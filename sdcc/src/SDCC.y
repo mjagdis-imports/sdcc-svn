@@ -31,6 +31,7 @@
 #include "SDCCval.h"
 #include "SDCCmem.h"
 #include "SDCCast.h"
+
 extern int yyerror (char *);
 extern FILE	*yyin;
 extern char srcLstFname[];
@@ -75,10 +76,10 @@ value *cenum = NULL  ;  /* current enumeration  type chain*/
 %token <yyint> MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token <yyint> SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
 %token <yyint> XOR_ASSIGN OR_ASSIGN
-%token TYPEDEF EXTERN STATIC AUTO REGISTER CODE INTERRUPT SFR AT SBIT
+%token TYPEDEF EXTERN STATIC AUTO REGISTER CODE EEPROM INTERRUPT SFR AT SBIT
 %token REENTRANT USING  XDATA DATA IDATA PDATA VAR_ARGS CRITICAL
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID BIT
-%token STRUCT UNION ENUM ELIPSIS RANGE FAR _XDATA _CODE _GENERIC _NEAR _PDATA _IDATA
+%token STRUCT UNION ENUM ELIPSIS RANGE FAR _XDATA _CODE _GENERIC _NEAR _PDATA _IDATA _EEPROM
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN 
 %token <yyinline> INLINEASM
 %token IFX ADDRESS_OF GET_VALUE_AT_ADDRESS SPIL UNSPIL GETHBIT
@@ -576,6 +577,11 @@ type_specifier2
                   $$->class = SPECIFIER  ;
                   SPEC_SCLS($$) = S_CODE ;                 
                }
+   | EEPROM      {
+                  $$ = newLink () ;
+                  $$->class = SPECIFIER  ;
+                  SPEC_SCLS($$) = S_EEPROM ;
+               }
    | DATA      {
                   $$ = newLink ();
                   $$->class = SPECIFIER ;
@@ -914,7 +920,11 @@ pointer
 		 case S_CODE:
 		     DCL_PTR_CONST($3) = 1;
 		     DCL_TYPE($3) = CPOINTER ;
+		 case S_EEPROM:
+		     DCL_TYPE($3) = EEPPOINTER;
 		     break;
+		 default:
+		     werror(W_PTR_TYPE_INVALID);
 		 }
 	     }
 	     else 
@@ -941,6 +951,7 @@ far_near
    | _IDATA    { $$ = newLink() ; DCL_TYPE($$) = IPOINTER ; }
    | _NEAR     { $$ = NULL ; }
    | _GENERIC  { $$ = newLink() ; DCL_TYPE($$) = GPOINTER ; } 
+   | _EEPROM   { $$ = newLink() ; DCL_TYPE($$) = EEPPOINTER ;} 
    |           { $$ = newLink() ; DCL_TYPE($$) = UPOINTER ; }
    ;
 

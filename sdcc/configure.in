@@ -177,9 +177,9 @@ if test "${datadir}" = "\${prefix}/share"; then
 else
   sdcc_datadir=${datadir}
 fi
-AC_DEFINE_UNQUOTED(STANDARD_INCLUDE_DIR, "${sdcc_datadir}/sdcc51inc")
-AC_DEFINE_UNQUOTED(SDCC_INCLUDE_DIR, "${sdcc_datadir}/sdcc51inc")
-AC_DEFINE_UNQUOTED(SDCC_LIB_DIR, "${sdcc_datadir}/sdcc51lib")
+AC_DEFINE_UNQUOTED(STANDARD_INCLUDE_DIR, "${sdcc_datadir}/include")
+AC_DEFINE_UNQUOTED(SDCC_INCLUDE_DIR, "${sdcc_datadir}/include")
+AC_DEFINE_UNQUOTED(SDCC_LIB_DIR, "${sdcc_datadir}/lib")
 AC_DEFINE_UNQUOTED(STD_LIB, "libsdcc")
 AC_DEFINE_UNQUOTED(STD_INT_LIB, "libint")
 AC_DEFINE_UNQUOTED(STD_LONG_LIB, "liblong")
@@ -189,10 +189,16 @@ AC_DEFINE_UNQUOTED(PREFIX, "${prefix}")
 AC_DEFINE_UNQUOTED(DATADIR, "${sdcc_datadir}")
 AC_DEFINE_UNQUOTED(SRCDIR, "${config_in}")
 
+# mlh: dont compile libgc if it's available locally
+AC_CHECK_LIB(gc,GC_malloc,HAVE_LIBGC=1)
+AC_SUBST(HAVE_LIBGC)
 
 # Generating output files
 # ===========================================================================
-AC_CONFIG_SUBDIRS(s51.src)
+AC_CONFIG_SUBDIRS(sim/ucsim)
+# MLH: removed as the rules are already in Makefile.common
+#as/z80/Makefile
+#link/z80/Makefile
 AC_OUTPUT(main.mk:main_in.mk
 support/gc/Makefile
 src/Makefile
@@ -201,6 +207,7 @@ support/cpp/Makefile
 device/include/Makefile
 device/lib/Makefile
 debugger/mcs51/Makefile
+Makefile.common:Makefile.common.in
 )
 
 # End of configure/configure.in

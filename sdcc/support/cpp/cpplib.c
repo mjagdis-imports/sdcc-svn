@@ -78,6 +78,12 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include <stdlib.h>
 #endif
 
+#ifdef __MINGW32__
+#include <time.h>
+#else
+#ifdef __BORLANDC__
+#include <time.h>
+#else
 #ifndef VMS
 #ifndef USG
 #include <sys/time.h>		/* for __DATE__ and __TIME__ */
@@ -89,6 +95,8 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include <fcntl.h>
 #endif /* USG */
 #endif /* not VMS */
+#endif
+#endif
 
 /* This defines "errno" properly for VMS, and gives us EACCES. */
 #include <errno.h>
@@ -2157,6 +2165,7 @@ output_line_command (
   CPP_RESERVE (pfile, 4 * strlen (ip->nominal_fname) + 50);
   {
     static char sharp_line[] = "#line ";
+
     CPP_PUTS_Q (pfile, sharp_line, sizeof(sharp_line)-1);
   }
 

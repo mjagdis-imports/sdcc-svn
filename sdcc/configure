@@ -2406,15 +2406,15 @@ else
   sdcc_datadir=${datadir}
 fi
 cat >> confdefs.h <<EOF
-#define STANDARD_INCLUDE_DIR "${sdcc_datadir}/sdcc51inc"
+#define STANDARD_INCLUDE_DIR "${sdcc_datadir}/include"
 EOF
 
 cat >> confdefs.h <<EOF
-#define SDCC_INCLUDE_DIR "${sdcc_datadir}/sdcc51inc"
+#define SDCC_INCLUDE_DIR "${sdcc_datadir}/include"
 EOF
 
 cat >> confdefs.h <<EOF
-#define SDCC_LIB_DIR "${sdcc_datadir}/sdcc51lib"
+#define SDCC_LIB_DIR "${sdcc_datadir}/lib"
 EOF
 
 cat >> confdefs.h <<EOF
@@ -2447,11 +2447,56 @@ cat >> confdefs.h <<EOF
 EOF
 
 
+# mlh: dont compile libgc if it's available locally
+echo $ac_n "checking for GC_malloc in -lgc""... $ac_c" 1>&6
+echo "configure:2453: checking for GC_malloc in -lgc" >&5
+ac_lib_var=`echo gc'_'GC_malloc | sed 'y%./+-%__p_%'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-lgc  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 2461 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char GC_malloc();
+
+int main() {
+GC_malloc()
+; return 0; }
+EOF
+if { (eval echo configure:2472: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  HAVE_LIBGC=1
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+
 
 # Generating output files
 # ===========================================================================
-subdirs="s51.src"
+subdirs="sim/ucsim"
 
+# MLH: removed as the rules are already in Makefile.common
+#as/z80/Makefile
+#link/z80/Makefile
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -2561,6 +2606,7 @@ support/cpp/Makefile
 device/include/Makefile
 device/lib/Makefile
 debugger/mcs51/Makefile
+Makefile.common:Makefile.common.in
  sdccconf.h:sdccconf_in.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -2612,6 +2658,7 @@ s%@AUTOCONF@%$AUTOCONF%g
 s%@AS@%$AS%g
 s%@CP@%$CP%g
 s%@M_OR_MM@%$M_OR_MM%g
+s%@HAVE_LIBGC@%$HAVE_LIBGC%g
 s%@subdirs@%$subdirs%g
 
 CEOF
@@ -2662,6 +2709,7 @@ support/cpp/Makefile
 device/include/Makefile
 device/lib/Makefile
 debugger/mcs51/Makefile
+Makefile.common:Makefile.common.in
 "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
@@ -2865,7 +2913,7 @@ if test "$no_recursion" != yes; then
     esac
   done
 
-  for ac_config_dir in s51.src; do
+  for ac_config_dir in sim/ucsim; do
 
     # Do not complain, so a configure script can configure whichever
     # parts of a large source tree are present.

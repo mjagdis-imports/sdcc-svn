@@ -21,15 +21,8 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
-#include <stdio.h>
-#include "SDCCglobl.h"
-#include "SDCCast.h"
-#include "SDCCmem.h"
-#include "SDCCy.h"
-#include "SDCChasht.h"
-#include "SDCCicode.h"
-#include "SDCCerr.h"
-#include "SDCCralloc.h"
+
+#include "common.h"
 
 /*-----------------------------------------------------------------*/
 /* global variables       */
@@ -59,7 +52,6 @@ operand *geniCodeRValue (operand *, bool );
 operand *geniCodeDerefPtr (operand *);
 
 #define PRINTFUNC(x) void x (FILE *of, iCode *ic, char *s)
-
 /* forward definition of print functions */
 PRINTFUNC(picGetValueAtAddr);
 PRINTFUNC(picSetValueAtAddr);
@@ -67,8 +59,6 @@ PRINTFUNC(picAddrOf);
 PRINTFUNC(picGeneric);
 PRINTFUNC(picGenericOne);
 PRINTFUNC(picCast);
-PRINTFUNC(picIncrement);
-PRINTFUNC(picDecrement);
 PRINTFUNC(picAssign);
 PRINTFUNC(picLabel);
 PRINTFUNC(picGoto);
@@ -159,12 +149,6 @@ int printOperand (operand *op, FILE *file)
 		 OP_LIVEFROM(op),OP_LIVETO(op),
 		 OP_SYMBOL(op)->stack,
 		 op->isaddr, OP_SYMBOL(op)->isreqv,OP_SYMBOL(op)->remat
-/* 		 , */
-/* 		 OP_SYMBOL(op)->allocreq,OP_SYMBOL(op)->remat, */
-/* 		 OP_SYMBOL(op)->ruonly, */
-/* 		 OP_SYMBOL(op)->isptr,op->isaddr,OP_SYMBOL(op)->used, */
-/* 		 OP_SYMBOL(op)->isind, */
-/* 		 OP_SYMBOL(op)->accuse, op->key, OP_SYMBOL(op)->key */
 		 );
 	{
 	    fprintf(file,"{"); printTypeChain(operandType(op),file); 
@@ -191,9 +175,7 @@ int printOperand (operand *op, FILE *file)
 		int i;
 		fprintf(file,"[");
 		for(i=0;i<OP_SYMBOL(op)->nRegs;i++)
-		    fprintf(file,"%s ",(OP_SYMBOL(op)->regs[i] ? 
-					OP_SYMBOL(op)->regs[i]->name :
-					"err"));
+		    fprintf(file,"%s ", port->getRegName(OP_SYMBOL(op)->regs[i]));
 		fprintf(file,"]");
 	    }
 	} 
@@ -561,6 +543,51 @@ void initiCode ()
 }
 
 /*-----------------------------------------------------------------*/
+/* copyiCode - make a copy of the iCode given                      */
+/*-----------------------------------------------------------------*/
+iCode *copyiCode (iCode *ic)
+{
+    iCode *nic = newiCode(ic->op,NULL,NULL);
+
+    nic->lineno = ic->lineno ;
+    nic->filename= ic->filename ;
+    nic->block = ic->block;
+    nic->level = ic->level;
+
+    /* deal with the special cases first */
+    switch (ic->op) {
+    case IFX:
+	IC_COND(nic) = operandFromOperand(IC_COND(ic));
+	IC_TRUE(nic) = IC_TRUE(ic);
+	IC_FALSE(nic)= IC_FALSE(ic);
+	break;
+
+    case JUMPTABLE:
+	IC_JTCOND(nic) = operandFromOperand(IC_JTCOND(ic));
+	IC_JTLABELS(nic) = IC_JTLABELS(ic);
+	break;
+
+    case CALL:
+    case PCALL:
+	IC_RESULT(nic) = operandFromOperand(IC_RESULT(ic));
+	IC_LEFT(nic)   = operandFromOperand(IC_LEFT(ic));
+	IC_ARGS(nic)   = IC_ARGS(ic);
+	break;
+
+    case INLINEASM:
+	IC_INLINE(nic) = IC_INLINE(ic);
+	break;
+	
+    default:
+	IC_RESULT(nic) = operandFromOperand(IC_RESULT(ic));
+	IC_LEFT(nic) = operandFromOperand(IC_LEFT(ic));
+	IC_RIGHT(nic)= operandFromOperand(IC_RIGHT(ic));
+    }
+
+    return nic;
+}
+
+/*-----------------------------------------------------------------*/
 /* getTableEntry - gets the table entry for the given operator     */
 /*-----------------------------------------------------------------*/
 iCodeTable *getTableEntry (int oper )
@@ -621,13 +648,13 @@ link *operandType (operand *op)
 	
     case TYPE :
 	return op->operand.typeOperand ;
+    default:
+	werror (E_INTERNAL_ERROR,__FILE__,__LINE__,
+		" operand type not known ");
+	assert (0) ; /* should never come here */
+	/*  Just to keep the compiler happy */
+	return (link *)0;
     }
-    
-    werror (E_INTERNAL_ERROR,__FILE__,__LINE__,
-	    " operand type not known ");
-    assert (0) ; /* should never come here */
-    /*  Just to keep the compiler happy */
-    return (link *)0;
 }
 
 /*-----------------------------------------------------------------*/
@@ -951,12 +978,40 @@ int isiCodeEqual (iCode *left, iCode *right)
 }
 
 /*-----------------------------------------------------------------*/
+/* newiTempFromOp - create a temp Operand with same attributes     */
+/*-----------------------------------------------------------------*/
+operand *newiTempFromOp (operand *op)
+{
+    operand *nop;
+
+    if (!op)
+	return NULL;
+    
+    if (!IS_ITEMP(op))
+	return op;
+
+    nop = newiTempOperand(operandType(op),TRUE);
+    nop->isaddr = op->isaddr ;
+    nop->isvolatile = op->isvolatile ;
+    nop->isGlobal = op->isGlobal ;
+    nop->isLiteral= op->isLiteral ;
+    nop->noSpilLoc= op->noSpilLoc;
+    nop->usesDefs = op->usesDefs;
+    nop->isParm = op->isParm;
+    nop->parmBytes = op->parmBytes;
+    return nop;
+}
+
+/*-----------------------------------------------------------------*/
 /* operand from operand - creates an operand holder for the type   */
 /*-----------------------------------------------------------------*/
 operand *operandFromOperand (operand *op)
 {
-    operand *nop = newOperand();
+    operand *nop ;
     
+    if (!op)
+	return NULL;
+    nop = newOperand();
     nop->type = op->type;
     nop->isaddr = op->isaddr ;
     nop->key = op->key ;
@@ -1005,7 +1060,7 @@ operand *operandFromSymbol (symbol *sym)
 {
     operand *op ;
     iCode *ic ;
-    
+    int ok =1 ;
     /* if the symbol's type is a literal */
     /* then it is an enumerator type     */
     if (IS_LITERAL(sym->etype) && SPEC_ENUM(sym->etype)) 
@@ -1023,11 +1078,17 @@ operand *operandFromSymbol (symbol *sym)
 	op->key = sym->key ;
 	op->isvolatile = isOperandVolatile(op,TRUE);
 	op->isGlobal   = isOperandGlobal(op);
+	op->parmBytes  = sym->argStack;
 	return op;
     }
     
     /* under the following conditions create a
        register equivalent for a local symbol */
+    if (sym->level && sym->etype && SPEC_OCLS(sym->etype) &&
+	IN_FARSPACE(SPEC_OCLS(sym->etype))  &&
+	options.stackAuto == 0)
+	ok =0;
+
     if (!IS_AGGREGATE(sym->type) &&     /* not an aggregate */
 	!IS_FUNC(sym->type)      &&     /* not a function   */
 	!sym->_isparm            &&     /* not a parameter  */
@@ -1036,8 +1097,10 @@ operand *operandFromSymbol (symbol *sym)
 	!sym->reqv               &&     /* does not already have a register euivalence */
 	!IS_VOLATILE(sym->etype) &&     /* not declared as volatile */
 	!IS_STATIC(sym->etype)   &&     /* and not declared static  */
-	!sym->islbl              &&
-	!IN_FARSPACE(SPEC_OCLS(sym->etype))) {     /* not a label */
+	!sym->islbl              &&     /* not a label */
+	ok                       &&     /* farspace check */
+	!IS_BITVAR(sym->etype)          /* not a bit variable */
+	) {
 	
 	/* we will use it after all optimizations
 	   and before liveRange calculation */
@@ -1048,7 +1111,7 @@ operand *operandFromSymbol (symbol *sym)
 	OP_SYMBOL(sym->reqv)->islocal = 1;
 	SPIL_LOC(sym->reqv) = sym;
     }
-
+   
     if (!IS_AGGREGATE(sym->type)) {
 	op = newOperand();
 	op->type = SYMBOL;
@@ -1270,7 +1333,7 @@ operand *geniCodeCast (link *type, operand *op, bool implicit)
 	return op;
     
     /* if this is a literal then just change the type & return */
-    if (IS_LITERAL(opetype) && !IS_PTR(type) && !IS_PTR(optype))
+    if (IS_LITERAL(opetype) && op->type == VALUE && !IS_PTR(type) && !IS_PTR(optype))
 	return operandFromValue(valCastLiteral(type,
 					       operandLitValue(op)));
           
@@ -1589,25 +1652,9 @@ link *aggrToPtr ( link *type, bool force)
 
     ptype->next = type;
     /* if the output class is generic */
-    if (SPEC_OCLS(etype) == generic)
-	DCL_TYPE(ptype) = GPOINTER;
-    else
-	if (SPEC_OCLS(etype)->codesp ) {
-	    DCL_TYPE(ptype) = CPOINTER ;
-	    DCL_PTR_CONST(ptype) = 1;
-	}
-	else
-	    if (SPEC_OCLS(etype)->fmap && !SPEC_OCLS(etype)->paged)
-		DCL_TYPE(ptype) = FPOINTER ;
-	    else
-		if (SPEC_OCLS(etype)->fmap && SPEC_OCLS(etype)->paged)
-		    DCL_TYPE(ptype) = PPOINTER ;
-		else
-		    if (SPEC_OCLS(etype) == idata)
-			DCL_TYPE(ptype) = IPOINTER;
-		    else
-			DCL_TYPE(ptype) = POINTER ;
-    
+    if ((DCL_TYPE(ptype) = PTR_TYPE(SPEC_OCLS(etype))) == CPOINTER)
+	DCL_PTR_CONST(ptype) = port->mem.code_ro;
+
     /* if the variable was declared a constant */
     /* then the pointer points to a constant */
     if (IS_CONSTANT(etype) )
@@ -1626,23 +1673,11 @@ operand *geniCodeArray2Ptr (operand *op)
 {
     link *optype = operandType(op);
     link *opetype = getSpec(optype);
-    
-    /* set the pointer depending on the storage class */
-    if (SPEC_OCLS(opetype)->codesp ) {
-	DCL_TYPE(optype) = CPOINTER ;
-	DCL_PTR_CONST(optype) = 1;
-    }
-    else
-	if (SPEC_OCLS(opetype)->fmap && !SPEC_OCLS(opetype)->paged)
-	    DCL_TYPE(optype) = FPOINTER ;
-	else
-	    if (SPEC_OCLS(opetype)->fmap && SPEC_OCLS(opetype)->paged)
-		DCL_TYPE(optype) = PPOINTER ;
-	    else
-		if (SPEC_OCLS(opetype) == idata)
-		    DCL_TYPE(optype) = IPOINTER;
-		else
-		    DCL_TYPE(optype) = POINTER ;
+
+    /* set the pointer depending on the storage class */    
+    if ((DCL_TYPE(optype) = PTR_TYPE(SPEC_OCLS(opetype))) == CPOINTER)
+	DCL_PTR_CONST(optype) = port->mem.code_ro;
+
     
     /* if the variable was declared a constant */
     /* then the pointer points to a constant */
@@ -1665,15 +1700,12 @@ operand *geniCodeArray (operand *left,operand *right)
     link *ltype = operandType(left);
     
     if (IS_PTR(ltype)) {
-	operand *r ;
-	int olval = lvaluereq ;
-	lvaluereq = IS_PTR(ltype->next);
-	r= geniCodeDerefPtr(geniCodeAdd(left,right));
-	lvaluereq = olval;
-	return r;
+	if (IS_PTR(ltype->next) && left->isaddr)
+	    left = geniCodeRValue(left,FALSE);
+	return geniCodeDerefPtr(geniCodeAdd(left,right));
     }
 
-   /* array access */
+    /* array access */
     right = geniCodeMultiply(right,
 			     operandFromLit(getSize(ltype->next)));
 
@@ -1692,7 +1724,7 @@ operand *geniCodeArray (operand *left,operand *right)
 				      !IS_AGGREGATE(ltype->next) &&
 				      !IS_PTR(ltype->next))
 				     ? ltype : ltype->next),0);
-/*     IC_RESULT(ic) = newiTempOperand(ltype->next,0); */
+
     IC_RESULT(ic)->isaddr = (!IS_AGGREGATE(ltype->next));
     ADDTOCHAIN(ic);
     return IC_RESULT(ic) ;
@@ -1745,7 +1777,6 @@ operand *geniCodePostInc (operand *op)
 		   geniCodeRValue(op,(IS_PTR(optype) ? TRUE : FALSE)) :
 		   op);		   
     link *rvtype = operandType(rv);    
-    int diff = (IS_PTR(rvtype) && DCL_TYPE(optype) != DCL_TYPE(rvtype));
     int size = 0;
     
     /* if this is not an address we have trouble */
@@ -1754,7 +1785,7 @@ operand *geniCodePostInc (operand *op)
 	return op ;
     }
     
-    rOp = newiTempOperand((diff ? rvtype : optype),0);
+    rOp = newiTempOperand(rvtype,0);
     rOp->noSpilLoc = 1;
 
     if (IS_ITEMP(rv))
@@ -1764,7 +1795,7 @@ operand *geniCodePostInc (operand *op)
    
     size = (IS_PTR(rvtype) ? getSize(rvtype->next) : 1);
     ic = newiCode('+',rv,operandFromLit(size));          
-    IC_RESULT(ic) = result =newiTempOperand((diff ? rvtype : optype),0);
+    IC_RESULT(ic) = result =newiTempOperand(rvtype,0);
     ADDTOCHAIN(ic);
 
     geniCodeAssign(op,result,0);
@@ -1784,7 +1815,6 @@ operand *geniCodePreInc (operand *op)
 		    geniCodeRValue (op,(IS_PTR(optype) ? TRUE : FALSE)) :
 		    op);
     link *roptype = operandType(rop);
-    int diff = (IS_PTR(roptype) && (DCL_TYPE(roptype) != DCL_TYPE(optype)));
     operand *result;
     int size = 0;
     
@@ -1796,7 +1826,7 @@ operand *geniCodePreInc (operand *op)
 
     size = (IS_PTR(roptype) ? getSize(roptype->next) : 1);
     ic = newiCode('+',rop,operandFromLit(size));
-    IC_RESULT(ic) = result = newiTempOperand((diff ? roptype : optype),0) ;
+    IC_RESULT(ic) = result = newiTempOperand(roptype,0) ;
     ADDTOCHAIN(ic);
 
     
@@ -1816,7 +1846,6 @@ operand *geniCodePostDec (operand *op)
 		   geniCodeRValue(op,(IS_PTR(optype) ? TRUE : FALSE)) :
 		   op);		   
     link *rvtype = operandType(rv);    
-    int diff = (IS_PTR(rvtype) && DCL_TYPE(optype) != DCL_TYPE(rvtype));
     int size = 0;
     
     /* if this is not an address we have trouble */
@@ -1825,7 +1854,7 @@ operand *geniCodePostDec (operand *op)
 	return op ;
     }
     
-    rOp = newiTempOperand((diff ? rvtype : optype),0);
+    rOp = newiTempOperand(rvtype,0);
     rOp->noSpilLoc = 1;
 
     if (IS_ITEMP(rv))
@@ -1835,7 +1864,7 @@ operand *geniCodePostDec (operand *op)
    
     size = (IS_PTR(rvtype) ? getSize(rvtype->next) : 1);
     ic = newiCode('-',rv,operandFromLit(size));          
-    IC_RESULT(ic) = result =newiTempOperand((diff ? rvtype : optype),0);
+    IC_RESULT(ic) = result =newiTempOperand(rvtype,0);
     ADDTOCHAIN(ic);
 
     geniCodeAssign(op,result,0);
@@ -1855,7 +1884,6 @@ operand *geniCodePreDec (operand *op)
 		    geniCodeRValue (op,(IS_PTR(optype) ? TRUE : FALSE)) :
 		    op);
     link *roptype = operandType(rop);
-    int diff = (IS_PTR(roptype) && (DCL_TYPE(roptype) != DCL_TYPE(optype)));
     operand *result;
     int size = 0;
     
@@ -1867,7 +1895,7 @@ operand *geniCodePreDec (operand *op)
 
     size = (IS_PTR(roptype) ? getSize(roptype->next) : 1);
     ic = newiCode('-',rop,operandFromLit(size));
-    IC_RESULT(ic) = result = newiTempOperand((diff ? roptype : optype),0) ;
+    IC_RESULT(ic) = result = newiTempOperand(roptype,0) ;
     ADDTOCHAIN(ic);
 
     
@@ -1903,35 +1931,20 @@ operand *geniCodeAddressOf (operand *op)
     link *optype = operandType(op);
     link *opetype= getSpec(optype);
     
+    /* lvalue check already done in decorateType */
     /* this must be a lvalue */
-    if (!op->isaddr && !IS_AGGREGATE(optype)) {
-	werror (E_LVALUE_REQUIRED,"&");
-	return op;
-    }
+/*     if (!op->isaddr && !IS_AGGREGATE(optype)) { */
+/* 	werror (E_LVALUE_REQUIRED,"&"); */
+/* 	return op; */
+/*     } */
     
     p = newLink();
     p->class = DECLARATOR ;
-    /* set the pointer depending on the storage class */
-    if (SPEC_OCLS(opetype)->codesp ) {
-	DCL_TYPE(p) = CPOINTER ;
-	DCL_PTR_CONST(p) = 1;
-    }
-    else
-	if (SPEC_OCLS(opetype)->fmap && !SPEC_OCLS(opetype)->paged)
-	    DCL_TYPE(p) = FPOINTER ;
-	else
-	    if (SPEC_OCLS(opetype)->fmap && SPEC_OCLS(opetype)->paged)
-		DCL_TYPE(p) = PPOINTER ;
-	    else
-		if (SPEC_OCLS(opetype) == idata)
-		    DCL_TYPE(p) = IPOINTER;
-		else
-		    if (SPEC_OCLS(opetype) == data ||
-			SPEC_OCLS(opetype) == overlay)
-			DCL_TYPE(p) = POINTER ;
-		    else
-			DCL_TYPE(p) = GPOINTER;
     
+    /* set the pointer depending on the storage class */
+    if ((DCL_TYPE(p) = PTR_TYPE(SPEC_OCLS(opetype))) == CPOINTER)
+	DCL_PTR_CONST(p) = port->mem.code_ro;
+
     /* make sure we preserve the const & volatile */
     if (IS_CONSTANT(opetype)) 
 	DCL_PTR_CONST(p) = 1;
@@ -1984,7 +1997,14 @@ void setOClass (link *ptr, link *spec)
     case PPOINTER:
 	SPEC_OCLS(spec) = xstack;
 	break;
-	
+
+    case EEPPOINTER:
+	SPEC_OCLS(spec) = eeprom;
+	break;
+
+    default:
+	break;
+
     }
 }
 
@@ -2007,16 +2027,19 @@ operand *geniCodeDerefPtr (operand *op)
     }
     
     /* now get rid of the pointer part */
-    if (lvaluereq && IS_ITEMP(op))
+    if (lvaluereq && IS_ITEMP(op) )
+    {
 	retype = getSpec(rtype = copyLinkChain(optype)) ;
+    }
     else
+    {
 	retype = getSpec(rtype = copyLinkChain(optype->next)) ;
+    }
     
     /* if this is a pointer then outputclass needs 2b updated */
     if (IS_PTR(optype)) 
 	setOClass(optype,retype);    
         
-    op = geniCodeRValue(op,TRUE);
     op->isGptr = IS_GENPTR(optype);
 
     /* if the pointer was declared as a constant */
@@ -2024,13 +2047,16 @@ operand *geniCodeDerefPtr (operand *op)
     if (IS_PTR_CONST(optype))
 	SPEC_CONST(retype) = 1;
     
-
-    setOperandType(op,rtype);
     op->isaddr = (IS_PTR(rtype)    ||
 		  IS_STRUCT(rtype) || 
 		  IS_INT(rtype)    ||
 		  IS_CHAR(rtype)   ||
 		  IS_FLOAT(rtype) );
+
+    if (!lvaluereq)
+	op = geniCodeRValue(op,TRUE);
+
+    setOperandType(op,rtype);
     
     return op;    
 }
@@ -2080,6 +2106,12 @@ operand *geniCodeRightShift (operand *left, operand *right)
     return IC_RESULT(ic) ;  
 }
 
+#ifdef __BORLANDC__
+#define LONG_LONG __int64
+#else
+#define LONG_LONG long long
+#endif
+
 /*-----------------------------------------------------------------*/
 /* geniCodeLogic- logic code                                       */
 /*-----------------------------------------------------------------*/
@@ -2096,7 +2128,7 @@ operand *geniCodeLogic (operand *left, operand *right, int op )
 	int nbits = bitsForType(ltype);
 	long v = operandLitValue(right);
 
-	if (v > ((long long) 1 << nbits) && v > 0)
+	if (v > ((LONG_LONG) 1 << nbits) && v > 0)
 	    werror(W_CONST_RANGE," compare operation ");
     }
 
@@ -2185,13 +2217,14 @@ operand *geniCodeAssign (operand *left, operand *right, int nosupdate)
 	
     /* left is integral type and right is literal then
        check if the literal value is within bounds */
-    if (IS_INTEGRAL(ltype) && IS_LITERAL(rtype)) {
+    if (IS_INTEGRAL(ltype) && right->type == VALUE && IS_LITERAL(rtype)) {
 	int nbits = bitsForType(ltype);
 	long v = operandLitValue(right);
 
-	if (v > ((long long)1 << nbits) && v > 0)
+	if (v > ((LONG_LONG)1 << nbits) && v > 0)
 	    werror(W_CONST_RANGE," = operation");
     }
+
     /* if the left & right type don't exactly match */
     /* if pointer set then make sure the check is
        done with the type & not the pointer */
@@ -2262,7 +2295,7 @@ static void geniCodeSEParms (ast *parms)
 	parms->right->left->lvalue = 1;
 
     parms->opval.oprnd = 
-	geniCodeRValue(ast2iCode (parms),TRUE);	  
+	geniCodeRValue(ast2iCode (parms),FALSE);
    
     parms->type = EX_OPERAND ;
 }
@@ -2317,12 +2350,12 @@ static void geniCodeParms ( ast *parms , int *stack, link *fetype)
 	    geniCodeAssign(top,pval,1);
 	}
 	else { 
-
+	    link *p = operandType(pval);
 	    /* push */
 	    ic = newiCode(IPUSH,pval,NULL);
 	    ic->parmPush = 1;
 	    /* update the stack adjustment */
-	    *stack += getSize(operandType(pval));
+	    *stack += getSize(IS_AGGREGATE(p)? aggrToPtr(p,FALSE):p);
 	    ADDTOCHAIN(ic);
 	}
     }
@@ -2383,16 +2416,19 @@ static void geniCodeReceive (value *args)
 
 	    /* we will use it after all optimizations
 	       and before liveRange calculation */	    
-	    if (!sym->addrtaken && 
-		!IS_VOLATILE(sym->etype) &&
-		!IN_FARSPACE(SPEC_OCLS(sym->etype))) {
-		opl = newiTempOperand(args->type,0);
-		sym->reqv = opl ;	    
-		sym->reqv->key = sym->key ;
-		OP_SYMBOL(sym->reqv)->key = sym->key;
-		OP_SYMBOL(sym->reqv)->isreqv = 1;
-		OP_SYMBOL(sym->reqv)->islocal= 0;
-		SPIL_LOC(sym->reqv) =  sym;
+	    if (!sym->addrtaken && !IS_VOLATILE(sym->etype)) {
+
+		if(IN_FARSPACE(SPEC_OCLS(sym->etype)) &&
+		   options.stackAuto == 0) {
+		} else {
+		    opl = newiTempOperand(args->type,0);
+		    sym->reqv = opl ;	    
+		    sym->reqv->key = sym->key ;
+		    OP_SYMBOL(sym->reqv)->key = sym->key;
+		    OP_SYMBOL(sym->reqv)->isreqv = 1;
+		    OP_SYMBOL(sym->reqv)->islocal= 0;
+		    SPIL_LOC(sym->reqv) =  sym;
+		}
 	    }
 
 	    ic = newiCode(RECEIVE,NULL,NULL);
@@ -2477,7 +2513,6 @@ void geniCodeIfx (ast *tree)
 {
     iCode *ic;
     operand *condition = ast2iCode(tree->left);
-/*     link *ctype = operandType(condition);     */
     link *cetype; 
     
     /* if condition is null then exit */
@@ -2599,7 +2634,7 @@ int geniCodeJumpTable (operand *cond, value *caseVals, ast *tree)
     /* if the min is not zero then we no make it zero */
     if (min) {
 	cond = geniCodeSubtract(cond,operandFromLit(min));
-	setOperandType(cond,ucharType);
+	setOperandType(cond, UCHARTYPE);
     }
 
     /* now create the jumptable */
@@ -2714,14 +2749,24 @@ operand *ast2iCode (ast *tree)
 	 tree->opval.op != SWITCH &&
 	 tree->opval.op != FUNCTION &&
 	 tree->opval.op != INLINEASM ) {
-	if (IS_ASSIGN_OP(tree->opval.op) || IS_DEREF_OP(tree)) {
+	if (IS_ASSIGN_OP(tree->opval.op) || 
+	    IS_DEREF_OP(tree)            || 
+	    (tree->opval.op == '&' && !tree->right) ||
+	    tree->opval.op == PTR_OP) {
 	    lvaluereq++;
 	    left = operandFromAst(tree->left);
 	    lvaluereq--;
 	} else {
 	    left =  operandFromAst(tree->left);
 	}
-	right= operandFromAst(tree->right);
+	if (tree->opval.op == INC_OP || 
+	    tree->opval.op == DEC_OP) {
+	    lvaluereq++;
+	    right= operandFromAst(tree->right);
+	    lvaluereq--;
+	} else {
+	    right= operandFromAst(tree->right);
+	}
     }
     
     /* now depending on the type of operand */
@@ -2729,8 +2774,11 @@ operand *ast2iCode (ast *tree)
     switch (tree->opval.op) {
 	
     case '[' :    /* array operation */
-	left= geniCodeRValue (left,FALSE);
-	right=geniCodeRValue (right,TRUE);		   
+	{
+	    link *ltype = operandType(left);
+	    left= geniCodeRValue (left,IS_PTR(ltype->next) ? TRUE : FALSE);
+	    right=geniCodeRValue (right,TRUE);		   
+	}
 	
 	return geniCodeArray (left,right);
 	
@@ -2828,7 +2876,7 @@ operand *ast2iCode (ast *tree)
     case GETHBIT:
 	{
 	    operand *op = geniCodeUnary (geniCodeRValue(left,FALSE),tree->opval.op);
-	    setOperandType(op,ucharType);
+	    setOperandType(op, UCHARTYPE);
 	    return op;
 	}
     case '>' :

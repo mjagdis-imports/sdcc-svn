@@ -21,32 +21,25 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
-#include <stdio.h>
-#include <string.h>
+
+#include "common.h"
+#include "asm.h"
 #include <time.h>
-#include "SDCCglobl.h"
-#include "SDCCsymt.h"
-#include "SDCCmem.h"
-#include "SDCCval.h"
-#include "SDCCast.h"
-#include "SDCChasht.h"
-#include "SDCCset.h"
-#include "SDCCicode.h"
-#include "SDCCopt.h"
-#include "SDCCy.h"
-#include "SDCCglue.h"
 
 symbol *interrupts[256];
-extern char *aopLiteral (value *, int);
+/*extern char *aopLiteral (value *, int);*//* drdani Jan 30 2000 */
 void printIval (symbol *, link *, initList *, FILE *);
 extern int noAlloc;
 set *publics = NULL;		/* public variables */
+
+/* TODO: this should be configurable (DS803C90 uses more than 6) */
 int maxInterrupts = 6;
 extern int maxRegBank ;
 symbol *mainf;
 extern char *VersionString;
 extern FILE *codeOutFile;
 set *tmpfileSet = NULL; /* set of tmp file created by the compiler */
+set *tmpfileNameSet = NULL; /* All are unlinked at close. */
 /*-----------------------------------------------------------------*/
 /* closeTmpFiles - closes all tmp files created by the compiler    */
 /*                 because of BRAIN DEAD MS/DOS & CYGNUS Libraries */
@@ -58,6 +51,21 @@ DEFSETFUNC(closeTmpFiles)
     if (tfile)
 	fclose(tfile);
     
+    return 0;
+}
+
+/*-----------------------------------------------------------------*/
+/* rmTmpFiles - closes all tmp files created by the compiler    */
+/*                 because of BRAIN DEAD MS/DOS & CYGNUS Libraries */
+/*-----------------------------------------------------------------*/
+DEFSETFUNC(rmTmpFiles)
+{
+    char *name = item;
+
+    if (name) {
+	unlink(name);
+	free(name);
+    }
     return 0;
 }
 
@@ -74,6 +82,57 @@ void copyFile (FILE * dest, FILE * src)
 	    fputc (ch, dest);
 }
 
+char *aopLiteralLong(value *val, int offset, int size)
+{
+    char *rs;
+    union {
+        float f;
+        unsigned char c[4];
+    } fl;
+
+    /* if it is a float then it gets tricky */
+    /* otherwise it is fairly simple */
+    if (!IS_FLOAT(val->type)) {
+        unsigned long v = floatFromVal(val);
+
+        v >>= (offset * 8);
+	switch (size) {
+	case 1:
+	    tsprintf(buffer, "!immedbyte", (unsigned int)v & 0xff);
+	    break;
+	case 2:
+	    tsprintf(buffer, "!immedword", (unsigned int)v & 0xffff);
+	    break;
+	default:
+	    /* Hmm.  Too big for now. */
+	    assert(0);
+	}
+        ALLOC_ATOMIC(rs,strlen(buffer)+1);
+        return strcpy (rs,buffer);
+    }
+
+    /* PENDING: For now size must be 1 */
+    assert(size == 1);
+
+    /* it is type float */
+    fl.f = (float) floatFromVal(val);
+#ifdef _BIG_ENDIAN
+    tsprintf(buffer, "!immedbyte", fl.c[3-offset]);
+#else
+    tsprintf(buffer, "!immedbyte", fl.c[offset]);
+#endif
+    ALLOC_ATOMIC(rs,strlen(buffer)+1);
+    return strcpy (rs,buffer);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopLiteral - string from a literal value                        */
+/*-----------------------------------------------------------------*/
+char *aopLiteral (value *val, int offset)
+{
+    return aopLiteralLong(val, offset, 1);
+}
+
 /*-----------------------------------------------------------------*/
 /* emitRegularMap - emit code for maps with no special cases       */
 /*-----------------------------------------------------------------*/
@@ -81,8 +140,13 @@ static void emitRegularMap (memmap * map, bool addPublics, bool arFlag)
 {
     symbol *sym;
     
-    if (addPublics)
-	fprintf (map->oFile, "\t.area\t%s\n", map->sname);
+    if (addPublics) {
+	/* PENDING: special case here - should remove */
+	if (!strcmp(map->sname, DATA_NAME))
+	    tfprintf(map->oFile, "\t!areadata\n", map->sname);
+	else
+	    tfprintf(map->oFile, "\t!area\n", map->sname);
+    }
     
     /* print the area name */
     for (sym = setFirstItem (map->syms); sym;
@@ -114,7 +178,7 @@ static void emitRegularMap (memmap * map, bool addPublics, bool arFlag)
 	    continue;
 	
 	/* print extra debug info if required */
-	if (options.debug || sym->level == 0) {
+	if ((options.debug || sym->level == 0) && !options.nodebug) {
 
 	    cdbSymbol(sym,cdbFile,FALSE,FALSE);
 
@@ -132,7 +196,7 @@ static void emitRegularMap (memmap * map, bool addPublics, bool arFlag)
 	/* if is has an absolute address then generate
 	   an equate for this no need to allocate space */
 	if (SPEC_ABSA (sym->etype)) {
-	    if (options.debug || sym->level == 0)
+	    if ((options.debug || sym->level == 0) && !options.nodebug)
 		fprintf (map->oFile," == 0x%04x\n",SPEC_ADDR (sym->etype));	    
 
 	    fprintf (map->oFile, "%s\t=\t0x%04x\n",
@@ -141,10 +205,10 @@ static void emitRegularMap (memmap * map, bool addPublics, bool arFlag)
 	}
 	else {
 	    /* allocate space */
-	    if (options.debug || sym->level == 0)
+	    if ((options.debug || sym->level == 0) && !options.nodebug)
 		fprintf(map->oFile,"==.\n");
-	    fprintf (map->oFile, "%s:\n", sym->rname);
-	    fprintf (map->oFile, "\t.ds\t0x%04x\n", (unsigned int)getSize (sym->type) & 0xffff);
+	    tfprintf(map->oFile, "!labeldef\n", sym->rname);
+	    tfprintf(map->oFile, "\t!ds\n", (unsigned int)getSize (sym->type) & 0xffff);
 	}
 	
 	/* if it has a initial value then do it only if
@@ -190,7 +254,7 @@ value *initPointer (initList *ilist)
 	    val->type = newLink();
 	    if (SPEC_SCLS(expr->left->etype) == S_CODE) {
 		DCL_TYPE(val->type) = CPOINTER ;
-		DCL_PTR_CONST(val->type) = 1;
+		DCL_PTR_CONST(val->type) = port->mem.code_ro;
 	    }
 	    else
 		if (SPEC_SCLS(expr->left->etype) == S_XDATA)
@@ -202,7 +266,10 @@ value *initPointer (initList *ilist)
 			if (SPEC_SCLS(expr->left->etype) == S_IDATA)
 			    DCL_TYPE(val->type) = IPOINTER ;
 			else
-			    DCL_TYPE(val->type) = POINTER ;
+			    if (SPEC_SCLS(expr->left->etype) == S_EEPROM)
+				DCL_TYPE(val->type) = EEPPOINTER ;
+			    else
+				DCL_TYPE(val->type) = POINTER ;
 	    val->type->next = expr->left->ftype;
 	    val->etype = getSpec(val->type);
 	    return val;
@@ -243,29 +310,38 @@ void printChar (FILE * ofile, char *s, int plen)
     int i;
     int len = strlen (s);
     int pplen = 0;
-    
-    while (len && pplen < plen) {
+    char buf[100];
+    char *p = buf;
 
-	fprintf (ofile, "\t.ascii /");
+    while (len && pplen < plen) {
 	i = 60;
 	while (i && *s && pplen < plen) {
-	    if (*s < ' ' || *s == '/') {	       
-		fprintf (ofile, "/\n\t.byte 0x%02x\n\t.ascii /", *s++);
+	    if (*s < ' ' || *s == '\"') {
+		*p = '\0';
+		if (p != buf) 
+		    tfprintf(ofile, "\t!ascii\n", buf);
+		tfprintf(ofile, "\t!db\n", *s);
+		p = buf;
 	    }
-	    else 
-		fprintf (ofile, "%c", *s++);
+	    else {
+		*p = *s;
+		p++;
+	    }
+	    s++;
 	    pplen++;
 	    i--;
 	}
-	fprintf (ofile, "/\n");
+	if (p != buf) {
+	    *p = '\0';
+	    tfprintf(ofile, "\t!ascii\n", buf);
+	}
 	
 	if (len > 60)
 	    len -= 60;
 	else
 	    len = 0;
     }
-    if (pplen < plen)
-	fprintf(ofile,"\t.byte\t0\n");
+    tfprintf(ofile, "\t!db\n", 0);
 }
 
 /*-----------------------------------------------------------------*/
@@ -283,31 +359,27 @@ void printIvalType (link * type, initList * ilist, FILE * oFile)
     switch (getSize (type)) {
     case 1:
 	if (!val)
-	    fprintf (oFile, "\t.byte 0\n");
+	    tfprintf(oFile, "\t!db\n", 0);
 	else
-	    fprintf (oFile, "\t.byte %s\n",
+	    tfprintf(oFile, "\t!dbs\n",
 		     aopLiteral (val, 0));
 	break;
 
     case 2:
-	if (!val)
-	    fprintf (oFile, "\t.word 0\n");
-	else
-	    fprintf (oFile, "\t.byte %s,%s\n",
-		     aopLiteral (val, 0), aopLiteral (val, 1));
+	tfprintf(oFile, "\t!dws\n", aopLiteralLong(val, 0, 2));
 	break;
-
     case 4:
-	if (!val)
-	    fprintf (oFile, "\t.word 0,0\n");
-	else
+	if (!val) {
+	    tfprintf (oFile, "\t!dw\n", 0);
+	    tfprintf (oFile, "\t!dw\n", 0);
+	}
+	else {
 	    fprintf (oFile, "\t.byte %s,%s,%s,%s\n",
 		     aopLiteral (val, 0), aopLiteral (val, 1),
 		     aopLiteral (val, 2), aopLiteral (val, 3));
+	}
 	break;
     }
-    
-    return;
 }
 
 /*-----------------------------------------------------------------*/
@@ -357,7 +429,7 @@ int printIvalChar (link * type, initList * ilist, FILE * oFile, char *s)
 	    
 	    if ((remain = (DCL_ELEM (type) - strlen (SPEC_CVAL (val->etype).v_char) -1))>0)
 		while (remain--)
-		    fprintf (oFile, "\t.byte 0\n");
+		    tfprintf (oFile, "\t!db\n", 0);
 	    
 	    return 1;
 	}
@@ -431,23 +503,19 @@ void printIvalFuncPtr (link * type, initList * ilist, FILE * oFile)
     val = list2val (ilist);
     /* check the types   */
     if ((dLvl = checkType (val->type, type->next)) <= 0) {
-	
-	fprintf (oFile, "\t.word 0\n");
+	tfprintf(oFile, "\t!dw\n", 0);
 	return;
     }
     
     /* now generate the name */
     if (!val->sym) {
 	if (IS_LITERAL (val->etype))
-	    fprintf (oFile, "\t.byte %s,%s\n",
-		     aopLiteral (val, 0), aopLiteral (val, 1));
+	    tfprintf(oFile, "\t!dws\n", aopLiteralLong(val, 0, 2));
 	else
-	    fprintf (oFile, "\t.byte %s,(%s >> 8)\n",
-		     val->name, val->name);
+	    tfprintf(oFile, "\t!dws\n", val->name);
     }
     else 
-	fprintf (oFile, "\t.byte %s,(%s >> 8)\n",
-		 val->sym->rname, val->sym->rname);
+	tfprintf(oFile, "\t!dws\n", val->sym->rname);
     
     return;
 }
@@ -459,21 +527,49 @@ int printIvalCharPtr (symbol * sym, link * type, value * val, FILE * oFile)
 {
     int size = 0;
     
+    /* PENDING: this is _very_ mcs51 specific, including a magic
+       number... 
+       It's also endin specific.
+    */
     size = getSize (type);
-    
-    if (size == 1)
-	fprintf(oFile,
-	     "\t.byte %s", val->name) ;
-    else
-	fprintf (oFile,
-		 "\t.byte %s,(%s >> 8)",
-		 val->name, val->name);
-   
-    if (size > 2)
-	fprintf (oFile, ",#0x02\n");
-    else
-	fprintf (oFile, "\n");
-    
+
+    if (val->name && strlen(val->name)) {
+	switch (size) {
+	case 1:
+	    tfprintf(oFile,
+		    "\t!dbs\n", val->name) ;
+	    break;
+	case 2:
+	    tfprintf(oFile, "\t!dws\n", val->name);
+	    break;
+	    /* PENDING: probably just 3 */
+	default:
+	    /* PENDING: 0x02 or 0x%02x, CDATA? */
+	    fprintf (oFile,
+		     "\t.byte %s,(%s >> 8),#0x02\n",
+		     val->name, val->name);
+	}
+    }
+    else {
+	switch (size) {
+	case 1:
+	    tfprintf(oFile, "\t!dbs\n", aopLiteral(val, 0));
+	    break;
+	case 2:
+	    tfprintf(oFile, "\t!dws\n", 
+		    aopLiteralLong(val, 0, 2));
+	    break;
+	case 3:
+	    /* PENDING: 0x02 or 0x%02x, CDATA? */
+	    fprintf(oFile, "\t.byte %s,%s,0x02\n",
+		    aopLiteral (val, 0), aopLiteral (val, 1));
+	    break;
+	default:
+	    assert(0);
+	}
+    }
+
+
     if (val->sym && val->sym->isstrlit)
 	addSet (&statsg->syms, val->sym);
     
@@ -513,12 +609,10 @@ void printIvalPtr (symbol * sym, link * type, initList * ilist, FILE * oFile)
     if (IS_LITERAL (val->etype)) {
 	switch (getSize (type)) {
 	case 1:
-	    fprintf (oFile, "\t.byte 0x%02x\n", ((char) floatFromVal (val)) & 0xff);
+	    tfprintf(oFile, "\t!db\n", (unsigned int)floatFromVal(val) & 0xff);
 	    break;
 	case 2:
-	    fprintf (oFile, "\t.byte %s,%s\n",
-		     aopLiteral (val, 0), aopLiteral (val, 1));
-	    
+	    tfprintf (oFile, "\t!dws\n", aopLiteralLong(val, 0, 2));
 	    break;
 	case 3:
 	    fprintf (oFile, "\t.byte %s,%s,0x%02x\n",
@@ -530,10 +624,10 @@ void printIvalPtr (symbol * sym, link * type, initList * ilist, FILE * oFile)
     
     switch (getSize (type)) {
     case 1:
-	fprintf (oFile, "\t.byte %s\n", val->name);
+	tfprintf (oFile, "\t!dbs\n", val->name);
 	break;
     case 2:
-	fprintf (oFile, "\t.byte %s,(%s >> 8)\n", val->name, val->name);
+	tfprintf (oFile, "\t!dws\n", val->name);
 	break;
 	
     case 3:
@@ -600,7 +694,7 @@ void emitStaticSeg (memmap * map)
 	    addSetHead (&publics, sym);
 
 	/* print extra debug info if required */
-	if (options.debug || sym->level == 0) {
+	if ((options.debug || sym->level == 0) && !options.nodebug) {
 
 	    cdbSymbol(sym,cdbFile,FALSE,FALSE);
 
@@ -619,7 +713,7 @@ void emitStaticSeg (memmap * map)
 	
 	/* if it has an absolute address */
 	if (SPEC_ABSA (sym->etype)) {
-	    if (options.debug || sym->level == 0)
+	    if ((options.debug || sym->level == 0) && !options.nodebug)
 		fprintf(code->oFile," == 0x%04x\n", SPEC_ADDR (sym->etype));
 
 	    fprintf (code->oFile, "%s\t=\t0x%04x\n",
@@ -627,7 +721,7 @@ void emitStaticSeg (memmap * map)
 		     SPEC_ADDR (sym->etype));
 	}
 	else {
-	    if (options.debug || sym->level == 0)
+	    if ((options.debug || sym->level == 0) && !options.nodebug)
 		fprintf(code->oFile," == .\n");	
 
 	    /* if it has an initial value */
@@ -647,8 +741,8 @@ void emitStaticSeg (memmap * map)
 		    printChar (code->oFile,
 			       SPEC_CVAL (sym->etype).v_char,
 			       strlen(SPEC_CVAL (sym->etype).v_char)+1);
-		else
-		    fprintf (code->oFile, "\t.ds\t0x%04x\n", (unsigned int)getSize (sym->type)& 0xffff);
+		else 
+		    tfprintf(code->oFile, "\t!ds\n", (unsigned int)getSize (sym->type)& 0xffff);
 	    }
 	}
     }
@@ -695,18 +789,27 @@ void createInterruptVect (FILE * vFile)
 	return;
     }
     
-    fprintf (vFile, "\t.area\tCODE (CODE)\n");
+    tfprintf(vFile, "\t!areacode\n", CODE_NAME);
     fprintf (vFile, "__interrupt_vect:\n");
+
     
-    fprintf (vFile, "\tljmp\t__sdcc_gsinit_startup\n");
+    if (!port->genIVT || ! (port->genIVT(vFile, interrupts, maxInterrupts)))
+    {
+        /* "generic" interrupt table header (if port doesn't specify one).
+         *
+         * Look suspiciously like 8051 code to me...
+         */
+    
+    	fprintf (vFile, "\tljmp\t__sdcc_gsinit_startup\n");
     
     
-    /* now for the other interrupts */
-    for (; i < maxInterrupts; i++) {
-	if (interrupts[i])
-	    fprintf (vFile, "\tljmp\t%s\n\t.ds\t5\n", interrupts[i]->rname);
-	else
-	    fprintf (vFile, "\treti\n\t.ds\t7\n");
+    	/* now for the other interrupts */
+    	for (; i < maxInterrupts; i++) {
+		if (interrupts[i])
+	    		fprintf (vFile, "\tljmp\t%s\n\t.ds\t5\n", interrupts[i]->rname);
+		else
+	    		fprintf (vFile, "\treti\n\t.ds\t7\n");
+    	}
     }
 }
 
@@ -745,7 +848,7 @@ void printPublics (FILE * afile)
     
     for (sym = setFirstItem (publics); sym;
 	 sym = setNextItem (publics))
-	fprintf (afile, "\t.globl %s\n", sym->rname);
+	tfprintf(afile, "\t!global\n", sym->rname);
 }
 
 /*-----------------------------------------------------------------*/
@@ -756,7 +859,7 @@ static void emitOverlay(FILE *afile)
     set *ovrset;
     
     if (!elementsInSet(ovrSetSets))
-	fprintf(afile,"\t.area\tOSEG\t(OVR,DATA)\n");
+	tfprintf(afile,"\t!area\n", port->mem.overlay_name);
 
     /* for each of the sets in the overlay segment do */
     for (ovrset = setFirstItem(ovrSetSets); ovrset;
@@ -771,7 +874,7 @@ static void emitOverlay(FILE *afile)
 	       sad but true */
 	    fprintf(afile,"\t.area _DUMMY\n");
 	    /* output the area informtion */
-	    fprintf(afile,"\t.area\tOSEG\t(OVR,DATA)\n"); /* MOF */
+	    fprintf(afile,"\t.area\t%s\n", port->mem.overlay_name); /* MOF */
 	}
 	
 	for (sym = setFirstItem(ovrset); sym;
@@ -801,7 +904,7 @@ static void emitOverlay(FILE *afile)
 		continue;
 
 	    /* print extra debug info if required */
-	    if (options.debug || sym->level == 0) {
+	    if ((options.debug || sym->level == 0) && !options.nodebug) {
 		
 		cdbSymbol(sym,cdbFile,FALSE,FALSE);
 		
@@ -822,7 +925,7 @@ static void emitOverlay(FILE *afile)
 	       an equate for this no need to allocate space */
 	    if (SPEC_ABSA (sym->etype)) {
 		
-		if (options.debug || sym->level == 0)
+		if ((options.debug || sym->level == 0) && !options.nodebug)
 		    fprintf (afile," == 0x%04x\n",SPEC_ADDR (sym->etype));	    
 
 		fprintf (afile, "%s\t=\t0x%04x\n",
@@ -830,12 +933,12 @@ static void emitOverlay(FILE *afile)
 			 SPEC_ADDR (sym->etype));
 	    }
 	    else {
-		if (options.debug || sym->level == 0)
+		if ((options.debug || sym->level == 0) && !options.nodebug)
 		    fprintf(afile,"==.\n");
 	
 		/* allocate space */
-		fprintf (afile, "%s:\n", sym->rname);
-		fprintf (afile, "\t.ds\t0x%04x\n", (unsigned int)getSize (sym->type) & 0xffff);
+		tfprintf(afile, "!labeldef\n", sym->rname);
+		tfprintf(afile, "\t!ds\n", (unsigned int)getSize (sym->type) & 0xffff);
 	    }
 	    
 	}
@@ -849,15 +952,20 @@ void glue ()
 {
     FILE *vFile;
     FILE *asmFile;
-    FILE *ovrFile = tmpfile();
+    FILE *ovrFile = tempfile();
     
     addSetHead(&tmpfileSet,ovrFile);
     /* print the global struct definitions */
     if (options.debug)
 	cdbStructBlock (0,cdbFile);
 
-    /* create the interrupt vector table */
-    createInterruptVect ((vFile = tmpfile ()));
+    vFile = tempfile();
+    /* PENDING: this isnt the best place but it will do */
+    if (port->general.glue_up_main) {
+	/* create the interrupt vector table */
+	createInterruptVect (vFile);
+    }
+
     addSetHead(&tmpfileSet,vFile);
     
     /* emit code for the all the variables declared */
@@ -867,8 +975,15 @@ void glue ()
 
     /* now put it all together into the assembler file */
     /* create the assembler file name */
-    sprintf (buffer, srcFileName);
-    strcat (buffer, ".asm");
+    
+    if (!options.c1mode) {
+	sprintf (buffer, srcFileName);
+	strcat (buffer, ".asm");
+    }
+    else {
+	strcpy(buffer, options.out_name);
+    }
+
     if (!(asmFile = fopen (buffer, "w"))) {
 	werror (E_FILE_OPEN_ERR, buffer);
 	exit (1);
@@ -878,11 +993,17 @@ void glue ()
     initialComments (asmFile);
     
     /* print module name */
-    fprintf (asmFile, "\t.module %s\n", moduleName);
+    tfprintf(asmFile, "\t!module\n", moduleName);
+    tfprintf(asmFile, "\t!fileprelude\n");
+
+    /* Let the port generate any global directives, etc. */
+    if (port->genAssemblerPreamble)
+    {
+    	port->genAssemblerPreamble(asmFile);
+    }
     
     /* print the global variables in this module */
     printPublics (asmFile);
-
     
     /* copy the sfr segment */
     fprintf (asmFile, "%s", iComments2);
@@ -913,7 +1034,7 @@ void glue ()
     if (mainf && mainf->fbody) {
 	fprintf (asmFile, "%s", iComments2);
 	fprintf (asmFile, "; Stack segment in internal ram \n");
-	fprintf (asmFile, "%s", iComments2);    
+	fprintf (asmFile, "%s", iComments2);
 	fprintf (asmFile, "\t.area\tSSEG\t(DATA)\n"
 		 "__start__stack:\n\t.ds\t1\n\n");
     }
@@ -958,7 +1079,17 @@ void glue ()
     fprintf (asmFile, "%s", iComments2);
     fprintf (asmFile, "; global & static initialisations\n");
     fprintf (asmFile, "%s", iComments2);
-    fprintf (asmFile, "\t.area GSINIT (CODE)\n"); /* MOF */
+    
+    /* Everywhere we generate a reference to the static_name area, 
+     * (which is currently only here), we immediately follow it with a 
+     * definition of the post_static_name area. This guarantees that
+     * the post_static_name area will immediately follow the static_name
+     * area.
+     */
+    tfprintf(asmFile, "\t!area\n", port->mem.static_name); /* MOF */
+    tfprintf(asmFile, "\t!area\n", port->mem.post_static_name);
+    tfprintf(asmFile, "\t!area\n", port->mem.static_name);
+    
     if (mainf && mainf->fbody) {
 	fprintf (asmFile,"__sdcc_gsinit_startup:\n");
 	/* if external stack is specified then the
@@ -991,12 +1122,22 @@ void glue ()
 	
     }
     copyFile (asmFile, statsg->oFile);
-    
+
+    if (port->general.glue_up_main && mainf && mainf->fbody)
+    {
+        /* This code is generated in the post-static area.
+         * This area is guaranteed to follow the static area
+         * by the ugly shucking and jiving about 20 lines ago.
+         */
+    	tfprintf(asmFile, "\t!area %s\n", port->mem.post_static_name);
+	fprintf (asmFile,"\tljmp\t__sdcc_program_startup\n");
+    }
+	
     /* copy over code */
     fprintf (asmFile, "%s", iComments2);
     fprintf (asmFile, "; code\n");
     fprintf (asmFile, "%s", iComments2);
-    fprintf (asmFile, "\t.area CSEG (CODE)\n");
+    tfprintf(asmFile, "\t!areacode\n", CODE_NAME);
     if (mainf && mainf->fbody) {
 	
 	/* entry point @ start of CSEG */
@@ -1019,4 +1160,39 @@ void glue ()
     
     fclose (asmFile);
     applyToSet(tmpfileSet,closeTmpFiles);
+    applyToSet(tmpfileNameSet, rmTmpFiles);
+}
+
+/** Creates a temporary file a'la tmpfile which avoids the bugs
+    in cygwin wrt c:\tmp.
+    Scans, in order: TMP, TEMP, TMPDIR, else uses tmpfile().
+*/
+FILE *tempfile(void)
+{
+    const char *tmpdir = NULL;
+    if (getenv("TMP"))
+	tmpdir = getenv("TMP");
+    else if (getenv("TEMP"))
+	tmpdir = getenv("TEMP");
+    else if (getenv("TMPDIR"))
+	tmpdir = getenv("TMPDIR");
+    if (tmpdir) {
+	char *name = tempnam(tmpdir, "sdcc");
+	if (name) {
+	    FILE *fp = fopen(name, "w+b");
+	    if (fp)
+		addSetHead(&tmpfileNameSet, name);
+	    return fp;
+	}
+	return NULL;
+    }
+    return tmpfile();
+}
+
+char *gc_strdup(const char *s)
+{
+    char *ret;
+    ALLOC_ATOMIC(ret, strlen(s)+1);
+    strcpy(ret, s);
+    return ret;
 }

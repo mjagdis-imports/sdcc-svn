@@ -8,33 +8,34 @@
 struct set ;
 struct value ;
 typedef  struct memmap{
-    unsigned char  pageno;/* page no for this variable  */
-    char     *sname;    /*   character prefix for map */
-    char     dbName ;   /* debugger address space name */
-    int      slbl ;    /* label counter for space    */
-    unsigned sloc    ;    /* starting location          */
-    unsigned fmap : 1;    /* 1 = 16bit addressing reqd  */
-    unsigned paged : 1;    /* this is a paged mem space  */
-    unsigned direct: 1;    /* 1= indirect access only    */
-    unsigned bitsp: 1;    /* 1 = bit addressable space  */
-    unsigned codesp:1;    /* 1 = code space             */
-    unsigned regsp: 1;    /* 1= sfr space               */
-    FILE    *oFile   ;    /* object file associated     */
-    struct  set *syms;   /* symbols defined in this segment */
+    unsigned char  pageno;    /* page no for this variable  */
+    const char     *sname;    /*   character prefix for map */
+    char     dbName ;         /* debugger address space name */
+    int      ptrType;         /* pointer Type for this space */
+    int      slbl ;           /* label counter for space    */
+    unsigned sloc    ;        /* starting location          */
+    unsigned fmap : 1;        /* 1 = 16bit addressing reqd  */
+    unsigned paged : 1;       /* this is a paged mem space  */
+    unsigned direct: 1;       /* 1= indirect access only    */
+    unsigned bitsp: 1;        /* 1 = bit addressable space  */
+    unsigned codesp:1;        /* 1 = code space             */
+    unsigned regsp: 1;        /* 1= sfr space               */
+    FILE    *oFile   ;        /* object file associated     */
+    struct  set *syms;        /* symbols defined in this segment */
 } memmap ;
 
 extern FILE	*junkFile ;	
 
 /* memory map prefixes  MOF added the DATA,CODE,XDATA,BIT */
-#define  XSTACK_NAME   "XSEG    (XDATA)"
-#define  ISTACK_NAME   "STACK   (DATA)"
-#define  CODE_NAME     "CSEG    (CODE)"
-#define  DATA_NAME     "DSEG    (DATA)"
-#define  IDATA_NAME    "ISEG    (DATA)"
-#define  XDATA_NAME    "XSEG    (XDATA)"
-#define  BIT_NAME      "BSEG    (BIT)"
-#define  REG_NAME      "RSEG    (DATA)"
-#define  STATIC_NAME   "GSINIT  (CODE)"
+#define  XSTACK_NAME   port->mem.xstack_name
+#define  ISTACK_NAME   port->mem.istack_name
+#define  CODE_NAME     port->mem.code_name
+#define  DATA_NAME     port->mem.data_name
+#define  IDATA_NAME    port->mem.idata_name
+#define  XDATA_NAME    port->mem.xdata_name
+#define  BIT_NAME      port->mem.bit_name
+#define  REG_NAME      port->mem.reg_name
+#define  STATIC_NAME   port->mem.static_name
  
 /* forward definition for variables */
 extern   memmap  *xstack;    /* xternal stack data         */
@@ -51,6 +52,7 @@ extern   memmap  *reg   ;    /* register space		   */
 extern   memmap  *_const;    /* constant segment           */
 extern   memmap  *generic;   /* unknown                    */
 extern   memmap  *overlay;   /* the overlay segment        */
+extern   memmap  *eeprom;    /* eepromp space              */
 
 extern   struct  set     *ovrSetSets;
 
@@ -61,9 +63,11 @@ extern   struct  set     *ovrSetSets;
 #define IN_DIRSPACE(map)        (map && map->direct)
 #define IN_PAGEDSPACE(map)      (map && map->paged )
 #define IN_CODESPACE(map)       (map && map->codesp)
+#define PTR_TYPE(map)           (map ? (map->ptrType ? map->ptrType : POINTER)\
+                                     : GPOINTER)
 
 /* forward decls for functions    */
-memmap     *allocMap       (char,char,char,char,char,char,unsigned,char *,char );
+memmap     *allocMap       (char,char,char,char,char,char,unsigned, const char *,char,int );
 void        initMem        (                                );
 void        allocGlobal    (struct symbol  *                );
 void        allocLocal     (struct symbol  *                );
