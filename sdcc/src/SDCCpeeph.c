@@ -23,23 +23,12 @@
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include "SDCCglobl.h"
-#include "SDCChasht.h"
-#include "SDCCset.h" 
+#include "common.h"
 #include "SDCCpeeph.h"
-
 
 peepRule *rootRules = NULL;
 peepRule *currRule  = NULL;
 
-char *defaultRules =
-{
-#include "SDCCpeeph.rul"
-};
- 
 static bool matchLine (char *, char *, hTab **);
 
 #define FBYNAME(x) int x (hTab *vars, lineNode *currPl, lineNode *head)
@@ -73,6 +62,14 @@ int pcDistance (lineNode *cpos, char *lbl, bool back)
 
     }
     return 0;
+}
+
+/*-----------------------------------------------------------------*/
+/* flat24bitMode - will check to see if we are in flat24 mode	   */
+/*-----------------------------------------------------------------*/
+FBYNAME(flat24bitMode)
+{
+    return (options.model == MODEL_FLAT24);
 }
 
 /*-----------------------------------------------------------------*/
@@ -136,7 +133,8 @@ int callFuncByName ( char *fname,
 	int (*func)(hTab *,lineNode *,lineNode *) ; 
     }  ftab[] = { 
 	{"labelInRange",   labelInRange },
-	{"operandsNotSame", operandsNotSame }
+	{"operandsNotSame", operandsNotSame },
+	{"24bitMode", flat24bitMode },
     };
     int i;
 
@@ -641,9 +639,6 @@ void peepHole (lineNode **pls )
 		else
 		    replaceRule (&spl, mtail,pr);
 		
-		/* if it was the start then replace
-		   the start */
-		
 		/* if restart rule type then
 		   start at the top again */
 		if (pr->restart)
@@ -711,7 +706,7 @@ void initPeepHole ()
     char *s;
 
     /* read in the default rules */
-    readRules(defaultRules);
+    readRules(port->peep.default_rules);
 
     /* if we have any additional file read it too */
     if (options.peep_file) {

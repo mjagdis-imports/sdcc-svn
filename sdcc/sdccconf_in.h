@@ -25,6 +25,11 @@
 #undef HAVE_SYS_ISA_DEFS_H
 #undef HAVE_ENDIAN_H
 
+#undef OPT_DISABLE_Z80
+#undef OPT_DISABLE_GBZ80
+#undef OPT_DISABLE_MCS51
+#undef OPT_DISABLE_AVR
+
 #endif
 
 /* End of config.h */

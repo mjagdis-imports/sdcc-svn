@@ -37,10 +37,12 @@ enum {
         EXPRESSION      ,
         STATEMENT       ,
         LEAF            };
-enum optype {
+
+typedef enum {
   SYMBOL    =1,
   VALUE       ,
-  TYPE      };
+  TYPE      
+} OPTYPE;
 
 #define IS_SYMOP(op) (op && op->type == SYMBOL)
 #define ADDTOCHAIN(x) addSetHead(&iCodeChain,x)
@@ -68,7 +70,7 @@ enum optype {
 
 /* typedef for operand */
 typedef struct operand {
-    unsigned int  type: 6 ;      /* type of operand */
+    OPTYPE type;      		 /* type of operand */
     unsigned int  isaddr : 1;    /* is an address   */
     unsigned int  isvolatile: 1; /* is a volatile operand */
     unsigned int  isGlobal :1 ;  /* is a global operand */
@@ -163,7 +165,7 @@ typedef struct icodeFuncTable
     int icode ;
     char *printName ;
     void (*iCodePrint)(FILE *,iCode *,char *) ;
-    void (*iCodeGen)() ;
+    iCode * (*iCodeCopy)(iCode *) ;
 } iCodeTable ;
 
 /* useful macros */
@@ -273,5 +275,6 @@ int      printOperand (operand *,FILE *);
 void     setOperandType (operand *, link *);
 bool     isOperandInFarSpace (operand *);
 operand *opFromOpWithDU (operand *,bitVect *,bitVect *);
-
+iCode   *copyiCode (iCode *);
+operand *newiTempFromOp( operand *);
 #endif
