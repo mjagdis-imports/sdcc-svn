@@ -177,9 +177,9 @@ if test "${datadir}" = "\${prefix}/share"; then
 else
   sdcc_datadir=${datadir}
 fi
-AC_DEFINE_UNQUOTED(STANDARD_INCLUDE_DIR, "${sdcc_datadir}/sdcc51inc")
-AC_DEFINE_UNQUOTED(SDCC_INCLUDE_DIR, "${sdcc_datadir}/sdcc51inc")
-AC_DEFINE_UNQUOTED(SDCC_LIB_DIR, "${sdcc_datadir}/sdcc51lib")
+AC_DEFINE_UNQUOTED(STANDARD_INCLUDE_DIR, "${sdcc_datadir}/include")
+AC_DEFINE_UNQUOTED(SDCC_INCLUDE_DIR, "${sdcc_datadir}/include")
+AC_DEFINE_UNQUOTED(SDCC_LIB_DIR, "${sdcc_datadir}/lib")
 AC_DEFINE_UNQUOTED(STD_LIB, "libsdcc")
 AC_DEFINE_UNQUOTED(STD_INT_LIB, "libint")
 AC_DEFINE_UNQUOTED(STD_LONG_LIB, "liblong")
@@ -189,18 +189,55 @@ AC_DEFINE_UNQUOTED(PREFIX, "${prefix}")
 AC_DEFINE_UNQUOTED(DATADIR, "${sdcc_datadir}")
 AC_DEFINE_UNQUOTED(SRCDIR, "${config_in}")
 
+# mlh: dont compile libgc if it's available locally
+AC_CHECK_LIB(gc,GC_malloc,HAVE_LIBGC=1)
+AC_SUBST(HAVE_LIBGC)
+
+# Now handle the port selection
+AC_ARG_ENABLE(z80-port,--disable-z80-port: Excludes the z80 port)
+if test "$enable_z80_port" = "no"; then
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_Z80, 1)
+else
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_Z80, 0)
+fi
+
+AC_ARG_ENABLE(gbz80-port,--disable-gbz80-port: Excludes the Gameboy gbz80 port)
+if test "$enable_gbz80_port" = "no"; then
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_GBZ80, 1)
+else
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_GBZ80, 0)
+fi
+
+AC_ARG_ENABLE(mcs51-port,--disable-mcs51-port: Excludes the Intel mcs51 port)
+if test "$enable_mcs51_port" = "no"; then
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_MCS51, 1)
+else
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_MCS51, 0)
+fi
+
+AC_ARG_ENABLE(avr-port,--disable-avr-port: Excludes the AVR port)
+if test "$enable_avr_port" = "no"; then
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_AVR, 1)
+else
+    AC_DEFINE_UNQUOTED(OPT_DISABLE_AVR, 0)
+fi
 
 # Generating output files
 # ===========================================================================
-AC_CONFIG_SUBDIRS(s51.src)
+AC_CONFIG_SUBDIRS(sim/ucsim)
+# MLH: removed as the rules are already in Makefile.common
+#as/z80/Makefile
+#link/z80/Makefile
 AC_OUTPUT(main.mk:main_in.mk
 support/gc/Makefile
+support/gc/Makefile.cross
 src/Makefile
 as/mcs51/Makefile
 support/cpp/Makefile
 device/include/Makefile
 device/lib/Makefile
 debugger/mcs51/Makefile
+Makefile.common:Makefile.common.in
 )
 
 # End of configure/configure.in

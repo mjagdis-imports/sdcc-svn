@@ -50,17 +50,20 @@ typedef struct structdef {
 } structdef ;
 
 /* noun definitions */
-enum  { V_INT   =  0,
+typedef enum { 
+	V_INT   =  0,
 	V_FLOAT     ,
         V_CHAR      ,
         V_VOID      ,
         V_STRUCT    ,
         V_LABEL     ,
         V_BIT       ,
-        V_SBIT      };
+        V_SBIT      
+} NOUN;
 
 /* storage class    */
-enum  { S_FIXED  =  0,
+typedef enum { 
+    	S_FIXED  =  0,
         S_AUTO       ,
         S_REGISTER   ,        
         S_CONSTANT   ,
@@ -74,12 +77,14 @@ enum  { S_FIXED  =  0,
         S_LITERAL    ,
         S_STACK      ,
         S_XSTACK     ,
-        S_BIT        };
+        S_BIT        ,
+        S_EEPROM      
+} STORAGE_CLASS;
 
 /* specifier is the last in the type-chain */
 typedef struct specifier {
-    unsigned    noun        ;  /* CHAR INT STRUCTURE LABEL   */
-    unsigned    sclass      ;  /* REGISTER,AUTO,FIX,CONSTANT */
+    NOUN	noun        ;  /* CHAR INT STRUCTURE LABEL   */
+    STORAGE_CLASS sclass    ;  /* REGISTER,AUTO,FIX,CONSTANT */
     struct memmap *oclass   ;  /* output storage class       */
     unsigned    _long : 1   ;  /* 1=long            */
     unsigned    _short: 1	;	/* 1=short int	  */
@@ -96,6 +101,7 @@ typedef struct specifier {
     unsigned   _typedef :1  ;  /* is typedefed               */
     unsigned   _isregparm:1 ;  /* is the first parameter     */
     unsigned   _isenum   :1 ;  /* is an enumerated type      */
+    unsigned    nonbanked   :1  ;  /* function has the nonbanked attribute */
     unsigned   _IntNo       ;  /* 1=Interrupt svc routine    */
     short      _regbank     ;  /* register bank 2b used      */
     unsigned   _addr        ;  /* address of symbol          */
@@ -116,22 +122,25 @@ typedef struct specifier {
 } specifier ;
 
 /* types of declarators */
-enum {  POINTER   = 0,       /* pointer to near data */
+typedef enum {
+	POINTER   = 0,       /* pointer to near data */
         FPOINTER     ,       /* pointer to far data  */
         CPOINTER     ,       /* pointer to code space */
         GPOINTER     ,       /* _generic pointer     */
         PPOINTER     ,       /* paged area pointer   */
         IPOINTER     ,       /* pointer to upper 128 bytes */
 	UPOINTER     ,       /* unknown pointer used only when parsing */
+	EEPPOINTER   ,       /* pointer to eeprom     */
         ARRAY        ,
-        FUNCTION     };
+        FUNCTION     
+} DECLARATOR_TYPE;
 
 typedef struct declarator {
-    short    dcl_type;     /* POINTER,ARRAY or FUNCTION  */
-    short    num_elem;     /* # of elems if type==array  */
-    short    ptr_const :1;   /* pointer is constant        */
-    short    ptr_volatile:1; /* pointer is volatile        */
-    struct link *tspec;     /* pointer type specifier      */
+    DECLARATOR_TYPE dcl_type;       /* POINTER,ARRAY or FUNCTION  */
+    unsigned int    num_elem;       /* # of elems if type==array  */
+    short           ptr_const :1;   /* pointer is constant        */
+    short           ptr_volatile:1; /* pointer is volatile        */
+    struct link     *tspec;         /* pointer type specifier      */
 } declarator ;
 
 #define DECLARATOR   0
@@ -175,6 +184,7 @@ typedef struct symbol {
     unsigned isreqv     :1      ;  /* is the register quivalent of a symbol */
     unsigned hasFcall   :1      ;  /* for functions does it call other functions */
     unsigned calleeSave :1      ;  /* for functions uses callee save paradigm */
+    unsigned udChked    :1      ;  /* use def checking has been already done */
 
     /* following flags are used by the backend
        for code generation and can be changed
@@ -192,9 +202,13 @@ typedef struct symbol {
     unsigned onStack    :1      ;  /* this symbol allocated on the stack */
     unsigned iaccess    :1      ;  /* indirect access      */
     unsigned ruonly     :1      ;  /* used in return statement only */
-    unsigned accuse     :1      ;  /* can be left in the accumulator */
     unsigned spildir    :1      ;  /* spilt in direct space */
     unsigned ptrreg     :1      ;  /* this symbol assigned to a ptr reg */
+    unsigned accuse             ;  /* can be left in the accumulator
+				      On the Z80 accuse is devided into
+				      ACCUSE_A and ACCUSE_HL as the idea
+				      is quite similar.
+				   */
 
     int      stack              ;  /* offset on stack      */
     int      xstack             ;  /* offset on xternal stack */
@@ -228,6 +242,7 @@ typedef struct symbol {
     int      liveTo   ;            /* live to sequence number */    
     int      used     ;            /* no. of times this was used */
     int      recvSize ;            /* size of first argument  */
+    int      argStack ;            /* stacks used by parameters */
 
 } symbol ;
 
@@ -264,6 +279,7 @@ typedef struct symbol {
 #define SPEC_STRUCT(x) x->select.s.v_struct
 #define SPEC_TYPEDEF(x) x->select.s._typedef
 #define SPEC_REGPARM(x) x->select.s._isregparm
+#define SPEC_NONBANKED(x) x->select.s.nonbanked
 
 /* type check macros */
 #define IS_DECL(x)   ( x && x->class == DECLARATOR	)
@@ -275,6 +291,7 @@ typedef struct symbol {
 			             DCL_TYPE(x) == GPOINTER   ||    \
 			             DCL_TYPE(x) == IPOINTER   ||    \
 			             DCL_TYPE(x) == PPOINTER   ||    \
+			             DCL_TYPE(x) == EEPPOINTER ||    \
                                      DCL_TYPE(x) == CPOINTER   ||    \
                                      DCL_TYPE(x) == UPOINTER  ))
 #define IS_PTR_CONST(x) (IS_PTR(x) && DCL_PTR_CONST(x))
@@ -309,6 +326,9 @@ typedef struct symbol {
 #define IS_LITERAL(x)   (IS_SPEC(x)  && x->select.s.sclass == S_LITERAL)
 #define IS_ISR(x)		(IS_SPEC(x)  && SPEC_INTRTN(x))
 #define IS_REGPARM(x)   (IS_SPEC(x) && SPEC_REGPARM(x))
+#define IS_NONBANKED(x)   (IS_SPEC(x) && SPEC_NONBANKED(x))
+/* Note that !IS_BANKED is not IS_NONBANKED */
+#define IS_BANKED(x)	(IS_SPEC(x) && !SPEC_NONBANKED(x) && !SPEC_STAT(x))
 
 /* forward declaration for the global vars */
 extern bucket *SymbolTab[] ;
@@ -326,38 +346,19 @@ extern symbol *__fslt  ;
 extern symbol *__fslteq;
 extern symbol *__fsgt  ;
 extern symbol *__fsgteq;
-extern symbol *__fs2uchar;
-extern symbol *__fs2uint ;
-extern symbol *__fs2ulong;
-extern symbol *__fs2char;
-extern symbol *__fs2int ;
-extern symbol *__fs2long;
-extern symbol *__long2fs;
-extern symbol *__ulong2fs;
-extern symbol *__int2fs;
-extern symbol *__uint2fs;
-extern symbol *__char2fs;
-extern symbol *__uchar2fs;
-extern symbol *__muluint;
-extern symbol *__mulsint;
-extern symbol *__divuint;
-extern symbol *__divsint;
-extern symbol *__mululong;
-extern symbol *__mulslong;
-extern symbol *__divulong;
-extern symbol *__divslong;
-extern symbol *__moduint;
-extern symbol *__modsint;
-extern symbol *__modulong;
-extern symbol *__modslong;
 
-extern link *charType ;
-extern link *intType  ;
+/* Dims: mul/div/mod, BYTE/WORD/DWORD, SIGNED/UNSIGNED */
+extern symbol *__muldiv[3][3][2];
+/* Dims: BYTE/WORD/DWORD SIGNED/UNSIGNED */
+extern link *__multypes[3][2];
+/* Dims: to/from float, BYTE/WORD/DWORD, SIGNED/USIGNED */
+extern symbol *__conv[2][3][2];
+
+#define CHARTYPE	__multypes[0][0]
+#define INTTYPE		__multypes[1][0]
+#define UCHARTYPE	__multypes[0][1]
+
 extern link *floatType;
-extern link *longType ;
-extern link *ucharType ;
-extern link *uintType  ;
-extern link *ulongType ;
 
 #include "SDCCval.h"
 
@@ -381,7 +382,6 @@ char        *genSymName       ( int                            );
 int          compStructSize   ( int    ,structdef *            );
 link        *copyLinkChain    ( link    *                      );
 int          checkDecl        ( symbol *                       );
-void         checkSClass      ( symbol   *                     );
 void         checkBasic       ( link   *, link  *              );
 value       *checkPointerIval ( link   *, value *              );
 value       *checkStructIval  ( symbol *, value *              );

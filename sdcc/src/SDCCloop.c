@@ -22,20 +22,8 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
-#include <stdio.h>
-#include <stdlib.h>
-#include "SDCCglobl.h"
-#include "SDCCast.h"
-#include "SDCCmem.h"
-#include "SDCCy.h"
-#include "SDCChasht.h"
-#include "SDCCbitv.h"
-#include "SDCCset.h"
-#include "SDCCicode.h"
-#include "SDCClabel.h"
-#include "SDCCBBlock.h"
-#include "SDCCdflow.h"
-#include "SDCCloop.h"
+
+#include "common.h"
 
 DEFSETFUNC(isDefAlive);
 
@@ -884,6 +872,12 @@ set *basicInduction (region *loopReg , eBBlock **ebbs, int count)
 	    if (! applyToSetFTrue (basicInd,findInduction,aSym,&ip))
 		continue ;	    	    
 	    
+	    /* ask port for size not worth if native instruction
+	       exist for multiply & divide */
+	    if (getSize(operandType(IC_LEFT(ic))) <= port->muldiv.native_below ||
+		getSize(operandType(IC_RIGHT(ic))) <= port->muldiv.native_below)
+		continue;
+
 	    /* if this is a division then the remainder should be zero 
 	       for it to be inducted */
 	    if (ic->op == '/' && (ip->cval % litVal))
