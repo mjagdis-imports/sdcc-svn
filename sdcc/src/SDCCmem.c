@@ -2,17 +2,7 @@
 /* SDCCmem.c - 8051 memory management routines			   */
 /*-----------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <string.h>
-#include "SDCCglobl.h"
-#include "SDCCsymt.h"
-#include "SDCCmem.h"
-#include "SDCCval.h"
-#include "SDCCast.h"
-#include "SDCChasht.h"
-#include "SDCCset.h"
-#include "SDCCicode.h"
-#include "SDCCopt.h"
+#include "common.h"
 
 /* memory segments */
 memmap  *xstack= NULL ;	 /* xternal stack data	       */
@@ -28,6 +18,7 @@ memmap  *reg   = NULL;   /* register space              */
 memmap  *sfrbit= NULL;   /* sfr bit space               */
 memmap  *generic=NULL;   /* is a generic pointer        */
 memmap  *overlay=NULL;   /* overlay segment             */
+memmap  *eeprom =NULL;   /* eeprom location             */
 
 /* this is a set of sets each set containing
    symbols in a single overlay */
@@ -40,7 +31,7 @@ int maxRegBank = 0;
 int fatalError = 0			 ;/* fatal error flag			*/
 
 /*-----------------------------------------------------------------*/
-/* allocMap - allocates a memory map							   */
+/* allocMap - allocates a memory map				   */
 /*-----------------------------------------------------------------*/
 memmap *allocMap (char rspace,     /* sfr space            */
                   char farmap,     /* far or near segment  */
@@ -49,8 +40,9 @@ memmap *allocMap (char rspace,     /* sfr space            */
 		  char bitaddr,    /* bit addressable space*/
 		  char codemap,    /* this is code space   */
 		  unsigned sloc,   /* starting location    */
-		  char *name,      /* 2 character name     */
-		  char dbName     
+		  const char *name,      /* 2 character name     */
+		  char dbName    , /* debug name                 */
+		  int  ptrType     /* pointer type for this space */
 		  )
 {
 	memmap *map ;
@@ -70,7 +62,8 @@ memmap *allocMap (char rspace,     /* sfr space            */
 	map->sloc   =  sloc ;
 	map->sname = name ;
 	map->dbName = dbName ;
-	if (!(map->oFile = tmpfile())) {
+	map->ptrType= ptrType;
+	if (!(map->oFile = tempfile())) {
 		werror(E_TMPFILE_FAILED);
 		exit (1);
 	} 
@@ -84,7 +77,6 @@ memmap *allocMap (char rspace,     /* sfr space            */
 /*-----------------------------------------------------------------*/
 void initMem ()
 {	
-	
 	/* allocate all the segments */
 	/* xternal stack segment ;   
 	           SFRSPACE       -   NO
@@ -92,8 +84,11 @@ void initMem ()
 		   PAGED          -   YES
 		   DIRECT-ACCESS  -   NO
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */
-	xstack	  = allocMap (0, 1, 1, 0, 0, 0, options.xstack_loc, XSTACK_NAME,'A');
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'A'
+		   POINTER-TYPE   -   FPOINTER
+	*/
+	xstack	  = allocMap (0, 1, 1, 0, 0, 0, options.xstack_loc, XSTACK_NAME,'A',PPOINTER);
 
 	/* internal stack segment ;   
 	           SFRSPACE       -   NO
@@ -101,8 +96,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   NO
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */
-	istack	  = allocMap (0, 0, 0, 0, 0, 0,options.stack_loc, ISTACK_NAME,'B');
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'B'
+		   POINTER-TYPE   -   POINTER
+	*/
+	istack	  = allocMap (0, 0, 0, 0, 0, 0,options.stack_loc, ISTACK_NAME,'B',POINTER);
 
 	/* code  segment ;   
 	           SFRSPACE       -   NO
@@ -110,8 +108,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   NO
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   YES */
-	code 	  = allocMap (0, 1, 0, 0, 0, 1, options.code_loc, CODE_NAME,'C');
+		   CODE-ACESS     -   YES 
+		   DEBUG-NAME     -   'C'
+		   POINTER-TYPE   -   CPOINTER
+	*/
+	code 	  = allocMap (0, 1, 0, 0, 0, 1, options.code_loc, CODE_NAME,'C',CPOINTER);
 
 	/* Static segment (code for variables );
 	           SFRSPACE       -   NO
@@ -119,8 +120,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   NO
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   YES */
-	statsg	  = allocMap (0, 1, 0, 0, 0, 1,0, STATIC_NAME,'D');
+		   CODE-ACESS     -   YES 
+		   DEBUG-NAME     -   'D'
+		   POINTER-TYPE   -   CPOINTER
+	*/
+	statsg	  = allocMap (0, 1, 0, 0, 0, 1,0, STATIC_NAME,'D',CPOINTER);
 
 	/* Data segment - internal storage segment ;
 	           SFRSPACE       -   NO
@@ -128,8 +132,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   YES
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */	
-	data      = allocMap (0, 0, 0, 1, 0, 0, options.data_loc, DATA_NAME,'E');
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'E'
+		   POINTER-TYPE   -   POINTER
+	*/	
+	data      = allocMap (0, 0, 0, 1, 0, 0, options.data_loc, DATA_NAME,'E',POINTER);
 
 	/* overlay segment - same as internal storage segment ;
 	           SFRSPACE       -   NO
@@ -137,8 +144,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   YES
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */	
-	overlay   = allocMap (0, 0, 0, 1, 0, 0, options.data_loc, DATA_NAME,'E');
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'E'
+		   POINTER-TYPE   -   POINTER
+	*/
+	overlay   = allocMap (0, 0, 0, 1, 0, 0, options.data_loc, DATA_NAME,'E',POINTER);
 
 	/* Xternal Data segment - 
 	           SFRSPACE       -   NO
@@ -146,8 +156,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   NO
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */
-	xdata     = allocMap (0, 1, 0, 0, 0, 0, options.xdata_loc, XDATA_NAME,'F' );
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'F'
+		   POINTER-TYPE   -   FPOINTER
+	*/
+	xdata     = allocMap (0, 1, 0, 0, 0, 0, options.xdata_loc, XDATA_NAME,'F',FPOINTER);
 
 	/* Inderectly addressed internal data segment
 	           SFRSPACE       -   NO
@@ -155,8 +168,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   NO
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */
-	idata     = allocMap (0, 0, 0, 0, 0, 0, options.idata_loc,IDATA_NAME,'G' );
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'G'
+		   POINTER-TYPE   -   IPOINTER
+	*/
+	idata     = allocMap (0, 0, 0, 0, 0, 0, options.idata_loc,IDATA_NAME,'G',IPOINTER);
 
 	/* Static segment (code for variables );
 	           SFRSPACE       -   NO
@@ -164,8 +180,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   YES
 		   BIT-ACCESS     -   YES
-		   CODE-ACESS     -   NO */
-	bit	  = allocMap (0, 0, 0, 1, 1, 0,0, BIT_NAME,'H');
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'H'
+		   POINTER-TYPE   -  _NONE_
+	*/
+	bit	  = allocMap (0, 0, 0, 1, 1, 0,0, BIT_NAME,'H',0);
 	
 	/* Special function register space :-
 	           SFRSPACE       -   YES
@@ -173,8 +192,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   YES
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */
-	sfr        = allocMap (1,0, 0, 1, 0, 0,0, REG_NAME,'I');
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'I'
+		   POINTER-TYPE   -   _NONE_
+	*/
+	sfr        = allocMap (1,0, 0, 1, 0, 0,0, REG_NAME,'I',0);
 
 	/* Register space ;
 	           SFRSPACE       -   YES
@@ -182,8 +204,11 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   NO
 		   BIT-ACCESS     -   NO
-		   CODE-ACESS     -   NO */
-	reg        = allocMap (1,0, 0, 0, 0, 0, 0,REG_NAME,' ');
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   ' '
+		   POINTER-TYPE   -   _NONE_
+	*/
+	reg        = allocMap (1,0, 0, 0, 0, 0, 0,REG_NAME,' ',0);
 
 	/* SFR bit space 
 	           SFRSPACE       -   YES
@@ -191,12 +216,27 @@ void initMem ()
 		   PAGED          -   NO
 		   DIRECT-ACCESS  -   YES
 		   BIT-ACCESS     -   YES
-		   CODE-ACESS     -   NO */
-	sfrbit     = allocMap (1,0, 0, 1, 1, 0,0, REG_NAME,'J' );
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'J'
+		   POINTER-TYPE   -   _NONE_
+	*/
+	sfrbit     = allocMap (1,0, 0, 1, 1, 0,0, REG_NAME,'J',0);
+
+	/* EEPROM bit space 
+	           SFRSPACE       -   NO
+		   FAR-SPACE      -   YES
+		   PAGED          -   NO
+		   DIRECT-ACCESS  -   NO
+		   BIT-ACCESS     -   NO
+		   CODE-ACESS     -   NO 
+		   DEBUG-NAME     -   'K'
+		   POINTER-TYPE   -   EEPPOINTER
+	*/
+	eeprom     = allocMap (0,1, 0, 0, 0, 0,0, REG_NAME,'K',EEPPOINTER);
 
 	/* the unknown map */
-	generic     = allocMap (1,0, 0, 1, 1, 0,0, REG_NAME,' ' );
-
+	generic     = allocMap (1,0, 0, 1, 1, 0,0, REG_NAME,' ',GPOINTER);
+       
 }
 
 /*-----------------------------------------------------------------*/
@@ -205,7 +245,6 @@ void initMem ()
 void allocIntoSeg (symbol *sym) 
 {
     memmap *segment = SPEC_OCLS(sym->etype);
-
     addSet (&segment->syms,sym);
 }
 
@@ -215,7 +254,7 @@ void allocIntoSeg (symbol *sym)
 void allocGlobal ( symbol *sym )
 {
     /* symbol name is internal name  */
-    sprintf (sym->rname,"_%s",sym->name);
+    sprintf (sym->rname,"%s%s", port->fun_prefix, sym->name);
     
     /* add it to the operandKey reset */
     addSet(&operKeyReset,sym);
@@ -303,7 +342,7 @@ void allocGlobal ( symbol *sym )
     if ( SPEC_SCLS(sym->etype) == S_FIXED  ||
 	 SPEC_SCLS(sym->etype) == S_AUTO   ) {
 	/* set the output class */
-	SPEC_OCLS(sym->etype) = ( options.model  ? xdata : data ) ;
+	SPEC_OCLS(sym->etype) = port->mem.default_globl_map ;
 	/* generate the symbol  */
 	allocIntoSeg  (sym) ;
 	return   ;
@@ -329,6 +368,12 @@ void allocGlobal ( symbol *sym )
 	allocIntoSeg (sym)  ;
 	return ;
     }
+
+    if ( SPEC_SCLS(sym->etype) == S_EEPROM  )    {
+	SPEC_OCLS(sym->etype) = eeprom ;
+	allocIntoSeg (sym)  ;
+	return ;
+    }
     
     return ;
 }
@@ -343,21 +388,15 @@ void allocParms ( value  *val )
 
     for ( lval = val ; lval ; lval = lval->next, pNum++ ) {
 
-	/* if this is a literal e.g. enumerated type */
-	if (IS_LITERAL(lval->etype)) {
-	    SPEC_OCLS(lval->etype) = SPEC_OCLS(lval->sym->etype) = 
-		( options.model  ? xdata : data );
-	    continue;
-	}
+	/* check the declaration */
+	checkDecl (lval->sym);
+	
 	/* if this a register parm then allocate
 	   it as a local variable by adding it
 	   to the first block we see in the body */
 	if (IS_REGPARM(lval->etype)) 
 	    continue ;
 
-	/* check the declaration */
-	checkDecl (lval->sym);
-	
 	/* mark it as my parameter */
 	lval->sym->ismyparm = 1;
 	lval->sym->localof = currFunc;
@@ -372,6 +411,7 @@ void allocParms ( value  *val )
 	    /* choose which stack 2 use	  */
 	    /*  use xternal stack */
 	    if ( options.useXstack )	{
+		/* PENDING: stack direction support */
 		SPEC_OCLS(lval->etype) = SPEC_OCLS(lval->sym->etype) = xstack ;
 		SPEC_STAK(lval->etype) = SPEC_STAK(lval->sym->etype) = lval->sym->stack =
 		    xstackPtr - getSize(lval->type);		
@@ -379,17 +419,25 @@ void allocParms ( value  *val )
 	    }
 	    else   {	/* use internal stack   */
 		SPEC_OCLS(lval->etype) = SPEC_OCLS(lval->sym->etype) = istack ;
-		SPEC_STAK(lval->etype) = SPEC_STAK(lval->sym->etype) = lval->sym->stack = 
-		    stackPtr - ( SPEC_BANK(currFunc->etype) ? 1 : 0) - 
-		    getSize(lval->type) -
-		    (IS_ISR(currFunc->etype) ? 4 : 0); 
-		stackPtr -= getSize (lval->type);
+		if (port->stack.direction > 0) {
+		    SPEC_STAK(lval->etype) = SPEC_STAK(lval->sym->etype) = lval->sym->stack = 
+			stackPtr - ( SPEC_BANK(currFunc->etype) ? port->stack.bank_overhead : 0) - 
+			getSize(lval->type) -
+			(IS_ISR(currFunc->etype) ? port->stack.isr_overhead : 0); 
+		    stackPtr -= getSize (lval->type);
+		}
+		else {
+		    /* This looks like the wrong order but it turns out OK... */
+		    /* PENDING: isr, bank overhead, ... */
+		    SPEC_STAK(lval->etype) = SPEC_STAK(lval->sym->etype) = lval->sym->stack = stackPtr;
+		    stackPtr += getSize (lval->type);
+		}		    
 	    }
 	    allocIntoSeg(lval->sym);
 	}
 	else   {	/* allocate them in the automatic space */
 	    /* generate a unique name  */
-	    sprintf (lval->sym->rname,"_%s_PARM_%d",currFunc->name,pNum);
+	    sprintf (lval->sym->rname,"%s%s_PARM_%d", port->fun_prefix, currFunc->name,pNum);
 	    strcpy  (lval->name,lval->sym->rname);
 	    
 	    /* if declared in external storage */
@@ -401,7 +449,9 @@ void allocParms ( value  *val )
 		   first, we will remove it from the overlay segment
 		   after the overlay determination has been done */
 		SPEC_OCLS(lval->etype) = SPEC_OCLS(lval->sym->etype) = 
-		    ( options.model  ? xdata : (options.noOverlay ? data :overlay ));
+		    ( options.model  ? port->mem.default_local_map : 
+		      (options.noOverlay ? port->mem.default_local_map
+		       :overlay ));
 	    
 	    allocIntoSeg(lval->sym);
 	}
@@ -458,7 +508,8 @@ void allocLocal ( symbol *sym  )
 {   
     
     /* generate an unique name */
-    sprintf(sym->rname,"_%s_%s_%d_%d",
+    sprintf(sym->rname,"%s%s_%s_%d_%d",
+	    port->fun_prefix,
 	    currFunc->name,sym->name,sym->level,sym->block);
     
     sym->islocal = 1;
@@ -466,7 +517,8 @@ void allocLocal ( symbol *sym  )
 
     /* if this is a static variable */
     if ( IS_STATIC (sym->etype)) {
-	SPEC_OCLS(sym->etype) = (options.model ? xdata : data );
+/* 	SPEC_OCLS(sym->etype) = (options.model ? xdata : data ); */
+	SPEC_OCLS(sym->etype) = port->mem.default_local_map;
 	allocIntoSeg (sym);
         sym->allocreq = 1;
 	return   ;
@@ -483,14 +535,21 @@ void allocLocal ( symbol *sym  )
 	       
 	sym->onStack = 1;
 	if ( options.useXstack ) { 
+	    /* PENDING: stack direction for xstack */
 	    SPEC_OCLS(sym->etype) = xstack ;
 	    SPEC_STAK(sym->etype) = sym->stack = (xstackPtr + 1);
 	    xstackPtr += getSize (sym->type) ;
 	}
 	else {
 	    SPEC_OCLS(sym->etype) = istack ;
-	    SPEC_STAK(sym->etype) = sym->stack = ( stackPtr + 1);
-	    stackPtr += getSize (sym->type) ;
+	    if (port->stack.direction > 0) {
+		SPEC_STAK(sym->etype) = sym->stack = ( stackPtr + 1);
+		stackPtr += getSize (sym->type) ;
+	    }
+	    else {
+		stackPtr -= getSize (sym->type);
+		SPEC_STAK(sym->etype) = sym->stack = stackPtr;
+	    }
 	}
 	allocIntoSeg(sym);
 	return ;
@@ -550,11 +609,24 @@ void allocLocal ( symbol *sym  )
 	return  ;
     }
 
+    if ( SPEC_SCLS(sym->etype) == S_DATA  ) {
+	SPEC_OCLS(sym->etype) = (options.noOverlay ? data : overlay );
+	allocIntoSeg(sym)  ;
+	return ;
+    }
+
+    if ( SPEC_SCLS(sym->etype) == S_EEPROM  ) {
+	SPEC_OCLS(sym->etype) = eeprom;
+	allocIntoSeg(sym)  ;
+	return ;
+    }
+    
     /* again note that we have put it into the overlay segment
        will remove and put into the 'data' segment if required after 
        overlay  analysis has been done */   
-    SPEC_OCLS(sym->etype) = ( options.model  ? xdata : 
-			      (options.noOverlay ? data : overlay )) ;
+    SPEC_OCLS(sym->etype) = ( options.model  ? port->mem.default_local_map : 
+			      (options.noOverlay ? port->mem.default_local_map
+			       : overlay )) ;
     allocIntoSeg (sym); 
 }
 
@@ -714,12 +786,18 @@ void redoStackOffsets ()
 	int size = getSize(sym->type);
 	/* nothing to do with parameters so continue */
 	if ((sym->_isparm && !IS_REGPARM(sym->etype)))
-		continue ;
+	    continue ;
 	
 	if ( IS_AGGREGATE(sym->type)) {
+	    if (port->stack.direction > 0) {
 		SPEC_STAK(sym->etype) = sym->stack = ( sPtr + 1);
 		sPtr += size;
-		continue ;
+	    }
+	    else {
+		sPtr -= size;
+		SPEC_STAK(sym->etype) = sym->stack = sPtr;
+	    }
+	    continue;
 	}
 
 	/* if allocation not required then subtract
@@ -730,8 +808,14 @@ void redoStackOffsets ()
 	    continue ;
 	}
 
-	SPEC_STAK(sym->etype) = sym->stack = ( sPtr + 1);
-	sPtr += size ;
+	if (port->stack.direction > 0) {
+	    SPEC_STAK(sym->etype) = sym->stack = ( sPtr + 1);
+	    sPtr += size ;
+	}
+	else {
+	    sPtr -= size ;
+	    SPEC_STAK(sym->etype) = sym->stack = sPtr;
+	}
     }
 
     /* do the same for the external stack */
@@ -742,12 +826,12 @@ void redoStackOffsets ()
 	int size  = getSize(sym->type);
 	/* nothing to do with parameters so continue */
 	if ((sym->_isparm && !IS_REGPARM(sym->etype)))
-		continue ;
+	    continue ;
 	
 	if (IS_AGGREGATE(sym->type)) {
-		SPEC_STAK(sym->etype) = sym->stack = ( xsPtr + 1);
-		xsPtr += size ;
-		continue ;
+	    SPEC_STAK(sym->etype) = sym->stack = ( xsPtr + 1);
+	    xsPtr += size ;
+	    continue ;
 	}      
 
 	/* if allocation not required then subtract

@@ -23,22 +23,8 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
-#include <stdio.h>
-#include <stdlib.h>
-#include "SDCCglobl.h"
-#include "SDCCast.h"
-#include "SDCCmem.h"
-#include "SDCCy.h"
-#include "SDCChasht.h"
-#include "SDCCbitv.h"
-#include "SDCCset.h"
-#include "SDCCicode.h"
-#include "SDCClabel.h"
-#include "SDCCBBlock.h"
-#include "SDCCloop.h"
-#include "SDCCcse.h"
-#include "SDCCcflow.h"
-#include "SDCCdflow.h"
+
+#include "common.h"
 
 /*-----------------------------------------------------------------*/
 /* ifKilledInBlock - will return 1 if the symbol is redefined in B */
@@ -111,18 +97,26 @@ DEFSETFUNC(mergeInExprs)
     /* if in the dominator list then */
     if (bitVectBitValue(dest->domVect,ebp->bbnum) && dest != ebp) {
 	/* if already present then intersect */
-	if (!dest->inExprs && *firstTime) 
+	if (!dest->inExprs && *firstTime) {
 	    dest->inExprs = setFromSet(ebp->outExprs);
-	else
+	    /* copy the pointer set from the dominator */
+	    dest->inPtrsSet = bitVectCopy(ebp->ptrsSet);
+	    dest->ndompset  = bitVectCopy(ebp->ndompset);
+	}
+	else {
 	    dest->inExprs = intersectSets (dest->inExprs,
 					   ebp->outExprs,
-					   THROW_DEST);    
-	/* copy the pointer set from the dominator */
-	dest->inPtrsSet = bitVectCopy(ebp->ptrsSet);
+					   THROW_DEST);  
+	    dest->inPtrsSet = bitVectUnion(dest->inPtrsSet,ebp->ptrsSet);
+	    dest->ndompset  = bitVectUnion(dest->ndompset,ebp->ndompset);
+	}
     }
-    else 
+    else {
 	/* delete only if killed in this block */
 	deleteItemIf (&dest->inExprs,ifKilledInBlock, ebp);
+	/* union the ndompset with pointers set in this block*/
+	dest->ndompset = bitVectUnion(dest->ndompset,ebp->ptrsSet);
+    }
     
     *firstTime = 0;
 

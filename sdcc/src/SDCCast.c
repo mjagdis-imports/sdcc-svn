@@ -22,16 +22,7 @@
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <string.h>
-#include "SDCCglobl.h"
-#include "SDCCast.h"
-#include "SDCCmem.h"
-#include "SDCCy.h"
-#include "SDCChasht.h"
-#include "SDCCicode.h"
-#include "SDCCopt.h"
-
+#include "common.h"
 
 int currLineno  = 0;
 set *astList = NULL ;
@@ -423,6 +414,9 @@ int setAstLineno ( ast *tree, int lineno)
     return 0;
 }
 
+#if 0
+/* this functions seems to be superfluous?! kmh */
+
 /*-----------------------------------------------------------------*/
 /* resolveFromTable - will return the symbal table value           */
 /*-----------------------------------------------------------------*/
@@ -448,6 +442,7 @@ value *resolveFromTable (value *val)
 
     return val;
 }
+#endif
 
 /*-----------------------------------------------------------------*/
 /* funcOfType :- function of type with name                        */
@@ -456,7 +451,7 @@ symbol *funcOfType (char *name, link *type, link *argType,
 		    int nArgs , int rent)
 {
     symbol *sym;    
-    	
+    int argStack = 0; 	
     /* create the symbol */
     sym = newSymbol (name,0);
 	
@@ -467,6 +462,7 @@ symbol *funcOfType (char *name, link *type, link *argType,
 	args = sym->args = newValue();
 
 	while (nArgs--) {
+	    argStack += getSize(type);
 	    args->type = copyLinkChain(argType);
 	    args->etype = getSpec(args->type);
 	    if (!nArgs)
@@ -485,6 +481,7 @@ symbol *funcOfType (char *name, link *type, link *argType,
     /* save it */
     addSymChain(sym);
     sym->cdef = 1;
+    sym->argStack = (rent ? argStack : 0);
     allocVariables (sym);
     return sym;
     
@@ -584,10 +581,12 @@ int processParms (ast *func, value *defParm,
 	actParm->ftype= defParm->type;
     }
     
-    actParm->argSym = resolveFromTable(defParm)->sym ;
+/*    actParm->argSym = resolveFromTable(defParm)->sym ; */
+    actParm->argSym = defParm->sym;
     /* make a copy and change the regparm type to the defined parm */
     actParm->etype = getSpec(actParm->ftype = copyLinkChain(actParm->ftype));
     SPEC_REGPARM(actParm->etype) = SPEC_REGPARM(defParm->etype);
+    (*parmNumber)++;
     return 0;
 }
 /*-----------------------------------------------------------------*/
@@ -602,7 +601,7 @@ ast *createIvalType ( ast *sym,link  *type, initList *ilist)
 	ilist =  ilist->init.deep  ;
     
     iExpr = decorateType(resolveSymbols(list2expr(ilist)));
-    return newNode('=',sym,iExpr);
+    return decorateType(newNode('=',sym,iExpr));
 }
 
 /*-----------------------------------------------------------------*/
@@ -629,9 +628,9 @@ ast *createIvalStruct (ast *sym,link *type,initList *ilist)
 	if (!iloop)
 	    break;
 	sflds->implicit = 1;
-	lAst = decorateType(resolveSymbols(newNode('.',sym,
-						   newAst(EX_VALUE,symbolVal(sflds)))));
-	rast = createIval (lAst, sflds->type, iloop,rast);
+	lAst = newNode(PTR_OP,newNode('&',sym,NULL),newAst(EX_VALUE,symbolVal(sflds)));
+	lAst = decorateType(resolveSymbols(lAst));
+	rast = decorateType(resolveSymbols(createIval (lAst, sflds->type, iloop,rast)));
     }
     return rast ;
 }
@@ -654,7 +653,7 @@ ast *createIvalArray (ast  *sym, link *type, initList *ilist)
 				       type,
 				       decorateType(resolveSymbols(list2expr(ilist))))))
 	    
-	    return rast;
+	    return decorateType(resolveSymbols(rast));
     
     /* not the special case             */
     if (ilist->type != INIT_DEEP) {
@@ -690,7 +689,7 @@ ast *createIvalArray (ast  *sym, link *type, initList *ilist)
     if (!DCL_ELEM(type))
 	DCL_ELEM(type) = size;
     
-    return rast;
+    return decorateType(resolveSymbols(rast));
 }
 
 
@@ -735,7 +734,7 @@ ast *createIvalCharPtr (ast *sym, link *type, ast *iexpr)
 				   newNode('[',	sym,
 					   newAst(EX_VALUE,valueFromLit(i))),
 				   newAst(EX_VALUE,valueFromLit(*s))));
-	return rast;
+	return decorateType(resolveSymbols(rast));
     }
 
     return NULL ;
@@ -789,13 +788,13 @@ ast  *createIval  (ast *sym, link *type, initList *ilist, ast *wid)
 		if (IS_SPEC(type))
 		    rast =  createIvalType (sym,type,ilist);
     if ( wid )
-	return newNode(NULLOP,wid,rast);
+	return decorateType(resolveSymbols(newNode(NULLOP,wid,rast)));
     else
-	return rast ;
+	return decorateType(resolveSymbols(rast)) ;
 }
 
 /*-----------------------------------------------------------------*/
-/* initAggregates - initialises aggregate variables with initv */
+/* initAggregates - initialises aggregate variables with initv     */
 /*-----------------------------------------------------------------*/
 ast *initAggregates ( symbol *sym, initList *ival, ast *wid)
 {
@@ -1233,7 +1232,12 @@ bool isConformingBody (ast *pbody, symbol *sym, ast *body)
 		return FALSE;
 	    else
 		return isConformingBody(pbody->left,sym,body) ;
-	} 
+	} else {
+	    if (astHasSymbol(pbody->left,sym) ||
+		astHasSymbol(pbody->right,sym))
+		return FALSE;
+	}
+
 	
 	/*------------------------------------------------------------------*/
     case  '|':
@@ -1524,7 +1528,7 @@ ast *decorateType (ast *tree)
 		  TTYPE(tree) = TETYPE(tree) =
 		    tree->opval.val->type = tree->opval.val->sym->type = 
 		    tree->opval.val->etype = tree->opval.val->sym->etype = 
-		    copyLinkChain(intType);
+		    copyLinkChain(INTTYPE);
 		}
 		else {
 		  
@@ -1758,7 +1762,7 @@ ast *decorateType (ast *tree)
 	}
 	if (SPEC_SCLS(tree->left->etype) == S_CODE) {
 	    DCL_TYPE(p) = CPOINTER ;
-	    DCL_PTR_CONST(p) = 1;
+	    DCL_PTR_CONST(p) = port->mem.code_ro;
 	}
 	else
 	    if (SPEC_SCLS(tree->left->etype) == S_XDATA)
@@ -1770,7 +1774,10 @@ ast *decorateType (ast *tree)
 		    if (SPEC_SCLS(tree->left->etype) == S_IDATA)
 			DCL_TYPE(p) = IPOINTER ;
 		    else
-			DCL_TYPE(p) = POINTER ;
+			if (SPEC_SCLS(tree->left->etype) == S_EEPROM)
+			    DCL_TYPE(p) = EEPPOINTER ;
+			else
+			    DCL_TYPE(p) = POINTER ;
 
 	if (IS_AST_SYM_VALUE(tree->left)) {
 	    AST_SYMBOL(tree->left)->addrtaken = 1;
@@ -2217,7 +2224,11 @@ ast *decorateType (ast *tree)
 	    return tree;
 	}
 	LRVAL(tree) = RRVAL(tree) = 1;
-	COPYTYPE(TTYPE(tree),TETYPE(tree),LTYPE(tree));
+	if (IS_LITERAL(LTYPE(tree)) && !IS_LITERAL(RTYPE(tree))) {	    
+	    COPYTYPE(TTYPE(tree),TETYPE(tree),RTYPE(tree));	
+	} else {
+	    COPYTYPE(TTYPE(tree),TETYPE(tree),LTYPE(tree));
+	}
 	return tree ;
         
 	/*------------------------------------------------------------------*/
@@ -2782,7 +2793,7 @@ ast *backPatchLabels (ast *tree, symbol *trueLabel, symbol *falseLabel )
     
     /* change not */
     if (IS_NOT(tree)) {
-	tree->left = backPatchLabels (tree->left,trueLabel,falseLabel);
+	tree->left = backPatchLabels (tree->left,falseLabel,trueLabel);
 	
 	/* if the left is already a IFX */
 	if ( ! IS_IFX(tree->left) ) 
@@ -3085,7 +3096,7 @@ ast *createFor ( symbol *trueLabel, symbol *continueLabel ,
     /* vanilla for statement */
     condExpr = backPatchLabels(condExpr,trueLabel,falseLabel);
     
-    if (!IS_IFX(condExpr)) 
+    if (condExpr && !IS_IFX(condExpr)) 
 	condExpr = newIfxNode(condExpr,trueLabel,falseLabel);
     
     
@@ -3538,8 +3549,14 @@ ast  *createFunction   (symbol  *name,   ast  *body )
     processFuncArgs(currFunc,0);
     
     /* set the stack pointer */
-    stackPtr = -1 - (IS_ISR(name->etype)) - (IS_RENT(name->etype) | options.stackAuto);
-    xstackPtr= -1;
+    /* PENDING: check this for the mcs51 */
+    stackPtr = -port->stack.direction * port->stack.call_overhead;
+    if (IS_ISR(name->etype))
+	stackPtr -= port->stack.direction * port->stack.isr_overhead;
+    if (IS_RENT(name->etype) || options.stackAuto)
+	stackPtr -= port->stack.direction * port->stack.reent_overhead;
+
+    xstackPtr = -port->stack.direction * port->stack.call_overhead;
     
     fetype = getSpec(name->type); /* get the specifier for the function */
     /* if this is a reentrant function then */
@@ -3565,7 +3582,7 @@ ast  *createFunction   (symbol  *name,   ast  *body )
 	name->stack = SPEC_STAK(fetype) = stack;
     
     /* name needs to be mangled */
-    sprintf (name->rname,"_%s",name->name);
+    sprintf (name->rname,"%s%s", port->fun_prefix, name->name);
     
     body = resolveSymbols(body); /* resolve the symbols */
     body = decorateType (body);  /* propagateType & do semantic checks */

@@ -21,13 +21,22 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+
+#include "common.h"
 #include <ctype.h>
 
+#if NATIVE_WIN32
+#include <process.h>
+#else
 #include "spawn.h"
-#include "SDCCglobl.h"
+#endif
+
+/* This is a bit messy.  We cant include unistd.h as it defines
+   'link' which we also use.
+*/
+int access(const char *path, int mode);
+#define X_OK 1
+int unlink(const char *path);
 
 extern void		initSymt		();
 extern void		initMem			();
@@ -46,8 +55,7 @@ FILE  *cdbFile = NULL  ;/* debugger information output file */
 char  *fullSrcFileName ;/* full name for the source file */
 char  *srcFileName     ;/* source file name with the .c stripped */
 char  *moduleName      ;/* module name is srcFilename stripped of any path */
-char *preArgv[128]	   ;/* pre-processor arguments	*/
-int   preArgc	= 0	   ;/* pre-processor argument count	*/
+const char *preArgv[128]	   ;/* pre-processor arguments	*/
 int   currRegBank = 0 ;
 struct optimize optimize ;
 struct options  options ;
@@ -55,19 +63,22 @@ char *VersionString = SDCC_VERSION_STR /*"Version 2.1.8a"*/;
 short preProcOnly = 0;
 short noAssemble = 0;
 char *linkOptions[128];
-char *asmOptions[128];
+const char *asmOptions[128];
 char *libFiles[128] ;
 int nlibFiles = 0;
 char *libPaths[128] ;
 int nlibPaths = 0;
 char *relFiles[128];
 int nrelFiles = 0;
+bool verboseExec = FALSE;
 //extern int wait (int *);
 char    *preOutName;
 
 #define OPTION_LARGE_MODEL "-model-large"
 #define OPTION_SMALL_MODEL "-model-small"
+#define OPTION_FLAT24_MODEL "-model-flat24"
 #define OPTION_STACK_AUTO  "-stack-auto"
+#define OPTION_STACK_10BIT "-stack-10bit"
 #define OPTION_XSTACK      "-xstack"
 #define OPTION_GENERIC     "-generic"
 #define OPTION_NO_GCSE     "-nogcse"
@@ -107,18 +118,136 @@ char    *preOutName;
 #define OPTION_VERSION     "-version"
 #define OPTION_STKAFTRDATA "-stack-after-data"
 #define OPTION_PREPROC_ONLY "-preprocessonly"
+#define OPTION_C1_MODE   "-c1mode"
 #define OPTION_HELP         "-help"
 #define OPTION_CALLEE_SAVES "-callee-saves"
 #define OPTION_NOREGPARMS   "-noregparms"
+
+static const char *_preCmd[] = {
+    "sdcpp", "-Wall", "-lang-c++", "-DSDCC=1", 
+    "-I" SDCC_INCLUDE_DIR, "$l", "$1", "$2", NULL
+};
+
+#if !OPT_DISABLE_MCS51
+extern PORT mcs51_port;
+#endif
+#if !OPT_DISABLE_GBZ80
+extern PORT gbz80_port;
+#endif
+#if !OPT_DISABLE_Z80
+extern PORT z80_port;
+#endif
+#if !OPT_DISABLE_AVR
+extern PORT avr_port;
+#endif
+
+PORT *port;
+
+static PORT *_ports[] = {
+#if !OPT_DISABLE_MCS51
+   &mcs51_port,
+#endif
+#if !OPT_DISABLE_GBZ80
+    &gbz80_port,
+#endif
+#if !OPT_DISABLE_Z80
+    &z80_port,
+#endif
+#if !OPT_DISABLE_AVR
+    &avr_port,
+#endif
+};
+
+#define NUM_PORTS (sizeof(_ports)/sizeof(_ports[0]))
+
+/** Sets the port to the one given by the command line option.
+    @param		The name minus the option (eg 'mcs51')
+    @return 		0 on success.
+*/
+static int _setPort(const char *name)
+{
+    int i;
+    for (i=0; i<NUM_PORTS; i++) {
+	if (!strcmp(_ports[i]->target, name)) {
+	    port = _ports[i];
+	    return 0;
+	}
+    }
+    /* Error - didnt find */
+    werror(E_UNKNOWN_TARGET,name);
+    exit(1);
+}
+
+static void _buildCmdLine(char *into, char **args, const char **cmds, 
+			  const char *p1, const char *p2, 
+			  const char *p3, const char **list)
+{
+    const char *p, *from;
+
+    while (*cmds) {
+	*args = into;
+	args++;
+
+	from = *cmds;
+	cmds++;
+	*into = '\0';
+
+	/* See if it has a '$' anywhere - if not, just copy */
+	if ((p = strchr(from, '$'))) {
+	    strncpy(into, from, p - from);
+	    from = p+2;
+	    p++;
+	    switch (*p) {
+	    case '1':
+		if (p1)
+		    strcat(into, p1);
+		break;
+	    case '2':
+		if (p2)
+		    strcat(into, p2);
+		break;
+	    case '3':
+		if (p3)
+		    strcat(into, p3);
+		break;
+	    case 'l': {
+		const char **tmp = list;
+		if (tmp) {
+		    while (*tmp) {
+			strcpy(into, *tmp);
+			into += strlen(into)+1;
+			*args = into;
+			args++;
+			tmp++;
+		    }
+		}
+		break;
+	    }
+	    default:
+		assert(0);
+	    }
+	}
+	strcat(into, from);
+	if (strlen(into) == 0)
+	    args--;
+	into += strlen(into)+1;
+    }
+    *args = NULL;
+}
+
 /*-----------------------------------------------------------------*/
 /* printVersionInfo - prints the version info			   */
 /*-----------------------------------------------------------------*/
 void	printVersionInfo ()
 {
+    int i;
     
+    fprintf (stderr,
+	     "SDCC : ");
+    for (i=0; i<NUM_PORTS; i++)
+	fprintf(stderr, "%s%s", i==0 ? "" : "/", _ports[i]->target);
 
-	fprintf (stderr					,
-		"SDCC : MCU 8051 %s "
+    fprintf(stderr, " %s `"
 #ifdef __CYGWIN32__
 		" (CYGWIN32)\n"
 #else
@@ -128,8 +257,8 @@ void	printVersionInfo ()
 		" (UNIX) \n"
 # endif
 #endif
-		 , VersionString
-		    );
+	    , VersionString
+	    );
 }
 
 /*-----------------------------------------------------------------*/
@@ -141,6 +270,8 @@ void	printUsage ()
 	fprintf (stderr,
 		 "Usage : [options] filename\n"
 		 "Options :-\n"
+		 "\t-m<proc>             -     Target processor <proc>.  Default %s\n"
+		 "\t                           Try --version for supported values of <proc>\n"
 		 "\t--model-large        -     Large Model\n"
 		 "\t--model-small        -     Small Model (default)\n"
 		 "\t--stack-auto         -     Stack automatic variables\n"
@@ -157,7 +288,9 @@ void	printUsage ()
 		 "PreProcessor Options :-\n"
 		 "\t-Dmacro		-	Define Macro\n"		 
 		 "\t-Ipath		-	Include \"*.h\" path\n"
-		 "Note: this is a complete list of options see docs for details\n");		
+		 "Note: this is a complete list of options see docs for details\n",
+		 _ports[0]->target
+		 );		
 	exit (0);
 }
 
@@ -192,14 +325,9 @@ static void setDefaultOptions()
     int i ;
 
     for ( i = 0 ; i < 128 ; i++)
-	preArgv[i] = linkOptions [i] =
-	    asmOptions[i] = relFiles[i] = libFiles[i] =
+	preArgv[i] = asmOptions [i] =
+	    linkOptions[i] = relFiles[i] = libFiles[i] =
 	    libPaths[i] = NULL ;
-    preArgv[preArgc++] = "-version";
-    preArgv[preArgc++] = "-Wall";
-    preArgv[preArgc++] = "-lang-c++";
-    preArgv[preArgc++] = "-DSDCC=1";
-    preArgv[preArgc++] = "-I" SDCC_INCLUDE_DIR ;
 
     /* first the options part */
     options.stack_loc = 0; /* stack pointer initialised to 0 */
@@ -220,6 +348,8 @@ static void setDefaultOptions()
     optimize.label4 = 1;    
     optimize.loopInvariant = 1;
     optimize.loopInduction = 1;
+
+    port->setDefaultOptions();
 }
 
 /*-----------------------------------------------------------------*/
@@ -241,7 +371,7 @@ static void processFile (char *s)
     }
 
     /* otherwise depending on the file type */
-    if (strcmp(fext,".c") == 0 || strcmp(fext,".C") == 0) {
+    if (strcmp(fext,".c") == 0 || strcmp(fext,".C") == 0 || options.c1mode) {
 	/* source file name : not if we already have a 
 	   source file */
 	if (srcFileName) {
@@ -298,6 +428,32 @@ static void processFile (char *s)
   
 }
 
+static void _processC1Arg(char *s)
+{
+    if (srcFileName) {
+	if (options.out_name) {
+	    werror(W_TOO_MANY_SRC,s);
+	    return;
+	}
+	options.out_name = strdup(s);
+    }
+    else {
+	processFile(s);
+    }
+}
+
+static void _addToList(const char **list, const char *str)
+{
+    /* This is the bad way to do things :) */
+    while (*list)
+	list++;
+    *list = strdup(str);
+    if (!*list) {
+	werror(E_OUT_OF_MEM,__FILE__, 0);
+	exit (1);
+    }
+    *(++list) = NULL;
+}
 
 /*-----------------------------------------------------------------*/
 /* parseCmdLine - parses the command line and sets the options     */
@@ -326,13 +482,23 @@ int   parseCmdLine ( int argc, char **argv )
 	    }
 
 	    if (strcmp(&argv[i][1],OPTION_LARGE_MODEL) == 0) {
-		options.model = 1;
+		options.model = MODEL_LARGE;
                 continue;
 	    }
 	    
 	    if (strcmp(&argv[i][1],OPTION_SMALL_MODEL) == 0) {
-		options.model = 0;
+		options.model = MODEL_SMALL;
                 continue;
+	    }
+	    
+	    if (strcmp(&argv[i][1],OPTION_FLAT24_MODEL) == 0) {
+		options.model = MODEL_FLAT24;
+                continue;
+	    }
+	    
+	    if (strcmp(&argv[i][1],OPTION_STACK_10BIT) == 0) {
+	    	options.stack10bit = 1;
+	    	continue;
 	    }
 
 	    if (strcmp(&argv[i][1],OPTION_STACK_AUTO) == 0) {
@@ -412,6 +578,11 @@ int   parseCmdLine ( int argc, char **argv )
 
 	    if (strcmp(&argv[i][1],OPTION_PREPROC_ONLY) == 0) {
 		preProcOnly = 1;
+                continue;
+	    }
+
+	    if (strcmp(&argv[i][1],OPTION_C1_MODE) == 0) {
+		options.c1mode = 1;
                 continue;
 	    }
 
@@ -603,14 +774,23 @@ int   parseCmdLine ( int argc, char **argv )
                 continue;
 	    }
 
-	    werror(W_UNKNOWN_OPTION,argv[i]);
+	    if (!port->parseOption(&argc, argv, &i))
+	    {
+		werror(W_UNKNOWN_OPTION,argv[i]);
+	    }
+	    else
+	    {
+	    	continue;
+	    }
 	}      
 
 	/* these are undocumented options */
 	/* if preceded by '/' then turn off certain optmizations, used
 	   for debugging only these are also the legacy options from
-	   version 1.xx will be removed gradually */
-	if ( *argv[i] == '/') {
+	   version 1.xx will be removed gradually.
+	   It may be an absolute filename.
+	*/
+	if ( *argv[i] == '/' && strlen(argv[i]) < 3) {
 	    switch (argv[i][1]) {
 		
 	    case 'p':
@@ -673,7 +853,10 @@ int   parseCmdLine ( int argc, char **argv )
 		break;
 
 	    case 'm':
-		werror(W_UNSUPP_OPTION,"-mL/-mS","use --model-large/--model-small instead");
+		/* Used to select the port */
+		if (_setPort(argv[i] + 2)) {
+		    werror(W_UNSUPP_OPTION,"-m","Unrecognised processor");
+		}
 		break;
 	    
 	    case 'a'	: 
@@ -735,9 +918,9 @@ int   parseCmdLine ( int argc, char **argv )
 		    /* assembler options */
 		    if (argv[i][2] == 'a') {
 			if (argv[i][3])
-			    parseWithComma(asmOptions,&argv[i][3]);
+			    parseWithComma((char **)asmOptions,&argv[i][3]);
 			else
-			    parseWithComma(asmOptions,argv[++i]);
+			    parseWithComma((char **)asmOptions,argv[++i]);
 			
 		    } else {
 			werror(W_UNKNOWN_OPTION,argv[i]);		       
@@ -749,8 +932,12 @@ int   parseCmdLine ( int argc, char **argv )
 		break;
 
 	    case 'v':
+#if FEATURE_VERBOSE_EXEC
+		verboseExec = TRUE;
+#else
 		printVersionInfo();
 		exit(0);
+#endif
 		break;
 
 		/* preprocessor options */		
@@ -772,36 +959,30 @@ int   parseCmdLine ( int argc, char **argv )
 		    else
 			rest = &argv[i][2] ;
 		    
-		    /* increase allocation for preprocessor argv 
-		       if (!(preArgv = realloc(preArgv,(preArgc+1)*sizeof(char **)))) {
-		       werror (E_OUT_OF_MEM);
-		       exit (1);
-		       } */
 		    if ( argv[i][1] == 'Y' )
 			argv[i][1] = 'I';
 		    if (argv[i][1] == 'M')
 			preProcOnly = 1;
 
-		    if (!(preArgv[preArgc] = GC_malloc(strlen(rest)+3))) {
-			werror(E_OUT_OF_MEM,__FILE__,strlen(rest)+3);			
-			exit (1);
-		    }
-		    
-		    sprintf(preArgv[preArgc],"-%c%s",sOpt,rest);
-		    preArgc++ ;
+		    sprintf(buffer, "-%c%s", sOpt, rest);
+		    _addToList(preArgv, buffer);
 		}
 		break ;
 
 	    default:
-		werror(W_UNKNOWN_OPTION,argv[i]);		
+		if (!port->parseOption(&argc, argv, &i))
+		    werror(W_UNKNOWN_OPTION,argv[i]);
 	    }
 	    continue ;
 	}
 
-	/* no option must be a filename */
-	processFile(argv[i]);
-
-
+	if (!port->parseOption(&argc, argv, &i)) {
+	    /* no option must be a filename */
+	    if (options.c1mode)
+		_processC1Arg(argv[i]);
+	    else
+		processFile(argv[i]);
+	}
     }	
 
     /* set up external stack location if not explicitly specified */
@@ -827,16 +1008,51 @@ int   parseCmdLine ( int argc, char **argv )
 char *try_dir[]= {SRCDIR "/bin",PREFIX "/bin", NULL};
 int my_system (const char *cmd, char **cmd_argv)
 {    
-
     char *dir, *got= NULL; int i= 0;
-    while (!got && try_dir[i]) {
-	dir= (char*)malloc(strlen(try_dir[i])+strlen(cmd)+10);
-	strcpy(dir, try_dir[i]); strcat(dir, "/"); strcat(dir, cmd);
-	if (access(dir, X_OK) == 0)
-	    got= strdup(dir);
-	free(dir);
-	i++;
+
+    while (!got && try_dir[i])
+    {
+        dir= (char*)malloc(strlen(try_dir[i])+strlen(cmd)+10);
+        strcpy(dir, try_dir[i]);
+        strcat(dir, "/");
+        strcat(dir, cmd);
+
+#if NATIVE_WIN32
+        strcat(dir, ".exe");
+
+        /* Mung slashes into backslashes to keep WIndoze happy. */
+	{
+	    char *r;
+	    r = dir;
+	    
+	    while (*r)
+		{
+		    if (*r == '/')
+			{
+			    *r = '\\';
+			}
+		    r++;
+		}
+	}
+#endif
+
+        if (access(dir, X_OK) == 0)
+        {
+            got= strdup(dir);
+        }
+        free(dir);
+        i++;
     }
+#if FEATURE_VERBOSE_EXEC
+    if (verboseExec) {
+	char **pCmd = cmd_argv;
+	while (*pCmd) {
+	    printf("%s ", *pCmd);
+	    pCmd++;
+	}
+	printf("\n");
+    }
+#endif
     if (got)
       i= spawnv(P_WAIT,got,cmd_argv) == -1;
     else
@@ -855,7 +1071,9 @@ int my_system (const char *cmd, char **cmd_argv)
 static void linkEdit (char **envp)
 {
     FILE *lnkfile ;
-    char *lnkArgs[4];
+    char *argv[128];
+    char *segName, *c;
+
     int i;
     if (!srcFileName)
 	srcFileName = "temp";
@@ -876,24 +1094,50 @@ static void linkEdit (char **envp)
     
     /*if (options.debug) */
     fprintf(lnkfile,"-z\n");
+
+#define WRITE_SEG_LOC(N, L) \
+    segName = strdup(N); \
+    c = strtok(segName, " \t"); \
+    fprintf (lnkfile,"-b %s = 0x%04x\n", c, L); \
+    if (segName) { free(segName); } 
+    
     /* code segment start */
-    fprintf (lnkfile,"-b CODE = 0x%04x\n",options.code_loc);
-    /* data segment start */
-    fprintf (lnkfile,"-b DSEG = 0x%04x\n",options.data_loc);
+    WRITE_SEG_LOC(CODE_NAME, options.code_loc);
+    
+     /* data segment start */
+     WRITE_SEG_LOC(DATA_NAME, options.data_loc);
+                 
     /* xdata start */
-    fprintf (lnkfile,"-b XSEG = 0x%04x\n",options.xdata_loc);
+    WRITE_SEG_LOC(XDATA_NAME, options. xdata_loc);
+
     /* indirect data */
-    fprintf (lnkfile,"-b ISEG = 0x%04x\n",options.idata_loc);
+    WRITE_SEG_LOC(IDATA_NAME, options.idata_loc);
+
     /* bit segment start */
-    fprintf (lnkfile,"-b BSEG = 0x%04x\n",0);
+    WRITE_SEG_LOC(BIT_NAME, 0);
     
     /* add the extra linker options */
     for (i=0; linkOptions[i] ; i++)
 	fprintf(lnkfile,"%s\n",linkOptions[i]);
 
     /* standard library path */
-    fprintf (lnkfile,"-k %s/%s\n",SDCC_LIB_DIR/*STD_LIB_PATH*/,
-	     ( (options.model==0) ? "small": "large"));
+    switch(options.model)
+    {
+        case MODEL_SMALL:
+       	    c = "small";
+       	    break;
+       	case MODEL_LARGE:
+       	    c = "large";
+       	    break;
+       	case MODEL_FLAT24:
+       	    c = "flat24";
+       	    break;
+        default:
+            werror(W_UNKNOWN_MODEL, __FILE__, __LINE__);
+            c = "unknown";
+            break;
+    }
+    fprintf (lnkfile,"-k %s/%s\n",SDCC_LIB_DIR/*STD_LIB_PATH*/,c);
 	    
     /* other library paths if specified */
     for (i = 0 ; i < nlibPaths ; i++ )
@@ -919,13 +1163,10 @@ static void linkEdit (char **envp)
     fprintf (lnkfile,"\n-e\n");
     fclose(lnkfile);
 
-    /* call the linker */
-    lnkArgs[0] = "aslink";
-    lnkArgs[1] = "-nf";
-    lnkArgs[2] = srcFileName;
-    lnkArgs[3] = NULL;
+    _buildCmdLine(buffer, argv, port->linker.cmd, srcFileName, NULL, NULL, NULL);
 
-    if (my_system("aslink",lnkArgs)) {
+    /* call the linker */
+    if (my_system(argv[0], argv)) {
 	perror("Cannot exec linker");
 	exit(1);
     }
@@ -944,32 +1185,16 @@ static void linkEdit (char **envp)
 /*-----------------------------------------------------------------*/
 static void assemble (char **envp)
 {
-    char *asmArgs[128];  /* assembler arguments */
-    int i = 2;
+    char *argv[128];  /* assembler arguments */
 
-    asmArgs[0] = "asx8051";
-    
-/*     if (options.debug) */
-    asmArgs[1] = "-plosgffc" ;
-/*     else */
-/* 	asmArgs[1] = "-plosgff"; */
+    _buildCmdLine(buffer, argv, port->assembler.cmd, srcFileName, NULL, NULL, asmOptions);
 
-    /* add the extra options if any */
-    for (; asmOptions[i-2] ; i++)
-	asmArgs[i] = asmOptions[i-2];
-
-    /* create the assembler file name */
-    sprintf (buffer, srcFileName);
-    strcat (buffer, ".asm");
-    asmArgs[i++] = buffer;
-
-    asmArgs[i] = 0; /* end of args */
-
-    if (my_system("asx8051",asmArgs)) {
-	perror("Cannot exec linker");
+    if (my_system(argv[0], argv)) {
+	perror("Cannot exec assember");
 	exit(1);
     }
 }
+
 
 
 /*-----------------------------------------------------------------*/
@@ -977,44 +1202,87 @@ static void assemble (char **envp)
 /*-----------------------------------------------------------------*/
 static int preProcess (char **envp)
 {
-        
-    /* if using external stack define the macro */
-    if ( options.useXstack )
-	preArgv[preArgc++] = "-DSDCC_USE_XSTACK" ;
-    
-    /* set the macro for stack autos	*/
-    if ( options.stackAuto )
-	preArgv[preArgc++] = "-DSDCC_STACK_AUTO";
-    
-    /* set the macro for large model	*/
-    if ( options.model )
-	preArgv[preArgc++] = "-DSDCC_MODEL_LARGE" ;
-    else
-	preArgv[preArgc++] = "-DSDCC_MODEL_SMALL" ;
-    
-    preArgv[preArgc++] = fullSrcFileName ;
-    if (!preProcOnly)
-	preArgv[preArgc++] = preOutName = strdup(tmpnam(NULL));
-    preArgv[preArgc] = NULL;
+    char *argv[128];
+    char procDef[128];
 
-    preArgv[0] = "sdcpp";
+    preOutName = NULL;
 
-    if (my_system("sdcpp",preArgv)) {
-	unlink (preOutName);
-	perror("Cannot exec Preprocessor");
-	exit(1);
+    if (!options.c1mode) {
+	/* if using external stack define the macro */
+	if ( options.useXstack )
+	    _addToList(preArgv, "-DSDCC_USE_XSTACK");
+	
+	/* set the macro for stack autos	*/
+	if ( options.stackAuto )
+	    _addToList(preArgv, "-DSDCC_STACK_AUTO");
+	    
+	/* set the macro for stack autos	*/
+	if ( options.stack10bit )
+	    _addToList(preArgv, "-DSDCC_STACK_TENBIT");	
+    
+	/* set the macro for large model	*/
+	switch(options.model)
+	    {
+	    case MODEL_LARGE:
+		_addToList(preArgv, "-DSDCC_MODEL_LARGE");
+		break;
+	    case MODEL_SMALL:
+		_addToList(preArgv, "-DSDCC_MODEL_SMALL");
+		break;
+	    case MODEL_FLAT24:
+		_addToList(preArgv, "-DSDCC_MODEL_FLAT24");
+		break;
+	    default:
+		werror(W_UNKNOWN_MODEL, __FILE__, __LINE__);
+		break;
+	    }	    
+	    
+    
+	/* add port (processor information to processor */
+	sprintf(procDef,"-DSDCC_%s",port->target);
+	_addToList(preArgv,procDef);
+
+	if (!preProcOnly)
+	    preOutName = strdup(tmpnam(NULL));
+
+	_buildCmdLine(buffer, argv, _preCmd, fullSrcFileName, 
+		      preOutName, srcFileName, preArgv);
+
+	if (my_system(argv[0], argv)) {
+	    unlink (preOutName);
+	    perror("Cannot exec Preprocessor");
+	    exit(1);
+	}
+
+	if (preProcOnly)
+	    exit(0);
+    }
+    else {
+	preOutName = fullSrcFileName;
     }
 
-    if (preProcOnly)
-	exit(0);
-
-    yyin = fopen(preOutName,"r");
+    yyin = fopen(preOutName, "r");
     if (yyin == NULL) {
 	perror("Preproc file not found\n");
 	exit(1);
     }
     
     return 0;
+}
+
+static void _findPort(int argc, char **argv)
+{
+    argc--;
+    while (argc) {
+	if (!strncmp(*argv, "-m", 2)) {
+	    _setPort(*argv + 2);
+	    return;
+	}
+	argv++;
+	argc--;
+    }
+    /* Use the first in the list */
+    port = _ports[0];
 }
 
 /* 
@@ -1029,11 +1297,20 @@ int main ( int argc, char **argv , char **envp)
     
     /*printVersionInfo ();*/
 
+    _findPort(argc, argv);
+    /* Initalise the port. */
+    if (port->init)
+	port->init();
+
     setDefaultOptions();
-    parseCmdLine (argc,argv);
+    parseCmdLine(argc,argv);
+
+    initMem();
+
+    port->finaliseOptions();
 
     /* if no input then printUsage & exit */
-    if (!srcFileName && !nrelFiles) {
+    if ((!options.c1mode && !srcFileName && !nrelFiles) || (options.c1mode && !srcFileName && !options.out_name)) {
 	printUsage();
 	exit(0);
     }
@@ -1044,7 +1321,6 @@ int main ( int argc, char **argv , char **envp)
     if (srcFileName) {
 
 	initSymt();
-	initMem();	  	    
 	initiCode();
 	initCSupport ();
 	initPeepHole();
@@ -1052,8 +1328,11 @@ int main ( int argc, char **argv , char **envp)
 
 	if (!fatalError) {
 	    glue();
-	    assemble(envp);
-	}
+	    if (!options.c1mode)
+		assemble(envp);
+	} else {
+	    return 1;
+        }
 	
     }
     
@@ -1063,16 +1342,18 @@ int main ( int argc, char **argv , char **envp)
     if (!options.cc_only && 
 	!fatalError      &&
 	!noAssemble      &&
+	!options.c1mode  &&
 	(srcFileName || nrelFiles))
 	linkEdit (envp);
 
     if (yyin && yyin != stdin)
 	fclose(yyin);
 
-    if (preOutName) {
-	unlink(preOutName);
-	free(preOutName);
+    if (preOutName && !options.c1mode) {
+        unlink(preOutName);
+        free(preOutName);
     }
+
     return 0;
     
 }

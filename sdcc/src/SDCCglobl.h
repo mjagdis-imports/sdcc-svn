@@ -5,8 +5,16 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <setjmp.h>
+#include <stdio.h>
 #include "sdccconf.h"
 #include "SDCCerr.h"
+
+#ifdef __BORLANDC__
+#define NATIVE_WIN32 		1
+#endif
+#ifdef __MINGW32__
+#define NATIVE_WIN32		1
+#endif
 
 #ifdef _NO_GC
 
@@ -44,16 +52,16 @@ typedef int bool;
 #endif
 
 /* size's in bytes  */
-#define CHARSIZE    1
-#define SHORTSIZE   1
-#define INTSIZE     2
-#define LONGSIZE    4
-#define PTRSIZE     1
-#define FPTRSIZE    2
-#define GPTRSIZE    3
-#define BITSIZE     1
-#define FLOATSIZE   4
-#define MAXBASESIZE 4
+#define CHARSIZE    port->s.char_size
+#define SHORTSIZE   port->s.short_size
+#define INTSIZE     port->s.int_size
+#define LONGSIZE    port->s.long_size
+#define PTRSIZE     port->s.ptr_size
+#define FPTRSIZE    port->s.fptr_size
+#define GPTRSIZE    port->s.gptr_size
+#define BITSIZE     port->s.bit_size
+#define FLOATSIZE   port->s.float_size
+#define MAXBASESIZE port->s.max_base_size
 
 
 #define PRAGMA_SAVE        "SAVE"
@@ -162,11 +170,17 @@ struct optimize {
     unsigned    noLoopReverse :1;
 } ;
 
+/* Values for options.model. */
+#define MODEL_SMALL	0
+#define MODEL_LARGE	1
+#define MODEL_FLAT24	2
+
 /* other command line options */
 struct options {
-    int model  : 1     ; /* LARGE == 1 */
+    int model  : 3     ; /* see MODEL_* defines above */
     int stackAuto : 3  ; /* Stack Automatic  */
     int useXstack : 3  ; /* use Xternal Stack */
+    int stack10bit : 3;  /* use 10 bit stack (flat24 model only) */
     int genericPtr: 1  ; /* use generic pointers */
     int regExtend : 1  ; /* don't use extended registers */
     int dump_raw  : 1  ; /* dump after intermediate code generation */
@@ -186,9 +200,12 @@ struct options {
     int nopeep    : 1  ; /* no peep hole optimization */
     int asmpeep   : 1  ; /* pass inline assembler thru peep hole */
     int debug     : 1  ; /* generate extra debug info */
+    int nodebug	  : 1  ; /* Generate no debug info. */
     int stackOnData:1  ; /* stack after data segment  */
     int noregparms: 1  ; /* do not pass parameters in registers */
-    char *peep_file    ; /* additional rules for peep hole */    
+    int c1mode	  : 1  ; /* Act like c1 - no pre-proc, asm or link */
+    char *peep_file    ; /* additional rules for peep hole */
+    char *out_name     ; /* Asm output name for c1 mode */
 
     char *calleeSaves[128]; /* list of functions using callee save */
     char *excludeRegs[32] ; /* registers excluded from saving */
@@ -225,5 +242,25 @@ extern struct optimize optimize ;
 extern struct options options;
 extern int maxInterrupts;
 void parseWithComma (char **,char *) ;
+
+/** Creates a temporary file a'la tmpfile which avoids the bugs
+    in cygwin wrt c:\tmp.
+    Scans, in order: TMP, TEMP, TMPDIR, else uses tmpfile().
+*/
+FILE *tempfile(void);
+
+/** Creates a duplicate of the string 'sz' a'la strdup but using
+    libgc.
+*/
+char *gc_strdup(const char *sz);
+
+/** An assert() macro that will go out through sdcc's error
+    system.
+*/
+#define wassertl(a,s)	((a) ? 0 : \
+        (werror (E_INTERNAL_ERROR,__FILE__,__LINE__, s), 0))
+
+#define wassert(a)    wassertl(a,"code generator internal error")
+
 
 #endif

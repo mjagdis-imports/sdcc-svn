@@ -22,16 +22,11 @@
     You are forbidden to forbid anyone else to use, share and improve
     what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
-#include <stdio.h>
-#include <string.h>
+
+#include "common.h"
 #include <math.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "SDCCglobl.h"
-#include "SDCCsymt.h"
-#include "SDCCval.h"
-#include "SDCCast.h"
-#include "SDCCy.h"
 
 int		cNestLevel ;
 
@@ -583,7 +578,7 @@ double   floatFromVal ( value *val )
     if (!val)
 	return 0;
 
-    if (SPEC_SCLS(val->etype) != S_LITERAL) {
+    if (val->etype && SPEC_SCLS(val->etype) != S_LITERAL) {
 	werror(E_CONST_EXPECTED,val->name);
 	return 0;
     }
@@ -1203,10 +1198,10 @@ value *valForArray (ast *arrExpr)
     sprintf(val->name,"(%s + %d)",buffer,
 	    (int)AST_LIT_VALUE(arrExpr->right)*size);    
     
-    val->type = newLink();
+    val->type = newLink();    
     if (SPEC_SCLS(arrExpr->left->etype) == S_CODE) {
 	DCL_TYPE(val->type) = CPOINTER ;
-	DCL_PTR_CONST(val->type) = 1;
+	DCL_PTR_CONST(val->type) = port->mem.code_ro;
     }
     else
 	if (SPEC_SCLS(arrExpr->left->etype) == S_XDATA)
@@ -1218,7 +1213,10 @@ value *valForArray (ast *arrExpr)
 		if (SPEC_SCLS(arrExpr->left->etype) == S_IDATA)
 		    DCL_TYPE(val->type) = IPOINTER ;
 		else
-		    DCL_TYPE(val->type) = POINTER ;
+		    if (SPEC_SCLS(arrExpr->left->etype) == S_EEPROM)
+			DCL_TYPE(val->type) = EEPPOINTER ;
+		    else
+			DCL_TYPE(val->type) = POINTER ;
     val->type->next = arrExpr->left->ftype;
     val->etype = getSpec(val->type);
     return val;
@@ -1272,7 +1270,7 @@ value *valForStructElem(ast *structT, ast *elemT)
     val->type = newLink();
     if (SPEC_SCLS(structT->etype) == S_CODE) {
 	DCL_TYPE(val->type) = CPOINTER ;
-	DCL_PTR_CONST(val->type) = 1;
+	DCL_PTR_CONST(val->type) = port->mem.code_ro;
     }
     else
 	if (SPEC_SCLS(structT->etype) == S_XDATA)
@@ -1284,8 +1282,33 @@ value *valForStructElem(ast *structT, ast *elemT)
 		if (SPEC_SCLS(structT->etype) == S_IDATA)
 		    DCL_TYPE(val->type) = IPOINTER ;
 		else
-		    DCL_TYPE(val->type) = POINTER ;
+		    if (SPEC_SCLS(structT->etype) == S_EEPROM)
+			DCL_TYPE(val->type) = EEPPOINTER ;
+		    else
+			DCL_TYPE(val->type) = POINTER ;
     val->type->next = sym->type;
     val->etype = getSpec(val->type);
     return val; 
+}
+
+/*-----------------------------------------------------------------*/
+/* valForCastAggr - will return value for a cast of an aggregate   */
+/*                  plus minus a constant                          */
+/*-----------------------------------------------------------------*/
+value *valForCastAggr (ast *aexpr, link *type, ast *cnst, int op)
+{
+    value *val;
+
+    if (!IS_AST_SYM_VALUE(aexpr)) return NULL;
+    if (!IS_AST_LIT_VALUE(cnst)) return NULL;
+
+    val = newValue();
+
+    sprintf(val->name,"(%s %c %d)",
+	   AST_SYMBOL(aexpr)->rname, op,
+	   getSize(type->next)*(int)AST_LIT_VALUE(cnst));
+
+    val->type = type;
+    val->etype = getSpec(val->type);
+    return val;
 }

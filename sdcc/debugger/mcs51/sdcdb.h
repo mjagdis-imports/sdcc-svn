@@ -67,7 +67,13 @@ typedef short bool;
             exit (1);                                                \
          }
 #endif
-
+#ifndef ALLOC_ATOMIC
+#define ALLOC_ATOMIC(x,sz)   if (!(x = GC_malloc_atomic(sz)))   \
+         {                                               \
+            fprintf(stderr,"sdcdb: out of memory\n"); \
+            exit (1);                                    \
+         }
+#endif
 /* generalpurpose stack related macros */
 #define  STACK_DCL(stack,type,size)                   \
          typedef  type  t_##stack   ;                 \
@@ -115,7 +121,7 @@ typedef short bool;
 #define  STACK_WALK(stack)    (w_##stack >= (stack + sizeof(stack)/sizeof(*stack)) \
 			       ? NULL : *w_##stack++ )
 
-#include "../sdcc.src/SDCCbitv.h"
+#include "src/SDCCbitv.h"
 
 enum {
     SYM_REC = 1,

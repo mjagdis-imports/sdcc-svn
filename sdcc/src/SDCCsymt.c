@@ -21,14 +21,7 @@
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <string.h>
-#include "SDCCglobl.h"
-#include "SDCCsymt.h"
-#include "SDCCval.h"
-#include "SDCCast.h"
-#include "SDCCy.h"
-#include "SDCCset.h"
+#include "common.h"
 
 bucket   *SymbolTab [256]  ;  /* the symbol    table  */
 bucket   *StructTab [256]  ;  /* the structure table  */
@@ -300,8 +293,11 @@ void pointerTypes (link *ptr, link *type)
 	    DCL_TYPE(ptr) = POINTER ;
 	    break;
 	case S_CODE:
-	    DCL_PTR_CONST(ptr) = 1;
+	    DCL_PTR_CONST(ptr) = port->mem.code_ro;
 	    DCL_TYPE(ptr) = CPOINTER ;
+	    break;
+	case S_EEPROM:
+	    DCL_TYPE(ptr) = EEPPOINTER;
 	    break;
 	default:
 	    DCL_TYPE(ptr) = GPOINTER;
@@ -536,20 +532,18 @@ unsigned int   getSize ( link *p )
     /* if nothing return 0 */
     if ( ! p )
 	return 0 ;
-    
     if ( IS_SPEC(p) ) { /* if this is the specifier then */
-	
 	switch (SPEC_NOUN(p)) { /* depending on the specifier type */
 	case V_INT:
 	    return (IS_LONG(p) ? LONGSIZE : ( IS_SHORT(p) ? SHORTSIZE: INTSIZE)) ;
 	case V_FLOAT:
 	    return FLOATSIZE ;
 	case V_CHAR:
-	    return   CHARSIZE ;
+	    return CHARSIZE ;
 	case V_VOID:
 	    return   0 ;
 	case V_STRUCT:
-	    return   SPEC_STRUCT(p)->size ;
+	    return SPEC_STRUCT(p)->size ;
 	case V_LABEL:
 	    return 0 ;
 	case V_SBIT:
@@ -571,10 +565,11 @@ unsigned int   getSize ( link *p )
     case PPOINTER:
     case POINTER:
 	return ( PTRSIZE ) ;
+    case EEPPOINTER:
     case FPOINTER:
     case CPOINTER:
 	return ( FPTRSIZE );
-    case GPOINTER:
+    case GPOINTER:	
 	return ( GPTRSIZE );
 	
     default     :
@@ -625,6 +620,7 @@ unsigned int   bitsForType ( link *p )
     case PPOINTER:
     case POINTER:
 	return ( PTRSIZE * 8) ;
+    case EEPPOINTER:
     case FPOINTER:
     case CPOINTER:
 	return ( FPTRSIZE * 8);
@@ -905,8 +901,13 @@ int   compStructSize (int su, structdef  *sdef )
 /*------------------------------------------------------------------*/
 /* checkSClass - check the storage class specification              */
 /*------------------------------------------------------------------*/
-void  checkSClass ( symbol *sym )
+static void  checkSClass ( symbol *sym )
 {         
+    /* type is literal can happen foe enums change
+       to auto */
+    if (SPEC_SCLS(sym->etype) == S_LITERAL && !SPEC_ENUM(sym->etype))
+	SPEC_SCLS(sym->etype) = S_AUTO;
+
     /* if sfr or sbit then must also be */
     /* volatile the initial value will be xlated */
     /* to an absolute address */
@@ -929,13 +930,15 @@ void  checkSClass ( symbol *sym )
 
     /* global variables declared const put into code */
     if (sym->level == 0 && 
-	SPEC_SCLS(sym->etype) == S_CONSTANT) 
+	SPEC_SCLS(sym->etype) == S_CONSTANT) {
 	SPEC_SCLS(sym->etype) = S_CODE ;
-    
+	SPEC_CONST(sym->etype) = 1;
+    }
 
     /* global variable in code space is a constant */
     if (sym->level == 0 && 
-	SPEC_SCLS(sym->etype) == S_CODE) 
+	SPEC_SCLS(sym->etype) == S_CODE &&
+	port->mem.code_ro )
 	SPEC_CONST(sym->etype) = 1;
     
 
@@ -965,7 +968,9 @@ void  checkSClass ( symbol *sym )
 	 ( SPEC_SCLS(sym->etype) != S_AUTO      &&
 	   SPEC_SCLS(sym->etype) != S_FIXED     &&
 	   SPEC_SCLS(sym->etype) != S_REGISTER  &&
-	   SPEC_SCLS(sym->etype) != S_CONSTANT ))  {
+	   SPEC_SCLS(sym->etype) != S_STACK     &&
+	   SPEC_SCLS(sym->etype) != S_XSTACK    &&
+	   SPEC_SCLS(sym->etype) != S_CONSTANT  )) {
 
 	werror(E_AUTO_ASSUMED,sym->name) ;
 	SPEC_SCLS(sym->etype) = S_AUTO   ;
@@ -1000,6 +1005,7 @@ void  checkSClass ( symbol *sym )
     if (SPEC_SCLS(sym->etype) == S_CODE && 
 	sym->ival == NULL               &&
 	!sym->level                     &&
+	port->mem.code_ro               &&
 	!IS_EXTERN(sym->etype)) 
 	werror(E_CODE_NO_INIT,sym->name);
     
@@ -1007,10 +1013,10 @@ void  checkSClass ( symbol *sym )
     /* the storage class to reflect where the var will go */
     if ( sym->level && SPEC_SCLS(sym->etype) == S_FIXED) {
 	if ( options.stackAuto || (currFunc && IS_RENT(currFunc->etype)))
-	    SPEC_SCLS(sym->etype) = (options.model  ?
+	    SPEC_SCLS(sym->etype) = (options.useXstack  ?
 				     S_XSTACK : S_STACK ) ;
 	else
-	    SPEC_SCLS(sym->etype) = (options.model  ?
+	    SPEC_SCLS(sym->etype) = (options.useXstack  ?
 				     S_XDATA :S_DATA ) ;
     }
 }
@@ -1376,6 +1382,7 @@ void  processFuncArgs   (symbol *func, int ignoreName)
     value *val ;
     int pNum = 1;   
     
+
     /* if this function has variable argument list */
     /* then make the function a reentrant one	   */
     if (func->hasVargs)
@@ -1392,19 +1399,23 @@ void  processFuncArgs   (symbol *func, int ignoreName)
 	func->args = NULL ;
 	return ;
     }
-    
+
+    /* reset regparm for the port */
+    (*port->reset_regparms)();
     /* if any of the arguments is an aggregate */
     /* change it to pointer to the same type */
     while (val) {
 
 	/* mark it as a register parameter if
-	   the function does nit have VA_ARG
-	   and MAX_REG_PARMS not exceeded &&
+	   the function does not have VA_ARG
+	   and as port dictates
 	   not inhibited by command line option or #pragma */
-	if (pNum <= MAX_REG_PARMS && 
+	if (!func->hasVargs       && 	    
 	    !options.noregparms   &&
-	    !func->hasVargs)
+	    (*port->reg_parm)(val->type)) {
+
 	    SPEC_REGPARM(val->etype) = 1;
+	}
 	
 	if ( IS_AGGREGATE(val->type)) {
 	    /* if this is a structure */
@@ -1438,6 +1449,9 @@ void  processFuncArgs   (symbol *func, int ignoreName)
 		break;
 	    case S_XDATA:
 		DCL_TYPE(val->type) = FPOINTER;
+		break;
+	    case S_EEPROM:
+		DCL_TYPE(val->type) = EEPPOINTER;
 		break;
 	    default :
 		DCL_TYPE(val->type) = GPOINTER;
@@ -1548,6 +1562,12 @@ void printTypeChain (link *type, FILE *of)
 		if (DCL_PTR_CONST(type))
 		    fprintf(of,"const ");
 		break;
+	    case EEPPOINTER:
+		fprintf (of,"_eeprom * ");
+		if (DCL_PTR_CONST(type))
+		    fprintf(of,"const ");
+		break;
+		
 	    case POINTER:
 		fprintf (of,"_near * ");
 		if (DCL_PTR_CONST(type))
@@ -1613,6 +1633,9 @@ void printTypeChain (link *type, FILE *of)
 	    case V_BIT:
 		fprintf(of,"bit {%d,%d}",SPEC_BSTR(type),SPEC_BLEN(type));
 		break;
+		
+	    default:
+		break;
 	    }
 	}
 	type = type->next;
@@ -1651,8 +1674,13 @@ void cdbTypeInfo (link *type,FILE *of)
 	    case PPOINTER:
 		fprintf (of,"DP,");
 		break;
+	    case EEPPOINTER:
+		fprintf (of,"DA,");
+		break;
 	    case ARRAY :
 		fprintf (of,"DA%d,",DCL_ELEM(type));
+		break;
+	    default:
 		break;
 	    }
 	} else { 
@@ -1689,6 +1717,9 @@ void cdbTypeInfo (link *type,FILE *of)
 
 	    case V_BIT:
 		fprintf(of,"SB%d$%d",SPEC_BSTR(type),SPEC_BLEN(type));
+		break;
+
+	    default:
 		break;
 	    }
 	    fputs(":",of);
@@ -1827,93 +1858,90 @@ symbol *__fslt  ;
 symbol *__fslteq;
 symbol *__fsgt  ;
 symbol *__fsgteq;
-symbol *__fs2uchar;
-symbol *__fs2uint ;
-symbol *__fs2ulong;
-symbol *__fs2char;
-symbol *__fs2int ;
-symbol *__fs2long;
-symbol *__long2fs;
-symbol *__ulong2fs;
-symbol *__int2fs;
-symbol *__uint2fs;
-symbol *__char2fs;
-symbol *__uchar2fs;
-symbol *__muluint;
-symbol *__mulsint;
-symbol *__divuint;
-symbol *__divsint;
-symbol *__mululong;
-symbol *__mulslong;
-symbol *__divulong;
-symbol *__divslong;
-symbol *__moduint;
-symbol *__modsint;
-symbol *__modulong;
-symbol *__modslong;
 
-link *charType ;
-link *intType  ;
+/* Dims: mul/div/mod, BYTE/WORD/DWORD, SIGNED/UNSIGNED */
+symbol *__muldiv[3][3][2];
+/* Dims: BYTE/WORD/DWORD SIGNED/UNSIGNED */
+link *__multypes[3][2];
+/* Dims: to/from float, BYTE/WORD/DWORD, SIGNED/USIGNED */
+symbol *__conv[2][3][2];
+
 link *floatType;
-link *longType ;
-link *ucharType ;
-link *uintType  ;
-link *ulongType ;
 
 /*-----------------------------------------------------------------*/ 
 /* initCSupport - create functions for C support routines          */
 /*-----------------------------------------------------------------*/ 
 void initCSupport ()
 {
-    charType = newCharLink();
-    intType  = newIntLink();
-    floatType= newFloatLink();
-    longType = newLongLink();
-    ucharType = copyLinkChain(charType);
-    SPEC_USIGN(ucharType) = 1;
-    ulongType = copyLinkChain(longType);
-    SPEC_USIGN(ulongType) = 1;
-    uintType = copyLinkChain(intType);
-    SPEC_USIGN(uintType) = 1;
+    const char *smuldivmod[] = {
+	"mul", "div", "mod"
+    };
+    const char *sbwd[] = {
+	"char", "int", "long"
+    };
+    const char *ssu[] = {
+	"s", "u"
+    };
+	
+    int bwd, su, muldivmod, tofrom;
 
+    floatType= newFloatLink();
+
+    for (bwd = 0; bwd < 3; bwd++) {
+	link *l;
+	switch (bwd) {
+	case 0:
+	    l = newCharLink();
+	    break;
+	case 1:
+	    l = newIntLink();
+	    break;
+	case 2:
+	    l = newLongLink();
+	    break;
+	default:
+	    assert(0);
+	}
+	__multypes[bwd][0] = l;
+	__multypes[bwd][1] = copyLinkChain(l);
+	SPEC_USIGN(__multypes[bwd][1]) = 1;
+    }
 
     __fsadd = funcOfType ("__fsadd", floatType, floatType, 2, options.float_rent);
     __fssub = funcOfType ("__fssub", floatType, floatType, 2, options.float_rent);
     __fsmul = funcOfType ("__fsmul", floatType, floatType, 2, options.float_rent);
     __fsdiv = funcOfType ("__fsdiv", floatType, floatType, 2, options.float_rent);
-    __fseq  = funcOfType ("__fseq", charType, floatType, 2, options.float_rent);
-    __fsneq = funcOfType ("__fsneq", charType, floatType, 2, options.float_rent);
-    __fslt  = funcOfType ("__fslt", charType, floatType, 2, options.float_rent);
-    __fslteq= funcOfType ("__fslteq", charType, floatType, 2, options.float_rent);
-    __fsgt  = funcOfType ("__fsgt", charType, floatType, 2, options.float_rent);
-    __fsgteq= funcOfType ("__fsgteq", charType, floatType, 2, options.float_rent);
-    
-    __fs2uchar = funcOfType ("__fs2uchar",ucharType,floatType,1, options.float_rent);
-    __fs2uint  = funcOfType ("__fs2uint",uintType,floatType,1, options.float_rent);
-    __fs2ulong = funcOfType ("__fs2ulong",ulongType,floatType,1, options.float_rent);
-    __fs2char  = funcOfType ("__fs2char",charType,floatType,1, options.float_rent);
-    __fs2int   = funcOfType ("__fs2int",intType,floatType,1, options.float_rent);
-    __fs2long  = funcOfType ("__fs2long",longType,floatType,1, options.float_rent);
+    __fseq  = funcOfType ("__fseq", CHARTYPE, floatType, 2, options.float_rent);
+    __fsneq = funcOfType ("__fsneq", CHARTYPE, floatType, 2, options.float_rent);
+    __fslt  = funcOfType ("__fslt", CHARTYPE, floatType, 2, options.float_rent);
+    __fslteq= funcOfType ("__fslteq", CHARTYPE, floatType, 2, options.float_rent);
+    __fsgt  = funcOfType ("__fsgt", CHARTYPE, floatType, 2, options.float_rent);
+    __fsgteq= funcOfType ("__fsgteq", CHARTYPE, floatType, 2, options.float_rent);
 
-    __long2fs  = funcOfType ("__long2fs",floatType,longType,1, options.float_rent);
-    __ulong2fs = funcOfType ("__ulong2fs",floatType,ulongType,1, options.float_rent);
-    __int2fs   = funcOfType ("__int2fs",floatType,intType,1, options.float_rent);
-    __uint2fs  = funcOfType ("__uint2fs",floatType,uintType,1, options.float_rent);
-    __char2fs  = funcOfType ("__char2fs",floatType,charType,1, options.float_rent);
-    __uchar2fs = funcOfType ("__uchar2fs",floatType,ucharType,1, options.float_rent);
+    for (tofrom = 0; tofrom < 2; tofrom++) {
+	for (bwd = 0; bwd < 3; bwd++) {
+	    for (su = 0; su < 2; su++) {
+		if (tofrom) {
+		    sprintf(buffer, "__fs2%s%s", ssu[su], sbwd[bwd]);
+		    __conv[tofrom][bwd][su] = funcOfType(buffer, __multypes[bwd][su], floatType, 1, options.float_rent);
+		}
+		else {
+		    sprintf(buffer, "__%s%s2fs", ssu[su], sbwd[bwd]);
+		    __conv[tofrom][bwd][su] = funcOfType(buffer, floatType, __multypes[bwd][su], 1, options.float_rent);
+		}
+	    }
+	}
+    }
 
-    __muluint  = funcOfType ("_muluint",uintType,uintType,2,options.intlong_rent);
-    __mulsint  = funcOfType ("_mulsint",intType,intType,2,options.intlong_rent);
-    __divuint  = funcOfType ("_divuint",uintType,uintType,2,options.intlong_rent);
-    __divsint  = funcOfType ("_divsint",intType,intType,2,options.intlong_rent);
-    __moduint  = funcOfType ("_moduint",uintType,uintType,2,options.intlong_rent);
-    __modsint  = funcOfType ("_modsint",intType,intType,2,options.intlong_rent);
-  
-    __mululong = funcOfType ("_mululong",ulongType,ulongType,2,options.intlong_rent);
-    __mulslong = funcOfType ("_mulslong",longType,longType,2,options.intlong_rent);
-    __divulong  = funcOfType ("_divulong",ulongType,ulongType,2,options.intlong_rent);
-    __divslong  = funcOfType ("_divslong",longType,longType,2,options.intlong_rent);
-    __modulong  = funcOfType ("_modulong",ulongType,ulongType,2,options.intlong_rent);
-    __modslong  = funcOfType ("_modslong",longType,longType,2,options.intlong_rent);
- 
+    for (muldivmod = 0; muldivmod < 3; muldivmod++) {
+	for (bwd = 0; bwd < 3; bwd++) {
+	    for (su = 0; su < 2; su++) {
+		sprintf(buffer, "_%s%s%s", 
+			smuldivmod[muldivmod],
+			ssu[su],
+			sbwd[bwd]);
+		__muldiv[muldivmod][bwd][su] = funcOfType(buffer, __multypes[bwd][su], __multypes[bwd][su], 2, options.intlong_rent);
+	    }
+	}
+    }
 }

@@ -1,9 +1,6 @@
 /* SDCCerr.c - error handling routines */
-#include <stdio.h>
-#include <stdarg.h>
-#include "SDCCglobl.h"
-#include "SDCCmem.h"
-#include "SDCCerr.h"
+
+#include "common.h"
 
 #define ERROR		0
 #define WARNING		1
@@ -94,7 +91,7 @@ struct  {
 { ERROR  ,"error *** 'extern' variable '%s' cannot be initialised	\n"	      },
 { ERROR  ,"error *** Pre-Processor %s\n"					      },
 { ERROR  ,"error *** _dup call failed\n"                                          },
-{ ERROR  ,"error *** pointer being cast to incompatible type \n"                        },
+{ WARNING,"warning *** pointer being cast to incompatible type \n"                        },
 { WARNING,"warning *** 'while' loop with 'zero' constant.loop eliminated\n"	      },
 { WARNING,"warning *** %s expression has NO side effects.expr eliminated\n"	      },
 { WARNING,"warning *** constant value '%s', out of range.\n"		      },
@@ -145,7 +142,9 @@ struct  {
 { WARNING,"warning *** unreachable code %s(%d)\n"},
 { WARNING,"warning *** non-pointer type cast to _generic pointer\n"},
 { WARNING,"warning *** possible code generation error at line %d,\n send source to sandeep.dutta@usa.net\n"},
-{ WARNING,"warning *** pointer types incompatible \n" }
+{ WARNING,"warning *** pointer types incompatible \n" },
+{ WARNING,"warning *** unknown memory model at %s : %d\n" },
+{ ERROR  ,"error   *** cannot generate code for target '%s'\n"}
 };
 
 /****************************************************************************/
@@ -159,7 +158,7 @@ void	werror (int errNum, ... )
 	if ( ErrTab[errNum].errType== ERROR )
 		fatalError++ ;
 	
-	if ( lineno ) {
+	if ( filename && lineno ) {
 		fprintf(stderr,"%s(%d):",filename,lineno);
 	}
 	va_start(marker,errNum);
