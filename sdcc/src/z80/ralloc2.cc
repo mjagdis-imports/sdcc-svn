@@ -670,8 +670,14 @@ bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_
     return(true);
   if(ic->op == IPUSH && input_in_H && (getSize(operandType(IC_LEFT(ic))) <= 2 || I[ia.registers[REG_L][1]].byte == 2 && I[ia.registers[REG_H][1]].byte == 3))
     return(true);
+  if(ic->op == IPUSH && getSize(operandType(IC_LEFT(ic))) <= 2 &&
+    (operand_in_reg(left, REG_C, ia, i, G) && I[ia.registers[REG_C][1]].byte == 0 && (getSize(operandType(IC_LEFT(ic))) < 2 || operand_in_reg(left, REG_B, ia, i, G))||
+    operand_in_reg(left, REG_E, ia, i, G) && I[ia.registers[REG_E][1]].byte == 0 && (getSize(operandType(IC_LEFT(ic))) < 2 || operand_in_reg(left, REG_D, ia, i, G)) ||
+    operand_in_reg(left, REG_IYL, ia, i, G) && I[ia.registers[REG_IYL][1]].byte == 0 && (getSize(operandType(IC_LEFT(ic))) < 2 || operand_in_reg(left, REG_IYH, ia, i, G))))
+    return(true);
   if(POINTER_GET(ic) && input_in_L && input_in_H && (getSize(operandType(IC_RESULT(ic))) == 1 || !result_in_HL))
     return(true);
+
   if(ic->op == LEFT_OP && isOperandLiteral(IC_RIGHT(ic)))
     return(true);
 
@@ -697,6 +703,12 @@ bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_
 
   // HL overwritten by result.
   if(result_only_HL && (ic->op == CALL || ic->op == PCALL))
+    return(true);
+
+  if(POINTER_GET(ic) && getSize(operandType(IC_RESULT(ic))) == 1 && !IS_BITVAR(getSpec(operandType(result))) &&
+    (operand_in_reg(right, REG_C, ia, i, G) && I[ia.registers[REG_C][1]].byte == 0 && operand_in_reg(right, REG_B, ia, i, G) || // Uses ld a, (bc)
+    operand_in_reg(right, REG_E, ia, i, G) && I[ia.registers[REG_E][1]].byte == 0 && operand_in_reg(right, REG_D, ia, i, G) || // Uses ld a, (de)
+    operand_in_reg(right, REG_IYL, ia, i, G) && I[ia.registers[REG_IYL][1]].byte == 0 && operand_in_reg(right, REG_IYH, ia, i, G))) // Uses ld r, 0 (iy)
     return(true);
 
   if((ic->op == '=' || ic->op == CAST) && POINTER_SET(ic) && !result_only_HL)	// loads result pointer into (hl) first.
@@ -857,7 +869,7 @@ void set_surviving_regs(const assignment &a, unsigned short int i, const G_t &G,
   std::set<var_t>::const_iterator v, v_end;
   for (v = G[i].alive.begin(), v_end = G[i].alive.end(); v != v_end; ++v)
     if(G[i].dying.find(*v) == G[i].dying.end())
-      if(!(IC_RESULT(ic) && IS_SYMOP(IC_RESULT(ic)) && OP_SYMBOL_CONST(IC_RESULT(ic))->key == I[*v].v))
+      if(!((IC_RESULT(ic) && !POINTER_SET(ic)) && IS_SYMOP(IC_RESULT(ic)) && OP_SYMBOL_CONST(IC_RESULT(ic))->key == I[*v].v))
         ic->rSurv = bitVectSetBit(ic->rSurv, a.global[*v]);
 }
 
@@ -1276,7 +1288,7 @@ void tree_dec_ralloc(T_t &T, const G_t &G, const I_t &I)
           sym->isspilt = false;
         }
     }
-    
+
   for(unsigned int i = 0; i < boost::num_vertices(G); i++)
     set_surviving_regs(winner, i, G, I);	// Never freed. Memory leak?
 }
@@ -1284,13 +1296,14 @@ void tree_dec_ralloc(T_t &T, const G_t &G, const I_t &I)
 iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 {
   iCode *ic;
-  cfg_t control_flow_graph;
-  con_t conflict_graph;
-  tree_dec_t tree_decomposition;
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Processing " << currFunc->name << " from " << dstFileName << "\n"; std::cout.flush();
 #endif
+
+  cfg_t control_flow_graph;
+
+  con_t conflict_graph;
 
   ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
@@ -1299,6 +1312,8 @@ iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 
   if(z80_opts.dump_graphs)
     dump_con(conflict_graph);
+
+  tree_dec_t tree_decomposition;
 
   thorup_tree_decomposition(tree_decomposition, control_flow_graph);
 

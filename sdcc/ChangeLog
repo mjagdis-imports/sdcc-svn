@@ -1,26 +1,455 @@
-2011-11-21 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+2011-01-10 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
-	* src/SDCCicode.h,
-	  src/SDCCnaddr.cc,
-	  src/SDCCnaddr.hpp,
-	  src/SDCCopt.c,
-	  src/z80/ralloc2.cc,
-	  src/SDCCopt.h:
-	  Preparations for optimal placement of bank switching calls.
+	* src/SDCCicode.c: fixed bug 3466784
+
+2012-01-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCC.lex: included io.h for read() declaration with MSVC,
+	  fixed linenr bug
+	* src/SDCCerr.c: made W_LIT_OVERFLOW pedantic
+	* src/SDCCglue.c (printIvalType, printIvalBitFields),
+	* src/SDCCicode.c checkTypes): removed lessPedantic check
+	* src/SDCCicode.c (geniCodeCast): fixed bug 3470368
+
+2012-01-06 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/z80/gen.c:
+	  Fixed width of lower part of large literals.
+
+2012-01-06 Borut Razem <borut.razem AT gmail.com>
+
+	* sdas/linksrc/Makefile.in: removed LKLIB
+	* device/non-free/lib/Makefile.in: removed SOURCES
+
+2012-01-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/hc08/gen.c:
+	  More explicit stack size reporting for hc08.
+
+2012-01-04 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCopt.c (killDeadCode): fixed bug 2862308
+	* support/regression/tests/bug2862308.c: new, added
+
+2012-01-03 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/gcc-torture-execute-string-opt-5.c:
+	  Fixed bug #3463342.
+
+2012-01-03 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/as6808/m08ext.c,
+	* sdas/as6808/as_hc08.vcxproj,
+	* sdas/as6808/as_hc08.vcxproj.filters,
+	* sdas/as6808/Makefile.in: removed m08ext.c
+	* sdas/as6808/m08adr.c,
+	* sdas/as6808/m08mch.c, 
+	* sdas/as6808/m08pst.c,
+	* sdas/as6808/m6808.h,
+	* sdas/asxxsrc/asout.c: synced with ASxxxx v5 to fix bug 2894291
+
+2012-01-02 Borut Razem <borut.razem AT gmail.com>
+
+	* sdcc/SDCC.lex: included unistd.h, needed by flex 2.5.4 on
+	  NetBSD 5.0.1 sparc64 for read() declaration
+	* sdas/linksrc/lkar.h: '\n' replaced by '\012'
+
+2012-01-02 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/src.vcxproj: increased stack size 32M/64M so it never overflows
+	* src/Makefile.in: added flex fast flag -f
+	* src/SDCC.lex: removed preprocessor warning and error rules,
+	  removed EOL after #... rules
+
+2011-12-29 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/clean.mk: added z180 and r2k
+	* sim/ucsim/cmd.src/cmdlex.l: fixed unused yyunput warning
+	* src/hc08/main.c: removed unused BSEG
+	* src/SDCCglue.c (glue): suppress unused segments
+	* src/SDCCmem.c (allocMap, initMem): skip when name==NULL,
+	  (allocGlobal): use x_abs for __at on z80, fixed bug 2040874
+	* src/z80/main.c: removed ISEG, XSEG, BSEG, OVERLAY, added DABS (x_abs)
+	* support/regression/fwk/include/testfwk.h,
+	* support/regression/tests/absolute.c: z80 supports __at
+
+2011-12-29 Borut Razem <borut.razem AT gmail.com>
+
+	* support/cpp/libcpp/lex.c:
+	  partialy synchronized with sdcpp 4.6.[12]: no mmx, sse, altivec
+	* support/cpp/version.c: updated version to 4.6.2
+	* support/cpp/configure.in, support/cpp/configure,
+	  support/cpp/config.in: WORDS endianness detection
+
+2011-12-27 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCC.lex,
+	* src/SDCC.y: fixed bugs 1810965 and 2698805
+	* src/SDCCsymt.c (checkSClass): removed old hack-o-matic
+	* support/regression/tests/bug1810965.c: new, added
+
+2011-12-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCralloc.hpp:
+	  Reduce stack space usage in recursion.
+
+2011-12-25 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/r2k/setjmp.s,
+	* device/lib/z180/setjmp.s,
+	* device/lib/z80/setjmp.s: optimized
+	* device/lib/r2k/*,
+	* device/lib/z180/*,
+	* device/lib/z80/*: use native eol
+
+2011-12-24 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/setjmp.h: changed longjmp return type to void
+	* device/lib/_setjmp.c: but use int for the implementation
+
+2011-12-24 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCopt.c (replaceRegEqv): fixed bug 2938101
+
+2011-12-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCicode.c:
+	  Warn about return statements in _Noreturn functions.
+	* device/include/setjmp.h,
+	  device/lib/_setjmp.c:
+	  Make longjmp() a _Noreturn function, as required by the C11 standard.
+	* src/SDCClabel.c,
+	  src/z80/gen.c:
+	  Do some basic optimizations for _Noreturn functions.
+
+2011-12-23 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCClabel.c (labelIfx): fixed bug 3463455
+	* support/regression/tests/gcc-torture-execute-loop-12.c:
+	  reenable tests for hc08 and ds390
+	* support/regression/compact-results.py: wider test name field
+
+2011-12-22 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCerr.c: changed E_NONRENT_ARGS description
+
+2011-12-22 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/SDCCmain.c,
+	  src/SDCCglobl.h,
+	  src/SDCC.lex:
+	  Add option and pragma for ISO C11.
+	* support/regression/tests/gcc-torture-execute-anon-1.c:
+	  Disable for compilers other than sdcc and use sdcc in C11 mode.
+	* src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCC.y,
+	  src/SDCC.lex,
+	  device/include/stdnoreturn.h:
+	  Accept C11 keyword _Noreturn.
+	* device/include/stdio.h:
+	  Do not declare gets() in C11 mode.
+
+2011-12-21 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/as6808/Makefile.in,
+	* sdas/as8051/Makefile.in,
+	* sdas/asgb/Makefile.in,
+	* sdas/asrab/Makefile.in,
+	* sdas/asz80/Makefile.in: reverted as it fails to build without error
+
+2011-12-21 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* support/regression/tests/gcc-torture-execute-pure-1.c,
+	  support/regression/tests/gcc-torture-execute-string-opt-17.c,
+	  support/regression/tests/gcc-torture-execute-pta-field-1.c,
+	  support/regression/tests/gcc-torture-execute-string-opt-18.c,
+	  support/regression/tests/gcc-torture-execute-struct-ini-1.c,
+	  support/regression/tests/gcc-torture-execute-pta-field-2.c,
+	  support/regression/tests/gcc-torture-execute-ptr-arith-1.c,
+	  support/regression/tests/gcc-torture-execute-unroll-1.c,
+	  support/regression/tests/gcc-torture-execute-struct-ini-2.c,
+	  support/regression/tests/gcc-torture-execute-struct-ini-3.c,
+	  support/regression/tests/gcc-torture-execute-string-opt-5.c,
+	  support/regression/tests/gcc-torture-execute-stdarg-3.c,
+	  support/regression/tests/gcc-torture-execute-shiftopt-1.c,
+	  support/regression/tests/gcc-torture-execute-struct-ini-4.c,
+	  support/regression/tests/gcc-torture-execute-stdarg-4.c,
+	  support/regression/tests/gcc-torture-execute-switch-1.c,
+	  support/regression/tests/gcc-torture-execute-scope-1.c,
+	  support/regression/tests/gcc-torture-execute-loop-10.c,
+	  support/regression/tests/gcc-torture-execute-loop-11.c,
+	  support/regression/tests/gcc-torture-execute-loop-12.c,
+	  support/regression/tests/gcc-torture-execute-loop-13.c,
+	  support/regression/tests/gcc-torture-execute-loop-14.c,
+	  support/regression/tests/gcc-torture-execute-loop-15.c,
+	  support/regression/tests/gcc-torture-execute-loop-1.c,
+	  support/regression/tests/gcc-torture-execute-loop-2.c,
+	  support/regression/tests/gcc-torture-execute-loop-2c.c,
+	  support/regression/tests/gcc-torture-execute-loop-2d.c,
+	  support/regression/tests/gcc-torture-execute-loop-3b.c,
+	  support/regression/tests/gcc-torture-execute-loop-3.c,
+	  support/regression/tests/gcc-torture-execute-loop-3c.c,
+	  support/regression/tests/gcc-torture-execute-loop-5.c,
+	  support/regression/tests/gcc-torture-execute-loop-6.c,
+	  support/regression/tests/gcc-torture-execute-loop-7.c,
+	  support/regression/tests/gcc-torture-execute-loop-8.c,
+	  support/regression/tests/gcc-torture-execute-loop-9.c,
+	  support/regression/tests/gcc-torture-execute-func-ptr-1.c,
+	  support/regression/tests/gcc-torture-execute-const-addr-expr-1.c,
+	  support/regression/tests/gcc-torture-execute-divmod-1.c,
+	  support/regression/tests/gcc-torture-execute-divcmp-4.c,
+	  support/regression/tests/gcc-torture-execute-divconst-1.c,
+	  support/regression/tests/gcc-torture-execute-compare-1.c,
+	  support/regression/tests/gcc-torture-execute-divconst-2.c,
+	  support/regression/tests/gcc-torture-execute-compare-2.c,
+	  support/regression/tests/gcc-torture-execute-compare-3.c,
+	  support/regression/tests/gcc-torture-execute-loop-12.c,
+	  support/regression/tests/gcc-torture-execute-doloop-1.c,
+	  support/regression/tests/gcc-torture-execute-doloop-2.c,
+	  support/regression/tests/gcc-torture-execute-enum-2.c,
+	  support/regression/tests/gcc-torture-execute-ifcvt-onecmpl-abs-1.c,
+	  support/regression/tests/gcc-torture-execute-divcmp-1.c,
+	  support/regression/tests/gcc-torture-execute-enum-3.c,
+	  support/regression/tests/gcc-torture-execute-cmpsf-1.c,
+	  support/regression/tests/gcc-torture-execute-mod-1.c,
+	  support/regression/tests/gcc-torture-execute-divcmp-2.c,
+	  support/regression/tests/gcc-torture-execute-int-compare.c,
+	  support/regression/tests/gcc-torture-execute-divcmp-3.c,
+	  support/regression/tests/gcc-torture-execute-anon-1.c,
+	  support/regression/tests/gcc-torture-execute-arith-1.c,
+	  support/regression/tests/gcc-torture-execute-postmod-1.c,
+	  support/regression/tests/gcc-torture-execute-bitfld-1.c,
+	  support/regression/tests/gcc-torture-execute-pending-4.c:
+	  Added some tests from the execute part of the gcc torture regression test suite.
+
+2011-12-20 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/as6808/Makefile.in,
+	* sdas/as8051/Makefile.in,
+	* sdas/asgb/Makefile.in,
+	* sdas/asrab/Makefile.in,
+	* sdas/asz80/Makefile.in: added dependencies
+
+2011-12-19 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/asz80/z80pst.c: forgot this one, probably sdas dependencies are
+	  insufficient too
+
+2011-12-18 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/sdcdb.c (escapeQuotes): fixed warning
+	* sdas/asrab/rabbitmch.c: fixed bug 3461821 by calling outrb with 0
+	* sdas/as6808/m08pst.c,
+	* sdas/as8051/i51adr.c,
+	* sdas/as8051/i51mch.c,
+	* sdas/as8051/i51pst.c,
+	* sdas/as8051/i8051.h,
+	* sdas/asgb/gbpst.c,
+	* sdas/asxxsrc/asdata.c,
+	* sdas/asxxsrc/asexpr.c,
+	* sdas/asxxsrc/aslex.c,
+	* sdas/asxxsrc/aslist.c,
+	* sdas/asxxsrc/asmain.c,
+	* sdas/asxxsrc/asout.c,
+	* sdas/asxxsrc/assym.c,
+	* sdas/asxxsrc/asxxxx.h,
+	* sdas/asz80/z80mch.c,
+	* sdas/linksrc/aslink.h,
+	* sdas/linksrc/lkarea.c,
+	* sdas/linksrc/lkhead.c,
+	* sdas/linksrc/lklex.c,
+	* sdas/linksrc/lklist.c,
+	* sdas/linksrc/sdld.c,
+	* sdas/linksrc/sdld.h: another step towards ASxxxx v5
+	* sdas/asrab/rabbit.h,
+	* sdas/asrab/rabbitadr.c,
+	* sdas/asrab/rabbitext.c,
+	* sdas/asrab/rabbitpst.c: native line endings, no TABs
+	* src/ds390/main.c,
+	* src/mcs51/main.c,
+	* src/z80/main.c: asxxx -z flag is now case INsensitive
+	* src/hc08/main.c: fixed bug 1666106 by adding (PAG) to DSEG and OSEG
+	* src/SDCCglobl.h: fixed -E comment
+	* src/SDCCicode.c (geniCodeAdd),
+	* src/SDCCsymt.c (compStructSize): added error for unknown struct size
+	* src/SDCClabel.c: no TABs
+
+2011-12-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/mcs51/cc2530.h: new, added, thanks Zafi Ramarosandratana
+
+2011-12-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_atof.c,
+	* device/lib/_divuint.c,
+	* device/lib/_divulong.c,
+	* device/lib/_fsadd.c,
+	* device/lib/acosf.c,
+	* device/lib/asincosf.c,
+	* device/lib/asinf.c,
+	* device/lib/cosf.c,
+	* device/lib/cotf.c,
+	* device/lib/expf.c,
+	* device/lib/printf_large.c,
+	* device/lib/sincosf.c,
+	* device/lib/sincoshf.c,
+	* device/lib/sinf.c,
+	* device/lib/tancotf.c,
+	* device/lib/tanf.c,
+	* support/regression/tests/bug1337835.c,
+	* support/regression/tests/bug2719592.c,
+	* support/regression/tests/bug2805333.c,
+	* support/regression/tests/bug3223041.c,
+	* support/regression/tests/bug3290691.c,
+	* support/regression/tests/funptrs.c: changed BOOL to bool
+
+2011-12-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/stdbool.h: removed BOOL
+	* src/SDCCast.c (decorateType, addess of),
+	* src/SDCCsymt.c (checkSClass): fixed bug 2934292
+	* support/regression/tests/bool.c: enabled function pointer tests
+
+2011-12-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/linksrc/aslink.h,
+	* sdas/linksrc/lkarea.c,
+	* sdas/linksrc/lkbank.c,
+	* sdas/linksrc/lkdata.c,
+	* sdas/linksrc/lklex.c,
+	* sdas/linksrc/lklist.c,
+	* sdas/linksrc/lkmain.c,
+	* sdas/linksrc/lknoice.c,
+	* sdas/linksrc/lkout.c,
+	* sdas/linksrc/lkrloc.c,
+	* sdas/linksrc/lkrloc3.c,
+	* sdas/linksrc/lks19.c,
+	* sdas/linksrc/lksym.c,
+	* sdas/linksrc/Makefile.in: and another step towards ASxxxx v5
+
+2011-12-05 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/z80/ralloc.c:
+	  Fixed bug #3441816.
+
+2011-12-04 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/linksrc/aslink.h,
+	* sdas/linksrc/aslink.vcxproj,
+	* sdas/linksrc/aslink.vcxproj.filters,
+	* sdas/linksrc/lkar.c,
+	* sdas/linksrc/lkarea.c,
+	* sdas/linksrc/lkbank.c,
+	* sdas/linksrc/lkdata.c,
+	* sdas/linksrc/lkhead.c,
+	* sdas/linksrc/lklex.c,
+	* sdas/linksrc/lklibr.c,
+	* sdas/linksrc/lklist.c,
+	* sdas/linksrc/lkmain.c,
+	* sdas/linksrc/lkmem.c,
+	* sdas/linksrc/lknoice.c,
+	* sdas/linksrc/lkout.c,
+	* sdas/linksrc/lkrloc.c,
+	* sdas/linksrc/lkrloc3.c,
+	* sdas/linksrc/lks19.c,
+	* sdas/linksrc/lksdcclib.c,
+	* sdas/linksrc/lksdcdb.c,
+	* sdas/linksrc/lksym.c,
+	* sdas/linksrc/Makefile.in: next step towards ASxxxx v5
+	* src/SDCCmem.c (allocIntoSeg): MSVC 2010 still needs all declarations at
+	  the start of a block in C mode
+	* src/z80/gen.c (genPointerSet): fixed warning
+	* src/SDCCast.c (processParms): removed incorrect function pointer check
+	* support/regression/tests/bug3440327.c: reenabled test for mcs51
+
+2011-12-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug3444293.c
+	  Fix warning in regression test.
+
+2011-12-02 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/SDCCcse.c,
+	  src/SDCCicode.h:
+	  Rename IS_ASSOCIATIVE to IS_COMMUTATIVE.
+
+2011-12-01 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c,
+	  src/z80/peeph-z80.def:
+	  Minor improvements in pointer handling for the z80 backends.
+
+2011-12-01 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/SDCClabel.c:
+	  Disable hidden jump-to-jump optimization for mcs51, since it breaks large and huge.
+
+2011-11-30 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug3440327.c:
+	  Disable bug 3440327 test on mcs51.
+
+2011-11-30 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c:
+	  Cleanup leftover warning.
+
+2011-11-29 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c,
+	  src/z80/peeph-z80.def:
+	  Some small improvements to the generated code.
+
+2011-11-29 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/z80/ralloc2.cc,
+	  support/regression/tests/bug3444293.c:
+	  Fixed bug #3444293.
+
+2011-11-28 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* support/regression/tests/bug3440327.c:
+	  Regression test for bug #3440327.
+
+2011-11-28 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/SDCClabel.c:
+	  Optimize hidden jump-to-jump.
+
+2011-11-28 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* src/z80/gen.c:
+	  Replaced some uses of isLastUse() by the safer isPairDead().
+
+2011-11-28 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
+
+	* Merged the addrspacequal branch (named address spaces).
+
+2011-11-28 Borut Razem <borut.razem AT gmail.com>
+
+	* sim/ucsim/libltdl: direcrory removed since it is not used
+	* support/scripts/gen_known_bugs.pl: warious fixes
+	* src/pic16/ralloc.c, sim/ucsim/pobj.cc, sim/ucsim/utils.cc,
+	  sdas/linksrc/lkmain.c:
+	  fixed bug #3444387: Minor spelling fix in binary files;
+	  thanks to Gudjon I. Gudjonsson for the patch
+
+2011-11-27 Borut Razem <borut.razem AT gmail.com>
+
+	* Small Device C Compiler 3.1.0 released
+	* .version, doc/sdccman.lyx: changed sdcc version to 3.1.1
+	* support/scripts/gen_known_bugs.pl: adopted to the new SF bug tracker
 
 2011-11-21 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
 	  Fixed bug #3440327.
-
-2011-11-17 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
-
-	* src/Makefile.in,
-	  src/SDCCnaddr.cc,
-	  src/SDCCnaddr.hpp,
-	  src/SDCCopt.c,
-	  src/SDCCopt.h:
-	  First preparations for optimal placement of bank switching calls.
 
 2011-11-17 Philipp Klaus Krause <philipp AT informatik.uni-frankfurt.de>
 
@@ -20419,7 +20848,7 @@
 	wherever there is enough space for it, and IDATA can be anywhere
 	in internal RAM.  For now compile using	-Wl-Y[stack_size].
 	The mem file is different for this option as well, since it
-	makes no sense of talking about DSEG lenght.
+	makes no sense of talking about DSEG length.
 
 2004-01-02 Vangelis Rokas <vrokas AT otenet.gr>
 
@@ -23927,6 +24356,7 @@
 2001-11-07  Michael Hope  <michaelh AT juju.net.nz>
 
 	* support/regression/tests/float.c (testFloatAdd): Fixed up warning.
+
 2001-11-18  Bernhard Held  <bernhard AT bernhardheld.de>
 
 	* sdcc/support/regression/tests/bug-460010.c: fix seg violation on host

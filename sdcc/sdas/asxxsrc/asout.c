@@ -1,20 +1,27 @@
-/* asout.c
+/* asout.c */
 
-   Copyright (C) 1989-1995 Alan R. Baldwin
-   721 Berkeley St., Kent, Ohio 44240
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 3, or (at your option) any
-later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/*
+ *  Copyright (C) 1989-2009  Alan R. Baldwin
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ * Alan R. Baldwin
+ * 721 Berkeley St.
+ * Kent, Ohio  44240
+ *
+ */
 
 /*
  * 28-Oct-97 JLH:
@@ -22,9 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
  *           - Added outr11 to support 8051's 11 bit destination address
  */
 
-#include <stdio.h>
-#include <setjmp.h>
-#include <string.h>
 #include "sdas.h"
 #include "asxxxx.h"
 
@@ -62,7 +66,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
  *
  *      The  first  line  of  an object module contains the [XDQ][HL]
  *      format specifier (i.e.  XH indicates  a  hexadecimal  file  with
- *      most significant byte first) for the following designators.
+ *      most significant byte first) for the
+ *      following designators.
  *
  *
  *      (2)     Header Line
@@ -348,7 +353,9 @@ write_rmode(int r)
  *      is loaded into the txt and rel buffers.
  *
  *      local variables:
- *              int     n               symbol/area reference number
+ *		int	m		signed value mask
+ *		int	n		unsigned value mask
+ *					symbol/area reference number
  *              int *   relp            pointer to rel array
  *              int *   txtp            pointer to txt array
  *
@@ -370,7 +377,7 @@ write_rmode(int r)
 VOID
 outrb(struct expr *esp, int r)
 {
-        register int n;
+        a_uint m, n;
 
         if (pass == 2) {
                 if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
@@ -378,6 +385,14 @@ outrb(struct expr *esp, int r)
                          * const byte to the T line and don't
                          * generate any relocation info.
                          */
+			m = (a_uint) ~0x0000007F;	n = (a_uint) ~0x000000FF;		/* 1 byte  */
+			/*
+			 * Page0 Range Check
+			 */
+			if (((r & (R3_SGND | R3_USGN | R3_PAG0 | R3_PAG | R3_PCR)) == R3_PAG0) &&
+			   ((n & esp->e_addr) != 0))
+				err('d');
+
                         out_lb(lobyte(esp->e_addr),0);
                         if (oflag) {
                                 outchk(1, 0);
@@ -1140,10 +1155,10 @@ out(char *p, int n)
  */
 
 VOID
-out_lb(register int b, register int t)
+out_lb(a_uint v, int t)
 {
         if (cp < &cb[NCODE]) {
-                *cp++ = b;
+                *cp++ = v;
                 *cpt++ = t;
         }
 }
@@ -1172,14 +1187,14 @@ out_lb(register int b, register int t)
  */
 
 VOID
-out_lw(register int n, register int t)
+out_lw(a_uint v, int t)
 {
         if (hilo) {
-                out_lb(hibyte(n),t ? t|R_HIGH : 0);
-                out_lb(lobyte(n),t);
+                out_lb(hibyte(v),t ? t|R_HIGH : 0);
+                out_lb(lobyte(v),t);
         } else {
-                out_lb(lobyte(n),t);
-                out_lb(hibyte(n),t ? t|R_HIGH : 0);
+                out_lb(lobyte(v),t);
+                out_lb(hibyte(v),t ? t|R_HIGH : 0);
         }
 }
 
@@ -1244,20 +1259,20 @@ out_l24(int n, int t)
  */
 
 VOID
-out_rw(register int n)
+out_rw(a_uint v)
 {
         if (hilo) {
-                *relp++ = hibyte(n);
-                *relp++ = lobyte(n);
+                *relp++ = hibyte(v);
+                *relp++ = lobyte(v);
         } else {
-                *relp++ = lobyte(n);
-                *relp++ = hibyte(n);
+                *relp++ = lobyte(v);
+                *relp++ = hibyte(v);
         }
 }
 
 /*)Function     VOID    out_tw(n)
  *
- *              int     n               data word
+ *              a_uint  n               data word
  *
  *      The function out_tw() outputs the text (T)
  *      data word as two bytes ordered according to hilo.
@@ -1277,7 +1292,7 @@ out_rw(register int n)
  */
 
 VOID
-out_tw(register int n)
+out_tw(a_uint n)
 {
         if (hilo) {
                 *txtp++ = hibyte(n);
@@ -1346,9 +1361,9 @@ out_t24(int n)
  */
 
 int
-lobyte(int n)
+lobyte(a_uint v)
 {
-        return (n&0377);
+        return (v&0377);
 }
 
 /*)Function     int     hibyte(n)
@@ -1372,9 +1387,9 @@ lobyte(int n)
  */
 
 int
-hibyte(int n)
+hibyte(a_uint v)
 {
-        return ((n>>8)&0377);
+        return ((v>>8)&0377);
 }
 
 /*

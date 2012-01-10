@@ -117,9 +117,8 @@ static OPTION _hc08_options[] =
 static void
 _hc08_finaliseOptions (void)
 {
-  if (options.noXinitOpt) {
-    port->genXINIT=0;
-  }
+  if (options.noXinitOpt)
+    port->genXINIT = 0;
 
   if (options.model == MODEL_LARGE) {
       port->mem.default_local_map = xdata;
@@ -172,7 +171,6 @@ _hc08_genAssemblerPreamble (FILE * of)
   fprintf (of, "\t.area %s\n",port->mem.const_name);
   fprintf (of, "\t.area %s\n",port->mem.data_name);
   fprintf (of, "\t.area %s\n",port->mem.overlay_name);
-  fprintf (of, "\t.area %s\n",port->mem.bit_name);
   fprintf (of, "\t.area %s\n",port->mem.xdata_name);
   fprintf (of, "\t.area %s\n",port->mem.xidata_name);
 
@@ -335,8 +333,8 @@ oclsExpense (struct memmap *oclass)
     return -2;
   if (IN_FARSPACE (oclass))     /* extended addressing mode is almost at fast */
     return -1;
-  if (oclass == istack) /* stack is the slowest, but still faster than */
-    return 0;           /* trying to copy to a temp location elsewhere */
+  if (oclass == istack)         /* stack is the slowest, but still faster than */
+    return 0;                   /* trying to copy to a temp location elsewhere */
 
   return 0; /* anything we missed */
 }
@@ -396,8 +394,8 @@ PORT hc08_port =
   {
     _asmCmd,
     NULL,
-    "-plosgffwzc",              /* Options with debug */
-    "-plosgffwz",               /* Options without debug */
+    "-plosgffwc",               /* Options with debug */
+    "-plosgffw",                /* Options without debug */
     0,
     ".asm",
     NULL                        /* no do_assemble function */
@@ -420,23 +418,22 @@ PORT hc08_port =
   },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },           /* far, near, xstack, code */
-
   {
     "XSEG",
     "STACK",
-    "CSEG (CODE)",
-    "DSEG",
+    "CSEG    (CODE)",
+    "DSEG    (PAG)",
     NULL, /* "ISEG" */
     NULL, /* "PSEG" */
     "XSEG",
-    "BSEG",
-    "RSEG (ABS)",
-    "GSINIT (CODE)",
-    "OSEG    (OVR)",
+    NULL, /* "BSEG" */
+    "RSEG    (ABS)",
+    "GSINIT  (CODE)",
+    "OSEG    (PAG, OVR)",
     "GSFINAL (CODE)",
-    "HOME (CODE)",
-    "XISEG", // initialized xdata
-    "XINIT", // a code copy of xiseg
+    "HOME    (CODE)",
+    "XISEG",              // initialized xdata
+    "XINIT",              // a code copy of xiseg
     "CONST   (CODE)",     // const_name - const data (code or not)
     "CABS    (ABS,CODE)", // cabs_name - const absolute data (code or not)
     "XABS    (ABS)",      // xabs_name - absolute xdata

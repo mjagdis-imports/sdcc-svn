@@ -34,7 +34,7 @@ OBJECTS         = SDCCy.o SDCChasht.o SDCCmain.o \
                   SDCCBBlock.o SDCCloop.o SDCCcse.o SDCCcflow.o SDCCdflow.o \
                   SDCClrange.o SDCCptropt.o SDCCpeeph.o SDCCglue.o \
                   SDCCasm.o SDCCmacro.o SDCCutil.o SDCCdebug.o cdbFile.o SDCCdwarf2.o\
-                  SDCCerr.o SDCCsystem.o SDCCnaddr.o
+                  SDCCerr.o SDCCsystem.o
 
 SPECIAL         = SDCCy.h 
 ifeq ($(USE_ALT_LEX), 1)
@@ -126,7 +126,7 @@ SDCCy.c: SDCC.y
 	$(YACC) -d -v -o $@ $<
 
 SDCClex.c: SDCC.lex SDCCy.h
-	$(LEX) -t $< >$@
+	$(LEX) -f -t $< >$@
 
 version.h: ../ChangeLog
 	$(AWK) -f $(srcdir)/version.awk $< > $@

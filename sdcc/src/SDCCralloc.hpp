@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 //
-//
 // An optimal, polynomial-time register allocator.
 //
 // To use this from a port do the following:
@@ -891,7 +890,6 @@ void tree_dec_ralloc_nodes(T_t &T, typename boost::graph_traits<T_t>::vertex_des
 
   adjacency_iter_t c, c_end;
   typename boost::graph_traits<T_t>::vertex_descriptor c0, c1;
-  assignment ac2;
 
   boost::tie(c, c_end) = adjacent_vertices(t, T);
 
@@ -909,8 +907,12 @@ void tree_dec_ralloc_nodes(T_t &T, typename boost::graph_traits<T_t>::vertex_des
       c0 = *c++;
       c1 = *c;
       tree_dec_ralloc_nodes(T, c0, G, I, ac);
-      get_best_local_assignment_biased(ac2, c0, T);
-      tree_dec_ralloc_nodes(T, c1, G, I, ac2);
+      {
+        assignment *ac2 = new assignment;
+        get_best_local_assignment_biased(*ac2, c0, T);
+        tree_dec_ralloc_nodes(T, c1, G, I, *ac2);
+        delete ac2;
+      }
       tree_dec_ralloc_join(T, t, G, I);
       break;
     default:
