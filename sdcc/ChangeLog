@@ -36,6 +36,43 @@
 	  device/lib/r3ka/strcpy.s,
 	  device/lib/tlcs90/abs.s:
 	  Replace some backend-specific functions in r2k, r3ka and tlcs90 libraries by generic ones.
+	* device/lib/r2k/Makefile.in
+	  device/lib/r3ka/Makefile.in
+	  device/lib/stm8/Makefile.in
+	  device/lib/tlcs90/Makefile.in
+	  device/lib/z180/Makefile.in
+	  device/lib/z80/Makefile.in,
+	  device/lib/r2k/divmixed.s,
+	  device/lib/r2k/divsigned.s,
+	  device/lib/r2k/divunsigned.s,
+	  device/lib/r2k/modsigned.s,
+	  device/lib/r2k/modunsigned.s,
+	  device/lib/r3ka/divmixed.s,
+	  device/lib/r3ka/divsigned.s,
+	  device/lib/r3ka/divunsigned.s,
+	  device/lib/r3ka/modsigned.s,
+	  device/lib/r3ka/modunsigned.s,
+	  device/lib/stm8/_divsint.s,
+	  device/lib/stm8/_modsint.s,
+	  device/lib/stm8/_modslong.s,
+	  device/lib/stm8/_mulint.s,
+	  device/lib/tlcs90/divmixed.s,
+	  device/lib/tlcs90/divsigned.s,
+	  device/lib/tlcs90/divunsigned.s,
+	  device/lib/tlcs90/modsigned.s,
+	  device/lib/tlcs90/modunsigned.s,
+	  device/lib/tlcs90/strlen.s,
+	  device/lib/z180/divmixed.s,
+	  device/lib/z180/divsigned.s,
+	  device/lib/z180/divunsigned.s,
+	  device/lib/z180/modsigned.s,
+	  device/lib/z180/modunsigned.s,
+	  device/lib/z80/divmixed.s,
+	  device/lib/z80/divsigned.s,
+	  device/lib/z80/divunsigned.s,
+	  device/lib/z80/modsigned.s,
+	  device/lib/z80/modunsigned.s:
+	  Replace some backend-specific functions in z80, z180, r2k, r3ka and tlcs90 libraries by generic ones.
 
 2017-10-08 Philipp Klaus Krause <pkk AT spth.de>
 

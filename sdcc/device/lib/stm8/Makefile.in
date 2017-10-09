@@ -16,7 +16,12 @@ include $(srcdir)/../incl.mk
 
 STM8_FLOAT = $(COMMON_FLOAT)
 
-STM8_INT = _mulschar.c _divschar.c _modschar.c
+STM8_INT = $(COMMON_INT) \
+  _mulschar.c \
+  _divschar.c \
+  _modschar.c \
+  _divsint.c \
+  _modsint.c
 
 STM8_LONG = $(COMMON_LONG) \
   _divulong.c \
@@ -48,7 +53,7 @@ STM8_SDCC = $(COMMON_SDCC) \
 STM8SOURCES = $(addprefix ../,$(STM8_FLOAT) $(STM8_INT) $(STM8_LONG) $(STM8_LONGLONG) $(STM8_SDCC))
 STM8OBJECTS = $(patsubst %.c,%.rel,$(STM8_FLOAT) $(STM8_INT) $(STM8_LONG) $(STM8_LONGLONG) $(STM8_SDCC))
 
-OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel _divsint.rel _modsint.rel _modulong.rel _modslong.rel _fast_long_neg.rel heap.rel
+OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel _fast_long_neg.rel heap.rel
 
 LIB = stm8.lib
 CC = $(SCC)
