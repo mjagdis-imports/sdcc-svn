@@ -31,6 +31,8 @@
 
 #if !_SDCC_PORT_PROVIDES_STRCPY
 
+#undef strcpy /* Avoid conflict with builtin strcpy() in Z80 and some related ports */
+
 char * strcpy ( char * d, const char * s )
 {
 #if _SDCC_Z80_STYLE_LIB_OPT

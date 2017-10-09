@@ -1,3 +1,20 @@
+2017-10-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/string.h,
+	  device/lib/_strcpy.c,
+	  device/lib/stm8/Makefile.in,
+	  device/lib/z80/Makefile.in,
+	  device/lib/stm8/_divulong.s,
+	  device/lib/stm8/_modulong.s,
+	  device/lib/stm8/_mullong.s,
+	  device/lib/stm8/memcpy.s,
+	  device/lib/stm8/strcmp.s,
+	  device/lib/stm8/strcpy.s,
+	  device/lib/z80/memmove.s,
+	  device/lib/z80/strcpy.s,
+	  device/lib/z80/strlen.s:
+	  Replace some backend-specific functions in stm8 and z80 librtaries by generic ones.
+
 2017-10-08 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/bug-2663.c:
