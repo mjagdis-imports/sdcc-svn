@@ -13,7 +13,17 @@
 	  device/lib/z80/memmove.s,
 	  device/lib/z80/strcpy.s,
 	  device/lib/z80/strlen.s:
-	  Replace some backend-specific functions in stm8 and z80 librtaries by generic ones.
+	  Replace some backend-specific functions in stm8 and z80 libraries by generic ones.
+	* device/include/stdlib.h,
+	  device/lib/stm8/Makefile.in,
+	  device/lib/z180/Makefile.in,
+	  device/lib/stm8/_divslong.s,
+	  device/lib/z180/abs.s,
+	  device/lib/z180/memmove.s,
+	  device/lib/z180/strcpy.s,
+	  device/lib/z180/strlen.s,
+	  device/lib/z80/abs.s:
+	  Replace some backend-specific functions in stm8 and z180 libraries by generic ones.
 
 2017-10-08 Philipp Klaus Krause <pkk AT spth.de>
 
