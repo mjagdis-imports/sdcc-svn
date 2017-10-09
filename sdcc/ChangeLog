@@ -5,6 +5,31 @@
 	  device/lib/_muluchar.c,
 	  src/SDCCsymt.c:
 	  Generic support routine infrastructure.
+	* device/lib/gbz80/div.s,
+	  device/lib/gbz80/mul.s,
+	  device/lib/r2k/modmixed.s,
+	  device/lib/r2k/mul.s,
+	  device/lib/r2k/mulchar.s,
+	  device/lib/r3ka/modmixed.s,
+	  device/lib/r3ka/mul.s,
+	  device/lib/r3ka/mulchar.s,
+	  device/lib/tlcs90/modmixed.s,
+	  device/lib/tlcs90/mul.s,
+	  device/lib/tlcs90/mulchar.s,
+	  device/lib/z180/modmixed.s,
+	  device/lib/z180/mul.s,
+	  device/lib/z180/mulchar.s,
+	  device/lib/z80/modmixed.s,
+	  device/lib/z80/mul.s,
+	  device/lib/z80/mulchar.s,,
+	  device/lib/gbz80/Makefile.in,
+	  device/lib/r2k/Makefile.in,
+	  device/lib/r3ka/Makefile.in,
+	  device/lib/stm8/Makefile.in,
+	  device/lib/tlcs90/Makefile.in,
+	  device/lib/z180/Makefile.in,
+	  device/lib/z80/Makefile.in:
+	  Replace some backend-specific functions by generic ones.
 
 2017-10-09 Philipp Klaus Krause <pkk AT spth.de>
 
