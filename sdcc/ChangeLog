@@ -24,6 +24,18 @@
 	  device/lib/z180/strlen.s,
 	  device/lib/z80/abs.s:
 	  Replace some backend-specific functions in stm8 and z180 libraries by generic ones.
+	* device/lib/r2k/Makefile.in,
+	  device/lib/r3ka/Makefile.in,
+	  device/lib/tlcs90/Makefile.in,
+	  device/lib/z180/Makefile.in,
+	  device/lib/r2k/abs.s,
+	  device/lib/r2k/memmove.s,
+	  device/lib/r2k/strcpy.s,
+	  device/lib/r3ka/abs.s,
+	  device/lib/r3ka/memmove.s,
+	  device/lib/r3ka/strcpy.s,
+	  device/lib/tlcs90/abs.s:
+	  Replace some backend-specific functions in r2k, r3ka and tlcs90 libraries by generic ones.
 
 2017-10-08 Philipp Klaus Krause <pkk AT spth.de>
 
