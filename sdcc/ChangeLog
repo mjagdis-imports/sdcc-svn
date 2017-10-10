@@ -1,3 +1,57 @@
+2017-10-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-20001108-1.c,
+	  support/regression/tests/gcc-torture-execute-20020201-1.c,
+	  support/regression/tests/gcc-torture-execute-20020226-1.c,
+	  support/regression/tests/gcc-torture-execute-20060110-1.c,
+	  support/regression/tests/gcc-torture-execute-20060110-2.c,
+	  support/regression/tests/gcc-torture-execute-20060127-1.c,
+	  support/regression/tests/gcc-torture-execute-20071030-1.c,
+	  support/regression/tests/gcc-torture-execute-20080529-1.c,
+	  support/regression/tests/gcc-torture-execute-20101013-1.c,
+	  support/regression/tests/gcc-torture-execute-20120817-1.c,
+	  support/regression/tests/gcc-torture-execute-920604-1.c,
+	  support/regression/tests/gcc-torture-execute-920829-1.c,
+	  support/regression/tests/gcc-torture-execute-920922-1.c,
+	  support/regression/tests/gcc-torture-execute-930702-1.c,
+	  support/regression/tests/gcc-torture-execute-950511-1.c,
+	  support/regression/tests/gcc-torture-execute-950612-1.c,
+	  support/regression/tests/gcc-torture-execute-950915-1.c,
+	  support/regression/tests/gcc-torture-execute-961213-1.c,
+	  support/regression/tests/gcc-torture-execute-990513-1.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/gcc-torture-execute-pr47538.c,
+	  support/regression/tests/gcc-torture-execute-pr65170.c,
+	  support/regression/tests/gcc-torture-execute-pr78791.c,
+	  support/regression/tests/gcc-torture-execute-pr81556.c:
+	  Enable mcs51 tests that pass for me now.
+	* device/lib/hc08/Makefile.in,
+	  device/lib/hc08/_divuint.c,
+	  device/lib/hc08/_divulong.c,
+	  device/lib/hc08/_mullong.c,
+	  device/lib/hc08/Makefile.in,
+	  device/lib/hc08/_divuint.c,
+	  device/lib/hc08/_divulong.c,
+	  device/lib/hc08/_mullong.c:
+	  Replace some backend-specific functions in hc08 and s08 libraries by generic ones.
+
+2017-10-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCralloc.hpp:
+	  Fix bug #2667.
+	* support/regression/tests/gcc-torture-execute-pr68532.c:
+	  Disable test for medium model.
+
+2017-10-10 Ben Shi <powerstudio1st AT 163 DOT com>
+	* src/mcs51/gen.c:
+	  Fix a bug in genRet() to avoid generate "mov Rx,Ry".
+	* src/mcs51/peeph.def:
+	  Better format.
+	* support/regression/ports/mcs51-common/spec.mk:
+	  Add support for liblonglong.
+	* support/regression/tests/gcc-torture-execute-pr78378.c:
+	  Enabled for mcs-51.
+
 2017-10-09 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/_divuchar.c,
