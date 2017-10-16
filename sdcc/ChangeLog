@@ -1,3 +1,73 @@
+2017-10-16 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* src/mcs51/peeph.def:
+	  Fix a potential bug in label reference count calculation.
+
+2017-10-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCdebug.h,
+	  src/SDCCdwarf2.c,
+	  src/cdbFile.c,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c,
+	  src/stm8/ralloc.h:
+	  STM8 frame address debug info, based on patch by Åke Rehnman.
+	* src/stm8/main.c:
+	  Implement RFE #538: Option for stack pointer startup value for stm8.
+	* sdas/linksrc/lkelf.c:
+	  RFE #2670 ELF e_entry, patch by Åke Rehnman.
+	* src/SDCCtree_dec.hpp,
+	  src/SDCCralloc.hpp,
+	  src/SDCCnaddr.hpp,
+	  src/SDCClospre.cc:
+	  More verbose --dump-graphs output.
+
+2017-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-920922-1.c,
+	  support/regression/tests/gcc-torture-execute-950612-1.c:
+	  Disable tests that fail due to bug #2669.
+
+2017-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph.def:
+	  Renumber peephole rules.
+
+2017-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph.def:
+	  Remove obsolete peephole rules.
+
+2017-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def:
+	  Renumber peephole rules.
+
+2017-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def:
+	  Remove obsolete peephole rules.
+
+2017-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/hc08/peeph.def:
+	  Renumber peephole rules.
+
+2017-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/hc08/peeph.def:
+	  Remove obsolete peephole rules.
+
+2017-10-11 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* src/mcs51/peeph.def:
+	  Fix potential bugs in a serial of rules (241a-241h) by adding check of labelRefCount().
+
+2017-10-11 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* src/mcs51/peeph.def:
+	  Add two optimization rules for long long comparison.
+
 2017-10-10 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/gcc-torture-execute-20001108-1.c,
@@ -43,6 +113,7 @@
 	  Disable test for medium model.
 
 2017-10-10 Ben Shi <powerstudio1st AT 163 DOT com>
+
 	* src/mcs51/gen.c:
 	  Fix a bug in genRet() to avoid generate "mov Rx,Ry".
 	* src/mcs51/peeph.def:
