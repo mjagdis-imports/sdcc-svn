@@ -1,3 +1,34 @@
+2017-10-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve handling of a in pointer read and ifx.
+
+2017-05-13 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/z80/main.c (_parseOptions): fix bug #2634
+
+2017-10-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCdwarf2.h,
+	  src/SDCCdwarf2.c:
+	  CFI handling in DWARFv2 output, patch by Åke Rehnman.
+
+2017-10-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/main.c:
+	  Debug info infrastructure for stm8 registers.
+	* device/lib/_fsgt.c,
+	  device/lib/incl.mk,
+	  src/SDCCsymt.h,
+	  src/SDCCsymt.c
+	  src/SDCCopt.c:
+	  Remove __fsgt support function, RFE #526.
+	* src/z80/gen.c:
+	  Improve handling of variables on stack in return.
+	* src/SDCCsymt.c:
+	  Fix bug #2666.
+
 2017-10-16 Ben Shi <powerstudio1st AT 163 DOT com>
 
 	* src/mcs51/peeph.def:
