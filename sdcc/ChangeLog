@@ -1,3 +1,10 @@
+2017-10-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp,
+	  src/SDCCralloc.hpp,
+	  src/stm8/ralloc2.cc:
+	  Allow use of tdlib in place of SDCC Thorup in stm8 register allocator.
+
 2017-10-30 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:

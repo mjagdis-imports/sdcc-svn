@@ -61,6 +61,8 @@ struct forget_properties
   }
 };
 
+#ifndef USE_TDLIB
+
 // Thorup algorithm D.
 // The use of the multimap makes the complexity of this O(|I|log|I|), which could be reduced to O(|I|).
 template <class l_t>
@@ -279,6 +281,7 @@ void thorup_tree_decomposition(T_t &tree_decomposition, const G_t &cfg)
 
   tree_decomposition_from_elimination_ordering(tree_decomposition, elimination_ordering, cfg);
 }
+#endif
 
 // Ensure that all joins are at proper join nodes: Each node that has two children has the same bag as its children.
 // Complexity: Linear in the number of vertices of T.
@@ -556,4 +559,43 @@ private:
   std::string function;
   std::string purpose;
 };
+
+#ifdef USE_TDLIB
+
+#include <tdlib/treedec_traits.hpp>
+#include <vector>
+#include <tuple>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/graph/graph_utility.hpp>
+
+REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
+
+#include <tdlib/graph.hpp>
+#include <tdlib/preprocessing.hpp>
+#include <boost/graph/copy.hpp>
+
+#include <tdlib/thorup.hpp>
+#include <tdlib/combinations.hpp>
+
+typedef treedec::comb::PP_MD<cfg_t> PP_MD;
+typedef treedec::comb::PP_FI<cfg_t> PP_FI;
+typedef treedec::comb::PP_FI_TM<cfg_t> PP_FI_TM;
+
+#endif
+
+// Get a nice tree decomposition for a cfg.
+template <class T_t, class G_t>
+void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
+{
+#ifdef USE_TDLIB
+  G_t cfg2 = cfg;
+  treedec::thorup<cfg_t> TdAlgo(cfg2);
+  TdAlgo.do_it();
+  TdAlgo.get_tree_decomposition(tree_dec);
+#else
+  thorup_tree_decomposition(tree_dec, cfg);
+#endif
+  nicify(tree_dec);
+}
 
