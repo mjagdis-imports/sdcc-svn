@@ -16,6 +16,8 @@
 	  src/hc08/ralloc2.cc,
 	  src/z80/ralloc2.cc:
 	  Enable use of tdlib Thorup in place of SDCC Thorup.
+	* src/SDCCtree_dec.hp:
+	  Use PP+FI+TM instead of Thorup.
 
 2017-10-30 Philipp Klaus Krause <pkk AT spth.de>
 

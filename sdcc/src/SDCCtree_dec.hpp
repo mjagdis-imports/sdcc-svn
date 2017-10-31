@@ -578,6 +578,19 @@ REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
 #include <tdlib/thorup.hpp>
 #include <tdlib/combinations.hpp>
 
+template <typename G1_t, typename G2_t>
+void copy_undir(G1_t &G1, G2_t &G2){
+    for(unsigned i = 0; i < boost::num_vertices(G2); i++){
+        boost::add_vertex(G1);
+    }
+    typename boost::graph_traits<G2_t>::edge_iterator eIt, eEnd;
+    for(boost::tie(eIt, eEnd) = boost::edges(G2); eIt != eEnd; eIt++){
+        if (boost::source(*eIt, G2) != boost::target(*eIt, G2) && !boost::edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1).second){
+            boost::add_edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1);
+        }
+    }
+}
+
 #endif
 
 // Get a nice tree decomposition for a cfg.
@@ -588,9 +601,15 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
   typedef treedec::comb::PP_MD<G_t> PP_MD;
   typedef treedec::comb::PP_FI<G_t> PP_FI;
   typedef treedec::comb::PP_FI_TM<G_t> PP_FI_TM;
+  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> cfg2_t;
+  typedef treedec::comb::PP_MD<cfg2_t> PP_MD2;
+  typedef treedec::comb::PP_FI<cfg2_t> PP_FI2;
+  typedef treedec::comb::PP_FI_TM<cfg2_t> PP_FI_TM2;
 
-  G_t cfg2 = cfg;
-  treedec::thorup<G_t> TdAlgo(cfg2);
+  //G_t cfg2 = cfg;
+  cfg2_t cfg2;
+  copy_undir(cfg2, cfg);
+  PP_FI_TM2 TdAlgo(cfg2);
   TdAlgo.do_it();
   TdAlgo.get_tree_decomposition(tree_dec);
 #else
