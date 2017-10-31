@@ -22,6 +22,8 @@
 #define TD_SALLOC
 #define CH_SALLOC
 
+#undef USE_TDLIB
+
 #include "SDCCralloc.hpp"
 
 extern "C"
@@ -654,9 +656,7 @@ iCode *hc08_ralloc2_cc(ebbIndex *ebbi)
 
   tree_dec_t tree_decomposition;
 
-  thorup_tree_decomposition(tree_decomposition, control_flow_graph);
-
-  nicify(tree_decomposition);
+  get_nice_tree_decomposition(tree_decomposition, control_flow_graph);
 
   alive_tree_dec(tree_decomposition, control_flow_graph);
 
