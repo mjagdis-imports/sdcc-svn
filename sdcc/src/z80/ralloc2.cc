@@ -21,7 +21,7 @@
 // #define DEBUG_RALLOC_DEC // Uncomment to get debug messages while doing register allocation on the tree decomposition.
 // #define DEBUG_RALLOC_DEC_ASS // Uncomment to get debug messages about assignments while doing register allocation on the tree decomposition (much more verbose than the one above).
 
-#undef USE_TDLIB
+#define USE_TDLIB
 
 #include "SDCCralloc.hpp"
 

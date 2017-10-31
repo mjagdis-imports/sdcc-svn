@@ -21,7 +21,7 @@
 
 // #define DEBUG_LOSPRE // Uncomment to get debug messages while doing lospre.
 
-#undef USE_TDLIB
+#define USE_TDLIB
 
 #include "SDCClospre.hpp"
 

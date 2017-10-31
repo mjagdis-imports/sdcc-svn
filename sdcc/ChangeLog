@@ -11,6 +11,11 @@
 	  src/SDCCnaddr.cc,
 	  src/SDCCnaddr.hpp:
 	  Allow use of tdlib Thorup in place of SDCC Thorup in lospre and bank selection instruction placement.
+	* src/SDCClospre.cc,
+	  src/SDCCnaddr.cc,
+	  src/hc08/ralloc2.cc,
+	  src/z80/ralloc2.cc:
+	  Enable use of tdlib Thorup in place of SDCC Thorup.
 
 2017-10-30 Philipp Klaus Krause <pkk AT spth.de>
 

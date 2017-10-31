@@ -22,7 +22,7 @@
 #define TD_SALLOC
 #define CH_SALLOC
 
-#undef USE_TDLIB
+#define USE_TDLIB
 
 #include "SDCCralloc.hpp"
 
