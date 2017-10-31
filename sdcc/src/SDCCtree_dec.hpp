@@ -578,10 +578,6 @@ REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
 #include <tdlib/thorup.hpp>
 #include <tdlib/combinations.hpp>
 
-typedef treedec::comb::PP_MD<cfg_t> PP_MD;
-typedef treedec::comb::PP_FI<cfg_t> PP_FI;
-typedef treedec::comb::PP_FI_TM<cfg_t> PP_FI_TM;
-
 #endif
 
 // Get a nice tree decomposition for a cfg.
@@ -589,8 +585,12 @@ template <class T_t, class G_t>
 void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 {
 #ifdef USE_TDLIB
+  typedef treedec::comb::PP_MD<G_t> PP_MD;
+  typedef treedec::comb::PP_FI<G_t> PP_FI;
+  typedef treedec::comb::PP_FI_TM<G_t> PP_FI_TM;
+
   G_t cfg2 = cfg;
-  treedec::thorup<cfg_t> TdAlgo(cfg2);
+  treedec::thorup<G_t> TdAlgo(cfg2);
   TdAlgo.do_it();
   TdAlgo.get_tree_decomposition(tree_dec);
 #else

@@ -21,6 +21,8 @@
 
 // #define DEBUG_LOSPRE // Uncomment to get debug messages while doing lospre.
 
+#undef USE_TDLIB
+
 #include "SDCClospre.hpp"
 
 // A quick-and-dirty function to get the CFG from sdcc (a simplified version of the function from SDCCralloc.hpp).
@@ -259,7 +261,7 @@ void dump_cfg_lospre (const cfg_lospre_t &cfg)
 
 #if 0
 // Dump tree decomposition.
-static void dump_tree_decomposition(const tree_dec_lospre_t &tree_dec)
+static void dump_tree_decomposition(const tree_dec_t &tree_dec)
 {
   std::ofstream dump_file((std::string(dstFileName) + ".dumplospredec" + currFunc->rname + ".dot").c_str());
 
@@ -286,7 +288,7 @@ void
 lospre (iCode *sic, ebbIndex *ebbi)
 {
   cfg_lospre_t control_flow_graph;
-  tree_dec_lospre_t tree_decomposition;
+  tree_dec_t tree_decomposition;
 
   wassert (sic);
 
@@ -300,8 +302,7 @@ lospre (iCode *sic, ebbIndex *ebbi)
   if(options.dump_graphs)
     dump_cfg_lospre(control_flow_graph);
 
-  thorup_tree_decomposition (tree_decomposition, control_flow_graph);
-  nicify (tree_decomposition);
+  get_nice_tree_decomposition (tree_decomposition, control_flow_graph);
 
   int lkey = operandKey;
 

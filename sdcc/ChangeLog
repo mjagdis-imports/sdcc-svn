@@ -6,6 +6,11 @@
 	  src/hc08/ralloc2.cc,
 	  src/z80/ralloc2.cc:
 	  Allow use of tdlib Thorup in place of SDCC Thorup in register allocator.
+	* src/SDCClospre.cc,
+	  src/SDCClospre.hpp,
+	  src/SDCCnaddr.cc,
+	  src/SDCCnaddr.hpp:
+	  Allow use of tdlib Thorup in place of SDCC Thorup in lospre and bank selection instruction placement.
 
 2017-10-30 Philipp Klaus Krause <pkk AT spth.de>
 
