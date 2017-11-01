@@ -563,8 +563,6 @@ private:
 #ifdef USE_TDLIB
 
 #include <tdlib/treedec_traits.hpp>
-#include <vector>
-#include <tuple>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/graph/graph_utility.hpp>
