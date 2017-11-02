@@ -469,6 +469,11 @@ void nicify_diffs_more(T_t &T, typename boost::graph_traits<T_t>::vertex_descrip
   nicify_diffs_more(T, t);
 }
 
+#ifdef USE_TDLIB
+#include <tdlib/nice_decomposition.hpp>
+
+using treedec::find_root;
+#else
 // Find a root of an acyclic graph T
 // Complexity: Linear in the number of vertices of T.
 template <class T_t>
@@ -484,6 +489,7 @@ typename boost::graph_traits<T_t>::vertex_descriptor find_root(T_t &T)
 
   return(t);
 }
+#endif
 
 // Remove isolated vertices possibly introduced by nicify_diffs(). Complicated, since boost does not support removing more than one vertex at a time.
 template <class T_t>
@@ -607,7 +613,7 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
   //G_t cfg2 = cfg;
   cfg2_t cfg2;
   copy_undir(cfg2, cfg);
-  PP_FI_TM2 TdAlgo(cfg2);
+  PP_MD2 TdAlgo(cfg2);
   TdAlgo.do_it();
   TdAlgo.get_tree_decomposition(tree_dec);
 #else
