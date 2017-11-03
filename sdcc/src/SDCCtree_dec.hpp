@@ -609,6 +609,7 @@ void copy_undir(G1_t &G1, G2_t const &G2){
 #undef USE_THORUP
 #undef USE_PP_FI_TM
 #define USE_EX17 1
+#undef USE_PP_MD
 #undef USE_PP_FI
 
 // Get a nice tree decomposition for a cfg.
