@@ -482,11 +482,6 @@ void nicify_diffs_more(T_t &T, typename boost::graph_traits<T_t>::vertex_descrip
 #include <boost/graph/graph_utility.hpp>
 #include <tdlib/nice_decomposition.hpp>
 
-typedef  boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, treedec::bag_t> tdtu;
-// REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
-// REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
-// REGISTER_GRAPH_WITH_BUNDLED_BAGS(tdtu, bag);
-
 using treedec::find_root;
 #else
 // Find a root of an acyclic graph T
