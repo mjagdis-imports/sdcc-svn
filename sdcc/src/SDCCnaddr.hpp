@@ -130,6 +130,11 @@ struct tree_dec_naddr_node
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, cfg_naddr_node, float> cfg_t; // The edge property is the cost of subdividing the edge and inserting a bank switching instruction.
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, tree_dec_naddr_node> tree_dec_t;
 
+#ifdef USE_TDLIB
+#include <tdlib/treedec_traits.hpp>
+REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
+#endif
+
 #include "SDCCtree_dec.hpp"
 
 // Annotate nodes of the control flow graph with the set of possible named address spaces active there.

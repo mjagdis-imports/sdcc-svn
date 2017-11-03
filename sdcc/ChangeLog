@@ -1,3 +1,11 @@
+2017-11-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.hpp,
+	  src/SDCCnaddr.hpp,
+	  src/SDCCralloc.hpp,
+	  src/SDCCtree_dec.hpp:
+	  More changes for current tdlib, patch by Felix Salfelder.
+
 2017-11-02 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/bug-2684.c:

@@ -116,6 +116,11 @@ struct tree_dec_lospre_node
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, cfg_lospre_node, float> cfg_lospre_t; // The edge property is the cost of subdividing the edge and inserting an instruction (for now we always use 1, optimizing for code size, but relative execution frequency could be used when optimizing for speed or total energy consumption; aggregates thereof can be a good idea as well).
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, tree_dec_lospre_node> tree_dec_t;
 
+#ifdef USE_TDLIB
+#include <tdlib/treedec_traits.hpp>
+REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
+#endif
+
 #include "SDCCtree_dec.hpp"
 
 #ifdef DEBUG_LOSPRE

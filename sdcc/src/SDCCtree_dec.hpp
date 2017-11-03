@@ -40,6 +40,8 @@
 //
 // void thorup_elimination_ordering(l_t &l, const J_t &J)
 // Creates an elimination ordering l of a graph J using Thorup's heuristic.
+//
+#define USE_GALA
 
 #include <map>
 #include <vector>
@@ -49,9 +51,13 @@
 
 #include <boost/tuple/tuple_io.hpp>
 #include <boost/graph/graph_traits.hpp>
+#include <boost/graph/graph_utility.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/copy.hpp>
 #include <boost/graph/adjacency_list.hpp>
+
+#undef RANGE
+#undef BLOCK
 
 struct forget_properties
 {
@@ -470,7 +476,16 @@ void nicify_diffs_more(T_t &T, typename boost::graph_traits<T_t>::vertex_descrip
 }
 
 #ifdef USE_TDLIB
+#include <tdlib/treedec_traits.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/graph/graph_utility.hpp>
 #include <tdlib/nice_decomposition.hpp>
+
+typedef  boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, treedec::bag_t> tdtu;
+// REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
+// REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
+// REGISTER_GRAPH_WITH_BUNDLED_BAGS(tdtu, bag);
 
 using treedec::find_root;
 #else
@@ -568,12 +583,6 @@ private:
 
 #ifdef USE_TDLIB
 
-#include <tdlib/treedec_traits.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/graph/graph_utility.hpp>
-
-REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
 
 #include <tdlib/graph.hpp>
 #include <tdlib/preprocessing.hpp>
@@ -581,17 +590,22 @@ REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
 
 #include <tdlib/thorup.hpp>
 #include <tdlib/combinations.hpp>
+#include <tdlib/misc.hpp>
 
 template <typename G1_t, typename G2_t>
-void copy_undir(G1_t &G1, G2_t &G2){
+void copy_undir(G1_t &G1, G2_t const &G2){
     for(unsigned i = 0; i < boost::num_vertices(G2); i++){
         boost::add_vertex(G1);
     }
     typename boost::graph_traits<G2_t>::edge_iterator eIt, eEnd;
     for(boost::tie(eIt, eEnd) = boost::edges(G2); eIt != eEnd; eIt++){
-        if (boost::source(*eIt, G2) != boost::target(*eIt, G2) && !boost::edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1).second){
+        assert (boost::source(*eIt, G2) != boost::target(*eIt, G2));
+        if ( !boost::edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1).second){
             boost::add_edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1);
-        }
+        }else{
+			  // already there
+			  // intended here: this way, or the other.
+		  }
     }
 }
 
@@ -602,23 +616,37 @@ template <class T_t, class G_t>
 void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 {
 #ifdef USE_TDLIB
-  typedef treedec::comb::PP_MD<G_t> PP_MD;
+
+#if 0
+  typedef treedec::comb::PP_MD<G_t> TdAlgo;
   typedef treedec::comb::PP_FI<G_t> PP_FI;
   typedef treedec::comb::PP_FI_TM<G_t> PP_FI_TM;
+#endif
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> cfg2_t;
-  typedef treedec::comb::PP_MD<cfg2_t> PP_MD2;
-  typedef treedec::comb::PP_FI<cfg2_t> PP_FI2;
-  typedef treedec::comb::PP_FI_TM<cfg2_t> PP_FI_TM2;
+
+ // TODO: select one of those.
+  //typedef treedec::comb::PP_MD<cfg2_t> TdAlgo;
+  // typedef treedec::thorup<cfg2_t> TdAlgo;
+  typedef treedec::comb::ex17<cfg2_t> TdAlgo;
+  // typedef treedec::comb::PP_FI<cfg2_t> TdAlgo;
+  // typedef treedec::comb::PP_FI_TM<cfg2_t> TdAlgo;
 
   //G_t cfg2 = cfg;
+  // TODO: get rid of cfg2
   cfg2_t cfg2;
   copy_undir(cfg2, cfg);
-  PP_MD2 TdAlgo(cfg2);
-  TdAlgo.do_it();
-  TdAlgo.get_tree_decomposition(tree_dec);
+  TdAlgo a(cfg2);
+  a.do_it();
+  a.get_tree_decomposition(tree_dec);
+  // TODO: get_tree_decomposition must do that
+  wassert(treedec::is_valid_treedecomposition(cfg, tree_dec));
 #else
   thorup_tree_decomposition(tree_dec, cfg);
 #endif
   nicify(tree_dec);
+
+#ifdef USE_TDLIB
+  wassert(treedec::is_valid_treedecomposition(cfg, tree_dec));
+#endif
 }
 
