@@ -5,6 +5,8 @@
 	  src/SDCCralloc.hpp,
 	  src/SDCCtree_dec.hpp:
 	  More changes for current tdlib, patch by Felix Salfelder.
+	* src/SDCCtree_dec.hpp:
+	  Cleanup algorithm selection.
 
 2017-11-02 Philipp Klaus Krause <pkk AT spth.de>
 

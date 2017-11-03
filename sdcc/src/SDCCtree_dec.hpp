@@ -606,38 +606,47 @@ void copy_undir(G1_t &G1, G2_t const &G2){
 
 #endif
 
+#undef USE_THORUP
+#undef USE_PP_FI_TM
+#define USE_EX17 1
+#undef USE_PP_FI
+
 // Get a nice tree decomposition for a cfg.
 template <class T_t, class G_t>
 void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 {
 #ifdef USE_TDLIB
 
-#if 0
-  typedef treedec::comb::PP_MD<G_t> TdAlgo;
-  typedef treedec::comb::PP_FI<G_t> PP_FI;
-  typedef treedec::comb::PP_FI_TM<G_t> PP_FI_TM;
-#endif
+#ifdef USE_THORUP
+  treedec::thorup<G_t> a(cfg);
+#else
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> cfg2_t;
-
- // TODO: select one of those.
-  //typedef treedec::comb::PP_MD<cfg2_t> TdAlgo;
-  // typedef treedec::thorup<cfg2_t> TdAlgo;
-  typedef treedec::comb::ex17<cfg2_t> TdAlgo;
-  // typedef treedec::comb::PP_FI<cfg2_t> TdAlgo;
-  // typedef treedec::comb::PP_FI_TM<cfg2_t> TdAlgo;
-
-  //G_t cfg2 = cfg;
-  // TODO: get rid of cfg2
   cfg2_t cfg2;
   copy_undir(cfg2, cfg);
-  TdAlgo a(cfg2);
+#if USE_PP_FI_TM
+  treedec::comb::PP_FI_TM<cfg2_t> a(cfg2);
+#elif USE_EX17
+  treedec::comb::ex17<cfg2_t> a(cfg2);
+#elif USE_PP_MD
+  treedec::comb::PP_MD<cfg2_t> a(cfg2);
+#elif USE_PP_FI
+  treedec::comb::PP_FI<cfg2_t> a(cfg2);
+#else
+#error No algorithm selected
+#endif
+#endif
+
   a.do_it();
   a.get_tree_decomposition(tree_dec);
   // TODO: get_tree_decomposition must do that
   wassert(treedec::is_valid_treedecomposition(cfg, tree_dec));
+
 #else
+
   thorup_tree_decomposition(tree_dec, cfg);
+
 #endif
+
   nicify(tree_dec);
 
 #ifdef USE_TDLIB
