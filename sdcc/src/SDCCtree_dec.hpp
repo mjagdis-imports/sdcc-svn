@@ -608,8 +608,8 @@ void copy_undir(G1_t &G1, G2_t const &G2){
 #undef USE_THORUP
 #undef USE_PP_FI_TM
 #undef USE_EX17
-#define USE_PP_MD 1
-#undef USE_PP_FI
+#undef USE_PP_MD
+#define USE_PP_FI 1
 
 // Get a nice tree decomposition for a cfg.
 template <class T_t, class G_t>
@@ -620,7 +620,7 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 #ifdef USE_THORUP
   treedec::thorup<G_t> a(cfg);
 #else
-  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> cfg2_t;
+  typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> cfg2_t;
   cfg2_t cfg2;
   copy_undir(cfg2, cfg);
 #if USE_PP_FI_TM
