@@ -41,7 +41,6 @@
 // void thorup_elimination_ordering(l_t &l, const J_t &J)
 // Creates an elimination ordering l of a graph J using Thorup's heuristic.
 //
-#define USE_GALA
 
 #include <map>
 #include <vector>
@@ -67,7 +66,9 @@ struct forget_properties
   }
 };
 
-#ifndef USE_TREEDEC
+#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
+#define USE_GALA
+#else
 
 // Thorup algorithm D.
 // The use of the multimap makes the complexity of this O(|I|log|I|), which could be reduced to O(|I|).
@@ -475,7 +476,7 @@ void nicify_diffs_more(T_t &T, typename boost::graph_traits<T_t>::vertex_descrip
   nicify_diffs_more(T, t);
 }
 
-#ifdef USE_TREEDEC
+#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
 #include <treedec/treedec_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -576,7 +577,7 @@ private:
   std::string purpose;
 };
 
-#ifdef USE_TREEDEC
+#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
 
 #include <treedec/graph.hpp>
 #include <treedec/preprocessing.hpp>
@@ -615,7 +616,7 @@ void copy_undir(G1_t &G1, G2_t const &G2){
 template <class T_t, class G_t>
 void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 {
-#ifdef USE_TREEDEC
+#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
 
 #ifdef USE_THORUP
   treedec::thorup<G_t> a(cfg);
@@ -649,7 +650,7 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 
   nicify(tree_dec);
 
-#ifdef USE_TREEDEC
+#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
   wassert(treedec::is_valid_treedecomposition(cfg, tree_dec));
 #endif
 }

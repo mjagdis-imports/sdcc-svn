@@ -19,8 +19,6 @@
 //
 // Optimal placement of bank switching instructions for named address spaces.
 
-#define USE_TREEDEC
-
 #include "SDCCnaddr.hpp"
 
 // A quick-and-dirty function to get the CFG from sdcc (a simplified version of the function from SDCCralloc.hpp).

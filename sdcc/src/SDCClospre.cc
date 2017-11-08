@@ -21,8 +21,6 @@
 
 // #define DEBUG_LOSPRE // Uncomment to get debug messages while doing lospre.
 
-#define USE_TREEDEC
-
 #include "SDCClospre.hpp"
 
 // A quick-and-dirty function to get the CFG from sdcc (a simplified version of the function from SDCCralloc.hpp).

@@ -130,7 +130,7 @@ struct tree_dec_naddr_node
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, cfg_naddr_node, float> cfg_t; // The edge property is the cost of subdividing the edge and inserting a bank switching instruction.
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, tree_dec_naddr_node> tree_dec_t;
 
-#ifdef USE_TREEDEC
+#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
 #include <treedec/treedec_traits.hpp>
 TREEDEC_TREEDEC_BAG_TRAITS(tree_dec_t, bag);
 #endif

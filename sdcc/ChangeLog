@@ -1,5 +1,20 @@
 2017-11-08 Philipp Klaus Krause <pkk AT spth.de>
 
+	* configure,
+	  configure.ac,
+	  src/SDCClospre.cc,
+	  src/SDCClospre.hpp,
+	  src/SDCCnaddr.cc,
+	  src/SDCCnaddr.hpp,
+	  src/SDCCralloc.hpp,
+	  src/SDCCtree_dec.hpp,
+	  src/hc08/ralloc2.cc,
+	  src/stm8/ralloc2.cc,
+	  src/z80/ralloc2.cc:
+	  Detect and use treedec when available, fall back to Thorup otherwise.
+
+2017-11-08 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/SDCClospre.cc,
 	  src/SDCClospre.hpp,
 	  src/SDCCnaddr.cc,

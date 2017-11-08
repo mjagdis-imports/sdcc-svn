@@ -22,8 +22,6 @@
 #define TD_SALLOC
 #define CH_SALLOC
 
-#define USE_TREEDEC
-
 #include "SDCCralloc.hpp"
 
 extern "C"
