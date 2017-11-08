@@ -1,3 +1,31 @@
+2017-11-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCglobl.h,
+	  src/SDCCglue.c,
+	  src/SDCCmain.c,
+	  src/z80/main.c:
+	  Implement --data-seg, part of RFE #544.
+
+2017-11-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/peeph-gbz80.def,
+	  support/regression/tests/longlong.c,
+	  support/regression/tests/gcc-torture-execute-20001108-1.c,
+	  support/regression/tests/gcc-torture-execute-20011126-1,
+	  support/regression/tests/gcc-torture-execute-20041011-1.c,
+	  support/regression/tests/gcc-torture-execute-20080529-1.c,
+	  support/regression/tests/gcc-torture-execute-20120817-1.
+	  support/regression/tests/gcc-torture-execute-920829-1.c,
+	  support/regression/tests/gcc-torture-execute-950511-1.c,
+	  support/regression/tests/gcc-torture-execute-961213-1.c,
+	  support/regression/tests/gcc-torture-execute-pr65170:
+	  Fix bugs #2329, #2656, #2653.
+	* support/makebin/makebin.c:
+	  Apply patch #278 by Brandon Blake.
+	* support/regression/tests/bugs-1596270-1736867.c:
+	  Disable a test for ds390.
+
 2017-11-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCval.c,
