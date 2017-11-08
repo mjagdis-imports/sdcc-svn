@@ -1,3 +1,16 @@
+2017-11-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.cc,
+	  src/SDCClospre.hpp,
+	  src/SDCCnaddr.cc,
+	  src/SDCCnaddr.hpp,
+	  src/SDCCralloc.hpp,
+	  src/SDCCtree_dec.hpp,
+	  src/hc08/ralloc2.cc,
+	  src/stm8/ralloc2.cc,
+	  src/z80/ralloc2.cc:
+	  tdlib to treedec rename.
+
 2017-11-07 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCglobl.h,

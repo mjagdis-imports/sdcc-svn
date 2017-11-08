@@ -19,7 +19,7 @@
 //
 // Optimal placement of bank switching instructions for named address spaces.
 
-#define USE_TDLIB
+#define USE_TREEDEC
 
 #include "SDCCnaddr.hpp"
 

@@ -224,9 +224,9 @@ typedef boost::adjacency_matrix<boost::undirectedS, con_node> con2_t;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, cfg_node> cfg_t;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> cfg_sym_t;
 
-#ifdef USE_TDLIB
-#include <tdlib/treedec_traits.hpp>
-REGISTER_GRAPH_WITH_BUNDLED_BAGS(tree_dec_t, bag);
+#ifdef USE_TREEDEC
+#include <treedec/treedec_traits.hpp>
+TREEDEC_TREEDEC_BAG_TRAITS(tree_dec_t, bag);
 #endif
 
 #include "SDCCtree_dec.hpp"

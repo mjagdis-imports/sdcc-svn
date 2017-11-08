@@ -67,7 +67,7 @@ struct forget_properties
   }
 };
 
-#ifndef USE_TDLIB
+#ifndef USE_TREEDEC
 
 // Thorup algorithm D.
 // The use of the multimap makes the complexity of this O(|I|log|I|), which could be reduced to O(|I|).
@@ -475,12 +475,12 @@ void nicify_diffs_more(T_t &T, typename boost::graph_traits<T_t>::vertex_descrip
   nicify_diffs_more(T, t);
 }
 
-#ifdef USE_TDLIB
-#include <tdlib/treedec_traits.hpp>
+#ifdef USE_TREEDEC
+#include <treedec/treedec_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/graph/graph_utility.hpp>
-#include <tdlib/nice_decomposition.hpp>
+#include <treedec/nice_decomposition.hpp>
 
 using treedec::find_root;
 #else
@@ -576,15 +576,15 @@ private:
   std::string purpose;
 };
 
-#ifdef USE_TDLIB
+#ifdef USE_TREEDEC
 
-#include <tdlib/graph.hpp>
-#include <tdlib/preprocessing.hpp>
+#include <treedec/graph.hpp>
+#include <treedec/preprocessing.hpp>
 #include <boost/graph/copy.hpp>
 
-#include <tdlib/thorup.hpp>
-#include <tdlib/combinations.hpp>
-#include <tdlib/misc.hpp>
+#include <treedec/thorup.hpp>
+#include <treedec/combinations.hpp>
+#include <treedec/misc.hpp>
 
 template <typename G1_t, typename G2_t>
 void copy_undir(G1_t &G1, G2_t const &G2){
@@ -615,7 +615,7 @@ void copy_undir(G1_t &G1, G2_t const &G2){
 template <class T_t, class G_t>
 void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 {
-#ifdef USE_TDLIB
+#ifdef USE_TREEDEC
 
 #ifdef USE_THORUP
   treedec::thorup<G_t> a(cfg);
@@ -649,7 +649,7 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 
   nicify(tree_dec);
 
-#ifdef USE_TDLIB
+#ifdef USE_TREEDEC
   wassert(treedec::is_valid_treedecomposition(cfg, tree_dec));
 #endif
 }
