@@ -1,5 +1,10 @@
 2017-11-13 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/SDCCtree_dec.hpp:
+	  Document choice of algorithm for tree-decomposition.
+
+2017-11-13 Philipp Klaus Krause <pkk AT spth.de>
+
 	* configure.ac,
 	  src/SDCCtree_dec.hpp,
 	  sdccconf_in.h,
