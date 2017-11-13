@@ -535,8 +535,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   const i_assignment_t &ia = a.i_assignment;
 
-  const operand *const left = IC_LEFT(ic);
-  const operand *const right = IC_RIGHT(ic);
+  operand *const left = IC_LEFT(ic);
+  operand *const right = IC_RIGHT(ic);
   const operand *const result = IC_RESULT(ic);
 
   if(ia.registers[REG_A][1] < 0)
@@ -568,6 +568,12 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       break;
     }
 
+  // sfr access needs to go through a.
+  if(input_in_A &&
+    (IS_TRUE_SYMOP (left) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (left)->etype)) ||
+    IS_TRUE_SYMOP (right) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (right)->etype))))
+    return(false);
+
   // bit instructions do not disturb a.
   if(ic->op == BITWISEAND && ifxForOp (IC_RESULT(ic), ic) &&
     (IS_OP_LITERAL(left) && (!(IS_GB && IS_TRUE_SYMOP (right) || exstk && operand_on_stack(right, a, i, G)) || operand_in_reg(right, ia, i, G) && !operand_in_reg(right, REG_IYL, ia, i, G) && !operand_in_reg(right, REG_IYH, ia, i, G)) ||
@@ -594,10 +600,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if(IS_Z180 && ic->op == BITWISEAND && ifxForOp (IC_RESULT(ic), ic) &&
     (getSize(operandType(left)) == 1 && operand_in_reg(left, REG_A, ia, i, G) && (IS_OP_LITERAL(right) /*|| operand_in_reg(right, ia, i, G) && !operand_in_reg(right, REG_IYL, ia, i, G) && !operand_in_reg(right, REG_IYH, ia, i, G)*/) ||
     getSize(operandType(right)) == 1 && operand_in_reg(right, REG_A, ia, i, G) && (IS_OP_LITERAL(left) /*|| operand_in_reg(left, ia, i, G) && !operand_in_reg(left, REG_IYL, ia, i, G) && !operand_in_reg(left, REG_IYH, ia, i, G)*/)))
-    {
-      operand *const litop = IS_OP_LITERAL(left) ? IC_LEFT(ic) : IC_RIGHT(ic);
-      return(true);
-    }
+    return(true);
 
   const cfg_dying_t &dying = G[i].dying;
   const bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
@@ -608,8 +611,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_GB || ic->op == BITWISEAND || ic->op == '|' || ic->op == '^' || ic->op == '~') && // First byte of input and last byte of output may be in A.
     IS_ITEMP(result) && dying_A &&
-    (IS_ITEMP(left) || IS_OP_LITERAL(left)) &&
-    (!right || IS_ITEMP(right) || IS_OP_LITERAL(right)))
+    (IS_ITEMP(left) || IS_OP_LITERAL(left) || operand_on_stack(left, a, i, G)) &&
+    (!right || IS_ITEMP(right) || IS_OP_LITERAL(right) || operand_on_stack(right, a, i, G)))
     {
       
       if((operand_byte_in_reg(left, 0, REG_A, a, i, G) || !operand_in_reg(left, REG_A, ia, i, G)) &&
@@ -623,8 +626,13 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     operand_byte_in_reg(left, 0, REG_A, a, i, G) || getSize(operandType(left)) >= 2 && !IS_FLOAT (operandType(left)) && operand_byte_in_reg(left, 1, REG_A, a, i, G)))
     return(true);
 
+  // Any input byte in A is ok, when all operands are registers other than iy.
+  if(ic->op == CAST && operand_in_reg(right, REG_A, ia, i, G) &&
+    !operand_in_reg(result, REG_A, ia, i, G) && (operand_in_reg(result, REG_C, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G) || operand_in_reg(result, REG_L, ia, i, G)))
+    return(true);
+
   // Last byte of output may be in A.
-  if(ic->op == GET_VALUE_AT_ADDRESS && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))
+  if((ic->op == GET_VALUE_AT_ADDRESS || (ic->op == CAST) && !operand_in_reg(right, REG_A, ia, i, G)) && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))
     return(true);
 
   if (ic->op == LEFT_OP && getSize(operandType(IC_RESULT(ic))) == 2 && IS_OP_LITERAL(right) && byteOfVal (OP_VALUE (IC_RIGHT(ic)), 0) == 7)
@@ -634,13 +642,16 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     }
 
   // inc / dec does not affect a.
-  if ((ic->op == '+' || ic->op == '-') && IS_OP_LITERAL(right) && byteOfVal (OP_VALUE (IC_RIGHT(ic)), 0) <= 2 &&
+  if ((ic->op == '+' || ic->op == '-') && IS_OP_LITERAL(right) && ulFromVal (OP_VALUE (IC_RIGHT(ic))) <= 2 &&
     (getSize(operandType(IC_RESULT(ic))) == 2 && operand_is_pair(IC_RESULT(ic), a, i, G) || getSize(operandType(IC_RESULT(ic))) == 1 && operand_in_reg(result, ia, i, G) && operand_in_reg(result, ia, i, G)))
     return(true);
 
   // Code generator mostly cannot handle variables that are only partially in A.
   if(I[ia.registers[REG_A][1]].size > 1 || (ia.registers[REG_A][0] >= 0 && I[ia.registers[REG_A][0]].size > 1))
     return(false);
+
+  if(ic->op == '!' && getSize(operandType(left)) <= 2 && dying_A)
+    return(true);
 
   if(ic->op == GET_VALUE_AT_ADDRESS)
     return(!IS_BITVAR(getSpec(operandType(result))));
@@ -809,17 +820,24 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(result_only_HL && ic->op == PCALL)
     return(true);
 
-  if(exstk && (operand_on_stack(result, a, i, G) + operand_on_stack(left, a, i, G) + operand_on_stack(right, a, i, G) >= 2) && (result && IS_SYMOP(result) && getSize(operandType(result)) >= 2 || !result_only_HL)) // Todo: Make this more accurate to get better code when using --fomit-frame-pointer
+  if(ic->op == '-' && getSize(operandType(result)) == 2 && !IS_GB && IS_TRUE_SYMOP (left) && IS_TRUE_SYMOP (right) && result_only_HL)
+    return(true);
+
+  if(exstk &&
+     (operand_on_stack(result, a, i, G) + operand_on_stack(left, a, i, G) + operand_on_stack(right, a, i, G) >= 2) &&
+     (result && IS_SYMOP(result) && getSize(operandType(result)) >= 2 || !result_only_HL))
+     // Todo: Make this more accurate to get better code when using --fomit-frame-pointer
     return(false);
   if(exstk && (operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)) && (ic->op == '>' || ic->op == '<'))
     return(false);
   if(ic->op == '+' && getSize(operandType(result)) >= 2 && input_in_HL &&
-    ((exstk ? operand_on_stack(left, a, i, G) : IS_TRUE_SYMOP (left)) && (ia.registers[REG_L][1] > 0 || ia.registers[REG_H][1] > 0) ||
-    (exstk ? operand_on_stack(right, a, i, G) : IS_TRUE_SYMOP (right)) && (ia.registers[REG_L][1] > 0 || ia.registers[REG_H][1] > 0)))
+     ((exstk ? operand_on_stack(left,  a, i, G) : IS_TRUE_SYMOP (left) ) && (ia.registers[REG_L][1] > 0 || ia.registers[REG_H][1] > 0) ||
+      (exstk ? operand_on_stack(right, a, i, G) : IS_TRUE_SYMOP (right)) && (ia.registers[REG_L][1] > 0 || ia.registers[REG_H][1] > 0) ))
     return(false);
 
-  if(ic->op == '+' && getSize(operandType(result)) == 2 && (IS_OP_LITERAL (right) && ulFromVal (OP_VALUE (IC_RIGHT(ic))) <= 3 || IS_OP_LITERAL (left) && ulFromVal (OP_VALUE (IC_LEFT(ic))) <= 3) && 
-    (operand_in_reg(result, REG_L, ia, i, G) && I[ia.registers[REG_L][1]].byte == 0 && operand_in_reg(result, REG_H, ia, i, G)))
+  if(ic->op == '+' && getSize(operandType(result)) == 2 &&
+     (IS_OP_LITERAL (right) && ulFromVal (OP_VALUE (IC_RIGHT(ic))) <= 3 || IS_OP_LITERAL (left) && ulFromVal (OP_VALUE (IC_LEFT(ic))) <= 3) &&
+     (operand_in_reg(result, REG_L, ia, i, G) && I[ia.registers[REG_L][1]].byte == 0 && operand_in_reg(result, REG_H, ia, i, G)))
     return(true); // Uses inc hl.
 
   if(ic->op == '+' && getSize(operandType(result)) == 2 && !IS_TRUE_SYMOP (result) &&
@@ -853,7 +871,11 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 
   if(ic->op == LEFT_OP && getSize(operandType(result)) <= 2 && IS_OP_LITERAL (right) && result_only_HL)
     return(true);
-  if((ic->op == LEFT_OP || ic->op == RIGHT_OP) && (!exstk || ((!operand_on_stack(left, a, i, G) || !input_in_HL && result_only_HL) && (!operand_on_stack(right, a, i, G) || !input_in_HL && result_only_HL) && !operand_on_stack(result, a, i, G))))
+  if((ic->op == LEFT_OP || ic->op == RIGHT_OP) && (getSize(operandType(result)) <= 1 || !IS_TRUE_SYMOP(result) || !IY_RESERVED) &&
+     (!exstk ||
+      ((!operand_on_stack(left,  a, i, G) || !input_in_HL && result_only_HL) &&
+       (!operand_on_stack(right, a, i, G) || !input_in_HL && result_only_HL) &&
+       !operand_on_stack(result, a, i, G))))
     return(true);
 
   if(result && IS_SYMOP(result) && isOperandInDirSpace(IC_RESULT(ic)))
@@ -1665,9 +1687,7 @@ iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 
   tree_dec_t tree_decomposition;
 
-  thorup_tree_decomposition(tree_decomposition, control_flow_graph);
-
-  nicify(tree_decomposition);
+  get_nice_tree_decomposition(tree_decomposition, control_flow_graph);
 
   alive_tree_dec(tree_decomposition, control_flow_graph);
 

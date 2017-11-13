@@ -80,6 +80,8 @@ AC_LANG_C
 AC_CHECK_HEADERS(endian.h sys/endian.h machine/endian.h sys/isa_defs.h stdalign.h)
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS(stx/btree_set.h stx/btree_map.h,,AC_MSG_WARN([[STX library missing, using STL instead.]]))
+AC_CHECK_HEADERS(treedec/combinations.hpp,,AC_MSG_WARN([[treedec library missing, falling back to Thorup.]]))
+AC_CHECK_HEADERS(gala/graph.h)
 AC_CHECK_HEADERS(boost/graph/adjacency_list.hpp,,AC_MSG_ERROR([[boost library not found (boost/graph/adjacency_list.hpp).]]))
 AC_LANG_POP([C++])
 
@@ -95,10 +97,7 @@ esac
 
 # Checking for functions
 # ===========================================================================
-AC_CHECK_FUNCS(strerror)
-AC_CHECK_FUNCS(vsnprintf snprintf vsprintf mkstemp)
-AC_CHECK_FUNCS(strndup)
-AC_CHECK_FUNCS(setrlimit)
+AC_CHECK_FUNCS(strerror mkstemp strndup setrlimit)
 
 
 # Macro definitions
@@ -370,6 +369,7 @@ dnl replace \\ by \
 $2=`echo "[$]$2" | sed 's,\\\\\\\\,\\\\,g'`
 ])
 
+AX_CXX_COMPILE_STDCXX_11
 
 # Checking characteristics of compilers and other programs
 # ===========================================================================
@@ -405,7 +405,8 @@ if test "$ac_cv_c_compiler_gnu" = "yes"; then
 
   WALL_FLAG="-Wall -Wno-parentheses"
   C99_FLAG="--std=c99"
-  MAKEDEP="$CC $sdcc_cv_MM"
+  # We use CXX instead of CC here, since some of the C++ source files require a C++ compiler even during dependency generation.
+  MAKEDEP="$CXX $sdcc_cv_MM"
 else
   sdcc_IS_SUNPRO
   if test "$sdcc_cv_c_compiler_sunpro" = "yes"; then
@@ -427,8 +428,6 @@ AC_PROG_CC_C99
 if test "$ac_cv_prog_cc_c99" != "no"; then
   CFLAGS="$ac_cv_prog_cc_c99 ${CFLAGS}"
 fi
-
-AX_CXX_COMPILE_STDCXX_11
 
 # SDCC_C_UNNAMED_STRUCT_TAG ()
 # chech whether C compiler supports tag in unnamed struct
@@ -1010,6 +1009,7 @@ sdcc ${VERSION} is now configured for
   CXXFLAGS:             ${CXXFLAGS}
   CPPFLAGS:             ${CPPFLAGS}
   LDFLAGS:              ${LDFLAGS}
+  MAKEDEP:              ${MAKEDEP}
 
   ENABLED Ports:
     ds390               ${enable_ds390_port}

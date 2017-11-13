@@ -1,10 +1,310 @@
+2017-11-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* Merged nothorup branch to trunk.
+
+2017-11-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Document choice of algorithm for tree-decomposition.
+
+2017-11-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure.ac,
+	  src/SDCCtree_dec.hpp,
+	  sdccconf_in.h,
+	  configure:
+	  Automatically use gala for treedec.
+	  
+2017-11-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdccconf_in.h:
+	  Regenerate to get correct definitions from configuration.
+
+2017-11-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure,
+	  configure.ac,
+	  src/SDCClospre.cc,
+	  src/SDCClospre.hpp,
+	  src/SDCCnaddr.cc,
+	  src/SDCCnaddr.hpp,
+	  src/SDCCralloc.hpp,
+	  src/SDCCtree_dec.hpp,
+	  src/hc08/ralloc2.cc,
+	  src/stm8/ralloc2.cc,
+	  src/z80/ralloc2.cc:
+	  Detect and use treedec when available, fall back to Thorup otherwise.
+
+2017-11-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.cc,
+	  src/SDCClospre.hpp,
+	  src/SDCCnaddr.cc,
+	  src/SDCCnaddr.hpp,
+	  src/SDCCralloc.hpp,
+	  src/SDCCtree_dec.hpp,
+	  src/hc08/ralloc2.cc,
+	  src/stm8/ralloc2.cc,
+	  src/z80/ralloc2.cc:
+	  tdlib to treedec rename.
+
+2017-11-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCglobl.h,
+	  src/SDCCglue.c,
+	  src/SDCCmain.c,
+	  src/z80/main.c:
+	  Implement --data-seg, part of RFE #544.
+
+2017-11-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/peeph-gbz80.def,
+	  support/regression/tests/longlong.c,
+	  support/regression/tests/gcc-torture-execute-20001108-1.c,
+	  support/regression/tests/gcc-torture-execute-20011126-1,
+	  support/regression/tests/gcc-torture-execute-20041011-1.c,
+	  support/regression/tests/gcc-torture-execute-20080529-1.c,
+	  support/regression/tests/gcc-torture-execute-20120817-1.
+	  support/regression/tests/gcc-torture-execute-920829-1.c,
+	  support/regression/tests/gcc-torture-execute-950511-1.c,
+	  support/regression/tests/gcc-torture-execute-961213-1.c,
+	  support/regression/tests/gcc-torture-execute-pr65170:
+	  Fix bugs #2329, #2656, #2653.
+	* support/makebin/makebin.c:
+	  Apply patch #278 by Brandon Blake.
+	* support/regression/tests/bugs-1596270-1736867.c:
+	  Disable a test for ds390.
+
+2017-11-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCval.c,
+	  src/SDCCval.c,
+	  src/SDCC.lex,
+	  support/regression/tests/bug-2221.c,
+	  support/regression/tests/bug-2687.c,
+	  support/regression/tests/generic.c:
+	  Fix bugs #2221, #2687.
+	* configure.ac,
+	  configure:
+	  Fix bug #2689.
+
+2017-11-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCralloc.hpp,
+	  src/z80/gen.c,
+	  support/regression/tests/bug-2681.c:
+	  Fix bug #2681.
+	* support/regression/tests/bug-2645.c:
+	  Silence an mcs51 warning.
+	* support/regression/tests/bug-2567.c,
+	  support/regression/tests/gcc-torture-execute-pr60062.c,
+	  support/regression/tests/gcc-torture-execute-pr63209.c,
+	  support/regression/tests/gcc-torture-execute-pr80153.c:
+	  Silence some warning about unused function arguments.
+
+2017-11-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Fix bug #2684.
+
+2017-11-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Cleanup algorithm selection.
+
+2017-11-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2684.c:
+	  Disable new test for mcs51-small, which doesn't have enough RAM.
+
+2017-11-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.hpp,
+	  src/SDCCnaddr.hpp,
+	  src/SDCCralloc.hpp,
+	  src/SDCCtree_dec.hpp:
+	  More changes for current tdlib, patch by Felix Salfelder.
+
+2017-11-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2684.c:
+	  Test for bug #2684.
+
+2017-11-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Use find_root() from tdlib when available.
+
+2017-11-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc:
+	  Fix a bug in Z80 sfr handling.
+	* support/scripts/Makefile.in:
+	  Fix an access rights issue in make install, patch by Felix Salfelder.
+
+2017-10-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp,
+	  src/SDCCralloc.hpp,
+	  src/stm8/ralloc2.cc,
+	  src/hc08/ralloc2.cc,
+	  src/z80/ralloc2.cc:
+	  Allow use of tdlib Thorup in place of SDCC Thorup in register allocator.
+	* src/SDCClospre.cc,
+	  src/SDCClospre.hpp,
+	  src/SDCCnaddr.cc,
+	  src/SDCCnaddr.hpp:
+	  Allow use of tdlib Thorup in place of SDCC Thorup in lospre and bank selection instruction placement.
+	* src/SDCClospre.cc,
+	  src/SDCCnaddr.cc,
+	  src/hc08/ralloc2.cc,
+	  src/z80/ralloc2.cc:
+	  Enable use of tdlib Thorup in place of SDCC Thorup.
+	* src/SDCCtree_dec.hp:
+	  Use PP+FI+TM instead of Thorup.
+
+2017-10-30 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix --reserve-regs-iy issues, part of bug #2674.
+	* device/lib/incl.mk:
+	  Build library for mcs51 huge model, to reduce differences with Debian version.
+
+2017-10-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2580.c:
+	  Fix an issue for host systems where char is signed.
+	* support/regression/ports/ucz80-resiy,
+	  support/regression/Makefile.in:
+	  Add target for z80 test with --reserve-regs-iy.
+	* doc/Makefile.in:
+	  Try to resurrect full documentation build.
+
+2017-10-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/pic16/configure,
+	  device/non-free/lib/pic16/configure,
+	  device/non-free/lib/pic16/supported-devices.ac:
+	  Reduce pic device support warning timeout.
+	* support/regression/tests/gcc-torture-execute-920612-1.c:
+	  Disable a host test that fails for GCC 7.2.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-2580.c:
+	  Fix bug #2580.
+
+2017-10-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure,
+	  configure.ac,
+	  sim/ucsim/cmd.src/cmdutil.cc,
+	  sim/ucsim/configure,
+	  sim/ucsim/configure.ac,
+	  sim/ucsim/utils.cc,
+	  src/SDCCutil.c,
+	  src/SDCCutil.h:
+	  Do not work around missing C99 support.
+	* support/regression/Makefile.in:
+	  Reduce make overhead in regression testing from quadratic to linear in the number of tests.
+	* sim/ucsim/app.cc:
+	  Speed up simulator command handling for faster regression testing.
+
+2017-10-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c,
+	  support/regression/tests/bug-2370.c:
+	  Fix various --reserve-regs-iy issues, including bug #2370 and most of bug #2674.
+
+2017-10-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen:
+	  Fix a --reserve-regs-iy bug in 32/64-bit comparisons.
+	* src/stm8/peeph.def,
+	  src/stm8/gen.c:
+	  Minor improvements for stm8.
+
+2017-10-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/peep.c:
+	  __z88dk_fastcall function pointer support for --reserve-regs-iy.
+
+2017-10-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Fix broken references.
+	* src/z80/gen.c:
+	  Fix various --reserve-regs-iy issues, including bugs #2400, #2278, #2380.
+
+2017-10-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCdwarf2.c:
+	  Debug info for partially spilt variables.
+	* doc/sdccman.lyx,
+	  doc/Makefile.in:
+	  Fix SDCC version in manual title for out-of-tree build.
+	* src/SDCCast.c,
+	  support/regression/tests/bug-2632.c:
+	  Fix bug #2632.
+
+2017-10-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCdwarf2.c:
+	  Infrastructure for debug info for partially spilt variables.
+	* src/SDCCmain.c:
+	  Document command line options in help output.
+
+2017-10-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve handling of a in cast.
+	* src/z80/gen.c:
+	  Improve &.
+	* src/z80/gen.c:
+	  Improve |.
+
+2017-10-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph-z80.def:
+	  Optimize ifx on 16-bit pointer read.
+	* src/z80/peeph-z80.def:
+	  Improve peephole rules for caching 0 in a.
+
+2017-10-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve subtraction of global variables.
+	* src/z80/gen.c:
+	  Simplify stack adjustment.
+	* src/z80/gen.c:
+	  Improve 32-bit increment.
+	* src/z80/ralloc2.cc:
+	  Improve handling of a in negation.
+	* src/z80/gen.c:
+	  Improve cast to signed long and signed long long.
+	* src/z80/gen.c:
+	  Improve addition of immediates.
+
+2017-10-18 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* SDCC.props: boost 1.64
+	* sdas/linksrc/lkmem.c: fixed warning
+	* src/mcs51/peep.c,
+	* src/SDCCast.c,
+	* src/SDCCcse.c,
+	* src/SDCCmem.c,
+	* src/z80/ralloc2.cc: cosmetic changes
+
 2017-10-18 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/ralloc2.cc,
 	  src/z80/gen.c:
 	  Improve handling of a in pointer read and ifx.
 
-2017-05-13 Maarten Brock <sourceforge.brock AT dse.nl>
+2017-10-17 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/z80/main.c (_parseOptions): fix bug #2634
 

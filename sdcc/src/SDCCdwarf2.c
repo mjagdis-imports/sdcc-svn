@@ -2636,14 +2636,14 @@ dwFindScope (dwtag * tp, int block)
 static int
 dwWriteSymbolInternal (symbol *sym)
 {
-  dwtag * tp;
-  dwtag * subtp;
-  dwloc * lp;
-  dwtag * scopetp;
-  symbol * symloc;
-  dwtag * functp;
-  dwattr * funcap;
-  int inregs = 0;
+  dwtag *tp;
+  dwtag *subtp;
+  dwloc *lp;
+  dwtag *scopetp;
+  symbol *symloc;
+  dwtag *functp;
+  dwattr *funcap;
+  bool inregs = FALSE;
 
   if (!sym->level || IS_EXTERN (sym->etype))
     scopetp = dwRootTag;
@@ -2685,39 +2685,61 @@ dwWriteSymbolInternal (symbol *sym)
   /*   b) register equivalent,                   */
   /*   c) spill location                         */
   symloc = sym;
-  if (!sym->allocreq && sym->reqv)
+  if (/*!sym->allocreq &&*/ sym->reqv)
     {
       symloc = OP_SYMBOL (symloc->reqv);
-      if (symloc->isspilt && !symloc->remat)
+
+      for (int i = 0; i < symloc->nRegs; i++)
+        if (symloc->regs[i])
+          {
+            inregs = TRUE;
+            break;
+          }
+
+      if (!inregs && symloc->isspilt && !symloc->remat)
         symloc = symloc->usl.spillLoc;
-      else
-        inregs = 1;
     }
-  
+
   lp = NULL;
-  if (inregs && symloc->regs[0])
+  if (inregs) /* Variable (partially) in registers*/
     {
-      dwloc * reglp;
-      dwloc * lastlp = NULL;
-      int regNum;
-      int i;
-      
+      dwloc *reglp;
+      dwloc *lastlp = NULL;
+      symbol *spillloc = NULL;
+      int regNum, i, stack = 0;
+      int stackchange = port->little_endian ? port->stack.direction : -port->stack.direction;
+
+      if ((spillloc = symloc->usl.spillLoc) && spillloc->onStack)
+        stack = (port->little_endian ? spillloc->stack + symloc->nRegs - 1 : spillloc->stack);
+
       /* register allocation */
       for (i = (port->little_endian ? 0 : symloc->nRegs-1);
            (port->little_endian ? (i < symloc->nRegs) : (i >= 0));
-           (port->little_endian ? i++ : i--))
+           (port->little_endian ? i++ : i--), stack += stackchange)
         {
-          regNum = port->debugger.dwarf.regNum (symloc->regs[i]);
-          if (regNum >= 0 && regNum <= 31)
-            reglp = dwNewLoc (DW_OP_reg0 + regNum, NULL, 0);
-          else if (regNum >= 0)
-            reglp = dwNewLoc (DW_OP_regx, NULL, regNum);
-          else
+          if (!symloc->regs[i]) /* Spilt byte of variable */
             {
-              /* We are forced to give up if the ABI for this port */
-              /* does not define a number for this register        */
-              lp = NULL;
-              break;
+              if (!(spillloc && spillloc->onStack))
+                {
+                  lp = NULL;
+                  break;
+                }
+              reglp = dwNewLoc (DW_OP_fbreg, NULL, stack);
+            }
+          else /* Byte in registers */
+            {
+              regNum = port->debugger.dwarf.regNum (symloc->regs[i]);
+              if (regNum >= 0 && regNum <= 31)
+                reglp = dwNewLoc (DW_OP_reg0 + regNum, NULL, 0);
+              else if (regNum >= 0)
+                reglp = dwNewLoc (DW_OP_regx, NULL, regNum);
+              else
+                {
+                  /* We are forced to give up if the ABI for this port */
+                  /* does not define a number for this register        */
+                  lp = NULL;
+                  break;
+                }
             }
           
           if (lastlp)
