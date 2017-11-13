@@ -34,6 +34,9 @@
 /* Define to 1 if you have the <endian.h> header file. */
 #undef HAVE_ENDIAN_H
 
+/* Define to 1 if you have the <gala/graph.h> header file. */
+#undef HAVE_GALA_GRAPH_H
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 

@@ -66,9 +66,7 @@ struct forget_properties
   }
 };
 
-#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
-#define USE_GALA
-#else
+#ifndef HAVE_TREEDEC_COMBINATIONS_HPP
 
 // Thorup algorithm D.
 // The use of the multimap makes the complexity of this O(|I|log|I|), which could be reduced to O(|I|).

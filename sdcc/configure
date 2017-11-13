@@ -5024,6 +5024,18 @@ fi
 
 done
 
+for ac_header in gala/graph.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "gala/graph.h" "ac_cv_header_gala_graph_h" "$ac_includes_default"
+if test "x$ac_cv_header_gala_graph_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GALA_GRAPH_H 1
+_ACEOF
+
+fi
+
+done
+
 for ac_header in boost/graph/adjacency_list.hpp
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "boost/graph/adjacency_list.hpp" "ac_cv_header_boost_graph_adjacency_list_hpp" "$ac_includes_default"
