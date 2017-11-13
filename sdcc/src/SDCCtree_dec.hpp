@@ -604,9 +604,9 @@ void copy_undir(G1_t &G1, G2_t const &G2){
 
 #endif
 
-#undef USE_THORUP // Thorup's classic approach (default in SDCC pre-3.7.0). Substantially worse width than the otehr approaches.
+#undef USE_THORUP // Thorup's classic algorithm (default in SDCC pre-3.7.0). Substantially worse width than the others.
 #define USE_PP_FI_TM 1 // A good trade-off between width and runtime
-#undef USE_EX17 // Slightly better width width than PP_FI_TM, but no polynomial runtime bound.
+#undef USE_EX17 // Slightly better width than PP_FI_TM, but no polynomial runtime bound.
 #undef USE_PP_MD // Slightly worse width than PP_FI_TM.
 #undef USE_PP_FI // Slightly worse width than PP_FI_TM.
 
