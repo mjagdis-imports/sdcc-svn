@@ -1,3 +1,66 @@
+2017-12-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-1981238.c:
+	  Fix struct packing test for host.
+	* support/regression/tests/gcc-torture-execute-20141107-1.c:
+	  Fix test for host.
+
+2017-12-30 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/scripts/sdcc.nsi: added sdastlcs90.exe
+
+2017-12-29 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/wchar.c: disabled test for gcc 5.4 and older
+	* support/scripts/sdcc.nsi: added huge library
+
+2017-12-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/cmd.src/clean.mk:
+	  Cleanup bison-generated files.
+
+2017-12-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/cmd.src/Makefile.in,
+	  sim/ucsim/cmd.src/cmdpars.cc,
+	  sim/ucsim/cmd.src/cmdpars.hh,
+	  device/lib/pic14/*,
+	  device/lib/pic16/*:
+	  Fixes for out-of-tree builds.
+
+2017-11-18 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/ports/mcs51-huge/spec.mk,
+	* support/regression/Makefile.in: huge lib is now built by default
+	* support/regression/tests/gcc-torture-execute-20140212-1.c,
+	* support/regression/tests/gcc-torture-execute-20140212-2.c,
+	* support/regression/tests/gcc-torture-execute-pr60062.c,
+	* support/regression/tests/gcc-torture-execute-pr63209.c,
+	* support/regression/tests/gcc-torture-execute-pr64979.c,
+	* support/regression/tests/gcc-torture-execute-pr67714.c,
+	* support/regression/tests/gcc-torture-execute-pr68250.c,
+	* support/regression/tests/gcc-torture-execute-pr68321.c,
+	* support/regression/tests/gcc-torture-execute-pr68390.c,
+	* support/regression/tests/gcc-torture-execute-pr78675.c,
+	* support/regression/tests/gcc-torture-execute-pr80153.c,
+	* support/regression/tests/bug-2567.c: fix or suppress warnings
+	* support/regression/tests/gcc-torture-execute-pr66940.c: added test that
+	  long != long long
+	* support/regression/tests/inline.c: added test for bug 2591
+
+2017-11-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Choose Thorup vs. PP+FI+TM per CFG depending on width of decompositions.
+
+2017-11-14 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* src/mcs51/gen.c,
+	* src/mcs51/rtrack.c:
+	  Fix illegal form of MOV.
+	* support/regression/tests/bug-2221.c:
+	  Partially enabled.
+
 2017-11-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* Merged nothorup branch to trunk.
