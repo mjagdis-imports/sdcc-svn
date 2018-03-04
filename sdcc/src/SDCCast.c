@@ -1500,7 +1500,7 @@ createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootV
 /* initAggregates - initialises aggregate variables with initv     */
 /*-----------------------------------------------------------------*/
 ast *
-initAggregates (symbol * sym, initList * ival, ast * wid)
+initAggregates (symbol *sym, initList *ival, ast *wid)
 {
   ast *newAst = newAst_VALUE (symbolVal (sym));
   return createIval (newAst, sym->type, ival, wid, newAst, 1);
@@ -2642,7 +2642,7 @@ getResultTypeFromType (sym_link * type)
     }
   if (IS_CHAR (type))
     return RESULT_TYPE_CHAR;
-  if (IS_INT (type) && !IS_LONG (type))
+  if (IS_INT (type) && !IS_LONG (type) && !IS_LONGLONG (type))
     return RESULT_TYPE_INT;
   return RESULT_TYPE_OTHER;
 }
@@ -6359,7 +6359,7 @@ optimizeGetByte (ast * tree, RESULT_TYPE resultType)
 /* optimizeGetWord - get two bytes of the expression               */
 /*-----------------------------------------------------------------*/
 ast *
-optimizeGetWord (ast * tree, RESULT_TYPE resultType)
+optimizeGetWord (ast *tree, RESULT_TYPE resultType)
 {
   unsigned int i = 1;
   unsigned int size;
@@ -6367,6 +6367,7 @@ optimizeGetWord (ast * tree, RESULT_TYPE resultType)
   ast *count = NULL;
 
   expr = isShiftRightLitVal_BitAndLitVal (tree);
+
   if (expr)
     {
       i = AST_ULONG_VALUE (tree->left->right);

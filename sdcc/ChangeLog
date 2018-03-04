@@ -1,9 +1,117 @@
-2017-12-31 Philipp Klaus Krause <pkk AT spth.de>
+2016-02-18 Philipp Klaus Krause <pkk AT spth.de>
 
-	* support/regression/tests/bug-1981238.c:
-	  Fix struct packing test for host.
-	* support/regression/tests/gcc-torture-execute-20141107-1.c:
-	  Fix test for host.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-2715.c:
+	  Fix bug #2715.
+	* doc/sdccman.lyx:
+	  Document treedec location.
+
+2016-02-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version,
+	  doc/INSTALL.txt,
+	  sdcc.spec:
+	  Version 3.7.0
+
+2017-02-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Update for default build of lib for huge mcs51 memory model.
+
+2017-02-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Fixed a typo.
+
+2017-02-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/sdbinutils/bfd/doc/Makefile.am,
+	  support/sdbinutils/bfd/doc/Makefile.in:
+	  Fix bug #2711.
+
+2017-01-31 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/lib/strtol.c,
+	  device/lib/strtoul.c,
+	  support/regression/tests/strto.c,
+	  device/include/stdlib.h,
+	  device/lib/incl.mk:
+	  Implement strtoul(), strtol() RFE #555.
+
+2017-01-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCpeeph.c:
+	  Reduce memory usage in the peephole optimizer.
+	  
+2017-01-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/qsort.c,
+	  support/regression/tests/qsort.c:
+	  Implement qsort(), RFE #554.
+	* device/lib/stm8/heap.s:
+	  Increase stm8 default heapsize to 1KB size of other backends.
+	* src/SDCCpeeph.c,
+	  src/SDCCgen.c,
+	  src/stm8/peep.c:
+	  Code cleanup.
+
+2017-01-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peep.c,
+	  support/regression/tests/bug-2708.c:
+	  Fix bug #2708.
+
+2017-01-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.lex,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c:
+	  Remove leftovers from deprecated nojtbound pragma and option.
+	* doc/sdccman.lyx:
+	  Update list of incompatible changes.
+	* src/hc08/gen.c,
+	  src/SDCCast.c,
+	  device/lib/_rlulonglong.c,
+	  device/lib/_rrslonglong.c,
+	  device/lib/_rrulonglong.c,
+	  support/regression/tests/*.c:
+	  Fixed many long long issues, including bugs #2658 and #2118.
+
+2017-01-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCglue.c,
+	  support/regression/tests/bug-2643.c:
+	  Fix bug #2643.
+
+2017-01-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/ds390/gen.c,
+	  src/ds390/ralloc.c,
+	  support/regression/ports/ds390/spec.mk,
+	  support/regression/tests/*.c:
+	  Fixes in ds390 long long support.
+
+2017-01-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/ds390/ralloc.c,
+	  support/regression/tests/*.c:
+	  Fix conflict in assignment of long long return values.
+
+2017-01-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de.de>
+
+	* device/include/stdint.h,
+	  src/SDCCsymt.c,
+	  src/ds390/gen.c,
+	  src/ds390/gen.h,
+	  src/ds390/ralloc.c,
+	  support/regression/tests/*.c:
+	  Initial long long support for ds390.
+
+2018-01-03 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/scripts/sdcc.nsi: added tlcs90 library
 
 2017-12-30 Maarten Brock <sourceforge.brock AT dse.nl>
 
