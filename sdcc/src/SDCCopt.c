@@ -732,8 +732,8 @@ convilong (iCode * ic, eBBlock * ebp)
       bitVectUnSetBit (OP_USES (right), ic->key);
 
   if (op == '*' && (muls16tos32[0] || muls16tos32[1]) &&
-    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 || IS_OP_LITERAL (left) && operandLitValue (left) < 32768 && operandLitValue (left) >= -32768) &&
-    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 || IS_OP_LITERAL (right) && operandLitValue (right) < 32768 && operandLitValue (right) >= -32768) &&
+    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 && bitVectnBitsOn (OP_USES (left)) == 0 || IS_OP_LITERAL (left) && operandLitValue (left) < 32768 && operandLitValue (left) >= -32768) &&
+    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 && bitVectnBitsOn (OP_USES (right)) == 0 || IS_OP_LITERAL (right) && operandLitValue (right) < 32768 && operandLitValue (right) >= -32768) &&
     getSize (leftType) == 4 && getSize (rightType) == 4)
     {
       iCode *lic = IS_SYMOP (left) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (left))) : 0;
@@ -2987,6 +2987,19 @@ eBBlockFromiCode (iCode *ic)
 
   /* miscelaneous optimizations */
   miscOpt (ebbi->bbOrder, ebbi->count);
+
+  /* Split any live-ranges that became non-connected in dead code elimination. */
+  if(!TARGET_IS_DS390) /* Splitting live-ranges causes some regressions for ds390, probably by exposing other pre-existing bugs. */
+  {
+    recomputeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
+    adjustIChain (ebbi->bbOrder, ebbi->count);
+    ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+    separateLiveRanges (ic, ebbi);
+    ebbi = iCodeBreakDown (ic);
+    computeControlFlow (ebbi);
+    loops = createLoopRegions (ebbi);
+    computeDataFlow (ebbi);
+  }
 
   /* compute the live ranges */
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);
