@@ -324,7 +324,7 @@ create_bbcfg_lospre (bbcfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
   // Make a node for each basic block.
   std::map<int, unsigned int> key_to_index;
   {
-    int i = -1;
+    int i = -3;
     bool adding = false;
 
     for (ic = start_ic; ic; ic = ic->next)
@@ -334,7 +334,14 @@ create_bbcfg_lospre (bbcfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
         if (!adding)
         {
           boost::add_vertex(cfg);
-          cfg[++i].firstic = ic;
+          boost::add_vertex(cfg);
+          boost::add_vertex(cfg);
+          i += 3;
+          cfg[i].firstic = ic;
+          cfg[i + 1].firstic = 0;
+          cfg[i + 2].firstic = 0;
+          boost::add_edge(i, i + 1, 3.0f, cfg);
+          boost::add_edge(i + 1, i + 2, 3.0f, cfg);
           adding = true;
         }    
         if (ic->op == IFX || ic->op == GOTO || ic->op == JUMPTABLE)
@@ -348,19 +355,19 @@ create_bbcfg_lospre (bbcfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
   for (ic = start_ic; ic; ic = ic->next)
     {
       if((ic->op == '>' || ic->op == '<' || ic->op == LE_OP || ic->op == GE_OP || ic->op == EQ_OP || ic->op == NE_OP || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND) && ifxForOp (IC_RESULT (ic), ic) && key_to_index[ic->key] != key_to_index[ic->next->key])
-        boost::add_edge(key_to_index[ic->key], key_to_index[ic->next->key], 4.0f, cfg); // Try not to separate op from ifx.
+        boost::add_edge(key_to_index[ic->key] + 2, key_to_index[ic->next->key], 4.0f, cfg); // Try not to separate op from ifx.
       else if (ic->op != GOTO && ic->op != RETURN && ic->op != JUMPTABLE && ic->next && key_to_index[ic->key] != key_to_index[ic->next->key])
-        boost::add_edge(key_to_index[ic->key], key_to_index[ic->next->key], 3.0f, cfg);
+        boost::add_edge(key_to_index[ic->key] + 2, key_to_index[ic->next->key], 3.0f, cfg);
 
       if (ic->op == GOTO)
-        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, ic->label)->sch->key], 6.0f, cfg);
+        boost::add_edge(key_to_index[ic->key] + 2, key_to_index[eBBWithEntryLabel(ebbi, ic->label)->sch->key], 6.0f, cfg);
       else if (ic->op == RETURN)
-        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, returnLabel)->sch->key], 6.0f, cfg);
+        boost::add_edge(key_to_index[ic->key] + 2, key_to_index[eBBWithEntryLabel(ebbi, returnLabel)->sch->key], 6.0f, cfg);
       else if (ic->op == IFX)
-        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, IC_TRUE(ic) ? IC_TRUE(ic) : IC_FALSE(ic))->sch->key], 6.0f, cfg);
+        boost::add_edge(key_to_index[ic->key] + 2, key_to_index[eBBWithEntryLabel(ebbi, IC_TRUE(ic) ? IC_TRUE(ic) : IC_FALSE(ic))->sch->key], 6.0f, cfg);
       else if (ic->op == JUMPTABLE)
         for (symbol *lbl = (symbol *)(setFirstItem (IC_JTLABELS (ic))); lbl; lbl = (symbol *)(setNextItem (IC_JTLABELS (ic))))
-          boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, lbl)->sch->key], 6.0f, cfg);
+          boost::add_edge(key_to_index[ic->key] + 2, key_to_index[eBBWithEntryLabel(ebbi, lbl)->sch->key], 6.0f, cfg);
     }
 }
 
@@ -415,7 +422,7 @@ create_bbcfg_mcpre (bbcfg_mcpre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
 static void
 setup_bbcfg_mcpre_for_expression (bbcfg_mcpre_t *const cfg, const iCode *const eic)
 {
-  for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+  for (unsigned int i = 0; i < boost::num_vertices(*cfg); i++)
     {
       (*cfg)[i].kill = false;
       (*cfg)[i].avloc = false;
@@ -454,7 +461,8 @@ void dump_bbcfg_lospre (const bbcfg_lospre_t &cfg)
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       std::ostringstream os;
-      os << "First ic key " << cfg[i].firstic->key;
+      if (cfg[i].firstic)
+        os << "First ic key " << cfg[i].firstic->key;
       name[i] = os.str();
     }
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-lospre"));
