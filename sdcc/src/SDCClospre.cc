@@ -24,6 +24,8 @@
 
 #include "SDCClospre.hpp"
 
+#include <ctime>
+
 // A quick-and-dirty function to get the CFG from sdcc (a simplified version of the function from SDCCralloc.hpp).
 void
 create_cfg_lospre (cfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
@@ -509,11 +511,90 @@ void dump_bbcfg_mcpre (const bbcfg_mcpre_t &cfg)
   delete[] name;
 }
 
+void bb_lospre(const bbcfg_lospre_t &cfg, const iCode *ic)
+{
+}
+
+void bb_mcpre(const bbcfg_mcpre_t &cfg, const iCode *ic)
+{
+  // 1. Data-flow analysis
+
+  // 2. Obtain G_rd
+
+  // 3. Obtain G_mm
+
+  // 4. Obtain G_st
+
+  // 5. Find unique minimum cut
+
+  // 6. Backward data-flow analysis
+
+  // 7.
+
+  // 8.
+}
+
+void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
+{
+  bbcfg_lospre_t control_flow_graph;
+  create_bbcfg_lospre (control_flow_graph, sic, ebbi);
+  dump_bbcfg_lospre(control_flow_graph);
+
+  std::clock_t starttime = std::clock();
+
+  tree_dec_t tree_decomposition;
+  get_nice_tree_decomposition (tree_decomposition, control_flow_graph);
+  if(options.dump_graphs)
+    dump_dec_lospre(tree_decomposition);
+
+  std::set<int>::iterator ci, ci_end;
+  for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
+    {
+      const iCode *ic;
+
+      for (ic = sic; ic && ic->key != *ci; ic = ic->next);
+      if (!ic || !candidate_expression (ic, operandKey))
+        continue;
+
+      setup_bbcfg_lospre_for_expression (&control_flow_graph, ic);
+
+      bb_lospre(control_flow_graph, ic);
+    }
+
+  std::clock_t endtime = std::clock();
+  std::cout << "lospre time: " << double(endtime - starttime) / CLOCKS_PER_SEC << "\n";
+}
+
+void bb_mcpre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
+{
+  bbcfg_mcpre_t control_flow_graph;
+  create_bbcfg_mcpre (control_flow_graph, sic, ebbi);
+  dump_bbcfg_mcpre(control_flow_graph);
+
+  std::clock_t starttime = std::clock();
+
+  std::set<int>::iterator ci, ci_end;
+  for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
+    {
+      const iCode *ic;
+
+      for (ic = sic; ic && ic->key != *ci; ic = ic->next);
+      if (!ic || !candidate_expression (ic, operandKey))
+        continue;
+
+      setup_bbcfg_mcpre_for_expression (&control_flow_graph, ic);
+
+      bb_mcpre (control_flow_graph, ic);
+    }
+
+  std::clock_t endtime = std::clock();
+  std::cout << "MC-PRE time: " << double(endtime - starttime) / CLOCKS_PER_SEC << "\n";
+}
+
 void
 lospre (iCode *sic, ebbIndex *ebbi)
 {
   cfg_lospre_t control_flow_graph;
-  tree_dec_t tree_decomposition;
 
   wassert (sic);
 
@@ -527,57 +608,13 @@ lospre (iCode *sic, ebbIndex *ebbi)
   if(options.dump_graphs)
     dump_cfg_lospre(control_flow_graph);
 
-  get_nice_tree_decomposition (tree_decomposition, control_flow_graph);
+  std::set<int> candidate_set;
+  get_candidate_set (&candidate_set, sic, operandKey);
+  if(candidate_set.size() == 0)
+    return;
 
-  if(options.dump_graphs)
-    dump_dec_lospre(tree_decomposition);
+  bb_mcpre_all (candidate_set, sic, ebbi);
 
-  {
-    bbcfg_lospre_t control_flow_graph;
-
-    create_bbcfg_lospre (control_flow_graph, sic, ebbi);
-
-    dump_bbcfg_lospre(control_flow_graph);
-  }
-
-  {
-    bbcfg_mcpre_t control_flow_graph;
-
-    create_bbcfg_mcpre (control_flow_graph, sic, ebbi);
-
-    dump_bbcfg_mcpre(control_flow_graph);
-  }
-
-#if 1
-  int lkey = operandKey;
-
-  for (bool change = true; change;)
-    {
-      change = false;
-
-      std::set<int> candidate_set;
-      get_candidate_set (&candidate_set, sic, lkey);
-
-      if (currFunc)
-        std::cout << "Candidate set size for " << currFunc->rname << ": " << candidate_set.size() << "\n";
-
-      std::set<int>::iterator ci, ci_end;
-      for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
-        {
-          const iCode *ic;
-          for (ic = sic; ic && ic->key != *ci; ic = ic->next);
-
-          if (!ic || !candidate_expression (ic, lkey))
-            continue;
-
-          bool safety = setup_cfg_for_expression (&control_flow_graph, ic);
-
-          if (safety && tree_dec_safety (tree_decomposition, control_flow_graph, ic) < 0)
-            continue;
-
-          change |= (tree_dec_lospre (tree_decomposition, control_flow_graph, ic) > 0);
-        }
-    }
-#endif
+  bb_lospre_all (candidate_set, sic, ebbi);
 }
 
