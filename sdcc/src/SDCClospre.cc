@@ -320,6 +320,9 @@ lospre (iCode *sic, ebbIndex *ebbi)
       std::set<int> candidate_set;
       get_candidate_set (&candidate_set, sic, lkey);
 
+      if (currFunc)
+        std::cout << "Candidate set size for " << currFunc->rname << ": " << candidate_set.size() << "\n";
+
       std::set<int>::iterator ci, ci_end;
       for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
         {
