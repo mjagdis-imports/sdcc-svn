@@ -412,6 +412,36 @@ create_bbcfg_mcpre (bbcfg_mcpre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
     }
 }
 
+static void
+setup_bbcfg_mcpre_for_expression (bbcfg_mcpre_t *const cfg, const iCode *const eic)
+{
+  for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+    {
+      (*cfg)[i].kill = false;
+      (*cfg)[i].avloc = false;
+      (*cfg)[i].antloc = false;
+
+      for (const iCode *ic = (*cfg)[i].firstic; ic; ic = ic->next)
+        {
+          if (invalidates_expression (eic, ic))
+            {
+              (*cfg)[i].kill = true;
+              (*cfg)[i].avloc = false;
+            }
+
+          if (!(*cfg)[i].kill && same_expression (eic, ic))
+            (*cfg)[i].antloc = true;
+
+          if (same_expression (eic, ic))
+            (*cfg)[i].avloc = true;
+
+          if ((ic->op == IFX || ic->op == GOTO || ic->op == JUMPTABLE) || ic->next && ic->next->op == LABEL)
+            break;
+        }
+
+      (*cfg)[i].transp = !(*cfg)[i].kill;
+    }
+}
 
 void dump_bbcfg_lospre (const bbcfg_lospre_t &cfg)
 {
