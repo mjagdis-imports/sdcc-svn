@@ -186,6 +186,7 @@ invalidates_expression(const iCode *const eic, const iCode *const iic)
   return(false);
 }
 
+#if 0
 static bool
 setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
 {
@@ -252,6 +253,7 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
 
   return (safety_required);
 }
+#endif
 
 // Dump cfg, with numbered nodes.
 void dump_cfg_lospre (const cfg_lospre_t &cfg)
@@ -310,13 +312,22 @@ struct bbcfg_lospre_node
 struct bbcfg_mcpre_node
 {
   bool antloc, avloc, transp, kill;
+  bool n_aval, x_aval, x_pant, n_pant;
+  bool x_live, n_live;
+  bool d_isolated, d_insdel;
 
   iCode *firstic;
 };
 
+struct bbcfg_mcpre_edge
+{
+  bool ins_redund, ins_useless, non_ess, ess;
+  bool u_ins;
+};
+
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_lospre_node, float> bbcfg_lospre_t; // The edge property is the cost of subdividing the edge and inserting an instruction (for now we always use 1, optimizing for code size, but relative execution frequency could be used when optimizing for speed or total energy consumption; aggregates thereof can be a good idea as well).
 
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_mcpre_node, float> bbcfg_mcpre_t; // The edge property is the cost of subdividing the edge and inserting an instruction (for now we always use 1, optimizing for code size, but relative execution frequency could be used when optimizing for speed or total energy consumption; aggregates thereof can be a good idea as well).
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_mcpre_node, bbcfg_mcpre_edge> bbcfg_mcpre_t;
 
 void
 create_bbcfg_lospre (bbcfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
@@ -427,19 +438,19 @@ create_bbcfg_mcpre (bbcfg_mcpre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
   for (ic = start_ic; ic; ic = ic->next)
     {
       if((ic->op == '>' || ic->op == '<' || ic->op == LE_OP || ic->op == GE_OP || ic->op == EQ_OP || ic->op == NE_OP || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND) && ifxForOp (IC_RESULT (ic), ic) && key_to_index[ic->key] != key_to_index[ic->next->key])
-        boost::add_edge(key_to_index[ic->key], key_to_index[ic->next->key], 4.0f, cfg); // Try not to separate op from ifx.
+        boost::add_edge(key_to_index[ic->key], key_to_index[ic->next->key], cfg); // Try not to separate op from ifx.
       else if (ic->op != GOTO && ic->op != RETURN && ic->op != JUMPTABLE && ic->next && key_to_index[ic->key] != key_to_index[ic->next->key])
-        boost::add_edge(key_to_index[ic->key], key_to_index[ic->next->key], 3.0f, cfg);
+        boost::add_edge(key_to_index[ic->key], key_to_index[ic->next->key], cfg);
 
       if (ic->op == GOTO)
-        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, ic->label)->sch->key], 6.0f, cfg);
+        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, ic->label)->sch->key], cfg);
       else if (ic->op == RETURN)
-        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, returnLabel)->sch->key], 6.0f, cfg);
+        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, returnLabel)->sch->key], cfg);
       else if (ic->op == IFX)
-        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, IC_TRUE(ic) ? IC_TRUE(ic) : IC_FALSE(ic))->sch->key], 6.0f, cfg);
+        boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, IC_TRUE(ic) ? IC_TRUE(ic) : IC_FALSE(ic))->sch->key], cfg);
       else if (ic->op == JUMPTABLE)
         for (symbol *lbl = (symbol *)(setFirstItem (IC_JTLABELS (ic))); lbl; lbl = (symbol *)(setNextItem (IC_JTLABELS (ic))))
-          boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, lbl)->sch->key], 6.0f, cfg);
+          boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, lbl)->sch->key], cfg);
     }
 }
 
@@ -511,25 +522,109 @@ void dump_bbcfg_mcpre (const bbcfg_mcpre_t &cfg)
   delete[] name;
 }
 
-void bb_lospre(const bbcfg_lospre_t &cfg, const iCode *ic)
+void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
 {
+  tree_dec_lospre_nodes(T, find_root(T), G);
+
+  const assignment_lospre &winner = *(T[find_root(T)].assignments.begin());
+
+#ifdef DEBUG_LOSPRE
+  std::cout << "Winner (lospre): ";
+  print_assignment(winner, G);
+#endif
+
+  T[find_root(T)].assignments.clear();
 }
 
-void bb_mcpre(const bbcfg_mcpre_t &cfg, const iCode *ic)
+void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
 {
-  // 1. Data-flow analysis
+  typedef typename boost::graph_traits<bbcfg_mcpre_t>::in_edge_iterator in_iter_t;
+  typedef typename boost::graph_traits<bbcfg_mcpre_t>::out_edge_iterator out_iter_t;
+  typedef typename boost::graph_traits<bbcfg_mcpre_t>::edge_iterator edge_iter_t;
 
-  // 2. Obtain G_rd
+  // 1. Data-flow analysis (step 3.1 of MC-PRE_comp)
+  // 3.1a
+  for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+    {
+      cfg[i].n_aval = true;
+      cfg[i].x_aval = true;
+    }
+  for(bool change = true; change;)
+    {
+      change = false;
+      for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+        {
+          const bool old_n_aval = cfg[i].n_aval;
+          const bool old_x_aval = cfg[i].x_aval;
 
-  // 3. Obtain G_mm
+          if(!in_degree(i, cfg))
+            cfg[i].n_aval = false;
+          else
+            {
+              in_iter_t in, in_end;
+              cfg[i].n_aval = true;
+              for (boost::tie(in, in_end) = boost::in_edges(i, cfg);  in != in_end; ++in)
+                cfg[i].n_aval = cfg[i].n_aval && cfg[boost::source(*in, cfg)].x_aval;
+            }
+          cfg[i].x_aval = cfg[i].avloc || cfg[i].n_aval && cfg[i].transp;
 
-  // 4. Obtain G_st
+          if (cfg[i].n_aval != old_n_aval || cfg[i].x_aval != old_x_aval)
+            change = true;
+        }
+    }
+  // 3.1b
+  for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+    {
+      cfg[i].x_pant = false;
+      cfg[i].n_pant = false;
+    }
+  for(bool change = true; change;)
+    {
+      change = false;
+      for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+        {
+          const bool old_x_pant = cfg[i].x_pant;
+          const bool old_n_pant = cfg[i].n_pant;
+
+          out_iter_t out, out_end;
+          cfg[i].x_pant = false;
+          for (boost::tie(out, out_end) = boost::out_edges(i, cfg);  out != out_end; ++out)
+            cfg[i].x_pant = cfg[i].x_pant || cfg[boost::target(*out, cfg)].n_pant;
+          cfg[i].n_pant = cfg[i].antloc || cfg[i].x_pant && cfg[i].transp;
+
+          if (cfg[i].x_pant != old_x_pant || cfg[i].n_pant != old_n_pant)
+            change = true;
+        }
+    }
+
+  // 2. Obtain G_rd (step 3.2 of MC-PRE_comp)
+  // 3.2a
+  {
+    edge_iter_t e, e_end;
+    for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
+      {
+        cfg[*e].ins_redund = cfg[boost::source(*e, cfg)].x_aval;
+        cfg[*e].ins_useless = !cfg[boost::target(*e, cfg)].n_pant;
+        cfg[*e].non_ess = cfg[boost::source(*e, cfg)].x_aval || !cfg[boost::target(*e, cfg)].n_pant;
+        cfg[*e].ess = ! cfg[*e].non_ess;
+      }
+  } 
+  // 3.2b TODO
+
+  // 3. Obtain G_mm (step 3.3 of MC-PRE_comp)
+
+  // 4. Obtain G_st (step 3.4 of MC-PRE_comp)
 
   // 5. Find unique minimum cut
 
   // 6. Backward data-flow analysis
 
   // 7.
+  for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+    {
+      cfg[i].d_isolated = !cfg[i].x_live;
+      cfg[i].d_insdel = (cfg[i].avloc && cfg[i].kill) && !cfg[i].d_isolated;
+    }
 
   // 8.
 }
@@ -558,7 +653,7 @@ void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *eb
 
       setup_bbcfg_lospre_for_expression (&control_flow_graph, ic);
 
-      bb_lospre(control_flow_graph, ic);
+      bb_lospre(control_flow_graph, tree_decomposition, ic);
     }
 
   std::clock_t endtime = std::clock();

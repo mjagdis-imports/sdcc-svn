@@ -377,6 +377,7 @@ int tree_dec_lospre_nodes(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
   return(0);
 }
 
+#if 0
 template <class T_t, class G_t>
 void tree_dec_safety_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_descriptor t, const G_t &G)
 {
@@ -816,4 +817,4 @@ static int tree_dec_safety (tree_dec_t/*T_t*/ &T, cfg_lospre_t/*G_t*/ &G, const 
   T[find_root(T)].assignments.clear();
   return (0);
 }
-
+#endif
