@@ -317,6 +317,11 @@ struct bbcfg_mcpre_node
   bool d_isolated, d_insdel;
 
   iCode *firstic;
+  unsigned int gamma;
+};
+
+struct bbcfg_red_mcpre_node
+{
 };
 
 struct bbcfg_mcpre_edge
@@ -325,9 +330,20 @@ struct bbcfg_mcpre_edge
   bool u_ins;
 };
 
+
+struct bbcfg_red_mcpre_node
+{
+  unsigned int gamma_inv;
+};
+
+struct bbcfg_red_mcpre_edge
+{
+};
+
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_lospre_node, float> bbcfg_lospre_t; // The edge property is the cost of subdividing the edge and inserting an instruction (for now we always use 1, optimizing for code size, but relative execution frequency could be used when optimizing for speed or total energy consumption; aggregates thereof can be a good idea as well).
 
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_mcpre_node, bbcfg_mcpre_edge> bbcfg_mcpre_t;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_red_mcpre_node, bbcfg_red_mcpre_edge> bbcfg_red_mcpre_t;
 
 void
 create_bbcfg_lospre (bbcfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
@@ -424,7 +440,9 @@ create_bbcfg_mcpre (bbcfg_mcpre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
         if (!adding)
         {
           boost::add_vertex(cfg);
-          cfg[++i].firstic = ic;
+          i++;
+          cfg[i].firstic = ic;
+          cfg[i].gamma = UINT_MAX;
           adding = true;
         }    
         if (ic->op == IFX || ic->op == GOTO || ic->op == JUMPTABLE)
@@ -543,7 +561,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
   typedef typename boost::graph_traits<bbcfg_mcpre_t>::edge_iterator edge_iter_t;
 
   // 1. Data-flow analysis (step 3.1 of MC-PRE_comp)
-  // 3.1a
+  // 3.1a forward
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       cfg[i].n_aval = true;
@@ -572,7 +590,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
             change = true;
         }
     }
-  // 3.1b
+  // 3.1b backward
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       cfg[i].x_pant = false;
@@ -606,7 +624,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
         cfg[*e].ins_redund = cfg[boost::source(*e, cfg)].x_aval;
         cfg[*e].ins_useless = !cfg[boost::target(*e, cfg)].n_pant;
         cfg[*e].non_ess = cfg[boost::source(*e, cfg)].x_aval || !cfg[boost::target(*e, cfg)].n_pant;
-        cfg[*e].ess = ! cfg[*e].non_ess;
+        cfg[*e].ess = !cfg[*e].non_ess;
       }
   } 
   // 3.2b TODO
