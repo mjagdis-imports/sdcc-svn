@@ -6600,7 +6600,8 @@ genPointerGet (const iCode *ic)
           i++, blen -= 8;
           continue;
         }
-      else if (!bit_field && aopInReg (result->aop, i, Y_IDX) && !use_y)
+      else if (!bit_field && !use_y &&
+        (aopInReg (result->aop, i, Y_IDX) || aopOnStackNotExt (result->aop, i, 2) && regDead (Y_IDX, ic) && result->aop->regs[YL_IDX] < 0 && result->aop->regs[YH_IDX] < 0 && i + 3 < size && !optimize.codeSpeed))
         {
           o--;
 
@@ -6610,6 +6611,7 @@ genPointerGet (const iCode *ic)
           else
             emit2 ("ldw", "y, (0x%x, y)", o);
           cost (4 + (o > 0) + (o > 256), 3);
+          genMove_o (result->aop, i, ASMOP_Y, 0, 2, pushed_a, false, true);
 
           i++, blen -= 8;
           continue;

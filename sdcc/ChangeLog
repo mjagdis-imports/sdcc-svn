@@ -6,6 +6,8 @@
 	  Narrow |.
 	* src/stm8/peeph.def:
 	  Minor stm8 peephole improvement.
+	* src/stm8/gen.c:
+	  Improve wide pointer reads.
 
 2018-09-11 Philipp Klaus Krause <pkk AT spth.de>
 
