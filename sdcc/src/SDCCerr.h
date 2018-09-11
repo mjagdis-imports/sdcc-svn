@@ -74,7 +74,7 @@ enum {
   E_BITWISE_OP                  =  45, /* bit op invalid op   */
   E_ANDOR_OP                    =  46, /* && || op invalid    */
   E_TYPE_MISMATCH               =  47, /* type mismatch       */
-  E_AGGR_ASSIGN                 =  48, /* aggr assign         */
+  E_ARRAY_ASSIGN                =  48, /* array assign        */
   E_ARRAY_DIRECT                =  49, /* array indexing in   */
   E_BIT_ARRAY                   =  50, /* bit array not allowed  */
   E_DUPLICATE_TYPEDEF           =  51, /* typedef name duplicate */

@@ -1,3 +1,24 @@
+2018-09-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/string.h,
+	  device/lib/_memcpy.c,
+	  device/lib/stm8/memcpy.s,
+	  doc/sdccman.lyx,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/gcc-torture-execute-20011008-3.c,
+	  support/regression/tests/gcc-torture-execute-20050826-2.c,
+	  support/regression/tests/gcc-torture-execute-lto-tbaa-1.c,
+	  support/regression/tests/gcc-torture-execute-pr39339.c,
+	  support/regression/tests/gcc-torture-execute-pr70127.c,
+	  support/regression/tests/gcc-torture-execute-struct-cpy-1.c,
+	  support/regression/tests/structassign.c:
+	  Support for struct / union assignment, patch by Benedikt Freisen (roybaer).
+
 2018-09-10 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/peeph.def:

@@ -3942,6 +3942,8 @@ sym_link *charType;
 sym_link *floatType;
 sym_link *fixed16x16Type;
 
+symbol *memcpy_builtin;
+
 static const char *
 _mangleFunctionName (const char *in)
 {
@@ -4372,15 +4374,26 @@ initBuiltIns ()
   int i;
   symbol *sym;
 
-  if (!port->builtintable)
-    return;
-
-  for (i = 0; port->builtintable[i].name; i++)
+  if (port->builtintable)
     {
-      sym = funcOfTypeVarg (port->builtintable[i].name, port->builtintable[i].rtype,
-                            port->builtintable[i].nParms, (const char **)port->builtintable[i].parm_types);
-      FUNC_ISBUILTIN (sym->type) = 1;
-      FUNC_ISREENT (sym->type) = 0;     /* can never be reentrant */
+      for (i = 0; port->builtintable[i].name; i++)
+        {
+          sym = funcOfTypeVarg (port->builtintable[i].name, port->builtintable[i].rtype,
+                                port->builtintable[i].nParms, (const char **)port->builtintable[i].parm_types);
+          FUNC_ISBUILTIN (sym->type) = 1;
+          FUNC_ISREENT (sym->type) = 0;     /* can never be reentrant */
+        }
+    }
+
+  /* initialize memcpy symbol for struct assignment */
+  memcpy_builtin = findSym (SymbolTab, NULL, "__builtin_memcpy");
+  /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
+  if (!memcpy_builtin)
+    {
+      const char *argTypeStrs[] = {"vg*", "Cvg*", "Ui"};
+      memcpy_builtin = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
+      FUNC_ISBUILTIN (memcpy_builtin->type) = 0;
+      FUNC_ISREENT (memcpy_builtin->type) = options.stackAuto;
     }
 }
 
