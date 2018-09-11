@@ -6245,7 +6245,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
       goto release;
     }
 
-  wassertl (size <= 2 || shCount % 8 <= 1 + (size <= 4) || size == 4 && shCount <= 10, "Shifting of longs and long longs by non-trivial values should be handled by generic function.");
+  wassertl (size <= 2 || shCount % 8 <= 1 + (size <= 4) || size == 4 && (shCount <= 10 || shCount >= 16),
+    "Shifting of longs and long longs by non-trivial values should be handled by generic function.");
 
   if ((shCount < 8 || sign) && aopRS (left->aop) && aopRS (result->aop))
     {
@@ -6419,11 +6420,12 @@ genRightShift (const iCode *ic)
 
   /* if the shift count is known then do it
      as efficiently as possible */
-  if ( right->aop->type == AOP_LIT &&
-       ( (getSize (operandType (result)) <= 2) ||
-         (!sign && ulFromVal (right->aop->aopu.aop_lit) % 8 <= (getSize (operandType (result)) <= 4 ? 2UL : 1UL)) ||
-         (getSize (operandType (result)) <= 4 && ulFromVal (right->aop->aopu.aop_lit) <= 10) ||
-         (!sign && ulFromVal (right->aop->aopu.aop_lit) >= getSize (operandType (result)) * 8) ) )
+  if (right->aop->type == AOP_LIT &&
+    ((getSize (operandType (result)) <= 2) ||
+      (!sign && ulFromVal (right->aop->aopu.aop_lit) % 8 <= (getSize (operandType (result)) <= 4 ? 2ul : 1ul)) ||
+      (getSize (operandType (result)) <= 4 && ulFromVal (right->aop->aopu.aop_lit) <= 10) ||
+      (getSize (operandType (result)) <= 4 && ulFromVal (right->aop->aopu.aop_lit) >= 16) ||
+      (!sign && ulFromVal (right->aop->aopu.aop_lit) >= getSize (operandType (result)) * 8) ) )
     {
       genRightShiftLiteral (left, right, result, ic);
       freeAsmop (right);
