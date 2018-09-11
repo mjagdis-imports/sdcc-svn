@@ -5703,6 +5703,7 @@ static void init_shiftop(asmop *shiftop, const asmop *result, const asmop *left,
   for (i = 0; i < size;)
     {
       bool same_2_stack = aopOnStack (left, 0, 2) && aopOnStack (result, 0, 2) && left->aopu.bytes[i].byteu.stk == result->aopu.bytes[i].byteu.stk;
+      bool same_1_stack = aopOnStack (left, 0, 1) && aopOnStack (result, 0, 1) && left->aopu.bytes[i].byteu.stk == result->aopu.bytes[i].byteu.stk;
 
       if (!a_needed_for_count && aopInReg (left, i, A_IDX) && regDead (A_IDX, ic) && result->regs[A_IDX] == -1 && (size <= 1 || shCount >= 2))
         {
@@ -5710,7 +5711,7 @@ static void init_shiftop(asmop *shiftop, const asmop *result, const asmop *left,
           shiftop->regs[A_IDX] = i;
           i++;
         }
-      else if (aopInReg (left, i, X_IDX) && regDead (X_IDX, ic) && result->regs[XL_IDX] == -1 && result->regs[XH_IDX] == -1)
+      else if (aopInReg (left, i, X_IDX) && regDead (X_IDX, ic) && result->regs[XL_IDX] == -1 && result->regs[XH_IDX] == -1 && right->regs[XL_IDX] == -1 && right->regs[XH_IDX] == -1)
         {
           shiftop->aopu.bytes[i] = left->aopu.bytes[i];
           shiftop->aopu.bytes[i + 1] = left->aopu.bytes[i + 1];
@@ -5729,7 +5730,7 @@ static void init_shiftop(asmop *shiftop, const asmop *result, const asmop *left,
       // Try to shift in x instead of on stack.
       else if (aopOnStack (left, 0, 2) && aopOnStack (result, 0, 2) && !same_2_stack && regDead (X_IDX, ic) &&
         shiftop->regs[XL_IDX] == -1 && shiftop->regs[XH_IDX] == -1 &&
-        left->regs[XL_IDX] == -1 && left->regs[XH_IDX] == -1 && result->regs[XL_IDX] == -1 && result->regs[XH_IDX] == -1)
+        left->regs[XL_IDX] == -1 && left->regs[XH_IDX] == -1 && result->regs[XL_IDX] == -1 && result->regs[XH_IDX] == -1 && right->regs[XL_IDX] == -1 && right->regs[XH_IDX] == -1)
         {
           shiftop->aopu.bytes[i] = ASMOP_X->aopu.bytes[0];
           shiftop->aopu.bytes[i + 1] = ASMOP_X->aopu.bytes[1];
@@ -5748,7 +5749,7 @@ static void init_shiftop(asmop *shiftop, const asmop *result, const asmop *left,
           shiftop->regs[YH_IDX] = i + 1;
           i += 2;
         }
-      else if (!a_needed_for_count && size == 1 && aopOnStack (left, 0, 1) && aopOnStack (result, 0, 1) && regDead (A_IDX, ic) && shiftop->regs[A_IDX] == -1 && result->regs[A_IDX] == -1 && left->regs[A_IDX] == -1) // TODO: More cases.
+      else if (!a_needed_for_count && size == 1 && aopOnStack (left, 0, 1) && aopOnStack (result, 0, 1) && !same_1_stack && regDead (A_IDX, ic) && shiftop->regs[A_IDX] == -1 && result->regs[A_IDX] == -1 && left->regs[A_IDX] == -1) // TODO: More cases.
         {
           shiftop->aopu.bytes[i] = ASMOP_A->aopu.bytes[0];
           shiftop->regs[A_IDX] = i;
@@ -6020,7 +6021,7 @@ genLeftShift (const iCode *ic)
         {
           if (!regalloc_dry_run)
             wassertl (0, "Overwriting shift count");
-          cost (180, 180);
+          cost (380, 380);
         }
       if (aopInReg (shiftop, i, A_IDX) && !pushed_a)
         {
@@ -6439,7 +6440,7 @@ genRightShift (const iCode *ic)
         {
           if (!regalloc_dry_run)
             wassertl (0, "Overwriting shift count");
-          cost (180, 180);
+          cost (380, 380);
         }
       if (aopInReg (shiftop, i, A_IDX) && !pushed_a)
         {
