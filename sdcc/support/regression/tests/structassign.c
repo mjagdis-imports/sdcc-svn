@@ -6,13 +6,17 @@
 #include <testfwk.h>
 
 /* declare some structs and unions */
+struct t { {type} a; };
 struct s { {type} a; {type} b; };
+
+struct t t1 = { 1 };
+struct t t2 = { 2 };
 
 struct s s1 = { 1, 2 };
 struct s s2 = { 3, 4 };
 struct s s3 = { 5, 6 };
 
-union u { int a; float b; char c; };
+union u { {type} a; float b; char c; };
 
 union u u1, u2, u3;
 
@@ -23,6 +27,9 @@ testSimpleStructAssignment(void)
   s1 = s2;
   ASSERT(s1.a == 3);
   ASSERT(s1.b == 4);
+
+  t1 = t2;
+  ASSERT(t1.a == 2);
 }
 
 /* struct: transitive assignment */

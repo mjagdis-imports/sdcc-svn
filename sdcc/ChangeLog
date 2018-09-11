@@ -1,5 +1,10 @@
 2018-09-11 Philipp Klaus Krause <pkk AT spth.de>
 
+	* support/regression/tests/structassign.c:
+	  Test more struct sizes.
+
+2018-09-11 Philipp Klaus Krause <pkk AT spth.de>
+
 	* device/include/string.h,
 	  device/lib/_memcpy.c,
 	  device/lib/stm8/memcpy.s,
