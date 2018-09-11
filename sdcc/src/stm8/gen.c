@@ -6119,7 +6119,7 @@ postshift:
 /* genGetABit - get a bit                                           */
 /*------------------------------------------------------------------*/
 static void
-genGetABit (const iCode *ic)
+genGetABit (const iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
   int shCount, leftcost, rightcost;
@@ -6135,6 +6135,34 @@ genGetABit (const iCode *ic)
   aopOp (result, ic);
 
   shCount = (int) ulFromVal ((right->aop)->aopu.aop_lit);
+
+  if (ifx && result->aop->type == AOP_CND)
+    {
+      wassert (shCount % 8 == 7);
+
+      symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
+
+      if (aopInReg (left->aop, shCount / 8, XH_IDX))
+        emit3w (A_TNZW, ASMOP_X, 0);
+      else if (aopInReg (left->aop, shCount / 8, YH_IDX))
+        emit3w (A_TNZW, ASMOP_Y, 0);
+      else if (aopInReg (left->aop, shCount / 8, XL_IDX) || aopInReg (left->aop, shCount / 8, YL_IDX))
+        {
+          wassert (regalloc_dry_run);
+          cost (200, 200);
+        }
+      else
+        emit3_o (A_TNZ, left->aop, shCount / 8, 0, 0);
+
+      if (!regalloc_dry_run)
+        emit2 (IC_TRUE (ifx) ? "jrpl" : "jrmi", "!tlabel", labelKey2num (tlbl->key));
+      cost (2, 2); // Hmm. Cycle cost overestimate.
+
+      emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 1.0f); // Hmm. Cycle cost overestimate.
+      emitLabel (tlbl);
+
+      goto release;
+    }
 
   if (!regDead (A_IDX, ic))
     push (ASMOP_A, 0, 1);
@@ -6175,6 +6203,7 @@ genGetABit (const iCode *ic)
   if (!regDead (A_IDX, ic))
     pop (ASMOP_A, 0, 1);
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -7739,7 +7768,7 @@ genSTM8iCode (iCode *ic)
       break;
 
     case GETABIT:
-      genGetABit (ic);
+      genGetABit (ic, ifxForOp (IC_RESULT (ic), ic));
       break;
 
     case LEFT_OP:

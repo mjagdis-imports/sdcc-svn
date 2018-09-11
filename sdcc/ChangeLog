@@ -1,5 +1,11 @@
 2018-09-11 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/stm8/ralloc2.cc,
+	  src/stm8/gen.c:
+	  Improve jump on sign bit.
+
+2018-09-11 Philipp Klaus Krause <pkk AT spth.de>
+
 	* support/regression/tests/structassign.c:
 	  Test more struct sizes.
 	* src/SDCCopt.c:
