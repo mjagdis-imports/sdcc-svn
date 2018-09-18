@@ -1627,6 +1627,13 @@ replace restart {
 	jp	%3
 }
 
+replace restart {
+	dec	hl
+	inc	hl
+} by {
+	; peephole 155a removed inc hl / dec hl pair.
+}
+
 // These ex-generating rules should be among the last ones since ex counts as a read from both hl and de for notUsed().
 barrier
 

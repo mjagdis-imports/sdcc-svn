@@ -2,6 +2,9 @@
 
 	* doc/README.txt:
 	  List TLCS-90 as supported target.
+	* src/z80/peeph-z80.def,
+	  src/z80/peeph-r2k.def:
+	  Minor z80 peephole improvement.
 
 2018-09-14 Philipp Klaus Krause <pkk AT spth.de>
 
