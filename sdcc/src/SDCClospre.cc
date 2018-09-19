@@ -661,6 +661,9 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
     edge_iter_t e, e_end;
     for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
       {
+        if (!cfg[*e].ess)
+          continue;
+
         if(cfg[boost::source(*e, cfg)].red_map < 0)
           {
             boost::add_vertex(G_rd);
