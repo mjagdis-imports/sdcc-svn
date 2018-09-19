@@ -317,11 +317,7 @@ struct bbcfg_mcpre_node
   bool d_isolated, d_insdel;
 
   iCode *firstic;
-  unsigned int gamma;
-};
-
-struct bbcfg_red_mcpre_node
-{
+  int red_map;
 };
 
 struct bbcfg_mcpre_edge
@@ -330,20 +326,35 @@ struct bbcfg_mcpre_edge
   bool u_ins;
 };
 
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_lospre_node, float> bbcfg_lospre_t; // The edge property is the cost of subdividing the edge and inserting an instruction (for now we always use 1, optimizing for code size, but relative execution frequency could be used when optimizing for speed or total energy consumption; aggregates thereof can be a good idea as well).
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_mcpre_node, bbcfg_mcpre_edge> bbcfg_mcpre_t;
 
 struct bbcfg_red_mcpre_node
 {
-  unsigned int gamma_inv;
+  bool top, bot;
+
+  unsigned int top_part, bot_part;
+
+  int red_map_inv;
 };
 
 struct bbcfg_red_mcpre_edge
 {
+  std::pair<int, int> gamma;
 };
 
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_lospre_node, float> bbcfg_lospre_t; // The edge property is the cost of subdividing the edge and inserting an instruction (for now we always use 1, optimizing for code size, but relative execution frequency could be used when optimizing for speed or total energy consumption; aggregates thereof can be a good idea as well).
-
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_mcpre_node, bbcfg_mcpre_edge> bbcfg_mcpre_t;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_red_mcpre_node, bbcfg_red_mcpre_edge> bbcfg_red_mcpre_t;
+
+struct bbcfg_red2_mcpre_node
+{
+};
+
+struct bbcfg_red2_mcpre_edge
+{
+  boost::graph_traits<bbcfg_red_mcpre_t>::edge_iterator gamma_inv;
+};
+
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_red2_mcpre_node, bbcfg_red2_mcpre_edge> bbcfg_red2_mcpre_t;
 
 void
 create_bbcfg_lospre (bbcfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
@@ -442,7 +453,6 @@ create_bbcfg_mcpre (bbcfg_mcpre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
           boost::add_vertex(cfg);
           i++;
           cfg[i].firstic = ic;
-          cfg[i].gamma = UINT_MAX;
           adding = true;
         }    
         if (ic->op == IFX || ic->op == GOTO || ic->op == JUMPTABLE)
@@ -522,7 +532,7 @@ void dump_bbcfg_lospre (const bbcfg_lospre_t &cfg)
   delete[] name;
 }
 
-void dump_bbcfg_mcpre (const bbcfg_mcpre_t &cfg)
+void dump_bbcfg_mcpre(const bbcfg_mcpre_t &cfg)
 {
   if (!currFunc)
     return;
@@ -538,6 +548,20 @@ void dump_bbcfg_mcpre (const bbcfg_mcpre_t &cfg)
     }
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre"));
   delete[] name;
+}
+
+void dump_bbcfg_red2_mcpre(const bbcfg_red2_mcpre_t &cfg)
+{
+  if (!currFunc)
+    return;
+
+  static int n;
+
+  std::ostringstream filename;
+  filename << std::string(dstFileName) << ".dumpmcprebbcfg_red2" << "-" << n++ << currFunc->rname << ".dot";
+  std::ofstream dump_file(filename.str().c_str());
+
+  boost::write_graphviz(dump_file, cfg, boost::default_writer(), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre (reduced)"));
 }
 
 void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
@@ -616,6 +640,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
     }
 
   // 2. Obtain G_rd (step 3.2 of MC-PRE_comp)
+  bbcfg_red_mcpre_t G_rd;
   // 3.2a
   {
     edge_iter_t e, e_end;
@@ -626,12 +651,88 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
         cfg[*e].non_ess = cfg[boost::source(*e, cfg)].x_aval || !cfg[boost::target(*e, cfg)].n_pant;
         cfg[*e].ess = !cfg[*e].non_ess;
       }
+  }
+  // 3.2b
+  {
+    for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+      cfg[i].red_map = -1;
+
+    int i = -1;
+    edge_iter_t e, e_end;
+    for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
+      {
+        if(cfg[boost::source(*e, cfg)].red_map < 0)
+          {
+            boost::add_vertex(G_rd);
+            i++;
+            cfg[boost::source(*e, cfg)].red_map = i;
+            G_rd[i].red_map_inv = boost::source(*e, cfg);
+          }
+        if(cfg[boost::target(*e, cfg)].red_map < 0)
+          {
+            boost::add_vertex(G_rd);
+            i++;
+            cfg[boost::target(*e, cfg)].red_map = i;
+            G_rd[i].red_map_inv = boost::target(*e, cfg);
+          }
+        boost::add_edge(cfg[boost::source(*e, cfg)].red_map, cfg[boost::target(*e, cfg)].red_map, G_rd);
+      }
   } 
-  // 3.2b TODO
 
   // 3. Obtain G_mm (step 3.3 of MC-PRE_comp)
+  bbcfg_red2_mcpre_t G;
+  unsigned int s_mm, t_mm;
+  {
+    typedef typename boost::graph_traits<bbcfg_red_mcpre_t>::edge_iterator edge_iter_t;
+
+    unsigned int n = boost::num_vertices(G_rd);
+    edge_iter_t e, e_end;
+  // 3.3a
+
+    for (unsigned int i = 0; i < boost::num_vertices(G_rd); i++)
+      {
+        G_rd[i].top = cfg[G_rd[i].red_map_inv].antloc && in_degree(i, G_rd);
+        G_rd[i].bot = cfg[G_rd[i].red_map_inv].kill && out_degree(i, G_rd);
+        G_rd[i].top_part = G_rd[i].top && G_rd[i].bot ? n++ : i;
+        G_rd[i].bot_part = G_rd[i].top && G_rd[i].bot ? n++ : i;
+      }
+
+    for(boost::tie(e, e_end) = boost::edges(G_rd); e != e_end; ++e)
+      G_rd[*e].gamma = std::pair<int, int>(G_rd[boost::source(*e, G_rd)].bot_part, G_rd[boost::target(*e, G_rd)].top_part);
+  // 3.3b
+    for (unsigned int i = 0; i < n; i++)
+      boost::add_vertex(G);
+    for(boost::tie(e, e_end) = boost::edges(G_rd); e != e_end; ++e)
+      G[boost::add_edge(G_rd[*e].gamma.first, G_rd[*e].gamma.second, G).first].gamma_inv = e;
+  // 3.3c
+    s_mm = 0;
+    t_mm = 0;
+    for (unsigned int i = 0; i < boost::num_vertices(G); i++)
+      {
+        if (!in_degree(i, G))
+          s_mm++;
+        if (!out_degree(i, G))
+          t_mm++;
+      }
+  }
 
   // 4. Obtain G_st (step 3.4 of MC-PRE_comp)
+  {
+    unsigned int n = boost::num_vertices(G);
+    int s = s_mm ? boost::add_vertex(G) : -1;
+    int t = t_mm ? boost::add_vertex(G) : -1;
+
+    for (unsigned int i = 0; i < n; i++)
+      {
+        if (!in_degree(i, G))
+          add_edge(s, i, G);
+        if (!out_degree(i, G))
+          add_edge(i, t, G);
+      }
+  }
+
+  if(options.dump_graphs)
+    dump_bbcfg_red2_mcpre(G);
 
   // 5. Find unique minimum cut
 
