@@ -1,3 +1,10 @@
+2018-09-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph-r2k.def,
+	  src/z80/peeph-tlcs90.def,
+	  src/z80/peeph-z80.def:
+	  Fix bug #2814.
+
 2018-09-18 Philipp Klaus Krause <pkk AT spth.de>
 
 	* doc/README.txt:
