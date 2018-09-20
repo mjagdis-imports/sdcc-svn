@@ -356,6 +356,19 @@ struct bbcfg_red2_mcpre_edge
 
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_red2_mcpre_node, bbcfg_red2_mcpre_edge> bbcfg_red2_mcpre_t;
 
+struct bbcfg_flow_mcpre_node
+{
+  bool reaches_end;
+};
+
+struct bbcfg_flow_mcpre_edge
+{
+  unsigned int capacity;
+  unsigned int residual_capacity;
+};
+
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_flow_mcpre_node, bbcfg_flow_mcpre_edge> bbcfg_flow_mcpre_t;
+
 void
 create_bbcfg_lospre (bbcfg_lospre_t &cfg, iCode *start_ic, ebbIndex *ebbi)
 {
@@ -561,7 +574,7 @@ void dump_bbcfg_red2_mcpre(const bbcfg_red2_mcpre_t &cfg)
   filename << std::string(dstFileName) << ".dumpmcprebbcfg_red2" << "-" << n++ << currFunc->rname << ".dot";
   std::ofstream dump_file(filename.str().c_str());
 
-  boost::write_graphviz(dump_file, cfg, boost::default_writer(), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre (reduced)"));
+  boost::write_graphviz(dump_file, cfg, boost::default_writer(), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre (reduced s-t)"));
 }
 
 void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
@@ -577,6 +590,8 @@ void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
 
   T[find_root(T)].assignments.clear();
 }
+
+#include <boost/graph/push_relabel_max_flow.hpp>
 
 void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
 {
@@ -691,7 +706,6 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
     unsigned int n = boost::num_vertices(G_rd);
     edge_iter_t e, e_end;
   // 3.3a
-
     for (unsigned int i = 0; i < boost::num_vertices(G_rd); i++)
       {
         G_rd[i].top = cfg[G_rd[i].red_map_inv].antloc && in_degree(i, G_rd);
@@ -710,7 +724,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
   // 3.3c
     s_mm = 0;
     t_mm = 0;
-    for (unsigned int i = 0; i < boost::num_vertices(G); i++)
+    for(unsigned int i = 0; i < boost::num_vertices(G); i++)
       {
         if (!in_degree(i, G))
           s_mm++;
@@ -720,12 +734,13 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
   }
 
   // 4. Obtain G_st (step 3.4 of MC-PRE_comp)
+  int s, t;
   {
     unsigned int n = boost::num_vertices(G);
-    int s = s_mm ? boost::add_vertex(G) : -1;
-    int t = t_mm ? boost::add_vertex(G) : -1;
+    s = s_mm ? boost::add_vertex(G) : -1;
+     t = t_mm ? boost::add_vertex(G) : -1;
 
-    for (unsigned int i = 0; i < n; i++)
+    for(unsigned int i = 0; i < n; i++)
       {
         if (!in_degree(i, G))
           add_edge(s, i, G);
@@ -734,12 +749,72 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
       }
   }
 
+  if(s < 0 || t < 0)
+    {
+      std::cout << "Invalid reduced CFG. Abort MC-PRE.\n";
+      return;
+    }
+
   if(options.dump_graphs)
     dump_bbcfg_red2_mcpre(G);
 
   // 5. Find unique minimum cut
+  bbcfg_flow_mcpre_t G_flow;
+  // 5.5a
+  {
+    typedef typename boost::graph_traits<bbcfg_flow_mcpre_t>::edge_descriptor edge_t;
+    std::map<edge_t, edge_t> rev;
 
-  // 6. Backward data-flow analysis
+    for (unsigned int i = 0; i < boost::num_vertices(G); i++)
+      boost::add_vertex(G_flow);
+
+    typedef typename boost::graph_traits<bbcfg_red2_mcpre_t>::edge_iterator edge_iter_t;
+    edge_iter_t e, e_end;
+    for(boost::tie(e, e_end) = boost::edges(G); e != e_end; ++e)
+      {
+        edge_t edge = boost::add_edge(boost::source(*e, G), boost::target(*e, G), G_flow).first;
+        edge_t rev_edge = boost::add_edge(boost::target(*e, G), boost::source(*e, G), G_flow).first;
+        G_flow[edge].capacity = 1;
+        G_flow[rev_edge].capacity = 0;
+        rev[edge] = rev_edge;
+        rev[rev_edge] = edge;
+      }
+
+    boost::push_relabel_max_flow(G_flow, s, t, get(&bbcfg_flow_mcpre_edge::capacity, G_flow), get(&bbcfg_flow_mcpre_edge::residual_capacity, G_flow), boost::associative_property_map< std::map<edge_t, edge_t> >(rev), get(boost::vertex_index, G_flow));
+  }
+  // 5.5b,c
+  {
+    typedef typename boost::graph_traits<bbcfg_flow_mcpre_t>::edge_iterator edge_iter_t;
+    edge_iter_t e, e_end;
+
+    for (unsigned int i = 0; i < boost::num_vertices(G_flow); i++)
+      G_flow[i].reaches_end = false;
+    G_flow[t].reaches_end = true;
+    for(bool change = true; change;)
+      {
+        change = false;
+        for(boost::tie(e, e_end) = boost::edges(G_flow); e != e_end; ++e)
+          if(!G_flow[boost::source(*e, G_flow)].reaches_end && G_flow[boost::target(*e, G_flow)].reaches_end && G_flow[*e].residual_capacity)
+            {
+              G_flow[boost::source(*e, G_flow)].reaches_end = true;
+              change = true;
+            }
+      }
+  }
+  // 5.5d,e
+  {
+    typedef typename boost::graph_traits<bbcfg_flow_mcpre_t>::edge_iterator edge_iter_t;
+    edge_iter_t e, e_end;
+
+    for(boost::tie(e, e_end) = boost::edges(G_flow); e != e_end; ++e)
+      if(!G_flow[boost::source(*e, G_flow)].reaches_end && G_flow[boost::target(*e, G_flow)].reaches_end)
+        {
+          std::cout << "Edge in min cut: (" << boost::source(*e, G_flow) << ", " << boost::target(*e, G_flow) << ")\n";
+        }
+  }
+  // 5.5f TODO
+
+  // 6. Backward data-flow analysis TODO
 
   // 7.
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
@@ -748,7 +823,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
       cfg[i].d_insdel = (cfg[i].avloc && cfg[i].kill) && !cfg[i].d_isolated;
     }
 
-  // 8.
+  // 8. TODO
 }
 
 void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
