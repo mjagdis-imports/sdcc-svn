@@ -150,10 +150,11 @@ get_candidate_set(std::set<int> *c, const iCode *const sic, int lkey)
       if (!candidate_expression (ic, lkey))
         continue;
       for (const iCode *pic = sic; pic != ic; pic = pic->next)
-        if (candidate_expression (pic, lkey) && same_expression (ic, pic) && c->find (pic->key) == c->end ())
+        if (candidate_expression (pic, lkey) && same_expression (ic, pic) && c->find (pic->key) == c->end () && pic->eBBlockNum != ic->eBBlockNum)
           {
             // Found expression that occurs at least twice.
             c->insert (pic->key);
+            std::cout << "Found candidate at ic " << ic->key << " / " << pic->key << "\n";
             break;
           }
     }
@@ -315,6 +316,7 @@ struct bbcfg_mcpre_node
   bool n_aval, x_aval, x_pant, n_pant;
   bool x_live, n_live;
   bool d_isolated, d_insdel;
+  bool u_isolated, u_del;
 
   iCode *firstic;
   int red_map;
@@ -343,6 +345,8 @@ struct bbcfg_red_mcpre_node
 struct bbcfg_red_mcpre_edge
 {
   std::pair<int, int> gamma;
+
+  boost::graph_traits<bbcfg_mcpre_t>::edge_iterator red_map_inv;
 };
 
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_red_mcpre_node, bbcfg_red_mcpre_edge> bbcfg_red_mcpre_t;
@@ -353,7 +357,7 @@ struct bbcfg_red2_mcpre_node
 
 struct bbcfg_red2_mcpre_edge
 {
-  boost::graph_traits<bbcfg_red_mcpre_t>::edge_iterator gamma_inv;
+  boost::graph_traits<bbcfg_mcpre_t>::edge_iterator gamma_inv;
 };
 
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, bbcfg_red2_mcpre_node, bbcfg_red2_mcpre_edge> bbcfg_red2_mcpre_t;
@@ -365,7 +369,7 @@ struct bbcfg_flow_mcpre_node
 
 struct bbcfg_flow_mcpre_edge
 {
-  boost::graph_traits<bbcfg_red_mcpre_t>::edge_iterator gamma_inv;
+  boost::graph_traits<bbcfg_mcpre_t>::edge_iterator gamma_inv;
 
   unsigned int capacity;
   unsigned int residual_capacity;
@@ -516,7 +520,7 @@ setup_bbcfg_mcpre_for_expression (bbcfg_mcpre_t *const cfg, const iCode *const e
             (*cfg)[i].antloc = true;
 
           if (invalidates_expression (eic, ic))
-            {
+            {std::cout << "Expr at " << ic->key << " invalidates expr at " << eic->key << "\n";
               (*cfg)[i].kill = true;
               (*cfg)[i].avloc = false;
             }
@@ -544,7 +548,7 @@ void dump_bbcfg_lospre (const bbcfg_lospre_t &cfg)
     {
       std::ostringstream os;
       if (cfg[i].firstic)
-        os << "First ic key " << cfg[i].firstic->key;
+        os << i << " First ic key " << cfg[i].firstic->key;
       name[i] = os.str();
     }
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-lospre"));
@@ -562,14 +566,39 @@ void dump_bbcfg_mcpre(const bbcfg_mcpre_t &cfg)
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       std::ostringstream os;
-      os << "First ic key " << cfg[i].firstic->key;
+      os << i << " First ic key " << cfg[i].firstic->key;
       name[i] = os.str();
     }
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre"));
   delete[] name;
 }
 
-void dump_bbcfg_red2_mcpre(const bbcfg_red2_mcpre_t &cfg)
+// Dump CFG used for MC-PRE with expression-specific node labels
+void dump_bbcfg_mcpre_(const bbcfg_mcpre_t &cfg)
+{
+  if (!currFunc)
+    return;
+
+  static int n;
+
+  std::string *name = new std::string[num_vertices(cfg)];
+  for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+    {
+      std::ostringstream os;
+      os << i << " AVLOC: " << cfg[i].avloc << " ANTLOC: " << cfg[i].antloc << " KILL: " << cfg[i].kill;
+      name[i] = os.str();
+    }
+
+  std::ostringstream filename;
+  filename << std::string(dstFileName) << ".dumpmcprebbcfg" << "-" << n++ << currFunc->rname << ".dot";
+  std::ofstream dump_file(filename.str().c_str());
+
+  boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre"));
+  delete[] name;
+}
+
+// Dump expression-speific reduced CFG used for MC-PRE
+void dump_bbcfg_red2_mcpre_(const bbcfg_red2_mcpre_t &cfg)
 {
   if (!currFunc)
     return;
@@ -594,6 +623,12 @@ void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
   print_assignment(winner, G);
 #endif
 
+  typedef typename boost::graph_traits<bbcfg_lospre_t>::edge_iterator edge_iter_t;
+  edge_iter_t e, e_end;
+  for(boost::tie(e, e_end) = boost::edges(G); e != e_end; ++e)
+    if(!((winner.global[boost::source(*e, G)] & true) && !G[boost::source(*e, G)].invalidates) && (winner.global[boost::target(*e, G)] & true))
+      std::cout << "lospre would insert calculation at (" << boost::source(*e, G) << ", " << boost::target(*e, G) << ")\n";
+
   T[find_root(T)].assignments.clear();
 }
 
@@ -604,6 +639,9 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
   typedef typename boost::graph_traits<bbcfg_mcpre_t>::in_edge_iterator in_iter_t;
   typedef typename boost::graph_traits<bbcfg_mcpre_t>::out_edge_iterator out_iter_t;
   typedef typename boost::graph_traits<bbcfg_mcpre_t>::edge_iterator edge_iter_t;
+
+  if(options.dump_graphs)
+    dump_bbcfg_mcpre_(cfg);
 
   // 1. Data-flow analysis (step 3.1 of MC-PRE_comp)
   // 3.1a forward
@@ -699,7 +737,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
             cfg[boost::target(*e, cfg)].red_map = i;
             G_rd[i].red_map_inv = boost::target(*e, cfg);
           }
-        boost::add_edge(cfg[boost::source(*e, cfg)].red_map, cfg[boost::target(*e, cfg)].red_map, G_rd);
+        G_rd[boost::add_edge(cfg[boost::source(*e, cfg)].red_map, cfg[boost::target(*e, cfg)].red_map, G_rd).first].red_map_inv = e;
       }
   } 
 
@@ -726,7 +764,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
     for (unsigned int i = 0; i < n; i++)
       boost::add_vertex(G);
     for(boost::tie(e, e_end) = boost::edges(G_rd); e != e_end; ++e)
-      G[boost::add_edge(G_rd[*e].gamma.first, G_rd[*e].gamma.second, G).first].gamma_inv = e;
+      G[boost::add_edge(G_rd[*e].gamma.first, G_rd[*e].gamma.second, G).first].gamma_inv = G_rd[*e].red_map_inv;
   // 3.3c
     s_mm = 0;
     t_mm = 0;
@@ -762,7 +800,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
     }
 
   if(options.dump_graphs)
-    dump_bbcfg_red2_mcpre(G);
+    dump_bbcfg_red2_mcpre_(G);
 
   // 5. Find unique minimum cut
   bbcfg_flow_mcpre_t G_flow;
@@ -819,7 +857,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
     edge_iter_t e, e_end;
 
     for(boost::tie(e, e_end) = boost::edges(G_flow); e != e_end; ++e)
-      G_flow[*e].c_lambda = !G_flow[boost::source(*e, G_flow)].reaches_end && G_flow[boost::target(*e, G_flow)].reaches_end;
+      {G_flow[*e].c_lambda = !G_flow[boost::source(*e, G_flow)].reaches_end && G_flow[boost::target(*e, G_flow)].reaches_end; if(G_flow[*e].c_lambda) std::cout << "C_Lambda edge in red CFG: (" << boost::source(*e, cfg) << ", " << boost::target(*e, cfg) << ")\n"; std::cout.flush();}
   }
   // 5.5f
   edge_iter_t e, e_end;
@@ -834,6 +872,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
         {
           wassert (boost::source(*e, G_flow) != unsigned(s) && boost::target(*e, G_flow) != unsigned(t));
           cfg[*(G_flow[*e].gamma_inv)].c_lambda = true;
+std::cout << "Transfer C_Lambda via gamma_inv from (" << boost::source(*e, G_flow) << ", " << boost::target(*e, G_flow) << ") to (" << boost::source(*(G_flow[*e].gamma_inv), cfg) << ", " << boost::target(*(G_flow[*e].gamma_inv), cfg) << ")\n";
         }
   }
 
@@ -862,6 +901,10 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
         }
     }
 
+  for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
+    if(cfg[*e].c_lambda)
+      std::cout << "C_Lambda edge in CFG: (" << boost::source(*e, cfg) << ", " << boost::target(*e, cfg) << ")\n";
+
   // 7.
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
@@ -870,6 +913,21 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
     }
 
   // 8. TODO
+  for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
+    {
+      in_iter_t in, in_end;
+      cfg[i].u_isolated = (cfg[i].kill || !cfg[i].x_live);
+      for(boost::tie(in, in_end) = boost::in_edges(i, cfg);  in != in_end; ++in)
+        if(!cfg[*in].c_lambda) cfg[i].u_isolated = false;
+      cfg[i].u_del = cfg[i].antloc && cfg[i].u_isolated;
+    }
+  for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
+    cfg[*e].u_ins = cfg[*e].c_lambda && !cfg[boost::target(*e, cfg)].u_isolated;
+
+  // Output result.
+  for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
+    if(cfg[*e].u_ins)
+      std::cout << "mc-pre would insert calculation at (" << boost::source(*e, cfg) << ", " << boost::target(*e, cfg) << ")\n";
 }
 
 void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
@@ -948,6 +1006,7 @@ lospre (iCode *sic, ebbIndex *ebbi)
 
   std::set<int> candidate_set;
   get_candidate_set (&candidate_set, sic, operandKey);
+
   if(candidate_set.size() == 0)
     return;
 
