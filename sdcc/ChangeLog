@@ -11,6 +11,11 @@
 	  src/z80/peeph-z80.def:
 	  Fix bug #2814.
 
+2018-09-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/scripts/repack_release.sh:
+	  Update script for 3.8.0 release.
+
 2018-09-18 Philipp Klaus Krause <pkk AT spth.de>
 
 	* doc/README.txt:
@@ -18,6 +23,13 @@
 	* src/z80/peeph-z80.def,
 	  src/z80/peeph-r2k.def:
 	  Minor z80 peephole improvement.
+
+2018-09-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version,
+	  doc/INSTALL.txt,
+	  sdcc.spec:
+	  Bump version number preparing for 3.8.0 release.
 
 2018-09-14 Philipp Klaus Krause <pkk AT spth.de>
 
@@ -27,7 +39,7 @@
 	  support/regression/tests/z88dk.c:
 	  Disable __smallc for stm8.
 
-2018-09-12 Philipp Klaus Krause <pkk AT spth.de>
+2018-09-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCicode.c,
 	  src/SDCCmem.c,
