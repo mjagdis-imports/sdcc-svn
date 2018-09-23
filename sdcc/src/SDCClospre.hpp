@@ -157,8 +157,8 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
   assignment_list_lospre_t::iterator ai;
   boost::tie(c, c_end) = adjacent_vertices(t, T);
 
-  assignment_list_lospre_t &alist2 = T[t].assignments;
-  assignment_list_lospre_t &alist = T[*c].assignments;
+  assignment_list_lospre_t &alist = T[t].assignments;
+  std::swap(alist, T[*c].assignments);
 
   if(alist.size() > size_t(options.max_allocs_per_node) / 2)
     {
@@ -174,12 +174,10 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
     {
       ai->local.insert(i);
       ai->global[i] = false;
-      alist2.push_back(*ai);
+      ai = alist.insert(ai, *ai);
+      ++ai;
       ai->global[i] = true;
-      alist2.push_back(*ai);
     }
-
-  alist.clear();
 
   return(0);
 }
@@ -258,11 +256,7 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
               ++ai;
             }
           else
-            {
-              alist.erase(ai);
-              ai = aif;
-              ++ai;
-            }
+            ai = alist.erase(ai);
         }
     }
 
