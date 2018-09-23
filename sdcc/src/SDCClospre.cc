@@ -685,13 +685,13 @@ void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
 
 #include <boost/graph/push_relabel_max_flow.hpp>
 
-int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
+int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
 {
   typedef typename boost::graph_traits<bbcfg_mcpre_t>::in_edge_iterator in_iter_t;
   typedef typename boost::graph_traits<bbcfg_mcpre_t>::out_edge_iterator out_iter_t;
   typedef typename boost::graph_traits<bbcfg_mcpre_t>::edge_iterator edge_iter_t;
 
-  if(options.dump_graphs)
+  if(options.dump_graphs && !elim_only)
     dump_bbcfg_mcpre_(cfg);
 
   // 1. Data-flow analysis (step 3.1 of MC-PRE_comp)
@@ -792,7 +792,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
       }
   }
 
-  if(options.dump_graphs)
+  if(options.dump_graphs && !elim_only)
     dump_bbcfg_red_mcpre_(G_rd);
 
   // 3. Obtain G_mm (step 3.3 of MC-PRE_comp)
@@ -852,6 +852,8 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
       //std::cout << "Invalid reduced CFG. Abort MC-PRE.\n";
       return(-1);
     }
+  else if (elim_only)
+    return(0);
 
   if(options.dump_graphs)
     dump_bbcfg_red2_mcpre_(G);
@@ -994,6 +996,36 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
   return(0);
 }
 
+// Eliminate trivial cases
+std::set<int> bb_elim_all(const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
+{
+  bbcfg_mcpre_t control_flow_graph;
+  create_bbcfg_mcpre (control_flow_graph, sic, ebbi);
+  dump_bbcfg_mcpre(control_flow_graph);
+
+  std::clock_t starttime = std::clock();
+
+  std::set<int> result, elim_set;
+
+  std::set<int>::iterator ci, ci_end;
+  for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
+    {
+      const iCode *ic;
+
+      for (ic = sic; ic && ic->key != *ci; ic = ic->next);
+      if (!ic || !candidate_expression (ic, operandKey))
+        continue;
+
+      setup_bbcfg_mcpre_for_expression (&control_flow_graph, ic);
+
+      if(bb_mcpre (control_flow_graph, ic, true) < 0)
+        elim_set.insert(*ci);
+    }
+  std::set_difference(candidate_set.begin(), candidate_set.end(), elim_set.begin(), elim_set.end(), std::inserter(result, result.begin()));
+
+  return(result);
+}
+
 void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
 {
   bbcfg_lospre_t control_flow_graph;
@@ -1015,7 +1047,7 @@ std::cout << "lospre for " << *ci << "\n";
       for (ic = sic; ic && ic->key != *ci; ic = ic->next);
       if (!ic || !candidate_expression (ic, operandKey))
         continue;
-std::cout << "lospre for " << *ci << " : proceed\n";
+
       setup_bbcfg_lospre_for_expression (&control_flow_graph, ic);
 
       bb_lospre(control_flow_graph, tree_decomposition, ic);
@@ -1044,7 +1076,7 @@ std::cout << "mcpre for " << *ci << "\n";
 
       setup_bbcfg_mcpre_for_expression (&control_flow_graph, ic);
 
-      bb_mcpre (control_flow_graph, ic);
+      bb_mcpre (control_flow_graph, ic, false);
     }
 
   std::clock_t endtime = std::clock();
@@ -1071,6 +1103,7 @@ lospre (iCode *sic, ebbIndex *ebbi)
   std::set<int> candidate_set;
   get_candidate_set (&candidate_set, sic, operandKey);
 
+  candidate_set = bb_elim_all (candidate_set, sic, ebbi);
   if(candidate_set.size() == 0)
     return;
 
