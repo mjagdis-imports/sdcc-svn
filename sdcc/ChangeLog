@@ -2,7 +2,7 @@
 
 	* src/SDCClospre.hpp,
 	  src/SDCCralloc.hpp:
-	  Minor improvement in speed and memory usage of tree-decomoposition based algorithms.
+	  Speed and memory usage improvements for tree-decomoposition based algorithms.
 
 2018-09-20 Philipp Klaus Krause <pkk AT spth.de>
 
