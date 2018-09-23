@@ -547,8 +547,9 @@ void dump_bbcfg_lospre (const bbcfg_lospre_t &cfg)
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       std::ostringstream os;
+      os << i;
       if (cfg[i].firstic)
-        os << i << " First ic key " << cfg[i].firstic->key;
+        os << " First ic key " << cfg[i].firstic->key;
       name[i] = os.str();
     }
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-lospre"));
@@ -595,6 +596,21 @@ void dump_bbcfg_mcpre_(const bbcfg_mcpre_t &cfg)
 
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre"));
   delete[] name;
+}
+
+// Dump expression-speific reduced CFG used for MC-PRE
+void dump_bbcfg_red_mcpre_(const bbcfg_red_mcpre_t &cfg)
+{
+  if (!currFunc)
+    return;
+
+  static int n;
+
+  std::ostringstream filename;
+  filename << std::string(dstFileName) << ".dumpmcprebbcfg_red" << "-" << n++ << currFunc->rname << ".dot";
+  std::ofstream dump_file(filename.str().c_str());
+
+  boost::write_graphviz(dump_file, cfg, boost::default_writer(), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre (reduced)"));
 }
 
 // Dump expression-speific reduced CFG used for MC-PRE
@@ -739,7 +755,10 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
           }
         G_rd[boost::add_edge(cfg[boost::source(*e, cfg)].red_map, cfg[boost::target(*e, cfg)].red_map, G_rd).first].red_map_inv = e;
       }
-  } 
+  }
+
+  if(options.dump_graphs)
+    dump_bbcfg_red_mcpre_(G_rd);
 
   // 3. Obtain G_mm (step 3.3 of MC-PRE_comp)
   bbcfg_red2_mcpre_t G;
@@ -754,7 +773,7 @@ void bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic)
       {
         G_rd[i].top = cfg[G_rd[i].red_map_inv].antloc && in_degree(i, G_rd);
         G_rd[i].bot = cfg[G_rd[i].red_map_inv].kill && out_degree(i, G_rd);
-        G_rd[i].top_part = G_rd[i].top && G_rd[i].bot ? n++ : i;
+        G_rd[i].top_part = /*G_rd[i].top && G_rd[i].bot ? n++ :*/ i; /* We always reuse  i (instead of porentially introducing a new node i+ and deleting  i */
         G_rd[i].bot_part = G_rd[i].top && G_rd[i].bot ? n++ : i;
       }
 
@@ -947,7 +966,7 @@ void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *eb
   for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
     {
       const iCode *ic;
-
+std::cout << "lospre for " << *ci << "\n";
       for (ic = sic; ic && ic->key != *ci; ic = ic->next);
       if (!ic || !candidate_expression (ic, operandKey))
         continue;
@@ -973,7 +992,7 @@ void bb_mcpre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebb
   for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
     {
       const iCode *ic;
-
+std::cout << "mcpre for " << *ci << "\n";
       for (ic = sic; ic && ic->key != *ci; ic = ic->next);
       if (!ic || !candidate_expression (ic, operandKey))
         continue;
