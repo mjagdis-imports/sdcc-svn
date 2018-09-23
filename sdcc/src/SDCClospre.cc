@@ -928,11 +928,11 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
     edge_iter_t e, e_end;
 
     for(boost::tie(e, e_end) = boost::edges(G_flow); e != e_end; ++e)
-      if (G_flow[*e].c_lambda)
+      if (G_flow[*e].c_lambda && G_flow[*e].capacity)
         {
           wassert (boost::source(*e, G_flow) != unsigned(s) && boost::target(*e, G_flow) != unsigned(t));
           cfg[*(G_flow[*e].gamma_inv)].c_lambda = true;
-//std::cout << "Transfer C_Lambda via gamma_inv from (" << boost::source(*e, G_flow) << ", " << boost::target(*e, G_flow) << ") to (" << boost::source(*(G_flow[*e].gamma_inv), cfg) << ", " << boost::target(*(G_flow[*e].gamma_inv), cfg) << ")\n";
+          //std::cout << "Transfer C_Lambda via gamma_inv from (" << boost::source(*e, G_flow) << ", " << boost::target(*e, G_flow) << ") to (" << boost::source(*(G_flow[*e].gamma_inv), cfg) << ", " << boost::target(*(G_flow[*e].gamma_inv), cfg) << ")\n";
         }
   }
 
@@ -1003,8 +1003,6 @@ std::set<int> bb_elim_all(const std::set<int>& candidate_set, iCode *sic, ebbInd
   create_bbcfg_mcpre (control_flow_graph, sic, ebbi);
   dump_bbcfg_mcpre(control_flow_graph);
 
-  std::clock_t starttime = std::clock();
-
   std::set<int> result, elim_set;
 
   std::set<int>::iterator ci, ci_end;
@@ -1030,7 +1028,9 @@ void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *eb
 {
   bbcfg_lospre_t control_flow_graph;
   create_bbcfg_lospre (control_flow_graph, sic, ebbi);
-  dump_bbcfg_lospre(control_flow_graph);
+
+  if(options.dump_graphs)
+    dump_bbcfg_lospre(control_flow_graph);
 
   std::clock_t starttime = std::clock();
 
@@ -1038,6 +1038,8 @@ void bb_lospre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *eb
   get_nice_tree_decomposition (tree_decomposition, control_flow_graph);
   if(options.dump_graphs)
     dump_dec_lospre(tree_decomposition);
+
+  std::clock_t midtime = std::clock();
 
   std::set<int>::iterator ci, ci_end;
   for (ci = candidate_set.begin(), ci_end = candidate_set.end(); ci != ci_end; ++ci)
@@ -1054,14 +1056,16 @@ std::cout << "lospre for " << *ci << "\n";
     }
 
   std::clock_t endtime = std::clock();
-  std::cout << "lospre time: " << double(endtime - starttime) / CLOCKS_PER_SEC << "\n";
+  std::cout << "lospre time: " << double(endtime - starttime) / CLOCKS_PER_SEC << " (" << double(midtime - starttime) / CLOCKS_PER_SEC << " / " << double(endtime - midtime) / CLOCKS_PER_SEC << ")\n";
 }
 
 void bb_mcpre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
 {
   bbcfg_mcpre_t control_flow_graph;
   create_bbcfg_mcpre (control_flow_graph, sic, ebbi);
-  dump_bbcfg_mcpre(control_flow_graph);
+
+  if(options.dump_graphs)
+    dump_bbcfg_mcpre(control_flow_graph);
 
   std::clock_t starttime = std::clock();
 
@@ -1090,10 +1094,10 @@ lospre (iCode *sic, ebbIndex *ebbi)
 
   wassert (sic);
 
-#ifdef DEBUG_LOSPRE
+//#ifdef DEBUG_LOSPRE
   if (currFunc)
-    std::cout << "lospre for " << currFunc->rname << "()\n";
-#endif
+    std::cout << "mc-pre / lospre for " << currFunc->rname << "()\n";
+//#endif
 
   create_cfg_lospre (control_flow_graph, sic, ebbi);
 
