@@ -1028,11 +1028,7 @@ static void tree_dec_ralloc_forget(T_t &T, typename boost::graph_traits<T_t>::ve
               ++ai;
             }
           else
-            {
-              alist.erase(ai);
-              ai = aif;
-              ++ai;
-            }
+            ai = alist.erase(ai);
         }
     }
 
