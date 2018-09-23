@@ -288,6 +288,7 @@ void tree_dec_lospre_join(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
   ++c;
   c3 = c;
 
+# if 0
   assignment_list_lospre_t &alist1 = T[t].assignments;
   assignment_list_lospre_t &alist2 = T[*c2].assignments;
   assignment_list_lospre_t &alist3 = T[*c3].assignments;
@@ -323,6 +324,41 @@ void tree_dec_lospre_join(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
 
   alist2.clear();
   alist3.clear();
+#endif
+
+  assignment_list_lospre_t &alist = T[t].assignments;
+  assignment_list_lospre_t &alist2 = T[*c2].assignments;
+  std::swap(alist, T[*c3].assignments);
+
+  alist.sort();
+  alist2.sort();
+
+  assignment_list_lospre_t::iterator ai, ai2;
+  for (ai = alist.begin(), ai2 = alist2.begin(); ai != alist.end() && ai2 != alist2.end();)
+    {
+      if (assignments_lospre_locally_same(*ai, *ai2))
+        {
+          ai->s.get<0>() += ai2->s.get<0>();
+          ai->s.get<1>() += ai2->s.get<1>();
+          for (size_t i = 0; i < ai->global.size(); i++)
+            ai->global[i] = (ai->global[i] || ai2->global[i]);
+
+          ++ai;
+          ++ai2;
+        }
+      else if (*ai < *ai2)
+        {
+          ai = alist.erase(ai);
+          continue;
+        }
+      else if (*ai2 < *ai)
+        {
+          ++ai2;
+          continue;
+        }
+    }
+
+  alist2.clear();
 }
 
 template <class T_t, class G_t>
