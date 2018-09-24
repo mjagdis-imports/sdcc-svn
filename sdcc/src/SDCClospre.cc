@@ -448,7 +448,10 @@ setup_bbcfg_lospre_for_expression (bbcfg_lospre_t *const cfg, const iCode *const
             (*cfg)[i + 1 + (*cfg)[i + 1].invalidates].uses = true;
 
           if (invalidates_expression (eic, ic))
-            (*cfg)[i + 1].invalidates = true;
+            {
+              (*cfg)[i + 1].invalidates = true;
+              (*cfg)[i + 2].uses = false;
+            }
 
           if ((ic->op == IFX || ic->op == GOTO || ic->op == JUMPTABLE) || ic->next && ic->next->op == LABEL)
             break;
@@ -1056,7 +1059,8 @@ std::cout << "lospre for " << *ci << "\n";
     }
 
   std::clock_t endtime = std::clock();
-  std::cout << "lospre time: " << double(endtime - starttime) / CLOCKS_PER_SEC << " (" << double(midtime - starttime) / CLOCKS_PER_SEC << " / " << double(endtime - midtime) / CLOCKS_PER_SEC << ")\n";
+  std::cout << "lospre time: " << double(endtime - starttime) / CLOCKS_PER_SEC << " (" << double(midtime - starttime) / CLOCKS_PER_SEC << " for treedec / " << double(endtime - midtime) / CLOCKS_PER_SEC << " for lospre)\n";
+  std::cout.flush();
 }
 
 void bb_mcpre_all (const std::set<int>& candidate_set, iCode *sic, ebbIndex *ebbi)
@@ -1085,6 +1089,7 @@ std::cout << "mcpre for " << *ci << "\n";
 
   std::clock_t endtime = std::clock();
   std::cout << "MC-PRE time: " << double(endtime - starttime) / CLOCKS_PER_SEC << "\n";
+  std::cout.flush();
 }
 
 void
