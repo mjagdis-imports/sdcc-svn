@@ -1541,6 +1541,7 @@ compStructSize (int su, structdef * sdef)
   int sum = 0, usum = 0;
   int bitOffset = 0;
   symbol *loop;
+  const int oldlineno = lineno;
 
   if (!sdef->fields)
     {
@@ -1551,6 +1552,8 @@ compStructSize (int su, structdef * sdef)
   loop = sdef->fields;
   while (loop)
     {
+      lineno = loop->lineDef;
+
       /* create the internal name for this variable */
       SNPRINTF (loop->rname, sizeof (loop->rname), "_%s", loop->name);
       if (su == UNION)
@@ -1566,7 +1569,27 @@ compStructSize (int su, structdef * sdef)
           SPEC_BUNNAMED (loop->etype) = loop->bitUnnamed;
 
           /* change it to a unsigned bit */
-          SPEC_NOUN (loop->etype) = SPEC_NOUN(loop->etype) == V_BOOL ? V_BBITFIELD : V_BITFIELD;
+          switch (SPEC_NOUN (loop->etype))
+            {
+            case V_BOOL:
+              SPEC_NOUN( loop->etype) = V_BBITFIELD;
+              if (loop->bitVar > 1)
+                werror (E_BITFLD_SIZE, 1);
+              break;
+            case V_CHAR:
+              SPEC_NOUN (loop->etype) = V_BITFIELD;
+              if (loop->bitVar > 8)
+                werror (E_BITFLD_SIZE , 8);
+              break;
+            case V_INT:
+              SPEC_NOUN (loop->etype) = V_BITFIELD;
+              if (loop->bitVar > port->s.int_size * 8)
+                werror (E_BITFLD_SIZE , port->s.int_size * 8);
+              break;
+            default:
+              werror (E_BITFLD_TYPE);
+            }
+
           /* ISO/IEC 9899 J.3.9 implementation defined behaviour: */
           /* a "plain" int bitfield is unsigned */
           if (!loop->etype->select.s.b_signed)
@@ -1689,6 +1712,8 @@ compStructSize (int su, structdef * sdef)
   /* For STRUCT, round up after all fields processed */
   if (su != UNION)
     sum += ((bitOffset + 7) / 8);
+
+  lineno = oldlineno;
 
   return (su == UNION ? usum : sum);
 }

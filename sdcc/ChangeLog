@@ -1,8 +1,19 @@
+2018-09-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/struct.c,
+	  support/valdiag/tests/structflexiblearray.c:
+	  Fix bugs #2774, 2775.
+
 2018-09-23 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCClospre.hpp,
 	  src/SDCCralloc.hpp:
-	  Speed and memory usage improvements for tree-decomoposition based algorithms.
+	  Speed and memory usage improvements for tree-decomposition based algorithms.
 
 2018-09-20 Philipp Klaus Krause <pkk AT spth.de>
 

@@ -367,7 +367,7 @@ typedef struct symbol
     struct set *itmpStack;          /* symbols spilt @ this stack location */
   }
   usl;
-  signed char bitVar;               /* if bitVar != 0: this is a bit variable, bitVar is the size in bits */
+  int bitVar;                       /* if bitVar != 0: this is a bit variable, bitVar is the size in bits */
   unsigned bitUnnamed:1;            /* unnamed bit variable */
   unsigned offset;                  /* offset from top if struct */
 
