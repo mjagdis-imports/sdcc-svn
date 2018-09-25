@@ -668,9 +668,11 @@ void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
   if (options.dump_graphs)
     dump_bbcfg_lospre_(G);
 
-  tree_dec_lospre_nodes(T, find_root(T), G);
+  const boost::graph_traits<tree_dec_t>::vertex_descriptor t_root = find_root(T);
 
-  const assignment_lospre &winner = *(T[find_root(T)].assignments.begin());
+  tree_dec_lospre_nodes(T, t_root, G);
+
+  const assignment_lospre &winner = *(T[t_root].assignments.begin());
 
 #ifdef DEBUG_LOSPRE
   std::cout << "Winner (lospre): ";
@@ -683,7 +685,7 @@ void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
     if(!((winner.global[boost::source(*e, G)] & true) && !G[boost::source(*e, G)].invalidates) && (winner.global[boost::target(*e, G)] & true))
       std::cout << "lospre would insert calculation at (" << boost::source(*e, G) << ", " << boost::target(*e, G) << ")\n";
 
-  T[find_root(T)].assignments.clear();
+  T[t_root].assignments.clear();
 }
 
 #include <boost/graph/push_relabel_max_flow.hpp>
@@ -1119,5 +1121,7 @@ lospre (iCode *sic, ebbIndex *ebbi)
   bb_mcpre_all (candidate_set, sic, ebbi);
 
   bb_lospre_all (candidate_set, sic, ebbi);
+
+  exit(0);
 }
 
