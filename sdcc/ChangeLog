@@ -1,3 +1,10 @@
+2018-09-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp,
+	  src/SDCClospre.hpp,
+	  src/SDCClospre.cc:
+	  Remove hard dependencies on std::set to allow future transition to other containers.
+
 2018-09-25 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCC.y,

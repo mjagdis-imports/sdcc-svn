@@ -41,7 +41,7 @@ extern "C"
 #include "port.h"
 }
 
-typedef std::set<unsigned short int> lospreset_t;
+typedef std::set<unsigned int> lospreset_t;
 
 struct assignment_lospre
 {
@@ -105,7 +105,8 @@ typedef std::list<assignment_lospre> assignment_list_lospre_t;
 
 struct tree_dec_lospre_node
 {
-  std::set<unsigned int> bag;
+  lospreset_t bag;
+
   assignment_list_lospre_t assignments;
   unsigned weight; // The weight is the number of nodes at which intermediate results need to be remembered. In general, to minimize memory consumption, at join nodes the child with maximum weight should be processed first.
 };
@@ -166,9 +167,9 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
       return(-1);
     }
 
-  std::set<unsigned short> new_inst;
+  lospreset_t new_inst;
   std::set_difference(T[t].bag.begin(), T[t].bag.end(), T[*c].bag.begin(), T[*c].bag.end(), std::inserter(new_inst, new_inst.end()));
-  unsigned short int i = *(new_inst.begin());
+  unsigned int i = *(new_inst.begin());
 
   for(ai = alist.begin(); ai != alist.end(); ++ai)
     {
@@ -198,9 +199,9 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
   std::swap(alist, T[*c].assignments);
 
-  std::set<unsigned short int> old_inst;
+  lospreset_t old_inst;
   std::set_difference(T[*c].bag.begin(), T[*c].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(old_inst, old_inst.end()));
-  unsigned short int i = *(old_inst.begin());
+  unsigned int i = *(old_inst.begin());
 
   assignment_list_lospre_t::iterator ai, aif;
 
@@ -376,9 +377,9 @@ void tree_dec_safety_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
   std::swap(alist, T[*c].assignments);
 
-  std::set<unsigned short int> old_inst;
+  lospreset_t old_inst;
   std::set_difference(T[*c].bag.begin(), T[*c].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(old_inst, old_inst.end()));
-  unsigned short int i = *(old_inst.begin());
+  unsigned int i = *(old_inst.begin());
 
   assignment_list_lospre_t::iterator ai, aif;
 
