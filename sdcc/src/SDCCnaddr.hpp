@@ -115,6 +115,8 @@ typedef std::list<assignment_naddr> assignment_list_naddr_t;
 struct tree_dec_naddr_node
 {
   std::set<unsigned int> bag;
+  unsigned int diff_node; // For a forget / introduce node, the graph node forgotten / introduced.
+
   assignment_list_naddr_t assignments;
   unsigned weight; // The weight is the number of nodes at which intermediate results need to be remembered. In general, to minimize memory consumption, at join nodes the child with maximum weight should be processed first.
 };

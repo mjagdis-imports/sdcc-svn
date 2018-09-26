@@ -453,9 +453,17 @@ void nicify_diffs_more(T_t &T, typename boost::graph_traits<T_t>::vertex_descrip
   c0_size = T[c0].bag.size();
 
   if (t_size <= c0_size + 1 && t_size + 1 >= c0_size)
-    {
+    {  
       nicify_diffs_more(T, c0);
       T[t].weight = T[c0].weight;
+
+      wassert(t_size < c0_size || t_size > c0_size);
+      std::set<unsigned int> diff_inst;
+      if (t_size < c0_size)
+        std::set_difference(T[c0].bag.begin(), T[c0].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(diff_inst, diff_inst.end()));
+      else
+        std::set_difference(T[c0].bag.begin(), T[c0].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(diff_inst, diff_inst.end()));
+      T[t].diff_node = *(diff_inst.begin());
       return;
     }
 

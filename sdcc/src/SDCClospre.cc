@@ -1006,7 +1006,6 @@ std::set<int> bb_elim_all(const std::set<int>& candidate_set, iCode *sic, ebbInd
 {
   bbcfg_mcpre_t control_flow_graph;
   create_bbcfg_mcpre (control_flow_graph, sic, ebbi);
-  dump_bbcfg_mcpre(control_flow_graph);
 
   std::set<int> result, elim_set;
 
@@ -1122,6 +1121,6 @@ lospre (iCode *sic, ebbIndex *ebbi)
 
   bb_lospre_all (candidate_set, sic, ebbi);
 
-  exit(0);
+  //exit(0);
 }
 
