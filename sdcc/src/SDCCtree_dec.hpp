@@ -616,7 +616,7 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 #ifdef HAVE_TREEDEC_COMBINATIONS_HPP
 
 #ifdef USE_THORUP
-  treedec::thorup<G_t> a(cfg);
+  treedec::thorup<G_t> a2(cfg);
 #else
   typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> cfg2_t;
   cfg2_t cfg2;
@@ -640,7 +640,7 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
   wassert(treedec::is_valid_treedecomposition(cfg, tree_dec2));
 
   if (treedec::get_width(tree_dec2) < treedec::get_width(tree_dec))
-    tree_dec = tree_dec2;
+    std::swap(tree_dec, tree_dec2);
 #endif
 
   nicify(tree_dec);

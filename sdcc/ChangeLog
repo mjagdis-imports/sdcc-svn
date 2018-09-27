@@ -1,3 +1,8 @@
+2018-09-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Cherry-pick a minor performance improvement from lospre-vs-mcpre branch.
+
 2018-09-26 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCtree_dec.hpp,
