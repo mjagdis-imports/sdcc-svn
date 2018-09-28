@@ -19,6 +19,8 @@
 //
 // Lifetime-optimal speculative partial redundancy elimination.
 
+#include <valarray>
+
 // Workaround for boost bug #11880
 #include <boost/version.hpp>
 #if BOOST_VERSION == 106000
@@ -48,7 +50,7 @@ typedef boost::container::flat_set<unsigned int> lospreset_t;
 struct assignment_lospre
 {
   boost::tuple<float, float> s; // First entry: Calculation costs, second entry: Lifetime costs.
-  std::vector<bool> global;
+  /*std::vector<bool>*/std::valarray<bool> global;
 
   bool less(const assignment_lospre& a, const lospreset_t &local) const
   {
@@ -66,9 +68,10 @@ struct assignment_lospre
   }
 };
 
-bool assignments_lospre_locally_same(const assignment_lospre &a1, const assignment_lospre &a2, const lospreset_t &local)
+int assignments_lospre_locally_same(const assignment_lospre &a1, const assignment_lospre &a2, const lospreset_t &local)
 {
   lospreset_t::const_iterator i, i_end;
+
   for (i = local.begin(), i_end = local.end(); i != i_end; ++i)
     if (a1.global[*i] != a2.global[*i])
       return(false);
@@ -296,22 +299,17 @@ void tree_dec_lospre_join(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
         {
           ai->s.get<0>() += ai2->s.get<0>();
           ai->s.get<1>() += ai2->s.get<1>();
-          for (size_t i = 0; i < ai->global.size(); i++)
-            ai->global[i] = (ai->global[i] || ai2->global[i]);
+          //for (size_t i = 0; i < ai->global.size(); i++)
+            //ai->global[i] = (ai->global[i] || ai2->global[i]);
+          ai->global |= ai2->global;
 
           ++ai;
           ++ai2;
         }
       else if (ai->less(*ai2, T[t].bag))
-        {
-          ai = alist.erase(ai);
-          continue;
-        }
-      else if (ai2->less(*ai, T[t].bag))
-        {
-          ++ai2;
-          continue;
-        }
+        ai = alist.erase(ai);
+      else
+        ++ai2;
     }
   while(ai != alist.end())
     ai = alist.erase(ai);
