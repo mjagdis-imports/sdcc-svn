@@ -292,7 +292,7 @@ static void dump_dec_lospre(const tree_dec_t &tree_dec)
       if (tree_dec[i].bag.size() > w)
         w = tree_dec[i].bag.size();
       std::ostringstream os;
-      lospreset_t::const_iterator v1;
+      typename decltype(tree_dec[0].bag)::const_iterator v1;
        os << i << " | ";
       for (v1 = tree_dec[i].bag.begin(); v1 != tree_dec[i].bag.end(); ++v1)
         os << *v1 << " ";
@@ -663,7 +663,8 @@ void dump_bbcfg_red2_mcpre_(const bbcfg_red2_mcpre_t &cfg)
   boost::write_graphviz(dump_file, cfg, boost::default_writer(), boost::default_writer(), cfg_titlewriter(currFunc->rname, "bb-mcpre (reduced s-t)"));
 }
 
-void bb_lospre(const bbcfg_lospre_t &G, tree_dec_t& T, const iCode *ic)
+template <class G_t, class T_t>
+void bb_lospre(const G_t &G, T_t& T, const iCode *ic)
 {
   if (options.dump_graphs)
     dump_bbcfg_lospre_(G);
@@ -1121,6 +1122,6 @@ lospre (iCode *sic, ebbIndex *ebbi)
 
   bb_lospre_all (candidate_set, sic, ebbi);
 
-  //exit(0);
+  // exit(0);
 }
 
