@@ -58,6 +58,18 @@
 #undef RANGE
 #undef BLOCK
 
+// A minimal tree-dec type for internal use.
+struct tree_dec_int_node
+{
+  std::set<unsigned int> bag;
+  unsigned int diff_node; // For a forget / introduce node, the graph node forgotten / introduced.
+};
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, tree_dec_int_node> tree_dec_int_t;
+#ifdef HAVE_TREEDEC_COMBINATIONS_HPP
+#include <treedec/treedec_traits.hpp>
+TREEDEC_TREEDEC_BAG_TRAITS(tree_dec_int_t, bag);
+#endif
+
 struct forget_properties
 {
   template<class T1, class T2>
@@ -590,24 +602,38 @@ private:
 #include <treedec/combinations.hpp>
 #include <treedec/misc.hpp>
 
-template <typename G1_t, typename G2_t>
-void copy_undir(G1_t &G1, G2_t const &G2){
-    for(unsigned i = 0; i < boost::num_vertices(G2); i++){
-        boost::add_vertex(G1);
-    }
-    typename boost::graph_traits<G2_t>::edge_iterator eIt, eEnd;
-    for(boost::tie(eIt, eEnd) = boost::edges(G2); eIt != eEnd; eIt++){
-        assert (boost::source(*eIt, G2) != boost::target(*eIt, G2));
-        if ( !boost::edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1).second){
-            boost::add_edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1);
-        }else{
-			  // already there
-			  // intended here: this way, or the other.
-		  }
+template <typename Gd_t, typename Gs_t>
+void copy_undir(Gd_t &dst, const Gs_t &src)
+{
+  for(unsigned i = 0; i < boost::num_vertices(src); i++)
+    boost::add_vertex(dst);
+
+  typename boost::graph_traits<Gs_t>::edge_iterator e, e_end;
+  for(boost::tie(e, e_end) = boost::edges(src); e != e_end; ++e)
+    {
+      wassert (boost::source(*e, src) != boost::target(*e, src));
+      if (!boost::edge(boost::source(*e, src), boost::target(*e, src), dst).second)
+        boost::add_edge(boost::source(*e, src), boost::target(*e, src), dst);
     }
 }
 
 #endif
+
+template <typename Td_t, typename Ts_t>
+void copy_dec(Td_t &dst, const Ts_t &src)
+{
+  dst.clear();
+
+  for(unsigned i = 0; i < boost::num_vertices(src); i++)
+    {
+      boost::add_vertex(dst);
+      dst[i].bag.insert(src[i].bag.begin(), src[i].bag.end());
+    }
+
+  typename boost::graph_traits<Ts_t>::edge_iterator e, e_end;
+  for(boost::tie(e, e_end) = boost::edges(src); e != e_end; ++e)
+    boost::add_edge(boost::source(*e, src), boost::target(*e, src), dst);
+}
 
 #undef USE_THORUP // Thorup's classic algorithm (default in SDCC pre-3.7.0). Substantially worse width than the others.
 #define USE_PP_FI_TM 1 // A good trade-off between width and runtime
@@ -642,13 +668,13 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 #endif
 #endif
 
-  T_t tree_dec2;
+  tree_dec_int_t tree_dec2;
   a2.do_it();
   a2.get_tree_decomposition(tree_dec2);
   wassert(treedec::is_valid_treedecomposition(cfg, tree_dec2));
 
   if (treedec::get_width(tree_dec2) < treedec::get_width(tree_dec))
-    std::swap(tree_dec, tree_dec2);
+    copy_dec(tree_dec, tree_dec2);
 #endif
 
   nicify(tree_dec);

@@ -42,8 +42,8 @@ extern "C"
 #include "port.h"
 }
 
-//typedef boost::container::flat_set<unsigned int> lospreset_t;
-typedef std::set<unsigned int> lospreset_t;
+typedef boost::container::flat_set<unsigned int> lospreset_t;
+//typedef std::set<unsigned int> lospreset_t;
 
 struct assignment_lospre
 {
