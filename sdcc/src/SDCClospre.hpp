@@ -28,6 +28,7 @@
 #include <boost/graph/graphviz.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+#include <boost/container/flat_set.hpp>
 
 extern "C"
 {
@@ -41,6 +42,7 @@ extern "C"
 #include "port.h"
 }
 
+//typedef boost::container::flat_set<unsigned int> lospreset_t;
 typedef std::set<unsigned int> lospreset_t;
 
 struct assignment_lospre
