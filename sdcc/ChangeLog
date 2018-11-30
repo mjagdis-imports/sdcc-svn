@@ -1,3 +1,14 @@
+2018-11-30 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure,
+	  configure.ac,
+	  sdccconf_in.h,
+	  src/SDCCmain.c,
+	  src/port.h,
+	  src/z80/main.c,
+	  src/z80/z80.h:
+	  Basic infrastructure for ez80_z80 backend.
+
 2018-11-30 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/stm8/gen.c:
