@@ -209,6 +209,13 @@ _tlcs90_init (void)
 }
 
 static void
+_ez80_z80_init (void)
+{
+  z80_opts.sub = SUB_EZ80_Z80;
+  asm_addTree (&_asxxxx_z80);
+}
+
+static void
 _reset_regparm (struct sym_link *funcType)
 {
   _G.regParams = 0;
@@ -1705,7 +1712,7 @@ PORT ez80_z80_port =
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
-  _z180_init,
+  _ez80_z80_init,
   _parseOptions,
   _z80_options,
   NULL,
