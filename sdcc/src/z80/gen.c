@@ -9832,13 +9832,12 @@ genPointerGet (const iCode *ic)
                   if (offset != r)
                     _moveFrom_tpair_ (AOP (result), offset, pair);
 
-                  if (size)
+                  if (offset < size)
                     {
                       offset++;
                       emit2 ("inc %s", _pairs[pair].name);
                       regalloc_dry_run_cost += 1;
                       _G.pairs[pair].offset++;
-                      last_offset = offset;
                     }
                 }
 
@@ -9858,21 +9857,37 @@ genPointerGet (const iCode *ic)
             {
               while (offset < size)
                 {
+                  last_offset = offset;
+
+                  if (IS_EZ80_Z80 && offset != l && offset != h && getPairId_o (result->aop, offset) != PAIR_INVALID)
+                    {
+                      emit2 ("ld %s, !*hl", _pairs[getPairId_o (result->aop, offset)].name);
+                      regalloc_dry_run_cost += 2;
+                      offset += 2;
+                      if (offset < size)
+                        {
+                          emit2 ("inc %s", _pairs[pair].name);
+                          emit2 ("inc %s", _pairs[pair].name);
+                          regalloc_dry_run_cost += 2;
+                          _G.pairs[pair].offset += 2;
+                        }
+                      continue;
+                    }
+
                   if (offset != l && offset != h)
                     _moveFrom_tpair_ (AOP (result), offset, pair);
+                  offset++;
 
-                  if (size)
+                  if (offset < size)
                     {
-                      offset++;
                       emit2 ("inc %s", _pairs[pair].name);
                       regalloc_dry_run_cost += 1;
                       _G.pairs[pair].offset++;
-                      last_offset = offset;
                     }
                 }
 
               r = (l > h ? l : h);
-              for (size = offset; size != r; size--)
+              for (size = last_offset; size != r; size--)
                 {
                   emit2 ("dec %s", _pairs[pair].name);
                   regalloc_dry_run_cost += 1;
@@ -9900,35 +9915,35 @@ genPointerGet (const iCode *ic)
 
       while (offset < size)
         {
+          last_offset = offset;
+
           if (IS_EZ80_Z80 && getPairId_o (result->aop, offset) != PAIR_INVALID)
             {
               emit2 ("ld %s, !*hl", _pairs[getPairId_o (result->aop, offset)].name);
               regalloc_dry_run_cost += 2;
               offset += 2;
-              if (offset + 1 < size)
+              if (offset < size)
                 {
                   emit2 ("inc %s", _pairs[pair].name);
                   emit2 ("inc %s", _pairs[pair].name);
                   regalloc_dry_run_cost += 2;
                   _G.pairs[pair].offset += 2;
-                  last_offset = offset;
                 }
               continue;
             }
 
           _moveFrom_tpair_ (AOP (result), offset++, pair);
 
-          if (size)
+          if (offset < size)
             {
               emit2 ("inc %s", _pairs[pair].name);
               regalloc_dry_run_cost += 1;
               _G.pairs[pair].offset++;
-              last_offset = offset;
             }
         }
       /* Fixup HL back down */
       if (getPairId (AOP (left)) == pair && !isPairDead (pair, ic) && !pushed_pair)
-        for (; last_offset; last_offset--)
+        while (last_offset --> 0)
           {
             emit2 ("dec %s", _pairs[pair].name);
             regalloc_dry_run_cost += 1;
@@ -10327,7 +10342,7 @@ genPointerSet (iCode * ic)
               regalloc_dry_run_cost += 2;
               offset += 2;
 
-              if (offset + 1 < size)
+              if (offset < size)
                 {
                   emit2 ("inc %s", _pairs[PAIR_HL].name);
                   emit2 ("inc %s", _pairs[PAIR_HL].name);
@@ -10354,7 +10369,7 @@ genPointerSet (iCode * ic)
               offset++;
             }
 
-          if (offset + 1 < size)
+          if (offset < size)
             {
               emit2 ("inc %s", _pairs[PAIR_HL].name);
               regalloc_dry_run_cost += 1;
@@ -10439,7 +10454,7 @@ genPointerSet (iCode * ic)
               regalloc_dry_run_cost += 2;
               offset += 2;
 
-              if (offset + 1 < size)
+              if (offset < size)
                 {
                   emit2 ("inc %s", _pairs[pairId].name);
                   emit2 ("inc %s", _pairs[pairId].name);
@@ -10464,13 +10479,14 @@ genPointerSet (iCode * ic)
               emit2 ("ld !*pair, a", _pairs[pairId].name);
               regalloc_dry_run_cost += 1;
             }
-          if (offset + 1 < size)
+          offset++;
+
+          if (offset < size)
             {
               emit2 ("inc %s", _pairs[pairId].name);
               regalloc_dry_run_cost += 1;
               _G.pairs[pairId].offset++;
             }
-          offset++;
         }
       /* Restore operand partially in HL. */
       if (!isPairDead (pairId, ic) && AOP (result)->type == AOP_REG)
