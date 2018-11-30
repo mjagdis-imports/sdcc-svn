@@ -2075,6 +2075,11 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
                   emit2 ("ld hl, 0 (hl)");
                   regalloc_dry_run_cost += 3;
                 }
+              else if (IS_EZ80_Z80)
+                {
+                  emit2 ("ld hl, (hl)");
+                  regalloc_dry_run_cost += 2;
+                }
               else
                 {
                   if (ic && bitVectBitValue (ic->rMask, A_IDX))
@@ -2973,6 +2978,11 @@ commitPair (asmop *aop, PAIR_ID id, const iCode *ic, bool dont_destroy)
       else
         emit2 ("ld %d (ix), hl", fp_offset);    /* Relative to frame pointer. */
       regalloc_dry_run_cost += (id == PAIR_HL ? 2 : 3);
+    }
+  else if (IS_EZ80_Z80 && aop->type == AOP_STK)
+    {
+      emit2 ("ld %d (ix), %s", fp_offset, _pairs[id].name);
+      regalloc_dry_run_cost += 3;
     }
   else if (!regalloc_dry_run && (aop->type == AOP_STK || aop->type == AOP_EXSTK) && !sp_offset)
     {
@@ -9638,6 +9648,12 @@ genPointerGet (const iCode *ic)
           regalloc_dry_run_cost += 3;
           goto release;
         }
+      else if(IS_EZ80_Z80 && getPartPairId (AOP (result), 0) != PAIR_INVALID)
+        {
+          emit2 ("ld %s, %d (iy)", _pairs[getPartPairId (AOP (result), 0)].name, rightval);
+          regalloc_dry_run_cost += 3;
+          goto release;
+        }
 
       /* Just do it */
       offset = 0;
@@ -9745,6 +9761,11 @@ genPointerGet (const iCode *ic)
         {
           emit2 ("ld hl, %d (hl)", rightval);
           regalloc_dry_run_cost += 3;
+        }
+      else if (IS_EZ80_Z80 && getPairId (AOP (result)) == PAIR_HL && !rightval)
+        {
+          emit2 ("ld hl, (hl)");
+          regalloc_dry_run_cost += 2;
         }
       else if (aopInReg (result->aop, 1, A_IDX))
         {
