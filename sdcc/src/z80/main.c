@@ -1631,7 +1631,7 @@ PORT ez80_z80_port =
 {
   TARGET_ID_EZ80_Z80,
   "ez80_z80",
-  "EZ80-Z80",                  /* Target name */
+  "eZ80-Z80",                  /* Target name */
   NULL,                         /* Processor name */
   {
     glue,

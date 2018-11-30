@@ -899,7 +899,7 @@ int z80instructionSize(lineNode *pl)
       if(IS_RAB && !STRNCASECMP(op1start, "hl", 2) && (argCont(op2start, "(sp)") || argCont(op2start, "(ix)")))
         return(3);
 
-      if(IS_EZ80_Z80 && /* EZ80 16-bit pointer load */
+      if(IS_EZ80_Z80 && /* eZ80 16-bit pointer load */
         (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2) || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
         {
           if (!STRNCASECMP(op2start, "(hl)", 4))
