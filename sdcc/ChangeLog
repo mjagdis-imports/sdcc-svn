@@ -2,6 +2,11 @@
 
 	* src/z80/gen.c:
 	  Use lea for ez80_z80.
+	* sdas/asz80/z80.h,
+	  sdas/asz80/z80adr.c,
+	  sdas/asz80/z80mch.c,
+	  sdas/asz80/z80pst.c:
+	  eZ80 support in assembler, patch by Hynek Sladký.
 
 2018-12-01 Philipp Klaus Krause <pkk AT spth.de>
 
