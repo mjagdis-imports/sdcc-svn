@@ -4560,7 +4560,14 @@ genFunction (const iCode * ic)
     {
       if (!_G.omitFramePtr)
         emit2 ((optimize.codeSize && !IFFUNC_ISZ88DK_FASTCALL (ftype)) ? "!enters" : "!enter");
-      adjustStack (-sym->stack, !IS_TLCS90, TRUE, TRUE, !IY_RESERVED);
+      if (IS_EZ80_Z80 && -sym->stack > -128)
+        {
+          emit2 ("lea hl, ix, #%d", -sym->stack);
+          emit2 ("ld hl, sp");
+          regalloc_dry_run_cost += 4;
+        }
+      else
+        adjustStack (-sym->stack, !IS_TLCS90, TRUE, TRUE, !IY_RESERVED);
       _G.stack.pushed = 0;
     }
   else if (!_G.omitFramePtr)
