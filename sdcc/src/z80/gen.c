@@ -5199,6 +5199,18 @@ genPlus (iCode * ic)
       Safe_free (left);
     }
 
+  // eZ80 has lea.
+  if (IS_EZ80_Z80 && isPair (IC_RESULT (ic)->aop) && getPairId (IC_LEFT (ic)->aop) == PAIR_IY && IC_RIGHT (ic)->aop->type == AOP_LIT)
+    {
+       int lit = (int) ulFromVal (AOP (IC_RIGHT (ic))->aopu.aop_lit);
+       if (lit >= -128 && lit < 128)
+         {
+           emit2 ("lea %s, iy, #%d", _pairs[getPairId (IC_RESULT (ic)->aop)].name, lit);
+           regalloc_dry_run_cost += 3;
+           goto release;
+         }
+    }
+
   if ((isPair (AOP (IC_RIGHT (ic))) || isPair (AOP (IC_LEFT (ic)))) && getPairId (AOP (IC_RESULT (ic))) == PAIR_HL)
     {
       /* Fetch into HL then do the add */
@@ -10577,9 +10589,18 @@ genAddrOf (const iCode * ic)
       int fp_offset = sym->stack + (sym->stack > 0 ? _G.stack.param_offset : 0) + (int)operandLitValue (right);
       int sp_offset = fp_offset + _G.stack.pushed + _G.stack.offset;
 
-      pair = (getPairId (IC_RESULT (ic)->aop) == PAIR_IY) ? PAIR_IY : PAIR_HL;
-      spillPair (pair);
-      setupPairFromSP (pair, sp_offset);
+      if (IS_EZ80_Z80 && !_G.omitFramePtr && getPairId (IC_RESULT (ic)->aop) != PAIR_INVALID && fp_offset >= -128 && fp_offset < 128)
+        {
+          pair = getPairId (IC_RESULT (ic)->aop);
+          emit2 ("lea %s, ix, #%d", _pairs[pair].name, fp_offset);
+          regalloc_dry_run_cost += 3;
+        }
+      else
+        {
+          pair = (getPairId (IC_RESULT (ic)->aop) == PAIR_IY) ? PAIR_IY : PAIR_HL;
+          spillPair (pair);
+          setupPairFromSP (pair, sp_offset);
+        }
     }
   else 
     {
