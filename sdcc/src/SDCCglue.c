@@ -2243,6 +2243,8 @@ glue (void)
     fprintf (asmFile, "\t.hd64\n");
   else if (TARGET_IS_R3KA)
     fprintf (asmFile, "\t.r3k\n");
+  else if (TARGET_IS_EZ80_Z80)
+    fprintf (asmFile, "\t.ez80\n");
 
   /* print module name */
   tfprintf (asmFile, "\t!module\n", moduleName);
