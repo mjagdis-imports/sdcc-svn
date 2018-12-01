@@ -4563,7 +4563,7 @@ genFunction (const iCode * ic)
       if (IS_EZ80_Z80 && -sym->stack > -128)
         {
           emit2 ("lea hl, ix, #%d", -sym->stack);
-          emit2 ("ld hl, sp");
+          emit2 ("ld sp, hl");
           regalloc_dry_run_cost += 4;
         }
       else
