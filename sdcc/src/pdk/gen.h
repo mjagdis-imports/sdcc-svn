@@ -21,7 +21,58 @@
 #ifndef PDKGEN_H
 #define PDKGEN_H 1
 
+typedef enum
+{
+  AOP_INVALID,
+  /* Is a literal */
+  AOP_LIT = 1,
+  /* Is in a register */
+  AOP_REG,
+  /* Is an immediate value */
+  AOP_IMMD,
+  /* Is in direct space */
+  AOP_DIR,
+  /* I/O register */
+  AOP_SFR,
+  /* Read undefined, discard writes */
+  AOP_DUMMY
+}
+AOP_TYPE;
+
+/* asmop_byte: A type for the location a single byte
+   of an operand can be in */
+typedef struct asmop_byte
+{
+  bool in_reg;
+  union
+  {
+    reg_info *reg;    /* Register this byte is in. */
+  } byteu;
+} asmop_byte;
+
+/* asmop: A homogenised type for all the different
+   spaces an operand can be in */
+typedef struct asmop
+{
+  AOP_TYPE type;
+  short size;
+  union
+  {
+    value *aop_lit;
+    struct
+      {
+        char *immd;
+        int immd_off;
+      };
+    char *aop_dir;
+    asmop_byte bytes[8];
+  } aopu;
+}
+asmop;
+
 void genPdkCode (iCode *);
+
+void pdk_init_asmops (void);
 
 #endif
 

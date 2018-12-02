@@ -28,6 +28,19 @@
 
 #include "common.h"
 
+enum
+{
+  A_IDX = 0, // The accumulator
+
+  SP_IDX     // SP - for use with debug info.
+};
+
+enum
+{
+  REG_GPR = 2,
+  REG_CND = 4,
+};
+
 /* definition for the registers */
 typedef struct reg_info
 {
@@ -36,6 +49,8 @@ typedef struct reg_info
   short rIdx;                   /* index into register table */
   char *name;                   /* name */
 } reg_info;
+
+extern reg_info pdk_regs[];
 
 void pdk_assignRegisters (ebbIndex *);
 

@@ -24,6 +24,23 @@
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
 
+static struct asmop asmop_a, asmop_zero;
+static struct asmop *const ASMOP_A = &asmop_a;
+static struct asmop *const ASMOP_ZERO = &asmop_zero;
+
+void
+pdk_init_asmops (void)
+{
+  asmop_a.type = AOP_REG;
+  asmop_a.size = 1;
+  asmop_a.aopu.bytes[0].in_reg = TRUE;
+  asmop_a.aopu.bytes[0].byteu.reg = pdk_regs + A_IDX;
+
+  asmop_zero.type = AOP_LIT;
+  asmop_zero.size = 1;
+  asmop_zero.aopu.aop_lit = constVal ("0");
+}
+
 static void
 emit2 (const char *inst, const char *fmt, ...)
 {
@@ -48,6 +65,260 @@ emitJP(const symbol *target, float probability)
   //if (!regalloc_dry_run)
     emit2 ("goto", "%05d$", labelKey2num (target->key));
   cost (1, 2 * probability);
+}
+
+static bool
+regDead (int idx, const iCode *ic)
+{
+  wassert (idx == A_IDX);
+
+  return (!bitVectBitValue (ic->rSurv, idx));
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsLitVal - asmop from offset is val                          */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
+{
+  wassert_bt (size <= sizeof (unsigned long long int)); // Make sure we are not testing outside of argument val.
+
+  for(; size; size--, offset++)
+    {
+      unsigned char b = val & 0xff;
+      val >>= 8;
+
+      // Leading zeroes
+      if (aop->size <= offset && !b)
+        continue;
+
+      if (aop->type != AOP_LIT)
+        return (FALSE);
+
+      if (byteOfVal (aop->aopu.aop_lit, offset) != b)
+        return (FALSE);
+    }
+
+  return (TRUE);
+}
+
+static const char *
+aopGet(const asmop *aop, int offset)
+{
+  static char buffer[256];
+
+  if (offset >= aop->size)
+    return ("#0x00");
+
+  if (aop->type == AOP_LIT)
+    {
+      SNPRINTF (buffer, sizeof(buffer), "#0x%02x", byteOfVal (aop->aopu.aop_lit, offset));
+      return (buffer);
+    }
+
+  if (aop->type == AOP_IMMD)
+    {
+      wassertl_bt (offset < (2 + (options.model == MODEL_LARGE)), "Immediate operand out of range");
+      if (offset == 0)
+        SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
+      else
+        SNPRINTF (buffer, sizeof(buffer), "#((%s + %d) >> %d)", aop->aopu.immd, aop->aopu.immd_off, offset * 8);
+      return (buffer);
+    }
+
+  if (aop->type == AOP_DIR)
+    {
+      SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, aop->size - 1 - offset);
+      return (buffer);
+    }
+
+  wassert_bt (0);
+  return ("dummy");
+}
+
+/*-----------------------------------------------------------------*/
+/* newAsmop - creates a new asmOp                                  */
+/*-----------------------------------------------------------------*/
+static asmop *
+newAsmop (short type)
+{
+  asmop *aop;
+
+  aop = Safe_calloc (1, sizeof (asmop));
+  aop->type = type;
+
+  return (aop);
+}
+
+/*-----------------------------------------------------------------*/
+/* freeAsmop - free up the asmop given to an operand               */
+/*----------------------------------------------------------------*/
+static void
+freeAsmop (operand *op)
+{
+  asmop *aop;
+
+  wassert_bt (op);
+
+  aop = op->aop;
+
+  if (!aop)
+    return;
+
+  Safe_free (aop);
+
+  op->aop = 0;
+  if (IS_SYMOP (op) && SPIL_LOC (op))
+    SPIL_LOC (op)->aop = 0;
+}
+
+/*-----------------------------------------------------------------*/
+/* aopForSym - for a true symbol                                   */
+/*-----------------------------------------------------------------*/
+static asmop *
+aopForSym (const iCode *ic, symbol *sym)
+{
+  asmop *aop;
+
+  wassert_bt (ic);
+  wassert_bt (sym);
+  wassert_bt (sym->etype);
+
+  // Unlike some other backends we really free asmops; to avoid a double-free, we need to support multiple asmops for the same symbol.
+
+  if (IS_FUNC (sym->type))
+    {
+      aop = newAsmop (AOP_IMMD);
+      aop->aopu.immd = sym->rname;
+      aop->aopu.immd_off = 0;
+      aop->size = getSize (sym->type);
+    }
+  /* Assign depending on the storage class */
+  else if (sym->onStack || sym->iaccess)
+    {
+      wassertl (0, "Unimplemented support for on-stack operand");
+    }
+  else
+    {
+      aop = newAsmop (AOP_DIR);
+      aop->aopu.aop_dir = sym->rname;
+      aop->size = getSize (sym->type);
+    }
+
+  return (aop);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopOp - allocates an asmop for an operand  :                    */
+/*-----------------------------------------------------------------*/
+static void
+aopOp (operand *op, const iCode *ic)
+{
+  wassert_bt (op);
+
+  /* if already has an asmop */
+  if (op->aop)
+    return;
+
+  /* if this a literal */
+  if (IS_OP_LITERAL (op))
+    {
+      asmop *aop = newAsmop (AOP_LIT);
+      aop->aopu.aop_lit = OP_VALUE (op);
+      aop->size = getSize (operandType (op));
+      op->aop = aop;
+      return;
+    }
+
+  symbol *sym = OP_SYMBOL (op);
+
+  /* if this is a true symbol */
+  if (IS_TRUE_SYMOP (op))
+    {
+      op->aop = aopForSym (ic, sym);
+      return;
+    }
+
+  wassertl (0, "Unimplemented aop type");
+}
+
+/*-----------------------------------------------------------------*/
+/* genMove_o - Copy part of one asmop to another                   */
+/*-----------------------------------------------------------------*/
+static void
+genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global)
+{
+  wassert (result->type == AOP_DIR);
+  wassert (source->type == AOP_LIT || source->type == AOP_DIR);
+
+  for (unsigned int i = 0; i < size; i++)
+    {
+      if (aopIsLitVal (source, soffset + i, 1, 0x00))
+        {
+          emit2 ("clear", "%s", aopGet (result, roffset + i));
+        }
+      else
+        {
+          emit2 ("mov", "a, %s", aopGet (source, soffset + i));
+          emit2 ("mov", "%s, a", aopGet (result, roffset + i));
+        }
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* genMove - Copy the value from one asmop to another              */
+/*-----------------------------------------------------------------*/
+static void
+genMove (asmop *result, asmop *source, bool a_dead)
+{
+  genMove_o (result, 0, source, 0, result->size, a_dead);
+}
+
+/*-----------------------------------------------------------------*/
+/* genSub - generates code for subtraction                         */
+/*-----------------------------------------------------------------*/
+static void
+genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
+{
+  wassertl (0, "Unimplemented subtraction");
+}
+
+/*-----------------------------------------------------------------*/
+/* genUminus - generates code for unary minus                      */
+/*-----------------------------------------------------------------*/
+static void
+genUminusFloat (const iCode *ic)
+{
+  wassertl (0, "Unimplemented float negation");
+}
+
+/*-----------------------------------------------------------------*/
+/* genUminus - generates code for unary minus                      */
+/*-----------------------------------------------------------------*/
+static void
+genUminus (const iCode *ic)
+{
+  operand *result;
+  operand *left;
+
+  if (IS_FLOAT (operandType (IC_LEFT (ic))))
+    {
+      genUminusFloat (ic);
+      return;
+    }
+
+  result = IC_RESULT (ic);
+  left = IC_LEFT (ic);
+
+  D (emit2 ("; genUminus", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  genSub (ic, result->aop, ASMOP_ZERO, left->aop);
+
+  freeAsmop (left);
+  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/
@@ -116,6 +387,31 @@ genEndFunction (iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genReturn - generate code for return statement                  */
+/*-----------------------------------------------------------------*/
+static void
+genReturn (const iCode *ic)
+{
+  D (emit2 ("; genReturn", ""));
+
+  /* if we have no return value then
+     just generate the "ret" */
+  if (!IC_LEFT (ic))
+    goto jumpret;
+
+  /* we have something to return then
+     move the return value into place */
+
+  wassertl (0, "return of value not yet implemented");
+
+jumpret:
+  /* generate a jump to the return label
+     if the next is not the return statement */
+  if (!(ic->next && ic->next->op == LABEL && IC_LABEL (ic->next) == returnLabel))
+    emitJP(returnLabel, 1.0f);
+}
+
+/*-----------------------------------------------------------------*/
 /* genLabel - generates a label                                    */
 /*-----------------------------------------------------------------*/
 static void
@@ -144,6 +440,112 @@ genGoto (const iCode *ic)
   emitJP (IC_LABEL (ic), 1.0f);
 }
 
+/*-----------------------------------------------------------------*/
+/* genPlus - generates code for addition                           */
+/*-----------------------------------------------------------------*/
+static void
+genPlus (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  wassertl (size <= 1, "Unimplemented wide addition");
+
+  wassertl (0, "Unimplemented addition");
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genMinus - generates code for minus                             */
+/*-----------------------------------------------------------------*/
+static void
+genMinus (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genMinus", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  genSub (ic, result->aop, left->aop, right->aop);
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genAssign - generate code for assignment                        */
+/*-----------------------------------------------------------------*/
+static void
+genAssign (const iCode *ic)
+{
+  operand *result, *right;
+
+  D (emit2 ("; genAssign", ""));
+
+  result = IC_RESULT (ic);
+  right = IC_RIGHT (ic);
+
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  wassert (result->aop->type != AOP_DUMMY || right->aop->type != AOP_DUMMY);
+
+  if (right->aop->type == AOP_DUMMY)
+    {
+      wassert (0);
+#if 0
+      int i;
+      D (emit2 ("; Dummy write", ""));
+      for (i = 0; i < result->aop->size; i++)
+        cheapMove (result->aop, i, ASMOP_A, 0, TRUE);
+#endif
+    }
+  else if (result->aop->type == AOP_DUMMY)
+    {
+      wassert (0);
+#if 0
+      int i;
+      D (emit2 ("; Dummy read", ""));
+
+      if (!regDead(A_IDX, ic) && right->aop->type == AOP_DIR)
+        for (i = 0; i < right->aop->size; i++)
+          emit3_o (A_TNZ, right->aop, i, 0, 0);
+      else
+        {
+          if (!regDead(A_IDX, ic))
+            push (ASMOP_A, 0, 1);
+          for (i = 0; i < right->aop->size; i++)
+            cheapMove (ASMOP_A, 0, right->aop, i, FALSE);
+          if (!regDead(A_IDX, ic))
+            pop (ASMOP_A, 0, 1);
+        }
+#endif
+    }
+  else
+    genMove(result->aop, right->aop, regDead (A_IDX, ic));
+
+  wassert (result->aop != right->aop);
+
+  freeAsmop (right);
+  freeAsmop (result);
+}
+
 /*---------------------------------------------------------------------*/
 /* genSTM8Code - generate code for STM8 for a single iCode instruction */
 /*---------------------------------------------------------------------*/
@@ -170,6 +572,10 @@ genPdkiCode (iCode *ic)
 
   switch (ic->op)
     {
+    case UNARYMINUS:
+      genUminus (ic);
+      break;
+
     case FUNCTION:
       genFunction (ic);
       break;
@@ -179,7 +585,7 @@ genPdkiCode (iCode *ic)
       break;
 
    case RETURN:
-      // genReturn (ic);
+      genReturn (ic);
       break;
 
     case LABEL:
@@ -190,9 +596,25 @@ genPdkiCode (iCode *ic)
       genGoto (ic);
       break;
 
+    case '+':
+      genPlus (ic);
+      break;
+
+    case '-':
+      genMinus (ic);
+      break;
+
     case INLINEASM:
       genInline (ic);
       break;
+
+    case '=':
+      wassert (!POINTER_SET (ic));
+      genAssign (ic);
+      break;
+
+    default:
+      wassertl (0, "Unknown iCode");
     }
 }
 
