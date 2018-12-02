@@ -72,6 +72,19 @@ pdk_parseOptions (int *pargc, char **argv, int *i)
   return FALSE;
 }
 
+static void
+pdk_finaliseOptions (void)
+{
+  port->mem.default_local_map = data;
+  port->mem.default_globl_map = data;
+}
+
+static void
+pdk_setDefaultOptions (void)
+{
+  options.out_fmt = 'i';        /* Default output format is ihx */
+}
+
 static const char *
 pdk_getRegName (const struct reg_info *reg)
 {
@@ -219,8 +232,8 @@ PORT pdk14_port =
   pdk_parseOptions,
   0,
   0,
-  0,                             /* finaliseOptions */
-  0,                             /* setDefaultOptions */
+  pdk_finaliseOptions,           /* finaliseOptions */
+  pdk_setDefaultOptions,         /* setDefaultOptions */
   pdk_assignRegisters,
   pdk_getRegName,
   0,
