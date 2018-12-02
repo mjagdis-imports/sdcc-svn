@@ -134,6 +134,9 @@
 #undef OPT_DISABLE_PACKIHX
 
 /* XXX */
+#undef OPT_DISABLE_PDK14
+
+/* XXX */
 #undef OPT_DISABLE_PIC14
 
 /* XXX */

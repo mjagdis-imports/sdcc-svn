@@ -1,3 +1,22 @@
+2018-12-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure,
+	  configure.ac,
+	  sdccconf_in.h,
+	  src/SDCCmain.c,
+	  src/port.h,
+	  src/pdk,
+	  src/pdk/Makefile.in,
+	  src/pdk/main.c,
+	  src/pdk/ralloc.c,
+	  src/pdk/ralloc.h:
+	  Basic infrastructure for pdk14 backend.
+
+2018-12-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  genAddrOf refactoring.
+
 2018-11-30 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/stm8/gen.c:

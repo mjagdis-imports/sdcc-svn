@@ -357,6 +357,9 @@ static PORT *_ports[] = {
 #if !OPT_DISABLE_STM8
   &stm8_port,
 #endif
+#if !OPT_DISABLE_PDK14
+  &pdk14_port,
+#endif
 };
 
 #define NUM_PORTS (sizeof(_ports)/sizeof(_ports[0]))
