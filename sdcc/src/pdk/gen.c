@@ -24,7 +24,8 @@
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
 
-static void emit2 (const char *inst, const char *fmt, ...)
+static void
+emit2 (const char *inst, const char *fmt, ...)
 {
   //if (!regalloc_dry_run)
     {
@@ -34,6 +35,113 @@ static void emit2 (const char *inst, const char *fmt, ...)
       va_emitcode (inst, fmt, ap);
       va_end (ap);
     }
+}
+
+static void
+cost(unsigned int words, unsigned int cycles)
+{
+}
+
+static void
+emitJP(const symbol *target, float probability)
+{
+  //if (!regalloc_dry_run)
+    emit2 ("goto", "%05d$", labelKey2num (target->key));
+  cost (1, 2 * probability);
+}
+
+/*-----------------------------------------------------------------*/
+/* genFunction - generated code for function entry                 */
+/*-----------------------------------------------------------------*/
+static void
+genFunction (iCode *ic)
+{
+  const symbol *sym = OP_SYMBOL_CONST (IC_LEFT (ic));
+  sym_link *ftype = operandType (IC_LEFT (ic));
+
+  /* create the function header */
+  emit2 (";", "-----------------------------------------");
+  emit2 (";", " function %s", sym->name);
+  emit2 (";", "-----------------------------------------");
+
+  emit2 ("", "%s:", sym->rname);
+  genLine.lineCurr->isLabel = 1;
+
+  if (IFFUNC_ISNAKED(ftype))
+    {
+      emit2(";", "naked function: no prologue.");
+      return;
+    }
+
+  if (IFFUNC_ISISR (sym->type))
+    {
+      emit2 ("push", "af");
+      cost (1, 1);
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* genEndFunction - generates epilogue for functions               */
+/*-----------------------------------------------------------------*/
+static void
+genEndFunction (iCode *ic)
+{
+  symbol *sym = OP_SYMBOL (IC_LEFT (ic));
+
+  D (emit2 ("; genEndFunction", ""));
+
+  if (IFFUNC_ISNAKED(sym->type))
+  {
+      D (emit2 (";", "naked function: no epilogue."));
+      if (options.debug && currFunc /*&& !regalloc_dry_run*/)
+        debugFile->writeEndFunction (currFunc, ic, 0);
+      return;
+  }
+
+  /* if debug then send end of function */
+  if (options.debug && currFunc /*&& !regalloc_dry_run*/)
+    debugFile->writeEndFunction (currFunc, ic, 1);
+
+  if (IFFUNC_ISISR (sym->type))
+    {
+      emit2 ("pop", "af");
+      emit2 ("reti", "");
+      cost (2, 2);
+    }
+  else
+    {
+      emit2 ("ret", "");
+      cost (1, 1);
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* genLabel - generates a label                                    */
+/*-----------------------------------------------------------------*/
+static void
+genLabel (const iCode *ic)
+{
+  D (emit2 ("; genLabel", ""));
+
+  /* special case never generate */
+  if (IC_LABEL (ic) == entryLabel)
+    return;
+
+  if (options.debug /*&& !regalloc_dry_run*/)
+    debugFile->writeLabel (IC_LABEL (ic), ic);
+
+  emitLabel (IC_LABEL (ic));
+}
+
+/*-----------------------------------------------------------------*/
+/* genGoto - generates a jump                                      */
+/*-----------------------------------------------------------------*/
+static void
+genGoto (const iCode *ic)
+{
+  D (emit2 ("; genGoto", ""));
+
+  emitJP (IC_LABEL (ic), 1.0f);
 }
 
 /*---------------------------------------------------------------------*/
@@ -62,6 +170,29 @@ genPdkiCode (iCode *ic)
 
   switch (ic->op)
     {
+    case FUNCTION:
+      genFunction (ic);
+      break;
+
+    case ENDFUNCTION:
+      genEndFunction (ic);
+      break;
+
+   case RETURN:
+      // genReturn (ic);
+      break;
+
+    case LABEL:
+      genLabel (ic);
+      break;
+
+    case GOTO:
+      genGoto (ic);
+      break;
+
+    case INLINEASM:
+      genInline (ic);
+      break;
     }
 }
 
