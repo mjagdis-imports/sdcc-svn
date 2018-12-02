@@ -76,6 +76,40 @@ regDead (int idx, const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* aopInReg - asmop from offset in the register                    */
+/*-----------------------------------------------------------------*/
+static bool
+aopInReg (const asmop *aop, int offset, short rIdx)
+{
+  if (aop->type != AOP_REG)
+    return (false);
+
+  return (aop->aopu.bytes[offset].in_reg && aop->aopu.bytes[offset].byteu.reg->rIdx == rIdx);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopSame - are two asmops in the same location?                  */
+/*-----------------------------------------------------------------*/
+static bool
+aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int size)
+{
+  for(; size; size--, offset1++, offset2++)
+    {
+      if (aop1->type == AOP_LIT && aop2->type == AOP_LIT &&
+        byteOfVal (aop1->aopu.aop_lit, offset1) == byteOfVal (aop2->aopu.aop_lit, offset2))
+        continue;
+
+      if (aop1->type == AOP_DIR && aop2->type == AOP_DIR &&
+        offset1 == offset2 && !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
+        return (true);
+
+      return (false);
+    }
+
+  return (true);
+}
+
+/*-----------------------------------------------------------------*/
 /* aopIsLitVal - asmop from offset is val                          */
 /*-----------------------------------------------------------------*/
 static bool
@@ -93,13 +127,13 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
         continue;
 
       if (aop->type != AOP_LIT)
-        return (FALSE);
+        return (false);
 
       if (byteOfVal (aop->aopu.aop_lit, offset) != b)
-        return (FALSE);
+        return (false);
     }
 
-  return (TRUE);
+  return (true);
 }
 
 static const char *
@@ -243,6 +277,39 @@ aopOp (operand *op, const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* cheapMove - Copy a byte from one asmop to another               */
+/*-----------------------------------------------------------------*/
+static void
+cheapMove (asmop *result, int roffset, asmop *source, int soffset, bool a_dead)
+{
+  bool dummy = (result->type == AOP_DUMMY || source->type == AOP_DUMMY);
+
+  if (aopSame (result, roffset, source, soffset, 1))
+    return;
+  else if (!dummy && result->type == AOP_DIR && aopIsLitVal (source, soffset, 1, 0))
+    {
+      emit2 ("clear", "%s", aopGet (result, roffset));
+      cost (1, 1);
+    }
+  else if (aopInReg (result, roffset, A_IDX))
+    {
+      emit2 ("mov", "a, %s", aopGet (source, soffset));
+      cost (1, 1);
+    }
+  else if (aopInReg (source, soffset, A_IDX))
+    {
+      emit2 ("mov", "%s, a", aopGet (result, roffset));
+      cost (1, 1);
+    }
+  else
+    {
+      wassert (a_dead);
+      cheapMove (ASMOP_A, 0, source, soffset, false);
+      cheapMove (result, roffset, ASMOP_A, 0, false);
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* genMove_o - Copy part of one asmop to another                   */
 /*-----------------------------------------------------------------*/
 static void
@@ -252,17 +319,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassert (source->type == AOP_LIT || source->type == AOP_DIR);
 
   for (unsigned int i = 0; i < size; i++)
-    {
-      if (aopIsLitVal (source, soffset + i, 1, 0x00))
-        {
-          emit2 ("clear", "%s", aopGet (result, roffset + i));
-        }
-      else
-        {
-          emit2 ("mov", "a, %s", aopGet (source, soffset + i));
-          emit2 ("mov", "%s, a", aopGet (result, roffset + i));
-        }
-    }
+    cheapMove (result, roffset + i, source, soffset + i, a_dead_global);
 }
 
 /*-----------------------------------------------------------------*/
@@ -280,7 +337,39 @@ genMove (asmop *result, asmop *source, bool a_dead)
 static void
 genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 {
-  wassertl (0, "Unimplemented subtraction");
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  bool started = false;
+  for (int i = 0; i < size; i++)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, i, true);
+
+      wassertl (!started || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented subtraction of literal with multiple nonzero bytes");
+
+      if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          if (started && aopIsLitVal (right->aop, i, 1, 0x00))
+            emit2 ("subc", "a");
+          else
+            emit2 (started ? "sub" : "subc", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+          started = true;
+        }
+
+      cheapMove (result->aop, i, ASMOP_A, 0, true);
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/
@@ -456,9 +545,33 @@ genPlus (const iCode *ic)
 
   int size = result->aop->size;
 
-  wassertl (size <= 1, "Unimplemented wide addition");
+  /* Swap if left is literal or right is in A. */
+  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX))
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
 
-  wassertl (0, "Unimplemented addition");
+  bool started = false;
+  for (int i = 0; i < size; i++)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, i, true);
+
+      wassertl (!started || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented addition with multiple nozero bytes in literal");
+
+      if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          if (started && aopIsLitVal (right->aop, i, 1, 0x00))
+            emit2 ("addc", "a");
+          else
+            emit2 (started ? "adc" : "addc", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+          started = true;
+        }
+
+      cheapMove (result->aop, i, ASMOP_A, 0, true);
+    }
 
   freeAsmop (right);
   freeAsmop (left);
