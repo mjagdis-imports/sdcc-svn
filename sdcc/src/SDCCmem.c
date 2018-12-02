@@ -382,7 +382,7 @@ allocIntoSeg (symbol *sym)
 
       return;
     }
-  segment = SPEC_OCLS (sym->etype);
+  wassert(segment = SPEC_OCLS (sym->etype));
   addSet (&segment->syms, sym);
   if (segment == pdata)
     sym->iaccess = 1;

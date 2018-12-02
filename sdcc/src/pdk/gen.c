@@ -278,6 +278,26 @@ aopOp (operand *op, const iCode *ic)
       return;
     }
 
+  /* Rematerialize symbols where all bytes are spilt. */
+  if (sym->remat && sym->isspilt)
+    wassertl (0, "Unimplemented rematerialized operand");
+
+  /* if the type is a conditional */
+  if (sym->regType == REG_CND)
+    wassertl (0, "Unimplemented condition operand");
+
+  /* TODO: SFR! */
+
+  /* None of the above, which only leaves temporaries. */
+  if (sym->isspilt || sym->nRegs == 0)
+    {
+      sym->aop = op->aop = aopForSym (ic, sym->usl.spillLoc);
+      op->aop->size = getSize (sym->type);
+      return;
+    }
+
+  /* TODO register */
+
   wassertl (0, "Unimplemented aop type");
 }
 
@@ -416,6 +436,44 @@ genUminus (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genCall - generates a call statement                            */
+/*-----------------------------------------------------------------*/
+static void
+genCall (const iCode *ic)
+{
+  sym_link *dtype = operandType (IC_LEFT (ic));
+  sym_link *etype = getSpec (dtype);
+
+  D (emit2 ("; genCall", ""));
+
+  wassertl (ic->op != PCALL, "Unimplemented call through function pointer");
+
+  if (IS_LITERAL (etype))
+    emit2 ("call", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+  else
+    {
+      bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type));
+      emit2 (jump ? "goto" : "call", "%s",
+             (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+    }
+  cost (1, 2);
+
+  bool SomethingReturned = (IS_ITEMP (IC_RESULT (ic)) &&
+                       (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir))
+                       || IS_TRUE_SYMOP (IC_RESULT (ic));
+
+  if (SomethingReturned)
+    {
+      aopOp (IC_RESULT (ic), ic);
+
+      wassertl (IC_RESULT (ic)->aop->size <= 1, "Unimplemented call to function returning more than 1 byte");
+      cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true);
+
+      freeAsmop (IC_RESULT (ic));
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* genFunction - generated code for function entry                 */
 /*-----------------------------------------------------------------*/
 static void
@@ -486,17 +544,23 @@ genEndFunction (iCode *ic)
 static void
 genReturn (const iCode *ic)
 {
+  operand *left = IC_LEFT (ic);
+
   D (emit2 ("; genReturn", ""));
 
   /* if we have no return value then
      just generate the "ret" */
-  if (!IC_LEFT (ic))
+  if (!left)
     goto jumpret;
 
   /* we have something to return then
      move the return value into place */
+  aopOp (left, ic);
 
-  wassertl (0, "return of value not yet implemented");
+  wassertl (left->aop->size == 1, "return of value wider than 1 byte not yet implemented");
+  cheapMove (ASMOP_A, 0, left->aop, 0, true);
+
+  freeAsmop (left);  
 
 jumpret:
   /* generate a jump to the return label
@@ -544,6 +608,8 @@ genPlus (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
+  D (emit2 ("; genPlus", ""));
+
   aopOp (IC_LEFT (ic), ic);
   aopOp (IC_RIGHT (ic), ic);
   aopOp (IC_RESULT (ic), ic);
@@ -570,7 +636,7 @@ genPlus (const iCode *ic)
           if (started && aopIsLitVal (right->aop, i, 1, 0x00))
             emit2 ("addc", "a");
           else
-            emit2 (started ? "adc" : "addc", "a, %s", aopGet (right->aop, i));
+            emit2 (started ? "addc" : "add", "a, %s", aopGet (right->aop, i));
           cost (1, 1);
           started = true;
         }
@@ -870,7 +936,7 @@ genPdkiCode (iCode *ic)
 
     case CALL:
     case PCALL:
-      wassertl (0, "Unimplemented iCode: Function call");
+      genCall (ic);
       break;
 
     case FUNCTION:
@@ -999,11 +1065,11 @@ genPdkiCode (iCode *ic)
       break;
 
     case CRITICAL:
-      wassertl (0, "Unimplemented iCode: Critcal section");
+      wassertl (0, "Unimplemented iCode: Critical section");
       break;
 
     case ENDCRITICAL:
-      wassertl (0, "Unimplemented iCode: Critcal section");
+      wassertl (0, "Unimplemented iCode: Critical section");
       break;
 
     default:

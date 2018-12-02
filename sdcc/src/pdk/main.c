@@ -117,17 +117,17 @@ PORT pdk14_port =
   TARGET_ID_PDK14,
   "pdk14",
   "PDK14",                       /* Target name */
-  NULL,                         /* Processor name */
+  0,                             /* Processor name */
   {
     glue,
-    FALSE,
+    false,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    0,                          /* model == target */
   },
   {                             /* Assembler */
     pdkAsmCmd,
-    NULL,
+    0,
     "-plosgffwy",               /* Options with debug */
     "-plosgffw",                /* Options without debug */
     0,
@@ -135,11 +135,11 @@ PORT pdk14_port =
   },
   {                             /* Linker */
     _linkCmd,
-    NULL,                       //LINKCMD,
-    NULL,
+    0,                          //LINKCMD,
+    0,
     ".rel",
     1,
-    NULL,                       /* crt */
+    0,                          /* crt */
     _libs_pdk14,                /* libs */
   },
   {                             /* Peephole optimizer */
@@ -251,15 +251,15 @@ PORT pdk14_port =
   0,                            /* hasNativeMulFor */
   0,                            /* hasExtBitOp */
   0,                            /* oclsExpense */
-  TRUE,
-  FALSE,                        /* little endian */
+  true,
+  false,                        /* little endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */
   1,                            /* transform >= to ! < */
   1,                            /* transform != to !(a == b) */
   0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
+  false,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
   0,                            /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */

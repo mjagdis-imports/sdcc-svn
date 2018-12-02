@@ -20,6 +20,130 @@ enum
 #define D(_a, _s)
 #endif
 
+/*-----------------------------------------------------------------*/
+/* createStackSpil - create a location somewhere to spill          */
+/*-----------------------------------------------------------------*/
+static symbol *
+createStackSpil (symbol *sym)
+{
+  static int slocNum;
+  symbol *sloc = 0;
+  struct dbuf_s dbuf;
+
+  dbuf_init (&dbuf, 128);
+  dbuf_printf (&dbuf, "sloc%d", slocNum++);
+  sloc = newiTemp (dbuf_c_str (&dbuf));
+  dbuf_destroy (&dbuf);
+
+  /* set the type to the spilling symbol */
+  sloc->type = copyLinkChain (sym->type);
+  sloc->etype = getSpec (sloc->type);
+  SPEC_SCLS (sloc->etype) = S_DATA;
+  SPEC_EXTR (sloc->etype) = 0;
+  SPEC_STAT (sloc->etype) = 0;
+  SPEC_VOLATILE(sloc->etype) = 0;
+  SPEC_ABSA(sloc->etype) = 0;
+options.noOverlay = 1;
+  allocLocal (sloc);
+
+  sloc->isref = 1;
+
+  sym->usl.spillLoc = sloc;
+  sym->stackSpil = 1;
+
+  return sym;
+}
+
+/*-----------------------------------------------------------------*/
+/* spillThis - spils a specific operand                            */
+/*-----------------------------------------------------------------*/
+static void
+pdkSpillThis (symbol * sym)
+{
+  int i;
+  /* if this is rematerializable or has a spillLocation
+     we are okay, else we need to create a spillLocation
+     for it */
+  if (!(sym->remat || sym->usl.spillLoc))
+    createStackSpil (sym);
+
+  sym->isspilt = sym->spillA = 1;
+
+  for (i = 0; i < sym->nRegs; i++)
+    if (sym->regs[i])
+      sym->regs[i] = 0;
+
+  if (sym->usl.spillLoc && !sym->remat)
+    sym->usl.spillLoc->allocreq++;
+  return;
+}
+
+/*-----------------------------------------------------------------*/
+/* regTypeNum - computes the type & number of registers required   */
+/*-----------------------------------------------------------------*/
+static void
+regTypeNum (void)
+{
+  symbol *sym;
+  int k;
+
+  /* for each live range do */
+  for (sym = hTabFirstItem (liveRanges, &k); sym; sym = hTabNextItem (liveRanges, &k))
+    {
+      /* if used zero times then no registers needed. Exception: Variables larger than 4 bytes - these might need a spill location when they are return values */
+      if ((sym->liveTo - sym->liveFrom) == 0 && getSize (sym->type) <= 4)
+        continue;
+
+      D (D_ALLOC, ("regTypeNum: loop on sym %p\n", sym));
+
+      /* if the live range is a temporary */
+      if (sym->isitmp)
+        {
+          /* if the type is marked as a conditional */
+          if (sym->regType == REG_CND)
+            continue;
+
+          /* if used in return only then we don't
+             need registers */
+          if (sym->ruonly || sym->accuse)
+            {
+              if (IS_AGGREGATE (sym->type) || sym->isptr)
+                sym->type = aggrToPtr (sym->type, FALSE);
+              continue;
+            }
+
+          /* if not then we require registers */
+          D (D_ALLOC,
+             ("regTypeNum: isagg %u nRegs %u type %p\n", IS_AGGREGATE (sym->type) || sym->isptr, sym->nRegs, sym->type));
+          sym->nRegs =
+            ((IS_AGGREGATE (sym->type)
+              || sym->isptr) ? getSize (sym->type = aggrToPtr (sym->type, FALSE)) : getSize (sym->type));
+          D (D_ALLOC, ("regTypeNum: setting nRegs of %s (%p) to %u\n", sym->name, sym, sym->nRegs));
+
+          D (D_ALLOC, ("regTypeNum: setup to assign regs sym %p\n", sym));
+
+          if (sym->nRegs > 8)
+            {
+              fprintf (stderr, "allocated more than 8 registers for type ");
+              printTypeChain (sym->type, stderr);
+              fprintf (stderr, "\n");
+            }
+
+          /* determine the type of register required */
+          /* Always general purpose */
+          sym->regType = REG_GPR;
+        }
+      else
+        {
+          /* for the first run we don't provide */
+          /* registers for true symbols we will */
+          /* see how things go                  */
+          D (D_ALLOC, ("regTypeNum: #2 setting num of %p to 0\n", sym));
+          sym->nRegs = 0;
+        }
+    }
+}
+
 /** Transform weird SDCC handling of writes via pointers
     into something more sensible. */
 static void
@@ -202,6 +326,81 @@ packRegisters (eBBlock * ebp)
     }
 }
 
+/*------------------------------------------------------------------*/
+/* verifyRegsAssigned - make sure an iTemp is properly initialized; */
+/* it should either have registers or have been spilled. Otherwise, */
+/* there was an uninitialized variable, so just spill this to get   */
+/* the operand in a valid state.                                    */
+/*------------------------------------------------------------------*/
+static void
+verifyRegsAssigned (operand * op, iCode * ic)
+{
+  symbol *sym;
+  int i;
+  bool completely_in_regs;
+
+  if (!op)
+    return;
+  if (!IS_ITEMP (op))
+    return;
+
+  sym = OP_SYMBOL (op);
+
+  if (sym->regType == REG_CND)
+    return;
+
+  if (sym->isspilt && !sym->remat && sym->usl.spillLoc && !sym->usl.spillLoc->allocreq)
+    sym->usl.spillLoc->allocreq++;
+
+  if (sym->isspilt)
+    return;
+
+  for(i = 0, completely_in_regs = true; i < sym->nRegs; i++)
+    if (!sym->regs[i])
+      completely_in_regs = false;
+  if (completely_in_regs)
+    return;
+
+  pdkSpillThis (sym);
+}
+
+void
+pdkRegFix (eBBlock ** ebbs, int count)
+{
+  int i;
+
+  /* Check for and fix any problems with uninitialized operands */
+  for (i = 0; i < count; i++)
+    {
+      iCode *ic;
+
+      if (ebbs[i]->noPath && (ebbs[i]->entryLabel != entryLabel && ebbs[i]->entryLabel != returnLabel))
+        continue;
+
+      for (ic = ebbs[i]->sch; ic; ic = ic->next)
+        {
+          if (SKIP_IC2 (ic))
+            continue;
+
+          if (ic->op == IFX)
+            {
+              verifyRegsAssigned (IC_COND (ic), ic);
+              continue;
+            }
+
+          if (ic->op == JUMPTABLE)
+            {
+              verifyRegsAssigned (IC_JTCOND (ic), ic);
+              continue;
+            }
+
+          verifyRegsAssigned (IC_RESULT (ic), ic);
+          verifyRegsAssigned (IC_LEFT (ic), ic);
+          verifyRegsAssigned (IC_RIGHT (ic), ic);
+        }
+    }
+}
+
 /*-----------------------------------------------------------------*/
 /* assignRegisters - assigns registers to each live range as need  */
 /*-----------------------------------------------------------------*/
@@ -227,7 +426,13 @@ pdk_assignRegisters (ebbIndex *ebbi)
   if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_PACK, ebbi);
 
+  /* first determine for each live range the number of
+     registers & the type of registers required for each */
+  regTypeNum ();
+
   iCode *ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbs, count));
+
+  pdkRegFix (ebbs, count);
 
   genPdkCode (ic);
 }
