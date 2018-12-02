@@ -24,9 +24,10 @@
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
 
-static struct asmop asmop_a, asmop_zero;
+static struct asmop asmop_a, asmop_zero, asmop_one;
 static struct asmop *const ASMOP_A = &asmop_a;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
+static struct asmop *const ASMOP_ONE = &asmop_one;
 
 void
 pdk_init_asmops (void)
@@ -39,6 +40,10 @@ pdk_init_asmops (void)
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
   asmop_zero.aopu.aop_lit = constVal ("0");
+
+  asmop_one.type = AOP_LIT;
+  asmop_one.size = 1;
+  asmop_one.aopu.aop_lit = constVal ("1");
 }
 
 static void
@@ -602,6 +607,56 @@ genMinus (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genCmpEQorNE - equal or not equal comparison                    */
+/*-----------------------------------------------------------------*/
+static void
+genCmpEQorNE (const iCode *ic, iCode *ifx)
+{
+  operand *left, *right, *result;
+
+  D (emit2 ("; genCmpEQorNE", ""));
+
+  result = IC_RESULT (ic);
+  left = IC_LEFT (ic);
+  right = IC_RIGHT (ic);
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  symbol *tlbl_ne = newiTempLabel (NULL);
+  symbol *tlbl = newiTempLabel (NULL);
+
+  int size = max (left->aop->size, right->aop->size);
+
+  for (int i = 0; i < size; i++)
+    {
+      /* Prefer literal operand on right */
+      if (left->aop->type == AOP_LIT || aopInReg (right->aop, i, A_IDX))
+        {
+          operand *temp = left;
+          left = right;
+          right = temp;
+        }
+
+      cheapMove (ASMOP_A, 0, left->aop, i, true);
+      emit2 ("ceqsn", "a, %s", aopGet (right->aop, i));
+      cost (1, 1);
+      emitJP(tlbl_ne, 0.0f);
+    }
+
+  cheapMove (result->aop, 0, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true);
+  emitJP(tlbl, 0.0f);
+  emitLabel (tlbl_ne);
+  cheapMove (result->aop, 0, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true);
+  emitLabel (tlbl);
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genAssign - generate code for assignment                        */
 /*-----------------------------------------------------------------*/
 static void
@@ -659,6 +714,48 @@ genAssign (const iCode *ic)
   freeAsmop (result);
 }
 
+/*-----------------------------------------------------------------*/
+/* genIfx - generate code for Ifx statement                        */
+/*-----------------------------------------------------------------*/
+static void
+genIfx (const iCode *ic)
+{
+  operand *const cond = IC_COND (ic);
+  symbol *tlbl = 0;
+  aopOp (cond, ic);
+
+  if (IC_FALSE (ic) && cond->aop->size > 1)
+    tlbl = newiTempLabel (0);
+
+  for (int i = 0; i < cond->aop->size; i++)
+    {
+      cheapMove (ASMOP_A, 0, cond->aop, i, true);
+
+      if (IC_FALSE (ic) && i + 1 >= cond->aop->size)
+        {
+          emit2 ("ceqsn", "a, #0x00");
+          emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
+          cost (1, 1);
+        }
+      else if (IC_FALSE (ic))
+        {
+          emit2 ("cneqsn", "a, #0x00");
+          cost (1, 1);
+          emitJP (IC_FALSE (ic), 0.0f);
+        }
+      else
+        {
+          emit2 ("ceqsn", "a, #0x00");
+          cost (1, 1);
+          emitJP (IC_TRUE (ic), 0.0f);
+        }
+    }
+
+  emitLabel (tlbl);
+
+  freeAsmop (cond);
+}
+
 /*---------------------------------------------------------------------*/
 /* genSTM8Code - generate code for STM8 for a single iCode instruction */
 /*---------------------------------------------------------------------*/
@@ -685,8 +782,29 @@ genPdkiCode (iCode *ic)
 
   switch (ic->op)
     {
+    case '!':
+      wassertl (0, "Unimplemented iCode: Negation");
+      break;
+
+    case '~':
+      wassertl (0, "Unimplemented iCode: Bitwise complement");
+      break;
+
     case UNARYMINUS:
       genUminus (ic);
+      break;
+
+    case IPUSH:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case IPOP:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case CALL:
+    case PCALL:
+      wassertl (0, "Unimplemented iCode: Function call");
       break;
 
     case FUNCTION:
@@ -717,13 +835,109 @@ genPdkiCode (iCode *ic)
       genMinus (ic);
       break;
 
+    case '*':
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case '/':
+    case '%':
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case '>':
+    case '<':
+    case LE_OP:
+    case GE_OP:
+      wassertl (0, "Unimplemented iCode: Comparison");
+      break;
+
+    case NE_OP:
+    case EQ_OP:
+      genCmpEQorNE (ic, ifxForOp (IC_RESULT (ic), ic));
+      break;
+
+    case AND_OP:
+    case OR_OP:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case '^':
+      wassertl (0, "Unimplemented iCode: Xor");
+      break;
+
+    case '|':
+      wassertl (0, "Unimplemented iCode: Bitwise or");
+      break;
+
+    case BITWISEAND:
+      wassertl (0, "Unimplemented iCode: Bitwise and");
+      break;
+
     case INLINEASM:
       genInline (ic);
+      break;
+
+    case RRC:
+    case RLC:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case GETABIT:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case LEFT_OP:
+      wassertl (0, "Unimplemented iCode: Left shift");
+      break;
+
+    case RIGHT_OP:
+      wassertl (0, "Unimplemented iCode: Right shift");
+      break;
+
+    case GET_VALUE_AT_ADDRESS:
+      wassertl (0, "Unimplemented iCode: Read via pointer");
+      break;
+
+    case SET_VALUE_AT_ADDRESS:
+      wassertl (0, "Unimplemented iCode: Write via pointer");
       break;
 
     case '=':
       wassert (!POINTER_SET (ic));
       genAssign (ic);
+      break;
+
+    case IFX:
+      genIfx (ic);
+      break;
+
+    case ADDRESS_OF:
+      wassertl (0, "Unimplemented iCode: Adress of");
+      break;
+
+    case JUMPTABLE:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case CAST:
+      wassertl (0, "Unimplemented iCode. cast");
+      break;
+
+    case RECEIVE:
+    case SEND:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case DUMMY_READ_VOLATILE:
+      wassertl (0, "Unimplemented iCode: Dummy volatile read");
+      break;
+
+    case CRITICAL:
+      wassertl (0, "Unimplemented iCode: Critcal section");
+      break;
+
+    case ENDCRITICAL:
+      wassertl (0, "Unimplemented iCode: Critcal section");
       break;
 
     default:
