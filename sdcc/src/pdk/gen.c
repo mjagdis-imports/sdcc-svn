@@ -756,6 +756,72 @@ genIfx (const iCode *ic)
   freeAsmop (cond);
 }
 
+/*-----------------------------------------------------------------*/
+/* genCast - generate code for cast                                */
+/*-----------------------------------------------------------------*/
+static void
+genCast (const iCode *ic)
+{
+  operand *result, *right;
+  int offset;
+  sym_link *resulttype, *righttype;
+
+  D (emit2 ("; genCast", ""));
+
+  result = IC_RESULT (ic);
+  right = IC_RIGHT (ic);
+  resulttype = operandType (result);
+  righttype = operandType (right);
+
+  if ((getSize (resulttype) <= getSize (righttype) || !IS_SPEC (righttype) || (SPEC_USIGN (righttype) || IS_BOOL (righttype))) &&
+    (!IS_BOOL (resulttype) || IS_BOOL (righttype)))
+    {
+      genAssign (ic);
+      return;
+    }
+
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  if (IS_BOOL (resulttype))
+    {
+      int size = right->aop->size;
+
+      cheapMove (ASMOP_A, 0, right->aop, 0, true);
+
+      for(offset = 1; offset < size; offset++)
+        {
+          emit2 ("or", "a, %s", aopGet (right->aop, offset));
+          cost (1, 1);
+        }
+
+      emit2 ("ceqsn", "a, #0x00");
+      emit2 ("mov", "a, #0x01");
+      cost (2, 2);
+
+      cheapMove (result->aop, 0, ASMOP_A, 0, true);
+    }
+  else // Cast to signed type
+    {
+      genMove_o (result->aop, 0, right->aop, 0, right->aop->size, regDead (A_IDX, ic));
+
+      int size = result->aop->size - right->aop->size;
+      offset = right->aop->size;
+
+      cheapMove (ASMOP_A, 0, result->aop, right->aop->size - 1, true);
+      emit2 ("sl", "a");
+      emit2 ("mov", "a, #0x00");
+      emit2 ("subc", "a");
+      cost (3, 3);
+
+      while (size--)
+        cheapMove (result->aop, offset++, ASMOP_A, 0, true);
+    }
+
+  freeAsmop (right);
+  freeAsmop (result);
+}
+
 /*---------------------------------------------------------------------*/
 /* genSTM8Code - generate code for STM8 for a single iCode instruction */
 /*---------------------------------------------------------------------*/
@@ -920,7 +986,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case CAST:
-      wassertl (0, "Unimplemented iCode. cast");
+      genCast (ic);
       break;
 
     case RECEIVE:
