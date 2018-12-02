@@ -723,6 +723,126 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 }
 
 /*-----------------------------------------------------------------*/
+/* genOr - code for or                                             */
+/*-----------------------------------------------------------------*/
+static void
+genXor (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genPlus", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  /* Swap if left is literal or right is in A. */
+  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX))
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  for (int i = 0; i < size; i++)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, i, true);
+
+      emit2 ("xor", "a, %s", aopGet (right->aop, i));
+
+      cheapMove (result->aop, i, ASMOP_A, 0, true);
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genOr - code for or                                             */
+/*-----------------------------------------------------------------*/
+static void
+genOr (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genPlus", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  /* Swap if left is literal or right is in A. */
+  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX))
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  for (int i = 0; i < size; i++)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, i, true);
+
+      emit2 ("or", "a, %s", aopGet (right->aop, i));
+
+      cheapMove (result->aop, i, ASMOP_A, 0, true);
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genAnd - code for and                                           */
+/*-----------------------------------------------------------------*/
+static void
+genAnd (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genPlus", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  /* Swap if left is literal or right is in A. */
+  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX))
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  for (int i = 0; i < size; i++)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, i, true);
+
+      emit2 ("and", "a, %s", aopGet (right->aop, i));
+
+      cheapMove (result->aop, i, ASMOP_A, 0, true);
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genAssign - generate code for assignment                        */
 /*-----------------------------------------------------------------*/
 static void
@@ -994,15 +1114,15 @@ genPdkiCode (iCode *ic)
       break;
 
     case '^':
-      wassertl (0, "Unimplemented iCode: Xor");
+      genXor (ic);
       break;
 
     case '|':
-      wassertl (0, "Unimplemented iCode: Bitwise or");
+      genOr (ic);
       break;
 
     case BITWISEAND:
-      wassertl (0, "Unimplemented iCode: Bitwise and");
+      genAnd (ic);
       break;
 
     case INLINEASM:
