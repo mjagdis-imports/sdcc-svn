@@ -357,6 +357,50 @@ genMove (asmop *result, asmop *source, bool a_dead)
 }
 
 /*-----------------------------------------------------------------*/
+/* genNot - generates code for !                                   */
+/*-----------------------------------------------------------------*/
+static void
+genNot (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+
+  aopOp (left, ic);
+  aopOp (result, ic);
+
+  wassertl (0, "Unimplemented negation.");
+
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genCpl - generate code for complement                           */
+/*-----------------------------------------------------------------*/
+static void
+genCpl (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+
+  aopOp (left, ic);
+  aopOp (result, ic);
+
+  int size = result->aop->size;
+
+  genMove (result->aop, left->aop, true);
+
+  for(int i = 0; i < size; i++)
+    {
+      emit2("not", "%s", aopGet (result->aop, i));
+      cost (1, 1);
+    }
+
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genSub - generates code for subtraction                         */
 /*-----------------------------------------------------------------*/
 static void
@@ -366,9 +410,9 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   int size = result->aop->size;
 
@@ -412,8 +456,8 @@ genUminusFloat (const iCode *ic)
 static void
 genUminus (const iCode *ic)
 {
-  operand *result;
-  operand *left;
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
 
   if (IS_FLOAT (operandType (IC_LEFT (ic))))
     {
@@ -421,13 +465,10 @@ genUminus (const iCode *ic)
       return;
     }
 
-  result = IC_RESULT (ic);
-  left = IC_LEFT (ic);
-
   D (emit2 ("; genUminus", ""));
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (result, ic);
 
   genSub (ic, result->aop, ASMOP_ZERO, left->aop);
 
@@ -610,9 +651,9 @@ genPlus (const iCode *ic)
 
   D (emit2 ("; genPlus", ""));
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   int size = result->aop->size;
 
@@ -661,9 +702,9 @@ genMinus (const iCode *ic)
 
   D (emit2 ("; genMinus", ""));
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   genSub (ic, result->aop, left->aop, right->aop);
 
@@ -734,9 +775,9 @@ genXor (const iCode *ic)
 
   D (emit2 ("; genPlus", ""));
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   int size = result->aop->size;
 
@@ -774,9 +815,9 @@ genOr (const iCode *ic)
 
   D (emit2 ("; genPlus", ""));
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   int size = result->aop->size;
 
@@ -814,9 +855,9 @@ genAnd (const iCode *ic)
 
   D (emit2 ("; genPlus", ""));
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   int size = result->aop->size;
 
@@ -852,9 +893,9 @@ genLeftShift (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   int size = result->aop->size;
 
@@ -902,9 +943,9 @@ genRightShift (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
-  aopOp (IC_LEFT (ic), ic);
-  aopOp (IC_RIGHT (ic), ic);
-  aopOp (IC_RESULT (ic), ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   int size = result->aop->size;
 
@@ -1155,11 +1196,11 @@ genPdkiCode (iCode *ic)
   switch (ic->op)
     {
     case '!':
-      wassertl (0, "Unimplemented iCode: Negation");
+      genNot (ic);
       break;
 
     case '~':
-      wassertl (0, "Unimplemented iCode: Bitwise complement");
+      genCpl (ic);
       break;
 
     case UNARYMINUS:
