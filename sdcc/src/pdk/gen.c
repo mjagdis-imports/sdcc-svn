@@ -167,7 +167,7 @@ aopGet(const asmop *aop, int offset)
 
   if (aop->type == AOP_DIR)
     {
-      SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, aop->size - 1 - offset);
+      SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, offset);
       return (buffer);
     }
 
@@ -432,7 +432,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
     {
       cheapMove (ASMOP_A, 0, left->aop, i, true);
 
-      wassertl (!started || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented subtraction of literal with multiple nonzero bytes");
+      wassertl (!started || right->aop->type != AOP_LIT || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented subtraction of literal with multiple nonzero bytes");
 
       if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
         {
@@ -681,7 +681,7 @@ genPlus (const iCode *ic)
     {
       cheapMove (ASMOP_A, 0, left->aop, i, true);
 
-      wassertl (!started || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented addition with multiple nozero bytes in literal");
+      wassertl (!started || right->aop->type != AOP_LIT || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented addition with multiple nozero bytes in literal");
 
       if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
         {

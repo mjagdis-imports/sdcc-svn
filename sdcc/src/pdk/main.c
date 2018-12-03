@@ -252,7 +252,7 @@ PORT pdk14_port =
   0,                            /* hasExtBitOp */
   0,                            /* oclsExpense */
   true,
-  false,                        /* little endian */
+  true,                         /* little endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */
