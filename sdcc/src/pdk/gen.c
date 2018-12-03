@@ -533,7 +533,7 @@ genCall (const iCode *ic)
     {
       aopOp (IC_RESULT (ic), ic);
 
-      wassertl (IC_RESULT (ic)->aop->size <= 2, "Unimplemented call to function returning more than 1 byte");
+      wassertl (IC_RESULT (ic)->aop->size <= 2, "Unimplemented call to function returning more than 2 bytes");
       cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true);
       if (IC_RESULT (ic)->aop->size > 1)
         cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, true);
