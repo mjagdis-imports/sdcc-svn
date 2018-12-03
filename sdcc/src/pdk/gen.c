@@ -1129,7 +1129,7 @@ genPointerGet (const iCode *ic)
   wassertl (!bit_field, "Unimplemented read of bit-field");
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
-  if (left->aop->type == AOP_DIR)
+  if (left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
     {
       for (int i = 0; i < size; i++)
         {
@@ -1175,7 +1175,7 @@ genPointerSet (iCode *ic)
 
   wassertl (!bit_field, "Unimplemented write of bit-field");
 
-  if (left->aop->type == AOP_DIR)
+  if (left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
     {
       for (int i = 0; i < size; i++)
         {
@@ -1266,37 +1266,22 @@ static void
 genIfx (const iCode *ic)
 {
   operand *const cond = IC_COND (ic);
-  symbol *tlbl = 0;
+
+  D (emit2 ("; genIfx", ""));
+
   aopOp (cond, ic);
 
-  if (IC_FALSE (ic) && cond->aop->size > 1)
-    tlbl = newiTempLabel (0);
+  cheapMove (ASMOP_A, 0, cond->aop, 0, true);
 
-  for (int i = 0; i < cond->aop->size; i++)
+  for (int i = 1; i < cond->aop->size; i++)
     {
-      cheapMove (ASMOP_A, 0, cond->aop, i, true);
-
-      if (IC_FALSE (ic) && i + 1 >= cond->aop->size)
-        {
-          emit2 ("ceqsn", "a, #0x00");
-          emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
-          cost (1, 1);
-        }
-      else if (IC_FALSE (ic))
-        {
-          emit2 ("cneqsn", "a, #0x00");
-          cost (1, 1);
-          emitJP (IC_FALSE (ic), 0.0f);
-        }
-      else
-        {
-          emit2 ("ceqsn", "a, #0x00");
-          cost (1, 1);
-          emitJP (IC_TRUE (ic), 0.0f);
-        }
+      emit2 ("or", "a, %s", aopGet (cond->aop, i));
+      cost (1, 1);
     }
-
-  emitLabel (tlbl);
+ 
+  emit2 (IC_FALSE (ic) ? "cneqsn" : "ceqsn", "a, #0x00");
+  cost (1, 1); 
+  emitJP (IC_FALSE (ic) ? IC_FALSE (ic) : IC_TRUE (ic), 0.0f);
 
   freeAsmop (cond);
 }
