@@ -439,10 +439,17 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
   bool started = false;
   for (int i = 0; i < size; i++)
     {
+      if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          cheapMove (ASMOP_P, 0, right->aop, i, true);
+          cheapMove (ASMOP_A, 0, left->aop, i, true);
+          emit2 ("subc", "a, p");
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true);
+          continue;
+        }
+
       cheapMove (ASMOP_A, 0, left->aop, i, true);
-
-      wassertl (!started || right->aop->type != AOP_LIT || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented subtraction of literal with multiple nonzero bytes");
-
       if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
         {
           if (started && aopIsLitVal (right->aop, i, 1, 0x00))
@@ -451,8 +458,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             emit2 (started ? "sub" : "subc", "a, %s", aopGet (right->aop, i));
           cost (1, 1);
           started = true;
-        }
-
+       }
       cheapMove (result->aop, i, ASMOP_A, 0, true);
     }
 
@@ -691,11 +697,18 @@ genPlus (const iCode *ic)
 
   bool started = false;
   for (int i = 0; i < size; i++)
-    {
+    {  
+      if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          cheapMove (ASMOP_P, 0, right->aop, i, true);
+          cheapMove (ASMOP_A, 0, left->aop, i, true);
+          emit2 ("addc", "a, p");
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true);
+          continue;
+        }
+
       cheapMove (ASMOP_A, 0, left->aop, i, true);
-
-      wassertl (!started || right->aop->type != AOP_LIT || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented addition with multiple nozero bytes in literal");
-
       if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
         {
           if (started && aopIsLitVal (right->aop, i, 1, 0x00))
@@ -705,7 +718,6 @@ genPlus (const iCode *ic)
           cost (1, 1);
           started = true;
         }
-
       cheapMove (result->aop, i, ASMOP_A, 0, true);
     }
 
@@ -769,10 +781,19 @@ genCmp (const iCode *ic, iCode *ifx)
 
   for (int i = 0; i < size; i++)
     {
-      cheapMove (ASMOP_A, 0, left->aop, i, true);
-      wassertl (!i || right->aop->type != AOP_LIT || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented comparison operand larger than 0xff");
-      emit2 (i ? "subc" : "sub", "a, %s", aopGet (right->aop, i));
-      cost (1, 1);
+      if (i && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00)) // Work arounf lack of subc a, #nn.
+        {
+          cheapMove (ASMOP_P, 0, right->aop, i, true);
+          cheapMove (ASMOP_A, 0, left->aop, i, true);
+          emit2 ("subc", "a, p");
+          cost (1, 1);
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true);
+          emit2 (i ? "subc" : "sub", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+        }
     }
 
   if (sign)
@@ -853,7 +874,7 @@ genXor (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
-  D (emit2 ("; genPlus", ""));
+  D (emit2 ("; genXor", ""));
 
   aopOp (left, ic);
   aopOp (right, ic);
@@ -893,7 +914,7 @@ genOr (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
-  D (emit2 ("; genPlus", ""));
+  D (emit2 ("; genOr", ""));
 
   aopOp (left, ic);
   aopOp (right, ic);
@@ -933,7 +954,7 @@ genAnd (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
-  D (emit2 ("; genPlus", ""));
+  D (emit2 ("; genAnd", ""));
 
   aopOp (left, ic);
   aopOp (right, ic);
