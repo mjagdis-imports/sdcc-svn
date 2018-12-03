@@ -1268,6 +1268,45 @@ genIfx (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genAddrOf - generates code for address of                       */
+/*-----------------------------------------------------------------*/
+static void
+genAddrOf (const iCode *ic)
+{
+  operand *result, *left, *right;
+
+  D (emit2 ("; genAddrOf", ""));
+
+  result = IC_RESULT (ic);
+  left = IC_LEFT (ic);
+  right = IC_RIGHT (ic);
+
+  wassert (result);
+  wassert (left);
+  wassert (IS_TRUE_SYMOP (left));
+  wassert (right && IS_OP_LITERAL (IC_RIGHT (ic)));
+
+  const symbol *sym = OP_SYMBOL_CONST (left);
+  wassert (sym);
+
+  aopOp (result, ic);
+
+  int size = result->aop->size;
+
+  wassertl (!sym->onStack, "Unimplemented operand for &");
+  wassertl (!operandLitValue (right), "Unimplemented offset for &");
+  wassert (size == 2);
+
+  emit2 ("mov", "a, #<(%s + %d)", sym->rname, 0);
+  cost (1, 1);
+  cheapMove (result->aop, 0, ASMOP_A, 0, true);
+  emit2 ("mov", "a, #>(%s + %d)", sym->rname, 0);
+  cheapMove (result->aop, 1, ASMOP_A, 0, true);
+
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genCast - generate code for cast                                */
 /*-----------------------------------------------------------------*/
 static void
@@ -1492,7 +1531,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case ADDRESS_OF:
-      wassertl (0, "Unimplemented iCode: Adress of");
+      genAddrOf (ic);
       break;
 
     case JUMPTABLE:

@@ -308,7 +308,7 @@ packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
   iCode *dic;
 
   operand *op = *opp;
-printf("packRegsForOneuse() at ic %d\n", ic->key);
+
   /* if returning a literal then do nothing */
   if (!IS_ITEMP (op))
     return 0;
@@ -326,7 +326,7 @@ printf("packRegsForOneuse() at ic %d\n", ic->key);
   /* get the definition */
   if (!(dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (op)))))
     return 0;
-printf("Found dic %d\n", dic->key);
+
   /* found the definition now check if it is local */
   if (dic->seq < ebp->fSeq || dic->seq > ebp->lSeq)
     return 0;                /* non-local */
@@ -370,7 +370,7 @@ printf("Found dic %d\n", dic->key);
      one */
   for (iCode *nic = dic; nic != ic; nic = nic->next) 
     bitVectUnSetBit (nic->rlive, op->key);
-printf("Packing.\n");
+
   remiCodeFromeBBlock (ebp, dic);
 
   hTabDeleteItem (&iCodehTab, dic->key, ic, DELETE_ITEM, NULL);
