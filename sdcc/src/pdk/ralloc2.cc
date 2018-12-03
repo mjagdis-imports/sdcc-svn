@@ -24,7 +24,7 @@ extern "C"
 {
   #include "ralloc.h"
   #include "gen.h"
-  unsigned char drypdkiCode (iCode *ic);
+  float dryPdkiCode (iCode *ic);
   bool pdk_assignment_optimal;
 }
 
@@ -34,6 +34,28 @@ extern "C"
 template <class I_t>
 static void add_operand_conflicts_in_node(const cfg_node &n, I_t &I)
 {
+}
+
+template <class G_t, class I_t>
+static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
+{
+  const i_assignment_t &ia = a.i_assignment;
+
+  if(ia.registers[REG_A][1] < 0)
+    return(true);       // Register a not in use.
+
+  return(false);
+}
+
+template <class G_t, class I_t>
+static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
+{
+  const i_assignment_t &ia = a.i_assignment;
+
+  if(ia.registers[REG_P][1] < 0)
+    return(true);       // Register a not in use.
+
+  return(false);
 }
 
 template <class G_t, class I_t>
@@ -142,17 +164,14 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
       return(0.0f);
     }
 
-#if 0
   if(!Ainst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
 
   if(!Pinst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
-#endif
 
   switch(ic->op)
     {
-#if 0
     // Register assignment doesn't matter for these:
     case FUNCTION:
     case ENDFUNCTION:
@@ -171,10 +190,10 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case '^':
     case '|':
     case BITWISEAND:
-    case IPUSH:
+    //case IPUSH:
     //case IPOP:
     case CALL:
-    case PCALL:
+    //case PCALL:
     case RETURN:
     case '*':
     case '/':
@@ -187,9 +206,9 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case NE_OP:
     case AND_OP:
     case OR_OP:
-    case GETABIT:
-    case GETBYTE:
-    case GETWORD:
+    //case GETABIT:
+    //case GETBYTE:
+    //case GETWORD:
     case LEFT_OP:
     case RIGHT_OP:
     case GET_VALUE_AT_ADDRESS:
@@ -197,23 +216,22 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case '=':
     case IFX:
     case ADDRESS_OF:
-    case JUMPTABLE:
+    //case JUMPTABLE:
     case CAST:
     /*case RECEIVE:
     case SEND:*/
-    case DUMMY_READ_VOLATILE:
+    //case DUMMY_READ_VOLATILE:
     /*case CRITICAL:
     case ENDCRITICAL:*/
     case SWAP:
       assign_operands_for_cost(a, i, G, I);
       set_surviving_regs(a, i, G, I);
-      c = drySTM8iCode(ic);
+      c = dryPdkiCode(ic);
       ic->generated = false;
 #if 0
       std::cout << "Got cost " << c << "\n";
 #endif
       return(c);
-#endif
     default:
       return(0.0f);
     }

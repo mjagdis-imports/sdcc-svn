@@ -24,6 +24,11 @@
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
 
+static bool regalloc_dry_run;
+static unsigned int regalloc_dry_run_cost_words;
+static unsigned int regalloc_dry_run_cost_cycles;
+static unsigned int regalloc_dry_run_cycle_scale = 1;
+
 static struct asmop asmop_a, asmop_p, asmop_zero, asmop_one;
 static struct asmop *const ASMOP_A = &asmop_a;
 static struct asmop *const ASMOP_P = &asmop_p;
@@ -68,6 +73,8 @@ emit2 (const char *inst, const char *fmt, ...)
 static void
 cost(unsigned int words, unsigned int cycles)
 {
+  regalloc_dry_run_cost_words += words;
+  regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
 }
 
 static void
@@ -110,8 +117,8 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
         byteOfVal (aop1->aopu.aop_lit, offset1) == byteOfVal (aop2->aopu.aop_lit, offset2))
         continue;
 
-      if (aop1->type == AOP_DIR && aop2->type == AOP_DIR &&
-        offset1 == offset2 && !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
+      if (aop1->type == AOP_DIR && aop2->type == AOP_DIR && offset1 == offset2 &&
+        !regalloc_dry_run && !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
         return (true);
 
       return (false);
@@ -229,12 +236,12 @@ aopForSym (const iCode *ic, symbol *sym)
   asmop *aop;
 
   wassert_bt (ic);
-  wassert_bt (sym);
-  wassert_bt (sym->etype);
+  wassert_bt (regalloc_dry_run || sym);
+  wassert_bt (regalloc_dry_run || sym->etype);
 
   // Unlike some other backends we really free asmops; to avoid a double-free, we need to support multiple asmops for the same symbol.
 
-  if (IS_FUNC (sym->type))
+  if (sym && IS_FUNC (sym->type))
     {
       aop = newAsmop (AOP_IMMD);
       aop->aopu.immd = sym->rname;
@@ -242,15 +249,18 @@ aopForSym (const iCode *ic, symbol *sym)
       aop->size = getSize (sym->type);
     }
   /* Assign depending on the storage class */
-  else if (sym->onStack || sym->iaccess)
+  else if (sym && sym->onStack || sym && sym->iaccess)
     {
       wassertl (0, "Unimplemented support for on-stack operand");
     }
   else
     {
       aop = newAsmop (AOP_DIR);
-      aop->aopu.aop_dir = sym->rname;
-      aop->size = getSize (sym->type);
+      if (sym)
+        {
+          aop->aopu.aop_dir = sym->rname;
+          aop->size = getSize (sym->type);
+        }
     }
 
   return (aop);
@@ -305,9 +315,77 @@ aopOp (operand *op, const iCode *ic)
       return;
     }
 
-  /* TODO register */
+  /* None of the above, which only leaves temporaries. */
+  { 
+    bool completely_in_regs = true;
+    bool completely_spilt = true;
+    asmop *aop = newAsmop (AOP_REGDIR);
 
-  wassertl_bt (0, "Unimplemented aop type");
+    aop->size = getSize (operandType (op));
+    op->aop = aop;
+
+    for (int i = 0; i < aop->size; i++)
+      {
+        aop->aopu.bytes[i].in_reg = !!sym->regs[i];
+        if (sym->regs[i])
+          {
+            completely_spilt = false;
+            aop->aopu.bytes[i].byteu.reg = sym->regs[i];
+            //aop->regs[sym->regs[i]->rIdx] = i;
+          }
+        else if (sym->isspilt && sym->usl.spillLoc || sym->nRegs && regalloc_dry_run)
+          {
+            completely_in_regs = false;
+
+            if (!regalloc_dry_run)
+              {
+                /*aop->aopu.bytes[i].byteu.stk = (long int)(sym->usl.spillLoc->stack) + aop->size - i;
+
+                if (sym->usl.spillLoc->stack + aop->size - (int)(i) <= -G.stack.pushed)
+                  {
+                    fprintf (stderr, "%s %d %d %d %d at ic %d\n", sym->name, (int)(sym->usl.spillLoc->stack), (int)(aop->size), (int)(i), (int)(G.stack.pushed), ic->key);
+                    wassertl_bt (0, "Invalid stack offset.");
+                  }*/
+              }
+            else
+              {
+                static long int old_base = -10;
+                static const symbol *old_sym = 0;
+                if (sym != old_sym)
+                  {
+                    old_base -= aop->size;
+                    if (old_base < -100)
+                      old_base = -10;
+                    old_sym = sym;
+                  }
+
+                // aop->aopu.bytes[i].byteu.stk = old_base + aop->size - i;
+              }
+          }
+        else // Dummy iTemp.
+          {
+            aop->type = AOP_DUMMY;
+            return;
+          }
+
+        if (!completely_in_regs && (!currFunc || GcurMemmap == statsg))
+          {
+            if (!regalloc_dry_run)
+              wassertl_bt (0, "Stack asmop outside of function.");
+            cost (180, 180);
+          }
+      }
+
+    if (completely_in_regs)
+      aop->type = AOP_REG;
+    else if (completely_spilt)
+      {
+        sym->aop = op->aop = aopForSym (ic, sym->usl.spillLoc);
+        op->aop->size = getSize (sym->type);
+      }
+    else
+      wassertl (0, "Unsupported partially spilt aop");
+  }
 }
 
 /*-----------------------------------------------------------------*/
@@ -832,8 +910,8 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   aopOp (right, ic);
   aopOp (result, ic);
 
-  symbol *tlbl_ne = newiTempLabel (NULL);
-  symbol *tlbl = newiTempLabel (NULL);
+  symbol *tlbl_ne = regalloc_dry_run ? 0 : newiTempLabel (NULL);
+  symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
 
   int size = max (left->aop->size, right->aop->size);
 
@@ -1002,7 +1080,7 @@ genLeftShift (const iCode *ic)
 
   genMove (result->aop, left->aop, true);
 
-  symbol *tlbl1 = aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0);
+  symbol *tlbl1 = regalloc_dry_run ? 0 : (aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0));
   symbol *tlbl2 = tlbl1 ? newiTempLabel (0) : 0;
 
   if (tlbl1)
@@ -1012,7 +1090,8 @@ genLeftShift (const iCode *ic)
       cost (1, 1);
       emitLabel (tlbl1);
       emit2 ("dzsn", "a");
-      emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
+      if (!regalloc_dry_run)
+        emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
       cost (2, 2);
     }
 
@@ -1022,9 +1101,10 @@ genLeftShift (const iCode *ic)
       cost (1, 1);
     }
 
-  if (tlbl1)
+  if (!aopIsLitVal (right->aop, 0, 1, 0x01))
     {
-      emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
+      if (!regalloc_dry_run)
+        emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
       cost (1, 1);
     }
   emitLabel (tlbl2);
@@ -1052,7 +1132,7 @@ genRightShift (const iCode *ic)
 
   genMove (result->aop, left->aop, true);
 
-  symbol *tlbl1 = aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0);
+  symbol *tlbl1 = regalloc_dry_run ? 0 : (aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0));
   symbol *tlbl2 = tlbl1 ? newiTempLabel (0) : 0;
 
   if (tlbl1)
@@ -1062,7 +1142,8 @@ genRightShift (const iCode *ic)
       cost (1, 1);
       emitLabel (tlbl1);
       emit2 ("dzsn", "a");
-      emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
+      if (!regalloc_dry_run)
+        emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
       cost (2, 2);
     }
 
@@ -1092,9 +1173,10 @@ genRightShift (const iCode *ic)
       cost (1, 1);
     }
 
-  if (tlbl1)
+  if (!aopIsLitVal (right->aop, 0, 1, 0x01))
     {
-      emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
+      if (!regalloc_dry_run)
+        emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
       cost (1, 1);
     }
   emitLabel (tlbl2);
@@ -1581,6 +1663,26 @@ genPdkiCode (iCode *ic)
     default:
       wassertl (0, "Unknown iCode");
     }
+}
+
+float
+dryPdkiCode (iCode *ic)
+{
+  regalloc_dry_run = true;
+  regalloc_dry_run_cost_words = 0;
+  regalloc_dry_run_cost_cycles = 0;
+
+  initGenLineElement ();
+
+  genPdkiCode (ic);
+
+  destroy_line_list ();
+
+  wassert (regalloc_dry_run);
+
+  const unsigned int word_cost_weight = 2 << (optimize.codeSize * 3 + !optimize.codeSpeed * 3);
+
+  return ((float)regalloc_dry_run_cost_words * word_cost_weight + (float)regalloc_dry_run_cost_cycles * ic->count);
 }
 
 /*---------------------------------------------------------------------*/

@@ -28,6 +28,8 @@ typedef enum
   AOP_LIT = 1,
   /* Is in a register */
   AOP_REG,
+  /* Is partially in a register, partially in direct space */
+  AOP_REGDIR,
   /* Is an immediate value */
   AOP_IMMD,
   /* Is in direct space */
