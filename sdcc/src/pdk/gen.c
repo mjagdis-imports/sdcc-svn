@@ -368,7 +368,18 @@ genNot (const iCode *ic)
   aopOp (left, ic);
   aopOp (result, ic);
 
-  wassertl (0, "Unimplemented negation.");
+  cheapMove (ASMOP_A, 0, left->aop, 0, true);
+  for (int i = 1; i < left->aop->size; i++)
+    {
+      emit2 ("or", aopGet (left->aop, i));
+      cost (1, 1);
+    }
+  emit2 ("sub", "a, #0x01");
+  emit2 ("mov", "a, #0x00");
+  emit2 ("src", "a");
+
+  cheapMove (result->aop, 0, ASMOP_A, 0, true);
+  genMove_o (result->aop, 1, ASMOP_ZERO, 0, result->aop->size - 1, true);
 
   freeAsmop (left);
   freeAsmop (result);

@@ -1,7 +1,7 @@
 2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
-	  Implement shifts, complement.
+	  Implement shifts, complement, negation.
 
 2018-12-02 Philipp Klaus Krause <pkk AT spth.de>
 
