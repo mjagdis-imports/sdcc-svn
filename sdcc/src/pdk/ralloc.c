@@ -60,7 +60,7 @@ createStackSpil (symbol *sym)
 /*-----------------------------------------------------------------*/
 /* spillThis - spils a specific operand                            */
 /*-----------------------------------------------------------------*/
-static void
+void
 pdkSpillThis (symbol * sym)
 {
   int i;

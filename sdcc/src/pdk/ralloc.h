@@ -54,6 +54,7 @@ extern reg_info pdk_regs[];
 
 void pdk_assignRegisters (ebbIndex *);
 
+void pdkSpillThis (symbol *sym);
 iCode *pdk_ralloc2_cc(ebbIndex *ebbi);
 
 void pdkRegFix (eBBlock **ebbs, int count);
