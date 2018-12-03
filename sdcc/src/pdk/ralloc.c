@@ -418,6 +418,93 @@ packRegisters (eBBlock * ebp)
     }
 }
 
+/**
+  Mark variables for assignment by the register allocator.
+ */
+static void
+serialRegMark (eBBlock **ebbs, int count)
+{
+  int i;
+  short int max_alloc_bytes = SHRT_MAX; // Byte limit. Set this to a low value to pass only few variables to the register allocator. This can be useful for debugging.
+
+  D (D_ALLOC, ("serialRegMark for %s, currFunc->stack %d\n", currFunc->name, currFunc->stack));
+
+  /* for all blocks */
+  for (i = 0; i < count; i++)
+    {
+      iCode *ic;
+
+      if (ebbs[i]->noPath && (ebbs[i]->entryLabel != entryLabel && ebbs[i]->entryLabel != returnLabel))
+        continue;
+
+      /* for all instructions do */
+      for (ic = ebbs[i]->sch; ic; ic = ic->next)
+        {
+          if (ic->op == IPOP)
+            wassert (0);
+
+          /* if result is present && is a true symbol */
+          if (IC_RESULT (ic) && ic->op != IFX && IS_TRUE_SYMOP (IC_RESULT (ic)))
+            OP_SYMBOL (IC_RESULT (ic))->allocreq++;
+
+          /* some don't need registers, since there is no result. */
+          if (SKIP_IC2 (ic) ||
+              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == IPOP || ic->op == SET_VALUE_AT_ADDRESS)
+            continue;
+
+          /* now we need to allocate registers only for the result */
+          if (IC_RESULT (ic))
+            {
+              symbol *sym = OP_SYMBOL (IC_RESULT (ic));
+
+              D (D_ALLOC, ("serialRegAssign: in loop on result %p %s\n", sym, sym->name));
+
+              if (sym->isspilt && sym->usl.spillLoc) // todo: Remove once remat is supported!
+                {
+                  sym->usl.spillLoc->allocreq--;
+                  sym->isspilt = FALSE;
+                }
+
+              /* Make sure any spill location is definately allocated */
+              if (sym->isspilt && !sym->remat && sym->usl.spillLoc && !sym->usl.spillLoc->allocreq)
+                sym->usl.spillLoc->allocreq++;
+
+              /* if it does not need or is spilt
+                 or is already marked for the new allocator
+                 or will not live beyond this instructions */
+              if (!sym->nRegs ||
+                  sym->isspilt || sym->for_newralloc || sym->liveTo <= ic->seq && (sym->nRegs <= 4 || ic->op != CALL && ic->op != PCALL))
+                {
+                  D (D_ALLOC, ("serialRegMark: won't live long enough.\n"));
+                  continue;
+                }
+
+              if (sym->usl.spillLoc && !sym->usl.spillLoc->_isparm) // I have no idea where these spill locations come from. Sometime two symbols even have the same spill location, whic tends to mess up stack allocation. THose that come from previous iterations in this loop would be okay, but those from outside are a problem.
+                {
+                  sym->usl.spillLoc = 0;
+                  sym->isspilt = false;
+                }
+
+              if (sym->nRegs > 4 && ic->op == CALL)
+                {
+                  sym->for_newralloc = 0;
+                  pdkSpillThis (sym);
+                }
+              else if (max_alloc_bytes >= sym->nRegs)
+                {
+                  sym->for_newralloc = 1;
+                  max_alloc_bytes -= sym->nRegs;
+                }
+              else if (!sym->for_newralloc)
+                {
+                  pdkSpillThis (sym);
+                  printf ("Spilt %s due to byte limit.\n", sym->name);
+                }
+            }
+        }
+    }
+}
+
 /*------------------------------------------------------------------*/
 /* verifyRegsAssigned - make sure an iTemp is properly initialized; */
 /* it should either have registers or have been spilled. Otherwise, */
@@ -501,6 +588,7 @@ pdk_assignRegisters (ebbIndex *ebbi)
 {
   eBBlock **ebbs = ebbi->bbOrder;
   int count = ebbi->count;
+  iCode *ic;
 
   pdk_init_asmops();
 
@@ -522,9 +610,11 @@ pdk_assignRegisters (ebbIndex *ebbi)
      registers & the type of registers required for each */
   regTypeNum ();
 
-  iCode *ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbs, count));
+  /* Mark variables for assignment by the new allocator */
+  serialRegMark (ebbs, count);
 
-  pdkRegFix (ebbs, count);
+  /* Invoke optimal register allocator */
+  ic = pdk_ralloc2_cc (ebbi);
 
   genPdkCode (ic);
 }

@@ -1,6 +1,13 @@
 2018-12-02 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/ralloc.c,
+	  src/pdk/ralloc.h,
+	  src/pdk/ralloc2.cc:
+	  Infrastructure for register allocation.
+
+2018-12-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/ralloc.c,
 	  src/pdk/gen.c:
 	  Allow return of up to 2 bytes.
 
