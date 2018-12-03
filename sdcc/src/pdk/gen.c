@@ -1032,7 +1032,7 @@ genRightShift (const iCode *ic)
       cost (2, 2);
     }
 
-  // Padauk has bo arithmetic right shift instruction.
+  // Padauk has no arithmetic right shift instruction.
   // So we need this 4-instruction sequence here.
   // TODO: Investigate if we should change implementation-
   // defined behaviour to just use sr (the standard would
@@ -1068,6 +1068,51 @@ genRightShift (const iCode *ic)
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genPointerSet - stores the value into a pointer location        */
+/*-----------------------------------------------------------------*/
+static void
+genPointerSet (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genPointerSet", ""));
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+
+  bool bit_field = IS_BITVAR (getSpec (operandType (right))) || IS_BITVAR (getSpec (operandType (left)));
+  int size = right->aop->size;
+
+  wassertl (!bit_field, "Unimplemented write of bit-field");
+
+  if (left->aop->type == AOP_DIR)
+    {
+      for (int i = 0; i < size; i++)
+        {
+          cheapMove (ASMOP_A, 0, right->aop, i, true);
+          emit2 ("idxm", "%s, a", aopGet (left->aop, 0));
+          cost (1, 2);
+          if (i + 1 != size)
+            {
+              emit2 ("inc", "%s", aopGet (left->aop, 0));
+              cost (1, 1);
+            }
+        }
+      for (int i = 1; i < size; i++)
+        {
+          emit2 ("dec", "%s", aopGet (left->aop, 0));
+          cost (1, 1);
+        }
+    }
+  else
+    wassertl (0, "Unimplemented pointer operand for pointer set");
+
+  freeAsmop (right);
+  freeAsmop (left);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1382,7 +1427,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case SET_VALUE_AT_ADDRESS:
-      wassertl (0, "Unimplemented iCode: Write via pointer");
+      genPointerSet (ic);
       break;
 
     case '=':

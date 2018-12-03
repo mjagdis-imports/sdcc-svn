@@ -1,5 +1,12 @@
 2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c,
+	  src/pdk/main.c,
+	  src/pdk/ralloc.c:
+	  Implement basic support for writes via pointer.
+
+2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c:
 	  Implement comparison.
 

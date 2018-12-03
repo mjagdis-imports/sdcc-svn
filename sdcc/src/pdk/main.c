@@ -160,9 +160,9 @@ PORT pdk14_port =
     2,                          /* int */
     4,                          /* long */
     8,                          /* long long */
-    1,                          /* near ptr */
-    1,                          /* far ptr */
-    1,                          /* generic ptr */
+    2,                          /* near ptr */
+    2,                          /* far ptr */
+    2,                          /* generic ptr */
     2,                          /* func ptr */
     0,                          /* banked func ptr */
     1,                          /* bit */

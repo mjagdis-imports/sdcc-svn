@@ -1,5 +1,6 @@
 #include "ralloc.h"
 #include "gen.h"
+#include "dbuf_string.h"
 
 reg_info pdk_regs[] =
 {
