@@ -24,8 +24,9 @@
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
 
-static struct asmop asmop_a, asmop_zero, asmop_one;
+static struct asmop asmop_a, asmop_p, asmop_zero, asmop_one;
 static struct asmop *const ASMOP_A = &asmop_a;
+static struct asmop *const ASMOP_P = &asmop_p;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
 static struct asmop *const ASMOP_ONE = &asmop_one;
 
@@ -36,6 +37,11 @@ pdk_init_asmops (void)
   asmop_a.size = 1;
   asmop_a.aopu.bytes[0].in_reg = TRUE;
   asmop_a.aopu.bytes[0].byteu.reg = pdk_regs + A_IDX;
+
+  asmop_p.type = AOP_REG;
+  asmop_p.size = 1;
+  asmop_p.aopu.bytes[0].in_reg = TRUE;
+  asmop_p.aopu.bytes[0].byteu.reg = pdk_regs + P_IDX;
 
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
@@ -154,6 +160,9 @@ aopGet(const asmop *aop, int offset)
       SNPRINTF (buffer, sizeof(buffer), "#0x%02x", byteOfVal (aop->aopu.aop_lit, offset));
       return (buffer);
     }
+
+  if (aop->type == AOP_REG)
+    return (aop->aopu.bytes[offset].byteu.reg->name);
 
   if (aop->type == AOP_IMMD)
     {
@@ -518,8 +527,10 @@ genCall (const iCode *ic)
     {
       aopOp (IC_RESULT (ic), ic);
 
-      wassertl (IC_RESULT (ic)->aop->size <= 1, "Unimplemented call to function returning more than 1 byte");
+      wassertl (IC_RESULT (ic)->aop->size <= 2, "Unimplemented call to function returning more than 1 byte");
       cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true);
+      if (IC_RESULT (ic)->aop->size > 1)
+        cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, true);
 
       freeAsmop (IC_RESULT (ic));
     }
@@ -609,7 +620,9 @@ genReturn (const iCode *ic)
      move the return value into place */
   aopOp (left, ic);
 
-  wassertl (left->aop->size == 1, "return of value wider than 1 byte not yet implemented");
+  wassertl (left->aop->size <= 2, "return of value wider than 2 bytes not yet implemented");
+  if (left->aop->size > 1)
+    cheapMove (ASMOP_P, 0, left->aop, 1, true);
   cheapMove (ASMOP_A, 0, left->aop, 0, true);
 
   freeAsmop (left);  
