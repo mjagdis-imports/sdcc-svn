@@ -34,15 +34,94 @@ extern "C"
 template <class I_t>
 static void add_operand_conflicts_in_node(const cfg_node &n, I_t &I)
 {
+  const iCode *ic = n.ic;
+  
+  const operand *result = IC_RESULT(ic);
+  const operand *left = IC_LEFT(ic);
+  const operand *right = IC_RIGHT(ic);
+
+  if(!result || !IS_SYMOP(result))
+    return;
+
+  // Todo: More fine-grained control for these.
+  if (!(ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS && !IS_FLOAT (operandType (left)) || ic->op == '~' ||
+    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
+    ic->op == GET_VALUE_AT_ADDRESS))
+    return;
+
+  operand_map_t::const_iterator oir, oir_end, oirs; 
+  boost::tie(oir, oir_end) = n.operands.equal_range(OP_SYMBOL_CONST(result)->key);
+  if(oir == oir_end)
+    return;
+    
+  operand_map_t::const_iterator oio, oio_end;
+  
+  if(left && IS_SYMOP(left))
+    for(boost::tie(oio, oio_end) = n.operands.equal_range(OP_SYMBOL_CONST(left)->key); oio != oio_end; ++oio)
+      for(oirs = oir; oirs != oir_end; ++oirs)
+        {
+          var_t rvar = oirs->second;
+          var_t ovar = oio->second;
+          if(I[rvar].byte < I[ovar].byte)
+            boost::add_edge(rvar, ovar, I);
+        }
+        
+  if(right && IS_SYMOP(right))
+    for(boost::tie(oio, oio_end) = n.operands.equal_range(OP_SYMBOL_CONST(right)->key); oio != oio_end; ++oio)
+      for(oirs = oir; oirs != oir_end; ++oirs)
+        {
+          var_t rvar = oirs->second;
+          var_t ovar = oio->second;
+          if(I[rvar].byte < I[ovar].byte)
+            boost::add_edge(rvar, ovar, I);
+        }
+}
+
+// Return true, iff the operand is placed (partially) in r.
+template <class G_t>
+static bool operand_in_reg(const operand *o, reg_t r, const i_assignment_t &ia, unsigned short int i, const G_t &G)
+{
+  if(!o || !IS_SYMOP(o))
+    return(false);
+
+  if(r >= port->num_regs)
+    return(false);
+
+  operand_map_t::const_iterator oi, oi_end;
+  for(boost::tie(oi, oi_end) = G[i].operands.equal_range(OP_SYMBOL_CONST(o)->key); oi != oi_end; ++oi)
+    if(oi->second == ia.registers[r][1] || oi->second == ia.registers[r][0])
+      return(true);
+
+  return(false);
 }
 
 template <class G_t, class I_t>
 static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
+  const iCode *ic = G[i].ic;
   const i_assignment_t &ia = a.i_assignment;
 
   if(ia.registers[REG_A][1] < 0)
     return(true);       // Register a not in use.
+
+  const operand *left = IC_LEFT(ic);
+  const operand *right = IC_RIGHT(ic);
+  const operand *result = IC_RESULT(ic);
+
+  bool result_in_A = operand_in_reg(result, REG_A, ia, i, G);
+  bool left_in_A = operand_in_reg(left, REG_A, ia, i, G);
+  bool right_in_A = operand_in_reg(right, REG_A, ia, i, G);
+
+  const cfg_dying_t &dying = G[i].dying;
+
+  bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
+
+  // Only allow 1-Byte operands in a for now.
+  if (left_in_A && getSize(operandType(left)) != 1 || right_in_A && getSize(operandType(right)) != 1 || result_in_A && getSize(operandType(result)) != 1)
+    return (false);
+
+  if(dying_A)
+    return(true);
 
   return(false);
 }
@@ -53,7 +132,7 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   const i_assignment_t &ia = a.i_assignment;
 
   if(ia.registers[REG_P][1] < 0)
-    return(true);       // Register a not in use.
+    return(true);       // Pseudoregister p not in use.
 
   return(false);
 }

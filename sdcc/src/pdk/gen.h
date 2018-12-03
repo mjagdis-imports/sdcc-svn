@@ -74,6 +74,7 @@ asmop;
 
 void genPdkCode (iCode *);
 
+extern bool pdk_assignment_optimal;
 void pdk_init_asmops (void);
 
 #endif

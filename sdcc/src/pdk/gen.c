@@ -60,7 +60,7 @@ pdk_init_asmops (void)
 static void
 emit2 (const char *inst, const char *fmt, ...)
 {
-  //if (!regalloc_dry_run)
+  if (!regalloc_dry_run)
     {
       va_list ap;
 
@@ -80,7 +80,7 @@ cost(unsigned int words, unsigned int cycles)
 static void
 emitJP(const symbol *target, float probability)
 {
-  //if (!regalloc_dry_run)
+  if (!regalloc_dry_run)
     emit2 ("goto", "%05d$", labelKey2num (target->key));
   cost (1, 2 * probability);
 }
@@ -113,6 +113,11 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
 {
   for(; size; size--, offset1++, offset2++)
     {
+      if (aop1->type == AOP_REG && aop2->type == AOP_REG && // Same register
+        aop1->aopu.bytes[offset1].in_reg && aop2->aopu.bytes[offset2].in_reg &&
+        aop1->aopu.bytes[offset1].byteu.reg == aop2->aopu.bytes[offset2].byteu.reg)
+        continue;
+
       if (aop1->type == AOP_LIT && aop2->type == AOP_LIT &&
         byteOfVal (aop1->aopu.aop_lit, offset1) == byteOfVal (aop2->aopu.aop_lit, offset2))
         continue;
@@ -398,7 +403,7 @@ cheapMove (asmop *result, int roffset, asmop *source, int soffset, bool a_dead)
 
   if (aopSame (result, roffset, source, soffset, 1))
     return;
-  else if (!dummy && result->type == AOP_DIR && aopIsLitVal (source, soffset, 1, 0))
+  else if (!dummy && (result->type == AOP_DIR || aopInReg (result, roffset, P_IDX)) && aopIsLitVal (source, soffset, 1, 0))
     {
       emit2 ("clear", "%s", aopGet (result, roffset));
       cost (1, 1);
@@ -427,8 +432,8 @@ cheapMove (asmop *result, int roffset, asmop *source, int soffset, bool a_dead)
 static void
 genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global)
 {
-  wassert_bt (result->type == AOP_DIR);
-  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR);
+  wassert_bt (result->type == AOP_DIR || result->type == AOP_REG);
+  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG);
 
   for (unsigned int i = 0; i < size; i++)
     cheapMove (result, roffset + i, source, soffset + i, a_dead_global);
@@ -634,8 +639,11 @@ genFunction (iCode *ic)
   emit2 (";", " function %s", sym->name);
   emit2 (";", "-----------------------------------------");
 
+  D (emit2 (";", pdk_assignment_optimal ? "Register assignment is optimal." : "Register assignment might be sub-optimal."));
+
   emit2 ("", "%s:", sym->rname);
-  genLine.lineCurr->isLabel = 1;
+  if (!regalloc_dry_run)
+    genLine.lineCurr->isLabel = 1;
 
   if (IFFUNC_ISNAKED(ftype))
     {
@@ -1694,6 +1702,7 @@ genPdkCode (iCode *lic)
   int clevel = 0;
   int cblock = 0;  
   int cln = 0;
+  regalloc_dry_run = false;
 
   for (iCode *ic = lic; ic; ic = ic->next)
     {
