@@ -1,5 +1,10 @@
 2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/main.c:
+	  Report lack of hardware multiplication.
+
+2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c,
 	  src/pdk/main.c,
 	  src/pdk/ralloc.c:

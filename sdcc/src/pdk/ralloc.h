@@ -31,7 +31,7 @@
 enum
 {
   A_IDX = 0, // The accumulator
-
+  P_IDX,     // A memory location used as pseudoregister
   SP_IDX     // SP - for use with debug info.
 };
 

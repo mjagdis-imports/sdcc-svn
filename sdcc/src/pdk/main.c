@@ -31,8 +31,11 @@ extern int dwarf2FinalizeFile(FILE *);
 
 static char *pdk_keywords[] = {
   "at",
+  "data",
   "interrupt",
   "naked",
+  "reentrant",
+  "sfr",
   NULL
 };
 
@@ -91,6 +94,12 @@ pdk_getRegName (const struct reg_info *reg)
   if (reg)
     return reg->name;
   return "err";
+}
+
+static bool
+_hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
+{
+  return (false);
 }
 
 /** $1 is always the basename.
@@ -248,7 +257,7 @@ PORT pdk14_port =
   pdk_reg_parm,
   0,                            /* process_pragma */
   0,                            /* getMangledFunctionName */
-  0,                            /* hasNativeMulFor */
+  _hasNativeMulFor,             /* hasNativeMulFor */
   0,                            /* hasExtBitOp */
   0,                            /* oclsExpense */
   true,
