@@ -1071,6 +1071,58 @@ genRightShift (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genPointerGet - generate code for pointer get                   */
+/*-----------------------------------------------------------------*/
+static void
+genPointerGet (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genPointerGet", ""));
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  wassertl (right, "GET_VALUE_AT_ADDRESS without right operand");
+  wassertl (IS_OP_LITERAL (right), "GET_VALUE_AT_ADDRESS with non-literal right operand");
+
+  bool bit_field = IS_BITVAR (getSpec (operandType (result)));
+  int size = result->aop->size;
+
+  wassertl (!bit_field, "Unimplemented read of bit-field");
+  wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
+
+  if (left->aop->type == AOP_DIR)
+    {
+      for (int i = 0; i < size; i++)
+        {
+          emit2 ("idxm", "a, %s", aopGet (left->aop, 0));
+          cost (1, 2);
+          cheapMove (result->aop, i, ASMOP_A, 0, true);
+          if (i + 1 != size)
+            {
+              emit2 ("inc", "%s", aopGet (left->aop, 0));
+              cost (1, 1);
+            }
+        }
+      for (int i = 1; i < size; i++)
+        {
+          emit2 ("dec", "%s", aopGet (left->aop, 0));
+          cost (1, 1);
+        }
+    }
+  else
+    wassertl (0, "Unimplemented pointer operand for pointer read");
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+}
+
+/*-----------------------------------------------------------------*/
 /* genPointerSet - stores the value into a pointer location        */
 /*-----------------------------------------------------------------*/
 static void
@@ -1109,7 +1161,7 @@ genPointerSet (iCode *ic)
         }
     }
   else
-    wassertl (0, "Unimplemented pointer operand for pointer set");
+    wassertl (0, "Unimplemented pointer operand for pointer write");
 
   freeAsmop (right);
   freeAsmop (left);
@@ -1423,7 +1475,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case GET_VALUE_AT_ADDRESS:
-      wassertl (0, "Unimplemented iCode: Read via pointer");
+      genPointerGet (ic);
       break;
 
     case SET_VALUE_AT_ADDRESS:

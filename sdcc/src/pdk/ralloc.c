@@ -44,7 +44,8 @@ createStackSpil (symbol *sym)
   SPEC_STAT (sloc->etype) = 0;
   SPEC_VOLATILE(sloc->etype) = 0;
   SPEC_ABSA(sloc->etype) = 0;
-options.noOverlay = 1;
+
+  options.noOverlay = 1; // ?
   allocLocal (sloc);
 
   sloc->isref = 1;
@@ -299,6 +300,84 @@ pack:
   return 1;
 }
 
+/** Will reduce some registers for single use.
+ */
+static int
+packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
+{
+  iCode *dic;
+
+  operand *op = *opp;
+printf("packRegsForOneuse() at ic %d\n", ic->key);
+  /* if returning a literal then do nothing */
+  if (!IS_ITEMP (op))
+    return 0;
+
+  /* if rematerializable do nothing */
+  if (OP_SYMBOL (op)->remat)
+    return 0;
+
+  /* this routine will mark the symbol as used in one
+     instruction use only && if the definition is local
+     (ie. within the basic block) && has only one definition  */
+  if (bitVectnBitsOn (OP_USES (op)) != 1 || bitVectnBitsOn (OP_DEFS (op)) != 1)
+    return 0;
+
+  /* get the definition */
+  if (!(dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (op)))))
+    return 0;
+printf("Found dic %d\n", dic->key);
+  /* found the definition now check if it is local */
+  if (dic->seq < ebp->fSeq || dic->seq > ebp->lSeq)
+    return 0;                /* non-local */
+
+  /* for now handle results from assignments from globals only */
+  if (dic->op != '=' || !isOperandGlobal (IC_RIGHT (dic)))
+    return 0;
+  /* also make sure the intervenening instructions
+     don't have any thing in far space */
+  for (iCode *nic = dic->next; nic && nic != ic; nic = nic->next)
+    {
+      /* if there is an intervening function call then no */
+      if (nic->op == CALL || nic->op == PCALL)
+        return 0;
+
+      if (nic->op == SET_VALUE_AT_ADDRESS)
+        return 0;
+
+      /* if address of & the result is remat, then okay */
+      if (nic->op == ADDRESS_OF && OP_SYMBOL (IC_RESULT (nic))->remat)
+        continue;
+
+      if (IS_OP_VOLATILE (IC_LEFT (nic)) ||
+          IS_OP_VOLATILE (IC_RIGHT (nic)) ||
+          isOperandGlobal (IC_RESULT (nic)))
+        return 0;
+    }
+
+  /* Optimize out the assignment */
+  *opp = operandFromOperand (IC_RIGHT(dic));
+  (*opp)->isaddr = true;
+  
+  bitVectUnSetBit (OP_SYMBOL (op)->defs, dic->key);
+  bitVectUnSetBit (OP_SYMBOL (op)->uses, ic->key);
+
+  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
+    OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
+
+  /* delete from liverange table also
+     delete from all the points in between and the new
+     one */
+  for (iCode *nic = dic; nic != ic; nic = nic->next) 
+    bitVectUnSetBit (nic->rlive, op->key);
+printf("Packing.\n");
+  remiCodeFromeBBlock (ebp, dic);
+
+  hTabDeleteItem (&iCodehTab, dic->key, ic, DELETE_ITEM, NULL);
+  
+  return 1;
+}
+
 /** Does some transformations to reduce register pressure.
  */
 static void
@@ -324,6 +403,17 @@ packRegisters (eBBlock * ebp)
         }
       if (!change)
         break;
+    }
+
+  for (ic = ebp->sch; ic; ic = ic->next)
+    {
+      D (D_ALLOC, ("packRegisters: looping on ic %p\n", ic));
+
+      /* In some cases redundant moves can be eliminated */
+      if (ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS ||
+        ic->op == IFX && operandSize (IC_COND (ic)) == 1 ||
+        ic->op == IPUSH && operandSize (IC_LEFT (ic)) == 1)
+        packRegsForOneuse (ic, &(IC_LEFT (ic)), ebp);
     }
 }
 
