@@ -298,7 +298,7 @@ aopOp (operand *op, const iCode *ic)
 
   /* TODO register */
 
-  wassertl (0, "Unimplemented aop type");
+  wassertl_bt (0, "Unimplemented aop type");
 }
 
 /*-----------------------------------------------------------------*/
@@ -340,8 +340,8 @@ cheapMove (asmop *result, int roffset, asmop *source, int soffset, bool a_dead)
 static void
 genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global)
 {
-  wassert (result->type == AOP_DIR);
-  wassert (source->type == AOP_LIT || source->type == AOP_DIR);
+  wassert_bt (result->type == AOP_DIR);
+  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR);
 
   for (unsigned int i = 0; i < size; i++)
     cheapMove (result, roffset + i, source, soffset + i, a_dead_global);
@@ -843,6 +843,126 @@ genAnd (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genLeftShift - generates code for right shifting               */
+/*-----------------------------------------------------------------*/
+static void
+genLeftShift (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  genMove (result->aop, left->aop, true);
+
+  symbol *tlbl1 = aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0);
+  symbol *tlbl2 = tlbl1 ? newiTempLabel (0) : 0;
+
+  if (tlbl1)
+    {
+      cheapMove (ASMOP_A, 0, right->aop, 0, true);
+      emit2 ("inc", "a");
+      cost (1, 1);
+      emitLabel (tlbl1);
+      emit2 ("dzsn", "a");
+      emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
+      cost (2, 2);
+    }
+
+  for(int i = 0; i < size; i++)
+    {
+      emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
+      cost (1, 1);
+    }
+
+  if (tlbl1)
+    {
+      emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
+      cost (1, 1);
+    }
+  emitLabel (tlbl2);
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genRightShift - generates code for right shifting               */
+/*-----------------------------------------------------------------*/
+static void
+genRightShift (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  genMove (result->aop, left->aop, true);
+
+  symbol *tlbl1 = aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0);
+  symbol *tlbl2 = tlbl1 ? newiTempLabel (0) : 0;
+
+  if (tlbl1)
+    {
+      cheapMove (ASMOP_A, 0, right->aop, 0, true);
+      emit2 ("inc", "a");
+      cost (1, 1);
+      emitLabel (tlbl1);
+      emit2 ("dzsn", "a");
+      emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
+      cost (2, 2);
+    }
+
+  // Padauk has bo arithmetic right shift instruction.
+  // So we need this 4-instruction sequence here.
+  // TODO: Investigate if we should change implementation-
+  // defined behaviour to just use sr (the standard would
+  // allow this). Also check if arithmetic right shift is
+  // needed by some optimizations.
+  if (!SPEC_USIGN (getSpec (operandType (left))))
+    {
+      emit2 ("sl", aopGet (result->aop, size - 1));
+      emit2 ("addc", aopGet (result->aop, size - 1));
+      emit2 ("src", aopGet (result->aop, size - 1));
+      emit2 ("src", aopGet (result->aop, size - 1));
+      cost (4, 4);
+    }
+  else
+    {
+      emit2("sr", aopGet (result->aop, size - 1));
+      cost (1, 1);
+    }
+
+  for(int i = size - 2; i >= 0; i--)
+    {
+      emit2 ("src", "%s", aopGet (result->aop, i));
+      cost (1, 1);
+    }
+
+  if (tlbl1)
+    {
+      emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
+      cost (1, 1);
+    }
+  emitLabel (tlbl2);
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genAssign - generate code for assignment                        */
 /*-----------------------------------------------------------------*/
 static void
@@ -1139,11 +1259,11 @@ genPdkiCode (iCode *ic)
       break;
 
     case LEFT_OP:
-      wassertl (0, "Unimplemented iCode: Left shift");
+      genLeftShift (ic);
       break;
 
     case RIGHT_OP:
-      wassertl (0, "Unimplemented iCode: Right shift");
+      genRightShift (ic);
       break;
 
     case GET_VALUE_AT_ADDRESS:
