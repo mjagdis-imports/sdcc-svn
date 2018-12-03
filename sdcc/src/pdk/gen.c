@@ -725,6 +725,62 @@ genMinus (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genCmp :- greater or less than comparison                       */
+/*-----------------------------------------------------------------*/
+static void
+genCmp (const iCode *ic, iCode *ifx)
+{
+  operand *left, *right, *result;
+
+  D (emit2 ("; genCmp", ""));
+
+  result = IC_RESULT (ic);
+  left = IC_LEFT (ic);
+  right = IC_RIGHT (ic);
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  int size = max (left->aop->size, right->aop->size);
+  bool sign = false;
+  if (IS_SPEC (operandType (left)) && IS_SPEC (operandType (right)))
+    sign = !(SPEC_USIGN (operandType (left)) | SPEC_USIGN (operandType (right)));
+
+  if (ic->op == '>')
+    {
+      operand *t = right;
+      right = left;
+      left = t;  
+    }
+
+  for (int i = 0; i < size; i++)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, i, true);
+      wassertl (!i || right->aop->type != AOP_LIT || aopIsLitVal (right->aop, i, 1, 0x00), "Unimplemented comparison operand larger than 0xff");
+      emit2 (i ? "subc" : "sub", "a, %s", aopGet (right->aop, i));
+      cost (1, 1);
+    }
+
+  if (sign)
+    {
+      emit2 ("t0sn", "f.ov");
+      emit2 ("xor", "a, #0x80");
+      emit2 ("sl", "a");
+      cost (3, 3);
+    }
+
+  emit2 ("mov", "a, #0x00");
+  emit2 ("slc", "a");
+  cost (2, 2);
+  cheapMove (result->aop, 0, ASMOP_A, 0, true);
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genCmpEQorNE - equal or not equal comparison                    */
 /*-----------------------------------------------------------------*/
 static void
@@ -1270,9 +1326,12 @@ genPdkiCode (iCode *ic)
 
     case '>':
     case '<':
+      genCmp (ic, ifxForOp (IC_RESULT (ic), ic));
+      break;
+
     case LE_OP:
     case GE_OP:
-      wassertl (0, "Unimplemented iCode: Comparison");
+      wassertl (0, "Unimplemented iCode");
       break;
 
     case NE_OP:
