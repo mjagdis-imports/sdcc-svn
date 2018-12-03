@@ -509,45 +509,41 @@ genCpl (const iCode *ic)
 static void
 genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 {
-  operand *result = IC_RESULT (ic);
-  operand *left = IC_LEFT (ic);
-  operand *right = IC_RIGHT (ic);
-
-  aopOp (left, ic);
-  aopOp (right, ic);
-  aopOp (result, ic);
-
-  int size = result->aop->size;
+  int size = result_aop->size;
 
   bool started = false;
   for (int i = 0; i < size; i++)
     {
-      if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
+      if (!started && aopIsLitVal (left_aop, i, 1, 0x00) && aopInReg (right_aop, i, A_IDX))
         {
-          cheapMove (ASMOP_P, 0, right->aop, i, true);
-          cheapMove (ASMOP_A, 0, left->aop, i, true);
-          emit2 ("subc", "a, p");
-          cost (1, 1);
-          cheapMove (result->aop, i, ASMOP_A, 0, true);
-          continue;
-        }
-
-      cheapMove (ASMOP_A, 0, left->aop, i, true);
-      if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
-        {
-          if (started && aopIsLitVal (right->aop, i, 1, 0x00))
-            emit2 ("subc", "a");
-          else
-            emit2 (started ? "sub" : "subc", "a, %s", aopGet (right->aop, i));
+          emit2 ("neg", "a");
           cost (1, 1);
           started = true;
-       }
-      cheapMove (result->aop, i, ASMOP_A, 0, true);
+        }
+      else if (started && right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00))
+        {
+          cheapMove (ASMOP_P, 0, right_aop, i, true);
+          cheapMove (ASMOP_A, 0, left_aop, i, true);
+          emit2 ("subc", "a, p");
+          cost (1, 1);
+          cheapMove (result_aop, i, ASMOP_A, 0, true);
+          continue;
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left_aop, i, true);
+          if (started || !aopIsLitVal (right_aop, i, 1, 0x00))
+            {
+              if (started && aopIsLitVal (right_aop, i, 1, 0x00))
+                emit2 ("subc", "a");
+              else
+                emit2 (started ? "sub" : "subc", "a, %s", aopGet (right_aop, i));
+              cost (1, 1);
+              started = true;
+            }
+        }
+      cheapMove (result_aop, i, ASMOP_A, 0, true);
     }
-
-  freeAsmop (right);
-  freeAsmop (left);
-  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/
@@ -568,7 +564,10 @@ genUminus (const iCode *ic)
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
 
-  if (IS_FLOAT (operandType (IC_LEFT (ic))))
+  aopOp (left, ic);
+  aopOp (result, ic);
+
+  if (IS_FLOAT (operandType (left)))
     {
       genUminusFloat (ic);
       return;
@@ -576,8 +575,6 @@ genUminus (const iCode *ic)
 
   D (emit2 ("; genUminus", ""));
 
-  aopOp (left, ic);
-  aopOp (result, ic);
 
   genSub (ic, result->aop, ASMOP_ZERO, left->aop);
 
@@ -715,6 +712,13 @@ genReturn (const iCode *ic)
   wassertl (left->aop->size <= 2, "return of value wider than 2 bytes not yet implemented");
   if (left->aop->size > 1)
     cheapMove (ASMOP_P, 0, left->aop, 1, true);
+  if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
+    {
+      emit2 ("ret", "%s", aopGet (left->aop, 0));
+      cost (1, 2);
+      freeAsmop (left);
+      return;
+    }
   cheapMove (ASMOP_A, 0, left->aop, 0, true);
 
   freeAsmop (left);  
