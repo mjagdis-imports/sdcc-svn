@@ -1084,6 +1084,8 @@ genLeftShift (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
 
+  D (emit2 ("; genLeftShift", ""));
+
   aopOp (left, ic);
   aopOp (right, ic);
   aopOp (result, ic);
@@ -1135,6 +1137,8 @@ genRightShift (const iCode *ic)
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genRightShift", ""));
 
   aopOp (left, ic);
   aopOp (right, ic);
