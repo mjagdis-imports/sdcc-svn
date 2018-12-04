@@ -402,7 +402,7 @@ aopOp (operand *op, const iCode *ic)
 /* cheapMove - Copy a byte from one asmop to another               */
 /*-----------------------------------------------------------------*/
 static void
-cheapMove (asmop *result, int roffset, asmop *source, int soffset, bool a_dead)
+cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, bool a_dead)
 {
   bool dummy = (result->type == AOP_DUMMY || source->type == AOP_DUMMY);
 
@@ -429,6 +429,24 @@ cheapMove (asmop *result, int roffset, asmop *source, int soffset, bool a_dead)
       cheapMove (ASMOP_A, 0, source, soffset, false);
       cheapMove (result, roffset, ASMOP_A, 0, false);
     }
+}
+
+static void
+push (const asmop *op, int offset, int size)
+{
+  wassertl (size == 2 && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD), "Unimplemented push operand");
+
+  emit2 ("mov", "a, sp");
+  emit2 ("mov", "p, a");
+  emit2 ("push", "af");
+  cost (3, 3);
+  cheapMove (ASMOP_A, 0, op, 0, true);
+  emit2 ("idxm", "p, a");
+  emit2 ("inc", "p");
+  cost (2, 3);
+  cheapMove (ASMOP_A, 0, op, 1, true);
+  emit2 ("idxm", "p, a");
+  cost (1, 2);
 }
 
 /*-----------------------------------------------------------------*/
@@ -598,17 +616,51 @@ genCall (const iCode *ic)
 
   D (emit2 ("; genCall", ""));
 
-  wassertl (ic->op != PCALL, "Unimplemented call through function pointer");
+  wassertl (ic->op != PCALL || !ic->parmBytes, "Unimplemented call with paramters through function pointer");
 
-  if (IS_LITERAL (etype))
-    emit2 ("call", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+  if (ic->op == PCALL)
+    {
+      operand *left = IC_LEFT (ic);
+
+      aopOp (left, ic);
+
+      // Push return address
+      symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+
+      if (!regalloc_dry_run)
+        {
+          emit2 ("ld", "a, sp");
+          emit2 ("ld", "p, a");
+          emit2 ("push", "af");
+          emit2 ("ld", "a, #(!tlabel)", labelKey2num (tlbl->key));
+          emit2 ("idxm", "p, a");
+          emit2 ("inc", "p");
+          emit2 ("ld", "a, #(!tlabel >> 8)", labelKey2num (tlbl->key));
+          emit2 ("idxm", "p, a");
+        }
+      cost (8, 10);
+
+      // Jump to function
+      push (left->aop, 0, 2);
+      emit2 ("ret", "");
+      cost (2, 1);
+
+      emitLabel (tlbl);
+
+      freeAsmop (left);
+    }
   else
     {
-      bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type));
-      emit2 (jump ? "goto" : "call", "%s",
-             (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+      if (IS_LITERAL (etype))
+        emit2 ("call", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+      else
+        {
+          bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type));
+          emit2 (jump ? "goto" : "call", "%s",
+                 (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+        }
+      cost (1, 2);
     }
-  cost (1, 2);
 
   bool SomethingReturned = (IS_ITEMP (IC_RESULT (ic)) &&
                        (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir))

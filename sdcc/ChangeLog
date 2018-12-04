@@ -1,6 +1,11 @@
 2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
+	  Basic support for function pointers.
+
+2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
 	  Improve code generation for jump on comparison.
 
 2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
