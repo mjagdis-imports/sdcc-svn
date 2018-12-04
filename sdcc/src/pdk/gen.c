@@ -899,10 +899,19 @@ genCmp (const iCode *ic, iCode *ifx)
       cost (3, 3);
     }
 
-  emit2 ("mov", "a, #0x00");
-  emit2 ("slc", "a");
-  cost (2, 2);
-  cheapMove (result->aop, 0, ASMOP_A, 0, true);
+  if (ifx)
+    {
+      emit2 ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)) ? "t1sn" : "t0sn", "f.c");
+      cost (1, 1.5);
+      emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+    }
+  else
+    {
+      emit2 ("mov", "a, #0x00");
+      emit2 ("slc", "a");
+      cost (2, 2);
+      cheapMove (result->aop, 0, ASMOP_A, 0, true);
+    }
 
   freeAsmop (right);
   freeAsmop (left);
@@ -932,10 +941,10 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
   if (ifx)
     {
-      if ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx)))
+      if ((ic->op == EQ_OP) ^ (bool)(IC_FALSE (ifx)))
         lbl_ne = regalloc_dry_run ? 0 : newiTempLabel (NULL);
       else
-        lbl_ne = IC_FALSE(ifx) ? IC_FALSE(ifx) : IC_TRUE(ifx);
+        lbl_ne = IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx);
     }
   else if (!regalloc_dry_run)
     {
@@ -961,7 +970,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         {
           emit2 ("cneqsn", "a, %s", aopGet (right->aop, i));
           cost (1, 1);
-          emitJP(IC_FALSE(ifx) ? IC_FALSE(ifx) : IC_TRUE(ifx), 0.0f);
+          emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
         }
       else
         {

@@ -361,7 +361,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 // Code for another ic is generated when generating this one. Mark the other as generated.
 static void extra_ic_generated(iCode *ic)
 {
-  if(ic->op != EQ_OP && ic->op != NE_OP)
+  if(ic->op != EQ_OP && ic->op != NE_OP && ic->op != '<' && ic->op != '>')
     return;
 
   iCode *ifx = ifxForOp (IC_RESULT (ic), ic);
