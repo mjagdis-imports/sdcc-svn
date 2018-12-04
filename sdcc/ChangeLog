@@ -1,19 +1,28 @@
-2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
+2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Fix bug #1847.
+
+2018-12-04 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* SDCCerr.c: replaced include sdccconf.h by SDCCglobl.h, required for MSVC
+
+2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
 	  Basic support for function pointers.
 
-2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
+2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
 	  Improve code generation for jump on comparison.
 
-2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
+2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
 	  Fix an issue in code generation for pointer read.
 
-2018-12-02 Philipp Klaus Krause <pkk AT spth.de>
+2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/ralloc.c,
 	  src/pdk/ralloc.h,
@@ -23,36 +32,36 @@
 	  src/pdk/main.c:
 	  Basic register allocation.
 
-2018-12-02 Philipp Klaus Krause <pkk AT spth.de>
+2018-12-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/ralloc.c,
 	  src/pdk/gen.c:
 	  Allow return of up to 2 bytes.
 
-2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2018-12-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/main.c:
 	  Report lack of hardware multiplication.
 
-2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2018-12-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c,
 	  src/pdk/main.c,
 	  src/pdk/ralloc.c:
 	  Implement basic support for pointers.
 
-2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2018-12-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
 	  Implement comparison.
 
-2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2018-12-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/main.c,
 	  src/pdk/gen.c:
 	  Switch to little-endian to ease pointer-integer casts, fix addition.
 
-2018-12-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2018-12-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
 	  Implement shifts, complement, negation.
