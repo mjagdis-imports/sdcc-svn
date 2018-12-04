@@ -37,7 +37,9 @@ typedef enum
   /* I/O register */
   AOP_SFR,
   /* Read undefined, discard writes */
-  AOP_DUMMY
+  AOP_DUMMY,
+  /* Implicit condition operand */
+  AOP_CND,
 }
 AOP_TYPE;
 

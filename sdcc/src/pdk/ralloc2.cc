@@ -361,6 +361,17 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 // Code for another ic is generated when generating this one. Mark the other as generated.
 static void extra_ic_generated(iCode *ic)
 {
+  if(ic->op != EQ_OP && ic->op != NE_OP)
+    return;
+
+  iCode *ifx = ifxForOp (IC_RESULT (ic), ic);
+
+  if (ifx)
+    {
+      OP_SYMBOL (IC_RESULT (ic))->for_newralloc = false;
+      OP_SYMBOL (IC_RESULT (ic))->regType = REG_CND;
+      ifx->generated = true;
+    }
 }
 
 template <class T_t, class G_t, class I_t, class SI_t>

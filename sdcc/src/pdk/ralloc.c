@@ -6,6 +6,7 @@ reg_info pdk_regs[] =
 {
   {REG_GPR, A_IDX,   "a"},
   {REG_GPR, P_IDX,   "p"},
+  {REG_CND, C_IDX,   "f.c"},
   {0, SP_IDX,        "sp"},
 };
 

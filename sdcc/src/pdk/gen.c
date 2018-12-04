@@ -308,7 +308,12 @@ aopOp (operand *op, const iCode *ic)
 
   /* if the type is a conditional */
   if (sym->regType == REG_CND)
-    wassertl (0, "Unimplemented condition operand");
+    {
+      asmop *aop = newAsmop (AOP_CND);
+      op->aop = aop;
+      sym->aop = sym->aop;
+      return;
+    }
 
   /* TODO: SFR! */
 
@@ -922,8 +927,21 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   aopOp (right, ic);
   aopOp (result, ic);
 
-  symbol *tlbl_ne = regalloc_dry_run ? 0 : newiTempLabel (NULL);
-  symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
+  symbol *lbl_ne = 0;
+  symbol *endlbl = 0;
+
+  if (ifx)
+    {
+      if ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx)))
+        lbl_ne = regalloc_dry_run ? 0 : newiTempLabel (NULL);
+      else
+        lbl_ne = IC_FALSE(ifx) ? IC_FALSE(ifx) : IC_TRUE(ifx);
+    }
+  else if (!regalloc_dry_run)
+    {
+      lbl_ne = newiTempLabel (NULL);
+      endlbl = newiTempLabel (NULL);
+    }
 
   int size = max (left->aop->size, right->aop->size);
 
@@ -938,16 +956,34 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         }
 
       cheapMove (ASMOP_A, 0, left->aop, i, true);
-      emit2 ("ceqsn", "a, %s", aopGet (right->aop, i));
-      cost (1, 1);
-      emitJP(tlbl_ne, 0.0f);
+
+      if (ifx && i + 1 == size && ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx))))
+        {
+          emit2 ("cneqsn", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+          emitJP(IC_FALSE(ifx) ? IC_FALSE(ifx) : IC_TRUE(ifx), 0.0f);
+        }
+      else
+        {
+          emit2 ("ceqsn", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+          emitJP(lbl_ne, 0.0f);
+        }
     }
 
-  cheapMove (result->aop, 0, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true);
-  emitJP(tlbl, 0.0f);
-  emitLabel (tlbl_ne);
-  cheapMove (result->aop, 0, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true);
-  emitLabel (tlbl);
+  if (ifx) // Jump condition only.
+    {
+      if ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx)))
+        emitLabel (lbl_ne);
+    }
+  else // Needs result
+    {
+      cheapMove (result->aop, 0, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true);
+      emitJP(endlbl, 0.0f);
+      emitLabel (lbl_ne);
+      cheapMove (result->aop, 0, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true);
+      emitLabel (endlbl);
+    }
 
   freeAsmop (right);
   freeAsmop (left);
