@@ -1249,9 +1249,9 @@ genPointerGet (const iCode *ic)
   else
     wassertl (0, "Unimplemented pointer operand for pointer read");
 
-  aopOp (left, ic);
-  aopOp (right, ic);
-  aopOp (result, ic);
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/
