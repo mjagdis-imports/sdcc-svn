@@ -767,6 +767,14 @@ genReturn (const iCode *ic)
   aopOp (left, ic);
 
   wassertl (left->aop->size <= 2, "return of value wider than 2 bytes not yet implemented");
+
+  if (left->aop->size == 2 && aopInReg (left->aop, 0, P_IDX) && aopInReg (left->aop, 1, A_IDX))
+    {
+      emit2 ("xch", "a, p");
+      cost(1, 1);
+      goto end;
+    }
+
   if (left->aop->size > 1)
     cheapMove (ASMOP_P, 0, left->aop, 1, true);
   if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
@@ -778,13 +786,18 @@ genReturn (const iCode *ic)
     }
   cheapMove (ASMOP_A, 0, left->aop, 0, true);
 
+end:
   freeAsmop (left);  
 
 jumpret:
   /* generate a jump to the return label
      if the next is not the return statement */
   if (!(ic->next && ic->next->op == LABEL && IC_LABEL (ic->next) == returnLabel))
-    emitJP(returnLabel, 1.0f);
+    //emitJP(returnLabel, 1.0f);
+    {
+      emit2 ("ret", "");
+      cost (2, 1);
+    }
 }
 
 /*-----------------------------------------------------------------*/

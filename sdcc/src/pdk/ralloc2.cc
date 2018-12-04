@@ -95,6 +95,23 @@ static bool operand_in_reg(const operand *o, reg_t r, const i_assignment_t &ia, 
   return(false);
 }
 
+// Return true, iff the operand is placed in a reg.
+template <class G_t>
+static bool operand_byte_in_reg(const operand *o, int offset, reg_t r, const assignment &a, unsigned short int i, const G_t &G)
+{
+  if(!o || !IS_SYMOP(o))
+    return(false);
+
+  operand_map_t::const_iterator oi, oi2, oi3, oi_end;
+
+  for(boost::tie(oi, oi_end) = G[i].operands.equal_range(OP_SYMBOL_CONST(o)->key); offset && oi != oi_end; offset--, oi++);
+
+  if(oi == oi_end)
+    return(false);
+
+  return(a.global[oi->second] == r);
+}
+
 template <class G_t, class I_t>
 static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
@@ -116,9 +133,18 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
 
-  // Only allow 1-Byte operands in a for now.
-  if (left_in_A && getSize(operandType(left)) != 1 || right_in_A && getSize(operandType(right)) != 1 || result_in_A && getSize(operandType(result)) != 1)
-    return (false);
+  if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
+    return(true);
+  if (ic->op == RETURN)
+    return(true);
+
+  // For most operations only allow lower byte in a for now (upper byte for result).
+  if (left_in_A && !operand_byte_in_reg(left, 0, REG_A, a, i, G) || right_in_A && !operand_byte_in_reg(right, 0, REG_A, a, i, G) ||
+    result_in_A && !operand_byte_in_reg(result, getSize(operandType(result)) - 1, REG_A, a, i, G))
+    return(false);
+
+  if ((ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS) && (left_in_A || right_in_A))
+    return(false);
 
   if(dying_A)
     return(true);
@@ -129,12 +155,27 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 template <class G_t, class I_t>
 static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
+  const iCode *ic = G[i].ic;
   const i_assignment_t &ia = a.i_assignment;
 
   if(ia.registers[REG_P][1] < 0)
     return(true);       // Pseudoregister p not in use.
 
-  return(false);
+  const operand *left = IC_LEFT(ic);
+  const operand *right = IC_RIGHT(ic);
+  const operand *result = IC_RESULT(ic);
+
+  // Arithmetic uses p internally for literal operands with multiple nonzero bytes.
+  if ((ic->op == '+' || ic->op == '-' || ic->op == '!' || ic->op == '<' || ic->op == '>') && (IS_OP_LITERAL(left) || IS_OP_LITERAL(right)))
+    {
+      operand *const litop = IS_OP_LITERAL(left) ? IC_LEFT(ic) : IC_RIGHT(ic);
+      if ((ullFromVal(OP_VALUE (litop)) & 0x000000ffull) && (ullFromVal(OP_VALUE (litop)) & 0x0000ff00ull) && (ullFromVal(OP_VALUE (litop)) & 0x00ff0000ull) && (ullFromVal(OP_VALUE (litop)) & 0xff000000ull))
+        return(false);
+    }
+  if (ic->op == PCALL)
+    return(false);
+
+  return(true);
 }
 
 template <class G_t, class I_t>
@@ -201,9 +242,33 @@ static void assign_operands_for_cost(const assignment &a, unsigned short int i, 
     assign_operands_for_cost(a, (unsigned short)*(adjacent_vertices(i, G).first), G, I);
 }
 
+// Check that the operand is either fully in registers or fully in memory. Todo: Relax this once code generation can handle partially spilt variables!
 template <class G_t, class I_t>
 static bool operand_sane(const operand *o, const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
+  if(!o || !IS_SYMOP(o))
+    return(true);
+ 
+  operand_map_t::const_iterator oi, oi_end;
+  boost::tie(oi, oi_end) = G[i].operands.equal_range(OP_SYMBOL_CONST(o)->key);
+  
+  if(oi == oi_end)
+    return(true);
+  
+  // In registers.
+  if(std::binary_search(a.local.begin(), a.local.end(), oi->second))
+    {
+      while(++oi != oi_end)
+        if(!std::binary_search(a.local.begin(), a.local.end(), oi->second))
+          return(false);
+    }
+  else
+    {
+       while(++oi != oi_end)
+        if(std::binary_search(a.local.begin(), a.local.end(), oi->second))
+          return(false);
+    }
+ 
   return(true);
 }
 
