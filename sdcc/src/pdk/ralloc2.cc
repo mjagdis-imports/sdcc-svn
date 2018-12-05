@@ -137,6 +137,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(true);
   if (ic->op == RETURN)
     return(true);
+  if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))
+    return(IS_OP_LITERAL(right) && (ullFromVal(OP_VALUE_CONST (right)) <= 2 + optimize.codeSpeed || getSize(operandType(result)) == 1) || right_in_A && !result_in_A);
 
   // For most operations only allow lower byte in a for now (upper byte for result).
   if (left_in_A && !operand_byte_in_reg(left, 0, REG_A, a, i, G) || right_in_A && !operand_byte_in_reg(right, 0, REG_A, a, i, G) ||
@@ -168,11 +170,11 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   // Arithmetic uses p internally for literal operands with multiple nonzero bytes.
   if ((ic->op == '+' || ic->op == '-' || ic->op == '!' || ic->op == '<' || ic->op == '>') && (IS_OP_LITERAL(left) || IS_OP_LITERAL(right)))
     {
-      operand *const litop = IS_OP_LITERAL(left) ? IC_LEFT(ic) : IC_RIGHT(ic);
-      if ((ullFromVal(OP_VALUE (litop)) & 0x000000ffull) && (ullFromVal(OP_VALUE (litop)) & 0x0000ff00ull) && (ullFromVal(OP_VALUE (litop)) & 0x00ff0000ull) && (ullFromVal(OP_VALUE (litop)) & 0xff000000ull))
+      const operand *const litop = IS_OP_LITERAL(left) ? left : right;
+      if ((ullFromVal(OP_VALUE_CONST (litop)) & 0x000000ffull) && (ullFromVal(OP_VALUE_CONST(litop)) & 0x0000ff00ull) && (ullFromVal(OP_VALUE_CONST (litop)) & 0x00ff0000ull) && (ullFromVal(OP_VALUE_CONST (litop)) & 0xff000000ull))
         return(false);
     }
-  if (ic->op == PCALL)
+  if (ic->op == PCALL || ic->op == IPUSH)
     return(false);
 
   return(true);

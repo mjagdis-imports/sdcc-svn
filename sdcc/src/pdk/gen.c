@@ -123,7 +123,8 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
         continue;
 
       if (aop1->type == AOP_DIR && aop2->type == AOP_DIR && offset1 == offset2 &&
-        !regalloc_dry_run && !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
+        (!regalloc_dry_run || aop1->aopu.aop_dir && aop2->aopu.aop_dir && !strstr (aop1->aopu.aop_dir, "sloc")) &&
+        !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
         return (true);
 
       return (false);
@@ -425,28 +426,69 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else
     {
-      wassert (a_dead);
+      if (!a_dead)
+        {
+          emit2 ("push", "af");
+          cost (1, 1);
+        }
       cheapMove (ASMOP_A, 0, source, soffset, false);
       cheapMove (result, roffset, ASMOP_A, 0, false);
+      if (!a_dead)
+        {
+          emit2 ("push", "af");
+          cost (1, 1);
+        }
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+/* adjustStack - Adjust the stack pointer by n bytes.                       */
+/*--------------------------------------------------------------------------*/
+static void
+adjustStack (int n, bool a_free)
+{
+  wassertl (a_free || n >= 0, "Unimplemented negative stack adjustment with register a in use");
+  wassertl (!(n % 2), "Unsupported odd stack adjustment");  
+
+  if (n >= 0 && (!a_free || n <= 4))
+    for (int i = 0; i < n; i += 2)
+      {
+        emit2 ("push", "af");
+        cost (1, 1);
+      }
+  else // Can't use pop af, since it might affect reserved flag bits.
+    {
+      emit2 ("mov", "a, sp");
+      emit2 ("add", "a, #%d", n);
+      emit2 ("mov", "sp, a");
+      cost (3, 3);
     }
 }
 
 static void
 push (const asmop *op, int offset, int size)
 {
-  wassertl (size == 2 && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD), "Unimplemented push operand");
+  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD), "Unimplemented push operand");
 
+  // Save old stack pointer
   emit2 ("mov", "a, sp");
   emit2 ("mov", "p, a");
-  emit2 ("push", "af");
-  cost (3, 3);
-  cheapMove (ASMOP_A, 0, op, 0, true);
-  emit2 ("idxm", "p, a");
-  emit2 ("inc", "p");
-  cost (2, 3);
-  cheapMove (ASMOP_A, 0, op, 1, true);
-  emit2 ("idxm", "p, a");
-  cost (1, 2);
+  cost (2, 2);
+
+  adjustStack (size, true);
+
+  // Write value onto stack
+  for (int i = offset; i < offset + size; i++)
+    {
+      cheapMove (ASMOP_A, 0, op, i, true);
+      emit2 ("idxm", "p, a");
+      cost (1, 2);
+      if (i + 1 < offset + size)
+        {
+          emit2 ("inc", "p");
+          cost (1, 1);
+        }
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -457,6 +499,15 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 {
   wassert_bt (result->type == AOP_DIR || result->type == AOP_REG);
   wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG);
+
+  if (size == 2 &&
+    (aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX) && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) ||
+    aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX) && aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX)))
+    {
+      emit2 ("xch", "a, p");
+      cost (1, 1);
+      return;
+    }
 
   for (unsigned int i = 0; i < size; i++)
     cheapMove (result, roffset + i, source, soffset + i, a_dead_global);
@@ -537,11 +588,30 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
   bool started = false;
   for (int i = 0; i < size; i++)
     {
-      if (!started && aopIsLitVal (left_aop, i, 1, 0x00) && aopInReg (right_aop, i, A_IDX))
+      if (!started && right_aop->type == AOP_LIT && aopIsLitVal (right_aop, i, 1, 0x00))
+        {
+          cheapMove (result_aop, i, left_aop, i, true);
+          continue;
+        }
+      else if (!started && aopIsLitVal (left_aop, i, 1, 0x00) && aopInReg (right_aop, i, A_IDX))
         {
           emit2 ("neg", "a");
           cost (1, 1);
           started = true;
+        }
+      else if (!started && aopIsLitVal (right_aop, i, 1, 0x01) && aopSame (left_aop, i, result_aop, i, 1))
+        {
+          emit2 ("dec", "%s", aopGet (left_aop, i));
+          cost (1, 1);
+          started = true;
+          continue;
+        }
+      else if (!started && aopIsLitVal (right_aop, i, 1, 0xff) && aopSame (left_aop, i, result_aop, i, 1))
+        {
+          emit2 ("inc", "%s", aopGet (left_aop, i));
+          cost (1, 1);
+          started = true;
+          continue;
         }
       else if (started && right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00))
         {
@@ -549,8 +619,6 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cheapMove (ASMOP_A, 0, left_aop, i, true);
           emit2 ("subc", "a, p");
           cost (1, 1);
-          cheapMove (result_aop, i, ASMOP_A, 0, true);
-          continue;
         }
       else
         {
@@ -598,11 +666,39 @@ genUminus (const iCode *ic)
 
   D (emit2 ("; genUminus", ""));
 
-
   genSub (ic, result->aop, ASMOP_ZERO, left->aop);
 
   freeAsmop (left);
   freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genIpush - generate code for pushing this gets a little complex */
+/*-----------------------------------------------------------------*/
+static void
+genIpush (const iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+
+  aopOp (left, ic);
+
+  D (emit2 ("; genIPush", ""));
+
+  if (!ic->parmPush)
+    wassertl (0, "Encountered an unsupported spill push.");
+
+  wassertl (left->aop->size == 1 || !(left->aop->size % 2), "Unimplemented operand size for parameter push");
+
+  if (left->aop->size == 1)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, 0, true);
+      emit2 ("push", "af");
+      cost (1, 1);
+    }
+  else
+    push (left->aop, 0, left->aop->size);
+
+  freeAsmop (IC_LEFT (ic));
 }
 
 /*-----------------------------------------------------------------*/
@@ -615,8 +711,6 @@ genCall (const iCode *ic)
   sym_link *etype = getSpec (dtype);
 
   D (emit2 ("; genCall", ""));
-
-  wassertl (ic->op != PCALL || !ic->parmBytes, "Unimplemented call with paramters through function pointer");
 
   if (ic->op == PCALL)
     {
@@ -665,6 +759,8 @@ genCall (const iCode *ic)
   bool SomethingReturned = (IS_ITEMP (IC_RESULT (ic)) &&
                        (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir))
                        || IS_TRUE_SYMOP (IC_RESULT (ic));
+
+  adjustStack (-ic->parmBytes, !SomethingReturned);
 
   if (SomethingReturned)
     {
@@ -857,14 +953,33 @@ genPlus (const iCode *ic)
 
   bool started = false;
   for (int i = 0; i < size; i++)
-    {  
-      if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
+    {
+      if (!started && right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          cheapMove (result->aop, i, left->aop, i, true);
+          continue;
+        }
+      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
         {
           cheapMove (ASMOP_P, 0, right->aop, i, true);
           cheapMove (ASMOP_A, 0, left->aop, i, true);
           emit2 ("addc", "a, p");
           cost (1, 1);
           cheapMove (result->aop, i, ASMOP_A, 0, true);
+          continue;
+        }
+       else if (!started && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
+        {
+          emit2 ("inc", "%s", aopGet (left->aop, i));
+          cost (1, 1);
+          started = true;
+          continue;
+        }
+       else if (!started && aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (left->aop, i, result->aop, i, 1))
+        {
+          emit2 ("dec", "%s", aopGet (left->aop, i));
+          cost (1, 1);
+          started = true;
           continue;
         }
 
@@ -1207,13 +1322,57 @@ genLeftShift (const iCode *ic)
 
   int size = result->aop->size;
 
-  genMove (result->aop, left->aop, true);
+  genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX));
 
-  symbol *tlbl1 = regalloc_dry_run ? 0 : (aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0));
-  symbol *tlbl2 = tlbl1 ? newiTempLabel (0) : 0;
-
-  if (tlbl1)
+  if (right->aop->type == AOP_LIT)
     {
+      int shCount = ulFromVal (right->aop->aopu.aop_lit);
+
+      bool loop = (shCount > 2 + (size == 1) * 2 + optimize.codeSpeed) && !(size == 1 && aopInReg (result->aop, 0, A_IDX));
+      symbol *tlbl = (!loop || regalloc_dry_run) ? 0 : newiTempLabel (0);
+
+      if (loop)
+        {
+          cheapMove (ASMOP_A, 0, right->aop, 0, true);
+          emitLabel (tlbl);
+          regalloc_dry_run_cycle_scale = shCount;
+          shCount = 1;
+        }
+
+      while (shCount)
+        {
+          if (shCount >= 4 && size == 1 && aopInReg (result->aop, 0, A_IDX))
+            {
+              emit2 ("swap", "a");
+              emit2 ("and", "a, 0xf0");
+              cost (2, 2);
+              shCount -= 4;
+              continue;
+            }
+          
+          for (int i = 0; i < size; i++)
+            {
+              emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
+              cost (1, 1);
+            }
+          shCount--;
+        }
+
+      if (loop)
+        {
+          emit2 ("dzsn", "a");
+          if (!regalloc_dry_run)
+            emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
+          cost (2, 2);
+        }
+
+      regalloc_dry_run_cycle_scale = 0;
+    }
+  else
+    {
+      symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
+      symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
+    
       cheapMove (ASMOP_A, 0, right->aop, 0, true);
       emit2 ("inc", "a");
       cost (1, 1);
@@ -1222,21 +1381,19 @@ genLeftShift (const iCode *ic)
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
       cost (2, 2);
-    }
-
-  for(int i = 0; i < size; i++)
-    {
-      emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
-      cost (1, 1);
-    }
-
-  if (!aopIsLitVal (right->aop, 0, 1, 0x01))
-    {
+    
+      for(int i = 0; i < size; i++)
+        {
+          emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
+          cost (1, 1);
+        }
+    
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
       cost (1, 1);
+
+      emitLabel (tlbl2);
     }
-  emitLabel (tlbl2);
 
   freeAsmop (right);
   freeAsmop (left);
@@ -1261,13 +1418,73 @@ genRightShift (const iCode *ic)
 
   int size = result->aop->size;
 
-  genMove (result->aop, left->aop, true);
+  genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX));
 
-  symbol *tlbl1 = regalloc_dry_run ? 0 : (aopIsLitVal (right->aop, 0, 1, 0x01) ? 0 : newiTempLabel (0));
-  symbol *tlbl2 = tlbl1 ? newiTempLabel (0) : 0;
-
-  if (tlbl1)
+  if (right->aop->type == AOP_LIT)
     {
+      int shCount = ulFromVal (right->aop->aopu.aop_lit);
+
+      bool loop = (shCount > 2 + (size == 1) * 2 + optimize.codeSpeed) && !(size == 1 && aopInReg (result->aop, 0, A_IDX));
+      symbol *tlbl = (!loop || regalloc_dry_run) ? 0 : newiTempLabel (0);
+
+      if (loop)
+        {
+          cheapMove (ASMOP_A, 0, right->aop, 0, true);
+          emitLabel (tlbl);
+          regalloc_dry_run_cycle_scale = shCount;
+          shCount = 1;
+        }
+
+      while (shCount)
+        {
+          if (SPEC_USIGN (getSpec (operandType (left))) && shCount >= 4 && size == 1 && aopInReg (result->aop, 0, A_IDX))
+            {
+              emit2 ("swap", "a");
+              emit2 ("and", "a, 0x0f");
+              cost (2, 2);
+              shCount -= 4;
+              continue;
+            }
+              
+          // Padauk has no arithmetic right shift instruction.
+          // So we need this 4-instruction sequence here.
+          if (!SPEC_USIGN (getSpec (operandType (left))))
+            {
+              emit2 ("sl", aopGet (result->aop, size - 1));
+              emit2 ("addc", aopGet (result->aop, size - 1));
+              emit2 ("src", aopGet (result->aop, size - 1));
+              emit2 ("src", aopGet (result->aop, size - 1));
+              cost (4, 4);
+            }
+          else
+            {
+              emit2("sr", aopGet (result->aop, size - 1));
+              cost (1, 1);
+            }
+        
+          for(int i = size - 2; i >= 0; i--)
+            {
+              emit2 ("src", "%s", aopGet (result->aop, i));
+              cost (1, 1);
+            }
+          shCount--;
+        }
+
+      if (loop)
+        {
+          emit2 ("dzsn", "a");
+          if (!regalloc_dry_run)
+            emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
+          cost (2, 2);
+        }
+
+      regalloc_dry_run_cycle_scale = 0;
+    }
+  else
+    {
+      symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
+      symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
+    
       cheapMove (ASMOP_A, 0, right->aop, 0, true);
       emit2 ("inc", "a");
       cost (1, 1);
@@ -1276,41 +1493,35 @@ genRightShift (const iCode *ic)
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
       cost (2, 2);
-    }
-
-  // Padauk has no arithmetic right shift instruction.
-  // So we need this 4-instruction sequence here.
-  // TODO: Investigate if we should change implementation-
-  // defined behaviour to just use sr (the standard would
-  // allow this). Also check if arithmetic right shift is
-  // needed by some optimizations.
-  if (!SPEC_USIGN (getSpec (operandType (left))))
-    {
-      emit2 ("sl", aopGet (result->aop, size - 1));
-      emit2 ("addc", aopGet (result->aop, size - 1));
-      emit2 ("src", aopGet (result->aop, size - 1));
-      emit2 ("src", aopGet (result->aop, size - 1));
-      cost (4, 4);
-    }
-  else
-    {
-      emit2("sr", aopGet (result->aop, size - 1));
-      cost (1, 1);
-    }
-
-  for(int i = size - 2; i >= 0; i--)
-    {
-      emit2 ("src", "%s", aopGet (result->aop, i));
-      cost (1, 1);
-    }
-
-  if (!aopIsLitVal (right->aop, 0, 1, 0x01))
-    {
+        
+      // Padauk has no arithmetic right shift instruction.
+      // So we need this 4-instruction sequence here.
+      if (!SPEC_USIGN (getSpec (operandType (left))))
+        {
+          emit2 ("sl", aopGet (result->aop, size - 1));
+          emit2 ("addc", aopGet (result->aop, size - 1));
+          emit2 ("src", aopGet (result->aop, size - 1));
+          emit2 ("src", aopGet (result->aop, size - 1));
+          cost (4, 4);
+        }
+      else
+        {
+          emit2("sr", aopGet (result->aop, size - 1));
+          cost (1, 1);
+        }
+    
+      for(int i = size - 2; i >= 0; i--)
+        {
+          emit2 ("src", "%s", aopGet (result->aop, i));
+          cost (1, 1);
+        }
+    
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
       cost (1, 1);
+
+      emitLabel (tlbl2);
     }
-  emitLabel (tlbl2);
 
   freeAsmop (right);
   freeAsmop (left);
@@ -1643,7 +1854,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case IPUSH:
-      wassertl (0, "Unimplemented iCode");
+      genIpush (ic);
       break;
 
     case IPOP:

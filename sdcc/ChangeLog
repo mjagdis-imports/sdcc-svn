@@ -1,3 +1,9 @@
+2018-12-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/ralloc2.cc,
+	  src/pdk/gen.c:
+	  Improve code for shifts.
+
 2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/ralloc2.cc,
