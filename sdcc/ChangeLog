@@ -2,6 +2,13 @@
 
 	* sdas/asz80/z80mch.c:
 	  Improve eZ80 support in assembler, patch by Hynek Sladký.
+	* configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/lib/ez80_z80/Makefile.in,
+	  src/z80/main.c,
+	  device/lib/ez80_z80:
+	  ez80_z80 library.
 
 2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
 
