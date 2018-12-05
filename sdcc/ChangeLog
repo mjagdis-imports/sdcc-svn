@@ -1,3 +1,8 @@
+2018-12-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/asz80/z80mch.c:
+	  Improve eZ80 support in assembler, patch by Hynek Sladký.
+
 2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCtree_dec.hpp:
