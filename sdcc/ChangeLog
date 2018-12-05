@@ -1,3 +1,26 @@
+2018-12-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCtree_dec.hpp:
+	  Fix bug #1847.
+
+2018-12-04 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* SDCCerr.c: replaced include sdccconf.h by SDCCglobl.h, required for MSVC
+
+2018-12-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCpeeph.c:
+	  Peephole function for z88dk, patch from zsdcc fork diff by Phillip Stevens.
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/z80/gen.c,
+	  src/z80/main.c:
+	  More z88dk-specific calling conventions, patch from zsdcc fork diff by Phillip Stevens.
+
 2018-12-01 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
