@@ -1,4 +1,4 @@
-# Regression test specification for the z80 target running with uCsim
+# Regression test specification for the ez80_z80 target running with uCsim
 
 # simulation timeout in seconds
 SIM_TIMEOUT = 40
