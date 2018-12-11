@@ -1,11 +1,14 @@
 2018-12-11 Philipp Klaus Krause <pkk AT spth.de>
 
-	* device/include/math.h,
+	* device/include/asm/ez80_z80/features.h,
+	  device/include/math.h,
 	  device/include/sdcc-lib.h:
 	  Fixes for ez80_z80 library.
 	* support/regression/ports/ez80-z80/spec.mk,
 	  support/regression/ports/ucz180/spec.mk:
 	  Preparation for ez80_z80 regression testing.
+	* src/z80/peep.c:
+	  Fix handling of ez80_z80 lea, pea in peephole optimizer.
 
 2018-12-05 Philipp Klaus Krause <pkk AT spth.de>
 

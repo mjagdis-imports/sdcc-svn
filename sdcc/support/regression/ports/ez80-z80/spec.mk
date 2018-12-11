@@ -22,7 +22,7 @@ else
 
 ifndef CROSSCOMPILING
   SDCCFLAGS += --nostdinc -I$(top_srcdir)
-  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/z180
+  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/ez80_z80
 endif
 endif
 
@@ -31,7 +31,7 @@ ifdef CROSSCOMPILING
 endif
 
 SDCCFLAGS += -mez80_z80 --less-pedantic --profile
-LINKFLAGS += z180.lib
+LINKFLAGS += ez80_z80.lib
 
 OBJEXT = .rel
 BINEXT = .ihx
@@ -68,7 +68,7 @@ $(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib
 # run simulator with SIM_TIMEOUT seconds timeout
 %.out: %$(BINEXT) $(CASES_DIR)/timeout
 	mkdir -p $(dir $@)
-	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(EMU) -tz180 $< < $(PORTS_DIR)/$(PORT)/uCsim.cmd > $@ \
+	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(EMU) -tez80 $< < $(PORTS_DIR)/$(PORT)/uCsim.cmd > $@ \
 	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
 	$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
 	-grep -n FAIL $@ /dev/null || true

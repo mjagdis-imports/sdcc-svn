@@ -933,6 +933,9 @@ int z80instructionSize(lineNode *pl)
       return(1);
     }
 
+  if(IS_EZ80_Z80 && (ISINST(pl->line, "lea") || ISINST(pl->line, "pea")))
+    return(3);
+
   /* Exchange */
   if(ISINST(pl->line, "exx"))
     return(1);
