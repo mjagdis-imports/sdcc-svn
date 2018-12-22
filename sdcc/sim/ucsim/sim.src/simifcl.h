@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: simifcl.h 762 2017-06-18 19:42:07Z drdani $ */
-
 #ifndef SIMIFCL_HEADER
 #define SIMIFCL_HEADER
 
@@ -109,8 +107,10 @@ enum simif_cfg {
   simif_real_time	= 10, // R
   simif_vclk		= 11, // R
   simif_pc		= 12, // RW
+  simif_print		= 13, // W
+  simif_write		= 14, // W
   
-  simif_nuof		= 13
+  simif_nuof		= 15
 };
 
 class cl_simulator_interface;
