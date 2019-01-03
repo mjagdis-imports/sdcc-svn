@@ -1815,6 +1815,50 @@ genCast (const iCode *ic)
   freeAsmop (result);
 }
 
+/*-----------------------------------------------------------------*/
+/* genDummyRead - generate code for dummy read of volatiles        */
+/*-----------------------------------------------------------------*/
+static void
+genDummyRead (const iCode *ic)
+{
+  operand *op;
+
+  if ((op = IC_LEFT (ic)) && IS_SYMOP (op))
+    ;
+  else if ((op = IC_RIGHT (ic)) && IS_SYMOP (op))
+    ;
+  else
+    return;
+
+  aopOp (op, ic);
+
+  if (!regDead(A_IDX, ic) && op->aop->type == AOP_DIR && op->aop->size == 1)
+    {
+       emit2 ("ceqsn", "a, %s", aopGet (op->aop, 0));
+       emit2 ("nop", "");
+       cost (2, 2);
+    }
+  else
+    {
+      if (!regDead(A_IDX, ic))
+        {
+          emit2 ("push", "af");
+          cost (1, 1);
+        }
+
+      for (int i = 0; i < op->aop->size; i++)
+        cheapMove (ASMOP_A, 0, op->aop, i, true);
+
+      if (!regDead(A_IDX, ic))
+        {
+          emit2 ("pop", "af");
+          cost (1, 1);
+        }  
+    }
+
+  freeAsmop (op);
+}
+
 /*---------------------------------------------------------------------*/
 /* genSTM8Code - generate code for STM8 for a single iCode instruction */
 /*---------------------------------------------------------------------*/
@@ -1991,7 +2035,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case DUMMY_READ_VOLATILE:
-      wassertl (0, "Unimplemented iCode: Dummy volatile read");
+      genDummyRead (ic);
       break;
 
     case CRITICAL:

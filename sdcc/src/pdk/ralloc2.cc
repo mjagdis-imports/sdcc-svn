@@ -133,6 +133,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
 
+  if (ic->op == DUMMY_READ_VOLATILE)
+    return(true);
   if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
     return(true);
   if (ic->op == RETURN)
