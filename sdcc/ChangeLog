@@ -1,10 +1,15 @@
-2018-01-03 Philipp Klaus Krause <pkk AT spth.de>
+2019-01-03 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/version.awk:
+	  Fix bug #2818.
+
+2019-01-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
 	  Implement support for dummy read from volatile in direct space.
 
-2018-01-02 Philipp Klaus Krause <pkk AT spth.de>
+2019-01-02 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCsymt.c,
 	  src/SDCCerr.h,
