@@ -4,6 +4,9 @@
 	  src/pdk/gen.c,
 	  src/SDCCsymt.c:
 	  Implement basic I/O support (__sfr, __sfr16).
+	* src/port.h,
+	  src/SDCCsymt.c:
+	  Prepare for future pdk13, pdk15 and pdk16 backends.
 
 2019-01-03 Benedikt Freisen <b.freisen AT gmx.net>
 

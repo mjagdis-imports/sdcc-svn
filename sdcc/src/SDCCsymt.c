@@ -1869,9 +1869,24 @@ checkSClass (symbol *sym, int isProto)
       if (SPEC_ADDR (sym->etype) > (FUNC_REGBANK (sym->type) ? 0xffff : 0xff))
         werror (W_SFR_ABSRANGE, sym->name);
     }
+  else if (TARGET_IS_PDK13 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+   {
+     if (SPEC_ADDR (sym->etype) > 0x1f)
+        werror (W_SFR_ABSRANGE, sym->name);
+   }
   else if (TARGET_IS_PDK14 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
    {
      if (SPEC_ADDR (sym->etype) > 0x3f)
+        werror (W_SFR_ABSRANGE, sym->name);
+   }
+  else if (TARGET_IS_PDK15 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+   {
+     if (SPEC_ADDR (sym->etype) > 0x7f)
+        werror (W_SFR_ABSRANGE, sym->name);
+   }
+  else if (TARGET_IS_PDK16 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+   {
+     if (SPEC_ADDR (sym->etype) > 0x1f)
         werror (W_SFR_ABSRANGE, sym->name);
    }
 
