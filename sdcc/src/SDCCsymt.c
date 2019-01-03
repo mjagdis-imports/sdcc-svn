@@ -1864,6 +1864,11 @@ checkSClass (symbol *sym, int isProto)
         if (((addr >> n) & 0xFF) < 0x80)
           werror (W_SFR_ABSRANGE, sym->name);
     }
+  else if (TARGET_Z80_LIKE && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+    {
+      if (SPEC_ADDR (sym->etype) > (FUNC_REGBANK (sym->type) ? 0xffff : 0xff))
+        werror (W_SFR_ABSRANGE, sym->name);
+    }
 
   /* If code memory is read only, then pointers to code memory */
   /* implicitly point to constants -- make this explicit       */
@@ -3246,7 +3251,7 @@ processFuncPtrArgs (sym_link * funcType)
 /* processFuncArgs - does some processing with function args       */
 /*-----------------------------------------------------------------*/
 void
-processFuncArgs (symbol * func)
+processFuncArgs (symbol *func)
 {
   value *val;
   int pNum = 1;
@@ -3287,6 +3292,11 @@ processFuncArgs (symbol * func)
     {
       int argreg = 0;
       struct dbuf_s dbuf;
+
+      if (val->sym && val->sym->name)
+        for (value *val2 = val->next; val2; val2 = val2->next)
+          if (val2->sym && val2->sym->name && !strcmp (val->sym->name, val2->sym->name))
+            werror (E_DUPLICATE_PARAMTER_NAME, val->sym->name, func->name);
 
       dbuf_init (&dbuf, 128);
       dbuf_printf (&dbuf, "%s parameter %d", func->name, pNum);
