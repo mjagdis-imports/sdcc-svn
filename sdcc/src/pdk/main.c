@@ -36,6 +36,7 @@ static char *pdk_keywords[] = {
   "naked",
   "reentrant",
   "sfr",
+  "sfr16",
   NULL
 };
 

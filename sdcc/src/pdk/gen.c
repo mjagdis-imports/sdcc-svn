@@ -187,8 +187,9 @@ aopGet(const asmop *aop, int offset)
       return (buffer);
     }
 
-  if (aop->type == AOP_DIR)
+  if (aop->type == AOP_DIR || aop->type == AOP_SFR)
     {
+      wassert (aop->type != AOP_SFR || aop->size == 1);
       SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, offset);
       return (buffer);
     }
@@ -258,6 +259,14 @@ aopForSym (const iCode *ic, symbol *sym)
   else if (sym && sym->onStack || sym && sym->iaccess)
     {
       wassertl (0, "Unimplemented support for on-stack operand");
+    }
+  else if (sym && IN_REGSP (SPEC_OCLS (sym->etype)))
+    {
+      wassertl (getSize (sym->type) <= 2, "Unimplemented support for wide (> 16 bit) I/O register");
+
+      aop = newAsmop (AOP_SFR);
+      aop->aopu.aop_dir = sym->rname;
+      aop->size = getSize (sym->type);
     }
   else
     {
@@ -497,6 +506,34 @@ push (const asmop *op, int offset, int size)
 static void
 genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global)
 {
+  // Handle I/O first.
+  wassert_bt ((result->type == AOP_SFR) + (source->type == AOP_SFR) <= 1);
+  if (result->type == AOP_SFR || source->type == AOP_SFR)
+    switch (size)
+      {
+      case 1:
+        cheapMove (result, roffset, source, soffset, a_dead_global);
+        return;
+      case 2:
+        if (result->type == AOP_SFR && source->type == AOP_DIR)
+          {
+            emit2 ("stt16", "%s", aopGet (source, soffset));
+            cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
+          }
+        else if (result->type == AOP_DIR && source->type == AOP_SFR)
+          {
+            emit2 ("ldt16", "%s", aopGet (result, roffset));
+            cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
+          }
+        else if (regalloc_dry_run)
+          cost (1000, 1000);
+        else
+          wassertl (0, "Unimplemenetd operand in __sfr16 access");
+        return;
+      default:
+        wassertl (0, "Unknown __sfr size");
+      }
+
   wassert_bt (result->type == AOP_DIR || result->type == AOP_REG);
   wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG);
 

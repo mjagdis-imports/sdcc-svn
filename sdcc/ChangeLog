@@ -1,3 +1,9 @@
+2019-01-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/main.c,
+	  src/pdk/gen.c:
+	  Implement basic I/O support (__sfr, __sfr16).
+
 2019-01-03 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* src/version.awk:
