@@ -558,7 +558,14 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
 static void
 adjustStack (int n, bool a_free)
 {
-  wassertl (a_free || n >= 0, "Unimplemented negative stack adjustment with register a in use");
+  if (!a_free && n < 0)
+    if (regalloc_dry_run)
+      {
+        cost (1000, 1000);
+        return;
+      }
+    else
+      wassertl_bt (0, "Unimplemented negative stack adjustment with register a in use");
   wassertl (!(n % 2), "Unsupported odd stack adjustment");  
 
   if (n >= 0 && (!a_free || n <= 4))
@@ -872,6 +879,7 @@ genCall (const iCode *ic)
           emit2 ("inc", "p");
           emit2 ("ld", "a, #(!tlabel >> 8)", labelKey2num (tlbl->key));
           emit2 ("idxm", "p, a");
+          G.p.type = AOP_INVALID;
         }
       cost (8, 10);
 
@@ -901,9 +909,9 @@ genCall (const iCode *ic)
                        (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir))
                        || IS_TRUE_SYMOP (IC_RESULT (ic));
 
-  adjustStack (-ic->parmBytes, !SomethingReturned);
-
-  if (SomethingReturned)
+  if (!SomethingReturned)
+    adjustStack (-ic->parmBytes, true);
+  else
     {
       aopOp (IC_RESULT (ic), ic);
 
@@ -911,6 +919,8 @@ genCall (const iCode *ic)
       cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true);
       if (IC_RESULT (ic)->aop->size > 1)
         cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, true);
+
+      adjustStack (-ic->parmBytes, !(aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, A_IDX)));
 
       freeAsmop (IC_RESULT (ic));
     }
