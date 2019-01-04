@@ -1,3 +1,9 @@
+2019-01-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.h,
+	  src/pdk/gen.c:
+	  Rudimentary support for arguments on the stack.
+
 2019-01-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/main.c,

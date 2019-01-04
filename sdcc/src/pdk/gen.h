@@ -30,6 +30,8 @@ typedef enum
   AOP_REG,
   /* Is partially in a register, partially in direct space */
   AOP_REGDIR,
+  /* Is on the stack */
+  AOP_STK,
   /* Is an immediate value */
   AOP_IMMD,
   /* Is in direct space */
@@ -51,6 +53,7 @@ typedef struct asmop_byte
   union
   {
     reg_info *reg;    /* Register this byte is in. */
+    int stk;          /* Stack offset for this byte. */
   } byteu;
 } asmop_byte;
 

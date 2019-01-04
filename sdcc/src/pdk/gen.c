@@ -29,11 +29,33 @@ static unsigned int regalloc_dry_run_cost_words;
 static unsigned int regalloc_dry_run_cost_cycles;
 static unsigned int regalloc_dry_run_cycle_scale = 1;
 
-static struct asmop asmop_a, asmop_p, asmop_zero, asmop_one;
+static struct
+{
+  short debugLine;
+  struct
+    {
+      int pushed;
+      int size;
+      int param_offset;
+    } stack;
+  bool saved;
+
+  /* Track content of p */
+  struct
+   {
+     AOP_TYPE type;
+     const char *base;
+     int offset;
+   } p;
+}
+G;
+
+static struct asmop asmop_a, asmop_p, asmop_zero, asmop_one, asmop_sp;
 static struct asmop *const ASMOP_A = &asmop_a;
 static struct asmop *const ASMOP_P = &asmop_p;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
 static struct asmop *const ASMOP_ONE = &asmop_one;
+static struct asmop *const ASMOP_SP = &asmop_sp;
 
 void
 pdk_init_asmops (void)
@@ -55,6 +77,10 @@ pdk_init_asmops (void)
   asmop_one.type = AOP_LIT;
   asmop_one.size = 1;
   asmop_one.aopu.aop_lit = constVal ("1");
+
+  asmop_sp.type = AOP_SFR;
+  asmop_sp.aopu.aop_dir = "sp";
+  asmop_sp.size = 1;
 }
 
 static void
@@ -258,8 +284,14 @@ aopForSym (const iCode *ic, symbol *sym)
   /* Assign depending on the storage class */
   else if (sym && sym->onStack || sym && sym->iaccess)
     {
-      wassertl (0, "Unimplemented support for on-stack operand");
+      aop = newAsmop (AOP_STK);
+      aop->size = getSize (sym->type);
+      int base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
+
+      for (int offset = 0; offset < aop->size; offset++)
+        aop->aopu.bytes[offset].byteu.stk = base + aop->size + offset;
     }
+  /* sfr */
   else if (sym && IN_REGSP (SPEC_OCLS (sym->etype)))
     {
       wassertl (getSize (sym->type) <= 2, "Unimplemented support for wide (> 16 bit) I/O register");
@@ -324,8 +356,6 @@ aopOp (operand *op, const iCode *ic)
       sym->aop = sym->aop;
       return;
     }
-
-  /* TODO: SFR! */
 
   /* None of the above, which only leaves temporaries. */
   if (sym->isspilt || sym->nRegs == 0)
@@ -408,6 +438,69 @@ aopOp (operand *op, const iCode *ic)
   }
 }
 
+static void
+cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, bool a_dead);
+
+/*-----------------------------------------------------------------*/
+/* pushAF - push af, adjusting stack tracking                      */
+/*-----------------------------------------------------------------*/
+static void pushAF (void)
+{
+  emit2 ("push", "af");
+  cost (1, 1);
+  G.stack.pushed += 2;
+}
+
+/*-----------------------------------------------------------------*/
+/* popAF - pop af, adjusting stack tracking                      */
+/*-----------------------------------------------------------------*/
+static void popAF (void)
+{
+  emit2 ("pop", "af");
+  cost (1, 1);
+  G.stack.pushed -= 2;
+}
+
+/*-----------------------------------------------------------------*/
+/* pointPStack - Make pseudo-register p point to stack location    */
+/*-----------------------------------------------------------------*/
+static void pointPStack (int s, bool a_dead)
+{
+  // Try to adjust p when doing so is cheaper.
+  if (G.p.type == AOP_STK && abs(G.p.offset - s) <= 3 + !a_dead * 2)
+    {
+      while (G.p.offset < s)
+        {
+          emit2 ("inc", "p");
+          cost (1, 1);
+          G.p.offset++;
+        }
+
+      while (G.p.offset > s)
+        {
+          emit2 ("dec", "p");
+          cost (1, 1);
+          G.p.offset--;
+        }
+
+      return;
+    }
+
+  if (!a_dead)
+    pushAF();
+
+  int soffset = s + G.stack.pushed;
+  cheapMove (ASMOP_A, 0, ASMOP_SP, 0, true);
+  emit2 ("add", "a, #0x%02x", soffset & 0xff);
+  cost (1, 1);
+  cheapMove (ASMOP_P, 0, ASMOP_A, 0, true);
+  G.p.type = AOP_STK;
+  G.p.offset = s;
+
+  if (!a_dead)
+    popAF();
+}
+
 /*-----------------------------------------------------------------*/
 /* cheapMove - Copy a byte from one asmop to another               */
 /*-----------------------------------------------------------------*/
@@ -423,6 +516,18 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
       emit2 ("clear", "%s", aopGet (result, roffset));
       cost (1, 1);
     }
+  else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX))
+    {
+      pointPStack(source->aopu.bytes[soffset].byteu.stk, true);
+      emit2 ("idxm", "a, p");
+      cost (1, 1);
+    }
+  else if (result->type == AOP_STK && aopInReg (source, soffset, A_IDX))
+    {
+      pointPStack(source->aopu.bytes[soffset].byteu.stk, false);
+      emit2 ("idxm", "p, a");
+      cost (1, 1);
+    }
   else if (aopInReg (result, roffset, A_IDX))
     {
       emit2 ("mov", "a, %s", aopGet (source, soffset));
@@ -436,18 +541,15 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
   else
     {
       if (!a_dead)
-        {
-          emit2 ("push", "af");
-          cost (1, 1);
-        }
+        pushAF();
       cheapMove (ASMOP_A, 0, source, soffset, false);
       cheapMove (result, roffset, ASMOP_A, 0, false);
       if (!a_dead)
-        {
-          emit2 ("push", "af");
-          cost (1, 1);
-        }
+        popAF();
     }
+
+  if (result == ASMOP_P)
+    G.p.type = AOP_INVALID;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -472,6 +574,8 @@ adjustStack (int n, bool a_free)
       emit2 ("mov", "sp, a");
       cost (3, 3);
     }
+
+  G.stack.pushed += n;
 }
 
 static void
@@ -534,8 +638,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         wassertl (0, "Unknown __sfr size");
       }
 
-  wassert_bt (result->type == AOP_DIR || result->type == AOP_REG);
-  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG);
+  wassert_bt (result->type == AOP_DIR || result->type == AOP_REG || result->type == AOP_STK);
+  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG || source->type == AOP_STK);
 
   if (size == 2 &&
     (aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX) && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) ||
@@ -820,6 +924,9 @@ genFunction (iCode *ic)
 {
   const symbol *sym = OP_SYMBOL_CONST (IC_LEFT (ic));
   sym_link *ftype = operandType (IC_LEFT (ic));
+
+  G.stack.pushed = 0;
+  G.stack.param_offset = 0;
 
   /* create the function header */
   emit2 (";", "-----------------------------------------");
@@ -2099,6 +2206,8 @@ dryPdkiCode (iCode *ic)
 
   genPdkiCode (ic);
 
+  G.p.type = AOP_INVALID;
+
   destroy_line_list ();
 
   wassert (regalloc_dry_run);
@@ -2165,6 +2274,8 @@ genPdkCode (iCode *lic)
 
   /* now do the actual printing */
   printLine (genLine.lineHead, codeOutBuf);
+
+  G.p.type = AOP_INVALID;
 
   /* destroy the line list */
   destroy_line_list ();
