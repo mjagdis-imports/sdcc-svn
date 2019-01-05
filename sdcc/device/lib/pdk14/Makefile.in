@@ -16,13 +16,7 @@ include $(srcdir)/../incl.mk
 
 PDK14_FLOAT = 
 
-PDK14_INT = $(COMMON_INT) \
-  _mulint.c \
-  _divsint.c \
-  _modsint.c \
-  _mulschar.c \
-  _divschar.c \
-  _modschar.c
+PDK14_INT = 
 
 PDK14_LONG = 
 
