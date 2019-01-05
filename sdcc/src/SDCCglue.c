@@ -2518,7 +2518,7 @@ glue (void)
     }
   dbuf_write_and_destroy (&statsg->oBuf, asmFile);
 
-  /* STM8 note: there are no such instructions supported.
+  /* STM8 / PDK14 note: there are no such instructions supported.
      Also, we don't need this logic as well. */
   if (port->general.glue_up_main && mainf && IFFUNC_HASBODY (mainf->type))
     {
@@ -2529,6 +2529,8 @@ glue (void)
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
         fprintf (asmFile, "\tjp\t__sdcc_program_startup\n");
+      if(TARGET_PDK_LIKE)
+        fprintf (asmFile, "\tgoto\t__sdcc_program_startup\n");
       else
         fprintf (asmFile, "\t%cjmp\t__sdcc_program_startup\n", options.acall_ajmp ? 'a' : 'l');
     }
@@ -2550,6 +2552,8 @@ glue (void)
       /* put in jump or call to main */
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t_main\n" : "\tjp\t_main\n");
+      else if(TARGET_PDK_LIKE)
+        fprintf (asmFile, "\tgoto\t_main\n");
       else
         fprintf (asmFile, "\t%cjmp\t_main\n", options.acall_ajmp ? 'a' : 'l');        /* needed? */
       fprintf (asmFile, ";\treturn from main will return to caller\n");
