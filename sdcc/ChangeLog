@@ -1,3 +1,10 @@
+2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/main.c,
+	  src/pdk/gen.c,
+	  src/pdk/ralloc2.cc:
+	  Better unsigned char comparisons.
+
 2019-01-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.h,

@@ -1201,6 +1201,46 @@ genCmp (const iCode *ic, iCode *ifx)
   if (IS_SPEC (operandType (left)) && IS_SPEC (operandType (right)))
     sign = !(SPEC_USIGN (operandType (left)) | SPEC_USIGN (operandType (right)));
 
+  // Non-destructive 1-byte unsigned comparison.
+  if (!sign && size == 1 && ifx && aopInReg (left->aop, 0, A_IDX))
+    {
+      if (ic->op == '>' && right->aop->type == AOP_LIT)
+        {
+          wassert (!aopIsLitVal (right->aop, 0, 1, 0x00));
+          emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) - 1);
+          if (IC_TRUE (ifx))
+            {
+              emit2 ("nop", "");
+              emit2 ("t1sn", "f.c");
+              cost (3, 3.5);
+            }
+          else
+            {
+              emit2 ("t0sn", "f.c");
+              cost (2, 2.5);
+            }
+          emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+          goto release;
+        }
+      else if (ic->op == '<' && aopInReg (left->aop, 0, A_IDX) && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR) && (IC_TRUE (ifx) || !regDead (A_IDX, ic)))
+        {
+          emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
+          if (IC_TRUE (ifx))
+            {
+              emit2 ("t1sn", "f.c");
+              cost (2, 2.5);
+            }
+          else
+            {
+              emit2 ("nop", "");
+              emit2 ("t0sn", "f.c");
+              cost (3, 3.5);
+            }
+          emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+          goto release;
+        }
+    }
+
   if (ic->op == '>')
     {
       operand *t = right;
@@ -1252,6 +1292,7 @@ genCmp (const iCode *ic, iCode *ifx)
       cheapMove (result->aop, 0, ASMOP_A, 0, true);
     }
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -1904,6 +1945,38 @@ genAddrOf (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genJumpTab - generate code for jump table                       */
+/*-----------------------------------------------------------------*/
+static void
+genJumpTab (const iCode *ic)
+{
+  operand *cond;
+
+  D (emit2 ("; genJumpTab", ""));
+
+  cond = IC_JTCOND (ic);
+
+  aopOp (cond, ic);
+
+  wassertl (cond->aop->size == 1, "Jump table not implemented for operands wider than 1 byte.");
+
+  cheapMove (ASMOP_A, 0, cond->aop, 0, true);
+
+  emit2 ("add", "a, #0x02");
+  emit2 ("pcadd", "a");
+  cost (2, 3);
+
+  for (symbol *jtab = setFirstItem (IC_JTLABELS (ic)); jtab; jtab = setNextItem (IC_JTLABELS (ic)))
+    {
+      if (!regalloc_dry_run)
+        emit2 ("goto", "#!tlabel", labelKey2num (jtab->key));
+      cost (1, 0);
+    }
+
+  freeAsmop (cond);
+}
+
+/*-----------------------------------------------------------------*/
 /* genCast - generate code for cast                                */
 /*-----------------------------------------------------------------*/
 static void
@@ -2176,7 +2249,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case JUMPTABLE:
-      wassertl (0, "Unimplemented iCode");
+      genJumpTab (ic);
       break;
 
     case CAST:

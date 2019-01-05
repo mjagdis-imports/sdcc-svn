@@ -135,10 +135,17 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   if (ic->op == DUMMY_READ_VOLATILE)
     return(true);
+
+  if ((ic->op == EQ_OP || ic->op == NE_OP || (ic->op == '>' || ic->op == '<') && SPEC_USIGN(getSpec(operandType(left)))) && // Non-destructive comparison.
+    (left_in_A && getSize(operandType(left)) == 1 && IS_OP_LITERAL(right) || right_in_A && getSize(operandType(right)) == 1 && IS_OP_LITERAL(left)))
+    return (true);
+
   if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
     return(true);
+
   if (ic->op == RETURN)
     return(true);
+
   if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))
     return(IS_OP_LITERAL(right) && (ullFromVal(OP_VALUE_CONST (right)) <= 2 + optimize.codeSpeed || getSize(operandType(result)) == 1) || right_in_A && !result_in_A);
 

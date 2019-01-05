@@ -230,12 +230,12 @@ PORT pdk14_port =
     },
   },
   {
-    0,                          /* maxCount */
-    0,                          /* sizeofElement */
-    {0, 0, 0},                  /* sizeofMatchJump[] */
-    {0, 0, 0},                  /* sizeofRangeCompare[] */
-    0,                          /* sizeofSubtract */
-    0,                          /* sizeofDispatch */
+    256,                        /* maxCount */
+    1,                          /* sizeofElement */
+    {2, 0, 0},                  /* sizeofMatchJump[] - the 0s here ensure that we only generate jump tables for 8-bit operands, which is all the backend can handle */
+    {4, 0, 0},                  /* sizeofRangeCompare[] */
+    1,                          /* sizeofSubtract */
+    2,                          /* sizeofDispatch */
   },
   "_",
   pdk_init,
