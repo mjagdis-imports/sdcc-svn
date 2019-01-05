@@ -47,6 +47,49 @@ pdk_genAssemblerEnd (FILE *of)
     dwarf2FinalizeFile (of);
 }
 
+int
+pdk_genIVT(struct dbuf_s *oBuf, symbol **intTable, int intCount)
+{
+  return (true);
+}
+
+static void
+pdk_genInitStartup (FILE *of)
+{
+  fprintf (of, "__sdcc_gs_init_startup:\n");
+
+  // Initialize stack pointer
+  if (options.stack_loc >= 0)
+    {
+      fprintf (of, "\tmov\ta, #0x%02x\n", options.stack_loc);
+      fprintf (of, "\tmov\tsp, a\n");
+    }
+  else
+    {
+      fprintf (of, "\tmov\ta, #(s_DATA + l_DATA)\n");
+      fprintf (of, "\tmov\tsp, a\n");
+    }
+
+  /* Init static & global variables */
+  fprintf (of, "__sdcc_init_data:\n");
+
+  /* Zeroing memory (required by standard for static & global variables) */
+  fprintf (of, "\tmov\ta, #s_DATA\n");
+  fprintf (of, "\tmov\tp, a\n");
+  fprintf (of, "00001$:\n");
+  fprintf (of, "\tmov\ta, #(s_DATA + l_DATA)\n");
+  fprintf (of, "\tcneqsn\ta, p\n");
+  fprintf (of, "\tgoto\t00002$\n");
+  fprintf (of, "\tmov\ta, #0x00\n");
+  fprintf (of, "\tidxm\tp, a\n");
+  fprintf (of, "\tinc\tp\n");
+  fprintf (of, "\tgoto\t00001$\n");
+  fprintf (of, "00002$:\n");
+
+  /* Initialize l_INITIALIZER bytes from s_INITIALIZER to s_INITIALIZED */
+  // TODO
+}
+
 static void
 pdk_init (void)
 {
@@ -87,6 +130,8 @@ static void
 pdk_setDefaultOptions (void)
 {
   options.out_fmt = 'i';        /* Default output format is ihx */
+  options.data_loc = 0x02;      /* First two bytes of RAM are used for the pseudo-register p */
+  options.stack_loc = -1;
 }
 
 static const char *
@@ -137,7 +182,7 @@ PORT pdk14_port =
   0,                             /* Processor name */
   {
     glue,
-    false,
+    true,
     NO_MODEL,
     NO_MODEL,
     0,                          /* model == target */
@@ -258,9 +303,9 @@ PORT pdk14_port =
   pdk_keywords,
   0,
   pdk_genAssemblerEnd,
-  0,
+  pdk_genIVT,
   0,                            /* no genXINIT code */
-  0,                            /* genInitStartup */
+  pdk_genInitStartup,           /* genInitStartup */
   pdk_reset_regparm,
   pdk_reg_parm,
   0,                            /* process_pragma */
