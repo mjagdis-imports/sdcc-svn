@@ -85,9 +85,6 @@ pdk_genInitStartup (FILE *of)
   fprintf (of, "\tinc\tp\n");
   fprintf (of, "\tgoto\t00001$\n");
   fprintf (of, "00002$:\n");
-
-  /* Initialize l_INITIALIZER bytes from s_INITIALIZER to s_INITIALIZED */
-  // TODO
 }
 
 static void
@@ -251,11 +248,11 @@ PORT pdk14_port =
     "CONST",                    /* const_name */
     "CABS (ABS)",               /* cabs_name */
     "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
+    0,                          /* iabs_name */
+    0,                          /* name of segment for initialized variables */
+    0,                          /* name of segment for copies of initialized variables in code space */
+    0,
+    0,
     1                           /* CODE  is read-only */
   },
   { 0, 0 },
