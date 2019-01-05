@@ -4,6 +4,8 @@
 	  Don't try to compile library functions that will not work anytime soon.
 	* src/SDCCglue.c:
 	  Emit sfr locations for pdk14.
+	* device/include/stdlib.h:
+	  Mark bsearch(), qsort() function pointers as __reentrant for pdk14.
 
 2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
 
