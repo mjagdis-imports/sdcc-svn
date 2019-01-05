@@ -566,7 +566,7 @@ adjustStack (int n, bool a_free)
       }
     else
       wassertl_bt (0, "Unimplemented negative stack adjustment with register a in use");
-  wassertl (!(n % 2), "Unsupported odd stack adjustment");  
+  wassertl_bt (!(n % 2), "Unsupported odd stack adjustment"); // The datasheets seem to require that the stack pointer needs to be aligned to 2-byte boundaries. 
 
   if (n >= 0 && (!a_free || n <= 4))
     for (int i = 0; i < n; i += 2)

@@ -1,5 +1,10 @@
 2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
 
+	* device/lib/pdk14/Makefile.in:
+	  Don't try to compile library functions that will not work anytime soon.
+
+2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/SDCCmem.c:
 	  Improve error handling on missing output storage class.
 

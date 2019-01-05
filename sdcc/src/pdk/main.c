@@ -191,7 +191,7 @@ PORT pdk14_port =
     NULL,                       /* bit */
     "RSEG (ABS)",               /* reg */
     "GSINIT",                   /* static initialization */
-    NULL,                       /* overlay */
+    "OSEG (OVR,DATA)",          /* overlay */
     "GSFINAL",                  /* gsfinal */
     "HOME",                     /* home */
     NULL,                       /* xidata */

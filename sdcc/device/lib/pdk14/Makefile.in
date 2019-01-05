@@ -22,7 +22,7 @@ PDK14_LONG =
 
 PDK14_LONGLONG = 
 
-PDK14_SDCC = $(COMMON_SDCC) \
+PDK14_SDCC = $(filter-out atol.c atoll.c strtol.c strtoul.c labs.c calloc.c btowc.c time.c, $(COMMON_SDCC)) \
   _itoa.c \
   _startup.c \
   _strcmp.c \
