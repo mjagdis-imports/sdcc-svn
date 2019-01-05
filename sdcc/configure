@@ -5008,8 +5008,8 @@ if test "x$ac_cv_header_treedec_combinations_hpp" = xyes; then :
 _ACEOF
 
 else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: NOTICE: treedec library missing, falling back to Thorup." >&5
-$as_echo "$as_me: NOTICE: treedec library missing, falling back to Thorup." >&2;}
+  { $as_echo "$as_me:${as_lineno-$LINENO}: treedec library missing, falling back to Thorup." >&5
+$as_echo "$as_me: treedec library missing, falling back to Thorup." >&6;}
 fi
 
 done
@@ -8827,6 +8827,8 @@ fi
 if test $OPT_DISABLE_PDK14 = 0; then
   ac_config_files="$ac_config_files src/pdk/Makefile"
 
+   test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/pdk14/Makefile"
+
 fi
 
 test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/Makefile"
@@ -9569,6 +9571,7 @@ do
     "device/lib/stm8/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/stm8/Makefile" ;;
     "device/lib/stm8-large/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/stm8-large/Makefile" ;;
     "src/pdk/Makefile") CONFIG_FILES="$CONFIG_FILES src/pdk/Makefile" ;;
+    "device/lib/pdk14/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/pdk14/Makefile" ;;
     "device/lib/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/Makefile" ;;
     "device/non-free/lib/Makefile") CONFIG_FILES="$CONFIG_FILES device/non-free/lib/Makefile" ;;
     "main.mk") CONFIG_FILES="$CONFIG_FILES main.mk:main_in.mk" ;;

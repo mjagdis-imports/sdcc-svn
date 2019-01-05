@@ -4,6 +4,10 @@
 	  src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
 	  Better unsigned char comparisons.
+	* device/lib/pdk14,
+	  configure.ac,
+	  configure:
+	  Infrastructure for pdk14 library.
 
 2019-01-04 Philipp Klaus Krause <pkk AT spth.de>
 

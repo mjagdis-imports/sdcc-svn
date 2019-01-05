@@ -911,6 +911,7 @@ fi
 
 if test $OPT_DISABLE_PDK14 = 0; then
   AC_CONFIG_FILES([src/pdk/Makefile])
+   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk14/Makefile])
 fi
 
 test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/Makefile])
