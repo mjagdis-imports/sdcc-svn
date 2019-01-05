@@ -10,6 +10,8 @@
 	  Properly announce lack of support for extended bit operations.
 	* src/pdk/gen.c:
 	  Fix some cases of pointer read / write.
+	* src/SDCCicode.c:
+	  Pass 8-bit arguments as 16 bit on stack on pdk14 to satisfy alignment requirements.
 
 2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
 
