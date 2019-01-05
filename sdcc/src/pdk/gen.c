@@ -289,7 +289,7 @@ aopForSym (const iCode *ic, symbol *sym)
       int base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
 
       for (int offset = 0; offset < aop->size; offset++)
-        aop->aopu.bytes[offset].byteu.stk = base + aop->size + offset;
+        aop->aopu.bytes[offset].byteu.stk = base + offset;
     }
   /* sfr */
   else if (sym && IN_REGSP (SPEC_OCLS (sym->etype)))
@@ -1931,15 +1931,35 @@ genAddrOf (const iCode *ic)
 
   int size = result->aop->size;
 
-  wassertl (!sym->onStack, "Unimplemented operand for &");
-  wassertl (!operandLitValue (right), "Unimplemented offset for &");
   wassert (size == 2);
 
-  emit2 ("mov", "a, #<(%s + %d)", sym->rname, 0);
-  cost (1, 1);
-  cheapMove (result->aop, 0, ASMOP_A, 0, true);
-  emit2 ("mov", "a, #>(%s + %d)", sym->rname, 0);
-  cheapMove (result->aop, 1, ASMOP_A, 0, true);
+  if (sym->onStack)
+    {
+      int s = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0) + operandLitValue (right);
+
+      if (G.p.type == AOP_STK && s == G.p.offset)
+        cheapMove (result->aop, 0, ASMOP_P, 0, true);
+      else
+        {
+          cheapMove (ASMOP_A, 0, ASMOP_SP, 0, true);
+          emit2 ("add", "a, #0x%02x", (s + G.stack.pushed) & 0xff);
+          cost (1, 1);
+          cheapMove (result->aop, 0, ASMOP_A, 0, true);
+        }
+
+      cheapMove (result->aop, 1, ASMOP_ZERO, 0, true);
+    }
+  else
+    {
+      wassertl (!operandLitValue (right), "Unimplemented offset for &");
+  
+
+      emit2 ("mov", "a, #<(%s + %d)", sym->rname, 0);
+      cost (1, 1);
+      cheapMove (result->aop, 0, ASMOP_A, 0, true);
+      emit2 ("mov", "a, #>(%s + %d)", sym->rname, 0);
+      cheapMove (result->aop, 1, ASMOP_A, 0, true);
+    }
 
   freeAsmop (result);
 }
