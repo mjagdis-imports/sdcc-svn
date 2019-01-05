@@ -6,6 +6,10 @@
 	  Emit sfr locations for pdk14.
 	* device/include/stdlib.h:
 	  Mark bsearch(), qsort() function pointers as __reentrant for pdk14.
+	* src/pdk/main.c:
+	  Properly announce lack of support for extended bit operations.
+	* src/pdk/gen.c:
+	  Fix some cases of pointer read / write.
 
 2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
 

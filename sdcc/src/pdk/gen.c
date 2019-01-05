@@ -114,7 +114,7 @@ emitJP(const symbol *target, float probability)
 static bool
 regDead (int idx, const iCode *ic)
 {
-  wassert (idx == A_IDX);
+  wassert (idx == A_IDX || idx == P_IDX);
 
   return (!bitVectBitValue (ic->rSurv, idx));
 }
@@ -1768,7 +1768,26 @@ genPointerGet (const iCode *ic)
         }
     }
   else
-    wassertl (0, "Unimplemented pointer operand for pointer read");
+    {
+      if (!regDead (P_IDX,ic))
+        {
+          wassert (regalloc_dry_run);
+          cost (1000, 1000);
+        }
+      cheapMove (ASMOP_P, 0, left->aop, 0, true);
+      G.p.type = AOP_INVALID;
+      for (int i = 0; i < size; i++)
+        {
+          emit2 ("idxm", "a, p");
+          cost (1, 2);
+          cheapMove (result->aop, i, ASMOP_A, 0, true);
+          if (i + 1 != size)
+            {
+              emit2 ("inc", "p");
+              cost (1, 1);
+            }
+        }
+    }
 
   freeAsmop (right);
   freeAsmop (left);
@@ -1814,7 +1833,26 @@ genPointerSet (iCode *ic)
         }
     }
   else
-    wassertl (0, "Unimplemented pointer operand for pointer write");
+    {
+      if (!regDead (P_IDX,ic))
+        {
+          wassert (regalloc_dry_run);
+          cost (1000, 1000);
+        }
+      cheapMove (ASMOP_P, 0, left->aop, 0, true);
+      G.p.type = AOP_INVALID;
+      for (int i = 0; i < size; i++)
+        {
+          cheapMove (ASMOP_A, 0, right->aop, i, true);
+          emit2 ("idxm", "p, a");
+          cost (1, 2);
+          if (i + 1 != size)
+            {
+              emit2 ("inc", "p");
+              cost (1, 1);
+            }
+        }
+    }
 
   freeAsmop (right);
   freeAsmop (left);
@@ -2294,6 +2332,7 @@ genPdkiCode (iCode *ic)
       break;
 
     default:
+      fprintf (stderr, "iCode op %d:\n", ic->op);
       wassertl (0, "Unknown iCode");
     }
 }

@@ -103,6 +103,13 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   return (false);
 }
 
+/* Indicate which extended bit operations this backend supports */
+static bool
+hasExtBitOp (int op, int size)
+{
+  return (false);
+}
+
 /** $1 is always the basename.
     $2 is always the output file.
     $3 varies
@@ -259,7 +266,7 @@ PORT pdk14_port =
   0,                            /* process_pragma */
   0,                            /* getMangledFunctionName */
   _hasNativeMulFor,             /* hasNativeMulFor */
-  0,                            /* hasExtBitOp */
+  hasExtBitOp,                  /* hasExtBitOp */
   0,                            /* oclsExpense */
   true,
   true,                         /* little endian */
