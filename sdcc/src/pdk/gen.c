@@ -289,7 +289,7 @@ aopForSym (const iCode *ic, symbol *sym)
       int base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
 
       for (int offset = 0; offset < aop->size; offset++)
-        aop->aopu.bytes[offset].byteu.stk = base + offset;
+        {aop->aopu.bytes[offset].byteu.stk = base + offset;if(!regalloc_dry_run) printf("%s [%d] byte %d at fp offset %d\n", sym->name, sym->stack, offset, base + offset);}
     }
   /* sfr */
   else if (sym && IN_REGSP (SPEC_OCLS (sym->etype)))
@@ -498,7 +498,7 @@ static void pointPStack (int s, bool a_dead, bool f_dead)
   if (!(a_dead && f_dead))
     pushAF();
 
-  int soffset = s + G.stack.pushed;
+  int soffset = s - G.stack.pushed;
   cheapMove (ASMOP_A, 0, ASMOP_SP, 0, true, true);
   emit2 ("add", "a, #0x%02x", soffset & 0xff);
   cost (1, 1);
@@ -994,19 +994,26 @@ static void
 genEndFunction (iCode *ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
+  int retsize = getSize (sym->type->next);
 
   D (emit2 ("; genEndFunction", ""));
 
   if (IFFUNC_ISNAKED(sym->type))
   {
       D (emit2 (";", "naked function: no epilogue."));
-      if (options.debug && currFunc /*&& !regalloc_dry_run*/)
+      if (options.debug && currFunc && !regalloc_dry_run)
         debugFile->writeEndFunction (currFunc, ic, 0);
       return;
   }
 
+  /* adjust the stack for the function */
+  if (sym->stack)
+    adjustStack (-sym->stack, retsize == 0 || retsize > 2);
+
+  wassertl (!G.stack.pushed, "Unbalanced stack.");
+
   /* if debug then send end of function */
-  if (options.debug && currFunc /*&& !regalloc_dry_run*/)
+  if (options.debug && currFunc && !regalloc_dry_run)
     debugFile->writeEndFunction (currFunc, ic, 1);
 
   if (IFFUNC_ISISR (sym->type))
@@ -2024,7 +2031,7 @@ genAddrOf (const iCode *ic)
       else
         {
           cheapMove (ASMOP_A, 0, ASMOP_SP, 0, true, true);
-          emit2 ("add", "a, #0x%02x", (s + G.stack.pushed) & 0xff);
+          emit2 ("add", "a, #0x%02x", (s - G.stack.pushed) & 0xff);
           cost (1, 1);
           cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
         }

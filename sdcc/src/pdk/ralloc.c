@@ -52,6 +52,10 @@ createStackSpil (symbol *sym)
 
   sloc->isref = 1;
 
+  /* if it is on the stack then update the stack */
+  if (IN_STACK (sloc->etype))
+    currFunc->stack += getSize (sloc->type);
+
   sym->usl.spillLoc = sloc;
   sym->stackSpil = 1;
 
@@ -616,6 +620,12 @@ pdk_assignRegisters (ebbIndex *ebbi)
 
   /* Invoke optimal register allocator */
   ic = pdk_ralloc2_cc (ebbi);
+
+  /* redo offsets for stacked automatic variables */
+  if (currFunc)
+    {
+      redoStackOffsets ();
+    }
 
   genPdkCode (ic);
 }
