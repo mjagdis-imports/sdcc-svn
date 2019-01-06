@@ -1,3 +1,8 @@
+2019-01-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Improve support for reentrant functions.
+
 2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/main.c:
