@@ -567,7 +567,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
 static void
 adjustStack (int n, bool a_free, bool p_free)
 {
-  wassertl_bt (!(n % 2), "Unsupported odd stack adjustment"); // The datasheets seem to require that the stack pointer needs to be aligned to 2-byte boundaries. 
+  wassertl_bt (!(n % 2), "Unsupported odd stack adjustment"); // The datasheets seem to require the stack pointer to be aligned to a 2-byte boundary. 
 
   if (n >= 0 && (!a_free || n <= 4))
     for (int i = 0; i < n; i += 2)
@@ -2021,8 +2021,19 @@ genIfx (const iCode *ic)
 
   for (int i = 1; i < cond->aop->size; i++)
     {
-      emit2 ("or", "a, %s", aopGet (cond->aop, i));
-      cost (1, 1);
+      if (cond->aop->type == AOP_STK)
+        {
+          pushAF ();
+          cheapMove (ASMOP_P, 0, cond->aop, i, true, true);
+          popAF ();
+          emit2 ("or", "a, p");
+          cost (1, 1);
+        }
+      else
+        {
+          emit2 ("or", "a, %s", aopGet (cond->aop, i));
+          cost (1, 1);
+        }
     }
  
   emit2 (IC_FALSE (ic) ? "cneqsn" : "ceqsn", "a, #0x00");
