@@ -533,7 +533,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else if (result->type == AOP_STK && aopInReg (source, soffset, A_IDX))
     {
-      pointPStack(source->aopu.bytes[soffset].byteu.stk, false, f_dead);
+      pointPStack(result->aopu.bytes[roffset].byteu.stk, false, f_dead);
       emit2 ("idxm", "p, a");
       cost (1, 1);
     }
@@ -750,8 +750,9 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cheapMove (result_aop, i, left_aop, i, true, true);
           continue;
         }
-      else if (!started && aopIsLitVal (left_aop, i, 1, 0x00) && aopInReg (right_aop, i, A_IDX))
+      else if (!started && aopIsLitVal (left_aop, i, 1, 0x00))
         {
+          cheapMove (ASMOP_A, 0, right_aop, i, true, true);
           emit2 ("neg", "a");
           cost (1, 1);
           started = true;
@@ -770,11 +771,12 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
-      else if (started && right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00))
+      else if (started && right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00) ||
+        right_aop->type == AOP_STK)
         {
-          cheapMove (ASMOP_P, 0, right_aop, i, true, false);
+          cheapMove (ASMOP_P, 0, right_aop, i, !aopInReg (left_aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left_aop, i, true, false);
-          emit2 ("subc", "a, p");
+          emit2 (started ? "sub" : "subc", "a, p");
           cost (1, 1);
         }
       else
@@ -1107,7 +1109,7 @@ genPlus (const iCode *ic)
   int size = result->aop->size;
 
   /* Swap if left is literal or right is in A. */
-  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || right->aop->type == AOP_STK)
+  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || right->aop->type == AOP_STK && !aopInReg (left->aop, 0, A_IDX))
     {
       operand *t = right;
       right = left;
@@ -1122,11 +1124,12 @@ genPlus (const iCode *ic)
           cheapMove (result->aop, i, left->aop, i, true, true);
           continue;
         }
-      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
+      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00) ||
+        right->aop->type == AOP_STK)
         {
-          cheapMove (ASMOP_P, 0, right->aop, i, true, false);
+          cheapMove (ASMOP_P, 0, right->aop, i, !aopInReg (left->aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left->aop, i, true, false);
-          emit2 ("addc", "a, p");
+          emit2 (started ? "addc" : "add", "a, p");
           cost (1, 1);
           cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
           continue;
