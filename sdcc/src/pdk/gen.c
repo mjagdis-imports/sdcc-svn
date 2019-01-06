@@ -635,7 +635,7 @@ adjustStack (int n, bool a_free, bool p_free)
 static void
 push (const asmop *op, int offset, int size)
 {
-  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD), "Unimplemented push operand");
+  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
 
   // Save old stack pointer
   emit2 ("mov", "a, sp");
