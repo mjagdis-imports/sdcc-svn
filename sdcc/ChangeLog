@@ -4,6 +4,10 @@
 	  src/pdk/ralloc.c,
 	  src/SDCCbtree.cc:
 	  Improve support for reentrant functions.
+	* support/regression/ports/pdk14,
+	  support/regression/Makefile.in,
+	  support/regression/fwk/include/testfwk.h:
+	  Basic infrastructure for future pdk14 regression testing.
 
 2019-01-05 Philipp Klaus Krause <pkk AT spth.de>
 
