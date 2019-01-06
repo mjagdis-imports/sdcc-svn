@@ -289,7 +289,7 @@ aopForSym (const iCode *ic, symbol *sym)
       int base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
 
       for (int offset = 0; offset < aop->size; offset++)
-        {aop->aopu.bytes[offset].byteu.stk = base + offset;if(!regalloc_dry_run) printf("%s [%d] byte %d at fp offset %d\n", sym->name, sym->stack, offset, base + offset);}
+        aop->aopu.bytes[offset].byteu.stk = base + offset;
     }
   /* sfr */
   else if (sym && IN_REGSP (SPEC_OCLS (sym->etype)))
@@ -565,16 +565,8 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
 /* adjustStack - Adjust the stack pointer by n bytes.                       */
 /*--------------------------------------------------------------------------*/
 static void
-adjustStack (int n, bool a_free)
+adjustStack (int n, bool a_free, bool p_free)
 {
-  if (!a_free && n < 0)
-    if (regalloc_dry_run)
-      {
-        cost (1000, 1000);
-        return;
-      }
-    else
-      wassertl_bt (0, "Unimplemented negative stack adjustment with register a in use");
   wassertl_bt (!(n % 2), "Unsupported odd stack adjustment"); // The datasheets seem to require that the stack pointer needs to be aligned to 2-byte boundaries. 
 
   if (n >= 0 && (!a_free || n <= 4))
@@ -583,6 +575,52 @@ adjustStack (int n, bool a_free)
         emit2 ("push", "af");
         cost (1, 1);
       }
+  else if (!a_free && p_free && n < 0)
+    {
+      pushAF();
+
+      for (int i = 0; i < 2; i++)
+        {
+          pointPStack (G.stack.pushed - 2 + i, true, true);
+          emit2 ("idxm", "a, p");
+          cost (1, 1);
+          pointPStack (G.stack.pushed - 2 + n + i, false, true);
+          emit2 ("idxm", "p, a");
+          cost (1, 1);
+        }
+      
+      emit2 ("mov", "a, sp");
+      emit2 ("add", "a, #%d", n);
+      emit2 ("mov", "sp, a");
+      cost (3, 3);
+
+      popAF();
+    }
+  else if (!a_free && !p_free && n < 0)
+    {
+      pushAF();
+      cheapMove (ASMOP_A, 0, ASMOP_P, 0, true, true);
+      pushAF();
+
+      for (int i = 0; i < 4; i++)
+        {
+          pointPStack (G.stack.pushed - 4 + i, true, true);
+          emit2 ("idxm", "a, p");
+          cost (1, 1);
+          pointPStack (G.stack.pushed - 4 + n + i, false, true);
+          emit2 ("idxm", "p, a");
+          cost (1, 1);
+        }
+      
+      emit2 ("mov", "a, sp");
+      emit2 ("add", "a, #%d", n);
+      emit2 ("mov", "sp, a");
+      cost (3, 3);
+
+      popAF();
+      cheapMove (ASMOP_P, 0, ASMOP_A, 0, true, true);
+      popAF();
+    }
   else // Can't use pop af, since it might affect reserved flag bits.
     {
       emit2 ("mov", "a, sp");
@@ -604,7 +642,7 @@ push (const asmop *op, int offset, int size)
   emit2 ("mov", "p, a");
   cost (2, 2);
 
-  adjustStack (size, true);
+  adjustStack (size, true, false);
 
   // Write value onto stack
   for (int i = offset; i < offset + size; i++)
@@ -933,7 +971,7 @@ genCall (const iCode *ic)
                        || IS_TRUE_SYMOP (IC_RESULT (ic));
 
   if (!SomethingReturned)
-    adjustStack (-ic->parmBytes, true);
+    adjustStack (-ic->parmBytes, true, true);
   else
     {
       aopOp (IC_RESULT (ic), ic);
@@ -943,7 +981,7 @@ genCall (const iCode *ic)
       if (IC_RESULT (ic)->aop->size > 1)
         cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, true, true);
 
-      adjustStack (-ic->parmBytes, !(aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, A_IDX)));
+      adjustStack (-ic->parmBytes, !(aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, A_IDX)), !(aopInReg (IC_RESULT (ic)->aop, 0, P_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, P_IDX)));
 
       freeAsmop (IC_RESULT (ic));
     }
@@ -984,7 +1022,7 @@ genFunction (iCode *ic)
       cost (1, 1);
     }
 
-  adjustStack (sym->stack, true);
+  adjustStack (sym->stack, true, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1008,7 +1046,7 @@ genEndFunction (iCode *ic)
 
   /* adjust the stack for the function */
   if (sym->stack)
-    adjustStack (-sym->stack, retsize == 0 || retsize > 2);
+    adjustStack (-sym->stack, retsize == 0 || retsize > 2, retsize != 1);
 
   wassertl (!G.stack.pushed, "Unbalanced stack.");
 
