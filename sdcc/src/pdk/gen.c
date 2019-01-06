@@ -901,8 +901,7 @@ genIpush (const iCode *ic)
   if (left->aop->size == 1)
     {
       cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
-      emit2 ("push", "af");
-      cost (1, 1);
+      pushAF();
     }
   else
     push (left->aop, 0, left->aop->size);
@@ -947,6 +946,7 @@ genCall (const iCode *ic)
       // Jump to function
       push (left->aop, 0, 2);
       emit2 ("ret", "");
+      G.stack.pushed -= 2;
       cost (2, 1);
 
       emitLabel (tlbl);
