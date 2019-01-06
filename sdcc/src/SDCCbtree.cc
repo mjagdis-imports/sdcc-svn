@@ -163,6 +163,8 @@ void btree_alloc(void)
 #ifdef BTREE_DEBUG
       std::cout << "btree stack allocation used total of " << ssize << " bytes\n";
 #endif
+      if (TARGET_PDK_LIKE) // Stack pointer needs to be aligned to multiple of 2
+        if (ssize & 1) ssize++;
       currFunc->stack += ssize;
       SPEC_STAK (currFunc->etype) += ssize;
     }
