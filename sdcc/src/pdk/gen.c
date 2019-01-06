@@ -771,12 +771,19 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
-      else if (started && right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00) ||
-        right_aop->type == AOP_STK)
+      else if (right_aop->type == AOP_STK)
+        {
+          cheapMove (ASMOP_A, 0, left_aop, i, true, !started);
+          cheapMove (ASMOP_P, 0, right_aop, i, false, !started);
+          emit2 (started ? "sub" : "subc", "a, p");
+          cost (1, 1);
+          started = true;
+        }
+      else if (started && right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00))
         {
           cheapMove (ASMOP_P, 0, right_aop, i, !aopInReg (left_aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left_aop, i, true, false);
-          emit2 (started ? "sub" : "subc", "a, p");
+          emit2 ("subc", "a, p");
           cost (1, 1);
         }
       else
@@ -792,6 +799,11 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
               started = true;
             }
         }
+      if (i + 1 < size && aopInReg (result_aop, i, P_IDX) && (left_aop->type == AOP_STK || right_aop->type == AOP_STK))
+        if (regalloc_dry_run)
+          cost (1000, 1000);
+        else
+          wassertl (0, "Unimplemented p result in subtraction with stack operand");
       cheapMove (result_aop, i, ASMOP_A, 0, true, i + 1 == size);
     }
 }
@@ -971,6 +983,8 @@ genFunction (iCode *ic)
       emit2 ("push", "af");
       cost (1, 1);
     }
+
+  adjustStack (sym->stack, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1033,6 +1047,12 @@ genReturn (const iCode *ic)
     {
       emit2 ("xch", "a, p");
       cost(1, 1);
+      goto end;
+    }
+  else if (left->aop->size == 2 && left->aop->type == AOP_STK)
+    {
+      cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
+      cheapMove (ASMOP_P, 0, left->aop, 1, false, true);
       goto end;
     }
 
@@ -1124,15 +1144,20 @@ genPlus (const iCode *ic)
           cheapMove (result->aop, i, left->aop, i, true, true);
           continue;
         }
-      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00) ||
-        right->aop->type == AOP_STK)
+      else if (right->aop->type == AOP_STK)
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true, !started);
+          cheapMove (ASMOP_P, 0, right->aop, i, false, !started);
+          emit2 (started ? "addc" : "add", "a, p");
+          cost (1, 1);
+          started = true;
+        }
+      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
         {
           cheapMove (ASMOP_P, 0, right->aop, i, !aopInReg (left->aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left->aop, i, true, false);
-          emit2 (started ? "addc" : "add", "a, p");
+          emit2 ("addc", "a, p");
           cost (1, 1);
-          cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
-          continue;
         }
        else if (!started && (right->aop->type == AOP_DIR || right->aop->type == AOP_REGDIR || right->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
         {
@@ -1148,17 +1173,24 @@ genPlus (const iCode *ic)
           started = true;
           continue;
         }
-
-      cheapMove (ASMOP_A, 0, left->aop, i, true, !started);
-      if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
+      else
         {
-          if (started && aopIsLitVal (right->aop, i, 1, 0x00))
-            emit2 ("addc", "a");
-          else
-            emit2 (started ? "addc" : "add", "a, %s", aopGet (right->aop, i));
-          cost (1, 1);
-          started = true;
+          cheapMove (ASMOP_A, 0, left->aop, i, true, !started);
+          if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
+            {
+              if (started && aopIsLitVal (right->aop, i, 1, 0x00))
+                emit2 ("addc", "a");
+              else
+                emit2 (started ? "addc" : "add", "a, %s", aopGet (right->aop, i));
+              cost (1, 1);
+              started = true;
+            }
         }
+      if (i + 1 < size && aopInReg (result->aop, i, P_IDX) && (left->aop->type == AOP_STK || right->aop->type == AOP_STK))
+        if (regalloc_dry_run)
+          cost (1000, 1000);
+        else
+          wassertl (0, "Unimplemented p result in subtraction with stack operand");
       cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
     }
 
