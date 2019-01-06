@@ -1351,6 +1351,13 @@ genCmp (const iCode *ic, iCode *ifx)
           emit2 ("subc", "a, p");
           cost (1, 1);
         }
+      else if (right->aop->type == AOP_STK)
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
+          cheapMove (ASMOP_P, 0, right->aop, i, false, !i);
+          emit2 ("subc", "a, p");
+          cost (1, 1);
+        }
       else
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
