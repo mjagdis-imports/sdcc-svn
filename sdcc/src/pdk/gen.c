@@ -508,6 +508,32 @@ static void pointPStack (int s, bool a_dead, bool f_dead)
 }
 
 /*-----------------------------------------------------------------*/
+/* moveStackStack - Move a block of memory on the stack.           */
+/*-----------------------------------------------------------------*/
+static void
+moveStackStack (int d, int s, int size, bool a_dead)
+{
+  if (!a_dead)
+    pushAF ();
+
+  bool up = (d <= s);
+
+  for (int i = up ? 0 : size - 1; up ? i < size : i >= 0; up ? i++ : i--)
+    {
+      pointPStack (s + i, true, true);
+      emit2 ("idxm", "a, p");
+      cost (1, 2);
+      pointPStack (d + i, false, true);
+      emit2 ("idxm", "p, a");
+      cost (1, 2);
+    }
+
+
+  if (!a_dead)
+    popAF();
+}
+
+/*-----------------------------------------------------------------*/
 /* cheapMove - Copy a byte from one asmop to another               */
 /*-----------------------------------------------------------------*/
 static void
@@ -526,13 +552,13 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     {
       pointPStack(source->aopu.bytes[soffset].byteu.stk, true, f_dead);
       emit2 ("idxm", "a, p");
-      cost (1, 1);
+      cost (1, 2);
     }
   else if (result->type == AOP_STK && aopInReg (source, soffset, A_IDX))
     {
       pointPStack(result->aopu.bytes[roffset].byteu.stk, false, f_dead);
       emit2 ("idxm", "p, a");
-      cost (1, 1);
+      cost (1, 2);
     }
   else if (aopInReg (result, roffset, A_IDX))
     {
@@ -580,10 +606,10 @@ adjustStack (int n, bool a_free, bool p_free)
         {
           pointPStack (G.stack.pushed - 2 + i, true, true);
           emit2 ("idxm", "a, p");
-          cost (1, 1);
+          cost (1, 2);
           pointPStack (G.stack.pushed - 2 + n + i, false, true);
           emit2 ("idxm", "p, a");
-          cost (1, 1);
+          cost (1, 2);
         }
       
       emit2 ("mov", "a, sp");
@@ -603,10 +629,10 @@ adjustStack (int n, bool a_free, bool p_free)
         {
           pointPStack (G.stack.pushed - 4 + i, true, true);
           emit2 ("idxm", "a, p");
-          cost (1, 1);
+          cost (1, 2);
           pointPStack (G.stack.pushed - 4 + n + i, false, true);
           emit2 ("idxm", "p, a");
-          cost (1, 1);
+          cost (1, 2);
         }
       
       emit2 ("mov", "a, sp");
@@ -633,6 +659,14 @@ static void
 push (const asmop *op, int offset, int size)
 {
   wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
+
+  if (op->type == AOP_STK)
+    {
+      int s = G.stack.pushed;
+      adjustStack (size, true, true);
+      moveStackStack (s, op->aopu.bytes[0].byteu.stk, size, true);
+      return;
+    }
 
   // Save old stack pointer
   emit2 ("mov", "a, sp");
@@ -962,6 +996,7 @@ genCall (const iCode *ic)
         }
       cost (1, 2);
     }
+  G.p.type = AOP_INVALID;
 
   bool SomethingReturned = (IS_ITEMP (IC_RESULT (ic)) &&
                        (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir))
@@ -974,9 +1009,18 @@ genCall (const iCode *ic)
       aopOp (IC_RESULT (ic), ic);
 
       wassertl (IC_RESULT (ic)->aop->size <= 2, "Unimplemented call to function returning more than 2 bytes");
-      cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true, true);
-      if (IC_RESULT (ic)->aop->size > 1)
-        cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, true, true);
+
+      if (IC_RESULT (ic)->aop->type == AOP_STK && IC_RESULT (ic)->aop->size == 2)
+        {
+          cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, false, true);
+          cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true, true);
+        }
+      else
+        {
+          cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true, true);
+          if (IC_RESULT (ic)->aop->size > 1)
+            cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, true, true);
+        }
 
       adjustStack (-ic->parmBytes, !(aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, A_IDX)), !(aopInReg (IC_RESULT (ic)->aop, 0, P_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, P_IDX)));
 
