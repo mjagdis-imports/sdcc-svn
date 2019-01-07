@@ -2081,7 +2081,7 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
         {
           /* Do nothing */
         }
-      else if (IS_EZ80_Z80 && aop->type == AOP_STK)
+      else if (IS_EZ80_Z80 && aop->size - offset >= 2 && aop->type == AOP_STK)
         {
           int fp_offset = aop->aopu.aop_stk + offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0);
           emit2 ("ld %s, %d (ix)", _pairs[pairId].name, fp_offset);
@@ -4925,7 +4925,7 @@ genFunction (const iCode * ic)
     {
       if (!_G.omitFramePtr)
         emit2 ((optimize.codeSize && !IFFUNC_ISZ88DK_FASTCALL (ftype)) ? "!enters" : "!enter");
-      if (IS_EZ80_Z80 && -sym->stack > -128)
+      if (IS_EZ80_Z80 && !_G.omitFramePtr && -sym->stack > -128)
         {
           emit2 ("lea hl, ix, #%d", -sym->stack);
           emit2 ("ld sp, hl");

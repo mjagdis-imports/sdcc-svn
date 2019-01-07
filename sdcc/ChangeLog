@@ -1,5 +1,12 @@
 2019-01-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/ports/ez80-z80/spec.mk:
+	  Use new eZ80 uCsim in ez80_z80 regression tests.
+	* src/z80/gen.c:
+	  ez80_z80 fixes.
+
+2019-01-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c,
 	  src/pdk/ralloc.c:
 	  Support for return values wider than 16 bit.
