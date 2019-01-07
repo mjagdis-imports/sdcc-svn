@@ -358,7 +358,7 @@ aopOp (operand *op, const iCode *ic)
     }
 
   /* None of the above, which only leaves temporaries. */
-  if (sym->isspilt || sym->nRegs == 0)
+  if ((sym->isspilt || sym->nRegs == 0) && !(regalloc_dry_run && (options.stackAuto || reentrant)))
     {
       sym->aop = op->aop = aopForSym (ic, sym->usl.spillLoc);
       op->aop->size = getSize (sym->type);
@@ -429,10 +429,7 @@ aopOp (operand *op, const iCode *ic)
     if (completely_in_regs)
       aop->type = AOP_REG;
     else if (completely_spilt)
-      {
-        sym->aop = op->aop = aopForSym (ic, sym->usl.spillLoc);
-        op->aop->size = getSize (sym->type);
-      }
+      aop->type = AOP_STK;
     else
       wassertl (0, "Unsupported partially spilt aop");
   }
@@ -1238,7 +1235,7 @@ genPlus (const iCode *ic)
         if (regalloc_dry_run)
           cost (1000, 1000);
         else
-          wassertl (0, "Unimplemented p result in subtraction with stack operand");
+          wassertl (0, "Unimplemented p result in addition with stack operand");
       cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
     }
 
