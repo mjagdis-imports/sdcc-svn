@@ -528,7 +528,6 @@ moveStackStack (int d, int s, int size, bool a_dead)
       cost (1, 2);
     }
 
-
   if (!a_dead)
     popAF();
 }
@@ -1127,8 +1126,43 @@ genReturn (const iCode *ic)
      move the return value into place */
   aopOp (left, ic);
 
-  wassertl (left->aop->size <= 2, "return of value wider than 2 bytes not yet implemented");
   wassertl (currFunc, "return iCode outside of function");
+
+  if (left->aop->size > 2)
+    {
+      if (left->aop->type == AOP_STK)
+        {
+          for (int i = 0; i < left->aop->size; i++)
+          for (int i = 0; i < left->aop->size; i++)
+            {
+              cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+              pointPStack (-4, false, true); // TODO: Change to -3 if necesssary to allow efficient passing of hidden parameter via push af!
+              for (int j = 0; j < i; j++)
+                {
+                  emit2 ("inc", "p");
+                  cost (1, 1);
+                }
+              emit2 ("idxm", "p, a");
+              cost (1, 2);
+            }
+        }
+      else
+        {
+          pointPStack (-4, true, true); // TODO: Change to -3 if necesssary to allow efficient passing of hidden parameter via push af!
+          for (int i = 0; i < left->aop->size; i++)
+            {
+              cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+              emit2 ("idxm", "p, a");
+              cost (1, 2);
+              if (i + 1 < left->aop->size)
+                {
+                  emit2 ("inc", "p");
+                  cost (1, 1);
+                }
+            }
+        }
+      goto end;
+    }
 
   if (left->aop->size == 2 && aopInReg (left->aop, 0, P_IDX) && aopInReg (left->aop, 1, A_IDX))
     {

@@ -1,6 +1,11 @@
 2019-01-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
+	  Support for returning values wider than 16 bit.
+
+2019-01-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
 	  Fixes for reentrant functions.
 
 2019-01-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
