@@ -287,7 +287,6 @@ aopForSym (const iCode *ic, symbol *sym)
       aop = newAsmop (AOP_STK);
       aop->size = getSize (sym->type);
       int base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
-
       for (int offset = 0; offset < aop->size; offset++)
         aop->aopu.bytes[offset].byteu.stk = base + offset;
     }
@@ -947,8 +946,31 @@ genCall (const iCode *ic)
 {
   sym_link *dtype = operandType (IC_LEFT (ic));
   sym_link *etype = getSpec (dtype);
+  sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
+  bool bigreturn = (getSize (ftype->next) > 2) || IS_STRUCT (ftype->next);
 
-  D (emit2 ("; genCall", ""));
+  D (emit2 ("; genCall", ""));  
+
+  if (bigreturn)
+    {
+      wassertl (IC_RESULT (ic), "Unused return value in call to function returning large type.");
+
+      const symbol *rsym = OP_SYMBOL_CONST (IC_RESULT (ic));
+      if (rsym->usl.spillLoc)
+        rsym = rsym->usl.spillLoc;
+
+      if (rsym->onStack || rsym->isspilt && regalloc_dry_run && (options.stackAuto || reentrant))
+        {
+          emit2 ("mov", "a, sp");
+          emit2 ("add", "a, 0x%02x", (rsym->stack + (rsym->stack < 0 ? G.stack.param_offset : 0) - G.stack.pushed) & 0xff);
+        }
+      else
+        {
+          emit2 ("mov", "a, #%s", rsym->rname);
+          cost (1, 1);
+        }
+      pushAF ();
+    }
 
   if (ic->op == PCALL)
     {
@@ -1001,13 +1023,11 @@ genCall (const iCode *ic)
                        (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir))
                        || IS_TRUE_SYMOP (IC_RESULT (ic));
 
-  if (!SomethingReturned)
-    adjustStack (-ic->parmBytes, true, true);
+  if (!SomethingReturned || bigreturn)
+    adjustStack (-ic->parmBytes - bigreturn * 2, true, true);
   else
     {
       aopOp (IC_RESULT (ic), ic);
-
-      wassertl (IC_RESULT (ic)->aop->size <= 2, "Unimplemented call to function returning more than 2 bytes");
 
       if (IC_RESULT (ic)->aop->type == AOP_STK && IC_RESULT (ic)->aop->size == 2)
         {
@@ -1062,7 +1082,7 @@ genFunction (iCode *ic)
       cost (1, 1);
     }
 
-  G.stack.param_offset += (getSize (ftype->next) > 2) * 2; // Account for hidden parameter holding address of return value.
+  G.stack.param_offset -= (getSize (ftype->next) > 2 || IS_STRUCT (ftype->next)) * 2; // Account for hidden parameter holding address of return value.
 
   adjustStack (sym->stack, true, true);
 }

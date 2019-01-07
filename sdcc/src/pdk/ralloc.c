@@ -98,8 +98,8 @@ regTypeNum (void)
   /* for each live range do */
   for (sym = hTabFirstItem (liveRanges, &k); sym; sym = hTabNextItem (liveRanges, &k))
     {
-      /* if used zero times then no registers needed. Exception: Variables larger than 4 bytes - these might need a spill location when they are return values */
-      if ((sym->liveTo - sym->liveFrom) == 0 && getSize (sym->type) <= 4)
+      /* if used zero times then no registers needed. Exception: Variables larger than 2 bytes - these might need a spill location when they are return values */
+      if ((sym->liveTo - sym->liveFrom) == 0 && getSize (sym->type) <= 2)
         continue;
 
       D (D_ALLOC, ("regTypeNum: loop on sym %p\n", sym));
@@ -478,7 +478,7 @@ serialRegMark (eBBlock **ebbs, int count)
                  or is already marked for the new allocator
                  or will not live beyond this instructions */
               if (!sym->nRegs ||
-                  sym->isspilt || sym->for_newralloc || sym->liveTo <= ic->seq && (sym->nRegs <= 4 || ic->op != CALL && ic->op != PCALL))
+                  sym->isspilt || sym->for_newralloc || sym->liveTo <= ic->seq && (sym->nRegs <= 2 || ic->op != CALL && ic->op != PCALL))
                 {
                   D (D_ALLOC, ("serialRegMark: won't live long enough.\n"));
                   continue;
@@ -490,7 +490,7 @@ serialRegMark (eBBlock **ebbs, int count)
                   sym->isspilt = false;
                 }
 
-              if (sym->nRegs > 4 && ic->op == CALL)
+              if (sym->nRegs > 2 && ic->op == CALL)
                 {
                   sym->for_newralloc = 0;
                   pdkSpillThis (sym);
