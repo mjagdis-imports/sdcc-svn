@@ -1931,9 +1931,29 @@ genPointerSet (iCode *ic)
           cost (1, 1);
         }
     }
+  else if (right->aop->type == AOP_STK)
+    {
+      if (!regDead (P_IDX, ic))
+        {
+          wassert (regalloc_dry_run);
+          cost (1000, 1000);
+        }
+      for (int i = 0; i < size; i++)
+        {
+          cheapMove (ASMOP_A, 0, right->aop, i, true, true);
+          cheapMove (ASMOP_P, 0, left->aop, 0, false, true);
+          for (int j = 0; j < i; j++)
+            {
+              emit2 ("inc", "p");
+              cost (1, 1);
+            }
+          emit2 ("idxm", "p, a");
+          cost (1, 2);
+        }
+    }
   else
     {
-      if (!regDead (P_IDX,ic))
+      if (!regDead (P_IDX, ic))
         {
           wassert (regalloc_dry_run);
           cost (1000, 1000);

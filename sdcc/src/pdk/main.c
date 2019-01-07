@@ -58,7 +58,7 @@ pdk_genInitStartup (FILE *of)
 {
   fprintf (of, "__sdcc_gs_init_startup:\n");
 
-  // Zero upper byte of pseudo-register p to make p usabel for pointers.
+  // Zero upper byte of pseudo-register p to make p usable for pointers.
   fprintf (of, "\tclear\tsp, p+1\n");
 
   // Initialize stack pointer

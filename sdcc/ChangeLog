@@ -1,9 +1,14 @@
 2019-01-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
+	  Fix write via pointer for reentrant functions.
+
+2019-01-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
 	  Fix handling of stack adjustment on early return for on-stack variables.
 	  src/pdk/main.c:
-	  Initalize upper byte of pseudo-register p.
+	  Initialize upper byte of pseudo-register p.
 
 2019-01-06 Philipp Klaus Krause <pkk AT spth.de>
 
