@@ -1062,6 +1062,8 @@ genFunction (iCode *ic)
       cost (1, 1);
     }
 
+  G.stack.param_offset += (getSize (ftype->next) > 2) * 2; // Account for hidden parameter holding address of return value.
+
   adjustStack (sym->stack, true, true);
 }
 
