@@ -153,6 +153,10 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
         !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
         return (true);
 
+      if (aop1->type == AOP_SFR && aop2->type == AOP_SFR && offset1 == offset2 &&
+        aop1->aopu.aop_dir && aop2->aopu.aop_dir && !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
+        return (true);
+
       return (false);
     }
 
@@ -213,10 +217,15 @@ aopGet(const asmop *aop, int offset)
       return (buffer);
     }
 
-  if (aop->type == AOP_DIR || aop->type == AOP_SFR)
+  if (aop->type == AOP_DIR)
     {
-      wassert (aop->type != AOP_SFR || aop->size == 1);
       SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, offset);
+      return (buffer);
+    }
+  else if (aop->type == AOP_SFR)
+    {
+      wassert (aop->size == 1);
+      SNPRINTF (buffer, sizeof(buffer), "%s", aop->aopu.aop_dir);
       return (buffer);
     }
 
@@ -752,6 +761,30 @@ static void
 genMove (asmop *result, asmop *source, bool a_dead)
 {
   genMove_o (result, 0, source, 0, result->size, a_dead);
+}
+
+/*-----------------------------------------------------------------*/
+/* isLiteralBit - test if lit == 2^n                               */
+/*-----------------------------------------------------------------*/
+static int
+isLiteralBit (unsigned long lit)
+{
+  unsigned long pw[32] =
+  {
+    1l, 2l, 4l, 8l, 16l, 32l, 64l, 128l,
+    0x100l, 0x200l, 0x400l, 0x800l,
+    0x1000l, 0x2000l, 0x4000l, 0x8000l,
+    0x10000l, 0x20000l, 0x40000l, 0x80000l,
+    0x100000l, 0x200000l, 0x400000l, 0x800000l,
+    0x1000000l, 0x2000000l, 0x4000000l, 0x8000000l,
+    0x10000000l, 0x20000000l, 0x40000000l, 0x80000000l
+  };
+  int idx;
+
+  for (idx = 0; idx < 32; idx++)
+    if (lit == pw[idx])
+      return idx;
+  return -1;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1627,11 +1660,22 @@ genXor (const iCode *ic)
 
   for (int i = 0; i < size; i++)
     {
-      cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
-
-      emit2 ("xor", "a, %s", aopGet (right->aop, i));
-
-      cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
+      if ((aopInReg (left->aop, i, A_IDX) || aopInReg (left->aop, i, P_IDX) || left->aop->type == AOP_DIR) && aopIsLitVal (right->aop, i, 1, 0xff))
+        {
+          emit2 ("not", "%s", aopGet (left->aop, i));
+          cost (1, 1);
+        }
+      if (aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          cheapMove (result->aop, i, left->aop, i, true, true);
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          emit2 ("xor", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+        }
     }
 
   freeAsmop (right);
@@ -1667,11 +1711,24 @@ genOr (const iCode *ic)
 
   for (int i = 0; i < size; i++)
     {
-      cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
+      int bit = isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i));
 
-      emit2 ("or", "a, %s", aopGet (right->aop, i));
-
-      cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
+      if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
+        {
+          emit2 ("set1", "%s.%d", aopGet (left->aop, i), bit);
+          cost (1, 1);
+        }
+      else if (aopIsLitVal (right->aop, i, 1, 0xff))
+        {
+          cheapMove (result->aop, i, left->aop, i, true, true);
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          emit2 ("or", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+        }
     }
 
   freeAsmop (right);
@@ -1707,11 +1764,24 @@ genAnd (const iCode *ic)
 
   for (int i = 0; i < size; i++)
     {
-      cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
+      int bit = isLiteralBit (~byteOfVal (right->aop->aopu.aop_lit, i) & 0xff);
 
-      emit2 ("and", "a, %s", aopGet (right->aop, i));
-
-      cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
+      if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
+        {
+          emit2 ("set0", "%s.%d", aopGet (left->aop, i), bit);
+          cost (1, 1);
+        }
+      else if (aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          cheapMove (result->aop, i, left->aop, i, true, true);
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          emit2 ("and", "a, %s", aopGet (right->aop, i));
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+        }
     }
 
   freeAsmop (right);
