@@ -709,15 +709,15 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             emit2 ("stt16", "%s", aopGet (source, soffset));
             cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
           }
-        else if (result->type == AOP_DIR && source->type == AOP_SFR)
-          {
-            emit2 ("ldt16", "%s", aopGet (result, roffset));
-            cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
-          }
         else if (result->type == AOP_SFR && source->type == AOP_LIT && aopIsLitVal (source, 1, 1, 0x00))
           {
             cheapMove (ASMOP_P, 0, source, 0, true, true);
-            emit2 ("ldt16", "p");
+            emit2 ("stt16", "p");
+            cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
+          }
+        else if (result->type == AOP_DIR && source->type == AOP_SFR)
+          {
+            emit2 ("ldt16", "%s", aopGet (result, roffset));
             cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
           }
         else if (regalloc_dry_run)
@@ -1093,14 +1093,15 @@ genFunction (iCode *ic)
 
   if (IFFUNC_ISNAKED(ftype))
     {
-      emit2(";", "naked function: no prologue.");
+      emit2 (";", "naked function: no prologue.");
       return;
     }
 
   if (IFFUNC_ISISR (sym->type))
     {
-      emit2 ("push", "af");
-      cost (1, 1);
+      pushAF ();
+      cheapMove (ASMOP_A, 0, ASMOP_P, 0, true, true);
+      pushAF ();
     }
 
   G.stack.param_offset -= (getSize (ftype->next) > 2 || IS_STRUCT (ftype->next)) * 2; // Account for hidden parameter holding address of return value.
@@ -1131,23 +1132,25 @@ genEndFunction (iCode *ic)
   if (sym->stack)
     adjustStack (-sym->stack, retsize == 0 || retsize > 2, retsize != 1);
 
-  wassertl (!G.stack.pushed, "Unbalanced stack.");
-
   /* if debug then send end of function */
   if (options.debug && currFunc && !regalloc_dry_run)
     debugFile->writeEndFunction (currFunc, ic, 1);
 
   if (IFFUNC_ISISR (sym->type))
     {
-      emit2 ("pop", "af");
+      popAF ();
+      cheapMove (ASMOP_P, 0, ASMOP_A, 0, true, true);
+      popAF ();
       emit2 ("reti", "");
-      cost (2, 2);
+      cost (1, 2);
     }
   else
     {
       emit2 ("ret", "");
       cost (1, 1);
     }
+
+  wassertl (!G.stack.pushed, "Unbalanced stack.");
 }
 
 /*-----------------------------------------------------------------*/

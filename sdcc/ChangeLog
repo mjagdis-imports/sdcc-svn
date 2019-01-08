@@ -1,7 +1,7 @@
 2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
-	  Slightly improve __sfr16 handling.
+	  Slightly improve __sfr16 handling, fix pseudoregister saving in interrupt routine.
 
 2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
 
