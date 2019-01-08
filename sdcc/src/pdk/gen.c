@@ -427,6 +427,8 @@ aopOp (operand *op, const iCode *ic)
 
     if (completely_in_regs)
       aop->type = AOP_REG;
+    else if (completely_spilt && !(options.stackAuto || reentrant))
+      aop->type = AOP_DIR;
     else if (completely_spilt)
       aop->type = AOP_STK;
     else
