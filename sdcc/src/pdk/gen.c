@@ -883,7 +883,20 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 static void
 genUminusFloat (const iCode *ic)
 {
-  wassertl (0, "Unimplemented float negation");
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+
+  D (emit2 ("; genUminusFloat", ""));
+
+  genMove_o (result->aop, 0, left->aop, 0, result->aop->size - 1, true);
+
+  cheapMove (ASMOP_A, 0, left->aop, result->aop->size - 1, true, true);
+  emit2 ("xor", "a, 0x80");
+  cost (1, 1);
+  cheapMove (result->aop, result->aop->size - 1, ASMOP_A, 0, true, true);
+
+  freeAsmop (left);
+  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/

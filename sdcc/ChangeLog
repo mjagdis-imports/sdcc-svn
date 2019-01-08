@@ -1,5 +1,11 @@
 2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/pdk/gen.c,
+	  device/lib/pdk14/Makefile.in:
+	  Implement unary float minus, enable build of most of the float library.
+
+2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/pdk/gen.c:
 	  Fix handling of non-stack temporary operands in cost function.
 	* device/lib/pdk14/Makefile.in:
