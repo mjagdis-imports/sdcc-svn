@@ -1,5 +1,15 @@
 2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/pdk/gen.c:
+	  Slightly improve __sfr16 handling.
+
+2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/*.c:
+	  Enable some regression tests that need struct assignment support.
+
+2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/pdk/gen.c,
 	  device/lib/pdk14/Makefile.in:
 	  Implement unary float minus, enable build of most of the float library.
@@ -15,8 +25,6 @@
 
 	* src/stm8/peeph.def:
 	  Fixes and improvements for stm8 peephole rules, patch by Visenri.
-	* support/regression/tests/*.c:
-	  Enable some regression tests that need struct assignment support.
 
 2019-01-07 Philipp Klaus Krause <pkk AT spth.de>
 

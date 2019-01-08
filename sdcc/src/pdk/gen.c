@@ -714,6 +714,12 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             emit2 ("ldt16", "%s", aopGet (result, roffset));
             cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
           }
+        else if (result->type == AOP_SFR && source->type == AOP_LIT && aopIsLitVal (source, 1, 1, 0x00))
+          {
+            cheapMove (ASMOP_P, 0, source, 0, true, true);
+            emit2 ("ldt16", "p");
+            cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
+          }
         else if (regalloc_dry_run)
           cost (1000, 1000);
         else
