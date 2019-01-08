@@ -4925,7 +4925,7 @@ genFunction (const iCode * ic)
     {
       if (!_G.omitFramePtr)
         emit2 ((optimize.codeSize && !IFFUNC_ISZ88DK_FASTCALL (ftype)) ? "!enters" : "!enter");
-      if (IS_EZ80_Z80 && !_G.omitFramePtr && -sym->stack > -128)
+      if (IS_EZ80_Z80 && !_G.omitFramePtr && -sym->stack > -128 && -sym->stack <= -3)
         {
           emit2 ("lea hl, ix, #%d", -sym->stack);
           emit2 ("ld sp, hl");
@@ -9954,22 +9954,27 @@ genPointerGet (const iCode *ic)
 
   if (getPairId (AOP (left)) == PAIR_IY && !IS_BITVAR (retype) && rightval_in_range)
     {
-      if ((IS_RAB || IS_TLCS90) && getPairId (AOP (result)) == PAIR_HL)
+      offset = 0;
+
+      if ((IS_RAB || IS_TLCS90) && getPartPairId (AOP (result), 0) == PAIR_HL)
         {
           emit2 ("ld hl, %d (iy)", rightval);
           regalloc_dry_run_cost += 3;
-          goto release;
+          offset = 2;
+          size -= 2;
         }
-      else if(IS_EZ80_Z80 && getPartPairId (AOP (result), 0) != PAIR_INVALID)
+      else if (IS_EZ80_Z80 && getPartPairId (AOP (result), 0) != PAIR_INVALID)
         {
           emit2 ("ld %s, %d (iy)", _pairs[getPartPairId (AOP (result), 0)].name, rightval);
           regalloc_dry_run_cost += 3;
-          goto release;
+          offset = 2;
+          size -= 2;
         }
 
-      /* Just do it */
-      offset = 0;
+      if (!size)
+        goto release;
 
+      /* Just do it */
       if (surviving_a && !pushed_a)
         _push (PAIR_AF), pushed_a = TRUE;
 
