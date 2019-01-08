@@ -2,6 +2,8 @@
 
 	* src/pdk/gen.c:
 	  Slightly improve __sfr16 handling, fix pseudoregister saving in interrupt routine.
+	* src/pdk/main.c:
+	  Fix zero-initialization of upper byte of pseudo-register p.
 
 2019-01-08 Philipp Klaus Krause <pkk AT spth.de>
 
