@@ -858,21 +858,31 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cheapMove (result_aop, i, left_aop, i, true, true);
           continue;
         }
-      else if (!started && aopIsLitVal (left_aop, i, 1, 0x00))
+      else if (!started && i + 1 == size && aopIsLitVal (left_aop, i, 1, 0x00) &&
+        right_aop->type == AOP_DIR && aopSame (right_aop, i, result_aop, i, 1))
+        {
+          emit2 ("neg", "%s", aopGet (right_aop, i));
+          cost (1, 1);
+          started = true;
+          continue;
+        }
+      else if (!started && i + 1 == size && aopIsLitVal (left_aop, i, 1, 0x00))
         {
           cheapMove (ASMOP_A, 0, right_aop, i, true, true);
           emit2 ("neg", "a");
           cost (1, 1);
           started = true;
         }
-      else if (!started && aopIsLitVal (right_aop, i, 1, 0x01) && aopSame (left_aop, i, result_aop, i, 1))
+      else if (!started && aopIsLitVal (right_aop, i, 1, 0x01) &&
+        right_aop->type == AOP_DIR && aopSame (left_aop, i, result_aop, i, 1))
         {
           emit2 ("dec", "%s", aopGet (left_aop, i));
           cost (1, 1);
           started = true;
           continue;
         }
-      else if (!started && aopIsLitVal (right_aop, i, 1, 0xff) && aopSame (left_aop, i, result_aop, i, 1))
+      else if (!started && aopIsLitVal (right_aop, i, 1, 0xff) &&
+        right_aop->type == AOP_DIR && aopSame (left_aop, i, result_aop, i, 1))
         {
           emit2 ("inc", "%s", aopGet (left_aop, i));
           cost (1, 1);
@@ -2276,7 +2286,7 @@ genIfx (const iCode *ic)
           cost (1, 1);
         }
     }
- 
+
   emit2 (IC_FALSE (ic) ? "cneqsn" : "ceqsn", "a, #0x00");
   cost (1, 1); 
   emitJP (IC_FALSE (ic) ? IC_FALSE (ic) : IC_TRUE (ic), 0.0f);
