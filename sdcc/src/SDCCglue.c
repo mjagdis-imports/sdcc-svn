@@ -1944,8 +1944,8 @@ void
 emitMaps (void)
 {
   namedspacemap *nm;
-  int publicsfr = TARGET_IS_MCS51;      /* Ideally, this should be true for all  */
-                                        /* ports but let's be conservative - EEP */
+  int publicsfr = TARGET_IS_MCS51 || TARGET_PDK_LIKE;      /* Ideally, this should be true for all  */
+                                                           /* ports but let's be conservative - EEP */
 
   inInitMode++;
   /* no special considerations for the following
