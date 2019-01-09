@@ -3,6 +3,8 @@
 	* src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
 	  Minor fixes.
+	* src/SDCCast.c:
+	  Enable standard library call optimization for pdk14.
 
 2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

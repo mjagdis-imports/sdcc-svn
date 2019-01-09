@@ -1515,14 +1515,12 @@ genCmp (const iCode *ic, iCode *ifx)
       left = t;  
     }
 
+  bool started = false;
   for (int i = 0; i < size; i++)
     {
-      if (!i && aopIsLitVal (left->aop, i, 1, 0x00) && aopInReg (right->aop, i, A_IDX))
-        {
-          emit2 ("neg", "a");
-          cost (1, 1);
-        }
-      else if (i && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00)) // Work around lack of subc a, #nn.
+      if (!started && aopIsLitVal (right->aop, i, 1, 0x00))
+        ;
+      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00)) // Work around lack of subc a, #nn.
         {
           cheapMove (ASMOP_P, 0, right->aop, i, true, !i);
           cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
@@ -1539,8 +1537,9 @@ genCmp (const iCode *ic, iCode *ifx)
       else
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
-          emit2 (i ? "subc" : "sub", "a, %s", aopGet (right->aop, i));
+          emit2 (started ? "subc" : "sub", "a, %s", aopGet (right->aop, i));
           cost (1, 1);
+          started = true;
         }
     }
 
