@@ -763,6 +763,12 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cheapMove (result, roffset + 0, source, soffset + 0, false, true);
       return;
     }
+  else if (size == 2 && aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX) && source->type == AOP_DIR)
+    {
+      cheapMove (result, roffset + 1, source, soffset + 1, true, true);
+      cheapMove (result, roffset + 0, source, soffset + 0, true, true);
+      return;
+    }
   else if (size == 2 &&
     (aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX) && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) ||
     aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX) && aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX)))
