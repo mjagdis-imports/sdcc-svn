@@ -2,6 +2,8 @@
 
 	* src/pdk/main.c:
 	  Fix invalid use of .dw for variables in ROM.
+	* src/pdk/gen.c:
+	  Fix carry handling in subtraction.
 
 2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

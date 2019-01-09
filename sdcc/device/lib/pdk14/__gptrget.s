@@ -26,6 +26,8 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
+.area CODE
+
 __gptrget::
 	ceqsn	a, 0x80
 	t0sn	f.c
