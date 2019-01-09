@@ -1750,7 +1750,7 @@ genOr (const iCode *ic)
 /* genAnd - code for and                                           */
 /*-----------------------------------------------------------------*/
 static void
-genAnd (const iCode *ic)
+genAnd (const iCode *ic, iCode *ifx)
 {
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
@@ -1770,6 +1770,55 @@ genAnd (const iCode *ic)
       operand *t = right;
       right = left;
       left = t;
+    }
+
+  if (ifx && result->aop->type == AOP_CND)
+    {
+      int i, j, nonzero;
+
+      // Find the non-zero byte.
+      if (right->aop->type != AOP_LIT)
+        {
+          wassert (right->aop->size == 1);
+          i = 0;
+          nonzero = 1;
+        }
+      else
+        for (j = 0, nonzero = 0, i = 0; j < left->aop->size; j++)
+          if (byteOfVal (right->aop->aopu.aop_lit, j))
+            {
+              i = j;
+              nonzero++;
+            }
+
+
+      wassertl (nonzero <= 1, "Code generation for bitwise and can handle at most one nonzero byte");
+
+      int bit = isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i));
+
+      if (aopInReg (left->aop, i, P_IDX) && bit >= 0)
+        {
+          emit2 (IC_FALSE  (ifx) ? "t1sn" : "t0sn", "p.%d", bit);
+          cost (1, 1.5);
+        }
+      else if (aopInReg (left->aop, i, P_IDX) && regDead (P_IDX, ic) &&
+        (byteOfVal (right->aop->aopu.aop_lit, i) == 0x7f || byteOfVal (right->aop->aopu.aop_lit, i) == 0xfe))
+        {
+          emit2 (byteOfVal (right->aop->aopu.aop_lit, 0) == 0x7f ? "sl" : "sr", "p");
+          emit2 (IC_FALSE  (ifx) ? "t0sn" : "t1sn", "f.z");
+          cost (2, 2.5);
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          emit2 ("and", "a, %s", aopGet (right->aop, i));
+          emit2 (IC_FALSE  (ifx) ? "cneqsn" : "ceqsn", "#0x00");
+          cost (2, 2.5);
+        }
+
+      emitJP (IC_FALSE (ic) ? IC_FALSE (ic) : IC_TRUE (ic), 0.5f);
+
+      goto release;
     }
 
   for (int i = 0; i < size; i++)
@@ -1794,6 +1843,7 @@ genAnd (const iCode *ic)
         }
     }
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -2613,7 +2663,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case BITWISEAND:
-      genAnd (ic);
+      genAnd (ic, ifxForOp (IC_RESULT (ic), ic));
       break;
 
     case INLINEASM:

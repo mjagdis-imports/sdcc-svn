@@ -437,15 +437,32 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 // Code for another ic is generated when generating this one. Mark the other as generated.
 static void extra_ic_generated(iCode *ic)
 {
-  if(ic->op != EQ_OP && ic->op != NE_OP && ic->op != '<' && ic->op != '>')
+  if(ic->op != EQ_OP && ic->op != NE_OP && ic->op != '<' && ic->op != '>' && ic->op != BITWISEAND)
     return;
 
-  iCode *ifx = ifxForOp (IC_RESULT (ic), ic);
-
-  if (ifx)
+  // Bitwise and code generation can only do the jump if there is at most one nonzero byte.
+  if(ic->op == BITWISEAND)
     {
-      OP_SYMBOL (IC_RESULT (ic))->for_newralloc = false;
-      OP_SYMBOL (IC_RESULT (ic))->regType = REG_CND;
+      int nonzero = 0;
+      operand *const litop = IS_OP_LITERAL(IC_LEFT(ic)) ? IC_LEFT(ic) : IC_RIGHT(ic);
+
+      if (!IS_OP_LITERAL(litop))
+        return;
+
+      for(unsigned int i = 0; i < getSize(operandType(IC_LEFT (ic))) && i < getSize(operandType(IC_RIGHT(ic))) && i < getSize(operandType(IC_RESULT(ic))); i++)
+        if(byteOfVal (OP_VALUE(litop), i))
+          nonzero++;
+
+      if(nonzero > 1)
+        return;
+    }
+
+  iCode *ifx = ifxForOp(IC_RESULT(ic), ic);
+
+  if(ifx)
+    {
+      OP_SYMBOL(IC_RESULT(ic))->for_newralloc = false;
+      OP_SYMBOL(IC_RESULT(ic))->regType = REG_CND;
       ifx->generated = true;
     }
 }
