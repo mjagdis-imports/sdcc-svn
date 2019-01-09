@@ -50,9 +50,11 @@ static struct
 }
 G;
 
-static struct asmop asmop_a, asmop_p, asmop_zero, asmop_one, asmop_sp;
+static struct asmop asmop_a, asmop_p, asmop_pa, asmop_ap, asmop_zero, asmop_one, asmop_sp;
 static struct asmop *const ASMOP_A = &asmop_a;
 static struct asmop *const ASMOP_P = &asmop_p;
+static struct asmop *const ASMOP_PA = &asmop_pa;
+static struct asmop *const ASMOP_AP = &asmop_ap;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
 static struct asmop *const ASMOP_ONE = &asmop_one;
 static struct asmop *const ASMOP_SP = &asmop_sp;
@@ -62,13 +64,27 @@ pdk_init_asmops (void)
 {
   asmop_a.type = AOP_REG;
   asmop_a.size = 1;
-  asmop_a.aopu.bytes[0].in_reg = TRUE;
+  asmop_a.aopu.bytes[0].in_reg = true;
   asmop_a.aopu.bytes[0].byteu.reg = pdk_regs + A_IDX;
 
   asmop_p.type = AOP_REG;
   asmop_p.size = 1;
-  asmop_p.aopu.bytes[0].in_reg = TRUE;
+  asmop_p.aopu.bytes[0].in_reg = true;
   asmop_p.aopu.bytes[0].byteu.reg = pdk_regs + P_IDX;
+
+  asmop_ap.type = AOP_REG;
+  asmop_ap.size = 2;
+  asmop_ap.aopu.bytes[0].in_reg = true;
+  asmop_ap.aopu.bytes[0].byteu.reg = pdk_regs + A_IDX;
+  asmop_ap.aopu.bytes[1].in_reg = true;
+  asmop_ap.aopu.bytes[1].byteu.reg = pdk_regs + P_IDX;
+
+  asmop_pa.type = AOP_REG;
+  asmop_pa.size = 2;
+  asmop_pa.aopu.bytes[0].in_reg = true;
+  asmop_pa.aopu.bytes[0].byteu.reg = pdk_regs + P_IDX;
+  asmop_pa.aopu.bytes[1].in_reg = true;
+  asmop_pa.aopu.bytes[1].byteu.reg = pdk_regs + A_IDX;
 
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
@@ -741,7 +757,13 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassert_bt (result->type == AOP_DIR || result->type == AOP_REG || result->type == AOP_STK);
   wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG || source->type == AOP_STK);
 
-  if (size == 2 &&
+  if (size == 2 && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) && source->type == AOP_STK)
+    {
+      cheapMove (result, roffset + 1, source, soffset + 1, true, true);
+      cheapMove (result, roffset + 0, source, soffset + 0, false, true);
+      return;
+    }
+  else if (size == 2 &&
     (aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX) && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) ||
     aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX) && aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX)))
     {
@@ -2113,15 +2135,12 @@ genPointerGet (const iCode *ic)
     {
       for (int i = 0; i < size; i++)
         {
-          if (left->aop->type == AOP_STK)
+          genMove (ASMOP_PA, left->aop, true);
+          for (int j = 0; j < i; j++)
             {
-              cheapMove (ASMOP_A, 0, left->aop, 1, true, true);
-              cheapMove (ASMOP_P, 0, left->aop, 0, false, true);
-            }
-          else
-            {
-              cheapMove (ASMOP_P, 0, left->aop, 0, true, true);
-              cheapMove (ASMOP_A, 0, left->aop, 1, true, true);
+              emit2 ("inc", "p");
+              emit2 ("addc", "a");
+              cost (2, 2);
             }
           emit2 ("call", "__gptrget");
           cost (1, 2);
