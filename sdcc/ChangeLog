@@ -1,5 +1,10 @@
 2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c:
+	  Support variables in ROM.
+
+2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
 	  Minor fixes.

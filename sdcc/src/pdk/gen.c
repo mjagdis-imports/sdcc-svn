@@ -2108,6 +2108,30 @@ genPointerGet (const iCode *ic)
   wassertl (!bit_field, "Unimplemented read of bit-field");
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
+  // Generic, but also inefficient.
+  if (1)
+    {
+      for (int i = 0; i < size; i++)
+        {
+          if (left->aop->type == AOP_STK)
+            {
+              cheapMove (ASMOP_A, 0, left->aop, 1, true, true);
+              cheapMove (ASMOP_P, 0, left->aop, 0, false, true);
+            }
+          else
+            {
+              cheapMove (ASMOP_P, 0, left->aop, 0, true, true);
+              cheapMove (ASMOP_A, 0, left->aop, 1, true, true);
+            }
+          emit2 ("call", "__gptrget");
+          cost (1, 2);
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+        }
+      goto release;
+    }
+
+  // Stuff from here works for pointers to RAM. todo: Use it when when possible.
+
   if (left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
     {
       for (int i = 0; i < size; i++)
@@ -2169,6 +2193,7 @@ genPointerGet (const iCode *ic)
         }
     }
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -2398,11 +2423,20 @@ genAddrOf (const iCode *ic)
 
       cheapMove (result->aop, 1, ASMOP_ZERO, 0, true, true);
     }
+  else if (PTR_TYPE (SPEC_OCLS ( getSpec (operandType (IC_LEFT (ic))))) == CPOINTER) // In ROM
+    {
+      wassertl (!operandLitValue (right), "Unimplemented offset for &");
+
+      emit2 ("mov", "a, #<(%s + %d)", sym->rname, 0);
+      cost (1, 1);
+      cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
+      emit2 ("mov", "a, #(>(%s + %d) + 0x80)", sym->rname, 0);
+      cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
+    }
   else
     {
       wassertl (!operandLitValue (right), "Unimplemented offset for &");
   
-
       emit2 ("mov", "a, #<(%s + %d)", sym->rname, 0);
       cost (1, 1);
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
