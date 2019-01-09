@@ -313,7 +313,7 @@ PORT pdk14_port =
   _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   0,                            /* oclsExpense */
-  true,
+  false,                        /* data is represented in ROM using ret k instructions */
   true,                         /* little endian */
   0,                            /* leave lt */
   0,                            /* leave gt */

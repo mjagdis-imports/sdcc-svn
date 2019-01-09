@@ -44,6 +44,6 @@ code:
 	xch	a, p
 	idxm	p, a
 
-	; Jump to it. ret there will return from __gprtget
+	; Jump to it. ret there will return from the call to __gprtget
 	ret
 
