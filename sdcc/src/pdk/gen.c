@@ -196,6 +196,9 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
       if (aop->size <= offset && !b)
         continue;
 
+      if (aop->size <= offset)
+        return (false);
+
       if (aop->type != AOP_LIT)
         return (false);
 
@@ -1681,7 +1684,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 }
 
 /*-----------------------------------------------------------------*/
-/* genOr - code for or                                             */
+/* genXor - code for or                                             */
 /*-----------------------------------------------------------------*/
 static void
 genXor (const iCode *ic)
@@ -1759,7 +1762,7 @@ genOr (const iCode *ic)
 
   for (int i = 0; i < size; i++)
     {
-      int bit = isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i));
+      int bit = right->aop->type == AOP_LIT ? isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) : -1;
 
       if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
         {
@@ -1832,7 +1835,7 @@ genAnd (const iCode *ic, iCode *ifx)
 
       wassertl (nonzero <= 1, "Code generation for bitwise and can handle at most one nonzero byte");
 
-      int bit = isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i));
+      int bit = right->aop->type == AOP_LIT ? isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) : - 1;
 
       if (aopInReg (left->aop, i, P_IDX) && bit >= 0)
         {
