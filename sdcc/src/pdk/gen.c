@@ -750,8 +750,13 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       return;
     }
 
+  bool a_dead = a_dead_global;
   for (unsigned int i = 0; i < size; i++)
-    cheapMove (result, roffset + i, source, soffset + i, a_dead_global, true);
+    {
+      cheapMove (result, roffset + i, source, soffset + i, a_dead, true);
+      if (aopInReg (result, roffset + i, A_IDX))
+        a_dead = false;
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -1371,18 +1376,24 @@ genPlus (const iCode *ic)
           emit2 ("addc", "a, p");
           cost (1, 1);
         }
-       else if (!started && (right->aop->type == AOP_DIR || right->aop->type == AOP_REGDIR || right->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
+       else if (!started && (left->aop->type == AOP_DIR || left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
         {
           emit2 ("inc", "%s", aopGet (left->aop, i));
           cost (1, 1);
           started = true;
           continue;
         }
-       else if (!started && (right->aop->type == AOP_DIR || right->aop->type == AOP_REGDIR || right->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (left->aop, i, result->aop, i, 1))
+       else if (!started && (left->aop->type == AOP_DIR || left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (left->aop, i, result->aop, i, 1))
         {
           emit2 ("dec", "%s", aopGet (left->aop, i));
           cost (1, 1);
           started = true;
+          continue;
+        }
+      else if (started && (left->aop->type == AOP_DIR || left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0x00) && aopSame (left->aop, i, result->aop, i, 1))
+        {
+          emit2 ("addc", "%s", aopGet (left->aop, i));
+          cost (1, 1);
           continue;
         }
       else
@@ -1728,7 +1739,7 @@ genOr (const iCode *ic)
           emit2 ("set1", "%s.%d", aopGet (left->aop, i), bit);
           cost (1, 1);
         }
-      else if (aopIsLitVal (right->aop, i, 1, 0xff))
+      else if (aopIsLitVal (right->aop, i, 1, 0x00))
         {
           cheapMove (result->aop, i, left->aop, i, true, true);
         }

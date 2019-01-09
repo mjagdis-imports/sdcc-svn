@@ -176,6 +176,12 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   const operand *right = IC_RIGHT(ic);
   const operand *result = IC_RESULT(ic);
 
+  bool result_in_P = operand_in_reg(result, REG_P, ia, i, G);
+
+  const cfg_dying_t &dying = G[i].dying;
+
+  bool dying_P = result_in_P || dying.find(ia.registers[REG_P][1]) != dying.end() || dying.find(ia.registers[REG_P][0]) != dying.end();
+
   // Arithmetic uses p internally for literal operands with multiple nonzero bytes.
   if ((ic->op == '+' || ic->op == '-' || ic->op == '!' || ic->op == '<' || ic->op == '>') && (IS_OP_LITERAL(left) || IS_OP_LITERAL(right)))
     {
@@ -184,6 +190,9 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
         return(false);
     }
   if (ic->op == PCALL || ic->op == IPUSH)
+    return(false);
+
+  if (ic->op == CALL && !dying_P)
     return(false);
 
   return(true);
@@ -345,10 +354,10 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case '^':
     case '|':
     case BITWISEAND:
-    //case IPUSH:
+    case IPUSH:
     //case IPOP:
     case CALL:
-    //case PCALL:
+    case PCALL:
     case RETURN:
     case '*':
     case '/':
@@ -371,11 +380,11 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case '=':
     case IFX:
     case ADDRESS_OF:
-    //case JUMPTABLE:
+    case JUMPTABLE:
     case CAST:
     /*case RECEIVE:
     case SEND:*/
-    //case DUMMY_READ_VOLATILE:
+    case DUMMY_READ_VOLATILE:
     /*case CRITICAL:
     case ENDCRITICAL:*/
     case SWAP:

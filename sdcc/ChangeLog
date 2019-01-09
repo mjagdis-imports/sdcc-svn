@@ -2,6 +2,12 @@
 
 	* src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
+	  Minor fixes.
+
+2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/ralloc2.cc:
 	  Optimize conditional jump on bit test.
 
 2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
