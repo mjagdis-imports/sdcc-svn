@@ -630,15 +630,7 @@ adjustStack (int n, bool a_free, bool p_free)
     {
       pushAF();
 
-      for (int i = 0; i < 2; i++)
-        {
-          pointPStack (G.stack.pushed - 2 + i, true, true);
-          emit2 ("idxm", "a, p");
-          cost (1, 2);
-          pointPStack (G.stack.pushed - 2 + n + i, false, true);
-          emit2 ("idxm", "p, a");
-          cost (1, 2);
-        }
+      moveStackStack (G.stack.pushed - 2 + n, G.stack.pushed - 2, 2, true);
       
       emit2 ("mov", "a, sp");
       emit2 ("add", "a, #%d", n);
@@ -653,15 +645,7 @@ adjustStack (int n, bool a_free, bool p_free)
       cheapMove (ASMOP_A, 0, ASMOP_P, 0, true, true);
       pushAF();
 
-      for (int i = 0; i < 4; i++)
-        {
-          pointPStack (G.stack.pushed - 4 + i, true, true);
-          emit2 ("idxm", "a, p");
-          cost (1, 2);
-          pointPStack (G.stack.pushed - 4 + n + i, false, true);
-          emit2 ("idxm", "p, a");
-          cost (1, 2);
-        }
+      moveStackStack (G.stack.pushed - 4 + n, G.stack.pushed - 4, 4, true);
       
       emit2 ("mov", "a, sp");
       emit2 ("add", "a, #%d", n);
@@ -693,6 +677,19 @@ push (const asmop *op, int offset, int size)
       int s = G.stack.pushed;
       adjustStack (size, true, true);
       moveStackStack (s, op->aopu.bytes[0].byteu.stk, size, true);
+      return;
+    }
+  else if (size == 2)
+    {
+      cheapMove (ASMOP_A, 0, op, 0, true, true);
+      pushAF ();
+      emit2 ("mov", "a, sp");
+      emit2 ("mov", "p, a");
+      emit2 ("dec", "p");
+      cost (3, 3);
+      cheapMove (ASMOP_A, 0, op, 1, true, true);
+      emit2 ("idxm", "p, a");
+      cost (1, 1);
       return;
     }
 
@@ -1083,22 +1080,22 @@ genCall (const iCode *ic)
 
       if (!regalloc_dry_run)
         {
+          emit2 ("ld", "a, #(!tlabel)", labelKey2num (tlbl->key));
+          emit2 ("push", "af");
           emit2 ("ld", "a, sp");
           emit2 ("ld", "p, a");
-          emit2 ("push", "af");
-          emit2 ("ld", "a, #(!tlabel)", labelKey2num (tlbl->key));
-          emit2 ("idxm", "p, a");
-          emit2 ("inc", "p");
+          emit2 ("dec", "p");
           emit2 ("ld", "a, #(!tlabel >> 8)", labelKey2num (tlbl->key));
           emit2 ("idxm", "p, a");
           G.p.type = AOP_INVALID;
         }
-      cost (8, 10);
+      G.stack.pushed += 2;
+      cost (7, 8);
 
       // Jump to function
       push (left->aop, 0, 2);
       emit2 ("ret", "");
-      G.stack.pushed -= 2;
+      G.stack.pushed -= 4;
       cost (2, 1);
 
       emitLabel (tlbl);
@@ -1261,7 +1258,7 @@ genReturn (const iCode *ic)
           for (int i = 0; i < left->aop->size; i++)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);
-              pointPStack (-4, false, true); // TODO: Change to -3 if necesssary to allow efficient passing of hidden parameter via push af!
+              pointPStack (-4, false, true);
               for (int j = 0; j < i; j++)
                 {
                   emit2 ("inc", "p");
@@ -1273,7 +1270,7 @@ genReturn (const iCode *ic)
         }
       else
         {
-          pointPStack (-4, true, true); // TODO: Change to -3 if necesssary to allow efficient passing of hidden parameter via push af!
+          pointPStack (-4, true, true);
           for (int i = 0; i < left->aop->size; i++)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);

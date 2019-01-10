@@ -39,7 +39,7 @@ __gptrget::
 
 	; Pointer to ROM
 code:
-	; Put pointer on stack - THERE IS AN ASSUMPTION ON HOW PUSH AF OPERATES HERE! TODO: CHECK IT!
+	; Put pointer on stack
 	push	af
 	mov	a, sp
 	add	a, #-1

@@ -1,3 +1,9 @@
+2019-01-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  device/lib/pdk14/__gptrget.s:
+	  Use knowledge on byte order for push af.
+
 2019-01-09 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/main.c:
@@ -7,7 +13,8 @@
 
 2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
-	* src/pdk/gen.c:
+	* src/pdk/gen.c,
+	  device/lib/pdk14/__gptrget.s:
 	  Support variables in ROM.
 
 2019-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
