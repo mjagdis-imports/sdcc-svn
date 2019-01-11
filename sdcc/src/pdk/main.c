@@ -61,6 +61,23 @@ pdk_genInitStartup (FILE *of)
   // Zero upper byte of pseudo-register p to make p usable for pointers.
   fprintf (of, "\tclear\tp+1\n");
 
+  /* Init static & global variables */
+  fprintf (of, "__sdcc_init_data:\n");
+
+  /* Zeroing memory (required by standard for static & global variables) */
+  fprintf (of, "\tmov\ta, #s_DATA\n");
+  fprintf (of, "\tmov\tp, a\n");
+  fprintf (of, "00001$:\n");
+  fprintf (of, "\tmov\ta, #s_DATA\n");
+  fprintf (of, "\tadd\ta, #l_DATA\n");
+  fprintf (of, "\tcneqsn\ta, p\n");
+  fprintf (of, "\tgoto\t00002$\n");
+  fprintf (of, "\tmov\ta, #0x00\n");
+  fprintf (of, "\tidxm\tp, a\n");
+  fprintf (of, "\tinc\tp\n");
+  fprintf (of, "\tgoto\t00001$\n");
+  fprintf (of, "00002$:\n");
+
   // Initialize stack pointer
   if (options.stack_loc >= 0)
     {
@@ -69,25 +86,12 @@ pdk_genInitStartup (FILE *of)
     }
   else
     {
-      fprintf (of, "\tmov\ta, #(s_DATA + l_DATA)\n");
+      fprintf (of, "\tadd\ta, p\n");
+      fprintf (of, "\tinc\ta\n");
+      fprintf (of, "\tsr\ta\n");
+      fprintf (of, "\tsl\ta\n");
       fprintf (of, "\tmov\tsp, a\n");
     }
-
-  /* Init static & global variables */
-  fprintf (of, "__sdcc_init_data:\n");
-
-  /* Zeroing memory (required by standard for static & global variables) */
-  fprintf (of, "\tmov\ta, #s_DATA\n");
-  fprintf (of, "\tmov\tp, a\n");
-  fprintf (of, "00001$:\n");
-  fprintf (of, "\tmov\ta, #(s_DATA + l_DATA)\n");
-  fprintf (of, "\tcneqsn\ta, p\n");
-  fprintf (of, "\tgoto\t00002$\n");
-  fprintf (of, "\tmov\ta, #0x00\n");
-  fprintf (of, "\tidxm\tp, a\n");
-  fprintf (of, "\tinc\tp\n");
-  fprintf (of, "\tgoto\t00001$\n");
-  fprintf (of, "00002$:\n");
 }
 
 static void
