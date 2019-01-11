@@ -8,6 +8,8 @@
 	* sdas/aspdk/pdkmch.c,
 	  sdas/aspdk/pdkpst.c:
 	  Assembler fixes, patch by Nicolas Lesser.
+	* support/regression/ports/pdk14/spec.mk:
+	  Prepare for future pdk14 regression testing.
 
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 

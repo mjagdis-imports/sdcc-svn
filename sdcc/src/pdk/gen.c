@@ -1086,12 +1086,12 @@ genCall (const iCode *ic)
 
       if (!regalloc_dry_run)
         {
-          emit2 ("ld", "a, #(!tlabel)", labelKey2num (tlbl->key));
+          emit2 ("mov", "a, #(!tlabel)", labelKey2num (tlbl->key));
           emit2 ("push", "af");
-          emit2 ("ld", "a, sp");
-          emit2 ("ld", "p, a");
+          emit2 ("mov", "a, sp");
+          emit2 ("mov", "p, a");
           emit2 ("dec", "p");
-          emit2 ("ld", "a, #(!tlabel >> 8)", labelKey2num (tlbl->key));
+          emit2 ("mov", "a, #(!tlabel >> 8)", labelKey2num (tlbl->key));
           emit2 ("idxm", "p, a");
           G.p.type = AOP_INVALID;
         }
@@ -1410,21 +1410,21 @@ genPlus (const iCode *ic)
           emit2 ("addc", "a, p");
           cost (1, 1);
         }
-       else if (!started && (left->aop->type == AOP_DIR || left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
+       else if (!started && (left->aop->type == AOP_DIR || (left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
         {
           emit2 ("inc", "%s", aopGet (left->aop, i));
           cost (1, 1);
           started = true;
           continue;
         }
-       else if (!started && (left->aop->type == AOP_DIR || left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (left->aop, i, result->aop, i, 1))
+       else if (!started && (left->aop->type == AOP_DIR || (left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (left->aop, i, result->aop, i, 1))
         {
           emit2 ("dec", "%s", aopGet (left->aop, i));
           cost (1, 1);
           started = true;
           continue;
         }
-      else if (started && (left->aop->type == AOP_DIR || left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopIsLitVal (right->aop, i, 1, 0x00) && aopSame (left->aop, i, result->aop, i, 1))
+      else if (started && (left->aop->type == AOP_DIR || (left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0x00) && aopSame (left->aop, i, result->aop, i, 1))
         {
           emit2 ("addc", "%s", aopGet (left->aop, i));
           cost (1, 1);
@@ -1969,7 +1969,7 @@ genLeftShift (const iCode *ic)
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
     
       cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
-      emit2 ("inc", "a");
+      emit2 ("add", "a, #0x01");
       cost (1, 1);
       emitLabel (tlbl1);
       emit2 ("dzsn", "a");
@@ -2081,7 +2081,7 @@ genRightShift (const iCode *ic)
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
     
       cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
-      emit2 ("inc", "a");
+      emit2 ("add", "a, #0x01");
       cost (1, 1);
       emitLabel (tlbl1);
       emit2 ("dzsn", "a");
