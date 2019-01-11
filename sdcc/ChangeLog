@@ -1,5 +1,18 @@
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 
+	* sdas/aspdk,
+	  Makefile.common.in,
+	  Makefile.in,
+	  configure,
+	  configure.ac,
+	  sdas/linksrc/Makefile.in,
+	  sdas/linksrc/sdld.c,
+	  sdas/linksrc/sdld.h,
+	  src/pdk/main.c:
+	  Assembler for pdk14, patch by Nicolas Lesser.
+
+2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/pdk/main.c:
 	  Work around lack of link-time arithmetic.
 

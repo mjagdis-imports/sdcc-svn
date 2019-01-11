@@ -910,7 +910,8 @@ if test $OPT_DISABLE_STM8 = 0; then
 fi
 
 if test $OPT_DISABLE_PDK14 = 0; then
-  AC_CONFIG_FILES([src/pdk/Makefile])
+  AC_CONFIG_FILES([src/pdk/Makefile
+                   sdas/aspdk/Makefile])
    test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk14/Makefile])
 fi
 

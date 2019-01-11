@@ -167,13 +167,13 @@ hasExtBitOp (int op, int size)
 */
 static const char *_linkCmd[] =
 {
-  "sdldstm8", "-nf", "\"$1\"", NULL
+  "sdldpdk", "-nf", "\"$1\"", NULL
 };
 
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
 static const char *pdkAsmCmd[] =
 {
-  "sdasstm8", "$l", "$3", "\"$1.asm\"", NULL
+  "sdaspdk", "$l", "$3", "\"$1.asm\"", NULL
 };
 
 static const char *const _libs_pdk14[] = { "pdk14", NULL, };
