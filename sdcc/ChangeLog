@@ -2,6 +2,9 @@
 
 	* device/lib/pdk14/Makefile.in:
 	  Use sdaspdk to build pdk14 library.
+	* src/pdk/main.c,
+	  src/pdk/gen.c:
+	  Fix generation of invalid asm in a few places.
 
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 

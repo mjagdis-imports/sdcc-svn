@@ -87,7 +87,7 @@ pdk_genInitStartup (FILE *of)
   else
     {
       fprintf (of, "\tadd\ta, p\n");
-      fprintf (of, "\tinc\ta\n");
+      fprintf (of, "\tadd\ta, #1\n");
       fprintf (of, "\tsr\ta\n");
       fprintf (of, "\tsl\ta\n");
       fprintf (of, "\tmov\tsp, a\n");
