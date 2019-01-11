@@ -7,7 +7,7 @@ top_builddir = @top_builddir@
 LIB_TYPE     = @LIB_TYPE@
 
 SCC = $(top_builddir)/bin/sdcc -mpdk14
-SAS = $(top_builddir)/bin/sdasstm8
+SAS = $(top_builddir)/bin/sdaspdk
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/pdk14

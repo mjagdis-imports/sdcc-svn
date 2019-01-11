@@ -1,5 +1,10 @@
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 
+	* device/lib/pdk14/Makefile.in:
+	  Use sdaspdk to build pdk14 library.
+
+2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
+
 	* sdas/aspdk,
 	  Makefile.common.in,
 	  Makefile.in,
