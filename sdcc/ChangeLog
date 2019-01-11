@@ -5,6 +5,9 @@
 	* src/pdk/main.c,
 	  src/pdk/gen.c:
 	  Fix generation of invalid asm in a few places.
+	* sdas/aspdk/pdkmch.c,
+	  sdas/aspdk/pdkpst.c:
+	  Assembler fixes, patch by Nicolas Lesser.
 
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 

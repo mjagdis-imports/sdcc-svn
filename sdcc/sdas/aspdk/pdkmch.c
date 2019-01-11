@@ -353,11 +353,21 @@ machine(struct mne *mp)
                 outaw(op);
                 break;
 
+        case S_PUSHAF:
+        case S_POPAF:
+                if (more()) {
+                        if ((t = getnb()) != 'a')
+                                aerr();
+                        if (!more() || ((t1 = getnb()) != 'f'))
+                                aerr();
+                }
+
+                outaw(op);
+                break;
+
         /* Simple instructions consisting of only one opcode and no args */
         case S_LDT16:
         case S_STT16:
-        case S_PUSHAF:
-        case S_POPAF:
         case S_SWAP:
         case S_RETI:
         case S_NOP:

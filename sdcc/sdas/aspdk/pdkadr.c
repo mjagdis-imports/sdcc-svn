@@ -109,6 +109,12 @@ addr(struct expr *esp)
                 }
                 break;
 
+        case 'f':
+                /* ACC status flag */
+                esp->e_mode = S_IO;
+                esp->e_addr = -2;
+                break;
+
         default:
         fallback:
                 unget(c);
