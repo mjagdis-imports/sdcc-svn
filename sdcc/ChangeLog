@@ -11,6 +11,9 @@
 	* src/pdk/gen.c,
 	  device/lib/pdk14/__gptrget.s:
 	  Update for assembler syntax change.
+	* src/SDCCsymt.c,
+	  device/lib/Makefile.in,
+	  Enable build of pdk14 library.
 
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 
