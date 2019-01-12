@@ -45,25 +45,7 @@ addr(struct expr *esp)
                 esp->e_mode = S_K;
                 break;
 
-        case 'o':
-                if ((c1 = getnb()) == 'v') {
-                        /* OV bit of ACC flag */
-                        esp->e_mode = S_K;
-                        esp->e_addr = 3;
-                        break;
-                }
-                unget(c1);
-                goto fallback;
-
         case 'a':
-                if ((c1 = getnb()) == 'c') {
-                        /* AC bit of ACC flag */
-                        esp->e_mode = S_K;
-                        esp->e_addr = 2;
-                        break;
-                }
-                unget(c1);
-
                 /* Accumulator */
                 esp->e_mode = S_A;
                 break;
@@ -73,6 +55,56 @@ addr(struct expr *esp)
                         /* Stack (SP) */
                         esp->e_mode = S_IO;
                         esp->e_addr = 2;
+                        break;
+                }
+                unget(c1);
+                goto fallback;
+
+        case 'f':
+                /* ACC flag */
+                esp->e_mode = S_IO;
+                esp->e_addr = 0;
+                break;
+
+        default:
+        fallback:
+                unget(c);
+
+                /* Memory address */
+                expr(esp, 0);
+                esp->e_mode = S_M;
+        }
+
+        return (esp->e_mode);
+}
+
+int
+pdkbit(struct expr *esp)
+{
+        int c = getnb(), c1;
+
+        switch (c) {
+        case '#':
+                /* Bit number */
+                expr(esp, 0);
+                esp->e_mode = S_K;
+                break;
+
+        case 'a':
+                if ((c1 = getnb()) == 'c') {
+                        /* AC bit of ACC flag */
+                        esp->e_mode = S_K;
+                        esp->e_addr = 2;
+                        break;
+                }
+                unget(c1);
+                goto fallback;
+ 
+        case 'o':
+                if ((c1 = getnb()) == 'v') {
+                        /* OV bit of ACC flag */
+                        esp->e_mode = S_K;
+                        esp->e_addr = 3;
                         break;
                 }
                 unget(c1);
@@ -90,25 +122,6 @@ addr(struct expr *esp)
                 esp->e_addr = 0;
                 break;
 
-        case 'p':
-                /* Pseudo-register in memory. */
-                esp->e_mode = S_M;
-
-                /* TODO: There must be a better way to do this. */
-                if ((c1 = getnb()) == '+') {
-                        if ((c = getnb()) != '1') {
-                                unget(c);
-                                unget(c1);
-                                unget('p');
-                                goto fallback;
-                        }
-                        esp->e_addr = 1;
-                } else {
-                        unget(c1);
-                        esp->e_addr = 0;
-                }
-                break;
-
         case 'f':
                 /* ACC status flag */
                 esp->e_mode = S_IO;
@@ -119,9 +132,9 @@ addr(struct expr *esp)
         fallback:
                 unget(c);
 
-                /* Memory address */
-                expr(esp, 0);
-                esp->e_mode = S_M;
+                /* Error */
+                esp->e_mode = 0;
+                esp->e_addr = 0;
         }
 
         return (esp->e_mode);

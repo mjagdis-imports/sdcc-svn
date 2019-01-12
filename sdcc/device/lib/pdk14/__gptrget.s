@@ -30,7 +30,7 @@
 
 __gptrget::
 	ceqsn	a, 0x80
-	t0sn	f.c
+	t0sn	f, c
 	goto	code
 
 	; Pointer to RAM

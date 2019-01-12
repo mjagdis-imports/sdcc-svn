@@ -114,6 +114,7 @@
         
         /* pdkaddr.c */
 extern  int             addr(struct expr *esp);
+extern  int             pdkbit(struct expr *esp);
 
         /* pdkmch.c */
 extern  VOID            machine(struct mne *mp);
@@ -124,6 +125,7 @@ extern  VOID            minit(void);
 
         /* pdkadr.c */
 extern  int             addr();
+extern  int             pdkbit();
 
         /* pdkmch.c */
 extern  VOID            machine();

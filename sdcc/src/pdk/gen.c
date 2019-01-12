@@ -1512,12 +1512,12 @@ genCmp (const iCode *ic, iCode *ifx)
           if (IC_TRUE (ifx))
             {
               emit2 ("nop", "");
-              emit2 ("t1sn", "f.c");
+              emit2 ("t1sn", "f, c");
               cost (3, 3.5);
             }
           else
             {
-              emit2 ("t0sn", "f.c");
+              emit2 ("t0sn", "f, c");
               cost (2, 2.5);
             }
           emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
@@ -1528,13 +1528,13 @@ genCmp (const iCode *ic, iCode *ifx)
           emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
           if (IC_TRUE (ifx))
             {
-              emit2 ("t1sn", "f.c");
+              emit2 ("t1sn", "f, c");
               cost (2, 2.5);
             }
           else
             {
               emit2 ("nop", "");
-              emit2 ("t0sn", "f.c");
+              emit2 ("t0sn", "f, c");
               cost (3, 3.5);
             }
           emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
@@ -1585,7 +1585,7 @@ genCmp (const iCode *ic, iCode *ifx)
 
   if (sign)
     {
-      emit2 ("t0sn", "f.ov");
+      emit2 ("t0sn", "f, ov");
       emit2 ("xor", "a, #0x80");
       emit2 ("sl", "a");
       cost (3, 3);
@@ -1593,7 +1593,7 @@ genCmp (const iCode *ic, iCode *ifx)
 
   if (ifx)
     {
-      emit2 ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)) ? "t1sn" : "t0sn", "f.c");
+      emit2 ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)) ? "t1sn" : "t0sn", "f, c");
       cost (1, 1.5);
       emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
     }
@@ -1775,7 +1775,7 @@ genOr (const iCode *ic)
 
       if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
         {
-          emit2 ("set1", "%s.%d", aopGet (left->aop, i), bit);
+          emit2 ("set1", "%s, #%d", aopGet (left->aop, i), bit);
           cost (1, 1);
         }
       else if (aopIsLitVal (right->aop, i, 1, 0x00))
@@ -1848,14 +1848,14 @@ genAnd (const iCode *ic, iCode *ifx)
 
       if (aopInReg (left->aop, i, P_IDX) && bit >= 0)
         {
-          emit2 (IC_FALSE  (ifx) ? "t1sn" : "t0sn", "p.%d", bit);
+          emit2 (IC_FALSE  (ifx) ? "t1sn" : "t0sn", "p, #%d", bit);
           cost (1, 1.5);
         }
       else if (aopInReg (left->aop, i, P_IDX) && regDead (P_IDX, ic) &&
         (byteOfVal (right->aop->aopu.aop_lit, i) == 0x7f || byteOfVal (right->aop->aopu.aop_lit, i) == 0xfe))
         {
           emit2 (byteOfVal (right->aop->aopu.aop_lit, 0) == 0x7f ? "sl" : "sr", "p");
-          emit2 (IC_FALSE  (ifx) ? "t0sn" : "t1sn", "f.z");
+          emit2 (IC_FALSE  (ifx) ? "t0sn" : "t1sn", "f, z");
           cost (2, 2.5);
         }
       else
@@ -1877,7 +1877,7 @@ genAnd (const iCode *ic, iCode *ifx)
 
       if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
         {
-          emit2 ("set0", "%s.%d", aopGet (left->aop, i), bit);
+          emit2 ("set0", "%s, #%d", aopGet (left->aop, i), bit);
           cost (1, 1);
         }
       else if (aopIsLitVal (right->aop, i, 1, 0x00))

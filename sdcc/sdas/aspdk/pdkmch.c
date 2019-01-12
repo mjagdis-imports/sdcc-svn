@@ -227,9 +227,8 @@ machine(struct mne *mp)
                 /* fallthrough */
         case S_SET0:
                 t = addr(&e);
-                if (getnb() != '.')
-                        aerr();
-                t1 = addr(&e1);
+                comma(1);
+                t1 = pdkbit(&e1);
                 if (t1 != S_K)
                         aerr();
 
@@ -275,9 +274,8 @@ machine(struct mne *mp)
                 /* fallthrough */
         case S_T0SN:
                 t = addr(&e);
-                if (getnb() != '.')
-                        aerr();
-                t1 = addr(&e1);
+                comma(1);
+                t1 = pdkbit(&e1);
                 if (t1 != S_K)
                         aerr();
 

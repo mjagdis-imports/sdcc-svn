@@ -4,6 +4,13 @@
 	  Make some variables const so save RAM on targets that do not have __code.
 	* src/pdk/gen.c:
 	  Fix a segfault in code generation for &.
+	* sdas/aspdk/pdk.h,
+	  sdas/aspdk/pdkadr.c,
+	  sdas/aspdk/pdkmch.c:
+	  Assembler fixes and syntax change, patch by Nicolas Lesser.
+	* src/pdk/gen.c,
+	  device/lib/pdk14/__gptrget.s:
+	  Update for assembler syntax change.
 
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 
