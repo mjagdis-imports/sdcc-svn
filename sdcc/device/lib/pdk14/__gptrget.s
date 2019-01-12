@@ -26,6 +26,7 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
+.module __gptrget
 .area CODE
 
 __gptrget::

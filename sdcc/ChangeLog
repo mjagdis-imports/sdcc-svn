@@ -1,5 +1,10 @@
 2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/pdk/main.c:
+	  Set location of pseudo-register p.
+
+2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
+
 	* device/lib/time.c:
 	  Make some variables const so save RAM on targets that do not have __code.
 	* src/pdk/gen.c:

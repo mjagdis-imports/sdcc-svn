@@ -41,6 +41,11 @@ static char *pdk_keywords[] = {
 };
 
 static void
+pdk_genAssemblerStart (FILE *of)
+{
+}
+
+static void
 pdk_genAssemblerEnd (FILE *of)
 {
   if (options.out_fmt == 'E' && options.debug)
@@ -56,6 +61,11 @@ pdk_genIVT(struct dbuf_s *oBuf, symbol **intTable, int intCount)
 static void
 pdk_genInitStartup (FILE *of)
 {
+  fprintf (of, ".area\tPREG (ABS)\n");
+  fprintf (of, ".org 0x00\n");
+  fprintf (of, "p::\n");
+  fprintf (of, ".ds 2\n");
+
   fprintf (of, "__sdcc_gs_init_startup:\n");
 
   // Zero upper byte of pseudo-register p to make p usable for pointers.
@@ -305,7 +315,7 @@ PORT pdk14_port =
   0,
   0,
   pdk_keywords,
-  0,
+  pdk_genAssemblerStart,
   pdk_genAssemblerEnd,
   pdk_genIVT,
   0,                            /* no genXINIT code */
