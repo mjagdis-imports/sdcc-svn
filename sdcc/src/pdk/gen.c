@@ -1873,7 +1873,7 @@ genAnd (const iCode *ic, iCode *ifx)
 
   for (int i = 0; i < size; i++)
     {
-      int bit = isLiteralBit (~byteOfVal (right->aop->aopu.aop_lit, i) & 0xff);
+      int bit = right->aop->type == AOP_LIT ? isLiteralBit (~byteOfVal (right->aop->aopu.aop_lit, i) & 0xff) : -1;
 
       if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
         {

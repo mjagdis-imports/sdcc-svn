@@ -2,6 +2,8 @@
 
 	* device/lib/time.c:
 	  Make some variables const so save RAM on targets that do not have __code.
+	* src/pdk/gen.c:
+	  Fix a segfault in code generation for &.
 
 2019-01-11 Philipp Klaus Krause <pkk AT spth.de>
 
