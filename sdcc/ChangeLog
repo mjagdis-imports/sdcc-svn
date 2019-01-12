@@ -1,7 +1,7 @@
 2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/main.c:
-	  Set location of pseudo-register p.
+	  Various glue code for program startup.
 
 2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
 

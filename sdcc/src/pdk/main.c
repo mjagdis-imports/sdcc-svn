@@ -23,6 +23,7 @@
 -------------------------------------------------------------------------*/
 
 #include "common.h"
+#include "dbuf_string.h"
 
 #include "ralloc.h"
 
@@ -55,21 +56,51 @@ pdk_genAssemblerEnd (FILE *of)
 int
 pdk_genIVT(struct dbuf_s *oBuf, symbol **intTable, int intCount)
 {
+  dbuf_tprintf (oBuf, "\t.area\tHEADER (ABS)\n");
+  dbuf_tprintf (oBuf, "\t.org\t 0x0010\n");
+  if (interrupts[0])
+    dbuf_tprintf (oBuf, "\tgoto\t%s\n", interrupts[0]->rname);
+  else
+    dbuf_tprintf (oBuf, "\treti\n");
+
   return (true);
 }
 
 static void
 pdk_genInitStartup (FILE *of)
 {
-  fprintf (of, ".area\tPREG (ABS)\n");
-  fprintf (of, ".org 0x00\n");
+  fprintf (of, "\t.area\tPREG (ABS)\n");
+  fprintf (of, "\t.org 0x00\n");
   fprintf (of, "p::\n");
-  fprintf (of, ".ds 2\n");
+  fprintf (of, "\t.ds 2\n");
 
-  fprintf (of, "__sdcc_gs_init_startup:\n");
+  fprintf (of, "\t.area\tHEADER (ABS)\n"); // In the header we have 16 bytes. First should be nop.
+  fprintf (of, "\t.org 0x0000\n");
+  fprintf (of, "nop\n"); // First word is a jump to self-test routine at end of ROM on some new devices.
 
   // Zero upper byte of pseudo-register p to make p usable for pointers.
   fprintf (of, "\tclear\tp+1\n");
+
+  // Initialize stack pointer
+  if (options.stack_loc >= 0)
+    {
+      fprintf (of, "\tmov\ta, #0x%02x\n", options.stack_loc);
+      fprintf (of, "\tmov\tsp, a\n");
+    }
+  else
+    {
+      fprintf (of, "\tmov\ta, #s_DATA\n");
+      fprintf (of, "\tadd\ta, #l_DATA + 1\n");
+      fprintf (of, "\tsr\ta\n");
+      fprintf (of, "\tsl\ta\n");
+      fprintf (of, "\tmov\tsp, a\n");
+    }
+
+  fprintf (of, "\tcall\t__sdcc_external_startup\n");
+  fprintf (of, "\tgoto\t__sdcc_gs_init_startup\n");
+
+  fprintf (of, "\t.area\tGSINIT\n");
+  fprintf (of, "__sdcc_gs_init_startup:\n");
 
   /* Init static & global variables */
   fprintf (of, "__sdcc_init_data:\n");
@@ -87,21 +118,6 @@ pdk_genInitStartup (FILE *of)
   fprintf (of, "\tinc\tp\n");
   fprintf (of, "\tgoto\t00001$\n");
   fprintf (of, "00002$:\n");
-
-  // Initialize stack pointer
-  if (options.stack_loc >= 0)
-    {
-      fprintf (of, "\tmov\ta, #0x%02x\n", options.stack_loc);
-      fprintf (of, "\tmov\tsp, a\n");
-    }
-  else
-    {
-      fprintf (of, "\tadd\ta, p\n");
-      fprintf (of, "\tadd\ta, #1\n");
-      fprintf (of, "\tsr\ta\n");
-      fprintf (of, "\tsl\ta\n");
-      fprintf (of, "\tmov\tsp, a\n");
-    }
 }
 
 static void
