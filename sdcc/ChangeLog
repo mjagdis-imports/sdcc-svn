@@ -1,6 +1,11 @@
 2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/main.c:
+	  Use sensible default for --code-loc.
+
+2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/main.c:
 	  Various glue code for program startup.
 
 2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
