@@ -57,7 +57,7 @@ int
 pdk_genIVT(struct dbuf_s *oBuf, symbol **intTable, int intCount)
 {
   dbuf_tprintf (oBuf, "\t.area\tHEADER (ABS)\n");
-  dbuf_tprintf (oBuf, "\t.org\t 0x0010\n");
+  dbuf_tprintf (oBuf, "\t.org\t 0x0020\n");
   if (interrupts[0])
     dbuf_tprintf (oBuf, "\tgoto\t%s\n", interrupts[0]->rname);
   else

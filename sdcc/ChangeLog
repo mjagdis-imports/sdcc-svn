@@ -5,6 +5,8 @@
 	  sdas/aspdk/pdkmch.c,
 	  sdas/aspdk/pdkpst.c:
 	  Assembler fixes, patch by Nicolas Lesser.
+	* src/pdk/main.c:
+	  Switch .org use to bytewise addressing in ROM.
 
 2019-01-12 Philipp Klaus Krause <pkk AT spth.de>
 
