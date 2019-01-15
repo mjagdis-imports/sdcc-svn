@@ -99,6 +99,8 @@
 #define S_WDRESET 92
 #define S_SWAPC   93
 #define S_CNEQSN  94 
+#define S_LDSPTL  95
+#define S_LDSPTH  96
 
 /*
  * Addressing modes.

@@ -153,8 +153,8 @@ struct  mne     mne[] = {
     {   NULL,   "xch",          S_XCH,          0,      0x1380    },
     {   NULL,   "pushaf",       S_PUSHAF,       0,      0x0072    },
     {   NULL,   "popaf",        S_POPAF,        0,      0x0073    },
-    {   NULL,   "push",         S_PUSHAF,       0,      0x0072    },
-    {   NULL,   "pop",          S_POPAF,        0,      0x0073    },
+    {   NULL,   "push",         S_PUSHAF,       0,      0x2072    },
+    {   NULL,   "pop",          S_POPAF,        0,      0x2073    },
     {   NULL,   "add",          S_ADD,          0,      0x2800    },
     {   NULL,   "addc",         S_ADDC,         0,      0x0060    },
     {   NULL,   "sub",          S_SUB,          0,      0x2900    },
@@ -189,5 +189,7 @@ struct  mne     mne[] = {
     {   NULL,   "reset",        S_RESET,        0,      0x0075    },
     {   NULL,   "wdreset",      S_WDRESET,      0,      0x0070    },
     {   NULL,   "swapc",        S_SWAPC,        0,      0x0400    },
-    {   NULL,   "cneqsn",       S_CNEQSN,       S_EOL,  0x0000    }
+    {   NULL,   "cneqsn",       S_CNEQSN,       0,      0x0000    },
+    {   NULL,   "ldsptl",       S_LDSPTL,       0,      0x0006    },
+    {   NULL,   "ldspth",       S_LDSPTH,       S_EOL,  0x0007    },
 };

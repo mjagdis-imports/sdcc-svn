@@ -333,6 +333,10 @@ machine(struct mne *mp)
         case S_CALL:
         case S_GOTO:
                 expr(&e, 0);
+                /* Since call and goto take an address in words, we need to
+                convert the byte address to a word address. */
+                e.e_addr /= 2;
+
                 op |= e.e_addr & 0xFF;
                 outaw(op);
                 break;
@@ -353,30 +357,60 @@ machine(struct mne *mp)
 
         case S_PUSHAF:
         case S_POPAF:
-                if (more()) {
+                if (more() && (op & 0x2000)) {
                         if ((t = getnb()) != 'a')
                                 aerr();
                         if (!more() || ((t1 = getnb()) != 'f'))
                                 aerr();
+                        op &= 0x1FFF;
                 }
 
                 outaw(op);
                 break;
 
-        /* Simple instructions consisting of only one opcode and no args */
         case S_LDT16:
         case S_STT16:
+                t = addr(&e);
+                if (t != S_M)
+                        aerr();
+
+                op |= e.e_addr & 0x7F;
+                outaw(op);
+                break;
+
         case S_SWAP:
+        case S_PCADD:
+              if (more()) {
+                      t = addr(&e);
+                      if (t != S_A)
+                              aerr();
+              }
+              outaw(op);
+              break;
+
+        case S_SWAPC:
+              t = addr(&e);
+              comma(1);
+              t1 = addr(&e1);
+              if (t != S_IO || t1 != S_K)
+                      aerr();
+
+              op |= e.e_addr & 0x3F;
+              op |= (e1.e_addr & 0x7) << 6;
+              outaw(op);
+              break;
+
+        /* Simple instructions consisting of only one opcode and no args */
         case S_RETI:
         case S_NOP:
-        case S_PCADD:
         case S_ENGINT:
         case S_DISGINT:
         case S_STOPSYS:
         case S_STOPEXE:
         case S_RESET:
         case S_WDRESET:
-        case S_SWAPC:
+        case S_LDSPTL: /* undocumented */
+        case S_LDSPTH: /* undocumented */
                 outaw(op);
                 break;
         }

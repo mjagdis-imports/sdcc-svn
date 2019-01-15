@@ -73,6 +73,12 @@ addr(struct expr *esp)
                 /* Memory address */
                 expr(esp, 0);
                 esp->e_mode = S_M;
+
+                /* If there is no area information, assume that we have in
+                fact parsed an IO register variable - since any other constant
+                would have been prefixed by a '#'. */
+                if (!esp->e_base.e_ap)
+                        esp->e_mode = S_IO;
         }
 
         return (esp->e_mode);
