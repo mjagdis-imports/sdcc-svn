@@ -161,7 +161,7 @@ pdk_setDefaultOptions (void)
 {
   options.out_fmt = 'i';        /* Default output format is ihx */
   options.data_loc = 0x02;      /* First two bytes of RAM are used for the pseudo-register p */
-  options.code_loc = 0x0011;
+  options.code_loc = 0x0022;
   options.stack_loc = -1;
 }
 

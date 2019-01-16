@@ -1,3 +1,8 @@
+2019-01-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/main.c:
+	  Switch default code location for bytewise addressing in ROM.
+
 2019-01-15 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/aspdk/pdk.h,
