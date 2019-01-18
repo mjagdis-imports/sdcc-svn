@@ -835,7 +835,7 @@ genNot (const iCode *ic)
   cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
   for (int i = 1; i < left->aop->size; i++)
     {
-      emit2 ("or", aopGet (left->aop, i));
+      emit2 ("or", "a, %s", aopGet (left->aop, i));
       cost (1, 1);
     }
   emit2 ("sub", "a, #0x01");

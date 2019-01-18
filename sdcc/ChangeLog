@@ -1,3 +1,8 @@
+2019-01-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix !.
+
 2019-01-16 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/main.c:
