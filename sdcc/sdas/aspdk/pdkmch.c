@@ -44,7 +44,7 @@ VOID
 machine(struct mne *mp)
 {
         a_uint op;
-        int t, t1, combine, combine1;
+        int t, t1, combine;
         struct expr e, e1, e2;
 
         clrexpr(&e);
@@ -52,7 +52,7 @@ machine(struct mne *mp)
         clrexpr(&e2);
 
         op = mp->m_valu;
-        combine = combine1 = 0;
+        combine = 0;
         switch (mp->m_type) {
 
         case S_MOV:
@@ -156,17 +156,17 @@ machine(struct mne *mp)
         case S_SL:
         case S_SR:
                 if (mp->m_type == S_SRC || mp->m_type == S_SLC)
-                        combine = 6;
+                        combine = 2;
                 if (mp->m_type == S_SL || mp->m_type == S_SLC)
-                        combine1 = 0x80;
+                        combine += 1;
 
                 t = addr(&e);
 
                 if (t == S_A) {
-                        op = (0x006A ^ combine) + (combine1 ? 1 : 0);
+                        op = 0x006A + combine;
                 } else
                 if (t == S_M) {
-                        op = (0x1500 ^ combine) | combine1;
+                        op = 0x1500 + (combine << 7);
                         op |= e.e_addr & 0x7F;
                 } else
                         aerr();

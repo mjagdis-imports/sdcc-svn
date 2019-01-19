@@ -1,3 +1,8 @@
+2019-01-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk/pdkmch.c:
+	  Fix shifts, patch by Tim (cpldcpu).
+
 2019-01-18 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
