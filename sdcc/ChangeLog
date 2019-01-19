@@ -2,6 +2,8 @@
 
 	* sdas/aspdk/pdkmch.c:
 	  Fix shifts, patch by Tim (cpldcpu).
+	* src/pdk/gen.c:
+	  Fix signed comparison, fix pointer write with integer literal cast to pointer.
 
 2019-01-18 Philipp Klaus Krause <pkk AT spth.de>
 

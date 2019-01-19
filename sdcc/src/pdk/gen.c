@@ -1576,6 +1576,11 @@ genCmp (const iCode *ic, iCode *ifx)
         }
       else
         {
+          if (aopInReg (right->aop, i, A_IDX))
+            {
+              cost (100, 100);
+              wassert (regalloc_dry_run);
+            }
           cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
           emit2 (started ? "subc" : "sub", "a, %s", aopGet (right->aop, i));
           cost (1, 1);
@@ -2255,7 +2260,7 @@ genPointerSet (iCode *ic)
 
   wassertl (!bit_field, "Unimplemented write of bit-field");
 
-  if (left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
+  if (left->aop->type == AOP_DIR)
     {
       for (int i = 0; i < size; i++)
         {
