@@ -3,7 +3,7 @@
 	* sdas/aspdk/pdkmch.c:
 	  Fix idxm, patch by Tim (cpldcpu).
 	* device/lib/pdk14/Makefile.in:
-	  Use generic memcpy() and unsigned division for pdk14.
+	  Use generic memcpy(), unsigned 8 x 8 -> 16 multiplication and unsigned division for pdk14.
 	* src/pdk/main.c:
 	  Fix int x int -> long multiplication.
 	* src/pdk/main.c,

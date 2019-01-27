@@ -1554,7 +1554,7 @@ genMult (const iCode *ic)
   aopOp (result, ic);
 
   if (left->aop->size >= 2 || right->aop->size >= 2 || result->aop->size > 2)
-    wassertl (0, "Wide multiplication is to be handled through via function calls.");
+    wassertl (0, "Wide multiplication is to be handled via support function calls.");
 
   /* Swap left and right such that right is a literal */
   if (left->aop->type == AOP_LIT)

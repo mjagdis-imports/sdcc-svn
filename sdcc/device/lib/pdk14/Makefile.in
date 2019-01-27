@@ -17,6 +17,7 @@ include $(srcdir)/../incl.mk
 PDK14_FLOAT = $(filter-out atanf.c, $(COMMON_FLOAT))
 
 PDK14_INT = $(COMMON_INT) \
+  _muluchar.c \
   _mulint.c \
   _divsint.c \
   _divuint.c \
