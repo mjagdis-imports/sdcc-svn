@@ -6,6 +6,9 @@
 	  Use generic memcpy() and unsigned division for pdk14.
 	* src/pdk/main.c:
 	  Fix int x int -> long multiplication.
+	* src/pdk/main.c,
+	  src/pdk/gen.c:
+	  Code generation for 8 x 8 (lit) -> 8 multiplication.
 
 2019-01-27 Philipp Klaus Krause <pkk AT spth.de>
 

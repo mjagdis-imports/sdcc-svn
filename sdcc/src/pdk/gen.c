@@ -1480,6 +1480,105 @@ genMinus (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genMult - generates code for multiplication                     */
+/*-----------------------------------------------------------------*/
+static void
+genMultLit (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  /* Swap left and right such that right is a literal */
+  if (left->aop->type == AOP_LIT)
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  wassert (result->aop && result->aop->size == 1 && right->aop && right->aop->type == AOP_LIT);
+
+  cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
+
+  asmop *add_aop;
+  if (aopInReg (left->aop, 0, P_IDX) || left->aop->type == AOP_DIR || left->aop->type == AOP_IMMD)
+    add_aop = left->aop;
+  else
+    {
+      add_aop = ASMOP_P;
+      cheapMove (ASMOP_P, 0, left->aop, 0, false, true);
+    }
+
+  unsigned long long add, sub;
+  int topbit, nonzero;
+
+  wassert (!csdOfVal (&topbit, &nonzero, &add, &sub, right->aop->aopu.aop_lit));
+
+  // If the leading digits of the cse are 1 0 -1 we can use 0 1 1 instead to reduce the number of shifts.
+  if (topbit >= 2 && (add & (1ull << topbit)) && (sub & (1ull << (topbit - 2))))
+    {
+      add = (add & ~(1u << topbit)) | (3u << (topbit - 2));
+      sub &= ~(1u << (topbit - 1));
+      topbit--;
+    }
+
+  for (int bit = topbit - 1; bit >= 0; bit--)
+    {
+      emit2 ("sl", "a");
+      cost (1, 1);
+      if ((add | sub) & (1ull << bit))
+        {
+          emit2 (add & (1ull << bit) ? "add" : "sub" , "%s", aopGet (add_aop, 0));
+          cost (1, 1);
+        }
+    }
+
+  cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
+}
+
+/*-----------------------------------------------------------------*/
+/* genMult - generates code for multiplication                     */
+/*-----------------------------------------------------------------*/
+static void
+genMult (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genMult", ""));
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  if (left->aop->size >= 2 || right->aop->size >= 2 || result->aop->size > 2)
+    wassertl (0, "Wide multiplication is to be handled through via function calls.");
+
+  /* Swap left and right such that right is a literal */
+  if (left->aop->type == AOP_LIT)
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  if (right->aop->type == AOP_LIT && result->aop->size == 1)
+    {
+      genMultLit (ic);
+      goto release;
+    }
+
+  wassert (0);
+
+release:
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genCmp :- greater or less than comparison                       */
 /*-----------------------------------------------------------------*/
 static void
@@ -2712,7 +2811,7 @@ genPdkiCode (iCode *ic)
       break;
 
     case '*':
-      wassertl (0, "Unimplemented iCode");
+      genMult (ic);
       break;
 
     case '/':

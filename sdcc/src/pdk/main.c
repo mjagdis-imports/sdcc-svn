@@ -176,7 +176,9 @@ pdk_getRegName (const struct reg_info *reg)
 static bool
 _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
-  return (false);
+  int result_size = IS_SYMOP (IC_RESULT(ic)) ? getSize (OP_SYM_TYPE (IC_RESULT(ic))) : 4;
+
+  return ((IS_LITERAL (left) || IS_LITERAL (right)) && result_size == 1);
 }
 
 /* Indicate which extended bit operations this backend supports */
