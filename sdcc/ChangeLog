@@ -2,6 +2,8 @@
 
 	* sdas/aspdk/pdkmch.c:
 	  Fix idxm, patch by Tim (cpldcpu).
+	* device/lib/pdk14/Makefile.in:
+	  Use generic memcpy() and unsigned division for pdk14.
 
 2019-01-27 Philipp Klaus Krause <pkk AT spth.de>
 

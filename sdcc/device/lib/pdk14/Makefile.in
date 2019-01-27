@@ -19,6 +19,7 @@ PDK14_FLOAT = $(filter-out atanf.c, $(COMMON_FLOAT))
 PDK14_INT = $(COMMON_INT) \
   _mulint.c \
   _divsint.c \
+  _divuint.c \
   _modsint.c \
   _mulschar.c \
   _divschar.c \
@@ -46,6 +47,8 @@ PDK14_SDCC = $(COMMON_SDCC) \
   _strcpy.c \
   _strlen.c \
   _memmove.c \
+  __memcpy.c \
+  memcpy.c \
   sprintf.c \
   vprintf.c
 
