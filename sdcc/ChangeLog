@@ -1,3 +1,17 @@
+2019-01-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* aspdk/pdkmch.c,
+	  asxxsrc/asout.c,
+	  asxxsrc/asxxxx.h,
+	  asxxsrc/sdas.c,
+	  asxxsrc/sdas.h,
+	  linksrc/lkrloc3.c:
+	  Linker and assembler fixes for pdk14, patch by Nicolas Lesser.
+	* src/pdk/gen.c:
+	  Fix code generation for unary float minus and calls to functions returning more than a word.
+	* device/lib/pdk14/__gptrget.s:
+	  Asm syntax fix.
+
 2019-01-19 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/aspdk/pdkmch.c:

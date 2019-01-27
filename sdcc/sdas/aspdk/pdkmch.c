@@ -333,12 +333,7 @@ machine(struct mne *mp)
         case S_CALL:
         case S_GOTO:
                 expr(&e, 0);
-                /* Since call and goto take an address in words, we need to
-                convert the byte address to a word address. */
-                e.e_addr /= 2;
-
-                op |= e.e_addr & 0xFF;
-                outaw(op);
+                outrwp(&e, op);
                 break;
 
         case S_XCH:

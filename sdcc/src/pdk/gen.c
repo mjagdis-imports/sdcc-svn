@@ -979,7 +979,7 @@ genUminusFloat (const iCode *ic)
   genMove_o (result->aop, 0, left->aop, 0, result->aop->size - 1, true);
 
   cheapMove (ASMOP_A, 0, left->aop, result->aop->size - 1, true, true);
-  emit2 ("xor", "a, 0x80");
+  emit2 ("xor", "a, #0x80");
   cost (1, 1);
   cheapMove (result->aop, result->aop->size - 1, ASMOP_A, 0, true, true);
 
@@ -1065,7 +1065,7 @@ genCall (const iCode *ic)
       if (rsym->onStack || rsym->isspilt && regalloc_dry_run && (options.stackAuto || reentrant))
         {
           emit2 ("mov", "a, sp");
-          emit2 ("add", "a, 0x%02x", (rsym->stack + (rsym->stack < 0 ? G.stack.param_offset : 0) - G.stack.pushed) & 0xff);
+          emit2 ("add", "a, #0x%02x", (rsym->stack + (rsym->stack < 0 ? G.stack.param_offset : 0) - G.stack.pushed) & 0xff);
         }
       else
         {

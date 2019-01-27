@@ -442,6 +442,21 @@ relr3(void)
                         } else {
                                 relv = adb_1b(reli, rtp);
                         }
+                } else if (IS_R_J11(mode) && TARGET_IS_PDK) {
+                        /* 11 bit goto/call instruction fusion for pdk. */
+                        relv = adb_2b(reli, rtp);
+
+                        /* pdk addresses in words, not in bytes. */
+                        rtval[rtp] /= 2;
+                        rtval[rtp] |= rtval[rtp + 1] & 1;
+                        rtval[rtp + 1] /= 2;
+
+                        /* Do the actual opcode fusion and ignore the extra
+                           byte taken for the opcode by the assembler.
+                        */
+                        rtval[rtp + 1] |= rtval[rtp + 2];
+                        rtflg[rtp + 2] = 0;
+                        rtofst += 1;
                 } else if (IS_R_J11(mode)) {
                         /*
                          * JLH: 11 bit jump destination for 8051.

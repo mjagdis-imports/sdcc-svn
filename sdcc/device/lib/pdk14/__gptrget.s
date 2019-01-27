@@ -30,7 +30,7 @@
 .area CODE
 
 __gptrget::
-	ceqsn	a, 0x80
+	ceqsn	a, #0x80
 	t0sn	f, c
 	goto	code
 
