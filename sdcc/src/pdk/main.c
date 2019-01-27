@@ -299,7 +299,7 @@ PORT pdk14_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, true },
+  { -1, false },                /* no int x int -> long multiplication support routine. */
   { 0,
     {
       0,
