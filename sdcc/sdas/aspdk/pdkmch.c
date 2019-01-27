@@ -89,7 +89,7 @@ machine(struct mne *mp)
                 t1 = addr(&e1);
                 if (t == S_A && t1 == S_M) {
                         op |= 1;
-                        op |= e1.e_addr & 0x7F;
+                        op |= (e1.e_addr & 0x7F) << 1;
                 } else
                 if (t == S_M && t1 == S_A) {
                         op |= (e.e_addr & 0x7F) << 1;
@@ -313,7 +313,7 @@ machine(struct mne *mp)
                         t = addr(&e);
                         if (t != S_K)
                                 aerr();
-                        op |= e.e_addr & 0xFF;
+                        op = 0x200 | (e.e_addr & 0xFF);
                 }
 
                 outaw(op);
@@ -369,7 +369,7 @@ machine(struct mne *mp)
                 if (t != S_M)
                         aerr();
 
-                op |= e.e_addr & 0x7F;
+                op |= (e.e_addr & 0x7F) << 1;
                 outaw(op);
                 break;
 

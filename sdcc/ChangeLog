@@ -1,5 +1,10 @@
 2019-01-27 Philipp Klaus Krause <pkk AT spth.de>
 
+	* sdas/aspdk/pdkmch.c:
+	  Fix idxm, patch by Tim (cpldcpu).
+
+2019-01-27 Philipp Klaus Krause <pkk AT spth.de>
+
 	* aspdk/pdkmch.c,
 	  asxxsrc/asout.c,
 	  asxxsrc/asxxxx.h,
