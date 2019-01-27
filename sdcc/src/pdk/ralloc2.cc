@@ -307,7 +307,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
   iCode *ic = G[i].ic;
   float c;
 
-  wassert(TARGET_IS_PDK14);
+  wassert(TARGET_PDK_LIKE);
   wassert(ic);
 
   if(!inst_sane(a, i, G, I))

@@ -471,8 +471,14 @@ extern PORT s08_port;
 #if !OPT_DISABLE_STM8
 extern PORT stm8_port;
 #endif
+#if !OPT_DISABLE_PDK13
+extern PORT pdk13_port;
+#endif
 #if !OPT_DISABLE_PDK14
 extern PORT pdk14_port;
+#endif
+#if !OPT_DISABLE_PDK15
+extern PORT pdk15_port;
 #endif
 
 #endif /* PORT_INCLUDE */

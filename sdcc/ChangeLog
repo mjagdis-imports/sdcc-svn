@@ -9,6 +9,13 @@
 	* src/pdk/main.c,
 	  src/pdk/gen.c:
 	  Code generation for 8 x 8 (lit) -> 8 multiplication.
+	* configure,
+	  configure.ac,
+	  src/SDCCmain.c,
+	  src/pdk/main.c,
+	  src/pdk/ralloc2.cc,
+	  src/port.h:
+	  Infrastructure for pdk13, pdk15.
 
 2019-01-27 Philipp Klaus Krause <pkk AT spth.de>
 
