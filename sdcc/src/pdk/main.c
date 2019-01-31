@@ -123,7 +123,7 @@ pdk_genInitStartup (FILE *of)
 static void
 pdk_init (void)
 {
-  asm_addTree (&asm_asxxxx_mapping);
+  asm_addTree (&asm_asxxxx_smallpdk_mapping);
 }
 
 static void

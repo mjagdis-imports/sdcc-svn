@@ -1,3 +1,10 @@
+2019-01-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCasm.c,
+	  src/SDCCasm.h,
+	  src/pdk/main.c:
+	  Use ret k for constant data bytes.
+
 2019-01-31 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* sim/ucsim/z80.src/ez80.cc: add needed header for int8_t
