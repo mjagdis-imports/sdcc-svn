@@ -1,3 +1,12 @@
+2019-02-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCglue.c,
+	  src/SDCCglue.h,
+	  src/ds390/gen.c,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c:
+	  Use ret k for constant data.
+
 2019-01-31 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCasm.c,

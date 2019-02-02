@@ -65,8 +65,8 @@ aopLiteralGptr (const char * name, value * val)
   return dbuf_detach_c_str (&dbuf);
 }
 
-char *
-aopLiteralLong (value * val, int offset, int size)
+const char *
+aopLiteralLong (value *val, int offset, int size)
 {
   unsigned long v;
   struct dbuf_s dbuf;
@@ -107,8 +107,8 @@ aopLiteralLong (value * val, int offset, int size)
 /*-----------------------------------------------------------------*/
 /* aopLiteral - string from a literal value                        */
 /*-----------------------------------------------------------------*/
-char *
-aopLiteral (value * val, int offset)
+const char *
+aopLiteral (value *val, int offset)
 {
   return aopLiteralLong (val, offset, 1);
 }
@@ -608,6 +608,21 @@ printChar (struct dbuf_s *oBuf, const char *s, int plen)
   char buf[100];
   char *p = buf;
 
+  if (TARGET_PDK_LIKE && !TARGET_IS_PDK16) // Assembler does not support .ascii
+    {
+      while (pplen < plen)
+        {
+          if (isprint((unsigned char) *s))
+            dbuf_tprintf (oBuf, "\t!db !constbyte\t; %c\n", (unsigned char) *s, (unsigned char) *s);
+          else
+            dbuf_tprintf (oBuf, "\t!db !constbyte\n", (unsigned char) *s);
+
+          s++;
+          pplen++;
+        }
+      return;
+    }
+
   while (pplen < plen)
     {
       i = 60;
@@ -719,6 +734,35 @@ pointerTypeToGPByte (const int p_type, const char *iname, const char *oname)
   return -1;
 }
 
+/*-----------------------------------------------------------------*/
+/* printIvalVal - generate ival according from value               */
+/*-----------------------------------------------------------------*/
+static void printIvalVal(struct dbuf_s *oBuf, value *val, int size, bool newline)
+{
+  if (size == 2 && port->use_dw_for_init)
+    {
+      dbuf_tprintf (oBuf, "\t!dws\n", aopLiteralLong (val, 0, 2));
+      return;
+    }
+
+  const bool use_ret = TARGET_PDK_LIKE && !TARGET_IS_PDK16;
+
+  if (!use_ret)
+    dbuf_printf (oBuf, "\t.byte ");
+
+  for (int i = 0; i < size; i++)
+    {
+      const char *inst;
+      const char *byte = aopLiteral (val, port->little_endian ? i : size - 1 - i);
+      if (use_ret)
+        inst = i != size - 1 ? "\tret %s\n" : "\tret %s";
+      else
+        inst = i != size - 1 ? "%s, " : "%s";
+      dbuf_printf (oBuf, inst, byte);
+    }
+  if (newline)
+    dbuf_printf (oBuf, "\n");
+}
 
 /*-----------------------------------------------------------------*/
 /* _printPointerType - generates ival for pointer type             */
@@ -726,6 +770,13 @@ pointerTypeToGPByte (const int p_type, const char *iname, const char *oname)
 static void
 _printPointerType (struct dbuf_s *oBuf, const char *name, int size)
 {
+  if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
+    {
+      dbuf_printf (oBuf, "\tret %s", name);
+      dbuf_printf (oBuf, "\tret (%s >> 8)", name);
+      return;
+    }
+
   if (size == 4)
     {
       if (port->little_endian)
@@ -871,19 +922,10 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
     case 2:
       if (port->use_dw_for_init)
         {
-          dbuf_tprintf (oBuf, "\t!dws\n", aopLiteralLong (val, 0, 2));
+          printIvalVal (oBuf, val, 2, true);
           break;
         }
-      else if (port->little_endian)
-        {
-          dbuf_printf (oBuf, "\t.byte %s,%s",
-                       aopLiteral (val, 0), aopLiteral (val, 1));
-        }
-      else
-        {
-          dbuf_printf (oBuf, "\t.byte %s,%s",
-                       aopLiteral (val, 1), aopLiteral (val, 0));
-        }
+      printIvalVal (oBuf, val, 2, false);
       if (IS_UNSIGNED (val->type))
         dbuf_printf (oBuf, "\t; %u\n", (unsigned int) ulVal);
       else
@@ -898,16 +940,8 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
         }
       else
         {
-          if (port->little_endian)
-            {
-              dbuf_printf (oBuf, "\t.byte %s,%s,%s,%s",
-                           aopLiteral (val, 0), aopLiteral (val, 1), aopLiteral (val, 2), aopLiteral (val, 3));
-            }
-          else
-            {
-              dbuf_printf (oBuf, "\t.byte %s,%s,%s,%s",
-                           aopLiteral (val, 3), aopLiteral (val, 2), aopLiteral (val, 1), aopLiteral (val, 0));
-            }
+          printIvalVal (oBuf, val, 4, false);
+
           if (IS_FLOAT (val->type))
             {
               dbuf_printf (oBuf, "\t; % e\n", floatFromVal (val));
@@ -922,18 +956,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
         }
       break;
     case 8:
-      if (port->little_endian)
-        {
-          dbuf_printf (oBuf, "\t.byte %s,%s,%s,%s,%s,%s,%s,%s",
-            aopLiteral (val, 0), aopLiteral (val, 1), aopLiteral (val, 2), aopLiteral (val, 3), aopLiteral (val, 4), aopLiteral (val, 5), aopLiteral (val, 6), aopLiteral (val, 7));
-        }
-      else
-        {
-          dbuf_printf (oBuf, "\t.byte %s,%s,%s,%s,%s,%s,%s,%s",
-            aopLiteral (val, 7), aopLiteral (val, 6), aopLiteral (val, 5), aopLiteral (val, 4), aopLiteral (val, 3), aopLiteral (val, 2), aopLiteral (val, 1), aopLiteral (val, 0));
-        }
-      // TODO: Print value as comment. Does dbuf_printf support long long even on MSVC?
-      dbuf_printf (oBuf, "\n");
+      printIvalVal (oBuf, val, 8, true); // TODO: Print value as comment. Does dbuf_printf support long long even on MSVC?
       break;
     default:
       wassertl (0, "Attempting to initialize integer of non-handled size.");
@@ -1529,7 +1552,12 @@ printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBu
           dbuf_tprintf (oBuf, "\t!dbs\n", aopLiteral (val, 0));
           break;
         case 2:
-          if (port->use_dw_for_init)
+          if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
+            {
+              dbuf_tprintf (oBuf, "\tret %s\n", aopLiteral (val, 0));
+              dbuf_tprintf (oBuf, "\tret %s\n", aopLiteral (val, 1));
+            }
+          else if (port->use_dw_for_init)
             dbuf_tprintf (oBuf, "\t!dws\n", aopLiteralLong (val, 0, size));
           else if (port->little_endian)
             dbuf_tprintf (oBuf, "\t.byte %s,%s\n", aopLiteral (val, 0), aopLiteral (val, 1));
@@ -2529,7 +2557,7 @@ glue (void)
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
         fprintf (asmFile, "\tjp\t__sdcc_program_startup\n");
-      if(TARGET_PDK_LIKE)
+      else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t__sdcc_program_startup\n");
       else
         fprintf (asmFile, "\t%cjmp\t__sdcc_program_startup\n", options.acall_ajmp ? 'a' : 'l');
