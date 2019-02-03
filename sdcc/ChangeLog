@@ -1,5 +1,10 @@
 2019-02-03 Philipp Klaus Krause <pkk AT spth.de>
 
+	* doc/Makefile.in:
+	  Fix dependencies.
+
+2019-02-03 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/SDCCglue.c:
 	  Fix a pointer initalization issue.
 	* src/pdk/main.c:
@@ -13,6 +18,10 @@
 	  src/hc08/gen.c,
 	  src/mcs51/gen.c:
 	  Use ret k for constant data.
+
+2019-02-01 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/scripts/sdcc.nsi: add support for ez80_z80
 
 2019-01-31 Philipp Klaus Krause <pkk AT spth.de>
 
