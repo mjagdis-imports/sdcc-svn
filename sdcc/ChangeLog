@@ -2,6 +2,8 @@
 
 	* src/SDCCglue.c:
 	  Fix a pointer initalization issue.
+	* src/pdk/main.c:
+	  Save a word in stack-pointer setup.
 
 2019-02-02 Philipp Klaus Krause <pkk AT spth.de>
 

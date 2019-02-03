@@ -91,8 +91,7 @@ pdk_genInitStartup (FILE *of)
     {
       fprintf (of, "\tmov\ta, #s_DATA\n");
       fprintf (of, "\tadd\ta, #l_DATA + 1\n");
-      fprintf (of, "\tsr\ta\n");
-      fprintf (of, "\tsl\ta\n");
+      fprintf (of, "\tand\ta, #0xfe\n");
       fprintf (of, "\tmov\tsp, a\n");
     }
 
