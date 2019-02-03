@@ -1323,7 +1323,7 @@ jumpret:
   /* generate a jump to the return label
      if the next is not the return statement */
   if (!(ic->next && ic->next->op == LABEL && IC_LABEL (ic->next) == returnLabel))
-    if (!currFunc->stack)
+    if (!currFunc->stack && !IFFUNC_ISISR (currFunc->type))
     {
       emit2 ("ret", "");
       cost (2, 1);
