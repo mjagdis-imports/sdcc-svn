@@ -772,8 +772,8 @@ _printPointerType (struct dbuf_s *oBuf, const char *name, int size)
 {
   if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
     {
-      dbuf_printf (oBuf, "\tret %s", name);
-      dbuf_printf (oBuf, "\tret (%s >> 8)", name);
+      dbuf_printf (oBuf, "\tret #%s\n", name);
+      dbuf_printf (oBuf, "\tret #(%s >> 8)", name);
       return;
     }
 
