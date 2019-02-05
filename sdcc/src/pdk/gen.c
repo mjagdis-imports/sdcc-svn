@@ -2266,15 +2266,18 @@ genPointerGet (const iCode *ic)
   wassertl (IS_OP_LITERAL (right), "GET_VALUE_AT_ADDRESS with non-literal right operand");
 
   bool bit_field = IS_BITVAR (getSpec (operandType (result)));
+  symbol *const tlbl = ((regalloc_dry_run || !bit_field) ? 0 : newiTempLabel (NULL));
   int size = result->aop->size;
+  int blen, bstr;
+  blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
+  bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
 
-  wassertl (!bit_field, "Unimplemented read of bit-field");
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
   // Generic, but also inefficient.
   if (1)
     {
-      for (int i = 0; i < size; i++)
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           genMove (ASMOP_PA, left->aop, true);
           for (int j = 0; j < i; j++)
@@ -2285,13 +2288,45 @@ genPointerGet (const iCode *ic)
             }
           emit2 ("call", "__gptrget");
           cost (1, 2);
+
+
+          if (bit_field && blen < 8 && !i) // The only byte might need shifting.
+            {
+              if (bstr >= 4)
+                {
+                  emit2 ("swap", "a");
+                  cost (1, 1);
+                  bstr -= 4;
+                }
+              while (bstr--)
+                {
+                  emit2 ("sr", "a");
+                  cost (1, 1);
+                }
+            }
+          if (bit_field && blen < 8) // The partial byte.
+            {
+              emit2 ("and", "a, #0x%02x", 0xff >> (8 - blen));
+              cost (2, 1);
+            }
+
+          if (bit_field && blen <= 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
+            {
+              emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - blen));
+              emit2 ("t1sn", "f, c");
+              if (tlbl)
+                emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
+              emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
+              cost (4, 4);
+              emitLabel (tlbl);
+            }
+
           cheapMove (result->aop, i, ASMOP_A, 0, true, true);
         }
       goto release;
     }
 
-  // Stuff from here works for pointers to RAM. todo: Use it when when possible.
-
+  // Stuff from here works for pointers to RAM only. todo: Use it when when possible.
   if (left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
     {
       for (int i = 0; i < size; i++)
@@ -2340,10 +2375,11 @@ genPointerGet (const iCode *ic)
         }
       cheapMove (ASMOP_P, 0, left->aop, 0, true, true);
       G.p.type = AOP_INVALID;
-      for (int i = 0; i < size; i++)
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           emit2 ("idxm", "a, p");
           cost (1, 2);
+
           cheapMove (result->aop, i, ASMOP_A, 0, true, true);
           if (i + 1 != size)
             {
@@ -2375,6 +2411,10 @@ genPointerSet (iCode *ic)
 
   bool bit_field = IS_BITVAR (getSpec (operandType (right))) || IS_BITVAR (getSpec (operandType (left)));
   int size = right->aop->size;
+
+  int blen, bstr;
+  blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
+  bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
 
   wassertl (!bit_field, "Unimplemented write of bit-field");
 
@@ -2426,7 +2466,7 @@ genPointerSet (iCode *ic)
         }
       cheapMove (ASMOP_P, 0, left->aop, 0, true, true);
       G.p.type = AOP_INVALID;
-      for (int i = 0; i < size; i++)
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           cheapMove (ASMOP_A, 0, right->aop, i, true, true);
           emit2 ("idxm", "p, a");
