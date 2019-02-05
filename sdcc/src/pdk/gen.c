@@ -2416,9 +2416,7 @@ genPointerSet (iCode *ic)
   blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
 
-  wassertl (!bit_field, "Unimplemented write of bit-field");
-
-  if (left->aop->type == AOP_DIR)
+  if (left->aop->type == AOP_DIR && !bit_field)
     {
       for (int i = 0; i < size; i++)
         {
@@ -2437,7 +2435,7 @@ genPointerSet (iCode *ic)
           cost (1, 1);
         }
     }
-  else if (right->aop->type == AOP_STK)
+  else if (right->aop->type == AOP_STK && !bit_field)
     {
       if (!regDead (P_IDX, ic))
         {
@@ -2468,7 +2466,24 @@ genPointerSet (iCode *ic)
       G.p.type = AOP_INVALID;
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
-          cheapMove (ASMOP_A, 0, right->aop, i, true, true);
+          if (bit_field && blen < 8)
+            {
+              wassertl (right->aop->type == AOP_LIT, "Unimplemented operand for bit-field write");
+
+              emit2 ("idxm", "a, p");
+
+              unsigned char bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr);
+              emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
+              cost (1, 1);
+              if (bval)
+                {
+                  emit2 ("or", "a, #0x%02x", bval);
+                  cost (1, 1);
+                }
+            }
+          else
+            cheapMove (ASMOP_A, 0, right->aop, i, true, true);
+
           emit2 ("idxm", "p, a");
           cost (1, 2);
           if (i + 1 != size)

@@ -1,7 +1,7 @@
 2019-02-05 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
-	  Implement read from bit-field.
+	  Implement read from bit-field, literal write to bit-field.
 
 2019-02-05 Philipp Klaus Krause <pkk AT spth.de>
 
