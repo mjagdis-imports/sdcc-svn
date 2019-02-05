@@ -32,7 +32,7 @@
  */
 
 #include "asxxxx.h"
-#include "pdk.h"
+#include "pdk14.h"
 
 char    *cpu    = "Padauk 14";
 char    *dsft   = "asm";

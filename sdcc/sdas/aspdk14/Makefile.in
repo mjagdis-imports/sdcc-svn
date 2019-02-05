@@ -49,16 +49,16 @@ ASXXLIB = $(srcdir)/../asxxsrc
 ASXXLIBSRC = asdbg.c asdata.c asexpr.c aslex.c aslist.c asmain.c asout.c assubr.c assym.c asmcro.c sdas.c strcmpi.c
 ASXXLIBOBJS = $(ASXXLIBSRC:%.c=$(OBJDIR)/%.o)
 
-SRC = pdkpst.c pdkmch.c pdkadr.c
+SRC = pdk14pst.c pdk14mch.c pdk14adr.c
 OBJS = $(SRC:%.c=$(OBJDIR)/%.o)
 
 ASSOURCES = $(SRC) $(ASXXLIBSRC:%.c=$(ASXXLIB)/%.c) $(UTILSRC:%.c=$(UTILLIB)/%.c)
 
 ASOBJECTS = $(OBJS) $(ASXXLIBOBJS) $(UTILLIBOBJS)
 
-ASX = $(top_builddir)/bin/sdaspdk$(EXEEXT)
-#DEST = $(DESTDIR)$(bindir)/sdaspdk$(EXEEXT)
-DEST = sdaspdk
+ASX = $(top_builddir)/bin/sdaspdk14$(EXEEXT)
+#DEST = $(DESTDIR)$(bindir)/sdaspdk14$(EXEEXT)
+DEST = sdaspdk14
 DESTPATH = $(DESTDIR)$(bindir)/
 
 transform       = @program_transform_name@

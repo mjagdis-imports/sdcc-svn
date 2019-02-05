@@ -1,3 +1,19 @@
+2019-02-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix signed comparison by 0.
+	* Makefile.in,
+	  configure,
+	  configure.ac,
+	  src/pdk/main.c,
+	  sdas/aspdk,
+	  sdas/aspdk14:
+	  Assembler rename, based on patch by Nicolas Lesser.
+
+2019-02-04 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c: fix bug #2863
+
 2019-02-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:

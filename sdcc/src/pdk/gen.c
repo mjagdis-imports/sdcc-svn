@@ -1651,7 +1651,26 @@ genCmp (const iCode *ic, iCode *ifx)
   bool started = false;
   for (int i = 0; i < size; i++)
     {
-      if (!started && aopIsLitVal (right->aop, i, 1, 0x00))
+#if 0 // Enable when Assembler can handle t0sn a, #7 - will neve rhgappen
+      if (!started && sign && aopIsLitVal (right->aop, i, 1, 0x00) && i + 1 == size)
+        {
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          if (ifx)
+            {
+               emit2 ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)) ? "t1sn" : "t0sn", "a, #7");
+               cost (1, 1.5);
+               emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+            }
+          else
+            {
+              emit2 ("sl", "a");
+              emit2 ("mov", "a, #0x00");
+              emit2 ("slc", "a");
+            }
+          goto release;
+        }
+#endif
+      if (!started && aopIsLitVal (right->aop, i, 1, 0x00) && i + 1 < size)
         ;
       else if (started && aopIsLitVal (right->aop, i, 1, 0x00))
         {

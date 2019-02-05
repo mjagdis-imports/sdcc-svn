@@ -199,9 +199,9 @@ static const char *_linkCmd[] =
 };
 
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
-static const char *pdkAsmCmd[] =
+static const char *pdk13AsmCmd[] =
 {
-  "sdaspdk", "$l", "$3", "\"$1.asm\"", NULL
+  "sdaspdk14", "$l", "$3", "\"$1.asm\"", NULL
 };
 
 static const char *const _libs_pdk13[] = { "pdk13", NULL, };
@@ -220,7 +220,7 @@ PORT pdk13_port =
     0,                          /* model == target */
   },
   {                             /* Assembler */
-    pdkAsmCmd,
+    pdk13AsmCmd,
     0,
     "-plosgffwy",               /* Options with debug */
     "-plosgffw",                /* Options without debug */
@@ -363,6 +363,12 @@ PORT pdk13_port =
   PORT_MAGIC
 };
 
+/* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
+static const char *pdk14AsmCmd[] =
+{
+  "sdaspdk14", "$l", "$3", "\"$1.asm\"", NULL
+};
+
 static const char *const _libs_pdk14[] = { "pdk14", NULL, };
 
 PORT pdk14_port =
@@ -379,7 +385,7 @@ PORT pdk14_port =
     0,                          /* model == target */
   },
   {                             /* Assembler */
-    pdkAsmCmd,
+    pdk14AsmCmd,
     0,
     "-plosgffwy",               /* Options with debug */
     "-plosgffw",                /* Options without debug */
@@ -522,6 +528,12 @@ PORT pdk14_port =
   PORT_MAGIC
 };
 
+/* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
+static const char *pdk15AsmCmd[] =
+{
+  "sdaspdk14", "$l", "$3", "\"$1.asm\"", NULL
+};
+
 static const char *const _libs_pdk15[] = { "pdk15", NULL, };
 
 PORT pdk15_port =
@@ -538,7 +550,7 @@ PORT pdk15_port =
     0,                          /* model == target */
   },
   {                             /* Assembler */
-    pdkAsmCmd,
+    pdk15AsmCmd,
     0,
     "-plosgffwy",               /* Options with debug */
     "-plosgffw",                /* Options without debug */

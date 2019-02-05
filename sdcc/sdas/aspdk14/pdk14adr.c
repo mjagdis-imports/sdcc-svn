@@ -29,7 +29,7 @@
  */
 
 #include "asxxxx.h"
-#include "pdk.h"
+#include "pdk14.h"
 
 
 /*  Classify argument as to address mode */

@@ -916,7 +916,7 @@ if test $OPT_DISABLE_PDK13 = 0 || test $OPT_DISABLE_PDK14 = 0 || test $OPT_DISAB
 fi
 
 if test $OPT_DISABLE_PDK14 = 0; then
-  AC_CONFIG_FILES([sdas/aspdk/Makefile])
+  AC_CONFIG_FILES([sdas/aspdk14/Makefile])
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk14/Makefile])
 fi
 
