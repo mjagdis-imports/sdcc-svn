@@ -143,7 +143,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
     return(true);
 
-  if (ic->op == RETURN)
+  if (ic->op == RETURN ||
+    (ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(result)) == 1 || ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1) && dying_A)
     return(true);
 
   if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))
@@ -177,6 +178,7 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   const operand *result = IC_RESULT(ic);
 
   bool result_in_P = operand_in_reg(result, REG_P, ia, i, G);
+  bool left_in_P = operand_in_reg(left, REG_P, ia, i, G);
 
   const cfg_dying_t &dying = G[i].dying;
 
@@ -193,6 +195,9 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(false);
 
   if (ic->op == CALL && !dying_P)
+    return(false);
+
+  if (ic->op == GET_VALUE_AT_ADDRESS && !dying_P && !(left_in_P && getSize(operandType(result)) == 1))
     return(false);
 
   return(true);

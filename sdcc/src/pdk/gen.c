@@ -2062,7 +2062,7 @@ genLeftShift (const iCode *ic)
           if (shCount >= 4 && size == 1 && aopInReg (result->aop, 0, A_IDX))
             {
               emit2 ("swap", "a");
-              emit2 ("and", "a, 0xf0");
+              emit2 ("and", "a, #0xf0");
               cost (2, 2);
               shCount -= 4;
               continue;
@@ -2158,7 +2158,7 @@ genRightShift (const iCode *ic)
           if (SPEC_USIGN (getSpec (operandType (left))) && shCount >= 4 && size == 1 && aopInReg (result->aop, 0, A_IDX))
             {
               emit2 ("swap", "a");
-              emit2 ("and", "a, 0x0f");
+              emit2 ("and", "a, #0x0f");
               cost (2, 2);
               shCount -= 4;
               continue;
