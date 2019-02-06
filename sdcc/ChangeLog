@@ -1,5 +1,14 @@
 2019-02-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c,
+	  src/pdk/gen.h,
+	  src/pdk/ralloc.c,
+	  src/pdk/ralloc2.cc,
+	  src/pdk/gen.c:
+	  Various improvments in register allocation.
+
+2019-02-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/ralloc.c,
 	  src/pdk/gen.c:
 	  Rematerialization.

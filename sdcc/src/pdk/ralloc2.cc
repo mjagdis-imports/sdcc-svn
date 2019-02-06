@@ -49,6 +49,9 @@ static void add_operand_conflicts_in_node(const cfg_node &n, I_t &I)
     ic->op == GET_VALUE_AT_ADDRESS))
     return;
 
+  if (ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(IC_RESULT(ic))) == 1)
+    return;
+
   operand_map_t::const_iterator oir, oir_end, oirs; 
   boost::tie(oir, oir_end) = n.operands.equal_range(OP_SYMBOL_CONST(result)->key);
   if(oir == oir_end)
@@ -146,6 +149,11 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if (ic->op == RETURN ||
     (ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(result)) == 1 || ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1) && dying_A)
     return(true);
+
+  if ((ic->op == '=' || ic->op == CAST) &&
+    (getSize(operandType(result)) == 1 || getSize(operandType(result)) == 2 && SPEC_USIGN (getSpec(operandType(right))) && operand_byte_in_reg(result, 1, REG_P, a, i, G)) &&
+    right_in_A && (IS_TRUE_SYMOP (result) || dying_A))
+    return (true);
 
   if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))
     return(IS_OP_LITERAL(right) && (ullFromVal(OP_VALUE_CONST (right)) <= 2 + optimize.codeSpeed || getSize(operandType(result)) == 1) || right_in_A && !result_in_A);

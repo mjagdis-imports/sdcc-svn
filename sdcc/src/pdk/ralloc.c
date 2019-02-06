@@ -431,10 +431,26 @@ packRegisters (eBBlock * ebp)
       /* if straight assignment then carry remat flag if this is the
          only definition */
       if (ic->op == '=' && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the paramter is not accounted for in DEFS */)
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the parameter is not accounted for in DEFS */)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
+        }
+
+      /* if cast to a generic pointer & the pointer being
+         cast is remat, then we can remat this cast as well */
+      if (ic->op == CAST &&
+        IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the paramter is not accounted for in DEFS */)
+        {
+          sym_link *to_type = operandType (IC_LEFT (ic));
+          sym_link *from_type = operandType (IC_RIGHT (ic));
+          if (IS_GENPTR (to_type) && IS_PTR (from_type))
+            {
+              OP_SYMBOL (IC_RESULT (ic))->remat = 1;
+              OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;
+              OP_SYMBOL (IC_RESULT (ic))->usl.spillLoc = NULL;
+            }
         }
 
       /* if this is a +/- operation with a rematerizable
@@ -454,6 +470,7 @@ packRegisters (eBBlock * ebp)
 
       /* In some cases redundant moves can be eliminated */
       if (ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS ||
+        ic->op == '+' || ic->op == '-' ||
         ic->op == IFX && operandSize (IC_COND (ic)) == 1 ||
         ic->op == IPUSH && operandSize (IC_LEFT (ic)) == 1)
         packRegsForOneuse (ic, &(IC_LEFT (ic)), ebp);

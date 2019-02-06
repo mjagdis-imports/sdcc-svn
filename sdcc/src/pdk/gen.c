@@ -231,6 +231,8 @@ aopGet(const asmop *aop, int offset)
       wassertl_bt (offset < (2 + (options.model == MODEL_LARGE)), "Immediate operand out of range");
       if (offset == 0)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
+      //else if (aop->aopu.code) - Assembler can't handle this.
+      //  SNPRINTF (buffer, sizeof(buffer), "#(((%s + %d) >> %d) | 0x80)", aop->aopu.immd, aop->aopu.immd_off, offset * 8);
       else
         SNPRINTF (buffer, sizeof(buffer), "#((%s + %d) >> %d)", aop->aopu.immd, aop->aopu.immd_off, offset * 8);
       return (buffer);
@@ -307,6 +309,7 @@ aopForSym (const iCode *ic, symbol *sym)
       aop = newAsmop (AOP_IMMD);
       aop->aopu.immd = sym->rname;
       aop->aopu.immd_off = 0;
+      aop->aopu.code = IN_CODESPACE (SPEC_OCLS (sym->etype));
       aop->size = getSize (sym->type);
     }
   /* Assign depending on the storage class */
@@ -398,6 +401,7 @@ aopForRemat (symbol *sym)
       aop = newAsmop (AOP_IMMD);
       aop->aopu.immd = OP_SYMBOL (IC_LEFT (ic))->rname;
       aop->aopu.immd_off = val;
+      aop->aopu.code = IN_CODESPACE (SPEC_OCLS (OP_SYMBOL (IC_LEFT (ic))->etype));
     }
 
   aop->size = getSize (sym->type);
@@ -2843,8 +2847,8 @@ genCast (const iCode *ic)
   resulttype = operandType (result);
   righttype = operandType (right);
 
-  if ((getSize (resulttype) <= getSize (righttype) || !IS_SPEC (righttype) || (SPEC_USIGN (righttype) || IS_BOOL (righttype))) &&
-    (!IS_BOOL (resulttype) || IS_BOOL (righttype)))
+  if ((getSize (resulttype) <= getSize (righttype) || !IS_SPEC (righttype) || (SPEC_USIGN (righttype) || IS_BOOLEAN (righttype))) &&
+    (!IS_BOOLEAN (resulttype) || IS_BOOLEAN (righttype)))
     {
       genAssign (ic);
       return;
