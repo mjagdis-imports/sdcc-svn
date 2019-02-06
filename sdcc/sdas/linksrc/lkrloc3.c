@@ -448,7 +448,7 @@ relr3(void)
 
                         /* pdk addresses in words, not in bytes. */
                         rtval[rtp] /= 2;
-                        rtval[rtp] |= rtval[rtp + 1] & 1;
+                        rtval[rtp] |= (rtval[rtp + 1] & 1) << 7;
                         rtval[rtp + 1] /= 2;
 
                         /* Do the actual opcode fusion and ignore the extra
