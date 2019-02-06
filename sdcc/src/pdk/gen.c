@@ -2468,16 +2468,41 @@ genPointerSet (iCode *ic)
         {
           if (bit_field && blen < 8)
             {
-              wassertl (right->aop->type == AOP_LIT, "Unimplemented operand for bit-field write");
-
               emit2 ("idxm", "a, p");
-
-              unsigned char bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr);
               emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
               cost (1, 1);
-              if (bval)
+
+              if (right->aop->type == AOP_LIT)
                 {
-                  emit2 ("or", "a, #0x%02x", bval);
+                  unsigned char bval;
+                  if (bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr))
+                    {
+                      emit2 ("or", "a, #0x%02x", bval);
+                      cost (1, 1);
+                    }
+                }
+              else
+                {
+                  emit2 ("xch", "a, p");
+                  cost (1, 1);
+                  pushAF ();
+                  cheapMove (ASMOP_A, 0, right->aop, i, true, true);
+                  if (bstr >= 4)
+                    {
+                      emit2 ("swap", "a");
+                      cost (1, 1);
+                    }
+                  for (int j = (bstr >= 4 ? 4 : 0); j < bstr; j++)
+                    {
+                      emit2 ("sl", "a");
+                      cost (1, 1);
+                    }
+                  emit2 ("and", "a, #0x%02x", (0xff >> (8 - blen)) << bstr);
+                  emit2 ("or", "a, p");
+                  emit2 ("mov", "p, a");
+                  cost (3, 3);
+                  popAF ();
+                  emit2 ("xch", "a, p");
                   cost (1, 1);
                 }
             }
