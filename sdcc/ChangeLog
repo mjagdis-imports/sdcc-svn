@@ -1,9 +1,15 @@
-2019-02-06 Philipp Klaus Krause <pkk AT spth.de>
+2019-02-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/ralloc.c,
+	  src/pdk/gen.c:
+	  Rematerialization.
+
+2019-02-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
 	  Fix direct read from variable in code space.
 
-2019-02-06 Philipp Klaus Krause <pkk AT spth.de>
+2019-02-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
 	  Implement write of non-literal to bit-field.

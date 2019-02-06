@@ -341,6 +341,71 @@ aopForSym (const iCode *ic, symbol *sym)
 }
 
 /*-----------------------------------------------------------------*/
+/* aopForRemat - rematerializes an object                          */
+/*-----------------------------------------------------------------*/
+static asmop *
+aopForRemat (symbol *sym)
+{
+  iCode *ic = sym->rematiCode;
+  asmop *aop;
+  int val = 0;
+
+  wassert_bt (ic);
+
+  for (;;)
+    {
+      if (ic->op == '+')
+        {
+          if (isOperandLiteral (IC_RIGHT (ic)))
+            {
+              val += (int) operandLitValue (IC_RIGHT (ic));
+              ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
+            }
+          else
+            {
+              val += (int) operandLitValue (IC_LEFT (ic));
+              ic = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
+            }
+        }
+      else if (ic->op == '-')
+        {
+          val -= (int) operandLitValue (IC_RIGHT (ic));
+          ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
+        }
+      else if (IS_CAST_ICODE (ic))
+        {
+          ic = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
+        }
+      else if (ic->op == ADDRESS_OF)
+        {
+          val += (int) operandLitValue (IC_RIGHT (ic));
+          break;
+        }
+      else
+        wassert_bt (0);
+    }
+
+  wassert (!OP_SYMBOL (IC_LEFT (ic))->onStack);
+#if 0 // TODO: Enable for support for rematerialization of addresses on stack.
+  if (OP_SYMBOL (IC_LEFT (ic))->onStack)
+    {
+      aop = newAsmop (AOP_STL);
+      aop->aopu.stk_off = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + 1 + val;
+    }
+  else
+#endif
+    {
+      aop = newAsmop (AOP_IMMD);
+      aop->aopu.immd = OP_SYMBOL (IC_LEFT (ic))->rname;
+      aop->aopu.immd_off = val;
+    }
+
+  aop->size = getSize (sym->type);
+
+  return aop;
+}
+
+/*-----------------------------------------------------------------*/
 /* aopOp - allocates an asmop for an operand  :                    */
 /*-----------------------------------------------------------------*/
 static void
@@ -372,8 +437,18 @@ aopOp (operand *op, const iCode *ic)
     }
 
   /* Rematerialize symbols where all bytes are spilt. */
-  if (sym->remat && sym->isspilt)
-    wassertl (0, "Unimplemented rematerialized operand");
+  if (sym->remat && (sym->isspilt || regalloc_dry_run))
+    {
+      bool completely_spilt = TRUE;
+      for (int i = 0; i < getSize (sym->type); i++)
+        if (sym->regs[i])
+          completely_spilt = FALSE;
+      if (completely_spilt)
+        {
+          op->aop = aopForRemat (sym);
+          return;
+        }
+    }
 
   /* if the type is a conditional */
   if (sym->regType == REG_CND)
@@ -1408,7 +1483,7 @@ genPlus (const iCode *ic)
           cost (1, 1);
           started = true;
         }
-      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00))
+      else if (started && (right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00) || right->aop->type == AOP_IMMD))
         {
           cheapMove (ASMOP_P, 0, right->aop, i, !aopInReg (left->aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left->aop, i, true, false);
@@ -2862,6 +2937,34 @@ genDummyRead (const iCode *ic)
   freeAsmop (op);
 }
 
+/*-----------------------------------------------------------------*/
+/* resultRemat - result is to be rematerialized                    */
+/*-----------------------------------------------------------------*/
+static bool
+resultRemat (const iCode *ic)
+{
+  if (SKIP_IC (ic) || ic->op == IFX)
+    return 0;
+
+  if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)))
+    {
+      const symbol *sym = OP_SYMBOL_CONST (IC_RESULT (ic));
+
+      if (!sym->remat)
+        return(false);
+
+      bool completely_spilt = TRUE;
+      for (unsigned int i = 0; i < getSize (sym->type); i++)
+        if (sym->regs[i])
+          completely_spilt = FALSE;
+
+      if (completely_spilt)
+        return(true);
+    }
+
+  return (false);
+}
+
 /*---------------------------------------------------------------------*/
 /* genSTM8Code - generate code for STM8 for a single iCode instruction */
 /*---------------------------------------------------------------------*/
@@ -2870,14 +2973,12 @@ genPdkiCode (iCode *ic)
 {
   genLine.lineElement.ic = ic;
 
-#if 0
   if (resultRemat (ic))
     {
       if (!regalloc_dry_run)
         D (emit2 ("; skipping iCode since result will be rematerialized", ""));
       return;
     }
-#endif
 
   if (ic->generated)
     {
