@@ -38,6 +38,8 @@ typedef enum
   AOP_DIR,
   /* I/O register */
   AOP_SFR,
+  /* Is in code space */
+  AOP_CODE,
   /* Read undefined, discard writes */
   AOP_DUMMY,
   /* Implicit condition operand */

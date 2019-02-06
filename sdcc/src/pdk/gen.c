@@ -329,7 +329,7 @@ aopForSym (const iCode *ic, symbol *sym)
     }
   else
     {
-      aop = newAsmop (AOP_DIR);
+      aop = newAsmop (IN_CODESPACE (SPEC_OCLS (sym->etype)) ? AOP_CODE : AOP_DIR);
       if (sym)
         {
           aop->aopu.aop_dir = sym->rname;
@@ -576,6 +576,11 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
       emit2 ("clear", "%s", aopGet (result, roffset));
       cost (1, 1);
     }
+  else if (source->type == AOP_CODE && aopInReg (result, roffset, A_IDX))
+    {
+      emit2 ("call", "%s+%d", source->aopu.aop_dir, soffset);
+      cost (1, 4);
+    }
   else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX))
     {
       pointPStack(source->aopu.bytes[soffset].byteu.stk, true, f_dead);
@@ -755,7 +760,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       }
 
   wassert_bt (result->type == AOP_DIR || result->type == AOP_REG || result->type == AOP_STK);
-  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG || source->type == AOP_STK);
+  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG || source->type == AOP_STK || source->type == AOP_CODE);
 
   if (size == 2 && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) && source->type == AOP_STK)
     {
