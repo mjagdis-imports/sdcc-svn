@@ -2462,30 +2462,52 @@ genPointerSet (iCode *ic)
           wassert (regalloc_dry_run);
           cost (1000, 1000);
         }
-      cheapMove (ASMOP_P, 0, left->aop, 0, true, true);
+      const asmop *ptr_aop = (left->aop->type == AOP_DIR && size == 1) ? left->aop : ASMOP_P;
+      cheapMove (ptr_aop, 0, left->aop, 0, true, true);
       G.p.type = AOP_INVALID;
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           if (bit_field && blen < 8)
             {
-              emit2 ("idxm", "a, p");
-              emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
-              cost (1, 1);
-
               if (right->aop->type == AOP_LIT)
                 {
                   unsigned char bval;
+
+                  emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                  emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
+                  cost (2, 2);
+
                   if (bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr))
                     {
                       emit2 ("or", "a, #0x%02x", bval);
                       cost (1, 1);
                     }
                 }
+              else if (bit_field && blen == 1)
+                {
+                  cheapMove (ASMOP_A, 0, right->aop, i, true, true);
+                  emit2 ("sr", "a");
+                  emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                  emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
+                  emit2 ("t0sn", "f, c");
+                  emit2 ("or", "a, #0x%02x", 1 << bstr);
+                  cost (5, 5);
+                }
               else
                 {
+                  if (aopInReg (right->aop, i, A_IDX))
+                    {
+                      cost (100, 100);
+                      wassert (regalloc_dry_run);
+                    }
+                  emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                  emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
+                  cost (2, 2);
+
                   emit2 ("xch", "a, p");
                   cost (1, 1);
-                  pushAF ();
+                  if (aopInReg (ptr_aop, 0, P_IDX))
+                    pushAF ();
                   cheapMove (ASMOP_A, 0, right->aop, i, true, true);
                   if (bstr >= 4)
                     {
@@ -2499,17 +2521,22 @@ genPointerSet (iCode *ic)
                     }
                   emit2 ("and", "a, #0x%02x", (0xff >> (8 - blen)) << bstr);
                   emit2 ("or", "a, p");
-                  emit2 ("mov", "p, a");
-                  cost (3, 3);
-                  popAF ();
-                  emit2 ("xch", "a, p");
-                  cost (1, 1);
+                  cost (2, 2);
+
+                  if (aopInReg (ptr_aop, 0, P_IDX))
+                    {
+                      emit2 ("mov", "p, a");
+                      cost (1, 1);
+                      popAF ();
+                      emit2 ("xch", "a, p");
+                      cost (1, 1);
+                    }
                 }
             }
           else
             cheapMove (ASMOP_A, 0, right->aop, i, true, true);
 
-          emit2 ("idxm", "p, a");
+          emit2 ("idxm", "%s, a", aopGet (ptr_aop, 0));
           cost (1, 2);
           if (i + 1 != size)
             {
