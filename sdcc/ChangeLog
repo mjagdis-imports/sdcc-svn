@@ -8,6 +8,8 @@
 	  Various improvements in register allocation.
 	* sdas/linksrc/lkrloc3.c:
 	  Fix a linker issue, patch by Nicolas Lesser.
+	* device/lib/pdk14/__gptrget.s:
+	  Fix an issue in read from pointer to ROM.
 
 2019-02-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
