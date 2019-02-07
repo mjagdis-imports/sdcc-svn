@@ -1,3 +1,12 @@
+2019-02-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version,
+	  Makefile.in,
+	  configure,
+	  configure.ac,
+	  doc/sdccman.lyx:
+	  Remove sdcclib.
+
 2019-02-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* sdas/aspdk14,
