@@ -29,7 +29,7 @@
  */
 
 #include "asxxxx.h"
-#include "pdk14.h"
+#include "pdk.h"
 
 
 /*  Classify argument as to address mode */
@@ -77,7 +77,7 @@ addr(struct expr *esp)
                 /* If there is no area information, assume that we have in
                 fact parsed an IO register variable - since any other constant
                 would have been prefixed by a '#'. */
-                if (!esp->e_base.e_ap)
+                if (!esp->e_flag && !esp->e_base.e_ap)
                         esp->e_mode = S_IO;
         }
 

@@ -1,4 +1,4 @@
-/* pdkmch.c */
+/* pdk14mch.c */
 
 /*
  *  Copyright (C) 1998-2011  Alan R. Baldwin
@@ -32,7 +32,7 @@
  */
 
 #include "asxxxx.h"
-#include "pdk14.h"
+#include "pdk.h"
 
 char    *cpu    = "Padauk 14";
 char    *dsft   = "asm";
@@ -44,139 +44,73 @@ VOID
 machine(struct mne *mp)
 {
         a_uint op;
-        int t, t1, combine;
-        struct expr e, e1, e2;
-
-        clrexpr(&e);
-        clrexpr(&e1);
-        clrexpr(&e2);
+        int combine;
 
         op = mp->m_valu;
         combine = 0;
+
+        /* Default instructions are only used for A -> K instructions.
+         * Although they may be (ab)used for other types.
+         */
+        struct inst def = {op, 0xFF};
         switch (mp->m_type) {
 
-        case S_MOV:
-                t = addr(&e);
-                comma(1);
-                t1 = addr(&e1);
-                if (t == S_IO && t1 == S_A) {
-                        op = 0x0180;
-                        op |= e.e_addr & 0x3F;
-                } else
-                if (t == S_A && t1 == S_IO) {
-                        op = 0x01C0;
-                        op |= e1.e_addr & 0x3F;
-                } else
-                if (t == S_M && t1 == S_A) {
-                        op = 0xB80;
-                        op |= e.e_addr & 0x7F;
-                } else
-                if (t == S_A && t1 == S_M) {
-                        op = 0x0F80;
-                        op |= e1.e_addr & 0x7F;
-                } else
-                if (t == S_A && t1 == S_K)
-                        op |= e1.e_addr & 0xFF;
-                else
-                        aerr();
-
-                outaw(op);
+        case S_MOV: {
+                struct inst ioa = {0x0180, 0x3F};
+                struct inst aio = {0x01C0, 0x3F};
+                struct inst ma = {0x0B80, 0x7F};
+                struct inst am = {0x0F80, 0x7F};
+                emov(def, ioa, aio, ma, am);
                 break;
+        }
 
-        case S_IDXM:
-                t = addr(&e);
-                comma(1);
-                t1 = addr(&e1);
-                if (t == S_A && t1 == S_M) {
-                        op |= 1;
-                        op |= (e1.e_addr & 0x7F) << 1;
-                } else
-                if (t == S_M && t1 == S_A) {
-                        op |= (e.e_addr & 0x7F) << 1;
-                } else
-                        aerr();
-
-                outaw(op);
+        case S_IDXM: {
+                struct inst am = {op | 1, 0x7E};
+                struct inst ma = {op, 0x7E};
+                eidxm(am, ma);
                 break;
+        }
 
         case S_SUB:
                 combine = 0x80;
                 /* fallthrough */
-        case S_ADD:
-                t = addr(&e);
-                comma(1);
-                t1 = addr(&e1);
-                if (t == S_M && t1 == S_A) {
-                        op = 0x0800 | combine;
-                        op |= e.e_addr & 0x7F;
-                } else
-                if (t == S_A && t1 == S_M) {
-                        op = 0x0C00 | combine;
-                        op |= e1.e_addr & 0x7F;
-                } else
-                if (t == S_A && t1 == S_K) {
-                        op |= e1.e_addr & 0xFF;
-                } else
-                        aerr();
-
-                outaw(op);
+        case S_ADD: {
+                struct inst ma = {0x0800 | combine, 0x7F};
+                struct inst am = {0x0C00 | combine, 0x7F};
+                earith(def, ma, am);
                 break;
+        }
 
         case S_SUBC:
                 combine = 0x80;
                 /* fallthrough */
-        case S_ADDC:
-                t = addr(&e);
-                if (comma(0)) {
-                        t1 = addr(&e1);
-                        if (t == S_M && t1 == S_A) {
-                                op = 0x0900 | combine;
-                                op |= e.e_addr & 0x7F;
-                        } else
-                        if (t == S_A && t1 == S_M) {
-                                op = 0x0D00 | combine;
-                                op |= e1.e_addr & 0x7F;
-                        } else
-                                aerr();
-                } else
-                if (t == S_M) {
-                        op = 0x1000 | combine;
-                        op |= e.e_addr & 0x7F;
-                } else
-                if (t == S_A) {
-                        op = 0x0060 + (combine ? 1 : 0);
-                } else
-                        aerr();
-
-                outaw(op);
+        case S_ADDC: {
+                struct inst ma = {0x0900 | combine, 0x7F};
+                struct inst am = {0x0D00 | combine, 0x7F};
+                struct inst m = {0x1000 | combine, 0x7F};
+                struct inst a = {0x0060 + (combine ? 1 : 0), 0x00};
+                earithc(ma, am, m, a);
                 break;
+        }
 
         case S_SLC:
         case S_SRC:
         case S_SL:
-        case S_SR:
+        case S_SR: {
                 if (mp->m_type == S_SRC || mp->m_type == S_SLC)
                         combine = 2;
                 if (mp->m_type == S_SL || mp->m_type == S_SLC)
                         combine += 1;
 
-                t = addr(&e);
-
-                if (t == S_A) {
-                        op = 0x006A + combine;
-                } else
-                if (t == S_M) {
-                        op = 0x1500 + (combine << 7);
-                        op |= e.e_addr & 0x7F;
-                } else
-                        aerr();
-
-                outaw(op);
+                struct inst a = {0x006A + combine, 0x00};
+                struct inst m = {0x1500 + (combine << 7), 0x7F};
+                eshift(a, m);
                 break;
+        }
 
         case S_OR:
         case S_XOR:
-        case S_AND:
+        case S_AND: {
                 if (mp->m_type == S_OR) {
                         combine = 0x80;
                 } else
@@ -184,216 +118,115 @@ machine(struct mne *mp)
                         combine = 0x100;
                 }
 
-                t = addr(&e);
-                comma(1);
-                t1 = addr(&e1);
-                if (t == S_M && t1 == S_A) {
-                        op = 0x0A00 | combine;
-                        op |= e.e_addr & 0x7F;
-                } else
-                if (t == S_A && t1 == S_M) {
-                        op = 0x0E00 | combine;
-                        op |= e1.e_addr & 0x7F;
-                } else
-                if (t == S_A && t1 == S_K) {
-                        op |= e1.e_addr & 0xFF;
-                } else
-                if (t == S_IO && t1 == S_A && mp->m_type == S_XOR) {
-                        op = 0x00C0;
-                        op |= e.e_addr & 0x3F;
-                } else 
-                        aerr();
-
-                outaw(op);
+                struct inst ma = {0x0A00 | combine, 0x7F};
+                struct inst am = {0x0E00 | combine, 0x7F};
+                struct inst ioa = {0x00C0, 0x3F};
+                ebit(def, ma, am, mp->m_type == S_XOR ? &ioa : NULL);
                 break;
+        }
 
         case S_NEG:
                 combine = 0x80;
                 /* fallthrough */
-        case S_NOT:
-                t = addr(&e);
-                if (t == S_M) {
-                        op = 0x1400 | combine;
-                        op |= e.e_addr & 0x7F;
-                } else
-                if (t != S_A)
-                        aerr();
-
-                outaw(op);
+        case S_NOT: {
+                struct inst m = {0x1400 | combine, 0x7F};
+                enot(def, m);
                 break;
+        }
 
         case S_SET1:
                 combine = 0x200;
                 /* fallthrough */
-        case S_SET0:
-                t = addr(&e);
-                comma(1);
-                t1 = pdkbit(&e1);
-                if (t1 != S_K)
-                        aerr();
-
-                if (t == S_IO) {
-                        op = 0x1C00 | combine;
-                        op |= e.e_addr & 0x3F;
-                } else
-                if (t == S_M) {
-                        op = 0x2400 | combine;
-                        op |= e.e_addr & 0x7F;
-                } else
-                        aerr();
-
-                op |= (e1.e_addr & 0x7) << 6;
-                outaw(op);
+        case S_SET0: {
+                struct inst io = {0x1C00 | combine, 0x3F};
+                struct inst m = {0x2400 | combine, 0x7F};
+                ebitn(io, m);
                 break;
+        }
 
         case S_CNEQSN:
                 combine = 0x80;
                 /* fallthrough */
-        case S_CEQSN:
-                t = addr(&e);
-                if (t != S_A)
-                        aerr();
-
-                comma(1);
-                t1 = addr(&e1);
-                if (t1 == S_M) {
-                        op = 0x1700 | combine;
-                        op |= e1.e_addr & 0x7F;
-                } else
-                if (t1 == S_K) {
-                        op = 0x2A00 | (combine << 1);
-                        op |= e1.e_addr & 0xFF;
-                } else
-                        aerr();
-
-                outaw(op);
+        case S_CEQSN: {
+                struct inst m = {0x1700 | combine, 0x7F};
+                def.op |= combine << 1;
+                eskip(def, m);
                 break;
+        }
 
         case S_T1SN:
                 combine = 0x200;
                 /* fallthrough */
-        case S_T0SN:
-                t = addr(&e);
-                comma(1);
-                t1 = pdkbit(&e1);
-                if (t1 != S_K)
-                        aerr();
-
-                if (t == S_IO) {
-                        op = 0x1800 | combine;
-                        op |= e.e_addr & 0x3F;
-                } else
-                if (t == S_M) {
-                        op = 0x2000 | combine;
-                        op |= e.e_addr & 0x7F;
-                } else
-                        aerr();
-
-                op |= (e1.e_addr & 0x7) << 6;
-                outaw(op);
+        case S_T0SN: {
+                struct inst io = {0x1800 | combine, 0x3F};
+                struct inst m = {0x2000 | combine, 0x7F};
+                ebitn(io, m);
                 break;
+        }
 
         case S_DZSN:
                 combine = 0x80;
                 /* fallthrough */
-        case S_IZSN:
-                t = addr(&e);
-                if (t == S_M) {
-                        op = 0x1100 | combine;
-                        op |= e.e_addr & 0x7F;
-                } else
-                if (t != S_A)
-                        aerr();
-
-                outaw(op);
+        case S_IZSN: {
+                struct inst m = {0x1100 | combine, 0x7F};
+                ezsn(def, m);
                 break;
+        }
 
-        case S_RET:
-                if (more()) {
-                        t = addr(&e);
-                        if (t != S_K)
-                                aerr();
-                        op = 0x200 | (e.e_addr & 0xFF);
-                }
-
-                outaw(op);
+        case S_RET: {
+                struct inst k = {0x0200, 0xFF};
+                eret(def, k);
                 break;
+        }
 
         case S_INC:
         case S_DEC:
         case S_CLEAR:
-                t = addr(&e);
-                if (t != S_M)
-                        aerr();
-                op |= e.e_addr & 0x7F;
-
-                outaw(op);
+                def.mask = 0x7F;
+                eone(def);
                 break;
 
         case S_CALL:
-        case S_GOTO:
+        case S_GOTO: {
+                struct expr e;
+                clrexpr(&e);
                 expr(&e, 0);
                 outrwp(&e, op);
                 break;
+        }
 
         case S_XCH:
-                t = addr(&e);
-                if (t == S_A) {
-                        /* Ignore extra accumulator param. */
-                        comma(1);
-                        t = addr(&e);
-                }
-                if (t != S_M)
-                        aerr();
-
-                op |= e.e_addr & 0x7F;
-                outaw(op);
+                def.mask = 0x7F;
+                exch(def);
                 break;
 
         case S_PUSHAF:
         case S_POPAF:
-                if (more() && (op & 0x2000)) {
-                        if ((t = getnb()) != 'a')
-                                aerr();
-                        if (!more() || ((t1 = getnb()) != 'f'))
-                                aerr();
-                        op &= 0x1FFF;
-                }
-
-                outaw(op);
+                epupo(def);
                 break;
 
         case S_LDT16:
         case S_STT16:
-                t = addr(&e);
-                if (t != S_M)
-                        aerr();
-
-                op |= (e.e_addr & 0x7F) << 1;
-                outaw(op);
+                def.mask = 0x7E;
+                eone(def);
                 break;
 
         case S_SWAP:
         case S_PCADD:
-              if (more()) {
-                      t = addr(&e);
-                      if (t != S_A)
-                              aerr();
-              }
-              outaw(op);
+              eopta(def);
               break;
 
         case S_SWAPC:
-              t = addr(&e);
-              comma(1);
-              t1 = addr(&e1);
-              if (t != S_IO || t1 != S_K)
-                      aerr();
-
-              op |= e.e_addr & 0x3F;
-              op |= (e1.e_addr & 0x7) << 6;
-              outaw(op);
+              def.mask = 0x3F;
               break;
+
+        case S_COMP:
+        case S_NADD: {
+              struct inst am = {op, 0x7F};
+              struct inst ma = {op | 0x80, 0x7F};
+              espec(am, ma);
+              break;
+        }
 
         /* Simple instructions consisting of only one opcode and no args */
         case S_RETI:
@@ -404,35 +237,12 @@ machine(struct mne *mp)
         case S_STOPEXE:
         case S_RESET:
         case S_WDRESET:
+        case S_MUL:
         case S_LDSPTL: /* undocumented */
         case S_LDSPTH: /* undocumented */
                 outaw(op);
                 break;
         }
-}
-
-/*
- * Branch/Jump PCR Mode Check
- */
-int
-mchpcr(struct expr *esp)
-{
-        if (esp->e_base.e_ap == dot.s_area) {
-                return(1);
-        }
-        if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
-                /*
-                 * Absolute Destination
-                 *
-                 * Use the global symbol '.__.ABS.'
-                 * of value zero and force the assembler
-                 * to use this absolute constant as the
-                 * base value for the relocation.
-                 */
-                esp->e_flag = 1;
-                esp->e_base.e_sp = &sym[1];
-        }
-        return(0);
 }
 
 /*
@@ -452,3 +262,4 @@ minit(void)
          */
         exprmasks(3);
 }
+

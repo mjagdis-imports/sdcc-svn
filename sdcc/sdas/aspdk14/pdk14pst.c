@@ -1,4 +1,4 @@
-/* pdkpst.c */
+/* pdk14pst.c */
 
 /*
  *  Copyright (C) 1998-2009  Alan R. Baldwin
@@ -29,7 +29,7 @@
  */
 
 #include "asxxxx.h"
-#include "pdk14.h"
+#include "pdk.h"
 
 /*
  * Mnemonic Structure
@@ -174,7 +174,7 @@ struct  mne     mne[] = {
     {   NULL,   "neg",          S_NEG,          0,      0x0069    },
     {   NULL,   "set0",         S_SET0,         0,      0x0000    },
     {   NULL,   "set1",         S_SET1,         0,      0x0000    },
-    {   NULL,   "ceqsn",        S_CEQSN,        0,      0x0000    },
+    {   NULL,   "ceqsn",        S_CEQSN,        0,      0x2A00    },
     {   NULL,   "t0sn",         S_T0SN,         0,      0x0000    },
     {   NULL,   "t1sn",         S_T1SN,         0,      0x0001    },
     {   NULL,   "izsn",         S_IZSN,         0,      0x0062    },
@@ -189,7 +189,10 @@ struct  mne     mne[] = {
     {   NULL,   "reset",        S_RESET,        0,      0x0075    },
     {   NULL,   "wdreset",      S_WDRESET,      0,      0x0070    },
     {   NULL,   "swapc",        S_SWAPC,        0,      0x0400    },
-    {   NULL,   "cneqsn",       S_CNEQSN,       0,      0x0000    },
+    {   NULL,   "cneqsn",       S_CNEQSN,       0,      0x2A00    },
+    {   NULL,   "comp",         S_COMP,         0,      0x0600    },
+    {   NULL,   "nadd",         S_NADD,         0,      0x0700    },
+    {   NULL,   "mul",          S_MUL,          0,      0x007C    },
     {   NULL,   "ldsptl",       S_LDSPTL,       0,      0x0006    },
     {   NULL,   "ldspth",       S_LDSPTH,       S_EOL,  0x0007    },
 };

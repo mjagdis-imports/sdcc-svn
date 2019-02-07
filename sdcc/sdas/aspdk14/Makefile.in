@@ -34,7 +34,7 @@ EXEEXT          = @EXEEXT@
 
 VPATH           = @srcdir@
 
-CPPFLAGS        = @CPPFLAGS@ -DSDCDB -DNOICE -DINDEXLIB -I. -I$(srcdir) -I$(srcdir)/../asxxsrc -I$(srcdir)/../../support/util
+CPPFLAGS        = @CPPFLAGS@ -DSDCDB -DNOICE -DINDEXLIB -I. -I$(srcdir) -I$(srcdir)/../asxxsrc -I$(srcdir)/../aspdk -I$(srcdir)/../../support/util
 CFLAGS          = @CFLAGS@ @WALL_FLAG@ $(CPPFLAGS)
 LDFLAGS         = @LDFLAGS@
 LIBS            = -lm
@@ -49,12 +49,17 @@ ASXXLIB = $(srcdir)/../asxxsrc
 ASXXLIBSRC = asdbg.c asdata.c asexpr.c aslex.c aslist.c asmain.c asout.c assubr.c assym.c asmcro.c sdas.c strcmpi.c
 ASXXLIBOBJS = $(ASXXLIBSRC:%.c=$(OBJDIR)/%.o)
 
-SRC = pdk14pst.c pdk14mch.c pdk14adr.c
+ASPDKLIB = $(srcdir)/../aspdk
+ASPDKLIBSRC = pdkmch.c pdkadr.c
+ASPDKLIBOBJS = $(ASPDKLIBSRC:%.c=$(OBJDIR)/%.o)
+
+
+SRC = pdk14pst.c pdk14mch.c
 OBJS = $(SRC:%.c=$(OBJDIR)/%.o)
 
-ASSOURCES = $(SRC) $(ASXXLIBSRC:%.c=$(ASXXLIB)/%.c) $(UTILSRC:%.c=$(UTILLIB)/%.c)
+ASSOURCES = $(SRC) $(ASXXLIBSRC:%.c=$(ASXXLIB)/%.c) $(ASPDKLIBSRC:%.c=$(ASPDKLIB)/%.c) $(UTILSRC:%.c=$(UTILLIB)/%.c)
 
-ASOBJECTS = $(OBJS) $(ASXXLIBOBJS) $(UTILLIBOBJS)
+ASOBJECTS = $(OBJS) $(ASXXLIBOBJS) $(ASPDKLIBOBJS) $(UTILLIBOBJS)
 
 ASX = $(top_builddir)/bin/sdaspdk14$(EXEEXT)
 #DEST = $(DESTDIR)$(bindir)/sdaspdk14$(EXEEXT)
@@ -121,6 +126,9 @@ $(OBJDIR)/%.o: %.c $(OBJDIR)/.stamp
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/%.o: $(ASXXLIB)/%.c $(OBJDIR)/.stamp
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(OBJDIR)/%.o: $(ASPDKLIB)/%.c $(OBJDIR)/.stamp
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(OBJDIR)/%.o: $(UTILLIB)/%.c $(OBJDIR)/.stamp
