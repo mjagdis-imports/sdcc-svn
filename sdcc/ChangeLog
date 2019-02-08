@@ -1,3 +1,17 @@
+2019-02-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/main.c,
+	  src/pdk/ralloc2.cc:
+	  Various pdk improvements.
+	* device/lib/calloc.c,
+	  device/lib/free.c,
+	  device/lib/malloc.c,
+	  device/lib/realloc.c:
+	  Improve dynamic memory management for pdk.
+	* device/lib/_memchr.c:
+	  Improve comparison.
+
 2019-02-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* configure,

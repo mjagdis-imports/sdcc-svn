@@ -124,6 +124,9 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if(ia.registers[REG_A][1] < 0)
     return(true);       // Register a not in use.
 
+  if(ic->op == GOTO || ic->op == LABEL)
+    return(true);
+
   const operand *left = IC_LEFT(ic);
   const operand *right = IC_RIGHT(ic);
   const operand *result = IC_RESULT(ic);
@@ -136,11 +139,15 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
 
+  bool result_dir = IS_TRUE_SYMOP (result) || IS_ITEMP (result) && !(options.stackAuto || reentrant) && !result_in_A;
+  bool left_dir = IS_TRUE_SYMOP (left) || IS_ITEMP (left) && !(options.stackAuto || reentrant) && !left_in_A;
+  bool right_dir = IS_TRUE_SYMOP (right) || IS_ITEMP (right) && !(options.stackAuto || reentrant) && !right_in_A;
+
   if (ic->op == DUMMY_READ_VOLATILE)
     return(true);
 
   if ((ic->op == EQ_OP || ic->op == NE_OP || (ic->op == '>' || ic->op == '<') && SPEC_USIGN(getSpec(operandType(left)))) && // Non-destructive comparison.
-    (left_in_A && getSize(operandType(left)) == 1 && IS_OP_LITERAL(right) || right_in_A && getSize(operandType(right)) == 1 && IS_OP_LITERAL(left)))
+    (left_in_A && getSize(operandType(left)) == 1 && (IS_OP_LITERAL(right) || right_dir) || right_in_A && getSize(operandType(right)) == 1 && (IS_OP_LITERAL(left) || left_dir)))
     return (true);
 
   if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
@@ -152,7 +159,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   if ((ic->op == '=' || ic->op == CAST) &&
     (getSize(operandType(result)) == 1 || getSize(operandType(result)) == 2 && SPEC_USIGN (getSpec(operandType(right))) && operand_byte_in_reg(result, 1, REG_P, a, i, G)) &&
-    right_in_A && (IS_TRUE_SYMOP (result) || dying_A))
+    right_in_A && (result_dir || dying_A))
     return (true);
 
   if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))

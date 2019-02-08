@@ -231,10 +231,10 @@ aopGet(const asmop *aop, int offset)
       wassertl_bt (offset < (2 + (options.model == MODEL_LARGE)), "Immediate operand out of range");
       if (offset == 0)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
-      //else if (aop->aopu.code) - Assembler can't handle this.
-      //  SNPRINTF (buffer, sizeof(buffer), "#(((%s + %d) >> %d) | 0x80)", aop->aopu.immd, aop->aopu.immd_off, offset * 8);
+      else if (offset == 1)
+        SNPRINTF (buffer, sizeof(buffer), "#(>(%s + %d) + 0x80)", aop->aopu.immd, aop->aopu.immd_off);
       else
-        SNPRINTF (buffer, sizeof(buffer), "#((%s + %d) >> %d)", aop->aopu.immd, aop->aopu.immd_off, offset * 8);
+        wassert (0);
       return (buffer);
     }
 
@@ -1032,6 +1032,12 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cheapMove (ASMOP_A, 0, left_aop, i, true, !started);
           if (started || !aopIsLitVal (right_aop, i, 1, 0x00))
             {
+              if (aopInReg (right_aop, i, A_IDX))
+                {
+                  cost (1000, 1000);
+                  if (!regalloc_dry_run)
+                    wassertl (0, "Unimplemented operand in subtraction");
+                }
               if (started && aopIsLitVal (right_aop, i, 1, 0x00))
                 emit2 ("subc", "a");
               else
@@ -1735,14 +1741,25 @@ genCmp (const iCode *ic, iCode *ifx)
   bool started = false;
   for (int i = 0; i < size; i++)
     {
-#if 0 // Enable when Assembler can handle t0sn a, #7 - will neve rhgappen
       if (!started && sign && aopIsLitVal (right->aop, i, 1, 0x00) && i + 1 == size)
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
           if (ifx)
             {
-               emit2 ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)) ? "t1sn" : "t0sn", "a, #7");
-               cost (1, 1.5);
+               if ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)))
+                 {
+                   emit2 ("ceqsn", "a, #0x80");
+                   emit2 ("nop", "");
+                   emit2 ("t0sn", "f, c");
+                   cost (3, 3.5);
+                 }
+               else
+                 {
+                   emit2 ("ceqsn", "a, #0x80");
+                   emit2 ("t1sn", "f, c");
+                   cost (2, 2.5);
+                 }
+
                emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
             }
           else
@@ -1753,7 +1770,7 @@ genCmp (const iCode *ic, iCode *ifx)
             }
           goto release;
         }
-#endif
+
       if (!started && aopIsLitVal (right->aop, i, 1, 0x00) && i + 1 < size)
         ;
       else if (started && aopIsLitVal (right->aop, i, 1, 0x00))
@@ -1980,7 +1997,7 @@ genOr (const iCode *ic)
     {
       int bit = right->aop->type == AOP_LIT ? isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) : -1;
 
-      if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
+      if ((left->aop->type == AOP_SFR || aopInReg (left->aop, i, P_IDX)) && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
         {
           emit2 ("set1", "%s, #%d", aopGet (left->aop, i), bit);
           cost (1, 1);
@@ -2049,7 +2066,7 @@ genAnd (const iCode *ic, iCode *ifx)
             }
 
 
-      wassertl (nonzero <= 1, "Code generation for bitwise and can handle at most one nonzero byte");
+      wassertl (nonzero <= 1, "Code generation for jump on bitwise and can handle at most one nonzero byte");
 
       int bit = right->aop->type == AOP_LIT ? isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) : - 1;
 
@@ -2082,7 +2099,7 @@ genAnd (const iCode *ic, iCode *ifx)
     {
       int bit = right->aop->type == AOP_LIT ? isLiteralBit (~byteOfVal (right->aop->aopu.aop_lit, i) & 0xff) : -1;
 
-      if (left->aop->type == AOP_SFR && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
+      if ((left->aop->type == AOP_SFR || aopInReg (left->aop, i, P_IDX)) && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
         {
           emit2 ("set0", "%s, #%d", aopGet (left->aop, i), bit);
           cost (1, 1);
@@ -2399,7 +2416,7 @@ genPointerGet (const iCode *ic)
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
 #if 0 // TODO: CHECK IF SET HIGH BIT IS A PROBLEM HERE!
-  if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ltabl for efficient read from code space.
+  if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ldtabl for efficient read from code space.
     {
       emit2 ("ldtabl", "a, %s", aopGet (left->aop, 0));
       cost (1, 2);
@@ -2412,9 +2429,9 @@ genPointerGet (const iCode *ic)
     }
   else
 #endif
-  if (ptype == POINTER && (left->aop->type == AOP_DIR || aopInReg (left->aop, 0, P_IDX))) // Try to use efficient idxm when we know the target is in RAM.
+  if (ptype == POINTER) // Try to use efficient idxm when we know the target is in RAM.
     {
-      const asmop *ptr_aop = (left->aop->type == AOP_DIR) ? left->aop : ASMOP_P;
+      const asmop *ptr_aop = (left->aop->type == AOP_DIR && TARGET_IS_PDK16) ? left->aop : ASMOP_P;
 
       cheapMove (ptr_aop, 0, left->aop, 0, true, true);
 
@@ -2490,7 +2507,7 @@ genPointerSet (iCode *ic)
   blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
 
-  if (left->aop->type == AOP_DIR && !bit_field)
+  if (left->aop->type == AOP_DIR && TARGET_IS_PDK16 && !bit_field)
     {
       for (int i = 0; i < size; i++)
         {
@@ -2746,7 +2763,7 @@ genAddrOf (const iCode *ic)
 
   int size = result->aop->size;
 
-  wassert (size == 2);
+  wassert (size == 1 || size == 2);
 
   if (sym->onStack)
     {
@@ -2762,27 +2779,30 @@ genAddrOf (const iCode *ic)
           cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
         }
 
-      cheapMove (result->aop, 1, ASMOP_ZERO, 0, true, true);
+      if (size == 2)
+        cheapMove (result->aop, 1, ASMOP_ZERO, 0, true, true);
     }
-  else if (PTR_TYPE (SPEC_OCLS ( getSpec (operandType (IC_LEFT (ic))))) == CPOINTER) // In ROM
+  else if (PTR_TYPE (SPEC_OCLS (getSpec (operandType (IC_LEFT (ic))))) == CPOINTER) // In ROM
     {
-      wassertl (!operandLitValue (right), "Unimplemented offset for &");
+      wassert (size == 2);
 
-      emit2 ("mov", "a, #<(%s + %d)", sym->rname, 0);
+      emit2 ("mov", "a, #<(%s + %d)", sym->rname, operandLitValue (right));
       cost (1, 1);
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
-      emit2 ("mov", "a, #(>(%s + %d) + 0x80)", sym->rname, 0);
+      emit2 ("mov", "a, #(>(%s + %d) + 0x80)", sym->rname, operandLitValue (right));
       cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
     }
   else
     {
-      wassertl (!operandLitValue (right), "Unimplemented offset for &");
-  
-      emit2 ("mov", "a, #<(%s + %d)", sym->rname, 0);
+      emit2 ("mov", "a, #<(%s + %d)", sym->rname, operandLitValue (right));
       cost (1, 1);
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
-      emit2 ("mov", "a, #>(%s + %d)", sym->rname, 0);
-      cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
+      if (size == 2)
+        {
+          emit2 ("mov", "a, #>(%s + %d)", sym->rname, operandLitValue (right));
+          cost (1, 1);
+          cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
+        }
     }
 
   freeAsmop (result);

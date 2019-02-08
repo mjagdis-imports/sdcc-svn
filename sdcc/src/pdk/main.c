@@ -256,7 +256,7 @@ PORT pdk13_port =
     2,                          /* int */
     4,                          /* long */
     8,                          /* long long */
-    2,                          /* near ptr */
+    1,                          /* near ptr */
     2,                          /* far ptr */
     2,                          /* generic ptr */
     2,                          /* func ptr */
@@ -421,7 +421,7 @@ PORT pdk14_port =
     2,                          /* int */
     4,                          /* long */
     8,                          /* long long */
-    2,                          /* near ptr */
+    1,                          /* near ptr */
     2,                          /* far ptr */
     2,                          /* generic ptr */
     2,                          /* func ptr */
@@ -586,7 +586,7 @@ PORT pdk15_port =
     2,                          /* int */
     4,                          /* long */
     8,                          /* long long */
-    2,                          /* near ptr */
+    1,                          /* near ptr */
     2,                          /* far ptr */
     2,                          /* generic ptr */
     2,                          /* func ptr */
