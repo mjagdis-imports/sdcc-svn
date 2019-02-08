@@ -150,6 +150,10 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     (left_in_A && getSize(operandType(left)) == 1 && (IS_OP_LITERAL(right) || right_dir) || right_in_A && getSize(operandType(right)) == 1 && (IS_OP_LITERAL(left) || left_dir)))
     return (true);
 
+  if (ic->op == '<' && IS_OP_LITERAL(right) && !ullFromVal(OP_VALUE_CONST (right)) &&
+    (operand_byte_in_reg(left, getSize(operandType(left)) - 1, REG_A, a, i, G) || operand_byte_in_reg(left, getSize(operandType(left)) - 1, REG_P, a, i, G)))
+    return (true);
+
   if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
     return(true);
 

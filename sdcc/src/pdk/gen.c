@@ -2104,10 +2104,10 @@ genAnd (const iCode *ic, iCode *ifx)
           emit2 ("set0", "%s, #%d", aopGet (left->aop, i), bit);
           cost (1, 1);
         }
+      else if (aopIsLitVal (right->aop, i, 1, 0xff))
+        cheapMove (result->aop, i, left->aop, i, true, true);
       else if (aopIsLitVal (right->aop, i, 1, 0x00))
-        {
-          cheapMove (result->aop, i, left->aop, i, true, true);
-        }
+        cheapMove (result->aop, i, ASMOP_ZERO, 0, true, true);
       else
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
