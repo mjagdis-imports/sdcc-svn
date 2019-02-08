@@ -531,7 +531,7 @@ PORT pdk14_port =
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
 static const char *pdk15AsmCmd[] =
 {
-  "sdaspdk14", "$l", "$3", "\"$1.asm\"", NULL
+  "sdaspdk15", "$l", "$3", "\"$1.asm\"", NULL
 };
 
 static const char *const _libs_pdk15[] = { "pdk15", NULL, };

@@ -781,7 +781,7 @@ AC_DO_PORT(s08,      hc08,   S08,      [Excludes the S08 port])
 AC_DO_PORT(stm8,     stm8,   STM8,     [Excludes the STM8 port])
 AC_DO_PORT_ENABLER(pdk13,    pdk,    PDK13,    [Includes the PDK13 port])
 AC_DO_PORT(pdk14,    pdk,    PDK14,    [Excludes the PDK14 port])
-AC_DO_PORT_ENABLER(pdk15,    pdk,    PDK15,    [Includes the PDK15 port])
+AC_DO_PORT(pdk15,    pdk,    PDK15,    [Excludes the PDK15 port])
 
 # Unsupported targets
 ####AC_DO_PORT_ENABLER(avr,   avr,   AVR,   [Includes the AVR port (disabled by default)])
@@ -920,6 +920,9 @@ if test $OPT_DISABLE_PDK14 = 0; then
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk14/Makefile])
 fi
 
+if test $OPT_DISABLE_PDK15 = 0; then
+  AC_CONFIG_FILES([sdas/aspdk15/Makefile])
+fi
 
 test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/Makefile])
 test $OPT_DISABLE_DEVICE_LIB = 0 && test $OPT_DISABLE_NON_FREE = 0 && AC_CONFIG_FILES([device/non-free/lib/Makefile])
@@ -1000,7 +1003,7 @@ sdcc ${VERSION} is now configured for
     stm8                ${enable_stm8_port}
     pdk13               ${enable_pdk14_port}
     pdk14               ${enable_pdk14_port}
-    pdk15               ${enable_pdk14_port}
+    pdk15               ${enable_pdk15_port}
 
   Disable non-free lib: ${OPT_DISABLE_NON_FREE}
   Disable packihx:      ${OPT_DISABLE_PACKIHX}

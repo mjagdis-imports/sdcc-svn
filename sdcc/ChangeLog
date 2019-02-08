@@ -1,3 +1,14 @@
+2019-02-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Makefile.common.in,
+	  Makefile.in,
+	  configure,
+	  configure.ac,
+	  sdccconf_in.h,
+	  src/pdk/main.c,
+	  sdas/aspdk15:
+	  pdk15 assembler, patch by Nicolas Lesser.
+
 2019-02-07 Philipp Klaus Krause <pkk AT spth.de>
 
 	* .version,
@@ -12,7 +23,7 @@
 	  sim/ucsim/stm8.src/stm8.cc:
 	  stm8 simulator fixes, patches by Mike Jagdis.
 
-2019-02-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2019-02-07 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/aspdk14,
 	  sdas/aspdk,
