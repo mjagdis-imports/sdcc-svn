@@ -1,5 +1,16 @@
 2019-02-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* configure,
+	  configure.ac,
+	  device/include/stdlib.h,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/pdk15/Makefile.in,
+	  device/lib/pdk15:
+	  pdk15 library.
+
+2019-02-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* Makefile.common.in,
 	  Makefile.in,
 	  configure,
