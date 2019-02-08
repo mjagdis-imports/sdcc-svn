@@ -32,9 +32,11 @@ extern int dwarf2FinalizeFile(FILE *);
 
 static char *pdk_keywords[] = {
   "at",
+  "code",
   "data",
   "interrupt",
   "naked",
+  "near",
   "reentrant",
   "sfr",
   "sfr16",

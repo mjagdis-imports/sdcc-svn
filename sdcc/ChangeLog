@@ -8,6 +8,9 @@
 	  device/lib/pdk15/Makefile.in,
 	  device/lib/pdk15:
 	  pdk15 library.
+	* src/pdk/main.c,
+	  src/pdk/gen.c:
+	  Improve read from pointer.
 
 2019-02-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

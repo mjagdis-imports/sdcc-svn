@@ -2330,6 +2330,45 @@ genRightShift (const iCode *ic)
   freeAsmop (result);
 }
 
+
+/*-----------------------------------------------------------------*/
+/* getBitFieldByte - process partial byte of bit-field             */
+/*-----------------------------------------------------------------*/
+static void getBitFieldByte (int len, int str, bool sex)
+{
+  wassert (len >= 0 && len < 8);
+
+  // Shift
+  if (str >= 4)
+    {
+      emit2 ("swap", "a");
+      cost (1, 1);
+      str -= 4;
+    }
+  while (str--)
+    {
+      emit2 ("sr", "a");
+      cost (1, 1);
+    }
+
+  // Mask
+  emit2 ("and", "a, #0x%02x", 0xff >> (8 - len));
+  cost (2, 1);
+
+  // Sign-extend
+  if (sex)
+    {
+      symbol *const tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+      emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - len));
+      emit2 ("t1sn", "f, c");
+      if (tlbl)
+        emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
+      emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - len)) & 0xff);
+      cost (4, 4);
+      emitLabel (tlbl);
+    }
+}
+
 /*-----------------------------------------------------------------*/
 /* genPointerGet - generate code for pointer get                   */
 /*-----------------------------------------------------------------*/
@@ -2350,16 +2389,59 @@ genPointerGet (const iCode *ic)
   wassertl (IS_OP_LITERAL (right), "GET_VALUE_AT_ADDRESS with non-literal right operand");
 
   bool bit_field = IS_BITVAR (getSpec (operandType (result)));
-  symbol *const tlbl = ((regalloc_dry_run || !bit_field) ? 0 : newiTempLabel (NULL));
   int size = result->aop->size;
   int blen, bstr;
   blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
+  sym_link *type = operandType (left);
+  int ptype = (IS_PTR (type) && !IS_FUNC (type->next)) ? DCL_TYPE (type) : PTR_TYPE (SPEC_OCLS (getSpec (type)));
 
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
-  // Generic, but also inefficient.
-  if (1)
+#if 0 // TODO: CHECK IF SET HIGH BIT IS A PROBLEM HERE!
+  if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ltabl for efficient read from code space.
+    {
+      emit2 ("ldtabl", "a, %s", aopGet (left->aop, 0));
+      cost (1, 2);
+
+      if (bit_field && blen < 8)
+            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
+
+      cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
+      goto release;
+    }
+  else
+#endif
+  if (ptype == POINTER && (left->aop->type == AOP_DIR || aopInReg (left->aop, 0, P_IDX))) // Try to use efficient idxm when we know the target is in RAM.
+    {
+      const asmop *ptr_aop = (left->aop->type == AOP_DIR) ? left->aop : ASMOP_P;
+
+      cheapMove (ptr_aop, 0, left->aop, 0, true, true);
+
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
+        {
+          emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+          cost (1, 2);
+
+          if (bit_field && blen < 8)
+            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
+
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+          if (i + 1 != size)
+            {
+              emit2 ("inc", "%s", aopGet (ptr_aop, 0));
+              cost (1, 1);
+            }
+        }
+      if (!(aopInReg (left->aop, 0, P_IDX) && regDead (P_IDX, ic)))
+        for (int i = 1; i < size; i++)
+          {
+            emit2 ("dec", "%s", aopGet (ptr_aop, 0));
+            cost (1, 1);
+          }
+      goto release;
+    }
+  else // Generic, but also inefficient.
     {
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
@@ -2371,106 +2453,14 @@ genPointerGet (const iCode *ic)
               cost (2, 2);
             }
           emit2 ("call", "__gptrget");
-          cost (1, 2);
+          cost (1, 8);
 
-
-          if (bit_field && blen < 8 && !i) // The only byte might need shifting.
-            {
-              if (bstr >= 4)
-                {
-                  emit2 ("swap", "a");
-                  cost (1, 1);
-                  bstr -= 4;
-                }
-              while (bstr--)
-                {
-                  emit2 ("sr", "a");
-                  cost (1, 1);
-                }
-            }
-          if (bit_field && blen < 8) // The partial byte.
-            {
-              emit2 ("and", "a, #0x%02x", 0xff >> (8 - blen));
-              cost (2, 1);
-            }
-
-          if (bit_field && blen <= 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
-            {
-              emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - blen));
-              emit2 ("t1sn", "f, c");
-              if (tlbl)
-                emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
-              emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
-              cost (4, 4);
-              emitLabel (tlbl);
-            }
+          if (bit_field && blen < 8)
+            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
 
           cheapMove (result->aop, i, ASMOP_A, 0, true, true);
         }
       goto release;
-    }
-
-  // Stuff from here works for pointers to RAM only. todo: Use it when when possible.
-  if (left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
-    {
-      for (int i = 0; i < size; i++)
-        {
-          emit2 ("idxm", "a, %s", aopGet (left->aop, 0));
-          cost (1, 2);
-          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
-          if (i + 1 != size)
-            {
-              emit2 ("inc", "%s", aopGet (left->aop, 0));
-              cost (1, 1);
-            }
-        }
-      for (int i = 1; i < size; i++)
-        {
-          emit2 ("dec", "%s", aopGet (left->aop, 0));
-          cost (1, 1);
-        }
-    }
-  else if (size > 1 && result->aop->type == AOP_STK)
-    {
-      if (!regDead (P_IDX,ic))
-        {
-          wassert (regalloc_dry_run);
-          cost (1000, 1000);
-        }
-      for (int i = 0; i < size; i++)
-        {
-          cheapMove (ASMOP_P, 0, left->aop, 0, true, true);
-          for (int j = 0; j < i; j++)
-            {
-              emit2 ("inc", "p");
-              cost (1, 1);
-            }
-          emit2 ("idxm", "a, p");
-          cost (1, 2);
-          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
-        }
-    }
-  else
-    {
-      if (!regDead (P_IDX,ic))
-        {
-          wassert (regalloc_dry_run);
-          cost (1000, 1000);
-        }
-      cheapMove (ASMOP_P, 0, left->aop, 0, true, true);
-      G.p.type = AOP_INVALID;
-      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
-        {
-          emit2 ("idxm", "a, p");
-          cost (1, 2);
-
-          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
-          if (i + 1 != size)
-            {
-              emit2 ("inc", "p");
-              cost (1, 1);
-            }
-        }
     }
 
 release:
