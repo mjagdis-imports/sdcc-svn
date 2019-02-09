@@ -1,5 +1,15 @@
 2019-02-08 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/pdk/gen.c
+	  src/pdk/ralloc2.cc:
+	  Various pdk improvements.
+
+2019-02-09 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCdwarf2.c: fix bug #2762
+
+2019-02-08 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/pdk/gen.c,
 	  src/pdk/main.c,
 	  src/pdk/ralloc2.cc:

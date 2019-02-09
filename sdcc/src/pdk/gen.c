@@ -164,8 +164,7 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
         byteOfVal (aop1->aopu.aop_lit, offset1) == byteOfVal (aop2->aopu.aop_lit, offset2))
         continue;
 
-      if (aop1->type == AOP_DIR && aop2->type == AOP_DIR && offset1 == offset2 &&
-        (!regalloc_dry_run || aop1->aopu.aop_dir && aop2->aopu.aop_dir && !strstr (aop1->aopu.aop_dir, "sloc")) &&
+      if (aop1->type == AOP_DIR && aop2->type == AOP_DIR && aop1->aopu.immd_off + offset1 == aop2->aopu.immd_off + offset2 &&
         !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
         return (true);
 
@@ -535,7 +534,10 @@ aopOp (operand *op, const iCode *ic)
     if (completely_in_regs)
       aop->type = AOP_REG;
     else if (completely_spilt && !(options.stackAuto || reentrant))
-      aop->type = AOP_DIR;
+      {
+        aop->type = AOP_DIR;
+        aop->aopu.immd = sym->rname;
+      }
     else if (completely_spilt)
       aop->type = AOP_STK;
     else
@@ -968,30 +970,24 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
   int size = result_aop->size;
 
   bool started = false;
+  bool pushed_a = false;
   for (int i = 0; i < size; i++)
     {
       if (!started && right_aop->type == AOP_LIT && aopIsLitVal (right_aop, i, 1, 0x00))
         {
-          cheapMove (result_aop, i, left_aop, i, true, true);
+          cheapMove (result_aop, i, left_aop, i, regDead (A_IDX, ic), true);
           continue;
         }
       else if (!started && i + 1 == size && aopIsLitVal (left_aop, i, 1, 0x00) &&
-        right_aop->type == AOP_DIR && aopSame (right_aop, i, result_aop, i, 1))
+        (right_aop->type == AOP_DIR || aopInReg (right_aop, i, P_IDX)) && aopSame (right_aop, i, result_aop, i, 1))
         {
           emit2 ("neg", "%s", aopGet (right_aop, i));
           cost (1, 1);
           started = true;
           continue;
         }
-      else if (!started && i + 1 == size && aopIsLitVal (left_aop, i, 1, 0x00))
-        {
-          cheapMove (ASMOP_A, 0, right_aop, i, true, true);
-          emit2 ("neg", "a");
-          cost (1, 1);
-          started = true;
-        }
       else if (!started && aopIsLitVal (right_aop, i, 1, 0x01) &&
-        left_aop->type == AOP_DIR && aopSame (left_aop, i, result_aop, i, 1))
+        (right_aop->type == AOP_DIR || aopInReg (right_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
         {
           emit2 ("dec", "%s", aopGet (left_aop, i));
           cost (1, 1);
@@ -999,7 +995,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           continue;
         }
       else if (!started && aopIsLitVal (right_aop, i, 1, 0xff) &&
-        left_aop->type == AOP_DIR && aopSame (left_aop, i, result_aop, i, 1))
+        (right_aop->type == AOP_DIR || aopInReg (right_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
         {
           emit2 ("inc", "%s", aopGet (left_aop, i));
           cost (1, 1);
@@ -1011,6 +1007,20 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           emit2 ("subc", "%s", aopGet (left_aop, i));
           cost (1, 1);
           continue;
+        }
+
+      if (!(regDead (A_IDX, ic) || pushed_a))
+        {
+          pushAF();
+          pushed_a = true;
+        }
+
+      if (!started && i + 1 == size && aopIsLitVal (left_aop, i, 1, 0x00))
+        {
+          cheapMove (ASMOP_A, 0, right_aop, i, true, true);
+          emit2 ("neg", "a");
+          cost (1, 1);
+          started = true;
         }
       else if (right_aop->type == AOP_STK)
         {
@@ -1051,8 +1061,18 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cost (1000, 1000);
         else
           wassertl (0, "Unimplemented p result in subtraction with stack operand");
-      cheapMove (result_aop, i, ASMOP_A, 0, true, i + 1 == size);
+
+      if (aopInReg (result_aop, i, A_IDX) && i + 1 < size)
+        {
+          pushAF();
+          pushed_a = true;
+        }
+      else
+        cheapMove (result_aop, i, ASMOP_A, 0, true, i + 1 == size);
     }
+
+  if (pushed_a)
+    popAF();
 }
 
 /*-----------------------------------------------------------------*/
@@ -1478,14 +1498,42 @@ genPlus (const iCode *ic)
     }
 
   bool started = false;
+  bool pushed_a = false;
   for (int i = 0; i < size; i++)
     {
-      if (!started && right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i, 1, 0x00))
+       if (!started && (left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
         {
-          cheapMove (result->aop, i, left->aop, i, true, true);
+          emit2 ("inc", "%s", aopGet (left->aop, i));
+          cost (1, 1);
+          started = true;
           continue;
         }
-      else if (right->aop->type == AOP_STK)
+       else if (!started && (left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (left->aop, i, result->aop, i, 1))
+        {
+          emit2 ("dec", "%s", aopGet (left->aop, i));
+          cost (1, 1);
+          started = true;
+          continue;
+        }
+      else if (started && (left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0x00) && aopSame (left->aop, i, result->aop, i, 1))
+        {
+          emit2 ("addc", "%s", aopGet (left->aop, i));
+          cost (1, 1);
+          continue;
+        }
+      else if (!started && right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i, 1, 0x00))
+        {
+          cheapMove (result->aop, i, left->aop, i, regDead (A_IDX, ic), true);
+          continue;
+        }
+
+      if (!(regDead (A_IDX, ic) || pushed_a))
+        {
+          pushAF();
+          pushed_a = true;
+        }
+
+      if (right->aop->type == AOP_STK)
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, !started);
           cheapMove (ASMOP_P, 0, right->aop, i, false, !started);
@@ -1499,26 +1547,6 @@ genPlus (const iCode *ic)
           cheapMove (ASMOP_A, 0, left->aop, i, true, false);
           emit2 ("addc", "a, p");
           cost (1, 1);
-        }
-       else if (!started && (left->aop->type == AOP_DIR || (left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
-        {
-          emit2 ("inc", "%s", aopGet (left->aop, i));
-          cost (1, 1);
-          started = true;
-          continue;
-        }
-       else if (!started && (left->aop->type == AOP_DIR || (left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (left->aop, i, result->aop, i, 1))
-        {
-          emit2 ("dec", "%s", aopGet (left->aop, i));
-          cost (1, 1);
-          started = true;
-          continue;
-        }
-      else if (started && (left->aop->type == AOP_DIR || (left->aop->type == AOP_REGDIR || left->aop->type == AOP_REG) && aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0x00) && aopSame (left->aop, i, result->aop, i, 1))
-        {
-          emit2 ("addc", "%s", aopGet (left->aop, i));
-          cost (1, 1);
-          continue;
         }
       else
         {
@@ -1538,8 +1566,18 @@ genPlus (const iCode *ic)
           cost (1000, 1000);
         else
           wassertl (0, "Unimplemented p result in addition with stack operand");
-      cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
+
+      if (aopInReg (result->aop, i, A_IDX) && i + 1 < size)
+        {
+          pushAF();
+          pushed_a = true;
+        }
+      else
+        cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
     }
+
+  if (pushed_a)
+    popAF();
 
   freeAsmop (right);
   freeAsmop (left);
@@ -2141,11 +2179,16 @@ genLeftShift (const iCode *ic)
 
   int size = result->aop->size;
 
-  genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX));
-
   if (right->aop->type == AOP_LIT)
     {
       int shCount = ulFromVal (right->aop->aopu.aop_lit);
+
+      genMove_o (result->aop, shCount / 8, left->aop, 0, result->aop->size - shCount / 8, true);
+      genMove_o (result->aop, 0, ASMOP_ZERO, 0, shCount / 8, true);
+      shCount %= 8;
+
+      if (!shCount)
+        goto release;
 
       bool loop = (shCount > 2 + (size == 1) * 2 + optimize.codeSpeed) && !(size == 1 && aopInReg (result->aop, 0, A_IDX));
       symbol *tlbl = (!loop || regalloc_dry_run) ? 0 : newiTempLabel (0);
@@ -2189,6 +2232,8 @@ genLeftShift (const iCode *ic)
     }
   else
     {
+      genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX));
+
       symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
     
@@ -2214,6 +2259,7 @@ genLeftShift (const iCode *ic)
       emitLabel (tlbl2);
     }
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -2237,18 +2283,23 @@ genRightShift (const iCode *ic)
 
   int size = result->aop->size;
 
-  genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX));
-
   if (right->aop->type == AOP_LIT)
     {
       int shCount = ulFromVal (right->aop->aopu.aop_lit);
+
+      genMove_o (result->aop, 0, left->aop, shCount / 8, result->aop->size, true);
+      shCount %= 8;
+
+      if (!shCount)
+        goto release;
 
       bool loop = (shCount > 2 + (size == 1) * 2 + optimize.codeSpeed) && !(size == 1 && aopInReg (result->aop, 0, A_IDX));
       symbol *tlbl = (!loop || regalloc_dry_run) ? 0 : newiTempLabel (0);
 
       if (loop)
         {
-          cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
+          emit2 ("mov", "a, #%d", shCount);
+          cost (1, 1);
           emitLabel (tlbl);
           regalloc_dry_run_cycle_scale = shCount;
           shCount = 1;
@@ -2301,6 +2352,8 @@ genRightShift (const iCode *ic)
     }
   else
     {
+      genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX));
+
       symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
     
@@ -2342,6 +2395,7 @@ genRightShift (const iCode *ic)
       emitLabel (tlbl2);
     }
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);

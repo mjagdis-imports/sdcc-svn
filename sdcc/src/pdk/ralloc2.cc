@@ -154,6 +154,12 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     (operand_byte_in_reg(left, getSize(operandType(left)) - 1, REG_A, a, i, G) || operand_byte_in_reg(left, getSize(operandType(left)) - 1, REG_P, a, i, G)))
     return (true);
 
+  if (ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1 && left_dir && right_in_A)
+    return (true);
+
+  if ((ic->op == '+' || ic->op == '-') && (!left_in_A && !right_in_A || getSize(operandType(result)) == 1))
+    return (true);
+
   if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
     return(true);
 
