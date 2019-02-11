@@ -6,7 +6,7 @@
 	  device/lib/pdk15/Makefile.in:
 	  Enable a missing support function.
 	* src/pdk/gen.c:
-	  Improve read from bit-field.
+	  Improve bit-field access.
 
 2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

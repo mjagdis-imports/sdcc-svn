@@ -2483,7 +2483,7 @@ genPointerGet (const iCode *ic)
           if (ptype == POINTER)
             {
               emit2 ("mov", "a, %s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
-              cost (1, 2);
+              cost (1, 1);
             }
           else
             {
@@ -2630,14 +2630,24 @@ genPointerSet (iCode *ic)
     }
   else
     {
-      if (!regDead (P_IDX, ic))
+      const asmop *ptr_aop;
+
+      if (left->aop->type == AOP_IMMD)
+        ptr_aop = 0;
+      else if (left->aop->type == AOP_DIR && size == 1 || aopInReg (left->aop, 0, P_IDX))
+        ptr_aop = left->aop;
+      else
         {
-          wassert (regalloc_dry_run);
-          cost (1000, 1000);
+          ptr_aop = ASMOP_P;
+          cheapMove (ptr_aop, 0, left->aop, 0, true, true);
+          G.p.type = AOP_INVALID;
+          if (!regDead (P_IDX, ic))
+            {
+              wassert (regalloc_dry_run);
+              cost (1000, 1000);
+            }
         }
-      const asmop *ptr_aop = (left->aop->type == AOP_DIR && size == 1) ? left->aop : ASMOP_P;
-      cheapMove (ptr_aop, 0, left->aop, 0, true, true);
-      G.p.type = AOP_INVALID;
+      
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           if (bit_field && blen < 8)
@@ -2646,9 +2656,18 @@ genPointerSet (iCode *ic)
                 {
                   unsigned char bval;
 
-                  emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                  if (!ptr_aop)
+                    {
+                      emit2 ("mov", "a, %s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+                      cost (1, 1);
+                    }
+                  else
+                    {
+                      emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                      cost (1, 2);
+                    }
                   emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
-                  cost (2, 2);
+                  cost (1, 1);
 
                   if (bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr))
                     {
@@ -2660,11 +2679,21 @@ genPointerSet (iCode *ic)
                 {
                   cheapMove (ASMOP_A, 0, right->aop, i, true, true);
                   emit2 ("sr", "a");
-                  emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                  cost (1, 1);
+                  if (!ptr_aop)
+                    {
+                      emit2 ("mov", "a, %s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+                      cost (1, 1);
+                    }
+                  else
+                    {
+                      emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                      cost (1, 2);
+                    }
                   emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
                   emit2 ("t0sn", "f, c");
                   emit2 ("or", "a, #0x%02x", 1 << bstr);
-                  cost (5, 5);
+                  cost (3, 3);
                 }
               else
                 {
@@ -2673,13 +2702,22 @@ genPointerSet (iCode *ic)
                       cost (100, 100);
                       wassert (regalloc_dry_run);
                     }
-                  emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                  if (!ptr_aop)
+                    {
+                      emit2 ("mov", "a, %s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+                      cost (1, 1);
+                    }
+                  else
+                    {
+                      emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
+                      cost (1, 2);
+                    }
                   emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
-                  cost (2, 2);
+                  cost (1, 1);
 
                   emit2 ("xch", "a, p");
                   cost (1, 1);
-                  if (aopInReg (ptr_aop, 0, P_IDX))
+                  if (ptr_aop && aopInReg (ptr_aop, 0, P_IDX))
                     pushAF ();
                   cheapMove (ASMOP_A, 0, right->aop, i, true, true);
                   if (bstr >= 4)
@@ -2696,7 +2734,7 @@ genPointerSet (iCode *ic)
                   emit2 ("or", "a, p");
                   cost (2, 2);
 
-                  if (aopInReg (ptr_aop, 0, P_IDX))
+                  if (ptr_aop && aopInReg (ptr_aop, 0, P_IDX))
                     {
                       emit2 ("mov", "p, a");
                       cost (1, 1);
@@ -2709,8 +2747,17 @@ genPointerSet (iCode *ic)
           else
             cheapMove (ASMOP_A, 0, right->aop, i, true, true);
 
-          emit2 ("idxm", "%s, a", aopGet (ptr_aop, 0));
-          cost (1, 2);
+          if (!ptr_aop)
+            {
+              emit2 ("mov", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+              cost (1, 1);
+            }
+          else
+            {
+              emit2 ("idxm", "%s, a", aopGet (ptr_aop, 0));
+              cost (1, 2);
+            }
+
           if (i + 1 != size)
             {
               emit2 ("inc", "p");
