@@ -1,3 +1,13 @@
+2019-02-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/ports/pdk14/support.c:
+	  Make regression tests compile, even before simulator is ready.
+	* device/lib/pdk14/Makefile.in,
+	  device/lib/pdk15/Makefile.in:
+	  Enable a missing support function.
+	* src/pdk/gen.c:
+	  Improve read from bit-field.
+
 2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:

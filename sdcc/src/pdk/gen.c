@@ -2476,21 +2476,42 @@ genPointerGet (const iCode *ic)
 
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
+  if (left->aop->type == AOP_IMMD && (ptype == POINTER || ptype == CPOINTER))
+    {
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
+        {
+          if (ptype == POINTER)
+            {
+              emit2 ("mov", "a, %s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+              cost (1, 2);
+            }
+          else
+            {
+              emit2 ("call", "%s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+              cost (1, 4);
+            }
+
+          if (bit_field && blen < 8)
+            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
+
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+        }
+    }
 #if 0 // TODO: CHECK IF SET HIGH BIT IS A PROBLEM HERE!
-  if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ldtabl for efficient read from code space.
+  else if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ldtabl for efficient read from code space.
     {
       emit2 ("ldtabl", "a, %s", aopGet (left->aop, 0));
       cost (1, 2);
 
       if (bit_field && blen < 8)
-            getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
+        getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
 
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
       goto release;
     }
   else
 #endif
-  if (ptype == POINTER) // Try to use efficient idxm when we know the target is in RAM.
+  else if (ptype == POINTER) // Try to use efficient idxm when we know the target is in RAM.
     {
       const asmop *ptr_aop = (left->aop->type == AOP_DIR && TARGET_IS_PDK16) ? left->aop : ASMOP_P;
 

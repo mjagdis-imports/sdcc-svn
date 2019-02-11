@@ -19,8 +19,9 @@ PDK14_FLOAT = $(filter-out atanf.c, $(COMMON_FLOAT))
 PDK14_INT = $(COMMON_INT) \
   _muluchar.c \
   _mulint.c \
-  _divsint.c \
   _divuint.c \
+  _divsint.c \
+  _moduint.c \
   _modsint.c \
   _mulschar.c \
   _divschar.c \
