@@ -1371,10 +1371,14 @@ genReturn (const iCode *ic)
       if (left->aop->type == AOP_STK)
         {
           for (int i = 0; i < left->aop->size; i++)
-          for (int i = 0; i < left->aop->size; i++)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+              pushAF ();
               pointPStack (-4, false, true);
+              emit2 ("idxm", "a, p");
+              emit2 ("mov", "p, a");
+              cost (2, 3);
+              popAF ();
               for (int j = 0; j < i; j++)
                 {
                   emit2 ("inc", "p");
@@ -1387,6 +1391,9 @@ genReturn (const iCode *ic)
       else
         {
           pointPStack (-4, true, true);
+          emit2 ("idxm", "a, p");
+          emit2 ("mov", "p, a");
+          cost (2, 3);
           for (int i = 0; i < left->aop->size; i++)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);

@@ -1,5 +1,10 @@
 2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c:
+	  Fix handling of wide return values.
+
+2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* sim/ucsim/z80.src/inst_ed.c:
 	  Implement Z80/Z180/eZ80 rld, rrd.
 	* src/z80/gen.c,
