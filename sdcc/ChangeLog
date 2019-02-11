@@ -1,3 +1,17 @@
+2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sim/ucsim/z80.src/inst_ed.c:
+	  Implement Z80/Z180/eZ80 rld, rrd.
+	* src/z80/gen.c,
+	  support/regression/tests/bitfields.c:
+	  Improve bit-field write.
+
+2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sdas/asrab/rabadr.c,
+	  src/z80/gen.c:
+	  Fix bug #2869.
+
 2019-02-08 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c

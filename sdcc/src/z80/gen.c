@@ -7378,7 +7378,7 @@ fix:
               if (!regalloc_dry_run)
                 {
                   symbol *tlbl = newiTempLabel (NULL);
-                  emit2 ("jp PO, !tlabel", labelKey2num (tlbl->key));
+                  emit2 (IS_RAB ? "jp LZ, !tlabel": "jp PO, !tlabel", labelKey2num (tlbl->key));
                   emit2 ("xor a, !immedbyte", 0x80);
                   emitLabelSpill (tlbl);
                 }
@@ -9019,7 +9019,7 @@ AccLsh (unsigned int shCount)
     0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80, 0x00
   };
 
-  if (shCount <= 3)
+  if (shCount <= 3 + !IS_GB)
     while (shCount--)
       emit3 (A_ADD, ASMOP_A, ASMOP_A);
   else
@@ -10345,7 +10345,14 @@ genPackBits (sym_link * etype, operand * right, int pair, const iCode * ic)
     {
       mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
 
-      if (AOP_TYPE (right) == AOP_LIT)
+      if (AOP_TYPE (right) == AOP_LIT && blen == 1 && (pair == PAIR_HL || pair == PAIR_IX || pair == PAIR_IY))
+        {
+          litval = (int) ulFromVal (AOP (right)->aopu.aop_lit);
+          emit2 (litval & 1 ? "set %d, !*pair" : "res %d, !*pair", bstr, _pairs[pair].name);
+          regalloc_dry_run_cost = (pair == PAIR_IX || pair == PAIR_IY) ? 4 : 2;
+          return;
+        }
+      else if (AOP_TYPE (right) == AOP_LIT)
         {
           /* Case with a bit-field length <8 and literal source */
           litval = (int) ulFromVal (AOP (right)->aopu.aop_lit);
@@ -10367,14 +10374,28 @@ genPackBits (sym_link * etype, operand * right, int pair, const iCode * ic)
           regalloc_dry_run_cost += (pair == PAIR_IX || pair == PAIR_IY) ? 3 : 1;
           return;
         }
+      else if (blen == 4 && bstr % 4 == 0 && pair == PAIR_HL && !aopInReg (right->aop, 0, A_IDX) && !requiresHL (right->aop) && (IS_Z80 || IS_Z180 || IS_EZ80_Z80))
+        {
+          emit2 (bstr ? "rld" : "rrd");
+          regalloc_dry_run_cost += 2;
+          cheapMove (ASMOP_A, 0, AOP (right), 0, true);
+          emit2 (bstr ? "rrd" : "rld");
+          regalloc_dry_run_cost += 2;
+          return;
+        }
       else
         {
           /* Case with a bit-field length <8 and arbitrary source */
           cheapMove (ASMOP_A, 0, AOP (right), 0, true);
           /* shift and mask source value */
-          AccLsh (bstr);
-          emit2 ("and a, !immedbyte", (~mask) & 0xff);
-          regalloc_dry_run_cost += 2;
+          if (blen + bstr == 8)
+            AccLsh (bstr);
+          else
+            {
+              AccRol (bstr);
+              emit2 ("and a, !immedbyte", (~mask) & 0xff);
+              regalloc_dry_run_cost += 2;
+            }
 
           extraPair = getFreePairId (ic);
           if (extraPair == PAIR_INVALID)
@@ -12356,12 +12377,12 @@ genBuiltInStrncpy (const iCode *ic, int nparams, operand **pparams)
       emitLabel (tlbl2);
       emit2 ("cp a, (hl)");
       emit2 ("ldi");
-      emit2 ("jp PO, !tlabel", labelKey2num (tlbl1->key));
+      emit2 (IS_RAB ? "jp LZ, !tlabel" : "jp PO, !tlabel", labelKey2num (tlbl1->key));
       emit2 ("jr NZ, !tlabel", labelKey2num (tlbl2->key));
       emitLabel (tlbl3);
       emit2 ("dec hl");
       emit2 ("ldi");
-      emit2 ("jp PE, !tlabel", labelKey2num (tlbl3->key));
+      emit2 (IS_RAB ? "jp LO, !tlabel" : "jp PE, !tlabel", labelKey2num (tlbl3->key));
       emitLabel (tlbl1);
     }
   regalloc_dry_run_cost += 14;
