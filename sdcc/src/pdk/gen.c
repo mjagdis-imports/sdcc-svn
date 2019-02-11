@@ -2416,12 +2416,22 @@ static void getBitFieldByte (int len, int str, bool sex)
 {
   wassert (len >= 0 && len < 8);
 
+  bool mask = len + str != 8;
+
   // Shift
+  if (len == 1 && str == 7)
+    {
+      emit2 ("sl", "a");
+      emit2 ("slc", "a");
+      str = 0;
+      mask = true;
+    }
   if (str >= 4)
     {
       emit2 ("swap", "a");
       cost (1, 1);
       str -= 4;
+      mask = true;
     }
   while (str--)
     {
@@ -2430,8 +2440,11 @@ static void getBitFieldByte (int len, int str, bool sex)
     }
 
   // Mask
-  emit2 ("and", "a, #0x%02x", 0xff >> (8 - len));
-  cost (2, 1);
+  if (mask)
+    {
+      emit2 ("and", "a, #0x%02x", 0xff >> (8 - len));
+      cost (2, 1);
+    }
 
   // Sign-extend
   if (sex)
