@@ -227,13 +227,12 @@ aopGet(const asmop *aop, int offset)
 
   if (aop->type == AOP_IMMD)
     {
-      wassertl_bt (offset < (2 + (options.model == MODEL_LARGE)), "Immediate operand out of range");
       if (offset == 0)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else if (offset == 1)
         SNPRINTF (buffer, sizeof(buffer), "#(>(%s + %d) + 0x80)", aop->aopu.immd, aop->aopu.immd_off);
       else
-        wassert (0);
+        SNPRINTF (buffer, sizeof(buffer), "#0", aop->aopu.immd, aop->aopu.immd_off);
       return (buffer);
     }
 
@@ -1664,7 +1663,7 @@ genMultLit (const iCode *ic)
       cost (1, 1);
       if ((add | sub) & (1ull << bit))
         {
-          emit2 (add & (1ull << bit) ? "add" : "sub" , "%s", aopGet (add_aop, 0));
+          emit2 (add & (1ull << bit) ? "add" : "sub" , "a, %s", aopGet (add_aop, 0));
           cost (1, 1);
         }
     }
@@ -2775,9 +2774,9 @@ genPointerSet (iCode *ic)
               cost (1, 2);
             }
 
-          if (i + 1 != size)
+          if (i + 1 != size && ptr_aop)
             {
-              emit2 ("inc", "p");
+              emit2 ("inc", "%s", aopGet (ptr_aop, 0));
               cost (1, 1);
             }
         }
@@ -3016,11 +3015,20 @@ genCast (const iCode *ic)
   if (IS_BOOL (resulttype))
     {
       int size = right->aop->size;
+      int skipbyte;
 
-      cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
-
-      for(offset = 1; offset < size; offset++)
+      if (aopInReg (right->aop, 1, A_IDX))
+        skipbyte = 1;
+      else
         {
+          cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
+          skipbyte = 0;
+        }
+
+      for(offset = 0; offset < size; offset++)
+        {
+          if (offset == skipbyte)
+            continue;
           emit2 ("or", "a, %s", aopGet (right->aop, offset));
           cost (1, 1);
         }

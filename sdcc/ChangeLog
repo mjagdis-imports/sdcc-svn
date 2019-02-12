@@ -1,5 +1,21 @@
 2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/pdk/gen.c,
+	  src/pdk/ralloc.c:
+	  Fix various pdk issues.
+	* support/regression/tests/bug-1918.c,
+	  support/regression/tests/bug-2124.c,
+	  support/regression/tests/bug-2271.c,
+	  support/regression/tests/bug-2274.c,
+	  support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-2349.c,
+	  support/regression/tests/bug-2373.c,
+	  support/regression/tests/bug-2455.c,
+	  support/regression/tests/bug-2497.c:
+	  Disable tests that are unlikely to compile for pdk14 anytime soon.
+
+2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/pdk/gen.c:
 	  Use ltabl for pdk15, improve shifts.
 	* src/SDCCglue.c:
