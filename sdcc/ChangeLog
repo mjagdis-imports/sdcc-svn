@@ -16,6 +16,9 @@
 	  support/regression/tests/bug2077267.c,
 	  support/regression/tests/bug3379723.c:
 	  Disable tests that are unlikely to compile for pdk14 anytime soon.
+	* device/lib/pdk14/heap.s,
+	  device/lib/pdk14/heap.s:
+	  Default heap of 64 Bytes for pdk14, pdk15.
 
 2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
 
