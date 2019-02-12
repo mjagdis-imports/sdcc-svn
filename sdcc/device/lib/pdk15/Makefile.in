@@ -14,7 +14,7 @@ override PORTDIR = ../build/pdk15
 
 include $(srcdir)/../incl.mk
 
-PDK15_FLOAT = $(filter-out atanf.c, $(COMMON_FLOAT))
+PDK15_FLOAT = $(COMMON_FLOAT)
 
 PDK15_INT = $(COMMON_INT) \
   _muluchar.c \

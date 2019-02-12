@@ -2,7 +2,7 @@
 
 	* src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
-	  Fix subtraction by immediate, &^| with both operands on stack.
+	  Fix subtraction by immediate, &^| with both operands on stack, left shift of on-stack operand.
 	* device/lib/pdk14/Makefile.in,
 	  device/lib/pdk15/Makefile.in:
 	  Enable missing support functions.

@@ -2245,6 +2245,8 @@ genLeftShift (const iCode *ic)
           emitLabel (tlbl);
           regalloc_dry_run_cycle_scale = shCount;
           shCount = 1;
+          if (result->aop->type == AOP_STK)
+            pushAF();
         }
 
       while (shCount)
@@ -2257,17 +2259,29 @@ genLeftShift (const iCode *ic)
               shCount -= 4;
               continue;
             }
-          
+
           for (int i = offset; i < size; i++)
             {
-              emit2((i > offset) ? "slc" : "sl", "%s", aopGet (result->aop, i));
-              cost (1, 1);
+              if (result->aop->type == AOP_STK)
+                {
+                  cheapMove (ASMOP_A, 0, result->aop, i, true, true);
+                  emit2((i > offset) ? "slc" : "sl", "a");
+                  cost (1, 1);
+                  cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+                }
+              else
+                {
+                  emit2((i > offset) ? "slc" : "sl", "%s", aopGet (result->aop, i));
+                  cost (1, 1);
+                }
             }
           shCount--;
         }
 
       if (loop)
         {
+          if (result->aop->type == AOP_STK)
+            popAF();
           emit2 ("dzsn", "a");
           if (!regalloc_dry_run)
             emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
