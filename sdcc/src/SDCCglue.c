@@ -1034,7 +1034,13 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
       break;
 
     case 2:
-      dbuf_tprintf (oBuf, "\t!db !constbyte, !constbyte\n", (ival & 0xff), (ival >> 8) & 0xff);
+      if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
+        {
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (ival & 0xff));
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", ((ival >> 8) & 0xff));
+        }
+      else
+        dbuf_tprintf (oBuf, "\t!db !constbyte, !constbyte\n", (ival & 0xff), (ival >> 8) & 0xff);
       bytes_written += 2;
       break;
 

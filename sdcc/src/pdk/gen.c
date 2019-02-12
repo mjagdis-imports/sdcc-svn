@@ -2211,7 +2211,7 @@ genLeftShift (const iCode *ic)
 
       while (shCount)
         {
-          if (shCount >= 4 && size == 1 && aopInReg (result->aop, 0, A_IDX))
+          if (shCount >= 4 && (size - offset) == 1 && aopInReg (result->aop, offset, A_IDX))
             {
               emit2 ("swap", "a");
               emit2 ("and", "a, #0xf0");

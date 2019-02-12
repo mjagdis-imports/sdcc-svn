@@ -2,6 +2,8 @@
 
 	* src/pdk/gen.c:
 	  Use ltabl for pdk15, improve shifts.
+	* src/SDCCglue.c:
+	  Fix initialization of bit-fields in code space for pdk.
 
 2019-02-12 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
