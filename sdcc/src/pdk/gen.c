@@ -1997,6 +1997,19 @@ genXor (const iCode *ic)
         {
           cheapMove (result->aop, i, left->aop, i, true, true);
         }
+      else if (right->aop->type == AOP_STK)
+        {
+          if (!regDead (P_IDX, ic) || aopInReg (left->aop, i, P_IDX))
+            {
+              cost (100, 100);
+              wassert (regalloc_dry_run);
+            }
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          cheapMove (ASMOP_P, 0, right->aop, i, false, true);
+          emit2 ("xor", "a, p");
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+        }
       else
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
@@ -2049,6 +2062,19 @@ genOr (const iCode *ic)
       else if (aopIsLitVal (right->aop, i, 1, 0x00))
         {
           cheapMove (result->aop, i, left->aop, i, true, true);
+        }
+      else if (right->aop->type == AOP_STK)
+        {
+          if (!regDead (P_IDX, ic) || aopInReg (left->aop, i, P_IDX))
+            {
+              cost (100, 100);
+              wassert (regalloc_dry_run);
+            }
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          cheapMove (ASMOP_P, 0, right->aop, i, false, true);
+          emit2 ("or", "a, p");
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
         }
       else
         {
@@ -2152,6 +2178,19 @@ genAnd (const iCode *ic, iCode *ifx)
         cheapMove (result->aop, i, left->aop, i, true, true);
       else if (aopIsLitVal (right->aop, i, 1, 0x00))
         cheapMove (result->aop, i, ASMOP_ZERO, 0, true, true);
+      else if (right->aop->type == AOP_STK)
+        {
+          if (!regDead (P_IDX, ic) || aopInReg (left->aop, i, P_IDX))
+            {
+              cost (100, 100);
+              wassert (regalloc_dry_run);
+            }
+          cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+          cheapMove (ASMOP_P, 0, right->aop, i, false, true);
+          emit2 ("and", "a, p");
+          cost (1, 1);
+          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+        }
       else
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);

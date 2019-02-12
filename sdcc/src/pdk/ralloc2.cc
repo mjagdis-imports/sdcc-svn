@@ -204,10 +204,17 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   bool result_in_P = operand_in_reg(result, REG_P, ia, i, G);
   bool left_in_P = operand_in_reg(left, REG_P, ia, i, G);
+  bool right_in_P = operand_in_reg(right, REG_P, ia, i, G);
+
+  bool left_in_A = operand_in_reg(left, REG_A, ia, i, G);
+  bool right_in_A = operand_in_reg(right, REG_A, ia, i, G);
 
   const cfg_dying_t &dying = G[i].dying;
 
   bool dying_P = result_in_P || dying.find(ia.registers[REG_P][1]) != dying.end() || dying.find(ia.registers[REG_P][0]) != dying.end();
+
+  bool left_stack = IS_ITEMP (left) && (options.stackAuto || reentrant) && !left_in_A && !left_in_P;
+  bool right_stack = IS_ITEMP (right) && (options.stackAuto || reentrant) && !right_in_A && !right_in_P;
 
   // Arithmetic uses p internally for literal operands with multiple nonzero bytes.
   if ((ic->op == '+' || ic->op == '-' || ic->op == '!' || ic->op == '<' || ic->op == '>') && (IS_OP_LITERAL(left) || IS_OP_LITERAL(right)))
@@ -223,6 +230,10 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(false);
 
   if (ic->op == GET_VALUE_AT_ADDRESS && !dying_P && !(left_in_P && getSize(operandType(result)) == 1))
+    return(false);
+
+  if ((ic->op == '+' || ic->op == '-' || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND) &&
+    (left_stack || right_stack) && (!dying_P || left_stack || right_stack))
     return(false);
 
   return(true);
