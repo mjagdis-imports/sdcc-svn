@@ -6,9 +6,12 @@
 	  device/lib/pdk15/Makefile.in:
 	  Enable missing support functions.
 	* support/regression/tests/bug-2551.c,
-	  support/regression/tests/bug-2554.c
+	  support/regression/tests/bug-2554.c,
 	  support/regression/tests/bug-2558.c,
-	  support/regression/tests/gcc-torture-execute-920721-3.c:
+	  support/regression/tests/bug-2559.c,
+	  support/regression/tests/gcc-torture-execute-920721-3.c,
+	  support/regression/tests/gcc-torture-execute-20050106-1.c,
+	  support/regression/tests/gcc-torture-execute-20060930-2.c:
 	  Disable tests that fail to compile due to bug #2874.
 	* support/regression/tests/bug-2663.c,
 	  support/regression/tests/bug-2767.c,
@@ -20,6 +23,8 @@
 	* device/lib/pdk14/heap.s,
 	  device/lib/pdk14/heap.s:
 	  Default heap of 64 Bytes for pdk14, pdk15.
+	* src/pdk/main.c:
+	  Report lack of code generation support for division by constant.
 
 2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
 

@@ -179,6 +179,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
   int result_size = IS_SYMOP (IC_RESULT(ic)) ? getSize (OP_SYM_TYPE (IC_RESULT(ic))) : 4;
 
+  if (ic->op != '*')
+    return (false);
+
   return ((IS_LITERAL (left) || IS_LITERAL (right)) && result_size == 1);
 }
 
