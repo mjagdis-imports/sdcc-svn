@@ -2510,8 +2510,7 @@ genPointerGet (const iCode *ic)
           cheapMove (result->aop, i, ASMOP_A, 0, true, true);
         }
     }
-#if 0 // TODO: CHECK IF SET HIGH BIT IS A PROBLEM HERE!
-  else if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ldtabl for efficient read from code space.
+  else if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ldtabl for efficient read from code space via a 12-bit address (top nibble of 16-bit value is ignored).
     {
       emit2 ("ldtabl", "a, %s", aopGet (left->aop, 0));
       cost (1, 2);
@@ -2522,8 +2521,6 @@ genPointerGet (const iCode *ic)
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
       goto release;
     }
-  else
-#endif
   else if (ptype == POINTER) // Try to use efficient idxm when we know the target is in RAM.
     {
       const asmop *ptr_aop = (left->aop->type == AOP_DIR && TARGET_IS_PDK16) ? left->aop : ASMOP_P;
@@ -2565,7 +2562,7 @@ genPointerGet (const iCode *ic)
               cost (2, 2);
             }
           emit2 ("call", "__gptrget");
-          cost (1, 8);
+          cost (1, 8 + (ptype == CPOINTER) * 6);
 
           if (bit_field && blen < 8)
             getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
