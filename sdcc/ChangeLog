@@ -7,7 +7,8 @@
 	  Enable missing support functions.
 	* support/regression/tests/bug-2551.c,
 	  support/regression/tests/bug-2554.c
-	  support/regression/tests/bug-2558.c:
+	  support/regression/tests/bug-2558.c,
+	  support/regression/tests/gcc-torture-execute-920721-3.c:
 	  Disable tests that fail to compile due to bug #2874.
 	* support/regression/tests/bug-2663.c,
 	  support/regression/tests/bug-2767.c,
