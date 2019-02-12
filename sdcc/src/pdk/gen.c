@@ -1029,7 +1029,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cost (1, 1);
           started = true;
         }
-      else if (started && right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00))
+      else if (started && (right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00) || right->aop->type == AOP_IMMD))
         {
           cheapMove (ASMOP_P, 0, right_aop, i, !aopInReg (left_aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left_aop, i, true, false);

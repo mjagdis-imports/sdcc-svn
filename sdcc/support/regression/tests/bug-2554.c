@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#ifndef __SDCC_pdk14 // Bug #2874
 uint16_t numTests;
 
 void fail(void)
@@ -105,6 +106,7 @@ llvm_cbe_if_2e_end52:
 llvm_cbe_cond_2e_end59:
   return;
 }
+#endif
 
 void testBug(void)
 {

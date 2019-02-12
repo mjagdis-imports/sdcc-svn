@@ -1,5 +1,27 @@
 2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/pdk/gen.c:
+	  Fix subtraction by immediate.
+	* device/lib/pdk14/Makefile.in,
+	  device/lib/pdk15/Makefile.in:
+	  Enable missing support functions.
+	* support/regression/tests/bug-2551.c,
+	  support/regression/tests/bug-2554.c
+	  support/regression/tests/bug-2558.c:
+	  Disable tests that fail to compile due to bug #2874.
+	* support/regression/tests/bug-2663.c,
+	  support/regression/tests/bug-2767.c,
+	  support/regression/tests/bug-716242.c:
+	  Disable tests that are unlikely to compile for pdk14 anytime soon.
+
+2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc.c,
+	  support/regression/tests/bug-2031.c:
+	  Allow rematerialization of pointer-to-integer cast, fixes a gbz80 initialization bug.
+
+2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/pdk/gen.c,
 	  src/pdk/ralloc.c:
 	  Fix various pdk issues.

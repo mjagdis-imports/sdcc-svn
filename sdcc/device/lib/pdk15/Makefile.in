@@ -18,14 +18,16 @@ PDK15_FLOAT = $(filter-out atanf.c, $(COMMON_FLOAT))
 
 PDK15_INT = $(COMMON_INT) \
   _muluchar.c \
+  _mulschar.c \
   _mulint.c \
+  _divuchar.c \
+  _divschar.c \
   _divuint.c \
   _divsint.c \
+  _moduchar.c \
+  _modschar.c \
   _moduint.c \
-  _modsint.c \
-  _mulschar.c \
-  _divschar.c \
-  _modschar.c
+  _modsint.c
 
 PDK15_LONG = $(COMMON_LONG) \
   _divulong.c \
