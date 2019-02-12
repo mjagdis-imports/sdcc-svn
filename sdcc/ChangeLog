@@ -11,7 +11,10 @@
 	  Disable tests that fail to compile due to bug #2874.
 	* support/regression/tests/bug-2663.c,
 	  support/regression/tests/bug-2767.c,
-	  support/regression/tests/bug-716242.c:
+	  support/regression/tests/bug-716242.c,
+	  support/regression/tests/bug1908493.c,
+	  support/regression/tests/bug2077267.c,
+	  support/regression/tests/bug3379723.c:
 	  Disable tests that are unlikely to compile for pdk14 anytime soon.
 
 2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
