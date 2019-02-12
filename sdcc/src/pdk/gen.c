@@ -2189,15 +2189,16 @@ genLeftShift (const iCode *ic)
   if (right->aop->type == AOP_LIT)
     {
       int shCount = ulFromVal (right->aop->aopu.aop_lit);
+      int offset = shCount / 8;
 
-      genMove_o (result->aop, shCount / 8, left->aop, 0, result->aop->size - shCount / 8, true);
-      genMove_o (result->aop, 0, ASMOP_ZERO, 0, shCount / 8, true);
+      genMove_o (result->aop, offset, left->aop, 0, result->aop->size - shCount / 8, true);
+      genMove_o (result->aop, 0, ASMOP_ZERO, 0, offset, true);
       shCount %= 8;
 
       if (!shCount)
         goto release;
 
-      bool loop = (shCount > 2 + (size == 1) * 2 + optimize.codeSpeed) && !(size == 1 && aopInReg (result->aop, 0, A_IDX));
+      bool loop = (shCount > 2 + ((size - offset) <= 1) * 2 + optimize.codeSpeed) && !(size == 1 && aopInReg (result->aop, 0, A_IDX));
       symbol *tlbl = (!loop || regalloc_dry_run) ? 0 : newiTempLabel (0);
 
       if (loop)
@@ -2219,9 +2220,9 @@ genLeftShift (const iCode *ic)
               continue;
             }
           
-          for (int i = 0; i < size; i++)
+          for (int i = offset; i < size; i++)
             {
-              emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
+              emit2((i > offset) ? "slc" : "sl", "%s", aopGet (result->aop, i));
               cost (1, 1);
             }
           shCount--;
@@ -2294,8 +2295,14 @@ genRightShift (const iCode *ic)
     {
       int shCount = ulFromVal (right->aop->aopu.aop_lit);
 
-      genMove_o (result->aop, 0, left->aop, shCount / 8, result->aop->size, true);
-      shCount %= 8;
+      if (SPEC_USIGN (getSpec (operandType (left))))
+        {
+          genMove_o (result->aop, 0, left->aop, shCount / 8, result->aop->size, true);
+          size -= shCount / 8;
+          shCount %= 8;
+        }
+      else
+        genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX));
 
       if (!shCount)
         goto release;

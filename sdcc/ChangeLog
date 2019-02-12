@@ -1,7 +1,7 @@
 2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
-	  Use ltabl for pdk15.
+	  Use ltabl for pdk15, improve shifts.
 
 2019-02-12 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
