@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <setjmp.h>
 
-#ifndef __SDCC_mcs51
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14)
 unsigned char array[300];
 #endif
 
@@ -85,7 +85,7 @@ void jump(unsigned char *a)
 
 void testLoop(void)
 {
-#ifndef __SDCC_mcs51
+##if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14)
 	loop8 (array, 3);
 	ASSERT (array[0] == 8);
 	ASSERT (array[3] == 8);
