@@ -6,8 +6,13 @@
 	  support/regression/tests/gcc-torture-execute-991112-1.c,
 	  support/regression/tests/gcc-torture-execute-func-ptr-1.c,
 	  support/regression/tests/gcc-torture-execute-pr34456.c,
-	  support/regression/tests/z88dk.c:
+	  support/regression/tests/z88dk.c,
+	  support/regression/tests/gcc-torture-execute-20010409-1.c,
+	  support/regression/tests/gcc-torture-execute-pr60003.c,
+	  support/regression/tests/setjmp.c:
 	  Disable tests that are unlikely to compile for pdk14 anytime soon.
+	* src/z80/gen.c:
+	  Fix wide comparison with immediate, fix a corner case of & with one stack operand, fix comparison with stack operand.
 
 2019-02-13 Philipp Klaus Krause <pkk AT spth.de>
 

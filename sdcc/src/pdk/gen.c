@@ -693,7 +693,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
         popAF();
     }
 
-  if (result == ASMOP_P)
+  if (aopInReg (result, roffset, P_IDX))
     G.p.type = AOP_INVALID;
 }
 
@@ -914,13 +914,26 @@ genNot (const iCode *ic)
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
 
+  D (emit2 ("; genNot", ""));
+
   aopOp (left, ic);
   aopOp (result, ic);
 
   cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
   for (int i = 1; i < left->aop->size; i++)
     {
-      emit2 ("or", "a, %s", aopGet (left->aop, i));
+      if (left->aop->type == AOP_STK)
+        {
+          if (!regDead (P_IDX, ic))
+            {
+              cost (1000, 1000);
+              wassert (regalloc_dry_run);
+            }
+          cheapMove (ASMOP_P, 0, left->aop, i, false, true);
+          emit2 ("or", "a, p");
+        }
+      else
+        emit2 ("or", "a, %s", aopGet (left->aop, i));
       cost (1, 1);
     }
   emit2 ("sub", "a, #0x01");
@@ -942,6 +955,8 @@ genCpl (const iCode *ic)
 {
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
+
+  D (emit2 ("; genCpl", ""));
 
   aopOp (left, ic);
   aopOp (result, ic);
@@ -1823,7 +1838,7 @@ genCmp (const iCode *ic, iCode *ifx)
           emit2 ("subc", "a");
           cost (1, 1);
         }
-      else if (started && right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00)) // Work around lack of subc a, #nn.
+      else if (started && (right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00) || right->aop->type == AOP_IMMD)) // Work around lack of subc a, #nn.
         {
           cheapMove (ASMOP_P, 0, right->aop, i, true, !i);
           cheapMove (ASMOP_A, 0, left->aop, i, true, !i);
@@ -1927,15 +1942,25 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
       cheapMove (ASMOP_A, 0, left->aop, i, true, true);
 
+      if (right->aop->type == AOP_STK)
+        {
+          if (!regDead (P_IDX, ic))
+            {
+              cost (1000, 1000);
+              wassert (regalloc_dry_run);
+            }
+          cheapMove (ASMOP_P, 0, right->aop, i, false, true);
+        }
+
       if (ifx && i + 1 == size && ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx))))
         {
-          emit2 ("cneqsn", "a, %s", aopGet (right->aop, i));
+          emit2 ("cneqsn", "a, %s", right->aop->type == AOP_STK ? "p" : aopGet (right->aop, i));
           cost (1, 1);
           emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
         }
       else
         {
-          emit2 ("ceqsn", "a, %s", aopGet (right->aop, i));
+          emit2 ("ceqsn", "a, %s", right->aop->type == AOP_STK ? "p" : aopGet (right->aop, i));
           cost (1, 1);
           emitJP(lbl_ne, 0.0f);
         }
@@ -2167,6 +2192,13 @@ genAnd (const iCode *ic, iCode *ifx)
 
   for (int i = 0; i < size; i++)
     {
+      if (aopInReg (right->aop, i, A_IDX))
+        {
+          operand *t = right;
+          right = left;
+          left = t;
+        }
+
       int bit = right->aop->type == AOP_LIT ? isLiteralBit (~byteOfVal (right->aop->aopu.aop_lit, i) & 0xff) : -1;
 
       if ((left->aop->type == AOP_SFR || aopInReg (left->aop, i, P_IDX)) && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
@@ -2193,6 +2225,11 @@ genAnd (const iCode *ic, iCode *ifx)
         }
       else
         {
+          if (left->aop->type == AOP_STK && (!regDead (P_IDX, ic) || aopInReg (right->aop, i, P_IDX)))
+            {
+              cost (100, 100);
+              wassert (regalloc_dry_run);
+            }
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
           emit2 ("and", "a, %s", aopGet (right->aop, i));
           cost (1, 1);
