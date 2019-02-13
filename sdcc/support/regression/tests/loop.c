@@ -60,6 +60,7 @@ void address(unsigned char *a)
 	}
 }
 
+#ifndef __SDCC_pdk14
 void jump_func(jmp_buf *jp, {type} i)
 {
 	ASSERT (i == (1ul << 29));
@@ -82,10 +83,11 @@ void jump(unsigned char *a)
 
 	a[0] = 13;
 }
+#endif
 
 void testLoop(void)
 {
-##if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14)
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14)
 	loop8 (array, 3);
 	ASSERT (array[0] == 8);
 	ASSERT (array[3] == 8);
