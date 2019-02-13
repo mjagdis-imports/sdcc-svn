@@ -12,7 +12,7 @@
 	  support/regression/tests/setjmp.c:
 	  Disable tests that are unlikely to compile for pdk14 anytime soon.
 	* src/z80/gen.c:
-	  Fix wide comparison with immediate, fix a corner case of & with one stack operand, fix comparison with stack operand.
+	  Fix wide comparison with immediate, fix a corner case of & with one stack operand, fix comparison with stack operand, fix multiplication by negative literal.
 
 2019-02-13 Philipp Klaus Krause <pkk AT spth.de>
 

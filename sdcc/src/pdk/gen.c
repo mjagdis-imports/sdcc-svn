@@ -1662,7 +1662,9 @@ genMultLit (const iCode *ic)
   unsigned long long add, sub;
   int topbit, nonzero;
 
-  wassert (!csdOfVal (&topbit, &nonzero, &add, &sub, right->aop->aopu.aop_lit));
+  value *bval = valueFromLit (ulFromVal (right->aop->aopu.aop_lit) & 0xff);
+  wassert (!csdOfVal (&topbit, &nonzero, &add, &sub, bval));
+  Safe_free (bval);
 
   // If the leading digits of the cse are 1 0 -1 we can use 0 1 1 instead to reduce the number of shifts.
   if (topbit >= 2 && (add & (1ull << topbit)) && (sub & (1ull << (topbit - 2))))
