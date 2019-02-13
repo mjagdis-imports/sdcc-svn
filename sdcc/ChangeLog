@@ -1,3 +1,19 @@
+2019-02-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-20030714-1.c,
+	  support/regression/tests/gcc-torture-execute-921208-1.c,
+	  support/regression/tests/gcc-torture-execute-930702-1.c,
+	  support/regression/tests/gcc-torture-execute-991112-1.c,
+	  support/regression/tests/gcc-torture-execute-func-ptr-1.c,
+	  support/regression/tests/gcc-torture-execute-pr34456.c,
+	  support/regression/tests/z88dk.c:
+	  Disable tests that are unlikely to compile for pdk14 anytime soon.
+
+2019-02-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix bug #2875.
+
 2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c,
