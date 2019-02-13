@@ -293,7 +293,8 @@ PORT pdk13_port =
     0,                          /* name of segment for copies of initialized variables in code space */
     0,
     0,
-    1                           /* CODE  is read-only */
+    1,                          /* CODE  is read-only */
+    1                           /* No fancy alignments supported. */
   },
   { 0, 0 },
   {                             /* stack information */
@@ -458,7 +459,8 @@ PORT pdk14_port =
     0,                          /* name of segment for copies of initialized variables in code space */
     0,
     0,
-    1                           /* CODE  is read-only */
+    1,                          /* CODE  is read-only */
+    1                           /* No fancy alignments supported. */
   },
   { 0, 0 },
   {                             /* stack information */
@@ -623,7 +625,8 @@ PORT pdk15_port =
     0,                          /* name of segment for copies of initialized variables in code space */
     0,
     0,
-    1                           /* CODE  is read-only */
+    1,                          /* CODE  is read-only */
+    1                           /* No fancy alignments supported. */
   },
   { 0, 0 },
   {                             /* stack information */
