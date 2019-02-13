@@ -230,7 +230,7 @@ aopGet(const asmop *aop, int offset)
       if (offset == 0)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else if (offset == 1)
-        SNPRINTF (buffer, sizeof(buffer), "#(>(%s + %d) + 0x80)", aop->aopu.immd, aop->aopu.immd_off);
+        SNPRINTF (buffer, sizeof(buffer), "#>(%s + 0x8000 + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else
         SNPRINTF (buffer, sizeof(buffer), "#0", aop->aopu.immd, aop->aopu.immd_off);
       return (buffer);
@@ -3026,7 +3026,7 @@ genAddrOf (const iCode *ic)
       emit2 ("mov", "a, #<(%s + %d)", sym->rname, operandLitValue (right));
       cost (1, 1);
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
-      emit2 ("mov", "a, #(>(%s + %d) + 0x80)", sym->rname, operandLitValue (right));
+      emit2 ("mov", "a, #>(%s + 0x8000 + %d)", sym->rname, operandLitValue (right));
       cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
     }
   else
