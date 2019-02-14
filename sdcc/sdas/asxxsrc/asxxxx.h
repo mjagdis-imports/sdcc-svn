@@ -1228,7 +1228,7 @@ extern  VOID            outrw(struct expr *esp, int r);
 extern  VOID            outr3b(struct expr *esp, int r);
 extern  VOID            outrxb(int i, struct expr *esp, int r);
 extern  VOID            outrwm(struct expr *esp, int r, a_uint v);
-extern  VOID            outrwp(struct expr *esp, a_uint op);
+extern  VOID            outrwp(struct expr *esp, a_uint op, a_uint mask, int jump);
 extern  VOID            outr3bm(struct expr *esp, int r, a_uint v);
 extern  VOID            out_lb(a_uint v, int t);
 extern  VOID            out_lw(a_uint v, int t);

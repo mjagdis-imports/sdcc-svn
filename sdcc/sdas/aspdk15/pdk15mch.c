@@ -195,7 +195,7 @@ machine(struct mne *mp)
                 struct expr e;
                 clrexpr(&e);
                 expr(&e, 0);
-                outrwp(&e, op);
+                outrwp(&e, op, 0xFFF, /*jump=*/1);
                 break;
         }
 

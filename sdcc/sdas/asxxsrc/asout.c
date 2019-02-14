@@ -1767,10 +1767,12 @@ outr3bm(struct expr * esp, int r, a_uint v)
  * This function is derived from outrw(), adding the parameter for the
  * 11 bit address.  This form of address is used only on the pdk.
  */
-/*)Function     VOID    outrwp(esp, op)
+/*)Function     VOID    outrwp(esp, op, mask, jump)
  *
- *              expr *  esp             pointer to expr structure
- *              int     op              opcode
+ *              expr *      esp             pointer to expr structure
+ *              a_uint      op              opcode
+ *              a_uint      mask            address mask
+ *              int         jump            call/goto relocation data
  *
  *      The function outrwp() processes a word of generated code
  *      in either absolute or relocatable format dependent upon
@@ -1805,9 +1807,9 @@ outr3bm(struct expr * esp, int r, a_uint v)
  *              The current assembly address is incremented by 2.
  */
 VOID
-outrwp(struct expr *esp, a_uint op)
+outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
 {
-        int n, r = R_J11;
+        int n, r = jump ? R_J11 : R_J19;
 
         if (pass == 2) {
                 if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
@@ -1822,13 +1824,24 @@ outrwp(struct expr *esp, a_uint op)
                         esp->e_flag = 1;
                         esp->e_base.e_sp = &sym[1];
                 }
+
+                /* We need to select either the MSB or LSB of the address.
+                 * Reset relocation marker so that the linker knows what to do
+                 * with it.
+                 */
+                if (esp->e_rlcf & R_BYTX) {
+                        r = R_BYTE;
+                } else {
+                        r |= R_WORD;
+                }
+
                 /*
                  * Relocatable Destination.  Build THREE
                  * byte output: relocatable word, followed
                  * by op-code.  Linker will combine them.
                  */
-                r |= R_WORD | esp->e_rlcf;
-                n =  op | (esp->e_addr & 0x7FFF);
+                r |= esp->e_rlcf;
+                n =  op | (esp->e_addr & mask);
                 out_lw(n,r|R_RELOC);
                 if (oflag) {
                         outchk(3, 4);

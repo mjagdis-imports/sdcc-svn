@@ -139,7 +139,7 @@ machine(struct mne *mp)
                 /* fallthrough */
         case S_SET0: {
                 struct inst io = {0x1C00 | combine, 0x3F};
-                struct inst m = {0x2400 | combine, 0x7F};
+                struct inst m = {0x2400 | combine, 0x3F};
                 ebitn(io, m);
                 break;
         }
@@ -148,7 +148,7 @@ machine(struct mne *mp)
                 combine = 0x80;
                 /* fallthrough */
         case S_CEQSN: {
-                struct inst m = {0x1700 | combine, 0x7F};
+                struct inst m = {0x1700 | combine, 0xFF};
                 def.op |= combine << 1;
                 eskip(def, m);
                 break;
@@ -159,7 +159,7 @@ machine(struct mne *mp)
                 /* fallthrough */
         case S_T0SN: {
                 struct inst io = {0x1800 | combine, 0x3F};
-                struct inst m = {0x2000 | combine, 0x7F};
+                struct inst m = {0x2000 | combine, 0x3F};
                 ebitn(io, m);
                 break;
         }
@@ -191,7 +191,7 @@ machine(struct mne *mp)
                 struct expr e;
                 clrexpr(&e);
                 expr(&e, 0);
-                outrwp(&e, op);
+                outrwp(&e, def.op, 0x7FF, /*jump=*/1);
                 break;
         }
 

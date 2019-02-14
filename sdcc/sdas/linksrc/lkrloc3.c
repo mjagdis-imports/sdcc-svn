@@ -390,10 +390,39 @@ relr3(void)
                         reli -= paga + pags;
                 }
 
+
+                /* pdk instruction fusion */
+                if (TARGET_IS_PDK) {
+                        if (IS_R_J11(mode) || IS_R_J19(mode)) {
+                                relv = adb_2b(reli, rtp);
+
+                                /* pdk addresses in words, not in bytes for
+                                   jump (goto/call) instructions. */
+                                if (IS_R_J11(mode)) {
+                                        rtval[rtp] /= 2;
+                                        rtval[rtp] |= (rtval[rtp + 1] & 1) << 7;
+                                        rtval[rtp + 1] /= 2;
+                                }
+
+                                /* Do the actual opcode fusion and ignore the extra
+                                   byte taken for the opcode by the assembler.
+                                */
+                                rtval[rtp + 1] |= rtval[rtp + 2];
+                                rtflg[rtp + 2] = 0;
+                        } else if (mode & R3_MSB) {
+                                relv = adb_hi(reli, rtp);
+                                rtflg[rtp + 2] = 1;
+                        } else {
+                                relv = adb_lo(reli, rtp);
+                                rtflg[rtp + 2] = 1;
+                        }
+                        rtofst += 1;
+                }
+
                 /*
                  * R3_BYTE or R3_WORD operation
                  */
-                if (mode & R3_BYTE) {
+                else if (mode & R3_BYTE) {
                         if (mode & R_BYT3)
                         {
                                 /* This is a three byte address, of which
@@ -442,21 +471,6 @@ relr3(void)
                         } else {
                                 relv = adb_1b(reli, rtp);
                         }
-                } else if (IS_R_J11(mode) && TARGET_IS_PDK) {
-                        /* 11 bit goto/call instruction fusion for pdk. */
-                        relv = adb_2b(reli, rtp);
-
-                        /* pdk addresses in words, not in bytes. */
-                        rtval[rtp] /= 2;
-                        rtval[rtp] |= (rtval[rtp + 1] & 1) << 7;
-                        rtval[rtp + 1] /= 2;
-
-                        /* Do the actual opcode fusion and ignore the extra
-                           byte taken for the opcode by the assembler.
-                        */
-                        rtval[rtp + 1] |= rtval[rtp + 2];
-                        rtflg[rtp + 2] = 0;
-                        rtofst += 1;
                 } else if (IS_R_J11(mode)) {
                         /*
                          * JLH: 11 bit jump destination for 8051.

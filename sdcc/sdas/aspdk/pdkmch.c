@@ -35,6 +35,10 @@ static VOID outpdkaw(struct inst inst, struct expr e) {
         outaw(inst.op | (e.e_addr & inst.mask));
 }
 
+static VOID outpdkrm(struct inst inst, struct expr e) {
+        outrwp(&e, inst.op, inst.mask, /*jump=*/0);
+}
+
 static VOID outpdka(struct inst inst) {
         struct expr e;
         clrexpr(&e);
@@ -61,14 +65,14 @@ VOID emov(struct inst def,
                 outpdkaw(aio, e1);
         } else
         if (t == S_M && t1 == S_A) {
-                outpdkaw(ma, e);
+                outpdkrm(ma, e);
         } else
         if (t == S_A && t1 == S_M) {
-                outpdkaw(am, e1);
+                outpdkrm(am, e1);
         } else
-        if (t == S_A && t1 == S_K)
-                outpdkaw(def, e1);
-        else
+        if (t == S_A && t1 == S_K) {
+                outpdkrm(def, e1);
+        } else
                 aerr();
 }
 
@@ -82,10 +86,10 @@ VOID eidxm(struct inst am, struct inst ma) {
         int t1 = addr(&e1);
 
         if (t == S_A && t1 == S_M) {
-                outpdkaw(am, e1);
+                outpdkrm(am, e1);
         } else
         if (t == S_M && t1 == S_A) {
-                outpdkaw(ma, e);
+                outpdkrm(ma, e);
         } else
                 aerr();
 }
@@ -102,13 +106,13 @@ VOID earith(struct inst def,
         int t1 = addr(&e1);
 
         if (t == S_M && t1 == S_A) {
-                outpdkaw(ma, e);
+                outpdkrm(ma, e);
         } else
         if (t == S_A && t1 == S_M) {
-                outpdkaw(am, e1);
+                outpdkrm(am, e1);
         } else
         if (t == S_A && t1 == S_K) {
-                outpdkaw(def, e1);
+                outpdkrm(def, e1);
         } else
                 aerr();
 }
@@ -126,15 +130,15 @@ VOID earithc(struct inst ma,
                 clrexpr(&e1);
                 int t1 = addr(&e1);
                 if (t == S_M && t1 == S_A) {
-                        outpdkaw(ma, e);
+                        outpdkrm(ma, e);
                 } else
                 if (t == S_A && t1 == S_M) {
-                        outpdkaw(am, e1);
+                        outpdkrm(am, e1);
                 } else
                         aerr();
         } else
         if (t == S_M) {
-                outpdkaw(m, e);
+                outpdkrm(m, e);
         } else
         if (t == S_A) {
                 outpdka(a);
@@ -152,7 +156,7 @@ VOID eshift(struct inst a,
                 outpdka(a);
         } else
         if (t == S_M) {
-                outpdkaw(m, e);
+                outpdkrm(m, e);
         } else
                 aerr();
 }
@@ -182,13 +186,13 @@ VOID ebit(struct inst def,
         }
 
         if (t == S_M && t1 == S_A) {
-                outpdkaw(ma, e);
+                outpdkrm(ma, e);
         } else
         if (t == S_A && t1 == S_M) {
-                outpdkaw(am, e1);
+                outpdkrm(am, e1);
         } else
         if (t == S_A && t1 == S_K) {
-                outpdkaw(def, e1);
+                outpdkrm(def, e1);
         } else
         if (t == S_IO && t1 == S_A && ioa) {
                 outpdkaw(*ioa, e);
@@ -202,7 +206,7 @@ VOID enot(struct inst def, struct inst m) {
         int t = more() ? addr(&e) : S_A;
 
         if (t == S_M) {
-                outpdkaw(m, e);
+                outpdkrm(m, e);
         } else if (t == S_A) {
                 outpdka(def);
         } else
@@ -226,7 +230,7 @@ VOID ebitn(struct inst io, struct inst m) {
         } else
         if (t == S_M) {
                 m.op |= bitn;
-                outpdkaw(m, e);
+                outpdkrm(m, e);
         } else
                 aerr();
 }
@@ -241,10 +245,10 @@ VOID eskip(struct inst def, struct inst m) {
         }
 
         if (t == S_M) {
-                outpdkaw(m, e);
+                outpdkrm(m, e);
         } else
         if (t == S_K) {
-                outpdkaw(def, e);
+                outpdkrm(def, e);
         } else
                 aerr();
 }
@@ -260,7 +264,7 @@ VOID eret(struct inst def, struct inst k) {
                 clrexpr(&e);
                 if (addr(&e) != S_K)
                         aerr();
-                outpdkaw(k, e);
+                outpdkrm(k, e);
         } else
                 outpdka(def);
 }
@@ -271,7 +275,7 @@ VOID eone(struct inst m) {
         if (addr(&e) != S_M)
                 aerr();
 
-        outpdkaw(m, e);
+        outpdkrm(m, e);
 }
 
 VOID exch(struct inst m) {
@@ -286,7 +290,7 @@ VOID exch(struct inst m) {
 
         if (t != S_M)
                 aerr();
-        outpdkaw(m, e);
+        outpdkrm(m, e);
 }
 
 VOID epupo(struct inst def) {
@@ -337,10 +341,10 @@ VOID espec(struct inst am, struct inst ma) {
         int t1 = addr(&e1);
 
         if (t == S_A && t1 == S_M) {
-                outpdkaw(am, e1);
+                outpdkrm(am, e1);
         } else
         if (t == S_M && t1 == S_A) {
-                outpdkaw(ma, e);
+                outpdkrm(ma, e);
         } else
                 aerr();
 }
