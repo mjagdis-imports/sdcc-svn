@@ -1,3 +1,8 @@
+2019-02-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Disable use of idxm, ldtabl, stt16, ldt16 on direct operands, since we can't handle alignment requirements yet.
+
 2019-02-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/gcc-torture-execute-20030714-1.c,

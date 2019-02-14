@@ -814,22 +814,27 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         cheapMove (result, roffset, source, soffset, a_dead_global, true);
         return;
       case 2:
+#if 0 // TODO: Implement alignment requirements - ldt16 needs 16-bit-aligned operand
         if (result->type == AOP_SFR && source->type == AOP_DIR)
           {
             emit2 ("stt16", "%s", aopGet (source, soffset));
             cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
           }
-        else if (result->type == AOP_SFR && source->type == AOP_LIT && aopIsLitVal (source, 1, 1, 0x00))
+         else
+#endif
+         if (result->type == AOP_SFR && source->type == AOP_LIT && aopIsLitVal (source, 1, 1, 0x00))
           {
             cheapMove (ASMOP_P, 0, source, 0, true, true);
             emit2 ("stt16", "p");
             cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
           }
+#if 0 // TODO: Implement alignment requirements - ldt16 needs 16-bit-aligned operand
         else if (result->type == AOP_DIR && source->type == AOP_SFR)
           {
             emit2 ("ldt16", "%s", aopGet (result, roffset));
             cost (1, 1); // TODO: Really just 1 cycle? Other 16-bit-transfer instructions use 2.
           }
+#endif
         else if (regalloc_dry_run)
           cost (1000, 1000);
         else
@@ -2608,6 +2613,7 @@ genPointerGet (const iCode *ic)
           cheapMove (result->aop, i, ASMOP_A, 0, true, true);
         }
     }
+#if 0 // TODO: Implement alignment requirements - ldt16 needs 16-bit-aligned operand
   else if (TARGET_IS_PDK15 && ptype == CPOINTER && left->aop->type == AOP_DIR && size == 1) // pdk15 has ldtabl for efficient read from code space via a 12-bit address (top nibble of 16-bit value is ignored).
     {
       emit2 ("ldtabl", "a, %s", aopGet (left->aop, 0));
@@ -2619,6 +2625,7 @@ genPointerGet (const iCode *ic)
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
       goto release;
     }
+#endif
   else if (ptype == POINTER) // Try to use efficient idxm when we know the target is in RAM.
     {
       const asmop *ptr_aop = (left->aop->type == AOP_DIR && TARGET_IS_PDK16) ? left->aop : ASMOP_P;
@@ -2697,6 +2704,7 @@ genPointerSet (iCode *ic)
   blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
 
+#if 0 // TODO: Implement alignment requirements - idxm needs 16-bit-aligned operand
   if (left->aop->type == AOP_DIR && TARGET_IS_PDK16 && !bit_field)
     {
       for (int i = 0; i < size; i++)
@@ -2716,7 +2724,9 @@ genPointerSet (iCode *ic)
           cost (1, 1);
         }
     }
-  else if (right->aop->type == AOP_STK && !bit_field)
+  else
+#endif
+  if (right->aop->type == AOP_STK && !bit_field)
     {
       if (!regDead (P_IDX, ic))
         {
@@ -2742,8 +2752,10 @@ genPointerSet (iCode *ic)
 
       if (left->aop->type == AOP_IMMD)
         ptr_aop = 0;
+#if 0 // TODO: Implement alignment requirements - idxm needs 16-bit-aligned operand
       else if (left->aop->type == AOP_DIR && size == 1 || aopInReg (left->aop, 0, P_IDX))
         ptr_aop = left->aop;
+#endif
       else
         {
           ptr_aop = ASMOP_P;
