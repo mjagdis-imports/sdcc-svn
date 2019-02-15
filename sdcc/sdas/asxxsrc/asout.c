@@ -1809,7 +1809,7 @@ outr3bm(struct expr * esp, int r, a_uint v)
 VOID
 outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
 {
-        int n, r = jump ? R_J11 : R_J19;
+        int n, r;
 
         if (pass == 2) {
                 if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
@@ -1825,12 +1825,32 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                         esp->e_base.e_sp = &sym[1];
                 }
 
+                if (!esp->e_flag && esp->e_base.e_ap->a_id[0] == 'C') {
+                        /* ROM is when esp is in CODE or CONST. */
+                        r = R_J11;
+
+                        /* Multiply the offset by two since
+                         * it is WORD aligned, but not for jumps.
+                         */
+                        if (!jump) {
+                                a_uint old = esp->e_addr;
+                                esp->e_addr *= 2;
+                                if (old & 0xC000) {
+                                        esp->e_addr &= ~0xC000;
+                                        esp->e_addr |= old & 0xC000;
+                                }
+                        }
+                } else {
+                        /* RAM */
+                        r = R_J19;
+                }
+
                 /* We need to select either the MSB or LSB of the address.
                  * Reset relocation marker so that the linker knows what to do
                  * with it.
                  */
                 if (esp->e_rlcf & R_BYTX) {
-                        r = R_BYTE;
+                        r |= r == R_J19 ? R_USGN : R_BYTE;
                 } else {
                         r |= R_WORD;
                 }

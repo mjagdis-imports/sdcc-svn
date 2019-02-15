@@ -397,23 +397,32 @@ relr3(void)
 
                         /* pdk addresses in words, not in bytes. */
                         if (!IS_R_J19(mode)) {
+                                /* Addresses cannot be bigger than N - 2 bits.
+                                 * Any bits that are set past that point are
+                                 * marker bits that should be not shifted.
+                                 */ 
+                                int marker = rtval[rtp + 1] & 0xC0;
+                                rtval[rtp + 1] &= ~0xC0;
+
                                 rtval[rtp] /= 2;
                                 rtval[rtp] |= (rtval[rtp + 1] & 1) << 7;
                                 rtval[rtp + 1] /= 2;
+                                rtval[rtp + 1] |= marker;
                         }
 
                         /* Do the actual opcode fusion and ignore the two 
                          * bytes taken for the opcode by the assembler.
                          */
-                        if (IS_R_J11(mode) || IS_R_J19(mode)) {
+                        if ((IS_R_J11(mode) || IS_R_J19(mode)) && !(mode & R3_USGN)) {
                                 rtval[rtp + 2] |= rtval[rtp];
                                 rtval[rtp + 3] |= rtval[rtp + 1];
-                        } else if (mode & R3_MSB) {
+                        } else if (!IS_R_J19(mode) && mode & R3_MSB) {
                                 rtval[rtp + 2] |= rtval[rtp + 1];
                         } else {
                                 rtval[rtp + 2] |= rtval[rtp];
                         }
 
+                        mode &= ~R3_USGN;
                         rtflg[rtp] = 0;
                         rtflg[rtp + 1] = 0;
                         rtofst += 2;
