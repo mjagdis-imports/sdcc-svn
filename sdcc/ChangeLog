@@ -3,6 +3,8 @@
 	* sdas/asxxsrc/asout.c,
 	  sdas/linksrc/lkrloc3.c:
 	  Fix relocation of addresses in ROM, patches by Nicolas Lesser.
+	* sdas/aspdk/pdkmch.c:
+	  Fix handling of literals, patch by Nicolas Lesser.
 
 2019-02-14 Philipp Klaus Krause <pkk AT spth.de>
 

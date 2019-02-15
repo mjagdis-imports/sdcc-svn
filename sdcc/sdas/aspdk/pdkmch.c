@@ -36,7 +36,12 @@ static VOID outpdkaw(struct inst inst, struct expr e) {
 }
 
 static VOID outpdkrm(struct inst inst, struct expr e) {
-        outrwp(&e, inst.op, inst.mask, /*jump=*/0);
+        /* Don't generate relocatable data if everything is constant. */
+        if (is_abs(&e)) {
+                outpdkaw(inst, e);
+        } else {
+                outrwp(&e, inst.op, inst.mask, /*jump=*/0);
+        }
 }
 
 static VOID outpdka(struct inst inst) {
