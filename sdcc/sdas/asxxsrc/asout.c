@@ -1844,9 +1844,9 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                 n =  op | (esp->e_addr & mask);
                 out_lw(n,r|R_RELOC);
                 if (oflag) {
-                        outchk(3, 4);
+                        outchk(4, 4);
                         out_txb(2, esp->e_addr);
-                        *txtp++ = op >> 8;
+                        out_txb(2, op);
 
                         if (esp->e_flag) {
                                 n = esp->e_base.e_sp->s_ref;
@@ -1855,7 +1855,7 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                                 n = esp->e_base.e_ap->a_ref;
                         }
                         *relp++ = r;
-                        *relp++ = txtp - txt - 3;
+                        *relp++ = txtp - txt - 4;
                         out_rw(n);
                 }
         }

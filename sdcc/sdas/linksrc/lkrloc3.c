@@ -393,30 +393,30 @@ relr3(void)
 
                 /* pdk instruction fusion */
                 if (TARGET_IS_PDK) {
-                        if (IS_R_J11(mode) || IS_R_J19(mode)) {
-                                relv = adb_2b(reli, rtp);
+                        relv = adb_3b(reli, rtp);
 
-                                /* pdk addresses in words, not in bytes for
-                                   jump (goto/call) instructions. */
-                                if (IS_R_J11(mode)) {
-                                        rtval[rtp] /= 2;
-                                        rtval[rtp] |= (rtval[rtp + 1] & 1) << 7;
-                                        rtval[rtp + 1] /= 2;
-                                }
-
-                                /* Do the actual opcode fusion and ignore the extra
-                                   byte taken for the opcode by the assembler.
-                                */
-                                rtval[rtp + 1] |= rtval[rtp + 2];
-                                rtflg[rtp + 2] = 0;
-                        } else if (mode & R3_MSB) {
-                                relv = adb_hi(reli, rtp);
-                                rtflg[rtp + 2] = 1;
-                        } else {
-                                relv = adb_lo(reli, rtp);
-                                rtflg[rtp + 2] = 1;
+                        /* pdk addresses in words, not in bytes. */
+                        if (!IS_R_J19(mode)) {
+                                rtval[rtp] /= 2;
+                                rtval[rtp] |= (rtval[rtp + 1] & 1) << 7;
+                                rtval[rtp + 1] /= 2;
                         }
-                        rtofst += 1;
+
+                        /* Do the actual opcode fusion and ignore the two 
+                         * bytes taken for the opcode by the assembler.
+                         */
+                        if (IS_R_J11(mode) || IS_R_J19(mode)) {
+                                rtval[rtp + 2] |= rtval[rtp];
+                                rtval[rtp + 3] |= rtval[rtp + 1];
+                        } else if (mode & R3_MSB) {
+                                rtval[rtp + 2] |= rtval[rtp + 1];
+                        } else {
+                                rtval[rtp + 2] |= rtval[rtp];
+                        }
+
+                        rtflg[rtp] = 0;
+                        rtflg[rtp + 1] = 0;
+                        rtofst += 2;
                 }
 
                 /*

@@ -1,3 +1,9 @@
+2019-02-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/asxxsrc/asout.c,
+	  sdas/linksrc/lkrloc3.c:
+	  Fix relocation of lower byte of address in ROM, patch by Nicolas Lesser.
+
 2019-02-14 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
