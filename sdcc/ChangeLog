@@ -1,3 +1,10 @@
+2019-02-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Do not emit set0, set1 with memory operand fpr pdk13, as assembler support for these likely won't be ready for SDCC 3.9.0.
+	* device/lib/pdk13:
+	  Infrastructure for pdk13 library.
+
 2019-02-15 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/asxxsrc/asout.c,
