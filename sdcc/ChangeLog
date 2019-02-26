@@ -1,3 +1,23 @@
+2019-02-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-960116-1.c
+	  support/regression/tests/gcc-torture-execute-cvt-1.c
+	  support/regression/tests/gcc-torture-execute-loop-2c.c
+	  support/regression/tests/gcc-torture-execute-pr20601-1.c
+	  support/regression/tests/gcc-torture-execute-pr33870-1.c
+	  support/regression/tests/gcc-torture-execute-pr33870.c
+	  support/regression/tests/gcc-torture-execute-pr37125.c
+	  support/regression/tests/gcc-torture-execute-pr63843.c
+	  support/regression/tests/gcc-torture-execute-pr65215-1.c
+	  support/regression/tests/gcc-torture-execute-pr65215-2.c
+	  support/regression/tests/gcc-torture-execute-pr68841.c
+	  support/regression/tests/gcc-torture-execute-stdarg-5.c
+	  support/regression/tests/gcc-torture-execute-unroll-1.c
+	  support/regression/tests/inline.c
+	  Disable tests that are unlikely to compile for pdk14 anytime soon.
+	* src/pdk/gen.c:
+	  Fix an issue in handling aop for spilt variables.
+
 2019-02-25 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* src/SDCCsymt.c: fix bug #2861

@@ -330,7 +330,7 @@ aopForSym (const iCode *ic, symbol *sym)
     }
   else
     {
-      aop = newAsmop (IN_CODESPACE (SPEC_OCLS (sym->etype)) ? AOP_CODE : AOP_DIR);
+      aop = newAsmop (sym && IN_CODESPACE (SPEC_OCLS (sym->etype)) ? AOP_CODE : AOP_DIR);
       if (sym)
         {
           aop->aopu.aop_dir = sym->rname;
