@@ -681,6 +681,12 @@ pdk_assignRegisters (ebbIndex *ebbi)
       redoStackOffsets ();
     }
 
+  if (options.dump_i_code)
+    {
+      dumpEbbsToFileExt (DUMP_RASSGN, ebbi);
+      dumpLiveRanges (DUMP_LRANGE, liveRanges);
+    }
+
   genPdkCode (ic);
 }
 
