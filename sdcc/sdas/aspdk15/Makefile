@@ -8,11 +8,11 @@ VERSIONLO       = 8
 VERSIONP        = 7
 
 SHELL           = /bin/sh
-CC              = gcc
-CPP             = gcc -E
+CC              = clang-9
+CPP             = clang-cpp-9
 INSTALL         = /usr/bin/install -c
 STRIP           = strip
-MAKEDEP         = g++ -MM
+MAKEDEP         = clang++-9 -MM
 
 top_builddir    = ../..
 top_srcdir      = ../..
