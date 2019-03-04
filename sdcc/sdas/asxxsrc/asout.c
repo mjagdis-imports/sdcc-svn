@@ -1809,7 +1809,7 @@ outr3bm(struct expr * esp, int r, a_uint v)
 VOID
 outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
 {
-        int n, r;
+        int n, r = R_J19 /*RAM*/;
 
         if (pass == 2) {
                 if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
@@ -1825,24 +1825,24 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                         esp->e_base.e_sp = &sym[1];
                 }
 
-                if (!esp->e_flag && esp->e_base.e_ap->a_id[0] == 'C') {
-                        /* ROM is when esp is in CODE or CONST. */
-                        r = R_J11;
+                if (!esp->e_flag) {
+                        /* ROM is when esp is in CODE, CONST, GS* or HOME. */
+                        char letter = esp->e_base.e_ap->a_id[0];
+                        if (letter == 'C' || letter == 'G' || letter == 'H') {
+                                r = R_J11;
 
-                        /* Multiply the offset by two since
-                         * it is WORD aligned, but not for jumps.
-                         */
-                        if (!jump) {
-                                a_uint old = esp->e_addr;
-                                esp->e_addr *= 2;
-                                if (old & 0xC000) {
-                                        esp->e_addr &= ~0xC000;
-                                        esp->e_addr |= old & 0xC000;
+                                /* Multiply the offset by two since
+                                 * it is WORD aligned, but not for jumps.
+                                 */
+                                if (!jump) {
+                                        a_uint old = esp->e_addr;
+                                        esp->e_addr *= 2;
+                                        if (old & 0xC000) {
+                                                esp->e_addr &= ~0xC000;
+                                                esp->e_addr |= old & 0xC000;
+                                        }
                                 }
                         }
-                } else {
-                        /* RAM */
-                        r = R_J19;
                 }
 
                 /* We need to select either the MSB or LSB of the address.
@@ -1856,7 +1856,7 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                 }
 
                 /*
-                 * Relocatable Destination.  Build THREE
+                 * Relocatable Destination.  Build FOUR 
                  * byte output: relocatable word, followed
                  * by op-code.  Linker will combine them.
                  */
