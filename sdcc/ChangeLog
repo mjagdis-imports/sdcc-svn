@@ -2,6 +2,14 @@
 
 	* sdas/asxxsrc/asout.c:
 	  Assembler fix, patch by Nicolas Lesser.
+	* sim/ucsim/Makefile.in,
+	  sim/ucsim/configure,
+	  sim/ucsim/configure.ac,
+	  sim/ucsim/globals.cc,
+	  sim/ucsim/globals.h,
+	  sim/ucsim/packages_in.mk,
+	  sim/ucsim/stypes.h:
+	  pdk14 simulator, patch by Nicolas Lesser.
 
 2019-03-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 

@@ -697,6 +697,7 @@ CXXFLAGS
 CXX
 enable_serio
 enable_st7_port
+enable_pdk_port
 enable_stm8_port
 enable_xa_port
 enable_s08_port
@@ -774,6 +775,7 @@ enable_hc08_port
 enable_s08_port
 enable_xa_port
 enable_stm8_port
+enable_pdk_port
 enable_st7_port
 enable_serio
 enable_statistic
@@ -1445,6 +1447,7 @@ Optional Features:
   --disable-s08-port      do not compile simulator for s08
   --enable-xa-port        compile simulator for xa
   --disable-stm8-port     do not compile simulator for stm8
+  --disable-pdk-port      do not compile simulator for pdk
   --enable-st7-port       compile simulator for st7
   --enable-serio          compile serio GUI tool (needs curses)
   --enable-statistic      compile statistical features (slower simulation)
@@ -2921,6 +2924,15 @@ if test "${enable_stm8_port+set}" = set; then :
 fi
 else
   enable_stm8_port="yes"
+fi
+
+# Check whether --enable-pdk-port was given.
+if test "${enable_pdk_port+set}" = set; then :
+  enableval=$enable_pdk_port; if test $enable_pdk_port != "no"; then
+    enable_pdk_port="yes"
+fi
+else
+  enable_pdk_port="yes"
 fi
 
 # Check whether --enable-st7-port was given.
@@ -18109,7 +18121,7 @@ _ACEOF
 # Generating output files
 # ===========================================================================
 
-ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile tlcs.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile st7.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
+ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile tlcs.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile pdk.src/Makefile st7.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -19206,6 +19218,7 @@ do
     "hc08.src/Makefile") CONFIG_FILES="$CONFIG_FILES hc08.src/Makefile" ;;
     "xa.src/Makefile") CONFIG_FILES="$CONFIG_FILES xa.src/Makefile" ;;
     "stm8.src/Makefile") CONFIG_FILES="$CONFIG_FILES stm8.src/Makefile" ;;
+    "pdk.src/Makefile") CONFIG_FILES="$CONFIG_FILES pdk.src/Makefile" ;;
     "st7.src/Makefile") CONFIG_FILES="$CONFIG_FILES st7.src/Makefile" ;;
     "gui.src/Makefile") CONFIG_FILES="$CONFIG_FILES gui.src/Makefile" ;;
     "gui.src/serio.src/Makefile") CONFIG_FILES="$CONFIG_FILES gui.src/serio.src/Makefile" ;;
