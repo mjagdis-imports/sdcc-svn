@@ -8,7 +8,9 @@
 	  sim/ucsim/globals.cc,
 	  sim/ucsim/globals.h,
 	  sim/ucsim/packages_in.mk,
-	  sim/ucsim/stypes.h:
+	  sim/ucsim/stypes.h,
+	  support/regression/ports/pdk14/spec.mk,
+	  support/regression/ports/pdk14/support.c:
 	  pdk14 simulator, patch by Nicolas Lesser.
 
 2019-03-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>

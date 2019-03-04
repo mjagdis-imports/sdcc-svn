@@ -5,15 +5,15 @@ SIM_TIMEOUT = 30
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
-  UCPDK14C = $(SDCC_BIN_PATH)/sstm8$(EXEEXT)
+  UCPDK14C = $(SDCC_BIN_PATH)/spdk$(EXEEXT)
 
   AS_PDK14C = $(SDCC_BIN_PATH)/sdaspdk$(EXEEXT)
 else
   ifdef UCSIM_DIR
-    UCPDK14A = $(UCSIM_DIR)/stm8.src/sstm8$(EXEEXT)
+    UCPDK14A = $(UCSIM_DIR)/pdk.src/spdk$(EXEEXT)
   else
-    UCPDK14A = $(top_builddir)/sim/ucsim/stm8.src/sstm8$(EXEEXT)
-    UCPDK14B = $(top_builddir)/bin/sstm8$(EXEEXT)
+    UCPDK14A = $(top_builddir)/sim/ucsim/pdk.src/spdk$(EXEEXT)
+    UCPDK14B = $(top_builddir)/bin/spdk$(EXEEXT)
   endif
 
   EMU = $(WINE) $(shell if [ -f $(UCPDK14A) ]; then echo $(UCPDK14A); else echo $(UCPDK14B); fi)

@@ -3,7 +3,7 @@ _putchar(unsigned char c)
 {
   c;
   __asm
-    nop
+    .db 0xFF, 0x00
   __endasm;
 }
 
@@ -16,6 +16,6 @@ void
 _exitEmu(void)
 {
   __asm
-    nop
+    stopsys
   __endasm;
 }

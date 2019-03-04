@@ -139,6 +139,8 @@ struct dis_entry disass_pdk_14[]= {
   { 0x0400, ~0x0000, ' ', 2, "swapc" },
   { 0x0006, ~0x0000, ' ', 2, "ldsptl" },
   { 0x0007, ~0x0000, ' ', 2, "ldspth" },
+
+  { 0xFF00, ~0x0000, ' ', 2, "putchar" },
  
   { 0, 0, 0, 0, NULL }
 };

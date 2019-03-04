@@ -77,13 +77,55 @@ int cl_pdk::init(void) {
 void cl_pdk::reset(void) {
   cl_uc::reset();
 
-  regs.SP = 0x80;
-  regs.A = 0;
-  regs.Z = 0;
-  regs.C = 0;
-  regs.AC = 0;
-  regs.OV = 0;
   PC = 0x0000;
+  regs.a = 0;
+
+  regs.flag = 0x00;
+  regs.sp = 0x00;
+  regs.clkmd = 0xF6;
+  regs.inten = 0x00;
+  regs.intrq = 0x00;
+  regs.t16m = 0x00;
+  regs.eoscr = 0x00;
+  regs.integs = 0x00;
+  regs.padier = 0xF9;
+  regs.pbdier = 0xFF;
+  regs.pa = 0x00;
+  regs.pac = 0x00;
+  regs.paph = 0x00;
+  regs.pb = 0x00;
+  regs.pbc = 0x00;
+  regs.pbph = 0x00;
+  regs.misc = 0x00;
+  regs.tm2c = 0x00;
+  regs.tm2ct = 0x00;
+  regs.tm2s = 0x00;
+  regs.tm2s = 0x00;
+  regs.tm2b = 0x00;
+  regs.tm3c = 0x00;
+  regs.tm3ct = 0x00;
+  regs.tm3s = 0x00;
+  regs.tm3b = 0x00;
+  regs.gpcc = 0x00;
+  regs.gpcs = 0x00;
+  regs.pwmg0c = 0x00;
+  regs.pwmg0s = 0x00;
+  regs.pwmg0cubh = 0x00;
+  regs.pwmg0cubl = 0x00;
+  regs.pwmg0dth = 0x00;
+  regs.pwmg0dtl = 0x00;
+  regs.pwmg1c = 0x00;
+  regs.pwmg1s = 0x00;
+  regs.pwmg1cubh = 0x00;
+  regs.pwmg1cubl = 0x00;
+  regs.pwmg1dth = 0x00;
+  regs.pwmg1dtl = 0x00;
+  regs.pwmg2c = 0x00;
+  regs.pwmg2s = 0x00;
+  regs.pwmg2cubh = 0x00;
+  regs.pwmg2cubl = 0x00;
+  regs.pwmg2dth = 0x00;
+  regs.pwmg2dtl = 0x00;
 }
 
 char *cl_pdk::id_string(void) { return ((char *)"pdk14"); }
@@ -133,30 +175,151 @@ void cl_pdk::make_memories(void) {
   as->decoders->add(ad);
   ad->activate(0);
 
-  regs8 = new cl_address_space("regs8", 0, 5, 8);
+  regs8 = new cl_address_space("regs8", 0, 45, 8);
   regs8->init();
-  regs8->get_cell(0)->decode((t_mem *)&regs.A);
-  regs8->get_cell(1)->decode((t_mem *)&regs.SP);
-  regs8->get_cell(2)->decode((t_mem *)&regs.Z);
-  regs8->get_cell(3)->decode((t_mem *)&regs.C);
-  regs8->get_cell(4)->decode((t_mem *)&regs.AC);
-  regs8->get_cell(5)->decode((t_mem *)&regs.OV);
+  int i = 0;
+  regs8->get_cell(i++)->decode((t_mem *)&regs.a);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.flag);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.sp);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.clkmd);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.inten);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.intrq);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.t16m);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.eoscr);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.integs);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.padier);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pbdier);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pa);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pac);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pb);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pbc);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pbph);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.misc);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2c);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2ct);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2s);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2b);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3c);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3ct);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3s);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3b);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.gpcc);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.gpcs);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0c);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0s);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0cubh);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0cubl);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0dth);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0dtl);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1c);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1s);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1cubh);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1cubl);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1dth);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1dtl);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2c);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2s);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2cubh);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2cubl);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2dth);
+  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2dtl);
   /* TODO: Add the other registers. */
 
   address_spaces->add(regs8);
 
   class cl_var *v;
-  vars->add(v = new cl_var(cchars("A"), regs8, 0, ""));
+  i = 0;
+  vars->add(v = new cl_var(cchars("a"), regs8, i++, ""));
   v->init();
-  vars->add(v = new cl_var(cchars("SP"), regs8, 1, ""));
+  vars->add(v = new cl_var(cchars("flag"), regs8, i++, ""));
   v->init();
-  vars->add(v = new cl_var(cchars("Z"), regs8, 2, ""));
+  vars->add(v = new cl_var(cchars("sp"), regs8, i++, ""));
   v->init();
-  vars->add(v = new cl_var(cchars("C"), regs8, 3, ""));
+  vars->add(v = new cl_var(cchars("clkmd"), regs8, i++, ""));
   v->init();
-  vars->add(v = new cl_var(cchars("AC"), regs8, 4, ""));
+  vars->add(v = new cl_var(cchars("inten"), regs8, i++, ""));
   v->init();
-  vars->add(v = new cl_var(cchars("OV"), regs8, 5, ""));
+  vars->add(v = new cl_var(cchars("intrq"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("t16m"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("eoscr"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("integs"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("padier"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pbdier"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pa"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pac"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("paph"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pb"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pbc"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pbph"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("misc"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm2c"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm2ct"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm2s"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm2b"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm3c"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm3ct"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm3s"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("tm3b"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("gpcc"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("gpcs"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg0c"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg0s"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg0cubh"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg0cubl"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg0dth"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg0dtl"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg1c"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg1s"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg1cubh"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg1cubl"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg1dth"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg1dtl"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg2c"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg2s"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg2cubh"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg2cubl"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg2dth"), regs8, i++, ""));
+  v->init();
+  vars->add(v = new cl_var(cchars("pwmg2dtl"), regs8, i++, ""));
   v->init();
 }
 
@@ -362,11 +525,9 @@ char *cl_pdk::disass(t_addr addr, const char *sep) {
 }
 
 void cl_pdk::print_regs(class cl_console_base *con) {
-  con->dd_printf("A= 0x%02x(%3d)\n", regs.A, regs.A);
-  con->dd_printf("Flag= 0b1111'%c%c%c%c  \n", regs.OV ? '1' : '0',
-                 regs.AC ? '1' : '0', regs.C ? '1' : '0',
-                 regs.Z ? '1' : '0');
-  con->dd_printf("SP= 0x%02x(%3d)\n", regs.SP, regs.SP);
+  con->dd_printf("A= 0x%02x(%3d)\n", regs.a, regs.a);
+  con->dd_printf("Flag= 0x%02x(%3d)  \n", regs.flag, regs.flag);
+  con->dd_printf("SP= 0x%02x(%3d)\n", regs.sp, regs.sp);
 
   print_disass(PC, con);
 }
@@ -383,336 +544,14 @@ int cl_pdk::exec_inst(void) {
   }
   tick(1);
 
-#define CODE_MASK(op, m) ((code & ~(m)) == (op))
-
-  if (code == 0x0000) {
-    // nop
-  } else if (CODE_MASK(0x0200, 0x7F)) {
-    // ret k
-    regs.A = code & 0xFF;
-    regs.SP -= 2;
-    PC = get_mem(regs.SP) | (get_mem(regs.SP + 1) << 8);
-  } else if (code == 0x007A) {
-    // ret
-    regs.SP -= 2;
-    PC = get_mem(regs.SP) | (get_mem(regs.SP + 1) << 8);
-  } else if (CODE_MASK(0x2F00, 0xFF)) {
-    // mov a, k
-    regs.A = code & 0xFF;
-  } else if (CODE_MASK(0x0180, 0x3F)) {
-    // mov i, a
-    store_io(code & 0x3F, regs.A);
-  } else if (CODE_MASK(0x01C0, 0x3F)) {
-    // mov a, i
-    regs.A = get_io(code & 0x3F);
-  } else if (CODE_MASK(0x0B80, 0x7F)) {
-    // mov m, a
-    ram->write(code & 0x7F, regs.A);
-  } else if (CODE_MASK(0x0F80, 0x7F)) {
-    // mov a, m
-    regs.A = get_mem(code & 0x7F);
-  } else
-  // TODO: ldt16
-  // TODO: stt16
-  if ((CODE_MASK(0x380, 0x7E)) && !(code % 2)) {
-    // idxm a, m
-    regs.A = get_mem(code & 0x7E);
-  } else if ((CODE_MASK(0x380, 0x7E)) && code % 2) {
-    // idxm m, a
-    regs.A = get_mem(code & 0x7E);
-  } else if (CODE_MASK(0x1380, 0x7F)) {
-    // xch m
-    int mem = get_mem(code & 0x7F);
-    ram->write(code & 0x7F, regs.A);
-    regs.A = mem;
-  } else if (code == 0x0072) {
-    // pushaf
-    u8_t flag = ~u8_t(0xF);
-    flag |= regs.Z;
-    flag |= regs.C << 1;
-    flag |= regs.AC << 2;
-    flag |= regs.OV << 3;
-    ram->write(regs.SP++, flag);
-    ram->write(regs.SP++, regs.A);
-  } else if (code == 0x0073) {
-    // popaf
-    regs.A = get_mem(--regs.SP);
-    u8_t flag = get_mem(--regs.SP);
-    regs.Z = flag & 1;
-    regs.C = flag & 2;
-    regs.AC = flag & 4;
-    regs.OV = flag & 8;
-  } else if (CODE_MASK(0x2800, 0xFF)) {
-    // add a, k
-    regs.A = add_to(regs.A, code & 0xFF);
-  } else if (CODE_MASK(0x0C00, 0x7F)) {
-    // add a, m
-    regs.A = add_to(regs.A, get_mem(code & 0x7F));
-  } else if (CODE_MASK(0x0800, 0x7F)) {
-    // add m, a
-    int addr = code & 0x7F;
-    ram->write(addr, add_to(regs.A, get_mem(addr)));
-  } else if (CODE_MASK(0x2900, 0xFF)) {
-    // sub a, k
-    regs.A = sub_to(regs.A, code & 0xFF);
-  } else if (CODE_MASK(0x0C80, 0x7F)) {
-    // sub a, m
-    regs.A = sub_to(regs.A, get_mem(code & 0x7F));
-  } else if (CODE_MASK(0x0880, 0x7F)) {
-    // sub m, a
-    int addr = code & 0x7F;
-    ram->write(addr, sub_to(get_mem(addr), regs.A));
-  } else if (CODE_MASK(0x2800, 0xFF)) {
-    // addc a, k
-    regs.A = add_to(regs.A + regs.C, code & 0xFF);
-  } else if (CODE_MASK(0x0C00, 0x7F)) {
-    // addc a, m
-    regs.A = add_to(regs.A + regs.C, get_mem(code & 0x7F));
-  } else if (CODE_MASK(0x0800, 0x7F)) {
-    // addc m, a
-    int addr = code & 0x7F;
-    ram->write(addr, add_to(regs.A + regs.C, get_mem(addr)));
-  } else if (code == 0x0060) {
-    // addc a
-    regs.A = add_to(regs.A, regs.C); 
-  } else if (CODE_MASK(0x1000, 0x7F)) {
-    // addc m
-    int addr = code & 0x7F;
-    ram->write(addr, add_to(get_mem(addr), regs.C));
-  } else if (CODE_MASK(0x2900, 0xFF)) {
-    // subc a, k
-    regs.A = sub_to(regs.A - regs.C, code & 0xFF);
-  } else if (CODE_MASK(0x0C80, 0x7F)) {
-    // subc a, m
-    regs.A = sub_to(regs.A - regs.C, get_mem(code & 0x7F));
-  } else if (CODE_MASK(0x0880, 0x7F)) {
-    // subc m, a
-    int addr = code & 0x7F;
-    ram->write(addr, sub_to(get_mem(addr), regs.A - regs.C));
-  } else if (code == 0x0061) {
-    // subc a
-    regs.A = sub_to(regs.A, regs.C); 
-  } else if (CODE_MASK(0x1080, 0x7F)) {
-    // subc m
-    int addr = code & 0x7F;
-    ram->write(addr, sub_to(get_mem(addr), regs.C));
-  } else if (CODE_MASK(0x1200, 0x7F)) {
-    // inc m
-    int addr = code & 0x7F;
-    ram->write(addr, add_to(get_mem(addr), 1));
-  } else if (CODE_MASK(0x1280, 0x7F)) {
-    // dec m
-    int addr = code & 0x7F;
-    ram->write(addr, sub_to(get_mem(addr), 1));
-  } else if (CODE_MASK(0x1300, 0x7F)) {
-    // clear m
-    ram->write(code & 0x7F, 0);
-  } else if (code == 0x006A) {
-    // sr a
-    regs.C = regs.A & 1;
-    regs.A >>= 1;
-  } else if (CODE_MASK(0x1500, 0x7F)) {
-    // sr m
-    int value = get_mem(code & 0x7F);
-    regs.C = value & 1;
-    ram->write(code & 0x7F, value >> 1);
-  } else if (code == 0x006B) {
-    // sl a
-    regs.C = (regs.A & 0x80) >> 7;
-    regs.A <<= 1;
-  } else if (CODE_MASK(0x1580, 0x7F)) {
-    // sl m
-    int value = get_mem(code & 0x7F);
-    regs.C = (value & 0x80) >> 7;
-    ram->write(code & 0x7F, value << 1);
-  } else if (code == 0x006A) {
-    // src a
-    int c = regs.A & 1;
-    regs.A >>= 1;
-    regs.A |= regs.C << 7;
-    regs.C = c;
-  } else if (CODE_MASK(0x1500, 0x7F)) {
-    // src m
-    int value = get_mem(code & 0x7F);
-    int c = value & 1;
-    ram->write(code & 0x7F, (value >> 1) | (regs.C << 7));
-    regs.C = c;
-  } else if (code == 0x006D) {
-    // slc a
-    int c = regs.A & 0x80;
-    regs.A <<= 1;
-    regs.A |= regs.C;
-    regs.C = c >> 7;
-  } else if (CODE_MASK(0x1500, 0x7F)) {
-    // slc m
-    int value = get_mem(code & 0x7F);
-    int c = value & 0x80;
-    ram->write(code & 0x7F, (value << 1) | regs.C);
-    regs.C = c >> 7;
-  } else if (CODE_MASK(0x2C00, 0xFF)) {
-    // and a, k
-    regs.A &= code & 0xFF;
-    regs.Z = !regs.A;
-  } else if (CODE_MASK(0x0E00, 0x7F)) {
-    // and a, m
-    regs.A &= get_mem(code & 0x7F);
-    regs.Z = !regs.A;
-  } else if (CODE_MASK(0x0A00, 0x7F)) {
-    // and m, a
-    int store = regs.A & get_mem(code & 0x7F);
-    regs.Z = !store;
-    ram->write(code & 0x7F, store);
-  } else if (CODE_MASK(0x2D00, 0xFF)) {
-    // or a, k
-    regs.A |= code & 0xFF;
-    regs.Z = !regs.A;
-  } else if (CODE_MASK(0x0E80, 0x7F)) {
-    // or a, m
-    regs.A |= get_mem(code & 0x7F);
-    regs.Z = !regs.A;
-  } else if (CODE_MASK(0x0A80, 0x7F)) {
-    // or m, a
-    int store = regs.A | get_mem(code & 0x7F);
-    regs.Z = !store;
-    ram->write(code & 0x7F, store);
-  } else if (CODE_MASK(0x2E00, 0xFF)) {
-    // xor a, k
-    regs.A ^= code & 0xFF;
-    regs.Z = !regs.A;
-  } else if (CODE_MASK(0x0F00, 0x7F)) {
-    // xor a, m
-    regs.A ^= get_mem(code & 0x7F);
-    regs.Z = !regs.A;
-  } else if (CODE_MASK(0x0B00, 0x7F)) {
-    // xor m, a
-    int store = regs.A ^ get_mem(code & 0x7F);
-    regs.Z = !store;
-    ram->write(code & 0x7F, store);
-  } else if (CODE_MASK(0x00C0, 0x3F)) {
-    // xor io, a
-    assert(!"not implemented");
-  } else if (code == 0x0068) {
-    // not a
-    regs.A = ~regs.A;
-  } else if (CODE_MASK(0x1400, 0x7F)) {
-    // not m
-    ram->write(code & 0x7F, ~get_mem(code & 0x7F));
-  } else if (code == 0x0069) {
-    // neg a
-    regs.A = -regs.A;
-  } else if (CODE_MASK(0x1480, 0x7F)) {
-    // neg m
-    ram->write(code & 0x7F, -get_mem(code & 0x7F));
-  } else if (CODE_MASK(0x2400, 0x3F)) {
-    // set0 m, n
-    const u8_t bit = 0x1C0 >> 6;
-    const u8_t addr = code & 0x3F;
-    ram->write(addr, get_mem(addr) & ~(1 << bit));
-  } else if (CODE_MASK(0x2400, 0x3F)) {
-    // set1 m, n
-    const u8_t bit = 0x1C0 >> 6;
-    const u8_t addr = code & 0x3F;
-    ram->write(addr, get_mem(addr) | (1 << bit));
-  } else
-  // TODO: t0sn
-  // TODO: t1sn
-  if (CODE_MASK(0x2A00, 0xFF)) {
-    // ceqsn a, k
-    sub_to(regs.A, code & 0xFF);
-    if (regs.A == (code & 0xFF))
-      ++PC;
-  } else if (CODE_MASK(0x1700, 0x7F)) {
-    // ceqsn a, m
-    int addr = code & 0x7F;
-    sub_to(regs.A, get_mem(addr));
-    if (regs.A == get_mem(addr))
-      ++PC;
-  } else if (CODE_MASK(0x2B00, 0xFF)) {
-    // cneqsn a, k
-    sub_to(regs.A, code & 0xFF);
-    if (regs.A != (code & 0xFF))
-      ++PC;
-  } else if (CODE_MASK(0x1780, 0x7F)) {
-    // cneqsn a, m
-    int addr = code & 0x7F;
-    sub_to(regs.A, get_mem(addr));
-    if (regs.A != get_mem(addr))
-      ++PC;
-  } else if (code == 0x0062) {
-    // izsn
-    regs.A = add_to(regs.A, 1);
-    if (!regs.A)
-      ++PC;
-  } else if (CODE_MASK(0x1100, 0x7F)) {
-    // izsn m
-    const int addr = code & 0x7F;
-    int result = add_to(get_mem(addr), 1);
-    ram->write(addr, result);
-    if (!result)
-      ++PC;
-  } else if (code == 0x0063) {
-    // dzsn
-    regs.A = sub_to(regs.A, 1);
-    if (!regs.A)
-      ++PC;
-  } else if (CODE_MASK(0x1100, 0x7F)) {
-    // dzsn m
-    const int addr = code & 0x7F;
-    int result = sub_to(get_mem(addr), 1);
-    ram->write(addr, result);
-    if (!result)
-      ++PC;
-  } else if (CODE_MASK(0x3800, 0x7FF)) {
-    // call k
-    ram->write(regs.SP, PC);
-    ram->write(regs.SP + 1, PC >> 8);
-    PC = code & 0x7FF;
-    regs.SP += 2;
-  } else if (CODE_MASK(0x3000, 0x7FF)) {
-    // goto k
-    PC = code & 0x7FF;
-  } else if (CODE_MASK(0x0600, 0x7F)) {
-    // comp a, m
-    sub_to(regs.A, get_mem(code & 0x7F));
-  } else if (CODE_MASK(0x0680, 0x7F)) {
-    // comp m, a
-    sub_to(get_mem(code & 0x7F), regs.A);
-  } else if (CODE_MASK( 0x0700, 0x7F)) {
-    // nadd a, m
-    regs.A = add_to(get_mem(code & 0x7F), -regs.A);
-  } else if (CODE_MASK(0x0780, 0x7F)) {
-    // nadd m, a
-    int addr = code & 0x7F;
-    ram->write(addr, add_to(-get_mem(addr), regs.A));
-  } else if (code == 0x006E) {
-    // swap
-    int high = regs.A & 0xF;
-    regs.A = (high << 4) | (regs.A >> 4);
-  } else if (code == 0x0067) {
-    // pcadd
-    PC += regs.A;
-  }
-  // TODO: engint
-  // TODO: disint
-  // TODO: stopsys
-  // TODO: stopexe
-  // TODO: reset
-  // TODO: wdreset
-  // TODO: swapc
-  else if (code == 0x0006) {
-    // ldsptl
-    regs.A = rom->get(regs.SP) & 0xFF;
-  } else if (code == 0x0007) {
-    // ldspth
-    regs.A = (rom->get(regs.SP) & 0xFF00) >> 8;
-  }
-  else {
+  int status = execute(code);
+  if (status == resINV_INST) {
     PC = rom->inc_address(PC, -1);
 
     sim->stop(resINV_INST);
     return (resINV_INST);
   }
-  return (resGO);
+  return (status);
 }
 
 /* End of pdk.src/pdk.cc */
