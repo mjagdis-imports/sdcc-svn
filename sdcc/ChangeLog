@@ -15,7 +15,15 @@
 	  support/regression/tests/gcc-torture-execute-strncmp-1.c,
 	  support/regression/tests/gcc-torture-execute-struct-cpy-1.c,
 	  support/regression/tests/new_wide.c,
-	  support/regression/tests/wchar.c:
+	  support/regression/tests/wchar.c
+	  support/regression/tests/bug-2684.c,
+	  support/regression/tests/bug-2732.c,
+	  support/regression/tests/dhrystone.c,
+	  support/regression/tests/gcc-torture-execute-20050826-1.c,
+	  support/regression/tests/gcc-torture-execute-991216-1.c,
+	  support/regression/tests/gcc-torture-execute-pr47538.c,
+	  support/regression/tests/gcc-torture-execute-pr68532.c,
+	  support/regression/tests/qsort.c:
 	  Disable tests that won't work for pdk14 due to lack of memory.
 
 2019-03-04 Philipp Klaus Krause <pkk AT spth.de>

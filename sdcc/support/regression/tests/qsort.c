@@ -32,7 +32,7 @@ void testSort(void)
 	qsort(unsorted, NUM_ELEM, sizeof({type}), &cmp);
 
 	ASSERT(!memcmp(unsorted, sorted, sizeof({type}) * NUM_ELEM));
-#if !(defined (__SDCC_mcs51) && defined (__SDCC_MODEL_SMALL)) // Not enough RAM
+#if !(defined (__SDCC_mcs51) && defined (__SDCC_MODEL_SMALL)) && !defined(__SDCC_pdk14) // Not enough RAM
 	{
 		const {type} e95 = 95;
 		const {type} e35 = 35;
