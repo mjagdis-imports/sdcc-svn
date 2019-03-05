@@ -25,7 +25,7 @@ _Static_assert(WEOF <= WINT_MAX, "WEOF out of wint_t range");
 static void
 testwcharnorestart(void)
 {
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) && !defined(__SDCC_pdk14) // Not enough memory
 	wchar_t w;
 	char c[MB_LEN_MAX];
 
@@ -50,7 +50,7 @@ testwcharnorestart(void)
 static void
 testwcharstringnorestart(void)
 {
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM))) // Not enough memory
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM))) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Not enough memory
 	wchar_t wcs1[5] = L"Test";
 	wchar_t wcs2[5];
 	char mbs[5 * MB_LEN_MAX];

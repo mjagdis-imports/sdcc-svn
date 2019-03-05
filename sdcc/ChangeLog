@@ -1,3 +1,23 @@
+2019-03-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2363.c,
+	  support/regression/tests/bug-2756.c,
+	  support/regression/tests/gcc-torture-execute-20011008-3.c,
+	  support/regression/tests/gcc-torture-execute-20020402-3.c,
+	  support/regression/tests/gcc-torture-execute-20100430-1.c,
+	  support/regression/tests/gcc-torture-execute-cmpdi-1.c,
+	  support/regression/tests/gcc-torture-execute-longlong.c,
+	  support/regression/tests/gcc-torture-execute-memcpy-bi.c,
+	  support/regression/tests/gcc-torture-execute-mode-dependent-address.c,
+	  support/regression/tests/gcc-torture-execute-p18298.c,
+	  support/regression/tests/gcc-torture-execute-strcmp-1.c,
+	  support/regression/tests/gcc-torture-execute-strcpy-1.c,
+	  support/regression/tests/gcc-torture-execute-strncmp-1.c,
+	  support/regression/tests/gcc-torture-execute-struct-cpy-1.c,
+	  support/regression/tests/new_wide.c,
+	  support/regression/tests/wchar.c:
+	  Disable tests that won't work for pdk14 due to lack of memory.
+
 2019-03-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/asxxsrc/asout.c:
