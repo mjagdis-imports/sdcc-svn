@@ -25,6 +25,10 @@
 	  support/regression/tests/gcc-torture-execute-pr68532.c,
 	  support/regression/tests/qsort.c:
 	  Disable tests that won't work for pdk14 due to lack of memory.
+	* sdas/asxxsrc/asout.c,
+	  sdas/linksrc/lkrloc3.c,
+	  sim/ucsim/pdk.src/pdk.cc:
+	  pdk14 fixes, patch by Nicolas Lesser.
 
 2019-03-04 Philipp Klaus Krause <pkk AT spth.de>
 

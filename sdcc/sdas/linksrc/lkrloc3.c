@@ -395,8 +395,11 @@ relr3(void)
                 if (TARGET_IS_PDK) {
                         relv = adb_3b(reli, rtp);
 
-                        /* pdk addresses in words, not in bytes. */
-                        if (!IS_R_J19(mode)) {
+                        /* pdk addresses in words, not in bytes,
+                         * for goto/call instructions and byte selections.
+                         */
+                        int jump = rtval[rtp + 3] & 0x38;
+                        if ((mode & R3_BYTE) || jump == 0x38 || jump == 0x30) {
                                 /* Addresses cannot be bigger than N - 2 bits.
                                  * Any bits that are set past that point are
                                  * marker bits that should be not shifted.
@@ -413,16 +416,15 @@ relr3(void)
                         /* Do the actual opcode fusion and ignore the two 
                          * bytes taken for the opcode by the assembler.
                          */
-                        if ((IS_R_J11(mode) || IS_R_J19(mode)) && !(mode & R3_USGN)) {
+                        if (IS_R_J11(mode)) {
                                 rtval[rtp + 2] |= rtval[rtp];
                                 rtval[rtp + 3] |= rtval[rtp + 1];
-                        } else if (!IS_R_J19(mode) && mode & R3_MSB) {
+                        } else if (mode & R3_MSB) {
                                 rtval[rtp + 2] |= rtval[rtp + 1];
                         } else {
                                 rtval[rtp + 2] |= rtval[rtp];
                         }
 
-                        mode &= ~R3_USGN;
                         rtflg[rtp] = 0;
                         rtflg[rtp + 1] = 0;
                         rtofst += 2;

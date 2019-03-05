@@ -157,9 +157,10 @@ class cl_memory_chip *c;
 void cl_pdk::make_memories(void) {
   class cl_address_space *as;
 
-  ram = rom = as = new cl_address_space("rom", 0, 0x7D0, 16);
-  // ram = new cl_address_space("ram", 0, 0x80, 8);
-
+  rom = as = new cl_address_space("rom", 0, 0x7D0, 16);
+  as->init();
+  address_spaces->add(as);
+  ram = as = new cl_address_space("ram", 0, 0x80, 8);
   as->init();
   address_spaces->add(as);
 

@@ -1809,7 +1809,7 @@ outr3bm(struct expr * esp, int r, a_uint v)
 VOID
 outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
 {
-        int n, r = R_J19 /*RAM*/;
+        int n, r = R_J11;
 
         if (pass == 2) {
                 if (esp->e_flag==0 && esp->e_base.e_ap==NULL) {
@@ -1825,23 +1825,14 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                         esp->e_base.e_sp = &sym[1];
                 }
 
-                if (!esp->e_flag) {
-                        /* ROM is when esp is in CODE, CONST, GS* or HOME. */
-                        char letter = esp->e_base.e_ap->a_id[0];
-                        if (letter == 'C' || letter == 'G' || letter == 'H') {
-                                r = R_J11;
 
-                                /* Multiply the offset by two since
-                                 * it is WORD aligned, but not for jumps.
-                                 */
-                                if (!jump) {
-                                        a_uint old = esp->e_addr;
-                                        esp->e_addr *= 2;
-                                        if (old & 0xC000) {
-                                                esp->e_addr &= ~0xC000;
-                                                esp->e_addr |= old & 0xC000;
-                                        }
-                                }
+                /* Jumps and byte selections are word aligned. */
+                if (esp->e_rlcf & R_BYTX) {
+                        a_uint old = esp->e_addr;
+                        esp->e_addr *= 2;
+                        if (old & 0xC000) {
+                                esp->e_addr &= ~0xC000;
+                                esp->e_addr |= old & 0xC000;
                         }
                 }
 
@@ -1850,7 +1841,7 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                  * with it.
                  */
                 if (esp->e_rlcf & R_BYTX) {
-                        r |= r == R_J19 ? R_USGN : R_BYTE;
+                        r |= R_BYTE;
                 } else {
                         r |= R_WORD;
                 }
