@@ -33,7 +33,7 @@ unsigned char cl_pdk::add_to(unsigned char initial, int value) {
   store_flag(flag::z, initial + value == 0 && get_flag(flag::c));
 
   if (initial + value < initial) {
-    if (regs.flag & 0x2) {
+    if (get_flag(flag::c)) {
       // Actual overflow of accumulator.
       store_flag(flag::ov, true);
       store_flag(flag::c, false);
@@ -243,16 +243,16 @@ int cl_pdk::execute(unsigned int code) {
   } else if (CODE_MASK(0x0F80, 0x7F)) {
     // mov a, m
     regs.a = get_mem(code & 0x7F);
-  } else if (CODE_MASK(0x0300, 0x7F) && !(code % 2)) {
+  } else if (CODE_MASK(0x0301, 0x7E)) {
     // TODO: ldt16
-  } else if (CODE_MASK(0x0300, 0x7F) && code % 2) {
+  } else if (CODE_MASK(0x0300, 0x7E)) {
     // TODO: stt16
-  } else if ((CODE_MASK(0x380, 0x7E)) && !(code % 2)) {
+  } else if ((CODE_MASK(0x381, 0x7E))) {
     // idxm a, m
-    regs.a = get_mem(code & 0x7E);
-  } else if ((CODE_MASK(0x380, 0x7E)) && code % 2) {
+    regs.a = get_mem(get_mem(code & 0x7F));
+  } else if ((CODE_MASK(0x380, 0x7E))) {
     // idxm m, a
-    regs.a = get_mem(code & 0x7E);
+    ram->write(get_mem(code & 0x7F), regs.a);
   } else if (CODE_MASK(0x1380, 0x7F)) {
     // xch m
     int mem = get_mem(code & 0x7F);
