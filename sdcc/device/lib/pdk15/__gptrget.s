@@ -31,7 +31,7 @@
 
 __gptrget::
 	sub	a, #0x80
-	t0sn	f, c
+	t1sn	f, c
 	goto	code
 
 	; Pointer to RAM
