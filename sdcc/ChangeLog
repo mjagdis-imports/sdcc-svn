@@ -1,5 +1,10 @@
 2019-03-05 Philipp Klaus Krause <pkk AT spth.de>
 
+	* support/regression/ports/pdk14/support.c:
+	  Fix regression-test _putchar for pdk14.
+
+2019-03-05 Philipp Klaus Krause <pkk AT spth.de>
+
 	* support/regression/tests/bug-2363.c,
 	  support/regression/tests/bug-2756.c,
 	  support/regression/tests/gcc-torture-execute-20011008-3.c,
