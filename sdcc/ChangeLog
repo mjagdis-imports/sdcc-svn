@@ -1,5 +1,13 @@
 2019-03-05 Philipp Klaus Krause <pkk AT spth.de>
 
+	* device/lib/pdk14/__gptrget.s,
+	  device/lib/pdk15/__gptrget.s:
+	  Fix generic pointer read.
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix push af / pop af simulation.
+
+2019-03-05 Philipp Klaus Krause <pkk AT spth.de>
+
 	* support/regression/ports/pdk14/support.c:
 	  Fix regression-test _putchar for pdk14.
 	* device/lib/pdk14/__gptrget.s,

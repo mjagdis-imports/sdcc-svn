@@ -260,12 +260,12 @@ int cl_pdk::execute(unsigned int code) {
     regs.a = mem;
   } else if (code == 0x0072) {
     // pushaf
-    ram->write(regs.sp++, regs.flag);
     ram->write(regs.sp++, regs.a);
+    ram->write(regs.sp++, regs.flag);
   } else if (code == 0x0073) {
     // popaf
-    regs.a = get_mem(--regs.sp);
     regs.flag = get_mem(--regs.sp);
+    regs.a = get_mem(--regs.sp);
   } else if (CODE_MASK(0x2800, 0xFF)) {
     // add a, k
     regs.a = add_to(regs.a, code & 0xFF);

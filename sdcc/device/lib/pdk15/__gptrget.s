@@ -41,6 +41,7 @@ __gptrget::
 	; Pointer to ROM
 code:
 	; Put pointer on stack
+	xch	a, p
 	push	af
 	mov	a, sp
 	add	a, #-1
