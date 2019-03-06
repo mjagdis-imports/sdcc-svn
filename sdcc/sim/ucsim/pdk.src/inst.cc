@@ -355,7 +355,7 @@ int cl_pdk::execute(unsigned int code) {
     regs.a >>= 1;
     regs.a |= get_flag(flag::c) << 7;
     store_flag(flag::c, c);
-  } else if (CODE_MASK(0x1500, 0x7F)) {
+  } else if (CODE_MASK(0x1600, 0x7F)) {
     // src m
     int value = get_mem(code & 0x7F);
     int c = value & 1;
@@ -367,7 +367,7 @@ int cl_pdk::execute(unsigned int code) {
     regs.a <<= 1;
     regs.a |= get_flag(flag::c);
     store_flag(flag::c, c);
-  } else if (CODE_MASK(0x1500, 0x7F)) {
+  } else if (CODE_MASK(0x1680, 0x7F)) {
     // slc m
     int value = get_mem(code & 0x7F);
     int c = (value & 0x80) >> 7;

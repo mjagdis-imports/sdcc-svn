@@ -1812,12 +1812,21 @@ genCmp (const iCode *ic, iCode *ifx)
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
           if (ifx)
             {
-               if ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)))
+               if ((ic->op == '<') ^ (bool)(IC_TRUE(ifx)))
                  {
-                   emit2 ("ceqsn", "a, #0x80");
-                   emit2 ("nop", "");
+                   if (aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic))
+                     {
+                       emit2 ("ceqsn", "a, #0x80");
+                       emit2 ("nop", "");
+                       cost (2, 2);
+                     }
+                   else
+                     {
+                       emit2 ("sub", "a, #0x80");
+                       cost (1, 1);
+                     }
                    emit2 ("t0sn", "f, c");
-                   cost (3, 3.5);
+                   cost (1, 1.5);
                  }
                else
                  {

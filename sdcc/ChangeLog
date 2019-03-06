@@ -5,6 +5,10 @@
 	* sim/ucsim/pdk.src/glob.cc,
 	  sim/ucsim/pdk.src/pdk.cc:
 	  state output fix, patch by Nicolas Lesser.
+	* src/pdk/gen.c:
+	  Comparison fix.
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix src, slc.
 
 2019-03-05 Philipp Klaus Krause <pkk AT spth.de>
 
