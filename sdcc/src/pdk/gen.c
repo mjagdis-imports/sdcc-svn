@@ -2782,6 +2782,13 @@ genPointerSet (iCode *ic)
       
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
+          if (!ptr_aop && aopIsLitVal (right->aop, i, 1, 0))
+            {
+              emit2 ("clear", "%s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+              cost (1, 1);
+              continue;
+            }
+
           if (bit_field && blen < 8)
             {
               if (right->aop->type == AOP_LIT)
