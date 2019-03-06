@@ -2771,7 +2771,7 @@ genPointerSet (iCode *ic)
       else
         {
           ptr_aop = ASMOP_P;
-          cheapMove (ptr_aop, 0, left->aop, 0, true, true);
+          cheapMove (ptr_aop, 0, left->aop, 0, !aopInReg (right->aop, 0, A_IDX), true);
           G.p.type = AOP_INVALID;
           if (!regDead (P_IDX, ic))
             {

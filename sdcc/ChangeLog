@@ -1,7 +1,7 @@
 2019-03-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
-	  Improve handling of upper byte of addresses of variables in RAM, zeroing via rematerialized pointer.
+	  Improve pointer handling.
 	* sim/ucsim/pdk.src/inst.cc:
 	  Fix idxm.
 	* src/pdk/gen.c:
