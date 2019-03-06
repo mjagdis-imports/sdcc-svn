@@ -249,10 +249,10 @@ int cl_pdk::execute(unsigned int code) {
     // TODO: stt16
   } else if ((CODE_MASK(0x381, 0x7E))) {
     // idxm a, m
-    regs.a = get_mem(get_mem(code & 0x7F));
+    regs.a = get_mem(get_mem(code & 0x7E));
   } else if ((CODE_MASK(0x380, 0x7E))) {
     // idxm m, a
-    ram->write(get_mem(code & 0x7F), regs.a);
+    ram->write(get_mem(code & 0x7E), regs.a);
   } else if (CODE_MASK(0x1380, 0x7F)) {
     // xch m
     int mem = get_mem(code & 0x7F);
