@@ -1825,17 +1825,6 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                         esp->e_base.e_sp = &sym[1];
                 }
 
-
-                /* Jumps and byte selections are word aligned. */
-                if (esp->e_rlcf & R_BYTX) {
-                        a_uint old = esp->e_addr;
-                        esp->e_addr *= 2;
-                        if (old & 0xC000) {
-                                esp->e_addr &= ~0xC000;
-                                esp->e_addr |= old & 0xC000;
-                        }
-                }
-
                 /* We need to select either the MSB or LSB of the address.
                  * Reset relocation marker so that the linker knows what to do
                  * with it.

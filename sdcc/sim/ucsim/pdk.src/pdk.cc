@@ -482,17 +482,28 @@ char *cl_pdk::disass(t_addr addr, const char *sep) {
   while (*b) {
     if (*b == '%') {
       b++;
-      uint code = rom->get(addr);
+      uint code = rom->get(addr) & ~(uint)dis_e->mask;
       switch (*(b++)) {
         case 'k':  // k    immediate addressing
-          sprintf(temp, "#%u", code & ~(unsigned)dis_e->mask);
+          sprintf(temp, "#%u", code);
           break;
         case 'm':  // m    memory addressing
-          sprintf(temp, "%u", code & ~(unsigned)dis_e->mask);
+          if (*b == 'n') {
+            code &= 0x3F;
+            ++b;
+          }
+          sprintf(temp, "%u", code);
           break;
         case 'i':  // i    IO addressing
           // TODO: Maybe add pretty printing.
-          sprintf(temp, "[%u]", code & ~(unsigned)dis_e->mask);
+          if (*b == 'n') {
+            code &= 0x3F;
+            ++b;
+          }
+          sprintf(temp, "[%u]", code);
+          break;
+        case 'n':  // n    N-bit addressing
+          sprintf(temp, "#%u", (code & 0x1C0) >> 6);
           break;
         default:
           strcpy(temp, "%?");

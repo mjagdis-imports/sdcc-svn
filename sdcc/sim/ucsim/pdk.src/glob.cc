@@ -35,7 +35,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /*
 %k - immediate addressing
 %m - memory addressing
+%mn - memory addressing when using N-bit
 %i - IO addressing 
+%in - IO addressing when using N-bit
+%n - N-bit addressing
 */
 
 /*  uint  code, mask;  char  branch;  uchar length;  char  *mnemonic; */
@@ -101,14 +104,14 @@ struct dis_entry disass_pdk_14[]= {
   { 0x0069, ~0x00FF, ' ', 2, "neg" },
   { 0x1480, ~0x007F, ' ', 2, "neg %m" },
 
-  { 0x1C00, ~0x01FF, ' ', 2, "set0 %i, %k" },
-  { 0x2400, ~0x01FF, ' ', 2, "set0 %m, %k" },
-  { 0x1E00, ~0x01FF, ' ', 2, "set1 %i, %k" },
-  { 0x2600, ~0x01FF, ' ', 2, "set1 %m, %k" },
-  { 0x1800, ~0x01FF, ' ', 2, "t0sn %i, %k" },
-  { 0x2000, ~0x01FF, ' ', 2, "t0sn %m, %k" },
-  { 0x1A00, ~0x01FF, ' ', 2, "t1sn %i, %k" },
-  { 0x2200, ~0x01FF, ' ', 2, "t1sn %m, %k" },
+  { 0x1C00, ~0x01FF, ' ', 2, "set0 %in, %n" },
+  { 0x2400, ~0x01FF, ' ', 2, "set0 %mn, %n" },
+  { 0x1E00, ~0x01FF, ' ', 2, "set1 %in, %n" },
+  { 0x2600, ~0x01FF, ' ', 2, "set1 %mn, %n" },
+  { 0x1800, ~0x01FF, ' ', 2, "t0sn %in, %n" },
+  { 0x2000, ~0x01FF, ' ', 2, "t0sn %mn, %n" },
+  { 0x1A00, ~0x01FF, ' ', 2, "t1sn %in, %n" },
+  { 0x2200, ~0x01FF, ' ', 2, "t1sn %mn, %n" },
 
   { 0x2A00, ~0x00FF, ' ', 2, "ceqsn %k" },
   { 0x1700, ~0x007F, ' ', 2, "ceqsn %m" },
