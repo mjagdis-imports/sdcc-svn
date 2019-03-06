@@ -1009,7 +1009,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           continue;
         }
       else if (!started && aopIsLitVal (right_aop, i, 1, 0x01) &&
-        (right_aop->type == AOP_DIR || aopInReg (right_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
+        (left_aop->type == AOP_DIR || aopInReg (left_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
         {
           emit2 ("dec", "%s", aopGet (left_aop, i));
           cost (1, 1);
@@ -1017,7 +1017,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           continue;
         }
       else if (!started && aopIsLitVal (right_aop, i, 1, 0xff) &&
-        (right_aop->type == AOP_DIR || aopInReg (right_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
+        (left_aop->type == AOP_DIR || aopInReg (left_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
         {
           emit2 ("inc", "%s", aopGet (left_aop, i));
           cost (1, 1);

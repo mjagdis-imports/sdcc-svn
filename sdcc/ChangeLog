@@ -1,7 +1,7 @@
 2019-03-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
-	  Improve pointer handling.
+	  Improve pointer handling and subtraction.
 	* sim/ucsim/pdk.src/inst.cc:
 	  Fix idxm.
 	* src/pdk/gen.c:
