@@ -1,7 +1,7 @@
 2019-03-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
-	  Fix handling of upper byte of addresses of variables in RAM.
+	  Improve handling of upper byte of addresses of variables in RAM.
 	* sim/ucsim/pdk.src/inst.cc:
 	  Fix idxm.
 	* src/pdk/gen.c:
