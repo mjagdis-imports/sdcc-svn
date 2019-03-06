@@ -229,7 +229,7 @@ aopGet(const asmop *aop, int offset)
     {
       if (offset == 0)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
-      else if (offset == 1)
+      else if (offset == 1 && aop->aopu.code)
         SNPRINTF (buffer, sizeof(buffer), "#>(%s + 0x8000 + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else
         SNPRINTF (buffer, sizeof(buffer), "#0", aop->aopu.immd, aop->aopu.immd_off);

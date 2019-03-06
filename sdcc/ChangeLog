@@ -1,5 +1,10 @@
 2019-03-06 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/pdk/gen.c:
+	  Fix handling of upper byte of addresses of variables in RAM.
+
+2019-03-06 Philipp Klaus Krause <pkk AT spth.de>
+
 	* sdas/asxxsrc/asout.c:
 	  Addrss handling fix, patch by Nicolas Lesser.
 	* sim/ucsim/pdk.src/glob.cc,
