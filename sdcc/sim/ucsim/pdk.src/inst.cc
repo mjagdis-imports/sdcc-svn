@@ -307,14 +307,14 @@ int cl_pdk::execute(unsigned int code) {
     ram->write(addr, add_to(get_mem(addr), get_flag(flag::c)));
   } else if (CODE_MASK(0x2900, 0xFF)) {
     // subc a, k
-    regs.a = sub_to(regs.a - get_flag(flag::c), code & 0xFF);
+    regs.a = sub_to(regs.a, code & 0xFF + get_flag(flag::c));
   } else if (CODE_MASK(0x0D80, 0x7F)) {
     // subc a, m
-    regs.a = sub_to(regs.a - get_flag(flag::c), get_mem(code & 0x7F));
+    regs.a = sub_to(regs.a, get_mem(code & 0x7F) + get_flag(flag::c));
   } else if (CODE_MASK(0x0880, 0x7F)) {
     // subc m, a
     int addr = code & 0x7F;
-    ram->write(addr, sub_to(get_mem(addr), regs.a - get_flag(flag::c)));
+    ram->write(addr, sub_to(get_mem(addr), regs.a + get_flag(flag::c)));
   } else if (code == 0x0061) {
     // subc a
     regs.a = sub_to(regs.a, get_flag(flag::c)); 

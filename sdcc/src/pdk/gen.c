@@ -1895,7 +1895,7 @@ genCmp (const iCode *ic, iCode *ifx)
 
   if (ifx)
     {
-      emit2 ((ic->op == '<') ^ (bool)(IC_FALSE(ifx)) ? "t1sn" : "t0sn", "f, c");
+      emit2 (IC_FALSE(ifx) ? "t1sn" : "t0sn", "f, c");
       cost (1, 1.5);
       emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
     }
