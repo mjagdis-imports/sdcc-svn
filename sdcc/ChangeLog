@@ -4,6 +4,8 @@
 	  Carry workaround.
 	* src/pdk/gen.c:
 	  Comparison fix.
+	* sim/ucsim/pdk.src/glob.cc:
+	  dzsn / izsn debug output fix, patch by Nicolas Lesser.
 
 2019-03-06 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
@@ -22,10 +24,10 @@
 2019-03-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/asxxsrc/asout.c:
-	  Addrss handling fix, patch by Nicolas Lesser.
+	  Address handling fix, patch by Nicolas Lesser.
 	* sim/ucsim/pdk.src/glob.cc,
 	  sim/ucsim/pdk.src/pdk.cc:
-	  state output fix, patch by Nicolas Lesser.
+	  State output fix, patch by Nicolas Lesser.
 	* src/pdk/gen.c:
 	  Comparison fix.
 	* sim/ucsim/pdk.src/inst.cc:

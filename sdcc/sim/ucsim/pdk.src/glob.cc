@@ -118,9 +118,9 @@ struct dis_entry disass_pdk_14[]= {
   { 0x2B00, ~0x00FF, ' ', 2, "cneqsn %k" },
   { 0x1780, ~0x007F, ' ', 2, "cneqsn %m" },
 
-  { 0x0062, ~0x00FF, ' ', 2, "izsn %k" },
+  { 0x0062, ~0x0000, ' ', 2, "izsn" },
   { 0x1100, ~0x007F, ' ', 2, "izsn %m" },
-  { 0x0063, ~0x00FF, ' ', 2, "dzsn %k" },
+  { 0x0063, ~0x0000, ' ', 2, "dzsn" },
   { 0x1180, ~0x007F, ' ', 2, "dzsn %m" },
 
   { 0x3800, ~0x07FF, ' ', 2, "call %k" },
