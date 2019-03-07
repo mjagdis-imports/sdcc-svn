@@ -69,6 +69,8 @@ unsigned char cl_pdk::sub_to(unsigned char initial, int value) {
 
   // TODO: Add support for auxiliary carry.
 
+  store_flag(flag::c, initial - value < 0); // Workaround. TODO: Properly implement flags.
+
   return initial - value;
 }
 

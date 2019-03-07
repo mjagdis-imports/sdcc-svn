@@ -1,3 +1,10 @@
+2019-03-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/pdk.src/inst.cc:
+	  Carry workaround.
+	* src/pdk/gen.c:
+	  Comparison fix.
+
 2019-03-06 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* support/scripts/sdcc.nsi: sdcclib.exe is not built
