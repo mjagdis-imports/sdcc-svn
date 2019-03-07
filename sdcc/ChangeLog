@@ -6,6 +6,9 @@
 	  Comparison fix.
 	* sim/ucsim/pdk.src/glob.cc:
 	  dzsn / izsn debug output fix, patch by Nicolas Lesser.
+	* sdas/asxxsrc/asout.c,
+	  sdas/linksrc/lkrloc3.c:
+	  Fix handling of addresses of variables in RAM, patch by Nicolas Lesser.
 
 2019-03-06 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 

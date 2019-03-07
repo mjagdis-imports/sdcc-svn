@@ -1831,6 +1831,13 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                  */
                 if (esp->e_rlcf & R_BYTX) {
                         r |= R_BYTE;
+                        /* We might select the MSB/LSB of an address in RAM. In
+                         * that case the linker should not convert the address
+                         * to words.
+                         */
+                        if (!esp->e_flag && !memcmp(esp->e_base.e_ap->a_id, "DATA", 4)) {
+                                r |= R_USGN;
+                        }
                 } else {
                         r |= R_WORD;
                 }

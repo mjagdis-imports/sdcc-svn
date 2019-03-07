@@ -399,11 +399,12 @@ relr3(void)
                          * for goto/call instructions and byte selections.
                          */
                         int jump = rtval[rtp + 3] & 0x38;
-                        if ((mode & R3_BYTE) || jump == 0x38 || jump == 0x30) {
+                        if (((mode & R3_BYTE) && !(mode & R3_USGN)) ||
+                            jump == 0x38 || jump == 0x30) {
                                 /* Addresses cannot be bigger than N - 2 bits.
                                  * Any bits that are set past that point are
                                  * marker bits that should be not shifted.
-                                 */ 
+                                 */
                                 int marker = rtval[rtp + 1] & 0xC0;
                                 rtval[rtp + 1] &= ~0xC0;
 
@@ -425,6 +426,7 @@ relr3(void)
                                 rtval[rtp + 2] |= rtval[rtp];
                         }
 
+                        mode &= ~R3_USGN;
                         rtflg[rtp] = 0;
                         rtflg[rtp + 1] = 0;
                         rtofst += 2;
