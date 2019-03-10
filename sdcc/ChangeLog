@@ -8,6 +8,8 @@
 	  support/regression/tests/args.c,
 	  support/regression/tests/array.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon).
+	* sim/ucsim/pdk.src/inst.cc:
+	  Carry bug workaround.
 
 2019-03-10 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
@@ -23,7 +25,7 @@
 	* src/pdk/gen.c:
 	  Workaround for lack of support for offset at call in assembler.
 	* sim/ucsim/pdk.src/inst.cc:
-	  Carry workaround.
+	  Carry bug workaround.
 	* src/pdk/ralloc2.cc,
 	  src/pdk/ralloc.c,
 	  src/pdk/main.c:
