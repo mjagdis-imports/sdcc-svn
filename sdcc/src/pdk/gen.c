@@ -1856,6 +1856,7 @@ genCmp (const iCode *ic, iCode *ifx)
               emit2 ("sl", "a");
               emit2 ("mov", "a, #0x00");
               emit2 ("slc", "a");
+              cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
             }
           goto release;
         }

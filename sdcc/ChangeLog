@@ -1,6 +1,11 @@
 2019-03-10 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
+	  Comparison fix.
+
+2019-03-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
 	  Workaround for lack of support for offset at call in assembler.
 	* sim/ucsim/pdk.src/inst.cc:
 	  Carry workaround.
