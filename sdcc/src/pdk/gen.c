@@ -661,8 +661,19 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else if (source->type == AOP_CODE && aopInReg (result, roffset, A_IDX))
     {
-      emit2 ("call", "%s+%d", source->aopu.aop_dir, soffset);
-      cost (1, 4);
+      if (soffset == 0 /* TODO: ALWAS USE WHEN ASSEMBLER / INKER GETS SUPPRT FOR OFFSET AT CALL! */)
+        {
+          emit2 ("call", "%s+%d", source->aopu.aop_dir, soffset);
+          cost (1, 4);
+        }
+      else
+        {
+          emit2 ("mov", "a, #<(%s+%d)", source->aopu.aop_dir, soffset);
+          emit2 ("mov", "p, a");
+          emit2 ("mov", "a, #>(%s+%d)", source->aopu.aop_dir, soffset);
+          emit2 ("call", "__gptrget");
+          cost (4, 17);
+        }
     }
   else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX))
     {
@@ -2604,7 +2615,7 @@ genPointerGet (const iCode *ic)
 
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
-  if (left->aop->type == AOP_IMMD && (ptype == POINTER || ptype == CPOINTER))
+  if (left->aop->type == AOP_IMMD && (ptype == POINTER /*|| ptype == CPOINTER - TODO: ENABLE WHEN ASSEMBLER / LINKER SUPPORTS OFFSET At CALL*/))
     {
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
