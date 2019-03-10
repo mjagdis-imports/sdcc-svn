@@ -46,6 +46,10 @@ static char *pdk_keywords[] = {
 static void
 pdk_genAssemblerStart (FILE *of)
 {
+  fprintf (of, "\n; default segment ordering in RAM for linker\n");
+  tfprintf (of, "\t!area\n", DATA_NAME);
+  tfprintf (of, "\t!area\n", OVERLAY_NAME);
+  fprintf (of, "\n");
 }
 
 static void
@@ -75,10 +79,11 @@ pdk_genInitStartup (FILE *of)
   fprintf (of, "\t.org 0x00\n");
   fprintf (of, "p::\n");
   fprintf (of, "\t.ds 2\n");
+  
 
   fprintf (of, "\t.area\tHEADER (ABS)\n"); // In the header we have 16 bytes. First should be nop.
   fprintf (of, "\t.org 0x0000\n");
-  fprintf (of, "nop\n"); // First word is a jump to self-test routine at end of ROM on some new devices.
+  fprintf (of, "\tnop\n"); // First word is a jump to self-test routine at end of ROM on some new devices.
 
   // Zero upper byte of pseudo-register p to make p usable for pointers.
   fprintf (of, "\tclear\tp+1\n");
@@ -91,8 +96,8 @@ pdk_genInitStartup (FILE *of)
     }
   else
     {
-      fprintf (of, "\tmov\ta, #s_DATA\n");
-      fprintf (of, "\tadd\ta, #l_DATA + 1\n");
+      fprintf (of, "\tmov\ta, #s_OSEG\n");
+      fprintf (of, "\tadd\ta, #l_OSEG + 1\n");
       fprintf (of, "\tand\ta, #0xfe\n");
       fprintf (of, "\tmov\tsp, a\n");
     }
@@ -100,7 +105,7 @@ pdk_genInitStartup (FILE *of)
   fprintf (of, "\tcall\t__sdcc_external_startup\n");
   fprintf (of, "\tgoto\t__sdcc_gs_init_startup\n");
 
-  fprintf (of, "\t.area\tGSINIT\n");
+  tfprintf (of, "\t!area\n", STATIC_NAME);
   fprintf (of, "__sdcc_gs_init_startup:\n");
 
   /* Init static & global variables */

@@ -628,6 +628,8 @@ iCode *pdk_ralloc2_cc(ebbIndex *ebbi)
 
   pdkRegFix (ebbs, count);
 
+  doOverlays (ebbs, count);
+
   return(ic);
 }
 

@@ -4,6 +4,10 @@
 	  Workaround for lack of support for offset at call in assembler.
 	* sim/ucsim/pdk.src/inst.cc:
 	  Carry workaround.
+	* src/pdk/ralloc2.cc,
+	  src/pdk/ralloc.c,
+	  src/pdk/main.c:
+	  Enable local variable overlay for leaf functions.
 
 2019-03-07 Philipp Klaus Krause <pkk AT spth.de>
 

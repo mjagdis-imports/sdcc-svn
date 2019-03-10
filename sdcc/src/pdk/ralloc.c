@@ -47,7 +47,6 @@ createStackSpil (symbol *sym)
   SPEC_VOLATILE(sloc->etype) = 0;
   SPEC_ABSA(sloc->etype) = 0;
 
-  options.noOverlay = 1; // ?
   allocLocal (sloc);
 
   sloc->isref = 1;
