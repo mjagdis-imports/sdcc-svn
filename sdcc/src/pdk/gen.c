@@ -1583,6 +1583,12 @@ genPlus (const iCode *ic)
           cost (1, 1);
           started = true;
         }
+      else if (aopInReg (left->aop, i, P_IDX))
+        {
+          cheapMove (ASMOP_A, 0, right->aop, i, true, !started);
+          emit2 (started ? "addc" : "add", "a, p");
+          cost (1, 1);
+        }
       else if (started && (right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00) || right->aop->type == AOP_IMMD))
         {
           cheapMove (ASMOP_P, 0, right->aop, i, !aopInReg (left->aop, i, A_IDX), false);
@@ -3530,7 +3536,7 @@ genPdkCode (iCode *lic)
 
       genPdkiCode(ic);
 
-#if 1
+#if 0
       D (emit2 (";", "Cost for generated ic %d : (%d, %d)", ic->key, regalloc_dry_run_cost_words, regalloc_dry_run_cost_cycles));
 #endif
     }

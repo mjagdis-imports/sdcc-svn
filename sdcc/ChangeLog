@@ -2,11 +2,13 @@
 
 	* src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
-	  Improve register allocation.
+	  Improve register allocation, small code generation fixes.
 	* support/regression/tests/absolute.c,
 	  support/regression/tests/addsub.c,
 	  support/regression/tests/args.c,
-	  support/regression/tests/array.c:
+	  support/regression/tests/array.c,
+	  support/regression/tests/bug-221100.c,
+	  support/regression/tests/bug-221168.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon).
 	* sim/ucsim/pdk.src/inst.cc:
 	  Carry bug workaround.
