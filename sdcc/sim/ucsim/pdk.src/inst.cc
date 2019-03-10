@@ -47,6 +47,8 @@ unsigned char cl_pdk::add_to(unsigned char initial, int value) {
 
   // TODO: Have support for auxiliary carry.
 
+  store_flag(flag::c, initial + value > 0xff); // Workaround. TODO: Properly implement flags.
+
   return initial + value;
 }
 
