@@ -8,6 +8,9 @@
 	  src/pdk/ralloc.c,
 	  src/pdk/main.c:
 	  Enable local variable overlay for leaf functions.
+	* configure.ac,
+	  configure:
+	  Fix display of pdk13 enable.
 
 2019-03-07 Philipp Klaus Krause <pkk AT spth.de>
 

@@ -1002,7 +1002,7 @@ sdcc ${VERSION} is now configured for
     tlcs90              ${enable_tlcs90_port}
     ez80_z80            ${enable_ez80_z80_port}
     stm8                ${enable_stm8_port}
-    pdk13               ${enable_pdk14_port}
+    pdk13               ${enable_pdk13_port}
     pdk14               ${enable_pdk14_port}
     pdk15               ${enable_pdk15_port}
 
