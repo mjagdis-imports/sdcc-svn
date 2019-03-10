@@ -157,7 +157,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if (ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1 && left_dir && right_in_A)
     return (true);
 
-  if ((ic->op == '+' || ic->op == '-') && (!left_in_A && !right_in_A || getSize(operandType(result)) == 1))
+  if ((ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS) && (!left_in_A && !right_in_A || getSize(operandType(result)) == 1))
     return (true);
 
   if ((ic->op == CALL || ic->op == PCALL) && !left_in_A)
@@ -170,6 +170,10 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if ((ic->op == '=' || ic->op == CAST) &&
     (getSize(operandType(result)) == 1 || getSize(operandType(result)) == 2 && SPEC_USIGN (getSpec(operandType(right))) && operand_byte_in_reg(result, 1, REG_P, a, i, G)) &&
     right_in_A && (result_dir || dying_A))
+    return (true);
+
+  if ((ic->op == '=' || ic->op == CAST && getSize(operandType(result)) <= getSize(operandType(right))) && getSize(operandType(result)) <= 2 &&
+    (result_dir && dying_A || result_in_A && right_dir || result_in_A && right_in_A))
     return (true);
 
   if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))
@@ -432,6 +436,10 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
       assign_operands_for_cost(a, i, G, I);
       set_surviving_regs(a, i, G, I);
       c = dryPdkiCode(ic);
+
+      if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && !OP_SYMBOL(IC_RESULT(ic))->remat && !operand_in_reg(IC_RESULT(ic), REG_A, a.i_assignment, i, G)) // Nudge towards saving RAM space. TODO: Do this in a better way, so it works for all backends!
+        c += 0.0001;
+
       ic->generated = false;
 #if 0
       std::cout << "Got cost " << c << "\n";

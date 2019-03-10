@@ -867,7 +867,9 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cheapMove (result, roffset + 0, source, soffset + 0, false, true);
       return;
     }
-  else if (size == 2 && aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX) && source->type == AOP_DIR)
+  else if (size == 2 && // Assign upper byte first to avoid overwriting a.
+    (aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX) && source->type == AOP_DIR ||
+    aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX) && result->type == AOP_DIR))
     {
       cheapMove (result, roffset + 1, source, soffset + 1, true, true);
       cheapMove (result, roffset + 0, source, soffset + 0, true, true);
@@ -3516,6 +3518,9 @@ genPdkCode (iCode *lic)
           cln = ic->lineno;
         }
 
+      regalloc_dry_run_cost_words = 0;
+      regalloc_dry_run_cost_cycles = 0;
+
       if (options.iCodeInAsm)
         {
           const char *iLine = printILine (ic);
@@ -3524,6 +3529,10 @@ genPdkCode (iCode *lic)
         }
 
       genPdkiCode(ic);
+
+#if 1
+      D (emit2 (";", "Cost for generated ic %d : (%d, %d)", ic->key, regalloc_dry_run_cost_words, regalloc_dry_run_cost_cycles));
+#endif
     }
 
   if (options.debug)
