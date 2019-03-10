@@ -2624,7 +2624,7 @@ genPointerGet (const iCode *ic)
 
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
-  if (left->aop->type == AOP_IMMD && (ptype == POINTER /*|| ptype == CPOINTER - TODO: ENABLE WHEN ASSEMBLER / LINKER SUPPORTS OFFSET At CALL*/))
+  if (left->aop->type == AOP_IMMD && (ptype == POINTER /*|| ptype == CPOINTER - TODO: ENABLE WHEN ASSEMBLER / LINKER SUPPORTS OFFSET AT CALL*/))
     {
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
