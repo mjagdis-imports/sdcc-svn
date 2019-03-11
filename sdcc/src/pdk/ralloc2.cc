@@ -150,6 +150,9 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     (left_in_A && getSize(operandType(left)) == 1 && (IS_OP_LITERAL(right) || right_dir) || right_in_A && getSize(operandType(right)) == 1 && (IS_OP_LITERAL(left) || left_dir)))
     return (true);
 
+  if (ic->op == IFX && dying_A)
+    return (true);
+
   if (ic->op == '<' && IS_OP_LITERAL(right) && !ullFromVal(OP_VALUE_CONST (right)) &&
     (operand_byte_in_reg(left, getSize(operandType(left)) - 1, REG_A, a, i, G) || operand_byte_in_reg(left, getSize(operandType(left)) - 1, REG_P, a, i, G)))
     return (true);
@@ -172,12 +175,18 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     right_in_A && (result_dir || dying_A))
     return (true);
 
-  if ((ic->op == '=' || ic->op == CAST && getSize(operandType(result)) <= getSize(operandType(right))) && getSize(operandType(result)) <= 2 &&
+  if ((ic->op == '=' || ic->op == CAST && (getSize(operandType(result)) <= getSize(operandType(right)) || SPEC_USIGN (getSpec(operandType(right))))) &&
+    getSize(operandType(result)) <= 2 &&
     (result_dir && dying_A || result_in_A && right_dir || result_in_A && right_in_A))
     return (true);
 
   if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))
     return(IS_OP_LITERAL(right) && (ullFromVal(OP_VALUE_CONST (right)) <= 2 + optimize.codeSpeed || getSize(operandType(result)) == 1) || right_in_A && !result_in_A);
+
+  if (ic->op == '^' &&
+    (operand_byte_in_reg(result, 0, REG_A, a, i, G) && (operand_byte_in_reg(left, 0, REG_A, a, i, G) || operand_byte_in_reg(right, 0, REG_A, a, i, G)) ||
+    operand_byte_in_reg(result, 1, REG_A, a, i, G) && (operand_byte_in_reg(left, 1, REG_A, a, i, G) || operand_byte_in_reg(right, 1, REG_A, a, i, G))))
+    return (true);
 
   // For most operations only allow lower byte in a for now (upper byte for result).
   if (left_in_A && !operand_byte_in_reg(left, 0, REG_A, a, i, G) || right_in_A && !operand_byte_in_reg(right, 0, REG_A, a, i, G) ||

@@ -1,5 +1,11 @@
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/ralloc2.cc,
+	  src/pdk/gen.c:
+	  Improve register use.
+
+2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c:
 	  Fix arithmetic right shift, assembler issue workaround for variables in ROM.
 	* src/pdk/ralloc2.cc:
