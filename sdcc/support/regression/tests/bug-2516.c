@@ -16,12 +16,12 @@ static float sfa = 1.0 / 0.0;
 static float sfb = (-1.0) / 0.0;
 static float sfc = 0.0 / 0.0;
 static float sfd = 1.0;
-#endif
 
 static float divTest(float a, float b)
 {
   return a / b;
 }
+#endif
 
 void
 testBug (void)

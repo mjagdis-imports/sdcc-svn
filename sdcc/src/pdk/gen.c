@@ -2493,7 +2493,13 @@ genRightShift (const iCode *ic)
           // So we need this emulation sequence here.
           if (!SPEC_USIGN (getSpec (operandType (left))))
             {
-              pushAF();
+              if (loop || !regDead (A_IDX, ic))
+                pushAF();
+              if (aopInReg (result->aop, size - 1, A_IDX))
+                {
+                  wassert (regalloc_dry_run);
+                  cost (500, 500);
+                }
               emit2 ("mov", "a, #0x01");
               emit2 ("sl", aopGet (result->aop, size - 1));
               emit2 ("t0sn", "f, c");
@@ -2501,7 +2507,8 @@ genRightShift (const iCode *ic)
               emit2 ("src", aopGet (result->aop, size - 1));
               emit2 ("src", aopGet (result->aop, size - 1));
               cost (6, 6);
-              popAF();
+              if (loop || !regDead (A_IDX, ic))
+                popAF();
             }
           else
             {
