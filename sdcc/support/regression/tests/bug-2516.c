@@ -6,6 +6,7 @@
 
 #pragma disable_warning 122
 
+#ifndef __SDCC_pdk14 // Not enough RAM
 float gfa = 1.0 / 0.0;
 float gfb = (-1.0) / 0.0;
 float gfc = 0.0 / 0.0;
@@ -15,6 +16,7 @@ static float sfa = 1.0 / 0.0;
 static float sfb = (-1.0) / 0.0;
 static float sfc = 0.0 / 0.0;
 static float sfd = 1.0;
+#endif
 
 static float divTest(float a, float b)
 {
