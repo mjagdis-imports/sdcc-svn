@@ -1,6 +1,6 @@
 /*
    bug-2458.c
-   In backends that support 16x16->32 multiplication, there awas a bug when
+   In backends that support 16x16->32 multiplication, there was a bug when
    operands to such a multiplication were used in multiple such multiplications.
 */
 

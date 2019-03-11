@@ -63,9 +63,11 @@ ee_s16 calc_func(ee_s16 *pdata, core_results *res)
 
 void testBug(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 	ee_s16 data = 0;
 	core_results res = {0};
 	ASSERT(calc_func(&data, &res) == 0x0a55);
 	ASSERT(res.crcstate ==  0x0a55);
+#endif
 }
 

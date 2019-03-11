@@ -55,12 +55,14 @@ void errx(int _beval, const char *_bfmt, ...)
 {
 }
 
+#ifndef __SDCC_pdk14 // Lack of memory
 char *argv0;
 int all = 0;
 int wday;
 int advance;
 char CurLine[64];
 char *CurLinep;
+#endif
 
 enum {NONE, DAY, WEEK, MONTH} mflag;
 
