@@ -1792,7 +1792,7 @@ genCmp (const iCode *ic, iCode *ifx)
       if (ic->op == '>' && right->aop->type == AOP_LIT)
         {
           wassert (!aopIsLitVal (right->aop, 0, 1, 0x00));
-          emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) - 1);
+          emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
           if (IC_TRUE (ifx))
             {
               emit2 ("nop", "");
