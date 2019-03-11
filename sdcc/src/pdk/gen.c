@@ -1810,7 +1810,7 @@ genCmp (const iCode *ic, iCode *ifx)
       else if (ic->op == '<' && aopInReg (left->aop, 0, A_IDX) && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR) && (IC_TRUE (ifx) || !regDead (A_IDX, ic)))
         {
           emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
-          if (IC_TRUE (ifx))
+          if (IC_FALSE (ifx))
             {
               emit2 ("t1sn", "f, c");
               cost (2, 2.5);

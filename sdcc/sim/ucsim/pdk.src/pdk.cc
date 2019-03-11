@@ -61,6 +61,7 @@ int cl_pdk::init(void) {
   cl_uc::init(); /* Memories now exist */
 
   xtal = 8000000;
+  sp_max = 0xFF;
 
   // rom = address_space(MEM_ROM_ID);
   // ram = mem(MEM_XRAM);

@@ -1,5 +1,13 @@
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c:
+	  Comparison fixes.
+	* sim/ucsim/pdk.src/pdk.cc,
+	  sdas/linksrc/lkmain.c:
+	  Memory limit diagnostics, patch by Nicolas Lesser.
+
+2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c,
 	  src/SDCCglue.c:
 	  Pointer handling fixes.
