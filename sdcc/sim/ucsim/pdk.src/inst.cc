@@ -28,52 +28,24 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "pdkcl.h"
 #include "regspdk.h"
 
-unsigned char cl_pdk::add_to(unsigned char initial, int value) {
-  // Zero.
-  store_flag(flag::z, initial + value == 0 && get_flag(flag::c));
+unsigned char cl_pdk::add_to(unsigned char initial, int value, bool carry) {
+  store_flag(flag::z, initial + value + carry == 0);
+  store_flag(flag::c, initial + value + carry > 0xFF);
+  store_flag(flag::ac, (initial & 0xF) + (value & 0xF) + carry > 0xF);
+  store_flag(
+      flag::ov,
+      get_flag(flag::c) ^ ((initial & 0x7F) + (initial & 0x7F) + carry > 0x7F));
 
-  if (initial + value < initial) {
-    if (get_flag(flag::c)) {
-      // Actual overflow of accumulator.
-      store_flag(flag::ov, true);
-      store_flag(flag::c, false);
-    } else {
-      store_flag(flag::ov, false);
-      store_flag(flag::c, true);
-    }
-  } else {
-      store_flag(flag::ov, false);
-  }
-
-  // TODO: Have support for auxiliary carry.
-
-  store_flag(flag::c, initial + value > 0xff); // Workaround. TODO: Properly implement flags.
-
-  return initial + value;
+  return initial + value + carry;
 }
 
-unsigned char cl_pdk::sub_to(unsigned char initial, int value) {
-  // Zero.
-  store_flag(flag::z, initial - value == 0 && !get_flag(flag::c));
+unsigned char cl_pdk::sub_to(unsigned char initial, int value, bool carry) {
+  store_flag(flag::z, initial - value - carry == 0);
+  store_flag(flag::c, initial < value + carry);
+  store_flag(flag::ac, (value & 0xF) > (initial & 0xF) - carry);
+  store_flag(flag::ov, get_flag(flag::c) && initial >> 7);
 
-  if (initial - value > initial) {
-    if (!get_flag(flag::c)) {
-      // Actual overflow of accumulator.
-      store_flag(flag::ov, true);
-      store_flag(flag::c, true);
-    } else {
-      store_flag(flag::ov, false);
-      store_flag(flag::c, false);
-    }
-  } else {
-    store_flag(flag::ov, false);
-  }
-
-  // TODO: Add support for auxiliary carry.
-
-  store_flag(flag::c, initial - value < 0); // Workaround. TODO: Properly implement flags.
-
-  return initial - value;
+  return initial - value - carry;
 }
 
 int cl_pdk::get_mem(unsigned int addr) {
@@ -82,7 +54,7 @@ int cl_pdk::get_mem(unsigned int addr) {
 }
 
 unsigned char cl_pdk::get_io(t_addr addr) {
-  #define WRITE_ONLY(reg) puts("can't read from write-only register " reg "!");
+#define WRITE_ONLY(reg) puts("can't read from write-only register " reg "!");
 
   switch (addr) {
   case 0x00: return regs.flag;
@@ -292,34 +264,34 @@ int cl_pdk::execute(unsigned int code) {
     ram->write(addr, sub_to(get_mem(addr), regs.a));
   } else if (CODE_MASK(0x2800, 0xFF)) {
     // addc a, k
-    regs.a = add_to(regs.a, (code & 0xFF) + get_flag(flag::c));
+    regs.a = add_to(regs.a, code & 0xFF, get_flag(flag::c));
   } else if (CODE_MASK(0x0D00, 0x7F)) {
     // addc a, m
-    regs.a = add_to(regs.a, get_mem(code & 0x7F) + get_flag(flag::c));
+    regs.a = add_to(regs.a, get_mem(code & 0x7F), get_flag(flag::c));
   } else if (CODE_MASK(0x0800, 0x7F)) {
     // addc m, a
     int addr = code & 0x7F;
-    ram->write(addr, add_to(regs.a, get_mem(addr) + get_flag(flag::c)));
+    ram->write(addr, add_to(regs.a, get_mem(addr), get_flag(flag::c)));
   } else if (code == 0x0060) {
     // addc a
-    regs.a = add_to(regs.a, get_flag(flag::c)); 
+    regs.a = add_to(regs.a, get_flag(flag::c));
   } else if (CODE_MASK(0x1000, 0x7F)) {
     // addc m
     int addr = code & 0x7F;
     ram->write(addr, add_to(get_mem(addr), get_flag(flag::c)));
   } else if (CODE_MASK(0x2900, 0xFF)) {
     // subc a, k
-    regs.a = sub_to(regs.a, (code & 0xFF) + get_flag(flag::c));
+    regs.a = sub_to(regs.a, code & 0xFF, get_flag(flag::c));
   } else if (CODE_MASK(0x0D80, 0x7F)) {
     // subc a, m
-    regs.a = sub_to(regs.a, get_mem(code & 0x7F) + get_flag(flag::c));
+    regs.a = sub_to(regs.a, get_mem(code & 0x7F), get_flag(flag::c));
   } else if (CODE_MASK(0x0880, 0x7F)) {
     // subc m, a
     int addr = code & 0x7F;
-    ram->write(addr, sub_to(get_mem(addr), regs.a + get_flag(flag::c)));
+    ram->write(addr, sub_to(get_mem(addr), regs.a, get_flag(flag::c)));
   } else if (code == 0x0061) {
     // subc a
-    regs.a = sub_to(regs.a, get_flag(flag::c)); 
+    regs.a = sub_to(regs.a, get_flag(flag::c));
   } else if (CODE_MASK(0x1080, 0x7F)) {
     // subc m
     int addr = code & 0x7F;
@@ -522,7 +494,7 @@ int cl_pdk::execute(unsigned int code) {
   } else if (CODE_MASK(0x0680, 0x7F)) {
     // comp m, a
     sub_to(get_mem(code & 0x7F), regs.a);
-  } else if (CODE_MASK( 0x0700, 0x7F)) {
+  } else if (CODE_MASK(0x0700, 0x7F)) {
     // nadd a, m
     regs.a = add_to(get_mem(code & 0x7F), -regs.a);
   } else if (CODE_MASK(0x0780, 0x7F)) {

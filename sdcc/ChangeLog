@@ -3,6 +3,9 @@
 	* src/pdk/ralloc2.cc,
 	  src/pdk/gen.c:
 	  Improve register use.
+	* sim/ucsim/pdk.src/inst.cc,
+	  sim/ucsim/pdk.src/instcl.h:
+	  Fix flag handling, patch by Nicolas Lesser.
 
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
