@@ -437,7 +437,8 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
       set_surviving_regs(a, i, G, I);
       c = dryPdkiCode(ic);
 
-      if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && !OP_SYMBOL(IC_RESULT(ic))->remat && !operand_in_reg(IC_RESULT(ic), REG_A, a.i_assignment, i, G)) // Nudge towards saving RAM space. TODO: Do this in a better way, so it works for all backends!
+      if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && !OP_SYMBOL(IC_RESULT(ic))->remat && // Nudge towards saving RAM space. TODO: Do this in a better way, so it works for all backends!
+        !operand_in_reg(IC_RESULT(ic), REG_A, a.i_assignment, i, G) && !operand_in_reg(IC_RESULT(ic), REG_P, a.i_assignment, i, G)) 
         c += 0.0001;
 
       ic->generated = false;

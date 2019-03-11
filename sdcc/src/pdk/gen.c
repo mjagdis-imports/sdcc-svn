@@ -2458,15 +2458,19 @@ genRightShift (const iCode *ic)
               continue;
             }
               
-          // Padauk has no arithmetic right shift instruction.
-          // So we need this 4-instruction sequence here.
+          // Padauk has no arithmetic right shift instructions.
+          // So we need this emulation sequence here.
           if (!SPEC_USIGN (getSpec (operandType (left))))
             {
+              pushAF();
+              emit2 ("mov", "a, #0x01");
               emit2 ("sl", aopGet (result->aop, size - 1));
-              emit2 ("addc", aopGet (result->aop, size - 1));
+              emit2 ("t0sn", "f, c");
+              emit2 ("or", "%s, a", aopGet (result->aop, size - 1));
               emit2 ("src", aopGet (result->aop, size - 1));
               emit2 ("src", aopGet (result->aop, size - 1));
-              cost (4, 4);
+              cost (6, 6);
+              popAF();
             }
           else
             {
