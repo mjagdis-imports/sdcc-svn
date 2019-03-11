@@ -8,7 +8,8 @@
 	* support/regression/tests/bug-2208.c,
 	  support/regression/tests/bug-2253.c,
 	  support/regression/tests/bug-2357.c,
-	  support/regression/tests/bug-2516.c:
+	  support/regression/tests/bug-2516.c,
+	  support/regression/tests/bug-2625.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>

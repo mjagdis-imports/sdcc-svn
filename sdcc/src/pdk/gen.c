@@ -2019,11 +2019,17 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
     }
   else // Needs result
     {
+      if (!regDead (A_IDX, ic))
+        pushAF();
       cheapMove (result->aop, 0, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true, true);
       emitJP(endlbl, 0.0f);
       emitLabel (lbl_ne);
+      emit2 ("push", "af");
+      cost (1, 1);
       cheapMove (result->aop, 0, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true, true);
       emitLabel (endlbl);
+      if (!regDead (A_IDX, ic))
+        popAF();
     }
 
   freeAsmop (right);
