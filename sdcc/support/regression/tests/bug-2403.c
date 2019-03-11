@@ -19,7 +19,6 @@ typedef struct
 #ifndef __SDCC_pdk14 // Not enough RAM
 __xdata struct_one test;
 unsigned long sum;
-#endif
 
 unsigned long badd (__xdata struct_one *pointer)
 {
@@ -35,6 +34,7 @@ unsigned long add (__xdata struct_one *pointer)
   sum = pointer->e + pointer->f;
   return CONST / sum;
 }
+#endif
 
 void testBug (void)
 {
