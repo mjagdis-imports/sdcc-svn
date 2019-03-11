@@ -36,6 +36,7 @@ foo (int n, int f, int *s, int m)
 void
 testTortureExecute (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
   int s[3], i;
   struct S buf[3] = { { 1, 1, 2 }, { 0, 0, 0 }, { 0, 0, 0 } };
   t = buf;
@@ -44,5 +45,6 @@ testTortureExecute (void)
   if (s[0] != 1 || s[1] != 2)
     ASSERT (0);
   return;
+#endif
 }
 

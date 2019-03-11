@@ -19,6 +19,7 @@ struct S
   unsigned long d;
 };
 
+#ifndef __SDCC_pdk14 // Lack of memory
 void
 foo (struct S *x, const struct S *y)
 {
@@ -51,6 +52,7 @@ foo (struct S *x, const struct S *y)
       x->c[0] = 2.0 * o;
     }
 }
+#endif
 
 void
 testTortureExecute (void)

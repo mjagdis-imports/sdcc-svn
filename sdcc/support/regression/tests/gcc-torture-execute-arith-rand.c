@@ -13,6 +13,7 @@ simple_rand ()
   return this >> 8;
 }
 
+#ifndef __SDCC_pdk14 // Lack of memory
 unsigned long int
 random_bitstring ()
 {
@@ -41,12 +42,14 @@ random_bitstring ()
         }
     }
 }
+#endif
 
 #define ABS(x) ((x) >= 0 ? (x) : -(x))
 
 void
 testTortureExecute (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
   long int i;
 
   for (i = 0; i < 40 /* Was 1000 in GCC, reduced to speed up regression testing */; i++)
@@ -118,4 +121,5 @@ testTortureExecute (void)
     }
 
   return;
+#endif
 }
