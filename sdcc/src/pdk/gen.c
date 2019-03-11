@@ -2648,8 +2648,12 @@ genPointerGet (const iCode *ic)
   int blen, bstr;
   blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
+
   sym_link *type = operandType (left);
   int ptype = (IS_PTR (type) && !IS_FUNC (type->next)) ? DCL_TYPE (type) : PTR_TYPE (SPEC_OCLS (getSpec (type)));
+
+  if (left->aop->type == AOP_IMMD && ptype == GPOINTER && IS_SYMOP (left) && OP_SYMBOL (left)->remat)
+    ptype = left->aop->aopu.code ? CPOINTER : POINTER;
 
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
