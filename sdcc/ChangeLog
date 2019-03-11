@@ -1,11 +1,12 @@
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
-	  Fix arithmetic right shift.
+	  Fix arithmetic right shift, assembler issue workaround for variables in ROM.
 	* src/pdk/ralloc2.cc:
 	  Try to save abit more RAM.
 	* support/regression/tests/and_survive.c,
-	  support/regression/tests/ato.c
+	  support/regression/tests/ato.c,
+	  support/regression/tests/bitopcse.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 
 2019-03-10 Philipp Klaus Krause <pkk AT spth.de>

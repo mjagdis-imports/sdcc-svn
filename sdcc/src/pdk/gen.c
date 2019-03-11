@@ -661,18 +661,25 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else if (source->type == AOP_CODE && aopInReg (result, roffset, A_IDX))
     {
-      if (soffset == 0 /* TODO: ALWAS USE WHEN ASSEMBLER / INKER GETS SUPPRT FOR OFFSET AT CALL! */)
+      if (soffset == 0 /* TODO: ALWAS USE THIS WHEN ASSEMBLER / LINKER GETS SUPPRT FOR OFFSET AT CALL! */)
         {
           emit2 ("call", "%s+%d", source->aopu.aop_dir, soffset);
           cost (1, 4);
         }
       else
         {
-          emit2 ("mov", "a, #<(%s+%d)", source->aopu.aop_dir, soffset);
+          emit2 ("mov", "a, #<(%s+0)", source->aopu.aop_dir);
           emit2 ("mov", "p, a");
-          emit2 ("mov", "a, #>(%s+%d)", source->aopu.aop_dir, soffset);
+          emit2 ("mov", "a, #>(%s+0x8000+0)", source->aopu.aop_dir);
+          cost (3, 3);
+          for (int i = 0; i < soffset; i++)
+            {
+              emit2 ("inc", "p");
+              emit2 ("addc", "a");
+              cost (2, 2);
+            }
           emit2 ("call", "__gptrget");
-          cost (4, 17);
+          cost (1, 14);
         }
     }
   else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX))
