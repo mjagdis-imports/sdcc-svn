@@ -2038,7 +2038,7 @@ genXor (const iCode *ic)
   int size = result->aop->size;
 
   /* Swap if left is literal or right is in A. */
-  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || right->aop->type == AOP_STK)
+  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || aopInReg (right->aop, 1, A_IDX) || right->aop->type == AOP_STK)
     {
       operand *t = right;
       right = left;

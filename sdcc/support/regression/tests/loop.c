@@ -10,6 +10,7 @@
 unsigned char array[300];
 #endif
 
+#ifndef __SDCC_pdk14
 /* A loop where the counter should be narrowed to an 8-bit unsigned type. */
 void loop8(unsigned char *a, {type} n)
 {
@@ -60,7 +61,6 @@ void address(unsigned char *a)
 	}
 }
 
-#ifndef __SDCC_pdk14
 void jump_func(jmp_buf *jp, {type} i)
 {
 	ASSERT (i == (1ul << 29));

@@ -19,6 +19,7 @@ void vafunction (TYPE dummy1, TYPE dummy2, ...)
   va_start(ap, dummy2);
   if (dummy1 != 888.)
     ASSERT(0);
+#if !defined(__SDCC_pdk14) // Lack of memory
   if (dummy2 != 999.)
     ASSERT(0);
   if (va_arg (ap, TYPE) != 1.)
@@ -39,6 +40,7 @@ void vafunction (TYPE dummy1, TYPE dummy2, ...)
     ASSERT(0);
   if (va_arg (ap, TYPE) != 9.)
     ASSERT(0);
+#endif
   va_end(ap);
 }
 

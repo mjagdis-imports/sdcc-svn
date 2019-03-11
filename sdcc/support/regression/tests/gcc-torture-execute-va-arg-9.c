@@ -58,6 +58,7 @@ f1 (int a1, char* format, ...)
   va_end(ap);
 }
 
+#if !defined(__SDCC_pdk14) // Lack of memory
 void
 f2 (int a1, int a2, char* format, ...)
 {
@@ -223,6 +224,7 @@ f15 (int a1, int a2, int a3, int a4, int a5,
   fap(15, format, ap);
   va_end(ap);
 }
+#endif
 
 void
 testTortureExecute (void)
@@ -231,6 +233,7 @@ testTortureExecute (void)
 
   f0 (f+0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
   f1 (0, f+1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+#if !defined(__SDCC_pdk14) // Lack of memory
   f2 (0, 1, f+2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
   f3 (0, 1, 2, f+3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
   f4 (0, 1, 2, 3, f+4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
@@ -245,6 +248,6 @@ testTortureExecute (void)
   f13 (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, f+13, 13, 14, 15);
   f14 (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, f+14, 14, 15);
   f15 (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, f+15, 15);
-
+#endif
   return;
 }

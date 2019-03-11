@@ -47,6 +47,7 @@ returnSecondArg(int marker, ...)
     return i;
 }
 
+#ifndef __SDCC_pdk14 // Lack of memory
 static {type2}
 returnSecondArgCopy(int marker, ...)
 {
@@ -82,6 +83,7 @@ returnThirdArg(int marker, ...)
     return i;
 }
 #endif
+#endif
 
 void
 testArgs(void)
@@ -92,7 +94,7 @@ testArgs(void)
     LOG(("First arg: %u\n", returnFirstArg(marker, ({type1})123, ({type2})45, ({type3})67)));
     ASSERT(returnFirstArg(marker, ({type1})123, ({type2})45, ({type3})67) == ({type1})123);
     ASSERT(returnFirstArg(marker, ({type1})-123, ({type2})45, ({type3})67) == ({type1})-123);
-
+#ifndef __SDCC_pdk14 // Lack of memory
     ASSERT(returnSecondArg(marker, ({type1})1, ({type2})-23, ({type3})64) == ({type2})-23);
     ASSERT(returnSecondArg(marker, ({type1})1, ({type2})8, ({type3})64) == ({type2})8);
     
@@ -101,6 +103,7 @@ testArgs(void)
 
     ASSERT(returnThirdArg(marker, ({type1})-33, ({type2})-34, ({type3})-35) == ({type3})-35);
     ASSERT(returnThirdArg(marker, ({type1})-33, ({type2})-34, ({type3})35) == ({type3})35);
+#endif
 #endif
 }
 
