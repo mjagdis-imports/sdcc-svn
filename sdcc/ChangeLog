@@ -1,5 +1,14 @@
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c,
+	  src/SDCCglue.c:
+	  Function pointer handling fixes.
+	* support/regression/tests/bp.c,
+	  support/regression/tests/bug-1805702.c:
+	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
+
+2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/ralloc2.cc,
 	  src/pdk/gen.c:
 	  Improve register use.

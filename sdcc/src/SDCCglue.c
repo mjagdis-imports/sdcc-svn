@@ -1461,7 +1461,12 @@ printIvalFuncPtr (sym_link * type, initList * ilist, struct dbuf_s *oBuf)
 
   if (size == FUNCPTRSIZE)
     {
-      if (TARGET_IS_STM8 && FUNCPTRSIZE == 3)
+      if (TARGET_PDK_LIKE)
+        {
+          dbuf_printf (oBuf, "\tret #<%s\n", name);
+          dbuf_printf (oBuf, "\tret #>%s\n", name);
+        }
+      else if (TARGET_IS_STM8 && FUNCPTRSIZE == 3)
         {
           _printPointerType (oBuf, name, size);
           dbuf_printf (oBuf, "\n");

@@ -1238,12 +1238,12 @@ genCall (const iCode *ic)
 
       if (!regalloc_dry_run)
         {
-          emit2 ("mov", "a, #(!tlabel)", labelKey2num (tlbl->key));
+          emit2 ("mov", "a, #<(!tlabel)", labelKey2num (tlbl->key));
           emit2 ("push", "af");
           emit2 ("mov", "a, sp");
           emit2 ("mov", "p, a");
           emit2 ("dec", "p");
-          emit2 ("mov", "a, #(!tlabel >> 8)", labelKey2num (tlbl->key));
+          emit2 ("mov", "a, #>(!tlabel)", labelKey2num (tlbl->key));
           emit2 ("idxm", "p, a");
           G.p.type = AOP_INVALID;
         }
