@@ -190,7 +190,9 @@ machine(struct mne *mp)
         case S_GOTO: {
                 struct expr e;
                 clrexpr(&e);
+                waddrmode =  1;
                 expr(&e, 0);
+                waddrmode =  0;
                 outrwp(&e, def.op, 0x7FF, /*jump=*/1);
                 break;
         }

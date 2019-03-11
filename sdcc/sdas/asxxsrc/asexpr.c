@@ -493,6 +493,9 @@ term(struct expr *esp)
                         c = get();
                 }
                 unget(c);
+                if (is_sdas_target_pdk() && waddrmode) {
+                        n *= 2;
+                }
                 esp->e_addr = rngchk(n);
                 return;
         }

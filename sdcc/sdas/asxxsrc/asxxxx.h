@@ -990,6 +990,8 @@ extern  int     yflag;          /*      -y, enable SDCC Debug Symbols
 
 extern  int     zflag;          /*      -z, disable symbol case sensitivity
                                  */
+extern  int     waddrmode;      /*      WORD Address mode flag
+                                 */
 extern  int     a_bytes;        /*      REL file T Line address length
                                  */
 extern  a_uint  a_mask;         /*      Address Mask

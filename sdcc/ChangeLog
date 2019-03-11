@@ -1,3 +1,13 @@
+2019-03-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk14/pdk14mch.c,
+	  sdas/asxxsrc/asdata.c,
+	  sdas/asxxsrc/asexpr.c,
+	  sdas/asxxsrc/asxxxx.h:
+	  Fix handling of offsets to word addresses, patch by Nicolas Lesser.
+	* src/pdk/gen.c:
+	  Remove workarounds for word address offset handling issue.
+
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
