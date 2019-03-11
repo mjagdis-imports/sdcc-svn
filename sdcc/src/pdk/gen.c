@@ -2810,6 +2810,7 @@ genPointerSet (iCode *ic)
   else
     {
       const asmop *ptr_aop;
+      bool swapped = false;
 
       if (left->aop->type == AOP_IMMD)
         ptr_aop = 0;
@@ -2817,12 +2818,21 @@ genPointerSet (iCode *ic)
       else if (left->aop->type == AOP_DIR && size == 1 || aopInReg (left->aop, 0, P_IDX))
         ptr_aop = left->aop;
 #endif
+      else if (aopInReg (right->aop, 0, P_IDX) && regDead (P_IDX, ic))
+        {
+          ptr_aop = ASMOP_P;
+          cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+          G.p.type = AOP_INVALID;
+          swapped = true;
+        }
       else
         {
           ptr_aop = ASMOP_P;
           cheapMove (ptr_aop, 0, left->aop, 0, !aopInReg (right->aop, 0, A_IDX), true);
           G.p.type = AOP_INVALID;
-          if (!regDead (P_IDX, ic))
+          if (!regDead (P_IDX, ic) || aopInReg (right->aop, 0, P_IDX))
             {
               wassert (regalloc_dry_run);
               cost (1000, 1000);
@@ -2932,7 +2942,7 @@ genPointerSet (iCode *ic)
                     }
                 }
             }
-          else
+          else if (!swapped)
             cheapMove (ASMOP_A, 0, right->aop, i, true, true);
 
           if (!ptr_aop)

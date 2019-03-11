@@ -2,7 +2,7 @@
 
 	* src/pdk/gen.c,
 	  src/SDCCglue.c:
-	  Function pointer handling fixes.
+	  Pointer handling fixes.
 	* support/regression/tests/bp.c,
 	  support/regression/tests/bug-1805702.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
