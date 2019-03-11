@@ -58,7 +58,7 @@ foo (unsigned long *x, int y)
 void
 testTortureExecute (void)
 {
-#ifndef __SDCC_mcs51
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_pdk14) // Lack of memory
   unsigned long a[40];
   int b = 0;
 

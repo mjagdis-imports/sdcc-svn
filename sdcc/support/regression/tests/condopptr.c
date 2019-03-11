@@ -91,6 +91,7 @@ testCondOpPtrTypes1(void)
 void
 testCondOpPtrTypes2(void)
 {
+#if !defined(__SDCC_pdk14) // Lack of memory
   int *ip1;
   int *ip2;
   void *vp1;
@@ -138,6 +139,7 @@ testCondOpPtrTypes2(void)
   /* the char * parameter */
   ASSERT (deref2 (cond ? vp1 : testarray) == 3);
   ASSERT (deref2 (cond ? vp1 : ip1) == 7);
+#endif
 }
 
 int

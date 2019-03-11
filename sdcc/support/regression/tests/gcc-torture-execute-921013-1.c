@@ -16,6 +16,7 @@ void f(int *d, float *x, float *y,int n)
 void
 testTortureExecute (void)
 {
+#if !defined(__SDCC_pdk14) // Lack of memory
   int r[4]={2,2,2,2};
   float a[]={5,1,3,5};
   float b[]={2,4,3,0};
@@ -26,4 +27,5 @@ testTortureExecute (void)
   ASSERT ((a[2]==b[2]) == r[2]);
   ASSERT ((a[3]==b[3]) == r[3]);
   return;
+#endif
 }

@@ -45,15 +45,19 @@ foo (struct B *x, struct B *y)
     ASSERT (0);
 }
 
+#ifndef __SDCC_pdk14 // Lack of memory
 struct B x, y;
+#endif
 
 void
 testTortureExecute (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
   y.b1.c1.d1 = 6;
   y.b1.c3 = 145;
   y.b1.c4 = 2448;
   x.b1.c3 = -1;
   foo (&x, &y);
+#endif
 }
 

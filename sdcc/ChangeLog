@@ -7,29 +7,7 @@
 	  Fix handling of offsets to word addresses, patch by Nicolas Lesser.
 	* src/pdk/gen.c:
 	  Remove workarounds for word address offset handling issue.
-	* support/regression/tests/bitfields.c,
-	  support/regression/tests/bitwise.c,
-	  support/regression/tests/bug-2181.c,
-	  support/regression/tests/bug-2197.c,
-	  support/regression/tests/bug-2569.c,
-	  support/regression/tests/bug-2632.c,
-	  support/regression/tests/bug-2681.c,
-	  support/regression/tests/bug-2712.c,
-	  support/regression/tests/bug-2756.c,
-	  support/regression/tests/bug-2764.c,
-	  support/regression/tests/bug-2833.c,
-	  support/regression/tests/bug-2866.c,
-	  support/regression/tests/bug-3117729.c,
-	  support/regression/tests/bug-3495411.c,
-	  support/regression/tests/bug-499644.c,
-	  support/regression/tests/bug-500536.c,
-	  support/regression/tests/bug-524697.c,
-	  support/regression/tests/bug-927659.c,
-	  support/regression/tests/bug1057979.c,
-	  support/regression/tests/bug1115321.c,
-	  support/regression/tests/bug1520966.c,
-	  support/regression/tests/bug1551947.c,
-	  support/regression/tests/bug2094505.c:
+	* support/regression/tests/*:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 
 2019-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
