@@ -3175,7 +3175,6 @@ genAddrOf (const iCode *ic)
   int size = result->aop->size;
 
   wassert (size == 1 || size == 2);
-
   if (sym->onStack)
     {
       int s = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0) + operandLitValue (right);
@@ -3197,15 +3196,15 @@ genAddrOf (const iCode *ic)
     {
       wassert (size == 2);
 
-      emit2 ("mov", "a, #<(%s + %d)", sym->rname, operandLitValue (right));
+      emit2 ("mov", "a, #<(%s + %d)", sym->rname, (int)operandLitValue (right));
       cost (1, 1);
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
-      emit2 ("mov", "a, #>(%s + 0x8000 + %d)", sym->rname, operandLitValue (right));
+      emit2 ("mov", "a, #>(%s + 0x8000 + %d)", sym->rname, (int)operandLitValue (right));
       cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
     }
   else // In RAM
     {
-      emit2 ("mov", "a, #(%s + %d)", sym->rname, operandLitValue (right));
+      emit2 ("mov", "a, #(%s + %d)", sym->rname, (int)operandLitValue (right));
       cost (1, 1);
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
       if (size == 2)

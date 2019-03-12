@@ -408,7 +408,13 @@ term(struct expr *esp)
                 return;
         }
         if (c == '>' || c == '<') {
+                if (is_sdas_target_pdk()) {
+                        waddrmode = 1;
+                }
                 expr(esp, 100);
+                if (is_sdas_target_pdk()) {
+                        waddrmode = 0;
+                }
                 if (is_abs (esp)) {
                         /*
                          * evaluate byte selection directly

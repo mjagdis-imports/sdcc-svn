@@ -1842,6 +1842,15 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                         r |= R_WORD;
                 }
 
+                /* Some (address) marker bits might have been shifted out of
+                 * range. Revert this and put them back where they belong.
+                 */
+                if (esp->e_addr & ~0xFFFF) {
+                        int marker = esp->e_addr & 0x18000;
+                        esp->e_addr &= ~0x18000;
+                        esp->e_addr |= marker >> 1;
+                }
+
                 /*
                  * Relocatable Destination.  Build FOUR 
                  * byte output: relocatable word, followed
