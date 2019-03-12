@@ -2636,6 +2636,8 @@ genPointerGet (const iCode *ic)
   wassertl (right, "GET_VALUE_AT_ADDRESS without right operand");
   wassertl (IS_OP_LITERAL (right), "GET_VALUE_AT_ADDRESS with non-literal right operand");
 
+  bool pushed_a = false;
+
   bool bit_field = IS_BITVAR (getSpec (operandType (result)));
   int size = result->aop->size;
   int blen, bstr;
@@ -2668,7 +2670,13 @@ genPointerGet (const iCode *ic)
           if (bit_field && blen < 8)
             getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
 
-          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+          if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 <= 0))
+            {
+              pushAF();
+              pushed_a = true;
+            }
+          else
+            cheapMove (result->aop, i, ASMOP_A, 0, true, true);
         }
     }
 #if 0 // TODO: Implement alignment requirements - ldt16 needs 16-bit-aligned operand
@@ -2698,7 +2706,14 @@ genPointerGet (const iCode *ic)
           if (bit_field && blen < 8)
             getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
 
-          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+          if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 <= 0))
+            {
+              pushAF();
+              pushed_a = true;
+            }
+          else
+            cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+
           if (i + 1 != size)
             {
               emit2 ("inc", "%s", aopGet (ptr_aop, 0));
@@ -2715,6 +2730,12 @@ genPointerGet (const iCode *ic)
     }
   else // Generic, but also inefficient.
     {
+      if (!regDead (A_IDX, ic))
+        {
+          pushAF();
+          pushed_a = true;
+        }
+
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           genMove (ASMOP_PA, left->aop, true);
@@ -2730,12 +2751,28 @@ genPointerGet (const iCode *ic)
           if (bit_field && blen < 8)
             getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
 
-          cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+          if (aopInReg (result->aop, i, P_IDX) && (!bit_field ? i + 1 < size : blen - 8 <= 0))
+            {
+              wassert (regalloc_dry_run);
+              cost (200, 200);
+            }
+          else if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 <= 0))
+            {
+              pushAF();
+              pushed_a = true;
+            }
+          else
+            {
+              cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+            }
         }
       goto release;
     }
 
 release:
+  if (pushed_a)
+    popAF();
+
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);

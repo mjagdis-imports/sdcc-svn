@@ -4,6 +4,8 @@
 
 #include <testfwk.h>
 
+#pragma disable_warning 85
+
 long subchar(void *pa, void *pb)
 {
   return *((char *) pa) - *((char *) pb);

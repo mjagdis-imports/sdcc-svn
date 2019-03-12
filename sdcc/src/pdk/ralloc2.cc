@@ -170,6 +170,9 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     (ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(result)) == 1 || ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1) && dying_A)
     return(true);
 
+  if (ic->op == GET_VALUE_AT_ADDRESS && !left_in_A)
+    return(true);
+
   if ((ic->op == '=' || ic->op == CAST) &&
     (getSize(operandType(result)) == 1 || getSize(operandType(result)) == 2 && SPEC_USIGN (getSpec(operandType(right))) && operand_byte_in_reg(result, 1, REG_P, a, i, G)) &&
     right_in_A && (result_dir || dying_A))
