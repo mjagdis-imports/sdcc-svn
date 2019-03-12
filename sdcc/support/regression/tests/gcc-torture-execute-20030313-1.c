@@ -8,6 +8,7 @@
 #pragma std_c99
 #endif
 
+#ifndef __SDCC_pdk14 // Lack of memory
 struct A
 {
   unsigned long p, q, r, s;
@@ -54,6 +55,7 @@ foo (unsigned long *x, int y)
   if (x[10] != 6 || x[11] != 16)
     ASSERT (0);
 }
+#endif
 
 void
 testTortureExecute (void)

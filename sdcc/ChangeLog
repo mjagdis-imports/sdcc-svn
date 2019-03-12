@@ -20,7 +20,13 @@
 	  support/regression/tests/bug-2621.c,
 	  support/regression/tests/bug-2764.c,
 	  support/regression/tests/gcc-torture-execute-pr39501.c,
-	  support/regression/tests/gcc-torture-execute-pr78586.c:
+	  support/regression/tests/gcc-torture-execute-pr78586.c,
+	  support/regression/tests/bug1723128.c,
+	  support/regression/tests/bug3410878.c,
+	  support/regression/tests/ctype.c,
+	  support/regression/tests/gcc-torture-execute-20030313-1.c,
+	  support/regression/tests/p99-conformance.c,
+	  support/regression/tests/scott-compare3.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* support/regression/tests/gcc-torture-execute-divcmp-2.c,
 	  support/regression/tests/staticinit.c:

@@ -74,8 +74,9 @@ void testBug(void)
 #ifndef __SDCC_ds390
 	ASSERT(f(0x55aa55aa) == 0x55aa55aa);
 	ASSERT(f(0x0000ffff) == 0x0000ffff);
-	ASSERT(f(0xffff0001) == 0xffff0001);
 #ifndef __SDCC_pdk14 // Lack of memory
+	ASSERT(f(0xffff0001) == 0xffff0001);
+
 	ASSERT(g(0x55aa55aa) == 0x55aa55aa);
 	ASSERT(g(0x0000ffff) == 0x00000000);
 	ASSERT(g(0xffff0001) == 0x0000ffff);
