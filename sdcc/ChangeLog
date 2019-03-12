@@ -16,7 +16,7 @@
 	* src/SDCCglue.c:
 	  Pointer initialization fix.
 	* src/pdk/gen.c:
-	  Shift fix, pointer read fix, jump table fix.
+	  Shift fix, pointer read fix, jump table fix, negation fix.
 	* src/pdk/ralloc2.cc:
 	  Improve register use at pointer read.
 	* sim/ucsim/pdk.src/inst.cc:

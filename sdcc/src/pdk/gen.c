@@ -948,7 +948,7 @@ genNot (const iCode *ic)
     }
   emit2 ("sub", "a, #0x01");
   emit2 ("mov", "a, #0x00");
-  emit2 ("src", "a");
+  emit2 ("slc", "a");
 
   cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
   genMove_o (result->aop, 1, ASMOP_ZERO, 0, result->aop->size - 1, true);

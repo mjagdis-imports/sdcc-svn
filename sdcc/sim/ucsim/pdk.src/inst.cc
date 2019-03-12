@@ -116,7 +116,11 @@ void cl_pdk::store_io(t_addr addr, unsigned char value) {
 
   switch (addr) {
   case 0x00: regs.flag = (regs.flag & ~0xFF) | (value & 0xFF); break;
-  case 0x02: regs.sp = value; break;
+  case 0x02:
+    regs.sp = value;
+    if (regs.sp > sp_max)
+      sp_max = regs.sp;
+    break;
   case 0x03: regs.clkmd = value; break;
   case 0x04: regs.inten = value; break;
   case 0x05: RESERVE(regs.intrq, 0x8); break;
