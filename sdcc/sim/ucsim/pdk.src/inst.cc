@@ -202,11 +202,11 @@ int cl_pdk::execute(unsigned int code) {
   } else if (CODE_MASK(0x0200, 0xFF)) {
     // ret k
     regs.a = code & 0xFF;
-    regs.sp -= 2;
+    store_io(0x2, regs.sp - 2);
     PC = get_mem(regs.sp) | (get_mem(regs.sp + 1) << 8);
   } else if (code == 0x007A) {
     // ret
-    regs.sp -= 2;
+    store_io(0x2, regs.sp - 2);
     PC = get_mem(regs.sp) | (get_mem(regs.sp + 1) << 8);
   } else if (CODE_MASK(0x2F00, 0xFF)) {
     // mov a, k
@@ -240,12 +240,14 @@ int cl_pdk::execute(unsigned int code) {
     regs.a = mem;
   } else if (code == 0x0072) {
     // pushaf
-    ram->write(regs.sp++, regs.a);
-    ram->write(regs.sp++, regs.flag);
+    ram->write(regs.sp, regs.a);
+    ram->write(regs.sp + 1, regs.flag);
+    store_io(0x2, regs.sp + 2);
   } else if (code == 0x0073) {
     // popaf
-    regs.flag = get_mem(--regs.sp);
-    regs.a = get_mem(--regs.sp);
+    regs.flag = get_mem(regs.sp - 1);
+    regs.a = get_mem(regs.sp - 2);
+    store_io(0x2, regs.sp - 2);
   } else if (CODE_MASK(0x2800, 0xFF)) {
     // add a, k
     regs.a = add_to(regs.a, code & 0xFF);
@@ -488,7 +490,7 @@ int cl_pdk::execute(unsigned int code) {
     ram->write(regs.sp, PC);
     ram->write(regs.sp + 1, PC >> 8);
     PC = code & 0x7FF;
-    regs.sp += 2;
+    store_io(0x2, regs.sp + 2);
   } else if (CODE_MASK(0x3000, 0x7FF)) {
     // goto k
     PC = code & 0x7FF;
