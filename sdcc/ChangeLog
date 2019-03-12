@@ -1,17 +1,22 @@
 2019-03-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/bug-2854.c,
-	  support/regression/tests/gcc-torture-execute-arith-rand-ll.c:
+	  support/regression/tests/gcc-torture-execute-arith-rand-ll.c,
+	  support/regression/tests/bug-2222.c,
+	  support/regression/tests/bug-2231.c,
+	  support/regression/tests/bug-2427.c,
+	  support/regression/tests/bug-2611.c,
+	  support/regression/tests/bug-2890326.c,
+	  support/regression/tests/bug3474855.c,
+	  support/regression/tests/bug3475630.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* support/regression/tests/gcc-torture-execute-divcmp-2.c,
-	  support/regression/tests/staticinit.c,
-	  support/regression/tests/bug-2222.c,
-	  support/regression/tests/bug-2231.c:
+	  support/regression/tests/staticinit.c:
 	  Disable two tests that fail in annoying ways.
 	* src/SDCCglue.c:
 	  Pointer initialization fix.
 	* src/pdk/gen.c:
-	  Shift fix, pointer read fix.
+	  Shift fix, pointer read fix, jump table fix.
 	* src/pdk/ralloc2.cc:
 	  Improve register use at pointer read.
 

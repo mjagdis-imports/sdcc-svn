@@ -3199,7 +3199,7 @@ genJumpTab (const iCode *ic)
 
   cheapMove (ASMOP_A, 0, cond->aop, 0, true, true);
 
-  emit2 ("add", "a, #0x02");
+  emit2 ("add", "a, #0x01");
   emit2 ("pcadd", "a");
   cost (2, 3);
 
