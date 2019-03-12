@@ -511,6 +511,11 @@ static void extra_ic_generated(iCode *ic)
   if(ic->op != EQ_OP && ic->op != NE_OP && ic->op != '<' && ic->op != '>' && ic->op != BITWISEAND)
     return;
 
+  iCode *ifx = ifxForOp(IC_RESULT(ic), ic);
+
+  if (!ifx)
+    return;
+
   // Bitwise and code generation can only do the jump if there is at most one nonzero byte.
   if(ic->op == BITWISEAND)
     {
@@ -524,18 +529,13 @@ static void extra_ic_generated(iCode *ic)
         if(byteOfVal (OP_VALUE(litop), i))
           nonzero++;
 
-      if(nonzero > 1)
+      if(nonzero > 1 && IC_FALSE (ifx))
         return;
     }
 
-  iCode *ifx = ifxForOp(IC_RESULT(ic), ic);
-
-  if(ifx)
-    {
-      OP_SYMBOL(IC_RESULT(ic))->for_newralloc = false;
-      OP_SYMBOL(IC_RESULT(ic))->regType = REG_CND;
-      ifx->generated = true;
-    }
+  OP_SYMBOL(IC_RESULT(ic))->for_newralloc = false;
+  OP_SYMBOL(IC_RESULT(ic))->regType = REG_CND;
+  ifx->generated = true;
 }
 
 template <class T_t, class G_t, class I_t, class SI_t>

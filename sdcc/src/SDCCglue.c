@@ -1731,8 +1731,16 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
 
   if (TARGET_PDK_LIKE && size == 2)
     {
-      dbuf_printf (oBuf, "\tret #<%s\n", val->name);
-      dbuf_printf (oBuf, IN_CODESPACE (SPEC_OCLS (val->etype)) ? "\tret #>(%s + 0x8000)\n" : "\tret #>%s\n", val->name);
+      if (IN_CODESPACE (SPEC_OCLS (val->etype)))
+        {
+          dbuf_printf (oBuf, "\tret #<%s\n", val->name);
+          dbuf_printf (oBuf, "\tret #>(%s + 0x8000)\n", val->name);
+        }
+      else
+        {
+          dbuf_printf (oBuf, "\tret #%s\n", val->name);
+          dbuf_printf (oBuf, "\tret #0\n", val->name);
+        }
     }
   if (size == 1)                /* Z80 specific?? */
     {

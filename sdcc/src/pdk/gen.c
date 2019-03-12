@@ -230,10 +230,12 @@ aopGet(const asmop *aop, int offset)
 
   if (aop->type == AOP_IMMD)
     {
-      if (offset == 0)
+      if (offset == 0 && aop->aopu.code)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else if (offset == 1 && aop->aopu.code)
         SNPRINTF (buffer, sizeof(buffer), "#>(%s + 0x8000 + %d)", aop->aopu.immd, aop->aopu.immd_off);
+      else if (offset == 0)
+        SNPRINTF (buffer, sizeof(buffer), "#(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else
         SNPRINTF (buffer, sizeof(buffer), "#0", aop->aopu.immd, aop->aopu.immd_off);
       return (buffer);
@@ -2193,7 +2195,7 @@ genAnd (const iCode *ic, iCode *ifx)
       left = t;
     }
 
-  if (ifx && result->aop->type == AOP_CND)
+  if (ifx && IC_FALSE (ifx) && result->aop->type == AOP_CND)
     {
       int i, j, nonzero;
 
@@ -2211,7 +2213,6 @@ genAnd (const iCode *ic, iCode *ifx)
               i = j;
               nonzero++;
             }
-
 
       wassertl (nonzero <= 1, "Code generation for jump on bitwise and can handle at most one nonzero byte");
 
@@ -2232,12 +2233,49 @@ genAnd (const iCode *ic, iCode *ifx)
       else
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
-          emit2 ("and", "a, %s", aopGet (right->aop, i));
+          if (!aopIsLitVal (right->aop, i, 1, 0xff))
+            {
+              emit2 ("and", "a, %s", aopGet (right->aop, i));
+              cost (1, 1);
+            }
           emit2 (IC_FALSE  (ifx) ? "cneqsn" : "ceqsn", "a, #0x00");
-          cost (2, 2.5);
+          cost (1, 1.5);
         }
 
       emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+
+      goto release;
+    }
+  else if (ifx && IC_TRUE (ifx) && result->aop->type == AOP_CND)
+    {
+      for (int i = 0; i < right->aop->size; i++)
+        {
+          if (aopInReg (left->aop, i, P_IDX) && bit >= 0)
+            {
+              emit2 ("t0sn", "p, #%d", bit);
+              cost (1, 1.5);
+            }
+          else if (aopInReg (left->aop, i, P_IDX) && regDead (P_IDX, ic) &&
+            (byteOfVal (right->aop->aopu.aop_lit, i) == 0x7f || byteOfVal (right->aop->aopu.aop_lit, i) == 0xfe))
+            {
+              emit2 (byteOfVal (right->aop->aopu.aop_lit, 0) == 0x7f ? "sl" : "sr", "p");
+              emit2 ("t1sn", "f, z");
+              cost (2, 2.5);
+            }
+          else
+            {
+              cheapMove (ASMOP_A, 0, left->aop, i, true, true);
+              if (!aopIsLitVal (right->aop, i, 1, 0xff))
+                {
+                  emit2 ("and", "a, %s", aopGet (right->aop, i));
+                  cost (1, 1);
+                }
+              emit2 ("ceqsn", "a, #0x00");
+              cost (1, 1.5);
+            }
+
+          emitJP (IC_TRUE (ifx), 0.5f);
+        }
 
       goto release;
     }
@@ -3165,17 +3203,13 @@ genAddrOf (const iCode *ic)
       emit2 ("mov", "a, #>(%s + 0x8000 + %d)", sym->rname, operandLitValue (right));
       cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
     }
-  else
+  else // In RAM
     {
-      emit2 ("mov", "a, #<(%s + %d)", sym->rname, operandLitValue (right));
+      emit2 ("mov", "a, #(%s + %d)", sym->rname, operandLitValue (right));
       cost (1, 1);
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true);
       if (size == 2)
-        {
-          emit2 ("mov", "a, #>(%s + %d)", sym->rname, operandLitValue (right));
-          cost (1, 1);
-          cheapMove (result->aop, 1, ASMOP_A, 0, true, true);
-        }
+        cheapMove (result->aop, 1, ASMOP_ZERO, 0, true, true);
     }
 
   freeAsmop (result);

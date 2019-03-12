@@ -12,7 +12,9 @@
 	  support/regression/tests/gcc-torture-execute-20021120-1.c,
 	  support/regression/tests/gcc-torture-execute-20030916-1.c,
 	  support/regression/tests/gcc-torture-execute-20121108-1.c,
-	  support/regression/tests/qsort.c:
+	  support/regression/tests/qsort.c,
+	  support/regression/tests/bug-2188.c,
+	  support/regression/tests/bug-2304.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* support/regression/tests/gcc-torture-execute-divcmp-2.c,
 	  support/regression/tests/staticinit.c:
@@ -25,6 +27,9 @@
 	  Improve register use at pointer read.
 	* sim/ucsim/pdk.src/inst.cc:
 	  Simulator fixes, patches by Nicolas Lesser.
+	* src/pdk/ralloc2.cc,
+	  src/pdk/gen.c:
+	  Improve jump on &.
 
 2019-03-12 Philipp Klaus Krause <pkk AT spth.de>
 
