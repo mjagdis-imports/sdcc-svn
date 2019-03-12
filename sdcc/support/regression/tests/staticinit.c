@@ -6,6 +6,7 @@
 
 #include <testfwk.h>
 
+#ifndef __SDCC_pdk14 // Lack of memory
 /*--------------------------------------------------
    regression test for #1864582:
    multiple definition of char cons w. --model-large
@@ -16,6 +17,7 @@ const char *c = (const char *) "Booting";
 static {type} smallDense[] = {
   1, 2, 3, 4, 5, 6
 };
+#endif
 
 static void
 testSmallDense (void)
@@ -86,6 +88,7 @@ testSmallSparseZero (void)
 #endif
 }
 
+#ifndef __SDCC_pdk14 // TODO Bug ?
 #ifdef __SDCC_mcs51
 __xdata
 #elif __SDCC_pic16
@@ -130,6 +133,7 @@ static {type} largeMixed[] = {
   3, 4, 5, 6, 3, 4, 5, 6,
   3, 4, 5, 6, 3, 4, 5, 6
 };
+#endif
 
 static void
 testLargeMixed (void)
