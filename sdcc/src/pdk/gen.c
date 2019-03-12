@@ -1324,6 +1324,8 @@ genFunction (iCode *ic)
 
   G.stack.param_offset -= (getSize (ftype->next) > 2 || IS_STRUCT (ftype->next)) * 2; // Account for hidden parameter holding address of return value.
 
+  G.p.type = AOP_INVALID;
+
   adjustStack (sym->stack, true, true);
 }
 
@@ -1491,6 +1493,8 @@ genLabel (const iCode *ic)
     debugFile->writeLabel (IC_LABEL (ic), ic);
 
   emitLabel (IC_LABEL (ic));
+
+  G.p.type = AOP_INVALID;
 }
 
 /*-----------------------------------------------------------------*/
