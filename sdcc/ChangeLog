@@ -8,11 +8,15 @@
 	  support/regression/tests/bug-2611.c,
 	  support/regression/tests/bug-2890326.c,
 	  support/regression/tests/bug3474855.c,
-	  support/regression/tests/bug3475630.c:
+	  support/regression/tests/bug3475630.c,
+	  support/regression/tests/gcc-torture-execute-20021120-1.c,
+	  support/regression/tests/gcc-torture-execute-20030916-1.c,
+	  support/regression/tests/gcc-torture-execute-20121108-1.c,
+	  support/regression/tests/qsort.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* support/regression/tests/gcc-torture-execute-divcmp-2.c,
 	  support/regression/tests/staticinit.c:
-	  Disable two tests that fail in annoying ways.
+	  Disable tests that fail in annoying ways.
 	* src/SDCCglue.c:
 	  Pointer initialization fix.
 	* src/pdk/gen.c:
