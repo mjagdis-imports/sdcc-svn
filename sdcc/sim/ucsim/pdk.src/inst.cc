@@ -195,7 +195,7 @@ int cl_pdk::execute(unsigned int code) {
 
   if (code == 0x0000) {
     // nop
-  } else if (CODE_MASK(0x0200, 0x7F)) {
+  } else if (CODE_MASK(0x0200, 0xFF)) {
     // ret k
     regs.a = code & 0xFF;
     regs.sp -= 2;
@@ -325,7 +325,7 @@ int cl_pdk::execute(unsigned int code) {
     int value = get_mem(code & 0x7F);
     store_flag(flag::c, (value & 0x80) >> 7);
     ram->write(code & 0x7F, value << 1);
-  } else if (code == 0x006A) {
+  } else if (code == 0x006C) {
     // src a
     int c = regs.a & 1;
     regs.a >>= 1;
@@ -507,7 +507,7 @@ int cl_pdk::execute(unsigned int code) {
     regs.a = (high << 4) | (regs.a >> 4);
   } else if (code == 0x0067) {
     // pcadd
-    PC += regs.a;
+    PC += regs.a - 1;
   }
   // TODO: engint
   // TODO: disint
