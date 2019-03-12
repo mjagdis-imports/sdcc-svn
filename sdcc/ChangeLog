@@ -6,6 +6,10 @@
 	* support/regression/tests/gcc-torture-execute-divcmp-2.c,
 	  support/regression/tests/staticinit.c:
 	  Disable two tests that fail in annoying ways.
+	* src/SDCCglue.c:
+	  Pointer initialization fix.
+	* src/pdk/gen.c:
+	  Shift fix.
 
 2019-03-12 Philipp Klaus Krause <pkk AT spth.de>
 

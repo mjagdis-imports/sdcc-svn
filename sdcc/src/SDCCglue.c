@@ -1522,14 +1522,15 @@ printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBu
         }
       else if (size == FARPTRSIZE)
         {
-          if (port->use_dw_for_init)
+          if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
             {
-              dbuf_tprintf (oBuf, "\t!dws\n", val->name);
+              dbuf_printf (oBuf, "\tret #<%s\n", val->name);
+              dbuf_printf (oBuf, "\tret #>(%s + 0x8000)\n", val->name);
             }
+          else if (port->use_dw_for_init)
+            dbuf_tprintf (oBuf, "\t!dws\n", val->name);
           else
-            {
-              printPointerType (oBuf, val->name);
-            }
+            printPointerType (oBuf, val->name);
         }
       else if (size == GPTRSIZE)
         {
@@ -1652,7 +1653,7 @@ printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBu
 /* printIvalPtr - generates initial value for pointers             */
 /*-----------------------------------------------------------------*/
 void
-printIvalPtr (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf)
+printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
 {
   value *val;
   int size;
@@ -1728,6 +1729,11 @@ printIvalPtr (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oB
 
   size = getSize (type);
 
+  if (TARGET_PDK_LIKE && size == 2)
+    {
+      dbuf_printf (oBuf, "\tret #<%s\n", val->name);
+      dbuf_printf (oBuf, IN_CODESPACE (SPEC_OCLS (val->etype)) ? "\tret #>(%s + 0x8000)\n" : "\tret #>%s\n", val->name);
+    }
   if (size == 1)                /* Z80 specific?? */
     {
       dbuf_tprintf (oBuf, "\t!dbs\n", val->name);

@@ -2387,13 +2387,12 @@ genLeftShift (const iCode *ic)
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
     
       cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
-      emit2 ("add", "a, #0x01");
-      cost (1, 1);
       emitLabel (tlbl1);
-      emit2 ("dzsn", "a");
+      emit2 ("sub", "a, #1");
+      emit2 ("t0sn", "f, c");
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
-      cost (2, 2);
+      cost (3, 3);
     
       for(int i = 0; i < size; i++)
         {
@@ -2524,13 +2523,12 @@ genRightShift (const iCode *ic)
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
     
       cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
-      emit2 ("add", "a, #0x01");
-      cost (1, 1);
       emitLabel (tlbl1);
-      emit2 ("dzsn", "a");
+      emit2 ("sub", "a, #1");
+      emit2 ("t0sn", "f, c");
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
-      cost (2, 2);
+      cost (3, 3);
         
       // Padauk has no arithmetic right shift instruction.
       // So we need this 4-instruction sequence here.
