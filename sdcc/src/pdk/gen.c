@@ -2041,6 +2041,49 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   freeAsmop (result);
 }
 
+static void
+genXorByte (const asmop *result_aop, const asmop *left_aop, const asmop *right_aop, int i, bool *pushed_a, bool a_dead, bool p_dead)
+{
+  if ((aopInReg (left_aop, i, A_IDX) || aopInReg (left_aop, i, P_IDX) || left_aop->type == AOP_DIR) &&
+    aopIsLitVal (right_aop, i, 1, 0xff) && aopSame (result_aop, i, left_aop, i, 1))
+    {
+      emit2 ("not", "%s", aopGet (left_aop, i));
+      cost (1, 1);
+    }
+  else if (aopIsLitVal (right_aop, i, 1, 0x00))
+    {
+      cheapMove (result_aop, i, left_aop, i, a_dead, true);
+    }
+  else
+    {
+      if (!a_dead && !*pushed_a)
+        {
+          pushAF();
+          *pushed_a = true;
+        }
+      if (right_aop->type == AOP_STK)
+        {
+          if (!p_dead || aopInReg (left_aop, i, P_IDX))
+            {
+              cost (100, 100);
+              wassert (regalloc_dry_run);
+            }
+          cheapMove (ASMOP_A, 0, left_aop, i, true, true);
+          cheapMove (ASMOP_P, 0, right_aop, i, false, true);
+          emit2 ("xor", "a, p");
+          cost (1, 1);
+          cheapMove (result_aop, i, ASMOP_A, 0, true, true);
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left_aop, i, true, true);
+          emit2 ("xor", "a, %s", aopGet (right_aop, i));
+          cost (1, 1);
+          cheapMove (result_aop, i, ASMOP_A, 0, true, true);
+        }
+    }
+}
+
 /*-----------------------------------------------------------------*/
 /* genXor - code for or                                             */
 /*-----------------------------------------------------------------*/
@@ -2058,6 +2101,7 @@ genXor (const iCode *ic)
   aopOp (result, ic);
 
   int size = result->aop->size;
+  int skip_byte = -1;
 
   /* Swap if left is literal or right is in A. */
   if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || aopInReg (right->aop, 1, A_IDX) || right->aop->type == AOP_STK)
@@ -2071,46 +2115,21 @@ genXor (const iCode *ic)
   bool pushed_a = false;
 
   for (int i = 0; i < size; i++)
-    {
-      if ((aopInReg (left->aop, i, A_IDX) || aopInReg (left->aop, i, P_IDX) || left->aop->type == AOP_DIR) &&
-        aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (result->aop, i, left->aop, i, 1))
-        {
-          emit2 ("not", "%s", aopGet (left->aop, i));
-          cost (1, 1);
-        }
-      else if (aopIsLitVal (right->aop, i, 1, 0x00))
-        {
-          cheapMove (result->aop, i, left->aop, i, a_free, true);
-        }
-      else
-        {
-          if (!a_free && !pushed_a)
-            {
-              pushAF();
-              pushed_a = true;
-            }
+    if (aopInReg (left->aop, i, A_IDX))
+      {
+        genXorByte (result->aop, left->aop, right->aop, i, &pushed_a, a_free, regDead (P_IDX, ic));
+        skip_byte = i;
 
-          if (right->aop->type == AOP_STK)
-            {
-              if (!regDead (P_IDX, ic) || aopInReg (left->aop, i, P_IDX))
-                {
-                  cost (100, 100);
-                  wassert (regalloc_dry_run);
-                }
-              cheapMove (ASMOP_A, 0, left->aop, i, true, true);
-              cheapMove (ASMOP_P, 0, right->aop, i, false, true);
-              emit2 ("xor", "a, p");
-              cost (1, 1);
-              cheapMove (result->aop, i, ASMOP_A, 0, true, true);
-            }
-          else
-            {
-              cheapMove (ASMOP_A, 0, left->aop, i, true, true);
-              emit2 ("xor", "a, %s", aopGet (right->aop, i));
-              cost (1, 1);
-              cheapMove (result->aop, i, ASMOP_A, 0, true, true);
-            }
-        }
+        if (aopInReg (result->aop, i, A_IDX))
+          a_free = false;
+      }
+
+  for (int i = 0; i < size; i++)
+    {
+      if (i == skip_byte)
+        continue;
+
+      genXorByte (result->aop, left->aop, right->aop, i, &pushed_a, a_free, regDead (P_IDX, ic));
 
       if (aopInReg (result->aop, i, A_IDX))
         a_free = false;
