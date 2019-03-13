@@ -2254,7 +2254,11 @@ genAnd (const iCode *ic, iCode *ifx)
     {
       for (int i = 0; i < right->aop->size; i++)
         {
-          if (aopInReg (left->aop, i, P_IDX) && bit >= 0)
+          int bit = right->aop->type == AOP_LIT ? isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) : - 1;
+
+          if (aopIsLitVal (right->aop, i, 1, 0x00))
+            continue;
+          else if (aopInReg (left->aop, i, P_IDX) && bit >= 0)
             {
               emit2 ("t0sn", "p, #%d", bit);
               cost (1, 1.5);
