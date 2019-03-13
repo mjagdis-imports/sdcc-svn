@@ -13,13 +13,19 @@
 	  support/regression/tests/bug2862650.c,
 	  support/regression/tests/bug2935162.c,
 	  support/regression/tests/bug3027957.c,
-	  support/regression/tests/bug3183823.c:
+	  support/regression/tests/bug3183823.c,
+	  support/regression/tests/bug3381400.c,
+	  support/regression/tests/bug3424150.c,
+	  support/regression/tests/bug3564104.c,
+	  support/regression/tests/bugs-1596270-1736867.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.h,
 	  src/pdk/gen.c:
 	  Fix arithmetic right shift, jump on &, static function pointer initalization, zeroing of bit-fields, ==.
 	* src/SDCCglue.c:
 	  Fix pdk pointer initalization corner case.
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix ov.
 
 2019-03-12 Philipp Klaus Krause <pkk AT spth.de>
 

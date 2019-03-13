@@ -34,7 +34,7 @@ unsigned char cl_pdk::add_to(unsigned char initial, int value, bool carry) {
   store_flag(flag::ac, (initial & 0xF) + (value & 0xF) + carry > 0xF);
   store_flag(
       flag::ov,
-      get_flag(flag::c) ^ ((initial & 0x7F) + (initial & 0x7F) + carry > 0x7F));
+      get_flag(flag::c) ^ ((initial & 0x7F) + (value & 0x7F) + carry > 0x7F));
 
   return initial + value + carry;
 }
@@ -43,7 +43,9 @@ unsigned char cl_pdk::sub_to(unsigned char initial, int value, bool carry) {
   store_flag(flag::z, initial - value - carry == 0);
   store_flag(flag::c, initial < value + carry);
   store_flag(flag::ac, (value & 0xF) > (initial & 0xF) - carry);
-  store_flag(flag::ov, get_flag(flag::c) && initial >> 7);
+  store_flag(
+      flag::ov,
+      get_flag(flag::c) ^ ((initial & 0x7F) - (value & 0x7F) - carry < 0));
 
   return initial - value - carry;
 }
