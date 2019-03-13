@@ -1005,6 +1005,11 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
       if (!started && right_aop->type == AOP_LIT && aopIsLitVal (right_aop, i, 1, 0x00))
         {
           cheapMove (result_aop, i, left_aop, i, regDead (A_IDX, ic), true);
+          if (aopInReg (result_aop, i, A_IDX) && i + 1 < size)
+            {
+              pushAF();
+              pushed_a = true;
+            }
           continue;
         }
       else if (!started && i + 1 == size && aopIsLitVal (left_aop, i, 1, 0x00) &&
@@ -1564,6 +1569,11 @@ genPlus (const iCode *ic)
       else if (!started && right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i, 1, 0x00))
         {
           cheapMove (result->aop, i, left->aop, i, regDead (A_IDX, ic), true);
+          if (aopInReg (result->aop, i, A_IDX) && i + 1 < size)
+            {
+              pushAF();
+              pushed_a = true;
+            }
           continue;
         }
 

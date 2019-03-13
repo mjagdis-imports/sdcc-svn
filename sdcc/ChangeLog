@@ -4,10 +4,12 @@
 	  support/regression/tests/gcc-torture-execute-pr41750.c,
 	  support/regression/tests/gcc-torture-execute-pr42833.c,
 	  support/regression/tests/gcc-torture-execute-pr43236.c,
-	  support/regression/tests/gcc-torture-execute-pr44575.c:
+	  support/regression/tests/gcc-torture-execute-pr44575.c,
+	  support/regression/tests/gcc-torture-execute-20030717-1.c,
+	  support/regression/tests/gcc-torture-execute-20031204-1.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.c:
-	  Fix read from signed bit-field.
+	  Fix read from signed bit-field, fix +/- lower esult byte in a.
 
 2019-03-13 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
