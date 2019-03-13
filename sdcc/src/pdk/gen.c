@@ -2015,8 +2015,11 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       cheapMove (result->aop, 0, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true, true);
       emitJP(endlbl, 0.0f);
       emitLabel (lbl_ne);
-      emit2 ("push", "af");
-      cost (1, 1);
+      if (!regDead (A_IDX, ic))
+        {
+          emit2 ("push", "af");
+          cost (1, 1);
+        }
       cheapMove (result->aop, 0, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, 0, true, true);
       emitLabel (endlbl);
       if (!regDead (A_IDX, ic))
