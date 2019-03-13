@@ -5,8 +5,9 @@
 	  support/regression/tests/bug-441448.c,
 	  support/regression/tests/bug-460010.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
-	* src/pdk/gen.c:
-	  Fix arithmetic right shift, jump on &.
+	* src/pdk/gen.h,
+	  src/pdk/gen.c:
+	  Fix arithmetic right shift, jump on &, static function pointer initalization.
 
 2019-03-12 Philipp Klaus Krause <pkk AT spth.de>
 

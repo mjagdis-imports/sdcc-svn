@@ -232,6 +232,8 @@ aopGet(const asmop *aop, int offset)
     {
       if (offset == 0 && aop->aopu.code)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
+      else if (offset == 1 && aop->aopu.func)
+        SNPRINTF (buffer, sizeof(buffer), "#>(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else if (offset == 1 && aop->aopu.code)
         SNPRINTF (buffer, sizeof(buffer), "#>(%s + 0x8000 + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else if (offset == 0)
@@ -313,6 +315,7 @@ aopForSym (const iCode *ic, symbol *sym)
       aop->aopu.immd = sym->rname;
       aop->aopu.immd_off = 0;
       aop->aopu.code = IN_CODESPACE (SPEC_OCLS (sym->etype));
+      aop->aopu.func = true;
       aop->size = getSize (sym->type);
     }
   /* Assign depending on the storage class */

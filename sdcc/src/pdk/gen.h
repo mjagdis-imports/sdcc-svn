@@ -73,6 +73,7 @@ typedef struct asmop
         char *immd;
         int immd_off;
         bool code; /* in code space */
+        bool func; /* function address */
       };
     char *aop_dir;
     asmop_byte bytes[8];
