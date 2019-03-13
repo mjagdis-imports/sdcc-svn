@@ -17,11 +17,21 @@
 	  support/regression/tests/bug3381400.c,
 	  support/regression/tests/bug3424150.c,
 	  support/regression/tests/bug3564104.c,
-	  support/regression/tests/bugs-1596270-1736867.c:
+	  support/regression/tests/bugs-1596270-1736867.c,
+	  support/regression/tests/gcc-torture-execute-postmod-1.c,
+	  support/regression/tests/gcc-torture-execute-pr15262.c,
+	  support/regression/tests/gcc-torture-execute-pr15296.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/gcc-torture-execute-pr20527-1.c,
+	  support/regression/tests/gcc-torture-execute-pr20601-1.c,
+	  support/regression/tests/gcc-torture-execute-pr27073.c,
+	  support/regression/tests/gcc-torture-execute-pr27260.c,
+	  support/regression/tests/gcc-torture-execute-pr27285.c,
+	  support/regression/tests/gcc-torture-execute-pr28982a.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.h,
 	  src/pdk/gen.c:
-	  Fix arithmetic right shift, jump on &, static function pointer initalization, zeroing of bit-fields, ==.
+	  Fix arithmetic right shift, jump on &, static function pointer initalization, zeroing of bit-fields, ==, bit-field write from register p.
 	* src/SDCCglue.c:
 	  Fix pdk pointer initalization corner case.
 	* sim/ucsim/pdk.src/inst.cc:

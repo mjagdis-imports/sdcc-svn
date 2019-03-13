@@ -20,7 +20,7 @@ struct T
   char **t3;
 };
 
-#if defined (__SDCC) && !defined (__SDCC_mcs51)
+#if defined (__SDCC) && !defined (__SDCC_mcs51) && !defined (__SDCC_pdk14) // Lack of memory
 int a[5];
 int b;
 const char **c;

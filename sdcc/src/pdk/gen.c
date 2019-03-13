@@ -3036,7 +3036,8 @@ genPointerSet (iCode *ic)
                   cost (1, 1);
                   if (ptr_aop && aopInReg (ptr_aop, 0, P_IDX))
                     pushAF ();
-                  cheapMove (ASMOP_A, 0, right->aop, i, true, true);
+                  if (!aopInReg (right->aop, i, P_IDX)) // xch above would already have brought it into a.
+                    cheapMove (ASMOP_A, 0, right->aop, i, true, true);
                   if (bstr >= 4)
                     {
                       emit2 ("swap", "a");
