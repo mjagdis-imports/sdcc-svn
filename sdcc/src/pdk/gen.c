@@ -2471,6 +2471,8 @@ genRightShift (const iCode *ic)
   aopOp (right, ic);
   aopOp (result, ic);
 
+  bool pushed_a = false;
+
   int size = result->aop->size;
 
   if (right->aop->type == AOP_LIT)
@@ -2511,13 +2513,17 @@ genRightShift (const iCode *ic)
               shCount -= 4;
               continue;
             }
-              
+
+          if (!SPEC_USIGN (getSpec (operandType (left))) && (loop || !regDead (A_IDX, ic)))
+            {
+              pushAF();
+              pushed_a = true;
+            }
+
           // Padauk has no arithmetic right shift instructions.
           // So we need this emulation sequence here.
           if (!SPEC_USIGN (getSpec (operandType (left))))
             {
-              if (loop || !regDead (A_IDX, ic))
-                pushAF();
               if (aopInReg (result->aop, size - 1, A_IDX))
                 {
                   wassert (regalloc_dry_run);
@@ -2530,8 +2536,6 @@ genRightShift (const iCode *ic)
               emit2 ("src", aopGet (result->aop, size - 1));
               emit2 ("src", aopGet (result->aop, size - 1));
               cost (6, 6);
-              if (loop || !regDead (A_IDX, ic))
-                popAF();
             }
           else
             {
@@ -2541,14 +2545,25 @@ genRightShift (const iCode *ic)
         
           for(int i = size - 2; i >= 0; i--)
             {
+              if (pushed_a && aopInReg (result->aop, i, A_IDX))
+                {
+                  wassert (regalloc_dry_run);
+                  cost (500, 500);
+                }
               emit2 ("src", "%s", aopGet (result->aop, i));
               cost (1, 1);
             }
+
           shCount--;
         }
 
       if (loop)
         {
+          if (pushed_a)
+            {
+              popAF();
+              pushed_a = false;
+            }
           emit2 ("dzsn", "a");
           if (!regalloc_dry_run)
             emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
@@ -2566,21 +2581,30 @@ genRightShift (const iCode *ic)
     
       cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
       emitLabel (tlbl1);
+
       emit2 ("sub", "a, #1");
       emit2 ("t0sn", "f, c");
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
       cost (3, 3);
-        
-      // Padauk has no arithmetic right shift instruction.
-      // So we need this 4-instruction sequence here.
+
       if (!SPEC_USIGN (getSpec (operandType (left))))
         {
+          pushAF();
+          pushed_a = true;
+        }
+
+      // Padauk has no arithmetic right shift instructions.
+      // So we need this emulation sequence here.
+      if (!SPEC_USIGN (getSpec (operandType (left))))
+        {
+          emit2 ("mov", "a, #0x01");
           emit2 ("sl", aopGet (result->aop, size - 1));
-          emit2 ("addc", aopGet (result->aop, size - 1));
+          emit2 ("t0sn", "f, c");
+          emit2 ("or", "%s, a", aopGet (result->aop, size - 1));
           emit2 ("src", aopGet (result->aop, size - 1));
           emit2 ("src", aopGet (result->aop, size - 1));
-          cost (4, 4);
+          cost (6, 6);
         }
       else
         {
@@ -2593,6 +2617,12 @@ genRightShift (const iCode *ic)
           emit2 ("src", "%s", aopGet (result->aop, i));
           cost (1, 1);
         }
+
+      if (!SPEC_USIGN (getSpec (operandType (left))))
+        {
+          popAF();
+          pushed_a = false;
+        }
     
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl1->key));
@@ -2600,6 +2630,9 @@ genRightShift (const iCode *ic)
 
       emitLabel (tlbl2);
     }
+
+  if (pushed_a)
+    popAF();
 
 release:
   freeAsmop (right);
