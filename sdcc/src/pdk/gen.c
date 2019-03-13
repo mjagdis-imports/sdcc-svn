@@ -1059,7 +1059,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cost (1, 1);
           started = true;
         }
-      else if (started && (right_aop->type == AOP_LIT && !aopIsLitVal (right_aop, i, 1, 0x00) || right_aop->type == AOP_IMMD))
+      else if (started && (right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD) && !aopIsLitVal (right_aop, i, 1, 0x00))
         {
           cheapMove (ASMOP_P, 0, right_aop, i, !aopInReg (left_aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left_aop, i, true, false);
@@ -1587,7 +1587,7 @@ genPlus (const iCode *ic)
           emit2 (started ? "addc" : "add", "a, p");
           cost (1, 1);
         }
-      else if (started && (right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00) || right->aop->type == AOP_IMMD))
+      else if (started && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && !aopIsLitVal (right->aop, i, 1, 0x00))
         {
           cheapMove (ASMOP_P, 0, right->aop, i, !aopInReg (left->aop, i, A_IDX), false);
           cheapMove (ASMOP_A, 0, left->aop, i, true, false);
@@ -2535,7 +2535,7 @@ genRightShift (const iCode *ic)
           // So we need this emulation sequence here.
           if (!SPEC_USIGN (getSpec (operandType (left))))
             {
-              if (aopInReg (result->aop, size - 1, A_IDX))
+              if (aopInReg (result->aop, size - 1, A_IDX) || aopInReg (result->aop, 0, A_IDX))
                 {
                   wassert (regalloc_dry_run);
                   cost (500, 500);

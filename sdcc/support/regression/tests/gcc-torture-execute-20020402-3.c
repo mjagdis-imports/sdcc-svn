@@ -10,8 +10,7 @@
 
 #define NULL ((void *) 0)
 
-// Todo: Enable when long long comes to these ports!
-#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
+#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk14) // Lack of memory
 
 /* extracted from gdb sources */
 
