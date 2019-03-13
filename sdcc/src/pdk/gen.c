@@ -2062,7 +2062,8 @@ genXor (const iCode *ic)
 
   for (int i = 0; i < size; i++)
     {
-      if ((aopInReg (left->aop, i, A_IDX) || aopInReg (left->aop, i, P_IDX) || left->aop->type == AOP_DIR) && aopIsLitVal (right->aop, i, 1, 0xff))
+      if ((aopInReg (left->aop, i, A_IDX) || aopInReg (left->aop, i, P_IDX) || left->aop->type == AOP_DIR) &&
+        aopIsLitVal (right->aop, i, 1, 0xff) && aopSame (result->aop, i, left->aop, i, 1))
         {
           emit2 ("not", "%s", aopGet (left->aop, i));
           cost (1, 1);

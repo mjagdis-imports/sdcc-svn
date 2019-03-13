@@ -30,11 +30,17 @@
 	  support/regression/tests/gcc-torture-execute-pr28982a.c,
 	  support/regression/tests/condopptr.c,
 	  support/regression/tests/constantRange.c,
-	  support/regression/tests/frexpf.c:
+	  support/regression/tests/frexpf.c,
+	  support/regression/tests/gcc-torture-execute-20000603-1.c,
+	  support/regression/tests/gcc-torture-execute-20000717-4.c,
+	  support/regression/tests/gcc-torture-execute-20000731-1.c,
+	  support/regression/tests/gcc-torture-execute-20001024-1.c,
+	  support/regression/tests/gcc-torture-execute-20010910-1.c,
+	  support/regression/tests/gcc-torture-execute-20010915-1.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.h,
 	  src/pdk/gen.c:
-	  Fix arithmetic right shift, jump on &, static function pointer initalization, zeroing of bit-fields, ==, bit-field write from register p, bit-field write with non-dead register p.
+	  Fix arithmetic right shift, jump on &, static function pointer initalization, zeroing of bit-fields, ==, bit-field write from register p, bit-field write with non-dead register p, ^.
 	* src/SDCCglue.c:
 	  Fix pdk pointer initalization corner case.
 	* sim/ucsim/pdk.src/inst.cc:
