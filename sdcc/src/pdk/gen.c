@@ -1836,7 +1836,7 @@ genCmp (const iCode *ic, iCode *ifx)
                  {
                    if (aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic))
                      {
-                       emit2 ("ceqsn", "a, #0x80");
+                       emit2 ("cneqsn", "a, #0x80");
                        emit2 ("nop", "");
                        cost (2, 2);
                      }
@@ -2693,12 +2693,13 @@ static void getBitFieldByte (int len, int str, bool sex)
   if (sex)
     {
       symbol *const tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-      emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - len));
-      emit2 ("t1sn", "f, c");
+      emit2 ("cneqsn", "a, #0x%02x", 0x80 >> (8 - len));
+      emit2 ("nop", "");
+      emit2 ("t0sn", "f, c");
       if (tlbl)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
       emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - len)) & 0xff);
-      cost (4, 4);
+      cost (5, 5);
       emitLabel (tlbl);
     }
 }
