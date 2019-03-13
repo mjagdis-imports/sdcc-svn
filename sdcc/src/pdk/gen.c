@@ -2877,6 +2877,8 @@ genPointerSet (iCode *ic)
   aopOp (left, ic);
   aopOp (right, ic);
 
+  bool pushed_p = false;
+
   bool bit_field = IS_BITVAR (getSpec (operandType (right))) || IS_BITVAR (getSpec (operandType (left)));
   int size = right->aop->size;
 
@@ -2910,8 +2912,12 @@ genPointerSet (iCode *ic)
     {
       if (!regDead (P_IDX, ic))
         {
-          wassert (regalloc_dry_run);
-          cost (1000, 1000);
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+          pushAF ();
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+          pushed_p = true;
         }
       for (int i = 0; i < size; i++)
         {
@@ -3034,6 +3040,11 @@ genPointerSet (iCode *ic)
 
                   emit2 ("xch", "a, p");
                   cost (1, 1);
+                  if (!regDead (P_IDX, ic) && !pushed_p)
+                    {
+                      pushAF ();
+                      pushed_p = true;
+                    }
                   if (ptr_aop && aopInReg (ptr_aop, 0, P_IDX))
                     pushAF ();
                   if (!aopInReg (right->aop, i, P_IDX)) // xch above would already have brought it into a.
@@ -3082,6 +3093,15 @@ genPointerSet (iCode *ic)
               cost (1, 1);
             }
         }
+    }
+
+  if (pushed_p)
+    {
+      emit2 ("xch", "a, p");
+      cost (1, 1);
+      popAF ();
+      emit2 ("xch", "a, p");
+      cost (1, 1);
     }
 
   freeAsmop (right);
