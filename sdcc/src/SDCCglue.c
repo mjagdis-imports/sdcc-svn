@@ -770,12 +770,7 @@ static void printIvalVal(struct dbuf_s *oBuf, value *val, int size, bool newline
 static void
 _printPointerType (struct dbuf_s *oBuf, const char *name, int size)
 {
-  if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
-    {
-      dbuf_printf (oBuf, "\tret #%s\n", name);
-      dbuf_printf (oBuf, "\tret #(%s >> 8)", name);
-      return;
-    }
+  wassert (!TARGET_PDK_LIKE);
 
   if (size == 4)
     {
@@ -1739,10 +1734,10 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
       else
         {
           dbuf_printf (oBuf, "\tret #%s\n", val->name);
-          dbuf_printf (oBuf, "\tret #0\n", val->name);
+          dbuf_printf (oBuf, "\tret #0\n");
         }
     }
-  if (size == 1)                /* Z80 specific?? */
+  else if (size == 1)                /* Z80 specific?? */
     {
       dbuf_tprintf (oBuf, "\t!dbs\n", val->name);
     }
