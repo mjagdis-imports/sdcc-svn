@@ -17,11 +17,20 @@
 	  support/regression/tests/gcc-torture-execute-pr61306-2.c,
 	  support/regression/tests/gcc-torture-execute-pr64979.c,
 	  support/regression/tests/gcc-torture-execute-pr78378.c,
-	  support/regression/tests/gcc-torture-execute-pr79121.c:
-	  support/regression/tests/onebyte.c
+	  support/regression/tests/gcc-torture-execute-pr79121.c,
+	  support/regression/tests/onebyte.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-12.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-15.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-16.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-18.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-26.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-5.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-6.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-9.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.c:
-	  Fix non-dead-register bugs.
+	  Fix non-dead-register bugs, fix a carry issue.
 
 2019-03-14 Philipp Klaus Krause <pkk AT spth.de>
 
