@@ -48,10 +48,12 @@ testSparseSwitch(void)
   ASSERT(sparseSwitch(6) == 14);
   ASSERT(sparseSwitch(12) == 14);
   ASSERT(sparseSwitch(13) == 19);
+#ifndef __SDCC_pdk14 // Lack of memory
   ASSERT(sparseSwitch(14) == 19);
   ASSERT(sparseSwitch(15) == 19);
   ASSERT(sparseSwitch(19) == 30);
   ASSERT(sparseSwitch(0) == 30);
+#endif
 }
 
 #ifndef __SDCC_pdk14 // Lack of memory

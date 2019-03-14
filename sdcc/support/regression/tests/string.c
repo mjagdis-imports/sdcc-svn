@@ -15,6 +15,7 @@
 static void 
 do_teststrcmp (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
   int result = strcmp ("", "");
   ASSERT (result == 0);
   
@@ -29,6 +30,7 @@ do_teststrcmp (void)
 
   result = strcmp ("aa", "ab");
   ASSERT (result < 0);
+#endif
 }
 
 /** tests for strcpy
@@ -172,6 +174,7 @@ do_teststrtok (void)
 static void
 do_utf_8 (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if defined(__STDC_VERSION) && __STDC_VERSION >= 201112L
   const char *str1 = u8"Ä ä";
   const char *str2 = u8"\u00c4 ä";
@@ -185,6 +188,7 @@ do_utf_8 (void)
   ASSERT (!strcmp (str1, str3));
   ASSERT (!strcmp (str1, str4));
   ASSERT (!strcmp (str1, str5));
+#endif
 #endif
 }
 
@@ -220,7 +224,6 @@ do_utf_8_sdcc (void)
 static void
 do_utf_16 (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
 #ifdef __STDC_UTF_16__
   const char16_t *str1 = u"Ä ä";
   const char16_t *str2 = u"\u00c4 ä";
@@ -234,7 +237,6 @@ do_utf_16 (void)
   ASSERT (!memcmp (str1, str3, 4 * sizeof(char16_t)));
   ASSERT (!memcmp (str1, str4, 4 * sizeof(char16_t)));
   ASSERT (!memcmp (str1, str5, 4 * sizeof(char16_t)));
-#endif
 #endif
 }
 

@@ -666,7 +666,12 @@ printChar16 (struct dbuf_s *oBuf, const TYPE_TARGET_UINT *s, int plen)
 
   while (pplen < plen)
     {
-      if (port->little_endian)
+      if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
+        {
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (*s >> 0) & 0xff);
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (*s >> 8) & 0xff);
+        }
+      else if (port->little_endian)
         dbuf_printf (oBuf, "\t.byte %d,%d\n", (*s >> 0) & 0xff, (*s >> 8) & 0xff);
       else
         dbuf_printf (oBuf, "\t.byte %d,%d\n", (*s >> 8) & 0xff, (*s >> 0) & 0xff);
@@ -691,7 +696,14 @@ printChar32 (struct dbuf_s *oBuf, const TYPE_TARGET_ULONG *s, int plen)
 
   while (pplen < plen)
     {
-      if (port->little_endian)
+      if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
+        {
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (*s >> 0) & 0xff);
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (*s >> 8) & 0xff);
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (*s >> 16) & 0xff);
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (*s >> 24) & 0xff);
+        }
+      else if (port->little_endian)
         dbuf_printf (oBuf, "\t.byte %d,%d,%d,%d\n", (*s >> 0) & 0xff, (*s >> 8) & 0xff, (*s >> 16) & 0xff, (*s >> 24) & 0xff);
       else
         dbuf_printf (oBuf, "\t.byte %d,%d,%d,%d\n", (*s >> 24) & 0xff, (*s >> 16) & 0xff, (*s >> 8) & 0xff,(*s >> 0) & 0xff);

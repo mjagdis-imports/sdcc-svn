@@ -7,6 +7,15 @@
 	  src/pdk/gen.c,
 	  src/pdk/ralloc2.cc:
 	  Improve read of 16-bit value via pointer.
+	* support/regression/tests/gcc-torture-execute-pure-1.c,
+	  support/regression/tests/gcc-torture-execute-string-opt-18.c,
+	  support/regression/tests/io.c,
+	  support/regression/tests/key.c,
+	  support/regression/tests/string.c,
+	  support/regression/tests/switch.c:
+	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
+	* src/SDCCglue.c:
+	  Fix UTF-16 and UTF-16 string literals for pdk.
 
 2019-03-14 Philipp Klaus Krause <pkk AT spth.de>
 
