@@ -26,28 +26,49 @@
 ;  might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-.module __gptrget
+.module __gptrget2
 .area CODE
 
-__gptrget::
+__gptrget2::
 	sub	a, #0x80
 	t1sn	f, c
 	goto	code
 
 	; Pointer to RAM
 	idxm	a, p
+	push	af
+	inc	p
+	idxm	a, p
+	mov	p, a
+	pop	af
 	ret
 
 	; Pointer to ROM
 code:
-	; Put pointer on stack
 	xch	a, p
-	push	af	; Put lower byte of pointer on stack.
-	mov	a, sp
-	add	a, #-1
-	xch	a, p
-	idxm	p, a	; Put upper byte of pointer on stack.
+	push	af	; Put lower byte of pointer to first byte of value on stack.
+	call	code2	; Put return value for the ret at second byte of value on stack.
 
-	; Jump to it. ret there will return from the call to __gprtget
+	mov	p, a
+	; Jump to lower byte. ret there will return from the call to __gptrget2
+	ret
+
+code2:
+	add	a, #1
+	push	af	; Put lower byte of pointer to second byte of value on stack.
+	mov	a, sp
+	add	a, #-5
+	xch	a, p
+	idxm	p, a	; Put upper byte of pointer to first byte of value on stack.
+	pop	af
+	push	af
+	idxm	a, p
+	addc	a
+	xch	a, p
+	add	a, #4
+	xch	a, p
+	idxm	p, a	; Put lower byte of pointer to second byte of value on stack.
+
+	; Jump to upper byte. ret there will return from the call to code2
 	ret
 

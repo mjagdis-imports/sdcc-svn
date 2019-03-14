@@ -167,7 +167,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(true);
 
   if (ic->op == RETURN ||
-    (ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(result)) == 1 || ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1) && dying_A)
+    (ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(result)) <= 2 || ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1) && dying_A)
     return(true);
 
   if (ic->op == GET_VALUE_AT_ADDRESS && !left_in_A)

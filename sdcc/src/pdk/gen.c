@@ -2849,6 +2849,15 @@ genPointerGet (const iCode *ic)
           pushed_a = true;
         }
 
+      if (!bit_field && size == 2)
+        {
+          genMove (ASMOP_PA, left->aop, true);
+          emit2 ("call", "__gptrget2");
+          cost (1, (ptype == CPOINTER) ? 32 : 13);
+          genMove (result->aop, ASMOP_AP, true);
+          goto release;
+        }
+
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           genMove (ASMOP_PA, left->aop, true);
@@ -2859,7 +2868,7 @@ genPointerGet (const iCode *ic)
               cost (2, 2);
             }
           emit2 ("call", "__gptrget");
-          cost (1, 8 + (ptype == CPOINTER) * 6);
+          cost (1, (ptype == CPOINTER) ? 16 : 8);
 
           if (bit_field && blen < 8)
             getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));

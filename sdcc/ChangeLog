@@ -1,5 +1,15 @@
 2019-03-14 Philipp Klaus Krause <pkk AT spth.de>
 
+	* device/lib/pdk14/Makefile.in,
+	  device/lib/pdk14/__gptrget.s,
+	  device/lib/pdk15/Makefile.in,
+	  device/lib/pdk15/__gptrget.s,
+	  src/pdk/gen.c,
+	  src/pdk/ralloc2.cc:
+	  Improve read of 16-bit value via pointer.
+
+2019-03-14 Philipp Klaus Krause <pkk AT spth.de>
+
 	* doc/sdccman.lyx,
 	  src/SDCCast.c,
 	  support/regression/tests/vaargs.c:
