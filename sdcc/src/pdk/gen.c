@@ -2860,6 +2860,12 @@ genPointerGet (const iCode *ic)
 
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
+          if (i != 0 && (aopInReg (left->aop, 0, A_IDX) || aopInReg (left->aop, 1, A_IDX) || aopInReg (result->aop, i - 1, P_IDX))) // Would have ben overwritten on previous byte.
+            {
+              cost (500, 500);
+              wassert (regalloc_dry_run);
+            }
+
           genMove (ASMOP_PA, left->aop, true);
           for (int j = 0; j < i; j++)
             {
