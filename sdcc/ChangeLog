@@ -2,7 +2,23 @@
 
 	* support/regression/tests/gcc-torture-execute-20000412-2.c,
 	  support/regression/tests/gcc-torture-execute-20180112-1.c,
-	  support/regression/tests/gcc-torture-execute-920922-1.c:
+	  support/regression/tests/gcc-torture-execute-920922-1.c,
+	  support/regression/tests/gcc-torture-execute-arith-rand.c,
+	  support/regression/tests/gcc-torture-execute-ashldi-1.c,
+	  support/regression/tests/gcc-torture-execute-divconst-3.c,
+	  support/regression/tests/gcc-torture-execute-divmod-1.c,
+	  support/regression/tests/gcc-torture-execute-index-1.c,
+	  support/regression/tests/gcc-torture-execute-loop-15.c,
+	  support/regression/tests/gcc-torture-execute-multdi-1.c,
+	  support/regression/tests/gcc-torture-execute-pr39100.c,
+	  support/regression/tests/gcc-torture-execute-pr49419.c,
+	  support/regression/tests/gcc-torture-execute-pr60454.c,
+	  support/regression/tests/gcc-torture-execute-pr61306-1.c,
+	  support/regression/tests/gcc-torture-execute-pr61306-2.c,
+	  support/regression/tests/gcc-torture-execute-pr64979.c,
+	  support/regression/tests/gcc-torture-execute-pr78378.c,
+	  support/regression/tests/gcc-torture-execute-pr79121.c:
+	  support/regression/tests/onebyte.c
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.c:
 	  Fix non-dead-register bugs.

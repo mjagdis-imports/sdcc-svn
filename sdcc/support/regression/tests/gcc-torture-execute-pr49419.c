@@ -13,6 +13,7 @@
 
 struct S { int w, x, y; } *t;
 
+#ifndef __SDCC_pdk14 // Lack of memory
 int
 foo (int n, int f, int *s, int m)
 {
@@ -32,6 +33,7 @@ foo (int n, int f, int *s, int m)
   s[0] = x;
   return a;
 }
+#endif
 
 void
 testTortureExecute (void)

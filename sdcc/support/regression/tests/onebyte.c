@@ -222,6 +222,7 @@ testCompare (void)
 void
 testUMinus (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
     signed char  {attrL} sc;
   unsigned char  {attrL} uc;
     signed int   {attrL} si;
@@ -250,6 +251,7 @@ testUMinus (void)
   ASSERT (-(-128 ) ==  128);
   sc = -128;
   ASSERT (-sc == 128);
+#endif
 }
 
 void

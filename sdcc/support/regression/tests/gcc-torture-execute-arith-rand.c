@@ -4,6 +4,7 @@ arith-rand.c from the execute part of the gcc torture tests.
 
 #include <testfwk.h>
 
+#ifndef __SDCC_pdk14 // Lack of memory
 long
 simple_rand ()
 {
@@ -13,7 +14,6 @@ simple_rand ()
   return this >> 8;
 }
 
-#ifndef __SDCC_pdk14 // Lack of memory
 unsigned long int
 random_bitstring ()
 {
