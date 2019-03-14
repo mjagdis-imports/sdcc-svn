@@ -1,6 +1,8 @@
 2019-03-14 Philipp Klaus Krause <pkk AT spth.de>
 
-	* support/regression/tests/gcc-torture-execute-20000412-2.c:
+	* support/regression/tests/gcc-torture-execute-20000412-2.c,
+	  support/regression/tests/gcc-torture-execute-20180112-1.c,
+	  support/regression/tests/gcc-torture-execute-920922-1.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.c:
 	  Fix non-dead-register bugs.

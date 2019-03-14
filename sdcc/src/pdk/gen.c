@@ -2813,6 +2813,12 @@ genPointerGet (const iCode *ic)
 
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
+          if (i != 0 && aopInReg (ptr_aop, 0, P_IDX) && aopInReg (result->aop, i - 1, P_IDX)) // Would have been overwritten on previous byte.
+            {
+              cost (500, 500);
+              wassert (regalloc_dry_run);
+            }
+
           emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
           cost (1, 2);
 
@@ -2860,7 +2866,7 @@ genPointerGet (const iCode *ic)
 
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
-          if (i != 0 && (aopInReg (left->aop, 0, A_IDX) || aopInReg (left->aop, 1, A_IDX) || aopInReg (result->aop, i - 1, P_IDX))) // Would have ben overwritten on previous byte.
+          if (i != 0 && (aopInReg (left->aop, 0, A_IDX) || aopInReg (left->aop, 1, A_IDX) || aopInReg (result->aop, i - 1, P_IDX))) // Would have been overwritten on previous byte.
             {
               cost (500, 500);
               wassert (regalloc_dry_run);
