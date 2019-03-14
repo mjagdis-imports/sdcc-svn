@@ -27,7 +27,8 @@
 	  support/regression/tests/gcc-torture-execute-va-arg-26.c,
 	  support/regression/tests/gcc-torture-execute-va-arg-5.c,
 	  support/regression/tests/gcc-torture-execute-va-arg-6.c,
-	  support/regression/tests/gcc-torture-execute-va-arg-9.c:
+	  support/regression/tests/gcc-torture-execute-va-arg-9.c,
+	  support/regression/tests/gcc-torture-execute-loop-8.c:
 	  Disable some tests for pdk14 (on which they won't work anytime soon due to lack of memory).
 	* src/pdk/gen.c:
 	  Fix non-dead-register bugs, fix a carry issue.
