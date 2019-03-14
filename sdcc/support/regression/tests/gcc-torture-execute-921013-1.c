@@ -8,10 +8,12 @@
 #pragma std_c99
 #endif
 
+#if !defined(__SDCC_pdk14) // Lack of memory
 void f(int *d, float *x, float *y,int n)
 {
   while(n--){*d++=*x++==*y++;}
 }
+#endif
 
 void
 testTortureExecute (void)

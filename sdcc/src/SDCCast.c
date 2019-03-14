@@ -927,7 +927,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
       /* don't perform integer promotion of explicitly typecasted variable arguments
        * if sdcc extensions are enabled */
-      if (options.std_sdcc &&
+      if (options.std_sdcc && !TARGET_PDK_LIKE &&
           (IS_CAST_OP (*actParm) ||
            (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
            (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))

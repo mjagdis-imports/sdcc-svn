@@ -9,7 +9,7 @@
 #include <stdarg.h>
 
 /* gcc 3.3 throws a warning, if char is in '...' */
-#if defined(PORT_HOST)
+#if defined(PORT_HOST) || defined (__SDCC_pdk13) || defined (__SDCC_pdk14) || defined (__SDCC_pdk15)
 # define va_char int
 #else
 # define va_char char

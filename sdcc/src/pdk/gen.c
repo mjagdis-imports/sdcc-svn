@@ -581,7 +581,7 @@ static void popAF (void)
 static void pointPStack (int s, bool a_dead, bool f_dead)
 {
   // Try to adjust p when doing so is cheaper.
-  if (G.p.type == AOP_STK && abs(G.p.offset - s) <= 3 + (!a_dead && f_dead) * 2)
+  if (G.p.type == AOP_STK && abs(G.p.offset - s) <= 3 + !(a_dead && f_dead) * 2)
     {
       if (G.p.offset == s)
         return;
@@ -776,10 +776,7 @@ push (const asmop *op, int offset, int size)
     {
       cheapMove (ASMOP_A, 0, op, 0, true, true);
       pushAF ();
-      emit2 ("mov", "a, sp");
-      emit2 ("mov", "p, a");
-      emit2 ("dec", "p");
-      cost (3, 3);
+      pointPStack (G.stack.pushed - 1, true, true);
       cheapMove (ASMOP_A, 0, op, 1, true, true);
       emit2 ("idxm", "p, a");
       cost (1, 1);
@@ -1358,7 +1355,7 @@ genEndFunction (iCode *ic)
 
   /* adjust the stack for the function */
   if (sym->stack)
-    adjustStack (-sym->stack, retsize == 0 || retsize > 2, retsize != 1);
+    adjustStack (-sym->stack, retsize == 0 || retsize > 2, retsize != 2);
 
   /* if debug then send end of function */
   if (options.debug && currFunc && !regalloc_dry_run)
