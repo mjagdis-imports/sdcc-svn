@@ -2397,8 +2397,8 @@ genLeftShift (const iCode *ic)
       int shCount = ulFromVal (right->aop->aopu.aop_lit);
       int offset = shCount / 8;
 
-      genMove_o (result->aop, offset, left->aop, 0, result->aop->size - shCount / 8, true);
-      genMove_o (result->aop, 0, ASMOP_ZERO, 0, offset, true);
+      genMove_o (result->aop, offset, left->aop, 0, result->aop->size - shCount / 8, regDead (A_IDX, ic));
+      genMove_o (result->aop, 0, ASMOP_ZERO, 0, offset, regDead (A_IDX, ic));
       shCount %= 8;
 
       if (!shCount)
@@ -2833,7 +2833,7 @@ genPointerGet (const iCode *ic)
               cost (1, 1);
             }
         }
-      if (!(aopInReg (left->aop, 0, P_IDX) && regDead (P_IDX, ic)))
+      if (ptr_aop == left->aop && !(aopInReg (left->aop, 0, P_IDX) && regDead (P_IDX, ic)))
         for (int i = 1; i < size; i++)
           {
             emit2 ("dec", "%s", aopGet (ptr_aop, 0));
