@@ -67,8 +67,7 @@ COMMAND_DO_WORK_UC(cl_break_cmd)
     hit= params[1]->value.number;
     mem= uc->address_space(params[0]->value.cell, &addr);
     if (!mem)
-      return con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n"),
-	false;
+      return syntax_error(con),	false;
     s= params[2]->get_svalue();
     if (s && *s &&
 	(strcmp(s, "if") == 0))
@@ -85,8 +84,7 @@ COMMAND_DO_WORK_UC(cl_break_cmd)
     hit= 1;
     mem= uc->address_space(params[0]->value.cell, &addr);
     if (!mem)
-      return con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n"),
-	false;
+      return syntax_error(con),	false;
     s= params[1]->get_svalue();
     if (s && *s &&
 	(strcmp(s, "if") == 0))
@@ -103,8 +101,7 @@ COMMAND_DO_WORK_UC(cl_break_cmd)
     hit= params[1]->value.number;
     mem= uc->address_space(params[0]->value.cell, &addr);
     if (!mem)
-      return con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n"),
-	false;
+      return syntax_error(con),	false;
     if (mem == uc->rom)
       do_fetch(uc, addr, hit, cond, con);
     else
@@ -117,8 +114,7 @@ COMMAND_DO_WORK_UC(cl_break_cmd)
     hit= 1;
     mem= uc->address_space(params[0]->value.cell, &addr);
     if (!mem)
-      return con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n"),
-	false;
+      return syntax_error(con),	false;
     if (mem == uc->rom)
       do_fetch(uc, addr, hit, cond, con);
     else
@@ -189,11 +185,16 @@ COMMAND_DO_WORK_UC(cl_break_cmd)
   }
   else
     {
-      con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+      syntax_error(con);
       return(false);
     }
   return(false);
 }
+
+CMDHELP(cl_break_cmd,
+	"break addr [hit [if expr]] | break mem_type r|w addr [hit [if expr]]",
+	"Set fix or event breakpoint",
+	"long help of break")
 
 void
 cl_break_cmd::do_fetch(class cl_uc *uc,
@@ -283,6 +284,10 @@ COMMAND_DO_WORK_UC(cl_clear_cmd)
   return(false);
 }
 
+CMDHELP(cl_clear_cmd,
+	"clear [addr...]",
+	"Clear fix breakpoint",
+	"long help of clear")
 
 /*
  * DELETE nr nr ...
@@ -315,6 +320,10 @@ COMMAND_DO_WORK_UC(cl_delete_cmd)
   return(false);
 }
 
+CMDHELP(cl_delete_cmd,
+	"delete [nr...]",
+	"Delete breakpoint(s)",
+	"long help of clear")
 
 /*
  * COMMANDS [nr] cmdstring...
@@ -322,7 +331,7 @@ COMMAND_DO_WORK_UC(cl_delete_cmd)
 
 COMMAND_DO_WORK_UC(cl_commands_cmd)
 {
-  long nr= -1;
+  int nr= -1;
   
   cmdline->shift();
   chars s= chars(cmdline->cmd);
@@ -335,12 +344,12 @@ COMMAND_DO_WORK_UC(cl_commands_cmd)
     {
       if (isdigit(((char*)s)[0]))
 	{
-	  class cl_cmd_arg *p= cmdline->param(0);
-	  if (p)
+	  char *p0= (char*)s;
+	  if (p0 && *p0)
 	    {
-	      long l;
-	      if (p->get_ivalue(&l))
-		nr= l;
+	      long l=-2;
+	      l= strtol(p0, 0, 0);
+	      nr= l;
 	    }
 	  cmdline->shift();
 	  s= chars(cmdline->cmd);
@@ -355,7 +364,9 @@ COMMAND_DO_WORK_UC(cl_commands_cmd)
     return con->dd_printf("command missing\n"), false;
 
   if (nr < 0)
-    nr= uc->brk_counter;
+    {
+      nr= uc->brk_counter;
+    }
   if (nr == 0)
     return con->dd_printf("breakpoint (%d) not found\n", nr), false;
   
@@ -364,7 +375,9 @@ COMMAND_DO_WORK_UC(cl_commands_cmd)
     return con->dd_printf("no breakpoint (%d)\n", nr), false;
 
   if (!s.empty())
-    b->commands= s;
+    {
+      b->commands= s;
+    }
   else
     b->commands= chars("");
   cmdline->rest= NULL;
@@ -372,5 +385,9 @@ COMMAND_DO_WORK_UC(cl_commands_cmd)
   return false;
 }
 
+CMDHELP(cl_commands_cmd,
+	"commands [breakpoint-nr]",
+	"command_string",
+	"long help of commands")
 
 /* End of cmd.src/cmd_bp.cc */

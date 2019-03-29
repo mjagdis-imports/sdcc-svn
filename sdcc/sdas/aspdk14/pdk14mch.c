@@ -31,6 +31,7 @@
  *  Fixed bugs in relative address with "."
  */
 
+#include "sdas.h"
 #include "asxxxx.h"
 #include "pdk.h"
 
@@ -45,6 +46,11 @@ machine(struct mne *mp)
 {
         a_uint op;
         int combine;
+
+        /* Set the target in case it was not automatically
+         * configured from the executable filename.
+         */
+        set_sdas_target (TARGET_ID_PDK);
 
         op = mp->m_valu;
         combine = 0;
@@ -140,7 +146,7 @@ machine(struct mne *mp)
         case S_SET0: {
                 struct inst io = {0x1C00 | combine, 0x3F};
                 struct inst m = {0x2400 | combine, 0x3F};
-                ebitn(io, m);
+                ebitn(io, m, /*N offset*/6);
                 break;
         }
 
@@ -160,7 +166,7 @@ machine(struct mne *mp)
         case S_T0SN: {
                 struct inst io = {0x1800 | combine, 0x3F};
                 struct inst m = {0x2000 | combine, 0x3F};
-                ebitn(io, m);
+                ebitn(io, m, /*N offset*/6);
                 break;
         }
 
@@ -220,6 +226,7 @@ machine(struct mne *mp)
 
         case S_SWAPC:
               def.mask = 0x3F;
+              eswapc(def, /*N offset*/6);
               break;
 
         case S_COMP:

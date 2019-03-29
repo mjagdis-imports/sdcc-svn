@@ -166,8 +166,13 @@ cl_sim::stop(int reason, class cl_ev_brk *ebrk)
     {
       if (!(b->commands.empty()))
 	{
-	  application->exec(b->commands);
-	  steps_done= 0;
+	  class cl_option *o= app->options->get_option("echo_script");
+	  bool e= false;
+	  if (o) o->get_value(&e);
+	  if (e)
+	    cmd->dd_printf("%s\n", (char*)(b->commands));
+		  application->exec(b->commands);
+		  steps_done= 0;
 	}
     }
   
@@ -205,7 +210,7 @@ cl_sim::stop(int reason, class cl_ev_brk *ebrk)
 					     eb->id, m?(m->get_name()):"mem?", (int)eb->addr,
 					     (int)uc->instPC,
 					     uc->disass(uc->instPC, " "));
-	    }
+    	    }
 	  break;
 	case resINTERRUPT:
 	  cmd->frozen_console->dd_printf("Interrupt\n");
@@ -304,49 +309,37 @@ void
 cl_sim::build_cmdset(class cl_cmdset *cmdset)
 {
   class cl_cmd *cmd;
-  class cl_cmdset *cset;
+  //class cl_cmdset *cset;
 
-  cmdset->add(cmd= new cl_run_cmd("run", 0,
-"run [start [stop]] Go",
-"long help of run"));
+  cmdset->add(cmd= new cl_run_cmd("run", 0));
   cmd->init();
   cmd->add_name("go");
   cmd->add_name("r");
   cmd->add_name("continue");
   
-  cmdset->add(cmd= new cl_stop_cmd("stop", 0,
-"stop               Stop",
-"long help of stop"));
+  cmdset->add(cmd= new cl_stop_cmd("stop", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_step_cmd("step", true,
-"step               Step",
-"long help of step"));
+  cmdset->add(cmd= new cl_step_cmd("step", true));
   cmd->init();
   cmd->add_name("s");
 
-  cmdset->add(cmd= new cl_next_cmd("next", true,
-"next               Next",
-"long help of next"));
+  cmdset->add(cmd= new cl_next_cmd("next", true));
   cmd->init();
   cmd->add_name("n");
 
-  {
+  /*{
     cset= new cl_cmdset();
     cset->init();
-    cset->add(cmd= new cl_gui_start_cmd("start", 0, 
-"gui start          Start interfacing with GUI tool",
-"long help of gui start"));
+    cset->add(cmd= new cl_gui_start_cmd("start", 0));
     cmd->init();
-    cset->add(cmd= new cl_gui_stop_cmd("stop", 0, 
-"gui stop           Stop interfacing with GUI tool",
-"long help of gui stop"));
+    cset->add(cmd= new cl_gui_stop_cmd("stop", 0));
     cmd->init();
   }
-  cmdset->add(cmd= new cl_super_cmd("gui", 0,
-"gui subcommand     Operations to support GUI tools",
-"long help of gui", cset));
+  cmdset->add(cmd= new cl_super_cmd("gui", 0, cset));
   cmd->init();
+  set_gui_help();
+  */
 }
 
 

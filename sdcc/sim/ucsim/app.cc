@@ -35,7 +35,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #endif
 #include <ctype.h>
 #include <errno.h>
-#include <signal.h>
 #include "i_string.h"
 
 // prj
@@ -83,10 +82,7 @@ cl_app::~cl_app(void)
 int
 cl_app::init(int argc, char *argv[])
 {
-  struct sigaction sa;
-  sa.sa_handler= SIG_IGN;
-  sigaction(SIGPIPE, &sa, NULL);
-
+  sigpipe_off();
   cl_base::init();
   set_name(cchars("application"));
   mk_options();
@@ -207,7 +203,7 @@ static void
 print_help(char *name)
 {
   printf("%s: %s\n", name, VERSIONSTR);
-  printf("Usage: %s [-hHVvPg] [-p prompt] [-t CPU] [-X freq[k|M]]\n"
+  printf("Usage: %s [-hHVvPgGw] [-p prompt] [-t CPU] [-X freq[k|M]]\n"
 	 "       [-C cfg_file] [-c file] [-s file] [-S optionlist]\n"
 	 "       [-a nr]"
 #ifdef SOCKET_AVAIL
@@ -235,7 +231,7 @@ print_help(char *name)
      "               simulator interface. Known options are:\n"
      "                 if=memory[address]  turn on interface on given memory location\n"
      "                 in=file             specify input file for IO\n"
-     "                 out=file            specify output file forr IO\n"
+     "                 out=file            specify output file for IO\n"
      "  -p prompt    Specify string for prompt\n"
      "  -P           Prompt is a null ('\\0') character\n"
      "  -g           Go, start simulation\n"
@@ -673,9 +669,9 @@ cl_app::exec(chars line)
       c= new cl_console_dummy();
       c->init();
     }
-  class cl_cmdline *cmdline= new cl_cmdline(this, (char*)line, c);
   do
     {
+      class cl_cmdline *cmdline= new cl_cmdline(this, (char*)line, c);
       cmdline->init();
       class cl_cmd *cm= commander->cmdset->get_cmd(cmdline, false/*c->is_interactive()*/);
       if (cm)
@@ -691,9 +687,10 @@ cl_app::exec(chars line)
 	      c->dd_printf("%ld\n", l);
 	    }
 	}
+      line= cmdline->rest;
+      delete cmdline;
     }
-  while (cmdline->restart_at_rest());
-  delete cmdline;
+  while (!line.empty());
   if (c != commander->frozen_console)
     delete c;
 }
@@ -732,51 +729,34 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
   {
     cset= new cl_cmdset();
     cset->init();
-    cset->add(cmd= new cl_conf_cmd("_no_parameters_", 0,
-"conf               Configuration",
-"long help of conf"));
+    cset->add(cmd= new cl_conf_cmd("_no_parameters_", 0));
     cmd->init();
-    cset->add(cmd= new cl_conf_objects_cmd("objects", 0, 
-"conf objects       Show object tree",
-"long help of conf objects"));
+    cset->add(cmd= new cl_conf_objects_cmd("objects", 0));
     cmd->init();
   }
-  cmdset->add(cmd= new cl_super_cmd("conf", 0,
-"conf subcommand    Information, see `conf' command for more help",
-"long help of conf", cset));
+  cmdset->add(cmd= new cl_super_cmd("conf", 0, cset));
   cmd->init();
-
-  cmd= new cl_help_cmd("help", 0,
-"help [command]     Help about command(s)",
-"long help of help");
+  set_conf_help(cmd);
+  
+  cmd= new cl_help_cmd("help", 0);
   cmdset->add(cmd);
   cmd->init();
   cmd->add_name("?");
 
-  cmdset->add(cmd= new cl_quit_cmd("quit", 0,
-"quit               Quit",
-"long help of quit"));
+  cmdset->add(cmd= new cl_quit_cmd("quit", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_kill_cmd("kill", 0,
-"kill               Shutdown simulator",
-"long help of kill"));
+  cmdset->add(cmd= new cl_kill_cmd("kill", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_exec_cmd("exec", 0,
-"exec file          Execute commands from file",
-"long help of exec"));
+  cmdset->add(cmd= new cl_exec_cmd("exec", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_expression_cmd("expression", 0,
-"expression expr    Evaluate the expression",
-"long help of expression "));
+  cmdset->add(cmd= new cl_expression_cmd("expression", 0));
   cmd->init();
   cmd->add_name("let");
 
-  cmdset->add(cmd= new cl_jaj_cmd("jaj", 0,
-"jaj [val]          Jaj",
-"long help of jaj "));
+  cmdset->add(cmd= new cl_jaj_cmd("jaj", 0));
   cmd->init();
 
   {
@@ -787,33 +767,22 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_show_copying_cmd("copying", 0, 
-"show copying       Conditions for redistributing copies of uCsim",
-"long help of show copying"));
+    cset->add(cmd= new cl_show_copying_cmd("copying", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_warranty_cmd("warranty", 0, 
-"show warranty      Various kinds of warranty you do not have",
-"long help of show warranty"));
+    cset->add(cmd= new cl_show_warranty_cmd("warranty", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_option_cmd("option", 0,
-"show option [name] Show internal data of options",
-"long help of show option"));
+    cset->add(cmd= new cl_show_option_cmd("option", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_error_cmd("error", 0,
-"show error         Show class of errors",
-"long help of show error"));
+    cset->add(cmd= new cl_show_error_cmd("error", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_console("console", 0,
-				       "",
-				       ""));
+    cset->add(cmd= new cl_show_console("console", 0));
     cmd->init();
   }
   if (!super_cmd)
     {
-      cmdset->add(cmd= new cl_super_cmd("show", 0,
-"show subcommand    Generic command for showing things about the uCsim",
-"long help of show", cset));
+      cmdset->add(cmd= new cl_super_cmd("show", 0, cset));
       cmd->init();
+      set_show_help(cmd);
     }
 
   {
@@ -824,21 +793,16 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_get_option_cmd("option", 0,
-"get option [name]  Get value of an option",
-"long help of get option"));
+    cset->add(cmd= new cl_get_option_cmd("option", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_error_cmd("error", 0,
-"get error          Get class of errors",
-"long help of get error"));
+    cset->add(cmd= new cl_show_error_cmd("error", 0));
     cmd->init();
   }
   if (!super_cmd)
     {
-      cmdset->add(cmd= new cl_super_cmd("get", 0,
-"get subcommand     Get, see `get' command for more help",
-"long help of get", cset));
+      cmdset->add(cmd= new cl_super_cmd("get", 0, cset));
       cmd->init();
+      set_get_help(cmd);
     }
 
   {
@@ -849,28 +813,18 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_set_option_cmd("option", 0,
-"set option name|nr value\n"
-"                   Set value of an option",
-"long help of set option"));
+    cset->add(cmd= new cl_set_option_cmd("option", 0));
     cmd->init();
-    cset->add(cmd= new cl_set_error_cmd("error", 0,
-"set error error_name on|off|unset\n"
-"                   Set value of an error",
-"long help of set error"));
+    cset->add(cmd= new cl_set_error_cmd("error", 0));
     cmd->init();
-    cset->add(cmd= new cl_set_console_cmd("console", 0,
-"set console interactive [on|off]|noninteractive|raw|edited\n"
-"                   Set console parameters",
-"long help of set console"));
+    cset->add(cmd= new cl_set_console_cmd("console", 0));
     cmd->init();
   }
   if (!super_cmd)
     {
-      cmdset->add(cmd= new cl_super_cmd("set", 0,
-"set subcommand     Set, see `set' command for more help",
-"long help of set", cset));
+      cmdset->add(cmd= new cl_super_cmd("set", 0, cset));
       cmd->init();
+      set_set_help(cmd);
     }
 }
 
@@ -958,7 +912,10 @@ cl_app::mk_options(void)
 					      "Name of output file for simulator interface (-I)"));
   o->init();
   o->hide();
-  
+
+  options->new_option(o= new cl_bool_option(this, "echo_script",
+					    "Print breakpoint script before execute"));
+  o->init();
 }
 
 

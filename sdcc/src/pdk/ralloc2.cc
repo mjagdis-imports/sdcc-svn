@@ -44,12 +44,8 @@ static void add_operand_conflicts_in_node(const cfg_node &n, I_t &I)
     return;
 
   // Todo: More fine-grained control for these.
-  if (!(ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS && !IS_FLOAT (operandType (left)) || ic->op == '~' ||
-    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
-    ic->op == GET_VALUE_AT_ADDRESS))
-    return;
-
-  if (ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(IC_RESULT(ic))) == 1)
+  if (!(ic->op == '-' || ic->op == UNARYMINUS && !IS_FLOAT (operandType (left)) || ic->op == '~' ||
+    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND))
     return;
 
   operand_map_t::const_iterator oir, oir_end, oirs; 
@@ -143,14 +139,22 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   bool left_dir = IS_TRUE_SYMOP (left) || IS_ITEMP (left) && !(options.stackAuto || reentrant) && !left_in_A;
   bool right_dir = IS_TRUE_SYMOP (right) || IS_ITEMP (right) && !(options.stackAuto || reentrant) && !right_in_A;
 
-  if (ic->op == DUMMY_READ_VOLATILE)
+  if(result && IS_ITEMP(result) && OP_SYMBOL_CONST(result)->remat && !operand_in_reg(result, REG_A, ia, i, G) && !operand_in_reg(result, REG_P, ia, i, G))
     return(true);
+
+  if (ic->op == DUMMY_READ_VOLATILE || ic->op == '=')
+    return(true);
+
+  if ((ic->op == EQ_OP || ic->op == NE_OP) && dying_A &&
+    (left_in_A && (right_dir || IS_OP_LITERAL(right) || IS_ITEMP(right) && OP_SYMBOL_CONST(right)->remat) ||
+    right_in_A && (left_dir || IS_OP_LITERAL(left) || IS_ITEMP(left) && OP_SYMBOL_CONST(left)->remat)))
+    return (true);
 
   if ((ic->op == EQ_OP || ic->op == NE_OP || (ic->op == '>' || ic->op == '<') && SPEC_USIGN(getSpec(operandType(left)))) && // Non-destructive comparison.
     (left_in_A && getSize(operandType(left)) == 1 && (IS_OP_LITERAL(right) || right_dir) || right_in_A && getSize(operandType(right)) == 1 && (IS_OP_LITERAL(left) || left_dir)))
     return (true);
 
-  if (ic->op == IFX && dying_A)
+  if (ic->op == IFX && (dying_A || left_in_A))
     return (true);
 
   if (ic->op == '<' && IS_OP_LITERAL(right) && !ullFromVal(OP_VALUE_CONST (right)) &&
@@ -158,6 +162,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return (true);
 
   if (ic->op == SET_VALUE_AT_ADDRESS && getSize(operandType(right)) == 1 && left_dir && right_in_A)
+    return (true);
+  if (ic->op == SET_VALUE_AT_ADDRESS && IS_ITEMP(left) && OP_SYMBOL_CONST(left)->remat && !operand_in_reg(left, REG_A, ia, i, G))
     return (true);
 
   if ((ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS) && (!left_in_A && !right_in_A || getSize(operandType(result)) == 1))
@@ -173,18 +179,18 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if (ic->op == GET_VALUE_AT_ADDRESS && !left_in_A)
     return(true);
 
-  if ((ic->op == '=' || ic->op == CAST) &&
+  if (ic->op == CAST &&
     (getSize(operandType(result)) == 1 || getSize(operandType(result)) == 2 && SPEC_USIGN (getSpec(operandType(right))) && operand_byte_in_reg(result, 1, REG_P, a, i, G)) &&
     right_in_A && (result_dir || dying_A))
     return (true);
 
-  if ((ic->op == '=' || ic->op == CAST && (getSize(operandType(result)) <= getSize(operandType(right)) || SPEC_USIGN (getSpec(operandType(right))))) &&
+  if ((ic->op == CAST && (getSize(operandType(result)) <= getSize(operandType(right)) || SPEC_USIGN(getSpec(operandType(right))))) &&
     getSize(operandType(result)) <= 2 &&
     (result_dir && dying_A || result_in_A && right_dir || result_in_A && right_in_A))
     return (true);
 
   if ((ic->op == LEFT_OP || ic->op == RIGHT_OP))
-    return(IS_OP_LITERAL(right) && (ullFromVal(OP_VALUE_CONST (right)) <= 2 + optimize.codeSpeed || getSize(operandType(result)) == 1) || right_in_A && !result_in_A);
+    return(IS_OP_LITERAL(right) || right_in_A && !result_in_A);
 
   if (ic->op == '^' &&
     (operand_byte_in_reg(result, 0, REG_A, a, i, G) && (operand_byte_in_reg(left, 0, REG_A, a, i, G) || operand_byte_in_reg(right, 0, REG_A, a, i, G)) ||
@@ -193,7 +199,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   // For most operations only allow lower byte in a for now (upper byte for result).
   if (left_in_A && !operand_byte_in_reg(left, 0, REG_A, a, i, G) || right_in_A && !operand_byte_in_reg(right, 0, REG_A, a, i, G) ||
-    result_in_A && !operand_byte_in_reg(result, getSize(operandType(result)) - 1, REG_A, a, i, G))
+    ic->op != '+' && ic->op != '-' && ic->op != UNARYMINUS && result_in_A && !operand_byte_in_reg(result, getSize(operandType(result)) - 1, REG_A, a, i, G))
     return(false);
 
   if ((ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS) && (left_in_A || right_in_A))
@@ -231,6 +237,9 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   bool left_stack = IS_ITEMP (left) && (options.stackAuto || reentrant) && !left_in_A && !left_in_P;
   bool right_stack = IS_ITEMP (right) && (options.stackAuto || reentrant) && !right_in_A && !right_in_P;
+
+  if(result && IS_ITEMP(result) && OP_SYMBOL_CONST(result)->remat && !operand_in_reg(result, REG_A, ia, i, G) && !operand_in_reg(result, REG_P, ia, i, G))
+    return(true);
 
   // Arithmetic uses p internally for literal operands with multiple nonzero bytes.
   if ((ic->op == '+' || ic->op == '-' || ic->op == '!' || ic->op == '<' || ic->op == '>') && (IS_OP_LITERAL(left) || IS_OP_LITERAL(right)))
@@ -449,7 +458,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
       set_surviving_regs(a, i, G, I);
       c = dryPdkiCode(ic);
 
-      if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && !OP_SYMBOL(IC_RESULT(ic))->remat && // Nudge towards saving RAM space. TODO: Do this in a better way, so it works for all backends!
+      if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT(ic)) && !OP_SYMBOL_CONST(IC_RESULT(ic))->remat && // Nudge towards saving RAM space. TODO: Do this in a better way, so it works for all backends!
         !operand_in_reg(IC_RESULT(ic), REG_A, a.i_assignment, i, G) && !operand_in_reg(IC_RESULT(ic), REG_P, a.i_assignment, i, G)) 
         c += 0.0001;
 
@@ -508,12 +517,38 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 // Code for another ic is generated when generating this one. Mark the other as generated.
 static void extra_ic_generated(iCode *ic)
 {
+  iCode *ifx;
+
+  // - can only jump on nonzero result for decrement of register / direct variable.
+  if(ic->op == '-' && ic->next && ic->next->op == IFX && IC_TRUE(ic->next) && IC_COND (ic->next)->key == IC_RESULT(ic)->key)
+    {
+      ifx = ic->next;
+
+      if ((!IS_ITEMP(IC_LEFT (ic)) || options.stackAuto || reentrant) && !isOperandGlobal (IC_LEFT (ic)))
+        return;
+
+      if (!IS_OP_LITERAL(IC_RIGHT(ic)))
+        return;
+
+      if (ullFromVal(OP_VALUE(IC_RIGHT(ic))) != 1)
+        return;
+
+      if (!isOperandEqual (IC_RESULT(ic), IC_LEFT(ic)))
+        return;
+
+      if (getSize(operandType(IC_RESULT(ic))) > 2)
+        return;
+
+      ifx->generated = true;
+      return;
+    }
+
   if(ic->op != EQ_OP && ic->op != NE_OP && ic->op != '<' && ic->op != '>' && ic->op != BITWISEAND)
     return;
 
-  iCode *ifx = ifxForOp(IC_RESULT(ic), ic);
+  ifx = ifxForOp(IC_RESULT(ic), ic);
 
-  if (!ifx)
+  if(!ifx)
     return;
 
   // Bitwise and code generation can only do the jump if there is at most one nonzero byte.
@@ -526,13 +561,14 @@ static void extra_ic_generated(iCode *ic)
         return;
 
       for(unsigned int i = 0; i < getSize(operandType(IC_LEFT (ic))) && i < getSize(operandType(IC_RIGHT(ic))) && i < getSize(operandType(IC_RESULT(ic))); i++)
-        if(byteOfVal (OP_VALUE(litop), i))
+        if(byteOfVal(OP_VALUE(litop), i))
           nonzero++;
 
       if(nonzero > 1 && IC_FALSE (ifx))
         return;
     }
 
+cnd:
   OP_SYMBOL(IC_RESULT(ic))->for_newralloc = false;
   OP_SYMBOL(IC_RESULT(ic))->regType = REG_CND;
   ifx->generated = true;
@@ -559,7 +595,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
   assignment_optimal = true;
   tree_dec_ralloc_nodes(T, find_root(T), G, I2, ac, &assignment_optimal);
 
-  const assignment &winner = *(T[find_root(T)].assignments.begin());
+  /*const*/ assignment &winner = *(T[find_root(T)].assignments.begin());
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Winner: ";

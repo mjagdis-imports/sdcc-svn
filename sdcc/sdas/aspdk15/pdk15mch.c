@@ -31,6 +31,7 @@
  *  Fixed bugs in relative address with "."
  */
 
+#include "sdas.h"
 #include "asxxxx.h"
 #include "pdk.h"
 
@@ -46,6 +47,11 @@ machine(struct mne *mp)
         a_uint op;
         int combine;
 
+        /* Set the target in case it was not automatically
+         * configured from the executable filename.
+         */
+        set_sdas_target (TARGET_ID_PDK);
+
         op = mp->m_valu;
         combine = 0;
 
@@ -56,8 +62,8 @@ machine(struct mne *mp)
         switch (mp->m_type) {
 
         case S_MOV: {
-                struct inst ioa = {0x0080, 0xFC};
-                struct inst aio = {0x00C0, 0xFC};
+                struct inst ioa = {0x0100, 0x7F};
+                struct inst aio = {0x0180, 0x7F};
                 struct inst ma = {0x1700, 0xFF};
                 struct inst am = {0x1F00, 0xFF};
                 emov(def, ioa, aio, ma, am);
@@ -140,7 +146,7 @@ machine(struct mne *mp)
         case S_SET0: {
                 struct inst io = {0x3800 | combine, 0x7F};
                 struct inst m = {0x4800 | combine, 0x7F};
-                ebitn(io, m);
+                ebitn(io, m, /*N offset*/7);
                 break;
         }
 
@@ -159,7 +165,7 @@ machine(struct mne *mp)
         case S_T0SN: {
                 struct inst io = {0x3000 | combine, 0x7F};
                 struct inst m = {0x4000 | combine, 0x7F};
-                ebitn(io, m);
+                ebitn(io, m, /*N offset*/7);
                 break;
         }
 
@@ -215,6 +221,7 @@ machine(struct mne *mp)
 
         case S_SWAPC:
               def.mask = 0x7F;
+              eswapc(def, /*N offset*/7);
               break;
 
         case S_COMP:

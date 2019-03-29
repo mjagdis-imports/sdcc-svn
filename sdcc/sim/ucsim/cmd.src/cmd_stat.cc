@@ -74,8 +74,6 @@ COMMAND_DO_WORK_UC(cl_statistic_cmd)
   }
   else
     {
-      /*con->dd_printf("Error: wrong syntax\n"
-	"%s\n", short_help?short_help:"no help");*/
       int i;
       unsigned long wr, ww;
       for (i= 0; i < uc->address_spaces->count; i++)
@@ -113,6 +111,12 @@ COMMAND_DO_WORK_UC(cl_statistic_cmd)
 
   return(false);;
 }
+
+CMDHELP(cl_statistic_cmd,
+	"statistic [mem [startaddr [endaddr]]]",
+	"Statistic of memory accesses",
+	"long help of statistic")
+
 #endif
 
 
