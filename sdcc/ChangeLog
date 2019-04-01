@@ -1,3 +1,12 @@
+2019-04-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* configure,
+	  configure.ac,
+	  Makefile.in,
+	  Makefile.common.in,
+	  sdas/aspdk13:
+	  Infrastructure for pdk13 assembler.
+
 2019-03-29 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCCast.c,
