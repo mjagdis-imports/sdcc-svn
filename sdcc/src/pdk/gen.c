@@ -4003,12 +4003,10 @@ genPdkCode (iCode *lic)
   if (options.debug)
     debugFile->writeFrameAddress (NULL, NULL, 0); /* have no idea where frame is now */
 
-#if 0
   /* now we are ready to call the
      peephole optimizer */
   if (!options.nopeep)
     peepHole (&genLine.lineHead);
-#endif
 
   /* now do the actual printing */
   printLine (genLine.lineHead, codeOutBuf);

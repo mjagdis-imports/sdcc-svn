@@ -1,0 +1,10 @@
+// peeph.def - PDK peephole rules
+
+replace restart {
+	mov	%1, a
+	mov	a, %1
+} by {
+	mov	%1, a
+	; peephole 1 redundant load rom %1 into a.
+} if notVolatile(%1)
+

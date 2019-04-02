@@ -1,5 +1,13 @@
 2019-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/SDCCpeeph.c,
+	  src/pdk/gen.c,
+	  src/pdk/main.c,
+	  src/pdk/peeph.def:
+	  Basic peephole optimizer.
+
+2019-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* sdas/aspdk15/Makefile:
 	  Remove generated file from svn.
 
