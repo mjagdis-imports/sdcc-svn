@@ -62,17 +62,17 @@ machine(struct mne *mp)
         switch (mp->m_type) {
 
         case S_MOV: {
-                struct inst ioa = {0x0180, 0x3F};
-                struct inst aio = {0x01C0, 0x3F};
-                struct inst ma = {0x0B80, 0x7F};
-                struct inst am = {0x0F80, 0x7F};
+                struct inst ioa = {0x0180, 0x1F};
+                struct inst aio = {0x01C0, 0x1F};
+                struct inst ma = {0x0B80, 0x3F};
+                struct inst am = {0x0F80, 0x3F};
                 emov(def, ioa, aio, ma, am);
                 break;
         }
 
         case S_IDXM: {
-                struct inst am = {op | 1, 0x7E};
-                struct inst ma = {op, 0x7E};
+                struct inst am = {op | 1, 0x3E};
+                struct inst ma = {op, 0x3E};
                 eidxm(am, ma);
                 break;
         }
@@ -81,8 +81,8 @@ machine(struct mne *mp)
                 combine = 0x80;
                 /* fallthrough */
         case S_ADD: {
-                struct inst ma = {0x0800 | combine, 0x7F};
-                struct inst am = {0x0C00 | combine, 0x7F};
+                struct inst ma = {0x0800 | combine, 0x3F};
+                struct inst am = {0x0C00 | combine, 0x3F};
                 earith(def, ma, am);
                 break;
         }
@@ -91,9 +91,9 @@ machine(struct mne *mp)
                 combine = 0x80;
                 /* fallthrough */
         case S_ADDC: {
-                struct inst ma = {0x0900 | combine, 0x7F};
-                struct inst am = {0x0D00 | combine, 0x7F};
-                struct inst m = {0x1000 | combine, 0x7F};
+                struct inst ma = {0x0900 | combine, 0x3F};
+                struct inst am = {0x0D00 | combine, 0x3F};
+                struct inst m = {0x1000 | combine, 0x3F};
                 struct inst a = {0x0060 + (combine ? 1 : 0), 0x00};
                 earithc(ma, am, m, a);
                 break;
@@ -109,7 +109,7 @@ machine(struct mne *mp)
                         combine += 1;
 
                 struct inst a = {0x006A + combine, 0x00};
-                struct inst m = {0x1500 + (combine << 7), 0x7F};
+                struct inst m = {0x1500 + (combine << 3), 0x3F};
                 eshift(a, m);
                 break;
         }
@@ -124,8 +124,8 @@ machine(struct mne *mp)
                         combine = 0x100;
                 }
 
-                struct inst ma = {0x0A00 | combine, 0x7F};
-                struct inst am = {0x0E00 | combine, 0x7F};
+                struct inst ma = {0x0A00 | combine, 0x3F};
+                struct inst am = {0x0E00 | combine, 0x3F};
                 struct inst ioa = {0x00C0, 0x3F};
                 ebit(def, ma, am, mp->m_type == S_XOR ? &ioa : NULL);
                 break;
@@ -135,7 +135,7 @@ machine(struct mne *mp)
                 combine = 0x80;
                 /* fallthrough */
         case S_NOT: {
-                struct inst m = {0x1400 | combine, 0x7F};
+                struct inst m = {0x1400 | combine, 0x3F};
                 enot(def, m);
                 break;
         }
@@ -144,8 +144,8 @@ machine(struct mne *mp)
                 combine = 0x200;
                 /* fallthrough */
         case S_SET0: {
-                struct inst io = {0x1C00 | combine, 0x3F};
-                struct inst m = {0x2400 | combine, 0x3F};
+                struct inst io = {0x1C00 | combine, 0x1F};
+                struct inst m = {0x2400 | combine, 0x1F};
                 ebitn(io, m, /*N offset*/6);
                 break;
         }
@@ -174,7 +174,7 @@ machine(struct mne *mp)
                 combine = 0x80;
                 /* fallthrough */
         case S_IZSN: {
-                struct inst m = {0x1100 | combine, 0x7F};
+                struct inst m = {0x1100 | combine, 0x3F};
                 ezsn(def, m);
                 break;
         }
@@ -188,7 +188,7 @@ machine(struct mne *mp)
         case S_INC:
         case S_DEC:
         case S_CLEAR:
-                def.mask = 0x7F;
+                def.mask = 0x3F;
                 eone(def);
                 break;
 
@@ -204,7 +204,7 @@ machine(struct mne *mp)
         }
 
         case S_XCH:
-                def.mask = 0x7F;
+                def.mask = 0x3F;
                 exch(def);
                 break;
 
@@ -215,7 +215,7 @@ machine(struct mne *mp)
 
         case S_LDT16:
         case S_STT16:
-                def.mask = 0x7E;
+                def.mask = 0x3E;
                 eone(def);
                 break;
 
@@ -225,14 +225,14 @@ machine(struct mne *mp)
               break;
 
         case S_SWAPC:
-              def.mask = 0x3F;
+              def.mask = 0x1F;
               eswapc(def, /*N offset*/6);
               break;
 
         case S_COMP:
         case S_NADD: {
-              struct inst am = {op, 0x7F};
-              struct inst ma = {op | 0x80, 0x7F};
+              struct inst am = {op, 0x3F};
+              struct inst ma = {op | 0x80, 0x3F};
               espec(am, ma);
               break;
         }

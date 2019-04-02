@@ -5,6 +5,9 @@
 	  src/pdk/main.c,
 	  src/pdk/peeph.def:
 	  Basic peephole optimizer.
+	* sdas/aspdk13/pdk13mch.c,
+	  sdas/aspdk13/pdk13pst.c:
+	  Basic pdk13 assembler, patch by Leo.
 
 2019-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
