@@ -5,6 +5,6 @@ replace restart {
 	mov	a, %1
 } by {
 	mov	%1, a
-	; peephole 1 redundant load rom %1 into a.
+	; peephole 1 remved redundant load rom %1 into a.
 } if notVolatile(%1)
 

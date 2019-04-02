@@ -734,6 +734,8 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
     {
       if (var[0] == '#')
         return true;
+      if (!strcmp (var, "p"))
+        return true;
     }
 
   /* Extract a symbol name from the variable */
