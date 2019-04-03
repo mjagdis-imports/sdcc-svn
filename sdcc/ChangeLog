@@ -3,6 +3,9 @@
 	* device/include/signal.h,
 	  device/include/stdint.h:
 	  Support sig_atomic_t.
+	* src/stm8/peep.c,
+	  src/stm8/peeph.def:
+	  Peephole improvements, picked from patch #290 by Visenri.
 
 2019-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
