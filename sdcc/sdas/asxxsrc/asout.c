@@ -1860,9 +1860,10 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                 n =  op | (esp->e_addr & mask);
                 out_lw(n,r|R_RELOC);
                 if (oflag) {
-                        outchk(4, 4);
+                        outchk(5, 4);
                         out_txb(2, esp->e_addr);
                         out_txb(2, op);
+                        out_txb(1, (int)get_sdas_target());
 
                         if (esp->e_flag) {
                                 n = esp->e_base.e_sp->s_ref;
@@ -1871,7 +1872,7 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                                 n = esp->e_base.e_ap->a_ref;
                         }
                         *relp++ = r;
-                        *relp++ = txtp - txt - 4;
+                        *relp++ = txtp - txt - 5;
                         out_rw(n);
                 }
         }
