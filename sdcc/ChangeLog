@@ -6,6 +6,10 @@
 	* src/stm8/peep.c,
 	  src/stm8/peeph.def:
 	  Peephole improvements, picked from patch #290 by Visenri.
+	* src/z80/peeph-gbz80.def,
+	  src/z80/peeph-r2k.def,
+	  src/z80/peeph-z80.def:
+	  Peephole rule improvements, patch by b-s-a.
 
 2019-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
