@@ -1,3 +1,10 @@
+2019-04-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk15/pdk15mch.c,
+	  sdas/asxxsrc/asout.c,
+	  sdas/linksrc/lkrloc3.c:
+	  Assembler fix, patch by Nicolas Lesser.
+
 2019-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* sdas/aspdk13/pdk13mch.c:

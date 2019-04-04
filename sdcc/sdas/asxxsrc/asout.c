@@ -1846,8 +1846,8 @@ outrwp(struct expr *esp, a_uint op, a_uint mask, int jump)
                  * range. Revert this and put them back where they belong.
                  */
                 if (esp->e_addr & ~0xFFFF) {
-                        int marker = esp->e_addr & 0x18000;
-                        esp->e_addr &= ~0x18000;
+                        int marker = esp->e_addr & 0x10000;
+                        esp->e_addr &= ~0x10000;
                         esp->e_addr |= marker >> 1;
                 }
 

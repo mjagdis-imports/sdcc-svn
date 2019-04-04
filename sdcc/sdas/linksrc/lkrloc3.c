@@ -415,12 +415,12 @@ relr3(void)
                         const int igoto = (mask >> 0) | (mask >> 1);
                         if (((mode & R3_BYTE) && !(mode & R3_USGN)) ||
                             jump == icall || jump == igoto) {
-                                /* Addresses cannot be bigger than N - 2 bits.
+                                /* Addresses cannot be bigger than N - 1 bits.
                                  * Any bits that are set past that point are
                                  * marker bits that should be not shifted.
                                  */
-                                int marker = rtval[rtp + 1] & 0xC0;
-                                rtval[rtp + 1] &= ~0xC0;
+                                int marker = rtval[rtp + 1] & 0x80;
+                                rtval[rtp + 1] &= ~0x80;
 
                                 rtval[rtp] /= 2;
                                 rtval[rtp] |= (rtval[rtp + 1] & 1) << 7;
