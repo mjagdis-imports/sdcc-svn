@@ -1,4 +1,4 @@
-/* pdk14mch.c */
+ /* pdk14mch.c */
 
 /*
  *  Copyright (C) 1998-2011  Alan R. Baldwin
@@ -78,21 +78,21 @@ machine(struct mne *mp)
         }
 
         case S_SUB:
-                combine = 0x80;
+                combine = 0x40;
                 /* fallthrough */
         case S_ADD: {
-                struct inst ma = {0x0800 | combine, 0x3F};
-                struct inst am = {0x0C00 | combine, 0x3F};
+                struct inst ma = {0x0400 | combine, 0x3F};
+                struct inst am = {0x0600 | combine, 0x3F};
                 earith(def, ma, am);
                 break;
         }
 
         case S_SUBC:
-                combine = 0x80;
+                combine = 0x40;
                 /* fallthrough */
         case S_ADDC: {
-                struct inst ma = {0x0900 | combine, 0x3F};
-                struct inst am = {0x0D00 | combine, 0x3F};
+                struct inst ma = {0x0800 | combine, 0x3F};
+                struct inst am = {0x0800 | combine, 0x3F};
                 struct inst m = {0x1000 | combine, 0x3F};
                 struct inst a = {0x0060 + (combine ? 1 : 0), 0x00};
                 earithc(ma, am, m, a);
@@ -132,7 +132,7 @@ machine(struct mne *mp)
         }
 
         case S_NEG:
-                combine = 0x80;
+                combine = 0x40;
                 /* fallthrough */
         case S_NOT: {
                 struct inst m = {0x1400 | combine, 0x3F};
@@ -151,10 +151,10 @@ machine(struct mne *mp)
         }
 
         case S_CNEQSN:
-                combine = 0x80;
+                combine = 0x40;
                 /* fallthrough */
         case S_CEQSN: {
-                struct inst m = {0x1700 | combine, 0xFF};
+                struct inst m = {0x1200 | combine, 0xFF};
                 def.op |= combine << 1;
                 eskip(def, m);
                 break;
@@ -171,7 +171,7 @@ machine(struct mne *mp)
         }
 
         case S_DZSN:
-                combine = 0x80;
+                combine = 0x40;
                 /* fallthrough */
         case S_IZSN: {
                 struct inst m = {0x1100 | combine, 0x3F};
