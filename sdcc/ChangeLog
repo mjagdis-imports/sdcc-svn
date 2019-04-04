@@ -4,6 +4,12 @@
 	  sdas/asxxsrc/asout.c,
 	  sdas/linksrc/lkrloc3.c:
 	  Assembler fix, patch by Nicolas Lesser.
+	* support/regression/fwk/include/testfwk.h,
+	  support/regression/tests/absolute.c,
+	  support/regression/tests/bug-1918.c,
+	  support/regression/tests/bug-2124.c,
+	  support/regression/tests/bug-2271.c:
+	  Towards regression testing for pdk15.
 
 2019-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
