@@ -4,6 +4,8 @@
 	  Assembler fixes, patch by Leo.
 	* sdas/aspdk13/pdk13pst.c:
 	  Assembler fixes.
+	* device/lib/Makefile.in:
+	  Build pdk13 library.
 
 2019-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

@@ -50,7 +50,7 @@ machine(struct mne *mp)
         /* Set the target in case it was not automatically
          * configured from the executable filename.
          */
-        set_sdas_target (TARGET_ID_PDK);
+        set_sdas_target (TARGET_ID_PDK13);
 
         op = mp->m_valu;
         combine = 0;
