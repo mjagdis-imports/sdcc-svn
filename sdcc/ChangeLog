@@ -6,6 +6,13 @@
 	  Assembler fixes.
 	* device/lib/Makefile.in:
 	  Build pdk13 library.
+	* sim/ucsim/globals.cc,
+	  sim/ucsim/pdk.src/*,
+	  sim/ucsim/stypes.h,
+	  pdk15 simulator, patch by Nicolas Lesser.
+	* support/regression/Makefile.in,
+	  support/regression/ports/pdk15:
+	  pdk15 regression testing infrastructure.
 
 2019-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

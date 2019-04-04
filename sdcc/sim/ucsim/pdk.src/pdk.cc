@@ -80,56 +80,23 @@ void cl_pdk::reset(void) {
 
   PC = 0x0000;
   regs.a = 0;
-
-  regs.flag = 0x00;
-  regs.sp = 0x00;
-  regs.clkmd = 0xF6;
-  regs.inten = 0x00;
-  regs.intrq = 0x00;
-  regs.t16m = 0x00;
-  regs.eoscr = 0x00;
-  regs.integs = 0x00;
-  regs.padier = 0xF9;
-  regs.pbdier = 0xFF;
-  regs.pa = 0x00;
-  regs.pac = 0x00;
-  regs.paph = 0x00;
-  regs.pb = 0x00;
-  regs.pbc = 0x00;
-  regs.pbph = 0x00;
-  regs.misc = 0x00;
-  regs.tm2c = 0x00;
-  regs.tm2ct = 0x00;
-  regs.tm2s = 0x00;
-  regs.tm2s = 0x00;
-  regs.tm2b = 0x00;
-  regs.tm3c = 0x00;
-  regs.tm3ct = 0x00;
-  regs.tm3s = 0x00;
-  regs.tm3b = 0x00;
-  regs.gpcc = 0x00;
-  regs.gpcs = 0x00;
-  regs.pwmg0c = 0x00;
-  regs.pwmg0s = 0x00;
-  regs.pwmg0cubh = 0x00;
-  regs.pwmg0cubl = 0x00;
-  regs.pwmg0dth = 0x00;
-  regs.pwmg0dtl = 0x00;
-  regs.pwmg1c = 0x00;
-  regs.pwmg1s = 0x00;
-  regs.pwmg1cubh = 0x00;
-  regs.pwmg1cubl = 0x00;
-  regs.pwmg1dth = 0x00;
-  regs.pwmg1dtl = 0x00;
-  regs.pwmg2c = 0x00;
-  regs.pwmg2s = 0x00;
-  regs.pwmg2cubh = 0x00;
-  regs.pwmg2cubl = 0x00;
-  regs.pwmg2dth = 0x00;
-  regs.pwmg2dtl = 0x00;
+  for (size_t i = 0; i < sizeof(t_regs::regs); ++i) {
+    regs.regs[i] = 0;
+  }
 }
 
-char *cl_pdk::id_string(void) { return ((char *)"pdk14"); }
+char *cl_pdk::id_string(void) {
+  switch (type->type) {
+    case CPU_PDK13:
+      return((char *)"pdk13");
+    case CPU_PDK14:
+      return((char *)"pdk14");
+    case CPU_PDK15:
+      return((char *)"pdk15");
+    default:
+      return((char*)"unknown pdk");
+  }
+}
 
 /*
  * Making elements of the controller
@@ -158,10 +125,25 @@ class cl_memory_chip *c;
 void cl_pdk::make_memories(void) {
   class cl_address_space *as;
 
-  rom = as = new cl_address_space("rom", 0, 0x7D0, 16);
+  int rom_storage, ram_storage;
+  switch (type->type) {
+  case CPU_PDK13:
+    // TODO
+  case CPU_PDK14:
+    rom_storage = 0x800;
+    ram_storage = 0x80;
+    break;
+  case CPU_PDK15:
+    rom_storage = 0x1000;
+    ram_storage = 0x100;
+    break;
+  default:
+    __builtin_unreachable();
+  }
+  rom = as = new cl_address_space("rom", 0, rom_storage, 16);
   as->init();
   address_spaces->add(as);
-  ram = as = new cl_address_space("ram", 0, 0x80, 8);
+  ram = as = new cl_address_space("ram", 0, ram_storage, 8);
   as->init();
   address_spaces->add(as);
 
@@ -179,149 +161,18 @@ void cl_pdk::make_memories(void) {
 
   regs8 = new cl_address_space("regs8", 0, 45, 8);
   regs8->init();
-  int i = 0;
-  regs8->get_cell(i++)->decode((t_mem *)&regs.a);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.flag);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.sp);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.clkmd);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.inten);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.intrq);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.t16m);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.eoscr);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.integs);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.padier);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pbdier);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pa);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pac);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pb);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pbc);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pbph);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.misc);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2c);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2ct);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2s);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm2b);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3c);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3ct);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3s);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.tm3b);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.gpcc);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.gpcs);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0c);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0s);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0cubh);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0cubl);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0dth);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg0dtl);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1c);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1s);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1cubh);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1cubl);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1dth);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg1dtl);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2c);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2s);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2cubh);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2cubl);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2dth);
-  regs8->get_cell(i++)->decode((t_mem *)&regs.pwmg2dtl);
-  /* TODO: Add the other registers. */
-
+  regs8->get_cell(0)->decode((t_mem *)&regs.a);
+  for (size_t i = 0; i < sizeof(t_regs::regs); ++i) {
+    regs8->get_cell(i + 1)->decode((t_mem *)(regs.regs + i));
+  }
   address_spaces->add(regs8);
 
   class cl_var *v;
-  i = 0;
-  vars->add(v = new cl_var(cchars("a"), regs8, i++, ""));
+  vars->add(v = new cl_var(cchars("a"), regs8, 0, ""));
   v->init();
-  vars->add(v = new cl_var(cchars("flag"), regs8, i++, ""));
+  vars->add(v = new cl_var(cchars("flag"), regs8, 1, ""));
   v->init();
-  vars->add(v = new cl_var(cchars("sp"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("clkmd"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("inten"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("intrq"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("t16m"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("eoscr"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("integs"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("padier"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pbdier"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pa"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pac"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("paph"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pb"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pbc"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pbph"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("misc"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm2c"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm2ct"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm2s"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm2b"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm3c"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm3ct"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm3s"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("tm3b"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("gpcc"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("gpcs"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg0c"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg0s"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg0cubh"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg0cubl"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg0dth"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg0dtl"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg1c"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg1s"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg1cubh"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg1cubl"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg1dth"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg1dtl"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg2c"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg2s"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg2cubh"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg2cubl"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg2dth"), regs8, i++, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("pwmg2dtl"), regs8, i++, ""));
+  vars->add(v = new cl_var(cchars("sp"), regs8, 2, ""));
   v->init();
 }
 
@@ -371,76 +222,35 @@ const char *cl_pdk::get_disasm_info(t_addr addr, int *ret_len, int *ret_branch,
                                     int *immed_offset,
                                     struct dis_entry **dentry) {
   const char *b = NULL;
-  uint code;
-  int len = 0;
   int immed_n = 0;
-  int i;
   int start_addr = addr;
-  struct dis_entry *dis_e;
+  struct dis_entry *instructions;
 
-  //code = rom->get(addr++);
-  dis_e = NULL;
-
-  switch (code = 0x14) {
+  switch (type->type) {
       /* Dispatch to appropriate pdk port. */
-      /*case 0x13 :
-        code= rom->get(addr++);
-    i= 0;
-    while ((code & disass_pdk_13[i].mask) != disass_pdk13[i].code &&
-      disass_pdk_13[i].mnemonic)
-      i++;
-    dis_e = &disass_pdk_13[i];
-    b= disass_pdk_13[i].mnemonic;
-    if (b != NULL)
-      len += (disass_pdk_13[i].length + 1);
-  break;*/
+      /*case CPU_PDK13:
+        instructions = disass_pdk_13;
+        break;*/
 
-    case 0x14:
-      code = rom->get(addr++);
-      i = 0;
-      while ((code & disass_pdk_14[i].mask) != disass_pdk_14[i].code &&
-             disass_pdk_14[i].mnemonic)
-        i++;
-      dis_e = &disass_pdk_14[i];
-      b = disass_pdk_14[i].mnemonic;
-      if (b != NULL) len += 1; //(disass_pdk_14[i].length + 1);
-      break;
+      case CPU_PDK14:
+        instructions = disass_pdk_14;
+        break;
 
-      /*case 0x15 :
-        code= rom->get(addr++);
-    i= 0;
-    while ((code & disass_pdk_15[i].mask) != disass_pdk_15[i].code &&
-      disass_pdk_15[i].mnemonic)
-      i++;
-    dis_e = &disass_pdk_15[i];
-    b= disass_pdk_15[i].mnemonic;
-    if (b != NULL)
-      len += (disass_pdk_15[i].length + 1);
-  break;*/
+      case CPU_PDK15:
+        instructions = disass_pdk_15;
+        break;
 
-      /*case 0x16 :
-        code= rom->get(addr++);
-    i= 0;
-    while ((code & disass_pdk_16[i].mask) != disass_pdk_16[i].code &&
-      disass_pdk_16[i].mnemonic)
-      i++;
-    dis_e = &disass_pdk_16[i];
-    b= disass_pdk_16[i].mnemonic;
-    if (b != NULL)
-      len += (disass_pdk_16[i].length + 1);
-  break;*/
-
-      /*default:
-        i= 0;
-        while ((code & disass_pdk[i].mask) != disass_pdk[i].code &&
-               disass_pdk[i].mnemonic)
-          i++;
-        dis_e = &disass_pdk[i];
-        b= disass_pdk[i].mnemonic;
-        if (b != NULL)
-          len += (disass_pdk[i].length);
-      break;*/
+      default:
+        __builtin_unreachable();
   }
+
+  uint code = rom->get(addr++);
+  int i = 0;
+  while ((code & instructions[i].mask) != instructions[i].code &&
+         instructions[i].mnemonic)
+    i++;
+  dis_entry *dis_e = &instructions[i];
+  b = instructions[i].mnemonic;
 
   if (ret_branch) {
     *ret_branch = dis_e->branch;
@@ -453,9 +263,7 @@ const char *cl_pdk::get_disasm_info(t_addr addr, int *ret_len, int *ret_branch,
       *immed_offset = (addr - start_addr);
   }
 
-  if (len == 0) len = 1;
-
-  if (ret_len) *ret_len = len;
+  if (ret_len) *ret_len = 1;
 
   if (dentry) *dentry = dis_e;
 
@@ -539,8 +347,8 @@ char *cl_pdk::disass(t_addr addr, const char *sep) {
 
 void cl_pdk::print_regs(class cl_console_base *con) {
   con->dd_printf("A= 0x%02x(%3d)\n", regs.a, regs.a);
-  con->dd_printf("Flag= 0x%02x(%3d)  \n", regs.flag, regs.flag);
-  con->dd_printf("SP= 0x%02x(%3d)\n", regs.sp, regs.sp);
+  con->dd_printf("Flag= 0x%02x(%3d)  \n", regs.regs[0x00], regs.regs[0x00]);
+  con->dd_printf("SP= 0x%02x(%3d)\n", regs.regs[0x02], regs.regs[0x02]);
 
   print_disass(PC, con);
 }
