@@ -18,6 +18,11 @@
 	  support/regression/tests/bug-2455.c,
 	  support/regression/tests/bug-2497.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lkrloc3.c,
+	  sdas/linksrc/sdld.c,
+	  sdas/linksrc/sdld.h:
+	  Fix bug #2896, patch by Nicolas Lesser.
 
 2019-04-04 Philipp Klaus Krause <pkk AT spth.de>
 

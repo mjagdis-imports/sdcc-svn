@@ -402,12 +402,33 @@ relr3(void)
                         if (rtval[rtp + 4] == 15) {
                                 jump = rtval[rtp + 3] & 0x70;
                                 mask = 0x40;
+                                if (get_sdld_target() == TARGET_ID_PDK) {
+                                        set_sdld_target(TARGET_ID_PDK15);
+                                } else if (get_sdld_target() != TARGET_ID_PDK15) {
+                                        printf(
+                                            "?ASlink-Warning-mismatched pdk targets; "
+                                              "expected pdk15");
+                                }
                         } else if (rtval[rtp + 4] == 14) {
                                 jump = rtval[rtp + 3] & 0x38;
                                 mask = 0x20;
+                                if (get_sdld_target() == TARGET_ID_PDK) {
+                                        set_sdld_target(TARGET_ID_PDK14);
+                                } else if (get_sdld_target() != TARGET_ID_PDK14) {
+                                        printf(
+                                            "?ASlink-Warning-mismatched pdk targets; "
+                                              "expected pdk14");
+                                }
                         } else if (rtval[rtp + 4] == 13) {
                                 jump = rtval[rtp + 3] & 0x1C;
                                 mask = 0x10;
+                                if (get_sdld_target() == TARGET_ID_PDK) {
+                                        set_sdld_target(TARGET_ID_PDK13);
+                                } else if (get_sdld_target() != TARGET_ID_PDK13) {
+                                        printf(
+                                            "?ASlink-Warning-mismatched pdk targets; "
+                                              "expected pdk13");
+                                }
                         }
 
                         const int icall =
