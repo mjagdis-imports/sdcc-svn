@@ -1858,15 +1858,22 @@ genCmp (const iCode *ic, iCode *ifx)
       if (ic->op == '>' && right->aop->type == AOP_LIT)
         {
           wassert (!aopIsLitVal (right->aop, 0, 1, 0x00));
-          emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
+          
           if (IC_TRUE (ifx))
             {
+              emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
               emit2 ("t1sn", "f, c");
+              cost (2, 2.5);
+            }
+          else if (TARGET_IS_PDK15)
+            {
+              emit2 ("comp", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
+              emit2 ("t0sn", "f, c");
               cost (2, 2.5);
             }
           else
             {
-              
+              emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
               emit2 ("nop", "");
               emit2 ("t0sn", "f, c");
               cost (3, 3.5);
@@ -1876,14 +1883,21 @@ genCmp (const iCode *ic, iCode *ifx)
         }
       else if (ic->op == '<' && aopInReg (left->aop, 0, A_IDX) && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR) && (IC_TRUE (ifx) || !regDead (A_IDX, ic)))
         {
-          emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
           if (IC_FALSE (ifx))
             {
+              emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
               emit2 ("t1sn", "f, c");
+              cost (2, 2.5);
+            }
+          else if (TARGET_IS_PDK15)
+            {
+              emit2 ("comp", "a, %s", aopGet (right->aop, 0));
+              emit2 ("t0sn", "f, c");
               cost (2, 2.5);
             }
           else
             {
+              emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
               emit2 ("nop", "");
               emit2 ("t0sn", "f, c");
               cost (3, 3.5);

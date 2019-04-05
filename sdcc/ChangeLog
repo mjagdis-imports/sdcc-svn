@@ -1,5 +1,19 @@
 2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c:
+	  Use comp in pdk15 comparisons.
+	* support/regression/tests/bug-2551.c,
+	  support/regression/tests/bug-2554.c,
+	  support/regression/tests/bug-2558.c,
+	  support/regression/tests/bug-2559.c,
+	  support/regression/tests/bug-2611.c,
+	  support/regression/tests/bug-2625.c,
+	  support/regression/tests/bug-2632.c,
+	  support/regression/tests/bug-2663.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+
+2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c,
 	  support/regression/tests/bug-2274.c:
 	  Support dummy write for handling of uninitialized variables, better code for write of literal to bit-field.
