@@ -223,7 +223,6 @@ machine(struct mne *mp)
         case S_PCADD:
               eopta(def);
               break;
-        }
 
         /* Simple instructions consisting of only one opcode and no args */
         case S_RETI:
