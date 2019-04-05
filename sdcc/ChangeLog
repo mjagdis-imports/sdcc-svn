@@ -21,7 +21,17 @@
 	  support/regression/tests/bug1723128.c,
 	  support/regression/tests/bug1908493.c,
 	  support/regression/tests/bug2077267.c,
-	  support/regression/tests/bug2094505.c:
+	  support/regression/tests/bug2094505.c,
+	  support/regression/tests/bug3401973.c,
+	  support/regression/tests/bug3474855.c,
+	  support/regression/tests/bug3475630.c,
+	  support/regression/tests/bug3502965.c,
+	  support/regression/tests/compare_2_n.m4,
+	  support/regression/tests/float.c,
+	  support/regression/tests/float_single.c,
+	  support/regression/tests/float_trans.c,
+	  support/regression/tests/gcc-torture-execute-20000314-3.c,
+	  support/regression/tests/gcc-torture-execute-20000605-1.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 	* sdas/aspdk15/pdk15mch.c
 	  Assembler fix, patch by Nicolas Lesser.
