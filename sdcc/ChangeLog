@@ -5,6 +5,19 @@
 	  Support dummy write for handling of uninitialized variables, better code for write of literal to bit-field.
 	* sim/ucsim/pdk.src/inst.cc:
 	  Fix dec m for pdk15.
+	* support/regression/tests/bitfields.c,
+	  support/regression/tests/bug-2181.c,
+	  support/regression/tests/bug-2197.c,
+	  support/regression/tests/bug-221100.c,
+	  support/regression/tests/bug-221168.c,
+	  support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-2349.c,
+	  support/regression/tests/bug-2357.c,
+	  support/regression/tests/bug-2363.c,
+	  support/regression/tests/bug-2373.c,
+	  support/regression/tests/bug-2455.c,
+	  support/regression/tests/bug-2497.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
 
 2019-04-04 Philipp Klaus Krause <pkk AT spth.de>
 
