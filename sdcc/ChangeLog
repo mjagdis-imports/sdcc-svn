@@ -13,7 +13,15 @@
 	  support/regression/tests/bug-2767.c,
 	  support/regression/tests/bug-2820.c,
 	  support/regression/tests/bug-3117729.c,
-	  support/regression/tests/bug-3495411.c:
+	  support/regression/tests/bug-3495411.c,
+	  support/regression/tests/bug-499644.c,
+	  support/regression/tests/bug-500536.c,
+	  support/regression/tests/bug-716242.c,
+	  support/regression/tests/bug1551947.c,
+	  support/regression/tests/bug1723128.c,
+	  support/regression/tests/bug1908493.c,
+	  support/regression/tests/bug2077267.c,
+	  support/regression/tests/bug2094505.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 
 2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
