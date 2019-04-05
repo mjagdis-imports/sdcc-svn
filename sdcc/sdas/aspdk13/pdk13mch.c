@@ -93,8 +93,8 @@ machine(struct mne *mp)
         case S_ADDC: {
                 struct inst ma = {0x0800 | combine, 0x3F};
                 struct inst am = {0x0800 | combine, 0x3F};
-                struct inst m = {0x1000 | combine, 0x3F};
-                struct inst a = {0x0060 + (combine ? 1 : 0), 0x00};
+                struct inst a = {0x001A + combine, 0x00};
+                struct inst m = {0x0A80 + (combine << 6), 0x3F};
                 earithc(ma, am, m, a);
                 break;
         }
@@ -222,18 +222,6 @@ machine(struct mne *mp)
         case S_SWAP:
         case S_PCADD:
               eopta(def);
-              break;
-
-        case S_SWAPC:
-              def.mask = 0x1F;
-              eswapc(def, /*N offset*/3);
-              break;
-
-        case S_COMP:
-        case S_NADD: {
-              struct inst am = {op, 0x3F};
-              struct inst ma = {op | 0x80, 0x3F};
-              espec(am, ma);
               break;
         }
 
