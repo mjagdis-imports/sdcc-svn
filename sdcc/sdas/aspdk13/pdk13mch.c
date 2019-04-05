@@ -35,7 +35,7 @@
 #include "asxxxx.h"
 #include "pdk.h"
 
-char    *cpu    = "Padauk 14";
+char    *cpu    = "Padauk 13";
 char    *dsft   = "asm";
 
 /*
@@ -199,7 +199,7 @@ machine(struct mne *mp)
                 waddrmode =  1;
                 expr(&e, 0);
                 waddrmode =  0;
-                outrwp(&e, def.op, 0x7FF, /*jump=*/1);
+                outrwp(&e, def.op, 0x3FF, /*jump=*/1);
                 break;
         }
 

@@ -69,7 +69,6 @@
 	  support/regression/tests/bug-2271.c:
 	  Towards regression testing for pdk15.
 
->>>>>>>
 2019-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* sdas/aspdk13/pdk13mch.c:
