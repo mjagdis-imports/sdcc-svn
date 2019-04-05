@@ -1,5 +1,13 @@
 2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* sdas/aspdk13/pdk13mch.c,
+	  sdas/aspdk13/pdk13pst.c:
+	  Assembler fix, patch by Leo.
+	* sim/ucsim/pdk.src/pdk.cc:
+	  Simulator fix, patch by Nicolas Lesser.
+
+2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* .version,
 	  doc/INSTALL.txt,
 	  sdcc.spec:

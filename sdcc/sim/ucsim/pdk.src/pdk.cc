@@ -306,13 +306,38 @@ char *cl_pdk::disass(t_addr addr, const char *sep) {
         case 'i':  // i    IO addressing
           // TODO: Maybe add pretty printing.
           if (*b == 'n') {
-            code &= 0x3F;
+            switch (type->type) {
+            case CPU_PDK13:
+              // TODO
+            case CPU_PDK14:
+              code &= 0x3F;
+              break;
+            case CPU_PDK15:
+              code &= 0x7F;
+              break;
+            default:
+              __builtin_unreachable();
+           }
+
             ++b;
           }
           sprintf(temp, "[%u]", code);
           break;
         case 'n':  // n    N-bit addressing
-          sprintf(temp, "#%u", (code & 0x1C0) >> 6);
+          uint n;
+          switch (type->type) {
+          case CPU_PDK13:
+            // TODO
+          case CPU_PDK14:
+            n = (code & 0x1C0) >> 6;
+            break;
+          case CPU_PDK15:
+            n = (code & 0x380) >> 7;
+            break;
+          default:
+            __builtin_unreachable();
+          }
+          sprintf(temp, "#%u", n);
           break;
         default:
           strcpy(temp, "%?");

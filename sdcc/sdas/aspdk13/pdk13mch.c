@@ -174,7 +174,7 @@ machine(struct mne *mp)
                 combine = 0x40;
                 /* fallthrough */
         case S_IZSN: {
-                struct inst m = {0x1100 | combine, 0x3F};
+                struct inst m = {0x0800 | combine, 0x3F};
                 ezsn(def, m);
                 break;
         }
