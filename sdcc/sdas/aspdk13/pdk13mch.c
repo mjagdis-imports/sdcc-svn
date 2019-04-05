@@ -62,17 +62,17 @@ machine(struct mne *mp)
         switch (mp->m_type) {
 
         case S_MOV: {
-                struct inst ioa = {0x0180, 0x1F};
-                struct inst aio = {0x01C0, 0x1F};
-                struct inst ma = {0x0B80, 0x3F};
-                struct inst am = {0x0F80, 0x3F};
+                struct inst ioa = {0x0080, 0x1F};
+                struct inst aio = {0x00A0, 0x1F};
+                struct inst ma = {0x05C0, 0x3F};
+                struct inst am = {0x07C0, 0x3F};
                 emov(def, ioa, aio, ma, am);
                 break;
         }
 
         case S_IDXM: {
-                struct inst am = {op | 1, 0x3E};
-                struct inst ma = {op, 0x3E};
+                struct inst am = {op | 1, 0x1E};
+                struct inst ma = {op, 0x1E};
                 eidxm(am, ma);
                 break;
         }
@@ -91,10 +91,10 @@ machine(struct mne *mp)
                 combine = 0x40;
                 /* fallthrough */
         case S_ADDC: {
-                struct inst ma = {0x0800 | combine, 0x3F};
-                struct inst am = {0x0800 | combine, 0x3F};
-                struct inst a = {0x001A + combine, 0x00};
-                struct inst m = {0x0A80 + (combine << 6), 0x3F};
+                struct inst ma = {0x0480 | combine, 0x3F};
+                struct inst am = {0x0680 | combine, 0x3F};
+                struct inst a = {0x0010 + (combine >> 6), 0x00};
+                struct inst m = {0x0800 + combine, 0x3F};
                 earithc(ma, am, m, a);
                 break;
         }
@@ -108,8 +108,8 @@ machine(struct mne *mp)
                 if (mp->m_type == S_SL || mp->m_type == S_SLC)
                         combine += 1;
 
-                struct inst a = {0x006A + combine, 0x00};
-                struct inst m = {0x0A00 + (combine << 3), 0x3F};
+                struct inst a = {0x001A + combine, 0x00};
+                struct inst m = {0x0A00 + (combine << 6), 0x3F};
                 eshift(a, m);
                 break;
         }
@@ -118,15 +118,15 @@ machine(struct mne *mp)
         case S_XOR:
         case S_AND: {
                 if (mp->m_type == S_OR) {
-                        combine = 0x80;
+                        combine = 0x40;
                 } else
                 if (mp->m_type == S_XOR) {
-                        combine = 0x100;
+                        combine = 0x80;
                 }
 
-                struct inst ma = {0x0A00 | combine, 0x3F};
-                struct inst am = {0x0E00 | combine, 0x3F};
-                struct inst ioa = {0x00C0, 0x3F};
+                struct inst ma = {0x0500 | combine, 0x3F};
+                struct inst am = {0x0700 | combine, 0x3F};
+                struct inst ioa = {0x0060, 0x1F};
                 ebit(def, ma, am, mp->m_type == S_XOR ? &ioa : NULL);
                 break;
         }
@@ -155,7 +155,7 @@ machine(struct mne *mp)
                 /* fallthrough */
         case S_CEQSN: {
                 struct inst m = {0x0B80 | combine, 0xFF};
-                def.op |= combine << 1;
+                def.op |= combine << 2;
                 eskip(def, m);
                 break;
         }
@@ -174,13 +174,13 @@ machine(struct mne *mp)
                 combine = 0x40;
                 /* fallthrough */
         case S_IZSN: {
-                struct inst m = {0x0800 | combine, 0x3F};
+                struct inst m = {0x0880 | combine, 0x3F};
                 ezsn(def, m);
                 break;
         }
 
         case S_RET: {
-                struct inst k = {0x0200, 0xFF};
+                struct inst k = {0x0100, 0xFF};
                 eret(def, k);
                 break;
         }
