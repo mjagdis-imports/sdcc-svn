@@ -40,7 +40,19 @@
 	  support/regression/tests/gcc-torture-execute-20020508-1.c,
 	  support/regression/tests/gcc-torture-execute-20020508-2.c,
 	  support/regression/tests/gcc-torture-execute-20020508-3.c,
-	  support/regression/tests/gcc-torture-execute-20030209-1.c:
+	  support/regression/tests/gcc-torture-execute-20030209-1.c,
+	  support/regression/tests/gcc-torture-execute-20030714-1.c,
+	  support/regression/tests/gcc-torture-execute-20031012-1.c,
+	  support/regression/tests/gcc-torture-execute-20041011-1.c,
+	  support/regression/tests/gcc-torture-execute-20050106-1.c,
+	  support/regression/tests/gcc-torture-execute-20060412-1.c,
+	  support/regression/tests/gcc-torture-execute-20060905-1.c,
+	  support/regression/tests/gcc-torture-execute-20060930-2.c,
+	  support/regression/tests/gcc-torture-execute-20071030-1.c,
+	  support/regression/tests/gcc-torture-execute-20080424-1.c,
+	  support/regression/tests/gcc-torture-execute-20090113-1.c,
+	  support/regression/tests/gcc-torture-execute-920721-3.c,
+	  support/regression/tests/gcc-torture-execute-921208-1.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 	* sdas/aspdk15/pdk15mch.c
 	  Assembler fix, patch by Nicolas Lesser.
