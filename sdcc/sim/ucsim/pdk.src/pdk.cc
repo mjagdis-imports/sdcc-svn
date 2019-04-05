@@ -80,7 +80,7 @@ void cl_pdk::reset(void) {
 
   PC = 0x0000;
   regs.a = 0;
-  for (size_t i = 0; i < sizeof(t_regs::regs); ++i) {
+  for (size_t i = 0; i < io_size; ++i) {
     regs.regs[i] = 0;
   }
 }
@@ -150,19 +150,19 @@ void cl_pdk::make_memories(void) {
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip = new cl_memory_chip("rom_chip", 0x7Dd0, 16);
+  chip = new cl_memory_chip("rom_chip", rom_storage, 16);
   chip->init();
   memchips->add(chip);
 
-  ad = new cl_address_decoder(as = address_space("rom"), chip, 0, 0x7CF, 0);
+  ad = new cl_address_decoder(as = address_space("rom"), chip, 0, rom_storage, 0);
   ad->init();
   as->decoders->add(ad);
   ad->activate(0);
 
-  regs8 = new cl_address_space("regs8", 0, 45, 8);
+  regs8 = new cl_address_space("regs8", 0, io_size + 1, 8);
   regs8->init();
   regs8->get_cell(0)->decode((t_mem *)&regs.a);
-  for (size_t i = 0; i < sizeof(t_regs::regs); ++i) {
+  for (size_t i = 0; i < io_size; ++i) {
     regs8->get_cell(i + 1)->decode((t_mem *)(regs.regs + i));
   }
   address_spaces->add(regs8);

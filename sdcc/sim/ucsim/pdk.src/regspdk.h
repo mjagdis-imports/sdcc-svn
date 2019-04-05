@@ -31,11 +31,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "ddconfig.h"
 
 
+const int io_size = 64;
 struct t_regs
 {
   u8_t a;
 
-  u8_t regs[64];
+  u8_t regs[io_size];
 };
 
 #define BIT_Z	0x01  // zero status, 1=zero, 0=nonzero

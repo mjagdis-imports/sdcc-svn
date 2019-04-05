@@ -23,6 +23,12 @@
 	  support/regression/tests/bug2077267.c,
 	  support/regression/tests/bug2094505.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* sdas/aspdk15/pdk15mch.c
+	  Assembler fix, patch by Nicolas Lesser.
+	* sim/ucsim/pdk.src/inst.cc,
+	  sim/ucsim/pdk.src/pdk.cc,
+	  sim/ucsim/pdk.src/regspdk.h:
+	  Simulator fix, patch by Nicolas Lesser.
 
 2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
