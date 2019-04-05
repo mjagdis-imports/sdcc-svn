@@ -39,6 +39,8 @@
 	  sim/ucsim/pdk.src/pdk.cc,
 	  sim/ucsim/pdk.src/regspdk.h:
 	  Simulator fix, patch by Nicolas Lesser.
+	* sdas/aspdk13/pdk13mch.c:
+	  Assembler fix, patch by Leo.
 
 2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

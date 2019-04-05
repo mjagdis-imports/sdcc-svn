@@ -109,7 +109,7 @@ machine(struct mne *mp)
                         combine += 1;
 
                 struct inst a = {0x006A + combine, 0x00};
-                struct inst m = {0x1500 + (combine << 3), 0x3F};
+                struct inst m = {0x0A00 + (combine << 3), 0x3F};
                 eshift(a, m);
                 break;
         }
@@ -135,7 +135,7 @@ machine(struct mne *mp)
                 combine = 0x40;
                 /* fallthrough */
         case S_NOT: {
-                struct inst m = {0x1400 | combine, 0x3F};
+                struct inst m = {0x0A00 | combine, 0x3F};
                 enot(def, m);
                 break;
         }
@@ -154,7 +154,7 @@ machine(struct mne *mp)
                 combine = 0x40;
                 /* fallthrough */
         case S_CEQSN: {
-                struct inst m = {0x1200 | combine, 0xFF};
+                struct inst m = {0x0B80 | combine, 0xFF};
                 def.op |= combine << 1;
                 eskip(def, m);
                 break;
@@ -226,7 +226,7 @@ machine(struct mne *mp)
 
         case S_SWAPC:
               def.mask = 0x1F;
-              eswapc(def, /*N offset*/6);
+              eswapc(def, /*N offset*/3);
               break;
 
         case S_COMP:
