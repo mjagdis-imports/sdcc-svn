@@ -7,7 +7,13 @@
 	  support/regression/tests/bug-2611.c,
 	  support/regression/tests/bug-2625.c,
 	  support/regression/tests/bug-2632.c,
-	  support/regression/tests/bug-2663.c:
+	  support/regression/tests/bug-2663.c,
+	  support/regression/tests/bug-2681.c,
+	  support/regression/tests/bug-2684.c,
+	  support/regression/tests/bug-2767.c,
+	  support/regression/tests/bug-2820.c,
+	  support/regression/tests/bug-3117729.c,
+	  support/regression/tests/bug-3495411.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 
 2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
