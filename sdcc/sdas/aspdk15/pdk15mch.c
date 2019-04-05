@@ -119,7 +119,7 @@ machine(struct mne *mp)
                         combine = 0x200;
                 }
 
-                struct inst ma = {0x1500 | combine, 0xFF};
+                struct inst ma = {0x1400 | combine, 0xFF};
                 struct inst am = {0x1C00 | combine, 0xFF};
                 struct inst ioa = {0x0040, 0x3F};
                 ebit(def, ma, am, mp->m_type == S_XOR ? &ioa : NULL);

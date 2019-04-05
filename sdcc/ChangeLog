@@ -25,6 +25,8 @@
 	  Fix bug #2896, patch by Nicolas Lesser.
 	* src/pdk/main.c:
 	  Enable peephole optimizer for pdk13, pdk15.
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix and m, a, patch by Nicolas Lesser.
 
 2019-04-04 Philipp Klaus Krause <pkk AT spth.de>
 
