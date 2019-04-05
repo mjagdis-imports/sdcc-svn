@@ -1865,12 +1865,6 @@ genCmp (const iCode *ic, iCode *ifx)
               emit2 ("t1sn", "f, c");
               cost (2, 2.5);
             }
-          else if (TARGET_IS_PDK15)
-            {
-              emit2 ("comp", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
-              emit2 ("t0sn", "f, c");
-              cost (2, 2.5);
-            }
           else
             {
               emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
@@ -1887,12 +1881,6 @@ genCmp (const iCode *ic, iCode *ifx)
             {
               emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
               emit2 ("t1sn", "f, c");
-              cost (2, 2.5);
-            }
-          else if (TARGET_IS_PDK15)
-            {
-              emit2 ("comp", "a, %s", aopGet (right->aop, 0));
-              emit2 ("t0sn", "f, c");
               cost (2, 2.5);
             }
           else
