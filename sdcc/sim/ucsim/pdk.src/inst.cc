@@ -567,9 +567,9 @@ int cl_pdk::execute_pdk15(unsigned int code) {
     // inc m
     int addr = code & 0xFF;
     ram->write(addr, add_to(get_mem(addr), 1));
-  } else if (CODE_MASK(0x2500, 0x7F)) {
+  } else if (CODE_MASK(0x2500, 0xFF)) {
     // dec m
-    int addr = code & 0x7F;
+    int addr = code & 0xFF;
     ram->write(addr, sub_to(get_mem(addr), 1));
   } else if (CODE_MASK(0x2600, 0xFF)) {
     // clear m

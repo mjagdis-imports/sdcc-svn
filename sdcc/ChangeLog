@@ -3,6 +3,8 @@
 	* src/pdk/gen.c,
 	  support/regression/tests/bug-2274.c:
 	  Support dummy write for handling of uninitialized variables, better code for write of literal to bit-field.
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix dec m for pdk15.
 
 2019-04-04 Philipp Klaus Krause <pkk AT spth.de>
 
