@@ -252,7 +252,7 @@ PORT pdk13_port =
     _libs_pdk13,                /* libs */
   },
   {                             /* Peephole optimizer */
-    0,
+    pdk_defaultRules,
     0,
     0,
     0,
@@ -584,7 +584,7 @@ PORT pdk15_port =
     _libs_pdk15,                /* libs */
   },
   {                             /* Peephole optimizer */
-    0,
+    pdk_defaultRules,
     0,
     0,
     0,
