@@ -3199,7 +3199,23 @@ genPointerSet (iCode *ic)
             {
               if (right->aop->type == AOP_LIT)
                 {
-                  unsigned char bval;
+                  unsigned char mval = ~((0xff >> (8 - blen)) << bstr) & 0xff;
+                  unsigned char bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr);
+
+                  if (!ptr_aop && (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) == ((0xff >> (8 - blen)) << bstr))
+                    {
+                      emit2 ("mov", "a, #0x%02x", bval);
+                      emit2 ("or", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+                      cost (2, 2);
+                      continue;
+                    }
+                  else if (!ptr_aop && !bval)
+                    {
+                      emit2 ("mov", "a, #0x%02x", mval);
+                      emit2 ("and", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
+                      cost (2, 2);
+                      continue;
+                    }
 
                   if (!ptr_aop)
                     {
@@ -3211,10 +3227,14 @@ genPointerSet (iCode *ic)
                       emit2 ("idxm", "a, %s", aopGet (ptr_aop, 0));
                       cost (1, 2);
                     }
-                  emit2 ("and", "a, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
-                  cost (1, 1);
 
-                  if (bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr))
+                  if ((byteOfVal (right->aop->aopu.aop_lit, i) << bstr) != ((0xff >> (8 - blen)) << bstr))
+                    {
+                      emit2 ("and", "a, #0x%02x", mval);
+                      cost (1, 1);
+                    }
+
+                  if (bval)
                     {
                       emit2 ("or", "a, #0x%02x", bval);
                       cost (1, 1);
@@ -3363,13 +3383,10 @@ genAssign (const iCode *ic)
 
   if (right->aop->type == AOP_DUMMY)
     {
-      wassert (0);
-#if 0
       int i;
       D (emit2 ("; Dummy write", ""));
       for (i = 0; i < result->aop->size; i++)
-        cheapMove (result->aop, i, ASMOP_A, 0, TRUE);
-#endif
+        cheapMove (result->aop, i, ASMOP_A, 0, false, true);
     }
   else if (result->aop->type == AOP_DUMMY)
     {

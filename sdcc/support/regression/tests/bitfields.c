@@ -263,7 +263,7 @@ testBitfieldsSingleBit(void)
 void
 testBitfieldsMultibitLiteral(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) // Lack of memory
 #if !defined(__SDCC_pic16)
   size2c_bf.b0 = 0xff;   /* should truncate to 0x0f */
   size2c_bf.b1 = 0;
