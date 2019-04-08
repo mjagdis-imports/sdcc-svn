@@ -4,6 +4,8 @@
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 	* sdas/linksrc/lkmain.c:
 	  Linker memory size warning fix, patch by Nicolas Lesser.
+	* src/pdk/ralloc.c:
+	  Fix handling of shift result assigned to sfr.
 
 2019-04-06 Philipp Klaus Krause <pkk AT spth.de>
 
