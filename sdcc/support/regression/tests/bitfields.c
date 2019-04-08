@@ -402,7 +402,7 @@ testBitfields(void)
 void
 testSignedBitfields(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #if !defined(__SDCC_pic16)
   s_bf.s0_7 =   0xf0;
   s_bf.s7_1 =      1;
@@ -470,7 +470,7 @@ struct
 
 /* test case for const struct with bitfields */
 
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #ifndef __SDCC_pic16 // TODO: enable when the pic16 ports supports bitfields of size greater than 8 bits!
 const struct
 {

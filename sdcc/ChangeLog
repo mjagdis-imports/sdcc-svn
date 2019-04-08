@@ -1,3 +1,17 @@
+2019-04-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitfields.c,
+	  support/regression/tests/bug-2304.c,
+	  support/regression/tests/bug-2516.c,
+	  support/regression/tests/bug1520966.c,
+	  support/regression/tests/bug2686159.c,
+	  support/regression/tests/bug3027957.c,
+	  support/regression/tests/bug3379723.c,
+	  support/regression/tests/bug3482146.c,
+	  support/regression/tests/gcc-torture-execute-20021120-3.c,
+	  support/regression/tests/gcc-torture-execute-20030626-2.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+
 2019-04-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/aspdk13/pdk13pst.c,
