@@ -449,6 +449,8 @@ relr3(void)
                                 rtval[rtp + 1] |= marker;
                         }
 
+                        const int inst = (rtval[rtp + 3] << 8) | rtval[rtp + 2];
+
                         /* Do the actual opcode fusion and ignore the two 
                          * bytes taken for the opcode by the assembler.
                          */
@@ -457,8 +459,16 @@ relr3(void)
                                 rtval[rtp + 3] |= rtval[rtp + 1];
                         } else if (mode & R3_MSB) {
                                 rtval[rtp + 2] |= rtval[rtp + 1];
+                                rtval[rtp] = rtval[rtp + 1];
+                                rtval[rtp + 1] = 0;
                         } else {
                                 rtval[rtp + 2] |= rtval[rtp];
+                                rtval[rtp + 1] = 0;
+                        }
+
+                        const int addr = (rtval[rtp + 1] << 8) | rtval[rtp];
+                        if (vpdkinst(inst, addr, rtval[rtp + 4])) {
+                                error = 11;
                         }
 
                         mode &= ~R3_USGN;
@@ -668,7 +678,8 @@ char *errmsg3[] = {
 /* 8 */ "",
 /* 9 */ "",
 /* sdld specific */
-/* 10 */        "Bit-addressable relocation error"
+/* 10 */        "Bit-addressable relocation error",
+/* 11 */        "Invalid address for instruction"
 /* end sdld specific */
 };
 
@@ -1378,6 +1389,139 @@ int i;
         rtflg[i+1] = 0;
 
         return (j);
+}
+
+/*)Function VOID              vpdkinst(inst, addr, ver)
+ *
+ *              int inst        instruction
+ *              int addr        address
+ *              int ver         PDK version
+ *
+ *      The function vpdkinst() tests whether the address
+ *      does not exceed the allowed maximum size of the
+ *      instruction.
+ *
+ *      local variable:
+ *              a_uint  j               temporary evaluation variable
+ *
+ *      global variables:
+ *              hilo                    byte ordering parameter
+ *
+ *      called functions:
+ *              none
+ *
+ *      side effects:
+ *              The value of rtval[] is changed.
+ *              The rtflg[] value corresponding to the
+ *              MSB & middle byte  of the word value is cleared to
+ *              reflect the fact that the LSB is the selected byte.
+ *
+ */
+
+int
+vpdkinst(inst, addr, ver)
+int inst;
+int addr;
+int ver;
+{
+        switch (ver) {
+        case 13: /* PDK 13 */
+                break;
+        case 14: /* PDK 14 */
+                switch (inst & 0x3800) {
+                case 0x3000:
+                case 0x3800:
+                        if (addr > 0x7FF) {
+                                return 1;
+                        }
+                        break;
+                case 0x2800:
+                        if (addr > 0xFF) {
+                                return 1;
+                        }
+                        break;
+                case 0x1800:
+                case 0x2000:
+                        if (addr > 0x3F) {
+                                return 1;
+                        }
+                        break;
+                case 0x800:
+                case 0x1000:
+                        if (addr > 0x7F) {
+                                return 1;
+                        }
+                        break;
+                case 0x0:
+                        if (inst & 0x400) {
+                                if (addr > 0x3F) {
+                                        return 1;
+                                }
+                        } else if ((inst & 0x300) == 0x300) {
+                                if (addr & 0x1) {
+                                        return 1;
+                                }
+                        } else if ((inst & 0x300) == 0x200 && addr > 0xFF) {
+                                return 1;
+                        } else if ((inst & 0x300) == 0x100 && addr > 0x3F) {
+                                return 1;
+                        }
+                        break;
+                }
+                break;
+        case 15: /* PDK 15 */
+                switch (inst & 0x7000) {
+                case 0x6000:
+                case 0x7000:
+                        if (addr > 0xFFF) {
+                                return 1;
+                        }
+                        break;
+                case 0x5000:
+                        if (inst & 0x800) {
+                                if (addr > 0x7F) {
+                                        return 1;
+                                }
+                                break;
+                        }
+                case 0x1000:
+                case 0x2000:
+                        if (addr > 0xFF) {
+                                return 1;
+                        }
+                        break;
+                case 0x3000:
+                case 0x4000:
+                        if (addr > 0x7F) {
+                                return 1;
+                        }
+                        break;
+                case 0x0:
+                        switch (inst & 0xC00) {
+                        case 0xC00:
+                                if (addr > 0xFF) {
+                                        return 1;
+                                }
+                                break;
+                        case 0x400:
+                                if (addr > 0xFF || (addr & 0x1)) {
+                                        return 1;
+                                }
+                                break;
+                        case 0x0:
+                                if ((inst & 0x200) && addr > 0xFF) {
+                                        return 1;
+                                } else if (!(inst & 0x200) && addr > 0x7F) {
+                                        return 1;
+                                }
+                                break;
+                        }
+                        break;
+                }
+                break;
+        }
+        return 0;
+#undef MASK
 }
 
 /* end sdld specific */

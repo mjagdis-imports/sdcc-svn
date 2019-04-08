@@ -438,7 +438,8 @@ main(int argc, char *argv[])
                 unsigned ram = 0;
                 unsigned rom = 0;
                 for (struct area *it = areap; it; it = it->a_ap) {
-                        if (!strcmp(it->a_id, "DATA")) {
+                        if (!strcmp(it->a_id, "DATA") ||
+                            !strcmp(it->a_id, "OSEG")) {
                                 if (it->a_addr + it->a_size > ram) {
                                         ram = it->a_addr + it->a_size;
                                 }

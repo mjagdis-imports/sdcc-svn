@@ -2,8 +2,10 @@
 
 	* support/regression/tests/*.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
-	* sdas/linksrc/lkmain.c:
-	  Linker memory size warning fix, patch by Nicolas Lesser.
+	* sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lkrloc3.c:
+	  Linker memory size warning fixes, patches by Nicolas Lesser.
 	* src/pdk/ralloc.c:
 	  Fix handling of shift result assigned to sfr.
 
