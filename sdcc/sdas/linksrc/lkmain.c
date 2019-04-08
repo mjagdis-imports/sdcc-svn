@@ -439,10 +439,14 @@ main(int argc, char *argv[])
                 unsigned rom = 0;
                 for (struct area *it = areap; it; it = it->a_ap) {
                         if (!strcmp(it->a_id, "DATA")) {
-                                ram += it->a_size;
+                                if (it->a_addr + it->a_size > ram) {
+                                        ram = it->a_addr + it->a_size;
+                                }
                         } else if (!strcmp(it->a_id, "CODE") || 
                                    !strcmp(it->a_id, "CONST")) {
-                                rom += it->a_size;
+                                if (it->a_addr + it->a_size > rom) {
+                                        rom = it->a_addr + it->a_size;
+                                }
                         }
                 }
 

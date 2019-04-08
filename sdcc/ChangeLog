@@ -11,6 +11,8 @@
 	  support/regression/tests/gcc-torture-execute-20021120-3.c,
 	  support/regression/tests/gcc-torture-execute-20030626-2.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* sdas/linksrc/lkmain.c:
+	  Linker memory size warning fix, patch by Nicolas Lesser.
 
 2019-04-06 Philipp Klaus Krause <pkk AT spth.de>
 
