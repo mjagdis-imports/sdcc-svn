@@ -467,8 +467,14 @@ relr3(void)
                         }
 
                         const int addr = (rtval[rtp + 1] << 8) | rtval[rtp];
+                        static int errorCount = 0;
                         if (vpdkinst(inst, addr, rtval[rtp + 4])) {
-                                error = 11;
+                                if (errorCount < 3) {
+                                        error = 11;
+                                } else if (errorCount == 3) {
+                                        puts("?ASlink-Warning-More instruction address errors omitted");
+                                }
+                                ++errorCount;
                         }
 
                         mode &= ~R3_USGN;

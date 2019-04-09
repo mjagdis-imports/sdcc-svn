@@ -1,3 +1,10 @@
+2019-04-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sdas/linksrc/lkrloc3.c:
+	  Linker warning improvement, patch by Nicolas Lesser.
+	* support/regression/tests/*.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+
 2019-04-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/tests/*.c:
