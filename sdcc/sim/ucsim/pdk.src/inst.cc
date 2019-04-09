@@ -28,6 +28,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "pdkcl.h"
 #include "regspdk.h"
 
+#define CODE_MASK(op, m) ((code & ~(m)) == (op))
+
 unsigned char cl_pdk::add_to(unsigned char initial, int value, bool carry) {
   store_flag(flag_z, initial + value + carry == 0);
   store_flag(flag_c, initial + value + carry > 0xFF);
@@ -91,7 +93,7 @@ void cl_pdk::store_flag(flag n, int value) {
 int cl_pdk::execute(unsigned int code) {
   switch (type->type) {
   case CPU_PDK13:
-    // return(execute_pdk13(code));
+    return(execute_pdk13(code));
   case CPU_PDK14:
     return(execute_pdk14(code));
   case CPU_PDK15:
@@ -102,8 +104,6 @@ int cl_pdk::execute(unsigned int code) {
 }
 
 int cl_pdk::execute_pdk14(unsigned int code) {
-#define CODE_MASK(op, m) ((code & ~(m)) == (op))
-
   if (code == 0x0000) {
     // nop
   } else if (CODE_MASK(0x0200, 0xFF)) {
@@ -437,12 +437,353 @@ int cl_pdk::execute_pdk14(unsigned int code) {
   // TODO: wdreset
   // TODO: swapc IO, k
   else if (code == 0x0006) {
-    // ldregs[0x02]tl
+    // ldsptl
+    regs.a = rom->get(regs.regs[0x02]) & 0xFF;
+  } else if (code == 0x0007) {
+    // ldspth
+    regs.a = (rom->get(regs.regs[0x02]) & 0xFF00) >> 8;
+  } else if (code == 0x007C) {
+    // mul
+    unsigned result = regs.a * get_io(0x08);
+    regs.a = result & 0xFF;
+    store_io(0x08, (result & 0xFF00) >> 8);
+  } else if (code == 0xFF00) {
+    // putchar - usim specific instruction
+    putchar(regs.a);
+    fflush(stdout);
+  } else {
+    return (resINV_INST);
+  }
+  return (resGO);
+}
+
+int cl_pdk::execute_pdk13(unsigned int code) {
+  if (code == 0x0000) {
+    // nop
+  } else if (CODE_MASK(0x0100, 0xFF)) {
+    // ret k
+    regs.a = code & 0xFF;
+    store_io(0x2, regs.regs[0x02] - 2);
+    PC = get_mem(regs.regs[0x02]) | (get_mem(regs.regs[0x02] + 1) << 8);
+  } else if (code == 0x003A) {
+    // ret
+    store_io(0x2, regs.regs[0x02] - 2);
+    PC = get_mem(regs.regs[0x02]) | (get_mem(regs.regs[0x02] + 1) << 8);
+  } else if (CODE_MASK(0x1700, 0xFF)) {
+    // mov a, k
+    regs.a = code & 0xFF;
+  } else if (CODE_MASK(0x0080, 0x1F)) {
+    // mov i, a
+    store_io(code & 0x1F, regs.a);
+  } else if (CODE_MASK(0x00A0, 0x1F)) {
+    // mov a, i
+    regs.a = get_io(code & 0x1F);
+  } else if (CODE_MASK(0x05C0, 0x3F)) {
+    // mov m, a
+    ram->write(code & 0x5F, regs.a);
+  } else if (CODE_MASK(0x07C0, 0x3F)) {
+    // mov a, m
+    regs.a = get_mem(code & 0x3F);
+  } else if (CODE_MASK(0x00C1, 0x1E)) {
+    // TODO: ldt16
+  } else if (CODE_MASK(0x0C00, 0x1E)) {
+    // TODO: stt16
+  } else if ((CODE_MASK(0x0E1, 0x1E))) {
+    // idxm a, m
+    regs.a = get_mem(get_mem(code & 0x1E));
+  } else if ((CODE_MASK(0x0E0, 0x1E))) {
+    // idxm m, a
+    ram->write(get_mem(code & 0x1E), regs.a);
+  } else if (CODE_MASK(0x09C0, 0x3F)) {
+    // xch m
+    int mem = get_mem(code & 0x3F);
+    ram->write(code & 0x3F, regs.a);
+    regs.a = mem;
+  } else if (code == 0x0032) {
+    // pushaf
+    ram->write(regs.regs[0x02], regs.a);
+    ram->write(regs.regs[0x02] + 1, regs.regs[0x00]);
+    store_io(0x2, regs.regs[0x02] + 2);
+  } else if (code == 0x0033) {
+    // popaf
+    regs.regs[0x00] = get_mem(regs.regs[0x02] - 1);
+    regs.a = get_mem(regs.regs[0x02] - 2);
+    store_io(0x2, regs.regs[0x02] - 2);
+  } else if (CODE_MASK(0x1000, 0xFF)) {
+    // add a, k
+    regs.a = add_to(regs.a, code & 0xFF);
+  } else if (CODE_MASK(0x0600, 0x3F)) {
+    // add a, m
+    regs.a = add_to(regs.a, get_mem(code & 0x3F));
+  } else if (CODE_MASK(0x0400, 0x3F)) {
+    // add m, a
+    int addr = code & 0x3F;
+    ram->write(addr, add_to(regs.a, get_mem(addr)));
+  } else if (CODE_MASK(0x1100, 0xFF)) {
+    // sub a, k
+    regs.a = sub_to(regs.a, code & 0xFF);
+  } else if (CODE_MASK(0x0640, 0x3F)) {
+    // sub a, m
+    regs.a = sub_to(regs.a, get_mem(code & 0x3F));
+  } else if (CODE_MASK(0x0440, 0x3F)) {
+    // sub m, a
+    int addr = code & 0x3F;
+    ram->write(addr, sub_to(get_mem(addr), regs.a));
+  } else if (CODE_MASK(0x0680, 0x3F)) {
+    // addc a, m
+    regs.a = add_to(regs.a, get_mem(code & 0x3F), get_flag(flag_c));
+  } else if (CODE_MASK(0x0480, 0x3F)) {
+    // addc m, a
+    int addr = code & 0x3F;
+    ram->write(addr, add_to(regs.a, get_mem(addr), get_flag(flag_c)));
+  } else if (code == 0x0010) {
+    // addc a
+    regs.a = add_to(regs.a, get_flag(flag_c));
+  } else if (CODE_MASK(0x0800, 0x3F)) {
+    // addc m
+    int addr = code & 0x3F;
+    ram->write(addr, add_to(get_mem(addr), get_flag(flag_c)));
+  } else if (CODE_MASK(0x06C0, 0x3F)) {
+    // subc a, m
+    regs.a = sub_to(regs.a, get_mem(code & 0x3F), get_flag(flag_c));
+  } else if (CODE_MASK(0x04C0, 0x3F)) {
+    // subc m, a
+    int addr = code & 0x3F;
+    ram->write(addr, sub_to(get_mem(addr), regs.a, get_flag(flag_c)));
+  } else if (code == 0x0011) {
+    // subc a
+    regs.a = sub_to(regs.a, get_flag(flag_c));
+  } else if (CODE_MASK(0x0840, 0x3F)) {
+    // subc m
+    int addr = code & 0x3F;
+    ram->write(addr, sub_to(get_mem(addr), get_flag(flag_c)));
+  } else if (CODE_MASK(0x0900, 0x3F)) {
+    // inc m
+    int addr = code & 0x3F;
+    ram->write(addr, add_to(get_mem(addr), 1));
+  } else if (CODE_MASK(0x0940, 0x3F)) {
+    // dec m
+    int addr = code & 0x3F;
+    ram->write(addr, sub_to(get_mem(addr), 1));
+  } else if (CODE_MASK(0x0980, 0x3F)) {
+    // clear m
+    ram->write(code & 0x3F, 0);
+  } else if (code == 0x001A) {
+    // sr a
+    store_flag(flag_c, regs.a & 1);
+    regs.a >>= 1;
+  } else if (CODE_MASK(0x0A80, 0x3F)) {
+    // sr m
+    int value = get_mem(code & 0x3F);
+    store_flag(flag_c, value & 1);
+    ram->write(code & 0x3F, value >> 1);
+  } else if (code == 0x001B) {
+    // sl a
+    store_flag(flag_c, (regs.a & 0x80) >> 7);
+    regs.a <<= 1;
+  } else if (CODE_MASK(0x0AC0, 0x3F)) {
+    // sl m
+    int value = get_mem(code & 0x3F);
+    store_flag(flag_c, (value & 0x80) >> 7);
+    ram->write(code & 0x3F, value << 1);
+  } else if (code == 0x001C) {
+    // src a
+    int c = regs.a & 1;
+    regs.a >>= 1;
+    regs.a |= get_flag(flag_c) << 7;
+    store_flag(flag_c, c);
+  } else if (CODE_MASK(0x0B00, 0x3F)) {
+    // src m
+    int value = get_mem(code & 0x3F);
+    int c = value & 1;
+    ram->write(code & 0x3F, (value >> 1) | (get_flag(flag_c) << 7));
+    store_flag(flag_c, c);
+  } else if (code == 0x001D) {
+    // slc a
+    int c = (regs.a & 0x80) >> 7;
+    regs.a <<= 1;
+    regs.a |= get_flag(flag_c);
+    store_flag(flag_c, c);
+  } else if (CODE_MASK(0x0B40, 0x3F)) {
+    // slc m
+    int value = get_mem(code & 0x3F);
+    int c = (value & 0x80) >> 7;
+    ram->write(code & 0x3F, (value << 1) | get_flag(flag_c));
+    store_flag(flag_c, c);
+  } else if (CODE_MASK(0x1400, 0xFF)) {
+    // and a, k
+    regs.a &= code & 0xFF;
+    store_flag(flag_z, !regs.a);
+  } else if (CODE_MASK(0x0700, 0x3F)) {
+    // and a, m
+    regs.a &= get_mem(code & 0x3F);
+    store_flag(flag_z, !regs.a);
+  } else if (CODE_MASK(0x0500, 0x3F)) {
+    // and m, a
+    int store = regs.a & get_mem(code & 0x3F);
+    store_flag(flag_z, !store);
+    ram->write(code & 0x3F, store);
+  } else if (CODE_MASK(0x1500, 0xFF)) {
+    // or a, k
+    regs.a |= code & 0xFF;
+    store_flag(flag_z, !regs.a);
+  } else if (CODE_MASK(0x0740, 0x3F)) {
+    // or a, m
+    regs.a |= get_mem(code & 0x3F);
+    store_flag(flag_z, !regs.a);
+  } else if (CODE_MASK(0x0540, 0x3F)) {
+    // or m, a
+    int store = regs.a | get_mem(code & 0x3F);
+    store_flag(flag_z, !store);
+    ram->write(code & 0x3F, store);
+  } else if (CODE_MASK(0x1600, 0xFF)) {
+    // xor a, k
+    regs.a ^= code & 0xFF;
+    store_flag(flag_z, !regs.a);
+  } else if (CODE_MASK(0x0780, 0x3F)) {
+    // xor a, m
+    regs.a ^= get_mem(code & 0x3F);
+    store_flag(flag_z, !regs.a);
+  } else if (CODE_MASK(0x0580, 0x3F)) {
+    // xor m, a
+    int store = regs.a ^ get_mem(code & 0x3F);
+    store_flag(flag_z, !store);
+    ram->write(code & 0x3F, store);
+  } else if (CODE_MASK(0x0060, 0x1F)) {
+    // xor io, a
+    store_io(code & 0x1F, regs.a ^ get_io(code & 0x1F));
+  } else if (code == 0x0018) {
+    // not a
+    regs.a = ~regs.a;
+  } else if (CODE_MASK(0x0A00, 0x3F)) {
+    // not m
+    ram->write(code & 0x3F, ~get_mem(code & 0x3F));
+  } else if (code == 0x0019) {
+    // neg a
+    regs.a = -regs.a;
+  } else if (CODE_MASK(0x0A40, 0x3F)) {
+    // neg m
+    ram->write(code & 0x3F, -get_mem(code & 0x3F));
+  } else if (CODE_MASK(0x0E00, 0x1F)) {
+    // set0 io, k
+    const u8_t bit = 0xE0 >> 5;
+    const u8_t addr = code & 0x1F;
+    store_io(addr, get_io(addr) & ~(1 << bit));
+  } else if (CODE_MASK(0x0300, 0xFE)) {
+    // set0 m, k
+    const u8_t bit = 0xE0 >> 5;
+    const u8_t addr = (code & 0xFE) >> 1;
+    ram->write(addr, get_mem(addr) & ~(1 << bit));
+  } else if (CODE_MASK(0x0F00, 0x1F)) {
+    // set1 io, k
+    const u8_t bit = 0xE0 >> 5;
+    const u8_t addr = code & 0x1F;
+    store_io(addr, get_io(addr) | (1 << bit));
+  } else if (CODE_MASK(0x0301, 0xFE)) {
+    // set1 m, k
+    const u8_t bit = 0xE0 >> 5;
+    const u8_t addr = (code & 0x1E) >> 1;
+    ram->write(addr, get_mem(addr) | (1 << bit));
+  } else if (CODE_MASK(0x0C00, 0x1F)) {
+    // t0sn io, k
+    int n = (code & 0xE0) >> 5;
+    if (!(get_io(code & 0x1F) & (1 << n)))
+      ++PC;
+  } else if (CODE_MASK(0x0200, 0xFE)) {
+    // t0sn m, k
+    int n = (code & 0xE0) >> 5;
+    if (!(get_mem((code & 0xFE) >> 1) & (1 << n)))
+      ++PC;
+  } else if (CODE_MASK(0x0D00, 0x1F)) {
+    // t1sn io, k
+    int n = (code & 0xE0) >> 5;
+    if (get_io(code & 0x1F) & (1 << n))
+      ++PC;
+  } else if (CODE_MASK(0x0201, 0xFE)) {
+    // t1sn m, k
+    int n = (code & 0xE0) >> 5;
+    if (get_mem((code & 0xFE) >> 1) & (1 << n))
+      ++PC;
+  } else if (CODE_MASK(0x1200, 0xFF)) {
+    // ceqsn a, k
+    sub_to(regs.a, code & 0xFF);
+    if (regs.a == (code & 0xFF))
+      ++PC;
+  } else if (CODE_MASK(0x0B80, 0x3F)) {
+    // ceqsn a, m
+    int addr = code & 0x3F;
+    sub_to(regs.a, get_mem(addr));
+    if (regs.a == get_mem(addr))
+      ++PC;
+  } else if (CODE_MASK(0x1300, 0xFF)) {
+    // cneqsn a, k
+    sub_to(regs.a, code & 0xFF);
+    if (regs.a != (code & 0xFF))
+      ++PC;
+  } else if (CODE_MASK(0x0Bc0, 0x3F)) {
+    // cneqsn a, m
+    int addr = code & 0x3F;
+    sub_to(regs.a, get_mem(addr));
+    if (regs.a != get_mem(addr))
+      ++PC;
+  } else if (code == 0x0012) {
+    // izsn
+    regs.a = add_to(regs.a, 1);
+    if (!regs.a)
+      ++PC;
+  } else if (CODE_MASK(0x0880, 0x3F)) {
+    // izsn m
+    const int addr = code & 0x3F;
+    int result = add_to(get_mem(addr), 1);
+    ram->write(addr, result);
+    if (!result)
+      ++PC;
+  } else if (code == 0x0013) {
+    // dzsn
+    regs.a = sub_to(regs.a, 1);
+    if (!regs.a)
+      ++PC;
+  } else if (CODE_MASK(0x08C0, 0x3F)) {
+    // dzsn m
+    const int addr = code & 0x3F;
+    int result = sub_to(get_mem(addr), 1);
+    ram->write(addr, result);
+    if (!result)
+      ++PC;
+  } else if (CODE_MASK(0x1C00, 0x3FF)) {
+    // call k
+    ram->write(regs.regs[0x02], PC);
+    ram->write(regs.regs[0x02] + 1, PC >> 8);
+    PC = code & 0x3FF;
+    store_io(0x2, regs.regs[0x02] + 2);
+  } else if (CODE_MASK(0x1800, 0x3FF)) {
+    // goto k
+    PC = code & 0x3FF;
+  } else if (code == 0x001E) {
+    // swap
+    int high = regs.a & 0xF;
+    regs.a = (high << 4) | (regs.a >> 4);
+  } else if (code == 0x0017) {
+    // pcadd
+    PC += regs.a - 1;
+  }
+  // TODO: engint
+  // TODO: disint
+  else if (code == 0x0036) {
+    // stopsys
+    return (resHALT);
+  }
+  // TODO: stopexe
+  // TODO: reset
+  // TODO: wdreset
+  // TODO: swapc IO, k
+  else if (code == 0x0006) {
+    // ldsptl
     regs.a = rom->get(regs.regs[0x02]) & 0xFF;
   } else if (code == 0x0007) {
     // ldregs[0x02]th
     regs.a = (rom->get(regs.regs[0x02]) & 0xFF00) >> 8;
-  } else if (code == 0x007C) {
+  } else if (code == 0x003C) {
     // mul
     unsigned result = regs.a * get_io(0x08);
     regs.a = result & 0xFF;
@@ -791,10 +1132,10 @@ int cl_pdk::execute_pdk15(unsigned int code) {
   // TODO: wdreset
   // TODO: swapc IO, k
   else if (code == 0x0006) {
-    // ldregs[0x02]tl
+    // ldsptl
     regs.a = rom->get(regs.regs[0x02]) & 0xFF;
   } else if (code == 0x0007) {
-    // ldregs[0x02]th
+    // ldspth
     regs.a = (rom->get(regs.regs[0x02]) & 0xFF00) >> 8;
   } else if (code == 0x007C) {
     // mul

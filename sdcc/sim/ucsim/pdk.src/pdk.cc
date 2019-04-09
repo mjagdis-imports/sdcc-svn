@@ -128,7 +128,9 @@ void cl_pdk::make_memories(void) {
   int rom_storage, ram_storage;
   switch (type->type) {
   case CPU_PDK13:
-    // TODO
+    rom_storage = 0x400;
+    ram_storage = 0x40;
+    break;
   case CPU_PDK14:
     rom_storage = 0x800;
     ram_storage = 0x80;
@@ -181,7 +183,16 @@ void cl_pdk::make_memories(void) {
  */
 
 struct dis_entry *cl_pdk::dis_tbl(void) {
-  return (disass_pdk_14);
+  switch (type->type) {
+  case CPU_PDK13:
+    return (disass_pdk_13);
+  case CPU_PDK14:
+    return (disass_pdk_14);
+  case CPU_PDK15:
+    return (disass_pdk_15);
+  default:
+    __builtin_unreachable();
+  }
 }
 
 /*struct name_entry *
@@ -228,9 +239,9 @@ const char *cl_pdk::get_disasm_info(t_addr addr, int *ret_len, int *ret_branch,
 
   switch (type->type) {
       /* Dispatch to appropriate pdk port. */
-      /*case CPU_PDK13:
+      case CPU_PDK13:
         instructions = disass_pdk_13;
-        break;*/
+        break;
 
       case CPU_PDK14:
         instructions = disass_pdk_14;
@@ -308,7 +319,8 @@ char *cl_pdk::disass(t_addr addr, const char *sep) {
           if (*b == 'n') {
             switch (type->type) {
             case CPU_PDK13:
-              // TODO
+              code &= 0x1F;
+              break;
             case CPU_PDK14:
               code &= 0x3F;
               break;
@@ -327,7 +339,8 @@ char *cl_pdk::disass(t_addr addr, const char *sep) {
           uint n;
           switch (type->type) {
           case CPU_PDK13:
-            // TODO
+            n = (code & 0xE0) >> 5;
+            break;
           case CPU_PDK14:
             n = (code & 0x1C0) >> 6;
             break;

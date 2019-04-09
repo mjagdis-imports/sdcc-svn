@@ -16,7 +16,7 @@ int get_flag(flag n);
 void store_flag(flag n, int value);
 
 int execute(unsigned int code);
-//int execute_pdk13(unsigned int code);
+int execute_pdk13(unsigned int code);
 int execute_pdk14(unsigned int code);
 int execute_pdk15(unsigned int code);
 

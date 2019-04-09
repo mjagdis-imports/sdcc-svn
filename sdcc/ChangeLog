@@ -6,6 +6,12 @@
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 	* src/pdk/gen.c:
 	  Fix wide left shift by large literal.
+	* sim/ucsim/pdk.src/glob.cc,
+	  sim/ucsim/pdk.src/glob.h,
+	  sim/ucsim/pdk.src/inst.cc,
+	  sim/ucsim/pdk.src/instcl.h,
+	  sim/ucsim/pdk.src/pdk.cc:
+	  pdk13 simulator, patch by Nicolas Lesser.
 
 2019-04-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
