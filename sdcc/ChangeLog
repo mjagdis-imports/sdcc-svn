@@ -1,5 +1,10 @@
 2019-04-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/pdk/gen.c:
+	  Fix handling of -0.0 in ifx.
+
+2019-04-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* sdas/linksrc/lkrloc3.c:
 	  Linker warning improvement, patch by Nicolas Lesser.
 	* support/regression/tests/*.c:

@@ -3467,7 +3467,14 @@ genIfx (const iCode *ic)
     }
 
   int skip_byte;
-  if (aopInReg (cond->aop, 1, A_IDX))
+  if (IS_FLOAT (operandType (cond))) // Clear sign bit for float.
+    {
+      cheapMove (ASMOP_A, 0, cond->aop, cond->aop->size - 1, true, true);
+      emit2 ("and", "a, #0x7f");
+      cost (1, 1);
+      skip_byte = cond->aop->size - 1;
+    }
+  else if (aopInReg (cond->aop, 1, A_IDX))
     {
       skip_byte = 1;
     }
