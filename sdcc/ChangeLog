@@ -4,6 +4,8 @@
 	  Linker warning improvement, patch by Nicolas Lesser.
 	* support/regression/tests/*.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* src/pdk/gen.c:
+	  Fix wide left shift by large literal.
 
 2019-04-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

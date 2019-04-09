@@ -908,6 +908,12 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cost (1, 1);
       return;
     }
+  else if (size >= 2 && result->type == AOP_DIR && source->type == AOP_DIR && !strcmp (result->aopu.aop_dir, source->aopu.aop_dir) && soffset < roffset) // Copy high-to-low to avoid overwriting of still-needed bytes.
+    {
+      for (int i = size - 1; i >= 0; i--)
+        cheapMove (result, roffset + i, source, soffset + i, a_dead_global, true);
+      return;
+    }
 
   bool a_dead = a_dead_global;
   for (unsigned int i = 0; i < size; i++)
@@ -2539,7 +2545,8 @@ genLeftShift (const iCode *ic)
 
       if (loop)
         {
-          cheapMove (ASMOP_A, 0, right->aop, 0, true, true);
+          emit2 ("mov", "a, #%d", shCount);
+          cost (1, 1);
           emitLabel (tlbl);
           regalloc_dry_run_cycle_scale = shCount;
           shCount = 1;
