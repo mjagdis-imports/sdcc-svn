@@ -3147,18 +3147,18 @@ genPointerSet (iCode *ic)
     }
   else if (aopInReg (right->aop, 0, P_IDX) && aopInReg (right->aop, 1, A_IDX) && left->aop->type == AOP_IMMD)
     {
-      emit2 ("mov", "%s+1, a", left->aop->aopu.immd);
+      emit2 ("mov", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off + 1);
       cost (1, 1);
       if (regDead (A_IDX, ic))
         {
           emit2 ("mov", "a, p");
-          emit2 ("mov", "%s+0, a", left->aop->aopu.immd);
+          emit2 ("mov", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off);
           cost (2, 2);
         }
       else
         {
           emit2 ("xch", "a, p");
-          emit2 ("mov", "%s+0, a", left->aop->aopu.immd);
+          emit2 ("mov", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off);
           emit2 ("xch", "a, p");
           cost (3, 3);
         }
