@@ -1,7 +1,8 @@
 2019-04-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
-	  Fix a bug in 16-bit store from registers via rematerialized pointer with non-zero offset.
+	  Fix a bug in 16-bit store from registers via rematerialized pointer with non-zero offset;
+	  fix a bug in handling of on-stack parameters in &,|.
 
 2019-04-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

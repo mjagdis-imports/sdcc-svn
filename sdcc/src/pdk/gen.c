@@ -2290,13 +2290,13 @@ genOr (const iCode *ic)
           emit2 ("set1", "%s, #%d", aopGet (left->aop, i), bit);
           cost (1, 1);
         }
-      else if ((left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX)) && aopSame (left->aop, i, result->aop, i, 1))
+      else if ((left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX) && right->aop->type != AOP_STK) && aopSame (left->aop, i, result->aop, i, 1))
         {
           cheapMove (ASMOP_A, 0, right->aop, i, true, true);
           emit2 ("or", "%s, a", aopGet (left->aop, i));
           cost (1, 1);
         }
-      else if ((right->aop->type == AOP_DIR || aopInReg (right->aop, i, P_IDX)) && aopSame (right->aop, i, result->aop, i, 1))
+      else if ((right->aop->type == AOP_DIR || aopInReg (right->aop, i, P_IDX) && left->aop->type != AOP_STK) && aopSame (right->aop, i, result->aop, i, 1))
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
           emit2 ("or", "%s, a", aopGet (right->aop, i));
@@ -2464,13 +2464,13 @@ genAnd (const iCode *ic, iCode *ifx)
           emit2 ("set0", "%s, #%d", aopGet (left->aop, i), bit);
           cost (1, 1);
         }
-      else if ((left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX)) && aopSame (left->aop, i, result->aop, i, 1))
+      else if ((left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX) && right->aop->type != AOP_STK) && aopSame (left->aop, i, result->aop, i, 1))
         {
           cheapMove (ASMOP_A, 0, right->aop, i, true, true);
           emit2 ("and", "%s, a", aopGet (left->aop, i));
           cost (1, 1);
         }
-      else if ((right->aop->type == AOP_DIR || aopInReg (right->aop, i, P_IDX)) && aopSame (right->aop, i, result->aop, i, 1))
+      else if ((right->aop->type == AOP_DIR || aopInReg (right->aop, i, P_IDX) && left->aop->type != AOP_STK) && aopSame (right->aop, i, result->aop, i, 1))
         {
           cheapMove (ASMOP_A, 0, left->aop, i, true, true);
           emit2 ("and", "%s, a", aopGet (right->aop, i));
