@@ -2,7 +2,8 @@
 
 	* src/pdk/gen.c:
 	  Fix a bug in 16-bit store from registers via rematerialized pointer with non-zero offset;
-	  fix a bug in handling of on-stack parameters in &,|.
+	  fix a bug in handling of on-stack operands to &,|;
+	  fix a bug in handling of past-end offsets for stack operands.
 
 2019-04-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

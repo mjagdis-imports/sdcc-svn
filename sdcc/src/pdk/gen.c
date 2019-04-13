@@ -679,7 +679,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
       emit2 ("call", "%s+%d", source->aopu.aop_dir, soffset);
       cost (1, 4);
     }
-  else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX))
+  else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX) && !aopIsLitVal (source, soffset, 1, 0))
     {
       pointPStack(source->aopu.bytes[soffset].byteu.stk, true, f_dead);
       emit2 ("idxm", "a, p");
