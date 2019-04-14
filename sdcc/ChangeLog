@@ -1,11 +1,15 @@
 2019-04-14 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/bug-460010.c,
-	  support/regression/tests/bug1928022.c:
+	  support/regression/tests/bug1928022.c,
+	  support/regression/tests/gcc-torture-execute-991216-2.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-15.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 	* src/pdk/gen.c:
 	  Improve handling of 16-bit return value,
-	  fix stack parameters.
+	  fix stack parameters,
+	  fix carry in comparison of wide stack values.
 
 2019-04-13 Philipp Klaus Krause <pkk AT spth.de>
 

@@ -8,3 +8,10 @@ replace restart {
 	; peephole 1 removed redundant load rom %1 into a.
 } if notVolatile(%1)
 
+replace restart {
+	xch	%1, a
+	xch	a, %1
+} by {
+	; peephole 2 removed redundant exchange between %1 and a.
+} if notVolatile(%1)
+
