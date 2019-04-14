@@ -5,13 +5,13 @@ replace restart {
 	mov	a, %1
 } by {
 	mov	%1, a
-	; peephole 1 removed redundant load rom %1 into a.
+	; peephole 1 removed redundant load from %1 into a.
 } if notVolatile(%1)
 
 replace restart {
-	xch	%1, a
+	xch	a, %1
 	xch	a, %1
 } by {
-	; peephole 2 removed redundant exchange between %1 and a.
+	; peephole 2 removed redundant double exchange between a and %1.
 } if notVolatile(%1)
 

@@ -10,6 +10,8 @@
 	  Improve handling of 16-bit return value,
 	  fix stack parameters,
 	  fix carry in comparison of wide stack values.
+	* src/pdk/peeph.def:
+	  Remove double exchange.
 
 2019-04-13 Philipp Klaus Krause <pkk AT spth.de>
 
