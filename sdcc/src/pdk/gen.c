@@ -323,7 +323,7 @@ aopForSym (const iCode *ic, symbol *sym)
     {
       aop = newAsmop (AOP_STK);
       aop->size = getSize (sym->type);
-      int base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
+      int base = sym->stack + (sym->stack < 0 ? G.stack.param_offset : 0);
       for (int offset = 0; offset < aop->size; offset++)
         aop->aopu.bytes[offset].byteu.stk = base + offset;
     }
@@ -589,7 +589,7 @@ static void pointPStack (int s, bool a_dead, bool f_dead)
       if (!f_dead)
         pushAF();
 
-      if (abs(G.p.offset - s) <= 3)
+      if (abs(G.p.offset - s) < 3)
         {
           while (G.p.offset < s)
             {
@@ -605,11 +605,19 @@ static void pointPStack (int s, bool a_dead, bool f_dead)
               G.p.offset--;
             }
        }
+     else if (a_dead || !f_dead)
+       {
+         emit2 ("mov", "a, #%d", s - G.p.offset);
+         emit2 ("add", "p, a");
+         cost (2, 2);
+         G.p.offset = s;
+       }
      else
        {
          emit2 ("xch", "a, p");
          emit2 ("add", "a, #%d", s - G.p.offset);
          emit2 ("xch", "a, p");
+         cost (3, 3);
          G.p.offset = s;
        }
 
@@ -619,19 +627,32 @@ static void pointPStack (int s, bool a_dead, bool f_dead)
       return;
     }
 
-  if (!(a_dead && f_dead))
-    pushAF();
+  if (!a_dead && f_dead)
+    {
+      int soffset = s - G.stack.pushed;
+      emit2 ("xch", "a, p");
+      emit2 ("mov", "a, sp");
+      emit2 ("add", "a, #0x%02x", soffset & 0xff);
+      emit2 ("xch", "a, p");
+      cost (4, 4);
+    }
+  else
+    {
+      if (!(a_dead && f_dead))
+        pushAF();
 
-  int soffset = s - G.stack.pushed;
-  cheapMove (ASMOP_A, 0, ASMOP_SP, 0, true, true);
-  emit2 ("add", "a, #0x%02x", soffset & 0xff);
-  cost (1, 1);
-  cheapMove (ASMOP_P, 0, ASMOP_A, 0, true, true);
+      int soffset = s - G.stack.pushed;
+      cheapMove (ASMOP_A, 0, ASMOP_SP, 0, true, true);
+      emit2 ("add", "a, #0x%02x", soffset & 0xff);
+      cost (1, 1);
+      cheapMove (ASMOP_P, 0, ASMOP_A, 0, true, true);
+
+      if (!(a_dead && f_dead))
+        popAF();
+    }
+
   G.p.type = AOP_STK;
   G.p.offset = s;
-
-  if (!(a_dead && f_dead))
-    popAF();
 }
 
 /*-----------------------------------------------------------------*/
@@ -868,6 +889,16 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
     {
       cheapMove (result, roffset + 1, source, soffset + 1, true, true);
       cheapMove (result, roffset + 0, source, soffset + 0, false, true);
+      return;
+    }
+  else if (size == 2 && result->type == AOP_STK && aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX))
+    {
+      pushAF ();
+      emit2 ("xch", "a, p");
+      cost (1, 1);
+      cheapMove (result, roffset + 1, ASMOP_A, 0, false, true);
+      popAF ();
+      cheapMove (result, roffset + 0, ASMOP_A, 0, true, true);
       return;
     }
   else if (size == 2 && result->type == AOP_DIR && !a_dead_global && // Using xch cheaper than push / pop.
@@ -1437,7 +1468,7 @@ genReturn (const iCode *ic)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);
               pushAF ();
-              pointPStack (-4, false, true);
+              pointPStack (-4, true, true);
               emit2 ("idxm", "a, p");
               emit2 ("mov", "p, a");
               cost (2, 3);
@@ -1449,6 +1480,7 @@ genReturn (const iCode *ic)
                 }
               emit2 ("idxm", "p, a");
               cost (1, 2);
+              G.p.type = AOP_INVALID;
             }
         }
       else
@@ -1480,8 +1512,7 @@ genReturn (const iCode *ic)
     }
   else if (left->aop->size == 2 && left->aop->type == AOP_STK)
     {
-      cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
-      cheapMove (ASMOP_P, 0, left->aop, 1, false, true);
+      genMove (ASMOP_AP, left->aop, true);
       goto end;
     }
 
@@ -2559,10 +2590,10 @@ genLeftShift (const iCode *ic)
             {
               if (result->aop->type == AOP_STK)
                 {
-                  cheapMove (ASMOP_A, 0, result->aop, i, true, true);
+                  cheapMove (ASMOP_A, 0, result->aop, i, true, i <= offset);
                   emit2((i > offset) ? "slc" : "sl", "a");
                   cost (1, 1);
-                  cheapMove (result->aop, i, ASMOP_A, 0, true, true);
+                  cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 != size);
                 }
               else
                 {
@@ -3531,7 +3562,7 @@ genAddrOf (const iCode *ic)
   wassert (size == 1 || size == 2);
   if (sym->onStack)
     {
-      int s = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0) + operandLitValue (right);
+      int s = sym->stack + (sym->stack < 0 ? G.stack.param_offset : 0) + operandLitValue (right);
 
       if (G.p.type == AOP_STK && s == G.p.offset)
         cheapMove (result->aop, 0, ASMOP_P, 0, true, true);

@@ -4,7 +4,8 @@
 	  support/regression/tests/bug1928022.c:
 	  Disable some tests for pdk15, on which they won't work anytime soon.
 	* src/pdk/gen.c:
-	  Improve handling of 16-bit return value.
+	  Improve handling of 16-bit return value,
+	  fix stack parameters.
 
 2019-04-13 Philipp Klaus Krause <pkk AT spth.de>
 
