@@ -1313,17 +1313,7 @@ genCall (const iCode *ic)
     {
       aopOp (IC_RESULT (ic), ic);
 
-      if (IC_RESULT (ic)->aop->type == AOP_STK && IC_RESULT (ic)->aop->size == 2)
-        {
-          cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, false, true);
-          cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true, true);
-        }
-      else
-        {
-          cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_A, 0, true, true);
-          if (IC_RESULT (ic)->aop->size > 1)
-            cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_P, 0, true, true);
-        }
+      genMove (IC_RESULT (ic)->aop, ASMOP_AP, true);
 
       adjustStack (-ic->parmBytes, !(aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, A_IDX)), !(aopInReg (IC_RESULT (ic)->aop, 0, P_IDX) || aopInReg (IC_RESULT (ic)->aop, 1, P_IDX)));
 
