@@ -3198,6 +3198,11 @@ genPointerSet (iCode *ic)
 #endif
       else if (aopInReg (right->aop, 0, P_IDX) && regDead (P_IDX, ic))
         {
+          if (left->aop->type == AOP_STK)
+            {
+              cost (250, 250);
+              wassert (regalloc_dry_run);
+            }
           ptr_aop = ASMOP_P;
           cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
           emit2 ("xch", "a, p");
@@ -3411,6 +3416,12 @@ genAssign (const iCode *ic)
   aopOp (result, ic);
 
   wassert (result->aop->type != AOP_DUMMY || right->aop->type != AOP_DUMMY);
+
+  if (result->aop->type == AOP_STK && !regDead (P_IDX, ic))
+    {
+      cost (100, 100); // Todo: Implement!
+      wassert (regalloc_dry_run);
+    }
 
   if (right->aop->type == AOP_DUMMY)
     {
