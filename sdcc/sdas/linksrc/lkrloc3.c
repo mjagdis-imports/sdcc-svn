@@ -405,9 +405,7 @@ relr3(void)
                                 if (get_sdld_target() == TARGET_ID_PDK) {
                                         set_sdld_target(TARGET_ID_PDK15);
                                 } else if (get_sdld_target() != TARGET_ID_PDK15) {
-                                        printf(
-                                            "?ASlink-Warning-mismatched pdk targets; "
-                                              "expected pdk15");
+                                        error = 12;
                                 }
                         } else if (rtval[rtp + 4] == 14) {
                                 jump = rtval[rtp + 3] & 0x38;
@@ -415,9 +413,7 @@ relr3(void)
                                 if (get_sdld_target() == TARGET_ID_PDK) {
                                         set_sdld_target(TARGET_ID_PDK14);
                                 } else if (get_sdld_target() != TARGET_ID_PDK14) {
-                                        printf(
-                                            "?ASlink-Warning-mismatched pdk targets; "
-                                              "expected pdk14");
+                                        error = 13;
                                 }
                         } else if (rtval[rtp + 4] == 13) {
                                 jump = rtval[rtp + 3] & 0x1C;
@@ -425,9 +421,16 @@ relr3(void)
                                 if (get_sdld_target() == TARGET_ID_PDK) {
                                         set_sdld_target(TARGET_ID_PDK13);
                                 } else if (get_sdld_target() != TARGET_ID_PDK13) {
-                                        printf(
-                                            "?ASlink-Warning-mismatched pdk targets; "
-                                              "expected pdk13");
+                                        error = 14;
+                                }
+
+                                /* T*SN and SET* instructions for PDK13 needed to
+                                 * be handled specially since their address is
+                                 * in between the opcode.
+                                 */
+                                if ((rtval[rtp + 3] & 0x1F00) == 0x300 ||
+                                    (rtval[rtp + 3] & 0x1F00) == 0x200) {
+                                        rtval[rtp] <<= 1;
                                 }
                         }
 
@@ -685,7 +688,10 @@ char *errmsg3[] = {
 /* 9 */ "",
 /* sdld specific */
 /* 10 */        "Bit-addressable relocation error",
-/* 11 */        "Invalid address for instruction"
+/* 11 */        "Invalid address for instruction",
+/* 12 */        "mismatched pdk targets; expected pdk15",
+/* 13 */        "mismatched pdk targets; expected pdk14",
+/* 14 */        "mismatched pdk targets; expected pdk13"
 /* end sdld specific */
 };
 
@@ -1432,6 +1438,48 @@ int ver;
 {
         switch (ver) {
         case 13: /* PDK 13 */
+                switch (inst & 0x1C00) {
+                case 0x1800:
+                case 0x1C00:
+                        if (addr > 0x3FF) {
+                                return 1;
+                        }
+                        break;
+                case 0x1000:
+                case 0x1400:
+                        if (addr > 0xFF) {
+                                return 1;
+                        }
+                        break;
+                case 0x0C00:
+                case 0x2000:
+                        if (addr > 0x1F) {
+                                return 1;
+                        }
+                        break;
+                case 0x800:
+                case 0x400:
+                        if (addr > 0x3F) {
+                                return 1;
+                        }
+                        break;
+                case 0x0:
+                        if (inst & 0x200) {
+                                /* Address was right shifted to fit into the
+                                 * opcode.
+                                 */
+                                if ((addr >> 1) > 0xF) {
+                                        return 1;
+                                }
+                        } else if (inst & 0x100) {
+                                if (addr > 0xFF) {
+                                        return 1;
+                                }
+                        } else if (addr > 0x1F) {
+                                return 1;
+                        }
+                        break;
+                }
                 break;
         case 14: /* PDK 14 */
                 switch (inst & 0x3800) {
