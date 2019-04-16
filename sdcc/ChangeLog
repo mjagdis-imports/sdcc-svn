@@ -1,3 +1,15 @@
+2019-04-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk16,
+	  Makefile.common.in,
+	  Makefile.in,
+	  configure,
+	  configure.ac,
+	  sdas/asxxsrc/sdas.c,
+	  sdas/asxxsrc/sdas.h:
+	  Infrastructure for pdk16 assembler, based on patch
+	  by Leo and Nicolas.
+
 2019-04-15 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/linksrc/lkrloc3.c:
