@@ -22,6 +22,9 @@
 	  sdcc/sim/ucsim/ddconfig_in.h,
 	  sdcc/support/sdbinutils/bfd/doc/bfdver.texi:
 	  Fix pic14 library out-of-tree build.
+	* device/lib/pic14/configure.ac,
+	  device/lib/pic14/configure:
+	  Disable default build of extra libary flavors.
 
 2019-06-10 Philipp Klaus Krause <pkk AT spth.de>
 
