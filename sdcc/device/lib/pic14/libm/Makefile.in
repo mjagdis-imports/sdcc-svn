@@ -477,7 +477,7 @@ libm_a_CFLAGS = $(AM_CFLAGS)
 @ENABLE_EXPERIMENTAL_TRUE@@ENABLE_NOOPTS_TRUE@libmox_a_CFLAGS = $(AM_CFLAGS_OX)
 @ENABLE_ENHANCED_PICS_TRUE@@ENABLE_EXPERIMENTAL_TRUE@@ENABLE_NOOPTS_TRUE@libmeox_a_SOURCES = $(libm_a_SOURCES)
 @ENABLE_ENHANCED_PICS_TRUE@@ENABLE_EXPERIMENTAL_TRUE@@ENABLE_NOOPTS_TRUE@libmeox_a_CFLAGS = $(AM_CFLAGS_EOX)
-SOURCE_DIRS = $(srcdir)
+SOURCE_DIRS = .
 
 ############################################################
 # common source files for all variants of the sdcc library

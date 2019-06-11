@@ -3,6 +3,25 @@
 	* device/include/ctype.h,
 	  device/include/pic14/stdlib.h:
 	  Work around some pic14 inlining issue.
+	* sdcc/aclocal.m4,
+	  sdcc/config.guess,
+	  sdcc/config.sub,
+	  sdcc/device/lib/pic14/install-sh,
+	  sdcc/device/lib/pic14/libc/Makefile.am,
+	  sdcc/device/lib/pic14/libc/Makefile.in,
+	  sdcc/device/lib/pic14/libm/Makefile.am,
+	  sdcc/device/lib/pic14/libm/Makefile.in,
+	  sdcc/device/lib/pic14/libsdcc/enhanced/Makefile.am,
+	  sdcc/device/lib/pic14/libsdcc/enhanced/Makefile.in,
+	  sdcc/device/lib/pic14/libsdcc/enhanced-no-xinst/Makefile.am,
+	  sdcc/device/lib/pic14/libsdcc/enhanced-no-xinst/Makefile.in,
+	  sdcc/device/lib/pic14/libsdcc/regular/Makefile.am,
+	  sdcc/device/lib/pic14/libsdcc/regular/Makefile.in,
+	  sdcc/device/lib/pic14/missing,
+	  sdcc/install-sh,
+	  sdcc/sim/ucsim/ddconfig_in.h,
+	  sdcc/support/sdbinutils/bfd/doc/bfdver.texi:
+	  Fix pic14 library out-of-tree build.
 
 2019-06-10 Philipp Klaus Krause <pkk AT spth.de>
 
