@@ -1,3 +1,4 @@
+<<<<<<< .working
 2019-06-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/pic14/Makefile.common,
@@ -36,6 +37,31 @@
 	* device/lib/pic14/configure.ac,
 	  device/lib/pic14/configure:
 	  Disable default build of extra libary flavors.
+
+2019-06-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/ctype.h,
+	  device/include/pic14/stdlib.h:
+	  Work around some pic14 inlining issue.
+
+2019-06-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCpeeph.c,
+	  src/pdk/gen.c,
+	  src/pdk/peep.c,
+	  src/pdk/peeph.def:
+	  pdk peephole improvements.
+
+2019-06-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/main.c,
+	  src/pdk/peep.h,
+	  src/pdk/peep.c,	
+	  src/pdk/peeph.def:
+	  notUsed() and notUsedFrom().
+	* src/stm8/peep.c,
+	  src/z80/peep.c:
+	  Fixes for notUsedFrom().
 
 2019-06-10 Philipp Klaus Krause <pkk AT spth.de>
 
