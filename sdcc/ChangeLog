@@ -1,5 +1,8 @@
-<<<<<<< .working
 2019-06-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* Merge pic14 branch.
+
+2019-06-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* device/lib/pic14/Makefile.common,
 	  device/lib/pic14/Makefile.in,
