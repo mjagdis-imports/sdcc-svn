@@ -1,3 +1,14 @@
+2019-06-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/pic14/Makefile.common,
+	  device/lib/pic14/Makefile.in,
+	  device/lib/pic14/libc/Makefile.in,
+	  device/lib/pic14/libm/Makefile.in,
+	  device/lib/pic14/libsdcc/enhanced/Makefile.in,
+	  device/lib/pic14/libsdcc/enhanced-no-xinst/Makefile.in,
+	  device/lib/pic14/libsdcc/regular/Makefile.in:
+	  Fix another pic14 out-of-tree-build issue.
+
 2019-06-11 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/include/ctype.h,
