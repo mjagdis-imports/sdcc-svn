@@ -1,3 +1,69 @@
+2019-06-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z88/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve handling of a in bitwise operations.
+	* src/pdk/main.c:
+	  Fix bug #2916.
+	* src/z80/peeph-z80.def:
+	  Fix bug #2914.
+
+2019-06-19 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/scripts/sdcc.nsi: pic14/libm no longer has *.c files
+	  to install
+
+2019-06-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z88/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve handling of a in &.
+
+2019-06-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z88/ralloc2.cc:
+	  Fix an issue in register allocation for GET_VALUE_AT_ADRESS.
+
+2019-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-2912.c:
+	  Fix a typo that resulted in a test being accidentially enabled for pdk.
+	* src/z80/gen.c:
+	  Fix handling of swapped register operand in 16-bit shift by literal.
+
+2019-06-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/SDCCgen.h,
+	  src/SDCCgen.c,
+	  src/z80/gen.c:
+	  Improve handling of a.
+
+2019-06-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix an issue in iy shuffling.
+
+2019-06-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc.c,
+	  src/z80/ralloc2.cc:
+	  Handle iy like other registers.
+
+2019-06-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Minor register allocation improvement,
+	  fix a --reserve-regs-iy issue.
+
+2019-06-14 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-2912.c:
+	  Fix bug #2912.
+
 2019-06-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/regression/*:
