@@ -549,7 +549,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127) || IS_GB);
 
-  //std::cout << "Ainst_ok: A = (" << ia.registers[REG_A][0] << ", " << ia.registers[REG_A][1] << "), inst " << i << ", " << ic->key << "\n";
+  //std::cout << "Ainst_ok at " << G[i].ic->key << ": A = (" << ia.registers[REG_A][0] << ", " << ia.registers[REG_A][1] << "), inst " << i << ", " << ic->key << "\n";
 
   // Check if the result of this instruction is placed in A.
   bool result_in_A = operand_in_reg(IC_RESULT(ic), REG_A, ia, i, G);
@@ -575,32 +575,13 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     IS_TRUE_SYMOP (right) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (right)->etype))))
     return(false);
 
-  // bit instructions do not disturb a.
-  if(ic->op == BITWISEAND && ifxForOp (IC_RESULT(ic), ic) &&
-    (IS_OP_LITERAL(left) && (!(IS_GB && IS_TRUE_SYMOP (right) || exstk && operand_on_stack(right, a, i, G)) || operand_in_reg(right, ia, i, G) && !operand_in_reg(right, REG_IYL, ia, i, G) && !operand_in_reg(right, REG_IYH, ia, i, G)) ||
-    IS_OP_LITERAL(right) && (!(IS_GB && IS_TRUE_SYMOP (left) || exstk && operand_on_stack(left, a, i, G)) || operand_in_reg(left, ia, i, G) && !operand_in_reg(left, REG_IYL, ia, i, G) && !operand_in_reg(left, REG_IYH, ia, i, G))))
-    {
-      operand *const litop = IS_OP_LITERAL(left) ? IC_LEFT(ic) : IC_RIGHT(ic);
-      for(unsigned int i = 0; i < getSize(operandType(result)); i++)
-        {
-          unsigned char byte = byteOfVal (OP_VALUE (litop), i);
-          if (byte != 0x00 && byte != 0x01 && byte != 0x02 && byte != 0x04 && byte != 0x08 && byte != 0x10 && byte != 0x20 && byte != 0x40 && byte != 0x80)
-            goto nobit;
-        }
-      return(true);
-    }
-  nobit:
+  if (ic->op == '^' || ic->op == BITWISEAND || ic->op == '|') // Codegen can handle it all.
+     return(true);
 
   // Can use non-destructive cp on == and < (> might swap operands).
   if((ic->op == EQ_OP || ic->op == '<' && SPEC_USIGN(getSpec(operandType(left))) && SPEC_USIGN(getSpec(operandType(right)))) &&
     getSize(operandType(IC_LEFT(ic))) == 1 && ifxForOp (IC_RESULT(ic), ic) && operand_in_reg(left, REG_A, ia, i, G) &&
     (IS_OP_LITERAL (right) || operand_in_reg(right, REG_C, ia, i, G) || operand_in_reg(right, REG_B, ia, i, G) || operand_in_reg(right, REG_E, ia, i, G) || operand_in_reg(right, REG_D, ia, i, G) || operand_in_reg(right, REG_H, ia, i, G) || operand_in_reg(right, REG_L, ia, i, G)))
-    return(true);
-
-  // The Z180 has a non-destructive testing and.
-  if((IS_Z180 || IS_EZ80_Z80)&& ic->op == BITWISEAND && ifxForOp (IC_RESULT(ic), ic) &&
-    (getSize(operandType(left)) == 1 && operand_in_reg(left, REG_A, ia, i, G) && (IS_OP_LITERAL(right) /*|| operand_in_reg(right, ia, i, G) && !operand_in_reg(right, REG_IYL, ia, i, G) && !operand_in_reg(right, REG_IYH, ia, i, G)*/) ||
-    getSize(operandType(right)) == 1 && operand_in_reg(right, REG_A, ia, i, G) && (IS_OP_LITERAL(left) /*|| operand_in_reg(left, ia, i, G) && !operand_in_reg(left, REG_IYL, ia, i, G) && !operand_in_reg(left, REG_IYH, ia, i, G)*/)))
     return(true);
 
   const cfg_dying_t &dying = G[i].dying;
@@ -610,7 +591,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     getSize(operandType(IC_RESULT(ic))) == 1 && dying_A)
     return(true);
 
-  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_GB || ic->op == BITWISEAND || ic->op == '|' || ic->op == '^' || ic->op == '~') && // First byte of input and last byte of output may be in A.
+  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_GB || ic->op == '~') && // First byte of input and last byte of output may be in A.
     IS_ITEMP(result) && dying_A &&
     (IS_ITEMP(left) || IS_OP_LITERAL(left) || operand_on_stack(left, a, i, G)) &&
     (!right || IS_ITEMP(right) || IS_OP_LITERAL(right) || operand_on_stack(right, a, i, G)))
@@ -647,15 +628,24 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     (getSize(operandType(IC_RESULT(ic))) == 2 && operand_is_pair(IC_RESULT(ic), a, i, G) || getSize(operandType(IC_RESULT(ic))) == 1 && operand_in_reg(result, ia, i, G) && operand_in_reg(result, ia, i, G)))
     return(true);
 
+  if(ic->op == GET_VALUE_AT_ADDRESS) // Any register can be assigned from (hl) and (iy), so we don't need to go through a then.
+    return(!IS_BITVAR(getSpec(operandType(result))) &&
+    (getSize(operandType(result)) == 1 || operand_is_pair(left, a, i, G) && (operand_in_reg(left, REG_L, ia, i, G) && !ulFromVal (OP_VALUE (IC_RIGHT(ic))) || operand_in_reg(left, REG_IYL, ia, i, G) && ulFromVal (OP_VALUE (IC_RIGHT(ic))) <= 127)));
+
+  if(ic->op == '=' && POINTER_SET (ic) && // Any register can be assigned to (hl) and (iy), so we don't need to go through a then.
+    !(IS_BITVAR(getSpec(operandType (result))) || IS_BITVAR(getSpec(operandType (right)))) &&
+    (getSize(operandType(right)) == 1 || operand_is_pair(result, a, i, G) && (operand_in_reg(result, REG_L, ia, i, G) || operand_in_reg(result, REG_IYL, ia, i, G))))
+    return(true);
+
   // Code generator mostly cannot handle variables that are only partially in A.
-  if(I[ia.registers[REG_A][1]].size > 1 || (ia.registers[REG_A][0] >= 0 && I[ia.registers[REG_A][0]].size > 1))
+  if(operand_in_reg(left, REG_A, ia, i, G) && getSize(operandType(left)) != 1 ||
+    operand_in_reg(right, REG_A, ia, i, G) && getSize(operandType(right)) != 1 ||
+    operand_in_reg(result, REG_A, ia, i, G) && getSize(operandType(result)) != 1)
     return(false);
 
   if(ic->op == '!' && getSize(operandType(left)) <= 2 && dying_A)
     return(true);
 
-  if(ic->op == GET_VALUE_AT_ADDRESS)
-    return(!IS_BITVAR(getSpec(operandType(result))));
   if(ic->op == '=' && POINTER_SET (ic))
     return(dying_A || !(IS_BITVAR(getSpec(operandType (result))) || IS_BITVAR(getSpec(operandType (right)))));
 
@@ -912,6 +902,11 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     operand_in_reg(left, REG_E, ia, i, G) && I[ia.registers[REG_E][1]].byte == 0 && (getSize(operandType(left)) < 2 || operand_in_reg(left, REG_D, ia, i, G)) ||
     operand_in_reg(left, REG_IYL, ia, i, G) && I[ia.registers[REG_IYL][1]].byte == 0 && (getSize(operandType(left)) < 2 || operand_in_reg(left, REG_IYH, ia, i, G))))
     return(true);
+  if (ic->op == IPUSH && getSize(operandType(left)) == 4 &&
+    operand_in_reg(left, REG_L, ia, i, G) && I[ia.registers[REG_L][1]].byte == 0 && operand_in_reg(left, REG_H, ia, i, G) && I[ia.registers[REG_H][1]].byte == 1 &&
+    (operand_in_reg(left, REG_C, ia, i, G) && I[ia.registers[REG_C][1]].byte == 2 && operand_in_reg(left, REG_B, ia, i, G) && I[ia.registers[REG_B][1]].byte == 3 ||
+    operand_in_reg(left, REG_E, ia, i, G) && I[ia.registers[REG_E][1]].byte == 2 && operand_in_reg(left, REG_D, ia, i, G) && I[ia.registers[REG_D][1]].byte == 3))
+    return(true);
   if(POINTER_GET(ic) && input_in_L && input_in_H && (getSize(operandType(IC_RESULT(ic))) == 1 || !result_in_HL))
     return(true);
   if(!IS_GB && ic->op == ADDRESS_OF &&
@@ -1031,10 +1026,28 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(unused_IYL && unused_IYH)
     return(true); // Register IY not in use.
 
+  if(SKIP_IC2(ic))
+    return(true);
+
   if(exstk && (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G))) // Todo: Make this more accurate to get better code when using --fomit-frame-pointer
     return(false);
 
-  // Code generator cannot handle variables that are only partially in IY.
+  if(ic->op == CALL)
+    return(true);
+
+  if(!result_in_IY && !input_in_IY &&
+    !(IC_RESULT(ic) && isOperandInDirSpace(IC_RESULT(ic))) &&
+    !(IC_RIGHT(ic) && IS_TRUE_SYMOP(IC_RIGHT(ic))) &&
+    !(IC_LEFT(ic) && IS_TRUE_SYMOP(IC_LEFT(ic))))
+    return(true);
+
+  // variables partially in IY can be pushed.
+  if(ic->op == IPUSH &&
+    operand_in_reg(left, REG_IYL, ia, i, G) && operand_in_reg(left, REG_IYH, ia, i, G) &&
+    (I[ia.registers[REG_IYL][1]].byte == 0 && I[ia.registers[REG_IYH][1]].byte == 1 || I[ia.registers[REG_IYL][1]].byte == 2 && I[ia.registers[REG_IYH][1]].byte == 3))
+    return(true);
+
+  // Code generator mostly cannot handle variables that are only partially in IY.
   if(unused_IYL ^ unused_IYH)
     return(false);
   if(!unused_IYL && I[ia.registers[REG_IYL][1]].size != 2 || !unused_IYH && I[ia.registers[REG_IYH][1]].size != 2 ||
@@ -1086,15 +1099,6 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
       std::cout << "2IYinst_ok: at (" << i << ", " << ic->key << ")\nIYL = (" << ia.registers[REG_IYL][0] << ", " << ia.registers[REG_IYL][1] << "), IYH = (" << ia.registers[REG_IYH][0] << ", " << ia.registers[REG_IYH][1] << ")inst " << i << ", " << ic->key << "\n";
     }
 #endif
-
-  if(SKIP_IC2(ic))
-    return(true);
-
-  if(!result_in_IY && !input_in_IY &&
-    !(IC_RESULT(ic) && isOperandInDirSpace(IC_RESULT(ic))) &&
-    !(IC_RIGHT(ic) && IS_TRUE_SYMOP(IC_RIGHT(ic))) &&
-    !(IC_LEFT(ic) && IS_TRUE_SYMOP(IC_LEFT(ic))))
-    return(true);
 
   if(!result_in_IY && !input_in_IY &&
     (ic->op == '=' || ic->op == CAST && getSize(operandType(IC_RIGHT (ic))) >= 2 && (getSize(operandType(IC_RESULT (ic))) <= getSize(operandType(IC_RIGHT (ic))) || !IS_SPEC(operandType(IC_RIGHT (ic))) || SPEC_USIGN(operandType(IC_RIGHT(ic))))) &&
@@ -1204,20 +1208,10 @@ static void assign_operand_for_cost(operand *o, const assignment &a, unsigned sh
       var_t v = oi->second;
       if(a.global[v] >= 0)
         { 
-          if(a.global[v] != REG_IYL && a.global[v] != REG_IYH || !OPTRALLOC_IY)
-            {
-              sym->regs[I[v].byte] = regsZ80 + a.global[v];
-              sym->accuse = 0;
-              sym->isspilt = false;
-              sym->nRegs = I[v].size;
-            }
-          else
-            {
-              sym->accuse = ACCUSE_IY;
-              sym->isspilt = false;
-              sym->nRegs = 0;
-              sym->regs[I[v].byte] = 0;
-            }
+          sym->regs[I[v].byte] = regsZ80 + a.global[v];
+          sym->accuse = 0;
+          sym->isspilt = false;
+          sym->nRegs = I[v].size;
         }
       else
         {
@@ -1383,14 +1377,6 @@ static bool assignment_hopeless(const assignment &a, unsigned short int i, const
 
   const i_assignment_t &ia = a.i_assignment;
 
-  // Code generator cannot handle variables that are only partially in IY.
-  if(OPTRALLOC_IY &&
-    (ia.registers[REG_IYL][1] >= 0 && (I[ia.registers[REG_IYL][1]].size != 2 || I[ia.registers[REG_IYL][1]].byte != 0) ||
-    ia.registers[REG_IYH][1] >= 0 && (I[ia.registers[REG_IYH][1]].size != 2 || I[ia.registers[REG_IYH][1]].byte != 1) ||
-    ia.registers[REG_IYL][0] >= 0 && (I[ia.registers[REG_IYL][0]].size != 2 || I[ia.registers[REG_IYL][0]].byte != 0) ||
-    ia.registers[REG_IYH][0] >= 0 && (I[ia.registers[REG_IYH][0]].size != 2 || I[ia.registers[REG_IYH][0]].byte != 1)))
-    return(true);
-
   // Can only check for HLinst_ok() in some cases.
   if(OPTRALLOC_HL &&
       (ia.registers[REG_L][1] >= 0 && ia.registers[REG_H][1] >= 0) &&
@@ -1400,8 +1386,7 @@ static bool assignment_hopeless(const assignment &a, unsigned short int i, const
 
   // Can only check for IYinst_ok() in some cases.
   if(OPTRALLOC_IY &&
-      (ia.registers[REG_IYL][1] >= 0 && ia.registers[REG_IYH][1] >= 0) &&
-      !((ia.registers[REG_IYL][0] >= 0) ^ (ia.registers[REG_IYH][0] >= 0)) &&
+      (ia.registers[REG_IYL][1] >= 0 || ia.registers[REG_IYH][1] >= 0) &&
       !IYinst_ok(a, i, G, I))
     return(true);
 
@@ -1582,20 +1567,11 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
       symbol *sym = (symbol *)(hTabItemWithKey(liveRanges, I[v].v));
       if(winner.global[v] >= 0)
         {
-          if(winner.global[v] != REG_IYL && winner.global[v] != REG_IYH || !OPTRALLOC_IY)
-            {
-              sym->regs[I[v].byte] = regsZ80 + winner.global[v];
-              sym->accuse = 0;
-              sym->isspilt = false;
-              sym->nRegs = I[v].size;
-            }
-          else
-            {
-              sym->accuse = ACCUSE_IY;
-              sym->isspilt = false;
-              sym->nRegs = 0;
-              sym->regs[I[v].byte] = 0;
-            }
+         
+          sym->regs[I[v].byte] = regsZ80 + winner.global[v];
+          sym->accuse = 0;
+          sym->isspilt = false;
+          sym->nRegs = I[v].size;
         }
       else
         {

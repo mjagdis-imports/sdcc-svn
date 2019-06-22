@@ -178,7 +178,7 @@ int cl_pdk::execute_pdk14(unsigned int code) {
   } else if (CODE_MASK(0x0D00, 0x7F)) {
     // addc a, m
     regs.a = add_to(regs.a, get_mem(code & 0x7F), get_flag(flag_c));
-  } else if (CODE_MASK(0x0800, 0x7F)) {
+  } else if (CODE_MASK(0x0900, 0x7F)) {
     // addc m, a
     int addr = code & 0x7F;
     ram->write(addr, add_to(regs.a, get_mem(addr), get_flag(flag_c)));
@@ -192,7 +192,7 @@ int cl_pdk::execute_pdk14(unsigned int code) {
   } else if (CODE_MASK(0x0D80, 0x7F)) {
     // subc a, m
     regs.a = sub_to(regs.a, get_mem(code & 0x7F), get_flag(flag_c));
-  } else if (CODE_MASK(0x0880, 0x7F)) {
+  } else if (CODE_MASK(0x0980, 0x7F)) {
     // subc m, a
     int addr = code & 0x7F;
     ram->write(addr, sub_to(get_mem(addr), regs.a, get_flag(flag_c)));

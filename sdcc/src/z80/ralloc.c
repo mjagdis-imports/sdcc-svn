@@ -125,6 +125,8 @@ static reg_info _z80_regs[] = {
   {REG_GPR, D_IDX, "d", 1},
   {REG_GPR, L_IDX, "l", 1},
   {REG_GPR, H_IDX, "h", 1},
+  {REG_GPR, IYL_IDX, "iyl", 1},
+  {REG_GPR, IYH_IDX, "iyh", 1},
   {REG_CND, CND_IDX, "c", 1}
 };
 
@@ -1824,15 +1826,7 @@ pack:
     return 0;
 
   /* found the definition */
-  /* replace the result with the result of */
-  /* this assignment and remove this assignment */
-  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
-  IC_RESULT (dic) = IC_RESULT (ic);
 
-  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
-    {
-      OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
-    }
   /* delete from liverange table also
      delete from all the points inbetween and the new
      one */
@@ -1841,6 +1835,16 @@ pack:
       bitVectUnSetBit (sic->rlive, IC_RESULT (ic)->key);
       if (IS_ITEMP (IC_RESULT (dic)))
         bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
+    }
+
+  /* replace the result with the result of */
+  /* this assignment and remove this assignment */
+  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
+  IC_RESULT (dic) = IC_RESULT (ic);
+
+  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
+    {
+      OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
     }
 
   remiCodeFromeBBlock (ebp, ic);
