@@ -1,3 +1,9 @@
+2019-06-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/*.c:
+	  Disable some tests for pic14 that won't work anytime soon.
+	  Partially picked from patch by Gonzalo Pérez de Olaguer Córdoba.
+
 2019-06-22 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z88/ralloc2.cc,
