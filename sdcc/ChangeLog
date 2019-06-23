@@ -3,6 +3,14 @@
 	* support/regression/tests/*.c:
 	  Disable some tests for pic14 that won't work anytime soon.
 	  Partially picked from patch by Gonzalo Pérez de Olaguer Córdoba.
+	* src/SDCCast.c,
+	  src/pic14/gen.c,
+	  src/pic14/gen.h,
+	  src/pic14/genarith.c,
+	  src/pic14/pcode.c,
+	  src/pic14/pcodepeep.c,
+	  src/pic14/ralloc.c:
+	  Fixes from patch by Gonzalo Pérez de Olaguer Córdoba.
 
 2019-06-22 Philipp Klaus Krause <pkk AT spth.de>
 
