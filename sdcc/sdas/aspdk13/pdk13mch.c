@@ -109,7 +109,7 @@ machine(struct mne *mp)
                         combine += 1;
 
                 struct inst a = {0x001A + combine, 0x00};
-                struct inst m = {0x0A00 + (combine << 6), 0x3F};
+                struct inst m = {0x0A80 + (combine << 6), 0x3F};
                 eshift(a, m);
                 break;
         }
