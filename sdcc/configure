@@ -1460,7 +1460,7 @@ Optional Features:
   --disable-pdk13-port    Excludes the PDK13 port
   --disable-pdk14-port    Excludes the PDK14 port
   --disable-pdk15-port    Excludes the PDK15 port
-  --disable-pdk16-port    Excludes the PDK16 port
+  --enable-pdk16-port     Includes the PDK16 port
   --disable-ucsim         Disables configuring and building of ucsim
   --disable-device-lib    Disables building device libraries
   --disable-packihx       Disables building packihx
@@ -8276,11 +8276,11 @@ if test "${enable_pdk16_port+set}" = set; then :
 fi
 
 
-  if test "$enable_pdk16_port" = "no"; then
-    OPT_DISABLE_PDK16=1
-  else
-    enable_pdk16_port="yes"
+  if test "$enable_pdk16_port" = "yes"; then
     OPT_DISABLE_PDK16=0
+  else
+    enable_pdk16_port="no"
+    OPT_DISABLE_PDK16=1
   fi
 
 

@@ -3,6 +3,9 @@
 	* sdas/aspdk13/pdk13pst.c,
 	  sdas/aspdk13/pdk13mch.c:
 	  Fix bug #2915 via suggestion by Free-PDK.
+	* configure.ac,
+	  configure:
+	  Disable pdk16 port by default.
 
 2019-06-22 Philipp Klaus Krause <pkk AT spth.de>
 
