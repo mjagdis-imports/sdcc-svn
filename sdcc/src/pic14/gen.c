@@ -5996,6 +5996,140 @@ emitPtrByteSet (operand * dst, int p_type, bool alreadyAddressed)
     }
 }
 
+/*
+ * Read data from address pointed by left to result.
+ * For bitfields (blen != 0) does the corresponding bit masking
+ * and zero/sign extensions.
+ * For non-bitfields (blen == bstr == 0) just reads the number of
+ * bytes determined by the size of result.
+ */
+static void
+emitPtrGet (operand * result, operand * left, int ptype, int blen, int bstr)
+{
+    /* emit call to __gptrget */
+    char *func[] = { NULL, "__gptrget1", "__gptrget2", "__gptrget3", "__gptrget4" };
+    int offset = 0;
+    int size, mask = 0;
+
+    if (blen == 0)
+      {
+        size = AOP_SIZE(result);
+      }
+    else
+      {
+        /* single byte field case (with mask): blen 2..7, blen + bstr 2..8 */
+        /* single byte field case (full byte): blen 8, bstr 0 */
+        /* multi byte field case: blen > 8, bstr 0 */
+
+        /* bytes to move without masking */
+        size = blen / 8;
+
+        /* bits to mask in the last byte */
+        blen = blen % 8;
+
+        /* mask to apply */
+        if (blen)
+          {
+            mask = (((1UL << blen) - 1) << bstr) & 0x00ff;
+            size++;
+          }
+      }
+
+    assert (size > 0 && size <= 4);
+
+    switch (ptype)
+      {
+        case -1:
+            while (size--)
+              {
+                emitpcode (POC_MOVFW, popGet (AOP (left), offset));
+                if (!size && blen)
+                    emitpcode (POC_ANDLW, popGetLit (mask));
+                movwf (AOP (result), offset);
+                if (size)
+                    offset++;
+              }
+            goto manage_signs;
+
+        case POINTER:
+        case FPOINTER:
+            assert (AOP_SIZE (left) == 2);
+            setup_fsr (left);
+            while (size--)
+              {
+                emitpcode (POC_MOVFW, popCopyReg (pc_indf));
+                if (!size && blen)
+                    emitpcode (POC_ANDLW, popGetLit (mask));
+                movwf (AOP (result), offset);
+                if (size)
+                  {
+                    inc_fsr (1);
+                    offset++;
+                  }
+              }
+            goto manage_signs;
+
+        case GPOINTER:
+            assert (AOP_SIZE (left) == 3);
+            mov2w_op (left, 0);
+            emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - 1));
+            mov2w_op (left, 1);
+            emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr));
+            mov2w_op (left, 2);
+            break;
+
+        case CPOINTER:
+            /* special case: assign from __code */
+            assert (OP_IN_CODE_SPACE(left) || AOP_SIZE (left) == 2);
+            mov2w_op (left, 0);
+            emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - 1));
+            mov2w_op (left, 1);
+            emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr));
+            emitpcode (POC_MOVLW, popGetLit (GPTRTAG_CODE));    /* GPOINTER tag for __code space */
+            break;
+
+        default:
+            assert (!"unhandled pointer type");
+      }
+
+    /* This is for GPOINTER and CPOINTER only */
+
+    call_libraryfunc (func[size]);
+
+    if (blen)
+        emitpcode (POC_ANDLW, popGetLit (mask));
+
+    /* save result */
+    movwf (AOP (result), --size);
+    while (size--)
+      {
+        emitpcode (POC_MOVFW, popRegFromIdx (Gstack_base_addr - offset++));
+        movwf (AOP (result), size);
+      }                         // while
+
+manage_signs:
+
+    /* This is for all pointers */
+
+    /* Handle the partial byte at the end */
+    if (blen)
+      {
+        if (bstr)
+          AccRsh (popGet (AOP (result), offset), bstr, 1);       /* zero extend the bitfield */
+
+        if (!SPEC_USIGN (OP_SYM_ETYPE (left)))
+          {
+            /* signed bitfield */
+            emitpcode (POC_MOVLW, popGetLit (0x00ff << blen));
+            emitpcode (POC_BTFSC, newpCodeOpBit (aopGet (AOP (result), offset, FALSE, FALSE), blen - 1, 0));
+            emitpcode (POC_IORWF, popGet (AOP (result), offset));
+          }
+      }
+
+    if (AOP_SIZE(result) > ++offset)
+        addSign (result, offset, !SPEC_USIGN (OP_SYM_ETYPE (left)));
+}
+
 /*-----------------------------------------------------------------*/
 /* genUnpackBits - generates code for unpacking bits               */
 /*-----------------------------------------------------------------*/
@@ -6087,51 +6221,11 @@ genUnpackBits (operand * result, operand * left, int ptype, iCode * ifx)
               addSign (result, 1, !SPEC_USIGN (OP_SYM_ETYPE (left)));
             } // if
         }
-      return;
     }
-  else if (blen <= 8 && ((blen + bstr) <= 8))
+  else
     {
-      /* blen > 1 */
-      int i;
-
-      for (i = 0; i < AOP_SIZE (result); i++)
-        emitpcode (POC_CLRF, popGet (AOP (result), i));
-
-      switch (ptype)
-        {
-        case -1:
-          emitpcode (POC_MOVFW, popGet (AOP (left), 0));
-          break;
-
-        case POINTER:
-        case FPOINTER:
-        case GPOINTER:
-        case CPOINTER:
-          emitPtrByteGet (left, ptype, FALSE);
-          break;
-
-        default:
-          assert (!"unhandled pointer type");
-        }                       // switch
-
-      if (blen < 8)
-        emitpcode (POC_ANDLW, popGetLit ((((1UL << blen) - 1) << bstr) & 0x00ff));
-      movwf (AOP (result), 0);
-      AccRsh (popGet (AOP (result), 0), bstr, 1);       /* zero extend the bitfield */
-
-      if (!SPEC_USIGN (OP_SYM_ETYPE (left)) && (blen != 8))
-        {
-          /* signed bitfield */
-          assert (blen > 0);
-          emitpcode (POC_MOVLW, popGetLit (0x00ff << blen));
-          emitpcode (POC_BTFSC, newpCodeOpBit (aopGet (AOP (result), 0, FALSE, FALSE), blen - 1, 0));
-          emitpcode (POC_IORWF, popGet (AOP (result), 0));
-        }
-      addSign (result, 1, !SPEC_USIGN (OP_SYM_ETYPE (left)));
-      return;
+      emitPtrGet (result, left, ptype, blen, bstr);
     }
-
-  assert (!"bitfields larger than 8 bits or crossing byte boundaries are not yet supported");
 }
 
 #if 1
@@ -6155,7 +6249,7 @@ genDataPointerGet (operand * left, operand * result, iCode * ic)
   aopOp (result, ic, TRUE);
 
   if (pic14_sameRegs (AOP (left), AOP (result)))
-    return;
+    goto release;
 
   DEBUGpic14_AopType (__LINE__, left, NULL, result);
 
@@ -6171,6 +6265,7 @@ genDataPointerGet (operand * left, operand * result, iCode * ic)
       offset++;
     }
 
+release:
   freeAsmop (left, NULL, ic, TRUE);
   freeAsmop (result, NULL, ic, TRUE);
 }
@@ -6182,7 +6277,6 @@ genDataPointerGet (operand * left, operand * result, iCode * ic)
 static void
 genNearPointerGet (operand * left, operand * result, iCode * ic)
 {
-  asmop *aop = NULL;
   sym_link *ltype = operandType (left);
   sym_link *rtype = operandType (result);
   sym_link *retype = getSpec (rtype);   /* bitfield type information */
@@ -6217,72 +6311,12 @@ genNearPointerGet (operand * left, operand * result, iCode * ic)
   if (IS_BITFIELD (getSpec (operandType (result))))
     {
       genUnpackBits (result, left, direct ? -1 : POINTER, ifxForOp (IC_RESULT (ic), ic));
-      goto release;
-    }
-
-  /* If the pointer value is not in a the FSR then need to put it in */
-  /* Must set/reset IRP bit for use with FSR. */
-  if (!direct)
-    setup_fsr (left);
-
-//  sym_link *etype;
-  /* if bitfield then unpack the bits */
-  {
-    /* we have can just get the values */
-    int size = AOP_SIZE (result);
-    int offset = 0;
-
-    DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-
-    while (size--)
-      {
-        if (direct)
-          emitpcode (POC_MOVWF, popGet (AOP (left), 0));
-        else
-          emitpcode (POC_MOVFW, popCopyReg (pc_indf));
-        if (AOP_TYPE (result) == AOP_LIT)
-          {
-            emitpcode (POC_MOVLW, popGet (AOP (result), offset));
-          }
-        else
-          {
-            emitpcode (POC_MOVWF, popGet (AOP (result), offset));
-          }
-        if (size && !direct)
-          {
-            inc_fsr (1);
-          }
-        offset++;
-      }
-  }
-
-  /* now some housekeeping stuff */
-  if (aop)
-    {
-      /* we had to allocate for this iCode */
-      DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-      freeAsmop (NULL, aop, ic, TRUE);
-    }
-  else if (!direct)
-    {
-      /* nothing to do */
     }
   else
     {
-      /* we did not allocate which means left
-         already in a pointer register, then
-         if size > 0 && this could be used again
-         we have to point it back to where it
-         belongs */
-      DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-      if (AOP_SIZE (result) > 1 && !OP_SYMBOL (left)->remat && (OP_SYMBOL (left)->liveTo > ic->seq || ic->depth))
-        {
-          int size = AOP_SIZE (result) - 1;
-          inc_fsr (-size);
-        }
+      emitPtrGet (result, left, direct ? -1 : POINTER, 0, 0);
     }
 
-release:
   /* done */
   freeAsmop (left, NULL, ic, TRUE);
   freeAsmop (result, NULL, ic, TRUE);
@@ -6306,34 +6340,11 @@ genGenPointerGet (operand * left, operand * result, iCode * ic)
   if (IS_BITFIELD (getSpec (operandType (result))))
     {
       genUnpackBits (result, left, GPOINTER, ifxForOp (IC_RESULT (ic), ic));
-      return;
     }
-
-  {
-    /* emit call to __gptrget */
-    char *func[] = { NULL, "__gptrget1", "__gptrget2", "__gptrget3", "__gptrget4" };
-    int size = AOP_SIZE (result);
-    int idx = 0;
-
-    assert (size > 0 && size <= 4);
-
-    /* pass arguments */
-    assert (AOP_SIZE (left) == 3);
-    mov2w (AOP (left), 0);
-    emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - 1));
-    mov2w (AOP (left), 1);
-    emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr));
-    mov2w (AOP (left), 2);
-    call_libraryfunc (func[size]);
-
-    /* save result */
-    movwf (AOP (result), --size);
-    while (size--)
-      {
-        emitpcode (POC_MOVFW, popRegFromIdx (Gstack_base_addr - idx++));
-        movwf (AOP (result), size);
-      }                         // while
-  }
+  else
+    {
+      emitPtrGet (result, left, GPOINTER, 0, 0);
+    }
 
   freeAsmop (left, NULL, ic, TRUE);
   freeAsmop (result, NULL, ic, TRUE);
@@ -6351,7 +6362,6 @@ genConstPointerGet (operand * left, operand * result, iCode * ic)
   symbol *albl, *blbl;          //, *clbl;
   pCodeOp *pcop;
 #endif
-  int i, lit;
 
   FENTRY;
   DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
@@ -6362,35 +6372,15 @@ genConstPointerGet (operand * left, operand * result, iCode * ic)
 
   DEBUGpic14_emitcode ("; ", " %d getting const pointer", __LINE__);
 
-  lit = op_isLitLike (left);
-
   if (IS_BITFIELD (getSpec (operandType (result))))
     {
-      genUnpackBits (result, left, lit ? -1 : CPOINTER, ifxForOp (IC_RESULT (ic), ic));
-      goto release;
+      genUnpackBits (result, left, CPOINTER, ifxForOp (IC_RESULT (ic), ic));
+    }
+  else
+    {
+      emitPtrGet (result, left, CPOINTER, 0, 0);
     }
 
-  {
-    char *func[] = { NULL, "__gptrget1", "__gptrget2", "__gptrget3", "__gptrget4" };
-    int size = AOP_SIZE (result);
-    assert (size > 0 && size <= 4);
-
-    mov2w_op (left, 0);
-    emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - 1));
-    mov2w_op (left, 1);
-    emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr));
-    emitpcode (POC_MOVLW, popGetLit (GPTRTAG_CODE));    /* GPOINTER tag for __code space */
-    call_libraryfunc (func[size]);
-
-    movwf (AOP (result), size - 1);
-    for (i = 1; i < size; i++)
-      {
-        emitpcode (POC_MOVFW, popRegFromIdx (Gstack_base_addr + 1 - i));
-        movwf (AOP (result), size - 1 - i);
-      }                         // for
-  }
-
-release:
   freeAsmop (left, NULL, ic, TRUE);
   freeAsmop (result, NULL, ic, TRUE);
 
@@ -6482,6 +6472,211 @@ genPointerGet (iCode * ic)
 
 }
 
+/*
+ * Write data from right to the address pointed by result.
+ * For bitfields (blen != 0) does the corresponding bit masking
+ * and zero/sign extensions.
+ * For non-bitfields (blen == bstr == 0) just writes the number of
+ * bytes determined by the size of right.
+ */
+static void
+emitPtrPut (operand * right, operand * result, int ptype, int blen, int bstr)
+{
+    /* emit call to __gptrput */
+    char *func[] = { NULL, "__gptrput1", "__gptrput2", "__gptrput3", "__gptrput4" };
+    int offset = 0;
+    pCodeOp *temp = NULL;
+    int litval = 0;               /* source literal value (if AOP_LIT) */
+    unsigned char mask = 0;       /* bitmask within current byte */
+    int size;
+    symbol *lbl = NULL;
+
+    if (blen == 0)
+      {
+        size = AOP_SIZE(right);
+      }
+    else
+      {
+        /* single byte field case (with mask): blen 2..7, blen + bstr 2..8 */
+        /* single byte field case (full byte): blen 8, bstr 0 */
+        /* multi byte field case: blen > 8, bstr 0 */
+
+        /* bytes to move without masking */
+        size = blen / 8;
+
+        /* bits to mask in the last byte */
+        blen = blen % 8;
+
+        /* If there was a partial byte at the end */
+        if (blen)
+          {
+            mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
+
+            if (AOP_TYPE (right) == AOP_LIT)
+              {
+                /* Case with partial byte and literal source
+                 */
+                litval = (int) ulFromVal (AOP (right)->aopu.aop_lit);
+                litval <<= bstr;
+                litval >>= 8 * size;
+                litval &= (~mask) & 0xff;
+              }
+            else
+              {
+                /* Case with a bitfield 1 < length <= 8 and arbitrary source */
+                temp = popGetTempReg ();
+
+                mov2w (AOP (right), size);
+                emitpcode (POC_ANDLW, popGetLit ((1UL << blen) - 1));
+                emitpcode (POC_MOVWF, temp);
+                if (bstr)
+                  AccLsh (temp, bstr);
+              }
+
+            /* Include the last byte into the size count */
+            size++;
+          }
+      }
+
+    /* The following assertion fails for
+     *   struct foo { char a; char b; } bar;
+     *   void demo(struct foo *dst, char c) { dst->b = c; }
+     * as size will be 1 (sizeof(c)), whereas dst->b will be accessed
+     * using (((char *)dst)+1), whose OP_SYM_ETYPE still is struct foo
+     * of size 2.
+     * The frontend seems to guarantee that IC_LEFT has the correct size,
+     * it works fine both for larger and smaller types of `char c'.
+     * */
+    //assert (size == getSize(OP_SYM_ETYPE(result)));
+    assert (size > 0 && size <= 4);
+
+    switch (ptype)
+      {
+        case -1:
+            while (size--)
+              {
+                if (size || !blen)
+                  {
+                    if (AOP_TYPE (right) == AOP_LIT)
+                      emitpcode (POC_MOVLW, popGet (AOP (right), offset));
+                    else
+                      emitpcode (POC_MOVFW, popGet (AOP (right), offset));
+                    movwf (AOP (result), offset);
+                    if (size)
+                        offset++;
+                  }
+                else
+                  {
+                    emitpcode (POC_MOVFW, popGet (AOP (result), offset));
+                    if (AOP_TYPE (right) == AOP_LIT)
+                      {
+                        if ((litval | mask) != 0x00ff)
+                          emitpcode (POC_ANDLW, popGetLit (mask));
+                        if (litval != 0x00)
+                          emitpcode (POC_IORLW, popGetLit (litval));
+                      }
+                    else
+                      {
+                        emitpcode (POC_ANDLW, popGetLit (mask));
+                        emitpcode (POC_IORFW, temp);
+                      }
+                    movwf (AOP (result), offset);
+                  }
+              }
+            break;
+
+        case GPOINTER:
+            /* GPOINTER should point to data space, because code space is not writeable */
+            if (!blen)
+              {
+                /* For non-bitfields use the library functions.
+                 * They will silently ignore tries to write to code space.
+                 */
+                /* pass arguments */
+                /* - value (MSB in Gstack_base_addr-2, growing downwards) */
+                {
+                  int off = size;
+                  int idx = 2;
+                  while (off--)
+                    {
+                      mov2w_op (right, off);
+                      emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - idx++));
+                    }
+                }
+                /* - address */
+                assert (AOP_SIZE (result) == 3);
+                mov2w (AOP (result), 0);
+                emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - 1));
+                mov2w (AOP (result), 1);
+                emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr));
+                mov2w (AOP (result), 2);
+                call_libraryfunc (func[size]);
+                break;
+              }
+
+            /* For bitfields, manage the pointer as a data pointer */
+            lbl = newiTempLabel (NULL);
+            mov2w (AOP (result), 2);
+            /* If result happends to be a remat, it may be a literal and mov2w doesn't set Z */
+            emitpcode (POC_IORLW, popGetLit (0));
+            emitSKPZ;
+            if (pic->isEnhancedCore)
+              emitpcode (POC_BRA, popGetLabel (lbl->key));
+            else
+              emitpcode (POC_GOTO, popGetLabel (lbl->key));
+
+        case POINTER:
+        case FPOINTER:
+            setup_fsr (result);
+            while (size--)
+              {
+                if (size || !blen)
+                  {
+                    if (AOP_TYPE (right) == AOP_LIT)
+                      emitpcode (POC_MOVLW, popGet (AOP (right), offset));
+                    else
+                      emitpcode (POC_MOVFW, popGet (AOP (right), offset));
+                    emitpcode (POC_MOVWF, popCopyReg (pc_indf));
+                    if (size)
+                      {
+                        inc_fsr (1);
+                        offset++;
+                      }
+                  }
+                else
+                  {
+                    emitpcode (POC_MOVFW, popCopyReg (pc_indf));
+                    if (AOP_TYPE (right) == AOP_LIT)
+                      {
+                        if ((litval | mask) != 0x00ff)
+                          emitpcode (POC_ANDLW, popGetLit (mask));
+                        if (litval != 0x00)
+                          emitpcode (POC_IORLW, popGetLit (litval));
+                      }
+                    else
+                      {
+                        emitpcode (POC_ANDLW, popGetLit (mask));
+                        emitpcode (POC_IORFW, temp);
+                      }
+                    emitpcode (POC_MOVWF, popCopyReg (pc_indf));
+                  }
+              }
+            if (lbl)
+                emitpLabel (lbl->key);
+            break;
+
+        case CPOINTER:
+            assert (!"trying to assign via pointer to __code space");
+            break;
+
+        default:
+            assert (!"unhandled pointer type");
+      }
+
+    if (temp)
+        popReleaseTempReg (temp);
+}
+
 /*-----------------------------------------------------------------*/
 /* genPackBits - generates code for packed bit storage             */
 /*-----------------------------------------------------------------*/
@@ -6490,8 +6685,6 @@ genPackBits (sym_link * etype, operand * result, operand * right, int p_type)
 {
   unsigned blen;                /* bitfield length */
   unsigned bstr;                /* bitfield starting bit within byte */
-  int litval;                   /* source literal value (if AOP_LIT) */
-  unsigned char mask;           /* bitmask within current byte */
 
   FENTRY;
   DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
@@ -6499,18 +6692,15 @@ genPackBits (sym_link * etype, operand * result, operand * right, int p_type)
   blen = SPEC_BLEN (etype);
   bstr = SPEC_BSTR (etype);
 
-  /* If the bitfield length is less than a byte and does not cross byte boundaries */
-  if ((blen <= 8) && ((bstr + blen) <= 8))
+  /* single bit field case */
+  if (blen == 1)
     {
-      mask = ((unsigned char) (0xFF << (blen + bstr)) | (unsigned char) (0xFF >> (8 - bstr)));
+              pCodeOp *pcop;
 
       if (AOP_TYPE (right) == AOP_LIT)
         {
           /* Case with a bitfield length <8 and literal source */
           int lit = (int) ulFromVal (AOP (right)->aopu.aop_lit);
-          if (blen == 1)
-            {
-              pCodeOp *pcop;
 
               switch (p_type)
                 {
@@ -6549,51 +6739,10 @@ genPackBits (sym_link * etype, operand * result, operand * right, int p_type)
                   assert (!"unhandled pointer type");
                   break;
                 }               // switch (p_type)
-            }
-          else
-            {
-              /* blen > 1 */
-              litval = lit << bstr;
-              litval &= (~mask) & 0x00ff;
-
-              switch (p_type)
-                {
-                case -1:
-                  emitpcode (POC_MOVFW, popGet (AOP (result), 0));
-                  if ((litval | mask) != 0x00ff)
-                    emitpcode (POC_ANDLW, popGetLit (mask));
-                  if (litval != 0x00)
-                    emitpcode (POC_IORLW, popGetLit (litval));
-                  movwf (AOP (result), 0);
-                  break;
-
-                case POINTER:
-                case FPOINTER:
-                case GPOINTER:
-                  emitPtrByteGet (result, p_type, FALSE);
-                  if ((litval | mask) != 0x00ff)
-                    emitpcode (POC_ANDLW, popGetLit (mask));
-                  if (litval != 0x00)
-                    emitpcode (POC_IORLW, popGetLit (litval));
-                  emitPtrByteSet (result, p_type, TRUE);
-                  break;
-
-                case CPOINTER:
-                  assert (!"trying to assign to bitfield via pointer to __code space");
-                  break;
-
-                default:
-                  assert (!"unhandled pointer type");
-                  break;
-                }               // switch
-            }                   // if (blen > 1)
         }
       else
         {
           /* right is no literal */
-          if (blen == 1)
-            {
-              pCodeOp *pcop;
 
               switch (p_type)
                 {
@@ -6630,58 +6779,12 @@ genPackBits (sym_link * etype, operand * result, operand * right, int p_type)
                   assert (!"unhandled pointer type");
                   break;
                 }               // switch
-              return;
-            }
-          else
-            {
-              /* Case with a bitfield 1 < length <= 8 and arbitrary source */
-              pCodeOp *temp = popGetTempReg ();
-
-              mov2w (AOP (right), 0);
-              if (blen < 8)
-                {
-                  emitpcode (POC_ANDLW, popGetLit ((1UL << blen) - 1));
-                }
-              emitpcode (POC_MOVWF, temp);
-              if (bstr)
-                {
-                  AccLsh (temp, bstr);
-                }
-
-              switch (p_type)
-                {
-                case -1:
-                  emitpcode (POC_MOVFW, popGet (AOP (result), 0));
-                  emitpcode (POC_ANDLW, popGetLit (mask));
-                  emitpcode (POC_IORFW, temp);
-                  movwf (AOP (result), 0);
-                  break;
-
-                case POINTER:
-                case FPOINTER:
-                case GPOINTER:
-                  emitPtrByteGet (result, p_type, FALSE);
-                  emitpcode (POC_ANDLW, popGetLit (mask));
-                  emitpcode (POC_IORFW, temp);
-                  emitPtrByteSet (result, p_type, TRUE);
-                  break;
-
-                case CPOINTER:
-                  assert (!"trying to assign to bitfield via pointer to __code space");
-                  break;
-
-                default:
-                  assert (!"unhandled pointer type");
-                  break;
-                }               // switch
-
-              popReleaseTempReg (temp);
-            }                   // if (blen > 1)
         }                       // if (AOP(right)->type != AOP_LIT)
-      return;
-    }                           // if (blen <= 8 && ((blen + bstr) <= 8))
-
-  assert (!"bitfields larger than 8 bits or crossing byte boundaries are not yet supported");
+    }
+  else
+    {
+      emitPtrPut (right, result, p_type, blen, bstr);
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -6697,7 +6800,6 @@ genDataPointerSet (operand * right, operand * result, iCode * ic)
   FENTRY;
   DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
   aopOp (right, ic, FALSE);
-  aopOp (result, ic, FALSE);
 
   assert (IS_SYMOP (result));
   assert (IS_PTR (OP_SYM_TYPE (result)));
@@ -6760,7 +6862,6 @@ genDataPointerSet (operand * right, operand * result, iCode * ic)
 static void
 genNearPointerSet (operand * right, operand * result, iCode * ic)
 {
-  asmop *aop = NULL;
   sym_link *ptype = operandType (result);
   sym_link *retype = getSpec (operandType (right));
   sym_link *letype = getSpec (ptype);
@@ -6778,7 +6879,6 @@ genNearPointerSet (operand * right, operand * result, iCode * ic)
   if (AOP_TYPE (result) == AOP_PCODE && PIC_IS_DATA_PTR (ptype) && !IS_BITVAR (retype) && !IS_BITVAR (letype))
     {
       genDataPointerSet (right, result, ic);
-      freeAsmop (result, NULL, ic, TRUE);
       return;
     }
 #endif
@@ -6796,73 +6896,10 @@ genNearPointerSet (operand * right, operand * result, iCode * ic)
   if (IS_BITFIELD (letype))
     {
       genPackBits (letype, result, right, direct ? -1 : POINTER);
-      return;
-    }
-
-  /* If the pointer value is not in a the FSR then need to put it in */
-  /* Must set/reset IRP bit for use with FSR. */
-  /* Note only do this once - assuming that never need to cross a bank boundary at address 0x100. */
-  if (!direct)
-    setup_fsr (result);
-
-  {
-    /* we have can just get the values */
-    int size = AOP_SIZE (right);
-    int offset = 0;
-
-    DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-    while (size--)
-      {
-        char *l = aopGet (AOP (right), offset, FALSE, TRUE);
-        if (*l == '@')
-          {
-            emitpcode (POC_MOVFW, popCopyReg (pc_indf));
-          }
-        else
-          {
-            if (AOP_TYPE (right) == AOP_LIT)
-              {
-                emitpcode (POC_MOVLW, popGet (AOP (right), offset));
-              }
-            else
-              {
-                emitpcode (POC_MOVFW, popGet (AOP (right), offset));
-              }
-            if (direct)
-              emitpcode (POC_MOVWF, popGet (AOP (result), 0));
-            else
-              emitpcode (POC_MOVWF, popCopyReg (pc_indf));
-          }
-        if (size && !direct)
-          inc_fsr (1);
-        offset++;
-      }
-  }
-
-  DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-  /* now some housekeeping stuff */
-  if (aop)
-    {
-      /* we had to allocate for this iCode */
-      freeAsmop (NULL, aop, ic, TRUE);
-    }
-  else if (!direct)
-    {
-      /* nothing to do */
     }
   else
     {
-      /* we did not allocate which means left
-         already in a pointer register, then
-         if size > 0 && this could be used again
-         we have to point it back to where it
-         belongs */
-      DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-      if (AOP_SIZE (right) > 1 && !OP_SYMBOL (result)->remat && (OP_SYMBOL (result)->liveTo > ic->seq || ic->depth))
-        {
-          int size = AOP_SIZE (right) - 1;
-          inc_fsr (-size);
-        }
+      emitPtrPut (right, result, direct ? -1 : POINTER, 0, 0);
     }
 
   DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
@@ -6891,48 +6928,11 @@ genGenPointerSet (operand * right, operand * result, iCode * ic)
   if (IS_BITFIELD (retype))
     {
       genPackBits (retype, result, right, GPOINTER);
-      return;
     }
-
-  {
-    /* emit call to __gptrput */
-    char *func[] = { NULL, "__gptrput1", "__gptrput2", "__gptrput3", "__gptrput4" };
-    int size = AOP_SIZE (right);
-    int idx = 0;
-
-    /* The following assertion fails for
-     *   struct foo { char a; char b; } bar;
-     *   void demo(struct foo *dst, char c) { dst->b = c; }
-     * as size will be 1 (sizeof(c)), whereas dst->b will be accessed
-     * using (((char *)dst)+1), whose OP_SYM_ETYPE still is struct foo
-     * of size 2.
-     * The frontend seems to guarantee that IC_LEFT has the correct size,
-     * it works fine both for larger and smaller types of `char c'.
-     * */
-    //assert (size == getSize(OP_SYM_ETYPE(result)));
-    assert (size > 0 && size <= 4);
-
-    /* pass arguments */
-    /* - value (MSB in Gstack_base_addr-2, growing downwards) */
+  else
     {
-      int off = size;
-      idx = 2;
-      while (off--)
-        {
-          mov2w_op (right, off);
-          emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - idx++));
-        }
-      idx = 0;
+      emitPtrPut (right, result, GPOINTER, 0, 0);
     }
-    /* - address */
-    assert (AOP_SIZE (result) == 3);
-    mov2w (AOP (result), 0);
-    emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr - 1));
-    mov2w (AOP (result), 1);
-    emitpcode (POC_MOVWF, popRegFromIdx (Gstack_base_addr));
-    mov2w (AOP (result), 2);
-    call_libraryfunc (func[size]);
-  }
 
   freeAsmop (right, NULL, ic, TRUE);
   freeAsmop (result, NULL, ic, TRUE);

@@ -1,3 +1,8 @@
+2019-07-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pic14/gen.c:
+	  Fixes for bit-fields, from patches by Gonzalo Pérez de Olaguer Córdoba.
+
 2019-06-30 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c,
