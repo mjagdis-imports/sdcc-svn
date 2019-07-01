@@ -2,6 +2,8 @@
 
 	* src/pic14/gen.c:
 	  Fixes for bit-fields, from patches by Gonzalo Pérez de Olaguer Córdoba.
+	* src/pic14/glue.c:
+	  Fixes from patches by Gonzalo Pérez de Olaguer Córdoba (rough version).
 
 2019-06-30 Philipp Klaus Krause <pkk AT spth.de>
 
