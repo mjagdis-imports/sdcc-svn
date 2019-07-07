@@ -140,12 +140,16 @@ machine(struct mne *mp)
                 break;
         }
 
-        case S_SET1:
-                combine = 0x100;
-                /* fallthrough */
+        case S_SET1: {
+                struct inst io = {0x0F00, 0x1F};
+                struct inst m = {0x0301, 0x1F};
+                ebitn(io, m, /*N offset*/5);
+                break;
+        }
+
         case S_SET0: {
-                struct inst io = {0x0E00 | combine, 0x1F};
-                struct inst m = {0x0300 | combine, 0x1F};
+                struct inst io = {0x0E00, 0x1F};
+                struct inst m = {0x0300, 0x1F};
                 ebitn(io, m, /*N offset*/5);
                 break;
         }
@@ -160,12 +164,16 @@ machine(struct mne *mp)
                 break;
         }
 
-        case S_T1SN:
-                combine = 0x100;
-                /* fallthrough */
+        case S_T1SN: {
+                struct inst io = {0x0D00, 0x1F};
+                struct inst m = {0x0201, 0x1F};
+                ebitn(io, m, /*N offset*/5);
+                break;
+        }
+
         case S_T0SN: {
-                struct inst io = {0x0C00 | combine, 0x1F};
-                struct inst m = {0x0200 | combine, 0x1F};
+                struct inst io = {0x0C00, 0x1F};
+                struct inst m = {0x0200, 0x1F};
                 ebitn(io, m, /*N offset*/5);
                 break;
         }

@@ -2996,11 +2996,42 @@ aopPut3 (asmop *op1, int offset1, asmop *op2, int offset2, bool a_dead)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
-  /* Todo: Longer list of moves that can be optimized out. */
-  if (to->type == AOP_REG && from->type == AOP_REG && to->aopu.aop_reg[to_offset] == from->aopu.aop_reg[from_offset])
-    return;
   if (aopInReg (to, to_offset, A_IDX))
     a_dead = true;
+
+  if (to->type == AOP_REG && from->type == AOP_REG)
+    {
+      if (to->aopu.aop_reg[to_offset] == from->aopu.aop_reg[from_offset])
+        return;
+      bool from_index = aopInReg (from, from_offset, IYL_IDX) || aopInReg (from, from_offset, IYH_IDX);
+      bool to_index = aopInReg (to, to_offset, IYL_IDX)  || aopInReg (to, to_offset, IYH_IDX);
+      bool index = to_index || from_index;
+      if (!index || IS_EZ80_Z80)
+        {
+          bool a = aopInReg (to, to_offset, A_IDX) || aopInReg (from, from_offset, A_IDX);
+          if (!regalloc_dry_run)
+            aopPut (to, aopGet (from, from_offset, false), to_offset);
+          regalloc_dry_run_cost += 1 + (IS_TLCS90 + !a) + index;
+          return;
+        }
+      if (aopInReg (from, from_offset, IYL_IDX) && !to_index)
+        {
+          if (!a_dead)
+            _push (PAIR_AF);
+          _push(PAIR_IY);
+          _pop (PAIR_AF);
+          cheapMove (to, to_offset, ASMOP_A, 0, true);
+          if (!a_dead)
+            _pop (PAIR_AF);
+          return;
+        }
+      // Can't do it (todo: implement something there - will be expensive though, probablky at least 7B of code).
+      regalloc_dry_run_cost += 100;
+      wassert (regalloc_dry_run);
+    }
+
+  // TODO: Optimize out some moves that do not involve registers.
+
   bool uses_a = (from->type == AOP_DIR || from->type == AOP_SFR);
   if (!a_dead && uses_a)
     _push (PAIR_AF);
@@ -3264,6 +3295,51 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
 
   // Now do the register shuffling.
 
+  // Try to use:
+  // TLCS-90 ld rr, rr
+  // eZ80 lea rr, iy.
+  // All: push rr / pop iy
+  // All: push iy / pop rr
+  for (int i = 0; i + 1 < n; i++)
+    {
+      if (assigned[i] || assigned[i + 1])
+        continue;
+
+      for (int j = 0; j + 1 < n; j++)
+        {
+          if (!assigned[j] && i != j && i + 1 != j && (result->aopu.aop_reg[roffset + i] == source->aopu.aop_reg[soffset + j] || result->aopu.aop_reg[roffset + i + 1] == source->aopu.aop_reg[soffset + j]))
+            goto skip_byte_push_iy; // We can't write this one without overwriting the source.
+        }
+
+      if (IS_TLCS90 && getPairId_o (result, roffset + i) != PAIR_INVALID && getPairId_o (source, soffset + i) != PAIR_INVALID)
+        {
+          emit2 ("ld %s, %s", _pairs[getPairId_o (result, roffset + i)].name, _pairs[getPairId_o (source, soffset + i)].name);
+          regalloc_dry_run_cost += 1 + (!aopInReg (result, roffset + i, HL_IDX) && !aopInReg (source, soffset + i, HL_IDX));
+        }
+      else if (IS_EZ80_Z80 && getPairId_o (result, roffset + i) != PAIR_INVALID && aopInReg (source, soffset + i, IY_IDX))
+        {
+          emit2 ("lea %s, iy, #0", _pairs[getPairId_o (result, roffset + i)].name);
+          regalloc_dry_run_cost += 3;
+        }
+      else if (aopInReg (result, roffset + i, IY_IDX) && getPairId_o (source, soffset + i) != PAIR_INVALID ||
+        getPairId_o (result, roffset + i) != PAIR_INVALID && aopInReg (source, soffset + i, IY_IDX))
+        {
+          emit2 ("push %s", _pairs[getPairId_o (source, soffset + i)].name);
+          emit2 ("pop %s", _pairs[getPairId_o (result, roffset + i)].name);
+          regalloc_dry_run_cost += 3;
+        }
+      else
+        continue;
+
+      regsize -= 2;
+      size -= 2;
+      assigned[i] = true;
+      assigned[i + 1] = true;
+
+skip_byte_push_iy:
+        ;
+    }
+
   // Try to use ex de, hl. TODO: Also do so when only some bytes are used, while others are dead (useful e.g. for emulating ld de, hl or ld hl, de).
   if (regsize >= 4)
     {
@@ -3301,35 +3377,9 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
     }
 
-  // Try to use push rr / pop iy.
-  for (int i = 0; i + 1< n; i++)
-    {
-      if (assigned[i] || assigned[i + 1])
-        continue;
 
-      for (int j = 0; j + 1 < n; j++)
-        {
-          if (!assigned[j] && i != j && i + 1 != j && (result->aopu.aop_reg[roffset + i] == source->aopu.aop_reg[soffset + j] || result->aopu.aop_reg[roffset + i + 1] == source->aopu.aop_reg[soffset + j]))
-            goto skip_byte_push_iy; // We can't write this one without overwriting the source.
-        }
 
-      if (aopInReg (result, roffset + i, IY_IDX) && getPairId_o (source, soffset + i) != PAIR_INVALID ||
-        getPairId_o (result, roffset + i) != PAIR_INVALID && aopInReg (source, soffset + i, IY_IDX))
-        {
-          emit2 ("push %s", _pairs[getPairId_o (source, soffset + i)].name);
-          emit2 ("pop %s", _pairs[getPairId_o (result, roffset + i)].name);
-          regalloc_dry_run_cost += 3;
-          regsize -= 2;
-          size -= 2;
-          assigned[i] = true;
-          assigned[i + 1] = true;
-        }
-
-skip_byte_push_iy:
-        ;
-    }
-
-  // TODO: Try to use push iy / pop rr, lea rr, ix
+  // TODO: Try to use push iy / pop rr.
 
   while (regsize && result->type == AOP_REG && source->type == AOP_REG)
     {
@@ -3708,7 +3758,14 @@ _toBoolean (const operand *oper, bool needflag)
     }
   while (size--)
     if (size != skipbyte)
-      emit3_o (A_OR, ASMOP_A, 0, oper->aop, size);
+      {
+        if (aopInReg (oper->aop, size, IYL_IDX) || aopInReg (oper->aop, size, IYH_IDX))
+          {
+            regalloc_dry_run_cost += 100;
+            wassert (regalloc_dry_run);
+          }
+        emit3_o (A_OR, ASMOP_A, 0, oper->aop, size);
+      }
 }
 
 /*-----------------------------------------------------------------*/
@@ -11524,6 +11581,14 @@ genCast (const iCode *ic)
     }
 
   /* casting to bool */
+  if (IS_BOOL (operandType (result)) && IS_RAB && right->aop->size == 2 && 
+    (aopInReg (right->aop, 0, HL_IDX) && isPairDead (PAIR_HL, ic)|| aopInReg (right->aop, 0, IY_IDX) && isPairDead (PAIR_IY, ic)))
+    {
+      bool iy = aopInReg (right->aop, 0, IY_IDX);
+      emit2 ("bool %s", _pairs[getPairId (right->aop)].name);
+      cheapMove (result->aop, 0, iy ? ASMOP_IYL : ASMOP_L, 0, !bitVectBitValue (ic->rSurv, A_IDX));
+      goto release;
+    }
   if (IS_BOOL (operandType (result)))
     {
       _castBoolean (right);
