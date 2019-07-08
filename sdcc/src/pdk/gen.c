@@ -2004,7 +2004,7 @@ genCmp (const iCode *ic, iCode *ifx)
                  {
                    if (aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic))
                      {
-                       emit2 ("cneqsn", "a, #0x80");
+                       emit2 ("ceqsn", "a, #0x80");
                        emit2 ("nop", "");
                        cost (2, 2);
                      }
@@ -3592,7 +3592,8 @@ genIfx (const iCode *ic)
         {
           symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
           emit2 ("ceqsn", "a, #0");
-          if (!regalloc_dry_run) emit2 ("goto", "#!tlabel", labelKey2num (tlbl->key));
+          if (!regalloc_dry_run)
+            emit2 ("goto", "#!tlabel", labelKey2num (tlbl->key));
           emit2 ("cneqsn", "a, p");
           cost (3, 3.25f);
           emitJP (IC_FALSE (ic), 0.375f);
