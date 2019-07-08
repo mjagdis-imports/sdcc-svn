@@ -8,7 +8,7 @@
 	* src/pdk/main.c:
 	  Rewrite initalization code without cneqsn (towards fixing bug #2923).
 	* src/pdk/gen.c:
-	  Remove use of cneqsn in some comparisons (towards fixing bug #2923).
+	  Remove use of cneqsn for pdk13 in comparisons (towards fixing bug #2923).
 
 2019-06-30 Philipp Klaus Krause <pkk AT spth.de>
 
