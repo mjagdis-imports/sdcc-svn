@@ -2508,8 +2508,21 @@ genAnd (const iCode *ic, iCode *ifx)
               emit2 ("and", "a, %s", aopGet (right->aop, i));
               cost (1, 1);
             }
-          emit2 (IC_FALSE  (ifx) ? "cneqsn" : "ceqsn", "a, #0x00");
-          cost (1, 1.5);
+          if (TARGET_IS_PDK13 && IC_FALSE (ic)) // pdk13 does not have cneqsn
+            {
+              symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
+              emit2 ("ceqsn", "a, #0x00");
+              cost (1, 1.5);
+              emitJP (tlbl, 0.5f);
+              emitJP (IC_FALSE (ifx), 0.5f);
+              emitLabel (tlbl);
+              goto release;
+            }
+          else
+            {
+              emit2 (IC_FALSE  (ifx) ? "cneqsn" : "ceqsn", "a, #0x00");
+              cost (1, 1.5);
+            }
         }
 
       emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
@@ -3007,7 +3020,7 @@ static void getBitFieldByte (int len, int str, bool sex)
   if (sex)
     {
       symbol *const tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-      emit2 ("cneqsn", "a, #0x%02x", 0x80 >> (8 - len));
+      emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - len));
       emit2 ("nop", "");
       emit2 ("t0sn", "f, c");
       if (tlbl)
