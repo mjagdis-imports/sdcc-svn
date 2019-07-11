@@ -1,5 +1,10 @@
 2019-07-11 Philipp Klaus Krause <pkk AT spth.de>
 
+	* sdcc/device/lib/pic14/libsdcc/idata.c:
+	  Fix missing extern declaration of main.
+
+2019-07-11 Philipp Klaus Krause <pkk AT spth.de>
+
 	* .version:
 	  Reflect recent progress on pdk13 by bumping the version number.
 
