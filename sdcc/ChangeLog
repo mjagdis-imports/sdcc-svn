@@ -1,3 +1,17 @@
+2019-07-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version:
+	  Reflect recent progress on pdk13 by bumping the version number.
+
+2019-07-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sim/ucsim/pdk.src/inst.cc,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk13/pdk13mch.c,
+	  src/pdk/main.c,
+	  src/pdk/gen.c:
+	  Remove cneqsn for pdk13 fixing bug #2923.
+
 2019-07-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pic14/gen.c:
