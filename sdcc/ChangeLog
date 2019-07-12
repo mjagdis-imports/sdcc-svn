@@ -1,3 +1,10 @@
+2019-07-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/ctype.h,
+	  device/include/pic14/stdlib.h,
+	  support/regression/fwk/include/testfwk.h:
+	  Minor improvements towards pic14 regression testing suggested by Gonzalo Pérez de Olaguer Córdoba.
+
 2019-07-11 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdcc/device/lib/pic14/libsdcc/idata.c:
