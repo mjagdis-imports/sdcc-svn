@@ -1,5 +1,16 @@
 2019-09-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* sdas/aspdk/pdk.h,
+	  sdas/aspdk13/pdk13mch.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14mch.c,
+	  sdas/aspdk14/pdk14pst.c:
+	  Do not emit error on proposed idxsp and spadd instructions.
+	* src/pdk/gen.c:
+	  Use proposed idxsp and spadd instructions (dpending on feature macro).
+
+2019-09-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/pdk/gen.c,
 	  src/SDCCopt.c,
 	  support/regression/tests/bug-2931.c:

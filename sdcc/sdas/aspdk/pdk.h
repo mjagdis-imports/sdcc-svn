@@ -98,6 +98,9 @@
 #define S_WAIT1   112 /* not on pdk15 */
 #define S_NMOV    113 /* not on pdk15 */
 
+#define S_IDXSP   114 /* proposed */
+#define S_SPADD   115 /* proposed */
+
 /*
  * Addressing modes.
  */

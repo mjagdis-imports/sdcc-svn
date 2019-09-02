@@ -21,6 +21,9 @@
 #include "ralloc.h"
 #include "gen.h"
 
+#define IDXSP 1
+#define SPADD 1
+
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
 
@@ -145,6 +148,15 @@ aopInReg (const asmop *aop, int offset, short rIdx)
     return (false);
 
   return (aop->aopu.bytes[offset].in_reg && aop->aopu.bytes[offset].byteu.reg->rIdx == rIdx);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopOnStack - asmop from offset on stack (excl. extended stack)  */
+/*-----------------------------------------------------------------*/
+static bool
+aopOnStackNotExt (const asmop *aop, int offset, int size)
+{
+  return (aop->type == AOP_STK && (aop->aopu.bytes[offset].byteu.stk - G.stack.pushed > (TARGET_IS_PDK13 ? -16 : -32) || regalloc_dry_run)); // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
 }
 
 /*-----------------------------------------------------------------*/
@@ -668,12 +680,28 @@ moveStackStack (int d, int s, int size, bool a_dead)
 
   for (int i = up ? 0 : size - 1; up ? i < size : i >= 0; up ? i++ : i--)
     {
-      pointPStack (s + i, true, true);
-      emit2 ("idxm", "a, p");
-      cost (1, 2);
-      pointPStack (d + i, false, true);
-      emit2 ("idxm", "p, a");
-      cost (1, 2);
+      if (IDXSP && (s + i - G.stack.pushed >= (TARGET_IS_PDK13 ? -16 : -32)))
+        {
+          emit2 ("idxsp", "");
+          cost (1, 1);
+        }
+      else
+        {
+          pointPStack (s + i, true, true);
+          emit2 ("idxm", "a, p");
+          cost (1, 2);
+        }
+      if (IDXSP && (d + i - G.stack.pushed >= (TARGET_IS_PDK13 ? -16 : -32)))
+        {
+          emit2 ("idxsp", "");
+          cost (1, 1);
+        }
+      else
+        {
+          pointPStack (d + i, false, true);
+          emit2 ("idxm", "p, a");
+          cost (1, 2);
+        }
     }
 
   if (!a_dead)
@@ -702,15 +730,35 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX) && !aopIsLitVal (source, soffset, 1, 0))
     {
-      pointPStack(source->aopu.bytes[soffset].byteu.stk, true, f_dead);
-      emit2 ("idxm", "a, p");
-      cost (1, 2);
+      int soff = source->aopu.bytes[soffset].byteu.stk - G.stack.pushed;
+      if (IDXSP && soff >= (TARGET_IS_PDK13 ? -16 : -32))
+        {
+          //emit2 ("idxsp", "a, #%d", soff);
+          emit2 ("idxsp", "");
+          cost (1, 1);
+        }
+      else
+        {
+          pointPStack(source->aopu.bytes[soffset].byteu.stk, true, f_dead);
+          emit2 ("idxm", "a, p");
+          cost (1, 2);
+        }
     }
   else if (result->type == AOP_STK && aopInReg (source, soffset, A_IDX))
     {
-      pointPStack(result->aopu.bytes[roffset].byteu.stk, false, f_dead);
-      emit2 ("idxm", "p, a");
-      cost (1, 2);
+      int soff = result->aopu.bytes[roffset].byteu.stk - G.stack.pushed;
+      if (IDXSP && soff >= (TARGET_IS_PDK13 ? -16 : -32))
+        {
+          //emit2 ("idxsp", "#%d, a", soff);
+          emit2 ("idxsp", "");
+          cost (1, 1);
+        }
+      else
+        {
+          pointPStack(result->aopu.bytes[roffset].byteu.stk, false, f_dead);
+          emit2 ("idxm", "p, a");
+          cost (1, 2);
+        }
     }
   else if (aopInReg (result, roffset, A_IDX))
     {
@@ -744,7 +792,26 @@ adjustStack (int n, bool a_free, bool p_free)
 {
   wassertl_bt (!(n % 2), "Unsupported odd stack adjustment"); // The datasheets seem to require the stack pointer to be aligned to a 2-byte boundary. 
 
-  if (n >= 0 && (!(p_free || a_free) || n <= 4))
+  if (SPADD && (abs(n) <= 3 * (TARGET_IS_PDK13 ? 6 : 14) ||
+    !a_free && abs(n) <= 5 * (TARGET_IS_PDK13 ? 6 : 14) ||
+    !a_free && !p_free))
+    for (int i = 0; i != n;)
+      {
+        int clamped = n - i;
+        if (TARGET_IS_PDK13 && clamped < -8)
+          clamped = -8;
+        if (TARGET_IS_PDK14 && clamped < -16)
+          clamped = -16;
+        if (TARGET_IS_PDK13 && clamped > 6)
+          clamped = 6;
+        if (TARGET_IS_PDK14 && clamped > 14)
+          clamped = 14;
+        //emit2 ("spadd", "#%d", clamped);
+        emit2 ("spadd", "");
+        cost (1, 1);
+        i += clamped;
+      }
+  else if (n >= 0 && (!(p_free || a_free) || n <= 4))
     for (int i = 0; i < n; i += 2)
       {
         emit2 ("push", "af");
@@ -804,12 +871,27 @@ push (const asmop *op, int offset, int size)
     {
       cheapMove (ASMOP_A, 0, op, 0, true, true);
       pushAF ();
-      pointPStack (G.stack.pushed - 1, true, true);
+      if (!IDXSP)
+        pointPStack (G.stack.pushed - 1, true, true);
       cheapMove (ASMOP_A, 0, op, 1, true, true);
-      emit2 ("idxm", "p, a");
+      if (!IDXSP)
+        emit2 ("idxm", "p, a");
+      else
+        emit2("idxsp", "");
       cost (1, 1);
       return;
     }
+  else if (IDXSP)
+    {
+      adjustStack (size, true, true);
+      for (int i = offset; i < offset + size; i++)
+        {
+          cheapMove (ASMOP_A, 0, op, i, true, true);
+          emit2 ("idxsp", "");
+          cost (1, 1);
+        }
+      return;
+    } 
 
   // Save old stack pointer
   emit2 ("mov", "a, sp");
@@ -1368,15 +1450,23 @@ genCall (const iCode *ic)
         {
           emit2 ("mov", "a, #<(!tlabel)", labelKey2num (tlbl->key));
           emit2 ("push", "af");
-          emit2 ("mov", "a, sp");
-          emit2 ("mov", "p, a");
-          emit2 ("dec", "p");
-          emit2 ("mov", "a, #>(!tlabel)", labelKey2num (tlbl->key));
-          emit2 ("idxm", "p, a");
-          G.p.type = AOP_INVALID;
+          if (IDXSP)
+            {
+              emit2 ("mov", "a, #>(!tlabel)", labelKey2num (tlbl->key));
+              emit2 ("idxsp", "");
+            }
+          else
+            {
+              emit2 ("mov", "a, sp");
+              emit2 ("mov", "p, a");
+              emit2 ("dec", "p");
+              emit2 ("mov", "a, #>(!tlabel)", labelKey2num (tlbl->key));
+              emit2 ("idxm", "p, a");
+              G.p.type = AOP_INVALID;
+            }
         }
       G.stack.pushed += 2;
-      cost (7, 8);
+      cost (IDXSP ? 4 : 7, IDXSP ? 4 : 8);
 
       // Jump to function
       push (left->aop, 0, 2);
@@ -1530,16 +1620,25 @@ genReturn (const iCode *ic)
 
   if (left->aop->size > 2)
     {
-      if (left->aop->type == AOP_STK)
+      if (left->aop->type == AOP_STK && !aopOnStackNotExt (left->aop, 0, left->aop->size))
         {
           for (int i = 0; i < left->aop->size; i++)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);
               pushAF ();
-              pointPStack (-4, true, true);
-              emit2 ("idxm", "a, p");
+              if (IDXSP)
+                {
+                  emit2 ("idxsp", "");
+                  cost (1, 1);
+                }
+              else
+                {
+                  pointPStack (-4, true, true);
+                  emit2 ("idxm", "a, p");
+                  cost (1, 2);
+                }
               emit2 ("mov", "p, a");
-              cost (2, 3);
+              cost (1, 1);
               popAF ();
               for (int j = 0; j < i; j++)
                 {
@@ -1553,10 +1652,19 @@ genReturn (const iCode *ic)
         }
       else
         {
-          pointPStack (-4, true, true);
-          emit2 ("idxm", "a, p");
+          if (IDXSP)
+            {
+              emit2 ("idxsp", "");
+              cost (1, 1);
+            }
+          else
+            {
+              pointPStack (-4, true, true);
+              emit2 ("idxm", "a, p");
+              cost (1, 2);
+            }
           emit2 ("mov", "p, a");
-          cost (2, 3);
+          cost (1, 1);
           for (int i = 0; i < left->aop->size; i++)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);
