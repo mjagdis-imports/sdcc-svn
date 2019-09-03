@@ -21,8 +21,8 @@
 #include "ralloc.h"
 #include "gen.h"
 
-#define IDXSP 1
-#define SPADD 1
+#define IDXSP 0
+#define SPADD 0
 
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
@@ -178,6 +178,9 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
 
       if (aop1->type == AOP_DIR && aop2->type == AOP_DIR && aop1->aopu.immd_off + offset1 == aop2->aopu.immd_off + offset2 &&
         !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
+        return (true);
+
+      if (aop1->type == AOP_STK && aop2->type == AOP_STK && aop1->aopu.bytes[offset1].byteu.stk == aop2->aopu.bytes[offset2].byteu.stk)
         return (true);
 
       if (aop1->type == AOP_SFR && aop2->type == AOP_SFR && offset1 == offset2 &&
@@ -1244,12 +1247,20 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cost (1, 1);
           started = true;
         }
-      else if ((TARGET_IS_PDK15 || TARGET_IS_PDK16) &&
-        !started && i + 1 == size && aopInReg (right_aop, i, A_IDX) &&
+      else if (!started && i + 1 == size && aopInReg (right_aop, i, A_IDX) &&
         (left_aop->type == AOP_DIR || aopInReg (left_aop, i, P_IDX)))
         {
-          emit2 ("nadd", "a, %s", aopGet (left_aop, i));
-          cost (1, 1);
+          if (TARGET_IS_PDK15 || TARGET_IS_PDK16)
+            {
+              emit2 ("nadd", "a, %s", aopGet (left_aop, i));
+              cost (1, 1);
+            }
+          else
+            {
+              emit2 ("neg", "a");
+              emit2 ("add", "a, %s", aopGet (left_aop, i));
+              cost (2, 2);
+            }
           started = true;
         }
       else if (right_aop->type == AOP_STK)

@@ -1,3 +1,18 @@
+2019-09-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/ralloc2.cc,
+	  src/SDCCsalloc.hpp,
+	  src/pdk/ralloc.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-19.c:
+	  Use Chaitin-style allocator for stack variables.
+	* src/pdk/gen.c:
+	  Optimize out assignments between coalesced stack variables.
+
+2019-09-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Emulate nadd a, m for pdk14, pdk13.
+
 2019-09-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* sdas/aspdk/pdk.h,
@@ -7,7 +22,7 @@
 	  sdas/aspdk14/pdk14pst.c:
 	  Do not emit error on proposed idxsp and spadd instructions.
 	* src/pdk/gen.c:
-	  Use proposed idxsp and spadd instructions (dpending on feature macro).
+	  Use proposed idxsp and spadd instructions (depending on feature macro).
 
 2019-09-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
