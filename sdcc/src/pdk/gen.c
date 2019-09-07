@@ -22,7 +22,7 @@
 #include "gen.h"
 
 #define IDXSP 0
-#define SPADD 0
+#define SPADD 1
 #define SPRELMODE 1
 
 /* Use the D macro for basic (unobtrusive) debugging messages */
@@ -699,7 +699,7 @@ moveStackStack (int d, int s, int size, bool a_dead)
     {
       if ((IDXSP || SPRELMODE) && (s + i - G.stack.pushed >= (TARGET_IS_PDK13 ? -16 : -32)))
         {
-          emit2 ("idxsp", "");
+          emit2 ("mov", "a, (p%d)", s + i - G.stack.pushed);
           cost (1, 1);
         }
       else
@@ -710,7 +710,7 @@ moveStackStack (int d, int s, int size, bool a_dead)
         }
       if ((IDXSP || SPRELMODE) && (d + i - G.stack.pushed >= (TARGET_IS_PDK13 ? -16 : -32)))
         {
-          emit2 ("idxsp", "");
+          emit2 ("mov", "(p%d), a", d + i - G.stack.pushed);
           cost (1, 1);
         }
       else
@@ -747,10 +747,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else if ((IDXSP || SPRELMODE) && aopOnStackNotExt (source, soffset, 1) && aopInReg (result, roffset, A_IDX))
     {
-      if (SPRELMODE)
-        emit2 ("mov", "a, %s", aopGet (source, soffset));
-      else
-        emit2 ("idxsp", "");
+      emit2 ("mov", "a, %s", aopGet (source, soffset));
       cost (1, 1);
     }
   else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX) && !aopIsLitVal (source, soffset, 1, 0))
@@ -761,10 +758,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     }
   else if ((IDXSP || SPRELMODE) && aopOnStackNotExt (result, roffset, 1) && aopInReg (source, soffset, A_IDX))
     {
-      if (SPRELMODE)
-        emit2 ("mov", "%s, a", aopGet (result, roffset));
-      else
-        emit2 ("idxsp", "");
+      emit2 ("mov", "%s, a", aopGet (result, roffset));
       cost (1, 1);
     }
   else if (result->type == AOP_STK && aopInReg (source, soffset, A_IDX))
@@ -890,7 +884,7 @@ push (const asmop *op, int offset, int size)
       if (!(IDXSP || SPRELMODE))
         emit2 ("idxm", "p, a");
       else
-        emit2("idxsp", "");
+        emit2("mov", "(p-2), a");
       cost (1, 1);
       return;
     }
@@ -983,7 +977,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cheapMove (result, roffset + 0, source, soffset + 0, false, true);
       return;
     }
-  else if (size == 2 && result->type == AOP_STK && aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX))
+  else if (size == 2 && (result->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (result, 0, 2))) && aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX))
     {
       pushAF ();
       emit2 ("xch", "a, p");
@@ -1477,7 +1471,7 @@ genCall (const iCode *ic)
           if (IDXSP || SPRELMODE)
             {
               emit2 ("mov", "a, #>(!tlabel)", labelKey2num (tlbl->key));
-              emit2 ("idxsp", "");
+              emit2 ("mov", "(p-1), a");
             }
           else
             {
@@ -3445,7 +3439,7 @@ genPointerSet (iCode *ic)
     }
   else
 #endif
-  if (right->aop->type == AOP_STK && !bit_field)
+  if (right->aop->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (right->aop, 0, right->aop->size)) && !bit_field)
     {
       if (!regDead (P_IDX, ic))
         {
