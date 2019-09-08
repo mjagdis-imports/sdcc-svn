@@ -21,9 +21,9 @@
 #include "ralloc.h"
 #include "gen.h"
 
-#define SPADD 1
+#define SPADD 0
 #define IDXSP 0 // sp-relative addressing for mov only
-#define SPRELMODE 1 // sp-relative addressing for all instructions
+#define SPRELMODE 0 // sp-relative addressing for all instructions
 
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
