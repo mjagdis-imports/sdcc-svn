@@ -272,7 +272,7 @@ aopGet(const asmop *aop, int offset)
       SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, offset);
       return (buffer);
     }
-  else if (SPRELMODE && aopOnStackNotExt (aop, offset, 1))
+  else if ((SPRELMODE || IDXSP) && aopOnStackNotExt (aop, offset, 1))
     {
       SNPRINTF (buffer, sizeof(buffer), "(p%d)" /*"(%d, sp)"*/, aop->aopu.bytes[offset].byteu.stk - G.stack.pushed);
       return (buffer);
@@ -1629,9 +1629,9 @@ genReturn (const iCode *ic)
             {
               cheapMove (ASMOP_A, 0, left->aop, i, true, true);
               pushAF ();
-              if (IDXSP || SPRELMODE)
+              if ((IDXSP || SPRELMODE) && -4 - G.stack.pushed >= (TARGET_IS_PDK14 ? -32 : -16))
                 {
-                  emit2 ("idxsp", "");
+                  emit2 ("mov", "a, (p%d)", -4 - G.stack.pushed);
                   cost (1, 1);
                 }
               else
@@ -1655,9 +1655,9 @@ genReturn (const iCode *ic)
         }
       else
         {
-          if (IDXSP || SPRELMODE)
+          if ((IDXSP || SPRELMODE) && -4 - G.stack.pushed >= (TARGET_IS_PDK14 ? -32 : -16))
             {
-              emit2 ("idxsp", "");
+              emit2 ("mov", "a, (p%d)", -4 - G.stack.pushed);
               cost (1, 1);
             }
           else
