@@ -735,7 +735,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
 
   if (aopSame (result, roffset, source, soffset, 1))
     return;
-  else if (!dummy && (result->type == AOP_DIR || aopInReg (result, roffset, P_IDX)) && aopIsLitVal (source, soffset, 1, 0))
+  else if (!dummy && (result->type == AOP_DIR || aopInReg (result, roffset, P_IDX) || SPRELMODE && aopOnStackNotExt (result, roffset, 1)) && aopIsLitVal (source, soffset, 1, 0))
     {
       emit2 ("clear", "%s", aopGet (result, roffset));
       cost (1, 1);
@@ -867,7 +867,7 @@ push (const asmop *op, int offset, int size)
 {
   wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
 
-  if (op->type == AOP_STK)
+  if (op->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (op, offset, size)))
     {
       int s = G.stack.pushed;
       adjustStack (size, true, true);
@@ -971,7 +971,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassert_bt (result->type == AOP_DIR || result->type == AOP_REG || result->type == AOP_STK);
   wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG || source->type == AOP_STK || source->type == AOP_CODE);
 
-  if (size == 2 && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) && source->type == AOP_STK)
+  if (size == 2 && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) && source->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (source, 0, 2)))
     {
       cheapMove (result, roffset + 1, source, soffset + 1, true, true);
       cheapMove (result, roffset + 0, source, soffset + 0, false, true);
@@ -987,7 +987,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cheapMove (result, roffset + 0, ASMOP_A, 0, true, true);
       return;
     }
-  else if (size == 2 && result->type == AOP_DIR && !a_dead_global && // Using xch cheaper than push / pop.
+  else if (size == 2 && (result->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (result, 0, 2)) && !a_dead_global && // Using xch cheaper than push / pop.
     aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX))
     {
       cheapMove (result, roffset + 0, ASMOP_A, 0, false, true);
@@ -998,7 +998,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cost (1, 1);
       return;
     }
-  else if (size == 2 && result->type == AOP_DIR && !a_dead_global && // Using xch cheaper than push / pop.
+  else if (size == 2 && (result->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (result, 0, 2)) && !a_dead_global && // Using xch cheaper than push / pop.
     aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX))
     {
       cheapMove (result, roffset + 1, ASMOP_A, 0, false, true);
@@ -1010,8 +1010,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       return;
     }
   else if (size == 2 && // Assign upper byte first to avoid overwriting a.
-    (aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX) && source->type == AOP_DIR ||
-    aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX) && result->type == AOP_DIR))
+    (aopInReg (result, roffset, A_IDX) && aopInReg (result, roffset + 1, P_IDX) && (source->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (source, soffset, 2)) ||
+    aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX) && (result->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (result, roffset, 2))))
     {
       cheapMove (result, roffset + 1, source, soffset + 1, a_dead_global, true);
       cheapMove (result, roffset + 0, source, soffset + 0, a_dead_global, true);
@@ -1800,7 +1800,7 @@ genPlus (const iCode *ic)
 
   for (int i = 0; i < size; i++)
     {
-       if (!started && !moved_to_a && (left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX || SPRELMODE && aopOnStackNotExt (left->aop, i, 1))) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
+       if (!started && !moved_to_a && (left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX) || SPRELMODE && aopOnStackNotExt (left->aop, i, 1)) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
         {
           emit2 ("inc", "%s", aopGet (left->aop, i));
           cost (1, 1);
@@ -2820,7 +2820,7 @@ genLeftShift (const iCode *ic)
           emitLabel (tlbl);
           regalloc_dry_run_cycle_scale = shCount;
           shCount = 1;
-          if (result->aop->type == AOP_STK)
+          if (result->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (result->aop, 0, size)))
             pushAF();
         }
 
@@ -2866,7 +2866,7 @@ genLeftShift (const iCode *ic)
 
       if (loop)
         {
-          if (result->aop->type == AOP_STK)
+          if (result->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (result->aop, 0, size)))
             popAF();
           emit2 ("dzsn", "a");
           if (!regalloc_dry_run)
@@ -2972,7 +2972,7 @@ genRightShift (const iCode *ic)
 
       while (shCount)
         {
-          if (SPEC_USIGN (getSpec (operandType (left))) && shCount == 7 && size == 1 && (result->aop->type == AOP_REG || result->aop->type == AOP_DIR))
+          if (SPEC_USIGN (getSpec (operandType (left))) && shCount == 7 && size == 1 && (result->aop->type == AOP_REG || result->aop->type == AOP_DIR || SPRELMODE && aopOnStackNotExt (result->aop, 0, 1)))
             {
               emit2 ("sl", "%s", aopGet (result->aop, 0));
               if (aopInReg (result->aop, 0, A_IDX))
@@ -3827,7 +3827,7 @@ genIfx (const iCode *ic)
       if (i == skip_byte)
         continue;
 
-      if (cond->aop->type == AOP_STK)
+      if (cond->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (cond->aop, i, 1)))
         {
           pushAF ();
           cheapMove (ASMOP_P, 0, cond->aop, i, true, true);
