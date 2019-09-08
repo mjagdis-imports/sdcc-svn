@@ -21,9 +21,9 @@
 #include "ralloc.h"
 #include "gen.h"
 
-#define IDXSP 0
 #define SPADD 1
-#define SPRELMODE 1
+#define IDXSP 0 // sp-relative addressing for mov only
+#define SPRELMODE 1 // sp-relative addressing for all instructions
 
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
@@ -163,9 +163,9 @@ aopOnStackNotExt (const asmop *aop, int offset, int size)
 // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
 
   if (SPRELMODE)
-    return (aop->aopu.bytes[offset].byteu.stk - G.stack.pushed > -32 || regalloc_dry_run);
+    return (aop->aopu.bytes[offset].byteu.stk - G.stack.pushed >= -32 || regalloc_dry_run);
 
-  return (aop->aopu.bytes[offset].byteu.stk - G.stack.pushed > (TARGET_IS_PDK13 ? -16 : -32) || regalloc_dry_run);
+  return (aop->aopu.bytes[offset].byteu.stk - G.stack.pushed >= (TARGET_IS_PDK13 ? -16 : -32) || regalloc_dry_run);
 }
 
 /*-----------------------------------------------------------------*/
@@ -865,62 +865,47 @@ adjustStack (int n, bool a_free, bool p_free)
 static void
 push (const asmop *op, int offset, int size)
 {
-  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
+  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_REG || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
 
-  if (op->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (op, offset, size)))
+  for (int i = 0; i < size; i+= 2)
     {
-      int s = G.stack.pushed;
-      adjustStack (size, true, true);
-      moveStackStack (s, op->aopu.bytes[0].byteu.stk, size, true);
-      return;
-    }
-  else if (size == 2)
-    {
-      cheapMove (ASMOP_A, 0, op, 0, true, true);
-      pushAF ();
-      if (!(IDXSP || SPRELMODE))
-        pointPStack (G.stack.pushed - 1, true, true);
-      cheapMove (ASMOP_A, 0, op, 1, true, true);
-      if (!(IDXSP || SPRELMODE))
-        emit2 ("idxm", "p, a");
-      else
-        emit2("mov", "(p-2), a");
-      cost (1, 1);
-      return;
-    }
-  else if (IDXSP || SPRELMODE)
-    {
-      adjustStack (size, true, true);
-      for (int i = offset; i < offset + size; i++)
+      if (aopInReg (op, i, P_IDX) && aopInReg (op, i + 1, A_IDX))
         {
-          cheapMove (ASMOP_A, 0, op, i, true, true);
-          emit2 ("idxsp", "");
+          emit2 ("xch", "a, p");
           cost (1, 1);
+          pushAF ();
+          emit2 ("xch", "a, p");
+          pointPStack (G.stack.pushed - 1, false, true);
+          emit2 ("idxm", "p, a");
+          cost (1, 1);
+          continue;
         }
-      return;
-    } 
 
-  // Save old stack pointer
-  emit2 ("mov", "a, sp");
-  emit2 ("mov", "p, a");
-  G.p.type = AOP_INVALID;
-  cost (2, 2);
-
-  adjustStack (size, true, false);
-
-  // Write value onto stack
-  for (int i = offset; i < offset + size; i++)
-    {
       cheapMove (ASMOP_A, 0, op, i, true, true);
-      emit2 ("idxm", "p, a");
-      cost (1, 2);
-      if (i + 1 < offset + size)
+      pushAF ();
+
+      if (IDXSP || SPRELMODE)
         {
-          emit2 ("inc", "p");
+          cheapMove (ASMOP_A, 0, op, i + 1, true, true);
+          emit2("mov", "(p-2), a");
+          cost (1, 1);
+        }
+      else if (aopInReg (op, i + 1, P_IDX))
+        {
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+          pointPStack (G.stack.pushed - 1, false, true);
+          emit2 ("idxm", "p, a");
+          cost (1, 1);
+        }
+      else
+        {
+          pointPStack (G.stack.pushed - 1, true, true);
+          cheapMove (ASMOP_A, 0, op, i + 1, true, true);
+          emit2 ("idxm", "p, a");
           cost (1, 1);
         }
     }
-  G.p.type = AOP_INVALID;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1894,7 +1879,8 @@ genPlus (const iCode *ic)
               started = true;
             }
         }
-      if (i + 1 < size && aopInReg (result->aop, i, P_IDX) && (left->aop->type == AOP_STK || right->aop->type == AOP_STK))
+      if (i + 1 < size && aopInReg (result->aop, i, P_IDX) &&
+        (left->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (left->aop, i, 1)) || right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1))))
         if (regalloc_dry_run)
           cost (1000, 1000);
         else
