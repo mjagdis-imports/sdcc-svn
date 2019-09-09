@@ -168,6 +168,9 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
         !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
         return (true);
 
+      if (aop1->type == AOP_STK && aop2->type == AOP_STK && aop1->aopu.bytes[offset1].byteu.stk == aop2->aopu.bytes[offset2].byteu.stk)
+        return (true);
+
       if (aop1->type == AOP_SFR && aop2->type == AOP_SFR && offset1 == offset2 &&
         aop1->aopu.aop_dir && aop2->aopu.aop_dir && !strcmp(aop1->aopu.aop_dir, aop2->aopu.aop_dir))
         return (true);
@@ -791,47 +794,38 @@ adjustStack (int n, bool a_free, bool p_free)
 static void
 push (const asmop *op, int offset, int size)
 {
-  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
+  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_REG || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
 
-  if (op->type == AOP_STK)
+  for (int i = 0; i < size; i+= 2)
     {
-      int s = G.stack.pushed;
-      adjustStack (size, true, true);
-      moveStackStack (s, op->aopu.bytes[0].byteu.stk, size, true);
-      return;
-    }
-  else if (size == 2)
-    {
-      cheapMove (ASMOP_A, 0, op, 0, true, true);
+      if (aopInReg (op, i, P_IDX) && aopInReg (op, i + 1, A_IDX))
+        {
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+          pushAF ();
+          emit2 ("xch", "a, p");
+          pointPStack (G.stack.pushed - 1, false, true);
+          emit2 ("idxm", "p, a");
+          cost (1, 1);
+          continue;
+        }
+
+      cheapMove (ASMOP_A, 0, op, i, true, true);
       pushAF ();
-      pointPStack (G.stack.pushed - 1, true, true);
-      cheapMove (ASMOP_A, 0, op, 1, true, true);
+      if (aopInReg (op, i + 1, P_IDX))
+        {
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+          pointPStack (G.stack.pushed - 1, false, true);
+        }
+      else
+        {
+          pointPStack (G.stack.pushed - 1, true, true);
+          cheapMove (ASMOP_A, 0, op, i + 1, true, true);
+        }
       emit2 ("idxm", "p, a");
       cost (1, 1);
-      return;
     }
-
-  // Save old stack pointer
-  emit2 ("mov", "a, sp");
-  emit2 ("mov", "p, a");
-  G.p.type = AOP_INVALID;
-  cost (2, 2);
-
-  adjustStack (size, true, false);
-
-  // Write value onto stack
-  for (int i = offset; i < offset + size; i++)
-    {
-      cheapMove (ASMOP_A, 0, op, i, true, true);
-      emit2 ("idxm", "p, a");
-      cost (1, 2);
-      if (i + 1 < offset + size)
-        {
-          emit2 ("inc", "p");
-          cost (1, 1);
-        }
-    }
-  G.p.type = AOP_INVALID;
 }
 
 /*-----------------------------------------------------------------*/
@@ -873,7 +867,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         else if (regalloc_dry_run)
           cost (1000, 1000);
         else
-          wassertl (0, "Unimplemenetd operand in __sfr16 access");
+          wassertl (0, "Unimplemented operand in __sfr16 access");
         return;
       default:
         wassertl (0, "Unknown __sfr size");
@@ -1109,6 +1103,15 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
+      else if ((TARGET_IS_PDK15 || TARGET_IS_PDK16) &&
+        !started && i + 1 == size && aopInReg (left_aop, i, A_IDX) &&
+        (right_aop->type == AOP_DIR || aopInReg (right_aop, i, P_IDX)) && aopSame (right_aop, i, result_aop, i, 1))
+        {
+          emit2 ("nadd", "%s, a", aopGet (right_aop, i));
+          cost (1, 1);
+          started = true;
+          continue;
+        }
       else if (!started && aopIsLitVal (right_aop, i, 1, 0x01) &&
         (left_aop->type == AOP_DIR || aopInReg (left_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
         {
@@ -1153,6 +1156,22 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cost (1, 1);
           started = true;
         }
+      else if (!started && i + 1 == size && aopInReg (right_aop, i, A_IDX) &&
+        (left_aop->type == AOP_DIR || aopInReg (left_aop, i, P_IDX)))
+        {
+          if (TARGET_IS_PDK15 || TARGET_IS_PDK16)
+            {
+              emit2 ("nadd", "a, %s", aopGet (left_aop, i));
+              cost (1, 1);
+            }
+          else
+            {
+              emit2 ("neg", "a");
+              emit2 ("add", "a, %s", aopGet (left_aop, i));
+              cost (2, 2);
+            }
+          started = true;
+        }
       else if (right_aop->type == AOP_STK)
         {
           cheapMove (ASMOP_A, 0, left_aop, i, true, !started);
@@ -1168,24 +1187,27 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           emit2 ("sub", "a, %s", aopGet (right_aop, i));
           cost (2, 2);
         }
-      else if (started && (right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD) && !aopIsLitVal (right_aop, i, 1, 0x00))
+      else if ((started && (right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD) && !aopIsLitVal (right_aop, i, 1, 0x00) || aopInReg (right_aop, i, A_IDX)) &&
+        regDead (A_IDX, ic) && regDead (P_IDX, ic) && !aopInReg(left_aop, P_IDX, i + 1) && !aopInReg(right_aop, P_IDX, i + 1))
         {
-          cheapMove (ASMOP_P, 0, right_aop, i, !aopInReg (left_aop, i, A_IDX), false);
-          cheapMove (ASMOP_A, 0, left_aop, i, true, false);
-          emit2 ("subc", "a, p");
+          cheapMove (ASMOP_P, 0, right_aop, i, !aopInReg (left_aop, i, A_IDX), !started);
+          cheapMove (ASMOP_A, 0, left_aop, i, true, !started);
+          emit2 (started ? "subc" : "sub", "a, p");
           cost (1, 1);
+          started = true;
         }
       else
         {
+          if (aopInReg (right_aop, i, A_IDX))
+            {
+              cost (1000, 1000);
+              if (!regalloc_dry_run)
+                wassertl (0, "Unimplemented operand in subtraction");
+              continue;
+            }
           cheapMove (ASMOP_A, 0, left_aop, i, true, !started);
           if (started || !aopIsLitVal (right_aop, i, 1, 0x00))
             {
-              if (aopInReg (right_aop, i, A_IDX))
-                {
-                  cost (1000, 1000);
-                  if (!regalloc_dry_run)
-                    wassertl (0, "Unimplemented operand in subtraction");
-                }
               if (started && aopIsLitVal (right_aop, i, 1, 0x00))
                 emit2 ("subc", "a");
               else
@@ -1195,15 +1217,19 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             }
         }
       if (i + 1 < size && aopInReg (result_aop, i, P_IDX) && (left_aop->type == AOP_STK || right_aop->type == AOP_STK))
-        if (regalloc_dry_run)
-          cost (1000, 1000);
-        else
-          wassertl (0, "Unimplemented p result in subtraction with stack operand");
+        {
+          if (regalloc_dry_run)
+            cost (1000, 1000);
+          else
+            wassertl (0, "Unimplemented p result in subtraction with stack operand");
+        }
       if (i + 1 < size && result_aop->type == AOP_STK && (aopInReg (left_aop, i + 1, P_IDX) || aopInReg (right_aop, i + 1, P_IDX)))
-        if (regalloc_dry_run)
-          cost (1000, 1000);
-        else
-          wassertl (0, "Unimplemented upper byte p operand in subtraction with stack result");
+        {
+          if (regalloc_dry_run)
+            cost (1000, 1000);
+          else
+            wassertl (0, "Unimplemented upper byte p operand in subtraction with stack result");
+        }
 
       if (aopInReg (result_aop, i, A_IDX) && i + 1 < size)
         {
@@ -2746,8 +2772,18 @@ genLeftShift (const iCode *ic)
     
       for(int i = 0; i < size; i++)
         {
-          emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
-          cost (1, 1);
+          if (result->aop->type == AOP_STK)
+            {
+              cheapMove (ASMOP_A, 0, result->aop, i, true, !i);
+              emit2(i ? "slc" : "sl", "a");
+              cost (1, 1);
+              cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
+            }
+          else
+            {
+              emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
+              cost (1, 1);
+            }
         }
     
       if (!regalloc_dry_run)
@@ -2835,7 +2871,7 @@ genRightShift (const iCode *ic)
               continue;
             }
 
-          if (!SPEC_USIGN (getSpec (operandType (left))) && (loop || !regDead (A_IDX, ic)))
+          if ((!SPEC_USIGN (getSpec (operandType (left))) || result->aop->type == AOP_STK) && (loop || !regDead (A_IDX, ic)))
             {
               pushAF();
               pushed_a = true;
@@ -2871,9 +2907,26 @@ genRightShift (const iCode *ic)
                     }
                    cheapMove (ASMOP_A, 0, result->aop, size - 1, true, true);
                    emit2 ("sl", "a");
-                   emit2 ("src", aopGet (result->aop, size - 1));
-                   cost (2, 2);
+                   cost (1, 1);
+                   if (result->aop->type == AOP_STK)
+                     {
+                       cheapMove (ASMOP_A, 0, result->aop, size - 1, true, false);
+                       emit2 ("src", "a");
+                       cheapMove (result->aop, size - 1, ASMOP_A, 0, true, size > 1);
+                     }
+                   else
+                     {
+                       emit2 ("src", aopGet (result->aop, size - 1));
+                       cost (1, 1);
+                     }
                 }
+            }
+          else if (result->aop->type == AOP_STK)
+            {
+              cheapMove (ASMOP_A, 0, result->aop, size - 1, true, true);
+              emit2("sr", "a");
+              cost (1, 1);
+              cheapMove (result->aop, size - 1, ASMOP_A, 0, true, size == 1);
             }
           else
             {
@@ -2888,8 +2941,18 @@ genRightShift (const iCode *ic)
                   wassert (regalloc_dry_run);
                   cost (500, 500);
                 }
-              emit2 ("src", "%s", aopGet (result->aop, i));
-              cost (1, 1);
+              if (result->aop->type == AOP_STK)
+                {
+                  cheapMove (ASMOP_A, 0, result->aop, i, true, false);
+                  emit2("src", "a");
+                  cost (1, 1);
+                  cheapMove (result->aop, i, ASMOP_A, 0, true, i > 1);
+                }
+              else
+                {
+                  emit2 ("src", "%s", aopGet (result->aop, i));
+                  cost (1, 1);
+                }
             }
 
           shCount--;
