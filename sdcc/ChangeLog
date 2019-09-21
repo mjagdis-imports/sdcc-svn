@@ -1,3 +1,26 @@
+2019-09-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/ralloc2.cc,
+	  src/pdk/peeph.def:
+	  Fixes for on-stack operands.
+
+2019-09-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/ralloc2.cc:
+	  Fixes for on-stack operands.
+
+2019-09-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix wide load via pointer with register result in ahl.
+
+2019-09-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fixes for on-stack operands.
+
 2019-09-09 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:
