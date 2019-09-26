@@ -139,6 +139,9 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   bool left_dir = IS_TRUE_SYMOP (left) || IS_ITEMP (left) && !(options.stackAuto || reentrant) && !left_in_A;
   bool right_dir = IS_TRUE_SYMOP (right) || IS_ITEMP (right) && !(options.stackAuto || reentrant) && !right_in_A;
 
+  if (ic->op == '=' || ic->op == CAST)
+    return(true);
+
   if(result && IS_ITEMP(result) && OP_SYMBOL_CONST(result)->remat && !operand_in_reg(result, REG_A, ia, i, G) && !operand_in_reg(result, REG_P, ia, i, G))
     return(true);
 
@@ -262,7 +265,7 @@ static bool Pinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if (ic->op == GET_VALUE_AT_ADDRESS && !dying_P && !(left_in_P && getSize(operandType(result)) == 1))
     return(false);
 
-  if ((ic->op == '+' || ic->op == '-' || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND || ic->op == EQ_OP || ic->op == NE_OP) &&
+  if ((ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND || ic->op == EQ_OP || ic->op == NE_OP) &&
     (left_stack || right_stack || result_stack && !dying_P))
     return(false);
 
@@ -600,7 +603,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
   assignment_optimal = true;
   tree_dec_ralloc_nodes(T, find_root(T), G, I2, ac, &assignment_optimal);
 
-  /*const*/ assignment &winner = *(T[find_root(T)].assignments.begin());
+  const assignment &winner = *(T[find_root(T)].assignments.begin());
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Winner: ";

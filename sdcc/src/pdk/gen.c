@@ -421,15 +421,12 @@ aopForRemat (symbol *sym)
         wassert_bt (0);
     }
 
-  wassert (!OP_SYMBOL (IC_LEFT (ic))->onStack);
-#if 0 // TODO: Enable for support for rematerialization of addresses on stack.
   if (OP_SYMBOL (IC_LEFT (ic))->onStack)
     {
       aop = newAsmop (AOP_STL);
-      aop->aopu.stk_off = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + 1 + val;
+      aop->aopu.stk_off = OP_SYMBOL (IC_LEFT (ic))->stack + (OP_SYMBOL (IC_LEFT (ic))->stack < 0 ? G.stack.param_offset : 0) + val;
     }
   else
-#endif
     {
       aop = newAsmop (AOP_IMMD);
       aop->aopu.immd = OP_SYMBOL (IC_LEFT (ic))->rname;
@@ -650,7 +647,7 @@ static void popPF (bool a_dead)
 static void pointPStack (int s, bool a_dead, bool f_dead)
 {
   // Try to adjust p when doing so is cheaper.
-  if (G.p.type == AOP_STK)
+  if (G.p.type == AOP_STL)
     {
       if (G.p.offset == s)
         return;
@@ -720,7 +717,7 @@ static void pointPStack (int s, bool a_dead, bool f_dead)
         popAF();
     }
 
-  G.p.type = AOP_STK;
+  G.p.type = AOP_STL;
   G.p.offset = s;
 }
 
@@ -777,6 +774,42 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
 
   if (aopSame (result, roffset, source, soffset, 1))
     return;
+  else if (source->type == AOP_STL)
+    {
+      if (soffset)
+        {
+          cheapMove (result, roffset, ASMOP_ZERO, 0, a_dead, p_dead, f_dead);
+          return;
+        }
+
+      if (G.p.type == AOP_STL && source->aopu.stk_off == G.p.offset && aopInReg (result, roffset, P_IDX))
+        return;
+
+      if (aopInReg (result, roffset, A_IDX) && !f_dead)
+        {
+          cost (200, 200);
+          wassert (regalloc_dry_run);
+        }
+
+      if (!a_dead || !f_dead)
+        pushAF ();
+
+      if (G.p.type == AOP_STL && source->aopu.stk_off == G.p.offset)
+        {
+          emit2 ("mov", "a, p");
+          cost (1, 1);
+        }
+      else
+        {
+          emit2 ("mov", "a, sp");
+          emit2 ("add", "a, #0x%02x", (source->aopu.stk_off - G.stack.pushed) & 0xff);
+          cost (2, 2);
+        }
+      cheapMove (result, roffset, ASMOP_A, 0, true, p_dead, true);
+
+      if (!a_dead || !f_dead)
+        popAF ();
+    }
   else if (!dummy && (result->type == AOP_DIR || aopInReg (result, roffset, P_IDX) || SPRELMODE && aopOnStackNotExt (result, roffset, 1)) && aopIsLitVal (source, soffset, 1, 0))
     {
       emit2 ("clear", "%s", aopGet (result, roffset));
@@ -939,7 +972,7 @@ adjustStack (int n, bool a_free, bool p_free)
 static void
 push (const asmop *op, int offset, int size)
 {
-  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_REG || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK), "Unimplemented push operand");
+  wassertl (!(size % 2) && (op->type == AOP_DIR || op->type == AOP_REG || op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_STK || op->type == AOP_STL), "Unimplemented push operand");
 
   int a_litval = -1;
 
@@ -1053,7 +1086,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       }
 
   wassert_bt (result->type == AOP_DIR || result->type == AOP_REG || result->type == AOP_STK);
-  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG || source->type == AOP_STK || source->type == AOP_CODE);
+  wassert_bt (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || source->type == AOP_REG || source->type == AOP_STK || source->type == AOP_CODE || source->type == AOP_STL);
 
   if (size == 2 && aopInReg (result, roffset, P_IDX) && aopInReg (result, roffset + 1, A_IDX) && source->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (source, 0, 2)))
     {
@@ -1140,10 +1173,14 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       return;
     }
 
-  bool a_dead = a_dead_global;
+  bool a_dead = a_dead_global && !aopInReg (source, soffset + 0, A_IDX) && !(aopInReg (source, soffset + 1, A_IDX) && size > 1);
   for (unsigned int i = 0; i < size; i++)
     {
+      if (a_dead_global && aopInReg (source, soffset, A_IDX))
+        a_dead = true;
+
       cheapMove (result, roffset + i, source, soffset + i, a_dead, true, true);
+
       if (aopInReg (result, roffset + i, A_IDX))
         a_dead = false;
     }
@@ -1294,16 +1331,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 
   for (int i = 0; i < size; i++)
     {
-      if (aopInReg (right_aop, P_IDX, i) && left_aop->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (left_aop, i, 1)))
-        {
-          pushPF (true);
-          cheapMove (ASMOP_A, 0, left_aop, i, true, true, true);
-          popAF();
-          emit2 (started ? "subc" : "sub", "a, p");
-          started = true;
-          continue;
-        }
-      else if (!started && right_aop->type == AOP_LIT && aopIsLitVal (right_aop, i, 1, 0x00))
+      if (!started && right_aop->type == AOP_LIT && aopIsLitVal (right_aop, i, 1, 0x00))
         {
           cheapMove (result_aop, i, left_aop, i, regDead (A_IDX, ic), true, true);
           if (aopInReg (result_aop, i, A_IDX) && i + 1 < size)
@@ -1367,6 +1395,13 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
+      else if (aopInReg (right_aop, P_IDX, i) && left_aop->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (left_aop, i, 1)))
+        {
+          cheapMove (ASMOP_A, 0, left_aop, i, true, false, true);
+          emit2 (started ? "subc" : "sub", "a, p");
+          started = true;
+          continue;
+        }
       else if (!started && i + 1 == size && aopIsLitVal (left_aop, i, 1, 0x00))
         {
           cheapMove (ASMOP_A, 0, right_aop, i, true, true, true);
@@ -1423,7 +1458,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
                 wassertl (0, "Unimplemented operand in subtraction");
               continue;
             }
-          cheapMove (ASMOP_A, 0, left_aop, i, true, true, !started);
+          cheapMove (ASMOP_A, 0, left_aop, i, true, !aopInReg (right_aop, i, P_IDX), !started);
           if (started || !aopIsLitVal (right_aop, i, 1, 0x00))
             {
               if (started && aopIsLitVal (right_aop, i, 1, 0x00))
@@ -1584,11 +1619,14 @@ genCall (const iCode *ic)
       pushAF ();
     }
 
-  if (!regDead (A_IDX, ic) || !regDead (P_IDX, ic))
+  if (!regDead (A_IDX, ic) && ic->parmBytes || !regDead (P_IDX, ic))
     {
       cost (700, 700);
       wassertl (regalloc_dry_run, "Register saving across call not yet implemented");
     }
+
+  if (!regDead (A_IDX, ic))
+    pushAF ();
 
   if (ic->op == PCALL)
     {
@@ -1661,6 +1699,10 @@ genCall (const iCode *ic)
 
       freeAsmop (IC_RESULT (ic));
     }
+
+
+  if (!regDead (A_IDX, ic))
+    popAF ();
 }
 
 /*-----------------------------------------------------------------*/
@@ -1936,7 +1978,7 @@ genPlus (const iCode *ic)
   int size = result->aop->size;
 
   /* Swap if left is literal or right is in A. */
-  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || right->aop->type == AOP_STK && !aopInReg (left->aop, 0, A_IDX))
+  if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || right->aop->type == AOP_STL || right->aop->type == AOP_STK && !(aopInReg (left->aop, 0, A_IDX) || left->aop->type == AOP_STL))
     {
       operand *t = right;
       right = left;
@@ -1999,7 +2041,7 @@ genPlus (const iCode *ic)
           started = true;
           continue;
         }
-      else if (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)))
+      else if (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_STL && !i)
         {
           if (!moved_to_a)
             cheapMove (ASMOP_A, 0, left->aop, i, true, p_dead, !started);
@@ -2459,7 +2501,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   int size = max (left->aop->size, right->aop->size);
 
   if (left->aop->type == AOP_LIT || aopInReg (right->aop, 0, A_IDX) || aopInReg (right->aop, 1, A_IDX) ||
-     !aopInReg (left->aop, 0, A_IDX) && right->aop->type == AOP_CODE)
+     !aopInReg (left->aop, 0, A_IDX) && (right->aop->type == AOP_STK || right->aop->type == AOP_CODE || right->aop->type == AOP_STL))
     {
       operand *temp = left;
       left = right;
@@ -2510,7 +2552,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         else
           {
             cheapMove (ASMOP_A, 0, left->aop, i, true, true, true);
-            if (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE)
+            if (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE || right->aop->type == AOP_STL)
               {
                 if (!regDead (P_IDX, ic) || i + 1 < size && aopInReg(left->aop, i + 1, P_IDX))
                   {
@@ -2531,7 +2573,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             if (TARGET_IS_PDK13)
               {
                 symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
-                emit2 ("ceqsn", "a, %s", (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE) ? "p" : aopGet (right->aop, i));
+                emit2 ("ceqsn", "a, %s", (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE || right->aop->type == AOP_STL) ? "p" : aopGet (right->aop, i));
                 emitJP (tlbl, 0.0f);
                 cost (2, 3);
                 emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
@@ -2539,14 +2581,14 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               }
             else
               {
-                emit2 ("cneqsn", "a, %s", (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE) ? "p" : aopGet (right->aop, i));
+                emit2 ("cneqsn", "a, %s", (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE || right->aop->type == AOP_STL) ? "p" : aopGet (right->aop, i));
                 cost (1, 1);
                 emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
               }
           }
         else
           {
-            emit2 ("ceqsn", "a, %s", (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE) ? "p" : aopGet (right->aop, i));
+            emit2 ("ceqsn", "a, %s", (right->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (right->aop, i, 1)) || right->aop->type == AOP_CODE || right->aop->type == AOP_STL) ? "p" : aopGet (right->aop, i));
             cost (1, 1);
             emitJP(lbl_ne, 0.0f);
           }
@@ -3771,7 +3813,10 @@ genPointerSet (iCode *ic)
   if (right->aop->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (right->aop, 0, size)) && !bit_field && left->aop->type != AOP_IMMD)
     {
       if (!regDead (P_IDX, ic))
-        pushPF (!aopInReg (left->aop, 0, A_IDX) && !aopInReg (right->aop, 0, A_IDX));
+        {
+          pushPF (!aopInReg (left->aop, 0, A_IDX) && !aopInReg (right->aop, 0, A_IDX));
+          pushed_p = true;
+        }
 
       for (int i = 0; i < size; i++)
         {
@@ -4226,7 +4271,7 @@ genAddrOf (const iCode *ic)
     {
       int s = sym->stack + (sym->stack < 0 ? G.stack.param_offset : 0) + operandLitValue (right);
 
-      if (G.p.type == AOP_STK && s == G.p.offset)
+      if (G.p.type == AOP_STL && s == G.p.offset)
         cheapMove (result->aop, 0, ASMOP_P, 0, true, true, true);
       else
         {
@@ -4373,6 +4418,9 @@ genCast (const iCode *ic)
       int size = result->aop->size - right->aop->size;
       offset = right->aop->size;
 
+      if (!regDead (A_IDX, ic) || aopInReg (result->aop, 0, A_IDX))
+        pushAF ();
+
       cheapMove (ASMOP_A, 0, result->aop, right->aop->size - 1, true, true, true);
       emit2 ("sl", "a");
       emit2 ("mov", "a, #0x00");
@@ -4381,6 +4429,9 @@ genCast (const iCode *ic)
 
       while (size--)
         cheapMove (result->aop, offset++, ASMOP_A, 0, true, true, true);
+
+      if (!regDead (A_IDX, ic) || aopInReg (result->aop, 0, A_IDX))
+        popAF ();
     }
 
   if (pushed_a)
