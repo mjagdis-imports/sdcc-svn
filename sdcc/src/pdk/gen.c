@@ -941,18 +941,21 @@ adjustStack (int n, bool a_free, bool p_free)
   else if (!a_free && !p_free && n < 0)
     {
       pushAF();
-      cheapMove (ASMOP_A, 0, ASMOP_P, 0, true, false, true);
+      cheapMove (ASMOP_A, 0, ASMOP_P, 0, true, true, true);
       pushAF();
 
-      moveStackStack (G.stack.pushed - 4 + n, G.stack.pushed - 4, 4, true);
-      
+      moveStackStack (G.stack.pushed + n - 4, G.stack.pushed - 4, 2, true);
+      pointPStack (G.stack.pushed - 2, true, true);
+      emit2 ("idxm", "a, p");
+      emit2 ("mov", "p, a");
+      cost (2, 3);
+
       emit2 ("mov", "a, sp");
-      emit2 ("add", "a, #%d", n);
+      emit2 ("add", "a, #%d", n - 2);
       emit2 ("mov", "sp, a");
       cost (3, 3);
+      G.stack.pushed -= 2;
 
-      popAF();
-      cheapMove (ASMOP_P, 0, ASMOP_A, 0, true, false, true);
       popAF();
     }
   else // Can't use pop af, since it might affect reserved flag bits.
@@ -3277,9 +3280,9 @@ genLeftShift (const iCode *ic)
               shCount -= 4;
               continue;
             }
-          else if ((size - offset) == 1 && result->aop->type == AOP_STK)
+          else if ((size - offset) == 1 && result->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (result->aop, offset, 1)))
             {
-              cheapMove (ASMOP_A, 0, result->aop, offset, true, p_dead, false);
+              cheapMove (ASMOP_A, 0, result->aop, offset, true, p_dead, true);
               if (shCount >= 4)
                 {
                   emit2 ("swap", "a");
@@ -3292,7 +3295,7 @@ genLeftShift (const iCode *ic)
                   emit2 ("sl", "a");
                   cost (1, 1);
                 }
-              cheapMove (result->aop, offset, ASMOP_A, 0, true, p_dead, false);
+              cheapMove (result->aop, offset, ASMOP_A, 0, true, p_dead, true);
               continue;
             }
 
@@ -3473,6 +3476,25 @@ genRightShift (const iCode *ic)
             {
               pushAF();
               pushed_a = true;
+            }
+
+          if (SPEC_USIGN (getSpec (operandType (left))) && size == 1 && result->aop->type == AOP_STK && !(SPRELMODE && aopOnStackNotExt (result->aop, 0, 1)))
+            {
+              cheapMove (ASMOP_A, 0, result->aop, 0, true, p_dead, true);
+              if (shCount >= 4)
+                {
+                  emit2 ("swap", "a");
+                  emit2 ("and", "a, #0x0f");
+                  cost (2, 2);
+                  shCount -= 4;
+                }
+              for (;shCount; shCount--)
+                {
+                  emit2 ("sr", "a");
+                  cost (1, 1);
+                }
+              cheapMove (result->aop, 0, ASMOP_A, 0, true, p_dead, true);
+              continue;
             }
 
           // Padauk has no arithmetic right shift instructions.
