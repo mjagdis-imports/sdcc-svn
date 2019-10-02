@@ -2,6 +2,9 @@
 
 	* src/pdk/gen.c:
 	  Improve use of sp-relative addressing in zeroing.
+	* sdas/aspdk1?/pdk1?pst.c,	
+	  sdas/aspdk1?/pdk1?mch.c:
+	  Remove support for idxsp, add pdk15 support for spadd.
 
 2019-10-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

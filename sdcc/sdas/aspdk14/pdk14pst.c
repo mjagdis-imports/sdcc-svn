@@ -196,6 +196,5 @@ struct  mne     mne[] = {
     {   NULL,   "ldsptl",       S_LDSPTL,       0,      0x0006    },
     {   NULL,   "ldspth",       S_LDSPTH,       0,      0x0007    },
 
-    {   NULL,   "idxsp",        S_IDXSP,        0,      0x0000    },
     {   NULL,   "spadd",        S_SPADD,        S_EOL,  0x0000    },
 };

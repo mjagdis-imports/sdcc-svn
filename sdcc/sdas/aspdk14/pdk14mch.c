@@ -245,7 +245,6 @@ machine(struct mne *mp)
         case S_LDSPTL: /* undocumented */
         case S_LDSPTH: /* undocumented */
 
-        case S_IDXSP: /* proposed */
         case S_SPADD: /* proposed */
                 outaw(op);
                 break;
