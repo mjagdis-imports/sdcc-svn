@@ -1,3 +1,8 @@
+2019-10-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Improve use of sp-relative addressing in zeroing.
+
 2019-10-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/pdk/gen.c:
@@ -7,7 +12,9 @@
 	* configure.ac,
 	  configure,
 	  sim/ucsim/configure.ac,
-	  sim/ucsim/configure:
+	  sim/ucsim/configure,
+	  sdccconf_in.h,
+	  sim/ucsim/ddconfig_in.h:
 	  Remove check for strerror(), which is part of C89 and used unconditionally in SDCC anyway.
 
 2019-09-30 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>

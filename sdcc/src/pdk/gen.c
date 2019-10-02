@@ -1114,7 +1114,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cheapMove (result, roffset + 0, source, soffset + 0, false, p_dead_global, true);
       return;
     }
-  else if (size == 2 && (result->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (result, 0, 2))) && aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX))
+  else if (size == 2 && (result->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (result, roffset, 2))) && aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX))
     {
       if (!p_dead_global)
         pushPF (false);
@@ -1128,7 +1128,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         popPF (a_dead_global);
       return;
     }
-  else if (size == 2 && result->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (result, 0, 2)) && aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX))
+  else if (size == 2 && result->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (result, roffset, 2)) && aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX))
     {
       if (!p_dead_global)
         pushPF (false);
@@ -1142,7 +1142,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         popPF (a_dead_global);
       return;
     }
-  else if (size == 2 && result->type == (result->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (result, 0, 2)) && !a_dead_global && // Using xch cheaper than push / pop.
+  else if (size == 2 && result->type == (result->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (result, roffset, 2)) && !a_dead_global && // Using xch cheaper than push / pop.
     aopInReg (source, soffset, A_IDX) && aopInReg (source, soffset + 1, P_IDX))
     {
       cheapMove (result, roffset + 0, ASMOP_A, 0, false, p_dead_global, true);
@@ -1153,7 +1153,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cost (1, 1);
       return;
     }
-  else if (size == 2 && (result->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (result, 0, 2)) && !a_dead_global && // Using xch cheaper than push / pop.
+  else if (size == 2 && (result->type == AOP_DIR || (IDXSP || SPRELMODE) && aopOnStackNotExt (result, roffset, 2)) && !a_dead_global && // Using xch cheaper than push / pop.
     aopInReg (source, soffset, P_IDX) && aopInReg (source, soffset + 1, A_IDX))
     {
       cheapMove (result, roffset + 1, ASMOP_A, 0, false, p_dead_global, true);
@@ -1221,7 +1221,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cost (size + 1, size + 1);
       return;
     }
-  else if (size >= 2 && result->type == AOP_STK && source->type == AOP_LIT) // Cache lit values in a.
+  else if (size >= 2 && result->type == AOP_STK && !((IDXSP || SPRELMODE) && aopOnStackNotExt (result, roffset, size)) && source->type == AOP_LIT) // Cache lit values in a.
     {
       int a_litval = -1;
       if (!a_dead_global)
