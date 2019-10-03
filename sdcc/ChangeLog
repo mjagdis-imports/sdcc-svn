@@ -1,3 +1,176 @@
+2019-10-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Improve handling of stack operands in comparison.
+
+2019-10-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Fixes and improvements for stack operands.
+	* .version:
+	  Bump version for advances in -mpdk15 --stack-auto.
+	* configure.ac,
+	  configure,
+	  sim/ucsim/configure.ac,
+	  sim/ucsim/configure,
+	  sdccconf_in.h,
+	  sim/ucsim/ddconfig_in.h:
+	  Remove check for strerror(), which is part of C89 and used unconditionally in SDCC anyway.
+
+2019-09-30 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Fixes and improvements for stack operands.
+	* configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/pdk15-stack-auto,
+	  src/pdk/main.c,
+	  support/regression/Makefile.in,
+	  support/regression/ports/pdk15-stack-auto:
+	  Infrastructure for -mpdk15 --stack-auto regression testing.
+
+2019-09-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fixes for stack operands and rematerialized stack locations.
+
+2019-09-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fixes for stack operands.
+
+2019-09-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix tracking of pseudoregister in shifts.
+
+2019-09-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/ralloc.c:
+	  Fix a bug affecting rematerialized addresses cast to integers of multiple widths.
+
+2019-09-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/ralloc2.cc:
+	  Improve register allocation.
+
+2019-09-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/gen.h,
+	  src/pdk/ralloc.c,
+	  src/pdk/ralloc2.cc:
+	  Rematerialize stack adresses, improve handling of on-stack operands.
+
+2019-09-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/gcc-torture-execute-20020402-3.c,
+	  support/regression/tests/gcc-torture-execute-divconst-2.c,
+	  support/regression/tests/gcc-torture-execute-pr78791.c:
+	  Fixes for on-stack operands.
+
+2019-09-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/addsub.c,
+	  support/regression/tests/ato.c,
+	  support/regression/tests/bitfields.c,
+	  support/regression/tests/bitwise.c,
+	  support/regression/tests/bug-2621.c,
+	  support/regression/tests/bug-2833.c,
+	  support/regression/tests/bug1115321.c,
+	  support/regression/tests/bug3410878.c,
+	  support/regression/tests/bug3521024.c,
+	  support/regression/tests/compare.c,
+	  support/regression/tests/condopptr.c,
+	  support/regression/tests/constantRange.c,
+	  support/regression/tests/ctype.c,
+	  support/regression/tests/funptrs.c,
+	  support/regression/tests/gcc-torture-execute-20000603-1.c,
+	  support/regression/tests/gcc-torture-execute-20000731-1.c,
+	  support/regression/tests/gcc-torture-execute-20020201-1.c,
+	  support/regression/tests/gcc-torture-execute-20020506-1.c,
+	  support/regression/tests/gcc-torture-execute-20040409-2.c,
+	  support/regression/tests/gcc-torture-execute-ashldi-1.c,
+	  support/regression/tests/gcc-torture-execute-ashrdi-1.c,
+	  support/regression/tests/gcc-torture-execute-divcmp-4.c,
+	  support/regression/tests/gcc-torture-execute-divconst-3.c,
+	  support/regression/tests/gcc-torture-execute-divmod-1.c,
+	  support/regression/tests/gcc-torture-execute-lshrdi-1.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/gcc-torture-execute-pr39339.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/gcc-torture-execute-string-opt-5.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-10.c
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-9.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/logic.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/malloc.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/memory.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/muldiv.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/onebyte.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c,
+	  support/regression/tests/rotate.c,
+	  support/regression/tests/shifts.c,
+	  support/regression/tests/shifts2.c,
+	  support/regression/tests/staticinit.c,
+	  support/regression/tests/string.c,
+	  support/regression/tests/switch.c,
+	  support/regression/tests/wchar.c:
+	  Preparations for -mpdk15 --stack-auto regression testing.
+
+2019-09-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
+	  src/pdk/gen.c,
+	  support/regression/ports/pdk14/support.c,
+	  support/regression/ports/pdk15/support.c:
+	  Fixes for on-stack operands.
+
+2019-09-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/ralloc2.cc,
+	  src/pdk/peeph.def:
+	  Fixes for on-stack operands.
+
+2019-09-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/ralloc2.cc:
+	  Fixes for on-stack operands.
+
+2019-09-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix wide load via pointer with register result in ahl.
+
+2019-09-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fixes for on-stack operands.
+
+2019-09-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Various improvements.
+	* device/lib/_fseq.c:
+	  Refactor to reduce RAM use.
+
+2019-09-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Improve handling of stack operands.
+
 2019-09-08 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c:

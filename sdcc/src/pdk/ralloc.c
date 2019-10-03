@@ -432,7 +432,7 @@ packRegisters (eBBlock * ebp)
          then mark this as rematerialisable   */
       if (ic->op == ADDRESS_OF && 
         IS_ITEMP (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the parameter is not accounted for in DEFS */ &&
-        IS_TRUE_SYMOP (IC_LEFT (ic)) && !OP_SYMBOL (IC_LEFT (ic))->onStack)
+        IS_TRUE_SYMOP (IC_LEFT (ic)) /*&& !OP_SYMBOL (IC_LEFT (ic))->onStack*/)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = 1;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;
@@ -516,7 +516,7 @@ packRegisters (eBBlock * ebp)
               if(ic->prev)
                 ic = ic->prev;
             }
-          else if (((use->op == SET_VALUE_AT_ADDRESS && !IS_BITVAR (getSpec (operandType (IC_LEFT (use)))) && !IS_BITVAR (getSpec (operandType (IC_RIGHT (use))))) ||
+          else if ((/*(use->op == SET_VALUE_AT_ADDRESS && !IS_BITVAR (getSpec (operandType (IC_LEFT (use)))) && !IS_BITVAR (getSpec (operandType (IC_RIGHT (use))))) || - resulted in pointer writes toring too few bytes*/
             use->op == CAST && (SPEC_USIGN (getSpec (operandType (IC_RIGHT (use)))) || operandSize (IC_RESULT (use)) <= operandSize (IC_RIGHT (use))) ||
             use->op == LEFT_OP || use->op == RIGHT_OP || use->op == '+' || use->op == '-' ||
             use->op == '&' || use->op == '|' || use->op == '^') &&

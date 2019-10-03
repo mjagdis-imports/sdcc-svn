@@ -96,7 +96,7 @@ esac
 
 # Checking for functions
 # ===========================================================================
-AC_CHECK_FUNCS(strerror mkstemp strndup setrlimit backtrace_symbols_fd)
+AC_CHECK_FUNCS(mkstemp strndup setrlimit backtrace_symbols_fd)
 
 
 # Macro definitions
@@ -928,7 +928,8 @@ fi
 
 if test $OPT_DISABLE_PDK15 = 0; then
   AC_CONFIG_FILES([sdas/aspdk15/Makefile])
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk15/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk15/Makefile
+                                                       device/lib/pdk15-stack-auto/Makefile])
 fi
 
 if test $OPT_DISABLE_PDK16 = 0; then
