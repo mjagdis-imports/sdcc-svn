@@ -275,24 +275,6 @@ addToAbsMap (symbol *sym)
       DBG_ENTRY ();
       addr = SPEC_ADDR (sym->etype);
 
-      /* handle CONFIG words here */
-      if (IS_CONFIG_ADDRESS (addr))
-        {
-          //fprintf( stderr, "%s: assignment to CONFIG@0x%x found\n", __FUNCTION__, addr );
-          //fprintf( stderr, "ival: %p (0x%x)\n", sym->ival, (int)list2int( sym->ival ) );
-          if (sym->ival)
-            {
-              DBG_MSG ("config word addr 0x%04X value 0x%04X", addr, (int) list2int (sym->ival));
-              pic14_assignConfigWordValue (addr, (int) list2int (sym->ival));
-            }
-          else
-            {
-              fprintf (stderr, "ERROR: Symbol %s, which is covering a __CONFIG word must be initialized!\n", sym->name);
-            }
-          DBG_EXIT ();
-          return;
-        }
-
       if (absmap_max == -1 || addr > absmap_max)
         absmap_max = addr;
       if (absmap_min == -1 || addr < absmap_min)
@@ -2256,6 +2238,29 @@ pic14_emitStaticSeg (memmap *map, struct dbuf_s *oBuf)
     {
       DBG_SYMBOL ("symbol", sym);
       DBG_ENTRY ();
+
+      if (SPEC_ABSA (sym->etype))
+        {
+          int addr = SPEC_ADDR (sym->etype);
+  
+          /* handle CONFIG words here */
+          if (IS_CONFIG_ADDRESS (addr))
+            {
+              //fprintf( stderr, "%s: assignment to CONFIG@0x%x found\n", __FUNCTION__, addr );
+              //fprintf( stderr, "ival: %p (0x%x)\n", sym->ival, (int)list2int( sym->ival ) );
+              if (sym->ival)
+                {
+                  DBG_MSG ("config word addr 0x%04X value 0x%04X", addr, (int) list2int (sym->ival));
+                  pic14_assignConfigWordValue (addr, (int) list2int (sym->ival));
+                }
+              else
+                {
+                  fprintf (stderr, "ERROR: Symbol %s, which is covering a __CONFIG word must be initialized!\n", sym->name);
+                }
+              DBG_EXIT ();
+              continue;
+            }
+        }
 
       /* if it is "extern" then do nothing */
       if (IS_EXTERN (sym->etype) && !sym->ival)

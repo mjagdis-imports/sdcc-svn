@@ -1,4 +1,9 @@
-2019-09-06 Philipp Klaus Krause <pkk AT spth.de>
+2019-10-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pic14/glue.c:
+	  Improve compability with trunk, patch by Gonzalo Pérez de Olaguer Córdoba.
+
+2019-10-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/aspdk15/pdk15pst.c:
 	  Fix swapc bug #2935.
