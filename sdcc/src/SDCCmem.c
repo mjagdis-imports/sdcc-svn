@@ -567,10 +567,12 @@ allocGlobal (symbol * sym)
       return;
     }
 
+#if 0
   if (!TARGET_IS_PIC16 || sym->level)
     /* register storage class ignored changed to FIXED */
     if (SPEC_SCLS (sym->etype) == S_REGISTER)
       SPEC_SCLS (sym->etype) = S_FIXED;
+#endif
 
   /* if it is fixed, then allocate depending on the */
   /* current memory model, same for automatics      */
