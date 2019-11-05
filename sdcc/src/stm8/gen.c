@@ -3227,7 +3227,8 @@ genCall (const iCode *ic)
       freeAsmop (IC_RESULT (ic));
     }
   // Check if we can do tail call optimization.
-  else if ((!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, X_IDX)) &&
+  else if (!(currFunc && IFFUNC_ISISR (currFunc->type)) &&
+    (!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, X_IDX)) &&
     !ic->parmBytes && !ic->localEscapeAlive)
     {
       int limit = 16; // Avoid endless loops in the code putting us into an endless loop here.
@@ -5994,6 +5995,16 @@ genAnd (const iCode *ic, iCode *ifx)
           genMove_o (result->aop, i, left->aop, i, j - i, TRUE, regFree (X_IDX, ic), regFree (Y_IDX, ic));
           result_in_a |= new_in_a;
           i = j;
+        }
+      else if ((aopInReg (result->aop, i, X_IDX) && !aopInReg (left->aop, i, XL_IDX) && !aopInReg (left->aop, i, XH_IDX) || aopInReg (result->aop, i, Y_IDX) && !aopInReg (left->aop, i, YL_IDX) && !aopInReg (left->aop, i, YH_IDX)) &&
+        right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i + 1, 1, 0x00)) // Use clrw to efficiently clear upper byte before writing lower byte.
+        {
+          emit3w_o (A_CLRW, result->aop, i, 0, 0);
+          cheapMove (ASMOP_A, 0, left->aop, i, false);
+          emit3_o (A_AND, ASMOP_A, 0, right->aop, i);
+          cheapMove (result->aop, i, ASMOP_A, 0, false);
+          i += 2;
+          continue;
         }
       else
         {
