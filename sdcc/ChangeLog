@@ -2,6 +2,10 @@
 
 	* src/SDCCmem.c:
 	  Allocate register variables at file scope like other variables at file scope.
+	* src/SDCCicode.h,
+	  src/SDCCicode.c,
+	  src/SDCClospre.cc:
+	  Exploit register storage class for lospre.
 
 2019-11-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

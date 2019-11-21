@@ -163,25 +163,25 @@ invalidates_expression(const iCode *const eic, const iCode *const iic)
 {
   const operand *const eleft = IC_LEFT (eic);
   const operand *const eright = IC_RIGHT (eic);
-  const bool uses_global = (eic->op == GET_VALUE_AT_ADDRESS || isOperandGlobal (eleft) || isOperandGlobal (eright) || IS_SYMOP (eleft) && OP_SYMBOL_CONST (eleft)->addrtaken || IS_SYMOP (eright) && OP_SYMBOL_CONST (eright)->addrtaken);
+  const bool uses_maybe_pointed_to = (eic->op == GET_VALUE_AT_ADDRESS || isOperandMaybePointedTo (eleft) || isOperandMaybePointedTo (eright));
   const bool uses_volatile = POINTER_GET (eic) && IS_VOLATILE (operandType (eleft)->next) || IS_OP_VOLATILE (eleft) || IS_OP_VOLATILE (eright);
 
   const operand *const left = IC_LEFT (iic);
   const operand *const right = IC_RIGHT (iic);
   const operand *const result = IC_RESULT (iic);
 
-  if (eic->op == GET_VALUE_AT_ADDRESS && (isOperandGlobal (IC_RESULT (iic)) || IS_SYMOP (IC_RESULT (iic)) && OP_SYMBOL_CONST (IC_RESULT (iic))->addrtaken))
+  if (eic->op == GET_VALUE_AT_ADDRESS && isOperandMaybePointedTo (IC_RESULT (iic)))
     return(true);
   if (IC_RESULT (iic) && !IS_OP_LITERAL (result) && !POINTER_SET(iic) &&
     (eleft && isOperandEqual (eleft, result) || eright && isOperandEqual (eright, result)))
     return(true);
   if (iic->op == FUNCTION || iic->op == ENDFUNCTION || iic->op == RECEIVE)
     return(true);
-  if ((uses_global || uses_volatile) && (iic->op == CALL || iic->op == PCALL))
+  if ((uses_maybe_pointed_to || uses_volatile) && (iic->op == CALL || iic->op == PCALL))
     return(true);
   if (uses_volatile && (POINTER_GET (iic) && IS_VOLATILE (operandType (left)->next)) || IS_OP_VOLATILE (left) || IS_OP_VOLATILE (right))
     return(true);
-  if (uses_global && POINTER_SET (iic)) // TODO: More accuracy here!
+  if (uses_maybe_pointed_to && POINTER_SET (iic)) // TODO: More accuracy here!
     return(true);
 
   return(false);

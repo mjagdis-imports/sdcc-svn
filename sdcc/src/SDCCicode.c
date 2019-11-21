@@ -888,6 +888,25 @@ isOperandGlobal (const operand *op)
   return 0;
 }
 
+/*---------------------------------------------------------------------------------*/
+/* isOperandMaybePointedTo - return 1 if operand is there might be a pointer to it */
+/*---------------------------------------------------------------------------------*/
+bool
+isOperandMaybePointedTo (const operand *op)
+{
+  if (!op || !IS_SYMOP (op))
+    return false;
+
+  if (IS_ITEMP (op))
+    return false;
+
+  /* For global symbols we can only make a rough guess. */
+  if (op->svt.symOperand->level == 0 || IS_STATIC (op->svt.symOperand->etype) || IS_EXTERN (op->svt.symOperand->etype))
+    return SPEC_SCLS (OP_SYMBOL_CONST (op)->etype) != S_REGISTER;
+
+  return OP_SYMBOL_CONST (op)->addrtaken;
+}
+
 /*-----------------------------------------------------------------*/
 /* isOperandVolatile - return 1 if the operand is volatile         */
 /*-----------------------------------------------------------------*/

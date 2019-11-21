@@ -311,6 +311,7 @@ iCode *reverseiCChain ();
 bool isOperandOnStack (operand *);
 int isOperandVolatile (const operand *, bool);
 int isOperandGlobal (const operand *);
+bool isOperandMaybePointedTo (const operand *);
 void printiCChain (iCode *, FILE *);
 operand *ast2iCode (ast *, int);
 operand *geniCodePtrPtrSubtract (operand *, operand *);
