@@ -2559,7 +2559,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
 
          /* Until pointer tracking is complete, by conservative and delete all */
          /* pointer accesses that might alias this symbol. */
-         if (isOperandGlobal (IC_RESULT (ic)) || OP_SYMBOL (IC_RESULT (ic))->addrtaken)
+         if (isOperandMaybePointedTo (IC_RESULT (ic)))
            {
              memmap *map = SPEC_OCLS (getSpec (operandType (IC_RESULT (ic))));
              destructItemIf (&cseSet, freeLocalCseDef, ifAnyUnrestrictedGetPointer, map->ptrType);
