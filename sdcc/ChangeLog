@@ -1,5 +1,10 @@
 2019-11-21 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/SDCC.y:
+	  Revert previous syntax error on multiple data types commit, since it broke __at (which in SDCC is a type specifier).
+
+2019-11-21 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/SDCCmem.c:
 	  Allocate register variables at file scope like other variables at file scope.
 	* src/SDCCicode.h,
