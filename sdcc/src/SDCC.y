@@ -1285,7 +1285,17 @@ function_declarator
 
 pointer
    : unqualified_pointer { $$ = $1;}
-   | unqualified_pointer type_specifier_list
+   | unqualified_pointer AT constant_expr /* Special case to allow __at at the end */
+         {
+             sym_link *n = newLink(SPECIFIER);
+             /* add this to the storage class specifier  */
+             SPEC_ABSA(n) = 1;   /* set the absolute addr flag */
+             /* now get the abs addr from value */
+             SPEC_ADDR(n) = (unsigned int) ulFromVal(constExprValue($3,TRUE));
+             n->next = $1;
+             $$ = n;
+         }
+   | unqualified_pointer type_qualifier_list
          {
              $$ = $1;
              if (IS_SPEC($2)) {
@@ -1298,13 +1308,33 @@ pointer
              else
                  werror (W_PTR_TYPE_INVALID);
          }
+   | unqualified_pointer type_qualifier_list AT constant_expr /* Special case to allow __at at the end */
+         {
+             if (IS_SPEC($2)) {
+                 DCL_TSPEC($1) = $2;
+                 DCL_PTR_CONST($1) = SPEC_CONST($2);
+                 DCL_PTR_VOLATILE($1) = SPEC_VOLATILE($2);
+                 DCL_PTR_RESTRICT($1) = SPEC_RESTRICT($2);
+                 DCL_PTR_ADDRSPACE($1) = SPEC_ADDRSPACE($2);
+             }
+             else
+                 werror (W_PTR_TYPE_INVALID);
+
+             sym_link *n = newLink(SPECIFIER);
+             /* add this to the storage class specifier  */
+             SPEC_ABSA(n) = 1;   /* set the absolute addr flag */
+             /* now get the abs addr from value */
+             SPEC_ADDR(n) = (unsigned int) ulFromVal(constExprValue($4,TRUE));
+             n->next = $1;
+             $$ = n;
+         }
    | unqualified_pointer pointer
          {
              $$ = $1;
              $$->next = $2;
              DCL_TYPE($2)=port->unqualified_pointer;
          }
-   | unqualified_pointer type_specifier_list pointer
+   | unqualified_pointer type_qualifier_list pointer
          {
              $$ = $1;
              if (IS_SPEC($2) && DCL_TYPE($3) == UPOINTER) {
@@ -1931,11 +1961,13 @@ function_definition
             /* assume it to be 'int'       */
             addDecl($1,0,newIntLink());
             $1 = createFunctionDecl($1);
-            if ($1 && FUNC_ISCRITICAL ($1->type))
-                inCriticalFunction = 1;
-
-            strncpy (function_name, $1->name, sizeof (function_name) - 4);
-            memset (function_name + sizeof (function_name) - 4, 0x00, 4);
+            if ($1)
+                {
+                    if (FUNC_ISCRITICAL ($1->type))
+                        inCriticalFunction = 1;
+                    strncpy (function_name, $1->name, sizeof (function_name) - 4);
+                    memset (function_name + sizeof (function_name) - 4, 0x00, 4);
+                }
         }
    function_body
         {
@@ -1949,18 +1981,19 @@ function_definition
             pointerTypes($2->type,p);
             addDecl($2,0,p);
             $2 = createFunctionDecl($2);
-            if ($2 && FUNC_ISCRITICAL ($2->type))
-                inCriticalFunction = 1;
-            // warn for loss of calling convention for inlined functions.
-            if ($2 && FUNC_ISINLINE ($2->type) &&
-                ( FUNC_ISZ88DK_CALLEE ($2->type) || FUNC_ISZ88DK_FASTCALL ($2->type) ||
-                  FUNC_BANKED ($2->type)         || FUNC_REGBANK ($2->type)          ||
-                  FUNC_ISOVERLAY ($2->type)      || FUNC_ISISR ($2->type) ))
-              {
-                werror (W_INLINE_FUNCATTR, $2->name);
-              }
-            strncpy (function_name, $2->name, sizeof (function_name) - 4);
-            memset (function_name + sizeof (function_name) - 4, 0x00, 4);
+            if ($2)
+                {
+                    if (FUNC_ISCRITICAL ($2->type))
+                        inCriticalFunction = 1;
+                    // warn for loss of calling convention for inlined functions.
+                    if (FUNC_ISINLINE ($2->type) &&
+                        ( FUNC_ISZ88DK_CALLEE ($2->type) || FUNC_ISZ88DK_FASTCALL ($2->type) ||
+                          FUNC_BANKED ($2->type)         || FUNC_REGBANK ($2->type)          ||
+                          FUNC_ISOVERLAY ($2->type)      || FUNC_ISISR ($2->type) ))
+                        werror (W_INLINE_FUNCATTR, $2->name);
+                    strncpy (function_name, $2->name, sizeof (function_name) - 4);
+                    memset (function_name + sizeof (function_name) - 4, 0x00, 4);
+                }
         }
    function_body
         {
