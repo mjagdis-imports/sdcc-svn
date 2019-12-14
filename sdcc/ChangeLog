@@ -1,5 +1,12 @@
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
 
+	* sdas/asrab/rabmch.c:
+	  Fix ex (sp), hl for Rabbits.
+	* src/z80/gen.c:
+	  Fix an issue in eZ80 pointer read.
+
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
 	* configure,
 	  configure.ac,
 	  device/lib/Makefile.in,
@@ -18,6 +25,12 @@
 	  Infrastructure for z80n backend.
 
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-2932.c:
+	  Fix bug #2932.
+
+2019-12-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCopt.c,
 	  support/regression/tests/bug-2932.c:
