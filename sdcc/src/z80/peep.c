@@ -992,6 +992,8 @@ int z80instructionSize(lineNode *pl)
     }
 
   /* Push / pop */
+  if(ISINST(pl->line, "push")  && IS_Z80N && op2start[0] == '#')
+    return(4);
   if(ISINST(pl->line, "push") || ISINST(pl->line, "pop"))
     {
       if(!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2))
@@ -1000,6 +1002,8 @@ int z80instructionSize(lineNode *pl)
     }
 
   /* 16 bit add / subtract / and */
+  if(IS_Z80N && ISINST(pl->line, "add") && (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2)))
+    return(4);
   if((ISINST(pl->line, "add") || ISINST(pl->line, "adc") || ISINST(pl->line, "sbc") || IS_RAB && ISINST(pl->line, "and")) &&
      !STRNCASECMP(op1start, "hl", 2))
     {
