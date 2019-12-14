@@ -1,5 +1,11 @@
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Use push nnnn for z80n.
+
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
 	* sdas/asrab/rabmch.c:
 	  Fix ex (sp), hl for Rabbits.
 	* src/z80/gen.c:
