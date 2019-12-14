@@ -1,6 +1,11 @@
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
+	  Enable use of rld and rrd for z80n.
+
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
 	  Use tst a, n for z80n.
 
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
