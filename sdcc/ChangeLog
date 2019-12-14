@@ -1,5 +1,10 @@
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/z80/gen.c:
+	  Revive non-destructive &.
+
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/z80/gen.c,
 	  src/z80/peep.c:
 	  Use add dd, nnnn for z80n.
