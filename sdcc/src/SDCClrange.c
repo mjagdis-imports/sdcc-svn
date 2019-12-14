@@ -1189,11 +1189,12 @@ shortenLiveRanges (iCode *sic, ebbIndex *ebbi)
       if (isOperandEqual (IC_RESULT (pic), IC_LEFT (ic)) || isOperandEqual (IC_RESULT (pic), IC_RIGHT (ic)))
         continue;
 
-      if (isOperandEqual (IC_RESULT (ic), IC_LEFT (nic)) || isOperandEqual (IC_RESULT (ic), IC_RIGHT (nic)))
+      if (isOperandEqual (IC_RESULT (ic), IC_LEFT (nic)) || isOperandEqual (IC_RESULT (ic), IC_RIGHT (nic)) ||
+        (POINTER_SET (nic) && (isOperandEqual (IC_RESULT (ic), IC_RESULT (nic)) || isOperandEqual (IC_RESULT (ic), IC_RESULT (nic)))))
         continue;
 
-      if ((POINTER_SET (nic) || isOperandGlobal (IC_RESULT (nic))) && (POINTER_GET (ic) || isOperandGlobal (IC_LEFT (ic)) || isOperandGlobal (IC_RIGHT (ic))) ||
-        (POINTER_GET (nic) || isOperandGlobal (IC_LEFT (nic)) || isOperandGlobal (IC_RIGHT (nic))) && (POINTER_SET (ic) || POINTER_SET (nic) && isOperandGlobal (IC_RESULT (ic))))
+      if ((POINTER_SET (nic) || isOperandMaybePointedTo (IC_RESULT (nic))) && (POINTER_GET (ic) || isOperandMaybePointedTo (IC_LEFT (ic)) || isOperandMaybePointedTo (IC_RIGHT (ic))) ||
+        (POINTER_GET (nic) || isOperandMaybePointedTo (IC_LEFT (nic)) || isOperandMaybePointedTo (IC_RIGHT (nic))) && (POINTER_SET (ic) || POINTER_SET (nic) && isOperandMaybePointedTo (IC_RESULT (ic))))
         continue;
 
       if (isOperandGlobal (IC_RIGHT (pic)) && !TARGET_IS_STM8 && !TARGET_PDK_LIKE) // Might result in too many global operands per op for backend.

@@ -459,7 +459,7 @@ packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
       if (nic->op == CALL || nic->op == PCALL)
         return 0;
 
-      if (nic->op == GET_VALUE_AT_ADDRESS || nic->op == SET_VALUE_AT_ADDRESS)
+      if ((nic->op == GET_VALUE_AT_ADDRESS || nic->op == SET_VALUE_AT_ADDRESS) && isOperandMaybePointedTo (IC_RIGHT (dic)))
         return 0;
 
       /* if address of & the result is remat, then okay */
