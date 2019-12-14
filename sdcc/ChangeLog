@@ -1,4 +1,23 @@
-2019-12-12 Philipp Klaus Krause <pkk AT spth.de>
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/z80n/Makefile.in,
+	  sdcc.spec,
+	  src/SDCCgue.c,
+	  src/SDCCmain.c,
+	  src/SDCCopt.c,
+	  src/port.h,
+	  src/z80/gen.c,
+	  src/z80/main.c,
+	  src/z80/z80.h,
+	  device/include/*,
+	  device/lib/z80n:
+	  Infrastructure for z80n backend.
+
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCopt.c,
 	  support/regression/tests/bug-2932.c:
