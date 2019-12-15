@@ -5453,7 +5453,14 @@ genPlusIncr (const iCode * ic)
           return TRUE;
         }
 
-      if (IS_Z80N && resultId == getPairId (IC_LEFT (ic)->aop) && resultId != PAIR_IY)
+      if (IS_Z80N && resultId == getPairId (IC_LEFT (ic)->aop) && resultId != PAIR_IY && icount > 3 && icount < 256 && !bitVectBitValue (ic->rSurv, A_IDX)) // Saves once cycle vs. add dd, nn below.
+        {
+          cheapMove (ASMOP_A, 0, IC_RIGHT (ic)->aop, 0, true);
+          emit2 ("add %s, a", getPairName (IC_RESULT (ic)->aop));
+          regalloc_dry_run_cost += 2;
+          return true;
+        }
+      else if (IS_Z80N && resultId == getPairId (IC_LEFT (ic)->aop) && resultId != PAIR_IY && icount > 3)
         {
           emit2 ("add %s, #%s", getPairName (IC_RESULT (ic)->aop), aopGetLitWordLong (IC_RIGHT (ic)->aop, 0, false));
           regalloc_dry_run_cost += 4;
