@@ -2,6 +2,8 @@
 
 	* src/z80/gen.c:
 	  Use add dd, a for z80n.
+	* support/scripts/sdcc.nsi:
+	  Include z80n library in Windows installer.
 
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
 
