@@ -5,6 +5,90 @@
 	* support/scripts/sdcc.nsi:
 	  Include z80n library in Windows installer.
 
+2020-01-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Update manual.
+	* .version,
+	  doc/INSTALL.txt,
+	  sdcc.spec:
+	  Bump version in preparation of 4.0.0 release.
+
+2020-01-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c,
+	  support/regression/tests/bug-2966.c:
+	  Fix bug #2966.
+
+2020-01-14 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCglue.c,
+	  support/regression/tests/fptr_cast_array_init.c:
+	  Implement feature request #598 (Cannot initialize arrays with type cast function pointers).
+
+2020-01-13 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-2859.c,
+	  support/valdiag/tests/bug-2859.c:
+	  Fix bug #2859 (Cannot compare function to 0)
+
+2020-01-13 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h: Add parser rules and an error message for compound literals.
+
+2020-01-12 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* configure.ac,
+	  configure,
+	  src/SDCC.lex: Gracefully handle when uchar.h is missing
+
+2020-01-10 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* sdas/asxxsrc/asdata.c,
+	  sdas/asxxsrc/aslex.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkdata.c,
+	  sdas/linksrc/lklex.c:
+	  Make the character input routines in sdas and sdld 8-bit-safe (bug #2961) and interpret all extended ASCII characters as letters.
+	* src/SDCC.lex,
+	  src/SDCCutil.c,
+	  support/regression/tests/idf_ucn_utf8.c:
+	  Add compiler support for UCNs and non-ASCII-utf8 in identifiers (patch #311) -- the internal representation is utf8.
+
+2020-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/hc08/gen.c,
+	  support/regression/tests/bug-2825.c:
+	  Fix bug #2825.
+	* support/regression/tests/gcc-torture-execute-20040409-1.c,
+	  support/regression/tests/gcc-torture-execute-20040409-2.c,
+	  support/regression/tests/gcc-torture-execute-20040409-3.c:
+	  Remove some tests that depend on older GCC implementation-defined behaviour on signed int overflow.
+
+2020-01-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-2964.c:
+	  Fix bug #2964.
+
+2019-12-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/ralloc2.cc,
+	  src/stm8/gen.c,
+	  src/SDCCsymt.c:
+	  Reenable partial register allocation for stm8, that was accidentially partially disabled when enabling the new stack allocator.
+
+2019-12-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Use add dd, a for z80n.
+	* support/scripts/sdcc.nsi:
+	  Include z80n library in Windows installer.
+
 2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
