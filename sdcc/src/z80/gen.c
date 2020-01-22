@@ -3326,7 +3326,8 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
 
       for (int j = 0; j + 1 < n; j++)
         {
-          if (!assigned[j] && i != j && i + 1 != j && (result->aopu.aop_reg[roffset + i] == source->aopu.aop_reg[soffset + j] || result->aopu.aop_reg[roffset + i + 1] == source->aopu.aop_reg[soffset + j]))
+          if (!assigned[j] && i != j && i + 1 != j && !aopOnStack(result, roffset + i, 2) && !aopOnStack(source, soffset + i, 1) &&
+            (result->aopu.aop_reg[roffset + i] == source->aopu.aop_reg[soffset + j] || result->aopu.aop_reg[roffset + i + 1] == source->aopu.aop_reg[soffset + j]))
             goto skip_byte_push_iy; // We can't write this one without overwriting the source.
         }
 
@@ -4778,7 +4779,8 @@ genCall (const iCode *ic)
       freeAsmop (IC_RESULT (ic), NULL);
     }
   // Check if we can do tail call optimization.
-  else if ((!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, IS_GB ? E_IDX : L_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, IS_GB ? DE_IDX : HL_IDX)) &&
+  else if (!(currFunc && IFFUNC_ISISR (currFunc->type)) &&
+    (!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, IS_GB ? E_IDX : L_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, IS_GB ? DE_IDX : HL_IDX)) &&
     !ic->parmBytes && !ic->localEscapeAlive && !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL (ftype) && _G.omitFramePtr &&
     (ic->op != PCALL || !IFFUNC_ISZ88DK_FASTCALL (ftype)))
     {
@@ -5491,7 +5493,7 @@ genPlusIncr (const iCode * ic)
             }
           else
             {
-              fetchPair (resultId, AOP (IC_RIGHT (ic)));
+              fetchPair (PAIR_HL, AOP (IC_RIGHT (ic)));
               emit2 ("add hl, %s", getPairName (AOP (IC_LEFT (ic))));
               regalloc_dry_run_cost += 1;
               return TRUE;
@@ -7551,11 +7553,12 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
               goto release;
             }
         }
-
-      if (!IS_GB && (!sign || size > 2) && getPartPairId(AOP (left), offset) == PAIR_HL && isPairDead (PAIR_HL, ic) &&
-        (getPartPairId (AOP (right), offset) == PAIR_DE || getPartPairId(AOP (right), offset) == PAIR_BC))
+      if (!IS_GB && (!sign || size > 2) && (getPartPairId (left->aop, offset) == PAIR_HL || size == 2 && left->aop->type == AOP_IY) && isPairDead (PAIR_HL, ic) &&
+        (getPartPairId (right->aop, offset) == PAIR_DE || getPartPairId (right->aop, offset) == PAIR_BC))
         {
-          emit3 (A_CP, ASMOP_A, ASMOP_A); // Clear carry.
+          if (left->aop->type == AOP_DIR || left->aop->type == AOP_IY)
+            fetchPair (PAIR_HL, left->aop);
+          emit3 (A_XOR, ASMOP_A, ASMOP_A); // Clear carry.
           emit2 ("sbc hl, %s", _pairs[getPartPairId (AOP (right), offset)].name);
           regalloc_dry_run_cost += 2;
           size -= 2;
@@ -8303,12 +8306,6 @@ genAnd (const iCode * ic, iCode * ifx)
       symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
       int sizel;
 
-      if (!a_free) // Hard to handle pop with ifx
-        {
-           regalloc_dry_run_cost += 100;
-           wassert (regalloc_dry_run);
-        }
-
       sizel = AOP_SIZE (left);
       if (size)
         {
@@ -8445,6 +8442,12 @@ genAnd (const iCode * ic, iCode * ifx)
           /* Generic case, loading into accumulator and testing there. */
           else
             {
+              if (bitVectBitValue (ic->rSurv, A_IDX) || left->aop->regs[A_IDX] > offset || right->aop->regs[A_IDX] > offset)
+                {
+                  regalloc_dry_run_cost += 100;
+                  wassert (regalloc_dry_run);
+                }
+
               cheapMove (ASMOP_A, 0, left->aop, offset, true);
               if (isLiteralBit (bytelit) == 0 || isLiteralBit (bytelit) == 7)
                 {
@@ -9408,7 +9411,7 @@ AccLsh (unsigned int shCount)
 /* shiftL1Left2Result - shift left one byte from left to result    */
 /*-----------------------------------------------------------------*/
 static void
-shiftL1Left2Result (operand *left, int offl, operand *result, int offr, unsigned int shCount)
+shiftL1Left2Result (operand *left, int offl, operand *result, int offr, unsigned int shCount, const iCode *ic)
 {
   /* If operand and result are the same we can shift in place.
      However shifting in acc using add is cheaper than shifting
@@ -9419,12 +9422,29 @@ shiftL1Left2Result (operand *left, int offl, operand *result, int offr, unsigned
       while (shCount--)
         emit3 (A_SLA, AOP (result), 0);
     }
+  else if ((IS_Z180 && !optimize.codeSpeed || IS_EZ80_Z80) && // Try to use mlt
+    (aopInReg (result->aop, offr, C_IDX) && isPairDead(PAIR_BC, ic) || aopInReg (result->aop, offr, E_IDX) && isPairDead(PAIR_DE, ic) || aopInReg (result->aop, offr, L_IDX) && isPairDead(PAIR_HL, ic)))
+    {
+      PAIR_ID pair = aopInReg (result->aop, offr, C_IDX) ? PAIR_BC : (aopInReg (result->aop, offr, E_IDX) ? PAIR_DE : PAIR_HL);
+
+      bool top = aopInReg (left->aop, offl, _pairs[pair].h_idx);
+      if (!top)
+        cheapMove (pair == PAIR_BC ? ASMOP_C : (pair == PAIR_DE ? ASMOP_E : ASMOP_L), 0, left->aop, offl, !bitVectBitValue (ic->rSurv, A_IDX));
+
+      emit2 ("ld %s, #%d", top ? _pairs[pair].l : _pairs[pair].h, 1 << shCount);
+      emit2 ("mlt %s", _pairs[pair].name);
+      regalloc_dry_run_cost += 4;
+    }
   else
     {
+      if (bitVectBitValue (ic->rSurv, A_IDX))
+        _push (PAIR_AF);
       cheapMove (ASMOP_A, 0, left->aop, offl, true);
       /* shift left accumulator */
       AccLsh (shCount);
       cheapMove (AOP (result), offr, ASMOP_A, 0, true);
+      if (bitVectBitValue (ic->rSurv, A_IDX))
+        _pop (PAIR_AF);
     }
 }
 
@@ -9445,7 +9465,7 @@ genlshTwo (operand *result, operand *left, unsigned int shCount, const iCode *ic
       if (size > 1)
         {
           if (shCount)
-            shiftL1Left2Result (left, LSB, result, MSB16, shCount);
+            shiftL1Left2Result (left, 0, result, 1, shCount, ic);
           else
             movLeft2Result (left, LSB, result, MSB16, 0);
         }
@@ -9465,20 +9485,11 @@ genlshTwo (operand *result, operand *left, unsigned int shCount, const iCode *ic
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genlshOne - left shift a one byte quantity by known count       */
-/*-----------------------------------------------------------------*/
-static void
-genlshOne (operand * result, operand * left, unsigned int shCount)
-{
-  shiftL1Left2Result (left, LSB, result, LSB, shCount);
-}
-
 /*------------------------------------------------------------------*/
 /* genLeftShiftLiteral - left shifting by known count for size <= 2 */
 /*------------------------------------------------------------------*/
 static void
-genLeftShiftLiteral (operand * left, operand * right, operand * result, const iCode *ic)
+genLeftShiftLiteral (operand *left, operand *right, operand *result, const iCode *ic)
 {
   unsigned int shCount = ulFromVal (AOP (right)->aopu.aop_lit);
   unsigned int size;
@@ -9494,13 +9505,13 @@ genLeftShiftLiteral (operand * left, operand * right, operand * result, const iC
   wassert (getSize (operandType (left)) >= size);
 
   if (shCount >= (size * 8))
-    genMove (result->aop, ASMOP_ZERO, !bitVectBitValue (ic->rSurv, A_IDX) && left->aop->regs[A_IDX] != 0, isPairDead (PAIR_HL, ic) && left->aop->regs[H_IDX] < 0 && left->aop->regs[L_IDX] < 0);
+    genMove (result->aop, ASMOP_ZERO, !bitVectBitValue (ic->rSurv, A_IDX), isPairDead (PAIR_HL, ic) && left->aop->regs[H_IDX] < 0 && left->aop->regs[L_IDX] < 0);
   else
     {
       switch (size)
         {
         case 1:
-          genlshOne (result, left, shCount);
+          shiftL1Left2Result (left, 0, result, 0, shCount, ic);
           break;
         case 2:
           genlshTwo (result, left, shCount, ic);
@@ -9520,7 +9531,7 @@ genLeftShiftLiteral (operand * left, operand * right, operand * result, const iC
 /* genLeftShift - generates code for left shifting                 */
 /*-----------------------------------------------------------------*/
 static void
-genLeftShift (const iCode * ic)
+genLeftShift (const iCode *ic)
 {
   int size, offset;
   symbol *tlbl = 0, *tlbl1 = 0;
@@ -10459,7 +10470,7 @@ genPointerGet (const iCode *ic)
       goto release;
     }
 
- if (isPair (AOP (result)) && IS_EZ80_Z80 && getPairId (AOP (left)) == PAIR_HL && !IS_BITVAR (retype))
+ if (isPair (AOP (result)) && IS_EZ80_Z80 && getPairId (AOP (left)) == PAIR_HL && !IS_BITVAR (retype) && !rightval)
    {
      emit2 ("ld %s, (hl)", _pairs[getPairId (AOP (result))].name);
      regalloc_dry_run_cost += 2;
@@ -11353,7 +11364,7 @@ genAddrOf (const iCode * ic)
 /* genAssign - generate code for assignment                        */
 /*-----------------------------------------------------------------*/
 static void
-genAssign (const iCode * ic)
+genAssign (const iCode *ic)
 {
   operand *result, *right;
   int size, offset;
