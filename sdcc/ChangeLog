@@ -1,9 +1,17 @@
-2019-12-15 Philipp Klaus Krause <pkk AT spth.de>
+2020-01-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/linksrc/Makefile.in:
+	  Fix bug #2969.
+
+2020-01-22 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
-	  Use add dd, a for z80n.
-	* support/scripts/sdcc.nsi:
-	  Include z80n library in Windows installer.
+	  Fix bug #2967.
+
+2020-01-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Fix a typo in documentation.
 
 2020-01-18 Philipp Klaus Krause <pkk AT spth.de>
 
