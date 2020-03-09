@@ -621,13 +621,6 @@ checkTypeSanity (sym_link *etype, const char *name)
       werror (E_SIGNED_OR_UNSIGNED_INVALID, noun, name);
     }
 
-  // special case for "short"
-  if (SPEC_SHORT (etype))
-    {
-      SPEC_NOUN (etype) = V_INT;
-      SPEC_SHORT (etype) = 0;
-    }
-
   /* if no noun e.g.
      "const a;" or "data b;" or "signed s" or "long l"
      assume an int */
@@ -1102,6 +1095,8 @@ getSize (sym_link * p)
     case EEPPOINTER:
     case FPOINTER:
     case CPOINTER:
+      if (!IS_FUNCPTR(p))
+        return (FARPTRSIZE);
     case FUNCTION:
       return (IFFUNC_ISBANKEDCALL (p) ? BFUNCPTRSIZE : FUNCPTRSIZE);
     case GPOINTER:
@@ -1801,6 +1796,12 @@ checkSClass (symbol *sym, int isProto)
       fprintf (stderr, "checkSClass: %s \n", sym->name);
     }
 
+  if (!sym->level && SPEC_SCLS (sym->etype) == S_AUTO)
+   {
+     werrorfl (sym->fileDef, sym->lineDef, E_AUTO_FILE_SCOPE);
+     SPEC_SCLS (sym->etype) = S_FIXED;
+   }
+
   /* type is literal can happen for enums change to auto */
   if (SPEC_SCLS (sym->etype) == S_LITERAL && !SPEC_ENUM (sym->etype))
     SPEC_SCLS (sym->etype) = S_AUTO;
@@ -1844,8 +1845,8 @@ checkSClass (symbol *sym, int isProto)
   if (!TARGET_PIC_LIKE)
 #endif
 
-    if (IS_ABSOLUTE (sym->etype))
-      SPEC_VOLATILE (sym->etype) = 1;
+  if (IS_ABSOLUTE (sym->etype))
+    SPEC_VOLATILE (sym->etype) = 1;
 
   if (TARGET_IS_MCS51 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
     {
@@ -2700,6 +2701,10 @@ compareType (sym_link *dest, sym_link *src)
       else
         return 1;
     }
+
+  if (SPEC_SHORT (dest) != SPEC_SHORT (src))
+    return -1;
+
   if (SPEC_LONG (dest) != SPEC_LONG (src))
     return -1;
 

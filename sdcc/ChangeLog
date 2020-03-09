@@ -1,4 +1,372 @@
-2019-10-13 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2020-03-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c,
+	  support/regression/tests/bug-2982.c:
+	  Fix bug #2982.
+	* src/z80/gen.c:
+	  Improve code generation for 16-bit addition with literal.
+
+2020-03-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/mcs51/gen.c,
+	* src/ds390/gen.c: fixed bug #2980
+
+2020-02-13 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/peeph-z80.def,
+	  src/z80/peeph-r2k.def:
+	  Improve flexibility of some peephole rules.
+
+2020-02-13 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/peeph-z80.def:
+	  Additional z80 peephole rules picked from patch #314 by b-s-a.
+
+2020-02-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCopt.c,
+	  src/z80/gen.c:
+	  Allow non-literal third argument for ldir-memcpy().
+
+2020-02-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Use macros for immediate data to improve assembler portability, patch #315 by b-s-a.
+
+2020-02-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph-gbz80.def:
+	  Fix bug #2974.
+
+2020-01-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/linksrc/Makefile.in:
+	  Fix bug #2969.
+
+2020-01-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix bug #2967.
+
+2020-01-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Fix a typo in documentation.
+
+2020-01-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Update manual.
+	* .version,
+	  doc/INSTALL.txt,
+	  sdcc.spec:
+	  Bump version in preparation of 4.0.0 release.
+
+2020-01-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c,
+	  support/regression/tests/bug-2966.c:
+	  Fix bug #2966.
+
+2020-01-14 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCglue.c,
+	  support/regression/tests/fptr_cast_array_init.c:
+	  Implement feature request #598 (Cannot initialize arrays with type cast function pointers).
+
+2020-01-13 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-2859.c,
+	  support/valdiag/tests/bug-2859.c:
+	  Fix bug #2859 (Cannot compare function to 0)
+
+2020-01-13 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h: Add parser rules and an error message for compound literals.
+
+2020-01-12 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* configure.ac,
+	  configure,
+	  src/SDCC.lex: Gracefully handle when uchar.h is missing
+
+2020-01-10 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* sdas/asxxsrc/asdata.c,
+	  sdas/asxxsrc/aslex.c,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkdata.c,
+	  sdas/linksrc/lklex.c:
+	  Make the character input routines in sdas and sdld 8-bit-safe (bug #2961) and interpret all extended ASCII characters as letters.
+	* src/SDCC.lex,
+	  src/SDCCutil.c,
+	  support/regression/tests/idf_ucn_utf8.c:
+	  Add compiler support for UCNs and non-ASCII-utf8 in identifiers (patch #311) -- the internal representation is utf8.
+
+2020-01-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/hc08/gen.c,
+	  support/regression/tests/bug-2825.c:
+	  Fix bug #2825.
+	* support/regression/tests/gcc-torture-execute-20040409-1.c,
+	  support/regression/tests/gcc-torture-execute-20040409-2.c,
+	  support/regression/tests/gcc-torture-execute-20040409-3.c:
+	  Remove some tests that depend on older GCC implementation-defined behaviour on signed int overflow.
+
+2020-01-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-2964.c:
+	  Fix bug #2964.
+
+2019-12-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/ralloc2.cc,
+	  src/stm8/gen.c,
+	  src/SDCCsymt.c:
+	  Reenable partial register allocation for stm8, that was accidentially partially disabled when enabling the new stack allocator.
+
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Revive non-destructive &.
+
+2019-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/asrab/rabmch.c:
+	  Fix ex (sp), hl for Rabbits.
+	* src/z80/gen.c:
+	  Fix an issue in eZ80 pointer read.
+
+2019-12-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-2932.c:
+	  Fix bug #2932.
+
+2019-12-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc,
+	  src/z80/main.c:
+	  Improve use of sbc hl, rr in comparisons, part of RFE #641.
+
+2019-12-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve <<, part of RFE #639.
+
+2019-12-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/literalop.c:
+	  Avoid testing for undefined behaviour that happens to be implementation-defined in GCC, but not clang.
+
+2019-12-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCClospre.cc:
+	  Improve handling of ADDRESS_OF.
+	* support/regression/tests/bug-2957.c:
+	  Test for bug #2957.
+	* src/pdk/gen.c,
+	  support/regression/tests/bug-2959.c,
+	  support/regression/tests/bug-2958.c:
+	  Fix bugs #2959, #2958.
+
+2019-12-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/string.c:
+	  Make preprocessor guards compatible with default setting of clang-9.
+
+2019-11-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClrange.c,
+	  support/regression/tests/bug-2956.c:
+	  Fix bug #2956.
+
+2019-11-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.y:
+	  Fix bug #2953.
+
+2019-11-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.y:
+	  Fix bug #2954.
+
+2019-11-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.y:
+	  Revert previous syntax error on multiple data types commit, since it broke __at (which in SDCC is a type specifier).
+
+2019-11-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Allow C2X attribute declarations and attribute arguments.
+
+2019-11-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Reorganize grammar by appendix A.2 of C2X.
+
+2019-11-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c:
+	  Allow C2X attributes on statements.
+
+2019-11-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/gcc-torture-execute-20181120-1.c:
+	  Fix bug #2947.
+	* src/SDCC.lex,
+	  support/regression/tests/c2xkeywords.c:
+	  Support C2X keyword from N2457.
+	* support/regression/tests/gcc-torture-execute-pr47148.c,
+	  support/regression/tests/gcc-torture-execute-pr63659.c,
+	  support/regression/tests/gcc-torture-execute-pr64682.c:
+	  Enable some tests that depend on C99 features now supported by SDCC.
+
+2019-11-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/gcc-torture-execute-*:
+	  Add more GCC tests, RFE #652.
+
+2019-11-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph-z80.def,
+	  src/z80/peeph-tlcs90.def,
+	  src/z80/peeph-r2k.def,
+	  src/z80/peeph-gbz80.def:
+	  Improve fix for bug #2914.
+
+2019-11-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.lex,
+	  src/SDCCval.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c:
+	  C2X u8 character constants (N2418).
+
+2019-11-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.cc,
+	  support/regression/tests/bug-2942.c:
+	  Fix bug #2942.
+
+2019-11-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/ports/pdk15-stack-auto/spec.mk:
+	  Increase timeout for regression testing on ARMv6.
+
+2019-11-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCClrange.c:
+	  Allow more live-range shortening for stm8, pdk.
+
+2019-11-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c:
+	  Improve wide & by small constants and register result.
+	* src/SDCCsymt.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  support/valdiag/tests/bug-2940.c:
+	  Fix bug #2940.
+
+2019-11-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c:
+	  Fix a bug in optimization of tail calls in interrupt handlers.
+
+2019-11-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/scripts/sdcc.nsi:
+	  Fix Windows installation of pdk13 and pdk15-stack-auto files.
+
+2019-11-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/sdbinutils/binutils/Makefile.am,
+	  support/sdbinutils/binutils/Makefile.in: prefer static linked libz
+	  for the Windows snapshot builds so that we don't need another DLL
+
+2019-11-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  src/SDCCopt.c,
+	  support/regression/tests/bug-2907.c:
+	  Fix bug #2907.
+	* support/regression/ports/pdk15-stack-auto/spec.mk:
+	  Increase timeout for regression testing on ARMv6.
+
+2019-10-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fix handling of rematerialized pointers to the stack in y.
+
+2019-10-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c:
+	  Various small improvements.
+
+2019-10-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c,
+	  src/pdk/gen.c:
+	  Improve ! of bool.
+
+2019-10-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c:
+	  Register shuffling fix, small | improvement.
+
+2019-10-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix an issue in stack operands of shifts.
+	* support/regression/tests/gcc-torture-execute-20000113-1.c,
+	  support/regression/tests/gcc-torture-execute-950511-1.c,
+	  support/regression/tests/gcc-torture-execute-pr42833.c:
+	  Disable tests failing due to known bugs.
+
+2019-10-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix a typo that resulted in comp being emitted for pdk13.
+
+2019-10-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/pdk15-stack-auto/__setjmp.s:
+	  Fix bug #2934.
+	* src/pdk/gen.c:
+	  Fix 3 issues in handling of non-dead p.
+
+2019-10-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Use pdk15 comp.
+
+2019-10-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fix code generation for calls via function pointers.
+
+2019-10-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* Merge pic14 branch.
+
+2019-10-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCicode.h,
 	  src/SDCCicode.c,

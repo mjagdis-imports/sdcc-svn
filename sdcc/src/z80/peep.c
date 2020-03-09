@@ -328,15 +328,21 @@ z80MightRead(const lineNode *pl, const char *what)
       const char *arg = pl->line + 4;
       while(isspace(*arg))
         arg++;
-      if(*arg == 'a' && *(arg + 1) == ',')
+      if(arg[0] == 'a' && arg[1] == ',')
         {
           if(!strcmp(what, "a"))
             return(true);
           arg += 2;
         }
-      else if(!strncmp(arg, "hl", 2) && *(arg + 2) == ',')
+      else if(!strncmp(arg, "hl", 2) && arg[2] == ',') // add hl, rr
         {
           if(!strcmp(what, "h") || !strcmp(what, "l"))
+            return(true);
+          arg += 3;
+        }
+      else if(arg[0] == 'i') // add ix/y, rr
+        {
+          if(!strncmp(arg, what, 2))
             return(true);
           arg += 3;
         }
@@ -1057,7 +1063,7 @@ int z80instructionSize(lineNode *pl)
   /* Bit */
   if(ISINST(pl->line, "bit") || ISINST(pl->line, "set") || ISINST(pl->line, "res"))
     {
-      if(argCont(op1start, "(ix)") || argCont(op1start, "(iy)"))
+      if(argCont(op2start, "(ix)") || argCont(op2start, "(iy)"))
         return(4);
       return(2);
     }

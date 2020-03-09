@@ -269,7 +269,8 @@ cnvToFloatCast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_RIGHT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_RIGHT (ic)));
+  SPEC_SHORT (type) = 0;
   int linenno = ic->lineno;
   int bwd, su;
   int bytesPushed=0;
@@ -393,7 +394,8 @@ cnvToFixed16x16Cast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_RIGHT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_RIGHT (ic)));
+  SPEC_SHORT (type) = 0;
   int linenno = ic->lineno;
   int bwd, su;
   int bytesPushed=0;
@@ -503,7 +505,8 @@ cnvFromFloatCast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_LEFT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_LEFT (ic)));
+  SPEC_SHORT (type) = 0;
   char *filename = ic->filename;
   int lineno = ic->lineno;
   int bwd, su;
@@ -614,7 +617,8 @@ cnvFromFixed16x16Cast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_LEFT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_LEFT (ic)));
+  SPEC_SHORT (type) = 0;
   char *filename = ic->filename;
   int lineno = ic->lineno;
   int bwd, su;
@@ -743,8 +747,10 @@ convilong (iCode * ic, eBBlock * ebp)
   int bytesPushed=0;
   operand *left;
   operand *right;
-  sym_link *leftType = operandType (IC_LEFT (ic));
-  sym_link *rightType = operandType (IC_RIGHT (ic));
+  sym_link *leftType = copyLinkChain (operandType (IC_LEFT (ic)));
+  sym_link *rightType = copyLinkChain (operandType (IC_RIGHT (ic)));
+  SPEC_SHORT (leftType) = 0;
+  SPEC_SHORT (rightType) = 0;
 
   remiCodeFromeBBlock (ebp, ic);
 
@@ -1010,8 +1016,8 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
 
   if ((TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_RABBIT || TARGET_IS_EZ80_Z80) && (!strcmp (bif->name, "__builtin_memcpy") || !strcmp (bif->name, "__builtin_strncpy") || !strcmp (bif->name, "__builtin_memset")))
     {
-      /* Replace iff return value is used or last parameter is not an integer constant. */
-      if (bitVectIsZero (OP_USES (IC_RESULT (icc))) && IS_OP_LITERAL (IC_LEFT (lastparam)))
+      /* Replace iff return value is used or last parameter is not an integer constant (except for memcpy, where non-integers can be handled). */
+      if (bitVectIsZero (OP_USES (IC_RESULT (icc))) && (IS_OP_LITERAL (IC_LEFT (lastparam)) || !strcmp (bif->name, "__builtin_memcpy")))
         return;
       
       strcpy(OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
@@ -1076,6 +1082,8 @@ convsmallc (iCode *ic, eBBlock *ebp)
     {
       if (icp)
         icp->next = icc->prev;
+      else
+        ebp->sch = icc->prev;
       icc->prev = ic;
     }
   for (; icc != icp; ico = icc, icc = icc->prev)
