@@ -328,7 +328,7 @@ z80MightRead(const lineNode *pl, const char *what)
       const char *arg = pl->line + 4;
       while(isspace(*arg))
         arg++;
-      if(*arg == 'a' && *(arg + 1) == ',')
+      if(arg[0] == 'a' && arg[1] == ',')
         {
           if(!strcmp(what, "a"))
             return(true);
@@ -346,9 +346,15 @@ z80MightRead(const lineNode *pl, const char *what)
             return(true);
           arg += 3;
         }
-      else if(!strncmp(arg, "hl", 2) && *(arg + 2) == ',')
+      else if(!strncmp(arg, "hl", 2) && arg[2] == ',') // add hl, rr
         {
           if(!strcmp(what, "h") || !strcmp(what, "l"))
+            return(true);
+          arg += 3;
+        }
+      else if(arg[0] == 'i') // add ix/y, rr
+        {
+          if(!strncmp(arg, what, 2))
             return(true);
           arg += 3;
         }
