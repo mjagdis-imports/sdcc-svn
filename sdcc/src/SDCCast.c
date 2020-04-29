@@ -991,18 +991,8 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
   /* the parameter type must be at least castable */
   if (compareType (defParm->type, (*actParm)->ftype) == 0)
     {
-      if (IS_STRUCT ((*actParm)->ftype))
-        {
-          if (IS_AST_VALUE (*actParm))
-            werrorfl ((*actParm)->filename, (*actParm)->lineno, E_STRUCT_AS_ARG, (*actParm)->opval.val->name);
-          else
-            werrorfl ((*actParm)->filename, (*actParm)->lineno, E_STRUCT_AS_ARG, "");
-        }
-      else
-        {
-          werror (E_INCOMPAT_TYPES);
-          printFromToType ((*actParm)->ftype, defParm->type);
-        }
+      werror (E_INCOMPAT_TYPES);
+      printFromToType ((*actParm)->ftype, defParm->type);
       return 1;
     }
 
@@ -2224,7 +2214,7 @@ isConformingBody (ast * pbody, symbol * sym, ast * body)
     case NE_OP:
     case '?':
     case ':':
-    case SIZEOF:               /* evaluate wihout code generation */
+    case SIZEOF:               /* evaluate without code generation */
 
       if (IS_AST_SYM_VALUE (pbody->left) && isSymbolEqual (AST_SYMBOL (pbody->left), sym))
         return FALSE;
@@ -8565,17 +8555,17 @@ astErrors (ast * t)
  */
 
 static ast *
-offsetofOp_rec (sym_link * type, ast * snd, sym_link ** result_type)
+offsetofOp_rec (sym_link *type, ast *snd, sym_link **result_type)
 {
   /* make sure the type is complete and sane */
   checkTypeSanity (type, "(offsetofOp)");
 
   /* offsetof can only be applied to structs/unions */
-  if (!IS_STRUCT (type))
+  if (!IS_STRUCT (type) || !getSize (type))
     {
       werrorfl (snd->filename, snd->lineno, E_OFFSETOF_TYPE);
-      *result_type = NULL;
-      return NULL;
+      *result_type = 0;
+      return newAst_VALUE (valueFromLit (0));
     }
 
   /* offsetof(struct_type, symbol); */
@@ -8609,8 +8599,10 @@ offsetofOp_rec (sym_link * type, ast * snd, sym_link ** result_type)
 }
 
 ast *
-offsetofOp (sym_link * type, ast * snd)
+offsetofOp (sym_link *type, ast *snd)
 {
   sym_link *result_type;
+
   return offsetofOp_rec (type, snd, &result_type);
 }
+
