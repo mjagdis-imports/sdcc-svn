@@ -392,6 +392,7 @@ void emitJP(const symbol *target, float probability)
   cost (3 + (options.model == MODEL_LARGE), (1 + (options.model == MODEL_LARGE)) * probability);
 }
 
+// Get aop at offset as 8-bit operand.
 static const char *
 aopGet(const asmop *aop, int offset)
 {
@@ -401,14 +402,14 @@ aopGet(const asmop *aop, int offset)
   if (regalloc_dry_run)
     return ("");
 
-  if (offset >= aop->size)
-    return ("#0x00");
-
   if (aop->type == AOP_LIT)
     {
       SNPRINTF (buffer, sizeof(buffer), "#0x%02x", byteOfVal (aop->aopu.aop_lit, offset));
       return (buffer);
     }
+
+  if (offset >= aop->size)
+    return ("#0x00");
 
   if (aopRS (aop) && aop->aopu.bytes[offset].in_reg)
     return (aop->aopu.bytes[offset].byteu.reg->name);
@@ -451,6 +452,7 @@ aopGet(const asmop *aop, int offset)
   return ("dummy");
 }
 
+// Get aop at offset as 16-bit operand.
 static const char *
 aopGet2(const asmop *aop, int offset)
 {
@@ -3363,7 +3365,10 @@ genCall (const iCode *ic)
             {
               adjustStack (prestackadjust, true, true, true);
 
-              emit2 (jump ? "jp" : "call", "%s", aopGet2 (left->aop, 0));
+              if (left->aop->type == AOP_LIT)
+                emit2 (jump ? "jp" : "call", "0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0));
+              else
+                emit2 (jump ? "jp" : "call", "%s", left->aop->aopu.immd);
               cost (3, jump ? 1 : 4);
             }
           else if (aopInReg (left->aop, 0, Y_IDX)) // Faster than going through x.
@@ -5279,6 +5284,16 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit3_o (A_CP, ASMOP_A, 0, right->aop, i);
 
           i++;
+        }
+      else if (aopInReg (left->aop, i, X_IDX) && right->aop->type == AOP_STL || left->aop->type == AOP_STL && aopInReg (right->aop, i, X_IDX))
+        {
+          push (ASMOP_X, 0, 2);
+          genMove_o (ASMOP_X, 0, right->aop->type == AOP_STL ? right->aop : left->aop, i, 2, regDead (A_IDX, ic) || pushed_a, true, regDead (Y_IDX, ic));
+          emit2 ("cpw", "x, (1, sp)");
+          cost (2, 2);
+          pop (ASMOP_X, 0, 2);
+          
+          i += 2;
         }
       else
         {

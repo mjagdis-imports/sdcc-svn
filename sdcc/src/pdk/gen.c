@@ -195,7 +195,7 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
       val >>= 8;
 
       // Leading zeroes
-      if (aop->size <= offset && !b)
+      if ((aop->size <= offset || aop->type == AOP_STL && offset) && !b)
         continue;
 
       if (aop->type == AOP_IMMD && offset > (aop->aopu.code ? 1 : 0) && !b)
@@ -2798,7 +2798,7 @@ genXorByte (const asmop *result_aop, const asmop *left_aop, const asmop *right_a
           emit2 ("xor", "%s, a", aopGet (right_aop, i));
           cost (1, 1);
         }
-      else if (right_aop->type == AOP_STK)
+      else if (right_aop->type == AOP_STK || right_aop->type == AOP_STL)
         {
           if (!p_dead || aopInReg (left_aop, i, P_IDX))
             {
@@ -3801,6 +3801,8 @@ genPointerGet (const iCode *ic)
 
   if (left->aop->type == AOP_IMMD && ptype == GPOINTER && IS_SYMOP (left) && OP_SYMBOL (left)->remat)
     ptype = left->aop->aopu.code ? CPOINTER : POINTER;
+  else if (left->aop->type == AOP_STL)
+    ptype = POINTER;
 
   wassertl (aopIsLitVal (right->aop, 0, 2, 0x0000), "Unimplemented nonzero right operand in pointer read");
 
@@ -3851,6 +3853,10 @@ genPointerGet (const iCode *ic)
       goto release;
     }
 #endif
+  else if (!bit_field && left->aop->type == AOP_STL && result->aop->type == AOP_STK) // Just a stack-to-stack copy
+    {
+      moveStackStack (result->aop->aopu.bytes[0].byteu.stk, left->aop->aopu.stk_off, size, regDead (A_IDX, ic));
+    }
   else if (ptype == POINTER) // Try to use efficient idxm when we know the source is in RAM.
     {
       const asmop *ptr_aop = (left->aop->type == AOP_DIR && TARGET_IS_PDK16) ? left->aop : ASMOP_P;
@@ -4061,7 +4067,11 @@ genPointerSet (iCode *ic)
             }
         }
     }
-  if (right->aop->type == AOP_STK && !bit_field && left->aop->type != AOP_IMMD)
+  if (right->aop->type == AOP_STK && !bit_field && left->aop->type == AOP_STL)
+    {
+      moveStackStack (left->aop->aopu.stk_off, right->aop->aopu.bytes[0].byteu.stk, size, regDead (A_IDX, ic));
+    }
+  else if (right->aop->type == AOP_STK && !bit_field && left->aop->type != AOP_IMMD)
     {
       if (!regDead (A_IDX, ic))
         {
@@ -4087,6 +4097,10 @@ genPointerSet (iCode *ic)
                   emit2 ("add", "a, #%d", i);
                   emit2 ("xch", "a, p");
                   cost (3, 3);
+                  if (G.p.type == AOP_STL)
+                    G.p.offset += i;
+                  else
+                    G.p.type = AOP_INVALID;
                 }
               else
                 for (int j = 0; j < i; j++)
@@ -4247,7 +4261,8 @@ genPointerSet (iCode *ic)
                 }
               else if (bit_field && blen == 1)
                 {
-                  cheapMove (ASMOP_A, 0, right->aop, i, true, !ptr_aop || !aopInReg (ptr_aop, 0, P_IDX), true);
+                  if (!swapped)
+                    cheapMove (ASMOP_A, 0, right->aop, i, true, !ptr_aop || !aopInReg (ptr_aop, 0, P_IDX), true);
                   emit2 ("sr", "a");
                   cost (1, 1);
                   if (!ptr_aop)
@@ -4267,7 +4282,7 @@ genPointerSet (iCode *ic)
                 }
               else
                 {
-                  if (aopInReg (right->aop, i, A_IDX))
+                  if (aopInReg (right->aop, i, A_IDX) || aopInReg (right->aop, i, P_IDX) && swapped)
                     {
                       cost (100, 100);
                       wassert (regalloc_dry_run);
@@ -4295,7 +4310,11 @@ genPointerSet (iCode *ic)
                   if (ptr_aop && aopInReg (ptr_aop, 0, P_IDX))
                     pushAF ();
                   if (!aopInReg (right->aop, i, P_IDX)) // xch above would already have brought it into a.
-                    cheapMove (ASMOP_A, 0, right->aop, i, true, false, true);
+                    {
+                      if (right->aop->type == AOP_STK)
+                        G.p.type = AOP_INVALID;
+                      cheapMove (ASMOP_A, 0, right->aop, i, true, false, true);
+                    }
                   if (bstr >= 4)
                     {
                       emit2 ("swap", "a");
