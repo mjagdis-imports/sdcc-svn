@@ -1240,8 +1240,11 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       return NULL;
     }
 
+  const bool rle_better = (lcnt ? lcnt : getNelements (type, ilist)) + getSize (type->next) >
+    (optimize.codeSpeed ? 10 : (optimize.codeSize ? 5 : 6)); 
+
   // If available, use RLE-compressed initalization for big arrays.
-  if (port->arrayInitializerSuppported && (lcnt ? lcnt : getNelements (type, ilist)) + getSize (type->next) > 6 && convertIListToConstList (reorderIlist(type,ilist), &literalL, lcnt))
+  if (port->arrayInitializerSuppported && rle_better && convertIListToConstList (reorderIlist(type,ilist), &literalL, lcnt))
     {
       ast *aSym;
 

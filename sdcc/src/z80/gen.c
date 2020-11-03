@@ -12719,7 +12719,7 @@ genArrayInit (iCode * ic)
     }
 
   fetchPair (PAIR_DE, AOP (IC_LEFT (ic)));
-  emit2 ("call __initrleblock");
+  emit2 ("call ___initrleblock");
 
   type = operandType (IC_LEFT (ic));
 

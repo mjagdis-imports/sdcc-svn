@@ -4,6 +4,10 @@
 	  Make choice of RLE-compressed initalization depend on array and element size.
 	* support/regression/tests/bug-3120.c:
 	  Add reliable reproducer for bug #3120.
+	* src/z80/gen.c,
+	  device/lib/gbz80/__initrleblock.s,
+	  src/z80/peep.c:
+	  Move __initrleblock into implementation-reserved namespace.
 
 2020-11-02 Philipp Klaus Krause <pkk AT spth.de>
 

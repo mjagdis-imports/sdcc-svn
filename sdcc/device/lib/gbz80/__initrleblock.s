@@ -31,7 +31,7 @@
 
 	;; Special RLE decoder used for initing global data
 	;; input: DE - destination address
-__initrleblock::
+___initrleblock::
 	;; Pop the return address
 	pop	hl
 1$:
@@ -65,3 +65,4 @@ __initrleblock::
 4$:
 	;; Return back
 	jp	(hl)
+
