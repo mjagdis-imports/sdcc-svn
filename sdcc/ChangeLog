@@ -1,3 +1,10 @@
+2020-11-03 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* device/lib/z80/Makefile.in,
+	  device/lib/z80/__initrleblock.s,
+	  src/z80/main.c:
+	  Enable array initalizer support for z80 in arrayinit branch.
+
 2020-11-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCast.c:
