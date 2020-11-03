@@ -1,3 +1,10 @@
+2020-11-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCast.c:
+	  Make choice of RLE-compressed initalization depend on array and element size.
+	* support/regression/tests/bug-3120.c:
+	  Add reliable reproducer for bug #3120.
+
 2020-11-02 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/main.c:

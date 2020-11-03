@@ -1240,7 +1240,8 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       return NULL;
     }
 
-  if (port->arrayInitializerSuppported && convertIListToConstList (reorderIlist(type,ilist), &literalL, lcnt))
+  // If available, use RLE-compressed initalization for big arrays.
+  if (port->arrayInitializerSuppported && (lcnt ? lcnt : getNelements (type, ilist)) + getSize (type->next) > 6 && convertIListToConstList (reorderIlist(type,ilist), &literalL, lcnt))
     {
       ast *aSym;
 
