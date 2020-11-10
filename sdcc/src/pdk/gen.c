@@ -1671,7 +1671,8 @@ genCall (const iCode *ic)
       pushAF ();
     }
   // Check if we can do tail call optimization.
-  else if ((!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) && aopInReg (IC_RESULT (ic)->aop, 1, P_IDX)) &&
+  else if (!(currFunc && IFFUNC_ISISR (currFunc->type)) &&
+    (!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) && aopInReg (IC_RESULT (ic)->aop, 1, P_IDX)) &&
     !ic->parmBytes && !ic->localEscapeAlive)
     {
       int limit = 16; // Avoid endless loops in the code putting us into an endless loop here.
@@ -3862,7 +3863,7 @@ genPointerGet (const iCode *ic)
           if (bit_field && blen < 8)
             getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
 
-          if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 <= 0))
+          if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 > 0))
             {
               pushAF();
               pushed_a = true;
@@ -3945,12 +3946,12 @@ genPointerGet (const iCode *ic)
           if (bit_field && blen < 8)
             getBitFieldByte (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))));
 
-          if (aopInReg (result->aop, i, P_IDX) && (!bit_field ? i + 1 < size : blen - 8 <= 0))
+          if (aopInReg (result->aop, i, P_IDX) && (!bit_field ? i + 1 < size : blen - 8 > 0))
             {
               wassert (regalloc_dry_run);
               cost (200, 200);
             }
-          else if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 <= 0))
+          else if (aopInReg (result->aop, i, A_IDX) && (!bit_field ? i + 1 < size : blen - 8 > 0))
             {
               pushAF();
               pushed_a = true;
