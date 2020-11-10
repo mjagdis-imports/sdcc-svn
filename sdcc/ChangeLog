@@ -1,3 +1,102 @@
+2019-03-06 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/scripts/sdcc.nsi: sdcclib.exe is not built
+	  anymore, so don't try to include it in the installer
+
+2019-03-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+        * src/mcs51/gen.c: fix bug #2729
+        * support/regression/tests/bool.c: reenable test
+
+2019-03-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Fix bug #2876.
+
+2019-03-01 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c: fix bug #2873
+	* support/regression/tests/literalop.c: add casts to fix
+	  integer promotion of hexadeciaml constants in ?: operator.
+
+2019-02-25 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCsymt.c: fix bug #2861
+
+2019-02-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Generalize loop narrowing (part of RFE #530).
+
+2019-02-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix bug #2875.
+
+2019-02-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc.c,
+	  support/regression/tests/bug-2031.c:
+	  Allow rematerialization of pointer-to-integer cast, fixes a gbz80 initialization bug.
+
+2019-02-12 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCicode.c: fix bug #2829
+
+2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sim/ucsim/z80.src/inst_ed.c:
+	  Implement Z80/Z180/eZ80 rld, rrd.
+	* src/z80/gen.c,
+	  support/regression/tests/bitfields.c:
+	  Improve bit-field write.
+
+2019-02-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sdas/asrab/rabadr.c,
+	  src/z80/gen.c:
+	  Fix bug #2869.
+
+2019-02-09 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCdwarf2.c: fix bug #2762
+
+2019-02-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version,
+	  Makefile.in,
+	  configure,
+	  configure.ac,
+	  doc/sdccman.lyx:
+	  Remove sdcclib.
+	* sim/ucsim/sim.src/var.cc,
+	  sim/ucsim/sim.src/varcl.h,
+	  sim/ucsim/stm8.src/glob.cc,
+	  sim/ucsim/stm8.src/stm8.cc:
+	  stm8 simulator fixes, patches by Mike Jagdis.
+
+2019-02-04 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c: fix bug #2863
+
+2019-02-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/Makefile.in:
+	  Fix dependencies.
+
+2019-02-01 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/scripts/sdcc.nsi: add support for ez80_z80
+
+2019-01-31 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* sim/ucsim/z80.src/ez80.cc: add needed header for int8_t
+
+2019-01-30 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx:
+	  Clarify documentation on library path options.
+
 2019-01-28 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCC.y:
