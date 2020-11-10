@@ -44,8 +44,14 @@ extern "C"
 #include "port.h"
 }
 
+<<<<<<< .working
 typedef boost::container::flat_set<unsigned int> lospreset_t;
 //typedef std::set<unsigned int> lospreset_t;
+||||||| .merge-left.r10574
+typedef std::set<unsigned short int> lospreset_t;
+=======
+typedef std::set<unsigned int> lospreset_t;
+>>>>>>> .merge-right.r10900
 
 struct assignment_lospre
 {
@@ -93,9 +99,16 @@ typedef std::vector<assignment_lospre> assignment_list_lospre_t;
 
 struct tree_dec_lospre_node
 {
+<<<<<<< .working
   lospreset_t bag;
   unsigned int diff_node; // For a forget / introduce node, the graph node forgotten / introduced.
 
+||||||| .merge-left.r10574
+  std::set<unsigned int> bag;
+=======
+  lospreset_t bag;
+
+>>>>>>> .merge-right.r10900
   assignment_list_lospre_t assignments;
   unsigned weight; // The weight is the number of nodes at which intermediate results need to be remembered. In general, to minimize memory consumption, at join nodes the child with maximum weight should be processed first.
 };
@@ -155,14 +168,38 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
       return(-1);
     }
 
+<<<<<<< .working
   unsigned int n = T[t].diff_node;
+||||||| .merge-left.r10574
+  std::set<unsigned short> new_inst;
+  std::set_difference(T[t].bag.begin(), T[t].bag.end(), T[*c].bag.begin(), T[*c].bag.end(), std::inserter(new_inst, new_inst.end()));
+  unsigned short int i = *(new_inst.begin());
+=======
+  lospreset_t new_inst;
+  std::set_difference(T[t].bag.begin(), T[t].bag.end(), T[*c].bag.begin(), T[*c].bag.end(), std::inserter(new_inst, new_inst.end()));
+  unsigned int i = *(new_inst.begin());
+>>>>>>> .merge-right.r10900
 
   alist.reserve(alist.size() * 2);
   for(unsigned int i = 0, end = alist.size(); i < end; i++)
     {
+<<<<<<< .working
       alist[i].global[n] = false;
       alist.push_back(alist[i]);
       alist[i].global[n] = true;
+||||||| .merge-left.r10574
+      ai->local.insert(i);
+      ai->global[i] = false;
+      alist2.push_back(*ai);
+      ai->global[i] = true;
+      alist2.push_back(*ai);
+=======
+      ai->local.insert(i);
+      ai->global[i] = false;
+      ai = alist.insert(ai, *ai);
+      ++ai;
+      ai->global[i] = true;
+>>>>>>> .merge-right.r10900
     }
 
   return(0);
@@ -184,7 +221,17 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
   std::swap(alist, T[*c].assignments);
 
+<<<<<<< .working
   unsigned int i = T[t].diff_node;
+||||||| .merge-left.r10574
+  std::set<unsigned short int> old_inst;
+  std::set_difference(T[*c].bag.begin(), T[*c].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(old_inst, old_inst.end()));
+  unsigned short int i = *(old_inst.begin());
+=======
+  lospreset_t old_inst;
+  std::set_difference(T[*c].bag.begin(), T[*c].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(old_inst, old_inst.end()));
+  unsigned int i = *(old_inst.begin());
+>>>>>>> .merge-right.r10900
 
   assignment_list_lospre_t::iterator ai, aif;
 
@@ -246,7 +293,17 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
               i++;
             }
           else
+<<<<<<< .working
             alist.erase(alist.begin() + i);
+||||||| .merge-left.r10574
+            {
+              alist.erase(ai);
+              ai = aif;
+              ++ai;
+            }
+=======
+            ai = alist.erase(ai);
+>>>>>>> .merge-right.r10900
         }
     }
 
@@ -282,6 +339,7 @@ void tree_dec_lospre_join(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
   assignment_list_lospre_t &alist2 = T[*c2].assignments;
   std::swap(alist, T[*c3].assignments);
 
+<<<<<<< .working
   {
     const lospreset_t& local = T[t].bag;
     auto less = [local] (const assignment_lospre& a1, const assignment_lospre& a2) -> bool
@@ -291,25 +349,69 @@ void tree_dec_lospre_join(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
     std::sort(alist.begin(), alist.end(), less);
     std::sort(alist2.begin(), alist2.end(), less);
   }
+||||||| .merge-left.r10574
+  alist2.sort();
+  alist3.sort();
+=======
+  alist.sort();
+  alist2.sort();
+>>>>>>> .merge-right.r10900
 
   assignment_list_lospre_t::iterator ai, ai2;
   for (ai = alist.begin(), ai2 = alist2.begin(); ai != alist.end() && ai2 != alist2.end();)
     {
+<<<<<<< .working
       if (assignments_lospre_locally_same(*ai, *ai2, T[t].bag))
+||||||| .merge-left.r10574
+      if (assignments_lospre_locally_same(*ai2, *ai3))
+=======
+      if (assignments_lospre_locally_same(*ai, *ai2))
+>>>>>>> .merge-right.r10900
         {
+<<<<<<< .working
           ai->s.get<0>() += ai2->s.get<0>();
           ai->s.get<1>() += ai2->s.get<1>();
           //for (size_t i = 0; i < ai->global.size(); i++)
             //ai->global[i] = (ai->global[i] || ai2->global[i]);
           ai->global |= ai2->global;
+||||||| .merge-left.r10574
+          ai2->s.get<0>() += ai3->s.get<0>();
+          ai2->s.get<1>() += ai3->s.get<1>();
+          for (size_t i = 0; i < ai2->global.size(); i++)
+            ai2->global[i] = (ai2->global[i] || ai3->global[i]);
+          alist1.push_back(*ai2);
+=======
+          ai->s.get<0>() += ai2->s.get<0>();
+          ai->s.get<1>() += ai2->s.get<1>();
+          for (size_t i = 0; i < ai->global.size(); i++)
+            ai->global[i] = (ai->global[i] || ai2->global[i]);
+>>>>>>> .merge-right.r10900
 
           ++ai;
           ++ai2;
         }
+<<<<<<< .working
       else if (ai->less(*ai2, T[t].bag))
         ai = alist.erase(ai);
       else
         ++ai2;
+||||||| .merge-left.r10574
+      else if (*ai2 < *ai3)
+        {
+          ++ai2;
+          continue;
+        }
+      else if (*ai3 < *ai2)
+        {
+          ++ai3;
+          continue;
+        }
+=======
+      else if (*ai < *ai2)
+        ai = alist.erase(ai);
+      else if (*ai2 < *ai)
+        ++ai2;
+>>>>>>> .merge-right.r10900
     }
   while(ai != alist.end())
     ai = alist.erase(ai);
@@ -375,9 +477,9 @@ void tree_dec_safety_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
   std::swap(alist, T[*c].assignments);
 
-  std::set<unsigned short int> old_inst;
+  lospreset_t old_inst;
   std::set_difference(T[*c].bag.begin(), T[*c].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(old_inst, old_inst.end()));
-  unsigned short int i = *(old_inst.begin());
+  unsigned int i = *(old_inst.begin());
 
   assignment_list_lospre_t::iterator ai, aif;
 
@@ -598,7 +700,7 @@ static void forward_lospre_assignment(G_t &G, typename boost::graph_traits<G_t>:
 
       iCode *nic = G[i].ic;
 
-      if (isOperandEqual(IC_RESULT(ic), IC_LEFT(nic)) && nic->op != ADDRESS_OF && nic->op != PCALL && (!POINTER_GET(nic) || !IS_PTR(operandType(IC_LEFT(nic))) || !IS_BITFIELD(operandType(IC_LEFT(nic))->next) || compareType(operandType(IC_LEFT(nic)), operandType(tmpop)) == 1))
+      if (isOperandEqual(IC_RESULT(ic), IC_LEFT(nic)) && IS_UNSIGNED (operandType (tmpop)) == IS_UNSIGNED (operandType (IC_LEFT(nic))) && nic->op != ADDRESS_OF && nic->op != PCALL && (!POINTER_GET(nic) || !IS_PTR(operandType(IC_LEFT(nic))) || !IS_BITFIELD(operandType(IC_LEFT(nic))->next) || compareType(operandType(IC_LEFT(nic)), operandType(tmpop)) == 1))
         {
           bool isaddr = IC_LEFT (nic)->isaddr;
 #ifdef DEBUG_LOSPRE

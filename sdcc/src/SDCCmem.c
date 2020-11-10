@@ -382,7 +382,12 @@ allocIntoSeg (symbol *sym)
 
       return;
     }
-  segment = SPEC_OCLS (sym->etype);
+  if (!(segment = SPEC_OCLS (sym->etype)))
+    {
+      fprintf (stderr, "Symbol %s:\n", sym->name);
+      wassertl (0, "Failed to allocate symbol to memory segment due to missing output storage class");
+      return;
+    }
   addSet (&segment->syms, sym);
   if (segment == pdata)
     sym->iaccess = 1;
@@ -980,7 +985,8 @@ allocVariables (symbol * symChain)
         {
           /* check if the typedef already exists    */
           csym = findSym (TypedefTab, NULL, sym->name);
-          if (csym && csym->level == sym->level)
+          if (csym && csym->level == sym->level &&
+            !(options.std_c11 && compareTypeExact (sym->type, csym->type, -1))) /* typedef to same type not allowed before ISO C11 */
             werror (E_DUPLICATE_TYPEDEF, sym->name);
 
           SPEC_EXTR (sym->etype) = 0;
@@ -1031,6 +1037,31 @@ allocVariables (symbol * symChain)
     }
 
   return stack;
+}
+
+void
+clearStackOffsets (void)
+{
+  const symbol *sym;
+
+  for (sym = setFirstItem (istack->syms); sym;
+       sym = setNextItem (istack->syms))
+    {
+      const int size = getSize (sym->type);
+      
+      /* nothing to do with parameters so continue */
+      if ((sym->_isparm && !IS_REGPARM (sym->etype)))
+        continue;
+
+      currFunc->stack -= size;
+      SPEC_STAK (currFunc->etype) -= size;
+    }
+
+  if (currFunc)
+    {
+      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->sams.
+      currFunc->stack = 0;
+    }
 }
 
 #define BTREE_STACK 1

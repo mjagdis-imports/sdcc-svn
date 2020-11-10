@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id$ */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -145,7 +143,20 @@ cl_serial_hw::init(void)
   uc->vars->add(v= new cl_var(pn+chars("esc_char"), cfg, serconf_escape,
 			      "Escape character on serial IO screen"));
   v->init();
+
+  uc->vars->add(v= new cl_var(pn+chars("received_char"), cfg, serconf_received,
+			      "Received character"));
+  v->init();
 		
+  uc->vars->add(v= new cl_var(pn+chars("flowctrl"), cfg, serconf_flowctrl,
+			      "Simulate flow control"));
+  v->init();
+
+  uc->vars->add(v= new cl_var(pn+chars("able_receive"), cfg, serconf_able_receive,
+			      "Receiver is able to receive (when flow ctrl)"));
+  v->init();
+
+  cfg_set(serconf_able_receive, 1);
   return 0;
 }
 
@@ -216,6 +227,8 @@ cl_serial_hw::proc_input(void)
   char esc= (char)cfg_get(serconf_escape);
   bool run= uc->sim->state & SIM_GO;
   class cl_f *fin, *fout;
+  int flw= cfg_get(serconf_flowctrl);
+  int able= cfg_get(serconf_able_receive);
 
   fin= io->get_fin();
   fout= io->get_fout();
@@ -235,7 +248,7 @@ cl_serial_hw::proc_input(void)
     }
   if (menu == 0)
     {
-      if (fin->tty)
+      if (fin->tty && !flw)
 	{
 	  if (fin->read(&c, 1))
 	    {
@@ -265,10 +278,16 @@ cl_serial_hw::proc_input(void)
 	}
       else if (!input_avail)
 	{
-	  if (fin->read(&c, 1))
+	  if (!flw ||
+	      able)
 	    {
-	      input= c;
-	      input_avail= true;
+	      if (fin->read(&c, 1))
+		{
+		  //printf("ser: %d,%c\n",c,isprint(c)?c:' ');
+		  input= c;
+		  input_avail= true;
+		  cfg_set(serconf_able_receive, 0);
+		}
 	    }
 	}
     }
@@ -317,7 +336,7 @@ cl_serial_hw::proc_input(void)
 		case 'T':
 		  uc->reset();
 		  menu= 0;
-		  io->dd_printf("CPU reseted.\n");
+		  io->dd_printf("CPU reset.\n");
 		  break;
 		case 'q': case 'Q': case 'q'-'a'+1:
 		  // kill
@@ -359,6 +378,11 @@ cl_serial_hw::proc_input(void)
   return true;
 }
 
+void
+cl_serial_hw::reset(void)
+{
+  cfg_set(serconf_able_receive, 1);
+}
 
 cl_serial_listener::cl_serial_listener(int serverport, class cl_app *the_app,
 				       class cl_serial_hw *the_serial):

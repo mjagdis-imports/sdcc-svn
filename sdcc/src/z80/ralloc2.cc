@@ -22,6 +22,7 @@
 // #define DEBUG_RALLOC_DEC_ASS // Uncomment to get debug messages about assignments while doing register allocation on the tree decomposition (much more verbose than the one above).
 
 #include "SDCCralloc.hpp"
+#include "SDCCsalloc.hpp"
 
 extern "C"
 {
@@ -181,7 +182,7 @@ assign_cost(const assignment &a, unsigned short int i, const G_t &G, const I_t &
   if(!right || !IS_SYMOP(right) || !result || !IS_SYMOP(result) || POINTER_GET(ic) || POINTER_SET(ic))
     return(default_instruction_cost(a, i, G, I));
 
-  reg_t byteregs[4] = {-1, -1, -1, -1}; // Todo: Change this when sdcc supports variables larger than 4 bytes.
+  reg_t byteregs[4] = {-1, -1, -1, -1}; // Todo: Change this when sdcc supports variables larger than 4 bytes in register allocation for z80.
 
   operand_map_t::const_iterator oi, oi_end;
 
@@ -597,7 +598,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(true);
 
   // The Z180 has a non-destructive testing and.
-  if(IS_Z180 && ic->op == BITWISEAND && ifxForOp (IC_RESULT(ic), ic) &&
+  if((IS_Z180 || IS_EZ80_Z80)&& ic->op == BITWISEAND && ifxForOp (IC_RESULT(ic), ic) &&
     (getSize(operandType(left)) == 1 && operand_in_reg(left, REG_A, ia, i, G) && (IS_OP_LITERAL(right) /*|| operand_in_reg(right, ia, i, G) && !operand_in_reg(right, REG_IYL, ia, i, G) && !operand_in_reg(right, REG_IYH, ia, i, G)*/) ||
     getSize(operandType(right)) == 1 && operand_in_reg(right, REG_A, ia, i, G) && (IS_OP_LITERAL(left) /*|| operand_in_reg(left, ia, i, G) && !operand_in_reg(left, REG_IYL, ia, i, G) && !operand_in_reg(left, REG_IYH, ia, i, G)*/)))
     return(true);
@@ -817,6 +818,11 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if((IS_GB || IY_RESERVED) && IS_TRUE_SYMOP(result) && getSize(operandType(IC_RESULT(ic))) > 2)
     return(false);
 
+  // __z88dk_fastcall passes paramter in hl
+  if(ic->op == PCALL && ic->prev && ic->prev->op == SEND && input_in_HL && IFFUNC_ISZ88DK_FASTCALL(operandType(IC_LEFT(ic))->next))
+    return(false);
+
+  // HL overwritten by result.
   if(result_only_HL && ic->op == PCALL)
     return(true);
 
@@ -941,10 +947,6 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     return(true);
 
   if(ic->op == CALL)
-    return(true);
-
-  // HL overwritten by result.
-  if(result_only_HL && ic->op == PCALL)
     return(true);
 
   if(POINTER_GET(ic) && getSize(operandType(IC_RESULT(ic))) == 1 && !IS_BITVAR(getSpec(operandType(result))) &&
@@ -1534,8 +1536,8 @@ static void extra_ic_generated(iCode *ic)
     }
 }
 
-template <class T_t, class G_t, class I_t>
-static bool tree_dec_ralloc(T_t &T, const G_t &G, const I_t &I)
+template <class T_t, class G_t, class I_t, class SI_t>
+static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
 {
   bool assignment_optimal;
 
@@ -1601,13 +1603,18 @@ static bool tree_dec_ralloc(T_t &T, const G_t &G, const I_t &I)
             sym->regs[i] = 0;
           sym->accuse = 0;
           sym->nRegs = I[v].size;
-          //spillThis(sym); Leave it to regFix, which can do some spillocation compaction. Todo: Use Thorup instead.
-          sym->isspilt = false;
+          if (USE_OLDSALLOC)
+            sym->isspilt = false; // Leave it to Z80RegFix, which can do some spillocation compaction.
+          else
+            z80SpillThis(sym);
         }
     }
 
   for(unsigned int i = 0; i < boost::num_vertices(G); i++)
     set_surviving_regs(winner, i, G, I);
+
+  if (!USE_OLDSALLOC)
+    set_spilt(G, I, SI);
 
   return(!assignment_optimal);
 }
@@ -1664,7 +1671,8 @@ void move_parms(void)
 
 iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 {
-  iCode *ic;
+  eBBlock **const ebbs = ebbi->bbOrder;
+  const int count = ebbi->count;
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Processing " << currFunc->name << " from " << dstFileName << "\n"; std::cout.flush();
@@ -1674,7 +1682,7 @@ iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 
   con_t conflict_graph;
 
-  ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
+  iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
   should_omit_frame_ptr = omit_frame_ptr(control_flow_graph);
   move_parms();
@@ -1700,7 +1708,19 @@ iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 
   guessCounts (ic, ebbi);
 
-  z80_assignment_optimal = !tree_dec_ralloc(tree_decomposition, control_flow_graph, conflict_graph);
+  scon_t stack_conflict_graph;
+
+  z80_assignment_optimal = !tree_dec_ralloc(tree_decomposition, control_flow_graph, conflict_graph, stack_conflict_graph);
+
+  Z80RegFix (ebbs, count);
+
+  if (USE_OLDSALLOC)
+    redoStackOffsets ();
+  else
+    chaitin_salloc(stack_conflict_graph); // new Chaitin-style stack allocator
+
+  if(options.dump_graphs && !USE_OLDSALLOC)
+    dump_scon(stack_conflict_graph);
 
   return(ic);
 }

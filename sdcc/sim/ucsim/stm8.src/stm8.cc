@@ -28,8 +28,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: stm8.cc 776 2017-07-09 11:45:22Z drdani $ */
-
 #include "ddconfig.h"
 
 #include <stdarg.h> /* for va_list */
@@ -1205,7 +1203,8 @@ cl_stm8::exec_inst(void)
                pop1(tempi);
                store1(opaddr, tempi);
                return(resGO);
-            case 0x40: //mul
+            case 0x40: // mul
+               tick(3);
                if(cprefix==0x90) {
                   regs.Y = (regs.Y&0xff) * regs.A;
                } else if(cprefix==0x00) {

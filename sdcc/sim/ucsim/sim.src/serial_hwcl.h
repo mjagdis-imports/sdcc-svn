@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id$ */
-
 #ifndef SERIAL_HWCL_HEADER
 #define SERIAL_HWCL_HEADER
 
@@ -40,7 +38,10 @@ enum serial_cfg {
   serconf_check_often	= 1,
   serconf_escape	= 2,
   serconf_common	= 3,
-  serconf_nr		= 3
+  serconf_received	= 4,
+  serconf_flowctrl	= 5,
+  serconf_able_receive	= 6,
+  serconf_nr		= 7
 };
 
 
@@ -77,6 +78,8 @@ class cl_serial_hw: public cl_hw
   virtual bool proc_input(void);
   virtual void refresh_display(bool force) {}
   virtual void draw_display(void) {}
+
+  virtual void reset(void);
 };
 
 

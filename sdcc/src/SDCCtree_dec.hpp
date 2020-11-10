@@ -224,7 +224,7 @@ typename boost::graph_traits<T_t>::vertex_iterator find_bag(const X_t &X, const 
 
 // Add edges to make the vertices in X a clique in G.
 template <class X_t, class G_t>
-void make_clique(const X_t &X, G_t &G)
+void make_clique(const X_t &X , G_t &G)
 {
   typename X_t::const_iterator n1, n2;
   for (n1 = X.begin(); n1 != X.end(); n1++)
@@ -397,10 +397,8 @@ void nicify_diffs(T_t &T, typename boost::graph_traits<T_t>::vertex_descriptor t
       boost::remove_edge(t, c0, T);
       adjacency_iter_t c, c_end;
       for(boost::tie(c, c_end) = adjacent_vertices(c0, T); c != c_end; ++c)
-        {
-          boost::add_edge(t, *c, T);
-          boost::remove_edge(c0, *c, T);
-        }
+        boost::add_edge(t, *c, T);
+      boost::clear_vertex(c0, T);
     }
 
   if (std::includes(T[t].bag.begin(), T[t].bag.end(), T[c0].bag.begin(), T[c0].bag.end()) || std::includes(T[c0].bag.begin(), T[c0].bag.end(), T[t].bag.begin(), T[t].bag.end()))
@@ -668,7 +666,7 @@ void get_nice_tree_decomposition(T_t &tree_dec, const G_t &cfg)
 #endif
 #endif
 
-  tree_dec_int_t tree_dec2;
+  tree_dec_int_t tree_dec2; // TODO: Check speed of using tree_dec_int and copy_dec vs. using T_t and std::swap!
   a2.do_it();
   a2.get_tree_decomposition(tree_dec2);
   wassert(treedec::is_valid_treedecomposition(cfg, tree_dec2));

@@ -198,6 +198,8 @@ struct cfg_node
   cfg_alive_t alive;
   cfg_dying_t dying;
 
+  std::set<var_t> stack_alive;
+
 #ifdef DEBUG_SEGV
   cfg_node(void);
 #endif
@@ -352,7 +354,7 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
   std::map<std::pair<int, reg_t>, var_t> sym_to_index;
 
   if(currFunc)
-    currFunc->div_flag_safe = 1;
+    currFunc->funcDivFlagSafe = 1;
 
   start_ic = iCodeLabelOptimize(iCodeFromeBBlock (ebbs, ebbi->count));
   {
@@ -362,8 +364,8 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
     for (ic = start_ic, i = 0, j = 0; ic; ic = ic->next, i++)
       {
         if (currFunc)
-          currFunc->div_flag_safe &= !(ic->op == INLINEASM || ic->op == '/' || ic->op == '%' || ic->op == PCALL ||
-            ic->op == CALL && (IS_OP_LITERAL (IC_LEFT (ic)) || !OP_SYMBOL(IC_LEFT (ic))->div_flag_safe) ||
+          currFunc->funcDivFlagSafe &= !(ic->op == INLINEASM || ic->op == '/' || ic->op == '%' || ic->op == PCALL ||
+            ic->op == CALL && (IS_OP_LITERAL (IC_LEFT (ic)) || !OP_SYMBOL(IC_LEFT (ic))->funcDivFlagSafe) ||
             ic->op == RIGHT_OP && IS_OP_LITERAL (IC_RIGHT (ic))); // Right shift might be implemented using division.
 
 #ifdef DEBUG_SEGV
@@ -1070,53 +1072,44 @@ static void tree_dec_ralloc_join(T_t &T, typename boost::graph_traits<T_t>::vert
   ++c;
   c3 = c;
 
-  assignment_list_t &alist1 = T[t].assignments;
+  assignment_list_t &alist = T[t].assignments;
   assignment_list_t &alist2 = T[*c2].assignments;
-  assignment_list_t &alist3 = T[*c3].assignments;
+  std::swap(alist, T[*c3].assignments);
 
+  alist.sort();
   alist2.sort();
-  //std::sort(alist2.begin(), alist2.end());
-  alist3.sort();
-  //std::sort(alist3.begin(), alist3.end());
 
-  assignment_list_t::iterator ai2, ai3;
-  for (ai2 = alist2.begin(), ai3 = alist3.begin(); ai2 != alist2.end() && ai3 != alist3.end();)
+  assignment_list_t::iterator ai, ai2;
+  for (ai = alist.begin(), ai2 = alist2.begin(); ai != alist.end() && ai2 != alist2.end();)
     {
-      if (assignments_locally_same(*ai2, *ai3))
+      if (assignments_locally_same(*ai, *ai2))
         {
-          ai2->s += ai3->s;
+          ai->s += ai2->s;
           // Avoid double-counting instruction costs.
           std::set<unsigned int>::iterator bi;
           for (bi = T[t].bag.begin(); bi != T[t].bag.end(); ++bi)
-            ai2->s -= ai2->i_costs[*bi];
-          for (size_t i = 0; i < ai2->global.size(); i++)
-            ai2->global[i] = ((ai2->global[i] != -1) ? ai2->global[i] : ai3->global[i]);
-          alist1.push_back(*ai2);
+            ai->s -= ai->i_costs[*bi];
+          for (size_t i = 0; i < ai->global.size(); i++)
+            ai->global[i] = ((ai->global[i] != -1) ? ai->global[i] : ai2->global[i]);
+          ++ai;
           ++ai2;
-          ++ai3;
         }
-      else if (*ai2 < *ai3)
-        {
-          ++ai2;
-          continue;
-        }
-      else if (*ai3 < *ai2)
-        {
-          ++ai3;
-          continue;
-        }
+      else if (*ai < *ai2)
+        ai = alist.erase(ai);
+      else if (*ai2 < *ai)
+        ++ai2;
     }
+  while(ai != alist.end())
+    ai = alist.erase(ai);
 
   alist2.clear();
-  alist3.clear();
 
 #ifdef DEBUG_RALLOC_DEC
-  std::cout << "Remaining assignments: " << alist1.size() << "\n"; std::cout.flush();
+  std::cout << "Remaining assignments: " << alist.size() << "\n"; std::cout.flush();
 #endif
 
 #ifdef DEBUG_RALLOC_DEC_ASS
-  std::list<assignment>::iterator ai;
-  for(ai = alist1.begin(); ai != alist1.end(); ++ai)
+  for(std::list<assignment>::iterator ai = alist.begin(); ai != alist.end(); ++ai)
     {
       print_assignment(*ai);
       std::cout << "\n";
