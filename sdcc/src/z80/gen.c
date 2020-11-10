@@ -4928,14 +4928,14 @@ genFunction (const iCode * ic)
     {
       if (!_G.omitFramePtr)
         emit2 ((optimize.codeSize && !IFFUNC_ISZ88DK_FASTCALL (ftype)) ? "!enters" : "!enter");
-      if (IS_EZ80_Z80 && !_G.omitFramePtr && -sym->stack > -128 && -sym->stack <= -3)
+      if (IS_EZ80_Z80 && !_G.omitFramePtr && -sym->stack > -128 && -sym->stack <= -3 && !IFFUNC_ISZ88DK_FASTCALL (ftype))
         {
           emit2 ("lea hl, ix, #%d", -sym->stack);
           emit2 ("ld sp, hl");
           regalloc_dry_run_cost += 4;
         }
       else
-        adjustStack (-sym->stack, !IS_TLCS90, TRUE, TRUE, !IY_RESERVED);
+        adjustStack (-sym->stack, !IS_TLCS90, TRUE, !IFFUNC_ISZ88DK_FASTCALL (ftype), !IY_RESERVED);
       _G.stack.pushed = 0;
     }
   else if (!_G.omitFramePtr)
@@ -5319,7 +5319,8 @@ genPlusIncr (const iCode * ic)
     (IC_LEFT (ic)->aop->type == AOP_HL || IC_LEFT (ic)->aop->type == AOP_IY))
     {
       fetchPair (PAIR_HL, AOP (IC_LEFT (ic)));
-      emit2 ("inc hl");
+      while (icount--)
+        emit2 ("inc hl");
       regalloc_dry_run_cost++;
       commitPair (AOP (IC_RESULT (ic)), PAIR_HL, ic, FALSE);
       return true;

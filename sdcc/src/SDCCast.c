@@ -927,7 +927,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
       /* don't perform integer promotion of explicitly typecasted variable arguments
        * if sdcc extensions are enabled */
-      if (options.std_sdcc &&
+      if (options.std_sdcc && !TARGET_PDK_LIKE &&
           (IS_CAST_OP (*actParm) ||
            (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
            (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
@@ -1170,7 +1170,7 @@ createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       if (!iloop && (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype)))
         break;
 
-      if (aggregateIsAutoVar)
+      if (aggregateIsAutoVar && (SPEC_STRUCT (type)->type != UNION))
         for (ps = old_sflds; ps != sflds && ps != NULL; ps = ps->next)
           {
             ps->implicit = 1;
@@ -1185,6 +1185,10 @@ createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE);
       rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE);
       iloop = iloop ? iloop->next : NULL;
+
+      /* Unions can only initialize a single field */
+      if (SPEC_STRUCT (type)->type == UNION)
+        break;
     }
 
   if (iloop)
@@ -2638,8 +2642,13 @@ getResultTypeFromType (sym_link * type)
     {
       unsigned blen = SPEC_BLEN (type);
 
+/*    BOOL and single bit BITFIELD are not interchangeable!
+ *    There must be a cast to do this safely, in which case
+ *    the previous IS_BOOLEAN test will handle it. 
+      
       if (blen <= 1)
         return RESULT_TYPE_BOOL;
+*/
       if (blen <= 8)
         return RESULT_TYPE_CHAR;
       return RESULT_TYPE_INT;
@@ -3169,7 +3178,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
   ast *parms = tree->right;
   ast *func = tree->left;
 
-  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
+  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE && !TARGET_PDK_LIKE) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
     return;
 
   if (!IS_FUNC (func->ftype) || IS_LITERAL (func->ftype) || func->type != EX_VALUE || !func->opval.val->sym)
@@ -5395,7 +5404,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                 assoc_type = assoc->left->opval.lnk;
                 checkTypeSanity (assoc_type, "_Generic");
 
-                if (compareType (type, assoc->left->opval.lnk) > 0)
+                if (compareType (type, assoc->left->opval.lnk) > 0 && !(SPEC_NOUN (type) == V_CHAR && type->select.s.b_implicit_sign != assoc->left->opval.lnk->select.s.b_implicit_sign))
                   {
                     if (found_expr)
                       {

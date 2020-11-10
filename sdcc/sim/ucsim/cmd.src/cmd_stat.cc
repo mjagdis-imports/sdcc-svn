@@ -74,8 +74,6 @@ COMMAND_DO_WORK_UC(cl_statistic_cmd)
   }
   else
     {
-      /*con->dd_printf("Error: wrong syntax\n"
-	"%s\n", short_help?short_help:"no help");*/
       int i;
       unsigned long wr, ww;
       for (i= 0; i < uc->address_spaces->count; i++)
@@ -107,12 +105,18 @@ COMMAND_DO_WORK_UC(cl_statistic_cmd)
 	    double dw= ww?((double(w)*100.0)/double(ww)):0.0;
 	    con->dd_printf("%s[0x%06x] writes= %10lu (%6.2lf%%) "
 			   "reads= %10lu (%6.2lf%%)\n",
-			   mem->get_name("mem"), i, w, dw, r, dr);
+			   mem->get_name("mem"), AU(i), w, dw, r, dr);
 	  }
     }
 
   return(false);;
 }
+
+CMDHELP(cl_statistic_cmd,
+	"statistic [mem [startaddr [endaddr]]]",
+	"Statistic of memory accesses",
+	"long help of statistic")
+
 #endif
 
 

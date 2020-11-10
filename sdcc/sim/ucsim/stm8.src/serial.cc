@@ -246,7 +246,8 @@ cl_serial::tick(int cycles)
       (s_tr_bit >= bits))
     {
       s_sending= false;
-      io->dd_printf("%c", s_out);
+      //io->dd_printf("%c", s_out);
+      io->write((char*)&s_out, 1);
       s_tr_bit-= bits;
       if (s_tx_written)
 	restart_send();
@@ -432,6 +433,7 @@ cl_serial::print_info(class cl_console_base *con)
   if (fout)
     con->dd_printf("%s/%d", fout->get_file_name(), fout->file_id);
   con->dd_printf("\n");
+  print_cfg_info(con);
 }
 
 

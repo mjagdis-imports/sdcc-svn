@@ -164,6 +164,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
 
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -181,6 +182,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
           newic = newiCode ('=', NULL, right);
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next);
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -202,6 +204,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
           bytesPushed += getSize(operandType(right));
         }
 
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -220,6 +223,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
           newic->parmPush = 1;
           bytesPushed += getSize(operandType(left));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -253,6 +257,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
 }
 
@@ -320,6 +325,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -340,6 +346,7 @@ found:
           newic->parmPush = 1;
           bytesPushed += getSize(operandType(IC_RIGHT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -370,6 +377,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = linenno;
@@ -427,6 +435,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -447,6 +456,7 @@ found:
           newic->parmPush = 1;
           bytesPushed += getSize(operandType(IC_RIGHT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -477,6 +487,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = linenno;
@@ -535,6 +546,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -555,6 +567,7 @@ found:
           newic->parmPush = 1;
           bytesPushed += getSize(operandType(IC_RIGHT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -585,6 +598,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = lineno;
@@ -650,6 +664,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -670,6 +685,7 @@ found:
           newic->parmPush = 1;
           bytesPushed += getSize(operandType(IC_RIGHT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -700,6 +716,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = lineno;
@@ -849,6 +866,7 @@ found:
           newic = newiCode ('=', NULL, IC_LEFT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -866,6 +884,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next);
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -888,6 +907,7 @@ found:
 
           bytesPushed += getSize(operandType(IC_RIGHT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -907,6 +927,7 @@ found:
 
           bytesPushed += getSize(operandType(IC_LEFT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -941,6 +962,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
 }
 
@@ -1411,6 +1433,7 @@ separateAddressSpaces (eBBlock **ebbs, int count)
             {
               newic->filename = ic->filename;
               newic->lineno = ic->lineno;
+              hTabAddItem (&iCodehTab, newic->key, newic);
               addiCodeToeBBlock (ebbs[i], newic, iic);
             } 
             
@@ -2059,7 +2082,7 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
   int i;
   int change = 0;
   iCode *ic, *newic;
-  iCode *uic;
+  iCode *uic, *skipuic;
   sym_link *nextresulttype;
   symbol *sym;
   int resultsize, nextresultsize;
@@ -2340,10 +2363,14 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
                 continue;
 
               /* Skip over assignment */
+              skipuic = NULL;
               if(uic->op == '=' && IS_ITEMP (IC_RESULT (uic)) &&
                 bitVectnBitsOn (OP_DEFS (IC_RESULT (uic))) == 1 && bitVectnBitsOn (OP_USES (IC_RESULT (ic))) == 1 && bitVectnBitsOn (OP_USES (IC_RESULT (uic))) == 1 &&
                 compareType (operandType (IC_RESULT (ic)), operandType (IC_RESULT (uic))) == 1)
-                uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (uic))));
+                {
+                  skipuic = uic;
+                  uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (uic))));
+                }
 
               /* Try to handle a few cases where the result has multiple uses */
               else if(ic->op == '*' && bitsForType (operandType (IC_RESULT (ic))) > 16 && uic->op == '=' &&
@@ -2481,7 +2508,15 @@ optimize:
                     }
                 }
               if (uic->op == CAST && ic->op != RIGHT_OP)
-                uic->op = '=';
+                {
+                  uic->op = '=';
+                  if (skipuic)
+                    {
+                      bitVectUnSetBit (OP_USES (IC_RIGHT (uic)), uic->key);
+                      IC_RIGHT (uic) = IC_RIGHT (skipuic);
+                      OP_USES (IC_RIGHT (uic)) = bitVectSetBit (OP_USES (IC_RIGHT (uic)), uic->key);
+                    }
+                }
               change++;
             }
         }
@@ -3144,6 +3179,8 @@ eBBlockFromiCode (iCode *ic)
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
   computeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
+  while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
+    optimizeCastCast (ebbi->bbOrder, ebbi->count);
   adjustIChain (ebbi->bbOrder, ebbi->count);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
   shortenLiveRanges (ic, ebbi);
@@ -3198,8 +3235,6 @@ eBBlockFromiCode (iCode *ic)
   ebbi = iCodeBreakDown (ic);
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
-  while (optimizeOpWidth (ebbi->bbOrder, ebbi->count)) /* Do it again here, as some opportunities might be have been missed above due to code that later turned out to be dead. */
-    optimizeCastCast (ebbi->bbOrder, ebbi->count);
   computeDataFlow (ebbi);
 
   if (!options.lessPedantic)
