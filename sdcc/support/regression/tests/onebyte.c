@@ -9,6 +9,7 @@ void
 testMul (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   {attrL}    signed  char  cL;
   {attrL}  unsigned  char ucL;
   {attrR}    signed  char  cR;
@@ -39,12 +40,14 @@ testMul (void)
    cL = -128;  cR = -1; r16 =  cL *  cR; ASSERT (r16 ==  128);
 #endif
 #endif
+#endif
 }
 
 void
 testDiv (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   {attrL}    signed char  cL;
   {attrL}  unsigned char ucL;
   {attrR}    signed char  cR;
@@ -87,12 +90,13 @@ testDiv (void)
   ucL =  254;  cR =   -1; r16 = ucL /  cR; ASSERT (r16 == -254);
    cL = -128;  cR =   -1; r16 =  cL /  cR; ASSERT (r16 ==  128);
 #endif
+#endif
 }
 
 void
 testMod (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   {attrL}    signed char  cL;
   {attrL}  unsigned char ucL;
   {attrR}    signed char  cR;
@@ -127,7 +131,7 @@ testMod (void)
 void
 testOr (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   {attrL}    signed char  cL;
   {attrL}  unsigned char ucL;
   {attrR}    signed char  cR;
@@ -143,7 +147,7 @@ testOr (void)
 void
 testXor (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   {attrL}    signed char  cL;
   {attrL}  unsigned char ucL;
   {attrR}    signed char  cR;
@@ -165,7 +169,7 @@ testXor (void)
 void
 testAnd (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   {attrL}    signed char  cL;
   {attrL}  unsigned char ucL;
   {attrR}    signed char  cR;
@@ -203,7 +207,7 @@ testComplement (void)
 void
 testCompare (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   {attrL}   signed char  c;
   {attrR} unsigned char uc;
 
@@ -222,7 +226,7 @@ testCompare (void)
 void
 testUMinus (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
     signed char  {attrL} sc;
   unsigned char  {attrL} uc;
     signed int   {attrL} si;
@@ -257,7 +261,7 @@ testUMinus (void)
 void
 testBug1571231 (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   unsigned char  {attrL} uc;
 
   /* bug-1571231 */

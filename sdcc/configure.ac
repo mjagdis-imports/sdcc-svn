@@ -779,9 +779,10 @@ AC_DO_PORT(pic16,    pic16,  PIC16,    [Excludes the PIC16 port])
 AC_DO_PORT(hc08,     hc08,   HC08,     [Excludes the HC08 port])
 AC_DO_PORT(s08,      hc08,   S08,      [Excludes the S08 port])
 AC_DO_PORT(stm8,     stm8,   STM8,     [Excludes the STM8 port])
-AC_DO_PORT_ENABLER(pdk13,    pdk,    PDK13,    [Includes the PDK13 port])
+AC_DO_PORT(pdk13,    pdk,    PDK13,    [Excludes the PDK13 port])
 AC_DO_PORT(pdk14,    pdk,    PDK14,    [Excludes the PDK14 port])
 AC_DO_PORT(pdk15,    pdk,    PDK15,    [Excludes the PDK15 port])
+AC_DO_PORT_ENABLER(pdk16,    pdk,    PDK16,    [Includes the PDK16 port])
 
 # Unsupported targets
 ####AC_DO_PORT_ENABLER(avr,   avr,   AVR,   [Includes the AVR port (disabled by default)])
@@ -911,8 +912,13 @@ if test $OPT_DISABLE_STM8 = 0; then
                                                        device/lib/stm8-large/Makefile])
 fi
 
-if test $OPT_DISABLE_PDK13 = 0 || test $OPT_DISABLE_PDK14 = 0 || test $OPT_DISABLE_PDK15 = 0; then
+if test $OPT_DISABLE_PDK13 = 0 || test $OPT_DISABLE_PDK14 = 0 || test $OPT_DISABLE_PDK15 = 0 || test $OPT_DISABLE_PDK16 = 0; then
   AC_CONFIG_FILES([src/pdk/Makefile])
+fi
+
+if test $OPT_DISABLE_PDK13 = 0; then
+  AC_CONFIG_FILES([sdas/aspdk13/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk13/Makefile])
 fi
 
 if test $OPT_DISABLE_PDK14 = 0; then
@@ -922,8 +928,14 @@ fi
 
 if test $OPT_DISABLE_PDK15 = 0; then
   AC_CONFIG_FILES([sdas/aspdk15/Makefile])
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk15/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/pdk15/Makefile
+                                                       device/lib/pdk15-stack-auto/Makefile])
 fi
+
+if test $OPT_DISABLE_PDK16 = 0; then
+  AC_CONFIG_FILES([sdas/aspdk16/Makefile])
+fi
+
 
 test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/Makefile])
 test $OPT_DISABLE_DEVICE_LIB = 0 && test $OPT_DISABLE_NON_FREE = 0 && AC_CONFIG_FILES([device/non-free/lib/Makefile])
@@ -1005,6 +1017,7 @@ sdcc ${VERSION} is now configured for
     pdk13               ${enable_pdk13_port}
     pdk14               ${enable_pdk14_port}
     pdk15               ${enable_pdk15_port}
+    pdk16               ${enable_pdk16_port}
 
   Disable non-free lib: ${OPT_DISABLE_NON_FREE}
   Disable packihx:      ${OPT_DISABLE_PACKIHX}

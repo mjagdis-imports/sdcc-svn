@@ -147,6 +147,7 @@ void
 testBitfieldsSingleBitLiteral(void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 #if !defined(__SDCC_pic16)
   size2b_bf.b0 = 0;
   size2b_bf.b1 = 0;
@@ -197,12 +198,14 @@ testBitfieldsSingleBitLiteral(void)
   ASSERT(size2b_bf.b9==1);
 #endif  /* !__SDCC_pic16 */
 #endif
+#endif
 }
 
 void
 testBitfieldsSingleBit(void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 #if !defined(__SDCC_pic16)
   volatile unsigned char c;
 
@@ -258,12 +261,13 @@ testBitfieldsSingleBit(void)
   ASSERT(size2b_bf.b9==1);
 #endif  /* !__SDCC_pic16 */
 #endif
+#endif
 }
 
 void
 testBitfieldsMultibitLiteral(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #if !defined(__SDCC_pic16)
   size2c_bf.b0 = 0xff;   /* should truncate to 0x0f */
   size2c_bf.b1 = 0;
@@ -321,7 +325,7 @@ testBitfieldsMultibitLiteral(void)
 void
 testBitfieldsMultibit(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #if !defined(__SDCC_pic16)
   volatile int allones = 0xffff;
   volatile int zero = 0;
@@ -402,7 +406,7 @@ testBitfields(void)
 void
 testSignedBitfields(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #if !defined(__SDCC_pic16)
   s_bf.s0_7 =   0xf0;
   s_bf.s7_1 =      1;
@@ -470,7 +474,7 @@ struct
 
 /* test case for const struct with bitfields */
 
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #ifndef __SDCC_pic16 // TODO: enable when the pic16 ports supports bitfields of size greater than 8 bits!
 const struct
 {
@@ -497,7 +501,7 @@ const struct
 void
 testCS(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #ifndef __SDCC_pic16 // TODO: enable when the pic16 ports supports bitfields of size greater than 8 bits!
   ASSERT(cs.a == 1);
   ASSERT(cs.b == 2);

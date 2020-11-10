@@ -28,6 +28,7 @@ static void
 testwcharnorestart(void)
 {
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) && !defined(__SDCC_pdk14) // Not enough memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 	wchar_t w;
 	char c[MB_LEN_MAX];
 
@@ -45,6 +46,7 @@ testwcharnorestart(void)
 	ASSERT(wctomb(c, 0x110000) == -1); // Invalid: Out of 21-bit Unicode range.
 	ASSERT(wctomb(c, 0xd800) == -1);   // Invalid: Unpaired UTF-16 surrogate.
 	ASSERT(wctomb(c, 0xdfff) == -1);   // Invalid: Unpaired UTF-16 surrogate.
+#endif
 #endif
 #endif
 }
@@ -85,7 +87,7 @@ testwcharstringnorestart(void)
 static void
 testwcharrestart(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
 	static mbstate_t ps;
 	wchar_t w;
@@ -111,7 +113,7 @@ testwcharrestart(void)
 static void
 testchar16restart(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
 	static mbstate_t ps;
 	char16_t c16[2];
@@ -148,7 +150,7 @@ testchar16restart(void)
 static void
 testchar32restart(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // Lack of memory
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
 	static mbstate_t ps;
 	char32_t c32[2];

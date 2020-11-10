@@ -2298,16 +2298,6 @@ packRegsForAssign (iCode * ic, eBBlock * ebp)
     }
 pack:
   /* found the definition */
-  /* replace the result with the result of */
-  /* this assignment and remove this assignment */
-  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
-  ReplaceOpWithCheaperOp (&IC_RESULT (dic), IC_RESULT (ic));
-
-  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
-    {
-      OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
-    }
-  // TODO: and the otherway around?
 
   /* delete from liverange table also
      delete from all the points inbetween and the new
@@ -2318,6 +2308,17 @@ pack:
       if (IS_ITEMP (IC_RESULT (dic)))
         bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
     }
+
+  /* replace the result with the result of */
+  /* this assignment and remove this assignment */
+  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
+  ReplaceOpWithCheaperOp (&IC_RESULT (dic), IC_RESULT (ic));
+
+  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
+    {
+      OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
+    }
+  // TODO: and the otherway around?
 
   remiCodeFromeBBlock (ebp, ic);
   bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
@@ -3096,7 +3097,8 @@ packRegisters (eBBlock ** ebpp, int blockno)
           OP_SYMBOL (IC_RIGHT (ic))->remat &&
           !IS_CAST_ICODE (OP_SYMBOL (IC_RIGHT (ic))->rematiCode) &&
           !isOperandGlobal (IC_RESULT (ic)) &&  /* due to bug 1618050 */
-          bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1)
+          bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1 &&
+          !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
@@ -3107,7 +3109,8 @@ packRegisters (eBBlock ** ebpp, int blockno)
       if (ic->op == CAST &&
           IS_SYMOP (IC_RIGHT (ic)) &&
           OP_SYMBOL (IC_RIGHT (ic))->remat &&
-          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1)
+          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 &&
+          !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           sym_link *to_type = operandType (IC_LEFT (ic));
           sym_link *from_type = operandType (IC_RIGHT (ic));

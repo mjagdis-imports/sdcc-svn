@@ -10,6 +10,7 @@
 #endif
 
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 
 #define SIZE ({size})
 #define MSB ({msb})
@@ -72,11 +73,12 @@ TYPE rol30(TYPE s){ return (s<<30) | (s>>(SIZE-30)); }
 TYPE rol31(TYPE s){ return (s<<31) | (s>>(SIZE-31)); }
 #endif
 #endif
+#endif
 
 static void
 testRol(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
     volatile TYPE t = TEST_VECT;
     TYPE u;
 

@@ -26,9 +26,15 @@
 #include "dbuf_string.h"
 
 #include "ralloc.h"
+#include "peep.h"
 
 extern DEBUGFILE dwarf2DebugFile;
 extern int dwarf2FinalizeFile(FILE *);
+
+static char pdk_defaultRules[] = {
+#include "peeph.rul"
+  ""
+};
 
 static char *pdk_keywords[] = {
   "at",
@@ -114,16 +120,16 @@ pdk_genInitStartup (FILE *of)
   /* Zeroing memory (required by standard for static & global variables) */
   fprintf (of, "\tmov\ta, #s_DATA\n");
   fprintf (of, "\tmov\tp, a\n");
-  fprintf (of, "00001$:\n");
-  fprintf (of, "\tmov\ta, #s_DATA\n");
-  fprintf (of, "\tadd\ta, #l_DATA\n");
-  fprintf (of, "\tcneqsn\ta, p\n");
   fprintf (of, "\tgoto\t00002$\n");
+  fprintf (of, "00001$:\n");
   fprintf (of, "\tmov\ta, #0x00\n");
   fprintf (of, "\tidxm\tp, a\n");
   fprintf (of, "\tinc\tp\n");
-  fprintf (of, "\tgoto\t00001$\n");
+  fprintf (of, "\tmov\ta, #s_DATA\n");
   fprintf (of, "00002$:\n");
+  fprintf (of, "\tadd\ta, #l_DATA\n");
+  fprintf (of, "\tceqsn\ta, p\n");
+  fprintf (of, "\tgoto\t00001$\n");
 }
 
 static void
@@ -197,6 +203,12 @@ hasExtBitOp (int op, int size)
   return (false);
 }
 
+static const char *
+get_model (void)
+{
+    return(options.stackAuto ? "pdk15-stack-auto" : "pdk15");
+}
+
 /** $1 is always the basename.
     $2 is always the output file.
     $3 varies
@@ -211,7 +223,7 @@ static const char *_linkCmd[] =
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
 static const char *pdk13AsmCmd[] =
 {
-  "sdaspdk14", "$l", "$3", "\"$1.asm\"", NULL
+  "sdaspdk13", "$l", "$3", "\"$1.asm\"", NULL
 };
 
 static const char *const _libs_pdk13[] = { "pdk13", NULL, };
@@ -247,14 +259,14 @@ PORT pdk13_port =
     _libs_pdk13,                /* libs */
   },
   {                             /* Peephole optimizer */
+    pdk_defaultRules,
+    pdkinstructionSize,
     0,
     0,
     0,
+    pdknotUsed,
     0,
-    0,
-    0,
-    0,
-    0,
+    pdknotUsedFrom,
     0,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
@@ -413,14 +425,14 @@ PORT pdk14_port =
     _libs_pdk14,                /* libs */
   },
   {                             /* Peephole optimizer */
+    pdk_defaultRules,
+    pdkinstructionSize,
     0,
     0,
     0,
+    pdknotUsed,
     0,
-    0,
-    0,
-    0,
-    0,
+    pdknotUsedFrom,
     0,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
@@ -559,7 +571,7 @@ PORT pdk15_port =
     true,
     NO_MODEL,
     NO_MODEL,
-    0,                          /* model == target */
+    &get_model,
   },
   {                             /* Assembler */
     pdk15AsmCmd,
@@ -579,14 +591,14 @@ PORT pdk15_port =
     _libs_pdk15,                /* libs */
   },
   {                             /* Peephole optimizer */
+    pdk_defaultRules,
+    pdkinstructionSize,
     0,
     0,
     0,
+    pdknotUsed,
     0,
-    0,
-    0,
-    0,
-    0,
+    pdknotUsedFrom,
     0,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */

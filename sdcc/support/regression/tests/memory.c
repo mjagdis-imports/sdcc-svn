@@ -61,6 +61,7 @@ void testmemory(void)
   memcpy(destination, source, 4);
   ASSERT(memcmp(destination, source, 4) == 0);
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   /* Test memmove() */
   memcpy(destination, source, 4);
   memmove(destination, destination + 1, 3);
@@ -83,6 +84,15 @@ void testmemory(void)
   ASSERT(strlen("test") == 4);
   ASSERT(strlen("t") == 1);
   ASSERT(strlen("") == 0);
+
+  destination[2] = 0;
+  destination[3] = 0;
+#ifndef PORT_HOST
+  ASSERT(memccpy(destination, source, 2, 4) == destination + 3);
+  ASSERT(destination[2] == 2);
+  ASSERT(destination[3] == 0);
+#endif
+#endif
 #endif
 }
 

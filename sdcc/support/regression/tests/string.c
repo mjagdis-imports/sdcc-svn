@@ -16,6 +16,7 @@ static void
 do_teststrcmp (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   int result = strcmp ("", "");
   ASSERT (result == 0);
   
@@ -31,6 +32,7 @@ do_teststrcmp (void)
   result = strcmp ("aa", "ab");
   ASSERT (result < 0);
 #endif
+#endif
 }
 
 /** tests for strcpy
@@ -39,6 +41,7 @@ static void
 do_teststrcpy (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   static char empty[] = "";
   static char string[] = "\1\2\0\3";
   char buf[40] = "abcdefghijklmnopqrstuvwxyz";
@@ -54,6 +57,7 @@ do_teststrcpy (void)
   ASSERT (buf[1] == '\2');
   ASSERT (buf[3] == 'd');
 #endif
+#endif
 }
 
 /** tests for strncmp
@@ -62,6 +66,7 @@ static void
 do_teststrncmp (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   ASSERT (strncmp ("", "", 0) == 0);
   ASSERT (strncmp ("ab", "ab", 0) == 0);
   ASSERT (strncmp ("a", "a", 2) == 0);
@@ -69,6 +74,7 @@ do_teststrncmp (void)
   ASSERT (strncmp ("aa", "ab", 2) < 0);
   ASSERT (strncmp ("abc", "abd", 2) == 0);
   ASSERT (strncmp ("abc", "abc", 3) == 0);
+#endif
 #endif
 }
 
@@ -78,7 +84,7 @@ do_teststrncmp (void)
 static void
 do_teststrpbrk (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   const char *a = "test";
 
   ASSERT (strpbrk (a, "e")  == &a[1] );
@@ -96,7 +102,7 @@ do_teststrpbrk (void)
 static void
 do_teststrrchr (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   const char *test = "test";
 
   ASSERT (strrchr (test, 0) == test + 4);
@@ -110,7 +116,7 @@ do_teststrrchr (void)
 static void 
 do_teststrstr (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   const char *a = "aabbcd";
   ASSERT (strstr (a, "\0\1") == a);
   ASSERT (strstr (a, "") == a);
@@ -128,7 +134,7 @@ do_teststrstr (void)
 static void 
 do_teststrspn (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   ASSERT (strspn("aabbcd", "ab") == 4);
   ASSERT (strspn("abbacd", "") == 0);
   ASSERT (strspn("abbacd", "ac") == 1);
@@ -144,7 +150,7 @@ do_teststrspn (void)
 static void
 do_teststrtok (void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   static char str[] = "?a???b,,,#c";
   char str2[] = "axaaba";
   char *token = strtok (str, "?"); // 'token' points to the token "a"
@@ -198,6 +204,7 @@ static void
 do_utf_8_sdcc (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 #ifdef __SDCC
   const char *str1 = "Ä ä";
   const char *str2 = "\u00c4 ä";
@@ -216,6 +223,7 @@ do_utf_8_sdcc (void)
   ASSERT (mblen(str1, 3) == 2);
   ASSERT (mblen("test", 3) == 1);
   ASSERT (mblen("", 3) == 0);
+#endif
 #endif
 #endif
 }
@@ -245,6 +253,7 @@ static void
 do_utf_32_c95 (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 #ifdef __STDC_ISO_10646__
   const wchar_t *str1 = L"Ä ä";
   const wchar_t *str2 = L"\u00c4 ä";
@@ -259,6 +268,7 @@ do_utf_32_c95 (void)
   ASSERT (!memcmp (str1, str3, 4 * sizeof(wchar_t)));
   ASSERT (!memcmp (str1, str4, 4 * sizeof(wchar_t)));
   ASSERT (!memcmp (str1, str5, 4 * sizeof(wchar_t)));
+#endif
 #endif
 #endif
 }

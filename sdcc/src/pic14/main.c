@@ -153,6 +153,29 @@ _pic14_finaliseOptions (void)
       addSet (&preArgvSet, dbuf_detach_c_str (&dbuf));
     }
 
+  /* This is valid after calling pCodeInitRegisters */
+  if (pic14_getPIC()->isEnhancedCore)
+    {
+      dbuf_set_length (&dbuf, 0);
+      dbuf_printf (&dbuf, "-D__SDCC_PIC14_ENHANCED");
+      addSet (&preArgvSet, Safe_strdup (dbuf_detach_c_str (&dbuf)));
+    }
+
+  /* Report the actual stack size */
+  {
+    int size;
+    pic14_getSharedStack(NULL, NULL, &size);
+
+    /* non-enhanced cores take PSAVE, SSAVE and WSAVE from stack */
+    if (!pic14_getPIC()->isEnhancedCore)
+      size -= 3;
+
+    /* Actual stack size includes WREG and STK00, ... */
+    dbuf_set_length (&dbuf, 0);
+    dbuf_printf (&dbuf, "-D__SDCC_PIC14_STACK_SIZE=%d", size + 1);
+    addSet (&preArgvSet, Safe_strdup (dbuf_detach_c_str (&dbuf)));
+  }
+
   if (!pic14_options.no_warn_non_free && !options.use_non_free)
     {
       fprintf(stderr,
@@ -205,6 +228,7 @@ _pic14_genIVT (struct dbuf_s * oBuf, symbol ** interrupts, int maxInterrupts)
 static bool
 _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
+#if 0
   if ( ic->op != '*')
   {
     return FALSE;
@@ -213,6 +237,7 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   /* multiply chars in-place */
   if (getSize(left) == 1 && getSize(right) == 1)
     return TRUE;
+#endif
 
   /* use library functions for more complex maths */
   return FALSE;

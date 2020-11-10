@@ -91,6 +91,7 @@ public:
   class cl_options *options;
   int going;
   long expr_result;
+  chars startup_command;
   
 public:
   cl_app(void);
@@ -125,6 +126,7 @@ protected:
 
 public: // output functions
   virtual int dd_printf(const char *format, ...);
+  virtual int dd_cprintf(const char *color_name, const char *format, ...);
   virtual int debug(const char *format, ...);
 };
 

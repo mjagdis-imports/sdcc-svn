@@ -10,6 +10,7 @@ void
 testUnsignedModDiv(void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
     {attr} {storage} unsigned {type} i;
     unsigned {type} result;
 
@@ -26,6 +27,7 @@ testUnsignedModDiv(void)
 
     result = i%34;
     ASSERT(result == 32);
+#endif
 #endif
 }
 
@@ -51,6 +53,7 @@ void
 testMul(void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
     {attr} {storage} signed {type} i;
     signed {type} result;
 
@@ -69,6 +72,7 @@ testMul(void)
     ASSERT(i*-3 == 30);
 #endif
 #endif
+#endif
 }
 
 void mark(void)
@@ -78,7 +82,7 @@ void mark(void)
 void
 testDiv(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
     {attr} {storage} signed {type} i;
 
     i = 100;
@@ -101,7 +105,7 @@ testDiv(void)
 void 
 test16to32(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
    {attr} {storage} int i, j;
    {attr} {storage} unsigned int ui, uj;
 
@@ -136,7 +140,7 @@ test16to32(void)
 void
 testMod(void)
 {
-#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
     {attr} {storage} signed {type} i;
 
     // Disabled the LOG functions due to a bug in sdcc involving

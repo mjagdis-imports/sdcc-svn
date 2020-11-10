@@ -58,6 +58,8 @@ createStackSpil (symbol *sym)
   sym->usl.spillLoc = sloc;
   sym->stackSpil = 1;
 
+  addSetHead (&sloc->usl.itmpStack, sym);
+
   return sym;
 }
 
@@ -248,6 +250,10 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
   if (!dic)
     return 0;                   /* did not find */
 
+  /* Avoid having a result in a sfr for shifts. */
+  if (IS_SYMOP (IC_RESULT (ic)) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (IC_RESULT (ic))->etype)) && (dic->op == LEFT_OP || dic->op == RIGHT_OP))
+    return 0;
+
   /* if assignment then check that right is not a bit */
   if (ic->op == '=')
     {
@@ -278,15 +284,7 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
     }
 pack:
   /* found the definition */
-  /* replace the result with the result of */
-  /* this assignment and remove this assignment */
-  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
-  IC_RESULT (dic) = IC_RESULT (ic);
 
-  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
-    {
-      OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
-    }
   /* delete from liverange table also
      delete from all the points in between and the new
      one */
@@ -295,6 +293,16 @@ pack:
       bitVectUnSetBit (sic->rlive, IC_RESULT (ic)->key);
       if (IS_ITEMP (IC_RESULT (dic)))
         bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
+    }
+
+  /* replace the result with the result of */
+  /* this assignment and remove this assignment */
+  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
+  IC_RESULT (dic) = IC_RESULT (ic);
+
+  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
+    {
+      OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
     }
 
   remiCodeFromeBBlock (ebp, ic);
@@ -337,8 +345,13 @@ packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
     return 0;                /* non-local */
 
   /* for now handle results from assignments from globals only */
-  if (dic->op != '=' || !isOperandGlobal (IC_RIGHT (dic)))
+  if (!(dic->op == '=' || dic->op == CAST && SPEC_USIGN (getSpec (operandType (IC_RIGHT (dic)))) && operandSize (op) > operandSize (IC_RIGHT (dic)))
+    || !isOperandGlobal (IC_RIGHT (dic)))
     return 0;
+
+  if (IS_OP_VOLATILE (IC_RESULT (ic)) && IS_OP_VOLATILE (IC_RIGHT (dic)))
+    return 0;
+
   /* also make sure the intervenening instructions
      don't have any thing in far space */
   for (iCode *nic = dic->next; nic && nic != ic; nic = nic->next)
@@ -419,7 +432,7 @@ packRegisters (eBBlock * ebp)
          then mark this as rematerialisable   */
       if (ic->op == ADDRESS_OF && 
         IS_ITEMP (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the parameter is not accounted for in DEFS */ &&
-        IS_TRUE_SYMOP (IC_LEFT (ic)) && !OP_SYMBOL (IC_LEFT (ic))->onStack)
+        IS_TRUE_SYMOP (IC_LEFT (ic)) /*&& !OP_SYMBOL (IC_LEFT (ic))->onStack*/)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = 1;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;
@@ -430,7 +443,8 @@ packRegisters (eBBlock * ebp)
       /* if straight assignment then carry remat flag if this is the
          only definition */
       if (ic->op == '=' && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the parameter is not accounted for in DEFS */)
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the parameter is not accounted for in DEFS */
+        !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
@@ -440,7 +454,8 @@ packRegisters (eBBlock * ebp)
          cast is remat, then we can remat this cast as well */
       if (ic->op == CAST &&
         IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the paramter is not accounted for in DEFS */)
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the paramter is not accounted for in DEFS */
+        !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           sym_link *to_type = operandType (IC_LEFT (ic));
           sym_link *from_type = operandType (IC_RIGHT (ic));
@@ -469,10 +484,53 @@ packRegisters (eBBlock * ebp)
 
       /* In some cases redundant moves can be eliminated */
       if (ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS ||
-        ic->op == '+' || ic->op == '-' ||
+        ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS ||
+        ic->op == '|' || ic->op == '&' || ic->op == '^' ||
+        ic->op == EQ_OP || ic->op == NE_OP ||
         ic->op == IFX && operandSize (IC_COND (ic)) == 1 ||
-        ic->op == IPUSH && operandSize (IC_LEFT (ic)) == 1)
+        ic->op == IPUSH && operandSize (IC_LEFT (ic)) == 1 ||
+        ic->op == LEFT_OP || ic->op == RIGHT_OP)
         packRegsForOneuse (ic, &(IC_LEFT (ic)), ebp);
+      if (ic->op == '+' || ic->op == '-' ||
+        ic->op == '|' || ic->op == '&' || ic->op == '^' ||
+        ic->op == EQ_OP || ic->op == NE_OP ||
+        ic->op == LEFT_OP || ic->op == RIGHT_OP)
+        packRegsForOneuse (ic, &(IC_RIGHT (ic)), ebp);
+
+      // Optimize out some unsigned upcasts.
+      if (ic->op == CAST && IS_ITEMP (IC_RESULT (ic)) && !IS_OP_VOLATILE (IC_RIGHT (ic)) &&
+        bitVectnBitsOn (OP_USES (IC_RESULT (ic))) == 1 && hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (ic)))) == ic->next &&
+        SPEC_USIGN (getSpec (operandType (IC_RIGHT (ic)))) && operandSize (IC_RESULT (ic)) >= operandSize (IC_RIGHT (ic)) && !IS_BOOL (operandType (IC_RESULT (ic))))
+        {
+          iCode *use = ic->next;
+          operand *op = IC_RESULT (ic);
+          if ((use->op == LEFT_OP || use->op == '+' || use->op == '-' || use->op == UNARYMINUS ||
+            use->op == '&' || use->op == '|' || use->op == '^') &&
+            IC_LEFT (use)->key == op->key && (!IC_RIGHT(use) || IC_RIGHT (use)->key != op->key))
+            {
+              bitVectUnSetBit (OP_SYMBOL (IC_RIGHT (ic))->uses, ic->key);
+              bitVectSetBit (OP_SYMBOL (IC_RIGHT (ic))->uses, use->key);
+              IC_LEFT (use) = operandFromOperand (IC_RIGHT(ic));
+              remiCodeFromeBBlock (ebp, ic);
+              hTabDeleteItem (&iCodehTab, ic->key, ic, DELETE_ITEM, NULL);
+              if(ic->prev)
+                ic = ic->prev;
+            }
+          else if ((/*(use->op == SET_VALUE_AT_ADDRESS && !IS_BITVAR (getSpec (operandType (IC_LEFT (use)))) && !IS_BITVAR (getSpec (operandType (IC_RIGHT (use))))) || - resulted in pointer writes toring too few bytes*/
+            use->op == CAST && (SPEC_USIGN (getSpec (operandType (IC_RIGHT (use)))) || operandSize (IC_RESULT (use)) <= operandSize (IC_RIGHT (use))) ||
+            use->op == LEFT_OP || use->op == RIGHT_OP || use->op == '+' || use->op == '-' ||
+            use->op == '&' || use->op == '|' || use->op == '^') &&
+            IC_RIGHT (use)->key == op->key && (!IC_LEFT(use) || IC_LEFT (use)->key != op->key))
+            {
+              bitVectUnSetBit (OP_SYMBOL (IC_RIGHT (ic))->uses, ic->key);
+              bitVectSetBit (OP_SYMBOL (IC_RIGHT (ic))->uses, use->key);
+              IC_RIGHT (use) = operandFromOperand (IC_RIGHT(ic));
+              remiCodeFromeBBlock (ebp, ic);
+              hTabDeleteItem (&iCodehTab, ic->key, ic, DELETE_ITEM, NULL);
+              if(ic->prev)
+                ic = ic->prev;
+            }
+        }
     }
 }
 
@@ -537,13 +595,13 @@ serialRegMark (eBBlock **ebbs, int count)
                   continue;
                 }
 
-              if (sym->usl.spillLoc && !sym->usl.spillLoc->_isparm) // I have no idea where these spill locations come from. Sometime two symbols even have the same spill location, whic tends to mess up stack allocation. THose that come from previous iterations in this loop would be okay, but those from outside are a problem.
+              if (sym->usl.spillLoc && !sym->usl.spillLoc->_isparm) // I have no idea where these spill locations come from. Sometime two symbols even have the same spill location, whic tends to mess up stack allocation. Those that come from previous iterations in this loop would be okay, but those from outside are a problem.
                 {
                   sym->usl.spillLoc = 0;
                   sym->isspilt = false;
                 }
 
-              if (sym->nRegs > 2 && ic->op == CALL)
+              if (sym->nRegs > 2 && ic->op == CALL) // To be allocated to stack due to the way (long) long return values are handled via a hidden pointer.
                 {
                   sym->for_newralloc = 0;
                   pdkSpillThis (sym);
@@ -673,12 +731,6 @@ pdk_assignRegisters (ebbIndex *ebbi)
 
   /* Invoke optimal register allocator */
   ic = pdk_ralloc2_cc (ebbi);
-
-  /* redo offsets for stacked automatic variables */
-  if (currFunc)
-    {
-      redoStackOffsets ();
-    }
 
   if (options.dump_i_code)
     {
