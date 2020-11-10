@@ -334,6 +334,8 @@ newSymbol (const char *name, long scope)
   sym->for_newralloc = 0;
   sym->isinscope = 1;
   sym->usl.spillLoc = 0;
+
+  // Err on the safe side, when in doubt disabling optimizations.
   sym->funcDivFlagSafe = 0;
   sym->funcUsesVolatile = 1;
 
@@ -4510,7 +4512,7 @@ newEnumType (symbol * enumlist)
   else if (min >= -128 && max <= 127)
     {
       SPEC_NOUN (type) = V_CHAR;
-	  SPEC_SIGN (type) = 1;
+      SPEC_SIGN (type) = 1;
     }
   else if (min >= 0 && max <= 65535)
     {
