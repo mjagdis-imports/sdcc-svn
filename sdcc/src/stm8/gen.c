@@ -368,6 +368,13 @@ cost(unsigned int bytes, unsigned int cycles)
   regalloc_dry_run_cost_cycles += cycles;
 }
 
+void emitJP(const symbol *target, float probability)
+{
+  if (!regalloc_dry_run)
+     emit2 (options.model == MODEL_LARGE ? "jpf" : "jp", "%05d$", labelKey2num (target->key));
+  cost (3 + (options.model == MODEL_LARGE), (1 + (options.model == MODEL_LARGE)) * probability);
+}
+
 static const char *
 aopGet(const asmop *aop, int offset)
 {
@@ -2871,38 +2878,90 @@ emitCall (const iCode *ic, bool ispcall)
 
       aopOp (left, ic);
 
-      if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
+      if (options.model == MODEL_LARGE)
         {
-          emit2 ("call", "%s", aopGet2 (left->aop, 0));
-          cost (3, 4);
-        }
-      else if (aopInReg (left->aop, 0, Y_IDX)) // Faster than going through x.
-        {
-          emit2 ("call", "(y)");
-          cost (2, 4);
+          wassertl (left->aop->size == 3, "Functions pointers should be 24 bits in large memory model.");
+
+          symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+
+          if (!regalloc_dry_run)
+            emit2("ld", "a, #(!tlabel >> 16)", labelKey2num (tlbl->key));
+          push (ASMOP_A, 0, 1);
+          if (!regalloc_dry_run)
+            emit2("ld", "a, #(!tlabel >> 8)", labelKey2num (tlbl->key));
+          push (ASMOP_A, 0, 1);
+          if (!regalloc_dry_run)
+            emit2("ld", "a, #(!tlabel)", labelKey2num (tlbl->key));
+          push (ASMOP_A, 0, 1);
+
+          cheapMove (ASMOP_A, 0, left->aop, 0, FALSE);
+          push (ASMOP_A, 0, 1);
+          cheapMove (ASMOP_A, 0, left->aop, 1, FALSE);
+          push (ASMOP_A, 0, 1);
+          cheapMove (ASMOP_A, 0, left->aop, 2, FALSE);
+          push (ASMOP_A, 0, 1);
+          emit2("retf", "");
+          cost (1, 5);
+
+          G.stack.pushed -= 6;
+
+          emitLabel (tlbl);
         }
       else
         {
-          genMove (ASMOP_X, left->aop, TRUE, TRUE, TRUE);
+          wassertl (left->aop->size == 2, "Functions pointers should be 16 bits in medium memory model.");
+
+          if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
+            {
+              emit2 ("call", "%s", aopGet2 (left->aop, 0));
+              cost (3, 4);
+            }
+          else if (aopInReg (left->aop, 0, Y_IDX)) // Faster than going through x.
+            {
+              emit2 ("call", "(y)");
+              cost (2, 4);
+            }
+          else
+            {
+              genMove (ASMOP_X, left->aop, TRUE, TRUE, TRUE);
           
-          emit2 ("call", "(x)");
-          cost (1, 4);
+              emit2 ("call", "(x)");
+              cost (1, 4);
+            }
         }
       freeAsmop (left);
     }
   else
     {
-      if (IS_LITERAL (etype))
+      if (options.model == MODEL_LARGE)
         {
-          emit2 ("call", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
-          cost (3, 4);
+          if (IS_LITERAL (etype))
+            {
+              emit2 ("callf", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+              cost (4, 5);
+            }
+          else
+            {
+              bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type));
+              emit2 (jump ? "jpf" : "callf", "%s",
+                (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+              cost (4, jump ? 2 : 5);
+            }
         }
       else
         {
-          bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type));
-          emit2 (jump ? "jp" : "call", "%s",
-            (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
-          cost (3, jump ? 1 : 4);
+          if (IS_LITERAL (etype))
+            {
+              emit2 ("call", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+              cost (3, 4);
+            }
+          else
+            {
+              bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (OP_SYMBOL (IC_LEFT (ic))->type));
+              emit2 (jump ? "jp" : "call", "%s",
+                (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+              cost (3, jump ? 1 : 4);
+            }
         }
     }
 
@@ -3141,6 +3200,7 @@ genFunction (iCode *ic)
 
   bigreturn = (getSize (ftype->next) > 4);
   G.stack.param_offset += bigreturn * 2;
+  G.stack.param_offset += (options.model == MODEL_LARGE);
 
   if (options.debug && !regalloc_dry_run)
     debugFile->writeFrameAddress (NULL, &stm8_regs[SP_IDX], 1);
@@ -3195,8 +3255,16 @@ genEndFunction (iCode *ic)
       if (options.debug && currFunc && !regalloc_dry_run)
         debugFile->writeEndFunction (currFunc, ic, 1);
 
-      emit2 ("ret", "");
-      cost (1, 4);
+      if (options.model == MODEL_LARGE)
+        {
+          emit2 ("retf", "");
+          cost (1, 5);
+        }
+      else
+        {
+          emit2 ("ret", "");
+          cost (1, 4);
+        }
     }
 }
 
@@ -3324,11 +3392,7 @@ jumpret:
   /* generate a jump to the return label
      if the next is not the return statement */
   if (!(ic->next && ic->next->op == LABEL && IC_LABEL (ic->next) == returnLabel))
-    {
-      if (!regalloc_dry_run)
-        emit2 ("jp", "%05d$", labelKey2num (returnLabel->key));
-      cost (3, 1);
-    }
+    emitJP(returnLabel, 1.0f);
 }
 
 /*-----------------------------------------------------------------*/
@@ -3357,8 +3421,7 @@ genGoto (const iCode *ic)
 {
   D (emit2 ("; genGoto", ""));
 
-  emit2 ("jp", "%05d$", labelKey2num (IC_LABEL (ic)->key));
-  cost (3, 1);
+  emitJP(IC_LABEL (ic), 1.0f);
 }
 
 /*-----------------------------------------------------------------*/
@@ -4527,9 +4590,7 @@ _genCmp_1:
           }
       cost (2, 0);
       cheapMove (result->aop, 0, ASMOP_ZERO, 0, !regDead (A_IDX, ic));
-      if (tlbl2)
-        emit2 ("jp", "%05d$", labelKey2num (tlbl2->key));
-      cost (3, 1);
+      emitJP (tlbl2, 1.0f);
       emitLabel (tlbl1);
       cheapMove (result->aop, 0, ASMOP_ONE, 0, !regDead (A_IDX, ic));
       emitLabel (tlbl2);
@@ -4551,9 +4612,7 @@ _genCmp_1:
             break;
           }
       cost (2, 0);
-      if (!regalloc_dry_run)
-        emit2 ("jp", "!tlabel", labelKey2num ((IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx))->key));
-      cost (3, 1);
+      emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 1.0f);
       emitLabel (tlbl);
       if (!regalloc_dry_run)
         ifx->generated = 1;
@@ -4722,9 +4781,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   if (!ifx)
     {
       cheapMove (result->aop, 0, opcode == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, !regDead (A_IDX, ic));
-      if (tlbl)
-        emit2 ("jp", "%05d$", labelKey2num (tlbl->key));
-      cost (3, 0);
+      emitJP(tlbl, 0.0f);
       if (pop_a)
         {
           emitLabel (tlbl_NE_pop);
@@ -4736,8 +4793,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
     }
   else if (IC_TRUE (ifx) && opcode == EQ_OP || IC_FALSE (ifx) && opcode == NE_OP)
     {
-      emit2 ("jp", "!tlabel", labelKey2num ((IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx))->key));
-      cost (3, 0);
+      emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.0f);
       if (pop_a)
         {
           emitLabel (tlbl_NE_pop);
@@ -4749,17 +4805,14 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
     }
   else
     {
-      if (tlbl)
-        emit2 ("jp", "%05d$", labelKey2num (tlbl->key));
-      cost (3, 0);
+      emitJP(tlbl, 0.0f);
       if (pop_a)
         {
           emitLabel (tlbl_NE_pop);
           pop (ASMOP_A, 0, 1);
         }
       emitLabel (tlbl_NE);
-      emit2 ("jp", "!tlabel", labelKey2num ((IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx))->key));
-      cost (3, 0);
+      emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.0f);
       emitLabel (tlbl);
       if (!regalloc_dry_run)
         ifx->generated = 1;
@@ -5177,7 +5230,7 @@ genAnd (const iCode *ic, iCode *ifx)
           if (tlbl)
             {
               emit2 (IC_TRUE (ifx) ? "btjf" : "btjt", "%s, #%d, !tlabel", aopGet (left->aop, i), isLiteralBit (ulFromVal (right->aop->aopu.aop_lit)) - i * 8, labelKey2num (tlbl->key));
-              emit2 ("jp", "!tlabel", labelKey2num ((IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx))->key));
+              emit2 (options.model == MODEL_LARGE ? "jpf" : "jp", "!tlabel", labelKey2num ((IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx))->key));
               emitLabel (tlbl);
             }
           cost (8, 4); // Hmm. Cost 2 or 3 for btjf?
@@ -5255,9 +5308,7 @@ genAnd (const iCode *ic, iCode *ifx)
             emit2 (IC_TRUE (ifx) ? "jreq" : "jrne", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 2); // Hmm. Cycle cost overestimate.
         }
-      if (!regalloc_dry_run)
-        emit2 ("jp", "!tlabel", labelKey2num ((IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx))->key));
-      cost (3, 1); // Hmm. Cycle cost overestimate.
+      emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 1.0f); // Hmm. Cycle cost overestimate.
       emitLabel (tlbl);
       goto release;
     }
@@ -6892,14 +6943,12 @@ genIfx (const iCode *ic)
   if (inv)
     {
       emitLabel (tlbl);
-      emit2 ("jp", "!tlabel", labelKey2num ((IC_TRUE (ic) ? IC_TRUE (ic) : IC_FALSE (ic))->key));
-      cost (3, 0);
+      emitJP(IC_TRUE (ic) ? IC_TRUE (ic) : IC_FALSE (ic), 0.0f);
       emitLabel (tlbl2);
     }
   else
     {
-      emit2 ("jp", "!tlabel", labelKey2num ((IC_TRUE (ic) ? IC_TRUE (ic) : IC_FALSE (ic))->key));
-      cost (3, 0);
+      emitJP(IC_TRUE (ic) ? IC_TRUE (ic) : IC_FALSE (ic), 0.0f);
       emitLabel (tlbl);
     }
 
@@ -7005,6 +7054,8 @@ genJumpTab (const iCode *ic)
   operand *cond;
 
   D (emit2 ("; genJumpTab", ""));
+
+  wassertl (options.model != MODEL_LARGE, "Jump tables not implemented for large memory model.");
 
   cond = IC_JTCOND (ic);
 

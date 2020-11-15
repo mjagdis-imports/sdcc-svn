@@ -1,3 +1,43 @@
+2016-02-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Implement calls through functions pointers via retpoline for stm8 large memory model (RFE #556).
+
+2016-02-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Document stm8 memory models (RFE #556).
+	* src/stm8/main.c,
+	  src/stm8/gen.c:
+	  Do not generate jump tables for stm8 large memory model (RFE #556).
+
+2016-02-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/stm8.src/inst.cc:
+	  Fix handling of 16-bit and 17-bit jumps in simulator (RFE #556).
+	* src/stm8/peep.c:
+	  Improve handling of 24-bit jumps in peephole optimizer (RFE #556).
+	* src/stm8/main.c,
+	  src/stm8/gen.c:
+	  Code generation for large memory model for stm8 (RFE #556).
+	* support/regression/tests/memory.c:
+	  Enable test for host.
+	* src/stm8/peeph.def:
+	  New peephole rules for large memory model (RFE #556).
+
+2016-02-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version,
+	  src/stm8/peeph.def:
+	  Implement RFE #557.
+	* device/lib/stm8/strcmp.s,
+	  device/lib/stm8/strcpy.s:
+	  Faster string functions from patch #281 by Benedikt Freisen.
+	* support/regression/tests/memory.c:
+	  Test memory functions on larger arrays.
+	* device/lib/stm8/memcpy.s:
+	  Faster string function based on patch #281 by Benedikt Freisen.
+
 2016-02-18 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c,

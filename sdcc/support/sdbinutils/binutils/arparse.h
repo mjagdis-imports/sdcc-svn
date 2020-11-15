@@ -1,9 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.7.3.  */
+/* A Bison parser, made by GNU Bison 3.0.4.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
-   Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -31,10 +30,6 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
-   especially those whose name start with YY_ or yy_.  They are
-   private implementation details that can be changed or removed.  */
-
 #ifndef YY_YY_ARPARSE_H_INCLUDED
 # define YY_YY_ARPARSE_H_INCLUDED
 /* Debug traces.  */
@@ -45,40 +40,32 @@
 extern int yydebug;
 #endif
 
-/* Token kinds.  */
+/* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
-    NEWLINE = 258,                 /* NEWLINE  */
-    VERBOSE = 259,                 /* VERBOSE  */
-    FILENAME = 260,                /* FILENAME  */
-    ADDLIB = 261,                  /* ADDLIB  */
-    LIST = 262,                    /* LIST  */
-    ADDMOD = 263,                  /* ADDMOD  */
-    CLEAR = 264,                   /* CLEAR  */
-    CREATE = 265,                  /* CREATE  */
-    DELETE = 266,                  /* DELETE  */
-    DIRECTORY = 267,               /* DIRECTORY  */
-    END = 268,                     /* END  */
-    EXTRACT = 269,                 /* EXTRACT  */
-    FULLDIR = 270,                 /* FULLDIR  */
-    HELP = 271,                    /* HELP  */
-    QUIT = 272,                    /* QUIT  */
-    REPLACE = 273,                 /* REPLACE  */
-    SAVE = 274,                    /* SAVE  */
-    OPEN = 275                     /* OPEN  */
+    NEWLINE = 258,
+    VERBOSE = 259,
+    FILENAME = 260,
+    ADDLIB = 261,
+    LIST = 262,
+    ADDMOD = 263,
+    CLEAR = 264,
+    CREATE = 265,
+    DELETE = 266,
+    DIRECTORY = 267,
+    END = 268,
+    EXTRACT = 269,
+    FULLDIR = 270,
+    HELP = 271,
+    QUIT = 272,
+    REPLACE = 273,
+    SAVE = 274,
+    OPEN = 275
   };
-  typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Token kinds.  */
-#define YYEOF 0
-#define YYerror 256
-#define YYUNDEF 257
+/* Tokens.  */
 #define NEWLINE 258
 #define VERBOSE 259
 #define FILENAME 260
@@ -100,17 +87,18 @@ extern int yydebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+
 union YYSTYPE
 {
-#line 37 "arparse.y"
+#line 37 "arparse.y" /* yacc.c:1909  */
 
   char *name;
 struct list *list ;
 
 
-#line 112 "arparse.h"
-
+#line 100 "arparse.h" /* yacc.c:1909  */
 };
+
 typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
