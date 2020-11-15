@@ -51,11 +51,11 @@
 
 	.org	0x100
 init:
-	;; Stack at the top of memory.
-	ld	sp,#0xffff
+	;; Set stack pointer directly above top of memory.
+	ld	sp,#0x0000
 
-        ;; Initialise global variables
-        call    gsinit
+	;; Initialise global variables
+	call	gsinit
 	call	_main
 	jp	_exit
 
@@ -75,13 +75,13 @@ init:
 	.area   _CODE
 __clock::
 	ld	a,#2
-	rst     0x08
+	rst	0x08
 	ret
 
 _exit::
 	;; Exit - special code to the emulator
 	ld	a,#0
-	rst     0x08
+	rst	0x08
 1$:
 	halt
 	jr	1$

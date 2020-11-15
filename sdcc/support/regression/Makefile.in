@@ -44,6 +44,8 @@ CC = @CC@
 CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@ -DNO_VARARGS
 EXEEXT = @EXEEXT@
+PYTHON = @PYTHON@
+M4 = @M4@
 
 srcdir       = @srcdir@
 top_srcdir   = @top_srcdir@
@@ -68,7 +70,7 @@ GENERATE_CASES = $(srcdir)/generate-cases.py
 # Each directory under ports/ is used as a port name.  Each port is tested.
 # Each port must have a spec.mk which describes how to build the object
 # files and how to run the emulator.
-ALL_PORTS = $(filter-out .svn xa51 rrz80 rrgbz80 pic16 pic14 mcs51-common,$(notdir $(wildcard $(PORTS_DIR)/*)))
+ALL_PORTS = $(filter-out .svn rrz80 rrgbz80 pic16 pic14 mcs51-common,$(notdir $(wildcard $(PORTS_DIR)/*)))
 
 # These  ports will be cleaned with 'make clean'
 CLEAN_PORTS = $(filter-out .svn mcs51-common,$(notdir $(wildcard $(PORTS_DIR)/*)))
@@ -96,7 +98,7 @@ test-rrgbz80:
 	$(MAKE) test-port PORT=rrgbz80
 
 # Helper rule for testing the mcs51 port only
-test-mcs51: test-mcs51-small test-mcs51-medium test-mcs51-large test-mcs51-huge test-mcs51-stack-auto test-mcs51-xstack-auto
+test-mcs51: test-mcs51-small test-mcs51-medium test-mcs51-large test-mcs51-huge test-mcs51-stack-auto test-mcs51-large-stack-auto test-mcs51-xstack-auto
 
 test-mcs51-small:
 	$(MAKE) test-common
@@ -112,11 +114,15 @@ test-mcs51-large:
 
 test-mcs51-huge:
 	$(MAKE) test-common
-	$(MAKE) make_library test-port PORT=mcs51-huge
+	$(MAKE) test-port PORT=mcs51-huge
 
 test-mcs51-stack-auto:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=mcs51-stack-auto
+
+test-mcs51-large-stack-auto:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=mcs51-large-stack-auto
 
 test-mcs51-xstack-auto:
 	$(MAKE) test-common
@@ -128,52 +134,52 @@ test-ds390:
 	$(MAKE) test-port PORT=ds390
 
 # Helper rule for testing the z80 related ports only
-test-z80: test-ucz80 test-ucz180 test-ucgbz80 test-ucr2k test-ucr3ka
+test-z80: test-ucz80 test-ucz80-resiy test-ucz180 test-ucgbz80 test-ucr2k test-ucr3ka
 
-# Helper rule for testing the z80 port only(use ucSim simulator)
+# Helper rule for testing the z80 port only (use uCsim simulator)
 test-ucz80:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucz80
 
-# Helper rule for testing the z180 port only(use ucSim simulator)
+# Helper rule for testing the z80 port with --reserve-regs-iy only (use uCsim simulator)
+test-ucz80-resiy:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=ucz80-resiy
+
+# Helper rule for testing the z180 port only(use uCsim simulator)
 test-ucz180:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucz180
 
-# Helper rule for testing the gb/lr35902 port only(use ucSim simulator)
+# Helper rule for testing the gb/lr35902 port only(use uCsim simulator)
 test-ucgbz80:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucgbz80
 
-# Helper rule for testing the r2k port only(use ucSim simulator)
+# Helper rule for testing the r2k port only(use uCsim simulator)
 test-ucr2k:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucr2k
 
-# Helper rule for testing the r3k port only(use ucSim simulator)
+# Helper rule for testing the r3k port only(use uCsim simulator)
 test-ucr3ka:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucr3ka
 
-# Helper rule for testing the hc08 port only(use ucSim simulator)
+# Helper rule for testing the hc08 port only(use uCsim simulator)
 test-hc08:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=hc08
 
-# Helper rule for testing the s08 port only(use ucSim simulator)
+# Helper rule for testing the s08 port only(use uCsim simulator)
 test-s08:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=s08
 
-# Helper rule for testing the stm8 port only(use ucSim simulator)
+# Helper rule for testing the stm8 port only(use uCsim simulator)
 test-stm8:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=stm8
-
-# Helper rule for testing the xa51 port only(use ucSim simulator)
-test-xa51:
-	$(MAKE) test-common
-	$(MAKE) test-port PORT=xa51
 
 # Helper rule for testing the pic16 port only(use gpsim simulator)
 test-pic16:
@@ -184,6 +190,11 @@ test-pic16:
 test-pic14:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=pic14
+
+# Helper rule for testing the tlcs90 port only(use uCsim simulator)
+test-tlcs90:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=tlcs90
 
 ### Helper rule for testing the host cc only
 test-host:
@@ -196,16 +207,20 @@ test-host2:
 
 # Begin per-port rules
 # List of all of the known source test suites.
+# Do not do this for the individual test files, to avoid quadratic complexity.
+ifndef CASES
 ALL_C_TESTS = $(shell find $(TESTS_DIR) -name "*.c")
 ALL_M_TESTS = $(shell find $(TESTS_DIR) -name "*.m4")
-
 M_CASES = $(ALL_M_TESTS:$(TESTS_DIR)/%.m4=$(CASES_DIR)/%.c)
+endif
 
 # Intermediate directory
 PORT_CASES_DIR = $(CASES_DIR)/$(PORT)
 PORT_RESULTS_DIR = $(RESULTS_DIR)/$(PORT)
 # Each test generates a result log file
-PORT_RESULTS = $(sort $(ALL_C_TESTS:$(TESTS_DIR)/%.c=$(PORT_RESULTS_DIR)/%.out) $(ALL_M_TESTS:$(TESTS_DIR)/%.m4=$(PORT_RESULTS_DIR)/%.out))
+ifndef CASES
+PORT_RESULTS = $(sort $(patsubst %.c,$(PORT_RESULTS_DIR)/%.out,$(notdir $(ALL_C_TESTS))) $(patsubst %.m4,$(PORT_RESULTS_DIR)/%.out,$(notdir $(ALL_M_TESTS))))
+endif
 
 SDCC_EXTRA_DIR = $(top_builddir)/../sdcc-extra
 
@@ -260,25 +275,25 @@ $(CASES_DIR)/stamp:
 
 # Rule to generate .c files from .m4 files
 $(CASES_DIR)/%.c: $(TESTS_DIR)/%.m4 $(CASES_DIR)/stamp
-	m4 -I $(srcdir)/m4include rtmacros.m4 $< > $@
+	$(M4) -I $(srcdir)/m4include rtmacros.m4 $< > $@
 
 # Rule to generate the iterations of a test suite off the source suite.
 $(PORT_CASES_DIR)/%/iterations.stamp: %.c $(GENERATE_CASES)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
-	python $(GENERATE_CASES) $< $(dir $@)
+	$(PYTHON) $(GENERATE_CASES) $< $(dir $@)
 	touch $@
 
 # Rule linking the combined results log to all of the files in the
 # iteration directory.
 $(PORT_RESULTS_DIR)/%.out: $(PORT_CASES_DIR)/%/iterations.stamp
 	$(MAKE) iterations PORT=$(PORT) CASES=$(dir $<)
-	python $(srcdir)/compact-results.py < $@
+	$(PYTHON) $(srcdir)/compact-results.py $@ < $@
 
 # Rule to summarise the results for one port after all of the tests
 # have been run.
 port-results: $(PORT_RESULTS)
-	cat $(PORT_RESULTS) | python $(srcdir)/collate-results.py $(PORT)
+	cat $(PORT_RESULTS) | $(PYTHON) $(srcdir)/collate-results.py $(PORT)
 
 port-fwklib: $(EXTRAS) $(FWKLIB)
 
@@ -330,7 +345,10 @@ $(CASES_DIR)/timeout: $(srcdir)/fwk/lib/timeout.c $(CASES_DIR)/stamp
 
 clean:
 	rm -rf $(CASES_DIR) $(RESULTS_DIR) *.pyc
-	for i in $(CLEAN_PORTS); do $(MAKE) -f $(PORTS_DIR)/$$i/spec.mk _clean PORTS_DIR=$(PORTS_DIR) PORT=$$i srcdir=$(srcdir); done
+	for i in $(CLEAN_PORTS); do \
+	  $(MAKE) -f $(PORTS_DIR)/$$i/spec.mk _clean PORTS_DIR=$(PORTS_DIR) PORT=$$i srcdir=$(srcdir); \
+	done
 
 distclean: clean
+	rm -f $(PORTS_DIR)/host/spec.mk
 	rm -f Makefile

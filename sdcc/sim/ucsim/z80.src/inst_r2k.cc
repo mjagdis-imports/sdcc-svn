@@ -23,9 +23,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "z80mac.h"
 
 
-unsigned   word_parity( TYPE_UWORD  x ) {
+unsigned   word_parity( u16_t  x ) {
   // bitcount(x) performed by shift-and-add
-  TYPE_UWORD  tmp = (x & 0x5555) + ((x & 0xAAAA) >> 1);
+  u16_t  tmp = (x & 0x5555) + ((x & 0xAAAA) >> 1);
   tmp = (tmp & 0x3333) + ((tmp & 0xCCCC) >> 2);
   tmp = (tmp & 0x0F0F) + ((tmp & 0xF0F0) >> 4);
   tmp = (tmp & 0x000F) + ((tmp & 0x0F00) >> 8);
@@ -35,28 +35,28 @@ unsigned   word_parity( TYPE_UWORD  x ) {
 }
 
 /******** rabbit 2000 memory access helper functions *****************/
-TYPE_UDWORD  rabbit_mmu::logical_addr_to_phys( TYPE_UWORD logical_addr ) {
-  TYPE_UDWORD  phys_addr = logical_addr;
+u32_t  rabbit_mmu::logical_addr_to_phys( u16_t logical_addr ) {
+  u32_t  phys_addr = logical_addr;
   unsigned     segnib = logical_addr >> 12;
   
   if (segnib >= 0xE000)
   {
-    phys_addr += ((TYPE_UDWORD)xpc) << 12;
+    phys_addr += ((u32_t)xpc) << 12;
   }
   else if (segnib >= ((segsize >> 4) & 0x0F))
   {
-    phys_addr += ((TYPE_UDWORD)stackseg) << 12;    
+    phys_addr += ((u32_t)stackseg) << 12;    
   }
   else if (segnib >= (segsize & 0x0F))
   {
-    phys_addr += ((TYPE_UDWORD)dataseg) << 12;    
+    phys_addr += ((u32_t)dataseg) << 12;    
   }
   
   return phys_addr;
 }
 
-void cl_r2k::store1( TYPE_UWORD addr, t_mem val ) {
-  TYPE_UDWORD  phys_addr;
+void cl_r2k::store1( u16_t addr, t_mem val ) {
+  u32_t  phys_addr;
   
   if (mmu.io_flag == IOI) {
     if ((mmu.mmidr ^ 0x80) & 0x80)
@@ -81,11 +81,11 @@ void cl_r2k::store1( TYPE_UWORD addr, t_mem val ) {
   }
   
   phys_addr = mmu.logical_addr_to_phys( addr );
-  ram->set(phys_addr, val);
+  ram->write(phys_addr, val);
 }
 
-void cl_r2k::store2( TYPE_UWORD addr, TYPE_UWORD val ) {
-  TYPE_UDWORD  phys_addr;
+void cl_r2k::store2( u16_t addr, u16_t val ) {
+  u32_t  phys_addr;
   
   if (mmu.io_flag == IOI) {
     /* I/O operation for on-chip device (serial ports, timers, etc) */
@@ -99,12 +99,12 @@ void cl_r2k::store2( TYPE_UWORD addr, TYPE_UWORD val ) {
   
   phys_addr = mmu.logical_addr_to_phys( addr );
   
-  ram->set(phys_addr,   val & 0xff);
-  ram->set(phys_addr+1, (val >> 8) & 0xff);
+  ram->write(phys_addr,   val & 0xff);
+  ram->write(phys_addr+1, (val >> 8) & 0xff);
 }
 
-TYPE_UBYTE  cl_r2k::get1( TYPE_UWORD addr ) {
-  TYPE_UDWORD  phys_addr = mmu.logical_addr_to_phys( addr );
+u8_t  cl_r2k::get1( u16_t addr ) {
+  u32_t  phys_addr = mmu.logical_addr_to_phys( addr );
   
   if (mmu.io_flag == IOI) {
     /* stub for on-chip device I/O */
@@ -115,12 +115,12 @@ TYPE_UBYTE  cl_r2k::get1( TYPE_UWORD addr ) {
     return 0;
   }
   
-  return ram->get(phys_addr);
+  return ram->read(phys_addr);
 }
 
-TYPE_UWORD  cl_r2k::get2( TYPE_UWORD addr ) {
-  TYPE_UDWORD phys_addr = mmu.logical_addr_to_phys( addr );
-  TYPE_UWORD  l, h;
+u16_t  cl_r2k::get2( u16_t addr ) {
+  u32_t phys_addr = mmu.logical_addr_to_phys( addr );
+  u16_t  l, h;
   
   if (mmu.io_flag == IOI) {
     /* stub for on-chip device I/O */
@@ -131,8 +131,8 @@ TYPE_UWORD  cl_r2k::get2( TYPE_UWORD addr ) {
     return 0;
   }
   
-  l = ram->get(phys_addr  );
-  h = ram->get(phys_addr+1);
+  l = ram->read(phys_addr  );
+  h = ram->read(phys_addr+1);
   
   return (h << 8) | l;
 }
@@ -141,8 +141,8 @@ t_mem       cl_r2k::fetch1( void ) {
   return fetch( );
 }
 
-TYPE_UWORD  cl_r2k::fetch2( void ) {
-  TYPE_UWORD  c1, c2;
+u16_t  cl_r2k::fetch2( void ) {
+  u16_t  c1, c2;
   
   c1 = fetch( );
   c2 = fetch( );
@@ -157,7 +157,7 @@ t_mem cl_r2k::fetch(void) {
    * which does check for a breakpoint hit
    */
   
-  TYPE_UDWORD phys_addr = mmu.logical_addr_to_phys( PC );
+  u32_t phys_addr = mmu.logical_addr_to_phys( PC );
   ulong code;
   
   if (!rom)
@@ -165,12 +165,13 @@ t_mem cl_r2k::fetch(void) {
   
   code= rom->read(phys_addr);
   PC = (PC + 1) & 0xffffUL;
+  vc.fetch++;
   return(code);
 }
 
 /******** start rabbit 2000 specific codes *****************/
 int cl_r2k::inst_add_sp_d(t_mem code) {
-  TYPE_UWORD  d = fetch( );
+  u16_t  d = fetch( );
   /* sign-extend d from 8-bits to 16-bits */
   d |= (d>>7)*0xFF00;
   regs.SP = (regs.SP + d) & 0xffff;
@@ -195,10 +196,10 @@ cl_r2k::inst_r2k_ld(t_mem code)
    *   FD F4 = ld (iy+d),hl
    */
   switch(code) {
-  case 0xC4:  regs.HL = get2( add_u16_disp(regs.SP, fetch()) ); break;
-  case 0xD4:  store2( add_u16_disp(regs.SP, fetch()), regs.HL ); break;
-  case 0xE4:  regs.HL = get2( add_u16_disp(regs.IX, fetch()) ); break;
-  case 0xF4:  store2( add_u16_disp(regs.IX, fetch()), regs.HL ); break;
+  case 0xC4:  regs.HL = get2( add_u16_disp(regs.SP, fetch()) ); vc.rd+= 2; break;
+  case 0xD4:  store2( add_u16_disp(regs.SP, fetch()), regs.HL ); vc.wr+= 2; break;
+  case 0xE4:  regs.HL = get2( add_u16_disp(regs.IX, fetch()) ); vc.rd+= 2; break;
+  case 0xF4:  store2( add_u16_disp(regs.IX, fetch()), regs.HL ); vc.wr+= 2; break;
   default:
     return(resINV_INST);
   }
@@ -207,7 +208,7 @@ cl_r2k::inst_r2k_ld(t_mem code)
 }
 
 int cl_r2k::inst_r2k_ex (t_mem code) {
-  TYPE_UWORD tempw;
+  u16_t tempw;
   
   switch(code) {
   case 0xE3:
@@ -223,7 +224,7 @@ int cl_r2k::inst_r2k_ex (t_mem code) {
 }
 
 int cl_r2k::inst_ljp(t_mem code) {
-  TYPE_UWORD  mn;
+  u16_t  mn;
   
   mn = fetch2();  /* don't clobber PC before the fetch for xmem page */
   mmu.xpc = fetch1();
@@ -233,10 +234,11 @@ int cl_r2k::inst_ljp(t_mem code) {
 }
 
 int cl_r2k::inst_lcall(t_mem code) {
-  TYPE_UWORD  mn;
+  u16_t  mn;
   
   push1(mmu.xpc);
   push2(PC+2);
+  vc.wr+= 2;
   
   mn = fetch2();  /* don't clobber PC before the fetch for xmem page */
   mmu.xpc = fetch1();
@@ -246,37 +248,37 @@ int cl_r2k::inst_lcall(t_mem code) {
 }
 
 int cl_r2k::inst_bool(t_mem code) {
-  regs.F &= ~BIT_ALL;
+  regs.raf.F &= ~BIT_ALL;
   if (regs.HL)
     regs.HL = 1;
   else
-    regs.F |= BIT_Z;
+    regs.raf.F |= BIT_Z;
   return(resGO);
 }
 
 int cl_r2k::inst_r2k_and(t_mem code) {  // AND HL,DE
   regs.HL &= regs.DE;
   
-  regs.F &= ~BIT_ALL;
+  regs.raf.F &= ~BIT_ALL;
   if (regs.DE & 0x8000)
-    regs.F |= BIT_S;
+    regs.raf.F |= BIT_S;
   if (regs.DE == 0)
-    regs.F |= BIT_Z;
+    regs.raf.F |= BIT_Z;
   if (word_parity(regs.DE))
-    regs.F |= BIT_P;
+    regs.raf.F |= BIT_P;
   return(resGO);
 }
 
 int cl_r2k::inst_r2k_or (t_mem code) {  // OR  HL,DE
   regs.HL |= regs.DE;
   
-  regs.F &= ~BIT_ALL;
+  regs.raf.F &= ~BIT_ALL;
   if (regs.DE & 0x8000)
-    regs.F |= BIT_S;
+    regs.raf.F |= BIT_S;
   if (regs.DE == 0)
-    regs.F |= BIT_Z;
+    regs.raf.F |= BIT_Z;
   if (word_parity(regs.DE))
-    regs.F |= BIT_P;
+    regs.raf.F |= BIT_P;
   return(resGO);
 }
 
@@ -295,51 +297,51 @@ int cl_r2k::inst_mul(t_mem code) {
 }
 
 int cl_r2k::inst_rl_de(t_mem code) {
-  unsigned int oldcarry = (regs.F & BIT_C);
+  unsigned int oldcarry = (regs.raf.F & BIT_C);
   
-  regs.F &= ~BIT_ALL;
-  regs.F |= (((regs.DE >> 15) & 1U) << BITPOS_C);
+  regs.raf.F &= ~BIT_ALL;
+  regs.raf.F |= (((regs.DE >> 15) & 1U) << BITPOS_C);
   regs.DE = (regs.DE << 1) | (oldcarry >> BITPOS_C);
   
   if (regs.DE & 0x8000)
-    regs.F |= BIT_S;
+    regs.raf.F |= BIT_S;
   if (regs.DE == 0)
-    regs.F |= BIT_Z;
+    regs.raf.F |= BIT_Z;
   if (word_parity(regs.DE))
-    regs.F |= BIT_P;
+    regs.raf.F |= BIT_P;
   return(resGO);
 }
 
 int cl_r2k::inst_rr_de(t_mem code) {
-  unsigned int oldcarry = (regs.F & BIT_C);
+  unsigned int oldcarry = (regs.raf.F & BIT_C);
 
-  regs.F &= ~BIT_ALL;
-  regs.F |= ((regs.DE & 1) << BITPOS_C);
+  regs.raf.F &= ~BIT_ALL;
+  regs.raf.F |= ((regs.DE & 1) << BITPOS_C);
   regs.DE = (regs.DE >> 1) | (oldcarry << (15 - BITPOS_C));
   
   if (regs.DE & 0x8000)
-    regs.F |= BIT_S;
+    regs.raf.F |= BIT_S;
   if (regs.DE == 0)
-    regs.F |= BIT_Z;
+    regs.raf.F |= BIT_Z;
   if (word_parity(regs.DE))
-    regs.F |= BIT_P;
+    regs.raf.F |= BIT_P;
   return(resGO);
 }
 
 int cl_r2k::inst_rr_hl(t_mem code)    // RR HL
 {
-  unsigned int oldcarry = (regs.F & BIT_C);
+  unsigned int oldcarry = (regs.raf.F & BIT_C);
   
-  regs.F &= ~BIT_ALL;
-  regs.F |= ((regs.HL & 1) << BITPOS_C);
+  regs.raf.F &= ~BIT_ALL;
+  regs.raf.F |= ((regs.HL & 1) << BITPOS_C);
   regs.HL = (regs.HL >> 1) | (oldcarry << (15 - BITPOS_C));
   
   if (regs.HL & 0x8000)
-    regs.F |= BIT_S;
+    regs.raf.F |= BIT_S;
   if (regs.HL == 0)
-    regs.F |= BIT_Z;
+    regs.raf.F |= BIT_Z;
   if (word_parity(regs.HL))
-    regs.F |= BIT_P;
+    regs.raf.F |= BIT_P;
   return(resGO);
 }
 
@@ -351,6 +353,7 @@ cl_r2k::inst_rst(t_mem code)
     case 0xC7: // RST 0
       push2(PC+2);
       PC = 0x0;
+      vc.wr+= 2;
     break;
     case 0xCF: // RST 8
       return(resINV_INST);
@@ -358,18 +361,21 @@ cl_r2k::inst_rst(t_mem code)
     case 0xD7: // RST 10H
       push2(PC+2);
       PC = 0x10;
+      vc.wr+= 2;
     break;
     case 0xDF: // RST 18H
       push2(PC+2);
       PC = 0x18;
+      vc.wr+= 2;
     break;
     case 0xE7: // RST 20H
       push2(PC+2);
       PC = 0x20;
+      vc.wr+= 2;
     break;
     case 0xEF: // RST 28H
       //PC = 0x28;
-      switch (regs.A) {
+      switch (regs.raf.A) {
         case 0:
           return(resBREAKPOINT);
 //          ::exit(0);
@@ -388,6 +394,7 @@ cl_r2k::inst_rst(t_mem code)
     case 0xFF: // RST 38H
       push2(PC+2);
       PC = 0x38;
+      vc.wr+= 2;
     break;
     default:
       return(resINV_INST);
@@ -398,7 +405,7 @@ cl_r2k::inst_rst(t_mem code)
 
 int cl_r2k::inst_xd(t_mem prefix)
 {
-  TYPE_UWORD  *regs_IX_OR_IY = (prefix==0xdd)?(&regs.IX):(&regs.IY);
+  u16_t  *regs_IX_OR_IY = (prefix==0xdd)?(&regs.IX):(&regs.IY);
   t_mem code;
   
   if (fetch(&code))
@@ -481,6 +488,7 @@ int cl_r2k::inst_xd(t_mem prefix)
     
   case 0xC4: // LD IX,(SP+n)
     *regs_IX_OR_IY = get2( add_u16_disp(regs.SP, fetch()) );
+    vc.rd+= 2;
     return(resGO);
     
   case 0xCB: // escape, IX prefix to CB commands
@@ -496,29 +504,33 @@ int cl_r2k::inst_xd(t_mem prefix)
       *regs_IX_OR_IY = 1;
     
     // update flags
-    regs.F &= ~BIT_ALL;
+    regs.raf.F &= ~BIT_ALL;
     // bit 15 will never be set, so S<=0
     if (*regs_IX_OR_IY == 0)
-      regs.F |= BIT_Z;
+      regs.raf.F |= BIT_Z;
     // L/V and C are always cleared
     return(resGO);
     
   case 0xD4: // LD (SP+n),IX|IY
     store2( add_u16_disp(regs.SP, fetch()), *regs_IX_OR_IY );
+    vc.wr+= 2;
     return(resGO);
     
   case 0xE1: // POP IX
     *regs_IX_OR_IY = get2(regs.SP);
     regs.SP+=2;
+    vc.rd+= 2;
     return(resGO);
     
   case 0xE3: // EX (SP),IX
   {
-    TYPE_UWORD tempw;
+    u16_t tempw;
     
     tempw = *regs_IX_OR_IY;
     *regs_IX_OR_IY = get2(regs.SP);
     store2(regs.SP, tempw);
+    vc.rd+= 2;
+    vc.wr+= 2;
   }
   return(resGO);
   
@@ -527,10 +539,12 @@ int cl_r2k::inst_xd(t_mem prefix)
       regs.HL = get2( add_u16_disp(regs.HL, fetch()) );
     else
       regs.HL = get2( add_u16_disp(regs.IY, fetch()) );
+    vc.rd+= 2;
     return(resGO);
     
   case 0xE5: // PUSH IX
     push2(*regs_IX_OR_IY);
+    vc.wr+= 2;
     return(resGO);
     
   case 0xE9: // JP (IX)
@@ -540,6 +554,7 @@ int cl_r2k::inst_xd(t_mem prefix)
   case 0xEA:
     push2(PC);
     PC = *regs_IX_OR_IY;
+    vc.wr+= 2;
     return(resGO);
     
   case 0xDC: // AND IX|IY,DE  for rabbit processors
@@ -550,13 +565,13 @@ int cl_r2k::inst_xd(t_mem prefix)
       *regs_IX_OR_IY |= regs.DE;
     
     // update flags
-    regs.F &= ~BIT_ALL;
+    regs.raf.F &= ~BIT_ALL;
     if (*regs_IX_OR_IY & 0x8000)
-      regs.F |= BIT_S;
+      regs.raf.F |= BIT_S;
     if (regs_IX_OR_IY == 0)
-      regs.F |= BIT_Z;
+      regs.raf.F |= BIT_Z;
     if (word_parity(*regs_IX_OR_IY))
-      regs.F |= BIT_P;
+      regs.raf.F |= BIT_P;
     return(resGO);
     
   case 0xF4: // LD (HL|IY+d),HL
@@ -564,21 +579,22 @@ int cl_r2k::inst_xd(t_mem prefix)
       store2( add_u16_disp(regs.HL, fetch()), regs.HL );
     else
       store2( add_u16_disp(regs.IY, fetch()), regs.HL );
+    vc.wr+= 2;
     return(resGO);
     
   case 0xFC: // RR IX|IY
   {
-    TYPE_UWORD  tmp = (regs.F & BIT_C) << (15 - BITPOS_C);
+    u16_t  tmp = (regs.raf.F & BIT_C) << (15 - BITPOS_C);
     tmp |= (*regs_IX_OR_IY >> 1);
     
-    regs.F = (regs.F & ~BIT_C) | ((*regs_IX_OR_IY & 1) << BITPOS_C);
+    regs.raf.F = (regs.raf.F & ~BIT_C) | ((*regs_IX_OR_IY & 1) << BITPOS_C);
     
     if (*regs_IX_OR_IY & 0x8000)
-      regs.F |= BIT_S;
+      regs.raf.F |= BIT_S;
     if (*regs_IX_OR_IY == 0)
-      regs.F |= BIT_Z;
+      regs.raf.F |= BIT_Z;
     if (word_parity(*regs_IX_OR_IY))
-      regs.F |= BIT_P;
+      regs.raf.F |= BIT_P;
     return(resGO);
   }
   

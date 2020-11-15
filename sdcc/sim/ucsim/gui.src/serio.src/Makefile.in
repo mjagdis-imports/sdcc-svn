@@ -6,7 +6,7 @@ CXXCPP		= @CXXCPP@
 INSTALL		= @INSTALL@
 STRIP		= @STRIP@
 CP		= /bin/cp
-MAKEDEP         = @MAKEDEP
+MAKEDEP         = @MAKEDEP@
 
 top_builddir	= @top_builddir@
 top_srcdir	= @top_srcdir@
@@ -108,7 +108,7 @@ serialview$(EXEEXT): $(OBJECTS)
 # ----------------------
 checkconf:
 	@if [ -f $(top_builddir)/devel ]; then\
-	  $(MAKE) -f conf.mk srcdir="$(srcdir)" top_builddir="$(top_builddir)" freshconf;\
+	  $(MAKE) -f conf.mk srcdir="$(srcdir)" top_builddir="$(top_builddir)" top_srcdir=$(top_srcdir) freshconf;\
 	fi
 
 # End of gui.src/serio.src/Makefile.in

@@ -32,7 +32,7 @@
 #endif
 #endif
 
-/* C++ incompatible heared files */
+/* C++ incompatible header files */
 #ifdef __cplusplus
 /* TODO: the extern "C" should be moved to each header file */
 extern "C" {
@@ -70,7 +70,7 @@ extern "C" {
 }
 #endif
 
-/* C++ compatible heared files */
+/* C++ compatible header files */
 #include "SDCCgen.h"
 
 #endif

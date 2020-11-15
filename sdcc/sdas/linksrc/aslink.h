@@ -160,9 +160,23 @@
  #if defined(__BORLANDC__) || defined(_MSC_VER)
   #include <stdlib.h>
   #define PATH_MAX      _MAX_PATH
+ #elif defined(__x86_64__)
+  #define PATH_MAX      4096
  #else
   #define PATH_MAX      255     /* define a reasonable value */
  #endif
+#endif
+
+#ifdef _WIN32           /* WIN32 native */
+#  define NATIVE_WIN32          1
+#  ifdef __MINGW32__    /* GCC MINGW32 depends on configure */
+#    include "../../sdccconf.h"
+#  else
+#    include "../../sdcc_vc.h"
+#    define PATH_MAX    _MAX_PATH
+#  endif
+#else                   /* Assume *nix style system */
+#  include "../../sdccconf.h"
 #endif
 
 #define LKOBJEXT        "rel"

@@ -18,6 +18,8 @@ MAKEDEP         = @MAKEDEP@
 top_builddir	= @top_builddir@
 top_srcdir	= @top_srcdir@
 
+transform	= @program_transform_name@
+
 DEFS            = $(subs -DHAVE_CONFIG_H,,@DEFS@)
 CPPFLAGS        = @CPPFLAGS@ -I$(srcdir) -I$(top_srcdir) -I$(top_builddir) \
 		  -I$(top_srcdir)/cmd.src -I$(top_srcdir)/sim.src \
@@ -72,14 +74,14 @@ tests: $(TEST_OBJ)
 # Compiling and installing everything and runing test
 # ---------------------------------------------------
 install: all installdirs
-	$(INSTALL) sst7$(EXEEXT) $(DESTDIR)$(bindir)/sst7$(EXEEXT)
-	$(STRIP) $(DESTDIR)$(bindir)/sst7$(EXEEXT)
+	$(INSTALL) sst7$(EXEEXT) $(DESTDIR)$(bindir)/`echo sst7|sed '$(transform)'`$(EXEEXT)
+	$(STRIP) $(DESTDIR)$(bindir)/`echo sst7|sed '$(transform)'`$(EXEEXT)
 
 
 # Deleting all the installed files
 # --------------------------------
 uninstall:
-	rm -f $(DESTDIR)$(bindir)/sst7$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/`echo sst7|sed '$(transform)'`$(EXEEXT)
 
 
 # Performing self-test
@@ -116,8 +118,8 @@ include $(srcdir)/clean.mk
 
 st7.src: sst7$(EXEEXT)  shared_lib
 
-sst7$(EXEEXT): $(OBJECTS) $(top_builddir)/*.a
-	$(CXX) $(CXXFLAGS) $(LDFLAGS)  -o $@ $(OBJECTS) $(LIBS)
+sst7$(EXEEXT): $(OBJECTS) $(top_builddir)/libcmd.a $(top_builddir)/libguiucsim.a $(top_builddir)/libsim.a $(top_builddir)/libucsimutil.a
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 
 ifeq ($(dlso_ok),yes)
 shared_lib: $(top_builddir)/sst7.so
@@ -130,9 +132,19 @@ endif
 $(top_builddir)/sst7.so: $(OBJECTS_SHARED)
 	$(CXX) -shared $(LDFLAGS) $(OBJECTS_SHARED) -o $(top_builddir)/sst7.so
 
-otherlibs:
+otherlibs: $(top_builddir)/libcmd.a $(top_builddir)/libguiucsim.a $(top_builddir)/libsim.a $(top_builddir)/libucsimutil.a
+
+$(top_builddir)/libcmd.a:
 	$(MAKE) -C $(top_builddir)/cmd.src all
+
+$(top_builddir)/libguiucsim.a:
+	$(MAKE) -C $(top_builddir)/gui.src checkconf ucsim_lib
+
+$(top_builddir)/libsim.a:
 	$(MAKE) -C $(top_builddir)/sim.src all
+
+$(top_builddir)/libucsimutil.a:
+	$(MAKE) -C $(top_builddir) -f main.mk
 
 .cc.o:
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@

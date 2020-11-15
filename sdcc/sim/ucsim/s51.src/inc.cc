@@ -39,10 +39,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  */
 
 int
-cl_51core::inst_inc_a(uchar code)
+cl_51core::instruction_04/*inst_inc_a*/(t_mem/*uchar*/ code)
 {
   acc->wadd(1);
   return(resGO);
+  //vc.rd++;
+  //vc.wr++;
 }
 
 
@@ -53,12 +55,14 @@ cl_51core::inst_inc_a(uchar code)
  */
 
 int
-cl_51core::inst_inc_addr(uchar code)
+cl_51core::instruction_05/*inst_inc_addr*/(t_mem/*uchar*/ code)
 {
   class cl_memory_cell *cell= get_direct(fetch());
 
   t_mem d= cell->read(HW_PORT);
   cell->write(d+1);
+  vc.rd++;
+  vc.wr++;
   return(resGO);
 }
 
@@ -70,12 +74,14 @@ cl_51core::inst_inc_addr(uchar code)
  */
 
 int
-cl_51core::inst_inc_Sri(uchar code)
+cl_51core::instruction_06/*inst_inc_Sri*/(t_mem/*uchar*/ code)
 {
   class cl_memory_cell *cell;
 
-  cell= iram->get_cell(get_reg(code & 0x01)->read());
+  cell= iram->get_cell(R[code & 0x01]->read());
   cell->wadd(1);
+  vc.rd++;//= 2;
+  vc.wr++;
   return(resGO);
 }
 
@@ -87,11 +93,13 @@ cl_51core::inst_inc_Sri(uchar code)
  */
 
 int
-cl_51core::inst_inc_rn(uchar code)
+cl_51core::instruction_08/*inst_inc_rn*/(t_mem/*uchar*/ code)
 {
-  class cl_memory_cell *reg= get_reg(code & 0x07);
+  class cl_memory_cell *reg= R[code & 0x07];
 
   reg->wadd(1);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -103,10 +111,11 @@ cl_51core::inst_inc_rn(uchar code)
  */
 
 int
-cl_51core::inst_dec_a(uchar code)
+cl_51core::instruction_14/*inst_dec_a*/(t_mem/*uchar*/ code)
 {
   acc->wadd(-1);
-
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -118,13 +127,15 @@ cl_51core::inst_dec_a(uchar code)
  */
 
 int
-cl_51core::inst_dec_addr(uchar code)
+cl_51core::instruction_15/*inst_dec_addr*/(t_mem/*uchar*/ code)
 {
   class cl_memory_cell *cell;
 
   cell= get_direct(fetch());
   t_mem d= cell->read(HW_PORT);
   cell->write(d-1);
+  vc.rd++;
+  vc.wr++;
   return(resGO);
 }
 
@@ -136,12 +147,14 @@ cl_51core::inst_dec_addr(uchar code)
  */
 
 int
-cl_51core::inst_dec_Sri(uchar code)
+cl_51core::instruction_16/*inst_dec_Sri*/(t_mem/*uchar*/ code)
 {
   class cl_memory_cell *cell;
 
-  cell= iram->get_cell(get_reg(code & 0x01)->read());
+  cell= iram->get_cell(R[code & 0x01]->read());
   cell->add(-1);
+  vc.rd++;//= 2;
+  vc.wr++;
   return(resGO);
 }
 
@@ -153,11 +166,13 @@ cl_51core::inst_dec_Sri(uchar code)
  */
 
 int
-cl_51core::inst_dec_rn(uchar code)
+cl_51core::instruction_18/*inst_dec_rn*/(t_mem/*uchar*/ code)
 {
-  class cl_memory_cell *reg= get_reg(code & 0x07);
+  class cl_memory_cell *reg= R[code & 0x07];
 
   reg->wadd(-1);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -169,14 +184,16 @@ cl_51core::inst_dec_rn(uchar code)
  */
 
 int
-cl_51core::inst_inc_dptr(uchar code)
+cl_51core::instruction_a3/*inst_inc_dptr*/(t_mem/*uchar*/ code)
 {
-  uint dptr;
+  uint _dptr;
 
-  dptr= sfr->read(DPH)*256 + sfr->read(DPL) + 1;
-  sfr->write(DPH, (dptr >> 8) & 0xff);
-  sfr->write(DPL, dptr & 0xff);
+  _dptr= /*sfr*/dptr->read(/*DPH*/1)*256 + /*sfr*/dptr->read(/*DPL*/0) + 1;
+  /*sfr*/dptr->write(/*DPH*/1, (_dptr >> 8) & 0xff);
+  /*sfr*/dptr->write(/*DPL*/0, _dptr & 0xff);
   tick(1);
+  vc.rd+= 2;
+  vc.wr+= 2;
   return(resGO);
 }
 

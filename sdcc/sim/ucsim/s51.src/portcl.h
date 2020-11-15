@@ -34,24 +34,39 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "newcmdcl.h"
 
+#include "port_hwcl.h"
+
+
+enum port_cfg {
+  port_on		= 0, // RW
+  port_pin		= 1, // RW
+  port_value		= 2, // RO
+};
 
 class cl_port: public cl_hw
 {
 public:
   t_addr addr_p;
-  class cl_memory_cell *cell_p;
   t_mem port_pins;
   t_mem prev;
+  class cl_address_space *bas;
+  class cl_memory_cell *cell_p, *cell_in, *bit_cells[8];
 public:
   cl_port(class cl_uc *auc, int aid);
+  cl_port(class cl_uc *auc, int aid, t_addr the_addr);
   virtual int init(void);
+  virtual int cfg_size(void) { return 3; }
 
   virtual t_mem read(class cl_memory_cell *cell);
   virtual void write(class cl_memory_cell *cell, t_mem *val);
+  virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
 
+  virtual void set_pin(t_mem val);
+    
   virtual void set_cmd(class cl_cmdline *cmdline, class cl_console_base *con);
   //virtual void mem_cell_changed(class cl_m *mem, t_addr addr);
 
+  virtual void make_io(void) {}
   //virtual int tick(int cycles);
   virtual void print_info(class cl_console_base *con);
 };

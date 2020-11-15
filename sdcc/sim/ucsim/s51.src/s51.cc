@@ -45,7 +45,6 @@ int
 main(int argc, char *argv[])
 {
   int retval;
-  //class cl_app *app;
   class cl_sim *sim;
 
   cpus= cpus_51;
@@ -53,9 +52,11 @@ main(int argc, char *argv[])
   application->init(argc, argv);
   sim= new cl_sim51(application);
   if (sim->init())
-    return(1);
+    sim->state|= SIM_QUIT;
   application->set_simulator(sim);
-  retval= /*sim->main()*/application->run();
+  retval= application->run();
+
+  application->done();
   delete application;
   
   return(retval);

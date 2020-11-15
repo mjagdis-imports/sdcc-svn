@@ -81,12 +81,7 @@ static char *_pic16_keywords[] =
 
 
 pic16_sectioninfo_t pic16_sectioninfo;
-
-extern char *pic16_processor_base_name(void);
-
-void pic16_pCodeInitRegisters(void);
-
-void pic16_assignRegisters (ebbIndex *);
+int has_xinst_config = 0;
 
 static int regParmFlg = 0;  /* determine if we can register a parameter */
 
@@ -111,10 +106,11 @@ _pic16_init (void)
   asm_addTree (&asm_asxxxx_mapping);
   pic16_pCodeInitRegisters();
   maxInterrupts = 2;
+  memset(&pic16_options, 0, sizeof(pic16_options));
 }
 
 static void
-_pic16_reset_regparm (void)
+_pic16_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
 }
@@ -247,11 +243,11 @@ do_pragma (int id, const char *name, const char *cp)
         addSet (&pic16_fix_udata, reg);
 
         sym = newSymbol ("stack", 0);
-        sprintf (sym->rname, "_%s", sym->name);
+        SNPRINTF(sym->rname, sizeof(sym->rname), "_%s", sym->name);
         addSet (&publics, sym);
 
         sym = newSymbol ("stack_end", 0);
-        sprintf (sym->rname, "_%s", sym->name);
+        SNPRINTF(sym->rname, sizeof(sym->rname), "_%s", sym->name);
         addSet (&publics, sym);
 
         initsfpnt = 1;    // force glue() to initialize stack/frame pointers */
@@ -267,8 +263,8 @@ do_pragma (int id, const char *name, const char *cp)
         if (TOKEN_STR != token.type)
           goto code_err;
 
-        absS = Safe_calloc (1, sizeof (absSym));
-        sprintf (absS->name, "_%s", get_pragma_string (&token));
+        absS = Safe_alloc(sizeof(absSym));
+        SNPRINTF(absS->name, sizeof(absS->name), "_%s", get_pragma_string(&token));
 
         cp = get_pragma_token (cp, &token);
         if (TOKEN_INT != token.type)
@@ -330,9 +326,11 @@ do_pragma (int id, const char *name, const char *cp)
 
         while (symname)
           {
-            ssym = Safe_calloc (1, sizeof (sectSym));
-            ssym->name = Safe_calloc (1, strlen (symname) + 2);
-            sprintf (ssym->name, "%s%s", port->fun_prefix, symname);
+            size_t len = strlen(symname) + 2;
+
+            ssym = Safe_alloc(sizeof(sectSym));
+            ssym->name = Safe_alloc(len);
+            SNPRINTF(ssym->name, len, "%s%s", port->fun_prefix, symname);
             ssym->reg = NULL;
 
             addSet (&sectSyms, ssym);
@@ -356,7 +354,7 @@ do_pragma (int id, const char *name, const char *cp)
 
             if(!found)
               {
-                snam = Safe_calloc (1, sizeof (sectName));
+                snam = Safe_alloc(sizeof(sectName));
                 snam->name = Safe_strdup (sectname);
                 snam->regsSet = NULL;
 
@@ -450,6 +448,8 @@ do_pragma (int id, const char *name, const char *cp)
 
         do
           {
+            int isXINST = 0;
+
             if (first)
               first = FALSE;
             else
@@ -471,6 +471,11 @@ do_pragma (int id, const char *name, const char *cp)
                 begin = cp++;
                 while (*cp == '_' || isalnum (*cp))
                   ++cp;
+                if ((5 == (cp - begin)) && (0 == strncmp("XINST", begin, 5)))
+                  {
+                    /* Keep warning if we have XINST=ON ... */
+                    isXINST = 1;
+                  } // if
                 dbuf_append (&dbuf, begin, cp - begin);
               }
             else
@@ -492,6 +497,11 @@ do_pragma (int id, const char *name, const char *cp)
                 begin = cp++;
                 while (*cp == '_' || isalnum (*cp))
                   ++cp;
+                if (isXINST && (3 == cp - begin) && (0 == strncmp("OFF", begin, 3)))
+                  {
+                    /* Suppress warning in glue.c if #pragma config XINST=OFF is present. */
+                    has_xinst_config = 1;
+                  } // if
                 dbuf_append (&dbuf, begin, cp - begin);
               }
             else
@@ -614,38 +624,39 @@ int pic16_enable_peeps = 0;
 
 OPTION pic16_optionsTable[]= {
     /* code generation options */
-    { 0, STACK_MODEL,        NULL, "use stack model 'small' (default) or 'large'"},
+    { 0, STACK_MODEL,           NULL, "use stack model 'small' (default) or 'large'"},
 #if XINST
-    { 'y', "--extended",     &pic16_options.xinst, "enable Extended Instruction Set/Literal Offset Addressing mode"},
+    { 'y', "--extended",        &pic16_options.xinst, "enable Extended Instruction Set/Literal Offset Addressing mode"},
 #endif
-    { 0, "--pno-banksel",    &pic16_options.no_banksel, "do not generate BANKSEL assembler directives"},
+    { 0, "--pno-banksel",       &pic16_options.no_banksel, "do not generate BANKSEL assembler directives"},
 
     /* optimization options */
-    { 0, OPT_BANKSEL,       &pic16_options.opt_banksel, "set banksel optimization level (default=0 no)", CLAT_INTEGER },
-    { 0, "--denable-peeps", &pic16_enable_peeps, "explicit enable of peepholes"},
-    { 0, NO_OPTIMIZE_GOTO,  NULL, "do NOT use (conditional) BRA instead of GOTO"},
-    { 0, OPTIMIZE_CMP,      NULL, "try to optimize some compares"},
-    { 0, OPTIMIZE_DF,       NULL, "thoroughly analyze data flow (memory and time intensive!)"},
+    { 0, OPT_BANKSEL,           &pic16_options.opt_banksel, "set banksel optimization level (default=0 no)", CLAT_INTEGER },
+    { 0, "--denable-peeps",     &pic16_enable_peeps, "explicit enable of peepholes"},
+    { 0, NO_OPTIMIZE_GOTO,      NULL, "do NOT use (conditional) BRA instead of GOTO"},
+    { 0, OPTIMIZE_CMP,          NULL, "try to optimize some compares"},
+    { 0, OPTIMIZE_DF,           NULL, "thoroughly analyze data flow (memory and time intensive!)"},
 
     /* assembling options */
-    { 0, ALT_ASM,           &alt_asm, "Use alternative assembler", CLAT_STRING},
-    { 0, MPLAB_COMPAT,      &pic16_mplab_comp, "enable compatibility mode for MPLAB utilities (MPASM/MPLINK)"},
+    { 0, ALT_ASM,               &alt_asm, "Use alternative assembler", CLAT_STRING},
+    { 0, MPLAB_COMPAT,          &pic16_mplab_comp, "enable compatibility mode for MPLAB utilities (MPASM/MPLINK)"},
 
     /* linking options */
-    { 0, ALT_LINK,          &alt_link, "Use alternative linker", CLAT_STRING },
-    { 0, REP_UDATA,         &pic16_sectioninfo.at_udata, "Place udata variables at another section: udata_acs, udata_ovr, udata_shr", CLAT_STRING },
-    { 0, IVT_LOC,           NULL, "Set address of interrupt vector table."},
-    { 0, NO_DEFLIBS,        &pic16_options.nodefaultlibs,   "do not link default libraries when linking"},
-    { 0, USE_CRT,           NULL, "use <crt-o> run-time initialization module"},
-    { 0, "--no-crt",        &pic16_options.no_crt, "do not link any default run-time initialization module"},
+    { 0, ALT_LINK,              &alt_link, "Use alternative linker", CLAT_STRING },
+    { 0, REP_UDATA,             &pic16_sectioninfo.at_udata, "Place udata variables at another section: udata_acs, udata_ovr, udata_shr", CLAT_STRING },
+    { 0, IVT_LOC,               NULL, "Set address of interrupt vector table."},
+    { 0, NO_DEFLIBS,            &pic16_options.nodefaultlibs,   "do not link default libraries when linking"},
+    { 0, USE_CRT,               NULL, "use <crt-o> run-time initialization module"},
+    { 0, "--no-crt",            &pic16_options.no_crt, "do not link any default run-time initialization module"},
 
     /* debugging options */
-    { 0, "--debug-xtra",    &pic16_debug_verbose, "show more debug info in assembly output"},
-    { 0, "--debug-ralloc",  &pic16_ralloc_debug, "dump register allocator debug file *.d"},
-    { 0, "--pcode-verbose", &pic16_pcode_verbose, "dump pcode related info"},
-    { 0, "--calltree",      &pic16_options.dumpcalltree, "dump call tree in .calltree file"},
-    { 0, "--gstack",        &pic16_options.gstack, "trace stack pointer push/pop to overflow"},
-    { 0, NULL,              NULL, NULL}
+    { 0, "--debug-xtra",        &pic16_debug_verbose, "show more debug info in assembly output"},
+    { 0, "--debug-ralloc",      &pic16_ralloc_debug, "dump register allocator debug file *.d"},
+    { 0, "--pcode-verbose",     &pic16_pcode_verbose, "dump pcode related info"},
+    { 0, "--calltree",          &pic16_options.dumpcalltree, "dump call tree in .calltree file"},
+    { 0, "--gstack",            &pic16_options.gstack, "trace stack pointer push/pop to overflow"},
+    { 0, "--no-warn-non-free",  &pic16_options.no_warn_non_free, "suppress warning on absent --use-non-free option" },
+    { 0, NULL,                  NULL, NULL}
 };
 
 
@@ -851,17 +862,6 @@ _pic16_finaliseOptions (void)
 
   dbuf_init (&dbuf, 128);
 
-/*
- * deprecated in sdcc 3.2.0
- * TODO: should be obsoleted in sdcc 3.3.0 or later
-  if (options.std_sdcc)
- */
-    {
-      dbuf_append (&dbuf, "-D", sizeof ("-D") - 1);
-      dbuf_append_str (&dbuf, pic16->name[2]);
-      addSet (&preArgvSet, Safe_strdup (dbuf_c_str (&dbuf)));
-    }
-
   dbuf_set_length (&dbuf, 0);
   dbuf_append (&dbuf, "-D__", sizeof ("-D__") - 1);
   dbuf_append_str (&dbuf, pic16->name[1]);
@@ -931,32 +931,24 @@ _pic16_finaliseOptions (void)
 
   if (STACK_MODEL_LARGE)
     {
-/*
- * deprecated in sdcc 3.2.0
- * TODO: should be obsoleted in sdcc 3.3.0 or later
-      if (options.std_sdcc)
- */
-        {
-          addSet (&preArgvSet, Safe_strdup ("-DSTACK_MODEL_LARGE"));
-          addSet (&asmOptionsSet, Safe_strdup ("-DSTACK_MODEL_LARGE"));
-        }
-        addSet (&preArgvSet, Safe_strdup ("-D__STACK_MODEL_LARGE"));
-        addSet (&asmOptionsSet, Safe_strdup ("-D__STACK_MODEL_LARGE"));
+      addSet (&preArgvSet, Safe_strdup ("-D__STACK_MODEL_LARGE"));
+      addSet (&asmOptionsSet, Safe_strdup ("-D__STACK_MODEL_LARGE"));
     }
   else
     {
-/*
- * deprecated in sdcc 3.2.0
- * TODO: should be obsoleted in sdcc 3.3.0 or later
-      if (options.std_sdcc)
- */
-        {
-          addSet (&preArgvSet, Safe_strdup ("-DSTACK_MODEL_SMALL"));
-          addSet (&asmOptionsSet, Safe_strdup ("-DSTACK_MODEL_SMALL"));
-        }
       addSet (&preArgvSet, Safe_strdup ("-D__STACK_MODEL_SMALL"));
       addSet (&asmOptionsSet, Safe_strdup ("-D__STACK_MODEL_SMALL"));
     }
+
+  if (!pic16_options.no_warn_non_free && !options.use_non_free)
+    {
+      fprintf(stderr,
+              "WARNING: Command line option --use-non-free not present.\n"
+              "         When compiling for PIC14/PIC16, please provide --use-non-free\n"
+              "         to get access to device headers and libraries.\n"
+              "         If you do not use these, you may provide --no-warn-non-free\n"
+              "         to suppress this warning (not recommended).\n");
+    } // if
 
   dbuf_destroy (&dbuf);
 }
@@ -982,11 +974,12 @@ _pic16_setDefaultOptions (void)
   pic16_options.ivt_loc = 0x000000;
   pic16_options.nodefaultlibs = 0;
   pic16_options.dumpcalltree = 0;
-  pic16_options.crt_name = "crt0i.o";       /* the default crt to link */
+  pic16_options.crt_name = "crt0iz.o";       /* the default crt to link */
   pic16_options.no_crt = 0;         /* use crt by default */
   pic16_options.ip_stack = 1;       /* set to 1 to enable ipop/ipush for stack */
   pic16_options.gstack = 0;
   pic16_options.debgen = 0;
+  pic16_options.no_warn_non_free = 0;
 }
 
 static const char *
@@ -1012,7 +1005,7 @@ _pic16_mangleFunctionName (const char *sz)
 static void
 _pic16_genAssemblerPreamble (FILE * of)
 {
-  char *name = pic16_processor_base_name();
+  const char *name = pic16_processor_base_name();
 
   if (!name)
     {
@@ -1372,11 +1365,11 @@ PORT pic16_port =
     4,          /* extra overhead when the function is an ISR */
     1,          /* extra overhead for a function call */
     1,          /* re-entrant space */
-    0           /* 'banked' call overhead, mild overlap with bank_overhead */
+    0,          /* 'banked' call overhead, mild overlap with bank_overhead */
+    1           /* sp is offset by 1 from last item pushed */
   },
-    /* pic16 has an 8 bit mul */
   {
-     0, -1
+     -1, FALSE
   },
   {
     pic16_emitDebuggerSymbol
@@ -1400,6 +1393,8 @@ PORT pic16_port =
   _pic16_setDefaultOptions,
   pic16_assignRegisters,
   _pic16_getRegName,
+  0,
+  NULL,
   _pic16_keywords,
   _pic16_genAssemblerPreamble,
   NULL,             /* no genAssemblerEnd */

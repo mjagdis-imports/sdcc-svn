@@ -4,14 +4,9 @@
 
 #include <testfwk.h>
 
-#ifdef __SDCC
-#pragma std_c99
-#endif
-
 #include        <stdio.h>
 #include        <stdlib.h>
 
-#if 0
 typedef struct foo
 {
         int     uaattrid;
@@ -30,17 +25,11 @@ int     *Upgd_minor_ID =
 
 int     *Upgd_minor_ID1 = 
         (int *) &((Upgrade_items)->uaattrid);
-#endif
 
 void
 testTortureExecute (void)
 {
-#if 0
-	if (*Upgd_minor_ID != 2)
-	  ASSERT (0);
-
-	if (*Upgd_minor_ID1 != 1)
-	  ASSERT (0);
+	ASSERT (*Upgd_minor_ID == 2);
+	ASSERT (*Upgd_minor_ID1 == 1);
 	return;
-#endif
 }

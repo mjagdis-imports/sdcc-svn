@@ -12,13 +12,13 @@ for i in "${LIBDEV}/pic1"*.c; do
   p="${p%.c}";
   P=$(echo "$p" | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ);
   printf "  include \"p%s.inc\"\n  END" "$p" > "${CHECK}.asm";
-  if $mCCAS -p "$p" -o "${CHECK}.o" -c "${CHECK}.asm" >/dev/null 2>&1 && $mLD "${CHECK}.o" >/dev/null 2>&1; then
+  if "$mCCAS" -p "$p" -o "${CHECK}.o" -c "${CHECK}.asm" >/dev/null 2>&1 && "$mLD" "${CHECK}.o" >/dev/null 2>&1; then
     GOOD_PICS="$GOOD_PICS $p";
-    N_GOOD=$((N_GOOD + 1));
+    N_GOOD=`expr $N_GOOD + 1`;
     echo "$P" >> "$RESULT";
   else
     BAD_PICS="$BAD_PICS $p";
-    N_BAD=$((N_BAD + 1));
+    N_BAD=`expr $N_BAD + 1`;
   fi;
 done;
 AC_MSG_RESULT([[$N_GOOD devices ($GOOD_PICS)]])
@@ -48,7 +48,7 @@ $BAD_PICS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ]])
-  for d in 5 4 3 2 1; do
+  for d in 3 2 1; do
     echo "Continuing in $d seconds ...";
     sleep 1;
   done;

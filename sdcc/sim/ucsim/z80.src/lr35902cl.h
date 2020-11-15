@@ -48,11 +48,11 @@ class lr35902_memory
   virtual void init( void );
   
   
-  virtual void store1( TYPE_UWORD addr, t_mem val );
-  virtual void store2( TYPE_UWORD addr, TYPE_UWORD val );
+  virtual void store1( u16_t addr, t_mem val );
+  virtual void store2( u16_t addr, u16_t val );
   
-  virtual TYPE_UBYTE  get1( TYPE_UWORD addr );
-  virtual TYPE_UWORD  get2( TYPE_UWORD addr );
+  virtual u8_t  get1( u16_t addr );
+  virtual u16_t  get2( u16_t addr );
   
   // fetch not included b/c it only uses the rom
 };
@@ -64,9 +64,9 @@ public:
   lr35902_memory    mem;
   
 public:
-  cl_lr35902(int Itype, int Itech, class cl_sim *asim);
+  cl_lr35902(struct cpu_entry *Itype, class cl_sim *asim);
   virtual int init(void);
-  virtual const char *id_string(void);
+  virtual char *id_string(void);
   
   //virtual t_addr get_mem_size(enum mem_class type);
   virtual void mk_hw_elements(void);
@@ -76,7 +76,7 @@ public:
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
   virtual int longest_inst(void);
-  virtual const char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr, const char *sep);
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);
@@ -88,11 +88,11 @@ public:
   
 
   // memory access altered to use the 'mem' object
-  virtual void store1( TYPE_UWORD addr, t_mem val );
-  virtual void store2( TYPE_UWORD addr, TYPE_UWORD val );
+  virtual void store1( u16_t addr, t_mem val );
+  virtual void store2( u16_t addr, u16_t val );
   
-  virtual TYPE_UBYTE  get1( TYPE_UWORD addr );
-  virtual TYPE_UWORD  get2( TYPE_UWORD addr );
+  virtual u8_t  get1( u16_t addr );
+  virtual u16_t  get2( u16_t addr );
   
   
   // see #include "instcl.h" for Z80 versions

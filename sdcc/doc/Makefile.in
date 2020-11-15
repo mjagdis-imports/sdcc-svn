@@ -2,19 +2,19 @@ VPATH  = @srcdir@
 srcdir = @srcdir@
 
 LYX        = @LYX@
+LATEX      = @LATEX@
 LATEX2HTML = @LATEX2HTML@
 PDFLATEX   = @PDFLATEX@
 MAKEINDEX  = @MAKEINDEX@
-PDFOPT     = @PDFOPT@
+DVIPDFM    = @DVIPDFM@
 
-QUIET      = >/dev/null 2>/dev/null
+PDFLATEXARGS = -file-line-error -halt-on-error
 
 include ../Makefile.common
 
 MANUAL = sdccman
 
-#all: $(MANUAL).pdf $(MANUAL).html/index.html $(MANUAL).txt
-all: $(MANUAL).pdf
+all: $(MANUAL).pdf $(MANUAL).html/index.html $(MANUAL).txt
 
 install:
 	$(INSTALL) -d $(DESTDIR)$(docdir)
@@ -53,67 +53,63 @@ $(MANUAL).html/index.html: $(MANUAL).tex $(MANUAL).aux ;#$(MANUAL).ind $(MANUAL)
 	@# $(LYX) will export the file in the directory of the $(LYX) file
 	@# if VPATH is used the $(LYX) file is copied first
 	if [ "$(srcdir)" != "." ]; then \
-	  cp -f $(srcdir)/$(notdir $<) . ; \
+	  cp -f $(srcdir)/$(notdir $<) $(srcdir)/*.svg . ; \
 	fi
 	$(LYX) -e text $(notdir $<);
 
-#%.pdf: %.tex %.dvi %.ind
-#	$(DVIPDF) $*
-## pdflatex creates documents for acrobat reader >= 5.0	
-##	which $(PDFLATEX) > /dev/null && $(PDFLATEX) $* || $(DVIPDF) $*
+%.pdf: %.tex %.dvi %.ind
+	which $(PDFLATEX) > /dev/null && $(PDFLATEX) $* || $(DVIPDFM) $*
 
 #%.ps:  %.pdf
 #	$(DVIPS) $*
 
-#%.dvi: %.tex
-#	$(LATEX) $<
-#	@# rerun to in include aux
-#	$(LATEX) $<
+%.dvi: %.tex
+	$(LATEX) $<
+	@# rerun to in include aux
+	$(LATEX) $<
 
 %.tex: %.lyx
 	if [ "$(srcdir)" != "." ] ; then \
-	  cp -f $(srcdir)/$(notdir $<) . ; \
+	  cp -f $(srcdir)/$(notdir $^) $(srcdir)/*.svg . ; \
 	fi
+	echo $(VERSION) > sdcc_version
 	$(LYX) -e latex $(notdir $<);
 
-#%.ind: %.dvi
-#	$(LATEX) $*
-#	# is there an index?
-#	if [ -f $*.idx ] ; then \
-#	  $(MAKEINDEX) $*; \
-#	  $(LATEX) $*; \
-#	  $(LATEX) $*; \
-#	fi
-##	  -$(MAKEINDEX) -s l2hidx.ist $*; \
+%.ind: %.dvi
+	$(LATEX) $*
+	# is there an index?
+	if [ -f $*.idx ] ; then \
+	  $(MAKEINDEX) -q $*; \
+	  $(LATEX) $*; \
+	  $(LATEX) $*; \
+	fi
+#	  -$(MAKEINDEX) -s l2hidx.ist $*; \
 
 #%.glo: %.dvi
 #	# the glossary, not implemented yet
 #	# $(MAKEINDEX) -s l2hglo.ist -o $@ $<
 
-%.pdf %.aux: %.tex
-	$(PDFLATEX) $* $(QUIET)
-	[ ! -e "$*.idx" ] || $(MAKEINDEX) $* $(QUIET)
-	$(PDFLATEX) $* $(QUIET)
-	[ ! -e "$*.idx" ] || $(MAKEINDEX) $* $(QUIET)
-	$(PDFLATEX) $* $(QUIET)
-	$(PDFOPT) $*.pdf $*-tmp.pdf
-	rm $*.pdf
-	mv $*-tmp.pdf $*.pdf
+#%.pdf %.aux: %.tex
+#	$(PDFLATEX) $* $(PDFLATEXARGS)
+#	[ ! -e "$*.idx" ] || $(MAKEINDEX) $* $(QUIET)
+#	$(PDFLATEX) $* $(PDFLATEXARGS)
+#	[ ! -e "$*.idx" ] || $(MAKEINDEX) $* $(QUIET)
+#	$(PDFLATEX) $* $(PDFLATEXARGS)
 
 archive: all
 	rm -rf sdcc-doc sdcc-doc.tar.bz2
 	mkdir sdcc-doc
-	rsync -rCt avr z80 *.pdf *.txt $(srcdir)/*.txt sdcc-doc
+	rsync -rCt *.pdf *.txt $(srcdir)/*.txt sdcc-doc
 
 	for doc in $(MANUAL); do \
 	  rsync -Rt $$doc.html/*.html $$doc.html/*.png $$doc.html/*.css sdcc-doc/; \
 	done
 
 	mkdir sdcc-doc/as
-	rsync -rCt $(top_srcdir)/as/doc/* sdcc-doc/as/
+	rsync -rCt $(top_srcdir)/sdas/doc/* sdcc-doc/as/
 
 	mkdir sdcc-doc/ucsim
-	cd $(top_srcdir)/sim/ucsim/doc; rsync *.html *.jpg *.gif *.fig ../../../doc/sdcc-doc/ucsim/
+	cd $(top_srcdir)/sim/ucsim/doc; rsync *.html *.jpg *.fig ../../../doc/sdcc-doc/ucsim/
 
 	tar -c sdcc-doc | bzip2 -9 > sdcc-doc.tar.bz2
 

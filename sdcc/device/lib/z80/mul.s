@@ -26,24 +26,17 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-        .area   _CODE
+.area   _CODE
 
-__mulint_rrx_s::
+.globl	__mulint
+
+__mulint:
         pop     af
-        pop     hl
+        pop     bc
         pop     de
         push    de
-        push    hl
+        push    bc
         push    af
-
-        ;; Fall through
-
-__muluchar_rrx_hds::
-__mulint_rrx_hds::
-	;; Parameters:
-	;;	hl, de (left, right irrelevant)
-	ld	b,h
-	ld	c,l
 
 	;; 16-bit multiplication
 	;;

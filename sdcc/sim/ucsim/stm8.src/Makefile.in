@@ -14,6 +14,7 @@ RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 STRIP		= @STRIP@
 MAKEDEP         = @MAKEDEP@
+SREC_CAT	= @SREC_CAT@
 
 top_builddir	= @top_builddir@
 top_srcdir	= @top_srcdir@
@@ -48,7 +49,8 @@ infodir         = @infodir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
-OBJECTS_SHARED	= glob.o \
+OBJECTS_SHARED	= glob.o itc.o serial.o rst.o timer.o port.o clk.o \
+		  uid.o bl.o flash.o \
 		  inst.o \
 		  simstm8.o stm8.o
 OBJECTS_EXE	= sstm8.o
@@ -64,7 +66,7 @@ dlso_ok		= @dlso_ok@
 
 # Compiling entire program or any subproject
 # ------------------------------------------
-all: checkconf otherlibs stm8.src tests
+all: checkconf otherlibs stm8.src
 
 tests: $(TEST_OBJ)
 
@@ -72,14 +74,14 @@ tests: $(TEST_OBJ)
 # Compiling and installing everything and runing test
 # ---------------------------------------------------
 install: all installdirs
-	$(INSTALL) sstm8$(EXEEXT) $(DESTDIR)$(bindir)/sstm8$(EXEEXT)
-	$(STRIP) $(DESTDIR)$(bindir)/sstm8$(EXEEXT)
+	$(INSTALL) sstm8$(EXEEXT) $(DESTDIR)$(bindir)/`echo sstm8|sed '$(transform)'`$(EXEEXT)
+	$(STRIP) $(DESTDIR)$(bindir)/`echo sstm8|sed '$(transform)'`$(EXEEXT)
 
 
 # Deleting all the installed files
 # --------------------------------
 uninstall:
-	rm -f $(DESTDIR)$(bindir)/sstm8$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/`echo sstm8|sed '$(transform)'`$(EXEEXT)
 
 
 # Performing self-test
@@ -114,10 +116,10 @@ include $(srcdir)/clean.mk
 # --------
 .SUFFIXES: .asm .hex
 
-stm8.src: sstm8$(EXEEXT)  shared_lib
+stm8.src: sstm8$(EXEEXT) shared_lib
 
-sstm8$(EXEEXT): $(OBJECTS) $(top_builddir)/*.a
-	$(CXX) $(CXXFLAGS) $(LDFLAGS)  -o $@ $(OBJECTS) $(LIBS)
+sstm8$(EXEEXT): $(OBJECTS) $(top_builddir)/libcmd.a $(top_builddir)/libguiucsim.a $(top_builddir)/libsim.a $(top_builddir)/libucsimutil.a
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 
 ifeq ($(dlso_ok),yes)
 shared_lib: $(top_builddir)/sstm8.so
@@ -130,12 +132,22 @@ endif
 $(top_builddir)/sstm8.so: $(OBJECTS_SHARED)
 	$(CXX) -shared $(LDFLAGS) $(OBJECTS_SHARED) -o $(top_builddir)/sstm8.so
 
-otherlibs:
+otherlibs: $(top_builddir)/libcmd.a $(top_builddir)/libguiucsim.a $(top_builddir)/libsim.a $(top_builddir)/libucsimutil.a
+
+$(top_builddir)/libcmd.a:
 	$(MAKE) -C $(top_builddir)/cmd.src all
+
+$(top_builddir)/libguiucsim.a:
+	$(MAKE) -C $(top_builddir)/gui.src checkconf ucsim_lib
+
+$(top_builddir)/libsim.a:
 	$(MAKE) -C $(top_builddir)/sim.src all
 
+$(top_builddir)/libucsimutil.a:
+	$(MAKE) -C $(top_builddir) -f main.mk
+
 .cc.o:
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(PICOPT) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@
 
 .asm.hex:
 	$(STM8ASM) -l $< -o $@ -e $<.lst
@@ -145,7 +157,27 @@ otherlibs:
 # ----------------------
 checkconf:
 	@if [ -f $(top_builddir)/devel ]; then\
-	  $(MAKE) -f conf.mk srcdir="$(srcdir)" top_builddir="$(top_builddir)" freshconf;\
+	  $(MAKE) -C $(top_builddir) -f conf.mk srcdir="$(srcdir)" top_builddir="$(top_builddir)" freshconf;\
 	fi
+
+#bl_l15x46.hex: bl_l15x46.asc
+#	$(SREC_CAT) $< -Ascii_Hex -Output $@ -Intel
+
+#bl_l15x46.cc: bl_l15x46.asc
+#	$(SREC_CAT) $< -Ascii_Hex -Output $@ -C-Array bl_l15x46 -INClude -No-CONST
+
+#bl_s105.hex: bl_s105.asc
+#	$(SREC_CAT) $< -Ascii_Hex -Output $@ -Intel
+
+#bl_s105.cc: bl_s105.asc
+#	$(SREC_CAT) $< -Ascii_Hex -Output $@ -C-Array bl_s105 -INClude -No-CONST
+
+#bl_source: bl.cc bl.h
+
+#bl.cc: bl_head.cc bl_l15x46.cc bl_s105.cc
+#	cat bl_head.cc bl_l15x46.cc bl_s105.cc|sed 's/unsigned char/t_mem/' >$@
+
+#bl.h: bl_l15x46.h bl_s105.h
+#	cat bl_l15x46.h bl_s105.h|sed 's/unsigned char/t_mem/' >$@
 
 # End of stm8.src/Makefile.in

@@ -8,8 +8,8 @@
 #pragma std_c99
 #endif
 
-// TODO: Enable when sdcc supports long long constants!
-#if 0
+// TODO: Enable when sdcc supports long long in these ports!
+#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
 
 unsigned
 f1 (int x)
@@ -27,7 +27,7 @@ f2 (int x)
 void
 testTortureExecute (void)
 {
-#if 0
+#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
   if (f1 (1) != (~(unsigned) 0) >> 1)
     ASSERT (0);
   if (f1 (0) != ((~(unsigned) 0) >> 1) - 1)

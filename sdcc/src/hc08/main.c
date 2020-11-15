@@ -94,7 +94,7 @@ _s08_init (void)
 }
 
 static void
-_hc08_reset_regparm (void)
+_hc08_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
 }
@@ -351,7 +351,6 @@ hasExtBitOp (int op, int size)
 {
   if (op == RRC
       || op == RLC
-      || op == GETHBIT
       || (op == SWAP && size <= 2)
       || op == GETABIT
       || op == GETBYTE
@@ -396,6 +395,12 @@ hc08_dwarfRegNum (const struct reg_info *reg)
     case SP_IDX: return 15;
     }
   return -1;
+}
+
+static bool
+_hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
+{
+  return getSize (left) == 1 && getSize (right) == 1;
 }
 
 typedef struct asmLineNode
@@ -812,7 +817,7 @@ PORT hc08_port =
     "GSFINAL (CODE)",
     "HOME    (CODE)",
     "XISEG",              // initialized xdata
-    "XINIT",              // a code copy of xiseg
+    "XINIT   (CODE)",     // a code copy of xiseg
     "CONST   (CODE)",     // const_name - const data (code or not)
     "CABS    (ABS,CODE)", // cabs_name - const absolute data (code or not)
     "XABS    (ABS)",      // xabs_name - absolute xdata
@@ -832,11 +837,11 @@ PORT hc08_port =
     4,          /* isr_overhead */
     2,          /* call_overhead */
     0,          /* reent_overhead */
-    0           /* banked_overhead (switch between code banks) */
+    0,          /* banked_overhead (switch between code banks) */
+    1           /* sp is offset by 1 from last item pushed */
   },
-    /* hc08 has an 8 bit mul */
   {
-    1, 5
+    5, FALSE
   },
   {
     hc08_emitDebuggerSymbol,
@@ -868,6 +873,8 @@ PORT hc08_port =
   _hc08_setDefaultOptions,
   hc08_assignRegisters,
   _hc08_getRegName,
+  0,
+  NULL,
   _hc08_keywords,
   _hc08_genAssemblerPreamble,
   _hc08_genAssemblerEnd,        /* no genAssemblerEnd */
@@ -878,7 +885,7 @@ PORT hc08_port =
   _hc08_regparm,
   NULL,                         /* process_pragma */
   NULL,                         /* getMangledFunctionName */
-  NULL,                         /* hasNativeMulFor */
+  _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
   TRUE,                         /* use_dw_for_init */
@@ -955,7 +962,7 @@ PORT s08_port =
     "GSFINAL (CODE)",
     "HOME    (CODE)",
     "XISEG",              // initialized xdata
-    "XINIT",              // a code copy of xiseg
+    "XINIT   (CODE)",     // a code copy of xiseg
     "CONST   (CODE)",     // const_name - const data (code or not)
     "CABS    (ABS,CODE)", // cabs_name - const absolute data (code or not)
     "XABS    (ABS)",      // xabs_name - absolute xdata
@@ -975,11 +982,11 @@ PORT s08_port =
     4,          /* isr_overhead */
     2,          /* call_overhead */
     0,          /* reent_overhead */
-    0           /* banked_overhead (switch between code banks) */
+    0,          /* banked_overhead (switch between code banks) */
+    1           /* sp is offset by 1 from last item pushed */
   },
-    /* hc08 has an 8 bit mul */
   {
-    1, 5
+    5, FALSE
   },
   {
     hc08_emitDebuggerSymbol,
@@ -1011,6 +1018,8 @@ PORT s08_port =
   _hc08_setDefaultOptions,
   hc08_assignRegisters,
   _hc08_getRegName,
+  0,
+  NULL,
   _hc08_keywords,
   _hc08_genAssemblerPreamble,
   _hc08_genAssemblerEnd,        /* no genAssemblerEnd */
@@ -1021,7 +1030,7 @@ PORT s08_port =
   _hc08_regparm,
   NULL,                         /* process_pragma */
   NULL,                         /* getMangledFunctionName */
-  NULL,                         /* hasNativeMulFor */
+  _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
   TRUE,                         /* use_dw_for_init */

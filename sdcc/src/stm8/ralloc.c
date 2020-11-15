@@ -7,13 +7,15 @@ extern void genSTM08Code (iCode *);
 
 reg_info stm8_regs[] =
 {
-
   {REG_GPR, A_IDX,   "a"},
   {REG_GPR, XL_IDX,  "xl"},
   {REG_GPR, XH_IDX,  "xh"},
   {REG_GPR, YL_IDX,  "yl"},
   {REG_GPR, YH_IDX,  "yh"},
   {REG_CND, C_IDX,   "c"},
+  {REG_GPR, X_IDX,   "x"},
+  {REG_GPR, Y_IDX,   "y"},
+  {0, SP_IDX,        "sp"},
 };
 
 /* Flags to turn on debugging code.
@@ -97,7 +99,7 @@ createStackSpil (symbol * sym)
   symbol *sloc = NULL;
   struct dbuf_s dbuf;
 
-  D (D_ALLOC, ("createStackSpil: for sym %p\n", sym));
+  D (D_ALLOC, ("createStackSpil: for sym %p %s\n", sym, sym->name));
 
   /* first go try and find a free one that is already
      existing on the stack */
@@ -168,17 +170,17 @@ spillThis (symbol *sym, bool force_spill)
 {
   int i;
 
-  D (D_ALLOC, ("spillThis: spilling %p\n", sym));
+  D (D_ALLOC, ("spillThis: spilling %p (%s)\n", sym, sym->name));
 
   sym->for_newralloc = 0;
 
   /* if this is rematerializable or has a spillLocation
      we are okay, else we need to create a spillLocation
      for it */
-  if (!(sym->remat || sym->usl.spillLoc))
+  if (!(sym->remat || sym->usl.spillLoc) || (sym->usl.spillLoc && !sym->usl.spillLoc->onStack)) // stm8 port currently only supports on-stack spill locations in code generation.
     createStackSpil (sym);
 
-  /* mark it has spilt & put it in the spilt set */
+  /* mark it as spilt */
   sym->isspilt = sym->spillA = 1;
 
   if (force_spill)
@@ -207,8 +209,8 @@ regTypeNum (void)
   /* for each live range do */
   for (sym = hTabFirstItem (liveRanges, &k); sym; sym = hTabNextItem (liveRanges, &k))
     {
-      /* if used zero times then no registers needed */
-      if ((sym->liveTo - sym->liveFrom) == 0)
+      /* if used zero times then no registers needed. Exception: Variables larger than 4 bytes - these might need a spill location when they are return values */
+      if ((sym->liveTo - sym->liveFrom) == 0 && getSize (sym->type) <= 4)
         continue;
 
       D (D_ALLOC, ("regTypeNum: loop on sym %p\n", sym));
@@ -241,7 +243,7 @@ regTypeNum (void)
 
           if (sym->nRegs > 8)
             {
-              fprintf (stderr, "allocated more than 8 egisters for type ");
+              fprintf (stderr, "allocated more than 8 registers for type ");
               printTypeChain (sym->type, stderr);
               fprintf (stderr, "\n");
             }
@@ -258,6 +260,178 @@ regTypeNum (void)
           D (D_ALLOC, ("regTypeNum: #2 setting num of %p to 0\n", sym));
           sym->nRegs = 0;
         }
+    }
+}
+
+/** Register reduction for assignment.
+ */
+static int
+packRegsForAssign (iCode *ic, eBBlock *ebp)
+{
+  iCode *dic, *sic;
+
+  if (!IS_ITEMP (IC_RIGHT (ic)) || OP_SYMBOL (IC_RIGHT (ic))->isind || OP_LIVETO (IC_RIGHT (ic)) > ic->seq)
+    return 0;
+  
+  /* Avoid having multiple named address spaces in one iCode. */
+  if (IS_SYMOP (IC_RESULT (ic)) && SPEC_ADDRSPACE (OP_SYMBOL (IC_RESULT (ic))->etype))
+    return 0;
+
+  /* find the definition of iTempNN scanning backwards if we find a
+     a use of the true symbol in before we find the definition then
+     we cannot */
+  for (dic = ic->prev; dic; dic = dic->prev)
+    {
+      /* PENDING: Don't pack across function calls. */
+      if (dic->op == CALL || dic->op == PCALL)
+        {
+          dic = NULL;
+          break;
+        }
+
+      if (SKIP_IC2 (dic))
+        continue;
+
+      if (dic->op == IFX)
+        {
+          if (IS_SYMOP (IC_COND (dic)) &&
+              (IC_COND (dic)->key == IC_RESULT (ic)->key || IC_COND (dic)->key == IC_RIGHT (ic)->key))
+            {
+              dic = NULL;
+              break;
+            }
+        }
+      else
+        {
+          if (IS_TRUE_SYMOP (IC_RESULT (dic)) && IS_OP_VOLATILE (IC_RESULT (dic)))
+            {
+              dic = NULL;
+              break;
+            }
+
+          if (IS_SYMOP (IC_RESULT (dic)) && IC_RESULT (dic)->key == IC_RIGHT (ic)->key)
+            {
+              if (POINTER_SET (dic))
+                dic = NULL;
+
+              break;
+            }
+
+          if (IS_SYMOP (IC_RIGHT (dic)) &&
+              (IC_RIGHT (dic)->key == IC_RESULT (ic)->key || IC_RIGHT (dic)->key == IC_RIGHT (ic)->key))
+            {
+              dic = NULL;
+              break;
+            }
+
+          if (IS_SYMOP (IC_LEFT (dic)) &&
+              (IC_LEFT (dic)->key == IC_RESULT (ic)->key || IC_LEFT (dic)->key == IC_RIGHT (ic)->key))
+            {
+              dic = NULL;
+              break;
+            }
+
+          if (IS_SYMOP (IC_RESULT (dic)) && IC_RESULT (dic)->key == IC_RESULT (ic)->key)
+            {
+              dic = NULL;
+              break;
+            }
+        }
+    }
+
+  if (!dic)
+    return 0;                   /* did not find */
+
+  /* if assignment then check that right is not a bit */
+  if (ASSIGNMENT (ic) && !POINTER_SET (ic))
+    {
+      sym_link *etype = operandType (IC_RESULT (dic));
+      if (IS_BITFIELD (etype))
+        {
+          /* if result is a bit too then it's ok */
+          etype = operandType (IC_RESULT (ic));
+          if (!IS_BITFIELD (etype))
+            {
+              return 0;
+            }
+        }
+    }
+
+  /* For now eliminate 8-bit temporary variables only.
+     The STM8 instruction soperating directly on memory
+     operands are 8-bit, so the most benefit is in 8-bit
+     operations. On the other hand, supporting wider
+     operations well in codegen is also more effort. */
+  if (bitsForType (operandType (IC_RESULT (dic))) > 8)
+    return 0;
+
+  /* if the result is on stack or iaccess then it must be
+     the same atleast one of the operands */
+  if (OP_SYMBOL (IC_RESULT (ic))->onStack || OP_SYMBOL (IC_RESULT (ic))->iaccess)
+    {
+      /* the operation has only one symbol
+         operator then we can pack */
+      if ((IC_LEFT (dic) && !IS_SYMOP (IC_LEFT (dic))) || (IC_RIGHT (dic) && !IS_SYMOP (IC_RIGHT (dic))))
+        goto pack;
+
+      if (!((IC_LEFT (dic) &&
+             IC_RESULT (ic)->key == IC_LEFT (dic)->key) || (IC_RIGHT (dic) && IC_RESULT (ic)->key == IC_RIGHT (dic)->key)))
+        return 0;
+    }
+pack:
+  /* found the definition */
+  /* replace the result with the result of */
+  /* this assignment and remove this assignment */
+  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
+  IC_RESULT (dic) = IC_RESULT (ic);
+
+  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
+    {
+      OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
+    }
+  /* delete from liverange table also
+     delete from all the points inbetween and the new
+     one */
+  for (sic = dic; sic != ic; sic = sic->next)
+    {
+      bitVectUnSetBit (sic->rlive, IC_RESULT (ic)->key);
+      if (IS_ITEMP (IC_RESULT (dic)))
+        bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
+    }
+
+  remiCodeFromeBBlock (ebp, ic);
+  // PENDING: Check vs mcs51
+  bitVectUnSetBit (OP_SYMBOL (IC_RESULT (ic))->defs, ic->key);
+  hTabDeleteItem (&iCodehTab, ic->key, ic, DELETE_ITEM, NULL);
+  OP_DEFS (IC_RESULT (dic)) = bitVectSetBit (OP_DEFS (IC_RESULT (dic)), dic->key);
+  return 1;
+}
+
+/** Does some transformations to reduce register pressure.
+ */
+static void
+packRegisters (eBBlock * ebp)
+{
+  iCode *ic;
+  int change = 0;
+
+  D (D_ALLOC, ("packRegisters: entered.\n"));
+
+  for(;;)
+    {
+      change = 0;
+      /* look for assignments of the form */
+      /* iTempNN = TRueSym (someoperation) SomeOperand */
+      /*       ....                       */
+      /* TrueSym := iTempNN:1             */
+      for (ic = ebp->sch; ic; ic = ic->next)
+        {
+          /* find assignment of the form TrueSym := iTempNN:1 */
+          if (ic->op == '=' && !POINTER_SET (ic))
+            change += packRegsForAssign (ic, ebp);
+        }
+      if (!change)
+        break;
     }
 }
 
@@ -309,7 +483,7 @@ serialRegMark (eBBlock ** ebbs, int count)
             {
               symbol *sym = OP_SYMBOL (IC_RESULT (ic));
 
-              D (D_ALLOC, ("serialRegAssign: in loop on result %p\n", sym));
+              D (D_ALLOC, ("serialRegMark: in loop on result %p\n", sym));
 
               if (sym->isspilt && sym->usl.spillLoc) // todo: Remove once remat is supported!
                 {
@@ -327,11 +501,15 @@ serialRegMark (eBBlock ** ebbs, int count)
               if (!sym->nRegs ||
                   sym->isspilt || sym->for_newralloc || sym->liveTo <= ic->seq)
                 {
-                  D (D_ALLOC, ("serialRegAssign: won't live long enough.\n"));
+                  D (D_ALLOC, ("serialRegMark: won't live long enough.\n"));
                   continue;
                 }
 
-              if (max_alloc_bytes >= sym->nRegs)
+              if (sym->nRegs > 4 && ic->op == CALL)
+                {
+                  spillThis (sym, TRUE);
+                }
+              else if (max_alloc_bytes >= sym->nRegs)
                 {
                   sym->for_newralloc = 1;
                   max_alloc_bytes -= sym->nRegs;
@@ -357,7 +535,7 @@ verifyRegsAssigned (operand * op, iCode * ic)
 {
   symbol *sym;
   int i;
-  bool completly_in_regs;
+  bool completely_in_regs;
 
   if (!op)
     return;
@@ -366,16 +544,19 @@ verifyRegsAssigned (operand * op, iCode * ic)
 
   sym = OP_SYMBOL (op);
 
+  if (sym->regType == REG_CND)
+    return;
+
   if (sym->isspilt && !sym->remat && sym->usl.spillLoc && !sym->usl.spillLoc->allocreq)
     sym->usl.spillLoc->allocreq++;
 
   if (sym->isspilt)
     return;
 
-  for(i = 0, completly_in_regs = TRUE; i < sym->nRegs; i++)
+  for(i = 0, completely_in_regs = TRUE; i < sym->nRegs; i++)
     if (!sym->regs[i])
-      completly_in_regs = FALSE;
-  if (completly_in_regs)
+      completely_in_regs = FALSE;
+  if (completely_in_regs)
     return;
 
   spillThis (sym, FALSE);
@@ -427,18 +608,21 @@ void
 stm8_assignRegisters (ebbIndex * ebbi)
 {
   eBBlock **ebbs = ebbi->bbOrder;
-  int count = ebbi->count;
+  int i, count = ebbi->count;
   iCode *ic;
 
   stm8_init_asmops();
 
-  /* TODO: Register packing. */
+  /* change assignments this will remove some
+     live ranges reducing some register pressure */
+  for (i = 0; i < count; i++)
+    packRegisters (ebbs[i]);
 
   /* liveranges probably changed by register packing
      so we compute them again */
   recomputeLiveRanges (ebbs, count, FALSE);
 
-  if (options.dump_pack)
+  if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_PACK, ebbi);
 
   /* first determine for each live range the number of
@@ -453,7 +637,7 @@ stm8_assignRegisters (ebbIndex * ebbi)
   /* Invoke optimal register allocator */
   ic = stm8_ralloc2_cc (ebbi);
 
-  /* Get spilllocs for all variables that have not been placed completly in regs */
+  /* Get spilllocs for all variables that have not been placed completely in regs */
   RegFix (ebbs, count);
 
   /* redo the offsets for stacked automatic variables */
@@ -476,14 +660,14 @@ stm8_assignRegisters (ebbIndex * ebbi)
           /* Invoke optimal register allocator */
           ic = stm8_ralloc2_cc (ebbi);
 
-          /* Get spilllocs for all variables that have not been placed completly in regs */
+          /* Get spilllocs for all variables that have not been placed completely in regs */
           RegFix (ebbs, count);
 
           redoStackOffsets ();
         }
     }
 
-  if (options.dump_rassgn)
+  if (options.dump_i_code)
     {
       dumpEbbsToFileExt (DUMP_RASSGN, ebbi);
       dumpLiveRanges (DUMP_LRANGE, liveRanges);

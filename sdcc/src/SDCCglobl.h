@@ -36,7 +36,9 @@
 #     define FALSE  false
 #   endif
 # else
-typedef unsigned char bool;
+    typedef unsigned char bool;
+#   define true     1
+#   define false    0
 #   ifndef TRUE
 #     define TRUE   1
 #   endif
@@ -230,12 +232,11 @@ struct optimize
     int label4;
     int loopInvariant;
     int loopInduction;
-    int noJTabBoundary;
     int noLoopReverse;
     int codeSpeed;
     int codeSize;
     int lospre;
-    int lospre_unsafe_read;
+    int allow_unsafe_read;
   };
 
 /** Build model.
@@ -250,7 +251,7 @@ enum
     MODEL_MEDIUM = 4,
     MODEL_LARGE = 8,
     MODEL_FLAT24 = 16,
-    MODEL_PAGE0 = 32, /* for the xa51 port */
+//  MODEL_PAGE0 = 32, /* disabled, was for the xa51 port */
     MODEL_HUGE = 64   /* for banked support */
   };
 
@@ -261,6 +262,13 @@ typedef struct {
     int  nfuncs;        /* number of functions in this overlay */
     char *funcs[128];   /* function name that belong to this */
 } olay;
+
+enum
+  {
+    NO_DEPENDENCY_FILE_OPT = 0,
+    SYSTEM_DEPENDENCY_FILE_OPT = 1,
+    USER_DEPENDENCY_FILE_OPT = 2
+  };
 
 /* other command line options */
 /*
@@ -273,14 +281,8 @@ struct options
     int stackAuto;              /* Stack Automatic  */
     int useXstack;              /* use Xternal Stack */
     int stack10bit;             /* use 10 bit stack (flat24 model only) */
-    int dump_raw;               /* dump after intermediate code generation */
-    int dump_gcse;              /* dump after gcse */
-    int dump_loop;              /* dump after loop optimizations */
-    int dump_kill;              /* dump after dead code elimination */
-    int dump_range;             /* dump after live range analysis */
-    int dump_pack;              /* dump after register packing */
-    int dump_rassgn;            /* dump after register assignment */
-    int dump_tree;              /* dump front-end tree before lowering to iCode */
+    int dump_ast;               /* dump front-end tree before lowering to iCode */
+    int dump_i_code;            /* dump iCode at various stages */
     int dump_graphs;            /* Dump graphs in .dot format (control-flow, conflict, etc) */
     int cc_only;                /* compile only flag              */
     int intlong_rent;           /* integer & long support routines reentrant */
@@ -299,7 +301,6 @@ struct options
     int nostdinc;               /* Don't use standard include files */
     int noRegParams;            /* Disable passing some parameters in registers */
     int verbose;                /* Show what the compiler is doing */
-    int shortis8bits;           /* treat short like int or char */
     int lessPedantic;           /* disable some warnings */
     int profile;                /* Turn on extra profiling information */
     int omitFramePtr;           /* Turn off the frame pointer. */
@@ -336,13 +337,16 @@ struct options
     int vc_err_style;           /* errors and warnings are compatible with Micro$oft visual studio */
     int use_stdout;             /* send errors to stdout instead of stderr */
     int no_std_crt0;            /* for the z80/gbz80 do not link default crt0.o*/
+    int std_c95;                /* enable C95 keywords/constructs */
     int std_c99;                /* enable C99 keywords/constructs */
     int std_c11;                /* enable C11 keywords/constructs */
     int std_sdcc;               /* enable SDCC extensions to C */
     int dollars_in_ident;       /* zero means dollar signs are punctuation */
-    int unsigned_char;          /* use unsigned for char without signed/unsigned modifier */
+    int signed_char;            /* use signed for char without signed/unsigned modifier */
     char *code_seg;             /* segment name to use instead of CSEG */
     char *const_seg;            /* segment name to use instead of CONST */
+    char *data_seg;             /* segment name to use instead of DATA */
+    int dependencyFileOpt;      /* write dependencies to given file */
     /* sets */
     set *calleeSavesSet;        /* list of functions using callee save */
     set *excludeRegsSet;        /* registers excluded from saving */
@@ -397,7 +401,7 @@ void setParseWithComma (set **, const char *);
 /** An assert() macro that will go out through sdcc's error
     system.
 */
-#define wassertl(a,s)   ((a) ? 0 : \
+#define wassertl(a,s)   (void)((a) ? 0 : \
         (werror (E_INTERNAL_ERROR, __FILE__, __LINE__, s), 0))
 
 #define wassert(a)    wassertl(a,"code generator internal error")

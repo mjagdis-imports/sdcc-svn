@@ -4,8 +4,8 @@
 
 #include <string.h>
 
-unsigned char destination[4];
-const unsigned char source[4] = {0, 1, 2, 3};
+unsigned char destination[9];
+const unsigned char source[9] = {0, 1, 2, 3};
 int c;
 
 void testmemory(void)
@@ -42,6 +42,14 @@ void testmemory(void)
   ASSERT(destination[3] == 23);
   memcpy(destination, source, one);
   ASSERT(destination[0] == 0);
+  memset(destination, 5, 9);
+  memcpy(destination, source, 8);
+  ASSERT(destination[7] == source[7]);
+  ASSERT(destination[8] == 5);
+  memset(destination, 5, 9);
+  memcpy(destination, source, 3);
+  ASSERT(destination[2] == source[2]);
+  ASSERT(destination[3] == 5);
 
   /* Test memcmp() */
   memcpy(destination, source, 4);
@@ -60,10 +68,12 @@ void testmemory(void)
   ASSERT(destination[3] == source[2]);
 
   /* Test memchr() */
+  memcpy(destination, source, 4);
   ASSERT(NULL == memchr(destination, 5, 4));
-  /*ASSERT(destination == memchr(destination, 0, 4));
-  ASSERT(destination + 3 == memchr(destination, 3, 4));*/
+  ASSERT(destination == memchr(destination, 0, 4));
+  ASSERT(destination + 3 == memchr(destination, 3, 4));
 
+  /* Test strlen() */
   ASSERT(strlen("test") == 4);
   ASSERT(strlen("t") == 1);
   ASSERT(strlen("") == 0);

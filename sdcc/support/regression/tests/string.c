@@ -2,6 +2,13 @@
 */
 #include <testfwk.h>
 #include <string.h>
+#include <stdlib.h>
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L
+#include <wchar.h>
+#endif
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#include <uchar.h>
+#endif
 
 /** tests for strcmp
 */
@@ -145,17 +152,139 @@ do_teststrtok (void)
 #endif
 }
 
-/** tests for multibyte character sets
- * related to bug #3506236
-*/
-static void
-do_multibyte (void)
-{
-  const char *str = "��";
+#if !defined (__APPLE__) // uchar.h/char16_t/char32_t are not supported on MacOS/Clang
 
-  ASSERT (str[0] == '\xd4');
-  ASSERT (str[1] == '\xc2');
+// Test C11 UTF-8 behaviour.
+static void
+do_utf_8 (void)
+{
+#if defined(__STDC_VERSION) && __STDC_VERSION >= 201112L
+  const char *str1 = u8"Ä ä";
+  const char *str2 = u8"\u00c4 ä";
+  const char *str3 = u8"Ä " "ä";
+  const char *str4 = u8"Ä " u8"ä";
+  const char *str5 = "Ä " u8"ä";
+
+  ASSERT (str1[0] == 0xc3);
+  ASSERT (str2[1] == 0x84);
+  ASSERT (!strcmp (str1, str2));
+  ASSERT (!strcmp (str1, str3));
+  ASSERT (!strcmp (str1, str4));
+  ASSERT (!strcmp (str1, str5));
+#endif
 }
+
+// Test SDCC implementation-defined UTF-8 behaviour
+// string literals are UTF-8 (as nearly all implementations out there)
+static void
+do_utf_8_sdcc (void)
+{
+#ifdef __SDCC
+  const char *str1 = "Ä ä";
+  const char *str2 = "\u00c4 ä";
+  const char *str3 = u8"Ä " "ä";
+  const char *str4 = "Ä " "ä";
+  const char *str5 = u8"Ä " u8"ä";
+
+  ASSERT (str1[0] == 0xc3);
+  ASSERT (str2[1] == 0x84);
+  ASSERT (!strcmp (str1, str2));
+  ASSERT (!strcmp (str1, str3));
+  ASSERT (!strcmp (str1, str4));
+  ASSERT (!strcmp (str1, str5));
+
+  ASSERT (!mblen(0, 0));
+  ASSERT (mblen(str1, 3) == 2);
+  ASSERT (mblen("test", 3) == 1);
+  ASSERT (mblen("", 3) == 0);
+#endif
+}
+
+// Test C11 UTF-16 behaviour
+static void
+do_utf_16 (void)
+{
+#ifdef __STDC_UTF_16__
+  const char16_t *str1 = u"Ä ä";
+  const char16_t *str2 = u"\u00c4 ä";
+  const char16_t *str3 = u"Ä " "ä";
+  const char16_t *str4 = "Ä " u"ä";
+  const char16_t *str5 = u"Ä " u"ä";
+
+  ASSERT (str1[0] == 0xc4);
+  ASSERT (str2[2] == 0xe4);
+  ASSERT (!memcmp (str1, str2, 4 * sizeof(char16_t)));
+  ASSERT (!memcmp (str1, str3, 4 * sizeof(char16_t)));
+  ASSERT (!memcmp (str1, str4, 4 * sizeof(char16_t)));
+  ASSERT (!memcmp (str1, str5, 4 * sizeof(char16_t)));
+#endif
+}
+
+// Test C95 UTF-32 behaviour
+static void
+do_utf_32_c95 (void)
+{
+#ifdef __STDC_ISO_10646__
+  const wchar_t *str1 = L"Ä ä";
+  const wchar_t *str2 = L"\u00c4 ä";
+  const wchar_t *str3 = L"Ä " "ä";
+  const wchar_t *str4 = "Ä " L"ä";
+  const wchar_t *str5 = L"Ä " L"ä";
+
+  ASSERT (str1[0] == 0xc4);
+  ASSERT (str2[2] == 0xe4);
+  ASSERT (wcslen (str1) == 3);
+  ASSERT (!memcmp (str1, str2, 4 * sizeof(wchar_t)));
+  ASSERT (!memcmp (str1, str3, 4 * sizeof(wchar_t)));
+  ASSERT (!memcmp (str1, str4, 4 * sizeof(wchar_t)));
+  ASSERT (!memcmp (str1, str5, 4 * sizeof(wchar_t)));
+#endif
+}
+
+// Test C11 UTF-32 behaviour
+static void
+do_utf_32_c11 (void)
+{
+#ifdef __STDC_UTF_32__
+  const char32_t *str1 = U"Ä ä";
+  const char32_t *str2 = U"\u00c4 ä";
+  const char32_t *str3 = U"Ä " "ä";
+  const char32_t *str4 = "Ä " U"ä";
+  const char32_t *str5 = U"Ä " U"ä";
+
+  ASSERT (str1[0] == 0xc4);
+  ASSERT (str2[2] == 0xe4);
+  ASSERT (!memcmp (str1, str2, 4 * sizeof(char32_t)));
+  ASSERT (!memcmp (str1, str3, 4 * sizeof(char32_t)));
+  ASSERT (!memcmp (str1, str4, 4 * sizeof(char32_t)));
+  ASSERT (!memcmp (str1, str5, 4 * sizeof(char32_t)));
+#endif
+}
+
+static void
+do_chinese (void)
+{
+#ifdef __STDC_UTF_32__
+  const char32_t *p0 = U"史斌";
+#endif
+#ifdef __STDC_ISO_10646__
+  const wchar_t *p1 = L"史庭芳";
+#endif
+#ifdef __STDC_UTF_16__
+  const char16_t *p2 = u"天津";
+#endif
+#ifdef __STDC_UTF_32__
+  ASSERT (p0[0] == 0x53f2);
+#endif
+#ifdef __STDC_ISO_10646__
+  ASSERT (p1[2] == 0x82b3);
+#endif
+#ifdef __STDC_UTF_16__
+  ASSERT (p2[1] == 0x6d25);
+#endif
+}
+
+#endif // __APPLE__
 
 static void
 teststr (void)
@@ -168,5 +297,13 @@ teststr (void)
   do_teststrstr ();
   do_teststrspn ();
   do_teststrtok ();
-  do_multibyte ();
+#if !defined (__APPLE__)
+  do_utf_8 ();
+  do_utf_8_sdcc ();
+  do_utf_16 ();
+  do_utf_32_c95 ();
+  do_utf_32_c11 ();
+  do_chinese ();
+#endif // __APPLE__
 }
+

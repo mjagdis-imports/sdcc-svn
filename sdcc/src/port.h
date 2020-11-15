@@ -17,7 +17,6 @@
 #define TARGET_ID_DS390    5
 #define TARGET_ID_PIC14    6
 #define TARGET_ID_PIC16    7
-#define TARGET_ID_XA51     9
 #define TARGET_ID_DS400    10
 #define TARGET_ID_HC08     11
 #define TARGET_ID_Z180     12
@@ -25,6 +24,7 @@
 #define TARGET_ID_R3KA     14
 #define TARGET_ID_S08      15
 #define TARGET_ID_STM8     16
+#define TARGET_ID_TLCS90   17
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -35,18 +35,18 @@
 #define TARGET_IS_DS400    (port->id == TARGET_ID_DS400)
 #define TARGET_IS_PIC14    (port->id == TARGET_ID_PIC14)
 #define TARGET_IS_PIC16    (port->id == TARGET_ID_PIC16)
-#define TARGET_IS_XA51     (port->id == TARGET_ID_XA51)
 #define TARGET_IS_Z80      (port->id == TARGET_ID_Z80)
 #define TARGET_IS_Z180     (port->id == TARGET_ID_Z180)
 #define TARGET_IS_R2K      (port->id == TARGET_ID_R2K)
 #define TARGET_IS_R3KA     (port->id == TARGET_ID_R3KA)
 #define TARGET_IS_GBZ80    (port->id == TARGET_ID_GBZ80)
+#define TARGET_IS_TLCS90   (port->id == TARGET_ID_TLCS90)
 #define TARGET_IS_HC08     (port->id == TARGET_ID_HC08)
 #define TARGET_IS_S08      (port->id == TARGET_ID_S08)
 #define TARGET_IS_STM8     (port->id == TARGET_ID_STM8)
 
 #define TARGET_MCS51_LIKE  (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_IS_DS400)
-#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GBZ80 || TARGET_IS_R2K || TARGET_IS_R3KA)
+#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GBZ80 || TARGET_IS_R2K || TARGET_IS_R3KA || TARGET_IS_TLCS90)
 #define TARGET_IS_RABBIT   (TARGET_IS_R2K || TARGET_IS_R3KA)
 #define TARGET_HC08_LIKE   (TARGET_IS_HC08 || TARGET_IS_S08)
 #define TARGET_PIC_LIKE    (TARGET_IS_PIC14 || TARGET_IS_PIC16)
@@ -159,6 +159,7 @@ typedef struct
     bool (*notUsed) (const char *reg, lineNode * currPl, lineNode * head);
     bool (*canAssign) (const char *op1, const char *op2, const char *op3);
     bool (*notUsedFrom) (const char *reg, const char *label, lineNode *head);
+    bool (*symmParmStack) (void);
   }
   peep;
 
@@ -220,8 +221,8 @@ typedef struct
     const char *const initializer_name; // A code copy of initialized_name (to be copied for fast initialization).
     struct memmap *default_local_map;   // default location for auto vars
     struct memmap *default_globl_map;   // default location for globl vars
-    int code_ro;                /* code space read-only 1=yes */
-    int maxextalign;                    // maximum extended alignment supported, nonnegative power of 2 (C11 standard, section 6.2.8).
+    int code_ro;                        // code space read-only 1=yes
+    unsigned int maxextalign;           // maximum extended alignment supported, nonnegative power of 2 (C11 standard, section 6.2.8).
   }
   mem;
 
@@ -248,17 +249,19 @@ typedef struct
     /** 'banked' call overhead.
         Mild overlap with bank_overhead */
     int banked_overhead;
+    /** 0 if sp points to last item pushed, 1 if sp points to next location to use */
+    int offset;
+
   }
   stack;
 
   struct
   {
-    /** One more than the smallest
-        mul/div operation the processor can do natively
-        Eg if the processor has an 8 bit mul, native below is 2 */
-    unsigned muldiv;
     /** Size of the biggest shift the port can handle. -1 if port can handle shifts of arbitrary size. */
-    unsigned shift;
+    signed int shift;
+
+    /* Has support routines for int x int -> long multiplication and unsigned int x unsigned int -> unsigned long multiplication */
+    bool has_mulint2long;
   }
   support;
 
@@ -318,6 +321,11 @@ typedef struct
       Used so that 'reg_info' can be an incomplete type. */
   const char *(*getRegName) (const struct reg_info *reg);
 
+  int (*getRegByName) (const char *name);
+
+  /** Try to keep track of register contents. */
+  bool (*rtrackUpdate)(const char* line);
+
   /* list of keywords that are used by this
      target (used by lexer) */
   char **keywords;
@@ -339,7 +347,7 @@ typedef struct
   void (*genInitStartup) (FILE * of);
 
   /* parameter passing in register related functions */
-  void (*reset_regparms) (void);        /* reset the register count */
+  void (*reset_regparms) (struct sym_link *);        /* reset the register count */
   int (*reg_parm) (struct sym_link *, bool reentrant);  /* will return 1 if can be passed in register */
 
   /** Process the pragma string 'sz'.  Returns 0 if recognised and
@@ -354,7 +362,7 @@ typedef struct
   /** Returns true if the port can multiply the two types nativly
       without using support functions.
    */
-  bool (*hasNativeMulFor) (iCode * ic, sym_link * left, sym_link * right);
+  bool (*hasNativeMulFor) (iCode *ic, sym_link *left, sym_link *right);
 
   /** Returns true if the port has implemented certain bit
       manipulation iCodes (RRC, RLC, SWAP, GETHBIT, GETABIT, GETBYTE, GETWORD)
@@ -390,9 +398,10 @@ typedef struct
   int reset_labelKey;           /* reset Label no 1 at the start of a function */
   int globals_allowed;          /* global & static locals not allowed ?  0 ONLY TININative */
 
-  int num_regs;                /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+  int num_regs;                 /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+
 #define PORT_MAGIC 0xAC32
-  /** Used at runtime to detect if this structure has been completly filled in. */
+  /** Used at runtime to detect if this structure has been completely filled in. */
   int magic;
 }
 PORT;
@@ -417,6 +426,9 @@ extern PORT r3ka_port; /* Rabbit 3000A */
 #if !OPT_DISABLE_GBZ80
 extern PORT gbz80_port;
 #endif
+#if !OPT_DISABLE_TLCS90
+extern PORT tlcs90_port;
+#endif
 #if !OPT_DISABLE_AVR
 extern PORT avr_port;
 #endif
@@ -431,9 +443,6 @@ extern PORT pic16_port;
 #endif
 #if !OPT_DISABLE_TININative
 extern PORT tininative_port;
-#endif
-#if !OPT_DISABLE_XA51
-extern PORT xa51_port;
 #endif
 #if !OPT_DISABLE_DS400
 extern PORT ds400_port;

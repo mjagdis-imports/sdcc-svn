@@ -130,7 +130,7 @@ struct	mne	mne[] = {
     {	NULL,	"FSFX",		S_BTYP,		0,	B_FSFX	},
     {	NULL,	"MAP",		S_BTYP,		0,	B_MAP	},
 #endif
-
+    {	NULL,	"NOLOAD",	S_ATYP,		0,	A_NOLOAD},
     {	NULL,	".page",	S_PAGE,		0,	0	},
     {	NULL,	".title",	S_HEADER,	0,	O_TITLE	},
     {	NULL,	".sbttl",	S_HEADER,	0,	O_SBTTL	},
@@ -178,6 +178,8 @@ struct	mne	mne[] = {
     {	NULL,	".endif",	S_CONDITIONAL,	0,	O_ENDIF	},
     {	NULL,	".list",	S_LISTING,	0,	O_LIST	},
     {	NULL,	".nlist",	S_LISTING,	0,	O_NLIST	},
+    {	NULL,	".uleb128",	S_ULEB128,	0,	0	},
+    {	NULL,	".sleb128",	S_SLEB128,	0,	0	},
     {	NULL,	".equ",		S_EQU,		0,	O_EQU	},
     {	NULL,	".gblequ",	S_EQU,		0,	O_GBLEQU},
     {	NULL,	".lclequ",	S_EQU,		0,	O_LCLEQU},
@@ -221,6 +223,9 @@ struct	mne	mne[] = {
 /*    {	NULL,	".24bit",	S_BITS,		0,	O_3BYTE	},	*/
 /*    {	NULL,	".32bit",	S_BITS,		0,	O_4BYTE	},	*/
     {	NULL,	".end",		S_END,		0,	0	},
+/* sdas specific */
+    {   NULL,   ".optsdcc",     S_OPTSDCC,      0,      0       },
+/* end sdas specific */
 
 	/* Macro Processor */
 
@@ -348,6 +353,7 @@ struct	mne	mne[] = {
     {	NULL,	"jp",		S_CLJP,		0,	0x0C	},
     {	NULL,	"jpf",		S_CLJPF,	0,	0xAC	},
 
+    {	NULL,	"break", 	S_INH,		0,	0x8B	},
     {	NULL,	"ccf",		S_INH,	   	0,	0x8C	},
     {	NULL,	"halt",		S_INH,	   	0,	0x8E	},
     {	NULL,	"int",		S_INT,		0,	0x0C	},

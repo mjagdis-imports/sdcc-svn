@@ -46,42 +46,45 @@ struct t_regs
 */
 
 /* store to sfr */
-#define set_word_direct(addr, val) { sfr->set((t_addr) (addr), (val) & 0xff); \
-                            sfr->set((t_addr) (addr+1), ((val) >> 8) & 0xff); }
-#define set_byte_direct(addr, val) sfr->set((t_addr) (addr), (val) )
+#define set_word_direct(addr, val) { sfr->write((t_addr) (addr), (val) & 0xff); \
+    sfr->write((t_addr) ((addr)+1), ((val) >> 8) & 0xff); \
+    vc.wr+= 2; }
+#define set_byte_direct(addr, val) { sfr->write((t_addr) (addr), (val) ); vc.wr++; }
 
 /* get from sfr */
-#define get_byte_direct(addr) sfr->get((t_addr) (addr))
-#define get_word_direct(addr) (sfr->get((t_addr) (addr)) | (sfr->get((t_addr) (addr+1)) << 8) )
+#define get_byte_direct(addr) (vc.rd++, (sfr->read((t_addr) (addr))))
+#define get_word_direct(addr) (vc.rd+= 2, ((sfr->read((t_addr) (addr)) | (sfr->read((t_addr) ((addr)+1)) << 8) )))
 
 /* store to idata(onchip) ram */
-#define set_idata2(addr, val) { iram->set((t_addr) (addr), (val) & 0xff); \
-                            iram->set((t_addr) (addr+1), ((val) >> 8) & 0xff); }
-#define set_idata1(addr, val) iram->set((t_addr) (addr), (val) )
+#define set_idata2(addr, val) { iram->write((t_addr) (addr), (val) & 0xff); \
+                            iram->write((t_addr) (addr+1), ((val) >> 8) & 0xff); \
+  			    vc.wr+= 2; }
+#define set_idata1(addr, val) { iram->write((t_addr) (addr), (val) ); vc.wr++; }
 
 /* get from idata(onchip) ram */
-#define get_idata1(addr) iram->get((t_addr) (addr))
-#define get_idata2(addr) (iram->get((t_addr) (addr)) | (iram->get((t_addr) (addr+1)) << 8) )
+#define get_idata1(addr) (vc.rd++, (iram->read((t_addr) (addr))))
+#define get_idata2(addr) (vc.rd+= 2, (iram->read((t_addr) (addr)) | (iram->read((t_addr) (addr+1)) << 8) ))
 
 /* store to xdata(external) ram */
-#define set_xdata2(addr, val) { ram->set((t_addr) (addr), (val) & 0xff); \
-                            ram->set((t_addr) (addr+1), ((val) >> 8) & 0xff); }
-#define set_xdata1(addr, val) ram->set((t_addr) (addr), val)
+#define set_xdata2(addr, val) { ram->write((t_addr) (addr), (val) & 0xff); \
+                            ram->write((t_addr) (addr+1), ((val) >> 8) & 0xff); \
+  			    vc.wr+= 2; }
+#define set_xdata1(addr, val) { ram->write((t_addr) (addr), val); vc.wr++; }
 
 /* get from xdata(external) ram */
-#define get_xdata1(addr) ram->get((t_addr) (addr))
-#define get_xdata2(addr) (ram->get((t_addr) (addr)) | (ram->get((t_addr) (addr+1)) << 8) )
+#define get_xdata1(addr) (vc.rd++, (ram->read((t_addr) (addr))))
+#define get_xdata2(addr) (vc.rd+= 2, (ram->read((t_addr) (addr)) | (ram->read((t_addr) (addr+1)) << 8) ))
 
 /* get from code */
-#define getcode1(addr) rom->get((t_addr) (addr))
-#define getcode2(addr) (rom->get((t_addr) (addr)) | (rom->get((t_addr) (addr+1)) << 8) )
+#define getcode1(addr) (vc.rd++, rom->read((t_addr) (addr)))
+#define getcode2(addr) (vc.rd+= 2, (rom->read((t_addr) (addr)) | (rom->read((t_addr) (addr+1)) << 8) ))
 
 /* fetch from opcode code space */
 #define fetch2() ((fetch() << 8) | fetch())
 #define fetch1() fetch()
 
 /* get a 1 or 2 byte register */
-#define reg2(_index) get_reg(1, REGS_OFFSET + (_index<<1)) /* function in inst.cc */
+#define reg2(_index) get_reg(1, REGS_OFFSET + ((_index)<<1)) /* function in inst.cc */
 #define reg1(_index) (unsigned char)get_reg(0, REGS_OFFSET + (_index))
 
 #define set_reg1(_index, _value) { \
@@ -89,7 +92,7 @@ struct t_regs
 }
 
 #define set_reg2(_index, _value) { \
-     set_word_direct( (REGS_OFFSET+(_index<<1)), _value); \
+    set_word_direct( (REGS_OFFSET+((_index)<<1)), _value);	\
 }
 
 #define set_reg(_word_flag, _index, _value) { \
@@ -106,11 +109,11 @@ struct t_regs
   { set_word_direct(REGS_OFFSET+(7*2), _value); } \
 }
 
-#define get_sp() ((TYPE_UWORD)(get_word_direct(REGS_OFFSET+(7*2))))
+#define get_sp() ((u16_t)(get_word_direct(REGS_OFFSET+(7*2))))
 
 /* the program status word */
 #define PSW 0x400
-#define get_psw() ((TYPE_UWORD)(get_word_direct(PSW)))
+#define get_psw() ((u16_t)(get_word_direct(PSW)))
 #define set_psw(_flags) set_word_direct(PSW, _flags)
 
 /* the system configuration register */
@@ -128,7 +131,7 @@ struct t_regs
 
 
 #if 0
---------------------------------------------------------------------
+/*--------------------------------------------------------------------
 Developer Notes.
 
 This user guide has got the detailed information on the XA chip. 
@@ -274,6 +277,7 @@ set_indirect1(addr, value) {
 }
 
 ----------------------------------------------
+*/
 #endif
 
 

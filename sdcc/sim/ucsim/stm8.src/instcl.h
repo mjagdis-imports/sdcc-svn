@@ -1,12 +1,16 @@
+/* $Id: instcl.h 519 2016-11-23 14:21:44Z drdani $ */
+
 /* stm8.src/instcl.h */
 
    //virtual void incx(void);
    virtual int fetchea(t_mem code, unsigned char prefix);
+   virtual int get_1(unsigned int addr);
    virtual int get2(unsigned int addr);
    virtual int get3(unsigned int addr);
    virtual int get_dest(t_mem code, unsigned char prefix);
    virtual int operandw(t_mem code, unsigned char prefix);
-   
+   virtual void flag_cvh(int x, int m, int r, bool byte, bool add, int mask);
+  
    virtual int inst_adc(t_mem code, unsigned char prefix);
    virtual int inst_add(t_mem code, unsigned char prefix);
    virtual int inst_addw(t_mem code, unsigned char prefix);

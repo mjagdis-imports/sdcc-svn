@@ -13,6 +13,7 @@ CXXCPP		= @CXXCPP@
 RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 MAKEDEP         = @MAKEDEP@
+AR		= @AR@
 
 top_builddir	= @top_builddir@
 top_srcdir	= @top_srcdir@
@@ -27,12 +28,17 @@ CPPFLAGS        = @CPPFLAGS@ -I$(top_builddir) -I$(srcdir) \
 		  -I$(top_srcdir)/$(CMDDIR) -I$(top_srcdir)/$(GUIDIR)
 CFLAGS          = @CFLAGS@ -I$(top_builddir) @WALL_FLAG@
 CXXFLAGS        = @CXXFLAGS@ -I$(top_builddir) @WALL_FLAG@
+WINSOCK_AVAIL   = @WINSOCK_AVAIL@
+LDFLAGS		= @LDFLAGS@
 
 EXEEXT		= @EXEEXT@
 
-LIB_LIST	= ucsimutil cmd sim
-UCSIM_LIBS	= -Wl,--start-group $(patsubst %,-l%,$(LIB_LIST)) -Wl,--end-group
+LIB_LIST	= sim ucsimutil guiucsim cmd ucsimutil sim
+UCSIM_LIBS	= $(patsubst %,-l%,$(LIB_LIST)) @LIBS@
 UCSIM_LIB_FILES	= $(patsubst %,lib%.a,$(LIB_LIST))
+
+RELAY_LIBS	= $(patsubst %,-l%,ucsimutil) @LIBS@
+RELAY_LIB_FILES	= $(patsubst %,lib%.a,ucsimutil)
 
 prefix          = @prefix@
 exec_prefix     = @exec_prefix@
@@ -48,11 +54,18 @@ infodir         = @infodir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
-OBJECTS         = pobj.o globals.o utils.o error.o app.o option.o
+OBJECTS         = pobj.o globals.o utils.o error.o app.o option.o chars.o fio.o
+ifeq ($(WINSOCK_AVAIL), 1)
+OBJECTS		+= fwio.o
+else
+OBJECTS		+= fuio.o
+endif
 SOURCES		= $(patsubst %.o,%.cc,$(OBJECTS))
 UCSIM_OBJECTS	= ucsim.o
 UCSIM_SOURCES	= $(patsubst %.o,%.cc,$(UCSIM_OBJECTS))
-ALL_SOURCES	= $(SOURCES) $(UCSIM_SOURCES)
+RELAY_OBJECTS	= relay.o
+RELAY_SOURCES	= $(patsubst %.o,%.cc,$(RELAY_OBJECTS))
+ALL_SOURCES	= $(SOURCES) $(UCSIM_SOURCES) $(RELAY_SSOURCES)
 
 enable_ucsim	= @enable_ucsim@
 
@@ -63,7 +76,7 @@ all: checkconf libs
 
 libs: libucsimutil.a
 
-main_app: checkconf ucsim_app
+main_app: checkconf ucsim_app relay_app
 
 # Compiling and installing everything and runing test
 # ---------------------------------------------------
@@ -114,19 +127,30 @@ include $(srcdir)/clean.mk
 # My rules
 # --------
 libucsimutil.a: $(OBJECTS)
-	ar -rcu $*.a $(OBJECTS)
-	$(RANLIB) $*.a
+	$(AR) -rc $@ $(OBJECTS)
+	$(RANLIB) $@
 
 
 ifeq ($(enable_ucsim),yes)
-ucsim_app: libs ucsim
+ucsim_app: libs ucsim$(EXEEXT)
 else
 ucsim_app:
 endif
 
-ucsim: $(UCSIM_OBJECTS) $(UCSIM_LIB_FILES)
+ftest_app: libs ftest$(EXEEXT)
+
+relay_app: libs relay$(EXEEXT)
+
+ucsim$(EXEEXT): $(UCSIM_OBJECTS) $(UCSIM_LIB_FILES)
 	echo $(UCSIM_LIB_FILES)
-	$(CXX) $(CXXFLAGS) -o $@ $< -L$(top_builddir) $(UCSIM_LIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< -L$(top_builddir) $(UCSIM_LIBS) -o $@ 
+
+ftest$(EXEEXT): ftest.o libucsimutil.a
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $< -L$(top_builddir) -lucsimutil @LIBS@
+
+relay$(EXEEXT): $(RELAY_OBJECTS) $(RELAY_LIB_FILES)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $< -L$(top_builddir) $(RELAY_LIBS) -o $@
+
 
 ptt: ptt.o
 	$(CXX) $(CXXFLAGS) -o $@ $< -lpthread

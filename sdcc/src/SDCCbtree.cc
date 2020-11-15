@@ -18,6 +18,7 @@
 
 #include <set>
 #include <map>
+#include <iostream>
 
 #include <boost/graph/adjacency_list.hpp>
 
@@ -131,7 +132,7 @@ static void btree_alloc_subtree(btree_t::vertex_descriptor v, int sPtr, int cssi
       const int size = getSize (sym->type);
 
 #ifdef BTREE_DEBUG
-      std::cout << "Allocating symbol " << sym->name << " (" << v << ") to " << sPtr << "\n";
+      std::cout << "Allocating symbol " << sym->name << " (" << v << ") of size " << size << " to " << sPtr << "\n";
 #endif
 
       if(port->stack.direction > 0)

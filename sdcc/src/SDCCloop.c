@@ -905,6 +905,12 @@ addPostLoopBlock (region * loopReg, ebbIndex * ebbi, iCode * ic)
                   /* insert goto to old predecessor of eblock */
                   newic = newiCodeLabelGoto (GOTO, eblock->entryLabel);
                   addiCodeToeBBlock (ebpi, newic, NULL);
+                  /* Make sure the GOTO has a target */
+                  if (eblock->sch->op != LABEL)
+                    {
+                      newic = newiCodeLabelGoto (LABEL, eblock->entryLabel);
+                      addiCodeToeBBlock (eblock, newic, eblock->sch);
+                    }
                   break;        /* got it, only one is possible */
                 }
             }
@@ -1180,8 +1186,7 @@ loopInduction (region * loopReg, ebbIndex * ebbi)
 
           /* ask port for size not worth if native instruction
              exist for multiply & divide */
-          if (getSize (operandType (IC_LEFT (ic))) <= (unsigned long) port->support.muldiv ||
-              getSize (operandType (IC_RIGHT (ic))) <= (unsigned long) port->support.muldiv)
+          if (port->hasNativeMulFor (ic, operandType (IC_LEFT (ic)), operandType (IC_RIGHT (ic))))
             continue;
 
           /* if this is a division then the remainder should be zero

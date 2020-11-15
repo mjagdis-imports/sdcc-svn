@@ -2,9 +2,9 @@
  * This declarations of the PIC16F1513 MCU.
  *
  * This file is part of the GNU PIC library for SDCC, originally
- * created by Molnar Karoly <molnarkaroly@users.sf.net> 2012.
+ * created by Molnar Karoly <molnarkaroly@users.sf.net> 2016.
  *
- * This file is generated automatically by the cinc2h.pl, 2012-11-01 17:29:59 UTC.
+ * This file is generated automatically by the cinc2h.pl, 2016-04-13 17:23:06 UTC.
  *
  * SDCC is licensed under the GNU Public license (GPL) v2. Note that
  * this license covers the code to the compiler and other executables,
@@ -73,6 +73,7 @@
 #define WDTCON_ADDR             0x0097
 #define OSCCON_ADDR             0x0099
 #define OSCSTAT_ADDR            0x009A
+#define ADRES_ADDR              0x009B
 #define ADRES0_ADDR             0x009B
 #define ADRES0L_ADDR            0x009B
 #define ADRESL_ADDR             0x009B
@@ -100,8 +101,11 @@
 #define VREGCON_ADDR            0x0197
 #define RCREG_ADDR              0x0199
 #define TXREG_ADDR              0x019A
+#define SP1BRG_ADDR             0x019B
+#define SP1BRGL_ADDR            0x019B
 #define SPBRG_ADDR              0x019B
 #define SPBRGL_ADDR             0x019B
+#define SP1BRGH_ADDR            0x019C
 #define SPBRGH_ADDR             0x019C
 #define RCSTA_ADDR              0x019D
 #define TXSTA_ADDR              0x019E
@@ -123,9 +127,11 @@
 #define SSPCON2_ADDR            0x0216
 #define SSP1CON3_ADDR           0x0217
 #define SSPCON3_ADDR            0x0217
+#define CCPR1_ADDR              0x0291
 #define CCPR1L_ADDR             0x0291
 #define CCPR1H_ADDR             0x0292
 #define CCP1CON_ADDR            0x0293
+#define CCPR2_ADDR              0x0298
 #define CCPR2L_ADDR             0x0298
 #define CCPR2H_ADDR             0x0299
 #define CCP2CON_ADDR            0x029A
@@ -143,9 +149,12 @@
 #define AADCAP_ADDR             0x0719
 #define AADRES0_ADDR            0x071A
 #define AADRES0L_ADDR           0x071A
+#define AD1RES0_ADDR            0x071A
 #define AADRES0H_ADDR           0x071B
 #define AADRES1_ADDR            0x071C
 #define AADRES1L_ADDR           0x071C
+#define AD1RES1_ADDR            0x071C
+#define ADRES1_ADDR             0x071C
 #define AADRES1H_ADDR           0x071D
 #define STATUS_SHAD_ADDR        0x0FE4
 #define WREG_SHAD_ADDR          0x0FE5
@@ -966,6 +975,7 @@ extern __at(0x009A) volatile __OSCSTATbits_t OSCSTATbits;
 
 //==============================================================================
 
+extern __at(0x009B) __sfr ADRES;
 extern __at(0x009B) __sfr ADRES0;
 extern __at(0x009B) __sfr ADRES0L;
 extern __at(0x009B) __sfr ADRESL;
@@ -1423,8 +1433,11 @@ extern __at(0x0197) volatile __VREGCONbits_t VREGCONbits;
 
 extern __at(0x0199) __sfr RCREG;
 extern __at(0x019A) __sfr TXREG;
+extern __at(0x019B) __sfr SP1BRG;
+extern __at(0x019B) __sfr SP1BRGL;
 extern __at(0x019B) __sfr SPBRG;
 extern __at(0x019B) __sfr SPBRGL;
+extern __at(0x019C) __sfr SP1BRGH;
 extern __at(0x019C) __sfr SPBRGH;
 
 //==============================================================================
@@ -1884,6 +1897,7 @@ extern __at(0x0217) volatile __SSPCON3bits_t SSPCON3bits;
 
 //==============================================================================
 
+extern __at(0x0291) __sfr CCPR1;
 extern __at(0x0291) __sfr CCPR1L;
 extern __at(0x0292) __sfr CCPR1H;
 
@@ -1931,6 +1945,7 @@ extern __at(0x0293) volatile __CCP1CONbits_t CCP1CONbits;
 
 //==============================================================================
 
+extern __at(0x0298) __sfr CCPR2;
 extern __at(0x0298) __sfr CCPR2L;
 extern __at(0x0299) __sfr CCPR2H;
 
@@ -2398,9 +2413,12 @@ extern __at(0x0719) volatile __AADCAPbits_t AADCAPbits;
 
 extern __at(0x071A) __sfr AADRES0;
 extern __at(0x071A) __sfr AADRES0L;
+extern __at(0x071A) __sfr AD1RES0;
 extern __at(0x071B) __sfr AADRES0H;
 extern __at(0x071C) __sfr AADRES1;
 extern __at(0x071C) __sfr AADRES1L;
+extern __at(0x071C) __sfr AD1RES1;
+extern __at(0x071C) __sfr ADRES1;
 extern __at(0x071D) __sfr AADRES1H;
 
 //==============================================================================
@@ -2450,51 +2468,53 @@ extern __at(0x0FEF) __sfr TOSH;
 
 //----------------------------- CONFIG1 Options -------------------------------
 
-#define _FOSC_LP                0xFFF8  // LP Oscillator, Low-power crystal connected between OSC1 and OSC2 pins.
-#define _FOSC_XT                0xFFF9  // XT Oscillator, Crystal/resonator connected between OSC1 and OSC2 pins.
-#define _FOSC_HS                0xFFFA  // HS Oscillator, High-speed crystal/resonator connected between OSC1 and OSC2 pins.
-#define _FOSC_EXTRC             0xFFFB  // EXTRC oscillator: External RC circuit connected to CLKIN pin.
-#define _FOSC_INTOSC            0xFFFC  // INTOSC oscillator: I/O function on CLKIN pin.
-#define _FOSC_ECL               0xFFFD  // ECL, External Clock, Low Power Mode (0-0.5 MHz): device clock supplied to CLKIN pin.
-#define _FOSC_ECM               0xFFFE  // ECM, External Clock, Medium Power Mode (0.5-4 MHz): device clock supplied to CLKIN pin.
-#define _FOSC_ECH               0xFFFF  // ECH, External Clock, High Power Mode (4-20 MHz): device clock supplied to CLKIN pin.
-#define _WDTE_OFF               0xFFE7  // WDT disabled.
-#define _WDTE_SWDTEN            0xFFEF  // WDT controlled by the SWDTEN bit in the WDTCON register.
-#define _WDTE_NSLEEP            0xFFF7  // WDT enabled while running and disabled in Sleep.
-#define _WDTE_ON                0xFFFF  // WDT enabled.
-#define _PWRTE_ON               0xFFDF  // PWRT enabled.
-#define _PWRTE_OFF              0xFFFF  // PWRT disabled.
-#define _MCLRE_OFF              0xFFBF  // MCLR/VPP pin function is digital input.
-#define _MCLRE_ON               0xFFFF  // MCLR/VPP pin function is MCLR.
-#define _CP_ON                  0xFF7F  // Program memory code protection is enabled.
-#define _CP_OFF                 0xFFFF  // Program memory code protection is disabled.
-#define _BOREN_OFF              0xF9FF  // Brown-out Reset disabled.
-#define _BOREN_SBODEN           0xFBFF  // Brown-out Reset controlled by the SBOREN bit in the BORCON register.
-#define _BOREN_NSLEEP           0xFDFF  // Brown-out Reset enabled while running and disabled in Sleep.
-#define _BOREN_ON               0xFFFF  // Brown-out Reset enabled.
-#define _CLKOUTEN_ON            0xF7FF  // CLKOUT function is enabled on the CLKOUT pin.
-#define _CLKOUTEN_OFF           0xFFFF  // CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin.
-#define _IESO_OFF               0xEFFF  // Internal/External Switchover mode is disabled.
-#define _IESO_ON                0xFFFF  // Internal/External Switchover mode is enabled.
-#define _FCMEN_OFF              0xDFFF  // Fail-Safe Clock Monitor is disabled.
-#define _FCMEN_ON               0xFFFF  // Fail-Safe Clock Monitor is enabled.
+#define _FOSC_LP                0x3FF8  // LP Oscillator, Low-power crystal connected between OSC1 and OSC2 pins.
+#define _FOSC_XT                0x3FF9  // XT Oscillator, Crystal/resonator connected between OSC1 and OSC2 pins.
+#define _FOSC_HS                0x3FFA  // HS Oscillator, High-speed crystal/resonator connected between OSC1 and OSC2 pins.
+#define _FOSC_EXTRC             0x3FFB  // EXTRC oscillator: External RC circuit connected to CLKIN pin.
+#define _FOSC_INTOSC            0x3FFC  // INTOSC oscillator: I/O function on CLKIN pin.
+#define _FOSC_ECL               0x3FFD  // ECL, External Clock, Low Power Mode (0-0.5 MHz): device clock supplied to CLKIN pin.
+#define _FOSC_ECM               0x3FFE  // ECM, External Clock, Medium Power Mode (0.5-4 MHz): device clock supplied to CLKIN pin.
+#define _FOSC_ECH               0x3FFF  // ECH, External Clock, High Power Mode (4-20 MHz): device clock supplied to CLKIN pin.
+#define _WDTE_OFF               0x3FE7  // WDT disabled.
+#define _WDTE_SWDTEN            0x3FEF  // WDT controlled by the SWDTEN bit in the WDTCON register.
+#define _WDTE_NSLEEP            0x3FF7  // WDT enabled while running and disabled in Sleep.
+#define _WDTE_ON                0x3FFF  // WDT enabled.
+#define _PWRTE_ON               0x3FDF  // PWRT enabled.
+#define _PWRTE_OFF              0x3FFF  // PWRT disabled.
+#define _MCLRE_OFF              0x3FBF  // MCLR/VPP pin function is digital input.
+#define _MCLRE_ON               0x3FFF  // MCLR/VPP pin function is MCLR.
+#define _CP_ON                  0x3F7F  // Program memory code protection is enabled.
+#define _CP_OFF                 0x3FFF  // Program memory code protection is disabled.
+#define _BOREN_OFF              0x39FF  // Brown-out Reset disabled.
+#define _BOREN_SBODEN           0x3BFF  // Brown-out Reset controlled by the SBOREN bit in the BORCON register.
+#define _BOREN_NSLEEP           0x3DFF  // Brown-out Reset enabled while running and disabled in Sleep.
+#define _BOREN_ON               0x3FFF  // Brown-out Reset enabled.
+#define _CLKOUTEN_ON            0x37FF  // CLKOUT function is enabled on the CLKOUT pin.
+#define _CLKOUTEN_OFF           0x3FFF  // CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin.
+#define _IESO_OFF               0x2FFF  // Internal/External Switchover mode is disabled.
+#define _IESO_ON                0x3FFF  // Internal/External Switchover mode is enabled.
+#define _FCMEN_OFF              0x1FFF  // Fail-Safe Clock Monitor is disabled.
+#define _FCMEN_ON               0x3FFF  // Fail-Safe Clock Monitor is enabled.
 
 //----------------------------- CONFIG2 Options -------------------------------
 
-#define _WRT_ALL                0xFFFC  // 000h to 1FFFh write protected, no addresses may be modified by EECON control.
-#define _WRT_HALF               0xFFFD  // 000h to FFFh write protected, 1000h to 1FFFh may be modified by EECON control.
-#define _WRT_BOOT               0xFFFE  // 000h to 1FFh write protected, 200h to 1FFFh may be modified by EECON control.
-#define _WRT_OFF                0xFFFF  // Write protection off.
-#define _VCAPEN_ON              0xFFEF  // VCAP pin function enabled.
-#define _VCAPEN_OFF             0xFFFF  // VCAP pin function disabled.
-#define _STVREN_OFF             0xFDFF  // Stack Overflow or Underflow will not cause a Reset.
-#define _STVREN_ON              0xFFFF  // Stack Overflow or Underflow will cause a Reset.
-#define _BORV_HI                0xFBFF  // Brown-out Reset Voltage (Vbor), high trip point selected.
-#define _BORV_LO                0xFFFF  // Brown-out Reset Voltage (Vbor), low trip point selected.
-#define _LPBOR_ON               0xF7FF  // Low-Power BOR is enabled.
-#define _LPBOR_OFF              0xFFFF  // Low-Power BOR is disabled.
-#define _LVP_OFF                0xDFFF  // High-voltage on MCLR/VPP must be used for programming.
-#define _LVP_ON                 0xFFFF  // Low-voltage programming enabled.
+#define _WRT_ALL                0x3FFC  // 000h to 1FFFh write protected, no addresses may be modified by EECON control.
+#define _WRT_HALF               0x3FFD  // 000h to FFFh write protected, 1000h to 1FFFh may be modified by EECON control.
+#define _WRT_BOOT               0x3FFE  // 000h to 1FFh write protected, 200h to 1FFFh may be modified by EECON control.
+#define _WRT_OFF                0x3FFF  // Write protection off.
+#define _VCAPEN_ON              0x3FEF  // VCAP pin function enabled.
+#define _VCAPEN_OFF             0x3FFF  // VCAP pin function disabled.
+#define _STVREN_OFF             0x3DFF  // Stack Overflow or Underflow will not cause a Reset.
+#define _STVREN_ON              0x3FFF  // Stack Overflow or Underflow will cause a Reset.
+#define _BORV_HI                0x3BFF  // Brown-out Reset Voltage (Vbor), high trip point selected.
+#define _BORV_LO                0x3FFF  // Brown-out Reset Voltage (Vbor), low trip point selected.
+#define _LPBOR_ON               0x37FF  // Low-Power BOR is enabled.
+#define _LPBOR_OFF              0x3FFF  // Low-Power BOR is disabled.
+#define _DEBUG_ON               0x2FFF  // In-Circuit Debugger enabled, ICSPCLK and ICSPDAT are dedicated to the debugger.
+#define _DEBUG_OFF              0x3FFF  // In-Circuit Debugger disabled, ICSPCLK and ICSPDAT are general purpose I/O pins.
+#define _LVP_OFF                0x1FFF  // High-voltage on MCLR/VPP must be used for programming.
+#define _LVP_ON                 0x3FFF  // Low-voltage programming enabled.
 
 //==============================================================================
 

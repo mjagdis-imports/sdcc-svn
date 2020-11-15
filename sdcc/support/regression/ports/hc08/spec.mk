@@ -9,8 +9,12 @@ ifdef SDCC_BIN_PATH
 
   AS_HC08C = $(SDCC_BIN_PATH)/sdas6808$(EXEEXT)
 else
-  UCHC08A = $(top_builddir)/sim/ucsim/hc08.src/shc08$(EXEEXT)
-  UCHC08B = $(top_builddir)/bin/shc08$(EXEEXT)
+  ifdef UCSIM_DIR
+    UCHC08A = $(UCSIM_DIR)/hc08.src/shc08$(EXEEXT)
+  else
+    UCHC08A = $(top_builddir)/sim/ucsim/hc08.src/shc08$(EXEEXT)
+    UCHC08B = $(top_builddir)/bin/shc08$(EXEEXT)
+  endif
 
   EMU = $(WINE) $(shell if [ -f $(UCHC08A) ]; then echo $(UCHC08A); else echo $(UCHC08B); fi)
 
@@ -26,7 +30,7 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mhc08 --less-pedantic --out-fmt-ihx -DREENTRANT=__reentrant
+SDCCFLAGS += -mhc08 --less-pedantic --out-fmt-ihx
 LINKFLAGS += hc08.lib
 
 OBJEXT = .rel
@@ -63,7 +67,7 @@ $(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib
 	mkdir -p $(dir $@)
 	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $< < $(PORTS_DIR)/$(PORT)/uCsim.cmd > $@ \
 	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
-	python $(srcdir)/get_ticks.py < $@ >> $@
+	$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
 	-grep -n FAIL $@ /dev/null || true
 
 _clean:

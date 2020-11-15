@@ -105,11 +105,11 @@ candidate_expression (const iCode *const ic, int lkey)
   if(ic->op == '=' && IS_OP_LITERAL (right))
     return (false);
 
-  if(IS_OP_VOLATILE (left) || IS_OP_VOLATILE (right))
-    return (false);
+  //if(IS_OP_VOLATILE (left) || IS_OP_VOLATILE (right))
+  //  return (false);
 
-  if(POINTER_GET (ic) && IS_VOLATILE (operandType (IC_LEFT (ic))->next))
-    return (false);
+  //if(POINTER_GET (ic) && IS_VOLATILE (operandType (IC_LEFT (ic))->next))
+  //  return (false);
 
   // Todo: Allow more operands!
   if (ic->op != CAST && left && !(IS_SYMOP (left) || IS_OP_LITERAL (left)) ||
@@ -169,6 +169,7 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   const operand *const eleft = IC_LEFT (eic);
   const operand *const eright = IC_RIGHT (eic);
   const bool uses_global = (eic->op == GET_VALUE_AT_ADDRESS || isOperandGlobal (eleft) || isOperandGlobal (eright) || IS_SYMOP (eleft) && OP_SYMBOL_CONST (eleft)->addrtaken || IS_SYMOP (eright) && OP_SYMBOL_CONST (eright)->addrtaken);
+  const bool uses_volatile = POINTER_GET (eic) && IS_VOLATILE (operandType (eleft)->next) || IS_OP_VOLATILE (eleft) || IS_OP_VOLATILE (eright);
   bool safety_required = false;
 
   // In redundancy elimination, safety means not doing a computation on any path were it was not done before.
@@ -178,7 +179,7 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   // safety, since reading from an unknown location could result in making the device do something or in a SIGSEGV. 
   // On the other hand, addition is something that typically does not require safety, since adding two undefined
   // operands gives just another undefined (the C standard allows trap representations, which, could result
-  // in addition requiring safety though; AFAIK none of the targets currently supported by sdcc have trap representations).
+  // in addition requiring safety though; AFAIK none of the targets currently supported by SDCC have trap representations).
   // Philipp, 2012-07-06.
   //
   // For now we just always require safety for "dangerous" operations.
@@ -190,8 +191,12 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   if (eic->op == CALL || eic->op == PCALL)
     safety_required = true;
 
+  // volatile requires safety.
+  if (uses_volatile)
+    safety_required = true;
+
   // Reading from an invalid address might be dangerous, since there could be memory-mapped I/O.
-  if (eic->op == GET_VALUE_AT_ADDRESS && !optimize.lospre_unsafe_read)
+  if (eic->op == GET_VALUE_AT_ADDRESS && !optimize.allow_unsafe_read)
     safety_required = true;
 
   // The division routines for z80-like ports and the hc08/s08's and stm8's hardware division just give an undefined result
@@ -207,6 +212,10 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   for (vertex_t i = 0; i < boost::num_vertices (*cfg); i++)
     {
        const iCode *const ic = (*cfg)[i].ic;
+       const operand *const left = IC_LEFT (ic);
+       const operand *const right = IC_RIGHT (ic);
+       const operand *const result = IC_RESULT (ic);
+
        (*cfg)[i].uses = same_expression (eic, ic);
        (*cfg)[i].invalidates = false;
        (*cfg)[i].i_writes[0] = false;
@@ -216,17 +225,19 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
        (*cfg)[i].i_live[0] = false;
        (*cfg)[i].i_live[1] = false;
 
-       if (IC_RESULT (ic) && !IS_OP_LITERAL (IC_RESULT (ic)) && !POINTER_SET(ic))
+       if (result && !IS_OP_LITERAL (result) && !POINTER_SET(ic))
          {
-           (*cfg)[i].i_writes[0] = (eleft && isOperandEqual (eleft, IC_RESULT (ic)));
-           (*cfg)[i].i_writes[bool(eleft)] = (eright && isOperandEqual (eright, IC_RESULT (ic)));
+           (*cfg)[i].i_writes[0] = (eleft && isOperandEqual (eleft, result));
+           (*cfg)[i].i_writes[bool(eleft)] = (eright && isOperandEqual (eright, result));
            (*cfg)[i].invalidates = (*cfg)[i].i_writes[0] || (*cfg)[i].i_writes[1];
          }
        if(ic->op == FUNCTION || ic->op == ENDFUNCTION || ic->op == RECEIVE)
          (*cfg)[i].invalidates = true;
-       if(uses_global && (ic->op == CALL || ic->op == PCALL))
+       if ((uses_global || uses_volatile) && (ic->op == CALL || ic->op == PCALL))
          (*cfg)[i].invalidates = true;
-       if(uses_global && POINTER_SET (ic)) // TODO: More accuracy here!
+       if (uses_volatile && !(*cfg)[i].uses && (POINTER_GET (ic) && IS_VOLATILE (operandType (left)->next)) || IS_OP_VOLATILE (left) || IS_OP_VOLATILE (right))
+         (*cfg)[i].invalidates = true;
+       if (uses_global && POINTER_SET (ic)) // TODO: More accuracy here!
          (*cfg)[i].invalidates = true;
 
        (*cfg)[i].i_uses[0] = !(*cfg)[i].uses && (eleft && (IC_LEFT(ic) && isOperandEqual (eleft, IC_LEFT (ic)) || IC_RIGHT(ic) && isOperandEqual (eleft, IC_RIGHT (ic))) || POINTER_SET(ic) && isOperandEqual (eleft, IC_RESULT (ic)));
@@ -246,7 +257,7 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
 }
 
 // Dump cfg, with numbered nodes.
-void dump_cfg_lospre(const cfg_lospre_t &cfg)
+void dump_cfg_lospre (const cfg_lospre_t &cfg)
 {
   if(!currFunc)
     return;
@@ -262,13 +273,13 @@ void dump_cfg_lospre(const cfg_lospre_t &cfg)
       dbuf_free (iLine);
       name[i] = os.str();
     }
-  boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name));
+  boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "lospre"));
   delete[] name;
 }
 
 #if 0
 // Dump tree decomposition.
-static void dump_tree_decomposition(const tree_dec_lospre_t &tree_dec)
+static void dump_tree_decomposition(const tree_dec_t &tree_dec)
 {
   std::ofstream dump_file((std::string(dstFileName) + ".dumplospredec" + currFunc->rname + ".dot").c_str());
 
@@ -295,7 +306,7 @@ void
 lospre (iCode *sic, ebbIndex *ebbi)
 {
   cfg_lospre_t control_flow_graph;
-  tree_dec_lospre_t tree_decomposition;
+  tree_dec_t tree_decomposition;
 
   wassert (sic);
 
@@ -309,8 +320,7 @@ lospre (iCode *sic, ebbIndex *ebbi)
   if(options.dump_graphs)
     dump_cfg_lospre(control_flow_graph);
 
-  thorup_tree_decomposition (tree_decomposition, control_flow_graph);
-  nicify (tree_decomposition);
+  get_nice_tree_decomposition (tree_decomposition, control_flow_graph);
 
   int lkey = operandKey;
 

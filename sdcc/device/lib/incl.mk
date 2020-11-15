@@ -17,7 +17,6 @@ COMMON_FLOAT = \
   _fsmul.c \
   _fssub.c \
   _fseq.c \
-  _fsgt.c \
   _fslt.c \
   _fsneq.c \
   fabsf.c \
@@ -46,7 +45,9 @@ COMMON_FLOAT = \
   floorf.c \
   ceilf.c \
   modff.c \
-  errno.c
+  errno.c \
+  isinf.c \
+  isnan.c
 
 COMMON_LONG = \
   _divslong.c \
@@ -54,23 +55,31 @@ COMMON_LONG = \
   _modulong.c
 
 COMMON_SDCC = \
-  _atoi.c \
-  _atol.c \
+  isalnum.c \
+  isalpha.c \
+  isblank.c \
+  iscntrl.c \
+  isdigit.c \
+  isgraph.c \
+  islower.c \
+  isprint.c \
+  ispunct.c \
+  isspace.c \
+  isupper.c \
+  isxdigit.c \
+  tolower.c \
+  toupper.c \
+  atoi.c \
+  atol.c \
+  atoll.c \
+  strtol.c \
+  strtoul.c \
+  qsort.c \
   abs.c \
   labs.c \
   rand.c \
-  _iscntrl.c \
-  _isdigit.c \
-  _isgraph.c \
-  _isprint.c \
-  _ispunct.c \
-  _isspace.c \
-  _islower.c \
-  _isupper.c \
-  _isxdigit.c \
   _strcat.c \
   _strchr.c \
-  _strcmp.c \
   _strcspn.c \
   _strncat.c \
   _strncmp.c \
@@ -83,16 +92,33 @@ COMMON_SDCC = \
   _strtok.c \
   _memchr.c \
   _memcmp.c \
-  _memcpy.c \
   _memset.c \
-  _calloc.c \
-  _malloc.c \
-  _realloc.c \
-  _free.c \
+  aligned_alloc.c \
+  calloc.c \
+  malloc.c \
+  realloc.c \
+  free.c \
+  mblen.c \
+  mbtowc.c \
+  wctomb.c \
+  mbstowcs.c \
+  wcstombs.c \
+  mbrtoc16.c \
+  c16rtomb.c \
+  mbrtoc32.c \
+  c32rtomb.c \
+  wcscmp.c \
+  wcslen.c \
+  btowc.c \
+  wctob.c \
+  mbsinit.c \
+  mbrlen.c \
+  mbrtowc.c \
+  wcrtomb.c \
   printf_large.c \
   puts.c \
   gets.c \
   assert.c \
   time.c
 
-MODELS = small medium large
+MODELS = small medium large huge

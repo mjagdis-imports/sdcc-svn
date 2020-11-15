@@ -1,7 +1,7 @@
 /*
  * Simulator of microcontrollers (stypes.h)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 1997,16 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -30,13 +30,33 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "ddconfig.h"
 
+//typedef int8_t TYPE_BYTE;
+//typedef uint8_t TYPE_UBYTE;
+//typedef int16_t TYPE_WORD;
+//typedef uint16_t TYPE_UWORD;
+//typedef int32_t TYPE_DWORD;
+//typedef uint32_t TYPE_UDWORD;
 
 typedef unsigned char	uchar;
 typedef unsigned int	uint;
 typedef unsigned long	ulong;
-typedef TYPE_DWORD	t_addr;		/* 32 bit max */
-typedef TYPE_UWORD	t_mem;		/* 16 bit max */
-typedef TYPE_WORD	t_smem;		/* signed 16 bit memory */
+
+typedef   signed TYPE_BYTE  i8_t;
+typedef unsigned TYPE_BYTE  u8_t;
+typedef   signed TYPE_WORD  i16_t;
+typedef unsigned TYPE_WORD  u16_t;
+typedef   signed TYPE_DWORD i32_t;
+typedef unsigned TYPE_DWORD u32_t;
+typedef   signed TYPE_QWORD i64_t;
+typedef unsigned TYPE_QWORD u64_t;
+
+typedef i64_t		t_addr;		/* 64 bit max */
+typedef u32_t		t_mem;		/* 32 bit max */
+typedef i32_t		t_smem;		/* signed 32 bit memory */
+
+enum {
+  max_mem_size= 0x40000000		/* 1 GB */
+};
 
 struct id_element
 {
@@ -53,65 +73,144 @@ enum error_type {
 // table of dissassembled instructions
 struct dis_entry
 {
-  uint  code, mask;
+  /*uint64_t*/long long code, mask; // max 8 byte of code
   char  branch;
   uchar length;
   const char *mnemonic;
+  bool is_call;
 };
 
 // table entry of SFR and BIT names
 struct name_entry
 {
-  int cpu_type;
-  t_addr addr;
-  const char *name;
+  int		cpu_type;
+  t_addr	addr;
+  const char	*name;
+};
+
+enum cpu_type {
+  CPU_NONE      = 0,
+  
+  CPU_51	= 0x0001,
+  CPU_31	= 0x0002,
+  CPU_52	= 0x0004,
+  CPU_32	= 0x0008,
+  CPU_51R	= 0x0010,
+  CPU_89C51R	= 0x0020,
+  CPU_251	= 0x0040,
+  CPU_DS320 	= 0x0080,
+  CPU_DS390	= 0x0100,
+  CPU_DS390F	= 0x0200,
+  CPU_C521	= 0x0400,
+  CPU_517	= 0x0800,
+  CPU_F380	= 0x1000,
+  CPU_XC88X	= 0x2000,
+  
+  CPU_ALL_51	= (CPU_51|CPU_31),
+  CPU_ALL_52	= (CPU_52|CPU_32|CPU_51R|CPU_89C51R|CPU_251|
+		   CPU_DS320|CPU_DS390|CPU_DS390F|
+		   CPU_C521|CPU_517|CPU_XC88X|
+		   CPU_F380),
+  CPU_ALL_DS3X0 = (CPU_DS320|CPU_DS390|CPU_DS390F),
+ 
+  CPU_AVR	= 0x0001,
+  CPU_ALL_AVR	= (CPU_AVR),
+
+  CPU_Z80	= 0x0001,
+  CPU_Z180	= 0x0002,
+  CPU_LR35902   = 0x0004,
+  CPU_R2K       = 0x0008,
+  CPU_R3KA      = 0x0010,
+  CPU_ALL_Z80   = (CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA),
+
+  CPU_XA	= 0x0001,
+  CPU_ALL_XA	= (CPU_XA),
+
+  CPU_HC08      = 0x0001,
+  CPU_HCS08     = 0x0002,
+  CPU_ALL_HC08  = (CPU_HC08|CPU_HCS08),
+
+  CPU_STM8S		= 0x0001,		// S and AF family
+  CPU_STM8AF		= 0x0001,
+  CPU_STM8SAF		= 0x0001,
+  // Devices of S family 0x00 00 00 XX
+  DEV_STM8S903		= 0x00000001,
+  DEV_STM8S003		= 0x00000002,
+  DEV_STM8S005		= 0x00000004,
+  DEV_STM8S007		= 0x00000008,
+  DEV_STM8S103		= 0x00000010,
+  DEV_STM8S105		= 0x00000020,
+  DEV_STM8S207		= 0x00000040,
+  DEV_STM8S208		= 0x00000080,
+  DEV_STM8S		= (DEV_STM8S903|
+			   DEV_STM8S003|
+			   DEV_STM8S005|
+			   DEV_STM8S007|
+			   DEV_STM8S103|
+			   DEV_STM8S105|
+			   DEV_STM8S207|
+			   DEV_STM8S208),
+  // Devices of AF family 0x00 00 0X 00
+  DEV_STM8AF52		= 0x00000100,
+  DEV_STM8AF62_12	= 0x00000200,
+  DEV_STM8AF62_46	= 0x00000400,
+  DEV_STM8AF		= (DEV_STM8AF52|
+			   DEV_STM8AF62_12|
+			   DEV_STM8AF62_46),
+
+  DEV_STM8SAF		= (DEV_STM8S|DEV_STM8AF),
+  
+  CPU_STM8L		= 0x0002,		// AL and L family
+  // Devices of AL family 0x00 0X 00 00
+  DEV_STM8AL3xE		= 0x00010000,
+  DEV_STM8AL3x8		= 0x00020000,
+  DEV_STM8AL3x346	= 0x00040000,
+  DEV_STM8AL		= (DEV_STM8AL3xE|
+			   DEV_STM8AL3x8|
+			   DEV_STM8AL3x346),
+  // Devices of L family 0xXX 00 00 00
+  DEV_STM8L051		= 0x01000000,
+  DEV_STM8L052C		= 0x02000000,
+  DEV_STM8L052R		= 0x04000000,
+  DEV_STM8L151x23	= 0x08000000,
+  DEV_STM8L15x46	= 0x10000000,
+  DEV_STM8L15x8		= 0x20000000,
+  DEV_STM8L162		= 0x40000000,
+  DEV_STM8L		= (DEV_STM8L051|
+			   DEV_STM8L052C|
+			   DEV_STM8L052R|
+			   DEV_STM8L151x23|
+			   DEV_STM8L15x46|
+			   DEV_STM8L15x8|
+			   DEV_STM8L162),
+
+  DEV_STM8ALL		= (DEV_STM8AL|DEV_STM8L),
+  
+  CPU_STM8101		= 0x0004,		// L101 family
+  CPU_STM8L101		= 0x0004,
+  // Devices of L101 family 0x00 00 X0 00
+  DEV_STM8101		= 0x00001000,
+  DEV_STM8L101		= 0x00001000,
+  
+  CPU_ALL_STM8	= (CPU_STM8S|CPU_STM8L|CPU_STM8101),
+
+  CPU_ST7       = 0x0001,
+  CPU_ALL_ST7   = (CPU_ST7),
+
+  // technology
+  CPU_CMOS	= 0x0001,
+  CPU_HMOS	= 0x0002,
 };
 
 
 struct cpu_entry
 {
   const char *type_str;
-  int  type;
-  int  technology;
+  enum cpu_type  type;
+  int  subtype;
+  const char *type_help;
+  const char *sub_help;
 };
-
-#define CPU_51		0x0001
-#define CPU_31		0x0002
-#define CPU_52		0x0004
-#define CPU_32		0x0008
-#define CPU_51R		0x0010
-#define CPU_89C51R	0x0020
-#define CPU_251		0x0040
-#define CPU_DS390	0x0080
-#define CPU_DS390F	0x0100
-#define CPU_ALL_51	(CPU_51|CPU_31)
-#define CPU_ALL_52	(CPU_52|CPU_32|CPU_51R|CPU_89C51R|CPU_251|CPU_DS390|CPU_DS390F)
-
-#define CPU_AVR		0x0001
-#define CPU_ALL_AVR	(CPU_AVR)
-
-#define CPU_Z80		0x0001
-#define CPU_Z180	0x0002
-#define CPU_LR35902	0x0004
-#define CPU_R2K		0x0008
-#define CPU_R3KA        0x0010
-#define CPU_ALL_Z80	(CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA)
-
-#define CPU_XA		0x0001
-#define CPU_ALL_XA	(CPU_XA)
-
-#define CPU_HC08       0x0001
-#define CPU_HCS08      0x0002
-#define CPU_ALL_HC08   (CPU_HC08|CPU_HCS08)
-
-#define CPU_STM8	0x0001
-#define CPU_ALL_STM8	(CPU_STM8)
-
-#define CPU_ST7       0x0001
-#define CPU_ALL_ST7   (CPU_ST7)
-
-#define CPU_CMOS	0x0001
-#define CPU_HMOS	0x0002
 
 /* Classes of memories, this is index on the list */
 enum mem_class
@@ -125,45 +224,46 @@ enum mem_class
   MEM_TYPES
 };
 
-#define MEM_ROM_ID	"rom"
-#define MEM_SFR_ID	"sfr"
-#define MEM_XRAM_ID	"xram"
-#define MEM_IXRAM_ID	"ixram"
-#define MEM_IRAM_ID	"iram"
+#define MEM_SFR_ID	cchars("sfr")
+#define MEM_XRAM_ID	cchars("xram")
+#define MEM_IXRAM_ID	cchars("ixram")
+#define MEM_IRAM_ID	cchars("iram")
 
 // States of simulator
-#define SIM_NONE	0
-#define SIM_GO		0x01	// Processor is running
-#define SIM_QUIT	0x02	// Program must exit
+enum sim_state {
+  SIM_NONE	= 0,
+  SIM_GO	= 0x01,	// Processor is running
+  SIM_QUIT	= 0x02	// Program must exit
+};
 
 /* States of CPU */
-#define stGO		0	/* Normal state */
-#define stIDLE		1	/* Idle mode is active */
-#define stPD		2	/* Power Down mode is active */
+enum cpu_state {
+  stGO		= 0,	/* Normal state */
+  stIDLE	= 1,	/* Idle mode is active */
+  stPD		= 2	/* Power Down mode is active */
+};
 
 /* Result of instruction simulation */
-#define resGO		0	/* OK, go on */
-#define resWDTRESET	1	/* Reseted by WDT */
-#define resINTERRUPT	2	/* Interrupt accepted */
-#define resSTOP		100	/* Stop if result greather then this */
-#define resHALT		101	/* Serious error, halt CPU */
-#define resINV_ADDR	102	/* Invalid indirect address */
-#define resSTACK_OV	103	/* Stack overflow */
-#define resBREAKPOINT	104	/* Breakpoint */
-#define resUSER		105	/* Stopped by user */
-#define resINV_INST	106	/* Invalid instruction */
-#define resBITADDR	107	/* Bit address is uninterpretable */
-#define resERROR	108	/* Error happened during instruction exec */
-
+enum inst_result {
+  resGO		= 0,	/* OK, go on */
+  resWDTRESET	= 1,	/* Reseted by WDT */
+  resINTERRUPT	= 2,	/* Interrupt accepted */
+  resSTOP	= 100,	/* Stop if result greather then this */
+  resHALT	= 101,	/* Serious error, halt CPU */
+  resINV_ADDR	= 102,	/* Invalid indirect address */
+  resSTACK_OV	= 103,	/* Stack overflow */
+  resBREAKPOINT	= 104,	/* Fetch Breakpoint */
+  resUSER	= 105,	/* Stopped by user */
+  resINV_INST	= 106,	/* Invalid instruction */
+  resBITADDR	= 107,	/* Bit address is uninterpretable */
+  resERROR	= 108,	/* Error happened during instruction exec */
+  resSTEP	= 109,	/* Step command done, no more exex needed */
+  resSIMIF	= 110,	/* Stopped by simulated prog itself through sim interface */
+  resNOT_DONE	= 111,	/* Intruction has not simulated */
+  resEVENTBREAK = 112,  /* Event breakpoint */
+};
+  
 #define BIT_MASK(bitaddr) (1 << (bitaddr & 0x07))
-
-//#define IRAM_SIZE 256	  /* Size of Internal RAM */
-//#define SFR_SIZE  256     /* Size of SFR area */
-//#define SFR_START 128     /* Start address of SFR area */
-//#define ERAM_SIZE 256     /* Size of ERAM in 51R */
-//#define XRAM_SIZE 0x10000 /* Size of External RAM */
-//#define IROM_SIZE 0x1000  /* Size of Internal ROM */
-//#define EROM_SIZE 0x10000 /* Size of External ROM */
 
 
 /* Type of breakpoints */
@@ -194,21 +294,12 @@ enum brk_event
   brkACCESS
 };
 
-//struct event_rec
-//{
-//  t_addr wx; /* write to XRAM at this address, else -1 */
-//  t_addr rx; /* read from XRAM at this address, else -1 */
-//  t_addr wi; /* write to IRAM at this address, else -1 */
-//  t_addr ri; /* read from IRAM at this address, else -1 */
-//  t_addr ws; /* write to SFR at this address, else -1 */
-//  t_addr rs; /* read from SFR at this address, else -1 */
-//  t_addr rc; /* read from ROM at this address, else -1 */
-//};
-
 /* Interrupt levels */
-//#define IT_NO		-1 /* not in interroupt service */
-#define IT_LOW		1 /* low level interrupt service */
-#define IT_HIGH		2 /* service of high priority interrupt */
+enum intr_levels {
+//IT_NO		= -1, /* not in interroupt service */
+  IT_LOW	= 1, /* low level interrupt service */
+  IT_HIGH	= 2 /* service of high priority interrupt */
+};
 
 /* cathegories of hw elements (peripherials) */
 enum hw_cath {
@@ -218,22 +309,30 @@ enum hw_cath {
   HW_PORT	= 0x0008,
   HW_PCA	= 0x0010,
   HW_INTERRUPT	= 0x0020,
-  HW_WDT	= 0x0040
+  HW_WDT	= 0x0040,
+  HW_SIMIF	= 0x0080,
+  HW_RESET	= 0x0100,
+  HW_CLOCK	= 0x0200,
+  HW_CALC	= 0x0400,
+  HW_FLASH	= 0x0800
 };
 
 // Events that can happen in peripherals
 enum hw_event {
   EV_OVERFLOW,
   EV_PORT_CHANGED,
-  EV_T2_MODE_CHANGED
+  EV_T2_MODE_CHANGED,
+  EV_CLK_ON,
+  EV_CLK_OFF
 };
 
 // flags of hw units
-#define HWF_NONE	0
-#define HWF_INSIDE	0x0001
-#define HWF_OUTSIDE	0x0002
-#define HWF_MISC	0x0004
-
+enum hw_flags {
+  HWF_NONE	= 0,
+  HWF_INSIDE	= 0x0001,
+  HWF_OUTSIDE	= 0x0002,
+  HWF_MISC	= 0x0004
+};
 
 /* Letter cases */
 enum letter_case {

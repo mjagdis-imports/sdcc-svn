@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include "common.h"
 #include "ralloc.h"
+#include "gen.h"
 
 #define D(x) x
 #define DEADMOVEERROR() do {werror(E_INTERNAL_ERROR, __FILE__, __LINE__, "error in deadmove");} while(0)
@@ -226,19 +227,20 @@ static S4O_RET
 termScanAtFunc (const lineNode *pl, int rIdx)
 {
   sym_link *ftype;
+  bool banked_reg = (rIdx == R0_IDX) || (rIdx == R1_IDX) || (rIdx == R2_IDX);
 
   if (!isFunc (pl))
     return S4O_CONTINUE;
   // let's assume calls to literally given locations use the default
   // most notably :  (*(void (*)()) 0) ();  see bug 1749275
   if (IS_VALOP (IC_LEFT (pl->ic)))
-    return !options.all_callee_saves;
-
+    return (options.model == MODEL_HUGE) && banked_reg ? S4O_ABORT : options.all_callee_saves ? S4O_CONTINUE : S4O_TERM;
   ftype = OP_SYM_TYPE(IC_LEFT(pl->ic));
   if (IS_FUNCPTR (ftype))
     ftype = ftype->next;
-  if (IFFUNC_ISBANKEDCALL(ftype) &&
-      ((rIdx == R0_IDX) || (rIdx == R1_IDX) || (rIdx == R2_IDX)))
+  if (IFFUNC_ISBANKEDCALL(ftype) && banked_reg)
+    return S4O_ABORT;
+  if (FUNC_ARGS (ftype) && getSize (FUNC_ARGS (ftype)->type) > 4)
     return S4O_ABORT;
   if (FUNC_CALLEESAVES(ftype))
     return S4O_CONTINUE;
@@ -260,7 +262,7 @@ termScanAtFunc (const lineNode *pl, int rIdx)
 /*       points to a register (e.g. "ar0"). scan4op() tests for    */
 /*       read or write operations with this register               */
 /*    const char *untilOp                                          */
-/*       points to NULL or a opcode (e.g. "push").                 */
+/*       points to NULL or an opcode (e.g. "push").                */
 /*       scan4op() returns if it hits this opcode.                 */
 /*    lineNode **plCond                                            */
 /*       If a conditional branch is met plCond points to the       */
@@ -505,6 +507,18 @@ scan4op (lineNode **pl, const char *pReg, const char *untilOp,
                   }
 
                 /* it's a normal function return */
+                if (!((*pl)->ic))
+                  return S4O_ABORT; /* but no ic? */
+                if (!currFunc->type)
+                  return S4O_ABORT;  /* not a function? */
+                if (FUNC_CALLEESAVES (currFunc->type))
+                  return S4O_ABORT; /* returning from callee saves function */
+                if (getSize(currFunc->etype) > 4)
+                  {
+                    for (unsigned i = 0; i < getSize(currFunc->etype); i++)
+                      if (strstr (pReg, fReturn8051[i]))
+                        return S4O_ABORT; /* return value is partially in r4-r7 */
+                  }
                 return S4O_TERM;
               }
             break;

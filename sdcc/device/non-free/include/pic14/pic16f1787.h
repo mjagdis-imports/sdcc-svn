@@ -2,9 +2,9 @@
  * This declarations of the PIC16F1787 MCU.
  *
  * This file is part of the GNU PIC library for SDCC, originally
- * created by Molnar Karoly <molnarkaroly@users.sf.net> 2013.
+ * created by Molnar Karoly <molnarkaroly@users.sf.net> 2016.
  *
- * This file is generated automatically by the cinc2h.pl, 2013-03-05 18:28:13 UTC.
+ * This file is generated automatically by the cinc2h.pl, 2016-04-13 17:23:18 UTC.
  *
  * SDCC is licensed under the GNU Public license (GPL) v2. Note that
  * this license covers the code to the compiler and other executables,
@@ -160,7 +160,9 @@
 #define SSP1STAT_ADDR           0x0214
 #define SSPSTAT_ADDR            0x0214
 #define SSP1CON_ADDR            0x0215
+#define SSP1CON1_ADDR           0x0215
 #define SSPCON_ADDR             0x0215
+#define SSPCON1_ADDR            0x0215
 #define SSP1CON2_ADDR           0x0216
 #define SSPCON2_ADDR            0x0216
 #define SSP1CON3_ADDR           0x0217
@@ -206,6 +208,7 @@
 #define IOCEF_ADDR              0x039F
 #define OPA1CON_ADDR            0x0511
 #define OPA2CON_ADDR            0x0513
+#define OPA3CON_ADDR            0x0515
 #define CLKRCON_ADDR            0x051A
 #define PSMC1CON_ADDR           0x0811
 #define PSMC1MDL_ADDR           0x0812
@@ -1121,16 +1124,31 @@ extern __at(0x0093) volatile __PIE3bits_t PIE3bits;
 
 extern __at(0x0094) __sfr PIE4;
 
-typedef struct
+typedef union
   {
-  unsigned PSMC1SIE             : 1;
-  unsigned PSMC2SIE             : 1;
-  unsigned PSMC3SIE             : 1;
-  unsigned                      : 1;
-  unsigned PSMC1TIE             : 1;
-  unsigned PSMC2TIE             : 1;
-  unsigned PMSC3TIE             : 1;
-  unsigned                      : 1;
+  struct
+    {
+    unsigned PSMC1SIE           : 1;
+    unsigned PSMC2SIE           : 1;
+    unsigned PSMC3SIE           : 1;
+    unsigned                    : 1;
+    unsigned PSMC1TIE           : 1;
+    unsigned PSMC2TIE           : 1;
+    unsigned PSMC3TIE           : 1;
+    unsigned                    : 1;
+    };
+
+  struct
+    {
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned PMSC3TIE           : 1;
+    unsigned                    : 1;
+    };
   } __PIE4bits_t;
 
 extern __at(0x0094) volatile __PIE4bits_t PIE4bits;
@@ -1140,6 +1158,7 @@ extern __at(0x0094) volatile __PIE4bits_t PIE4bits;
 #define _PSMC3SIE               0x04
 #define _PSMC1TIE               0x10
 #define _PSMC2TIE               0x20
+#define _PSMC3TIE               0x40
 #define _PMSC3TIE               0x40
 
 //==============================================================================
@@ -1939,8 +1958,8 @@ typedef union
     unsigned ADFVR1             : 1;
     unsigned CDAFVR0            : 1;
     unsigned CDAFVR1            : 1;
-    unsigned                    : 1;
-    unsigned                    : 1;
+    unsigned TSRNG              : 1;
+    unsigned TSEN               : 1;
     unsigned FVRRDY             : 1;
     unsigned FVREN              : 1;
     };
@@ -1965,6 +1984,8 @@ extern __at(0x0117) volatile __FVRCONbits_t FVRCONbits;
 #define _ADFVR1                 0x02
 #define _CDAFVR0                0x04
 #define _CDAFVR1                0x08
+#define _TSRNG                  0x10
+#define _TSEN                   0x20
 #define _FVRRDY                 0x40
 #define _FVREN                  0x80
 
@@ -3447,6 +3468,46 @@ extern __at(0x0215) volatile __SSP1CONbits_t SSP1CONbits;
 
 
 //==============================================================================
+//        SSP1CON1 Bits
+
+extern __at(0x0215) __sfr SSP1CON1;
+
+typedef union
+  {
+  struct
+    {
+    unsigned SSPM0              : 1;
+    unsigned SSPM1              : 1;
+    unsigned SSPM2              : 1;
+    unsigned SSPM3              : 1;
+    unsigned CKP                : 1;
+    unsigned SSPEN              : 1;
+    unsigned SSPOV              : 1;
+    unsigned WCOL               : 1;
+    };
+
+  struct
+    {
+    unsigned SSPM               : 4;
+    unsigned                    : 4;
+    };
+  } __SSP1CON1bits_t;
+
+extern __at(0x0215) volatile __SSP1CON1bits_t SSP1CON1bits;
+
+#define _SSP1CON1_SSPM0         0x01
+#define _SSP1CON1_SSPM1         0x02
+#define _SSP1CON1_SSPM2         0x04
+#define _SSP1CON1_SSPM3         0x08
+#define _SSP1CON1_CKP           0x10
+#define _SSP1CON1_SSPEN         0x20
+#define _SSP1CON1_SSPOV         0x40
+#define _SSP1CON1_WCOL          0x80
+
+//==============================================================================
+
+
+//==============================================================================
 //        SSPCON Bits
 
 extern __at(0x0215) __sfr SSPCON;
@@ -3482,6 +3543,46 @@ extern __at(0x0215) volatile __SSPCONbits_t SSPCONbits;
 #define _SSPCON_SSPEN           0x20
 #define _SSPCON_SSPOV           0x40
 #define _SSPCON_WCOL            0x80
+
+//==============================================================================
+
+
+//==============================================================================
+//        SSPCON1 Bits
+
+extern __at(0x0215) __sfr SSPCON1;
+
+typedef union
+  {
+  struct
+    {
+    unsigned SSPM0              : 1;
+    unsigned SSPM1              : 1;
+    unsigned SSPM2              : 1;
+    unsigned SSPM3              : 1;
+    unsigned CKP                : 1;
+    unsigned SSPEN              : 1;
+    unsigned SSPOV              : 1;
+    unsigned WCOL               : 1;
+    };
+
+  struct
+    {
+    unsigned SSPM               : 4;
+    unsigned                    : 4;
+    };
+  } __SSPCON1bits_t;
+
+extern __at(0x0215) volatile __SSPCON1bits_t SSPCON1bits;
+
+#define _SSPCON1_SSPM0          0x01
+#define _SSPCON1_SSPM1          0x02
+#define _SSPCON1_SSPM2          0x04
+#define _SSPCON1_SSPM3          0x08
+#define _SSPCON1_CKP            0x10
+#define _SSPCON1_SSPEN          0x20
+#define _SSPCON1_SSPOV          0x40
+#define _SSPCON1_WCOL           0x80
 
 //==============================================================================
 
@@ -4604,6 +4705,24 @@ typedef union
 
   struct
     {
+    unsigned PCH0               : 1;
+    unsigned PCH1               : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned SP                 : 1;
+    unsigned EN                 : 1;
+    };
+
+  struct
+    {
+    unsigned PCH                : 2;
+    unsigned                    : 6;
+    };
+
+  struct
+    {
     unsigned OPA1PCH            : 2;
     unsigned                    : 6;
     };
@@ -4612,9 +4731,13 @@ typedef union
 extern __at(0x0511) volatile __OPA1CONbits_t OPA1CONbits;
 
 #define _OPA1PCH0               0x01
+#define _PCH0                   0x01
 #define _OPA1PCH1               0x02
+#define _PCH1                   0x02
 #define _OPA1SP                 0x40
+#define _SP                     0x40
 #define _OPA1EN                 0x80
+#define _EN                     0x80
 
 //==============================================================================
 
@@ -4640,6 +4763,24 @@ typedef union
 
   struct
     {
+    unsigned PCH0               : 1;
+    unsigned PCH1               : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned SP                 : 1;
+    unsigned EN                 : 1;
+    };
+
+  struct
+    {
+    unsigned PCH                : 2;
+    unsigned                    : 6;
+    };
+
+  struct
+    {
     unsigned OPA2PCH            : 2;
     unsigned                    : 6;
     };
@@ -4647,10 +4788,72 @@ typedef union
 
 extern __at(0x0513) volatile __OPA2CONbits_t OPA2CONbits;
 
-#define _OPA2PCH0               0x01
-#define _OPA2PCH1               0x02
-#define _OPA2SP                 0x40
-#define _OPA2EN                 0x80
+#define _OPA2CON_OPA2PCH0       0x01
+#define _OPA2CON_PCH0           0x01
+#define _OPA2CON_OPA2PCH1       0x02
+#define _OPA2CON_PCH1           0x02
+#define _OPA2CON_OPA2SP         0x40
+#define _OPA2CON_SP             0x40
+#define _OPA2CON_OPA2EN         0x80
+#define _OPA2CON_EN             0x80
+
+//==============================================================================
+
+
+//==============================================================================
+//        OPA3CON Bits
+
+extern __at(0x0515) __sfr OPA3CON;
+
+typedef union
+  {
+  struct
+    {
+    unsigned OPA3PCH0           : 1;
+    unsigned OPA3PCH1           : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned OPA3SP             : 1;
+    unsigned OPA3EN             : 1;
+    };
+
+  struct
+    {
+    unsigned PCH0               : 1;
+    unsigned PCH1               : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned                    : 1;
+    unsigned SP                 : 1;
+    unsigned EN                 : 1;
+    };
+
+  struct
+    {
+    unsigned PCH                : 2;
+    unsigned                    : 6;
+    };
+
+  struct
+    {
+    unsigned OPA3PCH            : 2;
+    unsigned                    : 6;
+    };
+  } __OPA3CONbits_t;
+
+extern __at(0x0515) volatile __OPA3CONbits_t OPA3CONbits;
+
+#define _OPA3CON_OPA3PCH0       0x01
+#define _OPA3CON_PCH0           0x01
+#define _OPA3CON_OPA3PCH1       0x02
+#define _OPA3CON_PCH1           0x02
+#define _OPA3CON_OPA3SP         0x40
+#define _OPA3CON_SP             0x40
+#define _OPA3CON_OPA3EN         0x80
+#define _OPA3CON_EN             0x80
 
 //==============================================================================
 
@@ -7694,55 +7897,57 @@ extern __at(0x0FEF) __sfr TOSH;
 
 //----------------------------- CONFIG1 Options -------------------------------
 
-#define _FOSC_LP                0xFFF8  // LP Oscillator, Low-power crystal connected between OSC1 and OSC2 pins.
-#define _FOSC_XT                0xFFF9  // XT Oscillator, Crystal/resonator connected between OSC1 and OSC2 pins.
-#define _FOSC_HS                0xFFFA  // HS Oscillator, High-speed crystal/resonator connected between OSC1 and OSC2 pins.
-#define _FOSC_EXTRC             0xFFFB  // EXTRC oscillator: External RC circuit connected to CLKIN pin.
-#define _FOSC_INTOSC            0xFFFC  // INTOSC oscillator: I/O function on CLKIN pin.
-#define _FOSC_ECL               0xFFFD  // ECL, External Clock, Low Power Mode (0-0.5 MHz): device clock supplied to CLKIN pin.
-#define _FOSC_ECM               0xFFFE  // ECM, External Clock, Medium Power Mode (0.5-4 MHz): device clock supplied to CLKIN pin.
-#define _FOSC_ECH               0xFFFF  // ECH, External Clock, High Power Mode (4-32 MHz): device clock supplied to CLKIN pin.
-#define _WDTE_OFF               0xFFE7  // WDT disabled.
-#define _WDTE_SWDTEN            0xFFEF  // WDT controlled by the SWDTEN bit in the WDTCON register.
-#define _WDTE_NSLEEP            0xFFF7  // WDT enabled while running and disabled in Sleep.
-#define _WDTE_ON                0xFFFF  // WDT enabled.
-#define _PWRTE_ON               0xFFDF  // PWRT enabled.
-#define _PWRTE_OFF              0xFFFF  // PWRT disabled.
-#define _MCLRE_OFF              0xFFBF  // MCLR/VPP pin function is digital input.
-#define _MCLRE_ON               0xFFFF  // MCLR/VPP pin function is MCLR.
-#define _CP_ON                  0xFF7F  // Program memory code protection is enabled.
-#define _CP_OFF                 0xFFFF  // Program memory code protection is disabled.
-#define _CPD_ON                 0xFEFF  // Data memory code protection is enabled.
-#define _CPD_OFF                0xFFFF  // Data memory code protection is disabled.
-#define _BOREN_OFF              0xF9FF  // Brown-out Reset disabled.
-#define _BOREN_SBODEN           0xFBFF  // Brown-out Reset controlled by the SBOREN bit in the BORCON register.
-#define _BOREN_NSLEEP           0xFDFF  // Brown-out Reset enabled while running and disabled in Sleep.
-#define _BOREN_ON               0xFFFF  // Brown-out Reset enabled.
-#define _CLKOUTEN_ON            0xF7FF  // CLKOUT function is enabled on the CLKOUT pin.
-#define _CLKOUTEN_OFF           0xFFFF  // CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin.
-#define _IESO_OFF               0xEFFF  // Internal/External Switchover mode is disabled.
-#define _IESO_ON                0xFFFF  // Internal/External Switchover mode is enabled.
-#define _FCMEN_OFF              0xDFFF  // Fail-Safe Clock Monitor is disabled.
-#define _FCMEN_ON               0xFFFF  // Fail-Safe Clock Monitor is enabled.
+#define _FOSC_LP                0x3FF8  // LP Oscillator, Low-power crystal connected between OSC1 and OSC2 pins.
+#define _FOSC_XT                0x3FF9  // XT Oscillator, Crystal/resonator connected between OSC1 and OSC2 pins.
+#define _FOSC_HS                0x3FFA  // HS Oscillator, High-speed crystal/resonator connected between OSC1 and OSC2 pins.
+#define _FOSC_EXTRC             0x3FFB  // EXTRC oscillator: External RC circuit connected to CLKIN pin.
+#define _FOSC_INTOSC            0x3FFC  // INTOSC oscillator: I/O function on CLKIN pin.
+#define _FOSC_ECL               0x3FFD  // ECL, External Clock, Low Power Mode (0-0.5 MHz): device clock supplied to CLKIN pin.
+#define _FOSC_ECM               0x3FFE  // ECM, External Clock, Medium Power Mode (0.5-4 MHz): device clock supplied to CLKIN pin.
+#define _FOSC_ECH               0x3FFF  // ECH, External Clock, High Power Mode (4-32 MHz): device clock supplied to CLKIN pin.
+#define _WDTE_OFF               0x3FE7  // WDT disabled.
+#define _WDTE_SWDTEN            0x3FEF  // WDT controlled by the SWDTEN bit in the WDTCON register.
+#define _WDTE_NSLEEP            0x3FF7  // WDT enabled while running and disabled in Sleep.
+#define _WDTE_ON                0x3FFF  // WDT enabled.
+#define _PWRTE_ON               0x3FDF  // PWRT enabled.
+#define _PWRTE_OFF              0x3FFF  // PWRT disabled.
+#define _MCLRE_OFF              0x3FBF  // MCLR/VPP pin function is digital input.
+#define _MCLRE_ON               0x3FFF  // MCLR/VPP pin function is MCLR.
+#define _CP_ON                  0x3F7F  // Program memory code protection is enabled.
+#define _CP_OFF                 0x3FFF  // Program memory code protection is disabled.
+#define _CPD_ON                 0x3EFF  // Data memory code protection is enabled.
+#define _CPD_OFF                0x3FFF  // Data memory code protection is disabled.
+#define _BOREN_OFF              0x39FF  // Brown-out Reset disabled.
+#define _BOREN_SBODEN           0x3BFF  // Brown-out Reset controlled by the SBOREN bit in the BORCON register.
+#define _BOREN_NSLEEP           0x3DFF  // Brown-out Reset enabled while running and disabled in Sleep.
+#define _BOREN_ON               0x3FFF  // Brown-out Reset enabled.
+#define _CLKOUTEN_ON            0x37FF  // CLKOUT function is enabled on the CLKOUT pin.
+#define _CLKOUTEN_OFF           0x3FFF  // CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin.
+#define _IESO_OFF               0x2FFF  // Internal/External Switchover mode is disabled.
+#define _IESO_ON                0x3FFF  // Internal/External Switchover mode is enabled.
+#define _FCMEN_OFF              0x1FFF  // Fail-Safe Clock Monitor is disabled.
+#define _FCMEN_ON               0x3FFF  // Fail-Safe Clock Monitor is enabled.
 
 //----------------------------- CONFIG2 Options -------------------------------
 
-#define _WRT_ALL                0xFFFC  // 000h to 7FFh write protected, no addresses may be modified by EECON control.
-#define _WRT_HALF               0xFFFD  // 000h to FFFh write protected, 1000h to 1FFFh may be modified by EECON control.
-#define _WRT_BOOT               0xFFFE  // 000h to 1FFh write protected, 200h to 1FFFh may be modified by EECON control.
-#define _WRT_OFF                0xFFFF  // Write protection off.
-#define _VCAPEN_ON              0xFFDF  // Vcap functionality is enabled on RA6 (Vddcore is connected to the pad).
-#define _VCAPEN_OFF             0xFFFF  // Vcap functionality is disabled on RA6.
-#define _PLLEN_OFF              0xFEFF  // 4x PLL disabled.
-#define _PLLEN_ON               0xFFFF  // 4x PLL enabled.
-#define _STVREN_OFF             0xFDFF  // Stack Overflow or Underflow will not cause a Reset.
-#define _STVREN_ON              0xFFFF  // Stack Overflow or Underflow will cause a Reset.
-#define _BORV_HI                0xFBFF  // Brown-out Reset Voltage (Vbor), high trip point selected.
-#define _BORV_LO                0xFFFF  // Brown-out Reset Voltage (Vbor), low trip point selected.
-#define _LPBOR_ON               0xF7FF  // Low power brown-out is enabled.
-#define _LPBOR_OFF              0xFFFF  // Low power brown-out is disabled.
-#define _LVP_OFF                0xDFFF  // High-voltage on MCLR/VPP must be used for programming.
-#define _LVP_ON                 0xFFFF  // Low-voltage programming enabled.
+#define _WRT_ALL                0x3FFC  // 000h to 7FFh write protected, no addresses may be modified by EECON control.
+#define _WRT_HALF               0x3FFD  // 000h to FFFh write protected, 1000h to 1FFFh may be modified by EECON control.
+#define _WRT_BOOT               0x3FFE  // 000h to 1FFh write protected, 200h to 1FFFh may be modified by EECON control.
+#define _WRT_OFF                0x3FFF  // Write protection off.
+#define _VCAPEN_ON              0x3FDF  // Vcap functionality is enabled on RA6 (Vddcore is connected to the pad).
+#define _VCAPEN_OFF             0x3FFF  // Vcap functionality is disabled on RA6.
+#define _PLLEN_OFF              0x3EFF  // 4x PLL disabled.
+#define _PLLEN_ON               0x3FFF  // 4x PLL enabled.
+#define _STVREN_OFF             0x3DFF  // Stack Overflow or Underflow will not cause a Reset.
+#define _STVREN_ON              0x3FFF  // Stack Overflow or Underflow will cause a Reset.
+#define _BORV_HI                0x3BFF  // Brown-out Reset Voltage (Vbor), high trip point selected.
+#define _BORV_LO                0x3FFF  // Brown-out Reset Voltage (Vbor), low trip point selected.
+#define _LPBOR_ON               0x37FF  // Low power brown-out is enabled.
+#define _LPBOR_OFF              0x3FFF  // Low power brown-out is disabled.
+#define _DEBUG_ON               0x2FFF  // In-Circuit Debugger enabled, ICSPCLK and ICSPDAT are dedicated to the debugger.
+#define _DEBUG_OFF              0x3FFF  // In-Circuit Debugger disabled, ICSPCLK and ICSPDAT are general purpose I/O pins.
+#define _LVP_OFF                0x1FFF  // High-voltage on MCLR/VPP must be used for programming.
+#define _LVP_ON                 0x3FFF  // Low-voltage programming enabled.
 
 //==============================================================================
 
@@ -7974,6 +8179,8 @@ extern __at(0x0FEF) __sfr TOSH;
 #define ADFVR1                  FVRCONbits.ADFVR1               // bit 1
 #define CDAFVR0                 FVRCONbits.CDAFVR0              // bit 2
 #define CDAFVR1                 FVRCONbits.CDAFVR1              // bit 3
+#define TSRNG                   FVRCONbits.TSRNG                // bit 4
+#define TSEN                    FVRCONbits.TSEN                 // bit 5
 #define FVRRDY                  FVRCONbits.FVRRDY               // bit 6
 #define FVREN                   FVRCONbits.FVREN                // bit 7
 
@@ -8196,15 +8403,14 @@ extern __at(0x0FEF) __sfr TOSH;
 #define ODCONE1                 ODCONEbits.ODCONE1              // bit 1
 #define ODCONE2                 ODCONEbits.ODCONE2              // bit 2
 
-#define OPA1PCH0                OPA1CONbits.OPA1PCH0            // bit 0
-#define OPA1PCH1                OPA1CONbits.OPA1PCH1            // bit 1
-#define OPA1SP                  OPA1CONbits.OPA1SP              // bit 6
-#define OPA1EN                  OPA1CONbits.OPA1EN              // bit 7
-
-#define OPA2PCH0                OPA2CONbits.OPA2PCH0            // bit 0
-#define OPA2PCH1                OPA2CONbits.OPA2PCH1            // bit 1
-#define OPA2SP                  OPA2CONbits.OPA2SP              // bit 6
-#define OPA2EN                  OPA2CONbits.OPA2EN              // bit 7
+#define OPA1PCH0                OPA1CONbits.OPA1PCH0            // bit 0, shadows bit in OPA1CONbits
+#define PCH0                    OPA1CONbits.PCH0                // bit 0, shadows bit in OPA1CONbits
+#define OPA1PCH1                OPA1CONbits.OPA1PCH1            // bit 1, shadows bit in OPA1CONbits
+#define PCH1                    OPA1CONbits.PCH1                // bit 1, shadows bit in OPA1CONbits
+#define OPA1SP                  OPA1CONbits.OPA1SP              // bit 6, shadows bit in OPA1CONbits
+#define SP                      OPA1CONbits.SP                  // bit 6, shadows bit in OPA1CONbits
+#define OPA1EN                  OPA1CONbits.OPA1EN              // bit 7, shadows bit in OPA1CONbits
+#define EN                      OPA1CONbits.EN                  // bit 7, shadows bit in OPA1CONbits
 
 #define PS0                     OPTION_REGbits.PS0              // bit 0
 #define PS1                     OPTION_REGbits.PS1              // bit 1
@@ -8274,7 +8480,8 @@ extern __at(0x0FEF) __sfr TOSH;
 #define PSMC3SIE                PIE4bits.PSMC3SIE               // bit 2
 #define PSMC1TIE                PIE4bits.PSMC1TIE               // bit 4
 #define PSMC2TIE                PIE4bits.PSMC2TIE               // bit 5
-#define PMSC3TIE                PIE4bits.PMSC3TIE               // bit 6
+#define PSMC3TIE                PIE4bits.PSMC3TIE               // bit 6, shadows bit in PIE4bits
+#define PMSC3TIE                PIE4bits.PMSC3TIE               // bit 6, shadows bit in PIE4bits
 
 #define TMR1IF                  PIR1bits.TMR1IF                 // bit 0
 #define TMR2IF                  PIR1bits.TMR2IF                 // bit 1

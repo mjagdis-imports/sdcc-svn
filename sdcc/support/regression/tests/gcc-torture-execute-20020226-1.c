@@ -8,7 +8,6 @@
 #pragma std_c99
 #endif
 
-#if 0 // TODO:Enable when long long literal support is complete!
 /* This tests the rotate patterns that some machines support.  */
 
 #include <limits.h>
@@ -36,12 +35,10 @@ unsigned long ul = LONG_VALUE;
 unsigned long long ull = LL_VALUE;
 int shift1 = SHIFT1;
 int shift2 = SHIFT2;
-#endif
 
 void
 testTortureExecute (void)
 {
-#if 0
   if (ROR (uc, shift1) != ROR (CHAR_VALUE, SHIFT1))
     ASSERT (0);
 
@@ -115,6 +112,5 @@ testTortureExecute (void)
     ASSERT (0);
 
   return;
-#endif
 }
 

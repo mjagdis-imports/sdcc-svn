@@ -9,8 +9,12 @@ ifdef SDCC_BIN_PATH
 
   AS_Z80C = $(SDCC_BIN_PATH)/sdasz80$(EXEEXT)
 else
-  SZ80A = $(top_builddir)/sim/ucsim/z80.src/sz80$(EXEEXT)
-  SZ80B = $(top_builddir)/bin/sz80$(EXEEXT)
+  ifdef UCSIM_DIR
+    SZ80A = $(UCSIM_DIR)/z80.src/sz80$(EXEEXT)
+  else
+    SZ80A = $(top_builddir)/sim/ucsim/z80.src/sz80$(EXEEXT)
+    SZ80B = $(top_builddir)/bin/sz80$(EXEEXT)
+  endif
 
   EMU = $(WINE) $(shell if [ -f $(SZ80A) ]; then echo $(SZ80A); else echo $(SZ80B); fi)
 
@@ -26,7 +30,7 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mz180 --less-pedantic --profile -DREENTRANT=
+SDCCFLAGS += -mz180 --less-pedantic --profile
 LINKFLAGS += z180.lib
 
 OBJEXT = .rel
@@ -66,7 +70,7 @@ $(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib
 	mkdir -p $(dir $@)
 	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(EMU) -tz180 $< < $(PORTS_DIR)/$(PORT)/uCsim.cmd > $@ \
 	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
-	python $(srcdir)/get_ticks.py < $@ >> $@
+	$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
 	-grep -n FAIL $@ /dev/null || true
 
 _clean:

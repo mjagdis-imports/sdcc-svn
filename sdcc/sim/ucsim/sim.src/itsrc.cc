@@ -34,6 +34,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "itsrccl.h"
 #include "pobjcl.h"
 #include "stypes.h"
+#include "memcl.h"
 
 
 /*
@@ -41,29 +42,46 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  ******************************************************************************
  */
 
-cl_it_src::cl_it_src(uchar Iie_mask,
-		     uchar Isrc_reg,
-		     uchar Isrc_mask,
-		     uint  Iaddr,
-		     bool  Iclr_bit,
-		     const char  *Iname,
-		     int   apoll_priority):
-  cl_base()
+cl_it_src::cl_it_src(cl_uc  *Iuc,
+		     int    Inuof,
+		     class  cl_memory_cell *Iie_cell,
+		     t_mem  Iie_mask,
+		     class  cl_memory_cell *Isrc_cell,
+		     t_mem  Isrc_mask,
+		     t_addr Iaddr,
+		     bool   Iclr_bit,
+		     bool   Iindirect,
+		     const  char *Iname,
+		     int    apoll_priority):
+	  /*cl_base()*/
+	  cl_hw(Iuc, HW_INTERRUPT, 100+Inuof, chars("", "itsrc_%d", Inuof))
 {
+  uc= Iuc;
   poll_priority= apoll_priority;
+  nuof    = Inuof;
+  ie_cell = Iie_cell;
   ie_mask = Iie_mask;
-  src_reg = Isrc_reg;
+  src_cell= Isrc_cell;
   src_mask= Isrc_mask;
   addr    = Iaddr;
   clr_bit = Iclr_bit;
+  indirect= Iindirect;
   if (Iname != NULL)
     set_name(Iname);
   else
     set_name("unknown");
-  active= DD_TRUE;
+  active= true;
 }
 
 cl_it_src::~cl_it_src(void) {}
+
+int
+cl_it_src::init(void)
+{
+  register_cell(ie_cell);
+  register_cell(src_cell);
+  return 0;
+}
 
 bool
 cl_it_src::is_active(void)
@@ -80,26 +98,98 @@ cl_it_src::set_active_status(bool Aactive)
 void
 cl_it_src::activate(void)
 {
-  set_active_status(DD_TRUE);
+  set_active_status(true);
 }
 
 void
 cl_it_src::deactivate(void)
 {
-  set_active_status(DD_FALSE);
+  set_active_status(false);
+}
+
+
+bool
+cl_it_src::enabled(void)
+{
+  if (!ie_cell)
+    return false;
+  t_mem e= ie_cell->get();
+  e&= ie_mask;
+  return e != 0;
+}
+
+bool
+cl_it_src::pending(void)
+{
+  if (!src_cell)
+    return false;
+  t_mem s= src_cell->get();
+  s&= src_mask;
+  return s != 0;
+}
+
+void
+cl_it_src::clear(void)
+{
+  if (clr_bit)
+    src_cell->set_bit0(src_mask);
+}
+
+void
+cl_it_src::write(class cl_memory_cell *cell, t_mem *val)
+{
+  t_mem iev= ie_cell->get();
+  t_mem srcv= src_cell->get();
+  t_mem ier, srcr;
+  
+  if (cell == ie_cell)
+    {
+      //printf("ITSRC ie=%x\n", *val);
+      iev= *val;
+    }
+  if (cell == src_cell)
+    {
+      //printf("ITSRC src=%x\n", *val);
+      srcv= *val;
+    }
+  ier= iev&ie_mask;
+  srcr= srcv&src_mask;
+  /*
+  printf("%2d iev =%x & %x = %x\n", nuof, iev, ie_mask, ier);
+  printf("%2d srcv=%x & %x = %x\n", nuof, srcv, src_mask, srcr);
+  printf("%2d ie=%s src=%s req=%s\n", nuof,
+	 ier?"true":"false",
+	 srcr?"true":"false",
+	 (ier&&srcr)?"TRUE":"FALSE");
+  */
+  if (ier)
+    {
+      if (srcr)
+	{
+	  //printf("%2d IRQ\n", nuof);
+	  uc->irq= true;
+	}
+    }
+}
+
+t_mem
+cl_it_src::read(class cl_memory_cell *cell)
+{
+  return cell->get();
 }
 
 
 /*
+ *  Sorted list of IRQ sources
  */
 
 cl_irqs::cl_irqs(t_index alimit, t_index adelta):
   cl_sorted_list(alimit, adelta, "irqs")
 {
-  Duplicates= DD_TRUE;
+  Duplicates= true;
 }
 
-const void *
+void *
 cl_irqs::key_of(void *item)
 {
   class cl_it_src *itsrc= (class cl_it_src *)item;
@@ -107,13 +197,13 @@ cl_irqs::key_of(void *item)
 }
 
 int
-cl_irqs::compare(const void *key1, const void *key2)
+cl_irqs::compare(void *key1, void *key2)
 {
-  const int k1= *static_cast<const int *>(key1), k2= *static_cast<const int *>(key2);
+  int *k1= (int*)key1, *k2= (int*)key2;
 
-  if (k1 == k2)
+  if (*k1 == *k2)
     return(0);
-  else if (k1 < k2)
+  else if (*k1 < *k2)
     return(-1);
   return(1);
 }

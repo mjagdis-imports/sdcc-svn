@@ -51,17 +51,18 @@ testMul(void)
 
     i = 5;
 
-    LOG(("i*5 == 25 = %u\n", (int)(i*5)));
+    LOG(("i*5 == 25 = %d\n", (int)(i*5)));
     result = i*5;
     ASSERT(result == 25);
-    LOG(("i*-4 == -20 = %u\n", (int)(i*-4)));
+    LOG(("i*-4 == -20 = %d\n", (int)(i*-4)));
     ASSERT(i*-4 == -20);
-
     i = -10;
-    LOG(("i*12 == -120 = %u\n", (int)(i*12)));
+#ifndef __SDCC_pic16
+    LOG(("i*12 == -120 = %d\n", (int)(i*12)));
     ASSERT(i*12 == -120);
-    LOG(("i*-3 == 30 = %u\n", (int)(i*-3)));
+    LOG(("i*-3 == 30 = %d\n", (int)(i*-3)));
     ASSERT(i*-3 == 30);
+#endif
 }
 
 void mark(void)
@@ -74,19 +75,52 @@ testDiv(void)
     {attr} {storage} signed {type} i;
 
     i = 100;
-    LOG(("i/5 == 20 = %u\n", (int)i/5));
+    LOG(("i/5 == 20 = %d\n", (int)i/5));
     ASSERT(i/5 == 20);
-    LOG(("i/-4 == -25 = %u\n", (int)i/-4));
+    LOG(("i/-4 == -25 = %d\n", (int)i/-4));
     mark();
     ASSERT(i/-4 == -25);
 
     i = -50;
-    LOG(("i/25 == -2 = %u\n", (int)i/25));
+    LOG(("i/25 == -2 = %d\n", (int)i/25));
     ASSERT(i/25 == -2);
-    LOG(("i/-12 == 4 = %u\n", (int)i/-12));
+    LOG(("i/-12 == 4 = %d\n", (int)i/-12));
     ASSERT(i/-12 == 4);
     //power of 2
     ASSERT(i/4 == -12);
+}
+
+void 
+test16to32(void)
+{
+   {attr} {storage} int i, j;
+   {attr} {storage} unsigned int ui, uj;
+
+   i = 42;
+   j = 42;
+   ASSERT((long)i * (long)j == 42l * 42l);
+   i = -i;
+   ASSERT((long)i * (long)j == -42l * 42l);
+   j = -j;
+   ASSERT((long)i * (long)j == -42l * -42l);
+   i = 2342;
+   j = 4223;
+   ASSERT((unsigned long)i * (unsigned long)j == 2342ul * 4223ul);
+   ASSERT((long)i * (long)j == 2342l * 4223l);
+   j = -j;
+   ASSERT((long)i * (long)j == 2342l * -4223l);
+   i = -i;
+   ASSERT((long)i * (long)j == -2342l * -4223l);
+
+   ui = 42;
+   uj = 42;
+   ASSERT((unsigned long)ui * (unsigned long)uj == 42ul * 42ul);
+   ui = 2342;
+   uj = 4223;
+   ASSERT((unsigned long)ui * (unsigned long)uj == 2342ul * 4223ul);
+   ui = 0xffff;
+   uj = 0x8000;
+   ASSERT((unsigned long)ui * (unsigned long)uj == 0xfffful * 0x8000ul);
 }
 
 void

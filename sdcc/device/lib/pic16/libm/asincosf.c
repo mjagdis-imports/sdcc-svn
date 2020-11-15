@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -41,19 +41,13 @@
 #define P(g) (P2*g+P1)
 #define Q(g) ((Q2*g+Q1)*g+Q0)
 
-#ifdef SDCC_mcs51
-   #define myconst code
-#else
-   #define myconst const
-#endif
-
-float asincosf(const float x, const int isacos)
+float asincosf(float x, int isacos)
 {
     float y, g, r;
     int i;
 
-    static myconst float a[2]={ 0.0, QUART_PI };
-    static myconst float b[2]={ HALF_PI, QUART_PI };
+    static const float a[2]={ 0.0, QUART_PI };
+    static const float b[2]={ HALF_PI, QUART_PI };
 
     y=fabsf(x);
     i=isacos;

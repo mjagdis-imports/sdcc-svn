@@ -2,9 +2,9 @@
  * This declarations of the PIC16F707 MCU.
  *
  * This file is part of the GNU PIC library for SDCC, originally
- * created by Molnar Karoly <molnarkaroly@users.sf.net> 2012.
+ * created by Molnar Karoly <molnarkaroly@users.sf.net> 2016.
  *
- * This file is generated automatically by the cinc2h.pl, 2012-11-01 17:30:09 UTC.
+ * This file is generated automatically by the cinc2h.pl, 2016-04-13 17:22:57 UTC.
  *
  * SDCC is licensed under the GNU Public license (GPL) v2. Note that
  * this license covers the code to the compiler and other executables,
@@ -728,8 +728,8 @@ typedef union
     unsigned                    : 1;
     unsigned                    : 1;
     unsigned                    : 1;
-    unsigned                    : 1;
-    unsigned                    : 1;
+    unsigned TMR1CS0            : 1;
+    unsigned TMR1CS1            : 1;
     };
 
   struct
@@ -737,6 +737,12 @@ typedef union
     unsigned                    : 4;
     unsigned T1CKPS             : 2;
     unsigned                    : 2;
+    };
+
+  struct
+    {
+    unsigned                    : 6;
+    unsigned TMR1CS             : 2;
     };
 
   struct
@@ -755,7 +761,9 @@ extern __at(0x0010) volatile __T1CONbits_t T1CONbits;
 #define _T1CKPS0                0x10
 #define _T1CKPS1                0x20
 #define _TMRCS0                 0x40
+#define _TMR1CS0                0x40
 #define _TMRCS1                 0x80
+#define _TMR1CS1                0x80
 
 //==============================================================================
 
@@ -1973,13 +1981,13 @@ typedef union
 
   struct
     {
-    unsigned TBPS               : 3;
+    unsigned TMRBPS             : 3;
     unsigned                    : 5;
     };
 
   struct
     {
-    unsigned TMRBPS             : 3;
+    unsigned TBPS               : 3;
     unsigned                    : 5;
     };
   } __TBCONbits_t;
@@ -2633,8 +2641,10 @@ extern __at(0x018C) volatile __PMCON1bits_t PMCON1bits;
 #define T1OSCEN                 T1CONbits.T1OSCEN               // bit 3
 #define T1CKPS0                 T1CONbits.T1CKPS0               // bit 4
 #define T1CKPS1                 T1CONbits.T1CKPS1               // bit 5
-#define TMRCS0                  T1CONbits.TMRCS0                // bit 6
-#define TMRCS1                  T1CONbits.TMRCS1                // bit 7
+#define TMRCS0                  T1CONbits.TMRCS0                // bit 6, shadows bit in T1CONbits
+#define TMR1CS0                 T1CONbits.TMR1CS0               // bit 6, shadows bit in T1CONbits
+#define TMRCS1                  T1CONbits.TMRCS1                // bit 7, shadows bit in T1CONbits
+#define TMR1CS1                 T1CONbits.TMR1CS1               // bit 7, shadows bit in T1CONbits
 
 #define T1GSS0                  T1GCONbits.T1GSS0               // bit 0
 #define T1GSS1                  T1GCONbits.T1GSS1               // bit 1

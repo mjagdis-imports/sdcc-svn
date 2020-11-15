@@ -17,18 +17,15 @@
 
 #include <string.h>
 
-#ifndef __SDCC_mcs51
-// mcs51 small model does not have enough RAM to hold buf.
 int x = 6;
 int y = 1;
 const char *bar = "hi world";
-char buf [64];
-#endif
+char buf [24];
 
 void
 testTortureExecute (void)
 {
-#ifndef __SDCC_mcs51
+#ifndef __SDCC_pic16
   const char *const foo = "hello world";
   char dst [64];
 
@@ -115,4 +112,3 @@ testTortureExecute (void)
   return;
 #endif
 }
-

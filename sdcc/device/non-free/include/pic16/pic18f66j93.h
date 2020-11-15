@@ -2,9 +2,9 @@
  * This declarations of the PIC18F66J93 MCU.
  *
  * This file is part of the GNU PIC library for SDCC, originally
- * created by Molnar Karoly <molnarkaroly@users.sf.net> 2012.
+ * created by Molnar Karoly <molnarkaroly@users.sf.net> 2016.
  *
- * This file is generated automatically by the cinc2h.pl, 2012-11-01 17:31:07 UTC.
+ * This file is generated automatically by the cinc2h.pl, 2016-04-13 17:23:34 UTC.
  *
  * SDCC is licensed under the GNU Public license (GPL) v2. Note that
  * this license covers the code to the compiler and other executables,
@@ -3281,14 +3281,14 @@ typedef union
   struct
     {
     unsigned                    : 2;
-    unsigned CS                 : 2;
+    unsigned LCDCS              : 2;
     unsigned                    : 4;
     };
 
   struct
     {
     unsigned                    : 2;
-    unsigned LCDCS              : 2;
+    unsigned CS                 : 2;
     unsigned                    : 4;
     };
   } __LCDCONbits_t;
@@ -3417,13 +3417,13 @@ typedef union
 
   struct
     {
-    unsigned LCDPS              : 4;
+    unsigned LP                 : 4;
     unsigned                    : 4;
     };
 
   struct
     {
-    unsigned LP                 : 4;
+    unsigned LCDPS              : 4;
     unsigned                    : 4;
     };
   } __LCDPSbits_t;

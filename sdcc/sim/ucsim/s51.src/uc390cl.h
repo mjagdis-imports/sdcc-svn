@@ -36,48 +36,57 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 class cl_uc390: public cl_uc52
 {
 public:
-  cl_uc390(int Itype, int Itech, class cl_sim *asim);
+  // memories and cells for faster access
+  class cl_address_space *ixram;
+  class cl_memory_chip *ixram_chip;
+  
+  cl_uc390(struct cpu_entry *Itype, class cl_sim *asim);
   virtual void mk_hw_elements (void);
   virtual void make_memories(void);
-
+  virtual void make_address_spaces();
+  virtual void make_chips(void);
+  virtual void decode_rom(void);
+  virtual void decode_xram(void);
+  virtual void decode_dptr(void);
+  
   virtual void clear_sfr (void);
 
   // making objects
   //virtual t_addr get_mem_size (enum mem_class type);
 
   // manipulating memories
-  virtual t_mem read_mem (const char *id/*enum mem_class type*/, t_addr addr);
-  virtual t_mem get_mem (const char *id/*enum mem_class type*/, t_addr addr);
-  virtual void  write_mem (const char *id/*enum mem_class type*/, t_addr addr, t_mem val);
-  virtual void  set_mem (const char *id/*enum mem_class type*/, t_addr addr, t_mem val);
+  virtual t_mem read_mem (char *id/*enum mem_class type*/, t_addr addr);
+  virtual t_mem get_mem (char *id/*enum mem_class type*/, t_addr addr);
+  virtual void  write_mem (char *id/*enum mem_class type*/, t_addr addr, t_mem val);
+  virtual void  set_mem (char *id/*enum mem_class type*/, t_addr addr, t_mem val);
 
   /* mods for dual-dptr */
-  virtual int inst_inc_dptr(uchar code);
-  virtual int inst_jmp_Sa_dptr(uchar code);
-  virtual int inst_mov_dptr_Sdata(uchar code);
-  virtual int inst_movc_a_Sa_dptr(uchar code);
-  virtual int inst_movx_a_Sdptr(uchar code);
-  virtual int inst_movx_Sdptr_a(uchar code);
+  virtual int instruction_a3/*inst_inc_dptr*/(t_mem/*uchar*/ code);		// a3
+  virtual int instruction_73/*inst_jmp_Sa_dptr*/(t_mem/*uchar*/ code);		// 73
+  virtual int instruction_90/*inst_mov_dptr_Sdata*/(t_mem/*uchar*/ code);	// 90
+  virtual int instruction_93/*inst_movc_a_Sa_dptr*/(t_mem/*uchar*/ code);	// 93
+  virtual int instruction_e0/*inst_movx_a_Sdptr*/(t_mem/*uchar*/ code);		// e0
+  virtual int instruction_f0/*inst_movx_Sdptr_a*/(t_mem/*uchar*/ code);		// f0
 
   /* mods for flat24 */
-  virtual int inst_ajmp_addr(uchar code);
-  virtual int inst_ljmp(uchar code);
-  virtual int inst_acall_addr(uchar code);
-  virtual int inst_lcall(uchar code, uint addr, bool intr);/* 12 */
-  virtual int inst_ret(uchar code);
-  virtual int inst_reti(uchar code);
+  virtual int instruction_01/*inst_ajmp_addr*/(t_mem/*uchar*/ code);		// [02468abce]1
+  virtual int instruction_02/*inst_ljmp*/(t_mem/*uchar*/ code);			// 02
+  virtual int instruction_11/*inst_acall_addr*/(t_mem/*uchar*/ code);		// [13579bdf]1
+  virtual int inst_lcall(t_mem/*uchar*/ code, uint addr, bool intr);		// 12
+  virtual int instruction_22/*inst_ret*/(t_mem/*uchar*/ code);			// 22
+  virtual int instruction_32/*inst_reti*/(t_mem/*uchar*/ code);
 
   /* mods for 10 bit stack */
-  virtual int inst_push (uchar code);
-  virtual int inst_pop (uchar code);
+  virtual int instruction_c0/*inst_push*/ (t_mem/*uchar*/ code);		// c0
+  virtual int instruction_d0/*inst_pop*/ (t_mem/*uchar*/ code);			// d0
 
   /* mods for disassembly of flat24 */
   virtual struct dis_entry *dis_tbl(void);
-  virtual const char * disass(t_addr addr, const char *sep);
+  virtual char * disass(t_addr addr, const char *sep);
   virtual void   print_regs(class cl_console_base *con);
 
 protected:
-  int flat24_flag; /* true if processor == ds390f */
+  //int flat24_flag; /* true if processor == ds390f */
   virtual void push_byte (t_mem uc);
   virtual t_mem pop_byte (void);
 };

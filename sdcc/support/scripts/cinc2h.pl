@@ -2,7 +2,7 @@
 
 =back
 
-  Copyright (C) 2012, Molnar Karoly <molnarkaroly@users.sf.net>
+  Copyright (C) 2012-2015, Molnar Karoly <molnarkaroly@users.sf.net>
 
     This file is part of SDCC. 
 
@@ -97,6 +97,7 @@
 
 use strict;
 use warnings;
+no if $] >= 5.018, warnings => "experimental::smartmatch";        # perl 5.16
 use 5.12.0;                     # when (regex)
 use File::Path 'make_path';
 use feature 'switch';           # Starting from 5.10.1.
@@ -327,11 +328,11 @@ sub Outl
 
 #-------------------------------------------------------------------------------
 
-sub smartCompare($$)
+sub versionCompare($$)
   {
   my ($Str1, $Str2) = @_;
 
-  if (${$Str1} =~ /^\d/o && ${$Str2} =~ /^\d/o)
+  if ((${$Str1} =~ /^\d/o) && (${$Str2} =~ /^\d/o))
     {
         # $Str1 number and $Str2 number
     return (int(${$Str1}) <=> int(${$Str2}));
@@ -342,7 +343,7 @@ sub smartCompare($$)
 
 #-------------------------------------------------------------------------------
 
-sub smartSort($$)
+sub versionSort($$)
   {
   my @a_s = ($_[0] =~ /(\d+|\D+)/go);
   my @b_s = ($_[1] =~ /(\d+|\D+)/go);
@@ -369,7 +370,7 @@ sub smartSort($$)
 
   for ($i = 0; $i < $end; ++$i)
     {
-    $k = smartCompare(\$a_s[$i], \$b_s[$i]);
+    $k = versionCompare(\$a_s[$i], \$b_s[$i]);
 
     return $k if ($k != 0);
     }
@@ -405,7 +406,7 @@ sub correct_name($)
 
         # Adds to the list the $Name register.
 
-sub add_register($$)
+sub new_register($$)
   {
   my ($Name, $Address) = @_;
 
@@ -532,7 +533,7 @@ sub add_reg_bits($$)
   {
   my ($Queue, $Bits) = @_;
 
-  return if (! @{$Queue} || ! @{$Bits});
+  return if ((scalar(@{$Queue}) == 0) || (scalar(@{$Bits}) == 0));
 
   foreach (@{$Queue})
     {
@@ -544,7 +545,7 @@ sub add_reg_bits($$)
     if (! defined($reg))
       {
       Log("The $name register is not directly be reached or does not exist. ($mcu)", 2);
-      $reg = add_register($name, -1);
+      $reg = new_register($name, -1);
       }
 
     bit_filtration($name, $Bits);
@@ -622,7 +623,7 @@ sub add_conf_options($$)
   {
   my ($Queue, $Options) = @_;
 
-  return if (! @{$Queue} || ! @{$Options});
+  return if ((scalar(@{$Queue}) == 0) || (scalar(@{$Options}) == 0));
 
   foreach (@{$Queue})
     {
@@ -694,7 +695,7 @@ sub read_content_from_header($)
         # PORTC     EQU  H'0007'
         #
 
-          add_register($1, str2int($2));
+          new_register($1, str2int($2));
           }
         } # when (ST_REG_ADDR)
 
@@ -894,8 +895,8 @@ sub extract_config_area($$)
   open(LIB, '<', $gpproc_path) || die "extract_config_area(): Can not open. -> \"$gpproc_path\"\n";
 
         # static struct px pics[] = {
-        #   { PROC_CLASS_PIC12E   , "__12F529T39A"  , { "pic12f529t39a"  , "p12f529t39a"    , "12f529t39a"      }, 0xE529,  3,    8, 0x0005FF, 0x000600, {       -1,       -1 }, { 0x000FFF, 0x000FFF }, "12f529t39a_g.lkr"  , 0 },
-        #   { PROC_CLASS_PIC14E   , "__16LF1517"    , { "pic16lf1517"    , "p16lf1517"      , "16lf1517"        }, 0xA517,  4,   32, 0x001FFF, 0x002000, {       -1,       -1 }, { 0x008007, 0x008008 }, "16lf1517_g.lkr"    , 0 },
+        #   { PROC_CLASS_PIC12E   , "__12F529T39A"  , { "pic12f529t39a"  , "p12f529t39a"    , "12f529t39a"      }, 0xE529,  3,    8, 0x00E0, { 0x07, 0x0F }, 0x06F, {     -1,     -1 }, 0x00FF, 0x0005FF, 0x000600, {       -1,       -1 }, { 0x000640, 0x000643 }, { 0x000FFF, 0x000FFF }, { 0x000600, 0x00063F }, 0x0FF0, "p12f529t39a.inc"  , "12f529t39a_g.lkr"  , 0 },
+        #   { PROC_CLASS_PIC14E   , "__16LF1517"    , { "pic16lf1517"    , "p16lf1517"      , "16lf1517"        }, 0xA517,  4,   32, 0x0F80, { 0x70, 0x7F },    -1, { 0x2000, 0x21EF }, 0x0FFF, 0x001FFF, 0x002000, {       -1,       -1 }, { 0x008000, 0x008003 }, { 0x008007, 0x008008 }, {       -1,       -1 }, 0x3F80, "p16lf1517.inc"    , "16lf1517_g.lkr"    , 0 },
 
   my $in_table = FALSE;
 
@@ -905,9 +906,9 @@ sub extract_config_area($$)
 
     if (! $in_table)
       {
-      $in_table = TRUE if ($_ =~ /^\s*static\s+struct\s+px\s+pics\[\s*\]\s*=\s*\{\s*$/io);
+      $in_table = TRUE if (/^\s*static\s+struct\s+px\s+pics\[\s*\]\s*=\s*\{\s*$/io);
       }
-    elsif ($_ =~ /\{\s*PROC_CLASS_\w+\s*,\s*"\w+"\s*,\s*\{\s*"\w+"\s*,\s*"\w+"\s*,\s*"(\S+)"\s*}\s*,\s*[\w-]+\s*,\s*[\w-]+\s*,\s*[\w-]+\s*,\s*\S+\s*,\s*\S+\s*,\s*\{\s*\S+\s*,\s*\S+\s*\}\s*,\s*{\s*(\S+)\s*,\s*(\S+)\s*\}\s*,\s*\"?[\.\w]+\"?\s*,\s*\d+\s*\}/io)
+    elsif (/\{\s*PROC_CLASS_\w+\s*,\s*"\w+"\s*,\s*\{\s*"\w+"\s*,\s*"\w+"\s*,\s*"(\w+)"\s*}\s*,\s*[\w-]+\s*,\s*[\w-]+\s*,\s*[\w-]+\s*,\s*[\w-]+\s*,\s*\{\s*\S+\s*,\s*\S+\s*\}\s*,\s*\S+\s*,\s*\{\s*\S+\s*,\s*\S+\s*\}\s*,\s*\S+\s*,\s*\S+\s*,\s*\S+\s*,\s*\{\s*\S+\s*,\s*\S+\s*\}\s*,\s*{\s*\S+\s*,\s*\S+\s*\}\s*,\s*{\s*(\S+)\s*,\s*(\S+)\s*\}\s*,\s*{\s*\S+\s*,\s*\S+\s*\}\s*,\s*\w+\s*,\s*\"?[\.\w]+\"?\s*,\s*\"?[\.\w]+\"?\s*,\s*\d+\s*\}/iop)
       {
       my ($name, $c_start, $c_end) = ($1, $2, $3);
 
@@ -949,7 +950,7 @@ sub max_count_of_names_of_bit($)
 
     next if (! defined($array));
 
-    my $l = @{$array};
+    my $l = scalar(@{$array});
 
     $num = $l if ($num < $l);
     }
@@ -966,7 +967,7 @@ sub max_count_of_names_of_bit($)
 
 sub set_bit_prefix()
   {
-  foreach my $register (sort {smartSort($a->{NAME}, $b->{NAME})} @registers)
+  foreach my $register (sort {versionSort($a->{NAME}, $b->{NAME})} @registers)
     {
     my $bits = $register->{BITNAMES};
 
@@ -1072,7 +1073,7 @@ sub bitfield_filtration($)
 
     $first_addr = $addresses->[0];
 
-    if (@{$addresses} < 2 || $indexes->[$first_addr] != 0)
+    if ((scalar(@{$addresses}) < 2) || ($indexes->[$first_addr] != 0))
       {
         # This is not field, for only one member of there is. The other
         # possibility is that the index of the first member is not zero.
@@ -1090,7 +1091,7 @@ sub bitfield_filtration($)
 
       if ($last_addr >= 0)
         {
-        if (($last_addr + 1) != $_ || ($last_index + 1) != $idx)
+        if ((($last_addr + 1) != $_) || (($last_index + 1) != $idx))
           {
         # This bitfield is fragmented (not uniform).
 
@@ -1107,7 +1108,7 @@ sub bitfield_filtration($)
 
     my $width = $last_addr - $first_addr + 1;
 
-    if ($width > 0 && $width < 8)
+    if (($width > 0) && ($width < 8))
       {
       $gr->{WIDTH} = $width;
       }
@@ -1161,7 +1162,7 @@ sub print_all_registers()
       $alias = $register_aliases{$name};
       $alias = undef if (defined($alias) && defined($reg_refs_by_names{$alias}));
 
-      if (defined($bits) && @{$bits})
+      if (defined($bits) && (scalar(@{$bits}) > 0))
         {
         $type = "__$name$btype_t";
         Outl("\n$section\n//", (' ' x 8), "$name Bits\n\nextern $text __sfr $name;");
@@ -1222,7 +1223,7 @@ sub print_all_registers()
         Outl("\n$section\n");
 
         $device_registers .= "$text volatile $type $name$btail;\n";
-        } # if (defined($bits) && @{$bits})
+        } # if (defined($bits) && (scalar(@{$bits}) > 0))
       else
         {
         Outl("extern $text __sfr $name;");
@@ -1231,7 +1232,7 @@ sub print_all_registers()
 
       $device_registers .= "\n" if ($r < $v);
       } # if ($addr >= 0)
-    elsif (defined($bits) && @{$bits})
+    elsif (defined($bits) && (scalar(@{$bits}) > 0))
       {
         # This is a register which can not be achieved directly, but the bits has name.
 
@@ -1253,7 +1254,7 @@ sub print_configuration_words()
     my ($start, $end) = (-1, -1);
 
     extract_config_area(\$start, \$end);
-    return if ($start < 0 || $end < 0);
+    return if (($start < 0) || ($end < 0));
 
     Outl("\n$section\n//\n//", (' ' x 8), "Configuration Addresses\n//\n$section\n");
 
@@ -1292,11 +1293,11 @@ sub print_configuration_words()
       my $expl = $_->{EXPLANATION};
 
         # Improve a spelling error: On the end of a sentence a point must be.
-      $expl .= '.' if ($expl ne '' && $expl !~ /\.$/o);
+      $expl .= '.' if (($expl ne '') && ($expl !~ /\.$/o));
 
       Out(align("#define $_->{NAME}", DIST_BITSIZE));
       Out(align(sprintf("0x%0${conf_size}X", $_->{VALUE}), 8));
-      Out("// $expl") if (defined($expl) && $expl ne '');
+      Out("// $expl") if (defined($expl) && ($expl ne ''));
       Outl();
       }
     }
@@ -1310,7 +1311,7 @@ sub print_devids_and_idlocs()
   {
   foreach (\@devids, \@idlocs)
     {
-    if (@{$_})
+    if (scalar(@{$_}) > 0)
       {
       foreach (@{$_})
         {
@@ -1362,7 +1363,7 @@ EOT
 
 sub make_pic14_dependent_defs()
   {
-  foreach (sort {smartSort($a->{NAME}, $b->{NAME})} @registers)
+  foreach (sort {versionSort($a->{NAME}, $b->{NAME})} @registers)
     {
     my ($name, $bits) = ($_->{NAME}, $_->{BITNAMES});
     my $prefix = "$name$btail";
@@ -1381,7 +1382,7 @@ sub make_pic14_dependent_defs()
 
       next if (! defined($array));
 
-      my $shadow = (@{$array} > 1) ? ", shadows bit in $prefix" : '';
+      my $shadow = (scalar(@{$array}) > 1) ? ", shadows bit in $prefix" : '';
 
       foreach (@{$array})
         {
@@ -1403,7 +1404,7 @@ sub make_pic14_dependent_defs()
 
 sub print_to_header_file()
   {
-  my $text;
+  my ($text, $name, $address, $str);
 
   print_license('declarations');
   Outl("#ifndef __${mcu}_H__\n#define __${mcu}_H__\n\n$section");
@@ -1416,9 +1417,10 @@ sub print_to_header_file()
 
     foreach (sort { $a->{ADDRESS} <=> $b->{ADDRESS} } @registers)
       {
-      my ($name, $address) = ($_->{NAME}, $_->{ADDRESS});
-      my $str = sprintf('0x%04X', $address);
+      ($name, $address) = ($_->{NAME}, $_->{ADDRESS});
+      next if ($address < 0);
 
+      $str = sprintf('0x%04X', $address);
       Outl(align("#define ${name}_ADDR", DIST_ADDRSIZE), $str);
       }
 
@@ -1532,7 +1534,7 @@ $PROGRAM = basename($0);
 $gp_header_path = '';
 $mcu = '';
 
-for (my $i = 0; $i < @ARGV; )
+for (my $i = 0; $i < scalar(@ARGV); )
   {
   my $opt = $ARGV[$i++];
 
@@ -1566,7 +1568,7 @@ for (my $i = 0; $i < @ARGV; )
       {
       param_exist($opt, $i);
       $verbose = int($ARGV[$i++]);
-      $verbose = 0 if (! defined($verbose) || $verbose < 0);
+      $verbose = 0 if (! defined($verbose) || ($verbose < 0));
       $verbose = 10 if ($verbose > 10);
       }
 

@@ -42,6 +42,7 @@ static OPTION _pic14_poptions[] =
     { 0, "--no-pcode-opt", &pic14_options.disable_df, "disable (slightly faulty) optimization on pCode" },
     { 0, OPTION_STACK_SIZE, &options.stack_size, "sets the size if the argument passing stack (default: 16, minimum: 4)", CLAT_INTEGER },
     { 0, "--no-extended-instructions", &pic14_options.no_ext_instr, "forbid use of the extended instruction set (e.g., ADDFSR)" },
+    { 0, "--no-warn-non-free", &pic14_options.no_warn_non_free, "suppress warning on absent --use-non-free option" },
     { 0, NULL, NULL, NULL }
   };
 
@@ -96,7 +97,7 @@ _pic14_init (void)
 }
 
 static void
-_pic14_reset_regparm (void)
+_pic14_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
 }
@@ -136,17 +137,6 @@ _pic14_finaliseOptions (void)
   dbuf_printf (&dbuf, "-D__SDCC_PROCESSOR=\"%s\"", port->processor);
   addSet (&preArgvSet, Safe_strdup (dbuf_detach_c_str (&dbuf)));
 
-/*
- * deprecated in sdcc 3.2.0
- * TODO: should be obsoleted in sdcc 3.3.0 or later
-  if (options.std_sdcc)
- */
-    {
-      dbuf_set_length (&dbuf, 0);
-      dbuf_printf (&dbuf, "-DSDCC_PROCESSOR=\"%s\"", port->processor);
-      addSet (&preArgvSet, dbuf_detach_c_str (&dbuf));
-    }
-
     {
       char *upperProc, *p1, *p2;
       int len;
@@ -162,6 +152,17 @@ _pic14_finaliseOptions (void)
       dbuf_append (&dbuf, upperProc, len);
       addSet (&preArgvSet, dbuf_detach_c_str (&dbuf));
     }
+
+  if (!pic14_options.no_warn_non_free && !options.use_non_free)
+    {
+      fprintf(stderr,
+              "WARNING: Command line option --use-non-free not present.\n"
+              "         When compiling for PIC14/PIC16, please provide --use-non-free\n"
+              "         to get access to device headers and libraries.\n"
+              "         If you do not use these, you may provide --no-warn-non-free\n"
+              "         to suppress this warning (not recommended).\n");
+    } // if
+
 }
 
 static void
@@ -342,8 +343,6 @@ PORT pic_port =
     NULL,
     "-g",           /* options with --debug */
     NULL,           /* options without --debug */
-    //"-plosgffc",  /* Options with debug */
-    //"-plosgff",   /* Options without debug */
     0,
     ".asm",
     NULL            /* no do_assemble function */
@@ -397,11 +396,11 @@ PORT pic_port =
   },
   { NULL, NULL },
   {
-    +1, 1, 4, 1, 1, 0
+    +1, 1, 4, 1, 1, 0, 0
   },
     /* pic14 has an 8 bit mul */
   {
-    1, -1
+    -1, FALSE
   },
   {
     pic14_emitDebuggerSymbol
@@ -425,6 +424,8 @@ PORT pic_port =
   _pic14_setDefaultOptions,
   pic14_assignRegisters,
   _pic14_getRegName,
+  0,
+  NULL,
   _pic14_keywords,
   _pic14_genAssemblerPreamble,
   NULL,         /* no genAssemblerEnd */

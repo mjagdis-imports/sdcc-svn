@@ -346,7 +346,7 @@ initMem ()
   eeprom = allocMap (0, 1, 0, 0, 0, 0, 0, REG_NAME, 'K', EEPPOINTER);
 
   /* the unknown map */
-  generic = allocMap (1, 0, 0, 1, 1, 0, 0, REG_NAME, ' ', GPOINTER);
+  generic = allocMap (0, 0, 0, 0, 0, 0, 0, DATA_NAME, ' ', GPOINTER);
 
 }
 
@@ -370,7 +370,10 @@ allocIntoSeg (symbol *sym)
           nm = Safe_alloc (sizeof (namedspacemap));
           nm->name = Safe_alloc (strlen(SPEC_ADDRSPACE (sym->etype)->name) + 1);
           strcpy (nm->name, SPEC_ADDRSPACE (sym->etype)->name);
-          nm->map = allocMap (0, 0, 0, 1, 0, 0, options.data_loc, SPEC_ADDRSPACE (sym->etype)->name, 'E', POINTER);
+          nm->is_const = (SPEC_ADDRSPACE (sym->etype)->type && SPEC_CONST (SPEC_ADDRSPACE (sym->etype)->type));
+          nm->map = nm->is_const ?
+            allocMap (0, 1, 0, 0, 0, 1, options.code_loc, SPEC_ADDRSPACE (sym->etype)->name, 'C', CPOINTER) :
+            allocMap (0, 0, 0, 1, 0, 0, options.data_loc, SPEC_ADDRSPACE (sym->etype)->name, 'E', POINTER);
           nm->next = namedspacemaps;
           namedspacemaps = nm;
         }
@@ -541,7 +544,7 @@ allocGlobal (symbol * sym)
             interrupts[FUNC_INTNO (sym->type)] = sym;
 
           /* automagically extend the maximum interrupts */
-          if (FUNC_INTNO (sym->type) >= maxInterrupts)
+          if (FUNC_INTNO (sym->type) >= maxInterrupts && FUNC_INTNO (sym->type)!=INTNO_TRAP)
             maxInterrupts = FUNC_INTNO (sym->type) + 1;
         }
       /* if it is not compiler defined */
@@ -604,10 +607,22 @@ allocGlobal (symbol * sym)
 /* allocParms - parameters are always passed on stack              */
 /*-----------------------------------------------------------------*/
 void
-allocParms (value * val)
+allocParms (value *val, bool smallc)
 {
   value *lval;
   int pNum = 1;
+  int stackParamSizeAdjust = 0;
+
+  if (IFFUNC_ISSMALLC (currFunc->type))
+    {
+      for (lval = val; lval; lval = lval->next)
+      {
+        if (IS_REGPARM (lval->etype))
+          continue;
+        stackParamSizeAdjust += getSize (lval->type);
+      }
+    }
+  stackPtr += stackParamSizeAdjust;
 
   for (lval = val; lval; lval = lval->next, pNum++)
     {
@@ -631,19 +646,19 @@ allocParms (value * val)
             lval->sym->onStack = 1;
 
           /* choose which stack 2 use   */
-          /*  use xternal stack */
-          if (options.useXstack)
+          if (options.useXstack)    /* use external stack */
             {
               /* PENDING: stack direction support */
+              wassertl (!smallc, "SmallC calling convention not yet supported for xstack callee");
               SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) = xstack;
               SPEC_STAK (lval->etype) = SPEC_STAK (lval->sym->etype) = lval->sym->stack =
                 xstackPtr - getSize (lval->type);
               xstackPtr -= getSize (lval->type);
             }
-          else
-            {                   /* use internal stack   */
+          else                      /* use internal stack   */
+            {
               SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) = istack;
-              if (port->stack.direction > 0)
+              if ((port->stack.direction > 0) != (IFFUNC_ISSMALLC (currFunc->type)))
                 {
                   SPEC_STAK (lval->etype) = SPEC_STAK (lval->sym->etype) = lval->sym->stack =
                     stackPtr - (FUNC_REGBANK (currFunc->type) ? port->stack.bank_overhead : 0) -
@@ -665,7 +680,12 @@ allocParms (value * val)
           allocIntoSeg (lval->sym);
         }
       else
-        { /* allocate them in the automatic space */
+        {
+          /* Do not allocate for inline functions to avoid multiple definitions - see bug report #2591. */
+          if(IFFUNC_ISINLINE (currFunc->type) && !IS_STATIC (currFunc->etype) && !IS_EXTERN (currFunc->etype))
+            continue;
+
+          /* allocate them in the automatic space */
           /* generate a unique name  */
           SNPRINTF (lval->sym->rname, sizeof(lval->sym->rname),
                     "%s%s_PARM_%d", port->fun_prefix, currFunc->name, pNum);
@@ -703,6 +723,9 @@ allocParms (value * val)
           allocIntoSeg (lval->sym);
         }
     }
+
+  stackPtr -= stackParamSizeAdjust;
+
   return;
 }
 
@@ -967,7 +990,7 @@ allocVariables (symbol * symChain)
         csym = sym;
 
       /* check the declaration */
-      checkDecl (csym,0);
+      checkDecl (csym, 0);
 
       /* if this is a function or a pointer to a */
       /* function then do args processing        */
@@ -976,8 +999,8 @@ allocVariables (symbol * symChain)
           processFuncArgs (csym);
         }
 
-      /* if this is a extern variable then change the */
-      /* level to zero temporarily                    */
+      /* if this is an extern variable then change */
+      /* the level to zero temporarily             */
       if (IS_EXTERN (csym->etype) || IS_FUNC (csym->type))
         {
           saveLevel = csym->level;
@@ -1074,6 +1097,9 @@ redoStackOffsets (void)
 
   /* do the same for the external stack */
 
+  if (!xstack)
+    return;
+
   for (sym = setFirstItem (xstack->syms); sym; sym = setNextItem (xstack->syms))
     {
       int size = getSize (sym->type);
@@ -1160,6 +1186,11 @@ printAllocInfoSeg (memmap * map, symbol * func, struct dbuf_s *oBuf)
               else
                 stack_offset = func->stack;
             }
+
+          stack_offset += port->stack.offset; /* in case sp/bp points to the next location instead of last */
+
+          if (port->stack.direction < 0)
+            stack_offset = -stack_offset;
 
           dbuf_printf (oBuf, "to stack - %s %+d\n", SYM_BP (sym), sym->stack - stack_offset);
           continue;

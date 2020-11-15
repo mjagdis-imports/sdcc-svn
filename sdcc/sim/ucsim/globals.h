@@ -1,7 +1,7 @@
 /*
  * Simulator of microcontrollers (globals.h)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 1997,16 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -52,6 +52,8 @@ extern struct cpu_entry *cpus;
 extern struct cpu_entry cpus_51[];
 extern struct cpu_entry cpus_z80[];
 extern struct cpu_entry cpus_hc08[];
+extern struct cpu_entry cpus_stm8[];
+
 
 #endif
 

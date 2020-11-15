@@ -9,6 +9,7 @@
 #pragma std_sdcc99
 #endif
 
+#include <limits.h>
 #include <stdbool.h>
 
 #ifndef PORT_HOST
@@ -36,6 +37,7 @@ char complement(bool a, bool b)
 void
 testBits(void)
 {
+#ifndef __SDCC_pic16
 #ifdef __bool_true_false_are_defined
   bool x = 2;
   ASSERT (foo(x,3,4) == 6);
@@ -46,7 +48,7 @@ testBits(void)
 #if !(defined(__SUNPRO_C) && defined(__i386))
 /* this test fails on Solaris i386 SunPro C compiler with -xO2 option;
    it pass without -xO2 option !? */
-#if defined TYPE_char && !defined __SDCC_CHAR_UNSIGNED && !defined __CHAR_UNSIGNED__
+#if defined TYPE_char && CHAR_MIN < 0
   ASSERT (complement (~_ff, 0));
 #else
   ASSERT (complement (~_ff, 1));
@@ -55,7 +57,7 @@ testBits(void)
 
 #if defined TYPE_bool
   ASSERT (complement (~_ffff, 1));
-#elif defined TYPE_char && !defined __SDCC_CHAR_UNSIGNED && !defined __CHAR_UNSIGNED__
+#elif defined TYPE_char && CHAR_MIN < 0
   ASSERT (complement (~_ffff, 0));
 #else
   if (sizeof({type}) < sizeof(int))
@@ -65,4 +67,6 @@ testBits(void)
 #endif
 
 #endif //__bool_true_false_are_defined
+#endif
 }
+

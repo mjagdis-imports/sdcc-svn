@@ -41,6 +41,7 @@ extern char *VersionString;
 extern struct dbuf_s *codeOutBuf;
 extern char *iComments1;
 extern char *iComments2;
+extern int has_xinst_config;
 
 extern int initsfpnt;
 extern unsigned long pFile_isize;
@@ -100,7 +101,7 @@ unsigned int pic16aopLiteral (value *val, int offset)
 
 iCode *tic;
 symbol *nsym;
-char tbuffer[512], *tbuf=tbuffer;;
+char tbuffer[512], *tbuf=tbuffer;
 
 
 /*-----------------------------------------------------------------*/
@@ -378,7 +379,7 @@ pic16_initPointer (initList * ilist, sym_link *toType)
   ast *expr;
 
   if (!ilist) {
-      return valCastLiteral(toType, 0.0);
+      return valCastLiteral(toType, 0.0, 0);
   }
 
   expr = decorateType(resolveSymbols( list2expr (ilist) ), FALSE);
@@ -531,9 +532,9 @@ _pic16_printPointerType (const char *name, char ptype, void *p)
 {
   char buf[256];
 
-  sprintf (buf, "LOW(%s)", name);
+  SNPRINTF(buf, sizeof(buf), "LOW(%s)", name);
   pic16_emitDS (buf, ptype, p);
-  sprintf (buf, "HIGH(%s)", name);
+  SNPRINTF(buf, sizeof(buf), "HIGH(%s)", name);
   pic16_emitDS (buf, ptype, p);
 }
 
@@ -564,7 +565,7 @@ pic16_printGPointerType (const char *iname, const unsigned int itype,
     case FUNCTION: /* fall through */
     case GPOINTER:
       /* GPTRs pointing to __data space should be reported as POINTERs */
-      sprintf (buf, "UPPER(%s)", iname);
+      SNPRINTF(buf, sizeof(buf), "UPPER(%s)", iname);
       pic16_emitDS (buf, ptype, p);
       break;
 
@@ -572,7 +573,7 @@ pic16_printGPointerType (const char *iname, const unsigned int itype,
     case FPOINTER: /* fall through */
     case IPOINTER: /* fall through */
     case PPOINTER: /* __data space */
-      sprintf (buf, "0x%02x", GPTR_TAG_DATA);
+      SNPRINTF(buf, sizeof(buf), "0x%02x", GPTR_TAG_DATA);
       pic16_emitDS (buf, ptype, p);
       break;
 
@@ -616,13 +617,13 @@ pic16_printIvalType (symbol *sym, sym_link * type, initList * ilist, char ptype,
     werror (W_EXCESS_INITIALIZERS, "scalar", sym->name, sym->lineDef);
   }
 
-  if (!(val = list2val (ilist))) {
+  if (!(val = list2val (ilist, TRUE))) {
     // assuming a warning has been thrown
     val = constCharVal (0);
   }
 
   if (val->type != type) {
-    val = valCastLiteral(type, floatFromVal(val));
+    val = valCastLiteral(type, floatFromVal (val), (TYPE_TARGET_ULONGLONG) ullFromVal (val));
   }
 
   for (i = 0; i < (int)getSize (type); i++) {
@@ -648,7 +649,7 @@ pic16_printIvalChar (symbol *sym, sym_link * type, initList * ilist, const char 
 #endif
 
   if(!s) {
-    val = list2val (ilist);
+    val = list2val (ilist, TRUE);
 
     /* if the value is a character string  */
     if(IS_ARRAY (val->type) && IS_CHAR (val->etype)) {
@@ -730,7 +731,7 @@ pic16_printIvalArray (symbol * sym, sym_link * type, initList * ilist,
   /* by a string                      */
   if (IS_CHAR (type->next) &&
       ilist && ilist->type == INIT_NODE) {
-    if (!IS_LITERAL(list2val(ilist)->etype)) {
+    if (!IS_LITERAL(list2val(ilist, TRUE)->etype)) {
       werror (W_INIT_WRONG);
       return;
     }
@@ -814,7 +815,7 @@ pic16_printIvalBitFields (symbol **sym, initList **ilist, char ptype, void *p)
       else if (!SPEC_BUNNAMED (lsym->etype))
         {
           /* not an unnamed bit-field structure member */
-          value *val = list2val (lilist);
+          value *val = list2val (lilist, TRUE);
 
           if (size)
             {
@@ -1026,9 +1027,9 @@ pic16_printIvalFuncPtr (sym_link * type, initList * ilist, char ptype, void *p)
 #endif
 
   if (ilist)
-    val = list2val (ilist);
+    val = list2val (ilist, TRUE);
   else
-    val = valCastLiteral(type, 0.0);
+    val = valCastLiteral(type, 0.0, 0);
 
   if (!val) {
     // an error has been thrown already
@@ -1295,13 +1296,13 @@ CODESPACE: %d\tCONST: %d\tPTRCONST: %d\tSPEC_CONST: %d\n", __FUNCTION__, map->sn
 
       if (SPEC_ABSA (sym->etype) && PIC16_IS_CONFIG_ADDRESS (SPEC_ADDR (sym->etype)))
         {
-          pic16_assignConfigWordValue (SPEC_ADDR (sym->etype), (int) ulFromVal (list2val (sym->ival)));
+          pic16_assignConfigWordValue (SPEC_ADDR (sym->etype), (int) ulFromVal (list2val (sym->ival, TRUE)));
           continue;
         }
 
       if (SPEC_ABSA (sym->etype) && PIC16_IS_IDLOC_ADDRESS (SPEC_ADDR (sym->etype)))
         {
-          pic16_assignIdByteValue (SPEC_ADDR (sym->etype), (char) ulFromVal (list2val (sym->ival)));
+          pic16_assignIdByteValue (SPEC_ADDR (sym->etype), (char) ulFromVal (list2val (sym->ival, TRUE)));
           continue;
         }
 
@@ -1360,8 +1361,9 @@ CODESPACE: %d\tCONST: %d\tPTRCONST: %d\tSPEC_CONST: %d\n", __FUNCTION__, map->sn
               ++noAlloc;
               resolveIvalSym (sym->ival, sym->type);
               asym = newSymbol (sym->rname, 0);
-              abSym = Safe_calloc (1, sizeof (absSym));
-              strcpy (abSym->name, sym->rname);
+              abSym = Safe_alloc(sizeof (absSym));
+              strncpy(abSym->name, sym->rname, sizeof(abSym->name) - 1);
+              abSym->name[sizeof(abSym->name) - 1] = '\0';
               abSym->address = SPEC_ADDR (sym->etype);
               addSet (&absSymSet, abSym);
 
@@ -1369,7 +1371,7 @@ CODESPACE: %d\tCONST: %d\tPTRCONST: %d\tSPEC_CONST: %d\n", __FUNCTION__, map->sn
               pic16_addpBlock (pb);
 
               pcf = pic16_newpCodeFunction (moduleName, asym->name);
-              PCF (pcf)->absblock = 1;
+              PCF (pcf)->absblock = TRUE;
 
               pic16_addpCode2pBlock (pb, pcf);
               pic16_addpCode2pBlock (pb, pic16_newpCodeLabel (sym->rname, -1));
@@ -1761,6 +1763,14 @@ pic16glue ()
 
     mainf = findSymWithLevel(SymbolTab, mainf);
 
+    if (mainf && IFFUNC_HASBODY(mainf->type) && pic16->xinst && !has_xinst_config)
+      {
+        fprintf(stderr, "WARNING: The target device seems to support XINST and no #pragma config XINST=OFF was found.\n");
+        fprintf(stderr, "         The code generated by SDCC does probably not work when XINST is enabled (possibly by default).\n");
+        fprintf(stderr, "         Please make sure to disable XINST.\n");
+        fprintf(stderr, "         (If the target does not actually support XINST, please report this as a bug in SDCC.)\n");
+      } // if
+
     pic16_pCodeInitRegisters();
 
     if(pic16_options.no_crt && mainf && IFFUNC_HASBODY(mainf->type)) {
@@ -1812,10 +1822,9 @@ pic16glue ()
 
 #if 1
     if(pic16_options.dumpcalltree) {
-      FILE *cFile;
+        FILE *cFile;
 
-        sprintf(buffer, "%s", dstFileName);
-        strcat(buffer, ".calltree");
+        SNPRINTF(buffer, sizeof(buffer), "%s.calltree", dstFileName);
         cFile = fopen(buffer, "w");
         pic16_printCallTree( cFile );
         fclose(cFile);
@@ -1825,17 +1834,15 @@ pic16glue ()
     pic16_InlinepCode();
     pic16_AnalyzepCode('*');
 
-
     if(pic16_debug_verbose)
       pic16_pcode_test();
 
     /* now put it all together into the assembler file */
     /* create the assembler file name */
     if((noAssemble || options.c1mode)  && fullDstFileName) {
-      sprintf (buffer, "%s", fullDstFileName);
+      SNPRINTF(buffer, sizeof(buffer), "%s", fullDstFileName);
     } else {
-      sprintf (buffer, "%s", dstFileName);
-      strcat (buffer, ".asm");
+      SNPRINTF(buffer, sizeof(buffer), "%s.asm", dstFileName);
     }
 
     if(!(asmFile = fopen (buffer, "w"))) {

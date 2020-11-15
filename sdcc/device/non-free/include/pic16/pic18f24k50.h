@@ -2,9 +2,9 @@
  * This declarations of the PIC18F24K50 MCU.
  *
  * This file is part of the GNU PIC library for SDCC, originally
- * created by Molnar Karoly <molnarkaroly@users.sf.net> 2012.
+ * created by Molnar Karoly <molnarkaroly@users.sf.net> 2016.
  *
- * This file is generated automatically by the cinc2h.pl, 2012-11-01 17:30:35 UTC.
+ * This file is generated automatically by the cinc2h.pl, 2016-04-13 17:23:27 UTC.
  *
  * SDCC is licensed under the GNU Public license (GPL) v2. Note that
  * this license covers the code to the compiler and other executables,
@@ -1917,13 +1917,7 @@ typedef union
     unsigned RA4                : 1;
     unsigned RA5                : 1;
     unsigned RA6                : 1;
-    unsigned                    : 1;
-    };
-
-  struct
-    {
-    unsigned RA                 : 7;
-    unsigned                    : 1;
+    unsigned RA7                : 1;
     };
   } __DDRAbits_t;
 
@@ -1944,6 +1938,7 @@ extern __at(0x0F92) volatile __DDRAbits_t DDRAbits;
 #define _TRISA6                 0x40
 #define _RA6                    0x40
 #define _TRISA7                 0x80
+#define _RA7                    0x80
 
 //==============================================================================
 
@@ -1976,13 +1971,7 @@ typedef union
     unsigned RA4                : 1;
     unsigned RA5                : 1;
     unsigned RA6                : 1;
-    unsigned                    : 1;
-    };
-
-  struct
-    {
-    unsigned RA                 : 7;
-    unsigned                    : 1;
+    unsigned RA7                : 1;
     };
   } __TRISAbits_t;
 
@@ -2003,6 +1992,7 @@ extern __at(0x0F92) volatile __TRISAbits_t TRISAbits;
 #define _TRISA_TRISA6           0x40
 #define _TRISA_RA6              0x40
 #define _TRISA_TRISA7           0x80
+#define _TRISA_RA7              0x80
 
 //==============================================================================
 
@@ -2366,13 +2356,13 @@ typedef union
 
   struct
     {
-    unsigned C1CH               : 2;
+    unsigned CCH                : 2;
     unsigned                    : 6;
     };
 
   struct
     {
-    unsigned CCH                : 2;
+    unsigned C1CH               : 2;
     unsigned                    : 6;
     };
   } __CM1CON0bits_t;
@@ -2431,13 +2421,13 @@ typedef union
 
   struct
     {
-    unsigned C2CH               : 2;
+    unsigned CCH                : 2;
     unsigned                    : 6;
     };
 
   struct
     {
-    unsigned CCH                : 2;
+    unsigned C2CH               : 2;
     unsigned                    : 6;
     };
   } __CM2CON0bits_t;
@@ -3601,27 +3591,27 @@ typedef union
 
   struct
     {
-    unsigned PSSBD              : 2;
-    unsigned                    : 6;
-    };
-
-  struct
-    {
     unsigned PSS1BD             : 2;
     unsigned                    : 6;
     };
 
   struct
     {
-    unsigned                    : 2;
-    unsigned PSS1AC             : 2;
-    unsigned                    : 4;
+    unsigned PSSBD              : 2;
+    unsigned                    : 6;
     };
 
   struct
     {
     unsigned                    : 2;
     unsigned PSSAC              : 2;
+    unsigned                    : 4;
+    };
+
+  struct
+    {
+    unsigned                    : 2;
+    unsigned PSS1AC             : 2;
     unsigned                    : 4;
     };
 
@@ -4335,46 +4325,6 @@ extern __at(0x0FC5) volatile __SSPCON2bits_t SSPCON2bits;
 
 
 //==============================================================================
-//        SSP1CON Bits
-
-extern __at(0x0FC6) __sfr SSP1CON;
-
-typedef union
-  {
-  struct
-    {
-    unsigned SSPM0              : 1;
-    unsigned SSPM1              : 1;
-    unsigned SSPM2              : 1;
-    unsigned SSPM3              : 1;
-    unsigned CKP                : 1;
-    unsigned SSPEN              : 1;
-    unsigned SSPOV              : 1;
-    unsigned WCOL               : 1;
-    };
-
-  struct
-    {
-    unsigned SSPM               : 4;
-    unsigned                    : 4;
-    };
-  } __SSP1CONbits_t;
-
-extern __at(0x0FC6) volatile __SSP1CONbits_t SSP1CONbits;
-
-#define _SSPM0                  0x01
-#define _SSPM1                  0x02
-#define _SSPM2                  0x04
-#define _SSPM3                  0x08
-#define _CKP                    0x10
-#define _SSPEN                  0x20
-#define _SSPOV                  0x40
-#define _WCOL                   0x80
-
-//==============================================================================
-
-
-//==============================================================================
 //        SSP1CON1 Bits
 
 extern __at(0x0FC6) __sfr SSP1CON1;
@@ -4402,14 +4352,14 @@ typedef union
 
 extern __at(0x0FC6) volatile __SSP1CON1bits_t SSP1CON1bits;
 
-#define _SSP1CON1_SSPM0         0x01
-#define _SSP1CON1_SSPM1         0x02
-#define _SSP1CON1_SSPM2         0x04
-#define _SSP1CON1_SSPM3         0x08
-#define _SSP1CON1_CKP           0x10
-#define _SSP1CON1_SSPEN         0x20
-#define _SSP1CON1_SSPOV         0x40
-#define _SSP1CON1_WCOL          0x80
+#define _SSPM0                  0x01
+#define _SSPM1                  0x02
+#define _SSPM2                  0x04
+#define _SSPM3                  0x08
+#define _CKP                    0x10
+#define _SSPEN                  0x20
+#define _SSPOV                  0x40
+#define _WCOL                   0x80
 
 //==============================================================================
 
@@ -4450,6 +4400,46 @@ extern __at(0x0FC6) volatile __SSPCONbits_t SSPCONbits;
 #define _SSPCON_SSPEN           0x20
 #define _SSPCON_SSPOV           0x40
 #define _SSPCON_WCOL            0x80
+
+//==============================================================================
+
+
+//==============================================================================
+//        SSPCON1 Bits
+
+extern __at(0x0FC6) __sfr SSPCON1;
+
+typedef union
+  {
+  struct
+    {
+    unsigned SSPM0              : 1;
+    unsigned SSPM1              : 1;
+    unsigned SSPM2              : 1;
+    unsigned SSPM3              : 1;
+    unsigned CKP                : 1;
+    unsigned SSPEN              : 1;
+    unsigned SSPOV              : 1;
+    unsigned WCOL               : 1;
+    };
+
+  struct
+    {
+    unsigned SSPM               : 4;
+    unsigned                    : 4;
+    };
+  } __SSPCON1bits_t;
+
+extern __at(0x0FC6) volatile __SSPCON1bits_t SSPCON1bits;
+
+#define _SSPCON1_SSPM0          0x01
+#define _SSPCON1_SSPM1          0x02
+#define _SSPCON1_SSPM2          0x04
+#define _SSPCON1_SSPM3          0x08
+#define _SSPCON1_CKP            0x10
+#define _SSPCON1_SSPEN          0x20
+#define _SSPCON1_SSPOV          0x40
+#define _SSPCON1_WCOL           0x80
 
 //==============================================================================
 

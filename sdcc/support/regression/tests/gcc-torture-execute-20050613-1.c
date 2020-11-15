@@ -18,8 +18,10 @@ struct D { struct A a; int r[]; };
 void
 foo (struct A *x)
 {
-  if (x->i != 0 || x->j != 5 || x->k != 0 || x->l != 0)
-    ASSERT (0);
+  ASSERT (x->i == 0);
+  ASSERT (x->j == 5);
+  ASSERT (x->k == 0);
+  ASSERT (x->l == 0);
 }
 
 void
@@ -28,10 +30,8 @@ testTortureExecute (void)
   struct B b = { .a.j = 5 };
   struct C c = { .a.j = 5 };
   struct D d = { .a.j = 5 };
-#if 0 // sdcc bug #2167
   foo (&b.a);
   foo (&c.a);
   foo (&d.a);
-#endif
   return;
 }

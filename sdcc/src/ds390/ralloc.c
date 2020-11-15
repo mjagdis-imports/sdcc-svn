@@ -39,6 +39,8 @@
 
 #define D(x)
 
+extern char **fReturnDS390;
+
 /* Global data */
 static struct
 {
@@ -1151,45 +1153,92 @@ willCauseSpill (int nr, int rt)
   return 1;
 }
 
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
 /* positionRegs - the allocator can allocate same registers to res- */
-/* ult and operand, if this happens make sure they are in the same */
-/* position as the operand otherwise chaos results                 */
-/*-----------------------------------------------------------------*/
+/* ult and operand, if this happens make sure they are in the same  */
+/* position as the operand otherwise chaos results                  */
+/*------------------------------------------------------------------*/
 static int
-positionRegs (symbol * result, symbol * opsym)
+positionRegs (symbol *result, symbol *opsym, int chOp)
 {
   int count = min (result->nRegs, opsym->nRegs);
   int i, j = 0, shared = 0;
   int change = 0;
 
   /* if the result has been spilt then cannot share */
-  if (opsym->isspilt)
+  if (result->isspilt || opsym->isspilt)
     return 0;
-again:
-  shared = 0;
-  /* first make sure that they actually share */
-  for (i = 0; i < count; i++)
+
+  for (;;)
     {
-      for (j = 0; j < count; j++)
-        {
+      shared = 0;
+      /* first make sure that they actually share */
+      for (i = 0; i < count; i++)
+        for (j = 0; j < count; j++)
           if (result->regs[i] == opsym->regs[j] && i != j)
             {
               shared = 1;
               goto xchgPositions;
             }
-        }
-    }
 xchgPositions:
-  if (shared)
-    {
-      reg_info *tmp = result->regs[i];
-      result->regs[i] = result->regs[j];
-      result->regs[j] = tmp;
-      change++;
-      goto again;
+      if (shared)
+        if (!chOp)
+          {
+            reg_info *tmp = result->regs[i];
+            result->regs[i] = result->regs[j];
+            result->regs[j] = tmp;
+            change++;
+          }
+        else
+          {
+            reg_info *tmp = opsym->regs[i];
+            opsym->regs[i] = opsym->regs[j];
+            opsym->regs[j] = tmp;
+            change++;
+          }
+      else
+        return change;
     }
-  return change;
+}
+
+/*-----------------------------------------------------------------*/
+/* positionRegs - the allocator can allocate the registers of the  */
+/* return value to the result, if this happens make sure they are  */
+/* in the same position as the return value otherwise chaos results*/
+/*-----------------------------------------------------------------*/
+static int
+positionRegsReturned (symbol *result)
+{
+  int count = result->nRegs;
+  int i, j = 0, shared = 0;
+  int change = 0;
+
+  /* if the result has been spilt then cannot share */
+  if (result->isspilt)
+    return 0;
+
+  for (;;)
+    {
+      shared = 0;
+      /* first make sure that they actually share */
+      for (i = 0; i < count; i++)
+        for (j = 0; j < count; j++)
+          if (!strcmp(result->regs[i]->name, fReturnDS390[j]) && i != j)
+            {
+              shared = 1;
+              goto xchgPositions;
+            }
+xchgPositions:
+      if (shared)
+        {
+            reg_info *tmp = result->regs[i];
+            result->regs[i] = result->regs[j];
+            result->regs[j] = tmp;
+            change++;
+        }
+      else
+        return change;
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -1496,13 +1545,18 @@ serialRegAssign (eBBlock ** ebbs, int count)
                 {
                   if (IC_LEFT (ic) && IS_SYMOP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic))->nRegs)
                     {
-                      positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_LEFT (ic)));
+                      positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_LEFT (ic)), 0);
                     }
                   /* do the same for the right operand */
                   if (IC_RIGHT (ic) && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->nRegs)
                     {
-                      positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_RIGHT (ic)));
+                      positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_RIGHT (ic)), 0);
                     }
+                }
+
+              if (ic->op == CALL || ic->op == PCALL || ic->op == RECEIVE)
+                {
+                  positionRegsReturned (OP_SYMBOL (IC_RESULT (ic)));
                 }
 
               if (ptrRegSet)
@@ -1692,11 +1746,11 @@ fillGaps ()
                       /* if left is assigned to registers */
                       if (IS_SYMOP (IC_LEFT (ic)) && bitVectBitValue (_G.totRegAssigned, OP_SYMBOL (IC_LEFT (ic))->key))
                         {
-                          pdone += (positionRegs (sym, OP_SYMBOL (IC_LEFT (ic))) > 0);
+                          pdone += (positionRegs (sym, OP_SYMBOL (IC_LEFT (ic)), 0) > 0);
                         }
                       if (IS_SYMOP (IC_RIGHT (ic)) && bitVectBitValue (_G.totRegAssigned, OP_SYMBOL (IC_RIGHT (ic))->key))
                         {
-                          pdone += (positionRegs (sym, OP_SYMBOL (IC_RIGHT (ic))) > 0);
+                          pdone += (positionRegs (sym, OP_SYMBOL (IC_RIGHT (ic)), 0) > 0);
                         }
                       if (pdone > 1)
                         break;
@@ -1717,7 +1771,7 @@ fillGaps ()
                       /* if result is assigned to registers */
                       if (IS_SYMOP (IC_RESULT (ic)) && bitVectBitValue (_G.totRegAssigned, OP_SYMBOL (IC_RESULT (ic))->key))
                         {
-                          pdone += (positionRegs (sym, OP_SYMBOL (IC_RESULT (ic))) > 0);
+                          pdone += (positionRegs (sym, OP_SYMBOL (IC_RESULT (ic)), 0) > 0);
                         }
                       if (pdone > 1)
                         break;
@@ -2038,9 +2092,9 @@ regTypeNum ()
           sym->nRegs = ((IS_AGGREGATE (sym->type) || sym->isptr) ?
                         getSize (sym->type = aggrToPtr (sym->type, FALSE)) : getSize (sym->type));
 
-          if (sym->nRegs > 4)
+          if (sym->nRegs > 8)
             {
-              fprintf (stderr, "allocated more than 4 or 0 registers for type ");
+              fprintf (stderr, "allocated more than 8 or 0 registers for type ");
               printTypeChain (sym->type, stderr);
               fprintf (stderr, "\n");
             }
@@ -3272,6 +3326,32 @@ packRegisters (eBBlock ** ebpp, int blockno)
     }
 }
 
+/*------------------------------------------------------------------------*/
+/* positionRegsReverse - positioning registers from end to begin to avoid */
+/* conflict among result, left and right operands in some extrem cases    */
+/*------------------------------------------------------------------------*/
+static void
+positionRegsReverse (eBBlock ** ebbs, int count)
+{
+  int i;
+  iCode *ic;
+
+  for (i = count - 1; i >= 0; i--)
+    for (ic = ebbs[i]->ech; ic; ic = ic->prev)
+      {
+        if (IC_LEFT (ic) && IS_SYMOP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic))->nRegs &&
+            IC_RESULT (ic) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic))->nRegs)
+          {
+            positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_LEFT (ic)), 1);    
+          }
+        if (IC_RIGHT (ic) && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->nRegs &&
+            IC_RESULT (ic) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic))->nRegs)
+          {
+            positionRegs (OP_SYMBOL (IC_RESULT (ic)), OP_SYMBOL (IC_RIGHT (ic)), 1);    
+          }
+      }
+}
+
 /*-----------------------------------------------------------------*/
 /* assignRegisters - assigns registers to each live range as need  */
 /*-----------------------------------------------------------------*/
@@ -3310,7 +3390,7 @@ ds390_assignRegisters (ebbIndex * ebbi)
      so we compute them again */
   recomputeLiveRanges (ebbs, count, FALSE);
 
-  if (options.dump_pack)
+  if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_PACK, ebbi);
 
   /* first determine for each live range the number of
@@ -3323,6 +3403,7 @@ ds390_assignRegisters (ebbIndex * ebbi)
   ds390_nRegs = 8;
   freeAllRegs ();
   fillGaps ();
+  positionRegsReverse (ebbs, count);
   ds390_nRegs = 12 + ds390_nBitRegs;
 
   /* if stack was extended then tell the user */
@@ -3356,7 +3437,7 @@ ds390_assignRegisters (ebbIndex * ebbi)
       currFunc->regsUsed = bitVectSetBit (currFunc->regsUsed, R1_IDX);
     }
 
-  if (options.dump_rassgn)
+  if (options.dump_i_code)
     {
       dumpEbbsToFileExt (DUMP_RASSGN, ebbi);
       dumpLiveRanges (DUMP_LRANGE, liveRanges);

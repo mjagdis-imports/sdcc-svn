@@ -28,6 +28,7 @@
 #include "ralloc.h"
 #include "gen.h"
 #include "peep.h"
+#include "rtrack.h"
 #include "dbuf_string.h"
 #include "../SDCCutil.h"
 
@@ -91,7 +92,7 @@ _mcs51_init (void)
 }
 
 static void
-_mcs51_reset_regparm (void)
+_mcs51_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
   regBitParmFlg = 0;
@@ -326,7 +327,6 @@ hasExtBitOp (int op, int size)
 {
   if (op == RRC
       || op == RLC
-      || op == GETHBIT
       || op == GETABIT
       || op == GETBYTE
       || op == GETWORD
@@ -345,6 +345,12 @@ oclsExpense (struct memmap *oclass)
     return 1;
 
   return 0;
+}
+
+static bool
+_hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
+{
+  return getSize (left) == 1 && getSize (right) == 1;
 }
 
 static int
@@ -821,13 +827,13 @@ PORT mcs51_port =
     getRegsRead,
     getRegsWritten,
     mcs51DeadMove,
-    0,
-    0,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
   },
-  {
-    /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
-    1, 2, 2, 4, 8, 1, 2, 3, 1, 4, 4
-  },
+  /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
+  { 1, 2, 2, 4, 8, 1, 2, 3, 1, 4, 4 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -844,7 +850,7 @@ PORT mcs51_port =
     "OSEG    (OVR,DATA)",       // overlay_name
     "GSFINAL (CODE)",           // post_static_name
     "HOME    (CODE)",           // home_name
-    "XISEG   (XDATA)",          // xidata_name - initialized xdata   initialized xdata
+    "XISEG   (XDATA)",          // xidata_name - initialized xdata
     "XINIT   (CODE)",           // xinit_name - a code copy of xiseg
     "CONST   (CODE)",           // const_name - const data (code or not)
     "CABS    (ABS,CODE)",       // cabs_name - const absolute data (code or not)
@@ -864,15 +870,11 @@ PORT mcs51_port =
     4,          /* isr_overhead */
     1,          /* call_overhead (2 for return address - 1 for pre-incrementing push */
     1,          /* reent_overhead */
-    1           /* banked_overhead (switch between code banks) */
+    1,          /* banked_overhead (switch between code banks) */
+    0           /* sp points directly at last item pushed */
   },
-  {
-    /* mcs51 has an 8 bit mul */
-    1, -1
-  },
-  {
-    mcs51_emitDebuggerSymbol
-  },
+  { -1, FALSE },
+  { mcs51_emitDebuggerSymbol },
   {
     256,        /* maxCount */
     2,          /* sizeofElement */
@@ -890,6 +892,8 @@ PORT mcs51_port =
   _mcs51_setDefaultOptions,
   mcs51_assignRegisters,
   _mcs51_getRegName,
+  0,
+  _mcs51_rtrackUpdate,
   _mcs51_keywords,
   _mcs51_genAssemblerPreamble,
   NULL,                         /* no genAssemblerEnd */
@@ -900,7 +904,7 @@ PORT mcs51_port =
   _mcs51_regparm,
   NULL,                         /* process_pragma */
   NULL,                         /* getMangledFunctionName */
-  NULL,                         /* hasNativeMulFor */
+  _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
   FALSE,                        /* use_dw_for_init */

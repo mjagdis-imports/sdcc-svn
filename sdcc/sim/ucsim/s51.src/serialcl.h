@@ -28,37 +28,35 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #ifndef SERIALCL_HEADER
 #define SERIALCL_HEADER
 
+#include "fiocl.h"
 #include "stypes.h"
 #include "pobjcl.h"
+
 #include "uccl.h"
+#include "serial_hwcl.h"
+
+#include "newcmdposixcl.h"
 
 //#include "newcmdcl.h"
 
+class cl_serial_listener;
 
-class cl_serial: public cl_hw
+class cl_serial: public cl_serial_hw
 {
 protected:
-  class cl_address_space *sfr;
+  class cl_address_space *sfr, *bas;
   bool there_is_t2, t2_baud;
-  class cl_memory_cell *sbuf, *pcon, *scon;
-#ifdef HAVE_TERMIOS_H
-  struct termios saved_attributes_in; // Attributes of serial interface
-  struct termios saved_attributes_out;
-#endif
-  class cl_optref *serial_in_file_option;
-  class cl_optref *serial_out_file_option;
-  FILE *serial_in;      // Serial line input
-  FILE *serial_out;     // Serial line output
-  uchar s_in;           // Serial channel input reg
-  uchar s_out;          // Serial channel output reg
-  bool  s_sending;      // Transmitter is working
-  bool  s_receiving;    // Receiver is working
-  int   s_rec_bit;      // Bit counter of receiver
-  int   s_tr_bit;       // Bit counter of transmitter
-  int   s_rec_t1;       // T1 overflows for receiving
-  int   s_tr_t1;        // T1 overflows for sending
-  int   s_rec_tick;     // Machine cycles for receiving
-  int   s_tr_tick;      // Machine cycles for sending
+  class cl_memory_cell *sbuf, *pcon, *scon, *scon_bits[8];
+  uchar s_in;		// Serial channel input reg
+  uchar s_out;		// Serial channel output reg
+  bool  s_sending;	// Transmitter is working
+  bool  s_receiving;	// Receiver is working
+  int   s_rec_bit;	// Bit counter of receiver
+  int   s_tr_bit;	// Bit counter of transmitter
+  int   s_rec_t1;	// T1 overflows for receiving
+  int   s_tr_t1;	// T1 overflows for sending
+  int   s_rec_tick;	// Machine cycles for receiving
+  int   s_tr_tick;	// Machine cycles for sending
   uchar _mode;
   uchar _bmREN;
   uchar _bmSMOD;
@@ -68,13 +66,13 @@ public:
   cl_serial(class cl_uc *auc);
   virtual ~cl_serial(void);
   virtual int init(void);
+  virtual int cfg_size(void) { return 10; }
 
   virtual void new_hw_added(class cl_hw *new_hw);
   virtual void added_to_uc(void);
   virtual t_mem read(class cl_memory_cell *cell);
   virtual void write(class cl_memory_cell *cell, t_mem *val);
-
-  //virtual void mem_cell_changed(class cl_m *mem, t_addr addr);
+  virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
 
   virtual int  serial_bit_cnt(void);
   virtual void received(int c);
@@ -82,7 +80,7 @@ public:
   virtual int tick(int cycles);
   virtual void reset(void);
   virtual void happen(class cl_hw *where, enum hw_event he, void *params);
-
+  
   virtual void print_info(class cl_console_base *con);
 };
 

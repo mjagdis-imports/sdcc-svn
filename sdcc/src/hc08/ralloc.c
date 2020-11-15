@@ -719,6 +719,7 @@ createRegMask (eBBlock ** ebbs, int count)
 
           /* first mark the registers used in this
              instruction */
+          ic->rSurv = newBitVect(port->num_regs);
           ic->rUsed = regsUsedIniCode (ic);
           _G.funcrUsed = bitVectUnion (_G.funcrUsed, ic->rUsed);
 
@@ -752,8 +753,13 @@ createRegMask (eBBlock ** ebbs, int count)
 
               /* for all the registers allocated to it */
               for (k = 0; k < sym->nRegs; k++)
-                if (sym->regs[k])
+                {
+                  if (!sym->regs[k])
+                    continue;
                   ic->rMask = bitVectSetBit (ic->rMask, sym->regs[k]->rIdx);
+                  if (sym->liveTo != ic->key)
+                    ic->rSurv = bitVectSetBit (ic->rSurv, sym->regs[k]->rIdx);
+                }
             }
         }
     }
@@ -1912,21 +1918,12 @@ packPointerOp (iCode * ic, eBBlock ** ebpp)
     }
 
   /* Put the remaining operand on the right and convert to assignment     */
-  /* or cast (Sometimes the operands to the addition are different sizes, */
-  /* so there is an implicit cast. If so, need to make it explicit so     */
-  /* that all the bytes of the pointer are defined. */
   if (IS_SYMOP (offsetOp))
     bitVectUnSetBit (OP_USES (offsetOp), dic->key);
   IC_RIGHT (dic) = nonOffsetOp;
   IC_LEFT (dic) = NULL;
   SET_ISADDR (IC_RESULT (dic), 0);
-  if (getSize (operandType (pointer)) == getSize (operandType (nonOffsetOp)))
-    dic->op = '=';
-  else
-    {
-      dic->op = CAST;
-      IC_LEFT (dic) = operandFromLink (operandType (pointer));
-    }
+  dic->op = '=';
 }
 
 /*-----------------------------------------------------------------*/
@@ -1987,7 +1984,8 @@ packRegisters (eBBlock ** ebpp, int blockno)
           !POINTER_SET (ic) &&
           IS_SYMOP (IC_RIGHT (ic)) &&
           OP_SYMBOL (IC_RIGHT (ic))->remat &&
-          bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1)
+          bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1 &&
+          !OP_SYMBOL (IC_RESULT (ic))->_isparm)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
@@ -1998,7 +1996,8 @@ packRegisters (eBBlock ** ebpp, int blockno)
       if (ic->op == CAST &&
           IS_SYMOP(IC_RIGHT(ic)) &&
           OP_SYMBOL(IC_RIGHT(ic))->remat &&
-          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1)
+          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 &&
+          !OP_SYMBOL (IC_RESULT (ic))->_isparm)
         {
           sym_link *to_type = operandType(IC_LEFT(ic));
           sym_link *from_type = operandType(IC_RIGHT(ic));
@@ -2214,7 +2213,7 @@ hc08_oldralloc (ebbIndex * ebbi)
      so we compute them again */
   recomputeLiveRanges (ebbs, count, FALSE);
 
-  if (options.dump_pack)
+  if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_PACK, ebbi);
 
   /* first determine for each live range the number of
@@ -2259,7 +2258,7 @@ hc08_oldralloc (ebbIndex * ebbi)
       redoStackOffsets ();
     }
 
-  if (options.dump_rassgn)
+  if (options.dump_i_code)
     {
       dumpEbbsToFileExt (DUMP_RASSGN, ebbi);
       dumpLiveRanges (DUMP_LRANGE, liveRanges);
@@ -2424,7 +2423,7 @@ hc08_ralloc (ebbIndex * ebbi)
      so we compute them again */
   recomputeLiveRanges (ebbs, count, FALSE);
 
-  if (options.dump_pack)
+  if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_PACK, ebbi);
 
   /* first determine for each live range the number of
@@ -2454,17 +2453,13 @@ hc08_ralloc (ebbIndex * ebbi)
       _G.dataExtend = 0;
     }
 
-  /* after that create the register mask
-     for each of the instruction */
-  createRegMask (ebbs, count);
-
   /* redo that offsets for stacked automatic variables */
   if (currFunc)
     {
       redoStackOffsets ();
     }
 
-  if (options.dump_rassgn)
+  if (options.dump_i_code)
     {
       dumpEbbsToFileExt (DUMP_RASSGN, ebbi);
       dumpLiveRanges (DUMP_LRANGE, liveRanges);

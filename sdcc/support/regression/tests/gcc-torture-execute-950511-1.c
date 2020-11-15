@@ -11,8 +11,8 @@
 void
 testTortureExecute (void)
 {
-// TODO: Enable when sdcc supports long long constants!
-#if 0
+#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
+
   unsigned long long xx;
   unsigned long long *x = (unsigned long long *) &xx;
 
@@ -21,6 +21,7 @@ testTortureExecute (void)
   if (*x != 9)
     ASSERT (0);
   return;
+
 #endif
 }
 

@@ -40,17 +40,19 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  */
 
 int
-cl_51core::inst_orl_c_bit(uchar code)
+cl_51core::instruction_72/*inst_orl_c_bit*/(t_mem/*uchar*/ code)
 {
   uchar bitaddr;
 
-  t_addr a;
-  t_mem m;
-  class cl_address_space *mem;
-  mem= bit2mem(bitaddr= fetch(), &a, &m);
-  SFR_SET_C(SFR_GET_C ||
-	    (mem->read(a) & m));
+  //t_addr a;
+  //t_mem m;
+  //class cl_address_space *mem;
+  bitaddr= fetch();
+  //mem= bit2mem(bitaddr, &a, &m);
+  /*SFR_SET_C(*/bits->set(0xd7,/*SFR_GET_C*/bits->get(0xd7) ||
+	    /*(mem->read(a) & m)*/bits->read(bitaddr));
   tick(1);
+  vc.rd++;
   return(resGO);
 }
 
@@ -62,16 +64,18 @@ cl_51core::inst_orl_c_bit(uchar code)
  */
 
 int
-cl_51core::inst_anl_c_bit(uchar code)
+cl_51core::instruction_82/*inst_anl_c_bit*/(t_mem/*uchar*/ code)
 {
-  t_mem m;
-  t_addr a;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  SFR_SET_C(SFR_GET_C &&
-	    (mem->read(a) & m));
+  //t_mem m;
+  //t_addr a;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch(), c= bits->get(0xd7);
+  
+  //mem= bit2mem(bitaddr, &a, &m);
+  /*SFR_SET_C*/bits->set(0xd7,/*SFR_GET_C*/c &&
+	    /*(mem->read(a) & m)*/bits->read(bitaddr));
   tick(1);
+  vc.rd++;
   return(resGO);
 }
 
@@ -83,19 +87,23 @@ cl_51core::inst_anl_c_bit(uchar code)
  */
 
 int
-cl_51core::inst_mov_bit_c(uchar code)
+cl_51core::instruction_92/*inst_mov_bit_c*/(t_mem/*uchar*/ code)
 {
-  t_addr a;
-  t_mem m, d;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  d= mem->read(a, HW_PORT);
+  //t_addr a;
+  //t_mem m, d;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch();
+  
+  //mem= bit2mem(bitaddr, &a, &m);
+  /*d= mem->read(a, HW_PORT);
   if (SFR_GET_C)
     mem->write(a, d|m);
   else
-    mem->write(a, d&~m);
+  mem->write(a, d&~m);*/
+  bits->write(bitaddr, /*SFR_GET_C*/bits->get(0xd7));
   tick(1);
+  vc.rd++;
+  vc.wr++;
   return(resGO);
 }
 
@@ -107,14 +115,18 @@ cl_51core::inst_mov_bit_c(uchar code)
  */
 
 int
-cl_51core::inst_mov_c_bit(uchar code)
+cl_51core::instruction_a2/*inst_mov_c_bit*/(t_mem/*uchar*/ code)
 {
-  t_addr a;
-  t_mem m;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  SFR_SET_C(mem->read(a) & m);
+  //t_addr a;
+  //t_mem m;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch(), x;
+  
+  //mem= bit2mem(bitaddr, &a, &m);
+  //SFR_SET_C(/*mem->read(a) & m*/bits->read(bitaddr));
+  x= bits->read(bitaddr);
+  bits->set(0xd7, x);
+  vc.rd++;
   return(resGO);
 }
 
@@ -126,16 +138,18 @@ cl_51core::inst_mov_c_bit(uchar code)
  */
 
 int
-cl_51core::inst_orl_c_Sbit(uchar code)
+cl_51core::instruction_a0/*inst_orl_c_Sbit*/(t_mem/*uchar*/ code)
 {
-  t_mem m;
-  t_addr a;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  SFR_SET_C(SFR_GET_C ||
-	    !(mem->read(a) & m));
+  //t_mem m;
+  //t_addr a;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch();
+  
+  //mem= bit2mem(fetch(), &a, &m);
+  /*SFR_SET_C(*/bits->set(0xd7, /*SFR_GET_C*/bits->get(0xd7) ||
+			  !(/*mem->read(a) & m*/bits->read(bitaddr)));
   tick(1);
+  vc.rd++;
   return(resGO);
 }
 
@@ -147,16 +161,18 @@ cl_51core::inst_orl_c_Sbit(uchar code)
  */
 
 int
-cl_51core::inst_anl_c_Sbit(uchar code)
+cl_51core::instruction_b0/*inst_anl_c_Sbit*/(t_mem/*uchar*/ code)
 {
-  t_mem m;
-  t_addr a;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  SFR_SET_C(SFR_GET_C &&
-	    !(mem->read(a) & m));
+  //t_mem m;
+  //t_addr a;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch();
+    
+  //mem= bit2mem(fetch(), &a, &m);
+  /*SFR_SET_C(*/bits->set(0xd7, /*SFR_GET_C*/bits->get(0xd7) &&
+			  !(/*mem->read(a) & m*/bits->read(bitaddr)));
   tick(1);
+  vc.rd++;
   return(resGO);
 }
 
@@ -168,15 +184,20 @@ cl_51core::inst_anl_c_Sbit(uchar code)
  */
 
 int
-cl_51core::inst_cpl_bit(uchar code)
+cl_51core::instruction_b2/*inst_cpl_bit*/(t_mem/*uchar*/ code)
 {
-  t_addr a;
-  t_mem m, d;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  d= mem->read(a, HW_PORT);
-  mem->write(a, d^m);
+  //t_addr a;
+  //t_mem m, d;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch(), b;
+  
+  //mem= bit2mem(fetch(), &a, &m);
+  //d= mem->read(a, HW_PORT);
+  //mem->write(a, d^m);
+  b= bits->/*read*/get(bitaddr);
+  bits->write(bitaddr, !b);
+  vc.rd++;
+  vc.wr++;
   return(resGO);
 }
 
@@ -188,9 +209,12 @@ cl_51core::inst_cpl_bit(uchar code)
  */
 
 int
-cl_51core::inst_cpl_c(uchar code)
+cl_51core::instruction_b3/*inst_cpl_c*/(t_mem/*uchar*/ code)
 {
-  psw->write(psw->read() ^ bmCY);
+  //psw->write(psw->read() ^ bmCY);
+  bits->write(0xd7, !bits->read(0xd7));
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -202,15 +226,20 @@ cl_51core::inst_cpl_c(uchar code)
  */
 
 int
-cl_51core::inst_clr_bit(uchar code)
+cl_51core::instruction_c2/*inst_clr_bit*/(t_mem/*uchar*/ code)
 {
-  t_addr a;
-  t_mem m;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  t_mem d= mem->read(a, HW_PORT);
-  mem->write(a, d&~m);
+  //t_addr a;
+  //t_mem m;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch();//, b;
+  
+  //b= bits->get(bitaddr);
+  //mem= bit2mem(bitaddr, &a, &m);
+  //t_mem d= mem->read(a, HW_PORT);
+  //mem->write(a, d&~m);
+  bits->write(bitaddr, 0);
+  vc.rd++;
+  vc.wr++;
   return(resGO);
 }
 
@@ -222,9 +251,10 @@ cl_51core::inst_clr_bit(uchar code)
  */
 
 int
-cl_51core::inst_clr_c(uchar code)
+cl_51core::instruction_c3/*inst_clr_c*/(t_mem/*uchar*/ code)
 {
-  psw->write(psw->read() & ~bmCY);
+  //psw->write(psw->read() & ~bmCY);
+  bits->write(0xd7, 0);
   return(resGO);
 }
 
@@ -236,15 +266,19 @@ cl_51core::inst_clr_c(uchar code)
  */
 
 int
-cl_51core::inst_setb_bit(uchar code)
+cl_51core::instruction_d2/*inst_setb_bit*/(t_mem/*uchar*/ code)
 {
-  t_addr a;
-  t_mem m, d;
-  class cl_address_space *mem;
-
-  mem= bit2mem(fetch(), &a, &m);
-  d= mem->read(a, HW_PORT);
-  mem->write(a, d|m);
+  //t_addr a;
+  //t_mem m, d;
+  //class cl_address_space *mem;
+  u8_t bitaddr= fetch();
+  
+  //mem= bit2mem(bitaddr, &a, &m);
+  //d= mem->read(a, HW_PORT);
+  //mem->write(a, d|m);
+  bits->write(bitaddr, 1);
+  vc.rd++;
+  vc.wr++;
   return(resGO);
 }
 
@@ -256,9 +290,10 @@ cl_51core::inst_setb_bit(uchar code)
  */
 
 int
-cl_51core::inst_setb_c(uchar code)
+cl_51core::instruction_d3/*inst_setb_c*/(t_mem/*uchar*/ code)
 {
-  psw->write(psw->read() | bmCY);
+  //psw->write(psw->read() | bmCY);
+  bits->write(0xd7, 1);
   return(resGO);
 }
 

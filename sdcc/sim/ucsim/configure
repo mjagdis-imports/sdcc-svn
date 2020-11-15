@@ -656,7 +656,6 @@ NMEDIT
 DSYMUTIL
 MANIFEST_TOOL
 ac_ct_AR
-AR
 DLLTOOL
 OBJDUMP
 LN_S
@@ -680,6 +679,8 @@ build_vendor
 build_cpu
 build
 LIBTOOL
+SREC_CAT
+AR
 STRIP
 RANLIB
 INSTALL_DATA
@@ -694,13 +695,20 @@ LDFLAGS
 CXXFLAGS
 CXX
 enable_serio
-enable_st7
-enable_stm8
-enable_xa
-enable_hc08
-enable_z80
-enable_avr
-enable_51
+enable_st7_port
+enable_stm8_port
+enable_xa_port
+enable_s08_port
+enable_hc08_port
+enable_tlcs_port
+enable_r3ka_port
+enable_r2k_port
+enable_gbz80_port
+enable_z180_port
+enable_z80_port
+enable_avr_port
+enable_ds390_port
+enable_mcs51_port
 enable_dlso
 enable_ucsim
 VERSIONP
@@ -727,6 +735,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -751,13 +760,20 @@ ac_user_opts='
 enable_option_checking
 enable_ucsim
 enable_dlso
-enable_51
-enable_avr
-enable_z80
-enable_hc08
-enable_xa
-enable_stm8
-enable_st7
+enable_mcs51_port
+enable_ds390_port
+enable_avr_port
+enable_z80_port
+enable_z180_port
+enable_gbz80_port
+enable_r2k_port
+enable_r3ka_port
+enable_tlcs_port
+enable_hc08_port
+enable_s08_port
+enable_xa_port
+enable_stm8_port
+enable_st7_port
 enable_serio
 enable_statistic
 enable_shared
@@ -822,6 +838,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE}'
@@ -1074,6 +1091,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1211,7 +1237,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1364,6 +1390,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1381,6 +1408,11 @@ _ACEOF
 
   cat <<\_ACEOF
 
+Program names:
+  --program-prefix=PREFIX            prepend PREFIX to installed program names
+  --program-suffix=SUFFIX            append SUFFIX to installed program names
+  --program-transform-name=PROGRAM   run sed PROGRAM on installed program names
+
 System types:
   --build=BUILD     configure for building on BUILD [guessed]
   --host=HOST       cross-compile to build programs to run on HOST [BUILD]
@@ -1397,13 +1429,20 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-ucsim          compile ucsim frontend
   --enable-dlso           compile dynamically loadable shared libraries
-  --disable-51            do not compile simulator for MCS51
-  --disable-avr           do not compile simulator for AVR
-  --disable-z80           do not compile simulator for Z80
-  --disable-hc08          do not compile simulator for hc08
-  --enable-xa             compile simulator for XA
-  --disable-stm8          do not compile simulator for stm8
-  --disable-st7           do not compile simulator for st7
+  --disable-mcs51-port    do not compile simulator for mcs51
+  --disable-ds390-port    do not compile simulator for ds390
+  --enable-avr-port       compile simulator for AVR
+  --disable-z80-port      do not compile simulator for z80
+  --disable-z180-port     do not compile simulator for z180
+  --disable-gbz80-port    do not compile simulator for gbz80
+  --disable-r2k-port      do not compile simulator for r2k
+  --disable-r3ka-port     do not compile simulator for r3ka
+  --disable-tlcs-port    do not compile simulator for TLCS
+  --disable-hc08-port     do not compile simulator for hc08
+  --disable-s08-port      do not compile simulator for s08
+  --enable-xa-port        compile simulator for xa
+  --disable-stm8-port     do not compile simulator for stm8
+  --enable-st7-port       compile simulator for st7
   --enable-serio          compile serio GUI tool (needs curses)
   --enable-statistic      compile statistical features (slower simulation)
   --enable-shared[=PKGS]  build shared libraries [default=yes]
@@ -2718,6 +2757,15 @@ cat >>confdefs.h <<_ACEOF
 #define VERSIONP $VERSIONP
 _ACEOF
 
+test "$program_prefix" != NONE &&
+  program_transform_name="s&^&$program_prefix&;$program_transform_name"
+# Use a double $ so make ignores it.
+test "$program_suffix" != NONE &&
+  program_transform_name="s&\$&$program_suffix&;$program_transform_name"
+# Double any \ or $.
+# By default was `s,x,x', remove it if useless.
+ac_script='s/[\\$]/&&/g;s/;s,x,x,$//'
+program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 
 # Some options
 #==============
@@ -2747,67 +2795,132 @@ else
   enable_dlso="no"
 fi
 
-# Check whether --enable-51 was given.
-if test "${enable_51+set}" = set; then :
-  enableval=$enable_51; if test $enable_51 != "no"; then
-    enable_51="yes"
+# Check whether --enable-mcs51-port was given.
+if test "${enable_mcs51_port+set}" = set; then :
+  enableval=$enable_mcs51_port; if test $enable_mcs51_port != "no"; then
+    enable_mcs51_port="yes"
 fi
 else
-  enable_51="yes"
+  enable_mcs51_port="yes"
 fi
 
-# Check whether --enable-avr was given.
-if test "${enable_avr+set}" = set; then :
-  enableval=$enable_avr; if test $enable_avr != "no"; then
-    enable_avr="yes"
+# Check whether --enable-ds390-port was given.
+if test "${enable_ds390_port+set}" = set; then :
+  enableval=$enable_ds390_port; if test $enable_ds390_port != "no"; then
+    enable_ds390_port="yes"
 fi
 else
-  enable_avr="yes"
+  enable_ds390_port="yes"
 fi
 
-# Check whether --enable-z80 was given.
-if test "${enable_z80+set}" = set; then :
-  enableval=$enable_z80; if test $enable_z80 != "no"; then
-    enable_z80="yes"
+# Check whether --enable-avr-port was given.
+if test "${enable_avr_port+set}" = set; then :
+  enableval=$enable_avr_port; if test $enable_avr_port != "no"; then
+    enable_avr_port="yes"
 fi
 else
-  enable_z80="yes"
+  enable_avr_port="no"
 fi
 
-# Check whether --enable-hc08 was given.
-if test "${enable_hc08+set}" = set; then :
-  enableval=$enable_hc08; if test $enable_hc08 != "no"; then
-    enable_hc08="yes"
+# Check whether --enable-z80-port was given.
+if test "${enable_z80_port+set}" = set; then :
+  enableval=$enable_z80_port; if test $enable_z80_port != "no"; then
+    enable_z80_port="yes"
 fi
 else
-  enable_hc08="yes"
+  enable_z80_port="yes"
 fi
 
-# Check whether --enable-xa was given.
-if test "${enable_xa+set}" = set; then :
-  enableval=$enable_xa; if test $enable_xa != "no"; then
-    enable_xa="yes"
+# Check whether --enable-z180-port was given.
+if test "${enable_z180_port+set}" = set; then :
+  enableval=$enable_z180_port; if test $enable_z180_port != "no"; then
+    enable_z180_port="yes"
 fi
 else
-  enable_xa="no"
+  enable_z180_port="yes"
 fi
 
-# Check whether --enable-stm8 was given.
-if test "${enable_stm8+set}" = set; then :
-  enableval=$enable_stm8; if test $enable_stm8 != "no"; then
-    enable_stm8="yes"
+# Check whether --enable-gbz80-port was given.
+if test "${enable_gbz80_port+set}" = set; then :
+  enableval=$enable_gbz80_port; if test $enable_gbz80_port != "no"; then
+    enable_gbz80_port="yes"
 fi
 else
-  enable_stm8="yes"
+  enable_gbz80_port="yes"
 fi
-# Check whether --enable-st7 was given.
-if test "${enable_st7+set}" = set; then :
-  enableval=$enable_st7; if test $enable_st7 != "no"; then
-    enable_st7="yes"
+
+# Check whether --enable-r2k-port was given.
+if test "${enable_r2k_port+set}" = set; then :
+  enableval=$enable_r2k_port; if test $enable_r2k_port != "no"; then
+    enable_r2k_port="yes"
 fi
 else
-  enable_st7="yes"
+  enable_r2k_port="yes"
 fi
+
+# Check whether --enable-r3ka-port was given.
+if test "${enable_r3ka_port+set}" = set; then :
+  enableval=$enable_r3ka_port; if test $enable_r3ka_port != "no"; then
+    enable_r3ka_port="yes"
+fi
+else
+  enable_r3ka_port="yes"
+fi
+
+# Check whether --enable-tlcs-port was given.
+if test "${enable_tlcs_port+set}" = set; then :
+  enableval=$enable_tlcs_port; if test $enable_tlcs_port != "no"; then
+    enable_tlcs_port="yes"
+fi
+else
+  enable_tlcs_port="yes"
+fi
+
+# Check whether --enable-hc08-port was given.
+if test "${enable_hc08_port+set}" = set; then :
+  enableval=$enable_hc08_port; if test $enable_hc08_port != "no"; then
+    enable_hc08_port="yes"
+fi
+else
+  enable_hc08_port="yes"
+fi
+
+# Check whether --enable-s08-port was given.
+if test "${enable_s08_port+set}" = set; then :
+  enableval=$enable_s08_port; if test $enable_s08_port != "no"; then
+    enable_s08_port="yes"
+fi
+else
+  enable_s08_port="yes"
+fi
+
+# Check whether --enable-xa-port was given.
+if test "${enable_xa_port+set}" = set; then :
+  enableval=$enable_xa_port; if test $enable_xa_port != "no"; then
+    enable_xa_port="yes"
+fi
+else
+  enable_xa_port="no"
+fi
+
+# Check whether --enable-stm8-port was given.
+if test "${enable_stm8_port+set}" = set; then :
+  enableval=$enable_stm8_port; if test $enable_stm8_port != "no"; then
+    enable_stm8_port="yes"
+fi
+else
+  enable_stm8_port="yes"
+fi
+
+# Check whether --enable-st7-port was given.
+if test "${enable_st7_port+set}" = set; then :
+  enableval=$enable_st7_port; if test $enable_st7_port  != "no"; then
+    enable_st7_port="yes"
+fi
+else
+  enable_st7_port="no"
+fi
+
 # Check whether --enable-serio was given.
 if test "${enable_serio+set}" = set; then :
   enableval=$enable_serio; if test $enable_serio != "no"; then
@@ -2816,6 +2929,14 @@ fi
 else
   enable_serio="no"
 fi
+
+
+
+
+
+
+
+
 
 
 
@@ -3700,8 +3821,9 @@ else
 fi
 
 
-# Extract the first word of "strip", so it can be a program name with args.
-set dummy strip; ac_word=$2
+if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}strip", so it can be a program name with args.
+set dummy ${ac_tool_prefix}strip; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
 if ${ac_cv_prog_STRIP+:} false; then :
@@ -3717,7 +3839,7 @@ do
   test -z "$as_dir" && as_dir=.
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_STRIP="strip"
+    ac_cv_prog_STRIP="${ac_tool_prefix}strip"
     $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -3725,7 +3847,6 @@ done
   done
 IFS=$as_save_IFS
 
-  test -z "$ac_cv_prog_STRIP" && ac_cv_prog_STRIP=":"
 fi
 fi
 STRIP=$ac_cv_prog_STRIP
@@ -3737,6 +3858,244 @@ else
 $as_echo "no" >&6; }
 fi
 
+
+fi
+if test -z "$ac_cv_prog_STRIP"; then
+  ac_ct_STRIP=$STRIP
+  # Extract the first word of "strip", so it can be a program name with args.
+set dummy strip; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_STRIP+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_STRIP"; then
+  ac_cv_prog_ac_ct_STRIP="$ac_ct_STRIP" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_STRIP="strip"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_STRIP=$ac_cv_prog_ac_ct_STRIP
+if test -n "$ac_ct_STRIP"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_STRIP" >&5
+$as_echo "$ac_ct_STRIP" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_STRIP" = x; then
+    STRIP=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    STRIP=$ac_ct_STRIP
+  fi
+else
+  STRIP="$ac_cv_prog_STRIP"
+fi
+
+if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}ar", so it can be a program name with args.
+set dummy ${ac_tool_prefix}ar; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_AR+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$AR"; then
+  ac_cv_prog_AR="$AR" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_AR="${ac_tool_prefix}ar"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+AR=$ac_cv_prog_AR
+if test -n "$AR"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $AR" >&5
+$as_echo "$AR" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_AR"; then
+  ac_ct_AR=$AR
+  # Extract the first word of "ar", so it can be a program name with args.
+set dummy ar; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_AR+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_AR"; then
+  ac_cv_prog_ac_ct_AR="$ac_ct_AR" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_AR="ar"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_AR=$ac_cv_prog_ac_ct_AR
+if test -n "$ac_ct_AR"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_AR" >&5
+$as_echo "$ac_ct_AR" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_AR" = x; then
+    AR=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    AR=$ac_ct_AR
+  fi
+else
+  AR="$ac_cv_prog_AR"
+fi
+
+if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}srec_cat", so it can be a program name with args.
+set dummy ${ac_tool_prefix}srec_cat; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_SREC_CAT+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$SREC_CAT"; then
+  ac_cv_prog_SREC_CAT="$SREC_CAT" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_SREC_CAT="${ac_tool_prefix}srec_cat"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+SREC_CAT=$ac_cv_prog_SREC_CAT
+if test -n "$SREC_CAT"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $SREC_CAT" >&5
+$as_echo "$SREC_CAT" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_SREC_CAT"; then
+  ac_ct_SREC_CAT=$SREC_CAT
+  # Extract the first word of "srec_cat", so it can be a program name with args.
+set dummy srec_cat; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_SREC_CAT+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_SREC_CAT"; then
+  ac_cv_prog_ac_ct_SREC_CAT="$ac_ct_SREC_CAT" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_SREC_CAT="srec_cat"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_SREC_CAT=$ac_cv_prog_ac_ct_SREC_CAT
+if test -n "$ac_ct_SREC_CAT"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_SREC_CAT" >&5
+$as_echo "$ac_ct_SREC_CAT" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_SREC_CAT" = x; then
+    SREC_CAT=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    SREC_CAT=$ac_ct_SREC_CAT
+  fi
+else
+  SREC_CAT="$ac_cv_prog_SREC_CAT"
+fi
 
 
 enable_dlopen=yes
@@ -15418,13 +15777,36 @@ fi
 
 done
 
-for ac_header in getopt.h unistd.h termios.h
+for ac_header in getopt.h
 do :
-  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
-ac_fn_cxx_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
-if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "getopt.h" "ac_cv_header_getopt_h" "$ac_includes_default"
+if test "x$ac_cv_header_getopt_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
+#define HAVE_GETOPT_H 1
+_ACEOF
+
+fi
+
+done
+
+for ac_header in unistd.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "unistd.h" "ac_cv_header_unistd_h" "$ac_includes_default"
+if test "x$ac_cv_header_unistd_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_UNISTD_H 1
+_ACEOF
+
+fi
+
+done
+
+for ac_header in termios.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "termios.h" "ac_cv_header_termios_h" "$ac_includes_default"
+if test "x$ac_cv_header_termios_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_TERMIOS_H 1
 _ACEOF
 
 fi
@@ -15900,6 +16282,51 @@ _ACEOF
 
 fi
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for nanosleep in -lrt" >&5
+$as_echo_n "checking for nanosleep in -lrt... " >&6; }
+if ${ac_cv_lib_rt_nanosleep+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lrt  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char nanosleep ();
+int
+main ()
+{
+return nanosleep ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_rt_nanosleep=yes
+else
+  ac_cv_lib_rt_nanosleep=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_rt_nanosleep" >&5
+$as_echo "$ac_cv_lib_rt_nanosleep" >&6; }
+if test "x$ac_cv_lib_rt_nanosleep" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBRT 1
+_ACEOF
+
+  LIBS="-lrt $LIBS"
+
+fi
+
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
@@ -15962,7 +16389,7 @@ fi
 #curses_ok="no")
 #,
 #-lcurses)
-
+CURSES_LIBS=""
 if test $curses_h_ok != yes; then
   panel_ok="no"
   curses_ok="no"
@@ -16005,7 +16432,7 @@ fi
 $as_echo "$ac_cv_lib_panel_panel_above" >&6; }
 if test "x$ac_cv_lib_panel_panel_above" = xyes; then :
   panel_ok="yes"
-    curses_ok="yes"
+    curses_ok="no"
     CURSES_LIBS="-lpanel"
 else
   panel_ok="no"
@@ -16053,7 +16480,7 @@ fi
 $as_echo "$ac_cv_lib_curses_nl" >&6; }
 if test "x$ac_cv_lib_curses_nl" = xyes; then :
   curses_ok="yes"
-      CURSES_LIBS="-lcurses"
+      CURSES_LIBS="${CURSES_LIBS} -lcurses"
 else
   curses_ok="no"
 fi
@@ -16099,7 +16526,7 @@ fi
 $as_echo "$ac_cv_lib_ncurses_nl" >&6; }
 if test "x$ac_cv_lib_ncurses_nl" = xyes; then :
   curses_ok="yes"
-      CURSES_LIBS="-lncurses"
+      CURSES_LIBS="${CURSES_LIBS} -lncurses"
 else
   curses_ok="no"
 fi
@@ -16110,47 +16537,6 @@ fi
 
 
 
-
-for ac_func in vprintf
-do :
-  ac_fn_cxx_check_func "$LINENO" "vprintf" "ac_cv_func_vprintf"
-if test "x$ac_cv_func_vprintf" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_VPRINTF 1
-_ACEOF
-
-ac_fn_cxx_check_func "$LINENO" "_doprnt" "ac_cv_func__doprnt"
-if test "x$ac_cv_func__doprnt" = xyes; then :
-
-$as_echo "#define HAVE_DOPRNT 1" >>confdefs.h
-
-fi
-
-fi
-done
-
-
-for ac_func in vsnprintf
-do :
-  ac_fn_cxx_check_func "$LINENO" "vsnprintf" "ac_cv_func_vsnprintf"
-if test "x$ac_cv_func_vsnprintf" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_VSNPRINTF 1
-_ACEOF
-
-fi
-done
-
-for ac_func in _vsnprintf
-do :
-  ac_fn_cxx_check_func "$LINENO" "_vsnprintf" "ac_cv_func__vsnprintf"
-if test "x$ac_cv_func__vsnprintf" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE__VSNPRINTF 1
-_ACEOF
-
-fi
-done
 
 for ac_func in vasprintf
 do :
@@ -16163,36 +16549,13 @@ _ACEOF
 fi
 done
 
-for ac_func in strlen strcpy strcat strstr strcmp strerror strtok strdup
+for ac_func in strerror strdup
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_cxx_check_func "$LINENO" "$ac_func" "$as_ac_var"
 if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
   cat >>confdefs.h <<_ACEOF
 #define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
-_ACEOF
-
-fi
-done
-
-for ac_func in strchr memcpy
-do :
-  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
-ac_fn_cxx_check_func "$LINENO" "$ac_func" "$as_ac_var"
-if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
-  cat >>confdefs.h <<_ACEOF
-#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
-_ACEOF
-
-fi
-done
-
-for ac_func in fgets
-do :
-  ac_fn_cxx_check_func "$LINENO" "fgets" "ac_cv_func_fgets"
-if test "x$ac_cv_func_fgets" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_FGETS 1
 _ACEOF
 
 fi
@@ -17054,6 +17417,12 @@ $as_echo_n "checking type name for dword... " >&6; }
 TYPE_DWORD=`type_name 4`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_DWORD" >&5
 $as_echo "$TYPE_DWORD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for qword" >&5
+$as_echo_n "checking type name for qword... " >&6; }
+TYPE_QWORD=`type_name 8`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_QWORD" >&5
+$as_echo "$TYPE_QWORD" >&6; }
+
 
 cat >>confdefs.h <<_ACEOF
 #define TYPE_BYTE $TYPE_BYTE
@@ -17071,19 +17440,12 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define TYPE_UBYTE unsigned $TYPE_BYTE
+#define TYPE_QWORD $TYPE_QWORD
 _ACEOF
 
-
-cat >>confdefs.h <<_ACEOF
-#define TYPE_UWORD unsigned $TYPE_WORD
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
-#define TYPE_UDWORD unsigned $TYPE_DWORD
-_ACEOF
-
+#AC_DEFINE_UNQUOTED(TYPE_UBYTE, [unsigned $TYPE_BYTE], [XXX])
+#AC_DEFINE_UNQUOTED(TYPE_UWORD, [unsigned $TYPE_WORD], [XXX])
+#AC_DEFINE_UNQUOTED(TYPE_UDWORD, [unsigned $TYPE_DWORD], [XXX])
 
 
 
@@ -17115,7 +17477,7 @@ _ACEOF
 # Generating output files
 # ===========================================================================
 
-ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile st7.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
+ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile tlcs.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile st7.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -18202,6 +18564,7 @@ do
     "s51.src/Makefile") CONFIG_FILES="$CONFIG_FILES s51.src/Makefile" ;;
     "avr.src/Makefile") CONFIG_FILES="$CONFIG_FILES avr.src/Makefile" ;;
     "z80.src/Makefile") CONFIG_FILES="$CONFIG_FILES z80.src/Makefile" ;;
+    "tlcs.src/Makefile") CONFIG_FILES="$CONFIG_FILES tlcs.src/Makefile" ;;
     "hc08.src/Makefile") CONFIG_FILES="$CONFIG_FILES hc08.src/Makefile" ;;
     "xa.src/Makefile") CONFIG_FILES="$CONFIG_FILES xa.src/Makefile" ;;
     "stm8.src/Makefile") CONFIG_FILES="$CONFIG_FILES stm8.src/Makefile" ;;
@@ -19603,4 +19966,4 @@ fi
 #gui.src/portmon.src/Makefile
 
 
-# End of configure/configure.in
+# End of configure.ac

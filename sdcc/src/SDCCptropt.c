@@ -8,19 +8,19 @@
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; either version 2, or (at your option) any
    later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-   
+
    In other words, you are welcome to use, share and improve this program.
    You are forbidden to forbid anyone else to use, share and improve
-   what you give them.   Help stamp out software-hoarding!  
+   what you give them.   Help stamp out software-hoarding!
 -------------------------------------------------------------------------*/
 
 #include "common.h"
@@ -54,22 +54,22 @@ findPointerGetSet (iCode * sic, operand * op)
 }
 
 static int
-pattern1 (iCode * sic)
+pattern1 (iCode * sic, eBBlock * ebb)
 {
   /* this is what we do. look for sequences like
 
      iTempX := _SOME_POINTER_;
      iTempY := _SOME_POINTER_ + nn ;   nn  = sizeof (pointed to object)      sic->next
      _SOME_POINTER_ := iTempY;                                               sic->next->next
-     either       
+     either
      iTempZ := @[iTempX];                                                    sic->next->next->next
      or
      *(iTempX) := ..something..                                              sic->next->next->next
      if we find this then transform this to
      iTempX := _SOME_POINTER_;
-     either       
+     either
      iTempZ := @[iTempX];
-     or 
+     or
      *(iTempX) := ..something..
      iTempY := _SOME_POINTER_ + nn ;   nn  = sizeof (pointed to object)
      _SOME_POINTER_ := iTempY; */
@@ -106,13 +106,15 @@ pattern1 (iCode * sic)
   /* and put them after the pointer get/set icode */
   if ((st->next = pgs->next))
     st->next->prev = st;
+  if (!st->next)
+    ebb->ech = st;
   pgs->next = sh;
   sh->prev = pgs;
   return 1;
 }
 
 static int
-pattern2 (iCode * sic)
+pattern2 (iCode * sic, eBBlock * ebb)
 {
   /* this is what we do. look for sequences like
 
@@ -120,18 +122,18 @@ pattern2 (iCode * sic)
      iTempY := _SOME_POINTER_ + nn ;   nn  = sizeof (pointed to object)      sic->next
      iTempK := iTempY;                                                       sic->next->next
      _SOME_POINTER_ := iTempK;                                               sic->next->next->next
-     either       
+     either
      iTempZ := @[iTempX];                                                    sic->next->next->next->next
      or
      *(iTempX) := ..something..                                              sic->next->next->next->next
      if we find this then transform this to
      iTempX := _SOME_POINTER_;
-     either       
+     either
      iTempZ := @[iTempX];
-     or 
+     or
      *(iTempX) := ..something..
      iTempY := _SOME_POINTER_ + nn ;   nn  = sizeof (pointed to object)
-     iTempK := iTempY;       
+     iTempK := iTempY;
      _SOME_POINTER_ := iTempK; */
 
   /* sounds simple enough so let's start , here I use negative
@@ -175,6 +177,8 @@ pattern2 (iCode * sic)
   /* and put them after the pointer get/set icode */
   if ((st->next = pgs->next))
     st->next->prev = st;
+  if (!st->next)
+    ebb->ech = st;
   pgs->next = sh;
   sh->prev = pgs;
   return 1;
@@ -185,11 +189,11 @@ pattern2 (iCode * sic)
 /*                     this will help register allocation amongst others */
 /*-----------------------------------------------------------------------*/
 void
-ptrPostIncDecOpt (iCode * sic)
+ptrPostIncDecOpt (iCode * sic, eBBlock * ebb)
 {
-  if (pattern1 (sic))
+  if (pattern1 (sic, ebb))
     return;
-  pattern2 (sic);
+  pattern2 (sic, ebb);
 }
 
 /*-----------------------------------------------------------------------*/
@@ -332,7 +336,12 @@ ptrPseudoSymSafe (symbol * sym, iCode * dic)
           /* Check for hazard #2 */
           else if (POINTER_SET (ic))
             {
-              symbol *ptrsym2 = OP_SYMBOL (IC_RESULT (ic));
+              symbol *ptrsym2;
+
+              if (!IS_SYMOP (IC_RESULT (ic)))
+                return 0;
+
+              ptrsym2 = OP_SYMBOL (IC_RESULT (ic));
 
               if (ptrsym2->remat)
                 {
@@ -351,7 +360,12 @@ ptrPseudoSymSafe (symbol * sym, iCode * dic)
             }
           else if (IC_RESULT (ic))
             {
-              symbol *rsym = OP_SYMBOL (IC_RESULT (ic));
+              symbol *rsym;
+
+              if (!IS_SYMOP (IC_RESULT (ic)))
+                return 0;
+
+              rsym = OP_SYMBOL (IC_RESULT (ic));
 
               /* Make sure there is no conflict with another pseudo symbol */
               if (rsym->psbase == basesym)

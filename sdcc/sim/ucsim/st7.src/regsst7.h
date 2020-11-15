@@ -33,31 +33,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "ddconfig.h"
 
 
-struct t_regpair
-{
-#ifdef WORDS_BIGENDIAN
-  TYPE_UBYTE h;
-  TYPE_UBYTE l;
-#else
-  TYPE_UBYTE l;
-  TYPE_UBYTE h;
-#endif
-};
-
-#define DEF_REGPAIR(BIGNAME,smallname) \
-  union { \
-    TYPE_UWORD BIGNAME; \
-    struct t_regpair smallname; \
-  }
-
 struct t_regs
 {
-  TYPE_UBYTE A;
-  TYPE_UBYTE X;
-  TYPE_UBYTE Y;
-  TYPE_UWORD SP;
-  TYPE_UBYTE CC;
-  TYPE_UBYTE VECTOR;
+  u8_t A;
+  u8_t X;
+  u8_t Y;
+  u16_t SP;
+  u8_t CC;
+  u8_t VECTOR;
 };
 
 #define BIT_C	0x01  // carry status(out of bit 7)

@@ -42,7 +42,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  */
 
 int
-cl_51core::inst_rr(uchar code)
+cl_51core::instruction_03/*inst_rr*/(t_mem/*uchar*/ code)
 {
   uchar ac;
 
@@ -51,6 +51,8 @@ cl_51core::inst_rr(uchar code)
     acc->write((ac >> 1) | 0x80);
   else
     acc->write(ac >> 1);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -62,17 +64,19 @@ cl_51core::inst_rr(uchar code)
  */
 
 int
-cl_51core::inst_rrc(uchar code)
+cl_51core::instruction_13/*inst_rrc*/(t_mem/*uchar*/ code)
 {
   bool cy;
   uchar ac;
 
-  cy= SFR_GET_C;
-  SFR_SET_C((ac= acc->read()) & 0x01);
+  cy= /*SFR_GET_C*/bits->get(0xd7);
+  /*SFR_SET_C(*/bits->set(0xd7, (ac= acc->read()) & 0x01);
   ac>>= 1;
   if (cy)
     ac|= 0x80;
   sfr->write(ACC, ac);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -84,7 +88,7 @@ cl_51core::inst_rrc(uchar code)
  */
 
 int
-cl_51core::inst_rl(uchar code)
+cl_51core::instruction_23/*inst_rl*/(t_mem/*uchar*/ code)
 {
   uchar ac;
 
@@ -93,6 +97,8 @@ cl_51core::inst_rl(uchar code)
     acc->write((ac << 1 ) | 0x01);
   else
     acc->write(ac << 1);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -104,10 +110,10 @@ cl_51core::inst_rl(uchar code)
  */
 
 int
-cl_51core::inst_add_a_Sdata(uchar code)
+cl_51core::instruction_24/*inst_add_a_Sdata*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool newC, newA, c6;
+  u8_t newC, newA, c6;
 
   data= fetch();
   ac  = acc->read();
@@ -115,9 +121,11 @@ cl_51core::inst_add_a_Sdata(uchar code)
   newA= ((ac&0x0f)+(data&0x0f)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)) & 0x80;
   acc->write(ac+data);
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -129,10 +137,10 @@ cl_51core::inst_add_a_Sdata(uchar code)
  */
 
 int
-cl_51core::inst_add_a_addr(uchar code)
+cl_51core::instruction_25/*inst_add_a_addr*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool newC, newA, c6;
+  u8_t newC, newA, c6;
   class cl_memory_cell *cell;
   t_addr a;
 
@@ -143,9 +151,11 @@ cl_51core::inst_add_a_addr(uchar code)
   newA= ((ac&0x0f)+(data&0x0f)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)) & 0x80;
   acc->write(ac+data);
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  vc.rd++;//= 2;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -157,22 +167,24 @@ cl_51core::inst_add_a_addr(uchar code)
  */
 
 int
-cl_51core::inst_add_a_Sri(uchar code)
+cl_51core::instruction_26/*inst_add_a_Sri*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool newC, newA, c6;
+  u8_t newC, newA, c6;
   class cl_memory_cell *cell;
 
-  cell= iram->get_cell(get_reg(code & 0x01)->read());
+  cell= iram->get_cell(R[code & 0x01]->read());
   ac  = acc->get();
   data= cell->read();
   newC= (((uint)ac+(uint)data) > 255)?0x80:0;
   newA= ((ac&0x0f)+(data&0x0f)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)) & 0x80;
   acc->write(ac+data);
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  vc.rd++;//= 3;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -184,20 +196,22 @@ cl_51core::inst_add_a_Sri(uchar code)
  */
 
 int
-cl_51core::inst_add_a_rn(uchar code)
+cl_51core::instruction_28/*inst_add_a_rn*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool newC, newA, c6;
+  u8_t newC, newA, c6;
 
-  data= get_reg(code & 0x07)->read();
+  data= R[code & 0x07]->read();
   ac  = acc->get();
   newC= (((uint)ac+(uint)data) > 255)?0x80:0;
   newA= ((ac&0x0f)+(data&0x0f)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)) & 0x80;
   acc->write(ac+data);
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  //vc.rd+= 2;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -209,17 +223,19 @@ cl_51core::inst_add_a_rn(uchar code)
  */
 
 int
-cl_51core::inst_rlc(uchar code)
+cl_51core::instruction_33/*inst_rlc*/(t_mem/*uchar*/ code)
 {
   bool cy;
   uchar ac;
 
-  cy= SFR_GET_C;
-  SFR_SET_C((ac= acc->get()) & 0x80);
+  cy= /*SFR_GET_C*/bits->get(0xd7);
+  /*SFR_SET_C(*/bits->set(0xd7, (ac= acc->get()) & 0x80);
   ac<<= 1;
   if (cy)
     ac|= 0x01;
   acc->write(ac);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -231,20 +247,22 @@ cl_51core::inst_rlc(uchar code)
  */
 
 int
-cl_51core::inst_addc_a_Sdata(uchar code)
+cl_51core::instruction_34/*inst_addc_a_Sdata*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool orgC, newC, newA, c6;
+  u8_t orgC, newC, newA, c6;
 
   data= fetch();
   ac  = acc->get();
-  newC= (((uint)ac+(uint)data+((orgC= SFR_GET_C)?1:0)) > 255)?0x80:0;
+  newC= (((uint)ac+(uint)data+((orgC= /*SFR_GET_C*/bits->get(0xd7))?1:0)) > 255)?0x80:0;
   newA= ((ac&0x0f)+(data&0x0f)+(orgC?1:0)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)+(orgC?1:0)) & 0x80;
   acc->write(ac + data + (orgC?1:0));
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -256,23 +274,25 @@ cl_51core::inst_addc_a_Sdata(uchar code)
  */
 
 int
-cl_51core::inst_addc_a_addr(uchar code)
+cl_51core::instruction_35/*inst_addc_a_addr*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool orgC, newC, newA, c6;
+  u8_t orgC, newC, newA, c6;
   class cl_memory_cell *cell;
   t_addr a;
 
   cell= get_direct(a= fetch());
   data= cell->read();
   ac  = acc->get();
-  newC= (((uint)ac+(uint)data+((orgC= SFR_GET_C)?1:0)) > 255)?0x80:0;
+  newC= (((uint)ac+(uint)data+((orgC= /*SFR_GET_C*/bits->get(0xd7))?1:0)) > 255)?0x80:0;
   newA= ((ac&0x0f)+(data&0x0f)+(orgC?1:0)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)+(orgC?1:0)) & 0x80;
   acc->write(ac + data + (orgC?1:0));
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  vc.rd++;//= 2;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -284,22 +304,24 @@ cl_51core::inst_addc_a_addr(uchar code)
  */
 
 int
-cl_51core::inst_addc_a_Sri(uchar code)
+cl_51core::instruction_36/*inst_addc_a_Sri*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool orgC, newC, newA, c6;
+  u8_t orgC, newC, newA, c6;
   class cl_memory_cell *cell;
   
-  cell= iram->get_cell(get_reg(code & 0x01)->read());
+  cell= iram->get_cell(R[code & 0x01]->read());
   ac  = acc->get();
   data= cell->read();
-  newC= (((uint)ac+(uint)data+((orgC= SFR_GET_C)?1:0)) > 255)?0x80:0;
+  newC= (((uint)ac+(uint)data+((orgC= /*SFR_GET_C*/bits->get(0xd7))?1:0)) > 255)?0x80:0;
   newA= ((ac&0x0f)+(data&0x0f)+(orgC?1:0)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)+(orgC?1:0)) & 0x80;
   acc->write(ac + data + (orgC?1:0));
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  vc.rd++;//= 3;
+  //vc.rd++;
   return(resGO);
 }
 
@@ -311,20 +333,22 @@ cl_51core::inst_addc_a_Sri(uchar code)
  */
 
 int
-cl_51core::inst_addc_a_rn(uchar code)
+cl_51core::instruction_38/*inst_addc_a_rn*/(t_mem/*uchar*/ code)
 {
   uchar data, ac;
-  bool orgC, newC, newA, c6;
+  u8_t orgC, newC, newA, c6;
 
-  data= get_reg(code & 0x07)->read();
+  data= R[code & 0x07]->read();
   ac  = acc->get();
-  newC= (((uint)ac+(uint)data+((orgC= SFR_GET_C)?1:0)) > 255)?0x80:0;
+  newC= (((uint)ac+(uint)data+((orgC= /*SFR_GET_C*/bits->get(0xd7))?1:0)) > 255)?0x80:0;
   newA= ((ac&0x0f)+(data&0x0f)+(orgC?1:0)) & 0xf0;
   c6  = ((ac&0x7f)+(data&0x7f)+(orgC?1:0)) & 0x80;
   acc->write(ac + data + (orgC?1:0));
-  SFR_SET_C(newC);
+  /*SFR_SET_C(*/bits->set(0xd7, newC);
   SFR_SET_BIT(newC ^ c6, PSW, bmOV);
   SFR_SET_BIT(newA, PSW, bmAC);
+  //vc.rd+= 2;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -336,7 +360,7 @@ cl_51core::inst_addc_a_rn(uchar code)
  */
 
 int
-cl_51core::inst_div_ab(uchar code)
+cl_51core::instruction_84/*inst_div_ab*/(t_mem/*uchar*/ code)
 {
   uchar temp, pw, b, ac;
 
@@ -353,6 +377,8 @@ cl_51core::inst_div_ab(uchar code)
     }
   psw->write(pw);
   tick(3);
+  vc.rd++;//= 2;
+  vc.wr++;//= 2;
   return(resGO);
 }
 
@@ -364,7 +390,7 @@ cl_51core::inst_div_ab(uchar code)
  */
 
 int
-cl_51core::inst_subb_a_Sdata(uchar code)
+cl_51core::instruction_94/*inst_subb_a_Sdata*/(t_mem/*uchar*/ code)
 {
   uchar data, ac, result, pw, c;
 
@@ -381,6 +407,8 @@ cl_51core::inst_subb_a_Sdata(uchar code)
 	       (ac>0x7f && data<0x80 && result<0x80))?bmOV:0) |
 	     (((ac&0x0f) < ((data+c)&0x0f) ||
 	       (c && ((data&0x0f)==0x0f)))?bmAC:0));
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -392,7 +420,7 @@ cl_51core::inst_subb_a_Sdata(uchar code)
  */
 
 int
-cl_51core::inst_subb_a_addr(uchar code)
+cl_51core::instruction_95/*inst_subb_a_addr*/(t_mem/*uchar*/ code)
 {
   uchar data, ac, result, pw, c;
   class cl_memory_cell *cell;
@@ -411,6 +439,8 @@ cl_51core::inst_subb_a_addr(uchar code)
 	     (ac>0x7f && data<0x80 && result<0x80))?bmOV:0) |
 	   (((ac&0x0f) < ((data+c)&0x0f) ||
 	     (c && ((data&0x0f)==0x0f)))?bmAC:0));
+  vc.rd++;//= 2;
+  //vc.rd++;
   return(resGO);
 }
 
@@ -422,12 +452,12 @@ cl_51core::inst_subb_a_addr(uchar code)
  */
 
 int
-cl_51core::inst_subb_a_Sri(uchar code)
+cl_51core::instruction_96/*inst_subb_a_Sri*/(t_mem/*uchar*/ code)
 {
   uchar data, ac, result, pw, c;
   class cl_memory_cell *cell;
 
-  cell= iram->get_cell(get_reg(code & 0x01)->read());
+  cell= iram->get_cell(R[code & 0x01]->read());
   data= cell->read();
   ac  = acc->get();
   result= ac-data;
@@ -441,6 +471,8 @@ cl_51core::inst_subb_a_Sri(uchar code)
 	       (ac>0x7f && data<0x80 && result<0x80))?bmOV:0) |
 	     (((ac&0x0f) < ((data+c)&0x0f) ||
 	       (c && ((data&0x0f)==0x0f)))?bmAC:0));
+  vc.rd++;//= 3;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -452,11 +484,11 @@ cl_51core::inst_subb_a_Sri(uchar code)
  */
 
 int
-cl_51core::inst_subb_a_rn(uchar code)
+cl_51core::instruction_98/*inst_subb_a_rn*/(t_mem/*uchar*/ code)
 {
   uchar data, ac, result, pw, c;
 
-  data= get_reg(code & 0x07)->read();
+  data= R[code & 0x07]->read();
   ac  = acc->get();
   result= ac-data;
   pw= psw->get();
@@ -469,6 +501,8 @@ cl_51core::inst_subb_a_rn(uchar code)
 	       (ac>0x7f && data<0x80 && result<0x80))?bmOV:0) |
 	     (((ac&0x0f) < ((data+c)&0x0f) ||
 	       (c && ((data&0x0f)==0x0f)))?bmAC:0));
+  //vc.rd+= 2;
+  //vc.wr++;
   return(resGO);
 }
 
@@ -480,7 +514,7 @@ cl_51core::inst_subb_a_rn(uchar code)
  */
 
 int
-cl_51core::inst_mul_ab(uchar code)
+cl_51core::instruction_a4/*inst_mul_ab*/(t_mem/*uchar*/ code)
 {
   uint temp, pw, ac, b, x;
 
@@ -492,6 +526,8 @@ cl_51core::inst_mul_ab(uchar code)
   SFR_SET_BIT(x/*sfr->get(B)*/, PSW, bmOV);
   SFR_SET_BIT(0, PSW, bmCY);
   tick(3);
+  vc.rd++;//= 2;
+  vc.wr++;//= 2;
   return(resGO);
 }
 
@@ -503,7 +539,7 @@ cl_51core::inst_mul_ab(uchar code)
  */
 
 int
-cl_51core::inst_da_a(uchar code)
+cl_51core::instruction_d4/*inst_da_a*/(t_mem/*uchar*/ code)
 {
   uchar ac, pw;
 
@@ -525,6 +561,8 @@ cl_51core::inst_da_a(uchar code)
     }
   acc->write(ac);
   psw->write(pw);
+  //vc.rd++;
+  //vc.wr++;
   return(resGO);
 }
 

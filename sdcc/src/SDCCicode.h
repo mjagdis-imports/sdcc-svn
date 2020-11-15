@@ -83,6 +83,7 @@ typedef struct operand
   unsigned int isGptr:1;            /* is a generic pointer  */
   unsigned int isParm:1;            /* is a parameter        */
   unsigned int isLiteral:1;         /* operand is literal    */
+  unsigned int isConstElimnated:1;  /* if original const casted to non-const */
 
   int key;
   union
@@ -196,6 +197,9 @@ typedef struct iCode
   int argreg;                   /* argument regno for SEND/RECEIVE */
   int eBBlockNum;               /* belongs to which eBBlock */
   char riu;                     /* after ralloc, the registers in use */
+  float count;                  /* An execution count or probability */
+  float pcount;                 /* For propagation of count */
+
   struct ast *tree;             /* ast node for this iCode (if not NULL) */
 }
 iCode;
@@ -316,6 +320,7 @@ iCodeTable *getTableEntry (int);
 int isOperandLiteral (const operand * const);
 operand *operandOperation (operand *, operand *, int, sym_link *);
 double operandLitValue (operand *);
+unsigned long long operandLitValueUll (operand *);
 operand *operandFromLit (double);
 operand *operandFromOperand (operand *);
 int isParameterToCall (value *, operand *);

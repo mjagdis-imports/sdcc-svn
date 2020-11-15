@@ -25,6 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
   
+/* $Id: sstm8.cc 604 2017-01-12 18:25:08Z drdani $ */
+
 // prj
 #include "globals.h"
 
@@ -40,12 +42,15 @@ main(int argc, char *argv[])
 {
   class cl_sim *sim;
 
+  cpus= cpus_stm8;
   application= new cl_app();
   application->init(argc, argv);
   sim= new cl_simstm8(application);
-  sim->init();
+  if (sim->init())
+    sim->state|= SIM_QUIT;
   application->set_simulator(sim);
   application->run();
+  application->done();
   delete application;
   return(0);
 }

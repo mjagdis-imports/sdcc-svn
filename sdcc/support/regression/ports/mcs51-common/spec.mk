@@ -7,8 +7,12 @@ SIM_TIMEOUT = 80
 ifdef SDCC_BIN_PATH
   S51 = $(SDCC_BIN_PATH)/s51$(EXEEXT)
 else
-  S51A = $(top_builddir)/sim/ucsim/s51.src/s51$(EXEEXT)
-  S51B = $(top_builddir)/bin/s51$(EXEEXT)
+  ifdef UCSIM_DIR
+    S51A = $(UCSIM_DIR)/s51.src/s51$(EXEEXT)
+  else
+    S51A = $(top_builddir)/sim/ucsim/s51.src/s51$(EXEEXT)
+    S51B = $(top_builddir)/bin/s51$(EXEEXT)
+  endif
 
   EMU = $(WINE) $(shell if [ -f $(S51A) ]; then echo $(S51A); else echo $(S51B); fi)
 
@@ -25,8 +29,8 @@ else
   DEV_NULL ?= /dev/null
 endif
 
-SDCCFLAGS += --less-pedantic -DREENTRANT=__reentrant
-LINKFLAGS += mcs51.lib libsdcc.lib liblong.lib libint.lib libfloat.lib
+SDCCFLAGS += --less-pedantic
+LINKFLAGS += mcs51.lib libsdcc.lib liblong.lib libint.lib libfloat.lib liblonglong.lib
 
 OBJEXT = .rel
 BINEXT = .ihx
@@ -61,7 +65,7 @@ $(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib $(PORTS_DIR)/mcs51-common/f
 	mkdir -p $(dir $@)
 	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(EMU) -t32 -S in=$(DEV_NULL),out=$@ $< < $(PORTS_DIR)/mcs51-common/uCsim.cmd > $(@:.out=.sim) \
 	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
-	python $(srcdir)/get_ticks.py < $(@:.out=.sim) >> $@
+	$(PYTHON) $(srcdir)/get_ticks.py < $(@:.out=.sim) >> $@
 	-grep -n FAIL $@ /dev/null || true
 
 _clean:

@@ -28,11 +28,11 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+    <Import Project="SDCC.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+    <Import Project="SDCC.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -184,15 +184,17 @@
 copy %(Identity) bin\sdldz80.exe /y &gt; nul
 copy %(Identity) bin\sdldrab.exe /y &gt; nul
 copy %(Identity) bin\sdldgb.exe /y &gt; nul
+copy %(Identity) bin\sdldstm8.exe /y &gt; nul
 copy %(Identity) bin\sdld6808.exe /y &gt; nul</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin\sdld.exe;bin\sdldz80.exe;bin\sdldrab.exe;bin\sdldgb.exe;bin\sdld6808.exe;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin\sdld.exe;bin\sdldz80.exe;bin\sdldrab.exe;bin\sdldstm8.exe;bin\sdldgb.exe;bin\sdld6808.exe;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating: %(Outputs)</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy %(Identity) bin\sdld.exe /y &gt; nul
 copy %(Identity) bin\sdldz80.exe /y &gt; nul
 copy %(Identity) bin\sdldrab.exe /y &gt; nul
 copy %(Identity) bin\sdldgb.exe /y &gt; nul
+copy %(Identity) bin\sdldstm8.exe /y &gt; nul
 copy %(Identity) bin\sdld6808.exe /y &gt; nul</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin\sdld.exe;bin\sdldz80.exe;bin\sdldrab.exe;bin\sdldgb.exe;bin\sdld6808.exe;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin\sdld.exe;bin\sdldz80.exe;bin\sdldrab.exe;bin\sdldstm8.exe;bin\sdldgb.exe;bin\sdld6808.exe;%(Outputs)</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating: %(Outputs)</Message>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </CustomBuild>

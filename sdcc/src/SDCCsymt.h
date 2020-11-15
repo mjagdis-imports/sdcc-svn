@@ -29,7 +29,9 @@
 #include "dbuf.h"
 
 #define INTNO_MAX 255           /* maximum allowed interrupt number */
+#define INTNO_TRAP INTNO_MAX
 #define INTNO_UNSPEC (INTNO_MAX+1)      /* interrupt number unspecified */
+
 
 #define BITVAR_PAD -1
 
@@ -175,6 +177,7 @@ typedef struct specifier
   unsigned b_isregparm:1;           /* is the first parameter     */
   unsigned b_isenum:1;              /* is an enumerated type      */
   unsigned b_bitUnnamed:1;          /* is an unnamed bit-field    */
+  unsigned b_needspar:1;            /* has to be a parameter      */
   unsigned _bitStart;               /* bit start position         */
   unsigned _bitLength;              /* bit length                 */
   unsigned _addr;                   /* address of symbol          */
@@ -183,7 +186,9 @@ typedef struct specifier
   union
   {                                   /* Values if constant or enum */
     TYPE_TARGET_INT v_int;            /* 2 bytes: int and char values            */
-    const char *v_char;               /*          character string               */
+    const char *v_char;               /*          char character string          */
+    const TYPE_TARGET_UINT *v_char16; /*          char16_t character string      */
+    const TYPE_TARGET_ULONG *v_char32;/*          char32_t character string      */
     TYPE_TARGET_UINT v_uint;          /* 2 bytes: unsigned int const value       */
     TYPE_TARGET_LONG v_long;          /* 4 bytes: long constant value            */
     TYPE_TARGET_ULONG v_ulong;        /* 4 bytes: unsigned long constant value   */
@@ -201,13 +206,13 @@ specifier;
 /* types of declarators */
 typedef enum
 {
-  POINTER = 0,                      /* pointer to near data */
-  FPOINTER,                         /* pointer to far data  */
-  CPOINTER,                         /* pointer to code space */
-  GPOINTER,                         /* _generic pointer     */
-  PPOINTER,                         /* paged area pointer   */
+  UPOINTER = 0,                     /* unknown pointer used only when parsing */
+  POINTER,                          /* pointer to near data  */
   IPOINTER,                         /* pointer to upper 128 bytes */
-  UPOINTER,                         /* unknown pointer used only when parsing */
+  PPOINTER,                         /* paged area pointer    */
+  FPOINTER,                         /* pointer to far data   */
+  CPOINTER,                         /* pointer to code space */
+  GPOINTER,                         /* generic pointer       */
   EEPPOINTER,                       /* pointer to eeprom     */
   ARRAY,
   FUNCTION
@@ -267,12 +272,15 @@ typedef struct sym_link
     unsigned inlinereq:1;           /* inlining requested                   */
     unsigned noreturn:1;            /* promised not to return               */
     unsigned smallc:1;              /* Parameters on stack are passed in reverse order */
+    unsigned z88dk_fastcall:1;      /* For the z80-related ports: Function has a single paramter of at most 32 bits that is passed in dehl */
+    unsigned z88dk_callee:1;        /* Stack pointer adjustment for parameters passed on the stack is done by the callee */
     unsigned intno;                 /* 1=Interrupt service routine          */
     short regbank;                  /* register bank 2b used                */
     unsigned builtin;               /* is a builtin function                */
     unsigned javaNative;            /* is a JavaNative Function (TININative ONLY) */
     unsigned overlay;               /* force parameters & locals into overlay segment */
     unsigned hasStackParms;         /* function has parameters on stack     */
+    bool preserved_regs[9];         /* Registers preserved by the function - may be an underestimate */
   } funcAttrs;
 
   struct sym_link *next;            /* next element on the chain  */
@@ -330,6 +338,7 @@ typedef struct symbol
   unsigned spildir:1;               /* spilt in direct space */
   unsigned ptrreg:1;                /* this symbol assigned to a ptr reg */
   unsigned noSpilLoc:1;             /* cannot be assigned a spil location */
+  unsigned div_flag_safe:1;         /* we know this function is safe to call with undocumented stm8 flag bit 6 set*/
   unsigned isstrlit;                /* is a string literal and it's usage count  */
   unsigned accuse;                  /* can be left in the accumulator
                                        On the Z80 accuse is divided into
@@ -442,6 +451,10 @@ extern sym_link *validateLink (sym_link * l,
 #define IFFUNC_ISOVERLAY(x) (IS_FUNC(x) && FUNC_ISOVERLAY(x))
 #define FUNC_ISSMALLC(x) (x->funcAttrs.smallc)
 #define IFFUNC_ISSMALLC(x) (IS_FUNC(x) && FUNC_ISSMALLC(x))
+#define FUNC_ISZ88DK_FASTCALL(x) (x->funcAttrs.z88dk_fastcall)
+#define IFFUNC_ISZ88DK_FASTCALL(x) (IS_FUNC(x) && FUNC_ISZ88DK_FASTCALL(x))
+#define FUNC_ISZ88DK_CALLEE(x) (x->funcAttrs.z88dk_callee)
+#define IFFUNC_ISZ88DK_CALLEE(x) (IS_FUNC(x) && FUNC_ISZ88DK_CALLEE(x))
 
 #define BANKED_FUNCTIONS        ( options.model == MODEL_HUGE || \
                                   ( (options.model == MODEL_LARGE || options.model == MODEL_MEDIUM) && \
@@ -454,6 +467,7 @@ extern sym_link *validateLink (sym_link * l,
 #define SPEC_LONGLONG(x) validateLink(x, "SPEC_LONGLONG", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_longlong
 #define SPEC_SHORT(x) validateLink(x, "SPEC_LONG", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_short
 #define SPEC_USIGN(x) validateLink(x, "SPEC_USIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_unsigned
+#define SPEC_SIGN(x) validateLink(x, "SPEC_USIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_signed
 #define SPEC_SCLS(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass
 #define SPEC_ENUM(x) validateLink(x, "SPEC_ENUM", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_isenum
 #define SPEC_OCLS(x) validateLink(x, "SPEC_OCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.oclass
@@ -467,7 +481,8 @@ extern sym_link *validateLink (sym_link * l,
 #define SPEC_CVAL(x) validateLink(x, "SPEC_CVAL", #x, SPECIFIER, __FILE__, __LINE__)->select.s.const_val
 #define SPEC_BSTR(x) validateLink(x, "SPEC_BSTR", #x, SPECIFIER, __FILE__, __LINE__)->select.s._bitStart
 #define SPEC_BLEN(x) validateLink(x, "SPEC_BLEN", #x, SPECIFIER, __FILE__, __LINE__)->select.s._bitLength
-#define SPEC_BUNNAMED(x) validateLink(x, "SPEC_BLEN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_bitUnnamed
+#define SPEC_BUNNAMED(x) validateLink(x, "SPEC_BUNNAMED", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_bitUnnamed
+#define SPEC_NEEDSPAR(x) validateLink(x, "SPEC_NEEDSPAR", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_needspar
 
 /* Sleaze: SPEC_ISR_SAVED_BANKS is only used on
  * function type symbols, which obviously cannot
@@ -577,9 +592,6 @@ extern symbol *fsdiv;
 extern symbol *fseq;
 extern symbol *fsneq;
 extern symbol *fslt;
-extern symbol *fslteq;
-extern symbol *fsgt;
-extern symbol *fsgteq;
 
 extern symbol *fps16x16_add;
 extern symbol *fps16x16_sub;
@@ -594,6 +606,8 @@ extern symbol *fps16x16_gteq;
 
 /* Dims: mul/div/mod, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED/BOTH */
 extern symbol *muldiv[3][4][4];
+/* 16 x 16 -> 32 multiplication SIGNED/UNSIGNED */
+extern symbol *muls16tos32[2];
 /* Dims: BYTE/WORD/DWORD/QWORD SIGNED/UNSIGNED */
 extern sym_link *multypes[4][2];
 /* Dims: to/from float, BYTE/WORD/DWORD/QWORD, SIGNED/USIGNED */
@@ -640,14 +654,14 @@ sym_link *mergeSpec (sym_link *, sym_link *, const char *name);
 sym_link *mergeDeclSpec (sym_link *, sym_link *, const char *name);
 symbol *reverseSyms (symbol *);
 sym_link *reverseLink (sym_link *);
-symbol *copySymbol (symbol *);
-symbol *copySymbolChain (symbol *);
+symbol *copySymbol (const symbol *);
+symbol *copySymbolChain (const symbol *);
 void printSymChain (symbol *, int);
 void printStruct (structdef *, int);
 char *genSymName (int);
 sym_link *getSpec (sym_link *);
 int compStructSize (int, structdef *);
-sym_link *copyLinkChain (sym_link *);
+sym_link *copyLinkChain (const sym_link *);
 int checkDecl (symbol *, int);
 void checkBasic (sym_link *, sym_link *);
 value *checkPointerIval (sym_link *, value *);
@@ -690,7 +704,7 @@ void addSym (bucket **, void *, char *, int, int, int checkType);
 void deleteSym (bucket **, void *, const char *);
 void *findSym (bucket **, void *, const char *);
 void *findSymWithLevel (bucket **, struct symbol *);
-void *findSymWithBlock (bucket **, struct symbol *, int);
+void *findSymWithBlock (bucket **, struct symbol *, int, int);
 void changePointer (sym_link * p);
 void checkTypeSanity (sym_link * etype, const char *name);
 sym_link *typeFromStr (const char *);

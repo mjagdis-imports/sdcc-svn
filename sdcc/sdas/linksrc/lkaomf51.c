@@ -210,7 +210,16 @@ void OutputName(char * name)
   int k;
   OutputByte((unsigned char)strlen(name));
   for(k=0; name[k]!=0; k++)
-      OutputByte((unsigned char)toupper(name[k]));
+    {
+      if (zflag)
+        {
+          OutputByte((unsigned char)toupper(name[k]));
+        }
+      else
+        {
+          OutputByte((unsigned char)name[k]);
+        }
+    }
 }
 
 void OutputChkSum(void)
@@ -295,7 +304,8 @@ void ParseRegisters(_symbol * symbol, const char * Registers)
           return;
         }
     }
-  symbol->Address = address[0] + procedure[symbol->Procedure].RegBank * 8;
+  if (0 <= symbol->Procedure && symbol->Procedure < numproc)
+    symbol->Address = address[0] + procedure[symbol->Procedure].RegBank * 8;
 }
 
 void OutputAOEMF51(void)
@@ -429,6 +439,8 @@ void OutputAOEMF51(void)
               OutputWord(procedure[k].BeginAdd); /*Offset*/
               for (i=procedure[k].BeginAdd; i<=procedure[k].EndAdd; i++)
                 {
+                  if (i < 0 || MEMSIZE <= i)
+                    continue;
                   OutputByte((unsigned char)ihxBuff[i]);
                   ihxBuff[i] -= 0x200;
                 }

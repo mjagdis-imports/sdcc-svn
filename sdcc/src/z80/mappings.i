@@ -5,6 +5,7 @@ static const ASM_MAPPING _asxxxx_gb_mapping[] = {
     { "areadata", ".area _%s" },
     { "areahome", ".area _%s" },
     { "functionlabeldef", "%s:" },
+    { "globalfunctionlabeldef", "%s::" },
     { "*hl", "(hl)" },
     { "di", "di" },
     { "ei", "ei" },
@@ -14,22 +15,9 @@ static const ASM_MAPPING _asxxxx_gb_mapping[] = {
     { "ldaspsp", "add sp, #%d" },
     { "*pair", "(%s)" },
     { "enter", "" },
+    { "enters", "" },
     { "enterx", 
       "add sp, #-%d" },
-    { "enterxl",
-                "ld hl,#-%d\n"
-                "add\thl,sp\n"
-                "ld\tsp,hl"
-    },
-    { "leave", ""
-    },
-    { "leavex", "add\tsp,#%d"
-    },
-    { "leavexl",
-                "ld hl,#%d\n"
-                "add\thl,sp\n"
-                "ld\tsp,hl"
-    },
     { "pusha", 
       "push af\n"
       "push bc\n"
@@ -81,21 +69,8 @@ static const ASM_MAPPING _asxxxx_z80_mapping[] = {
 		"push\tix\n"
 		"ld\tix,#0\n"
 		"add\tix,sp" },
-    { "enterx", 
-		"push\tix\n"
-		"ld\tix,#0\n"
-		"add\tix,sp\n"
-		"ld\thl,#-%d\n"
-		"add\thl,sp\n"
-		"ld\tsp,hl" 
-        },
-    { "leave", 
-		"pop\tix"
-    },
-    { "leavex", 
-		"ld sp,ix\n"
-		"pop\tix"
-    },
+    { "enters", 
+		"call\t___sdcc_enter_ix\n" },
     { "pusha", 
       		"push af\n"
       		"push\tbc\n"
@@ -148,21 +123,8 @@ static const ASM_MAPPING _asxxxx_r2k_mapping[] = {
 		"push\tix\n"
 		"ld\tix,#0\n"
 		"add\tix,sp" },
-    { "enterx", 
-		"push\tix\n"
-		"ld\tix,#0\n"
-		"add\tix,sp\n"
-		"ld\thl,#-%d\n"
-		"add\thl,sp\n"
-		"ld\tsp,hl" 
-        },
-    { "leave", 
-		"pop\tix"
-    },
-    { "leavex", 
-		"ld sp,ix\n"
-		"pop\tix"
-    },
+    { "enters", 
+		"call\t___sdcc_enter_ix\n" },
     { "pusha", 
       		"push af\n"
       		"push\tbc\n"
@@ -222,6 +184,7 @@ static const ASM_MAPPING _rgbds_mapping[] = {
       "; ---------------------------------"
     },
     { "functionlabeldef", "%s:" },
+    { "globalfunctionlabeldef", "%s::" },
     { "zero", "$00" },
     { "one", "$01" },
     { "area", "SECTION \"%s\",CODE" },
@@ -264,12 +227,7 @@ static const ASM_MAPPING _rgbds_gb_mapping[] = {
     { "ei", "ei" },
     { "adjustsp", "add sp,-%d" },
     { "enter", "" },
-    { "enterx", "add sp,-%d"
-    },
-    { "leave", ""
-    },
-    { "leavex", "add sp,%d"
-    },
+    { "enters", "" },
     { "ldahli", "ld a,[hl+]" },
     { "*hl", "[hl]" },
     { "ldahlsp", "ld hl,[sp+%d]" },
@@ -292,7 +250,7 @@ static const ASM_MAPPING _isas_mapping[] = {
       "\tCAPSOFF      ; Case sensitive\n"
       "\tISDMG        ; Gameboy mode\n"
       "_CODE\tGROUP\n"
-      "\t; We have to define these here as sdcc doesnt make them global by default\n"
+      "\t; We have to define these here as sdcc doesn't make them global by default\n"
       "\tGLOBAL __mulschar\n"
       "\tGLOBAL __muluchar\n"
       "\tGLOBAL __mulint\n"
@@ -313,6 +271,7 @@ static const ASM_MAPPING _isas_mapping[] = {
       "; ---------------------------------"
     },
     { "functionlabeldef", "%s:" },
+    { "globalfunctionlabeldef", "%s::" },
     { "zero", "$00" },
     { "one", "$01" },
     { "area", "%s\tGROUP" },
@@ -355,11 +314,7 @@ static const ASM_MAPPING _isas_gb_mapping[] = {
     { "ei", "ei" },
     { "adjustsp", "add sp,-%d" },
     { "enter", "" },
-    { "enterx", "add sp,-%d"
-    },
-    { "leave", ""
-    },
-    { "leavex", "add sp,%d\n" },
+    { "enters", "" },
     { "ldahli", "ld a,(hli)" },
     { "*hl", "(hl)" },
     { "ldahlsp", "ldhl sp,%d" },
@@ -398,6 +353,7 @@ static const ASM_MAPPING _z80asm_mapping[] = {
       "; ---------------------------------"
     },
     { "functionlabeldef", ".%s" },
+    { "globalfunctionlabeldef", ".%s" },
     { "zero", "$00" },
     { "one", "$01" },
     { "ascii", "DEFM \"%s\"" },
@@ -445,21 +401,8 @@ static const ASM_MAPPING _z80asm_z80_mapping[] = {
 		"push\tix\n"
 		"ld\tix,0\n"
 		"add\tix,sp" },
-    { "enterx", 
-		"push\tix\n"
-		"ld\tix,0\n"
-		"add\tix,sp\n"
-		"ld\thl,-%d\n"
-		"add\thl,sp\n"
-		"ld\tsp,hl" 
-        },
-    { "leave", 
-		"pop\tix"
-    },
-    { "leavex", 
-		"ld sp,ix\n"
-		"pop\tix"
-    },
+    { "enters", 
+		"call\t___sdcc_enter_ix\n" },
     { "pusha", 
       		"push af\n"
       		"push\tbc\n"

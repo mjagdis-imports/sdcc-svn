@@ -124,11 +124,11 @@ enum {
   W_FUNC_NO_RETURN              =  95, /* no return statement found */
   W_PRE_PROC_WARNING            =  96, /* preprocessor generated warning */
   E_STRUCT_AS_ARG               =  97, /* structure passed as argument */
-  E_PREV_DEF_CONFLICT           =  98, /* previous definition conflicts with current */
+  E_PREV_DECL_CONFLICT          =  98, /* previous declaration conflicts with current */
   E_CODE_NO_INIT                =  99, /* vars in code space must have initializer */
   E_OPS_INTEGRAL                = 100, /* operans must be integral for certain assignments */
   E_TOO_MANY_PARMS              = 101, /* too many parameters */
-  E_TOO_FEW_PARMS               = 102, /* to few parameters   */
+  E_TOO_FEW_PARMS               = 102, /* too few parameters  */
   E_FUNC_NO_CODE                = 103, /* fatalError          */
   E_TYPE_MISMATCH_PARM          = 104, /* type mismatch for parameter */
   E_INVALID_FLOAT_CONST         = 105, /* invalid floating point literal string */
@@ -145,7 +145,7 @@ enum {
   W_SHIFT_CHANGED               = 116, /* shift changed to zero */
   W_UNKNOWN_OPTION              = 117, /* don't know the option */
   W_UNSUPP_OPTION               = 118, /* processor reset has been redifned */
-  W_UNKNOWN_FEXT                = 119, /* unknown file extension */
+  E_UNKNOWN_FEXT                = 119, /* unknown file extension */
   W_TOO_MANY_SRC                = 120, /* can only compile one .c file at a time */
   I_CYCLOMATIC                  = 121, /* information message */
   E_DIVIDE_BY_ZERO              = 122, /* / 0 */
@@ -155,7 +155,7 @@ enum {
   W_CODE_UNREACH                = 126, /* unreachable code    */
   W_NONPTR2_GENPTR              = 127, /* non pointer cast to generic pointer */
   W_POSSBUG                     = 128, /* possible code generation error */
-  E_INCOMPAT_PTYPES             = 129, /* incampatible pointer assignment */
+  E_INCOMPAT_PTYPES             = 129, /* incompatible pointer assignment */
   W_UNKNOWN_MODEL               = 130, /* Unknown memory model */
   E_UNKNOWN_TARGET              = 131, /* target not defined  */
   W_INDIR_BANKED                = 132, /* Indirect call to a banked fun */
@@ -230,8 +230,8 @@ enum {
   W_DEPRECATED_OPTION           = 201, /* deprecated compiler option '%s' */
   E_BAD_DESIGNATOR              = 202, /* Bad designated initializer */
   W_DUPLICATE_INIT              = 203, /* duplicate initializer */
-  E_INVALID_UNIVERSAL           = 204, /* incomplete universal character name %s. */
-  W_UNIVERSAL_C99               = 205, /* universal character names are only valid in C99 */
+  E_INVALID_UNIVERSAL           = 204, /* invalid universal character name %s. */
+  W_UNIVERSAL_C95               = 205, /* universal character names are only valid in C95 or later */
   E_SHORTLONG                   = 206, /* Invalid combination of short / long */
   E_INTEGERSUFFIX               = 207, /* Invalid integer suffix */
   E_AUTO_ADDRSPACE              = 208, /* named address space for auto var */
@@ -244,6 +244,31 @@ enum {
   W_STATIC_ASSERTION            = 215, /* static assertion failed */
   E_ALIGNAS                     = 216, /* invalid alignment specified */
   W_INTERNAL_ERROR              = 217, /* warning for non-fatal internal errors - things that should not have happened, but can be handled */
+  W_UNRECOGNIZED_ASM            = 218, /* unrecognized asm instruction in peephole optimizer */
+  W_FLEXARRAY_INSTRUCT          = 219, /* using flexible arrays in a struct */
+  E_TYPE_IS_FUNCTION            = 220, /* typedef void foo_t(void); foo_t foo; */
+  W_INLINE_NAKED                = 221, /* inline function is naked */
+  E_Z88DK_FASTCALL_PARAMETERS   = 222, /* invalid number of parameters in __z88dk_fastcall */
+  E_Z88DK_FASTCALL_PARAMETER    = 223, /* invalid parameter type in __z88dk_fastcall */
+  W_REPEAT_QUALIFIER            = 224, /* the same qualifier appears more than once */
+  W_NO_TYPE_SPECIFIER           = 225, /* type specifier missing in declaration */
+  E_NO_TYPE_SPECIFIER           = 226, /* type specifier missing in declaration */
+  E_MULTIPLE_DEFAULT_IN_GENERIC = 227, /* multiple default expressions in generic association */
+  E_MULTIPLE_MATCHES_IN_GENERIC = 228, /* multiple matching expressions in generic association */
+  E_NO_MATCH_IN_GENERIC         = 229, /* no matching expression in generic association */
+  W_LABEL_WITHOUT_STATEMENT     = 230, /* label without statement, not allowed in standard C */
+  E_WCHAR_CONST_C95             = 231, /* character constant of type wchar_t requires ISO C 95 or later */
+  E_WCHAR_CONST_C11             = 232, /* character constant of type char16_t or char32_t equires ISO C 11 or later */
+  E_WCHAR_STRING_C95            = 233, /* wide character string literal requires ISO C 95 or later */
+  E_WCHAR_STRING_C11            = 234, /* wide character string literal requires ISO C 11 or later */
+  W_UNKNOWN_REG                 = 235, /* unknown register specified */
+  E_HEXFLOAT_C99                = 236, /* hexadecimal floating constant requires ISO C99 or later */
+  E_ANONYMOUS_STRUCT_TAG        = 237, /* anonymous struct/union should not have a tag */
+  W_INLINE_FUNCATTR             = 238, /* inline functions should not be z88dk_fastcall or z88dk_callee */
+  E_FOR_INITAL_DECLARATION_C99  = 239, /* initial declaration in for loop requires ISO C99 or later */
+  E_QUALIFIED_ARRAY_PARAM_C99   = 240, /* qualifiers in array parameters require ISO C99 or later */
+  E_QUALIFIED_ARRAY_NOPARAM     = 241, /* qualifier or static in array declarator that is not a parameter */
+  E_STATIC_ARRAY_PARAM_C99      = 242, /* static in array parameters requires ISO C99 or later */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
@@ -357,6 +382,14 @@ disabled - Disable output of specified warning
 */
 
 void setWarningDisabled (int errNum);
+
+/*
+-------------------------------------------------------------------------------
+disabledState - Enable/Disable output of specified warning
+-------------------------------------------------------------------------------
+*/
+
+int setWarningDisabledState (int errNum, int disabled);
 
 /*
 -------------------------------------------------------------------------------

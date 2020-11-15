@@ -2,9 +2,9 @@
  * This definitions of the PIC16F1789 MCU.
  *
  * This file is part of the GNU PIC library for SDCC, originally
- * created by Molnar Karoly <molnarkaroly@users.sf.net> 2013.
+ * created by Molnar Karoly <molnarkaroly@users.sf.net> 2016.
  *
- * This file is generated automatically by the cinc2h.pl, 2013-03-15 21:50:54 UTC.
+ * This file is generated automatically by the cinc2h.pl, 2016-04-13 17:23:19 UTC.
  *
  * SDCC is licensed under the GNU Public license (GPL) v2. Note that
  * this license covers the code to the compiler and other executables,
@@ -369,8 +369,14 @@ __at(0x0214) volatile __SSPSTATbits_t SSPSTATbits;
 __at(0x0215) __sfr SSP1CON;
 __at(0x0215) volatile __SSP1CONbits_t SSP1CONbits;
 
+__at(0x0215) __sfr SSP1CON1;
+__at(0x0215) volatile __SSP1CON1bits_t SSP1CON1bits;
+
 __at(0x0215) __sfr SSPCON;
 __at(0x0215) volatile __SSPCONbits_t SSPCONbits;
+
+__at(0x0215) __sfr SSPCON1;
+__at(0x0215) volatile __SSPCON1bits_t SSPCON1bits;
 
 __at(0x0216) __sfr SSP1CON2;
 __at(0x0216) volatile __SSP1CON2bits_t SSP1CON2bits;
@@ -509,15 +515,21 @@ __at(0x0591) volatile __DAC2CON0bits_t DAC2CON0bits;
 
 __at(0x0592) __sfr DAC2CON1;
 
+__at(0x0592) __sfr DAC2REF;
+
 __at(0x0593) __sfr DAC3CON0;
 __at(0x0593) volatile __DAC3CON0bits_t DAC3CON0bits;
 
 __at(0x0594) __sfr DAC3CON1;
 
+__at(0x0594) __sfr DAC3REF;
+
 __at(0x0595) __sfr DAC4CON0;
 __at(0x0595) volatile __DAC4CON0bits_t DAC4CON0bits;
 
 __at(0x0596) __sfr DAC4CON1;
+
+__at(0x0596) __sfr DAC4REF;
 
 __at(0x0E91) __sfr PSMC1CON;
 __at(0x0E91) volatile __PSMC1CONbits_t PSMC1CONbits;

@@ -17,6 +17,8 @@ libm18f_a_SOURCES += expf.c
 libm18f_a_SOURCES += fabsf.c
 libm18f_a_SOURCES += floorf.c
 libm18f_a_SOURCES += frexpf.c
+libm18f_a_SOURCES += isinf.c
+libm18f_a_SOURCES += isnan.c
 libm18f_a_SOURCES += ldexpf.c
 libm18f_a_SOURCES += log10f.c
 libm18f_a_SOURCES += logf.c
@@ -30,6 +32,11 @@ libm18f_a_SOURCES += sqrtf.c
 libm18f_a_SOURCES += tancotf.c
 libm18f_a_SOURCES += tanf.c
 libm18f_a_SOURCES += tanhf.c
+
+# Use the generic code where possible.
+%.c: ../../%.c
+	test -e $(<D)/pic16/libm/$(@F) || ln -s $^ $@
+	test -e $@ || ln -s $(<D)/pic16/libm/$(@F) $@
 
 include $(top_srcdir)/Makefile.common
 

@@ -1,0 +1,4 @@
+@set VERSION 2.25
+@set VERSION_PACKAGE (sdbinutils derived from GNU Binutils) 
+@set UPDATED November 2020
+@set BUGURL @uref{https://sourceforge.net/p/sdcc/bugs/}

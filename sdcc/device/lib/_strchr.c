@@ -26,27 +26,20 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#include "string.h"
+#include <string.h>
 
 #undef strchr /* Avoid conflict with builtin strchr() in Z80 and some related ports */
 
 #ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-char * strchr (
-	const char * string,
-	char ch
-	)
+char * strchr ( const char * string, char ch )
 #else
-char * strchr (
-	const char * string,
-	int ch
-	)
+char * strchr ( const char * string, int ch )
 #endif
 {
 	while (*string && *string != ch)
 		string++;
 
 	if (*string == ch)
-		return(string);
+		return((char *)string);
 	return ( NULL );
 }
-

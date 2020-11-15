@@ -31,6 +31,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <ctype.h>
 
 #include "pobjcl.h"
+#include "globals.h"
+
 #include "brkcl.h"
 
 
@@ -48,10 +50,21 @@ cl_brk::cl_brk(class cl_address_space *imem, int inr, t_addr iaddr,
   perm = iperm;
   hit  = ihit;
   cnt  = ihit;
+  cond = chars("");
+  commands= chars("");
 }
 
 cl_brk::~cl_brk(void)
 {}
+
+bool
+cl_brk::condition(void)
+{
+  if (cond.empty())
+    return true;
+  long l= application->eval(cond);
+  return l!=0;
+}
 
 void
 cl_brk::activate(void)
@@ -74,7 +87,8 @@ cl_brk::do_hit(void)
   if (cnt <= 0)
     {
       cnt= hit;
-      return(1);
+      if (condition())
+	return(1);      
     }
   return(0);
 }
@@ -143,7 +157,7 @@ cl_ev_brk::type(void)
 bool
 cl_ev_brk::match(struct event_rec *ev)
 {
-  return(DD_FALSE);
+  return(false);
 }
 
 
@@ -160,7 +174,7 @@ brk_coll::brk_coll(t_index alimit, t_index adelta,
   rom= arom;
 }
 
-const void *
+void *
 brk_coll::key_of(void *item)
 {
   return((void *)&(((class cl_brk *)(item))->nr));
@@ -168,7 +182,7 @@ brk_coll::key_of(void *item)
 
 
 int
-brk_coll::compare(const void *key1, const void *key2)
+brk_coll::compare(void *key1, void *key2)
 {
   int k1, k2;
 
@@ -200,9 +214,9 @@ brk_coll::there_is_event(enum brk_event ev)
       b= (class cl_brk *)at(i);
       if (b->type() == brkEVENT &&
 	  ((class cl_ev_brk *)b)->event == ev)
-	return(DD_TRUE);
+	return(true);
     }
-  return(DD_FALSE);
+  return(false);
 }
 
 /*int
@@ -237,12 +251,6 @@ brk_coll::del_bp(t_addr addr)
       free_at(idx);
     }
   return;
-  /*if (rom &&
-      addr < rom->size)
-    {
-      fprintf(stderr, "brk_coll::del_bp(0x%"_A_"x\n", addr);//FIXME
-      //rom->bp_map->clear(addr);
-      }*/
 }
 
 void

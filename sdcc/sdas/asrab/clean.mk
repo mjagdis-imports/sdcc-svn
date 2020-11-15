@@ -5,7 +5,7 @@ include $(top_builddir)/Makefile.common
 clean: mostlyclean
 	rm -f *.dep
 	rm -f $(ASOBJECTS) $(OBJDIR)/.stamp
-	-rmdir $(OBJDIR)
+	if [ -d $(OBJDIR) ]; then rmdir $(OBJDIR); fi
 
 # Deleting all files created by configuring or building the program
 # -----------------------------------------------------------------
@@ -17,7 +17,7 @@ distclean: clean
 mostlyclean:
 	rm -f *core *[%~] *.[oa]
 	rm -f .[a-z]*~
-	rm -f $(top_builddir)/bin/sdasz80$(EXEEXT)
+	rm -f $(top_builddir)/bin/sdasrab$(EXEEXT)
 
 # Deleting everything that can reconstructed by this Makefile. It deletes
 # everything deleted by distclean plus files created by bison, etc.

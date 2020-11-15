@@ -25,8 +25,9 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mpic16 -pp18f452 --less-pedantic -Wl,-q -DREENTRANT=__reentrant
+SDCCFLAGS += -mpic16 -pp18f452 --less-pedantic -Wl,-q
 SDCCFLAGS += --no-peep
+SDCCFLAGS += --no-warn-non-free
 LINKFLAGS += libsdcc.lib libc18f.lib libm18f.lib
 
 OBJEXT = .o
@@ -54,7 +55,7 @@ $(PORT_CASES_DIR)/%$(OBJEXT): fwk/lib/%.c
 	mkdir -p $(dir $@)
 	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(GPSIM) -i -s $< -c $(PORTS_DIR)/pic16/gpsim.cmd > $@ || \
 	  echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
-	python $(srcdir)/get_ticks.py < $@ >> $@
+	$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
 	-grep -n FAIL $@ /dev/null || true
 
 _clean:

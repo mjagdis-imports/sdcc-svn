@@ -63,7 +63,7 @@ static char  stm8pg[256] = {
 /*20*/   2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 /*30*/   1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 /*40*/   1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-/*50*/   2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+/*50*/   2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 1, 1,
 /*60*/   1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 /*70*/   1,UN,P1, 1, 1,UN, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 /*80*/  11, 4,UN, 9, 1, 2, 1, 5, 1, 2, 1,UN, 1, 5,10,10,
@@ -105,7 +105,7 @@ static char  pg90[256] = {  /* P2: PreByte == 90 */
 /*20*/  UN,UN,UN,UN,UN,UN,UN,UN, 1, 1,UN,UN, 1, 1, 1, 1,
 /*30*/  UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,UN,
 /*40*/   1,UN, 4, 1, 1,UN, 1, 1, 1, 1, 1,UN, 1, 1, 1, 1,
-/*50*/   2,UN,UN, 2, 2,UN, 2, 2, 2, 2, 2,UN, 2, 2, 1, 1,
+/*50*/   2,UN,UN, 2, 2,UN, 2, 2, 2, 2, 2,UN, 1, 2, 1, 1,
 /*60*/   1,UN, 2, 1, 1,UN, 1, 1, 1, 1, 1,UN, 1, 1, 1, 1,
 /*70*/   1,UN,UN, 1, 1,UN, 1, 1, 1, 1, 1,UN, 1, 1, 1, 1,
 /*80*/  UN,UN,UN,UN,UN, 2,UN,UN,UN, 2,UN,UN,UN,UN,UN,UN,
@@ -399,7 +399,7 @@ struct mne *mp;
 			case Y:		outab(0xB2);	break;
 			default:			break;
 			}
-			outrb(&e1, R_USGN);
+			outrw(&e1, R_USGN);
 			break;
 		case S_IMM:	/* #arg */
 			switch(v2) {
@@ -1724,7 +1724,7 @@ struct mne *mp;
 		}
 		outab(0x72);
 		//outrbm(&e2, R_BITS, op);
-                outab(op|v2);  /* TODO: maybe fix outrb vs. outrbm */
+		outab(op|(v2 << 1));  /* TODO: maybe fix outrb vs. outrbm */
 		outrw(&e1, R_USGN);
 		if (mchpcr(&e3)) {
 			v3 = (int) (e3.e_addr - dot.s_addr - 1);
@@ -1760,7 +1760,7 @@ struct mne *mp;
 		default:			break;
 		}
 		//outrbm(&e2, R_BITS, op);
-                outab(op|v2); /* TODO: maybe fix outrb vs. outrbm */
+                outab(op|v2*2); /* TODO: maybe fix outrb vs. outrbm */
 		outrw(&e1, R_USGN);
 		break;
 

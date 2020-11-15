@@ -32,13 +32,9 @@ char c = CHAR_VALUE;
 short s = SHORT_VALUE;
 int i = INT_VALUE;
 long l = LONG_VALUE;
-#if 0 // TODO: enable when support for long long is complete!
 long long ll = LL_VALUE;
-#endif
 int shift1 = SHIFT1;
-#if 0
 int shift2 = SHIFT2;
-#endif
 
 void
 testTortureExecute (void)
@@ -66,7 +62,7 @@ testTortureExecute (void)
 
   if (ROR (l, SHIFT1) != ROR (LONG_VALUE, SHIFT1))
     ASSERT (0);
-#if 0 // TODO: enable when support for long long is complete!
+
   if (ROR (ll, shift1) != ROR (LL_VALUE, SHIFT1))
     ASSERT (0);
 
@@ -78,7 +74,7 @@ testTortureExecute (void)
 
   if (ROR (ll, SHIFT2) != ROR (LL_VALUE, SHIFT2))
     ASSERT (0);
-#endif
+
   if (ROL (c, shift1) != ROL (CHAR_VALUE, SHIFT1))
     ASSERT (0);
 
@@ -102,7 +98,7 @@ testTortureExecute (void)
 
   if (ROL (l, SHIFT1) != ROL (LONG_VALUE, SHIFT1))
     ASSERT (0);
-#if 0 // TODO: enable when support for long long is complete!
+
   if (ROL (ll, shift1) != ROL (LL_VALUE, SHIFT1))
     ASSERT (0);
 
@@ -114,6 +110,6 @@ testTortureExecute (void)
 
   if (ROL (ll, SHIFT2) != ROL (LL_VALUE, SHIFT2))
     ASSERT (0);
-#endif
+
   return;
 }

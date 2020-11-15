@@ -66,7 +66,7 @@ typedef struct ast
   /* union for special processing */
   union
   {
-    const char *inlineasm;      /* pointer to inline assembler code */
+    char *inlineasm;            /* pointer to inline assembler code */
     literalList *constlist;     /* init list for array initializer. */
     symbol *sym;                /* if block then -> symbols */
     value *args;                /* if function then args    */
@@ -224,6 +224,7 @@ int setAstFileLine (ast *, char *, int);
 symbol *funcOfType (const char *, sym_link *, sym_link *, int, int);
 symbol *funcOfTypeVarg (const char *, const char *, int, const char **);
 ast *initAggregates (symbol *, initList *, ast *);
+bool astHasVolatile (ast *tree);
 bool hasSEFcalls (ast *);
 void addSymToBlock (symbol *, ast *);
 void freeStringSymbol (symbol *);

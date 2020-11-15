@@ -27,84 +27,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "ddconfig.h"
 
+#include <ctype.h>
 #include <stdlib.h>
 #include "i_string.h"
 
 #include "stypes.h"
+#include "globals.h"
+
 #include "hwcl.h"
-
-
-/*
- *____________________________________________________________________________
- */
-
-cl_watched_cell::cl_watched_cell(class cl_address_space *amem, t_addr aaddr,
-                                 class cl_memory_cell **astore,
-                                 enum what_to_do_on_cell_change awtd)
-{
-  mem= amem;
-  addr= aaddr;
-  store= astore;
-  wtd= awtd;
-  if (mem)
-    {
-      cell= mem->get_cell(addr);
-      if (store)
-        *store= cell;
-    }
-}
-
-void
-cl_watched_cell::mem_cell_changed(class cl_address_space *amem, t_addr aaddr,
-                                  class cl_hw *hw)
-{
-  if (mem &&
-      mem == amem &&
-      addr == aaddr)
-    {
-      cell= mem->get_cell(addr);
-      if (store &&
-          (wtd & WTD_RESTORE))
-        *store= cell;
-      if (wtd & WTD_WRITE)
-        {
-          t_mem d= cell->get();
-          hw->write(cell, &d);
-        }
-    }
-}
-
-void
-cl_watched_cell::address_space_added(class cl_address_space *amem,
-                                     class cl_hw *hw)
-{
-}
-
-void
-cl_used_cell::mem_cell_changed(class cl_address_space *amem, t_addr aaddr, 
-class cl_hw *hw)
-{
-  if (mem &&
-      mem == amem &&
-      addr == aaddr)
-    {
-      cell= mem->get_cell(addr);
-      if (store &&
-          (wtd & WTD_RESTORE))
-        *store= cell;
-      if (wtd & WTD_WRITE)
-        {
-          t_mem d= cell->get();
-          hw->write(cell, &d);
-        }
-    }
-}
-
-void
-cl_used_cell::address_space_added(class cl_address_space *amem,
-                                  class cl_hw *hw)
-{
-}
 
 
 /*
@@ -123,22 +53,50 @@ cl_hw::cl_hw(class cl_uc *auc, enum hw_cath cath, int aid, const char *aid_strin
     id_string= strdup(aid_string);
   else
     id_string= strdup("unknown hw element");
+  set_name(id_string);
   char *s= (char*)malloc(strlen(get_name("hw"))+100);
   sprintf(s, "partners of %s", get_name("hw"));
   partners= new cl_list(2, 2, s);
   sprintf(s, "watched cells of %s", get_name("hw"));
-  watched_cells= new cl_list(2, 2, s);
   free(s);
+  cfg= 0;
+  io= 0;
 }
 
 cl_hw::~cl_hw(void)
 {
-  free(id_string);
-  //hws_to_inform->disconn_all();
+  free((void*)id_string);
   delete partners;
-  delete watched_cells;
 }
 
+int
+cl_hw::init(void)
+{
+  chars n(id_string);
+  char s[100];
+  int i;
+
+  on= true;
+  
+  snprintf(s, 99, "%d", id);
+  n+= '_';
+  n+= s;
+  n+= cchars("_cfg");
+
+  cfg= new cl_address_space(n, 0, cfg_size(), sizeof(t_mem)*8);
+  cfg->init();
+  cfg->hidden= true;
+  uc->address_spaces->add(cfg);
+
+  for (i= 0; i < cfg_size(); i++)
+    {
+      cfg->register_hw(i, this, false);
+    }
+
+  cache_run= -1;
+  cache_time= 0;
+  return 0;
+}
 
 void
 cl_hw::new_hw_adding(class cl_hw *new_hw)
@@ -169,23 +127,62 @@ cl_hw::make_partner(enum hw_cath cath, int id)
   return(hw);
 }
 
-
-/*
- * Callback functions for changing memory locations
- */
-
-/*t_mem
-cl_hw::read(class cl_m *mem, t_addr addr)
+t_mem
+cl_hw::read(class cl_memory_cell *cell)
 {
-  // Simply return the value
-  return(mem->get(addr));
-}*/
+  conf(cell, NULL);
+  return cell->get();
+}
 
-/*void
-cl_hw::write(class cl_m *mem, t_addr addr, t_mem *val)
+void
+cl_hw::write(class cl_memory_cell *cell, t_mem *val)
 {
-  // Do not change *val by default
-}*/
+  conf(cell, val);    
+}
+
+bool
+cl_hw::conf(class cl_memory_cell *cell, t_mem *val)
+{
+  t_addr a;
+  if (cfg->is_owned(cell, &a))
+    {
+      conf_op(cell, a, val);
+      if (val)
+	cell->set(*val);
+      return true;
+    }
+  return false;
+}
+
+t_mem
+cl_hw::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
+{
+  return cell->get();
+}
+
+void
+cl_hw::cfg_set(t_addr addr, t_mem val)
+{
+  cfg->set(addr, val);
+}
+
+void
+cl_hw::cfg_write(t_addr addr, t_mem val)
+{
+  cfg->write(addr, val);
+}
+
+t_mem
+cl_hw::cfg_get(t_addr addr)
+{
+  return cfg->get(addr);
+}
+
+t_mem
+cl_hw::cfg_read(t_addr addr)
+{
+  return cfg->read(addr);
+}
 
 void
 cl_hw::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
@@ -194,65 +191,30 @@ cl_hw::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
 }
 
 class cl_memory_cell *
-cl_hw::register_cell(class cl_address_space *mem, t_addr addr,
-                     class cl_memory_cell **store,
-                     enum what_to_do_on_cell_change awtd)
+cl_hw::register_cell(class cl_address_space *mem, t_addr addr)
 {
-  class cl_watched_cell *wc;
-  class cl_memory_cell *cell;
-
   if (mem)
-    mem->register_hw(addr, this, (int*)0, DD_FALSE);
+    mem->register_hw(addr, this, false);
   else
     printf("regcell JAJ no mem\n");
-  wc= new cl_watched_cell(mem, addr, &cell, awtd);
-  if (store)
-    *store= cell;
-  watched_cells->add(wc);
-  // announce
-  //uc->sim->mem_cell_changed(mem, addr);
-  return(cell);
+  return mem->get_cell(addr);
 }
 
 class cl_memory_cell *
-cl_hw::use_cell(class cl_address_space *mem, t_addr addr,
-                class cl_memory_cell **store,
-                enum what_to_do_on_cell_change awtd)
+cl_hw::register_cell(class cl_memory_cell *cell)
 {
-  class cl_watched_cell *wc;
-  class cl_memory_cell *cell;
-
-  wc= new cl_used_cell(mem, addr, &cell, awtd);
-  if (store)
-    *store= cell;
-  watched_cells->add(wc);
-  return(cell);
+  if (cell)
+    {
+      cell->add_hw(this);
+    }
+  return cell;
 }
 
 void
-cl_hw::mem_cell_changed(class cl_address_space *mem, t_addr addr)
+cl_hw::unregister_cell(class cl_memory_cell *the_cell)
 {
-  int i;
-
-  for (i= 0; i < watched_cells->count; i++)
-    {
-      class cl_watched_cell *wc=
-        (class cl_watched_cell *)(watched_cells->at(i));
-      wc->mem_cell_changed(mem, addr, this);
-    }
-}
-
-void
-cl_hw::address_space_added(class cl_address_space *as)
-{
-  int i;
-
-  for (i= 0; i < watched_cells->count; i++)
-    {
-      class cl_watched_cell *wc=
-        dynamic_cast<class cl_watched_cell *>(watched_cells->object_at(i));
-      wc->address_space_added(as, this);
-    }
+  if (the_cell)
+    the_cell->remove_hw(this);
 }
 
 
@@ -278,6 +240,186 @@ cl_hw::inform_partners(enum hw_event he, void *params)
     }
 }
 
+void
+cl_hw::touch(void)
+{
+  refresh_display(false);
+}
+
+void
+cl_hw::make_io()
+{
+  if (!io)
+    {
+      io= new cl_hw_io(this);
+      io->init();
+      application->get_commander()->add_console(io);
+    }
+}
+
+void
+cl_hw::new_io(class cl_f *f_in, class cl_f *f_out)
+{
+  make_io();
+  if (!io)
+    return ;
+  /*if (io->fin)
+    delete io->fin;
+  if (io->fout)
+  delete io->fout;*/
+  //io->close_files();
+  /*io->fin= f_in;
+    io->fout= f_out;*/
+  io->tu_reset();
+  io->replace_files(true, f_in, f_out);
+  if (f_in)
+    {
+      f_in->interactive(NULL);
+      f_in->raw();
+      f_in->echo(NULL);
+    }
+  draw_display();
+  //application->get_commander()->update_active();
+}
+
+class cl_hw_io *
+cl_hw::get_io(void)
+{
+  return io;
+}
+
+bool
+cl_hw::proc_input(void)
+{
+  int c;
+
+  if (!io)
+    return false;
+  
+  class cl_f *fin= io->get_fin();
+  class cl_f *fout= io->get_fout();
+  
+  if (fin)
+    {
+      if (fin->eof())
+	{
+	  if (fout &&
+	      (fout->file_id == fin->file_id))
+	    {
+	      io->tu_reset();
+	      delete fout;
+	      io->replace_files(false, fin, 0);
+	    }
+	  delete fin;
+	  io->replace_files(false, 0, 0);
+	  return true;
+	}
+      fin->read(&c, 1);
+      return handle_input(c);
+    }
+  return false;
+}
+
+bool
+cl_hw::handle_input(int c)
+{
+  if (!io)
+    return false;
+  
+  switch (c)
+    {
+    case 's'-'a'+1: case 'r'-'a'+1: case 'g'-'a'+1:
+      uc->sim->start(0, 0);
+      io->dd_printf("Simulation started.");
+      break;
+    case 'p'-'a'+1:
+      uc->sim->stop(resSIMIF);
+      io->dd_printf("Simulation stopped.");
+      break;
+    case 't'-'a'+1:
+      uc->reset();
+      io->dd_printf("CPU reseted.");
+      break;
+    case 'q'-'a'+1:
+      uc->sim->state|= SIM_QUIT;
+      io->dd_printf("Exit simulator.");
+      io->tu_reset();
+      break;
+    case 'o'-'a'+1:
+      io->dd_printf("Closing display.");
+      io->tu_reset();
+      io->tu_cls();
+      io->convert2console();
+      break;
+    case 'l'-'a'+1:
+      draw_display();
+      break;
+    case 'n'-'a'+1:
+      {
+	class cl_hw *h= next_displayer();
+	if (!h)
+	  io->dd_printf("No other displayer.");
+	else
+	  {
+	    io->tu_reset();
+	    io->tu_cls();
+	    io->pass2hw(h);
+	  }
+	break;
+      }
+    default:
+      return false;
+      break;
+    }
+  return true;
+}
+
+void
+cl_hw::refresh_display(bool force)
+{
+  if (!io)
+    return ;
+  int n= uc->sim->state & SIM_GO;
+  if ((n != cache_run) ||
+      force)
+    {
+      io->tu_go(72,1);
+      io->dd_printf("%4s", n?"Run":"Stop");
+      cache_run= n;
+    }
+  unsigned int t= uc->get_rtime() * 1000;
+  if ((t != cache_time) ||
+      force)
+    {
+      io->tu_go(28,2);
+      io->dd_printf("%u ms", t);
+      if (t < cache_time)
+	io->dd_printf("                ");
+      cache_time= t;
+    }
+}
+
+void
+cl_hw::draw_display(void)
+{
+  if (!io)
+    return ;
+  io->tu_go(1, 1);
+  io->dd_printf("[^s] Start  [^p] stoP  [^t] reseT  [^q] Quit  [^o] clOse  [^l] redraw\n");
+  io->dd_printf("[^n] chaNge display  Time: ");
+  io->tu_go(72,2);
+  chars s("", "%s[%d]", id_string, id);
+  io->dd_printf("%8s", (char*)s);
+}
+
+class cl_hw *
+cl_hw::next_displayer(void)
+{
+  if (!uc)
+    return NULL;
+  return uc->hws->next_displayer(this);
+}
+
 
 void
 cl_hw::print_info(class cl_console_base *con)
@@ -285,6 +427,10 @@ cl_hw::print_info(class cl_console_base *con)
   con->dd_printf("%s[%d]\n", id_string, id);
 }
 
+
+/*
+ * List of hw
+ */
 
 t_index
 cl_hws::add(void *item)
@@ -310,32 +456,46 @@ cl_hws::add(void *item)
   return(res);
 }
 
-
-void
-cl_hws::mem_cell_changed(class cl_address_space *mem, t_addr addr)
+class cl_hw *
+cl_hws::next_displayer(class cl_hw *hw)
 {
-  int i;
+  int i, j;
+  cl_hw_io *io;
+  cl_f *fi, *fo;
   
-  for (i= 0; i < count; i++)
+  if (!index_of(hw, &i))
+    return NULL;
+
+  for (j= i+1; j < count; j++)
     {
-      class cl_hw *hw= (class cl_hw *)(at(i));
-      hw->mem_cell_changed(mem, addr);
+      class cl_hw *h= (class cl_hw *)(at(j));
+      h->make_io();
+      if ((io= h->get_io()))
+	{
+	  fi= io->get_fin();
+	  fo= io->get_fout();
+	  if (!fi &&
+	      !fo)
+	    return h;
+	}
     }
+  for (j= 0; j < i; j++)
+    {
+      class cl_hw *h= (class cl_hw *)(at(j));
+      h->make_io();
+      if ((io= h->get_io()))
+	{
+	  fi= io->get_fin();
+	  fo= io->get_fout();
+	  if (!fi &&
+	      !fo)
+	    return h;
+	}
+    }
+  return NULL;
 }
 
-void
-cl_hws::address_space_added(class cl_address_space *mem)
-{
-  int i;
-  
-  for (i= 0; i < count; i++)
-    {
-      class cl_hw *hw= (class cl_hw *)(at(i));
-      hw->address_space_added(mem);
-    }
-}
-
-
+		       
 /*
  *____________________________________________________________________________
  */
@@ -366,12 +526,12 @@ cl_partner_hw::refresh(void)
     {
       // partner is already set
       if (partner != hw)
-        {
-          // partner changed?
-          partner= hw;
-        }
+	{
+	  // partner changed?
+	  partner= hw;
+	}
       else
-        partner= hw;
+	partner= hw;
     }
   partner= hw;
 }
@@ -385,12 +545,12 @@ cl_partner_hw::refresh(class cl_hw *new_hw)
       id == new_hw->id)
     {
       if (partner)
-        {
-          // partner changed?
-          partner= new_hw;
-        }
+	{
+	  // partner changed?
+	  partner= new_hw;
+	}
       else
-        partner= new_hw;
+	partner= new_hw;
     }
 }
 
@@ -399,6 +559,61 @@ cl_partner_hw::happen(class cl_hw *where, enum hw_event he, void *params)
 {
   if (partner)
     partner->happen(where, he, params);
+}
+
+
+/*
+ *____________________________________________________________________________
+ */
+
+cl_hw_io::cl_hw_io(class cl_hw *ihw):
+  cl_console()
+{
+  hw= ihw;
+  set_name(chars("", "%s[%d]", ihw->id_string, ihw->id));
+}
+
+int
+cl_hw_io::init(void)
+{
+  set_flag(CONS_NOWELCOME, true);
+  return 0;
+}
+
+int
+cl_hw_io::proc_input(class cl_cmdset *cmdset)
+{
+  if (hw)
+    hw->proc_input();
+  else
+    {
+      int c;
+      fin->read(&c, 1);
+      dd_printf("Unhandled hwio command: %c %d 0x%02x\n", isprint(c)?c:'?', c, c);
+    }
+  return 0;
+}
+
+
+void
+cl_hw_io::convert2console(void)
+{
+  if (fin &&
+      fout)
+    {
+      class cl_console *con= new cl_console(fin, fout, application);
+      con->init();
+      application->get_commander()->add_console(con);
+    }
+  drop_files();
+}
+
+void
+cl_hw_io::pass2hw(class cl_hw *new_hw)
+{
+  if (new_hw)
+    new_hw->new_io(fin, fout);
+  drop_files();
 }
 
 

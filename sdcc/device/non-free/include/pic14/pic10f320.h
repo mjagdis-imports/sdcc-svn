@@ -2,9 +2,9 @@
  * This declarations of the PIC10F320 MCU.
  *
  * This file is part of the GNU PIC library for SDCC, originally
- * created by Molnar Karoly <molnarkaroly@users.sf.net> 2012.
+ * created by Molnar Karoly <molnarkaroly@users.sf.net> 2016.
  *
- * This file is generated automatically by the cinc2h.pl, 2012-11-01 17:29:42 UTC.
+ * This file is generated automatically by the cinc2h.pl, 2016-04-13 17:22:54 UTC.
  *
  * SDCC is licensed under the GNU Public license (GPL) v2. Note that
  * this license covers the code to the compiler and other executables,
@@ -1487,14 +1487,14 @@ typedef union
   struct
     {
     unsigned                    : 4;
-    unsigned LC1D2S             : 3;
+    unsigned D2S                : 3;
     unsigned                    : 1;
     };
 
   struct
     {
     unsigned                    : 4;
-    unsigned D2S                : 3;
+    unsigned LC1D2S             : 3;
     unsigned                    : 1;
     };
   } __CLC1SEL0bits_t;

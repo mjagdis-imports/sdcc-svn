@@ -13,6 +13,7 @@ CXXCPP		= @CXXCPP@
 RANLIB		= @RANLIB@
 INSTALL		= @INSTALL@
 MAKEDEP         = @MAKEDEP@
+AR		= @AR@
 
 top_builddir	= @top_builddir@
 top_srcdir	= @top_srcdir@
@@ -38,7 +39,8 @@ srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 OBJECTS         = stack.o mem.o sim.o itsrc.o brk.o arg.o \
-		  guiobj.o uc.o hw.o
+		  guiobj.o uc.o hw.o simif.o serial_hw.o port_hw.o \
+		  iwrap.o var.o vcd.o
 
 
 # Compiling entire program or any subproject
@@ -98,8 +100,8 @@ include $(srcdir)/clean.mk
 sim_lib: $(top_builddir)/libsim.a
 
 $(top_builddir)/libsim.a: $(OBJECTS)
-	ar -rcu $*.a $(OBJECTS)
-	$(RANLIB) $*.a
+	$(AR) -rc $@ $(OBJECTS)
+	$(RANLIB) $@
 
 .cc.o:
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@

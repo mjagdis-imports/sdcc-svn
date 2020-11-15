@@ -46,6 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #endif
 
 
+#ifndef HAVE_STRNDUP
 char *
 strndup (const char *str, size_t len)
 {
@@ -54,6 +55,7 @@ strndup (const char *str, size_t len)
   s[len] = '\0';
   return s;
 }
+#endif
 
 static int
 is_ar (FILE * libfp)
@@ -918,16 +920,7 @@ static void
 loadfile_ar (struct lbfile *lbfh)
 {
   FILE *fp;
-
-#ifdef __CYGWIN__
-  char posix_path[PATH_MAX];
-  void cygwin_conv_to_full_posix_path (char *win_path, char *posix_path);
-  cygwin_conv_to_full_posix_path (lbfh->libspc, posix_path);
-  fp = fopen (posix_path, "rb");
-#else
   fp = fopen (lbfh->libspc, "rb");
-#endif
-
   if (fp != NULL)
     {
       struct ar_hdr hdr;

@@ -9,7 +9,7 @@
 #endif
 
 // TODO: Enable when these ports support long long!
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
 
 typedef unsigned long long ull;
 volatile int gvol[32];
@@ -66,7 +66,7 @@ ull neg (ull x) { return -x; }
 void
 testTortureExecute (void)
 {
-#if 0 // TODO: Enable when long long literals are supported!
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
   gull = 100;
   DO_TESTS (RUN_TEST)
   if (neg (gull) != -100ULL)

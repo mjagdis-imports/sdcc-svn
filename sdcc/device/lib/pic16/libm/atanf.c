@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -44,17 +44,11 @@
 #define K2  0.7320508076 /* sqrt(3)-1 */
 #define K3  1.7320508076 /* sqrt(3)   */
 
-#ifdef SDCC_mcs51
-   #define myconst code
-#else
-   #define myconst const
-#endif
-
-float atanf(const float x) _MATH_REENTRANT
+float atanf(float x) _MATH_REENTRANT
 {
     float f, r, g;
     int n=0;
-	static myconst float a[]={  0.0, 0.5235987756, 1.5707963268, 1.0471975512 };
+    static const float a[]={  0.0, 0.5235987756, 1.5707963268, 1.0471975512 };
 
     f=fabsf(x);
     if(f>1.0)

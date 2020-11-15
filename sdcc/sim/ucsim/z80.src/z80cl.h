@@ -42,11 +42,14 @@ public:
   class cl_memory *ram;
   class cl_memory *rom;
   struct t_regs regs;
-  
+  class cl_address_space *regs8;
+  class cl_address_space *regs16;
+  class cl_address_space *inputs;
+  class cl_address_space *outputs;
 public:
-  cl_z80(int Itype, int Itech, class cl_sim *asim);
+  cl_z80(struct cpu_entry *Itype, class cl_sim *asim);
   virtual int init(void);
-  virtual const char *id_string(void);
+  virtual char *id_string(void);
 
   //virtual t_addr get_mem_size(enum mem_class type);
   virtual void mk_hw_elements(void);
@@ -56,39 +59,40 @@ public:
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
   virtual int longest_inst(void);
-  virtual const char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr, const char *sep);
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);
 
   virtual const char *get_disasm_info(t_addr addr,
-                        int *ret_len,
-                        int *ret_branch,
-                        int *immed_offset);
+                                      int *ret_len,
+                                      int *ret_branch,
+                                      int *immed_offset,
+                                      struct dis_entry **dentry);
+  virtual bool is_call(t_addr addr);
 
-  
-  virtual void store1( TYPE_UWORD addr, t_mem val );
-  virtual void store2( TYPE_UWORD addr, TYPE_UWORD val );
-  
-  virtual TYPE_UBYTE  get1( TYPE_UWORD addr );
-  virtual TYPE_UWORD  get2( TYPE_UWORD addr );
-  
+  virtual void store1( u16_t addr, t_mem val );
+  virtual void store2( u16_t addr, u16_t val );
+
+  virtual u8_t  get1( u16_t addr );
+  virtual u16_t  get2( u16_t addr );
+
   virtual t_mem       fetch1( void );
-  virtual TYPE_UWORD  fetch2( void );
+  virtual u16_t  fetch2( void );
   virtual t_mem       peek1 ( void );
-  
-  virtual TYPE_UBYTE   in_byte( TYPE_UWORD ioaddr );
-  virtual void        out_byte( TYPE_UWORD ioaddr, TYPE_UBYTE io_val );
-  
+
+  virtual u8_t   in_byte( u16_t ioaddr );
+  virtual void        out_byte( u16_t ioaddr, u8_t io_val );
+
   //virtual t_mem fetch(void);
-  virtual TYPE_UBYTE  reg_g_read ( t_mem g );
-  virtual void        reg_g_store( t_mem g, TYPE_UBYTE new_val );
+  virtual u8_t  reg_g_read ( t_mem g );
+  virtual void        reg_g_store( t_mem g, u8_t new_val );
 
 #include "instcl.h"
 };
 
 
-unsigned   word_parity( TYPE_UWORD  x );
+unsigned   word_parity( u16_t  x );
 /* returns parity for a 16-bit value */
 
 #endif

@@ -15,6 +15,7 @@
 # define va_char char
 #endif
 
+#ifndef __SDCC_pic16
 static {type1}
 returnFirstArg(int marker, ...)
 {
@@ -26,7 +27,7 @@ returnFirstArg(int marker, ...)
 
     va_end(ap);
 
-    LOG(("Returning %u\n", i));
+    LOG(("Returning %d\n", i));
     return i;
 }
 
@@ -42,7 +43,7 @@ returnSecondArg(int marker, ...)
 
     va_end(ap);
 
-    LOG(("Returning %u\n", i));
+    LOG(("Returning %d\n", i));
     return i;
 }
 
@@ -60,7 +61,7 @@ returnSecondArgCopy(int marker, ...)
     va_end(ap1);
     va_end(ap2);
 
-    LOG(("Returning %u\n", i));
+    LOG(("Returning %d\n", i));
     return i;
 }
 
@@ -77,13 +78,15 @@ returnThirdArg(int marker, ...)
 
     va_end(ap);
 
-    LOG(("Returning %u\n", i));
+    LOG(("Returning %d\n", i));
     return i;
 }
+#endif
 
 void
 testArgs(void)
 {
+#ifndef __SDCC_pic16
     int marker = 12;
 
     LOG(("First arg: %u\n", returnFirstArg(marker, ({type1})123, ({type2})45, ({type3})67)));
@@ -98,5 +101,6 @@ testArgs(void)
 
     ASSERT(returnThirdArg(marker, ({type1})-33, ({type2})-34, ({type3})-35) == ({type3})-35);
     ASSERT(returnThirdArg(marker, ({type1})-33, ({type2})-34, ({type3})35) == ({type3})35);
+#endif
 }
 

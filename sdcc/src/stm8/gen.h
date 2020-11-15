@@ -37,7 +37,9 @@ typedef enum
   /* Is in direct space */
   AOP_DIR,
   /* Read undefined, discard writes */
-  AOP_DUMMY
+  AOP_DUMMY,
+  /* Has been optimized out by jumping directly (see ifxForOp) */
+  AOP_CND
 }
 AOP_TYPE;
 
@@ -49,7 +51,7 @@ typedef struct asmop_byte
   union
   {
     reg_info *reg;    /* Register this byte is in. */
-    int stk; /* Stack offset for this byte. */
+    long int stk; /* Stack offset for this byte. */
   } byteu;
 } asmop_byte;
 

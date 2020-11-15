@@ -19,15 +19,38 @@ top_srcdir	= @top_srcdir@
 
 # Compiling entire program or any subproject
 # ------------------------------------------
-all: checkconf
+all: checkconf #libs apps
+	$(MAKE) libs
+	$(MAKE) apps
+
+libs: main_all cmd_src_all sim_src_all gui_src_all
+
+main_all:
 	$(MAKE) -f main.mk all
-	@for pkg in $(PKGS); do\
-	  $(MAKE) -C $$pkg $$pkg ;\
-	done
+
+cmd_src_all:
+	$(MAKE) -C cmd.src cmd.src
+
+sim_src_all:
+	$(MAKE) -C sim.src sim.src
+
+gui_src_all:
+	$(MAKE) -C gui.src gui.src
+
+
+apps: $(PKGS) main_app
+
+main_app:
 	$(MAKE) -f main.mk main_app
 
-libs: main.mk
-	$(MAKE) -f main.mk libs
+
+.PHONY: $(PKGS)
+
+$(PKGS):
+	$(MAKE) -C $@ $@
+
+#main_libs: main.mk
+#	$(MAKE) -f main.mk libs
 
 
 # Compiling and installing everything and runing test
@@ -129,7 +152,7 @@ dep:
 # My rules
 # --------
 putcopyright:
-	'put(c)' -s $(STARTYEAR) *.cc *.h *.y *.l
+	'./put(c)' -s $(STARTYEAR) *.cc *.h *.y *.l
 
 start:
 	date '+%Y.%m.%d-%H:%M' >.start
@@ -163,9 +186,9 @@ lines:
 
 # Remaking configuration
 # ----------------------
-configure: configure.in
+configure: configure.ac
 	@$(top_srcdir)/mkecho $(top_builddir) "RE-CREATING CONFIGURE"
-	autoconf configure.in >configure
+	autoconf configure.ac >configure
 	chmod 755 configure
 
 config.status: configure

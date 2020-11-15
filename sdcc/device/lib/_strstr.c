@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -26,30 +26,27 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#include "string.h" 
+#include <string.h>
 
-char * strstr (
-	const char * str1,
-	const char * str2
-	) 
+char *strstr ( const char *str1, const char *str2 )
 {
-	const char * cp = str1;
-	const char * s1;
-	const char * s2;
+	const char *cp = str1;
+	const char *s1;
+	const char *s2;
 
-	if ( !*str2 )
-	    return str1;
+	if (!*str2)
+	    return ((char*)str1);
 
 	while (*cp)
 	{
 		s1 = cp;
 		s2 = str2;
 
-		while ( *s1 && *s2 && !(*s1-*s2) )
+		while (*s1 && *s2 && !(*s1-*s2))
 			s1++, s2++;
 
 		if (!*s2)
-			return( (char*)cp );
+			return ((char*)cp);
 
 		cp++;
 	}

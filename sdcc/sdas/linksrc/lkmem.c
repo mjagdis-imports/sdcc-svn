@@ -92,7 +92,7 @@ int summary(struct area * areap)
     };
 
     _Mem IRam6808 =  {0xff,   0,     0, "INDIRECT RAM",           0x0080};
-    _Mem Stack6808 = {0xff,   0,     1, "STACK",                          0x0000};
+    _Mem Stack6808 = {0xff,   0,     1, "STACK",                  0x0000};
     _Mem XRam6808 =  {0xffff, 0, 65536, "EXTERNAL RAM",           0x0100};
     _Mem Rom6808 =   {0xffff, 0, 65536, "ROM/EPROM/FLASH",        0x0200};
 
@@ -105,17 +105,17 @@ int summary(struct area * areap)
 
     if (TARGET_IS_8051) {
         Ram = Ram8051;
-	memcpy(&IRam, &IRam8051, sizeof (_Mem));
-	memcpy(&Stack, &Stack8051, sizeof (_Mem));
-	memcpy(&XRam, &XRam8051, sizeof (_Mem));
-	memcpy(&Rom, &Rom8051, sizeof (_Mem));
+        memcpy(&IRam, &IRam8051, sizeof (_Mem));
+        memcpy(&Stack, &Stack8051, sizeof (_Mem));
+        memcpy(&XRam, &XRam8051, sizeof (_Mem));
+        memcpy(&Rom, &Rom8051, sizeof (_Mem));
     }
     else {
         Ram = Ram6808;
-	memcpy(&IRam, &IRam6808, sizeof (_Mem));
-	memcpy(&Stack, &Stack6808, sizeof (_Mem));
-	memcpy(&XRam, &XRam6808, sizeof (_Mem));
-	memcpy(&Rom, &Rom6808, sizeof (_Mem));
+        memcpy(&IRam, &IRam6808, sizeof (_Mem));
+        memcpy(&Stack, &Stack6808, sizeof (_Mem));
+        memcpy(&XRam, &XRam6808, sizeof (_Mem));
+        memcpy(&Rom, &Rom6808, sizeof (_Mem));
     }
 
     if (stacksize == 0) stacksize = MIN_STACK;
@@ -474,8 +474,9 @@ int summary2(struct area * areap)
 
     char buff[128];
     int toreturn = 0;
-    unsigned int j;
+    unsigned int i, j;
     unsigned long int Stack_Start=0, Stack_Size;
+    unsigned int spare_begin = 0, spare_size = 0;
 
     struct area * xp;
     struct area * xstack_xp = NULL;
@@ -595,7 +596,7 @@ int summary2(struct area * areap)
 
     for(j=Stack_Start, Stack_Size=0; j<((iram_size)?iram_size:256); j++)
     {
-        if((idatamap[j]=='S')||(idatamap[j]==' ')) Stack_Size++;
+        if(idatamap[j]=='S') Stack_Size++;
         else break;
     }
 
@@ -613,12 +614,28 @@ int summary2(struct area * areap)
     }
 
     /*Report the position of the begining of the stack*/
-    if(Stack_Start!=256)
+    if(Stack_Start!=256 && Stack_Size > 0)
         fprintf(of, "\n%s starts at: 0x%02lx (sp set to 0x%02lx) with %ld bytes available.",
             rflag ? "16 bit mode initial stack" : "Stack", Stack_Start, Stack_Start-1, Stack_Size);
     else
-        fprintf(of, "\nI don't have a clue where the stack ended up! Sorry...");
+        fprintf(of, "\nNo clue at where the stack begins and ends!");
 
+    /* Report the spare space left in the IRAM */
+    for (j = 0; j < (iram_size ? iram_size : 256); )
+    {
+        for (i = j; i < (iram_size ? iram_size : 256) && idatamap[i] == ' '; i++);
+        if (i - j > spare_size)
+        {
+            spare_size = i - j;
+            spare_begin = j;
+        }
+        j = i + 1;
+    }
+    if (spare_size > 0)
+        fprintf(of, "\nThe largest spare internal RAM space starts at 0x%x with %d byte%s available.", spare_begin, spare_size, spare_size > 1 ? "s" : "");
+    else
+        fprintf(of, "\nNo spare internal RAM space left.");
+ 
     /*Report about xstack*/
     if (xstack_xp)
     {
@@ -679,7 +696,7 @@ int summary2(struct area * areap)
 
     /*Report any excess:*/
     if( ((XRam.End) > XRam.Max) ||
-        (((int)XRam.Size>xram_size)&&(xram_size>=0)) )
+        ((((int)XRam.Size+(int)Paged.Size)>xram_size)&&(xram_size>=0)) )
     {
         sprintf(buff, "Insufficient EXTERNAL RAM memory.\n");
         REPORT_ERROR(buff, 1);
