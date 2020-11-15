@@ -2107,7 +2107,7 @@ skip_byte:
 /* genMove_o - Copy part of one asmop to another                   */
 /*-----------------------------------------------------------------*/
 static void
-genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead, bool x_dead, bool y_dead)
+genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global, bool x_dead_global, bool y_dead_global)
 {
   int i;
 
@@ -2118,17 +2118,27 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassertl (roffset + size <= result->size, "Trying to write beyond end of operand");
 
 #if 0
-  D (emit2(";  genMove_o", "offset %d %d, size %d, deadness %d %d %d", roffset, soffset, size, a_dead, x_dead, y_dead));
+  D (emit2(";  genMove_o", "offset %d %d, size %d, deadness %d %d %d", roffset, soffset, size, a_dead_global, x_dead_global, y_dead_global));
 #endif
 
   if (aopRS (result) && aopRS (source))
     {
-      genCopy (result, roffset, source, soffset, size, a_dead, x_dead, y_dead);
+      genCopy (result, roffset, source, soffset, size, a_dead_global, x_dead_global, y_dead_global);
       return;
     }
 
   for (i = 0; i < size;)
     {
+      const bool x_dead = x_dead_global &&
+        (!aopRS (result) || (result->regs[XL_IDX] >= (roffset + i) || result->regs[XL_IDX] < 0) && (result->regs[XH_IDX] >= (roffset + i) || result->regs[XH_IDX] < 0)) &&
+        (!aopRS (source) || source->regs[XL_IDX] <= i + 1 && source->regs[XH_IDX] <= i + 1);
+      const bool y_dead = y_dead_global &&
+        (!aopRS (result) || (result->regs[YL_IDX] >= (roffset + i) || result->regs[YL_IDX] < 0) && (result->regs[YH_IDX] >= (roffset + i) || result->regs[YH_IDX] < 0)) &&
+        (!aopRS (source) || source->regs[YL_IDX] <= i + 1 && source->regs[YH_IDX] <= i + 1);
+      const bool a_dead = a_dead_global &&
+        (!aopRS (result) || (result->regs[A_IDX] >= (roffset + i) || result->regs[A_IDX] < 0)) &&
+        (!aopRS (source) || source->regs[A_IDX] <= i);
+
       if (i + 1 < size && (aopInReg (result, roffset + i, X_IDX) || aopInReg (result, roffset + i, Y_IDX)) && aopIsLitVal (source, soffset + i, 2, 0x0000))
         {
           if (aopInReg (result, roffset + i, X_IDX) && !clr_x)
@@ -2185,8 +2195,9 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           cost (4, 2);
           i += 2;
         }
-      else if (x_dead && i + 1 < size && (result->regs[XL_IDX] < 0 && result->regs[XH_IDX] < 0 && aopOnStack (result, roffset + i, 2) || result->type == AOP_DIR) &&
-        (source->type == AOP_LIT || source->type == AOP_DIR && soffset + i + 1 < source->size || source->type == AOP_IMMD))
+      else if (x_dead && i + 1 < size &&
+        (aopOnStack (result, roffset + i, 2) || result->type == AOP_DIR) &&
+        (aopOnStackNotExt (source, soffset + i, 2) || source->type == AOP_LIT || source->type == AOP_DIR && soffset + i + 1 < source->size || source->type == AOP_IMMD))
         {
           if (aopIsLitVal (source, soffset + i, 2, 0x0000))
             {
@@ -2207,7 +2218,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       else if (i + 1 < size && aopIsLitVal (source, soffset + i + 1, 1, 0x00) && (aopInReg (result, roffset + i, X_IDX) || aopInReg (result, roffset + i, Y_IDX)))
         {
           emit3w_o (A_CLRW, result, roffset + i, 0, 0);
-          cheapMove (result, roffset + i, source, soffset + i, !(a_dead && (result->regs[A_IDX] >= i || result->regs[A_IDX] == -1) && source->regs[A_IDX] <= i));
+          cheapMove (result, roffset + i, source, soffset + i, !a_dead);
           i += 2;
         }
       else if ((!aopRS (result) || aopOnStack(result, roffset + i, 1) || aopInReg (result, roffset + i, A_IDX)) && aopIsLitVal (source, soffset + i, 1, 0x00))
@@ -2215,7 +2226,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           emit3_o (A_CLR, result, roffset + i, 0, 0);
           i++;
         }
-      else if (y_dead && result->regs[YL_IDX] < 0 && result->regs[YH_IDX] < 0 && aopOnStack (result, roffset + i, 2) &&
+      else if (y_dead && aopOnStack (result, roffset + i, 2) &&
         (source->type == AOP_LIT || source->type == AOP_DIR && soffset + i + 1 < source->size || source->type == AOP_IMMD))
         {
           if (aopIsLitVal (source, soffset + i, 2, 0x0000))
@@ -2234,9 +2245,17 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           cost (2, 2);
           i += 2;
         }
+      else if (y_dead && i + 1 < size && aopOnStack (source, soffset + i, 2) && source->type == AOP_DIR)
+        {
+          emit2 ("ldw", "y, %s", aopGet2 (source, soffset + i));
+          emit2 ("ldw", "%s, y", aopGet2 (result, roffset + i));
+          cost (6, 4);
+          clr_y = FALSE;
+          i += 2;
+        }
       else
         {
-          cheapMove (result, roffset + i, source, soffset + i, !(a_dead && (result->regs[A_IDX] >= (roffset + i) || result->regs[A_IDX] == -1) && source->regs[A_IDX] <= i));
+          cheapMove (result, roffset + i, source, soffset + i, !a_dead);
           i++;
         }
     }
@@ -3524,7 +3543,7 @@ genPlus (const iCode *ic)
   size = result->aop->size;
 
   /* Swap if left is literal or right is in A. */
-  if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD || aopInReg (right->aop, 0, A_IDX) || right->aop->type != AOP_LIT && right->aop->size == 1 && aopOnStackNotExt (left->aop, 0, 2) || left->aop->type == AOP_STK && (right->aop->type == AOP_REG || right->aop->type == AOP_REGSTK)) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
+  if (left->aop->type == AOP_LIT || right->aop->type != AOP_LIT && left->aop->type == AOP_IMMD || aopInReg (right->aop, 0, A_IDX) || right->aop->type != AOP_LIT && right->aop->size == 1 && aopOnStackNotExt (left->aop, 0, 2) || left->aop->type == AOP_STK && (right->aop->type == AOP_REG || right->aop->type == AOP_REGSTK)) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
     {
       operand *t = right;
       right = left;
@@ -3625,8 +3644,20 @@ genPlus (const iCode *ic)
        bool yh_free = regDead (YH_IDX, ic) && (result->aop->regs[YH_IDX] >= i || result->aop->regs[YH_IDX] < 0) && leftop->regs[YH_IDX] <= i + 1 && rightop->regs[YH_IDX] < i;
        bool y_free = yl_free && yh_free;
 
+      // Special case for rematerializing sums
+      if (!started && i == size - 2 && (leftop->type == AOP_IMMD && rightop->type == AOP_LIT) &&
+        (aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Y_IDX) || x_free && aopOnStack (result->aop, i, 2)))
+        {
+          unsigned offset = byteOfVal (right->aop->aopu.aop_lit, 1) * 256 + byteOfVal (right->aop->aopu.aop_lit, 0);
+          bool y = aopInReg (result->aop, i, Y_IDX) ;
+          emit2 ("ldw", y ? "y, %s+%d" : "x, %s+%d", aopGet2 (leftop, i), offset);
+          cost (3 + y, 2);
+          genMove_o (result->aop, i, y ? ASMOP_Y : ASMOP_X, 0, 2, a_free, TRUE, y_free);
+          started = TRUE;
+          i += 2;
+        }
       // We can use incw / decw easily only for the only, top non-zero word, since it neither takes into account an existing carry nor does it update the carry.
-      if (!started && i == size - 2 &&
+      else if (!started && i == size - 2 &&
         (aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Y_IDX)) &&
         rightop->type == AOP_LIT && !byteOfVal (rightop->aopu.aop_lit, i + 1) &&
         byteOfVal (rightop->aopu.aop_lit, i) <= 1 + aopInReg (result->aop, i, X_IDX) ||
@@ -3673,9 +3704,9 @@ genPlus (const iCode *ic)
                 emit3w_o (A_INCW, result->aop, i, 0, 0);
               else
                 {
-                  genMove_o (ASMOP_X, 0, leftop, i, 2, a_free, TRUE, FALSE);
+                  genMove_o (ASMOP_X, 0, leftop, i, 2, a_free, TRUE, y_free);
                   emit3w (A_INCW, ASMOP_X, 0);
-                  genMove_o (result->aop, i, ASMOP_X, 0, 2, a_free, TRUE, FALSE);
+                  genMove_o (result->aop, i, ASMOP_X, 0, 2, a_free, TRUE, y_free);
                 }
               i += 2;
               if(i >= size)
@@ -6428,10 +6459,27 @@ genPointerGet (const iCode *ic)
       cost (4, 4);
       goto release;
     }
-  else if (!bit_field && size == 1 && !offset && left->aop->type == AOP_LIT && aopInReg(result->aop, 0, A_IDX))
+  // Special case for efficient handling of 8-bit I/O and rematerialized pointers
+  else if (!bit_field && size == 1 && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
+    && aopInReg(result->aop, 0, A_IDX))
     {
-      emit2("ld", "a, 0x%02x%02x",  byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0));
+      if (left->aop->type == AOP_LIT)
+        emit2("ld", offset ? "a, 0x%02x%02x+%d" : "a, 0x%02x%02x",  byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+      else
+        emit2("ld", offset ? "a, %s+%d" : "a, %s", left->aop->aopu.aop_immd, offset);
       cost (3, 1);
+      goto release;
+    }
+  // Special case for efficient handling of 16-bit I/O and rematerialized pointers
+  else if (!bit_field && size == 2 && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) &&
+    (aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Y_IDX)))
+    {
+      bool use_y = aopInReg (result->aop, 0, Y_IDX);
+      if (left->aop->type == AOP_LIT)
+        emit2("ldw", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", use_y ? "y" : "x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+      else
+        emit2("ldw", offset ? "%s, %s+%d" : "%s, %s", use_y ? "y" : "x", left->aop->aopu.aop_immd, offset);
+      cost (3 + use_y, 2);
       goto release;
     }
 
@@ -7415,7 +7463,7 @@ genDummyRead (const iCode *ic)
 /*-----------------------------------------------------------------*/
 /* resultRemat - result is to be rematerialized                    */
 /*-----------------------------------------------------------------*/
-static int
+static bool
 resultRemat (const iCode * ic)
 {
   if (SKIP_IC (ic) || ic->op == IFX)
@@ -7424,11 +7472,19 @@ resultRemat (const iCode * ic)
   if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)))
     {
       const symbol *sym = OP_SYMBOL_CONST (IC_RESULT (ic));
-      if (sym->remat && !POINTER_SET (ic) && sym->isspilt)
-        return 1;
+
+      if (!sym->remat || POINTER_SET (ic))
+        return(false);
+
+      bool completely_spilt = TRUE;
+      for (unsigned int i = 0; i < getSize (sym->type); i++)
+        if (sym->regs[i])
+          completely_spilt = FALSE;
+      if (completely_spilt)
+        return(true);
     }
 
-  return 0;
+  return (false);
 }
 
 /*---------------------------------------------------------------------*/
