@@ -111,7 +111,8 @@ class cl_console_base: public cl_base
   class cl_cmd *last_command;
   //class cl_cmdline *last_cmdline;
   chars last_cmd;
-
+  chars startup_command;
+  
   char nl;
   chars lbuf;
 
@@ -138,6 +139,10 @@ class cl_console_base: public cl_base
   virtual void replace_files(bool close_old, cl_f *new_in, cl_f *new_out)= 0;
   
   virtual int init(void);
+  virtual void set_startup(chars the);
+  virtual chars *get_startup() { return &startup_command; }
+  virtual bool has_startup() { return startup_command.nempty(); }
+  
   virtual void welcome(void);
   virtual int proc_input(class cl_cmdset *cmdset);
   virtual bool need_check(void) { return false; }

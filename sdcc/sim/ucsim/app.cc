@@ -140,6 +140,8 @@ cl_app::run(void)
 	}
       if (rs == rs_start)
 	{
+	  //if (startup_command.nempty())
+	  //exec(startup_command);
 	  if (o)
 	    o->get_value(&g_opt);
 	  if (sim && g_opt)
@@ -217,6 +219,7 @@ print_help(char *name)
      "  -t CPU       Type of CPU: 51, C52, 251, etc.\n"
      "  -X freq[k|M] XTAL frequency\n"
      "  -C cfg_file  Read initial commands from `cfg_file' and execute them\n"
+     "  -e command   Execute command on startup\n"
      "  -c file      Open command console on `file' (use `-' for std in/out)\n"
      "  -Z portnum   Use localhost:portnum for command console\n"
      "  -k portnum   Use localhost:portnum for serial I/O\n"
@@ -290,7 +293,7 @@ cl_app::proc_arguments(int argc, char *argv[])
   bool /*s_done= DD_FALSE,*/ k_done= false;
   //bool S_i_done= false, S_o_done= false;
 
-  strcpy(opts, "c:C:p:PX:vVt:s:S:I:a:whHgGJ_");
+  strcpy(opts, "c:C:e:p:PX:vVt:s:S:I:a:whHgGJ_");
 #ifdef SOCKET_AVAIL
   strcat(opts, "Z:r:k:");
 #endif
@@ -331,6 +334,10 @@ cl_app::proc_arguments(int argc, char *argv[])
 	if (!options->set_value("config_file", this, optarg))
 	  fprintf(stderr, "Warning: No \"config_file\" option found to set "
 		  "parameter of -C as config file\n");
+	break;
+      case 'e':
+	startup_command+= optarg;
+	startup_command+= chars("\n");
 	break;
 #ifdef SOCKET_AVAIL
       case 'Z': case 'r':
@@ -837,8 +844,8 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
     }
     cset->add(cmd= new cl_get_option_cmd("option", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_error_cmd("error", 0));
-    cmd->init();
+    /*cset->add(cmd= new cl_show_error_cmd("error", 0));
+      cmd->init();*/
   }
   if (!super_cmd)
     {

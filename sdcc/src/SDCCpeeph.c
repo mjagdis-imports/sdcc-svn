@@ -421,6 +421,10 @@ FBYNAME (labelIsUncondJump)
       jpInst = (options.model == MODEL_LARGE ? "jpf" : "jp");
       jpInst2 = "jra";
     }
+  else if (TARGET_PDK_LIKE)
+    {
+      jpInst = "goto";
+    }
   len = strlen(jpInst);
   if (strncmp(p, jpInst, len))
     {
@@ -730,6 +734,14 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
         return global_not_volatile;
     }
 
+  if (TARGET_PDK_LIKE)
+    {
+      if (var[0] == '#')
+        return true;
+      if (!strcmp (var, "p"))
+        return true;
+    }
+
   /* Extract a symbol name from the variable */
   while (*vp && (*vp!='_'))
     vp++;
@@ -805,7 +817,7 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
       }
   }
 
-  /* Couldn't find the symbol for some reason. Assume volatile. */
+  /* Couldn't find the symbol for some reason. Assume volatile if the current function touches anything volatile. */
   return global_not_volatile;
 }
 

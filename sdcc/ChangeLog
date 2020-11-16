@@ -1,3 +1,172 @@
+2019-05-29 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Improve arithmetic right shift.
+	* src/hc08/gen.c:
+	  Minor improvements suggested by Tony Papadimitriou.
+
+2019-05-29 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCcse.c,
+	  src/SDCCopt.c: fix some def/use bugs
+	* support/regression/tests/gcc-tortue-execute-stdarg-5.c:
+	  disable test for stm8, unimplemented addition op
+	* src/mcs51/ralloc.c,
+	  src/ds390/ralloc.c,
+	  src/hc08/ralloc.c,
+	  src/z80/ralloc.c,
+	  src/pdk/ralloc.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/ralloc.c: fix a live range bug
+
+2019-05-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/string.h,
+	  device/lib/incl.mk,
+	  device/lib/memccpy.c,
+	  support/regression/tests/memory.c:
+	  Implement C2X memccpy().
+
+2019-04-27 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/ralloc.c,
+	  src/pdk/gen.c:
+	  Improve register packing.
+
+2019-04-27 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/peeph.def:
+	  Improve workaround for missing addc/subc a, k; improve shifts by 7, 15, etc; fix handling of non-dead a in wide right shifty by literal.
+
+2019-04-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Fix note on endianness.
+
+2019-04-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix bug #2904.
+	* src/z80/gen.c:
+	  Implement RFE #623.
+
+2019-04-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix addc m, a, patch by Nicolas Lesser,
+	  fix subs m, a.
+	* src/pdk/gen.c:
+	  +=, -= optimization; fix wide == between stack and register operand.
+
+2019-04-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/pdk.src/pdk.cc:
+	  Fix register dump, patch by Nicolas Lesser.
+
+2019-04-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Various fixes and improvements.
+	* src/SDCCpeeph.c,
+	  src/pdk/peeph.def:
+	  Remove untargeted labels.
+	* support/regression/tests/*.c:
+	  Disable tests that won't work anytime soon on pkd15.
+	* sim/ucsim/globals.cc:
+	  More verbose pdk subtype output.
+
+2019-04-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* Merged pdk branch to trunk.
+
+2019-04-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/linksrc/lkrloc3.c:
+	  pdk13 linker fix, patch By Nicolas Lesser.
+
+2019-04-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* Merged post-3.9 branch to trunk.
+
+2019-04-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Fix POINTER_SET with left operand on stack, right operand in pseudo-register.
+
+2019-04-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-460010.c,
+	  support/regression/tests/bug1928022.c,
+	  support/regression/tests/gcc-torture-execute-991216-2.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-15.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* src/pdk/gen.c:
+	  Improve handling of 16-bit return value,
+	  fix stack parameters,
+	  fix carry in comparison of wide stack values.
+	* src/pdk/peeph.def:
+	  Remove double exchange.
+
+2019-04-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix a bug in 16-bit store from registers via rematerialized pointer with non-zero offset;
+	  fix a bug in handling of on-stack operands to &,|;
+	  fix a bug in handling of past-end offsets for stack operands.
+
+2019-04-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c:
+	  Fix handling of -0.0 in ifx.
+
+2019-04-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sdas/linksrc/lkrloc3.c:
+	  Linker warning improvement, patch by Nicolas Lesser.
+	* support/regression/tests/*.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* src/pdk/gen.c:
+	  Fix wide left shift by large literal.
+	* sim/ucsim/pdk.src/glob.cc,
+	  sim/ucsim/pdk.src/glob.h,
+	  sim/ucsim/pdk.src/inst.cc,
+	  sim/ucsim/pdk.src/instcl.h,
+	  sim/ucsim/pdk.src/pdk.cc:
+	  pdk13 simulator, patch by Nicolas Lesser.
+
+2019-04-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/*.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lkrloc3.c:
+	  Linker memory size warning fixes, patches by Nicolas Lesser.
+	* src/pdk/ralloc.c:
+	  Fix handling of shift result assigned to sfr.
+
+2019-04-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk13/pdk13mch.c:
+	  Assembler fixes.
+
+2019-04-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk13/pdk13mch.c:
+	  Assembler fixes.
+
+2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sdas/aspdk13/pdk13mch.c,
+	  sdas/aspdk13/pdk13pst.c:
+	  Assembler fix, patch by Leo.
+	* sim/ucsim/pdk.src/pdk.cc:
+	  Simulator fix, patch by Nicolas Lesser.
+
 2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* .version,
@@ -5,12 +174,77 @@
 	  sdcc.spec:
 	  Bump version in preparation of 3.9.0 release.
 
+2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/*:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* sdas/aspdk15/pdk15mch.c
+	  Assembler fix, patch by Nicolas Lesser.
+	* sim/ucsim/pdk.src/inst.cc,
+	  sim/ucsim/pdk.src/pdk.cc,
+	  sim/ucsim/pdk.src/regspdk.h:
+	  Simulator fix, patch by Nicolas Lesser.
+	* sdas/aspdk13/pdk13mch.c:
+	  Assembler fix, patch by Leo.
+
+2019-04-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/bug-2274.c:
+	  Support dummy write for handling of uninitialized variables, better code for write of literal to bit-field.
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix dec m for pdk15.
+	* support/regression/tests/bitfields.c,
+	  support/regression/tests/bug-2181.c,
+	  support/regression/tests/bug-2197.c,
+	  support/regression/tests/bug-221100.c,
+	  support/regression/tests/bug-221168.c,
+	  support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-2349.c,
+	  support/regression/tests/bug-2357.c,
+	  support/regression/tests/bug-2363.c,
+	  support/regression/tests/bug-2373.c,
+	  support/regression/tests/bug-2455.c,
+	  support/regression/tests/bug-2497.c:
+	  Disable some tests for pdk15, on which they won't work anytime soon.
+	* sdas/linksrc/lkmain.c,
+	  sdas/linksrc/lkrloc3.c,
+	  sdas/linksrc/sdld.c,
+	  sdas/linksrc/sdld.h:
+	  Fix bug #2896, patch by Nicolas Lesser.
+	* src/pdk/main.c:
+	  Enable peephole optimizer for pdk13, pdk15.
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix and m, a, patch by Nicolas Lesser.
+
 2019-04-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/aspdk15/pdk15mch.c,
 	  sdas/asxxsrc/asout.c,
 	  sdas/linksrc/lkrloc3.c:
 	  Assembler fix, patch by Nicolas Lesser.
+	* support/regression/fwk/include/testfwk.h,
+	  support/regression/tests/absolute.c,
+	  support/regression/tests/bug-1918.c,
+	  support/regression/tests/bug-2124.c,
+	  support/regression/tests/bug-2271.c:
+	  Towards regression testing for pdk15.
+
+2019-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sdas/aspdk13/pdk13mch.c:
+	  Assembler fixes, patch by Leo.
+	* sdas/aspdk13/pdk13pst.c:
+	  Assembler fixes.
+	* device/lib/Makefile.in:
+	  Build pdk13 library.
+	* sim/ucsim/globals.cc,
+	  sim/ucsim/pdk.src/*,
+	  sim/ucsim/stypes.h,
+	  pdk15 simulator, patch by Nicolas Lesser.
+	* support/regression/Makefile.in,
+	  support/regression/ports/pdk15:
+	  pdk15 regression testing infrastructure.
 
 2019-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
@@ -30,10 +264,43 @@
 	  sdas/linksrc/lkrloc3.c:
 	  Fix bug #2900, patch by Nicolas Lesser.
 
+2019-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/signal.h,
+	  device/include/stdint.h:
+	  Support sig_atomic_t.
+	* src/stm8/peep.c,
+	  src/stm8/peeph.def:
+	  Peephole improvements, picked from patch #290 by Visenri.
+	* src/z80/peeph-gbz80.def,
+	  src/z80/peeph-r2k.def,
+	  src/z80/peeph-z80.def:
+	  Peephole rule improvements, patch by b-s-a.
+
+2019-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCpeeph.c,
+	  src/pdk/gen.c,
+	  src/pdk/main.c,
+	  src/pdk/peeph.def:
+	  Basic peephole optimizer.
+	* sdas/aspdk13/pdk13mch.c,
+	  sdas/aspdk13/pdk13pst.c:
+	  Basic pdk13 assembler, patch by Leo.
+
 2019-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* sdas/aspdk15/Makefile:
 	  Remove generated file from svn.
+
+2019-04-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* configure,
+	  configure.ac,
+	  Makefile.in,
+	  Makefile.common.in,
+	  sdas/aspdk13:
+	  Infrastructure for pdk13 assembler.
 
 2019-03-29 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

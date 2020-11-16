@@ -15,7 +15,8 @@
 
 long x, y;
 
-#ifndef __SDCC_pdk14 // Bug #2874
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Bug #2874
+#if !defined(__SDCC_stm8)
 
 #define INLINED_{inlined}
 
@@ -131,14 +132,17 @@ f4 (int i, ...)
   va_end (ap);
 }
 #endif
+#endif
 
 void
 testTortureExecute (void)
 {
-#ifndef __SDCC_pdk14 // Bug #2874
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Bug #2874
 #if defined(__SDCC_pic16)
   //broken, skip
 #elif defined(__SDCC_mcs51) && defined(__SDCC_STACK_AUTO) && !defined(__SDCC_USE_XSTACK) && defined(INLINED_yes)
+  //broken, skip
+#elif defined(__SDCC_stm8)
   //broken, skip
 #else
   f1 (3, 16.0, 128L, 32.0);
