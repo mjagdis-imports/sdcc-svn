@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _memcpy.c - part of string library functions
+   features.h - Z80 specific features.
 
-   Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
+   Copyright (C) 2001, Michael Hope
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -10,10 +10,10 @@
 
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
+   You should have received a copy of the GNU General Public License 
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -26,26 +26,16 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#include <string.h>
-#include <sdcc-lib.h>
+#ifndef __SDCC_ASM_Z180_FEATURES_H
+#define __SDCC_ASM_Z180_FEATURES_H   1
 
-#if !_SDCC_PORT_PROVIDES_MEMCPY
+#define _REENTRANT
+#define _CODE
+#define _AUTOMEM
+#define _STATMEM
 
-#undef memcpy /* Avoid conflict with builtin memcpy() in Z80 and some related ports */
+#define _SDCC_MANGLES_SUPPORT_FUNS	1
+#define _SDCC_Z80_STYLE_LIB_OPT		1
 
-void * memcpy (void * dst, const void * src, size_t acount)
-{
-	void * ret = dst;
-	char * d = dst;
-	const char * s = src;
-
-	/*
-	 * copy from lower addresses to higher addresses
-	 */
-	while (acount--) {
-		*d++ = *s++;
-	}
-
-	return(ret);
-}
 #endif
+

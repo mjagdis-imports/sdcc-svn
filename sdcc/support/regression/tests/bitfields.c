@@ -10,6 +10,7 @@ struct {
   char c3_5 : 5;
 } c_bf;
 
+#ifndef __SDCC_pdk14 // Lack of memory
 #if !defined(__SDCC_pic16)
 struct {
   int i0_7 : 7;
@@ -35,6 +36,7 @@ struct {
   unsigned int b9 : 1;
 } sb_bf;
 #endif  /* !__SDCC_pic16 */
+#endif
 
 struct {
   unsigned int b0 : 1;
@@ -83,11 +85,17 @@ struct {
   unsigned int b1 : 3;
 } size2d_bf;
 
+struct { /* Bit-fields that end on byte boundary */
+  unsigned int b0 : 3;
+  unsigned int b1 : 5;
+  unsigned int b2 : 5;
+  unsigned int b3 : 3;
+} size2e_bf;
+
 struct {
   unsigned int b0 : 3;
   unsigned int b1 : 12;
 } size3a_bf;
-
 
 struct {
   signed int s0_7  : 7;
@@ -138,6 +146,7 @@ testBitfieldSizeof(void)
 void
 testBitfieldsSingleBitLiteral(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if !defined(__SDCC_pic16)
   size2b_bf.b0 = 0;
   size2b_bf.b1 = 0;
@@ -187,11 +196,13 @@ testBitfieldsSingleBitLiteral(void)
   ASSERT(size2b_bf.b8==0);
   ASSERT(size2b_bf.b9==1);
 #endif  /* !__SDCC_pic16 */
+#endif
 }
 
 void
 testBitfieldsSingleBit(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if !defined(__SDCC_pic16)
   volatile unsigned char c;
 
@@ -246,11 +257,13 @@ testBitfieldsSingleBit(void)
   ASSERT(size2b_bf.b8==0);
   ASSERT(size2b_bf.b9==1);
 #endif  /* !__SDCC_pic16 */
+#endif
 }
 
 void
 testBitfieldsMultibitLiteral(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if !defined(__SDCC_pic16)
   size2c_bf.b0 = 0xff;   /* should truncate to 0x0f */
   size2c_bf.b1 = 0;
@@ -291,12 +304,24 @@ testBitfieldsMultibitLiteral(void)
   size2d_bf.b1 = 5;
   ASSERT(size2d_bf.b0==0x0a46);
   ASSERT(size2d_bf.b1==5);
+
+  size2e_bf.b0 = 2;
+  size2e_bf.b1 = 2;
+  size2e_bf.b2 = 2;
+  size2e_bf.b3 = 2;
+
+  ASSERT(size2e_bf.b0==2);
+  ASSERT(size2e_bf.b1==2);
+  ASSERT(size2e_bf.b2==2);
+  ASSERT(size2e_bf.b3==2);
 #endif  /* !__SDCC_pic16 */
+#endif
 }
 
 void
 testBitfieldsMultibit(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if !defined(__SDCC_pic16)
   volatile int allones = 0xffff;
   volatile int zero = 0;
@@ -335,7 +360,19 @@ testBitfieldsMultibit(void)
   size2d_bf.b1 = x;
   ASSERT(size2d_bf.b0==0x0a46);
   ASSERT(size2d_bf.b1==5);
+
+  x = 2;
+  size2e_bf.b0 = x;
+  size2e_bf.b1 = x;
+  size2e_bf.b2 = x;
+  size2e_bf.b3 = x;
+
+  ASSERT(size2e_bf.b0==2);
+  ASSERT(size2e_bf.b1==2);
+  ASSERT(size2e_bf.b2==2);
+  ASSERT(size2e_bf.b3==2);
 #endif  /* !__SDCC_pic16 */
+#endif
 }
 
 void
@@ -365,6 +402,7 @@ testBitfields(void)
 void
 testSignedBitfields(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if !defined(__SDCC_pic16)
   s_bf.s0_7 =   0xf0;
   s_bf.s7_1 =      1;
@@ -385,6 +423,7 @@ testSignedBitfields(void)
   ASSERT(s_bf.s0_7 > 0);
   ASSERT(s_bf.s8_9 > 0);
 #endif  /* !__SDCC_pic16 */
+#endif
 }
 
 /* test case for enhancement request #2291335 : Unnamed bit-field initialization */
@@ -431,6 +470,7 @@ struct
 
 /* test case for const struct with bitfields */
 
+#ifndef __SDCC_pdk14 // Lack of memory
 #ifndef __SDCC_pic16 // TODO: enable when the pic16 ports supports bitfields of size greater than 8 bits!
 const struct
 {
@@ -444,6 +484,7 @@ const struct
   unsigned int g;
 } cs = { 1, 2, 345, 6, 2, 1, 54321};
 #endif
+#endif
 
 #if defined(PORT_HOST) && (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 6)
 /* Workaround to fix the (cs.f == 1) test failure, which appeared in svn build 6665, when -O2 gcc option was included.
@@ -456,6 +497,7 @@ const struct
 void
 testCS(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #ifndef __SDCC_pic16 // TODO: enable when the pic16 ports supports bitfields of size greater than 8 bits!
   ASSERT(cs.a == 1);
   ASSERT(cs.b == 2);
@@ -464,6 +506,7 @@ testCS(void)
   ASSERT(cs.e == 2);
   ASSERT(cs.f == 1);
   ASSERT(cs.g == 54321U);
+#endif
 #endif
 }
 #if defined(PORT_HOST) && defined(__sun) && defined(__i386__) && defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 6)

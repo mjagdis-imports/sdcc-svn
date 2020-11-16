@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: timercl.h 621 2017-02-03 10:13:54Z drdani $ */
-
 #ifndef STM8_TIMERCL_HEADER
 #define STM8_TIMERCL_HEADER
 
@@ -105,6 +103,7 @@ class cl_tim: public cl_hw
   cl_tim(class cl_uc *auc, int aid, t_addr abase);
   virtual int init(void);
   virtual int cfg_size(void) { return stm8_tim_nuof_cfg; }
+  virtual char *cfg_help(t_addr addr);
  
   virtual int tick(int cycles);
   virtual void reset(void);

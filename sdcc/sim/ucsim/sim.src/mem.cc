@@ -190,11 +190,11 @@ cl_memory::dump(t_addr start, t_addr stop, int bpl, class cl_f *f)
   if (start < lva)
     start= lva;
   if (start > hva)
-    start= hva;
-  if (stop < lva)
-    stop= lva;
+    return dump_finished;
   if (stop > hva)
     stop= hva;
+  if (stop < lva)
+    return dump_finished;
   if (stop >= start)
     {
       step= +1;
@@ -266,6 +266,16 @@ cl_memory::dump_s(t_addr start, t_addr stop, int bpl, class cl_f *f)
     start= dump_finished;
   if (stop < 0)
     stop= start + 10*8 - 1;
+  
+  if (start < lva)
+    start= lva;
+  if (start > hva)
+    return dump_finished;
+  if (stop > hva)
+    stop= hva;
+  if (stop < lva)
+    return dump_finished;
+  
   if (bpl < 0)
     bpl= 8;
   t_addr a= start;
@@ -300,6 +310,16 @@ cl_memory::dump_b(t_addr start, t_addr stop, int bpl, class cl_f *f)
     start= dump_finished;
   if (stop < 0)
     stop= start + 10*8 - 1;
+
+  if (start < lva)
+    start= lva;
+  if (start > hva)
+    return dump_finished;
+  if (stop > hva)
+    stop= hva;
+  if (stop < lva)
+    return dump_finished;
+
   if (bpl < 0)
     bpl= 8;
   t_addr a= start;
@@ -335,8 +355,19 @@ cl_memory::dump_i(t_addr start, t_addr stop, int bpl, class cl_f *f)
     stop= start + 10*8 - 1;
   if (stop > hva)
     stop= hva;
+
+  if (start < lva)
+    start= lva;
+  if (start > hva)
+    return dump_finished;
+  if (stop > hva)
+    stop= hva;
+  if (stop < lva)
+    return dump_finished;
+  
   if (start > stop)
     return dump_finished= stop;
+  
   if (bpl < 0)
     bpl= 16;
   if (bpl > 32)
@@ -391,10 +422,23 @@ cl_memory::dump(enum dump_format fmt,
 		t_addr start, t_addr stop, int bpl,
 		class cl_f *f)
 {
+  t_addr lva= lowest_valid_address();
+  t_addr hva= highest_valid_address();
+
   if (start < 0)
     start= dump_finished;
   if (stop < 0)
     stop= start + 10*8 - 1;
+
+  if (start < lva)
+    start= lva;
+  if (start > hva)
+    return dump_finished;
+  if (stop > hva)
+    stop= hva;
+  if (stop < lva)
+    return dump_finished;
+  
   if (bpl < 0)
     bpl= 8;
   switch (fmt & df_format)
@@ -465,9 +509,9 @@ cl_memory::print_info(chars pre, class cl_console_base *con)
   if (!hidden)
     {
       con->dd_printf("%s0x%06x-0x%06x %8d %s (%d,%s,%s)\n", (char*)pre,
-		     (unsigned int)(get_start_address()),
-		     (unsigned int)(highest_valid_address()),
-		     (unsigned int)(get_size()),
+		     AU(get_start_address()),
+		     AU(highest_valid_address()),
+		     AU(get_size()),
 		     n,
 		     width, data_format, addr_format);
     }
@@ -637,7 +681,8 @@ t_mem
 cl_write_operator::write(t_mem val)
 {
   //printf("write event at 0x%x bp=%p\n",address,bp);
-  uc->events->add(bp);
+  if (bp->do_hit())
+    uc->events->add(bp);
   if (next_operator)
     return(next_operator->write(val));
   else if (cell)
@@ -662,7 +707,8 @@ t_mem
 cl_read_operator::read(void)
 {
   //printf("read event at 0x%x bp=%p\n",address,bp);
-  uc->events->add(bp);
+  if (bp->do_hit())
+    uc->events->add(bp);
   if (next_operator)
     return(next_operator->read());
   else if (cell)
@@ -1249,7 +1295,9 @@ cl_address_space::cl_address_space(const char *id,
   int i;
   for (i= 0; i < size; i++)
     {
-      memcpy(&(cella[i]), cell, sizeof(c));
+      void *p1= &(cella[i]);
+      void *p2= cell;
+      memcpy(p1, p2, sizeof(c));
       cella[i].init();
     }
   dummy= new cl_dummy_cell(awidth);
@@ -1689,9 +1737,9 @@ cl_address_space::print_info(chars pre, class cl_console_base *con)
   if (!hidden)
     {
       con->dd_printf("%s0x%06x-0x%06x %8d %s (%d,%s,%s)\n", (char*)pre,
-		     (unsigned int)(get_start_address()),
-		     (unsigned int)(highest_valid_address()),
-		     (unsigned int)(get_size()),
+		     AU(get_start_address()),
+		     AU(highest_valid_address()),
+		     AU(get_size()),
 		     n,
 		     width, data_format, addr_format);
     }
@@ -1834,9 +1882,9 @@ cl_memory_chip::print_info(chars pre, class cl_console_base *con)
     {
       //con->dd_printf(pre0);
       con->dd_printf("%s0x%06x-0x%06x %8d %s (%d,%s,%s)\n", (char*)pre,
-		     (unsigned int)(get_start_address()),
-		     (unsigned int)(highest_valid_address()),
-		     (unsigned int)(get_size()),
+		     AU(get_start_address()),
+		     AU(highest_valid_address()),
+		     AU(get_size()),
 		     n,
 		     width, data_format, addr_format);
     }
@@ -2420,6 +2468,36 @@ cl_bander::activate(class cl_console_base *con)
       m<<= 1;
     }
   return activated= true;
+}
+
+void
+cl_bander::print_info(chars pre, class cl_console_base *con)
+{
+  if (address_space &&
+      address_space->hidden)
+    return;
+  if (memchip &&
+      memchip->hidden)
+    return;
+  con->dd_printf(pre);
+  if (address_space)
+    {
+      con->dd_printf("%s ", address_space->get_name("unknown"));
+      con->dd_printf(address_space->addr_format, as_begin);
+      con->dd_printf(" ");
+      con->dd_printf(address_space->addr_format, as_end);
+    }
+  else
+    con->dd_printf("x");
+  con->dd_printf(" -> bander(%d/%d) ", bpc, distance);
+  if (memchip)
+    {
+      con->dd_printf("%s ", memchip->get_name("unknown"));
+      con->dd_printf(memchip->addr_format, chip_begin);
+    }
+  else
+    con->dd_printf("x");
+  con->dd_printf(" %s\n", (activated)?"activated":"inactive");
 }
 
 

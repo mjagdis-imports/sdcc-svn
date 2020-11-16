@@ -34,6 +34,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // sim.src
 #include "simcl.h"
+#include "uccl.h"
 
 // local, cmd.src
 #include "cmd_execcl.h"
@@ -72,8 +73,8 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
   if (params[0])
     {
       if (!sim->uc->inst_at(start))
-	con->dd_printf(cchars("Warning: maybe not instruction at 0x%06lx\n"),
-		       start);
+	con->dd_printf(cchars("Warning: maybe not instruction at 0x%06x\n"),
+		       AI(start));
       sim->uc->PC= start;
       if (params[1])
 	{
@@ -94,7 +95,7 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
 	    }
 	}
     }
-  con->dd_printf(cchars("Simulation started, PC=0x%06x\n"), sim->uc->PC);
+  con->dd_printf(cchars("Simulation started, PC=0x%06x\n"), AI(sim->uc->PC));
   /*
   if (sim->uc->fbrk_at(sim->uc->PC))
     sim->uc->do_inst(1);
@@ -103,6 +104,10 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
   return(false);
 }
 
+CMDHELP(cl_run_cmd,
+	"run [start [stop]]",
+	"Go",
+	"long help of run")
 
 /*
  * Command: stop
@@ -119,6 +124,10 @@ COMMAND_DO_WORK_SIM(cl_stop_cmd)
   return(false);
 }
 
+CMDHELP(cl_stop_cmd,
+	"stop",
+	"Stop",
+	"long help of stop")
 
 /*
  * Command: step
@@ -130,17 +139,101 @@ COMMAND_DO_WORK_SIM(cl_stop_cmd)
 //		     class cl_cmdline *cmdline, class cl_console *con)
 COMMAND_DO_WORK_SIM(cl_step_cmd)
 {
-  class cl_cmd_arg *parm= cmdline->param(0);
+  class cl_cmd_arg *params[2];
+  params[0]= cmdline->param(0);
+  params[1]= cmdline->param(1);
   int instrs= 1;
-  if (parm != NULL)
-    instrs= parm->i_value;
+  if (params[0] != NULL)
+    {
+      instrs= params[0]->i_value;
+    }
+  class cl_uc *uc= sim->get_uc();
+  if (uc && (params[1] != NULL))
+    {
+      chars s= params[1]->get_svalue();
+      unsigned long do_clk;
+      class cl_time_measurer *tm= NULL;
+      do_clk= instrs;
+      if (s == "clk")
+	{
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "s") || (s == "sec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "ms") || (s == "msec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs/1000.0);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "us") || (s == "usec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs/1000000.0);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "ns") || (s == "nsec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs/1000000000.0);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if (s == "vclk")
+	{
+	  tm= new cl_time_vclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "fclk") || (s == "fetch"))
+	{
+	  tm= new cl_time_fclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "rclk") || (s == "read"))
+	{
+	  tm= new cl_time_rclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "wclk") || (s == "write"))
+	{
+	  tm= new cl_time_wclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else
+	{
+	  con->dd_printf("Unknown unit.\n");
+	  return 0;
+	}
+      if (tm)
+	{
+	  uc->stop_when(tm);
+	  sim->start(con, 0);
+	}
+      return 0;
+    }
   if (instrs <= 0)
     instrs= 1;
   sim->start(con, instrs);
   return(0);
 }
 
-
+CMDHELP(cl_step_cmd,
+	"step [number [unit]]",
+	"Step",
+	"long help of step")
 /*
  * Command: next
  *----------------------------------------------------------------------------
@@ -204,6 +297,10 @@ COMMAND_DO_WORK_SIM(cl_next_cmd)
   return(false);
 }
 
+CMDHELP(cl_next_cmd,
+	"next",
+	"Next",
+	"long help of next")
 
 /*
  * Command: help
@@ -228,10 +325,11 @@ COMMAND_DO_WORK_APP(cl_help_cmd)
     for (i= 0; i < cmdset->count; i++)
       {
 	class cl_cmd *c= (class cl_cmd *)(cmdset->at(i));
-	if (c->short_help)
-	  con->dd_printf("%s\n", c->short_help);
+	/*if (c->short_help.nempty())
+	  con->dd_printf("%s\n", (char*)c->short_help);
 	else
-	  con->dd_printf("%s\n", (char*)(c->names->at(0)));
+	con->dd_printf("%s\n", (char*)(c->names->at(0)));*/
+	c->print_short(con);
       }
   }
   else
@@ -256,11 +354,12 @@ COMMAND_DO_WORK_APP(cl_help_cmd)
 		{
 		  class cl_cmd *c=
 		    dynamic_cast<class cl_cmd *>(subset->object_at(i));
-		  con->dd_printf("%s\n", c->short_help);
+		  //con->dd_printf("%s\n", (char*)c->short_help);
+		  c->print_short(con);
 		}
 	    }
-	  if (cmd_found->long_help)
-	    con->dd_printf("%s\n", cmd_found->long_help);
+	  if (cmd_found->long_help.nempty())
+	    con->dd_printf("%s\n", (char*)cmd_found->long_help);
 	}
       if (!matches ||
 	  !cmd_found)
@@ -268,6 +367,11 @@ COMMAND_DO_WORK_APP(cl_help_cmd)
     }
   return(false);
 }
+
+CMDHELP(cl_help_cmd,
+	"help [command [subcommand]]",
+	"List of known commands, or description of specified command",
+	"Long help of help command")
 
 bool
 cl_help_cmd::do_set(class cl_cmdline *cmdline, int pari,
@@ -292,10 +396,11 @@ cl_help_cmd::do_set(class cl_cmdline *cmdline, int pari,
 	    {
 	      matches++;
 	      cmd_found= cmd;
-	      if (cmd->short_help)
-		con->dd_printf("%s\n", cmd->short_help);
+	      /*if (cmd->short_help.nempty())
+		con->dd_printf("%s\n", (char*)cmd->short_help);
 	      else
-		con->dd_printf("%s\n", (char*)(cmd->names->at(0)));
+	      con->dd_printf("%s\n", (char*)(cmd->names->at(0)));*/
+	      cmd->print_short(con);
 	      //continue;
 	    }
 	  else
@@ -320,6 +425,10 @@ COMMAND_DO_WORK(cl_quit_cmd)
   return(1);
 }
 
+CMDHELP(cl_quit_cmd,
+	"quit",
+	"Quit",
+	"long help of quit")
 
 /*
  * Command: kill
@@ -337,6 +446,10 @@ COMMAND_DO_WORK_APP(cl_kill_cmd)
   return(1);
 }
 
+CMDHELP(cl_kill_cmd,
+	"kill",
+	"Shutdown simulator",
+	"long help of kill")
 
 /*
  * EXEC file
@@ -352,7 +465,7 @@ COMMAND_DO_WORK_APP(cl_exec_cmd)
   }
   if (!fn || !*fn)
     {
-      con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+      syntax_error(con);
       return (false);
     }
 
@@ -362,6 +475,10 @@ COMMAND_DO_WORK_APP(cl_exec_cmd)
   return(false);
 }
 
+CMDHELP(cl_exec_cmd,
+	"exec \"file\"",
+	"Execute commands from file",
+	"long help of exec")
 
 /*
  * expression expression
@@ -401,21 +518,25 @@ COMMAND_DO_WORK_APP(cl_expression_cmd)
 	    {
 	      switch (fmt[i])
 		{
-		case 'x': con->dd_printf("%lx\n", v); break;
-		case 'X': con->dd_printf("0x%lx\n", v); break;
-		case '0': con->dd_printf("0x%08lx\n", v); break;
-		case 'd': con->dd_printf("%ld\n", v); break;
-		case 'o': con->dd_printf("%lo\n", v); break;
-		case 'u': con->dd_printf("%lu\n", v); break;
+		case 'x': con->dd_printf("%x\n", MU(v)); break;
+		case 'X': con->dd_printf("0x%x\n", MU(v)); break;
+		case '0': con->dd_printf("0x%08x\n", MU32(v)); break;
+		case 'd': con->dd_printf("%d\n", MI(v)); break;
+		case 'o': con->dd_printf("%o\n", MU(v)); break;
+		case 'u': con->dd_printf("%u\n", MU(v)); break;
 		case 'b': con->dd_printf("%s\n", (char*)cbin(v,8*sizeof(v))); break;
 		}
 	    }
 	}
       else
-	con->dd_printf("%ld\n", v);
+	con->dd_printf("%d\n", MI(v));
     }
   return(false);
 }
 
+CMDHELP(cl_expression_cmd,
+	"expression [/format] expr",
+	"Evaluate the expression",
+	"long help of expression ")
 
 /* End of cmd.src/cmd_exec.cc */

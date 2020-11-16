@@ -46,7 +46,7 @@ extern "C"
 #include "port.h"
 }
 
-typedef std::set<unsigned short int> lospreset_t;
+typedef std::set<unsigned int> lospreset_t;
 
 static unsigned short int maxval;
 
@@ -121,7 +121,8 @@ typedef std::list<assignment_lospre> assignment_list_lospre_t;
 
 struct tree_dec_lospre_node
 {
-  std::set<unsigned int> bag;
+  lospreset_t bag;
+
   assignment_list_lospre_t assignments;
   unsigned weight; // The weight is the number of nodes at which intermediate results need to be remembered. In general, to minimize memory consumption, at join nodes the child with maximum weight should be processed first.
 };
@@ -173,8 +174,8 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
   assignment_list_lospre_t::iterator ai;
   boost::tie(c, c_end) = adjacent_vertices(t, T);
 
-  assignment_list_lospre_t &alist2 = T[t].assignments;
-  assignment_list_lospre_t &alist = T[*c].assignments;
+  assignment_list_lospre_t &alist = T[t].assignments;
+  std::swap(alist, T[*c].assignments);
 
   if(alist.size() > size_t(options.max_allocs_per_node) / 2)
     {
@@ -182,11 +183,11 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
       return(-1);
     }
 
-  std::set<unsigned short> new_inst;
+  lospreset_t new_inst;
   std::set_difference(T[t].bag.begin(), T[t].bag.end(), T[*c].bag.begin(), T[*c].bag.end(), std::inserter(new_inst, new_inst.end()));
-  unsigned short int i = *(new_inst.begin());
+  unsigned int i = *(new_inst.begin());
 
-  for(ai = alist.begin(); ai != alist.end(); ++ai)
+  for(ai = alist.begin(); ai != alist.end();)
     {
       ai->local.insert(i);
       for(unsigned short int j = 0; j <= maxval; j++)
@@ -198,11 +199,10 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
           if(maxval > 3 && G[i].i_uses[1] && !(j & 4))
             continue;
 
-          alist2.push_back(*ai);
+          ai = alist.insert(ai, *ai);
+          ++ai;
         }
     }
-
-  alist.clear();
 
   return(0);
 }
@@ -247,9 +247,9 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
   std::swap(alist, T[*c].assignments);
 
-  std::set<unsigned short int> old_inst;
+  lospreset_t old_inst;
   std::set_difference(T[*c].bag.begin(), T[*c].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(old_inst, old_inst.end()));
-  unsigned short int i = *(old_inst.begin());
+  unsigned int i = *(old_inst.begin());
 
   assignment_list_lospre_t::iterator ai, aif;
 
@@ -358,11 +358,7 @@ nextassignment:
               ++ai;
             }
           else
-            {
-              alist.erase(ai);
-              ai = aif;
-              ++ai;
-            }
+            ai = alist.erase(ai);
         }
     }
 
@@ -394,41 +390,35 @@ void tree_dec_lospre_join(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
   ++c;
   c3 = c;
 
-  assignment_list_lospre_t &alist1 = T[t].assignments;
+  assignment_list_lospre_t &alist = T[t].assignments;
   assignment_list_lospre_t &alist2 = T[*c2].assignments;
-  assignment_list_lospre_t &alist3 = T[*c3].assignments;
+  std::swap(alist, T[*c3].assignments);
 
+  alist.sort();
   alist2.sort();
-  alist3.sort();
 
-  assignment_list_lospre_t::iterator ai2, ai3;
-  for (ai2 = alist2.begin(), ai3 = alist3.begin(); ai2 != alist2.end() && ai3 != alist3.end();)
+  assignment_list_lospre_t::iterator ai, ai2;
+  for (ai = alist.begin(), ai2 = alist2.begin(); ai != alist.end() && ai2 != alist2.end();)
     {
-      if (assignments_lospre_locally_same(*ai2, *ai3))
+      if (assignments_lospre_locally_same(*ai, *ai2))
         {
-          ai2->s.get<0>() += ai3->s.get<0>();
-          ai2->s.get<1>() += ai3->s.get<1>();
-          for (size_t i = 0; i < ai2->global.size(); i++)
-            ai2->global[i] = (ai2->global[i] | ai3->global[i]);
-          alist1.push_back(*ai2);
+          ai->s.get<0>() += ai2->s.get<0>();
+          ai->s.get<1>() += ai2->s.get<1>();
+          for (size_t i = 0; i < ai->global.size(); i++)
+            ai->global[i] = (ai->global[i] | ai2->global[i]);
 
+          ++ai;
           ++ai2;
-          ++ai3;
         }
-      else if (*ai2 < *ai3)
-        {
-          ++ai2;
-          continue;
-        }
-      else if (*ai3 < *ai2)
-        {
-          ++ai3;
-          continue;
-        }
+      else if (*ai < *ai2)
+        ai = alist.erase(ai);
+      else if (*ai2 < *ai)
+        ++ai2;
     }
+  while(ai != alist.end())
+    ai = alist.erase(ai);
 
   alist2.clear();
-  alist3.clear();
 }
 
 template <class T_t, class G_t>
@@ -488,9 +478,9 @@ void tree_dec_safety_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
   std::swap(alist, T[*c].assignments);
 
-  std::set<unsigned short int> old_inst;
+  lospreset_t old_inst;
   std::set_difference(T[*c].bag.begin(), T[*c].bag.end(), T[t].bag.begin(), T[t].bag.end(), std::inserter(old_inst, old_inst.end()));
-  unsigned short int i = *(old_inst.begin());
+  unsigned int i = *(old_inst.begin());
 
   assignment_list_lospre_t::iterator ai, aif;
 
@@ -704,7 +694,7 @@ static void forward_lospre_assignment(G_t &G, typename boost::graph_traits<G_t>:
 
       iCode *nic = G[i].ic;
 
-      if (isOperandEqual(IC_RESULT(ic), IC_LEFT(nic)) && nic->op != ADDRESS_OF && nic->op != PCALL && (!POINTER_GET(nic) || !IS_PTR(operandType(IC_LEFT(nic))) || !IS_BITFIELD(operandType(IC_LEFT(nic))->next) || compareType(operandType(IC_LEFT(nic)), operandType(tmpop)) == 1))
+      if (isOperandEqual(IC_RESULT(ic), IC_LEFT(nic)) && IS_UNSIGNED (operandType (tmpop)) == IS_UNSIGNED (operandType (IC_LEFT(nic))) && nic->op != ADDRESS_OF && nic->op != PCALL && (!POINTER_GET(nic) || !IS_PTR(operandType(IC_LEFT(nic))) || !IS_BITFIELD(operandType(IC_LEFT(nic))->next) || compareType(operandType(IC_LEFT(nic)), operandType(tmpop)) == 1))
         {
           bool isaddr = IC_LEFT (nic)->isaddr;
 #ifdef DEBUG_LOSPRE

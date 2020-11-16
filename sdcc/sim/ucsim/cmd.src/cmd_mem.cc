@@ -36,6 +36,22 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "cmd_memcl.h"
 
 
+void
+set_memory_help(class cl_cmd *cmd)
+{
+  cmd->set_help("memory subcommand",
+		"Manage memory chips and address spaces",
+		"Long of memory");
+}
+
+void
+set_memory_create_help(class cl_cmd *cmd)
+{
+  cmd->set_help("memory create subcommand",
+		"Set of commands to create memory objects",
+		"Long of memory create");
+}
+
 /*
  * Command: memory create chip
  *----------------------------------------------------------------------------
@@ -64,7 +80,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_chip_cmd)
     width= params[2]->value.number;
   }
   else
-    con->dd_printf("Syntax error.\n");
+    syntax_error(con);
 
   if (!memid ||
       !*memid)
@@ -85,6 +101,10 @@ COMMAND_DO_WORK_UC(cl_memory_create_chip_cmd)
   return(false);
 }
 
+CMDHELP(cl_memory_create_chip_cmd,
+	"memory create chip id size cellsize",
+	"Create a new memory chip",
+	"long help of memory create chip")
 
 /*
  * Command: memory create addressspace
@@ -119,7 +139,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_addressspace_cmd)
     width= params[3]->value.number;
   }
   else
-    con->dd_printf("Syntax error.\n");
+    syntax_error(con);
 
   if (!memid ||
       !*memid)
@@ -141,6 +161,10 @@ COMMAND_DO_WORK_UC(cl_memory_create_addressspace_cmd)
   return(false);
 }
 
+CMDHELP(cl_memory_create_addressspace_cmd,
+	"memory create addressspace id startaddr size",
+	"Create a new address space",
+	"long help of memory create addressspace")
 
 /*
  * Command: memory create addressdecoder
@@ -198,7 +222,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_addressdecoder_cmd)
     chip_begin= params[4]->value.number;
   }
   else
-    con->dd_printf("Syntax error.\n");
+    syntax_error(con);
 
   if (!as->is_address_space())
     con->dd_printf("%s is not an address space\n", as->get_name("unknown"));
@@ -224,7 +248,10 @@ COMMAND_DO_WORK_UC(cl_memory_create_addressdecoder_cmd)
   return(false);
 }
 
-
+CMDHELP(cl_memory_create_addressdecoder_cmd,
+	"memory create addressdecoder addressspace begin end chip begin",
+	"Create a new address decoder",
+	"long help of memory create addressdecoder")
 
 /*
  * Command: memory create banker
@@ -252,7 +279,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_banker_cmd)
     ase= params[5]->value.number;
   }
   else
-    return con->dd_printf("Syntax error.\n"), false;
+    return syntax_error(con), false;
 
   if (!banker_as->is_address_space())
     con->dd_printf("%s is not an address space\n", banker_as->get_name("unknown"));
@@ -280,6 +307,10 @@ COMMAND_DO_WORK_UC(cl_memory_create_banker_cmd)
   return(false);
 }
 
+CMDHELP(cl_memory_create_banker_cmd,
+	"memory create banker switcher_addressspace switcher_address switcher_mask banked_addressspace start end",
+	"Create a new bank switcher",
+	"long help of memory create banker")
 
 /*
  * Command: memory create bander
@@ -321,7 +352,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_bander_cmd)
       bpc= params[5]->value.number;
     }
   else
-    return con->dd_printf("Syntax error.\n"), false;
+    return syntax_error(con), false;
 
   if (!as->is_address_space())
     con->dd_printf("%s is not an address space\n", as->get_name("unknown"));
@@ -349,6 +380,10 @@ COMMAND_DO_WORK_UC(cl_memory_create_bander_cmd)
   return(false);
 }
 
+CMDHELP(cl_memory_create_bander_cmd,
+	"memory create bander addressspace begin end chip begin bits_per_chip [distance]",
+	"Create a new bit bander",
+	"long help of memory create bander")
 
 /*
  * Command: memory create bank
@@ -380,7 +415,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_bank_cmd)
     chip= params[3]->value.memory.memory;
   }
   else
-    return con->dd_printf("Syntax error.\n"), false;
+    return syntax_error(con), false;
 
   if (!as->is_address_space())
     con->dd_printf("%s is not an address space\n", as->get_name("unknown"));
@@ -407,6 +442,10 @@ COMMAND_DO_WORK_UC(cl_memory_create_bank_cmd)
   return(false);
 }
 
+CMDHELP(cl_memory_create_bank_cmd,
+	"memory create bank addressspace begin bank_nr chip begin",
+	"Add a new bank to bank switcher",
+	"long help of memory create bank")
 
 /*
  * Command: memory cell
@@ -435,7 +474,7 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
 	as= (cl_address_space *)m;
     }
   if (m == 0)
-    return con->dd_printf("Syntax error.\n"), false;
+    return syntax_error(con), false;
 
   if (!c)
     c= as->get_cell(a);
@@ -446,9 +485,9 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
 
   con->dd_printf("cell data=%p/%d mask=%x flags=%x\n",
 		 c->get_data(),
-		 c->get_width(),
-		 c->get_mask(),
-		 c->get_flags());
+		 MU(c->get_width()),
+		 MU(c->get_mask()),
+		 MU(c->get_flags()));
 
   int i;
   for (i= 0; i < uc->memchips->count; i++)
@@ -457,8 +496,8 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
       t_addr ad;
       if ((ad= ch->is_slot(c->get_data())) >= 0)
 	{
-	  con->dd_printf("  decoded to %s[%d]\n",
-			 ch->get_name(), ad);
+	  con->dd_printf("  decoded to %s[%u]\n",
+			 ch->get_name(), AU(ad));
 	  break;
 	}
     }
@@ -469,5 +508,9 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
   return false;
 }
 
+CMDHELP(cl_memory_cell_cmd,
+	"memory cell",
+	"Information about a memory cell",
+	"long help of memory cell")
 
 /* End of cmd.src/cmd_mem.cc */

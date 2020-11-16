@@ -23,12 +23,10 @@ struct tty_driver
   struct termios t;
 };
 
-#if !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) // Lack of memory
+#if !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) && !defined(__SDCC_pdk14) // Lack of memory
 static struct termios zero_t;
 static struct tty_driver pty;
-#endif
 
-#if 0 // TODO: Enable when SDCC can assign struct!
 void ini (void)
 {
   pty.t = zero_t;
@@ -42,7 +40,7 @@ void ini (void)
 void
 testTortureExecute (void)
 {
-#if 0 // TODO: Enable when SDCC can assign struct!
+#if !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) && !defined(__SDCC_pdk14) // Lack of memory
   ini ();
   if (pty.t.a != 1
       || pty.t.b != 2

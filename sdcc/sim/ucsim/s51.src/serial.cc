@@ -131,7 +131,10 @@ t_mem
 cl_serial::read(class cl_memory_cell *cell)
 {
   if (cell == sbuf)
-    return(s_in);
+    {
+      cfg_set(serconf_able_receive, 1);
+      return(s_in);
+    }
   conf(cell, NULL);
   return(cell->get());
 }
@@ -293,11 +296,7 @@ cl_serial::tick(int cycles)
     {
       s_sending= false;
       scon->set_bit1(bmTI);
-      //if (io->fout)
-	{
-	  //io->fout->write((char*)(&s_out), 1);
-	  io->dd_printf("%c", s_out);
-	}
+      io->write((char*)(&s_out), 1);
       s_tr_bit-= _bits;
     }
   if ((_bmREN) &&
@@ -322,6 +321,8 @@ cl_serial::tick(int cycles)
       //if (fin->read(&c, 1) == 1)
 	{
 	  c= input;
+	  uc->sim->app->debug("UART%d received %d,%c\n", id,
+			      c,isprint(c)?c:' ');
 	  input_avail= false;
 	  s_in= c;
 	  sbuf->set(s_in);
@@ -341,6 +342,7 @@ void
 cl_serial::received(int c)
 {
   scon->set_bit1(bmRI);
+  cfg_write(serconf_received, c);
 }
 
 void
@@ -434,6 +436,7 @@ cl_serial::print_info(class cl_console_base *con)
   con->dd_printf("s_tr_t1=%d s_tr_bit=%d s_tr_tick=%d\n",
 		 s_tr_t1, s_tr_bit, s_tr_tick);
 		 con->dd_printf("divby=%d bits=%d\n", _divby, _bits);*/
+  print_cfg_info(con);
 }
 
 

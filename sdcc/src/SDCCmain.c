@@ -97,10 +97,6 @@ char buffer[PATH_MAX * 2];
 #define OPTION_HELP                 "--help"
 #define OPTION_OUT_FMT_IHX          "--out-fmt-ihx"
 #define OPTION_OUT_FMT_S19          "--out-fmt-s19"
-#define OPTION_HUGE_MODEL           "--model-huge"
-#define OPTION_LARGE_MODEL          "--model-large"
-#define OPTION_MEDIUM_MODEL         "--model-medium"
-#define OPTION_SMALL_MODEL          "--model-small"
 #define OPTION_PEEP_FILE            "--peep-file"
 #define OPTION_LIB_PATH             "--lib-path"
 #define OPTION_CALLEE_SAVES         "--callee-saves"
@@ -157,6 +153,11 @@ char buffer[PATH_MAX * 2];
 #define OPTION_DUMP_I_CODE          "--dump-i-code"
 #define OPTION_DUMP_GRAPHS          "--dump-graphs"
 
+#define OPTION_SMALL_MODEL          "--model-small"
+#define OPTION_MEDIUM_MODEL         "--model-medium"
+#define OPTION_LARGE_MODEL          "--model-large"
+#define OPTION_HUGE_MODEL           "--model-huge"
+
 static const OPTION optionsTable[] = {
   {0,   NULL, NULL, "General options"},
   {0,   OPTION_HELP, NULL, "Display this help"},
@@ -201,10 +202,6 @@ static const OPTION optionsTable[] = {
   {0,   NULL, NULL, "Code generation options"},
   {'m', NULL, NULL, "Set the port to use e.g. -mz80."},
   {'p', NULL, NULL, "Select port specific processor e.g. -mpic14 -p16f84"},
-  {0,   OPTION_SMALL_MODEL, NULL, "internal data space is used (default)"},
-  {0,   OPTION_MEDIUM_MODEL, NULL, "external paged data space is used"},
-  {0,   OPTION_LARGE_MODEL, NULL, "external data space is used"},
-  {0,   OPTION_HUGE_MODEL, NULL, "functions are banked, data in external space"},
   {0,   "--stack-auto", &options.stackAuto, "Stack automatic variables"},
   {0,   "--xstack", &options.useXstack, "Use external stack"},
   {0,   "--int-long-reent", &options.intlong_rent, "Use reentrant calls on the int and long support functions"},
@@ -330,6 +327,9 @@ static PORT *_ports[] = {
 #if !OPT_DISABLE_TLCS90
   &tlcs90_port,
 #endif
+#if !OPT_DISABLE_EZ80_Z80
+  &ez80_z80_port,
+#endif
 #if !OPT_DISABLE_AVR
   &avr_port,
 #endif
@@ -356,6 +356,15 @@ static PORT *_ports[] = {
 #endif
 #if !OPT_DISABLE_STM8
   &stm8_port,
+#endif
+#if !OPT_DISABLE_PDK13
+  &pdk13_port,
+#endif
+#if !OPT_DISABLE_PDK14
+  &pdk14_port,
+#endif
+#if !OPT_DISABLE_PDK15
+  &pdk15_port,
 #endif
 };
 
@@ -875,9 +884,6 @@ scanOptionsTable (const OPTION * optionsTable, char shortOpt, const char *longOp
                (optionsTable[i].arg_type == CLAT_BOOLEAN && len == strlen (longOpt) && optionsTable[i].longOpt)) &&
               strncmp (optionsTable[i].longOpt, longOpt, len) == 0)
             {
-              if (strncmp ("--nojtbound", longOpt, len) == 0)
-                werror (W_DEPRECATED_OPTION, "--nojtbound");
-
               /* If it is a flag then we can handle it here */
               if (optionsTable[i].pparameter != NULL)
                 {
@@ -2162,7 +2168,7 @@ preProcess (char **envp)
         since its name makes it non-compliant.
         It got removed a few times, but keeps coming back.
         This time it got added back for the 3.7.0 release
-        to support the old SiLabs */
+        to support the old SiLabs IDE */
       if (TARGET_IS_MCS51 && options.std_sdcc)
         {
           struct dbuf_s dbuf;
@@ -2190,7 +2196,7 @@ preProcess (char **envp)
       addSet (&preArgvSet, Safe_strdup ("-D__STDC_NO_ATOMICS__=1"));
       addSet (&preArgvSet, Safe_strdup ("-D__STDC_NO_VLA__=1"));
 
-      /* Character encoding */
+      /* Character encoding  - these need to be set in device/lib/Makefile.in for $CPP, too */
       addSet (&preArgvSet, Safe_strdup ("-D__STDC_ISO_10646__=201409L")); // wchar_t is UTF-32
       addSet (&preArgvSet, Safe_strdup ("-D__STDC_UTF_16__=1")); // char16_t is UTF-16
       addSet (&preArgvSet, Safe_strdup ("-D__STDC_UTF_32__=1")); // char32_t is UTF-32

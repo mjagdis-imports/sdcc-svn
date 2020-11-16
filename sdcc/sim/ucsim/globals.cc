@@ -434,6 +434,8 @@ struct cpu_entry cpus_z80[]=
     {"R2K"    , CPU_R2K,     0			, ""		, ""},
     {"R3KA"   , CPU_R3KA,    0			, ""		, ""},
     {"LR35902", CPU_LR35902, 0			, ""		, ""},
+
+    {"EZ80"   , CPU_EZ80,    0			, ""		, ""},
     
     {NULL, CPU_NONE, 0, "", ""}
   };
@@ -544,6 +546,13 @@ struct cpu_entry cpus_stm8[]=
     {"L101"     	, CPU_STM8L101, DEV_STM8L101	, "L101"	, "L101xx"},
     {"STM8L101" 	, CPU_STM8L101, DEV_STM8L101	, "L101"	, "L101xx"},
 
+    {NULL, CPU_NONE, 0, "", ""}
+  };
+
+struct cpu_entry cpus_pdk[]=
+  {
+    {"PDK14"   , CPU_PDK14, 0			, ""		, ""},
+    
     {NULL, CPU_NONE, 0, "", ""}
   };
 

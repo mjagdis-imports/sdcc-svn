@@ -79,6 +79,7 @@ ast *optimizeGetAbit (ast *, RESULT_TYPE);
 ast *optimizeGetByte (ast *, RESULT_TYPE);
 ast *optimizeGetWord (ast *, RESULT_TYPE);
 static ast *backPatchLabels (ast *, symbol *, symbol *);
+static void copyAstLoc (ast *, ast *);
 void PA (ast * t);
 int inInitMode = 0;
 memmap *GcurMemmap = NULL;      /* points to the memmap that's currently active */
@@ -926,7 +927,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
       /* don't perform integer promotion of explicitly typecasted variable arguments
        * if sdcc extensions are enabled */
-      if (options.std_sdcc &&
+      if (options.std_sdcc && !TARGET_PDK_LIKE &&
           (IS_CAST_OP (*actParm) ||
            (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
            (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
@@ -1169,7 +1170,7 @@ createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       if (!iloop && (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype)))
         break;
 
-      if (aggregateIsAutoVar)
+      if (aggregateIsAutoVar && (SPEC_STRUCT (type)->type != UNION))
         for (ps = old_sflds; ps != sflds && ps != NULL; ps = ps->next)
           {
             ps->implicit = 1;
@@ -1184,6 +1185,10 @@ createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE);
       rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE);
       iloop = iloop ? iloop->next : NULL;
+
+      /* Unions can only initialize a single field */
+      if (SPEC_STRUCT (type)->type == UNION)
+        break;
     }
 
   if (iloop)
@@ -1692,6 +1697,7 @@ stringToSymbol (value *val)
     }
   else
     {
+      defaultOClass (sym);
       addSet (&strSym, sym);
       addSet (&statsg->syms, sym);
     }
@@ -2636,8 +2642,13 @@ getResultTypeFromType (sym_link * type)
     {
       unsigned blen = SPEC_BLEN (type);
 
+/*    BOOL and single bit BITFIELD are not interchangeable!
+ *    There must be a cast to do this safely, in which case
+ *    the previous IS_BOOLEAN test will handle it. 
+      
       if (blen <= 1)
         return RESULT_TYPE_BOOL;
+*/
       if (blen <= 8)
         return RESULT_TYPE_CHAR;
       return RESULT_TYPE_INT;
@@ -3167,7 +3178,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
   ast *parms = tree->right;
   ast *func = tree->left;
 
-  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
+  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE && !TARGET_PDK_LIKE) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
     return;
 
   if (!IS_FUNC (func->ftype) || IS_LITERAL (func->ftype) || func->type != EX_VALUE || !func->opval.val->sym)
@@ -3316,6 +3327,54 @@ rewriteAstNodeVal (ast *tree, value *val)
   tree->decorated = 0;
   
   rewriteAstJoinSideEffects (tree, oLeft, oRight);
+}
+
+/*-----------------------------------------------------------*/
+/* rewrite struct assignment "a = b" to something similar to */
+/* "__builtin_memcpy (&a, &b, sizeof (a)), a"   or, if a has */
+/* side effects, "*(__builtin_memcpy (&a, &b, sizeof (a)))"  */
+/*-----------------------------------------------------------*/
+ast *
+rewriteStructAssignment (ast *tree)
+{
+  /* prepare pointer to destination */
+  ast *dest = newNode ('&', tree->left, NULL);
+  copyAstLoc (dest, tree->left);
+
+  /* prepare remaining arguments */
+  ast *src = newNode ('&', tree->right, NULL);
+  copyAstLoc (src, tree->right);
+  ast *size = newNode (SIZEOF, NULL, tree->left);
+  copyAstLoc (size, tree->left);
+  ast *srcsize = newNode (PARAM, src, size);
+  copyAstLoc (srcsize, tree);
+  ast *params = newNode (PARAM, dest, srcsize);
+  copyAstLoc (params, tree);
+
+  /* create call to the appropriate memcpy function */
+  ast *memcpy_ast = newAst_VALUE (symbolVal (memcpy_builtin));
+  copyAstLoc (memcpy_ast, tree);
+  ast *call = newNode (CALL, memcpy_ast, params);
+  copyAstLoc (call, tree);
+
+  /* assemble the result expression depending on side effects */
+  ast *newTree;
+  if (hasSEFcalls (dest))
+    {
+      /* memcpy returns the dest pointer -> dereference it */
+      newTree = newNode ('*', call, NULL);
+    }
+  else
+    {
+      /* no side effects -> dereference dest pointer itself */
+      ast *destderef = newNode ('*', dest, NULL);
+      copyAstLoc (destderef, dest);
+      newTree = newNode (',', call, destderef);
+    }
+
+  /* copy source location and return decorated result */
+  copyAstLoc (newTree, tree);
+  return decorateType (newTree, RESULT_TYPE_OTHER);
 }
 
 /*--------------------------------------------------------------------*/
@@ -3546,8 +3605,10 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         }
 
       RRVAL (tree) = 1;
-      COPYTYPE (TTYPE (tree), TETYPE (tree), LTYPE (tree)->next);
-      if (IS_PTR (LTYPE (tree)) && !IS_LITERAL (TETYPE (tree)))
+      TTYPE (tree) = copyLinkChain (LTYPE (tree)->next);
+      TETYPE (tree) = getSpec (TTYPE (tree));
+
+      if (IS_PTR (LTYPE (tree)) /* && !IS_LITERAL (TETYPE (tree)) caused bug #2850 */)
         {
           SPEC_SCLS (TETYPE (tree)) = sclsFromPtr (LTYPE (tree));
         }
@@ -4094,36 +4155,9 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           TTYPE (tree) = copyLinkChain (LTYPE (tree)->next);
           TETYPE (tree) = getSpec (TTYPE (tree));
           /* adjust the storage class */
-          switch (DCL_TYPE (tree->left->ftype))
-            {
-            case POINTER:
-              SPEC_SCLS (TETYPE (tree)) = S_DATA;
-              break;
-            case FPOINTER:
-              SPEC_SCLS (TETYPE (tree)) = S_XDATA;
-              break;
-            case CPOINTER:
-              SPEC_SCLS (TETYPE (tree)) = S_CODE;
-              break;
-            case GPOINTER:
-              SPEC_SCLS (TETYPE (tree)) = 0;
-              break;
-            case PPOINTER:
-              SPEC_SCLS (TETYPE (tree)) = S_XSTACK;
-              break;
-            case IPOINTER:
-              SPEC_SCLS (TETYPE (tree)) = S_IDATA;
-              break;
-            case EEPPOINTER:
-              SPEC_SCLS (TETYPE (tree)) = S_EEPROM;
-              break;
-            case UPOINTER:
-              SPEC_SCLS (TETYPE (tree)) = 0;
-              break;
-            case ARRAY:
-            case FUNCTION:
-              break;
-            }
+          if (DCL_TYPE (tree->left->ftype) != ARRAY && DCL_TYPE (tree->left->ftype) != FUNCTION)
+            SPEC_SCLS (TETYPE (tree)) = sclsFromPtr (tree->left->ftype);
+
           return tree;
         }
 
@@ -5285,10 +5319,24 @@ decorateType (ast *tree, RESULT_TYPE resultType)
          this can save generating unused const strings. */
       if (IS_LITERAL (LTYPE (tree)))
         {
+          ast * heir;
+          
+          ++noAlloc;
+          tree->right = decorateType (tree->right, resultTypeProp);
+          --noAlloc;
+
           if (((int) ulFromVal (valFromType (LETYPE (tree)))) != 0)
-            return decorateType (tree->right->left, resultTypeProp);
+            heir = tree->right->left;
           else
-            return decorateType (tree->right->right, resultTypeProp);
+            heir = tree->right->right;
+            
+          heir = decorateType (heir, resultTypeProp);
+          if (IS_LITERAL (TETYPE (heir)))
+            TTYPE (heir) = valRecastLitVal (TTYPE (tree->right), valFromType (TETYPE (heir)))->type;
+          else
+            TTYPE (heir) = TTYPE (tree->right);
+          TETYPE (heir) = getSpec (TTYPE (heir));
+          return heir;
         }
 
       tree->right = decorateType (tree->right, resultTypeProp);
@@ -5356,7 +5404,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                 assoc_type = assoc->left->opval.lnk;
                 checkTypeSanity (assoc_type, "_Generic");
 
-                if (compareType (type, assoc->left->opval.lnk) > 0)
+                if (compareType (type, assoc->left->opval.lnk) > 0 && !(SPEC_NOUN (type) == V_CHAR && type->select.s.b_implicit_sign != assoc->left->opval.lnk->select.s.b_implicit_sign))
                   {
                     if (found_expr)
                       {
@@ -5388,10 +5436,12 @@ decorateType (ast *tree, RESULT_TYPE resultType)
 
     case ':':
       if ((compareType (LTYPE (tree), RTYPE (tree)) == 0) && (compareType (RTYPE (tree), LTYPE (tree)) == 0))
-        if (IS_PTR (LTYPE (tree)) && !IS_GENPTR (LTYPE (tree)))
-          DCL_TYPE (LTYPE(tree)) = GPOINTER;
-        if (IS_PTR (RTYPE (tree)) && !IS_GENPTR (RTYPE (tree)))
-          DCL_TYPE (RTYPE(tree)) = GPOINTER;
+        {
+          if (IS_PTR (LTYPE (tree)) && !IS_GENPTR (LTYPE (tree)))
+            DCL_TYPE (LTYPE(tree)) = GPOINTER;
+          if (IS_PTR (RTYPE (tree)) && !IS_GENPTR (RTYPE (tree)))
+            DCL_TYPE (RTYPE(tree)) = GPOINTER;
+        }
 
       if ((compareType (LTYPE (tree), RTYPE (tree)) == 0) &&
         (compareType (RTYPE (tree), LTYPE (tree)) == 0) &&
@@ -5539,10 +5589,10 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /*      straight assignemnt   */
       /*----------------------------*/
     case '=':
-      /* cannot be an aggregate */
-      if (IS_AGGREGATE (LTYPE (tree)))
+      /* cannot be an array */
+      if (IS_ARRAY (LTYPE (tree)))
         {
-          werrorfl (tree->filename, tree->lineno, E_AGGR_ASSIGN);
+          werrorfl (tree->filename, tree->lineno, E_ARRAY_ASSIGN);
           goto errorTreeReturn;
         }
 
@@ -5571,8 +5621,13 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         }
 
       TETYPE (tree) = getSpec (TTYPE (tree) = LTYPE (tree));
-      RRVAL (tree) = 1;
-      LLVAL (tree) = 1;
+      if (IS_STRUCT (LTYPE (tree)))
+        tree = rewriteStructAssignment (tree);
+      else
+        {
+          RRVAL (tree) = 1;
+          LLVAL (tree) = 1;
+        }
       if (!tree->initMode)
         {
           if (IS_CONSTANT (LTYPE (tree)))

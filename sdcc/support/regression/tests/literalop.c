@@ -16,6 +16,7 @@ typedef unsigned {type} utype;
 
 volatile char is8 = 8;
 
+#if !defined(__SDCC_pdk14) // Lack of memory
 signed char  sc;
 signed short ss;
 signed LONG  sl;
@@ -34,6 +35,7 @@ utype u;
 volatile utype vu;
 
 unsigned LONG t1, t2;
+#endif
 
 int
 mulWrapper (int a, int b)
@@ -44,6 +46,7 @@ mulWrapper (int a, int b)
 void
 testOpOp (void)
 {
+#if !defined(__SDCC_pdk14) // Lack of memory
   /* mul signedness: usualBinaryConversions() */
   vsc = 0x7f;
   vuc = 0xfe;
@@ -79,12 +82,12 @@ testOpOp (void)
 
   ASSERT ((stype         ) 0xfffffff8 * (stype         ) 0xfffffff7 == 72);
 
-  ASSERT ((signed char ) -1 * (unsigned char ) 0xfffffff7 == (sizeof(int) == 2 ? 0xff09 : 0xffffff09));
+  ASSERT ((signed char ) -1 * (unsigned char ) 0xfffffff7 == (sizeof(int) == 2 ? (int)0xff09 : (int)0xffffff09));
   ASSERT ((signed short) -1 * (unsigned short) 0xfffffff7 == (sizeof(int) == 2 ?     9u : 0xffff0009));
   ASSERT ((signed LONG ) -1 * (unsigned LONG ) 0xfffffff7 == 9u);
 
-  ASSERT ((signed char ) -2 * (unsigned char ) 0x8004 == (sizeof(int) == 2 ? 0xfff8 : 0xfffffff8));
-  ASSERT ((signed short) -2 * (unsigned short) 0x8004 == (sizeof(int) == 2 ? 0xfff8 : 0xfffefff8));
+  ASSERT ((signed char ) -2 * (unsigned char ) 0x8004 == (sizeof(int) == 2 ? (int)0xfff8 : (int)0xfffffff8));
+  ASSERT ((signed short) -2 * (unsigned short) 0x8004 == (sizeof(int) == 2 ? (int)0xfff8 : (int)0xfffefff8));
   ASSERT ((signed LONG ) -2 * (unsigned LONG ) 0x8004 == 0xfffefff8);
 
   ASSERT (-1 * 0xfff7 == (sizeof(int) == 2 ? 9 : 0xffff0009)); // 0xfff7 is stored in 'unsigned int'
@@ -134,12 +137,12 @@ testOpOp (void)
 
   ASSERT ((stype         ) 0xfffffff8 * (stype         ) 0xfffffff7 == 72);
 
-  ASSERT ((signed char ) -1 * (unsigned char ) 0xfffffff7 == (sizeof(int) == 2 ? 0xff09 : 0xffffff09));
+  ASSERT ((signed char ) -1 * (unsigned char ) 0xfffffff7 == (sizeof(int) == 2 ? (int)0xff09 : (int)0xffffff09));
   ASSERT ((signed short) -1 * (unsigned short) 0xfffffff7 == (sizeof(int) == 2 ?     9u : 0xffff0009));
   ASSERT ((signed LONG ) -1 * (unsigned LONG ) 0xfffffff7 == 9u);
 
-  ASSERT ((signed char ) -2 * (unsigned char ) 0x8004 == (sizeof(int) == 2 ? 0xfff8 : 0xfffffff8));
-  ASSERT ((signed short) -2 * (unsigned short) 0x8004 == (sizeof(int) == 2 ? 0xfff8 : 0xfffefff8));
+  ASSERT ((signed char ) -2 * (unsigned char ) 0x8004 == (sizeof(int) == 2 ? (int)0xfff8 : (int)0xfffffff8));
+  ASSERT ((signed short) -2 * (unsigned short) 0x8004 == (sizeof(int) == 2 ? (int)0xfff8 : (int)0xfffefff8));
   ASSERT ((signed LONG ) -2 * (unsigned LONG ) 0x8004 == 0xfffefff8);
 
   /* div ast: valDiv() */
@@ -147,7 +150,7 @@ testOpOp (void)
   ASSERT ((stype) -12 / (stype)  3 == (stype) -4);
   ASSERT ((stype)  12 / (stype) -3 == (stype) -4);
 
-  ASSERT ((unsigned char ) -12 / (signed char ) -3 == (sizeof(int) == 2 ? 0xffaf : 0xffffffaf));
+  ASSERT ((unsigned char ) -12 / (signed char ) -3 == (sizeof(int) == 2 ? (int)0xffaf : (int)0xffffffaf));
   ASSERT ((unsigned short) -12 / (signed short) -3 == (sizeof(int) == 2 ?      0 : 0xffffaaaf));
   ASSERT ((unsigned LONG ) -12 / (signed LONG ) -3 == 0);
   ASSERT ((utype)          -12 / (stype)         3 == (stype) 0x55555551);
@@ -174,7 +177,7 @@ testOpOp (void)
   ASSERT (s / (stype) -3 == (stype) -4);
 
   uc = -12;
-  ASSERT (uc / (signed char ) -3 == (sizeof(int) == 2 ? 0xffaf : 0xffffffaf));
+  ASSERT (uc / (signed char ) -3 == (sizeof(int) == 2 ? (int)0xffaf : (int)0xffffffaf));
   us = -12;
   ASSERT (us / (signed short) -3 == (sizeof(int) == 2 ?      0 : 0xffffaaaf));
   ul = -12;
@@ -223,5 +226,6 @@ testOpOp (void)
   ASSERT ( 80  +  80  == 160);
   ASSERT (150  + 150  == 300);
   ASSERT (160u + 160u == 320);
+#endif
 }
 

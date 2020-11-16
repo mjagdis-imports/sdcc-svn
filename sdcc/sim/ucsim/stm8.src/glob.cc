@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: glob.cc 776 2017-07-09 11:45:22Z drdani $ */
-
 #include <stdio.h>
 
 #include "stypes.h"
@@ -385,14 +383,14 @@ struct dis_entry disass_stm8_72[]= {
   { 0x001c, 0x00ff, ' ', 3, "bset %x,#6" },
   { 0x001e, 0x00ff, ' ', 3, "bset %x,#7" },
 
-  { 0x0001, 0x00ff, ' ', 4, "bjtf %x,#0,%p" },
-  { 0x0003, 0x00ff, ' ', 4, "bjtf %x,#1,%p" },
-  { 0x0005, 0x00ff, ' ', 4, "bjtf %x,#2,%p" },
-  { 0x0007, 0x00ff, ' ', 4, "bjtf %x,#3,%p" },
-  { 0x0009, 0x00ff, ' ', 4, "bjtf %x,#4,%p" },
-  { 0x000b, 0x00ff, ' ', 4, "bjtf %x,#5,%p" },
-  { 0x000d, 0x00ff, ' ', 4, "bjtf %x,#6,%p" },
-  { 0x000f, 0x00ff, ' ', 4, "bjtf %x,#7,%p" },
+  { 0x0001, 0x00ff, ' ', 4, "btjf %x,#0,%p" },
+  { 0x0003, 0x00ff, ' ', 4, "btjf %x,#1,%p" },
+  { 0x0005, 0x00ff, ' ', 4, "btjf %x,#2,%p" },
+  { 0x0007, 0x00ff, ' ', 4, "btjf %x,#3,%p" },
+  { 0x0009, 0x00ff, ' ', 4, "btjf %x,#4,%p" },
+  { 0x000b, 0x00ff, ' ', 4, "btjf %x,#5,%p" },
+  { 0x000d, 0x00ff, ' ', 4, "btjf %x,#6,%p" },
+  { 0x000f, 0x00ff, ' ', 4, "btjf %x,#7,%p" },
 
   { 0x0000, 0x00ff, ' ', 4, "btjt %x,#0,%p" },
   { 0x0002, 0x00ff, ' ', 4, "btjt %x,#1,%p" },

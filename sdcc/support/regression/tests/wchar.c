@@ -17,15 +17,17 @@
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #include <stdint.h>
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#ifdef __SDCC
 _Static_assert(!WCHAR_MIN, "nonzero WCHAR_MIN");
 _Static_assert(WEOF <= WINT_MAX, "WEOF out of wint_t range");
+#endif
 #endif
 #endif
 
 static void
 testwcharnorestart(void)
 {
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL)) && !defined(__SDCC_pdk14) // Not enough memory
 	wchar_t w;
 	char c[MB_LEN_MAX];
 
@@ -50,7 +52,7 @@ testwcharnorestart(void)
 static void
 testwcharstringnorestart(void)
 {
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM))) // Not enough memory
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L && !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM))) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Not enough memory
 	wchar_t wcs1[5] = L"Test";
 	wchar_t wcs2[5];
 	char mbs[5 * MB_LEN_MAX];
@@ -83,6 +85,7 @@ testwcharstringnorestart(void)
 static void
 testwcharrestart(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
 	static mbstate_t ps;
 	wchar_t w;
@@ -102,11 +105,13 @@ testwcharrestart(void)
 	ASSERT(wcrtomb(c, 0xdfff, 0) == -1);   // Invalid: Unpaired UTF-16 surrogate.
 #endif
 #endif
+#endif
 }
 
 static void
 testchar16restart(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
 	static mbstate_t ps;
 	char16_t c16[2];
@@ -127,11 +132,15 @@ testchar16restart(void)
 	errno = 0;
 	ASSERT(c16rtomb(c, u'\0', 0) == 1);    // Converting a 0 character resets internal state.
 
+#ifdef __SDCC // The stadnard was defective (fixed in C2X). SDCC always behaves according to the fixed standard.
 	ASSERT(c16rtomb(c, 0xd800, 0) == 0);
 	ASSERT(c16rtomb(c, 0xd800, 0) == -1);  // Invalid: Unpaired UTF-16 surrogate.
+
 	ASSERT(errno == EILSEQ);
 	errno = 0;
 	ASSERT(c16rtomb(c, u'\0', 0) == 1);    // Converting a 0 character resets internal state.
+#endif
+#endif
 #endif
 #endif
 }
@@ -139,6 +148,7 @@ testchar16restart(void)
 static void
 testchar32restart(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !(defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL))
 	static mbstate_t ps;
 	char32_t c32[2];
@@ -149,6 +159,7 @@ testchar32restart(void)
 	ASSERT(c32[0] == (U"C")[0]);
 	ASSERT(c32rtomb(c, c32[0], &ps) == 1);
 	ASSERT(c[0] == 'C');
+#endif
 #endif
 }
 

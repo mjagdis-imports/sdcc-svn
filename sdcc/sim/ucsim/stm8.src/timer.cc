@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: timer.cc 677 2017-03-07 08:16:02Z drdani $ */
-
 #include "itsrccl.h"
 
 #include "clkcl.h"
@@ -109,6 +107,16 @@ cl_tim::init(void)
   clk_enabled= false;
   
   return 0;
+}
+
+char *
+cl_tim::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case stm8_tim_on: return (char*)"Turn simulation of timer on/off (bool, RW)";
+    }
+  return (char*)"Not used";
 }
 
 int
@@ -381,7 +389,7 @@ cl_tim::update_event(void)
 	  set_counter(ar);
 	}
     }
-  regs[idx.sr1]->set_bit1(uif);
+  regs[idx.sr1]->write_bit1(uif);
 }
 
 // true: UP, false: down
@@ -424,6 +432,7 @@ cl_tim::print_info(class cl_console_base *con)
 {
   u8_t c1= regs[idx.cr1]->get();
   // features
+  con->dd_printf("Simulation of %s is %s\n", get_name(), on?"ON":"OFF");
   con->dd_printf("%s %d bit %s counter at 0x%06x\n", get_name(), bits,
 		 bidir?"Up/Down":"Up", base);
   // actual values
@@ -434,6 +443,7 @@ cl_tim::print_info(class cl_console_base *con)
 		 prescaler_cnt, prescaler_cnt,
 		 calc_prescaler(), calc_prescaler());
   con->dd_printf("arr= 0x%04x %d\n", get_arr(), get_arr());
+  print_cfg_info(con);
 }
 
 

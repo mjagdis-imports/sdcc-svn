@@ -816,19 +816,13 @@ cl_51core::build_cmdset(class cl_cmdset *cmdset)
 
   cl_uc::build_cmdset(cmdset);
 
-  cmdset->add(cmd= new cl_di_cmd("di", true,
-"di [start [stop]]  Dump Internal RAM",
-"long help of di"));
+  cmdset->add(cmd= new cl_di_cmd("di", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_dx_cmd("dx", true,
-"dx [start [stop]]  Dump External RAM",
-"long help of dx"));
+  cmdset->add(cmd= new cl_dx_cmd("dx", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_ds_cmd("ds", true,
-"ds [start [stop]]  Dump SFR",
-"long help of ds"));
+  cmdset->add(cmd= new cl_ds_cmd("ds", true));
   cmd->init();
 }
 
@@ -1280,6 +1274,7 @@ cl_51core::print_regs(class cl_console_base *con)
   
   // show regs
   start= psw->get() & 0x18;
+  con->dd_printf("     R0 R1 R2 R3 R4 R5 R6 R7\n");
   iram->dump(start, start+7, 8, con->get_fout());
   // show indirectly addressed IRAM and some basic regs
   data= iram->get(iram->get(start));
@@ -1324,8 +1319,8 @@ cl_51core::print_regs(class cl_console_base *con)
 		  dp= 0;
 		  int di;
 		  for (di= dptr->get_size()-1; di >= 0; di--)
-		    dp= (dp<<8) + dptr_chip->get(a+di);
-		  con->dd_printf(" %cDPTR%d= ", (i==act)?'*':' ', i);
+		    dp= (dp*256) + dptr_chip->get(a+di);
+		  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
 		  con->dd_printf(xram->addr_format, dp);
 		  data= xram->read(dp);
 		  con->dd_printf(" @DPTR%d= ", i);
@@ -1347,9 +1342,9 @@ cl_51core::print_regs(class cl_console_base *con)
 	    }
 	  act&= mask;
 	  i= 0;
-	  dp= sfr_chip->get(DPL-0x80) +
-	    sfr_chip->get(DPH-0x80) * 256;
-	  con->dd_printf(" %cDPTR%d= ", (i==act)?'*':' ', i);
+	  dp= (sfr_chip->get(DPL-0x80) +
+	       sfr_chip->get(DPH-0x80) * 256) & 0xffff;
+	  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
 	  con->dd_printf(xram->addr_format, dp);
 	  data= xram->read(dp);
 	  con->dd_printf(" @DPTR%d= ", i);
@@ -1358,7 +1353,7 @@ cl_51core::print_regs(class cl_console_base *con)
 	  i= 1;
 	  dp= sfr_chip->get(cpu->cfg_get(uc51cpu_aof_mdps1l) - 0x80) +
 	    sfr_chip->get(cpu->cfg_get(uc51cpu_aof_mdps1h) - 0x80) * 256;
-	  con->dd_printf(" %cDPTR%d= ", (i==act)?'*':' ', i);
+	  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
 	  con->dd_printf(xram->addr_format, dp);
 	  data= xram->read(dp);
 	  con->dd_printf(" @DPTR%d= ", i);
@@ -1368,13 +1363,18 @@ cl_51core::print_regs(class cl_console_base *con)
       else
 	{
 	  // non-multi DPTR
-	  t_mem dp= dptr->get(0) +
-	    dptr->get(1) * 256 +
-	    dptr->get(2) * 256*256 +
-	    dptr->get(3) * 256*256*256;
+	  int a= dptr->get_size();
+	  dp= 0;
+	  int di;
+	  chars f="";
+	  for (di= a-1; di >= 0; di--)
+	    {
+	      dp= (dp*256) + dptr->get(di);
+	    }
+	  f.format("0x%%0%dx",a*2);
 	  data= xram->get(dp);
 	  con->dd_printf("   DPTR= ");
-	  con->dd_printf(xram->addr_format, dp);
+	  con->dd_printf(/*xram->addr_format*/(char*)f, dp);
 	  con->dd_printf(" @DPTR= 0x%02x %3d %c\n",
 			 data, data, isprint(data)?data:'.');
 	}
@@ -1929,7 +1929,7 @@ cl_51core::instruction_c4/*inst_swap*/(t_mem/*uchar*/ code)
  */
 
 cl_uc51_cpu::cl_uc51_cpu(class cl_uc *auc):
-  cl_hw(auc, HW_DUMMY, 0, "cpu")
+  cl_hw(auc, HW_CPU/*DUMMY*/, 0, "cpu")
 {
 }
 
@@ -1952,25 +1952,46 @@ cl_uc51_cpu::init(void)
 
   cl_var *v;
   uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps"), cfg, uc51cpu_aof_mdps,
-			      "Address of multi_DPTR_sfr selector (WR selects this style of multi_DPTR)"));
+			      cfg_help(uc51cpu_aof_mdps)));
   v->init();
   uc->vars->add(v= new cl_var(cchars("cpu_mask_mdps"), cfg, uc51cpu_mask_mdps,
-			      "Mask in multi_DPTR_srf selector"));
+			      cfg_help(uc51cpu_mask_mdps)));
   v->init();
   uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps1l"), cfg, uc51cpu_aof_mdps1l,
-			      "Address of multi_DPTR_sfr DPL1"));
+			      cfg_help(uc51cpu_aof_mdps1l)));
   v->init();
   uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps1h"), cfg, uc51cpu_aof_mdps1h,
-			      "Address of multi_DPTR_sfr DPH1"));
+			      cfg_help(uc51cpu_aof_mdps1h)));
   v->init();
   uc->vars->add(v= new cl_var(cchars("cpu_aof_mdpc"), cfg, uc51cpu_aof_mdpc,
-			      "Address of multi_DPTR_chip selector (WR selects this stly of ulti_DPTR)"));
+			      cfg_help(uc51cpu_aof_mdpc)));
   v->init();
   uc->vars->add(v= new cl_var(cchars("cpu_mask_mdpc"), cfg, uc51cpu_mask_mdpc,
-			      "Mask in multi_DPTR_chip selector"));
+			      cfg_help(uc51cpu_mask_mdpc)));
   v->init();
   
   return(0);
+}
+
+char *
+cl_uc51_cpu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case uc51cpu_aof_mdps:
+      return (char*)"Address of multi_DPTR_sfr selector, WR selects this style of multi_DPTR (int, RW)";
+    case uc51cpu_mask_mdps:
+      return (char*)"Mask in multi_DPTR_srf selector (int, RW)";
+    case uc51cpu_aof_mdps1l:
+      return (char*)"Address of multi_DPTR_sfr DPL1 (int, RW)";
+    case uc51cpu_aof_mdps1h:
+      return (char*)"Address of multi_DPTR_sfr DPH1 (int, RW)";
+    case uc51cpu_aof_mdpc:
+      return (char*)"Address of multi_DPTR_chip selector, WR selects this stlye of multi_DPTR (int, RW)";
+    case uc51cpu_mask_mdpc:
+      return (char*)"Mask in multi_DPTR_chip selector (int, RW)";
+    }
+  return (char*)"Not used";
 }
 
 void

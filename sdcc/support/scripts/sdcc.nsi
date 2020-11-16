@@ -382,12 +382,15 @@ ${Section} "SDCC application files" SEC01
   File "${SDCC_ROOT}\bin\sdas390.exe"
   File "${SDCC_ROOT}\bin\sdasrab.exe"
   File "${SDCC_ROOT}\bin\sdasstm8.exe"
+  File "${SDCC_ROOT}\bin\sdaspdk14.exe"
+  File "${SDCC_ROOT}\bin\sdaspdk15.exe"
   File "${SDCC_ROOT}\bin\sdastlcs90.exe"
   File "${SDCC_ROOT}\bin\sdld.exe"
   File "${SDCC_ROOT}\bin\sdldgb.exe"
   File "${SDCC_ROOT}\bin\sdld6808.exe"
   File "${SDCC_ROOT}\bin\sdldz80.exe"
   File "${SDCC_ROOT}\bin\sdldstm8.exe"
+  File "${SDCC_ROOT}\bin\sdldpdk.exe"
   File "${SDCC_ROOT}\bin\sdar.exe"
   File "${SDCC_ROOT}\bin\sdranlib.exe"
   File "${SDCC_ROOT}\bin\sdnm.exe"
@@ -395,7 +398,6 @@ ${Section} "SDCC application files" SEC01
   File "${SDCC_ROOT}\bin\makebin.exe"
   File "${SDCC_ROOT}\bin\packihx.exe"
   File "${SDCC_ROOT}\bin\sdcc.exe"
-  File "${SDCC_ROOT}\bin\sdcclib.exe"
   File "${SDCC_ROOT}\bin\sdcpp.exe"
   File "${SDCC_ROOT}\bin\as2gbmap.cmd"
   File "${SDCC_ROOT}\bin\readline5.dll"
@@ -455,6 +457,8 @@ ${Section} "SDCC include files" SEC05
   File "${DEV_ROOT}\include\asm\r2k\features.h"
   SetOutPath "$INSTDIR\include\asm\r3ka"
   File "${DEV_ROOT}\include\asm\r3ka\features.h"
+  SetOutPath "$INSTDIR\include\asm\ez80_z80"
+  File "${DEV_ROOT}\include\asm\ez80_z80\features.h"
   SetOutPath "$INSTDIR\include\asm\stm8"
   File "${DEV_ROOT}\include\asm\stm8\features.h"
 
@@ -821,6 +825,24 @@ ${Section} "SDCC STM8 large model library" SEC26
   File "${DEV_ROOT}\lib\stm8-large\*.*"
 ${SectionEnd}
 
+${Section} "SDCC EZ80_Z80 library" SEC27
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\ez80_z80"
+  File "${DEV_ROOT}\lib\ez80_z80\*.*"
+${SectionEnd}
+
+${Section} "SDCC PDK14 library" SEC28
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\pdk14"
+  File "${DEV_ROOT}\lib\pdk14\*.*"
+${SectionEnd}
+
+${Section} "SDCC PDK15 library" SEC29
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\pdk15"
+  File "${DEV_ROOT}\lib\pdk15\*.*"
+${SectionEnd}
+
 
 ;--------------------------------
 ;Descriptions
@@ -852,6 +874,9 @@ LangString DESC_SEC23 ${LANG_ENGLISH} "SDCC STM8 small library"
 LangString DESC_SEC24 ${LANG_ENGLISH} "SDCC TLCS90 library"
 LangString DESC_SEC25 ${LANG_ENGLISH} "SDCC library sources"
 LangString DESC_SEC26 ${LANG_ENGLISH} "SDCC STM8 large model library"
+LangString DESC_SEC27 ${LANG_ENGLISH} "SDCC EZ80_Z80 library"
+LangString DESC_SEC28 ${LANG_ENGLISH} "SDCC PDK14 library"
+LangString DESC_SEC29 ${LANG_ENGLISH} "SDCC PDK15 library"
 
 ;Assign language strings to sections
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -867,6 +892,7 @@ LangString DESC_SEC26 ${LANG_ENGLISH} "SDCC STM8 large model library"
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC10} $(DESC_SEC10)
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC11} $(DESC_SEC11)
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC12} $(DESC_SEC12)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC27} $(DESC_SEC27)
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC13} $(DESC_SEC13)
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC14} $(DESC_SEC14)
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC15} $(DESC_SEC15)
@@ -1001,6 +1027,11 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\src\r3ka\*.s"
 
+  Delete "$INSTDIR\lib\src\ez80_z80\*.s"
+  Delete "$INSTDIR\lib\src\ez80_z80\z80.lib"
+  Delete "$INSTDIR\lib\src\ez80_z80\README"
+  Delete "$INSTDIR\lib\src\ez80_z80\Makefile"
+
   Delete "$INSTDIR\lib\src\ds390\*.c"
   Delete "$INSTDIR\lib\src\ds390\libds390.lib"
   Delete "$INSTDIR\lib\src\ds390\Makefile.dep"
@@ -1011,6 +1042,12 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\src\ds400\libds400.lib"
   Delete "$INSTDIR\lib\src\ds400\Makefile.dep"
   Delete "$INSTDIR\lib\src\ds400\Makefile"
+
+  Delete "$INSTDIR\lib\src\pdk14\pdk14.lib"
+  Delete "$INSTDIR\lib\src\pdk14\Makefile"
+
+  Delete "$INSTDIR\lib\src\pdk15\pdk15.lib"
+  Delete "$INSTDIR\lib\src\pdk15\Makefile"
 
   Delete "$INSTDIR\lib\src\*.c"
 
@@ -1043,6 +1080,9 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\r3ka\*.rel"
   Delete "$INSTDIR\lib\r3ka\*.lib"
 
+  Delete "$INSTDIR\lib\ez80_z80\*.rel"
+  Delete "$INSTDIR\lib\ez80_z80\*.lib"
+
   Delete "$INSTDIR\lib\small\*.lib"
 
   Delete "$INSTDIR\lib\medium\*.lib"
@@ -1059,10 +1099,15 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\ds400\*.lib"
 
+  Delete "$INSTDIR\lib\pdk14\*.lib"
+
+  Delete "$INSTDIR\lib\pdk15\*.lib"
+
   Delete "$INSTDIR\include\asm\z80\*.h"
   Delete "$INSTDIR\include\asm\z180\*.h"
   Delete "$INSTDIR\include\asm\r2k\*.h"
   Delete "$INSTDIR\include\asm\r3ka\*.h"
+  Delete "$INSTDIR\include\asm\ez80_z80\*.h"
   Delete "$INSTDIR\include\asm\pic16\*.h"
   Delete "$INSTDIR\include\asm\pic14\*.h"
   Delete "$INSTDIR\include\asm\mcs51\*.h"
@@ -1096,12 +1141,15 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\bin\sdas390.exe"
   Delete "$INSTDIR\bin\sdasrab.exe"
   Delete "$INSTDIR\bin\sdasstm8.exe"
+  Delete "$INSTDIR\bin\sdaspdk14.exe"
+  Delete "$INSTDIR\bin\sdaspdk15.exe"
   Delete "$INSTDIR\bin\sdastlcs90.exe"
   Delete "$INSTDIR\bin\sdld.exe"
   Delete "$INSTDIR\bin\sdldgb.exe"
   Delete "$INSTDIR\bin\sdld6808.exe"
   Delete "$INSTDIR\bin\sdldz80.exe"
   Delete "$INSTDIR\bin\sdldstm8.exe"
+  Delete "$INSTDIR\bin\sdldpdk.exe"
   Delete "$INSTDIR\bin\sdar.exe"
   Delete "$INSTDIR\bin\sdranlib.exe"
   Delete "$INSTDIR\bin\sdnm.exe"
@@ -1109,7 +1157,6 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\bin\makebin.exe"
   Delete "$INSTDIR\bin\packihx.exe"
   Delete "$INSTDIR\bin\sdcc.exe"
-  Delete "$INSTDIR\bin\sdcclib.exe"
   Delete "$INSTDIR\bin\sdcpp.exe"
   Delete "$INSTDIR\bin\as2gbmap.cmd"
   Delete "$INSTDIR\bin\readline5.dll"
@@ -1147,6 +1194,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\gbz80"
   RMDir "$INSTDIR\lib\src\r2k"
   RMDir "$INSTDIR\lib\src\r3ka"
+  RMDir "$INSTDIR\lib\src\ez80_z80"
   RMDir "$INSTDIR\lib\src\ds390\examples"
   RMDir "$INSTDIR\lib\src\ds390"
   RMDir "$INSTDIR\lib\src\ds400"
@@ -1154,6 +1202,8 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\s08"
   RMDir "$INSTDIR\lib\src\stm8"
   RMDir "$INSTDIR\lib\src\stm8-large"
+  RMDir "$INSTDIR\lib\src\pdk14"
+  RMDir "$INSTDIR\lib\src\pdk15"
   RMDir "$INSTDIR\lib\src"
   RMDir "$INSTDIR\non-free\lib\src"
 
@@ -1165,6 +1215,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\z180"
   RMDir "$INSTDIR\lib\r2k"
   RMDir "$INSTDIR\lib\r3ka"
+  RMDir "$INSTDIR\lib\ez80_z80"
   RMDir "$INSTDIR\lib\small"
   RMDir "$INSTDIR\lib\medium"
   RMDir "$INSTDIR\lib\large"
@@ -1177,6 +1228,8 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\s08"
   RMDir "$INSTDIR\lib\stm8"
   RMDir "$INSTDIR\lib\stm8-large"
+  RMDir "$INSTDIR\lib\pdk14"
+  RMDir "$INSTDIR\lib\pdk15"
   RMDir "$INSTDIR\lib"
   RMDir "$INSTDIR\non-free\lib"
 
@@ -1184,6 +1237,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\include\asm\z180"
   RMDir "$INSTDIR\include\asm\r2k"
   RMDir "$INSTDIR\include\asm\r3ka"
+  RMDir "$INSTDIR\include\asm\ez80_z80"
   RMDir "$INSTDIR\include\asm\pic16"
   RMDir "$INSTDIR\non-free\include\asm\pic16"
   RMDir "$INSTDIR\include\asm\pic14"

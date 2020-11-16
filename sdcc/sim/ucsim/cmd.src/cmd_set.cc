@@ -45,6 +45,14 @@
 #include "cmdutil.h"
 
 
+void
+set_set_help(class cl_cmd *cmd)
+{
+  cmd->set_help("set subcommand",
+		"Set value of different objects",
+		"Long of set");
+}
+
 /*
  * Command: set memory
  *----------------------------------------------------------------------------
@@ -71,7 +79,7 @@ COMMAND_DO_WORK_UC(cl_set_mem_cmd)
       con->dd_printf("Error: no data\n");
     else if (start < mem->get_start_address())
       con->dd_printf("Start address less then 0x%x\n",
-		     (int)mem->get_start_address());
+		     AU(mem->get_start_address()));
     else
       {
 	int i;
@@ -85,11 +93,15 @@ COMMAND_DO_WORK_UC(cl_set_mem_cmd)
       }
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
   
   return(false);;
 }
 
+CMDHELP(cl_set_mem_cmd,
+	"set memory memory_type address data...",
+	"Place list of data into memory",
+	"long help of set memory")
 
 /*
  * Command: set bit
@@ -120,11 +132,15 @@ COMMAND_DO_WORK_UC(cl_set_bit_cmd)
     mem->dump(mem_addr, mem_addr, 1, con->get_fout());
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
 
   return(false);;
 }
 
+CMDHELP(cl_set_bit_cmd,
+	"set bit addr 0|1",
+	"Set specified bit to 0 or 1",
+	"long help of set bit")
 
 /*
  * Command: set hw
@@ -150,7 +166,7 @@ COMMAND_DO_WORK_UC(cl_set_hw_cmd)
     hw= uc->get_hw(HW_PORT, pn, 0);
     }*/
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
   /*if (pn < 0 ||
       pn > 3)
     con->dd_printf("Error: wrong port\n");
@@ -167,6 +183,10 @@ COMMAND_DO_WORK_UC(cl_set_hw_cmd)
   return(false);;
 }
 
+CMDHELP(cl_set_hw_cmd,
+	"set hardware cathegory params...",
+	"Set parameters of specified hardware element",
+	"long help of set hardware")
 
 /*
  * Command: set option
@@ -230,7 +250,7 @@ COMMAND_DO_WORK_APP(cl_set_option_cmd)
       option= app->options->get_option(id);
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
   if (!option)
     {
       con->dd_printf("Option does not exist\n");
@@ -242,7 +262,11 @@ COMMAND_DO_WORK_APP(cl_set_option_cmd)
   return(false);
 }
 
-
+CMDHELP(cl_set_option_cmd,
+	"set option name|nr value",
+	"Set value of an option",
+	"long help of set option")
+	
 /*
  * Command: set error
  *----------------------------------------------------------------------------
@@ -264,7 +288,7 @@ COMMAND_DO_WORK_APP(cl_set_error_cmd)
     value= params[1]->value.string.string;
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
 
   class cl_list *registered_errors = cl_error_registry::get_list();
   if (error_name &&
@@ -299,6 +323,10 @@ COMMAND_DO_WORK_APP(cl_set_error_cmd)
   return(false);
 }
 
+CMDHELP(cl_set_error_cmd,
+	"set error error_name on|off|unset",
+	"Set value of an error",
+	"long help of set error")
 
 /*
  * Command: set console
@@ -360,10 +388,14 @@ COMMAND_DO_WORK_APP(cl_set_console_cmd)
       con->set_cooked(true);
     }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
   
   return false;
 }
 
+CMDHELP(cl_set_console_cmd,
+	"set console interactive [on|off]|noninteractive|raw|edited",
+	"Set console parameters",
+	"long help of set console")
 
 /* End of cmd.src/cmd_set.cc */

@@ -523,6 +523,7 @@ rliveClear (eBBlock **ebbs, int count)
 /* rlivePoint - for each point compute the ranges that are alive   */
 /* The live range is only stored for ITEMPs; the same code is used */
 /* to find use of unitialized AUTOSYMs (an ITEMP is an AUTOSYM).   */
+/* also, update funcUsesVolatile flag for current function         */
 /*-----------------------------------------------------------------*/
 static void
 rlivePoint (eBBlock ** ebbs, int count, bool emitWarnings)
@@ -530,6 +531,8 @@ rlivePoint (eBBlock ** ebbs, int count, bool emitWarnings)
   int i, key;
   eBBlock *succ;
   bitVect *alive;
+
+  bool uses_volatile = false;
 
   /* for all blocks do */
   for (i = 0; i < count; i++)
@@ -539,6 +542,8 @@ rlivePoint (eBBlock ** ebbs, int count, bool emitWarnings)
       /* for all instructions in this block do */
       for (ic = ebbs[i]->sch; ic; ic = ic->next)
         {
+          uses_volatile |= POINTER_GET (ic) && IS_VOLATILE (operandType (IC_LEFT(ic))->next) || IS_OP_VOLATILE (IC_LEFT(ic)) || IS_OP_VOLATILE (IC_RIGHT(ic));
+          uses_volatile |= POINTER_SET (ic) && IS_VOLATILE (operandType (IC_RESULT(ic))->next) || IS_OP_VOLATILE (IC_RESULT(ic));
 
 	  if (!ic->rlive)
 	    ic->rlive = newBitVect (operandKey);
@@ -681,6 +686,9 @@ rlivePoint (eBBlock ** ebbs, int count, bool emitWarnings)
 	}
 
     }
+
+  if(currFunc)
+    currFunc->funcUsesVolatile = uses_volatile;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1143,5 +1151,98 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
   deleteSet (&candidates);
 
   return (num_separated);
+}
+
+/*-----------------------------------------------------------------*/
+/* Shorten live ranges by swapping order of operations             */
+/*-----------------------------------------------------------------*/
+int
+shortenLiveRanges (iCode *sic, ebbIndex *ebbi)
+{
+  int change = 0;
+
+  for (iCode *ic = sic; ic; ic = ic->next)
+    {
+      iCode *ifx = 0;
+
+      iCode *pic = ic->prev;
+      iCode *nic = ic->next;
+
+      if (!pic || !nic)
+        continue;
+
+      if (ic->op == IFX || nic->op == IFX)
+        continue;
+
+      if (nic->op == IPUSH || nic->op == SEND)
+        continue;
+
+      if (pic->op != '=' || !IS_ITEMP (IC_RESULT (pic)) || bitVectnBitsOn (OP_DEFS (IC_RESULT (pic))) != 1)
+        continue;
+
+      if (IC_LEFT (nic) != IC_RESULT (pic) && IC_RIGHT (nic) != IC_RESULT (pic) || bitVectnBitsOn (OP_USES (IC_RESULT (pic))) != 1)
+        continue;
+
+      if (IS_OP_VOLATILE (IC_RIGHT (pic)) || IS_OP_VOLATILE (IC_LEFT (nic)) || IS_OP_VOLATILE (IC_RIGHT (nic)) || IS_OP_VOLATILE (IC_RESULT (nic)))
+        continue;
+
+      if (isOperandEqual (IC_RESULT (pic), IC_LEFT (ic)) || isOperandEqual (IC_RESULT (pic), IC_RIGHT (ic)))
+        continue;
+
+      if (isOperandEqual (IC_RESULT (ic), IC_LEFT (nic)) || isOperandEqual (IC_RESULT (ic), IC_RIGHT (nic)))
+        continue;
+
+      if ((POINTER_SET (nic) || isOperandGlobal (IC_RESULT (nic))) && (POINTER_GET (ic) || isOperandGlobal (IC_LEFT (ic)) || isOperandGlobal (IC_RIGHT (ic))) ||
+        (POINTER_GET (nic) || isOperandGlobal (IC_LEFT (nic)) || isOperandGlobal (IC_RIGHT (nic))) && (POINTER_SET (ic) || POINTER_SET (nic) && isOperandGlobal (IC_RESULT (ic))))
+        continue;
+
+      if (isOperandGlobal (IC_RIGHT (pic))) // Might result in too many global operands per op for backend.
+        continue;
+
+      if (ifx = ifxForOp (IC_RESULT (nic), nic))
+        {
+          const symbol *starget = IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx);
+          const iCode *itarget = eBBWithEntryLabel(ebbi, starget)->sch;
+
+          if (nic->next != ifx || bitVectBitValue(itarget->rlive, IC_RESULT (ic)->key))
+            continue;
+        }
+
+      if (IC_LEFT (nic) == IC_RESULT (pic))
+        IC_LEFT (nic) = IC_RIGHT (pic);
+      if (IC_RIGHT (nic) == IC_RESULT (pic))
+        IC_RIGHT (nic) = IC_RIGHT (pic);
+      bitVectUnSetBit (OP_USES (IC_RESULT (pic)), nic->key);
+      if (IS_SYMOP (IC_RIGHT (pic)))
+        bitVectSetBit (OP_USES (IC_RIGHT (pic)), nic->key);
+
+      // Assignment to self will get optimized out later
+      IC_LEFT (pic) = IC_RESULT (pic); 
+      bitVectSetBit (OP_USES (IC_RESULT (pic)), pic->key);
+
+      pic->next = nic;
+      nic->prev = pic;
+      ic->prev = nic;
+      ic->next = nic->next;
+      nic->next = ic;
+      if (ic->next)
+        ic->next->prev = ic;
+
+      if (ifx) // Move calculation beyond ifx.
+        {
+          ifx->prev = ic->prev;
+          ic->next = ifx->next;
+          ifx->next = ic;
+          ic->prev = ifx;
+
+          ifx->prev->next = ifx;
+          if (ic->next)
+            ic->next->prev = ic;
+        }
+
+       change++;
+    }
+
+  return (change);
 }
 

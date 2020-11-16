@@ -50,7 +50,7 @@ COMMAND_DO_WORK_UC(cl_state_cmd)
 {
   con->dd_printf("CPU state= %s PC= 0x%06x XTAL= %g\n",
 		 get_id_string(cpu_states, uc->state),
-		 uc->PC, 
+		 AU(uc->PC), 
 		 uc->xtal);
   con->dd_printf("Operation since last reset= (%lu vclks)\n",
 		 (unsigned long)(uc->vc.fetch) +
@@ -61,7 +61,7 @@ COMMAND_DO_WORK_UC(cl_state_cmd)
   con->dd_printf("Read= %lu ", (unsigned long)(uc->vc.rd));
   con->dd_printf("Write= %lu\n", (unsigned long)(uc->vc.wr));
   con->dd_printf("Total time since last reset= %g sec (%lu clks)\n",
-		 uc->get_rtime(), uc->ticks->ticks);
+		 uc->get_rtime(), (unsigned long)(uc->ticks->ticks));
   con->dd_printf("Time in isr = %g sec (%lu clks) %3.2g%%\n",
 		 uc->isr_ticks->get_rtime(uc->xtal),
 		 uc->isr_ticks->ticks,
@@ -75,12 +75,16 @@ COMMAND_DO_WORK_UC(cl_state_cmd)
 		 (100.0*((double)(uc->idle_ticks->ticks)/
 			 (double)(uc->ticks->ticks))));
   con->dd_printf("Max value of stack pointer= 0x%06x, avg= 0x%06x\n",
-		 uc->sp_max, uc->sp_avg);
+		 AU(uc->sp_max), AU(uc->sp_avg));
   con->dd_printf("Simulation: %s\n",
-		 (uc->sim->state & SIM_GO)?"runnig":"stopped");
+		 (uc->sim->state & SIM_GO)?"running":"stopped");
   return(0);
 }
 
+CMDHELP(cl_state_cmd,
+	"state",
+	"State of microcontroller",
+	"long help of state")
 
 /*
  * Command: file
@@ -108,6 +112,10 @@ COMMAND_DO_WORK_UC(cl_file_cmd)
   return(0);
 }
 
+CMDHELP(cl_file_cmd,
+	"file \"FILE\"",
+        "Load FILE into ROM",
+	"long help of file")
 
 /*
  * Command: download
@@ -127,6 +135,10 @@ COMMAND_DO_WORK_UC(cl_dl_cmd)
   return(0);
 }
 
+CMDHELP(cl_dl_cmd,
+	"download",
+	"Load (intel.hex) data",
+	"long help of download")
 
 /*
  * Command: pc
@@ -155,13 +167,17 @@ COMMAND_DO_WORK_UC(cl_pc_cmd)
 	    addr= rom->highest_valid_address();
 	}
       if (!uc->inst_at(addr))
-	con->dd_printf("Warning: maybe not instruction at 0x%06x\n", addr);
+	con->dd_printf("Warning: maybe not instruction at 0x%06x\n", AU(addr));
       uc->PC= addr;
     }
   uc->print_disass(uc->PC, con);
   return(false);
 }
 
+CMDHELP(cl_pc_cmd,
+	"pc [addr]",
+	"Set/get PC",
+	"long help of pc")
 
 /*
  * Command: reset
@@ -177,6 +193,10 @@ COMMAND_DO_WORK_UC(cl_reset_cmd)
   return(0);
 }
 
+CMDHELP(cl_reset_cmd,
+	"reset",
+	"Reset processor to start state",
+	"long help of reset")
 
 /*
  * Command: dump
@@ -221,7 +241,7 @@ COMMAND_DO_WORK_UC(cl_dump_cmd)
 	  params[0]= cmdline->param(i);
 	}
       if (params[0])
-	con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+	syntax_error(con);
       return false;
     }
   if (params[0] &&
@@ -270,42 +290,46 @@ COMMAND_DO_WORK_UC(cl_dump_cmd)
     }
   
   enum dump_format df= (enum dump_format)fmt;
-  if (!params[0] ||
-      !params[0]->as_memory(uc))
+  if ((cmdline->param(0)==NULL) ||
+      (!(cmdline->param(0)->as_memory(uc))))
     {
       con->dd_printf("No memory specified. Use \"info memory\" for available memories\n");
       return(false);
     }
   if (cmdline->syntax_match(uc, MEMORY))
     {
-      mem= params[0]->value.memory.memory;
+      mem= cmdline->param(0)->value.memory.memory;
       mem->dump(df, -1, -1, bpl, con->get_fout());
     }
   else if (cmdline->syntax_match(uc, MEMORY ADDRESS)) {
-    mem  = params[0]->value.memory.memory;
-    start= params[1]->value.address;
+    mem  = cmdline->param(0)->value.memory.memory;
+    start= cmdline->param(1)->value.address;
     end  = start+10*8-1;
     mem->dump(df, start, end, bpl, con->get_fout());
   }
   else if (cmdline->syntax_match(uc, MEMORY ADDRESS ADDRESS)) {
-    mem  = params[0]->value.memory.memory;
-    start= params[1]->value.address;
-    end  = params[2]->value.address;
+    mem  = cmdline->param(0)->value.memory.memory;
+    start= cmdline->param(1)->value.address;
+    end  = cmdline->param(2)->value.address;
     mem->dump(df, start, end, bpl, con->get_fout());
   }
   else if (cmdline->syntax_match(uc, MEMORY ADDRESS ADDRESS NUMBER)) {
-    mem  = params[0]->value.memory.memory;
-    start= params[1]->value.address;
-    end  = params[2]->value.address;
-    bpl  = params[3]->value.number;
+    mem  = cmdline->param(0)->value.memory.memory;
+    start= cmdline->param(1)->value.address;
+    end  = cmdline->param(2)->value.address;
+    bpl  = cmdline->param(3)->value.number;
     mem->dump(df, start, end, bpl, con->get_fout());
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
 
   return(false);;
 }
 
+CMDHELP(cl_dump_cmd,
+	"dump [/format] memory_type [start [stop [bytes_per_line]]] | dump bit...",
+	"Dump memory of specified type or bit(s)",
+	"long help of dump")
 
 /*
  * Command: di
@@ -322,6 +346,10 @@ COMMAND_DO_WORK_UC(cl_di_cmd)
   return(0);
 }
 
+CMDHELP(cl_di_cmd,
+	"di [start [stop]]",
+	"Dump Internal RAM",
+	"long help of di")
 
 /*
  * Command: dx
@@ -338,6 +366,10 @@ COMMAND_DO_WORK_UC(cl_dx_cmd)
   return(0);
 }
 
+CMDHELP(cl_dx_cmd,
+	"dx [start [stop]]",
+	"Dump External RAM",
+	"long help of dx")
 
 /*
  * Command: dch
@@ -354,6 +386,10 @@ COMMAND_DO_WORK_UC(cl_dch_cmd)
   return(0);
 }
 
+CMDHELP(cl_dch_cmd,
+	"dch [start [stop]]",
+	"Dump code in hex form",
+	"long help of dch")
 
 /*
  * Command: ds
@@ -370,6 +406,10 @@ COMMAND_DO_WORK_UC(cl_ds_cmd)
   return(0);
 }
 
+CMDHELP(cl_ds_cmd,
+	"ds [start [stop]]",
+	"Dump SFR",
+	"long help of ds")
 
 /*
  * Command: dc
@@ -417,6 +457,10 @@ COMMAND_DO_WORK_UC(cl_dc_cmd)
   return(false);
 }
 
+CMDHELP(cl_dc_cmd,
+	"dc [start [stop]]",
+	"Dump code in disass form",
+	"long help of dc")
 
 /*
  * Command: disassemble
@@ -453,7 +497,7 @@ COMMAND_DO_WORK_UC(cl_disassemble_cmd)
   }
   else
     {
-      con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+      syntax_error(con);
       return(false);
     }
 
@@ -501,6 +545,10 @@ COMMAND_DO_WORK_UC(cl_disassemble_cmd)
   return(false);;
 }
 
+CMDHELP(cl_disassemble_cmd,
+	"disassemble [start [offset [lines]]]",
+	"Disassemble code",
+	"long help of disassemble")
 
 /*
  * Command: fill
@@ -534,11 +582,15 @@ COMMAND_DO_WORK_UC(cl_fill_cmd)
       }
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
 
   return(false);;
 }
 
+CMDHELP(cl_fill_cmd,
+	"fill memory_type start end data",
+	"Fill memory region with data",
+	"long help of fill")
 
 /*
  * Command: where
@@ -573,7 +625,7 @@ cl_where_cmd::do_real_work(class cl_uc *uc,
       }
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
 
   return(false);
 }
@@ -586,6 +638,11 @@ COMMAND_DO_WORK_UC(cl_where_cmd)
   return(do_real_work(uc, cmdline, con, false));
 }
 
+CMDHELP(cl_where_cmd,
+	"where memory_type data...",
+	"Case unsensitive search for data",
+	"long help of where")
+
 //int
 //cl_Where_cmd::do_work(class cl_sim *sim,
 //		      class cl_cmdline *cmdline, class cl_console *con)
@@ -594,6 +651,10 @@ COMMAND_DO_WORK_UC(cl_Where_cmd)
   return(do_real_work(uc, cmdline, con, true));
 }
 
+CMDHELP(cl_Where_cmd,
+	"Where memory_type data...",
+	"Case sensitive search for data",
+	"long help of Where")
 
 COMMAND_DO_WORK_UC(cl_var_cmd)
 {
@@ -625,8 +686,7 @@ COMMAND_DO_WORK_UC(cl_var_cmd)
     {
     }
   else
-    return con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n"),
-      false;
+    return syntax_error(con), false;
 
   if (!valid_sym_name(params[0]->value.string.string))
     return con->dd_printf("name is invalid\n"),
@@ -687,5 +747,10 @@ COMMAND_DO_WORK_UC(cl_var_cmd)
   
   return false;
 }
+
+CMDHELP(cl_var_cmd,
+	"var name [memory addr [bit_nr]]",
+	"Create new variable",
+	"long help of var")
 
 /* End of cmd.src/cmd_uc.cc */

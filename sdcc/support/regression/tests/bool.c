@@ -75,17 +75,13 @@ testBool(void)
 
 	E = true;
 	ASSERT((E ? 1 : 0) == (!(!E)));
-#ifndef __SDCC_ds390
 	ASSERT((E += 2) == 1);
-#endif
 	ASSERT((--E, --E, E) == E);
 
 	E = false;
-#ifndef __SDCC_ds390
 	ASSERT((E ? 1 : 0) == (!(!E)));
 	ASSERT((E += 2) == 1);
 	ASSERT((--E, --E, E) == E);
-#endif
 
 	E = 0;   ASSERT(!E); // sets E to 0
 	E = 1;   ASSERT(E);  // sets E to 1
@@ -100,12 +96,10 @@ testBool(void)
 	E = true;
 	E--;     ASSERT(!E); // sets E to 1-E
 
-#ifndef __SDCC_mcs51
 	ASSERT(!s2.b1);
 	s2.b = true;
 	fieldassign();
 	ASSERT(s2.b1);
-#endif
 #endif
 }
 

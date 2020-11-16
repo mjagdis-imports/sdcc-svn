@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: itc.cc 644 2017-02-15 12:33:31Z drdani $ */
-
 // prj
 
 #include <stdarg.h>
@@ -138,7 +136,7 @@ cl_itc::print_info(class cl_console_base *con)
   for (i= 0; i < uc->it_sources->count; i++)
     {
       class cl_it_src *is= (class cl_it_src *)(uc->it_sources->at(i));
-      con->dd_printf("  0x%06x", is->addr);
+      con->dd_printf("  0x%06x", AU(is->addr));
       con->dd_printf(" %-3s", (is->enabled())?"en":"dis");
       con->dd_printf(" %2d", uc->priority_of(/*is->ie_mask*/is->nuof));
       con->dd_printf(" %-3s", (is->pending())?"YES":"no");
@@ -154,13 +152,14 @@ cl_itc::print_info(class cl_console_base *con)
       if (il->level >= 0)
 	{
 	  con->dd_printf("  %2d", il->level);
-	  con->dd_printf(" 0x%06x", il->addr);
-	  con->dd_printf(" 0x%06x", il->PC);
+	  con->dd_printf(" 0x%06x", AU(il->addr));
+	  con->dd_printf(" 0x%06x", AU(il->PC));
 	  con->dd_printf(" %s", (il->source)?(object_name(il->source)):
 			 "nothing");
 	  con->dd_printf("\n");
 	}
     }
+  print_cfg_info(con);
 }
 
 

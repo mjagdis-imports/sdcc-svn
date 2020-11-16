@@ -1271,20 +1271,19 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
         retval = operandFromValue (valCastLiteral (type, operandLitValue (left) * operandLitValue (right), operandLitValueUll (left) * operandLitValueUll (right)));
       break;
     case '/':
+      if ((TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0 && operandLitValueUll (right) == 0)
+        {
+          werror (E_DIVIDE_BY_ZERO);
+          retval = right;
+          break;
+        }
       if (IS_UNSIGNED (type))
         {
-          if ((TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0)
-            {
-              werror (E_DIVIDE_BY_ZERO);
-              retval = right;
-              break;
-            }
           SPEC_USIGN (let) = 1;
           SPEC_USIGN (ret) = 1;
           if (IS_LONGLONG (type))
             retval = operandFromValue (valCastLiteral (type,
-                                                       operandLitValue (left) /
-                                                       operandLitValue (right),
+                                                       0.0,
                                                        operandLitValueUll (left) /
                                                        operandLitValueUll (right)));
           else
@@ -1295,18 +1294,10 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
                                                        (TYPE_TARGET_ULONG) double2ul (operandLitValue (right))));
         }
       else
-        {
-          if ((TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0)
-            {
-              werror (E_DIVIDE_BY_ZERO);
-              retval = right;
-              break;
-            }
-          retval = operandFromValue (valCastLiteral (type, operandLitValue (left) / operandLitValue (right), operandLitValueUll (left) / operandLitValueUll (right)));
-        }
+        retval = operandFromValue (valCastLiteral (type, operandLitValue (left) / operandLitValue (right), operandLitValueUll (left) / operandLitValueUll (right)));
       break;
     case '%':
-      if ((TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0)
+      if ((TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0 && operandLitValueUll (right) == 0)
         {
           werror (E_DIVIDE_BY_ZERO);
           retval = right;
@@ -1314,8 +1305,15 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
       else
         {
           if (IS_UNSIGNED (type))
-            retval = operandFromLit ((TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) %
-                                     (TYPE_TARGET_ULONG) double2ul (operandLitValue (right)));
+            {
+              if (IS_LONGLONG (type))
+                retval = operandFromValue (valCastLiteral (type,
+                                                       0.0,
+                                                       operandLitValueUll (left) %
+                                                       operandLitValueUll (right)));
+              else
+                retval = operandFromLit ((TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) % (TYPE_TARGET_ULONG) double2ul (operandLitValue (right)));
+            }
           else
             retval = operandFromLit ((TYPE_TARGET_LONG) operandLitValue (left) % (TYPE_TARGET_LONG) operandLitValue (right));
         }
@@ -2354,7 +2352,7 @@ geniCodeAdd (operand *left, operand *right, RESULT_TYPE resultType, int lvl)
       nBytes = getSize (ltype->next);
       ptrSize = getArraySizePtr (left); // works for both arrays and pointers
 
-      if (nBytes == 0)
+      if (nBytes == 0 && !IS_VOID (ltype->next))
         werror (E_UNKNOWN_SIZE, IS_SYMOP (left) ? OP_SYMBOL (left)->name : "<no name>");
       // there is no need to multiply with 1
       if (nBytes != 1)
@@ -2604,6 +2602,7 @@ geniCodePostInc (operand * op)
   operand *rv = (IS_ITEMP (op) ? geniCodeRValue (op, (!op->aggr2ptr && IS_PTR (optype)) ? TRUE : FALSE) : op);
   sym_link *rvtype = operandType (rv);
   int size = 0;
+  operand *srcOp = rv;
 
   /* if this is not an address we have trouble */
   if (!op->isaddr)
@@ -2620,17 +2619,23 @@ geniCodePostInc (operand * op)
 
   geniCodeAssign (rOp, rv, 0, 0);
 
+  /* If rv is volatile, we can only read it once, and we've just */
+  /* done that, so use the copy in rOp instead to avoid reading  */
+  /* it again. */
+  if (isOperandVolatile (rv, FALSE))
+    srcOp = rOp;
+
   size = (IS_PTR (rvtype) ? getSize (rvtype->next) : 1);
   if (size == 0)
     werror (W_SIZEOF_VOID);
   if (IS_FLOAT (rvtype))
-    ic = newiCode ('+', rv, operandFromValue (constFloatVal ("1.0")));
+    ic = newiCode ('+', srcOp, operandFromValue (constFloatVal ("1.0")));
   else if (IS_FIXED16X16 (rvtype))
-    ic = newiCode ('+', rv, operandFromValue (constFixed16x16Val ("1.0")));
+    ic = newiCode ('+', srcOp, operandFromValue (constFixed16x16Val ("1.0")));
   else if (IS_BOOL (rvtype))
     ic = newiCode ('=', NULL, operandFromLit (1));
   else
-    ic = newiCode ('+', rv, operandFromLit (size));
+    ic = newiCode ('+', srcOp, operandFromLit (size));
 
   IC_RESULT (ic) = result = newiTempOperand (rvtype, 0);
   ADDTOCHAIN (ic);
@@ -2675,7 +2680,7 @@ geniCodePreInc (operand * op, bool lvalue)
   ADDTOCHAIN (ic);
 
   (void) geniCodeAssign (op, result, 0, 0);
-  if (lvalue || IS_TRUE_SYMOP (op) || IS_BITVAR (optype))
+  if (lvalue || (IS_TRUE_SYMOP (op) && !isOperandVolatile (op, FALSE)) || IS_BITVAR (optype))
     return op;
   else
     return result;
@@ -2694,6 +2699,7 @@ geniCodePostDec (operand * op)
   operand *rv = (IS_ITEMP (op) ? geniCodeRValue (op, ((!op->aggr2ptr && IS_PTR (optype)) ? TRUE : FALSE)) : op);
   sym_link *rvtype = operandType (rv);
   int size = 0;
+  operand *srcOp = rv;
 
   /* if this is not an address we have trouble */
   if (!op->isaddr)
@@ -2710,17 +2716,23 @@ geniCodePostDec (operand * op)
 
   geniCodeAssign (rOp, rv, 0, 0);
 
+  /* If rv is volatile, we can only read it once, and we've just */
+  /* done that, so use the copy in rOp instead to avoid reading  */
+  /* it again. */
+  if (isOperandVolatile (rv, FALSE))
+    srcOp = rOp;
+
   size = (IS_PTR (rvtype) ? getSize (rvtype->next) : 1);
   if (size == 0)
     werror (W_SIZEOF_VOID);
   if (IS_FLOAT (rvtype))
-    ic = newiCode ('-', rv, operandFromValue (constFloatVal ("1.0")));
+    ic = newiCode ('-', srcOp, operandFromValue (constFloatVal ("1.0")));
   else if (IS_FIXED16X16 (rvtype))
-    ic = newiCode ('-', rv, operandFromValue (constFixed16x16Val ("1.0")));
+    ic = newiCode ('-', srcOp, operandFromValue (constFixed16x16Val ("1.0")));
   else if (IS_BOOL (rvtype))
-    ic = newiCode ('!', rv, 0);
+    ic = newiCode ('!', srcOp, 0);
   else
-    ic = newiCode ('-', rv, operandFromLit (size));
+    ic = newiCode ('-', srcOp, operandFromLit (size));
 
   IC_RESULT (ic) = result = newiTempOperand (rvtype, 0);
   ADDTOCHAIN (ic);
@@ -2765,7 +2777,7 @@ geniCodePreDec (operand * op, bool lvalue)
   ADDTOCHAIN (ic);
 
   (void) geniCodeAssign (op, result, 0, 0);
-  if (lvalue || IS_TRUE_SYMOP (op) || IS_BITVAR (optype))
+  if (lvalue || (IS_TRUE_SYMOP (op) && !isOperandVolatile (op, FALSE)) || IS_BITVAR (optype))
     return op;
   else
     return result;
@@ -3446,7 +3458,7 @@ geniCodeParms (ast * parms, value * argVals, int *iArg, int *stack, sym_link * f
           ic->parmPush = 1;
           /* update the stack adjustment */
           *stack += getSize (IS_AGGREGATE (p) ? aggrToPtr (p, FALSE) : p);
-          if (IFFUNC_ISSMALLC (ftype) && !IS_AGGREGATE (p) && getSize (p) == 1) /* SmallC calling convention passes 8-bit paramters as 16-bit values */
+          if ((IFFUNC_ISSMALLC (ftype) || TARGET_PDK_LIKE) && !IS_AGGREGATE (p) && getSize (p) == 1) /* SmallC calling convention passes 8-bit paramters as 16-bit values. So does pdk due to stack alignment requirements */
             (*stack)++;
           ADDTOCHAIN (ic);
         }

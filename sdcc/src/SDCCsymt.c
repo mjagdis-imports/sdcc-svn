@@ -334,7 +334,8 @@ newSymbol (const char *name, long scope)
   sym->for_newralloc = 0;
   sym->isinscope = 1;
   sym->usl.spillLoc = 0;
-  sym->div_flag_safe = 0;
+  sym->funcDivFlagSafe = 0;
+  sym->funcUsesVolatile = 1;
 
   return sym;
 }
@@ -349,6 +350,7 @@ newLink (SYM_LINK_CLASS select)
 
   p = Safe_alloc (sizeof (sym_link));
   p->xclass = select;
+  p->funcAttrs.z88dk_params_offset = 0;
 
   return p;
 }
@@ -661,13 +663,13 @@ checkTypeSanity (sym_link *etype, const char *name)
 sym_link *
 finalizeSpec (sym_link * lnk)
 {
-  if (!options.signed_char)
+  sym_link *p = lnk;
+  while (p && !IS_SPEC (p))
+    p = p->next;
+  if (SPEC_NOUN (p) == V_CHAR && !SPEC_USIGN (p) && !p->select.s.b_signed)
     {
-      sym_link *p = lnk;
-      while (p && !IS_SPEC (p))
-        p = p->next;
-      if (SPEC_NOUN (p) == V_CHAR && !SPEC_USIGN (p) && !p->select.s.b_signed)
-        SPEC_USIGN (p) = 1;
+      SPEC_USIGN (p) = !options.signed_char;
+      p->select.s.b_implicit_sign = true;
     }
   return lnk;
 }
@@ -1541,6 +1543,7 @@ compStructSize (int su, structdef * sdef)
   int sum = 0, usum = 0;
   int bitOffset = 0;
   symbol *loop;
+  const int oldlineno = lineno;
 
   if (!sdef->fields)
     {
@@ -1551,6 +1554,8 @@ compStructSize (int su, structdef * sdef)
   loop = sdef->fields;
   while (loop)
     {
+      lineno = loop->lineDef;
+
       /* create the internal name for this variable */
       SNPRINTF (loop->rname, sizeof (loop->rname), "_%s", loop->name);
       if (su == UNION)
@@ -1566,7 +1571,27 @@ compStructSize (int su, structdef * sdef)
           SPEC_BUNNAMED (loop->etype) = loop->bitUnnamed;
 
           /* change it to a unsigned bit */
-          SPEC_NOUN (loop->etype) = SPEC_NOUN(loop->etype) == V_BOOL ? V_BBITFIELD : V_BITFIELD;
+          switch (SPEC_NOUN (loop->etype))
+            {
+            case V_BOOL:
+              SPEC_NOUN( loop->etype) = V_BBITFIELD;
+              if (loop->bitVar > 1)
+                werror (E_BITFLD_SIZE, 1);
+              break;
+            case V_CHAR:
+              SPEC_NOUN (loop->etype) = V_BITFIELD;
+              if (loop->bitVar > 8)
+                werror (E_BITFLD_SIZE , 8);
+              break;
+            case V_INT:
+              SPEC_NOUN (loop->etype) = V_BITFIELD;
+              if (loop->bitVar > port->s.int_size * 8)
+                werror (E_BITFLD_SIZE , port->s.int_size * 8);
+              break;
+            default:
+              werror (E_BITFLD_TYPE);
+            }
+
           /* ISO/IEC 9899 J.3.9 implementation defined behaviour: */
           /* a "plain" int bitfield is unsigned */
           if (!loop->etype->select.s.b_signed)
@@ -1689,6 +1714,8 @@ compStructSize (int su, structdef * sdef)
   /* For STRUCT, round up after all fields processed */
   if (su != UNION)
     sum += ((bitOffset + 7) / 8);
+
+  lineno = oldlineno;
 
   return (su == UNION ? usum : sum);
 }
@@ -1837,6 +1864,31 @@ checkSClass (symbol *sym, int isProto)
         if (((addr >> n) & 0xFF) < 0x80)
           werror (W_SFR_ABSRANGE, sym->name);
     }
+  else if (TARGET_Z80_LIKE && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+    {
+      if (SPEC_ADDR (sym->etype) > (FUNC_REGBANK (sym->type) ? 0xffff : 0xff))
+        werror (W_SFR_ABSRANGE, sym->name);
+    }
+  else if (TARGET_IS_PDK13 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+   {
+     if (SPEC_ADDR (sym->etype) > 0x1f)
+        werror (W_SFR_ABSRANGE, sym->name);
+   }
+  else if (TARGET_IS_PDK14 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+   {
+     if (SPEC_ADDR (sym->etype) > 0x3f)
+        werror (W_SFR_ABSRANGE, sym->name);
+   }
+  else if (TARGET_IS_PDK15 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+   {
+     if (SPEC_ADDR (sym->etype) > 0x7f)
+        werror (W_SFR_ABSRANGE, sym->name);
+   }
+  else if (TARGET_IS_PDK16 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+   {
+     if (SPEC_ADDR (sym->etype) > 0x1f)
+        werror (W_SFR_ABSRANGE, sym->name);
+   }
 
   /* If code memory is read only, then pointers to code memory */
   /* implicitly point to constants -- make this explicit       */
@@ -2837,7 +2889,7 @@ compareTypeExact (sym_link * dest, sym_link * src, long level)
 }
 
 /*---------------------------------------------------------------------------*/
-/* compareTypeExact - will do type check return 1 if representation is same. */
+/* compareTypeInexact - will do type check return 1 if representation is same. */
 /* Useful for redundancy elimination.                                        */
 /*---------------------------------------------------------------------------*/
 int
@@ -2965,7 +3017,7 @@ checkFunction (symbol * sym, symbol * csym)
 
   if (!IS_FUNC (sym->type))
     {
-      werror (E_SYNTAX_ERROR, sym->name);
+      werrorfl (sym->fileDef, sym->lineDef, E_SYNTAX_ERROR, sym->name);
       return 0;
     }
 
@@ -2995,7 +3047,7 @@ checkFunction (symbol * sym, symbol * csym)
   /* function cannot return aggregate */
   if (IS_AGGREGATE (sym->type->next))
     {
-      werror (E_FUNC_AGGR, sym->name);
+      werrorfl (sym->fileDef, sym->lineDef, E_FUNC_AGGR, sym->name);
       return 0;
     }
 
@@ -3009,14 +3061,14 @@ checkFunction (symbol * sym, symbol * csym)
     {
       if (!IS_VOID (FUNC_ARGS (sym->type)->type))
         {
-          werror (E_INT_ARGS, sym->name);
+          werrorfl (sym->fileDef, sym->lineDef, E_INT_ARGS, sym->name);
           FUNC_ARGS (sym->type) = NULL;
         }
     }
 
   if (IFFUNC_ISSHADOWREGS (sym->type) && !FUNC_ISISR (sym->type))
     {
-      werror (E_SHADOWREGS_NO_ISR, sym->name);
+      werrorfl (sym->fileDef, sym->lineDef, E_SHADOWREGS_NO_ISR, sym->name);
     }
 
   for (argCnt = 1, acargs = FUNC_ARGS (sym->type); acargs; acargs = acargs->next, argCnt++)
@@ -3024,7 +3076,7 @@ checkFunction (symbol * sym, symbol * csym)
       if (!acargs->sym)
         {
           // this can happen for reentrant functions
-          werror (E_PARAM_NAME_OMITTED, sym->name, argCnt);
+          werrorfl (sym->fileDef, sym->lineDef, E_PARAM_NAME_OMITTED, sym->name, argCnt);
           // the show must go on: synthesize a name and symbol
           SNPRINTF (acargs->name, sizeof (acargs->name), "_%s_PARM_%d", sym->name, argCnt);
           acargs->sym = newSymbol (acargs->name, 1);
@@ -3037,7 +3089,7 @@ checkFunction (symbol * sym, symbol * csym)
       else if (strcmp (acargs->sym->name, acargs->sym->rname) == 0)
         {
           // synthesized name
-          werror (E_PARAM_NAME_OMITTED, sym->name, argCnt);
+          werrorfl (sym->fileDef, sym->lineDef, E_PARAM_NAME_OMITTED, sym->name, argCnt);
         }
     }
   argCnt--;
@@ -3051,25 +3103,25 @@ checkFunction (symbol * sym, symbol * csym)
   /* check if body already present */
   if (csym && IFFUNC_HASBODY (csym->type))
     {
-      werror (E_FUNC_BODY, sym->name);
+      werrorfl (sym->fileDef, sym->lineDef, E_FUNC_BODY, sym->name);
       return 0;
     }
 
   /* check the return value type   */
   if (compareType (csym->type, sym->type) <= 0)
     {
-      werror (E_PREV_DECL_CONFLICT, csym->name, "type", csym->fileDef, csym->lineDef);
+      werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "type", csym->fileDef, csym->lineDef);
       printFromToType (csym->type, sym->type);
       return 0;
     }
 
   if (FUNC_ISISR (csym->type) != FUNC_ISISR (sym->type))
-    werror (E_PREV_DECL_CONFLICT, csym->name, "interrupt", csym->fileDef, csym->lineDef);
+    werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "interrupt", csym->fileDef, csym->lineDef);
 
   /* I don't think this is necessary for interrupts. An isr is a  */
   /* root in the calling tree.                                    */
   if ((FUNC_REGBANK (csym->type) != FUNC_REGBANK (sym->type)) && (!FUNC_ISISR (sym->type)))
-    werror (E_PREV_DECL_CONFLICT, csym->name, "using", csym->fileDef, csym->lineDef);
+    werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "using", csym->fileDef, csym->lineDef);
 
   if (IFFUNC_ISNAKED (csym->type) != IFFUNC_ISNAKED (sym->type))
     {
@@ -3082,7 +3134,7 @@ checkFunction (symbol * sym, symbol * csym)
     {
       if (FUNC_NONBANKED (csym->type) || FUNC_NONBANKED (sym->type))
         {
-          werror (W_BANKED_WITH_NONBANKED);
+          werrorfl (sym->fileDef, sym->lineDef, W_BANKED_WITH_NONBANKED);
           FUNC_BANKED (sym->type) = 0;
           FUNC_NONBANKED (sym->type) = 1;
         }
@@ -3106,14 +3158,14 @@ checkFunction (symbol * sym, symbol * csym)
   if (IFFUNC_ISREENT (csym->type) != IFFUNC_ISREENT (sym->type) && argCnt > 1)
     {
       //printf("argCnt = %d\n",argCnt);
-      werror (E_PREV_DECL_CONFLICT, csym->name, "reentrant", csym->fileDef, csym->lineDef);
+      werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "reentrant", csym->fileDef, csym->lineDef);
     }
 
   if (IFFUNC_ISWPARAM (csym->type) != IFFUNC_ISWPARAM (sym->type))
-    werror (E_PREV_DECL_CONFLICT, csym->name, "wparam", csym->fileDef, csym->lineDef);
+    werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "wparam", csym->fileDef, csym->lineDef);
 
   if (IFFUNC_ISSHADOWREGS (csym->type) != IFFUNC_ISSHADOWREGS (sym->type))
-    werror (E_PREV_DECL_CONFLICT, csym->name, "shadowregs", csym->fileDef, csym->lineDef);
+    werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "shadowregs", csym->fileDef, csym->lineDef);
 
   /* compare expected args with actual args */
   exargs = FUNC_ARGS (csym->type);
@@ -3169,7 +3221,7 @@ checkFunction (symbol * sym, symbol * csym)
   SPEC_STAT (sym->etype) |= SPEC_STAT (csym->etype);
   if (SPEC_STAT (sym->etype) && SPEC_EXTR (sym->etype))
     {
-      werror (E_TWO_OR_MORE_STORAGE_CLASSES, sym->name);
+      werrorfl (sym->fileDef, sym->lineDef, E_TWO_OR_MORE_STORAGE_CLASSES, sym->name);
     }
 
   return 1;
@@ -3219,7 +3271,7 @@ processFuncPtrArgs (sym_link * funcType)
 /* processFuncArgs - does some processing with function args       */
 /*-----------------------------------------------------------------*/
 void
-processFuncArgs (symbol * func)
+processFuncArgs (symbol *func)
 {
   value *val;
   int pNum = 1;
@@ -3260,6 +3312,11 @@ processFuncArgs (symbol * func)
     {
       int argreg = 0;
       struct dbuf_s dbuf;
+
+      if (val->sym && val->sym->name)
+        for (value *val2 = val->next; val2; val2 = val2->next)
+          if (val2->sym && val2->sym->name && !strcmp (val->sym->name, val2->sym->name))
+            werror (E_DUPLICATE_PARAMTER_NAME, val->sym->name, func->name);
 
       dbuf_init (&dbuf, 128);
       dbuf_printf (&dbuf, "%s parameter %d", func->name, pNum);
@@ -3357,7 +3414,7 @@ processFuncArgs (symbol * func)
 /* isSymbolEqual - compares two symbols return 1 if they match     */
 /*-----------------------------------------------------------------*/
 int
-isSymbolEqual (symbol * dest, symbol * src)
+isSymbolEqual (const symbol * dest, const symbol * src)
 {
   /* if pointers match then equal */
   if (dest == src)
@@ -3942,6 +3999,8 @@ sym_link *charType;
 sym_link *floatType;
 sym_link *fixed16x16Type;
 
+symbol *memcpy_builtin;
+
 static const char *
 _mangleFunctionName (const char *in)
 {
@@ -4009,6 +4068,8 @@ typeFromStr (const char *s)
         case 'c':
           r->xclass = SPECIFIER;
           SPEC_NOUN (r) = V_CHAR;
+          if (!sign && !usign)
+            r->select.s.b_implicit_sign = true;
           if (usign)
             {
               SPEC_USIGN (r) = 1;
@@ -4287,7 +4348,7 @@ initCSupport (void)
           dbuf_init (&dbuf, 128);
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
-            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
+            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
                         options.intlong_rent);
           dbuf_destroy (&dbuf);
         }
@@ -4304,7 +4365,7 @@ initCSupport (void)
               dbuf_init (&dbuf, 128);
               dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su * 3], sbwd[bwd]);
               muldiv[muldivmod][bwd][su] =
-                funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE) && bwd == 0) ? 1 : bwd][su], multypes[bwd][su], 2,
+                funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE) && bwd == 0) ? 1 : bwd][su], multypes[bwd][su], 2,
                             options.intlong_rent);
               dbuf_destroy (&dbuf);
             }
@@ -4372,15 +4433,26 @@ initBuiltIns ()
   int i;
   symbol *sym;
 
-  if (!port->builtintable)
-    return;
-
-  for (i = 0; port->builtintable[i].name; i++)
+  if (port->builtintable)
     {
-      sym = funcOfTypeVarg (port->builtintable[i].name, port->builtintable[i].rtype,
-                            port->builtintable[i].nParms, (const char **)port->builtintable[i].parm_types);
-      FUNC_ISBUILTIN (sym->type) = 1;
-      FUNC_ISREENT (sym->type) = 0;     /* can never be reentrant */
+      for (i = 0; port->builtintable[i].name; i++)
+        {
+          sym = funcOfTypeVarg (port->builtintable[i].name, port->builtintable[i].rtype,
+                                port->builtintable[i].nParms, (const char **)port->builtintable[i].parm_types);
+          FUNC_ISBUILTIN (sym->type) = 1;
+          FUNC_ISREENT (sym->type) = 0;     /* can never be reentrant */
+        }
+    }
+
+  /* initialize memcpy symbol for struct assignment */
+  memcpy_builtin = findSym (SymbolTab, NULL, "__builtin_memcpy");
+  /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
+  if (!memcpy_builtin)
+    {
+      const char *argTypeStrs[] = {"vg*", "Cvg*", "Ui"};
+      memcpy_builtin = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
+      FUNC_ISBUILTIN (memcpy_builtin->type) = 0;
+      FUNC_ISREENT (memcpy_builtin->type) = options.stackAuto;
     }
 }
 

@@ -18,7 +18,7 @@ void __printf(const char *szFormat, ...);
  #define _STATMEM
 #endif
 
-#if defined(PORT_HOST) || defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka) || defined(__SDCC_gbz80) || defined(__SDCC_stm8) || defined(__SDCC_tlcs90)
+#if defined(PORT_HOST) || defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka) || defined(__SDCC_gbz80) || defined(__SDCC_stm8) || defined(__SDCC_tlcs90) || defined(__SDCC_ez80_z80)
 # define __data
 # define __idata
 # define __pdata
@@ -27,6 +27,16 @@ void __printf(const char *szFormat, ...);
 # define __near
 # define __far
 # define __reentrant
+#endif
+
+#if defined(__SDCC_pdk14)
+# define __data
+# define __idata
+# define __pdata
+# define __xdata
+# define __code // TODO: __code will be supported in the future.
+# define __near
+# define __far
 #endif
 
 #if defined(PORT_HOST)

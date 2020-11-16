@@ -370,7 +370,10 @@ cl_f::put(int c)
 {
   int n= (first_free + 1) % 1024;
   if (n == last_used)
-    return -1;
+    {
+      printf("put: %d FULL!\n",c);
+      return -1;
+    }
   buffer[first_free]= c;
   first_free= n;
   return 0;
@@ -383,9 +386,7 @@ cl_f::get(void)
     {
       return -1;
     }
-  int c= buffer[last_used];
-  //if (c == 3 /* ^C */)
-  //return -2;
+  int c= buffer[last_used] & 0xff;
   last_used= (last_used + 1) % 1024;
   return c;
 }
@@ -430,7 +431,7 @@ cl_f::process_csi(void)
   int l= strlen(esc_buffer);
   if (l < 3)
     return 0;
-  int f, ret= 0;
+  int /*f,*/ ret= 0;
   char c= esc_buffer[l-1];
   
   switch (esc_buffer[2])
@@ -454,13 +455,13 @@ cl_f::process_csi(void)
 	    case 'p': ret= TU_CSUP; break;
 	    case 'q': ret= TU_CSDOWN; break;
 	    }
-	  f= ret;
+	  //f= ret;
 	  ret&= ~0xffff00;
 	  int x= (esc_buffer[4] - 0x20) & 0xff;
 	  int y= (esc_buffer[5] - 0x20) & 0xff;
 	  ret|= x << 16;
 	  ret|= y << 8;
-	  fprintf(stderr, "Mouse: 0x%0x (f=%d,0x%x)\n", ret, f, f);
+	  //fprintf(stderr, "Mouse: 0x%0x (f=%d,0x%x)\n", ret, f, f);
 	  return finish_esc(ret);
 	}
       return 0;
@@ -937,8 +938,6 @@ cl_f::read_dev(int *buf, int max)
   while (i < max)
     {
       c= get();
-      //if (c == -2) // ^C
-	  //return i;
       if (c == -1)
 	{
 	  if (i>0)

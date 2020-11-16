@@ -163,6 +163,7 @@ typedef struct specifier
   unsigned b_short:1;               /* 1=short int                */
   unsigned b_unsigned:1;            /* 1=unsigned, 0=signed       */
   unsigned b_signed:1;              /* just for sanity checks only*/
+  bool     b_implicit_sign:1;       /* signedness not explicitly specified - needed to keep char a separate type from signed char and unsigned char. */
   unsigned b_static:1;              /* 1=static keyword found     */
   unsigned b_extern:1;              /* 1=extern found             */
   unsigned b_inline:1;              /* inline function requested  */
@@ -274,6 +275,8 @@ typedef struct sym_link
     unsigned smallc:1;              /* Parameters on stack are passed in reverse order */
     unsigned z88dk_fastcall:1;      /* For the z80-related ports: Function has a single paramter of at most 32 bits that is passed in dehl */
     unsigned z88dk_callee:1;        /* Stack pointer adjustment for parameters passed on the stack is done by the callee */
+    unsigned z88dk_shortcall:1;     /* Short call available via rst (see values later) (Z80 only) */
+    unsigned z88dk_has_params_offset:1;     /* Has a parameter offset (Z80 only) */
     unsigned intno;                 /* Number of interrupt for interrupt service routine */
     short regbank;                  /* register bank 2b used                */
     unsigned builtin;               /* is a builtin function                */
@@ -281,6 +284,9 @@ typedef struct sym_link
     unsigned overlay;               /* force parameters & locals into overlay segment */
     unsigned hasStackParms;         /* function has parameters on stack     */
     bool preserved_regs[9];         /* Registers preserved by the function - may be an underestimate */
+    unsigned char z88dk_shortcall_rst;  /* Rst for a short call */
+    unsigned short z88dk_shortcall_val; /* Value for a short call */
+    unsigned short z88dk_params_offset;  /* Additional offset from for arguments */
   } funcAttrs;
 
   struct sym_link *next;            /* next element on the chain  */
@@ -338,7 +344,8 @@ typedef struct symbol
   unsigned spildir:1;               /* spilt in direct space */
   unsigned ptrreg:1;                /* this symbol assigned to a ptr reg */
   unsigned noSpilLoc:1;             /* cannot be assigned a spil location */
-  unsigned div_flag_safe:1;         /* we know this function is safe to call with undocumented stm8 flag bit 6 set*/
+  bool funcDivFlagSafe:1;           /* we know this function is safe to call with undocumented stm8 flag bit 6 set*/
+  bool funcUsesVolatile:1;          /* The function accesses a volatile variable */
   unsigned isstrlit;                /* is a string literal and it's usage count  */
   unsigned accuse;                  /* can be left in the accumulator
                                        On the Z80 accuse is divided into
@@ -367,7 +374,7 @@ typedef struct symbol
     struct set *itmpStack;          /* symbols spilt @ this stack location */
   }
   usl;
-  signed char bitVar;               /* if bitVar != 0: this is a bit variable, bitVar is the size in bits */
+  int bitVar;                       /* if bitVar != 0: this is a bit variable, bitVar is the size in bits */
   unsigned bitUnnamed:1;            /* unnamed bit variable */
   unsigned offset;                  /* offset from top if struct */
 
@@ -455,6 +462,8 @@ extern sym_link *validateLink (sym_link * l,
 #define IFFUNC_ISZ88DK_FASTCALL(x) (IS_FUNC(x) && FUNC_ISZ88DK_FASTCALL(x))
 #define FUNC_ISZ88DK_CALLEE(x) (x->funcAttrs.z88dk_callee)
 #define IFFUNC_ISZ88DK_CALLEE(x) (IS_FUNC(x) && FUNC_ISZ88DK_CALLEE(x))
+#define FUNC_ISZ88DK_SHORTCALL(x) (x->funcAttrs.z88dk_shortcall)
+#define IFFUNC_ISZ88DK_SHORTCALL(x) (IS_FUNC(x) && FUNC_ISZ88DK_SHORTCALL(x))
 
 #define BANKED_FUNCTIONS        ( options.model == MODEL_HUGE || \
                                   ( (options.model == MODEL_LARGE || options.model == MODEL_MEDIUM) && \
@@ -617,6 +626,8 @@ extern symbol *fp16x16conv[2][5][2];
 /* Dims: shift left/shift right, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
 extern symbol *rlrr[2][4][2];
 
+extern symbol *memcpy_builtin;
+
 #define SCHARTYPE       multypes[0][0]
 #define UCHARTYPE       multypes[0][1]
 #define INTTYPE         multypes[1][0]
@@ -689,7 +700,7 @@ symbol *getStructElement (structdef *, symbol *);
 sym_link *computeType (sym_link *, sym_link *, RESULT_TYPE, int);
 void processFuncPtrArgs (sym_link *);
 void processFuncArgs (symbol *);
-int isSymbolEqual (symbol *, symbol *);
+int isSymbolEqual (const symbol *, const symbol *);
 int powof2 (TYPE_TARGET_ULONG);
 void dbuf_printTypeChain (sym_link *, struct dbuf_s *);
 void printTypeChain (sym_link *, FILE *);

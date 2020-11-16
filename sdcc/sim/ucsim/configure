@@ -696,6 +696,7 @@ LDFLAGS
 CXXFLAGS
 CXX
 enable_serio
+enable_pdk_port
 enable_st7_port
 enable_stm8_port
 enable_xa_port
@@ -774,6 +775,7 @@ enable_hc08_port
 enable_s08_port
 enable_xa_port
 enable_stm8_port
+enable_pdk_port
 enable_st7_port
 enable_serio
 enable_statistic
@@ -1430,7 +1432,7 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-ucsim          compile ucsim frontend
+  --enable-ucsim          obsolete, ignored
   --enable-dlso           compile dynamically loadable shared libraries
   --disable-mcs51-port    do not compile simulator for mcs51
   --disable-ds390-port    do not compile simulator for ds390
@@ -1445,6 +1447,7 @@ Optional Features:
   --disable-s08-port      do not compile simulator for s08
   --enable-xa-port        compile simulator for xa
   --disable-stm8-port     do not compile simulator for stm8
+  --disable-pdk-port      do not compile simulator for pdk
   --enable-st7-port       compile simulator for st7
   --enable-serio          compile serio GUI tool (needs curses)
   --enable-statistic      compile statistical features (slower simulation)
@@ -2794,6 +2797,9 @@ else
 enable_ucsim="no"
 fi
 
+# ignore setting, always use NO
+enable_ucsim="no"
+
 # Check whether --enable-dlso was given.
 if test "${enable_dlso+set}" = set; then :
   enableval=$enable_dlso; if test $enable_dlso != "no"; then
@@ -2920,6 +2926,15 @@ else
   enable_stm8_port="yes"
 fi
 
+# Check whether --enable-pdk-port was given.
+if test "${enable_pdk_port+set}" = set; then :
+  enableval=$enable_pdk_port; if test $enable_pdk_port != "no"; then
+    enable_pdk_port="yes"
+fi
+else
+  enable_pdk_port="yes"
+fi
+
 # Check whether --enable-st7-port was given.
 if test "${enable_st7_port+set}" = set; then :
   enableval=$enable_st7_port; if test $enable_st7_port  != "no"; then
@@ -2937,6 +2952,7 @@ fi
 else
   enable_serio="no"
 fi
+
 
 
 
@@ -5958,7 +5974,7 @@ linux* | k*bsd*-gnu | kopensolaris*-gnu | gnu*)
   lt_cv_deplibs_check_method=pass_all
   ;;
 
-netbsd* | netbsdelf*-gnu)
+netbsd*)
   if echo __ELF__ | $CC -E - | $GREP __ELF__ > /dev/null; then
     lt_cv_deplibs_check_method='match_pattern /lib[^/]+(\.so\.[0-9]+\.[0-9]+|_pic\.a)$'
   else
@@ -9656,9 +9672,6 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
   openbsd* | bitrig*)
     with_gnu_ld=no
     ;;
-  linux* | k*bsd*-gnu | gnu*)
-    link_all_deplibs=no
-    ;;
   esac
 
   ld_shlibs=yes
@@ -9913,7 +9926,7 @@ _LT_EOF
       fi
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds='$LD -Bshareable $libobjs $deplibs $linker_flags -o $lib'
 	wlarc=
@@ -10583,7 +10596,6 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
 	if test yes = "$lt_cv_irix_exported_symbol"; then
           archive_expsym_cmds='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname `test -n "$verstring" && func_echo_all "$wl-set_version $wl$verstring"` $wl-update_registry $wl$output_objdir/so_locations $wl-exports_file $wl$export_symbols -o $lib'
 	fi
-	link_all_deplibs=no
       else
 	archive_cmds='$CC -shared $libobjs $deplibs $compiler_flags -soname $soname `test -n "$verstring" && func_echo_all "-set_version $verstring"` -update_registry $output_objdir/so_locations -o $lib'
 	archive_expsym_cmds='$CC -shared $libobjs $deplibs $compiler_flags -soname $soname `test -n "$verstring" && func_echo_all "-set_version $verstring"` -update_registry $output_objdir/so_locations -exports_file $export_symbols -o $lib'
@@ -10605,7 +10617,7 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
       esac
       ;;
 
-    netbsd* | netbsdelf*-gnu)
+    netbsd*)
       if echo __ELF__ | $CC -E - | $GREP __ELF__ >/dev/null; then
 	archive_cmds='$LD -Bshareable -o $lib $libobjs $deplibs $linker_flags'  # a.out
       else
@@ -11700,6 +11712,9 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
+  # Add ABI-specific directories to the system library path.
+  sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib"
+
   # Ideally, we could use ldconfig to report *all* directores which are
   # searched for libraries, however this is still not possible.  Aside from not
   # being certain /sbin/ldconfig is available, command
@@ -11708,7 +11723,7 @@ fi
   # appending ld.so.conf contents (and includes) to the search path.
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -11718,18 +11733,6 @@ fi
   # people can always --disable-shared, the test was removed, and we
   # assume the GNU/Linux dynamic linker is in use.
   dynamic_linker='GNU/Linux ld.so'
-  ;;
-
-netbsdelf*-gnu)
-  version_type=linux
-  need_lib_prefix=no
-  need_version=no
-  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
-  soname_spec='${libname}${release}${shared_ext}$major'
-  shlibpath_var=LD_LIBRARY_PATH
-  shlibpath_overrides_runpath=no
-  hardcode_into_libs=yes
-  dynamic_linker='NetBSD ld.elf_so'
   ;;
 
 netbsd*)
@@ -14626,7 +14629,7 @@ lt_prog_compiler_static_CXX=
 	    ;;
 	esac
 	;;
-      netbsd* | netbsdelf*-gnu)
+      netbsd*)
 	;;
       *qnx* | *nto*)
         # QNX uses GNU C++, but need to define -shared option too, otherwise
@@ -15000,9 +15003,6 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
       exclude_expsyms_CXX='[_]+GLOBAL_OFFSET_TABLE_|[_]+GLOBAL__[FID]_.*|[_]+head_[A-Za-z0-9_]+_dll|[A-Za-z0-9_]+_dll_iname'
       ;;
     esac
-    ;;
-  linux* | k*bsd*-gnu | gnu*)
-    link_all_deplibs_CXX=no
     ;;
   *)
     export_symbols_cmds_CXX='$NM $libobjs $convenience | $global_symbol_pipe | $SED '\''s/.* //'\'' | sort | uniq > $export_symbols'
@@ -15677,6 +15677,9 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
+  # Add ABI-specific directories to the system library path.
+  sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib"
+
   # Ideally, we could use ldconfig to report *all* directores which are
   # searched for libraries, however this is still not possible.  Aside from not
   # being certain /sbin/ldconfig is available, command
@@ -15685,7 +15688,7 @@ fi
   # appending ld.so.conf contents (and includes) to the search path.
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -15695,18 +15698,6 @@ fi
   # people can always --disable-shared, the test was removed, and we
   # assume the GNU/Linux dynamic linker is in use.
   dynamic_linker='GNU/Linux ld.so'
-  ;;
-
-netbsdelf*-gnu)
-  version_type=linux
-  need_lib_prefix=no
-  need_version=no
-  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext}$major ${libname}${shared_ext}'
-  soname_spec='${libname}${release}${shared_ext}$major'
-  shlibpath_var=LD_LIBRARY_PATH
-  shlibpath_overrides_runpath=no
-  hardcode_into_libs=yes
-  dynamic_linker='NetBSD ld.elf_so'
   ;;
 
 netbsd*)
@@ -18034,30 +18025,80 @@ type_name()
     echo "long long"
 }
 
+specifier_name()
+{
+    if expr "$ac_cv_sizeof_char" '>=' "$1" >/dev/null; then
+        echo "\"\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_short" '>=' "$1" >/dev/null; then
+        echo "\"h\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_int" '>=' "$1" >/dev/null; then
+        echo "\"\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_long" '>=' "$1" >/dev/null; then
+        echo "\"l\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_long_long" '>=' "$1" >/dev/null; then
+        echo "\"L\""
+        exit
+    fi
+    echo "\"L\""
+}
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for byte" >&5
 $as_echo_n "checking type name for byte... " >&6; }
 TYPE_BYTE=`type_name 1`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_BYTE" >&5
 $as_echo "$TYPE_BYTE" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for byte" >&5
+$as_echo_n "checking specifier for byte... " >&6; }
+SPEC_BYTE=`specifier_name 1`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_BYTE" >&5
+$as_echo "$SPEC_BYTE" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for word" >&5
 $as_echo_n "checking type name for word... " >&6; }
 TYPE_WORD=`type_name 2`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_WORD" >&5
 $as_echo "$TYPE_WORD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for word" >&5
+$as_echo_n "checking specifier for word... " >&6; }
+SPEC_WORD=`specifier_name 2`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_WORD" >&5
+$as_echo "$SPEC_WORD" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for dword" >&5
 $as_echo_n "checking type name for dword... " >&6; }
 TYPE_DWORD=`type_name 4`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_DWORD" >&5
 $as_echo "$TYPE_DWORD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for dword" >&5
+$as_echo_n "checking specifier for dword... " >&6; }
+SPEC_DWORD=`specifier_name 4`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_DWORD" >&5
+$as_echo "$SPEC_DWORD" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for qword" >&5
 $as_echo_n "checking type name for qword... " >&6; }
 TYPE_QWORD=`type_name 8`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_QWORD" >&5
 $as_echo "$TYPE_QWORD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for qword" >&5
+$as_echo_n "checking specifier for qword... " >&6; }
+SPEC_QWORD=`specifier_name 8`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_QWORD" >&5
+$as_echo "$SPEC_QWORD" >&6; }
 
 
 cat >>confdefs.h <<_ACEOF
 #define TYPE_BYTE $TYPE_BYTE
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPEC_BYTE $SPEC_BYTE
 _ACEOF
 
 
@@ -18067,12 +18108,27 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
+#define SPEC_WORD $SPEC_WORD
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
 #define TYPE_DWORD $TYPE_DWORD
 _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
+#define SPEC_DWORD $SPEC_DWORD
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
 #define TYPE_QWORD $TYPE_QWORD
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPEC_QWORD $SPEC_QWORD
 _ACEOF
 
 #AC_DEFINE_UNQUOTED(TYPE_UBYTE, [unsigned $TYPE_BYTE], [XXX])
@@ -18109,7 +18165,7 @@ _ACEOF
 # Generating output files
 # ===========================================================================
 
-ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile tlcs.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile st7.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
+ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile tlcs.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile pdk.src/Makefile st7.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -19206,6 +19262,7 @@ do
     "hc08.src/Makefile") CONFIG_FILES="$CONFIG_FILES hc08.src/Makefile" ;;
     "xa.src/Makefile") CONFIG_FILES="$CONFIG_FILES xa.src/Makefile" ;;
     "stm8.src/Makefile") CONFIG_FILES="$CONFIG_FILES stm8.src/Makefile" ;;
+    "pdk.src/Makefile") CONFIG_FILES="$CONFIG_FILES pdk.src/Makefile" ;;
     "st7.src/Makefile") CONFIG_FILES="$CONFIG_FILES st7.src/Makefile" ;;
     "gui.src/Makefile") CONFIG_FILES="$CONFIG_FILES gui.src/Makefile" ;;
     "gui.src/serio.src/Makefile") CONFIG_FILES="$CONFIG_FILES gui.src/serio.src/Makefile" ;;
@@ -19780,6 +19837,7 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
     cat <<_LT_EOF >> "$cfgfile"
 #! $SHELL
 # Generated automatically by $as_me ($PACKAGE) $VERSION
+# Libtool was configured on host `(hostname || uname -n) 2>/dev/null | sed 1q`:
 # NOTE: Changes made to this file will be lost: look at ltmain.sh.
 
 # Provide generalized library-building support services.
