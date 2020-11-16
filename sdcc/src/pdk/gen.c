@@ -1109,6 +1109,15 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
+      else if ((TARGET_IS_PDK15 || TARGET_IS_PDK16) &&
+        !started && i + 1 == size && aopInReg (left_aop, i, A_IDX) &&
+        (right_aop->type == AOP_DIR || aopInReg (right_aop, i, P_IDX)) && aopSame (right_aop, i, result_aop, i, 1))
+        {
+          emit2 ("nadd", "%s, a", aopGet (right_aop, i));
+          cost (1, 1);
+          started = true;
+          continue;
+        }
       else if (!started && aopIsLitVal (right_aop, i, 1, 0x01) &&
         (left_aop->type == AOP_DIR || aopInReg (left_aop, i, P_IDX)) && aopSame (left_aop, i, result_aop, i, 1))
         {
@@ -1150,6 +1159,14 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
         {
           cheapMove (ASMOP_A, 0, right_aop, i, true, true);
           emit2 ("neg", "a");
+          cost (1, 1);
+          started = true;
+        }
+      else if ((TARGET_IS_PDK15 || TARGET_IS_PDK16) &&
+        !started && i + 1 == size && aopInReg (right_aop, i, A_IDX) &&
+        (left_aop->type == AOP_DIR || aopInReg (left_aop, i, P_IDX)))
+        {
+          emit2 ("nadd", "a, %s", aopGet (left_aop, i));
           cost (1, 1);
           started = true;
         }
@@ -1195,15 +1212,19 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             }
         }
       if (i + 1 < size && aopInReg (result_aop, i, P_IDX) && (left_aop->type == AOP_STK || right_aop->type == AOP_STK))
-        if (regalloc_dry_run)
-          cost (1000, 1000);
-        else
-          wassertl (0, "Unimplemented p result in subtraction with stack operand");
+        {
+          if (regalloc_dry_run)
+            cost (1000, 1000);
+          else
+            wassertl (0, "Unimplemented p result in subtraction with stack operand");
+        }
       if (i + 1 < size && result_aop->type == AOP_STK && (aopInReg (left_aop, i + 1, P_IDX) || aopInReg (right_aop, i + 1, P_IDX)))
-        if (regalloc_dry_run)
-          cost (1000, 1000);
-        else
-          wassertl (0, "Unimplemented upper byte p operand in subtraction with stack result");
+        {
+          if (regalloc_dry_run)
+            cost (1000, 1000);
+          else
+            wassertl (0, "Unimplemented upper byte p operand in subtraction with stack result");
+        }
 
       if (aopInReg (result_aop, i, A_IDX) && i + 1 < size)
         {
@@ -2004,7 +2025,7 @@ genCmp (const iCode *ic, iCode *ifx)
                  {
                    if (aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic))
                      {
-                       emit2 ("cneqsn", "a, #0x80");
+                       emit2 ("ceqsn", "a, #0x80");
                        emit2 ("nop", "");
                        cost (2, 2);
                      }
@@ -2154,9 +2175,21 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       cheapMove (ASMOP_A, 0, left->aop, 0, true, true);
       if (ifx && ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx))))
         {
-          emit2 ("cneqsn", "a, %s", aopGet (right->aop, 0));
-          cost (1, 1);
-          emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+          if (TARGET_IS_PDK13) // pdk13 does not have cneqsn
+            {
+              symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+              emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
+              emitJP (tlbl, 0.0f);
+              cost (2, 3);
+              emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+              emitLabel (tlbl);
+            }
+          else
+            {
+              emit2 ("cneqsn", "a, %s", aopGet (right->aop, 0));
+              cost (1, 1);
+              emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+            }
         }
       else
         {
@@ -2182,9 +2215,21 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   
         if (ifx && i + 1 == size && ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx))))
           {
-            emit2 ("cneqsn", "a, %s", (right->aop->type == AOP_STK || right->aop->type == AOP_CODE) ? "p" : aopGet (right->aop, i));
-            cost (1, 1);
-            emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+            if (TARGET_IS_PDK13)
+              {
+                symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+                emit2 ("ceqsn", "a, %s", (right->aop->type == AOP_STK || right->aop->type == AOP_CODE) ? "p" : aopGet (right->aop, i));
+                emitJP (tlbl, 0.0f);
+                cost (2, 3);
+                emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+                emitLabel (tlbl);
+              }
+            else
+              {
+                emit2 ("cneqsn", "a, %s", (right->aop->type == AOP_STK || right->aop->type == AOP_CODE) ? "p" : aopGet (right->aop, i));
+                cost (1, 1);
+                emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+              }
           }
         else
           {
@@ -2484,8 +2529,21 @@ genAnd (const iCode *ic, iCode *ifx)
               emit2 ("and", "a, %s", aopGet (right->aop, i));
               cost (1, 1);
             }
-          emit2 (IC_FALSE  (ifx) ? "cneqsn" : "ceqsn", "a, #0x00");
-          cost (1, 1.5);
+          if (TARGET_IS_PDK13 && IC_FALSE (ic)) // pdk13 does not have cneqsn
+            {
+              symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
+              emit2 ("ceqsn", "a, #0x00");
+              cost (1, 1.5);
+              emitJP (tlbl, 0.5f);
+              emitJP (IC_FALSE (ifx), 0.5f);
+              emitLabel (tlbl);
+              goto release;
+            }
+          else
+            {
+              emit2 (IC_FALSE  (ifx) ? "cneqsn" : "ceqsn", "a, #0x00");
+              cost (1, 1.5);
+            }
         }
 
       emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
@@ -2709,8 +2767,18 @@ genLeftShift (const iCode *ic)
     
       for(int i = 0; i < size; i++)
         {
-          emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
-          cost (1, 1);
+          if (result->aop->type == AOP_STK)
+            {
+              cheapMove (ASMOP_A, 0, result->aop, i, true, !i);
+              emit2(i ? "slc" : "sl", "a");
+              cost (1, 1);
+              cheapMove (result->aop, i, ASMOP_A, 0, true, i + 1 == size);
+            }
+          else
+            {
+              emit2(i ? "slc" : "sl", "%s", aopGet (result->aop, i));
+              cost (1, 1);
+            }
         }
     
       if (!regalloc_dry_run)
@@ -2798,7 +2866,7 @@ genRightShift (const iCode *ic)
               continue;
             }
 
-          if (!SPEC_USIGN (getSpec (operandType (left))) && (loop || !regDead (A_IDX, ic)))
+          if ((!SPEC_USIGN (getSpec (operandType (left))) || result->aop->type == AOP_STK) && (loop || !regDead (A_IDX, ic)))
             {
               pushAF();
               pushed_a = true;
@@ -2837,6 +2905,13 @@ genRightShift (const iCode *ic)
                    emit2 ("src", aopGet (result->aop, size - 1));
                    cost (2, 2);
                 }
+            }
+          else if (result->aop->type == AOP_STK)
+            {
+              cheapMove (ASMOP_A, 0, result->aop, size - 1, true, true);
+              emit2("sr", "a");
+              cost (1, 1);
+              cheapMove (result->aop, size - 1, ASMOP_A, 0, true, size == 1);
             }
           else
             {
@@ -2983,7 +3058,7 @@ static void getBitFieldByte (int len, int str, bool sex)
   if (sex)
     {
       symbol *const tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-      emit2 ("cneqsn", "a, #0x%02x", 0x80 >> (8 - len));
+      emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - len));
       emit2 ("nop", "");
       emit2 ("t0sn", "f, c");
       if (tlbl)
@@ -3587,19 +3662,20 @@ genIfx (const iCode *ic)
           emit2 ("ceqsn", "a, p");
           cost (1, 0.75f);
           emitJP (IC_TRUE (ic), 0.375f);
+          goto release;
         }
-      else
+      else if (!TARGET_IS_PDK13)
         {
           symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
           emit2 ("ceqsn", "a, #0");
-          if (!regalloc_dry_run) emit2 ("goto", "#!tlabel", labelKey2num (tlbl->key));
+          if (!regalloc_dry_run)
+            emit2 ("goto", "#!tlabel", labelKey2num (tlbl->key));
           emit2 ("cneqsn", "a, p");
           cost (3, 3.25f);
           emitJP (IC_FALSE (ic), 0.375f);
           emitLabel (tlbl);
+          goto release;
         }
-
-      goto release;
     }
 
   int skip_byte;
@@ -3640,9 +3716,21 @@ genIfx (const iCode *ic)
         }
     }
 
-  emit2 (IC_FALSE (ic) ? "cneqsn" : "ceqsn", "a, #0x00");
-  cost (1, 1); 
-  emitJP (IC_FALSE (ic) ? IC_FALSE (ic) : IC_TRUE (ic), 0.0f);
+  if (TARGET_IS_PDK13 && IC_FALSE (ic)) // pdk13 does not have cneqsn.
+    {
+      symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+      emit2 ("ceqsn", "a, #0x00");
+      emitJP (tlbl, 0.0f);
+      cost (2, 3);
+      emitJP (IC_FALSE (ic), 0.0f);
+      emitLabel (tlbl);
+    }
+  else
+    {
+      emit2 (IC_FALSE (ic) ? "cneqsn" : "ceqsn", "a, #0x00");
+      cost (1, 1); 
+      emitJP (IC_FALSE (ic) ? IC_FALSE (ic) : IC_TRUE (ic), 0.0f);
+    }
 
 release:
   freeAsmop (cond);

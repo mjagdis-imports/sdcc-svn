@@ -1,3 +1,168 @@
+2019-09-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/SDCCopt.c,
+	  support/regression/tests/bug-2931.c:
+	  Fix bug #2931.
+
+2019-09-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/nadd.c:
+	  Use nadd in subtraction for pdk15.
+
+2019-08-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/pdk.src/glob.cc,
+	  sim/ucsim/pdk.src/inst.cc,
+	  sim/ucsim/pdk.src/instcl.h,
+	  sim/ucsim/pdk.src/pdk.cc,
+	  sim/ucsim/pdk.src/pdkcl.h,
+	  sim/ucsim/pdk.src/regspdk.h:
+	  pdk13 I/O fix (patch #305 by Serge Rabyking).
+	  .version:
+	  Bump version for all the pdk13 fixes we got so far.
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve unsigned char right shift by literal (also part of RFE #639).
+
+2019-08-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve wide ==, !=, part of RFE #641.
+
+2019-08-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc,
+	  support/regression/test/bug-2929.c:
+	  Fix bug #2929.
+
+2019-08-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/strdup.c:
+	  Fix strdup buffer overflow (patch #306).
+
+2019-08-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve ~ register allocation (RFE #638).
+
+2019-08-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/peeph-z80.def,
+	  src/z80/peeph-tlcs90.def,
+	  src/z80/peeph-r2k.def:
+	  Improve caching of zero on pointer write.
+
+2019-08-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve assignment.
+	* device/include/string.h,
+	  device/lib/strdup.c,
+	  device/lib/strndup.c,
+	  device/lib/incl.mk:
+	  Implement C2X string duplication functions.
+
+2019-08-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c:
+	  Improve notUsed() precision, alternative to patch from z88dk fork.
+	* src/stm8/*.def:
+	  Add rule from patch #304.
+	* src/z80/gen.c:
+	  Improve load of hl.
+
+2019-08-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peep.c,
+	  src/stm8/peeph.def:
+	  stm8 peephole optimization improvements, mostly picked from patch #290.
+	* sdas/asxxsrc/asmcro.c:
+	  Improve sdas behaviour on internal error, patch from bug #2626.
+	* src/z80/peep.c:
+	  Pick some peephole optimization improvements from z88dk fork.
+
+2019-08-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk13/pdk13mch.c:
+	  Bit instruction fixes by Free-PDK.
+	* device/lib/pdk13/__gptrget.s:
+	  Pointer read fix as suggested by Serge Rabyking (see patch #305).
+
+2019-07-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Small improvements in handling of wide values.
+
+2019-07-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve aop moves (in particular wrt. 16-bit ld).
+
+2019-07-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version:
+	  Reflect recent progress on pdk13 by bumping the version number.
+
+2019-07-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sim/ucsim/pdk.src/inst.cc,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk13/pdk13mch.c,
+	  src/pdk/main.c,
+	  src/pdk/gen.c:
+	  Remove cneqsn for pdk13 fixing bug #2923.
+
+2019-06-30 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/preserves_regs.c:
+	  Improve handling of iy, should fix bug #2918.
+
+2019-06-29 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/z80/ralloc.c,
+	  src/hc08/ralloc.c,
+	  src/mcs51/ralloc.c,
+	  src/ds390/ralloc.c,
+	  src/stm8/ralloc.c,
+	  src/pdk/ralloc.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/ralloc.c: fix bug #2920
+	* src/hc08/gen.c: fix bug with negative array index
+
+2019-06-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/peeph.def:
+	  Add a rule suggested by Free-PDK in RFE #630.
+	* sdas/aspdk13/pdk13mch.c:
+	  Fix curly brackets.
+	* Makefile.in:
+	  Fail build if any assembler fails to build.
+
+2019-06-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk13/pdk13mch.c:
+	  Fix bug #2919 via suggestion by Free-PDK.
+
+2019-06-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge pdk branch to trunk.
+
+2019-06-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk13/pdk13mch.c:
+	  Fix bug #2915 via suggestion by Free-PDK.
+	* configure.ac,
+	  configure:
+	  Disable pdk16 port by default.
+
 2019-06-22 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z88/ralloc2.cc,
@@ -15,13 +180,13 @@
 
 2019-06-18 Philipp Klaus Krause <pkk AT spth.de>
 
-	* src/z88/ralloc2.cc,
+	* src/z80/ralloc2.cc,
 	  src/z80/gen.c:
 	  Improve handling of a in &.
 
 2019-06-18 Philipp Klaus Krause <pkk AT spth.de>
 
-	* src/z88/ralloc2.cc:
+	* src/z80/ralloc2.cc:
 	  Fix an issue in register allocation for GET_VALUE_AT_ADRESS.
 
 2019-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
@@ -274,6 +439,18 @@
 	  Disable tests that won't work anytime soon on pkd15.
 	* sim/ucsim/globals.cc:
 	  More verbose pdk subtype output.
+
+2019-04-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/aspdk16,
+	  Makefile.common.in,
+	  Makefile.in,
+	  configure,
+	  configure.ac,
+	  sdas/asxxsrc/sdas.c,
+	  sdas/asxxsrc/sdas.h:
+	  Infrastructure for pdk16 assembler, based on patch
+	  by Leo and Nicolas.
 
 2019-04-16 Philipp Klaus Krause <pkk AT spth.de>
 
