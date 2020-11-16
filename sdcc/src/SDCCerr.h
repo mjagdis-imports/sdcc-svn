@@ -56,8 +56,8 @@ enum {
   E_PTR_REQD                    =  27, /* pointer required     */
   E_UNARY_OP                    =  28, /* unary operator bad op*/
   E_CONV_ERR                    =  29, /* conversion error     */
-  E_INT_REQD                    =  30, /* bit field must be int*/
-  E_BITFLD_SIZE                 =  31, /* bit field size > 16  */
+  E_INT_REQD                    =  30, /* bit-field must be int*/
+  E_BITFLD_SIZE                 =  31, /* bit-field size > 16  */
   W_TRUNCATION                  =  32, /* high order trucation */
   E_CODE_WRITE                  =  33, /* trying 2 write to code */
   E_LVALUE_CONST                =  34, /* lvalue is a const   */
@@ -271,6 +271,9 @@ enum {
   E_STATIC_ARRAY_PARAM_C99      = 242, /* static in array parameters requires ISO C99 or later */
   E_INT_MULTIPLE                = 243, /* mutiple interrupt numbers */
   W_INCOMPAT_PTYPES             = 244, /* incompatible pointer assignment (not allowed by the standard, but allowed in SDCC) */
+  E_STATIC_ASSERTION_C2X        = 245, /* static assertion with one argument requires C2X or later */
+  W_STATIC_ASSERTION_2          = 246, /* static assertion failed */
+  E_DECL_AFTER_STATEMENT_C99    = 247, /* declaration after statement requires ISO C99 or later */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

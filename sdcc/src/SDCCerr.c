@@ -112,9 +112,9 @@ struct
   { E_CONV_ERR, ERROR_LEVEL_ERROR,
      "conversion error: integral promotion failed", 0 },
   { E_INT_REQD, ERROR_LEVEL_ERROR,
-     "type must be INT for bit field definition", 0 },
+     "type must be INT for bit-field definition", 0 },
   { E_BITFLD_SIZE, ERROR_LEVEL_ERROR,
-     "bit field size cannot be greater than int (%d bits)", 0 },
+     "bit-field size cannot be greater than int (%d bits)", 0 },
   { W_TRUNCATION, ERROR_LEVEL_WARNING,
      "high order truncation might occur", 0 },
   { E_CODE_WRITE, ERROR_LEVEL_ERROR,
@@ -526,7 +526,7 @@ struct
   { E_WCHAR_STRING_C11, ERROR_LEVEL_ERROR,
     "wide character string of type u8, u, U requires C11 or later", 0},
   { W_UNKNOWN_REG, ERROR_LEVEL_WARNING,
-    "unknown register specification", 0},
+    "unknown register specification %s", 0},
   { E_HEXFLOAT_C99, ERROR_LEVEL_ERROR,
     "hexadecimal floating constant requires ISO C99 or later", 0},
   { E_ANONYMOUS_STRUCT_TAG, ERROR_LEVEL_ERROR,
@@ -545,6 +545,12 @@ struct
     "mutiple interrupt numbers for '%s'", 0},
   { W_INCOMPAT_PTYPES, ERROR_LEVEL_WARNING,
      "pointer types incompatible ", 0 },
+  { E_STATIC_ASSERTION_C2X, ERROR_LEVEL_ERROR,
+    "static assertion with one argument requires C2X or later", 0 },
+  { W_STATIC_ASSERTION_2, ERROR_LEVEL_WARNING,
+    "static assertion failed", 0 },
+  { E_DECL_AFTER_STATEMENT_C99, ERROR_LEVEL_ERROR,
+    "declaration after statement requires ISO C99 or later", 0 },
 };
 
 /* -------------------------------------------------------------------------------

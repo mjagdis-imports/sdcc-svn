@@ -49,12 +49,41 @@ replace restart {
 } if notVolatile(%1), notVolatile(%2)
 
 replace restart {
+	ld	%1, %2
+	ld	%3, %1
+	ld	%1, %2
+} by {
+	ld	%1, %2
+	ld	%3, %1
+	; peephole 4a removed redundant load from %2 into %1.
+} if notVolatile(%1), notVolatile(%2)
+
+replace restart {
 	ld	%1, a
 	exg	a, %1
 } by {
 	ld	%1, a
 	; peephole 5 removed redundant exg.
 } if notVolatile(%1)
+
+replace restart {
+	ld	xl, a
+	srl	a
+	srlw	x
+} by {
+	srl	a
+	; peephole 5a removed redundant srlw x.
+} if notUsed('x')
+
+replace restart {
+	ld	%1, %2
+	ld	%3, %1
+	ld	%1, %2
+} by {
+	ld	%1, %2
+	ld	%3, %1
+	; peephole 5a removed redundant rght shift of .
+} if notVolatile(%1), notVolatile(%2)
 
 replace restart {
 	pop	%1
@@ -90,12 +119,31 @@ replace restart {
 
 replace restart {
 	addw	%1, #%2
+	clr	(%1)
+} by {
+	; peephole 9a moved addition of offset into clear instruction
+	clr	(%2, %1)
+} if notUsed(%1)
+
+replace restart {
+	addw	%1, #%2
 	ldw	%3, %4
 	ldw	(%1), %3
 } by {
 	; peephole 10 moved addition of offset into storage instruction
 	ldw	%3, %4
 	ldw	(%2, %1), %3
+} if notUsed(%1)
+
+replace restart {
+	incw	%1
+	incw	%1
+	ldw	%3, %4
+	ldw	(%1), %3
+} by {
+	; peephole 10a moved addition of offset into storage instruction
+	ldw	%3, %4
+	ldw	(0x02, %1), %3
 } if notUsed(%1)
 
 replace restart {
@@ -144,6 +192,26 @@ replace restart {
 	ldw	(%1, sp), x
 	; peephole 14a loaded (%1, sp) directly from x instead of going through y.
 } if notUsed('y')
+
+replace restart {
+	ldw	y, x
+	ld	a, %1
+	ld	(%2, y), a
+} by {
+	; peephole 14b used y directly instead of going through x.
+	ld	a, %1
+	ld	(%2, x), a
+} if notUsed('y')
+
+replace restart {
+	ldw	x, y
+	ld	a, %1
+	ld	(%2, x), a
+} by {
+	; peephole 14c used y directly instead of going through x.
+	ld	a, %1
+	ld	(%2, y), a
+} if notUsed('x')
 
 replace restart {
 	ldw	(%1, sp), y
@@ -495,6 +563,26 @@ replace restart {
 }
 
 replace restart {
+	tnzw	%1
+	jrne	%2
+	clrw	%1
+} by {
+	tnzw	%1
+	jrne	%2
+	; peephole 22c removed redundant clrw %1.
+}
+
+replace restart {
+	ldw	%1, (%3, %4)
+	jrne	%2
+	clrw	%1
+} by {
+	ldw	%1, (%3, %4)
+	jrne	%2
+	; peephole 22d removed redundant clrw %1.
+}
+
+replace restart {
 	and	a, %1
 	tnz	a
 } by {
@@ -559,11 +647,27 @@ replace restart {
 } if notSame(%1 'xl' 'xh' 'yl' 'yh')
 
 replace restart {
+	ldw	%1, (%1)
+	tnzw	%1
+} by {
+	ldw	%1, (%1)
+	; peephole 30bw removed redundant tnzw.
+}
+
+replace restart {
 	ld	a, (%1, %2)
 	tnz	a
 } by {
 	ld	a, (%1, %2)
 	; peephole 31 removed redundant tnz.
+}
+
+replace restart {
+	ldw	%1, (%2, %3)
+	tnzw	%1
+} by {
+	ldw	%1, (%2, %3)
+	; peephole 31w removed redundant tnzw.
 }
 
 replace restart {
@@ -653,6 +757,142 @@ replace restart {
 	addw	sp, #4
 	; peephole 41 merged popw x into addw.
 } if notUsed('x')
+
+replace restart {
+	ld	a, %1
+	cp	a, %2
+	jrc	%3
+	ld	a, %1
+} by {
+	ld	a, %1
+	cp	a, %2
+	jrc	%3
+	; peephole 42 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ld	a, %1
+	cp	a, %2
+	jrslt	%3
+	ld	a, %1
+} by {
+	ld	a, %1
+	cp	a, %2
+	jrslt	%3
+	; peephole 43 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ld	a, %1
+	cp	a, %2
+	jrsle	%3
+	ld	a, %1
+} by {
+	ld	a, %1
+	cp	a, %2
+	jrsle	%3
+	; peephole 44 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ld	a, %1
+	cp	a, %2
+	jrule	%3
+	ld	a, %1
+} by {
+	ld	a, %1
+	cp	a, %2
+	jrule	%3
+	; peephole 45 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ldw	x, %1
+	cpw	x, %2
+	jrc	%3
+	ldw	x, %1
+} by {
+	ldw	x, %1
+	cpw	x, %2
+	jrc	%3
+	; peephole 46 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ldw	x, %1
+	cpw	x, %2
+	jrslt	%3
+	ldw	x, %1
+} by {
+	ldw	x, %1
+	cpw	x, %2
+	jrslt	%3
+	; peephole 47 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ldw	x, %1
+	cpw	x, %2
+	jrsle	%3
+	ldw	x, %1
+} by {
+	ldw	x, %1
+	cpw	x, %2
+	jrsle	%3
+	; peephole 48 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ldw	x, %1
+	cpw	x, %2
+	jrule	%3
+	ldw	x, %1
+} by {
+	ldw	x, %1
+	cpw	x, %2
+	jrule	%3
+	; peephole 49 removed redundant load of a from %1.
+} if notVolatile(%1), notUsed('c')
+
+replace restart {
+	ldw	x, %1
+	cpw	x, %2
+	jrnc	%3
+	ldw	x, %1
+} by {
+	ldw	x, %1
+	cpw	x, %2
+	jrnc	%3
+	; peephole 50 removed redundant load of a from %1.
+} if notVolatile(%1)
+
+replace restart {
+	cp	a, %1
+	jrne	%2
+	ld	a, #0x01
+} by {
+	sub	a, %1
+	jrne	%2
+	inc	a
+	; peephole 51 used inc to get #1 into a.
+} if notUsedFrom(%2 'a')
+
+replace {
+	jp	%5
+	ret
+} by {
+	jp	%5
+	; peephole 52 removed unused ret.
+}
+
+replace {
+	jp	%5
+	addw	sp, %1
+	ret
+} by {
+	jp	%5
+	; peephole 53 removed unused ret.
+}
 
 replace restart {
 	jp	%5
@@ -1017,29 +1257,28 @@ replace restart {
 
 
 replace restart {
-	ldw     x, (%1, sp)
-	cpw     x, #%2
-	jrsge   %3
-	ldw     x, #%2
+	ldw	x, (%1, sp)
+	cpw	x, #%2
+	jrsge	%3
+	ldw	x, #%2
 } by {
-	ldw     x, #%2
-	cpw     x, (%1, sp)
-	jrslt   %3
+	ldw	x, #%2
+	cpw	x, (%1, sp)
+	jrslt	%3
 	; peephole j31 removed load by inverting jump condition.
 } if notUsedFrom(%3 'x')
 
 replace restart {
-	ldw     x, (%1, sp)
-	cpw     x, #%2
-	jrsle   %3
-	ldw     x, #%2
+	ldw	x, (%1, sp)
+	cpw	x, #%2
+	jrsle	%3
+	ldw	x, #%2
 } by {
-	ldw     x, #%2
-	cpw     x, (%1, sp)
-	jrsgt   %3
+	ldw	x, #%2
+	cpw	x, (%1, sp)
+	jrsgt	%3
 	; peephole j32 removed load by inverting jump condition.
 } if notUsedFrom(%3 'x')
-
 
 // Barrier, since notUsed() is better at dealing with ret than with jp to unknown location.
 barrier
@@ -1151,4 +1390,109 @@ replace {
 	clr	a
 %2:
 } if labelRefCount(%1 1), labelRefCountChange(%2 -1)
+
+replace {
+	jra	%5
+%2:
+	ldw	x, y
+%5:
+} by {
+	.byte 0x21
+	; peephole jrf5 used jump-on-false opcode to shorten jump over 1-byte instruction.
+	%2:
+	ldw	x, y
+	%5:
+} if labelRefCountChange(%5 -1)
+
+// We don't have an explicit instruction to jump over 2 bytes. But when flags are not used, we can use cp a, longmen instead.
+
+// Jumping over ld a, #0xmm cp does a read from a memory location at 0xa6mm - which for all current STM8 is in Flash or unused. If a future STM8 places memory-mapped I/O there, we're in trouble.
+replace {
+	jra	%5
+%1:
+	ld	a, #%2
+%5:
+} by {
+	.byte 0xc1
+	; peephole jrf6 used cp opcode to jump over 2-byte instruction.
+%1:
+	ld	a, #%2
+%5:
+} if labelRefCountChange(%5 -1), notUsed('n'), notUsed('z')
+
+// Jumping over clr (mm, sp) cp does a read from a memory location at 0x0fmm - which for all current STM8 is in RAM or unused. If a future STM8 places memory-mapped I/O there, we're in trouble.
+replace {
+	jra	%5
+%1:
+	clr	(%2, sp)
+%5:
+} by {
+	.byte 0xc1
+	; peephole jrf7 used cp opcode to jump over 2-byte instruction.
+%1:
+	clr	(%2, sp)
+%5:
+} if labelRefCountChange(%5 -1), notUsed('n'), notUsed('z')
+
+// Jumping over clrw x; incwx cp does a read from a memory location at 0x5f5c - which for all current STM8 is unused. If a future STM8 places memory-mapped I/O there, we're in trouble.
+replace {
+	jra	%5
+%1:
+	clrw	x
+	incw	x
+%5:
+} by {
+	.byte 0xc1
+	; peephole jrf8 used cp opcode to jump over 2-byte instruction sequence.
+%1:
+	clrw	x
+	incw	x
+%5:
+} if labelRefCountChange(%5 -1), notUsed('n'), notUsed('z')
+
+// Jumping over ldw x, (mm, sp) cp does a read from a memory location at 0x1emm - which for all current STM8 is unused. If a future STM8 places memory-mapped I/O there, we're in trouble.
+replace {
+	jra	%5
+%1:
+	ldw	x, (%2, sp)
+%5:
+} by {
+	.byte 0xc1
+	; peephole jrf9 used cp opcode to jump over 2-byte instruction.
+%1:
+	ldw	x, (%2, sp)
+%5:
+} if labelRefCountChange(%5 -1), notUsed('n'), notUsed('z')
+
+// We don't have an explicit instruction to jump over 3 bytes. But when flags and a are not used, we can use ldf a, extmem instead.
+
+// Jumping over ldw x, #mmmm ldf does a read from a memory location at 0xaemmmm - which for all current STM8 is unused. If a future STM8 places memory-mapped I/O there, we're in trouble.
+replace {
+	jra	%5
+%1:
+	ldw	x, #%2
+%5:
+} by {
+	.byte 0xbc
+	; peephole jrf10 used ldf opcode to jump over 3-byte instruction.
+%1:
+	ldw	x, #%2
+%5:
+} if labelRefCountChange(%5 -1), notUsed('a'), notUsed('n'), notUsed('z')
+
+// Jumping over clrw x; ldw (mm, sp), x ldf does a read from a memory location at 0x5f1fmm - which for all current STM8 is unused. If a future STM8 places memory-mapped I/O there, we're in trouble.
+replace {
+	jra	%5
+%1:
+	clrw	x
+	ldw	(%2, sp), x
+%5:
+} by {
+	.byte 0xbc
+	; peephole jrf11 used ldf opcode to jump over 3-byte instruction.
+%1:
+	clrw	x
+	ldw	(%2, sp), x
+%5:
+} if labelRefCountChange(%5 -1), notUsed('a'), notUsed('n'), notUsed('z')
 

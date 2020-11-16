@@ -136,7 +136,7 @@ hashKey (const char *s)
 /* addSym - adds a symbol to the hash Table                        */
 /*-----------------------------------------------------------------*/
 void
-addSym (bucket ** stab, void *sym, char *sname, int level, int block, int checkType)
+addSym (bucket ** stab, void *sym, char *sname, long level, int block, int checkType)
 {
   int i;                        /* index into the hash Table */
   bucket *bp;                   /* temp bucket    *          */
@@ -297,7 +297,7 @@ findSymWithLevel (bucket ** stab, symbol * sym)
 /* findSymWithBlock - finds a symbol with name in a block          */
 /*-----------------------------------------------------------------*/
 void *
-findSymWithBlock (bucket ** stab, symbol * sym, int block, int level)
+findSymWithBlock (bucket ** stab, symbol * sym, int block, long level)
 {
   bucket *bp;
 
@@ -319,7 +319,7 @@ findSymWithBlock (bucket ** stab, symbol * sym, int block, int level)
 /* newSymbol () - returns a new pointer to a symbol                 */
 /*------------------------------------------------------------------*/
 symbol *
-newSymbol (const char *name, int scope)
+newSymbol (const char *name, long scope)
 {
   symbol *sym;
 
@@ -493,7 +493,7 @@ addDecl (symbol * sym, int type, sym_link * p)
   sym_link *t;
 
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
-    fprintf (stderr, "SDCCsymt.c:addDecl(%s,%d,%p)\n", sym->name, type, p);
+    fprintf (stderr, "SDCCsymt.c:addDecl(%s,%d,%p)\n", sym->name, type, (void *)p);
 
   if (empty == NULL)
     empty = newLink (SPECIFIER);
@@ -572,7 +572,7 @@ addDecl (symbol * sym, int type, sym_link * p)
   unsigned float uf;
   ------------------------------------------------------------------*/
 void
-checkTypeSanity (sym_link * etype, const char *name)
+checkTypeSanity (sym_link *etype, const char *name)
 {
   char *noun;
 
@@ -598,7 +598,7 @@ checkTypeSanity (sym_link * etype, const char *name)
 
   if (getenv ("DEBUG_SANITY"))
     {
-      fprintf (stderr, "checking sanity for %s %p\n", name, etype);
+      fprintf (stderr, "checking sanity for %s %p\n", name, (void *)etype);
     }
 
   if ((SPEC_NOUN (etype) == V_BOOL ||
@@ -900,7 +900,7 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
 /* genSymName - generates and returns a name used for anonymous vars */
 /*-------------------------------------------------------------------*/
 char *
-genSymName (int level)
+genSymName (long level)
 {
   static int gCount = 0;
   static char gname[SDCC_NAME_MAX + 1];
@@ -1344,8 +1344,8 @@ addSymChain (symbol ** symHead)
             elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
         }
 
-      /* if already exists in the symbol table on the same level */
-      if ((csym = findSymWithLevel (SymbolTab, sym)) && csym->level == sym->level)
+      /* if already exists in the symbol table on the same level, ignoring sublevels */
+      if ((csym = findSymWithLevel (SymbolTab, sym)) && csym->level / LEVEL_UNIT == sym->level / LEVEL_UNIT)
         {
           /* if not formal parameter and not in file scope
              then show symbol redefined error
@@ -2057,7 +2057,7 @@ cleanUpBlock (bucket ** table, int block)
 /*                symbols in the given level                        */
 /*------------------------------------------------------------------*/
 void
-cleanUpLevel (bucket ** table, int level)
+cleanUpLevel (bucket ** table, long level)
 {
   int i;
   bucket *chain;
@@ -2662,7 +2662,7 @@ compareType (sym_link *dest, sym_link *src)
 /* compareTypeExact - will do type check return 1 if match exactly    */
 /*--------------------------------------------------------------------*/
 int
-compareTypeExact (sym_link * dest, sym_link * src, int level)
+compareTypeExact (sym_link * dest, sym_link * src, long level)
 {
   STORAGE_CLASS srcScls, destScls;
 
@@ -2826,7 +2826,7 @@ compareTypeExact (sym_link * dest, sym_link * src, int level)
   if (srcScls != destScls)
     {
 #if 0
-      printf ("level = %d\n", level);
+      printf ("level = %ld:%ld\n", level / LEVEL_UNIT, level % LEVEL_UNIT);
       printf ("SPEC_SCLS (src) = %d, SPEC_SCLS (dest) = %d\n", SPEC_SCLS (src), SPEC_SCLS (dest));
       printf ("srcScls = %d, destScls = %d\n", srcScls, destScls);
 #endif
@@ -3967,7 +3967,8 @@ _mangleFunctionName (const char *in)
 /*                      'q' - fixed16x16                           */
 /*                      'v' - void                                 */
 /*                      '*' - pointer - default (GPOINTER)         */
-/* modifiers -          'u' - unsigned                             */
+/* modifiers -          'S' - signed                               */
+/*                      'U' - unsigned                             */
 /*                      'C' - const                                */
 /* pointer modifiers -  'g' - generic                              */
 /*                      'x' - xdata                                */
@@ -3976,12 +3977,14 @@ _mangleFunctionName (const char *in)
 /*                      'F' - function                             */
 /* examples : "ig*" - generic int *                                */
 /*            "cx*" - char xdata *                                 */
-/*            "ui" -  unsigned int                                 */
+/*            "Ui" -  unsigned int                                 */
+/*            "Sc" -  signed char                                  */
 /*-----------------------------------------------------------------*/
 sym_link *
 typeFromStr (const char *s)
 {
   sym_link *r = newLink (DECLARATOR);
+  int sign = 0;
   int usign = 0;
   int constant = 0;
 
@@ -3990,13 +3993,14 @@ typeFromStr (const char *s)
       sym_link *nr;
       switch (*s)
         {
+        case 'S':
+          sign = 1;
+          break;
+        case 'U':
+          usign = 1;
+          break;
         case 'C':
           constant = 1;
-          break;
-        case 'u':
-          usign = 1;
-          s++;
-          continue;
           break;
         case 'b':
           r->xclass = SPECIFIER;
@@ -4005,6 +4009,13 @@ typeFromStr (const char *s)
         case 'c':
           r->xclass = SPECIFIER;
           SPEC_NOUN (r) = V_CHAR;
+          if (usign)
+            {
+              SPEC_USIGN (r) = 1;
+              usign = 0;
+            }
+          else if (!sign && !options.signed_char)
+            SPEC_USIGN (r) = 1;
           break;
         case 's':
         case 'i':
@@ -4071,8 +4082,11 @@ typeFromStr (const char *s)
           break;
         default:
           werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "typeFromStr: unknown type");
+          fprintf(stderr, "unknown: %s\n", s);
           break;
         }
+      if (usign && sign)
+        werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "typeFromStr: both signed and unsigned specified");
       if (IS_SPEC (r) && usign)
         {
           SPEC_USIGN (r) = 1;
@@ -4113,7 +4127,7 @@ initCSupport (void)
   /* type as character codes for typeFromStr() */
   const char *sbwdCodes[] = {
     "c",  "i",  "l",  "L",
-    "uc", "ui", "ul", "uL"
+    "Uc", "Ui", "Ul", "UL"
   };
 
   int bwd, su, muldivmod, tofrom, slsr;
@@ -4343,9 +4357,9 @@ initCSupport (void)
 
   {
     const char *iparams[] = {"i", "i"};
-    const char *uiparams[] = {"ui", "ui"};
+    const char *uiparams[] = {"Ui", "Ui"};
     muls16tos32[0] = port->support.has_mulint2long ? funcOfTypeVarg ("__mulsint2slong", "l", 2, iparams) : 0;
-    muls16tos32[1] = port->support.has_mulint2long ? funcOfTypeVarg ("__muluint2ulong", "ul", 2, uiparams) : 0;
+    muls16tos32[1] = port->support.has_mulint2long ? funcOfTypeVarg ("__muluint2ulong", "Ul", 2, uiparams) : 0;
   }
 }
 

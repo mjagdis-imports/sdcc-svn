@@ -131,7 +131,7 @@ emitDebugSym (struct dbuf_s *oBuf, symbol * sym)
     {
       dbuf_printf (oBuf, "G$");
     }
-  dbuf_printf (oBuf, "%s$%d$%d", sym->name, sym->level, sym->block);
+  dbuf_printf (oBuf, "%s$%ld_%ld$%d", sym->name, sym->level / LEVEL_UNIT, sym->level % LEVEL_UNIT, sym->block);
 }
 
 /*-----------------------------------------------------------------*/
@@ -604,17 +604,11 @@ void
 printChar (struct dbuf_s *oBuf, const char *s, int plen)
 {
   int i;
-  int len = plen;
   int pplen = 0;
   char buf[100];
   char *p = buf;
-  int strEnd = plen - 1;
 
-  if (s)
-    while (s[strEnd] != 0)
-      strEnd--;
-
-  while (len && pplen < plen)
+  while (pplen < plen)
     {
       i = 60;
       while (i && pplen < plen)
@@ -624,34 +618,26 @@ printChar (struct dbuf_s *oBuf, const char *s, int plen)
               *p = '\0';
               if (p != buf)
                 dbuf_tprintf (oBuf, "\t!ascii\n", buf);
-              dbuf_tprintf (oBuf, "\t!db !constbyte\n", pplen < strEnd ? ((unsigned char) *s) : 0x00);
+              dbuf_tprintf (oBuf, "\t!db !constbyte\n", (unsigned char) *s);
               p = buf;
+              i = 60;
             }
           else
             {
               *p = *s;
               p++;
+              i--;
             }
           s++;
           pplen++;
-          i--;
         }
       if (p != buf)
         {
           *p = '\0';
           dbuf_tprintf (oBuf, "\t!ascii\n", buf);
           p = buf;
+          i = 60;
         }
-
-      if (len > 60)
-        len -= 60;
-      else
-        len = 0;
-    }
-  while (pplen < plen)
-    {
-      dbuf_tprintf (oBuf, "\t!db !constbyte\n", 0);
-      pplen++;
     }
 }
 
@@ -662,11 +648,6 @@ void
 printChar16 (struct dbuf_s *oBuf, const TYPE_TARGET_UINT *s, int plen)
 {
   int pplen = 0;
-  int strEnd = plen - 1;
-
-  if (s)
-    while (s[strEnd] != 0)
-      strEnd--;
 
   while (pplen < plen)
     {
@@ -692,11 +673,6 @@ void
 printChar32 (struct dbuf_s *oBuf, const TYPE_TARGET_ULONG *s, int plen)
 {
   int pplen = 0;
-  int strEnd = plen - 1;
-
-  if (s)
-    while (s[strEnd] != 0)
-      strEnd--;
 
   while (pplen < plen)
     {
@@ -1268,7 +1244,7 @@ printIvalChar32 (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s 
     {
       val = list2val (ilist, TRUE);
       /* if the value is a character string  */
-      if (IS_ARRAY (val->type) && IS_INT (val->etype) && IS_UNSIGNED (val->etype) && !IS_LONG (val->etype))
+      if (IS_ARRAY (val->type) && IS_INT (val->etype) && IS_UNSIGNED (val->etype) && IS_LONG (val->etype))
         {
           if (!size)
             {

@@ -5,17 +5,11 @@
 
 #define NOTUSEDERROR() do {werror(E_INTERNAL_ERROR, __FILE__, __LINE__, "error in notUsed()");} while(0)
 
-//#define D(_s) { printf _s; fflush(stdout); }
+// #define D(_s) { printf _s; fflush(stdout); }
 #define D(_s)
 
 #define EQUALS(l, i) (!strcmp((l), (i)))
 #define ISINST(l, i) (!strncmp((l), (i), sizeof(i) - 1))
-
-// This function should behave just like C99 isblank(). Remove it, once MSVC supports isblank().
-static int _isblank(int c)
-{
-  return (c == ' ' || c == '\t');
-}
 
 typedef enum
 {
@@ -447,12 +441,16 @@ findLabel (const lineNode *pl)
 
   /* 1. extract label in opcode */
 
-  /* In each mcs51 jumping opcode the label is at the end of the opcode */
+  /* In each jump the label is at the end */
   p = strlen (pl->line) - 1 + pl->line;
 
-  /* scan backward until ',' or '\t' */
+  /* Skip trailing whitespace */
+  while(isspace(*p))
+    p--;
+
+  /* scan backward until space or ',' */
   for (; p > pl->line; p--)
-    if (*p == ',' || *p == '\t')
+    if (isspace(*p) || *p == ',')
       break;
 
   /* sanity check */
@@ -487,13 +485,13 @@ static bool argCont(const char *arg, char what)
   if (arg == NULL || strlen (arg) == 0 || !(what == 'a' || what == 'x' || what == 'y'))
     return FALSE;
 
-  while (_isblank ((unsigned char)(arg[0])))
+  while (isblank ((unsigned char)(arg[0])))
     arg++;
 
   if (arg[0] == ',')
     arg++;
 
-  while (_isblank ((unsigned char)(arg[0])))
+  while (isblank ((unsigned char)(arg[0])))
     arg++;
 
   if (arg[0] == '#')
@@ -503,6 +501,9 @@ static bool argCont(const char *arg, char what)
     arg += 3; // Skip hex prefix to avoid false x positive.
 
   if (strlen(arg) == 0)
+    return FALSE;
+
+  if (arg[0] == '_' && what == 'a') // The STM8 has no a-relative addressing modes.
     return FALSE;
 
   return (strchr(arg, what) != NULL);
@@ -578,6 +579,11 @@ stm8MightReadFlag(const lineNode *pl, const char *what)
   if (!strcmp (what, "z"))
     return (ISINST (pl->line, "jreq") || ISINST (pl->line, "jrne") || ISINST (pl->line, "jrsgte") || ISINST (pl->line, "jrsle"));
 
+  if (!strcmp (what, "c"))
+    return (ISINST (pl->line, "jrc") || ISINST (pl->line, "jrnc") || ISINST (pl->line, "jruge") || ISINST (pl->line, "jrugt") || ISINST (pl->line, "jrule") || ISINST (pl->line, "jrult") ||
+      ISINST (pl->line, "adc") || ISINST (pl->line, "sbc") ||
+      ISINST (pl->line, "ccf") || ISINST (pl->line, "rlc") || ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrc") || ISINST (pl->line, "rrcw"));
+
   return TRUE;
 }
 
@@ -609,8 +615,7 @@ stm8MightRead(const lineNode *pl, const char *what)
         || ISINST (pl->line, "xor"))
           return TRUE;
 
-      if (pl->line[4] == 'a' &&
-        (ISINST (pl->line, "add")
+      if ((ISINST (pl->line, "add")
         || ISINST (pl->line, "cpl")
         || ISINST (pl->line, "dec")
         || ISINST (pl->line, "exg")
@@ -623,11 +628,13 @@ stm8MightRead(const lineNode *pl, const char *what)
         || ISINST (pl->line, "sra")
         || ISINST (pl->line, "srl")
         || ISINST (pl->line, "sub")
-        || ISINST (pl->line, "tnz")))
+        || ISINST (pl->line, "tnz")) &&
+        pl->line[4] == 'a')
           return TRUE;
 
-      if ((pl->line[5] == 'a') && (ISINST (pl->line, "push")
-        || ISINST (pl->line, "swap")))
+      if ((ISINST (pl->line, "push")
+        || ISINST (pl->line, "swap")) &&
+        pl->line[5] == 'a')
           return TRUE;
 
       if ((ISINST (pl->line, "ld") || ISINST (pl->line, "ldf")) && argCont (strchr (pl->line, ','), 'a'))
@@ -790,8 +797,7 @@ stm8SurelyWrites(const lineNode *pl, const char *what)
         || ISINST (pl->line, "xor"))
           return TRUE;
 
-      if (pl->line[4] == 'a' &&
-        (ISINST (pl->line, "add")
+      if ((ISINST (pl->line, "add")
         || ISINST (pl->line, "clr")
         || ISINST (pl->line, "cpl")
         || ISINST (pl->line, "dec")
@@ -806,13 +812,14 @@ stm8SurelyWrites(const lineNode *pl, const char *what)
         || ISINST (pl->line, "sra")
         || ISINST (pl->line, "srl")
         || ISINST (pl->line, "ldf")
-        || ISINST (pl->line, "sub")))
+        || ISINST (pl->line, "sub")) &&
+        pl->line[4] == 'a')
           return TRUE;
 
-      if (pl->line[5] == 'a' && ISINST (pl->line, "swap"))
+      if (ISINST (pl->line, "swap") && pl->line[5] == 'a')
         return TRUE;
 
-      if (pl->line[3] == 'a' && ISINST (pl->line, "ld"))
+      if (ISINST (pl->line, "ld") && pl->line[3] == 'a')
         return TRUE;
     }
   else

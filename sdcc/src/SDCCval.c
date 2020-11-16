@@ -31,7 +31,7 @@
 #include "newalloc.h"
 #include "dbuf_string.h"
 
-int cNestLevel;
+long cNestLevel;
 
 
 /*-----------------------------------------------------------------*/
@@ -1736,8 +1736,16 @@ charVal (const char *s)
           return constCharacterVal (*s, type);
         }
     }
-  else                          /* not a backslash */
-    return constCharacterVal (*s, type);
+  else if (type) // Wide character constant
+    {
+      size_t ulen;
+      const TYPE_UDWORD *ustr = utf_32_from_utf_8 (&ulen, s, strlen(s) - 1);
+      value *val = constCharacterVal (*ustr, type);
+      free ((void *)ustr);
+      return (val);
+    }
+  else // Character constant that is not wide - compability with legacy encodings.
+    return constCharacterVal (*s, 0);
 }
 
 /*------------------------------------------------------------------*/
@@ -1907,6 +1915,8 @@ byteOfVal (value * val, int offset)
 {
   unsigned char *p;
   int shift = 8*offset;
+
+  wassert (offset >= 0);
 
   if (!val)
     return 0;

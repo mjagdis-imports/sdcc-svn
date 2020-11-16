@@ -380,11 +380,13 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
      operands are 8-bit, so the most benefit is in 8-bit
      operations. On the other hand, supporting wider
      operations well in codegen is also more effort. */
-  if (bitsForType (operandType (IC_RESULT (dic))) > 8)
+  if (bitsForType (operandType (IC_RESULT (dic))) > 8 &&
+    !((dic->op == LEFT_OP || dic->op == RIGHT_OP) && IS_OP_LITERAL (IC_RIGHT (dic)) && operandLitValue (IC_RIGHT (dic))  == 1 && // Can do wide shift by 1 in place.
+      IS_SYMOP (IC_LEFT (dic)) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_LEFT (dic)) == OP_SYMBOL (IC_RESULT (ic))))
     return 0;
 
   /* if the result is on stack or iaccess then it must be
-     the same atleast one of the operands */
+     the same as at least one of the operands */
   if (OP_SYMBOL (IC_RESULT (ic))->onStack || OP_SYMBOL (IC_RESULT (ic))->iaccess)
     {
       /* the operation has only one symbol
@@ -477,9 +479,7 @@ packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
       if (IS_OP_VOLATILE (IC_LEFT (nic)) ||
           IS_OP_VOLATILE (IC_RIGHT (nic)) ||
           isOperandGlobal (IC_RESULT (nic)))
-        {
-          return 0;
-        }
+        return 0;
     }
 
   /* Optimize out the assignment */
@@ -499,7 +499,8 @@ packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
     bitVectUnSetBit (nic->rlive, op->key);
 
   remiCodeFromeBBlock (ebp, dic);
-  hTabDeleteItem (&iCodehTab, ic->key, ic, DELETE_ITEM, NULL);
+
+  hTabDeleteItem (&iCodehTab, dic->key, ic, DELETE_ITEM, NULL);
   
   return 1;
 }
@@ -575,7 +576,8 @@ packRegisters (eBBlock * ebp)
 
       /* In some cases redundant moves can be eliminated */
       if (ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS ||
-        ic->op == IFX && operandSize (IC_COND (ic)) == 1)
+        ic->op == IFX && operandSize (IC_COND (ic)) == 1 ||
+        ic->op == IPUSH && operandSize (IC_LEFT (ic)) == 1)
         packRegsForOneuse (ic, &(IC_LEFT (ic)), ebp);
     }
 }
@@ -750,10 +752,10 @@ void stm8_init_asmops (void);
 /* assignRegisters - assigns registers to each live range as need  */
 /*-----------------------------------------------------------------*/
 void
-stm8_assignRegisters (ebbIndex * ebbi)
+stm8_assignRegisters (ebbIndex *ebbi)
 {
   eBBlock **ebbs = ebbi->bbOrder;
-  int i, count = ebbi->count;
+  int count = ebbi->count;
   iCode *ic;
 
   stm8_init_asmops();
@@ -762,7 +764,7 @@ stm8_assignRegisters (ebbIndex * ebbi)
 
   /* change assignments this will remove some
      live ranges reducing some register pressure */
-  for (i = 0; i < count; i++)
+  for (int i = 0; i < count; i++)
     packRegisters (ebbs[i]);
 
   /* liveranges probably changed by register packing

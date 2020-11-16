@@ -4839,7 +4839,7 @@ fi
 done
 
 
-for ac_header in endian.h sys/endian.h machine/endian.h sys/isa_defs.h stdalign.h
+for ac_header in endian.h sys/endian.h machine/endian.h sys/isa_defs.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -4992,22 +4992,6 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-
-for ac_header in stx/btree_set.h stx/btree_map.h
-do :
-  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
-ac_fn_cxx_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
-if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
-  cat >>confdefs.h <<_ACEOF
-#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
-_ACEOF
-
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: STX library missing, using STL instead." >&5
-$as_echo "$as_me: WARNING: STX library missing, using STL instead." >&2;}
-fi
-
-done
 
 for ac_header in treedec/combinations.hpp
 do :

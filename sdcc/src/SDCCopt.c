@@ -2927,6 +2927,68 @@ void guessCounts (iCode *start_ic, ebbIndex *ebbi)
 }
 
 /*-----------------------------------------------------------------*/
+/* narrowRead() - Will read fewer bytes by eliminating a downcast. */
+/*-----------------------------------------------------------------*/
+static int
+narrowRead (iCode *ic, operand **opp, eBBlock *ebp)
+{
+  iCode *dic;
+  operand *op = *opp;
+
+  if (ic->op != CAST || !IS_ITEMP (op))
+    return 0;
+
+  if (bitVectnBitsOn (OP_USES (op)) != 1 || bitVectnBitsOn (OP_DEFS (op)) != 1)
+    return 0;
+
+  // get the definition
+  if (!(dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (op)))))
+    return 0;
+
+  // found the definition now check if it is local
+  if (dic->seq < ebp->fSeq || dic->seq > ebp->lSeq)
+    return 0;
+
+  // for now handle pointer reads only
+  if (dic->op != GET_VALUE_AT_ADDRESS || IS_VOLATILE (operandType (IC_LEFT (dic))->next))
+    return 0;
+
+  sym_link *resulttype = operandType (IC_RESULT (ic));
+  sym_link *righttype = operandType (IC_RIGHT (ic));
+
+  if (IS_BOOL (resulttype) || getSize (resulttype) >= getSize (righttype))
+    return 0;
+
+  // Narrow read
+  if (!port->little_endian)
+    {
+      int offset = getSize (righttype) - getSize (resulttype);
+      IC_RIGHT (dic) = operandFromLit (operandLitValue (IC_RIGHT (dic)) + offset);
+    }
+  OP_SYMBOL (IC_RESULT (dic))->type = resulttype;
+  ic->op = '=';
+
+  return 1;
+}
+
+/*-----------------------------------------------------------------*/
+/* narrowRead() - Will read fewer bytes by eliminating downcasts.  */
+/*-----------------------------------------------------------------*/
+static void
+narrowReads(ebbIndex *ebbi)
+{
+  for (int i = 0; i < ebbi->count; i++)
+    {
+      eBBlock **ebbs = ebbi->bbOrder;
+      eBBlock *ebp = ebbs[i];
+
+      for (iCode *ic = ebp->sch; ic; ic = ic->next)
+        if (ic->op == CAST)
+          narrowRead (ic, &(IC_RIGHT (ic)), ebp);
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* eBBlockFromiCode - creates extended basic blocks from iCode     */
 /*                    will return an array of eBBlock pointers     */
 /*-----------------------------------------------------------------*/
@@ -3071,6 +3133,7 @@ eBBlockFromiCode (iCode *ic)
         dumpEbbsToFileExt (DUMP_LOSPRE, ebbi);
 
       /* GCSE, lospre and maybe other optimizations sometimes create temporaries that have non-connected live ranges, which is bad. Split them. */
+      freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
@@ -3082,6 +3145,7 @@ eBBlockFromiCode (iCode *ic)
     }
 
   /* Break down again and redo some steps to not confuse live range analysis later. */
+  freeeBBlockData (ebbi);
   ebbi = iCodeBreakDown (ic);
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
@@ -3108,6 +3172,7 @@ eBBlockFromiCode (iCode *ic)
     switchAddressSpaces (ic); /* Fallback. Very unlikely to be triggered, unless --max-allocs-per-node is set to very small values or very weird control-flow graphs */
 
   /* Break down again and redo some steps to not confuse live range analysis. */
+  freeeBBlockData (ebbi);
   ebbi = iCodeBreakDown (ic);
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
@@ -3150,17 +3215,22 @@ eBBlockFromiCode (iCode *ic)
   miscOpt (ebbi->bbOrder, ebbi->count);
 
   /* Split any live-ranges that became non-connected in dead code elimination. */
-  if(!TARGET_IS_DS390) /* Splitting live-ranges causes some regressions for ds390, probably by exposing other pre-existing bugs. */
+  change = 0;
+  do
   {
+    if(TARGET_IS_DS390) /* Splitting live-ranges causes some regressions for ds390, probably by exposing other pre-existing bugs. */
+      break;
     recomputeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
     adjustIChain (ebbi->bbOrder, ebbi->count);
     ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-    separateLiveRanges (ic, ebbi);
+    change = separateLiveRanges (ic, ebbi);
+    freeeBBlockData (ebbi);
     ebbi = iCodeBreakDown (ic);
     computeControlFlow (ebbi);
     loops = createLoopRegions (ebbi);
     computeDataFlow (ebbi);
   }
+  while (change);
 
   /* compute the live ranges */
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);
@@ -3173,11 +3243,14 @@ eBBlockFromiCode (iCode *ic)
    */
   discardDeadParamReceives (ebbi->bbOrder, ebbi->count);
 
+  narrowReads(ebbi);
+
   /* allocate registers & generate code */
   port->assignRegisters (ebbi);
 
   /* throw away blocks */
   setToNull ((void *) &graphEdges);
+  freeeBBlockData (ebbi);
 
   return NULL;
 }

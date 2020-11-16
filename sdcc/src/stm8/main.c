@@ -134,7 +134,6 @@ static char *stm8_keywords[] = {
   "interrupt",
   "trap",
   "naked",
-  "smallc",
   NULL
 };
 
@@ -215,8 +214,21 @@ stm8_getRegName (const struct reg_info *reg)
   return "err";
 }
 
-void
-stm8_genInitStartup(FILE * of)
+static void
+stm8_genExtraArea (FILE *of, bool hasMain)
+{
+  fprintf (of, "\n; default segment ordering for linker\n");
+  tfprintf (of, "\t!area\n", HOME_NAME);
+  tfprintf (of, "\t!area\n", STATIC_NAME);
+  tfprintf (of, "\t!area\n", port->mem.post_static_name);
+  tfprintf (of, "\t!area\n", CONST_NAME);
+  tfprintf (of, "\t!area\n", "INITIALIZER");
+  tfprintf (of, "\t!area\n", CODE_NAME);
+  fprintf (of, "\n");
+}
+
+static void
+stm8_genInitStartup (FILE *of)
 {
   fprintf (of, "__sdcc_gs_init_startup:\n");
 
@@ -460,7 +472,7 @@ PORT stm8_port =
     NULL,
     1                           /* CODE  is read-only */
   },
-  { NULL, NULL },
+  { stm8_genExtraArea, NULL },
   {                             /* stack information */
     -1,                         /* direction */
      0,

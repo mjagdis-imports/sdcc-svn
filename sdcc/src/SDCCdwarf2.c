@@ -76,7 +76,7 @@ int dwAbbrevNum = 0;
 hTab * dwTypeTagTable;
 int dwRefNum = 0;
 int dwScopeBlock = 0;
-int dwScopeLevel = 0;
+long dwScopeLevel = 0;
 int dwDebugSymbol = 0;
 dwcfins * dwCIEins = NULL;
 dwlocregion * dwFrameLastLoc = NULL;
@@ -2376,9 +2376,9 @@ dwTagFromType (sym_link * type, dwtag * parent)
                                                     ((blen+7) & ~7)
                                                     - (blen+bstr)));
                       if (blen < 8)
-                        type = typeFromStr ("uc");
+                        type = typeFromStr ("Uc");
                       else
-                        type = typeFromStr ("ui");
+                        type = typeFromStr ("Ui");
                       subtp = dwTagFromType (type, tp);
                       dwAddTagAttr (memtp, dwNewAttrTagRef (DW_AT_type, subtp));
                     }

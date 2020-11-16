@@ -2159,6 +2159,9 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       return;
     }
 
+  if (result->type == AOP_DIR && source->type == AOP_DIR && roffset == soffset && !strcmp(result->aopu.aop_dir, source->aopu.aop_dir))
+    return;
+
   for (i = 0; i < size;)
     {
       const bool x_dead = x_dead_global &&
@@ -2185,7 +2188,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             }
           i += 2;
         }
-      else if (i + 1 < size && source->type == AOP_LIT && aopIsLitVal (source, soffset + i, 2, byteOfVal (source->aopu.aop_lit, soffset + i - 2) + byteOfVal (source->aopu.aop_lit, soffset + i - 1) * 256) &&
+      else if (i + 1 < size && i >= 2 && source->type == AOP_LIT && aopIsLitVal (source, soffset + i, 2, byteOfVal (source->aopu.aop_lit, soffset + i - 2) + byteOfVal (source->aopu.aop_lit, soffset + i - 1) * 256) &&
         (aopInReg (result, roffset + i, X_IDX) && aopInReg (result, roffset + i - 2, Y_IDX) || aopInReg (result, roffset + i, Y_IDX) && aopInReg (result, roffset + i - 2, X_IDX)))
         {
           emit2 ("ldw", "%s, %s", aopGet2 (result, roffset + i), aopGet2 (result, roffset + i - 2));
@@ -2555,7 +2558,6 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           emit3w (A_NEGW, x ? ASMOP_X : ASMOP_Y, 0);
 
           started = TRUE;
-
           i += 2;
         }
       else if (!started &&
@@ -2597,6 +2599,15 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
               cost ((x || aopOnStack (right_aop, 0, 2)) ? 3 : 4, 2);
               started = TRUE;
             }
+          i += 2;
+        }
+      else if (!started && i == size - 2 && aopInReg (right_aop, i, X_IDX) && aopInReg (result_aop, i, X_IDX) &&
+        (left_aop->type == AOP_DIR || aopOnStackNotExt (left_aop, i, 2)))
+        {
+          emit3w (A_NEGW, ASMOP_X, 0);
+          emit2 ("addw", "x, %s", aopGet2 (left_aop, i));
+          cost (4, 2);
+          started = TRUE;
           i += 2;
         }
       else if (!started && aopIsLitVal (left_aop, i, 1, 0x00) &&
@@ -3033,14 +3044,20 @@ genCall (const iCode *ic)
 
           if (aopInReg (left->aop, 0, X_IDX) || aopInReg (left->aop, 0, Y_IDX))
             push (left->aop, 0, 2);
+          else if (aopOnStackNotExt (left->aop, 0, 2) && !(aopInReg (left->aop, 2, XL_IDX) || aopInReg (left->aop, 2, XH_IDX)) ||
+            aopInReg (left->aop, 2, A_IDX))
+            {
+              genMove (ASMOP_X, left->aop, !aopInReg (left->aop, 2, A_IDX), true, false);
+              push (ASMOP_X, 0, 2);
+            }
           else
             {
-              cheapMove (ASMOP_A, 0, left->aop, 0, FALSE);
+              cheapMove (ASMOP_A, 0, left->aop, 0, false);
               push (ASMOP_A, 0, 1);
-              cheapMove (ASMOP_A, 0, left->aop, 1, FALSE);
+              cheapMove (ASMOP_A, 0, left->aop, 1, false);
               push (ASMOP_A, 0, 1);
             }
-          cheapMove (ASMOP_A, 0, left->aop, 2, FALSE);
+          cheapMove (ASMOP_A, 0, left->aop, 2, false);
           push (ASMOP_A, 0, 1);
           emit2("retf", "");
           cost (1, 5);
@@ -4223,8 +4240,23 @@ genDivMod1 (const iCode *ic)
   if (!regDead (A_IDX, ic))
     push (ASMOP_A, 0, 1);
 
-  genMove_o (use_y ? ASMOP_Y : ASMOP_X, 0, left->aop, 0, 2, right->aop->regs[A_IDX] < 0, FALSE, FALSE);
-  cheapMove (ASMOP_A, 0, right->aop, 0, TRUE);
+  if (!use_y && aopInReg (right->aop, 0, XL_IDX) && aopOnStack (left->aop, 0, 1))
+    {
+      cheapMove (ASMOP_X, 1, ASMOP_ZERO, 0, false);
+      cheapMove (ASMOP_A, 0, left->aop, 0, false);
+      emit2 ("exg", "a, xl");
+      cost (1, 1);
+    }
+  else if (aopInReg (right->aop, 0, use_y ? YL_IDX : XL_IDX) || aopInReg (right->aop, 0, use_y ? YH_IDX : XH_IDX))
+    {
+      cheapMove (ASMOP_A, 0, right->aop, 0, false);
+      genMove_o (use_y ? ASMOP_Y : ASMOP_X, 0, left->aop, 0, 2, false, false, false);
+    }
+  else
+    {
+      genMove_o (use_y ? ASMOP_Y : ASMOP_X, 0, left->aop, 0, 2, right->aop->regs[A_IDX] < 0, false, false);
+      cheapMove (ASMOP_A, 0, right->aop, 0, false);
+    }
 
   emit2 ("div", use_y ? "y, a" : "x, a");
   cost (1 + use_y, 17);
@@ -4970,7 +5002,8 @@ genXor (const iCode *ic)
 {
   operand *left, *right, *result;
   int size, i, j, omitbyte = -1;
-  bool pushed_a = FALSE;
+  bool result_in_a = false;
+  bool pushed_a = false;
 
   D (emit2 ("; genXor", ""));
 
@@ -4994,14 +5027,14 @@ genXor (const iCode *ic)
   if (!regDead (A_IDX, ic))
     {
       push (ASMOP_A, 0, 1);
-      pushed_a = TRUE;
+      pushed_a = true;
     }
 
   // Byte in a needs to be handled first.
   for (i = 0; i < size; i++)
     if (aopInReg (left->aop, i, A_IDX) || aopInReg (right->aop, i, A_IDX))
       {
-        const asmop *other_stacked = NULL;
+        const asmop *other_stacked = 0;
         int other_offset;
         asmop *other = (aopInReg (left->aop, i, A_IDX) ? right : left)->aop;
 
@@ -5024,10 +5057,7 @@ genXor (const iCode *ic)
           pop (other_stacked, 0, 2);
 
         if (aopInReg (result->aop, i, A_IDX) && size > 1)
-          {
-            push (ASMOP_A, 0, 1);
-            pushed_a = TRUE;
-          }
+          result_in_a = true;
         else
           {
             // Avoid overwriting operand.
@@ -5047,14 +5077,14 @@ genXor (const iCode *ic)
                     }
                 }
 
-            cheapMove (result->aop, i, ASMOP_A, 0, FALSE);
+            cheapMove (result->aop, i, ASMOP_A, 0, false);
           }
         break;
       }
 
   for (i = 0; i < size; i++)
     {
-      const asmop *right_stacked = NULL;
+      const asmop *right_stacked = 0;
       int right_offset;
 
       if (omitbyte == i)
@@ -5062,12 +5092,9 @@ genXor (const iCode *ic)
 
       if (aopIsLitVal (right->aop, i, 1, 0))
         {
-          cheapMove (result->aop, i, left->aop, i, FALSE);
-          if (aopInReg (result->aop, i, A_IDX) && i != size - 1)
-            {
-              push (ASMOP_A, 0, 1);
-              pushed_a = TRUE;
-            }
+          cheapMove (result->aop, i, left->aop, i, result_in_a);
+          if (aopInReg (result->aop, i, A_IDX))
+            result_in_a = true;
           continue;
         }
 
@@ -5080,7 +5107,14 @@ genXor (const iCode *ic)
 
       right_stacked = stack_aop (right->aop, i, &right_offset);
 
-      cheapMove (ASMOP_A, 0, left->aop, i, FALSE);
+      if (result_in_a)
+        {
+          push (ASMOP_A, 0, 1);
+          pushed_a = true;
+          result_in_a = false;
+        }
+
+      cheapMove (ASMOP_A, 0, left->aop, i, false);
 
       if (aopIsLitVal (right->aop, i, 1, 0xff))
         emit3 (A_CPL, ASMOP_A, 0);
@@ -5095,13 +5129,10 @@ genXor (const iCode *ic)
       if (right_stacked)
         pop (right_stacked, 0, 2);
 
-      if (!aopInReg (result->aop, i, A_IDX) || i == size - 1)
-        cheapMove (result->aop, i, ASMOP_A, 0, FALSE);
+      if (!aopInReg (result->aop, i, A_IDX))
+        cheapMove (result->aop, i, ASMOP_A, 0, false);
       else
-        {
-          push (ASMOP_A, 0, 1);
-          pushed_a = TRUE;
-        }
+        result_in_a = true;
     }
 
   if (pushed_a)
@@ -5271,10 +5302,11 @@ genOr (const iCode *ic)
         }
       else
         {
-          if (result_in_a && !pushed_a)
+          if (result_in_a)
             {
               push (ASMOP_A, 0, 1);
-              pushed_a = TRUE;
+              pushed_a = true;
+              result_in_a = false;
             }
 
           right_stacked = stack_aop (right->aop, i, &right_offset);

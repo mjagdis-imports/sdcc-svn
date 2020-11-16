@@ -20,6 +20,7 @@
 // Lifetime-optimal speculative partial redundancy elimination.
 
 // #define DEBUG_LOSPRE // Uncomment to get debug messages while doing lospre.
+// #define DEBUG_LOSPRE_ASS // Uncomment to get debug messages on considered assignmentd while doing lospre.
 
 #include "SDCClospre.hpp"
 
@@ -105,12 +106,6 @@ candidate_expression (const iCode *const ic, int lkey)
   if(ic->op == '=' && IS_OP_LITERAL (right))
     return (false);
 
-  //if(IS_OP_VOLATILE (left) || IS_OP_VOLATILE (right))
-  //  return (false);
-
-  //if(POINTER_GET (ic) && IS_VOLATILE (operandType (IC_LEFT (ic))->next))
-  //  return (false);
-
   // Todo: Allow more operands!
   if (ic->op != CAST && left && !(IS_SYMOP (left) || IS_OP_LITERAL (left)) ||
     right && !(IS_SYMOP (right) || IS_OP_LITERAL (right)) ||
@@ -163,13 +158,36 @@ get_candidate_set(std::set<int> *c, const iCode *const sic, int lkey)
 }
 
 static bool
-setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
+invalidates_expression(const iCode *const eic, const iCode *const iic)
 {
-  typedef boost::graph_traits<cfg_lospre_t>::vertex_descriptor vertex_t;
   const operand *const eleft = IC_LEFT (eic);
   const operand *const eright = IC_RIGHT (eic);
   const bool uses_global = (eic->op == GET_VALUE_AT_ADDRESS || isOperandGlobal (eleft) || isOperandGlobal (eright) || IS_SYMOP (eleft) && OP_SYMBOL_CONST (eleft)->addrtaken || IS_SYMOP (eright) && OP_SYMBOL_CONST (eright)->addrtaken);
   const bool uses_volatile = POINTER_GET (eic) && IS_VOLATILE (operandType (eleft)->next) || IS_OP_VOLATILE (eleft) || IS_OP_VOLATILE (eright);
+
+  const operand *const left = IC_LEFT (iic);
+  const operand *const right = IC_RIGHT (iic);
+  const operand *const result = IC_RESULT (iic);
+
+  if (IC_RESULT (iic) && !IS_OP_LITERAL (result) && !POINTER_SET(iic) &&
+    (eleft && isOperandEqual (eleft, result) || eright && isOperandEqual (eright, result)))
+    return(true);
+  if (iic->op == FUNCTION || iic->op == ENDFUNCTION || iic->op == RECEIVE)
+    return(true);
+  if ((uses_global || uses_volatile) && (iic->op == CALL || iic->op == PCALL))
+    return(true);
+  if (uses_volatile && (POINTER_GET (iic) && IS_VOLATILE (operandType (left)->next)) || IS_OP_VOLATILE (left) || IS_OP_VOLATILE (right))
+    return(true);
+  if (uses_global && POINTER_SET (iic)) // TODO: More accuracy here!
+    return(true);
+
+  return(false);
+}
+
+static bool
+setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
+{
+  typedef boost::graph_traits<cfg_lospre_t>::vertex_descriptor vertex_t;
   bool safety_required = false;
 
   // In redundancy elimination, safety means not doing a computation on any path were it was not done before.
@@ -192,7 +210,7 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
     safety_required = true;
 
   // volatile requires safety.
-  if (uses_volatile)
+  if (POINTER_GET (eic) && IS_VOLATILE (operandType (IC_LEFT (eic))->next) || IS_OP_VOLATILE (IC_LEFT (eic)) || IS_OP_VOLATILE (IC_RIGHT (eic)))
     safety_required = true;
 
   // Reading from an invalid address might be dangerous, since there could be memory-mapped I/O.
@@ -209,14 +227,15 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   if (optimize.codeSpeed)
     safety_required = true;
 
+#ifdef DEBUG_LOSPRE
+  std::cout << "Invalidation set I: ";
+#endif
   for (vertex_t i = 0; i < boost::num_vertices (*cfg); i++)
     {
        const iCode *const ic = (*cfg)[i].ic;
-       const operand *const left = IC_LEFT (ic);
-       const operand *const right = IC_RIGHT (ic);
-       const operand *const result = IC_RESULT (ic);
 
        (*cfg)[i].uses = same_expression (eic, ic);
+
        (*cfg)[i].invalidates = false;
        (*cfg)[i].i_writes[0] = false;
        (*cfg)[i].i_writes[1] = false;
@@ -229,16 +248,8 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
          {
            (*cfg)[i].i_writes[0] = (eleft && isOperandEqual (eleft, result));
            (*cfg)[i].i_writes[bool(eleft)] = (eright && isOperandEqual (eright, result));
-           (*cfg)[i].invalidates = (*cfg)[i].i_writes[0] || (*cfg)[i].i_writes[1];
          }
-       if(ic->op == FUNCTION || ic->op == ENDFUNCTION || ic->op == RECEIVE)
-         (*cfg)[i].invalidates = true;
-       if ((uses_global || uses_volatile) && (ic->op == CALL || ic->op == PCALL))
-         (*cfg)[i].invalidates = true;
-       if (uses_volatile && !(*cfg)[i].uses && (POINTER_GET (ic) && IS_VOLATILE (operandType (left)->next)) || IS_OP_VOLATILE (left) || IS_OP_VOLATILE (right))
-         (*cfg)[i].invalidates = true;
-       if (uses_global && POINTER_SET (ic)) // TODO: More accuracy here!
-         (*cfg)[i].invalidates = true;
+       (*cfg)[i].invalidates | invalidates_expression (eic, ic);
 
        (*cfg)[i].i_uses[0] = !(*cfg)[i].uses && (eleft && (IC_LEFT(ic) && isOperandEqual (eleft, IC_LEFT (ic)) || IC_RIGHT(ic) && isOperandEqual (eleft, IC_RIGHT (ic))) || POINTER_SET(ic) && isOperandEqual (eleft, IC_RESULT (ic)));
        (*cfg)[i].i_uses[bool(eleft)] = !(*cfg)[i].uses && (eright && (IC_LEFT(ic) && isOperandEqual (eright, IC_LEFT (ic)) || IC_RIGHT(ic) && isOperandEqual (eright, IC_RIGHT (ic))) || POINTER_SET(ic) && isOperandEqual (eright, IC_RESULT (ic)));
@@ -247,7 +258,15 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
        (*cfg)[i].i_live[bool(eleft)] = (eright && bitVectBitValue (ic->rlive, eright->key));
 
        (*cfg)[i].forward = std::pair<int, int>(-1, -1);
+
+#ifdef DEBUG_LOSPRE
+       if ((*cfg)[i].invalidates)
+         std::cout << i << ", ";
+#endif
     }
+#ifdef DEBUG_LOSPRE
+  std::cout << "\n";
+#endif
 
   leftsize = operandSize(eleft ? eleft : eright);
   rightsize = operandSize(eright);
@@ -259,7 +278,7 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
 // Dump cfg, with numbered nodes.
 void dump_cfg_lospre (const cfg_lospre_t &cfg)
 {
-  if(!currFunc)
+  if (!currFunc)
     return;
 
   std::ofstream dump_file((std::string(dstFileName) + ".dumplosprecfg" + currFunc->rname + ".dot").c_str());
@@ -277,10 +296,11 @@ void dump_cfg_lospre (const cfg_lospre_t &cfg)
   delete[] name;
 }
 
-#if 0
 // Dump tree decomposition.
-static void dump_tree_decomposition(const tree_dec_t &tree_dec)
+static void dump_dec_lospre(const tree_dec_t &tree_dec)
 {
+  wassert (currFunc);
+
   std::ofstream dump_file((std::string(dstFileName) + ".dumplospredec" + currFunc->rname + ".dot").c_str());
 
   unsigned int w = 0;
@@ -300,7 +320,6 @@ static void dump_tree_decomposition(const tree_dec_t &tree_dec)
   boost::write_graphviz(dump_file, tree_dec, boost::make_label_writer(name));
   delete[] name;
 }
-#endif
 
 void
 lospre (iCode *sic, ebbIndex *ebbi)
@@ -321,6 +340,9 @@ lospre (iCode *sic, ebbIndex *ebbi)
     dump_cfg_lospre(control_flow_graph);
 
   get_nice_tree_decomposition (tree_decomposition, control_flow_graph);
+
+  if(options.dump_graphs)
+    dump_dec_lospre(tree_decomposition);
 
   int lkey = operandKey;
 
