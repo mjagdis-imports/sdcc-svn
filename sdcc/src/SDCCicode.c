@@ -110,6 +110,7 @@ iCodeTable codeTable[] = {
   {LEFT_OP, "<<", picGeneric, NULL},
   {RIGHT_OP, ">>", picGeneric, NULL},
   {GET_VALUE_AT_ADDRESS, "@", picGetValueAtAddr, NULL},
+  {SET_VALUE_AT_ADDRESS, "@", picSetValueAtAddr, NULL},
   {ADDRESS_OF, "&", picAddrOf, NULL},
   {CAST, "<>", picCast, NULL},
   {'=', ":=", picAssign, NULL},
@@ -1850,7 +1851,7 @@ getArraySizePtr (operand * op)
   if (IS_PTR (ltype))
     {
       int size = getSize (ltype);
-      return ((IS_GENPTR (ltype) && GPTRSIZE > FPTRSIZE) ? (size - 1) : size);
+      return ((IS_GENPTR (ltype) && GPTRSIZE > FARPTRSIZE) ? (size - 1) : size);
     }
 
   if (IS_ARRAY (ltype))
@@ -1861,23 +1862,23 @@ getArraySizePtr (operand * op)
         case IPOINTER:
         case PPOINTER:
         case POINTER:
-          return (PTRSIZE);
+          return (NEARPTRSIZE);
         case EEPPOINTER:
         case FPOINTER:
         case CPOINTER:
         case FUNCTION:
-          return (FPTRSIZE);
+          return (FARPTRSIZE);
         case GPOINTER:
-          if (GPTRSIZE > FPTRSIZE)
+          if (GPTRSIZE > FARPTRSIZE)
             return (GPTRSIZE - 1);
           else
-            return (FPTRSIZE);
+            return (FARPTRSIZE);
 
         default:
-          return (FPTRSIZE);
+          return (FARPTRSIZE);
         }
     }
-  return (FPTRSIZE);
+  return (FARPTRSIZE);
 }
 
 /*-----------------------------------------------------------------*/
@@ -2044,7 +2045,7 @@ geniCodeCast (sym_link *type, operand *op, bool implicit)
       return operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValueUll (op)));
     }
 
-  checkPtrCast (type, optype, implicit);
+  checkPtrCast (type, optype, implicit, IS_LITERAL (opetype) && !operandLitValue (op));
 
   ic = newiCode (CAST, operandFromLink (type), geniCodeRValue (op, FALSE));
   IC_RESULT (ic) = newiTempOperand (type, 0);

@@ -64,7 +64,7 @@ AC_CHECK_PROGS(LEX, flex lex, :)
 dnl Don't use AC_PROG_YACC
 AC_CHECK_PROGS(YACC, 'bison -y' byacc yacc, :)
 
-AC_CHECK_PROGS(PYTHON, python2 python2.7 python2.6 python2.5 python2.4, python)
+AC_CHECK_PROGS(PYTHON, python3.6 python2.7 python2 python3, python)
 
 AC_DEFUN([SDCC_REQUIRE_PROG],
 [if test "$1" = ":"; then
@@ -428,50 +428,6 @@ AC_PROG_CC_C99
 if test "$ac_cv_prog_cc_c99" != "no"; then
   CFLAGS="$ac_cv_prog_cc_c99 ${CFLAGS}"
 fi
-
-# SDCC_C_UNNAMED_STRUCT_TAG ()
-# chech whether C compiler supports tag in unnamed struct
-# -------------------------------------------------------------------------
-AC_DEFUN([SDCC_C_UNNAMED_STRUCT_TAG],
-[
-  if test "$ac_cv_c_compiler_gnu" = "yes"; then
-    sdcc_IS_VALID_OPTION(-fms-extensions)
-  else
-    sdcc_cv_c_fms_extensions=no
-  fi
-  AC_CACHE_CHECK(whether C supports tag in unnamed struct, sdcc_cv_c_unnamed_struct_tag,
-    if test "$sdcc_cv_c_fms_extensions" = "yes"; then
-      CFLAGS="-fms-extensions ${CFLAGS}"
-    fi
-
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-      [
-struct s1 {
-  int a;
-};
-
-struct s2 {
-  struct s1;
-  int b;
-};
-      ],
-      [
-  struct s2 s;
-
-  s.a = 1;
-  s.b = 2;
-      ])],
-      [
-        sdcc_cv_[]_AC_LANG_ABBREV[]_unnamed_struct_tag=yes
-        AC_DEFINE_UNQUOTED(UNNAMED_STRUCT_TAG, 1, [Define to 1 if c supports tags in unnamed struct.])
-      ],
-      [
-        sdcc_cv_[]_AC_LANG_ABBREV[]_unnamed_struct_tag=no
-      ])
-  )
-])
-
-SDCC_C_UNNAMED_STRUCT_TAG
 
 # Checks for typedefs, structures, and compiler characteristics.
 # ===========================================================================
@@ -947,7 +903,8 @@ fi
 if test $OPT_DISABLE_STM8 = 0; then
   AC_CONFIG_FILES([src/stm8/Makefile
                    sdas/asstm8/Makefile])
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/stm8/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/stm8/Makefile
+                                                       device/lib/stm8-large/Makefile])
 fi
 
 test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/Makefile])

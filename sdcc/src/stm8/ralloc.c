@@ -263,6 +263,27 @@ regTypeNum (void)
     }
 }
 
+/** Transform weird SDCC handling of writes via pointers
+    into something more sensible. */
+static void
+transformPointerSet (eBBlock **ebbs, int count)
+{
+  /* for all blocks */
+  for (int i = 0; i < count; i++)
+    {
+      iCode *ic;
+
+      /* for all instructions do */
+      for (ic = ebbs[i]->sch; ic; ic = ic->next)
+        if (POINTER_SET (ic))
+          {
+            IC_LEFT (ic) = IC_RESULT (ic);
+            IC_RESULT (ic) = 0;
+            ic->op = SET_VALUE_AT_ADDRESS;
+          }
+    }
+}
+
 /** Register reduction for assignment.
  */
 static int
@@ -311,9 +332,6 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
 
           if (IS_SYMOP (IC_RESULT (dic)) && IC_RESULT (dic)->key == IC_RIGHT (ic)->key)
             {
-              if (POINTER_SET (dic))
-                dic = NULL;
-
               break;
             }
 
@@ -343,7 +361,7 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
     return 0;                   /* did not find */
 
   /* if assignment then check that right is not a bit */
-  if (ASSIGNMENT (ic) && !POINTER_SET (ic))
+  if (ic->op == '=')
     {
       sym_link *etype = operandType (IC_RESULT (dic));
       if (IS_BITFIELD (etype))
@@ -358,7 +376,7 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
     }
 
   /* For now eliminate 8-bit temporary variables only.
-     The STM8 instruction soperating directly on memory
+     The STM8 instructions operating directly on memory
      operands are 8-bit, so the most benefit is in 8-bit
      operations. On the other hand, supporting wider
      operations well in codegen is also more effort. */
@@ -390,7 +408,7 @@ pack:
       OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
     }
   /* delete from liverange table also
-     delete from all the points inbetween and the new
+     delete from all the points in between and the new
      one */
   for (sic = dic; sic != ic; sic = sic->next)
     {
@@ -404,6 +422,85 @@ pack:
   bitVectUnSetBit (OP_SYMBOL (IC_RESULT (ic))->defs, ic->key);
   hTabDeleteItem (&iCodehTab, ic->key, ic, DELETE_ITEM, NULL);
   OP_DEFS (IC_RESULT (dic)) = bitVectSetBit (OP_DEFS (IC_RESULT (dic)), dic->key);
+  return 1;
+}
+
+/** Will reduce some registers for single use.
+ */
+static int
+packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
+{
+  iCode *dic;
+
+  operand *op = *opp;
+//printf("packRegsForOneuse() at ic %d\n", ic->key);
+  /* if returning a literal then do nothing */
+  if (!IS_ITEMP (op))
+    return 0;
+
+  /* if rematerializable do nothing */
+  if (OP_SYMBOL (op)->remat)
+    return 0;
+
+  /* this routine will mark the symbol as used in one
+     instruction use only && if the definition is local
+     (ie. within the basic block) && has only one definition  */
+  if (bitVectnBitsOn (OP_USES (op)) != 1 || bitVectnBitsOn (OP_DEFS (op)) != 1)
+    return 0;
+
+  /* get the definition */
+  if (!(dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (op)))))
+    return 0;
+//printf("Found dic %d\n", dic->key);
+  /* found the definition now check if it is local */
+  if (dic->seq < ebp->fSeq || dic->seq > ebp->lSeq)
+    return 0;                /* non-local */
+
+  /* for now handle results from assignments from globals only */
+  if (dic->op != '=' || !isOperandGlobal (IC_RIGHT (dic)))
+    return 0;
+  /* also make sure the intervenening instructions
+     don't have any thing in far space */
+  for (iCode *nic = dic->next; nic && nic != ic; nic = nic->next)
+    {
+      /* if there is an intervening function call then no */
+      if (nic->op == CALL || nic->op == PCALL)
+        return 0;
+
+      if (nic->op == GET_VALUE_AT_ADDRESS || nic->op == SET_VALUE_AT_ADDRESS)
+        return 0;
+
+      /* if address of & the result is remat the okay */
+      if (nic->op == ADDRESS_OF && OP_SYMBOL (IC_RESULT (nic))->remat)
+        continue;
+
+      if (IS_OP_VOLATILE (IC_LEFT (nic)) ||
+          IS_OP_VOLATILE (IC_RIGHT (nic)) ||
+          isOperandGlobal (IC_RESULT (nic)))
+        {
+          return 0;
+        }
+    }
+
+  /* Optimize out the assignment */
+  *opp = operandFromOperand (IC_RIGHT(dic));
+  (*opp)->isaddr = true;
+  
+  bitVectUnSetBit (OP_SYMBOL (op)->defs, dic->key);
+  bitVectUnSetBit (OP_SYMBOL (op)->uses, ic->key);
+
+  if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
+    OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
+
+  /* delete from liverange table also
+     delete from all the points in between and the new
+     one */
+  for (iCode *nic = dic; nic != ic; nic = nic->next) 
+    bitVectUnSetBit (nic->rlive, op->key);
+
+  remiCodeFromeBBlock (ebp, dic);
+  hTabDeleteItem (&iCodehTab, ic->key, ic, DELETE_ITEM, NULL);
+  
   return 1;
 }
 
@@ -427,7 +524,7 @@ packRegisters (eBBlock * ebp)
       for (ic = ebp->sch; ic; ic = ic->next)
         {
           /* find assignment of the form TrueSym := iTempNN:1 */
-          if (ic->op == '=' && !POINTER_SET (ic))
+          if (ic->op == '=')
             change += packRegsForAssign (ic, ebp);
         }
       if (!change)
@@ -442,8 +539,8 @@ packRegisters (eBBlock * ebp)
       /* if this is an itemp & result of a address of a true sym
          then mark this as rematerialisable   */
       if (ic->op == ADDRESS_OF && !operandLitValue (IC_RIGHT (ic)) /* STM8 codegen cannot handle non-zero right operand in rematerialization yet */ && 
-          IS_ITEMP (IC_RESULT (ic)) &&
-          IS_TRUE_SYMOP (IC_LEFT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !OP_SYMBOL (IC_LEFT (ic))->onStack)
+          IS_ITEMP (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the paramter isnot accounted for in DEFS */ &&
+          IS_TRUE_SYMOP (IC_LEFT (ic)) && !OP_SYMBOL (IC_LEFT (ic))->onStack)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = 1;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;
@@ -453,8 +550,8 @@ packRegisters (eBBlock * ebp)
       /* Safe: just propagates the remat flag */
       /* if straight assignment then carry remat flag if this is the
          only definition */
-      if (ic->op == '=' && !POINTER_SET (ic) && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat && !IS_CAST_ICODE (OP_SYMBOL (IC_RIGHT (ic))->rematiCode) && !isOperandGlobal (IC_RESULT (ic)) &&
-          bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1)
+      if (ic->op == '=' && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the paramter isnot accounted for in DEFS */)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
@@ -463,7 +560,8 @@ packRegisters (eBBlock * ebp)
       /* if cast to a generic pointer & the pointer being
          cast is remat, then we can remat this cast as well */
       if (ic->op == CAST &&
-          IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1)
+        IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) /* The receiving of the paramter isnot accounted for in DEFS */)
         {
           sym_link *to_type = operandType (IC_LEFT (ic));
           sym_link *from_type = operandType (IC_RIGHT (ic));
@@ -474,6 +572,11 @@ packRegisters (eBBlock * ebp)
               OP_SYMBOL (IC_RESULT (ic))->usl.spillLoc = NULL;
             }
         }
+
+      /* In some cases redundant moves can be eliminated */
+      if (ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS ||
+        ic->op == IFX && operandSize (IC_COND (ic)) == 1)
+        packRegsForOneuse (ic, &(IC_LEFT (ic)), ebp);
     }
 }
 
@@ -517,7 +620,7 @@ serialRegMark (eBBlock ** ebbs, int count)
 
           /* some don't need registers, since there is no result. */
           if (SKIP_IC2 (ic) ||
-              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == IPOP || (IC_RESULT (ic) && POINTER_SET (ic)))
+              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == IPOP || ic->op == SET_VALUE_AT_ADDRESS)
             continue;
 
           /* now we need to allocate registers only for the result */
@@ -654,6 +757,8 @@ stm8_assignRegisters (ebbIndex * ebbi)
   iCode *ic;
 
   stm8_init_asmops();
+
+  transformPointerSet (ebbs, count);
 
   /* change assignments this will remove some
      live ranges reducing some register pressure */

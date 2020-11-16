@@ -138,7 +138,7 @@ emitDebugSym (struct dbuf_s *oBuf, symbol * sym)
 /* emitRegularMap - emit code for maps with no special cases       */
 /*-----------------------------------------------------------------*/
 static void
-emitRegularMap (memmap * map, bool addPublics, bool arFlag)
+emitRegularMap (memmap *map, bool addPublics, bool arFlag)
 {
   symbol *sym;
   ast *ival = NULL;
@@ -1025,6 +1025,10 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
 
   switch (size)
     {
+    case 0:
+      dbuf_tprintf (oBuf, "\n");
+      break;
+
     case 1:
       dbuf_tprintf (oBuf, "\t!db !constbyte\n", ival);
       bytes_written++;
@@ -1040,6 +1044,8 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
                     (ival & 0xff), (ival >> 8) & 0xff, (ival >> 16) & 0xff, (ival >> 24) & 0xff);
       bytes_written += 4;
       break;
+    default:
+      wassert (0);
     }
   *sym = lsym;
   *ilist = lilist;
@@ -1448,9 +1454,14 @@ printIvalFuncPtr (sym_link * type, initList * ilist, struct dbuf_s *oBuf)
 
   size = getSize (type);
 
-  if (size == FPTRSIZE)
+  if (size == FUNCPTRSIZE)
     {
-      if (port->use_dw_for_init)
+      if (TARGET_IS_STM8 && FUNCPTRSIZE == 3)
+        {
+          _printPointerType (oBuf, name, size);
+          dbuf_printf (oBuf, "\n");
+        }
+      else if (port->use_dw_for_init)
         {
           dbuf_tprintf (oBuf, "\t!dws\n", name);
         }
@@ -1459,14 +1470,14 @@ printIvalFuncPtr (sym_link * type, initList * ilist, struct dbuf_s *oBuf)
           printPointerType (oBuf, name);
         }
     }
-  else if (size == GPTRSIZE)
+  else if (size == BFUNCPTRSIZE)
     {
       _printPointerType (oBuf, name, size);
       dbuf_printf (oBuf, "\n");
     }
   else
     {
-      assert (0);
+      wassertl (0, "Invalid function pointer size.");
     }
 
   return;
@@ -1499,7 +1510,7 @@ printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBu
         {
           dbuf_tprintf (oBuf, "\t!dbs\n", val->name);
         }
-      else if (size == FPTRSIZE)
+      else if (size == FARPTRSIZE)
         {
           if (port->use_dw_for_init)
             {
@@ -1550,7 +1561,7 @@ printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBu
             dbuf_tprintf (oBuf, "\t.byte %s,%s\n", aopLiteral (val, 1), aopLiteral (val, 0));
           break;
         case 3:
-          if (IS_GENPTR (type) && GPTRSIZE > FPTRSIZE && floatFromVal (val) != 0)
+          if (IS_GENPTR (type) && GPTRSIZE > FARPTRSIZE && floatFromVal (val) != 0)
             {
               if (!IS_PTR (val->type) && !IS_FUNC (val->type))
                 {
@@ -1571,7 +1582,7 @@ printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBu
             }
           break;
         case 4:
-          if (IS_GENPTR (type) && GPTRSIZE > FPTRSIZE && floatFromVal (val) != 0)
+          if (IS_GENPTR (type) && GPTRSIZE > FARPTRSIZE && floatFromVal (val) != 0)
             {
               if (!IS_PTR (val->type) && !IS_FUNC (val->type))
                 {
@@ -1706,7 +1717,7 @@ printIvalPtr (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oB
     {
       dbuf_tprintf (oBuf, "\t!dbs\n", val->name);
     }
-  else if (size == FPTRSIZE)
+  else if (size == FARPTRSIZE)
     {
       if (port->use_dw_for_init)
         dbuf_tprintf (oBuf, "\t!dws\n", val->name);
@@ -2560,7 +2571,7 @@ glue (void)
 
       /* put in jump or call to main */
       if(TARGET_IS_STM8)
-        fprintf (asmFile, "\tjp\t_main\n");
+        fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t_main\n" : "\tjp\t_main\n");
       else
         fprintf (asmFile, "\t%cjmp\t_main\n", options.acall_ajmp ? 'a' : 'l');        /* needed? */
       fprintf (asmFile, ";\treturn from main will return to caller\n");

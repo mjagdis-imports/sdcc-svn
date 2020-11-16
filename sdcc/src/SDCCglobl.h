@@ -147,12 +147,13 @@
 #define INTSIZE       port->s.int_size
 #define LONGSIZE      port->s.long_size
 #define LONGLONGSIZE  port->s.longlong_size
-#define PTRSIZE       port->s.ptr_size
-#define FPTRSIZE      port->s.fptr_size
-#define GPTRSIZE      port->s.gptr_size
+#define NEARPTRSIZE   port->s.near_ptr_size
+#define FARPTRSIZE    port->s.far_ptr_size
+#define GPTRSIZE      port->s.ptr_size
+#define FUNCPTRSIZE   port->s.funcptr_size
+#define BFUNCPTRSIZE  port->s.banked_funcptr_size
 #define BITSIZE       port->s.bit_size
 #define FLOATSIZE     port->s.float_size
-#define MAXBASESIZE   port->s.max_base_size
 
 #define  SMALL_MODEL  0
 #define  LARGE_MODEL  1
@@ -218,10 +219,6 @@
                                          : "empty"))
 
 /* optimization options */
-/*
- * cloneOptimize function in SDCC.lex should be updated every time
- * a new set is added to the optimize structure!
- */
 struct optimize
   {
     int global_cse;
@@ -237,6 +234,7 @@ struct optimize
     int codeSize;
     int lospre;
     int allow_unsafe_read;
+    int noStdLibCall;
   };
 
 /** Build model.

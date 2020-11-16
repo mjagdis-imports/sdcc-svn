@@ -1,9 +1,443 @@
+2018-05-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2746.c:
+	  Test for bug #2746.
+
+2018-04-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/stdbool.h:
+	  Change the type of true and false to _Bool (see also N 2229).
+	* device/include/assert.h,
+	  device/lib/__assert.c,
+	  device/lib/incl.mk:
+	  Fix bug #2745.
+
+2018-04-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Update documentation on long long support.
+	* device/lib/wctomb.c,
+	  support/regression/tests/wchar.c:
+	  Fix wctomb() error handling wrt. invalid surrogate codepoints.
+	* device/lib/wcrtomb.c,
+	  support/regression/tests/wchar.c:
+	  Fix wcrtomb() errno handling.
+	* device/lib/mbrtowc.c,
+	  device/lib/mbtowc.c:
+	  Improve mbrtowc(), mbtowc() error handling.
+	* device/lib/mbrtoc16.c:
+	  Simplify mbrtoc16() by relying on mbrtowc() error handling.
+	* device/lib/c16rtomb.c,
+	  support/regression/tests/wchar.c:
+	  Fix c16rtomb() error handling.
+
+2018-04-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/stdint.h,
+	  support/regression/tests/constantRange.c:
+	  Fix intmax_t, uintmax_t limit macros.
+
+2018-04-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/stdint.h,
+	  support/regression/tests/wchar.c:
+	  Fix wchar_t, wint_t limit macros.
+
+2018-04-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/wchar.c:
+	  A bit of additional UTF-16 and UTF-32 support testing.
+
+2018-04-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peep.c:
+	  Fix reads from unallocated memory.
+	* src/stm8/gen.c:
+	  Fix bug #2743.
+
+2018-04-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCglue.c:
+	  Fix read of unitialized value in initialization of zero-length bit-field.
+
+2018-04-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure,
+	  configure.ac:
+	  Use C11 instead of ms-extensions to get support for anonymous struct.
+
+2018-04-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/asxxsrc/asout.c (outrw): enable emit 24-bit relocation data for stm8
+	* src/stm8/main.c (get_model): fixed warning
+
+2018-04-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-2124.c,
+	  support/regression/tests/bug-2373.c,
+	  support/regression/tests/bug1908493.c,
+	  support/regression/tests/compare.c,
+	  support/regression/tests/funptrs.c,
+	  support/regression/tests/gcc-torture-execute-930702-1.c,
+	  support/regression/tests/gcc-torture-execute-991112-1.c,
+	  support/regression/tests/z88dk.c:
+	  Workaround for 24-bit symbol assembler issue.
+
+2018-04-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-20060110-2.c:
+	  Disable failing test.
+
+2018-04-01 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/valdiag/tests/funcdec.c,
+	* support/valdiag/tests/tentdecl.c: fix bug #2735
+
+2018-03-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Consider string literal reuse in dead code elimination, part of RFE #567.
+	* src/SDCCast.c,
+	  src/SDCCast.h,
+	  src/SDCCopt.c:
+	  Merge adjacent calls to puts(), RFE #564.
+	* src/SDCCglue.c,
+	  src/stm8/gen.c:
+	  Enable support for 24-bit function pointers for stm8 large memory model.
+	* support/valdiag/Makefile.in:
+	  Omit host by default.
+	* support/valdiag/tests/funcdec.c,
+	  support/valdiag/tests/tentdecl.c:
+	  Disable test affected by bug #2735.
+	* src/stm8/main.c:
+	  Separate default name for const segment from code segment.
+
+2018-03-31 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* sdas/asxxsrc/asout.c
+	* sdas/asxxsrc/sdas.c
+	* sdas/asxxsrc/sdas.h: enable sdasstm8 to emit 24-bit relocation data
+
+2018-03-30 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/valdiag/tests/overflow.c:
+	  Disable tests for known bugs #2733, #2734.
+	* device/lib/stm8-large/heap.s:
+	  Fix heap initialization.
+
+2018-03-30 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/collate-results.py: fix bug #2731 and
+	  handle malformed "Summary" and "Simulator" stats better
+
+2018-03-29 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  src/SDCCutil.c,
+	  src/SDCCval.c,
+	  src/SDCCval.h:
+	  Make optimization of stdlib calls play nice with string reuse.
+	* support/util/dbuf.c,
+	  support/util/dbuf.h:
+	  Improve const-correctness.
+
+2018-03-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-2124.c,
+	  support/regression/tests/bug-2373.c,
+	  support/regression/tests/bug-716242.c,
+	  support/regression/tests/bug1908493.c,
+	  support/regression/tests/compare.c,
+	  support/regression/tests/funptrs.c,
+	  support/regression/tests/gcc-torture-execute-930702-1.c,
+	  support/regression/tests/gcc-torture-execute-991112-1.c,
+	  support/regression/tests/gcc-torture-execute-func-ptr-1.c,
+	  support/regression/tests/z88dk.c:
+	  Give up on supporting function pointers for stm8 large memory model.
+	* device/lib/Makefile.in:
+	  Build library for stm8 large memory model by default.
+
+2018-03-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fix long long return values for large memory model.
+	* sim/ucsim/stm8.src/glob.cc:
+	  Fix decoding of jpf.
+	* device/lib/stm8-large/setjmp.s:
+	  Fix longjmp() for large memory model.
+
+2018-03-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.y,
+	  src/SDCCasm.c,
+	  src/SDCCicode.c,
+	  src/SDCCralloc.hpp,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c,
+	  src/stm8/ralloc2.cc,
+	  src/stm8/peep.c:
+	  Improve handling of global pointers.
+
+2018-03-27 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  doc/sdccman.lyx,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c:
+	  Implement basic optimization of calls to standard library functions, RFE #564.
+	* support/regression/tests/bug-716242.c,
+	  support/regression/tests/genptrs.c:
+	  Fix tests that assign void * to function pointers.
+	* src/SDCCglue.c:
+	  Use jpf to reach main() for stm8 large memory model.
+	* src/stm8/gen.c:
+	  Give up on assembler for stm8 large memory model to make regression tests pass.
+
+2018-03-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Minor optimization for 8-bit pointer reads.
+
+2018-03-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/valdiag/tests/constantRange.c:
+	  Make tests expect a few more warnings implemented in SDCC.
+	* src/stm8/gen.c:
+	  Fix | of a with itself.
+	* support/valdiag/tests/bug-971834.c:
+	  Do not expect unreasonable warning.
+	* src/SDCCast.h,
+	  src/SDCCast.c,
+	  src/SDCCicode.c,
+	  support/valdiag/tests/pointers.c:
+	  Fix bug #2730.
+
+2018-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCast.c,
+	  support/valdiag/valdiag.py,
+	  support/valdiag/tests/pointers.c:
+	  Diagnostics for conversions between pointers to objects and pointers to functions.
+	* src/stm8/gen.c,
+	  src/stm8/peeph.def:
+	  Some minor improvements.
+
+2018-03-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improve calls via global function pointers.
+	* src/pic16/gen.c,
+	  src/pic16/ralloc.c,
+	  src/pic16/ralloc.c:
+	  Fix NEARPTRSIZE use.
+	* src/hc08/main.c:
+	  Fix leftover max type size.
+
+2018-03-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/stm8-large/Makefile.in,
+	  device/lib/stm8-large/_fast_long_neg.s:
+	  Remove unused support routine.
+	* src/port.h,
+	  src/stm8/main.c:
+	  Fix library path for large memory model.
+	* src/SDCCpeeph.c:
+	  Fix labelIsUncondJump() for large memory model.
+	* src/stm8/gen.c:
+	  Simplify generation of calls, implement 24-bit return values.
+	* device/lib/stm8-large/Makefile.in:
+	  Fix build of char multiplicative operator routines.
+	* support/regression/ports/stm8-large/support.c:
+	  Fix regression test output.
+
+2018-03-25 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/collate-results.py,
+	* support/regression/compact-results.py,
+	* support/regression/get_ticks.py: Accept non-UTF-8 regression test
+	  output without throwing an exception under Python 3
+
+2018-03-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fixes for handling of immediate operands for large memory model.
+	* device/include/setjmp.h,
+	  device/lib/stm8-large/setjmp.s:
+	  Fix setjmp() / longjmp() for large memory model.
+
+2018-03-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/port.h,
+	  src/*/main.c,
+	  src/SDCCglobl.h,
+	  src/SDCCglue.c,
+	  src/SDCCsymt.c:
+	  Handle function pointer sizes separately from object pointer sizes.
+	* configure.ac,
+	  device/lib/Makefile.in,
+	  src/stm8/gen.c,
+	  device/lib/stm8-large:
+	  stm8-large library.
+	* support/regression/Makefile.in,
+	  support/regression/ports/stm8-large:
+	  stm8-large regression test target.
+
+2018-03-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/port.h,
+	  src/SDCCglobl.h,
+	  src/SDCCast.c,
+	  src/SDCCdwarf2.c,
+	  src/SDCCglue.c,
+	  src/SDCCicode.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/ds390/gen.c,
+	  src/ds390/main.c,
+	  src/ds390/ralloc.c,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c,
+	  src/mcs51/main.c,
+	  src/mcs51/ralloc.c,
+	  src/pic14/gen.c,
+	  src/pic16/gen.c:
+	  Rename pointer size macros for clarification.
+	* src/stm8/main.c,
+	  src/stm8/gen.c:
+	  Simplify call overhead handling for large memory model.
+
+2018-03-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/longlong.c:
+	  Disable test for mcs51 medium model.
+	* support/regression/tests/bool.c:
+	  Test assignments between bool bitfields.
+
+2018-03-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/mcs51/gen.c,
+	  support/regression/tests/gcc-torture-execute-950612-1.c:
+	  Fix bug #2669.
+	* support/regression/tests/longlong.c:
+	  Enable full long long regression testing for large and huge mcs51 memory model.
+
+2018-03-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/mcs51/gen.c:
+	  Fix a bug in code generation that was triggered by lospre.
+	* support/regression/tests/gcc-torture-execute-20060110-2.c:
+	  Enable test for mcs51.
+	* support/regression/tests/gcc-torture-execute-920922-1.c:
+	  Document that mcs51 exploits undefined behaviour.
+
+2018-03-23 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/valdiag/valdiag.py: define some port specific
+	  macros (__has_bit, __has_data, __has_xdata, __has_reentrant)
+	  to simplify conditions
+	* support/valdiag/tests/bug-971834.c,
+	* support/valdiag/tests/enum.c,
+	* support/valdiag/tests/funcdec.c,
+	* support/valdiag/tests/primtypes.c,
+	* support/valdiag/tests/switch.c,
+	* support/valdiag/tests/tentdecl.c,
+	* support/valdiag/tests/typedef.c: update for newer SDCC/GCC versions
+
+2018-03-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/mcs51/gen.c,
+	  src/mcs51/ralloc.c:
+	  Improve _Bool handling.
+
+2018-03-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/mcs51/ralloc.c:
+	  Allocate some local _Bool to bit registers.
+
+2018-03-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/mcs51/gen.c:
+	  Fix handling of acc for multiplicative operators.
+	* src/mcs51/ralloc.c:
+	  Fall back to generic registers when running out of bit registers.
+
+2018-03-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/mcs51/gen.c,
+	  src/SDCCast.c
+	  Improve code generation for _Bool.
+
+2018-03-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/mcs51/ralloc.c:
+	  Make better use of acc for 8-bit operands.
+	* src/SDCCopt.c:
+	  Optimize width of temporaries for bit tests.
+
+2018-03-22 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/valdiag/Makefile.in: display any actual failure(s)
+	  and not just the summary
+
+2018-03-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc.c:
+	  Remove leftover debug message.
+
+2018-03-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/mcs51/ralloc.c,
+	  src/mcs51/gen.c:
+	  Optimize bitwise operations on global variables.
+
+2018-03-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/scripts/as2gbmap.py:
+	  Migrate to Python 2/3.
+	* src/z80/ralloc.c,
+	  src/stm8/ralloc.c,
+	  support/regression/tests/bug-2347.c:
+	  Fix bug #2347.
+	* device/README,
+	  device/examples:
+	  Remove outdated examples (bug #2728).
+
+2018-03-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* configure.ac,
+	  configure:
+	  Migrate to Python 3.6 for default.
+
+2018-03-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/ralloc.c,
+	  src/stm8/ralloc.c:
+	  Do not mark global variables as rematerializeable.
+
+2018-03-19 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/generate-cases.py: apply patch #282 from
+	  Diego Herranz
+	* support/regression/generate-cases.py,
+	* support/regression/HTMLgen.py: use latin-1 encoding for file I/O
+	  to pass through UTF-8 and non-UTF-8 data without interpretation
+	  when using Python 3
+
+2018-03-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/sdbinutils:
+	  Merge upstream GNU Binutils 2.30.
+	* src/stm8/gen.c:
+	  Improve cycle count accuracy for shifts.
+
 2018-03-18 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/gen.c:
 	  Improve handling of rematerialized operands and I/O.
-	* support/sdbinutils:
-	  Merge upstream GNU Binutils 2.30.
 
 2018-03-18 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 

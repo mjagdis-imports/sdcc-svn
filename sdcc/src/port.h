@@ -105,7 +105,7 @@ typedef struct
     int supported_models;
     int default_model;
     /** return the model string, used as library destination;
-        port->taget is used as model string if get_model is NULL */
+        port->target is used as model string if get_model is NULL */
     const char *(*get_model) (void);
   }
   general;
@@ -171,12 +171,13 @@ typedef struct
     unsigned int int_size;
     int long_size;
     int longlong_size;
-    int ptr_size;               //near
-    int fptr_size;              //far
-    int gptr_size;              //generic
+    int near_ptr_size;          // __near
+    int far_ptr_size;           // __far
+    int ptr_size;               // generic
+    int funcptr_size;
+    int banked_funcptr_size;
     int bit_size;
     int float_size;
-    int max_base_size;
   }
   s;
 
