@@ -26,6 +26,7 @@
 #include "dbuf_string.h"
 
 #include "ralloc.h"
+#include "peep.h"
 
 extern DEBUGFILE dwarf2DebugFile;
 extern int dwarf2FinalizeFile(FILE *);
@@ -216,7 +217,7 @@ static const char *_linkCmd[] =
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
 static const char *pdk13AsmCmd[] =
 {
-  "sdaspdk14", "$l", "$3", "\"$1.asm\"", NULL
+  "sdaspdk13", "$l", "$3", "\"$1.asm\"", NULL
 };
 
 static const char *const _libs_pdk13[] = { "pdk13", NULL, };
@@ -253,13 +254,13 @@ PORT pdk13_port =
   },
   {                             /* Peephole optimizer */
     pdk_defaultRules,
+    pdkinstructionSize,
     0,
     0,
     0,
+    pdknotUsed,
     0,
-    0,
-    0,
-    0,
+    pdknotUsedFrom,
     0,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
@@ -419,13 +420,13 @@ PORT pdk14_port =
   },
   {                             /* Peephole optimizer */
     pdk_defaultRules,
+    pdkinstructionSize,
     0,
     0,
     0,
+    pdknotUsed,
     0,
-    0,
-    0,
-    0,
+    pdknotUsedFrom,
     0,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
@@ -585,13 +586,13 @@ PORT pdk15_port =
   },
   {                             /* Peephole optimizer */
     pdk_defaultRules,
+    pdkinstructionSize,
     0,
     0,
     0,
+    pdknotUsed,
     0,
-    0,
-    0,
-    0,
+    pdknotUsedFrom,
     0,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
