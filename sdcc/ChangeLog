@@ -1,7 +1,129 @@
+2019-11-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/gcc-torture-execute-20181120-1.c:
+	  Fix bug #2947.
+	* src/SDCC.lex,
+	  support/regression/tests/c2xkeywords.c:
+	  Support C2X keyword from N2457.
+
+2019-11-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/gcc-torture-execute-*:
+	  Add more GCC tests, RFE #652.
+
+2019-11-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph-z80.def,
+	  src/z80/peeph-tlcs90.def,
+	  src/z80/peeph-r2k.def,
+	  src/z80/peeph-gbz80.def:
+	  Improve fix for bug #2914.
+
+2019-11-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.lex,
+	  src/SDCCval.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c:
+	  C2X u8 character constants (N2418).
+
+2019-11-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.cc,
+	  support/regression/tests/bug-2942.c:
+	  Fix bug #2942.
+
+2019-11-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/ports/pdk15-stack-auto/spec.mk:
+	  Increase timeout for regression testing on ARMv6.
+
+2019-11-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCClrange.c:
+	  Allow more live-range shortening for stm8, pdk.
+
+2019-11-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c:
+	  Improve wide & by small constants and register result.
+	* src/SDCCsymt.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  support/valdiag/tests/bug-2940.c:
+	  Fix bug #2940.
+
+2019-11-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c:
+	  Fix a bug in optimization of tail calls in interrupt handlers.
+
+2019-11-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/scripts/sdcc.nsi:
+	  Fix Windows installation of pdk13 and pdk15-stack-auto files.
+
+2019-11-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/sdbinutils/binutils/Makefile.am,
+	  support/sdbinutils/binutils/Makefile.in: prefer static linked libz
+	  for the Windows snapshot builds so that we don't need another DLL
+
+2019-11-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  src/SDCCopt.c,
+	  support/regression/tests/bug-2907.c:
+	  Fix bug #2907.
+	* support/regression/ports/pdk15-stack-auto/spec.mk:
+	  Increase timeout for regression testing on ARMv6.
+
+2019-10-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fix handling of rematerialized pointers to the stack in y.
+
+2019-10-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c:
+	  Various small improvements.
+
+2019-10-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c,
+	  src/pdk/gen.c:
+	  Improve ! of bool.
+
+2019-10-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c:
+	  Register shuffling fix, small | improvement.
+
+2019-10-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix an issue in stack operands of shifts.
+	* support/regression/tests/gcc-torture-execute-20000113-1.c,
+	  support/regression/tests/gcc-torture-execute-950511-1.c,
+	  support/regression/tests/gcc-torture-execute-pr42833.c:
+	  Disable tests failing due to known bugs.
+
+2019-10-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c:
+	  Fix a typo that resulted in comp being emitted for pdk13.
+
 2019-10-19 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/pdk15-stack-auto/__setjmp.s:
 	  Fix bug #2934.
+	* src/pdk/gen.c:
+	  Fix 3 issues in handling of non-dead p.
 
 2019-10-16 Philipp Klaus Krause <pkk AT spth.de>
 
