@@ -50,7 +50,7 @@ typedef boost::container::flat_set<unsigned int> lospreset_t;
 struct assignment_lospre
 {
   boost::tuple<float, float> s; // First entry: Calculation costs, second entry: Lifetime costs.
-  /*std::vector<bool>*/std::valarray<bool> global;
+  std::valarray<bool> global; // Much faster than std::vector here, due to being able to use |=. TODO: Port this optimization back to trunk?
 
   bool less(const assignment_lospre& a, const lospreset_t &local) const
   {

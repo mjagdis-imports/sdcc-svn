@@ -706,8 +706,9 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
   if(options.dump_graphs && !elim_only)
     dump_bbcfg_mcpre_(cfg);
 
-  // 1. Data-flow analysis (step 3.1 of MC-PRE_comp)
-  // 3.1a forward
+  // Numbering according to Figure 5 MC-PRE of the MC-PRE paper. Where relevant numbering from Figure 3 MC-PRE_comp is shown in parentheses)
+  // 1. (3.1) Data-flow analysis
+  // (3.1a) forward
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       cfg[i].n_aval = true;
@@ -736,7 +737,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
             change = true;
         }
     }
-  // 3.1b backward
+  // (3.1b) backward
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       cfg[i].x_pant = false;
@@ -761,9 +762,9 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
         }
     }
 
-  // 2. Obtain G_rd (step 3.2 of MC-PRE_comp)
+  // 2. (3.2) Obtain G_rd
   bbcfg_red_mcpre_t G_rd;
-  // 3.2a
+  // (3.2a)
   {
     edge_iter_t e, e_end;
     for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
@@ -774,7 +775,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
         cfg[*e].ess = !cfg[*e].non_ess;
       }
   }
-  // 3.2b
+  // (3.2b)
   {
     for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
       cfg[i].red_map = -1;
@@ -807,7 +808,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
   if(options.dump_graphs && !elim_only)
     dump_bbcfg_red_mcpre_(G_rd);
 
-  // 3. Obtain G_mm (step 3.3 of MC-PRE_comp)
+  // 3. (3.3) Obtain G_mm
   bbcfg_red2_mcpre_t G;
   unsigned int s_mm, t_mm;
   {
@@ -815,7 +816,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
 
     unsigned int n = boost::num_vertices(G_rd);
     edge_iter_t e, e_end;
-  // 3.3a
+  // (3.3a)
     for (unsigned int i = 0; i < boost::num_vertices(G_rd); i++)
       {
         G_rd[i].top = cfg[G_rd[i].red_map_inv].antloc && in_degree(i, G_rd);
@@ -826,7 +827,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
 
     for(boost::tie(e, e_end) = boost::edges(G_rd); e != e_end; ++e)
       G_rd[*e].gamma = std::pair<int, int>(G_rd[boost::source(*e, G_rd)].bot_part, G_rd[boost::target(*e, G_rd)].top_part);
-  // 3.3b
+  // (3.3b)
     for (unsigned int i = 0; i < n; i++)
       boost::add_vertex(G);
     for(boost::tie(e, e_end) = boost::edges(G_rd); e != e_end; ++e)
@@ -843,7 +844,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
       }
   }
 
-  // 4. Obtain G_st (step 3.4 of MC-PRE_comp)
+  // 4. (3.4) Obtain G_st
   int s, t;
   {
     unsigned int n = boost::num_vertices(G);
@@ -973,9 +974,11 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
         }
     }
 
+#if 0
   for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
     if(cfg[*e].c_lambda)
       std::cout << "C_Lambda edge in CFG: (" << boost::source(*e, cfg) << ", " << boost::target(*e, cfg) << ")\n";
+#endif
 
   // 7.
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
@@ -984,7 +987,7 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
       cfg[i].d_insdel = (cfg[i].avloc && cfg[i].kill) && !cfg[i].d_isolated;
     }
 
-  // 8. TODO
+  // 8.
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
     {
       in_iter_t in, in_end;
@@ -998,12 +1001,12 @@ int bb_mcpre(bbcfg_mcpre_t &cfg, const iCode *ic, const bool elim_only)
 
   // Output result.
   for(boost::tie(e, e_end) = boost::edges(cfg); e != e_end; ++e)
-{
+    {
     //if(cfg[*e].c_lambda)
     //   std::cout << "Edge: (" << boost::source(*e, cfg) << ", " << boost::target(*e, cfg) << ") target u_isolated: " << cfg[boost::target(*e, cfg)].u_isolated << ", x_live: " << cfg[boost::target(*e, cfg)].x_live << "\n";
-    if(cfg[*e].u_ins)
-      std::cout << "mc-pre would insert calculation at (" << boost::source(*e, cfg) << ", " << boost::target(*e, cfg) << ")\n";
-}
+      if(cfg[*e].u_ins)
+        std::cout << "mc-pre would insert calculation at (" << boost::source(*e, cfg) << ", " << boost::target(*e, cfg) << ")\n";
+    }
 
   return(0);
 }
