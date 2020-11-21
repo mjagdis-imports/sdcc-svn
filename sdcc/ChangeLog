@@ -1,3 +1,9 @@
+2020-11-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.cc,
+	  src/SDCClospre.hpp:
+	  Fix some issues introduced in previous merges.
+
 2020-01-23 Philipp Klaus Krause <pkk AT spth.de>
 
 	* sdas/linksrc/Makefile.in:

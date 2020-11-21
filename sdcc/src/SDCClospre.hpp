@@ -187,7 +187,7 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
   std::set_difference(T[t].bag.begin(), T[t].bag.end(), T[*c].bag.begin(), T[*c].bag.end(), std::inserter(new_inst, new_inst.end()));
   unsigned int i = *(new_inst.begin());
 
-  for(ai = alist.begin(); ai != alist.end();)
+  for(ai = alist.begin(); ai != alist.end(); ++ai)
     {
       ai->local.insert(i);
       for(unsigned short int j = 0; j <= maxval; j++)

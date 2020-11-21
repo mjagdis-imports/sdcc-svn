@@ -211,6 +211,9 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   // TODO: Replace the current one  by a more exact mechanism, that takes into account information from
   // (not yet implemented) generalized constant propagation, pointer analysis, etc.
 
+  const operand *const eleft = IC_LEFT (eic);
+  const operand *const eright = IC_RIGHT (eic);
+
   // Function calls can have any side effects.
   if (eic->op == CALL || eic->op == PCALL)
     safety_required = true;
@@ -239,7 +242,9 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   for (vertex_t i = 0; i < boost::num_vertices (*cfg); i++)
     {
        const iCode *const ic = (*cfg)[i].ic;
-
+       
+       const operand *const result = IC_RESULT (ic);
+  
        (*cfg)[i].uses = same_expression (eic, ic);
 
        (*cfg)[i].invalidates = false;
@@ -255,7 +260,7 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
            (*cfg)[i].i_writes[0] = (eleft && isOperandEqual (eleft, result));
            (*cfg)[i].i_writes[bool(eleft)] = (eright && isOperandEqual (eright, result));
          }
-       (*cfg)[i].invalidates | invalidates_expression (eic, ic);
+       (*cfg)[i].invalidates = invalidates_expression (eic, ic);
 
        (*cfg)[i].i_uses[0] = !(*cfg)[i].uses && (eleft && (IC_LEFT(ic) && isOperandEqual (eleft, IC_LEFT (ic)) || IC_RIGHT(ic) && isOperandEqual (eleft, IC_RIGHT (ic))) || POINTER_SET(ic) && isOperandEqual (eleft, IC_RESULT (ic)));
        (*cfg)[i].i_uses[bool(eleft)] = !(*cfg)[i].uses && (eright && (IC_LEFT(ic) && isOperandEqual (eright, IC_LEFT (ic)) || IC_RIGHT(ic) && isOperandEqual (eright, IC_RIGHT (ic))) || POINTER_SET(ic) && isOperandEqual (eright, IC_RESULT (ic)));
