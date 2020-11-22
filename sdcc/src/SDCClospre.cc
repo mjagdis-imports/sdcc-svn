@@ -175,7 +175,7 @@ invalidates_expression(const iCode *const eic, const iCode *const iic)
     return(true);
   if (eic->op == ADDRESS_OF) // ADDRESS_OF does not really read its operand.
     return(false);
-  if (eic->op == GET_VALUE_AT_ADDRESS && (isOperandGlobal (IC_RESULT (iic)) || IS_SYMOP (IC_RESULT (iic)) && OP_SYMBOL_CONST (IC_RESULT (iic))->addrtaken))
+  if (eic->op == GET_VALUE_AT_ADDRESS && (isOperandGlobal (IC_RESULT (iic)) || IS_SYMOP (IC_RESULT (iic)) && OP_SYMBOL_CONST (IC_RESULT (iic))->addrtaken)) // TODO: More accuracy here!
     return(true);
   if (IC_RESULT (iic) && !IS_OP_LITERAL (result) && !POINTER_SET(iic) &&
     (eleft && isOperandEqual (eleft, result) || eright && isOperandEqual (eright, result)))

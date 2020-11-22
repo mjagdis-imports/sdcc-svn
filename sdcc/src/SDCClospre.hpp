@@ -52,9 +52,6 @@ static unsigned short int maxval;
 
 static int leftsize, rightsize, resultsize;
 
-// #define DEBUG_LOSPRE
-// #define DEBUG_LOSPRE_ASS
-
 struct assignment_lospre
 {
   boost::tuple<float, float> s; // First entry: Calculation costs, second entry: Lifetime costs.
