@@ -25,21 +25,22 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
 
 // cmd.src
-#include "newcmdcl.h"
-#include "cmdutil.h"
+//#include "newcmdcl.h"
+//#include "cmdutil.h"
 #include "cmd_uccl.h"
 #include "cmd_bpcl.h"
 #include "cmd_getcl.h"
@@ -51,9 +52,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // local, sim.src
 #include "uccl.h"
-#include "hwcl.h"
-#include "memcl.h"
-#include "simcl.h"
+//#include "hwcl.h"
+//#include "memcl.h"
+//#include "simcl.h"
 #include "itsrccl.h"
 #include "simifcl.h"
 #include "vcdcl.h"
@@ -125,6 +126,27 @@ cl_xtal_option::option_changed(void)
   uc->xtal= d;
 }
 
+cl_stop_selfjump_option::cl_stop_selfjump_option(class cl_uc *the_uc):
+  cl_optref(the_uc)
+{
+  uc= the_uc;
+}
+
+int
+cl_stop_selfjump_option::init(void)
+{
+  cl_optref::init();
+  create(uc, bool_opt, "selfjump_stop", "Stop when jump branches to itself");
+  return 0;
+}
+
+void
+cl_stop_selfjump_option::option_changed(void)
+{
+  bool b;
+  option->get_value(&b);
+  uc->stop_selfjump= b;
+}
 
 /* Time measurer */
 
@@ -336,6 +358,8 @@ cl_uc::cl_uc(class cl_sim *asim):
   //for (i= MEM_ROM; i < MEM_TYPES; i++) mems->add(0);
   xtal_option= new cl_xtal_option(this);
   xtal_option->init();
+  stop_selfjump_option= new cl_stop_selfjump_option(this);
+  stop_selfjump_option->init();
   ticks= new cl_ticker(+1, 0, "time");
   isr_ticks= new cl_ticker(+1, TICK_INISR, "isr");
   idle_ticks= new cl_ticker(+1, TICK_IDLE, "idle");
@@ -389,11 +413,13 @@ cl_uc::init(void)
     xtal= xtal_option->get_value(xtal);
   else
     xtal= 11059200;
+  stop_selfjump= false;
+  stop_selfjump_option->option->set_value(stop_selfjump);
   vars= new cl_var_list();
   make_variables();
   make_memories();
   if (rom == NULL)
-    rom= address_space(cchars("rom")/*MEM_ROM_ID*/);
+    rom= address_space("rom"/*MEM_ROM_ID*/);
   ebrk= new brk_coll(2, 2, rom);
   fbrk= new brk_coll(2, 2, rom);
   fbrk->Duplicates= false;
@@ -409,7 +435,7 @@ cl_uc::init(void)
   return 0;
   for (i= 0; i < sim->app->in_files->count; i++)
     {
-      char *fname= (char *)(sim->app->in_files->at(i));
+      const char *fname= (const char *)(sim->app->in_files->at(i));
       long l;
       if ((l= read_hex_file(fname)) >= 0)
 	{
@@ -420,10 +446,10 @@ cl_uc::init(void)
   return(0);
 }
 
-char *
+const char *
 cl_uc::id_string(void)
 {
-  return((char*)"unknown microcontroller");
+  return("unknown microcontroller");
 }
 
 void
@@ -798,7 +824,7 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
  */
 
 t_mem
-cl_uc::read_mem(char *id, t_addr addr)
+cl_uc::read_mem(const char *id, t_addr addr)
 {
   class cl_address_space *m= address_space(id);
 
@@ -806,7 +832,7 @@ cl_uc::read_mem(char *id, t_addr addr)
 }
 
 t_mem
-cl_uc::get_mem(char *id, t_addr addr)
+cl_uc::get_mem(const char *id, t_addr addr)
 {
   class cl_address_space *m= address_space(id);
 
@@ -814,7 +840,7 @@ cl_uc::get_mem(char *id, t_addr addr)
 }
 
 void
-cl_uc::write_mem(char *id, t_addr addr, t_mem val)
+cl_uc::write_mem(const char *id, t_addr addr, t_mem val)
 {
   class cl_address_space *m= address_space(id);
 
@@ -823,7 +849,7 @@ cl_uc::write_mem(char *id, t_addr addr, t_mem val)
 }
 
 void
-cl_uc::set_mem(char *id, t_addr addr, t_mem val)
+cl_uc::set_mem(const char *id, t_addr addr, t_mem val)
 {
   class cl_address_space *m= address_space(id);
 
@@ -990,7 +1016,9 @@ cl_uc::set_rom(t_addr addr, t_mem val)
       d->activate(NULL);
     }
   else
-    ;//printf("no decoder at %lx\n", caddr);
+    {
+      //printf("no decoder at %lx\n", caddr);
+    }
 }
 
 long
@@ -1164,11 +1192,62 @@ cl_uc::read_omf_file(cl_f *f)
 }
 
 long
+cl_uc::read_asc_file(cl_f *f)
+{
+  int c;
+  chars line= chars();
+  bool in;
+  t_addr addr= 0;
+  
+  in= true;
+  while ((c= f->get_c()) &&
+	 (!f->eof()))
+    {
+      if (in)
+	{
+	  if ((c=='\n') || (c=='\r'))
+	    {
+	      in= false;
+	      {
+		chars word= chars();
+		const char *s;
+		// process
+		line.trim();
+		line.start_parse();
+		word= line.token(" ");
+		s= word.c_str();
+		if (isxdigit(*s))
+		  {
+		    t_mem d= strtoll(s, 0, 16);
+		    set_rom(addr, d);
+		    addr++;
+		  }
+		line= "";
+	      }
+	    }
+	  else
+	    line.append(c);
+	}
+      else // out
+	{
+	  if ((c=='\n') || (c=='\r'))
+	    ;
+	  else
+	    {
+	      in= true;
+	      line.append(c);
+	    }
+	}
+    }
+  return addr;
+}
+  
+long
 cl_uc::read_cdb_file(cl_f *f)
 {
   class cl_cdb_recs *fns= new cl_cdb_recs();
   chars ln;
-  char *lc;
+  const char *lc;
   long cnt= 0;
   class cl_cdb_rec *r;
   class cl_var *v;
@@ -1176,8 +1255,8 @@ cl_uc::read_cdb_file(cl_f *f)
   ln= f->get_s();
   while (!ln.empty())
     {
-      //printf("CBD LN=%s\n",(char*)ln);
-      lc= (char*)ln;
+      //printf("CBD LN=%s\n",ln.c_str());
+      lc= ln.c_str();
       if (lc[0] == 'F')
 	{
 	  if (ln.len() > 5)
@@ -1210,7 +1289,7 @@ cl_uc::read_cdb_file(cl_f *f)
 		  chars n= ln.token("$");
 		  chars t= ln.token(":");
 		  t= ln.token(" ");
-		  t_addr a= strtol((char*)t, 0, 16);
+		  t_addr a= strtol(t.c_str(), 0, 16);
 		  if ((r= fns->rec(n)) != NULL)
 		    {
 		      fns->del(n);
@@ -1242,24 +1321,29 @@ cl_uc::find_loadable_file(chars nam)
   if (o)
     return f;
 
-  c= chars("", "%s.ihx", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.asc", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
-  c= chars("", "%s.hex", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.ihx", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
-  c= chars("", "%s.ihex", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.hex", nam.c_str());
+  f->open(c, "r");
+  o= (f->opened());
+  if (o)
+    return f;
+  c= chars("", "%s.ihex", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
 
-  c= chars("", "%s.omf", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.omf", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
@@ -1280,6 +1364,11 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
       return 0;
     }
   /*if (con) con->dd_*/printf("Loading from %s\n", f->get_file_name());
+  if (is_asc_file(f))
+    {
+      l= read_asc_file(f);
+      printf("%ld words read from %s\n", l, f->get_fname());
+    }
   if (is_hex_file(f))
     {
       l= read_hex_file(f);
@@ -1298,7 +1387,7 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
   if (strcmp(nam, f->get_fname()) != 0)
     {
       chars n= nam;
-      n+= (char*)".cdb";
+      n+= ".cdb";
       cl_f *c= mk_io(n, "r");
       if (c->opened())
 	{
@@ -1444,7 +1533,7 @@ cl_uc::get_hw(enum hw_cath cath, int *idx)
 }
 
 class cl_hw *
-cl_uc::get_hw(char *id_string, int *idx)
+cl_uc::get_hw(const char *id_string, int *idx)
 {
   class cl_hw *hw= 0;
   int i= 0;
@@ -1486,7 +1575,7 @@ cl_uc::get_hw(enum hw_cath cath, int hwid, int *idx)
 }
 
 class cl_hw *
-cl_uc::get_hw(char *id_string, int hwid, int *idx)
+cl_uc::get_hw(const char *id_string, int hwid, int *idx)
 {
   class cl_hw *hw;
   int i= 0;
@@ -1535,11 +1624,7 @@ cl_uc::dis_tbl(void)
 char *
 cl_uc::disass(t_addr addr, const char *sep)
 {
-  char *buf;
-
-  buf= (char*)malloc(100);
-  strcpy(buf, "uc::disass() unimplemented\n");
-  return(buf);
+  return strdup("uc::disass() unimplemented\n");
 }
 
 void
@@ -1732,7 +1817,7 @@ cl_uc::symbolic_bit_name(t_addr bit_address,
       }*/
   /*sym_name= (char *)realloc(sym_name, strlen(sym_name)+2);
     strcat(sym_name, ".");*/
-  c+= cchars(".");
+  c+= ".";
   i= 0;
   while (bit_mask > 1)
     {
@@ -1742,8 +1827,8 @@ cl_uc::symbolic_bit_name(t_addr bit_address,
   //char bitnumstr[10];
   /*sprintf(bitnumstr, "%1d", i);
     strcat(sym_name, bitnumstr);*/
-  c.append("%d", i);
-  return(/*sym_name*/strdup((char*)c));
+  c.appendf("%d", i);
+  return(/*sym_name*/strdup(c.c_str()));
 }
 
 
@@ -2136,20 +2221,40 @@ cl_uc::do_inst(int step)
   if (step < 0)
     step= 1;
   while (step-- &&
-         res == resGO)
+         res == resGO &&
+	 (
+	  (state == stGO) || (state == stIDLE)
+	  )
+	 )
     {
-      pre_inst();
-      PCsave = PC;
-      res= exec_inst();
+      if (state == stGO)
+	{
+	  pre_inst();
+	  PCsave = PC;
+	  res= exec_inst();
 
-      if (res == resINV_INST)
-	/* backup to start of instruction */
-	PC = PCsave;
+	  if (res == resINV_INST)
+	    /* backup to start of instruction */
+	    PC = PCsave;
+	  
+	  post_inst();
+	}
+      else
+	{
+	  inst_ticks= 1;
+	  post_inst();
+	  tick(1);
+	}
+
+      if ((res == resGO) && (PC == PCsave) && stop_selfjump)
+	{
+	  res= resSELFJUMP;
+	  sim->stop(res);
+	  break;
+	}
       
-      post_inst();
-
       if ((res == resGO) &&
-	  irq)
+	  1/*irq*/)
 	{
 	  //printf("DO INTERRUPT PC=%lx\n", PC);
 	  int r= do_interrupt();
@@ -2244,9 +2349,10 @@ cl_uc::do_interrupt(void)
   for (i= 0; i < it_sources->count; i++)
     {
       class cl_it_src *is= (class cl_it_src *)(it_sources->at(i));
-       if (is->is_active() &&
-	  is->enabled() &&
-	  is->pending())
+      bool A= is->is_active();
+      bool E= is->enabled();
+      bool P= is->pending();
+      if (A && E && P)
 	{
 	  int pr= priority_of(is->nuof);
 	  int ap;
@@ -2257,7 +2363,11 @@ cl_uc::do_interrupt(void)
 	  else
 	    ap= priority_main();
 	  if (ap >= pr)
-	    continue;
+	    {
+	      continue;
+	    }
+	  if (state == stIDLE)
+	    state= stGO;
 	  is->clear();
 	  sim->app->get_commander()->
 	    debug("%g sec (%d clks): Accepting interrupt `%s' PC= 0x%06x\n",
@@ -2323,6 +2433,7 @@ cl_uc::touch(void)
 void
 cl_uc::stack_write(class cl_stack_op *op)
 {
+  stack_check_overflow(op);
   delete op;
   return ;
   if (op->get_op() & stack_read_operation)
@@ -2418,6 +2529,12 @@ cl_uc::stack_read(class cl_stack_op *op)
   delete op;
 }
 
+void
+cl_uc::stack_check_overflow(class cl_stack_op *op)
+{
+}
+
+  
 /*
  * Breakpoint handling
  */
@@ -2592,18 +2709,17 @@ cl_error_unknown_code::cl_error_unknown_code(class cl_uc *the_uc)
 void
 cl_error_unknown_code::print(class cl_commander_base *c)
 {
-  //FILE *f= c->get_out();
-  /*cmd_fprintf(f,*/c->dd_printf("%s: unknown instruction code at ", get_type_name());
+  c->dd_printf("%s: unknown instruction code at ", get_type_name());
   if (uc->rom)
     {
-      /*cmd_fprintf(f,*/c->dd_printf(uc->rom->addr_format, PC);
-      /*cmd_fprintf(f,*/c->dd_printf(" (");
-      /*cmd_fprintf(f,*/c->dd_printf(uc->rom->data_format, uc->rom->get(PC));
-      /*cmd_fprintf(f,*/c->dd_printf(")");
+      c->dd_printf(uc->rom->addr_format, PC);
+      c->dd_printf(" (");
+      c->dd_printf(uc->rom->data_format, uc->rom->get(PC));
+      c->dd_printf(")");
     }
   else
-    /*cmd_fprintf(f,*/c->dd_printf("0x%06x", AU(PC));
-  /*cmd_fprintf(f,*/c->dd_printf("\n");
+    c->dd_printf("0x%06x", AU(PC));
+  c->dd_printf("\n");
 }
 
 

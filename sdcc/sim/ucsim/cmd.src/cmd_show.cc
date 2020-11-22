@@ -25,18 +25,19 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
-#include "errorcl.h"
+//#include "errorcl.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "cmd_showcl.h"
@@ -211,7 +212,7 @@ CMDHELP(cl_show_error_cmd,
 	"Show class of errors",
 	"long help of show error")
 
-#include "newcmdposixcl.h"
+//#include "newcmdposixcl.h"
 
 /*
  * Command: show console
@@ -223,9 +224,9 @@ print_fio_info(class cl_console_base *con, class cl_f *ff)
 {
   if (ff)
     {
-      char *n= ff->get_file_name();
-      chars t= fio_type_name(ff->type);
-      con->dd_printf("\"%s\",%s,", n, (char*)t);
+      const char *n= ff->get_file_name();
+      const char *t= fio_type_name(ff->type);
+      con->dd_printf("\"%s\",%s,", n, t);
       con->dd_printf("%d,%d,", ff->file_id, ff->server_port);
       con->dd_printf("%s,%s",
 		     ff->tty?"tty":"non-tty",

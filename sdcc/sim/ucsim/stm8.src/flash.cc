@@ -26,6 +26,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /*@1@*/
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "globals.h"
 
@@ -104,14 +105,14 @@ cl_flash::init(void)
   return 0;
 }
 
-char *
+const char *
 cl_flash::cfg_help(t_addr addr)
 {
   switch (addr)
     {
-    case stm8_flash_on: return (char*)"Turn simulation of flash on/off (bool, RW)";
+    case stm8_flash_on: return "Turn simulation of flash on/off (bool, RW)";
     }
-  return (char*)"Not used";
+  return "Not used";
 }
 
 int

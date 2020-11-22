@@ -25,13 +25,15 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
+#include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
-#include "stypes.h"
+//#include "stypes.h"
 #include "globals.h"
 
 #include "hwcl.h"
@@ -65,7 +67,7 @@ cl_hw::cl_hw(class cl_uc *auc, enum hw_cath cath, int aid, const char *aid_strin
 
 cl_hw::~cl_hw(void)
 {
-  free((void*)id_string);
+  free(const_cast<char *>(id_string));
   delete partners;
 }
 
@@ -81,7 +83,7 @@ cl_hw::init(void)
   snprintf(s, 99, "%d", id);
   n+= '_';
   n+= s;
-  n+= cchars("_cfg");
+  n+= "_cfg";
 
   cfg= new cl_address_space(n, 0, cfg_size(), sizeof(t_mem)*8);
   cfg->init();
@@ -160,6 +162,14 @@ cl_hw::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
   return cell->get();
 }
 
+class cl_memory_cell *
+cl_hw::cfg_cell(t_addr addr)
+{
+  if (addr >= cfg_size())
+    return 0;
+  return cfg->get_cell(addr);
+}
+
 void
 cl_hw::cfg_set(t_addr addr, t_mem val)
 {
@@ -184,10 +194,10 @@ cl_hw::cfg_read(t_addr addr)
   return cfg->read(addr);
 }
 
-char *
+const char *
 cl_hw::cfg_help(t_addr addr)
 {
-  return (char*)"N/A";
+  return "N/A";
 }
 
 void
@@ -418,7 +428,7 @@ cl_hw::refresh_display(bool force)
 	io->dd_cprintf("ui_stop", "%s", "Stop");
       cache_run= n;
     }
-  unsigned int t= (unsigned int)(uc->get_rtime()) * 500;
+  unsigned int t= (unsigned int)(uc->get_rtime()) * 1000;
   if ((t != cache_time) ||
       force)
     {
@@ -451,7 +461,7 @@ cl_hw::draw_display(void)
   io->dd_cprintf("ui_label", "Time: ");
   io->tu_go(66,2);
   chars s("", "%s[%d]", id_string, id);
-  io->dd_cprintf("ui_title", "%-13s", (char*)s);
+  io->dd_cprintf("ui_title", "%-13s", s.c_str());
 }
 
 class cl_hw *

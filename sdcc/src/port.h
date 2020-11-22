@@ -30,6 +30,8 @@
 #define TARGET_ID_PDK14    20
 #define TARGET_ID_PDK15    21
 #define TARGET_ID_PDK16    22
+#define TARGET_ID_Z80N     23
+#define TARGET_ID_R2KA     24
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -43,10 +45,12 @@
 #define TARGET_IS_Z80      (port->id == TARGET_ID_Z80)
 #define TARGET_IS_Z180     (port->id == TARGET_ID_Z180)
 #define TARGET_IS_R2K      (port->id == TARGET_ID_R2K)
+#define TARGET_IS_R2KA     (port->id == TARGET_ID_R2KA)
 #define TARGET_IS_R3KA     (port->id == TARGET_ID_R3KA)
 #define TARGET_IS_GBZ80    (port->id == TARGET_ID_GBZ80)
 #define TARGET_IS_TLCS90   (port->id == TARGET_ID_TLCS90)
 #define TARGET_IS_EZ80_Z80 (port->id == TARGET_ID_EZ80_Z80)
+#define TARGET_IS_Z80N     (port->id == TARGET_ID_Z80N)
 #define TARGET_IS_HC08     (port->id == TARGET_ID_HC08)
 #define TARGET_IS_S08      (port->id == TARGET_ID_S08)
 #define TARGET_IS_STM8     (port->id == TARGET_ID_STM8)
@@ -56,8 +60,8 @@
 #define TARGET_IS_PDK16    (port->id == TARGET_ID_PDK16)
 
 #define TARGET_MCS51_LIKE  (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_IS_DS400)
-#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GBZ80 || TARGET_IS_R2K || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80)
-#define TARGET_IS_RABBIT   (TARGET_IS_R2K || TARGET_IS_R3KA)
+#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GBZ80 || TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N)
+#define TARGET_IS_RABBIT   (TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA)
 #define TARGET_HC08_LIKE   (TARGET_IS_HC08 || TARGET_IS_S08)
 #define TARGET_PIC_LIKE    (TARGET_IS_PIC14 || TARGET_IS_PIC16)
 #define TARGET_PDK_LIKE    (TARGET_IS_PDK13 || TARGET_IS_PDK14 || TARGET_IS_PDK15 || TARGET_IS_PDK16)
@@ -172,6 +176,8 @@ typedef struct
     bool (*canAssign) (const char *op1, const char *op2, const char *op3);
     bool (*notUsedFrom) (const char *reg, const char *label, lineNode *head);
     bool (*symmParmStack) (void);
+    bool (*canJoinRegs) (const char **regs, char dst[20]);
+    bool (*canSplitReg) (const char *reg, char dst[][16], int nDst);
   }
   peep;
 
@@ -208,13 +214,8 @@ typedef struct
   {
     const char *const xstack_name;
     const char *const istack_name;
-    /*
-     * The following 2 items can't be const pointers
-     * due to ugly implementation in gbz80 target;
-     * this should be fixed in src/z80/main.c (borutr)
-     */
-    const char *code_name;
-    const char *data_name;
+    const char *const code_name;
+    const char *const data_name;
     const char *const idata_name;
     const char *const pdata_name;
     const char *const xdata_name;
@@ -430,10 +431,13 @@ extern PORT z80_port;
 extern PORT z180_port;
 #endif
 #if !OPT_DISABLE_R2K
-extern PORT r2k_port;  /* Rabbit 2000/3000 */
+extern PORT r2k_port;  // Rabbit 2000
+#endif
+#if !OPT_DISABLE_R2KA
+extern PORT r2ka_port; // Rabbit 2000A, 2000C, 2000C, 3000
 #endif
 #if !OPT_DISABLE_R3KA
-extern PORT r3ka_port; /* Rabbit 3000A */
+extern PORT r3ka_port; // Rabbit 3000A
 #endif
 #if !OPT_DISABLE_GBZ80
 extern PORT gbz80_port;
@@ -443,6 +447,9 @@ extern PORT tlcs90_port;
 #endif
 #if !OPT_DISABLE_EZ80_Z80
 extern PORT ez80_z80_port;
+#endif
+#if !OPT_DISABLE_Z80N
+extern PORT z80n_port;
 #endif
 #if !OPT_DISABLE_AVR
 extern PORT avr_port;

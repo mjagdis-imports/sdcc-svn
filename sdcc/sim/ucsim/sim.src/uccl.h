@@ -78,6 +78,16 @@ public:
   virtual void option_changed(void);
 };
 
+class cl_stop_selfjump_option: public cl_optref
+{
+protected:
+  class cl_uc *uc;
+public:
+  cl_stop_selfjump_option(class cl_uc *the_uc);
+  virtual int init(void);
+  virtual void option_changed(void);
+};
+
 struct vcounter_t {
   t_mem inst;
   t_mem fetch;
@@ -166,20 +176,20 @@ class cl_cdb_recs: public cl_sorted_list
 {
  public:
  cl_cdb_recs(): cl_sorted_list(2,2,"cdb_recs_list") {}
-  virtual void *key_of(void *item)
-  { return (char*)(((cl_cdb_rec *)item)->fname); }
-  virtual int compare(void *k1, void *k2) {
-    return strcmp((char*)k1,(char*)k2);
+  virtual const void *key_of(const void *item) const
+  { return (((const cl_cdb_rec *)item)->fname); }
+  virtual int compare(const void *k1, const void *k2) {
+    return strcmp((const char*)k1,(const char*)k2);
   }
   virtual cl_cdb_rec *rec(chars n) {
     t_index i;
-    if (search((char*)n, i))
+    if (search(n, i))
       return (cl_cdb_rec*)(at(i));
     return NULL;
   }
   virtual void del(chars n) {
     t_index i;
-    if (search((char*)n,i))
+    if (search(n,i))
       free_at(i);
   }
 };
@@ -195,7 +205,8 @@ public:
   int state;			// GO, IDLE, PD
   //class cl_list *options;
   class cl_xtal_option *xtal_option;
-
+  class cl_stop_selfjump_option *stop_selfjump_option;
+  
   t_addr PC, instPC;		// Program Counter
   bool inst_exec;		// Instruction is executed
   class cl_ticker *ticks;	// Nr of XTAL clocks
@@ -205,6 +216,7 @@ public:
   int inst_ticks;		// ticks of an instruction
   double xtal;			// Clock speed
   struct vcounter_t vc;		// Virtual clk counter
+  bool stop_selfjump;		// Whether it should stop on selfjump
   
   int brk_counter;		// Number of breakpoints
   class brk_coll *fbrk;		// Collection of FETCH break-points
@@ -239,9 +251,10 @@ public:
   cl_uc(class cl_sim *asim);
   virtual ~cl_uc(void);
   virtual int init(void);
-  virtual char *id_string(void);
+  virtual const char *id_string(void);
   virtual void reset(void);
-
+  virtual void set_PC(t_addr addr) { PC= addr; }
+  
   // making objects
   virtual void make_memories(void);
   virtual void make_variables(void);
@@ -250,10 +263,10 @@ public:
   virtual void build_cmdset(class cl_cmdset *cmdset);
 
   // manipulating memories
-  virtual t_mem read_mem(char *id, t_addr addr);
-  virtual t_mem get_mem(char *id, t_addr addr);
-  virtual void write_mem(char *id, t_addr addr, t_mem val);
-  virtual void set_mem(char *id, t_addr addr, t_mem val);
+  virtual t_mem read_mem(const char *id, t_addr addr);
+  virtual t_mem get_mem(const char *id, t_addr addr);
+  virtual void write_mem(const char *id, t_addr addr, t_mem val);
+  virtual void set_mem(const char *id, t_addr addr, t_mem val);
   virtual class cl_address_space *address_space(const char *id);
   virtual class cl_address_space *address_space(class cl_memory_cell *cell);
   virtual class cl_address_space *address_space(class cl_memory_cell *cell, t_addr *addr);
@@ -265,6 +278,7 @@ public:
   virtual long read_hex_file(cl_console_base *con);
   virtual long read_hex_file(cl_f *f);
   virtual long read_omf_file(cl_f *f);
+  virtual long read_asc_file(cl_f *f);
   virtual long read_cdb_file(cl_f *f);
   virtual cl_f *find_loadable_file(chars nam);
   virtual long read_file(chars nam, class cl_console_base *con);
@@ -281,9 +295,9 @@ public:
   virtual int nuof_hws(void);
   virtual class cl_hw *get_hw(int idx);
   virtual class cl_hw *get_hw(enum hw_cath cath, int *idx);
-  virtual class cl_hw *get_hw(char *id_string, int *idx);
+  virtual class cl_hw *get_hw(const char *id_string, int *idx);
   virtual class cl_hw *get_hw(enum hw_cath cath, int hwid, int *idx);
-  virtual class cl_hw *get_hw(char *id_string, int hwid, int *idx);
+  virtual class cl_hw *get_hw(const char *id_string, int hwid, int *idx);
   virtual int get_max_hw_id(enum hw_cath cath);
   
   // "virtual" timers
@@ -321,7 +335,8 @@ public:
   // stack tracking
   virtual void stack_write(class cl_stack_op *op);
   virtual void stack_read(class cl_stack_op *op);
-
+  virtual void stack_check_overflow(class cl_stack_op *op);
+  
   // breakpoints
   virtual class cl_fetch_brk *fbrk_at(t_addr addr);
   virtual class cl_ev_brk *ebrk_at(t_addr addr, char *id);

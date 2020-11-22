@@ -26,30 +26,33 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
-#include <errno.h>
+//#include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <unistd.h>
+#include <string.h>
+
+//#include "i_string.h"
 
 //#include "cmdlexcl.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
-#include "fiocl.h"
+//#include "fiocl.h"
 
 // sim
-#include "simcl.h"
-#include "argcl.h"
-#include "appcl.h"
+//#include "simcl.h"
+//#include "argcl.h"
+//#include "appcl.h"
 
 // local
 #include "newcmdcl.h"
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 
 /*
@@ -237,11 +240,11 @@ cl_console_base::dd_cprintf(const char *color_name, const char *format, ...)
       )
     bw= true;
 
-  o= application->options->get_option((char*)chars("", "color_%s", color_name));
+  o= application->options->get_option(chars("", "color_%s", color_name));
   cc= NULL;
   if (o) o->get_value(&cc);
   cce= colopt2ansiseq(cc);
-  if (!bw) dd_printf("\033[0m%s", (char*)cce);
+  if (!bw) dd_printf("\033[0m%s", cce.c_str());
   
   va_start(ap, format);
   ret= cmd_do_print(format, ap);
@@ -260,7 +263,7 @@ cl_console_base::get_color_ansiseq(const char *color_name, bool add_reset)
   chars cce= "";
   class cl_f *fo= get_fout();
   class cl_option *o= application->options->get_option("black_and_white");
-  if (o) o->get_value(&cc);
+  if (o) o->get_value(&bw);
 
   if (!fo ||
       (fo &&
@@ -269,7 +272,7 @@ cl_console_base::get_color_ansiseq(const char *color_name, bool add_reset)
       )
     return cce;
 
-  o= application->options->get_option((char*)chars("", "color_%s", color_name));
+  o= application->options->get_option(chars("", "color_%s", color_name));
   cc= NULL;
   if (o) o->get_value(&cc);
   if (add_reset)
@@ -283,7 +286,7 @@ cl_console_base::get_color_ansiseq(const char *color_name, bool add_reset)
 void
 cl_console_base::dd_color(const char *color_name)
 {
-  dd_printf("%s", (char*)(get_color_ansiseq(color_name, true)));
+  dd_printf("%s", get_color_ansiseq(color_name, true).c_str());
 }
 
 int
@@ -354,7 +357,7 @@ cl_console_base::cmd_do_print(const char *format, va_list ap)
 	{
 	  return 0;
 	}
-      ret= fo->vprintf((char*)format, ap);
+      ret= fo->vprintf(format, ap);
       //fo->flush();
       return ret;
     }
@@ -379,7 +382,7 @@ cl_console_base::cmd_do_cprint(const char *color_name, const char *format, va_li
       )
     bw= true;
 
-  o= application->options->get_option((char*)chars("", "color_%s", color_name));
+  o= application->options->get_option(chars("", "color_%s", color_name));
   cc= NULL;
   if (o) o->get_value(&cc);
   cce= colopt2ansiseq(cc);
@@ -392,8 +395,8 @@ cl_console_base::cmd_do_cprint(const char *color_name, const char *format, va_li
 	{
 	  return 0;
 	}
-      if (!bw) fo->prntf("\033[0m%s", (char*)cce);
-      ret= fo->vprintf((char*)format, ap);
+      if (!bw) fo->prntf("\033[0m%s", cce.c_str());
+      ret= fo->vprintf(format, ap);
       if (!bw) fo->prntf("\033[0m");
       //fo->flush();
       return ret;
@@ -565,8 +568,8 @@ cl_console_base::proc_input(class cl_cmdset *cmdset)
 {
   int retval= 0, i, do_print_prompt= 1;
 
-  un_redirect();
-  char *cmdstr;
+  //un_redirect();
+  const char *cmdstr;
   i= read_line();
   if (i < 0)
     {
@@ -576,7 +579,7 @@ cl_console_base::proc_input(class cl_cmdset *cmdset)
     return 0;
   cmdstr= lbuf;
   if (cmdstr==NULL)
-    cmdstr= (char*)"";
+    cmdstr= "";
   if (is_frozen())
     {
       application->get_sim()->stop(resUSER);
@@ -596,6 +599,7 @@ cl_console_base::proc_input(class cl_cmdset *cmdset)
             dd_printf("%s\n", cmdstr);
 	  do
 	    {
+	      un_redirect();
 	      cmdline= new cl_cmdline(app, cmdstr, this);
 	      cmdline->init();
 	      if (cmdline->repeat() &&
@@ -921,7 +925,11 @@ cl_commander_base::input_avail_on_frozen(void)
 class cl_console_base *
 cl_commander_base::exec_on(class cl_console_base *cons, char *file_name)
 {
-  if (!cons || !file_name || !fopen(file_name, "r"))
+  FILE *dummy= fopen(file_name, "r");
+  bool oped= false;
+  if (dummy)
+    oped= true, fclose(dummy);
+  if (!cons || !file_name || !oped)
     return 0;
 
   class cl_console_base *subcon = cons->clone_for_exec(file_name);

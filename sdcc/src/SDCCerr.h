@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "SDCCset.h"
 
 /* ERROR Message Definition */
 
@@ -281,7 +282,14 @@ enum {
   E_U8_CHAR_INVALID             = 252, /* invalid u8 character constant */
   E_ATTRIBUTE_C2X               = 253, /* attribute requires ISO C2X or later */
   E_COMPOUND_LITERALS_C99       = 254, /* compound literals require ISO C99 or later */
-
+  E_THREAD_LOCAL                = 255, /* thread-local storage is not implemented */
+  E_ENUM_COMMA_C99              = 256, /* trailing comma after enumerator list requires ISO C99 or later */
+  E_OUTPUT_FILE_OPEN_ERR        = 257, /* Failed to open output file for writing (with error message) */
+  E_INPUT_FILE_OPEN_ERR         = 258, /* Failed to open input file for readin (with error message) */
+  W_SHIFT_NEGATIVE              = 259, /* shift by negative amount */
+  W_INVALID_STACK_LOCATION      = 260, /* access to invalid stack location */
+  W_BINARY_INTEGER_CONSTANT_C23 = 261, /* binary integer constant requires ISO C23 or later */
+  
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
 };
@@ -329,6 +337,7 @@ struct SDCCERRG {
   FILE *out;
   int style;                        /* 1=MSVC */
   int werror;                       /* treat the warnings as errors */
+  set *log;
 };
 
 extern struct SDCCERRG _SDCCERRG;

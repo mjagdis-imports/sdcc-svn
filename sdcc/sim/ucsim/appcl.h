@@ -128,6 +128,9 @@ public: // output functions
   virtual int dd_printf(const char *format, ...);
   virtual int dd_cprintf(const char *color_name, const char *format, ...);
   virtual int debug(const char *format, ...);
+
+public:
+  virtual void set_option_s(const char *opt_name, const char *new_value);
 };
 
 

@@ -715,7 +715,7 @@ struct mne *mp;
                         rf = 0;
                 break;
         case X_ZXN:
-                if (rf > S_CPU && rf < X_ZXN_INH2 && rf != X_TST)
+                if (rf > S_CPU && rf < X_ZXN_INH2 && rf != X_TST && rf != X_MLT)
                         rf = 0;
                 break;
         case X_EZ80:
@@ -824,12 +824,17 @@ struct mne *mp;
                         break;
                 }
                 if (mchtyp == X_ZXN && op == 0xC5 && (t1 = addr(&e1)) == S_IMMED) {
-                        int old_hilo = (int)hilo;
-                        hilo = !hilo;                   // ZXN push is big-endian
+                        // ZXN push is big-endian
                         outab(0xED);
                         outab(0x8A);
-                        outrw(&e1, R_MSB);
-                        hilo = old_hilo;
+                        // ASXXXX do not check for R_MSB/R_LSB for constants!!!
+                        if (e1.e_flag==0 && e1.e_base.e_ap==NULL) {
+                                outab(hibyte(e1.e_addr));
+                                outab(lobyte(e1.e_addr));
+                        } else {
+                                outrb(&e1, R_MSB);
+                                outrb(&e1, R_LSB);
+                        }
                         break;
                 }
                 if (mchtyp == X_ZXN && op == 0xC1 && (v1 = admode(RX)) != 0 && (v1 &= 0xFF) == X) {
@@ -1695,6 +1700,14 @@ struct mne *mp;
                         outab(0xE9);
                         break;
                 }
+                /*
+                 * jp  (c)
+                 */
+                if (mchtyp == X_ZXN && t1 == S_IDC) {
+                        outab(0xED);
+                        outab(0x98);
+                        break;
+                }
                 aerr();
                 break;
 
@@ -1741,7 +1754,12 @@ struct mne *mp;
                  * mlt  bc/de/hl/sp
                  */
                 t1 = addr(&e1);
-                if ((t1 == S_R16) && ((v1 = (int) e1.e_addr) <= SP)) {
+                if (mchtyp == X_ZXN && (t1 == S_R16) && (int) e1.e_addr == DE) {
+                        outab(0xED);
+                        outab(0x30);
+                        break;
+                }
+                else if ((t1 == S_R16) && ((v1 = (int) e1.e_addr) <= SP)) {
                         outab(0xED);
                         outab(op | (v1<<4));
                         break;
@@ -1816,6 +1834,26 @@ struct mne *mp;
                 break;
 
         case X_ZXN_INH2:
+                switch (op) {
+                case 0x23: //swap
+                        if (more()) { // Optional argument a on swap
+                                t1 = addr(&e1);
+                                if (t1 != S_R8 || e1.e_addr != A)
+                                        aerr();
+                         }
+                         break;
+                case 0x28: // BSLA DE,B
+                case 0x29: // BSRA DE,B
+                case 0x2a: // BSRL DE,B
+                case 0x2b: // BSRF DE,B
+                case 0x2c: // BRLC DE,B
+                         t1 = addr(&e1);
+                         comma(1);
+                         t2 = addr(&e2);
+                         if (t1 != S_R16 || e1.e_addr != DE || t2 != S_R8 || e2.e_addr != B)
+                                aerr();
+                         break;
+                }
                 outab(0xED);
                 outab(op);
                 break;
@@ -1865,24 +1903,6 @@ struct mne *mp;
                         outab(0xED);
                         outab(0x92);
                         outrb(&e1, 0);
-                        break;
-                }
-                aerr();
-                break;
-
-        case X_ZXN_MMU:
-                t1 = addr(&e1);
-                if (t1 == S_IMMED) {
-                        outab(0xED);
-                        outab(0x91);
-                        outab(op);
-                        outrb(&e1, 0);
-                        break;
-                }
-                if (t1 == S_R8 && e1.e_addr == A) {
-                        outab(0xED);
-                        outab(0x92);
-                        outab(op);
                         break;
                 }
                 aerr();
@@ -2257,6 +2277,11 @@ minit()
          * Byte Order
          */
         hilo = 0;
+
+        /*
+         * Address Space
+         */
+        exprmasks(3);
 
         if (pass == 0) {
                 mchtyp = X_Z80;

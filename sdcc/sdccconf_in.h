@@ -88,6 +88,9 @@
 /* Define to 1 if you have the <treedec/combinations.hpp> header file. */
 #undef HAVE_TREEDEC_COMBINATIONS_HPP
 
+/* Define to 1 if you have the <uchar.h> header file. */
+#undef HAVE_UCHAR_H
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
@@ -155,6 +158,9 @@
 #undef OPT_DISABLE_R2K
 
 /* XXX */
+#undef OPT_DISABLE_R2KA
+
+/* XXX */
 #undef OPT_DISABLE_R3KA
 
 /* XXX */
@@ -186,6 +192,9 @@
 
 /* XXX */
 #undef OPT_DISABLE_Z80
+
+/* XXX */
+#undef OPT_DISABLE_Z80N
 
 /* XXX */
 #undef OPT_ENABLE_DOC

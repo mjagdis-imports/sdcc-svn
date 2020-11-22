@@ -164,7 +164,7 @@ static const OPTION optionsTable[] = {
   {'v', OPTION_VERSION, NULL, "Display sdcc's version"},
   {0,   "--verbose", &options.verbose, "Trace calls to the preprocessor, assembler, and linker"},
   {'V', NULL, &options.verboseExec, "Execute verbosely. Show sub commands as they are run"},
-  {'d', NULL, NULL, "Output list of mcaro definitions in effect. Use with -E"},
+  {'d', NULL, NULL, "Output list of macro definitions in effect. Use with -E"},
   {'D', NULL, NULL, "Define macro as in -Dmacro"},
   {'I', NULL, NULL, "Add to the include (*.h) path, as in -Ipath"},
   {'A', NULL, NULL, NULL},
@@ -318,6 +318,9 @@ static PORT *_ports[] = {
 #if !OPT_DISABLE_R2K
   &r2k_port,
 #endif
+#if !OPT_DISABLE_R2KA
+  &r2ka_port,
+#endif
 #if !OPT_DISABLE_R3KA
   &r3ka_port,
 #endif
@@ -329,6 +332,9 @@ static PORT *_ports[] = {
 #endif
 #if !OPT_DISABLE_EZ80_Z80
   &ez80_z80_port,
+#endif
+#if !OPT_DISABLE_Z80N
+  &z80n_port,
 #endif
 #if !OPT_DISABLE_AVR
   &avr_port,
@@ -700,7 +706,7 @@ processFile (char *s)
       fullSrcFileName = s;
       if (!(srcFile = fopen (fullSrcFileName, "r")))
         {
-          werror (E_FILE_OPEN_ERR, s);
+          werror (E_INPUT_FILE_OPEN_ERR, fullSrcFileName, strerror (errno));
 
           dbuf_destroy (&path);
 
@@ -1600,7 +1606,7 @@ parseCmdLine (int argc, char **argv)
       if (debugFile->openFile (dbuf_c_str (&adbFile)))
         debugFile->writeModule (moduleName);
       else
-        werror (E_FILE_OPEN_ERR, dbuf_c_str (&adbFile));
+        werror (E_OUTPUT_FILE_OPEN_ERR, dbuf_c_str (&adbFile), strerror (errno));
 
       dbuf_destroy (&adbFile);
     }
@@ -1671,7 +1677,7 @@ linkEdit (char **envp)
       dbuf_printf (&linkerScriptFileName, "%s.lk", dstFileName);
       if (!(lnkfile = fopen (dbuf_c_str (&linkerScriptFileName), "w")))
         {
-          werror (E_FILE_OPEN_ERR, dbuf_c_str (&linkerScriptFileName));
+          werror (E_OUTPUT_FILE_OPEN_ERR, dbuf_c_str (&linkerScriptFileName), strerror (errno));
           exit (EXIT_FAILURE);
         }
 
@@ -1684,10 +1690,6 @@ linkEdit (char **envp)
           fprintf (lnkfile, "-muwx\n-%c %s\n", out_fmt, dbuf_c_str (&binFileName));
           if (TARGET_MCS51_LIKE)
             fprintf (lnkfile, "-M\n");
-          if (!options.no_pack_iram)
-            fprintf (lnkfile, "-Y\n");
-          else
-            werror (W_DEPRECATED_OPTION, "--no-pack-iram");
         }
 
       if (!TARGET_Z80_LIKE)   /* Not for the z80, gbz80 */
@@ -1759,9 +1761,11 @@ linkEdit (char **envp)
           WRITE_SEG_LOC (BIT_NAME, 0);
 
           /* stack start */
-          if ((options.stack_loc) && (options.stack_loc < 0x100) && !TARGET_HC08_LIKE)
+          if ((options.stack_loc) && (options.stack_loc < 0x100) && TARGET_MCS51_LIKE)
             {
               WRITE_SEG_LOC ("SSEG", options.stack_loc);
+              /* with the disappearance of --no-pack-iram I don't think this is ever valid anymore */
+              werror (W_DEPRECATED_OPTION, "--stack-loc");
             }
         }
       else                      /* For the z80, z180, gbz80 */
@@ -2123,6 +2127,12 @@ preProcess (char **envp)
           break;
         }
 
+      /* set macro for optimization level */
+      if (optimize.codeSpeed)
+        addSet (&preArgvSet, Safe_strdup ("-D__SDCC_OPTIMIZE_SPEED"));
+      if (optimize.codeSize)
+        addSet (&preArgvSet, Safe_strdup ("-D__SDCC_OPTIMIZE_SIZE"));
+
       /* set macro corresponding to compiler option */
       if (options.intlong_rent)
         addSet (&preArgvSet, Safe_strdup ("-D__SDCC_INT_LONG_REENT"));
@@ -2182,7 +2192,7 @@ preProcess (char **envp)
       {
         struct dbuf_s dbuf;
 
-        dbuf_init (&dbuf, 20);        
+        dbuf_init (&dbuf, 20);
         dbuf_printf (&dbuf, "-D__SDCC_REVISION=%s", getBuildNumber ());
         addSet (&preArgvSet, dbuf_detach_c_str (&dbuf));
       }

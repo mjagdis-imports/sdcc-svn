@@ -25,11 +25,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 // local
 #include "z80cl.h"
-#include "regsz80.h"
+//#include "regsz80.h"
 #include "z80mac.h"
 
 int
@@ -445,7 +445,7 @@ cl_z80::inst_cb(void)
 
   if (fetch(&code))
     return(resBREAKPOINT);
-  tick(1);
+  tick(7);
   switch (code)
     {
     case 0x00: // RLC B

@@ -22,7 +22,7 @@
 #define  SDCCSYMT_H
 
 #define MAX_NEST_LEVEL  256
-#define SDCC_SYMNAME_MAX 64
+#define SDCC_SYMNAME_MAX 256
 #define SDCC_NAME_MAX  3*SDCC_SYMNAME_MAX       // big enough for _<func>_<var>_etc
 #include "SDCChasht.h"
 #include "SDCCglobl.h"
@@ -299,7 +299,7 @@ typedef struct symbol
   char rname[SDCC_NAME_MAX + 1];    /* internal name           */
 
   long level;                       /* declaration lev,fld offset */
-  short block;                      /* sequential block # of definition */
+  int block;                        /* sequential block # of definition */
   int seqPoint;                     /* sequence point defined or, if unbound, used */
   int key;
   unsigned flexArrayLength;         /* if the symbol specifies a struct
@@ -667,8 +667,6 @@ symbol *reverseSyms (symbol *);
 sym_link *reverseLink (sym_link *);
 symbol *copySymbol (const symbol *);
 symbol *copySymbolChain (const symbol *);
-void printSymChain (symbol *, int);
-void printStruct (structdef *, int);
 char *genSymName (long);
 sym_link *getSpec (sym_link *);
 int compStructSize (int, structdef *);

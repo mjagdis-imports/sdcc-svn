@@ -26,6 +26,7 @@
 #include "dbuf_string.h"
 
 #include "ralloc.h"
+#include "gen.h"
 #include "peep.h"
 
 extern DEBUGFILE dwarf2DebugFile;
@@ -109,10 +110,9 @@ pdk_genInitStartup (FILE *of)
     }
 
   fprintf (of, "\tcall\t__sdcc_external_startup\n");
-  fprintf (of, "\tgoto\t__sdcc_gs_init_startup\n");
+  fprintf (of, "\tgoto\ts_GSINIT\n");
 
   tfprintf (of, "\t!area\n", STATIC_NAME);
-  fprintf (of, "__sdcc_gs_init_startup:\n");
 
   /* Init static & global variables */
   fprintf (of, "__sdcc_init_data:\n");
@@ -268,6 +268,8 @@ PORT pdk13_port =
     0,
     pdknotUsedFrom,
     0,
+    0,
+    0,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
   {
@@ -324,7 +326,7 @@ PORT pdk13_port =
      1,                         /* sp points to next free stack location */
   },     
   { -1, false },                /* no int x int -> long multiplication support routine. */
-  { 0,
+  { pdk_emitDebuggerSymbol,
     {
       0,
       0,                        /* cfiSame */
@@ -490,7 +492,7 @@ PORT pdk14_port =
      1,                         /* sp points to next free stack location */
   },     
   { -1, false },                /* no int x int -> long multiplication support routine. */
-  { 0,
+  { pdk_emitDebuggerSymbol,
     {
       0,
       0,                        /* cfiSame */
@@ -656,7 +658,7 @@ PORT pdk15_port =
      1,                         /* sp points to next free stack location */
   },     
   { -1, false },                /* no int x int -> long multiplication support routine. */
-  { 0,
+  { pdk_emitDebuggerSymbol,
     {
       0,
       0,                        /* cfiSame */

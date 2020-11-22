@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   gen.c - code generator for STM8.
 
-  Copyright (C) 2012 - 2013, Philipp Klaus Krause pkk@spth.de, philipp@informatik.uni-frankfurt.de)
+  Copyright (C) 2012 - 2020, Philipp Klaus Krause pkk@spth.de, philipp@informatik.uni-frankfurt.de, krauseph@informatik.uni-freiburg.de)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -196,12 +196,12 @@ stm8_init_asmops (void)
   asmop_xyl.aopu.bytes[1].byteu.reg = stm8_regs + XH_IDX;
   asmop_xyl.aopu.bytes[2].in_reg = TRUE;
   asmop_xyl.aopu.bytes[2].byteu.reg = stm8_regs + YL_IDX;
-  asmop_xy.regs[A_IDX] = -1;
-  asmop_xy.regs[XL_IDX] = 0;
-  asmop_xy.regs[XH_IDX] = 1;
-  asmop_xy.regs[YL_IDX] = 2;
-  asmop_xy.regs[YH_IDX] = -1;
-  asmop_xy.regs[C_IDX] = -1;
+  asmop_xyl.regs[A_IDX] = -1;
+  asmop_xyl.regs[XL_IDX] = 0;
+  asmop_xyl.regs[XH_IDX] = 1;
+  asmop_xyl.regs[YL_IDX] = 2;
+  asmop_xyl.regs[YH_IDX] = -1;
+  asmop_xyl.regs[C_IDX] = -1;
 
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
@@ -224,7 +224,8 @@ stm8_init_asmops (void)
   asmop_one.regs[C_IDX] = -1;
 }
 
-void emit2 (const char *inst, const char *fmt, ...)
+static void 
+emit2 (const char *inst, const char *fmt, ...)
 {
   if (!regalloc_dry_run)
     {
@@ -385,13 +386,15 @@ cost(unsigned int bytes, unsigned int cycles)
   regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
 }
 
-void emitJP(const symbol *target, float probability)
+static void 
+emitJP(const symbol *target, float probability)
 {
   if (!regalloc_dry_run)
      emit2 (options.model == MODEL_LARGE ? "jpf" : "jp", "%05d$", labelKey2num (target->key));
   cost (3 + (options.model == MODEL_LARGE), (1 + (options.model == MODEL_LARGE)) * probability);
 }
 
+// Get aop at offset as 8-bit operand.
 static const char *
 aopGet(const asmop *aop, int offset)
 {
@@ -401,21 +404,23 @@ aopGet(const asmop *aop, int offset)
   if (regalloc_dry_run)
     return ("");
 
-  if (offset >= aop->size)
-    return ("#0x00");
-
   if (aop->type == AOP_LIT)
     {
       SNPRINTF (buffer, sizeof(buffer), "#0x%02x", byteOfVal (aop->aopu.aop_lit, offset));
       return (buffer);
     }
 
+  if (offset >= aop->size)
+    return ("#0x00");
+
   if (aopRS (aop) && aop->aopu.bytes[offset].in_reg)
     return (aop->aopu.bytes[offset].byteu.reg->name);
 
   if (aopRS (aop) && !aop->aopu.bytes[offset].in_reg)
     {
-      int soffset = aop->aopu.bytes[offset].byteu.stk + G.stack.pushed;
+      long int soffset = aop->aopu.bytes[offset].byteu.stk + G.stack.pushed;
+      
+      wassert (soffset < (1 << 16) && soffset >= 0);
 
       if (soffset > 255)
         {
@@ -451,6 +456,7 @@ aopGet(const asmop *aop, int offset)
   return ("dummy");
 }
 
+// Get aop at offset as 16-bit operand.
 static const char *
 aopGet2(const asmop *aop, int offset)
 {
@@ -954,12 +960,19 @@ aopForSym (const iCode *ic, symbol *sym)
   else if (sym->onStack || sym->iaccess)
     {
       int offset;
-      int base;
+      long int base;
 
       aop = newAsmop (AOP_STK);
       aop->size = getSize (sym->type);
 
       base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
+
+      if (labs(base) > (1 << 15))
+      {
+        if (!regalloc_dry_run)
+          werror (W_INVALID_STACK_LOCATION);
+        base = 0;
+      }
 
       for(offset = 0; offset < aop->size; offset++)
         aop->aopu.bytes[offset].byteu.stk = base + aop->size - offset;
@@ -3363,7 +3376,10 @@ genCall (const iCode *ic)
             {
               adjustStack (prestackadjust, true, true, true);
 
-              emit2 (jump ? "jp" : "call", "%s", aopGet2 (left->aop, 0));
+              if (left->aop->type == AOP_LIT)
+                emit2 (jump ? "jp" : "call", "0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0));
+              else
+                emit2 (jump ? "jp" : "call", "%s", left->aop->aopu.immd);
               cost (3, jump ? 1 : 4);
             }
           else if (aopInReg (left->aop, 0, Y_IDX)) // Faster than going through x.
@@ -3412,7 +3428,7 @@ genCall (const iCode *ic)
   G.stack.pushed += prestackadjust;
 
   if (ic->parmBytes || bigreturn)
-    adjustStack (ic->parmBytes + bigreturn * 2, !(SomethingReturned && getSize (ftype->next) == 1), !(SomethingReturned && (getSize (ftype->next) == 2 || getSize (ftype->next) == 4)), !(SomethingReturned && getSize (ftype->next) == 4));
+    adjustStack (ic->parmBytes + bigreturn * 2, !(SomethingReturned && !bigreturn && getSize (ftype->next) == 1), !(SomethingReturned && !bigreturn && getSize (ftype->next) >= 2), !(SomethingReturned && !bigreturn && getSize (ftype->next) > 2));
 
   const bool half = stm8_extend_stack && SomethingReturned && getSize (ftype->next) == 4;
 
@@ -3718,7 +3734,7 @@ genReturn (const iCode *ic)
       genMove (ASMOP_XYL, left->aop, TRUE, TRUE, TRUE);
       break;
     case 4:
-      wassertl (regalloc_dry_run || !stm8_extend_stack, "Unimplemented long return in function with extended stack access.");
+      wassertl (regalloc_dry_run || !stm8_extend_stack, "Unimplemented long long return in function with extended stack access.");
       genMove (ASMOP_XY, left->aop, TRUE, TRUE, TRUE);
       break;
     default:
@@ -4440,6 +4456,92 @@ genMult (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genDivSign - generates code for signed division by power of 2   */
+/* any operands and results of up to 2 bytes                       */
+/*-----------------------------------------------------------------*/
+static void
+genDivSign (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  
+  wassert (right->aop->type == AOP_LIT && !SPEC_USIGN (operandType (left)) && isLiteralBit (ulFromVal (right->aop->aopu.aop_lit)) >= 0);
+  
+  symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+
+  if (result->aop->size == 1)
+    {
+      if (!regDead (A_IDX, ic))
+        push (ASMOP_A, 0, 1);
+        
+      cheapMove (ASMOP_A, 0, left->aop, 0, false);
+      
+      emit3w (A_TNZ, ASMOP_X, 0);
+      if (!regalloc_dry_run)
+        emit2 ("jrpl", "!tlabel", labelKey2num (tlbl->key));
+      if (ulFromVal (right->aop->aopu.aop_lit) == 2)
+        emit3w (A_INC, ASMOP_A, 0);
+      else
+        {
+          emit2 ("add", "a, #0x%02x", ulFromVal (right->aop->aopu.aop_lit) - 1);
+          cost (3, 2);
+        }
+      emitLabel (tlbl);
+      for (unsigned int i = 0; i < isLiteralBit (ulFromVal (right->aop->aopu.aop_lit)); i++)
+        emit3w (A_SRA, ASMOP_A, 0);
+        
+      cheapMove (result->aop, 0, ASMOP_A, 0, false);
+        
+      if (!regDead (A_IDX, ic))
+        pop (ASMOP_A, 0, 1);
+    }
+  else
+    {
+      if (!regDead (X_IDX, ic))
+        push (ASMOP_X, 0, 2);
+    
+      genMove (ASMOP_X, left->aop, regDead (A_IDX, ic), true, regDead (Y_IDX, ic));
+
+      emit3w (A_TNZW, ASMOP_X, 0);
+      if (!regalloc_dry_run)
+        emit2 ("jrpl", "!tlabel", labelKey2num (tlbl->key));
+      if (ulFromVal (right->aop->aopu.aop_lit) == 2)
+        emit3w (A_INCW, ASMOP_X, 0);
+      else
+        {
+          emit2 ("addw", "x, #0x%04x", ulFromVal (right->aop->aopu.aop_lit) - 1);
+          cost (3, 2);
+        }
+      emitLabel (tlbl);
+      for (unsigned int i = 0; i < isLiteralBit (ulFromVal (right->aop->aopu.aop_lit)); i++)
+        emit3w (A_SRAW, ASMOP_X, 0);
+          
+      genMove (result->aop, ASMOP_X, regDead (A_IDX, ic), true, regDead (Y_IDX, ic));
+      
+      if (!regDead (X_IDX, ic))
+        {
+          if (result->aop->regs[XH_IDX] >= 0)
+            {
+              adjustStack (1, FALSE, FALSE, FALSE);
+              swap_to_a (XL_IDX);
+              pop (ASMOP_A, 0, 1);
+              swap_from_a(XL_IDX);
+            }
+          else if (result->aop->regs[XL_IDX] >= 0)
+            {
+              swap_to_a (XH_IDX);
+              pop (ASMOP_A, 0, 1);
+              swap_from_a(XH_IDX);
+              adjustStack (1, FALSE, FALSE, FALSE);
+            }
+          else
+            pop (ASMOP_X, 0, 2);
+        }
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* genDivMod2 - generates code for unsigned division               */
 /* any operands and results of up to 2 bytes                       */
 /*-----------------------------------------------------------------*/
@@ -4659,7 +4761,9 @@ genDivMod (const iCode *ic)
   aopOp (IC_RIGHT (ic), ic);
   aopOp (IC_RESULT (ic), ic);
 
-  if (result->aop->size <= (ic->op == '/' ? 2 : 1) && left->aop->size <= 2 && right->aop->size <= 1)
+  if (ic->op == '/' && right->aop->type == AOP_LIT && !SPEC_USIGN (operandType (left)))
+    genDivSign(ic);
+  else if (result->aop->size <= (ic->op == '/' ? 2 : 1) && left->aop->size <= 2 && right->aop->size <= 1)
     genDivMod1(ic);
   else
     genDivMod2(ic);
@@ -5279,6 +5383,16 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit3_o (A_CP, ASMOP_A, 0, right->aop, i);
 
           i++;
+        }
+      else if (aopInReg (left->aop, i, X_IDX) && right->aop->type == AOP_STL || left->aop->type == AOP_STL && aopInReg (right->aop, i, X_IDX))
+        {
+          push (ASMOP_X, 0, 2);
+          genMove_o (ASMOP_X, 0, right->aop->type == AOP_STL ? right->aop : left->aop, i, 2, regDead (A_IDX, ic) || pushed_a, true, regDead (Y_IDX, ic));
+          emit2 ("cpw", "x, (1, sp)");
+          cost (2, 2);
+          pop (ASMOP_X, 0, 2);
+          
+          i += 2;
         }
       else
         {
@@ -6070,7 +6184,8 @@ release:
 /*------------------------------------------------------------------*/
 /* init_shiftop - find a good place to shift in                     */
 /*------------------------------------------------------------------*/
-static void init_shiftop(asmop *shiftop, const asmop *result, const asmop *left, const asmop *right, const iCode *ic, bool a_needed_for_count)
+static void 
+init_shiftop(asmop *shiftop, const asmop *result, const asmop *left, const asmop *right, const iCode *ic, bool a_needed_for_count)
 {
   int i;
   const int size = result->size;
@@ -6641,7 +6756,7 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
   int shCount = (int) ulFromVal (right->aop->aopu.aop_lit);
   int size, i;
   bool sign;
-  bool xh_zero, yh_zero, xl_free, yl_free;
+  bool xh_zero, yh_zero, xl_free, yl_free, a_free;
 
   struct asmop shiftop_impl;
   struct asmop *shiftop;
@@ -6657,6 +6772,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
 
   aopOp (left, ic);
   aopOp (result, ic);
+  
+  wassert (shCount >= 0);
 
   if (shCount > (size * 8))
     shCount = size * 8;
@@ -6699,6 +6816,7 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
   yh_zero = shiftop->regs[YH_IDX] >= size;
   xl_free = regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0;
   yl_free = regDead (YL_IDX, ic) && shiftop->regs[YL_IDX] < 0;
+  a_free = regDead (A_IDX, ic) && shiftop->regs[A_IDX] < 0;
 
   // Use swap a where beneficial.
   if (!sign && size == 1 && aopRS (shiftop) && !aopOnStack (shiftop, 0, 1) &&
@@ -6721,17 +6839,17 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
 
   // div can be cheaper than a sequence of shifts.
   if (!sign && shCount < 8 &&
-    (shCount > 3 + !regDead (A_IDX, ic) * 2 && (size == 2 && aopInReg (shiftop, 0, X_IDX) || size == 1 && aopInReg (shiftop, 0, XL_IDX) && xh_zero) ||
-    shCount * 2 > 4 + !regDead (A_IDX, ic) * 2 && (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && yh_zero)))
+    (shCount > 3 + !a_free * 2 && (size == 2 && aopInReg (shiftop, 0, X_IDX) || size == 1 && aopInReg (shiftop, 0, XL_IDX) && xh_zero) ||
+    shCount * 2 > 4 + !a_free * 2 && (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && yh_zero)))
     {
       const bool in_y = aopInReg (shiftop, 0, Y_IDX);
-      if (!regDead (A_IDX, ic))
+      if (!a_free)
         push (ASMOP_A, 0, 1);
       emit2 ("ld", "a, #0x%02x", 1 << shCount);
       cost (2, 1);
       emit2 ("div", in_y ? "y, a" : "x, a");
       cost (1 + in_y, 17); // TODO: Find out exact value, replace 17 by exact value, and accordingly choose this optimization depending on optimization goal.
-      if (!regDead (A_IDX, ic))
+      if (!a_free)
         pop (ASMOP_A, 0, 1);
       goto release;
     }
@@ -6804,7 +6922,7 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
     (aopInReg (shiftop, 0, X_IDX) || aopInReg (shiftop, 0, Y_IDX)) &&
     (aopInReg (shiftop, 2, X_IDX) || aopInReg (shiftop, 2, Y_IDX)))
     {
-      if (!regDead (A_IDX, ic))
+      if (!a_free)
         push (ASMOP_A, 0, 1);
       emit3 (A_CLR, ASMOP_A, 0);
       emit3w_o (A_RRWA, shiftop, 2, 0, 0);
@@ -6816,7 +6934,7 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
           emit3w_o (A_RLCW, shiftop, 0, 0, 0);
           emit3w_o (A_RLCW, shiftop, 2, 0, 0);
         }
-      if (!regDead (A_IDX, ic))
+      if (!a_free)
         pop (ASMOP_A, 0, 1);
     }
 
@@ -7039,7 +7157,8 @@ postshift:
 /*------------------------------------------------------------------*/
 /* init_stackop - initalize asmop for stack location                */
 /*------------------------------------------------------------------*/
-static void init_stackop (asmop *stackop, int size, long int stk_off)
+static void 
+init_stackop (asmop *stackop, int size, long int stk_off)
 {
   stackop->size = size;
   stackop->regs[A_IDX] = -1;
@@ -7047,6 +7166,13 @@ static void init_stackop (asmop *stackop, int size, long int stk_off)
   stackop->regs[XH_IDX] = -1;
   stackop->regs[YL_IDX] = -1;
   stackop->regs[YH_IDX] = -1;
+
+  if (labs(stk_off) > (1 << 15))
+  {
+    if (!regalloc_dry_run)
+      werror (W_INVALID_STACK_LOCATION);
+    stk_off = 0;
+  }
 
   for (int i = 0; i < size; i++)
     {
@@ -7111,9 +7237,18 @@ genPointerGet (const iCode *ic)
       genMove(result->aop, &stackop_impl, regDead (A_IDX, ic), regDead (X_IDX, ic), regDead (Y_IDX, ic));
       goto release;
     }
+  // Special case for efficient handling of 8-bit I/O and rematerialized pointers when assigning to direct memory.
+  else if (!bit_field && size == 1 && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && result->aop->type == AOP_DIR)
+    {
+      if (left->aop->type == AOP_LIT)
+        emit2("mov", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+      else
+        emit2("mov", offset ? "%s, %s+%d" : "%s, %s+%d", aopGet (result->aop, 0), left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+      cost (5, 1);
+      goto release;
+    }
   // Special case for efficient handling of 8-bit I/O and rematerialized pointers
-  else if (!bit_field && size == 1 && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
-    && regDead (A_IDX, ic))
+  else if (!bit_field && size == 1 && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && regDead (A_IDX, ic))
     {
       if (left->aop->type == AOP_LIT)
         emit2("ld", offset ? "a, 0x%02x%02x+%d" : "a, 0x%02x%02x",  byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);

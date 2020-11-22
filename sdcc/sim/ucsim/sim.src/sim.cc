@@ -25,12 +25,13 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include "i_string.h"
+//#include <unistd.h>
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
@@ -38,12 +39,34 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // cmd
 #include "cmd_execcl.h"
-#include "cmd_guicl.h"
+//#include "cmd_guicl.h"
 
 // local, sim.src
-#include "simcl.h"
-#include "appcl.h"
+//#include "simcl.h"
+//#include "appcl.h"
 #include "simifcl.h"
+
+
+cl_exec_hist::cl_exec_hist(class cl_uc *auc):
+  cl_base()
+{
+  uc= auc;
+  len= 100;
+  hist= (struct t_hist_elem*)malloc(sizeof(struct t_hist_elem) * len);
+  ff= lu= 0;
+}
+
+cl_exec_hist::~cl_exec_hist(void)
+{
+  if (hist)
+    free(hist);
+}
+
+int
+cl_exec_hist::init(void)
+{
+  return 0;
+}
 
 
 /*
@@ -69,12 +92,14 @@ cl_sim::init(void)
   if (!(uc= mk_controller()))
     return(1);
   uc->init();
-  simif= uc->get_hw(cchars("simif"), 0);
+  simif= uc->get_hw("simif", 0);
+  hist= new cl_exec_hist(uc);
   return(0);
 }
 
 cl_sim::~cl_sim(void)
 {
+  delete hist;
   if (uc)
     delete uc;
 }
@@ -164,15 +189,22 @@ cl_sim::stop(int reason, class cl_ev_brk *ebrk)
     }
   if (b)
     {
+      class cl_option *o;
+      o= app->options->get_option("beep_break");
+      bool e= false;
+      if (o) o->get_value(&e);
+      if (e)
+	cmd->frozen_console->dd_printf("\007");
+    
       if (!(b->commands.empty()))
 	{
-	  class cl_option *o= app->options->get_option("echo_script");
-	  bool e= false;
+	  o= app->options->get_option("echo_script");
+	  e= false;
 	  if (o) o->get_value(&e);
 	  if (e)
-	    cmd->dd_printf("%s\n", (char*)(b->commands));
-		  application->exec(b->commands);
-		  steps_done= 0;
+	    cmd->dd_printf("%s\n", b->commands.c_str());
+	  application->exec(b->commands);
+	  steps_done= 0;
 	}
     }
   
@@ -208,11 +240,13 @@ cl_sim::stop(int reason, class cl_ev_brk *ebrk)
 	    {
 	      class cl_ev_brk *eb= (cl_ev_brk*)b;
 	      class cl_address_space *m= eb->get_mem();
+	      char *dis = uc->disass(uc->instPC, " ");
 	      cmd->frozen_console->dd_printf("Event `%s' at %s[0x%x]: 0x%x %s\n",
 					     eb->id, m?(m->get_name()):"mem?",
 					     AU(eb->addr),
 					     AU(uc->instPC),
-					     uc->disass(uc->instPC, " "));
+					     dis);
+	      free(dis);
     	    }
 	  break;
 	case resINTERRUPT:
@@ -242,6 +276,9 @@ cl_sim::stop(int reason, class cl_ev_brk *ebrk)
 	case resSIMIF:
 	  cmd->frozen_console->dd_printf("Program stopped itself\n");
 	  break;
+	case resSELFJUMP:
+	  cmd->frozen_console->dd_printf("Jump to itself\n");
+	  break;
 	default:
 	  cmd->frozen_console->dd_printf("Unknown reason\n");
 	  break;
@@ -250,10 +287,14 @@ cl_sim::stop(int reason, class cl_ev_brk *ebrk)
       unsigned long dt= uc?(uc->ticks->ticks - start_tick):0;
       if ((reason != resSTEP) ||
 	  (steps_done > 1))
-	cmd->frozen_console->dd_printf("Simulated %lu ticks in %f sec, rate=%f\n",
-				       dt,
-				       stop_at - start_at,
-				       (dt*(1/uc->xtal)) / (stop_at - start_at));
+	{
+	  cmd->frozen_console->dd_printf("Simulated %lu ticks (%.3e sec)\n",
+					 dt,
+					 dt*(1/uc->xtal));
+	  cmd->frozen_console->dd_printf("Host usage: %f sec, rate=%f\n",
+					 stop_at - start_at,
+					 (dt*(1/uc->xtal)) / (stop_at - start_at));
+	}
       //if (cmd->actual_console != cmd->frozen_console)
       cmd->frozen_console->set_flag(CONS_FROZEN, false);
       //cmd->frozen_console->dd_printf("_s_");

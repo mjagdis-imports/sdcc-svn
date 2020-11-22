@@ -27,10 +27,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // prj
 #include "globals.h"
-#include "utils.h"
+//#include "utils.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "cmd_memcl.h"
@@ -481,7 +481,7 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
   con->dd_printf("%s", as->get_name());
   con->dd_printf("[");
   con->dd_printf(as->addr_format, a);
-  con->dd_printf("] %s\n", (char*)uc->cell_name(c));
+  con->dd_printf("] %s\n", uc->cell_name(c).c_str());
 
   con->dd_printf("cell data=%p/%d mask=%x flags=%x\n",
 		 c->get_data(),
