@@ -239,6 +239,9 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
 #ifdef DEBUG_LOSPRE
   std::cout << "Invalidation set I: ";
 #endif
+
+  int mayberemat[2] = {2, 2}; // Might be rematerializeable if only one definition, which is ADDRESS_OF.
+
   for (vertex_t i = 0; i < boost::num_vertices (*cfg); i++)
     {
        const iCode *const ic = (*cfg)[i].ic;
@@ -259,6 +262,18 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
          {
            (*cfg)[i].i_writes[0] = (eleft && isOperandEqual (eleft, result));
            (*cfg)[i].i_writes[bool(eleft)] = (eright && isOperandEqual (eright, result));
+           if ((*cfg)[i].i_writes[0])
+             {
+               mayberemat[0]--;
+               if (ic->op != ADDRESS_OF)
+                 mayberemat[0] = -1;
+             }
+           if ((*cfg)[i].i_writes[1])
+             {
+               mayberemat[1]--;
+               if (ic->op != ADDRESS_OF)
+                 mayberemat[1] = -1;
+             } 
          }
        (*cfg)[i].invalidates = invalidates_expression (eic, ic);
 
@@ -279,8 +294,8 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   std::cout << "\n";
 #endif
 
-  leftsize = operandSize(eleft ? eleft : eright);
-  rightsize = operandSize(eright);
+  leftsize = (mayberemat[0] > 0) ? 0 : operandSize(eleft ? eleft : eright); // Rematerializeable live ranges are not considered for register pressure.
+  rightsize = (mayberemat[1] > 0) ? 0 : operandSize(eright);
   resultsize = operandSize(IC_RESULT(eic));
 
   return (safety_required);

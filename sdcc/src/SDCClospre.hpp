@@ -275,20 +275,18 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
             if (((ai->global[i] & true) && !G[i].invalidates) >= ((ai->global[boost::target(*n, G)] & true) || G[boost::target(*n, G)].uses))
               continue;
 
-            if(((ai->global[i] & true) && !G[i].invalidates) < (ai->global[boost::target(*n, G)] & true))
-              ai->s.get<1>() += 0.1f; // Small bias against moving calculations - also ensures termination of the algorithm by avoiding pointless moves.
-            else
-              ai->s.get<1>() += (G[i].i_live[0] - (ai->global[i] & 2)) * leftsize + (G[i].i_live[1] - (ai->global[i] & 4)) * rightsize - forNextIcOnly(G[boost::target(*n, G)].ic); // Avoid double-counting lifetime cost when not moving calculation. Avoid separating condition from ifx.
-
-            ai->s.get<1>() += bitVectBitsInCommon(G[i].ic->rlive, G[boost::target(*n, G)].ic->rlive) /** std::max(leftsize, rightsize)*/ + resultsize + (maxval > 1) * leftsize + (maxval > 3) * rightsize; // Lifetime cost at point of calculation.
-
-            if (maxval > 1 && !(ai->global[i] & 2) || maxval > 3 && !(ai->global[i] & 4))
+            if (G[i].ic->op == IPUSH || G[i].ic->op == SEND) // Never separate parameter passing from the call
               {
                 ai = alist.erase(ai);
                 goto nextassignment;
               }
 
-            ai->s.get<0>() += G[*n]/*G[boost::target(*n, G)]more correct, but doesn't compile - doesn't make a difference now, but will when we implement profiler-driven optimization for speed*/; // Add calculation cost.
+            if(((ai->global[i] & true) && !G[i].invalidates) < (ai->global[boost::target(*n, G)] & true))
+              ai->s.get<1>() += 0.1f + forNextIcOnly(G[i].ic); // Small bias against moving calculations - also ensures termination of the algorithm by avoiding pointless moves. Also avoid separating condition from ifx.
+
+            ai->s.get<1>() += bitVectBitsInCommon(G[i].ic->rlive, G[boost::target(*n, G)].ic->rlive) + resultsize + (maxval > 1) * leftsize + (maxval > 3) * rightsize; // Lifetime cost at point of calculation.
+
+            ai->s.get<0>() += G[*n]; // Add calculation cost.
           }
       }
       {
@@ -308,19 +306,17 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
             if (((ai->global[boost::source(*n, G)] & true) && !G[boost::source(*n, G)].invalidates) >= ((ai->global[i] & true) || G[i].uses))
               continue;
-
-            if(((ai->global[boost::source(*n, G)] & true) && !G[boost::source(*n, G)].invalidates) < (ai->global[i] & true))
-              ai->s.get<1>() += 0.1f; // Small bias against moving calculations - also ensures termination of the algorithm by avoiding pointless moves.
-            else
-              ai->s.get<1>() += (G[i].i_live[0] - (ai->global[i] & 2)) * leftsize + (G[i].i_live[1] - (ai->global[i] & 4)) * rightsize - forNextIcOnly(G[i].ic); // Avoid double-counting lifetime cost when not moving calculation. Avoid separating condition from ifx.
-
-            ai->s.get<1>() += bitVectBitsInCommon(G[boost::source(*n, G)].ic->rlive, G[i].ic->rlive) /** std::max(leftsize, rightsize)*/ + resultsize + (maxval > 1) * leftsize + (maxval > 3) * rightsize; // Lifetime cost at point of calculation.
-
-            if (maxval > 1 && !(ai->global[boost::source(*n, G)] & 2) || maxval > 3 && !(ai->global[boost::source(*n, G)] & 4))
+              
+            if (G[boost::source(*n, G)].ic->op == IPUSH || G[boost::source(*n, G)].ic->op == SEND) // Never separate parameter passing from the call
               {
                 ai = alist.erase(ai);
                 goto nextassignment;
               }
+
+            if(((ai->global[boost::source(*n, G)] & true) && !G[boost::source(*n, G)].invalidates) < (ai->global[i] & true))
+              ai->s.get<1>() += 0.1f + forNextIcOnly(G[i].ic); // Small bias against moving calculations - also ensures termination of the algorithm by avoiding pointless moves. Avoid separating condition from ifx.
+
+            ai->s.get<1>() += bitVectBitsInCommon(G[boost::source(*n, G)].ic->rlive, G[i].ic->rlive) + resultsize + (maxval > 1) * leftsize + (maxval > 3) * rightsize; // Lifetime cost at point of calculation.
 
             ai->s.get<0>() += G[*n]; // Add calculation cost.
           }
@@ -859,8 +855,8 @@ static int implement_lospre_assignment(assignment_lospre a, T_t &T, G_t &G, cons
 /*template <class T_t, class G_t>*/
 static int tree_dec_lospre (tree_dec_t/*T_t*/ &T, cfg_lospre_t/*G_t*/ &G, const iCode *ic)
 {
-  // The lowest bit of maxval is used for savings by redundancy elimination, while the upper bits are used to measure savings in the live-ranges of operands.
-  maxval = (1 << (1 + (IC_LEFT(ic) && IS_ITEMP(IC_LEFT(ic))) + (IC_RIGHT(ic) && IS_ITEMP(IC_RIGHT(ic))))) - 1;
+  // The lowest bit is used for the live-range of the new temporary, while the upper bits are used for the live-ranges of operands.
+  maxval = (rightsize > 0) ? 7 : ((leftsize > 0) ? 3 : 1);
 
   if(tree_dec_lospre_nodes(T, find_root(T), G))
     return(-1);
