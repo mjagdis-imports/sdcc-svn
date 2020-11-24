@@ -19,10 +19,12 @@
 //
 // Lifetime-optimal speculative partial redundancy elimination.
 
-// #define DEBUG_LOSPRE // Uncomment to get debug messages while doing lospre.
-// #define DEBUG_LOSPRE_ASS // Uncomment to get debug messages on considered assignmentd while doing lospre.
+// #define DEBUG_LOSPRE // Uncomment to get debug messages during lospre.
+// #define DEBUG_LOSPRE_ASS // Uncomment to get debug messages on considered assignments during lospre.
 
 #include "SDCClospre.hpp"
+
+#include <map>
 
 // A quick-and-dirty function to get the CFG from sdcc (a simplified version of the function from SDCCralloc.hpp).
 void
@@ -96,7 +98,7 @@ candidate_expression (const iCode *const ic, int lkey)
     !(ic->op == '=' && !POINTER_SET(ic) && !(IS_ITEMP(IC_RIGHT(ic)) /*&& IC_RIGHT(ic)->key > lkey*/)) &&
     ic->op != GET_VALUE_AT_ADDRESS &&
     ic->op != CAST /*&&
-    ic->op != ADDRESS_OF Apparently typically not worth the cost in code size*/)
+    ic->op != ADDRESS_OF Apparently typically not worth the cost in code size - can also be rematerialized cheaply TODO: try it anyway.*/)
     return (false);
 
   const operand *const left = IC_LEFT (ic);
@@ -302,12 +304,17 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
 }
 
 // Dump cfg, with numbered nodes.
-void dump_cfg_lospre (const cfg_lospre_t &cfg)
+void dump_cfg_lospre (const cfg_lospre_t &cfg, const int *expression)
 {
   if (!currFunc)
     return;
 
-  std::ofstream dump_file((std::string(dstFileName) + ".dumplosprecfg" + currFunc->rname + ".dot").c_str());
+  std::string dumpfilename = std::string(dstFileName) + ".dumplosprecfg" + currFunc->rname;
+  if (expression)
+    dumpfilename += "-" + std::to_string(*expression);
+  dumpfilename += ".dot";
+
+  std::ofstream dump_file(dumpfilename.c_str());
 
   std::string *name = new std::string[num_vertices(cfg)];
   for (unsigned int i = 0; i < boost::num_vertices(cfg); i++)
@@ -318,7 +325,15 @@ void dump_cfg_lospre (const cfg_lospre_t &cfg)
       dbuf_free (iLine);
       name[i] = os.str();
     }
-  boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, "lospre"));
+  std::map<cfg_lospre_t::edge_descriptor, std::string> weights;
+  boost::graph_traits<cfg_lospre_t>::edge_iterator ei, ei_end;
+  for (boost::tie(ei, ei_end) = boost::edges(cfg); ei != ei_end; ++ei)
+    {
+      std::ostringstream os;
+      os << cfg[*ei];
+      weights[*ei] = os.str();
+    }
+  boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::make_label_writer(boost::make_assoc_property_map(weights)), cfg_titlewriter(currFunc->rname, "lospre"));
   delete[] name;
 }
 
@@ -363,7 +378,7 @@ lospre (iCode *sic, ebbIndex *ebbi)
   create_cfg_lospre (control_flow_graph, sic, ebbi);
 
   if(options.dump_graphs)
-    dump_cfg_lospre(control_flow_graph);
+    dump_cfg_lospre(control_flow_graph, 0);
 
   get_nice_tree_decomposition (tree_decomposition, control_flow_graph);
 
@@ -391,6 +406,11 @@ lospre (iCode *sic, ebbIndex *ebbi)
             continue;
 
           bool safety = setup_cfg_for_expression (&control_flow_graph, ic);
+
+#ifdef DEBUG_LOSPRE
+          if(options.dump_graphs)
+            dump_cfg_lospre(control_flow_graph, &(ic->key));
+#endif
 
           if (safety && tree_dec_safety (tree_decomposition, control_flow_graph, ic) < 0)
             continue;

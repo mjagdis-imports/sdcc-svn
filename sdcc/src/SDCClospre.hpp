@@ -156,6 +156,8 @@ void tree_dec_lospre_leaf(T_t &T, typename boost::graph_traits<T_t>::vertex_desc
   assignment_lospre a;
   assignment_list_lospre_t &alist = T[t].assignments;
 
+  wassert (!alist.size());
+
   a.s.get<0>() = 0;
   a.s.get<1>() = 0;
   a.global.resize(boost::num_vertices(G));
@@ -170,6 +172,10 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
   adjacency_iter_t c, c_end;
   assignment_list_lospre_t::iterator ai;
   boost::tie(c, c_end) = adjacent_vertices(t, T);
+
+#ifdef DEBUG_LOSPRE_ASS
+  std::cout << "Introduce (" << t << "):\n"; std::cout.flush();
+#endif
 
   assignment_list_lospre_t &alist = T[t].assignments;
   std::swap(alist, T[*c].assignments);
@@ -187,17 +193,21 @@ int tree_dec_lospre_introduce(T_t &T, typename boost::graph_traits<T_t>::vertex_
   for(ai = alist.begin(); ai != alist.end(); ++ai)
     {
       ai->local.insert(i);
-      for(unsigned short int j = 0; j <= maxval; j++)
-        {
-          ai->global[i] = j;
 
+      for(int j = maxval; j >= 0; j--)
+        {
           if(maxval > 1 && G[i].i_uses[0] && !(j & 2))
             continue;
           if(maxval > 3 && G[i].i_uses[1] && !(j & 4))
             continue;
 
-          ai = alist.insert(ai, *ai);
-          ++ai;
+          if (j != maxval)
+            {
+              ai = alist.insert(ai, *ai);
+              ++ai;
+            }
+            
+          ai->global[i] = j;
         }
     }
 
@@ -275,7 +285,8 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
             if (((ai->global[i] & true) && !G[i].invalidates) >= ((ai->global[boost::target(*n, G)] & true) || G[boost::target(*n, G)].uses))
               continue;
 
-            if (G[i].ic->op == IPUSH || G[i].ic->op == SEND) // Never separate parameter passing from the call
+            if (G[i].ic->op == IPUSH || G[i].ic->op == SEND || // Never separate: parameter passing - call, goto - target, jump table - target
+              G[i].ic->op == GOTO  || G[i].ic->op == JUMPTABLE)
               {
                 ai = alist.erase(ai);
                 goto nextassignment;
@@ -306,15 +317,16 @@ void tree_dec_lospre_forget(T_t &T, typename boost::graph_traits<T_t>::vertex_de
 
             if (((ai->global[boost::source(*n, G)] & true) && !G[boost::source(*n, G)].invalidates) >= ((ai->global[i] & true) || G[i].uses))
               continue;
-              
-            if (G[boost::source(*n, G)].ic->op == IPUSH || G[boost::source(*n, G)].ic->op == SEND) // Never separate parameter passing from the call
+
+            if (G[boost::source(*n, G)].ic->op == IPUSH || G[boost::source(*n, G)].ic->op == SEND || // Never separate: parameter passing - call, goto - target, jump table - target
+              G[boost::source(*n, G)].ic->op == GOTO  || G[boost::source(*n, G)].ic->op == JUMPTABLE)
               {
                 ai = alist.erase(ai);
                 goto nextassignment;
               }
 
             if(((ai->global[boost::source(*n, G)] & true) && !G[boost::source(*n, G)].invalidates) < (ai->global[i] & true))
-              ai->s.get<1>() += 0.1f + forNextIcOnly(G[i].ic); // Small bias against moving calculations - also ensures termination of the algorithm by avoiding pointless moves. Avoid separating condition from ifx.
+              ai->s.get<1>() += 0.1f + forNextIcOnly(G[boost::source(*n, G)].ic); // Small bias against moving calculations - also ensures termination of the algorithm by avoiding pointless moves. Avoid separating condition from ifx.
 
             ai->s.get<1>() += bitVectBitsInCommon(G[boost::source(*n, G)].ic->rlive, G[i].ic->rlive) + resultsize + (maxval > 1) * leftsize + (maxval > 3) * rightsize; // Lifetime cost at point of calculation.
 
@@ -330,6 +342,7 @@ nextassignment:
   alist.sort();
 
 #ifdef DEBUG_LOSPRE_ASS
+  std::cout << "Assignments after cost update: " << alist.size() << "\n"; std::cout.flush();
   for(ai = alist.begin(); ai != alist.end(); ++ai)
     {
       print_assignment(*ai, G);
@@ -641,7 +654,7 @@ typename boost::graph_traits<G_t>::vertex_descriptor split_edge(T_t &T, G_t &G, 
   boost::add_edge(n, boost::target(e, G), G[e], G);
 
 #ifdef DEBUG_LOSPRE
-  std::cout << "Calculating " << OP_SYMBOL_CONST(tmpop)->name << " at ic " << newic->key << "\n";
+  std::cout << "Calculating " << OP_SYMBOL_CONST(tmpop)->name << " at new ic " << newic->key << " (edge weight " << G[e] << ")\n";
 #endif
 
   // Update tree-decomposition.
@@ -774,7 +787,7 @@ static int implement_lospre_assignment(assignment_lospre a, T_t &T, G_t &G, cons
     return(0);
 
 #ifdef DEBUG_LOSPRE
-  std::cout << "Optimizing at " << ic->key << "\n"; std::cout.flush();
+  std::cout << "Optimizing at ic " << ic->key << " (sizes " << resultsize << ", " << leftsize << ", " << rightsize << ", maxval " << maxval << ")\n"; std::cout.flush();
 #endif
 
   tmpop = newiTempOperand (operandType (IC_RESULT (ic)), TRUE);
