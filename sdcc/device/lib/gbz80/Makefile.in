@@ -18,6 +18,7 @@ Z80_FLOAT = $(COMMON_FLOAT)
 
 Z80_INT = $(COMMON_INT) \
   _mulschar.c \
+  _muluchar.c \
   _divschar.c \
   _divuchar.c \
   _modschar.c \
@@ -56,9 +57,8 @@ Z80_SDCC = $(COMMON_SDCC) \
 Z80SOURCES = $(addprefix ../,$(Z80_FLOAT) $(Z80_INT) $(Z80_LONG) $(Z80_LONGLONG) $(Z80_SDCC))
 Z8OBJECTS = $(patsubst %.c,%.rel,$(Z80_FLOAT) $(Z80_INT) $(Z80_LONG) $(Z80_LONGLONG) $(Z80_SDCC))
 
-OBJ = div.rel mul.rel memcpy.rel abs.rel \
-      __initrleblock.rel heap.rel __sdcc_call_hl.rel \
-      setjmp.rel atomic_flag_test_and_set.rel strlen.rel
+OBJ = __initrleblock.rel heap.rel __sdcc_call_hl.rel \
+      setjmp.rel atomic_flag_test_and_set.rel
 
 LIB = gbz80.lib
 CC = $(SCC)
