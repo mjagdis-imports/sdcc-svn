@@ -489,7 +489,7 @@ PORT stm8_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, TRUE },
+  { -1, false },                /* can handle arbitrary shifts, has NO (noasm2 branch) 16x16->32 multiplication */
   { stm8_emitDebuggerSymbol,
     {
       stm8_dwarfRegNum,
