@@ -16,7 +16,17 @@ include $(srcdir)/../incl.mk
 
 Z80_FLOAT = $(COMMON_FLOAT)
 
-Z80_INT = $(COMMON_INT)
+Z80_INT = $(COMMON_INT) \
+  _mulschar.c \
+  _divschar.c \
+  _divuchar.c \
+  _modschar.c \
+  _moduchar.c \
+  _mulint.c \
+  _divsint.c \
+  _divuint.c \
+  _modsint.c \
+  _moduint.c
 
 Z80_LONG = $(COMMON_LONG) \
   _divulong.c \
@@ -30,18 +40,23 @@ Z80_LONGLONG = $(COMMON_LONGLONG) \
   _modulonglong.c
 
 Z80_SDCC = $(COMMON_SDCC) \
+  __itoa.c \
+  __ltoa.c \
   _startup.c \
   sprintf.c \
   vprintf.c \
   _strcmp.c \
+  _strcpy.c \
+  _strlen.c \
+  memcpy.c \
+  _memmove.c \
   atomic_flag_clear.c
 
 Z80SOURCES = $(addprefix ../,$(Z80_FLOAT) $(Z80_INT) $(Z80_LONG) $(Z80_LONGLONG) $(Z80_SDCC))
 Z8OBJECTS = $(patsubst %.c,%.rel,$(Z80_FLOAT) $(Z80_INT) $(Z80_LONG) $(Z80_LONGLONG) $(Z80_SDCC))
 
-OBJ = divunsigned.rel divsigned.rel divmixed.rel modunsigned.rel modsigned.rel modmixed.rel mul.rel mulchar.rel \
-      heap.rel memmove.rel strcpy.rel strlen.rel abs.rel __sdcc_call_hl.rel __sdcc_call_iy.rel crtenter.rel \
-      setjmp.rel atomic_flag_test_and_set.rel memcpy.rel __strreverse.rel __uitobcd.rel __ultobcd.rel __itoa.rel \
+OBJ = heap.rel __sdcc_call_hl.rel __sdcc_call_iy.rel crtenter.rel \
+      setjmp.rel atomic_flag_test_and_set.rel \
       __ltoa.rel __sdcc_bcall.rel
 
 LIB = z180.lib

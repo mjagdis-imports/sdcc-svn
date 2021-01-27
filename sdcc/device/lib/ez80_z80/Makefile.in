@@ -16,7 +16,17 @@ include $(srcdir)/../incl.mk
 
 Z80_FLOAT = $(COMMON_FLOAT)
 
-Z80_INT = $(COMMON_INT)
+Z80_INT = $(COMMON_INT) \
+  _mulschar.c \
+  _divschar.c \
+  _divuchar.c \
+  _modschar.c \
+  _moduchar.c \
+  _mulint.c \
+  _divsint.c \
+  _divuint.c \
+  _modsint.c \
+  _moduint.c
 
 Z80_LONG = $(COMMON_LONG) \
   _divulong.c \
@@ -30,10 +40,16 @@ Z80_LONGLONG = $(COMMON_LONGLONG) \
   _modulonglong.c
 
 Z80_SDCC = $(COMMON_SDCC) \
+  __itoa.c \
+  __ltoa.c \
   _startup.c \
   sprintf.c \
   vprintf.c \
   _strcmp.c \
+  _strcpy.c \
+  _strlen.c \
+  memcpy.c \
+  _memmove.c \
   atomic_flag_clear.c
 
 Z80SOURCES = $(addprefix ../,$(Z80_FLOAT) $(Z80_INT) $(Z80_LONG) $(Z80_LONGLONG) $(Z80_SDCC))
