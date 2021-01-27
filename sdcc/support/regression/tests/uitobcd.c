@@ -17,7 +17,7 @@ extern void __uitobcd (unsigned int v, unsigned char r[3]);
 
 void test__uitobcd (void)
 {
-#if defined(__SDCC_z80)
+#if 0
   CHECK(0);
   CHECK(1);
   CHECK(2);

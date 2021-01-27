@@ -49,6 +49,7 @@ STM8_SDCC = $(COMMON_SDCC) \
   _strcpy.c \
   _strlen.c \
   memcpy.c \
+  __memcpy.c \
   _memmove.c \
   sprintf.c \
   vprintf.c \

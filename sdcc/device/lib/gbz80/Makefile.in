@@ -49,6 +49,7 @@ Z80_SDCC = $(COMMON_SDCC) \
   _strcpy.c \
   _strlen.c \
   memcpy.c \
+  __memcpy.c \
   _memmove.c \
   atomic_flag_clear.c
 
