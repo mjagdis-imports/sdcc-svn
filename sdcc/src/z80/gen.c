@@ -1302,7 +1302,7 @@ aopForSym (const iCode * ic, symbol * sym, bool requires_a)
 /* aopForRemat - rematerializes an object                          */
 /*-----------------------------------------------------------------*/
 static asmop *
-aopForRemat (symbol * sym)
+aopForRemat (symbol *sym)
 {
   iCode *ic = sym->rematiCode;
   asmop *aop = newAsmop (AOP_IMMD);
@@ -2716,7 +2716,6 @@ aopPut (asmop *aop, const char *s, int offset)
       break;
 
     case AOP_REG:
-emitDebug ("; aopPut() AOP_REG");
       if (!strcmp (s, "!*hl"))
         emit2 ("ld %s,!*hl", aop->aopu.aop_reg[offset]->name);
       else
