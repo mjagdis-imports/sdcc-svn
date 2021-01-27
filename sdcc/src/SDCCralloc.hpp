@@ -428,6 +428,25 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
   for (ic = start_ic; ic; ic = ic->next)
     {
       wassertl (key_to_index[ic->key] < boost::num_vertices(cfg), "Node not in CFG.");
+      
+      if (ic->op == FUNCTION)
+        {
+          std::cout << "FUNCTION: ";
+          printTypeChain (operandType (IC_LEFT (ic)), stdout);
+          std::cout << "\n";
+        }
+      else if (ic->op == CALL && !(ic->prev && ic->prev->op == SEND && ic->prev->builtinSEND))
+        {
+          std::cout << "CALL: ";
+          printTypeChain (operandType (IC_LEFT (ic)), stdout);
+          std::cout << "\n";
+        }
+      else if (ic->op == PCALL)
+        {
+          std::cout << "PCALL: ";
+          printTypeChain (operandType (IC_LEFT (ic))->next, stdout);
+          std::cout << "\n";
+        }
 
       if (ic->op != GOTO && ic->op != RETURN && ic->op != JUMPTABLE && ic->next)
         {
