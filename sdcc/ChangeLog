@@ -1,9 +1,38 @@
+2020-02-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c:
+	  Fix printing of function with variable arguments (e.g. for debug dumps).
+
+2020-02-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCattr.h,
+	  src/SDCCattr.c,
+	  src/SDCC.y,
+	  src/SDCCsymt.h,
+	  src/Makefile.in:
+	  Infrastructure for attributes.
+
+2020-02-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Fix bug #3174.
+
+2020-01-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c:
+	  Fix bug #3173.
+	* src/z80/peeph.def:
+	  Split rule for add from adc, sbc rule due to differences in flag handling.
+
 2020-01-27 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/peeph.def:
 	  Pick some improvements from patch #362 by Visenri.
 	* support/regression/tests/bug-3172.c:
 	  Test for bug #3172.
+	* device/lib/_strcpy.c:
+	  Pick a fix from noasm2 branch.
 
 2020-01-26 Philipp Klaus Krause <pkk AT spth.de>
 
