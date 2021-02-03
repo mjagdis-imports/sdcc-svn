@@ -42,91 +42,6 @@ void *memset (void *s, unsigned char c, size_t n)
 void *memset (void *s, int c, size_t n)
 #endif
 
-#if !defined (_SDCC_NO_ASM_LIB_FUNCS) && (\
-              defined (__SDCC_z80) ||\
-              defined (__SDCC_ez80_z80) ||\
-              defined (__SDCC_z180) ||\
-              defined (__SDCC_z80n) ||\
-              defined (__SDCC_r2k) ||\
-              defined (__SDCC_z3ka))
-
-__naked
-{
-  (void)s;
-  (void)c;
-  (void)n;
-  __asm
-    pop   af
-    pop   hl
-#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-    dec   sp
-#endif
-    pop   de
-    pop   bc
-    push  bc
-    push  de
-#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-    inc   sp
-#endif
-    push  hl
-    push  af
-    ld    a, c
-    or    a, b
-    ret   Z
-#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-    ld    (hl), d
-#else
-    ld    (hl), e
-#endif
-    dec   bc
-    ld    a, c
-    or    a, b
-    ret   Z
-    push  hl
-    ld    e, l
-    ld    d, h
-    inc   de
-    ldir
-    pop   hl
-    ret
-  __endasm;
-}
-#elif !defined (_SDCC_NO_ASM_LIB_FUNCS) && defined(__SDCC_gbz80)
-__naked
-{
-  (void)s;
-  (void)c;
-  (void)n;
-  __asm
-    ldhl  sp,#2
-    ld    e, (hl)
-    inc   hl
-    ld    d, (hl)
-    inc   hl
-    ld    a, (hl)
-    inc   hl
-#ifndef __SDCC_BROKEN_STRING_FUNCTIONS
-    inc   hl
-#endif
-    ld    c, (hl)
-    inc   hl
-    ld    b, (hl)
-    ld    l, e
-    ld    h, d
-    inc   b
-    inc   c
-    jr    20$
-10$:
-    ld    (hl+),a
-20$:
-    dec   c
-    jr    NZ, 10$
-    dec   b
-    jr    NZ, 10$
-    ret
-  __endasm;
-}
-#else
 {
   register size_t sz = n;
   if (sz != 0)
@@ -139,7 +54,6 @@ __naked
     }
   return s;
 }
-#endif
 #else
 
   /* assembler implementation for mcs51 */
