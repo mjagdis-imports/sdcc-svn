@@ -1,5 +1,10 @@
 2020-02-04 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/z80/gen.c:
+	  Make end-of-call stack adjustment tolerate return value in a.
+
+2020-02-04 Philipp Klaus Krause <pkk AT spth.de>
+
 	* support/regression/tests/atomic.c
 	  support/regression/tests/bug3440327.c
 	  support/regression/tests/gcc-torture-execute-pr60003.c
