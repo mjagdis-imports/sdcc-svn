@@ -56,6 +56,7 @@ int bug(void)
 
 void testBug (void)
 {
+#if 0  // Disabled for noasm2 branch, since it requires asm-implemented functionality.
 #if defined(__SDCC_mcs51) || defined(__SDCC_z80) || defined(__PORT_HOST)
 	if (setjmp (b))
 	{
@@ -66,6 +67,7 @@ void testBug (void)
 		bug ();
 		ASSERT (0);
 	}
+#endif
 #endif
 }
 

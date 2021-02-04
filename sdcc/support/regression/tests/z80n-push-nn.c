@@ -7,7 +7,7 @@
 int x;
 typedef void* (*memcpy_p)(void *d, const void *s, size_t c);
 
-#ifdef __SDCC_z80n
+#if 0 // asm test disablked for noasm2 branch.
 int f(void) __naked
 {
     __asm

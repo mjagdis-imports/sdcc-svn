@@ -50,6 +50,7 @@ void f1(void)
 void
 testJmp (void)
 {
+#if 0  // Disabled for noasm2 branch, since it requires asm-implemented functionality.
 #if !defined(__SDCC_pic14) // Unimplemented setjmp
   jmp_buf catch;
   int exception;
@@ -72,6 +73,7 @@ testJmp (void)
   ASSERT (exception == 1);
 
   f1();
+#endif
 #endif
 
 // C99 might require setjmp to be a macro. The standard seems self-contradicting on this issue.

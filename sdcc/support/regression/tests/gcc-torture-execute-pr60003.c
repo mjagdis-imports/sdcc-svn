@@ -54,9 +54,11 @@ foo (int x)
 void
 testTortureExecute (void)
 {
+#if 0  // Disabled for noasm2 branch, since it requires asm-implemented functionality.
 #if !defined(__SDCC_pic14) // Unimplemented setjmp
   if (foo (1) == 0)
     ASSERT (0);
+#endif
 #endif
 }
 
