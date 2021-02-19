@@ -315,7 +315,7 @@ z80_init_asmops (void)
   asmop_return.size = 4;
   memset (asmop_return.regs, -1, 9);
   if (IS_GB)
-    z80_init_reg_asmop(&asmop_return, (const signed char[]){E_IDX, D_IDX, L_IDX, H_IDX, -1});
+    z80_init_reg_asmop(&asmop_return, (const signed char[]){L_IDX, H_IDX, C_IDX, B_IDX, -1});
   else
     z80_init_reg_asmop(&asmop_return, (const signed char[]){L_IDX, H_IDX, E_IDX, D_IDX, -1});
     
@@ -5311,7 +5311,7 @@ genFunction (const iCode * ic)
     }
   else if (!_G.omitFramePtr)
     {
-      emit2 ((optimize.codeSize && !IFFUNC_ISZ88DK_FASTCALL (ftype)) ? "!enters" : "!enter");
+      emit2 ((optimize.codeSize && !IFFUNC_ISZ88DK_FASTCALL (ftype)) ? "!enters" : "!enter"); // !enters might result in a function call to a helper function.
     }
 
   _G.stack.offset = sym->stack;
@@ -5397,6 +5397,13 @@ genEndFunction (iCode * ic)
             {
               symbol *tlbl = newiTempLabel (NULL);
               //restore P/O flag
+              if (retsize > 0 && retsize <= 4 && ASMOP_RETURN->regs[A_IDX] > 0 && ASMOP_RETURN->regs[A_IDX] < retsize) // Preserve return value in a.
+                {
+                  wassert (!IS_GB);
+                  emit2 ("ex (sp), hl");
+                  emit2 ("ld h, a");
+                  emit2 ("ex (sp), hl");
+                }
               emit2 ("pop af");
               //parity odd <==> P/O=0 <==> interrupt enable flag IFF2 was 0 <==>
               //don't enable interrupts as they were off before
@@ -9384,7 +9391,13 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
             if (right_aop->type == AOP_LIT && byteOfVal (right_aop->aopu.aop_lit, i) == 0xff)
               emit3 (A_CPL, 0, 0);
             else
-              emit3_o (A_XOR, ASMOP_A, 0, right_aop, i);
+              {
+                if (requiresHL (right_aop) && right_aop->type != AOP_REG && !hl_free)
+                  _push (PAIR_HL);
+                emit3_o (A_XOR, ASMOP_A, 0, right_aop, i);
+                if (requiresHL (right_aop) && right_aop->type != AOP_REG && !hl_free)
+                  _pop (PAIR_HL);
+              }
           }
         cheapMove (result_aop, i, ASMOP_A, 0, true);
         if(result_aop->type == AOP_REG &&

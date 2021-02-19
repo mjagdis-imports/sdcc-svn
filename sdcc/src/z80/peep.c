@@ -122,7 +122,7 @@ isReturned(const char *what)
       size = 4;
     }
     
-  const char *returnregs = IS_GB ? "hlde" : "dehl";
+  const char *returnregs = IS_GB ? "bchl" : "dehl";
 
   for(int i = 0; i <= size; i++)
     if(*what == returnregs[3 - i])
@@ -1642,8 +1642,10 @@ int z80instructionSize(lineNode *pl)
   return(999);
 }
 
-bool z80symmParmStack (void)
+bool z80symmParmStack (const char *name)
 {
+  if (!strcmp (name, "___sdcc_enter_ix"))
+   return false;
   return z80_symmParm_in_calls_from_current_function;
 }
 
