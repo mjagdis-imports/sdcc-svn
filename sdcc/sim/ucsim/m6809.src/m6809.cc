@@ -33,7 +33,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "glob.h"
 #include "serialcl.h"
-#include "portcl.h"
+#include "piacl.h"
 
 #include "m6809cl.h"
 
@@ -115,10 +115,15 @@ cl_m6809::mk_hw_elements(void)
   add_hw(h= new cl_serial(this, 0, 0xc000));
   h->init();
 
-  class cl_port *p0;
+  add_hw(h= new cl_serial(this, 1, 0xc008));
+  h->init();
+
+  class cl_pia *p0, *p1;
   
-  add_hw(p0= new cl_port(this, 0, 0xc010));
+  add_hw(p0= new cl_pia(this, 0, 0xc010));
   p0->init();
+  add_hw(p1= new cl_pia(this, 1, 0xc020));
+  p1->init();
 
   class cl_port_ui *d;
   add_hw(d= new cl_port_ui(this, 0, "dport"));
@@ -132,7 +137,7 @@ cl_m6809::mk_hw_elements(void)
   pd.cell_in = p0->ina;
   pd.keyset  = keysets[0];
   pd.basx    = 1;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 0);
 
   pd.set_name("P0B");
@@ -141,16 +146,79 @@ cl_m6809::mk_hw_elements(void)
   pd.cell_in = p0->inb;
   pd.keyset  = keysets[1];
   pd.basx    = 20;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 1);
+
+  pd.set_name("P0CA");
+  pd.cell_dir= p0->ddca;
+  pd.cell_p  = p0->oca;
+  pd.cell_in = p0->inca;
+  pd.cell_dir= p0->ddca;
+  pd.keyset  = keysets[2];
+  pd.basx    = 40;
+  pd.basy    = 5;
+  pd.width   = 2;
+  d->add_port(&pd, 2);
+
+  pd.set_name("P0CB");
+  pd.cell_dir= p0->ddcb;
+  pd.cell_p  = p0->ocb;
+  pd.cell_in = p0->incb;
+  pd.cell_dir= p0->ddcb;
+  pd.keyset  = keysets[3];
+  pd.basx    = 54;
+  pd.basy    = 5;
+  pd.width   = 2;
+  d->add_port(&pd, 3);
+
+  // Port #1
+  pd.init();
+  pd.set_name("P1A");
+  pd.cell_dir= p1->ddra;
+  pd.cell_p  = p1->ora;
+  pd.cell_in = p1->ina;
+  pd.keyset  = keysets[4];
+  pd.basx    = 1;
+  pd.basy    = 11;
+  d->add_port(&pd, 4);
+
+  pd.set_name("P1B");
+  pd.cell_dir= p1->ddrb;
+  pd.cell_p  = p1->orb;
+  pd.cell_in = p1->inb;
+  pd.keyset  = keysets[5];
+  pd.basx    = 20;
+  pd.basy    = 11;
+  d->add_port(&pd, 5);
+
+  pd.set_name("P1CA");
+  pd.cell_dir= p1->ddca;
+  pd.cell_p  = p1->oca;
+  pd.cell_in = p1->inca;
+  pd.cell_dir= p1->ddca;
+  pd.keyset  = keysets[6];
+  pd.basx    = 40;
+  pd.basy    = 11;
+  pd.width   = 2;
+  d->add_port(&pd, 6);
+
+  pd.set_name("P1CB");
+  pd.cell_dir= p1->ddcb;
+  pd.cell_p  = p1->ocb;
+  pd.cell_in = p1->incb;
+  pd.cell_dir= p1->ddcb;
+  pd.keyset  = keysets[7];
+  pd.basx    = 54;
+  pd.basy    = 11;
+  pd.width   = 2;
+  d->add_port(&pd, 7);
 }
 
 void
 cl_m6809::make_cpu_hw(void)
 {
-  cpu= new cl_m6809_cpu(this);
+  add_hw(cpu= new cl_m6809_cpu(this));
   cpu->init();
-  add_hw(cpu);
 }
 
 void
@@ -1645,12 +1713,15 @@ cl_m6809::inst_com(t_mem code, u8_t *acc, t_addr ea, u8_t op8)
     {
       op8= *acc= ~(*acc);
     }
-  op8= ~(rom->read(ea));
-  tick(1);
-  vc.rd++;
-  rom->write(ea, op8);
-  tick(1);
-  vc.wr++;
+  else
+    {
+      op8= ~(rom->read(ea));
+      tick(1);
+      vc.rd++;
+      rom->write(ea, op8);
+      tick(1);
+      vc.wr++;
+    }
   
   SET_C(1);
   SET_O(0);
@@ -1668,14 +1739,17 @@ cl_m6809::inst_lsr(t_mem code, u8_t *acc, t_addr ea, u8_t op8)
       SET_C(*acc & 1);
       op8= *acc= (*acc) >> 1;
     }
-  op8= rom->read(ea);
-  tick(1);
-  vc.rd++;
-  SET_C(op8 & 1);
-  op8>>= 1;
-  rom->write(ea, op8);
-  tick(1);
-  vc.wr++;
+  else
+    {
+      op8= rom->read(ea);
+      tick(1);
+      vc.rd++;
+      SET_C(op8 & 1);
+      op8>>= 1;
+      rom->write(ea, op8);
+      tick(1);
+      vc.wr++;
+    }
   
   SET_Z(op8);
   SET_S(op8 & 0x80);
@@ -2227,8 +2301,20 @@ cl_m6809::exec_inst(void)
 int
 cl_m6809::accept_it(class it_level *il)
 {
-  class cl_m6809_nmi_src *is= (class cl_m6809_nmi_src *)(il->source);
+  //class cl_m6809_src_base *org= NULL;
+  class cl_m6809_src_base *is= (class cl_m6809_src_base *)(il->source);
+  class cl_m6809_src_base *parent= NULL;
 
+  if (is)
+    {
+      if ((parent= is->get_parent()) != NULL)
+	{
+	  //org= is;
+	  is= parent;
+	  il->source= is;
+	}
+    }
+  
   tick(3);
   reg.CC&= ~flagE;
   reg.CC|= is->Evalue;
@@ -2253,8 +2339,40 @@ cl_m6809::accept_it(class it_level *il)
 
 /* CPU hardware */
 
+class cl_m6809_src_base *
+cl_m6809_src_base::get_parent(void)
+{
+  class cl_m6809 *muc= (class cl_m6809 *)(application->get_uc());
+  switch (pass_to)
+    {
+    case irq_nmi:
+      return muc->src_nmi;
+      break;
+    case irq_firq:
+      return muc->src_firq;
+      break;
+    case irq_irq:
+      return muc->src_irq;
+      break;
+    default:
+      return NULL;
+    }
+  return NULL;
+}
+
+void
+cl_m6809_src_base::set_pass_to(t_mem value)
+{
+  if (value == 'f')
+    pass_to= irq_firq;
+  else if (value == 'n')
+    pass_to= irq_nmi;
+  else
+    pass_to= irq_irq;
+}
+
 bool
-cl_m6809_it_src::enabled(void)
+cl_m6809_irq_src::enabled(void)
 {
   if (!ie_cell)
     return false;
@@ -2262,6 +2380,21 @@ cl_m6809_it_src::enabled(void)
   e&= ie_mask;
   return e == 0;
 }
+
+bool
+cl_m6809_slave_src::enabled(void)
+{
+  if (!ie_cell)
+    return false;
+  t_mem e= ie_cell->get();
+  e&= ie_mask;
+  return e == ie_value;
+}
+
+
+/*
+ * peripheral to handle CPU specific stuff
+ */
 
 cl_m6809_cpu::cl_m6809_cpu(class cl_uc *auc):
   cl_hw(auc, HW_CPU, 0, "cpu")
@@ -2281,44 +2414,45 @@ cl_m6809_cpu::init()
   v->init();
   uc->vars->add(v= new cl_var("FIRQ", cfg, cpu_firq, "FIRQ request/clear"));
   v->init();
-  
-  class cl_it_src *is;
 
-  is= new cl_m6809_it_src(uc,
-			  irq_irq,
-			  muc->regs8->get_cell(3), flagI,
-			  cfg->get_cell(cpu_irq), 1,
-			  0xfff8,
-			  "Interrupt request",
-			  0,
-			  flagE,
-			  flagI);
-  is->init();
-  uc->it_sources->add(is);
+  muc->src_irq= new cl_m6809_irq_src(uc,
+				     irq_irq,
+				     muc->regs8->get_cell(3), flagI,
+				     cfg->get_cell(cpu_irq), 1,
+				     0xfff8,
+				     "Interrupt request",
+				     0,
+				     flagE,
+				     flagI,
+				     irq_none);
+  muc->src_irq->init();
+  uc->it_sources->add(muc->src_irq);
 
-  is= new cl_m6809_it_src(uc,
-			  irq_firq,
-			  muc->regs8->get_cell(3), flagF,
-			  cfg->get_cell(cpu_firq), 1,
-			  0xfff6,
-			  "Fast interrupt request",
-			  0,
-			  0,
-			  flagI|flagF);
-  is->init();
-  uc->it_sources->add(is);
+  muc->src_firq= new cl_m6809_irq_src(uc,
+				      irq_firq,
+				      muc->regs8->get_cell(3), flagF,
+				      cfg->get_cell(cpu_firq), 1,
+				      0xfff6,
+				      "Fast interrupt request",
+				      0,
+				      0,
+				      flagI|flagF,
+				      irq_none);
+  muc->src_firq->init();
+  uc->it_sources->add(muc->src_firq);
 
-  is= new cl_m6809_nmi_src(uc,
-			   irq_nmi,
-			   cfg->get_cell(cpu_nmi_en), 1,
-			   cfg->get_cell(cpu_nmi), 1,
-			   0xfffc,
-			   "Non-maskable interrupt request",
-			   0,
-			   flagE,
-			   flagI|flagF);
-  is->init();
-  uc->it_sources->add(is);
+  muc->src_nmi= new cl_m6809_src_base(uc,
+				      irq_nmi,
+				      cfg->get_cell(cpu_nmi_en), 1,
+				      cfg->get_cell(cpu_nmi), 1,
+				      0xfffc,
+				      "Non-maskable interrupt request",
+				      0,
+				      flagE,
+				      flagI|flagF,
+				      irq_none);
+  muc->src_nmi->init();
+  uc->it_sources->add(muc->src_nmi);
   
   return 0;
 }
@@ -2397,9 +2531,12 @@ cl_m6809_cpu::print_info(class cl_console_base *con)
   con->dd_printf("  Handler  ISR    En  Pr Req Act Name\n");
   for (i= 0; i < uc->it_sources->count; i++)
     {
-      class cl_it_src *is= (class cl_it_src *)(uc->it_sources->at(i));
-      t_addr a= uc->rom->get(is->addr) * 256 + uc->rom->get(is->addr+1);
-      con->dd_printf("  [0x%04x] 0x%04x", AU(is->addr), a);
+      class cl_m6809_src_base *is=
+	(class cl_m6809_src_base *)(uc->it_sources->at(i));
+      class cl_m6809_src_base *pa= is->get_parent();
+      class cl_m6809_src_base *isp= (pa)?pa:is;
+      t_addr a= uc->rom->get(isp->addr) * 256 + uc->rom->get(isp->addr+1);
+      con->dd_printf("  [0x%04x] 0x%04x", AU(isp->addr), a);
       con->dd_printf(" %-3s", (is->enabled())?"en":"dis");
       con->dd_printf(" %2d", uc->priority_of(is->nuof));
       con->dd_printf(" %-3s", (is->pending())?"YES":"no");
@@ -2422,7 +2559,7 @@ cl_m6809_cpu::print_info(class cl_console_base *con)
 	  con->dd_printf("\n");
 	}
     }
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

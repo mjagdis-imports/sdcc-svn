@@ -27,6 +27,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 //#include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 
 //#include "ddconfig.h"
 
@@ -70,7 +71,7 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
   if (params[1])
     if (!(params[1]->get_address(sim->uc, &end)))
       {
-	con->dd_printf("Error: wromg end address\n");
+	con->dd_printf("Error: wrong end address\n");
 	return(false);
       }
   if (params[0])
@@ -98,7 +99,7 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
 	    }
 	}
     }
-  con->dd_printf("Simulation started, PC=0x%06x\n"), AI(sim->uc->PC);
+  con->dd_printf("Simulation started, PC=0x%06x\n", AI(sim->uc->PC));
   /*
   if (sim->uc->fbrk_at(sim->uc->PC))
     sim->uc->do_inst(1);
@@ -489,59 +490,35 @@ CMDHELP(cl_exec_cmd,
 
 COMMAND_DO_WORK_APP(cl_expression_cmd)
 {
-  const char *s= cmdline->cmd;
-  const char *fmt= NULL;
-  int fmt_len= 0;
-  int i;
-  chars cs= chars();
+  const char *s;
+  chars cs, w, fmt;
+  
+  cmdline->shift();
+  s= cmdline->cmd;
   if (!s ||
       !*s)
     return(false);
 
-  for (i=0;i<cmdline->tokens->get_count();i++)
+  cs= s;
+  cs.start_parse();
+  w= cs.token(" \r\n\v\r");
+  fmt= "";
+  con->dd_color("result");
+  while (w.nempty())
     {
-      const char *p= (const char*)(cmdline->tokens->at(i));
-      cs+= " ";
-      cs+= p;
-    }
-
-  s= cs.c_str();
-  i= strspn(s, " \t\v\n\r");
-  s+= i;
-  t_mem v= 0;
-  if (s && *s)
-    {
-      if (*s == '/')
-	{
-	  i= strcspn(s, " \t\v\n\r");
-	  fmt= s+1;
-	  fmt_len= i;
-	  s+= i;
-	  i= strspn(s, " \t\v\n\r");
-	  s+= i;
-	}
-      if (s && *s)
-	{
-	  v= application->eval(s);
-	}
-      if (fmt)
-	{
-	  for (i= 0; i < fmt_len; i++)
-	    {
-	      switch (fmt[i])
-		{
-		case 'x': con->dd_printf("%x\n", MU(v)); break;
-		case 'X': con->dd_printf("0x%x\n", MU(v)); break;
-		case '0': con->dd_printf("0x%08x\n", MU32(v)); break;
-		case 'd': con->dd_printf("%d\n", MI(v)); break;
-		case 'o': con->dd_printf("%o\n", MU(v)); break;
-		case 'u': con->dd_printf("%u\n", MU(v)); break;
-		case 'b': con->dd_printf("%s\n", cbin(v,8*sizeof(v)).c_str()); break;
-		}
-	    }
-	}
+      if (w.starts_with("/"))
+	fmt= w;
       else
-	con->dd_printf("%d\n", MI(v));
+	{
+	  t_mem v= 0;
+	  if (w.nempty())
+	    {
+	      v= application->eval(w);
+	      con->print_expr_result(v, fmt.nempty()?((const char *)fmt):NULL);
+	    }
+	  fmt= "";
+	}
+      w= cs.token(" \n\r\v\t");
     }
   return(false);
 }
@@ -550,5 +527,102 @@ CMDHELP(cl_expression_cmd,
 	"expression [/format] expr",
 	"Evaluate the expression",
 	"long help of expression ")
+
+
+/*
+ * HISTORY command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_cmd)
+{
+  class cl_exec_hist *hi= uc->hist;
+
+  if (hi->get_used() == 0)
+    return 0;
+  uc->hist->list(con, true, 10);
+  return 0;
+}
+
+CMDHELP(cl_hist_cmd,
+	"history",
+	"Execution history",
+	"long help of history")
+
+
+/*
+ * HISTORY INFO command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_info_cmd)
+{
+  //int i;
+  //class cl_cmd_arg *params[1]= { cmdline->param(0) };
+  //char *s= NULL;
+  class cl_exec_hist *hi= uc->hist;
+  
+  con->dd_printf("len: %d\n", hi->get_len());
+  con->dd_printf("used: %u\n", hi->get_used());
+  con->dd_printf("insts: %u\n", hi->get_insts());
+  return 0;
+}
+
+CMDHELP(cl_hist_info_cmd,
+	"history info",
+	"Information about execution history",
+	"long help of history info")
+
+
+/*
+ * HISTORY CLEAR command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_clear_cmd)
+{
+  //int i;
+  //class cl_cmd_arg *params[1]= { cmdline->param(0) };
+  //char *s= NULL;
+  class cl_exec_hist *hi= uc->hist;
+
+  hi->clear();
+  
+  return 0;
+}
+
+CMDHELP(cl_hist_clear_cmd,
+	"history clear",
+	"Clear execution history",
+	"long help of history clear")
+
+
+/*
+ * HISTORY LIST command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_list_cmd)
+{
+  int nr= 10;
+  class cl_cmd_arg *params[1]= { cmdline->param(0) };
+  //char *s= NULL;
+  class cl_exec_hist *hi= uc->hist;
+
+  if (hi->get_used() == 0)
+    return 0;
+
+  if (params[0] != NULL)
+    nr= params[0]->i_value;
+  uc->hist->list(con, true, nr);
+  
+  return 0;
+}
+
+CMDHELP(cl_hist_list_cmd,
+	"history list [nr]",
+	"List last `nr' elements of execution history",
+	"long help of history list")
+
 
 /* End of cmd.src/cmd_exec.cc */

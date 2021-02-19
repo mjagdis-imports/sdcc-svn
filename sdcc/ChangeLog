@@ -1,3 +1,276 @@
+2021-02-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/lonesha256.c:
+	  Fix gbz80 xor code generation bug #3181.
+
+2021-02-12 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* support/makebin/makebin.c: Replace getline with fgetc
+
+2021-02-12 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* support/makebin/makebin.c: Tone down filter of -yS
+
+2021-02-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* support/makebin/makebin.c: Add patch #365 (-yS)
+
+2021-02-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* support/makebin/makebin.c: Add patch #364 (-yp)
+
+2021-02-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCpeeph.c
+	  src/port.h
+	  src/z80/gen.c
+	  src/z80/peep.c
+	  src/z80/peep.h,
+	  support/regression/tests/bug-3178.c:
+	  Fix bug #3178.
+
+2021-02-09 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmain.c:
+	  Add language override option -x (feature request #667).
+
+2021-02-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/SDCCpeeph.c: fix function names in error messages
+
+2021-02-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* support/makebin/makebin.c: add patch #360
+
+2021-02-05 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCattr.c: fix include filename
+	* ChangeLog: it's no longer 2020
+
+2021-02-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Make end-of-call stack adjustment tolerate return value in a.
+
+2021-02-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Separate __z88dk_fastcall registers from return value registers.
+
+2021-02-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix a bug in code generation for wide unary minus with upper operand word in hl.
+
+2021-02-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/peep.c:
+	  Refactor handling of return value registers.
+
+2021-02-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c:
+	  Fix printing of function with variable arguments (e.g. for debug dumps).
+	* src/z80/gen.c,
+	  src/stm8/gen.c:
+	  Refactor register asmop intialization.
+
+2021-02-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCattr.h,
+	  src/SDCCattr.c,
+	  src/SDCC.y,
+	  src/SDCCsymt.h,
+	  src/Makefile.in:
+	  Infrastructure for attributes.
+
+2021-02-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Fix bug #3174.
+
+2021-01-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c:
+	  Fix bug #3173.
+	* src/z80/peeph.def:
+	  Split rule for add from adc, sbc rule due to differences in flag handling.
+
+2021-01-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def:
+	  Pick some improvements from patch #362 by Visenri.
+	* support/regression/tests/bug-3172.c:
+	  Test for bug #3172.
+	* device/lib/_strcpy.c:
+	  Pick a fix from noasm2 branch.
+
+2021-01-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def:
+	  Pick some improvements from patch #362 by Visenri.
+
+2021-01-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def:
+	  Pick some improvements from patch #362 by Visenri.
+
+2021-01-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def:
+	  Fix bug #3170.
+
+2021-01-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3169.c:
+	  Fix bug #3169.
+
+2021-01-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix an issue in handling of non-dead a in __sfr access, possibly bug #3168.
+
+2021-01-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/pdk/gen.c,
+	  support/regression/tests/bug-3167.c:
+	  Fix bug #3167.
+
+2021-01-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix an issue in handling surviving a when assigning single bytes from (hl) to stack.
+	* support/regression/tests/bug-3166.c:
+	  Test for bug #3166.
+
+2021-01-03 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c,
+	  src/SDCCast.h,
+	  src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/SDCCdwarf2.c,
+	  src/cdbFile.c: partial fix for bug #3153
+	* suppport/regression/tests/bug-3081.c: avoid redefinition warning
+
+2021-01-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* sim/ucsim/cmd.src/cmdlex.l: reverted previous change
+	* sim/ucism/cmd.src/cmdutil.h: ensure SOCKET_AVAIL defined before use
+
+2021-01-02 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* sim/ucsim/cmd.src/cmdlex.l: change #include order so SOCKET defined
+
+2020-12-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fixes in handling register operands.
+	* src/z80/ralloc2.cc:
+	  More flexibility for register operands in cast and ^.
+
+2020-12-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix an issue in handling of surviving registers in unsigned upcast.
+
+2020-12-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/pic14/aclocal.m4:
+	  Update to automake 1.16.2 to fix bug #3140.
+	* device/lib/pic14/libc/Makefile.am:
+	  Port itoa, ltoa rename to pic14 to fix bug #3110.
+	* src/clean.mk:
+	  Include pdk ports in make clean to fix bug #3152.
+	* support/regression/ports/stm8/spec.mk,
+	  support/regression/ports/stm8-large/spec.mk:
+	  Increase stm8 test timeout by 50%, to accomodate slow macOS PPC (bug #3149).
+
+2020-12-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCval.c,
+	  .version,
+	  support/regression/test/digit_separators.c:
+	  C23 digit separators.
+
+2020-12-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.lex,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCval.c,
+	  .version:
+	  C23 disallows concatenation of differently-prefixed string literals (N2594).
+
+2020-12-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve &, |, ^ by integer constant expression, merge ^ and ~.
+
+2020-11-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCmain.c,
+	  device/include/Makefile.in,
+	  device/include/rab,
+	  .version:
+	  Migrate Rabbit headers from OpenRabbit to SDCC.
+
+2020-11-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/main.c:
+	  Change Rabbit default data location to 0xa000.
+
+2020-11-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Update links to upstream ASxxxx, patch by Warner Losh.
+
+2020-11-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Unify ~,^.
+
+2020-11-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improve handling of rematerialized stack locations in +,-.
+	* src/stm8/peeph.def:
+	  Improve negation of carry result.
+
+2020-11-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Enable non-zero right GET_VALUE_AT_ADDRESS operand for tlcs90.
+	* src/SDCClospre.cc:
+	  Enable speculative division for pdk in lospre (though pdk does not use lospre yet).
+
+2020-11-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pic14/glue.c:
+	  --code-loc support for pic14, patch by Georgi Georgiev.
+
+2020-11-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sim/ucsim/sim.src/mem.cc:
+	  Fix spelling in debug message.
+	  sim/ucsim/doc/index.html:
+	  Reencode to UTF-8.
+
+2020-11-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-3141.c:
+	  Disable test for mcs51 due to bug #3146.
+
 2020-11-03 Sergey Belyashov <sergey.belyashov@gmail.com>
 
 	* device/lib/z80/Makefile.in,

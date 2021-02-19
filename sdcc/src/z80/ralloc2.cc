@@ -399,8 +399,8 @@ static void add_operand_conflicts_in_node(const cfg_node &n, I_t &I)
   if(!result || !IS_SYMOP(result))
     return;
     
-  if(!(ic->op == UNARYMINUS || ic->op == '+' || ic->op == '-' || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND)) 
-    return; // Code generation can always handle all other operations. Todo: Handle ^, |, BITWISEAND and float UNARYMINUS there as well.
+  if(!(ic->op == UNARYMINUS || ic->op == '+' || ic->op == '-' || ic->op == '|' || ic->op == BITWISEAND)) 
+    return; // Code generation can always handle all other operations. Todo: Handle |, BITWISEAND and float UNARYMINUS there as well.
    
   operand_map_t::const_iterator oir, oir_end, oirs; 
   boost::tie(oir, oir_end) = n.operands.equal_range(OP_SYMBOL_CONST(result)->key);
@@ -581,7 +581,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     IS_TRUE_SYMOP (right) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (right)->etype))))
     return(false);
 
-  if (ic->op == '^' || ic->op == BITWISEAND || ic->op == '|' || ic->op == '~' || ic->op == LEFT_OP) // Codegen can handle it all.
+  if (ic->op == CAST || ic->op == '^' || ic->op == BITWISEAND || ic->op == '|' || ic->op == '~' || ic->op == LEFT_OP) // Codegen can handle it all.
     return(true);
 
   if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))
@@ -600,7 +600,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     getSize(operandType(IC_RESULT(ic))) == 1 && dying_A)
     return(true);
 
-  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_GB || ic->op == '~') && // First byte of input and last byte of output may be in A.
+  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_GB) && // First byte of input and last byte of output may be in A.
     IS_ITEMP(result) && dying_A &&
     (IS_ITEMP(left) || IS_OP_LITERAL(left) || operand_on_stack(left, a, i, G)) &&
     (!right || IS_ITEMP(right) || IS_OP_LITERAL(right) || operand_on_stack(right, a, i, G)))
@@ -697,8 +697,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
         !((ic->op == RIGHT_OP || ic->op == LEFT_OP) &&
           (IS_OP_LITERAL(right) || operand_in_reg(right, REG_A, ia, i, G) || getSize(operandType(IC_RESULT(ic))) == 1 && ia.registers[REG_B][1] < 0)) &&
         !((ic->op == '=' || ic->op == CAST) && !(IY_RESERVED && POINTER_SET(ic))) &&
-        !IS_BITWISE_OP (ic) &&
-        !(ic->op == '~') &&
         !(ic->op == '*' && (IS_ITEMP(IC_LEFT(ic)) || IS_OP_LITERAL(IC_LEFT(ic))) && (IS_ITEMP(IC_RIGHT(ic)) || IS_OP_LITERAL(IC_RIGHT(ic)))) &&
         !((ic->op == '-' || ic->op == '+' || ic->op == EQ_OP) && IS_OP_LITERAL(IC_RIGHT(ic))))
         {
@@ -721,7 +719,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       ic->op != '+' &&
       ic->op != '-' &&
       (ic->op != '*' || !IS_OP_LITERAL(IC_LEFT(ic)) && !IS_OP_LITERAL(right)) &&
-      !IS_BITWISE_OP(ic) &&
       ic->op != GET_VALUE_AT_ADDRESS &&
       ic->op != '=' &&
       ic->op != EQ_OP &&
@@ -882,7 +879,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     (IS_TRUE_SYMOP (result) && !operand_on_stack(result, a, i, G) || (operand_on_stack(left, a, i, G) ? exstk : IS_TRUE_SYMOP (left)) || (operand_on_stack(right, a, i, G) ? exstk : IS_TRUE_SYMOP (right)))) // Might use (hl).
     return(false);
 
-  if(ic->op == '+' && input_in_HL && (operand_on_stack(result, a, i, G) ? exstk : IS_TRUE_SYMOP (result))) // Might use (hl) for result.
+  if(IS_GB && ic->op == '+' && getSize(operandType(result)) > 1 && input_in_HL && operand_on_stack(result, a, i, G))
     return(false);
 
   // HL overwritten by result.
@@ -939,7 +936,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(ic->op == LEFT_OP && isOperandLiteral(IC_RIGHT(ic)))
     return(true);
 
-  if(exstk && !result_only_HL && (operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G) || operand_on_stack(result, a, i, G)) && ic->op == '+')
+  if(exstk && !result_only_HL && (operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)) && ic->op == '+')
     return(false);
 
   if((!POINTER_SET(ic) && !POINTER_GET(ic) && (
@@ -953,7 +950,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
          ic->op == '<' ||
          ic->op == EQ_OP ||*/
          (ic->op == '+' && getSize(operandType(IC_RESULT(ic))) == 1) ||
-         (ic->op == '+' && getSize(operandType(IC_RESULT(ic))) <= 2 && (result_only_HL || !IS_GB)) )))) // 16 bit addition on gbz80 might need to use add hl, rr.
+         (ic->op == '+' && (result_only_HL || !IS_GB)) )))) // addition on gbz80 might need to use add hl, rr.
     return(true);
 
   if((ic->op == '<' || ic->op == '>') && (IS_ITEMP(left) || IS_OP_LITERAL(left) || IS_ITEMP(right) || IS_OP_LITERAL(right))) // Todo: Fix for large stack.

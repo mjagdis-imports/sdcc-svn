@@ -39,7 +39,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // cmd
 #include "cmd_execcl.h"
-//#include "cmd_guicl.h"
 
 // local, sim.src
 //#include "simcl.h"
@@ -96,6 +95,7 @@ cl_sim::step(void)
 	{
 	  start_at= dnow();
 	}
+      uc->save_hist();
       if (uc->do_inst(1) == resGO)
 	steps_done++;
       if ((steps_todo > 0) &&
@@ -252,6 +252,9 @@ cl_sim::stop(int reason, class cl_ev_brk *ebrk)
 	case resSIMIF:
 	  cmd->frozen_console->dd_printf("Program stopped itself\n");
 	  break;
+	case resSELFJUMP:
+	  cmd->frozen_console->dd_printf("Jump to itself\n");
+	  break;
 	default:
 	  cmd->frozen_console->dd_printf("Unknown reason\n");
 	  break;
@@ -335,7 +338,6 @@ void
 cl_sim::build_cmdset(class cl_cmdset *cmdset)
 {
   class cl_cmd *cmd;
-  //class cl_cmdset *cset;
 
   cmdset->add(cmd= new cl_run_cmd("run", 0));
   cmd->init();
@@ -354,17 +356,24 @@ cl_sim::build_cmdset(class cl_cmdset *cmdset)
   cmd->init();
   cmd->add_name("n");
 
-  /*{
-    cset= new cl_cmdset();
-    cset->init();
-    cset->add(cmd= new cl_gui_start_cmd("start", 0));
+  //class cl_super_cmd *super_cmd;
+  //class cl_cmdset *cset;
+  /*
+    {
+    // info
+    super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("info"));
+    if (super_cmd)
+      cset= super_cmd->get_subcommands();
+    else {
+      cset= new cl_cmdset();
+      cset->init();
+    }
+    if (!super_cmd) {
+    cmdset->add(cmd= new cl_super_cmd("info", 0, cset));
     cmd->init();
-    cset->add(cmd= new cl_gui_stop_cmd("stop", 0));
-    cmd->init();
-  }
-  cmdset->add(cmd= new cl_super_cmd("gui", 0, cset));
-  cmd->init();
-  set_gui_help();
+    set_info_help(cmd);
+    }
+    }
   */
 }
 

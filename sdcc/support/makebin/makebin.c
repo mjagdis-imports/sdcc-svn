@@ -4,6 +4,8 @@
   Copyright (c) 2000 Michael Hope
   Copyright (c) 2010 Borut Razem
   Copyright (c) 2012 Noel Lemouel
+  Copyright (c) 2020-2021 Sebastian 'basxto' Riedel
+  Copyright (c) 2020 'bbbbbr'
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -90,7 +92,7 @@ usage (void)
            "  -s romsize     size of the binary file (default: rom banks * 16384)\n"
            "  -Z             genarate GameBoy format binary file\n"
            "GameBoy format options (applicable only with -Z option):\n"
-           "  -yo n          number of rom banks (default: 2)\n"
+           "  -yo n          number of rom banks (default: 2) (autosize: A)\n"
            "  -ya n          number of ram banks (default: 0)\n"
            "  -yt n          MBC type (default: no MBC)\n"
            "  -yl n          old licensee code (default: 0x33)\n"
@@ -99,7 +101,9 @@ usage (void)
            "  -yc            GameBoy Color compatible\n"
            "  -yC            GameBoy Color only\n"
            "  -ys            Super GameBoy\n"
+           "  -yS            Convert .noi file named like input file to .sym\n"
            "  -yj            set non-Japanese region flag\n"
+           "  -yp addr=value Set address in ROM to given value (address 0x100-0x1FE)\n"
            "Arguments:\n"
            "  <in_file>      optional IHX input file, '-' means stdin. (default: stdin)\n"
            "  <out_file>     optional output file, '-' means stdout. (default: stdout)\n");
@@ -117,7 +121,10 @@ struct gb_opt_s
   BYTE licensee_id;               /* old licensee code */
   BYTE is_gbc;                    /* 1 if GBC compatible, 2 if GBC only, false for all other*/
   BYTE is_sgb;                    /* True if SGB, false for all other*/
+  BYTE sym_conversion;            /* True if .noi file should be converted to .sym (default false)*/
   BYTE non_jp;                    /* True if non-Japanese region, false for all other*/
+  BYTE rom_banks_autosize;        /* True if rom banks should be auto-sized (default false)*/
+  BYTE address_overwrite[16];     /* For limited compatibility with very old versions */
 };
 
 void
@@ -282,6 +289,44 @@ gb_postproc (BYTE * rom, int size, int *real_size, struct gb_opt_s *o)
 
   rom[0x14B] = o->licensee_id;
 
+  for (i = 0; i < 16; i+=2)
+    {
+      if(o->address_overwrite[i] != 0xFF)
+        {
+          rom[0x0100 & o->address_overwrite[i]] = o->address_overwrite[i+1];
+          // warnings for builds ported from ancient GBDK
+          fprintf (stderr, "caution: -yp0x01%02x=0x%02x is outdated", o->address_overwrite[i], o->address_overwrite[i+1]);
+          if(o->address_overwrite[i] == 0x43)
+            switch(o->address_overwrite[i+1]&0xC0)
+              {
+              case 0x80:
+                fprintf (stderr, ", please use -yc instead");
+                break;
+              case 0xC0:
+                fprintf (stderr, ", please use -yC instead");
+                break;
+              default:
+                o->address_overwrite[i] = 0xFF;
+              }
+          if(o->address_overwrite[i] == 0x44 || o->address_overwrite[i] == 0x45)
+              fprintf (stderr, ", please use -yk cc instead");
+          if(o->address_overwrite[i] == 0x46)
+            if(o->address_overwrite[i+1] == 0x03)
+              fprintf (stderr, ", please use -ys instead");
+            else
+              o->address_overwrite[i] = 0xFF;
+          if(o->address_overwrite[i] == 0x47)
+            fprintf (stderr, ", please use -yt 0x%02x instead", o->address_overwrite[i+1]);
+          if(o->address_overwrite[i] == 0x4A)
+            fprintf (stderr, ", please use -yl 0x%02x instead", o->address_overwrite[i+1]);
+          if(o->address_overwrite[i] == 0x4B && o->address_overwrite[i+1] == 1)
+            fprintf (stderr, ", please use -yj instead");
+          if(o->address_overwrite[i] == 0xFF)
+            fprintf (stderr, ", this setting is the default");
+          fprintf (stderr, ".\n");
+        }
+    }
+
   /* Update complement checksum */
   chk = 0;
   for (i = 0x134; i < 0x14d; ++i)
@@ -302,7 +347,156 @@ gb_postproc (BYTE * rom, int size, int *real_size, struct gb_opt_s *o)
 }
 
 int
-read_ihx (FILE *fin, BYTE *rom, int size, int *real_size, int gb)
+rom_autosize_grow(BYTE **rom, int test_size, int *size, struct gb_opt_s *o)
+{
+  int last_size = *size;
+
+  while ((test_size > *size) && (o->nb_rom_banks <= 512))
+    {
+      o->nb_rom_banks *= 2;
+      // banks work differently for mbc6, they have half the size
+      // but this in general ignored by -yo
+      *size = o->nb_rom_banks * 0x4000;
+    }
+
+  if (o->nb_rom_banks > 512)
+    {
+      fprintf (stderr, "error: auto-size banks exceeded max of 512 banks.\n");
+      return 0;
+    }
+  else
+    {
+      BYTE * t_rom = *rom;
+      *rom = realloc (*rom, *size);
+      if (*rom == NULL)
+        {
+          free(t_rom);
+          fprintf (stderr, "error: couldn't re-allocate size for larger rom image.\n");
+          return 0;
+        }
+      memset (*rom + last_size, FILL_BYTE, *size - last_size);
+    }
+
+  return 1;
+}
+
+int
+noi2sym (char *filename)
+{
+  FILE *noi, *sym;
+  char *nname, *sname;
+  //ssize_t read;
+  char read = ' ';
+  // no$gmb's implementation is limited to 32 character labels
+  // we can safely throw away the rest
+  char label[33];
+  // 0x + 6 digit hex number
+  // -> 65536 rom banks is the maximum homebrew cartrideges support (TPP1)
+  char value[9];
+  int name_len = strlen(filename);
+  int i = 0;
+  // copy filename's value to nname and sname
+  nname = malloc((name_len+1) * sizeof(char));
+  strcpy (nname, filename);
+  sname = malloc((name_len+1) * sizeof(char));
+  strcpy (sname, filename);
+  // change the extensions
+  nname[name_len-1]='i';
+  nname[name_len-2]='o';
+  nname[name_len-3]='n';
+  sname[name_len-1]='m';
+  sname[name_len-2]='y';
+  sname[name_len-3]='s';
+
+  if (NULL == (noi = fopen (nname, "r")))
+    {
+      fprintf (stderr, "error: can't open %s: ", nname);
+      perror(NULL);
+      return 1;
+    }
+  if (NULL == (sym = fopen (sname, "w")))
+    {
+      fprintf (stderr, "error: can't create %s: ", sname);
+      perror(NULL);
+      return 1;
+    }
+  // write header
+  fprintf (sym, "; no$gmb compatible .sym file\n; Generated automagically by makebin\n");
+  // iterate through .noi file
+  while (read != EOF && (read = fgetc(noi)) != EOF)
+    {
+      // just skip line breaks
+      if (read == '\r' || read == '\n')
+        continue;
+      // read first 4 chars
+      for (i = 0; i < 4; ++i)
+        {
+          value[i] = read;
+          if ((read = fgetc(noi)) == EOF || read == '\r' || read == '\n')
+            {
+              // leave for-loop
+              break;
+            }
+        }
+      // we left loop early
+      if (i != 4)
+        continue;
+      // only accept if line starts with this
+      if (strncmp(value, "DEF ", 4) == 0)
+        {
+          // read label
+          for (i = 0; i < 32; ++i)
+            {
+              label[i] = read;
+              if ((read = fgetc(noi)) == EOF || read == '\r' || read == '\n' || read == ' ')
+                {
+                  // leave for-loop
+                  break;
+                }
+            }
+          // skip rest of the label
+          while (read != EOF && read != '\r' && read != '\n' && read != ' ')
+            read = fgetc(noi);
+          // it has to be end of file or line if it's not space
+          if (read != ' ')
+            continue;
+          // strings have to end with \0
+          label[i+1] = '\0';
+          // read value
+          for (i = 0; i < 8; ++i)
+            {
+              value[i] = read;
+              if ((read = fgetc(noi)) == EOF || read == '\r' || read == '\n')
+                {
+                  // leave for-loop
+                  break;
+                }
+            }
+          // number is too long; ignore
+          if (read != EOF && read != '\r' && read != '\n')
+            continue;
+          value[i+1] = '\0';
+          // we successfully read label and value
+
+          // but filter out some invalid symbols
+          if (strcmp(label, ".__.ABS.") != 0 && strncmp(label, "l__", 3) != 0)
+            fprintf (sym, "%02X:%04X %s\n", (unsigned int)(strtoul(value, NULL, 0)>>16), (unsigned int)strtoul(value, NULL, 0)&0xFFFF, label);
+        }
+      else
+        // skip until file/line end
+        while ((read = fgetc(noi))!= EOF && read != '\r' && read != '\n');
+    }
+
+  // free close files
+  fclose (noi);
+  fclose (sym);
+
+  fprintf (stderr, "Converted %s to %s.\n", nname, sname);
+  return 0;
+}
+
+int
+read_ihx (FILE *fin, BYTE **rom, int *size, int *real_size, struct gb_opt_s *o)
 {
   int record_type;
 
@@ -356,16 +550,25 @@ read_ihx (FILE *fin, BYTE *rom, int size, int *real_size, int gb)
           return 0;
         }
 
-      if (addr + nbytes > size)
+      if (addr + nbytes > *size)
         {
-          fprintf (stderr, "error: size of the buffer is too small.\n");
-          return 0;
+          // If auto-size is enabled, grow rom bank size by power of 2 when needed
+          if (o->rom_banks_autosize)
+            {
+              if (rom_autosize_grow(rom, addr + nbytes, size, o) == 0)
+                return 0;
+            }
+          else
+            {
+              fprintf (stderr, "error: size of the buffer is too small.\n");
+              return 0;
+            }
         }
 
       while (nbytes--)
         {
-          if (addr < size)
-            rom[addr++] = getbyte (fin, &sum);
+          if (addr < *size)
+            (*rom)[addr++] = getbyte (fin, &sum);
         }
 
       if (addr > *real_size)
@@ -390,12 +593,14 @@ read_ihx (FILE *fin, BYTE *rom, int size, int *real_size, int gb)
 int
 main (int argc, char **argv)
 {
-  int size = 32768, pack = 0, real_size = 0;
+  int size = 32768, pack = 0, real_size = 0, i = 0;
+  char *token;
   BYTE *rom;
   FILE *fin, *fout;
+  char *filename = NULL;
   int ret;
   int gb = 0;
-  struct gb_opt_s gb_opt = { "", {'0', '0'}, 0, 2, 0, 0x33, 0, 0 };
+  struct gb_opt_s gb_opt = { "", {'0', '0'}, 0, 2, 0, 0x33, 0, 0, 0, 0, 0, {0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0}};
 
 #if defined(_WIN32)
   setmode (fileno (stdout), O_BINARY);
@@ -442,8 +647,14 @@ main (int argc, char **argv)
                   usage ();
                   return 1;
                 }
-              gb_opt.nb_rom_banks = strtoul (*argv, NULL, 0);
-              size = gb_opt.nb_rom_banks * 0x4000;
+              // Use auto-size for rom banks if -yto size param is 'A'
+              if ((*argv)[0] == 'A' || (*argv)[0] == 'a')
+                  gb_opt.rom_banks_autosize = 1;
+              else
+                {
+                  gb_opt.nb_rom_banks = strtoul (*argv, NULL, 0);
+                  size = gb_opt.nb_rom_banks * 0x4000;
+                }
               break;
 
             case 'a':
@@ -504,8 +715,30 @@ main (int argc, char **argv)
               gb_opt.is_sgb = 1;
               break;
 
+            case 'S':
+              gb_opt.sym_conversion = 1;
+              break;
+
             case 'j':
               gb_opt.non_jp = 1;
+              break;
+
+            // like -yp0x143=0x80
+            case 'p':
+              // remove "-yp"
+              *argv += 3;
+              // effectively split string into argv and token
+              strtok(*argv, "=");
+              token = strtok(NULL, "=");
+              for (i = 0; i < 16; i+=2)
+                { 
+                  if(gb_opt.address_overwrite[i] == 0xFF)
+                    {
+                      gb_opt.address_overwrite[i] = strtoul (*argv, NULL, 0);
+                      gb_opt.address_overwrite[i+1] = strtoul (token, NULL, 0);
+                      break;
+                    }
+                }
               break;
 
             default:
@@ -532,6 +765,7 @@ main (int argc, char **argv)
               perror(NULL);
               return 1;
             }
+          filename = *argv;
         }
       ++argv;
     }
@@ -551,7 +785,17 @@ main (int argc, char **argv)
     }
   memset (rom, FILL_BYTE, size);
 
-  ret = read_ihx (fin, rom, size, &real_size, gb);
+  if (gb_opt.sym_conversion == 1)
+    {
+      if (filename)
+        noi2sym(filename);
+      else
+        {
+          fprintf (stderr, "error: .noi to .sym conversion needs an input file.\n");
+        }
+    }
+
+  ret = read_ihx (fin, &rom, &size, &real_size, &gb_opt);
 
   fclose (fin);
 

@@ -298,7 +298,7 @@ cl_memory::dump_s(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
 	 (a <= hva))
     {
       char c= d;
-      int i= d;
+      int i= d & 0xff;
       if (a >= lva)
 	{
 	  switch (c)
@@ -1664,8 +1664,8 @@ cl_address_space::undecode_area(class cl_address_decoder *skip,
 	}
       else if (d->is_in(begin, end))
 	{
-	  // decoder sould shrink
-	  D("    Sould shrink\n");
+	  // decoder should shrink
+	  D("    Should shrink\n");
 	  if (d->shrink_out_of(begin, end))
 	    {
 	      D("    Can be removed after shrink\n");
@@ -2603,10 +2603,9 @@ cl_error_mem_invalid_address(class cl_memory *amem, t_addr aaddr):
 void
 cl_error_mem_invalid_address::print(class cl_commander_base *c)
 {
-  //FILE *f= c->get_fout();
-  /*cmd_fprintf(f,*/c->dd_printf("%s: invalid address ", get_type_name());
-  /*cmd_fprintf(f,*/c->dd_printf(mem->addr_format, addr);
-  /*cmd_fprintf(f,*/c->dd_printf(" in memory %s.\n", mem->get_name());
+  c->dd_printf("%s: invalid address ", get_type_name());
+  c->dd_printf(mem->addr_format, addr);
+  c->dd_printf(" in memory %s.\n", mem->get_name());
 }
 
 /* Non-decoded address space access */
@@ -2621,10 +2620,9 @@ cl_error_mem_non_decoded(class cl_memory *amem, t_addr aaddr):
 void
 cl_error_mem_non_decoded::print(class cl_commander_base *c)
 {
-  //FILE *f= c->get_fout();
-  /*cmd_fprintf(f,*/c->dd_printf("%s: access of non-decoded address ", get_type_name());
-  /*cmd_fprintf(f,*/c->dd_printf(mem->addr_format, addr);
-  /*cmd_fprintf(f,*/c->dd_printf(" in memory %s.\n", mem->get_name());
+  c->dd_printf("%s: access of non-decoded address ", get_type_name());
+  c->dd_printf(mem->addr_format, addr);
+  c->dd_printf(" in memory %s.\n", mem->get_name());
 }
 
 cl_mem_error_registry::cl_mem_error_registry(void)

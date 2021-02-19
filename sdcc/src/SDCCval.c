@@ -1172,6 +1172,54 @@ constVal (const char *s)
 }
 
 /*-----------------------------------------------------------------*/
+/* sepStrToUll - like stroull, but also handles digit separators   */
+/*-----------------------------------------------------------------*/
+static unsigned long long 
+sepStrToUll (const char *nptr, char **endptr, int base)
+{
+  wassert (base >= 2 && base <= 16);
+
+  unsigned long long ret = 0ull;
+  bool separated = false;
+
+  for(;;nptr++)
+    {
+      int next = nptr[0];
+
+      // Skip digit separators
+      if (next == '\'')
+        {
+          separated = true;
+          continue;
+        }
+      
+      // Assumes 0-9, a-f and A-F are consecutive in character set.
+      if (next >= 'a' && next <= 'f')
+        next = next - 'a' + 10;
+      else if (next >= 'A' && next <= 'F')
+        next = next - 'A' + 10;
+      else if (next >= '0' && next <= '9')
+        next = next - '0';
+      else
+        break;
+
+      if (!(next >= 0 && next < base))
+        break;
+        
+      ret *= base;
+      ret += next;
+    }
+
+  if(separated && !options.std_c2x)
+    werror (W_DIGIT_SEPARATOR_C23);
+
+  if (endptr) 
+    *endptr = (char *)nptr;
+
+  return(ret);
+}
+
+/*-----------------------------------------------------------------*/
 /* constIntVal - converts an integer constant into correct type    */
 /* See ISO C11, section 6.4.4.1 for the rules.                     */
 /*-----------------------------------------------------------------*/
@@ -1194,9 +1242,11 @@ constIntVal (const char *s)
   if (s[0] == '0')
     {
       if (s[1] == 'b' || s[1] == 'B')
-        llval = strtoull (s + 2, &p, 2);
+        llval = sepStrToUll (s + 2, &p, 2);
+      else if (s[1] == 'x' || s[1] == 'X')
+        llval = sepStrToUll (s + 2, &p, 16);
       else
-        llval = strtoull (s, &p, 0);
+        llval = sepStrToUll (s, &p, 8);
       dval = (double)(unsigned long long int) llval;
       decimal = FALSE;
     }
@@ -1204,10 +1254,17 @@ constIntVal (const char *s)
     {
       dval = strtod (s, &p);
       if (dval >= 0.0)
-        llval = strtoull (s, &p, 0);
+        {
+          llval = sepStrToUll (s, &p, 10);
+          dval = (double)(unsigned long long int) llval;
+        }
       else
-        llval = strtoll (s, &p, 0);
-      decimal = TRUE;
+        {
+          llval = sepStrToUll (s + 1, &p, 10);
+          llval = -llval;
+          dval = (double) llval;
+        }
+      decimal = true;
     }
 
   if (errno)
@@ -1537,11 +1594,11 @@ strVal (const char *s)
   SPEC_SCLS (val->etype) = S_LITERAL;
   SPEC_CONST (val->etype) = 1;
 
-  // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 first (handling all escape sequences, etc).
-  utf_8 = copyStr (s[0] == '"' ? s : s + 1, &utf_8_size);
-
-  if (s[0] == '"') // UTF-8 string literal (any prefix u8 or L in the source would already have been stripped by earlier stages)
+  if (s[0] == '"' || s[0] == 'u' && s[1] == '8' && s[2] == '"') // UTF-8 string literal
     {
+      // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 (handling all escape sequences, etc).
+      utf_8 = copyStr (s[0] == '"' ? s : s + 2, &utf_8_size);
+
       SPEC_NOUN (val->etype) = V_CHAR;
       SPEC_USIGN (val->etype) = !options.signed_char;
       val->etype->select.s.b_implicit_sign = true;
@@ -1550,6 +1607,9 @@ strVal (const char *s)
     }
   else
     {
+      // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 first (handling all escape sequences, etc).
+      utf_8 = copyStr (s + 1, &utf_8_size);
+      
       size_t utf_32_size;
       // Convert to UTF-32 next, since converting UTF-32 to UTF-16 is easier than UTF-8 to UTF-16.
       const TYPE_UDWORD *utf_32 = utf_32_from_utf_8 (&utf_32_size, utf_8, utf_8_size);

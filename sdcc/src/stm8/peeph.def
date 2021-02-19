@@ -7,10 +7,10 @@ replace restart {
 } if notVolatile(%1), notVolatile(%2), notUsed(%1), notUsed('n'), notUsed('z')
 
 replace restart {
-	ldw	a, (%2, sp)
+	ld	a, (%2, sp)
 } by {
 	; peephole 0a removed dead load into a from %2.
-} if notUsed('n'), notUsed('z')
+} if notUsed('a'), notUsed('n'), notUsed('z')
 
 replace restart {
 	ldw	%1, %2
@@ -143,7 +143,7 @@ replace restart {
 } by {
 	; peephole 8 moved addition of offset into storage instruction
 	ldw	(%2, %1), %3
-} if notUsed(%1)
+} if notUsed(%1), notUsed('c')
 
 replace restart {
 	addw	%1, #%2
@@ -153,7 +153,7 @@ replace restart {
 	; peephole 9 moved addition of offset into storage instruction
 	ld	a, %4
 	ld	(%2, %1), a
-} if notUsed(%1)
+} if notUsed(%1), notUsed('c')
 
 replace restart {
 	addw	%1, #%2
@@ -161,7 +161,7 @@ replace restart {
 } by {
 	; peephole 9a moved addition of offset into clear instruction
 	clr	(%2, %1)
-} if notUsed(%1)
+} if notUsed(%1), notUsed('c')
 
 replace restart {
 	addw	%1, #%2
@@ -171,7 +171,7 @@ replace restart {
 	; peephole 10 moved addition of offset into storage instruction
 	ldw	%3, %4
 	ldw	(%2, %1), %3
-} if notUsed(%1)
+} if notUsed(%1), notUsed('c')
 
 replace restart {
 	incw	%1
@@ -185,20 +185,45 @@ replace restart {
 } if notUsed(%1)
 
 replace restart {
-	addw	%1, #(%2 + 0)
+	addw	%1, #(_%2)
 	ld	a, (%1)
 } by {
 	; peephole 10b moved addition of offset into storage instruction
-	ld	a, (%2, %1)
-} if notUsed(%1)
+	ld	a, (_%2, %1)
+} if notUsed(%1), notUsed('c')
 
 replace restart {
-	addw	%1, #(%2 + 0)
+	addw	%1, #(_%2)
 	inc	(%1)
 } by {
 	; peephole 10c moved addition of offset into increment instruction
-	inc	(%2, %1)
-} if notUsed(%1)
+	inc	(_%2, %1)
+} if notUsed(%1), notUsed('c')
+
+replace restart {
+	addw	%1, #(_%2)
+	ldw	%1, (%1)
+} by {
+	; peephole 10d moved addition of offset into storage instruction
+	ldw	%1, (_%2, %1)
+}if notUsed('c')
+
+replace restart {
+	addw	%1, #(_%2)
+	ld	(%1), a
+} by {
+	; peephole 10e moved addition of offset into storage instruction
+	ld	(_%2, %1), a
+} if notUsed(%1), notUsed('c')
+
+replace restart {
+	ldw %1, sp
+	addw    %1, #%2
+	ld  a, (%1)
+} by {
+	ld  a, (%2, sp)
+	; peephole 10f moved addition to sp to storage instruction.
+} if notUsed(%1), notUsed('c'), operandsLiteral(%2), immdInRange(0 255 '+' 0 %2 %9)
 
 replace restart {
 	ldw	(%1, sp), x
@@ -447,7 +472,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #0
-	; peephole 20-0 replaced or by bcpl.
+	; peephole 20-0 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -457,7 +482,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #1
-	; peephole 20-1 replaced or by bcpl.
+	; peephole 20-1 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -467,7 +492,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #2
-	; peephole 20-2 replaced or by bcpl.
+	; peephole 20-2 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -477,7 +502,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #3
-	; peephole 20-3 replaced or by bcpl.
+	; peephole 20-3 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -487,7 +512,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #4
-	; peephole 20-4 replaced or by bcpl.
+	; peephole 20-4 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -497,7 +522,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #5
-	; peephole 20-5 replaced or by bcpl.
+	; peephole 20-5 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -507,7 +532,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #6
-	; peephole 20-6 replaced or by bcpl.
+	; peephole 20-6 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -517,7 +542,7 @@ replace restart {
 	ld	(%1), a
 } by {
 	bcpl	%2, #7
-	; peephole 20-7 replaced or by bcpl.
+	; peephole 20-7 replaced xor by bcpl.
 } if notUsed(%1), notUsed('a')
 
 replace restart {
@@ -526,7 +551,7 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #0
-	; peephole 21-0 replaced or by bcpl.
+	; peephole 21-0 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1 %2)
 
 replace restart {
@@ -535,7 +560,7 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #1
-	; peephole 21-1 replaced or by bcpl.
+	; peephole 21-1 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1 %2)
 
 replace restart {
@@ -544,7 +569,7 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #2
-	; peephole 21-2 replaced or by bcpl.
+	; peephole 21-2 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1 %2)
 
 replace restart {
@@ -553,7 +578,7 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #3
-	; peephole 21-3 replaced or by bcpl.
+	; peephole 21-3 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1 %2)
 
 replace restart {
@@ -562,7 +587,7 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #4
-	; peephole 21-4 replaced or by bcpl.
+	; peephole 21-4 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1, %2)
 
 replace restart {
@@ -571,7 +596,7 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #5
-	; peephole 21-5 replaced or by bcpl.
+	; peephole 21-5 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1 %2)
 
 replace restart {
@@ -580,7 +605,7 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #6
-	; peephole 21-6 replaced or by bcpl.
+	; peephole 21-6 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1 %2)
 
 replace restart {
@@ -589,8 +614,17 @@ replace restart {
 	ld	%1, a
 } by {
 	bcpl	%2, #7
-	; peephole 21-7 replaced or by bcpl.
+	; peephole 21-7 replaced xor by bcpl.
 } if notUsed('a'), operandsLiteral(%1), immdInRange(0 65535 '+' 0 %1 %2)
+
+replace restart {
+	rlc	a
+	xor	a, #0x01
+} by {
+	ccf
+	; peephole 20a replaced xor by ccf-
+	rlc	a
+} if notUsed('c')
 
 replace restart {
 	clr	a
@@ -602,9 +636,9 @@ replace restart {
 
 replace restart {
 	clr	a
-	; peephole 22a removed redundant clr a.
 	or	a, %1
 } by {
+	; peephole 22a removed redundant clr a.
 	ld	a, %1
 }
 
@@ -976,12 +1010,29 @@ replace {
 }
 
 replace {
+	jpf	%5
+	retf
+} by {
+	jpf	%5
+	; peephole 52a removed unused retf.
+}
+
+replace {
 	jp	%5
 	addw	sp, %1
 	ret
 } by {
 	jp	%5
 	; peephole 53 removed unused ret.
+}
+
+replace {
+	jpf	%5
+	addw	sp, %1
+	retf
+} by {
+	jpf	%5
+	; peephole 53a removed unused retf.
 }
 
 replace restart {
@@ -1168,8 +1219,8 @@ replace restart {
 	jrne	%2
 %1:
 } by {
-    jrne	%2
-    ; peephole j7-eq-ne replaced jreq-jrne by jrne
+	jrne	%2
+	; peephole j7-eq-ne replaced jreq-jrne by jrne
 %1:	
 } if labelRefCountChange(%1 -1)
 
@@ -1178,8 +1229,8 @@ replace restart {
 	jreq	%2
 %1:
 } by {
-    jreq	%2
-    ; peephole j7-ne-eq replaced jrne-jreq by jreq
+	jreq	%2
+	; peephole j7-ne-eq replaced jrne-jreq by jreq
 %1:	
 } if labelRefCountChange(%1 -1)
 

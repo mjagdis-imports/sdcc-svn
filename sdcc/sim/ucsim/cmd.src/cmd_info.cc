@@ -125,9 +125,11 @@ COMMAND_DO_WORK_UC(cl_info_hw_cmd)
 
   if (cmdline->syntax_match(uc, HW)) {
     hw= params[0]->value.hw;
+    con->dd_color("answer");
     hw->print_info(con);
+    hw->print_cfg_info(con);
   }
-  else if (cmdline->syntax_match(uc, STRING))
+  /*else if (cmdline->syntax_match(uc, STRING))
     {
       char *s= params[0]->get_svalue();
       if (s && *s && (strcmp("cpu", s)==0))
@@ -135,7 +137,7 @@ COMMAND_DO_WORK_UC(cl_info_hw_cmd)
 	  if (uc->cpu)
 	    uc->cpu->print_info(con);
 	}
-    }
+	}*/
   else
     syntax_error(con);
 
@@ -264,5 +266,6 @@ CMDHELP(cl_info_var_cmd,
 	"info variables [filter]",
 	"Information about variables",
 	"long help of info variables")
+
 
 /* End of cmd.src/cmd_info.cc */

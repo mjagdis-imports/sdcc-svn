@@ -121,39 +121,13 @@ isReturned(const char *what)
       NOTUSEDERROR();
       size = 4;
     }
+    
+  const char *returnregs = IS_GB ? "hlde" : "dehl";
 
-  if(!IS_GB)
-  {
-    switch(*what)
-      {
-      case 'd':
-        return(size >= 4);
-      case 'e':
-        return(size >= 3);
-      case 'h':
-        return(size >= 2);
-      case 'l':
-        return(size >= 1);
-      default:
-        return FALSE;
-      }
-  }
-  else
-  {
-    switch(*what)
-      {
-      case 'h':
-        return(size >= 4);
-      case 'l':
-        return(size >= 3);
-      case 'd':
-        return(size >= 2);
-      case 'e':
-        return(size >= 1);
-      default:
-        return FALSE;
-      }
-  }
+  for(int i = 0; i <= size; i++)
+    if(*what == returnregs[3 - i])
+      return true;
+  return false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -474,6 +448,8 @@ z80MightRead(const lineNode *pl, const char *what)
       if(argCont(strchr(pl->line, ','), what))
         return(true);
       if(*(strchr(pl->line, ',') - 1) == ')' && strstr(pl->line + 3, what) && (strchr(pl->line, '#') == 0 || strchr(pl->line, '#') > strchr(pl->line, ',')))
+        return(true);
+      if (!strcmp(what, "sp") && strchr(pl->line, '(')) // Assume any indirect memory access to be a stack access. This avoids optimizing out stackframe setups for local variables (bug #3173).
         return(true);
       return(false);
     }
@@ -1666,8 +1642,10 @@ int z80instructionSize(lineNode *pl)
   return(999);
 }
 
-bool z80symmParmStack (void)
+bool z80symmParmStack (const char *name)
 {
+  if (!strcmp (name, "___sdcc_enter_ix"))
+   return false;
   return z80_symmParm_in_calls_from_current_function;
 }
 

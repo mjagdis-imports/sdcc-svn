@@ -31,6 +31,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "argcl.h"
 
 // local
+#include "m6809cl.h"
 #include "serialcl.h"
 
 enum reg_idx
@@ -59,6 +60,10 @@ cl_serial::init(void)
   
   set_name("6850");
   cl_serial_hw::init();
+
+  r_cr= cfg_cell(acia_cfg_cr);
+  r_sr= cfg_cell(acia_cfg_sr);
+
   for (i= 0; i < 2; i++)
     regs[i]= register_cell(uc->rom, base+i);
   regs[cr]->write(0x15);
@@ -70,14 +75,37 @@ cl_serial::init(void)
   s_sending= false;
   s_receiving= false;
   
-  r_sr= 0;//regs[sr]->set(0);
+  r_sr->set(0);//regs[sr]->set(0);
   show_readable(false);
   show_writable(true);
-
+  cfg_set(acia_cfg_req, 'i');
+  
   cl_var *v;
-  chars pn= chars("", "uart%d_base", id);
-  uc->vars->add(v= new cl_var(pn, cfg, m6850conf_base, cfg_help(m6850conf_base)));
+  chars pn= chars("", "uart%d_", id);
+  uc->vars->add(v= new cl_var(pn+"base", cfg, acia_cfg_base, cfg_help(acia_cfg_base)));
   v->init();
+  uc->vars->add(v= new cl_var(pn+"cr", cfg, acia_cfg_cr,
+			      cfg_help(acia_cfg_cr)));
+  v->init();
+  uc->vars->add(v= new cl_var(pn+"sr", cfg, acia_cfg_sr,
+			      cfg_help(acia_cfg_sr)));
+  v->init();
+  uc->vars->add(v= new cl_var(pn+"req", cfg, acia_cfg_req,
+			      cfg_help(acia_cfg_req)));
+  v->init();
+  
+  is_t= new cl_m6809_slave_src(uc,
+			       r_cr, 0x60, 0x20,
+			       r_sr, 2,
+			       pn+"tx");
+  is_t->init();
+  uc->it_sources->add(is_t);
+  is_r= new cl_m6809_slave_src(uc,
+			       r_cr, 0x80, 0x80,
+			       r_sr, 1,
+			       pn+"rx");
+  is_r->init();
+  uc->it_sources->add(is_r);
   
   return(0);
 }
@@ -87,8 +115,14 @@ cl_serial::cfg_help(t_addr addr)
 {
   switch (addr)
     {
-    case m6850conf_base:
-      return "Base address of UART registers (int, RW)";
+    case acia_cfg_base:
+      return "Base address of ACIA registers (int, RW)";
+    case acia_cfg_cr:
+      return "Copy of written CR value";
+    case acia_cfg_sr:
+      return "Simulated SR value";
+    case acia_cfg_req:
+      return "Req mode of ACIA 'i'=IRQ 'f'=FIRQ 'n'=NMI";
     }
   return cl_serial_hw::cfg_help(addr);
 }
@@ -103,7 +137,7 @@ cl_serial::read(class cl_memory_cell *cell)
       return s_in;
     }
   if (cell == regs[sr])
-    return r_sr;
+    return r_sr->read();
   conf(cell, NULL);
   return cell->get();
 }
@@ -115,10 +149,11 @@ cl_serial::write(class cl_memory_cell *cell, t_mem *val)
     return;
   if (cell == regs[cr])
     {
-      r_cr= *val;
+      r_cr->set(*val);
       pick_div();
       pick_ctrl();
       //*val= cell->get();
+      set_sr_irq();
     }
   else
     {
@@ -141,9 +176,9 @@ cl_serial::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 {
   if (addr < serconf_common)
     return cl_serial_hw::conf_op(cell, addr, val);
-  switch ((enum serial_cfg)addr)
+  switch ((enum acia_cfg)addr)
     {
-    case m6850conf_base:
+    case acia_cfg_base:
       if (val)
 	{
 	  int i;
@@ -160,7 +195,23 @@ cl_serial::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 	  cell->set(base);
 	}
       break;
-
+    case acia_cfg_req:
+      if (val)
+	{
+	  is_r->set_pass_to(*val);
+	  is_t->set_pass_to(*val);
+	}
+      break;
+      
+    case acia_cfg_cr: break;
+    case acia_cfg_sr:
+      if (val)
+	{
+	  cell->set(*val&= 0x7f);
+	  set_sr_irq();
+	}
+      break;
+      
     default:
       break;
     }
@@ -319,7 +370,7 @@ cl_serial::happen(class cl_hw *where, enum hw_event he,
 void
 cl_serial::pick_div()
 {
-  switch (r_cr & 0x03)
+  switch (r_cr->get() & 0x03)
     {
     case 0x00: div= 1; break;
     case 0x01: div= 16; break;
@@ -332,7 +383,7 @@ cl_serial::pick_div()
 void
 cl_serial::pick_ctrl()
 {
-  switch ((r_cr >> 2) & 7)
+  switch ((r_cr->get() >> 2) & 7)
     {
     case 0: bits= 10; break;
     case 1: bits= 10; break;
@@ -354,9 +405,10 @@ cl_serial::show_writable(bool val)
 {
   // TDRE: Transmit Data Register Empty: sr.1
   if (val)
-    r_sr|= 2;//regs[sr]->write_bit1(0x02);
+    r_sr->set_bit1(2);//regs[sr]->write_bit1(0x02);
   else
-    r_sr&= ~2;//regs[sr]->write_bit0(0x02);
+    r_sr->set_bit0(2);//regs[sr]->write_bit0(0x02);
+  set_sr_irq();
 }
 
 void
@@ -364,9 +416,10 @@ cl_serial::show_readable(bool val)
 {
   // RDRF: Receive Data Register Full (sr.0)
   if (val)
-    r_sr|= 1;//regs[sr]->write_bit1(0x01);
+    r_sr->set_bit1(1);//regs[sr]->write_bit1(0x01);
   else
-    r_sr&= ~1;//regs[sr]->write_bit0(0x01);
+    r_sr->set_bit0(1);//regs[sr]->write_bit0(0x01);
+  set_sr_irq();
 }
 
 void
@@ -387,38 +440,51 @@ cl_serial::set_dr(t_mem val)
 }
 
 void
+cl_serial::set_sr_irq(void)
+{
+  bool t= false, r= false;
+  u8_t c= r_cr->get(), s= r_sr->get();
+  t= ((c & 0x60) == 0x20) && (s & 2);
+  r= (c & 0x80) && (s && 1);
+  s&= 0x7f;
+  if (r || t)
+    s|= 0x80;
+  r_sr->set(s);
+}
+
+void
 cl_serial::print_info(class cl_console_base *con)
 {
-  u8_t u8= r_sr;//regs[sr]->get();
-  con->dd_printf("%s[%d] at 0x%06x %s\n", id_string, id, base, on?"on":"off");
+  u8_t u8= r_sr->get();//regs[sr]->get();
+  con->dd_printf("%s[%d] at 0x%06x %s\n", id_string, id, base, on?"on ":"off");
   con->dd_printf("Input: ");
   class cl_f *fin= io->get_fin(), *fout= io->get_fout();
   if (fin)
-    con->dd_printf("%s/%d ", fin->get_file_name(), fin->file_id);
+    con->dd_printf("%30s/%3d ", fin->get_file_name(), fin->file_id);
   con->dd_printf("Output: ");
   if (fout)
-    con->dd_printf("%s/%d", fout->get_file_name(), fout->file_id);
+    con->dd_printf("%30s/%3d", fout->get_file_name(), fout->file_id);
   con->dd_printf("\n");
   con->dd_printf("mcnt=%d\n", mcnt);
-  con->dd_printf("Sending: %s, %s, %d/%d bits\n",
-		 s_sending?"yes":"no",
-		 ten?"en":"dis",
+  con->dd_printf("Sending: %s, %s, %2d/%2d bits\n",
+		 s_sending?"yes":"no ",
+		 ten?"en ":"dis",
 		 s_tr_bit, bits);
-  con->dd_printf("Receiving: %s, %s, %d/%d bits\n",
-		 s_receiving?"yes":"no",
-		 ren?"en":"dis",
+  con->dd_printf("Receiving: %s, %s, %2d/%2d bits\n",
+		 s_receiving?"yes":"no ",
+		 ren?"en ":"dis",
 		 s_rec_bit, bits);
   con->dd_printf("CR: ");
-  con->print_bin(r_cr, 8);
-  con->dd_printf(" 0x%02x", r_cr);
-  con->dd_printf(" div=%d bits=%d\n", div, bits);
+  con->print_bin(r_cr->get(), 8);
+  con->dd_printf(" 0x%02x", r_cr->get());
+  con->dd_printf(" div=%8d bits=%2d\n", div, bits);
   con->dd_printf("SR: ");
   con->print_bin(u8, 8);
   con->dd_printf(" 0x%02x", u8);
   con->dd_printf(" RDRF=%d TDRE=%d\n",
 		 (u8&1)?1:0,
 		 (u8&2)?1:0);
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 /* End of m6809.src/serial.cc */

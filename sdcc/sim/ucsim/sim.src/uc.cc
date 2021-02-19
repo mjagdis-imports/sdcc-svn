@@ -49,6 +49,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "cmd_timercl.h"
 #include "cmd_statcl.h"
 #include "cmd_memcl.h"
+#include "cmd_execcl.h"
 
 // local, sim.src
 #include "uccl.h"
@@ -126,6 +127,27 @@ cl_xtal_option::option_changed(void)
   uc->xtal= d;
 }
 
+cl_stop_selfjump_option::cl_stop_selfjump_option(class cl_uc *the_uc):
+  cl_optref(the_uc)
+{
+  uc= the_uc;
+}
+
+int
+cl_stop_selfjump_option::init(void)
+{
+  cl_optref::init();
+  create(uc, bool_opt, "selfjump_stop", "Stop when jump branches to itself");
+  return 0;
+}
+
+void
+cl_stop_selfjump_option::option_changed(void)
+{
+  bool b;
+  option->get_value(&b);
+  uc->stop_selfjump= b;
+}
 
 /* Time measurer */
 
@@ -316,6 +338,154 @@ cl_omf_rec::read(cl_f *f)
 
 
 /*
+ * Execution history
+ */
+
+cl_exec_hist::cl_exec_hist(class cl_uc *auc):
+  cl_base()
+{
+  uc= auc;
+  len= 101;
+  hist= (struct t_hist_elem*)malloc(sizeof(struct t_hist_elem) * len);
+  t= h= 0;
+}
+
+cl_exec_hist::~cl_exec_hist(void)
+{
+  if (hist)
+    free(hist);
+}
+
+int
+cl_exec_hist::init(void)
+{
+  return 0;
+}
+
+void
+cl_exec_hist::put(void)
+{
+  t_addr pc;
+  if (!uc)
+    return;
+  pc= uc->PC;
+  if (t != h)
+    {
+      if (hist[h].addr == pc)
+	{
+	  hist[h].nr++;
+	  return;
+	}
+    }
+  int nh= (h+1)%len;
+  if (t == nh)
+    t= (t+1)%len;
+  h= nh;
+  hist[h].addr= pc;
+  hist[h].nr= 1;
+}
+
+void
+cl_exec_hist::list(class cl_console_base *con, bool inc, int nr)
+{
+  int s, p, ta, l;
+  if (!con)
+    return;
+  if (t==h)
+    return;
+  if (nr > len-1)
+    nr= len-1;
+  if (nr > get_used())
+    nr= get_used();
+  s= h-nr+1;
+  if (s<0)
+    s+= len;
+  //s%= len;
+  ta= (t+1)%len;
+
+  //con->dd_printf("%d,%d,ta=%d,s=%d\n", t, h, ta,s);
+  p= inc?s:h;
+  do
+    {
+      //con->dd_printf("[%3d] ", p);
+      if (!uc)
+	{
+	  l= con->dd_cprintf("dump_address", "0x%06x", AU(hist[p].addr));
+	}
+      else
+	{
+	  l= uc->print_disass(hist[p].addr, con, false);
+	}
+      if (hist[p].nr > 1)
+	{
+	  l++; con->dd_printf(" ");
+	  while (l%8 != 0)
+	    l++, con->dd_printf(" ");
+	  con->dd_printf("(%d times)", hist[p].nr);
+	}
+      con->dd_printf("\n");
+      if (inc)
+	{
+	  if (p==h)
+	    break;
+	  p= (p+1)%len;
+	}
+      else
+	{
+	  if (p==ta)
+	    break;
+	  if (p==0)
+	    p=len-1;
+	  else
+	    p= (p-1)%len;
+	}
+      con->dd_color("answer");
+    }
+  while (1);
+}
+
+void
+cl_exec_hist::keep(int nr)
+{
+  if (nr < 0)
+    nr= 0;
+  if (t==h)
+    return;
+  while (get_used() > nr)
+    t= (t+1)%len;
+}
+
+int
+cl_exec_hist::get_used()
+{
+  if (t==h)
+    return 0;
+  if (h>t)
+    return h-t;
+  return len-t + h;
+}
+
+unsigned int
+cl_exec_hist::get_insts()
+{
+  unsigned int i= 0;
+  int p;
+  if (t==h)
+    return 0;
+  p= (t+1)%len;
+  do
+    {
+      i+= hist[p].nr;
+      if (p==h)
+	break;
+      p= (p+1)%len;
+    }
+  while (1);
+  return i;
+}
+
+
+/*
  * Abstract microcontroller
  ******************************************************************************
  */
@@ -337,6 +507,8 @@ cl_uc::cl_uc(class cl_sim *asim):
   //for (i= MEM_ROM; i < MEM_TYPES; i++) mems->add(0);
   xtal_option= new cl_xtal_option(this);
   xtal_option->init();
+  stop_selfjump_option= new cl_stop_selfjump_option(this);
+  stop_selfjump_option->init();
   ticks= new cl_ticker(+1, 0, "time");
   isr_ticks= new cl_ticker(+1, TICK_INISR, "isr");
   idle_ticks= new cl_ticker(+1, TICK_IDLE, "idle");
@@ -351,6 +523,7 @@ cl_uc::cl_uc(class cl_sim *asim):
   sp_max= 0;
   sp_avg= 0;
   inst_exec= false;
+  hist= new cl_exec_hist(this);
 }
 
 
@@ -376,6 +549,7 @@ cl_uc::~cl_uc(void)
   delete address_spaces;
   delete memchips;
   //delete address_decoders;
+  delete hist;
 }
 
 
@@ -390,6 +564,8 @@ cl_uc::init(void)
     xtal= xtal_option->get_value(xtal);
   else
     xtal= 11059200;
+  stop_selfjump= false;
+  stop_selfjump_option->option->set_value(stop_selfjump);
   vars= new cl_var_list();
   make_variables();
   make_memories();
@@ -615,13 +791,13 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cmd->init();
     /*cset->add(cmd= new cl_get_option_cmd("option", 0));
       cmd->init();*/
+    if (!super_cmd)
+      {
+	cmdset->add(cmd= new cl_super_cmd("get", 0, cset));
+	cmd->init();
+	set_get_help(cmd);
+      }
   }
-  if (!super_cmd)
-    {
-      cmdset->add(cmd= new cl_super_cmd("get", 0, cset));
-      cmd->init();
-      set_get_help(cmd);
-    }
 
   {
     super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("set"));
@@ -638,13 +814,13 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cset->add(cmd= new cl_set_hw_cmd("hardware", 0));
     cmd->add_name("hw");
     cmd->init();
+    if (!super_cmd)
+      {
+	cmdset->add(cmd= new cl_super_cmd("set", 0, cset));
+	cmd->init();
+	set_set_help(cmd);
+      }
   }
-  if (!super_cmd)
-    {
-      cmdset->add(cmd= new cl_super_cmd("set", 0, cset));
-      cmd->init();
-      set_set_help(cmd);
-    }
 
   { // info
     super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("info"));
@@ -661,6 +837,7 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cmd->init();
     cset->add(cmd= new cl_info_hw_cmd("hardware", 0));
     cmd->add_name("hw");
+    cmd->add_name("h");
     cmd->init();
     /*
     cset->add(cmd= new cl_info_stack_cmd("stack", 0,
@@ -673,11 +850,13 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cset->add(cmd= new cl_info_var_cmd("variables", 0));
     cmd->init();
     cmd->add_name("vars");
-  }
-  if (!super_cmd) {
-    cmdset->add(cmd= new cl_super_cmd("info", 0, cset));
+    cset->add(cmd= new cl_hist_info_cmd("history", 0));
     cmd->init();
-    set_info_help(cmd);
+    if (!super_cmd) {
+      cmdset->add(cmd= new cl_super_cmd("info", 0, cset));
+      cmd->init();
+      set_info_help(cmd);
+    }
   }
 
   {
@@ -705,11 +884,11 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cset->add(cmd= new cl_timer_value_cmd("set", 0));
     cmd->init();
     cmd->add_name("value");
-  }
-  if (!super_cmd) {
-    cmdset->add(cmd= new cl_super_cmd("timer", 0, cset));
-    cmd->init();
-    set_timer_help(cmd);
+    if (!super_cmd) {
+      cmdset->add(cmd= new cl_super_cmd("timer", 0, cset));
+      cmd->init();
+      set_timer_help(cmd);
+    }
   }
 
   {
@@ -781,13 +960,33 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cmd->init();
     cset->add(cmd= new cl_memory_cell_cmd("cell", 0));
     cmd->init();
-  }
-  if (!super_cmd) {
-    cmdset->add(cmd= new cl_super_cmd("memory", 0, cset));
-    cmd->init();
-    set_memory_help(cmd);
+    if (!super_cmd) {
+      cmdset->add(cmd= new cl_super_cmd("memory", 0, cset));
+      cmd->init();
+      set_memory_help(cmd);
+    }
   }
 
+  super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("history"));
+  if (super_cmd)
+    cset= super_cmd->get_subcommands();
+  else
+    {
+      cset= new cl_cmdset();
+      cset->init();
+      cmdset->add(cmd= new cl_super_cmd("history", 0, cset));
+      cmd->init();	
+    }
+  cset->add(cmd= new cl_hist_cmd("_no_parameters_", 0));
+  cmd->init();
+  cset->add(cmd= new cl_hist_info_cmd("information", 0));
+  cmd->init();
+  cset->add(cmd= new cl_hist_clear_cmd("clear", 0));
+  cmd->init();
+  cset->add(cmd= new cl_hist_list_cmd("list", 0));
+  cmd->add_name("print");
+  cmd->init();
+    
   cmdset->add(cmd= new cl_var_cmd("var", 0));
   cmd->init();
   cmd->add_name("variable");
@@ -1515,6 +1714,8 @@ cl_uc::get_hw(const char *id_string, int *idx)
 
   if (idx)
     i= *idx;
+  if (strcmp(id_string, "cpu") == 0)
+    return cpu;
   for (; i < hws->count; i++)
     {
       hw= (class cl_hw *)(hws->at(i));
@@ -1602,31 +1803,32 @@ cl_uc::disass(t_addr addr, const char *sep)
   return strdup("uc::disass() unimplemented\n");
 }
 
-void
-cl_uc::print_disass(t_addr addr, class cl_console_base *con)
+int
+cl_uc::print_disass(t_addr addr, class cl_console_base *con, bool nl)
 {
   char *dis;
   class cl_brk *b;
-  int i, l;
+  int i, l, len= 0;
 
   if (!rom)
-    return;
+    return 0;
 
   t_mem code= rom->get(addr);
   b= fbrk_at(addr);
   dis= disass(addr, NULL);
   if (b)
-    con->dd_cprintf("answer", "%c", (b->perm == brkFIX)?'F':'D');
+    len+= con->dd_cprintf("answer", "%c", (b->perm == brkFIX)?'F':'D');
   else
-    con->dd_printf(" ");
-  con->dd_cprintf("answer", "%c ", inst_at(addr)?' ':'?');
-  con->dd_cprintf("dump_address", rom->addr_format, addr); con->dd_printf(" ");
-  con->dd_cprintf("dump_number", rom->data_format, code);
+    len+= con->dd_printf(" ");
+  len+= con->dd_cprintf("answer", "%c ", inst_at(addr)?' ':'?');
+  len+= con->dd_cprintf("dump_address", rom->addr_format, addr);
+  len+= con->dd_printf(" ");
+  len+= con->dd_cprintf("dump_number", rom->data_format, code);
   l= inst_length(addr);
   for (i= 1; i < l; i++)
     {
-      con->dd_printf(" ");
-      con->dd_cprintf("dump_number", rom->data_format, rom->get(addr+i));
+      len+= con->dd_printf(" ");
+      len+= con->dd_cprintf("dump_number", rom->data_format, rom->get(addr+i));
     }
   int li= longest_inst();
   while (i < li)
@@ -1634,11 +1836,20 @@ cl_uc::print_disass(t_addr addr, class cl_console_base *con)
       int j;
       j= rom->width/4 + ((rom->width%4)?1:0) + 1;
       while (j)
-	con->dd_printf(" "), j--;
+	len+= con->dd_printf(" "), j--;
       i++;
     }
-  con->dd_cprintf("dump_char", " %s\n", dis);
+  len+= con->dd_cprintf("dump_char", " %s", dis);
+  if (nl)
+    con->dd_printf("\n");
   free((char *)dis);
+  return len;
+}
+
+int
+cl_uc::print_disass(t_addr addr, class cl_console_base *con)
+{
+  return print_disass(addr, con, true);
 }
 
 void
@@ -1871,6 +2082,12 @@ cl_uc::var(char *nam)
   return v;
 }
 
+class cl_var *
+cl_uc::var(chars n)
+{
+  const char *s= n.c_str();
+  return var((char*)s);
+}
 
 /*
  * Messages to broadcast
@@ -2220,6 +2437,13 @@ cl_uc::do_inst(int step)
 	  post_inst();
 	  tick(1);
 	}
+
+      if ((res == resGO) && (PC == PCsave) && stop_selfjump)
+	{
+	  res= resSELFJUMP;
+	  sim->stop(res);
+	  break;
+	}
       
       if ((res == resGO) &&
 	  1/*irq*/)
@@ -2295,6 +2519,13 @@ cl_uc::post_inst(void)
 }
 
 
+void
+cl_uc::save_hist()
+{
+  hist->put();
+}
+
+
 /*
  * Interrupt processing
  */
@@ -2303,20 +2534,19 @@ int
 cl_uc::do_interrupt(void)
 {
   int i;
-  // NMI?
-
-  // Maskable interrupts
-  if (!it_enabled())
-    {
-      //printf("do_interrupt skip (it disabled)\n");
-      return resGO;
-    }
+  bool is_en= it_enabled();
   class it_level *il= (class it_level *)(it_levels->top()), *IL= 0;
+
   irq= false;
   //printf("Checking IRQs...\n");
   for (i= 0; i < it_sources->count; i++)
     {
       class cl_it_src *is= (class cl_it_src *)(it_sources->at(i));
+      if (!is->is_nmi())
+	{
+	  if (!is_en)
+	    continue;
+	}
       bool A= is->is_active();
       bool E= is->enabled();
       bool P= is->pending();
@@ -2677,18 +2907,17 @@ cl_error_unknown_code::cl_error_unknown_code(class cl_uc *the_uc)
 void
 cl_error_unknown_code::print(class cl_commander_base *c)
 {
-  //FILE *f= c->get_out();
-  /*cmd_fprintf(f,*/c->dd_printf("%s: unknown instruction code at ", get_type_name());
+  c->dd_printf("%s: unknown instruction code at ", get_type_name());
   if (uc->rom)
     {
-      /*cmd_fprintf(f,*/c->dd_printf(uc->rom->addr_format, PC);
-      /*cmd_fprintf(f,*/c->dd_printf(" (");
-      /*cmd_fprintf(f,*/c->dd_printf(uc->rom->data_format, uc->rom->get(PC));
-      /*cmd_fprintf(f,*/c->dd_printf(")");
+      c->dd_printf(uc->rom->addr_format, PC);
+      c->dd_printf(" (");
+      c->dd_printf(uc->rom->data_format, uc->rom->get(PC));
+      c->dd_printf(")");
     }
   else
-    /*cmd_fprintf(f,*/c->dd_printf("0x%06x", AU(PC));
-  /*cmd_fprintf(f,*/c->dd_printf("\n");
+    c->dd_printf("0x%06x", AU(PC));
+  c->dd_printf("\n");
 }
 
 

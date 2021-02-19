@@ -156,7 +156,7 @@ cl_stm8::get_mem_size(enum mem_class type)
 
 static class cl_port_ui *d= NULL;
 static int puix= 1;
-static int puiy= 4;
+static int puiy= 5;
 static int puik= 0;
 static int puis= 1;
 static const char *puiks= keysets[puik];
@@ -188,6 +188,13 @@ cl_stm8::mk_port(t_addr base, chars n)
     puiks= NULL;
   else
     puiks= keysets[puik];
+}
+
+void
+cl_stm8::make_cpu_hw(void)
+{
+  add_hw(cpu= new cl_stm8_cpu(this));
+  cpu->init();
 }
 
 void
@@ -268,9 +275,6 @@ cl_stm8::mk_hw_elements(void)
   add_hw(d= new cl_port_ui(this, 0, "dport"));
   d->init();
   pd.init();
-  
-  add_hw(h= new cl_stm8_cpu(this));
-  h->init();
   
   if (type->type == CPU_STM8S)
     {
