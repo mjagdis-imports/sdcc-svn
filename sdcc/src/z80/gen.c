@@ -8802,7 +8802,7 @@ genAnd (const iCode * ic, iCode * ifx)
 
   for (int i = 0; i < size;)
     {
-      const bool hl_free = isPairDead (PAIR_HL, ic) &&
+      bool hl_free = isPairDead (PAIR_HL, ic) &&
         (left->aop->regs[L_IDX] < i && left->aop->regs[H_IDX] < i & right->aop->regs[L_IDX] < i && right->aop->regs[H_IDX] < i) &&
         (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] >= i) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] >= i);
 
@@ -8907,13 +8907,37 @@ genAnd (const iCode * ic, iCode * ifx)
 
       // Use plain and in a.
       if (aopInReg (right->aop, i, A_IDX))
-        emit3_o (A_AND, ASMOP_A, 0, left->aop, i);
+        {
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _push (PAIR_HL);
+          emit3_o (A_AND, ASMOP_A, 0, left->aop, i);
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _pop (PAIR_HL);
+        }
       else
         {
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _push (PAIR_HL);
           cheapMove (ASMOP_A, 0, left->aop, i, true);
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _pop (PAIR_HL);
+
+          if (requiresHL (right->aop) && right->aop->type != AOP_REG && !hl_free)
+            _push (PAIR_HL);
           emit3_o (A_AND, ASMOP_A, 0, right->aop, i);
+          if (requiresHL (right->aop) && right->aop->type != AOP_REG && !hl_free)
+            _pop (PAIR_HL);
         }
+
+      hl_free = isPairDead (PAIR_HL, ic) &&
+        (left->aop->regs[L_IDX] <= i && left->aop->regs[H_IDX] <= i & right->aop->regs[L_IDX] <= i && right->aop->regs[H_IDX] <= i) &&
+        (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] >= i) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] >= i);
+
+      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
+        _push (PAIR_HL);
       cheapMove (result->aop, i, ASMOP_A, 0, true);
+      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
+        _pop (PAIR_HL);
 
       if (aopInReg (result->aop, i, A_IDX))
         a_free = false;
@@ -9039,7 +9063,7 @@ genOr (const iCode * ic, iCode * ifx)
 
   for (int i = 0; i < size;)
     {
-      const bool hl_free = isPairDead (PAIR_HL, ic) &&
+      bool hl_free = isPairDead (PAIR_HL, ic) &&
         (left->aop->regs[L_IDX] < i && left->aop->regs[H_IDX] < i & right->aop->regs[L_IDX] < i && right->aop->regs[H_IDX] < i) &&
         (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] >= i) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] >= i);
         
@@ -9151,13 +9175,38 @@ genOr (const iCode * ic, iCode * ifx)
         }
 
       if (aopInReg (right->aop, i, A_IDX))
-        emit3_o (A_OR, ASMOP_A, 0, left->aop, i);
+        {
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _push (PAIR_HL);
+          emit3_o (A_OR, ASMOP_A, 0, left->aop, i);
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _pop (PAIR_HL);
+        }
       else
         {
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _push (PAIR_HL);
           cheapMove (ASMOP_A, 0, left->aop, i, true);
+          if (requiresHL (left->aop) && left->aop->type != AOP_REG && !hl_free)
+            _pop (PAIR_HL);
+
+          if (requiresHL (right->aop) && right->aop->type != AOP_REG && !hl_free)
+            _push (PAIR_HL);
           emit3_o (A_OR, ASMOP_A, 0, right->aop, i);
+          if (requiresHL (right->aop) && right->aop->type != AOP_REG && !hl_free)
+            _pop (PAIR_HL);
         }
+
+      hl_free = isPairDead (PAIR_HL, ic) &&
+        (left->aop->regs[L_IDX] <= i && left->aop->regs[H_IDX] <= i & right->aop->regs[L_IDX] <= i && right->aop->regs[H_IDX] <= i) &&
+        (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] >= i) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] >= i);
+
+      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
+        _push (PAIR_HL);
       cheapMove (result->aop, i, ASMOP_A, 0, true);
+      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
+        _pop (PAIR_HL);
+        
       if (aopInReg (result->aop, i, A_IDX))
         a_free = false;
       i++;
@@ -9293,7 +9342,7 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
       
     for (int i = 0; i < size;)
       {
-        const bool hl_free = isPairDead (PAIR_HL, ic) &&
+        bool hl_free = isPairDead (PAIR_HL, ic) &&
           (left_aop->regs[L_IDX] < i && left_aop->regs[H_IDX] < i & right_aop->regs[L_IDX] < i && right_aop->regs[H_IDX] < i) &&
           (result_aop->regs[L_IDX] < 0 || result_aop->regs[L_IDX] >= i) && (result_aop->regs[H_IDX] < 0 || result_aop->regs[H_IDX] >= i);
         
@@ -9409,7 +9458,17 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
                   _pop (PAIR_HL);
               }
           }
+          
+        hl_free = isPairDead (PAIR_HL, ic) &&
+          (left_aop->regs[L_IDX] <= i && left_aop->regs[H_IDX] <= i & right_aop->regs[L_IDX] <= i && right_aop->regs[H_IDX] <= i) &&
+          (result_aop->regs[L_IDX] < 0 || result_aop->regs[L_IDX] >= i) && (result_aop->regs[H_IDX] < 0 || result_aop->regs[H_IDX] >= i);
+
+        if (requiresHL (result_aop) && result_aop->type != AOP_REG && !hl_free)
+          _push (PAIR_HL);
         cheapMove (result_aop, i, ASMOP_A, 0, true);
+        if (requiresHL (result_aop) && result_aop->type != AOP_REG && !hl_free)
+          _pop (PAIR_HL);
+
         if(result_aop->type == AOP_REG &&
           (left_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] > i || right_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] > i))
           {

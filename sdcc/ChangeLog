@@ -1,5 +1,11 @@
 2021-03-04 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improved handling of hl in binary bitwise operators.
+
+2021-03-04 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/z80/gen.c:
 	  Fix another issue related to bug #3181.
 	* src/stm8/gen.c:

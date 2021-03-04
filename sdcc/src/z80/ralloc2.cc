@@ -807,8 +807,8 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     !(getSize(operandType(left)) == 1 && (operand_in_reg(left, REG_A, ia, i, G) || operand_in_reg(left, REG_B, ia, i, G) || operand_in_reg(left, REG_D, ia, i, G) || operand_in_reg(left, REG_H, ia, i, G))))
     return(false);
     
-  if(IS_GB && !result_only_HL && (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)))
-    return(false);
+  //if(IS_GB && !result_only_HL && (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)))
+  //  return(false);
 
   if(IS_GB && ic->op == GET_VALUE_AT_ADDRESS && !result_only_HL && (getSize(operandType(result)) >= 2 || !operand_is_pair(left, a, i, G)))
     return(false);
@@ -819,7 +819,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     return(false);
   if(IS_GB &&
     (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)) && 
-    (ic->op == RIGHT_OP || ic->op == LEFT_OP || ic->op == '=' || ic->op == CAST || ic->op == '-' || ic->op == UNARYMINUS || ic->op == BITWISEAND || ic->op == '|') &&
+    (ic->op == RIGHT_OP || ic->op == LEFT_OP || ic->op == '=' || ic->op == CAST || ic->op == '-' || ic->op == UNARYMINUS) &&
     !(result_only_HL && getSize(operandType(result)) == 1)) // Size of result needs to be checked after checking ic->op to esnure that there is a result operand.
     return(false);
 
