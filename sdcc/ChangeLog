@@ -1,3 +1,12 @@
+2021-02-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix another issue related to bug #3181.
+	* src/stm8/gen.c:
+	  exg, exgw handling cleanup, picked from patch #363 by Visenri.
+	* support/regression/tests/rotate2.c:
+	  Tests for rotation and swap, picked from patch #363 by Visenri.
+
 2021-03-02 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/ds390/ralloc.c (isOperandInFarSpace2): fixed warning
