@@ -44,8 +44,6 @@ typedef enum
   AOP_IY,
   /* Is pointed to by HL */
   AOP_HL,
-  /* Is in H and L */
-  AOP_HLREG,
   /* Is in the extended stack pointer (IY on the Z80) */
   AOP_EXSTK,
   /* Is referenced by a pointer in a register pair. */
@@ -78,6 +76,7 @@ typedef struct asmop
     int aop_pairId;             /* The pair ID */
   }
   aopu;
+  signed char regs[9]; // Byte of this aop that is in the register. -1 if no byte of this aop is in the reg.
 }
 asmop;
 

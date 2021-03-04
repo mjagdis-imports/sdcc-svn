@@ -25,13 +25,15 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
+#include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
-#include "stypes.h"
+//#include "stypes.h"
 #include "globals.h"
 
 #include "hwcl.h"
@@ -65,7 +67,7 @@ cl_hw::cl_hw(class cl_uc *auc, enum hw_cath cath, int aid, const char *aid_strin
 
 cl_hw::~cl_hw(void)
 {
-  free((void*)id_string);
+  free(const_cast<char *>(id_string));
   delete partners;
 }
 
@@ -81,7 +83,7 @@ cl_hw::init(void)
   snprintf(s, 99, "%d", id);
   n+= '_';
   n+= s;
-  n+= cchars("_cfg");
+  n+= "_cfg";
 
   cfg= new cl_address_space(n, 0, cfg_size(), sizeof(t_mem)*8);
   cfg->init();
@@ -160,6 +162,14 @@ cl_hw::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
   return cell->get();
 }
 
+class cl_memory_cell *
+cl_hw::cfg_cell(t_addr addr)
+{
+  if (addr >= cfg_size())
+    return 0;
+  return cfg->get_cell(addr);
+}
+
 void
 cl_hw::cfg_set(t_addr addr, t_mem val)
 {
@@ -182,6 +192,12 @@ t_mem
 cl_hw::cfg_read(t_addr addr)
 {
   return cfg->read(addr);
+}
+
+const char *
+cl_hw::cfg_help(t_addr addr)
+{
+  return "N/A";
 }
 
 void
@@ -263,13 +279,6 @@ cl_hw::new_io(class cl_f *f_in, class cl_f *f_out)
   make_io();
   if (!io)
     return ;
-  /*if (io->fin)
-    delete io->fin;
-  if (io->fout)
-  delete io->fout;*/
-  //io->close_files();
-  /*io->fin= f_in;
-    io->fout= f_out;*/
   io->tu_reset();
   io->replace_files(true, f_in, f_out);
   if (f_in)
@@ -280,6 +289,34 @@ cl_hw::new_io(class cl_f *f_in, class cl_f *f_out)
     }
   draw_display();
   //application->get_commander()->update_active();
+}
+
+void
+cl_hw::new_i(class cl_f *f_in)
+{
+  make_io();
+  if (!io)
+    return ;
+  io->tu_reset();
+  io->replace_files(true, f_in, io->get_fout());
+  if (f_in)
+    {
+      f_in->interactive(NULL);
+      f_in->raw();
+      f_in->echo(NULL);
+    }
+  draw_display();
+}
+
+void
+cl_hw::new_o(class cl_f *f_out)
+{
+  make_io();
+  if (!io)
+    return ;
+  io->tu_reset();
+  io->replace_files(true, io->get_fin(), f_out);
+  draw_display();
 }
 
 class cl_hw_io *
@@ -325,20 +362,21 @@ cl_hw::handle_input(int c)
 {
   if (!io)
     return false;
-  
+
+  io->tu_go(1,3);
+  io->tu_cll();
   switch (c)
     {
     case 's'-'a'+1: case 'r'-'a'+1: case 'g'-'a'+1:
-      uc->sim->start(0, 0);
-      io->dd_printf("Simulation started.");
-      break;
-    case 'p'-'a'+1:
-      uc->sim->stop(resSIMIF);
-      io->dd_printf("Simulation stopped.");
+      uc->sim->change_run();
+      if (uc->sim->state & SIM_GO)
+	io->dd_printf("Simulation started.");
+      else
+	io->dd_printf("Simulation stopped.");
       break;
     case 't'-'a'+1:
       uc->reset();
-      io->dd_printf("CPU reseted.");
+      io->dd_printf("CPU reset.");
       break;
     case 'q'-'a'+1:
       uc->sim->state|= SIM_QUIT;
@@ -375,28 +413,43 @@ cl_hw::handle_input(int c)
 }
 
 void
-cl_hw::refresh_display(bool force)
+cl_hw::draw_state_time(bool force)
 {
-  if (!io)
-    return ;
   int n= uc->sim->state & SIM_GO;
   if ((n != cache_run) ||
       force)
     {
-      io->tu_go(72,1);
-      io->dd_printf("%4s", n?"Run":"Stop");
+      io->tu_go(66,1);
+      if (n)
+	io->dd_cprintf("ui_run" , "%s", "Run ");
+      else
+	io->dd_cprintf("ui_stop", "%s", "Stop");
       cache_run= n;
     }
-  unsigned int t= uc->get_rtime() * 1000;
+  unsigned int t= (unsigned int)(uc->get_rtime()) * 1000;
   if ((t != cache_time) ||
       force)
     {
       io->tu_go(28,2);
-      io->dd_printf("%u ms", t);
+      io->dd_cprintf("ui_time", "%u ms", t);
       if (t < cache_time)
 	io->dd_printf("                ");
       cache_time= t;
     }
+}
+
+void
+cl_hw::refresh_display(bool force)
+{
+  if (!io)
+    return ;
+
+  io->tu_hide();
+  io->tu_go(1,4);
+  io->dd_color("answer");
+  print_info(io);
+  draw_state_time(force);
+  io->tu_show();
 }
 
 void
@@ -405,11 +458,27 @@ cl_hw::draw_display(void)
   if (!io)
     return ;
   io->tu_go(1, 1);
-  io->dd_printf("[^s] Start  [^p] stoP  [^t] reseT  [^q] Quit  [^o] clOse  [^l] redraw\n");
-  io->dd_printf("[^n] chaNge display  Time: ");
-  io->tu_go(72,2);
+  io->dd_cprintf("ui_mkey", "[^s] ");
+  io->dd_cprintf("ui_mitem", "Start/stop  ");
+  io->dd_cprintf("ui_mkey", "[^t] ");
+  io->dd_cprintf("ui_mitem", "reseT  ");
+  io->dd_cprintf("ui_mkey", "[^q] ");
+  io->dd_cprintf("ui_mitem", "Quit  ");
+  io->dd_cprintf("ui_mkey", "[^o] ");
+  io->dd_cprintf("ui_mitem", "clOse  ");
+  io->dd_cprintf("ui_mkey", "[^l] ");
+  io->dd_cprintf("ui_mitem", "redraw\n");
+  io->dd_cprintf("ui_mkey", "[^n] ");
+  io->dd_cprintf("ui_mitem", "chaNge display  ");
+  io->dd_cprintf("ui_label", "Time: ");
+  io->tu_go(66,2);
   chars s("", "%s[%d]", id_string, id);
-  io->dd_printf("%8s", (char*)s);
+  io->dd_cprintf("ui_title", "%-13s", s.c_str());
+
+  io->tu_go(1,3);
+  io->dd_printf("\033[2K"); // entire line
+  io->dd_printf("\033[0J"); // from cursor to end of screen
+  io->dd_printf("\n");
 }
 
 class cl_hw *
@@ -425,8 +494,33 @@ void
 cl_hw::print_info(class cl_console_base *con)
 {
   con->dd_printf("%s[%d]\n", id_string, id);
+  //print_cfg_info(con);
 }
 
+void
+cl_hw::print_cfg_info(class cl_console_base *con)
+{
+  t_mem v;
+  t_addr a, s, e;
+  con->dd_printf("Configuration memory of %s\n", get_name());
+  if (cfg)
+    {      
+      s= cfg->get_start_address();
+      e= s + cfg->get_size()-1;
+      for (a= s; a <= e; a++)
+	{
+	  v= cfg->read(a);
+	  con->dd_cprintf("dump_address", "0x%02x ", AU(a));
+	  con->dd_cprintf("dump_number", "%08x ",v);
+	  if ((v < 128) &&
+	      isprint((int)v))
+	    con->dd_cprintf("dump_char", "%c", v);
+	  else
+	    con->dd_cprintf("dump_char", ".");
+	  con->dd_printf(" %s\n", cfg_help(a));
+	}
+    }
+}
 
 /*
  * List of hw

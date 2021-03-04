@@ -22,6 +22,7 @@
 // #define DEBUG_RALLOC_DEC_ASS // Uncomment to get debug messages about assignments while doing register allocation on the tree decomposition (much more verbose than the one above).
 
 #include "SDCCralloc.hpp"
+#include "SDCCsalloc.hpp"
 
 extern "C"
 {
@@ -487,8 +488,8 @@ static void extra_ic_generated(iCode *ic)
     }
 }
 
-template <class T_t, class G_t, class I_t>
-static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I)
+template <class T_t, class G_t, class I_t, class SI_t>
+static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
 {
   bool assignment_optimal;
 
@@ -531,11 +532,18 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I)
   for(unsigned int v = 0; v < boost::num_vertices(I); v++)
     {
       symbol *sym = (symbol *)(hTabItemWithKey(liveRanges, I[v].v));
+      bool spilt = false;
 
       if(winner.global[v] >= 0)
         sym->regs[I[v].byte] = stm8_regs + winner.global[v];   
       else
-        sym->regs[I[v].byte] = 0;
+        {
+          sym->regs[I[v].byte] = 0;
+          spilt = true;
+        }
+
+      if(spilt)
+        stm8SpillThis(sym, false);
 
       sym->nRegs = I[v].size;
     }
@@ -543,12 +551,15 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I)
   for(unsigned int i = 0; i < boost::num_vertices(G); i++)
     set_surviving_regs(winner, i, G, I);
 
+  set_spilt(G, I, SI);
+
   return(!assignment_optimal);
 }
 
 iCode *stm8_ralloc2_cc(ebbIndex *ebbi)
 {
-  iCode *ic;
+  eBBlock **const ebbs = ebbi->bbOrder;
+  const int count = ebbi->count;
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Processing " << currFunc->name << " from " << dstFileName << "\n"; std::cout.flush();
@@ -558,7 +569,7 @@ iCode *stm8_ralloc2_cc(ebbIndex *ebbi)
 
   con_t conflict_graph;
 
-  ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
+  iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
   if(options.dump_graphs)
     dump_cfg(control_flow_graph);
@@ -581,7 +592,16 @@ iCode *stm8_ralloc2_cc(ebbIndex *ebbi)
 
   guessCounts (ic, ebbi);
 
-  stm8_assignment_optimal = !tree_dec_ralloc(tree_decomposition, control_flow_graph, conflict_graph);
+  scon_t stack_conflict_graph;
+
+  stm8_assignment_optimal = !tree_dec_ralloc(tree_decomposition, control_flow_graph, conflict_graph, stack_conflict_graph);
+
+  stm8RegFix (ebbs, count);
+
+  chaitin_salloc(stack_conflict_graph);
+
+  if(options.dump_graphs)
+    dump_scon(stack_conflict_graph);
 
   return(ic);
 }

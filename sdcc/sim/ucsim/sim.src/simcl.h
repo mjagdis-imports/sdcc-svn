@@ -43,7 +43,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "uccl.h"
 #include "argcl.h"
 
-
 class cl_sim: public cl_base
 {
 public:
@@ -73,6 +72,7 @@ public:
 
   virtual void start(class cl_console_base *con, unsigned long steps_to_do);
   virtual void stop(int reason, class cl_ev_brk *ebrk= NULL);
+  virtual void change_run(int reason= resSIMIF);
   //virtual void stop(class cl_ev_brk *brk);
   virtual int step(void);
 };

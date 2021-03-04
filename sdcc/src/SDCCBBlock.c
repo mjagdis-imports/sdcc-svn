@@ -125,7 +125,7 @@ createDumpFile (int id)
       dbuf_append_str (&dumpFileName, dumpFilesPtr->ext);
       if (!(dumpFilesPtr->filePtr = fopen (dbuf_c_str (&dumpFileName), "w")))
         {
-          werror (E_FILE_OPEN_ERR, dbuf_c_str (&dumpFileName));
+          werror (E_OUTPUT_FILE_OPEN_ERR, dbuf_c_str (&dumpFileName), strerror (errno));
           dbuf_destroy (&dumpFileName);
           exit (1);
         }
@@ -397,7 +397,7 @@ iCode2eBBlock (iCode * ic)
 /* eBBWithEntryLabel - finds the basic block with the entry label  */
 /*-----------------------------------------------------------------*/
 eBBlock *
-eBBWithEntryLabel (ebbIndex * ebbi, symbol * eLabel)
+eBBWithEntryLabel (ebbIndex* ebbi, const symbol *eLabel)
 {
   eBBlock **ebbs = ebbi->bbOrder;
   int count = ebbi->count;

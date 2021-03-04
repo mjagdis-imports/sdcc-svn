@@ -39,8 +39,6 @@
 #include "gen.h"
 #include "dbuf_string.h"
 
-char *aopLiteral (value * val, int offset);
-char *aopLiteralLong (value * val, int offset, int size);
 extern int allocInfo;
 static int pushReg (reg_info * reg, bool freereg);
 static void pullReg (reg_info * reg);
@@ -75,7 +73,7 @@ extern struct dbuf_s *codeOutBuf;
 static bool operandsEqu (operand * op1, operand * op2);
 static void loadRegFromConst (reg_info * reg, int c);
 static asmop *newAsmop (short type);
-static char *aopAdrStr (asmop * aop, int loffset, bool bit16);
+static const char *aopAdrStr (asmop * aop, int loffset, bool bit16);
 static void updateiTempRegisterUse (operand * op);
 #define RESULTONSTACK(x) \
                          (IC_RESULT(x) && IC_RESULT(x)->aop && \
@@ -651,7 +649,7 @@ forceload:
             }
           else
             {
-              char *l = aopAdrStr (aop, loffset, FALSE);
+              const char *l = aopAdrStr (aop, loffset, FALSE);
               emitcode ("lda", "%s", l);
               regalloc_dry_run_cost += ((aop->type == AOP_DIR || aop->type == AOP_IMMD || aop->type == AOP_LIT) ? 2 : 3);
               hc08_dirtyReg (reg, FALSE);
@@ -674,7 +672,7 @@ forceload:
             }
           else
             {
-              char *l = aopAdrStr (aop, loffset, FALSE);
+              const char *l = aopAdrStr (aop, loffset, FALSE);
               emitcode ("ldx", "%s", l);
               regalloc_dry_run_cost += ((aop->type == AOP_DIR || aop->type == AOP_IMMD || aop->type == AOP_LIT) ? 2 : 3);
               hc08_dirtyReg (reg, FALSE);
@@ -1617,7 +1615,7 @@ transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs)
     
   if ((dstaop->type == AOP_DIR) && (srcaop->type == AOP_DIR))
     {
-      char *src = aopAdrStr (srcaop, srcofs, FALSE);
+      const char *src = aopAdrStr (srcaop, srcofs, FALSE);
       /* mov src,dst : 3 bytes, 5 cycles */
       emitcode ("mov", "%s,%s", src, aopAdrStr (dstaop, dstofs, FALSE));
       regalloc_dry_run_cost += 3;
@@ -1956,7 +1954,7 @@ storeRegIndexed (reg_info * reg, int offset, char * rematOfs)
   /* force offset to signed 16-bit range */
   offset &= 0xffff;
   if (offset & 0x8000)
-    offset = 0x10000 - offset;
+    offset = offset - 0x10000;
 
   switch (reg->rIdx)
     {
@@ -2797,7 +2795,7 @@ aopOpExtToIdx(asmop * result, asmop *left, asmop *right)
 /* aopAdrStr - for referencing the address of the aop              */
 /*-----------------------------------------------------------------*/
 /* loffset seems to have a weird meaning here. It seems to be nonzero in some places where one would expect an offset to be zero */
-static char *
+static const char *
 aopAdrStr (asmop * aop, int loffset, bool bit16)
 {
   char *s = buffer;
@@ -2983,8 +2981,18 @@ asmopToBool (asmop *aop, bool resultInA)
             {
               emitcode ("pshh", "");
               emitcode ("tst", "1,s");
-              emitcode ("ais", "#1");
-              regalloc_dry_run_cost += 6;
+              regalloc_dry_run_cost += 4;
+              if (IS_S08 && optimize.codeSpeed)
+                {
+                  emitcode ("ais", "#1"); // 2 Bytes, 2 cycles.
+                  regalloc_dry_run_cost += 2;
+                }
+              else
+                {
+                  emitcode ("pulh", ""); // 1 Byte, 2 (hc08) / 3 (s08) cycles.
+                  regalloc_dry_run_cost += 1;
+                }
+              
             }
         }
       else if (IS_AOP_HX (aop))
@@ -4814,16 +4822,8 @@ genMultOneByte (operand * left, operand * right, operand * result)
       signed char val = (signed char) ulFromVal (AOP (right)->aopu.aop_lit);
 
       loadRegFromAop (hc08_reg_a, AOP (left), 0);
-      if (val < 0)
-        {
-          emitcode ("ldx", "#0x%02x", -val);
-          regalloc_dry_run_cost += 2;
-        }
-      else
-        {
-          emitcode ("ldx", "#0x%02x", val);
-          regalloc_dry_run_cost += 2;
-        }
+      emitcode ("ldx", "#0x%02x", val < 0 ? -val : val);
+      regalloc_dry_run_cost += 2;
       hc08_dirtyReg (hc08_reg_x, FALSE);
 
       emitcode ("mul", "");
@@ -6733,7 +6733,7 @@ expand_symbols (iCode * ic, const char *inlin)
               else
                 {
                   asmop *aop = aopForSym (ic, sym, FALSE);
-                  char *l = aopAdrStr (aop, aop->size - 1, TRUE);
+                  const char *l = aopAdrStr (aop, aop->size - 1, TRUE);
 
                   if ('#' == *l)
                     l++;
@@ -7163,10 +7163,10 @@ genSwap (iCode * ic)
         break;
       if (AOP_TYPE (result) == AOP_REG && AOP_TYPE (left) == AOP_REG)
         {
-          if (AOP (result)->aopu.aop_reg[1] != AOP (left)->aopu.aop_reg[0]);
+          if (AOP (result)->aopu.aop_reg[1] != AOP (left)->aopu.aop_reg[0])
             pushReg (AOP (left)->aopu.aop_reg[0], TRUE);
           storeRegToAop (AOP (left)->aopu.aop_reg[1], AOP (result), 0);
-          if (AOP (result)->aopu.aop_reg[1] != AOP (left)->aopu.aop_reg[0]);
+          if (AOP (result)->aopu.aop_reg[1] != AOP (left)->aopu.aop_reg[0])
             pullReg (AOP (result)->aopu.aop_reg[1]);
         }
       else if (operandsEqu (left, result) || sameRegs (AOP (left), AOP (result)))
@@ -7633,20 +7633,20 @@ movLeft2Result (operand * left, int offl, operand * result, int offr, int sign)
 /* shiftL2Left2Result - shift left two bytes from left to result   */
 /*-----------------------------------------------------------------*/
 static void
-shiftL2Left2Result (operand * left, int offl, operand * result, int offr, int shCount)
+shiftL2Left2Result (operand *left, int offl, operand *result, int offr, int shCount)
 {
   int i;
-  bool needpula = FALSE;
-  bool needpulx = FALSE;
+  bool needpula;
+  bool needpulx;
 
   if (!IS_AOP_XA (AOP (left)) && !IS_AOP_A (AOP (left)))
     needpula = pushRegIfUsed (hc08_reg_a);
   else
-    needpula = FALSE;
+    needpula = false;
   if (!IS_AOP_XA (AOP (left)))
     needpulx = pushRegIfUsed (hc08_reg_x);
   else
-    needpulx = FALSE;
+    needpulx = false;
 
   loadRegFromAop (hc08_reg_xa, AOP (left), offl);
 
@@ -7655,7 +7655,7 @@ shiftL2Left2Result (operand * left, int offl, operand * result, int offr, int sh
     case 7:
       rmwWithReg ("lsr", hc08_reg_x);
       rmwWithReg ("ror", hc08_reg_a);
-      transferRegReg (hc08_reg_a, hc08_reg_x, FALSE);
+      transferRegReg (hc08_reg_a, hc08_reg_x, false);
       rmwWithReg ("clr", hc08_reg_a);
       rmwWithReg ("ror", hc08_reg_a);
       break;
@@ -7670,7 +7670,6 @@ shiftL2Left2Result (operand * left, int offl, operand * result, int offr, int sh
 
   pullOrFreeReg (hc08_reg_x, needpulx);
   pullOrFreeReg (hc08_reg_a, needpula);
-
 }
 
 
@@ -7681,6 +7680,13 @@ shiftL2Left2Result (operand * left, int offl, operand * result, int offr, int sh
 static void
 shiftRLeftOrResult (operand * left, int offl, operand * result, int offr, int shCount)
 {
+  bool needpula;
+
+  if (!IS_AOP_XA (AOP (left)) && !IS_AOP_A (AOP (left)))
+    needpula = pushRegIfUsed (hc08_reg_a);
+  else
+    needpula = false;
+
   loadRegFromAop (hc08_reg_a, AOP (left), offl);
   /* shift left accumulator */
   AccRsh (shCount, FALSE);
@@ -7688,7 +7694,8 @@ shiftRLeftOrResult (operand * left, int offl, operand * result, int offr, int sh
   accopWithAop ("ora", AOP (result), offr);
   /* back to result */
   storeRegToAop (hc08_reg_a, AOP (result), offr);
-  hc08_freeReg (hc08_reg_a);
+
+  pullOrFreeReg (hc08_reg_a, needpula);
 }
 
 /*-----------------------------------------------------------------*/
@@ -7869,7 +7876,7 @@ genlshFour (operand * result, operand * left, int shCount)
         }
     }
 
-  /* 1 <= shCount <= 7 */
+  /* 1 <= shCount <= 2 */
   else if (shCount <= 2)
     {
       shiftLLong (left, result, LSB);
@@ -9712,12 +9719,15 @@ static void
 genAddrOf (iCode * ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
+  asmop *aopr;
   int size, offset;
   bool needpullx, needpullh;
-
+  struct dbuf_s dbuf;
+  
   D (emitcode (";     genAddrOf", ""));
 
   aopOp (IC_RESULT (ic), ic, FALSE);
+  aopr = AOP (IC_RESULT (ic));
 
   /* if the operand is on the stack then we
      need to get the stack offset of this
@@ -9755,25 +9765,37 @@ genAddrOf (iCode * ic)
       goto release;
     }
 
+  if (IS_AOP_HX (aopr) || aopr->type == AOP_DIR ||
+      (IS_S08 && aopr->type != AOP_REG))
+    {
+      needpullx = pushRegIfSurv (hc08_reg_x);
+      needpullh = pushRegIfSurv (hc08_reg_h);
+      loadRegFromImm (hc08_reg_hx, sym->rname);
+      storeRegToFullAop (hc08_reg_hx, AOP (IC_RESULT (ic)), FALSE);
+      pullOrFreeReg (hc08_reg_h, needpullh);
+      pullOrFreeReg (hc08_reg_x, needpullx);
+      goto release;
+    }
+  
   /* object not on stack then we need the name */
   size = AOP_SIZE (IC_RESULT (ic));
   offset = 0;
 
   while (size--)
     {
-      char s[SDCC_NAME_MAX + 10];
+      dbuf_init (&dbuf, 64);
       switch (offset)
         {
         case 0:
-          sprintf (s, "#%s", sym->rname);
+          dbuf_printf (&dbuf, "#%s", sym->rname);
           break;
         case 1:
-          sprintf (s, "#>%s", sym->rname);
+          dbuf_printf (&dbuf, "#>%s", sym->rname);
           break;
         default:
-          sprintf (s, "#(%s >> %d)", sym->rname, offset * 8);
+          dbuf_printf (&dbuf, "#0");
         }
-      storeImmToAop (s, AOP (IC_RESULT (ic)), offset++);
+      storeImmToAop (dbuf_detach_c_str (&dbuf), AOP (IC_RESULT (ic)), offset++);
     }
 
 release:
@@ -9818,6 +9840,7 @@ genAssignLit (operand * result, operand * right)
   for (offset=0; offset<size; offset++)
     {
       assigned[offset] = 0;
+      dup[offset] = 0;
       value[offset] = byteOfVal (AOP (right)->aopu.aop_lit, offset);
     }
 

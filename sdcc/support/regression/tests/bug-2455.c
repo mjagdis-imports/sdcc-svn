@@ -4,6 +4,7 @@
 
 #include <testfwk.h>
 
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15)
 typedef int (*funcType) (int);
 
 int foo0 (int a)
@@ -26,9 +27,11 @@ struct
   funcType fpa[2];
   funcType fpb;
 } testS = {{foo0, foo1}, foo2};
+#endif
 
 void testBug (void)
 {
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15)
   ASSERT (testS.fpa[0] (5) == 7);
   ASSERT (testS.fpa[1] (9) == 3);
   ASSERT (testS.fpb (5) == 10);
@@ -48,4 +51,5 @@ void testBug (void)
   ASSERT (testS.fpa[0] (5) == 10);
   ASSERT (testS.fpa[1] (9) == 11);
   ASSERT (testS.fpb (5) == -1);
+#endif
 }

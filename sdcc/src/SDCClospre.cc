@@ -95,7 +95,8 @@ candidate_expression (const iCode *const ic, int lkey)
     ic->op != RIGHT_OP &&
     !(ic->op == '=' && !POINTER_SET(ic) && !(IS_ITEMP(IC_RIGHT(ic)) /*&& IC_RIGHT(ic)->key > lkey*/)) &&
     ic->op != GET_VALUE_AT_ADDRESS &&
-    ic->op != CAST)
+    ic->op != CAST /*&&
+    ic->op != ADDRESS_OF Apparently typically not worth the cost in code size*/)
     return (false);
 
   const operand *const left = IC_LEFT (ic);
@@ -133,7 +134,8 @@ same_expression (const iCode *const lic, const iCode *const ric)
 
   if ((isOperandEqual (lleft, rleft) && isOperandEqual (lright, rright) ||
     IS_COMMUTATIVE (lic) && isOperandEqual (lleft, rright) && isOperandEqual (lright, rleft)) &&
-    (lresult && rresult && compareTypeInexact (operandType (lresult), operandType (rresult)) > 0))
+    (lresult && rresult && compareTypeInexact (operandType (lresult), operandType (rresult)) > 0) &&
+    IS_FLOAT (operandType (lresult)) == IS_FLOAT (operandType (rresult)))
     return (true);
 
   return (false);
@@ -169,10 +171,14 @@ invalidates_expression(const iCode *const eic, const iCode *const iic)
   const operand *const right = IC_RIGHT (iic);
   const operand *const result = IC_RESULT (iic);
 
+  if (iic->op == FUNCTION || iic->op == ENDFUNCTION || iic->op == RECEIVE)
+    return(true);
+  if (eic->op == ADDRESS_OF) // ADDRESS_OF does not really read its operand.
+    return(false);
+  if (eic->op == GET_VALUE_AT_ADDRESS && (isOperandGlobal (IC_RESULT (iic)) || IS_SYMOP (IC_RESULT (iic)) && OP_SYMBOL_CONST (IC_RESULT (iic))->addrtaken))
+    return(true);
   if (IC_RESULT (iic) && !IS_OP_LITERAL (result) && !POINTER_SET(iic) &&
     (eleft && isOperandEqual (eleft, result) || eright && isOperandEqual (eright, result)))
-    return(true);
-  if (iic->op == FUNCTION || iic->op == ENDFUNCTION || iic->op == RECEIVE)
     return(true);
   if ((uses_global || uses_volatile) && (iic->op == CALL || iic->op == PCALL))
     return(true);
@@ -217,9 +223,9 @@ setup_cfg_for_expression (cfg_lospre_t *const cfg, const iCode *const eic)
   if (eic->op == GET_VALUE_AT_ADDRESS && !optimize.allow_unsafe_read)
     safety_required = true;
 
-  // The division routines for z80-like ports and the hc08/s08's and stm8's hardware division just give an undefined result
+  // The division routines for z80-like ports, the hc08/s08's, the pdk ports and stm8's hardware division just give an undefined result
   // for division by zero, but there are no harmful side effects. I don't know about the other ports.
-  if ((eic->op == '/' || eic->op == '%') && !TARGET_Z80_LIKE && !TARGET_HC08_LIKE && !TARGET_IS_STM8)
+  if ((eic->op == '/' || eic->op == '%') && !TARGET_Z80_LIKE && !TARGET_HC08_LIKE && !TARGET_PDK_LIKE && !TARGET_IS_STM8)
     safety_required = true;
 
   // TODO: Relax this! There are cases where allowing unsafe optimizations will improve speed.
@@ -287,7 +293,7 @@ static void dump_dec_lospre(const tree_dec_t &tree_dec)
       if (tree_dec[i].bag.size() > w)
         w = tree_dec[i].bag.size();
       std::ostringstream os;
-      lospreset_t::const_iterator v1;
+      typename decltype(tree_dec[0].bag)::const_iterator v1;
        os << i << " | ";
       for (v1 = tree_dec[i].bag.begin(); v1 != tree_dec[i].bag.end(); ++v1)
         os << *v1 << " ";

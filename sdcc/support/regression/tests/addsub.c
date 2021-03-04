@@ -60,6 +60,7 @@ testAdd(void)
 void 
 testSub(void)
 {
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   {storage} {attr} {type} left, right, result;
 
   left = 5;
@@ -67,25 +68,26 @@ testSub(void)
 
   result = left-right;
   ASSERT(result == (5-26));
-  
+
   left = 39;
   right = -76;
-  
+
   result = left-right;
   ASSERT(result == (39+76));
 
   left = -12;
   right = 56;
-  
+
   result = left-right;
   ASSERT(result == (-12-56));
   
   left = -39;
   right = -20;
-  
+
   result = left-right;
   ASSERT(result == (-39+20));
 
   result = left-(signed)0x1200;
   ASSERT(result == ({type})(-39-(signed)0x1200));
+#endif
 }

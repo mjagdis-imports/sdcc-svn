@@ -25,22 +25,31 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
-#include "errorcl.h"
+//#include "errorcl.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "cmd_showcl.h"
 
+
+void
+set_show_help(class cl_cmd *cmd)
+{
+  cmd->set_help("show subcommand",
+		"Generic command for showing things about",
+		"Long of show");
+}
 
 /*
  * Command: show copying
@@ -56,6 +65,10 @@ COMMAND_DO_WORK(cl_show_copying_cmd)
   return(false);;
 }
 
+CMDHELP(cl_show_copying_cmd,
+	"show copying",
+	"Conditions for redistributing copies of uCsim",
+	"long help of show copying")
 
 /*
  * Command: show warranty
@@ -71,6 +84,10 @@ COMMAND_DO_WORK(cl_show_warranty_cmd)
   return(false);;
 }
 
+CMDHELP(cl_show_warranty_cmd,
+	"show warranty",
+	"Various kinds of warranty you do not have",
+	"long help of show warranty")
 
 /*
  * Command: show option
@@ -87,7 +104,7 @@ COMMAND_DO_WORK_APP(cl_show_option_cmd)
     s= parm->value.string.string;
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
 
   int i;
   for (i= 0; i < app->options->count; i++)
@@ -127,6 +144,10 @@ COMMAND_DO_WORK_APP(cl_show_option_cmd)
   return(false);
 }
 
+CMDHELP(cl_show_option_cmd,
+	"show option [name]",
+	"Show internal data of options",
+	"long help of show option")
 
 // prj
 #include "errorcl.h"
@@ -172,7 +193,7 @@ COMMAND_DO_WORK_APP(cl_show_error_cmd)
     s= parm->value.string.string;
   }
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+  syntax_error(con);
   */
   class cl_list *registered_errors = cl_error_registry::get_list();
   int i;
@@ -186,12 +207,41 @@ COMMAND_DO_WORK_APP(cl_show_error_cmd)
   return(false);
 }
 
-#include "newcmdposixcl.h"
+CMDHELP(cl_show_error_cmd,
+	"show error",
+	"Show class of errors",
+	"long help of show error")
+
+//#include "newcmdposixcl.h"
 
 /*
  * Command: show console
  *----------------------------------------------------------------------------
  */
+
+static void
+print_fio_info(class cl_console_base *con, class cl_f *ff)
+{
+  if (ff)
+    {
+      const char *n= ff->get_file_name();
+      const char *t= fio_type_name(ff->type);
+      con->dd_printf("\"%s\",%s,", n, t);
+      con->dd_printf("%d,%d,", ff->file_id, ff->server_port);
+      con->dd_printf("%s,%s",
+		     ff->tty?"tty":"non-tty",
+		     ff->get_cooking()?"cooked":"raw");
+      class cl_f *e= ff->get_echo_to();
+      if (e)
+	con->dd_printf("(echo>%d)", e->file_id);
+      if (ff->get_telnet())
+	con->dd_printf(",telnet");
+      if (ff->get_escape())
+	con->dd_printf(",esc");
+    }
+  con->dd_printf("\n");
+}
+
 COMMAND_DO_WORK_APP(cl_show_console)
 {
   class cl_commander_base *cm= app->get_commander();
@@ -213,36 +263,17 @@ COMMAND_DO_WORK_APP(cl_show_console)
       con->dd_printf("\n");
       class cl_f *ff= cn->get_fin();
       con->dd_printf(" <");
-      if (ff)
-	{
-	  char *n= ff->get_file_name();
-	  chars t= fio_type_name(ff->type);
-	  con->dd_printf("\"%s\",%s,", n, (char*)t);
-	  con->dd_printf("%d,%d,", ff->file_id, ff->server_port);
-	  con->dd_printf("%c%c",
-			 ff->tty?'T':'t',
-			 ff->get_cooking()?'c':'r');
-	  class cl_f *e= ff->get_echo_to();
-	  if (e)
-	    con->dd_printf("(>%d)", e->file_id);
-	}
-      con->dd_printf("\n");
+      print_fio_info(con, ff);
       ff= cn->get_fout();
       con->dd_printf(" >");
-      if (ff)
-	{
-	  char *n= ff->get_file_name();
-	  chars t= fio_type_name(ff->type);
-	  con->dd_printf("\"%s\",%s,", n, (char*)t);
-	  con->dd_printf("%d,", ff->file_id);
-	  con->dd_printf("%c%c",
-			 ff->tty?'T':'t',
-			 ff->get_cooking()?'c':'r');
-	}
-      con->dd_printf("\n");
+      print_fio_info(con, ff);
     }
   return false;
 }
 
+CMDHELP(cl_show_console,
+	"",
+	"",
+	"");
 
 /* End of cmd.src/cmd_show.cc */

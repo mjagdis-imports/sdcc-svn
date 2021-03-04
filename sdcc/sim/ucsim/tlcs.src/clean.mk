@@ -1,6 +1,5 @@
 # tlcs.src/clean.mk
 #
-# $Id: clean.mk 214 2016-06-18 08:00:47Z  $
 #
 
 # Deleting all files created by building the program
@@ -8,7 +7,7 @@
 clean:
 	rm -f *core *[%~] *.[oa] *.map
 	rm -f .[a-z]*~
-	rm -f stlcs$(EXEEXT)
+	rm -f stlcs$(EXEEXT) stlcs.exe
 
 
 # Deleting all files created by configuring or building the program

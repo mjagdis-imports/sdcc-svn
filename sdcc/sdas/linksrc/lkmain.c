@@ -60,26 +60,13 @@ void Areas51 (void)
 {
         char * rel[] = {
                 "XH",
-                "H 7 areas 0 global symbols",
-                "A _CODE size 0 flags 0",               /*Each .rel has one, so...*/
-                "A REG_BANK_0 size 0 flags 4",  /*Register banks are overlayable*/
-                "A REG_BANK_1 size 0 flags 4",
-                "A REG_BANK_2 size 0 flags 4",
-                "A REG_BANK_3 size 0 flags 4",
-                "A BSEG size 0 flags 80",               /*BSEG must be just before BITS*/
-                "A BSEG_BYTES size 0 flags 0",  /*Size will be obtained from BSEG in lnkarea()*/
-                ""
-        };
-
-        char * rel2[] = {
-                "XH",
                 "H C areas 0 global symbols",
-                "A _CODE size 0 flags 0",               /*Each .rel has one, so...*/
+                "A _CODE size 0 flags 0",       /*Each .rel has one, so...*/
                 "A REG_BANK_0 size 0 flags 4",  /*Register banks are overlayable*/
                 "A REG_BANK_1 size 0 flags 4",
                 "A REG_BANK_2 size 0 flags 4",
                 "A REG_BANK_3 size 0 flags 4",
-                "A BSEG size 0 flags 80",               /*BSEG must be just before BITS*/
+                "A BSEG size 0 flags 80",       /*BSEG must be just before BITS*/
                 "A BSEG_BYTES size 0 flags 0",  /*Size will be obtained from BSEG in lnkarea()*/
                 "A BIT_BANK size 0 flags 4",    /*Bit register bank is overlayable*/
                 "A DSEG size 0 flags 0",
@@ -91,17 +78,9 @@ void Areas51 (void)
         int j;
         struct sym * sp;
 
-        if (packflag) {
-                for (j = 0; rel2[j][0] != 0; j++) {
-                        ip = rel2[j];
-                        link_main();
-                }
-        }
-        else {
-                for (j = 0; rel[j][0] != 0; j++) {
-                        ip = rel[j];
-                        link_main();
-                }
+        for (j = 0; rel[j][0] != 0; j++) {
+                ip = rel[j];
+                link_main();
         }
 
         /*Set the start address of the default areas:*/
@@ -371,13 +350,12 @@ main(int argc, char *argv[])
                         /*
                          * Link all area addresses.
                          */
-                        if (!packflag)
-                                lnkarea();
-                        else {
-                                /* sdld 8051 specific */
+                        /* sdld 8051 specific */
+                        if (is_sdld_target_8051_like())
                                 lnkarea2();
+                        else
                                 /* end sdld 8051 specific */
-                        }
+                                lnkarea();
                         /*
                          * Check bank size limits.
                          */
@@ -403,18 +381,21 @@ main(int argc, char *argv[])
 
                         /* sdld specific */
                         if (sflag) {    /*JCF: memory usage summary output*/
-                                if (!packflag) {
-                                        if (summary(areap)) lkexit(1);
+                                if (is_sdld_target_8051_like()) {
+                                        if (summary2(areap)) {
+                                                lkexit(1);
+                                        }
                                 }
                                 else {
-                                        /* sdld 8051 specific */
-                                        if (summary2(areap)) lkexit(1);
-                                        /* end sdld 8051 specific */
+                                        if (summary(areap)) {
+                                                lkexit(1);
+                                        }
                                 }
                         }
 
-                        if ((iram_size) && (!packflag))
+                        if ((iram_size) && (!is_sdld_target_8051_like()))
                                 iramcheck();
+
                         /* end sdld specific */
 
                         /*
@@ -430,6 +411,44 @@ main(int argc, char *argv[])
                          * Complete Processing
                          */
                         reloc('E');
+                }
+        }
+
+        if (TARGET_IS_PDK && get_sdld_target() != TARGET_ID_PDK) {
+                unsigned ram = 0;
+                unsigned rom = 0;
+                for (struct area *it = areap; it; it = it->a_ap) {
+                        if (!strcmp(it->a_id, "DATA") ||
+                            !strcmp(it->a_id, "OSEG")) {
+                                if (it->a_addr + it->a_size > ram) {
+                                        ram = it->a_addr + it->a_size;
+                                }
+                        } else if (!strcmp(it->a_id, "CODE") ||
+                                   !strcmp(it->a_id, "CONST")) {
+                                if (it->a_addr + it->a_size > rom) {
+                                        rom = it->a_addr + it->a_size;
+                                }
+                        }
+                }
+
+                enum sdld_target_e target = get_sdld_target();
+                const unsigned max_ram =
+                    target == TARGET_ID_PDK13 ? 64 :
+                    target == TARGET_ID_PDK14 ? 128 : 256;
+                const unsigned max_rom =
+                    target == TARGET_ID_PDK13 ? 2048 :
+                    target == TARGET_ID_PDK14 ? 4096 : 8192;
+                if (ram > max_ram) {
+                        fprintf(stderr,
+                                "?ASlink-Warning-"
+                                "RAM value %u too large "
+                                "(%uB max)\n", ram, max_ram);
+                }
+                if (rom > max_rom) {
+                        fprintf(stderr,
+                                "?ASlink-Warning-"
+                                "ROM value %u too large "
+                                "(%uW max)\n", rom / 2, max_rom / 2);
                 }
         }
         if (TARGET_IS_8051) {
@@ -1099,9 +1118,8 @@ parse()
 #if SDCDB
                                 case 'Y':
                                         if (TARGET_IS_8051) {
-                                                unget(getnb());
-                                                packflag=1;
-                                                break;
+                                                fprintf(stderr,
+                                                    "Warning: Treating -Y as -y\n");
                                         }
                                         // else fall through
                                 case 'y':
@@ -1745,7 +1763,6 @@ char *usetxt_8051[] = {
         "  -X   [xram-size] Check for external RAM overflow",
         "  -C   [code-size] Check for code overflow",
         "  -M   Generate memory usage summary file[.mem]",
-        "  -Y   Pack internal ram",
         "  -S   [stack-size] Allocate space for stack",
         "End:",
         "  -e   or null line terminates input",
@@ -1823,6 +1840,10 @@ char *usetxt_z80_gb[] = {
         "Output:",
         "  -i   Intel Hex as (out)file[.ihx]",
         "  -s   Motorola S Record as (out)file[.s19]",
+#if NOICE
+        // can be converted into no$gmb compatible .sym
+        "  -j   NoICE Debug output as (out)file[.noi]",
+#endif
 #if SDCDB
         "  -y   SDCDB Debug output as (out)file[.cdb]",
 #endif

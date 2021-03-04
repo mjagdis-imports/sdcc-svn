@@ -4,6 +4,7 @@
 
 #include <testfwk.h>
 
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 typedef int (*DT)(int);
 
 unsigned int f1(unsigned int c)
@@ -17,9 +18,11 @@ int f2(int c)
 }
 
 DT gpfunc[] = {(DT) f1, f2};
+#endif
 
 void testBug (void)
 {
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
   DT lpfunc[] = {(DT) f1, f2};
   DT spfunc[] = {f2, (DT) f1};
 
@@ -29,5 +32,6 @@ void testBug (void)
   ASSERT (lpfunc[1](0x44) == 0x46);
   ASSERT (spfunc[0](0x11) == 0x13);
   ASSERT (spfunc[1](0x22) == 0x23);
+#endif
 }
 

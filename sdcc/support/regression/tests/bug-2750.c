@@ -18,6 +18,10 @@ typedef struct
   unsigned LATC7                : 1;
   } LATCbits_t;
 
+#if defined(__SDCC_pic14) // pic14: LATCbits may actually exist in the device
+#  define LATCbits fake_LATCbits
+#endif
+
 volatile LATCbits_t LATCbits;
 
 unsigned short mask;
@@ -31,12 +35,10 @@ volatile unsigned char bit;
 
 void testBug(void)
 {
-#ifndef __SDCC // Enable when bug gets fixed
     LATCbits.LATC0 = 1;
     mask = 0x00;
     bit = 0;
     set_bits(bit);
     ASSERT(!LATCbits.LATC0);
-#endif
 }
 

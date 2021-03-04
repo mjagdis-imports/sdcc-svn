@@ -57,12 +57,14 @@ int string_to_ip(const char *s)
 void
 testTortureExecute (void)
 {
+#if !defined( __SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
   int t = string_to_ip (temp);
   printf ("%x\n", t);
   printf ("%x\n", result);
   if (t != result)
     ASSERT (0);
   printf ("WORKS.\n");
+#endif
 }
 
 #if !defined(PORT_HOST)

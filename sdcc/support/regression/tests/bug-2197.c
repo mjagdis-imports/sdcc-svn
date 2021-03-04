@@ -6,7 +6,7 @@
 #include <testfwk.h>
 
 #if defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM) || \
-    (defined(__SDCC_mcs51) && defined(__SDCC_STACK_AUTO))
+    (defined(__SDCC_mcs51) && defined(__SDCC_STACK_AUTO)) || defined(__SDCC_pdk15) || defined(__SDCC_pic14)
 #define N	32
 #else
 #define N	128
@@ -35,6 +35,7 @@ inttostr (long i, char buf[N])
 void
 testTortureExecute (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
   char buf[N], *p;
 
   p = inttostr (-1, buf);
@@ -45,4 +46,5 @@ testTortureExecute (void)
   ASSERT(p == buf + (N-1) - 2);
 
   return;
+#endif
 }

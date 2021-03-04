@@ -25,22 +25,22 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <strings.h>
+//#include <errno.h>
+//#include <fcntl.h>
+//#include <sys/time.h>
+//#include <strings.h>
 
 // prj
 #include "globals.h"
-#include "utils.h"
+//#include "utils.h"
 
 // cmd
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 // local
 #include "serialcl.h"
@@ -77,7 +77,7 @@ cl_serial::init(void)
     }
 
   class cl_hw *t2= uc->get_hw(HW_TIMER, 2, 0);
-  if ((there_is_t2= t2 != 0))
+  if (((there_is_t2= t2) != 0))
     {
       t_mem d= sfr->get(T2CON);
       t2_baud= d & (bmRCLK | bmTCLK);
@@ -131,7 +131,10 @@ t_mem
 cl_serial::read(class cl_memory_cell *cell)
 {
   if (cell == sbuf)
-    return(s_in);
+    {
+      cfg_set(serconf_able_receive, 1);
+      return(s_in);
+    }
   conf(cell, NULL);
   return(cell->get());
 }
@@ -293,11 +296,7 @@ cl_serial::tick(int cycles)
     {
       s_sending= false;
       scon->set_bit1(bmTI);
-      //if (io->fout)
-	{
-	  //io->fout->write((char*)(&s_out), 1);
-	  io->dd_printf("%c", s_out);
-	}
+      io->write((char*)(&s_out), 1);
       s_tr_bit-= _bits;
     }
   if ((_bmREN) &&
@@ -322,6 +321,8 @@ cl_serial::tick(int cycles)
       //if (fin->read(&c, 1) == 1)
 	{
 	  c= input;
+	  uc->sim->app->debug("UART%d received %d,%c\n", id,
+			      c,isprint(c)?c:' ');
 	  input_avail= false;
 	  s_in= c;
 	  sbuf->set(s_in);
@@ -341,6 +342,7 @@ void
 cl_serial::received(int c)
 {
   scon->set_bit1(bmRI);
+  cfg_write(serconf_received, c);
 }
 
 void
@@ -423,17 +425,20 @@ cl_serial::print_info(class cl_console_base *con)
   con->dd_printf(" %s", (sc&bmREN)?"ON":"OFF");
   con->dd_printf(" RB8=%c", (sc&bmRB8)?'1':'0');
   con->dd_printf(" irq=%c", (sc&bmRI)?'1':'0');
+  con->dd_printf(" buf=0x%02x", s_in);
   con->dd_printf("\n");
 
   con->dd_printf("Transmitter");
   con->dd_printf(" TB8=%c", (sc&bmTB8)?'1':'0');
   con->dd_printf(" irq=%c", (sc&bmTI)?'1':'0');
+  con->dd_printf(" buf=0x%02x", s_out);
   con->dd_printf("\n");
   /*con->dd_printf("s_rec_t1=%d s_rec_bit=%d s_rec_tick=%d\n",
 		 s_rec_t1, s_rec_bit, s_rec_tick);
   con->dd_printf("s_tr_t1=%d s_tr_bit=%d s_tr_tick=%d\n",
 		 s_tr_t1, s_tr_bit, s_tr_tick);
 		 con->dd_printf("divby=%d bits=%d\n", _divby, _bits);*/
+  //print_cfg_info(con);
 }
 
 

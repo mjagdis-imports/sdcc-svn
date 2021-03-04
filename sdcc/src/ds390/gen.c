@@ -32,8 +32,6 @@
 #include "gen.h"
 #include "dbuf_string.h"
 
-char *aopLiteral (value * val, int offset);
-char *aopLiteralLong (value * val, int offset, int size);
 extern int allocInfo;
 
 /* this is the down and dirty file with all kinds of
@@ -864,20 +862,18 @@ aopForRemat (symbol * sym)
     }
 
   dbuf_init (&dbuf, 128);
-  if (val)
+  if (IS_ASSIGN_ICODE (ic) && isOperandLiteral (IC_RIGHT (ic)))
+    {
+      val = (val + (int) operandLitValue (IC_RIGHT (ic))) & 0xffffff;
+      dbuf_printf (&dbuf, "0x%06x", val);
+    }
+  else if (val)
     {
       dbuf_printf (&dbuf, "(%s %c 0x%06x)", OP_SYMBOL (IC_LEFT (ic))->rname, val >= 0 ? '+' : '-', abs (val) & 0xffffff);
     }
   else
     {
-      if (IS_ASSIGN_ICODE (ic) && isOperandLiteral (IC_RIGHT (ic)))
-        {
-          dbuf_printf (&dbuf, "0x%06x", (int) operandLitValue (IC_RIGHT (ic)));
-        }
-      else
-        {
-          dbuf_append_str (&dbuf, OP_SYMBOL (IC_LEFT (ic))->rname);
-        }
+      dbuf_append_str (&dbuf, OP_SYMBOL (IC_LEFT (ic))->rname);
     }
 
   aop->aopu.aop_immd.aop_immd1 = dbuf_detach_c_str (&dbuf);
@@ -2699,34 +2695,31 @@ assignResultValue (operand * oper, operand * func)
       return FALSE;
     }
 
-  if (size == fReturnSizeDS390)
+  if (AOP_NEEDSACC (oper))
     {
-      /* I don't think this case can ever happen... */
-      /* ACC is the last part of this. If writing the result
-       * uses ACC, we must preserve it.
-       */
-      if (AOP_NEEDSACC (oper))
+      int i;
+      for (i=0; i<size; i++)
         {
-          emitcode (";", "assignResultValue special case for ACC.");
-          emitpush ("acc");
-          pushedA = TRUE;
-          size--;
+          if (strcmp(fReturn[i],"a")==0)
+            {
+              emitcode (";", "assignResultValue special case for ACC.");
+              emitpush ("acc");
+              pushedA = TRUE;
+              break;
+            }
         }
     }
-
+              
   _startLazyDPSEvaluation ();
   while (size--)
     {
+      if (pushedA && strcmp(fReturn[offset],"a")==0)
+        emitpop ("acc");
       accuse |= aopPut (oper, fReturn[offset], offset);
       offset++;
     }
   _endLazyDPSEvaluation ();
 
-  if (pushedA)
-    {
-      emitpop ("acc");
-      accuse |= aopPut (oper, "a", offset);
-    }
   return accuse;
 }
 
@@ -3124,6 +3117,7 @@ genSend (set * sendSet)
           D (emitcode (";", "genSend argreg = %d, size = %d ", sic->argreg, size));
           if (sendCount == 0)
             {
+              bool pushedA = FALSE;
               /* first parameter */
               // we know that dpl(hxb) is the result, so
               rb1_count = 0;
@@ -3144,7 +3138,17 @@ genSend (set * sendSet)
                       emitcode ("mov", "a%s,%s", fReturn[offset], l); // use register's direct address instead of name
                     else
                       emitcode ("mov", "%s,%s", fReturn[offset], l);
+                    if (size && (strcmp(fReturn[offset],"a")==0) && AOP_NEEDSACC( IC_LEFT (sic)))
+                      {
+                        emitpush ("acc");
+                        pushedA = TRUE;
+                      }
                   offset++;
+                }
+              if (pushedA)
+                {
+                  emitpop ("acc");
+                  pushedA = FALSE;
                 }
               _endLazyDPSEvaluation ();
               freeAsmop (IC_LEFT (sic), NULL, sic, TRUE);
@@ -9431,7 +9435,7 @@ genlshFixed (operand *result, operand *left, int shCount)
     {
       shiftLLong (left, result, full_bytes);
     }
-  else if ((shCount == 2) && (full_bytes == 0))
+  else if ((shCount == 2) && (full_bytes == 0) && !isOperandVolatile (result, FALSE))
     {
       shiftLLong (left, result, full_bytes);
       shiftLLong (result, result, full_bytes);
@@ -11862,7 +11866,7 @@ genFarFarAssign (operand * result, operand * right, iCode * ic)
         }
     }
 
-  if (size > 1 && rSym && rSym->rname && !rSym->onStack)
+  if (size > 1 && rSym && rSym->rname && !rSym->onStack && !IS_OP_RUONLY (right))
     {
       /* We can use the '390 auto-toggle feature to good effect here. */
 
@@ -11872,7 +11876,15 @@ genFarFarAssign (operand * result, operand * right, iCode * ic)
       /* DP2 = result, DP1 = right, DP1 is current. */
       while (size)
         {
-          emitcode ("movx", "a,@dptr");
+          if (AOP (right)->code)
+            {
+              emitcode ("clr", "a");
+              emitcode ("movc", "a,@a+dptr");
+            }
+          else
+            {
+              emitcode ("movx", "a,@dptr");
+            }
           emitcode ("movx", "@dptr,a");
           if (--size)
             {
@@ -11950,7 +11962,7 @@ genAssign (iCode * ic)
   emitcode (";", "genAssign: resultIsFar = %s", isOperandInFarSpace (result) ? "TRUE" : "FALSE");
 
   /* special case both in far space */
-  if ((AOP_TYPE (right) == AOP_DPTR || AOP_TYPE (right) == AOP_DPTR2) &&
+  if ((AOP_TYPE (right) == AOP_DPTR || AOP_TYPE (right) == AOP_DPTR2 || IS_OP_RUONLY (right)) &&
       /* IS_TRUE_SYMOP(result)       && */
       isOperandInFarSpace (result))
     {

@@ -9,9 +9,11 @@
 #pragma disable_warning 85
 #endif
 
+#if !defined(__SDCC_pic14) // Unimplemented setjmp
 #include <string.h>
 #include <setjmp.h>
 
+#ifndef __SDCC_pdk14 // Lack of memory
 jmp_buf try;
 
 typedef struct A {
@@ -47,15 +49,21 @@ void test (const char *x, int *y)
   if (y)
     d->a[d->b]->b = *y;
 }
+#endif
+#endif
 
 void
 testTortureExecute (void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
+#if !defined(__SDCC_pic14) // Unimplemented setjmp
   if (setjmp(try) == 0)
   {
     d->b = 0;
     d->a = &a;
     test ("", 0);
   }
+#endif
+#endif
 }
 

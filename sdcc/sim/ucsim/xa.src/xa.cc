@@ -27,15 +27,15 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include "i_string.h"
+//#include <ctype.h>
+#include <string.h>
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
 
 // sim
 #include "simcl.h"
@@ -43,7 +43,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // local
 #include "xacl.h"
 #include "glob.h"
-#include "regsxa.h"
+//#include "regsxa.h"
 
 
 /*
@@ -286,10 +286,10 @@ cl_xa::init(void)
 }
 
 
-char *
+const char *
 cl_xa::id_string(void)
 {
-  return((char*)"unspecified XA");
+  return("unspecified XA");
 }
 
 
@@ -523,7 +523,7 @@ disass - Disassemble an opcode.
 char *
 cl_xa::disass(t_addr addr, const char *sep)
 {
-  char work[256], parm_str[40];
+  char work[256], parm_str[140];
   char *buf, *p, *b;
   int code;
   int len = 0;
@@ -992,6 +992,8 @@ int cl_xa::exec_inst(void)
   uint code;
   int i;
   int operands;
+
+  instPC= PC;
 
   if (fetch(&code1))
     return(resBREAKPOINT);

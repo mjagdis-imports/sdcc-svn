@@ -28,16 +28,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "ddconfig.h"
 
 #include <stdio.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include HEADER_FD
-#include <errno.h>
+//#include <errno.h>
 #include <string.h>
 #if defined HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
+# include <sys/socket.h>
 #endif
 #include <stdlib.h>
 #include <ctype.h>
@@ -77,27 +78,27 @@ cl_history::~cl_history(void)
 {
 }
 
-char *
+const char *
 cl_history::up(chars line)
 {
   replace(line);
   if (nr > 0)
     nr--;
-  return (char*)(Items[nr]);
+  return (char*)Items[nr];
 }
 
-char *
+const char *
 cl_history::down(chars line)
 {
   replace(line);
   if (nr < count)
     nr++;
   if (nr < count)
-    return (char*)(Items[nr]);
+    return (char*)Items[nr];
   return NULL;
 }
 
-char *
+void
 cl_history::enter(chars line)
 {
   if (count > 1000)
@@ -111,7 +112,6 @@ cl_history::enter(chars line)
       add(strdup(line));
       nr= count;
     }
-  return NULL;
 }
 
 void
@@ -140,6 +140,7 @@ cl_f::cl_f(void)
   server_port= -1;
   echo_of= NULL;
   echo_to= NULL;
+  echo_color= "";
   at_end= 0;
   last_used= first_free= 0;
   cooking= 0;
@@ -163,6 +164,7 @@ cl_f::cl_f(chars fn, chars mode):
   server_port= -1;
   echo_of= NULL;
   echo_to= NULL;
+  echo_color= "";
   at_end= 0;
   last_used= first_free= 0;
   cooking= 0;
@@ -184,6 +186,7 @@ cl_f::cl_f(int the_server_port)
   server_port= the_server_port;
   echo_of= NULL;
   echo_to= NULL;
+  echo_color= "";
   at_end= 0;
   last_used= first_free= 0;
   cooking= 0;
@@ -198,13 +201,13 @@ cl_f::cl_f(int the_server_port)
 class cl_f *
 cl_f::copy(chars mode)
 {
-  class cl_f *io= mk_io(chars(""), chars(""));
+  class cl_f *io= mk_io("", "");
   io->use_opened(file_id, mode);
   return io;
 }
 
 static int
-open_flags(char *m)
+open_flags(const char *m)
 {
   if (strcmp(m, "r") == 0)
     return O_RDONLY;
@@ -227,6 +230,12 @@ cl_f::init(void)
   if (server_port > 0)
     {
       file_id= mk_srv_socket(server_port);
+      if (file_id <= 0)
+	{
+	  file_id= -1;
+	  own= false;
+	  return -1;
+	}
       listen(file_id, 50);
       own= true;
       tty= false;
@@ -235,7 +244,7 @@ cl_f::init(void)
   else if (!file_name.empty())
     {
       if (file_mode.empty())
-	file_mode= cchars("r+");
+	file_mode= "r+";
       if ((file_id= ::open(file_name, open_flags(file_mode), (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH))) >= 0)
 	{
 	  tty= isatty(file_id);
@@ -253,13 +262,13 @@ cl_f::init(void)
 }
 
 int
-cl_f::use_opened(int opened_file_id, char *mode)
+cl_f::use_opened(int opened_file_id, const char *mode)
 {
   close();
   if (mode)
     file_mode= mode;
   else
-    file_mode= cchars("r+");
+    file_mode= "r+";
   own= false;
   if (opened_file_id >= 0)
     {
@@ -271,7 +280,7 @@ cl_f::use_opened(int opened_file_id, char *mode)
 }
 
 int
-cl_f::own_opened(int opened_file_id, char *mode)
+cl_f::own_opened(int opened_file_id, const char *mode)
 {
   use_opened(opened_file_id, mode);
   own= true;
@@ -279,7 +288,7 @@ cl_f::own_opened(int opened_file_id, char *mode)
 }
 
 int
-cl_f::use_opened(FILE *f, chars mode)
+cl_f::use_opened(FILE *f, const char *mode)
 {
   close();
   if (f)
@@ -298,7 +307,7 @@ cl_f::use_opened(FILE *f, chars mode)
 }
 
 int
-cl_f::own_opened(FILE *f, chars mode)
+cl_f::own_opened(FILE *f, const char *mode)
 {
   use_opened(f, mode);
   own= true;
@@ -306,7 +315,7 @@ cl_f::own_opened(FILE *f, chars mode)
 }
 
 int
-cl_f::open(char *fn)
+cl_f::open(const char *fn)
 {
   close();
   if (fn)
@@ -315,7 +324,7 @@ cl_f::open(char *fn)
 }
 
 int
-cl_f::open(char *fn, char *mode)
+cl_f::open(const char *fn, const char *mode)
 {
   close();
   if (mode)
@@ -370,7 +379,10 @@ cl_f::put(int c)
 {
   int n= (first_free + 1) % 1024;
   if (n == last_used)
-    return -1;
+    {
+      printf("put: %d FULL!\n",c);
+      return -1;
+    }
   buffer[first_free]= c;
   first_free= n;
   return 0;
@@ -383,9 +395,7 @@ cl_f::get(void)
     {
       return -1;
     }
-  int c= buffer[last_used];
-  //if (c == 3 /* ^C */)
-  //return -2;
+  int c= buffer[last_used] & 0xff;
   last_used= (last_used + 1) % 1024;
   return c;
 }
@@ -430,7 +440,7 @@ cl_f::process_csi(void)
   int l= strlen(esc_buffer);
   if (l < 3)
     return 0;
-  int f, ret= 0;
+  int /*f,*/ ret= 0;
   char c= esc_buffer[l-1];
   
   switch (esc_buffer[2])
@@ -454,13 +464,13 @@ cl_f::process_csi(void)
 	    case 'p': ret= TU_CSUP; break;
 	    case 'q': ret= TU_CSDOWN; break;
 	    }
-	  f= ret;
+	  //f= ret;
 	  ret&= ~0xffff00;
 	  int x= (esc_buffer[4] - 0x20) & 0xff;
 	  int y= (esc_buffer[5] - 0x20) & 0xff;
 	  ret|= x << 16;
 	  ret|= y << 8;
-	  fprintf(stderr, "Mouse: 0x%0x (f=%d,0x%x)\n", ret, f, f);
+	  //fprintf(stderr, "Mouse: 0x%0x (f=%d,0x%x)\n", ret, f, f);
 	  return finish_esc(ret);
 	}
       return 0;
@@ -694,7 +704,7 @@ cl_f::process(char c)
   // HISTORY
   else if (k == TU_UP)
     {
-      char *s= hist->up(line);
+      const char *s= hist->up(line);
       if (cursor > 0)
 	echo_cursor_go_left(cursor);
       echo_cursor_save();
@@ -711,7 +721,7 @@ cl_f::process(char c)
     }
   else if (k == TU_DOWN)
     {
-      char *s= hist->down(line);
+      const char *s= hist->down(line);
       if (cursor > 0)
 	echo_cursor_go_left(cursor);
       echo_cursor_save();
@@ -843,7 +853,7 @@ cl_f::pick(void)
       at_end= 1;
     }
   if (i < 0)
-    ;
+    {}
   return i;
 }
 
@@ -937,8 +947,6 @@ cl_f::read_dev(int *buf, int max)
   while (i < max)
     {
       c= get();
-      //if (c == -2) // ^C
-	  //return i;
       if (c == -1)
 	{
 	  if (i>0)
@@ -962,7 +970,7 @@ cl_f::read_dev(int *buf, int max)
 
 
 int
-cl_f::write(char *buf, int count)
+cl_f::write(const char *buf, int count)
 {
   int i;
   if (file_id >= 0)
@@ -980,13 +988,13 @@ cl_f::write(char *buf, int count)
 	    {
 	      j= ::write(file_id, "\r\n", 2);
 	      if (j != 2)
-		;
+	        {}
 	    }
 	  else
 	    {
 	      j= ::write(file_id, &buf[i], 1);
 	      if (j != 1)
-		;
+	        {}
 	    }
 	}
       return i;
@@ -996,7 +1004,7 @@ cl_f::write(char *buf, int count)
 
 
 int
-cl_f::write_str(char *s)
+cl_f::write_str(const char *s)
 {
   if (!s ||
       !*s)
@@ -1004,15 +1012,6 @@ cl_f::write_str(char *s)
   return write(s, strlen(s));
 }
 
-
-int
-cl_f::write_str(const char *s)
-{
-  if (!s ||
-      !*s)
-    return 0;
-  return write((char*)s, strlen((char*)s));
-}
 
 int
 cl_f::vprintf(const char *format, va_list ap)
@@ -1058,7 +1057,7 @@ cl_f::echo_cursor_save()
 {
   if (echo_to)
     {
-      echo_to->write(cchars("\033[s"), 3);
+      echo_to->write("\033[s", 3);
       //echo_to->flush();
     }
 }
@@ -1068,7 +1067,7 @@ cl_f::echo_cursor_restore()
 {
   if (echo_to)
     {
-      echo_to->write(cchars("\033[u"), 3);
+      echo_to->write("\033[u", 3);
       //echo_to->flush();
     }
 }
@@ -1098,21 +1097,13 @@ cl_f::echo_cursor_go_right(int n)
 }
 
 void
-cl_f::echo_write(char *b, int l)
+cl_f::echo_write(const char *b, int l)
 {
   if (echo_to)
     {
+      if (echo_color.nempty())
+	echo_to->prntf("%s", echo_color.c_str());
       echo_to->write(b, l);
-      //echo_to->flush();
-    }
-}
-
-void
-cl_f::echo_write_str(char *s)
-{
-  if (echo_to)
-    {
-      echo_to->write_str(s);
       //echo_to->flush();
     }
 }
@@ -1122,12 +1113,20 @@ cl_f::echo_write_str(const char *s)
 {
   if (echo_to)
     {
+      if (echo_color.nempty())
+	echo_to->prntf("%s", echo_color.c_str());
       echo_to->write_str(s);
       //echo_to->flush();
     }
 }
 
-  
+void
+cl_f::set_echo_color(chars col)
+{
+  echo_color= col;
+}
+
+
 /* Device handling */
 
 void
@@ -1219,7 +1218,7 @@ cl_f::set_escape(bool val)
 }
 
 
-chars
+const char *
 fio_type_name(enum file_type t)
 {
   switch (t)

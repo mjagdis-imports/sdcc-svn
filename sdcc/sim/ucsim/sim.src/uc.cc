@@ -25,21 +25,22 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
 
 // cmd.src
-#include "newcmdcl.h"
-#include "cmdutil.h"
+//#include "newcmdcl.h"
+//#include "cmdutil.h"
 #include "cmd_uccl.h"
 #include "cmd_bpcl.h"
 #include "cmd_getcl.h"
@@ -48,12 +49,13 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "cmd_timercl.h"
 #include "cmd_statcl.h"
 #include "cmd_memcl.h"
+#include "cmd_execcl.h"
 
 // local, sim.src
 #include "uccl.h"
-#include "hwcl.h"
-#include "memcl.h"
-#include "simcl.h"
+//#include "hwcl.h"
+//#include "memcl.h"
+//#include "simcl.h"
 #include "itsrccl.h"
 #include "simifcl.h"
 #include "vcdcl.h"
@@ -123,6 +125,112 @@ cl_xtal_option::option_changed(void)
   double d;
   option->get_value(&d);
   uc->xtal= d;
+}
+
+cl_stop_selfjump_option::cl_stop_selfjump_option(class cl_uc *the_uc):
+  cl_optref(the_uc)
+{
+  uc= the_uc;
+}
+
+int
+cl_stop_selfjump_option::init(void)
+{
+  cl_optref::init();
+  create(uc, bool_opt, "selfjump_stop", "Stop when jump branches to itself");
+  return 0;
+}
+
+void
+cl_stop_selfjump_option::option_changed(void)
+{
+  bool b;
+  option->get_value(&b);
+  uc->stop_selfjump= b;
+}
+
+/* Time measurer */
+
+cl_time_measurer::cl_time_measurer(class cl_uc *the_uc):
+  cl_base()
+{
+  to_reach= 0;
+  uc= the_uc;
+}
+
+void
+cl_time_measurer::set_reach(unsigned long val)
+{
+  to_reach= val;
+}
+
+void
+cl_time_measurer::from_now(unsigned long val)
+{
+  set_reach(now() + val);
+}
+
+bool
+cl_time_measurer::reached()
+{
+  return to_reach &&
+    (now() >= to_reach);
+}
+
+unsigned long
+cl_time_measurer::now()
+{
+  return 0;
+}
+
+
+/* value of xtal clock */
+
+unsigned long
+cl_time_clk::now()
+{
+  if (!uc) return 0;
+  return uc->ticks->ticks;
+}
+
+
+/* value of virtual clocks */
+
+unsigned long
+cl_time_vclk::now()
+{
+  if (!uc) return 0;
+  return uc->vc.fetch + uc->vc.rd + uc->vc.wr;
+}
+
+
+/* value of fetches */
+
+unsigned long
+cl_time_fclk::now()
+{
+  if (!uc) return 0;
+  return uc->vc.fetch;
+}
+
+
+/* value of reads */
+
+unsigned long
+cl_time_rclk::now()
+{
+  if (!uc) return 0;
+  return uc->vc.rd;
+}
+
+
+/* value of writes */
+
+unsigned long
+cl_time_wclk::now()
+{
+  if (!uc) return 0;
+  return uc->vc.wr;
 }
 
 
@@ -230,6 +338,154 @@ cl_omf_rec::read(cl_f *f)
 
 
 /*
+ * Execution history
+ */
+
+cl_exec_hist::cl_exec_hist(class cl_uc *auc):
+  cl_base()
+{
+  uc= auc;
+  len= 101;
+  hist= (struct t_hist_elem*)malloc(sizeof(struct t_hist_elem) * len);
+  t= h= 0;
+}
+
+cl_exec_hist::~cl_exec_hist(void)
+{
+  if (hist)
+    free(hist);
+}
+
+int
+cl_exec_hist::init(void)
+{
+  return 0;
+}
+
+void
+cl_exec_hist::put(void)
+{
+  t_addr pc;
+  if (!uc)
+    return;
+  pc= uc->PC;
+  if (t != h)
+    {
+      if (hist[h].addr == pc)
+	{
+	  hist[h].nr++;
+	  return;
+	}
+    }
+  int nh= (h+1)%len;
+  if (t == nh)
+    t= (t+1)%len;
+  h= nh;
+  hist[h].addr= pc;
+  hist[h].nr= 1;
+}
+
+void
+cl_exec_hist::list(class cl_console_base *con, bool inc, int nr)
+{
+  int s, p, ta, l;
+  if (!con)
+    return;
+  if (t==h)
+    return;
+  if (nr > len-1)
+    nr= len-1;
+  if (nr > get_used())
+    nr= get_used();
+  s= h-nr+1;
+  if (s<0)
+    s+= len;
+  //s%= len;
+  ta= (t+1)%len;
+
+  //con->dd_printf("%d,%d,ta=%d,s=%d\n", t, h, ta,s);
+  p= inc?s:h;
+  do
+    {
+      //con->dd_printf("[%3d] ", p);
+      if (!uc)
+	{
+	  l= con->dd_cprintf("dump_address", "0x%06x", AU(hist[p].addr));
+	}
+      else
+	{
+	  l= uc->print_disass(hist[p].addr, con, false);
+	}
+      if (hist[p].nr > 1)
+	{
+	  l++; con->dd_printf(" ");
+	  while (l%8 != 0)
+	    l++, con->dd_printf(" ");
+	  con->dd_printf("(%d times)", hist[p].nr);
+	}
+      con->dd_printf("\n");
+      if (inc)
+	{
+	  if (p==h)
+	    break;
+	  p= (p+1)%len;
+	}
+      else
+	{
+	  if (p==ta)
+	    break;
+	  if (p==0)
+	    p=len-1;
+	  else
+	    p= (p-1)%len;
+	}
+      con->dd_color("answer");
+    }
+  while (1);
+}
+
+void
+cl_exec_hist::keep(int nr)
+{
+  if (nr < 0)
+    nr= 0;
+  if (t==h)
+    return;
+  while (get_used() > nr)
+    t= (t+1)%len;
+}
+
+int
+cl_exec_hist::get_used()
+{
+  if (t==h)
+    return 0;
+  if (h>t)
+    return h-t;
+  return len-t + h;
+}
+
+unsigned int
+cl_exec_hist::get_insts()
+{
+  unsigned int i= 0;
+  int p;
+  if (t==h)
+    return 0;
+  p= (t+1)%len;
+  do
+    {
+      i+= hist[p].nr;
+      if (p==h)
+	break;
+      p= (p+1)%len;
+    }
+  while (1);
+  return i;
+}
+
+
+/*
  * Abstract microcontroller
  ******************************************************************************
  */
@@ -251,6 +507,8 @@ cl_uc::cl_uc(class cl_sim *asim):
   //for (i= MEM_ROM; i < MEM_TYPES; i++) mems->add(0);
   xtal_option= new cl_xtal_option(this);
   xtal_option->init();
+  stop_selfjump_option= new cl_stop_selfjump_option(this);
+  stop_selfjump_option->init();
   ticks= new cl_ticker(+1, 0, "time");
   isr_ticks= new cl_ticker(+1, TICK_INISR, "isr");
   idle_ticks= new cl_ticker(+1, TICK_IDLE, "idle");
@@ -265,6 +523,7 @@ cl_uc::cl_uc(class cl_sim *asim):
   sp_max= 0;
   sp_avg= 0;
   inst_exec= false;
+  hist= new cl_exec_hist(this);
 }
 
 
@@ -290,6 +549,7 @@ cl_uc::~cl_uc(void)
   delete address_spaces;
   delete memchips;
   //delete address_decoders;
+  delete hist;
 }
 
 
@@ -304,15 +564,18 @@ cl_uc::init(void)
     xtal= xtal_option->get_value(xtal);
   else
     xtal= 11059200;
+  stop_selfjump= false;
+  stop_selfjump_option->option->set_value(stop_selfjump);
   vars= new cl_var_list();
   make_variables();
   make_memories();
   if (rom == NULL)
-    rom= address_space(cchars("rom")/*MEM_ROM_ID*/);
+    rom= address_space("rom"/*MEM_ROM_ID*/);
   ebrk= new brk_coll(2, 2, rom);
   fbrk= new brk_coll(2, 2, rom);
   fbrk->Duplicates= false;
   brk_counter= 0;
+  stop_at_time= 0;
   make_cpu_hw();
   mk_hw_elements();
   class cl_cmdset *cs= sim->app->get_commander()->cmdset;
@@ -323,7 +586,7 @@ cl_uc::init(void)
   return 0;
   for (i= 0; i < sim->app->in_files->count; i++)
     {
-      char *fname= (char *)(sim->app->in_files->at(i));
+      const char *fname= (const char *)(sim->app->in_files->at(i));
       long l;
       if ((l= read_hex_file(fname)) >= 0)
 	{
@@ -334,10 +597,10 @@ cl_uc::init(void)
   return(0);
 }
 
-char *
+const char *
 cl_uc::id_string(void)
 {
-  return((char*)"unknown microcontroller");
+  return("unknown microcontroller");
 }
 
 void
@@ -455,109 +718,65 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
   class cl_super_cmd *super_cmd;
   class cl_cmdset *cset;
 
-  cmdset->add(cmd= new cl_state_cmd("state", 0,
-"state              State of microcontroller",
-"long help of state"));
+  cmdset->add(cmd= new cl_state_cmd("state", 0));
   cmd->init();
 
 #ifdef STATISTIC
-  cmdset->add(cmd= new cl_statistic_cmd("statistic", 0,
-"statistic [mem [startaddr [endaddr]]]\n"
-"                   Statistic of memory accesses",
-"long help of statistic"));
+  cmdset->add(cmd= new cl_statistic_cmd("statistic", 0));
   cmd->init();
 #endif
 
-  cmdset->add(cmd= new cl_file_cmd("file", 0,
-"file \"FILE\"        Load FILE into ROM",
-"long help of file"));
+  cmdset->add(cmd= new cl_file_cmd("file", 0));
   cmd->init();
   cmd->add_name("load");
 
-  cmdset->add(cmd= new cl_dl_cmd("download", 0,
-"download           Load (intel.hex) data",
-"long help of download"));
+  cmdset->add(cmd= new cl_dl_cmd("download", 0));
   cmd->init();
   cmd->add_name("dl");
 
-  cmdset->add(cmd= new cl_pc_cmd("pc", 0,
-"pc [addr]          Set/get PC",
-"long help of pc"));
+  cmdset->add(cmd= new cl_pc_cmd("pc", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_reset_cmd("reset", 0,
-"reset              Reset",
-"long help of reset"));
+  cmdset->add(cmd= new cl_reset_cmd("reset", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_dump_cmd("dump", true,
-"dump memory_type [start [stop [bytes_per_line]]]\n"
-"                   Dump memory of specified type\n"
-"dump bit...        Dump bits",
-"long help of dump"));
+  cmdset->add(cmd= new cl_dump_cmd("dump", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_dch_cmd("dch", true,
-"dch [start [stop]] Dump code in hex form",
-"long help of dch"));
+  cmdset->add(cmd= new cl_dch_cmd("dch", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_dc_cmd("dc", true,
-"dc [start [stop]]  Dump code in disass form",
-"long help of dc"));
+  cmdset->add(cmd= new cl_dc_cmd("dc", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_disassemble_cmd("disassemble", true,
-"disassemble [start [offset [lines]]]\n"
-"                   Disassemble code",
-"long help of disassemble"));
+  cmdset->add(cmd= new cl_disassemble_cmd("disassemble", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_fill_cmd("fill", 0,
-"fill memory_type start end data\n"
-"                   Fill memory region with data",
-"long help of fill"));
+  cmdset->add(cmd= new cl_fill_cmd("fill", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_where_cmd("where", 0,
-"where memory_type data...\n"
-"                   Case unsensitive search for data",
-"long help of where"));
+  cmdset->add(cmd= new cl_where_cmd("where", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_Where_cmd("Where", 0,
-"Where memory_type data...\n"
-"                   Case sensitive search for data",
-"long help of Where"));
+  cmdset->add(cmd= new cl_Where_cmd("Where", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_break_cmd("break", 0,
-"break addr [hit]   Set fix breakpoint\n"
-"break mem_type r|w addr [hit]\n"
-"                   Set fix event breakpoint",
-"long help of break"));
+  cmdset->add(cmd= new cl_hole_cmd("hole", 0));
+  cmd->init();
+  
+  cmdset->add(cmd= new cl_break_cmd("break", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_tbreak_cmd("tbreak", 0,
-"tbreak addr [hit]  Set temporary breakpoint\n"
-"tbreak mem_type r|w addr [hit]\n"
-"                   Set temporary event breakpoint",
-"long help of tbreak"));
+  cmdset->add(cmd= new cl_tbreak_cmd("tbreak", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_clear_cmd("clear", 0,
-"clear [addr...]    Clear fix breakpoint",
-"long help of clear"));
+  cmdset->add(cmd= new cl_clear_cmd("clear", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_delete_cmd("delete", 0,
-"delete [nr...]     Delete breakpoint(s)",
-"long help of clear"));
+  cmdset->add(cmd= new cl_delete_cmd("delete", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_commands_cmd("commands", 0,
-"commands [breakpoint-nr] command_string",
-"long help of commands"));
+  cmdset->add(cmd= new cl_commands_cmd("commands", 0));
   cmd->init();
   
   {
@@ -568,24 +787,17 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_get_sfr_cmd("sfr", 0,
-"get sfr address...\n"
-"                   Get value of addressed SFRs",
-"long help of get sfr"));
+    cset->add(cmd= new cl_get_sfr_cmd("sfr", 0));
     cmd->init();
-    /*cset->add(cmd= new cl_get_option_cmd("option", 0,
-"get option name\n"
-"                   Get value of an option",
-"long help of get option"));
-cmd->init();*/
+    /*cset->add(cmd= new cl_get_option_cmd("option", 0));
+      cmd->init();*/
+    if (!super_cmd)
+      {
+	cmdset->add(cmd= new cl_super_cmd("get", 0, cset));
+	cmd->init();
+	set_get_help(cmd);
+      }
   }
-  if (!super_cmd)
-    {
-      cmdset->add(cmd= new cl_super_cmd("get", 0,
-"get subcommand     Get, see `get' command for more help",
-"long help of get", cset));
-      cmd->init();
-    }
 
   {
     super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("set"));
@@ -595,29 +807,20 @@ cmd->init();*/
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_set_mem_cmd("memory", 0,
-"set memory memory_type address data...\n"
-"                   Place list of data into memory",
-"long help of set memory"));
+    cset->add(cmd= new cl_set_mem_cmd("memory", 0));
     cmd->init();
-    cset->add(cmd= new cl_set_bit_cmd("bit", 0,
-"set bit addr 0|1   Set specified bit to 0 or 1",
-"long help of set bit"));
+    cset->add(cmd= new cl_set_bit_cmd("bit", 0));
     cmd->init();
-    cset->add(cmd= new cl_set_hw_cmd("hardware", 0,
-"set hardware cathegory params...\n"
-"                   Set parameters of specified hardware element",
-"long help of set hardware"));
+    cset->add(cmd= new cl_set_hw_cmd("hardware", 0));
     cmd->add_name("hw");
     cmd->init();
+    if (!super_cmd)
+      {
+	cmdset->add(cmd= new cl_super_cmd("set", 0, cset));
+	cmd->init();
+	set_set_help(cmd);
+      }
   }
-  if (!super_cmd)
-    {
-      cmdset->add(cmd= new cl_super_cmd("set", 0,
-"set subcommand     Set, see `set' command for more help",
-"long help of set", cset));
-      cmd->init();
-    }
 
   { // info
     super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("info"));
@@ -627,40 +830,33 @@ cmd->init();*/
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_info_bp_cmd("breakpoints", 0,
-"info breakpoints   Status of user-settable breakpoints",
-"long help of info breakpoints"));
+    cset->add(cmd= new cl_info_bp_cmd("breakpoints", 0));
     cmd->add_name("bp");
     cmd->init();
-    cset->add(cmd= new cl_info_reg_cmd("registers", 0,
-"info registers     List of integer registers and their contents",
-"long help of info registers"));
+    cset->add(cmd= new cl_info_reg_cmd("registers", 0));
     cmd->init();
-    cset->add(cmd= new cl_info_hw_cmd("hardware", 0,
-"info hardware cathegory\n"
-"                   Status of hardware elements of the CPU",
-"long help of info hardware"));
+    cset->add(cmd= new cl_info_hw_cmd("hardware", 0));
     cmd->add_name("hw");
+    cmd->add_name("h");
     cmd->init();
+    /*
     cset->add(cmd= new cl_info_stack_cmd("stack", 0,
-"info stack         Status of stack of the CPU",
-"long help of info stack"));
+    "info stack         Status of stack of the CPU",
+    "long help of info stack"));
     cmd->init();
-    cset->add(cmd= new cl_info_memory_cmd("memory", 0,
-"info memory        Information about memory system",
-"long help of info memory"));
+    */
+    cset->add(cmd= new cl_info_memory_cmd("memory", 0));
     cmd->init();
-    cset->add(cmd= new cl_info_var_cmd("variables", 0,
-"info variables     Information about variables",
-"long help of info variables"));
+    cset->add(cmd= new cl_info_var_cmd("variables", 0));
     cmd->init();
     cmd->add_name("vars");
-  }
-  if (!super_cmd) {
-    cmdset->add(cmd= new cl_super_cmd("info", 0,
-"info subcommand    Information, see `info' command for more help",
-"long help of info", cset));
+    cset->add(cmd= new cl_hist_info_cmd("history", 0));
     cmd->init();
+    if (!super_cmd) {
+      cmdset->add(cmd= new cl_super_cmd("info", 0, cset));
+      cmd->init();
+      set_info_help(cmd);
+    }
   }
 
   {
@@ -671,43 +867,28 @@ cmd->init();*/
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_timer_add_cmd("add", 0,
-"timer add id [direction [in_isr]]\n"
-"                   Create a clock counter (timer)",
-"log help of timer add"));
+    cset->add(cmd= new cl_timer_add_cmd("add", 0));
     cmd->init();
     cmd->add_name("create");
     cmd->add_name("make");
-    cset->add(cmd= new cl_timer_delete_cmd("delete", 0,
-"timer delete id    Delete a timer",
-"long help of timer delete"));
+    cset->add(cmd= new cl_timer_delete_cmd("delete", 0));
     cmd->init();
     cmd->add_name("remove");
-    cset->add(cmd= new cl_timer_get_cmd("get", 0,
-"timer get [id]     Get value of a timer, or all",
-"long help of timer get"));
+    cset->add(cmd= new cl_timer_get_cmd("get", 0));
     cmd->init();
-    cset->add(cmd= new cl_timer_run_cmd("run", 0,
-"timer start id     Start a timer",
-"long help of timer run"));
+    cset->add(cmd= new cl_timer_run_cmd("run", 0));
     cmd->init();
     cmd->add_name("start");
-    cset->add(cmd= new cl_timer_stop_cmd("stop", 0,
-"timer stop id      Stop a timer",
-"long help of timer stop"));
+    cset->add(cmd= new cl_timer_stop_cmd("stop", 0));
     cmd->init();
-    cset->add(cmd= new cl_timer_value_cmd("set", 0,
-"timer set id value\n"
-"                   Set a timer value",
-"long help of timer set"));
+    cset->add(cmd= new cl_timer_value_cmd("set", 0));
     cmd->init();
     cmd->add_name("value");
-  }
-  if (!super_cmd) {
-    cmdset->add(cmd= new cl_super_cmd("timer", 0,
-"timer subcommand   Manage timers",
-"long help of timer", cset));
-    cmd->init();
+    if (!super_cmd) {
+      cmdset->add(cmd= new cl_super_cmd("timer", 0, cset));
+      cmd->init();
+      set_timer_help(cmd);
+    }
   }
 
   {
@@ -721,10 +902,8 @@ cmd->init();*/
       cset->init();
     }
     /*
-    cset->add(cmd= new cl_memory_cmd("_no_parameters_", 0,
-"memory             Information about memory system",
-"long help of memory"));
-    cmd->init();
+      cset->add(cmd= new cl_memory_cmd("_no_parameters_", 0));
+      cmd->init();
     */
     mem_create= (class cl_super_cmd *)cset->get_cmd("create");
     if (mem_create)
@@ -734,16 +913,10 @@ cmd->init();*/
       mem_create_cset->init();
     }
     
-    mem_create_cset->add(cmd= new cl_memory_create_chip_cmd("chip", 0,
-"memory create chip id size cellsize\n"
-"                   Create a new memory chip",
-"long help of memory create chip"));
+    mem_create_cset->add(cmd= new cl_memory_create_chip_cmd("chip", 0));
     cmd->init();
 
-    mem_create_cset->add(cmd= new cl_memory_create_addressspace_cmd("addressspace", 0,
-"memory create addressspace id startaddr size\n"
-"                   Create a new address space",
-"long help of memory create addressspace"));
+    mem_create_cset->add(cmd= new cl_memory_create_addressspace_cmd("addressspace", 0));
     cmd->init();
     cmd->add_name("addrspace");
     cmd->add_name("aspace");
@@ -751,10 +924,7 @@ cmd->init();*/
     cmd->add_name("addrs");
     cmd->add_name("addr");
 
-    mem_create_cset->add(cmd= new cl_memory_create_addressdecoder_cmd("addressdecoder", 0,
-"memory create addressdecoder addressspace begin end chip begin\n"
-"                   Create a new address decoder",
-"long help of memory create addressdecoder"));
+    mem_create_cset->add(cmd= new cl_memory_create_addressdecoder_cmd("addressdecoder", 0));
     cmd->init();
     cmd->add_name("addrdecoder");
     cmd->add_name("adecoder");
@@ -763,26 +933,17 @@ cmd->init();*/
     cmd->add_name("adec");
     cmd->add_name("ad");
 
-    mem_create_cset->add(cmd= new cl_memory_create_banker_cmd("banker", 0,
-"memory create banker switcher_addressspace switcher_address switcher_mask banked_addressspace start end\n"
-"                   Create a new bank switcher",
-"long help of memory create banker"));
+    mem_create_cset->add(cmd= new cl_memory_create_banker_cmd("banker", 0));
     cmd->init();
     cmd->add_name("bankswitcher");
     cmd->add_name("banksw");
     cmd->add_name("bsw");
     cmd->add_name("bs");
 
-    mem_create_cset->add(cmd= new cl_memory_create_bank_cmd("bank", 0,
-"memory create bank addressspace begin bank_nr chip begin\n"
-"                   Add a new bank to bank switcher",
-"long help of memory create bank"));
+    mem_create_cset->add(cmd= new cl_memory_create_bank_cmd("bank", 0));
     cmd->init();
 
-    mem_create_cset->add(cmd= new cl_memory_create_bander_cmd("bander", 0,
-"memory create bander addressspace begin end chip begin bits_per_chip [distance]\n"
-"                   Create a new bit bander",
-"long help of memory create bander"));
+    mem_create_cset->add(cmd= new cl_memory_create_bander_cmd("bander", 0));
     cmd->init();
     cmd->add_name("bitbander");
     cmd->add_name("bitband");
@@ -790,32 +951,43 @@ cmd->init();*/
     cmd->add_name("bb");
 
     if (!mem_create)
-      cset->add(mem_create= new cl_super_cmd("create", 0,
-"memory create      Set of commands to create memory objects",
-"long help of memory create", mem_create_cset));
+      cset->add(mem_create= new cl_super_cmd("create", 0, mem_create_cset));
     mem_create->init();
     mem_create->add_name("add");
-
-    cset->add(cmd= new cl_info_memory_cmd("info", 0,
-"memory info        Information about memory system",
-"long help of memory info"));
+    set_memory_create_help(mem_create);
+    
+    cset->add(cmd= new cl_info_memory_cmd("info", 0));
     cmd->init();
-    cset->add(cmd= new cl_memory_cell_cmd("cell", 0,
-"memory cell        Information about a memory cell",
-"long help of memory cell"));
+    cset->add(cmd= new cl_memory_cell_cmd("cell", 0));
     cmd->init();
-  }
-  if (!super_cmd) {
-    cmdset->add(cmd= new cl_super_cmd("memory", 0,
-"memory subcommand  Manage memory chips and address spaces",
-"long help of memory", cset));
-    cmd->init();
+    if (!super_cmd) {
+      cmdset->add(cmd= new cl_super_cmd("memory", 0, cset));
+      cmd->init();
+      set_memory_help(cmd);
+    }
   }
 
-  cmdset->add(cmd= new cl_var_cmd("var", 0,
-"var name [memory addr [bit_nr]]\n"
-"                    Create new variable",
-"long help of var"));
+  super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("history"));
+  if (super_cmd)
+    cset= super_cmd->get_subcommands();
+  else
+    {
+      cset= new cl_cmdset();
+      cset->init();
+      cmdset->add(cmd= new cl_super_cmd("history", 0, cset));
+      cmd->init();	
+    }
+  cset->add(cmd= new cl_hist_cmd("_no_parameters_", 0));
+  cmd->init();
+  cset->add(cmd= new cl_hist_info_cmd("information", 0));
+  cmd->init();
+  cset->add(cmd= new cl_hist_clear_cmd("clear", 0));
+  cmd->init();
+  cset->add(cmd= new cl_hist_list_cmd("list", 0));
+  cmd->add_name("print");
+  cmd->init();
+    
+  cmdset->add(cmd= new cl_var_cmd("var", 0));
   cmd->init();
   cmd->add_name("variable");
 }
@@ -826,7 +998,7 @@ cmd->init();*/
  */
 
 t_mem
-cl_uc::read_mem(char *id, t_addr addr)
+cl_uc::read_mem(const char *id, t_addr addr)
 {
   class cl_address_space *m= address_space(id);
 
@@ -834,7 +1006,7 @@ cl_uc::read_mem(char *id, t_addr addr)
 }
 
 t_mem
-cl_uc::get_mem(char *id, t_addr addr)
+cl_uc::get_mem(const char *id, t_addr addr)
 {
   class cl_address_space *m= address_space(id);
 
@@ -842,7 +1014,7 @@ cl_uc::get_mem(char *id, t_addr addr)
 }
 
 void
-cl_uc::write_mem(char *id, t_addr addr, t_mem val)
+cl_uc::write_mem(const char *id, t_addr addr, t_mem val)
 {
   class cl_address_space *m= address_space(id);
 
@@ -851,7 +1023,7 @@ cl_uc::write_mem(char *id, t_addr addr, t_mem val)
 }
 
 void
-cl_uc::set_mem(char *id, t_addr addr, t_mem val)
+cl_uc::set_mem(const char *id, t_addr addr, t_mem val)
 {
   class cl_address_space *m= address_space(id);
 
@@ -926,7 +1098,8 @@ cl_uc::memory(const char *id)
     return(0);
   for (i= 0; i < address_spaces->count; i++)
     {
-      class cl_memory *m= (cl_memory *)(address_spaces->at(i));
+      class cl_base *b= address_spaces->object_at(i);
+      class cl_memory *m= dynamic_cast<cl_memory *>(b);
       if (!m ||
 	  !m->have_real_name())
 	continue;
@@ -1017,7 +1190,9 @@ cl_uc::set_rom(t_addr addr, t_mem val)
       d->activate(NULL);
     }
   else
-    ;//printf("no decoder at %lx\n", caddr);
+    {
+      //printf("no decoder at %lx\n", caddr);
+    }
 }
 
 long
@@ -1191,11 +1366,62 @@ cl_uc::read_omf_file(cl_f *f)
 }
 
 long
+cl_uc::read_asc_file(cl_f *f)
+{
+  int c;
+  chars line= chars();
+  bool in;
+  t_addr addr= 0;
+  
+  in= true;
+  while ((c= f->get_c()) &&
+	 (!f->eof()))
+    {
+      if (in)
+	{
+	  if ((c=='\n') || (c=='\r'))
+	    {
+	      in= false;
+	      {
+		chars word= chars();
+		const char *s;
+		// process
+		line.trim();
+		line.start_parse();
+		word= line.token(" ");
+		s= word.c_str();
+		if (isxdigit(*s))
+		  {
+		    t_mem d= strtoll(s, 0, 16);
+		    set_rom(addr, d);
+		    addr++;
+		  }
+		line= "";
+	      }
+	    }
+	  else
+	    line.append(c);
+	}
+      else // out
+	{
+	  if ((c=='\n') || (c=='\r'))
+	    ;
+	  else
+	    {
+	      in= true;
+	      line.append(c);
+	    }
+	}
+    }
+  return addr;
+}
+  
+long
 cl_uc::read_cdb_file(cl_f *f)
 {
   class cl_cdb_recs *fns= new cl_cdb_recs();
   chars ln;
-  char *lc;
+  const char *lc;
   long cnt= 0;
   class cl_cdb_rec *r;
   class cl_var *v;
@@ -1203,8 +1429,8 @@ cl_uc::read_cdb_file(cl_f *f)
   ln= f->get_s();
   while (!ln.empty())
     {
-      //printf("CBD LN=%s\n",(char*)ln);
-      lc= (char*)ln;
+      //printf("CBD LN=%s\n",ln.c_str());
+      lc= ln.c_str();
       if (lc[0] == 'F')
 	{
 	  if (ln.len() > 5)
@@ -1237,7 +1463,7 @@ cl_uc::read_cdb_file(cl_f *f)
 		  chars n= ln.token("$");
 		  chars t= ln.token(":");
 		  t= ln.token(" ");
-		  t_addr a= strtol((char*)t, 0, 16);
+		  t_addr a= strtol(t.c_str(), 0, 16);
 		  if ((r= fns->rec(n)) != NULL)
 		    {
 		      fns->del(n);
@@ -1269,24 +1495,29 @@ cl_uc::find_loadable_file(chars nam)
   if (o)
     return f;
 
-  c= chars("", "%s.ihx", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.asc", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
-  c= chars("", "%s.hex", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.ihx", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
-  c= chars("", "%s.ihex", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.hex", nam.c_str());
+  f->open(c, "r");
+  o= (f->opened());
+  if (o)
+    return f;
+  c= chars("", "%s.ihex", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
 
-  c= chars("", "%s.omf", (char*)nam);
-  f->open(c, chars("r"));
+  c= chars("", "%s.omf", nam.c_str());
+  f->open(c, "r");
   o= (f->opened());
   if (o)
     return f;
@@ -1307,6 +1538,11 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
       return 0;
     }
   /*if (con) con->dd_*/printf("Loading from %s\n", f->get_file_name());
+  if (is_asc_file(f))
+    {
+      l= read_asc_file(f);
+      printf("%ld words read from %s\n", l, f->get_fname());
+    }
   if (is_hex_file(f))
     {
       l= read_hex_file(f);
@@ -1325,7 +1561,7 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
   if (strcmp(nam, f->get_fname()) != 0)
     {
       chars n= nam;
-      n+= (char*)".cdb";
+      n+= ".cdb";
       cl_f *c= mk_io(n, "r");
       if (c->opened())
 	{
@@ -1471,13 +1707,15 @@ cl_uc::get_hw(enum hw_cath cath, int *idx)
 }
 
 class cl_hw *
-cl_uc::get_hw(char *id_string, int *idx)
+cl_uc::get_hw(const char *id_string, int *idx)
 {
   class cl_hw *hw= 0;
   int i= 0;
 
   if (idx)
     i= *idx;
+  if (strcmp(id_string, "cpu") == 0)
+    return cpu;
   for (; i < hws->count; i++)
     {
       hw= (class cl_hw *)(hws->at(i));
@@ -1513,7 +1751,7 @@ cl_uc::get_hw(enum hw_cath cath, int hwid, int *idx)
 }
 
 class cl_hw *
-cl_uc::get_hw(char *id_string, int hwid, int *idx)
+cl_uc::get_hw(const char *id_string, int hwid, int *idx)
 {
   class cl_hw *hw;
   int i= 0;
@@ -1562,38 +1800,35 @@ cl_uc::dis_tbl(void)
 char *
 cl_uc::disass(t_addr addr, const char *sep)
 {
-  char *buf;
-
-  buf= (char*)malloc(100);
-  strcpy(buf, "uc::disass() unimplemented\n");
-  return(buf);
+  return strdup("uc::disass() unimplemented\n");
 }
 
-void
-cl_uc::print_disass(t_addr addr, class cl_console_base *con)
+int
+cl_uc::print_disass(t_addr addr, class cl_console_base *con, bool nl)
 {
   char *dis;
   class cl_brk *b;
-  int i, l;
+  int i, l, len= 0;
 
   if (!rom)
-    return;
+    return 0;
 
   t_mem code= rom->get(addr);
   b= fbrk_at(addr);
   dis= disass(addr, NULL);
   if (b)
-    con->dd_printf("%c", (b->perm == brkFIX)?'F':'D');
+    len+= con->dd_cprintf("answer", "%c", (b->perm == brkFIX)?'F':'D');
   else
-    con->dd_printf(" ");
-  con->dd_printf("%c ", inst_at(addr)?' ':'?');
-  con->dd_printf(rom->addr_format, addr); con->dd_printf(" ");
-  con->dd_printf(rom->data_format, code);
+    len+= con->dd_printf(" ");
+  len+= con->dd_cprintf("answer", "%c ", inst_at(addr)?' ':'?');
+  len+= con->dd_cprintf("dump_address", rom->addr_format, addr);
+  len+= con->dd_printf(" ");
+  len+= con->dd_cprintf("dump_number", rom->data_format, code);
   l= inst_length(addr);
   for (i= 1; i < l; i++)
     {
-      con->dd_printf(" ");
-      con->dd_printf(rom->data_format, rom->get(addr+i));
+      len+= con->dd_printf(" ");
+      len+= con->dd_cprintf("dump_number", rom->data_format, rom->get(addr+i));
     }
   int li= longest_inst();
   while (i < li)
@@ -1601,11 +1836,20 @@ cl_uc::print_disass(t_addr addr, class cl_console_base *con)
       int j;
       j= rom->width/4 + ((rom->width%4)?1:0) + 1;
       while (j)
-	con->dd_printf(" "), j--;
+	len+= con->dd_printf(" "), j--;
       i++;
     }
-  con->dd_printf(" %s\n", dis);
+  len+= con->dd_cprintf("dump_char", " %s", dis);
+  if (nl)
+    con->dd_printf("\n");
   free((char *)dis);
+  return len;
+}
+
+int
+cl_uc::print_disass(t_addr addr, class cl_console_base *con)
+{
+  return print_disass(addr, con, true);
 }
 
 void
@@ -1759,7 +2003,7 @@ cl_uc::symbolic_bit_name(t_addr bit_address,
       }*/
   /*sym_name= (char *)realloc(sym_name, strlen(sym_name)+2);
     strcat(sym_name, ".");*/
-  c+= cchars(".");
+  c+= ".";
   i= 0;
   while (bit_mask > 1)
     {
@@ -1769,8 +2013,8 @@ cl_uc::symbolic_bit_name(t_addr bit_address,
   //char bitnumstr[10];
   /*sprintf(bitnumstr, "%1d", i);
     strcat(sym_name, bitnumstr);*/
-  c.append("%d", i);
-  return(/*sym_name*/strdup((char*)c));
+  c.appendf("%d", i);
+  return(/*sym_name*/strdup(c.c_str()));
 }
 
 
@@ -1838,6 +2082,12 @@ cl_uc::var(char *nam)
   return v;
 }
 
+class cl_var *
+cl_uc::var(chars n)
+{
+  const char *s= n.c_str();
+  return var((char*)s);
+}
 
 /*
  * Messages to broadcast
@@ -2163,25 +2413,53 @@ cl_uc::do_inst(int step)
   if (step < 0)
     step= 1;
   while (step-- &&
-         res == resGO)
+         res == resGO &&
+	 (
+	  (state == stGO) || (state == stIDLE)
+	  )
+	 )
     {
-      pre_inst();
-      PCsave = PC;
-      res= exec_inst();
+      if (state == stGO)
+	{
+	  pre_inst();
+	  PCsave = PC;
+	  res= exec_inst();
 
-      if (res == resINV_INST)
-	/* backup to start of instruction */
-	PC = PCsave;
+	  if (res == resINV_INST)
+	    /* backup to start of instruction */
+	    PC = PCsave;
+	  
+	  post_inst();
+	}
+      else
+	{
+	  inst_ticks= 1;
+	  post_inst();
+	  tick(1);
+	}
+
+      if ((res == resGO) && (PC == PCsave) && stop_selfjump)
+	{
+	  res= resSELFJUMP;
+	  sim->stop(res);
+	  break;
+	}
       
-      post_inst();
-
       if ((res == resGO) &&
-	  irq)
+	  1/*irq*/)
 	{
 	  //printf("DO INTERRUPT PC=%lx\n", PC);
 	  int r= do_interrupt();
 	  if (r != resGO)
 	    res= r;
+	}
+
+      if (stop_at_time &&
+	  stop_at_time->reached())
+	{
+	  delete stop_at_time;
+	  stop_at_time= NULL;
+	  res= resBREAKPOINT;
 	}
     }
   if (res != resGO)
@@ -2241,6 +2519,13 @@ cl_uc::post_inst(void)
 }
 
 
+void
+cl_uc::save_hist()
+{
+  hist->put();
+}
+
+
 /*
  * Interrupt processing
  */
@@ -2249,23 +2534,23 @@ int
 cl_uc::do_interrupt(void)
 {
   int i;
-  // NMI?
-
-  // Maskable interrupts
-  if (!it_enabled())
-    {
-      //printf("do_interrupt skip (it disabled)\n");
-      return resGO;
-    }
+  bool is_en= it_enabled();
   class it_level *il= (class it_level *)(it_levels->top()), *IL= 0;
+
   irq= false;
   //printf("Checking IRQs...\n");
   for (i= 0; i < it_sources->count; i++)
     {
       class cl_it_src *is= (class cl_it_src *)(it_sources->at(i));
-       if (is->is_active() &&
-	  is->enabled() &&
-	  is->pending())
+      if (!is->is_nmi())
+	{
+	  if (!is_en)
+	    continue;
+	}
+      bool A= is->is_active();
+      bool E= is->enabled();
+      bool P= is->pending();
+      if (A && E && P)
 	{
 	  int pr= priority_of(is->nuof);
 	  int ap;
@@ -2276,7 +2561,11 @@ cl_uc::do_interrupt(void)
 	  else
 	    ap= priority_main();
 	  if (ap >= pr)
-	    continue;
+	    {
+	      continue;
+	    }
+	  if (state == stIDLE)
+	    state= stGO;
 	  is->clear();
 	  sim->app->get_commander()->
 	    debug("%g sec (%d clks): Accepting interrupt `%s' PC= 0x%06x\n",
@@ -2310,6 +2599,12 @@ cl_uc::get_rtime(void)
   return(ticks->get_rtime(xtal));
 }
 
+unsigned long
+cl_uc::clocks_of_time(double t)
+{
+  return (unsigned long)(t * xtal);
+}
+
 int
 cl_uc::clock_per_cycle(void)
 {
@@ -2336,6 +2631,7 @@ cl_uc::touch(void)
 void
 cl_uc::stack_write(class cl_stack_op *op)
 {
+  stack_check_overflow(op);
   delete op;
   return ;
   if (op->get_op() & stack_read_operation)
@@ -2431,6 +2727,12 @@ cl_uc::stack_read(class cl_stack_op *op)
   delete op;
 }
 
+void
+cl_uc::stack_check_overflow(class cl_stack_op *op)
+{
+}
+
+  
 /*
  * Breakpoint handling
  */
@@ -2582,6 +2884,14 @@ cl_uc::check_events(void)
     }
 }
 
+void
+cl_uc::stop_when(class cl_time_measurer *t)
+{
+  if (stop_at_time != NULL)
+    delete stop_at_time;
+  stop_at_time= t;
+}
+
 
 /*
  * Errors
@@ -2597,18 +2907,17 @@ cl_error_unknown_code::cl_error_unknown_code(class cl_uc *the_uc)
 void
 cl_error_unknown_code::print(class cl_commander_base *c)
 {
-  //FILE *f= c->get_out();
-  /*cmd_fprintf(f,*/c->dd_printf("%s: unknown instruction code at ", get_type_name());
+  c->dd_printf("%s: unknown instruction code at ", get_type_name());
   if (uc->rom)
     {
-      /*cmd_fprintf(f,*/c->dd_printf(uc->rom->addr_format, PC);
-      /*cmd_fprintf(f,*/c->dd_printf(" (");
-      /*cmd_fprintf(f,*/c->dd_printf(uc->rom->data_format, uc->rom->get(PC));
-      /*cmd_fprintf(f,*/c->dd_printf(")");
+      c->dd_printf(uc->rom->addr_format, PC);
+      c->dd_printf(" (");
+      c->dd_printf(uc->rom->data_format, uc->rom->get(PC));
+      c->dd_printf(")");
     }
   else
-    /*cmd_fprintf(f,*/c->dd_printf("0x%06x", PC);
-  /*cmd_fprintf(f,*/c->dd_printf("\n");
+    c->dd_printf("0x%06x", AU(PC));
+  c->dd_printf("\n");
 }
 
 

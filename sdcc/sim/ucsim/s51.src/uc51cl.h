@@ -90,7 +90,7 @@ public:
   cl_51core(struct cpu_entry *Itype, class cl_sim *asim);
   virtual ~cl_51core(void);
   virtual int    init(void);
-  virtual char  *id_string(void);
+  virtual const char *id_string(void);
   virtual void make_cpu_hw(void);
   virtual void mk_hw_elements(void);
   virtual void build_cmdset(class cl_cmdset *cmdset);
@@ -132,6 +132,8 @@ public:
   virtual int  do_interrupt(void);
   virtual int  accept_it(class it_level *il);
   virtual bool it_enabled(void);
+
+  virtual void stack_check_overflow(class cl_stack_op *op);
   
 protected:
   virtual int  idle_pd(void);
@@ -140,7 +142,8 @@ protected:
 
   virtual int   exec_inst(void);
   //virtual void  post_inst(void);
-
+  virtual int high_movxri(void);
+  
   virtual int inst_unknown(void);
   virtual int instruction_00/*inst_nop*/(t_mem/*uchar*/ code);		/* 00 */
   virtual int instruction_01/*inst_ajmp_addr*/(t_mem/*uchar*/ code);	/* [02468ace]1 */
@@ -262,25 +265,35 @@ enum uc51cpu_cfg {
   uc51cpu_mask_mdps	= 1, // mask in mutli_DPTR_sfr selector
   uc51cpu_aof_mdps1l	= 2, // addr of multi_DPTR_sfr DPL1
   uc51cpu_aof_mdps1h	= 3, // addr of multi_DPTR_sfr DPH1
-
   uc51cpu_aof_mdpc	= 4, // addr of multi_DPTR_chip selector
   uc51cpu_mask_mdpc	= 5, // mask in multi_DPTR_chip selector
+  uc51cpu_mdp_mode	= 6, // 's': sfr mode, 'c': chip_mode
+
+  uc51cpu_movxri_mode	= 7, // 'm': memory, 'e': expr
+  uc51cpu_movxri_as	= 8, // 's': sfr, 'i': iram, 'x': xram, 'c','r': code
+  uc51cpu_movxri_addr	= 9, // address of memory
   
   uc51cpu_nuof		= 16
 };
 
 class cl_uc51_cpu: public cl_hw
 {
- protected:
+protected:
   class cl_memory_cell *cell_acc, *cell_sp, *cell_psw;
   class cl_memory_cell *acc_bits[8];
+public:
+  chars movxri_expr;
  public:
   cl_uc51_cpu(class cl_uc *auc);
   virtual int init(void);
   virtual int cfg_size(void) { return uc51cpu_nuof; }
-
+  virtual const char *cfg_help(t_addr addr);
+  
   virtual void write(class cl_memory_cell *cell, t_mem *val);
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
+
+  virtual void set_cmd(class cl_cmdline *cmdline, class cl_console_base *con);
+  virtual void print_info(class cl_console_base *con);
 };
 
 

@@ -18,6 +18,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "SDCCglobl.h"
+#include "dbuf_string.h"
+#ifdef HAVE_BACKTRACE_SYMBOLS_FD
+#include <unistd.h>
+#include <execinfo.h>
+#endif
 
 #include "SDCCerr.h"
 
@@ -296,7 +304,7 @@ struct
   { I_CYCLOMATIC, ERROR_LEVEL_INFO,
      "function '%s', # edges %d , # nodes %d , cyclomatic complexity %d", 0 },
   { E_DIVIDE_BY_ZERO, ERROR_LEVEL_WARNING,
-     "dividing by ZERO", 0 },
+     "dividing by 0", 0 },
   { E_FUNC_BIT, ERROR_LEVEL_ERROR,
      "function cannot return 'bit'", 0 },
   { E_CAST_ZERO, ERROR_LEVEL_ERROR,
@@ -413,7 +421,7 @@ struct
      "size of void is zero", 0 },
   { W_POSSBUG2, ERROR_LEVEL_WARNING,
      "possible code generation error at %s line %d,\n"
-     " please report problem and send source code at SDCC-USER list on SF.Net"},
+     " please report problem and send source code at sdcc-user list on sourceforge.net"},
   { W_COMPLEMENT, ERROR_LEVEL_WARNING,
      "using ~ on bit/bool/unsigned char variables can give unexpected results due to promotion to int", 0 },
   { E_SHADOWREGS_NO_ISR, ERROR_LEVEL_ERROR,
@@ -542,7 +550,7 @@ struct
   { E_STATIC_ARRAY_PARAM_C99, ERROR_LEVEL_ERROR,
     "static in array parameters requires ISO C99 or later", 0},
   { E_INT_MULTIPLE, ERROR_LEVEL_ERROR,
-    "mutiple interrupt numbers for '%s'", 0},
+    "multiple interrupt numbers for '%s'", 0},
   { W_INCOMPAT_PTYPES, ERROR_LEVEL_WARNING,
      "pointer types incompatible ", 0 },
   { E_STATIC_ASSERTION_C2X, ERROR_LEVEL_ERROR,
@@ -551,6 +559,42 @@ struct
     "static assertion failed", 0 },
   { E_DECL_AFTER_STATEMENT_C99, ERROR_LEVEL_ERROR,
     "declaration after statement requires ISO C99 or later", 0 },
+  { E_SHORTCALL_INVALID_VALUE, ERROR_LEVEL_ERROR,
+    "invalid value for __z88dk_shortcall %s parameter: %x", 0},
+  { E_DUPLICATE_PARAMTER_NAME, ERROR_LEVEL_ERROR,
+    "duplicate parameter name %s for function %s", 0},
+  { E_AUTO_FILE_SCOPE, ERROR_LEVEL_ERROR,
+    "auto in declaration at file scope", 0},
+  { E_U8_CHAR_C2X, ERROR_LEVEL_ERROR,
+    "u8 character constant requires ISO C2X or later", 0},
+  { E_U8_CHAR_INVALID, ERROR_LEVEL_ERROR,
+    "invalid u8 character constant", 0},
+  { E_ATTRIBUTE_C2X, ERROR_LEVEL_ERROR,
+    "attribute requires C2X or later", 0},
+  { E_COMPOUND_LITERALS_C99, ERROR_LEVEL_ERROR,
+    "compound literals require ISO C99 or later and are not implemented", 0},
+  { E_THREAD_LOCAL, ERROR_LEVEL_ERROR,
+    "thread-local storage is not implemented", 0},
+  { E_ENUM_COMMA_C99,  ERROR_LEVEL_ERROR,
+    "trailing comma after enumerator list requires ISO C99 or later", 0},
+  { E_OUTPUT_FILE_OPEN_ERR, ERROR_LEVEL_ERROR,
+     "Failed to open output file '%s' (%s)", 0 },
+  { E_INPUT_FILE_OPEN_ERR, ERROR_LEVEL_ERROR,
+     "Failed to open input file '%s' (%s)", 0 },
+  { W_SHIFT_NEGATIVE, ERROR_LEVEL_WARNING,
+     "%s shift by negative amount", 0 },
+  { W_INVALID_STACK_LOCATION, ERROR_LEVEL_WARNING,
+     "access to invalid stack location", 0 },
+  { W_BINARY_INTEGER_CONSTANT_C23, ERROR_LEVEL_WARNING,
+     "binary integer constant requires C23 or later", 0 },
+  { E_U8CHAR_STRING_C11, ERROR_LEVEL_ERROR,
+     "unicode string literal requires ISO C 11 or later", 0 },
+  { W_PREFIXED_STRINGS, ERROR_LEVEL_WARNING,
+     "sequence of differently prefixed string literals", 0 },
+  { W_DIGIT_SEPARATOR_C23, ERROR_LEVEL_WARNING,
+     "digit separators require ISO C23 or later", 0 },
+  { E_INVALID_LANG_OVERRIDE, ERROR_LEVEL_ERROR,
+     "argument to option -x is not a valid file type override", 0},
 };
 
 /* -------------------------------------------------------------------------------
@@ -582,6 +626,10 @@ void setErrorLogLevel (ERROR_LOG_LEVEL level)
 int
 vwerror (int errNum, va_list marker)
 {
+  struct dbuf_s dbuf;
+  char *errmsg;
+  char *oldmsg;
+
   if (_SDCCERRG.out == NULL)
     {
       _SDCCERRG.out = DEFAULT_ERROR_OUT;
@@ -600,6 +648,8 @@ vwerror (int errNum, va_list marker)
       return 0;
     }
 
+  dbuf_init(&dbuf, 200);
+  
   if ((ErrTab[errNum].errType >= _SDCCERRG.logLevel) && (!ErrTab[errNum].disabled))
     {
       if (ErrTab[errNum].errType >= ERROR_LEVEL_ERROR || _SDCCERRG.werror)
@@ -608,47 +658,55 @@ vwerror (int errNum, va_list marker)
       if (filename && lineno)
         {
           if (_SDCCERRG.style)
-            fprintf (_SDCCERRG.out, "%s(%d) : ", filename, lineno);
+            dbuf_printf (&dbuf, "%s(%d) : ", filename, lineno);
           else
-            fprintf (_SDCCERRG.out, "%s:%d: ", filename, lineno);
+            dbuf_printf (&dbuf, "%s:%d: ", filename, lineno);
         }
       else if (lineno)
         {
-          fprintf (_SDCCERRG.out, "at %d: ", lineno);
+          dbuf_printf (&dbuf, "at %d: ", lineno);
         }
       else
         {
-          fprintf (_SDCCERRG.out, "-:0: ");
+          dbuf_printf (&dbuf, "-:0: ");
         }
 
       switch (ErrTab[errNum].errType)
         {
         case ERROR_LEVEL_SYNTAX_ERROR:
-          fprintf (_SDCCERRG.out, "syntax error: ");
+          dbuf_printf (&dbuf, "syntax error: ");
           break;
 
         case ERROR_LEVEL_ERROR:
-          fprintf (_SDCCERRG.out, "error %d: ", errNum);
+          dbuf_printf (&dbuf, "error %d: ", errNum);
           break;
 
         case ERROR_LEVEL_WARNING:
         case ERROR_LEVEL_PEDANTIC:
           if (_SDCCERRG.werror)
-            fprintf (_SDCCERRG.out, "error %d: ", errNum);
+            dbuf_printf (&dbuf, "error %d: ", errNum);
           else
-            fprintf (_SDCCERRG.out, "warning %d: ", errNum);
+            dbuf_printf (&dbuf, "warning %d: ", errNum);
           break;
 
         case ERROR_LEVEL_INFO:
-          fprintf (_SDCCERRG.out, "info %d: ", errNum);
+          dbuf_printf (&dbuf, "info %d: ", errNum);
           break;
 
         default:
           break;
         }
 
-      vfprintf (_SDCCERRG.out, ErrTab[errNum].errText, marker);
-      fprintf (_SDCCERRG.out, "\n");
+      dbuf_vprintf (&dbuf, ErrTab[errNum].errText, marker);
+      errmsg = dbuf_detach_c_str (&dbuf);
+      for (oldmsg = setFirstItem (_SDCCERRG.log); oldmsg; oldmsg = setNextItem (_SDCCERRG.log))
+        if (strcmp (errmsg, oldmsg) == 0)
+          {
+            free(errmsg);
+            return 0;
+          }
+      addSetHead (&_SDCCERRG.log, errmsg);
+      fprintf (_SDCCERRG.out, "%s\n", errmsg);
       return 1;
     }
   else
@@ -670,6 +728,29 @@ werror (int errNum, ...)
   va_start (marker, errNum);
   ret = vwerror (errNum, marker);
   va_end (marker);
+  return ret;
+}
+
+/* -------------------------------------------------------------------------------
+werror_bt - like werror(), but als provide a backtrace
+ * -------------------------------------------------------------------------------
+ */
+int
+werror_bt (int errNum, ...)
+{
+#ifdef HAVE_BACKTRACE_SYMBOLS_FD
+  void *callstack[16];
+  int frames = backtrace (callstack, 16);
+  fprintf (stderr, "Backtrace:\n");
+  backtrace_symbols_fd (callstack, frames, STDERR_FILENO);
+#endif
+
+  int ret;
+  va_list marker;
+  va_start (marker, errNum);
+  ret = vwerror (errNum, marker);
+  va_end (marker);
+
   return ret;
 }
 

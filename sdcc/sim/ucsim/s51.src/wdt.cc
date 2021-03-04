@@ -25,7 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include <ctype.h>
+#include <stdio.h>
+//#include <ctype.h>
 
 // local
 #include "wdtcl.h"
@@ -94,6 +95,7 @@ cl_wdt::print_info(class cl_console_base *con)
 {
   con->dd_printf("%s[%d] %s counter=%d (remains=%d)\n", id_string, id,
 		 (wdt>=0)?"ON":"OFF", wdt, (wdt>=0)?(reset_value-wdt):0);
+  //print_cfg_info(con);
 }
 
 

@@ -25,16 +25,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 // prj
 #include "globals.h"
 
 // sim.src
-#include "appcl.h"
+//#include "appcl.h"
 
 // local
 #include "sim51cl.h"
+#include "portcl.h"
 
 
 /*
@@ -49,6 +50,7 @@ main(int argc, char *argv[])
 
   cpus= cpus_51;
   application= new cl_app();
+  application->set_name("s51");
   application->init(argc, argv);
   sim= new cl_sim51(application);
   if (sim->init())

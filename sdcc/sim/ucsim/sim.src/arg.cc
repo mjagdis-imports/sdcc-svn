@@ -25,20 +25,21 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // cmd
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 // local
 #include "argcl.h"
@@ -127,6 +128,12 @@ cl_cmd_arg::~cl_cmd_arg(void)
     }
 }
 
+int
+cl_cmd_arg::init(void)
+{
+  return 0;
+}
+
 bool
 cl_cmd_arg::as_address(class cl_uc *uc)
 {
@@ -204,10 +211,10 @@ cl_cmd_arg::as_bit(class cl_uc *uc)
 }
 
 
-/* Interger number */
+/* Integer number */
 
-cl_cmd_int_arg::cl_cmd_int_arg(/*class cl_uc *iuc,*/ long addr):
-  cl_cmd_arg(/*iuc,*/ addr)
+cl_cmd_int_arg::cl_cmd_int_arg(long addr):
+  cl_cmd_arg(addr)
 {}
 
 bool
@@ -284,16 +291,6 @@ cl_cmd_sym_arg::get_bit_address(class cl_uc *uc, // input
 				t_addr *mem_addr,
 				t_mem *bit_mask)
 {
-  /*
-  struct name_entry *ne;
-
-  ne= uc->get_name_entry(uc->bit_tbl(), get_svalue());
-  if (ne == NULL)
-    return(false);
-  if (mem)
-    *mem= uc->bit2mem(ne->addr, mem_addr, bit_mask);
-  return(mem && *mem);
-  */
   class cl_var *v= uc->var(get_svalue());
   if (v)
     {
@@ -338,6 +335,8 @@ cl_cmd_sym_arg::as_hw(class cl_uc *uc)
   hw= found= uc->get_hw(get_svalue(), &i);
   if (!hw)
     return(false);
+  if (hw && (strcmp(get_svalue(), "cpu")==0))
+    return value.hw= hw, true;
   i++;
   found= uc->get_hw(get_svalue(), &i);
   if (found)
@@ -371,9 +370,8 @@ cl_cmd_str_arg::cl_cmd_str_arg(const char *str):
 
 /* Bit */
 
-cl_cmd_bit_arg::cl_cmd_bit_arg(/*class cl_uc *iuc,*/
-			       class cl_cmd_arg *asfr, class cl_cmd_arg *abit):
-  cl_cmd_arg(/*iuc,*/ (long)0)
+cl_cmd_bit_arg::cl_cmd_bit_arg(class cl_cmd_arg *asfr, class cl_cmd_arg *abit):
+  cl_cmd_arg((long)0)
 {
   sfr= asfr;
   bit= abit;
@@ -429,10 +427,9 @@ cl_cmd_bit_arg::get_bit_address(class cl_uc *uc, // input
 
 /* Array */
 
-cl_cmd_array_arg::cl_cmd_array_arg(/*class cl_uc *iuc,*/
-				   class cl_cmd_arg *aname,
+cl_cmd_array_arg::cl_cmd_array_arg(class cl_cmd_arg *aname,
 				   class cl_cmd_arg *aindex):
-  cl_cmd_arg(/*iuc,*/ (long)0)
+  cl_cmd_arg((long)0)
 {
   name_arg= aname;
   index= aindex;
@@ -482,154 +479,5 @@ cl_cmd_array_arg::as_cell(class cl_uc *uc)
   return value.cell != NULL;
 }
 
-
-/*
- * Program arguments
- *----------------------------------------------------------------------------
- */
-/*
-cl_prg_arg::cl_prg_arg(char sn, char *ln, long lv):
-  cl_arg(lv)
-{
-  short_name= sn;
-  long_name = ln?strdup(ln):0;
-}
-
-cl_prg_arg::cl_prg_arg(char sn, char *ln, char *sv):
-  cl_arg(sv)
-{
-  short_name= sn;
-  long_name = ln?strdup(ln):0;
-}
-
-cl_prg_arg::cl_prg_arg(char sn, char *ln, double fv):
-  cl_arg(fv)
-{
-  short_name= sn;
-  long_name = ln?strdup(ln):0;
-}
-
-cl_prg_arg::cl_prg_arg(char sn, char *ln, void *pv):
-  cl_arg(pv)
-{
-  short_name= sn;
-  long_name = ln?strdup(ln):0;
-}
-
-cl_prg_arg::~cl_prg_arg(void)
-{
-  if (long_name)
-    free(long_name);
-}
-*/
-
-/*
- * List of arguments
- *----------------------------------------------------------------------------
- */
-/*
-int
-cl_arguments::arg_avail(char nam)
-{
-  class cl_prg_arg *a;
-  int i;
-
-  for (i= 0; i < count; i++)
-    {
-      a= (class cl_prg_arg *)(at(i));
-      if (a->short_name == nam)
-	return(1);
-    }
-  return(0);
-}
-
-int
-cl_arguments::arg_avail(char *nam)
-{
-  class cl_prg_arg *a;
-  int i;
-
-  for (i= 0; i < count; i++)
-    {
-      a= (class cl_prg_arg *)(at(i));
-      if (a->long_name &&
-	  strcmp(a->long_name, nam) == 0)
-	return(1);
-    }
-  return(0);
-}
-
-long
-cl_arguments::get_iarg(char sname, char *lname)
-{
-  class cl_prg_arg *a;
-  int i;
-
-  for (i= 0; i < count; i++)
-    {
-      a= (class cl_prg_arg *)(at(i));
-      if ((sname && a->short_name == sname) ||
-	  (lname && a->long_name && strcmp(a->long_name, lname) == 0))
-	{
-	  long iv;
-	  if (a->get_ivalue(&iv))
-	    return(iv);
-	  else
-	    //FIXME
-	    return(0);
-	}
-    }
-  return(0);
-}
-
-char *
-cl_arguments::get_sarg(char sname, char *lname)
-{
-  class cl_prg_arg *a;
-  int i;
-
-  for (i= 0; i < count; i++)
-    {
-      a= (class cl_prg_arg *)(at(i));
-      if ((sname && a->short_name == sname) ||
-	  (lname && a->long_name && strcmp(a->long_name, lname) == 0))
-	return(a->get_svalue());
-    }
-  return(0);
-}
-
-
-double
-cl_arguments::get_farg(char sname, char *lname)
-{
-  class cl_prg_arg *a;
-  int i;
-
-  for (i= 0; i < count; i++)
-    {
-      a= (class cl_prg_arg *)(at(i));
-      if ((sname && a->short_name == sname) ||
-	  (lname && a->long_name && strcmp(a->long_name, lname) == 0))
-	return(a->get_fvalue());
-    }
-  return(0);
-}
-
-void *
-cl_arguments::get_parg(char sname, char *lname)
-{
-  class cl_prg_arg *a;
-  int i;
-
-  for (i= 0; i < count; i++)
-    {
-      a= (class cl_prg_arg *)(at(i));
-      if ((sname && a->short_name == sname) ||
-	  (lname && a->long_name && strcmp(a->long_name, lname) == 0))
-	return(a->get_pvalue());
-    }
-  return(0);
-}
-*/
 
 /* End of arg.cc */

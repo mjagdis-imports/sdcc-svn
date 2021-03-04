@@ -16,7 +16,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
+
+#include <stdio.h>
 
 // local
 #include "r2kcl.h"
@@ -39,19 +41,18 @@ u32_t  rabbit_mmu::logical_addr_to_phys( u16_t logical_addr ) {
   u32_t  phys_addr = logical_addr;
   unsigned     segnib = logical_addr >> 12;
   
-  if (segnib >= 0xE000)
+  if (segnib >= 0xe)
   {
     phys_addr += ((u32_t)xpc) << 12;
   }
-  else if (segnib >= ((segsize >> 4) & 0x0F))
+  else if (segnib >= ((segsize >> 4) & 0xf))
   {
     phys_addr += ((u32_t)stackseg) << 12;    
   }
-  else if (segnib >= (segsize & 0x0F))
+  else if (segnib >= (segsize & 0xf))
   {
     phys_addr += ((u32_t)dataseg) << 12;    
   }
-  
   return phys_addr;
 }
 
@@ -196,8 +197,8 @@ cl_r2k::inst_r2k_ld(t_mem code)
    *   FD F4 = ld (iy+d),hl
    */
   switch(code) {
-  case 0xC4:  regs.HL = get2( add_u16_disp(regs.SP, fetch()) ); vc.rd+= 2; break;
-  case 0xD4:  store2( add_u16_disp(regs.SP, fetch()), regs.HL ); vc.wr+= 2; break;
+  case 0xC4:  regs.HL = get2( add_u16_nisp(regs.SP, fetch()) ); vc.rd+= 2; break;
+  case 0xD4:  store2( add_u16_nisp(regs.SP, fetch()), regs.HL ); vc.wr+= 2; break;
   case 0xE4:  regs.HL = get2( add_u16_disp(regs.IX, fetch()) ); vc.rd+= 2; break;
   case 0xF4:  store2( add_u16_disp(regs.IX, fetch()), regs.HL ); vc.wr+= 2; break;
   default:
@@ -245,6 +246,19 @@ int cl_r2k::inst_lcall(t_mem code) {
   PC = mn;
   
   return(resGO);
+}
+
+int cl_r2k::inst_lret(t_mem code)
+{
+  u16_t u16;
+  u8_t u8;
+
+  pop2(u16);
+  pop1(u8);
+  mmu.xpc= u8;
+  PC= u16;
+  
+  return resGO;
 }
 
 int cl_r2k::inst_bool(t_mem code) {
@@ -352,7 +366,7 @@ cl_r2k::inst_rst(t_mem code)
   switch(code) {
     case 0xC7: // RST 0
       push2(PC+2);
-      PC = 0x0;
+      PC = iir + 0x00 * 2;
       vc.wr+= 2;
     break;
     case 0xCF: // RST 8
@@ -360,17 +374,17 @@ cl_r2k::inst_rst(t_mem code)
     
     case 0xD7: // RST 10H
       push2(PC+2);
-      PC = 0x10;
+      PC = iir + 0x10 * 2;
       vc.wr+= 2;
     break;
     case 0xDF: // RST 18H
       push2(PC+2);
-      PC = 0x18;
+      PC = iir + 0x18 * 2;
       vc.wr+= 2;
     break;
     case 0xE7: // RST 20H
       push2(PC+2);
-      PC = 0x20;
+      PC = iir + 0x20 * 2;
       vc.wr+= 2;
     break;
     case 0xEF: // RST 28H
@@ -393,7 +407,7 @@ cl_r2k::inst_rst(t_mem code)
     break;
     case 0xFF: // RST 38H
       push2(PC+2);
-      PC = 0x38;
+      PC = iir + 0x38 * 2;
       vc.wr+= 2;
     break;
     default:
@@ -412,6 +426,53 @@ int cl_r2k::inst_xd(t_mem prefix)
     return(resBREAKPOINT);
 
   switch (code) {
+
+  case 0x64: // LDP (Ix),HL
+    {
+      u16_t u16= *regs_IX_OR_IY;
+      t_addr al= ((regs.raf.A & 0xf) << 16) | u16;
+      t_addr ah= ((regs.raf.A & 0xf) << 16) | ((u16+1)&0xffff);
+      rom->write(al, regs.hl.l);
+      rom->write(ah, regs.hl.h);
+      vc.wr+= 2;
+      break;
+    }
+    
+  case 0x65: // LDP (mn),IX
+    {
+      u16_t ix= *regs_IX_OR_IY;
+      u16_t u16= fetch2();
+      t_addr al= ((regs.raf.A & 0xf) << 16) | u16;
+      t_addr ah= ((regs.raf.A & 0xf) << 16) | ((u16+1)&0xffff);
+      rom->write(al, ix&0xff);
+      rom->write(ah, ix>>8);
+      vc.wr+= 2;
+      break;
+    }
+    
+  case 0x6c: // LDP HL,(Ix)
+    {
+      u16_t u16= *regs_IX_OR_IY;
+      t_addr al= ((regs.raf.A & 0xf) << 16) | u16;
+      t_addr ah= ((regs.raf.A & 0xf) << 16) | ((u16+1)&0xffff);
+      regs.hl.l= rom->read(al);
+      regs.hl.h= rom->read(ah);
+      vc.rd+= 2;
+      break;
+    }
+    
+  case 0x6d: // LDP IX,(mn)
+    {
+      u8_t l,h;
+      u16_t u16= fetch2();
+      t_addr al= ((regs.raf.A & 0xf) << 16) | u16;
+      t_addr ah= ((regs.raf.A & 0xf) << 16) | ((u16+1)&0xffff);
+      l= rom->read(al);
+      h= rom->read(ah);
+      *regs_IX_OR_IY= h*256+l;
+      vc.rd+= 2;
+      break;
+    }
     
     // 0x06 LD A,(IX+A) is r4k+ instruction
   case 0x21: // LD IX,nnnn
@@ -487,7 +548,7 @@ int cl_r2k::inst_xd(t_mem prefix)
       return(inst_fd_misc(code));
     
   case 0xC4: // LD IX,(SP+n)
-    *regs_IX_OR_IY = get2( add_u16_disp(regs.SP, fetch()) );
+    *regs_IX_OR_IY = get2( add_u16_nisp(regs.SP, fetch()) );
     vc.rd+= 2;
     return(resGO);
     
@@ -512,7 +573,7 @@ int cl_r2k::inst_xd(t_mem prefix)
     return(resGO);
     
   case 0xD4: // LD (SP+n),IX|IY
-    store2( add_u16_disp(regs.SP, fetch()), *regs_IX_OR_IY );
+    store2( add_u16_nisp(regs.SP, fetch()), *regs_IX_OR_IY );
     vc.wr+= 2;
     return(resGO);
     

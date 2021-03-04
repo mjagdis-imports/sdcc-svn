@@ -82,6 +82,8 @@ COMMON_SDCC = \
   _strcat.c \
   _strchr.c \
   _strcspn.c \
+  strdup.c \
+  strndup.c \
   _strncat.c \
   _strncmp.c \
   strxfrm.c \
@@ -91,6 +93,7 @@ COMMON_SDCC = \
   _strspn.c \
   _strstr.c \
   _strtok.c \
+  memccpy.c \
   _memchr.c \
   _memcmp.c \
   _memset.c \

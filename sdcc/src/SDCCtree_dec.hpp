@@ -385,10 +385,8 @@ void nicify_diffs(T_t &T, typename boost::graph_traits<T_t>::vertex_descriptor t
       boost::remove_edge(t, c0, T);
       adjacency_iter_t c, c_end;
       for(boost::tie(c, c_end) = adjacent_vertices(c0, T); c != c_end; ++c)
-        {
-          boost::add_edge(t, *c, T);
-          boost::remove_edge(c0, *c, T);
-        }
+        boost::add_edge(t, *c, T);
+      boost::clear_vertex(c0, T);
     }
 
   if (std::includes(T[t].bag.begin(), T[t].bag.end(), T[c0].bag.begin(), T[c0].bag.end()) || std::includes(T[c0].bag.begin(), T[c0].bag.end(), T[t].bag.begin(), T[t].bag.end()))
@@ -582,20 +580,18 @@ private:
 #include <treedec/combinations.hpp>
 #include <treedec/misc.hpp>
 
-template <typename G1_t, typename G2_t>
-void copy_undir(G1_t &G1, G2_t const &G2){
-    for(unsigned i = 0; i < boost::num_vertices(G2); i++){
-        boost::add_vertex(G1);
-    }
-    typename boost::graph_traits<G2_t>::edge_iterator eIt, eEnd;
-    for(boost::tie(eIt, eEnd) = boost::edges(G2); eIt != eEnd; eIt++){
-        assert (boost::source(*eIt, G2) != boost::target(*eIt, G2));
-        if ( !boost::edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1).second){
-            boost::add_edge(boost::source(*eIt, G2), boost::target(*eIt, G2), G1);
-        }else{
-			  // already there
-			  // intended here: this way, or the other.
-		  }
+template <typename Gd_t, typename Gs_t>
+void copy_undir(Gd_t &dst, const Gs_t &src)
+{
+  for(unsigned i = 0; i < boost::num_vertices(src); i++)
+    boost::add_vertex(dst);
+
+  typename boost::graph_traits<Gs_t>::edge_iterator e, e_end;
+  for(boost::tie(e, e_end) = boost::edges(src); e != e_end; ++e)
+    {
+      wassert (boost::source(*e, src) != boost::target(*e, src));
+      if (!boost::edge(boost::source(*e, src), boost::target(*e, src), dst).second)
+        boost::add_edge(boost::source(*e, src), boost::target(*e, src), dst);
     }
 }
 

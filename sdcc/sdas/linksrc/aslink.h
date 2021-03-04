@@ -888,7 +888,7 @@ extern  char    rb[NINPUT];     /*      LST file text line being
                                  *      address relocated
                                  */
 extern  char    ctype[];        /*      array of character types, one per
-                                 *      ASCII character
+                                 *      ASCII/OEM character
                                  */
 
 /*
@@ -1110,8 +1110,6 @@ extern  struct lbfile *lbfhead; /*      pointer to the first
 /* sdld specific */
 extern  int     sflag;          /*      JCF: Memory usage output flag
                                  */
-extern  int     packflag;       /*      Pack data memory flag
-                                 */
 extern  int     stacksize;      /*      Stack size
                                  */
 extern int      rflag;          /*      Extended linear address record flag.
@@ -1127,7 +1125,7 @@ extern  char *sdld_output;      /*      output file name, --output argument
 extern char *optsdcc;
 extern char *optsdcc_module;
 /* sdld 8015 specific */
-extern  char idatamap[256];     /*      space is unused
+extern  char    idatamap[256];  /*      ' ' means unused
                                  */
 /* end sdld 8051 specific */
 /* end sdld specific */
@@ -1285,6 +1283,7 @@ extern  VOID            relr3(void);
 extern  VOID            relp3(void);
 extern  VOID            relerr3(char *str);
 extern  VOID            relerp3(char *str);
+extern  int             vpdkinst(int inst, int addr, int ver);
 
 /* lklibr.c */
 extern  int             addfile(char *path, char *libfil);

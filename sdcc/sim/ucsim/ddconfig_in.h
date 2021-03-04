@@ -76,9 +76,6 @@
 /* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP
 
-/* Define to 1 if you have the `strerror' function. */
-#undef HAVE_STRERROR
-
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
@@ -176,6 +173,18 @@
 
 /* XXX */
 #undef SOCKLEN_T
+
+/* XXX */
+#undef SPEC_BYTE
+
+/* XXX */
+#undef SPEC_DWORD
+
+/* XXX */
+#undef SPEC_QWORD
+
+/* XXX */
+#undef SPEC_WORD
 
 /* XXX */
 #undef STATISTIC

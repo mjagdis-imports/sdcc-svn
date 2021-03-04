@@ -21,10 +21,7 @@ SDCC_DOC        = doc
 SDCC_EXTRA      = support/regression support/valdiag
 
 SDCC_PACKIHX    = support/packihx
-SDCC_LIBRARIAN  = support/librarian
 SDCC_SDBINUTILS = support/sdbinutils
-
-TARGETS         = sdcc-librarian
 
 ifneq ($(OPT_DISABLE_HC08)$(OPT_DISABLE_S08), 11)
 SDCC_AS        += sdas/as6808
@@ -46,12 +43,12 @@ SDCC_LD        += sdcc-ld8051
 SDCC_MISC      += debugger/mcs51
 endif
 
-ifneq ($(OPT_DISABLE_Z80)$(OPT_DISABLE_Z180), 11)
+ifneq ($(OPT_DISABLE_Z80)$(OPT_DISABLE_Z180)$(OPT_DISABLE_Z80N), 111)
 SDCC_AS        += sdas/asz80
 SDCC_LD        += sdcc-ldz80
 endif
 
-ifneq ($(OPT_DISABLE_R2K)$(OPT_DISABLE_R3KA), 11)
+ifneq ($(OPT_DISABLE_R2K)$(OPT_DISABLE_R2KA)$(OPT_DISABLE_R3KA), 111)
 SDCC_AS        += sdas/asrab
 SDCC_LD        += sdcc-ldz80
 endif
@@ -64,6 +61,27 @@ ifeq ($(OPT_DISABLE_GBZ80), 0)
 SDCC_AS        += sdas/asgb
 SDCC_LD        += sdcc-ldgb
 endif
+
+ifeq ($(OPT_DISABLE_PDK13), 0)
+SDCC_AS        += sdas/aspdk13
+SDCC_LD        += sdcc-ldpdk
+endif
+
+ifeq ($(OPT_DISABLE_PDK14), 0)
+SDCC_AS        += sdas/aspdk14
+SDCC_LD        += sdcc-ldpdk
+endif
+
+ifeq ($(OPT_DISABLE_PDK15), 0)
+SDCC_AS        += sdas/aspdk15
+SDCC_LD        += sdcc-ldpdk
+endif
+
+ifeq ($(OPT_DISABLE_PDK16), 0)
+SDCC_AS        += sdas/aspdk16
+SDCC_LD        += sdcc-ldpdk
+endif
+
 
 ifeq ($(OPT_DISABLE_UCSIM), 0)
 TARGETS        += sdcc-misc
@@ -108,7 +126,7 @@ PKGS           += $(SDCC_LIBS) src device/include
 ifeq ($(OPT_DISABLE_NON_FREE), 0)
 PKGS           += device/non-free/include
 endif
-PKGS           += $(SDCC_AS) sdas/linksrc $(SDCC_LIBRARIAN) $(SDCC_SCRIPTS)
+PKGS           += $(SDCC_AS) sdas/linksrc $(SDCC_SCRIPTS)
 
 PORTS           = $(shell cat ports.build)
 ALLPORTS        = $(shell cat ports.all)
@@ -126,7 +144,7 @@ sdcc-cc: sdcc-libs
 	$(MAKE) -C src
 
 sdcc-as:
-	for as in $(SDCC_AS); do $(MAKE) -C $$as ; done
+	$(foreach as, $(SDCC_AS), $(MAKE) -C $(as) &&) echo "Assemblers built successfully."
 
 sdcc-ld:
 	$(MAKE) -C sdas/linksrc $(SDCC_LD)
@@ -139,9 +157,6 @@ sdcc-scripts:
 
 sdcc-packihx:
 	$(MAKE) -C $(SDCC_PACKIHX)
-
-sdcc-librarian:
-	$(MAKE) -C $(SDCC_LIBRARIAN)
 
 sdcc-sdbinutils:
 	$(MAKE) -C $(SDCC_SDBINUTILS)
@@ -179,7 +194,7 @@ sdcc-doc:
 
 sdcc: $(TARGETS)
 
-sdcc-tini: sdcc-librarian sdcc-cc sdcc-as sdcc-ld sdcc-device-tini sdcc-packihx
+sdcc-tini: sdcc-cc sdcc-as sdcc-ld sdcc-device-tini sdcc-packihx
 	$(MAKE) -f main.mk all
 
 # Some interesting sub rules
@@ -242,15 +257,6 @@ realclean: distclean
 	for pkg in $(PKGS); do\
 	  $(MAKE) -C $$pkg PORTS="$(PORTS)" EXEEXT=$(EXEEXT) realclean ;\
 	done
-
-# Creating distribution
-# ---------------------
-dist: distclean
-	@if [ -f devel ]; then\
-	  rm -f devel; mkdist sdcc; touch devel;\
-	else\
-	  mkdist sdcc;\
-	fi
 
 # Performing self-test
 # --------------------

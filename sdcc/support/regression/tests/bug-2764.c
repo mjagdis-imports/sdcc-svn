@@ -29,11 +29,13 @@ typedef struct RESULTS_S {
 
 #pragma disable_warning 85
 
+#if !(defined(__SDCC_pic14) && !defined(__SDCC_PIC14_ENHANCED)) // Pseudo-stack size limit
 ee_u16 core_bench_state(ee_u32 blksize, ee_u8 *memblock, ee_s16 seed1, ee_s16 seed2, ee_s16 step, ee_u16 crc)
 {
 	return 0x0a55;
 }
 
+#ifndef __SDCC_pdk14 // Lack of memory
 ee_s16 calc_func(ee_s16 *pdata, core_results *res)
 {
 	ee_s16 data=*pdata;
@@ -60,12 +62,18 @@ ee_s16 calc_func(ee_s16 *pdata, core_results *res)
 		return retval;
 	}
 }
+#endif
+#endif
 
 void testBug(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
 	ee_s16 data = 0;
 	core_results res = {0};
+#if !(defined(__SDCC_pic14) && !defined(__SDCC_PIC14_ENHANCED)) // Pseudo-stack size limit
 	ASSERT(calc_func(&data, &res) == 0x0a55);
 	ASSERT(res.crcstate ==  0x0a55);
+#endif
+#endif
 }
 

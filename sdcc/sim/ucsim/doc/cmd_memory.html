@@ -1,12 +1,12 @@
 <html>
   <head>
     <meta content="text/html; charset=ISO-8859-2" http-equiv="content-type">
-    <title>Memory manipulation commands of &#181;Csim</title>
+    <title>Memory manipulation commands of &mu;Csim</title>
   </head>
   <body bgcolor="white">
-    <h2>Memory manipulation commands of &#181;Csim</h2>
+    <h2>Memory manipulation commands of &mu;Csim</h2>
     Every command which changes content of ROM area such as <b><a href="#dl">dl</a></b>
-    or <b><a href="cmd_set#set_memory">set
+    or <b><a href="cmd_general#set_memory">set
         memory</a></b> deletes result of <a href="analyzer.html">code
       analyser</a> and causes to re-analyse the code.
     <hr>
@@ -89,7 +89,7 @@ under certain conditions; type `show c' for details.
       memory</a> command which
     lists size and name of all available memories.
     <p>Other parameters can be mixed list of strings (characters between "
-      and ") and numbers. Strings can contain escape sequencies. &#181;Csim
+      and ") and numbers. Strings can contain escape sequencies. &mu;Csim
       merges all parameters together and will search for merged list of
       values in specified memory.
     </p>
@@ -98,7 +98,7 @@ under certain conditions; type `show c' for details.
     </p>
     <p>Search is done in whole memory and all matches are dumped out.
     </p>
-    <pre>$ <font color="#118811">/s51</font>
+    <pre>$ <font color="#118811">s51</font>
 ucsim 0.2.38-pre2, Copyright (C) 1997 Daniel Drotos, Talker Bt.
 ucsim comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
 This is free software, and you are welcome to redistribute it
@@ -115,6 +115,42 @@ under certain conditions; type `show c' for details.
 &gt; <font color="#118811">Where xram "d ani"</font>
 0x0019 64 20 61 6e 69          d ani
 &gt; </pre>
+    <hr>
+    <a name="hole">
+      <h3>hole <i>[memory [length [value]]]</i></h3>
+    </a>
+    <p>Searching for a memory area where all locations are filled with
+    value. By default this command searches rom but any memory can be
+    specified. Areas shorter than specified length (default is 100)
+    will not be listed. Searched value is 0 (zero) by default but
+    other can be sepcified as the last patrameter.
+    </p>
+    <pre>$ <font color="#118811">s51</font>
+uCsim 0.6-pre55, Copyright (C) 1997 Daniel Drotos.
+uCsim comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+This is free software, and you are welcome to redistribute it
+under certain conditions; type `show c' for details.
+0&gt; hole
+0x0000 65535
+0&gt; <font color="#118811">hole xram</font>
+0&gt; <font color="#118811">fill xram 0x100 0x1ff 11</font>
+0&gt; <font color="#118811">hole xram 50 11</font>
+0x0100 255
+0&gt; <font color="#118811">fill xram 0x500 0x600 11</font>
+0&ht; <font color="#118811">hole xram 50 11</font>    
+0x0100 255
+0x0500 256
+0&gt; <font color="#118811">rom[0x200]=1</font>
+1
+0&gt; <font color="#118811">hole</font>
+0x0000 511
+0x0201 65022
+0&gt; </pre>
+    <p>
+      Data of found areas are listed in two columns. First column is
+      the start address of the area in hexadecimal and the second
+      column is area lenght (in decimal).
+    </p>
     <hr>
     <a name="memory">
       <h3>memory</h3>
@@ -247,5 +283,39 @@ Address decoders:
     This command is same as <a href="cmd_general.html#info_memory">info
       memory</a>.
     <hr>
+
+    <a name="var"><h4>var name [memory addr]</h4></a>
+
+    This command assigns a name to a memory location. This
+    name can be used in <a href="cmd_general.html#expression">expression</a>s
+    as variable. If memory is not specified, next yet unnamed location
+    will be used from a special address space, called <b>variables</b>. This
+    address sapce have 256 locations by default (32 bit each), but the
+    size can be specified using <a href="invoke.html">-a option</a> of
+    the simulator program. 
+
+    <pre>
+0&gt; <font color="#118811">var abc</font>
+0&gt; <font color="#118811">i v abc</font>
+abc variables[0x00] = 00000000
+0&gt; <font color="#118811">abc=12</font>
+12
+0&gt; <font color="#118811">expr /b abc</font>
+00000000000000000000000000001100
+0&gt; 
+    </pre>
+
+    Memory location can be specified in two forms:
+
+    <pre>
+0&gt; <font color="#118811">var vname rom 45</font>
+0&gt; <font color="#118811">i var vname</font>
+vname rom[0x002d] = 73d4d3c4
+0&gt; <font color="#118811">var other rom[45]</font>
+0&gt; <font color="#118811">i v other</font>
+other rom[0x002d] = 73d4d3c4
+0&gt;
+    </pre>
+
   </body>
 </html>

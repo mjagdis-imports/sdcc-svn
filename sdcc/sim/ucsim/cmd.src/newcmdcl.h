@@ -111,7 +111,8 @@ class cl_console_base: public cl_base
   class cl_cmd *last_command;
   //class cl_cmdline *last_cmdline;
   chars last_cmd;
-
+  chars startup_command;
+  
   char nl;
   chars lbuf;
 
@@ -125,7 +126,7 @@ class cl_console_base: public cl_base
   
   virtual class cl_console_base *clone_for_exec(char *fin) = 0;
 
-  virtual void redirect(char *fname, char *mode) = 0;
+  virtual void redirect(const char *fname, const char *mode) = 0;
   virtual void un_redirect(void) = 0;
   virtual bool is_tty(void) const = 0;
   virtual bool is_eof(void) const = 0;
@@ -134,20 +135,30 @@ class cl_console_base: public cl_base
   virtual class cl_f *get_fout(void)= 0;
   virtual class cl_f *get_fin(void)= 0;
   virtual void drop_files(void)= 0; // do not close, just ignore
-  virtual void close_files(void)= 0;
+  virtual void close_files(bool close_in, bool close_out)= 0;
   virtual void replace_files(bool close_old, cl_f *new_in, cl_f *new_out)= 0;
   
   virtual int init(void);
+  virtual void set_startup(chars the);
+  virtual chars *get_startup() { return &startup_command; }
+  virtual bool has_startup() { return startup_command.nempty(); }
+  
   virtual void welcome(void);
   virtual int proc_input(class cl_cmdset *cmdset);
   virtual bool need_check(void) { return false; }
   
   virtual void print_prompt(void);
+  virtual void print_expr_result(t_mem val, const char *fmt);
   virtual int dd_printf(const char *format, ...);
+  virtual int dd_cprintf(const char *color_name, const char *format, ...);
+  virtual chars get_color_ansiseq(const char *color_name, bool add_reset= false);
+  virtual void dd_color(const char *color_name);
+  virtual int write(char *buf, int count);
   virtual int debug(const char *format, ...);
   virtual void print_bin(long data, int bits);
   virtual void print_char_octal(char c);
   virtual int cmd_do_print(const char *format, va_list ap);
+  virtual int cmd_do_cprint(const char *color_name, const char *format, va_list ap);
   //virtual void flush(void);
   virtual void tu_cls(void);
   virtual void tu_clc(void);
@@ -195,7 +206,7 @@ class cl_console_dummy: public cl_console_base
 
   virtual class cl_console_base *clone_for_exec(char *fin) { return NULL; }
 
-  virtual void redirect(char *fname, char *mode) {}
+  virtual void redirect(const char *fname, const char *mode) {}
   virtual void un_redirect(void) {}
   virtual bool is_tty(void) const { return false; }
   virtual bool is_eof(void) const { return false; }
@@ -204,7 +215,7 @@ class cl_console_dummy: public cl_console_base
   virtual class cl_f *get_fout(void) { return NULL; }
   virtual class cl_f *get_fin(void) { return NULL; }
   virtual void drop_files(void) {}
-  virtual void close_files(void) {}
+  virtual void close_files(bool close_in, bool close_out) {}
   virtual void replace_files(bool close_old, cl_f *new_in, cl_f *new_out) {}
 };
 
@@ -236,7 +247,9 @@ class cl_commander_base: public cl_base
   //void prompt(void);
   int all_printf(const char *format, ...);        // print to all consoles
   int dd_printf(const char *format, va_list ap);  // print to actual_console
+  int dd_cprintf(const char *color_name, const char *format, va_list ap);  // print to actual_console
   int dd_printf(const char *format, ...);         // print to actual_console
+  int dd_cprintf(const char *color_name, const char *format, ...);         // print to actual_console
   int debug(const char *format, ...);             // print consoles with debug flag set
   int debug(const char *format, va_list ap);      // print consoles with debug flag set
   int flag_printf(int iflags, const char *format, ...);

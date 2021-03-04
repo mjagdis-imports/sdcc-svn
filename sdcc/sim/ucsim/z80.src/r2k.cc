@@ -30,22 +30,23 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdarg.h> /* for va_list */
+//#include <stdarg.h> /* for va_list */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
+#include "globals.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
-#include "z80cl.h"
+//#include "z80cl.h"
 #include "r2kcl.h"
 #include "glob.h"
 
@@ -85,20 +86,25 @@ cl_r2k::init(void)
   for (int i=0x8000; i<0x10000; i++) {
     ram->set((t_addr) i, 0);
   }
-
+  /*
+  sp_limit_opt= new cl_sp_limit_opt(this);
+  sp_limit_opt->set_value((char*)"0xf000");
+  application->options->add(sp_limit_opt);
+  */
+  
   return(0);
 }
 
-char *
+const char *
 cl_r2k::id_string(void)
 {
-  return((char*)"rabbit 2000");
+  return("rabbit 2000");
 }
 
-char *
+const char *
 cl_r3ka::id_string(void)
 {
-  return((char*)"rabbit 3000A");
+  return("rabbit 3000A");
 }
 
 /*
@@ -122,7 +128,11 @@ void
 cl_r2k::mk_hw_elements(void)
 {
   //class cl_base *o;
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+  
+  add_hw(h= new cl_z80_cpu(this));
+  h->init();
 }
 
 void
@@ -130,17 +140,17 @@ cl_r2k::make_memories(void)
 {
   class cl_address_space *as;
 
-  rom= ram= as= new cl_address_space("rom", 0, 0x10000, 8);
+  rom= ram= as= new cl_address_space("rom", 0, 0x100000, 8);
   as->init();
   address_spaces->add(as);
 
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x10000, 8);
+  chip= new cl_memory_chip("rom_chip", 0x100000, 8);
   chip->init();
   memchips->add(chip);
-  ad= new cl_address_decoder(as= address_space("rom"), chip, 0, 0xffff, 0);
+  ad= new cl_address_decoder(as= address_space("rom"), chip, 0, 0xfffff, 0);
   ad->init();
   as->decoders->add(ad);
   ad->activate(0);
@@ -186,65 +196,65 @@ cl_r2k::make_memories(void)
   address_spaces->add(regs16);
 
   class cl_var *v;
-  vars->add(v= new cl_var(cchars("A"), regs8, 0, ""));
+  vars->add(v= new cl_var("A", regs8, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("F"), regs8, 1, ""));
+  vars->add(v= new cl_var("F", regs8, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("B"), regs8, 2, ""));
+  vars->add(v= new cl_var("B", regs8, 2, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("C"), regs8, 3, ""));
+  vars->add(v= new cl_var("C", regs8, 3, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("D"), regs8, 4, ""));
+  vars->add(v= new cl_var("D", regs8, 4, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("E"), regs8, 5, ""));
+  vars->add(v= new cl_var("E", regs8, 5, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("H"), regs8, 6, ""));
+  vars->add(v= new cl_var("H", regs8, 6, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("L"), regs8, 7, ""));
+  vars->add(v= new cl_var("L", regs8, 7, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("IIR"), regs8, 8, ""));
+  vars->add(v= new cl_var("IIR", regs8, 8, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("EIR"), regs8, 9, ""));
-  v->init();
-
-  vars->add(v= new cl_var(cchars("ALT_A"), regs8, 10, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_F"), regs8, 11, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_B"), regs8, 12, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_C"), regs8, 13, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_D"), regs8, 14, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_E"), regs8, 15, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_H"), regs8, 16, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_L"), regs8, 17, ""));
+  vars->add(v= new cl_var("EIR", regs8, 9, ""));
   v->init();
 
-  vars->add(v= new cl_var(cchars("AF"), regs16, 0, ""));
+  vars->add(v= new cl_var("ALT_A", regs8, 10, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("BC"), regs16, 1, ""));
+  vars->add(v= new cl_var("ALT_F", regs8, 11, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("DE"), regs16, 2, ""));
+  vars->add(v= new cl_var("ALT_B", regs8, 12, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("HL"), regs16, 3, ""));
+  vars->add(v= new cl_var("ALT_C", regs8, 13, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("IX"), regs16, 4, ""));
+  vars->add(v= new cl_var("ALT_D", regs8, 14, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("IY"), regs16, 5, ""));
+  vars->add(v= new cl_var("ALT_E", regs8, 15, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("SP"), regs16, 6, ""));
+  vars->add(v= new cl_var("ALT_H", regs8, 16, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_AF"), regs16, 7, ""));
+  vars->add(v= new cl_var("ALT_L", regs8, 17, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_BC"), regs16, 8, ""));
+
+  vars->add(v= new cl_var("AF", regs16, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_DE"), regs16, 9, ""));
+  vars->add(v= new cl_var("BC", regs16, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_HL"), regs16, 10, ""));
+  vars->add(v= new cl_var("DE", regs16, 2, ""));
+  v->init();
+  vars->add(v= new cl_var("HL", regs16, 3, ""));
+  v->init();
+  vars->add(v= new cl_var("IX", regs16, 4, ""));
+  v->init();
+  vars->add(v= new cl_var("IY", regs16, 5, ""));
+  v->init();
+  vars->add(v= new cl_var("SP", regs16, 6, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_AF", regs16, 7, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_BC", regs16, 8, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_DE", regs16, 9, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_HL", regs16, 10, ""));
   v->init();
 }
 
@@ -537,6 +547,7 @@ cl_r2k::print_regs(class cl_console_base *con)
   con->dd_printf("SP= 0x%04x [SP]= %02x %3d %c\n",
                  regs.SP, ram->get(regs.SP), ram->get(regs.SP),
                  isprint(ram->get(regs.SP))?ram->get(regs.SP):'.');
+  con->dd_printf("SP limit= 0x%04x\n", AU(sp_limit));
 
   print_disass(PC, con);
 }
@@ -551,6 +562,7 @@ cl_r2k::exec_inst(void)
   t_mem code;
   
   ins_start = PC;
+  instPC = PC;
   
   if (fetch(&code))
     return(resBREAKPOINT);
@@ -725,7 +737,7 @@ int cl_r2k::exec_code(t_mem code)
     case 0xeb: return(inst_ex(code));
     case 0xec: return(inst_r2k_or (code));
       /* ED escapes out to other oddball opcodes */
-    case 0xed: return(inst_ed());
+    case 0xed: return(inst_ed(0xed));
     case 0xee: return(inst_xor(code));
     case 0xef: return(inst_rst(code));
       

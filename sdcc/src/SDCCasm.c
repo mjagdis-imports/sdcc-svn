@@ -434,7 +434,62 @@ static const ASM_MAPPING _asxxxx_mapping[] = {
    "; ---------------------------------"},
   {"functionlabeldef", "%s:"},
   {"globalfunctionlabeldef", "%s::"},
-  {"bankimmeds", "0     ; PENDING: bank support"},
+  {"bankimmeds", "b%s"},
+  {"hashedbankimmeds", "#b%s"},
+  {"los", "(%s & 0xFF)"},
+  {"his", "(%s >> 8)"},
+  {"hihis", "(%s >> 16)"},
+  {"hihihis", "(%s >> 24)"},
+  {"lod", "(%d & 0xFF)"},
+  {"hid", "(%d >> 8)"},
+  {"hihid", "(%d >> 16)"},
+  {"hihihid", "(%d >> 24)"},
+  {"lol", "(%05d$ & 0xFF)"},
+  {"hil", "(%05d$ >> 8)"},
+  {"hihil", "(%05d$ >> 16)"},
+  {"hihihil", "(%05d$ >> 24)"},
+  {"equ", "="},
+  {"bequ", "b%s = %i"},
+  {"org", ".org 0x%04X"},
+  {NULL, NULL}
+};
+
+static const ASM_MAPPING _asxxxx_smallpdk_mapping[] = {
+  {"labeldef", "%s::"},
+  {"slabeldef", "%s:"},
+  {"tlabeldef", "%05d$:"},
+  {"tlabel", "%05d$"},
+  {"immed", "#"},
+  {"zero", "#0x00"},
+  {"one", "#0x01"},
+  {"area", ".area %s"},
+  {"areacode", ".area %s"},
+  {"areadata", ".area %s"},
+  {"areahome", ".area %s"},
+  {"ascii", ".ascii \"%s\""},
+  {"ds", ".ds %d"},
+  {"db", "ret"},
+  {"dbs", "ret %s"},
+  {"dw", ".dw"},
+  {"dws", ".dw %s"},
+  {"constbyte", "#0x%02x"},
+  {"constword", "0x%04x"},
+  {"immedword", "#0x%04x"},
+  {"immedbyte", "#0x%02x"},
+  {"hashedstr", "#%s"},
+  {"lsbimmeds", "#<(%s)"},
+  {"msbimmeds", "#>(%s)"},
+  {"module", ".module %s"},
+  {"global", ".globl %s"},
+  {"fileprelude", ""},
+  {"functionheader",
+   "; ---------------------------------\n"
+   "; Function %s\n"
+   "; ---------------------------------"},
+  {"functionlabeldef", "%s:"},
+  {"globalfunctionlabeldef", "%s::"},
+  {"bankimmeds", "b%s"},
+  {"hashedbankimmeds", "#b%s"},
   {"los", "(%s & 0xFF)"},
   {"his", "(%s >> 8)"},
   {"hihis", "(%s >> 16)"},
@@ -452,10 +507,8 @@ static const ASM_MAPPING _asxxxx_mapping[] = {
   {NULL, NULL}
 };
 
-#if 0
-/* not used */
 static const ASM_MAPPING _gas_mapping[] = {
-  {"labeldef", "%s::"},
+  {"labeldef", "%s:"},
   {"slabeldef", "%s:"},
   {"tlabeldef", "%05d$:"},
   {"tlabel", "%05d$"},
@@ -463,15 +516,15 @@ static const ASM_MAPPING _gas_mapping[] = {
   {"zero", "#0x00"},
   {"one", "#0x01"},
   {"area", ".section %s"},
-  {"areacode", ".section %s"},
-  {"areadata", ".section %s"},
-  {"areahome", ".section %s"},
-  {"ascii", ".ascii \"%s\""},
-  {"ds", ".ds %d"},
+  {"areacode", ".section %s,\"ax\""},
+  {"areadata", ".section %s,\"rw\""},
+  {"areahome", ".section %s,\"ax\""},
+  {"ascii", ".ascii\t\"%s\""},
+  {"ds", ".ds\t%d"},
   {"db", ".db"},
-  {"dbs", ".db %s"},
+  {"dbs", ".db\t%s"},
   {"dw", ".dw"},
-  {"dws", ".dw %s"},
+  {"dws", ".dw\t%s"},
   {"constbyte", "0x%02X"},
   {"constword", "0x%04X"},
   {"immedword", "#0x%04X"},
@@ -479,20 +532,32 @@ static const ASM_MAPPING _gas_mapping[] = {
   {"hashedstr", "#%s"},
   {"lsbimmeds", "#<%s"},
   {"msbimmeds", "#>%s"},
-  {"module", ".file \"%s.c\""},
-  {"global", ".globl %s"},
-  {"extern", ".globl %s"},
+  {"module", ".file\t\"%s.c\""},
+  {"global", ".globl\t%s"},
+  {"extern", ".extern\t%s"},
   {"fileprelude", ""},
   {"functionheader",
    "; ---------------------------------\n"
    "; Function %s\n"
    "; ---------------------------------"},
   {"functionlabeldef", "%s:"},
-  {"globalfunctionlabeldef", "%s::"},
-  {"bankimmeds", "0     ; PENDING: bank support"},
+  {"globalfunctionlabeldef", "%s:"},
+  {"bankimmeds", "b%s"},
+  {"hashedbankimmeds", "#b%s"},
+  {"los", "%s & 0xFF"},
+  {"his", "%s >> 8"},
+  {"hihis", "%s >> 16"},
+  {"hihihis", "%s >> 24"},
+  {"lod", "%d & 0xFF"},
+  {"hid", "%d >> 8"},
+  {"hihid", "%d >> 16"},
+  {"hihihid", "%d >> 24"},
+  {"lol", "%05d$ & 0xFF"},
+  {"hil", "%05d$ >> 8"},
+  {"hihil", "%05d$ >> 16"},
+  {"hihihil", "%05d$ >> 24"},
   {NULL, NULL}
 };
-#endif
 
 static const ASM_MAPPING _a390_mapping[] = {
   {"labeldef", "%s:"},
@@ -528,7 +593,8 @@ static const ASM_MAPPING _a390_mapping[] = {
    "; ---------------------------------"},
   {"functionlabeldef", "%s:"},
   {"globalfunctionlabeldef", "%s::"},
-  {"bankimmeds", "0     ; PENDING: bank support"},
+  {"bankimmeds", "b%s"},
+  {"hashedbankimmeds", "#b%s"},
   {"los", "(%s & 0FFh)"},
   {"his", "((%s / 256) & 0FFh)"},
   {"hihis", "((%s / 65536) & 0FFh)"},
@@ -551,13 +617,15 @@ const ASM_MAPPINGS asm_asxxxx_mapping = {
   _asxxxx_mapping
 };
 
-#if 0
-/* not used */
+const ASM_MAPPINGS asm_asxxxx_smallpdk_mapping = {
+  NULL,
+  _asxxxx_smallpdk_mapping
+};
+
 const ASM_MAPPINGS asm_gas_mapping = {
   NULL,
   _gas_mapping
 };
-#endif
 
 const ASM_MAPPINGS asm_a390_mapping = {
   NULL,

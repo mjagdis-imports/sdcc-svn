@@ -6,7 +6,8 @@ ashrdi-1.c from the execute part of the gcc torture tests.
 
 #include <limits.h>
 
-#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM) || defined(__SDCC_MODEL_LARGE) && defined(__SDCC_STACK_AUTO))) // Lack of memory
+#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM) || defined(__SDCC_MODEL_LARGE) && defined(__SDCC_STACK_AUTO))) && !defined(__SDCC_pdk14) // Lack of memory// Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
 
 #if LLONG_MAX == 9223372036854775807LL
 #define BITS 64
@@ -306,14 +307,13 @@ constant_shift(long long x, int i)
   return x;
 }
 #endif
+#endif
 
 void
 testTortureExecute (void)
 {
-#ifndef __SDCC_hc08 // Bug #2782
-#ifndef __SDCC_s08 // Bug #2782
-#ifndef __SDCC_ds390 // Bug #2781
-#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM) || defined(__SDCC_MODEL_LARGE) && defined(__SDCC_STACK_AUTO))) // Lack of memory
+#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM) || defined(__SDCC_MODEL_LARGE) && defined(__SDCC_STACK_AUTO))) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory// Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
   int i;
 
   for (i = 0; i < BITS; ++i)
@@ -340,8 +340,6 @@ testTortureExecute (void)
       if (y != sext[i])
 	ASSERT (0);
     }
-#endif
-#endif
 #endif
 #endif
   return;

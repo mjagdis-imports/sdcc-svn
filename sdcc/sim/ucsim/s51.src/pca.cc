@@ -25,7 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include <ctype.h>
+#include <stdio.h>
+//#include <ctype.h>
 
 // sim.src
 #include "itsrccl.h"
@@ -358,6 +359,7 @@ void
 cl_pca::print_info(class cl_console_base *con)
 {
   con->dd_printf("%s[%d] FIXME\n", id_string, id);
+  //print_cfg_info(con);
 }
 
 

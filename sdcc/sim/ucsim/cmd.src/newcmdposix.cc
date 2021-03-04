@@ -26,27 +26,28 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <errno.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include "i_string.h"
+//#include <sys/types.h>
+//#include <sys/time.h>
+#include <string.h>
+#include <unistd.h>
+
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
-#include "utils.h"
+//#include "utils.h"
 
 // sim
-#include "simcl.h"
-#include "argcl.h"
-#include "appcl.h"
+//#include "simcl.h"
+//#include "argcl.h"
 
 // local
-#include "newcmdposixcl.h"
 
 
 /*
@@ -60,12 +61,12 @@ cl_console::cl_console(const char *_fin, const char *_fout, class cl_app *the_ap
   fin= 0;
   if (_fin)
     {
-      fin= mk_io(_fin, cchars("r"));
+      fin= mk_io(_fin, "r");
     }
   fout= 0;
   if (_fout)
     {
-      fout= mk_io(_fout, cchars("w"));
+      fout= mk_io(_fout, "w");
     }
   prompt= 0;
   set_flag(~CONS_NONE, false);
@@ -76,7 +77,7 @@ cl_console::cl_console(const char *_fin, const char *_fout, class cl_app *the_ap
       fin->cooked();
     }
   else
-    ;
+    {}
   frout= 0;
   id= 0;
   lines_printed= new cl_ustrings(100, 100, "console_cache");
@@ -96,7 +97,7 @@ cl_console::cl_console(cl_f *_fin, cl_f *_fout, class cl_app *the_app)
       fin->cooked();
     }
   else
-    ;
+    {}
   frout= 0;
   id= 0;
   lines_printed= new cl_ustrings(100, 100, "console_cache");
@@ -136,19 +137,28 @@ cl_console::drop_files(void) // do not close, just ignore
 }
 
 void
-cl_console::close_files(void)
+cl_console::close_files(bool close_in, bool close_out)
 {
   if (frout)
     delete frout;
-  if (fout)
+  if (close_out)
     {
-      if (fout->tty)
-	tu_reset();
-      delete fout;
+      if (fout)
+	{
+	  if (fout->tty)
+	    tu_reset();
+	  delete fout;
+	}
+      fout= 0;
     }
-  if (fin)
-    delete fin;
-  drop_files();
+  if (close_in)
+    {
+      if (fin)
+	delete fin;
+      fin= 0;
+      application->get_commander()->update_active();
+    }
+  //drop_files();
 }
 
 void
@@ -158,7 +168,7 @@ cl_console::replace_files(bool close_old, cl_f *new_in, cl_f *new_out)
     delete frout;
   frout= 0;
   if (close_old)
-    close_files();
+    close_files(fin != new_in, fout != new_out);
   fin= new_in;
   fout= new_out;
   application->get_commander()->update_active();
@@ -205,7 +215,7 @@ cl_console::~cl_console(void)
  */
 
 void
-cl_console::redirect(char *fname, char *mode)
+cl_console::redirect(const char *fname, const char *mode)
 {
   frout= mk_io(fname, mode);
   set_flag(CONS_REDIRECTED, true);
@@ -229,11 +239,13 @@ bool
 cl_console::input_avail(void)
 {
   bool ret= false;
+  if (startup_command.nempty())
+    return true;
   if (input_active())
     {
       ret= fin->input_avail();
       if (ret)
-	;
+        {}
     }
   return ret;
 }
@@ -276,7 +288,17 @@ cl_console::read_line(void)
   int b[2]= { 0, 0 };
 
   do {
-    i= fin->read(b, 1);
+    if (startup_command.nempty())
+      {
+	const char *s= startup_command;
+	b[0]= s[0];
+	startup_command= &s[1];
+	i= 1;
+      }
+    else
+      {
+	i= fin->read(b, 1);
+      }
     if (i < -1)
       {
 	return -1;
@@ -483,11 +505,15 @@ cl_commander::init(void)
       if (strcmp(cn, "-") == 0)
 	{
 	  class cl_f *in, *out;
-	  in= cp_io(fileno(stdin), cchars("r"));
-	  out= cp_io(fileno(stdout), cchars("w"));
+	  in= cp_io(fileno(stdin), "r");
+	  out= cp_io(fileno(stdout), "w");
 	  in->interactive(out);
 	  add_console(con= new cl_console(in, out, app));
 	  config_console= exec_on(con, Config);
+	  if (config_console)
+	    config_console->set_startup(app->startup_command);
+	  else
+	    con->set_startup(app->startup_command);
 	  need_config= false;
 	  if (in->tty)
 	    con->set_flag(CONS_INTERACTIVE, true);
@@ -502,26 +528,37 @@ cl_commander::init(void)
   if (cons->get_count() == ccnt)
     {
       class cl_f *in, *out;
-      in= cp_io(fileno(stdin), cchars("r"));
-      out= cp_io(fileno(stdout), cchars("w"));
+      in= cp_io(fileno(stdin), "r");
+      out= cp_io(fileno(stdout), "w");
       in->interactive(out);
       add_console(con= new cl_console(in, out, app));
       config_console= exec_on(con, Config);
+      if (config_console)
+	config_console->set_startup(app->startup_command);
+      else
+	con->set_startup(app->startup_command);
       need_config= false;
       if (in->tty)
 	con->set_flag(CONS_INTERACTIVE, true);
     }
-  if (need_config &&
-      Config &&
-      *Config)
+  if (
+      need_config &&
+      (
+       (Config && *Config)
+       ||
+       app->startup_command.nempty()
+       )
+      )
     {
-      class cl_f *i, *o;
-      i= mk_io(Config, "r");
+      class cl_f *i= NULL, *o;
+      if (Config && *Config)
+	i= mk_io(Config, "r");
       o= cp_io(fileno(stderr), "w");
       con= new cl_console(/*fc*/i, /*stderr*/o, app);
       con->set_flag(CONS_NOWELCOME|CONS_ECHO, true);
       //exec_on(con, Config);
       config_console= con;
+      con->set_startup(app->startup_command);
       add_console(con);
     }
   return(0);
@@ -584,6 +621,16 @@ cl_commander::input_avail(void)
   bool ret= check_inputs(active_inputs, avail);
   avail->disconn_all();
   delete avail;
+  if (!ret)
+    for (int j = 0; j < cons->count; j++)
+    {
+      class cl_console *c = dynamic_cast<class cl_console*>((class cl_console_base*)(cons->at(j)));
+      chars *s= c->get_startup();
+      if (s->nempty())
+	{
+	  return true;
+	}
+    }
   return ret;
 }
 
@@ -612,9 +659,9 @@ cl_commander::proc_input(void)
       if (config_console &&
 	  (config_console != c))
 	continue;
-      
+
       if (c->input_active() &&
-	  f)
+	  (f || c->has_startup()))
         {
 	  if (c->input_avail())
             {

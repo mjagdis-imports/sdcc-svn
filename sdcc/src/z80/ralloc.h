@@ -29,6 +29,8 @@
 
 #define DEBUG_FAKE_EXTRA_REGS 	0
 
+#define USE_OLDSALLOC 0 // Change to 1 to use old stack allocator
+
 enum
 {
   A_IDX = 0,
@@ -85,7 +87,8 @@ reg_info *regWithIdx (int);
 void z80_assignRegisters (ebbIndex *);
 bitVect *z80_rUmaskForOp (const operand * op);
 
-void spillThis (symbol *);
+void z80SpillThis (symbol *);
 iCode *z80_ralloc2_cc(ebbIndex *ebbi);
 
+void Z80RegFix (eBBlock ** ebbs, int count);
 #endif

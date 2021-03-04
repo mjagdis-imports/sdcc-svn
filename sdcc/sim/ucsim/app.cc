@@ -82,8 +82,10 @@ cl_app::~cl_app(void)
 int
 cl_app::init(int argc, char *argv[])
 {
+  sigpipe_off();
   cl_base::init();
-  set_name(cchars("application"));
+  if (!have_real_name())
+    set_name("application");
   mk_options();
   proc_arguments(argc, argv);
   class cl_cmdset *cmdset= new cl_cmdset();
@@ -127,11 +129,12 @@ cl_app::run(void)
 	      int i;
 	      for (i= 0; i < in_files->count; i++)
 		{
-		  char *fname= (char *)(in_files->at(i));
+		  const char *fname= (const char *)(in_files->at(i));
 		  long l;
 		  if ((l= sim->uc->read_file(fname, NULL)) >= 0)
 		    {
 		      ///*commander->all_printf*/printf("%ld words read from %s\n", l, fname);
+		      sim->uc->reset();
 		    }
 		}
 	    }
@@ -139,6 +142,8 @@ cl_app::run(void)
 	}
       if (rs == rs_start)
 	{
+	  //if (startup_command.nempty())
+	  //exec(startup_command);
 	  if (o)
 	    o->get_value(&g_opt);
 	  if (sim && g_opt)
@@ -199,14 +204,14 @@ cl_app::done(void)
  */
 
 static void
-print_help(char *name)
+print_help(const char *name)
 {
   printf("%s: %s\n", name, VERSIONSTR);
-  printf("Usage: %s [-hHVvPg] [-p prompt] [-t CPU] [-X freq[k|M]]\n"
-	 "       [-C cfg_file] [-c file] [-s file] [-S optionlist]\n"
-	 "       [-a nr]"
+  printf("Usage: %s [-hHVvPgGwlbB] [-p prompt] [-t CPU] [-X freq[k|M]] [-R seed]\n"
+	 "       [-C cfg_file] [-c file] [-e command] [-s file] [-S optionlist]\n"
+	 "       [-I if_optionlist] [-o colorlist] [-a nr]\n"
 #ifdef SOCKET_AVAIL
-	 " [-Z portnum] [-k portnum]"
+	 "       [-Z portnum] [-k portnum]"
 #endif
 	 "\n"
 	 "       [files...]\n", name);
@@ -215,7 +220,9 @@ print_help(char *name)
      "Options:\n"
      "  -t CPU       Type of CPU: 51, C52, 251, etc.\n"
      "  -X freq[k|M] XTAL frequency\n"
+     "  -R seed      Set the random number generator seed value\n"
      "  -C cfg_file  Read initial commands from `cfg_file' and execute them\n"
+     "  -e command   Execute command on startup\n"
      "  -c file      Open command console on `file' (use `-' for std in/out)\n"
      "  -Z portnum   Use localhost:portnum for command console\n"
      "  -k portnum   Use localhost:portnum for serial I/O\n"
@@ -226,17 +233,25 @@ print_help(char *name)
      "                  in=file   serial input will be read from file named `file'\n"
      "                  out=file  serial output will be written to `file'\n"
      "                  port=nr   Use localhost:nr as server for serial line\n"
+     "                  iport=nr  Use localhost:nr as server for serial input\n"
+     "                  oport=nr  Use localhost:nr as server for serial output\n"
      "  -I options   `options' is a comma separated list of options according to\n"
      "               simulator interface. Known options are:\n"
      "                 if=memory[address]  turn on interface on given memory location\n"
      "                 in=file             specify input file for IO\n"
-     "                 out=file            specify output file forr IO\n"
+     "                 out=file            specify output file for IO\n"
      "  -p prompt    Specify string for prompt\n"
      "  -P           Prompt is a null ('\\0') character\n"
+     "  -o colors    `colors' is a list of color specification: what=colspec,...\n"
+     "               where colspec is : separated list of color options\n"
+     "               e.g.: prompt=b:white:black (bold white on black)\n"
+     "  -l           Use light theme (default is dark)\n"
+     "  -b           Black & white (non-color) theme\n"
+     "  -B           Beep on breakpoints\n"
      "  -g           Go, start simulation\n"
      "  -G           Go, start simulation, quit on stop\n"
      "  -a nr        Specify size of variable space (default=256)\n"
-     "  -w           Writable flash"
+     "  -w           Writable flash\n"
      "  -V           Verbose mode\n"
      "  -v           Print out version number and quit\n"
      "  -H           Print out types of known CPUs and quit\n"
@@ -249,7 +264,9 @@ enum {
   SOPT_OUT,
   SOPT_UART,
   SOPT_USART,
-  SOPT_PORT
+  SOPT_PORT,
+  SOPT_IPORT,
+  SOPT_OPORT
 };
 
 static const char *S_opts[]= {
@@ -258,6 +275,8 @@ static const char *S_opts[]= {
   /*[SOPT_UART]=*/	"uart",
   /*[SOPT_USART]=*/	"usart",
   /*[SOPT_PORT]=*/	"port",
+  /*[SOPT_IPORT]=*/	"iport",
+  /*[SOPT_OPORT]=*/	"oport",
   NULL
 };
 
@@ -283,7 +302,7 @@ cl_app::proc_arguments(int argc, char *argv[])
   bool /*s_done= DD_FALSE,*/ k_done= false;
   //bool S_i_done= false, S_o_done= false;
 
-  strcpy(opts, "c:C:p:PX:vVt:s:S:I:a:whHgGJ_");
+  strcpy(opts, "c:C:e:p:PX:vVt:s:S:I:a:whHgGJo:blBR:_");
 #ifdef SOCKET_AVAIL
   strcat(opts, "Z:r:k:");
 #endif
@@ -295,6 +314,12 @@ cl_app::proc_arguments(int argc, char *argv[])
 	  (strcmp(argv[i], "-args") == 0) ||
 	  (strcmp(argv[i], "-nx") == 0))
 	strcpy(argv[i], "-_");
+      if ((strcmp(argv[i], "-help")==0) ||
+	  (strcmp(argv[i], "--help")==0))
+	{
+	  print_help(get_name());
+	  exit(0);
+	}
     }
   
   while((c= getopt(argc, argv, opts)) != -1)
@@ -325,13 +350,20 @@ cl_app::proc_arguments(int argc, char *argv[])
 	  fprintf(stderr, "Warning: No \"config_file\" option found to set "
 		  "parameter of -C as config file\n");
 	break;
+      case 'e':
+	startup_command+= optarg;
+	startup_command+= chars("\n");
+	break;
+      case 'R':
+        srand(atoi(optarg));
+        break;
 #ifdef SOCKET_AVAIL
       case 'Z': case 'r':
 	{
 	  // By Sandeep
 	  // Modified by DD
 	  class cl_option *o;
-	  options->new_option(o= new cl_number_option(this, cchars("port_number"),
+	  options->new_option(o= new cl_number_option(this, "port_number",
 						      "Listen on port (-Z)"));
 	  o->init();
 	  o->hide();
@@ -341,12 +373,19 @@ cl_app::proc_arguments(int argc, char *argv[])
 	  break;
 	}
 #endif
-      case 'p': {
-	if (!options->set_value("prompt", this, optarg))
-	  fprintf(stderr, "Warning: No \"prompt\" option found to set "
-		  "parameter of -p as default prompt\n");
-	break;
-      }
+      case 'p':
+	{
+	  if (!options->set_value("prompt", this, optarg))
+	    fprintf(stderr, "Warning: No \"prompt\" option found to set "
+		    "parameter of -p as default prompt\n");
+	  break;
+	}
+      case 'b':
+	{
+	  if (!options->set_value("black_and_white", this, bool(true)))
+	    fprintf(stderr, "Warning: No \"black_and_white\" option found to set\n");
+	  break;
+	}
       case 'P':
 	if (!options->set_value("null_prompt", this, bool(true)))
 	  fprintf(stderr, "Warning: No \"null_prompt\" option found\n");
@@ -436,17 +475,19 @@ cl_app::proc_arguments(int argc, char *argv[])
 	  if (!options->set_value("serial0_in_file", this, /*(void*)Ser_in*/s))
 	    fprintf(stderr, "Warning: No \"serial0_in_file\" option found to "
 		    "set parameter of -s as serial input file\n");
+	  free(s);
 	  s= format_string("\0010x%llx", (unsigned long long int)(fout));
 	  if (!options->set_value("serial0_out_file", this, /*Ser_out*/s))
 	    fprintf(stderr, "Warning: No \"serial0_out_file\" option found "
 		    "to set parameter of -s as serial output file\n");
+	  free(s);
 	  break;
 	}
 #endif
       case 'S':
 	{
 	  char *iname= NULL, *oname= NULL;
-	  int uart=0, port=0;
+	  int uart=0, port=0, iport= 0, oport= 0;
 	  subopts= optarg;
 	  while (*subopts != '\0')
 	    {
@@ -472,6 +513,12 @@ cl_app::proc_arguments(int argc, char *argv[])
 		case SOPT_PORT:
 		  port= strtol(value, 0, 0);
 		  break;
+		case SOPT_IPORT:
+		  iport= strtol(value, 0, 0);
+		  break;
+		case SOPT_OPORT:
+		  oport= strtol(value, 0, 0);
+		  break;
 		default:
 		  /* Unknown suboption. */
 		  fprintf(stderr, "Unknown suboption `%s' for -S\n", value);
@@ -479,7 +526,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 		  break;
 		}
 	    }
-	  if (!iname && !oname && (port<=0))
+	  if (!iname && !oname && (port<=0 && iport<=0 && oport<=0))
 	    {
 	      fprintf(stderr, "Suboption missing for -S\n");
 	    }
@@ -530,6 +577,36 @@ cl_app::proc_arguments(int argc, char *argv[])
 		      free(h);
 		    }
 		  options->set_value(s, this, (long)port);
+		  free(s);
+		}
+	      if (iport > 0)
+		{
+		  s= format_string("serial%d_iport", uart);
+		  if ((o= options->get_option(s)) == NULL)
+		    {
+		      h= format_string("Use localhost:port for serial line uart%d input (-S)", uart);
+		      o= new cl_number_option(this, s, h);
+		      o->init();
+		      o->hide();
+		      options->add(o);
+		      free(h);
+		    }
+		  options->set_value(s, this, (long)iport);
+		  free(s);
+		}
+	      if (oport > 0)
+		{
+		  s= format_string("serial%d_oport", uart);
+		  if ((o= options->get_option(s)) == NULL)
+		    {
+		      h= format_string("Use localhost:port for serial line uart%d output (-S)", uart);
+		      o= new cl_number_option(this, s, h);
+		      o->init();
+		      //o->hide();
+		      options->add(o);
+		      free(h);
+		    }
+		  options->set_value(s, this, (long)oport);
 		  free(s);
 		}
 	    }
@@ -590,8 +667,51 @@ cl_app::proc_arguments(int argc, char *argv[])
 	    }
 	  break;
 	}
+      case 'o':
+	{
+	  const chars s= optarg;
+	  chars opt= s.token(",");
+	  while (opt.nempty())
+	    {
+	      chars col_name, col_value, opt_name;
+	      col_name= opt.token("=");
+	      col_value=opt.token("=");
+	      opt_name.format("color_%s", col_name.c_str());
+	      class cl_option *o= options->get_option(opt_name);
+	      if (o)
+		o->set_value(col_value);
+	      opt= s.token(",");
+	    }
+	  break;
+	}
+      case 'l':
+	set_option_s("color_prompt", "green:bwhite");
+	set_option_s("color_prompt_console", "blue:bwhite");
+	set_option_s("color_command", "blue:bwhite");
+	set_option_s("color_answer", "black:bwhite");
+	set_option_s("color_result", "bblue:bwhite");
+	set_option_s("color_dump_address", "blue:bwhite");
+	set_option_s("color_dump_number", "bblack:bwhite");
+	set_option_s("color_dump_char", "black:bwhite");
+	set_option_s("color_error", "red:bwhite");
+	set_option_s("color_ui_mkey", "green:bwhite");
+	set_option_s("color_ui_mitem", "bblack:bwhite");
+	set_option_s("color_ui_label", "black:bwhite");
+	set_option_s("color_ui_time", "blue:bwhite");
+	set_option_s("color_ui_title", "magenta:bwhite");
+	set_option_s("color_ui_run", "black:green");
+	set_option_s("color_ui_stop", "white:red");
+	set_option_s("color_ui_bit0", "white:black");
+	set_option_s("color_ui_bit1", "bred:black");
+	set_option_s("color_debug", "magenta:bwhite");
+	break;
+      case 'B':
+	if (!options->set_value("beep_break", this, (bool)true))
+	  fprintf(stderr, "Warning: No \"debug\" option found to set "
+		  "by -B parameter\n");	
+	break;
       case 'h':
-	print_help(cchars("s51"));
+	print_help(get_name());
 	exit(0);
 	break;
       case 'H':
@@ -649,11 +769,11 @@ cl_app::get_cmd(class cl_cmdline *cmdline)
   return(0);
 }
 */
-long
+t_mem
 cl_app::eval(chars expr)
 {
   expr_result= 0;
-  uc_yy_set_string_to_parse((char*)expr);
+  uc_yy_set_string_to_parse(expr);
   yyparse();
   uc_yy_free_string_to_parse();
   return expr_result;
@@ -668,9 +788,10 @@ cl_app::exec(chars line)
       c= new cl_console_dummy();
       c->init();
     }
-  class cl_cmdline *cmdline= new cl_cmdline(this, (char*)line, c);
   do
     {
+      c->un_redirect();
+      class cl_cmdline *cmdline= new cl_cmdline(this, line, c);
       cmdline->init();
       class cl_cmd *cm= commander->cmdset->get_cmd(cmdline, false/*c->is_interactive()*/);
       if (cm)
@@ -682,13 +803,15 @@ cl_app::exec(chars line)
 	  char *e= cmdline->cmd;
 	  if (strlen(e) > 0)
 	    {
-	      long l= eval(e);
-	      c->dd_printf("%ld\n", l);
+	      t_mem l= eval(e);
+	      c->dd_color("result");
+	      c->print_expr_result(l, NULL);
 	    }
 	}
+      line= cmdline->rest;
+      delete cmdline;
     }
-  while (cmdline->restart_at_rest());
-  delete cmdline;
+  while (!line.empty());
   if (c != commander->frozen_console)
     delete c;
 }
@@ -727,51 +850,38 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
   {
     cset= new cl_cmdset();
     cset->init();
-    cset->add(cmd= new cl_conf_cmd("_no_parameters_", 0,
-"conf               Configuration",
-"long help of conf"));
+    cset->add(cmd= new cl_conf_cmd("_no_parameters_", 0));
     cmd->init();
-    cset->add(cmd= new cl_conf_objects_cmd("objects", 0, 
-"conf objects       Show object tree",
-"long help of conf objects"));
+    cset->add(cmd= new cl_conf_objects_cmd("objects", 0));
     cmd->init();
   }
-  cmdset->add(cmd= new cl_super_cmd("conf", 0,
-"conf subcommand    Information, see `conf' command for more help",
-"long help of conf", cset));
+  cmdset->add(cmd= new cl_super_cmd("conf", 0, cset));
   cmd->init();
+  set_conf_help(cmd);
 
-  cmd= new cl_help_cmd("help", 0,
-"help [command]     Help about command(s)",
-"long help of help");
+  cmd= new cl_ver_cmd("version", 0);
+  cmdset->add(cmd);
+  cmd->init();
+  
+  cmd= new cl_help_cmd("help", 0);
   cmdset->add(cmd);
   cmd->init();
   cmd->add_name("?");
 
-  cmdset->add(cmd= new cl_quit_cmd("quit", 0,
-"quit               Quit",
-"long help of quit"));
+  cmdset->add(cmd= new cl_quit_cmd("quit", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_kill_cmd("kill", 0,
-"kill               Shutdown simulator",
-"long help of kill"));
+  cmdset->add(cmd= new cl_kill_cmd("kill", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_exec_cmd("exec", 0,
-"exec file          Execute commands from file",
-"long help of exec"));
+  cmdset->add(cmd= new cl_exec_cmd("exec", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_expression_cmd("expression", 0,
-"expression expr    Evaluate the expression",
-"long help of expression "));
+  cmdset->add(cmd= new cl_expression_cmd("expression", 0));
   cmd->init();
   cmd->add_name("let");
 
-  cmdset->add(cmd= new cl_jaj_cmd("jaj", 0,
-"jaj [val]          Jaj",
-"long help of jaj "));
+  cmdset->add(cmd= new cl_jaj_cmd("jaj", 0));
   cmd->init();
 
   {
@@ -782,33 +892,22 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_show_copying_cmd("copying", 0, 
-"show copying       Conditions for redistributing copies of uCsim",
-"long help of show copying"));
+    cset->add(cmd= new cl_show_copying_cmd("copying", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_warranty_cmd("warranty", 0, 
-"show warranty      Various kinds of warranty you do not have",
-"long help of show warranty"));
+    cset->add(cmd= new cl_show_warranty_cmd("warranty", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_option_cmd("option", 0,
-"show option [name] Show internal data of options",
-"long help of show option"));
+    cset->add(cmd= new cl_show_option_cmd("option", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_error_cmd("error", 0,
-"show error         Show class of errors",
-"long help of show error"));
+    cset->add(cmd= new cl_show_error_cmd("error", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_console("console", 0,
-				       "",
-				       ""));
+    cset->add(cmd= new cl_show_console("console", 0));
     cmd->init();
   }
   if (!super_cmd)
     {
-      cmdset->add(cmd= new cl_super_cmd("show", 0,
-"show subcommand    Generic command for showing things about the uCsim",
-"long help of show", cset));
+      cmdset->add(cmd= new cl_super_cmd("show", 0, cset));
       cmd->init();
+      set_show_help(cmd);
     }
 
   {
@@ -819,21 +918,16 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_get_option_cmd("option", 0,
-"get option [name]  Get value of an option",
-"long help of get option"));
+    cset->add(cmd= new cl_get_option_cmd("option", 0));
     cmd->init();
-    cset->add(cmd= new cl_show_error_cmd("error", 0,
-"get error          Get class of errors",
-"long help of get error"));
-    cmd->init();
+    /*cset->add(cmd= new cl_show_error_cmd("error", 0));
+      cmd->init();*/
   }
   if (!super_cmd)
     {
-      cmdset->add(cmd= new cl_super_cmd("get", 0,
-"get subcommand     Get, see `get' command for more help",
-"long help of get", cset));
+      cmdset->add(cmd= new cl_super_cmd("get", 0, cset));
       cmd->init();
+      set_get_help(cmd);
     }
 
   {
@@ -844,28 +938,18 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
       cset= new cl_cmdset();
       cset->init();
     }
-    cset->add(cmd= new cl_set_option_cmd("option", 0,
-"set option name|nr value\n"
-"                   Set value of an option",
-"long help of set option"));
+    cset->add(cmd= new cl_set_option_cmd("option", 0));
     cmd->init();
-    cset->add(cmd= new cl_set_error_cmd("error", 0,
-"set error error_name on|off|unset\n"
-"                   Set value of an error",
-"long help of set error"));
+    cset->add(cmd= new cl_set_error_cmd("error", 0));
     cmd->init();
-    cset->add(cmd= new cl_set_console_cmd("console", 0,
-"set console interactive [on|off]|noninteractive|raw|edited\n"
-"                   Set console parameters",
-"long help of set console"));
+    cset->add(cmd= new cl_set_console_cmd("console", 0));
     cmd->init();
   }
   if (!super_cmd)
     {
-      cmdset->add(cmd= new cl_super_cmd("set", 0,
-"set subcommand     Set, see `set' command for more help",
-"long help of set", cset));
+      cmdset->add(cmd= new cl_super_cmd("set", 0, cset));
       cmd->init();
+      set_set_help(cmd);
     }
 }
 
@@ -876,6 +960,11 @@ cl_app::mk_options(void)
 
   options->new_option(o= new cl_bool_option(this, "writable_flash",
 					    "Use writable flash chip (-w)"));
+  o->init();
+  o->set_value((bool)false);
+  
+  options->new_option(o= new cl_bool_option(this, "black_and_white",
+					    "Non-color console (-b)"));
   o->init();
   o->set_value((bool)false);
   
@@ -953,6 +1042,115 @@ cl_app::mk_options(void)
 					      "Name of output file for simulator interface (-I)"));
   o->init();
   o->hide();
+
+  options->new_option(o= new cl_bool_option(this, "echo_script",
+					    "Print breakpoint script before execute"));
+  o->init();
+
+  options->new_option(o= new cl_bool_option(this, "beep_break",
+					    "Beep at breakpoint hit (-B)"));
+  o->init();
+  o->set_value((bool)false);
+
+  options->new_option(o= new cl_string_option(this, "expression_format",
+					      "Format specifier to print expression result"));
+  o->init();
+  o->set_value("d");
+  
+  options->new_option(o= new cl_string_option(this, "color_prompt",
+					      "Prompt color"));
+  o->init();
+  o->set_value("bwhite:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_prompt_console",
+					      "Color of console number in prompt"));
+  o->init();
+  o->set_value("yellow:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_command",
+					      "Color of entered command"));
+  o->init();
+  o->set_value("green:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_answer",
+					      "Answer color"));
+  o->init();
+  o->set_value("bwhite:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_result",
+					      "Result of expression"));
+  o->init();
+  o->set_value("byellow:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_dump_address",
+					      "Address color in dump"));
+  o->init();
+  o->set_value("byellow:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_dump_number",
+					      "Value color in dump"));
+  o->init();
+  o->set_value("white:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_dump_char",
+					      "Text color in dump"));
+  o->init();
+  o->set_value("green:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_error",
+					      "Text color in error messages"));
+  o->init();
+  o->set_value("red:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_debug",
+					      "Color of debug messages"));
+  o->init();
+  o->set_value("magenta:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_mkey",
+					      "Menu-key color on UI display"));
+  o->init();
+  o->set_value("b:yellow:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_mitem",
+					      "Menu-item color on UI display"));
+  o->init();
+  o->set_value("bwhite:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_label",
+					      "Label color on UI display"));
+  o->init();
+  o->set_value("white:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_time",
+					      "Color of time-value on UI display"));
+  o->init();
+  o->set_value("bblue:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_title",
+					      "Title color on UI display"));
+  o->init();
+  o->set_value("bmagenta:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_run",
+					      "Run state color on UI display"));
+  o->init();
+  o->set_value("black:green");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_bit0",
+					      "Bit 0 color on UI display"));
+  o->init();
+  o->set_value("white:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_bit1",
+					      "Bit 1 color on UI display"));
+  o->init();
+  o->set_value("bred:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_ui_stop",
+					      "Stop state color on UI display"));
+  o->init();
+  o->set_value("white:red");
   
 }
 
@@ -972,6 +1170,20 @@ cl_app::dd_printf(const char *format, ...)
 }
 
 int
+cl_app::dd_cprintf(const char *color_name, const char *format, ...)
+{
+  va_list ap;
+
+  if (!commander)
+    return(0);
+
+  va_start(ap, format);
+  int i= commander->dd_cprintf(color_name, format, ap);
+  va_end(ap);
+  return(i);
+}
+
+int
 cl_app::debug(const char *format, ...)
 {
   va_list ap;
@@ -985,5 +1197,15 @@ cl_app::debug(const char *format, ...)
   return(i);
 }
 
+
+void
+cl_app::set_option_s(const char *opt_name, const char *new_value)
+{
+  class cl_option *o= options->get_option(opt_name);
+  if (o)
+    {
+      o->set_value(new_value);
+    }
+}
 
 /* End of app.cc */

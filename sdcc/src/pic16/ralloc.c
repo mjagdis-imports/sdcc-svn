@@ -134,7 +134,7 @@ debugLog (const char *fmt,...)
 
       if (!(debugF = fopen (buffer, (append ? "a+" : "w"))))
         {
-          werror (E_FILE_OPEN_ERR, buffer);
+          werror (E_OUTPUT_FILE_OPEN_ERR, buffer, strerror (errno));
           exit (1);
         }
       append = 1;               // Next time debubLog is called, we'll append the debug info
@@ -3155,6 +3155,17 @@ pack:
   debugLog ("  packing. removing %s\n", OP_SYMBOL (IC_RIGHT (ic))->rname);
   debugLog ("  replacing with %s\n", OP_SYMBOL (IC_RESULT (dic))->rname);
   /* found the definition */
+
+  /* delete from liverange table also
+     delete from all the points inbetween and the new
+     one */
+    for (sic = dic; sic != ic; sic = sic->next)
+      {
+        bitVectUnSetBit (sic->rlive, IC_RESULT (ic)->key);
+        if (IS_ITEMP (IC_RESULT (dic)))
+          bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
+      }
+
   /* replace the result with the result of */
   /* this assignment and remove this assignment */
 
@@ -3165,15 +3176,6 @@ pack:
     if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
       {
         OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
-      }
-    /* delete from liverange table also
-       delete from all the points inbetween and the new
-       one */
-    for (sic = dic; sic != ic; sic = sic->next)
-      {
-        bitVectUnSetBit (sic->rlive, IC_RESULT (ic)->key);
-        if (IS_ITEMP (IC_RESULT (dic)))
-          bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
       }
 
     remiCodeFromeBBlock (ebp, ic);
@@ -4056,7 +4058,9 @@ pic16_packRegisters (eBBlock * ebp)
         !POINTER_SET (ic) &&
         IS_SYMOP (IC_RIGHT (ic)) &&
         OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1)
+        bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1 &&
+        !isOperandGlobal (IC_RESULT (ic)) && 
+        !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
       {
         debugLog ("  %d - %s. straight rematerializable\n", __LINE__,__FUNCTION__);
 

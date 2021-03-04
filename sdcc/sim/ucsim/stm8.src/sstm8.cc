@@ -25,13 +25,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
   
-/* $Id: sstm8.cc 604 2017-01-12 18:25:08Z drdani $ */
-
 // prj
 #include "globals.h"
 
 // sim.src
-#include "appcl.h"
+//#include "appcl.h"
 
 // local
 #include "simstm8cl.h"
@@ -44,6 +42,7 @@ main(int argc, char *argv[])
 
   cpus= cpus_stm8;
   application= new cl_app();
+  application->set_name("sstm8");
   application->init(argc, argv);
   sim= new cl_simstm8(application);
   if (sim->init())

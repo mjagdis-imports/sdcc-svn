@@ -146,8 +146,13 @@ _hc08_parseOptions (int *pargc, char **argv, int *i)
   return FALSE;
 }
 
+#define OPTION_SMALL_MODEL          "--model-small"
+#define OPTION_LARGE_MODEL          "--model-large"
+
 static OPTION _hc08_options[] =
   {
+    {0, OPTION_SMALL_MODEL, NULL, "8-bit address space for data"},
+    {0, OPTION_LARGE_MODEL, NULL, "16-bit address space for data (default)"},
     {0, "--out-fmt-elf", NULL, "Output executable in ELF format" },
     {0, "--oldralloc", NULL, "Use old register allocator"},
     {0, NULL }
@@ -801,7 +806,7 @@ PORT hc08_port =
     1, 2, 2, 4, 8, 2, 2, 2, 2, 0, 1, 4
   },
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },           /* far, near, xstack, code */
+  { 0x00, 0x00, 0x00, 0x00 },           /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
@@ -946,7 +951,7 @@ PORT s08_port =
     1, 2, 2, 4, 8, 2, 2, 2, 2, 0, 1, 4
   },
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },           /* far, near, xstack, code */
+  { 0x00, 0x00, 0x00, 0x00 },           /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",

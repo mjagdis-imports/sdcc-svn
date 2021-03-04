@@ -6,7 +6,7 @@ top_builddir = @top_builddir@
 
 LIB_TYPE     = @LIB_TYPE@
 
-SCC = $(top_builddir)/bin/sdcc -mstm8 --model-large
+SCC = $(top_builddir)/bin/sdcc -mstm8 --model-large --max-allocs-per-node 25000
 SAS = $(top_builddir)/bin/sdasstm8
 
 # override PORTDIR defined by super (parent) makefile
@@ -16,17 +16,9 @@ include $(srcdir)/../incl.mk
 
 STM8_FLOAT = $(COMMON_FLOAT)
 
-STM8_INT = $(COMMON_INT) \
-  _mulint.c \
-  _divsint.c \
-  _modsint.c \
-  _mulschar.c \
-  _divschar.c \
-  _modschar.c
+STM8_INT = _mulschar.c _divschar.c _modschar.c
 
-STM8_LONG = $(COMMON_LONG) \
-  _divulong.c \
-  _mullong.c
+STM8_LONG =
 
 STM8_LONGLONG = $(COMMON_LONGLONG) \
   _rrulonglong.c \
@@ -40,28 +32,26 @@ STM8_LONGLONG = $(COMMON_LONGLONG) \
   _modulonglong.c
 
 STM8_SDCC = $(COMMON_SDCC) \
-  _itoa.c \
-  _ltoa.c \
+  __itoa.c \
+  __ltoa.c \
   _startup.c \
-  _strcmp.c \
-  _strcpy.c \
   _strlen.c \
-  _memcpy.c \
   _memmove.c \
   sprintf.c \
-  vprintf.c
+  vprintf.c \
+  atomic_flag_clear.c
 
 STM8SOURCES = $(addprefix ../,$(STM8_FLOAT) $(STM8_INT) $(STM8_LONG) $(STM8_LONGLONG) $(STM8_SDCC))
 STM8OBJECTS = $(patsubst %.c,%.rel,$(STM8_FLOAT) $(STM8_INT) $(STM8_LONG) $(STM8_LONGLONG) $(STM8_SDCC))
 
-OBJ = setjmp.rel __mulsint2slong.rel heap.rel
+OBJ = setjmp.rel _mulint.rel __mulsint2slong.rel _divsint.rel _modsint.rel _mullong.rel _divulong.rel _modulong.rel _divslong.rel _modslong.rel _fast_long_neg.rel heap.rel strcpy.rel strcmp.rel memcpy.rel atomic_flag_test_and_set.rel
 
 LIB = stm8.lib
 CC = $(SCC)
 AS = $(SAS)
 ASFLAGS = -plosgff
 
-CFLAGS = -I$(srcdir)/../../include -I. --std-c99
+CFLAGS = -I$(srcdir)/../../include -I. --std-c11
 
 all: $(PORTDIR)/$(LIB)
 

@@ -553,7 +553,10 @@ scan4op (lineNode **pl, const char *pReg, const char *untilOp,
 static bool
 doPushScan (lineNode **pl, const char *pReg)
 {
-  lineNode *plConditional, *pushPl = NULL;
+#if 0
+  lineNode *pushPl = NULL;
+#endif
+  lineNode *plConditional;
 
   for (;; *pl = (*pl)->next)
     {
@@ -563,6 +566,7 @@ doPushScan (lineNode **pl, const char *pReg)
             /* this is what we're looking for */
             return TRUE;
           case S4O_VISITED:
+#if 0
             if (!pushPl)
               {
                 DEADMOVEERROR();
@@ -571,6 +575,9 @@ doPushScan (lineNode **pl, const char *pReg)
             *pl = pushPl;
             /* already checked */
             return TRUE;
+#else
+            return FALSE;
+#endif
           case S4O_CONDJMP:
 #if 0
             /* two possible destinations: recurse */
@@ -585,7 +592,7 @@ doPushScan (lineNode **pl, const char *pReg)
 #else
             /* two possible destinations: give up */
             return FALSE;
-#endif   
+#endif
           default:
             return FALSE;
         }

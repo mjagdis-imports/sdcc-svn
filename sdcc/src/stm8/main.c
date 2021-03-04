@@ -30,6 +30,8 @@
 #include "dbuf_string.h"
 #include "peep.h"
 
+#define OPTION_MEDIUM_MODEL         "--model-medium"
+#define OPTION_LARGE_MODEL          "--model-large"
 #define OPTION_CODE_SEG        "--codeseg"
 #define OPTION_CONST_SEG       "--constseg"
 #define OPTION_ELF             "--out-fmt-elf"
@@ -38,6 +40,8 @@ extern DEBUGFILE dwarf2DebugFile;
 extern int dwarf2FinalizeFile(FILE *);
 
 static OPTION stm8_options[] = {
+  {0, OPTION_MEDIUM_MODEL, NULL, "16-bit address space for both data and code (default)"},
+  {0, OPTION_LARGE_MODEL, NULL, "16-bit address space for data, 24-bit for code"},
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_ELF,             NULL, "Output executable in ELF format"},
@@ -152,7 +156,6 @@ stm8_init (void)
   asm_addTree (&asm_asxxxx_mapping);
 }
 
-
 static void
 stm8_reset_regparm (struct sym_link *funcType)
 {
@@ -230,8 +233,6 @@ stm8_genExtraArea (FILE *of, bool hasMain)
 static void
 stm8_genInitStartup (FILE *of)
 {
-  fprintf (of, "__sdcc_gs_init_startup:\n");
-
   if (options.stack_loc >= 0)
     {
       fprintf (of, "\tldw\tx, #0x%04x\n", options.stack_loc);
@@ -309,6 +310,8 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   switch (ic->op)
     {
     case '/':
+      if (getSize (left) <= 2 && getSize (right) <= 2 && IS_LITERAL (right) && isPowerOf2 (ulFromVal (valFromType (right))) && ulFromVal (valFromType (right)) <= 32) // Using arithmetic right-shift is worth it for small divisors only.
+        return true;
     case '%':
       return (getSize (left) <= 2 && IS_UNSIGNED (left) && getSize (right) <= 2 && IS_UNSIGNED (right));
     case '*':
@@ -428,6 +431,8 @@ PORT stm8_port =
     stm8canAssign,
     stm8notUsedFrom,
     NULL,
+    NULL,
+    NULL,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
   {
@@ -470,11 +475,12 @@ PORT stm8_port =
     "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1                           /* CODE  is read-only */
+    1,                          /* CODE  is read-only */
+    1                           /* No fancy alignments supported. */
   },
   { stm8_genExtraArea, NULL },
   {                             /* stack information */
-    -1,                         /* direction */
+    -1,                         /* stack grows down */
      0,
      7,                         /* isr overhead */
      2,                         /* call overhead */

@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: stm8cl.h 770 2017-07-03 21:35:13Z drdani $ */
-
 #ifndef STM8CL_HEADER
 #define STM8CL_HEADER
 
@@ -60,13 +58,15 @@ public:
   class cl_itc *itc;
   class cl_it_src *trap_src;
   class cl_flash *flash_ctrl;
+  t_addr sp_limit;
 public:
   cl_stm8(struct cpu_entry *IType, class cl_sim *asim);
   virtual int init(void);
-  virtual char *id_string(void);
+  virtual const char *id_string(void);
 
   //virtual t_addr get_mem_size(enum mem_class type);
   virtual void mk_port(t_addr base, chars n);
+  virtual void make_cpu_hw(void);
   virtual void mk_hw_elements(void);
   virtual void make_memories(void);
 
@@ -94,9 +94,16 @@ public:
   virtual int  accept_it(class it_level *il);
   virtual bool it_enabled(void);
 
+  virtual void stack_check_overflow(class cl_stack_op *op);
+
 #include "instcl.h"
 };
 
+
+enum stm8_cpu_cfg
+  {
+   cpuconf_sp_limit	= 0,
+  };
 
 class cl_stm8_cpu: public cl_hw
 {
@@ -110,6 +117,7 @@ class cl_stm8_cpu: public cl_hw
   virtual void write(class cl_memory_cell *cell, t_mem *val);
   virtual t_mem read(class cl_memory_cell *cell);
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
+  virtual const char *cfg_help(t_addr addr);
 };
 
 

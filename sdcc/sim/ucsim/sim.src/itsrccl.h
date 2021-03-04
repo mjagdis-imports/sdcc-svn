@@ -69,6 +69,7 @@ public:
 	    int    apoll_priority);
   virtual ~cl_it_src(void);
   virtual int init(void);
+  virtual bool is_nmi(void) { return false; }
   
           bool is_active(void);
   virtual void set_active_status(bool Aactive);
@@ -88,8 +89,8 @@ class cl_irqs: public cl_sorted_list
 {
 public:
   cl_irqs(t_index alimit, t_index adelta);
-  virtual void *key_of(void *item); 
-  virtual int compare(void *key1, void *key2);
+  virtual const void *key_of(const void *item) const;
+  virtual int compare(const void *key1, const void *key2);
 };
 
 

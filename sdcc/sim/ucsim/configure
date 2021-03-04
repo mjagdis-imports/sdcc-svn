@@ -696,6 +696,9 @@ LDFLAGS
 CXXFLAGS
 CXX
 enable_serio
+enable_m6809_port
+enable_p1516_port
+enable_pdk_port
 enable_st7_port
 enable_stm8_port
 enable_xa_port
@@ -774,7 +777,10 @@ enable_hc08_port
 enable_s08_port
 enable_xa_port
 enable_stm8_port
+enable_pdk_port
 enable_st7_port
+enable_p1516_port
+enable_m6809_port
 enable_serio
 enable_statistic
 enable_shared
@@ -1430,7 +1436,7 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-ucsim          compile ucsim frontend
+  --enable-ucsim          obsolete, ignored
   --enable-dlso           compile dynamically loadable shared libraries
   --disable-mcs51-port    do not compile simulator for mcs51
   --disable-ds390-port    do not compile simulator for ds390
@@ -1445,7 +1451,10 @@ Optional Features:
   --disable-s08-port      do not compile simulator for s08
   --enable-xa-port        compile simulator for xa
   --disable-stm8-port     do not compile simulator for stm8
+  --disable-pdk-port      do not compile simulator for pdk
   --enable-st7-port       compile simulator for st7
+  --enable-p1516-port     compile simulator for p1516
+  --enable-m6809-port     compile simulator for m6809
   --enable-serio          compile serio GUI tool (needs curses)
   --enable-statistic      compile statistical features (slower simulation)
   --enable-shared[=PKGS]  build shared libraries [default=yes]
@@ -2794,6 +2803,9 @@ else
 enable_ucsim="no"
 fi
 
+# ignore setting, always use NO
+enable_ucsim="no"
+
 # Check whether --enable-dlso was given.
 if test "${enable_dlso+set}" = set; then :
   enableval=$enable_dlso; if test $enable_dlso != "no"; then
@@ -2920,6 +2932,15 @@ else
   enable_stm8_port="yes"
 fi
 
+# Check whether --enable-pdk-port was given.
+if test "${enable_pdk_port+set}" = set; then :
+  enableval=$enable_pdk_port; if test $enable_pdk_port != "no"; then
+    enable_pdk_port="yes"
+fi
+else
+  enable_pdk_port="yes"
+fi
+
 # Check whether --enable-st7-port was given.
 if test "${enable_st7_port+set}" = set; then :
   enableval=$enable_st7_port; if test $enable_st7_port  != "no"; then
@@ -2927,6 +2948,24 @@ if test "${enable_st7_port+set}" = set; then :
 fi
 else
   enable_st7_port="no"
+fi
+
+# Check whether --enable-p1516-port was given.
+if test "${enable_p1516_port+set}" = set; then :
+  enableval=$enable_p1516_port; if test $enable_p1516_port  != "no"; then
+    enable_p1516_port="yes"
+fi
+else
+  enable_p1516_port="yes"
+fi
+
+# Check whether --enable-m6809-port was given.
+if test "${enable_m6809_port+set}" = set; then :
+  enableval=$enable_m6809_port; if test $enable_m6809_port  != "no"; then
+    enable_m6809_port="yes"
+fi
+else
+  enable_m6809_port="yes"
 fi
 
 # Check whether --enable-serio was given.
@@ -2937,6 +2976,9 @@ fi
 else
   enable_serio="no"
 fi
+
+
+
 
 
 
@@ -6321,7 +6363,7 @@ esac
 fi
 
 : ${AR=ar}
-: ${AR_FLAGS=cru}
+: ${AR_FLAGS=cr}
 
 
 
@@ -6822,11 +6864,8 @@ _LT_EOF
   test $ac_status = 0; }; then
     # Now try to grab the symbols.
     nlist=conftest.nm
-    if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$NM conftest.$ac_objext \| "$lt_cv_sys_global_symbol_pipe" \> $nlist\""; } >&5
-  (eval $NM conftest.$ac_objext \| "$lt_cv_sys_global_symbol_pipe" \> $nlist) 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; } && test -s "$nlist"; then
+    $ECHO "$as_me:$LINENO: $NM conftest.$ac_objext | $lt_cv_sys_global_symbol_pipe > $nlist" >&5
+    if eval "$NM" conftest.$ac_objext \| "$lt_cv_sys_global_symbol_pipe" \> $nlist 2>&5 && test -s "$nlist"; then
       # Try sorting and uniquifying the output.
       if sort "$nlist" | uniq > "$nlist"T; then
 	mv -f "$nlist"T "$nlist"
@@ -8045,8 +8084,8 @@ int forced_loaded() { return 2;}
 _LT_EOF
       echo "$LTCC $LTCFLAGS -c -o conftest.o conftest.c" >&5
       $LTCC $LTCFLAGS -c -o conftest.o conftest.c 2>&5
-      echo "$AR cru libconftest.a conftest.o" >&5
-      $AR cru libconftest.a conftest.o 2>&5
+      echo "$AR cr libconftest.a conftest.o" >&5
+      $AR cr libconftest.a conftest.o 2>&5
       echo "$RANLIB libconftest.a" >&5
       $RANLIB libconftest.a 2>&5
       cat > conftest.c << _LT_EOF
@@ -9178,6 +9217,12 @@ lt_prog_compiler_static=
       ecc*)
 	lt_prog_compiler_wl='-Wl,'
 	lt_prog_compiler_pic='-KPIC'
+	lt_prog_compiler_static='-static'
+        ;;
+      # flang / f18. f95 an alias for gfortran or flang on Debian
+      flang* | f18* | f95*)
+	lt_prog_compiler_wl='-Wl,'
+	lt_prog_compiler_pic='-fPIC'
 	lt_prog_compiler_static='-static'
         ;;
       # icc used to be incompatible with GCC.
@@ -13122,7 +13167,7 @@ with_gnu_ld=$lt_cv_prog_gnu_ld
       # Commands to make compiler produce verbose output that lists
       # what "hidden" libraries, object files and flags are used when
       # linking a shared library.
-      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP " \-L"'
 
     else
       GXX=no
@@ -13614,7 +13659,7 @@ fi
             # explicitly linking system object files so we need to strip them
             # from the output so that they don't get included in the library
             # dependencies.
-            output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $EGREP "\-L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
+            output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $EGREP " \-L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
             ;;
           *)
             if test yes = "$GXX"; then
@@ -13679,7 +13724,7 @@ fi
 	    # explicitly linking system object files so we need to strip them
 	    # from the output so that they don't get included in the library
 	    # dependencies.
-	    output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $GREP "\-L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
+	    output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $GREP " \-L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
 	    ;;
           *)
 	    if test yes = "$GXX"; then
@@ -14018,7 +14063,7 @@ fi
 	      # Commands to make compiler produce verbose output that lists
 	      # what "hidden" libraries, object files and flags are used when
 	      # linking a shared library.
-	      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+	      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP " \-L"'
 
 	    else
 	      # FIXME: insert proper C++ library support
@@ -14102,7 +14147,7 @@ fi
 	        # Commands to make compiler produce verbose output that lists
 	        # what "hidden" libraries, object files and flags are used when
 	        # linking a shared library.
-	        output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+	        output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP " \-L"'
 	      else
 	        # g++ 2.7 appears to require '-G' NOT '-shared' on this
 	        # platform.
@@ -14113,7 +14158,7 @@ fi
 	        # Commands to make compiler produce verbose output that lists
 	        # what "hidden" libraries, object files and flags are used when
 	        # linking a shared library.
-	        output_verbose_link_cmd='$CC -G $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+	        output_verbose_link_cmd='$CC -G $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP " \-L"'
 	      fi
 
 	      hardcode_libdir_flag_spec_CXX='$wl-R $wl$libdir'
@@ -17181,13 +17226,12 @@ _ACEOF
 fi
 done
 
-for ac_func in strerror strdup
+for ac_func in strdup
 do :
-  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
-ac_fn_cxx_check_func "$LINENO" "$ac_func" "$as_ac_var"
-if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  ac_fn_cxx_check_func "$LINENO" "strdup" "ac_cv_func_strdup"
+if test "x$ac_cv_func_strdup" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+#define HAVE_STRDUP 1
 _ACEOF
 
 fi
@@ -18034,30 +18078,80 @@ type_name()
     echo "long long"
 }
 
+specifier_name()
+{
+    if expr "$ac_cv_sizeof_char" '>=' "$1" >/dev/null; then
+        echo "\"\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_short" '>=' "$1" >/dev/null; then
+        echo "\"h\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_int" '>=' "$1" >/dev/null; then
+        echo "\"\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_long" '>=' "$1" >/dev/null; then
+        echo "\"l\""
+        exit
+    fi
+    if expr "$ac_cv_sizeof_long_long" '>=' "$1" >/dev/null; then
+        echo "\"L\""
+        exit
+    fi
+    echo "\"L\""
+}
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for byte" >&5
 $as_echo_n "checking type name for byte... " >&6; }
 TYPE_BYTE=`type_name 1`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_BYTE" >&5
 $as_echo "$TYPE_BYTE" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for byte" >&5
+$as_echo_n "checking specifier for byte... " >&6; }
+SPEC_BYTE=`specifier_name 1`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_BYTE" >&5
+$as_echo "$SPEC_BYTE" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for word" >&5
 $as_echo_n "checking type name for word... " >&6; }
 TYPE_WORD=`type_name 2`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_WORD" >&5
 $as_echo "$TYPE_WORD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for word" >&5
+$as_echo_n "checking specifier for word... " >&6; }
+SPEC_WORD=`specifier_name 2`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_WORD" >&5
+$as_echo "$SPEC_WORD" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for dword" >&5
 $as_echo_n "checking type name for dword... " >&6; }
 TYPE_DWORD=`type_name 4`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_DWORD" >&5
 $as_echo "$TYPE_DWORD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for dword" >&5
+$as_echo_n "checking specifier for dword... " >&6; }
+SPEC_DWORD=`specifier_name 4`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_DWORD" >&5
+$as_echo "$SPEC_DWORD" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking type name for qword" >&5
 $as_echo_n "checking type name for qword... " >&6; }
 TYPE_QWORD=`type_name 8`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TYPE_QWORD" >&5
 $as_echo "$TYPE_QWORD" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking specifier for qword" >&5
+$as_echo_n "checking specifier for qword... " >&6; }
+SPEC_QWORD=`specifier_name 8`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $SPEC_QWORD" >&5
+$as_echo "$SPEC_QWORD" >&6; }
 
 
 cat >>confdefs.h <<_ACEOF
 #define TYPE_BYTE $TYPE_BYTE
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPEC_BYTE $SPEC_BYTE
 _ACEOF
 
 
@@ -18067,12 +18161,27 @@ _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
+#define SPEC_WORD $SPEC_WORD
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
 #define TYPE_DWORD $TYPE_DWORD
 _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
+#define SPEC_DWORD $SPEC_DWORD
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
 #define TYPE_QWORD $TYPE_QWORD
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPEC_QWORD $SPEC_QWORD
 _ACEOF
 
 #AC_DEFINE_UNQUOTED(TYPE_UBYTE, [unsigned $TYPE_BYTE], [XXX])
@@ -18109,7 +18218,7 @@ _ACEOF
 # Generating output files
 # ===========================================================================
 
-ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile tlcs.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile st7.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
+ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk sim.src/Makefile cmd.src/Makefile s51.src/Makefile avr.src/Makefile z80.src/Makefile tlcs.src/Makefile hc08.src/Makefile xa.src/Makefile stm8.src/Makefile pdk.src/Makefile st7.src/Makefile p1516.src/Makefile m6809.src/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -19206,7 +19315,10 @@ do
     "hc08.src/Makefile") CONFIG_FILES="$CONFIG_FILES hc08.src/Makefile" ;;
     "xa.src/Makefile") CONFIG_FILES="$CONFIG_FILES xa.src/Makefile" ;;
     "stm8.src/Makefile") CONFIG_FILES="$CONFIG_FILES stm8.src/Makefile" ;;
+    "pdk.src/Makefile") CONFIG_FILES="$CONFIG_FILES pdk.src/Makefile" ;;
     "st7.src/Makefile") CONFIG_FILES="$CONFIG_FILES st7.src/Makefile" ;;
+    "p1516.src/Makefile") CONFIG_FILES="$CONFIG_FILES p1516.src/Makefile" ;;
+    "m6809.src/Makefile") CONFIG_FILES="$CONFIG_FILES m6809.src/Makefile" ;;
     "gui.src/Makefile") CONFIG_FILES="$CONFIG_FILES gui.src/Makefile" ;;
     "gui.src/serio.src/Makefile") CONFIG_FILES="$CONFIG_FILES gui.src/serio.src/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;

@@ -5,6 +5,7 @@
     right: 0,1
     vol: 0,1
     sign: u,
+    goal: 0, 1, 2
 */
 #include <testfwk.h>
 #ifdef __sun__
@@ -16,6 +17,7 @@
 #define SIZE    ({size})
 #define RIGHT   ({right})
 #define VOL     ({vol})
+#define GOAL    ({goal})
 
 #if SIZE == 8
 #  define TYPE {sign}int8_t
@@ -38,6 +40,12 @@
 #  define SHIFT(x,y) (TYPE)((TYPE)(x)>>(y))
 #endif
 
+#if GOAL == 1
+#pragma opt_code_size
+#elif GOAL == 2
+#pragma opt_code_speed
+#endif
+
 #if VOL == 0
   volatile TYPE s = TEST_VECT;
            TYPE t;
@@ -50,6 +58,8 @@
 static void
 testShift(void)
 {
+#ifndef __SDCC_pdk14 // Lack of memory
+#if !(defined (__SDCC_pdk15) && defined(__SDCC_STACK_AUTO)) // Lack of code memory
     TESTSHIFT(0);
     TESTSHIFT(1);
     TESTSHIFT(2);
@@ -88,5 +98,7 @@ testShift(void)
     TESTSHIFT(29);
     TESTSHIFT(30);
     TESTSHIFT(31);
+#endif
+#endif
 #endif
 }

@@ -18,15 +18,44 @@ void __printf(const char *szFormat, ...);
  #define _STATMEM
 #endif
 
-#if defined(PORT_HOST) || defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka) || defined(__SDCC_gbz80) || defined(__SDCC_stm8) || defined(__SDCC_tlcs90)
+#if defined(__SDCC_stm8) ||defined(PORT_HOST)
+#define __data
+#define __idata
+#define __pdata
+#define __xdata
+#define __code
+#define __near
+#define __far
+#define __reentrant
+#endif
+
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_gbz80) || defined(__SDCC_tlcs90) || defined(__SDCC_ez80_z80) || defined(__SDCC_z80n)
+#define __data
+#define __idata
+#define __pdata
+#define __xdata
+#define __code
+#define __near
+#define __far
+#define __reentrant
+#else
+#define __smallc
+#define __z88dk_callee
+#define __z88dk_fastcall
+#endif
+
+#ifdef __SDCC_gbz80
+#define __z88dk_fastcall
+#endif
+
+#if defined(__SDCC_pdk13) || defined(__SDCC_pdk14) || defined(__SDCC_pdk15)
 # define __data
 # define __idata
 # define __pdata
 # define __xdata
-# define __code
+# define __code // TODO: __code will be supported in the future.
 # define __near
 # define __far
-# define __reentrant
 #endif
 
 #if defined(PORT_HOST)
@@ -35,6 +64,12 @@ void __printf(const char *szFormat, ...);
 
 #if defined(__SDCC_hc08) || defined(__SDCC_s08)
 # define __idata __data
+# define __pdata __data
+#endif
+
+#if defined(__SDCC_pic14)
+# define __idata __data
+# define __xdata __data
 # define __pdata __data
 #endif
 

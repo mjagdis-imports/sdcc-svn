@@ -164,6 +164,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
 
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -181,6 +182,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
           newic = newiCode ('=', NULL, right);
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next);
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -199,9 +201,10 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
         {
           newic = newiCode (IPUSH, right, NULL);
           newic->parmPush = 1;
-          bytesPushed += getSize(operandType(right));
+          bytesPushed += getSize(operandType(right)) + (getSize(operandType(right)) % 2 && TARGET_PDK_LIKE); // pdk requires stack to be even-aligned
         }
 
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -218,8 +221,9 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
         {
           newic = newiCode (IPUSH, left, NULL);
           newic->parmPush = 1;
-          bytesPushed += getSize(operandType(left));
+          bytesPushed += getSize(operandType(left)) + (getSize(operandType(left)) % 2 && TARGET_PDK_LIKE); // pdk requires stack to be even-aligned
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -253,6 +257,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
 }
 
@@ -264,7 +269,8 @@ cnvToFloatCast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_RIGHT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_RIGHT (ic)));
+  SPEC_SHORT (type) = 0;
   int linenno = ic->lineno;
   int bwd, su;
   int bytesPushed=0;
@@ -296,6 +302,13 @@ cnvToFloatCast (iCode * ic, eBBlock * ebp)
       goto found;
     }
 
+  if (IS_BOOLEAN (type))
+    {
+      wassert(multypes[0][1] == UCHARTYPE);
+      func = conv[0][0][1];
+      goto found;
+    }
+
   assert (0);
 found:
 
@@ -313,6 +326,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -331,8 +345,9 @@ found:
         {
           newic = newiCode (IPUSH, IC_RIGHT (ic), NULL);
           newic->parmPush = 1;
-          bytesPushed += getSize(operandType(IC_RIGHT(ic)));
+          bytesPushed += getSize(operandType(IC_RIGHT(ic))) + (getSize(operandType(IC_RIGHT(ic))) % 2 && TARGET_PDK_LIKE); // pdk requires stack to be even-aligned
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -363,6 +378,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = linenno;
@@ -378,7 +394,8 @@ cnvToFixed16x16Cast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_RIGHT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_RIGHT (ic)));
+  SPEC_SHORT (type) = 0;
   int linenno = ic->lineno;
   int bwd, su;
   int bytesPushed=0;
@@ -420,6 +437,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -440,6 +458,7 @@ found:
           newic->parmPush = 1;
           bytesPushed += getSize(operandType(IC_RIGHT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = linenno;
@@ -470,6 +489,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = linenno;
@@ -485,7 +505,8 @@ cnvFromFloatCast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_LEFT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_LEFT (ic)));
+  SPEC_SHORT (type) = 0;
   char *filename = ic->filename;
   int lineno = ic->lineno;
   int bwd, su;
@@ -528,6 +549,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -546,8 +568,9 @@ found:
         {
           newic = newiCode (IPUSH, IC_RIGHT (ic), NULL);
           newic->parmPush = 1;
-          bytesPushed += getSize(operandType(IC_RIGHT(ic)));
+          bytesPushed += getSize(operandType(IC_RIGHT(ic))) + (getSize(operandType(IC_RIGHT(ic))) % 2 && TARGET_PDK_LIKE); // pdk requires stack to be even-aligned
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -578,6 +601,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = lineno;
@@ -593,7 +617,8 @@ cnvFromFixed16x16Cast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = operandType (IC_LEFT (ic));
+  sym_link *type = copyLinkChain (operandType (IC_LEFT (ic)));
+  SPEC_SHORT (type) = 0;
   char *filename = ic->filename;
   int lineno = ic->lineno;
   int bwd, su;
@@ -643,6 +668,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -663,6 +689,7 @@ found:
           newic->parmPush = 1;
           bytesPushed += getSize(operandType(IC_RIGHT(ic)));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -693,6 +720,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
   newic->filename = filename;
   newic->lineno = lineno;
@@ -719,8 +747,10 @@ convilong (iCode * ic, eBBlock * ebp)
   int bytesPushed=0;
   operand *left;
   operand *right;
-  sym_link *leftType = operandType (IC_LEFT (ic));
-  sym_link *rightType = operandType (IC_RIGHT (ic));
+  sym_link *leftType = copyLinkChain (operandType (IC_LEFT (ic)));
+  sym_link *rightType = copyLinkChain (operandType (IC_RIGHT (ic)));
+  SPEC_SHORT (leftType) = 0;
+  SPEC_SHORT (rightType) = 0;
 
   remiCodeFromeBBlock (ebp, ic);
 
@@ -842,6 +872,7 @@ found:
           newic = newiCode ('=', NULL, IC_LEFT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -859,6 +890,7 @@ found:
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
           IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next);
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -879,8 +911,9 @@ found:
           newic = newiCode (IPUSH, IC_RIGHT (ic), NULL);
           newic->parmPush = 1;
 
-          bytesPushed += getSize(operandType(IC_RIGHT(ic)));
+          bytesPushed += getSize(operandType(IC_RIGHT(ic))) + (getSize(operandType(IC_RIGHT(ic))) % 2 && TARGET_PDK_LIKE); // pdk requires stack to be even-aligned
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -898,8 +931,9 @@ found:
           newic = newiCode (IPUSH, IC_LEFT (ic), NULL);
           newic->parmPush = 1;
 
-          bytesPushed += getSize(operandType(IC_LEFT(ic)));
+          bytesPushed += getSize(operandType(IC_LEFT(ic))) + (getSize(operandType(IC_LEFT(ic))) % 2 && TARGET_PDK_LIKE); // pdk requires stack to be even-aligned
         }
+      hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
       newic->filename = filename;
       newic->lineno = lineno;
@@ -934,6 +968,7 @@ found:
         }
     }
 
+  hTabAddItem (&iCodehTab, newic->key, newic);
   addiCodeToeBBlock (ebp, newic, ip);
 }
 
@@ -979,10 +1014,10 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       goto convert;
     }
 
-  if ((TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_RABBIT) && (!strcmp (bif->name, "__builtin_memcpy") || !strcmp (bif->name, "__builtin_strncpy") || !strcmp (bif->name, "__builtin_memset")))
+  if ((TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_RABBIT || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N) && (!strcmp (bif->name, "__builtin_memcpy") || !strcmp (bif->name, "__builtin_strncpy") || !strcmp (bif->name, "__builtin_memset")))
     {
-      /* Replace iff return value is used or last parameter is not an integer constant. */
-      if (bitVectIsZero (OP_USES (IC_RESULT (icc))) && IS_OP_LITERAL (IC_LEFT (lastparam)))
+      /* Replace iff return value is used or last parameter is not an integer constant (except for memcpy, where non-integers can be handled). */
+      if (bitVectIsZero (OP_USES (IC_RESULT (icc))) && (IS_OP_LITERAL (IC_LEFT (lastparam)) || !strcmp (bif->name, "__builtin_memcpy")))
         return;
       
       strcpy(OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
@@ -1047,6 +1082,8 @@ convsmallc (iCode *ic, eBBlock *ebp)
     {
       if (icp)
         icp->next = icc->prev;
+      else
+        ebp->sch = icc->prev;
       icc->prev = ic;
     }
   for (; icc != icp; ico = icc, icc = icc->prev)
@@ -1095,35 +1132,78 @@ convertToFcall (eBBlock ** ebbs, int count)
 
           // Easy special case which avoids function call: modulo by a literal power
           // of two can be replaced by a bitwise AND.
-          if (ic->op == '%' && isOperandLiteral(IC_RIGHT(ic)) &&
-              IS_UNSIGNED(operandType(IC_LEFT(ic))))
+          if (ic->op == '%' && isOperandLiteral (IC_RIGHT(ic)))
             {
-              unsigned long litVal = double2ul (operandLitValue(IC_RIGHT(ic)));
+              bool us = IS_UNSIGNED (operandType (IC_LEFT(ic)));
+              bool upcast = FALSE;
+              iCode *dic = NULL;
 
-              /* modulo by 1: no remainder */
-              if (litVal == 1)
+              // Chek if left really is just an upcasted unsigned value.
+              if (!us && IS_SYMOP (IC_LEFT(ic)) && bitVectnBitsOn (OP_DEFS (IC_LEFT (ic))) == 1)
                 {
-                  ic->op = '=';
-                  IC_RIGHT (ic) = operandFromLit(0);
-                  IC_LEFT (ic) = NULL;
-                  continue;
-                }
-              // See if literal value is a power of 2.
-              while (litVal && !(litVal & 1))
-                {
-                  litVal >>= 1;
-                }
-              if (litVal)
-                {
-                  // discard lowest set bit.
-                  litVal >>= 1;
+                  dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (IC_LEFT (ic))));
+
+                  if (dic && dic->op == CAST && IS_UNSIGNED (operandType (IC_RIGHT (dic))) && getSize (operandType (IC_RIGHT (dic))) < getSize (operandType (IC_RESULT (dic))))
+                    us = upcast = true;
                 }
 
-              if (!litVal)
+              if (us)
                 {
-                  ic->op = BITWISEAND;
-                  IC_RIGHT(ic) = operandFromLit(operandLitValue(IC_RIGHT(ic)) - 1);
-                  continue;
+                  unsigned long litVal = double2ul (operandLitValue (IC_RIGHT (ic)));
+    
+                  /* modulo by 1: no remainder */
+                  if (litVal == 1)
+                    {
+                      ic->op = '=';
+                      IC_RIGHT (ic) = operandFromLit (0);
+                      if (IS_SYMOP (IC_LEFT (ic)))
+                        bitVectUnSetBit (OP_USES (IC_LEFT (ic)), ic->key);
+                      IC_LEFT (ic) = NULL;
+                      continue;
+                    }
+                  // See if literal value is a power of 2.
+                  while (litVal && !(litVal & 1))
+                    {
+                      litVal >>= 1;
+                    }
+                  if (litVal)
+                    {
+                      // discard lowest set bit.
+                      litVal >>= 1;
+                    }
+    
+                  if (!litVal)
+                    {
+                      ic->op = BITWISEAND;
+                      IC_RIGHT(ic) = operandFromLit (operandLitValue (IC_RIGHT (ic)) - 1);
+                      if (upcast && IS_CHAR (operandType (IC_RIGHT (dic)))
+                          && bitVectnBitsOn (OP_USES (IC_LEFT (ic))) == 1)
+                        {
+                          // Use precasted value
+                          attachiCodeOperand (IC_RIGHT (dic), &IC_LEFT (ic), ic);
+                          // Change cast to assignmnent to self to avoid
+                          // reading IC_RIGHT (dic) twice in case it
+                          // was volatile
+                          attachiCodeOperand (IC_RESULT (dic), &IC_RIGHT (dic), dic);
+                          dic->op = '=';
+                          // If upcast from char, maybe there's a
+                          // corresponding downcast to char that could
+                          // be eliminated too
+                          if (bitVectnBitsOn (OP_USES (IC_RESULT (ic))) == 1)
+                            {
+                              iCode *uic;
+                              uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (ic))));
+                              if (uic->op == CAST && IS_CHAR (operandType (IC_RESULT (uic))))\
+                                {
+                                  attachiCodeOperand (IC_RESULT (uic), &IC_RESULT (ic), ic);
+                                  attachiCodeOperand (IC_RESULT (uic), &IC_RIGHT (uic), uic);
+                                  uic->op = '=';
+                                }
+                            }
+                        }
+                      continue;
+
+                    }
                 }
             }
 
@@ -1319,7 +1399,7 @@ separateAddressSpaces (eBBlock **ebbs, int count)
           
           /*printf ("Looking at ic %d, op %d\n", ic->key, (int)(ic->op));*/
           
-          if (left && IS_SYMOP (left))
+          if (left && ic->op != ADDRESS_OF && IS_SYMOP (left))
             {
               if (POINTER_GET (ic))
                 {
@@ -1391,6 +1471,7 @@ separateAddressSpaces (eBBlock **ebbs, int count)
             {
               newic->filename = ic->filename;
               newic->lineno = ic->lineno;
+              hTabAddItem (&iCodehTab, newic->key, newic);
               addiCodeToeBBlock (ebbs[i], newic, iic);
             } 
             
@@ -1428,7 +1509,7 @@ getAddrspaceiCode (const iCode *ic)
 
   /* Previous transformations in separateAddressSpaces() should
      ensure that at most one addressspace occours in each iCode. */
-  if (left && IS_SYMOP (left))
+  if (left && ic->op != ADDRESS_OF && IS_SYMOP (left))
     { 
       if (POINTER_GET (ic))
         {
@@ -1541,6 +1622,38 @@ isLocalWithoutDef (symbol * sym)
   return !sym->defs;
 }
 
+static void
+replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isaddr)
+{
+  operand * op = *opp;
+  symbol * sym = OP_SYMBOL (op);
+  
+  if (isLocalWithoutDef (sym))
+    {
+      werrorfl (ic->filename, ic->lineno, W_LOCAL_NOINIT, sym->name);
+      OP_REQV (op) = NULL;
+      sym->allocreq = 1;
+    }
+  else if (OP_REQV (op))
+    {
+      operand * nop;
+
+      nop = operandFromOperand (OP_REQV (op));
+
+      /* Copy def/use info from true symbol to register equivalent */
+      /* but only if this hasn't been done already. */
+      if (!OP_DEFS (nop))
+        OP_DEFS (nop) = bitVectCopy (OP_DEFS (op));
+      if (!OP_USES (nop))
+        OP_USES (nop) = bitVectCopy (OP_USES (op));
+
+      if (force_isaddr)
+        nop->isaddr = new_isaddr;
+
+      *opp = nop; /* Replace true sym operand with reg equiv */
+    }
+}
+
 /*-----------------------------------------------------------------*/
 /* replaceRegEqv - replace all local variables with their reqv     */
 /*-----------------------------------------------------------------*/
@@ -1550,6 +1663,60 @@ replaceRegEqv (ebbIndex * ebbi)
   eBBlock ** ebbs = ebbi->bbOrder;
   int count = ebbi->count;
   int i;
+
+  /* Reset all the def/use info (Otherwise there may be stale def/use */
+  /* info if a variable is also used in a previous functions) */
+  for (i = 0; i < count; i++)
+    {
+      iCode *ic;
+      
+      if (ebbs[i]->noPath)
+        continue;
+
+      for (ic = ebbs[i]->sch; ic; ic = ic->next)
+        {
+          if (SKIP_IC2 (ic))
+            continue;
+
+          if (ic->op == IFX)
+            {
+              if (IS_TRUE_SYMOP (IC_COND (ic)))
+                {
+                  OP_DEFS (IC_COND (ic)) = NULL;
+                  OP_USES (IC_COND (ic)) = NULL;
+                }
+              continue;
+            }
+
+          if (ic->op == JUMPTABLE)
+            {
+              if (IS_TRUE_SYMOP (IC_JTCOND (ic)))
+                {
+                  OP_DEFS (IC_JTCOND (ic)) = NULL;
+                  OP_USES (IC_JTCOND (ic)) = NULL;
+                }
+              continue;
+            }
+          
+          if (IS_TRUE_SYMOP (IC_RESULT (ic)))
+            {
+              OP_DEFS (IC_RESULT (ic)) = NULL;
+              OP_USES (IC_RESULT (ic)) = NULL;
+            }
+
+          if (IS_TRUE_SYMOP (IC_RIGHT (ic)))
+            {
+              OP_DEFS (IC_RIGHT (ic)) = NULL;
+              OP_USES (IC_RIGHT (ic)) = NULL;
+            }
+
+          if (IS_TRUE_SYMOP (IC_LEFT (ic)))
+            {
+              OP_DEFS (IC_LEFT (ic)) = NULL;
+              OP_USES (IC_LEFT (ic)) = NULL;
+            }
+        }
+    }
 
   /* Update the symbols' def bitvector so we know if there is   */
   /* a defining iCode or not. Only replace a local variable     */
@@ -1571,41 +1738,15 @@ replaceRegEqv (ebbIndex * ebbi)
 
           if (ic->op == IFX)
             {
-              if (IC_COND (ic) &&
-                  IS_TRUE_SYMOP (IC_COND (ic)) &&
-                  isLocalWithoutDef (OP_SYMBOL (IC_COND (ic))))
-                {
-                  werrorfl (ic->filename, ic->lineno,
-                          W_LOCAL_NOINIT,
-                          OP_SYMBOL (IC_COND (ic))->name);
-                  OP_REQV (IC_COND (ic)) = NULL;
-                  OP_SYMBOL (IC_COND (ic))->allocreq = 1;
-                }
-
-              if (IS_TRUE_SYMOP (IC_COND (ic)) && OP_REQV (IC_COND (ic)))
-                IC_COND (ic) = opFromOpWithDU (OP_REQV (IC_COND (ic)),
-                                               OP_DEFS (IC_COND (ic)),
-                                               OP_USES (IC_COND (ic)));
+              if (IS_TRUE_SYMOP (IC_COND (ic)))
+                replaceRegEqvOperand (ic, &IC_COND (ic), 0, 0);
               continue;
             }
 
           if (ic->op == JUMPTABLE)
             {
-              if (IC_JTCOND (ic) &&
-                  IS_TRUE_SYMOP (IC_JTCOND (ic)) &&
-                  isLocalWithoutDef (OP_SYMBOL (IC_JTCOND (ic))))
-                {
-                  werrorfl (ic->filename, ic->lineno,
-                          W_LOCAL_NOINIT,
-                          OP_SYMBOL (IC_JTCOND (ic))->name);
-                  OP_REQV (IC_JTCOND (ic)) = NULL;
-                  OP_SYMBOL (IC_JTCOND (ic))->allocreq = 1;
-                }
-
-              if (IS_TRUE_SYMOP (IC_JTCOND (ic)) && OP_REQV (IC_JTCOND (ic)))
-                IC_JTCOND (ic) = opFromOpWithDU (OP_REQV (IC_JTCOND (ic)),
-                                                 OP_DEFS (IC_JTCOND (ic)),
-                                                 OP_USES (IC_JTCOND (ic)));
+              if (IS_TRUE_SYMOP (IC_JTCOND (ic)))
+                replaceRegEqvOperand (ic, &IC_JTCOND (ic), 0, 0);
               continue;
             }
 
@@ -1616,66 +1757,17 @@ replaceRegEqv (ebbIndex * ebbi)
             }
 
           /* general case */
-          if (IC_RESULT (ic) &&
-              IS_TRUE_SYMOP (IC_RESULT (ic)) &&
-              OP_REQV (IC_RESULT (ic)))
+          if (IS_TRUE_SYMOP (IC_RESULT (ic)))
             {
               if (POINTER_SET (ic))
-                {
-                  IC_RESULT (ic) = opFromOpWithDU (OP_REQV (IC_RESULT (ic)),
-                                                   OP_DEFS (IC_RESULT (ic)),
-                                                   OP_USES (IC_RESULT (ic)));
-                  IC_RESULT (ic)->isaddr = 1;
-                }
+                replaceRegEqvOperand (ic, &IC_RESULT (ic), 1, 1);
               else
-                {
-                  IC_RESULT (ic) = opFromOpWithDU (OP_REQV (IC_RESULT (ic)),
-                                                   OP_DEFS (IC_RESULT (ic)),
-                                                   OP_USES (IC_RESULT (ic)));
-                }
+                replaceRegEqvOperand (ic, &IC_RESULT (ic), 0, 0);
             }
-
-          if (IC_RIGHT (ic) &&
-              IS_TRUE_SYMOP (IC_RIGHT (ic)) &&
-              isLocalWithoutDef (OP_SYMBOL (IC_RIGHT (ic))))
-            {
-              werrorfl (ic->filename, ic->lineno,
-                        W_LOCAL_NOINIT,
-                        OP_SYMBOL (IC_RIGHT (ic))->name);
-              OP_REQV (IC_RIGHT (ic)) = NULL;
-              OP_SYMBOL (IC_RIGHT (ic))->allocreq = 1;
-            }
-
-          if (IC_RIGHT (ic) &&
-              IS_TRUE_SYMOP (IC_RIGHT (ic)) &&
-              OP_REQV (IC_RIGHT (ic)))
-            {
-              IC_RIGHT (ic) = opFromOpWithDU (OP_REQV (IC_RIGHT (ic)),
-                                              OP_DEFS (IC_RIGHT (ic)),
-                                              OP_USES (IC_RIGHT (ic)));
-              IC_RIGHT (ic)->isaddr = 0;
-            }
-
-          if (IC_LEFT (ic) &&
-              IS_TRUE_SYMOP (IC_LEFT (ic)) &&
-              isLocalWithoutDef (OP_SYMBOL (IC_LEFT (ic))))
-            {
-              werrorfl (ic->filename, ic->lineno,
-                        W_LOCAL_NOINIT,
-                        OP_SYMBOL (IC_LEFT (ic))->name);
-              OP_REQV (IC_LEFT (ic)) = NULL;
-              OP_SYMBOL (IC_LEFT (ic))->allocreq = 1;
-            }
-
-          if (IC_LEFT (ic) &&
-              IS_TRUE_SYMOP (IC_LEFT (ic)) &&
-              OP_REQV (IC_LEFT (ic)))
-            {
-              IC_LEFT (ic) = opFromOpWithDU (OP_REQV (IC_LEFT (ic)),
-                                             OP_DEFS (IC_LEFT (ic)),
-                                             OP_USES (IC_LEFT (ic)));
-              IC_LEFT (ic)->isaddr = 0;
-            }
+          if (IS_TRUE_SYMOP (IC_RIGHT (ic)))
+            replaceRegEqvOperand (ic, &IC_RIGHT (ic), 1, 0);
+          if (IS_TRUE_SYMOP (IC_LEFT (ic)))
+            replaceRegEqvOperand (ic, &IC_LEFT (ic), 1, 0);
         }
     }
 }
@@ -1895,6 +1987,8 @@ killDeadCode (ebbIndex * ebbi)
                     }
 
                   /* delete the result */
+                  if (IC_RESULT (ic))
+                    bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
                   IC_RESULT (ic) = NULL;
 
                   if (volLeft || volRight)
@@ -2039,7 +2133,7 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
   int i;
   int change = 0;
   iCode *ic, *newic;
-  iCode *uic;
+  iCode *uic, *skipuic;
   sym_link *nextresulttype;
   symbol *sym;
   int resultsize, nextresultsize;
@@ -2069,7 +2163,7 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
             continue;
 
           // Only try to narrow wide counters.
-          if (!IS_INTEGRAL(oldcountertype) || bitsForType (oldcountertype) <= 16 || TARGET_IS_DS390 || TARGET_IS_DS400 || (!SPEC_USIGN (oldcountertype))) // TODO: Handle signed types as well, maybe even transform int to unsigned int?
+          if (!IS_INTEGRAL(oldcountertype) || bitsForType (oldcountertype) <= 8 || TARGET_IS_DS390 || TARGET_IS_DS400 || (!SPEC_USIGN (oldcountertype))) // TODO: Handle signed types as well, maybe even transform int to unsigned int?
             continue;
 
           ifx = ifxForOp (IC_RESULT (ic), ic);
@@ -2107,6 +2201,16 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
               operand *mulotherop = 0;
               iCode *mul_candidate = 0;
               uic = hTabItemWithKey (iCodehTab, bit);
+
+              if (!uic)
+                {
+                  /* This iCode has been deleted but is still        */
+                  /* referenced. This shouldn't happen if everything */
+                  /* else is managing OP_USES properly, but better   */
+                  /* to ignore the problem than crash. */
+                  //printf ("%s used in iCode %d, but iCode missing\n",  OP_SYMBOL (IC_LEFT (ic))->name, bit);
+                  continue;
+                }
 
               if(uic->op == '+' && IS_OP_LITERAL (IC_RIGHT (uic)) && operandLitValue (IC_RIGHT (uic)) == 1 && isOperandEqual (IC_LEFT (uic), IC_LEFT (ic)))
                 {
@@ -2157,6 +2261,8 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
           /* All backends (except ds390 / ds400) have an array size limit smaller than 2^16. Thus if the loop counter ever goes outside
              the range of a 16-bit type, the array access would result in undefined behaviour. We can thus replace the loop
              counter by a 16-bit type. If we found a squaring multiplication, we can even use an 8-bit type*/
+          if (bitsForType (oldcountertype) <= 16 && !mul)
+            continue;
 
           newcountertype = mul ? newCharLink () : newIntLink ();
           SPEC_USIGN (newcountertype) = 1;
@@ -2296,14 +2402,14 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
     {
       for (ic = ebbs[i]->sch; ic; ic = ic->next)
         {
-          if ((ic->op == '+' || ic->op == '-' || ic->op == '*' || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == BITWISEAND || ic->op == '|' || ic->op == CAST) &&
+          if ((ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS || ic->op == '*' || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == BITWISEAND || ic->op == '|' || ic->op == CAST) &&
             IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)))
             {
               sym_link *resulttype = operandType (IC_RESULT (ic));
 
               if (!IS_INTEGRAL (resulttype) ||
                 ic->op != CAST && !(IS_SYMOP (IC_LEFT (ic)) || IS_OP_LITERAL (IC_LEFT (ic))) ||
-                !(IS_SYMOP (IC_RIGHT (ic)) || IS_OP_LITERAL (IC_RIGHT (ic))))
+                !(IS_SYMOP (IC_RIGHT (ic)) || IS_OP_LITERAL (IC_RIGHT (ic)) || ic->op == UNARYMINUS))
                 continue;
 
               resultsize = bitsForType (resulttype);
@@ -2318,10 +2424,14 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
                 continue;
 
               /* Skip over assignment */
-              if(uic->op == '=' &&
+              skipuic = NULL;
+              if(uic->op == '=' && IS_ITEMP (IC_RESULT (uic)) &&
                 bitVectnBitsOn (OP_DEFS (IC_RESULT (uic))) == 1 && bitVectnBitsOn (OP_USES (IC_RESULT (ic))) == 1 && bitVectnBitsOn (OP_USES (IC_RESULT (uic))) == 1 &&
                 compareType (operandType (IC_RESULT (ic)), operandType (IC_RESULT (uic))) == 1)
-                uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (uic))));
+                {
+                  skipuic = uic;
+                  uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (uic))));
+                }
 
               /* Try to handle a few cases where the result has multiple uses */
               else if(ic->op == '*' && bitsForType (operandType (IC_RESULT (ic))) > 16 && uic->op == '=' &&
@@ -2419,12 +2529,17 @@ optimize:
               /* Insert casts on operands */
               if (ic->op != CAST)
                 {
+                  sym_link *clefttype = copyLinkChain (nextresulttype);
+                  SPEC_VOLATILE (clefttype) = IS_OP_VOLATILE (IC_LEFT (ic));
+                  sym_link *crighttype = copyLinkChain (nextresulttype);
+                  SPEC_VOLATILE (crighttype) = IS_OP_VOLATILE (IC_RIGHT (ic));
+
                   if (IS_SYMOP (IC_LEFT (ic)))
                     {
-                      newic = newiCode (CAST, operandFromLink (nextresulttype), IC_LEFT (ic));
+                      newic = newiCode (CAST, operandFromLink (clefttype), IC_LEFT (ic));
                       hTabAddItem (&iCodehTab, newic->key, newic);
                       bitVectSetBit (OP_USES (IC_LEFT (ic)), newic->key);
-                      IC_RESULT (newic) = newiTempOperand (nextresulttype, 0);
+                      IC_RESULT (newic) = newiTempOperand (clefttype, 0);
                       OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
                       bitVectUnSetBit (OP_USES (IC_LEFT (ic)), ic->key);
                       IC_LEFT (ic) = operandFromOperand (IC_RESULT (newic));
@@ -2436,14 +2551,14 @@ optimize:
                   else
                     {
                       wassert (IS_OP_LITERAL (IC_LEFT (ic)));
-                      IC_LEFT (ic) = operandFromValue (valCastLiteral (nextresulttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))));
+                      IC_LEFT (ic) = operandFromValue (valCastLiteral (clefttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))));
                     }
                   if (ic->op != LEFT_OP && IS_SYMOP (IC_RIGHT (ic)))
                     {
-                      newic = newiCode (CAST, operandFromLink (nextresulttype), IC_RIGHT (ic));
+                      newic = newiCode (CAST, operandFromLink (crighttype), IC_RIGHT (ic));
                       hTabAddItem (&iCodehTab, newic->key, newic);
                       bitVectSetBit (OP_USES (IC_RIGHT (ic)), newic->key);
-                      IC_RESULT (newic) = newiTempOperand (nextresulttype, 0);
+                      IC_RESULT (newic) = newiTempOperand (crighttype, 0);
                       OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
                       bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
                       IC_RIGHT (ic) = operandFromOperand (IC_RESULT (newic));
@@ -2452,14 +2567,22 @@ optimize:
                       newic->lineno = ic->lineno;
                       addiCodeToeBBlock (ebbs[i], newic, ic);
                     }
-                  else if (ic->op != LEFT_OP)
+                  else if (ic->op != LEFT_OP && ic->op != UNARYMINUS)
                     {
                       wassert (IS_OP_LITERAL (IC_RIGHT (ic)));
-                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (nextresulttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))));
+                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (crighttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))));
                     }
                 }
               if (uic->op == CAST && ic->op != RIGHT_OP)
-                uic->op = '=';
+                {
+                  uic->op = '=';
+                  if (skipuic)
+                    {
+                      bitVectUnSetBit (OP_USES (IC_RIGHT (uic)), uic->key);
+                      IC_RIGHT (uic) = IC_RIGHT (skipuic);
+                      OP_USES (IC_RIGHT (uic)) = bitVectSetBit (OP_USES (IC_RIGHT (uic)), uic->key);
+                    }
+                }
               change++;
             }
         }
@@ -2816,7 +2939,7 @@ offsetFoldUse (eBBlock **ebbs, int count)
   iCode *ic;
   iCode *uic;
 
-  if (!TARGET_IS_Z80 && !TARGET_IS_Z180 && !TARGET_IS_RABBIT && !TARGET_IS_STM8)
+  if (!(TARGET_Z80_LIKE && !TARGET_IS_GBZ80) && !TARGET_IS_STM8) // All z80-related targets except gbz80 support non-zero right operand. stm8 also supports it.
     return;
   
   for (i = 0; i < count; i++)
@@ -3080,7 +3203,6 @@ eBBlockFromiCode (iCode *ic)
       assert(cseAllBlocks (ebbi, TRUE)==0);
     }
 
-
   /* kill dead code */
   kchange = killDeadCode (ebbi);
 
@@ -3122,9 +3244,12 @@ eBBlockFromiCode (iCode *ic)
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
-  computeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
+  computeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);
+  while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
+    optimizeCastCast (ebbi->bbOrder, ebbi->count);
   adjustIChain (ebbi->bbOrder, ebbi->count);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+  shortenLiveRanges (ic, ebbi);
   guessCounts (ic, ebbi);
   if (optimize.lospre && (TARGET_Z80_LIKE || TARGET_HC08_LIKE || TARGET_IS_STM8)) /* For mcs51, we get a code size regression with lospre enabled, since the backend can't deal well with the added temporaries */
     {
@@ -3132,7 +3257,7 @@ eBBlockFromiCode (iCode *ic)
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_LOSPRE, ebbi);
 
-      /* GCSE, lospre and maybe other optimizations sometimes create temporaries that have non-connected live ranges, which is bad. Split them. */
+      /* GCSE, lospre and maybe other optimizations sometimes create temporaries that have non-connected live ranges, which is bad (e.g. for offsetFoldUse and register allocation). Split them. */
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
       computeControlFlow (ebbi);
@@ -3218,8 +3343,6 @@ eBBlockFromiCode (iCode *ic)
   change = 0;
   do
   {
-    if(TARGET_IS_DS390) /* Splitting live-ranges causes some regressions for ds390, probably by exposing other pre-existing bugs. */
-      break;
     recomputeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
     adjustIChain (ebbi->bbOrder, ebbi->count);
     ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
@@ -3231,6 +3354,7 @@ eBBlockFromiCode (iCode *ic)
     computeDataFlow (ebbi);
   }
   while (change);
+  killDeadCode (ebbi); /* iCodeLabelOptimize() above might result in dead code, when both branches of an ifx go to the same destination. */
 
   /* compute the live ranges */
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);

@@ -27,13 +27,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
-#include "stdio.h"
-#include <stdlib.h>
+//#include "ddconfig.h"
+
+//#include <stdio.h>
+//#include <stdlib.h>
 
 // local
 #include "hc08cl.h"
-#include "regshc08.h"
+//#include "regshc08.h"
 #include "hc08mac.h"
 
 
@@ -986,6 +987,7 @@ cl_hc08::inst_condbranch(t_mem code, bool prefix)
         break;
       case 7: // BIL
         taken = 0; // TODO: should read simulated IRQ# pin
+	break;
       default:
         return(resHALT);
     } 

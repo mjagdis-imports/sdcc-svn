@@ -25,24 +25,22 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: serial.cc 765 2017-07-01 10:43:56Z drdani $ */
-
 #include "ddconfig.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <strings.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <ctype.h>
+//#include <errno.h>
+//#include <fcntl.h>
+//#include <sys/time.h>
+//#include <strings.h>
 
 // prj
-#include "globals.h"
-#include "utils.h"
+//#include "globals.h"
+//#include "utils.h"
 
 // cmd
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 // sim
 #include "itsrccl.h"
@@ -143,6 +141,7 @@ cl_serial::read(class cl_memory_cell *cell)
       if (sr_read)
 	regs[sr]->set_bit0(0x1f);
       regs[sr]->set_bit0(0x20);
+      cfg_set(serconf_able_receive, 1);
       return s_in;
     }
   sr_read= (cell == regs[sr]);
@@ -247,7 +246,8 @@ cl_serial::tick(int cycles)
       (s_tr_bit >= bits))
     {
       s_sending= false;
-      io->dd_printf("%c", s_out);
+      //io->dd_printf("%c", s_out);
+      io->write((char*)&s_out, 1);
       s_tr_bit-= bits;
       if (s_tx_written)
 	restart_send();
@@ -324,6 +324,7 @@ void
 cl_serial::received()
 {
   set_dr(s_in);
+  cfg_write(serconf_received, s_in);
   if (regs[sr]->get() & 0x20)
     regs[sr]->set_bit1(0x08); // overrun
   show_readable(true);
@@ -432,6 +433,7 @@ cl_serial::print_info(class cl_console_base *con)
   if (fout)
     con->dd_printf("%s/%d", fout->get_file_name(), fout->file_id);
   con->dd_printf("\n");
+  //print_cfg_info(con);
 }
 
 

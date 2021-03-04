@@ -26,7 +26,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /*@1@*/
 
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+
+//#include "i_string.h"
 
 // sim.src
 #include "simcl.h"
@@ -34,6 +36,13 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // local
 #include "cmd_infocl.h"
 
+void
+set_info_help(class cl_cmd *cmd)
+{
+  cmd->set_help("info subcommand",
+		"Information about simulator objects",
+		"Long of info");
+}
 
 /*
  * INFO BREAKPOINTS command
@@ -42,20 +51,25 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 COMMAND_DO_WORK_UC(cl_info_bp_cmd)
 {
   int i;
+  bool extra;
 
   con->dd_printf("Num Type       Disp Hit   Cnt   Address  Cond  What\n");
   for (i= 0; i < uc->fbrk->count; i++)
     {
       class cl_brk *fb= (class cl_brk *)(uc->fbrk->at(i));
-      const char *s= uc->disass(fb->addr, NULL);
+      char *s= uc->disass(fb->addr, NULL);
       con->dd_printf("%-3d %-10s %s %-5d %-5d 0x%06x %-5s %s\n", fb->nr,
                      "fetch", (fb->perm==brkFIX)?"keep":"del ",
-                     fb->hit, fb->cnt, fb->addr,
+                     fb->hit, fb->cnt, AU(fb->addr),
 		     fb->condition()?"true":"false",
 		     s);
+      extra= false;
+      if (!(fb->cond.empty()))
+	con->dd_printf("     cond=\"%s\"", fb->cond.c_str()), extra= true;
       if (!(fb->commands.empty()))
-	con->dd_printf("     %s\n", (char*)(fb->commands));
-      free((char *)s);
+	con->dd_printf("     cmd=\"%s\"", fb->commands.c_str()), extra= true;
+      free(s);
+      if (extra) con->dd_printf("\n");
     }
   for (i= 0; i < uc->ebrk->count; i++)
     {
@@ -63,13 +77,21 @@ COMMAND_DO_WORK_UC(cl_info_bp_cmd)
       con->dd_printf("%-3d %-10s %s %-5d %-5d 0x%06x %s\n", eb->nr,
 		     "event", (eb->perm==brkFIX)?"keep":"del ",
 		     eb->hit, eb->cnt,
-		     eb->addr, eb->id);
+		     AU(eb->addr), eb->id);
+      extra= false;
+      if (!(eb->cond.empty()))
+	con->dd_printf("     cond=\"%s\"", eb->cond.c_str()), extra= true;
       if (!(eb->commands.empty()))
-	con->dd_printf("     %s\n", (char*)(eb->commands));
+	con->dd_printf("     cmd=\"%s\"", eb->commands.c_str()), extra= true;
+      if (extra) con->dd_printf("\n");
     }
   return(0);
 }
 
+CMDHELP(cl_info_bp_cmd,
+	"info breakpoints",
+	"Status of user-settable breakpoints",
+	"long help of info breakpoints")
 
 /*
  * INFO REGISTERS command
@@ -81,6 +103,10 @@ COMMAND_DO_WORK_UC(cl_info_reg_cmd)
   return(0);
 }
 
+CMDHELP(cl_info_reg_cmd,
+	"info registers",
+	"List of integer registers and their contents",
+	"long help of info registers")
 
 /*
  * INFO HW command
@@ -99,19 +125,34 @@ COMMAND_DO_WORK_UC(cl_info_hw_cmd)
 
   if (cmdline->syntax_match(uc, HW)) {
     hw= params[0]->value.hw;
+    con->dd_color("answer");
     hw->print_info(con);
+    hw->print_cfg_info(con);
   }
+  /*else if (cmdline->syntax_match(uc, STRING))
+    {
+      char *s= params[0]->get_svalue();
+      if (s && *s && (strcmp("cpu", s)==0))
+	{
+	  if (uc->cpu)
+	    uc->cpu->print_info(con);
+	}
+	}*/
   else
-    con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+    syntax_error(con);
 
   return(false);
 }
 
+CMDHELP(cl_info_hw_cmd,
+	"info hardware cathegory",
+	"Status of hardware elements of the CPU",
+	"long help of info hardware")
 
 /*
  * INFO STACK command
  */
-
+/*
 COMMAND_DO_WORK_UC(cl_info_stack_cmd)
 {
   int i;
@@ -124,7 +165,12 @@ COMMAND_DO_WORK_UC(cl_info_stack_cmd)
     }
   return(false);
 }
+*/
 
+/*CMDHELP(cl_info_stack_cmd,
+	"info stack",
+	"Status of stack of the CPU",
+	"long help of info stack")*/
 
 /*
  * INFO MEMORY command
@@ -178,6 +224,10 @@ COMMAND_DO_WORK_UC(cl_info_memory_cmd)
   return(0);
 }
 
+CMDHELP(cl_info_memory_cmd,
+	"info memory",
+	"Information about memory system",
+	"long help of info memory")
 
 /*
  * INFO VARIABLES command
@@ -211,6 +261,11 @@ COMMAND_DO_WORK_UC(cl_info_var_cmd)
     }
   return 0;
 }
+
+CMDHELP(cl_info_var_cmd,
+	"info variables [filter]",
+	"Information about variables",
+	"long help of info variables")
 
 
 /* End of cmd.src/cmd_info.cc */

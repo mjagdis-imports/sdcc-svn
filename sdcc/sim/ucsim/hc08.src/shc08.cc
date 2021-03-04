@@ -24,12 +24,12 @@ along with UCSIM; see the file COPYING.  If not, write to the Free
 Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
-  
+
 // prj
 #include "globals.h"
 
 // sim.src
-#include "appcl.h"
+//#include "appcl.h"
 
 // local
 #include "simhc08cl.h"
@@ -42,6 +42,7 @@ main(int argc, char *argv[])
 
   cpus= cpus_hc08;
   application= new cl_app();
+  application->set_name("shc08");
   application->init(argc, argv);
   sim= new cl_simhc08(application);
   if (sim->init())

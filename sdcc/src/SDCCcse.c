@@ -1029,7 +1029,7 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
       /* if subtracting the same thing then zero     */
       if (IC_LEFT (ic)->key == IC_RIGHT (ic)->key &&
         !IS_OP_VOLATILE (IC_LEFT (ic)))
-        {printf("Sub. at %d\n", ic->key);
+        {
           ic->op = '=';
           IC_RIGHT (ic) = operandFromLit (0);
           IC_LEFT (ic) = NULL;
@@ -1638,7 +1638,11 @@ void
 unsetDefsAndUses (iCode * ic)
 {
   if (ic->op == JUMPTABLE)
-    return;
+    {
+      if (IS_SYMOP (IC_JTCOND (ic)))
+        bitVectUnSetBit (OP_USES (IC_JTCOND (ic)), ic->key);
+      return;
+    }
 
   /* take away this definition from the def chain of the */
   /* result & take away from use set of the operands */
@@ -1660,8 +1664,9 @@ unsetDefsAndUses (iCode * ic)
         bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
     }
   else
-    /* must be ifx turn off the use */ if (IS_SYMOP (IC_COND (ic)))
-    bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
+    /* must be ifx turn off the use */
+    if (IS_SYMOP (IC_COND (ic)))
+      bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1686,44 +1691,50 @@ ifxOptimize (iCode * ic, set * cseSet,
           ReplaceOpWithCheaperOp(&IC_COND (ic), pdop);
           (*change)++;
         }
-      else if(ic->prev &&  /* Remove unnecessary casts */
-        (ic->prev->op == '=' || ic->prev->op == CAST || ic->prev->op == '!') && IS_ITEMP (IC_RESULT (ic->prev)) &&
-        IC_RESULT (ic->prev)->key == IC_COND (ic)->key && bitVectnBitsOn (OP_USES (IC_RESULT (ic->prev))) <= 1)
+      else if (ic->prev &&  /* Remove unnecessary casts */
+               (ic->prev->op == '=' || ic->prev->op == CAST || ic->prev->op == '!') &&
+               IS_ITEMP (IC_RESULT (ic->prev)) &&
+               IC_RESULT (ic->prev)->key == IC_COND (ic)->key &&
+               bitVectnBitsOn (OP_USES (IC_RESULT (ic->prev))) <= 1)
         {
-          sym_link *type = operandType (IC_RESULT (ic->prev));
-          if (ic->prev->op != CAST || IS_BOOL (type) || bitsForType (operandType (IC_RIGHT (ic->prev))) < bitsForType (type))
-          {
-            if (!isOperandVolatile (ic->prev->op == '!' ? IC_LEFT (ic->prev) : IC_RIGHT (ic->prev), FALSE))
-              {
-                if (ic->prev->op =='!') /* Invert jump logic */
-                  {
-                    symbol *tmp = IC_TRUE (ic);
-                    IC_TRUE (ic) = IC_FALSE (ic);
-                    IC_FALSE (ic) = tmp;
-                  }
-                bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
-                ReplaceOpWithCheaperOp(&IC_COND (ic), ic->prev->op == '!' ? IC_LEFT (ic->prev) : IC_RIGHT (ic->prev));
-                (*change)++;
-              }
+          /* Don't do this for "if (--c)", it inhibits DJNZ generation */
+          if (!ic->prev->prev || ic->prev->prev->op != '-' || !IS_OP_LITERAL(IC_RIGHT(ic->prev->prev)))
+            {
+              sym_link *type = operandType (IC_RESULT (ic->prev));
+              if (ic->prev->op != CAST || IS_BOOL (type) || bitsForType (operandType (IC_RIGHT (ic->prev))) < bitsForType (type))
+                {
+                  if (!isOperandVolatile (ic->prev->op == '!' ? IC_LEFT (ic->prev) : IC_RIGHT (ic->prev), FALSE))
+                    {
+                      if (ic->prev->op == '!') /* Invert jump logic */
+                        {
+                          symbol *tmp = IC_TRUE (ic);
+                          IC_TRUE (ic) = IC_FALSE (ic);
+                          IC_FALSE (ic) = tmp;
+                        }
+                      bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
+                      ReplaceOpWithCheaperOp(&IC_COND (ic), ic->prev->op == '!' ? IC_LEFT (ic->prev) : IC_RIGHT (ic->prev));
+                      (*change)++;
+                    }
 /* There's an optimization opportunity here, but OP_USES doesn't seem to be */
 /* initialized properly at this point. - EEP 2016-08-04 */
 #if 0
-            else if (bitVectnBitsOn (OP_USES(IC_COND (ic))) == 1)
-              {
-                /* We can replace the iTemp with the original volatile symbol */
-                /* but we must make sure the volatile symbol is still accessed */
-                /* only once. */
-                bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
-                ReplaceOpWithCheaperOp(&IC_COND (ic), IC_RIGHT (ic->prev));
-                (*change)++;
-                /* Make previous assignment an assignment to self. */
-                /* killDeadCode() will eliminiate it. */
-                IC_RIGHT (ic->prev) = IC_RESULT (ic->prev);
-                IC_LEFT (ic->prev) = NULL;
-                ic->prev->op = '=';
-              }
+                  else if (bitVectnBitsOn (OP_USES(IC_COND (ic))) == 1)
+                    {
+                      /* We can replace the iTemp with the original volatile symbol */
+                      /* but we must make sure the volatile symbol is still accessed */
+                      /* only once. */
+                      bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
+                      ReplaceOpWithCheaperOp(&IC_COND (ic), IC_RIGHT (ic->prev));
+                      (*change)++;
+                      /* Make previous assignment an assignment to self. */
+                      /* killDeadCode() will eliminiate it. */
+                      IC_RIGHT (ic->prev) = IC_RESULT (ic->prev);
+                      IC_LEFT (ic->prev) = NULL;
+                      ic->prev->op = '=';
+                    }
 #endif
-          }
+                }
+            }
         }
     }
 
@@ -2146,7 +2157,12 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
 
   /* if this block is not reachable */
   if (ebb->noPath)
-    return 0;
+    {
+      for (ic = ebb->sch; ic; ic = ic->next)
+        if (!SKIP_IC2 (ic))
+          unsetDefsAndUses (ic);
+      return 0;
+    }
 
   /* Mark incoming subexpressions as non-local */
   for (setnode = ebb->inExprs; setnode; setnode = setnode->next)
@@ -2443,6 +2459,9 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
          then delete it and continue */
       if (ASSIGNMENT_TO_SELF (ic) && !isOperandVolatile (IC_RIGHT(ic), FALSE))
         {
+          bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
+          if (IS_SYMOP (IC_RIGHT (ic)))
+            bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
           remiCodeFromeBBlock (ebb, ic);
           continue;
         }
@@ -2546,7 +2565,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
 
          /* Until pointer tracking is complete, by conservative and delete all */
          /* pointer accesses that might alias this symbol. */
-         if (isOperandGlobal (IC_RESULT (ic)))
+         if (isOperandGlobal (IC_RESULT (ic)) || OP_SYMBOL (IC_RESULT (ic))->addrtaken)
            {
              memmap *map = SPEC_OCLS (getSpec (operandType (IC_RESULT (ic))));
              destructItemIf (&cseSet, freeLocalCseDef, ifAnyUnrestrictedGetPointer, map->ptrType);

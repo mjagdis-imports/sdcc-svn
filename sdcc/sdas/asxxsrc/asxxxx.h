@@ -990,6 +990,8 @@ extern  int     yflag;          /*      -y, enable SDCC Debug Symbols
 
 extern  int     zflag;          /*      -z, disable symbol case sensitivity
                                  */
+extern  int     waddrmode;      /*      WORD Address mode flag
+                                 */
 extern  int     a_bytes;        /*      REL file T Line address length
                                  */
 extern  a_uint  a_mask;         /*      Address Mask
@@ -1072,10 +1074,10 @@ extern  FILE    *ofp;           /*      relocation output file handle
                                  */
 extern  FILE    *tfp;           /*      symbol table output file handle
                                  */
-extern  unsigned char ctype[128]; /*    array of character types, one per
-                                 *      ASCII character
+extern  unsigned char ctype[256]; /*    array of character types, one per
+                                 *      ASCII/OEM character
                                  */
-extern  char    ccase[128];     /*      an array of characters which
+extern  char    ccase[256];     /*      an array of characters which
                                  *      perform the case translation function
                                  */
 /*sdas specific */
@@ -1228,6 +1230,7 @@ extern  VOID            outrw(struct expr *esp, int r);
 extern  VOID            outr3b(struct expr *esp, int r);
 extern  VOID            outrxb(int i, struct expr *esp, int r);
 extern  VOID            outrwm(struct expr *esp, int r, a_uint v);
+extern  VOID            outrwp(struct expr *esp, a_uint op, a_uint mask, int jump);
 extern  VOID            outr3bm(struct expr *esp, int r, a_uint v);
 extern  VOID            out_lb(a_uint v, int t);
 extern  VOID            out_lw(a_uint v, int t);
@@ -1375,6 +1378,7 @@ extern  VOID            outrw();
 extern  VOID            outr3b();
 extern  VOID            outrxb();
 extern  VOID            outrwm();
+extern  VOID            outrwp();
 extern  VOID            outr3bm();
 extern  VOID            out_lb();
 extern  VOID            out_lw();

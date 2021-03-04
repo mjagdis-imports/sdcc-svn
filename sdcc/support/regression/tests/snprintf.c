@@ -115,6 +115,7 @@ struct
 void
 test_snprintf (void)
 {
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 #ifndef __SDCC_pic16
   unsigned char buf[32];
   unsigned char i;
@@ -125,7 +126,7 @@ test_snprintf (void)
     {
       sprintf (buf, cases[i].fmt, cases[i].arg);
       DEBUG (__prints ("Test"));
-      DEBUG (__printn (i));
+      DEBUG (__printd (i));
       DEBUG (__prints (" should be: '"));
       DEBUG (__prints (cases[i].result));
       DEBUG (__prints ("' is: '"));
@@ -135,6 +136,7 @@ test_snprintf (void)
     }
 
   ASSERT (buf[sizeof buf - 10] == 0xfe);        /* check for cookie */
+#endif
 #endif
 }
 

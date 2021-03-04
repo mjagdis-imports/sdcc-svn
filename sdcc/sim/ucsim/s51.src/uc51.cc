@@ -25,27 +25,28 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/time.h>
+//#include <fcntl.h>
+//#include <errno.h>
+//#include <sys/types.h>
+//#include <sys/time.h>
 //#if FD_HEADER_OK
 //# include HEADER_FD
 //#endif
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "utils.h"
 #include "globals.h"
 
 // sim
-#include "optioncl.h"
+//#include "optioncl.h"
 #include "iwrap.h"
 
 //cmd.src
@@ -55,12 +56,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "uc51cl.h"
 #include "glob.h"
 #include "regs51.h"
-#include "timer0cl.h"
+//#include "timer0cl.h"
 #include "timer1cl.h"
 #include "serialcl.h"
 #include "portcl.h"
-#include "interruptcl.h"
-#include "types51.h"
+//#include "interruptcl.h"
+//#include "types51.h"
 
 
 
@@ -482,6 +483,7 @@ cl_irq_stop_option::init(void)
 {
   cl_optref::init();
   create(uc51, bool_opt, "irq_stop", "Stop when IRQ accepted");
+  
   return(0);
 }
 
@@ -714,7 +716,7 @@ cl_51core::init(void)
 
 static char id_string_51[100];
 
-char *
+const char *
 cl_51core::id_string(void)
 {
   int i;
@@ -732,7 +734,7 @@ cl_51core::id_string(void)
 void
 cl_51core::make_cpu_hw(void)
 {
-  cpu= new cl_uc51_cpu(this);
+  add_hw(cpu= new cl_uc51_cpu(this));
   cpu->init();
 }
 
@@ -770,37 +772,37 @@ cl_51core::mk_hw_elements(void)
   class cl_port_data pd;
   pd.init();
   pd.cell_dir= NULL;
-
+  
   pd.set_name("P0");
   pd.cell_p  = p0->cell_p;
   pd.cell_in = p0->cell_in;
-  pd.keyset  = chars(keysets[0]);
+  pd.keyset  = keysets[0];
   pd.basx    = 1;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 0);
   
   pd.set_name("P1");
   pd.cell_p  = p1->cell_p;
   pd.cell_in = p1->cell_in;
-  pd.keyset  = chars(keysets[1]);
+  pd.keyset  = keysets[1];
   pd.basx    = 20;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 1);
   
   pd.set_name("P2");
   pd.cell_p  = p2->cell_p;
   pd.cell_in = p2->cell_in;
-  pd.keyset  = chars(keysets[2]);
+  pd.keyset  = keysets[2];
   pd.basx    = 40;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 2);
   
   pd.set_name("P3");
   pd.cell_p  = p3->cell_p;
   pd.cell_in = p3->cell_in;
-  pd.keyset  = chars(keysets[3]);
+  pd.keyset  = keysets[3];
   pd.basx    = 60;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 3);
   
   add_hw(interrupt= new cl_interrupt(this));
@@ -816,19 +818,13 @@ cl_51core::build_cmdset(class cl_cmdset *cmdset)
 
   cl_uc::build_cmdset(cmdset);
 
-  cmdset->add(cmd= new cl_di_cmd("di", true,
-"di [start [stop]]  Dump Internal RAM",
-"long help of di"));
+  cmdset->add(cmd= new cl_di_cmd("di", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_dx_cmd("dx", true,
-"dx [start [stop]]  Dump External RAM",
-"long help of dx"));
+  cmdset->add(cmd= new cl_dx_cmd("dx", true));
   cmd->init();
 
-  cmdset->add(cmd= new cl_ds_cmd("ds", true,
-"ds [start [stop]]  Dump SFR",
-"long help of ds"));
+  cmdset->add(cmd= new cl_ds_cmd("ds", true));
   cmd->init();
 }
 
@@ -1098,21 +1094,21 @@ cl_51core::make_vars(void)
 {
   cl_var *v;
 
-  vars->add(v= new cl_var(cchars("R0"), regs, 0, ""));
+  vars->add(v= new cl_var("R0", regs, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("R1"), regs, 1, ""));
+  vars->add(v= new cl_var("R1", regs, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("R2"), regs, 2, ""));
+  vars->add(v= new cl_var("R2", regs, 2, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("R3"), regs, 3, ""));
+  vars->add(v= new cl_var("R3", regs, 3, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("R4"), regs, 4, ""));
+  vars->add(v= new cl_var("R4", regs, 4, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("R5"), regs, 5, ""));
+  vars->add(v= new cl_var("R5", regs, 5, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("R6"), regs, 6, ""));
+  vars->add(v= new cl_var("R6", regs, 6, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("R7"), regs, 7, ""));
+  vars->add(v= new cl_var("R7", regs, 7, ""));
   v->init();
 
   int i;
@@ -1274,13 +1270,15 @@ cl_51core::disass(t_addr addr, const char *sep)
 void
 cl_51core::print_regs(class cl_console_base *con)
 {
-  t_addr start;
+  t_addr start, stop;
   t_mem data;
   t_mem dp;
   
   // show regs
   start= psw->get() & 0x18;
-  iram->dump(start, start+7, 8, con->get_fout());
+  con->dd_printf("     R0 R1 R2 R3 R4 R5 R6 R7\n");
+  iram->dump(start, start+7, 8, con/*->get_fout()*/);
+  con->dd_color("answer");
   // show indirectly addressed IRAM and some basic regs
   data= iram->get(iram->get(start));
   con->dd_printf("@R0 %02x %c", data, isprint(data) ? data : '.');
@@ -1294,9 +1292,14 @@ cl_51core::print_regs(class cl_console_base *con)
               (data&bmCY)?'1':'0', (data&bmAC)?'1':'0',
               (data&bmOV)?'1':'0', (data&bmP)?'1':'0');
   /* show stack pointer */
-  start = sfr->get (SP);
-  con->dd_printf ("SP ", start);
-  iram->dump (start, start - 7, 8, con->get_fout());
+  start= sfr->get (SP);
+  if (start >= 7)
+    stop = start-7;
+  else
+    stop= 0;
+  con->dd_printf ("SP ");
+  iram->dump (start, stop, 8, con/*->get_fout()*/);
+  con->dd_color("answer");
   // show DPTR(s)
   if (dptr)
     {
@@ -1324,8 +1327,8 @@ cl_51core::print_regs(class cl_console_base *con)
 		  dp= 0;
 		  int di;
 		  for (di= dptr->get_size()-1; di >= 0; di--)
-		    dp= (dp<<8) + dptr_chip->get(a+di);
-		  con->dd_printf(" %cDPTR%d= ", (i==act)?'*':' ', i);
+		    dp= (dp*256) + dptr_chip->get(a+di);
+		  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
 		  con->dd_printf(xram->addr_format, dp);
 		  data= xram->read(dp);
 		  con->dd_printf(" @DPTR%d= ", i);
@@ -1347,9 +1350,9 @@ cl_51core::print_regs(class cl_console_base *con)
 	    }
 	  act&= mask;
 	  i= 0;
-	  dp= sfr_chip->get(DPL-0x80) +
-	    sfr_chip->get(DPH-0x80) * 256;
-	  con->dd_printf(" %cDPTR%d= ", (i==act)?'*':' ', i);
+	  dp= (sfr_chip->get(DPL-0x80) +
+	       sfr_chip->get(DPH-0x80) * 256) & 0xffff;
+	  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
 	  con->dd_printf(xram->addr_format, dp);
 	  data= xram->read(dp);
 	  con->dd_printf(" @DPTR%d= ", i);
@@ -1358,7 +1361,7 @@ cl_51core::print_regs(class cl_console_base *con)
 	  i= 1;
 	  dp= sfr_chip->get(cpu->cfg_get(uc51cpu_aof_mdps1l) - 0x80) +
 	    sfr_chip->get(cpu->cfg_get(uc51cpu_aof_mdps1h) - 0x80) * 256;
-	  con->dd_printf(" %cDPTR%d= ", (i==act)?'*':' ', i);
+	  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
 	  con->dd_printf(xram->addr_format, dp);
 	  data= xram->read(dp);
 	  con->dd_printf(" @DPTR%d= ", i);
@@ -1368,13 +1371,18 @@ cl_51core::print_regs(class cl_console_base *con)
       else
 	{
 	  // non-multi DPTR
-	  t_mem dp= dptr->get(0) +
-	    dptr->get(1) * 256 +
-	    dptr->get(2) * 256*256 +
-	    dptr->get(3) * 256*256*256;
+	  int a= dptr->get_size();
+	  dp= 0;
+	  int di;
+	  chars f="";
+	  for (di= a-1; di >= 0; di--)
+	    {
+	      dp= (dp*256) + dptr->get(di);
+	    }
+	  f.format("0x%%0%dx",a*2);
 	  data= xram->get(dp);
 	  con->dd_printf("   DPTR= ");
-	  con->dd_printf(xram->addr_format, dp);
+	  con->dd_printf(/*xram->addr_format*/f.c_str(), dp);
 	  con->dd_printf(" @DPTR= 0x%02x %3d %c\n",
 			 data, data, isprint(data)?data:'.');
 	}
@@ -1499,7 +1507,7 @@ cl_51core::baddr_name(t_addr addr, char *buf)
     ma= addr&0xf8;
   daddr_name(ma, buf);
   chars c= chars("", "%s.%d", buf, (int)(addr & 7));
-  strcpy(buf, (char*)c);
+  strcpy(buf, c.c_str());
 }
 
 
@@ -1568,7 +1576,8 @@ cl_51core::analyze(t_addr addr)
 {
   uint code;
   struct dis_entry *tabl;
-
+  t_addr a;
+  
   code= rom->get(addr);
   tabl= &(dis_tbl()[code]);
   while (!inst_at(addr) &&
@@ -1578,29 +1587,34 @@ cl_51core::analyze(t_addr addr)
       switch (tabl->branch)
 	{
 	case 'a': // acall
-	  analyze((addr & 0xf800)|
-		  ((rom->get(addr+1)&0x07)*256+
-		   rom->get(addr+2)));
-	  analyze(addr+tabl->length);
+	  a= (addr & 0xf800)|
+	    ((rom->get(addr+1)&0x07)*256+
+	     rom->get(addr+2));
+	  analyze(a);
+	  addr= addr+tabl->length;
 	  break;
 	case 'A': // ajmp
-	  addr= (addr & 0xf800)|
-	    ((rom->get(addr+1) & 0x07)*256 + rom->get(addr+2));
+	  a= (addr & 0xf800)|
+	    (((rom->get(addr)>>5) & 0x07)*256 + rom->get(addr+1));
+	  addr= a;
 	  break;
 	case 'l': // lcall
-	  analyze(rom->get(addr+1)*256 + rom->get(addr+2));
-	  analyze(addr+tabl->length);
+	  a= rom->get(addr+1)*256 + rom->get(addr+2);
+	  analyze(a);
+	  addr= addr+tabl->length;
 	  break;
 	case 'L': // ljmp
-	  addr= rom->get(addr+1)*256 + rom->get(addr+2);
+	  a= rom->get(addr+1)*256 + rom->get(addr+2);
+	  addr= a;
 	  break;
 	case 'r': // reljmp (2nd byte)
-	  analyze(rom->validate_address(addr+(signed char)(rom->get(addr+1))));
-	  analyze(addr+tabl->length);
+	  a= rom->validate_address(addr+2+(signed char)(rom->get(addr+1)));
+	  analyze(a);
+	  addr= addr+tabl->length;
 	  break;
 	case 'R': // reljmp (3rd byte)
-	  analyze(rom->validate_address(addr+(signed char)(rom->get(addr+2))));
-	  analyze(addr+tabl->length);
+	  analyze(rom->validate_address(addr+3+(signed char)(rom->get(addr+2))));
+	  addr= addr+tabl->length;
 	  break;
 	case 's': // sjmp
 	  {
@@ -1683,6 +1697,38 @@ cl_51core::exec_inst(void)
 }
 
 
+int
+cl_51core::high_movxri(void)
+{
+  t_mem mode= cpu->cfg_read(uc51cpu_movxri_mode);
+
+  if (mode == 'm')
+    {
+      t_addr addr= cpu->cfg_read(uc51cpu_movxri_addr);
+      switch (cpu->cfg_read(uc51cpu_movxri_as))
+	{
+	case 's': return sfr->read(addr);
+	case 'c':
+	case 'r': return rom->read(addr);
+	case 'i': return iram->read(addr);
+	default: return xram->read(addr);
+	}
+    }
+  else if (mode == 'e')
+    {
+      t_mem v;
+      class cl_uc51_cpu *c= (class cl_uc51_cpu *)cpu;
+      v= application->eval(c->movxri_expr);
+      return v & 0xff;
+    }
+  else
+    {
+      return sfr->read(P2);
+    }
+  return 0;
+}
+
+
 /*
  * Simulating execution of next instruction
  *
@@ -1699,6 +1745,7 @@ cl_51core::exec_inst(void)
 int
 cl_51core::do_inst(int step)
 {
+  t_addr PCsave;
   result= resGO;
   while ((result == resGO) &&
 	 (state != stPD) &&
@@ -1710,6 +1757,7 @@ cl_51core::do_inst(int step)
 	{
 	  interrupt->was_reti= false;
 	  pre_inst();
+	  PCsave= PC;
 	  result= exec_inst();
 	  post_inst();
 	}
@@ -1720,6 +1768,14 @@ cl_51core::do_inst(int step)
 	  post_inst();
 	  tick(1);
 	}
+
+      if ((result == resGO) && (PC == PCsave) && stop_selfjump)
+	{
+	  result= resSELFJUMP;
+	  sim->stop(result);
+	  break;
+	}
+
       if (result == resGO)
 	{
 	  int res;
@@ -1838,6 +1894,26 @@ cl_51core::it_enabled(void)
 }
 
 
+/* 
+ * Check SP validity after stack (write) poeration
+ */
+
+void
+cl_51core::stack_check_overflow(class cl_stack_op *op)
+{
+  t_addr b, a;
+  b= op->get_before();
+  a= op->get_after();
+  if (a < b)
+    {
+      class cl_error_stack_overflow *e=
+	new cl_error_stack_overflow(op);
+      e->init();
+      error(e);
+    }
+}
+
+
 /*
  * Checking if Idle or PowerDown mode should be activated
  */
@@ -1929,7 +2005,7 @@ cl_51core::instruction_c4/*inst_swap*/(t_mem/*uchar*/ code)
  */
 
 cl_uc51_cpu::cl_uc51_cpu(class cl_uc *auc):
-  cl_hw(auc, HW_DUMMY, 0, "cpu")
+  cl_hw(auc, HW_CPU/*DUMMY*/, 0, "cpu")
 {
 }
 
@@ -1951,26 +2027,71 @@ cl_uc51_cpu::init(void)
     acc_bits[i]= register_cell(bas, ACC+i);
 
   cl_var *v;
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps"), cfg, uc51cpu_aof_mdps,
-			      "Address of multi_DPTR_sfr selector (WR selects this style of multi_DPTR)"));
+  uc->vars->add(v= new cl_var("cpu_aof_mdps", cfg, uc51cpu_aof_mdps,
+			      cfg_help(uc51cpu_aof_mdps)));
   v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_mask_mdps"), cfg, uc51cpu_mask_mdps,
-			      "Mask in multi_DPTR_srf selector"));
+  uc->vars->add(v= new cl_var("cpu_mask_mdps", cfg, uc51cpu_mask_mdps,
+			      cfg_help(uc51cpu_mask_mdps)));
   v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps1l"), cfg, uc51cpu_aof_mdps1l,
-			      "Address of multi_DPTR_sfr DPL1"));
+  uc->vars->add(v= new cl_var("cpu_aof_mdps1l", cfg, uc51cpu_aof_mdps1l,
+			      cfg_help(uc51cpu_aof_mdps1l)));
   v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps1h"), cfg, uc51cpu_aof_mdps1h,
-			      "Address of multi_DPTR_sfr DPH1"));
+  uc->vars->add(v= new cl_var("cpu_aof_mdps1h", cfg, uc51cpu_aof_mdps1h,
+			      cfg_help(uc51cpu_aof_mdps1h)));
   v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdpc"), cfg, uc51cpu_aof_mdpc,
-			      "Address of multi_DPTR_chip selector (WR selects this stly of ulti_DPTR)"));
+  uc->vars->add(v= new cl_var("cpu_aof_mdpc", cfg, uc51cpu_aof_mdpc,
+			      cfg_help(uc51cpu_aof_mdpc)));
   v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_mask_mdpc"), cfg, uc51cpu_mask_mdpc,
-			      "Mask in multi_DPTR_chip selector"));
+  uc->vars->add(v= new cl_var("cpu_mask_mdpc", cfg, uc51cpu_mask_mdpc,
+			      cfg_help(uc51cpu_mask_mdpc)));
   v->init();
-  
+  uc->vars->add(v= new cl_var("cpu_mdp_mode", cfg, uc51cpu_mdp_mode,
+			      cfg_help(uc51cpu_mdp_mode)));
+  v->init();
+  uc->vars->add(v= new cl_var("cpu_movxri_mode", cfg, uc51cpu_movxri_mode,
+			      cfg_help(uc51cpu_movxri_mode)));
+  v->init();
+  v->write('m');
+  uc->vars->add(v= new cl_var("cpu_movxri_as", cfg, uc51cpu_movxri_as,
+			      cfg_help(uc51cpu_movxri_as)));
+  v->init();
+  v->write('s');
+  uc->vars->add(v= new cl_var("cpu_movxri_addr", cfg, uc51cpu_movxri_addr,
+			      cfg_help(uc51cpu_movxri_addr)));
+  v->init();
+  v->write(0xa0);
+
+  movxri_expr= "port2_odr";
   return(0);
+}
+
+const char *
+cl_uc51_cpu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case uc51cpu_aof_mdps:
+      return "Address of multi_DPTR_sfr selector, WR selects this style of multi_DPTR (int, RW)";
+    case uc51cpu_mask_mdps:
+      return "Mask in multi_DPTR_srf selector (int, RW)";
+    case uc51cpu_aof_mdps1l:
+      return "Address of multi_DPTR_sfr DPL1 (int, RW)";
+    case uc51cpu_aof_mdps1h:
+      return "Address of multi_DPTR_sfr DPH1 (int, RW)";
+    case uc51cpu_aof_mdpc:
+      return "Address of multi_DPTR_chip selector, WR selects this stlye of multi_DPTR (int, RW)";
+    case uc51cpu_mask_mdpc:
+      return "Mask in multi_DPTR_chip selector (int, RW)";
+    case uc51cpu_mdp_mode:
+      return "Multi DPTR simulation mode 's'=sfr, 'c'=chip, 'n'=none (int, RO)";
+    case uc51cpu_movxri_mode:
+      return "Calc mode of high address for MOVX @Ri, 'm'=memory, 'e'=expr  (int, RW)";
+    case uc51cpu_movxri_as:
+      return "Address space where high address is in 'm' mode, 'i','s','x','c' (int, RW)";
+    case uc51cpu_movxri_addr:
+      return "Address where high address is in 'm' mode (int, RW)";
+    }
+  return "Not used";
 }
 
 void
@@ -2039,11 +2160,55 @@ cl_uc51_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
       break;
     case uc51cpu_mask_mdpc: // mask in multi_DPTR_chip selector
       break;
-  
+
+    case uc51cpu_mdp_mode: // mode of dual dptr simulation
+      {
+	t_mem adps= cfg_get(uc51cpu_aof_mdps),
+	  dpl1= cfg_get(uc51cpu_aof_mdps1l),
+	  dph1= cfg_get(uc51cpu_aof_mdps1h),
+	  adpc= cfg_get(uc51cpu_aof_mdpc);;
+	if (adps > 0x7f &&
+	    dpl1 > 0x7f &&
+	    dph1 > 0x7f)
+	  cell->set('s');
+	else if (adpc > 0x7f)
+	  cell->set('c');
+	else
+	  cell->set('n');
+	break;
+      }
+
+    case uc51cpu_movxri_mode:
+      break;
+    case uc51cpu_movxri_as:
+      break;
+    case uc51cpu_movxri_addr:
+      break;
+      
     case uc51cpu_nuof:
       break;
     }
   return cell->get();
+}
+
+
+void
+cl_uc51_cpu::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
+{
+  class cl_cmd_arg *params[1]= { cmdline->param(0) };
+
+  if (cmdline->syntax_match(uc, STRING))
+    {
+      movxri_expr= params[0]->value.string.string;
+    }
+}
+
+void
+cl_uc51_cpu::print_info(class cl_console_base *con)
+{
+  con->dd_printf("%s[%d]\n", id_string, id);
+  con->dd_printf("Expression for MOVX @Ri: \"%s\"\n", movxri_expr.c_str());
+  //print_cfg_info(con);
 }
 
 /* End of s51.src/uc51.cc */

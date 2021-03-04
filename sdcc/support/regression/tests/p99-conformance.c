@@ -48,9 +48,7 @@
 # endif
 #else /* SDCC issues */
 # define SKIP_HEXDOUBLE /* bug #2536 */
-# define SKIP_NON_EVALUATED_COMMA_ASSIGN /* bug #2525 */
 # define SKIP_LONG_DOUBLE /* long double not yet supported */
-# define SKIP_UNIVERSAL
 # define SKIP_COMPOUND /* compound literals not yet supported */
 # define SKIP_VLA /* variable-length arrays not supported */
 # define SKIP_INLINE /* bug #1900 */
@@ -59,6 +57,21 @@
 # if defined(__SDCC_pic14) || defined(__SDCC_pic16)
 #  define SKIP_LONG_LONG
 # endif
+#endif
+
+#ifdef __SDCC_pdk14 // Lack of memory
+#define SKIP_INITIALIZERS
+#define SKIP_COMPOUND
+#define SKIP_EXPANDS
+#define SKIP_FLEXIBLE
+#define SKIP_LONG_LONG
+#define SKIP_DIGRAPH
+#define SKIP_TRIGRAPH
+#define SKIP_UNIVERSAL
+#endif
+
+#if defined(__SDCC_mcs51) && defined(__SDCC_MODEL_SMALL) // Lack of memory
+#define SKIP_UNIVERSAL
 #endif
 
 #ifndef SKIP_VA_ARGS_MACRO

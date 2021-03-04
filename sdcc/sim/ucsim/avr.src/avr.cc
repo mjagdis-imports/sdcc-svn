@@ -25,19 +25,20 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
 
 // sim
 #include "simcl.h"
-#include "memcl.h"
+//#include "memcl.h"
 
 // local
 #include "portcl.h"
@@ -143,10 +144,10 @@ cl_avr::init(void)
   return(0);
 }
 
-char *
+const char *
 cl_avr::id_string(void)
 {
-  return((char*)"unspecified AVR");
+  return("unspecified AVR");
 }
 
 
@@ -355,8 +356,9 @@ cl_avr::print_regs(class cl_console_base *con)
   uchar data, sreg= ram->get(SREG);
   uint x, y, z;
 
-  ram->dump(0, 31, 16, con->get_fout());
+  ram->dump(0, 31, 16, con/*->get_fout()*/);
 
+  con->dd_color("answer");
   con->dd_printf("ITHSVNZC  SREG= 0x%02x %3d %c\n",
 		 sreg, sreg, isprint(sreg)?sreg:'.');
   con->dd_printf("%c%c%c%c%c%c%c%c  ",

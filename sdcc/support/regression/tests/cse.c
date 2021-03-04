@@ -338,8 +338,7 @@ test_Struct4(void)
 void
 test_Struct5(void)
 {
-/* ASSERT(a2 == 2) currently fails in this test (2012-02-29) */
-#if 0
+#ifndef __SDCC_pdk14 // Lack of memory - see RFE #605
   packet_t  *pp1;
   packet_t  *pp2;
   unsigned char lx;
@@ -373,8 +372,7 @@ test_Struct5(void)
 void
 test_Global1(void)
 {
-/* ASSERT(a2 == 2) currently fails in this test (2012-02-29) */
-#if 0
+#ifndef __SDCC_pdk14 // Lack of memory - see RFE #605
   unsigned char lx;
   unsigned char *px;
 

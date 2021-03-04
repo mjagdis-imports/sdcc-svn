@@ -358,22 +358,24 @@ allocIntoSeg (symbol *sym)
 {
   memmap *segment;
 
-  if (SPEC_ADDRSPACE (sym->etype))
+  const symbol *symbolspace = getAddrspace (sym->type);
+
+  if (symbolspace)
     {
       namedspacemap *nm;
       for (nm = namedspacemaps; nm; nm = nm->next)
-        if (!strcmp (nm->name, SPEC_ADDRSPACE (sym->etype)->name))
+        if (!strcmp (nm->name, symbolspace->name))
           break;
 
       if (!nm)
         {
           nm = Safe_alloc (sizeof (namedspacemap));
-          nm->name = Safe_alloc (strlen(SPEC_ADDRSPACE (sym->etype)->name) + 1);
-          strcpy (nm->name, SPEC_ADDRSPACE (sym->etype)->name);
-          nm->is_const = (SPEC_ADDRSPACE (sym->etype)->type && SPEC_CONST (SPEC_ADDRSPACE (sym->etype)->type));
+          nm->name = Safe_alloc (strlen(symbolspace->name) + 1);
+          strcpy (nm->name, symbolspace->name);
+          nm->is_const = (symbolspace->type && SPEC_CONST (symbolspace->type));
           nm->map = nm->is_const ?
-            allocMap (0, 1, 0, 0, 0, 1, options.code_loc, SPEC_ADDRSPACE (sym->etype)->name, 'C', CPOINTER) :
-            allocMap (0, 0, 0, 1, 0, 0, options.data_loc, SPEC_ADDRSPACE (sym->etype)->name, 'E', POINTER);
+            allocMap (0, 1, 0, 0, 0, 1, options.code_loc, symbolspace->name, 'C', CPOINTER) :
+            allocMap (0, 0, 0, 1, 0, 0, options.data_loc, symbolspace->name, 'E', POINTER);
           nm->next = namedspacemaps;
           namedspacemaps = nm;
         }
@@ -382,7 +384,12 @@ allocIntoSeg (symbol *sym)
 
       return;
     }
-  segment = SPEC_OCLS (sym->etype);
+  if (!(segment = SPEC_OCLS (sym->etype)))
+    {
+      fprintf (stderr, "Symbol %s:\n", sym->name);
+      wassertl (0, "Failed to allocate symbol to memory segment due to missing output storage class");
+      return;
+    }
   addSet (&segment->syms, sym);
   if (segment == pdata)
     sym->iaccess = 1;
@@ -626,6 +633,12 @@ allocParms (value *val, bool smallc)
 
   for (lval = val; lval; lval = lval->next, pNum++)
     {
+      if (!lval->sym) // Can only happen if there was a syntax error in the declaration.
+        {
+          fatalError++;
+          return;
+        }
+        
       /* check the declaration */
       checkDecl (lval->sym, 0);
 
@@ -642,7 +655,7 @@ allocParms (value *val, bool smallc)
       /* if automatic variables r 2b stacked */
       if (options.stackAuto || IFFUNC_ISREENT (currFunc->type))
         {
-          int paramsize = getSize (lval->type) + (getSize (lval->type) == 1 && smallc);
+          int paramsize = getSize (lval->type) + (getSize (lval->type) == 1 && (smallc || TARGET_PDK_LIKE));
 
           if (lval->sym)
             lval->sym->onStack = 1;
@@ -742,6 +755,9 @@ deallocParms (value * val)
 
   for (lval = val; lval; lval = lval->next)
     {
+      if (!lval->sym) /* Syntax error in declaration */
+        continue;
+
       /* unmark is myparm */
       lval->sym->ismyparm = 0;
 
@@ -810,7 +826,7 @@ allocLocal (symbol * sym)
     }
 
   /* if volatile then */
-  if (IS_VOLATILE (sym->etype))
+  if (IS_VOLATILE (sym->type))
     sym->allocreq = 1;
 
   /* this is automatic           */
@@ -847,7 +863,7 @@ allocLocal (symbol * sym)
   /* else depending on the storage class specified */
 
   /* if this is a function then assign code space    */
-  if (IS_FUNC (sym->type))
+  if (IS_FUNC (sym->type) && !sym->isitmp)
     {
       SPEC_OCLS (sym->etype) = code;
       return;
@@ -980,7 +996,8 @@ allocVariables (symbol * symChain)
         {
           /* check if the typedef already exists    */
           csym = findSym (TypedefTab, NULL, sym->name);
-          if (csym && csym->level == sym->level)
+          if (csym && csym->level == sym->level &&
+            !(options.std_c11 && compareTypeExact (sym->type, csym->type, -1))) /* typedef to same type not allowed before ISO C11 */
             werror (E_DUPLICATE_TYPEDEF, sym->name);
 
           SPEC_EXTR (sym->etype) = 0;
@@ -1031,6 +1048,31 @@ allocVariables (symbol * symChain)
     }
 
   return stack;
+}
+
+void
+clearStackOffsets (void)
+{
+  const symbol *sym;
+
+  for (sym = setFirstItem (istack->syms); sym;
+       sym = setNextItem (istack->syms))
+    {
+      const int size = getSize (sym->type);
+      
+      /* nothing to do with parameters so continue */
+      if ((sym->_isparm && !IS_REGPARM (sym->etype)))
+        continue;
+
+      currFunc->stack -= size;
+      SPEC_STAK (currFunc->etype) -= size;
+    }
+
+  if (currFunc)
+    {
+      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->sams.
+      currFunc->stack = 0;
+    }
 }
 
 #define BTREE_STACK 1

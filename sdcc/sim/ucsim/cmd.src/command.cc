@@ -25,20 +25,24 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
+#include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include "i_string.h"
+//#include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
+
+//#include "i_string.h"
 
 // prj
-#include "fiocl.h"
-#include "utils.h"
+//#include "fiocl.h"
+//#include "utils.h"
 #include "appcl.h"
 
 // local, cmd
 #include "commandcl.h"
-#include "argcl.h"
+//#include "argcl.h"
 
 
 /*
@@ -47,7 +51,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  */
 
 cl_cmdline::cl_cmdline(class cl_app *the_app,
-		       char *acmd, class cl_console_base *acon):
+		       const char *acmd, class cl_console_base *acon):
   cl_base()
 {
   app= the_app;
@@ -161,6 +165,14 @@ cl_cmdline::split(void)
 	    split_out_bit(dot, param_str);
 	  else if ((dot= strchr(param_str, '[')) != NULL)
 	    split_out_array(dot, param_str);
+	  else if (param_str[0] == '0' && param_str[1] == 'b')
+            {
+              long n= 0;
+	      for (int i= 2; param_str[i] == '0' || param_str[i] == '1'; i++)
+                n = (n << 1) | (param_str[i] == '0' ? 0 : 1);
+	      params->add(arg= new cl_cmd_int_arg(n));
+	      arg->init();
+            }
 	  else if (strchr("0123456789-+", *param_str) != NULL)
 	    {
 	      // number
@@ -223,28 +235,22 @@ cl_cmdline::split_out_string(char **_start, char **_end)
 void
 cl_cmdline::split_out_output_redirection(char **_start, char **_end)
 {
-  char *start= *_start, *end/*= *_end*/;
-  int i;
+  char *start= *_start;
+  char *end;
+  int j;
   char mode[2];
 
   mode[0]= 'w';
   mode[1]= '\0';
   start++;
-  i= strcspn(start, " \t\v\r,");
-  end= start+i;
-  char *param_str= (char *)malloc(i+1);
-  char *n= param_str;
-  strncpy(param_str, start, i);
-  param_str[i]= '\0';
-  if (param_str &&
-      param_str[0] == '>')
+  if (*start=='>')
     {
-      n++;
       mode[0]= 'a';
+      start++;
     }
-  tokens->add(strdup(n));
-  con->redirect(n, mode);
-  free(param_str);
+  j= token_length(start);
+  end= start+j;
+  con->redirect(get_token(start).c_str(), mode);
   *_start= start;
   *_end= end;
 }
@@ -346,6 +352,80 @@ cl_cmdline::split_out_array(char *dot, char *param_str)
          arg->init();
        }
     }
+}
+
+int
+cl_cmdline::token_length(char *start)
+{
+  if (start==NULL ||
+      *start=='\0')
+    return 0;
+  if (*start == '\"')
+    {
+      int i;
+      char c;
+      for (i=1; start[i]!=0 && start[i]!='\"'; i++)
+	{
+	  c= start[i];
+	  if (c == '\\')
+	    i+= 2;
+	}
+      return i+1;
+    }
+  else
+    return strcspn(start, " \t\v\r,;");
+}
+
+chars
+cl_cmdline::get_token(char *start)
+{
+  int i;
+  char c;
+  chars cs= chars();
+  if (start==NULL ||
+      *start=='\0')
+    return cs;
+  if (*start == '\"')
+    {
+      for (i=1; start[i]!=0 && start[i]!='\"'; i++)
+	{
+	  c= start[i];
+	  if (c == '\\')
+	    {
+	      i++;
+	      if (start[i])
+		{
+		  switch (start[i])
+		    {
+		    case 'a': cs+= '\a'; break;
+		    case 'b': cs+= '\b'; break;
+		    case 'e': cs+= '\x1b'; break;
+		    case 'f': cs+= '\f'; break;
+		    case 'n': cs+= '\n'; break;
+		    case 'r': cs+= '\r'; break;
+		    case 't': cs+= '\t'; break;
+		    case 'v': cs+= '\v'; break;
+		    case '\'': cs+= '\''; break;
+		    case '\"': cs+= '\"'; break;
+		    default:
+		      cs+= start[i];
+		      break;
+		    }
+		}
+	      //i++;
+	    }
+	  else
+	    cs+= c;
+	}
+      return cs;
+    }
+  else
+    {
+      int l= strcspn(start, " \t\v\r,;");
+      for (i=0; i<l; i++)
+	cs+= start[i];
+    }
+  return cs;
 }
 
 int
@@ -493,7 +573,7 @@ cl_cmdline::set_data_list(class cl_cmd_arg *parm, int *iparm)
 {
   class cl_cmd_arg *next_parm;
   int len, i, j;
-  t_mem *array;
+  t_mem *array, *temp;
 
   len= 0;
   array= 0;
@@ -511,7 +591,12 @@ cl_cmdline::set_data_list(class cl_cmd_arg *parm, int *iparm)
 	  if (!array)
 	    array= (t_mem*)malloc(sizeof(t_mem)*l);
 	  else
-	    array= (t_mem*)realloc(array, sizeof(t_mem)*(l+len));
+	    {
+	      temp= (t_mem*)realloc(array, sizeof(t_mem)*(l+len));
+	      if (temp == NULL)
+		break;
+	      array= temp;
+	    }
 	  for (j= 0; j < l; j++)
 	    {
 	      array[len]= s[j];
@@ -531,7 +616,12 @@ cl_cmdline::set_data_list(class cl_cmd_arg *parm, int *iparm)
 	  if (!array)
 	    array= (t_mem*)malloc(sizeof(t_mem));
 	  else
-	    array= (t_mem*)realloc(array, sizeof(t_mem)*(1+len));
+	    {
+	      temp= (t_mem*)realloc(array, sizeof(t_mem)*(1+len));
+	      if (temp == NULL)
+		break;
+	      array= temp;
+	    }
 	  array[len]= next_parm->value.data;
 	  len++;
 	}
@@ -566,17 +656,16 @@ cl_cmdline::restart_at_rest(void)
 
 cl_cmd::cl_cmd(enum cmd_operate_on op_on,
 	       const char *aname,
-	       int can_rep,
-	       const char *short_hlp,
-	       const char *long_hlp):
+	       int can_rep):
   cl_base()
 {
   operate_on= op_on;
   names= new cl_strings(1, 1, "names of a command");
   names->add(aname?strdup(aname):strdup("unknown"));
   can_repeat= can_rep;
-  short_help= short_hlp?strdup(short_hlp):NULL;
-  long_help= long_hlp?strdup(long_hlp):NULL;
+  usage_help= 0;
+  short_help= 0;//short_hlp;//?strdup(short_hlp):NULL;
+  long_help= 0;//long_hlp;//?strdup(long_hlp):NULL;
 }
 
 /*cl_cmd::cl_cmd(class cl_sim *asim):
@@ -587,13 +676,19 @@ cl_cmd::cl_cmd(enum cmd_operate_on op_on,
   can_repeat= 0;
 }*/
 
+void
+cl_cmd::set_help(const char *usage_hlp, const char *short_hlp, const char *long_hlp)
+{
+  usage_help= usage_hlp;
+  short_help= short_hlp;
+  long_help= long_hlp;
+}
+
 cl_cmd::~cl_cmd(void)
 {
   delete names;
-  if (short_help)
-    free((void*)short_help);
-  if (long_help)
-    free((void*)long_help);
+  //if (short_help) free((void*)short_help);
+  //if (long_help) free((void*)long_help);
 }
 
 void
@@ -617,7 +712,7 @@ cl_cmd::name_match(const char *aname, int strict)
     {
       for (i= 0; i < names->count; i++)
 	{
-	  char *n= (char*)(names->at(i));
+	  const char *n= names->at(i);
 	  if (strcmp(aname, n) == 0)
 	    return(1);
 	}
@@ -626,7 +721,7 @@ cl_cmd::name_match(const char *aname, int strict)
     {
       for (i= 0; i < names->count; i++)
 	{
-	  char *n= (char*)(names->at(i));
+	  const char *n= names->at(i);
 	  if (strstr(n, aname) == n)
 	    return(1);
 	}
@@ -688,7 +783,7 @@ int
 cl_cmd::do_work(class cl_cmdline *cmdline, class cl_console_base *con)
 {
   con->dd_printf("Command \"%s\" does nothing.\n",
-		 (char*)(names->at(0)));
+		 names->at(0));
   return(0);
 }
 
@@ -697,7 +792,7 @@ cl_cmd::do_work(class cl_app *app,
 		class cl_cmdline *cmdline, class cl_console_base *con)
 {
   con->dd_printf("Command \"%s\" does nothing on application.\n",
-		 (char*)(names->at(0)));
+		 names->at(0));
   return(0);
 }
 
@@ -706,7 +801,7 @@ cl_cmd::do_work(class cl_sim *sim,
 		class cl_cmdline *cmdline, class cl_console_base *con)
 {
   con->dd_printf("Command \"%s\" does nothing on simulator.\n",
-		 (char*)(names->at(0)));
+		 names->at(0));
   return(0);
 }
 
@@ -715,10 +810,50 @@ cl_cmd::do_work(class cl_uc *uc,
 		class cl_cmdline *cmdline, class cl_console_base *con)
 {
   con->dd_printf("Command \"%s\" does nothing on microcontroller.\n",
-		 (char*)(names->at(0)));
+		 names->at(0));
   return(0);
 }
 
+void
+cl_cmd::print_short(class cl_console_base *con)
+{
+  int l= usage_help.len();
+
+  if (!con)
+    return;
+  
+  if (usage_help.nempty())
+    con->dd_printf("%s", usage_help.c_str());
+  if (l > 19)
+    {
+      con->dd_printf("\n");
+      l=0;
+    }
+  while (l < 20)
+    {
+      con->dd_printf(" ");
+      l++;
+    }
+  if (short_help.nempty())
+    {
+	con->dd_printf("%s", short_help.c_str());
+    }
+  else
+    con->dd_printf("%s", names->at(0));
+  con->dd_printf("\n");
+}
+  
+void
+cl_cmd::syntax_error(class cl_console_base *con)
+{
+  if (con)
+    {
+      if (short_help.nempty())
+	print_short(con);
+      else
+	con->dd_printf("Error: wrong syntax\n");
+    }
+}
 
 /*
  * Set of commands
@@ -823,10 +958,8 @@ cl_cmdset::replace(char *nam, class cl_cmd *cmd)
 
 cl_super_cmd::cl_super_cmd(const char *aname,
 			   int  can_rep,
-			   const char *short_hlp,
-			   const char *long_hlp,
 			   class cl_cmdset *acommands):
-  cl_cmd(operate_on_none, aname, can_rep, short_hlp, long_hlp)
+  cl_cmd(operate_on_none, aname, can_rep)
 {
   commands= acommands;
 }
@@ -852,18 +985,19 @@ cl_super_cmd::work(class cl_app *app,
 	return(cmd->work(app, cmdline, con));
       int i;
       con->dd_printf("\"%s\" must be followed by the name of a subcommand\n"
-		     "List of subcommands:\n", (char*)(names->at(0)));
+		     "List of subcommands:\n", names->at(0));
       for (i= 0; i < commands->count; i++)
 	{
 	  cmd= (class cl_cmd *)(commands->at(i));
-	  con->dd_printf("%s\n", cmd->short_help);
+	  //con->dd_printf("%s\n", cmd->short_help.c_str());
+	  cmd->print_short(con);
 	}
       return(0);
     }
   if ((cmd= commands->get_cmd(cmdline, con->is_interactive())) == NULL)
     {
       con->dd_printf("Undefined subcommand: \"%s\". Try \"help %s\".\n",
-		     cmdline->get_name(), (char*)(names->at(0)));
+		     cmdline->get_name(), names->at(0));
       return(0);
     }
   return(cmd->work(app, cmdline, con));

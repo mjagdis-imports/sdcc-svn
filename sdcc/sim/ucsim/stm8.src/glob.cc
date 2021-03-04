@@ -25,8 +25,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: glob.cc 776 2017-07-09 11:45:22Z drdani $ */
-
 #include <stdio.h>
 
 #include "stypes.h"
@@ -196,8 +194,8 @@ struct dis_entry disass_stm8[]= {
 
   { 0x00a7, 0x00ff, ' ', /*2*/4, "ldf (%3,X),A" },
   { 0x00af, 0x00ff, ' ', /*2*/4, "ldf A,(%3,X)" },
-  { 0x00bd, 0x00ff, ' ', /*2*/4, "ldf %e,A" },
-  { 0x00bc, 0x00ff, ' ', /*2*/4, "ldf A,%e" },
+  { 0x00bd, 0x00ff, ' ', /*2*/4, "ldf %3,A" },
+  { 0x00bc, 0x00ff, ' ', /*2*/4, "ldf A,%3" },
   { 0x001e, 0x00ff, ' ', 2, "ldw X,(%1,SP)" },
   { 0x00ae, 0x00ff, ' ', 3, "ldw X,%w" },
   { 0x00be, 0x00ff, ' ', 2, "ldw X,%d" },
@@ -217,7 +215,7 @@ struct dis_entry disass_stm8[]= {
   { 0x0094, 0x00ff, ' ', 1, "ldw SP,X" },
   { 0x0096, 0x00ff, ' ', 1, "ldw X,SP" },
 
-  { 0x0035, 0x00ff, ' ', 4, "mov %b,%x" },
+  { 0x0035, 0x00ff, ' ', 4, "mov %x,%b" },
   { 0x0045, 0x00ff, ' ', 3, "mov %d,%d" },
   { 0x0055, 0x00ff, ' ', 5, "mov %x,%x" },
   { 0x0042, 0x00ff, ' ', 1, "mul X,A" },
@@ -260,14 +258,14 @@ struct dis_entry disass_stm8[]= {
   { 0x0069, 0x00ff, ' ', 2, "rlc (%1,X)" },
   { 0x0079, 0x00ff, ' ', 1, "rlc (X)" },
   { 0x0059, 0x00ff, ' ', 1, "rlcw X" },
-  { 0x0002, 0x00ff, ' ', 1, "rlwa X,A" },
+  { 0x0002, 0x00ff, ' ', 1, "rlwa X" },
   { 0x0006, 0x00ff, ' ', 2, "rrc (%1,SP)" },
   { 0x0036, 0x00ff, ' ', 2, "rrc %d" },
   { 0x0046, 0x00ff, ' ', 1, "rrc A" },
   { 0x0066, 0x00ff, ' ', 2, "rrc (%1,X)" },
   { 0x0076, 0x00ff, ' ', 1, "rrc (X)" },
   { 0x0056, 0x00ff, ' ', 1, "rrcw X" },
-  { 0x0001, 0x00ff, ' ', 1, "rrwa X,A" },
+  { 0x0001, 0x00ff, ' ', 1, "rrwa X" },
 
   { 0x009c, 0x00ff, ' ', 1, "rvf" },
 
@@ -385,14 +383,14 @@ struct dis_entry disass_stm8_72[]= {
   { 0x001c, 0x00ff, ' ', 3, "bset %x,#6" },
   { 0x001e, 0x00ff, ' ', 3, "bset %x,#7" },
 
-  { 0x0001, 0x00ff, ' ', 4, "bjtf %x,#0,%p" },
-  { 0x0003, 0x00ff, ' ', 4, "bjtf %x,#1,%p" },
-  { 0x0005, 0x00ff, ' ', 4, "bjtf %x,#2,%p" },
-  { 0x0007, 0x00ff, ' ', 4, "bjtf %x,#3,%p" },
-  { 0x0009, 0x00ff, ' ', 4, "bjtf %x,#4,%p" },
-  { 0x000b, 0x00ff, ' ', 4, "bjtf %x,#5,%p" },
-  { 0x000d, 0x00ff, ' ', 4, "bjtf %x,#6,%p" },
-  { 0x000f, 0x00ff, ' ', 4, "bjtf %x,#7,%p" },
+  { 0x0001, 0x00ff, ' ', 4, "btjf %x,#0,%p" },
+  { 0x0003, 0x00ff, ' ', 4, "btjf %x,#1,%p" },
+  { 0x0005, 0x00ff, ' ', 4, "btjf %x,#2,%p" },
+  { 0x0007, 0x00ff, ' ', 4, "btjf %x,#3,%p" },
+  { 0x0009, 0x00ff, ' ', 4, "btjf %x,#4,%p" },
+  { 0x000b, 0x00ff, ' ', 4, "btjf %x,#5,%p" },
+  { 0x000d, 0x00ff, ' ', 4, "btjf %x,#6,%p" },
+  { 0x000f, 0x00ff, ' ', 4, "btjf %x,#7,%p" },
 
   { 0x0000, 0x00ff, ' ', 4, "btjt %x,#0,%p" },
   { 0x0002, 0x00ff, ' ', 4, "btjt %x,#1,%p" },
@@ -593,8 +591,8 @@ struct dis_entry disass_stm8_90[]= {
   { 0x0097, 0x00ff, ' ', 1, "ld YL,A" },
   { 0x009e, 0x00ff, ' ', 1, "ld A,YH" },
   { 0x009f, 0x00ff, ' ', 1, "ld A,YL" },
-  { 0x00a7, 0x00ff, ' ', /*2*/4, "ldf (%e,Y),A" }, // 90
-  { 0x00af, 0x00ff, ' ', /*2*/4, "ldf A,(%e,Y)" },
+  { 0x00a7, 0x00ff, ' ', /*2*/4, "ldf (%3,Y),A" }, // 90
+  { 0x00af, 0x00ff, ' ', /*2*/4, "ldf A,(%3,Y)" },
   { 0x00ae, 0x00ff, ' ', 3, "ldw Y,%w" },
   { 0x00be, 0x00ff, ' ', 2, "ldw Y,%d" },
   { 0x00ce, 0x00ff, ' ', 3, "ldw Y,%x" },
@@ -628,12 +626,12 @@ struct dis_entry disass_stm8_90[]= {
   { 0x0069, 0x00ff, ' ', 2, "rlc (%1,Y)" },
   { 0x0079, 0x00ff, ' ', 1, "rlc (Y)" },
   { 0x0059, 0x00ff, ' ', 1, "rlcw Y" },
-  { 0x0002, 0x00ff, ' ', 1, "rlwa Y,A" },
+  { 0x0002, 0x00ff, ' ', 1, "rlwa Y" },
   { 0x0046, 0x00ff, ' ', 3, "rrc (%2,Y)" },
   { 0x0066, 0x00ff, ' ', 2, "rrc (%1,Y)" },
   { 0x0076, 0x00ff, ' ', 1, "rrc (Y)" },
   { 0x0056, 0x00ff, ' ', 1, "rrcw Y" },
-  { 0x0001, 0x00ff, ' ', 1, "rrwa Y,A" },
+  { 0x0001, 0x00ff, ' ', 1, "rrwa Y" },
   
   { 0x00d2, 0x00ff, ' ', 3, "sbc A,(%2,Y)" },
   { 0x00e2, 0x00ff, ' ', 2, "sbc A,(%1,Y)" },
@@ -747,6 +745,7 @@ struct dis_entry disass_stm8_92[]= {
   { 0x00d7, 0x00ff, ' ', 2, "ld ([%1.w],X),A" },
   { 0x00a7, 0x00ff, ' ', /*2*/3, "ldf ([%2.e],X),A" },
   { 0x00af, 0x00ff, ' ', /*2*/3, "ldf A,([%2.e],X)" },
+  { 0x00bc, 0x00ff, ' ', 2, "ldf A,[%1.e]" },
   { 0x00ce, 0x00ff, ' ', 2, "ldw X,[%1.w]" },
   { 0x00de, 0x00ff, ' ', 2, "ldw X,([%1.w],X)" },
   { 0x00cf, 0x00ff, ' ', 2, "ldw [%1.w],X" },

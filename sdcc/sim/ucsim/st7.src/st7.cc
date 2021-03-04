@@ -27,16 +27,16 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdarg.h> /* for va_list */
+//#include <stdarg.h> /* for va_list */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
 
 // sim
 #include "simcl.h"
@@ -44,7 +44,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // local
 #include "st7cl.h"
 #include "glob.h"
-#include "regsst7.h"
+//#include "regsst7.h"
 #include "st7mac.h"
 
 #define uint32 t_addr
@@ -100,10 +100,10 @@ cl_st7::reset(void)
 }
 
 
-char *
+const char *
 cl_st7::id_string(void)
 {
-  return((char*)"unspecified ST7");
+  return("unspecified ST7");
 }
 
 
@@ -123,6 +123,14 @@ cl_st7::get_mem_size(enum mem_class type)
  return(cl_uc::get_mem_size(type));
 }
 */
+
+void
+cl_st7::make_cpu_hw(void)
+{
+  add_hw(cpu= new cl_st7_cpu(this));
+  cpu->init();
+}
+
 void
 cl_st7::mk_hw_elements(void)
 {
@@ -166,16 +174,16 @@ cl_st7::make_memories(void)
   address_spaces->add(regs16);
 
   class cl_var *v;
-  vars->add(v= new cl_var(cchars("A"), regs8, 0, ""));
+  vars->add(v= new cl_var("A", regs8, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("CC"), regs8, 1, ""));
+  vars->add(v= new cl_var("CC", regs8, 1, ""));
   v->init();
   
-  vars->add(v= new cl_var(cchars("X"), regs16, 0, ""));
+  vars->add(v= new cl_var("X", regs16, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("Y"), regs16, 1, ""));
+  vars->add(v= new cl_var("Y", regs16, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("SP"), regs16, 2, ""));
+  vars->add(v= new cl_var("SP", regs16, 2, ""));
   v->init();
 }
 
@@ -413,11 +421,13 @@ cl_st7::disass(t_addr addr, const char *sep)
               ++immed_offset;
               break;
             case 'p': // b    byte index offset
-              sprintf(temp, "0x%04lx",
-		      (long int)(addr+immed_offset+1
-				 +(char)rom->get(addr+immed_offset)));
-              ++immed_offset;
-              break;
+	      {
+		int i= (int)(addr+immed_offset+1
+			     +(char)rom->get(addr+immed_offset)); 
+		sprintf(temp, "0x%04x", i&0xffff);
+		++immed_offset;
+		break;
+	      }
             default:
               strcpy(temp, "?");
               break;
@@ -474,10 +484,10 @@ cl_st7::print_regs(class cl_console_base *con)
                  regs.X, regs.X, isprint(regs.X)?regs.X:'.');
   con->dd_printf("Y= 0x%02x %3d %c\n",
                  regs.Y, regs.Y, isprint(regs.Y)?regs.Y:'.');
-  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c\n",
+  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c",
                  regs.SP, ram->get(regs.SP+1), ram->get(regs.SP+1),
                  isprint(ram->get(regs.SP+1))?ram->get(regs.SP+1):'.');
-
+  con->dd_printf("  Limit= 0x%04x\n", AU(sp_limit));
   print_disass(PC, con);
 }
 
@@ -497,6 +507,7 @@ cl_st7::exec_inst(void)
 		return(resGO);
 	}
 
+  instPC= PC;
 
   if (fetch(&code)) {
     //printf("******************** break \n");
@@ -1200,6 +1211,26 @@ cl_st7::exec_inst(void)
   return(resINV_INST);
 }
 
+
+void
+cl_st7::stack_check_overflow(class cl_stack_op *op)
+{
+  if (op)
+    {
+      if (op->get_op() & stack_write_operation)
+	{
+	  t_addr a= op->get_after();
+	  if (a < sp_limit)
+	    {
+	      class cl_error_stack_overflow *e=
+		new cl_error_stack_overflow(op);
+	      e->init();
+	      error(e);
+	    }
+	}
+    }
+}
+
 t_mem
 cl_st7::get_1(t_addr addr)
 {
@@ -1222,5 +1253,55 @@ cl_st7::get_3(t_addr addr)
     (ram->read(addr+1) << 8) |
     (ram->read(addr+2));
 }
+
+
+cl_st7_cpu::cl_st7_cpu(class cl_uc *auc):
+  cl_hw(auc, HW_CPU, 0, "cpu")
+{
+}
+
+int
+cl_st7_cpu::init(void)
+{
+  cl_hw::init();
+
+  cl_var *v;
+  uc->vars->add(v= new cl_var("sp_limit", cfg, st7cpu_sp_limit,
+			      cfg_help(st7cpu_sp_limit)));
+  v->init();
+
+  return 0;
+}
+
+const char *
+cl_st7_cpu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case st7cpu_sp_limit:
+      return "Stack overflows when SP is below this limit";
+    }
+  return "Not used";
+}
+
+t_mem
+cl_st7_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
+{
+  class cl_st7 *u= (class cl_st7 *)uc;
+  if (val)
+    cell->set(*val);
+  switch ((enum st7cpu_confs)addr)
+    {
+    case st7cpu_sp_limit:
+      if (val)
+	u->sp_limit= *val & 0xffff;
+      else
+	cell->set(u->sp_limit);
+      break;
+    case st7cpu_nuof: break;
+    }
+  return cell->get();
+}
+
 
 /* End of st7.src/st7.cc */

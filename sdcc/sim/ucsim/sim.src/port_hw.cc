@@ -1,5 +1,31 @@
-/* $Id: port_hw.cc 652 2017-02-16 13:31:47Z drdani $ */
+/*
+ * Simulator of microcontrollers (sim.src/port_hw.cc)
+ *
+ * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * 
+ * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ *
+ */
 
+/* This file is part of microcontroller simulator: ucsim.
+
+UCSIM is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+UCSIM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with UCSIM; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA. */
+/*@1@*/
+
+#include <stdio.h>
 #include <ctype.h>
 
 #include "globals.h"
@@ -7,14 +33,15 @@
 #include "port_hwcl.h"
 
 
-const char *keysets[7]= {
+const char *keysets[8]= {
   "12345678",
   "qwertyui",
   "asdfghjk",
   "zxcvbnm,",
   "QWERTYUI",
   "ASDFGHJK",
-  "ZXCVBNM."
+  "ZXCVBNM,",
+  "9opl.OPL"
 };
 
 
@@ -55,7 +82,8 @@ cl_port_ui::add_port(class cl_port_data *p, int nr)
   pd[nr].keyset  = p->keyset;
   pd[nr].basx    = p->basx;
   pd[nr].basy    = p->basy;
-
+  pd[nr].width   = p->width;
+  
   pd[nr].set_name(p->get_name());
 
   if (act_port < 0)
@@ -103,7 +131,7 @@ cl_port_ui::handle_input(int c)
 
   if (i8 < 0)
     {
-      fprintf(stderr, "Port: spec key= %d\n", i8);
+      //fprintf(stderr, "Port: spec key= %d\n", i8);
     }
   else
     {
@@ -111,15 +139,17 @@ cl_port_ui::handle_input(int c)
 	{
 	  if (pd[i].cell_p == NULL)
 	    continue;
+	  int w= //pd[i].cell_p->get_width();
+	    pd[i].width;
 	  
 	  if (pd[i].keyset != NULL)
 	    {
-	      int bit;
-	      for (bit= 0; pd[i].keyset[bit]; bit++)
-		if (pd[i].keyset[bit] == c)
+	      int bit, l= strlen(pd[i].keyset), bc= 0;
+	      for (bit= 0; (bit < l) && (bc < w) && pd[i].keyset[bit]; bit++, bc++)
+		if ((pd[i].keyset[bit]!=' ') && (pd[i].keyset[bit] == c))
 		  {
 		    t_mem m= pd[i].cell_in->read();
-		    pd[i].cell_in->write(m ^ (1<<(7-bit)));
+		    pd[i].cell_in->write(m ^ (1<<((w-1)-bit)));
 		    pio->tu_go(1,1);
 		    return true;
 		  }
@@ -133,8 +163,8 @@ cl_port_ui::handle_input(int c)
   //pio->tu_cll();
   if (!ret)
     {
-      u8_t u= c;
-      fprintf(stderr, "Unknown command: %c (%d,0x%x)\n", isprint(u)?u:'?', i8, c);
+      //u8_t u= c;
+      //fprintf(stderr, "Unknown command: %c (%d,0x%x)\n", isprint(u)?u:'?', i8, c);
     }
   return ret;
 }
@@ -146,13 +176,17 @@ cl_port_ui::refresh_display(bool force)
   if (!io)
     return;
 
-  int i, m;
+  int i, w;
+  t_mem m;
   bool pc= false, ic= false;
+  chars fmt= chars();
   pio->tu_hide();
   for (i= 0; i < NUOF_PORT_UIS; i++)
     {
       if (pd[i].cell_p == NULL)
 	continue;
+      //w= pd[i].cell_p->get_width();
+      w= pd[i].width;
       // name
       pio->tu_go(pd[i].basx, pd[i].basy);
       pio->dd_printf("\033[%dm", (act_port == i)?7:0);
@@ -176,7 +210,7 @@ cl_port_ui::refresh_display(bool force)
 	  // Out
 	  pd[i].cache_p= pd[i].cell_p->get();
 	  pio->tu_go(pd[i].basx+4, pd[i].basy+1);
-	  m= 0x80;
+	  m= 1 << (w-1);
 	  for ( ; m; m>>= 1)
 	    {
 	      char v= (pd[i].cache_p&m)?'*':'-';
@@ -187,8 +221,9 @@ cl_port_ui::refresh_display(bool force)
 		}
 	      pio->dd_printf("%c", v);		
 	    }
-	  pio->tu_go(pd[i].basx+4+8+1, pd[i].basy+1);
-	  pio->dd_printf("%02x", pd[i].cache_p);
+	  pio->tu_go(pd[i].basx+4+w+1, pd[i].basy+1);
+	  fmt.format("%%0%dx", w/4);
+	  pio->dd_printf(fmt, pd[i].cache_p);
 	  pc= true;
 	}
       if (force ||
@@ -198,11 +233,12 @@ cl_port_ui::refresh_display(bool force)
 	  // In
 	  pd[i].cache_in= pd[i].cell_in->get();
 	  pio->tu_go(pd[i].basx+4, pd[i].basy+3);
-	  m= 0x80;
+	  m= 1 << (w-1);
 	  for ( ; m; m>>= 1)
 	    pio->dd_printf("%c", (pd[i].cache_in&m)?'*':'-');
-	  pio->tu_go(pd[i].basx+4+8+1, pd[i].basy+3);
-	  pio->dd_printf("%02x", pd[i].cache_in);
+	  pio->tu_go(pd[i].basx+4+w+1, pd[i].basy+3);
+	  fmt.format("%%0%dx", w/4);
+	  pio->dd_printf(fmt, pd[i].cache_in);
 	  ic= true;
 	}
       if (force ||
@@ -210,23 +246,25 @@ cl_port_ui::refresh_display(bool force)
 			pd[i].cell_dir == NULL*/))
 	{
 	  // port value on "Bits" line
-	  int b, val, pval= pd[i].cache_in;
+	  int disp, b, val, pval= pd[i].cache_in;
 	  pio->tu_go(pd[i].basx+4, pd[i].basy+2);
-	  for (b= 7; b>=0; b--)
+	  for (b= w-1; b>=0; b--)
 	    {
 	      m= 1<<b;
 	      val= pd[i].cache_in & m;
 	      if (pd[i].cell_dir == NULL)
 		val&= (pd[i].cache_p & m);
 	      //if (val)
-		pio->dd_printf("\033[%dm", val?7:0);
+	      disp= b%8;
+	      pio->dd_printf("\033[%dm", val?7:0);
 		//else
 		//pio->dd_printf("\033[0m");
-	      pio->dd_printf("%d", b);
+	      pio->dd_printf("%d", disp);
 	    }
 	  if (!pd[i].cell_dir)
 	    pval&= pd[i].cache_p;
-	  pio->dd_printf("\033[0m %02x", pval);
+	  fmt.format("%%0%dx", w/4);
+	  pio->dd_printf(chars("\033[0m ")+fmt, pval);
 	}
     }
   pio->tu_show();
@@ -256,12 +294,23 @@ cl_port_ui::draw_display(void)
       pio->tu_go(pd[i].basx, pd[i].basy+1);
       pio->dd_printf("Out ");
       pio->tu_go(pd[i].basx, pd[i].basy+2);
-      pio->dd_printf("Bit 76543210");
+      pio->dd_printf("Bit ");
+      int m;
+      m= pd[i].width;
+      while (m)
+	{
+	  pio->dd_printf("%d", 7-(m%8));
+	  m--;
+	}
       pio->tu_go(pd[i].basx, pd[i].basy+3);
       pio->dd_printf("In  ");
       pio->tu_go(pd[i].basx, pd[i].basy+4);
+      pio->dd_printf("Key ");
       if (pd[i].keyset)
-	pio->dd_printf("Key %s", pd[i].keyset);
+	{
+	  for (m= 0; m < pd[i].width; m++)
+	    pio->dd_printf("%c", pd[i].keyset[m]);
+	}
 
       pd[i].cache_p= pd[i].cell_p->get();
       pd[i].cache_in= pd[i].cell_in->read();

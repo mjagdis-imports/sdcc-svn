@@ -54,6 +54,25 @@ typedef i64_t		t_addr;		/* 64 bit max */
 typedef u32_t		t_mem;		/* 32 bit max */
 typedef i32_t		t_smem;		/* signed 32 bit memory */
 
+#define SPECA SPEC_QWORD
+#define SPECM SPEC_DWORD
+
+#define AI(addr)   ((int)(addr))
+#define AU(addr)   ((unsigned int)(addr))
+#define AI8(addr)  (AI((addr)&0xff))
+#define AU8(addr)  (AU((addr)&0xff))
+#define AI16(addr) (AI((addr)&0xffff))
+#define AU16(addr) (AU((addr)&0xffff))
+#define AI32(addr) (AI((addr)&0xffffffff))
+#define AU32(addr) (AU((addr)&0xffffffff))
+
+#define MI(v)      ((int)(v))
+#define MU(v)      ((unsigned int)(v))
+#define MI8(v)     (MI((v)&0xff))
+#define MU8(v)     (MU((v)&0xff))
+#define MI32(v)    (MI((v)&0xffffffff))
+#define MU32(v)    (MU((v)&0xffffffff))
+
 enum {
   max_mem_size= 0x40000000		/* 1 GB */
 };
@@ -78,6 +97,7 @@ struct dis_entry
   uchar length;
   const char *mnemonic;
   bool is_call;
+  uchar ticks;
 };
 
 // table entry of SFR and BIT names
@@ -121,7 +141,10 @@ enum cpu_type {
   CPU_LR35902   = 0x0004,
   CPU_R2K       = 0x0008,
   CPU_R3KA      = 0x0010,
-  CPU_ALL_Z80   = (CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA),
+  CPU_EZ80	= 0x0020,
+  CPU_Z80N      = 0x0040,
+  CPU_ALL_Z80   = (CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA|CPU_EZ80|
+		   CPU_Z80N),
 
   CPU_XA	= 0x0001,
   CPU_ALL_XA	= (CPU_XA),
@@ -200,6 +223,10 @@ enum cpu_type {
   // technology
   CPU_CMOS	= 0x0001,
   CPU_HMOS	= 0x0002,
+
+  CPU_PDK13 = 0x0001,
+  CPU_PDK14 = 0x0002,
+  CPU_PDK15 = 0x0003,
 };
 
 
@@ -224,10 +251,10 @@ enum mem_class
   MEM_TYPES
 };
 
-#define MEM_SFR_ID	cchars("sfr")
-#define MEM_XRAM_ID	cchars("xram")
-#define MEM_IXRAM_ID	cchars("ixram")
-#define MEM_IRAM_ID	cchars("iram")
+#define MEM_SFR_ID	"sfr"
+#define MEM_XRAM_ID	"xram"
+#define MEM_IXRAM_ID	"ixram"
+#define MEM_IRAM_ID	"iram"
 
 // States of simulator
 enum sim_state {
@@ -261,6 +288,7 @@ enum inst_result {
   resSIMIF	= 110,	/* Stopped by simulated prog itself through sim interface */
   resNOT_DONE	= 111,	/* Intruction has not simulated */
   resEVENTBREAK = 112,  /* Event breakpoint */
+  resSELFJUMP	= 113,  /* Jump to itself */
 };
   
 #define BIT_MASK(bitaddr) (1 << (bitaddr & 0x07))
@@ -314,7 +342,8 @@ enum hw_cath {
   HW_RESET	= 0x0100,
   HW_CLOCK	= 0x0200,
   HW_CALC	= 0x0400,
-  HW_FLASH	= 0x0800
+  HW_FLASH	= 0x0800,
+  HW_CPU	= 0x1000
 };
 
 // Events that can happen in peripherals

@@ -105,6 +105,8 @@ static void freeAllRegs ();
 static iCode *packRegsDPTRuse (operand *);
 static int packRegsDPTRnuse (operand *, unsigned);
 
+
+
 /*-----------------------------------------------------------------*/
 /* allocReg - allocates register of given type                     */
 /*-----------------------------------------------------------------*/
@@ -223,6 +225,33 @@ isOperandInReg (operand * op)
   if (OP_SYMBOL (op)->dptr)
     return 1;
   return bitVectBitValue (_G.totRegAssigned, OP_SYMBOL (op)->key);
+}
+
+/* When the spill locations aren't fully initialized, the usual
+ * isOperandInFarSpace() function may return false for a spilled
+ * operand that will ultimately end up in far space, but is not
+ * quite there yet. This function returns TRUE if the operand
+ * is either currently in far space or will be by the time code
+ * generation begins */
+static bool
+isOperandInFarSpace2 (operand * op)
+{
+  if (isOperandInFarSpace (op))
+    return TRUE;
+
+  if (!IS_ITEMP (op))
+    return FALSE;
+
+  if (isOperandInReg (op))
+    return FALSE;
+
+  if ((currFunc && IFFUNC_ISREENT (currFunc->type)) || options.stackAuto)
+    return FALSE;  /* Will spill to internal stack */
+
+  if (options.model == MODEL_SMALL)
+    return FALSE; /* Will spill to internal data memory */
+
+  return TRUE; /* No other option; must spill to external data memory */
 }
 
 /*-----------------------------------------------------------------*/
@@ -2310,6 +2339,17 @@ packRegsForAssign (iCode * ic, eBBlock * ebp)
     }
 pack:
   /* found the definition */
+
+  /* delete from liverange table also
+     delete from all the points inbetween and the new
+     one */
+  for (sic = dic; sic != ic; sic = sic->next)
+    {
+      bitVectUnSetBit (sic->rlive, IC_RESULT (ic)->key);
+      if (IS_ITEMP (IC_RESULT (dic)))
+        bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
+    }
+
   /* replace the result with the result of */
   /* this assignment and remove this assignment */
   bitVectUnSetBit (OP_SYMBOL (IC_RESULT (dic))->defs, dic->key);
@@ -2319,15 +2359,6 @@ pack:
   if (IS_ITEMP (IC_RESULT (dic)) && OP_SYMBOL (IC_RESULT (dic))->liveFrom > dic->seq)
     {
       OP_SYMBOL (IC_RESULT (dic))->liveFrom = dic->seq;
-    }
-  /* delete from liverange table also
-     delete from all the points inbetween and the new
-     one */
-  for (sic = dic; sic != ic; sic = sic->next)
-    {
-      bitVectUnSetBit (sic->rlive, IC_RESULT (ic)->key);
-      if (IS_ITEMP (IC_RESULT (dic)))
-        bitVectSetBit (sic->rlive, IC_RESULT (dic)->key);
     }
 
   remiCodeFromeBBlock (ebp, ic);
@@ -2496,6 +2527,7 @@ right:
 }
 
 
+
 /*-------------------------------------------------------------------*/
 /* packRegsDPTRnuse - color live ranges that can go into extra DPTRS */
 /*-------------------------------------------------------------------*/
@@ -2565,35 +2597,35 @@ packRegsDPTRnuse (operand * op, unsigned dptr)
       /* four special cases first */
       if (POINTER_GET (ic) && !isOperandEqual (IC_LEFT (ic), op) &&     /* pointer get */
           !OP_SYMBOL (IC_LEFT (ic))->ruonly &&                          /* with result in far space */
-          (isOperandInFarSpace (IC_RESULT (ic)) && !isOperandInReg (IC_RESULT (ic))))
+          (isOperandInFarSpace2 (IC_RESULT (ic)) && !isOperandInReg (IC_RESULT (ic))))
         {
           return 0;
         }
 
       if (POINTER_GET (ic) && !isOperandEqual (IC_LEFT (ic), op) &&     /* pointer get */
           !OP_SYMBOL (IC_LEFT (ic))->ruonly &&                          /* with left in far space */
-          (isOperandInFarSpace (IC_LEFT (ic)) && !isOperandInReg (IC_LEFT (ic))))
+          (isOperandInFarSpace2 (IC_LEFT (ic)) && !isOperandInReg (IC_LEFT (ic))))
         {
           return 0;
         }
 
       if (POINTER_SET (ic) && !isOperandEqual (IC_RESULT (ic), op) &&   /* pointer set */
           !OP_SYMBOL (IC_RESULT (ic))->ruonly &&                        /* with right in far space */
-          (isOperandInFarSpace (IC_RIGHT (ic)) && !isOperandInReg (IC_RIGHT (ic))))
+          (isOperandInFarSpace2 (IC_RIGHT (ic)) && !isOperandInReg (IC_RIGHT (ic))))
         {
           return 0;
         }
 
       if (POINTER_SET (ic) && !isOperandEqual (IC_RESULT (ic), op) &&   /* pointer set */
           !OP_SYMBOL (IC_RESULT (ic))->ruonly &&                        /* with result in far space */
-          (isOperandInFarSpace (IC_RESULT (ic)) && !isOperandInReg (IC_RESULT (ic))))
+          (isOperandInFarSpace2 (IC_RESULT (ic)) && !isOperandInReg (IC_RESULT (ic))))
         {
           return 0;
         }
 
       if (IC_RESULT (ic) && IS_SYMOP (IC_RESULT (ic)) &&    /* if symbol operand */
           !isOperandEqual (IC_RESULT (ic), op) &&		    /* not the same as this */
-          ((isOperandInFarSpace (IC_RESULT (ic)) ||         /* in farspace or */
+          ((isOperandInFarSpace2 (IC_RESULT (ic)) ||         /* in farspace or */
             OP_SYMBOL (IC_RESULT (ic))->onStack) &&         /* on the stack   */
            !isOperandInReg (IC_RESULT (ic))))               /* and not in register */
         {
@@ -2602,7 +2634,7 @@ packRegsDPTRnuse (operand * op, unsigned dptr)
       /* same for left */
       if (IC_LEFT (ic) && IS_SYMOP (IC_LEFT (ic)) &&        /* if symbol operand */
           !isOperandEqual (IC_LEFT (ic), op) &&             /* not the same as this */
-          ((isOperandInFarSpace (IC_LEFT (ic)) ||           /* in farspace or */
+          ((isOperandInFarSpace2 (IC_LEFT (ic)) ||           /* in farspace or */
             OP_SYMBOL (IC_LEFT (ic))->onStack) &&           /* on the stack   */
            !isOperandInReg (IC_LEFT (ic))))                 /* and not in register */
         {
@@ -2611,7 +2643,7 @@ packRegsDPTRnuse (operand * op, unsigned dptr)
       /* same for right */
       if (IC_RIGHT (ic) && IS_SYMOP (IC_RIGHT (ic)) &&      /* if symbol operand */
           !isOperandEqual (IC_RIGHT (ic), op) &&            /* not the same as this */
-          ((isOperandInFarSpace (IC_RIGHT (ic)) ||          /* in farspace or */
+          ((isOperandInFarSpace2 (IC_RIGHT (ic)) ||          /* in farspace or */
             OP_SYMBOL (IC_RIGHT (ic))->onStack) &&          /* on the stack   */
            !isOperandInReg (IC_RIGHT (ic))))                /* and not in register */
         {
@@ -2697,7 +2729,7 @@ packRegsDPTRuse (operand * op)
 
       /* if SEND & not the first parameter then give up */
       if (ic->op == SEND && ic->argreg != 1 &&
-          ((isOperandInFarSpace (IC_LEFT (ic)) && !isOperandInReg (IC_LEFT (ic))) || isOperandEqual (op, IC_LEFT (ic))))
+          ((isOperandInFarSpace2 (IC_LEFT (ic)) && !isOperandInReg (IC_LEFT (ic))) || isOperandEqual (op, IC_LEFT (ic))))
         return NULL;
 
       /* if CALL then make sure it is VOID || return value not used
@@ -2715,7 +2747,7 @@ packRegsDPTRuse (operand * op)
       /* special case of add with a [remat] */
       if (ic->op == '+' &&
           IS_SYMOP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic))->remat &&
-          isOperandInFarSpace (IC_RIGHT (ic)) && !isOperandInReg (IC_RIGHT (ic)))
+          isOperandInFarSpace2 (IC_RIGHT (ic)) && !isOperandInReg (IC_RIGHT (ic)))
         {
           return NULL;
         }
@@ -2748,7 +2780,7 @@ packRegsDPTRuse (operand * op)
       /* general case */
       if (IC_RESULT (ic) && IS_SYMOP (IC_RESULT (ic)) &&
           !isOperandEqual (IC_RESULT (ic), op) &&
-          (((isOperandInFarSpace (IC_RESULT (ic)) || OP_SYMBOL (IC_RESULT (ic))->onStack) &&
+          (((isOperandInFarSpace2 (IC_RESULT (ic)) || OP_SYMBOL (IC_RESULT (ic))->onStack) &&
             !isOperandInReg (IC_RESULT (ic))) || OP_SYMBOL (IC_RESULT (ic))->ruonly))
         return NULL;
 
@@ -2757,7 +2789,7 @@ packRegsDPTRuse (operand * op)
           (OP_SYMBOL (IC_RIGHT (ic))->liveTo >= ic->seq ||
            IS_TRUE_SYMOP (IC_RIGHT (ic)) ||
            OP_SYMBOL (IC_RIGHT (ic))->ruonly) &&
-          ((isOperandInFarSpace (IC_RIGHT (ic)) || OP_SYMBOL (IC_RIGHT (ic))->onStack) && !isOperandInReg (IC_RIGHT (ic))))
+          ((isOperandInFarSpace2 (IC_RIGHT (ic)) || OP_SYMBOL (IC_RIGHT (ic))->onStack) && !isOperandInReg (IC_RIGHT (ic))))
         return NULL;
 
       if (IC_LEFT (ic) && IS_SYMOP (IC_LEFT (ic)) &&
@@ -2765,13 +2797,13 @@ packRegsDPTRuse (operand * op)
           (OP_SYMBOL (IC_LEFT (ic))->liveTo >= ic->seq ||
            IS_TRUE_SYMOP (IC_LEFT (ic)) ||
            OP_SYMBOL (IC_LEFT (ic))->ruonly) &&
-          ((isOperandInFarSpace (IC_LEFT (ic)) || OP_SYMBOL (IC_LEFT (ic))->onStack) && !isOperandInReg (IC_LEFT (ic))))
+          ((isOperandInFarSpace2 (IC_LEFT (ic)) || OP_SYMBOL (IC_LEFT (ic))->onStack) && !isOperandInReg (IC_LEFT (ic))))
         return NULL;
 
       if (IC_LEFT (ic) && IC_RIGHT (ic) &&
           IS_ITEMP (IC_LEFT (ic)) && IS_ITEMP (IC_RIGHT (ic)) &&
-          (isOperandInFarSpace (IC_LEFT (ic)) && !isOperandInReg (IC_LEFT (ic))) &&
-          (isOperandInFarSpace (IC_RIGHT (ic)) && !isOperandInReg (IC_RIGHT (ic))))
+          (isOperandInFarSpace2 (IC_LEFT (ic)) && !isOperandInReg (IC_LEFT (ic))) &&
+          (isOperandInFarSpace2 (IC_RIGHT (ic)) && !isOperandInReg (IC_RIGHT (ic))))
         return NULL;
     }
   OP_SYMBOL (op)->ruonly = 1;
@@ -2956,6 +2988,9 @@ packForPush (iCode * ic, eBBlock ** ebpp, int blockno)
 
   if (IS_OP_VOLATILE (IC_RIGHT (dic)))
     return;
+    
+  if (!IS_SYMOP (IC_RIGHT (dic)))
+    return;
 
   if ((IS_SYMOP (IC_RIGHT (dic)) && OP_SYMBOL (IC_RIGHT (dic))->addrtaken) || isOperandGlobal (IC_RIGHT (dic)))
     disallowHiddenAssignment = 1;
@@ -3102,7 +3137,8 @@ packRegisters (eBBlock ** ebpp, int blockno)
       /* if straight assignment then carry remat flag if
          this is the only definition */
       if (ic->op == '=' && !POINTER_SET (ic) && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat && !IS_CAST_ICODE (OP_SYMBOL (IC_RIGHT (ic))->rematiCode) && !isOperandGlobal (IC_RESULT (ic)) &&  /* due to bug 1618050 */
-          bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1)
+          bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) <= 1 &&
+          !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
           OP_SYMBOL (IC_RESULT (ic))->rematiCode = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
@@ -3111,7 +3147,8 @@ packRegisters (eBBlock ** ebpp, int blockno)
       /* if cast to a generic pointer & the pointer being
          cast is remat, then we can remat this cast as well */
       if (ic->op == CAST && IS_SYMOP (IC_RIGHT (ic)) && !OP_SYMBOL (IC_RESULT (ic))->isreqv && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1)
+          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 &&
+          !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           sym_link *to_type = operandType (IC_LEFT (ic));
           sym_link *from_type = operandType (IC_RIGHT (ic));
@@ -3223,7 +3260,7 @@ packRegisters (eBBlock ** ebpp, int blockno)
       /* if pointer set & left has a size more than
          one and right is not in far space */
       if (POINTER_SET (ic) &&
-          !isOperandInFarSpace (IC_RIGHT (ic)) &&
+          !isOperandInFarSpace2 (IC_RIGHT (ic)) &&
           IS_SYMOP (IC_RESULT (ic)) &&
           !OP_SYMBOL (IC_RESULT (ic))->remat &&
           !IS_OP_RUONLY (IC_RIGHT (ic)) && getSize (aggrToPtr (operandType (IC_RESULT (ic)), FALSE)) > 1)
@@ -3234,7 +3271,7 @@ packRegisters (eBBlock ** ebpp, int blockno)
 
       /* if pointer get */
       if (POINTER_GET (ic) &&
-          !isOperandInFarSpace (IC_RESULT (ic)) &&
+          !isOperandInFarSpace2 (IC_RESULT (ic)) &&
           IS_SYMOP (IC_LEFT (ic)) &&
           !OP_SYMBOL (IC_LEFT (ic))->remat &&
           !IS_OP_RUONLY (IC_RESULT (ic)) && getSize (aggrToPtr (operandType (IC_LEFT (ic)), FALSE)) > 1)

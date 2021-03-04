@@ -9,8 +9,9 @@
 #pragma disable_warning 93
 #endif
 
-/* This generates too much code for a pic14 */
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_pic14)
+/* This generates too much code for a mcs51, hc08, pdk14 and pdk15 */
+/* pic14: Not enough data memory */
+#if !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mcs51) && !defined(__SDCC_pic14) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 
 /* Macros to emit "L Nxx R" for each octal number xx between 000 and 037.  */
 #define OP1(L, N, R, I, J) L N##I##J R
@@ -62,15 +63,14 @@ void foo (int n)
 void
 testTortureExecute (void)
 {
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390)
+#if !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mcs51) && !defined(__SDCC_pic14) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
   int i;
 
   for (i = 0; i < 32; i++)
     gd[i] = i, gf[i] = i;
   foo (1);
   for (i = 0; i < 32; i++)
-    if (gd[i] != i * 4 || gf[i] != i)
-      ASSERT (0);
+    ASSERT (gd[i] == i * 4 && gf[i] == i);
   return;
 #endif
 }

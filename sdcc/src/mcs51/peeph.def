@@ -1451,7 +1451,7 @@ replace {
 	;	peephole 177.h	optimized mov sequence
 	mov	a,%2
 	mov	%1,a
-} if notVolatile %2
+} if notVolatile(%2), notSame(%1 'dptr'), operandsNotRelated(%1 %2)
 
 // applies to f.e. testfwk.c
 replace {
@@ -5032,6 +5032,12 @@ replace {
 	mov	r%1,%2
 } by {
 	;	Peephole 301	mov r%1,%2 removed
+} if notVolatile(%2), deadMove(%1)
+
+replace {
+	mov	ar%1,%2
+} by {
+	;	Peephole 302	mov ar%1,%2 removed
 } if notVolatile(%2), deadMove(%1)
 
 

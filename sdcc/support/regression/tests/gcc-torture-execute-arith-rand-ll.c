@@ -4,6 +4,7 @@ arith-rand-ll.c from the execute part of the gcc torture tests.
 
 #include <testfwk.h>
 
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 long long
 simple_rand ()
 {
@@ -41,13 +42,14 @@ random_bitstring ()
 	}
     }
 }
+#endif
 
 #define ABS(x) ((x) >= 0 ? (x) : -(x))
 
 void
 testTortureExecute (void)
 {
-#if 0 // Bugs #278, 2789, 2790
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)  // Lack of memory
 #ifndef __SDCC_mcs51 // Not enough internal RAM for area OSEG.
   long long int i;
 

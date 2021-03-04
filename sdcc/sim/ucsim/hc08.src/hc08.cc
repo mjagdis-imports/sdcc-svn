@@ -27,16 +27,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdarg.h> /* for va_list */
+//#include <stdarg.h> /* for va_list */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
 
 // sim
 #include "simcl.h"
@@ -44,7 +45,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // local
 #include "hc08cl.h"
 #include "glob.h"
-#include "regshc08.h"
+//#include "regshc08.h"
 #include "hc08mac.h"
 
 #define uint32 t_addr
@@ -83,6 +84,7 @@ cl_hc08::init(void)
     ram->set((t_addr) i, 0);
   }
 
+  sp_limit= 0x7000;
   return(0);
 }
 
@@ -99,13 +101,14 @@ cl_hc08::reset(void)
   regs.P = 0x60;
   regs.VECTOR = 1;
 
+  PC= rom->get(0xfffe)*256 + rom->get(0xffff);
 }
 
 
-char *
+const char *
 cl_hc08::id_string(void)
 {
-  return((char*)"unspecified HC08");
+  return("unspecified HC08");
 }
 
 
@@ -129,7 +132,11 @@ void
 cl_hc08::mk_hw_elements(void)
 {
   //class cl_base *o;
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+
+  add_hw(h= new cl_hc08_cpu(this));
+  h->init();
 }
 
 void
@@ -169,16 +176,16 @@ cl_hc08::make_memories(void)
   address_spaces->add(regs16);
 
   class cl_var *v;
-  vars->add(v= new cl_var(cchars("A"), regs8, 0, ""));
+  vars->add(v= new cl_var("A", regs8, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("P"), regs8, 1, ""));
+  vars->add(v= new cl_var("P", regs8, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("H"), regs8, 2, ""));
+  vars->add(v= new cl_var("H", regs8, 2, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("X"), regs8, 3, ""));
+  vars->add(v= new cl_var("X", regs8, 3, ""));
   v->init();
 
-  vars->add(v= new cl_var(cchars("SP"), regs16, 0, ""));
+  vars->add(v= new cl_var("SP", regs16, 0, ""));
   v->init();
 }
 
@@ -364,22 +371,26 @@ cl_hc08::disass(t_addr addr, const char *sep)
 	      ++immed_offset;
 	      break;
 	    case '2': // 2    word index offset
-	      sprintf(temp, "0x%04x",
-	         (uint)((rom->get(addr+immed_offset)<<8) |
-	                (rom->get(addr+immed_offset+1))) );
-	      ++immed_offset;
-	      ++immed_offset;
-	      break;
+	      {
+		int i= (uint)((rom->get(addr+immed_offset)<<8) |
+			      (rom->get(addr+immed_offset+1)));
+		sprintf(temp, "0x%04x", i & 0xffff);
+		++immed_offset;
+		++immed_offset;
+		break;
+	      }		
 	    case '1': // b    byte index offset
               sprintf(temp, "0x%02x", (uint)rom->get(addr+immed_offset));
 	      ++immed_offset;
 	      break;
 	    case 'p': // b    byte index offset
-              sprintf(temp, "0x%04lx",
-		      (long int)(addr+immed_offset+1
-				 +(char)rom->get(addr+immed_offset)));
-	      ++immed_offset;
-	      break;
+	      {
+		int i= addr+immed_offset+1
+		  +(char)rom->get(addr+immed_offset);
+		sprintf(temp, "0x%04x", i & 0xffff);
+		++immed_offset;
+		break;
+	      }
 	    default:
 	      strcpy(temp, "?");
 	      break;
@@ -438,10 +449,11 @@ cl_hc08::print_regs(class cl_console_base *con)
 		 regs.H, regs.H, isprint(regs.H)?regs.H:'.');
   con->dd_printf("X= 0x%02x %3d %c\n",
 		 regs.X, regs.X, isprint(regs.X)?regs.X:'.');
-  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c\n",
+  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c",
                  regs.SP, ram->get(regs.SP+1), ram->get(regs.SP+1),
                  isprint(ram->get(regs.SP+1))?ram->get(regs.SP+1):'.');
-
+  con->dd_printf("  Limit= 0x%04x\n", AU(sp_limit));
+  
   print_disass(PC, con);
 }
 
@@ -459,6 +471,8 @@ cl_hc08::exec_inst(void)
     regs.VECTOR = 0;
     return(resGO);
   }
+
+  instPC= PC;
 
   if (fetch(&code))
     return(resBREAKPOINT);
@@ -601,8 +615,13 @@ cl_hc08::exec_inst(void)
                 case 0x9: return(inst_adc(code, true));
                 case 0xa: return(inst_ora(code, true));
                 case 0xb: return(inst_add(code, true));
-		case 0xc: return(resHALT); // not real instruction: regression test hack to exit simulation
-		case 0xd: putchar(regs.A); fflush(stdout); return(resGO); // not real instruction: regression test hack to output results
+	      case 0xc: return(resINV_INST);
+		return(resHALT); // not real instruction: regression test hack to exit simulation
+	      case 0xd:
+		return(resINV_INST);
+		putchar(regs.A);
+		fflush(stdout);
+		return(resGO); // not real instruction: regression test hack to output results
                 case 0xe: return(inst_ldx(code, true));
                 case 0xf: return(inst_stx(code, true));
                 default: return(resHALT);
@@ -672,6 +691,26 @@ cl_hc08::exec_inst(void)
   return(resINV_INST);
 }
 
+
+void
+cl_hc08::stack_check_overflow(class cl_stack_op *op)
+{
+  if (op)
+    {
+      if (op->get_op() & stack_write_operation)
+	{
+	  t_addr a= op->get_after();
+	  if (a < sp_limit)
+	    {
+	      class cl_error_stack_overflow *e=
+		new cl_error_stack_overflow(op);
+	      e->init();
+	      error(e);
+	    }
+	}
+    }
+}
+
 t_mem
 cl_hc08::get_1(t_addr addr)
 {
@@ -685,5 +724,55 @@ cl_hc08::get_2(t_addr addr)
   vc.rd+= 2;
   return (ram->read(addr & 0xffff) << 8) | ram->read((addr+1) & 0xffff);
 }
+
+
+cl_hc08_cpu::cl_hc08_cpu(class cl_uc *auc):
+  cl_hw(auc, HW_CPU, 0, "cpu")
+{
+}
+
+int
+cl_hc08_cpu::init(void)
+{
+  cl_hw::init();
+
+  cl_var *v;
+  uc->vars->add(v= new cl_var("sp_limit", cfg, hc08cpu_sp_limit,
+			      cfg_help(hc08cpu_sp_limit)));
+  v->init();
+
+  return 0;
+}
+
+const char *
+cl_hc08_cpu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case hc08cpu_sp_limit:
+      return "Stack overflows when SP is below this limit";
+    }
+  return "Not used";
+}
+
+t_mem
+cl_hc08_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
+{
+  class cl_hc08 *u= (class cl_hc08 *)uc;
+  if (val)
+    cell->set(*val);
+  switch ((enum hc08cpu_confs)addr)
+    {
+    case hc08cpu_sp_limit:
+      if (val)
+	u->sp_limit= *val & 0xffff;
+      else
+	cell->set(u->sp_limit);
+      break;
+    case hc08cpu_nuof: break;
+    }
+  return cell->get();
+}
+
 
 /* End of hc08.src/hc08.cc */

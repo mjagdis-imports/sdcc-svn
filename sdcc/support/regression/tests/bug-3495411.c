@@ -145,6 +145,7 @@ struct sip_lcb
 	BOOLEAN bMemCall;
 };
 
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 __xdata struct sip_lcb l;
 extern SIP_LCB_HANDLE Sip_pCurLcb = &l;
 
@@ -175,12 +176,15 @@ void sip_new_from()
 	dummy_free(Sip_pCurLcb->pFromTag);
 	Sip_pCurLcb->pFromTag = heap_save_str(pTag);
 }
+#endif
 
 void
 testBug (void)
 {
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 	l.pFrom = (PCHAR) 23;
 	sip_new_from();
 	ASSERT (l.pFrom == (PCHAR) 42);
+#endif
 }
 

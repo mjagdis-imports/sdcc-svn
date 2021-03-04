@@ -29,7 +29,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "globals.h"
 
 // sim.src
-#include "appcl.h"
+//#include "appcl.h"
 
 // local
 #include "simxacl.h"
@@ -41,6 +41,7 @@ main(int argc, char *argv[])
   class cl_sim *sim;
 
   application= new cl_app();
+  application->set_name("sxa");
   application->init(argc, argv);
   sim= new cl_simxa(application);
   if (sim->init())

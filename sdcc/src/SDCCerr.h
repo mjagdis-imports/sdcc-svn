@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "SDCCset.h"
 
 /* ERROR Message Definition */
 
@@ -269,12 +270,30 @@ enum {
   E_QUALIFIED_ARRAY_PARAM_C99   = 240, /* qualifiers in array parameters require ISO C99 or later */
   E_QUALIFIED_ARRAY_NOPARAM     = 241, /* qualifier or static in array declarator that is not a parameter */
   E_STATIC_ARRAY_PARAM_C99      = 242, /* static in array parameters requires ISO C99 or later */
-  E_INT_MULTIPLE                = 243, /* mutiple interrupt numbers */
+  E_INT_MULTIPLE                = 243, /* multiple interrupt numbers */
   W_INCOMPAT_PTYPES             = 244, /* incompatible pointer assignment (not allowed by the standard, but allowed in SDCC) */
   E_STATIC_ASSERTION_C2X        = 245, /* static assertion with one argument requires C2X or later */
   W_STATIC_ASSERTION_2          = 246, /* static assertion failed */
   E_DECL_AFTER_STATEMENT_C99    = 247, /* declaration after statement requires ISO C99 or later */
-
+  E_SHORTCALL_INVALID_VALUE     = 248, /* Invalid value for a __z88dk_shortcall specifier */
+  E_DUPLICATE_PARAMTER_NAME     = 249, /* duplicate parameter name */
+  E_AUTO_FILE_SCOPE             = 250, /* auto in declaration at file scope */
+  E_U8_CHAR_C2X                 = 251, /* u8 character constant requires ISO C2X or later */
+  E_U8_CHAR_INVALID             = 252, /* invalid u8 character constant */
+  E_ATTRIBUTE_C2X               = 253, /* attribute requires ISO C2X or later */
+  E_COMPOUND_LITERALS_C99       = 254, /* compound literals require ISO C99 or later */
+  E_THREAD_LOCAL                = 255, /* thread-local storage is not implemented */
+  E_ENUM_COMMA_C99              = 256, /* trailing comma after enumerator list requires ISO C99 or later */
+  E_OUTPUT_FILE_OPEN_ERR        = 257, /* Failed to open output file for writing (with error message) */
+  E_INPUT_FILE_OPEN_ERR         = 258, /* Failed to open input file for readin (with error message) */
+  W_SHIFT_NEGATIVE              = 259, /* shift by negative amount */
+  W_INVALID_STACK_LOCATION      = 260, /* access to invalid stack location */
+  W_BINARY_INTEGER_CONSTANT_C23 = 261, /* binary integer constant requires ISO C23 or later */
+  E_U8CHAR_STRING_C11           = 262, /* unicode string literal requires ISO C 11 or later */
+  W_PREFIXED_STRINGS            = 263, /* sequence of differently prefixed string literals */
+  W_DIGIT_SEPARATOR_C23         = 264, /* digit separators require ISO C23 or later */
+  E_INVALID_LANG_OVERRIDE       = 265, /* argument to option -x is not a valid file type override */
+  
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
 };
@@ -288,6 +307,11 @@ enum {
 #else
 # define assert(expr) ((expr) ? (void)0 : fatal (1, E_INTERNAL_ERROR, __FILE__, __LINE__, #expr))
 #endif
+
+#define wassertl_bt(a,s)   (void)((a) ? 0 : \
+        (werror_bt (E_INTERNAL_ERROR, __FILE__, __LINE__, s), 0))
+
+#define wassert_bt(a) wassertl_bt(a, "code generator internal error")
 
 /** Describes the maximum error level that will be logged.  Any level
  *  includes all of the levels listed after it.
@@ -317,6 +341,7 @@ struct SDCCERRG {
   FILE *out;
   int style;                        /* 1=MSVC */
   int werror;                       /* treat the warnings as errors */
+  set *log;
 };
 
 extern struct SDCCERRG _SDCCERRG;
@@ -352,6 +377,15 @@ werror - Output a standard eror message with variable number of arguements
 */
 
 int werror (int errNum, ... );
+
+/*
+-------------------------------------------------------------------------------
+werror_bt - like werror(), but als provide a backtrace
+
+-------------------------------------------------------------------------------
+*/
+
+int werror_bt (int errNum, ... );
 
 /*
 -------------------------------------------------------------------------------

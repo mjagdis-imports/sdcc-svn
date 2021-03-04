@@ -7,7 +7,7 @@
 #ifdef __SDCC_pic16
 # define ADDRESS(x) (0x02 ## x)
 #elif defined(__SDCC_pic14)
-# define ADDRESS(x) (0x01 ## x)
+# define ADDRESS(x) (0x01A0 + 0x ## x)
 #elif defined(__SDCC_stm8)
 # define ADDRESS(x) (0x10 ## x)
 #else
@@ -34,6 +34,7 @@ void correct(void)
 
 void testBug(void)
 {
+#if !defined( __SDCC_pdk14) && !defined( __SDCC_pdk15) // No RAM above 0x7f / 0xff.
 #ifdef __SDCC
 	REG_1 = 0x40;
 	incorrect();
@@ -42,4 +43,5 @@ void testBug(void)
 	REG_2 = 0x50;
 	correct();
 	ASSERT (REG_2 == 0x53);
+#endif
 }

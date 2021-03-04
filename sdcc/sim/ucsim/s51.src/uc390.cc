@@ -35,22 +35,22 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // strcpy (mem(MEM_ROM) ->addr_format, "0x%06x");
 // strcpy (mem(MEM_XRAM)->addr_format, "0x%06x");
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 #include "glob.h"
 #include "uc390cl.h"
 #include "regs51.h"
 #include "uc390hwcl.h"
 
-
-#include "uc52cl.h"
+//#include "uc52cl.h"
 #include "regs51.h"
-#include "timer2cl.h"
+//#include "timer2cl.h"
 
 /*
  * Names of instructions
@@ -498,7 +498,7 @@ cl_uc390::clear_sfr(void)
 
 
 t_mem
-cl_uc390::read_mem(char *id/*enum mem_class type*/, t_addr addr)
+cl_uc390::read_mem(const char *id/*enum mem_class type*/, t_addr addr)
 {
 
   if (strcmp(/*type*/id,/* == */MEM_XRAM_ID)==0 &&
@@ -512,7 +512,7 @@ cl_uc390::read_mem(char *id/*enum mem_class type*/, t_addr addr)
 }
 
 t_mem
-cl_uc390::get_mem (char *id/*enum mem_class type*/, t_addr addr)
+cl_uc390::get_mem (const char *id/*enum mem_class type*/, t_addr addr)
 {
   if (strcmp(/*type*/id/* == */,MEM_XRAM_ID)==0 &&
       addr >= 0x400000 &&
@@ -525,7 +525,7 @@ cl_uc390::get_mem (char *id/*enum mem_class type*/, t_addr addr)
 }
 
 void
-cl_uc390::write_mem (char *id/*enum mem_class type*/, t_addr addr, t_mem val)
+cl_uc390::write_mem (const char *id/*enum mem_class type*/, t_addr addr, t_mem val)
 {
   if (strcmp(/*type ==*/id, MEM_XRAM_ID)==0 &&
       addr >= 0x400000 &&
@@ -538,7 +538,7 @@ cl_uc390::write_mem (char *id/*enum mem_class type*/, t_addr addr, t_mem val)
 }
 
 void
-cl_uc390::set_mem (/*enum mem_class type*/char *id, t_addr addr, t_mem val)
+cl_uc390::set_mem (/*enum mem_class type*/const char *id, t_addr addr, t_mem val)
 {
   if (/*type == */strcmp(id,MEM_XRAM_ID)==0 &&
       addr >= 0x400000 &&
@@ -1267,7 +1267,8 @@ cl_uc390::print_regs (class cl_console_base *con)
       return;
     }
   start = sfr->get (PSW) & 0x18;
-  iram->dump (start, start + 7, 8, con->get_fout());
+  iram->dump (start, start + 7, 8, con/*->get_fout()*/);
+  con->dd_printf("     R0 R1 R2 R3 R4 R5 R6 R7\n");
   data = iram->get (iram->get (start));
   con->dd_printf ("@R0 %02x %c", data, isprint (data) ? data : '.');
   con->dd_printf ("  ACC= 0x%02x %3d %c  B= 0x%02x",
@@ -1302,13 +1303,13 @@ cl_uc390::print_regs (class cl_console_base *con)
       /* SA: 10 bit stack */
       start = (sfr->get (R51_ESP) & 3) * 256 + sfr->get (SP);
       con->dd_printf ("SP10 ", start);
-      ixram->dump (start, start - 7, 8, con->get_fout());
+      ixram->dump (start, start - 7, 8, con/*->get_fout()*/);
     }
   else
     {
       start = sfr->get (SP);
       con->dd_printf ("SP ", start);
-      iram->dump (start, start - 7, 8, con->get_fout());
+      iram->dump (start, start - 7, 8, con/*->get_fout()*/);
     }
 
   print_disass (PC, con);

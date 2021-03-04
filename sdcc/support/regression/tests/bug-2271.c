@@ -4,6 +4,7 @@
 
 #include <testfwk.h>
 
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 extern int foo0 (int *[]);
 extern int foo1 (int (*[])(int), int, int);
 
@@ -32,9 +33,12 @@ int foo1 (int (*pf[])(int), int a, int b)
 {
   return pf[0](a) + pf[1](b);
 }
+#endif
 
 void testBug (void)
 {
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
   ASSERT (foo0 (p) == 89);
   ASSERT (foo1 (pf, 4, 8) == 21);
+#endif
 }

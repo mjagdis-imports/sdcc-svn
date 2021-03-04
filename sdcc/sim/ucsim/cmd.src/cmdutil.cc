@@ -25,18 +25,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <assert.h>
-#include <sys/types.h>
-#include "i_string.h"
+#include <string.h>
+#include <stdarg.h>
 
-#include "stypes.h"
-#include "globals.h"
-#include "uccl.h"
 #include "cmdutil.h"
 
 
@@ -102,44 +98,6 @@ proc_escape(char *string, int *len)
   return(str);
 }
 
-
-
-extern "C" int vasprintf(char **strp, const  char *format, va_list ap);
-extern "C" int vsnprintf(char *str, size_t size,const char *format,va_list ap);
-
-int
-cmd_vfprintf(FILE *f, char *format, va_list ap)
-{
-  int ret, i;
-  if (!f)
-    return(0);
-#ifdef HAVE_VASPRINTF
-  char *msg= NULL;
-  i= vasprintf(&msg, format, ap);
-  if (i < 0)
-    ;
-  ret= fprintf(f, "%s", msg);
-  free(msg);
-#else
-  char msg[80*25];
-  i= vsnprintf(msg, 80*25, format, ap);
-  if (i < 0)
-    ;
-  ret= fprintf(f, "%s", msg);
-#endif
-  fflush(f);
-  return(ret);
-}
-
-int
-cmd_fprintf(FILE *f, char *format, ...)
-{
-  va_list ap;
-  va_start(ap, format);
-  int ret= cmd_vfprintf(f, format, ap);
-  va_end(ap);
-  return(ret);
-}
 
 int
 bool_name(char *s, int *val)

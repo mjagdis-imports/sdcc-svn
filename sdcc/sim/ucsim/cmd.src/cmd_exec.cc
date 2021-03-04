@@ -24,20 +24,25 @@ along with UCSIM; see the file COPYING.  If not, write to the Free
 Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
-#include <stdarg.h>
-#include "ddconfig.h"
+
+//#include <stdarg.h>
+#include <string.h>
+#include <ctype.h>
+
+//#include "ddconfig.h"
 
 // prj
-#include "i_string.h"
+//#include "i_string.h"
 #include "utils.h"
 #include "globals.h"
 
 // sim.src
-#include "simcl.h"
+//#include "simcl.h"
+//#include "uccl.h"
 
 // local, cmd.src
 #include "cmd_execcl.h"
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 
 /*
@@ -60,26 +65,26 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
   if (params[0])
     if (!(params[0]->get_address(sim->uc, &start)))
       {
-	con->dd_printf(cchars("Error: wrong start address\n"));
+	con->dd_printf("Error: wrong start address\n");
 	return(false);
       }
   if (params[1])
     if (!(params[1]->get_address(sim->uc, &end)))
       {
-	con->dd_printf(cchars("Error: wromg end address\n"));
+	con->dd_printf("Error: wrong end address\n");
 	return(false);
       }
   if (params[0])
     {
       if (!sim->uc->inst_at(start))
-	con->dd_printf(cchars("Warning: maybe not instruction at 0x%06lx\n"),
-		       start);
+	con->dd_printf("Warning: maybe not instruction at 0x%06x\n",
+		       AI(start));
       sim->uc->PC= start;
       if (params[1])
 	{
 	  if (start == end)
 	    {
-	      con->dd_printf(cchars("Addresses must be different.\n"));
+	      con->dd_printf("Addresses must be different.\n");
 	      return(false);
 	    }
 	  if ((b= sim->uc->fbrk_at(end)))
@@ -94,7 +99,7 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
 	    }
 	}
     }
-  con->dd_printf(cchars("Simulation started, PC=0x%06x\n"), sim->uc->PC);
+  con->dd_printf("Simulation started, PC=0x%06x\n", AI(sim->uc->PC));
   /*
   if (sim->uc->fbrk_at(sim->uc->PC))
     sim->uc->do_inst(1);
@@ -103,6 +108,10 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
   return(false);
 }
 
+CMDHELP(cl_run_cmd,
+	"run [start [stop]]",
+	"Go",
+	"long help of run")
 
 /*
  * Command: stop
@@ -119,6 +128,10 @@ COMMAND_DO_WORK_SIM(cl_stop_cmd)
   return(false);
 }
 
+CMDHELP(cl_stop_cmd,
+	"stop",
+	"Stop",
+	"long help of stop")
 
 /*
  * Command: step
@@ -130,17 +143,101 @@ COMMAND_DO_WORK_SIM(cl_stop_cmd)
 //		     class cl_cmdline *cmdline, class cl_console *con)
 COMMAND_DO_WORK_SIM(cl_step_cmd)
 {
-  class cl_cmd_arg *parm= cmdline->param(0);
+  class cl_cmd_arg *params[2];
+  params[0]= cmdline->param(0);
+  params[1]= cmdline->param(1);
   int instrs= 1;
-  if (parm != NULL)
-    instrs= parm->i_value;
+  if (params[0] != NULL)
+    {
+      instrs= params[0]->i_value;
+    }
+  class cl_uc *uc= sim->get_uc();
+  if (uc && (params[1] != NULL))
+    {
+      chars s= params[1]->get_svalue();
+      unsigned long do_clk;
+      class cl_time_measurer *tm= NULL;
+      do_clk= instrs;
+      if (s == "clk")
+	{
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "s") || (s == "sec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "ms") || (s == "msec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs/1000.0);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "us") || (s == "usec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs/1000000.0);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "ns") || (s == "nsec"))
+	{
+	  do_clk= uc->clocks_of_time(instrs/1000000000.0);
+	  tm= new cl_time_clk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if (s == "vclk")
+	{
+	  tm= new cl_time_vclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "fclk") || (s == "fetch"))
+	{
+	  tm= new cl_time_fclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "rclk") || (s == "read"))
+	{
+	  tm= new cl_time_rclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else if ((s == "wclk") || (s == "write"))
+	{
+	  tm= new cl_time_wclk(uc);
+	  tm->init();
+	  tm->from_now(do_clk);
+	}
+      else
+	{
+	  con->dd_printf("Unknown unit.\n");
+	  return 0;
+	}
+      if (tm)
+	{
+	  uc->stop_when(tm);
+	  sim->start(con, 0);
+	}
+      return 0;
+    }
   if (instrs <= 0)
     instrs= 1;
   sim->start(con, instrs);
   return(0);
 }
 
-
+CMDHELP(cl_step_cmd,
+	"step [number [unit]]",
+	"Step",
+	"long help of step")
 /*
  * Command: next
  *----------------------------------------------------------------------------
@@ -204,6 +301,10 @@ COMMAND_DO_WORK_SIM(cl_next_cmd)
   return(false);
 }
 
+CMDHELP(cl_next_cmd,
+	"next",
+	"Next",
+	"long help of next")
 
 /*
  * Command: help
@@ -228,10 +329,11 @@ COMMAND_DO_WORK_APP(cl_help_cmd)
     for (i= 0; i < cmdset->count; i++)
       {
 	class cl_cmd *c= (class cl_cmd *)(cmdset->at(i));
-	if (c->short_help)
-	  con->dd_printf("%s\n", c->short_help);
+	/*if (c->short_help.nempty())
+	  con->dd_printf("%s\n", c->short_help.c_str());
 	else
-	  con->dd_printf("%s\n", (char*)(c->names->at(0)));
+	con->dd_printf("%s\n", c->names->at(0).c_str());*/
+	c->print_short(con);
       }
   }
   else
@@ -244,23 +346,24 @@ COMMAND_DO_WORK_APP(cl_help_cmd)
 	  int names;
 	  con->dd_printf("Names of command:");
 	  for (names= 0; names < cmd_found->names->count; names++)
-	    con->dd_printf(" %s", (char*)(cmd_found->names->at(names)));
+	    con->dd_printf(" %s", cmd_found->names->at(names));
 	  con->dd_printf("\n");
 	  class cl_cmdset *subset= cmd_found->get_subcommands();
 	  if (subset)
 	    {
 	      con->dd_printf("\"%s\" must be followed by the name of a "
 			     "subcommand\nList of subcommands:\n",
-			     (char*)(cmd_found->names->at(0)));
+			     cmd_found->names->at(0));
 	      for (i= 0; i < subset->count; i++)
 		{
 		  class cl_cmd *c=
 		    dynamic_cast<class cl_cmd *>(subset->object_at(i));
-		  con->dd_printf("%s\n", c->short_help);
+		  //con->dd_printf("%s\n", c->short_help.c_str());
+		  c->print_short(con);
 		}
 	    }
-	  if (cmd_found->long_help)
-	    con->dd_printf("%s\n", cmd_found->long_help);
+	  if (cmd_found->long_help.nempty())
+	    con->dd_printf("%s\n", cmd_found->long_help.c_str());
 	}
       if (!matches ||
 	  !cmd_found)
@@ -268,6 +371,11 @@ COMMAND_DO_WORK_APP(cl_help_cmd)
     }
   return(false);
 }
+
+CMDHELP(cl_help_cmd,
+	"help [command [subcommand]]",
+	"List of known commands, or description of specified command",
+	"Long help of help command")
 
 bool
 cl_help_cmd::do_set(class cl_cmdline *cmdline, int pari,
@@ -292,10 +400,11 @@ cl_help_cmd::do_set(class cl_cmdline *cmdline, int pari,
 	    {
 	      matches++;
 	      cmd_found= cmd;
-	      if (cmd->short_help)
-		con->dd_printf("%s\n", cmd->short_help);
+	      /*if (cmd->short_help.nempty())
+		con->dd_printf("%s\n", cmd->short_help.c_str());
 	      else
-		con->dd_printf("%s\n", (char*)(cmd->names->at(0)));
+	      con->dd_printf("%s\n", cmd->names->at(0).c_str());*/
+	      cmd->print_short(con);
 	      //continue;
 	    }
 	  else
@@ -320,6 +429,10 @@ COMMAND_DO_WORK(cl_quit_cmd)
   return(1);
 }
 
+CMDHELP(cl_quit_cmd,
+	"quit",
+	"Quit",
+	"long help of quit")
 
 /*
  * Command: kill
@@ -337,6 +450,10 @@ COMMAND_DO_WORK_APP(cl_kill_cmd)
   return(1);
 }
 
+CMDHELP(cl_kill_cmd,
+	"kill",
+	"Shutdown simulator",
+	"long help of kill")
 
 /*
  * EXEC file
@@ -352,7 +469,7 @@ COMMAND_DO_WORK_APP(cl_exec_cmd)
   }
   if (!fn || !*fn)
     {
-      con->dd_printf("%s\n", short_help?short_help:"Error: wrong syntax\n");
+      syntax_error(con);
       return (false);
     }
 
@@ -362,6 +479,10 @@ COMMAND_DO_WORK_APP(cl_exec_cmd)
   return(false);
 }
 
+CMDHELP(cl_exec_cmd,
+	"exec \"file\"",
+	"Execute commands from file",
+	"long help of exec")
 
 /*
  * expression expression
@@ -369,53 +490,139 @@ COMMAND_DO_WORK_APP(cl_exec_cmd)
 
 COMMAND_DO_WORK_APP(cl_expression_cmd)
 {
-  char *s= cmdline->cmd;
-  char *fmt= NULL;
-  int fmt_len= 0;
+  const char *s;
+  chars cs, w, fmt;
+  
+  cmdline->shift();
+  s= cmdline->cmd;
   if (!s ||
       !*s)
     return(false);
-  int i= strspn(s, " \t\v\n\r");
-  s+= i;
-  i= strspn(s, "abcdefghijklmnopqrstuvwxyz");
-  s+= i;
-  i= strspn(s, " \t\v\n");
-  s+= i;
-  t_mem v= 0;
-  if (s && *s)
+
+  cs= s;
+  cs.start_parse();
+  w= cs.token(" \r\n\v\r");
+  fmt= "";
+  con->dd_color("result");
+  while (w.nempty())
     {
-      if (*s == '/')
-	{
-	  i= strcspn(s, " \t\v\n\r");
-	  fmt= s+1;
-	  fmt_len= i;
-	  s+= i;
-	  i= strspn(s, " \t\v\n\r");
-	  s+= i;
-	}
-      if (s && *s)
-	v= application->eval(s);
-      if (fmt)
-	{
-	  for (i= 0; i < fmt_len; i++)
-	    {
-	      switch (fmt[i])
-		{
-		case 'x': con->dd_printf("%lx\n", v); break;
-		case 'X': con->dd_printf("0x%lx\n", v); break;
-		case '0': con->dd_printf("0x%08lx\n", v); break;
-		case 'd': con->dd_printf("%ld\n", v); break;
-		case 'o': con->dd_printf("%lo\n", v); break;
-		case 'u': con->dd_printf("%lu\n", v); break;
-		case 'b': con->dd_printf("%s\n", (char*)cbin(v,8*sizeof(v))); break;
-		}
-	    }
-	}
+      if (w.starts_with("/"))
+	fmt= w;
       else
-	con->dd_printf("%ld\n", v);
+	{
+	  t_mem v= 0;
+	  if (w.nempty())
+	    {
+	      v= application->eval(w);
+	      con->print_expr_result(v, fmt.nempty()?((const char *)fmt):NULL);
+	    }
+	  fmt= "";
+	}
+      w= cs.token(" \n\r\v\t");
     }
   return(false);
 }
+
+CMDHELP(cl_expression_cmd,
+	"expression [/format] expr",
+	"Evaluate the expression",
+	"long help of expression ")
+
+
+/*
+ * HISTORY command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_cmd)
+{
+  class cl_exec_hist *hi= uc->hist;
+
+  if (hi->get_used() == 0)
+    return 0;
+  uc->hist->list(con, true, 10);
+  return 0;
+}
+
+CMDHELP(cl_hist_cmd,
+	"history",
+	"Execution history",
+	"long help of history")
+
+
+/*
+ * HISTORY INFO command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_info_cmd)
+{
+  //int i;
+  //class cl_cmd_arg *params[1]= { cmdline->param(0) };
+  //char *s= NULL;
+  class cl_exec_hist *hi= uc->hist;
+  
+  con->dd_printf("len: %d\n", hi->get_len());
+  con->dd_printf("used: %u\n", hi->get_used());
+  con->dd_printf("insts: %u\n", hi->get_insts());
+  return 0;
+}
+
+CMDHELP(cl_hist_info_cmd,
+	"history info",
+	"Information about execution history",
+	"long help of history info")
+
+
+/*
+ * HISTORY CLEAR command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_clear_cmd)
+{
+  //int i;
+  //class cl_cmd_arg *params[1]= { cmdline->param(0) };
+  //char *s= NULL;
+  class cl_exec_hist *hi= uc->hist;
+
+  hi->clear();
+  
+  return 0;
+}
+
+CMDHELP(cl_hist_clear_cmd,
+	"history clear",
+	"Clear execution history",
+	"long help of history clear")
+
+
+/*
+ * HISTORY LIST command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_hist_list_cmd)
+{
+  int nr= 10;
+  class cl_cmd_arg *params[1]= { cmdline->param(0) };
+  //char *s= NULL;
+  class cl_exec_hist *hi= uc->hist;
+
+  if (hi->get_used() == 0)
+    return 0;
+
+  if (params[0] != NULL)
+    nr= params[0]->i_value;
+  uc->hist->list(con, true, nr);
+  
+  return 0;
+}
+
+CMDHELP(cl_hist_list_cmd,
+	"history list [nr]",
+	"List last `nr' elements of execution history",
+	"long help of history list")
 
 
 /* End of cmd.src/cmd_exec.cc */

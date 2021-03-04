@@ -1,18 +1,21 @@
 /** Simple long long tests.
+ test: mul, div, bit, shift
 
  */
 #include <testfwk.h>
 
 #ifdef __SDCC
 #pragma std_sdcc99
-#pragma disable_warning 85
-#pragma disable_warning 212
 #endif
 
-#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM))) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
+#define TEST_{test}
+
+#if !(defined(__SDCC_mcs51) && !defined(__SDCC_STACK_AUTO) && defined(__SDCC_MODEL_SMALL) ) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
 long long x;
 unsigned long long y;
 int i;
+
+#if defined(TEST_mul)
 
 long long g(void)
 {
@@ -42,84 +45,11 @@ static unsigned long long mulLL(unsigned long long a, unsigned long long b)
   return a * b;
 }
 
-static long long divLL(long long a, long long b)
-{
-  return a / b;
-}
-
-static unsigned long long divULL(unsigned long long a, unsigned long long b)
-{
-  return a / b;
-}
-
-static unsigned long long modULL(unsigned long long a, unsigned long long b)
-{
-  return a % b;
-}
-
-static long long modLL(long long a, long long b)
-{
-  return a % b;
-}
-
-static int compareLL(unsigned long long a, unsigned long long b)
-{
-  if (a > b)
-    return 1;
-  else if (a < b)
-    return -1;
-  else
-    return 0;
-}
-
-static long long leftShiftLL(long long a)
-{
-  return a << 8;
-}
- 
-static long long rightShiftLL(long long a)
-{
-  return a >> 8;
-}
-
-static unsigned long long rightShiftULL(unsigned long long a)
-{
-  return a >> 8;
-}
-
-static unsigned long long leftShiftULL(unsigned long long a)
-{
-  return a << 8;
-}
-
-static unsigned long long bitAndULL(unsigned long long a, unsigned long long b)
-{
-  return a & b;
-}
-
-static unsigned long long bitOrULL(unsigned long long a, unsigned long long b)
-{
-  return a | b;
-}
-
-static unsigned long long bitXorULL(unsigned long long a, unsigned long long b)
-{
-  return a ^ b;
-}
-
-static unsigned long long bitNotULL(unsigned long long a)
-{
-  return ~a;
-}
-
-#endif
-
 void
-testLongLong (void)
+LongLong_mul (void)
 {
   volatile unsigned long tmp;
 
-#if !(defined(__SDCC_mcs51) && (defined(__SDCC_MODEL_SMALL) || defined(__SDCC_MODEL_MEDIUM))) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
   i = 42;
   ASSERT (g() == 43);
   i = 23;
@@ -177,13 +107,9 @@ testLongLong (void)
   x = 42ll << 23;
   ASSERT (x + y == (42ll << 23) + 42);
   ASSERT (x - y == (42ll << 23) - 42);
-#ifndef __SDCC_ds390
   ASSERT (x * y == (42ll << 23) * 42);
   ASSERT (x / tmp == (42ll << 23) / 42);
-#endif
-#if !defined __SDCC_hc08 && !defined __SDCC_s08 // hc08 / s08-specific bug
   ASSERT (x % tmp == (42ll << 23) % 42);
-#endif
 
   x = 0x1122334455667788ll;
   y = 0x9988776655443322ull;
@@ -194,7 +120,6 @@ testLongLong (void)
 
   y = 0x55667788ull;
   ASSERT (y * y == 0x55667788ull * 0x55667788ull); // this test is optimized by constant propagation
-#ifndef __SDCC_ds390
   ASSERT (mulLL (y, y) == 0x55667788ull * 0x55667788ull); // this test is not
   y = 0x55667788ull;
   x = 0x55667788ll;
@@ -219,11 +144,38 @@ testLongLong (void)
   ASSERT (y * x == 0x1122334455667700ull * 0x2ll); // this test is optimized by constant propagation
   ASSERT (mulLL (y, x) == 0x1122334455667700ull * 0x2ll); // this test is not
 
+  c(); // Unused long long return value requires special handling in register allocation.
+}
+
+#elif defined(TEST_div)
+
+static unsigned long long divULL(unsigned long long a, unsigned long long b)
+{
+  return a / b;
+}
+
+static unsigned long long modULL(unsigned long long a, unsigned long long b)
+{
+  return a % b;
+}
+
+static long long divLL(long long a, long long b)
+{
+  return a / b;
+}
+
+static long long modLL(long long a, long long b)
+{
+  return a % b;
+}
+
+void
+LongLong_div (void)
+{
   y = 0x1122334455667700ull;
   x = 0x7ll;
   ASSERT (y / x == 0x1122334455667700ull / 0x7ll); // this test is optimized by constant propagation
   ASSERT (divULL (y, x) == 0x1122334455667700ull / 0x7ll); // this test is not
-#if !defined __SDCC_hc08 && !defined __SDCC_s08 // hc08 / s08-specific bugs
   ASSERT (y % x == 0x1122334455667700ull % 0x7ll); // this test is optimized by constant propagation
   ASSERT (modULL (y, x) == 0x1122334455667700ull % 0x7ll); // this test is not
   x = 0x1122334455667700ll;
@@ -231,7 +183,63 @@ testLongLong (void)
   ASSERT (divLL (x, 0x7ll) == 0x1122334455667700ll / 0x7ll); // this test is not
   ASSERT (x % 0x7ll == 0x1122334455667700ll % 0x7ll); // this test is optimized by constant propagation
   ASSERT (modLL (x, 0x7ll) == 0x1122334455667700ll % 0x7ll); // this test is not
-#endif
+}
+
+#elif defined(TEST_bit)
+
+static int compareLL(unsigned long long a, unsigned long long b)
+{
+  if (a > b)
+    return 1;
+  else if (a < b)
+    return -1;
+  else
+    return 0;
+}
+
+static long long leftShiftLL(long long a)
+{
+  return a << 8;
+}
+ 
+static long long rightShiftLL(long long a)
+{
+  return a >> 8;
+}
+
+static unsigned long long rightShiftULL(unsigned long long a)
+{
+  return a >> 8;
+}
+
+static unsigned long long leftShiftULL(unsigned long long a)
+{
+  return a << 8;
+}
+
+static unsigned long long bitAndULL(unsigned long long a, unsigned long long b)
+{
+  return a & b;
+}
+
+static unsigned long long bitOrULL(unsigned long long a, unsigned long long b)
+{
+  return a | b;
+}
+
+static unsigned long long bitXorULL(unsigned long long a, unsigned long long b)
+{
+  return a ^ b;
+}
+
+static unsigned long long bitNotULL(unsigned long long a)
+{
+  return ~a;
+}
+
+void
+LongLong_bit (void)
+{
   y = 0x44556677aabbccddull;
   x = 0x7766554433221100ull;
   ASSERT (y < x);
@@ -265,9 +273,61 @@ testLongLong (void)
   ASSERT (bitXorULL (y, x) == (0x69aaaaaaaaaa55aaull ^ 0x69555555555555aall));
   ASSERT ((~y) == (~0x69aaaaaaaaaa55aaull));
   ASSERT (bitNotULL (y) == (~0x69aaaaaaaaaa55aaull));
-#endif
+}
 
-  c(); // Unused long long return value require special handling in register allocation.
+#elif defined(TEST_shift)
+
+void
+LongLong_shift (void)
+{
+  unsigned char i,j,expected,match;
+  for (i=0;i<64;i++) {
+    y = 1ull << i;
+    match=0;
+    for (j=0;j<64;j++) {
+      expected = (j==i);
+      if ((unsigned char)(y & 1) == expected)
+        match++;
+      y >>= 1;
+    }
+    ASSERT (match==64);
+  }
+
+  for (i=0;i<64;i++) {
+    y = 0x8000000000000000ull >> i;
+    match=0;
+    for (j=0;j<64;j++) {
+      expected = (j==i);
+      if ((y & 0x8000000000000000ull) ? expected : !expected)
+        match++;
+      y <<= 1;
+    }
+    ASSERT (match==64);
+  }
+
+  for (i=0;i<64;i++) {
+    x = (signed long long)0x8000000000000000ll >> i;
+    match=0;
+    for (j=0;j<64;j++) {
+      expected = (j<=i);
+      if ((x & 0x8000000000000000ll) ? expected : !expected)
+        match++;
+      x <<= 1;
+    }
+    ASSERT (match==64);
+  }
+ 
+}
+
+#endif //TEST_mul/div/bit/shift
+
+#endif //!mcs51-small
+
+void
+testLongLong (void)
+{
+#if !(defined(__SDCC_mcs51) && !defined(__SDCC_STACK_AUTO) && defined(__SDCC_MODEL_SMALL) ) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
+  LongLong_{test}();
 #endif
 }
 
