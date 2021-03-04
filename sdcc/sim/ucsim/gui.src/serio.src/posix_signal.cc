@@ -15,9 +15,9 @@
 #include <sys/wait.h>   /* header for waitpid() and various macros */
 #include <signal.h>     /* header for signal functions */
 #include <stdlib.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <string.h>
-#include <strings.h>
+//#include <strings.h>
 #include <errno.h>
 
 #include "posix_signal.hh"

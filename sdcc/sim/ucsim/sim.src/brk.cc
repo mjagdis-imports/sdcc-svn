@@ -25,12 +25,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 #include <ctype.h>
 
-#include "pobjcl.h"
+//#include "pobjcl.h"
 #include "globals.h"
 
 #include "brkcl.h"
@@ -64,7 +64,7 @@ cl_brk::condition(void)
     return true;
   long l;
   l= application->eval(cond);
-  //fprintf(stderr,"BP[%d]EVAL: %s =%ld\n", nr, (char*)cond, l);
+  //fprintf(stderr,"BP[%d]EVAL: %s =%ld\n", nr, cond.c_str(), l);
   return l!=0;
 }
 
@@ -176,28 +176,26 @@ brk_coll::brk_coll(t_index alimit, t_index adelta,
   rom= arom;
 }
 
-void *
-brk_coll::key_of(void *item)
+const void *
+brk_coll::key_of(const void *item) const
 {
-  return((void *)&(((class cl_brk *)(item))->nr));
+  return &(((const class cl_brk *)item)->nr);
 }
 
 
 int
-brk_coll::compare(void *key1, void *key2)
+brk_coll::compare(const void *key1, const void *key2)
 {
   int k1, k2;
 
-  k1= *(int *)key1;
-  k2= *(int *)key2;
+  k1= *(const int *)key1;
+  k2= *(const int *)key2;
 
   if (k1 == k2)
     return(0);
-  else
-    if (k1 < k2)
-      return(-1);
-    else
-      return(+1);
+  else if (k1 < k2)
+    return(-1);
+  return(1);
 }
 
 

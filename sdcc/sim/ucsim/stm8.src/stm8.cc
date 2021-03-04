@@ -28,27 +28,27 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdarg.h> /* for va_list */
+//#include <stdarg.h> /* for va_list */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
 #include "globals.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "stm8cl.h"
 #include "glob.h"
-#include "regsstm8.h"
+//#include "regsstm8.h"
 #include "stm8mac.h"
-#include "itccl.h"
+//#include "itccl.h"
 #include "serialcl.h"
 #include "rstcl.h"
 #include "timercl.h"
@@ -76,6 +76,7 @@ int
 cl_stm8::init(void)
 {
   cl_uc::init(); /* Memories now exist */
+  sp_limit= 0x1500;
 
   xtal = 8000000;
 
@@ -115,19 +116,19 @@ cl_stm8::reset(void)
 }
 
 
-char *
+const char *
 cl_stm8::id_string(void)
 {
   switch (type->type)
     {
     case CPU_STM8S:
-      return((char*)"STM8 S,AF");
+      return("STM8 S,AF");
     case CPU_STM8L:
-      return((char*)"STM8 AL,L");
+      return("STM8 AL,L");
     case CPU_STM8L101:
-      return((char*)"STM8 L101");
+      return("STM8 L101");
     default:
-      return((char*)"STM8");
+      return("STM8");
     }
 }
 
@@ -155,7 +156,7 @@ cl_stm8::get_mem_size(enum mem_class type)
 
 static class cl_port_ui *d= NULL;
 static int puix= 1;
-static int puiy= 4;
+static int puiy= 5;
 static int puik= 0;
 static int puis= 1;
 static const char *puiks= keysets[puik];
@@ -172,7 +173,7 @@ cl_stm8::mk_port(t_addr base, chars n)
   pd.cell_p  = p->cell_p;
   pd.cell_in = p->cell_in;
   pd.cell_dir= p->cell_dir;
-  pd.keyset  = chars(puiks);
+  pd.keyset  = puiks;
   pd.basx    = puix;
   pd.basy    = puiy;
   d->add_port(&pd, puis++);
@@ -181,12 +182,19 @@ cl_stm8::mk_port(t_addr base, chars n)
     {
       puix= 1;
       if ((puiy+= 7) > 20)
-	;
+        {}
     }
   if ((puik+= 1) > 7)
     puiks= NULL;
   else
     puiks= keysets[puik];
+}
+
+void
+cl_stm8::make_cpu_hw(void)
+{
+  add_hw(cpu= new cl_stm8_cpu(this));
+  cpu->init();
 }
 
 void
@@ -267,9 +275,6 @@ cl_stm8::mk_hw_elements(void)
   add_hw(d= new cl_port_ui(this, 0, "dport"));
   d->init();
   pd.init();
-  
-  add_hw(h= new cl_stm8_cpu(this));
-  h->init();
   
   if (type->type == CPU_STM8S)
     {
@@ -625,16 +630,16 @@ cl_stm8::make_memories(void)
   address_spaces->add(regs16);
 
   class cl_var *v;
-  vars->add(v= new cl_var(cchars("A"), regs8, 0, ""));
+  vars->add(v= new cl_var("A", regs8, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("CC"), regs8, 1, ""));
+  vars->add(v= new cl_var("CC", regs8, 1, ""));
   v->init();
   
-  vars->add(v= new cl_var(cchars("X"), regs16, 0, ""));
+  vars->add(v= new cl_var("X", regs16, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("Y"), regs16, 1, ""));
+  vars->add(v= new cl_var("Y", regs16, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("SP"), regs16, 2, ""));
+  vars->add(v= new cl_var("SP", regs16, 2, ""));
   v->init();
 }
 
@@ -969,9 +974,10 @@ cl_stm8::print_regs(class cl_console_base *con)
                  regs.X, regs.X, isprint(regs.X)?regs.X:'.');
   con->dd_printf("Y= 0x%04x %3d %c\n",
                  regs.Y, regs.Y, isprint(regs.Y)?regs.Y:'.');
-  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c\n",
+  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c  Limit= 0x%04x\n",
                  regs.SP, ram->get(regs.SP+1), ram->get(regs.SP+1),
-                 isprint(ram->get(regs.SP+1))?ram->get(regs.SP+1):'.');
+                 isprint(ram->get(regs.SP+1))?ram->get(regs.SP+1):'.',
+		 AU(sp_limit));
 
   print_disass(PC, con);
 }
@@ -1022,6 +1028,7 @@ cl_stm8::exec_inst(void)
 	int ch= fetch();
 	int cl= fetch();
 	PC= ce*0x10000 + ch*0x100 + cl;
+	tick(1);
 	return resGO;
       }
     case 0x8b: return resSTOP; // BREAK instruction
@@ -1096,6 +1103,7 @@ cl_stm8::exec_inst(void)
 		     delete il;
 		   }
 	       }
+	       tick(10);
                return(resGO);
             case 0x10: 
             case 0xA0:
@@ -1137,6 +1145,7 @@ cl_stm8::exec_inst(void)
                tempi = get1(opaddr);
                store1( opaddr, regs.A);
                regs.A = tempi;
+	       tick(2);
                return(resGO);
             case 0x40: // exg A,XL
                tempi = regs.X;
@@ -1164,6 +1173,7 @@ cl_stm8::exec_inst(void)
                }
             case 0x80: // ret
                pop2( PC);
+	       tick(3);
                return(resGO);
             case 0x10: 
             case 0xA0:
@@ -1206,7 +1216,7 @@ cl_stm8::exec_inst(void)
                pop1(tempi);
                store1(opaddr, tempi);
                return(resGO);
-            case 0x40: // mul
+            case 0x40: // MUL
                tick(3);
                if(cprefix==0x90) {
                   regs.Y = (regs.Y&0xff) * regs.A;
@@ -1251,6 +1261,7 @@ cl_stm8::exec_inst(void)
                return( inst_cpl( code, cprefix));
                break;
             case 0x80: // TRAP
+	      tick(8);
 	       {
 		 class it_level *il= new it_level(3, 0x8004, PC, trap_src);
 		 accept_it(il);
@@ -1340,7 +1351,8 @@ cl_stm8::exec_inst(void)
             case 0x60: // DIVW
                return( inst_div( code, cprefix));
                break;
-            case 0x80:
+	 case 0x80: // POPW
+	   tick(1);
                if(cprefix==0x90) {
                   pop2(regs.Y);
                } else if(cprefix==0x00) {
@@ -1434,6 +1446,7 @@ cl_stm8::exec_inst(void)
                pop1( tempi);
                pop2( PC);
                PC += (tempi <<16); //Add PCE to PC
+	       tick(5);
                return(resGO);
             case 0x90:
                if(cprefix==0x90) {
@@ -1445,12 +1458,14 @@ cl_stm8::exec_inst(void)
                }
                return(resGO);
                break;
-            case 0xA0:
+	 case 0xA0: // LDF
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   store1(get3(opaddr)+regs.X,regs.A);
+		  tick(3);
                } else if(cprefix==0x91) {
-                  store1(get3(opaddr)+regs.Y,regs.A);
+		 store1(get3(opaddr)+regs.Y,regs.A);
+		 tick(3);
                } else if(cprefix==0x90) {
                   store1((opaddr << 8) + fetch() + regs.Y, regs.A);
                } else if(cprefix==0x00) {
@@ -1513,6 +1528,7 @@ cl_stm8::exec_inst(void)
                return( inst_rlc( code, cprefix));
                break;
             case 0x80: // PUSHW
+	      tick(1);
                if(cprefix==0x90) {
                   push2(regs.Y);
                } else if(cprefix==0x00) {
@@ -1573,11 +1589,18 @@ cl_stm8::exec_inst(void)
       case 0xb:
          switch ( code & 0xf0) {
             case 0x30: // push longmem
-               push1( get1(fetch2()));
-               return(resGO);
+	      {
+		t_addr a= fetch2();
+		t_mem v= get1(a);
+		push1( v /*get1(fetch2())*/);
+		return(resGO);
+	      }
             case 0x40: // push #byte
-               push1( fetch1());
-               return(resGO);
+	      {
+		t_mem v= fetch1();
+		push1(v);
+		return(resGO);
+	      }
             case 0x50: // addw sp,#val
                regs.SP += fetch1();
                return(resGO);
@@ -1636,8 +1659,10 @@ cl_stm8::exec_inst(void)
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   PC = get3(opaddr);
+		  tick(5);
                } else {
                   PC = (opaddr << 8) + fetch();
+		  tick(1);
                }
                return(resGO);
                break;
@@ -1681,11 +1706,13 @@ cl_stm8::exec_inst(void)
                    push2(PC & 0xffff);
                    push1(PC >> 16);
                    PC = get3(opaddr);
+		   tick(7);
                } else {
                    unsigned char c = fetch();
                    push2(PC & 0xffff);
                    push1(PC >> 16);
                    PC = (opaddr << 8) + c;
+		   tick(4);
                }
                return(resGO);
                break;
@@ -1697,6 +1724,7 @@ cl_stm8::exec_inst(void)
                signed char c = (signed char) fetch1();
                push2(PC);
                PC += c;
+	       tick(3);
                return(resGO);
              }
                break;            
@@ -1704,6 +1732,7 @@ cl_stm8::exec_inst(void)
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   store1(get3(opaddr),regs.A);
+		  tick(3);
                } else {
                   store1((opaddr << 8) + fetch(), regs.A);
                }
@@ -1733,6 +1762,7 @@ cl_stm8::exec_inst(void)
                break;
             case 0x80: 
 	      //printf("************* HALT instruction reached !!!!\n");
+	      tick(9);
                return(resHALT);
             case 0x90: // LD A, YH / XH
                if(cprefix==0x90) {
@@ -1774,6 +1804,7 @@ cl_stm8::exec_inst(void)
                break;
             case 0x80: 
 	      //printf("************* WFI/WFE instruction not implemented !!!!\n");
+	      tick(9);
                return(resINV_INST);
             case 0x90:
                if(cprefix==0x90) {
@@ -1788,8 +1819,10 @@ cl_stm8::exec_inst(void)
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   regs.A = get1(get3(opaddr)+regs.X);
+		  tick(4);
                } else if(cprefix==0x91) {
                   regs.A = get1(get3(opaddr)+regs.Y);
+		  tick(4);
                } else if(cprefix==0x90) {
                   regs.A = get1((opaddr << 8) + fetch() + regs.Y);
                } else if(cprefix==0x00) {
@@ -1911,6 +1944,24 @@ cl_stm8::it_enabled(void)
   return !(regs.CC & BIT_I0) || !(regs.CC & BIT_I1);
 }
 
+void
+cl_stm8::stack_check_overflow(class cl_stack_op *op)
+{
+  if (op)
+    {
+      if (op->get_op() & stack_write_operation)
+	{
+	  t_addr a= op->get_after();
+	  if (a < sp_limit)
+	    {
+	      class cl_error_stack_overflow *e=
+		new cl_error_stack_overflow(op);
+	      e->init();
+	      error(e);
+	    }
+	}
+    }
+}
 
 cl_stm8_cpu::cl_stm8_cpu(class cl_uc *auc):
   cl_hw(auc, HW_DUMMY, 0, "cpu")
@@ -1926,6 +1977,11 @@ cl_stm8_cpu::init(void)
     {
       regs[i]= register_cell(uc->rom, 0x7f00+i);
     }
+  cl_var *v;
+  uc->vars->add(v= new cl_var(chars("sp_limit"), cfg, cpuconf_sp_limit,
+			      cfg_help(cpuconf_sp_limit)));
+  v->init();
+  
   return 0;
 }
 
@@ -2045,10 +2101,30 @@ cl_stm8_cpu::read(class cl_memory_cell *cell)
 t_mem
 cl_stm8_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 {
+  class cl_stm8 *u= (class cl_stm8 *)uc;
   if (val)
     cell->set(*val);
+  switch ((enum stm8_cpu_cfg)addr)
+    {
+    case cpuconf_sp_limit:
+      if (val)
+	u->sp_limit= *val & 0xffff;
+      else
+	cell->set(u->sp_limit);
+      break;
+    }
   return cell->get();
 }
 
+const char *
+cl_stm8_cpu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case cpuconf_sp_limit:
+      return "Stack overflows when SP is below this limit";
+    }
+  return "Not used";
+}
 
 /* End of stm8.src/stm8.cc */

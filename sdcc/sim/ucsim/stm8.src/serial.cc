@@ -27,20 +27,20 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "ddconfig.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <strings.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <ctype.h>
+//#include <errno.h>
+//#include <fcntl.h>
+//#include <sys/time.h>
+//#include <strings.h>
 
 // prj
-#include "globals.h"
-#include "utils.h"
+//#include "globals.h"
+//#include "utils.h"
 
 // cmd
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 // sim
 #include "itsrccl.h"
@@ -433,7 +433,7 @@ cl_serial::print_info(class cl_console_base *con)
   if (fout)
     con->dd_printf("%s/%d", fout->get_file_name(), fout->file_id);
   con->dd_printf("\n");
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

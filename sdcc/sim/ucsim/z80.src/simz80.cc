@@ -25,11 +25,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
+#include <stdio.h>
+#include <string.h>
+
 #include "globals.h"
 
 // local
 #include "simz80cl.h"
-#include "z80cl.h"
+//#include "z80cl.h"
 #include "r2kcl.h"
 #include "lr35902cl.h"
 #include "ez80cl.h"
@@ -65,6 +68,7 @@ cl_simz80::mk_controller(void)
     {
     case CPU_Z80:
     case CPU_Z180:
+    case CPU_Z80N:
       return(new cl_z80(&cpus_z80[i], this));
     // Add Rabbits, etc here.
 

@@ -25,7 +25,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
 
@@ -436,6 +436,8 @@ struct cpu_entry cpus_z80[]=
     {"LR35902", CPU_LR35902, 0			, ""		, ""},
 
     {"EZ80"   , CPU_EZ80,    0			, ""		, ""},
+
+    {"Z80N"   , CPU_Z80N,    0                  , ""            , ""},
     
     {NULL, CPU_NONE, 0, "", ""}
   };

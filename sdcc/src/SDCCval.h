@@ -40,7 +40,12 @@ value;
 
 typedef struct literalList
 {
-  double literalValue;
+  bool isFloat;
+  union {
+    unsigned long long ull;
+    double f64;
+  }
+  value;
   unsigned count;
   struct literalList *next;
 } literalList;
@@ -122,7 +127,7 @@ value *charVal (const char *);
 value *symbolVal (symbol *);
 void printVal (value *);
 double floatFromVal (value *);
-unsigned long ulFromVal (value *);
+unsigned long ulFromVal (const value *);
 unsigned long long ullFromVal (value *);
 
 /* convert a fixed16x16 type to double */

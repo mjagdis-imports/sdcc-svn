@@ -27,6 +27,9 @@
 */
 /*@1@*/
 
+#include <string.h>
+#include <ctype.h>
+
 #include "varcl.h"
 
 
@@ -56,6 +59,33 @@ cl_var::init(void)
   return 0;
 }
 
+int
+cl_var::move(t_addr new_addr)
+{
+  if (addr == new_addr)
+    return 0;
+  if (cell && (bitnr < 0))
+    cell->set_flag(CELL_VAR, false);
+  addr= new_addr;
+  cell= NULL;
+  return init();
+}
+
+t_mem
+cl_var::write(t_mem val)
+{
+  if (!cell)
+    return 0;
+  return cell->write(val);
+}
+
+t_mem
+cl_var::set(t_mem val)
+{
+  if (!cell)
+    return 0;
+  return cell->set(val);
+}
 
 void
 cl_var::print_info(cl_console_base *con)
@@ -77,28 +107,31 @@ cl_var::print_info(cl_console_base *con)
 	{
 	  con->dd_printf("= ");
 	  con->dd_printf(as->data_format, v);
+	  con->dd_printf(",%u", MU(v));
+	  con->dd_printf(",%d", MI(v));
+	  if (isprint(MI(v)))
+	    con->dd_printf(",'%c'", MI(v));
 	}
     }
   con->dd_printf("\n");
   if (!desc.empty())
-    con->dd_printf("  %s\n", (char*)desc);
+    con->dd_printf("  %s\n", desc.c_str());
 }
 
 
-void *
-cl_var_list::key_of(void *item)
+const void *
+cl_var_list::key_of(const void *item) const
 {
-  class cl_var *v= (class cl_var *)item;
-  return (void*)v->get_name();
+  return ((const class cl_var *)item)->get_name();
 }
 
 int
-cl_var_list::compare(void *key1, void *key2)
+cl_var_list::compare(const void *key1, const void *key2)
 {
-  char *k1, *k2;
+  const char *k1, *k2;
 
-  k1= (char*)key1;
-  k2= (char*)key2;
+  k1= (const char*)key1;
+  k2= (const char*)key2;
   if (k1 && k2)
     return strcmp(k1, k2);
   return 0;

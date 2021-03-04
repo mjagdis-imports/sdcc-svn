@@ -6,7 +6,7 @@ top_builddir = @top_builddir@
 
 LIB_TYPE     = @LIB_TYPE@
 
-SCC = $(top_builddir)/bin/sdcc -mpdk14
+SCC = $(top_builddir)/bin/sdcc -mpdk14 --max-allocs-per-node 25000
 SAS = $(top_builddir)/bin/sdaspdk14
 
 # override PORTDIR defined by super (parent) makefile
@@ -45,7 +45,7 @@ PDK14_LONGLONG = $(COMMON_LONGLONG) \
   _modulonglong.c
 
 PDK14_SDCC = $(COMMON_SDCC) \
-  _itoa.c \
+  __itoa.c \
   _startup.c \
   _strcmp.c \
   _strcpy.c \

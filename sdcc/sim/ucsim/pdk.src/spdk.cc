@@ -29,7 +29,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "globals.h"
 
 // sim.src
-#include "appcl.h"
+//#include "appcl.h"
 
 // local
 #include "simpdkcl.h"
@@ -42,6 +42,7 @@ main(int argc, char *argv[])
 
   cpus= cpus_pdk;
   application= new cl_app();
+  application->set_name("spdk");
   application->init(argc, argv);
   sim= new cl_simpdk(application);
   if (sim->init())

@@ -7,38 +7,38 @@ static const ASM_MAPPING _asxxxx_gb_mapping[] = {
     { "functionlabeldef", "%s:" },
     { "globalfunctionlabeldef", "%s::" },
     { "*hl", "(hl)" },
+    { "jphl", "jp (hl)" },
     { "di", "di" },
     { "ei", "ei" },
-    /*{ "ldahli", "ldi\ta, (hl)" }, use when assembler update is complete*/
-    {"ldahli", "ld\ta, (hl)\ninc\thl"},
+    { "ldahli", "ld\ta, (hl+)"},
     { "ldahlsp", "ldhl\tsp, #%d" },
     { "ldaspsp", "add sp, #%d" },
-    { "*pair", "(%s)" },
+    { "mems", "(%s)" },
     { "enter", "" },
     { "enters", "" },
-    { "enterx", 
+    { "enterx",
       "add sp, #-%d" },
-    { "pusha", 
+    { "pusha",
       "push af\n"
       "push bc\n"
       "push de\n"
       "push hl"
     },
-    { "popa", 
+    { "popa",
       "pop hl\n"
       "pop de\n"
       "pop bc\n"
       "pop af"
     },
-    { "adjustsp", "lda sp, -%d(sp)" },
+    { "adjustsp", "add sp, #-%d" },
     { "fileprelude", "" },
     { "profileenter",
-                "ld a, #3\n"
-                "rst\t0x08"
+      "ld a, #3\n"
+      "rst\t0x08"
     },
     { "profileexit",
-                "ld a, #4\n"
-                "rst\t0x08"
+      "ld a, #4\n"
+      "rst\t0x08"
     },
     { NULL, NULL }
 };
@@ -52,47 +52,48 @@ static const ASM_MAPPING _asxxxx_z80_mapping[] = {
     { "*ixx", "%d (ix)" },
     { "*iyx", "%d (iy)" },
     { "*hl", "(hl)" },
+    { "jphl", "jp (hl)" },
     { "di", "di" },
     { "ei", "ei" },
-    { "ldahli", 
-		"ld a, (hl)\n"
-		"inc\thl" },
-    { "ldahlsp", 
-		"ld hl, #%d\n"
-		"add\thl, sp" },
-    { "ldaspsp", 
-		"ld iy,#%d\n"
-		"add\tiy,sp\n"
-		"ld\tsp,iy" },
-    { "*pair", "(%s)" },
-    { "enter", 
-		"push\tix\n"
-		"ld\tix,#0\n"
-		"add\tix,sp" },
-    { "enters", 
-		"call\t___sdcc_enter_ix\n" },
-    { "pusha", 
-      		"push af\n"
-      		"push\tbc\n"
-      		"push\tde\n"
-      		"push\thl\n"
-		"push\tiy"
+    { "ldahli",
+      "ld a, (hl)\n"
+      "inc\thl" },
+    { "ldahlsp",
+      "ld hl, #%d\n"
+      "add\thl, sp" },
+    { "ldaspsp",
+      "ld iy,#%d\n"
+      "add\tiy,sp\n"
+      "ld\tsp,iy" },
+    { "mems", "(%s)" },
+    { "enter",
+      "push\tix\n"
+      "ld\tix,#0\n"
+      "add\tix,sp" },
+    { "enters",
+      "call\t___sdcc_enter_ix\n" },
+    { "pusha",
+      "push af\n"
+      "push\tbc\n"
+      "push\tde\n"
+      "push\thl\n"
+      "push\tiy"
     },
     { "popa",
-		"pop iy\n"
-		"pop\thl\n"
-		"pop\tde\n"
-		"pop\tbc\n"
-		"pop\taf"
+      "pop iy\n"
+      "pop\thl\n"
+      "pop\tde\n"
+      "pop\tbc\n"
+      "pop\taf"
     },
     { "adjustsp", "lda sp,-%d(sp)" },
     { "profileenter",
-                "ld a,#3\n"
-                "rst\t0x08"
+      "ld a,#3\n"
+      "rst\t0x08"
     },
     { "profileexit",
-                "ld a,#4\n"
-                "rst\t0x08"
+      "ld a,#4\n"
+      "rst\t0x08"
     },
     { NULL, NULL }
 };
@@ -106,79 +107,63 @@ static const ASM_MAPPING _asxxxx_r2k_mapping[] = {
     { "*ixx", "%d (ix)" },
     { "*iyx", "%d (iy)" },
     { "*hl", "(hl)" },
+    { "jphl", "jp (hl)" },
     { "di", "ipset3" },
     { "ei", "ipres" },
-    { "ldahli", 
-		"ld a, (hl)\n"
-		"inc\thl" },
-    { "ldahlsp", 
-		"ld hl, #%d\n"
-		"add\thl, sp" },
-    { "ldaspsp", 
-		"ld iy,#%d\n"
-		"add\tiy,sp\n"
-		"ld\tsp,iy" },
-    { "*pair", "(%s)" },
-    { "enter", 
-		"push\tix\n"
-		"ld\tix,#0\n"
-		"add\tix,sp" },
-    { "enters", 
-		"call\t___sdcc_enter_ix\n" },
-    { "pusha", 
-      		"push af\n"
-      		"push\tbc\n"
-      		"push\tde\n"
-      		"push\thl\n"
-		"push\tiy"
+    { "ldahli",
+      "ld a, (hl)\n"
+      "inc\thl" },
+    { "ldahlsp",
+      "ld hl, #%d\n"
+      "add\thl, sp" },
+    { "ldaspsp",
+      "ld iy,#%d\n"
+      "add\tiy,sp\n"
+      "ld\tsp,iy" },
+    { "mems", "(%s)" },
+    { "enter",
+      "push\tix\n"
+      "ld\tix,#0\n"
+      "add\tix,sp" },
+    { "enters",
+      "call\t___sdcc_enter_ix\n" },
+    { "pusha",
+      "push af\n"
+      "push\tbc\n"
+      "push\tde\n"
+      "push\thl\n"
+      "push\tiy"
     },
     { "popa",
-		"pop iy\n"
-		"pop\thl\n"
-		"pop\tde\n"
-		"pop\tbc\n"
-		"pop\taf"
+      "pop iy\n"
+      "pop\thl\n"
+      "pop\tde\n"
+      "pop\tbc\n"
+      "pop\taf"
     },
     { "adjustsp", "lda sp,-%d(sp)" },
     { "profileenter",
-                "ld a,#3\n"
-                "rst\t0x28"
+      "ld a,#3\n"
+      "rst\t0x28"
     },
     { "profileexit",
-                "ld a,#4\n"
-                "rst\t0x28"
+      "ld a,#4\n"
+      "rst\t0x28"
     },
     { NULL, NULL }
 };
 
 static const ASM_MAPPING _rgbds_mapping[] = {
-    { "global", "GLOBAL %s" },
-    { "extern", "GLOBAL %s" },
+    { "global", "EXPORT %s" },
+    { "extern", "" },
     { "slabeldef", "%s:" },
     { "labeldef", "%s:" },
     { "tlabeldef", ".l%05d:" },
     { "tlabel", ".l%05d" },
-    { "fileprelude", 
+    { "fileprelude",
       "; Generated using the rgbds tokens.\n"
-      "\t; We have to define these here as sdcc doesn't make them global by default\n"
-      "\tGLOBAL __mulschar\n"
-      "\tGLOBAL __muluchar\n"
-      "\tGLOBAL __mulint\n"
-      "\tGLOBAL __divschar\n"
-      "\tGLOBAL __divuchar\n"
-      "\tGLOBAL __divsint\n"
-      "\tGLOBAL __divuint\n"
-      "\tGLOBAL __modschar\n"
-      "\tGLOBAL __moduchar\n"
-      "\tGLOBAL __modsint\n"
-      "\tGLOBAL __moduint\n"
-      "\tGLOBAL __mullong\n"  
-      "\tGLOBAL __modslong\n"  
-      "\tGLOBAL __divslong\n"  
-      "\tGLOBAL banked_call\n"
-      "\tGLOBAL banked_ret\n"
     },
-    { "functionheader", 
+    { "functionheader",
       "; ---------------------------------\n"
       "; Function %s\n"
       "; ---------------------------------"
@@ -187,10 +172,10 @@ static const ASM_MAPPING _rgbds_mapping[] = {
     { "globalfunctionlabeldef", "%s::" },
     { "zero", "$00" },
     { "one", "$01" },
-    { "area", "SECTION \"%s\",CODE" },
-    { "areadata", "SECTION \"%F_%s\",BSS" },
-    { "areacode", "SECTION \"%F_CODE\",%s" }, 
-    { "areahome", "SECTION \"%F_HOME\",HOME" },
+    { "area", "SECTION FRAGMENT \"_%s\",ROM0" },
+    { "areadata", "SECTION FRAGMENT \"%F_DATA\",%s" },
+    { "areacode", "SECTION FRAGMENT \"%F_CODE\",%s" },
+    { "areahome", "SECTION FRAGMENT \"%F_HOME\",ROM0" },
     { "ascii", "DB \"%s\"" },
     { "ds", "DS %d" },
     { "db", "DB" },
@@ -206,18 +191,21 @@ static const ASM_MAPPING _rgbds_mapping[] = {
     { "lsbimmeds", "%s & $FF" },
     { "msbimmeds", "%s >> 8" },
     { "bankimmeds", "BANK(%s)" },
+    { "hashedbankimmeds", "BANK(%s)" },
     { "module", "; MODULE %s" },
+    { "equ", "EQU" },
+    { "bequ", "\rb%s EQU %i" },
     { NULL, NULL }
 };
 
 static const ASM_MAPPING _rgbds_gb_mapping[] = {
-    { "pusha", 
+    { "pusha",
       "push af\n"
       "\tpush bc\n"
       "\tpush de\n"
       "\tpush hl"
     },
-    { "popa", 
+    { "popa",
       "pop hl\n"
       "\tpop de\n"
       "\tpop bc\n"
@@ -228,11 +216,14 @@ static const ASM_MAPPING _rgbds_gb_mapping[] = {
     { "adjustsp", "add sp, -%d" },
     { "enter", "" },
     { "enters", "" },
+    { "enterx",
+      "add sp, -%d" },
     { "ldahli", "ld a, [hl+]" },
     { "*hl", "[hl]" },
-    { "ldahlsp", "ld hl, [sp+%d]" },
+    { "jphl", "jp hl" },
+    { "ldahlsp", "ld hl, sp+%d" },
     { "ldaspsp", "add sp, %d" },
-    { "*pair", "[%s]" },
+    { "mems", "[%s]" },
     { NULL, NULL }
 };
 
@@ -243,7 +234,7 @@ static const ASM_MAPPING _isas_mapping[] = {
     { "labeldef", "%s:" },
     { "tlabeldef", "?l%05d:" },
     { "tlabel", "?l%05d" },
-    { "fileprelude", 
+    { "fileprelude",
       ";Generated using the isas tokens.\n"
       "\tLPREFIX '?'  ; Treat labels starting with ? as local.\n"
       "\tONCNUM       ; Numbers are hex\n"
@@ -265,7 +256,7 @@ static const ASM_MAPPING _isas_mapping[] = {
       "\tGLOBAL banked_call\n"
       "\tGLOBAL banked_ret\n"
     },
-    { "functionheader", 
+    { "functionheader",
       "; ---------------------------------\n"
       "; Function %s\n"
       "; ---------------------------------"
@@ -293,18 +284,19 @@ static const ASM_MAPPING _isas_mapping[] = {
     { "lsbimmeds", "%s & 0xFF" },
     { "msbimmeds", "%s >> 8" },
     { "bankimmeds", "!%s" },
+    { "hashedbankimmeds", "!%s" },
     { "module", "; MODULE %s" },
     { NULL, NULL }
 };
 
 static const ASM_MAPPING _isas_gb_mapping[] = {
-    { "pusha", 
+    { "pusha",
       "push af\n"
       "push bc\n"
       "push de\n"
       "push hl"
     },
-    { "popa", 
+    { "popa",
       "pop hl\n"
       "pop de\n"
       "pop bc\n"
@@ -317,9 +309,10 @@ static const ASM_MAPPING _isas_gb_mapping[] = {
     { "enters", "" },
     { "ldahli", "ld a, (hli)" },
     { "*hl", "(hl)" },
+    { "jphl", "jp (hl)" },
     { "ldahlsp", "ldhl sp, %d" },
     { "ldaspsp", "add sp, %d" },
-    { "*pair", "(%s)" },
+    { "mems", "(%s)" },
     { NULL, NULL }
 };
 
@@ -330,24 +323,24 @@ static const ASM_MAPPING _z80asm_mapping[] = {
     { "labeldef", "\n.%s" },
     { "tlabeldef", "\n.l%N%05d" },
     { "tlabel", "l%N%05d" },
-    { "fileprelude", 
-        "; Generated using the z80asm/z88 tokens.\n"
-        "\tXREF __muluchar_rrx_s\n"
-        "\tXREF __mulschar_rrx_s\n"
-        "\tXREF __mulint_rrx_s\n"
-        "\tXREF __mullong_rrx_s\n"
-        "\tXREF __divuchar_rrx_s\n"
-        "\tXREF __divschar_rrx_s\n"
-        "\tXREF __divsint_rrx_s\n"
-        "\tXREF __divuint_rrx_s\n"
-        "\tXREF __divulong_rrx_s\n"
-        "\tXREF __divslong_rrx_s\n"
-        "\tXREF __rrulong_rrx_s\n"
-        "\tXREF __rrslong_rrx_s\n"
-        "\tXREF __rlulong_rrx_s\n"
-        "\tXREF __rlslong_rrx_s\n"
+    { "fileprelude",
+      "; Generated using the z80asm/z88 tokens.\n"
+      "\tXREF __muluchar_rrx_s\n"
+      "\tXREF __mulschar_rrx_s\n"
+      "\tXREF __mulint_rrx_s\n"
+      "\tXREF __mullong_rrx_s\n"
+      "\tXREF __divuchar_rrx_s\n"
+      "\tXREF __divschar_rrx_s\n"
+      "\tXREF __divsint_rrx_s\n"
+      "\tXREF __divuint_rrx_s\n"
+      "\tXREF __divulong_rrx_s\n"
+      "\tXREF __divslong_rrx_s\n"
+      "\tXREF __rrulong_rrx_s\n"
+      "\tXREF __rrslong_rrx_s\n"
+      "\tXREF __rlulong_rrx_s\n"
+      "\tXREF __rlslong_rrx_s\n"
     },
-    { "functionheader", 
+    { "functionheader",
       "; ---------------------------------\n"
       "; Function %s\n"
       "; ---------------------------------"
@@ -372,10 +365,11 @@ static const ASM_MAPPING _z80asm_mapping[] = {
     { "msbimmeds", "%s / 256" },
 
     { "bankimmeds", "BANK(%s)" },
+    { "hashedbankimmeds", "BANK(%s)" },
     { "module", "MODULE %s" },
     { "area", "; Area  %s" },
     { "areadata", "; Aread BSS" },
-    { "areacode", "; Area CODE" }, 
+    { "areacode", "; Area CODE" },
     { "areahome", "; Area HOME" },
     { NULL, NULL }
 };
@@ -384,47 +378,153 @@ static const ASM_MAPPING _z80asm_z80_mapping[] = {
     { "*ixx", "(ix%+d)" },
     { "*iyx", "(iy%+d)" },
     { "*hl", "(hl)" },
+    { "jphl", "jp (hl)" },
+    { "di", "di" },
+    { "ei", "ei" },
+    { "ldahli",
+      "ld a, (hl)\n"
+      "inc\thl" },
+    { "ldahlsp",
+      "ld hl, %d\n"
+      "add\thl, sp" },
+    { "ldaspsp",
+      "ld iy, %d\n"
+      "add\tiy, sp\n"
+      "ld\tsp, iy" },
+    { "mems", "(%s)" },
+    { "enter",
+      "push\tix\n"
+      "ld\tix,0\n"
+      "add\tix,sp" },
+    { "enters",
+      "call\t___sdcc_enter_ix\n" },
+    { "pusha",
+      "push af\n"
+      "push\tbc\n"
+      "push\tde\n"
+      "push\thl\n"
+      "push\tiy"
+    },
+    { "popa",
+      "pop\tiy\n"
+      "pop\thl\n"
+      "pop\tde\n"
+      "pop\tbc\n"
+      "pop\taf"
+    },
+    { "adjustsp", "lda sp, (sp%+d)" },
+    { "profileenter",
+      "ld a,3\n"
+      "rst\t$08"
+    },
+    { "profileexit",
+      "ld a,4\n"
+      "rst\t$08"
+    },
+    { NULL, NULL }
+};
+static const ASM_MAPPING _gas_gb_mapping[] = {
+    { "immed", "#"},
+    { "zero", "#0x00"},
+    { "one", "#0x01"},
+    { "area", ".area\t%s" },
+    { "areacode", ".area\t%s"},
+    { "areadata", ".area\t%s"},
+    { "areahome", ".area\t%s"},
+    { "functionlabeldef", "%s:" },
+    { "globalfunctionlabeldef", "%s:" },
+    { "*hl", "(hl)" },
+    { "di", "di" },
+    { "ei", "ei" },
+    { "ldahli", "ldi\ta, (hl)" },
+    { "ldahlsp", "ldhl\tsp, #%d" },
+    { "ldaspsp", "add\tsp, #%d" },
+    { "mems", "(%s)" },
+    { "enter", "" },
+    { "enters", "" },
+    { "enterx", "add\tsp, #-%d" },
+    { "pusha", 
+      "push\taf\n"
+      "push\tbc\n"
+      "push\tde\n"
+      "push\thl"
+    },
+    { "popa", 
+      "pop\thl\n"
+      "pop\tde\n"
+      "pop\tbc\n"
+      "pop\taf"
+    },
+    { "adjustsp", "lda\tsp, -%d (sp)" },
+    { "fileprelude", "" },
+    { "profileenter",
+                "ld\ta, #3\n"
+                "rst\t0x08"
+    },
+    { "profileexit",
+                "ld\ta, #4\n"
+                "rst\t0x08"
+    },
+    { NULL, NULL }
+};
+
+static const ASM_MAPPING _gas_z80_mapping[] = {
+    {"immed", "#"},
+    {"zero", "#0x00"},
+    {"one", "#0x01"},
+    {"area", ".area\t%s"},
+    {"areacode", ".area\t%s"},
+    {"areadata", ".area\t%s"},
+    {"areahome", ".area\t%s"},
+    {"constbyte", "0x%02x"},
+    {"constword", "0x%04x"},
+    {"immedword", "#0x%04x"},
+    {"immedbyte", "#0x%02x"},
+    {"hashedstr", "#%s"},
+    {"bankimmeds", "%s >> 16"},
+    { "*ixx", "%d (ix)" },
+    { "*iyx", "%d (iy)" },
+    { "*hl", "(hl)" },
     { "di", "di" },
     { "ei", "ei" },
     { "ldahli", 
-		"ld a, (hl)\n"
+		"ld\ta,(hl)\n"
 		"inc\thl" },
     { "ldahlsp", 
-		"ld hl, %d\n"
+		"ld\thl, #%d\n"
 		"add\thl, sp" },
     { "ldaspsp", 
-		"ld iy, %d\n"
-		"add\tiy, sp\n"
-		"ld\tsp, iy" },
-    { "*pair", "(%s)" },
+		"ld\tiy,#%d\n"
+		"add\tiy,sp\n"
+		"ld\tsp,iy" },
+    { "mems", "(%s)" },
     { "enter", 
 		"push\tix\n"
-		"ld\tix,0\n"
+		"ld\tix,#0\n"
 		"add\tix,sp" },
-    { "enters", 
-		"call\t___sdcc_enter_ix\n" },
+    { "enters", "call\t___sdcc_enter_ix\n" },
     { "pusha", 
-      		"push af\n"
+      		"push\taf\n"
       		"push\tbc\n"
       		"push\tde\n"
       		"push\thl\n"
 		"push\tiy"
     },
-    { "popa", 
+    { "popa",
 		"pop\tiy\n"
 		"pop\thl\n"
 		"pop\tde\n"
 		"pop\tbc\n"
 		"pop\taf"
     },
-    { "adjustsp", "lda sp, (sp%+d)" },
+    { "adjustsp", "lda\tsp,-%d (sp)" },
     { "profileenter",
-                "ld a,3\n"
-                "rst\t$08"
+                "ld\ta, #3\n"
+                "rst\t0x08"
     },
     { "profileexit",
-                "ld a,4\n"
-                "rst\t$08"
+                "ld\ta, #4\n"
+                "rst\t0x08"
     },
     { NULL, NULL }
 };
@@ -472,4 +572,14 @@ const ASM_MAPPINGS _z80asm_z80 = {
 const ASM_MAPPINGS _asxxxx_r2k = {
     &asm_asxxxx_mapping,
     _asxxxx_r2k_mapping
+};
+
+const ASM_MAPPINGS _gas_gb = {
+    &asm_gas_mapping,
+    _gas_gb_mapping
+};
+
+const ASM_MAPPINGS _gas_z80 = {
+    &asm_gas_mapping,
+    _gas_z80_mapping
 };

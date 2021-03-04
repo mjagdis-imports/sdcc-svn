@@ -262,7 +262,7 @@ status collapsed
 
 \end_inset
 
-, etc.), Dallas DS80C390 variants, Freescale (formerly Motorola) HC08 based
+, etc.), Dallas DS80C390 variants, NXP (formerly Freescale/Motorola) HC08 based
  (hc08, s08), Zilog Z80 based MCUs (Z80, Z180, eZ80 in Z80 mode, gbz80,
  Rabbit 2000/3000, Rabbit 3000A 
 \begin_inset Index idx
@@ -317,11 +317,11 @@ rollers and underlying hardware effectively.
 
 You might also want to have a look at the wiki 
 \begin_inset Flex URL
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
-http://sdcc.sourceforge.net/wiki/
+https://sourceforge.net/p/sdcc/wiki/
 \end_layout
 
 \end_inset
@@ -1058,7 +1058,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
-http://shop-pdp.kent.edu/ashtml/asxxxx.htm
+https://shop-pdp.net/ashtml/
 \end_layout
 
 \end_inset
@@ -1623,7 +1623,7 @@ status collapsed
 
 -std-c11
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 -
@@ -1663,7 +1663,7 @@ status collapsed
 
 -std-c2x
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 -
@@ -1846,7 +1846,7 @@ status collapsed
 
 -std-c11
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 -
@@ -1886,7 +1886,7 @@ status collapsed
 
 -std-c2x
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 -
@@ -1964,27 +1964,42 @@ status collapsed
 \end_layout
 
 \begin_layout Itemize
-bit
+__bit
 \begin_inset Index idx
 status collapsed
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
 bit
 \end_layout
 
 \end_inset
 
- and sbit
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-sbit
-\end_layout
-
-\end_inset
-
-
+ and __sbit
 \begin_inset Index idx
 status collapsed
 
@@ -2066,7 +2081,7 @@ Bit toggling
 \begin_inset space ~
 \end_inset
 
-bit b;
+__bit b;
 \begin_inset Newline newline
 \end_inset
 
@@ -2626,6 +2641,11 @@ In 3.7.0, the prototype for getchar() changed from char getchar(void) to int
 
 \begin_layout Itemize
 In 3.8.6, the deprecated sdcclib was removed.
+\end_layout
+
+\begin_layout Itemize
+In 4.0.3, _itoa, _uitoa, _ltoa, _ultoa were renamed to __itoa, __uitoa, __ltoa,
+ __ultoa.
 \end_layout
 
 \begin_layout Section
@@ -8853,7 +8873,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
-http://shop-pdp.kent.edu/
+https://shop-pdp.net/
 \end_layout
 
 \end_inset
@@ -15686,20 +15706,7 @@ status collapsed
 \begin_inset space ~
 \end_inset
 
-<Value> By default the stack
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-stack
-\end_layout
-
-\end_inset
-
- is placed after the data segment for mcs51.
- By using this option the stack can be placed anywhere in the internal memory
- space of the mcs51.
- The value entered can be in Hexadecimal or Decimal format, e.g.
+<Value> The value entered can be in Hexadecimal or Decimal format, e.g.
  -
 \begin_inset ERT
 status collapsed
@@ -15727,101 +15734,6 @@ status collapsed
 \end_inset
 
 -stack-loc 32.
- Since the sp register is incremented before a push or call, the initial
- sp will be set to one byte prior the provided value.
- The provided value should not overlap any other memory areas such as used
- register banks or the data segment and with enough space for the current
- application.
- The 
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pack-iram
-\end_layout
-
-\end_inset
-
- option (which is now a default setting) will override this setting, so
- you should also specify the 
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\end_layout
-
-\end_inset
-
- option if you need to manually place the stack.
 \end_layout
 
 \begin_deeper
@@ -15892,7 +15804,7 @@ xstack
 
  is placed after the __pdata
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset ERT
@@ -15955,7 +15867,7 @@ status collapsed
 
 \end_inset
 
--stack-loc 32768.
+-xstack-loc 32768.
  The provided value should not overlap any other memory areas such as the
  pdata or xdata segment and with enough space for the current application.
 \end_layout
@@ -17026,121 +16938,6 @@ status collapsed
 \end_inset
 
  Causes the linker to check if there is at minimum <Value> bytes for stack.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pack-iram
-\end_layout
-
-\end_inset
-
- Causes the linker to use unused register banks for data variables and pack
- data, idata and stack together.
- This is the default and this option will probably be removed along with
- the removal of -
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-(deprecated)
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\end_layout
-
-\end_inset
-
- Causes the linker to use old style for allocating memory areas.
- This option is now deprecated and will be removed in future versions.
 \end_layout
 
 \begin_layout Labeling
@@ -25616,7 +25413,7 @@ Interrupt handler can be interrupted by NMI only
 \end_layout
 
 \begin_layout Subsection
-Rabbit 2000, 3000, 3000A and 4000 Interrupt Service Routines
+Rabbit 2000, 3000 and 3000A Interrupt Service Routines
 \end_layout
 
 \begin_layout Standard
@@ -37416,7 +37213,7 @@ Defines created by the compiler
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="20" columns="2">
+<lyxtabular version="3" rows="22" columns="2">
 <features tabularvalignment="middle">
 <column alignment="left" valignment="top" width="3in">
 <column alignment="left" valignment="top" width="3in">
@@ -38238,7 +38035,7 @@ Always defined.
 \begin_layout Plain Layout
 __SDCC_REVISION
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 SDCC!Defines!SDCC
@@ -38522,7 +38319,7 @@ status collapsed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38580,7 +38377,7 @@ REENT
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38600,6 +38397,152 @@ status collapsed
 \end_inset
 
 -int-long-reent
+\emph default
+ is used
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+__SDCC_OPTIMIZE_SPEED
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SDCC!Defines!SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+OPTIMIZE
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+SPEED
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+when 
+\emph on
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-opt-code-speed
+\emph default
+ is used
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+__SDCC_OPTIMIZE_SIZE
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SDCC!Defines!SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+OPTIMIZE
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+SIZE
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+when 
+\emph on
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-opt-code-size
 \emph default
  is used
 \end_layout
@@ -43719,7 +43662,8 @@ ftp://ftp.dalsemi.com/pub/tini/ds80c400/c_libraries/sdcc/index.html
 \end_layout
 
 \begin_layout Section
-The Z80, Z180, Rabbit 2000/3000, Rabbit 3000A, GBZ80, eZ80 and TLCS-90 ports
+The Z80, Z180, Rabbit 2000, Rabbit 2000A, Rabbit 3000A, GBZ80, eZ80 and
+ TLCS-90 ports
 \end_layout
 
 \begin_layout Standard
@@ -43733,8 +43677,8 @@ Z80
 
 \end_inset
 
-, Z180, eZ80 in Z80 mode, Rabbit 2000/3000, Rabbit 3000A and LR35902, the
- Nintendo GameBoy's Z80-like gbz80
+, Z180, eZ80 in Z80 mode, Rabbit 2000, Rabbit 2000A, Rabbit 3000A and LR35902,
+ the Nintendo GameBoy's Z80-like gbz80
 \begin_inset Index idx
 status collapsed
 
@@ -43873,6 +43817,59 @@ status collapsed
 \end_layout
 
 \begin_layout Subsection
+Rabbit ports
+\end_layout
+
+\begin_layout Standard
+SDCC has three rabbit-supporting ports: r2k for the Rabbit 2000, r2ka for
+ the Rabbit 2000A, 2000B, 2000C and 3000, r3ka for the Rabbit 3000A.
+ The instruction set of the Rabbit 2000 to Rabbit 3000 is the same, and
+ a subset of the Rabbit 3000A instruction set.
+ Code from the r2k backend will work on Rabbit 2000 to 3000A and code from
+ the r2ka backend will work on Rabbit 2000A to 3000A.
+ In some hardware confgurations (see below), code from the r2ka backend
+ will work on the Rabbit 2000.
+ Typically, code from the r3ka backend will be faster and smaller than code
+ from the r2ka backend, and code from the r2ka backend will be faster and
+ smaller than code from the r2k backend.
+\end_layout
+
+\begin_layout Subsection
+Rabbit wait states
+\end_layout
+
+\begin_layout Standard
+There are multiple wait state bugs present in some of the the Rabbits.
+ The difference between the r2k and r2ka port is in additional wait state
+ bug workarounds.
+ If all memory used has zero wait states, code from the r2ka backend can
+ be safely run on the original Rabbit 2000.
+\end_layout
+
+\begin_layout Standard
+Note that The r2k and r2ka port assume that the whole stack has the same
+ number of wait states (code from the r2k and r2ka ports can fail is the
+ stack spans memories with a different amount of wait states).
+\end_layout
+
+\begin_layout Standard
+The Rabbit 2000 has some wait state bugs that SDCC does not work around.
+ These bugs result in the number of wait states used being one less than
+ configured for some instructions.
+ The workaround has to be supplied by the user, by configuring all memories
+ that do use wait states to use on additional wait state.
+\end_layout
+
+\begin_layout Standard
+For all Rabbit ports, SDCC assumes that all data memory is at least as fast
+ (i.e.
+ does not need more wait states) as all code memory.
+ Code where this is not the case (e.g.
+ code in fast Flash writing into slow battery-backed SRAM) will have to
+ be written in assembler by hand.
+\end_layout
+
+\begin_layout Subsection
 Complex instructions
 \end_layout
 
@@ -43942,7 +43939,7 @@ Unsafe reads
 
 \begin_layout Standard
 Usually, Z80-based systems (except for the Gameboy) have separate I/O and
- memory spaces, and any memory location can be read without side-effects.
+ memory spaces, and any normal memory location can be read without side-effects.
  For such systems, the option –allow-unsafe-reads can be used to enable
  some extra optimizations.
 \end_layout

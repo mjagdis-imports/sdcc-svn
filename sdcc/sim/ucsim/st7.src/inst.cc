@@ -27,13 +27,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
-#include "stdio.h"
-#include <stdlib.h>
+//#include "ddconfig.h"
+
+//#include "stdio.h"
+//#include <stdlib.h>
 
 // local
 #include "st7cl.h"
-#include "regsst7.h"
+//#include "regsst7.h"
 #include "st7mac.h"
 
 unsigned int
@@ -525,11 +526,10 @@ cl_st7::inst_jr(t_mem code, unsigned char prefix)
         break;
       case 7: // JRIL - interrupt low - no means to test this ???
         taken = 1; 
-        
+        break;
       default:
         return(resHALT);
     } 
-  
   if (code & 1)
     taken = ! taken;
   

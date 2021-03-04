@@ -25,20 +25,20 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
 
 // sim
-#include "simcl.h"
-#include "memcl.h"
-#include "stackcl.h"
+//#include "simcl.h"
+//#include "memcl.h"
+//#include "stackcl.h"
 
 // local
 #include "tlcscl.h"
@@ -101,85 +101,91 @@ cl_tlcs::init(void)
   cl_uc::init(); /* Memories now exist */
   //ram= address_space(MEM_IRAM_ID);
   //rom= address_space(MEM_ROM_ID);
-
+  sp_limit= 0xf000;
+  
   // zero out ram(this is assumed in regression tests)
   for (int i=0x8000; i<0x10000; i++) {
     nas->set((t_addr) i, 0);
   }
 
-  vars->add(v= new cl_var(cchars("A"), regs8, 0, ""));
+  vars->add(v= new cl_var("A", regs8, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("F"), regs8, 1, ""));
+  vars->add(v= new cl_var("F", regs8, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("B"), regs8, 2, ""));
+  vars->add(v= new cl_var("B", regs8, 2, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("C"), regs8, 3, ""));
+  vars->add(v= new cl_var("C", regs8, 3, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("D"), regs8, 4, ""));
+  vars->add(v= new cl_var("D", regs8, 4, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("E"), regs8, 5, ""));
+  vars->add(v= new cl_var("E", regs8, 5, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("H"), regs8, 6, ""));
+  vars->add(v= new cl_var("H", regs8, 6, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("L"), regs8, 7, ""));
-  v->init();
-
-  vars->add(v= new cl_var(cchars("ALT_A"), regs8, 8, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_F"), regs8, 9, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_B"), regs8, 10, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_C"), regs8, 11, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_D"), regs8, 12, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_E"), regs8, 13, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_H"), regs8, 14, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("ALT_L"), regs8, 15, ""));
+  vars->add(v= new cl_var("L", regs8, 7, ""));
   v->init();
 
-  vars->add(v= new cl_var(cchars("AF"), regs16, 0, ""));
+  vars->add(v= new cl_var("ALT_A", regs8, 8, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("BC"), regs16, 1, ""));
+  vars->add(v= new cl_var("ALT_F", regs8, 9, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("DE"), regs16, 2, ""));
+  vars->add(v= new cl_var("ALT_B", regs8, 10, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("HL"), regs16, 3, ""));
+  vars->add(v= new cl_var("ALT_C", regs8, 11, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("IX"), regs16, 4, ""));
+  vars->add(v= new cl_var("ALT_D", regs8, 12, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("IY"), regs16, 5, ""));
+  vars->add(v= new cl_var("ALT_E", regs8, 13, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("SP"), regs16, 6, ""));
+  vars->add(v= new cl_var("ALT_H", regs8, 14, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_AF"), regs16, 7, ""));
+  vars->add(v= new cl_var("ALT_L", regs8, 15, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_BC"), regs16, 8, ""));
+
+  vars->add(v= new cl_var("AF", regs16, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_DE"), regs16, 9, ""));
+  vars->add(v= new cl_var("BC", regs16, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("ALT_HL"), regs16, 11, ""));
+  vars->add(v= new cl_var("DE", regs16, 2, ""));
+  v->init();
+  vars->add(v= new cl_var("HL", regs16, 3, ""));
+  v->init();
+  vars->add(v= new cl_var("IX", regs16, 4, ""));
+  v->init();
+  vars->add(v= new cl_var("IY", regs16, 5, ""));
+  v->init();
+  vars->add(v= new cl_var("SP", regs16, 6, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_AF", regs16, 7, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_BC", regs16, 8, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_DE", regs16, 9, ""));
+  v->init();
+  vars->add(v= new cl_var("ALT_HL", regs16, 11, ""));
   v->init();
 
   return(0);
 }
 
-char *
+const char *
 cl_tlcs::id_string(void)
 {
-  return((char*)"unspecified TLCS");
+  return("unspecified TLCS");
 }
 
 
 void
+cl_tlcs::make_cpu_hw(void)
+{
+  add_hw(cpu= new cl_tlcs_cpu(this));
+  cpu->init();
+}
+
+void
 cl_tlcs::mk_hw_elements(void)
 {
-  //class cl_base *o;
-  //hws->add(o= new cl_port(this));
-  //o->init();
+  //class cl_hw *h;
   cl_uc::mk_hw_elements();
 }
 
@@ -189,13 +195,13 @@ cl_tlcs::make_memories(void)
 {
   class cl_address_space *as;
 
-  rom= nas= as= new cl_address_space(cchars("nas"), 0, 0x10000, 8);
+  rom= nas= as= new cl_address_space("nas", 0, 0x10000, 8);
   as->init();
   address_spaces->add(as);
-  xas= as= new cl_address_space(cchars("xas"), 0, 0x10000, 8);
+  xas= as= new cl_address_space("xas", 0, 0x10000, 8);
   as->init();
   address_spaces->add(as);
-  yas= as= new cl_address_space(cchars("yas"), 0, 0x10000, 8);
+  yas= as= new cl_address_space("yas", 0, 0x10000, 8);
   as->init();
   address_spaces->add(as);
 
@@ -369,8 +375,9 @@ cl_tlcs::disass(t_addr addr, const char *sep)
   u64_t c;
   int i;
   chars s("");
-  char *buf, *t, l[20];
-  
+  const char *t;
+  char l[20];
+
   c= 0;
   for (i= 7; i>=0; i--)
     {
@@ -389,7 +396,7 @@ cl_tlcs::disass(t_addr addr, const char *sep)
   if (de->mnemonic == NULL)
     return strdup("?");
 
-  for (t= (char*)de->mnemonic; *t; t++)
+  for (t= de->mnemonic; *t; t++)
     {
       if (*t == '%')
 	{
@@ -436,8 +443,7 @@ cl_tlcs::disass(t_addr addr, const char *sep)
 	s+= *t;
     }
   
-  buf= strdup(s);
-  return buf;
+  return strdup(s);
 }
 
 int
@@ -504,9 +510,31 @@ cl_tlcs::print_regs(class cl_console_base *con)
   con->dd_printf("SP= 0x%04x [SP]= %02x %3d %c\n",
                  reg.sp, nas->get(reg.sp), nas->get(reg.sp),
                  isprint(nas->get(reg.sp))?nas->get(reg.sp):'.');
+  con->dd_printf("SP limit= 0x%04x\n", AU(sp_limit));
 
   print_disass(PC, con);
 }
+
+
+void
+cl_tlcs::stack_check_overflow(class cl_stack_op *op)
+{
+  if (op)
+    {
+      if (op->get_op() & stack_write_operation)
+	{
+	  t_addr a= op->get_after();
+	  if (a < sp_limit)
+	    {
+	      class cl_error_stack_overflow *e=
+		new cl_error_stack_overflow(op);
+	      e->init();
+	      error(e);
+	    }
+	}
+    }
+}
+
 
 int
 cl_tlcs::exec_inst(void)
@@ -1349,6 +1377,7 @@ cl_tlcs::exec_inst4_e3(u8_t c1, u8_t c2, u8_t c3, u8_t c4)
 	      write16(mn, *ar);
 	      vc.wr+= 2;
 	      *ar= temp;
+	      break;
 	    }
 	  case 0xa8: inst_bit(c, c4); break; // BIT b,(mn)
 	  case 0xb0: inst_res(c, c4); break; // RES b,(mn)
@@ -1823,5 +1852,53 @@ cl_tlcs::cc(u8_t cc)
   return false;
 }
 
+
+cl_tlcs_cpu::cl_tlcs_cpu(class cl_uc *auc):
+  cl_hw(auc, HW_CPU, 0, "cpu")
+{
+}
+
+int
+cl_tlcs_cpu::init(void)
+{
+  cl_hw::init();
+
+  cl_var *v;
+  uc->vars->add(v= new cl_var("sp_limit", cfg, tlcscpu_sp_limit,
+			      cfg_help(tlcscpu_sp_limit)));
+  v->init();
+
+  return 0;
+}
+
+const char *
+cl_tlcs_cpu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case tlcscpu_sp_limit:
+      return "Stack overflows when SP is below this limit";
+    }
+  return "Not used";
+}
+
+t_mem
+cl_tlcs_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
+{
+  class cl_tlcs *u= (class cl_tlcs *)uc;
+  if (val)
+    cell->set(*val);
+  switch ((enum tlcscpu_confs)addr)
+    {
+    case tlcscpu_sp_limit:
+      if (val)
+	u->sp_limit= *val & 0xffff;
+      else
+	cell->set(u->sp_limit);
+      break;
+    case tlcscpu_nuof: break;
+    }
+  return cell->get();
+}
 
 /* End of tlcs.src/tlcs.cc */

@@ -139,7 +139,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   bool left_dir = IS_TRUE_SYMOP (left) || IS_ITEMP (left) && !(options.stackAuto || reentrant) && !left_in_A;
   bool right_dir = IS_TRUE_SYMOP (right) || IS_ITEMP (right) && !(options.stackAuto || reentrant) && !right_in_A;
 
-  if (ic->op == '=' || ic->op == DUMMY_READ_VOLATILE || ic->op == CAST || ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS)
+  if (ic->op == '=' || ic->op == DUMMY_READ_VOLATILE || ic->op == CAST || ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS || ic->op == '~' || ic->op == '|' || ic->op == '^' || ic->op == BITWISEAND && !ifxForOp (result, ic))
     return(true);
 
   if(result && IS_ITEMP(result) && OP_SYMBOL_CONST(result)->remat && !operand_in_reg(result, REG_A, ia, i, G) && !operand_in_reg(result, REG_P, ia, i, G))
@@ -522,7 +522,7 @@ static void extra_ic_generated(iCode *ic)
   iCode *ifx;
 
   // - can only jump on nonzero result for decrement of register / direct variable.
-  if(ic->op == '-' && ic->next && ic->next->op == IFX && IC_TRUE(ic->next) && IC_COND (ic->next)->key == IC_RESULT(ic)->key)
+  if(ic->op == '-' && ic->next && ic->next->op == IFX && IC_COND (ic->next)->key == IC_RESULT(ic)->key)
     {
       ifx = ic->next;
 
@@ -536,9 +536,6 @@ static void extra_ic_generated(iCode *ic)
         return;
 
       if (!isOperandEqual (IC_RESULT(ic), IC_LEFT(ic)))
-        return;
-
-      if (getSize(operandType(IC_RESULT(ic))) > 2)
         return;
 
       ifx->generated = true;

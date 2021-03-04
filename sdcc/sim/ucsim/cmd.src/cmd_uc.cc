@@ -26,13 +26,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /*@1@*/
 
 #include <ctype.h>
+#include <string.h>
 
 // prj
 #include "globals.h"
 #include "utils.h"
 
 // sim.src
-#include "uccl.h"
+//#include "uccl.h"
 
 // local, cmd.src
 #include "cmd_uccl.h"
@@ -98,17 +99,19 @@ COMMAND_DO_WORK_UC(cl_file_cmd)
 {
   const char *fname= 0;
   long l;
-  
+
   if ((cmdline->param(0) == 0) ||
       ((fname= cmdline->param(0)->get_svalue()) == NULL))
     {
       con->dd_printf("File name is missing.\n");
       return(0);
     }
-  
+
   if ((l= uc->read_file(fname, con)) >= 0)
-    ;//con->dd_printf("%ld words read from %s\n", l, fname);
-    
+    {
+      //con->dd_printf("%ld words read from %s\n", l, fname);
+    }
+
   return(0);
 }
 
@@ -168,7 +171,7 @@ COMMAND_DO_WORK_UC(cl_pc_cmd)
 	}
       if (!uc->inst_at(addr))
 	con->dd_printf("Warning: maybe not instruction at 0x%06x\n", AU(addr));
-      uc->PC= addr;
+      uc->set_PC(addr);
     }
   uc->print_disass(uc->PC, con);
   return(false);
@@ -299,27 +302,33 @@ COMMAND_DO_WORK_UC(cl_dump_cmd)
   if (cmdline->syntax_match(uc, MEMORY))
     {
       mem= cmdline->param(0)->value.memory.memory;
+      if (mem->width > 16) bpl/= 2;
       mem->dump(df, -1, -1, bpl, con/*->get_fout()*/);
     }
-  else if (cmdline->syntax_match(uc, MEMORY ADDRESS)) {
-    mem  = cmdline->param(0)->value.memory.memory;
-    start= cmdline->param(1)->value.address;
-    end  = start+10*8-1;
-    mem->dump(df, start, end, bpl, con/*->get_fout()*/);
-  }
-  else if (cmdline->syntax_match(uc, MEMORY ADDRESS ADDRESS)) {
-    mem  = cmdline->param(0)->value.memory.memory;
-    start= cmdline->param(1)->value.address;
-    end  = cmdline->param(2)->value.address;
-    mem->dump(df, start, end, bpl, con/*->get_fout()*/);
-  }
-  else if (cmdline->syntax_match(uc, MEMORY ADDRESS ADDRESS NUMBER)) {
-    mem  = cmdline->param(0)->value.memory.memory;
-    start= cmdline->param(1)->value.address;
-    end  = cmdline->param(2)->value.address;
-    bpl  = cmdline->param(3)->value.number;
-    mem->dump(df, start, end, bpl, con/*->get_fout()*/);
-  }
+  else if (cmdline->syntax_match(uc, MEMORY ADDRESS))
+    {
+      mem  = cmdline->param(0)->value.memory.memory;
+      start= cmdline->param(1)->value.address;
+      end  = start+10*8-1;
+      if (mem->width > 16) bpl/= 2;
+      mem->dump(df, start, end, bpl, con/*->get_fout()*/);
+    }
+  else if (cmdline->syntax_match(uc, MEMORY ADDRESS ADDRESS))
+    {
+      mem  = cmdline->param(0)->value.memory.memory;
+      start= cmdline->param(1)->value.address;
+      end  = cmdline->param(2)->value.address;
+      if (mem->width > 16) bpl/= 2;
+      mem->dump(df, start, end, bpl, con/*->get_fout()*/);
+    }
+  else if (cmdline->syntax_match(uc, MEMORY ADDRESS ADDRESS NUMBER))
+    {
+      mem  = cmdline->param(0)->value.memory.memory;
+      start= cmdline->param(1)->value.address;
+      end  = cmdline->param(2)->value.address;
+      bpl  = cmdline->param(3)->value.number;
+      mem->dump(df, start, end, bpl, con/*->get_fout()*/);
+    }
   else
     syntax_error(con);
 

@@ -1014,7 +1014,7 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       goto convert;
     }
 
-  if ((TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_RABBIT || TARGET_IS_EZ80_Z80) && (!strcmp (bif->name, "__builtin_memcpy") || !strcmp (bif->name, "__builtin_strncpy") || !strcmp (bif->name, "__builtin_memset")))
+  if ((TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_RABBIT || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N) && (!strcmp (bif->name, "__builtin_memcpy") || !strcmp (bif->name, "__builtin_strncpy") || !strcmp (bif->name, "__builtin_memset")))
     {
       /* Replace iff return value is used or last parameter is not an integer constant (except for memcpy, where non-integers can be handled). */
       if (bitVectIsZero (OP_USES (IC_RESULT (icc))) && (IS_OP_LITERAL (IC_LEFT (lastparam)) || !strcmp (bif->name, "__builtin_memcpy")))
@@ -1135,14 +1135,16 @@ convertToFcall (eBBlock ** ebbs, int count)
           if (ic->op == '%' && isOperandLiteral (IC_RIGHT(ic)))
             {
               bool us = IS_UNSIGNED (operandType (IC_LEFT(ic)));
+              bool upcast = FALSE;
+              iCode *dic = NULL;
 
               // Chek if left really is just an upcasted unsigned value.
               if (!us && IS_SYMOP (IC_LEFT(ic)) && bitVectnBitsOn (OP_DEFS (IC_LEFT (ic))) == 1)
                 {
-                  iCode *dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (IC_LEFT (ic))));
+                  dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (IC_LEFT (ic))));
 
                   if (dic && dic->op == CAST && IS_UNSIGNED (operandType (IC_RIGHT (dic))) && getSize (operandType (IC_RIGHT (dic))) < getSize (operandType (IC_RESULT (dic))))
-                    us = true;
+                    us = upcast = true;
                 }
 
               if (us)
@@ -1154,6 +1156,8 @@ convertToFcall (eBBlock ** ebbs, int count)
                     {
                       ic->op = '=';
                       IC_RIGHT (ic) = operandFromLit (0);
+                      if (IS_SYMOP (IC_LEFT (ic)))
+                        bitVectUnSetBit (OP_USES (IC_LEFT (ic)), ic->key);
                       IC_LEFT (ic) = NULL;
                       continue;
                     }
@@ -1172,7 +1176,33 @@ convertToFcall (eBBlock ** ebbs, int count)
                     {
                       ic->op = BITWISEAND;
                       IC_RIGHT(ic) = operandFromLit (operandLitValue (IC_RIGHT (ic)) - 1);
+                      if (upcast && IS_CHAR (operandType (IC_RIGHT (dic)))
+                          && bitVectnBitsOn (OP_USES (IC_LEFT (ic))) == 1)
+                        {
+                          // Use precasted value
+                          attachiCodeOperand (IC_RIGHT (dic), &IC_LEFT (ic), ic);
+                          // Change cast to assignmnent to self to avoid
+                          // reading IC_RIGHT (dic) twice in case it
+                          // was volatile
+                          attachiCodeOperand (IC_RESULT (dic), &IC_RIGHT (dic), dic);
+                          dic->op = '=';
+                          // If upcast from char, maybe there's a
+                          // corresponding downcast to char that could
+                          // be eliminated too
+                          if (bitVectnBitsOn (OP_USES (IC_RESULT (ic))) == 1)
+                            {
+                              iCode *uic;
+                              uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (ic))));
+                              if (uic->op == CAST && IS_CHAR (operandType (IC_RESULT (uic))))\
+                                {
+                                  attachiCodeOperand (IC_RESULT (uic), &IC_RESULT (ic), ic);
+                                  attachiCodeOperand (IC_RESULT (uic), &IC_RIGHT (uic), uic);
+                                  uic->op = '=';
+                                }
+                            }
+                        }
                       continue;
+
                     }
                 }
             }
@@ -1369,7 +1399,7 @@ separateAddressSpaces (eBBlock **ebbs, int count)
           
           /*printf ("Looking at ic %d, op %d\n", ic->key, (int)(ic->op));*/
           
-          if (left && IS_SYMOP (left))
+          if (left && ic->op != ADDRESS_OF && IS_SYMOP (left))
             {
               if (POINTER_GET (ic))
                 {
@@ -1479,7 +1509,7 @@ getAddrspaceiCode (const iCode *ic)
 
   /* Previous transformations in separateAddressSpaces() should
      ensure that at most one addressspace occours in each iCode. */
-  if (left && IS_SYMOP (left))
+  if (left && ic->op != ADDRESS_OF && IS_SYMOP (left))
     { 
       if (POINTER_GET (ic))
         {
@@ -2172,6 +2202,16 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
               iCode *mul_candidate = 0;
               uic = hTabItemWithKey (iCodehTab, bit);
 
+              if (!uic)
+                {
+                  /* This iCode has been deleted but is still        */
+                  /* referenced. This shouldn't happen if everything */
+                  /* else is managing OP_USES properly, but better   */
+                  /* to ignore the problem than crash. */
+                  //printf ("%s used in iCode %d, but iCode missing\n",  OP_SYMBOL (IC_LEFT (ic))->name, bit);
+                  continue;
+                }
+
               if(uic->op == '+' && IS_OP_LITERAL (IC_RIGHT (uic)) && operandLitValue (IC_RIGHT (uic)) == 1 && isOperandEqual (IC_LEFT (uic), IC_LEFT (ic)))
                 {
                   inc = uic;
@@ -2489,12 +2529,17 @@ optimize:
               /* Insert casts on operands */
               if (ic->op != CAST)
                 {
+                  sym_link *clefttype = copyLinkChain (nextresulttype);
+                  SPEC_VOLATILE (clefttype) = IS_OP_VOLATILE (IC_LEFT (ic));
+                  sym_link *crighttype = copyLinkChain (nextresulttype);
+                  SPEC_VOLATILE (crighttype) = IS_OP_VOLATILE (IC_RIGHT (ic));
+
                   if (IS_SYMOP (IC_LEFT (ic)))
                     {
-                      newic = newiCode (CAST, operandFromLink (nextresulttype), IC_LEFT (ic));
+                      newic = newiCode (CAST, operandFromLink (clefttype), IC_LEFT (ic));
                       hTabAddItem (&iCodehTab, newic->key, newic);
                       bitVectSetBit (OP_USES (IC_LEFT (ic)), newic->key);
-                      IC_RESULT (newic) = newiTempOperand (nextresulttype, 0);
+                      IC_RESULT (newic) = newiTempOperand (clefttype, 0);
                       OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
                       bitVectUnSetBit (OP_USES (IC_LEFT (ic)), ic->key);
                       IC_LEFT (ic) = operandFromOperand (IC_RESULT (newic));
@@ -2506,14 +2551,14 @@ optimize:
                   else
                     {
                       wassert (IS_OP_LITERAL (IC_LEFT (ic)));
-                      IC_LEFT (ic) = operandFromValue (valCastLiteral (nextresulttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))));
+                      IC_LEFT (ic) = operandFromValue (valCastLiteral (clefttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))));
                     }
                   if (ic->op != LEFT_OP && IS_SYMOP (IC_RIGHT (ic)))
                     {
-                      newic = newiCode (CAST, operandFromLink (nextresulttype), IC_RIGHT (ic));
+                      newic = newiCode (CAST, operandFromLink (crighttype), IC_RIGHT (ic));
                       hTabAddItem (&iCodehTab, newic->key, newic);
                       bitVectSetBit (OP_USES (IC_RIGHT (ic)), newic->key);
-                      IC_RESULT (newic) = newiTempOperand (nextresulttype, 0);
+                      IC_RESULT (newic) = newiTempOperand (crighttype, 0);
                       OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
                       bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
                       IC_RIGHT (ic) = operandFromOperand (IC_RESULT (newic));
@@ -2525,7 +2570,7 @@ optimize:
                   else if (ic->op != LEFT_OP && ic->op != UNARYMINUS)
                     {
                       wassert (IS_OP_LITERAL (IC_RIGHT (ic)));
-                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (nextresulttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))));
+                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (crighttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))));
                     }
                 }
               if (uic->op == CAST && ic->op != RIGHT_OP)
@@ -2894,7 +2939,7 @@ offsetFoldUse (eBBlock **ebbs, int count)
   iCode *ic;
   iCode *uic;
 
-  if (!TARGET_IS_Z80 && !TARGET_IS_Z180 && !TARGET_IS_RABBIT && !TARGET_IS_STM8)
+  if (!(TARGET_Z80_LIKE && !TARGET_IS_GBZ80) && !TARGET_IS_STM8) // All z80-related targets except gbz80 support non-zero right operand. stm8 also supports it.
     return;
   
   for (i = 0; i < count; i++)
@@ -3199,7 +3244,7 @@ eBBlockFromiCode (iCode *ic)
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
-  computeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
+  computeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);
   while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
     optimizeCastCast (ebbi->bbOrder, ebbi->count);
   adjustIChain (ebbi->bbOrder, ebbi->count);
@@ -3212,7 +3257,7 @@ eBBlockFromiCode (iCode *ic)
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_LOSPRE, ebbi);
 
-      /* GCSE, lospre and maybe other optimizations sometimes create temporaries that have non-connected live ranges, which is bad. Split them. */
+      /* GCSE, lospre and maybe other optimizations sometimes create temporaries that have non-connected live ranges, which is bad (e.g. for offsetFoldUse and register allocation). Split them. */
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
       computeControlFlow (ebbi);

@@ -97,6 +97,7 @@ struct dis_entry
   uchar length;
   const char *mnemonic;
   bool is_call;
+  uchar ticks;
 };
 
 // table entry of SFR and BIT names
@@ -141,7 +142,9 @@ enum cpu_type {
   CPU_R2K       = 0x0008,
   CPU_R3KA      = 0x0010,
   CPU_EZ80	= 0x0020,
-  CPU_ALL_Z80   = (CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA|CPU_EZ80),
+  CPU_Z80N      = 0x0040,
+  CPU_ALL_Z80   = (CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA|CPU_EZ80|
+		   CPU_Z80N),
 
   CPU_XA	= 0x0001,
   CPU_ALL_XA	= (CPU_XA),
@@ -248,10 +251,10 @@ enum mem_class
   MEM_TYPES
 };
 
-#define MEM_SFR_ID	cchars("sfr")
-#define MEM_XRAM_ID	cchars("xram")
-#define MEM_IXRAM_ID	cchars("ixram")
-#define MEM_IRAM_ID	cchars("iram")
+#define MEM_SFR_ID	"sfr"
+#define MEM_XRAM_ID	"xram"
+#define MEM_IXRAM_ID	"ixram"
+#define MEM_IRAM_ID	"iram"
 
 // States of simulator
 enum sim_state {
@@ -285,6 +288,7 @@ enum inst_result {
   resSIMIF	= 110,	/* Stopped by simulated prog itself through sim interface */
   resNOT_DONE	= 111,	/* Intruction has not simulated */
   resEVENTBREAK = 112,  /* Event breakpoint */
+  resSELFJUMP	= 113,  /* Jump to itself */
 };
   
 #define BIT_MASK(bitaddr) (1 << (bitaddr & 0x07))

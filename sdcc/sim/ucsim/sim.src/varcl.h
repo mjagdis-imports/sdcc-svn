@@ -50,7 +50,11 @@ class cl_var: public cl_base
  public:
   cl_var(const char *iname, class cl_address_space *ias, t_addr iaddr, chars adesc, int ibitnr= -1);
   virtual int init(void);
+  virtual int move(t_addr new_addr);
   virtual class cl_memory_cell *get_cell(void) { return cell; }
+
+  virtual t_mem write(t_mem val);
+  virtual t_mem set(t_mem val);
   
   virtual void print_info(cl_console_base *con);
 };
@@ -61,8 +65,8 @@ class cl_var_list: public cl_sorted_list
  public:
  cl_var_list(): cl_sorted_list(10, 10, "symlist") {}
  public:
-  virtual void *key_of(void *item);
-  virtual int compare(void *key1, void *key2);
+  virtual const void *key_of(const void *item) const;
+  virtual int compare(const void *key1, const void *key2);
 };
 
 

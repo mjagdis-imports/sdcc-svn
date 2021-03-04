@@ -491,16 +491,12 @@ pointerTypes (sym_link * ptr, sym_link * type)
 void
 addDecl (symbol * sym, int type, sym_link * p)
 {
-  static sym_link *empty = NULL;
   sym_link *head;
   sym_link *tail;
   sym_link *t;
 
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
     fprintf (stderr, "SDCCsymt.c:addDecl(%s,%d,%p)\n", sym->name, type, (void *)p);
-
-  if (empty == NULL)
-    empty = newLink (SPECIFIER);
 
   /* if we are passed a link then set head & tail */
   if (p)
@@ -515,16 +511,18 @@ addDecl (symbol * sym, int type, sym_link * p)
       DCL_TYPE (head) = type;
     }
 
-  /* if this is the first entry   */
+  // no type yet: make p the type
   if (!sym->type)
     {
       sym->type = head;
       sym->etype = tail;
     }
+  // type ends in spec, p is single spec element: merge specs
   else if (IS_SPEC (sym->etype) && IS_SPEC (head) && head == tail)
     {
       sym->etype = mergeSpec (sym->etype, head, sym->name);
     }
+  // type ends in spec, p is single decl element: p goes before spec
   else if (IS_SPEC (sym->etype) && !IS_SPEC (head) && head == tail)
     {
       t = sym->type;
@@ -533,11 +531,25 @@ addDecl (symbol * sym, int type, sym_link * p)
       t->next = head;
       tail->next = sym->etype;
     }
-  else if (IS_FUNC (sym->type) && IS_SPEC (sym->type->next) && !memcmp (sym->type->next, empty, sizeof (sym_link)))
+  // type ends in spec, p ends in spec: merge specs, p's decls go before spec
+  else if (IS_SPEC (sym->etype) && IS_SPEC (tail))
     {
-      sym->type->next = head;
-      sym->etype = tail;
+      sym->etype = mergeSpec (sym->etype, tail, sym->name);
+
+      // cut off p's spec
+      t = head;
+      while (t->next != tail)
+          t = t->next;
+      tail = t;
+
+      // splice p's decls
+      t = sym->type;
+      while (t->next != sym->etype)
+          t = t->next;
+      t->next = head;
+      tail->next = sym->etype;
     }
+  // append p to the type
   else
     {
       sym->etype->next = head;
@@ -545,7 +557,7 @@ addDecl (symbol * sym, int type, sym_link * p)
     }
 
   /* if the type is an unknown pointer and has
-     a tspec then take the storage class const & volatile
+     a tspec then take the storage class and address
      attribute from the tspec & make it those of this
      symbol */
   if (p && !IS_SPEC (p) &&
@@ -877,14 +889,23 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
         }
     }
 
-  DCL_PTR_CONST (decl) |= SPEC_CONST (spec);
-  DCL_PTR_VOLATILE (decl) |= SPEC_VOLATILE (spec);
-  DCL_PTR_RESTRICT (decl) |= SPEC_RESTRICT (spec);
-  if (DCL_PTR_ADDRSPACE (decl) && SPEC_ADDRSPACE (spec) &&
-    strcmp (DCL_PTR_ADDRSPACE (decl)->name, SPEC_ADDRSPACE (spec)->name))
-    werror (E_SYNTAX_ERROR, yytext);
-  if (SPEC_ADDRSPACE (spec))
-    DCL_PTR_ADDRSPACE (decl) = SPEC_ADDRSPACE (spec);
+  // for pointers, type qualifiers go in the declarator
+  if (DCL_TYPE (decl) != ARRAY && DCL_TYPE (decl) != FUNCTION)
+    {
+      DCL_PTR_CONST (decl) |= SPEC_CONST (spec);
+      DCL_PTR_VOLATILE (decl) |= SPEC_VOLATILE (spec);
+      DCL_PTR_RESTRICT (decl) |= SPEC_RESTRICT (spec);
+      if (DCL_PTR_ADDRSPACE (decl) && SPEC_ADDRSPACE (spec) &&
+        strcmp (DCL_PTR_ADDRSPACE (decl)->name, SPEC_ADDRSPACE (spec)->name))
+        werror (E_SYNTAX_ERROR, yytext);
+      if (SPEC_ADDRSPACE (spec))
+        DCL_PTR_ADDRSPACE (decl) = SPEC_ADDRSPACE (spec);
+
+      SPEC_CONST (spec) = 0;
+      SPEC_VOLATILE (spec) = 0;
+      SPEC_RESTRICT (spec) = 0;
+      SPEC_ADDRSPACE (spec) = 0;
+    }
 
   lnk = decl;
   while (lnk && !IS_SPEC (lnk->next))
@@ -2133,6 +2154,9 @@ cleanUpLevel (bucket ** table, long level)
 symbol *
 getAddrspace (sym_link *type)
 {
+  while(IS_ARRAY (type))
+    type = type->next;
+
   if (IS_DECL (type))
     return (DCL_PTR_ADDRSPACE (type));
   return (SPEC_ADDRSPACE (type));
@@ -2218,6 +2242,23 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
   /* Conditional operator has some special type conversion rules */
   if (op == ':')
     {
+      /* Function types are really pointers to functions */
+      if (IS_FUNC (type1))
+        {
+          sym_link *fptr;
+          fptr = newLink (DECLARATOR);
+          DCL_TYPE (fptr) = CPOINTER;
+          fptr->next = type1;
+          type1 = fptr;
+        }
+      if (IS_FUNC (type2))
+        {
+          sym_link *fptr;
+          fptr = newLink (DECLARATOR);
+          DCL_TYPE (fptr) = CPOINTER;
+          fptr->next = type2;
+          type2 = fptr;
+        }
       /* If either type is an array, convert to pointer */
       if (IS_ARRAY(type1))
         {
@@ -2336,7 +2377,7 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
     case RESULT_TYPE_BOOL:
       if (op == ':')
         {
-          SPEC_NOUN (reType) = V_BIT;
+          SPEC_NOUN (reType) = TARGET_MCS51_LIKE ? V_BIT : V_BOOL;
           return rType;
         }
       break;
@@ -3507,9 +3548,11 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               for (args = FUNC_ARGS (type); args; args = args->next)
                 {
                   dbuf_printTypeChain (args->type, dbuf);
-                  if (args->next)
+                  if (args->next || FUNC_HASVARARGS(type))
                     dbuf_append_str (dbuf, ", ");
                 }
+              if (FUNC_HASVARARGS(type))
+                dbuf_append_str (dbuf, "...");
               dbuf_append_str (dbuf, ")");
               if (IFFUNC_ISREENT (type) && isTargetKeyword("__reentrant"))
                 dbuf_append_str (dbuf, " __reentrant");

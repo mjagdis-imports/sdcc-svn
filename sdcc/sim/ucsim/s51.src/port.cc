@@ -25,6 +25,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
+#include <stdio.h>
 #include <ctype.h>
 
 // cmd
@@ -104,9 +105,7 @@ cl_port::init(void)
   cfg->set(port_value, prev & cell_in->get());
   
   cl_var *v;
-  chars pn;
-  pn= cchars("port");
-  pn.append("%d_", id);
+  chars pn= chars("", "port%d_", id);
   uc->vars->add(v= new cl_var(pn+chars("on"), cfg, port_on,
 			      cfg_help(port_on)));
   v->init();
@@ -119,30 +118,34 @@ cl_port::init(void)
   uc->vars->add(v= new cl_var(pn+chars("value"), cfg, port_value,
 			      cfg_help(port_value)));
   v->init();
-  chars p= chars("pin");
-  p.append("%d", id);
-  uc->vars->add(v= new cl_var(p, cfg, port_pin,
+  uc->vars->add(v= new cl_var(pn+chars("odr"), cfg, port_odr,
+			      cfg_help(port_odr)));
+  v->init();
+
+  pn= chars("", "pin%d", id);
+  uc->vars->add(v= new cl_var(pn, cfg, port_pin,
 			      cfg_help(port_pin)));
   v->init();
-  p= chars("pins");
-  p.append("%d", id);
-  uc->vars->add(v= new cl_var(p, cfg, port_pin,
+
+  pn= chars("", "pins%d", id);
+  uc->vars->add(v= new cl_var(pn, cfg, port_pin,
 			      cfg_help(port_pin)));
   v->init();
   
   return(0);
 }
 
-char *
+const char *
 cl_port::cfg_help(t_addr addr)
 {
   switch (addr)
     {
-    case port_on: return (char*)"Turn/get on/off state (bool, RW)";
-    case port_pin: return (char*)"Outside value of port pins (int, RW)";
-    case port_value: return (char*)"Value of the port (int, RO)";
+    case port_on: return "Turn/get on/off state (bool, RW)";
+    case port_pin: return "Outside value of port pins (int, RW)";
+    case port_value: return "Value of the port (int, RO)";
+    case port_odr: return "Value of output register (int, RW)";
     }
-  return (char*)"Not used";
+  return "Not used";
 }
 
 t_mem
@@ -228,7 +231,13 @@ cl_port::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
       break;
     case port_value:
       if (val)
-	*val= cell->get();//cell->set(*val);
+	//*val= cell->get();
+	cell->set(*val);
+      break;
+    case port_odr:
+      if (val)
+	cell_p->write(*val);
+      cell->set(cell_p->get());
       break;
     }
   return cell->get();
@@ -292,7 +301,7 @@ cl_port::print_info(class cl_console_base *con)
   con->print_bin(data, 8);
   con->dd_printf(" 0x%02x %3d %c (Value on the port pins)\n",
 		 data, data, isprint(data)?data:'.');
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

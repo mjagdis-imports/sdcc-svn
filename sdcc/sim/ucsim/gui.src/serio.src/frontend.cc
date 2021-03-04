@@ -2,26 +2,30 @@
  * to emulate the serial input and output of an 8051 controller               *
  * frontend.cc - the ncurses frontend                                         *
  ******************************************************************************/
-#include <sys/types.h>
-#include <iostream>
+
+#include <stdio.h>
+#include <ctype.h>
+//#include <sys/types.h>
+//#include <iostream>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <curses.h>
-#include <errno.h>
+//#include <sys/stat.h>
+//#include <fcntl.h>
+//#include <curses.h>
+//#include <errno.h>
 #include <string.h>
-#include <unistd.h>
+//#include <unistd.h>
+
 #include "frontend.hh"
 
-char *
+static const char *
 flt_name(enum filter_t f)
 {
   switch (f)
     {
-    case flt_none	: return (char*)"none";
-    case flt_hex	: return (char*)"hex";
+    case flt_none	: return "none";
+    case flt_hex	: return "hex";
     }
-  return (char*)"unknown";
+  return "unknown";
 }
 
 Viewer::Viewer()

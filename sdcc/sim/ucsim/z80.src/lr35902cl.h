@@ -66,7 +66,7 @@ public:
 public:
   cl_lr35902(struct cpu_entry *Itype, class cl_sim *asim);
   virtual int init(void);
-  virtual char *id_string(void);
+  virtual const char *id_string(void);
   
   //virtual t_addr get_mem_size(enum mem_class type);
   virtual void mk_hw_elements(void);

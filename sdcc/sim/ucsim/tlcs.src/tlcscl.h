@@ -161,13 +161,15 @@ class cl_tlcs: public cl_uc
   class cl_address_space *yas;
   class cl_address_space *regs8;
   class cl_address_space *regs16;
+  t_addr sp_limit;
  public:
   cl_tlcs(class cl_sim *asim);
   virtual int init(void);
-  virtual char *id_string(void);
+  virtual const char *id_string(void);
 
   //virtual t_addr get_mem_size(enum mem_class type);
   //virtual int get_mem_width(enum mem_class type);
+  virtual void make_cpu_hw(void);
   virtual void mk_hw_elements(void);
   virtual void make_memories(void);
 
@@ -185,6 +187,8 @@ class cl_tlcs: public cl_uc
   virtual void print_regs(class cl_console_base *con);
   virtual int inst_length(t_addr addr);
 
+  virtual void stack_check_overflow(class cl_stack_op *op);
+  
   virtual int exec_inst(void);
   virtual int exec_inst2(u8_t c1);
   virtual int exec_inst2_f3(u8_t c1);
@@ -359,6 +363,23 @@ class cl_tlcs: public cl_uc
   // ?
 };
 
+
+enum tlcscpu_confs
+  {
+   tlcscpu_sp_limit	= 0,
+   tlcscpu_nuof		= 1
+  };
+
+class cl_tlcs_cpu: public cl_hw
+{
+public:
+  cl_tlcs_cpu(class cl_uc *auc);
+  virtual int init(void);
+  virtual int cfg_size(void) { return tlcscpu_nuof; }
+  virtual const char *cfg_help(t_addr addr);
+
+  virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
+};
 
 #endif
 

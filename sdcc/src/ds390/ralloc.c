@@ -236,15 +236,12 @@ isOperandInReg (operand * op)
 static bool
 isOperandInFarSpace2 (operand * op)
 {
-  symbol * opsym;
-  
   if (isOperandInFarSpace (op))
     return TRUE;
 
   if (!IS_ITEMP (op))
     return FALSE;
-    
-  opsym = OP_SYMBOL (op);
+
   if (isOperandInReg (op))
     return FALSE;
 
@@ -2990,6 +2987,9 @@ packForPush (iCode * ic, eBBlock ** ebpp, int blockno)
     return;
 
   if (IS_OP_VOLATILE (IC_RIGHT (dic)))
+    return;
+    
+  if (!IS_SYMOP (IC_RIGHT (dic)))
     return;
 
   if ((IS_SYMOP (IC_RIGHT (dic)) && OP_SYMBOL (IC_RIGHT (dic))->addrtaken) || isOperandGlobal (IC_RIGHT (dic)))

@@ -25,30 +25,32 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <ctype.h>
-#include "i_string.h"
+//#include <ctype.h>
+#include <string.h>
 
-#include <stdarg.h>
+//#include "i_string.h"
+
+//#include <stdarg.h>
 // prj
 #include "utils.h"
 #include "appcl.h"
 
 // sim
-#include "simcl.h"
-#include "optioncl.h"
+//#include "simcl.h"
+//#include "optioncl.h"
 
 // local
 #include "cmd_getcl.h"
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 
 void
 set_get_help(class cl_cmd *cmd)
 {
   cmd->set_help("get subcommand",
-		"Get value of differend objects",
+		"Get value of different objects",
 		"Long of get");
 }
 
@@ -78,7 +80,7 @@ COMMAND_DO_WORK_UC(cl_get_sfr_cmd)
       if (!parm->as_address(uc) ||
 	  !mem->valid_address(parm->value.address))
 	con->dd_printf("Warning: Invalid address %s\n",
-		       (char*)cmdline->tokens->at(i));
+		       cmdline->tokens->at(i));
       else
 	mem->dump(parm->value.address, parm->value.address, 1, con/*->get_fout()*/);
     }

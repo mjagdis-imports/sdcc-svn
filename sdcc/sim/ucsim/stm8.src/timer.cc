@@ -25,6 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
+#include <string.h>
+
 #include "itsrccl.h"
 
 #include "clkcl.h"
@@ -72,7 +74,7 @@ cl_tim::init(void)
 {
   int i;
   chars s("tim");
-  s.append("%d", id);
+  s.appendf("%d", id);
   set_name(s);
   id_string= strdup(s);
   cl_hw::init();
@@ -109,14 +111,14 @@ cl_tim::init(void)
   return 0;
 }
 
-char *
+const char *
 cl_tim::cfg_help(t_addr addr)
 {
   switch (addr)
     {
-    case stm8_tim_on: return (char*)"Turn simulation of timer on/off (bool, RW)";
+    case stm8_tim_on: return "Turn simulation of timer on/off (bool, RW)";
     }
-  return (char*)"Not used";
+  return "Not used";
 }
 
 int
@@ -443,7 +445,7 @@ cl_tim::print_info(class cl_console_base *con)
 		 prescaler_cnt, prescaler_cnt,
 		 calc_prescaler(), calc_prescaler());
   con->dd_printf("arr= 0x%04x %d\n", get_arr(), get_arr());
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

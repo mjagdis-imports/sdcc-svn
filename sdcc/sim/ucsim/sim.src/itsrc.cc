@@ -25,16 +25,16 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
-#include <stdlib.h>
-#include "i_string.h"
+//#include <stdlib.h>
+//#include "i_string.h"
 
 #include "itsrccl.h"
-#include "pobjcl.h"
-#include "stypes.h"
-#include "memcl.h"
+//#include "pobjcl.h"
+//#include "stypes.h"
+//#include "memcl.h"
 
 
 /*
@@ -189,21 +189,22 @@ cl_irqs::cl_irqs(t_index alimit, t_index adelta):
   Duplicates= true;
 }
 
-void *
-cl_irqs::key_of(void *item)
+const void *
+cl_irqs::key_of(const void *item) const
 {
-  class cl_it_src *itsrc= (class cl_it_src *)item;
+  const class cl_it_src *itsrc= (const class cl_it_src *)item;
   return(&itsrc->poll_priority);
 }
 
 int
-cl_irqs::compare(void *key1, void *key2)
+cl_irqs::compare(const void *key1, const void *key2)
 {
-  int *k1= (int*)key1, *k2= (int*)key2;
+  int k1= *(const int *)key1;
+  int k2= *(const int *)key2;
 
-  if (*k1 == *k2)
+  if (k1 == k2)
     return(0);
-  else if (*k1 < *k2)
+  else if (k1 < k2)
     return(-1);
   return(1);
 }

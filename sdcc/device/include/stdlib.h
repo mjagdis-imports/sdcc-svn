@@ -63,10 +63,10 @@ extern long int strtol(const char *nptr, char **endptr, int base);
 extern unsigned long int strtoul(const char *nptr, char **endptr, int base);
 
 /* SDCC extensions */
-extern void _uitoa(unsigned int, char*, unsigned char);
-extern void _itoa(int, char*, unsigned char);
-extern void _ultoa(unsigned long, char*, unsigned char);
-extern void _ltoa(long, char*, unsigned char);
+extern void __uitoa(unsigned int, char *, unsigned char);
+extern void __itoa(int, char *, unsigned char);
+extern void __ultoa(unsigned long, char *, unsigned char);
+extern void __ltoa(long, char *, unsigned char);
 
 /* Pseudo-random sequence generation functions (ISO C11 7.22.2) */
 int rand(void);
@@ -96,7 +96,7 @@ extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t siz
 extern void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);
 
 /* Integer arithmetic functions (ISO C11 7.22.6) */
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80) || defined (__SDCC_z80n)
 int abs(int j) __preserves_regs(b, c, iyl, iyh);
 #else
 int abs(int j);
