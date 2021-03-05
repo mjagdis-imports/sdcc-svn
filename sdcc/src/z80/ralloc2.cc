@@ -803,7 +803,10 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 #endif
 
   // For some iCodes, code generation can handle anything.
-  if(ic->op == RETURN || ic->op == SEND || ic->op == RECEIVE || ic->op == BITWISEAND || ic->op == '|' || ic->op == '^' || ic->op == '~')
+  if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
+    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
+    !IS_GB && !IY_RESERVED && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
+    ic->op == RECEIVE || ic->op == SEND)
     return(true);
 
   // Due to lack of ex hl, (sp), the generic push code generation fallback doesn't work for gbz80, so we need to be able to use hl if we can't just push a pair or use a.
@@ -821,7 +824,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(IS_GB &&
     (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)) && 
     (ic->op == RIGHT_OP || ic->op == LEFT_OP || ic->op == '=' || ic->op == CAST || ic->op == '-' || ic->op == UNARYMINUS) &&
-    !(result_only_HL && getSize(operandType(result)) == 1)) // Size of result needs to be checked after checking ic->op to esnure that there is a result operand.
+    !(result_only_HL && getSize(operandType(result)) == 1)) // Size of result needs to be checked after checking ic->op to ensure that there is a result operand.
     return(false);
 
   if(IS_GB && ic->op == GET_VALUE_AT_ADDRESS && !(result_only_HL || getSize(operandType(result)) == 1))
@@ -964,10 +967,10 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     IS_OP_LITERAL (right) && ulFromVal (OP_VALUE_CONST(right)) == 0) 
     return(true);
 
-  if((ic->op == '=') && POINTER_SET(ic) && operand_in_reg(result, REG_IYL, ia, i, G) && I[ia.registers[REG_IYL][1]].byte == 0 && operand_in_reg(result, REG_IYH, ia, i, G)) // Uses ld 0 (iy), l etc
+  if(ic->op == '=' && POINTER_SET(ic) && operand_in_reg(result, REG_IYL, ia, i, G) && I[ia.registers[REG_IYL][1]].byte == 0 && operand_in_reg(result, REG_IYH, ia, i, G)) // Uses ld 0 (iy), l etc
     return(true);
 
-  if((ic->op == '=' || ic->op == CAST) && POINTER_SET(ic) && !result_only_HL) // loads result pointer into (hl) first.
+  if(ic->op == '=' && POINTER_SET(ic) && !result_only_HL) // loads result pointer into (hl) first.
     return(false);
 
   if((ic->op == '=' || ic->op == CAST) && !POINTER_GET(ic) && !input_in_HL)

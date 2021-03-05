@@ -2,7 +2,7 @@
 
 	* src/z80/gen.c,
 	  src/z80/ralloc2.cc:
-	  Improved handling of hl in binary bitwise operators.
+	  Improved handling of hl.
 
 2021-03-04 Philipp Klaus Krause <pkk AT spth.de>
 

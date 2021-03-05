@@ -3627,7 +3627,7 @@ skip_byte:
         {
           if (requiresHL (source) && source->type != AOP_REG && !hl_free)
             _push (PAIR_HL);
-          cheapMove (result, roffset + i, source, soffset + i, true);
+          cheapMove (result, roffset + i, source, soffset + i, a_free);
           if (requiresHL (source) && source->type != AOP_REG && !hl_free)
             _pop (PAIR_HL);
           assigned[i] = true;
@@ -3708,6 +3708,13 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           regalloc_dry_run_cost += 3 + (getPairId_o(source, soffset + i) != PAIR_HL);
           i += 2;
           continue;
+        }
+      else if (getPairId_o(result, roffset + i) != PAIR_INVALID && (source->type == AOP_IY || source->type == AOP_DIR))
+        {
+          emit2 ("ld %s, !mems", _pairs[getPairId_o(result, roffset + i)].name, aopGetLitWordLong (source, soffset + i, false));
+          regalloc_dry_run_cost += 3 + (getPairId_o(result, roffset + i) != PAIR_HL);
+          i += 2;
+          continue;      
         }
         
       else if(i + 1 < size && getPairId_o(result, roffset + i) != PAIR_INVALID)
