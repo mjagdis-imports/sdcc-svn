@@ -106,7 +106,6 @@
   TYPE rotate_test_value;
 #endif
 
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Bug #3185
 TYPE rotate_test_1(TYPE value)
 {
     return ((value << SHIFT_L) | (value >> SHIFT_R)) AND_OPERATION;
@@ -122,6 +121,8 @@ TYPE rotate_test_1_xor2(TYPE value)
 {
     return (((value ^ rotate_test_value_xor) << SHIFT_L) | ((value ^ rotate_test_value_xor) >> SHIFT_R)) AND_OPERATION;
 }
+
+#ifndef __SDCC_pdk14 // Lack of memory
 
 TYPE rotate_test_2(TYPE value)
 {
@@ -161,6 +162,8 @@ TYPE rotate_test_3_xor2(TYPE value)
     value2 = (((value2 ^ rotate_test_value_xor) << SHIFT_L) | ((value2 ^ rotate_test_value_xor) >> SHIFT_R)) AND_OPERATION;
     return value2;
 }
+
+#ifndef __SDCC_pdk15 // Lack of memory
 
 TYPE rotate_test_4(TYPE value)
 {
@@ -209,11 +212,12 @@ TYPE rotate_test_5_xor2(TYPE value)
     return rotate_test_value;
 }
 #endif
+#endif
 
 static void
 testSwaps(void)
 {
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Bug #3185
+#ifndef __SDCC_pdk14 // Lack of memory
     volatile TYPE t = TEST_VALUE;
     TYPE u;
     
@@ -222,15 +226,16 @@ testSwaps(void)
     ASSERT( rotate_test_1(u)      == ROTATE_RESULT);
     ASSERT( rotate_test_1_xor1(u) == ROTATE_RESULT_XOR);
     ASSERT( rotate_test_1_xor2(u) == ROTATE_RESULT_XOR);
-    
+  
     ASSERT( rotate_test_2(u)      == ROTATE_RESULT);
     ASSERT( rotate_test_2_xor1(u) == ROTATE_RESULT_XOR);
     ASSERT( rotate_test_2_xor2(u) == ROTATE_RESULT_XOR);
-    
+
     ASSERT( rotate_test_3(u)      == ROTATE_RESULT);
     ASSERT( rotate_test_3_xor1(u) == ROTATE_RESULT_XOR);
     ASSERT( rotate_test_3_xor2(u) == ROTATE_RESULT_XOR);
-    
+
+#ifndef __SDCC_pdk15 // Lack of memory
     ASSERT( rotate_test_4(u)      == ROTATE_RESULT);
     ASSERT( rotate_test_4_xor1(u) == ROTATE_RESULT_XOR);
     ASSERT( rotate_test_4_xor2(u) == ROTATE_RESULT_XOR);
@@ -238,6 +243,7 @@ testSwaps(void)
     ASSERT( rotate_test_5(u)      == ROTATE_RESULT);
     ASSERT( rotate_test_5_xor1(u) == ROTATE_RESULT_XOR);
     ASSERT( rotate_test_5_xor2(u) == ROTATE_RESULT_XOR);
+#endif
 #endif
 }
 

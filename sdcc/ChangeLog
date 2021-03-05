@@ -3,6 +3,9 @@
 	* src/z80/gen.c,
 	  src/z80/ralloc2.cc:
 	  Improved handling of a.
+	* src/pdk/gen.c,
+	  support/regression/tests/rotate2.c:
+	  Fix bug #3185.
 
 2021-03-05 Philipp Klaus Krause <pkk AT spth.de>
 
