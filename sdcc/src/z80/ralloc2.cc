@@ -581,7 +581,10 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     IS_TRUE_SYMOP (right) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (right)->etype))))
     return(false);
 
-  if (ic->op == CAST || ic->op == '^' || ic->op == BITWISEAND || ic->op == '|' || ic->op == '~' || ic->op == LEFT_OP) // Codegen can handle it all.
+  if(ic->op == '~' || ic->op == IPUSH || ic->op == LABEL || ic->op == GOTO ||
+    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
+    ic->op == LEFT_OP ||
+    ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
     return(true);
 
   if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))
@@ -622,19 +625,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     (operand_byte_in_reg(left, 0, REG_B, a, i, G) || operand_byte_in_reg(left, 0, REG_C, a, i, G) || operand_byte_in_reg(left, 0, REG_D, a, i, G) || operand_byte_in_reg(left, 0, REG_E, a, i, G) || operand_byte_in_reg(left, 0, REG_H, a, i, G) || operand_byte_in_reg(left, 0, REG_L, a, i, G)))
     return(true);
 
-  // Plain assignment between registers
-  if(ic->op == CAST && getSize(operandType(IC_RESULT(ic))) == 1 &&
-    (operand_in_reg(result, REG_B, ia, i, G) || operand_in_reg(result, REG_C, ia, i, G) || operand_in_reg(result, REG_D, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G) || operand_in_reg(result, REG_A, ia, i, G)) &&
-    (operand_in_reg(result, REG_B, ia, i, G) || operand_in_reg(result, REG_C, ia, i, G) || operand_in_reg(result, REG_D, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G)))
-    return(true);
-
-  // Any input byte in A is ok, when all operands are registers other than iy.
-  if(ic->op == CAST && operand_in_reg(right, REG_A, ia, i, G) &&
-    !operand_in_reg(result, REG_A, ia, i, G) && (operand_in_reg(result, REG_C, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G) || operand_in_reg(result, REG_L, ia, i, G)))
-    return(true);
-
   // Last byte of output may be in A.
-  if((ic->op == GET_VALUE_AT_ADDRESS || ic->op == CAST && !operand_in_reg(right, REG_A, ia, i, G)) && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))
+  if(ic->op == GET_VALUE_AT_ADDRESS && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))
     return(true);
 
   // inc / dec does not affect a.
@@ -669,20 +661,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       if(ic->op == '+' && IS_ITEMP (left) && IS_ITEMP (IC_RESULT(ic)) && IS_OP_LITERAL (right) &&
           ulFromVal (OP_VALUE_CONST (right)) == 1 &&
           OP_KEY (IC_RESULT(ic)) == OP_KEY (IC_LEFT(ic)))
-        return(true);
-
-      if((ic->op == '=' || ic->op == CAST) && !POINTER_SET (ic) && isOperandEqual (result, right))
-        return(true);
-
-      if((ic->op == '=' || ic->op == CAST) && !POINTER_SET (ic) && !(ic->op == CAST && IS_BOOL (operandType (result))) &&
-        (operand_in_reg(right, REG_A, ia, i, G) || operand_in_reg(right, REG_B, ia, i, G) || operand_in_reg(right, REG_C, ia, i, G) || operand_in_reg(right, REG_D, ia, i, G) || operand_in_reg(right, REG_E, ia, i, G) || operand_in_reg(right, REG_H, ia, i, G) || operand_in_reg(right, REG_L, ia, i, G)) &&
-        (operand_in_reg(right, REG_A, ia, i, G) || operand_in_reg(result, REG_B, ia, i, G) || operand_in_reg(result, REG_C, ia, i, G) || operand_in_reg(result, REG_D, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G) || operand_in_reg(right, REG_H, ia, i, G) || operand_in_reg(right, REG_L, ia, i, G)))
-        return(true);
-
-      if(ic->op == GOTO || ic->op == LABEL)
-        return(true);
-
-      if(ic->op == IPUSH) // Can handle anything.
         return(true);
 
       if(!result_in_A && !input_in_A)
@@ -724,7 +702,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       ic->op != EQ_OP &&
       ic->op != '<' &&
       ic->op != '>' &&
-      ic->op != CAST &&
       ic->op != CALL &&
       ic->op != PCALL &&
       ic->op != GETHBIT &&

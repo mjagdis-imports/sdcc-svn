@@ -8637,7 +8637,7 @@ genAnd (const iCode * ic, iCode * ifx)
             }
 
           /* Testing for the border bits of the accumulator destructively is cheap. */
-          if ((isLiteralBit (bytelit) == 0 || isLiteralBit (bytelit) == 7) && aopInReg (left->aop, 0, A_IDX) && !bitVectBitValue (ic->rSurv, A_IDX))
+          if ((isLiteralBit (bytelit) == 0 || isLiteralBit (bytelit) == 7) && aopInReg (left->aop, offset, A_IDX) && !bitVectBitValue (ic->rSurv, A_IDX))
             {
               emit3 (isLiteralBit (bytelit) == 0 ? A_RRCA : A_RLCA, 0 , 0);
               jumpcond = "C";
