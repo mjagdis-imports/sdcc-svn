@@ -3593,6 +3593,9 @@ skip_byte:
   // Last, move everything from stack to registers.
   for (int i = 0; i < n;)
     {
+      const bool a_free = a_dead && (result->regs[A_IDX] < 0 || !assigned[result->regs[A_IDX] - roffset]);
+      const bool hl_free = hl_dead && (result->regs[L_IDX] < 0 || !assigned[result->regs[L_IDX] - roffset]) && (result->regs[H_IDX] < 0 || !assigned[result->regs[H_IDX] - roffset]);
+
       if (i + 1 < n && source->type == AOP_STK &&
         (aopInReg (result, roffset + i, HL_IDX) && IS_RAB ||
         (aopInReg (result, roffset + i, BC_IDX) || aopInReg (result, roffset + i, DE_IDX) || aopInReg (result, roffset + i, HL_IDX) || aopInReg (result, roffset + i, IY_IDX)) && (IS_EZ80_Z80 || IS_TLCS90)))
@@ -3608,7 +3611,6 @@ skip_byte:
      else if (i + 1 < n && source->type == AOP_STK &&
         aopInReg (result, roffset + i, DE_IDX) && IS_RAB)
         {
-          bool hl_free = hl_dead && (result->regs[L_IDX] < 0 || !assigned[result->regs[L_IDX] - roffset]) && (result->regs[H_IDX] < 0 || !assigned[result->regs[H_IDX] - roffset]);
           if (!hl_free)
             emit2 ("ex de, hl");
           if (!regalloc_dry_run)
@@ -3623,7 +3625,11 @@ skip_byte:
         }
       else if (aopRS (result) && aopOnStack (source, soffset + i, 1) && !aopOnStack (result, roffset + i, 1))
         {
+          if (requiresHL (source) && source->type != AOP_REG && !hl_free)
+            _push (PAIR_HL);
           cheapMove (result, roffset + i, source, soffset + i, true);
+          if (requiresHL (source) && source->type != AOP_REG && !hl_free)
+            _pop (PAIR_HL);
           assigned[i] = true;
           size--;
           i++;
@@ -3739,7 +3745,11 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         }
       else
         {
+          if (requiresHL (result) && result->type != AOP_REG && !hl_dead)
+            _push (PAIR_HL);
           cheapMove (result, roffset + i, source, soffset + i, a_dead_global);
+           if (requiresHL (result) && result->type != AOP_REG && !hl_dead)
+            _pop (PAIR_HL);
           zeroed_a = false;
         }
 
@@ -8933,11 +8943,7 @@ genAnd (const iCode * ic, iCode * ifx)
         (left->aop->regs[L_IDX] <= i && left->aop->regs[H_IDX] <= i & right->aop->regs[L_IDX] <= i && right->aop->regs[H_IDX] <= i) &&
         (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] >= i) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] >= i);
 
-      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
-        _push (PAIR_HL);
-      cheapMove (result->aop, i, ASMOP_A, 0, true);
-      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
-        _pop (PAIR_HL);
+      genMove_o (result->aop, i, ASMOP_A, 0, 1, true, hl_free, !isPairInUse (PAIR_DE, ic));
 
       if (aopInReg (result->aop, i, A_IDX))
         a_free = false;
@@ -9201,11 +9207,7 @@ genOr (const iCode * ic, iCode * ifx)
         (left->aop->regs[L_IDX] <= i && left->aop->regs[H_IDX] <= i & right->aop->regs[L_IDX] <= i && right->aop->regs[H_IDX] <= i) &&
         (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] >= i) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] >= i);
 
-      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
-        _push (PAIR_HL);
-      cheapMove (result->aop, i, ASMOP_A, 0, true);
-      if (requiresHL (result->aop) && result->aop->type != AOP_REG && !hl_free)
-        _pop (PAIR_HL);
+      genMove_o (result->aop, i, ASMOP_A, 0, 1, true, hl_free, !isPairInUse (PAIR_DE, ic));
         
       if (aopInReg (result->aop, i, A_IDX))
         a_free = false;
@@ -9463,11 +9465,7 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
           (left_aop->regs[L_IDX] <= i && left_aop->regs[H_IDX] <= i & right_aop->regs[L_IDX] <= i && right_aop->regs[H_IDX] <= i) &&
           (result_aop->regs[L_IDX] < 0 || result_aop->regs[L_IDX] >= i) && (result_aop->regs[H_IDX] < 0 || result_aop->regs[H_IDX] >= i);
 
-        if (requiresHL (result_aop) && result_aop->type != AOP_REG && !hl_free)
-          _push (PAIR_HL);
-        cheapMove (result_aop, i, ASMOP_A, 0, true);
-        if (requiresHL (result_aop) && result_aop->type != AOP_REG && !hl_free)
-          _pop (PAIR_HL);
+        genMove_o (result_aop, i, ASMOP_A, 0, 1, true, hl_free, !isPairInUse (PAIR_DE, ic));
 
         if(result_aop->type == AOP_REG &&
           (left_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] > i || right_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] > i))

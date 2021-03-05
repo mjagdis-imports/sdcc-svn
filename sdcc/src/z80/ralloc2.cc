@@ -802,13 +802,14 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     }
 #endif
 
+  // For some iCodes, code generation can handle anything.
+  if(ic->op == RETURN || ic->op == SEND || ic->op == RECEIVE || ic->op == BITWISEAND || ic->op == '|' || ic->op == '^' || ic->op == '~')
+    return(true);
+
   // Due to lack of ex hl, (sp), the generic push code generation fallback doesn't work for gbz80, so we need to be able to use hl if we can't just push a pair or use a.
   if(IS_GB && ic->op == IPUSH && !operand_is_pair(left, a, i, G) && ia.registers[REG_A][1] >= 0 &&
     !(getSize(operandType(left)) == 1 && (operand_in_reg(left, REG_A, ia, i, G) || operand_in_reg(left, REG_B, ia, i, G) || operand_in_reg(left, REG_D, ia, i, G) || operand_in_reg(left, REG_H, ia, i, G))))
     return(false);
-    
-  //if(IS_GB && !result_only_HL && (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)))
-  //  return(false);
 
   if(IS_GB && ic->op == GET_VALUE_AT_ADDRESS && !result_only_HL && (getSize(operandType(result)) >= 2 || !operand_is_pair(left, a, i, G)))
     return(false);
@@ -827,9 +828,6 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     return(false);
   if(IS_GB && POINTER_GET(ic) && !(result_only_HL || getSize(operandType(right)) == 1))
     return(false);
-
-  if(ic->op == RETURN || ic->op == SEND || ic->op == RECEIVE)
-    return(true);
 
   if((IS_GB || IY_RESERVED) && (IS_TRUE_SYMOP(left) || IS_TRUE_SYMOP(right)))
     return(false);
@@ -895,7 +893,6 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(!exstk && !isOperandInDirSpace(IC_LEFT(ic)) && !isOperandInDirSpace(IC_RIGHT(ic)) && !isOperandInDirSpace(IC_RESULT(ic)) &&
     (ic->op == '-' ||
     ic->op == UNARYMINUS ||
-    ic->op == '~' ||
     ic->op == '<' ||
     ic->op == '>'))
     return(true);
