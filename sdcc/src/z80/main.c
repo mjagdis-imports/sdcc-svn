@@ -100,6 +100,7 @@ static OPTION _z80_options[] = {
 static OPTION _gbz80_options[] = {
   {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
   {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
@@ -910,10 +911,15 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, int size)
 {
-  if (op == GETHBIT)
-    return TRUE;
-  else
-    return FALSE;
+  switch (op)
+    {
+    case GETHBIT:
+    case GETBYTE:
+      return TRUE;
+    case SWAP:
+      return size <= 2;
+    }
+  return FALSE;
 }
 
 /* Indicate the expense of an access to an output storage class */

@@ -110,6 +110,8 @@ extern void *memset (void *s, unsigned char c, size_t n); /* c should be int acc
 extern void *memset (void *s, int c, size_t n);
 #endif
 
+extern void *memset_explicit (void *s, int c, size_t n);
+
 /* extern char *strerror(int errnum); */
 extern size_t strlen (const char *s);
 

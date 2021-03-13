@@ -1,3 +1,193 @@
+2021-03-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Some small improvements and fixes in register handling.
+
+2021-03-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve nibble swap.
+
+2021-03-11 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Fix regressions coused by previous change.
+
+2021-03-11 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Add basic support for SWAP iCode for all Z80 ports.
+
+2021-03-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix issue that resulted in adc hl, hl being emitted on gbz80.
+
+2021-03-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/typeof.h:
+	  Remove apparently unused header that has been broken for many years.
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Flexible register handling for GETBYTE.
+
+2021-03-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/gen.c,
+	  src/z80/mappings.i:
+	  Use placeholders more and add new ones. (Improves rgbds asm generation)
+
+2021-03-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve register pair handling in code generation.
+
+2021-03-10 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Add basic support for GETBYTE iCode for all Z80 ports.
+
+2021-03-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve handling of iyl and iyh in + and | for eZ80.
+
+2021-03-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/main.c,
+	  support/makebin/makebin.c:
+	  Fix help texts for gbz80.
+
+2021-03-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/gen.c: Get parameters faster on gbz80 sometimes.
+
+2021-03-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/gbz80/setjmp.s:
+	  Rewrite setjmp for gbz80.
+
+2021-03-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/gbz80/__initrleblock.s,
+	  device/lib/gbz80/crt0.s,
+	  device/lib/gbz80/div.s,
+	  device/lib/gbz80/memcpy.s,
+	  device/lib/gbz80/mul.s,
+	  device/lib/gbz80/setjmp.s:
+	  Do some obvious asm improvements for gbz80's stdlib.
+
+2021-03-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve handling of iy.
+
+2021-03-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve handling of iy.
+	* device/include/string.h,
+	  device/lib/memset_explicit.c,
+	  device/lib/incl.mk:
+	  C23 memset_explicit.
+
+2021-03-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Fix an issue affecting cost estimation for some register-to-register loads.
+
+2021-03-09 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph-gbz80.def,
+	  src/z80/peeph.def:
+	  Add new peephole rules. (Based on generated code from stdlib)
+
+2021-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix a gbz80 parameter push bug.
+	* support/regression/tests/rotate2.c:
+	  Disable test for mcs51 (bug #3188).
+
+2021-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c,
+	  src/z80/peeph.def_
+	  Improve use of iy.
+
+2021-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Optimize last byte of negation, part of RFE #734.
+
+2021-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3187.
+
+2021-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCpeeph.c:
+	  Pick notUsedFrom improvement and optimizeFor from patch #62 by Visenri.
+	* src/z80/peeph.def:
+	  Small z80 peephole rule cleanup.
+	* src/z80/gen.c:
+	  Improve gbz80 comparison with 0, part of RFE #734.
+
+2021-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* Merge sdcc-next branch to trunk.
+
+2021-03-08 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* .version: post release bump to 4.1.1
+
+2021-03-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Document the use of DWARF debug information with ELF binaries.
+
+2021-03-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improved handling of a.
+	* src/pdk/gen.c,
+	  support/regression/tests/rotate2.c:
+	  Fix bug #3185.
+
+2021-03-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improved handling of hl.
+
+2021-03-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improved handling of hl in binary bitwise operators.
+
+2021-03-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix another issue related to bug #3181.
+	* src/stm8/gen.c:
+	  exg, exgw handling cleanup, picked from patch #363 by Visenri.
+	* support/regression/tests/rotate2.c:
+	  Tests for rotation and swap, picked from patch #363 by Visenri.
+	* sdas/linksrc/lksdcdb.c:
+	  Fix a debug info issue, patch #346 by Benedikt Kleiner.
+
 2021-03-02 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* src/ds390/ralloc.c (isOperandInFarSpace2): fixed warning
