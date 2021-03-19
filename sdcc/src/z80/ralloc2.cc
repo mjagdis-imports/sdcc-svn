@@ -584,7 +584,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   // For some iCodes, we can handle anything.
   if(ic->op == '~' || ic->op == IPUSH || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
-    ic->op == GETBYTE || ic->op == SWAP && getSize(operandType(IC_RESULT (ic))) == 1 ||
+    ic->op == GETBYTE || ic->op == GETWORD || ic->op == SWAP && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G)) ||
     ic->op == LEFT_OP ||
     ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
     return(true);
@@ -784,9 +784,12 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   // For some iCodes, code generation can handle anything.
   if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
-    ic->op == GETBYTE || ic->op == SWAP && getSize(operandType(IC_RESULT (ic))) == 1 ||
+    ic->op == GETBYTE || ic->op == GETWORD || ic->op == SWAP && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G)) ||
     !IS_GB && !IY_RESERVED && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
     ic->op == RECEIVE || ic->op == SEND)
+    return(true);
+
+  if((ic->op == EQ_OP || ic->op == NE_OP) && IS_VALOP(right))
     return(true);
 
   // Due to lack of ex hl, (sp), the generic push code generation fallback doesn't work for gbz80, so we need to be able to use hl if we can't just push a pair or use a.
@@ -935,9 +938,6 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 
   if((ic->op == '<' || ic->op == '>') && (IS_ITEMP(left) || IS_OP_LITERAL(left) || IS_ITEMP(right) || IS_OP_LITERAL(right))) // Todo: Fix for large stack.
     return(true);
-    
-  if(ic->op == EQ_OP && IS_VALOP(right))
-    return(true);
 
   if(ic->op == CALL)
     return(true);
@@ -1039,7 +1039,7 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(ic->op == IPUSH || ic->op == CALL ||
     ic->op == '+' ||
     ic->op == '|' ||
-    ic->op == GETBYTE || ic->op == SWAP && getSize(operandType(IC_RESULT (ic))) == 1 ||
+    ic->op == GETBYTE || ic->op == GETWORD || ic->op == SWAP && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G)) ||
     ic->op == '=' && !POINTER_SET(ic) ||
     ic->op == CAST ||
     ic->op == SEND)

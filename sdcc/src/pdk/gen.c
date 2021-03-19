@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   gen.c - code generator for Padauk.
 
-  Copyright (C) 2018, Philipp Klaus Krause pkk@spth.de
+  Copyright (C) 2018-2021, Philipp Klaus Krause pkk@spth.de
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -3328,7 +3328,73 @@ release:
 }
 
 /*-----------------------------------------------------------------*/
-/* genLeftShift - generates code for right shifting               */
+/* genGetByte - generates code to get a single byte                */
+/*-----------------------------------------------------------------*/
+static void
+genGetByte (const iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  operand *result = IC_RESULT (ic);
+  
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  int offset = (int) ulFromVal (right->aop->aopu.aop_lit) / 8;
+  
+  cheapMove (ASMOP_A, 0, left->aop, offset, regDead (A_IDX, ic), regDead (P_IDX, ic), true);
+
+  freeAsmop (result);
+  freeAsmop (right);
+  freeAsmop (left);
+}
+
+/*-----------------------------------------------------------------*/
+/* genSwap - generates code for nibble swapping                    */
+/*-----------------------------------------------------------------*/
+static void
+genSwap (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+
+  D (emit2 ("; genSwap", ""));
+
+  aopOp (result, ic);
+  aopOp (left, ic);
+
+  wassert (result->aop->size == 1);
+
+  if (TARGET_IS_PDK16 && // swap m is supported in pdk16, but not pdk13 and pdk14. Some pdk15 devices support it officially, some support it as undocumented feature. It is unclear if there are pdk15 that do not support it.
+    (result->aop->type == AOP_DIR || aopInReg (result->aop, 0, P_IDX)) &&
+    aopSame (left->aop, 0, result->aop, 0, 1))
+    {
+      emit2 ("swap", "%s", aopGet (result->aop, 0));
+      cost (1, 1);
+    }
+  else
+    {
+      if (!regDead (A_IDX, ic))
+        pushAF ();
+    
+      cheapMove (ASMOP_A, 0, left->aop, 0, true, regDead (P_IDX, ic), true);
+  
+      emit2 ("swap", "a");
+      cost (1, 1);
+  
+      cheapMove (result->aop, 0, ASMOP_A, 0, true, regDead (P_IDX, ic), true);
+    
+      if (!regDead (A_IDX, ic))
+        popAF ();
+    }
+
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genLeftShift - generates code for right shifting                */
 /*-----------------------------------------------------------------*/
 static void
 genLeftShift (const iCode *ic)
@@ -5087,6 +5153,18 @@ genPdkiCode (iCode *ic)
 
     case GETABIT:
       wassertl (0, "Unimplemented iCode");
+      break;
+      
+    case GETBYTE:
+      genGetByte (ic);
+      break;
+      
+    case GETWORD:
+      wassertl (0, "Unimplemented iCode");
+      break;
+      
+    case SWAP:
+      genSwap (ic);
       break;
 
     case LEFT_OP:

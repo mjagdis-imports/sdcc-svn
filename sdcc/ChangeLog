@@ -1,3 +1,118 @@
+2021-03-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/main.c,
+	  src/pdk/ralloc2.cc:
+
+2021-03-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve register allocation for GETWORD and SWAP iCodes.
+
+2021-03-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Use genMove to simplify genSwap.
+
+2021-03-18 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Fix bug #3194.
+
+2021-03-18 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/peeph.def:
+	  Fix common peephole rule 41a: do not elimitate ld l,? before ld l,(hl)
+
+2021-03-17 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/peeph-gbz80.def:
+	  Added rules to move inc/dec hl possible upper.
+
+2021-03-17 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/peeph.def:
+	  Add two new peepholes for Z80.
+
+2021-03-17 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/SDCCicode.c:
+	  Fix RFE #736.
+
+2021-03-17 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Add Z80 GETWORD optimization for Z80.
+
+2021-03-17 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Add Z80 SWAP implementation using RRD.
+
+2021-03-17 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Add GetABit for all Z80 ports.
+
+2021-03-16 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* sim/ucsim/z80.src/inst_lr35902.cc:
+	  Fix SWAP H/L instructions simulation for GBZ80.
+
+2021-03-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix a genMove_o hl issue, part of bug #3194.
+
+2021-03-16 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c,
+          src/z80/main.c:
+	  Enable multibyte RRC/RLC for GBZ80.
+
+2021-03-16 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Fix typos (replace & by && in some conditions).
+
+2021-03-15 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Add RLC/RRC for all Z80 ports (GBZ80: only 8b).
+
+2021-03-15 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Add 32b swap for all Z80 ports.
+
+2021-03-14 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/gen.c:
+	  Improve 16b swap for z80ies.
+
+2021-03-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Fix bug #3190.
+
+2021-03-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/Makefile.in:
+	  Helper rule for testing pdk ports.
+	* src/pdk/gen.c,
+	  src/pdk/main.c:
+	  8-bit swap for pdk.
+	* support/regression/tests/rotate2.c:
+	  Disable test for pdk15-stack-auto due to lack of memory.
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve handling of hl in equality comparison.
+
 2021-03-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c,
