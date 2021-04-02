@@ -63,6 +63,13 @@ cl_z80::cl_z80(struct cpu_entry *Itype, class cl_sim *asim):
   cl_uc(asim)
 {
   type= Itype;
+  BIT_C= 0x01;  // carry status(out of bit 7)
+  BIT_N= 0x02,  // Not addition: subtract status(1 after subtract).
+  BIT_P= 0x04,  // parity/overflow, 1=even, 0=odd parity.  arith:1=overflow
+  BIT_A= 0x10,  // aux carry status(out of bit 3)
+  BIT_Z= 0x40,  // zero status, 1=zero, 0=nonzero
+  BIT_S= 0x80,  // sign status(value of bit 7)
+  BIT_ALL= (BIT_C |BIT_N |BIT_P |BIT_A |BIT_Z |BIT_S);
 }
 
 int
@@ -214,63 +221,47 @@ cl_z80::make_memories(void)
   address_spaces->add(regs8);
   address_spaces->add(regs16);
 
-  class cl_var *v;
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("F", regs8, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("B", regs8, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("C", regs8, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("D", regs8, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("E", regs8, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("H", regs8, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("L", regs8, 7, ""));
-  v->init();
+  vars->add("A", regs8, 0, 7, 0, "Accumulator");
+  vars->add("F", regs8, 1, 7, 0, "Flags");
+  vars->add("F_C", regs8, 1, BITPOS_C, BITPOS_C, "Carry");
+  vars->add("F_SUB", regs8, 1, BITPOS_SUB, BITPOS_SUB, "");
+  vars->add("F_P", regs8, 1, BITPOS_P, BITPOS_P, "");
+  vars->add("F_A", regs8, 1, BITPOS_A, BITPOS_A, "");
+  vars->add("F_Z", regs8, 1, BITPOS_Z, BITPOS_Z, "Zero");
+  vars->add("F_S", regs8, 1, BITPOS_S, BITPOS_S, "");
+  vars->add("B", regs8, 2, 7, 0, "");
+  vars->add("C", regs8, 3, 7, 0, "");
+  vars->add("D", regs8, 4, 7, 0, "");
+  vars->add("E", regs8, 5, 7, 0, "");
+  vars->add("H", regs8, 6, 7, 0, "");
+  vars->add("L", regs8, 7, 7, 0, "");
 
-  vars->add(v= new cl_var("ALT_A", regs8, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_F", regs8, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_B", regs8, 10, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_C", regs8, 11, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_D", regs8, 12, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_E", regs8, 13, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_H", regs8, 14, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_L", regs8, 15, ""));
-  v->init();
+  vars->add("ALT_A", regs8, 8, 7, 0, "Alt Accumulator");
+  vars->add("ALT_F", regs8, 9, 7, 0, "Alt Flags");
+  vars->add("ALT_F_C", regs8, 9, BITPOS_C, BITPOS_C, "Carry");
+  vars->add("ALT_F_SUB", regs8, 9, BITPOS_SUB, BITPOS_SUB, "");
+  vars->add("ALT_F_P", regs8, 9, BITPOS_P, BITPOS_P, "");
+  vars->add("ALT_F_A", regs8, 9, BITPOS_A, BITPOS_A, "");
+  vars->add("ALT_F_Z", regs8, 9, BITPOS_Z, BITPOS_Z, "Zero");
+  vars->add("ALT_F_S", regs8, 9, BITPOS_S, BITPOS_S, "");
+  vars->add("ALT_B", regs8, 10, 7, 0, "");
+  vars->add("ALT_C", regs8, 11, 7, 0, "");
+  vars->add("ALT_D", regs8, 12, 7, 0, "");
+  vars->add("ALT_E", regs8, 13, 7, 0, "");
+  vars->add("ALT_H", regs8, 14, 7, 0, "");
+  vars->add("ALT_L", regs8, 15, 7, 0, "");
 
-  vars->add(v= new cl_var("AF", regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("BC", regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("DE", regs16, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("HL", regs16, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("IX", regs16, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("IY", regs16, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("SP", regs16, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_AF", regs16, 7, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_BC", regs16, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_DE", regs16, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_HL", regs16, 10, ""));
-  v->init();
+  vars->add("AF", regs16, 0, 15, 0, "Accumulator/Flags");
+  vars->add("BC", regs16, 1, 15, 0, "");
+  vars->add("DE", regs16, 2, 15, 0, "");
+  vars->add("HL", regs16, 3, 15, 0, "");
+  vars->add("IX", regs16, 4, 15, 0, "");
+  vars->add("IY", regs16, 5, 15, 0, "");
+  vars->add("SP", regs16, 6, 15, 0, "");
+  vars->add("ALT_AF", regs16, 7, 15, 0, "Alt Accumulator/Flags");
+  vars->add("ALT_BC", regs16, 8, 15, 0, "");
+  vars->add("ALT_DE", regs16, 9, 15, 0, "");
+  vars->add("ALT_HL", regs16, 10, 15, 0, "");
 }
 
 
@@ -567,6 +558,7 @@ cl_z80::disass(t_addr addr, const char *sep)
 void
 cl_z80::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("SZ-A-PNC  Flags= 0x%02x %3d %c  ",
                  regs.raf.F, regs.raf.F, isprint(regs.raf.F)?regs.raf.F:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",

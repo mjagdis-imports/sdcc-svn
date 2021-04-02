@@ -255,19 +255,12 @@ cl_xa::init(void)
   for (i= 0; sfr_tabXA51[i].name != NULL; i++)
     {
       if (type->type & sfr_tabXA51[i].cpu_type)
-	{
-	  class cl_var *v;
-	  vars->add(v= new cl_var(chars(sfr_tabXA51[i].name),
-				  sfr,
-				  sfr_tabXA51[i].addr, ""));
-	  v->init();
-	}
+        vars->add(chars(sfr_tabXA51[i].name), sfr, sfr_tabXA51[i].addr, 7, 0, "");
     }
   for (i= 0; bit_tabXA51[i].name != NULL; i++)
     {
       if (type->type & bit_tabXA51[i].cpu_type)
 	{
-	  class cl_var *v;
 	  t_addr a= bit_tabXA51[i].addr;
 	  int bitnr, offset= 0;
 	  if (a >= 0x200)
@@ -277,10 +270,7 @@ cl_xa::init(void)
 	    }
 	  bitnr= a%8;
 	  a= offset + a/8;
-	  vars->add(v= new cl_var(chars(bit_tabXA51[i].name),
-				  sfr,
-				  a, "", bitnr));
-	  v->init();
+	  vars->add(chars(bit_tabXA51[i].name), sfr, a, bitnr, bitnr, "");
 	}
     }
   return(0);
@@ -969,6 +959,7 @@ cl_xa::print_regs(class cl_console_base *con)
   unsigned char flags;
 
   flags = get_psw();
+  con->dd_color("answer");
   con->dd_printf("CA---VNZ | ", flags);
   con->dd_printf("R0:%04x R1:%04x R2:%04x R3:%04x\n",
                  reg2(0), reg2(1), reg2(2), reg2(3));

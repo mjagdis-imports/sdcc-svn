@@ -1,8 +1,162 @@
+2021-04-01 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Partially fix bug #3203, but highlights new bugs.
+
+2021-04-01 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* sdas/asz80/z80mch.c:
+	  Enable undocumented Z80 instructions for Z80N.
+
+2021-04-01 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Partially fix bug #3203.
+
+2021-04-01 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/peeph.def:
+	  Fix many regressions caused by changes in r12173.
+
+2021-03-27 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/peeph.def:
+	  Partially fix bug #3203.
+
+2021-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph.def::
+	  Add new rules for pushing and treating xor a like #0.
+
+2021-03-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix issues in handling of (iy) operands (last part of fix for bug #3202).
+
+2021-03-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix an issue affecting 4-byte swap with both operands on extended stack.
+
+2021-03-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix handling of extended stack in addition and subtraction.
+
+2021-03-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix handling of frame pointer omission in dry run.
+
+2021-03-25 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* device/lib/_strcmp.c:
+	  strcmp optimization.
+
+2021-03-24 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/gen.c:
+	  Emit ldhl for calls on SM83.
+
+2021-03-24 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/_fsdiv.c: fixed bug with very small, but normal numbers
+	* device/include/float.h: no need to mask off bit23 in MANT() macro
+
+2021-03-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Disable accidentially comitted gbz80 zero push optimization.
+
+2021-03-24 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/peeph.def:
+	  Fix some rules and remove invalid ones.
+
+2021-03-24 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/peeph-gbz80.def,
+	  src/z80/peeph.def:
+	  Make some GBZ80 rules common.
+
+2021-03-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix a bug in tlcs90 interrupt handling.
+
+2021-03-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx,
+	  src/z80/gen.c,
+	  src/z80/main.c,
+	  configure.ac,
+	  configure:
+	  The GameBoy's CPU core is the SM83, also used in some Sharp microcontrollers.
+
+2021-03-22 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/float.h: added __NAN
+	* device/lib/_fsdiv.c: many small optimizations, starting from patch
+	  #368, thanks Marco Bodrato
+	* device/lib/_ulong2fs.c: fixed warning
+	* support/regression/tests/bug-2516.c: do not use denormal float
+
+2021-03-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/mappings.i:
+	  Fix broken debug symbols.
+
+2021-03-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph-gbz80.def,
+	  src/z80/peeph.def:
+	  Fix rule 1b, remove redundant rules.
+
+2021-03-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/gen.c:
+	  Optimize pushing of 4B+ constant arguments.
+
+2021-03-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/gbz80/crt0.s,
+	  support/regression/ports/ucgbz80/uCsim.cmd:
+	  Change emulator entry to 0x100 like after real bootrom
+
+2021-03-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/gen.c:
+	  Optimize return of 4B numbers
+
+2021-03-21 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph-gbz80.def:
+	  Add rules for faster stack push.
+	* src/z80/peeph.def:
+	  Improve safety of some rules.
+
+2021-03-21 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/SDCCpeeph.c:
+	  Make operandsLiteral pickier and fix bug #3198.
+
+2021-03-20 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sim/ucsim/z80.src/inst_lr35902.cc:
+	  Harmonize disassembly syntax with syntax emitted by sdcc.
+
+2021-03-19 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph-gbz80.def,
+	  src/z80/peeph.def:
+	  Add new peephole rules for precalc, constants reusage and stack access rearranging.
+
 2021-03-18 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/pdk/gen.c,
 	  src/pdk/main.c,
 	  src/pdk/ralloc2.cc:
+	  GETBYTE support for pdk.
 
 2021-03-18 Philipp Klaus Krause <pkk AT spth.de>
 

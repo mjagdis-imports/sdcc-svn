@@ -448,15 +448,10 @@ cl_uc390::decode_xram(void)
 void
 cl_uc390::decode_dptr(void)
 {
-  cl_var *v;
-  vars->add(v= new cl_var(chars("dpl"), sfr, 0x82, ""));
-  v->init();
-  vars->add(v= new cl_var(chars("DPL"), sfr, 0x82, ""));
-  v->init();
-  vars->add(v= new cl_var(chars("dph"), sfr, 0x83, ""));
-  v->init();
-  vars->add(v= new cl_var(chars("DPH"), sfr, 0x83, ""));
-  v->init();
+  vars->add("dpl", sfr, 0x82, 7, 0, "");
+  vars->add("DPL", sfr, 0x82, 7, 0, "");
+  vars->add("dph", sfr, 0x83, 7, 0, "");
+  vars->add("DPH", sfr, 0x83, 7, 0, "");
 }
 
 
@@ -1261,6 +1256,7 @@ cl_uc390::print_regs (class cl_console_base *con)
   t_mem data;
   uchar dps;
 
+  con->dd_color("answer");
   if (! (sfr->get (ACON) & 0x02)) /* AM1 set: 24-bit flat? */
     {
       cl_51core::print_regs (con);

@@ -85,9 +85,14 @@ uninstall:
 
 # Performing self-test
 # --------------------
-check: $(TEST_OBJ)
+check: test $(TEST_OBJ)
 
+.PHONY:	test baseline
 test:
+	@$(MAKE) --no-print-directory -C test
+
+baseline:
+	@$(MAKE) --no-print-directory -C test baseline
 
 
 # Performing installation test

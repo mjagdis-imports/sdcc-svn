@@ -54,7 +54,8 @@ uninstall:
 # --------------------
 check:
 
-test:
+test baseline:
+	@true
 
 
 # Performing installation test
