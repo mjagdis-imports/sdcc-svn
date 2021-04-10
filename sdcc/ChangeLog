@@ -1,3 +1,106 @@
+2021-04-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bitfields-bits1.c,
+	  support/regression/tests/bitfields-bits2.c,
+	  support/regression/tests/bitfields-checks.c,
+	  support/regression/tests/bitfields-dead-loop.c:
+	  Tests for bitfields at absolute addresses, picked from patch #373 by Visenri.
+	* src/z80/gen.c,
+	  support/regression/tests/bitwise8reg.c:
+	  Fix use of 16-bit bitwise instructions for 8-bit calculations.
+
+2021-04-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-20060110-volatile.c,
+	  support/regression/tests/stack-restore.c,
+	  support/regression/tests/swap_add.c:
+	  Improve stm8 peephole rule coverage, picked from patch #373 by Visenri.
+
+2021-04-07 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  isRegInUse renamed to isRegDead.
+
+2021-04-06 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Make code more readable by adding isRegInUse.
+
+2021-04-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/ports/host/spec.mk.in:
+	  Timeout for host regression tests (fix bug #3209).
+	* src/SDCClospre.hpp:
+	  Avoid unecessary flush of cout.
+	* device/lib/tlcs90/crt0.s:
+	  Fix implicit initialization.
+	* src/z80/ralloc2.cc:
+	  Document frame pointer omission heuristic.
+	* support/regression/tests/bug-3205.c:
+	  Regression test for bug #3205.
+
+2021-04-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/ez80_z80/crt0.s,
+	  device/lib/tlcs90/crt0.s,
+	  device/lib/z180/crt0.s,
+	  device/lib/z80/crt0.s,
+	  device/lib/z80n/crt0.s:
+	  Do default-initalization in crt0 to not rely on simulator zeroing memory.
+	* device/lib/gbz80/crt0.s:
+	  src/z80/main.c,
+	  .version:
+	  Improve explicit initialization.
+	* configure.ac,
+	  aclocal.m4,
+	  configure:
+	  Improve detection of python interpreter binary.
+
+2021-04-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClospre.cc:
+	  Fix bug #3207.
+
+2021-04-02 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Remove AOP, AOP_SIZE, AOP_TYPE macros.
+
+2021-04-02 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Fix possible errors caused by operands allocation.
+
+2021-04-02 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Fix one of highlighted bugs by change from Apr 01.
+
+2021-04-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/z80.h,
+	  src/z80/ralloc2.cc:
+	  Remove infrastructure for reserving hl in register allocator.
+
+2021-04-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc.c,
+	  src/z80/gen.c:
+	  Remove old register allocator code from z80-related backends.
+
+2021-04-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/main.c,
+	  src/z80/ralloc.c,
+	  .version,
+	  doc/sdccman.lyx:
+	  Deprecate --oldralloc for z80-related backends.
+
+2021-04-02 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* src/z80/gen.c:
+	  Fix one of highlighted bugs by previous change.
+
 2021-04-01 Sergey Belyashov <sergey.belyashov@gmail.com>
 
 	* src/z80/gen.c:
@@ -25,7 +128,7 @@
 
 2021-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
-	* src/z80/peeph.def::
+	* src/z80/peeph.def:
 	  Add new rules for pushing and treating xor a like #0.
 
 2021-03-26 Philipp Klaus Krause <pkk AT spth.de>
