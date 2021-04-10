@@ -91,7 +91,7 @@ float default_operand_cost(const operand *o, const assignment &a, unsigned short
 
               if(byteregs[0] == REG_A)
                 c -= 0.4f;
-              else if(OPTRALLOC_HL && byteregs[0] == REG_L)
+              else if(byteregs[0] == REG_L)
                 c -= 0.1f;
               else if((OPTRALLOC_IY && byteregs[0] == REG_IYL) || byteregs[0] == REG_IYH)
                 c += 0.1f;
@@ -1256,7 +1256,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
   if(!Ainst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
 
-  if(OPTRALLOC_HL && !HLinst_ok(a, i, G, I))
+  if(!HLinst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
 
   if(!DEinst_ok(a, i, G, I))
@@ -1375,8 +1375,7 @@ static bool assignment_hopeless(const assignment &a, unsigned short int i, const
   const i_assignment_t &ia = a.i_assignment;
 
   // Can only check for HLinst_ok() in some cases.
-  if(OPTRALLOC_HL &&
-      (ia.registers[REG_L][1] >= 0 && ia.registers[REG_H][1] >= 0) &&
+  if((ia.registers[REG_L][1] >= 0 && ia.registers[REG_H][1] >= 0) &&
       (ia.registers[REG_L][0] >= 0 && ia.registers[REG_H][0] >= 0) &&
       !HLinst_ok(a, i, G, I))
     return(true);
@@ -1403,7 +1402,7 @@ static void get_best_local_assignment_biased(assignment &a, typename boost::grap
         {
           varset_t::const_iterator vi, vi_end;
           for(vi = ai->local.begin(), vi_end = ai->local.end(); vi != vi_end; ++vi)
-            if(ai->global[*vi] == REG_A || OPTRALLOC_HL && (ai->global[*vi] == REG_H || ai->global[*vi] == REG_L) || OPTRALLOC_IY && (ai->global[*vi] == REG_IYH || ai->global[*vi] == REG_IYL))
+            if(ai->global[*vi] == REG_A || (ai->global[*vi] == REG_H || ai->global[*vi] == REG_L) || OPTRALLOC_IY && (ai->global[*vi] == REG_IYH || ai->global[*vi] == REG_IYL))
               goto too_risky;
           ai_best = ai;
         }
@@ -1427,8 +1426,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 
   c += weird_byte_order(a, I);
 
-  if(OPTRALLOC_HL &&
-     ia.registers[REG_L][1] >= 0 &&
+  if(ia.registers[REG_L][1] >= 0 &&
      ia.registers[REG_H][1] >= 0 &&
      ((ia.registers[REG_L][0] >= 0) == (ia.registers[REG_H][0] >= 0)) &&
      !HLinst_ok(a, i, G, I))
@@ -1437,7 +1435,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
   if(ia.registers[REG_A][1] < 0)
     c += 0.03f;
 
-  if(OPTRALLOC_HL && ia.registers[REG_L][1] < 0)
+  if(ia.registers[REG_L][1] < 0)
     c += 0.02f;
 
   // Using IY is rarely a good choice, so discard the IY-users first when in doubt.
@@ -1593,6 +1591,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
 }
 
 // Omit the frame pointer for functions with low register pressure and few parameter accesses.
+// This is just a heuristic, including the magic value of 21. Many other, more complex heuristics have been tried, but didn't perform better for the regression tests.
 template <class G_t>
 static bool omit_frame_ptr(const G_t &G)
 {
@@ -1601,8 +1600,8 @@ static bool omit_frame_ptr(const G_t &G)
 
   if(options.omitFramePtr)
     return(true);
-    
-  signed char omitcost = -16;
+
+  signed char omitcost = -10; // Overhead for setting up frame pointer is 10 bytes of code
   for(unsigned int i = 0; i < boost::num_vertices(G); i++)
     {
       if((int)G[i].alive.size() > port->num_regs - 4)
@@ -1611,6 +1610,7 @@ static bool omit_frame_ptr(const G_t &G)
       const iCode *const ic = G[i].ic;
       const operand *o;
       o = IC_RESULT(ic);
+      // Accesses without frame pointer, when using iy, tend to cost 6 bytes of overhead per variable (there is no difference in per-byte-specific costs).
       if(o && IS_SYMOP(o) && OP_SYMBOL_CONST(o)->_isparm && !IS_REGPARM (OP_SYMBOL_CONST(o)->etype))
         omitcost += 6;
       o = IC_LEFT(ic);
@@ -1620,7 +1620,7 @@ static bool omit_frame_ptr(const G_t &G)
       if(o && IS_SYMOP(o) && OP_SYMBOL_CONST(o)->_isparm && !IS_REGPARM (OP_SYMBOL_CONST(o)->etype))
         omitcost += 6;
 
-      if(omitcost > 14) // Chosen greater than zero, since the peephole optimizer often can optimize the use of iy into use of hl, reducing the cost.
+      if(omitcost > 20) // Chosen greater than zero, since the peephole optimizer often can optimize the use of iy into use of hl, reducing the cost.
         return(false);
     }
 
