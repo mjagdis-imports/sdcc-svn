@@ -131,6 +131,7 @@ cl_p1516::mk_hw_elements(void)
   d.keyset = NULL;
   d.basx   = 15;
   d.basy   = 14;
+  u->add_port(&d, 2);
   uo->add_port(&d, 2);
 
   d.set_name("PD");
@@ -139,6 +140,7 @@ cl_p1516::mk_hw_elements(void)
   d.keyset = NULL;
   d.basx   = 15;
   d.basy   = 19;
+  u->add_port(&d, 3);
   uo->add_port(&d, 3);
 
   d.set_name("PI");
@@ -146,8 +148,8 @@ cl_p1516::mk_hw_elements(void)
   d.cell_in= pi->cfg_cell(port_pin);
   d.keyset = chars("                qwertyui12345678");
   d.basx   = 15;
-  d.basy   = 15;
-  u->add_port(&d, 2);
+  d.basy   = 24;
+  u->add_port(&d, 4);
   d.basy   = 4;
   ui->add_port(&d, 0);
 
@@ -156,8 +158,8 @@ cl_p1516::mk_hw_elements(void)
   d.cell_in= pj->cfg_cell(port_pin);
   d.keyset = chars("                asdfghjkzxcvbnm,");
   d.basx   = 15;
-  d.basy   = 20;
-  u->add_port(&d, 3);
+  d.basy   = 29;
+  u->add_port(&d, 5);
   d.basy   = 10;
   ui->add_port(&d, 1);
 }
@@ -175,11 +177,10 @@ cl_p1516::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x4000, 32);
+  chip= new cl_chip32("rom_chip", 0x4000, 32);
   chip->init();
   memchips->add(chip);
-  ad= new cl_address_decoder(as= rom/*address_space(MEM_ROM_ID)*/,
-			     chip, 0, 0x3fff, 0);
+  ad= new cl_address_decoder(as= rom, chip, 0, 0x3fff, 0);
   ad->init();
   as->decoders->add(ad);
   ad->activate(0);
@@ -198,7 +199,7 @@ cl_p1516::make_memories(void)
     {
       n.format("R%d", i);
       d.format("CPU register %d", i);
-      vars->add(n, regs, i, 31, 0, d);
+      vars->add(n, regs, i, d);
     }
 }
 

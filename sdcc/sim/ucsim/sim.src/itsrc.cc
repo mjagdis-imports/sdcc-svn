@@ -132,7 +132,8 @@ void
 cl_it_src::clear(void)
 {
   if (clr_bit)
-    src_cell->set_bit0(src_mask);
+    //src_cell->set_bit0(src_mask);
+    src_cell->set(src_cell->get() & ~src_mask);
 }
 
 void
@@ -207,6 +208,22 @@ cl_irqs::compare(const void *key1, const void *key2)
   else if (k1 < k2)
     return(-1);
   return(1);
+}
+
+
+/*
+ * Specialized source
+ */
+
+void
+cl_m6xxx_src::set_pass_to(t_mem value)
+{
+  if (value == 'f')
+    pass_to= irq_firq;
+  else if (value == 'n')
+    pass_to= irq_nmi;
+  else
+    pass_to= irq_irq;
 }
 
 
