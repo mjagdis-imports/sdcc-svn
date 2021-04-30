@@ -47,6 +47,11 @@ void f1(void)
 
 #endif
 
+// Get FreeBSD version to skip part of test for known broken setjmp (FreeBSD bug #255320).
+#ifdef __FreeBSD__
+#include <sys/param.h>
+#endif
+
 void
 testJmp (void)
 {
@@ -71,7 +76,8 @@ testJmp (void)
       ASSERT (0);
     }
   ASSERT (exception == 1);
-
+  
+#if !defined(__FreeBSD__) || __FreeBSD_version > 1300139
   f1();
 #endif
 #endif

@@ -344,19 +344,23 @@ cl_pia::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
       break;
     case cfg_ca1_req	:
       if (val)
-	is_ca1->set_pass_to(*val);
+	if (is_ca1)
+	  is_ca1->set_pass_to(*val);
       break;
     case cfg_ca2_req	:
       if (val)
-	is_ca2->set_pass_to(*val);
+	if (is_ca2)
+	  is_ca2->set_pass_to(*val);
       break;
     case cfg_cb1_req	:
       if (val)
-	is_cb1->set_pass_to(*val);
+	if (is_cb1)
+	  is_cb1->set_pass_to(*val);
       break;
     case cfg_cb2_req	:
       if (val)
-	is_cb2->set_pass_to(*val);
+	if (is_cb2)
+	  is_cb2->set_pass_to(*val);
       break;
     case cfg_ddra	: r= ddra; break;
     case cfg_ora	: r= ora; break;
@@ -497,7 +501,7 @@ cl_pia::check_edges(void)
       *prev= signal;
       if (!(edge ^ signal))
 	{
-	  cr->set_bit1(0x80);
+	  cr->set(cr->get() | 0x80);
 	  if ((cr->get() & 0x38) == 0x20)
 	    {
 	      oca->write(oca->get() | 0x02);
@@ -513,7 +517,7 @@ cl_pia::check_edges(void)
 	{
 	  *prev= signal;
 	  if (!(edge ^ signal))
-	    cr->set_bit1(0x40);
+	    cr->set(cr->get() | 0x40);
 	}
     }
   
@@ -526,7 +530,7 @@ cl_pia::check_edges(void)
       *prev= signal;
       if (!(edge ^ signal))
 	{
-	  cr->set_bit1(0x80);
+	  cr->set(cr->get() | 0x80);
 	  if ((cr->get() & 0x38) == 0x20)
 	    {
 	      // TODO: CRB-b7 must first be cleared by a read of data.
@@ -543,7 +547,7 @@ cl_pia::check_edges(void)
 	{
 	  *prev= signal;
 	  if (!(edge ^ signal))
-	    cr->set_bit1(0x40);
+	    cr->set(cr->get() | 0x40);
 	}
     }
   return 0;
