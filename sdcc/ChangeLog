@@ -1,7 +1,14 @@
+2021-05-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Caching of floating literals.
+
 2021-05-01 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/bug-3215.c:
 	  Fix condition for skipping test on host.
+	* src/z80/gen.c:
+	  Improve loading of immediate into register pair.
 
 2021-04-30 Philipp Klaus Krause <pkk AT spth.de>
 
@@ -16,7 +23,7 @@
 2021-04-30 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
-	  Do not use double pusp / pop for 16-bit load when optimizing for speed.
+	  Do not use double push / pop for 16-bit load when optimizing for speed.
 
 2021-04-30 Philipp Klaus Krause <pkk AT spth.de>
 
