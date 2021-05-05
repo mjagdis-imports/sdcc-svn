@@ -122,7 +122,7 @@ isReturned(const char *what)
       size = 4;
     }
     
-  const char *returnregs = IS_GB ? "bchl" : "dehl";
+  const char *returnregs = IS_GB ? "hlde" : "dehl";
 
   for(int i = 0; i <= size; i++)
     if(*what == returnregs[3 - i])
