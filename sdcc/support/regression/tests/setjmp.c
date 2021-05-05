@@ -86,5 +86,6 @@ testJmp (void)
 //#ifndef setjmp
 //  ASSERT(0);
 //#endif
+#endif
 }
 
