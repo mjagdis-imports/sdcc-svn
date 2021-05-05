@@ -1,7 +1,44 @@
+2021-05-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Code clenaup.
+
+2021-05-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3223.c:
+	  Fix bug #3223.
+
+2021-05-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  src/stm8/main.c,
+	  doc/sdccman.lyx,
+	  .version,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/tests/z88dk_callee.c:
+	  __z88dk_callee support for stm8.
+
+2021-05-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  doc/sdccman.lyx,
+	  .version,
+	  support/regression/tests/z88dk.c,
+	  support/regression/tests/z88dk_callee.c:
+	  Implement __z88dk_callee support on callee side.
+
+2021-05-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Caching of floating literals.
+
 2021-05-01 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/tests/bug-3215.c:
 	  Fix condition for skipping test on host.
+	* src/z80/gen.c:
+	  Improve loading of immediate into register pair.
 
 2021-04-30 Philipp Klaus Krause <pkk AT spth.de>
 
@@ -16,7 +53,7 @@
 2021-04-30 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
-	  Do not use double pusp / pop for 16-bit load when optimizing for speed.
+	  Do not use double push / pop for 16-bit load when optimizing for speed.
 
 2021-04-30 Philipp Klaus Krause <pkk AT spth.de>
 

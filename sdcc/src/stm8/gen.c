@@ -289,7 +289,7 @@ aopOnStack (const asmop *aop, int offset, int size)
 static bool
 aopOnStackNotExt (const asmop *aop, int offset, int size)
 {
-  return (aopOnStack (aop, offset, size) && (aop->aopu.bytes[offset].byteu.stk + G.stack.pushed <= 255 || regalloc_dry_run));// Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
+  return (aopOnStack (aop, offset, size) && (aop->aopu.bytes[offset].byteu.stk + G.stack.pushed <= 255 || regalloc_dry_run)); // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
 }
 
 /*-----------------------------------------------------------------*/
@@ -1170,6 +1170,27 @@ aopOp (operand *op, const iCode *ic)
   }
 }
 
+// Get registers containing return type of function.
+static asmop *
+aopRet (const sym_link *ftype)
+{
+  int size = getSize (ftype->next);
+  
+  switch (size)
+    {
+    case 1:
+      return (ASMOP_A);
+    case 2:
+      return (ASMOP_X);
+    case 3:
+      return (ASMOP_XYL);
+    case 4:
+      return (ASMOP_XY);   
+    default:
+      return 0;
+    }
+}
+
 static void
 push (const asmop *op, int offset, int size)
 {
@@ -1291,7 +1312,7 @@ void swap_from_a(int idx)
 }
 
 /*-----------------------------------------------------------------*/
-/* stackAop - put xl, xh, yl, yh aop on stack                      */
+/* stack_aop - put xl, xh, yl, yh aop on stack                     */
 /*-----------------------------------------------------------------*/
 static
 const asmop *stack_aop (const asmop *aop, int i, int *offset)
@@ -3314,6 +3335,7 @@ genCall (const iCode *ic)
   sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
   int prestackadjust = 0;
   bool tailjump = false;
+  const bool z88dk_callee = IFFUNC_ISZ88DK_CALLEE (ftype);
 
   D (emit2 ("; genCall", ""));
 
@@ -3353,7 +3375,8 @@ genCall (const iCode *ic)
   // Check if we can do tail call optimization.
   else if (!(currFunc && IFFUNC_ISISR (currFunc->type)) &&
     (!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, A_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, X_IDX)) &&
-    !ic->parmBytes && !ic->localEscapeAlive)
+    !ic->parmBytes && !ic->localEscapeAlive &&
+    !IFFUNC_ISZ88DK_CALLEE (currFunc->type))
     {
       int limit = 16; // Avoid endless loops in the code putting us into an endless loop here.
 
@@ -3516,18 +3539,39 @@ genCall (const iCode *ic)
   freeAsmop (left);
   G.stack.pushed += prestackadjust;
 
+  // Adjust the stack for parameters if required.
   if (ic->parmBytes || bigreturn)
-    adjustStack (ic->parmBytes + bigreturn * 2, !(SomethingReturned && !bigreturn && getSize (ftype->next) == 1), !(SomethingReturned && !bigreturn && getSize (ftype->next) >= 2), !(SomethingReturned && !bigreturn && getSize (ftype->next) > 2));
+    {
+      const bool a_free = !aopRet (ftype) || aopRet (ftype)->regs[A_IDX] < 0;
+      const bool x_free = !aopRet (ftype) || (aopRet (ftype)->regs[XL_IDX] < 0 && aopRet (ftype)->regs[XH_IDX] < 0);
+      const bool y_free = !aopRet (ftype) || (aopRet (ftype)->regs[YL_IDX] < 0 && aopRet (ftype)->regs[YH_IDX] < 0);
+      if (IFFUNC_ISNORETURN (ftype) || z88dk_callee)
+        {
+          G.stack.pushed -= ic->parmBytes + bigreturn * 2;
+          updateCFA ();
+        }
+      else
+        adjustStack (ic->parmBytes + bigreturn * 2, a_free, x_free, y_free);
+    }
 
-  const bool half = stm8_extend_stack && SomethingReturned && getSize (ftype->next) == 4;
+
+  const bool half = stm8_extend_stack && SomethingReturned && (aopRet (ftype)->regs[YL_IDX] >= 0 || aopRet (ftype)->regs[YH_IDX] >= 0);
 
   /* Todo: More efficient handling of long return value for function with extendeds stack when the result value does not use the extended stack. */
 
-  /* Special handling of assignment of long result value when using extended stack. */
-  if (half)
+  /* Special handling of assignment of result value in y when using extended stack. */
+  if (half && (IC_RESULT (ic)->aop->type != AOP_STK && IC_RESULT (ic)->aop->type != AOP_REGSTK || !regalloc_dry_run && aopOnStackNotExt (IC_RESULT (ic)->aop, 0, IC_RESULT (ic)->aop->size)))
+    {
+      genMove (IC_RESULT (ic)->aop, aopRet (ftype), true, true, true);
+      pop (ASMOP_Y, 0, 2);
+      goto restore;
+    }  
+  else if (half)
     {
       asmop *result;
       int save_a = 0;
+      
+      wassert (regalloc_dry_run || aopRet (ftype) == ASMOP_XY || aopRet (ftype) == ASMOP_XYL); // Implementation assumes a 24-Bit or 32-Bit return value in XY.
 
       result = IC_RESULT (ic)->aop;
 
@@ -3581,11 +3625,12 @@ genCall (const iCode *ic)
 
       wassert (getSize (ftype->next) >= 1 && getSize (ftype->next) <= 4);
 
-      genMove_o (IC_RESULT (ic)->aop, 0, getSize (ftype->next) == 1 ? ASMOP_A : ASMOP_XY, 0, size, TRUE, TRUE, !stm8_extend_stack);
+      genMove_o (IC_RESULT (ic)->aop, 0, aopRet (ftype), 0, size, TRUE, TRUE, !stm8_extend_stack);
 
       freeAsmop (IC_RESULT (ic));
     }
 
+restore:
   // Restore regs.
   if (!regDead (Y_IDX, ic) && !stm8_extend_stack)
     if (regDead (YH_IDX, ic))
@@ -3735,7 +3780,6 @@ static void
 genEndFunction (iCode *ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
-  int retsize = getSize (sym->type->next);
 
   D (emit2 ("; genEndFunction", ""));
 
@@ -3748,12 +3792,83 @@ genEndFunction (iCode *ic)
         debugFile->writeEndFunction (currFunc, ic, 0);
       return;
   }
+  
+  int stackparmbytes = 0;
+  for (value *arg = FUNC_ARGS(sym->type); arg; arg = arg->next)
+    {
+      wassert (arg->sym);
+      if (!SPEC_REGPARM (arg->etype))
+        stackparmbytes += getSize (arg->sym->type);
+    }
+
+  bool a_free = !aopRet (sym->type) || aopRet (sym->type)->regs[A_IDX] < 0;
+  bool x_free = !aopRet (sym->type) || (aopRet (sym->type)->regs[XL_IDX] < 0 && aopRet (sym->type)->regs[XH_IDX] < 0);
+  bool y_free = !aopRet (sym->type) || (aopRet (sym->type)->regs[YL_IDX] < 0 && aopRet (sym->type)->regs[YH_IDX] < 0);
 
   /* adjust the stack for the function */
   if (sym->stack)
-    adjustStack (sym->stack, retsize != 1, retsize != 2 && retsize != 4, retsize != 4);
+    adjustStack (sym->stack, a_free, x_free, y_free);
 
   wassertl (!G.stack.pushed, "Unbalanced stack.");
+
+  if (IFFUNC_ISZ88DK_CALLEE(sym->type) && stackparmbytes)
+    {
+      wassertl(regalloc_dry_run || !IFFUNC_ISISR (sym->type), "Unimplemented __z88dk_callee __interrupt support on callee side");
+      wassertl(regalloc_dry_run || !IFFUNC_ISISR (sym->type), "Unimplemented __z88dk_callee large model support on callee side");
+
+      if (x_free && options.model != MODEL_LARGE)
+        {
+          pop (ASMOP_X, 0, 2);
+          adjustStack (stackparmbytes, a_free, false, y_free);
+          if (IFFUNC_ISCRITICAL (sym->type))
+            genEndCritical (NULL);
+          emit2 ("jp", "(x)");
+          cost (1, 1);
+          return;
+        }
+      else if (y_free && options.model != MODEL_LARGE)
+        {
+          pop (ASMOP_Y, 0, 2);
+          adjustStack (stackparmbytes, a_free, x_free, false);
+          if (IFFUNC_ISCRITICAL (sym->type))
+            genEndCritical (NULL);
+          emit2 ("jp", "(y)");
+          cost (2, 1);
+          return;
+        }
+      else if (3 + stackparmbytes <= 255 && options.model != MODEL_LARGE)
+        {
+          push (ASMOP_X, 0, 2);
+          emit2 ("ldw", "x, (3, sp)");
+          emit2 ("ldw", "(%d, sp), x", 3 + stackparmbytes);
+          pop (ASMOP_X, 0, 2);
+          adjustStack (stackparmbytes, a_free, x_free, y_free);
+          if (IFFUNC_ISCRITICAL (sym->type))
+            genEndCritical (NULL);
+          emit2 ("ret", "");
+          return;
+        }
+      else if (4 + stackparmbytes <= 255 && options.model == MODEL_LARGE)
+        {
+          push (ASMOP_A, 0, 1);
+          emit2 ("ld", "a, (4, sp)");
+          emit2 ("ld", "(%d, sp), a", 4 + stackparmbytes);
+          emit2 ("ld", "a, (3, sp)");
+          emit2 ("ld", "(%d, sp), a", 3 + stackparmbytes);
+          emit2 ("ld", "a, (2, sp)");
+          emit2 ("ld", "(%d, sp), a", 2 + stackparmbytes);
+          pop (ASMOP_A, 0, 1);
+          adjustStack (stackparmbytes, a_free, x_free, y_free);
+          if (IFFUNC_ISCRITICAL (sym->type))
+            genEndCritical (NULL);
+          emit2 ("retf", "");
+          return;
+        }
+      else
+        {
+          wassertl (regalloc_dry_run, "Unimplemented return from __z88dk_fastcall function with no free 16-bit reg and more than 252 B of stack parameters.");
+        }
+    }
 
   if (IFFUNC_ISCRITICAL (sym->type))
       genEndCritical (NULL);
@@ -3812,19 +3927,12 @@ genReturn (const iCode *ic)
     {
     case 0:
       break;
-    case 1:
-      cheapMove (ASMOP_A, 0, left->aop, 0, FALSE);
-      break;
-    case 2:
-      genMove (ASMOP_X, left->aop, TRUE, TRUE, TRUE);
-      break;
     case 3:
-      wassertl (regalloc_dry_run || !stm8_extend_stack, "Unimplemented 24-bit return in function with extended stack access.");
-      genMove (ASMOP_XYL, left->aop, TRUE, TRUE, TRUE);
-      break;
     case 4:
-      wassertl (regalloc_dry_run || !stm8_extend_stack, "Unimplemented long long return in function with extended stack access.");
-      genMove (ASMOP_XY, left->aop, TRUE, TRUE, TRUE);
+      wassertl (regalloc_dry_run || !stm8_extend_stack, "Unimplemented 24-Bit/32-Bit return in function with extended stack access.");
+    case 1:
+    case 2:
+      genMove (aopRet (currFunc->type), left->aop, true, true, true);
       break;
     default:
       wassertl (size > 4, "Return not implemented for return value of this size.");
