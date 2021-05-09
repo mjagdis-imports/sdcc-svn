@@ -1,5 +1,11 @@
 2021-05-09 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/z80/gen.c,
+	  src/stm8/gen.c:
+	  Improve stack adjustment.
+
+2021-05-09 Philipp Klaus Krause <pkk AT spth.de>
+
 	* support/regression/tests/loop.c,
 	  support/regression/tests/gcc-torture-execute-20010409-1.c:
 	  Disable tests that rely on asm-implemented longjmp.
