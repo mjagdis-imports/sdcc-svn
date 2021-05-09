@@ -1,7 +1,8 @@
 2021-05-09 Philipp Klaus Krause <pkk AT spth.de>
 
-	* support/regression/tests/loop.c:
-	  Disable a test that relies on asm-implemented longjmp.
+	* support/regression/tests/loop.c,
+	  support/regression/tests/gcc-torture-execute-20010409-1.c:
+	  Disable tests that rely on asm-implemented longjmp.
 
 2021-05-09 Philipp Klaus Krause <pkk AT spth.de>
 

@@ -57,12 +57,14 @@ testTortureExecute (void)
 {
 #ifndef __SDCC_pdk14 // Lack of memory
 #if !defined(__SDCC_pic14) // Unimplemented setjmp
+#if 0  // Disabled for noasm2 branch, since it requires asm-implemented functionality.
   if (setjmp(try) == 0)
   {
     d->b = 0;
     d->a = &a;
     test ("", 0);
   }
+#endif
 #endif
 #endif
 }
