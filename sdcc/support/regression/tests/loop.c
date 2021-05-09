@@ -112,8 +112,10 @@ void testLoop(void)
 	ASSERT (array[17] == 17);
 	ASSERT (array[18] == 18);
 #if !defined(__FreeBSD__) || __FreeBSD_version > 1300139
+#if 0  // Disabled for noasm2 branch, since it requires asm-implemented functionality.
 	jump (array);
 	ASSERT (array[0] != 13);
+#endif
 #endif
 #endif
 }
