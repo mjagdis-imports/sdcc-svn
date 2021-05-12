@@ -1,3 +1,27 @@
+2021-05-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/gen.h,
+	  src/z80/main.c,
+	  src/z80/peep.c:
+	  Infrastructure for non-__z88dk_fastcall register arguments.
+
+2021-05-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c,
+	  src/*/main.c:
+	  Make restriction on register parameters for vararg functions port-specific.
+
+2021-05-11 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-3231.c:
+	  Disable __critical test for host.
+
+2021-05-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Put all the documentation required by Annex J.3, "Implementation-defined behaviour", of the C standard in one place.
+
 2021-05-09 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c,
