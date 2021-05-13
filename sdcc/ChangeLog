@@ -1,3 +1,35 @@
+2021-05-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Infrastructure for register parameters.
+
+2021-05-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCClrange.c:
+	  Improve handling of register parameters.
+	* src/stm8/gen.c:
+	  Improve code generation for shift by slightly-less-than-a-multiple-of-8.
+	* src/z80/gen.c,
+	  src/z80/ralloc.c:
+	  Increase some regalloc_dry_run_cost penalties to avoid invalid allocation even when all alternatives result in expensive spilling.
+
+2021-05-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c,
+	  src/z80/gen.c:
+	  Fixes for register parameter in a, l or hl.
+
+2021-05-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  src/stm8/gen.h,
+	  src/stm8/main.c:
+	  Infrastructure for register parameters.
+	* src/SDCCast.c:
+	  Fix register parameters for printf->puts optimization.
+	* src/z80/peep.c:
+	  Fix bug #3234.
+
 2021-05-12 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c,
