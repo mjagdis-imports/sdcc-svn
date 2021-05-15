@@ -1,3 +1,31 @@
+2021-05-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/stm8/gen.c:
+	  Fix code generation bugs triggered by register arguments.
+	* src/stm8/ralloc2.cc:
+	  Fix cost function for register parameters.
+	* src/z80/ralloc2.cc:
+	  Fix cost function for byte and bit access.
+	* src/stm8/peep.c:
+	  Register parameter support infrastructure.
+
+2021-05-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve tail calloptimization.
+
+2021-05-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix a bug in handling of register parameters to function calls via pointer.
+
+2021-05-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/stm8/gen.c:
+	  Fix handling of multiple register parameters.
+
 2021-05-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/gen.c:

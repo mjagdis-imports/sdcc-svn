@@ -1796,14 +1796,15 @@ aopArg (sym_link *ftype, int i)
   if (IFFUNC_HASVARARGS (ftype))
     return 0;
 
+  value *args = FUNC_ARGS(ftype);
+  wassert (args);
+
   if (IFFUNC_ISZ88DK_FASTCALL (ftype))
     {
       if (i != 1)
         return false;
 
-      wassert (FUNC_ARGS(ftype));
-
-      switch (getSize (FUNC_ARGS(ftype)->type))
+      switch (getSize (args->type))
         {
         case 1:
           return ASMOP_L;
@@ -3984,11 +3985,25 @@ skip_byte:
         }
       else if (aopRS (result) && aopOnStack (source, soffset + i, 1) && !aopOnStack (result, roffset + i, 1))
         {
-          if (requiresHL (source) && source->type != AOP_REG && !hl_free)
-            _push (PAIR_HL);
-          cheapMove (result, roffset + i, source, soffset + i, a_free);
-          if (requiresHL (source) && source->type != AOP_REG && !hl_free)
-            _pop (PAIR_HL);
+          if (requiresHL (source) && !hl_free && (aopInReg (result, roffset + i, L_IDX) || aopInReg (result, roffset + i, H_IDX)))
+            {
+              if (!a_free)
+                _push (PAIR_AF);
+              _push (PAIR_HL);
+              cheapMove (ASMOP_A, 0, source, soffset + i, true);
+              _pop (PAIR_HL);
+              cheapMove (result, roffset + i, ASMOP_A, 0, true);
+              if (!a_free)
+                _pop (PAIR_AF);
+            }
+          else
+            {
+              if (requiresHL (source) && !hl_free)
+                _push (PAIR_HL);
+              cheapMove (result, roffset + i, source, soffset + i, a_free);
+              if (requiresHL (source) && source->type != AOP_REG && !hl_free)
+                _pop (PAIR_HL);
+              }
           assigned[i] = true;
           size--;
           i++;
@@ -4354,27 +4369,6 @@ adjustStack (int n, bool af_free, bool bc_free, bool de_free, bool hl_free, bool
     }
 
   wassert(!n);
-}
-
-/*-----------------------------------------------------------------*/
-/* movLeft2Result - move byte from left to result                  */
-/*-----------------------------------------------------------------*/
-static void
-movLeft2Result (operand *left, int offl, operand *result, int offr, int sign)
-{
-  if (!sameRegs (left->aop, result->aop) || (offl != offr))
-    {
-      if (!sign)
-        cheapMove (result->aop, offr, left->aop, offl, true);
-      else
-        {
-          if (getDataSize (left) == offl + 1)
-            {
-              cheapMove (ASMOP_A, 0, left->aop, offl, true);
-              cheapMove (result->aop, offr, ASMOP_A, 0, true);
-            }
-        }
-    }
 }
 
 /** Put Acc into a register set
@@ -5292,26 +5286,20 @@ static void genSend (const iCode *ic)
 {
   aopOp (IC_LEFT (ic), ic, FALSE, FALSE);
   
-  int n_regparams = 1;
-
   /* Caller saves, and this is the first iPush. */
-  /* Scan ahead until we find the function that we are pushing parameters to.
-     Count the number of addSets on the way to figure out what registers
-     are used in the send set.
-   */
+  // Scan ahead until we find the function that we are pushing parameters to.
   const iCode *walk;
   for (walk = ic->next; walk; walk = walk->next)
     {
-      if (walk->op == SEND)
-        n_regparams++;
-      else if (walk->op == CALL || walk->op == PCALL)
+      if (walk->op == CALL || walk->op == PCALL)
         break;
     }
 
-  if (_G.saves.saved == FALSE && !regalloc_dry_run) // Cost is counted at CALL or PCALL instead
-    _saveRegsForCall (walk, FALSE);
-    
-  asmop *argreg = aopArg (IS_FUNCPTR (operandType (IC_LEFT (walk))) ? operandType (IC_LEFT (walk))->next : operandType (IC_LEFT (walk)), n_regparams);
+  if (!_G.saves.saved && !regalloc_dry_run) // Cost is counted at CALL or PCALL instead
+    _saveRegsForCall (walk, false);
+
+  sym_link *ftype = IS_FUNCPTR (operandType (IC_LEFT (walk))) ? operandType (IC_LEFT (walk))->next : operandType (IC_LEFT (walk));
+  asmop *argreg = aopArg (ftype, ic->argreg);
   
   wassert (argreg);
 
@@ -5326,11 +5314,24 @@ static void genSend (const iCode *ic)
                 wassert (regalloc_dry_run);
               }
 
-            if (walk->op == CALL || walk->op == PCALL)
+            if (walk2->op == CALL || walk2->op == PCALL)
               break;
           }
 
-  genMove (argreg, IC_LEFT (ic)->aop, isRegDead (A_IDX, ic) || !isRegDead (A_IDX, walk), isPairDead (PAIR_HL, ic) || !isPairDead (PAIR_HL, walk), isPairDead (PAIR_DE, ic) || !isPairDead (PAIR_DE, walk));
+  bool a_dead = isRegDead (A_IDX, ic);
+  bool hl_dead = isPairDead (PAIR_HL, ic);
+  bool de_dead = isPairDead (PAIR_DE, ic);
+  
+  for (iCode *walk2 = ic->prev; walk2 && walk2->op == SEND; walk2 = walk2->prev)
+    {
+      asmop *warg = aopArg (ftype, walk2->argreg);
+      wassert (warg);
+      a_dead &= (warg->regs[A_IDX] < 0);
+      hl_dead &= (warg->regs[L_IDX] < 0 && warg->regs[H_IDX] < 0);
+      de_dead &= (warg->regs[E_IDX] < 0 && warg->regs[D_IDX] < 0);
+    }
+
+  genMove (argreg, IC_LEFT (ic)->aop, a_dead, hl_dead, de_dead);
   
   for (int i = 0; i < IC_LEFT (ic)->aop->size; i++)
     if (!regalloc_dry_run)
@@ -5360,6 +5361,7 @@ genCall (const iCode *ic)
   const bool SomethingReturned = IS_ITEMP (IC_RESULT (ic)) && (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir) ||
                        IS_TRUE_SYMOP (IC_RESULT (ic));
 
+  bool a_free_pre_call = !z80IsParmInCall(ftype, "a");
   bool hl_free_pre_call = !z80IsParmInCall(ftype, "l") && !z80IsParmInCall(ftype, "h");
   bool de_free_pre_call = !z80IsParmInCall(ftype, "e") && !z80IsParmInCall(ftype, "d");
   bool bc_free_pre_call = !z80IsParmInCall(ftype, "c") && !z80IsParmInCall(ftype, "b");
@@ -5423,8 +5425,12 @@ genCall (const iCode *ic)
 
   // Check if we can do tail call optimization.
   else if (!(currFunc && IFFUNC_ISISR (currFunc->type)) &&
-    (!SomethingReturned || IC_RESULT (ic)->aop->size == 1 && aopInReg (IC_RESULT (ic)->aop, 0, IS_GB ? E_IDX : L_IDX) || IC_RESULT (ic)->aop->size == 2 && aopInReg (IC_RESULT (ic)->aop, 0, IS_GB ? DE_IDX : HL_IDX)) &&
-    !ic->parmBytes && !ic->localEscapeAlive && !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL (ftype) && _G.omitFramePtr &&
+    (!SomethingReturned || aopInReg (IC_RESULT (ic)->aop, 0, aopRet (ftype)->aopu.aop_reg[0]->rIdx) &&
+      (IC_RESULT (ic)->aop->size <= 1 || aopInReg (IC_RESULT (ic)->aop, 1, aopRet (ftype)->aopu.aop_reg[1]->rIdx)) &&
+      (IC_RESULT (ic)->aop->size <= 2 || aopInReg (IC_RESULT (ic)->aop, 2, aopRet (ftype)->aopu.aop_reg[2]->rIdx)) &&
+      (IC_RESULT (ic)->aop->size <= 3 || aopInReg (IC_RESULT (ic)->aop, 3, aopRet (ftype)->aopu.aop_reg[3]->rIdx)) &&
+      IC_RESULT (ic)->aop->size <= 4) &&
+    !ic->parmBytes && !ic->localEscapeAlive && !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL (ftype) && (_G.omitFramePtr || IS_GB) &&
     (ic->op != PCALL || !IFFUNC_ISZ88DK_FASTCALL (ftype)) &&
     !IFFUNC_ISZ88DK_CALLEE (currFunc->type))
     {
@@ -5487,23 +5493,23 @@ genCall (const iCode *ic)
 
       if (isLitWord (IC_LEFT (ic)->aop))
         {
-          adjustStack (prestackadjust, false, bc_free_pre_call, de_free_pre_call, hl_free_pre_call, false);
+          adjustStack (prestackadjust, a_free_pre_call, bc_free_pre_call, de_free_pre_call, hl_free_pre_call, false);
           emit2 (jump ? "jp %s" : "call %s", aopGetLitWordLong (IC_LEFT (ic)->aop, 0, FALSE));
           regalloc_dry_run_cost += 3;
         }
       else if (getPairId (IC_LEFT (ic)->aop) != PAIR_IY && hl_free_pre_call)
         {
           spillPair (PAIR_HL);
-          fetchPairLong (PAIR_HL, IC_LEFT (ic)->aop, ic, 0);
-          adjustStack (prestackadjust, false, bc_free_pre_call, de_free_pre_call, false, false);
+          genMove (ASMOP_HL, IC_LEFT (ic)->aop, a_free_pre_call, hl_free_pre_call, de_free_pre_call);
+          adjustStack (prestackadjust, a_free_pre_call, bc_free_pre_call, de_free_pre_call, false, false);
           emit2 (jump ? "!jphl" : "call ___sdcc_call_hl");
           regalloc_dry_run_cost += 3;
         }
       else if (!IS_GB && !IY_RESERVED && !z80IsParmInCall (ftype, "iy"))
         {
           spillPair (PAIR_IY);
-          fetchPairLong (PAIR_IY, IC_LEFT (ic)->aop, ic, 0);
-          adjustStack (prestackadjust, false, bc_free_pre_call, de_free_pre_call, hl_free_pre_call, false);
+          genMove (ASMOP_IY, IC_LEFT (ic)->aop, a_free_pre_call, hl_free_pre_call, de_free_pre_call);
+          adjustStack (prestackadjust, a_free_pre_call, bc_free_pre_call, de_free_pre_call, hl_free_pre_call, false);
           emit2 (jump ? "jp (iy)" : "call ___sdcc_call_iy");
           regalloc_dry_run_cost += 3;
         }
@@ -11381,9 +11387,9 @@ genlshTwo (operand *result, operand *left, unsigned int shCount, const iCode *ic
           if (shCount)
             shiftL1Left2Result (left, 0, result, 1, shCount, ic);
           else
-            movLeft2Result (left, LSB, result, MSB16, 0);
+            cheapMove (result->aop, 1, left->aop, 0, isRegDead (A_IDX, ic));
         }
-      cheapMove (result->aop, 0, ASMOP_ZERO, 0, true);
+      cheapMove (result->aop, 0, ASMOP_ZERO, 0, isRegDead (A_IDX, ic));
     }
   /*  0 <= shCount <= 7 */
   else
@@ -11779,13 +11785,9 @@ genrshTwo (const iCode * ic, operand * result, operand * left, int shCount, int 
     {
       shCount -= 8;
       if (shCount)
-        {
-          shiftR1Left2Result (left, MSB16, result, LSB, shCount, sign);
-        }
+        shiftR1Left2Result (left, MSB16, result, LSB, shCount, sign);
       else
-        {
-          movLeft2Result (left, MSB16, result, LSB, sign);
-        }
+        cheapMove (result->aop, 0, left->aop, 1, isRegDead (A_IDX, ic));
       if (sign)
         {
           /* Sign extend the result */
@@ -13919,7 +13921,28 @@ genReceive (const iCode *ic)
   
   wassert (currFunc && ic->argreg);
 
-  genMove (result->aop, aopArg (currFunc->type, ic->argreg), isRegDead (A_IDX, ic), isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic));
+  bool dead_regs[IYH_IDX + 1];
+  
+  for (int i = 0; i <= IYH_IDX; i++)
+    dead_regs[i] = isRegDead (i, ic);
+
+  for(iCode *nic = ic->next; nic && nic->op == RECEIVE; nic = nic->next)
+    {
+      asmop *narg = aopArg (currFunc->type, nic->argreg);
+      wassert (narg);
+      for (int i = 0; i < narg->size; i++)
+        dead_regs[narg->aopu.aop_reg[i]->rIdx] = false;
+    }
+    
+  if (result->aop->type == AOP_REG)
+    for (int i = 0; i < result->aop->size; i++)
+      if (!dead_regs[result->aop->aopu.aop_reg[i]->rIdx])
+        {
+          regalloc_dry_run_cost += 500;
+          wassert (regalloc_dry_run);
+        }
+
+  genMove (result->aop, aopArg (currFunc->type, ic->argreg), dead_regs[A_IDX], dead_regs[L_IDX] && dead_regs[H_IDX], dead_regs[E_IDX] && dead_regs[D_IDX]);
 
   freeAsmop (IC_RESULT (ic), NULL);
 }
