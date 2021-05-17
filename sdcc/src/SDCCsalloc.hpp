@@ -151,7 +151,7 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
           if(p == G[i].ic->block || p == scon[j].sym->block)
             {
               G[i].stack_alive.insert(j);
-              if (scon[j].sym->addrtaken || IS_AGGREGATE(scon[j].sym->type) ) // TODO: More accurate analysis.
+              if (scon[j].sym->addrtaken || IS_AGGREGATE(scon[j].sym->type)) // TODO: More accurate analysis.
                 G[i].ic->localEscapeAlive = true;
             }
         }
@@ -226,7 +226,11 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
 
       // Extend liverange to cover everything.
       for(unsigned int i = 0; i < boost::num_vertices(G); i++)
-        G[i].stack_alive.insert(j);
+        {
+          G[i].stack_alive.insert(j);
+          if (sym->addrtaken)
+            G[i].ic->localEscapeAlive = true;
+        }
 
       // Conflict with everything.
       for(unsigned int i = 0; i < j; i++)
@@ -265,7 +269,7 @@ void color_stack_var(const var_t v, SI_t &SI, int start, int *ssize)
   
   SI[v].color = start;
 
-  const int sloc = (port->stack.direction > 0) ? start : -start - size ;
+  const int sloc = (port->stack.direction > 0) ? start : -start - size;
   symbol *const ssym = (sym->isspilt && sym->usl.spillLoc) ? sym->usl.spillLoc : sym;
 
   SPEC_STAK(ssym->etype) = ssym->stack = sloc;
