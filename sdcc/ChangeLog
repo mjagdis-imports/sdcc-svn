@@ -1,3 +1,58 @@
+2021-05-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/ucz180-resiy:
+	  Test z180 port with --reserve-regs-iy.
+	* sdcc/support/regression/ports/ucz80/spec.mk,
+	  sdcc/support/regression/ports/ucr3ka/spec.mk:
+	  Drop --profile option, so we get better coverage of tail call optimization.
+
+2021-05-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improvements for handling of literal values in wide registers: patch #388 by Visenri.
+
+2021-05-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Partial fix for bug #3054.
+	* device/include/float.h,
+	  device/include/pic16/float.h,
+	  device/lib/_fseq.c,
+	  device/lib/_fslt.c,
+	  device/lib/_fsneq.c,
+	  src/SDCCsymt.c:
+	  Make floating-point comparison support routines return _Bool.
+
+2021-05-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3242.c:
+	  Fix bug #3242.
+	* doc/sdccman.lyx:
+	  Fix some typos.
+
+2021-05-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  src/z80/gen.c:
+	  Tail call optimization for functions with no stack parameters.
+
+2021-05-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCpeeph.c,
+	  src/pdk/peep.c,
+	  src/stm8/peep.c,
+	  src/z80/gen.c,
+	  src/z80/peep.c,
+	  support/regression/tests/bug-3239.c:
+	  Fix bugs #3235, 3239.
+
+2021-05-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix a code generation bug in hl handling.
+
 2021-05-17 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/gen.c,
