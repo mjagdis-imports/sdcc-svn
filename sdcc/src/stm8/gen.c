@@ -1197,6 +1197,22 @@ aopRet (sym_link *ftype)
   // Cosmic passes return values larger than 16 bits in pseudoregisters.
   if (IFFUNC_ISCOSMIC (ftype) && size > 2)
     werror (E_COSMIC_LARGE_RETURN);
+    
+  int nArgs = 0;
+  for (value *args = FUNC_ARGS(ftype); args; args = args->next)
+    nArgs++; 
+  value *arg1 = FUNC_ARGS(ftype);
+  value *arg2 = arg1 ? arg1->next : 0;
+
+  // float x float -> float    
+  if (nArgs == 2 && IS_FLOAT (arg1->type) && IS_FLOAT (arg2->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // float -> float
+  else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // float x float -> bool
+  else if (nArgs == 2 && IS_FLOAT (arg1->type) && ftype->next && IS_BOOL (ftype->next))
+    ;
 
   switch (size)
     {
@@ -1298,7 +1314,7 @@ aopArg (sym_link *ftype, int i)
 
       return 0;
     }
-    
+
   // Cosmic calling convention.
   if (IFFUNC_ISCOSMIC (ftype))
     {
@@ -1310,6 +1326,22 @@ aopArg (sym_link *ftype, int i)
 
       return 0;
     }
+    
+  int nArgs = 0;
+  for (value *args = FUNC_ARGS(ftype); args; args = args->next)
+    nArgs++; 
+  value *arg1 = FUNC_ARGS(ftype);
+  value *arg2 = arg1 ? arg1->next : 0;
+
+  // float x float -> float    
+  if (nArgs == 2 && IS_FLOAT (arg1->type) && IS_FLOAT (arg2->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // float -> float
+  else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // float x float -> bool
+  else if (nArgs == 2 && IS_FLOAT (arg1->type) && ftype->next && IS_BOOL (ftype->next))
+    ;
 
   return 0;
 }
@@ -1328,6 +1360,22 @@ isFuncCalleeStackCleanup (sym_link *ftype)
     }
   if (!stackparmbytes)
     return false;
+    
+  int nArgs = 0;
+  for (value *args = FUNC_ARGS(ftype); args; args = args->next)
+    nArgs++; 
+  value *arg1 = FUNC_ARGS(ftype);
+  value *arg2 = arg1 ? arg1->next : 0;
+
+  // float x float -> float    
+  if (nArgs == 2 && IS_FLOAT (arg1->type) && IS_FLOAT (arg2->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // float -> float
+  else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // float x float -> bool
+  else if (nArgs == 2 && IS_FLOAT (arg1->type) && ftype->next && IS_BOOL (ftype->next))
+    ;
 
   return (IFFUNC_ISZ88DK_CALLEE (ftype));
 }
