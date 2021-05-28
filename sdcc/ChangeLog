@@ -3,6 +3,21 @@
 	* src/stm8/gen.c:
 	  List of common function types facilitates calling convention experiments.
 
+2021-05-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bitfields-nibbles.c:
+	  Test from patch #373 by Visenri.
+	* src/SDCCpeeph.c:
+	  Peephole optimizer helper function refactoring, from patch #362 by Visenri.
+	* src/stm8/peeph.def:
+	  Peephole rule refactoring, from patch #361 by Basil Hussain.
+
+2021-05-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3244.c:
+	  Fix bug #3244.
+
 2021-05-20 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/regression/Makefile.in,
