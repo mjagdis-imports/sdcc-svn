@@ -1,3 +1,22 @@
+2021-06-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/main.c,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc2.cc:
+	  Rotate support, inspired by patch #363 by Visenri.
+
+2021-06-07 Visenri
+	* src/stm8/peeph.def:
+	  Removed unused rules 660a & 660b because of patches applied in r12420 (SWAP implementation).
+	* ChangeLog:
+	  Fixed wrong date of previous commit.
+
+2021-06-07 Visenri
+	* src/stm8/peep.c,
+	  Fixed typo regarding instruction 'jrsgt'.
+	* src/stm8/peeph.def:
+	  Added rules 600a & 600b from patch #362 that were failing because of the 'jrsgt' typo.
+
 2021-06-04 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/main.c,
