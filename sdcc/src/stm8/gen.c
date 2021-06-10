@@ -1253,7 +1253,7 @@ aopRet (sym_link *ftype)
     case 3:
       return (ASMOP_XYL);
     case 4:
-      return (ASMOP_XY);   
+      return (ASMOP_XY);
     default:
       return 0;
     }
