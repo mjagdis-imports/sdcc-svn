@@ -130,7 +130,7 @@ static const char *asminstnames[] =
   "xor"
 };
 
-static struct asmop asmop_a, asmop_x, asmop_y, asmop_xy, asmop_xyl, asmop_yx, asmop_zero, asmop_one, asmop_mone;
+static struct asmop asmop_a, asmop_x, asmop_y, asmop_xy, asmop_xyl, asmop_yx, asmop_zero, asmop_one, asmop_mone, asmop_xl, asmop_xh, asmop_yl, asmop_yh;
 static struct asmop *const ASMOP_A = &asmop_a;
 static struct asmop *const ASMOP_X = &asmop_x;
 static struct asmop *const ASMOP_Y = &asmop_y;
@@ -140,6 +140,10 @@ static struct asmop *const ASMOP_YX = &asmop_yx;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
 static struct asmop *const ASMOP_ONE = &asmop_one;
 static struct asmop *const ASMOP_MONE = &asmop_mone;
+static struct asmop *const ASMOP_XL = &asmop_xl;
+static struct asmop *const ASMOP_XH = &asmop_xh;
+static struct asmop *const ASMOP_YL = &asmop_yl;
+static struct asmop *const ASMOP_YH = &asmop_yh;
 
 // Init aop as a an asmop for data in registers, as given by the -1-terminated array regidx.
 static void
@@ -167,6 +171,11 @@ stm8_init_asmops (void)
   stm8_init_reg_asmop(&asmop_xy, (const signed char[]){XL_IDX, XH_IDX, YL_IDX, YH_IDX, -1});
   stm8_init_reg_asmop(&asmop_xyl, (const signed char[]){XL_IDX, XH_IDX, YL_IDX, -1});
   stm8_init_reg_asmop(&asmop_yx, (const signed char[]){YL_IDX, YH_IDX, XL_IDX, XH_IDX, -1});
+  
+  stm8_init_reg_asmop(&asmop_xl, (const signed char[]){XL_IDX, -1});
+  stm8_init_reg_asmop(&asmop_xh, (const signed char[]){XH_IDX, -1});
+  stm8_init_reg_asmop(&asmop_yl, (const signed char[]){YL_IDX, -1});
+  stm8_init_reg_asmop(&asmop_yh, (const signed char[]){YH_IDX, -1});
 
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
@@ -1228,7 +1237,7 @@ aopRet (sym_link *ftype)
   // float -> float
   else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
     ;
-  // (u)int x (u)int -> (u)int
+  // (u)long x (u)long -> (u)long
   else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 4 && IS_INT (arg2->type) && getSize (arg2->type) == 4 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 4)
     ;
   // .* -> void
@@ -1376,7 +1385,7 @@ aopArg (sym_link *ftype, int i)
   // float -> float
   else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
     ;
-  // (u)int x (u)int -> (u)int
+  // (u)long x (u)long -> (u)long
   else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 4 && IS_INT (arg2->type) && getSize (arg2->type) == 4 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 4)
     ;
   // .* -> void
@@ -1429,13 +1438,12 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   // float -> float
   else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
     ;
-  // (u)int x (u)int -> (u)int
+  // (u)long x (u)long -> (u)long
   else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 4 && IS_INT (arg2->type) && getSize (arg2->type) == 4 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 4)
     ;
   // .* -> void
   else if (nArgs == 1 && IS_PTR (arg1->type))
     ;
-
 
   return (IFFUNC_ISZ88DK_CALLEE (ftype));
 }
