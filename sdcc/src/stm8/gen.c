@@ -130,6 +130,9 @@ static const char *asminstnames[] =
   "xor"
 };
 
+bool stm8_regs_used_as_parms_in_calls_from_current_function[YH_IDX + 1];
+bool stm8_regs_used_as_parms_in_pcalls_from_current_function[YH_IDX + 1];
+
 static struct asmop asmop_a, asmop_x, asmop_y, asmop_xy, asmop_xyl, asmop_yx, asmop_zero, asmop_one, asmop_mone;
 static struct asmop *const ASMOP_A = &asmop_a;
 static struct asmop *const ASMOP_X = &asmop_x;
@@ -416,7 +419,6 @@ aopGet(const asmop *aop, int offset)
 
   if (aop->type == AOP_IMMD)
     {
-      wassertl_bt (offset < (2 + (options.model == MODEL_LARGE || IFFUNC_ISCOSMIC (currFunc->type))), "Immediate operand out of range");
       if (offset == 0)
         SNPRINTF (buffer, sizeof(buffer), "#<(%s+%d)", aop->aopu.immd, aop->aopu.immd_off);
       else
@@ -1182,7 +1184,7 @@ aopOp (operand *op, const iCode *ic)
 }
 
 // Get asmop for registers containing the return type of function
-// Returns 0 is the function does not have a return value or it is not returned in registers.
+// Returns 0 if the function does not have a return value or it is not returned in registers.
 static asmop *
 aopRet (sym_link *ftype)
 {
@@ -1216,7 +1218,7 @@ aopRet (sym_link *ftype)
 }
 
 // Get asmop for registers containing a parameter
-// Returns 0 is the parameter is passed on the stack
+// Returns 0 if the parameter is passed on the stack
 static asmop *
 aopArg (sym_link *ftype, int i)
 {
@@ -3770,20 +3772,49 @@ genCall (const iCode *ic)
               emit2 (jump ? "jp" : "call", "(y)");
               cost (2,jump ? 1 : 4);
             }
-          else
+          else if (!stm8IsParmInCall(ftype, "x"))
             {
-              if (stm8IsParmInCall(ftype, "x"))
-                {
-                  cost (500, 500);
-                  wassert (regalloc_dry_run);
-                }
-
               genMove (ASMOP_X, left->aop, !stm8IsParmInCall(ftype, "a"), true, !stm8IsParmInCall(ftype, "y"));
 
               adjustStack (prestackadjust, true, false, true);
           
               emit2 (jump ? "jp" : "call", "(x)");
               cost (1, jump ? 1 : 4);
+            }
+          else
+            {
+              if (stm8IsParmInCall(ftype, "a"))
+                {
+                  cost (500, 500);
+                  wassert (regalloc_dry_run);
+                }
+
+              adjustStack (prestackadjust, left->aop->regs[A_IDX] < 0, left->aop->regs[XL_IDX] < 0 && left->aop->regs[XH_IDX] < 0, left->aop->regs[YL_IDX] < 0 && left->aop->regs[YH_IDX] < 0);
+                
+              symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+
+              if (!jump)
+                {
+                  if (!regalloc_dry_run)
+                    {
+                      emit2("push", "#(!tlabel)", labelKey2num (tlbl->key));
+                      emit2("push", "#(!tlabel >> 8)", labelKey2num (tlbl->key));
+                    }
+                  G.stack.pushed += 2;
+                  cost (4, 2);
+                }
+
+              cheapMove (ASMOP_A, 0, left->aop, 0, false);
+              push (ASMOP_A, 0, 1);
+              cheapMove (ASMOP_A, 0, left->aop, 1, false);
+              push (ASMOP_A, 0, 1);
+              emit2 ("ret", "");
+              cost (1, 4);
+
+              G.stack.pushed -= 2 * (2 - jump);
+
+              if (!jump)
+                emitLabel (tlbl);
             }
         }
     }
@@ -9027,6 +9058,10 @@ genSend (const iCode *ic)
     
   genMove (argreg, IC_LEFT (ic)->aop, a_dead, x_dead, y_dead);
 
+  for (int i = 0; i < argreg->size; i++)
+    if (!regalloc_dry_run)
+       ((walk->op == PCALL) ? stm8_regs_used_as_parms_in_pcalls_from_current_function : stm8_regs_used_as_parms_in_calls_from_current_function)[argreg->aopu.bytes[i].byteu.reg->rIdx] = true;
+
   freeAsmop (IC_LEFT (ic));
 }
 
@@ -9350,6 +9385,9 @@ genSTM8Code (iCode *lic)
   if (options.debug && !regalloc_dry_run)
     debugFile->writeFrameAddress (NULL, NULL, 0); /* have no idea where frame is now */
 
+  memset(stm8_regs_used_as_parms_in_calls_from_current_function, 0, sizeof(bool) * (YH_IDX + 1));
+  memset(stm8_regs_used_as_parms_in_pcalls_from_current_function, 0, sizeof(bool) * (YH_IDX + 1));
+
   for (ic = lic; ic; ic = ic->next)
     {
       initGenLineElement ();
@@ -9432,7 +9470,7 @@ bool
 stm8IsRegArg(struct sym_link *ftype, int i, const char *what)
 {
   if (what && !strcmp(what, "x"))
-    return (stm8IsRegArg (ftype, i, "xl") || stm8IsRegArg (ftype, i, "yl"));
+    return (stm8IsRegArg (ftype, i, "xl") || stm8IsRegArg (ftype, i, "xh"));
   else if (what && !strcmp(what, "y"))
     return (stm8IsRegArg (ftype, i, "yl") || stm8IsRegArg (ftype, i, "yh"));
  

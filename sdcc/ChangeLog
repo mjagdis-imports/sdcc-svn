@@ -1,9 +1,71 @@
+2021-06-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  src/stm8/peep.c:
+	  Implement register parameter tracking for peephole optimizer to fix code size regression caused by bugfix in previous commit.
+
+2021-06-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c,
+	  src/stm8/gen.c,
+	  src/stm8/main.c,
+	  src/stm8/peep.c,
+	  support/regression/tests/bug-3251.c,
+	  support/regression/tests/bug-2349.c,
+	  support/regression/tests/bug-2455.c,
+	  support/regression/tests/bug-3244.c,
+	  support/regression/tests/compare.c,
+	  support/regression/tests/fptr_cast_array_init.c,
+	  support/regression/tests/genptrs.c,
+	  support/regression/tests/z80n-push-nn.c:
+	  Fix bugs #3251, #3243.
+
+2021-06-09 Visenri
+
+	* src/stm8/peeph.def:
+	  STM8 - Added missing rule 625a from my pack #6 from patch #362, fixed tabs/spaces.
+
+2021-06-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx,
+	  src/ds390/gen.c,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c,
+	  src/pic14/gen.c,
+	  src/pic14/main.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/gen.c,
+	  src/pic16/main.c,
+	  src/pic16/ralloc.c,
+	  src/port.h,
+	  src/z80/gen.c,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCcse.c,
+	  src/SDCCicode.c,
+	  src/SDCClospre.cc:
+	  Remove infrastructure for obsolete GETHBIT.
+
+2021-06-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/ds390/gen.c,
+	  src/ds390/main.c:
+	  Support GETABIT instead of GETHBIT.
+
+2021-06-08 Visenri
+	* src/SDCCpeeph.c:
+	  Fixed buffer overflow in operand string in "immdInRange" function.
+	  
 2021-06-07 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/main.c,
 	  src/stm8/gen.c,
 	  src/stm8/ralloc2.cc:
 	  Rotate support, inspired by patch #363 by Visenri.
+	* src/z80/gen.c,
+	  src/z80/main.c,
+	  src/z80/ralloc2.cc:
+	  Remove redundant z80 GETHBIT support.
 
 2021-06-07 Visenri
 	* src/stm8/peeph.def:
