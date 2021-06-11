@@ -1767,7 +1767,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
 }
 
 // Get asmop for registers containing the return type of function
-// Returns 0 is the function does not have a return value or it is not returned in registers.
+// Returns 0 if the function does not have a return value or it is not returned in registers.
 static asmop *
 aopRet (const sym_link *ftype)
 {
@@ -1789,7 +1789,7 @@ aopRet (const sym_link *ftype)
 }
 
 // Get asmop for registers containing a parameter
-// Returns 0 is the parameter is passed on the stack
+// Returns 0 if the parameter is passed on the stack
 static asmop *
 aopArg (sym_link *ftype, int i)
 {
@@ -2549,7 +2549,7 @@ setupPair (PAIR_ID pairId, asmop *aop, int offset)
 
     case AOP_HL:
       wassertl (pairId == PAIR_HL, "AOP_HL must be in HL");
-emit2(";setupPair HL");
+
       fetchLitPair (pairId, aop, offset, true);
       _G.pairs[pairId].offset = offset;
       break;
@@ -10695,40 +10695,6 @@ genGetWord (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
-/* genGetHbit - generates code get highest order bit               */
-/*-----------------------------------------------------------------*/
-static void
-genGetHbit (const iCode * ic)
-{
-  operand *left, *result;
-  left = IC_LEFT (ic);
-  result = IC_RESULT (ic);
-
-  aopOp (left, ic, FALSE, FALSE);
-  aopOp (result, ic, TRUE, FALSE);
-
-  /* get the highest order byte into a */
-  cheapMove (ASMOP_A, 0, left->aop, left->aop->size - 1, true);
-
-  if (result->aop->type == AOP_CRY)
-    {
-      emit3 (A_RL, ASMOP_A, 0);
-      outBitC (result);
-    }
-  else
-    {
-      emit3 (A_RLCA, 0, 0);
-      emit2 ("and a, !one");
-      regalloc_dry_run_cost += 2;
-      outAcc (result);
-    }
-
-
-  freeAsmop (left, NULL);
-  freeAsmop (result, NULL);
-}
-
-/*-----------------------------------------------------------------*/
 /* genGetAbit - generates code get a single bit                    */
 /*-----------------------------------------------------------------*/
 static void
@@ -15386,11 +15352,6 @@ genZ80iCode (iCode * ic)
     case RLC:
       emitDebug ("; genRLC");
       genRLC (ic);
-      break;
-
-    case GETHBIT:
-      emitDebug ("; genGetHbit");
-      genGetHbit (ic);
       break;
 
     case GETABIT:
