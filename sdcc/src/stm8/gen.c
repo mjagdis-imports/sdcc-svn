@@ -1234,7 +1234,7 @@ aopArg (sym_link *ftype, int i)
     return 0;
 
   // Raisonance calling convention.
-  if (IFFUNC_ISRAISONANCE (ftype))
+  if (IFFUNC_ISRAISONANCE (ftype) || IFFUNC_ISSDCCNEWCALL (ftype) && !IFFUNC_HASVARARGS (ftype))
     {
       int j;
       value *arg;
@@ -1333,7 +1333,19 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (!stackparmbytes)
     return false;
 
-  return (IFFUNC_ISZ88DK_CALLEE (ftype));
+  if (IFFUNC_ISZ88DK_CALLEE (ftype))
+    return true;
+    
+  if (IFFUNC_ISSDCCNEWCALL (ftype) && !IFFUNC_HASVARARGS (ftype) && options.model != MODEL_LARGE)
+    {
+      if (!ftype->next || getSize (ftype->next) <= 2)
+        return true;
+      else if (IS_FLOAT (ftype->next) && FUNC_ARGS(ftype) && IS_FLOAT(FUNC_ARGS(ftype)->etype))
+        return true;
+      return false;
+    }
+  
+  return false;
 }
 
 static void
@@ -4080,6 +4092,7 @@ genFunction (iCode *ic)
 
   if (IFFUNC_ISNAKED(ftype))
   {
+      updateCFA(); //ensure function has at least 1 CFA record
       emit2(";", "naked function: no prologue.");
       return;
   }
