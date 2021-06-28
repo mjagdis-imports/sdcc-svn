@@ -1774,7 +1774,42 @@ aopRet (const sym_link *ftype)
   // Adjust returnregs in isReturned in peep.c accordingly when changing asmop_return here.
 
   int size = getSize (ftype->next);
-  
+
+  int nArgs = 0;
+  for (value *args = FUNC_ARGS(ftype); args; args = args->next)
+    nArgs++; 
+  value *arg1 = FUNC_ARGS(ftype);
+  value *arg2 = arg1 ? arg1->next : 0;
+  value *arg3 = arg2 ? arg2->next : 0;
+
+  // float x float -> float    
+  if (nArgs == 2 && IS_FLOAT (arg1->type) && IS_FLOAT (arg2->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // (u)int x (u)int -> (u)int
+  else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 2 && IS_INT (arg2->type) && getSize (arg2->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // float x float -> bool
+  else if (nArgs == 2 && IS_FLOAT (arg1->type) && ftype->next && IS_BOOL (ftype->next))
+    ;
+  // .* x .* x (u)int -> (u)int
+  else if (nArgs == 3 && IS_PTR (arg1->type) && IS_PTR (arg2->type) &&  IS_INT (arg3->type) && getSize (arg3->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // .* -> (u)int
+  else if (nArgs == 1 && IS_PTR (arg1->type) && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // (u)int -> (u)int
+  else if (nArgs == 1 && IS_INT (arg1->type) && getSize (arg1->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // float -> float
+  else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // (u)long x (u)long -> (u)long
+  else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 4 && IS_INT (arg2->type) && getSize (arg2->type) == 4 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 4)
+    ;
+  // .* -> void
+  else if (nArgs == 1 && IS_PTR (arg1->type))
+    ;
+
   switch (size)
     {
     case 1:
@@ -1817,6 +1852,41 @@ aopArg (sym_link *ftype, int i)
         }
     }
 
+  int nArgs = 0;
+  for (value *args = FUNC_ARGS(ftype); args; args = args->next)
+    nArgs++; 
+  value *arg1 = FUNC_ARGS(ftype);
+  value *arg2 = arg1 ? arg1->next : 0;
+  value *arg3 = arg2 ? arg2->next : 0;
+
+  // float x float -> float    
+  if (nArgs == 2 && IS_FLOAT (arg1->type) && IS_FLOAT (arg2->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // (u)int x (u)int -> (u)int
+  else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 2 && IS_INT (arg2->type) && getSize (arg2->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // float x float -> bool
+  else if (nArgs == 2 && IS_FLOAT (arg1->type) && ftype->next && IS_BOOL (ftype->next))
+    ;
+  // .* x .* x (u)int -> (u)int
+  else if (nArgs == 3 && IS_PTR (arg1->type) && IS_PTR (arg2->type) &&  IS_INT (arg3->type) && getSize (arg3->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // .* -> (u)int
+  else if (nArgs == 1 && IS_PTR (arg1->type) && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // (u)int -> (u)int
+  else if (nArgs == 1 && IS_INT (arg1->type) && getSize (arg1->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // float -> float
+  else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // (u)long x (u)long -> (u)long
+  else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 4 && IS_INT (arg2->type) && getSize (arg2->type) == 4 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 4)
+    ;
+  // .* -> void
+  else if (nArgs == 1 && IS_PTR (arg1->type))
+    ;
+
   return 0;
 }
 
@@ -1836,6 +1906,41 @@ isFuncCalleeStackCleanup (sym_link *ftype)
     }
   if (!stackparmbytes)
     return false;
+
+  int nArgs = 0;
+  for (value *args = FUNC_ARGS(ftype); args; args = args->next)
+    nArgs++; 
+  value *arg1 = FUNC_ARGS(ftype);
+  value *arg2 = arg1 ? arg1->next : 0;
+  value *arg3 = arg2 ? arg2->next : 0;
+
+  // float x float -> float    
+  if (nArgs == 2 && IS_FLOAT (arg1->type) && IS_FLOAT (arg2->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // (u)int x (u)int -> (u)int
+  else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 2 && IS_INT (arg2->type) && getSize (arg2->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // float x float -> bool
+  else if (nArgs == 2 && IS_FLOAT (arg1->type) && ftype->next && IS_BOOL (ftype->next))
+    ;
+  // .* x .* x (u)int -> (u)int
+  else if (nArgs == 3 && IS_PTR (arg1->type) && IS_PTR (arg2->type) &&  IS_INT (arg3->type) && getSize (arg3->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // .* -> (u)int
+  else if (nArgs == 1 && IS_PTR (arg1->type) && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // (u)int -> (u)int
+  else if (nArgs == 1 && IS_INT (arg1->type) && getSize (arg1->type) == 2 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 2)
+    ;
+  // float -> float
+  else if (nArgs == 1 && IS_FLOAT (arg1->type) && ftype->next && IS_FLOAT (ftype->next))
+    ;
+  // (u)long x (u)long -> (u)long
+  else if (nArgs == 2 && IS_INT (arg1->type) && getSize (arg1->type) == 4 && IS_INT (arg2->type) && getSize (arg2->type) == 4 && ftype->next && IS_INT (ftype->next) && getSize (ftype->next) == 4)
+    ;
+  // .* -> void
+  else if (nArgs == 1 && IS_PTR (arg1->type))
+    ;
 
   return (IFFUNC_ISZ88DK_CALLEE (ftype));
 }
