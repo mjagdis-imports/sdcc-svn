@@ -4211,7 +4211,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           i += 2;
           continue;
         }
-      else if (i + 1 < size && IS_GB && result->type != AOP_REG && requiresHL (result) && source->type == AOP_REG && requiresHL (source) && de_dead_global && hl_dead_global) // word through de is cheaper than direct byte-by-byte, since it requires fewer updates of hl.
+      else if (i + 1 < size && IS_GB && result->type != AOP_REG && requiresHL (result) && source->type == AOP_REG && requiresHL (source) && // word through de is cheaper than direct byte-by-byte, since it requires fewer updates of hl.
+        de_dead_global && hl_dead_global && source->regs[L_IDX] <= i + 1 && source->regs[H_IDX] <= i + 1)
         {
           cheapMove (ASMOP_E, 0, source, i, a_dead);
           cheapMove (ASMOP_D, 0, source, i + 1, a_dead);
@@ -4253,9 +4254,14 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           zeroed_a = true;
         }
 
-      if (result->type == AOP_HL && a_dead_global && (!hl_dead_global || source->regs[L_IDX] != -1 || source->regs[H_IDX] != -1) && source->regs[A_IDX] <= i)
+      if (result->type == AOP_HL && a_dead_global && (!hl_dead_global || source->regs[L_IDX] >= i || source->regs[H_IDX] >= i) && source->regs[A_IDX] <= i)
         {
-          if (!aopIsLitVal (source, soffset + i, 1, 0x00) || !zeroed_a)
+          if (source->type == AOP_HL)
+            {
+              emit2 ("ld a, !mems", aopGetLitWordLong (source, soffset + i, FALSE));
+              regalloc_dry_run_cost += 3;
+            }
+          else if (!aopIsLitVal (source, soffset + i, 1, 0x00) || !zeroed_a)
             {
               cheapMove (ASMOP_A, 0, source, soffset + i, true);
               zeroed_a = aopIsLitVal (source, soffset + i, 1, 0x00);
@@ -5557,10 +5563,26 @@ genCall (const iCode *ic)
       (IC_RESULT (ic)->aop->size <= 2 || aopInReg (IC_RESULT (ic)->aop, 2, aopRet (ftype)->aopu.aop_reg[2]->rIdx)) &&
       (IC_RESULT (ic)->aop->size <= 3 || aopInReg (IC_RESULT (ic)->aop, 3, aopRet (ftype)->aopu.aop_reg[3]->rIdx)) &&
       IC_RESULT (ic)->aop->size <= 4) &&
-    !ic->parmBytes && !ic->localEscapeAlive && !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL (ftype) && (_G.omitFramePtr || IS_GB) &&
-    !isFuncCalleeStackCleanup (currFunc->type))
+    !ic->parmBytes &&
+    (!isFuncCalleeStackCleanup (currFunc->type) || !ic->parmEscapeAlive && ic->op == CALL && 0 /* todo: test and enable depending on optimization goal - as done for stm8 - for z80 and r3ka this will be slower and bigger than without tail call optimization, but it saves RAM */) &&
+    !ic->localEscapeAlive &&
+    !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL (ftype) &&
+    (_G.omitFramePtr || IS_GB))
     {
       int limit = 16; // Avoid endless loops in the code putting us into an endless loop here.
+
+      if (isFuncCalleeStackCleanup (currFunc->type))
+        {
+           const bool caller_bigreturn = currFunc->type->next && (getSize (currFunc->type->next) > 4) || IS_STRUCT (currFunc->type->next);
+           int caller_stackparmbytes = caller_bigreturn * 2;
+           for (value *caller_arg = FUNC_ARGS(currFunc->type); caller_arg; caller_arg = caller_arg->next)
+             {
+               wassert (caller_arg->sym);
+               if (!SPEC_REGPARM (caller_arg->etype))
+                 caller_stackparmbytes += getSize (caller_arg->sym->type);
+             }
+           prestackadjust += caller_stackparmbytes;
+        }
 
       for (const iCode *nic = ic->next; nic && --limit;)
         {
@@ -5578,11 +5600,16 @@ genCall (const iCode *ic)
                 {
                   prestackadjust = OP_SYMBOL (IC_LEFT (nic))->stack;
                   tailjump = true;
+                  break;
                 }
+              prestackadjust = 0;
               break;
             }
           else
-            break;
+            {
+              prestackadjust = 0;
+              break;
+            }
 
           if (targetlabel)
             {
@@ -5595,7 +5622,11 @@ genCall (const iCode *ic)
                   if (nnic->op == LABEL && IC_LABEL (nnic)->key == targetlabel->key)
                     break;
               if (!nnic)
-                break;
+                {
+                  prestackadjust = 0;
+                  tailjump = false;
+                  break;
+                }
 
               nic = nnic;
             }
@@ -5721,6 +5752,12 @@ genCall (const iCode *ic)
         }
       else
         {
+          if (isFuncCalleeStackCleanup (currFunc->type) && prestackadjust && !IFFUNC_ISNORETURN (ftype)) // Copy return value into correct location on stack for tail call optimization.
+            {
+              wassert (0);
+              /* todo: implement */
+            }
+
           adjustStack (prestackadjust, false, bc_free_pre_call, de_free_pre_call, hl_free_pre_call, false);
 
           if (IS_LITERAL (etype))
@@ -13841,7 +13878,7 @@ genAssign (const iCode *ic)
               goto release;
             }
         }
-      if ((result->aop->type == AOP_REG || result->aop->type == AOP_STK || result->aop->type == AOP_EXSTK || result->aop->type == AOP_IY || result->aop->type == AOP_HL) && (right->aop->type == AOP_REG || right->aop->type == AOP_STK || right->aop->type == AOP_EXSTK || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || right->aop->type == AOP_IY))
+      if ((result->aop->type == AOP_REG || result->aop->type == AOP_STK || result->aop->type == AOP_EXSTK || result->aop->type == AOP_IY || result->aop->type == AOP_HL) && (right->aop->type == AOP_REG || right->aop->type == AOP_STK || right->aop->type == AOP_EXSTK || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || right->aop->type == AOP_IY || right->aop->type == AOP_HL))
         genMove (result->aop, right->aop, isRegDead (A_IDX, ic), isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic));
       else
         while (size--)
