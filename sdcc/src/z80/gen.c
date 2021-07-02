@@ -4107,7 +4107,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           continue;
         }
       else if (i + 1 < size && IS_GB && result->type != AOP_REG && requiresHL (result) && source->type == AOP_REG && requiresHL (source) && // word through de is cheaper than direct byte-by-byte, since it requires fewer updates of hl.
-        de_dead_global && hl_dead_global && source->regs[L_IDX] <= i + 1 && source->regs[H_IDX] <= i + 1)
+        de_dead_global && source->regs[E_IDX] <= i + 1 && source->regs[D_IDX] <= i + 1 &&
+        hl_dead_global && source->regs[L_IDX] <= i + 1 && source->regs[H_IDX] <= i + 1)
         {
           cheapMove (ASMOP_E, 0, source, i, a_dead);
           cheapMove (ASMOP_D, 0, source, i + 1, a_dead);
@@ -4176,28 +4177,48 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         {
           bool pushed_hl = false;
           bool via_a = false;
+          bool premoved_a = false;
           if ((requiresHL (result) && result->type != AOP_REG || requiresHL (source) && source->type != AOP_REG) && !hl_dead)
             {
               via_a = aopInReg (result, roffset + i, L_IDX) || aopInReg (result, roffset + i, H_IDX);
-              if (via_a)
+              if (via_a && !a_dead)
                 _push (PAIR_AF);
-              _push (PAIR_HL);
-              pushed_hl = true;
+              if (via_a && source->type == AOP_HL)
+                {
+                  emit2 ("ld a, !mems", aopGetLitWordLong (source, soffset + i, FALSE));
+                  regalloc_dry_run_cost += 3;
+                  premoved_a = true;
+                }
+              else
+                {
+                  _push (PAIR_HL);
+                  pushed_hl = true;
+                }
             }
-          cheapMove (via_a ? ASMOP_A : result, via_a ? 0 : (roffset + i), source, soffset + i, via_a || a_dead);
+          if (!premoved_a)
+            cheapMove (via_a ? ASMOP_A : result, via_a ? 0 : (roffset + i), source, soffset + i, via_a || a_dead);
           if (pushed_hl)
             _pop (PAIR_HL);
           if (via_a)
             {
               if (requiresHL (result) && result->type != AOP_REG && !hl_dead)
                 {
-                  _push (PAIR_HL);
-                  cheapMove (result, roffset + i, ASMOP_A, 0, a_dead_global);
-                  _pop (PAIR_HL);
+                  if (result->type == AOP_HL)
+                    {
+                      emit2 ("ld !mems, a", aopGetLitWordLong (result, roffset + i, FALSE));
+                      regalloc_dry_run_cost += 3;
+                    }
+                  else
+                    {
+                      _push (PAIR_HL);
+                      cheapMove (result, roffset + i, ASMOP_A, 0, true);
+                      _pop (PAIR_HL);
+                    }
                 }
               else
-                cheapMove (result, roffset + i, ASMOP_A, 0, a_dead_global);
-              _pop (PAIR_AF);
+                cheapMove (result, roffset + i, ASMOP_A, 0, true);
+              if (!a_dead)
+                _pop (PAIR_AF);
             }
           zeroed_a = false;
         }
@@ -5596,6 +5617,44 @@ genCall (const iCode *ic)
           regalloc_dry_run_cost += 3;
           genMove (ASMOP_BC, IC_LEFT (ic)->aop, z80IsParmInCall(ftype, "a"), hl_free_pre_call, de_free_pre_call);
           emit2 ("push bc");
+          emit2 ("ret");
+          if (!regalloc_dry_run)
+            _G.stack.pushed -= 2;
+          regalloc_dry_run_cost += 2;
+          if (tlbl)
+            emitLabel (tlbl);
+        }
+      else if (de_free_pre_call) // Try de.
+        {
+          wassert (!prestackadjust);
+          wassert (IY_RESERVED || IS_GB); // The peephole optimizer handles ret for purposes other than returning only for --reserve-regs-iy
+          symbol *tlbl = 0;
+          if (aopInReg (IC_LEFT (ic)->aop, 0, D_IDX) || aopInReg (IC_LEFT (ic)->aop, 0, E_IDX) || aopInReg (IC_LEFT (ic)->aop, 1, D_IDX) || aopInReg (IC_LEFT (ic)->aop, 1, E_IDX))
+            {
+              if (!bc_free_pre_call)
+                {
+                  regalloc_dry_run_cost += 500;
+                  wassertl (regalloc_dry_run, "Unimplemented function pointer in de with unavailable bc, hl and iy");
+                }
+              if (!regalloc_dry_run)
+                {
+                  tlbl = newiTempLabel (NULL);
+                  emit2 ("ld bc, !immed!tlabel", labelKey2num (tlbl->key));
+                  _push (PAIR_BC);
+                }
+            }
+          else if (!regalloc_dry_run)
+            {
+              if (!regalloc_dry_run)
+                {
+                  tlbl = newiTempLabel (NULL);
+                  emit2 ("ld de, !immed!tlabel", labelKey2num (tlbl->key));
+                  _push (PAIR_DE);
+                }
+            }
+          regalloc_dry_run_cost += 3;
+          genMove (ASMOP_DE, IC_LEFT (ic)->aop, z80IsParmInCall(ftype, "a"), hl_free_pre_call, true);
+          emit2 ("push de");
           emit2 ("ret");
           if (!regalloc_dry_run)
             _G.stack.pushed -= 2;
