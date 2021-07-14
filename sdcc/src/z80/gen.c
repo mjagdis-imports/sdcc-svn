@@ -247,7 +247,7 @@ bool z80_regs_preserved_in_calls_from_current_function[IYH_IDX + 1];
 
 static const char *aopGet (asmop *aop, int offset, bool bit16);
 
-static struct asmop asmop_a, asmop_b, asmop_c, asmop_d, asmop_e, asmop_h, asmop_l, asmop_iyh, asmop_iyl, asmop_hl, asmop_de, asmop_bc, asmop_iy, asmop_dehl, asmop_hlde, asmop_hlbc, asmop_zero, asmop_one, asmop_mone;
+static struct asmop asmop_a, asmop_b, asmop_c, asmop_d, asmop_e, asmop_h, asmop_l, asmop_iyh, asmop_iyl, asmop_hl, asmop_de, asmop_bc, asmop_iy, asmop_dehl, asmop_hlde, asmop_hlbc, asmop_debc, asmop_bcde, asmop_zero, asmop_one, asmop_mone;
 static struct asmop *const ASMOP_A = &asmop_a;
 static struct asmop *const ASMOP_B = &asmop_b;
 static struct asmop *const ASMOP_C = &asmop_c;
@@ -264,6 +264,8 @@ static struct asmop *const ASMOP_IY = &asmop_iy;
 static struct asmop *const ASMOP_DEHL = &asmop_dehl;
 static struct asmop *const ASMOP_HLDE = &asmop_hlde;
 static struct asmop *const ASMOP_HLBC = &asmop_hlbc;
+static struct asmop *const ASMOP_DEBC = &asmop_debc;
+static struct asmop *const ASMOP_BCDE = &asmop_bcde;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
 static struct asmop *const ASMOP_ONE = &asmop_one;
 static struct asmop *const ASMOP_MONE = &asmop_mone;
@@ -301,10 +303,12 @@ z80_init_asmops (void)
   z80_init_reg_asmop(&asmop_bc, (const signed char[]){C_IDX, B_IDX, -1});
   z80_init_reg_asmop(&asmop_de, (const signed char[]){E_IDX, D_IDX, -1});
   z80_init_reg_asmop(&asmop_hl, (const signed char[]){L_IDX, H_IDX, -1});
+  z80_init_reg_asmop(&asmop_iy, (const signed char[]){IYL_IDX, IYH_IDX, -1});
   z80_init_reg_asmop(&asmop_dehl, (const signed char[]){L_IDX, H_IDX, E_IDX, D_IDX, -1});
   z80_init_reg_asmop(&asmop_hlde, (const signed char[]){E_IDX, D_IDX, L_IDX, H_IDX, -1});
-  z80_init_reg_asmop(&asmop_iy, (const signed char[]){IYL_IDX, IYH_IDX, -1});
   z80_init_reg_asmop(&asmop_hlbc, (const signed char[]){C_IDX, B_IDX, L_IDX, H_IDX, -1});
+  z80_init_reg_asmop(&asmop_debc, (const signed char[]){C_IDX, B_IDX, E_IDX, D_IDX, -1});
+  z80_init_reg_asmop(&asmop_bcde, (const signed char[]){E_IDX, D_IDX, C_IDX, B_IDX, -1});
   
   asmop_zero.type = AOP_LIT;
   asmop_zero.aopu.aop_lit = constVal ("0");
