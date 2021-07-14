@@ -1,3 +1,36 @@
+2021-07-13 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/mcs51/gen.c (genMinusDec),
+	* src/ds390/gen.c (genMinusDec): fix bug #3246
+
+2021-07-12 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c (copyAst): fix bug #3264
+	* support/regression/tests/inline.c: add test for bug #3264
+
+2021-07-11 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/valdiags/tests/struct.c: add test for bug #3086
+
+2021-07-10 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/tests/bug-3141.c: reenable for mcs51
+	* src/SDCCsymt.c (promoteAnonStructs): fix bug #3086
+
+2021-07-10 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCdwarf2.c (dwWriteFrames): fix bug #3161
+
+2021-07-09 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCdwarf2.h: fix incorrect DW_CFA_nop value
+	* src/SDCCdwarf2.c (dwWriteTags): fix problem with excess
+	  end-of-sibling-chain markers at end of compilation unit
+	* src/SDCCdwarf2.c (dwWriteAbbrevs): write abbreviations in
+	  numerical order rather than hash table order
+	* src/SDCCdwarf2.c (dwGenCFIins,dwWriteFDE): keep start of
+	  CIE and FDE entries 32-bit aligned
+
 2021-07-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
