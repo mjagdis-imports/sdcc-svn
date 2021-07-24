@@ -1233,29 +1233,9 @@ aopArg (sym_link *ftype, int i)
   if (IFFUNC_HASVARARGS (ftype))
     return 0;
 
-  // Raisonance calling convention.
-  if (IFFUNC_ISRAISONANCE (ftype) || IFFUNC_ISSDCCNEWCALL (ftype) && !IFFUNC_HASVARARGS (ftype))
-    {
-      int j;
-      value *arg;
-
-      for (j = 1, arg = args; j < i; j++, arg = arg->next)
-        wassert (arg);
-
-      if (i == 1 && getSize (arg->type) == 2)
-        return ASMOP_X;
-
-      if (i == 1 && getSize (arg->type) == 1)
-        return ASMOP_A;
-
-      if (i == 2 && aopArg (ftype, 1) == ASMOP_X && getSize (arg->type) == 1)
-        return ASMOP_A;
-
-      if (i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 2)
-        return ASMOP_X;
-
-      return 0;
-    }
+  // Old SDCC calling convention.
+  if (IFFUNC_ISSDCCOLDCALL (ftype))
+    return 0;
     
   // IAR calling convention.
   if (IFFUNC_ISIAR (ftype))
@@ -1315,6 +1295,30 @@ aopArg (sym_link *ftype, int i)
       return 0;
     }
 
+  // Raisonance calling convention, same as current SDCC.
+  if (IFFUNC_ISRAISONANCE (ftype) || !IFFUNC_HASVARARGS (ftype))
+    {
+      int j;
+      value *arg;
+
+      for (j = 1, arg = args; j < i; j++, arg = arg->next)
+        wassert (arg);
+
+      if (i == 1 && getSize (arg->type) == 2)
+        return ASMOP_X;
+
+      if (i == 1 && getSize (arg->type) == 1)
+        return ASMOP_A;
+
+      if (i == 2 && aopArg (ftype, 1) == ASMOP_X && getSize (arg->type) == 1)
+        return ASMOP_A;
+
+      if (i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 2)
+        return ASMOP_X;
+
+      return 0;
+    }
+    
   return 0;
 }
 
@@ -1335,8 +1339,11 @@ isFuncCalleeStackCleanup (sym_link *ftype)
 
   if (IFFUNC_ISZ88DK_CALLEE (ftype))
     return true;
-    
-  if (IFFUNC_ISSDCCNEWCALL (ftype) && !IFFUNC_HASVARARGS (ftype) && options.model != MODEL_LARGE)
+
+  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISRAISONANCE (ftype) || IFFUNC_ISCOSMIC(ftype) || IFFUNC_ISIAR (ftype))
+    return false;
+
+  if (!IFFUNC_HASVARARGS (ftype) && options.model != MODEL_LARGE)
     {
       if (!ftype->next || getSize (ftype->next) <= 2)
         return true;

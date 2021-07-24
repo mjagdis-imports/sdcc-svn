@@ -1,3 +1,22 @@
+2021-07-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version,
+	  device/lib/stm8/_divsint.s,
+	  device/lib/stm8/_modsint.s,
+	  device/lib/stm8/atomic_flag_test_and_set.s,
+	  device/lib/stm8/strcmp.s,
+	  device/lib/stm8-large/_divsint.s,
+	  device/lib/stm8-large/_modsint.s,
+	  device/lib/stm8-large/atomic_flag_test_and_set.s,
+	  device/lib/stm8-large/strcmp.s,
+	  doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/stm8/gen.c:
+	  Implement new calling convention for stm8.
+
 2021-07-21 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* src/SDCCsymt.c (processFuncArgs): minor correction to #3260 bug fix

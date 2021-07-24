@@ -30,8 +30,7 @@
 
 	.area CODE
 __modsint:
-	ldw	y, (#5, sp)
-	ldw	x, (#3, sp)
+	ldw	y, (#3, sp)
 	ld	a, xh
 	jrpl	__modsint_1
 	negw	x
@@ -46,4 +45,7 @@ __modsint_2:
 	negw	y
 __modsint_3:
 	ldw	x, y
-	ret
+	popw	y
+	addw	sp, #2
+	jp	(y)
+
