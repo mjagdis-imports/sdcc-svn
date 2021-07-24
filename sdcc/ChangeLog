@@ -1,5 +1,13 @@
 2021-07-24 Philipp Klaus Krause <pkk AT spth.de>
 
+	* doc/sdccman.lyx,
+	  src/stm8/main.c,
+	  src/z80/gen.c,
+	  src/z80/main.c:
+	  Implement new calling convention for z80.
+
+2021-07-24 Philipp Klaus Krause <pkk AT spth.de>
+
 	* .version,
 	  device/lib/stm8/_divsint.s,
 	  device/lib/stm8/_modsint.s,
