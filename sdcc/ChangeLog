@@ -1,3 +1,14 @@
+2021-07-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/stm8/_mulint.s,
+	  device/lib/stm8/memcpy.s,
+	  device/lib/stm8/strcmp.s,
+	  device/lib/stm8/strcpy.s,
+	  device/lib/stm8-large/_mulint.s,
+	  device/lib/stm8-large/memcpy.s,
+	  device/lib/stm8-large/strcpy.s:
+	  Use new calling convention for stm8 library functions.
+
 2021-07-24 Philipp Klaus Krause <pkk AT spth.de>
 
 	* doc/sdccman.lyx,

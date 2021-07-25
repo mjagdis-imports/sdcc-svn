@@ -30,12 +30,10 @@
 
 	.area CODE
 
+; int strcmp (const char *s1, const char *s2)
 _strcmp:
 
 	exgw	x, y
-	popw	x
-	addw	sp, #2
-	pushw	x
 	ldw	x, (3, sp)
 
 loop:
@@ -67,14 +65,18 @@ null:
 	tnz	(x)
 	jrne	less
 	clrw	x
-	ret
+	jra	end
 
 diff:
 	jrult less
 	ldw	x, #1
-	ret
+	jra	end
 
 less:
 	ldw	x, #-1
-	ret
+
+end:
+	popw	y
+	addw	sp, #2
+	jp	(y)
 
