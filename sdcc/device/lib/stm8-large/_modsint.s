@@ -33,11 +33,11 @@ __modsint:
 	ldw	y, (#4, sp)
 	ld	a, xh
 	jrpl	__modsint_1
-	negw	x
-__modsint_1:
-	tnzw	y
-	jrpl	__modsint_2
 	negw	y
+__modsint_1:
+	tnzw	x
+	jrpl	__modsint_2
+	negw	x
 __modsint_2:
 	divw	x, y
 	tnz	a
