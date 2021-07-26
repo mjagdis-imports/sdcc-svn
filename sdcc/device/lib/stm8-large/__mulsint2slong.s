@@ -105,5 +105,6 @@ jrnc	neg_y
 neg_y:
 	negw	y
 end:
+	addw	sp, #2
 	retf
 
