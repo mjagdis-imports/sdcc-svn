@@ -1,7 +1,11 @@
-2021-07-25 Philipp Klaus Krause <pkk AT spth.de>
+2021-07-26 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/stm8/_modsint.s,
-	  device/lib/stm8-large/_modsint.s:
+	  device/lib/stm8-large/_modsint.s,
+	  device/lib/stm8/__mulsint2slong.s,
+	  device/lib/stm8/setjmp.s,
+	  device/lib/stm8-large/__mulsint2slong.s,
+	  device/lib/stm8-large/setjmp.s:
 	  Fix library functions for new calling convention.
 
 2021-07-25 Philipp Klaus Krause <pkk AT spth.de>
