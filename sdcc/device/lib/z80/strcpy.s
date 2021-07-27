@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  strcpy.s
 ;
-;  Copyright (C) 2012, Philipp Klaus Krause
+;  Copyright (C) 2012-2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
