@@ -46,16 +46,5 @@ __moduchar:
         ret
 
 __moduint:
-        pop     af
-        pop     hl
-        pop     de
-        push    de
-        push    hl
-        push    af
-
-        call    __divu16
-
-        ex      de,hl
-
-        ret
+        jp    __divu16
 

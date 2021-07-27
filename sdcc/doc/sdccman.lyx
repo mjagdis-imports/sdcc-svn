@@ -44147,11 +44147,10 @@ All other parameters are passed on the stack, right-to-left.
 \end_layout
 
 \begin_layout Standard
-The stack is usually adjusted for stack parameters by the caller.
- For non-gbz80, there are two exceptions: functions that return void, and
- functions where the return value is float, and there is a first parameter
- if type float.
- For gbz80: todo.
+The stack is adjusted for stack parameters by the caller, with the following
+ exceptions: functions that do not have variable arguments and return void
+ or a type of at most 16 bits, or have both a first parameter of type float
+ and a return value of type float.
 \end_layout
 
 \begin_layout Standard
@@ -44164,7 +44163,7 @@ There are other calling conventions supported, which can be specified using
  which is passed is l, hl or dehl.
  For __z88dk_callee, the stack is not adjusted for the parameters by the
  caller after the call (thus the callee has to do this instead).
- __z88dk_callee can be combined with __smallc.
+ __z88dk_callee can be combined with up to one of __smallc and __oldsdcccall.
 \end_layout
 
 \begin_layout Subsubsection

@@ -1,3 +1,14 @@
+2021-07-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/z80/abs.s,
+	  device/lib/z80/divsigned.s,
+	  device/lib/z80/divunsigned.s,
+	  device/lib/z80/modsigned.s,
+	  device/lib/z80/modunsigned.s,
+	  doc/sdccman.lyx,
+	  src/z80/gen.c:
+	  New calling convention for z80.
+
 2021/07/26 Visenri
 
     * support/regression/Makefile.in

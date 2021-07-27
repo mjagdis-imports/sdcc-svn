@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  divsigned.s
 ;
-;  Copyright (C) 2000-2010, Michael Hope, Philipp Klaus Krause
+;  Copyright (C) 2000-2021, Michael Hope, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -32,14 +32,9 @@
 .globl	__divschar
 
 __divsint:
-        pop     af
-        pop     hl
-        pop     de
-        push    de
-        push    hl
-        push    af
-
-        jp      __div16
+        call      __div16
+        ex	de, hl
+        ret
 
 __divschar:
         ld      hl, #2+1
@@ -123,15 +118,12 @@ __div16::
 	ret
 
 __get_remainder::
-        ; Negate remainder if it is negative and move it into hl
+        ; Negate remainder if it is negative.
         rla
-	ex	de, hl
         ret     NC              ; Return if remainder is positive
-        sub     a, a            ; Subtract remainder from 0
-        sub     a, l
-        ld      l, a
-        sbc     a, a             ; Propagate remainder (A=0xFF if borrow)
-        sub     a, h
-        ld      h, a
+        xor	a, a
+        ld	l, a
+        ld	h, a
+        sbc	hl, de
         ret
 

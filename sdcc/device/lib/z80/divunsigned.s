@@ -34,14 +34,9 @@
 .globl	__divuchar
 
 __divuint:
-        pop     af
-        pop     hl
-        pop     de
-        push    de
-        push    hl
-        push    af
-
-        jr      __divu16
+        call      __divu16
+        ex	de, hl
+        ret
 
 __divuchar:
         ld      hl,#2+1

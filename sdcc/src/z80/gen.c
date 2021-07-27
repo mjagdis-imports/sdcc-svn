@@ -1913,7 +1913,21 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (!IS_GB && !FUNC_HASVARARGS(ftype) && ftype->next && getSize (ftype->next) == 4 && IS_FLOAT (ftype->next) && farg)
     return true;
 
-  // todo: gbz80.
+  if (IFFUNC_ISSDCCOLDCALL (ftype))
+    return false;
+    
+  if (IFFUNC_ISBANKEDCALL (ftype))
+    return false;
+
+  if (IFFUNC_HASVARARGS (ftype))
+    return false;
+
+  // Callee cleans up stack if return value has at most 16 bits or the return value is float and there is a first agrument of type float.
+  if (!ftype->next || getSize (ftype->next) <= 2)
+        return true;
+      else if (IS_FLOAT (ftype->next) && FUNC_ARGS(ftype) && IS_FLOAT(FUNC_ARGS(ftype)->etype))
+        return true;
+      return false;
 
   return false;
 }
