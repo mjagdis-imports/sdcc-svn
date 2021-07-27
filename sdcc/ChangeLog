@@ -8,7 +8,10 @@
 	  doc/sdccman.lyx,
 	  src/z80/gen.c
 	  device/lib/z80/strcpy.s,
-	  device/lib/z80/strlen.s:
+	  device/lib/z80/strlen.s,
+	  device/lib/z80/atomic_flag_test_and_set.s,
+	  device/lib/z80/mul.s,
+	  device/lib/z80/mulchar.s:
 	  New calling convention for z80.
 
 2021/07/27 Visenri
