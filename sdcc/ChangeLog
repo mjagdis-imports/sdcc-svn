@@ -11,6 +11,13 @@
 	  device/lib/z80/strlen.s:
 	  New calling convention for z80.
 
+2021/07/27 Visenri
+
+    * src/pdk/gen.c
+      support/regression/tests/getbyte_param.c
+      Fix bug #3269.
+      Add test for it.
+
 2021/07/26 Visenri
 
     * support/regression/Makefile.in
