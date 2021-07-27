@@ -31,18 +31,13 @@
 	.globl _strcpy
 
 _strcpy:
-	pop	bc
-	pop	de
-	pop	hl
-	push	hl
-	push	de
-	push	bc
+	ex	de, hl
 	push	de
 	xor	a, a
 loop:
 	cp	a, (hl)
 	ldi
 	jr	NZ, loop
-	pop	hl
+	pop	de
 	ret
 

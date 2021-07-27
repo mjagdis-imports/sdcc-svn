@@ -6,7 +6,9 @@
 	  device/lib/z80/modsigned.s,
 	  device/lib/z80/modunsigned.s,
 	  doc/sdccman.lyx,
-	  src/z80/gen.c:
+	  src/z80/gen.c
+	  device/lib/z80/strcpy.s,
+	  device/lib/z80/strlen.s:
 	  New calling convention for z80.
 
 2021/07/26 Visenri
