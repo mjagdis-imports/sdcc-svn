@@ -33,10 +33,6 @@
 .globl	__divuint
 .globl	__divuchar
 
-__divuint:
-        call      __divu16
-        ex	de, hl
-        ret
 
 __divuchar:
         ld      hl,#2+1
@@ -59,12 +55,13 @@ __divu8::
         ;;   DE = divisor
         ;;
         ;; Exit conditions
-        ;;   HL = quotient
-        ;;   DE = remainder
+        ;;   DE = quotient
+        ;;   HL = remainder
         ;;   carry = 0
         ;;   If divisor is 0, quotient is set to "infinity", i.e HL = 0xFFFF.
         ;;
         ;; Register used: AF,B,DE,HL
+__divuint:
 __divu16::
         ;; Two algorithms: one assumes divisor <2^7, the second
         ;; assumes divisor >=2^7; choose the applicable one.
@@ -100,6 +97,7 @@ __divu16::
         ;; Carry now contains the same value it contained before
         ;; entering .dvloop7[*]: "0" = valid result.
         ld      e,a             ; DE = remainder, HL = quotient
+        ex	de, hl
         ret
 
 .morethan7bits:
@@ -133,6 +131,5 @@ __divu16::
         ;; Carry now contains "0" = valid result.
         ld      d,b
         ld      e,a             ; DE = quotient, HL = remainder
-        ex      de,hl           ; HL = quotient, DE = remainder
         ret
 

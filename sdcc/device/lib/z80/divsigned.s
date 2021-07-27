@@ -31,18 +31,9 @@
 .globl	__divsint
 .globl	__divschar
 
-__divsint:
-        call      __div16
-        ex	de, hl
-        ret
-
 __divschar:
-        ld      hl, #2+1
-        add     hl, sp
-
-        ld      e, (hl)
-        dec     hl
-        ld      l, (hl)
+	ld	e, l
+        ld	l, a
 
 __div8::
         ld      a, l            ; Sign extend
@@ -63,10 +54,11 @@ __div_signexte::
         ;;   DE = divisor
         ;;
         ;; Exit conditions
-        ;;   HL = quotient
-        ;;   DE = remainder
+        ;;   DE = quotient
+        ;;   HL = remainder
         ;;
         ;; Register used: AF,B,DE,HL
+__divsint:
 __div16::
         ;; Determine sign of quotient by xor-ing high bytes of dividend
         ;;  and divisor. Quotient is positive if signs are the same, negative
@@ -109,21 +101,24 @@ __div16::
         ret	NC		; Jump if quotient is positive
         ld      b, a
         sub     a, a            ; Subtract quotient from 0
-        sub     a, l
-        ld      l, a
+        sub     a, e
+        ld      e, a
         sbc     a, a            ; Propagate borrow (A=0xFF if borrow)
-        sub     a, h
-        ld      h, a
+        sub     a, d
+        ld      d, a
         ld      a, b
 	ret
 
 __get_remainder::
         ; Negate remainder if it is negative.
         rla
+        ex	de, hl
         ret     NC              ; Return if remainder is positive
-        xor	a, a
-        ld	l, a
-        ld	h, a
-        sbc	hl, de
+        sub     a, a            ; Subtract quotient from 0
+        sub     a, e
+        ld      e, a
+        sbc     a, a            ; Propagate borrow (A=0xFF if borrow)
+        sub     a, d
+        ld      d, a
         ret
 
