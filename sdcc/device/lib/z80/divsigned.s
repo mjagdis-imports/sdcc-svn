@@ -33,7 +33,7 @@
 
 __divschar:
 	ld	e, l
-        ld	l, a
+	ld	l, a
 
 __div8::
         ld      a, l            ; Sign extend
@@ -41,11 +41,11 @@ __div8::
         sbc     a,a
         ld      h, a
 __div_signexte::
-        ld      a, e            ; Sign extend
-        rlca
-        sbc     a,a
-        ld      d, a
-        ; Fall through to __div16
+	ld      a, e            ; Sign extend
+	rlca
+	sbc     a, a
+	ld      d, a
+	; Fall through to __div16
 
         ;; signed 16-bit division
         ;;

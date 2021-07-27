@@ -33,14 +33,14 @@
 
 __modschar:
 	ld	e, l
-        ld	l, a
+	ld	l, a
 
-        call    __div8
+	call    __div8
 
-        jp	__get_remainder
+	jp	__get_remainder
 
 __modsint:
-        call    __div16
+	call    __div16
 
-        jp	__get_remainder
+	jp	__get_remainder
 

@@ -12,7 +12,10 @@
 	  device/lib/z80/atomic_flag_test_and_set.s,
 	  device/lib/z80/mul.s,
 	  device/lib/z80/mulchar.s,
-	  device/lib/z80/memmove.s:
+	  device/lib/z80/memmove.s,
+	  device/lib/z80/divmixed.s,
+	  device/lib/z80/modmixed.s,
+	  device/lib/z80/setjmp.s:
 	  New calling convention for z80.
 
 2021/07/27 Visenri

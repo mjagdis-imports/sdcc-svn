@@ -33,14 +33,14 @@
 
 __moduchar:
 	ld	e, l
-        ld	l, a
+	ld	l, a
 
-        call    __divu8
-	ex	de,hl
-        ret
+	call    __divu8
+	ex	de, hl
+	ret
 
 __moduint:
-        call    __divu16
+	call    __divu16
 	ex	de, hl
 	ret
 
