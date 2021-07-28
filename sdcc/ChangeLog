@@ -28,6 +28,16 @@
 	  device/lib/z80n/strlen.s:
 	  Fix z180, z80n library functions for new calling convention.
 
+2021/07/28 Visenri
+
+    * sim/ucsim/pdk.src/inst.cc
+    Fix bug in pdk15 simulation (introduced in [r12557]).
+    
+2021/07/28 Visenri
+
+    * support/regression/compact-results.py
+      Fix parsing of test name.
+
 2021-07-27 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/z80/abs.s,
