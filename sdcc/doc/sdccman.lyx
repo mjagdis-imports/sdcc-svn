@@ -44120,7 +44120,7 @@ For z80, z180, z80n: if the first parameter is in a or hl, and the second
 \end_layout
 
 \begin_layout Standard
-For r2k, r2ka, r3ka, tlcs90, ez80_z80: if the first parametr is in a, and
+For r2k, r2ka, r3ka, tlcs90, ez80_z80: if the first parameter is in a, and
  the second has 8 bits, it is passed in l; if the first parameter is in
  hl or hlde, and the second has 8 bits, it is passed in a; if the first
  is in a, and the second has 16 bits, it is passed in hl.

@@ -1,3 +1,33 @@
+2021-07-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/z180/abs.s,
+	  device/lib/z180/divmixed.s,
+	  device/lib/z180/divsigned.s,
+	  device/lib/z180/divunsigned.s,
+	  device/lib/z180/modmixed.s,
+	  device/lib/z180/modsigned.s,
+	  device/lib/z180/modunsigned.s,
+	  device/lib/z180/mulchar.s,
+	  device/lib/z180/setjmp.s,
+	  device/lib/z180/strcpy.s,
+	  device/lib/z180/strlen.s,
+	  device/lib/z80/divmixed.s,
+	  device/lib/z80/modmixed.s,
+	  device/lib/z80/mulchar.s,
+	  device/lib/z80n/abs.s,
+	  device/lib/z80n/divmixed.s,
+	  device/lib/z80n/divsigned.s,
+	  device/lib/z80n/divunsigned.s,
+	  device/lib/z80n/modmixed.s,
+	  device/lib/z80n/modsigned.s,
+	  device/lib/z80n/modunsigned.s,
+	  device/lib/z80n/mul.s,
+	  device/lib/z80n/mulchar.s,
+	  device/lib/z80n/setjmp.s,
+	  device/lib/z80n/strcpy.s,
+	  device/lib/z80n/strlen.s:
+	  Fix z180, z80n library functions for new calling convention.
+
 2021-07-27 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/z80/abs.s,

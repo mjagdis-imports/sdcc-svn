@@ -29,14 +29,14 @@
 .globl	__divsuchar
 .globl	__divuschar
 
-__divuschar:
+__divsuchar:
 	ld	e, l
 	ld	l, a
 	ld	h, #0
 
 	jp	__div_signexte
 
-__divsuchar:
+__divuschar:
 	ld	e, l
 	ld	d, #0
 	ld	l, a
