@@ -57,18 +57,8 @@ __naked
   (void)n;
   __asm
     pop   af
-    pop   hl
-#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-    dec   sp
-#endif
-    pop   de
     pop   bc
     push  bc
-    push  de
-#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-    inc   sp
-#endif
-    push  hl
     push  af
     ld    a, c
     or    a, b
@@ -87,7 +77,7 @@ __naked
     ld    d, h
     inc   de
     ldir
-    pop   hl
+    pop   de
     ret
   __endasm;
 }
