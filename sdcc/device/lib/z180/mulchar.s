@@ -37,30 +37,30 @@
 ; operands have different sign
 
 __muluschar:
-	ld	e, a
-	ld	h, #0
+	ld	e, l
+	ld	d, #0
+	ld	l, a
 
         jr      signexte
 
 __mulsuchar:
-	ld	e, l
-	ld	l, a
-	ld	h, #0
+	ld	e, a
+	ld	d, #0
 
         jr      signexte
 
 __mulschar:
-        ld      a, l
+        ld      e, a
 
         ;; Need to sign extend before going in.
         rla
         sbc     a, a
-        ld      h, a
+        ld      d, a
 signexte:
-        ld      a, e
+        ld      a, l
         rla
         sbc     a, a
-        ld      d, a
+        ld      h, a
 
         jp      __mul16
 
