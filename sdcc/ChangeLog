@@ -1,5 +1,17 @@
 2021-07-28 Philipp Klaus Krause <pkk AT spth.de>
 
+	* support/regression/ports/rrz80/spec.mk,
+	  support/regression/ports/ucz180/spec.mk,
+	  support/regression/ports/ucz80-nmos/spec.mk,
+	  support/regression/ports/ucz80-resiy/spec.mk,
+	  support/regression/ports/ucz80n/spec.mk:
+	  Do not use --profile in regression testing, since it conflicts with register arguments.
+	* device/lib/z180/mul.s,
+	  device/lib/z180/mulchar.s:
+	  Fix z180 multiplication support routines for new calling convention.
+
+2021-07-28 Philipp Klaus Krause <pkk AT spth.de>
+
 	* device/lib/z180/abs.s,
 	  device/lib/z180/divmixed.s,
 	  device/lib/z180/divsigned.s,

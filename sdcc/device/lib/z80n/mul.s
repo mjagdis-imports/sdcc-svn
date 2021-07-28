@@ -1,5 +1,5 @@
 ;--------------------------------------------------------------------------
-;  mulchar.s
+;  mul.s
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Philipp Klaus Krause

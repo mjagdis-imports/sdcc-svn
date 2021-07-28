@@ -38,26 +38,24 @@
 
 __muluschar:
 	ld	e, a
-	ld	c, l
-	ld	b, #0
+	ld	h, #0
 
         jr      signexte
 
 __mulsuchar:
-	ld	c, a
-	ld	b, #0
 	ld	e, l
+	ld	l, a
+	ld	h, #0
 
         jr      signexte
 
 __mulschar:
-        ld      e, l
-        ld      c, a
+        ld      a, l
 
         ;; Need to sign extend before going in.
         rla
         sbc     a, a
-        ld      b, a
+        ld      h, a
 signexte:
         ld      a, e
         rla
