@@ -44,30 +44,20 @@ void *memset (void *s, int c, size_t n)
 
 #if !defined (_SDCC_NO_ASM_LIB_FUNCS) && (\
               defined (__SDCC_z80) ||\
-              defined (__SDCC_ez80_z80) ||\
               defined (__SDCC_z180) ||\
-              defined (__SDCC_z80n) ||\
-              defined (__SDCC_r2k) ||\
-              defined (__SDCC_z3ka))
-
+              defined (__SDCC_z80n))
 __naked
 {
   (void)s;
   (void)c;
   (void)n;
   __asm
-    pop   af
+    pop   iy
     pop   bc
-    push  bc
-    push  af
     ld    a, c
     or    a, b
     ret   Z
-#ifdef __SDCC_BROKEN_STRING_FUNCTIONS
-    ld    (hl), d
-#else
     ld    (hl), e
-#endif
     dec   bc
     ld    a, c
     or    a, b
@@ -78,7 +68,7 @@ __naked
     inc   de
     ldir
     pop   de
-    ret
+    jp	(iy)
   __endasm;
 }
 #elif !defined (_SDCC_NO_ASM_LIB_FUNCS) && defined(__SDCC_gbz80)
