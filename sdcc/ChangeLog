@@ -14,6 +14,8 @@
 	  device/lib/z80/memmove.s,
 	  device/lib/z80n/memmove.s:
 	  Fix library functions for new calling convention.
+	* support/regression/tests/z80n-push-nn.c:
+	  Port test to new calling convention.
 
 2021-07-28 Philipp Klaus Krause <pkk AT spth.de>
 
