@@ -34,16 +34,14 @@
 
 _memmove:
 	pop	af
-	pop	hl
-	pop	de
 	pop	bc
 	push	bc
-	push	de
-	push	hl
 	push	af
 	ld	a, c
 	or	a, b
+	ex	de, hl
 	ret	Z
+	ex	de, hl
 	push	hl
 	sbc	hl, de		; or above cleared carry.
 	add	hl, de		; same carry as the line before
@@ -55,11 +53,11 @@ memmove_down:
 	add	hl, bc
 	inc	bc
 	lddr
-	pop	hl
+	pop	de
 	ret
 memmove_up:
 	ex      de, hl
 	ldir
-	pop	hl
+	pop	de
 	ret
 

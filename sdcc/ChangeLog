@@ -25,7 +25,11 @@
 	  device/lib/z80n/mulchar.s,
 	  device/lib/z80n/setjmp.s,
 	  device/lib/z80n/strcpy.s,
-	  device/lib/z80n/strlen.s:
+	  device/lib/z80n/strlen.s,
+	  device/lib/z180/atomic_flag_test_and_set.s,
+	  device/lib/z180/memmove.s,
+	  device/lib/z80n/atomic_flag_test_and_set.s,
+	  device/lib/z80n/memmove.s:
 	  Fix z180, z80n library functions for new calling convention.
 
 2021/07/28 Visenri
