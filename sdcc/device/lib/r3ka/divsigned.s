@@ -32,14 +32,12 @@
 .globl	__divschar
 
 __divsint:
-        pop     af
-        pop     hl
+        pop     iy
         pop     de
-        push    de
-        push    hl
-        push    af
 
-        jp      __div16
+	call	__div16
+
+	jp	(iy)
 
 __divschar:
         ld      hl, #2+1

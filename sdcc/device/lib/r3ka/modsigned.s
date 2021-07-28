@@ -44,14 +44,12 @@ __modschar:
         jp	__get_remainder
 
 __modsint:
-        pop     af
-        pop     hl
-        pop     de
-        push    de
-        push    hl
-        push    af
+ 	pop     iy
+	pop     de
 
-        call    __div16
+	call    __div16
 
-        jp	__get_remainder
+	call	__get_remainder
+
+	jp	(iy)
 

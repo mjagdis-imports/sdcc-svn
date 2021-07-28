@@ -37,32 +37,22 @@
 ; operands have different sign
 
 __mulsuchar:
-        ld      hl,#2+1
-        ld      b, h
-        add     hl,sp
+	ld	c, l
+	ld	b, #0
+	ld	e, a
 
-        ld      e,(hl)
-        dec     hl
-        ld      c,(hl)
-        jr      signexte
+	jr	signexte
 
 __muluschar:
-        ld      hl,#2
-        ld      b, h
-        add     hl,sp
+	ld	c, a
+	ld	b, #0
+	ld	e, l
 
-        ld      e,(hl)
-        inc     hl
-        ld      c,(hl)
-        jr      signexte
+	jr	signexte
 
 __mulschar:
-        ld      hl,#2+1
-        add     hl,sp
-
-        ld      e,(hl)
-        dec     hl
-        ld      c,(hl)
+	ld	c, a
+	ld	e, l
 
         ;; Need to sign extend before going in.
         ld      a,c
