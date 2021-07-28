@@ -12,7 +12,10 @@
 	* device/lib/_memset.c,
 	  device/lib/z180/memmove.s,
 	  device/lib/z80/memmove.s,
-	  device/lib/z80n/memmove.s:
+	  device/lib/z80n/memmove.s,
+	  device/lib/z180/memcpy.s,
+	  device/lib/z80/memcpy.s,
+	  device/lib/z80n/memcpy.s:
 	  Fix library functions for new calling convention.
 	* support/regression/tests/z80n-push-nn.c:
 	  Port test to new calling convention.
