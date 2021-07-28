@@ -6,7 +6,11 @@
 	  device/lib/r3ka/divunsigned.s,
 	  device/lib/r3ka/modsigned.s,
 	  device/lib/r3ka/modunsigned.s,
-	  device/lib/r3ka/mulchar.s:
+	  device/lib/r3ka/mulchar.s,
+	  device/lib/r3ka/memmove.s,
+	  device/lib/r3ka/setjmp.s,
+	  device/lib/r3ka/strcpy.s,
+	  device/include/string.h:
 	  Fix library functions for new calling convention.
 
 2021-07-28 Philipp Klaus Krause <pkk AT spth.de>

@@ -42,12 +42,8 @@ __divuint:
 	jp	(iy)
 
 __divuchar:
-        ld      hl,#2+1
-        add     hl,sp
-
-        ld      e,(hl)
-        dec     hl
-        ld      l,(hl)
+	ld	e, l
+	ld	l, a
 
         ;; Fall through
 __divu8::

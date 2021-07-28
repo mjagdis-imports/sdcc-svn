@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  divsigned.s
 ;
-;  Copyright (C) 2000-2010, Michael Hope, Philipp Klaus Krause
+;  Copyright (C) 2000-2021, Michael Hope, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -40,12 +40,8 @@ __divsint:
 	jp	(iy)
 
 __divschar:
-        ld      hl, #2+1
-        add     hl, sp
-
-        ld      e, (hl)
-        dec     hl
-        ld      l, (hl)
+	ld	e, l
+	ld	l, a
 
 __div8::
         ld      a, l            ; Sign extend
