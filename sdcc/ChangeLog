@@ -10,7 +10,8 @@
 	  device/lib/r3ka/memmove.s,
 	  device/lib/r3ka/setjmp.s,
 	  device/lib/r3ka/strcpy.s,
-	  device/include/string.h:
+	  device/include/string.h,
+	  device/lib/r3ka/modmixed.s:
 	  Fix library functions for new calling convention.
 
 2021-07-28 Philipp Klaus Krause <pkk AT spth.de>
