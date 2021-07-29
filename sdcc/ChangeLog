@@ -1,3 +1,8 @@
+2021-07-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix __smallc.
+
 2021-07-28 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/r3ka/abs.s,

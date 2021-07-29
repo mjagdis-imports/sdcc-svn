@@ -1777,7 +1777,7 @@ aopRet (sym_link *ftype)
 
   int size = getSize (ftype->next);
 
-  if (IFFUNC_ISSDCCOLDCALL (ftype))
+  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISSMALLC (ftype))
     switch (size)
       {
       case 1:
@@ -1838,7 +1838,7 @@ aopArg (sym_link *ftype, int i)
     }
     
   // Old SDCC calling convention.
-  if (IFFUNC_ISSDCCOLDCALL (ftype))
+  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISSMALLC (ftype))
     return 0;
     
   if (!IFFUNC_HASVARARGS (ftype))
@@ -1913,7 +1913,7 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (!IS_GB && !FUNC_HASVARARGS(ftype) && ftype->next && getSize (ftype->next) == 4 && IS_FLOAT (ftype->next) && farg)
     return true;
 
-  if (IFFUNC_ISSDCCOLDCALL (ftype))
+  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISSMALLC (ftype))
     return false;
     
   if (IFFUNC_ISBANKEDCALL (ftype))
