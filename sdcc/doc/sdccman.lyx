@@ -44147,10 +44147,12 @@ All other parameters are passed on the stack, right-to-left.
 \end_layout
 
 \begin_layout Standard
-The stack is adjusted for stack parameters by the caller, with the following
- exceptions: functions that do not have variable arguments and return void
- or a type of at most 16 bits, or have both a first parameter of type float
- and a return value of type float.
+For non-gbz80, the stack is adjusted for stack parameters by the caller,
+ with the following exceptions: functions that do not have variable arguments
+ and return void or a type of at most 16 bits, or have both a first parameter
+ of type float and a return value of type float.
+ For gbz80, the stack is adjusted by the callee, with the exception of functions
+ that have variable arguments.
 \end_layout
 
 \begin_layout Standard

@@ -1,3 +1,12 @@
+2021-07-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/gbz80/div.s,
+	  doc/sdccman.lyx,
+	  src/z80/gen.c,
+	  support/regression/ports/ucgbz80/spec.mk,
+	  support/regression/tests/abs.c:
+	  New calling convention for gbz80.
+
 2021-07-29 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:

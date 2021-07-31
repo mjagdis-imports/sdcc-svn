@@ -1922,6 +1922,10 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (IFFUNC_HASVARARGS (ftype))
     return false;
 
+  // Callee cleans up stack for all non-vararg functions on gbz80.
+  if (IS_GB)
+    return true;
+
   // Callee cleans up stack if return value has at most 16 bits or the return value is float and there is a first agrument of type float.
   if (!ftype->next || getSize (ftype->next) <= 2)
         return true;

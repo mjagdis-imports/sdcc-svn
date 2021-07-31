@@ -137,43 +137,29 @@ __modschar:
         ret
 
 __divsint:
-        ldhl    sp,#2+3
+        ld	a, e
+        ld	e, c
+        ld	c, a
 
-        ld      a,(hl-)
-        ld      d,a
-        ld      a,(hl-)
-        ld      e,a
-        ld      a,(hl-)
-        ld      l,(hl)
-        ld      h,a
+        ld	a, d
+        ld	d, b
+        ld	b, a
 
-        ld      b,h
-        ld      c,l
-
-        call    .div16
-
-        ld      e,c
-        ld      d,b
-
-        ret
+        jp	.div16
 
 __modsint:
-        ldhl    sp,#2+3
+        ld	a, e
+        ld	e, c
+        ld	c, a
 
-        ld      a,(hl-)
-        ld      d,a
-        ld      a,(hl-)
-        ld      e,a
-        ld      a,(hl-)
-        ld      l,(hl)
-        ld      h,a
+        ld	a, d
+        ld	d, b
+        ld	b, a
 
-        ld      b,h
-        ld      c,l
+        call	.div16
 
-        call    .div16
-
-        ;; Already in DE
+	ld	c, e
+	ld	b, d
 
         ret
 
@@ -207,43 +193,30 @@ __moduchar:
 
         ret
 
-__divuint:
-        ldhl    sp,#2+3
+__divuint:      
+        ld	a, e
+        ld	e, c
+        ld	c, a
 
-        ld      a,(hl-)
-        ld      d,a
-        ld      a,(hl-)
-        ld      e,a
-        ld      a,(hl-)
-        ld      l,(hl)
-        ld      h,a
+        ld	a, d
+        ld	d, b
+        ld	b, a
 
-        ld      b,h
-        ld      c,l
-        call    .divu16
-
-        ld      e,c
-        ld      d,b
-
-        ret
+        jp	.divu16
 
 __moduint:
-        ldhl    sp,#2+3
+        ld	a, e
+        ld	e, c
+        ld	c, a
 
-        ld      a,(hl-)
-        ld      d,a
-        ld      a,(hl-)
-        ld      e,a
-        ld      a,(hl-)
-        ld      l,(hl)
-        ld      h,a
+        ld	a, d
+        ld	d, b
+        ld	b, a
 
-        ld      b,h
-        ld      c,l
+        call	.divu16
 
-        call    .divu16
-
-        ;; Already in DE
+	ld	c, e
+	ld	b, d
 
         ret
 
