@@ -1,3 +1,11 @@
+2021-08-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/gbz80/abs.s,
+	  device/lib/gbz80/atomic_flag_test_and_set.s,
+	  device/lib/gbz80/div.s,
+	  device/lib/gbz80/mul.s:
+	  Fix library functions for new calling convention.
+
 2021-07-31 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/gbz80/div.s,

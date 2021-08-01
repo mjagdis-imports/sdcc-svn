@@ -3,6 +3,7 @@
 ;
 ;  Copyright (C) 2000, Michael Hope
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
+;  Copyright (c) 2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
