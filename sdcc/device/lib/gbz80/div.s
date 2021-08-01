@@ -107,35 +107,21 @@ __moduschar:
         ret
 
 __divschar:
-        ldhl    sp,#2+1
+        ld      c, a
 
-        ld      a,(hl-)
-        ld      e,a
-        ld      l,(hl)
+	call	.div8
 
-        ld      c,l
-
-        call    .div8
-
-        ld      e,c
-        ld      d,b
-
-        ret
+	ret
 
 __modschar:
-        ldhl    sp,#2+1
+        ld      c, a
 
-        ld      a,(hl-)
-        ld      e,a
-        ld      l,(hl)
+	call	.div8
 
-        ld      c,l
+	ld	c, e
+	ld	b, d
 
-        call    .div8
-
-        ;; Already in DE
-
-        ret
+	ret
 
 __divsint:
         ld	a, e
@@ -166,33 +152,21 @@ __modsint:
 
         ;; Unsigned
 __divuchar:
-        ldhl    sp,#2+1
+        ld      c, a
 
-        ld      a,(hl-)
-        ld      e,a
-        ld      l,(hl)
+	call	.divu8
 
-        ld      c,l
-        call    .divu8
-
-        ld      e,c
-        ld      d,b
-
-        ret
+	ret
 
 __moduchar:
-        ldhl    sp,#2+1
+        ld      c, a
 
-        ld      a,(hl-)
-        ld      e,a
-        ld      l,(hl)
+	call	.divu8
 
-        ld      c,l
-        call    .divu8
+	ld	c, e
+	ld	b, d
 
-        ;; Already in DE
-
-        ret
+	ret
 
 __divuint:      
         ld	a, e

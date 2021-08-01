@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  setjmp.s
 ;
-;  Copyright (C) 2011-2014, Philipp Klaus Krause
+;  Copyright (C) 2011-2021, Philipp Klaus Krause
 ;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
 ;
 ;  This library is free software; you can redistribute it and/or modify it
@@ -32,19 +32,13 @@
 	.globl ___setjmp
 
 ___setjmp:
-	ldhl	sp, #0
-	; Load sp into de.
-	ld	e, l
-	ld	d, h
 	; Load return address into bc.
-	ld	a, (hl+)
-	ld	c, a
-	ld	a, (hl+)
-	ld	b, a
+	pop	bc
+	push	bc
+
 	; Load env into hl.
-	ld	a, (hl+)
-	ld	h, (hl)
-	ld	l, a
+	ld	l, e
+	ld	h, d
 
 	; Store return address.
 	ld	a, c
@@ -58,29 +52,27 @@ ___setjmp:
 	ld	(hl), d
 
 	; Return 0.
-	ld	de, #0
+	ld	bc, #0
 	ret
 
 .globl _longjmp
 
 _longjmp:
-	; We'll never jump back, we can lose this
-	pop	af
-	pop	hl ; env
-	pop	de ; return value
+	ld	l, e
+	ld	h, d
 
 	; Ensure that return value is non-zero.
-	ld	a, e
-	or	a, d
+	ld	a, c
+	or	a, b
 	jr	NZ, 0001$
-	inc	de
+	inc	bc
 0001$:
 
 	; Get return address.
 	ld	a, (hl+)
-	ld	c, a
+	ld	e, a
 	ld	a, (hl+)
-	ld	b, a
+	ld	d, a
 	; Get stack pointer.
 	ld	a, (hl+)
 	ld	h, (hl)
@@ -88,13 +80,14 @@ _longjmp:
 
 	; Adjust stack pointer.
 	ld	sp, hl
-
-	; Set return address.
-	ld	l, c
-	ld	h, b
 	pop	af
 
-	; Return value is in de.
+	; Set return address.
+	ld	l, e
+	ld	h, d
+
+	; Return value is in bc.
 
 	; Jump.
 	jp	(hl)
+
