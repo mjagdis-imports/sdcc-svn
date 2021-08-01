@@ -1,5 +1,5 @@
 /*
- * Simulator of microcontrollers (r5kcl.h)
+ * Simulator of microcontrollers (dpedm3a.h)
  *
  * Copyright (C) 2020,2021 Drotos Daniel, Talker Bt.
  * 
@@ -25,27 +25,24 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#ifndef R5KCL_HEADER
-#define R5KCL_HEADER
+#ifndef DPEDM3A_HEADER
+#define DPEDM3A_HEADER
 
-#include "r4kcl.h"
-
-
-class cl_r5k: public cl_r4k
-{
- public:
-  cl_r5k(class cl_sim *asim);
-  virtual const char *id_string(void);
-
-  virtual void tick5p1(int n) { tick(n+1); }
-  virtual void tick5p2(int n) { tick(n+2); }
-  virtual void tick5p3(int n) { tick(n+3); }
-  virtual void tick5p9(int n) { tick(n+9); }
-  virtual void tick5m1(int n) { tick(n  ); }
-  virtual void tick5m2(int n) { tick(n  ); }
-};
-
+#define PUSH_SU		instruction_ed_66
+#define POP_SU		instruction_ed_6e
+#define SETUSR		instruction_ed_6f
+#define SURES		instruction_ed_7d
+#define RDMODE		instruction_ed_7f
+#define SYSCALL		instruction_ed_75
+#define LDDSR		instruction_ed_98
+#define LDISR		instruction_ed_90
+#define LSDDR		instruction_ed_d8
+#define LSIDR		instruction_ed_d0
+#define LSDR		instruction_ed_f8
+#define LSIR		instruction_ed_f0
+#define UMA		instruction_ed_c0
+#define UMS		instruction_ed_c8
 
 #endif
 
-/* End of rxk.src/r5kcl.h */
+/* End of rxk.src/dpedm3a.h */

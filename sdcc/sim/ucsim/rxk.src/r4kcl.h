@@ -29,6 +29,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define R4KCL_HEADER
 
 #include "r3kacl.h"
+#include "dpddm4.h"
 
 #define rJ  (JK.r.J)
 #define rK  (JK.r.K)
@@ -41,7 +42,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 class cl_r4k: public cl_r3ka
 {
 public:
-  u8_t edmr;
   RP(JK,JK,J,K);
   RP(aJK,JK,J,K);
   u32_t rPW, rPX, rPY, rPZ;
@@ -66,6 +66,9 @@ public:
   virtual void mode4k(void);
 
   virtual int EXX(t_mem code);
+  
+  // Page DD/FD
+  virtual int LD_A_iIRA(t_mem code);
 };
 
 class cl_r4k_cpu: public cl_rxk_cpu

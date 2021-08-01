@@ -25,6 +25,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 
 #include "rxkcl.h"
+#include "r3kacl.h"
 
 
 /*
@@ -120,6 +121,24 @@ cl_rxk::inc_i8(t_addr addr)
   vc.rd++;
   vc.wr++;
   tick(7);
+  return resGO;
+}
+
+int
+cl_rxk::INC_IR(t_mem code)
+{
+  u16_t v= cIR->get();
+  cIR->write(v+1);
+  tick(3);
+  return resGO;
+}
+
+int
+cl_rxk::DEC_IR(t_mem code)
+{
+  u16_t v= cIR->get();
+  cIR->write(v-1);
+  tick(3);
   return resGO;
 }
 
@@ -622,6 +641,22 @@ cl_rxk::and16(class cl_cell16 &dest, u16_t op1, u16_t op2)
 }
 
 int
+cl_rxk::XOR_A_iIRd(t_mem code)
+{
+  i8_t d= fetch();
+  class cl_cell8 &a= destA(), &f= destF();
+  u8_t forg= rF & ~flagAll, res= rA ^ rwas->read(cIR->get() + d);
+  vc.rd++;
+  if (!res) forg|= flagZ;
+  if (res & 0x80) forg|= flagS;
+  if (res & 0xf0) forg|= flagL;
+  a.W(res);
+  f.W(forg);
+  tick5p1(8);
+  return resGO;
+}
+
+int
 cl_rxk::OR_A_iIRd(t_mem code)
 {
   i8_t d= fetch();
@@ -653,6 +688,50 @@ cl_rxk::AND_A_iIRd(t_mem code)
   return resGO;
 }
 
+int
+cl_rxk::BOOL_IR(t_mem code)
+{
+  u16_t v= cIR->get();
+  if (v)
+    cIR->W(v=1);
+  u8_t f= rF & ~flagAll;
+  //if (v&0x8000) f|= flagS;
+  if (!v) f|= flagZ;
+  cF.W(f);
+  tick(3);
+  return resGO;
+}
+
+int
+cl_rxk::AND_IR_DE(t_mem code)
+{
+  class cl_cell8 &f= destF();
+  u8_t forg= rF & ~flagAll;
+  u16_t v;
+  cIR->W(v= cIR->get() & rDE);
+  if (!v) forg|= flagZ;
+  if (v&0x8000) forg|= flagS;
+  if (v^0xf000) forg|= flagL;
+  f.W(forg);
+  tick(3);
+  return resGO;
+}
+
+int
+cl_rxk::OR_IR_DE(t_mem code)
+{
+  class cl_cell8 &f= destF();
+  u8_t forg= rF & ~flagAll;
+  u16_t v;
+  cIR->W(v= cIR->get() | rDE);
+  if (!v) forg|= flagZ;
+  if (v&0x8000) forg|= flagS;
+  if (v^0xf000) forg|= flagL;
+  f.W(forg);
+  tick(3);
+  return resGO;
+}
+
 
 /*
  *                                                                Arithmetic
@@ -671,13 +750,13 @@ cl_rxk::add_hl_ss(u16_t op)
 {
   class cl_cell16 &hl= destHL();
   class cl_cell8 &f= destF();
-  u8_t forg= f.R();
+  u8_t forg= rF;
   u32_t res= rHL + op;
   hl.W(res);
   if (res > 0xffff)
     f.W(forg|= flagC);
   else
-    f.W(forg|=~flagC);
+    f.W(forg&= ~flagC);
   tick(1);
   return resGO;
 }
@@ -688,7 +767,7 @@ cl_rxk::adc_hl_ss(u16_t op)
   class cl_cell16 &hl= destHL();
   class cl_cell8 &f= destF();
   u32_t res= rHL + op + ((rF&flagC)?1:0);
-  u8_t forg= f.R() & ~flagAll;
+  u8_t forg= rF & ~flagAll;
   u16_t c1= 0, c2;
   if (res > 0xffff)
     {
@@ -752,6 +831,16 @@ cl_rxk::sub8(u8_t op2, bool cy)
   a.W(res);
   f.W(forg);
   tick(3);
+  return resGO;
+}
+
+int
+cl_rxk::NEG(t_mem code)
+{
+  u8_t org= destA().get();
+  destA().set(0);
+  sub8(org, false);
+  tick5p9(0);
   return resGO;
 }
 
@@ -823,6 +912,48 @@ cl_rxk::MUL(t_mem code)
   cHL.W((res>>16)&0xffff);
   cBC.W(res);
   tick(11);
+  return resGO;
+}
+
+
+/*
+ *                                                    R3000A,R4000,R5000
+ */
+
+int
+cl_r3ka::UMx(bool add)
+{
+  u32_t v1, v2;
+
+  tick(7);
+  do
+  {
+    v1= rom->read(rIX);
+    vc.rd++;
+    v2= rom->read(rIY);
+    vc.rd++;
+    v2= v2*rDE;
+    v2+= raDE;
+    if (rF & flagC) v2++;
+    if (add)
+      v1+= v2;
+    else
+      v1-= v2;
+
+    rom->write(rHL, v1);
+    vc.wr++;
+    caDE.W(v1>>8);
+    u8_t f= rF & ~flagC;
+    if (v1>>24) f|= flagC;
+    cF.W(f);
+
+    cBC.W(rBC-1);
+    cIX.W(rIX+1);
+    cIY.W(rIY+1);
+    cHL.W(rHL+1);
+    tick(8);
+  }
+  while (rBC);
   return resGO;
 }
 

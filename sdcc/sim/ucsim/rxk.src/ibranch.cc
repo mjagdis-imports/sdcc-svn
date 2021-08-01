@@ -27,6 +27,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "appcl.h"
 
 #include "rxkcl.h"
+#include "r3kacl.h"
 
 
 int
@@ -101,7 +102,7 @@ cl_rxk::LCALL_lmn(t_mem code)
 int
 cl_rxk::rst_v(t_mem code)
 {
-  if (jaj && (code == 0xef)) return resGO;
+  if ((jaj || (juj&1)) && (code == 0xef)) return resGO;
   u8_t l= (code&0x38) << 1;
   cSP.W(rSP-1);
   rom->write(rSP, PC>>8);
@@ -131,7 +132,7 @@ cl_rxk::ret_f(bool f)
     {
       u8_t l, h;
       l= mem->read(rSP);
-      rSP++;
+      cSP.W(++rSP);
       h= mem->read(rSP);
       cSP.W(++rSP);
       vc.rd+= 2;
@@ -152,6 +153,56 @@ cl_rxk::jp_f_mn(bool f)
       PC= h*256+l;
     }
   tick(6);
+  return resGO;
+}
+
+int
+cl_rxk::LRET(t_mem code)
+{
+  u8_t l, h, x;
+  l= mem->read(rSP);
+  cSP.W(++rSP);
+  h= mem->read(rSP);
+  cSP.W(++rSP);
+  PC= h*256+l;
+  x= mem->read(rSP);
+  cSP.W(++rSP);
+  cXPC.W(x);
+  tick(12);
+  return resGO;
+}
+
+int
+cl_rxk::RETI(t_mem code)
+{
+  u8_t l, h, x;
+  x= mem->read(rSP);
+  cSP.W(++rSP);
+  l= mem->read(rSP);
+  cSP.W(++rSP);
+  h= mem->read(rSP);
+  cSP.W(++rSP);
+  PC= h*256+l;
+  cIP.W(x);
+  tick(11);
+  return resGO;
+}
+
+
+/*
+ *                                                    R3000A,R4000,R5000
+ */
+
+int
+cl_r3ka::SYSCALL(t_mem code)
+{
+  cSP.W(rSP-1);
+  rom->write(rSP, PC>>8);
+  cSP.W(rSP-1);
+  rom->write(rSP, PC);
+  PC= rIIR * 256 + 0x60;
+  vc.wr+= 2;
+  tick5p3(9);
   return resGO;
 }
 
