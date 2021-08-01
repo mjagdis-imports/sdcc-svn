@@ -36,9 +36,14 @@ ___setjmp:
 	pop	bc
 	push	bc
 
-	; Load env into hl.
+	; Load env into hl, sp-2 into de
+	ldhl	sp, #2
+	ld	a, l
 	ld	l, e
+	ld	e, a
+	ld	a, h
 	ld	h, d
+	ld	d, a
 
 	; Store return address.
 	ld	a, c
@@ -78,9 +83,8 @@ _longjmp:
 	ld	h, (hl)
 	ld	l, a
 
-	; Adjust stack pointer.
+	; Restore stack pointer.
 	ld	sp, hl
-	pop	af
 
 	; Set return address.
 	ld	l, e
