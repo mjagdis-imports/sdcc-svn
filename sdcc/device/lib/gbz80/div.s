@@ -45,66 +45,47 @@
 .globl	__moduint
 
 __divsuchar:
-        ldhl    sp,#2+1
+	ld	c, a
+	ld	b, #0
 
-        ld      a,(hl-)
-        ld      e,a
-        ld      c,(hl)
-        ld      b,#0
-
-        call    signexte
-
-	ld	e,c
-	ld	d,b
-
-	ret
+	jp	signexte
 
 __modsuchar:
-        ldhl    sp,#2+1
+	ld	c, a
+	ld	b, #0
 
-        ld      a,(hl-)
-        ld      e,a
-        ld      c,(hl)
-        ld      b,#0
+	call	signexte
 
-        jp      signexte
-
-__divuschar:
-        ldhl    sp,#2+1
-        ld      d, #0
-
-        ld      a,(hl-)
-        ld      e,a
-        ld      c,(hl)
-
-        ld      a,c             ; Sign extend
-        rlca
-        sbc     a
-        ld      b,a
-
-        call      .div16
-
-	ld	e,c
-	ld	d,b
+	ld	c, e
+	ld	b, d
 
 	ret
 
-__moduschar:
-        ldhl    sp,#2+1
-        ld      d, #0
+__divuschar:
+	ld	d, #0
 
-        ld      a,(hl-)
-        ld      e,a
-        ld      c,(hl)
+	ld	c, a             ; Sign extend
+        rlca
+        sbc     a
+        ld      b,a
+
+	jp	.div16
+
+__moduschar:
+	ld	e, a
+	ld	d, #0
 
         ld      a,c             ; Sign extend
         rlca
         sbc     a
         ld      b,a
 
-        call    .div16
+	call	.div16
 
-        ret
+	ld	c, e
+	ld	b, d
+
+	ret
 
 __divschar:
         ld      c, a
@@ -202,10 +183,10 @@ __moduint:
         sbc     a
         ld      b,a
 signexte:
-        ld      a,e             ; Sign extend
+        ld      a, e             ; Sign extend
         rlca
         sbc     a
-        ld      d,a
+        ld      d, a
 
         ; Fall through to .div16
 
