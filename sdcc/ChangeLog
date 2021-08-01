@@ -6,7 +6,8 @@
 	  device/lib/gbz80/mul.s,
 	  device/lib/gbz80/memcpy.s,
 	  device/lib/gbz80/setjmp.s,
-	  device/lib/gbz80/strlen.s:
+	  device/lib/gbz80/strlen.s,
+	  device/lib/_memset.c:
 	  Fix library functions for new calling convention.
 
 2021-07-31 Philipp Klaus Krause <pkk AT spth.de>
