@@ -1844,7 +1844,7 @@ aopArg (sym_link *ftype, int i)
     }
     
   // Old SDCC calling convention.
-  if (/*FUNC_SDCCCALL (ftype) == 0 ||*/ FUNC_ISSMALLC (ftype))
+  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype))
     return 0;
 
   wassert (FUNC_SDCCCALL (ftype) > 0);

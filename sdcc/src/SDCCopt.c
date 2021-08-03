@@ -1123,7 +1123,7 @@ convconvention (iCode *ic, eBBlock *ebp)
     {
       // Use default ABI version if no ABI version is explicitly requested.
       if (FUNC_SDCCCALL (ftype) < 0)
-        FUNC_SDCCCALL (ftype) = port->sdcccall;
+        FUNC_SDCCCALL (ftype) = options.sdcccall;
     }
 }
 

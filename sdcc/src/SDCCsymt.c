@@ -3138,7 +3138,7 @@ checkFunction (symbol * sym, symbol * csym)
 
   /* If no ABI version specified, use port default */
   if (FUNC_SDCCCALL (sym->type) < 0)
-    FUNC_SDCCCALL (sym->type) = port->sdcccall;
+    FUNC_SDCCCALL (sym->type) = options.sdcccall;
 
   /* make sure the type is complete and sane */
   checkTypeSanity (sym->etype, sym->name);
@@ -3415,7 +3415,7 @@ processFuncArgs (symbol *func, sym_link *funcType)
 
   /* If no ABI version specified, use port default */
   if (FUNC_SDCCCALL (funcType) < 0)
-    FUNC_SDCCCALL (funcType) = port->sdcccall;
+    FUNC_SDCCCALL (funcType) = options.sdcccall;
 
   /* loop thru all the arguments   */
   val = FUNC_ARGS (funcType);

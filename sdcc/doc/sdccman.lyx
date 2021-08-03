@@ -44105,6 +44105,19 @@ Calling conventions
 \end_layout
 
 \begin_layout Standard
+By default, the SDCC calling convention, version 1 is used.
+ Using the option –sdcccall 0, the default can be changed to version 0.
+ There are different calling conventions supported: __sdcccall(0), __sdcccall(1)
+, __smallc, __z88dk_fastcall (not on GBZ80) and __z88dk_callee.
+ Most are primarily intended for compatibility with libraries written for
+ other compilers.
+\end_layout
+
+\begin_layout Subsubsection
+SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
 For functions that do not have variable arguments, some parameters are passed
  in register.
  The first parameter is passed in a if it has 8 bits.
@@ -44156,16 +44169,13 @@ For non-gbz80, the stack is adjusted for stack parameters by the caller,
 \end_layout
 
 \begin_layout Standard
-There are other calling conventions supported, which can be specified using
- the keywords __sdcccall(0), __smallc, __z88dk_fastcall (not on GBZ80) and
- __z88dk_callee.
- They are primarily intended for compatibility with libraries written for
- other compilers.
- For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
- which is passed is l, hl or dehl.
- For __z88dk_callee, the stack is not adjusted for the parameters by the
- caller after the call (thus the callee has to do this instead).
- __z88dk_callee can be combined with up to one of __smallc and __sdcccall(0).
+If __z88dk_callee is specified, the stack is not adjusted for the parameters
+ by the caller after the call (thus the callee has to do this instead).
+\end_layout
+
+\begin_layout Standard
+This calling convnetion can be chosen for individual function via __sdcccall(1),
+ which is useful, if the default is changed via the –sdcccall option.
 \end_layout
 
 \begin_layout Subsubsection
@@ -44182,6 +44192,7 @@ l(0) calling convention is supported.
  hl, 32-bit values in dehl.
  For gbz80, 8-bit values are passed in e, 16-bit values in de, 32-bit values
  in hlde.
+ __sdcccall(0) can be combined with __z88dk_callee.
 \end_layout
 
 \begin_layout Subsubsection
@@ -44196,6 +44207,18 @@ Functions declared as __smallc are called using the Small-C calling convention
  by Small-C can be called from SDCC.
  Currently variable arguments are not yet supported (neither on the caller
  nor on the callee side).
+ __smallc can be combined with __z88dk_callee.
+\end_layout
+
+\begin_layout Subsubsection
+Z88DK fastcall
+\end_layout
+
+\begin_layout Standard
+For __z88dk_fastcall, there may be only one parameter of 8, 16 or 32 bits,
+ which is passed is l, hl or dehl.
+ 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
+ in dehl.
 \end_layout
 
 \begin_layout Subsection
@@ -44265,6 +44288,11 @@ The STM8 port
 
 \begin_layout Subsection
 Calling conventions
+\end_layout
+
+\begin_layout Standard
+By default, the SDCC calling convention, version 1 is used.
+ Using the option –sdcccall 0, the default can be changed to version 0.
 \end_layout
 
 \begin_layout Standard

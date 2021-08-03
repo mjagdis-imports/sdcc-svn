@@ -648,6 +648,7 @@ setDefaultOptions (void)
   options.out_fmt = 0;
   options.dump_graphs = 0;
   options.dependencyFileOpt = 0;
+  options.sdcccall = port->sdcccall;
 
   /* now for the optimizations */
   /* turn on the everything */

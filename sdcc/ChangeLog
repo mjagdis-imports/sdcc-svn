@@ -1,6 +1,18 @@
 2021-08-03 Philipp Klaus Krause <pkk AT spth.de>
 
 	* doc/sdccman.lyx,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/stm8/main.c,
+	  src/z80/gen.c,
+	  src/z80/main.c:
+	  --sdcccall option to set default version of calling convention ABI.
+
+2021-08-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx,
 	  src/SDCC.lex,
 	  src/SDCC.y,
 	  src/SDCCopt.c,
