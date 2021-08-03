@@ -152,7 +152,6 @@ static char *stm8_keywords[] = {
   "raisonance",
   "iar",
   "cosmic",
-  "sdccoldcall",
   "z88dk_callee",
   NULL
 };
@@ -506,6 +505,7 @@ PORT stm8_port =
     1                           /* No fancy alignments supported. */
   },
   { stm8_genExtraArea, NULL },
+  1,                            /* ABI revision */
   {                             /* stack information */
     -1,                         /* stack grows down */
      0,

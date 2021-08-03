@@ -44157,7 +44157,7 @@ For non-gbz80, the stack is adjusted for stack parameters by the caller,
 
 \begin_layout Standard
 There are other calling conventions supported, which can be specified using
- the keywords __sdccoldcall, __smallc, __z88dk_fastcall (not on GBZ80) and
+ the keywords __sdcccall(0), __smallc, __z88dk_fastcall (not on GBZ80) and
  __z88dk_callee.
  They are primarily intended for compatibility with libraries written for
  other compilers.
@@ -44165,16 +44165,16 @@ There are other calling conventions supported, which can be specified using
  which is passed is l, hl or dehl.
  For __z88dk_callee, the stack is not adjusted for the parameters by the
  caller after the call (thus the callee has to do this instead).
- __z88dk_callee can be combined with up to one of __smallc and __oldsdcccall.
+ __z88dk_callee can be combined with up to one of __smallc and __sdcccall(0).
 \end_layout
 
 \begin_layout Subsubsection
-Old SDCC calling convention
+SDCC calling convention, version 0
 \end_layout
 
 \begin_layout Standard
-For compability with functions written for older versions of SDCC, the __oldsdcc
-call calling convention is supported.
+For compability with functions written for older versions of SDCC, the __sdcccal
+l(0) calling convention is supported.
  All parameters are passed on the stack.
  The stack is not adjusted for the parameters after the call (thus the callee
  has to do this instead), unless __z88dk_callee is specified.
@@ -44275,7 +44275,7 @@ Arguments are passed on the stack right-to-left.
 \end_layout
 
 \begin_layout Subsubsection
-Current SDCC calling convention
+SDCC calling convention, version 1
 \end_layout
 
 \begin_layout Standard
@@ -44298,12 +44298,12 @@ For functions that have variable arguments, all parameters are passed on
 \end_layout
 
 \begin_layout Subsubsection
-Old SDCC calling convention
+SDCC calling convention, version 0
 \end_layout
 
 \begin_layout Standard
-For compability with functions written for older versions of SDCC, the __oldsdcc
-call calling convention is supported.
+For compability with functions written for older versions of SDCC, the __sdcccal
+l(0) calling convention is supported.
  All parameters are passed on the stack.
  The stack is the stack is not adjusted for the parameters after the call
  (thus the callee has to do this instead), unless __z88dk_callee is specified.

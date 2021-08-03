@@ -1188,18 +1188,20 @@ aopOp (operand *op, const iCode *ic)
 static asmop *
 aopRet (sym_link *ftype)
 {
+  wassert (IS_FUNC (ftype));
+
   int size = getSize (ftype->next);
 
   // Raisonance passes return values larger than 16 bits in pseudoregisters.
-  if (IFFUNC_ISRAISONANCE (ftype) && size > 2)
+  if (FUNC_ISRAISONANCE (ftype) && size > 2)
     werror (E_RAISONANCE_LARGE_RETURN);
 
   // IAR passes return values larger than 16 bits in pseudoregisters.
-  if (IFFUNC_ISIAR (ftype) && size > 2)
+  if (FUNC_ISIAR (ftype) && size > 2)
     werror (E_IAR_LARGE_RETURN);
 
   // Cosmic passes return values larger than 16 bits in pseudoregisters.
-  if (IFFUNC_ISCOSMIC (ftype) && size > 2)
+  if (FUNC_ISCOSMIC (ftype) && size > 2)
     werror (E_COSMIC_LARGE_RETURN);
 
   switch (size)
@@ -1222,23 +1224,25 @@ aopRet (sym_link *ftype)
 static asmop *
 aopArg (sym_link *ftype, int i)
 {
+  wassert (IS_FUNC (ftype));
+
   // Calling convention for variable arguments not documented in Raisonance C compiler manual. Needs reverse-engineering.
-  wassertl (!IFFUNC_ISRAISONANCE (ftype) || !IFFUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in Raisonance calling convention.");
+  wassertl (!FUNC_ISRAISONANCE (ftype) || !FUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in Raisonance calling convention.");
   // Calling convention for variable arguments not documented in IAR C/C++ development guide. Needs reverse-engineering.
-  wassertl (!IFFUNC_ISIAR (ftype) || !IFFUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in IAR calling convention.");
+  wassertl (!FUNC_ISIAR (ftype) || !FUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in IAR calling convention.");
 
   value *args = FUNC_ARGS(ftype);
   wassert (args);
 
-  if (IFFUNC_HASVARARGS (ftype))
+  if (FUNC_HASVARARGS (ftype))
     return 0;
 
   // Old SDCC calling convention.
-  if (IFFUNC_ISSDCCOLDCALL (ftype))
+  if (FUNC_SDCCCALL (ftype) == 0)
     return 0;
     
   // IAR calling convention.
-  if (IFFUNC_ISIAR (ftype))
+  if (FUNC_ISIAR (ftype))
     {
       int j, num_1_byte_args, num_2_byte_args;
       value *arg;
@@ -1284,7 +1288,7 @@ aopArg (sym_link *ftype, int i)
     }
     
   // Cosmic calling convention.
-  if (IFFUNC_ISCOSMIC (ftype))
+  if (FUNC_ISCOSMIC (ftype))
     {
       if (i == 1 && getSize (args->type) == 1)
         return ASMOP_A;
@@ -1296,7 +1300,7 @@ aopArg (sym_link *ftype, int i)
     }
 
   // Raisonance calling convention, same as current SDCC.
-  if (IFFUNC_ISRAISONANCE (ftype) || !IFFUNC_HASVARARGS (ftype))
+  if (FUNC_ISRAISONANCE (ftype) || !FUNC_HASVARARGS (ftype))
     {
       int j;
       value *arg;
@@ -1326,8 +1330,11 @@ aopArg (sym_link *ftype, int i)
 static bool
 isFuncCalleeStackCleanup (sym_link *ftype)
 {
+  wassert (IS_FUNC (ftype));
+
   const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
   int stackparmbytes = bigreturn * 2;
+
   for (value *arg = FUNC_ARGS(ftype); arg && !FUNC_HASVARARGS(ftype); arg = arg->next)
     {
       int argsize = getSize (arg->type);
@@ -1340,7 +1347,7 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (IFFUNC_ISZ88DK_CALLEE (ftype))
     return true;
 
-  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISRAISONANCE (ftype) || IFFUNC_ISCOSMIC(ftype) || IFFUNC_ISIAR (ftype))
+  if (FUNC_SDCCCALL (ftype) != 1 || FUNC_ISRAISONANCE (ftype) || FUNC_ISCOSMIC(ftype) || FUNC_ISIAR (ftype))
     return false;
 
   if (!IFFUNC_HASVARARGS (ftype) && options.model != MODEL_LARGE)

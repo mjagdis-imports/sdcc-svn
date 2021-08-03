@@ -1773,11 +1773,13 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
 static asmop *
 aopRet (sym_link *ftype)
 {
+  wassert (IS_FUNC (ftype));
+
   // Adjust returnregs in isReturned in peep.c accordingly when changing asmop_return here.
 
   int size = getSize (ftype->next);
 
-  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISSMALLC (ftype))
+  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || FUNC_ISZ88DK_FASTCALL (ftype))
     switch (size)
       {
       case 1:
@@ -1789,7 +1791,9 @@ aopRet (sym_link *ftype)
       default:
         return 0;
       }
-      
+
+  wassert (FUNC_SDCCCALL (ftype) > 0);
+ 
   switch (size)
     {
     case 1:
@@ -1813,13 +1817,15 @@ aopRet (sym_link *ftype)
 static asmop *
 aopArg (sym_link *ftype, int i)
 {
+  wassert (IS_FUNC (ftype));
+
   if (IFFUNC_HASVARARGS (ftype))
     return 0;
 
   value *args = FUNC_ARGS(ftype);
   wassert (args);
 
-  if (IFFUNC_ISZ88DK_FASTCALL (ftype))
+  if (FUNC_ISZ88DK_FASTCALL (ftype))
     {
       if (i != 1)
         return false;
@@ -1838,10 +1844,12 @@ aopArg (sym_link *ftype, int i)
     }
     
   // Old SDCC calling convention.
-  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISSMALLC (ftype))
+  if (/*FUNC_SDCCCALL (ftype) == 0 ||*/ FUNC_ISSMALLC (ftype))
     return 0;
-    
-  if (!IFFUNC_HASVARARGS (ftype))
+
+  wassert (FUNC_SDCCCALL (ftype) > 0);
+
+  if (!FUNC_HASVARARGS (ftype))
     {
       int j;
       value *arg;
@@ -1891,6 +1899,8 @@ aopArg (sym_link *ftype, int i)
 static bool
 isFuncCalleeStackCleanup (sym_link *ftype)
 {
+  wassert (IS_FUNC (ftype));
+
   const bool farg = !FUNC_HASVARARGS (ftype) && FUNC_ARGS (ftype) && IS_FLOAT (FUNC_ARGS (ftype)->type); 
   const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
   int stackparmbytes = bigreturn * 2;
@@ -1913,13 +1923,13 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (!IS_GB && !FUNC_HASVARARGS(ftype) && ftype->next && getSize (ftype->next) == 4 && IS_FLOAT (ftype->next) && farg)
     return true;
 
-  if (IFFUNC_ISSDCCOLDCALL (ftype) || IFFUNC_ISSMALLC (ftype))
+  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype))
     return false;
     
   if (IFFUNC_ISBANKEDCALL (ftype))
     return false;
 
-  if (IFFUNC_HASVARARGS (ftype))
+  if (FUNC_HASVARARGS (ftype))
     return false;
 
   // Callee cleans up stack for all non-vararg functions on gbz80.
