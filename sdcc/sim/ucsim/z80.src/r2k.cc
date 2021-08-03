@@ -447,18 +447,18 @@ cl_r2k::disass(t_addr addr)
           switch (*(b++))
             {
             case 'd': // d    jump relative target, signed? byte immediate operand
-              temp.format("#%d", (char)rom->get(addr+immed_offset));
+              temp.format("%d", (char)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             case 'w': // w    word immediate operand
-              temp.format("#0x%04x",
+              temp.format("0x%04x",
 			  (uint)((rom->get(addr+immed_offset)) |
 				 (rom->get(addr+immed_offset+1)<<8)) );
               ++immed_offset;
               ++immed_offset;
               break;
             case 'b': // b    byte immediate operand
-              temp.format("#0x%02x", (uint)rom->get(addr+immed_offset));
+              temp.format("0x%02x", (uint)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             default:
@@ -475,6 +475,27 @@ cl_r2k::disass(t_addr addr)
 }
 
 
+static FILE *log_file= NULL;
+static unsigned int cyc= 0;
+
+void
+cl_r2k::save_hist()
+{
+  cl_z80::save_hist();
+  if (juj&2)
+    {
+      if (log_file==NULL && PC==0x16) log_file= fopen("log.txt","w");
+      if (log_file!=NULL) {
+	fprintf(log_file, "%6u %06x ", cyc, AU(PC));
+	fprintf(log_file, "%02x %02x ", regs.raf.A, (regs.raf.F)&0xc1);
+	fprintf(log_file, "%04x %04x %04x ", regs.BC, regs.DE, regs.HL);
+	fprintf(log_file, "%04x %04x %04x ", regs.IX, regs.IY, regs.SP);
+	fprintf(log_file, "\n");
+	cyc++;
+      }
+    }
+}
+
 void
 cl_r2k::print_regs(class cl_console_base *con)
 {
@@ -486,9 +507,9 @@ cl_r2k::print_regs(class cl_console_base *con)
   con->dd_printf("%c%c-%c-%c%c%c\n",
                  (regs.raf.F&BIT_S)?'1':'0',
                  (regs.raf.F&BIT_Z)?'1':'0',
-                 (regs.raf.F&BIT_A)?'1':'0',
+                 'x',//(regs.raf.F&BIT_A)?'1':'0',
                  (regs.raf.F&BIT_P)?'1':'0',
-                 (regs.raf.F&BIT_N)?'1':'0',
+                 'x',//(regs.raf.F&BIT_N)?'1':'0',
                  (regs.raf.F&BIT_C)?'1':'0');
   con->dd_printf("BC= 0x%04x [BC]= %02x %3d %c  ",
                  regs.BC, ram->get(regs.BC), ram->get(regs.BC),
@@ -508,7 +529,7 @@ cl_r2k::print_regs(class cl_console_base *con)
   con->dd_printf("SP= 0x%04x [SP]= %02x %3d %c\n",
                  regs.SP, ram->get(regs.SP), ram->get(regs.SP),
                  isprint(ram->get(regs.SP))?ram->get(regs.SP):'.');
-  con->dd_printf("SP limit= 0x%04x\n", AU(sp_limit));
+  //con->dd_printf("SP limit= 0x%04x\n", AU(sp_limit));
 
   print_disass(PC, con);
 }

@@ -1,3 +1,118 @@
+2021/07/28 Visenri
+
+    * sim/ucsim/pdk.src/inst.cc
+    Fix bug in pdk15 simulation (introduced in [r12557]).
+    
+2021/07/28 Visenri
+
+    * support/regression/compact-results.py
+      Fix parsing of test name.
+      
+2021/07/27 Visenri
+
+    * src/pdk/gen.c
+      support/regression/tests/getbyte_param.c
+      Fix bug #3269.
+      Add test for it.
+
+2021/07/26 Visenri
+
+    * support/regression/Makefile.in
+      support/regression/ports/pdk13
+      support/regression/ports/pdk13/spec.mk
+      support/regression/ports/pdk13/support.c
+      support/regression/ports/pdk13/uCsim.cmd
+      Added infrastructure to test pdk13.
+      It is in the filter-out list to avoid automatic test, because many tests still need some work to be passed/skipped [#394].
+
+2021/07/26 Visenri
+
+    * support/regression/fwk/include/testfwk.h
+      support/regression/fwk/lib/testfwk.c
+      Lightweight version of test framework (testfwk) [#393].
+      Added new macro to indicate we are targeting a very low memory device: TARGET_VERY_LOW_MEMORY.
+      Added macros to easy the check of all pdk variants with 1 or 2 checks [#394].
+      Different implementation of __printd with hex output (for TARGET_VERY_LOW_MEMORY).
+      Skipped some strings in "Summary" output to save memory (for TARGET_VERY_LOW_MEMORY).
+
+2021/07/26 Visenri
+
+    * support/regression/collate-results.py
+      support/regression/compact-results.py
+      Added processing for the stack overflow message from simulator.
+      Added new check to reset state machine and name with "Simulation started" string
+      Added checks to validate the name after "--- Running", because sometimes we get garbage, because of caotic program behavior (due to stack overflow or wrong code).
+      Added the possibility to parse hex values instead of decimal [#393].
+      Better output in case of a catastrophic failure ("--- Summary" not found).
+      Fixed wrong regular expression to find ".ihx" file.
+
+2021/07/26 Visenri
+
+    * sdas/aspdk13/pdk13mch.c
+      sdas/aspdk13/pdk13pst.c
+      sdas/aspdk14/pdk14mch.c
+      sdas/aspdk14/pdk14pst.c
+      sdas/aspdk15/pdk15mch.c
+      sdas/aspdk15/pdk15pst.c
+      sdas/aspdk16/pdk16mch.c
+      sdas/aspdk16/pdk16pst.c
+      sdas/aspdk/pdk.h
+      sdas/aspdk/pdkadr.c
+      sdas/aspdk/pdkmch.c
+      Added assembler support for new pdk .io mnemonics (bug #3259).
+
+    * src/pdk/gen.c
+      src/pdk/main.c
+      src/pdk/peep.c
+      src/pdk/peeph.def
+      Updated compiler generated assembly and rules according to new pdk .io mnemonics
+
+2021/07/26 Visenri
+
+    * sim/ucsim/pdk.src/inst.cc
+    * sim/ucsim/pdk.src/instcl.h
+    * sim/ucsim/sim.src/sim.cc
+      Added support for stack overflow detection.
+      Fixed wrong order of output to stdout when program is stopped.
+      Added newline to make sure we get a separate line for the "Stop"
+
+2021-07-25 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCC.y,
+	* src/SDCCsymt.c,
+	* src/SDCCsymt.h: fix bugs #3212 and #3213
+
+2021-07-21 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCsymt.c (processFuncArgs): minor correction to #3260 bug fix
+
+2021-07-19 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCsymt.c (processFuncPtrArgs,processFuncArgs),
+	* src/SDCCsymt.h,
+	* src/SDCCmem.c (allocVariables): fix bug #3260
+	* support/regression/tests/bug-3260.c: added test
+
+2021-07-16 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c (decorateType): fix bug #2546
+
+2021-07-16 Visenri
+
+    * src/SDCC.lex
+      src/SDCC.y
+      Added builtins: "__builtin_rlc", "__builtin_rrc" & "__builtin_swap".
+      These functions will allow swap and rotate operations with volatile variables.
+    * src/SDCCast.c
+      src/SDCCsymt.c
+      src/SDCCsymt.h
+      src/SDCCval.c
+      src/SDCCval.h
+      Support for conditional type reduction (patch #392) for optimized values to 0.
+      Fixed size calculation for ptrdiff type.
+      Fixed int promotion for shift operations: using only left operand.
+      Added checks for side effects or volatility in optimizeRRCRLC (like optimizeSWAP, bug #3218)
+
 2021-07-14 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:

@@ -3403,6 +3403,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
   int parmNumber;
   sym_link *p;
   RESULT_TYPE resultTypeProp;
+  static int findingAddressOf=0;
 
   if (!tree)
     return tree;
@@ -3519,6 +3520,12 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
     if ((tree->opval.op == '?') && (resultTypeProp != RESULT_TYPE_BOOL) && reduceTypeAllowed)
       dtl = decorateType (tree->left, RESULT_TYPE_IFX, reduceTypeAllowed);
+    else if ((tree->opval.op == '&') && (!tree->right))
+      {
+        findingAddressOf = 1;
+        dtl = decorateType (tree->left, resultTypeProp, reduceTypeAllowed);
+        findingAddressOf = 0;
+      }
     else
       dtl = decorateType (tree->left, resultTypeProp, reduceTypeAllowed);
 
@@ -3622,7 +3629,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         {
           int arrayIndex = (int) ulFromVal (valFromType (RETYPE (tree)));
           int arraySize = DCL_ELEM (LTYPE (tree));
-          if (arraySize && arrayIndex >= arraySize)
+          int arrayLimit = findingAddressOf ? arraySize+1 : arraySize;
+          
+          if (arraySize && arrayIndex >= arrayLimit)
             {
               werrorfl (tree->filename, tree->lineno, W_IDX_OUT_OF_BOUNDS, arrayIndex, arraySize);
             }
@@ -4470,16 +4479,16 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         isAstEqual (tree->left, tree->right))
         {
           tree->type = EX_VALUE;
+          tree->opval.val = valZeroResultFromOp(LTYPE (tree), RTYPE (tree), tree->opval.op, reduceTypeAllowed);
           tree->left = tree->right = NULL;
-          tree->opval.val = constVal ("0");
           TETYPE (tree) = TTYPE (tree) = tree->opval.val->type;
           return tree;
         }
 
       /* if both of them are pointers or arrays then */
-      /* the result is going to be an integer        */
+      /* the result is a ptrdiff */
       if ((IS_ARRAY (LTYPE (tree)) || IS_PTR (LTYPE (tree))) && (IS_ARRAY (RTYPE (tree)) || IS_PTR (RTYPE (tree))))
-        TETYPE (tree) = TTYPE (tree) = newIntLink ();
+        TETYPE (tree) = TTYPE (tree) = newPtrDiffLink();
       else
         /* if only the left is a pointer */
         /* then result is a pointer      */
@@ -4711,7 +4720,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       LRVAL (tree) = RRVAL (tree) = 1;
       if(!reduceTypeAllowed)
         {
-          TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), RTYPE (tree), resultType, '+')); // compute promotion like in + operator
+          TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), NULL, resultType, tree->opval.op));
+          if(IS_INTEGRAL (TETYPE (tree)) && bitsForType (TETYPE (tree)) < INTSIZE * 8)
+            {
+              // Promote to int for smaller types
+              SPEC_NOUN (TETYPE (tree)) = V_INT;
+              SPEC_USIGN (TETYPE (tree)) = 0;
+            }
         }
       else if ((tree->opval.op == LEFT_OP))
         {
@@ -4731,7 +4746,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           /* Change shift op to comma op and replace the right operand with 0. */
           /* This preserves the left operand in case there were side-effects. */
           tree->opval.op = ',';
-          tree->right->opval.val = constVal ("0");
+          tree->right->opval.val = valZeroResultFromOp(LTYPE (tree), RTYPE (tree), tree->opval.op, reduceTypeAllowed);
           TETYPE (tree) = TTYPE (tree) = tree->right->opval.val->type;
           return tree;
         }
@@ -4746,7 +4761,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               /* Change shift op to comma op and replace the right operand with 0. */
               /* This preserves the left operand in case there were side-effects. */
               tree->opval.op = ',';
-              tree->right->opval.val = constVal ("0");
+              tree->right->opval.val = valZeroResultFromOp(LTYPE (tree), RTYPE (tree), tree->opval.op, reduceTypeAllowed);
               TETYPE (tree) = TTYPE (tree) = tree->right->opval.val->type;
               return tree;
             }
@@ -6678,6 +6693,10 @@ optimizeRRCRLC (ast * root)
       if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
         goto tryNext0;
 
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
+        return root;
+
       /* make sure the port supports RLC */
       if (port->hasExtBitOp && !port->hasExtBitOp (RLC, getSize (TTYPE (root->left->left))))
         return root;
@@ -6707,6 +6726,10 @@ tryNext0:
 
       if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
         goto tryNext1;
+
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
+        return root;
 
       /* make sure the port supports RLC */
       if (port->hasExtBitOp && !port->hasExtBitOp (RLC, getSize (TTYPE (root->left->left))))
@@ -6739,6 +6762,10 @@ tryNext1:
       if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
         goto tryNext2;
 
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
+        return root;
+
       /* make sure the port supports RRC */
       if (port->hasExtBitOp && !port->hasExtBitOp (RRC, getSize (TTYPE (root->left->left))))
         return root;
@@ -6766,6 +6793,10 @@ tryNext2:
         return root;
 
       if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
+        return root;
+
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
         return root;
 
       /* make sure the port supports RRC */

@@ -1,7 +1,7 @@
 /*
  * Simulator of microcontrollers (@@F@@)
  *
- * Copyright (C) @@S@@,@@Y@@ Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020,2021 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -33,6 +33,13 @@ cl_ras::cl_ras(chars id, class cl_memory_chip *achip):
   chip= achip;
 }
 
+int
+cl_ras::init(void)
+{
+  cl_address_space::init();
+  return 0;
+}
+
 t_addr
 cl_ras::log2phy(t_addr log)
 {
@@ -57,6 +64,16 @@ cl_ras::log2phy(t_addr log)
   return log + (xpc<<12);
 }
 
+t_addr
+cl_ras::px2phy(u32_t px)
+{
+  if ((px & 0xffff0000) == 0xffff0000)
+    {
+      return log2phy(px & 0xffff);
+    }
+  return px;
+}
+
 t_mem
 cl_ras::read(t_addr addr)
 {
@@ -65,10 +82,15 @@ cl_ras::read(t_addr addr)
       err_inv_addr(addr);
       return dummy->read();
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   return cella[addr].read();
+}
+
+t_mem
+cl_ras::pxread(t_addr pxaddr)
+{
+  if ((pxaddr & 0xffff0000) == 0xffff0000)
+    return read(pxaddr & 0xffff);
+  return phread(pxaddr);
 }
 
 t_mem
@@ -79,10 +101,19 @@ cl_ras::get(t_addr addr)
       err_inv_addr(addr);
       return dummy->get();
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   return cella[addr].get();
+}
+
+t_mem
+cl_ras::phget(t_addr phaddr)
+{
+  if (phaddr >= chip->get_size())
+    {
+      err_inv_addr(phaddr);
+      return dummy->read();
+    }
+  u8_t *slot= (u8_t*)(chip->get_slot(phaddr));
+  return *slot;
 }
 
 t_mem
@@ -93,10 +124,15 @@ cl_ras::write(t_addr addr, t_mem val)
       err_inv_addr(addr);
       return dummy->write(val);
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   return cella[addr].write(val);
+}
+
+t_mem
+cl_ras::pxwrite(t_addr pxaddr, t_mem val)
+{
+  if ((pxaddr & 0xffff0000) == 0xffff0000)
+    return write(pxaddr & 0xffff, val);
+  return phwrite(pxaddr, val);
 }
 
 void
@@ -107,22 +143,71 @@ cl_ras::set(t_addr addr, t_mem val)
       err_inv_addr(addr);
       dummy->set(val);
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   cella[addr].set(val);
 }
 
 void
-cl_ras::download(t_addr addr, t_mem val)
+cl_ras::phset(t_addr phaddr, t_mem val)
 {
-  if (addr >= chip->get_size())
+  if (phaddr >- chip->get_size())
     {
-      err_inv_addr(addr);
+      err_inv_addr(phaddr);
       dummy->set(val);
     }
-  chip->set(addr, val);
+  u8_t *slot= (u8_t*)(chip->get_slot(phaddr));
+  *slot= val;
 }
 
+void
+cl_ras::download(t_addr phaddr, t_mem val)
+{
+  if (phaddr >= chip->get_size())
+    {
+      err_inv_addr(phaddr);
+      dummy->set(val);
+    }
+  chip->set(phaddr, val);
+}
+
+
+void
+cl_ras::re_decode(void)
+{
+  t_addr a;
+  for (a= 0; a < get_size(); a++)
+    {
+      t_addr ph= log2phy(a);
+      void *slot= chip->get_slot(ph);
+      cella[a].decode(slot);
+    }
+}
+
+void
+cl_ras::set_xpc(u8_t val)
+{
+  xpc= val;
+  re_decode();
+}
+
+void
+cl_ras::set_segsize(u8_t val)
+{
+  segsize= val;
+  re_decode();
+}
+
+void
+cl_ras::set_dataseg(u8_t val)
+{
+  dataseg= val;
+  re_decode();
+}
+
+void
+cl_ras::set_stackseg(u8_t val)
+{
+  stackseg= val;
+  re_decode();
+}
 
 /* End of rxk.src/rmem.cc */

@@ -242,6 +242,9 @@ unary_expr
    | ALIGNOF '(' type_name ')'{ $$ = newAst_VALUE (alignofOp ($3)); }
    | TYPEOF unary_expr        { $$ = newNode (TYPEOF, NULL, $2); }
    | OFFSETOF '(' type_name ',' offsetof_member_designator ')' { $$ = offsetofOp($3, $5); }
+   | RLC unary_expr           { $$ = newNode (RLC, $2, NULL); }
+   | RRC unary_expr           { $$ = newNode (RRC, $2, NULL); }
+   | SWAP unary_expr          { $$ = newNode (SWAP, $2, NULL); }
    ;
 
 unary_operator
@@ -1317,6 +1320,7 @@ function_declarator
           FUNC_ARGS(funcType) = reverseVal($4);
 
           /* nest level was incremented to take care of the parms  */
+          leaveBlockScope (currBlockno);
           NestLevel -= LEVEL_UNIT;
           currBlockno = STACK_POP(blockNum);
           seqPointNo++; /* not a true sequence point, but helps resolve scope */
@@ -1813,6 +1817,7 @@ start_block
 end_block
    : '}'
         {
+          leaveBlockScope (currBlockno);
           NestLevel -= LEVEL_UNIT;
           currBlockno = STACK_POP(blockNum);
         }
@@ -1952,6 +1957,7 @@ iteration_statement
                           cleanUpLevel(StructTab, NestLevel + LEVEL_UNIT);
                           noLineno--;
 
+                          leaveBlockScope (currBlockno);
                           NestLevel -= LEVEL_UNIT;
                           currBlockno = STACK_POP(blockNum);
                         }
@@ -2520,6 +2526,7 @@ declaration_after_statement
 implicit_block
    : declaration_after_statement statements_and_implicit
      {
+       leaveBlockScope (currBlockno);
        NestLevel -= SUBLEVEL_UNIT;
        currBlockno = STACK_POP(blockNum);
        $$ = createBlock($1, $2);
@@ -2527,6 +2534,7 @@ implicit_block
      }
    | declaration_after_statement
      {
+       leaveBlockScope (currBlockno);
        NestLevel -= SUBLEVEL_UNIT;
        currBlockno = STACK_POP(blockNum);
        $$ = createBlock($1, NULL);
