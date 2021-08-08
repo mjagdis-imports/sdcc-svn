@@ -1793,7 +1793,22 @@ aopRet (sym_link *ftype)
       }
 
   wassert (FUNC_SDCCCALL (ftype) > 0);
- 
+
+  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || FUNC_ISZ88DK_FASTCALL (ftype))
+    switch (size)
+      {
+      case 1:
+        return (IS_GB ? ASMOP_E : ASMOP_L);
+      case 2:
+        return (IS_GB ? ASMOP_DE : ASMOP_HL);
+      case 4:
+        return (IS_GB ? ASMOP_HLDE : ASMOP_DEHL);   
+      default:
+        return 0;
+      }
+
+  wassert (FUNC_SDCCCALL (ftype) > 0);
+
   switch (size)
     {
     case 1:
@@ -1917,15 +1932,10 @@ isFuncCalleeStackCleanup (sym_link *ftype)
 
   if (IFFUNC_ISZ88DK_CALLEE (ftype))
     return true;
-    
-  if (!IS_GB && !FUNC_HASVARARGS(ftype) && (!ftype->next || getSize (ftype->next) == 0))
-    return true;
-  if (!IS_GB && !FUNC_HASVARARGS(ftype) && ftype->next && getSize (ftype->next) == 4 && IS_FLOAT (ftype->next) && farg)
-    return true;
 
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype))
     return false;
-    
+
   if (IFFUNC_ISBANKEDCALL (ftype))
     return false;
 
@@ -1938,11 +1948,9 @@ isFuncCalleeStackCleanup (sym_link *ftype)
 
   // Callee cleans up stack if return value has at most 16 bits or the return value is float and there is a first agrument of type float.
   if (!ftype->next || getSize (ftype->next) <= 2)
-        return true;
-      else if (IS_FLOAT (ftype->next) && FUNC_ARGS(ftype) && IS_FLOAT(FUNC_ARGS(ftype)->etype))
-        return true;
-      return false;
-
+    return true;
+  else if (IS_FLOAT (ftype->next) && FUNC_ARGS(ftype) && IS_FLOAT(FUNC_ARGS(ftype)->etype))
+    return true;
   return false;
 }
 
