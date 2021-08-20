@@ -34,8 +34,6 @@ _strcpy:
 	pop	iy
 	ex	de, hl
 	pop	hl
-	push	hl
-	push	bc
 	push	de
 	xor	a, a
 loop:
