@@ -1,7 +1,17 @@
 2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
-
 	* src/z80/gen.c:
 	  Do not use some aspects of new calling convention for banked functions.
+
+2021-08-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c,
+	  support/valdiag/tests/callingconvention.c,
+	  support/valdiag/valdiag.py:
+	  Fix diagnostics for __raisonance calling convention.
+
+2021-08-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCval.c (valCastLiteral): possibly fix bug #3273
 
 2021-08-11 Philipp Klaus Krause <pkk AT spth.de>
 
