@@ -1,5 +1,12 @@
 2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
 
+	* support/regression/ports/ez80-z80/spec.mk,
+	  support/regression/ports/ucr2k/spec.mk,
+	  support/regression/ports/ucr2ka/spec.mk:
+	  Do not use --profile in regression testing, since it conflicts with register arguments.
+
+2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
+
 	* device/lib/_memset.c,
 	  device/lib/z180/memcpy.s,
 	  device/lib/z180/memmove.s,
@@ -9,7 +16,11 @@
 	  device/lib/z80n/memmove.s,
 	  device/lib/r3ka/memcpy.s,
 	  device/lib/r3ka/memmove.s,
-	  device/lib/r3ka/strcpy.s:
+	  device/lib/r3ka/strcpy.s,
+	  device/lib/r3ka/divmixed.s,
+	  device/lib/r3ka/divsigned.s,
+	  device/lib/r3ka/modmixed.s,
+	  device/lib/r3ka/mulchar.s:
 	  Fix library functions for new calling convention.
 
 2021-08-20 Philipp Klaus Krause <pkk AT spth.de>

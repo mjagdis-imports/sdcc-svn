@@ -51,7 +51,7 @@ __div8::
 __div_signexte::
         ld      a, e            ; Sign extend
         rlca
-        sbc     a,a
+        sbc     a, a
         ld      d, a
         ; Fall through to __div16
 

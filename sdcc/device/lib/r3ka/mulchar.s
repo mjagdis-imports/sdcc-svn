@@ -36,14 +36,14 @@
 
 ; operands have different sign
 
-__mulsuchar:
+__muluschar:
 	ld	c, l
 	ld	b, #0
 	ld	e, a
 
 	jr	signexte
 
-__muluschar:
+__mulsuchar:
 	ld	c, a
 	ld	b, #0
 	ld	e, l

@@ -29,25 +29,27 @@
 .globl	__modsuchar
 .globl	__moduschar
 
-__modsuchar:
+__moduschar:
+	; Zero-extend
 	ld	e, l
-	ld	l, a
-	ld	h,#0
+	ld	d, #0
 
-	call	__div_signexte
+	; Sign-extend
+	ld	l, a
+	rlca
+	sbc	a, a
+	ld	h, a
+
+	call	__div16
 
 	jp	__get_remainder
 
-__moduschar:
-	ld	e, a
-	ld      d, #0
+__modsuchar:
+	ld	e, l
+	ld	l, a
+	ld	h, #0
 
-	ld      a,l	; Sign extend
-	rlca
-	sbc     a, a
-	ld      h, a
-
-	call	__div16
+	call	__div_signexte
 
 	jp	__get_remainder
 
