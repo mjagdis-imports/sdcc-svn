@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  memmove.s
 ;
-;  Copyright (C) 2008-2009, Philipp Klaus Krause, Marco Bodrato
+;  Copyright (C) 2008-2021, Philipp Klaus Krause, Marco Bodrato
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -38,7 +38,7 @@ _memmove:
 	ld	a, c
 	or	a, b
 	ex	de, hl
-	ret	Z
+	jr	Z, end
 	ex	de, hl
 	push	hl
 	sbc	hl, de		; or above cleared carry.
@@ -52,6 +52,7 @@ memmove_down:
 	inc	bc
 	lddr
 	pop	de
+end:
 	jp	(iy)
 memmove_up:
 	ex      de, hl

@@ -57,19 +57,20 @@ __naked
   __asm
     pop   iy
     pop   bc
+    push  hl
     ld    a, c
     or    a, b
-    ret   Z
+    jr    Z, end
     ld    (hl), e
     dec   bc
     ld    a, c
     or    a, b
-    ret   Z
-    push  hl
+    jr    Z, end
     ld    e, l
     ld    d, h
     inc   de
-    ldir
+    ldir 
+end:
     pop   de
     jp	(iy)
   __endasm;

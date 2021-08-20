@@ -1,4 +1,16 @@
 2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/_memset.c,
+	  device/lib/z180/memcpy.s,
+	  device/lib/z180/memmove.s,
+	  device/lib/z80/memcpy.s,
+	  device/lib/z80/memmove.s,
+	  device/lib/z80n/memcpy.s,
+	  device/lib/z80n/memmove.s:
+	  Fix library functions for new calling convention.
+
+2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/z80/gen.c:
 	  Do not use some aspects of new calling convention for banked functions.
 
