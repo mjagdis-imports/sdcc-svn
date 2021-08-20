@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  memmove.s
 ;
-;  Copyright (C) 2008-2009, Philipp Klaus Krause, Marco Bodrato
+;  Copyright (C) 2008-2021, Philipp Klaus Krause, Marco Bodrato
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -34,12 +34,11 @@
 
 _memmove:
 	pop	iy
-	pop	hl
 	pop	de
 	pop	bc
 	ld	a, c
 	or	a, b
-	ret	Z
+	jr	Z, end
 	push	hl
 	sbc	hl, de		; or above cleared carry.
 	add	hl, de		; same carry as the line before
@@ -52,6 +51,7 @@ memmove_down:
 	inc	bc
 	lddr
 	pop	hl
+end:
 	jp	(iy)
 memmove_up:
 	ex      de, hl
