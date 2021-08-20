@@ -1,5 +1,11 @@
 2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
 
+	* device/lib/r2k/*.s,
+	  device/lib/r2ka/*.s:
+	  Fix library functions for new calling convention.
+
+2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
+
 	* support/regression/ports/ez80-z80/spec.mk,
 	  support/regression/ports/ucr2k/spec.mk,
 	  support/regression/ports/ucr2ka/spec.mk:
