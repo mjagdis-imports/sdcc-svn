@@ -34,9 +34,9 @@
 .globl	__mulint
 
 __mulint:
-        pop     bc
+        pop     iy
         ex	de, hl
-        pop	iy
+        pop	bc
         call	__mul16
         jp	(iy)
 

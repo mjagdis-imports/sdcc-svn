@@ -51,8 +51,8 @@ __mulsuchar:
         jr      signexte
 
 __mulschar:
-	ld	c, a
-        ld      e, l
+	ld	e, a
+        ld      c, l
 
         ;; Need to sign extend before going in.
         rla
