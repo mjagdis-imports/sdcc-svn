@@ -34,12 +34,11 @@
 .globl	__mulint
 
 __mulint:
-        pop     af
         pop     bc
-        pop     de
-        push    de
-        push    bc
-        push    af
+        ex	de, hl
+        pop	iy
+        call	__mul16
+        jp	(iy)
 
 	;; 16-bit multiplication
 	;;
