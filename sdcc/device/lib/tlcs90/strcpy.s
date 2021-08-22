@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  strcpy.s
 ;
-;  Copyright (C) 2012, Philipp Klaus Krause
+;  Copyright (C) 2012-2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -31,8 +31,9 @@
 	.globl _strcpy
 
 _strcpy:
-	ld	de, 2 (sp)
-	ld	hl, 4 (sp)
+	pop	iy
+	ex	de, hl
+	pop	hl
 	push	de
 	xor	a, a
 loop:
@@ -40,5 +41,5 @@ loop:
 	ldi
 	jr	NZ, loop
 	pop	hl
-	ret
+	jp	(iy)
 

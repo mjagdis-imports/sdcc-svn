@@ -34,15 +34,16 @@
 ; The Z80 has the ldir instruction, which is perfect for implementing memcpy().
 _memcpy:
 ___memcpy:
-	ld	hl, 2 (sp)	;return value expected to be in HL, so pop dst to HL
-	ld	bc, 6 (sp)
+	ex	de, hl
+	pop	iy
+	pop	hl
+	pop	bc
+	push	de
 	ld	a, c
 	or	a, b
-	ret	Z
-	ld	de, 4 (sp)
-	push	hl
-	ex	de, hl
+	jr	Z, end
 	ldir
+end:
 	pop	hl
-	ret
+	jp	(iy)
 
