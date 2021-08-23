@@ -66,7 +66,7 @@ typedef int errno_t;
 void *memccpy (void */*restrict*/ dst, const void */*restict*/ src, int c, size_t n);
 extern void *memcpy (void * /*restrict */ dest, const void * /*restrict*/ src, size_t n);
 extern void *memmove (void *dest, const void *src, size_t n);
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80) || defined (__SDCC_z80n)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined (__SDCC_z80n)
 extern char *strcpy (char * /*restrict*/ dest, const char * /*restrict*/ src) __preserves_regs(iyl, iyh);
 #else
 extern char *strcpy (char * /*restrict*/ dest, const char * /*restrict*/ src);
@@ -118,7 +118,7 @@ extern void *memset_explicit (void *s, int c, size_t n);
 
 /* extern char *strerror(int errnum); */
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80) || defined (__SDCC_z80n)
-extern size_t strlen (const char *s) __preserves_regs(d, e, iyl, iyh);
+extern size_t strlen (const char *s) __preserves_regs(iyl, iyh);
 #else
 extern size_t strlen (const char *s);
 #endif
