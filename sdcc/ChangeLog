@@ -1,3 +1,12 @@
+2021-08-23 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* device/lib/ez80_z80/__strreverse.s,
+	  device/lib/ez80_z80/__uitobcd.s,
+	  device/lib/ez80_z80/__ultobcd.s,
+	  support/regression/tests/uitobcd.c,
+	  support/regression/tests/ultobcd.c:
+	  Fix library functions for new calling convention.
+
 2021-08-23 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/include/string.h:
