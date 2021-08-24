@@ -36,10 +36,6 @@
 ; bcd[] will contain BCD value.
 ;
 ___uitobcd:
-	pop	bc
-	pop	de
-	push	bc
-	push	de
 ;
 	ld	bc, #0x1000
 	ld	d, c
@@ -76,6 +72,7 @@ ___uitobcd:
 	djnz	100$
 ;
 	pop	hl
+	ex	(sp), hl
 	ld	(hl), e
 	inc	hl
 	ld	(hl), d

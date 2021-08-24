@@ -1,3 +1,10 @@
+2021-08-24 Sergey Belyashov <sergey.belyashov@gmail.com>
+
+	* device/lib/ez80_z80/__itoa.s,
+	  device/lib/ez80_z80/__ltoa.s,
+	  device/lib/ez80_z80/__uitobcd.s:
+	  Fix library functions for new calling convention.
+
 2021-08-23 Sergey Belyashov <sergey.belyashov@gmail.com>
 
 	* device/lib/ez80_z80/__strreverse.s,
