@@ -2,7 +2,22 @@
 
 	* device/lib/ez80_z80/__itoa.s,
 	  device/lib/ez80_z80/__ltoa.s,
-	  device/lib/ez80_z80/__uitobcd.s:
+	  device/lib/ez80_z80/__uitobcd.s,
+	  device/lib/z180/__itoa.s,
+	  device/lib/z180/__ltoa.s,
+	  device/lib/z180/__strreverse.s,
+	  device/lib/z180/__uitobcd.s,
+	  device/lib/z180/__ultobcd.s,
+	  device/lib/z80/__itoa.s,
+	  device/lib/z80/__ltoa.s,
+	  device/lib/z80/__strreverse.s,
+	  device/lib/z80/__uitobcd.s,
+	  device/lib/z80/__ultobcd.s,
+	  device/lib/z80n/__itoa.s,
+	  device/lib/z80n/__ltoa.s,
+	  device/lib/z80n/__strreverse.s,
+	  device/lib/z80n/__uitobcd.s,
+	  device/lib/z80n/__ultobcd.s:
 	  Fix library functions for new calling convention.
 
 2021-08-23 Sergey Belyashov <sergey.belyashov@gmail.com>
