@@ -353,6 +353,7 @@ newLink (SYM_LINK_CLASS select)
   p = Safe_alloc (sizeof (sym_link));
   p->xclass = select;
   p->funcAttrs.z88dk_params_offset = 0;
+  FUNC_SDCCCALL (p) = -1;
 
   return p;
 }
@@ -835,10 +836,10 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   FUNC_REGBANK (dest) |= FUNC_REGBANK (src);
   FUNC_ISINLINE (dest) |= FUNC_ISINLINE (src);
   FUNC_ISNORETURN (dest) |= FUNC_ISNORETURN (src);
-  if (FUNC_ISRAISONANCE (dest) && (FUNC_ISIAR (src) || FUNC_ISCOSMIC (src) || FUNC_ISSDCCNEWCALL (src) || FUNC_ISZ88DK_CALLEE (src)) ||
-    FUNC_ISIAR (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISCOSMIC (src) || FUNC_ISSDCCNEWCALL (src) || FUNC_ISZ88DK_CALLEE (src)) ||
-    FUNC_ISCOSMIC (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_ISSDCCNEWCALL (src) || FUNC_ISZ88DK_CALLEE (src)) ||
-    FUNC_ISSDCCNEWCALL (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_ISCOSMIC (src)) || // __sdcc_newcall can be combined with __z88dk_callee.
+  if (FUNC_ISRAISONANCE (dest) && (FUNC_ISIAR (src) || FUNC_ISCOSMIC (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_ISIAR (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISCOSMIC (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_ISCOSMIC (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_SDCCCALL (dest) >= 0 && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_ISCOSMIC (src)) || // __sdcccall can be combined with __z88dk_callee.
     FUNC_ISZ88DK_CALLEE (src) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (dest) || FUNC_ISCOSMIC (dest)))
     werror (E_MULTIPLE_CALLINGCONVENTIONS, name);
   FUNC_ISSMALLC (dest) |= FUNC_ISSMALLC (src);
@@ -2601,6 +2602,15 @@ compareFuncType (sym_link * dest, sym_link * src)
     IFFUNC_ISZ88DK_CALLEE (dest) != IFFUNC_ISZ88DK_CALLEE (src))
     return 0;
 
+  if (IFFUNC_ISRAISONANCE (dest) != IFFUNC_ISRAISONANCE (src) ||
+    IFFUNC_ISCOSMIC (dest) != IFFUNC_ISCOSMIC (src) ||
+    IFFUNC_ISIAR (dest) != IFFUNC_ISIAR (src))
+    return 0;
+
+  if (FUNC_SDCCCALL (dest) >= 0 && FUNC_SDCCCALL (src) >= 0 &&
+    FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src))
+    return 0;
+
   for (i = 0; i < 9; i++)
     if (dest->funcAttrs.preserved_regs[i] > src->funcAttrs.preserved_regs[i])
       return 0;
@@ -2855,6 +2865,19 @@ compareTypeExact (sym_link * dest, sym_link * src, long level)
                     return 0;
                   if (IFFUNC_ISNAKED (dest) != IFFUNC_ISNAKED (src))
                     return 0;
+
+                  if (IFFUNC_ISZ88DK_FASTCALL (dest) != IFFUNC_ISZ88DK_FASTCALL (src))
+                    return 0;
+                  if (IFFUNC_ISRAISONANCE (dest) != IFFUNC_ISRAISONANCE (src))
+                    return 0;
+                  if (IFFUNC_ISCOSMIC (dest) != IFFUNC_ISCOSMIC (src))
+                    return 0;
+                  if (IFFUNC_ISIAR (dest) != IFFUNC_ISIAR (src))
+                    return 0;
+                  if (FUNC_SDCCCALL (dest) >= 0 && FUNC_SDCCCALL (src) >= 0 &&
+                    FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src))
+                    return 0;
+
 #if 0
                   if (IFFUNC_ISREENT (dest) != IFFUNC_ISREENT (src) && argCnt > 1)
                     return 0;
@@ -3135,6 +3158,10 @@ checkFunction (symbol * sym, symbol * csym)
       FUNC_ISNORETURN (sym->type) = 1;
     }
 
+  /* If no ABI version specified, use port default */
+  if (FUNC_SDCCCALL (sym->type) < 0)
+    FUNC_SDCCCALL (sym->type) = options.sdcccall;
+
   /* make sure the type is complete and sane */
   checkTypeSanity (sym->etype, sym->name);
 
@@ -3374,7 +3401,7 @@ processFuncArgs (symbol *func, sym_link *funcType)
   int pNum = 1;
   char *funcName = NULL;
   int funcCdef = 0;
-  
+
   if (func && !funcType)
     funcType = func->type;
   if (func)
@@ -3407,6 +3434,10 @@ processFuncArgs (symbol *func, sym_link *funcType)
   /* check if this function is defined as calleeSaves
      then mark it as such */
   FUNC_CALLEESAVES (funcType) = inCalleeSaveList (funcName);
+
+  /* If no ABI version specified, use port default */
+  if (FUNC_SDCCCALL (funcType) < 0)
+    FUNC_SDCCCALL (funcType) = options.sdcccall;
 
   /* loop thru all the arguments   */
   val = FUNC_ARGS (funcType);
@@ -3647,6 +3678,8 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 dbuf_append_str (dbuf, " __z88dk_callee");
               if (IFFUNC_ISZ88DK_FASTCALL (type))
                 dbuf_append_str (dbuf, " __z88dk_fastcall");
+              if (FUNC_SDCCCALL (type) >= 0 && FUNC_SDCCCALL (type) != options.sdcccall)
+                dbuf_append_str (dbuf, FUNC_SDCCCALL (type) ? " __sdcccall(0)" : " __sdcccall(1)");
               for (unsigned char i = 0; i < 9; i++)
                   if (type->funcAttrs.preserved_regs[i])
                   {

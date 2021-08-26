@@ -28,6 +28,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "rxkcl.h"
 #include "r3kacl.h"
+#include "r4kcl.h"
 
 
 int
@@ -203,6 +204,151 @@ cl_r3ka::SYSCALL(t_mem code)
   PC= rIIR * 256 + 0x60;
   vc.wr+= 2;
   tick5p3(9);
+  return resGO;
+}
+
+int
+cl_r4k::DWJNZ(t_mem code)
+{
+  i8_t e= fetch();
+  u16_t v= rBC-1;
+  destBC().W(v);
+  if (v)
+    PC= (PC + e) & 0xffff;
+  tick5p1(6);
+  return resGO;
+}
+
+int
+cl_r4k::lljp_cx(t_mem code)
+{
+  u8_t cx= (code>>3) & 0x3;
+  bool cond= false, z, s, v, c, sxv;
+  s= rF & flagS;
+  v= rF & flagV;
+  z= rF & flagZ;
+  c= rF & flagC;
+  sxv= (!s && v) || (s && !v);
+  switch (cx)
+    {
+    case 0: // GT: (Z or (S xor V))=0
+      cond= !(z || (sxv));
+      break;
+    case 1: // GTU: ((C=0) and (Z=0))=1
+      cond= !c && !z;
+      break;
+    case 2: // LT: (S xor V)=1
+      cond= sxv;
+      break;
+    case 3: // V: V=1
+      cond= rF & flagV;
+      break;
+    }
+  u16_t mn, lxpc;
+  mn= fetch();
+  mn+= fetch() * 256;
+  lxpc= fetch();
+  lxpc+= fetch() * 256;
+  lxpc&= 0xfff;
+  if (cond)
+    {
+      PC= mn;
+      LXPC->W(lxpc);
+    }
+  tick(13);
+  return resGO;
+}
+
+int
+cl_r4k::lljp_cc(t_mem code)
+{
+  u8_t cc= (code>>3) & 0x3;
+  bool cond= false, z, c;
+  z= rF & flagZ;
+  c= rF & flagC;
+  switch (cc)
+    {
+    case 0: // NZ
+      cond= !z;
+      break;
+    case 1: // Z
+      cond= z;
+      break;
+    case 2: // NC
+      cond= !c;
+      break;
+    case 3: // C
+      cond= c;
+      break;
+    }
+  u16_t mn, lxpc;
+  mn= fetch();
+  mn+= fetch() * 256;
+  lxpc= fetch();
+  lxpc+= fetch() * 256;
+  lxpc&= 0xfff;
+  if (cond)
+    {
+      PC= mn;
+      LXPC->W(lxpc);
+    }
+  tick(13);
+  return resGO;
+}
+
+int
+cl_r4k::jre_cx_cc(bool cond)
+{
+  u8_t el, eh;
+  el= fetch();
+  eh= fetch();
+  i16_t ee= eh*256+el;
+  if (cond)
+    PC= (PC + ee) & 0xffff;
+  tick5p1(8);
+  return resGO;
+}
+
+int
+cl_r4k::CALL_iIR(t_mem code)
+{
+  u16_t a= rSP;
+  rom->write(--a, PC>>8);
+  rom->write(--a, PC);
+  vc.wr+= 2;
+  cSP.W(a);
+  PC= cIR->get();
+  tick5p1(11);
+  return resGO;
+}
+
+int
+cl_r4k::CALL_iHL(t_mem code)
+{
+  u16_t a= rSP;
+  rom->write(--a, PC>>8);
+  rom->write(--a, PC);
+  vc.wr+= 2;
+  cSP.W(a);
+  PC= rHL;
+  tick5p1(11);
+  return resGO;
+}
+
+int
+cl_r4k::LLRET(t_mem code)
+{
+  u16_t h= 0, l= 0;
+  u16_t a= rSP;
+  l= rom->read(a++);
+  l+= rom->read(a++)*256;
+  h= rom->read(a++);
+  h+= rom->read(a++)*256;
+  vc.rd+= 4;
+  cSP.W(a);
+  PC= l;
+  LXPC->write(h);
+  tick(13);
   return resGO;
 }
 
