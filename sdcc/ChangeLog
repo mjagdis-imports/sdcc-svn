@@ -1,3 +1,86 @@
+2021-08-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c:
+	  Fix handling of Rabbit or iy, de in peephole optimizer.
+
+2021-08-22 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/pic16/libsdcc/float/fseq.c,
+	  device/lib/pic16/libsdcc/float/fsgt.c,
+	  device/lib/pic16/libsdcc/float/fslt.c,
+	  device/lib/pic16/libsdcc/float/fsneq.c:
+	  Fix bug #3274.
+
+2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/main.c,
+	  doc/sdccman.lyx,
+	  .version:
+	  Enable new calling convention for z80, z180, z80n, r2k, r2ka, r3ka, tlcs90, ez80_z80.
+
+2021-08-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Do not use some aspects of new calling convention for banked functions.
+
+2021-08-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c,
+	  support/valdiag/tests/callingconvention.c,
+	  support/valdiag/valdiag.py:
+	  Fix diagnostics for __raisonance calling convention.
+
+2021-08-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCval.c (valCastLiteral): possibly fix bug #3273
+
+2021-08-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/main.c,
+	  doc/sdccman.lyx,
+	  .version:
+	  Enable new calling convention for stm8.
+
+2021-08-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCsymt.c,
+	  support/valdiag/tests/callingconvention.c:
+	  Diagnostics for conflicting calling conventions.
+
+2021-08-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peep.c:
+	  Fix buffer overflow reported in patch #397 by Arnout Engelen .
+
+2021-08-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/main.c,
+	  doc/sdccman.lyx:
+	  .version:
+	  Enable new calling convention for gbz80.
+
+2021-08-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/ds390/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/pdk/main.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c,
+	  src/port.h,
+	  src/stm8/gen.c,
+	  src/stm8/main.c,
+	  src/z80/gen.c,
+	  src/z80/main.c:
+	  Calling convention selection infrastructure from breaktheworld branch.
+
 2021/07/28 Visenri
 
     * sim/ucsim/pdk.src/inst.cc

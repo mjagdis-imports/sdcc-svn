@@ -40,53 +40,48 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
  * Base of RXK processor
  */
 
-#ifdef WORDS_BIGENDIAN
-#define RP(N,N16,NH,NL) union			\
-		      {				\
-			u16_t N16;		\
-			struct {		\
-			  u8_t NH;		\
-			  u8_t NL;		\
-			} r;			\
-  } N
-#else
-#define RP(N,N16,NH,NL) union			\
-		      {				\
-			u16_t N16;		\
-			struct {		\
-			  u8_t NL;		\
-			  u8_t NH;		\
-			} r;			\
-  } N
-#endif
 
 #define rA (AF.r.A)
 #define rF (AF.r.F)
-#define rB (BC.r.B)
-#define rC (BC.r.C)
-#define rD (DE.r.D)
-#define rE (DE.r.E)
-#define rH (HL.r.H)
-#define rL (HL.r.L)
 #define rAF (AF.AF)
-#define rBC (BC.BC)
-#define rDE (DE.DE)
-#define rHL (HL.HL)
 #define rXPC (mem->get_xpc())
 #define cXPC (*XPC)
 
+#define rBCDE (BCDE.BCDE)
+#define rBC   (BCDE.r32.r16h.BC)
+#define rDE   (BCDE.r32.r16l.DE)
+#define rB    (BCDE.r32.r16h.r.B)
+#define rC    (BCDE.r32.r16h.r.C)
+#define rD    (BCDE.r32.r16l.r.D)
+#define rE    (BCDE.r32.r16l.r.E)
+
+#define rJKHL (JKHL.JKHL)
+#define rJK   (JKHL.r32.r16h.JK)
+#define rHL   (JKHL.r32.r16l.HL)
+#define rJ    (JKHL.r32.r16h.r.J)
+#define rK    (JKHL.r32.r16h.r.K)
+#define rH    (JKHL.r32.r16l.r.H)
+#define rL    (JKHL.r32.r16l.r.L)
+
 #define raA (aAF.r.A)
 #define raF (aAF.r.F)
-#define raB (aBC.r.B)
-#define raC (aBC.r.C)
-#define raD (aDE.r.D)
-#define raE (aDE.r.E)
-#define raH (aHL.r.H)
-#define raL (aHL.r.L)
 #define raAF (aAF.AF)
-#define raBC (aBC.BC)
-#define raDE (aDE.DE)
-#define raHL (aHL.HL)
+
+#define raBCDE (aBCDE.BCDE)
+#define raBC   (aBCDE.r32.r16h.BC)
+#define raDE   (aBCDE.r32.r16l.DE)
+#define raB    (aBCDE.r32.r16h.r.B)
+#define raC    (aBCDE.r32.r16h.r.C)
+#define raD    (aBCDE.r32.r16l.r.D)
+#define raE    (aBCDE.r32.r16l.r.E)
+
+#define raJKHL (aJKHL.JKHL)
+#define raJK   (aJKHL.r32.r16h.JK)
+#define raHL   (aJKHL.r32.r16l.HL)
+#define raJ    (aJKHL.r32.r16h.r.J)
+#define raK    (aJKHL.r32.r16h.r.K)
+#define raH    (aJKHL.r32.r16l.r.H)
+#define raL    (aJKHL.r32.r16l.r.L)
 
 enum {
   flagS = 0x80,
@@ -94,10 +89,19 @@ enum {
   flagL = 0x04,
   flagV = 0x04,
   flagC = 0x01,
-  flagAll= flagS|flagZ|flagL|flagC
+  flagAll = flagS|flagZ|flagL|flagC,
+  flagsAll= flagS|flagZ|flagL|flagC,
+  allFlag = flagS|flagZ|flagL|flagC,
+  allFlags= flagS|flagZ|flagL|flagC
 };
 
+#define cond_GT(f)	( !(( ((f) ^ ((f)<<5)) | ((f)<<1)) & 0x80) )
+#define cond_GTU(f)	( !((f)&flagC) && !((f)&flagZ) )
+#define cond_LT(f)	( ((f) ^ ((f)<<5)) & 0x80 )
+#define cond_LTU(f)	( (f)&flagC) )
+
 #define CPU ((class cl_rxk_cpu *)cpu)
+
 
 class cl_rxk_base: public cl_uc
 {
@@ -112,13 +116,15 @@ class cl_rxk: public cl_rxk_base
 {
 public:
   RP(AF,AF,A,F);
-  RP(BC,BC,B,C);
-  RP(DE,DE,D,E);
-  RP(HL,HL,H,L);
   RP(aAF,AF,A,F);
   RP(aBC,BC,B,C);
   RP(aDE,DE,D,E);
   RP(aHL,HL,H,L);
+  R32(BCDE,BCDE,BC,DE,B,C,D,E);
+  R32(JKHL,JKHL,JK,HL,J,K,H,L);
+  R32(aBCDE,BCDE,BC,DE,B,C,D,E);
+  R32(aJKHL,JKHL,JK,HL,J,K,H,L);
+  class cl_cell32 cBCDE, caBCDE;
   u8_t rIP, rIIR, rEIR;
   u16_t rIX, rIY, rSP;
   class cl_cell8 cIP, cIIR, cEIR;
@@ -143,7 +149,8 @@ public:
   virtual void mk_hw_elements(void);
   virtual void make_cpu_hw(void);
   virtual void make_memories(void);
-
+  virtual t_addr chip_size() { return 0x100000; }
+  
   virtual int clock_per_cycle(void) { return 1; }
   //virtual struct dis_entry *dis_tbl(void);
   virtual struct dis_entry *dis_entry(t_addr addr);
@@ -152,7 +159,9 @@ public:
   virtual char *disassc_dd_cb(t_addr addr, chars *comment= NULL);
   virtual int inst_length(t_addr addr);
   virtual int longest_inst(void) { return 4; }
-
+  virtual void disass_irr(chars *work, bool dd) {}
+  virtual void disass_irrl(chars *work, bool dd) {}
+  
   virtual void save_hist();
   virtual void print_regs(class cl_console_base *con);
 
@@ -167,6 +176,7 @@ public:
   virtual void tick5p9(int n) { tick(n); }
   virtual void tick5m1(int n) { tick(n+2); }
   virtual void tick5m2(int n) { tick(n+2); }
+  virtual void select_IRR(bool dd) {}
   
   class cl_cell16 &destAF(void) { return altd?caAF:cAF; }
   class cl_cell16 &destBC(void) { return altd?caBC:cBC; }
@@ -195,23 +205,31 @@ public:
   u16_t op16_BC(void);
   u16_t op16_DE(void);
   u16_t op16_HL(void);
-  void write8(t_addr a, u8_t v) { vc.wr++; rom->write(a, v); }
-  void write8io(t_addr a, u8_t v) { vc.wr++; rwas->write(a, v); }
-  void write16(t_addr a, u16_t v) { vc.wr+=2;
+  void write8(u16_t a, u8_t v) { vc.wr++; rom->write(a, v); }
+  void write8io(u16_t a, u8_t v) { vc.wr++; rwas->write(a, v); }
+  void write16(u16_t a, u16_t v) { vc.wr+=2;
     rom->write(a, v); rom->write(a+1, v>>8);
   }
-  void write16io(t_addr a, u16_t v) { vc.wr+=2;
+  void write16io(u16_t a, u16_t v) { vc.wr+=2;
     rwas->write(a, v); rwas->write(a+1, v>>8);
   }
-  u8_t read8(t_addr a) { vc.rd++; return rom->read(a); }
-  u8_t read8io(t_addr a) { vc.rd++; return rwas->read(a); }
-  u16_t read16(t_addr a) { u8_t l, h; vc.rd+=2;
+  u8_t read8(u16_t a) { vc.rd++; return rom->read(a); }
+  u8_t read8io(u16_t a) { vc.rd++; return rwas->read(a); }
+  u16_t read16(u16_t a) { u8_t l, h; vc.rd+=2;
     l= rom->read(a); h= rom->read(a+1);
     return h*256+l;
   }
-  u16_t read16io(t_addr a) { u8_t l, h; vc.rd+=2;
+  u16_t read16io(u16_t a) { u8_t l, h; vc.rd+=2;
     l= rwas->read(a); h= rwas->read(a+1);
     return h*256+l;
+  }
+  u32_t read32(u16_t a) { u16_t l, h; vc.rd+=4;
+    l= read16(a); h= read16(a+2);
+    return (h<<16)+l;
+  }
+  u32_t read32io(u16_t a) { u16_t l, h; vc.rd+=4;
+    l= read16io(a); h= read16io(a+2);
+    return (h<<16)+l;
   }
   u16_t fetch16(void) { u8_t l, h;
     l= fetch(); h= fetch();
@@ -243,17 +261,24 @@ public:
   virtual int dec_r(class cl_cell8 &cr, u8_t op);
   virtual int rot8left(class cl_cell8 &dest, u8_t op);		// 0f,1t,0r,0w
   virtual int rlc(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
+  virtual int rot32left(class cl_cell32 &dest, u32_t op, int nr);//0f,4t,0r,0w
   virtual int rot9left(class cl_cell8 &dest, u8_t op);		// 0f,1t,0r,0w
   virtual int rl(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
   virtual int rot17left(class cl_cell16 &dest, u16_t op);	// 0f,1t,0r,0w
+  virtual int rot33left(class cl_cell32 &dest, u32_t op, int nr);//0f,4t,0r,0w
   virtual int rot8right(class cl_cell8 &dest, u8_t op);		// 0f,1t,0r,0w
+  virtual int rot32right(class cl_cell32 &dest, u32_t op,int nr);//0f,4t,0r,0w
   virtual int rrc(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
   virtual int rot9right(class cl_cell8 &dest, u8_t op);		// 0f,1t,0r,0w
   virtual int rr(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
   virtual int rot17right(class cl_cell16 &dest, u16_t op);	// 0f,1t,0r,0w
-  virtual int sla(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
-  virtual int sra(class cl_cell8 &dest, i8_t op);		// 0f,4t,0r,0w
-  virtual int srl(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
+  virtual int rot33right(class cl_cell32 &dest, u32_t op,int nr);//0f,4t,0r,0w
+  virtual int sla8(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
+  virtual int sla32(class cl_cell32 &dest, u32_t op, int nr);	// 0f,4t,0r,0w
+  virtual int sra8(class cl_cell8 &dest, i8_t op);		// 0f,4t,0r,0w
+  virtual int sra32(class cl_cell32 &dest, i32_t op, int nr);	// 0f,4t,0r,0w
+  virtual int srl8(class cl_cell8 &dest, u8_t op);		// 0f,4t,0r,0w
+  virtual int srl32(class cl_cell32 &dest, u32_t op, int nr);	// 0f,4t,0r,0w
   virtual int bit_r(u8_t b, u8_t op);				// 0f,4t,0r,0w
   virtual int bit_iHL(u8_t b);					// 0f,7t,1r,0w
   virtual int bit_iIRd(u8_t b, i8_t d);				// 0f,10t,1r,0w
@@ -269,6 +294,7 @@ public:
   virtual int add8(u8_t op2, bool cy);				// 0f,4t,0r,0w
   virtual int sub8(u8_t op2, bool cy);				// 0f,4t,0r,0w
   virtual int sub16(u16_t op2, bool cy);			// 0f,4t,0r,0w
+  virtual int sub32(u32_t op1, u32_t op2, class cl_cell32 &cRes, bool cy);
   
   virtual int inc_i8(t_addr addr);
   virtual int dec_i8(t_addr addr);
@@ -281,6 +307,7 @@ public:
   virtual int and16(class cl_cell16 &dest,
 		    u16_t op1, u16_t op2);			// 0f,1t,0r,0w
   virtual int cp8(u8_t op1, u8_t op2);				// 0f,3t,0r,0w
+  virtual int cp16(u16_t op1, u16_t op2);			// 0f,4t,0r,0w
   
   virtual int jr_cc(bool cond);
   virtual int ret_f(bool f);					// 0f,7t,2r,0w
@@ -630,6 +657,7 @@ public:
   virtual int OR_IR_DE(t_mem code);
   virtual int POP_IR(t_mem code);
   virtual int PUSH_IR(t_mem code);
+  virtual int EX_iSP_IR(t_mem code);
   virtual int LD_iIRd_A(t_mem code) { return ld_iIRd_r(rA); }
   virtual int LD_iIRd_B(t_mem code) { return ld_iIRd_r(rB); }
   virtual int LD_iIRd_C(t_mem code) { return ld_iIRd_r(rC); }
@@ -673,13 +701,14 @@ class cl_rxk_cpu: public cl_hw
 {
 protected:
   class cl_rxk *ruc;
-  class cl_cell8 *segsize, *dataseg, *stackseg;
+  class cl_memory_cell *segsize, *dataseg, *stackseg;
 public:
   cl_rxk_cpu(class cl_uc *auc);
   virtual int init(void);
   //virtual int cfg_size() { return rxk_cpu_nuof; }
   virtual const char *cfg_help(t_addr addr);
   
+  virtual void write(class cl_memory_cell *cell, t_mem *val);
   //virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
 
   virtual void print_info(class cl_console_base *con);

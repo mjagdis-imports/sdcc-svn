@@ -1,5 +1,5 @@
 /*
- * Simulator of microcontrollers (glob.h)
+ * Simulator of microcontrollers (rtypes.h)
  *
  * Copyright (C) 2020,2021 Drotos Daniel, Talker Bt.
  * 
@@ -25,27 +25,47 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#ifndef GLOB_HEADER
-#define GLOB_HEADER
+#ifndef RTYPES_HEADER
+#define RTYPES_HEADER
 
-#include "stypes.h"
-#include "iwrap.h"
-
-
-extern instruction_wrapper_fn itab[256];
-extern instruction_wrapper_fn itab_dd[256];
-extern instruction_wrapper_fn itab_ed[256];
-extern instruction_wrapper_fn itab_fd[256];
-extern instruction_wrapper_fn itab_7f[256];
-
-extern u8_t sbox_tab[256];
-extern u8_t ibox_tab[256];
-
-extern struct dis_entry disass_rxk[];
-
-extern void init_sbox();
-
+#ifdef WORDS_BIGENDIAN
+#define RP(N,N16,NH,NL) union			\
+		      {				\
+			u16_t N16;		\
+			struct {		\
+			  u8_t NH;		\
+			  u8_t NL;		\
+			} r;			\
+  } N
+#define R32(N,N32,N16H,N16L,NHH,NHL,NLH,NLL)	\
+  union						\
+  {						\
+  u32_t N32;					\
+  struct {					\
+    RP(r16h,N16H,NHH,NHL);			\
+    RP(r16l,N16L,NLH,NLL);			\
+  } r32;					\
+  } N
+#else
+#define RP(N,N16,NH,NL) union			\
+		      {				\
+			u16_t N16;		\
+			struct {		\
+			  u8_t NL;		\
+			  u8_t NH;		\
+			} r;			\
+  } N
+#define R32(N,N32,N16H,N16L,NHH,NHL,NLH,NLL)	\
+  union						\
+  {						\
+  u32_t N32;					\
+  struct {					\
+    RP(r16l,N16L,NLH,NLL);			\
+    RP(r16h,N16H,NHH,NHL);			\
+  } r32;					\
+  } N
+#endif
 
 #endif
 
-/* End of rxk.src/glob.h */
+/* End of rxk.src/rtypes.cc */
