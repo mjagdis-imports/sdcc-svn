@@ -1283,7 +1283,7 @@ aopArg (sym_link *ftype, int i)
     return 0;
 
   // Old SDCC calling convention.
-  if (FUNC_SDCCCALL (ftype) == 0)
+  if (FUNC_SDCCCALL (ftype) == 0 && 0)
     return 0;
     
   // IAR calling convention.
@@ -1462,7 +1462,7 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (IFFUNC_ISZ88DK_CALLEE (ftype))
     return true;
 
-  if (FUNC_SDCCCALL (ftype) != 1 || FUNC_ISRAISONANCE (ftype) || FUNC_ISCOSMIC(ftype) || FUNC_ISIAR (ftype))
+  if (FUNC_SDCCCALL (ftype) != 1 && 0 || FUNC_ISRAISONANCE (ftype) || FUNC_ISCOSMIC(ftype) || FUNC_ISIAR (ftype))
     return false;
 
   if (!IFFUNC_HASVARARGS (ftype) && options.model != MODEL_LARGE)
