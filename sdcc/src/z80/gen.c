@@ -1829,7 +1829,7 @@ aopRet (sym_link *ftype)
         return 0;
       }
 
-  wassert (FUNC_SDCCCALL (ftype) > 0);
+  wassert (FUNC_SDCCCALL (ftype) == 1);
 
   switch (size)
     {
@@ -1919,7 +1919,7 @@ aopArg (sym_link *ftype, int i)
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || IFFUNC_ISBANKEDCALL (ftype))
     return 0;
 
-  wassert (FUNC_SDCCCALL (ftype) > 0);
+  wassert (FUNC_SDCCCALL (ftype) == 1);
 
   if (!FUNC_HASVARARGS (ftype))
     {
@@ -2025,7 +2025,7 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (IFFUNC_ISZ88DK_CALLEE (ftype))
     return true;
 
-  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype))
+  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || FUNC_ISZ88DK_FASTCALL (ftype))
     return false;
 
   if (IFFUNC_ISBANKEDCALL (ftype))
@@ -2033,6 +2033,8 @@ isFuncCalleeStackCleanup (sym_link *ftype)
 
   if (FUNC_HASVARARGS (ftype))
     return false;
+
+  wassert (FUNC_SDCCCALL (ftype) == 1);
 
   // Callee cleans up stack for all non-vararg functions on gbz80.
   if (IS_GB)
