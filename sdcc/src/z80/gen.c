@@ -1792,7 +1792,7 @@ aopRet (sym_link *ftype)
         return 0;
       }
 
-  wassert (FUNC_SDCCCALL (ftype) > 0);
+  wassert (FUNC_SDCCCALL (ftype) == 1);
 
   switch (size)
     {
@@ -1847,7 +1847,7 @@ aopArg (sym_link *ftype, int i)
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || IFFUNC_ISBANKEDCALL (ftype))
     return 0;
 
-  wassert (FUNC_SDCCCALL (ftype) > 0);
+  wassert (FUNC_SDCCCALL (ftype) == 1);
 
   if (!FUNC_HASVARARGS (ftype))
     {
@@ -1918,7 +1918,7 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (IFFUNC_ISZ88DK_CALLEE (ftype))
     return true;
 
-  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype))
+  if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || FUNC_ISZ88DK_FASTCALL (ftype))
     return false;
 
   if (IFFUNC_ISBANKEDCALL (ftype))
@@ -1926,6 +1926,8 @@ isFuncCalleeStackCleanup (sym_link *ftype)
 
   if (FUNC_HASVARARGS (ftype))
     return false;
+
+  wassert (FUNC_SDCCCALL (ftype) == 1);
 
   // Callee cleans up stack for all non-vararg functions on gbz80.
   if (IS_GB)
@@ -8985,7 +8987,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
               offset += 2;
             }
           else if (!IS_GB && size >= 2 && (!sign || size > 2) && !left_already_in_a &&
-            isPairDead (PAIR_HL, ic) && isPairDead (PAIR_DE, ic) &&
+            isPairDead (PAIR_HL, ic) && isPairDead (PAIR_DE, ic) && left->aop->regs[E_IDX] < offset + 1 && left->aop->regs[D_IDX] < offset + 1 &&
             (getPartPairId (left->aop, offset) == PAIR_HL || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD || left->aop->type == AOP_HL || left->aop->type == AOP_IY || IS_RAB && left->aop->type == AOP_STK) &&
             (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_HL || right->aop->type == AOP_IY || IS_RAB && right->aop->type == AOP_STK))
             {
