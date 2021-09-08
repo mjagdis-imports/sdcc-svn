@@ -1,3 +1,21 @@
+2021-09-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improve handling of callee-cleanup of stack parameters.
+
+2021-09-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/main.c,
+	  src/z80/ralloc.c:
+	  Minor option handling cleanup.
+
+2021-09-02 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/stdlib.h:
+	  C23 sized memory deallocation.
+	* sdas/asz80/z80pst.c:
+	  incbin support, patch by bbbbbr.
+
 2021-09-01 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c:
