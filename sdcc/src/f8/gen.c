@@ -32,6 +32,12 @@ static unsigned int regalloc_dry_run_cycle_scale = 1;
 static struct
 {
   short debugLine;
+  struct
+    {
+      int pushed;
+      int size;
+      int param_offset;
+    } stack;
 }
 G;
 
@@ -53,6 +59,21 @@ emit2 (const char *inst, const char *fmt, ...)
     }
 }
 
+/*--------------------------------------------------------------------------*/
+/* updateCFA - update the debugger information to reflect the current       */
+/*             connonical frame address relative to the stack pointer       */
+/*--------------------------------------------------------------------------*/
+static void
+updateCFA (void)
+{
+  /* there is no frame unless there is a function */
+  if (!currFunc)
+    return;
+
+  if (options.debug && !regalloc_dry_run)
+    debugFile->writeFrameAddress (NULL, &f8_regs[SP_IDX], 1 + G.stack.param_offset + G.stack.pushed);
+}
+
 /*---------------------------------------------------------------------*/
 /* f8_emitDebuggerSymbol - associate the current code location         */
 /*   with a debugger symbol                                            */
@@ -63,6 +84,13 @@ f8_emitDebuggerSymbol (const char *debugSym)
   G.debugLine = 1;
   emit2 ("", "%s ==.", debugSym);
   G.debugLine = 0;
+}
+
+static void
+cost(unsigned int bytes, unsigned int cycles)
+{
+  regalloc_dry_run_cost_bytes += bytes;
+  regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
 }
 
 // Get asmop for registers containing the return type of function
@@ -122,6 +150,153 @@ resultRemat (const iCode *ic)
   return (false);
 }
 
+/*--------------------------------------------------------------------------*/
+/* adjustStack - Adjust the stack pointer by n bytes.                       */
+/*--------------------------------------------------------------------------*/
+static void
+adjustStack (int n)
+{
+  while (n)
+    {
+    	int m = n;
+    	if (m < -128)
+    	  n = -128;
+    	else if (m > 127)
+    	  m = 127;
+    	emit2 ("add", "sp, #%d", m);
+    	cost (1, 1);
+    	n -= m;
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* genFunction - generated code for function entry                 */
+/*-----------------------------------------------------------------*/
+static void
+genFunction (iCode *ic)
+{
+  const symbol *sym = OP_SYMBOL_CONST (IC_LEFT (ic));
+  sym_link *ftype = operandType (IC_LEFT (ic));
+  bool bigreturn;
+
+  G.stack.pushed = 0;
+  G.stack.param_offset = 0;
+
+  /* create the function header */
+  emit2 (";", "-----------------------------------------");
+  emit2 (";", " function %s", sym->name);
+  emit2 (";", "-----------------------------------------");
+
+  D (emit2 (";", f8_assignment_optimal ? "Register assignment is optimal." : "Register assignment might be sub-optimal."));
+  D (emit2 (";", "Stack space usage: %d bytes.", sym->stack));
+
+  emit2 ("", "%s:", sym->rname);
+  genLine.lineCurr->isLabel = 1;
+
+  if (IFFUNC_ISNAKED(ftype))
+  {
+      updateCFA(); //ensure function has at least 1 CFA record
+      emit2(";", "naked function: no prologue.");
+      return;
+  }
+
+  if (IFFUNC_ISCRITICAL (ftype))
+      wassert (0);
+
+  
+  if (f8_extend_stack) // Setup for extended stack access.
+    wassert (!f8_extend_stack);
+
+  bigreturn = (getSize (ftype->next) > 4);
+  G.stack.param_offset += bigreturn * 2;
+
+  if (options.debug && !regalloc_dry_run)
+    debugFile->writeFrameAddress (NULL, &f8_regs[SP_IDX], 1);
+
+  /* adjust the stack for the function */
+  {
+    int fadjust = -sym->stack;
+    adjustStack (fadjust);
+  }
+}
+
+/*-----------------------------------------------------------------*/
+/* genEndFunction - generates epilogue for functions               */
+/*-----------------------------------------------------------------*/
+static void
+genEndFunction (iCode *ic)
+{
+  symbol *sym = OP_SYMBOL (IC_LEFT (ic));
+
+  D (emit2 ("; genEndFunction", ""));
+
+  wassert (!regalloc_dry_run);
+
+  if (IFFUNC_ISNAKED(sym->type))
+  {
+      D (emit2 (";", "naked function: no epilogue."));
+      if (options.debug && currFunc && !regalloc_dry_run)
+        debugFile->writeEndFunction (currFunc, ic, 0);
+      return;
+  }
+
+  const bool bigreturn = (getSize (sym->type->next) > 4) || IS_STRUCT (sym->type->next);
+  int stackparmbytes = bigreturn * 2;
+  for (value *arg = FUNC_ARGS(sym->type); arg; arg = arg->next)
+    {
+      wassert (arg->sym);
+      if (!SPEC_REGPARM (arg->etype))
+        stackparmbytes += getSize (arg->sym->type);
+    }
+
+  int poststackadjust = isFuncCalleeStackCleanup (sym->type) ? stackparmbytes : 0;
+
+  //bool a_free = !aopRet (sym->type) || aopRet (sym->type)->regs[A_IDX] < 0;
+  //bool x_free = !aopRet (sym->type) || (aopRet (sym->type)->regs[XL_IDX] < 0 && aopRet (sym->type)->regs[XH_IDX] < 0);
+  //bool y_free = !aopRet (sym->type) || (aopRet (sym->type)->regs[YL_IDX] < 0 && aopRet (sym->type)->regs[YH_IDX] < 0);
+
+  if (sym->stack)
+    adjustStack (sym->stack);
+
+  wassertl (!G.stack.pushed, "Unbalanced stack.");
+
+  if (poststackadjust)
+    wassert (0);
+
+  if (IFFUNC_ISCRITICAL (sym->type))
+      wassert (0);
+
+  if (IFFUNC_ISISR (sym->type))
+    wassert (0);
+  else
+    {
+      /* if debug then send end of function */
+      if (options.debug && currFunc && !regalloc_dry_run)
+        debugFile->writeEndFunction (currFunc, ic, 1);
+
+      emit2 ("ret", "");
+      cost (1, 1);
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* genLabel - generates a label                                    */
+/*-----------------------------------------------------------------*/
+static void
+genLabel (const iCode *ic)
+{
+  D (emit2 ("; genLabel", ""));
+
+  /* special case never generate */
+  if (IC_LABEL (ic) == entryLabel)
+    return;
+
+  if (options.debug && !regalloc_dry_run)
+    debugFile->writeLabel (IC_LABEL (ic), ic);
+
+  emitLabel (IC_LABEL (ic));
+}
+
 /*---------------------------------------------------------------------*/
 /* genF8Code - generate code for F8 for a single iCode instruction     */
 /*---------------------------------------------------------------------*/
@@ -151,6 +326,18 @@ genF8iCode (iCode *ic)
 
   switch (ic->op)
     {
+    case FUNCTION:
+      genFunction (ic);
+      break;
+
+    case ENDFUNCTION:
+      genEndFunction (ic);
+      break;
+
+    case LABEL:
+      genLabel (ic);
+      break;
+
     default:
       wassertl (0, "Unknown iCode");
     }

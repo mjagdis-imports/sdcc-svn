@@ -34,11 +34,12 @@ extern "C"
   bool f8_extend_stack;
 }
 
-#define REG_A 0
-#define REG_XL 1
-#define REG_XH 2
-#define REG_YL 3
-#define REG_YH 4
+#define REG_XL 0
+#define REG_XH 1
+#define REG_YL 2
+#define REG_YH 3
+#define REG_ZL 4
+#define REG_ZH 5
 #define REG_C 5
 
 template <class I_t>
@@ -106,60 +107,7 @@ static bool operand_in_reg(const operand *o, reg_t r, const i_assignment_t &ia, 
 }
 
 template <class G_t, class I_t>
-static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
-{
-  const iCode *ic = G[i].ic;
-  const operand *const left = IC_LEFT(ic);
-
-  const i_assignment_t &ia = a.i_assignment;
-
-  if(ia.registers[REG_A][1] < 0)
-    return(true);       // Register a not in use.
-
-  if(ic->op == IPUSH)
-    {
-      if (ia.registers[REG_XL][1] < 0 || ia.registers[REG_YL][1] < 0 && !f8_extend_stack)
-        return(true);   // Register xl or yl free; code generation can use them when a is not available.
-
-      // push a does not disturb a.
-      if (getSize(operandType(IC_LEFT(ic))) <= 1 && operand_in_reg(left, REG_A, ia, i, G))
-        return(true);
-
-      // push #byte does not disturb a.
-      if (IS_OP_LITERAL(left))
-        return(true);
-
-      // push longmem does not disturb a.
-      if (IS_OP_GLOBAL(left))
-        return(true);
-
-      // Only look at itemp pushes below.
-      if (!IS_ITEMP(left))
-        return(false);
-
-      // Register pushes do not disturb a.
-      for (unsigned short i = 0; i < getSize(operandType(IC_LEFT(ic)));)
-        {
-          if(operand_in_reg(left, REG_A, ia, i, G))
-            i++;
-          else if(operand_in_reg(left, REG_XL, ia, i, G) && operand_in_reg(left, REG_XH, ia, i + 1, G))
-            i += 2;
-          else if(operand_in_reg(left, REG_YL, ia, i, G) && operand_in_reg(left, REG_YH, ia, i + 1, G))
-            i += 2;
-          else if(operand_in_reg(left, REG_XL, ia, i, G) || operand_in_reg(left, REG_YL, ia, i, G))
-            i++;
-          else
-            return(false);
-        }
-
-      return(true);
-    }
-
-  return(true);
-}
-
-template <class G_t, class I_t>
-static bool Yinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
+static bool Zinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
   const iCode *ic = G[i].ic;
   const operand *const left = IC_LEFT(ic);
@@ -169,7 +117,7 @@ static bool Yinst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if(!f8_extend_stack)
     return(true);   // Only an extended stack can make Y unavailable.
 
-  if(ia.registers[REG_YL][1] < 0 && ia.registers[REG_YH][1] < 0)
+  if(ia.registers[REG_ZL][1] < 0 && ia.registers[REG_ZH][1] < 0)
     return(true);   // Register Y not in use.
 
   return(false);
@@ -306,10 +254,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
       return(0.0f);
     }
 
-  if(!Ainst_ok(a, i, G, I))
-    return(std::numeric_limits<float>::infinity());
-
-  if(!Yinst_ok(a, i, G, I))
+  if(!Zinst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
 
   switch(ic->op)
@@ -407,7 +352,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
   const i_assignment_t &ia = a.i_assignment;
   float c = 0.0f;
 
-  if(ia.registers[REG_A][1] < 0)
+  if(ia.registers[REG_XL][1] < 0)
     c += 0.05f;
 
   varset_t::const_iterator v, v_end;
@@ -419,8 +364,8 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
       if(a.global[*v] < 0 && IS_REGISTER(sym->type)) // Try to honour register keyword.
         c += 4.0f;
       if((I[*v].byte % 2) ? // Try not to reverse bytes.
-        (a.global[*v] == REG_XL || a.global[*v] == REG_YL) :
-        (a.global[*v] == REG_XH || a.global[*v] == REG_YH))
+        (a.global[*v] == REG_YL || a.global[*v] == REG_ZL) :
+        (a.global[*v] == REG_XH || a.global[*v] == REG_ZH))
         c += 0.1f;
     }
 
