@@ -44,24 +44,32 @@ G;
 enum asminst
 {
   A_ADC,
+  A_ADCW,
   A_ADD,
+  A_ADDW,
   A_AND,
   A_CP,
   A_OR,
   A_SBC,
+  A_SBCW,
   A_SUB,
+  A_SUBW,
   A_XOR
 };
 
 static const char *asminstnames[] =
 {
   "adc",
+  "adcw",
   "add",
+  "addw",
   "and",
   "cp",
   "or",
   "sbc",
+  "sbcw"
   "sub",
+  "subw"
   "xor",
 };
 
@@ -259,13 +267,51 @@ aopGet2(const asmop *aop, int offset)
 }
 
 static void
+op2_cost (const asmop *op1, int offset1, const asmop *op2, int offset2)
+{
+  wassert (0);
+}
+
+static void
+op2w_cost (const asmop *op1, int offset1, const asmop *op2, int offset2)
+{
+  wassert (0);
+}
+
+static void
 emit3cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, int offset2)
 {
+  switch (inst)
+  {
+  case A_ADC:
+  case A_ADD:
+  case A_AND:
+  case A_CP:
+  case A_OR:
+  case A_SBC:
+  case A_SUB:
+  case A_XOR:
+    op2_cost (op1, offset1, op2, offset2);
+    break;
+  default:
+    wassertl_bt (0, "Tried to get cost for unknown 8-bit instruction");
+  }
 }
 
 static void
 emit3wcost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, int offset2)
 {
+  switch (inst)
+  {
+  case A_ADCW:
+  case A_ADDW:
+  case A_SBCW:
+  case A_SUBW:
+    op2w_cost (op1, offset1, op2, offset2);
+    break;
+  default:
+    wassertl_bt (0, "Tried to get cost for unknown 8-bit instruction");
+  }
 }
 
 static void
