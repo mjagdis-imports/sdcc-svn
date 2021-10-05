@@ -32,6 +32,7 @@
 #define TARGET_ID_PDK16    22
 #define TARGET_ID_Z80N     23
 #define TARGET_ID_R2KA     24
+#define TARGET_ID_F8       25
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -58,6 +59,7 @@
 #define TARGET_IS_PDK14    (port->id == TARGET_ID_PDK14)
 #define TARGET_IS_PDK15    (port->id == TARGET_ID_PDK15)
 #define TARGET_IS_PDK16    (port->id == TARGET_ID_PDK16)
+#define TARGET_IS_F8       (port->id == TARGET_ID_F8)
 
 #define TARGET_MCS51_LIKE  (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_IS_DS400)
 #define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GBZ80 || TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N)
@@ -489,6 +491,9 @@ extern PORT pdk14_port;
 #endif
 #if !OPT_DISABLE_PDK15
 extern PORT pdk15_port;
+#endif
+#if !OPT_DISABLE_F8
+extern PORT f8_port;
 #endif
 
 #endif /* PORT_INCLUDE */

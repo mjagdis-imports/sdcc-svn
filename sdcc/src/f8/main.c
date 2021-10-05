@@ -1,0 +1,426 @@
+/*-------------------------------------------------------------------------
+  main.c - F8 specific definitions.
+
+  Philipp Klaus Krause <pkk@spth.de> 2021
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+   In other words, you are welcome to use, share and improve this program.
+   You are forbidden to forbid anyone else to use, share and improve
+   what you give them.   Help stamp out software-hoarding!
+-------------------------------------------------------------------------*/
+
+#include "common.h"
+
+#include "ralloc.h"
+#include "gen.h"
+#include "dbuf_string.h"
+#include "peep.h"
+
+extern DEBUGFILE dwarf2DebugFile;
+extern int dwarf2FinalizeFile(FILE *);
+
+static OPTION f8_options[] = {
+  {0, NULL}
+};
+
+enum
+{
+  P_CODESEG = 1,
+  P_CONSTSEG,
+};
+
+static int
+f8_do_pragma (int id, const char *name, const char *cp)
+{
+  struct pragma_token_s token;
+  int processed = 1, error = 0;
+
+  init_pragma_token (&token);
+
+  switch (id)
+    {
+      case P_CODESEG:
+      case P_CONSTSEG:
+        {
+          char *segname;
+
+          cp = get_pragma_token (cp, &token);
+          if (token.type == TOKEN_EOL)
+            {
+              error = 1;
+              break;
+            }
+          else
+            segname = Safe_strdup (get_pragma_string (&token));
+
+          cp = get_pragma_token (cp, &token);
+          if (token.type != TOKEN_EOL)
+            {
+              Safe_free (segname);
+              error = 1;
+              break;
+            }
+          else
+            {
+              if (id == P_CODESEG)
+                {
+                  if (options.code_seg)
+                    Safe_free (options.code_seg);
+                  options.code_seg = segname;
+                } 
+              else
+                {
+                  if (options.const_seg)
+                    Safe_free (options.const_seg);
+                  options.const_seg = segname;
+                }
+            }
+        }
+        break;
+      default:
+        processed = 0;
+        break;
+    }
+
+  if (error)
+    werror (W_BAD_PRAGMA_ARGUMENTS, name);
+
+  free_pragma_token (&token);
+  return processed;
+}
+
+static struct pragma_s f8_pragma_tbl[] = {
+  {"codeseg", P_CODESEG, 0, f8_do_pragma},
+  {"constseg", P_CONSTSEG, 0, f8_do_pragma},
+  {NULL, 0, 0, NULL},
+};
+
+static int
+f8_process_pragma (const char *s)
+{
+  return process_pragma_tbl (f8_pragma_tbl, s);
+}
+
+static char f8_defaultRules[] = {
+#include "peeph.rul"
+  ""
+};
+
+
+static char *f8_keywords[] = {
+  0
+};
+
+static void
+f8_genAssemblerEnd (FILE *of)
+{
+  if (options.out_fmt == 'E' && options.debug)
+    {
+      dwarf2FinalizeFile (of);
+    }
+}
+
+extern void f8_init_asmops (void);
+
+static void
+f8_init (void)
+{
+  f8_init_asmops ();
+}
+
+static void
+f8_reset_regparm (struct sym_link *ftype)
+{
+}
+
+static int
+f8_reg_parm (sym_link *l, bool reentrant)
+{
+  return (0);
+}
+
+static bool
+f8_parseOptions (int *pargc, char **argv, int *i)
+{
+  return false;
+}
+
+static void
+f8_finaliseOptions (void)
+{
+}
+
+static void
+f8_setDefaultOptions (void)
+{
+  options.nopeep = 0;
+  options.stackAuto = 1;
+  options.intlong_rent = 1;
+  options.float_rent = 1;
+  options.noRegParams = 0;
+}
+
+static const char *
+f8_getRegName (const struct reg_info *reg)
+{
+  return "err";
+}
+
+static void
+f8_genExtraArea (FILE *of, bool hasMain)
+{
+  fprintf (of, "\n; default segment ordering for linker\n");
+  tfprintf (of, "\t!area\n", HOME_NAME);
+  tfprintf (of, "\t!area\n", STATIC_NAME);
+  tfprintf (of, "\t!area\n", port->mem.post_static_name);
+  tfprintf (of, "\t!area\n", CONST_NAME);
+  tfprintf (of, "\t!area\n", "INITIALIZER");
+  tfprintf (of, "\t!area\n", CODE_NAME);
+  fprintf (of, "\n");
+}
+
+static void
+f8_genInitStartup (FILE *of)
+{
+}
+
+int
+f8_genIVT(struct dbuf_s * oBuf, symbol ** intTable, int intCount)
+{
+  return true;
+}
+
+/*----------------------------------------------------------------------*/
+/* f8_dwarfRegNum - return the DWARF register number for a register.  */
+/*----------------------------------------------------------------------*/
+static int
+f8_dwarfRegNum (const struct reg_info *reg)
+{
+  return reg->rIdx;
+}
+
+static bool
+_hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
+{
+  return false;
+}
+
+/* Indicate which extended bit operations this port supports */
+static bool
+hasExtBitOp (int op, int size)
+{
+  return (false);
+}
+
+static const char *
+get_model (void)
+{
+  switch (options.model)
+    {
+    case MODEL_MEDIUM:
+      return ("stm8");
+      break;
+    case MODEL_LARGE:
+      return ("stm8-large");
+      break;
+    default:
+      werror (W_UNKNOWN_MODEL, __FILE__, __LINE__);
+      return "unknown";
+    }
+}
+
+/** $1 is always the basename.
+    $2 is always the output file.
+    $3 varies
+    $l is the list of extra options that should be there somewhere...
+    MUST be terminated with a NULL.
+*/
+static const char *_linkCmd[] =
+{
+  "sdldstm8", "-nf", "\"$1\"", NULL
+};
+
+/* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
+static const char *f8AsmCmd[] =
+{
+  "sdasstm8", "$l", "$3", "\"$1.asm\"", NULL
+};
+
+static const char *const _libs_stm8[] = { "stm8", NULL, };
+
+PORT f8_port =
+{
+  TARGET_ID_F8,
+  "f8",
+  "F8",                       /* Target name */
+  NULL,                         /* Processor name */
+  {
+    glue,
+    TRUE,                       /* We want stm8_genIVT to be triggered */
+    MODEL_MEDIUM | MODEL_LARGE,
+    MODEL_MEDIUM,
+    &get_model,                 /* model string used as library destination */
+  },
+  {                             /* Assembler */
+    f8AsmCmd,
+    NULL,
+    "-plosgffwy",               /* Options with debug */
+    "-plosgffw",                /* Options without debug */
+    0,
+    ".asm"
+  },
+  {                             /* Linker */
+    _linkCmd,
+    NULL,                       //LINKCMD,
+    NULL,
+    ".rel",
+    1,
+    NULL,                       /* crt */
+    _libs_stm8,                 /* libs */
+  },
+  {                             /* Peephole optimizer */
+    f8_defaultRules,
+    f8instructionSize,
+    NULL,
+    NULL,
+    NULL,
+    f8notUsed,
+    f8canAssign,
+    f8notUsedFrom,
+    NULL,
+    NULL,
+    NULL,
+  },
+  /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
+  {
+    1,                          /* char */
+    2,                          /* short */
+    2,                          /* int */
+    4,                          /* long */
+    8,                          /* long long */
+    2,                          /* near ptr */
+    2,                          /* far ptr */
+    2,                          /* generic ptr */
+    2,                          /* func ptr */
+    3,                          /* banked func ptr */
+    1,                          /* bit */
+    4,                          /* float */
+  },
+  /* tags for generic pointers */
+  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {
+    "XSEG",
+    "STACK",
+    "CODE",                     /* code */
+    "DATA",                     /* data */
+    NULL,                       /* idata */
+    NULL,                       /* pdata */
+    NULL,                       /* xdata */
+    NULL,                       /* bit */
+    "RSEG (ABS)",               /* reg */
+    "GSINIT",                   /* static initialization */
+    NULL,                       /* overlay */
+    "GSFINAL",                  /* gsfinal */
+    "HOME",                     /* home */
+    NULL,                       /* xidata */
+    NULL,                       /* xinit */
+    "CONST",                    /* const_name */
+    "CABS (ABS)",               /* cabs_name */
+    "DABS (ABS)",               /* xabs_name */
+    NULL,                       /* iabs_name */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,
+    NULL,
+    1,                          /* CODE  is read-only */
+    1                           /* No fancy alignments supported. */
+  },
+  { f8_genExtraArea, NULL },
+  1,                            /* default ABI revision */
+  {                             /* stack information */
+    -1,                         /* stack grows down */
+     0,
+     7,                         /* isr overhead */
+     2,                         /* call overhead */
+     0,
+     2,
+     1,                         /* sp points to next free stack location */
+  },     
+  { 
+    -1,                         /* shifts never use support routines */
+    true,                       /* use support routine for int x int -> long multiplication */
+  },
+  { f8_emitDebuggerSymbol,
+    {
+      f8_dwarfRegNum,
+      0,                        /* cfiSame */
+      0,                        /* cfiUndef */
+      4,                        /* addressSize */
+      9,                        /* regNumRet */
+      SP_IDX,                   /* regNumSP */
+      0,                        /* regNumBP */
+      2,                        /* offsetSP */
+    },
+  },
+  {
+    32767,                      /* maxCount */
+    2,                          /* sizeofElement */
+    {4, 5, 5},                  /* sizeofMatchJump[] - assuming operand in reg, inverse can be optimized away - would be much higher otherwise */
+    {4, 5, 5},                  /* sizeofRangeCompare[] - same as above */
+    3,                          /* sizeofSubtract - assuming 2 byte index, would be 2 otherwise */
+    5,                          /* sizeofDispatch - 1 byte for sllw followed by 3 bytes for ldw x, (..., X) and 2 byte for jp (x) */
+  },
+  "_",
+  f8_init,
+  f8_parseOptions,
+  f8_options,
+  NULL,
+  f8_finaliseOptions,
+  f8_setDefaultOptions,
+  f8_assignRegisters,
+  f8_getRegName,
+  0,
+  NULL,
+  f8_keywords,
+  NULL,
+  f8_genAssemblerEnd,
+  f8_genIVT,
+  0,                            /* no genXINIT code */
+  f8_genInitStartup,          /* genInitStartup */
+  f8_reset_regparm,
+  f8_reg_parm,
+  f8_process_pragma,          /* process_pragma */
+  NULL,                         /* getMangledFunctionName */
+  _hasNativeMulFor,             /* hasNativeMulFor */
+  hasExtBitOp,                  /* hasExtBitOp */
+  NULL,                         /* oclsExpense */
+  TRUE,
+  FALSE,                        /* little endian */
+  0,                            /* leave lt */
+  0,                            /* leave gt */
+  1,                            /* transform <= to ! > */
+  1,                            /* transform >= to ! < */
+  1,                            /* transform != to !(a == b) */
+  0,                            /* leave == */
+  FALSE,                        /* Array initializer support. */
+  0,                            /* no CSE cost estimation yet */
+  NULL,                         /* builtin functions */
+  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  1,                            /* reset labelKey to 1 */
+  1,                            /* globals & local statics allowed */
+  5,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+  PORT_MAGIC
+};
