@@ -17,7 +17,7 @@ extern void __ultobcd (unsigned long v, unsigned char r[5]);
 
 void test__ultobcd (void)
 {
-#if defined(__SDCC_z80) || defined(__SDCC_ez80_z80) || defined(__SDCC_gbz80) || defined(__SDCC_z80n) || defined(__SDCC_z180)
+#if defined(__SDCC_z80) || defined(__SDCC_ez80_z80) || defined(__SDCC_z80n) || defined(__SDCC_z180)
   CHECK(0);
   CHECK(1);
   CHECK(2);
