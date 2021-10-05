@@ -161,6 +161,8 @@ f8_parseOptions (int *pargc, char **argv, int *i)
 static void
 f8_finaliseOptions (void)
 {
+  port->mem.default_local_map = data;
+  port->mem.default_globl_map = data;
 }
 
 static void

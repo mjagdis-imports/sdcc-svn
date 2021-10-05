@@ -41,6 +41,30 @@ static struct
 }
 G;
 
+enum asminst
+{
+  A_ADC,
+  A_ADD,
+  A_AND,
+  A_CP,
+  A_OR,
+  A_SBC,
+  A_SUB,
+  A_XOR
+};
+
+static const char *asminstnames[] =
+{
+  "adc",
+  "add",
+  "and",
+  "cp",
+  "or",
+  "sbc",
+  "sub",
+  "xor",
+};
+
 void
 f8_init_asmops (void)
 {
@@ -57,6 +81,532 @@ emit2 (const char *inst, const char *fmt, ...)
       va_emitcode (inst, fmt, ap);
       va_end (ap);
     }
+}
+
+static void
+cost(unsigned int bytes, unsigned int cycles)
+{
+  regalloc_dry_run_cost_bytes += bytes;
+  regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
+}
+
+/*-----------------------------------------------------------------*/
+/* aopRS - asmop in register or on stack                           */
+/*-----------------------------------------------------------------*/
+static bool
+aopRS (const asmop *aop)
+{
+  return (aop->type == AOP_REG || aop->type == AOP_REGSTK || aop->type == AOP_STK);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopInReg - asmop from offset in the register                    */
+/*-----------------------------------------------------------------*/
+static bool
+aopInReg (const asmop *aop, int offset, short rIdx)
+{
+  if (!(aop->type == AOP_REG || aop->type == AOP_REGSTK))
+    return (false);
+
+  if (offset >= aop->size || offset < 0)
+    return (false);
+
+  if (rIdx == X_IDX)
+    return (aopInReg (aop, offset, XL_IDX) && aopInReg (aop, offset + 1, XH_IDX));
+  else if (rIdx == Y_IDX)
+    return (aopInReg (aop, offset, YL_IDX) && aopInReg (aop, offset + 1, YH_IDX));
+  else if (rIdx == Z_IDX)
+    return (aopInReg (aop, offset, ZL_IDX) && aopInReg (aop, offset + 1, ZH_IDX));
+
+  return (aop->aopu.bytes[offset].in_reg && aop->aopu.bytes[offset].byteu.reg->rIdx == rIdx);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopOnStack - asmop from offset on stack in consecutive memory   */
+/*-----------------------------------------------------------------*/
+static bool
+aopOnStack (const asmop *aop, int offset, int size)
+{
+  int i;
+  long int stk_base;
+
+  if (!(aop->type == AOP_STK || aop->type == AOP_REGSTK))
+    return (false);
+
+  if (offset + size > aop->size)
+    return (false);
+
+  // Fully on stack?
+  for (i = offset; i < offset + size; i++)
+    if (aop->aopu.bytes[i].in_reg)
+      return (false);
+
+  // Consecutive?
+  stk_base = aop->aopu.bytes[offset].byteu.stk;
+  for (i = 1; i < size; i++)
+    if (!regalloc_dry_run && aop->aopu.bytes[offset + i].byteu.stk != stk_base - i) // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
+      return (false);
+
+  return (true);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopOnStack - asmop from offset on stack (excl. extended stack)  */
+/*-----------------------------------------------------------------*/
+static bool
+aopOnStackNotExt (const asmop *aop, int offset, int size)
+{
+  return (aopOnStack (aop, offset, size) && (aop->aopu.bytes[offset].byteu.stk + G.stack.pushed <= 255 || regalloc_dry_run)); // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
+}
+
+// Get aop at offset as 8-bit operand.
+static const char *
+aopGet(const asmop *aop, int offset)
+{
+  static char buffer[256];
+
+  /* Don't really need the value during dry runs, so save some time. */
+  if (regalloc_dry_run)
+    return ("");
+
+  if (aop->type == AOP_LIT)
+    {
+      SNPRINTF (buffer, sizeof(buffer), "#0x%02x", byteOfVal (aop->aopu.aop_lit, offset));
+      return (buffer);
+    }
+
+  if (offset >= aop->size)
+    return ("#0x00");
+
+  if (aopRS (aop) && aop->aopu.bytes[offset].in_reg)
+    return (aop->aopu.bytes[offset].byteu.reg->name);
+
+  if (aopRS (aop) && !aop->aopu.bytes[offset].in_reg)
+    {
+      long int soffset = aop->aopu.bytes[offset].byteu.stk + G.stack.pushed;
+      
+      wassert (soffset < (1 << 16) && soffset >= 0);
+
+      if (soffset > 255)
+        {
+          long int eoffset = (long int)(aop->aopu.bytes[offset].byteu.stk) + G.stack.size - 256l;
+
+          wassertl_bt (regalloc_dry_run || f8_extend_stack, "Extended stack access, but y not prepared for extended stack access.");
+          wassertl_bt (regalloc_dry_run || eoffset >= 0l && eoffset <= 0xffffl, "Stack access out of extended stack range."); // Stack > 64K.
+
+          SNPRINTF (buffer, sizeof(buffer), "(0x%x, z)", (unsigned)eoffset);
+        }
+      else
+        SNPRINTF (buffer, sizeof(buffer), "(0x%02x, sp)", (unsigned)soffset);
+      return (buffer);
+    }
+
+  if (aop->type == AOP_IMMD)
+    {
+      if (offset == 0)
+        SNPRINTF (buffer, sizeof(buffer), "#<(%s+%d)", aop->aopu.immd, aop->aopu.immd_off);
+      else
+        SNPRINTF (buffer, sizeof(buffer), "#((%s+%d) >> %d)", aop->aopu.immd, aop->aopu.immd_off, offset * 8);
+      return (buffer);
+    }
+
+  if (aop->type == AOP_DIR)
+    {
+      SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, aop->size - 1 - offset);
+      return (buffer);
+    }
+
+  wassert_bt (0);
+  return ("dummy");
+}
+
+// Get aop at offset as 16-bit operand.
+static const char *
+aopGet2(const asmop *aop, int offset)
+{
+  static char buffer[256];
+
+  /* Don't really need the value during dry runs, so save some time. */
+  if (regalloc_dry_run)
+    return ("");
+
+  if (aopInReg (aop, offset, X_IDX))
+    return("x");
+  if (aopInReg (aop, offset, Y_IDX))
+    return("y");
+  if (aopInReg (aop, offset, Z_IDX))
+    return("z");
+
+  if (aop->type != AOP_LIT && !aopOnStack (aop, offset, 2) && aop->type != AOP_IMMD && aop->type != AOP_DIR)
+    fprintf (stderr, "Invalid aop for aopGet2. aop->type %d. aop->size %d.\n", aop->type, aop->size);
+  wassert_bt (aop->type == AOP_LIT || aopOnStack (aop, offset, 2) || aop->type == AOP_IMMD || aop->type == AOP_DIR);
+
+  if (aop->type == AOP_LIT)
+    {
+      SNPRINTF (buffer, sizeof(buffer), "#0x%02x%02x", byteOfVal (aop->aopu.aop_lit, offset + 1), byteOfVal (aop->aopu.aop_lit, offset));
+      return (buffer);
+    }
+  else if (aop->type == AOP_IMMD)
+    {
+      if (offset)
+        SNPRINTF (buffer, sizeof(buffer), "#((%s+%d) >> %d)", aop->aopu.immd, aop->aopu.immd_off, offset * 8);
+      else
+        SNPRINTF (buffer, sizeof(buffer), "#(%s+%d)", aop->aopu.immd, aop->aopu.immd_off);
+      return (buffer);
+    }
+
+  return (aopGet (aop, offset + 1));
+}
+
+static void
+emit3cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, int offset2)
+{
+}
+
+static void
+emit3wcost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, int offset2)
+{
+}
+
+static void
+emit3_o (enum asminst inst, asmop *op1, int offset1, asmop *op2, int offset2)
+{
+  emit3cost (inst, op1, offset1, op2, offset2);
+  if (regalloc_dry_run)
+    return;
+
+  if (op2)
+    {
+      char *l = Safe_strdup (aopGet (op1, offset1));
+      emit2 (asminstnames[inst], "%s, %s", l, aopGet (op2, offset2));
+      Safe_free (l);
+    }
+  else
+    emit2 (asminstnames[inst], "%s", aopGet (op1, offset1));
+}
+
+static void
+emit3w_o (enum asminst inst, asmop *op1, int offset1, asmop *op2, int offset2)
+{
+  emit3wcost (inst, op1, offset1, op2, offset2);
+  if (regalloc_dry_run)
+    return;
+
+  if (op2)
+    {
+      char *l = Safe_strdup (aopGet2 (op1, offset1));
+      emit2 (asminstnames[inst], "%s, %s", l, aopGet2 (op2, offset2));
+      Safe_free (l);
+    }
+  else
+    emit2 (asminstnames[inst], "%s", aopGet2 (op1, offset1));
+}
+
+static void
+emit3 (enum asminst inst, asmop *op1, asmop *op2)
+{
+  emit3_o (inst, op1, 0, op2, 0);
+}
+
+static bool
+regDead (int idx, const iCode *ic)
+{
+  if (idx == X_IDX)
+    return (regDead (XL_IDX, ic) && regDead (XH_IDX, ic));
+  if (idx == Y_IDX)
+    return (regDead (YL_IDX, ic) && regDead (YH_IDX, ic));
+  if (idx == Z_IDX)
+    return (regDead (ZL_IDX, ic) && regDead (ZH_IDX, ic));
+
+  if ((idx == ZL_IDX || idx == ZH_IDX) && f8_extend_stack)
+    return false;
+
+  return (!bitVectBitValue (ic->rSurv, idx));
+}
+
+/*-----------------------------------------------------------------*/
+/* newAsmop - creates a new asmOp                                  */
+/*-----------------------------------------------------------------*/
+static asmop *
+newAsmop (short type)
+{
+  asmop *aop;
+
+  aop = Safe_calloc (1, sizeof (asmop));
+  aop->type = type;
+
+  aop->regs[XL_IDX] = -1;
+  aop->regs[XH_IDX] = -1;
+  aop->regs[YL_IDX] = -1;
+  aop->regs[YH_IDX] = -1;
+  aop->regs[ZL_IDX] = -1;
+  aop->regs[ZH_IDX] = -1;
+  aop->regs[C_IDX] = -1;
+
+  return (aop);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopForSym - for a true symbol                                   */
+/*-----------------------------------------------------------------*/
+static asmop *
+aopForSym (const iCode *ic, symbol *sym)
+{
+  asmop *aop;
+
+  wassert_bt (ic);
+  wassert_bt (sym);
+  wassert_bt (sym->etype);
+
+  // Unlike other backends we really free asmops; to avoid a double-free, we need to support multiple asmops for the same symbol.
+
+  if (IS_FUNC (sym->type))
+    {
+      aop = newAsmop (AOP_IMMD);
+      aop->aopu.immd = sym->rname;
+      aop->aopu.immd_off = 0;
+      aop->size = getSize (sym->type);
+    }
+  /* Assign depending on the storage class */
+  else if (sym->onStack || sym->iaccess)
+    {
+      int offset;
+      long int base;
+
+      aop = newAsmop (AOP_STK);
+      aop->size = getSize (sym->type);
+
+      base = sym->stack + (sym->stack > 0 ? G.stack.param_offset : 0);
+
+      if (labs(base) > (1 << 15))
+      {
+        if (!regalloc_dry_run)
+          werror (W_INVALID_STACK_LOCATION);
+        base = 0;
+      }
+
+      for(offset = 0; offset < aop->size; offset++)
+        aop->aopu.bytes[offset].byteu.stk = base + aop->size - offset;
+    }
+  else
+    {
+      aop = newAsmop (AOP_DIR);
+      aop->aopu.aop_dir = sym->rname;
+      aop->size = getSize (sym->type);
+    }
+
+  return (aop);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopForRemat - rematerializes an object                          */
+/*-----------------------------------------------------------------*/
+static asmop *
+aopForRemat (symbol *sym)
+{
+  iCode *ic = sym->rematiCode;
+  asmop *aop;
+  int val = 0;
+
+  wassert_bt (ic);
+
+  for (;;)
+    {
+      if (ic->op == '+')
+        {
+          if (isOperandLiteral (IC_RIGHT (ic)))
+            {
+              val += (int) operandLitValue (IC_RIGHT (ic));
+              ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
+            }
+          else
+            {
+              val += (int) operandLitValue (IC_LEFT (ic));
+              ic = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
+            }
+        }
+      else if (ic->op == '-')
+        {
+          val -= (int) operandLitValue (IC_RIGHT (ic));
+          ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
+        }
+      else if (IS_CAST_ICODE (ic))
+        {
+          ic = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
+        }
+      else if (ic->op == ADDRESS_OF)
+        {
+          val += (int) operandLitValue (IC_RIGHT (ic));
+          break;
+        }
+      else
+        wassert_bt (0);
+    }
+
+  if (OP_SYMBOL (IC_LEFT (ic))->onStack)
+    {
+      aop = newAsmop (AOP_STL);
+      aop->aopu.stk_off = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + 1 + val;
+    }
+  else
+    {
+      aop = newAsmop (AOP_IMMD);
+      aop->aopu.immd = OP_SYMBOL (IC_LEFT (ic))->rname;
+      aop->aopu.immd_off = val;
+    }
+
+  aop->size = getSize (sym->type);
+
+  return aop;
+}
+
+/*-----------------------------------------------------------------*/
+/* aopOp - allocates an asmop for an operand  :                    */
+/*-----------------------------------------------------------------*/
+static void
+aopOp (operand *op, const iCode *ic)
+{
+  symbol *sym;
+  unsigned int i;
+
+  wassert_bt (op);
+
+  /* if already has an asmop */
+  if (op->aop)
+    return;
+
+  /* if this a literal */
+  if (IS_OP_LITERAL (op))
+    {
+      asmop *aop = newAsmop (AOP_LIT);
+      aop->aopu.aop_lit = OP_VALUE (op);
+      aop->size = getSize (operandType (op));
+      op->aop = aop;
+      return;
+    }
+
+  sym = OP_SYMBOL (op);
+
+  /* if this is a true symbol */
+  if (IS_TRUE_SYMOP (op))
+    {
+      op->aop = aopForSym (ic, sym);
+      return;
+    }
+
+  /* Rematerialize symbols where all bytes are spilt. */
+  if (sym->remat && (sym->isspilt || regalloc_dry_run))
+    {
+      bool completely_spilt = TRUE;
+      for (i = 0; i < getSize (sym->type); i++)
+        if (sym->regs[i])
+          completely_spilt = FALSE;
+      if (completely_spilt)
+        {
+          op->aop = aopForRemat (sym);
+          return;
+        }
+    }
+
+  /* if the type is a conditional */
+  if (sym->regType == REG_CND)
+    {
+      asmop *aop = newAsmop (AOP_CND);
+      op->aop = aop;
+      sym->aop = sym->aop;
+      return;
+    }
+
+  /* None of the above, which only leaves temporaries. */
+  { 
+    bool completely_in_regs = TRUE;
+    bool completely_on_stack = TRUE;
+    asmop *aop = newAsmop (AOP_REGSTK);
+
+    aop->size = getSize (operandType (op));
+    op->aop = aop;
+
+    for (i = 0; i < aop->size; i++)
+      {
+        aop->aopu.bytes[i].in_reg = !!sym->regs[i];
+        if (sym->regs[i])
+          {
+            completely_on_stack = FALSE;
+            aop->aopu.bytes[i].byteu.reg = sym->regs[i];
+            aop->regs[sym->regs[i]->rIdx] = i;
+          }
+        else if (sym->isspilt && sym->usl.spillLoc || sym->nRegs && regalloc_dry_run)
+          {
+            completely_in_regs = FALSE;
+
+            if (!regalloc_dry_run)
+              {
+                aop->aopu.bytes[i].byteu.stk = (long int)(sym->usl.spillLoc->stack) + aop->size - i;
+
+                if (sym->usl.spillLoc->stack + aop->size - (int)(i) <= -G.stack.pushed)
+                  {
+                    fprintf (stderr, "%s %d %d %d %d at ic %d\n", sym->name, (int)(sym->usl.spillLoc->stack), (int)(aop->size), (int)(i), (int)(G.stack.pushed), ic->key);
+                    wassertl_bt (0, "Invalid stack offset.");
+                  }
+              }
+            else
+              {
+                static long int old_base = -10;
+                static const symbol *old_sym = 0;
+                if (sym != old_sym)
+                  {
+                    old_base -= aop->size;
+                    if (old_base < -100)
+                      old_base = -10;
+                    old_sym = sym;
+                  }
+
+                aop->aopu.bytes[i].byteu.stk = old_base + aop->size - i;
+              }
+          }
+        else // Dummy iTemp.
+          {
+            aop->type = AOP_DUMMY;
+            return;
+          }
+
+        if (!completely_in_regs && (!currFunc || GcurMemmap == statsg))
+          {
+            if (!regalloc_dry_run)
+              wassertl_bt (0, "Stack asmop outside of function.");
+            cost (180, 180);
+          }
+      }
+
+    if (completely_in_regs)
+      aop->type = AOP_REG;
+    else if (completely_on_stack)
+      aop->type = AOP_STK;
+
+    return;
+  }
+}
+
+/*-----------------------------------------------------------------*/
+/* freeAsmop - free up the asmop given to an operand               */
+/*----------------------------------------------------------------*/
+static void
+freeAsmop (operand *op)
+{
+  asmop *aop;
+
+  wassert_bt (op);
+
+  aop = op->aop;
+
+  if (!aop)
+    return;
+
+  Safe_free (aop);
+
+  op->aop = 0;
+  if (IS_SYMOP (op) && SPIL_LOC (op))
+    SPIL_LOC (op)->aop = 0;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -84,13 +634,6 @@ f8_emitDebuggerSymbol (const char *debugSym)
   G.debugLine = 1;
   emit2 ("", "%s ==.", debugSym);
   G.debugLine = 0;
-}
-
-static void
-cost(unsigned int bytes, unsigned int cycles)
-{
-  regalloc_dry_run_cost_bytes += bytes;
-  regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
 }
 
 // Get asmop for registers containing the return type of function
@@ -297,6 +840,41 @@ genLabel (const iCode *ic)
   emitLabel (IC_LABEL (ic));
 }
 
+/*-----------------------------------------------------------------*/
+/* genAssign - generate code for assignment                        */
+/*-----------------------------------------------------------------*/
+static void
+genAssign (const iCode *ic)
+{
+  operand *result, *right;
+
+  D (emit2 ("; genAssign", ""));
+
+  result = IC_RESULT (ic);
+  right = IC_RIGHT (ic);
+
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  wassert (result->aop->type != AOP_DUMMY || right->aop->type != AOP_DUMMY);
+
+  if (right->aop->type == AOP_DUMMY)
+    {
+      D (emit2 ("; Dummy write", ""));
+      wassert (0);
+    }
+  else if (result->aop->type == AOP_DUMMY)
+    {
+      D (emit2 ("; Dummy read", ""));
+      wassert (0);
+    }
+  else
+    wassert (0);//;genMove(result->aop, right->aop, regDead (A_IDX, ic), regDead (X_IDX, ic), regDead (Y_IDX, ic));
+
+  freeAsmop (right);
+  freeAsmop (result);
+}
+
 /*---------------------------------------------------------------------*/
 /* genF8Code - generate code for F8 for a single iCode instruction     */
 /*---------------------------------------------------------------------*/
@@ -336,6 +914,11 @@ genF8iCode (iCode *ic)
 
     case LABEL:
       genLabel (ic);
+      break;
+
+    case '=':
+      wassert (!POINTER_SET (ic));
+      genAssign (ic);
       break;
 
     default:
