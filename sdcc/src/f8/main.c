@@ -138,6 +138,8 @@ extern void f8_init_asmops (void);
 static void
 f8_init (void)
 {
+  asm_addTree (&asm_asxxxx_mapping);
+
   f8_init_asmops ();
 }
 

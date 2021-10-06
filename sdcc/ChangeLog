@@ -1,7 +1,8 @@
 2021-10-06 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* src/f8/gen.c,
-	  src/f8/main.c:
+	  src/f8/main.c,
+	  src/f8/ralloc2.cc:
 	  Codegen infrastructure for experimental f8 port.
 
 2021-10-05 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>

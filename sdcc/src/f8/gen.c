@@ -48,6 +48,8 @@ enum asminst
   A_ADD,
   A_ADDW,
   A_AND,
+  A_CLR,
+  A_CLRW,
   A_CP,
   A_LD,
   A_LDW,
@@ -56,6 +58,8 @@ enum asminst
   A_SBCW,
   A_SUB,
   A_SUBW,
+  A_TST,
+  A_TSTW,
   A_XCH,
   A_XOR
 };
@@ -67,23 +71,28 @@ static const char *asminstnames[] =
   "add",
   "addw",
   "and",
+  "clr",
+  "clrw",
   "cp",
   "ld",
   "ldw",
   "or",
   "sbc",
-  "sbcw"
+  "sbcw",
   "sub",
-  "subw"
+  "subw",
+  "tst",
+  "tstw",
   "xch",
   "xor",
 };
 
-static struct asmop asmop_xl, asmop_x, asmop_y, asmop_z;
+static struct asmop asmop_xl, asmop_x, asmop_y, asmop_z, asmop_zero;
 static struct asmop *const ASMOP_XL = &asmop_xl;
 static struct asmop *const ASMOP_X = &asmop_x;
 static struct asmop *const ASMOP_Y = &asmop_y;
 static struct asmop *const ASMOP_Z = &asmop_z;
+static struct asmop *const ASMOP_ZERO = &asmop_zero;
 
 // Init aop as a an asmop for data in registers, as given by the -1-terminated array regidx.
 static void
@@ -109,6 +118,24 @@ f8_init_asmops (void)
   f8_init_reg_asmop(&asmop_x, (const signed char[]){XL_IDX, XH_IDX, -1});
   f8_init_reg_asmop(&asmop_y, (const signed char[]){YL_IDX, YH_IDX, -1});
   f8_init_reg_asmop(&asmop_z, (const signed char[]){ZL_IDX, ZH_IDX, -1});
+
+  asmop_zero.type = AOP_LIT;
+  asmop_zero.size = 1;
+  asmop_zero.aopu.aop_lit = constVal ("0");
+  asmop_zero.regs[XL_IDX] = -1;
+  asmop_zero.regs[XH_IDX] = -1;
+  asmop_zero.regs[YL_IDX] = -1;
+  asmop_zero.regs[YH_IDX] = -1;
+  asmop_zero.regs[ZL_IDX] = -1;
+  asmop_zero.regs[ZH_IDX] = -1;
+  asmop_zero.regs[C_IDX] = -1;
+}
+
+static void
+cost(unsigned int bytes, unsigned int cycles)
+{
+  regalloc_dry_run_cost_bytes += bytes;
+  regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
 }
 
 static void 
@@ -124,11 +151,12 @@ emit2 (const char *inst, const char *fmt, ...)
     }
 }
 
-static void
-cost(unsigned int bytes, unsigned int cycles)
+static void 
+emitJP(const symbol *target, float probability)
 {
-  regalloc_dry_run_cost_bytes += bytes;
-  regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
+  if (!regalloc_dry_run)
+     emit2 ("jp", "!tlabel", labelKey2num (target->key));
+  cost (3, 1);
 }
 
 /*-----------------------------------------------------------------*/
@@ -189,6 +217,54 @@ aopOnStack (const asmop *aop, int offset, int size)
       return (false);
 
   return (true);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsOp8_2 - asmop at offset can be used at 8-bit operand to
+                two-operand instruction                            */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsOp8_2 (const asmop *aop, int offset)
+{
+  return (aop->type == AOP_LIT || aop->type == AOP_DIR || aop->type == AOP_IMMD ||
+    aopOnStack (aop, offset, 1) ||
+    aopInReg (aop, offset, XH_IDX) || aopInReg (aop, offset, YL_IDX) || aopInReg (aop, offset, YH_IDX) || aopInReg (aop, offset, ZL_IDX));
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsOp8_1 - asmop at offset can be used at 8-bit operand to
+                one-operand instruction                            */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsOp8_1 (const asmop *aop, int offset)
+{
+  return (aop->type == AOP_IMMD ||
+    aopOnStack (aop, offset, 1) ||
+    aopRS (aop) && aop->aopu.bytes[offset].in_reg && !aopInReg (aop, offset, YH_IDX));
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsOp16_2 - asmop at offset can be used at 8-bit operand to
+                 two-operand instruction                            */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsOp16_2 (const asmop *aop, int offset)
+{
+  return (aop->type == AOP_LIT || aop->type == AOP_DIR || aop->type == AOP_IMMD ||
+    aopOnStack (aop, offset, 2) ||
+    aopInReg (aop, offset, X_IDX));
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsOp16_1 - asmop at offset can be used at 8-bit operand to
+                 one-operand instruction                            */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsOp16_1 (const asmop *aop, int offset)
+{
+  return (aop->type == AOP_IMMD ||
+    aopOnStack (aop, offset, 2) ||
+    aopInReg (aop, offset, Y_IDX) || aopInReg (aop, offset, X_IDX) || aopInReg (aop, offset, Z_IDX));
 }
 
 /*-----------------------------------------------------------------*/
@@ -305,7 +381,7 @@ static int
 op2_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
   int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
-  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op0->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
 
   if (r0Idx == XL_IDX)
     if (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == YH_IDX || r1Idx == ZL_IDX)
@@ -359,6 +435,21 @@ op2_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
   wassert_bt (bytes > 0);
 
   cost (bytes, prefixes + 1);
+}
+
+static void
+op_cost (const asmop *op0, int offset0)
+{
+  if (op0->type == AOP_DIR)
+    cost (3, 1);
+  else if (aopOnStack (op0, offset0, 1))
+    cost (2, 1);
+  else if (aopInReg (op0, offset0, XL_IDX) || aopInReg (op0, offset0, ZH_IDX))
+    cost (1, 1);
+  else if (aopInReg (op0, offset0, XH_IDX) || aopInReg (op0, offset0, YL_IDX) || aopInReg (op0, offset0, ZL_IDX))
+    cost (2, 2);
+  else
+    wassert (0);
 }
 
 // How many bytes would it take for the two-operand 16-bit instruction (including prefixes)? Also return the number of prefix bytes in *prefix.
@@ -539,7 +630,7 @@ static int
 ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
   int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
-  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op0->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
 
   if (r0Idx >= 0)
     {
@@ -586,9 +677,13 @@ ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
         *prefixes = 0;
         return 1;
       }
+    else if (op1->type == AOP_LIT && byteOfVal (op1->aopu.aop_lit, offset1 + 1) == ((byteOfVal (op1->aopu.aop_lit, offset1) & 0x80) ? 0xff : 0x00) || offset1 >= op1->size) // ldw y, #d
+      {
+        *prefixes = 0;
+        return 2;
+      }
     else if (op1->type == AOP_LIT || op1->type == AOP_IMMD || // ldw y, #ii
-      op1->type == AOP_DIR || // ldw y, mm
-      offset1 >= op1->size)
+      op1->type == AOP_DIR) // ldw y, mm
       {
         *prefixes = 0;
         return 3;
@@ -708,6 +803,10 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
     break;
   case A_LD:
     ld_cost (op0, offset0, op1, offset1);
+    break;
+  case A_CLR:
+  case A_TST:
+    op_cost (op0, offset0);
     break;
   case A_XCH:
     xch_cost (op0, offset0, op1, offset1);
@@ -1168,12 +1267,161 @@ pop (const asmop *op, int offset, int size)
 }
 
 /*-----------------------------------------------------------------*/
+/* genCopyStack - Copy the value - stack to stack only             */
+/*-----------------------------------------------------------------*/
+static void
+genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, bool *assigned, int *size, bool xl_free, bool xh_free, bool y_free, bool z_free, bool really_do_it_now)
+{
+  for (int i = 0; i < n;)
+    {
+      if (!aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
+        {
+          i++;
+          continue;
+        }
+
+      // Same location.
+      if (!assigned[i] &&
+        result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
+        {
+          wassert_bt (*size >= 1);
+
+          assigned[i] = TRUE;
+          (*size)--;
+          i++;
+          continue;
+        }
+
+      if (xl_free || really_do_it_now)
+        {
+          if (!xl_free)
+            push (ASMOP_XL, 0, 1);
+          emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
+          emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
+          if (!xl_free)
+            pop (ASMOP_XL, 0, 1);
+          assigned[i] = true;
+        }
+      i++;
+      
+    }
+}
+
+static void
+genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool xl_dead_global, bool xh_dead_global, bool y_dead_global, bool z_dead_global);
+
+/*-----------------------------------------------------------------*/
 /* genCopy - Copy the value from one reg/stk asmop to another      */
 /*-----------------------------------------------------------------*/
 static void
 genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool xl_dead_global, bool xh_dead_global, bool y_dead_global, bool z_dead_global)
 {
-  wassert(0); // Todo: Implement.
+  int n = (sizex < source->size - soffset) ? sizex : (source->size - soffset);
+  bool assigned[8] = {false, false, false, false, false, false, false, false};
+  int size = n;
+  int regsize = 0;
+  for (int i = 0; i < n; i++)
+    regsize += source->aopu.bytes[soffset + i].in_reg;
+
+  // Do nothing for coalesced bytes.
+  for (int i = 0; i < n; i++)
+    if (result->aopu.bytes[roffset + i].in_reg && source->aopu.bytes[soffset + i].in_reg && result->aopu.bytes[roffset + i].byteu.reg == source->aopu.bytes[soffset + i].byteu.reg)
+      {
+        assigned[i] = true;
+        regsize--;
+        size--;
+      }
+
+  // Move everything from registers to the stack.
+  for (int i = 0; i < n;)
+    {
+      if (aopOnStack (result, roffset + i, 1) &&
+        (aopInReg (source, soffset + i, XL_IDX) || aopInReg (source, soffset + i, XH_IDX) || aopInReg (source, soffset + i, YL_IDX) || aopInReg (source, soffset + i, ZL_IDX)))
+        {
+          emit3_o (A_LD, result, roffset + i, source, soffset + i);
+          assigned[i] = true;
+          size--;
+          regsize--;
+          i++;
+        }
+      else if (aopOnStack (result, roffset + i, 1) && !aopOnStack (source, soffset + i, 1))
+        {
+          wassert (regalloc_dry_run);
+          cost (100, 100);
+          assigned[i] = true;
+          size--;
+          i++;
+        }
+      else // This byte is not a register-to-stack copy.
+        i++;
+    }
+
+  // Copy (stack-to-stack) what we can with whatever free regs we have.
+  genCopyStack (result, roffset, source, soffset, n, assigned, &size, false, false, false, false, false);
+
+  // Now do the register shuffling.
+  if (regsize)
+    {
+      wassert (regalloc_dry_run);
+      cost (100, 100);
+    }
+
+  // Move everything from stack to registers.
+  for (int i = 0; i < n;)
+    {
+      if (aopOnStack (source, soffset + i, 1) &&
+        (aopInReg (result, roffset + i, XL_IDX) || aopInReg (result, roffset + i, XH_IDX) || aopInReg (result, roffset + i, YL_IDX) || aopInReg (result, roffset + i, ZL_IDX)))
+        {
+          emit3_o (A_LD, result, roffset + i, source, soffset + i);
+          assigned[i] = true;
+          size--;
+          i++;
+        }
+      else if (!aopOnStack (result, roffset + i, 1) && aopOnStack (source, soffset + i, 1))
+        {
+          wassert (regalloc_dry_run);
+          cost (100, 100);
+          assigned[i] = true;
+          size--;
+          i++;
+        }
+      else // This byte is not a stack-to-register copy.
+        i++;
+    }
+
+  // Copy (stack-to-stack) whatever is left.
+  genCopyStack (result, roffset, source, soffset, n, assigned, &size, false, false, false, false, true);
+  
+  wassertl_bt (size >= 0, "genCopy() copied more than there is to be copied.");
+
+// Place leading zeroes.
+  for (int i = source->size - soffset; i < sizex;)
+    {
+      if (assigned[i])
+        {
+          i++;
+          continue;
+        }
+        
+      int s = 1;
+      for (int j = i + 1; j < sizex && !assigned[j]; j++, s++);
+
+      genMove_o (result, roffset + i, ASMOP_ZERO, 0, s, false, false, false, false);
+      i += s;
+    }
+
+  if (size)
+    {
+      if (!regalloc_dry_run)
+        {
+          wassertl_bt (0, "genCopy failed to completely copy operands.");
+          fprintf (stderr, "%d bytes left.\n", size);
+          fprintf (stderr, "left type %d source type %d\n", result->type, source->type);
+          for (int i = 0; i < n ; i++)
+            fprintf (stderr, "Byte %d, result in reg %d, source in reg %d. %s assigned.\n", i, result->aopu.bytes[roffset + i].in_reg ? result->aopu.bytes[roffset + i].byteu.reg->rIdx : -1, source->aopu.bytes[soffset + i].in_reg ? source->aopu.bytes[soffset + i].byteu.reg->rIdx : -1, assigned[i] ? "" : "not");
+        }
+      cost (180, 180);
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -1260,7 +1508,17 @@ aopRet (sym_link *ftype)
 {
   wassert (IS_FUNC (ftype));
 
-  return 0;
+  int size = getSize (ftype->next);
+
+  switch (size)
+    {
+    case 1:
+      return (ASMOP_XL);
+    case 2:
+      return (ASMOP_Y);
+    default:
+      return 0;
+    }
 }
 
 // Get asmop for registers containing a parameter
@@ -1442,6 +1700,48 @@ genEndFunction (iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genReturn - generate code for return statement                  */
+/*-----------------------------------------------------------------*/
+static void
+genReturn (const iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  int size;
+
+  D (emit2 ("; genReturn", ""));
+
+  /* if we have no return value then
+     just generate the "ret" */
+  if (!IC_LEFT (ic))
+    goto jumpret;
+
+  /* we have something to return then
+     move the return value into place */
+  aopOp (left, ic);
+  size = left->aop->size;
+
+  switch (size)
+    {
+    case 0:
+      break;
+    case 1:
+    case 2:
+      genMove (aopRet (currFunc->type), left->aop, true, true, true, true);
+      break;
+    default:
+      wassertl (0, "Return not implemented for return value of this size.");
+    }
+
+  freeAsmop (left);
+
+jumpret:
+  /* generate a jump to the return label
+     if the next is not the return statement */
+  if (!(ic->next && ic->next->op == LABEL && IC_LABEL (ic->next) == returnLabel))
+    emitJP(returnLabel, 1.0f);
+}
+
+/*-----------------------------------------------------------------*/
 /* genLabel - generates a label                                    */
 /*-----------------------------------------------------------------*/
 static void
@@ -1457,6 +1757,33 @@ genLabel (const iCode *ic)
     debugFile->writeLabel (IC_LABEL (ic), ic);
 
   emitLabel (IC_LABEL (ic));
+}
+
+/*-----------------------------------------------------------------*/
+/* genAnd - code for and                                           */
+/*-----------------------------------------------------------------*/
+static void
+genAnd (const iCode *ic, iCode *ifx)
+{
+  wassert (0);
+}
+
+/*-----------------------------------------------------------------*/
+/* genPointerGet - generate code for read via pointer              */
+/*-----------------------------------------------------------------*/
+static void
+genPointerGet (const iCode *ic)
+{
+  wassert (0);
+}
+
+/*-----------------------------------------------------------------*/
+/* genPointerSet - generate code for write via pointer             */
+/*-----------------------------------------------------------------*/
+static void
+genPointerSet (const iCode *ic)
+{
+  wassert (0);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1492,6 +1819,50 @@ genAssign (const iCode *ic)
 
   freeAsmop (right);
   freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genIfx - generate code for conditional jump                     */
+/*-----------------------------------------------------------------*/
+static void
+genIfx (const iCode *ic)
+{
+  operand *const cond = IC_COND (ic);
+  sym_link *type = operandType (cond);
+  symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+  aopOp (cond, ic);
+
+  D (emit2 ("; genIfx", ""));
+
+  if (!regDead (XL_IDX, ic) || cond->aop->regs[XL_IDX] > 0)
+    {
+      wassert (regalloc_dry_run);
+      cost (100, 100);
+    }
+
+  genMove (ASMOP_XL, cond->aop, true, regDead (XH_IDX, ic) && cond->aop->regs[XH_IDX] <= 0, regDead (Y_IDX, ic) && cond->aop->regs[YL_IDX] <= 0 && cond->aop->regs[YH_IDX] <= 0, false);
+
+  for (int i = 1; i < cond->aop->size;)
+    {
+      if (aopIsOp8_2 (cond->aop, i))
+        emit3_o (A_OR, ASMOP_XL, 0, cond->aop, i);
+      else
+        {
+          wassert (regalloc_dry_run);
+          cost (100, 100);
+        }
+      i++;
+    }
+
+  emit3 (A_TST, ASMOP_XL, 0);
+
+  if (tlbl)
+    emit2 (IC_FALSE (ic) ? "jrz" : "jrnz", "!tlabel", labelKey2num (tlbl->key));
+  emitJP (IC_TRUE (ic) ? IC_TRUE (ic) : IC_FALSE (ic), 0.0f);
+  emitLabel (tlbl);
+  // todo : cost.
+
+  freeAsmop (cond);
 }
 
 /*---------------------------------------------------------------------*/
@@ -1531,13 +1902,33 @@ genF8iCode (iCode *ic)
       genEndFunction (ic);
       break;
 
+    case RETURN:
+      genReturn (ic);
+      break;
+
     case LABEL:
       genLabel (ic);
+      break;
+
+    case BITWISEAND:
+      genAnd (ic, ifxForOp (IC_RESULT (ic), ic));
+      break;
+
+    case GET_VALUE_AT_ADDRESS:
+      genPointerGet (ic);
+      break;
+
+    case SET_VALUE_AT_ADDRESS:
+      genPointerSet (ic);
       break;
 
     case '=':
       wassert (!POINTER_SET (ic));
       genAssign (ic);
+      break;
+
+    case IFX:
+      genIfx (ic);
       break;
 
     default:
