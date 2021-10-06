@@ -359,7 +359,7 @@ PORT f8_port =
      2,                         /* call overhead */
      0,
      2,
-     1,                         /* sp points to next free stack location */
+     0,                         /* sp points to next free stack location */
   },     
   { 
     -1,                         /* shifts never use support routines */
@@ -401,16 +401,16 @@ PORT f8_port =
   f8_genAssemblerEnd,
   f8_genIVT,
   0,                            /* no genXINIT code */
-  f8_genInitStartup,          /* genInitStartup */
+  f8_genInitStartup,            /* genInitStartup */
   f8_reset_regparm,
   f8_reg_parm,
-  f8_process_pragma,          /* process_pragma */
+  f8_process_pragma,            /* process_pragma */
   NULL,                         /* getMangledFunctionName */
   _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   NULL,                         /* oclsExpense */
   TRUE,
-  FALSE,                        /* little endian */
+  true,                         /* little endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */

@@ -49,11 +49,14 @@ enum asminst
   A_ADDW,
   A_AND,
   A_CP,
+  A_LD,
+  A_LDW,
   A_OR,
   A_SBC,
   A_SBCW,
   A_SUB,
   A_SUBW,
+  A_XCH,
   A_XOR
 };
 
@@ -65,17 +68,47 @@ static const char *asminstnames[] =
   "addw",
   "and",
   "cp",
+  "ld",
+  "ldw",
   "or",
   "sbc",
   "sbcw"
   "sub",
   "subw"
+  "xch",
   "xor",
 };
+
+static struct asmop asmop_xl, asmop_x, asmop_y, asmop_z;
+static struct asmop *const ASMOP_XL = &asmop_xl;
+static struct asmop *const ASMOP_X = &asmop_x;
+static struct asmop *const ASMOP_Y = &asmop_y;
+static struct asmop *const ASMOP_Z = &asmop_z;
+
+// Init aop as a an asmop for data in registers, as given by the -1-terminated array regidx.
+static void
+f8_init_reg_asmop(asmop *aop, const signed char *regidx)
+{
+  aop->type = AOP_REG;
+  aop->size = 0;
+  memset (aop->regs, -1, sizeof(aop->regs));
+  
+  for(int i = 0; regidx[i] >= 0; i++)
+    {
+      aop->aopu.bytes[i].byteu.reg = f8_regs + regidx[i];
+      aop->regs[regidx[i]] = i;
+      aop->aopu.bytes[i].in_reg = true;
+      aop->size++;
+    }
+}
 
 void
 f8_init_asmops (void)
 {
+  f8_init_reg_asmop(&asmop_xl, (const signed char[]){XL_IDX, -1});
+  f8_init_reg_asmop(&asmop_x, (const signed char[]){XL_IDX, XH_IDX, -1});
+  f8_init_reg_asmop(&asmop_y, (const signed char[]){YL_IDX, YH_IDX, -1});
+  f8_init_reg_asmop(&asmop_z, (const signed char[]){ZL_IDX, ZH_IDX, -1});
 }
 
 static void 
@@ -199,7 +232,7 @@ aopGet(const asmop *aop, int offset)
         {
           long int eoffset = (long int)(aop->aopu.bytes[offset].byteu.stk) + G.stack.size - 256l;
 
-          wassertl_bt (regalloc_dry_run || f8_extend_stack, "Extended stack access, but y not prepared for extended stack access.");
+          wassertl_bt (regalloc_dry_run || f8_extend_stack, "Extended stack access, but z not prepared for extended stack access.");
           wassertl_bt (regalloc_dry_run || eoffset >= 0l && eoffset <= 0xffffl, "Stack access out of extended stack range."); // Stack > 64K.
 
           SNPRINTF (buffer, sizeof(buffer), "(0x%x, z)", (unsigned)eoffset);
@@ -220,7 +253,7 @@ aopGet(const asmop *aop, int offset)
 
   if (aop->type == AOP_DIR)
     {
-      SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, aop->size - 1 - offset);
+      SNPRINTF (buffer, sizeof(buffer), "%s+%d", aop->aopu.aop_dir, offset);
       return (buffer);
     }
 
@@ -263,35 +296,421 @@ aopGet2(const asmop *aop, int offset)
       return (buffer);
     }
 
-  return (aopGet (aop, offset + 1));
+  return (aopGet (aop, offset));
 }
 
-static void
-op2_cost (const asmop *op1, int offset1, const asmop *op2, int offset2)
+// How many bytes would it take for the two-operand 8-bit instruction (including prefixes)? Also return the number of prefix bytes in *prefix.
+// returns -1 if impossible.
+static int
+op2_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
-  wassert (0);
+  int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op0->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+
+  if (r0Idx == XL_IDX)
+    if (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == YH_IDX || r1Idx == ZL_IDX)
+      {
+        *prefixes = 0;
+        return 1;
+      }
+    else if (op1->type == AOP_LIT || op1->type == AOP_IMMD ||
+      offset1 >= op1->size ||
+      op1->type == AOP_STK || op1->type == AOP_REGSTK && r1Idx == -1)
+      {
+        *prefixes = 0;
+        return 2;
+      }
+    else if (op1->type == AOP_DIR)
+      {
+        *prefixes = 0;
+        return 3;
+      }
+    else
+      return -1;
+
+  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX) // Try with alternate accumulator prefix.
+    {
+      int bytes = op2_bytes (prefixes, ASMOP_XL, 0, op1, offset1);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }
+  if (r1Idx == XL_IDX || r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX) // Try with swap prefix
+    {
+      int bytes = op2_bytes (prefixes, op1, offset1, op0, offset0);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }
+
+  return -1;
 }
 
 static void
-op2w_cost (const asmop *op1, int offset1, const asmop *op2, int offset2)
+op2_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
-  wassert (0);
+  int prefixes;
+  int bytes = op2_bytes (&prefixes, op0, offset0, op1, offset1);
+
+  wassert_bt (bytes > 0);
+
+  cost (bytes, prefixes + 1);
+}
+
+// How many bytes would it take for the two-operand 16-bit instruction (including prefixes)? Also return the number of prefix bytes in *prefix.
+// returns -1 if impossible.
+static int
+op2w_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
+{
+  int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op0->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+
+  if (r0Idx >= 0)
+    {
+      if (!op0->aopu.bytes[offset0 + 1].in_reg || op0->aopu.bytes[offset0 + 1].byteu.reg->rIdx != r0Idx + 1);
+        return -1;
+      switch (r0Idx)
+        {
+        case XL_IDX:
+          r0Idx = X_IDX;
+          break;
+        case YL_IDX:
+          r0Idx = Y_IDX;
+          break;
+        case ZL_IDX:
+          r0Idx = Z_IDX;
+          break;
+        default:
+          return -1;
+        }
+    }
+  if (r1Idx >= 0)
+    {
+      if (!op1->aopu.bytes[offset1 + 1].in_reg || op1->aopu.bytes[offset1 + 1].byteu.reg->rIdx != r1Idx + 1);
+        return -1;
+      switch (r1Idx)
+        {
+        case XL_IDX:
+          r1Idx = X_IDX;
+          break;
+        case YL_IDX:
+          r1Idx = Y_IDX;
+          break;
+        case ZL_IDX:
+          r1Idx = Z_IDX;
+          break;
+        default:
+          return -1;
+        }
+    }
+    
+  if (r0Idx == Y_IDX)
+    if (r1Idx == X_IDX)
+      {
+        *prefixes = 0;
+        return 1;
+      }
+    else if (op1->type == AOP_LIT || op1->type == AOP_IMMD ||
+      offset1 >= op1->size ||
+      op1->type == AOP_STK || op1->type == AOP_REGSTK && r1Idx == -1 ||
+      op1->type == AOP_DIR)
+      {
+        *prefixes = 0;
+        return 3;
+      }
+    else
+      return -1;
+
+  if (r0Idx == X_IDX || r0Idx == Z_IDX) // Try with alternate accumulator prefix.
+    {
+      int bytes = op2_bytes (prefixes, ASMOP_Y, 0, op1, offset1);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }    
+  if (r1Idx == Y_IDX || r1Idx == X_IDX || r1Idx == Z_IDX) // Try with swap prefix
+    {
+      int bytes = op2_bytes (prefixes, op1, offset1, op0, offset0);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }
+
+  return -1;
 }
 
 static void
-emit3cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, int offset2)
+op2w_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
+{
+  int prefixes;
+  int bytes = op2w_bytes (&prefixes, op0, offset0, op1, offset1);
+
+  wassert_bt (bytes > 0);
+
+  cost (bytes, prefixes + 1);
+}
+
+// How many bytes would it take for the two-operand 8-bit load (including prefixes)? Also return the number of prefix bytes in *prefix.
+// returns -1 if impossible.
+static int
+ld_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
+{
+  int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+
+  if (r0Idx == XL_IDX)
+    if (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == YH_IDX || r1Idx == ZL_IDX || r1Idx == ZH_IDX)
+      {
+        *prefixes = 0;
+        return 1;
+      }
+    else if (op1->type == AOP_LIT || op1->type == AOP_IMMD ||
+      offset1 >= op1->size ||
+      op1->type == AOP_STK || op1->type == AOP_REGSTK && r1Idx == -1)
+      {
+        *prefixes = 0;
+        return 2;
+      }
+    else if (op1->type == AOP_DIR)
+      {
+        *prefixes = 0;
+        return 3;
+      }
+    else
+      return -1;
+  else if (r1Idx == XL_IDX && op1->type == AOP_STK || op1->type == AOP_REGSTK && r0Idx == -1) // ld (n, sp), xl
+    {
+      *prefixes = 0;
+      return 2;
+    }
+  else if (r1Idx == XL_IDX && op1->type == AOP_DIR) // ld mm, xl
+    {
+      *prefixes = 0;
+      return 3;
+    }
+
+  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX || // Try with alternate accumulator prefix.
+    r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX)
+    {
+      bool replace0 = (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX);
+      bool replace1 = (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX); // TODO: Each prefix can only replave one!
+      int bytes = ld_bytes (prefixes, replace0 ? ASMOP_XL : op0, replace0 ? 0 : offset0, replace1 ? ASMOP_XL : op1, replace1 ? 0 : offset1);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }
+  if (r1Idx == XL_IDX || r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX) // Try with swap prefix
+    {
+      int bytes = ld_bytes (prefixes, op1, offset1, op0, offset0);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }
+
+  return -1;
+}
+
+static void
+ld_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
+{
+  int prefixes;
+  int bytes = ld_bytes (&prefixes, op0, offset0, op1, offset1);
+
+  wassert_bt (bytes > 0);
+
+  cost (bytes, prefixes + 1);
+}
+
+// How many bytes would it take for the two-operand 8-bit load (including prefixes)? Also return the number of prefix bytes in *prefix.
+// returns -1 if impossible.
+static int
+ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
+{
+  int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op0->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+
+  if (r0Idx >= 0)
+    {
+      if (!op0->aopu.bytes[offset0 + 1].in_reg || op0->aopu.bytes[offset0 + 1].byteu.reg->rIdx != r0Idx + 1);
+        return -1;
+      switch (r0Idx)
+        {
+        case XL_IDX:
+          r0Idx = X_IDX;
+          break;
+        case YL_IDX:
+          r0Idx = Y_IDX;
+          break;
+        case ZL_IDX:
+          r0Idx = Z_IDX;
+          break;
+        default:
+          return -1;
+        }
+    }
+  if (r1Idx >= 0)
+    {
+      if (!op1->aopu.bytes[offset1 + 1].in_reg || op1->aopu.bytes[offset1 + 1].byteu.reg->rIdx != r1Idx + 1);
+        return -1;
+      switch (r1Idx)
+        {
+        case XL_IDX:
+          r1Idx = X_IDX;
+          break;
+        case YL_IDX:
+          r1Idx = Y_IDX;
+          break;
+        case ZL_IDX:
+          r1Idx = Z_IDX;
+          break;
+        default:
+          return -1;
+        }
+    }
+
+  if (r0Idx == Y_IDX)
+    if (r1Idx == X_IDX) // ldw y, x
+      {
+        *prefixes = 0;
+        return 1;
+      }
+    else if (op1->type == AOP_LIT || op1->type == AOP_IMMD || // ldw y, #ii
+      op1->type == AOP_DIR || // ldw y, mm
+      offset1 >= op1->size)
+      {
+        *prefixes = 0;
+        return 3;
+      }
+    else if (op1->type == AOP_STK || op1->type == AOP_REGSTK && r1Idx == -1) // ldw y, (n, sp)
+      {
+        *prefixes = 0;
+        return 2;
+      }
+    else
+      return -1;
+  else if (r1Idx == Y_IDX)
+    if (r0Idx == X_IDX) // ldw x, y
+      {
+        *prefixes = 0;
+        return 1;
+      }
+    else if (op0->type == AOP_DIR) // ldw mm, y
+      {
+        *prefixes = 0;
+        return 3;
+      }
+    else if (op0->type == AOP_STK || op0->type == AOP_REGSTK && r0Idx == -1) // ldw (n, sp), y
+      {
+        *prefixes = 0;
+        return 2;
+      }
+
+  if (r0Idx == X_IDX || r0Idx == Z_IDX || // Try with alternate accumulator prefix.
+    r1Idx == X_IDX || r1Idx == Z_IDX)
+    {
+      bool replace0 = (r0Idx == X_IDX || r0Idx == Z_IDX);
+      bool replace1 = (r1Idx == X_IDX || r1Idx == Z_IDX); // TODO: Each prefix can only replave one!
+      int bytes = ldw_bytes (prefixes, replace0 ? ASMOP_Y : op0, replace0 ? 0 : offset0, replace1 ? ASMOP_Y : op1, replace1 ? 0 : offset1);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }
+
+  return -1;
+}
+
+static void
+ldw_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
+{
+  int prefixes;
+  int bytes = ldw_bytes (&prefixes, op0, offset0, op1, offset1);
+
+  wassert_bt (bytes > 0);
+
+  cost (bytes, prefixes + 1);
+}
+
+static void
+opw_cost (const asmop *op0, int offset0)
+{
+  int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
+
+  if (r0Idx < 0)
+    wassert(0);
+
+  if (!op0->aopu.bytes[offset0 + 1].in_reg || op0->aopu.bytes[offset0 + 1].byteu.reg->rIdx != r0Idx + 1);
+    wassert(0);
+  switch (r0Idx)
+    {
+    case XL_IDX:
+      r0Idx = X_IDX;
+      break;
+    case YL_IDX:
+      r0Idx = Y_IDX;
+      break;
+    case ZL_IDX:
+      r0Idx = Z_IDX;
+      break;
+    default:
+      wassert(0);
+    }
+
+  cost (1 + (r0Idx != Y_IDX), 1 + (r0Idx != Y_IDX));
+}
+
+static void
+xch_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
+{
+  if (op0->aopu.bytes[offset0].in_reg && op1->aopu.bytes[offset1].in_reg)
+    if (op0->aopu.bytes[offset0].byteu.reg->rIdx == XL_IDX && op1->aopu.bytes[offset1].byteu.reg->rIdx == XH_IDX)
+      opw_cost (ASMOP_X, 0);
+    else if (op0->aopu.bytes[offset0].byteu.reg->rIdx == YL_IDX && op1->aopu.bytes[offset1].byteu.reg->rIdx == YH_IDX)
+      opw_cost (ASMOP_Y, 0);
+    else if (op0->aopu.bytes[offset0].byteu.reg->rIdx == ZL_IDX && op1->aopu.bytes[offset1].byteu.reg->rIdx == ZH_IDX)
+      opw_cost (ASMOP_Z, 0);
+    else
+      wassert_bt (0);
+  else if ((op1->type == AOP_STK || op1->type == AOP_REGSTK) && !op1->aopu.bytes[offset1].in_reg)
+    cost (2, 1);
+  else 
+    wassert (0);
+}
+
+static void
+emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
   switch (inst)
   {
+  case A_SBC:
+  case A_SUB:
+    wassertl_bt (op1->type != AOP_LIT && op1->type != AOP_IMMD, "Subtraction with constant right operand not available.");
   case A_ADC:
   case A_ADD:
   case A_AND:
   case A_CP:
   case A_OR:
-  case A_SBC:
-  case A_SUB:
   case A_XOR:
-    op2_cost (op1, offset1, op2, offset2);
+    op2_cost (op0, offset0, op1, offset1);
+    break;
+  case A_LD:
+    ld_cost (op0, offset0, op1, offset1);
+    break;
+  case A_XCH:
+    xch_cost (op0, offset0, op1, offset1);
     break;
   default:
     wassertl_bt (0, "Tried to get cost for unknown 8-bit instruction");
@@ -299,15 +718,19 @@ emit3cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, i
 }
 
 static void
-emit3wcost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, int offset2)
+emit3wcost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
   switch (inst)
   {
-  case A_ADCW:
-  case A_ADDW:
   case A_SBCW:
   case A_SUBW:
-    op2w_cost (op1, offset1, op2, offset2);
+    wassertl_bt (op1->type != AOP_LIT && op1->type != AOP_IMMD, "Subtraction with constant right operand not available.");
+  case A_ADCW:
+  case A_ADDW:
+    op2w_cost (op0, offset0, op1, offset1);
+    break;
+  case A_LDW:
+    ldw_cost (op0, offset0, op1, offset1);
     break;
   default:
     wassertl_bt (0, "Tried to get cost for unknown 8-bit instruction");
@@ -315,43 +738,49 @@ emit3wcost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, 
 }
 
 static void
-emit3_o (enum asminst inst, asmop *op1, int offset1, asmop *op2, int offset2)
+emit3_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
 {
-  emit3cost (inst, op1, offset1, op2, offset2);
+  emit3cost (inst, op0, offset0, op1, offset1);
   if (regalloc_dry_run)
     return;
 
-  if (op2)
+  if (op1)
     {
-      char *l = Safe_strdup (aopGet (op1, offset1));
-      emit2 (asminstnames[inst], "%s, %s", l, aopGet (op2, offset2));
+      char *l = Safe_strdup (aopGet (op0, offset0));
+      emit2 (asminstnames[inst], "%s, %s", l, aopGet (op1, offset1));
       Safe_free (l);
     }
   else
-    emit2 (asminstnames[inst], "%s", aopGet (op1, offset1));
+    emit2 (asminstnames[inst], "%s", aopGet (op0, offset0));
 }
 
 static void
-emit3w_o (enum asminst inst, asmop *op1, int offset1, asmop *op2, int offset2)
+emit3 (enum asminst inst, asmop *op0, asmop *op1)
 {
-  emit3wcost (inst, op1, offset1, op2, offset2);
+  emit3_o (inst, op0, 0, op1, 0);
+}
+
+static void
+emit3w_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
+{
+  emit3wcost (inst, op0, offset0, op1, offset1);
   if (regalloc_dry_run)
     return;
 
-  if (op2)
+  if (op1)
     {
-      char *l = Safe_strdup (aopGet2 (op1, offset1));
-      emit2 (asminstnames[inst], "%s, %s", l, aopGet2 (op2, offset2));
+      char *l = Safe_strdup (aopGet2 (op0, offset0));
+      emit2 (asminstnames[inst], "%s, %s", l, aopGet2 (op1, offset1));
       Safe_free (l);
     }
   else
-    emit2 (asminstnames[inst], "%s", aopGet2 (op1, offset1));
+    emit2 (asminstnames[inst], "%s", aopGet2 (op0, offset0));
 }
 
 static void
-emit3 (enum asminst inst, asmop *op1, asmop *op2)
+emit3w (enum asminst inst, asmop *op0, asmop *op1)
 {
-  emit3_o (inst, op1, 0, op2, 0);
+  emit3w_o (inst, op0, 0, op1, 0);
 }
 
 static bool
@@ -587,9 +1016,9 @@ aopOp (operand *op, const iCode *ic)
 
             if (!regalloc_dry_run)
               {
-                aop->aopu.bytes[i].byteu.stk = (long int)(sym->usl.spillLoc->stack) + aop->size - i;
+                aop->aopu.bytes[i].byteu.stk = (long int)(sym->usl.spillLoc->stack) + i;
 
-                if (sym->usl.spillLoc->stack + aop->size - (int)(i) <= -G.stack.pushed)
+                if (sym->usl.spillLoc->stack + i <= -G.stack.pushed)
                   {
                     fprintf (stderr, "%s %d %d %d %d at ic %d\n", sym->name, (int)(sym->usl.spillLoc->stack), (int)(aop->size), (int)(i), (int)(G.stack.pushed), ic->key);
                     wassertl_bt (0, "Invalid stack offset.");
@@ -668,6 +1097,148 @@ updateCFA (void)
 
   if (options.debug && !regalloc_dry_run)
     debugFile->writeFrameAddress (NULL, &f8_regs[SP_IDX], 1 + G.stack.param_offset + G.stack.pushed);
+}
+
+static void
+push (const asmop *op, int offset, int size)
+{
+  if (size == 1)
+    {
+      emit2 ("push", "%s", aopGet (op, offset));
+      if (aopInReg (op, offset, XL_IDX) || aopInReg (op, offset, XH_IDX) || aopInReg (op, offset, YL_IDX) || aopInReg (op, offset, YH_IDX) || aopInReg (op, offset, ZL_IDX))
+        cost (1, 1);
+      else if (op->type == AOP_LIT || op->type == AOP_IMMD)
+        cost (2, 1);
+      else if (op->type == AOP_DIR)
+        cost (3, 1);
+      else if (aopOnStack (op, offset, 1))
+        cost (2, 1);
+      else
+        wassertl_bt (0, "Invalid aop type for size 1 for push");
+    }
+  else if (size == 2)
+    {
+      emit2 ("pushw", aopGet2 (op, offset));
+      if (aopInReg (op, offset, Y_IDX) || aopInReg (op, offset, X_IDX))
+        cost (1, 1);
+      else if (aopInReg (op, offset, Z_IDX))
+        cost (2, 2);
+      else if (op->type == AOP_LIT || op->type == AOP_IMMD || op->type == AOP_DIR)
+        cost (1, 3);
+      else if (aopOnStack (op, offset, 2))
+        cost (1, 2);
+      else
+        wassertl_bt (0, "Invalid aop type for size 2 for pushw");
+    }
+  else
+    wassertl_bt (0, "Invalid size for push/pushw");
+
+  G.stack.pushed += size;
+  updateCFA ();
+}
+
+static void
+pop (const asmop *op, int offset, int size)
+{
+  if (size == 1)
+    {
+      emit2 ("pop", "%s", aopGet (op, offset));
+      if (aopInReg (op, offset, XL_IDX))
+        cost (1, 1);
+      else if (aopInReg (op, offset, XH_IDX) || aopInReg (op, offset, YL_IDX) || aopInReg (op, offset, YH_IDX) || aopInReg (op, offset, ZL_IDX))
+        cost (2, 2);
+      else
+        wassertl_bt (0, "Invalid aop type for size 1 for pop");
+    }
+  else if (size == 2)
+    {
+      emit2 ("popw", aopGet2 (op, offset));
+      if (aopInReg (op, offset, Y_IDX))
+        cost (1, 1);
+      else if (aopInReg (op, offset, X_IDX) || aopInReg (op, offset, Z_IDX))
+        cost (2, 2);
+      else
+        wassertl_bt (0, "Invalid aop type for size 2 for popw");
+    }
+  else
+    wassertl_bt (0, "Invalid size for pop/popw");
+
+  G.stack.pushed -= size;
+  updateCFA ();
+}
+
+/*-----------------------------------------------------------------*/
+/* genCopy - Copy the value from one reg/stk asmop to another      */
+/*-----------------------------------------------------------------*/
+static void
+genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool xl_dead_global, bool xh_dead_global, bool y_dead_global, bool z_dead_global)
+{
+  wassert(0); // Todo: Implement.
+}
+
+/*-----------------------------------------------------------------*/
+/* genMove - Copy part of one asmop to another                     */
+/*-----------------------------------------------------------------*/
+static void
+genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool xl_dead_global, bool xh_dead_global, bool y_dead_global, bool z_dead_global)
+{
+  wassertl_bt (result->type != AOP_LIT, "Trying to write to literal.");
+  wassertl_bt (result->type != AOP_IMMD, "Trying to write to immediate.");
+  wassertl_bt (roffset + size <= result->size, "Trying to write beyond end of operand");
+
+  if (aopRS (result) && aopRS (source))
+    {
+      genCopy (result, roffset, source, soffset, size, xl_dead_global, xh_dead_global, y_dead_global, z_dead_global);
+      return;
+    }
+
+  if (source->type == AOP_STL)
+    {
+      wassert(0); // Todo: Implement.
+      return;
+    }
+
+  for (int i = 0; i < size;)
+    {
+      const bool xl_dead = xl_dead_global &&
+        (!aopRS (result) || (result->regs[XL_IDX] >= (roffset + i) || result->regs[XL_IDX] < 0)) &&
+        (!aopRS (source) || source->regs[XL_IDX] <= i);
+      const bool xh_dead = xh_dead_global &&
+        (!aopRS (result) || (result->regs[XH_IDX] >= (roffset + i) || result->regs[XH_IDX] < 0)) &&
+        (!aopRS (source) || source->regs[XH_IDX] <= i);
+      const bool y_dead = y_dead_global &&
+        (!aopRS (result) || (result->regs[YL_IDX] >= (roffset + i) || result->regs[YL_IDX] < 0) && (result->regs[YH_IDX] >= (roffset + i) || result->regs[YH_IDX] < 0)) &&
+        (!aopRS (source) || source->regs[YL_IDX] <= i + 1 && source->regs[YH_IDX] <= i + 1);
+      const bool z_dead = z_dead_global &&
+        (!aopRS (result) || (result->regs[ZL_IDX] >= (roffset + i) || result->regs[ZL_IDX] < 0) && (result->regs[ZH_IDX] >= (roffset + i) || result->regs[ZH_IDX] < 0)) &&
+        (!aopRS (source) || source->regs[ZL_IDX] <= i + 1 && source->regs[ZH_IDX] <= i + 1);
+
+      bool via_xl =
+        !aopInReg (result, roffset + i, XL_IDX) && !aopInReg (source, soffset + i, XL_IDX) &&
+        !((aopInReg (result, roffset + i, XH_IDX) || aopInReg (result, roffset + i, YL_IDX) || aopInReg (result, roffset + i, ZL_IDX)) && (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR)) &&
+        !(result->type == AOP_DIR && (aopInReg (source, soffset + i, XH_IDX) || aopInReg (source, soffset + i, YL_IDX) || aopInReg (source, soffset + i, ZL_IDX)));
+      if (via_xl)
+        {
+          if (!xl_dead)
+            push (ASMOP_XL, 0, 1);
+          emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
+          emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
+          if (!xl_dead)
+            pop (ASMOP_XL, 0, 1);
+        }
+      else
+        emit3_o (A_LD, result, roffset + i, source, soffset + i);
+      i++;
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* genMove - Copy the value from one asmop to another              */
+/*-----------------------------------------------------------------*/
+static void
+genMove (asmop *result, asmop *source, bool xl_dead, bool xh_dead, bool y_dead, bool z_dead)
+{
+  genMove_o (result, 0, source, 0, result->size, xl_dead, xh_dead, y_dead, z_dead);
 }
 
 /*---------------------------------------------------------------------*/
@@ -755,6 +1326,8 @@ adjustStack (int n)
     	emit2 ("add", "sp, #%d", m);
     	cost (1, 1);
     	n -= m;
+    	G.stack.pushed -= m;
+        updateCFA ();
     }
 }
 
@@ -915,7 +1488,7 @@ genAssign (const iCode *ic)
       wassert (0);
     }
   else
-    wassert (0);//;genMove(result->aop, right->aop, regDead (A_IDX, ic), regDead (X_IDX, ic), regDead (Y_IDX, ic));
+   genMove(result->aop, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
   freeAsmop (right);
   freeAsmop (result);
