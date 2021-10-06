@@ -40,6 +40,7 @@ static struct
       int size;
       int param_offset;
     } stack;
+  bool saved; // Saved the caller-save registers at call.
 }
 G;
 
@@ -252,7 +253,7 @@ aopIsOp8_2 (const asmop *aop, int offset)
 static bool
 aopIsOp8_1 (const asmop *aop, int offset)
 {
-  return (aop->type == AOP_IMMD ||
+  return (aop->type == AOP_DIR ||
     aopOnStack (aop, offset, 1) ||
     aopRS (aop) && aop->aopu.bytes[offset].in_reg && !aopInReg (aop, offset, YH_IDX));
 }
@@ -276,7 +277,7 @@ aopIsOp16_2 (const asmop *aop, int offset)
 static bool
 aopIsOp16_1 (const asmop *aop, int offset)
 {
-  return (aop->type == AOP_IMMD ||
+  return (aop->type == AOP_DIR ||
     aopOnStack (aop, offset, 2) ||
     aopInReg (aop, offset, Y_IDX) || aopInReg (aop, offset, X_IDX) || aopInReg (aop, offset, Z_IDX));
 }
@@ -1218,7 +1219,7 @@ push (const asmop *op, int offset, int size)
   if (size == 1)
     {
       emit2 ("push", "%s", aopGet (op, offset));
-      if (aopInReg (op, offset, XL_IDX) || aopInReg (op, offset, XH_IDX) || aopInReg (op, offset, YL_IDX) || aopInReg (op, offset, YH_IDX) || aopInReg (op, offset, ZL_IDX))
+      if (aopInReg (op, offset, XL_IDX) || aopInReg (op, offset, XH_IDX) || aopInReg (op, offset, YL_IDX) || aopInReg (op, offset, YH_IDX) || aopInReg (op, offset, ZL_IDX) || aopInReg (op, offset, ZH_IDX))
         cost (1, 1);
       else if (op->type == AOP_LIT || op->type == AOP_IMMD)
         cost (2, 1);
@@ -1352,7 +1353,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       if (i + 1 < n && aopOnStack (result, roffset + i, 2) &&
         (aopInReg (source, soffset + i, Y_IDX) || aopInReg (source, soffset + i, X_IDX) || aopInReg (source, soffset + i, Z_IDX)))
         {
-          emit3_o (A_LDW, result, roffset + i, source, soffset + i);
+          emit3w_o (A_LDW, result, roffset + i, source, soffset + i);
           assigned[i] = true;
           assigned[i + 1] = true;
           size += 2;
@@ -1490,7 +1491,9 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         (!aopRS (source) || source->regs[ZL_IDX] <= i + 1 && source->regs[ZH_IDX] <= i + 1);
 
       if (aopInReg (result, roffset + i, Y_IDX) && i + 1 < size &&
-        (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || aopOnStack (source, soffset + i, 2)))
+        (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || aopOnStack (source, soffset + i, 2)) ||
+        (result->type == AOP_DIR || aopOnStack (source, soffset + i, 2)) && i + 1 < size &&
+        aopInReg (source, soffset + i, Y_IDX))
         {
           emit3w_o (A_LDW, result, roffset + i, source, soffset + i);
           i += 2;
@@ -1623,6 +1626,180 @@ adjustStack (int n)
     	G.stack.pushed -= m;
         updateCFA ();
     }
+}
+
+static void
+saveRegsForCall (const iCode * ic)
+{
+  if (G.saved && !regalloc_dry_run)
+    return;
+
+  if (!regDead (X_IDX, ic))
+    push (ASMOP_X, 0, 1);
+
+  if (!regDead (Y_IDX, ic))
+    push (ASMOP_Y, 0, 2);
+
+  if (!regDead (Z_IDX, ic) && !f8_extend_stack)
+    push (ASMOP_Z, 0, 2);
+
+  G.saved = true;
+}
+
+/*-----------------------------------------------------------------*/
+/* genIpush - generate code for pushing this gets a little complex */
+/*-----------------------------------------------------------------*/
+static void
+genIpush (const iCode * ic)
+{
+  operand *left = IC_LEFT (ic);
+  iCode *walk;
+
+  D (emit2 ("; genIPush", ""));
+
+  if (!ic->parmPush)
+    {
+      wassertl (0, "Encountered an unsupported spill push.");
+      return;
+    }
+
+  /* Caller saves, and this is the first iPush. */
+  /* Scan ahead until we find the function that we are pushing parameters to.
+     Count the number of addSets on the way to figure out what registers
+     are used in the send set.
+   */
+  for (walk = ic->next; walk->op != CALL && walk->op != PCALL; walk = walk->next);
+  if (!G.saved  && !regalloc_dry_run /* Cost is counted at CALL or PCALL instead */ )
+    saveRegsForCall (walk);
+
+  // Then do the push
+  aopOp (left, ic);
+
+  for (int size = left->aop->size, i = 0; i < size;)
+    {
+      if (i + 1 < size && (aopIsOp16_1 (left->aop, i) || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD))
+        {
+          push (left->aop, i, 2);
+          i += 2;
+        }
+      else if (aopIsOp8_1 (left->aop, i) || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
+        {
+          push (left->aop, i, 1);
+          i++;
+        }
+      else
+        {
+          UNIMPLEMENTED;
+          i++;
+        }
+    }
+
+  freeAsmop (IC_LEFT (ic));
+}
+    
+/*-----------------------------------------------------------------*/
+/* genCall - generates a call statement                            */
+/*-----------------------------------------------------------------*/
+static void
+genCall (const iCode *ic)
+{
+  sym_link *dtype = operandType (IC_LEFT (ic));
+  sym_link *etype = getSpec (dtype);
+  sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
+  int prestackadjust = 0;
+  bool tailjump = false;
+
+  D (emit2 ("; genCall", ""));
+
+  saveRegsForCall (ic);
+
+  operand *left = IC_LEFT (ic);
+
+  const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);   // Return value of big type or returning struct or union.
+  const bool SomethingReturned = (IS_ITEMP (IC_RESULT (ic)) &&
+                       (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir))
+                       || IS_TRUE_SYMOP (IC_RESULT (ic));
+
+  aopOp (left, ic);
+  if (SomethingReturned && !bigreturn)
+    aopOp (IC_RESULT (ic), ic);
+
+  if (bigreturn)
+    {
+      UNIMPLEMENTED;
+    }
+
+  // TODO: Check if we can do tail call optimization.
+
+  const bool jump = tailjump || !ic->parmBytes && !bigreturn && IFFUNC_ISNORETURN (ftype);
+
+  if (ic->op == PCALL)
+    {
+      UNIMPLEMENTED;
+    }
+  else
+    {
+      if (isFuncCalleeStackCleanup (currFunc->type) && prestackadjust && !IFFUNC_ISNORETURN (ftype)) // Copy return value into correct location on stack for tail call optimization.
+        {
+          UNIMPLEMENTED;
+        }
+
+      adjustStack (prestackadjust);
+
+      if (IS_LITERAL (etype))
+        emit2 (jump ? "jp" : "call", "0x%04X", ulFromVal (OP_VALUE (left)));
+      else
+        emit2 (jump ? "jp" : "call", "%s",
+          (OP_SYMBOL (left)->rname[0] ? OP_SYMBOL (left)->rname : OP_SYMBOL (left)->name));
+      cost (3, 1);
+    }
+
+  freeAsmop (left);
+  G.stack.pushed += prestackadjust;
+
+  // Adjust the stack for parameters if required.
+  if (ic->parmBytes || bigreturn)
+    {
+      if (IFFUNC_ISNORETURN (ftype) || isFuncCalleeStackCleanup (ftype))
+        {
+          G.stack.pushed -= ic->parmBytes + bigreturn * 2;
+          updateCFA ();
+        }
+      else
+        adjustStack (ic->parmBytes + bigreturn * 2);
+    }
+
+
+  const bool result_in_frameptr = f8_extend_stack && SomethingReturned && !bigreturn && (aopRet (ftype)->regs[ZL_IDX] >= 0 || aopRet (ftype)->regs[ZH_IDX] >= 0);
+
+  asmop *result = IC_RESULT (ic)->aop;
+
+  if (result_in_frameptr)
+    {
+      UNIMPLEMENTED;
+
+      goto restore;
+    }
+
+  if (f8_extend_stack)
+    pop (ASMOP_Z, 0, 2);
+
+  /* if we need assign a result value */
+  if (SomethingReturned && !bigreturn)
+    {
+      wassert (getSize (ftype->next) >= 1 && getSize (ftype->next) <= 4);
+      genMove (result, aopRet (ftype), true, true, true, !f8_extend_stack);
+    }
+
+restore:
+  if (SomethingReturned && !bigreturn)
+    freeAsmop (IC_RESULT (ic));
+
+  // Restore regs.
+  if (!regDead (X_IDX, ic) || !regDead (Y_IDX, ic) || !regDead (Z_IDX, ic) && !f8_extend_stack)
+    UNIMPLEMENTED;
+
+  G.saved = false;
 }
 
 /*-----------------------------------------------------------------*/
@@ -2333,7 +2510,7 @@ genF8iCode (iCode *ic)
       break;
 
     case IPUSH:
-      wassertl (0, "Unimplemented iCode");
+      genIpush (ic);
       break;
 
     case IPOP:
@@ -2342,7 +2519,7 @@ genF8iCode (iCode *ic)
 
     case CALL:
     case PCALL:
-      wassertl (0, "Unimplemented iCode");
+      genCall (ic);
       break;
 
     case FUNCTION:
