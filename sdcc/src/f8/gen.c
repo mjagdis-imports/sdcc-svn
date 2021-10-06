@@ -1111,13 +1111,13 @@ aopOp (operand *op, const iCode *ic)
           }
         else if (sym->isspilt && sym->usl.spillLoc || sym->nRegs && regalloc_dry_run)
           {
-            completely_in_regs = FALSE;
+            completely_in_regs = false;
 
             if (!regalloc_dry_run)
               {
                 aop->aopu.bytes[i].byteu.stk = (long int)(sym->usl.spillLoc->stack) + i;
 
-                if (sym->usl.spillLoc->stack + i <= -G.stack.pushed)
+                if (sym->usl.spillLoc->stack + i < -G.stack.pushed)
                   {
                     fprintf (stderr, "%s %d %d %d %d at ic %d\n", sym->name, (int)(sym->usl.spillLoc->stack), (int)(aop->size), (int)(i), (int)(G.stack.pushed), ic->key);
                     wassertl_bt (0, "Invalid stack offset.");
@@ -1760,12 +1760,235 @@ genLabel (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genGoto - generates a jump                                      */
+/*-----------------------------------------------------------------*/
+static void
+genGoto (const iCode *ic)
+{
+  D (emit2 ("; genGoto", ""));
+
+  emitJP(IC_LABEL (ic), 1.0f);
+}
+
+/*-----------------------------------------------------------------*/
+/* genPlus - generates code for addition                           */
+/*-----------------------------------------------------------------*/
+static void
+genPlus (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  asmop *leftop;
+  asmop *rightop;
+
+  D (emit2 ("; genPlus", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = result->aop->size;
+
+  /* Swap if left is literal. */
+  if (leftop->type == AOP_LIT || rightop->type != AOP_LIT && leftop->type == AOP_IMMD) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  leftop = left->aop;
+  rightop = right->aop;
+
+  for (int i = 0, started = false; i < size;)
+    {
+       bool xl_free = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i && rightop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+
+       if (!xl_free || aopInReg (rightop, XL_IDX, i))
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+
+       genMove_o (ASMOP_XL, 0, leftop, i, true, false, false, false, false);
+       if (aopIsOp8_2 (rightop, i))
+         emit3_o (started ? A_ADC : A_ADD, ASMOP_XL, 0, rightop, i);
+       else
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+       genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
+       i++;
+       started = true;
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genXor - code for xor                                           */
+/*-----------------------------------------------------------------*/
+static void
+genXor (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genXor", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = getSize (operandType (result));
+
+  /* Prefer literal on right. */
+  if (left->aop->type == AOP_LIT || right->aop->type != AOP_LIT && left->aop->type == AOP_IMMD) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  for (int i = 0; i < size;)
+    {
+       bool xl_free = regDead (XL_IDX, ic) && left->aop->regs[XL_IDX] <= i && right->aop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+
+       if (!xl_free || aopInReg (right->aop, XL_IDX, i))
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+
+       genMove_o (ASMOP_XL, 0, left->aop, i, true, false, false, false, false);
+       if (aopIsOp8_2 (right->aop, i))
+         emit3_o (A_XOR, ASMOP_XL, 0, right->aop, i);
+       else
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+       genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
+       i++;
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genOr - code for and                                            */
+/*-----------------------------------------------------------------*/
+static void
+genOr (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genOr", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = getSize (operandType (result));
+
+  /* Prefer literal on right. */
+  if (left->aop->type == AOP_LIT || right->aop->type != AOP_LIT && left->aop->type == AOP_IMMD) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  for (int i = 0; i < size;)
+    {
+       bool xl_free = regDead (XL_IDX, ic) && left->aop->regs[XL_IDX] <= i && right->aop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+
+       if (!xl_free || aopInReg (right->aop, XL_IDX, i))
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+
+       genMove_o (ASMOP_XL, 0, left->aop, i, true, false, false, false, false);
+       if (aopIsOp8_2 (right->aop, i))
+         emit3_o (A_OR, ASMOP_XL, 0, right->aop, i);
+       else
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+       genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
+       i++;
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genAnd - code for and                                           */
 /*-----------------------------------------------------------------*/
 static void
 genAnd (const iCode *ic, iCode *ifx)
 {
-  wassert (0);
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genAnd", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  int size = getSize (operandType (result));
+
+  /* Prefer literal on right. */
+  if (left->aop->type == AOP_LIT || right->aop->type != AOP_LIT && left->aop->type == AOP_IMMD) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
+    {
+      operand *t = right;
+      right = left;
+      left = t;
+    }
+
+  wassert (!ifx);
+
+  for (int i = 0; i < size;)
+    {
+       bool xl_free = regDead (XL_IDX, ic) && left->aop->regs[XL_IDX] <= i && right->aop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+
+       if (!xl_free || aopInReg (right->aop, XL_IDX, i))
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+
+       genMove_o (ASMOP_XL, 0, left->aop, i, true, false, false, false, false);
+       if (aopIsOp8_2 (right->aop, i))
+         emit3_o (A_AND, ASMOP_XL, 0, right->aop, i);
+       else
+         {
+           wassert (regalloc_dry_run);
+           cost (100, 100);
+         }
+       genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
+       i++;
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1774,7 +1997,64 @@ genAnd (const iCode *ic, iCode *ifx)
 static void
 genPointerGet (const iCode *ic)
 {
-  wassert (0);
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  bool bit_field = IS_BITVAR (getSpec (operandType (result)));
+  int blen = bit_field ? SPEC_BLEN (getSpec (operandType (result))) : 0;
+  int bstr = bit_field ? SPEC_BSTR (getSpec (operandType (result))) : 0;
+  
+  D (emit2 ("; genPointerGet", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
+
+  if (result->aop->type == AOP_DUMMY)
+    D (emit2 ("; Dummy read", ""));
+
+  wassertl (right, "GET_VALUE_AT_ADDRESS without right operand");
+  wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "GET_VALUE_AT_ADDRESS with non-literal right operand");
+
+  int size = result->aop->size;
+  // todo: What if right operand is negative?
+  int offset = byteOfVal (right->aop->aopu.aop_lit, 1) * 256 + byteOfVal (right->aop->aopu.aop_lit, 0);
+  
+  wassert (!bit_field);
+  wassert (abs (offset) <= 200);
+
+  bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0;
+
+  if (aopInReg (left->aop, 0, Y_IDX))
+    ;
+  else if (y_dead)
+    genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
+  else
+    {
+      wassert (regalloc_dry_run);
+      cost (100, 100);
+    }
+
+  for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
+    {
+      bool xl_dead = regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+
+      if (!xl_dead)
+        {
+          wassert (regalloc_dry_run);
+          cost (100, 100);
+        }
+
+      emit2 ("ld", "xl, (%d, y)", offset + i);
+      cost (2, 1);
+
+      genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, false, false, false);
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1783,7 +2063,54 @@ genPointerGet (const iCode *ic)
 static void
 genPointerSet (const iCode *ic)
 {
-  wassert (0);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  bool bit_field = IS_BITVAR (getSpec (operandType (right))) || IS_BITVAR (getSpec (operandType (left)));
+  int blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
+  int bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
+
+  D (emit2 ("; genPointerSet", ""));
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+
+  int size = right->aop->size;
+
+  wassert (!bit_field);
+
+  bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0;
+
+  if (aopInReg (left->aop, 0, Y_IDX))
+    ;
+  else if (y_dead)
+    genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
+  else
+    {
+      wassert (regalloc_dry_run);
+      cost (100, 100);
+    }
+
+  for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
+    {
+      bool xl_dead = regDead (XL_IDX, ic) && (right->aop->regs[XL_IDX] <= i);
+
+      if (aopInReg (right->aop, 0, XL_IDX))
+        ;
+      else if (xl_dead)
+        genMove_o (ASMOP_XL, 0, right->aop, i, 1, true, false, false, false);
+      else
+        {
+          wassert (regalloc_dry_run);
+          cost (100, 100);
+        }
+
+      emit2 ("ld", "(%d, y), xl", i);
+      cost (2, 1);
+    }
+
+  freeAsmop (right);
+  freeAsmop (left);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1910,8 +2237,24 @@ genF8iCode (iCode *ic)
       genLabel (ic);
       break;
 
+    case GOTO:
+      genGoto (ic);
+      break;
+
+    case '+':
+      genPlus (ic);
+      break;
+
+    case '^':
+      genXor (ic);
+      break;
+
+    case '|':
+      genOr (ic);
+      break;
+
     case BITWISEAND:
-      genAnd (ic, ifxForOp (IC_RESULT (ic), ic));
+      genAnd (ic, /*ifxForOp (IC_RESULT (ic), ic)*/0);
       break;
 
     case GET_VALUE_AT_ADDRESS:
