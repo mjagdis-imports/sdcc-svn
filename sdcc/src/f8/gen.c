@@ -24,6 +24,8 @@
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
 
+#define UNIMPLEMENTED do {wassertl (regalloc_dry_run, "Unimplemented"); cost (100, 100);} while(0)
+
 static bool regalloc_dry_run;
 static unsigned int regalloc_dry_run_cost_bytes;
 static unsigned int regalloc_dry_run_cost_cycles;
@@ -87,12 +89,13 @@ static const char *asminstnames[] =
   "xor",
 };
 
-static struct asmop asmop_xl, asmop_x, asmop_y, asmop_z, asmop_zero;
+static struct asmop asmop_xl, asmop_x, asmop_y, asmop_z, asmop_zero, asmop_one;
 static struct asmop *const ASMOP_XL = &asmop_xl;
 static struct asmop *const ASMOP_X = &asmop_x;
 static struct asmop *const ASMOP_Y = &asmop_y;
 static struct asmop *const ASMOP_Z = &asmop_z;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
+static struct asmop *const ASMOP_ONE = &asmop_one;
 
 // Init aop as a an asmop for data in registers, as given by the -1-terminated array regidx.
 static void
@@ -129,10 +132,21 @@ f8_init_asmops (void)
   asmop_zero.regs[ZL_IDX] = -1;
   asmop_zero.regs[ZH_IDX] = -1;
   asmop_zero.regs[C_IDX] = -1;
+
+  asmop_one.type = AOP_LIT;
+  asmop_one.size = 1;
+  asmop_one.aopu.aop_lit = constVal ("1");
+  asmop_zero.regs[XL_IDX] = -1;
+  asmop_zero.regs[XH_IDX] = -1;
+  asmop_zero.regs[YL_IDX] = -1;
+  asmop_zero.regs[YH_IDX] = -1;
+  asmop_zero.regs[ZL_IDX] = -1;
+  asmop_zero.regs[ZH_IDX] = -1;
+  asmop_zero.regs[C_IDX] = -1;
 }
 
 static void
-cost(unsigned int bytes, unsigned int cycles)
+cost(unsigned int bytes, float cycles)
 {
   regalloc_dry_run_cost_bytes += bytes;
   regalloc_dry_run_cost_cycles += cycles * regalloc_dry_run_cycle_scale;
@@ -156,7 +170,7 @@ emitJP(const symbol *target, float probability)
 {
   if (!regalloc_dry_run)
      emit2 ("jp", "!tlabel", labelKey2num (target->key));
-  cost (3, 1);
+  cost (3, probability);
 }
 
 /*-----------------------------------------------------------------*/
@@ -634,7 +648,7 @@ ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
 
   if (r0Idx >= 0)
     {
-      if (!op0->aopu.bytes[offset0 + 1].in_reg || op0->aopu.bytes[offset0 + 1].byteu.reg->rIdx != r0Idx + 1);
+      if (!op0->aopu.bytes[offset0 + 1].in_reg || op0->aopu.bytes[offset0 + 1].byteu.reg->rIdx != r0Idx + 1)
         return -1;
       switch (r0Idx)
         {
@@ -653,7 +667,7 @@ ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
     }
   if (r1Idx >= 0)
     {
-      if (!op1->aopu.bytes[offset1 + 1].in_reg || op1->aopu.bytes[offset1 + 1].byteu.reg->rIdx != r1Idx + 1);
+      if (!op1->aopu.bytes[offset1 + 1].in_reg || op1->aopu.bytes[offset1 + 1].byteu.reg->rIdx != r1Idx + 1)
         return -1;
       switch (r1Idx)
         {
@@ -747,7 +761,7 @@ opw_cost (const asmop *op0, int offset0)
   if (r0Idx < 0)
     wassert(0);
 
-  if (!op0->aopu.bytes[offset0 + 1].in_reg || op0->aopu.bytes[offset0 + 1].byteu.reg->rIdx != r0Idx + 1);
+  if (!op0->aopu.bytes[offset0 + 1].in_reg || op0->aopu.bytes[offset0 + 1].byteu.reg->rIdx != r0Idx + 1)
     wassert(0);
   switch (r0Idx)
     {
@@ -1286,7 +1300,7 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
         {
           wassert_bt (*size >= 1);
 
-          assigned[i] = TRUE;
+          assigned[i] = true;
           (*size)--;
           i++;
           continue;
@@ -1301,9 +1315,9 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
           if (!xl_free)
             pop (ASMOP_XL, 0, 1);
           assigned[i] = true;
+          (*size)--;
         }
-      i++;
-      
+      i++;  
     }
 }
 
@@ -1335,7 +1349,17 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   // Move everything from registers to the stack.
   for (int i = 0; i < n;)
     {
-      if (aopOnStack (result, roffset + i, 1) &&
+      if (i + 1 < n && aopOnStack (result, roffset + i, 2) &&
+        (aopInReg (source, soffset + i, Y_IDX) || aopInReg (source, soffset + i, X_IDX) || aopInReg (source, soffset + i, Z_IDX)))
+        {
+          emit3_o (A_LDW, result, roffset + i, source, soffset + i);
+          assigned[i] = true;
+          assigned[i + 1] = true;
+          size += 2;
+          regsize -= 2;
+          i += 2;
+        }
+      else if (aopOnStack (result, roffset + i, 1) &&
         (aopInReg (source, soffset + i, XL_IDX) || aopInReg (source, soffset + i, XH_IDX) || aopInReg (source, soffset + i, YL_IDX) || aopInReg (source, soffset + i, ZL_IDX)))
         {
           emit3_o (A_LD, result, roffset + i, source, soffset + i);
@@ -1346,8 +1370,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
       else if (aopOnStack (result, roffset + i, 1) && !aopOnStack (source, soffset + i, 1))
         {
-          wassert (regalloc_dry_run);
-          cost (100, 100);
+          UNIMPLEMENTED;
           assigned[i] = true;
           size--;
           i++;
@@ -1361,15 +1384,21 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
 
   // Now do the register shuffling.
   if (regsize)
-    {
-      wassert (regalloc_dry_run);
-      cost (100, 100);
-    }
+    UNIMPLEMENTED;
 
   // Move everything from stack to registers.
   for (int i = 0; i < n;)
     {
-      if (aopOnStack (source, soffset + i, 1) &&
+      if (i + 1 < n && aopOnStack (source, soffset + i, 2) &&
+        (aopInReg (result, roffset + i, Y_IDX) || aopInReg (result, roffset + i, X_IDX) || aopInReg (result, roffset + i, Z_IDX)))
+        {
+          emit3w_o (A_LDW, result, roffset + i, source, soffset + i);
+          assigned[i] = true;
+          assigned[i + 1] = true;
+          size -= 2;
+          i += 2;
+        }
+      else if (aopOnStack (source, soffset + i, 1) &&
         (aopInReg (result, roffset + i, XL_IDX) || aopInReg (result, roffset + i, XH_IDX) || aopInReg (result, roffset + i, YL_IDX) || aopInReg (result, roffset + i, ZL_IDX)))
         {
           emit3_o (A_LD, result, roffset + i, source, soffset + i);
@@ -1379,8 +1408,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
       else if (!aopOnStack (result, roffset + i, 1) && aopOnStack (source, soffset + i, 1))
         {
-          wassert (regalloc_dry_run);
-          cost (100, 100);
+          UNIMPLEMENTED;
           assigned[i] = true;
           size--;
           i++;
@@ -1460,6 +1488,14 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       const bool z_dead = z_dead_global &&
         (!aopRS (result) || (result->regs[ZL_IDX] >= (roffset + i) || result->regs[ZL_IDX] < 0) && (result->regs[ZH_IDX] >= (roffset + i) || result->regs[ZH_IDX] < 0)) &&
         (!aopRS (source) || source->regs[ZL_IDX] <= i + 1 && source->regs[ZH_IDX] <= i + 1);
+
+      if (aopInReg (result, roffset + i, Y_IDX) && i + 1 < size &&
+        (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || aopOnStack (source, soffset + i, 2)))
+        {
+          emit3w_o (A_LDW, result, roffset + i, source, soffset + i);
+          i += 2;
+          continue;
+        }
 
       bool via_xl =
         !aopInReg (result, roffset + i, XL_IDX) && !aopInReg (source, soffset + i, XL_IDX) &&
@@ -1792,7 +1828,7 @@ genPlus (const iCode *ic)
   int size = result->aop->size;
 
   /* Swap if left is literal. */
-  if (leftop->type == AOP_LIT || rightop->type != AOP_LIT && leftop->type == AOP_IMMD) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
+  if (left->aop->type == AOP_LIT || right->aop->type != AOP_LIT && left->aop->type == AOP_IMMD) // todo: Swap in more cases when right in reg, left not. Swap individually per-byte.
     {
       operand *t = right;
       right = left;
@@ -1807,19 +1843,13 @@ genPlus (const iCode *ic)
        bool xl_free = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i && rightop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
 
        if (!xl_free || aopInReg (rightop, XL_IDX, i))
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
 
        genMove_o (ASMOP_XL, 0, leftop, i, true, false, false, false, false);
        if (aopIsOp8_2 (rightop, i))
          emit3_o (started ? A_ADC : A_ADD, ASMOP_XL, 0, rightop, i);
        else
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
        genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
        i++;
        started = true;
@@ -1861,19 +1891,13 @@ genXor (const iCode *ic)
        bool xl_free = regDead (XL_IDX, ic) && left->aop->regs[XL_IDX] <= i && right->aop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
 
        if (!xl_free || aopInReg (right->aop, XL_IDX, i))
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
 
        genMove_o (ASMOP_XL, 0, left->aop, i, true, false, false, false, false);
        if (aopIsOp8_2 (right->aop, i))
          emit3_o (A_XOR, ASMOP_XL, 0, right->aop, i);
        else
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
        genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
        i++;
     }
@@ -1914,23 +1938,84 @@ genOr (const iCode *ic)
        bool xl_free = regDead (XL_IDX, ic) && left->aop->regs[XL_IDX] <= i && right->aop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
 
        if (!xl_free || aopInReg (right->aop, XL_IDX, i))
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
 
        genMove_o (ASMOP_XL, 0, left->aop, i, true, false, false, false, false);
        if (aopIsOp8_2 (right->aop, i))
          emit3_o (A_OR, ASMOP_XL, 0, right->aop, i);
        else
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
        genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
        i++;
     }
 
+  freeAsmop (right);
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genCmpEQorNE - equal or not equal comparison                    */
+/*-----------------------------------------------------------------*/
+static void
+genCmpEQorNE (const iCode *ic, iCode *ifx)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  symbol *tlbl_NE = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+  symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+
+  D (emit2 ("; genCmpEQorNE", ""));
+
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  int size = max (left->aop->size, right->aop->size);
+
+  wassert (!ifx);
+  wassert (size <= 2);
+
+  /* Prefer literal operand on right */
+  if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD ||
+    right->aop->type != AOP_LIT && right->aop->type != AOP_IMMD && left->aop->type == AOP_DIR)
+    {
+      operand *temp = left;
+      left = right;
+      right = temp;
+    }
+
+  if (size == 1)
+    {
+      if (!(regDead (XL_IDX, ic) || aopInReg (left->aop, 0, XL_IDX)) || !aopIsOp8_2 (right->aop, 0))
+        UNIMPLEMENTED;
+      else
+        {
+          genMove (ASMOP_XL, left->aop, true, false, false, false);
+          emit3 (A_CP, ASMOP_XL, right->aop);
+        }
+    }
+  else if (size == 2)
+    {
+      if (!regDead (Y_IDX, ic) || !aopIsOp16_2 (left->aop, 0))
+        UNIMPLEMENTED;
+      else
+        {
+          genMove (ASMOP_Y, right->aop, false, false, true, false);
+          emit3 (A_SUBW, ASMOP_Y, left->aop);
+        }
+    }
+
+  if (tlbl_NE)
+    emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+  genMove (result->aop, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+  emitJP(tlbl, 0.0f);
+  emitLabel (tlbl_NE);
+  genMove (result->aop, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+  emitLabel (tlbl);
+    
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -1969,19 +2054,13 @@ genAnd (const iCode *ic, iCode *ifx)
        bool xl_free = regDead (XL_IDX, ic) && left->aop->regs[XL_IDX] <= i && right->aop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
 
        if (!xl_free || aopInReg (right->aop, XL_IDX, i))
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
 
        genMove_o (ASMOP_XL, 0, left->aop, i, true, false, false, false, false);
        if (aopIsOp8_2 (right->aop, i))
          emit3_o (A_AND, ASMOP_XL, 0, right->aop, i);
        else
-         {
-           wassert (regalloc_dry_run);
-           cost (100, 100);
-         }
+         UNIMPLEMENTED;
        genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
        i++;
     }
@@ -2031,20 +2110,14 @@ genPointerGet (const iCode *ic)
   else if (y_dead)
     genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
   else
-    {
-      wassert (regalloc_dry_run);
-      cost (100, 100);
-    }
+    UNIMPLEMENTED;
 
   for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
     {
       bool xl_dead = regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
 
       if (!xl_dead)
-        {
-          wassert (regalloc_dry_run);
-          cost (100, 100);
-        }
+        UNIMPLEMENTED;
 
       emit2 ("ld", "xl, (%d, y)", offset + i);
       cost (2, 1);
@@ -2086,10 +2159,7 @@ genPointerSet (const iCode *ic)
   else if (y_dead)
     genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
   else
-    {
-      wassert (regalloc_dry_run);
-      cost (100, 100);
-    }
+    UNIMPLEMENTED;
 
   for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
     {
@@ -2100,10 +2170,7 @@ genPointerSet (const iCode *ic)
       else if (xl_dead)
         genMove_o (ASMOP_XL, 0, right->aop, i, 1, true, false, false, false);
       else
-        {
-          wassert (regalloc_dry_run);
-          cost (100, 100);
-        }
+        UNIMPLEMENTED;
 
       emit2 ("ld", "(%d, y), xl", i);
       cost (2, 1);
@@ -2161,11 +2228,11 @@ genIfx (const iCode *ic)
 
   D (emit2 ("; genIfx", ""));
 
-  if (!regDead (XL_IDX, ic) || cond->aop->regs[XL_IDX] > 0)
-    {
-      wassert (regalloc_dry_run);
-      cost (100, 100);
-    }
+  if (cond->aop->regs[XL_IDX] > 0)
+    UNIMPLEMENTED;
+
+  if (!regDead (XL_IDX, ic))
+    push (ASMOP_XL, 0, 1);
 
   genMove (ASMOP_XL, cond->aop, true, regDead (XH_IDX, ic) && cond->aop->regs[XH_IDX] <= 0, regDead (Y_IDX, ic) && cond->aop->regs[YL_IDX] <= 0 && cond->aop->regs[YH_IDX] <= 0, false);
 
@@ -2174,14 +2241,14 @@ genIfx (const iCode *ic)
       if (aopIsOp8_2 (cond->aop, i))
         emit3_o (A_OR, ASMOP_XL, 0, cond->aop, i);
       else
-        {
-          wassert (regalloc_dry_run);
-          cost (100, 100);
-        }
+        UNIMPLEMENTED;
       i++;
     }
 
   emit3 (A_TST, ASMOP_XL, 0);
+
+  if (!regDead (XL_IDX, ic))
+    pop (ASMOP_XL, 0, 1);
 
   if (tlbl)
     emit2 (IC_FALSE (ic) ? "jrz" : "jrnz", "!tlabel", labelKey2num (tlbl->key));
@@ -2190,6 +2257,38 @@ genIfx (const iCode *ic)
   // todo : cost.
 
   freeAsmop (cond);
+}
+
+/*-----------------------------------------------------------------*/
+/* genCast - generate code for cast                                */
+/*-----------------------------------------------------------------*/
+static void
+genCast (const iCode *ic)
+{
+  operand *result, *right;
+  sym_link *resulttype, *righttype;
+
+  D (emit2 ("; genCast", ""));
+
+  result = IC_RESULT (ic);
+  right = IC_RIGHT (ic);
+  resulttype = operandType (result);
+  righttype = operandType (right);
+
+  if ((getSize (resulttype) <= getSize (righttype) || !IS_SPEC (righttype) || (SPEC_USIGN (righttype) || IS_BOOL (righttype))) &&
+    (!IS_BOOL (resulttype) || IS_BOOL (righttype)))
+    {
+      genAssign (ic);
+      return;
+    }
+
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  UNIMPLEMENTED;
+
+  freeAsmop (right);
+  freeAsmop (result);
 }
 
 /*---------------------------------------------------------------------*/
@@ -2221,6 +2320,31 @@ genF8iCode (iCode *ic)
 
   switch (ic->op)
     {
+    case '!':
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case '~':
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case UNARYMINUS:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case IPUSH:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case IPOP:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case CALL:
+    case PCALL:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
     case FUNCTION:
       genFunction (ic);
       break;
@@ -2245,6 +2369,16 @@ genF8iCode (iCode *ic)
       genPlus (ic);
       break;
 
+    case NE_OP:
+    case EQ_OP:
+      genCmpEQorNE (ic, /*ifxForOp (IC_RESULT (ic), ic)*/0);
+      break;
+
+    case AND_OP:
+    case OR_OP:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
     case '^':
       genXor (ic);
       break;
@@ -2255,6 +2389,31 @@ genF8iCode (iCode *ic)
 
     case BITWISEAND:
       genAnd (ic, /*ifxForOp (IC_RESULT (ic), ic)*/0);
+      break;
+
+    case INLINEASM:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case RRC:
+    case RLC:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case GETABIT:
+      wassertl (0, "Unimplemented iCode");
+      break;
+      
+    case SWAP:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case LEFT_OP:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case RIGHT_OP:
+      wassertl (0, "Unimplemented iCode");
       break;
 
     case GET_VALUE_AT_ADDRESS:
@@ -2272,6 +2431,18 @@ genF8iCode (iCode *ic)
 
     case IFX:
       genIfx (ic);
+      break;
+
+    case ADDRESS_OF:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case JUMPTABLE:
+      wassertl (0, "Unimplemented iCode");
+      break;
+
+    case CAST:
+      genCast (ic);
       break;
 
     default:
