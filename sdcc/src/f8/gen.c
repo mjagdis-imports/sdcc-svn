@@ -54,6 +54,7 @@ enum asminst
   A_CLR,
   A_CLRW,
   A_CP,
+  A_CPW,
   A_DEC,
   A_DECW,
   A_INC,
@@ -92,6 +93,7 @@ static const char *asminstnames[] =
   "clr",
   "clrw",
   "cp",
+  "cpw",
   "dec",
   "decw",
   "inc",
@@ -204,6 +206,33 @@ emitJP(const symbol *target, float probability)
   if (!regalloc_dry_run)
      emit2 ("jp", "!tlabel", labelKey2num (target->key));
   cost (3, probability);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsLitVal - asmop from offset is val                          */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
+{
+  wassert_bt (size <= sizeof (unsigned long long int)); // Make sure we are not testing outside of argument val.
+
+  for(; size; size--, offset++)
+    {
+      unsigned char b = val & 0xff;
+      val >>= 8;
+
+      // Leading zeroes
+      if (aop->size <= offset && !b)
+        continue;
+
+      if (aop->type != AOP_LIT)
+        return (FALSE);
+
+      if (byteOfVal (aop->aopu.aop_lit, offset) != b)
+        return (FALSE);
+    }
+
+  return (TRUE);
 }
 
 /*-----------------------------------------------------------------*/
@@ -908,7 +937,16 @@ emit3wcost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, 
     else if (aopInReg (op0, offset0, X_IDX) || aopInReg (op0, offset0, Z_IDX))
       cost (2, 1);
     else
-      wassertl_bt (0, "Tried to get cost for invalid wide shift instruction");
+      wassertl_bt (0, "Tried to get cost for invalid wide instruction");
+    break;
+  case A_CPW:
+    wassert_bt (op1->type == AOP_LIT || op1->type == AOP_IMMD || offset1 >= op1->size);
+    if (aopInReg (op0, offset0, Y_IDX))
+      cost (1, 1);
+    else if (aopInReg (op0, offset0, X_IDX) || aopInReg (op0, offset0, Z_IDX))
+      cost (2, 1);
+    else
+      wassertl_bt (0, "Tried to get cost for invalid cpw instruction");
     break;
   default:
     wassertl_bt (0, "Tried to get cost for unknown 8-bit instruction");
@@ -1790,42 +1828,64 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 {
   int size = result_aop->size;
 
-  if (size == 1)
+  bool started = false;
+
+  for (int i = 0; i < size;)
     {
-      if (!regDead (XL_IDX, ic) || !aopIsOp8_2 (right_aop, 0))
-        UNIMPLEMENTED;
-      else
+      if (i + 1 < size && aopIsOp16_2 (right_aop, i) &&
+        (aopInReg (left_aop, i, X_IDX) && regDead (X_IDX, ic) || aopInReg (left_aop, i, Y_IDX) && regDead (Y_IDX, ic) || aopInReg (left_aop, i, Z_IDX) && regDead (Z_IDX, ic)))
         {
-          genMove (ASMOP_XL, left_aop, true, false, false, false);
           if (right_aop->type == AOP_LIT)
             {
-              emit2 ("add", "xl, #0x%02x", (~byteOfVal (right_aop->aopu.aop_lit, 0) + 1) & 0xff);
+              unsigned litword = (byteOfVal (right_aop->aopu.aop_lit, i + 1) << 8) | byteOfVal (right_aop->aopu.aop_lit, i);
+              emit2 (started ? "adwc" : "addw", "%s, #0x%02x", aopGet2 (left_aop, i), (~litword + !started) & 0xffff);
+              cost (2 + !aopInReg (left_aop, 0, Y_IDX), 1 + !aopInReg (left_aop, 0, Y_IDX));
+            }
+          else
+            emit3w_o (started ? A_SBCW : A_SUBW, left_aop, i, right_aop, i);
+          genMove_o (result_aop, i, ASMOP_Y, 0, 2, false, false, false, false);
+          started = true;
+          i += 2;
+        }
+      else if (i + 1 < size && aopIsOp16_2 (right_aop, i) &&
+        (aopInReg (result_aop, i, X_IDX) && regDead (X_IDX, ic) && left_aop->regs[XL_IDX] < i + 1 && left_aop->regs[XH_IDX] < i + 1 && right_aop->regs[XL_IDX] < i + 1 && right_aop->regs[XH_IDX] < i + 1 ||
+          aopInReg (result_aop, i, Y_IDX) && regDead (Y_IDX, ic) && left_aop->regs[YL_IDX] < i + 1 && left_aop->regs[YH_IDX] < i + 1 && right_aop->regs[YL_IDX] < i + 1 && right_aop->regs[YH_IDX] < i + 1||
+          aopInReg (result_aop, i, Z_IDX) && regDead (Z_IDX, ic) && left_aop->regs[ZL_IDX] < i + 1 && left_aop->regs[ZH_IDX] < i + 1 && right_aop->regs[ZL_IDX] < i + 1 && right_aop->regs[ZH_IDX] < i + 1))
+        {
+          genMove_o (result_aop, i, left_aop, i, 2, false, false, false, false);
+          if (right_aop->type == AOP_LIT)
+            {
+              unsigned litword = (byteOfVal (right_aop->aopu.aop_lit, i + 1) << 8) | byteOfVal (right_aop->aopu.aop_lit, i);
+              emit2 (started ? "adwc" : "addw", "%s, #0x%02x", aopGet2 (result_aop, i), (~litword + !started) & 0xffff);
+              cost (2 + !aopInReg (left_aop, 0, Y_IDX), 1 + !aopInReg (left_aop, 0, Y_IDX));
+            }
+          else
+            emit3w_o (started ? A_SBCW : A_SUBW, result_aop, i, right_aop, i);
+          started = true;
+          i += 2;
+        }
+      else
+        {
+          if (!regDead (XL_IDX, ic))
+            UNIMPLEMENTED;
+          if (left_aop->regs[XL_IDX] > i || left_aop->regs[XL_IDX] > i || result_aop->regs[XL_IDX] > 0 && result_aop->regs[XL_IDX] < i)
+            UNIMPLEMENTED;
+
+          if (!aopIsOp8_2 (right_aop, i))
+            UNIMPLEMENTED;
+          genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false);
+          if (right_aop->type == AOP_LIT)
+            {
+              emit2 (started ? "adc" : "add", "xl, #0x%02x", (~byteOfVal (right_aop->aopu.aop_lit, i) + !started) & 0xff);
               cost (2, 1);
             }
           else
-            emit3 (A_SUB, ASMOP_XL, right_aop);
-          genMove (result_aop, ASMOP_XL, true, false, false, false);
+            emit3 (started ? A_SBC : A_SUB, ASMOP_XL, right_aop);
+          genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false);
+          started = true;
+          i++;
         }
     }
-  else if (size == 2)
-    {
-      if (!regDead (Y_IDX, ic) || !aopIsOp16_2 (left_aop, 0))
-        UNIMPLEMENTED;
-      else
-        {
-          genMove (ASMOP_Y, right_aop, false, false, true, false);
-          if (right_aop->type == AOP_LIT)
-            {
-              emit2 ("addw", "y, #0x%04x", (~byteOfVal (right_aop->aopu.aop_lit, 0) + 1) & 0xffff);
-              cost (2, 1);
-            }
-          else
-            emit3w (A_SUBW, ASMOP_Y, left_aop);
-          genMove (result_aop, ASMOP_Y, false, false, true, false);
-        }
-    }
-  else
-    UNIMPLEMENTED;
 }
 
 /*-----------------------------------------------------------------*/
@@ -2183,6 +2243,7 @@ genReturn (const iCode *ic)
       break;
     case 1:
     case 2:
+    case 4:
       genMove (aopRet (currFunc->type), left->aop, true, true, true, true);
       break;
     default:
@@ -2420,7 +2481,6 @@ genCmp (const iCode *ic, iCode *ifx)
     sign = !(SPEC_USIGN (operandType (left)) | SPEC_USIGN (operandType (right)));
 
   wassert (!ifx);
-  wassert (size <= 2);
 
   if (ic->op == '>')
     {
@@ -2428,37 +2488,74 @@ genCmp (const iCode *ic, iCode *ifx)
       right = left;
       left = t;  
     }
-        
-  if (size == 1)
+
+  bool pushed_xl = false;
+
+  if (right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0))
     {
-      if (!regDead (XL_IDX, ic) || !aopIsOp8_2 (right->aop, 0))
-        UNIMPLEMENTED;
+      if (aopRS (left->aop) && left->aop->aopu.bytes[size - 1].in_reg && regDead (left->aop->aopu.bytes[size - 1].byteu.reg->rIdx, ic) && !aopInReg (left->aop, size - 1, YH_IDX))
+        emit3_o (A_SLL, left->aop, size - 1, 0, 0);
       else
         {
-          genMove (ASMOP_XL, left->aop, true, false, false, false);
-          if (right->aop->type == AOP_LIT)
+          if (!regDead (XL_IDX, ic))
             {
-              emit2 ("add", "xl, #0x%02x", (~byteOfVal (right->aop->aopu.aop_lit, 0) + 1) & 0xff);
-              cost (2, 1);
+              push (ASMOP_XL, 0, 1);
+              pushed_xl = true;
             }
-          else
-            emit3 (A_SUB, ASMOP_XL, right->aop);
+          genMove_o (ASMOP_XL, 0, left->aop, size - 1, 1, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          emit3 (A_SLL, ASMOP_XL, 0);
         }
+      goto return_c;
     }
-  else if (size == 2)
+  else if (!sign && size == 1 && aopIsOp8_2 (right->aop, 0) &&
+    (aopInReg (left->aop, 0, XL_IDX) || aopInReg (left->aop, 0, XH_IDX) || aopInReg (left->aop, 0, YL_IDX) || aopInReg (left->aop, 0, ZL_IDX)))
     {
-      if (!regDead (Y_IDX, ic) || !aopIsOp16_2 (right->aop, 0))
-        UNIMPLEMENTED;
-      else
+      emit3 (A_CP, left->aop, right->aop);
+      goto return_c;
+    }
+  else if (!sign && size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) &&
+    (aopInReg (left->aop, 0, X_IDX) || aopInReg (left->aop, 0, Y_IDX) || aopInReg (left->aop, 0, Z_IDX)))
+    {
+      emit3w (A_CPW, left->aop, right->aop);
+      goto return_c;
+    }
+  else
+    {
+      bool started = false;
+
+      for (int i = 0; i < size;)
         {
-          genMove (ASMOP_Y, left->aop, false, false, true, false);
-          if (right->aop->type == AOP_LIT)
+          if ((!sign && i + 1 < size || i + 2 < size) && // Try to use cpw
+            (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) &&
+            (aopInReg (left->aop, 0, X_IDX) || aopInReg (left->aop, 0, Y_IDX) || aopInReg (left->aop, 0, Z_IDX)))
             {
-              emit2 ("addw", "y, #0x%02x", (~byteOfVal (right->aop->aopu.aop_lit, 0) + 1) & 0xffff);
-              cost (2, 1);
+              emit3w (A_CPW, left->aop, right->aop);
+              started = true;
+              i += 2;
             }
           else
-            emit3w (A_SUBW, ASMOP_Y, right->aop);
+            {
+              if (!regDead (XL_IDX, ic) && !pushed_xl)
+                {
+                  push (ASMOP_XL, 0, 1);
+                  pushed_xl = true;
+                }
+              if (left->aop->regs[XL_IDX] > i || left->aop->regs[XL_IDX] > i)
+                UNIMPLEMENTED;
+
+              if (!aopIsOp8_2 (right->aop, i))
+                UNIMPLEMENTED;
+              genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false);
+              if (right->aop->type == AOP_LIT)
+               {
+                 emit2 (started ? "adc" : "add", "xl, #0x%02x", (~byteOfVal (right->aop->aopu.aop_lit, i) + !started) & 0xff);
+                 cost (2, 1);
+               }
+              else
+                emit3 (started ? A_SBC : A_SUB, ASMOP_XL, right->aop);
+              started = true;
+              i++;
+            }
         }
     }
 
@@ -2476,11 +2573,18 @@ genCmp (const iCode *ic, iCode *ifx)
       emit3 (A_SLL, ASMOP_XL, 0);
     }
 
-  if (!regDead (XL_IDX, ic))
-    UNIMPLEMENTED;
+return_c:
+  if (!regDead (XL_IDX, ic) && !pushed_xl)
+    {
+      push (ASMOP_XL, 0, 1);
+      pushed_xl = true;
+    }
   emit3 (A_CLR, ASMOP_XL, 0);
   emit3 (A_RLC, ASMOP_XL, 0);
   genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      
+  if (pushed_xl)
+    pop (ASMOP_XL, 0, 1);
 
   freeAsmop (right);
   freeAsmop (left);
