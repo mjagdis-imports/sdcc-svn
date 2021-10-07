@@ -180,6 +180,8 @@ f8_setDefaultOptions (void)
 static const char *
 f8_getRegName (const struct reg_info *reg)
 {
+  if (reg)
+    return reg->name;
   return "err";
 }
 
@@ -380,12 +382,12 @@ PORT f8_port =
     },
   },
   {
-    32767,                      /* maxCount */
+    -1,                         /* maxCount */
     2,                          /* sizeofElement */
-    {4, 5, 5},                  /* sizeofMatchJump[] - assuming operand in reg, inverse can be optimized away - would be much higher otherwise */
-    {4, 5, 5},                  /* sizeofRangeCompare[] - same as above */
-    3,                          /* sizeofSubtract - assuming 2 byte index, would be 2 otherwise */
-    5,                          /* sizeofDispatch - 1 byte for sllw followed by 3 bytes for ldw x, (..., X) and 2 byte for jp (x) */
+    {4, 5, 5},                  /* sizeofMatchJump[] */
+    {4, 5, 5},                  /* sizeofRangeCompare[] */
+    3,                          /* sizeofSubtract */
+    5,                          /* sizeofDispatch */
   },
   "_",
   f8_init,
