@@ -634,25 +634,27 @@ ld_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int of
   int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
 
   if (r0Idx == XL_IDX)
-    if (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == YH_IDX || r1Idx == ZL_IDX || r1Idx == ZH_IDX)
-      {
-        *prefixes = 0;
-        return 1;
-      }
-    else if (op1->type == AOP_LIT || op1->type == AOP_IMMD ||
-      offset1 >= op1->size ||
-      op1->type == AOP_STK || op1->type == AOP_REGSTK && r1Idx == -1)
-      {
-        *prefixes = 0;
-        return 2;
-      }
-    else if (op1->type == AOP_DIR)
-      {
-        *prefixes = 0;
-        return 3;
-      }
-    else
-      return -1;
+    {
+      if (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == YH_IDX || r1Idx == ZL_IDX || r1Idx == ZH_IDX)
+        {
+          *prefixes = 0;
+          return 1;
+        }
+      else if (op1->type == AOP_LIT || op1->type == AOP_IMMD ||
+        offset1 >= op1->size ||
+        op1->type == AOP_STK || op1->type == AOP_REGSTK && r1Idx == -1)
+        {
+          *prefixes = 0;
+          return 2;
+        }
+      else if (op1->type == AOP_DIR)
+        {
+          *prefixes = 0;
+          return 3;
+        }
+      else
+        return -1;
+    }
   else if (r1Idx == XL_IDX && op1->type == AOP_STK || op1->type == AOP_REGSTK && r0Idx == -1) // ld (n, sp), xl
     {
       *prefixes = 0;
@@ -664,12 +666,20 @@ ld_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int of
       return 3;
     }
 
-  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX || // Try with alternate accumulator prefix.
-    r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX)
+  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX) // Try with alternate accu prefix.
     {
       bool replace0 = (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX);
-      bool replace1 = (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX); // TODO: Each prefix can only replave one!
-      int bytes = ld_bytes (prefixes, replace0 ? ASMOP_XL : op0, replace0 ? 0 : offset0, replace1 ? ASMOP_XL : op1, replace1 ? 0 : offset1);
+      int bytes = ld_bytes (prefixes, replace0 ? ASMOP_XL : op0, replace0 ? 0 : offset0, op1, offset1);
+      if (bytes >= 0)
+        {
+          (*prefixes)++;
+          return bytes + 1;
+        }
+    }
+  if (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX) // Try with alternate accu prefix.
+    {
+      bool replace1 = (r1Idx == XH_IDX || r1Idx == YL_IDX || r1Idx == ZL_IDX);
+      int bytes = ld_bytes (prefixes, op0, offset0, replace1 ? ASMOP_XL : op1, replace1 ? 0 : offset1);
       if (bytes >= 0)
         {
           (*prefixes)++;
@@ -1485,7 +1495,10 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
       else if (aopOnStack (result, roffset + i, 1) && !aopOnStack (source, soffset + i, 1))
         {
-          UNIMPLEMENTED;
+          push (ASMOP_XL, 0, 1);
+          emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
+          emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
+          pop (ASMOP_XL, 0, 1);
           assigned[i] = true;
           size--;
           i++;
@@ -1498,8 +1511,53 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   genCopyStack (result, roffset, source, soffset, n, assigned, &size, false, false, false, false, false);
 
   // Now do the register shuffling.
-  if (regsize)
-    UNIMPLEMENTED;
+  while (regsize)
+    {
+      int i;
+      // Find lowest byte that can be assigned and needs to be assigned.
+      for (i = 0; i < n; i++)
+        {
+          int j;
+
+          if (assigned[i] || !source->aopu.bytes[soffset + i].in_reg)
+            continue;
+
+          for (j = 0; j < n; j++)
+            {
+              if (!source->aopu.bytes[soffset + j].in_reg || !result->aopu.bytes[roffset + i].in_reg)
+                continue;
+              if (!assigned[j] && i != j && result->aopu.bytes[roffset + i].byteu.reg == source->aopu.bytes[soffset + j].byteu.reg)
+                goto skip_byte; // We can't write this one without overwriting the source.
+            }
+
+          break;                // Found byte that can be written safely.
+
+skip_byte:
+          ;
+        }
+
+      if (i < n) // We can safely assign a byte.
+        {
+          if (!aopInReg (result, roffset + i, YH_IDX) && !aopInReg (result, roffset + i, ZH_IDX) || // Assign via single ld if we can.
+            !aopInReg (source, soffset + i, YH_IDX) && !aopInReg (source, soffset + i, ZH_IDX))
+            emit3_o (A_LD, result, roffset + i, source, soffset + i);
+          else // Go through xl instead.
+            {
+              push (ASMOP_XL, 0, 1);
+              emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
+              emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
+              pop (ASMOP_XL, 0, 1);
+            }
+          regsize--;
+          size--;
+          assigned[i] = true;
+          continue;
+        }
+
+      // No byte can be assigned safely (i.e. the assignment is a permutation).
+      UNIMPLEMENTED;
+      return;
+    }
 
   // Move everything from stack to registers.
   for (int i = 0; i < n;)
@@ -1585,8 +1643,6 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 
   if (source->type == AOP_STL)
     {
-      wassert(!soffset);
-      
       if (!y_dead_global)
         UNIMPLEMENTED;
 
@@ -1594,7 +1650,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       emit2 ("addw", "y, #%ld", (long)(source->aopu.stk_off) + G.stack.pushed);
       cost (4, 2);
 
-      genMove_o (result, roffset, ASMOP_Y, 0, size, xl_dead_global, xh_dead_global, true, z_dead_global);
+      genMove_o (result, roffset, ASMOP_Y, soffset, size, xl_dead_global, xh_dead_global, true, z_dead_global);
 
       return;
     }
@@ -1873,15 +1929,18 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 
           if (!aopIsOp8_2 (right_aop, i))
             UNIMPLEMENTED;
-          genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false);
-          if (right_aop->type == AOP_LIT)
-            {
-              emit2 (started ? "adc" : "add", "xl, #0x%02x", (~byteOfVal (right_aop->aopu.aop_lit, i) + !started) & 0xff);
-              cost (2, 1);
-            }
           else
-            emit3 (started ? A_SBC : A_SUB, ASMOP_XL, right_aop);
-          genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false);
+            {
+              genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false);
+              if (right_aop->type == AOP_LIT)
+                {
+                  emit2 (started ? "adc" : "add", "xl, #0x%02x", (~byteOfVal (right_aop->aopu.aop_lit, i) + !started) & 0xff);
+                  cost (2, 1);
+                }
+              else
+                emit3_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right_aop, i);
+              genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false);
+            }
           started = true;
           i++;
         }
@@ -2039,7 +2098,10 @@ genCall (const iCode *ic)
 
   if (ic->op == PCALL)
     {
-      UNIMPLEMENTED;
+      adjustStack (prestackadjust);
+      genMove (ASMOP_Y, left->aop, true, true, true, true);
+      emit2 ("jp", "y");
+      cost (1, 1);
     }
   else
     {
@@ -2529,7 +2591,7 @@ genCmp (const iCode *ic, iCode *ifx)
             (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) &&
             (aopInReg (left->aop, 0, X_IDX) || aopInReg (left->aop, 0, Y_IDX) || aopInReg (left->aop, 0, Z_IDX)))
             {
-              emit3w (A_CPW, left->aop, right->aop);
+              emit3w_o (A_CPW, left->aop, i, right->aop, i);
               started = true;
               i += 2;
             }
@@ -2545,14 +2607,17 @@ genCmp (const iCode *ic, iCode *ifx)
 
               if (!aopIsOp8_2 (right->aop, i))
                 UNIMPLEMENTED;
-              genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false);
-              if (right->aop->type == AOP_LIT)
-               {
-                 emit2 (started ? "adc" : "add", "xl, #0x%02x", (~byteOfVal (right->aop->aopu.aop_lit, i) + !started) & 0xff);
-                 cost (2, 1);
-               }
               else
-                emit3 (started ? A_SBC : A_SUB, ASMOP_XL, right->aop);
+                {
+                  genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false);
+                  if (right->aop->type == AOP_LIT)
+                   {
+                     emit2 (started ? "adc" : "add", "xl, #0x%02x", (~byteOfVal (right->aop->aopu.aop_lit, i) + !started) & 0xff);
+                     cost (2, 1);
+                   }
+                  else
+                    emit3_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right->aop, i);
+                }
               started = true;
               i++;
             }
@@ -2564,7 +2629,7 @@ genCmp (const iCode *ic, iCode *ifx)
       if (!regalloc_dry_run)
         {
           symbol *tlbl = newiTempLabel (0);
-          emit2 ("jrno", "!tlabel", tlbl);
+          emit2 ("jrno", "!tlabel", labelKey2num (tlbl->key));
           emit2 ("xor", "xl, #0x80");
           cost (4, 2);
           emitLabel (tlbl);
@@ -2641,7 +2706,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       else
         {
           genMove (ASMOP_Y, right->aop, false, false, true, false);
-          emit3 (A_SUBW, ASMOP_Y, left->aop);
+          emit3w (A_SUBW, ASMOP_Y, left->aop);
         }
     }
 
