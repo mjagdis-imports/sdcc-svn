@@ -1,7 +1,9 @@
 2021-10-07 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* src/f8/gen.c,
-	  src/f8/main.c:
+	  src/f8/main.c,
+	  device/include/sdcc-lib.h,
+	  device/include/stdarg.h:
 	  Codegen for experimental f8 port.
 
 2021-10-06 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>

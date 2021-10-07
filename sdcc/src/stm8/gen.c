@@ -2806,7 +2806,7 @@ genNot (const iCode *ic)
       emit3 (A_RLC, ASMOP_A, 0);
     
       cheapMove (result->aop, 0, ASMOP_A, 0, false);
-    
+
       for (i = 1; i < result->aop->size; i++)
         cheapMove (result->aop, 0, ASMOP_ZERO, 0, true);
     }
