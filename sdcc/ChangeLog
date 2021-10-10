@@ -1,3 +1,11 @@
+2021-10-10 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* device/lib/f8,
+	  configure,
+	  configure.ac,
+	  device/lib/Makefile.in:
+	  Library infrastructure for experimental f8 port.
+
 2021-10-07 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* src/f8/gen.c,

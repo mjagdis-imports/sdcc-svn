@@ -949,6 +949,7 @@ fi
 
 if test $OPT_DISABLE_F8 = 0; then
   AC_CONFIG_FILES([src/f8/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/f8/Makefile])
 fi
 
 test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/Makefile])
