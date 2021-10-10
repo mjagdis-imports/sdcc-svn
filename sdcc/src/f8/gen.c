@@ -1557,6 +1557,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
           pop (ASMOP_XL, 0, 1);
           assigned[i] = true;
           size--;
+          regsize--;
           i++;
         }
       else // This byte is not a register-to-stack copy.
@@ -1596,6 +1597,30 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   genCopyStack (result, roffset, source, soffset, n, assigned, &size, xl_free, xh_free, y_free, z_free, false);
 
   // Now do the register shuffling.
+  for (int b = XL_IDX; b <= ZL_IDX; b += 2) // Try to use xch yl, yh, etc.
+    if (regsize >= 2)
+      {
+        int i;
+        int ex[2] = {-1, -1};
+
+        i = result->regs[b] - roffset;
+        if (i > 0 && i < n && !assigned[i] && aopInReg (source, soffset + i, b + 1))
+          ex[0] = i;
+        i = result->regs[b + 1] - roffset;
+        if (i > 0 && i < n && !assigned[i] && aopInReg (source, soffset + i, b))
+          ex[1] = i;
+
+        if (ex[0] >= 0 && ex[1] >= 0)
+          {
+            asmop *xchaop = b ? (b == 2 ? ASMOP_Y : ASMOP_Z) : ASMOP_X;
+            emit3_o (A_XCH, xchaop, 0, xchaop, 1);
+            assigned[ex[0]] = true;
+            assigned[ex[1]] = true;
+            regsize -= 2;
+            size -= 2;
+          }
+      }
+
   while (regsize)
     {
       int i;
@@ -1728,14 +1753,24 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 
   if (source->type == AOP_STL)
     {
-      if (!y_dead_global)
+      if (y_dead_global)
+        {
+          emit2 ("ld", "y, sp");
+          emit2 ("addw", "y, #%ld", (long)(source->aopu.stk_off) + G.stack.pushed);
+          cost (4, 2);
+          genMove_o (result, roffset, ASMOP_Y, soffset, size, xl_dead_global, xh_dead_global, true, z_dead_global);
+        }
+      else if (result->regs[YL_IDX] < 0 && result->regs[YH_IDX] < 0)
+        {
+          push (ASMOP_Y, 0, 2);
+          emit2 ("ld", "y, sp");
+          emit2 ("addw", "y, #%ld", (long)(source->aopu.stk_off) + G.stack.pushed);
+          cost (4, 2);
+          genMove_o (result, roffset, ASMOP_Y, soffset, size, xl_dead_global, xh_dead_global, true, z_dead_global);
+          pop (ASMOP_Y, 0, 2);
+        }
+      else 
         UNIMPLEMENTED;
-
-      emit2 ("ld", "y, sp");
-      emit2 ("addw", "y, #%ld", (long)(source->aopu.stk_off) + G.stack.pushed);
-      cost (4, 2);
-
-      genMove_o (result, roffset, ASMOP_Y, soffset, size, xl_dead_global, xh_dead_global, true, z_dead_global);
 
       return;
     }
