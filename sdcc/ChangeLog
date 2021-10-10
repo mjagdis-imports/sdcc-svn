@@ -5,6 +5,8 @@
 	  configure.ac,
 	  device/lib/Makefile.in:
 	  Library infrastructure for experimental f8 port.
+	* src/f8/gen.c:
+	  Improve codegen for experimental f8 port.
 
 2021-10-07 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
