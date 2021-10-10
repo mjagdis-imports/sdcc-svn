@@ -40,7 +40,7 @@ enum
 
   X_IDX,     // X - for use with code generation support functions only.
   Y_IDX,     // Y - for use with code generation support functions only.
-  Z_IDX,     // Y - for use with code generation support functions only.
+  Z_IDX,     // Z - for use with code generation support functions only.
 
   SP_IDX     // SP - for use with debug info.
 };

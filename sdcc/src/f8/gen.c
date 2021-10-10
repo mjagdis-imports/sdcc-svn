@@ -787,6 +787,12 @@ ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
         }
     }
 
+  if (r0Idx == Z_IDX && r1Idx == Y_IDX) // ldw z, y
+    {
+      *prefixes = 0;
+      return 1;
+    }
+
   if (r0Idx == Y_IDX)
     if (r1Idx == X_IDX) // ldw y, x
       {
@@ -1656,6 +1662,22 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
     }
   }
 
+  // Try to use ldw z, y
+  {
+    const int il = result->regs[ZL_IDX] - roffset;
+    const int ih = result->regs[ZH_IDX] - roffset;
+    const bool assign_l = (il >= 0 && il < n && !assigned[il] && aopInReg (source, soffset + il, YL_IDX));
+    const bool assign_h = (ih >= 0 && ih < n && !assigned[ih] && aopInReg (source, soffset + ih, YH_IDX));
+    if (source->regs[ZL_IDX] < 0 && source->regs[ZH_IDX] < 0 && assign_l && assign_h)
+    {
+      emit3w (A_LDW, ASMOP_Z, ASMOP_Y);
+      assigned[il] = true;
+      assigned[ih] = true;
+      regsize -= 2;
+      size -= 2;
+    }
+  }
+  
   while (regsize)
     {
       int i;
@@ -2138,6 +2160,45 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 
   for (int i = 0; i < size;)
     {
+      bool xl_free = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i && right_aop->regs[XL_IDX] <= i && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
+      bool xl_free2 = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i + 1 && right_aop->regs[XL_IDX] <= i + 1 && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
+      //bool yl_free2 = regDead (YL_IDX, ic) && leftop->regs[YL_IDX] <= i + 1 && rightop->regs[YL_IDX] <= i + 1 && (result->aop->regs[YL_IDX] < 0 || result->aop->regs[YL_IDX] >= i);
+      //bool yh_free2 = regDead (YH_IDX, ic) && leftop->regs[YH_IDX] <= i + 1 && rightop->regs[YH_IDX] <= i + 1 && (result->aop->regs[YH_IDX] < 0 || result->aop->regs[YH_IDX] >= i);
+      //bool y_free2 = yl_free2 && yh_free2;
+
+      if (!started && aopIsLitVal (right_aop, i, 1, 0x00)) // Skip lower bytes.
+        {
+          genMove_o (result_aop, i, left_aop, i, 1, xl_free, false, false, false);
+          i++;
+          continue;
+        }
+
+      if (i + 1 < size && !started && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place incw / decw
+        (aopIsLitVal (right_aop, i, 2, 1) || aopIsLitVal (right_aop, i, 2, -1)))
+        {
+          emit3w_o (aopIsLitVal (right_aop, i, 2, 1) ? A_DECW : A_INCW, left_aop, i, 0, 0);
+          i += 2;
+          started = true;
+          continue;
+        }
+      else if (i + 1 < size && !started && aopInReg (result_aop, i, Y_IDX) && // Use incw / decw y
+        (aopIsLitVal (right_aop, i, 2, 1) || aopIsLitVal (right_aop, i, 2, -1)))
+        {
+          genMove (ASMOP_Y, left_aop, xl_free2, false, true, false);
+          emit3w (aopIsLitVal (right_aop, i, 2, 1) ? A_DECW : A_INCW, ASMOP_Y, 0);
+          i += 2;
+          started = true;
+          continue;
+        }
+      else if (i + 1 < size && started && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place adcw / sbcw
+        (aopIsLitVal (right_aop, i, 2, 0) || aopIsLitVal (right_aop, i, 2, -1)))
+        {
+          emit3w_o (aopIsLitVal (right_aop, i, 2, 0) ? A_SBCW : A_ADCW, left_aop, i, 0, 0);
+          i += 2;
+          started = true;
+          continue;
+        }
+
       if (i + 1 < size && aopIsOp16_2 (right_aop, i) &&
         (aopInReg (left_aop, i, X_IDX) && regDead (X_IDX, ic) || aopInReg (left_aop, i, Y_IDX) && regDead (Y_IDX, ic) || aopInReg (left_aop, i, Z_IDX) && regDead (Z_IDX, ic)))
         {
@@ -2149,7 +2210,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             }
           else
             emit3w_o (started ? A_SBCW : A_SUBW, left_aop, i, right_aop, i);
-          genMove_o (result_aop, i, ASMOP_Y, 0, 2, false, false, false, false);
+          genMove_o (result_aop, i, left_aop, 0, 2, false, false, false, false);
           started = true;
           i += 2;
         }
@@ -2725,7 +2786,7 @@ genPlus (const iCode *ic)
        else if (i + 1 < size && !started && aopInReg (result->aop, i, Y_IDX) && // Use incw / decw y
          (aopIsLitVal (rightop, i, 2, 1) || aopIsLitVal (rightop, i, 2, -1)))
          {
-           genMove (ASMOP_Y, leftop, xl_free, false, true, false);
+           genMove (ASMOP_Y, leftop, xl_free2, false, true, false);
            emit3w (aopIsLitVal (rightop, i, 2, 1) ? A_INCW : A_DECW, ASMOP_Y, 0);
            i += 2;
            started = true;
