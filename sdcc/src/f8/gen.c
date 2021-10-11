@@ -2324,7 +2324,7 @@ saveRegsForCall (const iCode * ic)
   if (!regDead (Y_IDX, ic))
     push (ASMOP_Y, 0, 2);
 
-  if (!regDead (Z_IDX, ic) && !f8_extend_stack)
+  if (!regDead (Z_IDX, ic))
     push (ASMOP_Z, 0, 2);
 
   G.saved = true;
@@ -3099,7 +3099,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
-      else if (i + 1 < size && aopIsOp16_2 (left->aop, 0) && regDead (Y_IDX, ic))
+      else if (i + 1 < size && aopIsOp16_2 (left->aop, i) && regDead (Y_IDX, ic))
         {
           genMove_o (ASMOP_Y, 0, right->aop, i, 2, false, false, true, false);
           emit3sub (A_SUBW, ASMOP_Y, left->aop);
@@ -3109,11 +3109,11 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         }
       else
         {
-          if (aopIsAcc8 (left->aop, i) && aopIsOp8_2 (right->aop, 0))
+          if (aopIsAcc8 (left->aop, i) && aopIsOp8_2 (right->aop, i))
             emit3_o (A_CP, left->aop, i, right->aop, i);
-          else if (aopIsAcc8 (right->aop, i) && aopIsOp8_2 (left->aop, 0))
+          else if (aopIsAcc8 (right->aop, i) && aopIsOp8_2 (left->aop, i))
             emit3_o (A_CP, right->aop, i, left->aop, i);
-          else if (!regDead (XL_IDX, ic) || !aopIsOp8_2 (right->aop, 0))
+          else if (!regDead (XL_IDX, ic) || !aopIsOp8_2 (right->aop, i))
             UNIMPLEMENTED;
           else
             {
@@ -3551,7 +3551,6 @@ genPointerGet (const iCode *ic)
   // todo: What if right operand is negative?
   int offset = byteOfVal (right->aop->aopu.aop_lit, 1) * 256 + byteOfVal (right->aop->aopu.aop_lit, 0);
   
-  wassert (!bit_field);
   bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0;
 
   if (!bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) &&
@@ -3612,6 +3611,23 @@ genPointerGet (const iCode *ic)
           cost (2 + (use_z || offset + i > 255), 1);
         }
 
+      if (bit_field && blen < 8 && !i) // The only byte might need shifting.
+        {
+          while (bstr--)
+            emit3 (A_SRL, ASMOP_XL, 0);
+        }
+      if (bit_field && blen < 8) // The partial byte.
+        {
+          emit2 ("and", "xl, #0x%02x", 0xff >> (8 - blen));
+          cost (2, 1);
+        }
+      if (bit_field && blen <= 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
+        {  
+          wassertl(0, "Unimplemented read from signed bit-field.");
+        }
+
+      if (result->aop->type == AOP_DUMMY) // Pointer dereference where the result is ignored, but wasn't optimized out (typically due to use of volatile).
+        continue;
       genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, false, false, false);
     }
 
@@ -3641,8 +3657,6 @@ genPointerSet (const iCode *ic)
 
   int size = right->aop->size;
 
-  wassert (!bit_field);
-
   bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0;
 
   if (!bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && size <= 2 && aopIsLitVal (right->aop, 0, size, 0x0000)) // Use clr / clrw mm.
@@ -3658,6 +3672,17 @@ genPointerSet (const iCode *ic)
       bool wide = size > 1;
       genMove (wide ? ASMOP_Y : ASMOP_XL, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), y_dead, regDead (Z_IDX, ic));
       emit2 (wide ? "ldw" : "ld", "%s, %s", aopGet2 (left->aop, 0), wide ? "y" : "xl");
+      cost (3, 1);
+      goto release;
+    }
+  else if (bit_field && blen == 1 && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) &&
+    regDead (XL_IDX, ic))
+    {
+      genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      if (left->aop->type == AOP_LIT)
+        emit2 ("xchb", "xl, 0x%02x%02x, #%u", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), bstr);
+      else
+        emit2 ("xchb", "xl, %s+%d, #%u", left->aop->aopu.immd, left->aop->aopu.immd_off, bstr);
       cost (3, 1);
       goto release;
     }
@@ -3692,6 +3717,22 @@ genPointerSet (const iCode *ic)
         genMove_o (ASMOP_XL, 0, right->aop, i, 1, true, false, false, false);
       else
         UNIMPLEMENTED;
+
+      if (bit_field && blen < 8)
+        {
+          if (!regDead (XL_IDX, ic) || !regDead (XH_IDX, ic))
+            UNIMPLEMENTED;
+          for (int j = 0; j < bstr; j++)
+            emit3 (A_SLL, ASMOP_XL, 0);
+          emit2 ("and", "xl, #0x%02x", (0xff >> (8 - blen)) << bstr);
+          cost (2, 1);
+          emit2 ("ld", "xh, (%d, y)", i);
+          cost (3, 1);
+          emit2 ("and", "xh, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
+          cost (3, 1);
+          emit2 ("and", "xl, xh");
+          cost (1, 1);
+        }
 
       if (!i)
         {
@@ -4172,6 +4213,10 @@ genF8Code (iCode *lic)
       emit2 (";", "count: %f", ic->count);
 #endif
       genF8iCode(ic);
+
+#if 0
+      fprintf (stderr, "ic %d: stack %d\n", ic->key, G.stack.pushed);
+#endif
 
 #if 0
       D (emit2 (";", "Cost for generated ic %d : (%d, %d)", ic->key, regalloc_dry_run_cost_bytes, regalloc_dry_run_cost_cycles));

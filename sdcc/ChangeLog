@@ -1,6 +1,7 @@
 2021-10-11 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
-	* src/f8/gen.c:
+	* src/f8/gen.c.
+	  src/f8/alloc2.cc:
 	  Improve codegen for experimental f8 port.
 
 2021-10-11 Philipp Klaus Krause <pkk AT spth.de>
