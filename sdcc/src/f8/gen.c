@@ -1016,14 +1016,19 @@ emit3_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
   if (regalloc_dry_run)
     return;
 
+  bool wide =
+    (inst == A_CLRW || inst == A_DECW || inst == A_INCW ||
+    inst == A_BOOLW || inst == A_RLCW || inst == A_RRCW || inst == A_SEX || inst == A_SRAW || inst == A_SRLW ||
+    inst == A_CPW);
+
   if (op1)
     {
-      char *l = Safe_strdup (aopGet (op0, offset0));
-      emit2 (asminstnames[inst], "%s, %s", l, aopGet (op1, offset1));
+      char *l = Safe_strdup (wide ? aopGet2 (op0, offset0) : aopGet (op0, offset0));
+      emit2 (asminstnames[inst], "%s, %s", l, wide ? aopGet2 (op1, offset1) : aopGet (op1, offset1));
       Safe_free (l);
     }
   else
-    emit2 (asminstnames[inst], "%s", aopGet (op0, offset0));
+    emit2 (asminstnames[inst], "%s", wide ? aopGet2 (op0, offset0) : aopGet (op0, offset0));
 }
 
 static void
