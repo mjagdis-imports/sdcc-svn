@@ -339,8 +339,18 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
 }
 
 /*-----------------------------------------------------------------*/
-/* aopIsOp8_2 - asmop at offset can be used at 8-bit operand to
-                two-operand instruction                            */
+/* aopIsAcc8 - asmop at offset can be used as left 8-bit operand 
+              to two-operand instruction                           */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsAcc8 (const asmop *aop, int offset)
+{
+  return (aopInReg (aop, offset, XL_IDX) || aopInReg (aop, offset, XH_IDX) || aopInReg (aop, offset, YL_IDX) || aopInReg (aop, offset, ZL_IDX));
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsOp8_2 - asmop at offset can be used as right 8-bit operand 
+                to two-operand instruction                         */
 /*-----------------------------------------------------------------*/
 static bool
 aopIsOp8_2 (const asmop *aop, int offset)
@@ -1010,14 +1020,16 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
 }
 
 static void
-emit3_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
+emit3_o (const enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
 {
   emit3cost (inst, op0, offset0, op1, offset1);
   if (regalloc_dry_run)
     return;
 
-  bool wide =
-    (inst == A_CLRW || inst == A_DECW || inst == A_INCW ||
+  bool wide = // Same order as in emit3cost above
+    (inst == A_SBCW || inst == A_SUBW || inst == A_ADCW || inst == A_ADDW ||
+    inst == A_LDW ||
+    inst == A_CLRW || inst == A_DECW || inst == A_INCW ||
     inst == A_BOOLW || inst == A_RLCW || inst == A_RRCW || inst == A_SEX || inst == A_SRAW || inst == A_SRLW ||
     inst == A_CPW);
 
@@ -3039,8 +3051,6 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
   int size = max (left->aop->size, right->aop->size);
 
-  wassert (!ifx);
-
   /* Prefer literal operand on right */
   if (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD ||
     right->aop->type != AOP_LIT && right->aop->type != AOP_IMMD && left->aop->type == AOP_DIR)
@@ -3050,7 +3060,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       right = temp;
     }
 
-  if (size == 1 && aopIsOp8_2 (right->aop, 0) &&
+  if (!ifx && size == 1 && aopIsOp8_2 (right->aop, 0) &&
     result->aop->size == 1 && aopInReg (result->aop, 0, XL_IDX))
     {
       genMove (ASMOP_XL, left->aop, true, false, false, false);
@@ -3060,7 +3070,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
       goto release;
     }
-  else if (size == 2 && aopIsOp16_2 (right->aop, 0) &&
+  else if (!ifx && size == 2 && aopIsOp16_2 (right->aop, 0) &&
     (result->aop->size == 2 && aopInReg (result->aop, 0, Y_IDX) || result->aop->size == 1 && aopInReg (result->aop, 0, YL_IDX) && regDead (YH_IDX, ic)))
     {
       bool xl_dead = regDead (XL_IDX, ic) && right->aop->regs[XL_IDX] < 0 && right->aop->regs[XH_IDX] < 0;
@@ -3099,12 +3109,16 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         }
       else
         {
-          if (!(regDead (XL_IDX, ic) || aopInReg (left->aop, 0, XL_IDX)) || !aopIsOp8_2 (right->aop, 0))
+          if (aopIsAcc8 (left->aop, i) && aopIsOp8_2 (right->aop, 0))
+            emit3_o (A_CP, left->aop, i, right->aop, i);
+          else if (aopIsAcc8 (right->aop, i) && aopIsOp8_2 (left->aop, 0))
+            emit3_o (A_CP, right->aop, i, left->aop, i);
+          else if (!regDead (XL_IDX, ic) || !aopIsOp8_2 (right->aop, 0))
             UNIMPLEMENTED;
           else
             {
               genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false);
-              emit3 (A_CP, ASMOP_XL, right->aop);
+              emit3_o (A_CP, ASMOP_XL, 0, right->aop, i);
             }
           if (tlbl_NE)
             emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
@@ -3112,11 +3126,29 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         }
     }
 
-  genMove (result->aop, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-  emitJP(tlbl, 0.0f);
-  emitLabel (tlbl_NE);
-  genMove (result->aop, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-  emitLabel (tlbl);
+  if (ifx)
+    {
+      if ((bool)IC_TRUE (ifx) ^ (ic->op == NE_OP))
+        {
+          emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
+          emitLabel (tlbl_NE);
+        }
+      else
+        {
+          emitJP(tlbl, 0.5f);
+          emitLabel (tlbl_NE);
+          emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
+          emitLabel (tlbl);
+        }
+    }
+  else
+    {
+      genMove (result->aop, ic->op == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      emitJP(tlbl, 0.5);
+      emitLabel (tlbl_NE);
+      genMove (result->aop, ic->op == NE_OP ? ASMOP_ONE : ASMOP_ZERO, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      emitLabel (tlbl);
+    }
 
 release:    
   freeAsmop (right);
@@ -3962,7 +3994,7 @@ genF8iCode (iCode *ic)
 
     case NE_OP:
     case EQ_OP:
-      genCmpEQorNE (ic, /*ifxForOp (IC_RESULT (ic), ic)*/0);
+      genCmpEQorNE (ic, ifxForOp (IC_RESULT (ic), ic));
       break;
 
     case AND_OP:
