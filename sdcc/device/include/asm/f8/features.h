@@ -1,8 +1,7 @@
 /*-------------------------------------------------------------------------
-   sdcc-lib.h - Top level header file for the sdcc libraries that enables
-                target specific features.
+   features.h - STM8 specific features.
 
-   Copyright (C) 2004, Maarten Brock, sourceforge.brock@dse.nl
+   Copyright (C) 2001, Michael Hope, 2013, Philipp Klaus Krause
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -27,41 +26,16 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __SDC51_SDCC_LIB_H
-#define __SDC51_SDCC_LIB_H	1
+#ifndef __SDCC_ASM_STM8_FEATURES_H
+#define __SDCC_ASM_STM8_FEATURES_H   1
 
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_z80n)
-#include <asm/z80/features.h>
+#define _REENTRANT
+#define _CODE
+#define _AUTOMEM
+#define _STATMEM
 
-#elif defined(__SDCC_r2k) || defined(__SDCC_r2ka)
-#include <asm/r2k/features.h>
-
-#elif defined(__SDCC_r3ka)
-#include <asm/r3ka/features.h>
-
-#elif defined(__SDCC_tlcs90)
-#include <asm/tlcs90/features.h>
-
-#elif defined(__SDCC_gbz80)
-#include <asm/gbz80/features.h>
-
-#elif defined(__SDCC_mcs51)
-#include <asm/mcs51/features.h>
-
-#elif defined(__SDCC_ds390)
-#include <asm/ds390/features.h>
-
-#elif defined(__SDCC_stm8)
-#include <asm/stm8/features.h>
-
-#elif defined(__SDCC_f8)
-#include <asm/f8/features.h>
-
-#else
-/* PENDING */
-#include <asm/default/features.h>
-
-#endif
+#define _SDCC_MANGLES_SUPPORT_FUNS	1
+#define _SDCC_Z80_STYLE_LIB_OPT		1
 
 #endif
 

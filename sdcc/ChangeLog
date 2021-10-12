@@ -2,7 +2,9 @@
 
 	* src/f8/gen.c,
 	  src/f8/main.c,
-	  src/f8/alloc2.cc:
+	  src/f8/alloc2.cc,
+	  device/include/sdcc-lib.h,
+	  device/include/asm/f8:
 	  Improve codegen for experimental f8 port.
 
 2021-10-11 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
