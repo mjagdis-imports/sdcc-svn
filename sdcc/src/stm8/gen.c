@@ -4310,6 +4310,8 @@ genEndFunction (iCode *ic)
           cost (1, 4);
         }
     }
+
+  D (emit2 (";", "Total %s function size at codegen: %u bytes.", sym->name, (unsigned int)regalloc_dry_run_cost_bytes));
 }
 
 /*-----------------------------------------------------------------*/
@@ -9513,7 +9515,10 @@ genSTM8Code (iCode *lic)
 
   memset(stm8_regs_used_as_parms_in_calls_from_current_function, 0, sizeof(bool) * (YH_IDX + 1));
   memset(stm8_regs_used_as_parms_in_pcalls_from_current_function, 0, sizeof(bool) * (YH_IDX + 1));
-
+  
+  regalloc_dry_run_cost_bytes = 0;
+  regalloc_dry_run_cost_cycles = 0;
+      
   for (ic = lic; ic; ic = ic->next)
     {
       initGenLineElement ();
@@ -9538,8 +9543,10 @@ genSTM8Code (iCode *lic)
           cln = ic->lineno;
         }
 
+#if 0
       regalloc_dry_run_cost_bytes = 0;
       regalloc_dry_run_cost_cycles = 0;
+#endif
 
       if (options.iCodeInAsm)
         {

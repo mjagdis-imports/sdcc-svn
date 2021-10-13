@@ -1,5 +1,12 @@
 2021-10-13 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/f8/gen.c,
+	  device/include/math.h,
+	  device/lib/f8/Makefile.in:
+	  Improve codegen for experimental f8 port.
+
+2021-10-13 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/stm8/gen.c:
 	  Improve wide left shift by literal.
 	  

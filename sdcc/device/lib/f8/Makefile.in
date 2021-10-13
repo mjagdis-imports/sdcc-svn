@@ -55,8 +55,8 @@ F8_SDCC = $(COMMON_SDCC) \
   vprintf.c \
   atomic_flag_clear.c
 
-STM8SOURCES = $(addprefix ../,$(F8_FLOAT) $(F8_INT) $(F8_LONG) $(F8_LONGLONG) $(F8_SDCC))
-STM8OBJECTS = $(patsubst %.c,%.rel,$(F8_FLOAT) $(F8_INT) $(F8_LONG) $(F8_LONGLONG) $(F8_SDCC))
+F8SOURCES = $(addprefix ../,$(F8_FLOAT) $(F8_INT) $(F8_LONG) $(F8_LONGLONG) $(F8_SDCC))
+F8OBJECTS = $(patsubst %.c,%.rel,$(F8_FLOAT) $(F8_INT) $(F8_LONG) $(F8_LONGLONG) $(F8_SDCC))
 
 OBJ = setjmp.rel heap.rel atomic_flag_test_and_set.rel
 
@@ -69,20 +69,20 @@ CFLAGS = -I$(srcdir)/../../include -I. --std-c11
 
 all: $(PORTDIR)/$(LIB)
 
-$(PORTDIR)/$(LIB): $(OBJ) $(STM8OBJECTS) Makefile
+$(PORTDIR)/$(LIB): $(OBJ) $(F8OBJECTS) Makefile
 ifeq ($(LIB_TYPE), SDCCLIB)
 	rm -f $@; \
-	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(STM8OBJECTS)
+	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(F8OBJECTS)
 else
   ifeq ($(LIB_TYPE), AR)
-	$(top_builddir)/bin/sdar -rcSD $@ $(OBJ) $(STM8OBJECTS)
+	$(top_builddir)/bin/sdar -rcSD $@ $(OBJ) $(F8OBJECTS)
   else
     ifeq ($(LIB_TYPE), RANLIB)
-	$(top_builddir)/bin/sdar -rcD $@ $(OBJ) $(STM8OBJECTS)
+	$(top_builddir)/bin/sdar -rcD $@ $(OBJ) $(F8OBJECTS)
     else
 	rm -f $@
-	for i in $(basename $(OBJ) $(STM8OBJECTS)); do echo $$i >>$@; done
-	cp $(OBJ) $(STM8OBJECTS) $(PORTDIR)
+	for i in $(basename $(OBJ) $(F8OBJECTS)); do echo $$i >>$@; done
+	cp $(OBJ) $(F8OBJECTS) $(PORTDIR)
     endif
   endif
 endif
