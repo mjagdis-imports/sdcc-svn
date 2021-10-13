@@ -132,6 +132,9 @@ static const char *asminstnames[] =
   "xor",
 };
 
+bool f8_regs_used_as_parms_in_calls_from_current_function[ZH_IDX + 1];
+bool f8_regs_used_as_parms_in_pcalls_from_current_function[ZH_IDX + 1];
+
 static struct asmop asmop_xl, asmop_xh, asmop_x, asmop_y, asmop_z, asmop_xy, asmop_zero, asmop_one, asmop_mone;
 static struct asmop *const ASMOP_XL = &asmop_xl;
 static struct asmop *const ASMOP_XH = &asmop_xh;
@@ -1027,9 +1030,9 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
   case A_CPW:
     wassert_bt (op1->type == AOP_LIT || op1->type == AOP_IMMD || offset1 >= op1->size);
     if (aopInReg (op0, offset0, Y_IDX))
-      cost (1, 1);
+      cost (3, 1);
     else if (aopInReg (op0, offset0, X_IDX) || aopInReg (op0, offset0, Z_IDX))
-      cost (2, 1);
+      cost (4, 1);
     else
       wassertl_bt (0, "Tried to get cost for invalid cpw instruction");
     break;
@@ -2014,7 +2017,24 @@ static asmop *
 aopArg (sym_link *ftype, int i)
 {
   wassert (IS_FUNC (ftype));
-    
+
+  value *args = FUNC_ARGS(ftype);
+  wassert (args);
+
+  if (FUNC_HASVARARGS (ftype))
+    return 0;
+
+  int j;
+  value *arg;
+  for (j = 1, arg = args; j < i; j++, arg = arg->next)
+    wassert (arg);
+
+  if (i == 1 && getSize (arg->type) == 2)
+    return ASMOP_Y;
+
+  if (i == 1 && getSize (arg->type) == 1)
+    return ASMOP_XL;
+
   return 0;
 }
 
@@ -3155,6 +3175,7 @@ genCmp (const iCode *ic, iCode *ifx)
           else
             emit2 (IC_TRUE (ifx) ? "jrsgt" : "jslt", "!tlabel", labelKey2num (tlbl->key));
         }
+      cost (2, 1);
       emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
       goto release;
@@ -4209,6 +4230,110 @@ genCast (const iCode *ic)
   freeAsmop (result);
 }
 
+/*-----------------------------------------------------------------*/
+/* genReceive - generate code for receiving a register parameter.  */
+/*-----------------------------------------------------------------*/
+static void
+genReceive (const iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  aopOp (result, ic);
+
+  D (emit2 ("; genReceive", ""));
+
+  wassert (currFunc);
+  wassert (ic->argreg);
+  wassert (aopArg (currFunc->type, ic->argreg));
+
+  bool dead_regs[ZH_IDX + 1];
+  
+  for (int i = 0; i <= ZH_IDX; i++)
+    dead_regs[i] = regDead (i, ic);
+
+  for(iCode *nic = ic->next; nic && nic->op == RECEIVE; nic = nic->next)
+    {
+      asmop *narg = aopArg (currFunc->type, nic->argreg);
+      wassert (narg);
+      for (int i = 0; i < narg->size; i++)
+        dead_regs[narg->aopu.bytes[i].byteu.reg->rIdx] = false;
+    }
+    
+  if (result->aop->type == AOP_REG || result->aop->type == AOP_REGSTK)
+    for (int i = 0; i < result->aop->size; i++)
+      if (result->aop->aopu.bytes[i].in_reg && !dead_regs[result->aop->aopu.bytes[i].byteu.reg->rIdx])
+        UNIMPLEMENTED;
+
+  genMove (result->aop, aopArg (currFunc->type, ic->argreg), dead_regs[XL_IDX], dead_regs[XH_IDX], dead_regs[YL_IDX] && dead_regs[YH_IDX], dead_regs[ZL_IDX] && dead_regs[ZH_IDX]);
+
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
+/* genSend - generate code for sending a register parameter.       */
+/*-----------------------------------------------------------------*/
+static void
+genSend (const iCode *ic)
+{
+  D (emit2 ("; genSend", ""));
+
+  aopOp (IC_LEFT (ic), ic);
+
+  /* Caller saves, and this is the first iPush. */
+  /* Scan ahead until we find the function that we are pushing parameters to.
+     Count the number of addSets on the way to figure out what registers
+     are used in the send set.
+   */
+  const iCode *walk;
+  for (walk = ic->next; walk; walk = walk->next)
+    {
+      if (walk->op == CALL || walk->op == PCALL)
+        break;
+    }
+
+  if (!G.saved && !regalloc_dry_run) // Cost is counted at CALL or PCALL instead
+    saveRegsForCall (walk);
+
+  sym_link *ftype = IS_FUNCPTR (operandType (IC_LEFT (walk))) ? operandType (IC_LEFT (walk))->next : operandType (IC_LEFT (walk));
+  asmop *argreg = aopArg (ftype, ic->argreg);
+
+  wassert (argreg);
+
+  // The register argument shall not overwrite a still-needed (i.e. as further parameter or function for the call) value.
+  for (int i = 0; i < argreg->size; i++)
+    if (!regDead (argreg->aopu.bytes[i].byteu.reg->rIdx, ic))
+      for (iCode *walk2 = ic->next; walk2; walk2 = walk2->next)
+        {
+          if (walk2->op != CALL && IC_LEFT (walk2) && !IS_OP_LITERAL (IC_LEFT (walk2)))
+            UNIMPLEMENTED;
+
+          if (walk2->op == CALL || walk2->op == PCALL)
+            break;
+        }
+
+  bool xl_dead = regDead (XL_IDX, ic);
+  bool xh_dead = regDead (XH_IDX, ic);
+  bool y_dead = regDead (Y_IDX, ic);
+  bool z_dead = regDead (Z_IDX, ic);
+  
+  for (iCode *walk2 = ic->prev; walk2 && walk2->op == SEND; walk2 = walk2->prev)
+    {
+      asmop *warg = aopArg (ftype, walk2->argreg);
+      wassert (warg);
+      xl_dead &= (warg->regs[XL_IDX] < 0);
+      xh_dead &= (warg->regs[XH_IDX] < 0);
+      y_dead &= (warg->regs[YL_IDX] < 0 && warg->regs[YH_IDX] < 0);
+      z_dead &= (warg->regs[ZL_IDX] < 0 && warg->regs[ZH_IDX] < 0);
+    }
+    
+  genMove (argreg, IC_LEFT (ic)->aop, xl_dead, xh_dead, y_dead, z_dead);
+
+  for (int i = 0; i < argreg->size; i++)
+    if (!regalloc_dry_run)
+       ((walk->op == PCALL) ? f8_regs_used_as_parms_in_pcalls_from_current_function : f8_regs_used_as_parms_in_calls_from_current_function)[argreg->aopu.bytes[i].byteu.reg->rIdx] = true;
+
+  freeAsmop (IC_LEFT (ic));
+}
+
 /*---------------------------------------------------------------------*/
 /* genF8Code - generate code for F8 for a single iCode instruction     */
 /*---------------------------------------------------------------------*/
@@ -4387,11 +4512,11 @@ genF8iCode (iCode *ic)
       break;
 
     case RECEIVE:
-      wassertl (0, "Unimplemented iCode");
+      genReceive (ic);
       break;
       
     case SEND:
-      wassertl (0, "Unimplemented iCode");
+      genSend (ic);
       break;
 
     case DUMMY_READ_VOLATILE:
@@ -4450,8 +4575,8 @@ genF8Code (iCode *lic)
   if (options.debug && !regalloc_dry_run)
     debugFile->writeFrameAddress (NULL, NULL, 0); /* have no idea where frame is now */
 
-  //memset(stm8_regs_used_as_parms_in_calls_from_current_function, 0, sizeof(bool) * (YH_IDX + 1));
-  //memset(stm8_regs_used_as_parms_in_pcalls_from_current_function, 0, sizeof(bool) * (YH_IDX + 1));
+  memset(f8_regs_used_as_parms_in_calls_from_current_function, 0, sizeof(bool) * (ZH_IDX + 1));
+  memset(f8_regs_used_as_parms_in_pcalls_from_current_function, 0, sizeof(bool) * (ZH_IDX + 1));
 
   regalloc_dry_run_cost_bytes = 0;
   regalloc_dry_run_cost_cycles = 0;

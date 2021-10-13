@@ -2,7 +2,9 @@
 
 	* src/f8/gen.c,
 	  device/include/math.h,
-	  device/lib/f8/Makefile.in:
+	  device/lib/f8/Makefile.in,
+	  src/f8/gen.h,
+	  src/f8/main.c:
 	  Improve codegen for experimental f8 port.
 
 2021-10-13 Philipp Klaus Krause <pkk AT spth.de>
