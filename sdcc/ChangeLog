@@ -1,8 +1,13 @@
-2021-10-11 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+2021-10-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improve wide left shift by literal.
+	  
+2021-10-12 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* src/f8/gen.c,
 	  src/f8/main.c,
-	  src/f8/alloc2.cc,
+	  src/f8/ralloc2.cc,
 	  device/include/sdcc-lib.h,
 	  device/include/asm/f8:
 	  Improve codegen for experimental f8 port.
