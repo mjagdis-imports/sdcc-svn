@@ -1,3 +1,11 @@
+2021-10-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/stm8/_divulong.s,
+	  device/lib/stm8/_modulong.s,
+	  device/lib/stm8/Makefile.in,
+	  src/stm8/peeph.def:
+	  Revert some hand-written asm back to generic C, since SDCC now generates better code.
+
 2021-10-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/f8/gen.c,
@@ -6,6 +14,11 @@
 	  src/f8/gen.h,
 	  src/f8/main.c:
 	  Improve codegen for experimental f8 port.
+
+2021-10-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/btowc.c:
+	  Fix btowc handling of int values that are valid characters when cast to unsigned char.
 
 2021-10-13 Philipp Klaus Krause <pkk AT spth.de>
 
