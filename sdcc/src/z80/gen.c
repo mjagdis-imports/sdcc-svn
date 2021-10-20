@@ -6397,6 +6397,8 @@ done:
   _G.flushStatics = 1;
   _G.stack.pushed = 0;
   _G.stack.offset = 0;
+
+  emitDebug (";\tTotal %s function size at codegen: %u bytes.", sym->name, (unsigned int)regalloc_dry_run_cost);
 }
 
 /*-----------------------------------------------------------------*/

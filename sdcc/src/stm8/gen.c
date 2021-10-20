@@ -4219,7 +4219,7 @@ genEndFunction (iCode *ic)
       cost (2, 2);
       adjustStack (sym->stack + 2 + poststackadjust, a_free, false, x_free ? y_free : false);
       emit2 ("jp", x_free ? "(x)" : "(y)");
-      cost (1 + !x_free, 1);
+      cost (1 + !x_free, 1);D (emit2 (";", "Total %s function size at codegen: %u bytes.", sym->name, (unsigned int)regalloc_dry_run_cost_bytes));
       return;
     }
   else if (sym->stack) // Only do the first one for now.
@@ -4236,7 +4236,7 @@ genEndFunction (iCode *ic)
           if (IFFUNC_ISCRITICAL (sym->type))
             genEndCritical (NULL);
           emit2 ("jp", "(x)");
-          cost (1, 1);
+          cost (1, 1);D (emit2 (";", "Total %s function size at codegen: %u bytes.", sym->name, (unsigned int)regalloc_dry_run_cost_bytes));
           return;
         }
       else if (y_free && options.model != MODEL_LARGE && !IFFUNC_ISISR (sym->type) && !IFFUNC_ISCOSMIC (sym->type))
@@ -4246,7 +4246,7 @@ genEndFunction (iCode *ic)
           if (IFFUNC_ISCRITICAL (sym->type))
             genEndCritical (NULL);
           emit2 ("jp", "(y)");
-          cost (2, 1);
+          cost (2, 1);D (emit2 (";", "Total %s function size at codegen: %u bytes.", sym->name, (unsigned int)regalloc_dry_run_cost_bytes));
           return;
         }
       else if (3 + poststackadjust <= 255 && options.model != MODEL_LARGE && !IFFUNC_ISCOSMIC (sym->type))

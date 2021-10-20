@@ -1021,7 +1021,6 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
   case A_BOOLW:
   case A_MUL:
   case A_NEGW:
-  case A_SEX:
   case A_SLLW:
   case A_SRAW:
   case A_SRLW:
@@ -1058,7 +1057,7 @@ emit3_o (const enum asminst inst, asmop *op0, int offset0, asmop *op1, int offse
     inst == A_LDW ||
     inst == A_CLRW || inst == A_DECW || inst == A_INCW ||
     inst == A_RLCW || inst == A_RRCW ||
-    inst == A_BOOLW || inst == A_MUL || inst == A_NEGW || inst == A_SEX || inst == A_SLLW || inst == A_SRAW || inst == A_SRLW ||
+    inst == A_BOOLW || inst == A_MUL || inst == A_NEGW || inst == A_SLLW || inst == A_SRAW || inst == A_SRLW ||
     inst == A_CPW);
 
   if (op1)
@@ -1594,9 +1593,23 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         size--;
       }
 
-  // Clear registersnow that would be more expensive to clear later.
+  // Try to use zex.
+  if (n == 1 && sizex == 2 && aopIsAcc16 (result, roffset) && aopInReg (source, soffset, XL_IDX))
+    {
+      emit2 ("zex", "%s, xl", aopGet2 (result, roffset));
+      cost (1 + !aopInReg (result, roffset, Y_IDX), 1 + !aopInReg (result, roffset, Y_IDX));
+      assigned[0] = true;
+      assigned[1] = true;
+      if (!aopInReg (result, roffset, X_IDX))
+        {
+          size--;
+          regsize--;
+        }
+    }
+
+  // Clear registers now that would be more expensive to clear later.
   if(n >= 1 && !assigned[n - 1] && sizex > n && !assigned[n] && aopInReg (result, roffset + n - 1, Y_IDX) && // We want to clear the high byte of y.
-    size - regsize <= 1) // We won't need x or y for stack-to-stack copies.
+    size - regsize <= 1) // We won't need y for stack-to-stack copies.
     {
       const bool yl_free = source->regs[YL_IDX] < soffset || assigned[source->regs[YL_IDX] - soffset];
       const bool yh_free = source->regs[YH_IDX] < soffset || assigned[source->regs[YH_IDX] - soffset];
@@ -3011,11 +3024,11 @@ genPlus (const iCode *ic)
 
   for (int i = 0, started = false; i < size;)
     {
-       bool xl_free = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i && rightop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
-       bool xl_free2 = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i + 1 && rightop->regs[XL_IDX] <= i + 1 && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
-       bool yl_free2 = regDead (YL_IDX, ic) && leftop->regs[YL_IDX] <= i + 1 && rightop->regs[YL_IDX] <= i + 1 && (result->aop->regs[YL_IDX] < 0 || result->aop->regs[YL_IDX] >= i);
-       bool yh_free2 = regDead (YH_IDX, ic) && leftop->regs[YH_IDX] <= i + 1 && rightop->regs[YH_IDX] <= i + 1 && (result->aop->regs[YH_IDX] < 0 || result->aop->regs[YH_IDX] >= i);
-       bool y_free2 = yl_free2 && yh_free2;
+      bool xl_free = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i && rightop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+      bool xl_free2 = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i + 1 && rightop->regs[XL_IDX] <= i + 1 && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+      bool yl_free2 = regDead (YL_IDX, ic) && leftop->regs[YL_IDX] <= i + 1 && rightop->regs[YL_IDX] <= i + 1 && (result->aop->regs[YL_IDX] < 0 || result->aop->regs[YL_IDX] >= i);
+      bool yh_free2 = regDead (YH_IDX, ic) && leftop->regs[YH_IDX] <= i + 1 && rightop->regs[YH_IDX] <= i + 1 && (result->aop->regs[YH_IDX] < 0 || result->aop->regs[YH_IDX] >= i);
+      bool y_free2 = yl_free2 && yh_free2;
 
       // Special case for rematerializing sums
       if (!started && i == size - 2 && (leftop->type == AOP_IMMD && rightop->type == AOP_LIT) &&
@@ -3029,8 +3042,38 @@ genPlus (const iCode *ic)
           i += 2;
           continue;
         }
+      else if (!started && i == size - 2 &&
+        (leftop->type == AOP_STL && (rightop->type == AOP_LIT || rightop->type == AOP_DIR || aopOnStack (rightop, i, 2)) || rightop->type == AOP_STL && (leftop->type == AOP_LIT || leftop->type == AOP_DIR || aopOnStack (leftop, i, 2))) &&
+        aopInReg (result->aop, i, Y_IDX) /* todo: aloow more here */)
+        {
+          unsigned offset = 0;
+          bool lit = leftop->type == AOP_LIT || rightop->type == AOP_LIT;
+          if (lit)
+            offset = byteOfVal ((leftop->type == AOP_LIT ? left : right)->aop->aopu.aop_lit, 1) * 256 + byteOfVal ((leftop->type == AOP_LIT ? left : right)->aop->aopu.aop_lit, 0);
+          emit2 ("ldw", "y, sp");
+          cost (1, 1);
+          switch ((long)((leftop->type == AOP_STL ? left : right)->aop->aopu.stk_off) + G.stack.pushed + offset)
+            {
+            case 2:
+              emit3 (A_INCW, ASMOP_Y, 0);
+            case 1:
+              emit3 (A_INCW, ASMOP_Y, 0);
+              break;
+            default:
+              emit2 ("addw", "y, #%ld", (long)((leftop->type == AOP_STL ? left : right)->aop->aopu.stk_off) + G.stack.pushed + offset);
+              cost (3, 1);
+            }
+          if (!lit)
+            {
+              emit2 ("addw", "y, %s", aopGet2 (leftop->type == AOP_STL ? rightop : leftop, i));
+              cost (3, 1);
+            }
+          started = true;
+          i += 2;
+          continue;
+        } 
 
-       if (!started && aopIsLitVal (rightop, i, 1, 0x00)) // Skip lower bytes.
+      if (!started && aopIsLitVal (rightop, i, 1, 0x00)) // Skip lower bytes.
          {
            genMove_o (result->aop, i, leftop, i, 1, xl_free, false, false, false);
            i++;
@@ -3264,9 +3307,10 @@ genCmp (const iCode *ic, iCode *ifx)
       emit3 (A_CPW, left->aop, right->aop);
       goto return_c;
     }
-  else if (ifx && size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0)) // Use inverse jump condition
+  else if (ifx && // Use inverse jump condition
+    (size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0)) || (size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
     {
-      emit3 (A_CP, right->aop, left->aop);
+      emit3 ((size == 1) ? A_CP : A_CPW, right->aop, left->aop);
       symbol *tlbl = 0;
       if (!regalloc_dry_run)
         {
@@ -4671,8 +4715,13 @@ genCast (const iCode *ic)
   else if (result->aop->size == 2 &&
     (aopInReg (result->aop, 0, Y_IDX) || aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Z_IDX)))
     {
-      genMove_o (result->aop, 0, right->aop, 0, right->aop->size, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-      emit3 (A_SEX, result->aop, 0);
+      if (!regDead (XL_IDX, ic) && !aopInReg (right->aop, 0, XL_IDX))
+        push (ASMOP_XL, 0, 1);
+      genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      emit2 ("sex", "%s, xl", aopGet2 (result->aop, 0));
+      cost (1 + !aopInReg (result->aop, 0, Y_IDX), 1 + !aopInReg (result->aop, 0, Y_IDX));
+      if (!regDead (XL_IDX, ic) && !aopInReg (right->aop, 0, XL_IDX))
+        push (ASMOP_XL, 0, 1);
     }
   else 
     {
@@ -4682,9 +4731,12 @@ genCast (const iCode *ic)
         result->aop->regs[YL_IDX] >= 0 && result->aop->regs[YL_IDX] != right->aop->size - 1 ||
         result->aop->regs[YH_IDX] >= 0 && result->aop->regs[YH_IDX] != right->aop->size)
         UNIMPLEMENTED;
+      if (!regDead (XL_IDX, ic) ||
+        result->aop->regs[XL_IDX] >= 0 && result->aop->regs[XL_IDX] != right->aop->size - 1)
+        UNIMPLEMENTED;
 
-      genMove_o (ASMOP_Y, 0, result->aop, right->aop->size - 1, 1, false, false, true, false);
-      emit3 (A_SEX, ASMOP_Y, 0);
+      genMove_o (ASMOP_XL, 0, result->aop, right->aop->size - 1, 1, true, false, true, false);
+      emit2 ("sex", "y, xl");
 
       for (int i = right->aop->size; i < result->aop->size; i++)
         genMove_o (result->aop, i, ASMOP_Y, 1, 1, regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i), false, false, false);
@@ -5084,7 +5136,7 @@ genF8Code (iCode *lic)
       fprintf (stderr, "ic %d: stack %d\n", ic->key, G.stack.pushed);
 #endif
 
-#if 1
+#if 0
       D (emit2 (";", "Cost for generated ic %d : (%d, %f)", ic->key, regalloc_dry_run_cost_bytes, regalloc_dry_run_cost_cycles));
 #endif
     }
