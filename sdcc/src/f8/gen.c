@@ -450,10 +450,10 @@ aopGet(const asmop *aop, int offset)
           wassertl_bt (regalloc_dry_run || f8_extend_stack, "Extended stack access, but z not prepared for extended stack access.");
           wassertl_bt (regalloc_dry_run || eoffset >= 0l && eoffset <= 0xffffl, "Stack access out of extended stack range."); // Stack > 64K.
 
-          SNPRINTF (buffer, sizeof(buffer), "(0x%x, z)", (unsigned)eoffset);
+          SNPRINTF (buffer, sizeof(buffer), "(%u, z)", (unsigned)eoffset);
         }
       else
-        SNPRINTF (buffer, sizeof(buffer), "(0x%02x, sp)", (unsigned)soffset);
+        SNPRINTF (buffer, sizeof(buffer), "(%u, sp)", (unsigned)soffset);
       return (buffer);
     }
 
@@ -2957,8 +2957,8 @@ genReturn (const iCode *ic)
       for(int i = 0; i < size; i++)
         if (aopInReg (left->aop, i, XL_IDX))
           {
-            emit2 ("ld", "(#%d, y), xl", size + i);
-            cost (2, 1);
+            emit2 ("ld", i ? "(%d, y), xl" : "ld (y), xl", i);
+            cost (1 + (bool)i, 1);
             break;
           }
 
@@ -2968,15 +2968,15 @@ genReturn (const iCode *ic)
             i + 1 < size && (aopOnStack (left->aop, i, 2) || left->aop->type == AOP_DIR) && regDead (Z_IDX, ic) && left->aop->regs[ZL_IDX] <= i + 1 && left->aop->regs[ZH_IDX] <= i + 1)
             {
               genMove_o (ASMOP_Z, 0, left->aop, i, 2, true, false, false, true);
-              emit2 ("ldw", "(#%d, y), z", i);
+              emit2 ("ldw", "(%d, y), z", i);
               cost (3, 1);
               i += 2;
             }
           else if (!aopInReg (left->aop, i, XL_IDX))
             {
               genMove (ASMOP_XL, left->aop, true, false, false, false);
-              emit2 ("ld", "(#%d, y), xl", i);
-              cost (2, 1);
+              emit2 ("ld", i ? "(%d, y), xl" : "ld (y), xl", i);
+              cost (1 + (bool)i, 1);
               i++;
             }
           else // xl, already stored early.
@@ -3076,7 +3076,7 @@ genPlus (const iCode *ic)
         }
       else if (!started && i == size - 2 &&
         (leftop->type == AOP_STL && (rightop->type == AOP_LIT || rightop->type == AOP_DIR || aopOnStack (rightop, i, 2)) || rightop->type == AOP_STL && (leftop->type == AOP_LIT || leftop->type == AOP_DIR || aopOnStack (leftop, i, 2))) &&
-        aopInReg (result->aop, i, Y_IDX) /* todo: aloow more here */)
+        aopInReg (result->aop, i, Y_IDX) /* todo: allow more here */)
         {
           unsigned offset = 0;
           bool lit = leftop->type == AOP_LIT || rightop->type == AOP_LIT;
@@ -3147,11 +3147,30 @@ genPlus (const iCode *ic)
            continue;
          }
 
-       if (i + 1 < size && aopIsOp16_2 (rightop, i) &&
+       if (i + 1 < size && aopSame (result->aop, i, leftop, i, 2) && aopIsAcc16 (leftop, i) && aopIsOp16_2 (rightop, i)) // Use addw / adcw
+         {
+           emit3_o (started ? A_ADCW : A_ADDW, result->aop, i, rightop, i);
+           i += 2;
+           started = true;
+           continue;
+         }
+       else if (i + 1 < size && aopSame (result->aop, i, rightop, i, 2) && aopIsAcc16 (rightop, i) && aopIsOp16_2 (leftop, i))
+         {
+           emit3_o (started ? A_ADCW : A_ADDW, result->aop, i, leftop, i);
+           i += 2;
+           started = true;
+           continue;
+         }
+
+       if (i + 1 < size && aopIsOp16_2 (rightop, i) && // Use addw / adcw in y
          (aopInReg (result->aop, i, Y_IDX) || y_free2 && aopOnStack (leftop, i, 2) && aopOnStack (result->aop, i, 2)))
          {
            genMove_o (ASMOP_Y, 0, leftop, i, 2, xl_free2 && rightop->regs[XL_IDX] < i, false, true, false);
-           if (started && aopIsLitVal (rightop, i, 2, 0x0000))
+           if (!started && aopIsLitVal (rightop, i, 2, 1))
+             emit3 (A_INCW, ASMOP_Y, 0);
+           else if (!started && aopIsLitVal (rightop, i, 2, -1))
+             emit3 (A_DECW, ASMOP_Y, 0);
+           else if (started && aopIsLitVal (rightop, i, 2, 0x0000))
              emit3 (A_ADCW, ASMOP_Y, 0);
            else
              emit3_o (started ? A_ADCW : A_ADDW, ASMOP_Y, 0, rightop, i);
@@ -4460,16 +4479,22 @@ genPointerSet (const iCode *ic)
   if (!bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && size <= 2 && aopIsLitVal (right->aop, 0, size, 0x0000)) // Use clr / clrw mm.
     {
       bool wide = size > 1;
-      emit2 (wide ? "clrw" : "clr", "%s", aopGet2 (left->aop, 0));
+      if (left->aop->type == AOP_LIT)
+        emit2 (wide ? "clrw" : "clr", "0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0));
+      else
+        emit2 (wide ? "clrw" : "clr", "%s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off);
       cost (3, 1);
       goto release;
-    }
+    } 
   else if (!bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) &&
     (size == 1 && (regDead (XL_IDX, ic) || aopInReg (right->aop, 0, XL_IDX)) || size == 2 && (y_dead || aopInReg (right->aop, 0, Y_IDX))))
     {
       bool wide = size > 1;
       genMove (wide ? ASMOP_Y : ASMOP_XL, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), y_dead, regDead (Z_IDX, ic));
-      emit2 (wide ? "ldw" : "ld", "%s, %s", aopGet2 (left->aop, 0), wide ? "y" : "xl");
+      if (left->aop->type == AOP_LIT)
+        emit2 (wide ? "ldw" : "ld", "0x%02x%02x, %s", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), wide ? "y" : "xl");
+      else
+        emit2 (wide ? "ldw" : "ld", "%s+%d, %s", left->aop->aopu.immd, left->aop->aopu.immd_off, wide ? "y" : "xl");
       cost (3, 1);
       goto release;
     }
@@ -4510,7 +4535,8 @@ genPointerSet (const iCode *ic)
         aopInReg (right->aop, i, X_IDX) || x_dead2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2)))
         {
           genMove_o (ASMOP_X, 0, right->aop, i, 2, true, true, false, false);
-          emit2 ("ldw", "(%d, y), x", i);
+          emit2 ("ldw", i ? "(%d, y), x" : "(y), x", i);
+          cost (1 + (bool)i, 1);
           i++;
           blen -= 8;
           continue;
