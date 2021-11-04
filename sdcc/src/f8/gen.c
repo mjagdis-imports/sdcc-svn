@@ -1009,6 +1009,7 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
   case A_CLRW:
   case A_DECW:
   case A_INCW:
+  case A_TSTW:
     opw_cost (op0, offset0);
     break;
   case A_RLCW:
@@ -1055,7 +1056,7 @@ emit3_o (const enum asminst inst, asmop *op0, int offset0, asmop *op1, int offse
   bool wide = // Same order as in emit3cost above
     (inst == A_SBCW || inst == A_SUBW || inst == A_ADCW || inst == A_ADDW || inst == A_ORW ||
     inst == A_LDW ||
-    inst == A_CLRW || inst == A_DECW || inst == A_INCW ||
+    inst == A_CLRW || inst == A_DECW || inst == A_INCW || inst == A_TSTW ||
     inst == A_RLCW || inst == A_RRCW ||
     inst == A_BOOLW || inst == A_MUL || inst == A_NEGW || inst == A_SLLW || inst == A_SRAW || inst == A_SRLW ||
     inst == A_CPW);
@@ -3270,9 +3271,12 @@ genCmp (const iCode *ic, iCode *ifx)
 
   bool pushed_xl = false;
 
-  if (ifx && right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0) && aopIsOp8_1 (left->aop, size - 1)) // Use tst
+  if (ifx && right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0) && (aopIsOp8_1 (left->aop, size - 1) || size >= 2 && aopIsOp16_1 (left->aop, size - 2))) // Use tst(w)
     {
-      emit3_o (A_TST, left->aop, size - 1, 0, 0);
+      if (aopIsOp8_1 (left->aop, size - 1))
+        emit3_o (A_TST, left->aop, size - 1, 0, 0);
+      else
+        emit3_o (A_TSTW, left->aop, size - 2, 0, 0);
       symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
       if (!regalloc_dry_run)
         emit2 (IC_TRUE (ifx) ? "jrp" : "jrn", "!tlabel", labelKey2num (tlbl->key));
@@ -3281,7 +3285,7 @@ genCmp (const iCode *ic, iCode *ifx)
       emitLabel (tlbl);
       goto release;
     }
-  if (!ifx && right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0))
+  else if (!ifx && right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0))
     {
       if (aopRS (left->aop) && left->aop->aopu.bytes[size - 1].in_reg && regDead (left->aop->aopu.bytes[size - 1].byteu.reg->rIdx, ic) && !aopInReg (left->aop, size - 1, YH_IDX))
         emit3_o (A_SLL, left->aop, size - 1, 0, 0);
@@ -4574,6 +4578,14 @@ genIfx (const iCode *ic)
   if (size == 1 && aopIsOp8_1 (cond->aop, 0))
     {
       emit3 (A_TST, cond->aop, 0);
+      goto jump;
+    }
+
+  if (size == 2 &&
+    (aopInReg (cond->aop, 0, Y_IDX) || cond->aop->type == AOP_IMMD || aopOnStack (cond->aop, 0, 2) || aopInReg (cond->aop, 0, Z_IDX) ||
+      (aopInReg (cond->aop, 0, X_IDX) && !regDead (XL_IDX, ic))))
+    {
+      emit3 (A_TSTW, cond->aop, 0);
       goto jump;
     }
 

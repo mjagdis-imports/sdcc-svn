@@ -1,3 +1,12 @@
+2021-11-04 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* src/f8/gen.c:
+	  Support tstw.
+	* support/regression/ports/f8,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/Makefile.in:
+	  f8 regression test infrastructure.
+
 2021-10-29 Philipp Klaus Krause <pkk AT spth.de>
 
 	* support/makebin/makebin.c:
