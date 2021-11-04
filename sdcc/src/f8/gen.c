@@ -4366,7 +4366,8 @@ genPointerGet (const iCode *ic)
   else
     UNIMPLEMENTED;
 
-  for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
+  int i = 0;
+  for (i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
     {
       bool xl_dead = regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
 
@@ -4391,7 +4392,7 @@ genPointerGet (const iCode *ic)
               cost (2 + (use_z || offset + i > 255), 1);
             }
           genMove_o (result->aop, i, taop, 0, 2, xl_dead, false, true, false);
-          i++;
+          i++, blen -= 8;
           continue;
         }
 
@@ -4439,13 +4440,33 @@ genPointerGet (const iCode *ic)
           cost (2, 1);
         }
       if (bit_field && blen <= 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
-        {  
-          wassertl(0, "Unimplemented read from signed bit-field.");
+        {
+          if (!regDead (XH_IDX, ic) || result->aop->regs[XH_IDX] > 0)
+            UNIMPLEMENTED;
+
+          symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
+          emit2 ("ld", "xh, xl");
+          emit2 ("and", "xh, #0x%02x", 0x80 >> (8 - blen));
+          cost (4, 2);
+          if (tlbl)
+            emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
+          cost (2, 0);
+          emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
+          cost (2, 1);
+          emitLabel (tlbl);
         }
 
       if (result->aop->type == AOP_DUMMY) // Pointer dereference where the result is ignored, but wasn't optimized out (typically due to use of volatile).
         continue;
       genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, false, false, false);
+    }
+
+  if (bit_field && i < size)
+    {
+      if (SPEC_USIGN (getSpec (operandType (result))))
+        genMove_o (result->aop, i, ASMOP_ZERO, 0, i, regDead (XL_IDX, ic) && result->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0, false, false);
+      else
+        wassertl (0, "Unimplemented multibyte sign extension for bit-field.");
     }
 
 release:
@@ -4643,7 +4664,7 @@ genIfx (const iCode *ic)
     }
 
   if (size == 2 &&
-    (aopInReg (cond->aop, 0, Y_IDX) || cond->aop->type == AOP_IMMD || aopOnStack (cond->aop, 0, 2) || aopInReg (cond->aop, 0, Z_IDX) ||
+    (aopInReg (cond->aop, 0, Y_IDX) || cond->aop->type == AOP_DIR || aopOnStack (cond->aop, 0, 2) || aopInReg (cond->aop, 0, Z_IDX) ||
       (aopInReg (cond->aop, 0, X_IDX) && !regDead (XL_IDX, ic))))
     {
       emit3 (A_TSTW, cond->aop, 0);
@@ -4783,7 +4804,29 @@ genCast (const iCode *ic)
   aopOp (result, ic);
 
   if (IS_BOOL (resulttype))
-    UNIMPLEMENTED;
+    {
+      wassert (result->aop->size == 1);
+
+      if (right->aop->size == 2 && regDead (Y_IDX, ic) && aopInReg (result->aop, 0, YL_IDX))
+        {
+          genMove (ASMOP_Y, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+          emit2 ("boolw", "y");
+          cost (1, 1);
+        }
+      else if (right->aop->size == 1)
+        {
+          if (!regDead (XL_IDX, ic))
+            push (ASMOP_XL, 0, 1);
+          genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          emit2 ("bool", "xl");
+          cost (1, 1);
+          genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          if (!regDead (XL_IDX, ic))
+            pop (ASMOP_XL, 0, 1);
+        }
+      else
+        UNIMPLEMENTED;
+    }
   // Cast to signed type
   else if (result->aop->size == 2 &&
     (aopInReg (result->aop, 0, Y_IDX) || aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Z_IDX)))
@@ -4794,7 +4837,7 @@ genCast (const iCode *ic)
       emit2 ("sex", "%s, xl", aopGet2 (result->aop, 0));
       cost (1 + !aopInReg (result->aop, 0, Y_IDX), 1 + !aopInReg (result->aop, 0, Y_IDX));
       if (!regDead (XL_IDX, ic) && !aopInReg (right->aop, 0, XL_IDX))
-        push (ASMOP_XL, 0, 1);
+        pop (ASMOP_XL, 0, 1);
     }
   else 
     {
@@ -4921,6 +4964,60 @@ genSend (const iCode *ic)
        ((walk->op == PCALL) ? f8_regs_used_as_parms_in_pcalls_from_current_function : f8_regs_used_as_parms_in_calls_from_current_function)[argreg->aopu.bytes[i].byteu.reg->rIdx] = true;
 
   freeAsmop (IC_LEFT (ic));
+}
+
+/*-----------------------------------------------------------------*/
+/* genDummyRead - generate code for dummy read of volatiles.       */
+/*-----------------------------------------------------------------*/
+static void
+genDummyRead (const iCode *ic)
+{
+  operand *op;
+  int i;
+
+  if ((op = IC_RIGHT (ic)) && IS_SYMOP (op))
+    {
+      aopOp (op, ic);
+
+      D (emit2 ("; genDummyRead", ""));
+
+      for (i = 0; i < op->aop->size; i++)
+        {
+          if (i + 1 < op->aop->size && aopIsOp16_1 (op->aop, i))
+            {
+              emit3_o (A_TSTW, op->aop, i, 0, 0);
+              i++;
+            }
+          else if (aopIsOp8_1 (op->aop, i))
+            emit3_o (A_TST, op->aop, i, 0, 0);
+          else
+            UNIMPLEMENTED;
+        }
+
+      freeAsmop (op);
+    }
+
+  if ((op = IC_LEFT (ic)) && IS_SYMOP (op))
+    {
+      aopOp (op, ic);
+
+      D (emit2 ("; genDummyRead", ""));
+
+      for (i = 0; i < op->aop->size; i++)
+        {
+          if (i + 1 < op->aop->size && aopIsOp16_1 (op->aop, i))
+            {
+              emit3_o (A_TSTW, op->aop, i, 0, 0);
+              i++;
+            }
+          else if (aopIsOp8_1 (op->aop, i))
+            emit3_o (A_TST, op->aop, i, 0, 0);
+          else
+            UNIMPLEMENTED;
+        }
+
+      freeAsmop (op);
+    }
 }
 
 /*---------------------------------------------------------------------*/
@@ -5109,7 +5206,7 @@ genF8iCode (iCode *ic)
       break;
 
     case DUMMY_READ_VOLATILE:
-      wassertl (0, "Unimplemented iCode");
+      genDummyRead (ic);
       break;
 
     case CRITICAL:
