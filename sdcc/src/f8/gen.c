@@ -3143,7 +3143,9 @@ genPlus (const iCode *ic)
            continue;
          }
 
-       if (!xl_free || aopInReg (rightop, XL_IDX, i))
+       if (!xl_free)
+         push (ASMOP_XL, 0, 1);
+       if (aopInReg (rightop, XL_IDX, i))
          UNIMPLEMENTED;
 
        genMove_o (ASMOP_XL, 0, leftop, i, true, false, false, false, false);
@@ -3157,6 +3159,8 @@ genPlus (const iCode *ic)
        else
          UNIMPLEMENTED;
        genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
+       if (!xl_free)
+         pop (ASMOP_XL, 0, 1);
        i++;
        started = true;
     }

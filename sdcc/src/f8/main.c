@@ -132,6 +132,9 @@ static char f8_defaultRules[] = {
 
 
 static char *f8_keywords[] = {
+  "critical",
+  "interrupt",
+  "naked",
   0
 };
 
