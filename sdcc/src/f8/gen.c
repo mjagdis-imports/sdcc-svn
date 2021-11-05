@@ -997,7 +997,7 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
     break;
   case A_SBCW:
   case A_SUBW:
-    wassertl_bt (op1->type != AOP_LIT && op1->type != AOP_IMMD, "Subtraction with constant right operand not available.");
+    wassertl_bt (!op1 || op1->type != AOP_LIT && op1->type != AOP_IMMD, "Subtraction with constant right operand not available.");
   case A_ADCW:
   case A_ADDW:
   case A_ORW:
@@ -2200,6 +2200,17 @@ resultRemat (const iCode *ic)
 static void
 adjustStack (int n, bool xl_free, bool y_free)
 {
+  if (abs(n) > 512 && y_free)
+   {
+     emit2 ("ldw", "y, sp");
+     emit2 ("addw", "#%d", n);
+     emit2 ("ldw", "sp, y");
+     cost (5, 3);
+     G.stack.pushed -= n;
+     updateCFA ();
+     return;
+   }
+
   while (n)
     {
     	int m = n;
@@ -2207,6 +2218,7 @@ adjustStack (int n, bool xl_free, bool y_free)
     	  m = -128;
     	else if (m > 127)
     	  m = 127;
+    	
     	if (m == -1)
     	  {
     	    emit2 ("push", "xl");
@@ -2230,7 +2242,7 @@ adjustStack (int n, bool xl_free, bool y_free)
     	else
     	  {
     	    emit2 ("addw", "sp, #%d", m);
-    	    cost (1, 1);
+    	    cost (2, 1);
     	  }
     	n -= m;
     	G.stack.pushed -= m;
@@ -2439,7 +2451,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           continue;
         }
       else if (i + 1 < size && !started && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place incw / decw
-        (aopIsLitVal (right_aop, i, 2, 1) || aopIsLitVal (right_aop, i, 2, -1)))
+        (aopIsLitVal (right_aop, i, 2, 1) || aopIsLitVal (right_aop, i, 2, 0xffff)))
         {
           emit3_o (aopIsLitVal (right_aop, i, 2, 1) ? A_DECW : A_INCW, left_aop, i, 0, 0);
           i += 2;
@@ -2447,7 +2459,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           continue;
         }
       else if (i + 1 < size && !started && aopInReg (result_aop, i, Y_IDX) && // Use incw / decw y
-        (aopIsLitVal (right_aop, i, 2, 1) || aopIsLitVal (right_aop, i, 2, -1)))
+        (aopIsLitVal (right_aop, i, 2, 1) || aopIsLitVal (right_aop, i, 2, 0xffff)))
         {
           genMove (ASMOP_Y, left_aop, xl_free2, false, true, false);
           emit3 (aopIsLitVal (right_aop, i, 2, 1) ? A_DECW : A_INCW, ASMOP_Y, 0);
@@ -2456,7 +2468,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           continue;
         }
       else if (i + 1 < size && started && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place adcw / sbcw
-        (aopIsLitVal (right_aop, i, 2, 0) || aopIsLitVal (right_aop, i, 2, -1)))
+        (aopIsLitVal (right_aop, i, 2, 0) || aopIsLitVal (right_aop, i, 2, 0xffff)))
         {
           emit3_o (aopIsLitVal (right_aop, i, 2, 0) ? A_SBCW : A_ADCW, left_aop, i, 0, 0);
           i += 2;
@@ -2465,7 +2477,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
         }
 
       if (!started && aopSame (result_aop, i, left_aop, i, 1) && aopIsOp8_1 (left_aop, i) && // Use in-place inc / dec
-         (aopIsLitVal (right_aop, i, 1, 1) || aopIsLitVal (right_aop, i, 1, -1)))
+         (aopIsLitVal (right_aop, i, 1, 1) || aopIsLitVal (right_aop, i, 1, 0xffff)))
          {
            emit3_o (aopIsLitVal (right_aop, i, 1, 1) ? A_DEC : A_INC, left_aop, i, 0, 0);
            i++;
@@ -4066,9 +4078,15 @@ static void emitLeftShift (asmop *aop, int offset, int size, bool rlc, bool xl_d
   for (int i = 0; i < size;)
     {
       int ri = i + offset;
-      if (i + 1 < size && (aopIsAcc16 (aop, ri) || i && aopOnStackNotExt (aop, ri, 2)))
+      if (i + 1 < size && (aopIsAcc16 (aop, ri) || aopOnStackNotExt (aop, ri, 2)))
         {
-          emit3_o ((i || rlc) ? A_RLCW : A_SLLW, aop, ri, 0, 0);
+          if (!i && !rlc && aopOnStackNotExt (aop, ri, 2)) // There is no on-stack sllw. Emulate it.
+            {
+              emit3 (A_TST, ASMOP_XL, 0);
+              emit3_o (A_RLCW, aop, ri, 0, 0);
+            }
+          else
+            emit3_o ((i || rlc) ? A_RLCW : A_SLLW, aop, ri, 0, 0);
           i += 2;
         }
       else if (aopIsOp8_1 (aop, ri))
@@ -4111,9 +4129,15 @@ static void emitRightShift (asmop *aop, int offset, int size, bool rrc, bool sig
   for (int i = size - 1; i >= 0;)
     {
       int ri = i + offset;
-      if (i > 0 && (aopIsAcc16 (aop, ri - 1) || i != size - 1 && aopOnStackNotExt (aop, ri - 1, 2)))
+      if (i > 0 && (aopIsAcc16 (aop, ri - 1) || (i != size - 1 || rrc || !sign) && aopOnStackNotExt (aop, ri - 1, 2)))
         {
-          emit3_o ((i != size - 1 || rrc) ? A_RRCW : (sign ? A_SRAW : A_SRLW), aop, ri - 1, 0, 0);
+          if (i == size - 1 && !rrc && aopOnStackNotExt (aop, ri - 1, 2)) // There is no on-stack srlw. Emulate it.
+            {
+              emit3 (A_TST, ASMOP_XL, 0);
+              emit3_o (A_RRCW, aop, ri - 1, 0, 0);
+            }
+          else
+            emit3_o ((i != size - 1 || rrc) ? A_RRCW : (sign ? A_SRAW : A_SRLW), aop, ri - 1, 0, 0);
           i -= 2;
         }
       else if (i == size - 1 && sign) // sra needs special handling since it only supports few operands.
