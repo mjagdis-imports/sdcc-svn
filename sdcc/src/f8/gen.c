@@ -939,7 +939,7 @@ opw_cost (const asmop *op0, int offset0)
 static void
 xch_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
-  if (op0->aopu.bytes[offset0].in_reg && op1->aopu.bytes[offset1].in_reg)
+  if (aopRS (op0) && op0->aopu.bytes[offset0].in_reg && aopRS (op1) && op1->aopu.bytes[offset1].in_reg)
     if (op0->aopu.bytes[offset0].byteu.reg->rIdx == XL_IDX && op1->aopu.bytes[offset1].byteu.reg->rIdx == XH_IDX)
       opw_cost (ASMOP_X, 0);
     else if (op0->aopu.bytes[offset0].byteu.reg->rIdx == YL_IDX && op1->aopu.bytes[offset1].byteu.reg->rIdx == YH_IDX)
@@ -1598,6 +1598,8 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   int n = (sizex < source->size - soffset) ? sizex : (source->size - soffset);
   bool assigned[8] = {false, false, false, false, false, false, false, false};
   bool xl_free, xh_free, y_free, z_free;
+
+  wassert (aopRS (result) && aopRS (source));
 
   int size = n;
   int regsize = 0;
@@ -3462,7 +3464,7 @@ genCmp (const iCode *ic, iCode *ifx)
       goto return_c;
     }
   else if (ifx && // Use inverse jump condition
-    (size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0)) || (size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
+    (size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0) || size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
     {
       emit3 ((size == 1) ? A_CP : A_CPW, right->aop, left->aop);
       symbol *tlbl = 0;
@@ -3475,7 +3477,7 @@ genCmp (const iCode *ic, iCode *ifx)
             emit2 (IC_TRUE (ifx) ? "jrsle" : "jsge", "!tlabel", labelKey2num (tlbl->key));
         }
       cost (2, 1);
-      emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
+      emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
       goto release;
     }
@@ -3817,7 +3819,8 @@ genOr (const iCode *ic)
        if (i + 1 < size && aopIsAcc16 (result->aop, i) && aopIsOp16_2 (right->aop, i))
          {
            genMove_o (result->aop, i, left->aop, i, 2, xl_free, xh_free, false, false);
-           if (aopInReg (result->aop, i, ZL_IDX) && aopIsLitVal (right->aop, i + 1, 1, 0x00)) // Avoid orw z , #ii, when or zl, #i will do.
+           if ((aopInReg (result->aop, i, XL_IDX) || aopInReg (result->aop, i, ZL_IDX)) &&
+             aopIsLitVal (right->aop, i + 1, 1, 0x00)) // Avoid orw x/z, #ii, when or xl/zl, #i will do.
              emit3_o (A_OR, result->aop, i, right->aop, i);
            else
              emit3_o (A_ORW, result->aop, i, right->aop, i);
@@ -3827,7 +3830,8 @@ genOr (const iCode *ic)
        else if (i + 1 < size && aopIsAcc16 (result->aop, i) && aopIsOp16_2 (left->aop, i))
          {
            genMove_o (result->aop, i, right->aop, i, 2, xl_free, xh_free, false, false);
-           if (aopInReg (result->aop, i, ZL_IDX) && aopIsLitVal (left->aop, i + 1, 1, 0x00)) // Avoid orw z , #ii, when or zl, #i will do.
+           if ((aopInReg (result->aop, i, XL_IDX) || aopInReg (result->aop, i, ZL_IDX)) &&
+             aopIsLitVal (left->aop, i + 1, 1, 0x00)) // Avoid orw x/z, #ii, when or xl/zl, #i will do.
              emit3_o (A_OR, result->aop, i, left->aop, i);
            else
              emit3_o (A_ORW, result->aop, i, left->aop, i);
@@ -4261,7 +4265,7 @@ genLeftShift (const iCode *ic)
       symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (0));
       symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (0));
 
-      if (right->aop->aopu.bytes[0].in_reg && result->aop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
+      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && result->aop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
         UNIMPLEMENTED;
       genMove (ASMOP_XL, right->aop, true, false, false, false);
 
@@ -4370,7 +4374,7 @@ genRightShift (const iCode *ic)
           push (ASMOP_XL, 0, 1);
           pushed_xl = true;
         }
-      if (right->aop->aopu.bytes[0].in_reg && result->aop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
+      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && result->aop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
         UNIMPLEMENTED;
       genMove (ASMOP_XL, right->aop, true, false, false, false);
 
@@ -5028,7 +5032,7 @@ genReceive (const iCode *ic)
     
   if (result->aop->type == AOP_REG || result->aop->type == AOP_REGSTK)
     for (int i = 0; i < result->aop->size; i++)
-      if (result->aop->aopu.bytes[i].in_reg && !dead_regs[result->aop->aopu.bytes[i].byteu.reg->rIdx])
+      if (aopRS (result->aop) && result->aop->aopu.bytes[i].in_reg && !dead_regs[result->aop->aopu.bytes[i].byteu.reg->rIdx])
         UNIMPLEMENTED;
 
   genMove (result->aop, aopArg (currFunc->type, ic->argreg), dead_regs[XL_IDX], dead_regs[XH_IDX], dead_regs[YL_IDX] && dead_regs[YH_IDX], dead_regs[ZL_IDX] && dead_regs[ZH_IDX]);
