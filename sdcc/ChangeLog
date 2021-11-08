@@ -1,3 +1,8 @@
+2021-11-08 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* src/f8/gen.c:
+	  f8 bitfield fixes.
+
 2021-11-06 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* src/f8/gen.c:

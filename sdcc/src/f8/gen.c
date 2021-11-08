@@ -4677,7 +4677,7 @@ genPointerSet (const iCode *ic)
       bool x_dead2 = xl_dead2 || xh_dead2;
 
       if (!bit_field && i + 1 < size &&
-        aopInReg (right->aop, i, X_IDX) || x_dead2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2)))
+        (aopInReg (right->aop, i, X_IDX) || x_dead2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2))))
         {
           genMove_o (ASMOP_X, 0, right->aop, i, 2, true, true, false, false);
           emit2 ("ldw", i ? "(%d, y), x" : "(y), x", i);
@@ -4706,7 +4706,7 @@ genPointerSet (const iCode *ic)
           cost (3, 1);
           emit2 ("and", "xh, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
           cost (3, 1);
-          emit2 ("and", "xl, xh");
+          emit2 ("or", "xl, xh");
           cost (1, 1);
         }
 
