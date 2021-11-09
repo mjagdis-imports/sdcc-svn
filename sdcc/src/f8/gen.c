@@ -402,7 +402,7 @@ static bool
 aopIsOp16_2 (const asmop *aop, int offset)
 {
   return (aop->type == AOP_LIT || aop->type == AOP_DIR || aop->type == AOP_IMMD || offset >= aop->size ||
-    aopOnStack (aop, offset, 2) ||
+    aopOnStackNotExt (aop, offset, 2) ||
     aopInReg (aop, offset, X_IDX));
 }
 
@@ -2930,7 +2930,7 @@ genFunction (iCode *ic)
   /* adjust the stack for the function */
   {
     int fadjust = -sym->stack;
-    adjustStack (fadjust, false, false);
+    adjustStack (fadjust, !f8IsParmInCall (sym->type, "xl"), !f8IsParmInCall (sym->type, "y"));
   }
 }
 
