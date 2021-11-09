@@ -1274,7 +1274,7 @@ aopForRemat (symbol *sym)
   if (OP_SYMBOL (IC_LEFT (ic))->onStack)
     {
       aop = newAsmop (AOP_STL);
-      aop->aopu.stk_off = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + 1 + val;
+      aop->aopu.stk_off = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + val;
     }
   else
     {
@@ -4555,8 +4555,14 @@ genPointerGet (const iCode *ic)
 
       if (bit_field && blen < 8 && !i) // The only byte might need shifting.
         {
-          while (bstr--)
-            emit3 (A_SRL, ASMOP_XL, 0);
+          if (bstr <= 1)
+            while (bstr--)
+              emit3 (A_SRL, ASMOP_XL, 0);
+          else
+            {
+              emit2 ("rot", "xl, #%d", 8 - bstr);
+              cost (2, 1);
+            }
         }
       if (bit_field && blen < 8) // The partial byte.
         {
@@ -4698,8 +4704,14 @@ genPointerSet (const iCode *ic)
         {
           if (!regDead (XL_IDX, ic) || !regDead (XH_IDX, ic))
             UNIMPLEMENTED;
-          for (int j = 0; j < bstr; j++)
-            emit3 (A_SLL, ASMOP_XL, 0);
+          if (bstr <= 1)
+            for (int j = 0; j < bstr; j++)
+              emit3 (A_SLL, ASMOP_XL, 0);
+          else
+            {
+              emit2 ("rot", "xl, #%d", bstr);
+              cost (2, 1);
+            }
           emit2 ("and", "xl, #0x%02x", (0xff >> (8 - blen)) << bstr);
           cost (2, 1);
           emit2 ("ld", "xh, (%d, y)", i);
@@ -4879,21 +4891,35 @@ genAddrOf (const iCode *ic)
 
   aopOp (result, ic);
 
-  if (regDead (Y_IDX, ic))
+  bool in_dest = !sym->onStack && aopIsAcc16 (result->aop, 0) ||
+    aopInReg (result->aop, 0, Y_IDX) || aopIsAcc16 (result->aop, 0) && !regDead (Y_IDX, ic);
+
+  if (in_dest || regDead (Y_IDX, ic))
     {
+      struct asmop *aop = in_dest ? result->aop : ASMOP_Y;
+
       if (!sym->onStack)
         {
           wassert (sym->name);
-          emit2 ("ldw", "y, #%s+%ld", sym->rname, (long)(operandLitValue (right)));
-          cost (3, 1);
+          emit2 ("ldw", "%s, #%s+%ld", aopGet2 (aop, 0), sym->rname, (long)(operandLitValue (right)));
+          cost (3 + !aopInReg (aop, 0, Y_IDX), 1 + !aopInReg (aop, 0, Y_IDX));
         }
       else
         {
-          emit2 ("ldw", "y, sp");
-          emit2 ("addw", "y, #%ld", (long)(sym->stack) + G.stack.pushed + 1 + (long)(operandLitValue (right)));
-          cost (4, 2);
+          emit2 ("ldw", "%s, sp", aopGet2 (aop, 0));
+          cost (1 + !aopInReg (aop, 0, Y_IDX), 1 + !aopInReg (aop, 0, Y_IDX));
+          long soffset = (long)(sym->stack) + G.stack.pushed + (long)(operandLitValue (right));
+          if (!soffset)
+            ;
+          else if (soffset == 1)
+            emit3 (A_INCW, aop, 0);
+          else
+            {
+              emit2 ("addw", "%s, #%ld", aopGet2 (aop, 0), soffset);
+              cost (3, 1 + !aopInReg (aop, 0, Y_IDX));
+            }
         }
-      genMove (result->aop, ASMOP_Y, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+      genMove (result->aop, aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
     }
   else 
     UNIMPLEMENTED;
