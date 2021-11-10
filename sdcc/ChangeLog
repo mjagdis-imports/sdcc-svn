@@ -1,7 +1,9 @@
 2021-11-10 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/ralloc.c,
-	  src/stm8/gen.c:
+	  src/stm8/gen.c,
+	  src/f8/ralloc.c,
+	  src/f8/gen.c:
 	  Improve rematerialization of stack addresses.
 
 2021-11-10 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
