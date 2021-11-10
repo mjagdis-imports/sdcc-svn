@@ -3727,10 +3727,18 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
   for (int i = 0; i < size;)
     {
-      if (i + 1 < size && aopInReg (left->aop, i, Y_IDX) &&
+      if (i + 1 < size && aopIsAcc16 (left->aop, i) &&
         (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD))
         {
-          emit3 (A_CPW, ASMOP_Y, right->aop);
+          emit3 (A_CPW, left->aop, right->aop);
+          if (tlbl_NE)
+            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+          i += 2;
+        }
+      else if (i + 1 < size && aopIsOp16_2 (right->aop, i) && regDead (Y_IDX, ic))
+        {
+          genMove_o (ASMOP_Y, 0, left->aop, i, 2, false, false, true, false);
+          emit3sub_o (A_SUBW, ASMOP_Y, 0, right->aop, i);
           if (tlbl_NE)
             emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
@@ -3739,6 +3747,24 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         {
           genMove_o (ASMOP_Y, 0, right->aop, i, 2, false, false, true, false);
           emit3sub_o (A_SUBW, ASMOP_Y, 0, left->aop, i);
+          if (tlbl_NE)
+            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+          i += 2;
+        }
+      else if (i + 1 < size && aopInReg (left->aop, i, Y_IDX) && aopIsOp16_2 (right->aop, i))
+        {
+          push (ASMOP_Y, 0, 2);
+          emit3sub_o (A_SUBW, ASMOP_Y, 0, right->aop, i);
+          pop (ASMOP_Y, 0, 2);
+          if (tlbl_NE)
+            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+          i += 2;
+        }
+      else if (i + 1 < size && aopInReg (right->aop, i, Y_IDX) && aopIsOp16_2 (left->aop, i))
+        {
+          push (ASMOP_Y, 0, 2);
+          emit3sub_o (A_SUBW, ASMOP_Y, 0, left->aop, i);
+          pop (ASMOP_Y, 0, 2);
           if (tlbl_NE)
             emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;

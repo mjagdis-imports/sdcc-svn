@@ -1,3 +1,8 @@
+2021-11-10 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* src/f8/gen.c:
+	  Improve codegen for experimental f8 port.
+
 2021-11-10 Philipp Klaus Krause <pkk AT spth.de>
 
 	* device/lib/atomic_flag_clear.c:
