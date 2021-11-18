@@ -2000,26 +2000,26 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         (!aopRS (source) || source->regs[ZL_IDX] <= i + 1 && source->regs[ZH_IDX] <= i + 1);
 
       // Rematerialized stack location
-      if (source->type == AOP_STL && !(soffset + i))
+      if (source->type == AOP_STL)
         {
           long stack_offset = (long)(source->aopu.stk_off) + G.stack.pushed;
 
-          if (y_dead || result->regs[YL_IDX] < 0 && result->regs[YH_IDX] < 0)
+          if (!y_dead && aopIsAcc16 (result, roffset + i) && !(soffset + i) && size == 2)
+            {
+              emit2 ("ld", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
+              emit2 ("addw", "%s, sp", aopGet2 (result, roffset + i));
+              cost (5 + (labs(stack_offset) > 127), 2);
+            }
+          else if (y_dead || result->regs[YL_IDX] < 0 && result->regs[YH_IDX] < 0)
             {
               if (!y_dead)
                 push (ASMOP_Y, 0, 2);
               emit2 ("ld", "y, #%ld", stack_offset);
               emit2 ("addw", "y, sp");
               cost (3 + (labs(stack_offset) > 127), 2);
-              genMove_o (result, roffset + i, ASMOP_Y, soffset, size, xl_dead, xh_dead, true, z_dead);
+              genMove_o (result, roffset + i, ASMOP_Y, soffset + i, size, xl_dead, xh_dead, true, z_dead);
               if (!y_dead)
                 pop (ASMOP_Y, 0, 2);
-            }
-          else if (aopIsAcc16 (result, roffset + i))
-            {
-              emit2 ("ld", "y, #%ld", stack_offset);
-              emit2 ("addw", "y, sp");
-              cost (5 + (labs(stack_offset) > 127), 2);
             }
           else
             UNIMPLEMENTED;
@@ -2549,17 +2549,18 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
         }
       else
         {
-          if (!regDead (XL_IDX, ic))
-            UNIMPLEMENTED;
-          if (left_aop->regs[XL_IDX] > i || left_aop->regs[XL_IDX] > i || result_aop->regs[XL_IDX] > 0 && result_aop->regs[XL_IDX] < i)
-            UNIMPLEMENTED;
-
           if (aopIsOp8_2 (right_aop, i))
             {
+              if (!xl_free)
+                push (ASMOP_XL, 0, 1);
               genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false);
               emit3sub_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right_aop, i);
               genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false);
+              if (!xl_free)
+                pop (ASMOP_XL, 0, 1);
             }
+          else if (!xl_free)
+            UNIMPLEMENTED;
           else if (aopIsOp8_1 (right_aop, i))
             {
               push (right_aop, i, 1);
@@ -3209,7 +3210,7 @@ genPlus (const iCode *ic)
           if (lit && !offset && aopIsAcc16 (result->aop, i))
             taop = result->aop;
           offset += (long)((leftop->type == AOP_STL ? left : right)->aop->aopu.stk_off) + G.stack.pushed;
-          emit2 ("ldw %s, #%ld", aopGet2 (taop, 0), offset);
+          emit2 ("ldw", "%s, #%ld", aopGet2 (taop, 0), offset);
           cost (2 + labs(offset) > 127 + !aopInReg (taop, 0, Y_IDX), 1 + !aopInReg (taop, 0, Y_IDX));
           if (!lit)
             emit3_o (A_ADDW, taop, 0, leftop->type == AOP_STL ? rightop : leftop, i);
@@ -3718,10 +3719,17 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
   for (int i = 0; i < size;)
     {
-      if (i + 1 < size && aopIsAcc16 (left->aop, i) &&
+      if (i + 1 < size && aopIsOp16_1 (left->aop, i) && aopIsLitVal (right->aop, i, 2, 0x0000))
+        {
+          emit3_o (A_TSTW, left->aop, i, 0, 0);
+          if (tlbl_NE)
+            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+          i += 2;
+        }
+      else if (i + 1 < size && aopIsAcc16 (left->aop, i) &&
         (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD))
         {
-          emit3 (A_CPW, left->aop, right->aop);
+          emit3_o (A_CPW, left->aop, i, right->aop, i);
           if (tlbl_NE)
             emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;

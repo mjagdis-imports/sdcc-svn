@@ -1,5 +1,10 @@
 2021-11-18 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
+	* src/f8/gen.c:
+	  Improve codegen for experimental f8 port.
+
+2021-11-18 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
 	* src/stm8/gen.c:
 	  Fix bug #3296.
 
