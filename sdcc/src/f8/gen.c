@@ -2004,11 +2004,12 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         {
           long stack_offset = (long)(source->aopu.stk_off) + G.stack.pushed;
 
-          if (!y_dead && aopIsAcc16 (result, roffset + i) && !(soffset + i) && size == 2)
+          if (!y_dead && aopIsAcc16 (result, roffset + i) && !(soffset + i) && size >= 2)
             {
               emit2 ("ld", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
               emit2 ("addw", "%s, sp", aopGet2 (result, roffset + i));
               cost (5 + (labs(stack_offset) > 127), 2);
+              i += 2;
             }
           else if (y_dead || result->regs[YL_IDX] < 0 && result->regs[YH_IDX] < 0)
             {
@@ -2017,14 +2018,18 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
               emit2 ("ld", "y, #%ld", stack_offset);
               emit2 ("addw", "y, sp");
               cost (3 + (labs(stack_offset) > 127), 2);
-              genMove_o (result, roffset + i, ASMOP_Y, soffset + i, size, xl_dead, xh_dead, true, z_dead);
+              int lsize = size - i;
+              genMove_o (result, roffset + i, ASMOP_Y, soffset + i, lsize, xl_dead, xh_dead, true, z_dead);
               if (!y_dead)
                 pop (ASMOP_Y, 0, 2);
+              i += lsize;
             }
           else
-            UNIMPLEMENTED;
+            {
+              UNIMPLEMENTED;
+              i++;
+            }
 
-          i += 2;
           continue;
         }
     
@@ -3546,7 +3551,7 @@ genCmp (const iCode *ic, iCode *ifx)
                     }
                 }
               else
-                emit3_o (started ? A_SBCW : A_SUBW, ASMOP_Y, 0, right->aop, i);
+                emit3sub_o (started ? A_SBCW : A_SUBW, ASMOP_Y, 0, right->aop, i);
               started = true;
               i += 2;
             }
@@ -3567,7 +3572,7 @@ genCmp (const iCode *ic, iCode *ifx)
                     }
                 }
               else
-                emit3_o (started ? A_SBCW : A_SUBW, left->aop, i, right->aop, i);
+                emit3sub_o (started ? A_SBCW : A_SUBW, left->aop, i, right->aop, i);
               started = true;
               i += 2;
             }
@@ -3579,26 +3584,24 @@ genCmp (const iCode *ic, iCode *ifx)
             }
           else
             {
-              if (!regDead (XL_IDX, ic) && !pushed_xl)
+              if (!regDead (XL_IDX, ic) && !pushed_xl || left->aop->regs[XL_IDX] > i || right->aop->regs[XL_IDX] > i)
                 {
                   push (ASMOP_XL, 0, 1);
                   pushed_xl = true;
                 }
-              if (left->aop->regs[XL_IDX] > i || left->aop->regs[XL_IDX] > i)
-                UNIMPLEMENTED;
 
               if (!aopIsOp8_2 (right->aop, i))
                 UNIMPLEMENTED;
               else
                 {
                   genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false);
-                  if (right->aop->type == AOP_LIT)
-                   {
-                     emit2 (started ? "adc" : "add", "xl, #0x%02x", (~byteOfVal (right->aop->aopu.aop_lit, i) + !started) & 0xff);
-                     cost (2, 1);
-                   }
-                  else
-                    emit3_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right->aop, i);
+                  emit3sub_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right->aop, i);
+                }
+              
+              if (pushed_xl && (left->aop->regs[XL_IDX] > i || right->aop->regs[XL_IDX] > i)) // Restore xl here early if we will need it again soon.
+                {
+                  pop (ASMOP_XL, 0, 1);
+                  pushed_xl = false;
                 }
               started = true;
               i++;
