@@ -2373,6 +2373,19 @@ genEor (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
            continue;
          }
 
+       if (aopSame (result_aop, i, left_aop, i, 1) && aopIsAcc8 (left_aop, i) && aopIsOp8_2 (right_aop, i))
+         {
+           emit3_o (A_XOR, result_aop, i, right_aop, i);
+           i++;
+           continue;
+         }
+       else if (aopSame (result_aop, i, right_aop, i, 1) && aopIsAcc8 (right_aop, i) && aopIsOp8_2 (left_aop, i))
+         {
+           emit3_o (A_XOR, result_aop, i, left_aop, i);
+           i++;
+           continue;
+         }
+
        if (!xl_free)
          UNIMPLEMENTED;
 
@@ -4054,6 +4067,19 @@ genAnd (const iCode *ic, iCode *ifx)
            for(end = i; end < size && aopIsLitVal (right->aop, end, 1, bytelit); end++);
            genMove_o (result->aop, i, bytelit == 0x00 ? ASMOP_ZERO : left->aop, i, end - i, xl_free, xh_free, false, false);
            i = end;
+           continue;
+         }
+
+       if (aopSame (result->aop, i, left->aop, i, 1) && aopIsAcc8 (left->aop, i) && aopIsOp8_2 (right->aop, i))
+         {
+           emit3_o (A_AND, result->aop, i, right->aop, i);
+           i++;
+           continue;
+         }
+       else if (aopSame (result->aop, i, right->aop, i, 1) && aopIsAcc8 (right->aop, i) && aopIsOp8_2 (left->aop, i))
+         {
+           emit3_o (A_AND, result->aop, i, left->aop, i);
+           i++;
            continue;
          }
 
