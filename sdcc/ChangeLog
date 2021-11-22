@@ -1,5 +1,13 @@
 2021-11-22 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
+	* src/stm8/gen.c,
+	  src/stm8/main.c:
+	  Support GETBYTE and GETWORD.
+	* src/SDCCsalloc.hpp:
+	  Fix an issue in shifts of partially spilt variables.
+
+2021-11-22 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
 	* src/f8/gen.c:
 	  Improve codegen for experimental f8 port.
 
