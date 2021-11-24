@@ -4172,6 +4172,58 @@ write_to_xl:
 }
 
 /*-----------------------------------------------------------------*/
+/* genGetByte - generates code to get a single byte                */
+/*-----------------------------------------------------------------*/
+static void
+genGetByte (const iCode *ic)
+{
+  operand *left, *right, *result;
+  int offset;
+
+  D (emit2 ("; genGetByte", ""));
+
+  left = IC_LEFT (ic);
+  right = IC_RIGHT (ic);
+  result = IC_RESULT (ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  offset = (int) ulFromVal (right->aop->aopu.aop_lit) / 8;
+  genMove_o (result->aop, 0, left->aop, offset, 1, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+
+  freeAsmop (result);
+  freeAsmop (right);
+  freeAsmop (left);
+}
+
+/*-----------------------------------------------------------------*/
+/* genGetWord - generates code to get a 16-bit word                */
+/*-----------------------------------------------------------------*/
+static void
+genGetWord (const iCode *ic)
+{
+  operand *left, *right, *result;
+  int offset;
+
+  D (emit2 ("; genGetWord", ""));
+
+  left = IC_LEFT (ic);
+  right = IC_RIGHT (ic);
+  result = IC_RESULT (ic);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
+
+  offset = (int) ulFromVal (right->aop->aopu.aop_lit) / 8;
+  genMove_o (result->aop, 0, left->aop, offset, 2, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+
+  freeAsmop (result);
+  freeAsmop (right);
+  freeAsmop (left);
+}
+
+/*-----------------------------------------------------------------*/
 /* emitLeftShift - shifts asmop left by 1                          */
 /*-----------------------------------------------------------------*/
 static void emitLeftShift (asmop *aop, int offset, int size, bool rlc, bool xl_dead, bool *xl_pushed)
@@ -5414,7 +5466,15 @@ genF8iCode (iCode *ic)
     case GETABIT:
       genGetABit (ic, /*ifxForOp (IC_RESULT (ic), ic)*/0);
       break;
-      
+
+    case GETBYTE:
+      genGetByte (ic);
+      break;
+
+    case GETWORD:
+      genGetWord (ic);
+      break;
+ 
     case SWAP:
       wassertl (0, "Unimplemented iCode");
       break;
