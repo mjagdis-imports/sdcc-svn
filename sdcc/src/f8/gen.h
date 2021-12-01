@@ -28,9 +28,7 @@ typedef enum
   AOP_INVALID,
   /* Is a literal */
   AOP_LIT = 1,
-  /* Is in a register */
-  AOP_REG,
-  /* Is partially in registers, partially on the stack */
+  /* Is partially in registers or on the stack */
   AOP_REGSTK,
   /* Is on the stack */
   AOP_STK,

@@ -150,7 +150,7 @@ static struct asmop *const ASMOP_MONE = &asmop_mone;
 static void
 f8_init_reg_asmop(asmop *aop, const signed char *regidx)
 {
-  aop->type = AOP_REG;
+  aop->type = AOP_REGSTK;
   aop->size = 0;
   memset (aop->regs, -1, sizeof(aop->regs));
   
@@ -250,7 +250,7 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
 static bool
 aopRS (const asmop *aop)
 {
-  return (aop->type == AOP_REG || aop->type == AOP_REGSTK || aop->type == AOP_STK);
+  return (aop->type == AOP_REGSTK || aop->type == AOP_STK);
 }
 
 /*-----------------------------------------------------------------*/
@@ -259,7 +259,7 @@ aopRS (const asmop *aop)
 static bool
 aopInReg (const asmop *aop, int offset, short rIdx)
 {
-  if (!(aop->type == AOP_REG || aop->type == AOP_REGSTK))
+  if (aop->type != AOP_REGSTK)
     return (false);
 
   if (offset >= aop->size || offset < 0)
@@ -1421,9 +1421,7 @@ aopOp (operand *op, const iCode *ic)
           }
       }
 
-    if (completely_in_regs)
-      aop->type = AOP_REG;
-    else if (completely_on_stack)
+    if (completely_on_stack)
       aop->type = AOP_STK;
 
     return;
@@ -2837,7 +2835,7 @@ genCall (const iCode *ic)
     {
       adjustStack (prestackadjust, false, false);
       genMove (ASMOP_Y, left->aop, true, true, true, true);
-      emit2 ("jp", "y");
+      emit2 (jump ? "jp" : "call", "y");
       cost (1, 1);
     }
   else
@@ -3330,7 +3328,20 @@ genPlus (const iCode *ic)
            started = true;
            continue;
          }
-       if (xl_free && aopInReg (rightop, i, XL_IDX) && aopIsOp8_2 (leftop, i))
+       else if (i + 1 < size && aopIsOp16_2 (rightop, i) &&
+         (aopInReg (leftop, i, X_IDX) && regDead (X_IDX, ic) || aopInReg (leftop, i, Z_IDX) && regDead (Z_IDX, ic)) &&
+         (aopOnStack (result->aop, i, 2) || result->aop->type == AOP_DIR))
+         {
+           if (started && aopIsLitVal (leftop, i, 2, 0x0000))
+             emit3_o (A_ADCW, left->aop, i, 0, 0);
+           else
+             emit3_o (started ? A_ADCW : A_ADDW, leftop, i, rightop, i);
+           genMove_o (result->aop, i, leftop, i, 2, true, true, y_free2, false);
+           i += 2;
+           started = true;
+           continue;
+         }
+       else if (xl_free && aopInReg (rightop, i, XL_IDX) && aopIsOp8_2 (leftop, i))
          {
            emit3_o (started ? A_ADC : A_ADD, ASMOP_XL, 0, leftop, i);
            genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
@@ -4345,6 +4356,53 @@ static void emitRightShift (asmop *aop, int offset, int size, bool rrc, bool sig
     }
 }
 
+/*------------------------------------------------------------------*/
+/* init_shiftop - find a good place to shift in                     */
+/*------------------------------------------------------------------*/
+static void 
+init_shiftop(asmop *shiftop, const asmop *result, const asmop *left, const asmop *right, const iCode *ic)
+{
+  int i;
+  const int size = result->size;
+  unsigned int shCount = right->type == AOP_LIT ? ulFromVal (right->aopu.aop_lit) : 0;
+
+  shiftop->type = AOP_REGSTK;
+  shiftop->size = size;
+  memset (shiftop->regs, -1, sizeof(shiftop->regs));
+
+  for (i = 0; i < size;)
+    {
+      bool same_2_stack = aopOnStack (left, 0, 2) && aopOnStack (result, 0, 2) && left->aopu.bytes[i].byteu.stk == result->aopu.bytes[i].byteu.stk;
+      bool same_1_stack = aopOnStack (left, 0, 1) && aopOnStack (result, 0, 1) && left->aopu.bytes[i].byteu.stk == result->aopu.bytes[i].byteu.stk;
+
+      if (aopInReg (left, i, Y_IDX) && regDead (Y_IDX, ic) && result->regs[YL_IDX] == -1 && result->regs[YH_IDX] == -1)
+        {
+          shiftop->aopu.bytes[i] = left->aopu.bytes[i];
+          shiftop->aopu.bytes[i + 1] = left->aopu.bytes[i + 1];
+          shiftop->regs[YL_IDX] = i;
+          shiftop->regs[YH_IDX] = i + 1;
+          i += 2;
+        }
+      else if (size == 2 && (aopOnStack (left, i, 2) || left->type == AOP_LIT) && aopOnStack (result, i, 2) && !same_2_stack && regDead (Y_IDX, ic) &&
+        shiftop->regs[YL_IDX] == -1 && shiftop->regs[YH_IDX] == -1 &&
+        left->regs[YL_IDX] == -1 && left->regs[YH_IDX] == -1 && result->regs[YL_IDX] == -1 && result->regs[YH_IDX] == -1)
+        {
+          shiftop->aopu.bytes[i] = ASMOP_Y->aopu.bytes[0];
+          shiftop->aopu.bytes[i + 1] = ASMOP_Y->aopu.bytes[1];
+          shiftop->regs[YL_IDX] = i;
+          shiftop->regs[YH_IDX] = i + 1;
+          i += 2;
+        }
+      else
+        {
+          shiftop->aopu.bytes[i] = result->aopu.bytes[i];
+          if (result->aopu.bytes[i].in_reg)
+            shiftop->regs[result->aopu.bytes[i].byteu.reg->rIdx] = i;
+          i++;
+        }
+    }
+}
+
 /*-----------------------------------------------------------------*/
 /* genLeftShift - generates code for left shift                    */
 /*-----------------------------------------------------------------*/
@@ -4361,6 +4419,9 @@ genLeftShift (const iCode *ic)
   aopOp (result, ic);
   aopOp (left, ic);
 
+  struct asmop shiftop_impl;
+  struct asmop *shiftop = result->aop;
+
   int size = result->aop->size; 
 
   if (right->aop->type == AOP_LIT)
@@ -4371,21 +4432,27 @@ genLeftShift (const iCode *ic)
       if (shCount > (size * 8))
         shCount = size * 8;
 
+      if (shCount <= 6)
+        {
+          shiftop = &shiftop_impl;
+          init_shiftop (shiftop, result->aop, left->aop, right->aop, ic);
+        }
+
       if (shCount % 8 == 7 && aopIsOp8_1 (left->aop, size - (shCount + 1) / 8))
         {
           emit3_o (A_SRL, left->aop, size - (shCount + 1) / 8, 0, 0); // Move the one bit we still need into carry.
-          genMove_o (result->aop, (shCount + 1) / 8, left->aop, 0, size - (shCount + 1) / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-          genMove_o (result->aop, 0, ASMOP_ZERO, 0, (shCount + 1) / 8, regDead (XL_IDX, ic) && result->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && result->aop->regs[XL_IDX] < 0, false, false);
+          genMove_o (shiftop, (shCount + 1) / 8, left->aop, 0, size - (shCount + 1) / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          genMove_o (shiftop, 0, ASMOP_ZERO, 0, (shCount + 1) / 8, regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && shiftop->regs[XL_IDX] < 0, false, false);
           rrc = true;
         }
       else
         {
-          genMove_o (result->aop, shCount / 8, left->aop, 0, size - shCount / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-          genMove_o (result->aop, 0, ASMOP_ZERO, 0, shCount / 8, regDead (XL_IDX, ic) && result->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && result->aop->regs[XL_IDX] < 0, false, false);
+          genMove_o (shiftop, shCount / 8, left->aop, 0, size - shCount / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          genMove_o (shiftop, 0, ASMOP_ZERO, 0, shCount / 8, regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && shiftop->regs[XL_IDX] < 0, false, false);
         }
       
       if (shCount >= 16 && // Skip known 0 word when shifting.
-        (aopOnStack (result->aop, 0, 2) || aopInReg (result->aop, 0, Y_IDX) || aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Z_IDX) || result->aop->type == AOP_DIR))
+        (aopOnStack (shiftop, 0, 2) || aopInReg (shiftop, 0, Y_IDX) || aopInReg (shiftop, 0, X_IDX) || aopInReg (shiftop, 0, Z_IDX) || shiftop->type == AOP_DIR))
         offset += 2;
 
       shCount %= 8;
@@ -4393,8 +4460,8 @@ genLeftShift (const iCode *ic)
       bool xl_pushed = false;
       bool xl_free = regDead (XL_IDX, ic);
       if (rrc)
-        emitRightShift (result->aop, offset, size - offset, true, false, xl_free, &xl_pushed);
-      else if (size - offset == 2 && aopInReg (result->aop, offset, Y_IDX) && xl_free && shCount >= 4)
+        emitRightShift (shiftop, offset, size - offset, true, false, xl_free, &xl_pushed);
+      else if (size - offset == 2 && aopInReg (shiftop, offset, Y_IDX) && xl_free && shCount >= 4)
         {
           emit2 ("ld", "xl, #%d", shCount);
           emit2 ("sllw", "y, xl");
@@ -4403,28 +4470,28 @@ genLeftShift (const iCode *ic)
       else
         for (int c = 0; c < shCount; c++)
           {
-            emitLeftShift (result->aop, offset, size - offset, false, xl_free, &xl_pushed);
+            emitLeftShift (shiftop, offset, size - offset, false, xl_free, &xl_pushed);
             xl_free |= xl_pushed;
           }
       if (xl_pushed)
         pop (ASMOP_XL, 0, 1);
     }
-  else if (regDead (XL_IDX, ic) && result->aop->regs[XL_IDX] < 0)
+  else if (regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0)
     {
-      genMove (result->aop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      genMove (shiftop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
       symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (0));
       symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (0));
 
-      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && result->aop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
+      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
         UNIMPLEMENTED;
       genMove (ASMOP_XL, right->aop, true, false, false, false);
 
-      if (size == 2 && aopInReg (result->aop, 0, Y_IDX) || size == 1 && aopInReg (result->aop, 0, YL_IDX) && regDead (YH_IDX, ic))
+      if (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && regDead (YH_IDX, ic))
         {
           emit2 ("sllw", "y, xl");
           cost (2, 1);
-          goto release;
+          goto shifted;
         }
 
       emit3 (A_TST, ASMOP_XL, 0);
@@ -4435,7 +4502,7 @@ genLeftShift (const iCode *ic)
       emitLabel (tlbl1);
 
       bool xl_pushed = false;
-      emitLeftShift (result->aop, 0, size, false, false, &xl_pushed);
+      emitLeftShift (shiftop, 0, size, false, false, &xl_pushed);
       if (xl_pushed)
         pop (ASMOP_XL, 0, 1);
 
@@ -4448,7 +4515,9 @@ genLeftShift (const iCode *ic)
   else
     UNIMPLEMENTED;
 
-release:
+shifted:
+  genMove (result->aop, shiftop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+
   freeAsmop (left);
   freeAsmop (result);
   freeAsmop (right);
@@ -4470,6 +4539,9 @@ genRightShift (const iCode *ic)
   aopOp (result, ic);
   aopOp (left, ic);
 
+  struct asmop shiftop_impl;
+  struct asmop *shiftop = result->aop;
+
   bool sign =  !SPEC_USIGN (getSpec (operandType (left)));
   int size = result->aop->size;
 
@@ -4480,32 +4552,38 @@ genRightShift (const iCode *ic)
       if (shCount > (size * 8))
         shCount = size * 8;
 
+      if (shCount <= 6)
+        {
+          shiftop = &shiftop_impl;
+          init_shiftop (shiftop, result->aop, left->aop, right->aop, ic);
+        }
+
       if (shCount % 8 == 7 && !sign && aopIsOp8_1 (left->aop, shCount / 8))
         {
           emit3_o (A_SLL, left->aop, shCount / 8, 0, 0); // Move the one bit we still need into carry.
-          genMove_o (result->aop, 0, left->aop, (shCount + 1) / 8, size - (shCount + 1) / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-          genMove_o (result->aop, size - (shCount + 1) / 8, ASMOP_ZERO, 0, (shCount + 1) / 8, regDead (XL_IDX, ic) && result->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && result->aop->regs[XL_IDX] < 0, false, false);
+          genMove_o (shiftop, 0, left->aop, (shCount + 1) / 8, size - (shCount + 1) / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          genMove_o (shiftop, size - (shCount + 1) / 8, ASMOP_ZERO, 0, (shCount + 1) / 8, regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && shiftop->regs[XL_IDX] < 0, false, false);
           rlc = true;
         }
       else
         {
-          genMove_o (result->aop, 0, left->aop, shCount / 8, size - shCount / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-          genMove_o (result->aop, size - shCount / 8, ASMOP_ZERO, 0, shCount / 8, regDead (XL_IDX, ic) && result->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && result->aop->regs[XL_IDX] < 0, false, false);
+          genMove_o (shiftop, 0, left->aop, shCount / 8, size - shCount / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          genMove_o (shiftop, size - shCount / 8, ASMOP_ZERO, 0, shCount / 8, regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && shiftop->regs[XL_IDX] < 0, false, false);
         }
 
       if (shCount >= 16 && // Skip known 0 word when shifting.
-        (aopOnStack (result->aop, size - 2, 2) || aopInReg (result->aop, size - 2, Y_IDX) || aopInReg (result->aop, size - 2, X_IDX) || aopInReg (result->aop, size - 2, Z_IDX) || result->aop->type == AOP_DIR))
+        (aopOnStack (shiftop, size - 2, 2) || aopInReg (shiftop, size - 2, Y_IDX) || aopInReg (shiftop, size - 2, X_IDX) || aopInReg (shiftop, size - 2, Z_IDX) || shiftop->type == AOP_DIR))
         size -= 2;
       shCount %= 8;
 
       bool xl_pushed = false;
       bool xl_free = regDead (XL_IDX, ic);
       if (rlc)
-        emitLeftShift (result->aop, 0, size, true, xl_free, &xl_pushed);
+        emitLeftShift (shiftop, 0, size, true, xl_free, &xl_pushed);
       else
         for (int c = 0; c < shCount; c++)
           {
-            emitRightShift (result->aop, 0, size, false, sign, xl_free, &xl_pushed);
+            emitRightShift (shiftop, 0, size, false, sign, xl_free, &xl_pushed);
             xl_free |= xl_pushed;
           }
       if (xl_pushed)
@@ -4518,14 +4596,14 @@ genRightShift (const iCode *ic)
 
       bool pushed_xl = false;
 
-      genMove (result->aop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      genMove (shiftop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
-      if (!regDead (XL_IDX, ic) || result->aop->regs[XL_IDX] >= 0)
+      if (!regDead (XL_IDX, ic) || shiftop->regs[XL_IDX] >= 0)
         {
           push (ASMOP_XL, 0, 1);
           pushed_xl = true;
         }
-      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && result->aop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
+      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
         UNIMPLEMENTED;
       genMove (ASMOP_XL, right->aop, true, false, false, false);
 
@@ -4537,7 +4615,7 @@ genRightShift (const iCode *ic)
       emitLabel (tlbl1);
 
       bool xl_pushed = false;
-      emitRightShift (result->aop, 0, size, false, sign, false, &xl_pushed);
+      emitRightShift (shiftop, 0, size, false, sign, false, &xl_pushed);
       if (xl_pushed)
         pop (ASMOP_XL, 0, 1);
 
@@ -4549,6 +4627,8 @@ genRightShift (const iCode *ic)
       if (pushed_xl)
         pop (ASMOP_XL, 0, 1);
     }
+
+  genMove (result->aop, shiftop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
   freeAsmop (left);
   freeAsmop (result);
@@ -4769,6 +4849,8 @@ genPointerSet (const iCode *ic)
   int blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   int bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
 
+  bool pushed_y = false;
+
   D (emit2 ("; genPointerSet", ""));
 
   aopOp (left, ic);
@@ -4818,13 +4900,43 @@ genPointerSet (const iCode *ic)
       genMove(&stackop_impl, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       goto release;
     }
+  else if (!bit_field && size == 2 && aopOnStackNotExt (left->aop, 0, 2) &&
+    (!regalloc_dry_run || !f8_extend_stack) && // Avoid getting into a situation where stack allocation make scode generation impossible
+    aopIsAcc16 (right->aop, 0))
+    {
+      unsigned int soffset = left->aop->aopu.bytes[0].byteu.stk + G.stack.pushed;
+      emit2 ("ldw", "((%u, sp)), %s", soffset, aopGet2 (right->aop, 0));
+      cost (2 + !aopInReg (right->aop, 0, Y_IDX), 1);
+      goto release;
+    }
+  else if (!bit_field && size == 2 && aopOnStackNotExt (left->aop, 0, 2) &&
+    (!regalloc_dry_run || !f8_extend_stack) && // Avoid getting into a situation where stack allocation make scode generation impossible
+    (right->aop->type == AOP_DIR || aopOnStack (right->aop, 0, 2)) &&
+    (regDead (Y_IDX, ic) || regDead (X_IDX, ic)))
+    {
+      unsigned int soffset = left->aop->aopu.bytes[0].byteu.stk + G.stack.pushed;
+      bool use_y = regDead (Y_IDX, ic);
+      genMove (use_y ? ASMOP_Y : ASMOP_X, right->aop, true, true, regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      emit2 ("ldw", "((%u, sp)), %s", soffset, use_y ? "y" : "s");
+      cost (2 + !use_y, 1);
+      goto release;
+    }
 
   if (aopInReg (left->aop, 0, Y_IDX))
     ;
-  else if (y_dead)
-    genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
   else
-    UNIMPLEMENTED;
+    {
+      if (!y_dead && (right->aop->regs[YL_IDX] >= 0 || right->aop->regs[YH_IDX] >= 0))
+        UNIMPLEMENTED;
+
+      if (!y_dead)
+        {
+          push (ASMOP_Y, 0, 2);
+          pushed_y = true;
+        }
+
+       genMove (ASMOP_Y, left->aop, false, false, true, false);
+    }
 
   for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
     {
@@ -4886,6 +4998,9 @@ genPointerSet (const iCode *ic)
     }
 
 release:
+  if (pushed_y)
+    pop (ASMOP_Y, 0, 2);
+
   freeAsmop (right);
   freeAsmop (left);
 }
@@ -5201,7 +5316,7 @@ genReceive (const iCode *ic)
         dead_regs[narg->aopu.bytes[i].byteu.reg->rIdx] = false;
     }
     
-  if (result->aop->type == AOP_REG || result->aop->type == AOP_REGSTK)
+  if (result->aop->type == AOP_REGSTK)
     for (int i = 0; i < result->aop->size; i++)
       if (aopRS (result->aop) && result->aop->aopu.bytes[i].in_reg && !dead_regs[result->aop->aopu.bytes[i].byteu.reg->rIdx])
         UNIMPLEMENTED;
