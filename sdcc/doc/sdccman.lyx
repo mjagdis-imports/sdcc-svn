@@ -263,13 +263,13 @@ status collapsed
 \end_inset
 
 , etc.), Dallas DS80C390 variants, NXP (formerly Freescale/Motorola) HC08
- based (hc08, s08), Zilog Z80 based MCUs (Z80, Z180, eZ80 in Z80 mode, gbz80,
+ based (hc08, s08), Zilog Z80 based MCUs (Z80, Z180, eZ80 in Z80 mode, SM83,
  Rabbit 2000/3000, Rabbit 3000A 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-Z80, Z180, GBZ80, Rabbit 2000/3000, Rabbit 3000A CPU
+Z80, Z180, SM83, Rabbit 2000/3000, Rabbit 3000A CPU
 \end_layout
 
 \end_inset
@@ -285,8 +285,9 @@ STM8
 \end_inset
 
 , Padauk PDK14 and PDK15.
- It can be retargeted for other microprocessors, support for Microchip PIC
- and Padauk PDK13 is under development.
+ It can be retargeted for other microprocessors, support for Padauk PDK13
+ and MOS6502 is under development, whereas Microchip PIC is currently unmaintain
+ed.
  The entire source code for the compiler is distributed under GPL.
  SDCC uses a modified version of ASXXXX
 \begin_inset Index idx
@@ -2671,7 +2672,7 @@ status collapsed
 
 \begin_layout Itemize
 In 4.1.10, the default calling convention switched from __sdccall(0) to __sdccall(
-1) for stm8 and gbz80.
+1) for stm8 and sm83.
 \end_layout
 
 \begin_layout Itemize
@@ -2694,6 +2695,10 @@ In 4.1.12, support for –profile has been removed for z80, z180, z80n.
 
 \begin_layout Itemize
 In 4.1.13, support for –profile has been removed.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.14, the gbz80 port was renamed to sm83.
 \end_layout
 
 \begin_layout Section
@@ -3117,7 +3122,7 @@ status collapsed
 
 \end_inset
 
--disable-gbz80-port Excludes the Game Boy gbz80 port
+-disable-sm83-port Excludes the SM83 port
 \end_layout
 
 \begin_layout Labeling
@@ -6586,6 +6591,17 @@ Building SDCC
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+SDCC can be built for various host platforms using the instructions provided
+ below.
+ Note that the PIC14 and PIC16 library folders in the source distribution
+ contain Autotools-generated files.
+ These are included for convenience and to avoid introducing Autotools as
+ an additional dependency.
+ They have to be regenerated in case of a version mismatch.
+ Alternatively, the PIC backends can be disabled.
 \end_layout
 
 \begin_layout Subsection
@@ -11341,12 +11357,12 @@ status collapsed
 \labelwidthstring 00.00.0000
 
 \series bold
--mgbz80
+-msm83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
--mgbz80
+-msm83
 \end_layout
 
 \end_inset
@@ -11355,10 +11371,10 @@ status collapsed
 \series default
  Generate code for the Sharp SM83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-gbz80 (GameBoy Z80)
+sm83 (GameBoy Z80)
 \end_layout
 
 \end_inset
@@ -17811,7 +17827,7 @@ status collapsed
 \end_layout
 
 \begin_layout Subsection
-Options common to all z80-related ports (z80, z180, r2k, r3ka, gbz80, tlcs90,
+Options common to all z80-related ports (z80, z180, r2k, r3ka, sm83, tlcs90,
  ez80_z80)
 \end_layout
 
@@ -18237,7 +18253,7 @@ Never omit the frame pointer.
 \end_layout
 
 \begin_layout Subsection
-GBZ80 Options
+SM83 Options
 \begin_inset Index idx
 status collapsed
 
@@ -18249,10 +18265,10 @@ Options GBZ80
 
 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-GBZ80
+SM83
 \end_layout
 
 \end_inset
@@ -23506,8 +23522,8 @@ Binary constants
 \end_layout
 
 \begin_layout Standard
-SDCC supports the use of binary constants, such as 0b01100010.
- This feature is only enabled when the compiler is invoked using 
+SDCC supports the use of C23 binary constants, such as 0b01100010 when the
+ compiler is invoked using 
 \begin_inset Flex Code
 status open
 
@@ -23517,7 +23533,17 @@ status open
 
 \end_inset
 
-.
+, even when the corresponding 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--std-cxx
+\end_layout
+
+\end_inset
+
+, does not.
 \end_layout
 
 \begin_layout Subsection
@@ -25758,7 +25784,7 @@ Interrupt handler can be interrupted by interrupts of higher priority only
 \end_layout
 
 \begin_layout Subsection
-GBZ80 and TLCS-90 Interrupt Service Routines
+SM83 and TLCS-90 Interrupt Service Routines
 \end_layout
 
 \begin_layout Standard
@@ -43943,12 +43969,12 @@ Z80
 \end_inset
 
 , Z180, eZ80 in Z80 mode, Rabbit 2000, Rabbit 2000A, Rabbit 3000A and LR35902,
- the Sharp SM83 (used .e.g in the Nintendo GameBoy) gbz80
+ the Sharp SM83 (used .e.g in the Nintendo GameBoy) sm83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-gbz80 (GameBoy Z80)
+sm83 (GameBoy Z80)
 \end_layout
 
 \end_inset
@@ -44140,23 +44166,6 @@ The current default is the SDCC calling convention, version 1.
 \end_layout
 
 \begin_layout Subsubsection
-Z80 SDCC calling convention, version 0
-\end_layout
-
-\begin_layout Standard
-This calling convention can be chosen for individual function via __sdcccall(0).
- All parameters are passed on the stack, right-to-left.
- 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
- in dehl.
- Except for the GBZ80, where 8-bit values are passed in e, 16-bit values
- in de, 32-bit values in hlde.
- Larger return values are passed in memory in a location specified by the
- caller through a hidden pointer argument.
- Unless __z88dk_callee is used, all stack parameters are cleaned up by the
- caller.
-\end_layout
-
-\begin_layout Subsubsection
 Z80 SDCC calling convention, version 1
 \end_layout
 
@@ -44176,6 +44185,15 @@ For functions that have variable arguments: All parameters are passed on
 \end_layout
 
 \begin_layout Standard
+\begin_inset Graphics
+	filename z80-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 For Functions that do not have variable arguments: The first parameter is
  passed in a if it has 8 bits.
  If it has 16 bits it is passed in hl.
@@ -44188,6 +44206,23 @@ For Functions that do not have variable arguments: The first parameter is
  do not have variable arguments and return void or a type of at most 16
  bits, or have both a first parameter of type float and a return value of
  type float.
+\end_layout
+
+\begin_layout Subsubsection
+Z80 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(0).
+ All parameters are passed on the stack, right-to-left.
+ 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
+ in dehl.
+ Except for the SM83, where 8-bit values are passed in e, 16-bit values
+ in de, 32-bit values in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ Unless __z88dk_callee is used, all stack parameters are cleaned up by the
+ caller.
 \end_layout
 
 \begin_layout Subsection
@@ -44230,6 +44265,15 @@ For functions that have variable arguments: All parameters are passed on
 \end_layout
 
 \begin_layout Standard
+\begin_inset Graphics
+	filename r3ka-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 For Functions that do not have variable arguments: The first parameter is
  passed in a if it has 8 bits.
  If it has 16 bits it is passed in hl.
@@ -44256,22 +44300,6 @@ The current default is the SDCC calling convention, version 1.
 \end_layout
 
 \begin_layout Subsubsection
-SM83 SDCC calling convention, version 0
-\end_layout
-
-\begin_layout Standard
-This calling convention can be chosen for individual function via __sdcccall(0).
- 8-bit return values are passed in e, 16-bit values in de, 32-bit values
- in hlde.
- Larger return values are passed in memory in a location specified by the
- caller through a hidden pointer argument.
- All parameters are passed on the stack.
- The stack is not adjusted for the parameters by the callee (thus the caller
- has to do this instead), unless __z88dk_callee is specified.
- __sdcccall(0) can be combined with __z88dk_callee.
-\end_layout
-
-\begin_layout Subsubsection
 SM83 SDCC calling convention, version 1
 \end_layout
 
@@ -44294,6 +44322,15 @@ For functions that have variable arguments: All parameters are passed on
 \end_layout
 
 \begin_layout Standard
+\begin_inset Graphics
+	filename sm83-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 For Functions that do not have variable arguments: The first parameter is
  passed in a if it has 8 bits.
  If it has 16 bits it is passed in de.
@@ -44305,6 +44342,22 @@ For Functions that do not have variable arguments: The first parameter is
  passed in bc; all other parameters are passed on the stack, right-to-left.
  The stack is adjusted by the callee (thus explicitly specifying __z88dk_callee
  does not make a difference).
+\end_layout
+
+\begin_layout Subsubsection
+SM83 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(0).
+ 8-bit return values are passed in e, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ All parameters are passed on the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead), unless __z88dk_callee is specified.
+ __sdcccall(0) can be combined with __z88dk_callee.
 \end_layout
 
 \begin_layout Subsection
@@ -44357,6 +44410,27 @@ Usually, Z80-based systems (except for the SM83 and TLCS-90) have separate
  side-effects.
  For such systems, the option –allow-unsafe-reads can be used to enable
  some extra optimizations that rely on this.
+\end_layout
+
+\begin_layout Subsection
+Z80 banked calls
+\end_layout
+
+\begin_layout Standard
+Banked calls are supported via __banked.
+ Banked calls are done via a trampoline (__sdcc_bcall if --legacy-banking
+ us specified, __sdcc_bcall_abc for z88dk_fastcall, __sdcc_bcall_ehl for
+ other calls).
+ Default trampolines are provided in the library.
+ The default trampolines calls user supplied helper functions set_bank and
+ get_bank that set the current bank to the value inr egister a, or return
+ the current bank in register a.
+\end_layout
+
+\begin_layout Standard
+For banked functions, the calling convention is slightly different: the
+ stack is always cleared up by the caller.
+ Unless __z88dk_fastcall is used, all parameters are passed on the stack.
 \end_layout
 
 \begin_layout Section
@@ -44430,6 +44504,15 @@ Arguments are passed on the stack right-to-left.
 
 \begin_layout Subsubsection
 SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename stm8-arguments.svg
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard

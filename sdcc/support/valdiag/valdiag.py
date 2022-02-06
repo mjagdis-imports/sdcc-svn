@@ -141,9 +141,9 @@ testmodes = {
             "__has_z88dk_fastcall":"1"
         }
     },
-    "gbz80":{
+    "sm83":{
         "compiler":sdcc,
-        "port":"gbz80",
+        "port":"sm83",
         "extra-defines": {
             "__has_sdcccall":"1"
         }
@@ -167,6 +167,24 @@ testmodes = {
     "s08":{
         "compiler":sdcc,
         "port":"s08",
+        "extra-defines": {
+            "__has_data":"1",
+            "__has_xdata":"1",
+            "__has_reentrant":"1"
+        }
+    },
+    "mos6502":{
+        "compiler":sdcc,
+        "port":"mos6502",
+        "extra-defines": {
+            "__has_data":"1",
+            "__has_xdata":"1",
+            "__has_reentrant":"1"
+        }
+    },
+    "mos65c02":{
+        "compiler":sdcc,
+        "port":"mos65c02",
         "extra-defines": {
             "__has_data":"1",
             "__has_xdata":"1",

@@ -313,10 +313,19 @@ FBYNAME (labelIsReturnOnly)
     ;
 
   retInst = "ret";
-  if (TARGET_HC08_LIKE)
+  if (TARGET_HC08_LIKE || TARGET_MOS6502_LIKE)
     retInst = "rts";
-  if (strcmp(p, retInst) == 0)
+
+  if (strncmp(p, retInst,strlen(retInst)) != 0)
+    return FALSE;
+
+  p+=strlen(retInst);
+  while(*p && ISCHARSPACE(*p))
+    p++;
+
+  if(*p==0 || *p==';')
     return TRUE;
+
   return FALSE;
 }
 
@@ -397,7 +406,7 @@ FBYNAME (labelIsUncondJump)
       jpInst = "ljmp";
       jpInst2 = "sjmp";
     }
-  else if (TARGET_HC08_LIKE)
+  else if (TARGET_HC08_LIKE || TARGET_MOS6502_LIKE)
     {
       jpInst = "jmp";
       jpInst2 = "bra";
@@ -764,9 +773,9 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
         return global_not_volatile;
       if (strstr (var, "(iy"))
         return global_not_volatile;
-      // gbz80 specific ldh can be volatile
+      // sm83-specific ldh can be volatile
       // but HRAM doesn't have to be volatile
-      if (TARGET_ID_GBZ80 && strstr (var, "(c)"))
+      if (TARGET_ID_SM83 && strstr (var, "(c)"))
         return global_not_volatile;
     }
 
@@ -1168,12 +1177,12 @@ FBYNAME (notUsed)
   set *operands = setFromConditionArgs (cmdLine, vars);
 
   if (!operands)
-  {
-    fprintf (stderr,
+    {
+      fprintf (stderr,
              "*** internal error: notUsed peephole restriction"
              " requires operand(s): %s\n", cmdLine);
-    return FALSE;
-  }
+      return FALSE;
+    }
 
   what = setFirstItem (operands);
   for (ret = TRUE; ret && what != NULL; what = setNextItem (operands))
@@ -1217,7 +1226,7 @@ FBYNAME (notUsedFrom)
     deleteSet(&operands);
     return false;
   }
-  
+
   operands = reverseSet(operands);
 
   label = setFirstItem (operands);
@@ -2847,6 +2856,8 @@ matchLine (char *s, const char *d, hTab ** vars)
       /* skip white space in both */
       while (ISCHARSPACE(*s))
           s++;
+      if(*s==';') break;
+      
       while (ISCHARSPACE(*d))
           d++;
 
@@ -2871,20 +2882,9 @@ matchLine (char *s, const char *d, hTab ** vars)
           while (ISCHARDIGIT (*d))
             d++;
         }
-      else if (ISCHARSPACE (*s) && ISCHARSPACE (*d)) /* whitespace sequences match any whitespace sequences */
-        {
-          while (ISCHARSPACE (*s))
-            s++;
-          while (ISCHARSPACE (*d))
-            d++;
-        }
-      else if (*s == ',' && *d == ',') /* Allow comman to match comma followed by whitespace */
+      else if (*s == ',' && *d == ',') /* Allow comma to match comma followed by whitespace */
         {
           s++, d++;
-          while (ISCHARSPACE (*s))
-            s++;
-          while (ISCHARSPACE (*d))
-            d++;
         }
       else if (*s && *d) /* they should be an exact match otherwise */
         {
@@ -2897,6 +2897,11 @@ matchLine (char *s, const char *d, hTab ** vars)
   if (*s)
     while (ISCHARSPACE (*s))
       s++;
+
+  /* skip trailing comments as well*/
+  if(*s==';')
+   while (*s)
+     s++;
 
   if (*d)
     while (ISCHARSPACE (*d))

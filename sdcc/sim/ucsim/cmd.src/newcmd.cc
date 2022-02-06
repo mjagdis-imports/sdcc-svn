@@ -174,12 +174,13 @@ cl_console_base::welcome(void)
 {
   if (!(flags & CONS_NOWELCOME))
     {
-      dd_printf("uCsim %s, Copyright (C) 1997 Daniel Drotos.\n"
+      dd_printf("uCsim%s, Copyright (C) 1997 Daniel Drotos.\n"
         "uCsim comes with ABSOLUTELY NO WARRANTY; for details type "
         "`show w'.\n"
         "This is free software, and you are welcome to redistribute it\n"
         "under certain conditions; type `show c' for details.\n",
-        VERSIONSTR);
+		(application->quiet)?"":(" " VERSIONSTR)
+		);
     }
 }
 
@@ -926,19 +927,11 @@ int
 cl_commander_base::debug(const char *format, ...)
 {
   va_list ap;
-  int i, ret= 0;
 
-  for (i= 0; i < cons->count; i++)
-    {
-      class cl_console_base *c= (class cl_console_base*)(cons->at(i));
-      if (c->get_flag(CONS_DEBUG))
-        {
-          va_start(ap, format);
-          ret= c->cmd_do_cprint("debug", format, ap);
-          va_end(ap);
-        }
-    }
-  return(ret);
+  va_start(ap, format);
+  int ret = debug(format, ap);
+  va_end(ap);
+  return ret;
 }
 
 int
@@ -949,9 +942,17 @@ cl_commander_base::debug(const char *format, va_list ap)
   for (i= 0; i < cons->count; i++)
     {
       class cl_console_base *c= (class cl_console_base*)(cons->at(i));
-      if (c->get_flag(CONS_DEBUG))
+      if (c->get_flag(CONS_DEBUG) && !c->get_flag(CONS_INACTIVE))
         {
-          ret= c->cmd_do_cprint("debug", format, ap);
+          va_list aq;
+#ifdef va_copy
+          va_copy(aq, ap);
+          ret= c->cmd_do_cprint("debug", format, aq);
+          va_end(aq);
+#else
+	  memcpy(&aq, &ap, sizeof(va_list));
+          ret= c->cmd_do_cprint("debug", format, aq);
+#endif	  
         }
     }
   return(ret);

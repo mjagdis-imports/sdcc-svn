@@ -88,7 +88,7 @@ static struct
   int nRegs;
 } _G;
 
-reg_info gbz80_regs[] = {
+reg_info sm83_regs[] = {
   {REG_GPR, A_IDX, "a", 1},
   {REG_GPR, C_IDX, "c", 1},
   {REG_GPR, B_IDX, "b", 1},
@@ -115,8 +115,8 @@ reg_info z80_regs[] = {
 reg_info *regsZ80;
 
 /** Number of usable registers (all but C) */
-#define Z80_MAX_REGS ((sizeof(z80_regs)/sizeof(z80_regs[0]))-1)
-#define GBZ80_MAX_REGS ((sizeof(gbz80_regs)/sizeof(gbz80_regs[0]))-1)
+#define Z80_MAX_REGS ((sizeof (z80_regs) / sizeof (z80_regs[0]))-1)
+#define SM83_MAX_REGS ((sizeof (sm83_regs) / sizeof (sm83_regs[0]))-1)
 
 void z80SpillThis (symbol *);
 static void freeAllRegs ();
@@ -460,7 +460,7 @@ rUmaskForOp (const operand * op)
   if (sym->isspilt || !sym->nRegs)
     return NULL;
 
-  rumask = newBitVect (_G.nRegs + (IS_GB ? 0 : 2));
+  rumask = newBitVect (IS_SM83 ? SM83_MAX_REGS : Z80_MAX_REGS);
 
   for (j = 0; j < sym->nRegs; j++)
     {
@@ -486,7 +486,7 @@ z80_rUmaskForOp (const operand * op)
 bitVect *
 regsUsedIniCode (iCode * ic)
 {
-  bitVect *rmask = newBitVect (_G.nRegs + (IS_GB ? 0 : 2));
+  bitVect *rmask = newBitVect (IS_SM83 ? SM83_MAX_REGS : Z80_MAX_REGS);
 
   /* do the special cases first */
   if (ic->op == IFX)
@@ -859,7 +859,7 @@ packRegsForOneuse (iCode * ic, operand * op, eBBlock * ebp)
     return NULL;
 
   /* this routine will mark the a symbol as used in one
-     instruction use only && if the defintion is local
+     instruction use only && if the definition is local
      (ie. within the basic block) && has only one definition &&
      that definition is either a return value from a
      function or does not contain any variables in
@@ -869,7 +869,7 @@ packRegsForOneuse (iCode * ic, operand * op, eBBlock * ebp)
   if (!bitVectIsZero (uses))    /* has other uses */
     return NULL;
 
-  /* if it has only one defintion */
+  /* if it has only one definition */
   if (bitVectnBitsOn (OP_DEFS (op)) > 1)
     return NULL;                /* has more than one definition */
 
@@ -1339,7 +1339,7 @@ z80_ralloc (ebbIndex *ebbi)
   setToNull ((void *) &_G.totRegAssigned);
   _G.stackExtend = _G.dataExtend = 0;
 
-  _G.nRegs = IS_GB ? GBZ80_MAX_REGS : Z80_MAX_REGS;
+  _G.nRegs = IS_SM83 ? SM83_MAX_REGS : Z80_MAX_REGS;
 
   /* change assignments this will remove some
      live ranges reducing some register pressure */

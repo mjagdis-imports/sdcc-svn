@@ -4959,7 +4959,7 @@ genMultLit (const iCode *ic)
     unsigned long long add, sub;
     int topbit, nonzero;
 
-    wassert(!csdOfVal (&topbit, &nonzero, &add, &sub, right->aop->aopu.aop_lit));
+    wassert(!csdOfVal (&topbit, &nonzero, &add, &sub, right->aop->aopu.aop_lit, 0xffff));
 
     // If the leading digits of the cse are 1 0 -1 we can use 0 1 1 instead to reduce the number of shifts.
     if (topbit >= 2 && (add & (1ull << topbit)) && (sub & (1ull << (topbit - 2))))
@@ -6965,11 +6965,7 @@ init_shiftop(asmop *shiftop, const asmop *result, const asmop *left, const asmop
   bool all_in_reg = TRUE;
 
   shiftop->size = size;
-  shiftop->regs[A_IDX] = -1;
-  shiftop->regs[XL_IDX] = -1;
-  shiftop->regs[XH_IDX] = -1;
-  shiftop->regs[YL_IDX] = -1;
-  shiftop->regs[YH_IDX] = -1;
+  memset (shiftop->regs, -1, sizeof(shiftop->regs));
 
   for (i = 0; i < size;)
     {
@@ -9559,7 +9555,7 @@ drySTM8iCode (iCode *ic)
 }
 
 /*---------------------------------------------------------------------*/
-/* genSTM8Code - generate code for STM8 for a block of intructions     */
+/* genSTM8Code - generate code for STM8 for a block of instructions    */
 /*---------------------------------------------------------------------*/
 void
 genSTM8Code (iCode *lic)

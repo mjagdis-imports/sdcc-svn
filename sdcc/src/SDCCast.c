@@ -1495,7 +1495,7 @@ createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootV
 }
 
 /*-----------------------------------------------------------------*/
-/* initAggregates - initialises aggregate variables with initv     */
+/* initAggregates - initializes aggregate variables with initv     */
 /*-----------------------------------------------------------------*/
 ast *
 initAggregates (symbol *sym, initList *ival, ast *wid)
@@ -1539,7 +1539,7 @@ gatherAutoInit (symbol * autoChain)
       /* if this is a static variable & has an */
       /* initial value the code needs to be lifted */
       /* here to the main portion since they can be */
-      /* initialised only once at the start    */
+      /* initialized only once at the start    */
       if (IS_STATIC (sym->etype) && sym->ival && SPEC_SCLS (sym->etype) != S_CODE)
         {
           symbol *newSym;
@@ -2971,7 +2971,7 @@ checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNul
               if (IS_FUNCPTR (newType) && !orgIsNullPtrConstant) // cast to pointer to function is only allowed for null pointer constants
                 errors += werror (W_INCOMPAT_PTYPES);
             }
-          else if (GPTRSIZE > FARPTRSIZE /*!TARGET_IS_Z80 && !TARGET_IS_GBZ80 */ )
+          else if (GPTRSIZE > FARPTRSIZE /*!TARGET_IS_Z80 && !TARGET_IS_SM83 */ )
             {
               // if not a pointer to a function
               if (!(IS_CODEPTR (newType) && IS_FUNC (newType->next) && IS_FUNC (orgType)))

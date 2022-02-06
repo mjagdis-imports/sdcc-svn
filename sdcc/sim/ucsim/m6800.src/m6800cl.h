@@ -97,8 +97,6 @@ enum {
   flagZ	= 0x04,
   mN	= 0x08,
   flagN	= 0x08,
-  mS	= 0x08,
-  flagS	= 0x08,
   mI	= 0x10,
   flagI	= 0x10,
   mH	= 0x20,
@@ -122,15 +120,7 @@ enum {
 #define ifLS	( ((rF&mC)?mZ:0) | (rF&mZ) )
 #define ifHI	(!ifLS)
 #define ifA	(true)
-
-
-// Vectors
-enum {
-  IRQ_AT	= 0xfff8,
-  SWI_AT	= 0xfffa,
-  NMI_AT	= 0xfffc,
-  RESET_AT	= 0xfffe,
-};
+#define ifN	(false)
 
 extern int8_t p0ticks[256];
 
@@ -179,6 +169,7 @@ public:
   class cl_idx16 *cI;
   class cl_mop16 mop16;
   bool wai;
+  u16_t IRQ_AT, SWI_AT, NMI_AT, RESET_AT;
 public:
   cl_m6800(class cl_sim *asim);
   virtual int init(void);
@@ -189,13 +180,15 @@ public:
   virtual void mk_hw_elements(void);
   virtual void make_cpu_hw(void);
   virtual void make_memories(void);
-
+  virtual void setup_ccr(void);
+  
   virtual int8_t *tick_tab(t_mem code) { return p0ticks; }
   virtual int clock_per_cycle(void) { return 1; }
   virtual struct dis_entry *dis_tbl(void);
   virtual struct dis_entry *get_dis_entry(t_addr addr);
   virtual char *disassc(t_addr addr, chars *comment=NULL);
   virtual t_addr read_addr(class cl_memory *m, t_addr start_addr);
+  virtual void analyze_start(void);
   virtual void analyze(t_addr addr);
   virtual int inst_length(t_addr addr);
   virtual int longest_inst(void) { return 4; }
@@ -278,6 +271,7 @@ public:
   virtual int ABA(t_mem code) { return add(cA, rB, false); }
 
   virtual int BRA(t_mem code) { return branch(raddr(), ifA); }
+  virtual int BRN(t_mem code) { return branch(raddr(), ifN); }
   virtual int BHI(t_mem code) { return branch(raddr(), ifHI); }
   virtual int BLS(t_mem code) { return branch(raddr(), ifLS); }
   virtual int BCC(t_mem code) { return branch(raddr(), ifCC); }

@@ -38,7 +38,7 @@ ELIDE += -e 's/^(ucsim version ).*/\1[ELIDED]/'
 ELIDE += -e 's/^(Loading from ).*/\1[ELIDED]/'
 ELIDE += -e 's/( words read from ).*/\1[ELIDED]/'
 ELIDE += -e 's/( File: ).*/\1[ELIDED]/'
-ELIDE += -e 's/^(Simulated )[[:digit:]]\+( ticks )/\1[ELIDED]\2/'
+ELIDE += -e 's/^(Simulated [[:digit:]]+ ticks ).*/\1[ELIDED]/'
 ELIDE += -e 's/^(Host usage: ).*/\1[ELIDED]/'
 ELIDE += -e 's/([[:upper:]][[:alpha:]]{2} [[:upper:]][[:alpha:]]{2} .[[:digit:]] [[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2} [[:digit:]]{4})/[ELIDED]/'
 
@@ -58,7 +58,8 @@ define run-sim =
 		$(filter %.ihx, $+) \
 		2>&1 < /dev/null \
 		| sed -E $(ELIDE) \
-		> 'out/$@'
+		> 'out/$@'; \
+	for file in out/*.vcd; do [ -r "$$file" ] && sed -E -i $(ELIDE) "$$file"; done
 endef
 
 

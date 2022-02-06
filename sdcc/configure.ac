@@ -715,9 +715,9 @@ AC_DEFUN([AC_DO_DISABLER], [
 ])
 
 # macro AC_DO_PORT($1, $2, $3, $4)
-#   $1 used to access enable_$2_port, e.g. gbz80
+#   $1 used to access enable_$2_port, e.g. sm83
 #   $2 port name in ports.all and ports.build, e.g. z80
-#   $3 OPT_DISABLE_$3, normally uppercase of $2, e.g. GBZ80
+#   $3 OPT_DISABLE_$3, normally uppercase of $2, e.g. SM83
 #   $4 help string
 AC_DEFUN([AC_DO_PORT], [
   AC_ARG_ENABLE($1-port,
@@ -740,9 +740,9 @@ AC_DEFUN([AC_DO_PORT], [
 ])
 
 # macro AC_DO_PORT_ENABLER($1, $2, $3, $4)
-#   $1 used to access enable_$2_port, e.g. gbz80
+#   $1 used to access enable_$2_port, e.g. sm83
 #   $2 port name in ports.all and ports.build, e.g. z80
-#   $3 OPT_DISABLE_$3, normally uppercase of $2, e.g. GBZ80
+#   $3 OPT_DISABLE_$3, normally uppercase of $2, e.g. SM83
 #   $4 help string
 AC_DEFUN([AC_DO_PORT_ENABLER], [
   AC_ARG_ENABLE($1-port,
@@ -775,7 +775,7 @@ AC_DO_PORT(z180,     z80,    Z180,     [Excludes the Z180 port])
 AC_DO_PORT(r2k,      z80,    R2K,      [Excludes the Rabbit 2000 port])
 AC_DO_PORT(r2ka,     z80,    R2KA,     [Excludes the Rabbit 2000A port])
 AC_DO_PORT(r3ka,     z80,    R3KA,     [Excludes the Rabbit 3000A port])
-AC_DO_PORT(gbz80,    z80,    GBZ80,    [Excludes the SM83 port])
+AC_DO_PORT(sm83,     z80,    SM83,     [Excludes the SM83 port])
 AC_DO_PORT(tlcs90,   z80,    TLCS90,   [Excludes the TLCS-90 port])
 AC_DO_PORT(ez80_z80, z80,    EZ80_Z80, [Excludes the EZ80-Z80 port])
 AC_DO_PORT(z80n,     z80,    Z80N,     [Excludes the Z80N port])
@@ -791,6 +791,8 @@ AC_DO_PORT(pdk13,    pdk,    PDK13,    [Excludes the PDK13 port])
 AC_DO_PORT(pdk14,    pdk,    PDK14,    [Excludes the PDK14 port])
 AC_DO_PORT(pdk15,    pdk,    PDK15,    [Excludes the PDK15 port])
 AC_DO_PORT_ENABLER(pdk16,    pdk,    PDK16,    [Includes the PDK16 port])
+AC_DO_PORT(mos6502,  mos6502,MOS6502,  [Excludes the MOS6502 port])
+AC_DO_PORT_ENABLER(mos65c02, mos6502,MOS65C02, [Includes the MOS65C02 port])
 AC_DO_PORT(f8,       f8,     F8,       [Excludes the F8 port])
 
 # Unsupported targets
@@ -862,6 +864,13 @@ if test $OPT_DISABLE_HC08 = 0 || test $OPT_DISABLE_S08 = 0; then
                                                        device/lib/s08/Makefile])
 fi
 
+if test $OPT_DISABLE_MOS6502 = 0 || test $OPT_DISABLE_MOS65C02 = 0; then
+  AC_CONFIG_FILES([src/mos6502/Makefile
+                   sdas/as6500/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/mos6502/Makefile
+                                                       device/lib/mos65c02/Makefile])
+fi
+
 if test $OPT_DISABLE_MCS51 = 0; then
   AC_CONFIG_FILES([src/mcs51/Makefile
                    sdas/as8051/Makefile])
@@ -887,7 +896,7 @@ if test $OPT_DISABLE_PIC16 = 0 && test $OPT_DISABLE_NON_FREE = 0; then
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_SUBDIRS(device/non-free/lib/pic16)
 fi
 
-if test $OPT_DISABLE_Z80 = 0 || test $OPT_DISABLE_Z180 = 0 || test $OPT_DISABLE_R2K = 0 || test $OPT_DISABLE_R2KA = 0 || test $OPT_DISABLE_R3KA = 0 || test $OPT_DISABLE_GBZ80 = 0 || test $OPT_DISABLE_TLCS90 = 0 || test $OPT_DISABLE_EZ80_Z80 = 0 || test $OPT_DISABLE_Z80N = 0; then
+if test $OPT_DISABLE_Z80 = 0 || test $OPT_DISABLE_Z180 = 0 || test $OPT_DISABLE_R2K = 0 || test $OPT_DISABLE_R2KA = 0 || test $OPT_DISABLE_R3KA = 0 || test $OPT_DISABLE_SM83 = 0 || test $OPT_DISABLE_TLCS90 = 0 || test $OPT_DISABLE_EZ80_Z80 = 0 || test $OPT_DISABLE_Z80N = 0; then
   AC_CONFIG_FILES([src/z80/Makefile])
 fi
 
@@ -911,9 +920,9 @@ if test $OPT_DISABLE_TLCS90 = 0; then
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/tlcs90/Makefile])
 fi
 
-if test $OPT_DISABLE_GBZ80 = 0; then
+if test $OPT_DISABLE_SM83 = 0; then
   AC_CONFIG_FILES([sdas/asgb/Makefile])
-  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/gbz80/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/sm83/Makefile])
 fi
 
 if test $OPT_DISABLE_STM8 = 0; then
@@ -1026,7 +1035,7 @@ sdcc ${VERSION} is now configured for
     r2k                 ${enable_r2k_port}
     r2ka                ${enable_r2ka_port}
     r3ka                ${enable_r3ka_port}
-    gbz80               ${enable_gbz80_port}
+    sm83                ${enable_sm83_port}
     tlcs90              ${enable_tlcs90_port}
     ez80_z80            ${enable_ez80_z80_port}
     z80n                ${enable_z80n_port}
@@ -1035,6 +1044,8 @@ sdcc ${VERSION} is now configured for
     pdk14               ${enable_pdk14_port}
     pdk15               ${enable_pdk15_port}
     pdk16               ${enable_pdk16_port}
+    mos6502             ${enable_mos6502_port}
+    mos65c02            ${enable_mos65c02_port}
     f8                  ${enable_f8_port}
 
   Disable non-free lib: ${OPT_DISABLE_NON_FREE}

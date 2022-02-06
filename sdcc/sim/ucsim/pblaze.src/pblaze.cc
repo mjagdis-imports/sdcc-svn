@@ -96,7 +96,7 @@ cl_pblaze::init(void)
 
   cl_uc::init(); /* Memories now exist */
 
-  xtal = 8000000;
+  set_xtal(8000000);
 
   // loading file with interrupts
   read_interrupt_file();
@@ -839,6 +839,7 @@ cl_pblaze::load_state(class cl_console_base *con, char *file_name)
 int
 cl_pblaze::do_inst(int step)
 {
+  t_addr PCsave = PC;
   int result = resGO;
 
   if (step < 0)
@@ -850,7 +851,13 @@ cl_pblaze::do_inst(int step)
       result = exec_inst();
       post_inst();
 
-      if (result == resGO) {
+      if (result == resINV_INST)
+        /* backup to start of instruction */
+        PC = PCsave;
+      else if (result == resGO) {
+          if (!inst_at(PCsave))
+            analyze(PCsave);
+
           int res;
           if ((res = do_interrupt()) != resGO)
             result = res;
@@ -989,12 +996,12 @@ cl_pblaze::do_interrupt(void)
     return(resGO);
 
   // check in stored interrupts, if at actual cycle irq is set
-  if (find(stored_interrupts.begin(), stored_interrupts.end(), ticks->ticks / clock_per_cycle()) != stored_interrupts.end())
+  if (find(stored_interrupts.begin(), stored_interrupts.end(), ticks->get_ticks() / clock_per_cycle()) != stored_interrupts.end())
     interrupt->interrupt_request = true;
 
   if (interrupt->interrupt_request) {
     printf("%g sec (%ld clks): Accepting interrupt, PC= 0x%06x\n",
-	   get_rtime(), ticks->ticks, AU(PC));
+	   ticks->get_rtime(), (long int)(ticks->get_ticks()), AU(PC));
 
     tick(1);
 
@@ -1098,10 +1105,14 @@ cl_pblaze::read_hex_file(const char *nam)
     opt->get_value(&value);
   }
 
+  long ret;
   if (value)
-    return pblaze_read_hex_file(nam);
+    ret = pblaze_read_hex_file(nam);
   else
-    return std_read_hex_file(nam);
+    ret = std_read_hex_file(nam);
+
+  analyze_init();
+  return ret;
 }
 
 
@@ -1148,7 +1159,7 @@ cl_pblaze::pblaze_read_hex_file(const char *nam)
     }
   }
 
-  // if read wasn't ok and not at the and of file, read error has occured
+  // if read wasn't ok and not at the and of file, read error has occurred
   if (!ok && getc(f) != EOF)
   {
       application->debug("Read error in record %ld.\n", written);
@@ -1157,7 +1168,6 @@ cl_pblaze::pblaze_read_hex_file(const char *nam)
   if (nam)
     fclose(f);
   application->debug("%ld records have been read\n", written);
-  analyze(0);
   return(written);
 }
 
@@ -1300,7 +1310,6 @@ cl_pblaze::std_read_hex_file(const char *nam)
   if (nam)
     fclose(f);
   application->debug("%ld records have been read\n", recnum);
-  analyze(0);
   return(written);
 }
 

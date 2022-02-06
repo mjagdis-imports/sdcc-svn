@@ -1,7 +1,7 @@
 # Regression test specification for the stm8 target running with uCsim
 
 # simulation timeout in seconds
-SIM_TIMEOUT = 45
+SIM_TIMEOUT = 60
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
@@ -30,8 +30,8 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mstm8 --less-pedantic --out-fmt-ihx
-LINKFLAGS += stm8.lib
+SDCCFLAGS += --debug -mstm8 --less-pedantic --out-fmt-ihx
+LINKFLAGS += --debug stm8.lib
 
 OBJEXT = .rel
 BINEXT = .ihx
