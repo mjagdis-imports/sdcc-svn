@@ -43,6 +43,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // prj
 #include "stypes.h"
 #include "utils.h"
+#include "globals.h"
 
 // sim
 #include "appcl.h"
@@ -89,9 +90,7 @@ static int dup3(int oldfd, int newfd, int flags) { return dup2(oldfd, newfd); }
 #  endif
 */
 
-#  if !defined(HAVE_PIPE2)
-static int pipe2(int pipefd[2], int flags) { return pipe(pipefd); }
-#  endif
+static int spipe2(int pipefd[2], int flags) { return pipe(pipefd); }
 
 #endif
 
@@ -309,7 +308,7 @@ cl_vcd::open_vcd(class cl_console_base *con)
       int p[2];
       pid_t pid;
 
-      if (!pipe2(p, O_CLOEXEC))
+      if (!spipe2(p, O_CLOEXEC))
         {
           if ((pid = fork()) > 0)
             {
@@ -766,6 +765,8 @@ cl_vcd::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
 
                       // generate vcd file header
                       time_t now = time(NULL);
+		      if (application->quiet)
+			now= (time_t)0;
                       fprintf(fd, "$date\n\t%s$end\n$version\n\tucsim\n$end\n$timescale ", ctime(&now));
                       if (timescale >= 1e15)
                         fprintf(fd, "%.0ffs", timescale * 1e-15);
@@ -1091,7 +1092,8 @@ cl_vcd::print_info(class cl_console_base *con)
   con->dd_printf("  Modul:      %s\n", modul.c_str());
   con->dd_printf("  Started:    %s\n", (started ? "YES" : "no"));
   con->dd_printf("  Paused:     %s\n", (paused ? "YES" : "no"));
-  con->dd_printf("  File:       %s\n", (filename ? filename : "(none)"));
+  if (!application->quiet)
+    con->dd_printf("  File:       %s\n", (filename ? filename : "(none)"));
 
   if (state != -1)
     {
