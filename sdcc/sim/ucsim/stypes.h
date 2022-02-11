@@ -30,6 +30,13 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "ddconfig.h"
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 //typedef int8_t TYPE_BYTE;
 //typedef uint8_t TYPE_UBYTE;
 //typedef int16_t TYPE_WORD;
@@ -50,7 +57,7 @@ typedef unsigned TYPE_DWORD u32_t;
 typedef   signed TYPE_QWORD i64_t;
 typedef unsigned TYPE_QWORD u64_t;
 
-typedef i64_t		t_addr;		/* 64 bit max */
+typedef i64_t		t_addr;		/* 32 bit max */
 typedef u32_t		t_mem;		/* 32 bit max */
 typedef i32_t		t_smem;		/* signed 32 bit memory */
 
@@ -89,12 +96,12 @@ enum error_type {
   err_warning  = 0x04
 };
 
-// table of dissassembled instructions
+// table of disassembled instructions
 struct dis_entry
 {
   /*uint64_t*/long long code, mask; // max 8 byte of code
   char  branch;
-  uchar length;
+  i8_t length;
   const char *mnemonic;
   bool is_call;
   uchar ticks;
@@ -143,8 +150,13 @@ enum cpu_type {
   CPU_R3KA      = 0x0010,
   CPU_EZ80	= 0x0020,
   CPU_Z80N      = 0x0040,
+  CPU_GB80      = 0x0080,
+  CPU_R3K	= 0x0100,
+  CPU_R4K	= 0x0200,
+  CPU_R5K	= 0x0400,
+  CPU_R6K	= 0x0800,
   CPU_ALL_Z80   = (CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA|CPU_EZ80|
-		   CPU_Z80N),
+		   CPU_Z80N|CPU_GB80),
 
   CPU_XA	= 0x0001,
   CPU_ALL_XA	= (CPU_XA),
@@ -152,6 +164,14 @@ enum cpu_type {
   CPU_HC08      = 0x0001,
   CPU_HCS08     = 0x0002,
   CPU_ALL_HC08  = (CPU_HC08|CPU_HCS08),
+
+  CPU_HC11      = 0x0004,
+  CPU_HC12      = 0x0008,
+  CPU_ALL_HC12  = (CPU_HC11|CPU_HC12),
+  
+  CPU_PBLAZE_3	= 0x0001,
+  CPU_PBLAZE_6	= 0x0002,
+  CPU_ALL_PBLAZE= (CPU_PBLAZE_3|CPU_PBLAZE_6),
 
   CPU_STM8S		= 0x0001,		// S and AF family
   CPU_STM8AF		= 0x0001,
@@ -220,6 +240,20 @@ enum cpu_type {
   CPU_ST7       = 0x0001,
   CPU_ALL_ST7   = (CPU_ST7),
 
+  // MOS6502 and variants
+  CPU_6502	= 0x0001,	// NMOS
+  CPU_6502C	= 0x0002,	// 6502 + HALT pin
+  CPU_6510	= 0x0004,	// 6502 + integrated port
+  CPU_8500	= 0x0008,	// 6510 CMOS
+  CPU_8502	= 0x0010,	// 8500 2 MHz
+  CPU_7501	= 0x0020,	// 6502 HMOS-1
+  CPU_8501	= 0x0040,	// 6502 HMOS-2
+
+  // 6502 based, but not 100% compatible
+  CPU_65C02	= 0x0100,	// extended inst.set
+  CPU_65SC02	= 0x0200,      	// 65C02 variant, different inst.set
+  CPU_65CE02	= 0x0400,	// extension of 65C02
+  
   // technology
   CPU_CMOS	= 0x0001,
   CPU_HMOS	= 0x0002,
@@ -248,6 +282,7 @@ enum mem_class
   MEM_SFR,
   MEM_DUMMY,
   MEM_IXRAM,
+  MEM_STACK,
   MEM_TYPES
 };
 
@@ -255,6 +290,8 @@ enum mem_class
 #define MEM_XRAM_ID	"xram"
 #define MEM_IXRAM_ID	"ixram"
 #define MEM_IRAM_ID	"iram"
+#define MEM_STACK_ID	"stack"
+#define MEM_ROM_ID	"rom"
 
 // States of simulator
 enum sim_state {
@@ -275,18 +312,20 @@ enum inst_result {
   resGO		= 0,	/* OK, go on */
   resWDTRESET	= 1,	/* Reseted by WDT */
   resINTERRUPT	= 2,	/* Interrupt accepted */
-  resSTOP	= 100,	/* Stop if result greather then this */
+  resSTOP	= 100,	/* Stop if result greater then this */
   resHALT	= 101,	/* Serious error, halt CPU */
   resINV_ADDR	= 102,	/* Invalid indirect address */
   resSTACK_OV	= 103,	/* Stack overflow */
   resBREAKPOINT	= 104,	/* Fetch Breakpoint */
   resUSER	= 105,	/* Stopped by user */
   resINV_INST	= 106,	/* Invalid instruction */
+  resINST_INV	= 106,	/* Invalid instruction */
+  resINV	= 106,	/* Invalid instruction */
   resBITADDR	= 107,	/* Bit address is uninterpretable */
   resERROR	= 108,	/* Error happened during instruction exec */
   resSTEP	= 109,	/* Step command done, no more exex needed */
   resSIMIF	= 110,	/* Stopped by simulated prog itself through sim interface */
-  resNOT_DONE	= 111,	/* Intruction has not simulated */
+  resNOT_DONE	= 111,	/* Instruction has not simulated */
   resEVENTBREAK = 112,  /* Event breakpoint */
   resSELFJUMP	= 113,  /* Jump to itself */
 };
@@ -324,7 +363,7 @@ enum brk_event
 
 /* Interrupt levels */
 enum intr_levels {
-//IT_NO		= -1, /* not in interroupt service */
+//IT_NO		= -1, /* not in interrupt service */
   IT_LOW	= 1, /* low level interrupt service */
   IT_HIGH	= 2 /* service of high priority interrupt */
 };

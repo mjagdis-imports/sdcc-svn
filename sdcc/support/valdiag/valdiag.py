@@ -122,23 +122,38 @@ testmodes = {
     },
     "z80":{
         "compiler":sdcc,
-        "port":"z80"
+        "port":"z80",
+        "extra-defines": {
+            "__has_z88dk_fastcall":"1"
+        }
     },
     "z180":{
         "compiler":sdcc,
-        "port":"z180"
+        "port":"z180",
+        "extra-defines": {
+            "__has_z88dk_fastcall":"1"
+        }
     },
     "r2k":{
         "compiler":sdcc,
-        "port":"r2k"
+        "port":"r2k",
+        "extra-defines": {
+            "__has_z88dk_fastcall":"1"
+        }
     },
-    "gbz80":{
+    "sm83":{
         "compiler":sdcc,
-        "port":"gbz80"
+        "port":"sm83",
+        "extra-defines": {
+            "__has_sdcccall":"1"
+        }
     },
     "tlcs90":{
         "compiler":sdcc,
-        "port":"tlcs90"
+        "port":"tlcs90",
+        "extra-defines": {
+            "__has_z88dk_fastcall":"1"
+        }
     },
     "hc08":{
         "compiler":sdcc,
@@ -158,9 +173,31 @@ testmodes = {
             "__has_reentrant":"1"
         }
     },
+    "mos6502":{
+        "compiler":sdcc,
+        "port":"mos6502",
+        "extra-defines": {
+            "__has_data":"1",
+            "__has_xdata":"1",
+            "__has_reentrant":"1"
+        }
+    },
+    "mos65c02":{
+        "compiler":sdcc,
+        "port":"mos65c02",
+        "extra-defines": {
+            "__has_data":"1",
+            "__has_xdata":"1",
+            "__has_reentrant":"1"
+        }
+    },
     "stm8":{
         "compiler":sdcc,
-        "port":"stm8"
+        "port":"stm8",
+        "extra-defines": {
+            "__has_raisonance":"1",
+            "__has_sdcccall":"1"
+        }
     },
     "pdk13":{
         "compiler":sdcc,

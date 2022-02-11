@@ -57,6 +57,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "cmdlexcl.h"
 
 bool jaj= false;
+int juj= 0;
 
 
 /*
@@ -69,6 +70,7 @@ cl_app::cl_app(void)
   sim= 0;
   in_files= new cl_ustrings(2, 2, "input files");
   options= new cl_options();
+  quiet= false;
 }
 
 cl_app::~cl_app(void)
@@ -112,9 +114,10 @@ cl_app::run(void)
   double input_last_checked= 0;
   class cl_option *o= options->get_option("go");
   bool g_opt= false;
-  unsigned int cyc= 0;
+  //unsigned int cyc= 0, period= 10000;
   enum run_states rs= rs_config;
-    
+
+  cperiod.set(1000000);
   while (!done)
     {
       if ((rs == rs_config) &&
@@ -150,7 +153,7 @@ cl_app::run(void)
 	    sim->start(0, 0);
 	  rs= rs_run;
 	}
-      ++cyc;
+      ccyc.set(ccyc.get()+1);
       if (!sim)
 	{
 	  commander->wait_input();
@@ -160,9 +163,9 @@ cl_app::run(void)
         {
           if (sim->state & SIM_GO)
             {
-	      if (cyc - input_last_checked > 10000)
+	      if (ccyc.get() - input_last_checked > cperiod.get())
 		{
-		  input_last_checked= cyc;
+		  input_last_checked= ccyc.get();
 		  if (sim->uc)
 		    sim->uc->touch();
 		  if (commander->input_avail())
@@ -207,7 +210,7 @@ static void
 print_help(const char *name)
 {
   printf("%s: %s\n", name, VERSIONSTR);
-  printf("Usage: %s [-hHVvPgGwlbB] [-p prompt] [-t CPU] [-X freq[k|M]] [-R seed]\n"
+  printf("Usage: %s [-hHVvPgGwlbBq] [-p prompt] [-t CPU] [-X freq[k|M]] [-R seed]\n"
 	 "       [-C cfg_file] [-c file] [-e command] [-s file] [-S optionlist]\n"
 	 "       [-I if_optionlist] [-o colorlist] [-a nr]\n"
 #ifdef SOCKET_AVAIL
@@ -253,6 +256,7 @@ print_help(const char *name)
      "  -a nr        Specify size of variable space (default=256)\n"
      "  -w           Writable flash\n"
      "  -V           Verbose mode\n"
+     "  -q           Quiet mode\n"
      "  -v           Print out version number and quit\n"
      "  -H           Print out types of known CPUs and quit\n"
      "  -h           Print out this help and quit\n"
@@ -299,10 +303,10 @@ cl_app::proc_arguments(int argc, char *argv[])
   int i, c;
   char opts[100], *cp, *subopts, *value;
   char *cpu_type= NULL;
-  bool /*s_done= DD_FALSE,*/ k_done= false;
+  bool /*s_done= false,*/ k_done= false;
   //bool S_i_done= false, S_o_done= false;
 
-  strcpy(opts, "c:C:e:p:PX:vVt:s:S:I:a:whHgGJo:blBR:_");
+  strcpy(opts, "qc:C:e:p:PX:vVt:s:S:I:a:whHgGJo:blBR:_");
 #ifdef SOCKET_AVAIL
   strcat(opts, "Z:r:k:");
 #endif
@@ -326,6 +330,7 @@ cl_app::proc_arguments(int argc, char *argv[])
     switch (c)
       {
       case '_': break;
+      case 'q': quiet= true; break;
       case 'J': jaj= true; break;
       case 'g':
 	if (!options->set_value("go", this, true))
@@ -401,7 +406,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 	    XTAL*= 1e6;
 	  if (XTAL == 0)
 	    {
-	      fprintf(stderr, "Xtal frequency must be greather than 0\n");
+	      fprintf(stderr, "Xtal frequency must be greater than 0\n");
 	      exit(1);
 	    }
 	  if (!options->set_value("xtal", this, XTAL))
@@ -488,6 +493,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 	{
 	  char *iname= NULL, *oname= NULL;
 	  int uart=0, port=0, iport= 0, oport= 0;
+	  bool ifirst= false;
 	  subopts= optarg;
 	  while (*subopts != '\0')
 	    {
@@ -499,6 +505,8 @@ cl_app::proc_arguments(int argc, char *argv[])
 		    exit(1);
 		  }
 		  iname= value;
+		  if (oname == NULL)
+		    ifirst= true;
 		  break;
 		case SOPT_OUT:
 		  if (value == NULL) {
@@ -509,6 +517,9 @@ cl_app::proc_arguments(int argc, char *argv[])
 		  break;
 		case SOPT_UART: case SOPT_USART:
 		  uart= strtol(value, 0, 0);
+		  ifirst= false;
+		  iname= oname= NULL;
+		  port= iport= oport= 0;
 		  break;
 		case SOPT_PORT:
 		  port= strtol(value, 0, 0);
@@ -534,6 +545,18 @@ cl_app::proc_arguments(int argc, char *argv[])
 	    {
 	      char *s, *h;
 	      class cl_option *o;
+	      s= format_string("serial%d_ifirst", uart);
+	      if ((o= options->get_option(s)) == NULL)
+		{
+		  h= format_string("Open input file for uart%d first", uart);
+		  o= new cl_bool_option(this, s, h);
+		  o->init();
+		  o->hide();
+		  options->add(o);
+		  free(h);
+		}
+	      options->set_value(s, this, ifirst);
+	      free(s);
 	      if (iname)
 		{
 		  s= format_string("serial%d_in_file", uart);
@@ -693,6 +716,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 	set_option_s("color_dump_address", "blue:bwhite");
 	set_option_s("color_dump_number", "bblack:bwhite");
 	set_option_s("color_dump_char", "black:bwhite");
+	set_option_s("color_comment", "magenta:bwhite");
 	set_option_s("color_error", "red:bwhite");
 	set_option_s("color_ui_mkey", "green:bwhite");
 	set_option_s("color_ui_mitem", "bblack:bwhite");
@@ -1087,6 +1111,11 @@ cl_app::mk_options(void)
   o->init();
   o->set_value("byellow:black");
   
+  options->new_option(o= new cl_string_option(this, "color_dump_label",
+					      "Label color in dump"));
+  o->init();
+  o->set_value((char*)"bgreen:black");
+
   options->new_option(o= new cl_string_option(this, "color_dump_number",
 					      "Value color in dump"));
   o->init();
@@ -1096,6 +1125,11 @@ cl_app::mk_options(void)
 					      "Text color in dump"));
   o->init();
   o->set_value("green:black");
+
+  options->new_option(o= new cl_string_option(this, "color_comment",
+					      "Comment color in disassembly"));
+  o->init();
+  o->set_value("magenta:black");
   
   options->new_option(o= new cl_string_option(this, "color_error",
 					      "Text color in error messages"));
@@ -1152,6 +1186,10 @@ cl_app::mk_options(void)
   o->init();
   o->set_value("white:red");
   
+  options->new_option(o= new cl_number_option(this, "label_width",
+					      "Space to allow for labels in dumps and disassembly (-1 for auto)"));
+  o->init();
+  o->set_value((long)-1);
 }
 
 

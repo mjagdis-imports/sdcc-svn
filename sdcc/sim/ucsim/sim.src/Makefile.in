@@ -19,10 +19,11 @@ top_builddir	= @top_builddir@
 top_srcdir	= @top_srcdir@
 
 DEFS            = $(subs -DHAVE_CONFIG_H,,@DEFS@)
+PICOPT		= @PICOPT@
 CPPFLAGS        = @CPPFLAGS@ -I$(srcdir) -I$(top_srcdir) -I$(top_builddir) \
 		  -I$(top_srcdir)/cmd.src -I$(top_srcdir)/gui.src
-CFLAGS          = @CFLAGS@ @WALL_FLAG@
-CXXFLAGS        = @CXXFLAGS@ @WALL_FLAG@
+CFLAGS          = @WALL_FLAG@ @CFLAGS@
+CXXFLAGS        = @WALL_FLAG@ @CXXFLAGS@ $(PICOPT)
 
 prefix          = @prefix@
 exec_prefix     = @exec_prefix@
@@ -39,7 +40,7 @@ srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 OBJECTS         = stack.o mem.o sim.o itsrc.o brk.o arg.o \
-		  guiobj.o uc.o hw.o simif.o serial_hw.o port_hw.o \
+		  guiobj.o uc.o hw.o simif.o serial_hw.o port_hw.o dreg.o \
 		  iwrap.o var.o vcd.o
 
 
@@ -68,7 +69,12 @@ uninstall:
 check: test
 	./test_mem_speed
 
-test: test_mem_speed
+.PHONY:	test baseline
+test:
+	@$(MAKE) --no-print-directory -C test
+
+baseline:
+	@$(MAKE) --no-print-directory -C test baseline
 
 # Performing installation test
 # ----------------------------

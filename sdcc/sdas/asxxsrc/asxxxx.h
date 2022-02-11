@@ -1,7 +1,7 @@
 /* asxxxx.h */
 
 /*
- *  Copyright (C) 1989-2012  Alan R. Baldwin
+ *  Copyright (C) 1989-2021  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@
  *      - add DS80C390 flat mode support.
  * 10-Nov-07 borutr:
  *      - change a_id from [NCPS] to pointer
+ * 02-Feb-22 basxto/bbbbbr:
+ *      - raise NCPS to 256 like in upstream
  */
 
 /*
@@ -198,7 +200,7 @@
 #define LFTERM      '('         /* Left expression delimeter */
 #define RTTERM      ')'         /* Right expression delimeter */
 
-#define NCPS        80          /* Characters per symbol */
+#define NCPS        256         /* Characters per symbol */
 #define ASXHUGE     1000        /* A huge number */
 #define NERR        3           /* Errors per line */
 #define NINPUT      1024        /* Input buffer size */
@@ -520,7 +522,9 @@ struct  sym
 #define   O_TITLE    0          /* .title */
 #define   O_SBTTL    1          /* .sbttl */
 #define S_MODUL         5       /* .module */
-#define S_INCL          6       /* .include */
+#define	S_INCL		6	/* .include, .incbin */
+#define	  I_CODE     0		/* .include */
+#define	  I_BNRY     1		/* .incbin */
 #define S_AREA          7       /* .area */
 #define S_ATYP          8       /* .area type */
 #define S_ORG           11      /* .org */
@@ -971,6 +975,8 @@ extern  int     jflag;          /*      -j, generate debug information flag
 extern  int     lflag;          /*      -l, generate listing flag
                                  */
 extern  int     oflag;          /*      -o, generate relocatable output flag
+                                 */
+extern  int     nflag;          /*      -n, don't resolve global symbols flag
                                  */
 extern  int     pflag;          /*      -p, disable listing pagination
                                  */

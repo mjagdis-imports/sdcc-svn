@@ -67,43 +67,43 @@ static class cl_uc_error_registry uc_error_registry;
  * Clock counter
  */
 
-cl_ticker::cl_ticker(int adir, int in_isr, const char *aname)
+cl_ticker::cl_ticker(int adir, enum ticker_type atype, const char *aname, bool auser)
 {
-  options= TICK_RUN;
-  if (in_isr)
-    options|= TICK_INISR;
   dir= adir;
+  type= atype;
   ticks= 0;
+  run = true;
   set_name(aname);
+  user= auser;
 }
 
 cl_ticker::~cl_ticker(void) {}
 
-int
-cl_ticker::tick(int nr)
+void
+cl_ticker::tick(int nr, double time)
 {
-  if (options&TICK_RUN)
-    ticks+= dir*nr;
-  return(ticks);
-}
-
-double
-cl_ticker::get_rtime(double xtal)
-{
-  double d;
-
-  d= (double)ticks/xtal;
-  return(d);
+  if (dir >= 0)
+    {
+      ticks+= nr;
+      rtime+= time;
+    }
+  else
+    {
+      ticks-= nr;
+      rtime-= time;
+    }
 }
 
 void
-cl_ticker::dump(int nr, double xtal, class cl_console_base *con)
+cl_ticker::dump(int nr, class cl_console_base *con)
 {
-  con->dd_printf("timer #%d(\"%s\") %s%s: %g sec (%lu clks)\n",
+  const char *type_names[] = { "", ",ISR", ",IDLE", ",HALT" };
+
+  con->dd_printf("timer #%d(\"%s\") %s%s %.15f sec (%lu clks)\n",
 		 nr, get_name("unnamed"),
-		 (options&TICK_RUN)?"ON":"OFF",
-		 (options&TICK_INISR)?",ISR":"",
-		 get_rtime(xtal), ticks);
+		 (run ? "ON" : "OFF"),
+		 type_names[type],
+		 rtime, ticks);
 }
 
 
@@ -124,7 +124,7 @@ cl_xtal_option::option_changed(void)
     return;
   double d;
   option->get_value(&d);
-  uc->xtal= d;
+  uc->set_xtal(d);
 }
 
 cl_stop_selfjump_option::cl_stop_selfjump_option(class cl_uc *the_uc):
@@ -147,6 +147,30 @@ cl_stop_selfjump_option::option_changed(void)
   bool b;
   option->get_value(&b);
   uc->stop_selfjump= b;
+}
+
+cl_analyzer_option::cl_analyzer_option(class cl_uc *the_uc):
+  cl_optref(the_uc)
+{
+  uc= the_uc;
+}
+
+int
+cl_analyzer_option::init(void)
+{
+  cl_optref::init();
+  create(uc, bool_opt, "analyzer", "Analyze and label code");
+  return 0;
+}
+
+void
+cl_analyzer_option::option_changed(void)
+{
+  bool b;
+  option->get_value(&b);
+  uc->analyzer= b;
+  if (uc->rom)
+    uc->analyze_init();
 }
 
 /* Time measurer */
@@ -190,7 +214,7 @@ unsigned long
 cl_time_clk::now()
 {
   if (!uc) return 0;
-  return uc->ticks->ticks;
+  return uc->ticks->get_ticks();
 }
 
 
@@ -315,12 +339,10 @@ cl_omf_rec::read(cl_f *f)
     return false;
   c= g(f);
   l= c;
-  //printf("l=%02x\n", c);
   if (f->eof())
     return false;
   c= g(f);
   h= c;
-  //printf("h=%02x\n", c);
   if (f->eof())
     return false;
   len= h*256+l-1;
@@ -345,7 +367,7 @@ cl_exec_hist::cl_exec_hist(class cl_uc *auc):
   cl_base()
 {
   uc= auc;
-  len= 101;
+  len= 10001;
   hist= (struct t_hist_elem*)malloc(sizeof(struct t_hist_elem) * len);
   t= h= 0;
 }
@@ -403,11 +425,9 @@ cl_exec_hist::list(class cl_console_base *con, bool inc, int nr)
   //s%= len;
   ta= (t+1)%len;
 
-  //con->dd_printf("%d,%d,ta=%d,s=%d\n", t, h, ta,s);
   p= inc?s:h;
   do
     {
-      //con->dd_printf("[%3d] ", p);
       if (!uc)
 	{
 	  l= con->dd_cprintf("dump_address", "0x%06x", AU(hist[p].addr));
@@ -497,8 +517,8 @@ cl_uc::cl_uc(class cl_sim *asim):
   //int i;
   sim = asim;
   //mems= new cl_list(MEM_TYPES, 1);
-  memchips= new cl_list(2, 2, "memchips");
-  address_spaces= new cl_address_space_list(this);
+  memchips= new cl_memory_list(this, "memchips");
+  address_spaces= new cl_memory_list(this, "address_spaces");
   //address_decoders= new cl_list(2, 2);
   rom= 0;
 
@@ -509,10 +529,17 @@ cl_uc::cl_uc(class cl_sim *asim):
   xtal_option->init();
   stop_selfjump_option= new cl_stop_selfjump_option(this);
   stop_selfjump_option->init();
-  ticks= new cl_ticker(+1, 0, "time");
-  isr_ticks= new cl_ticker(+1, TICK_INISR, "isr");
-  idle_ticks= new cl_ticker(+1, TICK_IDLE, "idle");
+  analyzer_option= new cl_analyzer_option(this);
+  analyzer_option->init();
   counters= new cl_list(2, 2, "counters");
+  ticks= new cl_ticker(+1, TICK_ANY, "time", false);
+  add_counter(ticks, ticks->get_name());
+  isr_ticks= new cl_ticker(+1, TICK_INISR, "isr", false);
+  add_counter(isr_ticks, isr_ticks->get_name());
+  idle_ticks= new cl_ticker(+1, TICK_IDLE, "idle", false);
+  add_counter(idle_ticks, idle_ticks->get_name());
+  halt_ticks= new cl_ticker(+1, TICK_HALT, "halt", false);
+  add_counter(halt_ticks, halt_ticks->get_name());
   it_levels= new cl_list(2, 2, "it levels");
   it_sources= new cl_irqs(2, 2);
   class it_level *il= new it_level(-1, 0, 0, 0);
@@ -535,6 +562,7 @@ cl_uc::~cl_uc(void)
   delete ticks;
   delete isr_ticks;
   delete idle_ticks;
+  delete halt_ticks;
   delete counters;
   events->disconn_all();
   delete events;
@@ -561,11 +589,13 @@ cl_uc::init(void)
   set_name("controller");
   cl_base::init();
   if (xtal_option->use("xtal"))
-    xtal= xtal_option->get_value(xtal);
+    set_xtal(xtal_option->get_value(xtal));
   else
-    xtal= 11059200;
+    set_xtal(11059200);
   stop_selfjump= false;
   stop_selfjump_option->option->set_value(stop_selfjump);
+  analyzer= true;
+  analyzer_option->option->set_value(analyzer);
   vars= new cl_var_list();
   make_variables();
   make_memories();
@@ -581,6 +611,7 @@ cl_uc::init(void)
   class cl_cmdset *cs= sim->app->get_commander()->cmdset;
   build_cmdset(cs);
   irq= false;
+  vcd_break= false;
   reset();
 
   return 0;
@@ -611,9 +642,10 @@ cl_uc::reset(void)
   irq= false;
   instPC= PC= 0;
   state = stGO;
-  ticks->ticks= 0;
-  isr_ticks->ticks= 0;
-  idle_ticks->ticks= 0;
+  ticks->set(0, 0);
+  isr_ticks->set(0, 0);
+  idle_ticks->set(0, 0);
+  halt_ticks->set(0, 0);
   vc.inst= vc.fetch= vc.rd= vc.wr= 0;
   /*FIXME should we clear user counters?*/
   il= (class it_level *)(it_levels->top());
@@ -636,6 +668,26 @@ cl_uc::reset(void)
       hw->reset();
     }
 }
+
+void
+cl_uc::reg_cell_var(class cl_memory_cell *cell,
+		    void *store,
+		    chars vname, chars vdesc)
+{
+  if (cell)
+    {
+      cell->init();
+      if (store)
+	cell->decode(store);
+      if (vname.nempty())
+	{
+	  class cl_cvar *v;
+	  vars->add(v= new cl_cvar(vname, cell, vdesc));
+	  v->init();
+	}
+    }
+}
+
 
 /*
  * Making elements
@@ -667,7 +719,7 @@ cl_uc::make_variables(void)
       as->init();
       address_spaces->add(as);
 
-      chip= new cl_memory_chip("variable_storage", l, 32);
+      chip= new cl_chip32("variable_storage", l, 32);
       chip->init();
       memchips->add(chip);
       ad= new cl_address_decoder(variables, chip, 0, l-1, 0);
@@ -740,8 +792,12 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
   cmdset->add(cmd= new cl_reset_cmd("reset", 0));
   cmd->init();
 
+  cmdset->add(cmd= new cl_tick_cmd("tick", 0));
+  cmd->init();
+
   cmdset->add(cmd= new cl_dump_cmd("dump", true));
   cmd->init();
+  cmd->add_name("d");
 
   cmdset->add(cmd= new cl_dch_cmd("dch", true));
   cmd->init();
@@ -808,8 +864,7 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
       cset->init();
     }
     cset->add(cmd= new cl_set_mem_cmd("memory", 0));
-    cmd->init();
-    cset->add(cmd= new cl_set_bit_cmd("bit", 0));
+    cmd->add_name("bits");
     cmd->init();
     cset->add(cmd= new cl_set_hw_cmd("hardware", 0));
     cmd->add_name("hw");
@@ -892,8 +947,8 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
   }
 
   {
-    class cl_super_cmd *mem_create;
-    class cl_cmdset *mem_create_cset;
+    class cl_super_cmd *mem_create, *mem_remove;
+    class cl_cmdset *mem_create_cset, *mem_remove_cset;
     super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("memory"));
     if (super_cmd)
       cset= super_cmd->get_subcommands();
@@ -965,6 +1020,24 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
       cmd->init();
       set_memory_help(cmd);
     }
+
+    mem_remove= (class cl_super_cmd *)cset->get_cmd("remove");
+    if (mem_remove)
+      mem_remove_cset= mem_remove->get_subcommands();
+    else {
+      mem_remove_cset= new cl_cmdset();
+      mem_remove_cset->init();
+    }
+    
+    mem_remove_cset->add(cmd= new cl_memory_remove_chip_cmd("chip", 0));
+    cmd->init();
+
+    if (!mem_remove)
+      cset->add(mem_remove= new cl_super_cmd("remove", 0, mem_remove_cset));
+    mem_remove->init();
+    mem_remove->add_name("del");
+    mem_remove->add_name("rm");
+    set_memory_remove_help(mem_remove);
   }
 
   super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("history"));
@@ -990,6 +1063,11 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
   cmdset->add(cmd= new cl_var_cmd("var", 0));
   cmd->init();
   cmd->add_name("variable");
+  cmdset->add(cmd= new cl_rmvar_cmd("rmvar", 0));
+  cmd->init();
+
+  cmdset->add(cmd= new cl_analyze_cmd("analyze", 0));
+  cmd->init();
 }
 
 
@@ -1118,6 +1196,40 @@ cl_uc::memory(const char *id)
   return(0);
 }
 
+void
+cl_uc::remove_chip(class cl_memory *chip)
+{
+  class cl_address_space *as;
+  class cl_address_decoder *ad;
+  int i, j;
+  t_index idx;
+  i= memchips->index_of(chip, &idx);
+  if (!i)
+    return;
+  for (i= 0; i < address_spaces->get_count(); i++)
+    {
+      as= (class cl_address_space *)(address_spaces->at(i));
+      j= 0;
+      while (j < as->decoders->get_count())
+	{
+	  for (j= 0; j < as->decoders->get_count(); j++)
+	    {
+	      t_addr as_start, as_end;
+	      ad= (class cl_address_decoder *)(as->decoders->at(j));
+	      as_start= ad->as_begin;
+	      as_end= ad->as_end;
+	      if (ad->memchip == chip)
+		{
+		  as->undecode_area(NULL, as_start, as_end, NULL);
+		  break;
+		}
+	    }
+	}
+    }
+  memchips->disconn(chip);
+  delete chip;
+}
+
 
 static long
 ReadInt(cl_f *f, bool *ok, int bytes)
@@ -1165,7 +1277,6 @@ ReadInt(cl_f *f, bool *ok, int bytes)
 void
 cl_uc::set_rom(t_addr addr, t_mem val)
 {
-  //printf("rom[%06lx]=%02x\n", addr, val);
   t_addr size= rom->get_size();
   if (addr < size)
     {
@@ -1175,23 +1286,19 @@ cl_uc::set_rom(t_addr addr, t_mem val)
   t_addr bank, caddr;
   bank= addr / size;
   caddr= addr % size;
-  //printf("getting decoder of %ld/%lx\n", bank, caddr);
   class cl_banker *d= (class cl_banker *)(rom->get_decoder_of(caddr));
   if (d)
     {
       if (!d->is_banker())
 	{
-	  //printf("cell at %lx has no banker\n", caddr);
 	  return;
 	}
-      //printf("setting %ld/rom[%lx]=%x\n", bank, caddr, val);
       d->switch_to(bank, NULL);
       rom->download(caddr, val);
       d->activate(NULL);
     }
   else
     {
-      //printf("no decoder at %lx\n", caddr);
     }
 }
 
@@ -1243,8 +1350,9 @@ cl_uc::read_hex_file(cl_f *f)
   uchar sum ;     // checksum
   uchar chk ;     // check
   int  i;
-  bool ok, get_low= 1;
-  uchar low= 0, high;
+  bool ok;
+  int get_low= 0;
+  uchar lows[4]= { 0, 0, 0, 0 };
 
   if (!rom)
     {
@@ -1259,25 +1367,28 @@ cl_uc::read_hex_file(cl_f *f)
 	 rtyp != 1)
     {
       while (((c= /*getc(f)*/f->get_c()) != ':') &&
-	     (/*c != EOF*/!f->eof())) /*printf("search_record=%c\n",c)*/;
+	     (/*c != EOF*/!f->eof()));
       if (c != ':')
-	{fprintf(stderr, ": not found\n");break;}
+	{
+	  fprintf(stderr, ": not found\n");
+	  break;
+	}
       recnum++;
-      dnum= ReadInt(f, &ok, 1);//printf("%ld:dnum=%02x ",recnum,dnum);
+      dnum= ReadInt(f, &ok, 1);
       chk = dnum;
-      addr= ReadInt(f, &ok, 2);//printf("%ld:addr=%04x ",recnum,addr);
+      addr= ReadInt(f, &ok, 2);
       chk+= (addr & 0xff);
       chk+= ((addr >> 8) & 0xff);
-      rtyp= ReadInt(f, &ok, 1);//printf("%ld:rtyp=%02x ",recnum,rtyp);
+      rtyp= ReadInt(f, &ok, 1);
       chk+= rtyp;
       for (i= 0; ok && (i < dnum); i++)
 	{
-	  rec[i]= ReadInt(f, &ok, 1);//printf("%02x",rec[i]);
+	  rec[i]= ReadInt(f, &ok, 1);
 	  chk+= rec[i];
 	}
       if (ok)
 	{
-	  sum= ReadInt(f, &ok, 1);//printf(" %ld:sum=%02x\n",recnum,sum);
+	  sum= ReadInt(f, &ok, 1);
 	  if (ok)
 	    {
 	      if (((sum + chk) & 0xff) == 0)
@@ -1296,49 +1407,70 @@ cl_uc::read_hex_file(cl_f *f)
 			    }
 			  else if (rom->width <= 16)
 			    {
-			      if (get_low)
+			      switch (get_low)
 				{
-				  low= rec[i];
-				  get_low= 0;
-				}
-			      else
-				{
-				  high= rec[i];
-				  set_rom(base+addr, (high*256)+low);
+				case 0: lows[0]= rec[i]; get_low++; break;
+				case 1: lows[1]= rec[i];
+				  set_rom(base+addr, (lows[1]*256)+lows[0]);
 				  addr++;
 				  written++;
-				  get_low= 1;
+				  get_low= 0;
+				  break;
+				}
+			    }
+			  else if (rom->width <= 32)
+			    {
+			      switch (get_low)
+				{
+				case 0: lows[0]= rec[i]; get_low++; break;
+				case 1: lows[1]= rec[i]; get_low++; break;
+				case 2: lows[2]= rec[i]; get_low++; break;
+				case 3: lows[3]= rec[i];
+				  set_rom(base+addr,
+					  (lows[3]<<24)+
+					  (lows[2]<<16)+
+					  (lows[1]<<8)+
+					  (lows[0]));
+				  get_low= 0;
+				  lows[3]= lows[2]= lows[1]= lows[0]= 0;
+				  addr++;
+				  written++;
+				  break;
 				}
 			    }
 			}
 		    }
 		  else if (rtyp == 4)
 		    {
-		      //printf("hex record type=4\n");
 		      if (dnum >= 2)
 			{
 			  base= (rec[0]*256+rec[1]) << 16;
-			  //printf("hex base=%x\n", base);
 			}
 		    }
 		  else
 		    if (rtyp != 1)
-		      /*application->debug*/fprintf(stderr, "Unknown record type %d(0x%x)\n",
-					 rtyp, rtyp);
+		      fprintf(stderr, "Unknown record type %d(0x%x)\n",
+			      rtyp, rtyp);
 		}
 	      else
-		/*application->debug*/fprintf(stderr, "Checksum error (%x instead of %x) in "
-				   "record %ld.\n", chk, sum, recnum);
+		fprintf(stderr, "Checksum error (%x instead of %x) in "
+			"record %ld.\n", chk, sum, recnum);
 	    }
 	  else
-	    /*application->debug*/fprintf(stderr, "Read error in record %ld.\n", recnum);
+	    fprintf(stderr, "Read error in record %ld.\n", recnum);
 	}
     }
-  if (rom->width > 8 &&
-      !get_low)
-    rom->set(addr, low);
-
-  analyze(0);
+  if (rom->width > 8)
+    {
+      for (i= get_low; i<4; i++)
+	lows[i]= 0;
+      rom->set(addr,
+	       (lows[3]<<24)+
+	       (lows[2]<<16)+
+	       (lows[1]<<8)+
+	       (lows[0]));
+    }
+  
   return(written);
 }
 
@@ -1424,12 +1556,10 @@ cl_uc::read_cdb_file(cl_f *f)
   const char *lc;
   long cnt= 0;
   class cl_cdb_rec *r;
-  class cl_var *v;
-  
+
   ln= f->get_s();
   while (!ln.empty())
     {
-      //printf("CBD LN=%s\n",ln.c_str());
       lc= ln.c_str();
       if (lc[0] == 'F')
 	{
@@ -1442,8 +1572,7 @@ cl_uc::read_cdb_file(cl_f *f)
 		  chars n= ln.token("$");
 		  if ((r= fns->rec(n)) != NULL)
 		    {
-		      vars->add(v= new cl_var(n, rom, r->addr, ""));
-		      v->init();
+		      vars->add(n, rom, r->addr, "");
 		      fns->del(n);
 		      cnt++;
 		    }
@@ -1467,8 +1596,7 @@ cl_uc::read_cdb_file(cl_f *f)
 		  if ((r= fns->rec(n)) != NULL)
 		    {
 		      fns->del(n);
-		      vars->add(v= new cl_var(n, rom, a, ""));
-		      v->init();
+		      vars->add(n, rom, a, "");
 		      cnt++;
 		    }
 		  else
@@ -1534,29 +1662,37 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
   
   if (!f)
     {
-      if (con) con->dd_printf("no loadable file found\n");
+      if (con)
+	con->dd_printf("no loadable file found (%s)\n", nam.c_str());
+      else
+	printf("no loadable file found (%s)\n", nam.c_str());
       return 0;
     }
-  /*if (con) con->dd_*/printf("Loading from %s\n", f->get_file_name());
+  if (!application->quiet)
+    printf("Loading from %s\n", f->get_file_name());
   if (is_asc_file(f))
     {
       l= read_asc_file(f);
-      printf("%ld words read from %s\n", l, f->get_fname());
+      if (!application->quiet)
+	printf("%ld words read from %s\n", l, f->get_fname());
     }
   if (is_hex_file(f))
     {
       l= read_hex_file(f);
-      printf("%ld words read from %s\n", l, f->get_fname());
+      if (!application->quiet)
+	printf("%ld words read from %s\n", l, f->get_fname());
     }
   else if (is_omf_file(f))
     {
       l= read_omf_file(f);
-      printf("%ld words read from %s\n", l, f->get_fname());
+      if (!application->quiet)
+	printf("%ld words read from %s\n", l, f->get_fname());
     }
   else if (is_cdb_file(f))
     {
       l= read_cdb_file(f);
-      printf("%ld symbols read from %s\n", l, f->get_fname());
+      if (!application->quiet)
+	printf("%ld symbols read from %s\n", l, f->get_fname());
     }
   if (strcmp(nam, f->get_fname()) != 0)
     {
@@ -1566,21 +1702,126 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
       if (c->opened())
 	{
 	  l= read_cdb_file(c);
-	  printf("%ld symbols read from %s\n", l, c->get_fname());
+	  if (!application->quiet)
+	    printf("%ld symbols read from %s\n", l, c->get_fname());
 	}
       delete c;
     }
   delete f;
+
+  analyze_init();
   return l;
 }
 
+
+void
+cl_uc::analyze_init(void)
+{
+  // Forget everything we knew previously.
+  for (t_addr addr = rom->get_start_address(); addr < rom->highest_valid_address(); addr++)
+    del_inst_at(addr);
+
+  t_index i = 0;
+  while (i < vars->by_name.count)
+    {
+      class cl_cvar *v = vars->by_name.at(i);
+      if (*(v->get_name()) == '.')
+        vars->del(v->get_name());
+      else
+        i++;
+    }
+
+  if (analyzer)
+    analyze_start();
+}
+
+void
+cl_uc::analyze_start(void)
+{
+  class cl_var *v = new cl_var(".reset", rom, 0, chars("Auto-generated by analyze"), -1, -1);
+  v->init();
+  vars->add(v);
+
+  analyze(0);
+}
+
+void
+cl_uc::analyze(t_addr addr)
+{
+  set_inst_at(addr);
+
+  // If we jumped we should make sure its labeled. However we don't know if the
+  // target has a valid instruction and only a microprocessor specific analyze
+  // implementation can follow the execution path. So we tell a white lie.
+  bool was_inst = inst_at(PC);
+  set_inst_at(PC);
+
+  if (PC != addr + inst_length(addr))
+    analyze_jump(addr, PC, 'j');
+
+  if (!was_inst)
+    del_inst_at(PC);
+}
+
+void
+cl_uc::analyze_jump(t_addr addr, t_addr target, char type, unsigned int bit)
+{
+  // If the target isn't already labeled we'll create one ourselves.
+  t_index var_i;
+  if (!vars->by_addr.search(rom, target, -1, -1, var_i) &&
+      !vars->by_addr.search(rom, target, rom->width, 0, var_i))
+    {
+      const char *var_name = "";
+      const char *suffix = "";
+
+      switch (type)
+        {
+          case 's': // subroutine call
+            var_name = "func";
+            break;
+
+          case 't':
+          case 'f':
+            suffix = (type == 't' ? "_isset" : "_unset");
+            switch (bit)
+              {
+                default:
+                case 0: var_name= "bit0"; break;
+                case 1: var_name= "bit1"; break;
+                case 2: var_name= "bit2"; break;
+                case 3: var_name= "bit3"; break;
+                case 4: var_name= "bit4"; break;
+                case 5: var_name= "bit5"; break;
+                case 6: var_name= "bit6"; break;
+                case 7: var_name= "bit7"; break;
+              }
+            break;
+
+          default:
+            var_name = (target <= addr ? "loop" : "label");
+            break;
+        }
+
+      chars label("", ".%s%s$%u", var_name, suffix, label_index++);
+      class cl_var *v = new cl_var(label, rom, target, chars("Auto-generated by analyze"), -1, -1);
+      v->init();
+      vars->add(v);
+    }
+
+  // If we didn't know the target was code we do now, but don't cross
+  // into bankers - we don't know what bank would be selected at
+  // execution time.
+  class cl_address_decoder *ad;
+  if (!inst_at(target) && (ad = rom->get_decoder_of(target)) && !ad->is_banker())
+    analyze(target);
+}
 
 /*
  * Handling instruction map
  *
  * `inst_at' is checking if the specified address is in instruction
  * map and `set_inst_at' marks the address in the map and
- * `del_inst_at' deletes the mark. `there_is_inst' cheks if there is
+ * `del_inst_at' deletes the mark. `there_is_inst' checks if there is
  * any mark in the map
  */
 
@@ -1696,7 +1937,7 @@ cl_uc::get_hw(enum hw_cath cath, int *idx)
   for (; i < hws->count; i++)
     {
       hw= (class cl_hw *)(hws->at(i));
-      if (hw->cathegory == cath)
+      if (hw->category == cath)
 	break;
     }
   if (i >= hws->count)
@@ -1798,7 +2039,7 @@ cl_uc::dis_tbl(void)
 }
 
 char *
-cl_uc::disass(t_addr addr, const char *sep)
+cl_uc::disass(t_addr addr)
 {
   return strdup("uc::disass() unimplemented\n");
 }
@@ -1807,41 +2048,60 @@ int
 cl_uc::print_disass(t_addr addr, class cl_console_base *con, bool nl)
 {
   char *dis;
+  chars cdis, comment;
   class cl_brk *b;
   int i, l, len= 0;
-
+  class cl_option *o= sim->app->options->get_option("black_and_white");
+  bool bw= false;
+  if (o) o->get_value(&bw);
+  
   if (!rom)
     return 0;
 
-  t_mem code= rom->get(addr);
+  cl_vars_iterator vi(vars);
+  const class cl_var *var = NULL;
+  if ((var = vi.first(rom, addr)))
+    {
+      len+= con->dd_printf("\n");
+
+      do {
+        len+= con->dd_cprintf("dump_address", rom->addr_format, addr);
+        len+= con->dd_cprintf("answer", "   ");
+        len+= con->dd_cprintf("dump_label", " <%s>:\n", var->get_name());
+      } while ((var = vi.next()));
+    }
+
   b= fbrk_at(addr);
-  dis= disass(addr, NULL);
-  if (b)
-    len+= con->dd_cprintf("answer", "%c", (b->perm == brkFIX)?'F':'D');
-  else
-    len+= con->dd_printf(" ");
-  len+= con->dd_cprintf("answer", "%c ", inst_at(addr)?' ':'?');
+  dis= disassc(addr, &comment);
+  cdis= dis;
   len+= con->dd_cprintf("dump_address", rom->addr_format, addr);
-  len+= con->dd_printf(" ");
-  len+= con->dd_cprintf("dump_number", rom->data_format, code);
+  len+= con->dd_cprintf("answer", " %c", (b ? (b->perm == brkFIX ? 'F' : 'D') : ' '));
+  len+= con->dd_cprintf("answer", "%c", inst_at(addr)?' ':'?');
   l= inst_length(addr);
-  for (i= 1; i < l; i++)
+  for (i= 0; i < l; i++)
     {
       len+= con->dd_printf(" ");
       len+= con->dd_cprintf("dump_number", rom->data_format, rom->get(addr+i));
     }
-  int li= longest_inst();
-  while (i < li)
-    {
-      int j;
-      j= rom->width/4 + ((rom->width%4)?1:0) + 1;
-      while (j)
-	len+= con->dd_printf(" "), j--;
-      i++;
-    }
-  len+= con->dd_cprintf("dump_char", " %s", dis);
+  int padding= (longest_inst() - i) * ((rom->width + 3) / 4 + 1);
+  len+= con->dd_printf("%*.*s", padding, padding, "");
+  if (comment.nempty())
+    while (cdis.len() < 25) cdis.append(' ');
+  len+= con->dd_cprintf("dump_char", " %s", cdis.c_str());
+  if (comment.nempty())
+    len+= con->dd_cprintf("comment", " %s", comment.c_str());
   if (nl)
-    con->dd_printf("\n");
+    {
+      if (!bw)
+	{
+	  con->dd_printf("\033[0K");
+	}
+      else
+	{
+	  while (++len < 70) con->dd_printf(" ");
+	}
+      con->dd_printf("\n");
+    }
   free((char *)dis);
   return len;
 }
@@ -1921,102 +2181,115 @@ cl_uc::longest_inst(void)
   return(max);
 }
 
-bool
-cl_uc::addr_name(t_addr addr, class cl_address_space *as, char *buf)
+const class cl_var *
+cl_uc::addr_name(t_addr addr,
+		 class cl_memory *mem,
+		 int bitnr_high,
+		 int bitnr_low,
+		 chars *buf,
+		 const class cl_var *context)
 {
   t_index i;
-  
-  for (i= 0; i < vars->count; i++)
-    {
-      class cl_var *v= (cl_var *)(vars->at(i));
-      if ((v->as == as) &&
-	  (v->addr == addr))
-	{
-	  strcpy(buf, v->get_name());
-	  return true;
-	}
-    }
-  unsigned int a= addr;
-  sprintf(buf, "%02x", a);
-  return false;
-}
+  const cl_var *var = NULL;
 
-bool
-cl_uc::addr_name(t_addr addr, class cl_address_space *as, int bitnr, char *buf)
-{
-  t_index i;
-  
-  for (i= 0; i < vars->count; i++)
+  if (!mem)
+    return NULL;
+
+  if (vars->by_addr.search(mem, addr, bitnr_high, bitnr_low, i))
+    var = vars->by_addr.at(i);
+  else if (vars->by_addr.search(mem, addr, mem->width - 1, 0, i))
+    var = vars->by_addr.at(i);
+  else if (bitnr_high >= 0 && vars->by_addr.search(mem, addr, -1, -1, i))
+    var = vars->by_addr.at(i);
+  else if (mem->is_address_space())
     {
-      class cl_var *v= (cl_var *)(vars->at(i));
-      if ((v->as == as) &&
-	  (v->addr == addr) &&
-	  (v->bitnr == bitnr))
-	{
-	  strcpy(buf, v->get_name());
-	  return true;
-	}
+      cl_address_decoder *ad = ((cl_address_space *)mem)->get_decoder_of(addr);
+      if (ad)
+        {
+          mem = ad->memchip;
+          addr = ad->as_to_chip(addr);
+
+          if (vars->by_addr.search(mem, addr, bitnr_high, bitnr_low, i))
+            var = vars->by_addr.at(i);
+          else if (vars->by_addr.search(mem, addr, mem->width - 1, 0, i))
+            var = vars->by_addr.at(i);
+          else if (bitnr_high >= 0 && vars->by_addr.search(mem, addr, -1, -1, i))
+            var = vars->by_addr.at(i);
+        }
     }
-  unsigned int a= addr;
-  sprintf(buf, "%02x.%d", a, bitnr);
-  return false;
+
+  if (var)
+    {
+      const char *name = var->get_name();
+
+      // If there is a context var and its name prefixes the var for this
+      // addr we strip the prefix off.
+      size_t len;
+      if (context && (len = strlen(context->get_name())) &&
+          !strncmp(name, context->get_name(), len) &&
+          (name[len] == '\0' || name[len] == '_'))
+        {
+          if (name[len] == '\0')
+            {
+              // Same as context, nothing more to add
+              return var;
+            }
+          else if (name[len] == '_')
+            {
+              // We don't need the prefix - we already had the context
+              if (buf) buf->appendf(" <%s", &name[len + 1]);
+            }
+        }
+      else
+        {
+          // It's all significant, nothing to do with context
+          if (buf) buf->appendf(" <%s", name);
+        }
+
+      if (bitnr_high >= 0 &&
+          (var->bitnr_high != bitnr_high || var->bitnr_low != bitnr_low))
+        {
+          if (bitnr_high == bitnr_low)
+            {
+	      if (buf) buf->appendf(".%d", bitnr_high);
+	    }
+          else
+            {
+	      if (buf) buf->appendf("[%d:%d]", bitnr_high, bitnr_low);
+	    }
+        }
+
+      if (buf) buf->appendf(">");
+    }
+
+  return var;
 }
 
 bool
 cl_uc::symbol2address(char *sym,
-		      class cl_address_space **as,
+		      class cl_memory **mem,
 		      t_addr *addr)
 {
-  class cl_var *v;
   t_index i;
 
   if (!sym ||
       !*sym)
     return false;
-  if (vars->search(sym, i))
+  if (vars->by_name.search(sym, i))
     {
-      v= (class cl_var *)(vars->at(i));
-      if (v->bitnr >= 0)
+      class cl_cvar *v= vars->by_name.at(i);
+      /*if (v->bitnr_low >= 0)
+	return false;*/
+      if (!v->is_mem_var())
 	return false;
-      if (as)
-	*as= v->as;
+      if (mem)
+	*mem= v->get_mem();
       if (addr)
-	*addr= v->addr;
+	*addr= v->get_addr();
       return true;
     }
   return false;
 }
-  
-char *
-cl_uc::symbolic_bit_name(t_addr bit_address,
-			 class cl_memory *mem,
-			 t_addr mem_addr,
-			 t_mem bit_mask)
-{
-  //char *sym_name= 0;
-  int i;
-  chars c= chars("", mem?(mem->addr_format):"0x%06lx", (unsigned long)mem_addr);
-  /*if (!sym_name)
-    {
-      sym_name= (char *)malloc(16);
-      sprintf(sym_name, mem?(mem->addr_format):"0x%06lx", (unsigned long)mem_addr);
-      }*/
-  /*sym_name= (char *)realloc(sym_name, strlen(sym_name)+2);
-    strcat(sym_name, ".");*/
-  c+= ".";
-  i= 0;
-  while (bit_mask > 1)
-    {
-      bit_mask>>=1;
-      i++;
-    }
-  //char bitnumstr[10];
-  /*sprintf(bitnumstr, "%1d", i);
-    strcat(sym_name, bitnumstr);*/
-  c.appendf("%d", i);
-  return(/*sym_name*/strdup(c.c_str()));
-}
-
 
 /*
  * Searching for a name in the specified table
@@ -2037,7 +2310,6 @@ cl_uc::get_name_entry(struct name_entry tabl[], char *name)
 	 (!(tabl[i].cpu_type & type->type) ||
 	 (strcmp(tabl[i].name, name) != 0)))
     {
-      //printf("tabl[%d].name=%s <-> %s\n",i,tabl[i].name,name);
       i++;
     }
   if (tabl[i].name != NULL)
@@ -2047,46 +2319,40 @@ cl_uc::get_name_entry(struct name_entry tabl[], char *name)
 }
 
 chars
-cl_uc::cell_name(class cl_memory_cell *cell)
+cl_uc::cell_name(class cl_memory_cell *cell, int bitnr_high, int bitnr_low)
 {
-  if (cell == NULL)
-    return chars("");
-  if (cell->get_flag(CELL_VAR))
-    {
-      int i;
-      for (i= 0; i < vars->count; i++)
-	{
-	  class cl_var *v= (cl_var*)(vars->at(i));
-	  if (v->get_cell() &&
-	      (cell == v->get_cell()))
-	    return chars(v->get_name());
-	}
-    }
   class cl_address_space *as;
-  t_addr a;
-  as= address_space(cell, &a);
-  if (as == NULL)
+  t_addr addr;
+  int i;
+
+  if (!cell || !(as = address_space(cell, &addr)))
     return chars("");
-  return chars("", "%s_%06x", as->get_name(), a);
+
+  if (vars->by_addr.search(as, addr, bitnr_high, bitnr_low, i))
+    return chars(vars->by_addr.at(i)->get_name());
+
+  if (bitnr_high != - 1 && vars->by_addr.search(as, addr, -1, -1, i))
+    {
+      if (bitnr_high != bitnr_low)
+        return chars("", "%s[%d:%d]", vars->by_addr.at(i)->get_name(), bitnr_high, bitnr_low);
+      else
+        return chars("", "%s.%d", vars->by_addr.at(i)->get_name(), bitnr_low);
+    }
+
+  if (bitnr_high == -1)
+    return chars("", "%s_%06x", as->get_name(), addr);
+  else if (bitnr_high != bitnr_low)
+    return chars("", "%s_%06x[%d:%d]", as->get_name(), addr, bitnr_high, bitnr_low);
+  else
+    return chars("", "%s_%06x.%d", as->get_name(), addr, bitnr_high);
 }
 
-class cl_var *
-cl_uc::var(char *nam)
+t_addr
+cl_uc::read_addr(class cl_memory *m, t_addr start_addr)
 {
-  if (!vars)
-    return NULL;
-  t_index i;
-  if (!vars->search(nam, i))
-    return NULL;
-  class cl_var *v= (cl_var*)(vars->at(i));
-  return v;
-}
-
-class cl_var *
-cl_uc::var(chars n)
-{
-  const char *s= n.c_str();
-  return var((char*)s);
+  if (!m) return 0;
+  // 16 bit little endian, by default
+  return m->read(start_addr) + 256*m->read(start_addr+1);
 }
 
 /*
@@ -2155,7 +2421,6 @@ cl_uc::address_space_added(class cl_address_space *as)
 void
 cl_uc::error(class cl_error *error)
 {
-  //printf("error adding: %s...\n", error->get_class()->get_name());
   errors->add(error);
   if ((error->inst= inst_exec))
     error->PC= instPC;
@@ -2170,7 +2435,6 @@ cl_uc::check_errors(void)
 
   if (c)
     {
-      //printf("error list: %d items\n", errors->count);
       for (i= 0; i < errors->count; i++)
 	{
 	  class cl_error *error= (class cl_error *)(errors->at(i));
@@ -2186,7 +2450,7 @@ cl_uc::check_errors(void)
 		con= c->frozen_console;
 	      if (con)
 		{
-		  con->dd_printf("Erronouse instruction: ");
+		  con->dd_printf("Erroneous instruction: ");
 		  print_disass(error->PC, con);
 		}
 	    }
@@ -2205,13 +2469,12 @@ cl_uc::check_errors(void)
  */
 
 class cl_address_space *
-cl_uc::bit2mem(t_addr bitaddr, t_addr *memaddr, t_mem *bitmask)
+cl_uc::bit2mem(t_addr bitaddr, t_addr *memaddr, int *bitnr_high, int *bitnr_low)
 {
   if (memaddr)
     *memaddr= bitaddr;
-  if (bitmask)
-    *bitmask= 1 << (bitaddr & 0x7);
-  return(0); // abstract...
+
+  return rom;
 }
 
 
@@ -2226,12 +2489,15 @@ cl_uc::tick_hw(int cycles)
   int i;//, cpc= clock_per_cycle();
 
   // tick hws
-  for (i= 0; i < hws->count; i++)
+  while (cycles-- > 0)
     {
-      hw= (class cl_hw *)(hws->at(i));
-      if ((hw->flags & HWF_INSIDE) &&
-	  (hw->on))
-	hw->tick(cycles);
+      for (i= 0; i < hws->count; i++)
+        {
+          hw= (class cl_hw *)(hws->at(i));
+          if ((hw->flags & HWF_INSIDE) &&
+              (hw->on))
+            hw->tick(1);
+        }
     }
   do_extra_hw(cycles);
   return(0);
@@ -2245,29 +2511,39 @@ int
 cl_uc::tick(int cycles)
 {
   //class cl_hw *hw;
-  int i, cpc= clock_per_cycle();
+  int i, clocks= cycles * clock_per_cycle();
+  double time = clocks * xtal_tick;
 
   // increase time
-  ticks->tick(cycles * cpc);
   class it_level *il= (class it_level *)(it_levels->top());
-  if (il->level >= 0)
-    isr_ticks->tick(cycles * cpc);
-  if (state == stIDLE)
-    idle_ticks->tick(cycles * cpc);
   for (i= 0; i < counters->count; i++)
     {
       class cl_ticker *t= (class cl_ticker *)(counters->at(i));
-      if (t)
-	{
-	  if ((t->options&TICK_INISR) ||
-	      il->level < 0)
-	    t->tick(cycles * cpc);
-	}
+      if (t && t->run)
+        {
+          if (t->get_type() == TICK_ANY ||
+              (il->level >= 0 && (t->get_type() == TICK_INISR)) ||
+              (state == stIDLE && (t->get_type() == TICK_IDLE)) ||
+              (state == stPD && (t->get_type() == TICK_HALT)))
+            t->tick(clocks, time);
+        }
     }
 
-  // tick for hardwares
-  inst_ticks+= cycles;
+  tick_hw(cycles);
+
   return(0);
+}
+
+int
+cl_uc::tickt(t_mem code)
+{
+  int8_t *tt= tick_tab(code);
+  if (tt == NULL)
+    return tick(1);
+  int t= tt[code];
+  if (t)
+    return tick(t);
+  return 0;
 }
 
 class cl_ticker *
@@ -2380,34 +2656,49 @@ cl_uc::fetch(void)
  */
 
 bool
-cl_uc::fetch(t_mem *code)
+cl_uc::do_brk(void)
 {
   class cl_brk *brk;
   int idx;
+  bool ret= false;
 
-  if (!code)
-    return(0);
   if ((sim->state & SIM_GO) &&
       rom &&
       (sim->steps_done > 0))
     {
+      if (vcd_break)
+        {
+          vcd_break = false;
+          ret= true;
+        }
       if (rom->get_cell_flag(PC, CELL_FETCH_BRK))
 	if ((brk= fbrk->get_bp(PC, &idx)))
 	  if (brk->do_hit())
 	    {
 	      if (brk->perm == brkDYNAMIC)
 		fbrk->del_bp(PC);
-	      return(1);
+	      ret= true;
 	    }
     }
-  *code= fetch();
-  return(0);
+
+  return ret;
+}
+
+bool
+cl_uc::fetch(t_mem *code)
+{
+  bool ret = do_brk();
+
+  if (!ret)
+    *code= fetch();
+
+  return ret;
 }
 
 int
 cl_uc::do_inst(int step)
 {
-  t_addr PCsave;
+  t_addr PCsave= PC;
   int res= resGO;
 
   if (step < 0)
@@ -2428,15 +2719,11 @@ cl_uc::do_inst(int step)
 	  if (res == resINV_INST)
 	    /* backup to start of instruction */
 	    PC = PCsave;
-	  
-	  post_inst();
+	  else if (res == resGO && !inst_at(PCsave) && analyzer)
+            analyze(PCsave);
 	}
-      else
-	{
-	  inst_ticks= 1;
-	  post_inst();
-	  tick(1);
-	}
+
+      post_inst();
 
       if ((res == resGO) && (PC == PCsave) && stop_selfjump)
 	{
@@ -2445,10 +2732,9 @@ cl_uc::do_inst(int step)
 	  break;
 	}
       
-      if ((res == resGO) &&
+      if ((res == resGO || res == resNOT_DONE) &&
 	  1/*irq*/)
 	{
-	  //printf("DO INTERRUPT PC=%lx\n", PC);
 	  int r= do_interrupt();
 	  if (r != resGO)
 	    res= r;
@@ -2462,7 +2748,7 @@ cl_uc::do_inst(int step)
 	  res= resBREAKPOINT;
 	}
     }
-  if (res != resGO)
+  if (res != resGO && res != resNOT_DONE)
     sim->stop(res);
   return(res);
 }
@@ -2471,7 +2757,6 @@ void
 cl_uc::pre_inst(void)
 {
   inst_exec= true;
-  inst_ticks= 0;
   events->disconn_all();
   vc.inst++;
 }
@@ -2496,13 +2781,14 @@ cl_uc::exec_inst_tab(instruction_wrapper_fn itab[])
       PC= instPC;
       return resNOT_DONE;
     }
+  tickt(c);
   res= itab[c](this, c);
   if (res == resNOT_DONE)
     {
       PC= instPC;
       return res;
     }
-  tick(1);
+  //tick(1);
   return res;
 }
 
@@ -2510,7 +2796,6 @@ cl_uc::exec_inst_tab(instruction_wrapper_fn itab[])
 void
 cl_uc::post_inst(void)
 {
-  tick_hw(inst_ticks);
   if (errors->count)
     check_errors();
   if (events->count)
@@ -2519,10 +2804,30 @@ cl_uc::post_inst(void)
 }
 
 
+static FILE *pc_dump= NULL;
+
 void
 cl_uc::save_hist()
 {
+  if (juj & 1)
+    {
+      if (pc_dump==NULL) pc_dump= fopen("addr.txt","w");
+      if (pc_dump!=NULL)
+	{
+	  fprintf(pc_dump,"0x%06x\n",AU(PC));
+	  fflush(pc_dump);
+	}
+    }
   hist->put();
+}
+
+int
+cl_uc::inst_unknown(t_mem code)
+{
+  //PC--;
+  class cl_error_unknown_code *e= new cl_error_unknown_code(this);
+  error(e);
+  return(resGO);
 }
 
 
@@ -2538,14 +2843,24 @@ cl_uc::do_interrupt(void)
   class it_level *il= (class it_level *)(it_levels->top()), *IL= 0;
 
   irq= false;
-  //printf("Checking IRQs...\n");
   for (i= 0; i < it_sources->count; i++)
     {
       class cl_it_src *is= (class cl_it_src *)(it_sources->at(i));
+      is->pass_over();
+    }
+  for (i= 0; i < it_sources->count; i++)
+    {
+      class cl_it_src *is= (class cl_it_src *)(it_sources->at(i));
+      if (is->is_slave())
+	{
+	  continue;
+	}
       if (!is->is_nmi())
 	{
 	  if (!is_en)
-	    continue;
+	    {
+	      continue;
+	    }
 	}
       bool A= is->is_active();
       bool E= is->enabled();
@@ -2557,9 +2872,13 @@ cl_uc::do_interrupt(void)
 	  irq= true;
 	  if (il &&
 	      il->level >= 0)
-	    ap= il->level;
+	    {
+	      ap= il->level;
+	    }
 	  else
-	    ap= priority_main();
+	    {
+	      ap= priority_main();
+	    }
 	  if (ap >= pr)
 	    {
 	      continue;
@@ -2569,7 +2888,7 @@ cl_uc::do_interrupt(void)
 	  is->clear();
 	  sim->app->get_commander()->
 	    debug("%g sec (%d clks): Accepting interrupt `%s' PC= 0x%06x\n",
-			  get_rtime(), ticks->ticks, object_name(is), PC);
+			  ticks->get_rtime(), ticks->get_ticks(), object_name(is), PC);
 	  IL= new it_level(pr, is->addr, PC, is);
 	  return(accept_it(IL));
 	}
@@ -2584,20 +2903,30 @@ cl_uc::accept_it(class it_level *il)
   return resGO;
 }
 
+class cl_it_src *
+cl_uc::search_it_src(int cid_or_nr)
+{
+  class cl_it_src *it;
+  int i;
+  for (i= 0; i<it_sources->get_count(); i++)
+    {
+      it= (class cl_it_src *)(it_sources->at(i));
+      if (it &&
+	  (
+	   (it->cid != 0 && it->cid == cid_or_nr) ||
+	   (it->cid != 0 && toupper(it->cid) == toupper(cid_or_nr)) ||
+	   (it->nuof == cid_or_nr)
+	   )
+	  )
+	return it;
+    }
+  return NULL;
+}
 
+  
 /*
  * Time related functions
  */
-
-double
-cl_uc::get_rtime(void)
-{
-  /*  double d;
-
-  d= (double)ticks/xtal;
-  return(d);*/
-  return(ticks->get_rtime(xtal));
-}
 
 unsigned long
 cl_uc::clocks_of_time(double t)

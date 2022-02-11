@@ -5,13 +5,13 @@ SIM_TIMEOUT = 80
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
-  S51 = $(SDCC_BIN_PATH)/s51$(EXEEXT)
+  S51 = $(SDCC_BIN_PATH)/ucsim_51$(EXEEXT)
 else
   ifdef UCSIM_DIR
-    S51A = $(UCSIM_DIR)/s51.src/s51$(EXEEXT)
+    S51A = $(UCSIM_DIR)/s51.src/ucsim_51$(EXEEXT)
   else
-    S51A = $(top_builddir)/sim/ucsim/s51.src/s51$(EXEEXT)
-    S51B = $(top_builddir)/bin/s51$(EXEEXT)
+    S51A = $(top_builddir)/sim/ucsim/s51.src/ucsim_51$(EXEEXT)
+    S51B = $(top_builddir)/bin/ucsim_51$(EXEEXT)
   endif
 
   EMU = $(WINE) $(shell if [ -f $(S51A) ]; then echo $(S51A); else echo $(S51B); fi)
@@ -29,8 +29,8 @@ else
   DEV_NULL ?= /dev/null
 endif
 
-SDCCFLAGS += --less-pedantic
-LINKFLAGS += mcs51.lib libsdcc.lib liblong.lib libint.lib libfloat.lib liblonglong.lib
+SDCCFLAGS += --debug --less-pedantic
+LINKFLAGS += --debug mcs51.lib libsdcc.lib liblong.lib libint.lib libfloat.lib liblonglong.lib
 
 OBJEXT = .rel
 BINEXT = .ihx

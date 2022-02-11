@@ -53,6 +53,7 @@ cl_serial_hw::~cl_serial_hw(void)
 {
   delete serial_in_file_option;
   delete serial_out_file_option;
+  delete serial_ifirst_option;
   delete io;
 }
 
@@ -75,6 +76,11 @@ cl_serial_hw::init(void)
   serial_out_file_option= new cl_optref(this);
   serial_out_file_option->init();
   serial_out_file_option->use(s);
+  free(s);
+  s= format_string("serial%d_ifirst", id);
+  serial_ifirst_option= new cl_optref(this);
+  serial_ifirst_option->init();
+  serial_ifirst_option->use(s);
   free(s);
 
   s= format_string("serial%d_port", id);
@@ -144,32 +150,65 @@ cl_serial_hw::init(void)
 
   const char *f_serial_in = serial_in_file_option->get_value("");
   const char *f_serial_out= serial_out_file_option->get_value("");
+  bool ifirst= false;
+  ifirst= serial_ifirst_option->get_value(ifirst);
   class cl_f *fi, *fo;
-  if (f_serial_in && *f_serial_in)
-    {
-      if (f_serial_in[0] == '\001')
-	fi= (class cl_f *)(strtoll(&f_serial_in[1], 0, 0));
-      else
-	fi= mk_io(f_serial_in, "r");
-      if (!fi->tty)
-	fprintf(stderr, "Warning: serial input interface connected to a "
-		"non-terminal file.\n");
-    }
-  else
-    fi= 0;//mk_io(chars(""), chars(""));
-  if (f_serial_out && *f_serial_out)
-    {
-      if (f_serial_out[0] == '\001')
-	fo= (class cl_f *)(strtoll(&f_serial_out[1], 0, 0));
-      else
-	fo= mk_io(chars(f_serial_out), "w");
-      if (!fo->tty)
-	fprintf(stderr, "Warning: serial output interface connected to a "
-		"non-terminal file.\n");
-    }
-  else
-    fo= 0;//mk_io(chars(""), chars(""));
 
+  if (ifirst)
+    {
+      if (f_serial_in && *f_serial_in)
+	{
+	  if (f_serial_in[0] == '\001')
+	    fi= (class cl_f *)(strtoll(&f_serial_in[1], 0, 0));
+	  else
+	    fi= mk_io(f_serial_in, "r");
+	  if (!fi->tty)
+	    fprintf(stderr, "Warning: serial input interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fi= 0;//mk_io(chars(""), chars(""));
+      if (f_serial_out && *f_serial_out)
+	{
+	  if (f_serial_out[0] == '\001')
+	    fo= (class cl_f *)(strtoll(&f_serial_out[1], 0, 0));
+	  else
+	    fo= mk_io(chars(f_serial_out), "w");
+	  if (!fo->tty)
+	    fprintf(stderr, "Warning: serial output interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fo= 0;//mk_io(chars(""), chars(""));
+    }
+  else
+    {
+      if (f_serial_out && *f_serial_out)
+	{
+	  if (f_serial_out[0] == '\001')
+	    fo= (class cl_f *)(strtoll(&f_serial_out[1], 0, 0));
+	  else
+	    fo= mk_io(chars(f_serial_out), "w");
+	  if (!fo->tty)
+	    fprintf(stderr, "Warning: serial output interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fo= 0;//mk_io(chars(""), chars(""));
+      if (f_serial_in && *f_serial_in)
+	{
+	  if (f_serial_in[0] == '\001')
+	    fi= (class cl_f *)(strtoll(&f_serial_in[1], 0, 0));
+	  else
+	    fi= mk_io(f_serial_in, "r");
+	  if (!fi->tty)
+	    fprintf(stderr, "Warning: serial input interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fi= 0;//mk_io(chars(""), chars(""));
+    }
+  
   io->replace_files(true, fi, fo);
   
   if (fi)
@@ -185,29 +224,13 @@ cl_serial_hw::init(void)
   cfg_set(serconf_check_often, false);
   cfg_set(serconf_escape, 'x'-'a'+1);
 
-  cl_var *v;
-  chars pn= chars("", "%s%d_", id_string, id);
-  uc->vars->add(v= new cl_var(pn+chars("on"), cfg, serconf_on,
-			      cfg_help(serconf_on)));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("check_often"), cfg, serconf_check_often,
-			      cfg_help(serconf_check_often)));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("esc_char"), cfg, serconf_escape,
-			      cfg_help(serconf_escape)));
-  v->init();
-
-  uc->vars->add(v= new cl_var(pn+chars("received_char"), cfg, serconf_received,
-			      cfg_help(serconf_received)));
-  v->init();
-		
-  uc->vars->add(v= new cl_var(pn+chars("flowctrl"), cfg, serconf_flowctrl,
-			      cfg_help(serconf_flowctrl)));
-  v->init();
-
-  uc->vars->add(v= new cl_var(pn+chars("able_receive"), cfg, serconf_able_receive,
-			      cfg_help(serconf_able_receive)));
-  v->init();
+  chars pn("", "%s%d_", id_string, id);
+  uc->vars->add(pn+"on", cfg, serconf_on, cfg_help(serconf_on));
+  uc->vars->add(pn+"check_often", cfg, serconf_check_often, cfg_help(serconf_check_often));
+  uc->vars->add(pn+"esc_char", cfg, serconf_escape, cfg_help(serconf_escape));
+  uc->vars->add(pn+"received_char", cfg, serconf_received, cfg_help(serconf_received));
+  uc->vars->add(pn+"flowctrl", cfg, serconf_flowctrl, cfg_help(serconf_flowctrl));
+  uc->vars->add(pn+"able_receive", cfg, serconf_able_receive, cfg_help(serconf_able_receive));
 
   cfg_set(serconf_able_receive, 1);
   return 0;
@@ -386,7 +409,7 @@ cl_serial_hw::proc_input(void)
 		  if (run && !input_avail)
 		    {
 		      input= esc, input_avail= true;
-		      io->dd_printf("^%c enterted.\n", 'a'+esc-1);
+		      io->dd_printf("^%c entered.\n", 'a'+esc-1);
 		    }
 		  else
 		    io->dd_printf("Control menu exited.\n");

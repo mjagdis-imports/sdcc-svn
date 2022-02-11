@@ -44,6 +44,7 @@
 #define OPTION_EMIT_EXTERNS    "--emit-externs"
 #define OPTION_LEGACY_BANKING  "--legacy-banking"
 #define OPTION_NMOS_Z80        "--nmos-z80"
+#define OPTION_SDCCCALL        "--sdcccall"
 
 static char _z80_defaultRules[] = {
 #include "peeph.rul"
@@ -60,8 +61,8 @@ static char _tlcs90_defaultRules[] = {
 #include "peeph-tlcs90.rul"
 };
 
-static char _gbz80_defaultRules[] = {
-#include "peeph-gbz80.rul"
+static char _sm83_defaultRules[] = {
+#include "peeph-sm83.rul"
 #include "peeph.rul"
 };
 
@@ -87,25 +88,28 @@ static OPTION _z80_options[] = {
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
-  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
+  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
   {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
-  {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator"},
+  {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator (deprecated)"},
   {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
   {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
   {0, OPTION_NMOS_Z80,        &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
+  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
-static OPTION _gbz80_options[] = {
+static OPTION _sm83_options[] = {
   {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
   {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
-  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
+  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -123,9 +127,12 @@ ASM_TYPE;
 static struct
 {
   ASM_TYPE asmType;
-  /* determine if we can register a parameter */
-  int regParams;
-  bool z88dk_fastcall;
+  // Determine if we can put parameters in registers
+  struct
+  {
+    int n;
+    struct sym_link *ftype;
+  } regparam;
 }
 _G;
 
@@ -173,7 +180,7 @@ static char *_keywordstlcs90[] = {
 
 extern PORT z80_port;
 extern PORT r2k_port;
-extern PORT gbz80_port;
+extern PORT sm83_port;
 
 #include "mappings.i"
 
@@ -185,6 +192,11 @@ static builtins _z80_builtins[] = {
   {"__builtin_memset", "vg*", 3, {"vg*", "i", "Ui"}},
   {NULL, NULL, 0, {NULL}}
 };
+
+extern reg_info sm83_regs[];
+extern reg_info z80_regs[];
+extern void z80_init_asmops (void);
+extern reg_info *regsZ80;
 
 static void
 _z80_init (void)
@@ -199,6 +211,9 @@ _z80_init (void)
       asm_addTree (&_asxxxx_z80);
       break;
     }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -214,6 +229,9 @@ _z180_init (void)
       asm_addTree (&_asxxxx_z80);
       break;
     }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -221,6 +239,9 @@ _r2k_init (void)
 {
   z80_opts.sub = SUB_R2K;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -228,6 +249,9 @@ _r2ka_init (void)
 {
   z80_opts.sub = SUB_R2KA;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -235,12 +259,18 @@ _r3ka_init (void)
 {
   z80_opts.sub = SUB_R3KA;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
-_gbz80_init (void)
+_sm83_init (void)
 {
-  z80_opts.sub = SUB_GBZ80;
+  z80_opts.sub = SUB_SM83;
+
+  regsZ80 = sm83_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -248,6 +278,9 @@ _tlcs90_init (void)
 {
   z80_opts.sub = SUB_TLCS90;
   asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -263,6 +296,9 @@ _ez80_z80_init (void)
       asm_addTree (&_asxxxx_z80);
       break;
     }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -270,30 +306,34 @@ _z80n_init (void)
 {
   z80_opts.sub = SUB_Z80N;
   asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
-_reset_regparm (struct sym_link *funcType)
+_reset_regparm (struct sym_link *ftype)
 {
-  _G.regParams = 0;
-  _G.z88dk_fastcall = IFFUNC_ISZ88DK_FASTCALL (funcType);
-  if (_G.z88dk_fastcall && IFFUNC_HASVARARGS (funcType))
+  _G.regparam.n = 0;
+  _G.regparam.ftype = ftype;
+  if (IFFUNC_ISZ88DK_FASTCALL (ftype) && IFFUNC_HASVARARGS (ftype))
     werror (E_Z88DK_FASTCALL_PARAMETERS);
 }
 
 static int
 _reg_parm (sym_link *l, bool reentrant)
 {
-  if (_G.z88dk_fastcall)
+  if (IFFUNC_ISZ88DK_FASTCALL (_G.regparam.ftype))
     {
-      if (_G.regParams)
+      if (_G.regparam.n)
         werror (E_Z88DK_FASTCALL_PARAMETERS);
       if (getSize (l) > 4)
         werror (E_Z88DK_FASTCALL_PARAMETER);
-      _G.regParams++;
-      return TRUE;
     }
- return FALSE;
+
+  bool is_regarg = z80IsRegArg(_G.regparam.ftype, ++_G.regparam.n, 0);
+
+  return (is_regarg ? _G.regparam.n : 0);
 }
 
 enum
@@ -482,16 +522,16 @@ _process_pragma (const char *s)
   return process_pragma_tbl (pragma_tbl, s);
 }
 
-static const char *_gbz80_rgbasmCmd[] = {
+static const char *_sm83_rgbasmCmd[] = {
   "rgbasm", "-o$1.rel", "$1.asm", NULL
 };
 
-static const char *_gbz80_rgblinkCmd[] = {
+static const char *_sm83_rgblinkCmd[] = {
   "xlink", "-tg", "-n$1.sym", "-m$1.map", "-zFF", "$1.lnk", NULL
 };
 
 static void
-_gbz80_rgblink (void)
+_sm83_rgblink (void)
 {
   FILE *lnkfile;
   struct dbuf_s lnkFileName;
@@ -540,7 +580,7 @@ _parseOptions (int *pargc, char **argv, int *i)
 {
   if (argv[*i][0] == '-')
     {
-      if (IS_GB)
+      if (IS_SM83)
         {
           if (!strncmp (argv[*i], OPTION_BO, sizeof (OPTION_BO) - 1))
             {
@@ -592,9 +632,9 @@ _parseOptions (int *pargc, char **argv, int *i)
               // rgbds doesn't understand that
               options.noOptsdccInAsm = true;
 
-              gbz80_port.assembler.cmd = _gbz80_rgbasmCmd;
-              gbz80_port.linker.cmd = _gbz80_rgblinkCmd;
-              gbz80_port.linker.do_link = _gbz80_rgblink;
+              sm83_port.assembler.cmd = _sm83_rgbasmCmd;
+              sm83_port.linker.cmd = _sm83_rgblinkCmd;
+              sm83_port.linker.do_link = _sm83_rgblink;
 
               if(!(options.code_seg && strcmp(options.code_seg, CODE_NAME)))
                 {
@@ -621,7 +661,7 @@ _parseOptions (int *pargc, char **argv, int *i)
             {
               asm_addTree (&_isas_gb);
               /* Munge the function prefix */
-              gbz80_port.fun_prefix = "";
+              sm83_port.fun_prefix = "";
               _G.asmType = ASM_TYPE_ISAS;
               return TRUE;
             }
@@ -658,7 +698,12 @@ _parseOptions (int *pargc, char **argv, int *i)
       else if (!strncmp (argv[*i], OPTION_EMIT_EXTERNS, sizeof (OPTION_EMIT_EXTERNS) - 1))
         {
           port->assembler.externGlobal = 1;
-          return TRUE;
+          return true;
+        }
+      else if (!strncmp (argv[*i], OPTION_OLDRALLOC, sizeof (OPTION_OLDRALLOC) - 1))
+        {
+          werror (W_DEPRECATED_OPTION, "--oldralloc");
+          return true;
         }
     }
   return FALSE;
@@ -728,7 +773,7 @@ _setValues (void)
   setMainValue ("z80extralibpaths", (s = joinStrSet (libPathsSet)));
   Safe_free ((void *) s);
 
-  if (IS_GB)
+  if (IS_SM83)
     {
       setMainValue ("z80outputtypeflag", "-Z");
       setMainValue ("z80outext", ".gb");
@@ -751,7 +796,7 @@ _setValues (void)
   dbuf_destroy (&dbuf);
 
   /* For the old register allocator (with the new one we decide to omit the frame pointer for each function individually) */
-  if (!IS_GB && options.omitFramePtr)
+  if (!IS_SM83 && options.omitFramePtr)
     port->stack.call_overhead = 2;
 }
 
@@ -760,7 +805,7 @@ _finaliseOptions (void)
 {
   port->mem.default_local_map = data;
   port->mem.default_globl_map = data;
-  if (IS_GB)
+  if (IS_SM83)
     switch (_G.asmType)
       {
       case ASM_TYPE_ASXXXX:
@@ -793,7 +838,7 @@ _setDefaultOptions (void)
   /* Default code and data locations. */
   options.code_loc = 0x200;
 
-  if (IS_GB)
+  if (IS_SM83)
     options.data_loc = 0xc000;
   else if (IS_RAB) // Match default crt0
     options.data_loc = 0xa000;
@@ -890,12 +935,14 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
     test = right;
   /* 8x8 unsigned multiplication code is shorter than
      call overhead for the multiplication routine. */
-  else if (IS_CHAR (right) && IS_UNSIGNED (right) && IS_CHAR (left) && IS_UNSIGNED (left) && !IS_GB)
+  else if (IS_CHAR (right) && IS_UNSIGNED (right) && IS_CHAR (left) && IS_UNSIGNED (left) && !IS_SM83)
     return(true);
   /* Same for any multiplication with 8 bit result. */
-  else if (result_size == 1 && !IS_GB)
+  else if (result_size == 1 && !IS_SM83)
     return(true);
-  else if (IS_RAB && !IS_R2K && result_size == 2 && getSize (left) == 2 && getSize(right) == 2)
+  // Rabbits have signed 16x16->32 multiplication, which is broken on original Rabbit 2000.
+  else if (IS_RAB && !IS_R2K && getSize (left) == 2 && getSize(right) == 2 &&
+    (result_size == 2 || result_size <= 4 && !IS_UNSIGNED (left) && !IS_UNSIGNED (right)))
     return(true);
   else
     return(false);
@@ -910,10 +957,18 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, int size)
 {
-  if (op == GETHBIT)
-    return TRUE;
-  else
-    return FALSE;
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+    case RLC:
+    case RRC:
+      return true;
+    case SWAP:
+      return size <= 4;
+    }
+  return false;
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -979,7 +1034,7 @@ static const char *const _libs_r2k[] = { "r2k", NULL, };
 static const char *const _libs_r2ka[] = { "r2ka", NULL, };
 static const char *const _libs_r3ka[] = { "r3ka", NULL, };
 static const char *const _libs_tlcs90[] = { "tlcs90", NULL, };
-static const char *const _libs_gb[] = { "gbz80", NULL, };
+static const char *const _libs_sm83[] = { "sm83", NULL, };
 static const char *const _libs_ez80_z80[] = { "ez80_z80", NULL, };
 static const char *const _libs_z80n[] = { "z80n", NULL, };
 
@@ -1059,8 +1114,12 @@ PORT z80_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
-  { -1, FALSE },
+  { 
+    -1,                         /* shifts never use support routines */
+    true,                       /* use support routine for int x int -> long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1187,6 +1246,7 @@ PORT z180_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1314,6 +1374,7 @@ PORT r2k_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1442,6 +1503,7 @@ PORT r2ka_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1570,6 +1632,7 @@ PORT r3ka_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1624,11 +1687,11 @@ PORT r3ka_port =
 };
 
 /* Globals */
-PORT gbz80_port =
+PORT sm83_port =
 {
-  TARGET_ID_GBZ80,
-  "gbz80",
-  "Gameboy Z80-like",           /* Target name */
+  TARGET_ID_SM83,
+  "sm83",
+  "Sharp SM83",           /* Target name */
   NULL,
   {
     glue,
@@ -1653,10 +1716,10 @@ PORT gbz80_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_gb,                   /* libs */
+    _libs_sm83,                 /* libs */
   },
   {                             /* Peephole optimizer */
-    _gbz80_defaultRules,
+    _sm83_defaultRules,
     z80instructionSize,
     NULL,
     NULL,
@@ -1692,14 +1755,15 @@ PORT gbz80_port =
     "CABS (ABS)",               /* cabs_name */
     "DABS (ABS)",               /* xabs_name */
     NULL,                       /* iabs_name */
-    NULL,                       /* name of segment for initialized variables */
-    NULL,                       /* name of segment for copies of initialized variables in code space */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
     1,                          /* CODE is read-only */
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* default ABI revision */
   { -1, 0, 0, 2, 0, 4, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1712,9 +1776,9 @@ PORT gbz80_port =
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
-  _gbz80_init,
+  _sm83_init,
   _parseOptions,
-  _gbz80_options,
+  _sm83_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1828,6 +1892,7 @@ PORT tlcs90_port =
     1                           /* No fancy alignments supported. */
    },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1956,6 +2021,7 @@ PORT ez80_z80_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -2084,6 +2150,7 @@ PORT z80n_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },

@@ -90,7 +90,6 @@ candidate_expression (const iCode *const ic, int lkey)
     ic->op != RRC &&
     ic->op != RLC &&
     ic->op != GETABIT &&
-    ic->op != GETHBIT &&
     ic->op != LEFT_OP &&
     ic->op != RIGHT_OP &&
     !(ic->op == '=' && !POINTER_SET(ic) && !(IS_ITEMP(IC_RIGHT(ic)) /*&& IC_RIGHT(ic)->key > lkey*/)) &&
@@ -281,7 +280,8 @@ void dump_cfg_lospre (const cfg_lospre_t &cfg)
 // Dump tree decomposition.
 static void dump_dec_lospre(const tree_dec_t &tree_dec)
 {
-  wassert (currFunc);
+  if (!currFunc)
+    return;
 
   std::ofstream dump_file((std::string(dstFileName) + ".dumplospredec" + currFunc->rname + ".dot").c_str());
 

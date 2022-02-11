@@ -1712,6 +1712,13 @@ aopPut (operand * result, const char *s, int offset)
 
     case AOP_R0:
     case AOP_R1:
+      /* Get source in A before inc/dec of r0/r1 */
+      /* in case source needed different offset  */
+      if (aop->paged || *s == '@')
+        {
+          MOVA (s);
+        }
+        
       while (offset > aop->coff)
         {
           aop->coff++;
@@ -1726,12 +1733,12 @@ aopPut (operand * result, const char *s, int offset)
 
       if (aop->paged)
         {
-          MOVA (s);
+          /* source already in A */
           emitcode ("movx", "@%s,a", aop->aopu.aop_ptr->name);
         }
       else if (*s == '@')
         {
-          MOVA (s);
+          /* source already in A */
           emitcode ("mov", "@%s,a", aop->aopu.aop_ptr->name);
         }
       else if (EQ (s, "r0") || EQ (s, "r1") || EQ (s, "r2") || EQ (s, "r3") ||
@@ -3380,7 +3387,9 @@ genPcall (iCode * ic)
 
   D (emitcode (";", "genPcall"));
 
-  dtype = operandType (IC_LEFT (ic))->next;
+  dtype = operandType (IC_LEFT (ic));
+  if (IS_FUNCPTR (dtype))
+    dtype = dtype->next;
   etype = getSpec (dtype);
   /* if caller saves & we have not saved then */
   if (!ic->regsSaved)
@@ -4964,6 +4973,7 @@ genMinusDec (iCode * ic)
     {
       symbol *tlbl;
       const char *l;
+      unsigned int offset;
 
       tlbl = newiTempLabel (NULL);
       l = aopGet (IC_RESULT (ic), LSB, FALSE, FALSE);
@@ -4980,7 +4990,8 @@ genMinusDec (iCode * ic)
         }
       l = aopGet (IC_RESULT (ic), MSB16, FALSE, FALSE);
       emitcode ("dec", "%s", l);
-      if (size > 2)
+
+      for (offset=2; offset < size; offset++)
         {
           if (EQ (l, "acc"))
             {
@@ -4994,25 +5005,10 @@ genMinusDec (iCode * ic)
             {
               emitcode ("cjne", "a,%s,!tlabel", l, labelKey2num (tlbl->key));
             }
-          l = aopGet (IC_RESULT (ic), MSB24, FALSE, FALSE);
+          l = aopGet (IC_RESULT (ic), offset, FALSE, FALSE);
           emitcode ("dec", "%s", l);
         }
-      if (size > 3)
-        {
-          if (EQ (l, "acc"))
-            {
-              emitcode ("jnz", "!tlabel", labelKey2num (tlbl->key));
-            }
-          else if (AOP_TYPE (IC_RESULT (ic)) == AOP_REG || IS_AOP_PREG (IC_RESULT (ic)))
-            {
-              emitcode ("cjne", "%s,#!constbyte,!tlabel", l, 0xff, labelKey2num (tlbl->key));
-            }
-          else
-            {
-              emitcode ("cjne", "a,%s,!tlabel", l, labelKey2num (tlbl->key));
-            }
-          emitcode ("dec", "%s", aopGet (IC_RESULT (ic), MSB32, FALSE, FALSE));
-        }
+
       emitLabel (tlbl);
       return TRUE;
     }
@@ -8395,10 +8391,12 @@ genSwap (iCode * ic)
       else if (operandsEqu (left, result))
         {
           char *reg = "a";
+          const char *src;
           bool pushedB = FALSE, leftInB = FALSE;
 
-          MOVA (aopGet (left, 0, FALSE, FALSE));
-          if (aopGetUsesAcc (left, 1) || aopGetUsesAcc (result, 0))
+          src = aopGet (left, 0, FALSE, FALSE);
+          MOVA (src);
+          if (aopGetUsesAcc (left, 1) || aopGetUsesAcc (result, 0) || aopPutUsesAcc (result, src, 0))
             {
               pushedB = pushB ();
               emitcode ("mov", "b,a");
@@ -9056,7 +9054,7 @@ genlshFixed (operand *result, operand *left, int shCount)
           shiftL1Left2Result (left, LSB, result, full_bytes, shCount);
         }
     }
-  for (b = LSB; b < full_bytes; b++)
+  for (b = LSB; b < full_bytes && b < size; b++)
     aopPut (result, zero, b);
   return;
 }
@@ -12270,10 +12268,6 @@ gen51Code (iCode * lic)
 
         case RLC:
           genRLC (ic);
-          break;
-
-        case GETHBIT:
-          assert (0);
           break;
 
         case GETABIT:

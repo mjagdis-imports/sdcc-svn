@@ -34,14 +34,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "stypes.h"
 #include "appcl.h"
 
-
 extern class cl_app *application;
 
 extern char delimiters[];
 
-extern struct id_element mem_ids[];
-extern struct id_element mem_classes[];
-extern struct id_element cpu_states[];
 extern struct id_element error_type_names[];
 //extern char *case_string(enum letter_case lcase, const char *str);
 

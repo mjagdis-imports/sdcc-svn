@@ -1,19 +1,19 @@
 # Regression test specification for the hc08 target running with uCsim
 
 # simulation timeout in seconds
-SIM_TIMEOUT = 40
+SIM_TIMEOUT = 60
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
-  UCHC08C = $(SDCC_BIN_PATH)/shc08$(EXEEXT)
+  UCHC08C = $(SDCC_BIN_PATH)/ucsim_m68hc08$(EXEEXT)
 
   AS_HC08C = $(SDCC_BIN_PATH)/sdas6808$(EXEEXT)
 else
   ifdef UCSIM_DIR
-    UCHC08A = $(UCSIM_DIR)/hc08.src/shc08$(EXEEXT)
+    UCHC08A = $(UCSIM_DIR)/m68hc08.src/ucsim_m68hc08$(EXEEXT)
   else
-    UCHC08A = $(top_builddir)/sim/ucsim/hc08.src/shc08$(EXEEXT)
-    UCHC08B = $(top_builddir)/bin/shc08$(EXEEXT)
+    UCHC08A = $(top_builddir)/sim/ucsim/m68hc08.src/ucsim_m68hc08$(EXEEXT)
+    UCHC08B = $(top_builddir)/bin/ucsim_m68hc08$(EXEEXT)
   endif
 
   EMU = $(WINE) $(shell if [ -f $(UCHC08A) ]; then echo $(UCHC08A); else echo $(UCHC08B); fi)

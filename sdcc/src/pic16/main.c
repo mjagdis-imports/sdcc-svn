@@ -84,6 +84,7 @@ pic16_sectioninfo_t pic16_sectioninfo;
 int has_xinst_config = 0;
 
 static int regParmFlg = 0;  /* determine if we can register a parameter */
+static struct sym_link *regParmFuncType;
 
 pic16_options_t pic16_options;
 pic16_config_options_t *pic16_config_options;
@@ -113,11 +114,15 @@ static void
 _pic16_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
+  regParmFuncType = funcType;
 }
 
 static int
 _pic16_regparm (sym_link * l, bool reentrant)
 {
+  if (IFFUNC_HASVARARGS (regParmFuncType))
+    return 0;
+
   /* force all parameters via SEND/RECEIVE */
   if(0 /*pic16_options.ip_stack*/) {
     /* for this processor it is simple
@@ -1229,7 +1234,6 @@ hasExtBitOp (int op, int size)
   if (op == RRC
       || op == RLC
       || op == GETABIT
-      /* || op == GETHBIT */ /* GETHBIT doesn't look complete for PIC */
      )
     return TRUE;
   else
@@ -1359,6 +1363,7 @@ PORT pic16_port =
     NULL,       /* genExtraAreaDeclaration */
     NULL        /* genExatrAreaLinkOptions */
   },
+  0,            /* ABI revision */
   {
     /* stack related information */
     -1,         /* -1 stack grows downwards, +1 upwards */

@@ -11,7 +11,7 @@
 #include "dbuf.h"
 
 #define TARGET_ID_MCS51    1
-#define TARGET_ID_GBZ80    2
+#define TARGET_ID_SM83     2
 #define TARGET_ID_Z80      3
 #define TARGET_ID_AVR      4
 #define TARGET_ID_DS390    5
@@ -32,6 +32,8 @@
 #define TARGET_ID_PDK16    22
 #define TARGET_ID_Z80N     23
 #define TARGET_ID_R2KA     24
+#define TARGET_ID_MOS6502  25
+#define TARGET_ID_MOS65C02 26
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -47,7 +49,7 @@
 #define TARGET_IS_R2K      (port->id == TARGET_ID_R2K)
 #define TARGET_IS_R2KA     (port->id == TARGET_ID_R2KA)
 #define TARGET_IS_R3KA     (port->id == TARGET_ID_R3KA)
-#define TARGET_IS_GBZ80    (port->id == TARGET_ID_GBZ80)
+#define TARGET_IS_SM83     (port->id == TARGET_ID_SM83)
 #define TARGET_IS_TLCS90   (port->id == TARGET_ID_TLCS90)
 #define TARGET_IS_EZ80_Z80 (port->id == TARGET_ID_EZ80_Z80)
 #define TARGET_IS_Z80N     (port->id == TARGET_ID_Z80N)
@@ -58,13 +60,16 @@
 #define TARGET_IS_PDK14    (port->id == TARGET_ID_PDK14)
 #define TARGET_IS_PDK15    (port->id == TARGET_ID_PDK15)
 #define TARGET_IS_PDK16    (port->id == TARGET_ID_PDK16)
+#define TARGET_IS_MOS6502  (port->id == TARGET_ID_MOS6502)
+#define TARGET_IS_MOS65C02 (port->id == TARGET_ID_MOS65C02)
 
 #define TARGET_MCS51_LIKE  (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_IS_DS400)
-#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GBZ80 || TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N)
+#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_SM83 || TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N)
 #define TARGET_IS_RABBIT   (TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA)
 #define TARGET_HC08_LIKE   (TARGET_IS_HC08 || TARGET_IS_S08)
 #define TARGET_PIC_LIKE    (TARGET_IS_PIC14 || TARGET_IS_PIC16)
 #define TARGET_PDK_LIKE    (TARGET_IS_PDK13 || TARGET_IS_PDK14 || TARGET_IS_PDK15 || TARGET_IS_PDK16)
+#define TARGET_MOS6502_LIKE  (TARGET_IS_MOS6502 || TARGET_IS_MOS65C02)
 
 /* is using sdas / sdld assembler / linker */
 #define IS_SDASLD          (TARGET_Z80_LIKE || TARGET_MCS51_LIKE || TARGET_HC08_LIKE)
@@ -247,6 +252,9 @@ typedef struct
   }
   extraAreas;
 
+  /* Default ABI version */
+  unsigned sdcccall;
+
   /* stack related information */
   struct
   {
@@ -378,7 +386,7 @@ typedef struct
   bool (*hasNativeMulFor) (iCode *ic, sym_link *left, sym_link *right);
 
   /** Returns true if the port has implemented certain bit
-      manipulation iCodes (RRC, RLC, SWAP, GETHBIT, GETABIT, GETBYTE, GETWORD)
+      manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
    */
   bool (*hasExtBitOp) (int op, int size);
 
@@ -439,8 +447,8 @@ extern PORT r2ka_port; // Rabbit 2000A, 2000C, 2000C, 3000
 #if !OPT_DISABLE_R3KA
 extern PORT r3ka_port; // Rabbit 3000A
 #endif
-#if !OPT_DISABLE_GBZ80
-extern PORT gbz80_port;
+#if !OPT_DISABLE_SM83
+extern PORT sm83_port;
 #endif
 #if !OPT_DISABLE_TLCS90
 extern PORT tlcs90_port;
@@ -486,6 +494,12 @@ extern PORT pdk14_port;
 #endif
 #if !OPT_DISABLE_PDK15
 extern PORT pdk15_port;
+#endif
+#if !OPT_DISABLE_MOS6502
+extern PORT mos6502_port;
+#endif
+#if !OPT_DISABLE_MOS65C02
+extern PORT mos65c02_port;
 #endif
 
 #endif /* PORT_INCLUDE */

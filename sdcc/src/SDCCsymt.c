@@ -353,6 +353,7 @@ newLink (SYM_LINK_CLASS select)
   p = Safe_alloc (sizeof (sym_link));
   p->xclass = select;
   p->funcAttrs.z88dk_params_offset = 0;
+  FUNC_SDCCCALL (p) = -1;
 
   return p;
 }
@@ -577,7 +578,7 @@ addDecl (symbol * sym, int type, sym_link * p)
   // if there is a function in this type chain
   if (p && funcInChain (sym->type))
     {
-      processFuncArgs (sym);
+      processFuncArgs (sym, NULL);
     }
 
   return;
@@ -835,7 +836,16 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   FUNC_REGBANK (dest) |= FUNC_REGBANK (src);
   FUNC_ISINLINE (dest) |= FUNC_ISINLINE (src);
   FUNC_ISNORETURN (dest) |= FUNC_ISNORETURN (src);
+  if (FUNC_ISRAISONANCE (dest) && (FUNC_ISIAR (src) || FUNC_ISCOSMIC (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_ISIAR (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISCOSMIC (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_ISCOSMIC (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_SDCCCALL (dest) >= 0 && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_ISCOSMIC (src)) || // __sdcccall can be combined with __z88dk_callee.
+    FUNC_ISZ88DK_CALLEE (src) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (dest) || FUNC_ISCOSMIC (dest)))
+    werror (E_MULTIPLE_CALLINGCONVENTIONS, name);
   FUNC_ISSMALLC (dest) |= FUNC_ISSMALLC (src);
+  FUNC_ISRAISONANCE (dest) |= FUNC_ISRAISONANCE (src);
+  FUNC_ISIAR (dest) |= FUNC_ISIAR (src);
+  FUNC_ISCOSMIC (dest) |= FUNC_ISCOSMIC (src);
   FUNC_ISZ88DK_FASTCALL (dest) |= FUNC_ISZ88DK_FASTCALL (src);
   FUNC_ISZ88DK_CALLEE (dest) |= FUNC_ISZ88DK_CALLEE (src);
   for (i = 0; i < 9; i++)
@@ -1044,6 +1054,25 @@ newBoolLink ()
 }
 
 /*------------------------------------------------------------------*/
+/* newPtrDiffLink() - creates a ptrdiff type                        */
+/*------------------------------------------------------------------*/
+sym_link *
+newPtrDiffLink ()
+{
+  if (GPTRSIZE <= INTSIZE)
+    return newIntLink ();
+  else if (GPTRSIZE <= LONGSIZE)
+    return newLongLink ();
+  else if (GPTRSIZE <= LONGLONGSIZE)
+    return newLongLongLink();
+  else
+    {
+      assert (0);
+      return NULL;
+    }
+}
+
+/*------------------------------------------------------------------*/
 /* newVoidLink() - creates an void type                             */
 /*------------------------------------------------------------------*/
 sym_link *
@@ -1118,10 +1147,13 @@ getSize (sym_link * p)
     case CPOINTER:
       if (!IS_FUNCPTR(p))
         return (FARPTRSIZE);
-    case FUNCTION:
-      return (IFFUNC_ISBANKEDCALL (p) ? BFUNCPTRSIZE : FUNCPTRSIZE);
     case GPOINTER:
-      return (GPTRSIZE);
+      if (!IS_FUNCPTR(p))
+        return (GPTRSIZE);
+    case FUNCTION:
+      if (IS_FUNCPTR(p))
+        return ((IFFUNC_ISBANKEDCALL (p->next) || TARGET_IS_STM8 && IFFUNC_ISCOSMIC (p->next)) ? BFUNCPTRSIZE : FUNCPTRSIZE);
+      return ((IFFUNC_ISBANKEDCALL (p) || TARGET_IS_STM8 && IFFUNC_ISCOSMIC (p)) ? BFUNCPTRSIZE : FUNCPTRSIZE);
 
     default:
       return 0;
@@ -1753,8 +1785,7 @@ promoteAnonStructs (int su, structdef * sdef)
   int base;
 
   tofield = &sdef->fields;
-  field = sdef->fields;
-  while (field)
+  for (field = sdef->fields; field; field = nextfield)
     {
       nextfield = field->next;
       if (!*field->name && IS_STRUCT (field->type))
@@ -1799,7 +1830,6 @@ promoteAnonStructs (int su, structdef * sdef)
         }
       else
         tofield = &field->next;
-      field = nextfield;
     }
 }
 
@@ -2151,6 +2181,37 @@ cleanUpLevel (bucket ** table, long level)
     }
 }
 
+/*------------------------------------------------------------------*/
+/* leaveBlockScope - mark items in SymbolTab from a particular      */
+/*                   block as out-of-scope                          */
+/*------------------------------------------------------------------*/
+void
+leaveBlockScope (int block)
+{
+  int i;
+  bucket *chain;
+
+  /* go thru the entire  table  */
+  for (i = 0; i < 256; i++)
+    {
+      for (chain = SymbolTab[i]; chain; chain = chain->next)
+        {
+          if (chain->block == block)
+            {
+              symbol *sym = (symbol *)chain->sym;
+              
+              /* Temporary fix for bug #3289 - leave enums in scope. */
+              /* This is also buggy but compatible with 4.1.0 and    */
+              /* earlier behavior and less likely to trigger errors. */
+              if (sym->etype && SPEC_ENUM(sym->etype))
+                continue;
+              /* Everything else, mark as out of scope. */
+              sym->isinscope = 0;
+            }
+        }
+    }
+}
+
 symbol *
 getAddrspace (sym_link *type)
 {
@@ -2300,7 +2361,9 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
   /* shift operators have the important type in the left operand */
   if (op == LEFT_OP || op == RIGHT_OP)
     rType = copyLinkChain(type1);
-
+  /* If difference between pointers or arrays then the result is a ptrdiff */
+  else if ((op == '-') && (IS_PTR (type1) || IS_ARRAY (type1)) && (IS_PTR (type2) || IS_ARRAY (type2)))
+    rType = newPtrDiffLink();
   /* if one of them is a pointer or array then that prevails */
   else if (IS_PTR (type1) || IS_ARRAY (type1))
     rType = copyLinkChain (type1);
@@ -2545,6 +2608,15 @@ compareFuncType (sym_link * dest, sym_link * src)
 
   if (IFFUNC_ISZ88DK_FASTCALL (dest) != IFFUNC_ISZ88DK_FASTCALL (src) ||
     IFFUNC_ISZ88DK_CALLEE (dest) != IFFUNC_ISZ88DK_CALLEE (src))
+    return 0;
+
+  if (IFFUNC_ISRAISONANCE (dest) != IFFUNC_ISRAISONANCE (src) ||
+    IFFUNC_ISCOSMIC (dest) != IFFUNC_ISCOSMIC (src) ||
+    IFFUNC_ISIAR (dest) != IFFUNC_ISIAR (src))
+    return 0;
+
+  if (FUNC_SDCCCALL (dest) >= 0 && FUNC_SDCCCALL (src) >= 0 &&
+    FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src))
     return 0;
 
   for (i = 0; i < 9; i++)
@@ -2801,6 +2873,19 @@ compareTypeExact (sym_link * dest, sym_link * src, long level)
                     return 0;
                   if (IFFUNC_ISNAKED (dest) != IFFUNC_ISNAKED (src))
                     return 0;
+
+                  if (IFFUNC_ISZ88DK_FASTCALL (dest) != IFFUNC_ISZ88DK_FASTCALL (src))
+                    return 0;
+                  if (IFFUNC_ISRAISONANCE (dest) != IFFUNC_ISRAISONANCE (src))
+                    return 0;
+                  if (IFFUNC_ISCOSMIC (dest) != IFFUNC_ISCOSMIC (src))
+                    return 0;
+                  if (IFFUNC_ISIAR (dest) != IFFUNC_ISIAR (src))
+                    return 0;
+                  if (FUNC_SDCCCALL (dest) >= 0 && FUNC_SDCCCALL (src) >= 0 &&
+                    FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src))
+                    return 0;
+
 #if 0
                   if (IFFUNC_ISREENT (dest) != IFFUNC_ISREENT (src) && argCnt > 1)
                     return 0;
@@ -3081,6 +3166,10 @@ checkFunction (symbol * sym, symbol * csym)
       FUNC_ISNORETURN (sym->type) = 1;
     }
 
+  /* If no ABI version specified, use port default */
+  if (FUNC_SDCCCALL (sym->type) < 0)
+    FUNC_SDCCCALL (sym->type) = options.sdcccall;
+
   /* make sure the type is complete and sane */
   checkTypeSanity (sym->etype, sym->name);
 
@@ -3305,41 +3394,58 @@ cdbStructBlock (int block)
 void
 processFuncPtrArgs (sym_link * funcType)
 {
-  value *val = FUNC_ARGS (funcType);
-
-  /* if it is void then remove parameters */
-  if (val && IS_VOID (val->type))
-    {
-      FUNC_ARGS (funcType) = NULL;
-      return;
-    }
+  processFuncArgs (NULL, funcType);
 }
 
 /*-----------------------------------------------------------------*/
 /* processFuncArgs - does some processing with function args       */
+/*                                                                 */
+/*   Leave func NULL if processing a type rather than a symbol     */
 /*-----------------------------------------------------------------*/
 void
-processFuncArgs (symbol *func)
+processFuncArgs (symbol *func, sym_link *funcType)
 {
   value *val;
   int pNum = 1;
-  sym_link *funcType = func->type;
+  char *funcName = NULL;
+  int funcCdef = 0;
+
+  if (func && !funcType)
+    funcType = func->type;
+  if (func)
+    {
+      funcCdef = func->cdef;
+      funcName = func->name;
+    }
+  else
+    {
+      funcCdef = 0;
+      funcName = "unnamed function type";
+    }
 
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
-    fprintf (stderr, "SDCCsymt.c:processFuncArgs(%s)\n", func->name);
+    fprintf (stderr, "SDCCsymt.c:processFuncArgs(%s)\n", funcName);
 
   /* find the function declaration within the type */
   while (funcType && !IS_FUNC (funcType))
     funcType = funcType->next;
 
+  /* Nothing to do if no function type found */
+  if (!funcType)
+    return;
+
   /* if this function has variable argument list */
   /* then make the function a reentrant one    */
-  if (IFFUNC_HASVARARGS (funcType) || (options.stackAuto && !func->cdef))
+  if (IFFUNC_HASVARARGS (funcType) || (options.stackAuto && !funcCdef))
     FUNC_ISREENT (funcType) = 1;
 
   /* check if this function is defined as calleeSaves
      then mark it as such */
-  FUNC_CALLEESAVES (funcType) = inCalleeSaveList (func->name);
+  FUNC_CALLEESAVES (funcType) = inCalleeSaveList (funcName);
+
+  /* If no ABI version specified, use port default */
+  if (FUNC_SDCCCALL (funcType) < 0)
+    FUNC_SDCCCALL (funcType) = options.sdcccall;
 
   /* loop thru all the arguments   */
   val = FUNC_ARGS (funcType);
@@ -3364,10 +3470,10 @@ processFuncArgs (symbol *func)
       if (val->sym && val->sym->name)
         for (value *val2 = val->next; val2; val2 = val2->next)
           if (val2->sym && val2->sym->name && !strcmp (val->sym->name, val2->sym->name))
-            werror (E_DUPLICATE_PARAMTER_NAME, val->sym->name, func->name);
+            werror (E_DUPLICATE_PARAMTER_NAME, val->sym->name, funcName);
 
       dbuf_init (&dbuf, 128);
-      dbuf_printf (&dbuf, "%s parameter %d", func->name, pNum);
+      dbuf_printf (&dbuf, "%s parameter %d", funcName, pNum);
       checkTypeSanity (val->etype, dbuf_c_str (&dbuf));
       dbuf_destroy (&dbuf);
 
@@ -3379,7 +3485,7 @@ processFuncArgs (symbol *func)
       /* mark it as a register parameter if
          the function does not have VA_ARG
          and as port dictates */
-      if (!IFFUNC_HASVARARGS (funcType) && (argreg = (*port->reg_parm) (val->type, FUNC_ISREENT (funcType))))
+      if (argreg = (*port->reg_parm) (val->type, FUNC_ISREENT (funcType)))
         {
           SPEC_REGPARM (val->etype) = 1;
           SPEC_ARGREG (val->etype) = argreg;
@@ -3402,7 +3508,7 @@ processFuncArgs (symbol *func)
     }
 
   /* if this is an internal generated function call */
-  if (func->cdef)
+  if (funcCdef)
     {
       /* ignore --stack-auto for this one, we don't know how it is compiled */
       /* simply trust on --int-long-reent or --float-reent */
@@ -3418,6 +3524,10 @@ processFuncArgs (symbol *func)
       if (IFFUNC_ISREENT (funcType) || options.stackAuto)
         return;
     }
+
+  /* Don't create parameter symbols without a function symbol */
+  if (!func)
+    return;
 
   val = FUNC_ARGS (funcType);
   pNum = 1;
@@ -3564,10 +3674,20 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 }
               if (IFFUNC_ISBANKEDCALL (type))
                 dbuf_append_str (dbuf, " __banked");
+              if (IFFUNC_ISSMALLC (type))
+                dbuf_append_str (dbuf, " __smallc");
+              if (IFFUNC_ISRAISONANCE (type))
+                dbuf_append_str (dbuf, " __raisonance");
+              if (IFFUNC_ISIAR (type))
+                dbuf_append_str (dbuf, " __iar");
+              if (IFFUNC_ISCOSMIC (type))
+                dbuf_append_str (dbuf, " __cosmic");
               if (IFFUNC_ISZ88DK_CALLEE (type))
                 dbuf_append_str (dbuf, " __z88dk_callee");
               if (IFFUNC_ISZ88DK_FASTCALL (type))
                 dbuf_append_str (dbuf, " __z88dk_fastcall");
+              if (FUNC_SDCCCALL (type) >= 0 && FUNC_SDCCCALL (type) != options.sdcccall)
+                dbuf_append_str (dbuf, FUNC_SDCCCALL (type) ? " __sdcccall(0)" : " __sdcccall(1)");
               for (unsigned char i = 0; i < 9; i++)
                   if (type->funcAttrs.preserved_regs[i])
                   {
@@ -4045,11 +4165,11 @@ symbol *fp16x16conv[2][5][2];
 /* Dims: shift left/shift right, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
 symbol *rlrr[2][4][2];
 
-sym_link *charType;
 sym_link *floatType;
 sym_link *fixed16x16Type;
 
-symbol *memcpy_builtin;
+symbol *builtin_memcpy;
+symbol *nonbuiltin_memcpy;
 
 static const char *
 _mangleFunctionName (const char *in)
@@ -4277,15 +4397,16 @@ initCSupport (void)
 
   floatType = newFloatLink ();
   fixed16x16Type = newFixed16x16Link ();
-  charType = (options.signed_char) ? SCHARTYPE : UCHARTYPE;
+  sym_link *boolType = newLink (SPECIFIER); SPEC_NOUN (boolType) = V_BOOL; // Can't use newBoolLink, as it might give us a __bit.
+  sym_link *charType = (options.signed_char) ? SCHARTYPE : UCHARTYPE;
 
   fsadd = funcOfType ("__fsadd", floatType, floatType, 2, options.float_rent);
   fssub = funcOfType ("__fssub", floatType, floatType, 2, options.float_rent);
   fsmul = funcOfType ("__fsmul", floatType, floatType, 2, options.float_rent);
   fsdiv = funcOfType ("__fsdiv", floatType, floatType, 2, options.float_rent);
-  fseq = funcOfType ("__fseq", charType, floatType, 2, options.float_rent);
-  fsneq = funcOfType ("__fsneq", charType, floatType, 2, options.float_rent);
-  fslt = funcOfType ("__fslt", charType, floatType, 2, options.float_rent);
+  fseq = funcOfType ("__fseq", boolType, floatType, 2, options.float_rent);
+  fsneq = funcOfType ("__fsneq", boolType, floatType, 2, options.float_rent);
+  fslt = funcOfType ("__fslt", boolType, floatType, 2, options.float_rent);
 
   fps16x16_add = funcOfType ("__fps16x16_add", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
   fps16x16_sub = funcOfType ("__fps16x16_sub", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
@@ -4398,7 +4519,7 @@ initCSupport (void)
           dbuf_init (&dbuf, 128);
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
-            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
+            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE ) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
                         options.intlong_rent);
           dbuf_destroy (&dbuf);
         }
@@ -4495,15 +4616,19 @@ initBuiltIns ()
     }
 
   /* initialize memcpy symbol for struct assignment */
-  memcpy_builtin = findSym (SymbolTab, NULL, "__builtin_memcpy");
-  /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
-  if (!memcpy_builtin)
+  builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy");
+  nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");
+
+  if (!nonbuiltin_memcpy)
     {
       const char *argTypeStrs[] = {"vg*", "Cvg*", "Ui"};
-      memcpy_builtin = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
-      FUNC_ISBUILTIN (memcpy_builtin->type) = 0;
-      FUNC_ISREENT (memcpy_builtin->type) = options.stackAuto;
+      nonbuiltin_memcpy = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
+      FUNC_ISBUILTIN (nonbuiltin_memcpy->type) = 0;
+      FUNC_ISREENT (nonbuiltin_memcpy->type) = options.stackAuto;
     }
+  /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
+  if (!builtin_memcpy)
+    builtin_memcpy = nonbuiltin_memcpy;
 }
 
 sym_link *

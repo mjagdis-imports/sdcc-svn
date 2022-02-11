@@ -31,6 +31,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 //#include <stdlib.h>
 //#include "i_string.h"
 
+#include "globals.h"
+
 #include "itsrccl.h"
 //#include "pobjcl.h"
 //#include "stypes.h"
@@ -58,19 +60,23 @@ cl_it_src::cl_it_src(cl_uc  *Iuc,
 {
   uc= Iuc;
   poll_priority= apoll_priority;
-  nuof    = Inuof;
-  ie_cell = Iie_cell;
-  ie_mask = Iie_mask;
-  src_cell= Isrc_cell;
-  src_mask= Isrc_mask;
-  addr    = Iaddr;
-  clr_bit = Iclr_bit;
-  indirect= Iindirect;
+  nuof     = Inuof;
+  cid      = 0;
+  ie_cell  = Iie_cell;
+  ie_mask  = Iie_mask;
+  ie_value = Iie_mask;
+  src_cell = Isrc_cell;
+  src_mask = Isrc_mask;
+  src_value= Isrc_mask;
+  addr     = Iaddr;
+  clr_bit  = Iclr_bit;
+  indirect = Iindirect;
   if (Iname != NULL)
     set_name(Iname);
   else
     set_name("unknown");
   active= true;
+  parent= NULL;
 }
 
 cl_it_src::~cl_it_src(void) {}
@@ -107,6 +113,19 @@ cl_it_src::deactivate(void)
   set_active_status(false);
 }
 
+void
+cl_it_src::pass_over(void)
+{
+  if (is_slave())
+    {
+      if (pending() && enabled())
+	{
+	  parent->request();
+	  clear();
+	}
+    }
+}
+
 
 bool
 cl_it_src::enabled(void)
@@ -115,7 +134,7 @@ cl_it_src::enabled(void)
     return false;
   t_mem e= ie_cell->get();
   e&= ie_mask;
-  return e != 0;
+  return e == ie_value;
 }
 
 bool
@@ -125,14 +144,32 @@ cl_it_src::pending(void)
     return false;
   t_mem s= src_cell->get();
   s&= src_mask;
-  return s != 0;
+  return s == src_value;
+}
+
+void
+cl_it_src::request(void)
+{
+  if (!src_cell)
+    return;
+  if (src_value)
+    src_cell->write(src_cell->get() | src_mask);
+  else
+    src_cell->write(src_cell->get() & ~src_mask);
 }
 
 void
 cl_it_src::clear(void)
 {
+  if (!src_cell)
+    return;
   if (clr_bit)
-    src_cell->set_bit0(src_mask);
+    {
+      if (src_value)
+        src_cell->write(src_cell->get() & ~src_mask);
+      else
+        src_cell->write(src_cell->get() | src_mask);
+    }
 }
 
 void
@@ -144,30 +181,23 @@ cl_it_src::write(class cl_memory_cell *cell, t_mem *val)
   
   if (cell == ie_cell)
     {
-      //printf("ITSRC ie=%x\n", *val);
       iev= *val;
     }
   if (cell == src_cell)
     {
-      //printf("ITSRC src=%x\n", *val);
       srcv= *val;
     }
-  ier= iev&ie_mask;
-  srcr= srcv&src_mask;
-  /*
-  printf("%2d iev =%x & %x = %x\n", nuof, iev, ie_mask, ier);
-  printf("%2d srcv=%x & %x = %x\n", nuof, srcv, src_mask, srcr);
-  printf("%2d ie=%s src=%s req=%s\n", nuof,
-	 ier?"true":"false",
-	 srcr?"true":"false",
-	 (ier&&srcr)?"TRUE":"FALSE");
-  */
-  if (ier)
+  ier= (iev&ie_mask) == ie_value;
+  srcr= (srcv&src_mask) == src_value;
+
+  if (!is_slave())
     {
-      if (srcr)
+      if (ier)
 	{
-	  //printf("%2d IRQ\n", nuof);
-	  uc->irq= true;
+	  if (srcr)
+	    {
+	      uc->irq= true;
+	    }
 	}
     }
 }

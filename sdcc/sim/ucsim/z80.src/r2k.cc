@@ -147,7 +147,7 @@ cl_r2k::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x100000, 8);
+  chip= new cl_chip8("rom_chip", 0x100000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(as= address_space("rom"), chip, 0, 0xfffff, 0);
@@ -195,67 +195,49 @@ cl_r2k::make_memories(void)
   address_spaces->add(regs8);
   address_spaces->add(regs16);
 
-  class cl_var *v;
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("F", regs8, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("B", regs8, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("C", regs8, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("D", regs8, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("E", regs8, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("H", regs8, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("L", regs8, 7, ""));
-  v->init();
-  vars->add(v= new cl_var("IIR", regs8, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("EIR", regs8, 9, ""));
-  v->init();
+  vars->add("A", regs8, 0, 7, 0, "Accumulator");
+  vars->add("F", regs8, 1, 7, 0, "Flags");
+  vars->add("F_C", regs8, 1, BITPOS_C, BITPOS_C, "Carry");
+  vars->add("F_SUB", regs8, 1, BITPOS_SUB, BITPOS_SUB, "");
+  vars->add("F_P", regs8, 1, BITPOS_P, BITPOS_P, "");
+  vars->add("F_A", regs8, 1, BITPOS_A, BITPOS_A, "");
+  vars->add("F_Z", regs8, 1, BITPOS_Z, BITPOS_Z, "Zero");
+  vars->add("F_S", regs8, 1, BITPOS_S, BITPOS_S, "");
+  vars->add("B", regs8, 2, 7, 0, "");
+  vars->add("C", regs8, 3, 7, 0, "");
+  vars->add("D", regs8, 4, 7, 0, "");
+  vars->add("E", regs8, 5, 7, 0, "");
+  vars->add("H", regs8, 6, 7, 0, "");
+  vars->add("L", regs8, 7, 7, 0, "");
+  vars->add("IIR", regs8, 8, 7, 0, "");
+  vars->add("EIR", regs8, 9, 7, 0, "");
 
-  vars->add(v= new cl_var("ALT_A", regs8, 10, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_F", regs8, 11, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_B", regs8, 12, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_C", regs8, 13, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_D", regs8, 14, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_E", regs8, 15, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_H", regs8, 16, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_L", regs8, 17, ""));
-  v->init();
+  vars->add("ALT_A", regs8, 10, 7, 0, "Alt Accumulator");
+  vars->add("ALT_F", regs8, 11, 7, 0, "Alt Flags");
+  vars->add("ALT_F_C", regs8, 11, BITPOS_C, BITPOS_C, "ALT_Carry");
+  vars->add("ALT_F_SUB", regs8, 11, BITPOS_SUB, BITPOS_SUB, "");
+  vars->add("ALT_F_P", regs8, 11, BITPOS_P, BITPOS_P, "");
+  vars->add("ALT_F_A", regs8, 11, BITPOS_A, BITPOS_A, "");
+  vars->add("ALT_F_Z", regs8, 11, BITPOS_Z, BITPOS_Z, "ALT_Zero");
+  vars->add("ALT_F_S", regs8, 11, BITPOS_S, BITPOS_S, "");
+  vars->add("ALT_B", regs8, 12, 7, 0, "");
+  vars->add("ALT_C", regs8, 13, 7, 0, "");
+  vars->add("ALT_D", regs8, 14, 7, 0, "");
+  vars->add("ALT_E", regs8, 15, 7, 0, "");
+  vars->add("ALT_H", regs8, 16, 7, 0, "");
+  vars->add("ALT_L", regs8, 17, 7, 0, "");
 
-  vars->add(v= new cl_var("AF", regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("BC", regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("DE", regs16, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("HL", regs16, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("IX", regs16, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("IY", regs16, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("SP", regs16, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_AF", regs16, 7, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_BC", regs16, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_DE", regs16, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_HL", regs16, 10, ""));
-  v->init();
+  vars->add("AF", regs16, 0, 15, 0, "Accumulator/Flags");
+  vars->add("BC", regs16, 1, 15, 0, "");
+  vars->add("DE", regs16, 2, 15, 0, "");
+  vars->add("HL", regs16, 3, 15, 0, "");
+  vars->add("IX", regs16, 4, 15, 0, "");
+  vars->add("IY", regs16, 5, 15, 0, "");
+  vars->add("SP", regs16, 6, 15, 0, "Stack Pointer");
+  vars->add("ALT_AF", regs16, 7, 15, 0, "Alt Accumulator/Flags");
+  vars->add("ALT_BC", regs16, 8, 15, 0, "");
+  vars->add("ALT_DE", regs16, 9, 15, 0, "");
+  vars->add("ALT_HL", regs16, 10, 15, 0, "");
 }
 
 
@@ -436,88 +418,88 @@ cl_r2k::get_disasm_info(t_addr addr,
 }
 
 char *
-cl_r2k::disass(t_addr addr, const char *sep)
+cl_r2k::disass(t_addr addr)
 {
-  char work[256], temp[20];
+  chars work, temp;
   const char *b;
-  char *buf, *p, *t;
   int len = 0;
   int immed_offset = 0;
-
-  p= work;
-
+  bool first= true;
+  
+  work= "";
   b = get_disasm_info(addr, &len, NULL, &immed_offset);
-
-  if (b == NULL) {
-    buf= (char*)malloc(30);
-    strcpy(buf, "UNKNOWN/INVALID");
-    return(buf);
-  }
+  if (b == NULL)
+    {
+      return strdup("UNKNOWN/INVALID");
+    }
 
   while (*b)
     {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
       if (*b == '%')
         {
+	  temp= "";
           b++;
           switch (*(b++))
             {
             case 'd': // d    jump relative target, signed? byte immediate operand
-              sprintf(temp, "#%d", (char)rom->get(addr+immed_offset));
+              temp.format("%d", (char)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             case 'w': // w    word immediate operand
-              sprintf(temp, "#0x%04x",
-                 (uint)((rom->get(addr+immed_offset)) |
-                        (rom->get(addr+immed_offset+1)<<8)) );
+              temp.format("0x%04x",
+			  (uint)((rom->get(addr+immed_offset)) |
+				 (rom->get(addr+immed_offset+1)<<8)) );
               ++immed_offset;
               ++immed_offset;
               break;
             case 'b': // b    byte immediate operand
-              sprintf(temp, "#0x%02x", (uint)rom->get(addr+immed_offset));
+              temp.format("0x%02x", (uint)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             default:
-              strcpy(temp, "?");
+              temp= "?";
               break;
             }
-          t= temp;
-          while (*t)
-            *(p++)= *(t++);
+	  work+= temp;
         }
       else
-        *(p++)= *(b++);
+	work+= *(b++);
     }
-  *p= '\0';
 
-  p= strchr(work, ' ');
-  if (!p)
-    {
-      buf= strdup(work);
-      return(buf);
-    }
-  if (sep == NULL)
-    buf= (char *)malloc(6+strlen(p)+1);
-  else
-    buf= (char *)malloc((p-work)+strlen(sep)+strlen(p)+1);
-  for (p= work, t= buf; *p != ' '; p++, t++)
-    *t= *p;
-  p++;
-  *t= '\0';
-  if (sep == NULL)
-    {
-      while (strlen(buf) < 6)
-        strcat(buf, " ");
-    }
-  else
-    strcat(buf, sep);
-  strcat(buf, p);
-  return(buf);
+  return strdup(work.c_str());
 }
 
+
+static FILE *log_file= NULL;
+static unsigned int cyc= 0;
+
+void
+cl_r2k::save_hist()
+{
+  cl_z80::save_hist();
+  if (juj&2)
+    {
+      if (log_file==NULL && PC==0x16) log_file= fopen("log.txt","w");
+      if (log_file!=NULL) {
+	fprintf(log_file, "%6u %06x ", cyc, AU(PC));
+	fprintf(log_file, "%02x %02x ", regs.raf.A, (regs.raf.F)&0xc1);
+	fprintf(log_file, "%04x %04x %04x ", regs.BC, regs.DE, regs.HL);
+	fprintf(log_file, "%04x %04x %04x ", regs.IX, regs.IY, regs.SP);
+	fprintf(log_file, "\n");
+	cyc++;
+      }
+    }
+}
 
 void
 cl_r2k::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("SZ-A-PNC  Flags= 0x%02x %3d %c  ",
                  regs.raf.F, regs.raf.F, isprint(regs.raf.F)?regs.raf.F:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",
@@ -525,9 +507,9 @@ cl_r2k::print_regs(class cl_console_base *con)
   con->dd_printf("%c%c-%c-%c%c%c\n",
                  (regs.raf.F&BIT_S)?'1':'0',
                  (regs.raf.F&BIT_Z)?'1':'0',
-                 (regs.raf.F&BIT_A)?'1':'0',
+                 'x',//(regs.raf.F&BIT_A)?'1':'0',
                  (regs.raf.F&BIT_P)?'1':'0',
-                 (regs.raf.F&BIT_N)?'1':'0',
+                 'x',//(regs.raf.F&BIT_N)?'1':'0',
                  (regs.raf.F&BIT_C)?'1':'0');
   con->dd_printf("BC= 0x%04x [BC]= %02x %3d %c  ",
                  regs.BC, ram->get(regs.BC), ram->get(regs.BC),
@@ -547,7 +529,7 @@ cl_r2k::print_regs(class cl_console_base *con)
   con->dd_printf("SP= 0x%04x [SP]= %02x %3d %c\n",
                  regs.SP, ram->get(regs.SP), ram->get(regs.SP),
                  isprint(ram->get(regs.SP))?ram->get(regs.SP):'.');
-  con->dd_printf("SP limit= 0x%04x\n", AU(sp_limit));
+  //con->dd_printf("SP limit= 0x%04x\n", AU(sp_limit));
 
   print_disass(PC, con);
 }

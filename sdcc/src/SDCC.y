@@ -103,11 +103,11 @@ bool uselessDecl = TRUE;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token NAKED JAVANATIVE OVERLAY TRAP
 %token <yystr> STRING_LITERAL INLINEASM
-%token IFX ADDRESS_OF GET_VALUE_AT_ADDRESS SET_VALUE_AT_ADDRESS SPIL UNSPIL GETHBIT GETABIT GETBYTE GETWORD
+%token IFX ADDRESS_OF GET_VALUE_AT_ADDRESS SET_VALUE_AT_ADDRESS SPIL UNSPIL GETABIT GETBYTE GETWORD
 %token BITWISEAND UNARYMINUS IPUSH IPOP PCALL  ENDFUNCTION JUMPTABLE
 %token RRC RLC
 %token CAST CALL PARAM NULLOP BLOCK LABEL RECEIVE SEND ARRAYINIT
-%token DUMMY_READ_VOLATILE ENDCRITICAL SWAP INLINE NORETURN RESTRICT SMALLC PRESERVES_REGS Z88DK_FASTCALL Z88DK_CALLEE ALIGNAS Z88DK_SHORTCALL Z88DK_PARAMS_OFFSET
+%token DUMMY_READ_VOLATILE ENDCRITICAL SWAP INLINE NORETURN RESTRICT SMALLC RAISONANCE IAR COSMIC SDCCCALL PRESERVES_REGS Z88DK_FASTCALL Z88DK_CALLEE ALIGNAS Z88DK_SHORTCALL Z88DK_PARAMS_OFFSET
 %token GENERIC GENERIC_ASSOC_LIST GENERIC_ASSOCIATION
 %token ASM
 
@@ -242,6 +242,9 @@ unary_expr
    | ALIGNOF '(' type_name ')'{ $$ = newAst_VALUE (alignofOp ($3)); }
    | TYPEOF unary_expr        { $$ = newNode (TYPEOF, NULL, $2); }
    | OFFSETOF '(' type_name ',' offsetof_member_designator ')' { $$ = offsetofOp($3, $5); }
+   | RLC unary_expr           { $$ = newNode (RLC, $2, NULL); }
+   | RRC unary_expr           { $$ = newNode (RRC, $2, NULL); }
+   | SWAP unary_expr          { $$ = newNode (SWAP, $2, NULL); }
    ;
 
 unary_operator
@@ -1316,7 +1319,10 @@ function_declarator
           FUNC_HASVARARGS(funcType) = IS_VARG($4);
           FUNC_ARGS(funcType) = reverseVal($4);
 
+          FUNC_SDCCCALL(funcType) = -1;
+
           /* nest level was incremented to take care of the parms  */
+          leaveBlockScope (currBlockno);
           NestLevel -= LEVEL_UNIT;
           currBlockno = STACK_POP(blockNum);
           seqPointNo++; /* not a true sequence point, but helps resolve scope */
@@ -1813,6 +1819,7 @@ start_block
 end_block
    : '}'
         {
+          leaveBlockScope (currBlockno);
           NestLevel -= LEVEL_UNIT;
           currBlockno = STACK_POP(blockNum);
         }
@@ -1952,6 +1959,7 @@ iteration_statement
                           cleanUpLevel(StructTab, NestLevel + LEVEL_UNIT);
                           noLineno--;
 
+                          leaveBlockScope (currBlockno);
                           NestLevel -= LEVEL_UNIT;
                           currBlockno = STACK_POP(blockNum);
                         }
@@ -2178,6 +2186,19 @@ function_attributes
    |  SMALLC         {  $$ = newLink (SPECIFIER);
                         FUNC_ISSMALLC($$) = 1;
                      }
+   |  RAISONANCE     {  $$ = newLink (SPECIFIER);
+                        FUNC_ISRAISONANCE($$) = 1;
+                     }
+   |  IAR            {  $$ = newLink (SPECIFIER);
+                        FUNC_ISIAR($$) = 1;
+                     }
+   |  COSMIC         {  $$ = newLink (SPECIFIER);
+                        FUNC_ISCOSMIC($$) = 1;
+                     }
+   |  SDCCCALL '('constant_expr ')'
+                     {  $$ = newLink (SPECIFIER);
+                        FUNC_SDCCCALL($$) = ulFromVal(constExprValue ($3, true));
+                     }
    |  Z88DK_FASTCALL {  $$ = newLink (SPECIFIER);
                         FUNC_ISZ88DK_FASTCALL($$) = 1;
                      }
@@ -2186,7 +2207,7 @@ function_attributes
                      }
    |  Z88DK_PARAMS_OFFSET '(' constant_expr ')' 
                      {
-                        value *offset_v = constExprValue ($3, TRUE);
+                        value *offset_v = constExprValue ($3, true);
                         int    offset = 0;
                         $$ = newLink(SPECIFIER);
                         if  ( offset_v ) 
@@ -2508,6 +2529,7 @@ declaration_after_statement
 implicit_block
    : declaration_after_statement statements_and_implicit
      {
+       leaveBlockScope (currBlockno);
        NestLevel -= SUBLEVEL_UNIT;
        currBlockno = STACK_POP(blockNum);
        $$ = createBlock($1, $2);
@@ -2515,6 +2537,7 @@ implicit_block
      }
    | declaration_after_statement
      {
+       leaveBlockScope (currBlockno);
        NestLevel -= SUBLEVEL_UNIT;
        currBlockno = STACK_POP(blockNum);
        $$ = createBlock($1, NULL);

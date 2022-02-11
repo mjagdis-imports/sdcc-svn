@@ -729,6 +729,8 @@ static int implement_lospre_assignment(assignment_lospre a, T_t &T, G_t &G, cons
           IC_RESULT(ic) = operandFromOperand (IC_RESULT (ic));
           IC_RESULT(ic)->isaddr = 0;
         }
+      else
+        continue; // pointer set is not an assignment, so no need to forward
       if(IS_OP_VOLATILE(IC_RESULT (ic)))
         continue;
 
@@ -748,7 +750,10 @@ static int implement_lospre_assignment(assignment_lospre a, T_t &T, G_t &G, cons
     }
 
   if(substituted < split) // Todo: Remove this warning when optimization for speed instead of code size is implemented!
-    std::cout << "Introduced " << OP_SYMBOL_CONST(tmpop)->name << ", but did substitute only " << substituted << " calculations, while introducing "<< split << ".\n"; std::cout.flush();
+    {
+      std::cout << "Introduced " << OP_SYMBOL_CONST(tmpop)->name << ", but did substitute only " << substituted << " calculations, while introducing "<< split << ".\n";
+      std::cout.flush();
+    }
 
   return(1);
 }

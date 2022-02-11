@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -73,6 +73,7 @@ long2fs_doit:
 */
 
 /* (c)2000/2001: hacked a little by johan.knol@iduna.nl for sdcc */
+/* (c)2022:      fix sdcc bug #3276 -- Benedikt Freisen */
 
 union float_long
   {
@@ -82,12 +83,17 @@ union float_long
 
 float __ulong2fs (unsigned long a )
 {
-  unsigned char exp = 24 + EXCESS;
+  unsigned char exp = (unsigned char)24 + (unsigned char)EXCESS;
   volatile union float_long fl;
 
   if (!a)
     {
       return 0.0;
+    }
+
+  if (a == 0xfffffffful)
+    {
+      return 4294967296.0f;
     }
 
   while (a < HIDDEN)
@@ -96,7 +102,7 @@ float __ulong2fs (unsigned long a )
       exp--;
     }
 
-  while (a & NORM) 
+  while (a & NORM)
     {
       // we lose accuracy here
       if (a & 1)
@@ -104,7 +110,7 @@ float __ulong2fs (unsigned long a )
       a >>= 1;
       exp++;
     }
-  
+
   a &= ~HIDDEN ;
   /* pack up and go home */
   fl.l = PACK(0,(unsigned long)exp, a);

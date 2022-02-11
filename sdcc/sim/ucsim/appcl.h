@@ -40,6 +40,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 
 extern bool jaj;
+extern int juj;
 
 /* Options */
 /*
@@ -92,6 +93,8 @@ public:
   int going;
   long expr_result;
   chars startup_command;
+  class cl_mc32 cperiod, ccyc;
+  bool quiet;
   
 public:
   cl_app(void);

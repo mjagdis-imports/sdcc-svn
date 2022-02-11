@@ -97,7 +97,9 @@ public:
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
   virtual int longest_inst(void);
-  virtual char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr);
+
+  virtual void save_hist();
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);

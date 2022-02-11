@@ -293,7 +293,13 @@ enum {
   W_PREFIXED_STRINGS            = 263, /* sequence of differently prefixed string literals */
   W_DIGIT_SEPARATOR_C23         = 264, /* digit separators require ISO C23 or later */
   E_INVALID_LANG_OVERRIDE       = 265, /* argument to option -x is not a valid file type override */
-  
+  E_RAISONANCE_LARGE_RETURN     = 266, /* large return value not supported for Raisonance calling convention */
+  E_IAR_LARGE_RETURN            = 267, /* large return value not supported for IAR calling convention */
+  E_IAR_PSEUDOPARM              = 268, /* IAR function call with parameter in pseudoregister */
+  E_COSMIC_LARGE_RETURN         = 269, /* large return value not supported for Cosmic calling convention */
+  E_MULTIPLE_CALLINGCONVENTIONS = 270, /* multiple incompatible calling conventions */
+  W_SFR_ADDRESS                 = 271, /* unsupported address of __sfr taken */
+
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
 };

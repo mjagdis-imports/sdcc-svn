@@ -54,7 +54,7 @@ typedef int errno_t;
 
 #endif
 
-#if defined(__SDCC_mcs51) || defined(__SDCC_hc08) || defined(__SDCC_ds390) || defined(__SDCC_pic14) || defined(__SDCC_pic16)
+#if defined(__SDCC_mcs51) || defined(__SDCC_hc08) || defined(__SDCC_ds390) || defined(__SDCC_pic14) || defined(__SDCC_pic16) || defined(__SDCC_mos6502) || defined(__SDCC_mos65c02)
 #define __SDCC_BROKEN_STRING_FUNCTIONS
 #endif
 
@@ -118,9 +118,11 @@ extern void *memset (void *s, unsigned char c, size_t n); /* c should be int acc
 extern void *memset (void *s, int c, size_t n);
 #endif
 
+extern void *memset_explicit (void *s, int c, size_t n);
+
 /* extern char *strerror(int errnum); */
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80) || defined (__SDCC_z80n)
-extern size_t strlen (const char *s) __preserves_regs(d, e, iyl, iyh);
+extern size_t strlen (const char *s) __preserves_regs(iyl, iyh);
 #else
 extern size_t strlen (const char *s);
 #endif

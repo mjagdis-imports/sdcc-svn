@@ -102,19 +102,19 @@ cl_serial::init(void)
 					regs[cr2], 0x80,
 					regs[sr], 0x80,
 					0x8008+txit*4, false, false,
-					chars("", "usart%d transmit register empty", id), 20*10+1));
+					chars("", "USART%d_TXE", id), 20*10+1));
   is->init();
   uc->it_sources->add(is= new cl_it_src(uc, txit,
 					regs[cr2], 0x40,
 					regs[sr], 0x40,
 					0x8008+txit*4, false, false,
-					chars("", "usart%d transmit complete", id), 20*10+2));
+					chars("", "USART%d_TC", id), 20*10+2));
   is->init();
   uc->it_sources->add(is= new cl_it_src(uc, rxit,
 					regs[cr2], 0x20,
 					regs[sr], 0x20,
 					0x8008+rxit*4, false, false,
-					chars("", "usart%d receive", id), 20*10+3));
+					chars("", "USART%d_RX", id), 20*10+3));
   is->init();
 
   sr_read= false;
@@ -139,8 +139,8 @@ cl_serial::read(class cl_memory_cell *cell)
   if (cell == regs[dr])
     {
       if (sr_read)
-	regs[sr]->set_bit0(0x1f);
-      regs[sr]->set_bit0(0x20);
+	regs[sr]->set(regs[sr]->get() | 0x1f);
+      regs[sr]->set(regs[sr]->get() & ~0x20);
       cfg_set(serconf_able_receive, 1);
       return s_in;
     }
@@ -326,7 +326,7 @@ cl_serial::received()
   set_dr(s_in);
   cfg_write(serconf_received, s_in);
   if (regs[sr]->get() & 0x20)
-    regs[sr]->set_bit1(0x08); // overrun
+    regs[sr]->set(regs[sr]->get() | 0x08); // overrun
   show_readable(true);
 }
 
@@ -381,37 +381,37 @@ cl_serial::show_writable(bool val)
 {
   if (val)
     // TXE=1
-    regs[sr]->write_bit1(0x80);
+    regs[sr]->write(regs[sr]->read() | 0x80);
   else
     // TXE=0
-    regs[sr]->write_bit0(0x80);
+    regs[sr]->write(regs[sr]->read() & ~0x80);
 }
 
 void
 cl_serial::show_readable(bool val)
 {
   if (val)
-    regs[sr]->write_bit1(0x20);
+    regs[sr]->write(regs[sr]->read() | 0x20);
   else
-    regs[sr]->write_bit0(0x20);
+    regs[sr]->write(regs[sr]->read() & ~0x20);
 }
 
 void
 cl_serial::show_tx_complete(bool val)
 {
   if (val)
-    regs[sr]->write_bit1(0x40);
+    regs[sr]->write(regs[sr]->read() | 0x40);
   else
-    regs[sr]->write_bit0(0x40);
+    regs[sr]->write(regs[sr]->read() & ~0x40);
 }
 
 void
 cl_serial::show_idle(bool val)
 {
   if (val)
-    regs[sr]->write_bit1(0x10);
+    regs[sr]->write(regs[sr]->read() | 0x10);
   else
-    regs[sr]->write_bit0(0x10);
+    regs[sr]->write(regs[sr]->read() & ~0x10);
 }
 
 void

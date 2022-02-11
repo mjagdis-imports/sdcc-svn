@@ -35,7 +35,6 @@
 //#include "i_string.h"
 
 // prj
-//#include "utils.h"
 #include "globals.h"
 
 // sim
@@ -47,10 +46,10 @@
 
 // local
 #include "memcl.h"
-//#include "hwcl.h"
 
 
 static class cl_mem_error_registry mem_error_registry;
+static unsigned int mem_uids= 0;
 
 /*
  *                                                3rd version of memory system
@@ -67,6 +66,7 @@ cl_memory::cl_memory(const char *id, t_addr asize, int awidth):
   start_address= 0;
   uc= 0;
   hidden= false;
+  uid= mem_uids++;
 }
 
 cl_memory::~cl_memory(void)
@@ -180,26 +180,42 @@ cl_memory::err_non_decoded(t_addr addr)
   uc->error(e);
 }
 
-
 t_addr
-cl_memory::dump(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_console_base *con)
+cl_memory::dump(int smart, t_addr start, t_addr stop, int bitnr_high, int bitnr_low, int bpl, class cl_console_base *con)
 {
-  int i, step;
+  if (!con->get_fout())
+    return dump_finished;
+
+  if (bpl < 0)
+    {
+      bpl= 8;
+      if (width > 16)
+	bpl= 4;
+    }
+
+  if (start < 0)
+    start= dump_finished;
+
   t_addr lva= lowest_valid_address();
   t_addr hva= highest_valid_address();
-  class cl_f *f= con->get_fout();
-  
-  if (!f)
-    return dump_finished;
-  
+
   if (start < lva)
     start= lva;
   if (start > hva)
     return dump_finished;
+
+  int lines= -1;
+  if (stop < 0)
+    {
+      stop= hva;
+      lines= 10;
+    }
   if (stop > hva)
     stop= hva;
   if (stop < lva)
     return dump_finished;
+
+  int i, step;
   if (stop >= start)
     {
       step= +1;
@@ -214,53 +230,260 @@ cl_memory::dump(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_co
       if (start - bpl < stop)
         bpl= start - stop;
     }
+
+  long label_width = -1;
+  cl_option *o = application->options->get_option("label_width");
+  if (o)
+    o->get_value(&label_width);
+  if (label_width < 0)
+    label_width = uc->vars->get_max_name_len();
+
+  bool bitmode = (smart == 2 || (smart && bitnr_high >= 0));
+
+  cl_vars_iterator vi(uc->vars);
+  const class cl_var *var = NULL;
+  const class cl_var *var_next = NULL;
+
+  int state = 0;
+
   while ((step>0)?(start < stop):(start > stop))
     {
-      // 1. field: address
-      /*f->prntf*/con->dd_cprintf("dump_address", addr_format, start);
-      /*f->write_str*/con->dd_printf(" ");
-      // 2. field: hex list
-      for (i= 0;
-           (i < bpl) &&
-             (start+i*step >= lva) &&
-             (start+i*step <= hva) &&
-             (start+i*step != stop);
-           i++)
+      if (smart && step > 0 && this == uc->rom && uc->inst_at(start))
         {
-          /*f->prntf*/con->dd_cprintf("dump_number", data_format, read/*get*/(start+i*step));
-	  /*f->write_str*/con->dd_printf(" ");
+          uc->print_disass(start, con, true);
+          start += uc->inst_length(start);
+          dump_finished = start;
+          if (lines > 0 && --lines == 0)
+            break;
+          continue;
         }
-      // 3. field: char list
-      while (i < bpl)
+
+      int n;
+
+      con->dd_color("dump_address");
+      if (state == 0)
+        con->dd_printf(addr_format, start);
+      else
+        con->dd_printf("  %-*s", atoi(addr_format+4), "");
+
+      if (smart)
         {
-	  int j;
-	  j= width/4 + ((width%4)?1:0) + 1;
-	  while (j)
-	    {
-	      /*f->write_str*/con->dd_printf(" ");
-	      j--;
-	    }
-          i++;
+          if (state != 0)
+            {
+              if (bitnr_high >= 0 || smart == 2)
+                con->dd_printf("     ");
+            }
+          else
+            {
+              if (bitnr_high >= 0 && bitnr_high == bitnr_low)
+                con->dd_printf(".%d   ", bitnr_high);
+              else if (bitnr_low > 0 || (bitnr_high > 0 && bitnr_high < width - 1))
+                con->dd_printf("[%d:%d]", bitnr_high, bitnr_low);
+              else if (smart == 2)
+                con->dd_printf("     ");
+
+              state = 1;
+
+              // Find the first var for this location.
+              //fprintf(stderr, "Find first var for %s -> %s[0x%04x][%d:%d]\n", this->get_name(), this->get_name(), start, bitnr_high, bitnr_low);
+             var = vi.first(this, start);
+             while (var)
+                {
+                  // If _any_ var for this location names bits we output in bitmode
+                  // regardless of whether the named bits are in the requested range.
+                  if (var->bitnr_high >= 0)
+                    bitmode = true;
+
+                  // If the var names bits then we skip it unless all the bits are
+                  // contained within the requested range.
+                  if (bitnr_high < 0 || var->bitnr_high < 0 || (var->bitnr_high <= bitnr_high && var->bitnr_low >= bitnr_low))
+                    break;
+
+                  //fprintf(stderr, "    skip %s -> %s[0x%04x][%d:%d]\n", var->get_name(), var->mem->get_name(), var->addr, var->bitnr_high, var->bitnr_low);
+                  var = vi.next();
+                }
+            }
+
+          //if (var_i < uc->vars->by_addr.count && var)
+            //fprintf(stderr, "state = %d, %s -> %s[0x%04x][%d:%d]\n", state, var->get_name(), var->mem->get_name(), var->addr, var->bitnr_high, var->bitnr_low);
+
+          if (var &&
+              (var->bitnr_high < 0 ||
+	       (state < 2 && ((var->bitnr_high == bitnr_high && var->bitnr_low == bitnr_low) ||
+                              (bitnr_high < 0 && var->bitnr_high == width - 1 && var->bitnr_low == 0))) ||
+	       (state == 2 && (bitnr_high < 0 || (var->bitnr_high <= bitnr_high && var->bitnr_low >= bitnr_low)))))
+            {
+              con->dd_color("dump_label");
+
+              // If we wanted specific bits but the var is just a label we need to qualify it.
+              if (bitnr_high >= 0 && var->bitnr_high < 0)
+                {
+                  if (bitnr_high == bitnr_low)
+                    con->dd_printf(" %s.%d:   %*s", var->get_name(), bitnr_high, label_width - strlen(var->get_name()), "");
+                  else
+                    con->dd_printf(" %s[%d:%d]:%*s", var->get_name(), bitnr_high, bitnr_low, label_width - strlen(var->get_name()), "");
+                }
+              else
+                con->dd_printf(" %s:%*s", var->get_name(), label_width - strlen(var->get_name()) + (smart == 2 ? 5 : 0), "");
+
+              // Find the next relevant var.
+              while ((var_next = vi.next()))
+                {
+                  // If _any_ var for this location names bits we output in bitmode
+                  // regardless of whether the named bits are in the requested range.
+                  if (var_next->bitnr_high >= 0)
+                    bitmode = true;
+
+                  // If the var names bits then we skip it unless all the bits are
+                  // contained within the requested range.
+                  if (bitnr_high < 0 || var_next->bitnr_high < 0 || (var_next->bitnr_high <= bitnr_high && var_next->bitnr_low >= bitnr_low))
+                    break;
+
+                  //fprintf(stderr, "    skip next %s -> %s[0x%04x][%d:%d]\n", var_next->get_name(), var_next->mem->get_name(), var_next->addr, var_next->bitnr_high, var_next->bitnr_low);
+                }
+              //if (var_i < uc->vars->by_addr.count && var_next)
+                  //fprintf(stderr, "    next  is %s -> %s[0x%04x][%d:%d]\n", var_next->get_name(), var_next->mem->get_name(), var_next->addr, var_next->bitnr_high, var_next->bitnr_low);
+
+              if (var_next)
+                {
+                  // If it aliases the previous we do not need to output data now.
+                  if ((var_next->bitnr_high == var->bitnr_high && var_next->bitnr_low == var->bitnr_low) ||
+                      (state == 1 &&
+                       (var->bitnr_high < 0 &&
+                        ((var_next->bitnr_high == width - 1 && var_next->bitnr_low == 0) ||
+                         (bitnr_high >= 0 && var_next->bitnr_high == bitnr_high && var_next->bitnr_low >= bitnr_low)))))
+                    {
+                      con->dd_printf("\n");
+                      if (lines > 0)
+                        lines--;
+                      var = var_next;
+                      var_next = NULL;
+                      continue;
+                    }
+                }
+            }
+          else
+            {
+              var_next = var;
+              con->dd_printf(" %-*s %s", label_width, "", (smart == 2 ? "     " : ""));
+            }
+
+          con->dd_color("dump_number");
+
+          if (bitmode)
+            {
+              int b_high, b_low;
+
+              if (var && state == 2 && var->bitnr_high >= 0)
+                b_high = var->bitnr_high, b_low = var->bitnr_low;
+              else if (bitnr_high >= 0)
+                b_high = bitnr_high, b_low = bitnr_low;
+              else
+                b_high = width - 1, b_low = 0;
+
+              con->dd_printf(" ");
+
+              /*t_mem*/u64_t m= read(start);
+
+              int i;
+              con->dd_printf("0b");
+              for (i= width - 1; i > b_high; i--)
+                con->dd_printf("-");
+              for (; i >= b_low; i--)
+                con->dd_printf("%c", (m & (1U << i)) ? '1' : '0');
+              for (; i >= 0; i--)
+                con->dd_printf("-");
+
+              int nbits = b_high - b_low + 1;
+
+              m = (m >> b_low) & (((u64_t)1U << nbits) - 1);
+
+              con->dd_printf(" 0x%0*x", (nbits > 16 ? 8 : (nbits > 8 ? 4 : 2)), m);
+
+              con->dd_color("dump_char");
+              con->dd_printf(" '");
+	      // FIXME: endian assumption: low byte first - should be a uc flag or option?
+              for (int i= 0; i <= (nbits - 1) - ((nbits - 1) % 8); i += 8)
+                con->dd_printf("%c", (isprint((m >> i) & 255) ? (m >> i) & 255 : '.'));
+              con->dd_printf("'");
+              con->dd_color("dump_number");
+
+              con->dd_printf(" %*u", (nbits > 16 ? 10 : (nbits > 8 ? 5 : 3)), m);
+
+              if (nbits == width && (m & (1U << (nbits - 1))))
+                con->dd_printf(" (%*d)", (nbits > 16 ? 10 : (nbits > 8 ? 5 : 3)), 0 - ((1U << nbits) - m));
+
+              con->dd_printf("\n");
+              if (lines > 0)
+                lines--;
+
+              state = 2;
+
+              // Only advance if there is no more to say about this location.
+              if (var_next)
+                var = var_next;
+              else
+                {
+                  start += step;
+                  dump_finished= start;
+
+                  if (lines == 0)
+                    break;
+
+                  bitmode = (smart == 2 || (smart && bitnr_high >= 0));
+                  state = 0;
+                }
+
+              continue;
+            }
+
+            // Not bit-formatted so drop through to normal output.
         }
-      for (i= 0; (i < bpl) &&
-             (start+i*step >= lva) &&
-             (start+i*step <= hva) &&
-             (start+i*step != stop);
+
+      state = 2;
+      con->dd_color("dump_number");
+
+      for (n= 0;
+           (n < bpl) &&
+             (start+n*step >= lva) &&
+             (start+n*step <= hva) &&
+             (start+n*step != stop);
+           n++)
+        {
+          if (smart && n)
+            {
+              if (uc->inst_at(start+n*step) || (var = vi.first(this, start+n*step)))
+                break;
+            }
+          con->dd_printf(" ");
+          con->dd_printf(data_format, read(start+n*step));
+        }
+      con->dd_printf("%-*s", (bpl - n) * (width/4 + ((width%4)?1:0) + 1) + 1, " ");
+
+      con->dd_color("dump_char");
+      for (i= 0; i < n &&
+             start+i*step >= lva &&
+             start+i*step <= hva &&
+             start+i*step != stop;
            i++)
         {
           long c= read(start+i*step);
-          /*f->prntf*/con->dd_cprintf("dump_char", "%c", isprint(255&c)?(255&c):'.');
-          if (width > 8)
-            /*f->prntf*/con->dd_cprintf("dump_char", "%c", isprint(255&(c>>8))?(255&(c>>8)):'.');
-          if (width > 16)
-            /*f->prntf*/con->dd_cprintf("dump_char", "%c", isprint(255&(c>>16))?(255&(c>>16)):'.');
-          if (width > 24)
-            /*f->prntf*/con->dd_cprintf("dump_char", "%c", isprint(255&(c>>24))?(255&(c>>24)):'.');
+	  // FIXME: endian assumption: low byte first - should be a uc flag or option?
+          for (int i= 0; i <= (width - 1) - ((width - 1) % 8); i += 8)
+            con->dd_printf("%c", (isprint((c >> i) & 255) ? (c >> i) & 255 : '.'));
         }
-      /*f->prntf*/con->dd_printf("\n");
-      dump_finished= start+i*step;
-      start+= i*step;
+      con->dd_printf("\n");
+
+      start+= n*step;
+      dump_finished= start;
+      state = 0;
+      if (lines > 0 && --lines == 0)
+        break;
     }
+
+  if (dump_finished >= hva)
+    dump_finished= lva;
+
   return(dump_finished);
 }
 
@@ -271,30 +494,11 @@ cl_memory::dump_s(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
   t_addr hva= highest_valid_address();
   class cl_f *f= con->get_fout();
 
-  if (!f)
-    return dump_finished;
-  if (start < 0)
-    start= dump_finished;
-  if (stop < 0)
-    stop= start + 10*8 - 1;
-  
-  if (start < lva)
-    start= lva;
-  if (start > hva)
-    return dump_finished;
-  if (stop > hva)
-    stop= hva;
-  if (stop < lva)
-    return dump_finished;
-  
-  if (bpl < 0)
-    bpl= 8;
   t_addr a= start;
   t_mem d= read(a);
   char last= '\n';
   con->dd_printf("%s", con->get_color_ansiseq("dump_char").c_str());
-  while ((a <= stop) &&
-	 (d != 0) &&
+  while ((d != 0) &&
 	 (a <= hva))
     {
       char c= d;
@@ -329,7 +533,12 @@ cl_memory::dump_s(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
     }
   if (last != '\n')
     f->write_str("\n");
-  return dump_finished= a;
+
+  dump_finished= a;
+  if (dump_finished >= hva)
+    dump_finished= lva;
+
+  return dump_finished;
 }
 
 t_addr
@@ -339,24 +548,9 @@ cl_memory::dump_b(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
   t_addr hva= highest_valid_address();
   class cl_f *f= con->get_fout();
 
-  if (!f)
-    return dump_finished;
-  if (start < 0)
-    start= dump_finished;
   if (stop < 0)
-    stop= start + 10*8 - 1;
+    stop= start + 10 * bpl - 1;
 
-  if (start < lva)
-    start= lva;
-  if (start > hva)
-    return dump_finished;
-  if (stop > hva)
-    stop= hva;
-  if (stop < lva)
-    return dump_finished;
-
-  if (bpl < 0)
-    bpl= 8;
   t_addr a= start;
   t_mem d= read(a);
   while ((a <= stop) &&
@@ -369,7 +563,12 @@ cl_memory::dump_b(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
 	}
       d= read(++a);
     }
-  return dump_finished= a;
+
+  dump_finished= a;
+  if (dump_finished >= hva)
+    dump_finished= lva;
+
+  return dump_finished;
 }
 
 t_addr
@@ -381,14 +580,11 @@ cl_memory::dump_i(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
   t_addr start_line;
   class cl_f *f= con->get_fout();
   
-  if (!f)
-    return dump_finished;
-  if (start < 0)
-    start= dump_finished;
+  if (stop < 0)
+    stop= start + 10 * bpl - 1;
+
   if (start < lva)
     start= lva;
-  if (stop < 0)
-    stop= start + 10*8 - 1;
   if (stop > hva)
     stop= hva;
 
@@ -403,9 +599,6 @@ cl_memory::dump_i(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
   
   if (start > stop)
     return dump_finished= stop;
-  
-  if (bpl < 0)
-    bpl= 16;
   if (bpl > 32)
     bpl= 32;
   t_addr a= start;
@@ -429,7 +622,7 @@ cl_memory::dump_i(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
 	      sum+= c;
 	      c= start_line & 0xff;
 	      sum+= c;
-	      int i;
+	      unsigned int i;
 	      for (i= 0; i < a-start_line; i++)
 		{
 		  c= read(start_line + i);
@@ -444,56 +637,11 @@ cl_memory::dump_i(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
 	}
     }
   f->write_str(":00000001FF\r\n");
-  return dump_finished= a;
-}
 
-t_addr
-cl_memory::dump(/*class cl_f *f*/class cl_console_base *con)
-{
-  if (con->get_fout() == NULL)
-    return dump_finished;
-  return(dump(dump_finished, dump_finished+10*8-1, 8, /*f*/con));
-}
+  dump_finished= a;
+  if (dump_finished >= hva)
+    dump_finished= lva;
 
-t_addr
-cl_memory::dump(enum dump_format fmt,
-		t_addr start, t_addr stop, int bpl,
-		/*class cl_f *f*/class cl_console_base *con)
-{
-  t_addr lva= lowest_valid_address();
-  t_addr hva= highest_valid_address();
-
-  //if (!f)
-  //return dump_finished;
-  if (start < 0)
-    start= dump_finished;
-  if (stop < 0)
-    stop= start + 10*8 - 1;
-
-  if (start < lva)
-    start= lva;
-  if (start > hva)
-    return dump_finished;
-  if (stop > hva)
-    stop= hva;
-  if (stop < lva)
-    return dump_finished;
-  
-  if (bpl < 0)
-    bpl= 8;
-  switch (fmt & df_format)
-    {
-    case df_hex:
-      return dump(start, stop, bpl, /*f*/con);
-    case df_string:
-      return dump_s(start, stop, bpl, /*f*/con);
-    case df_ihex:
-      return dump_i(start, stop, bpl, /*f*/con);
-    case df_binary:
-      return dump_b(start, stop, bpl, /*f*/con);
-    default:
-      return dump(start, stop, bpl, /*f*/con);
-    }
   return dump_finished;
 }
 
@@ -561,45 +709,20 @@ cl_memory::print_info(const char *pre, class cl_console_base *con)
  *                                                             Memory operators
  */
 
-cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell/*,
-								    t_addr addr*/):
+cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell):
   cl_base()
 {
   cell= acell;
   if (cell)
     {
-      //data= cell->data;
       mask= cell->mask;
     }
   else
     {
-      //data= 0;
       mask= ~0;
     }
   next_operator= 0;
-  //address= addr;
 }
-/*
-cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell,
-				       t_addr addr,
-				       t_mem *data_place, t_mem the_mask):
-  cl_base()
-{
-  cell= acell;
-  //data= data_place;
-  mask= the_mask;
-  next_operator= 0;
-  address= addr;
-}
-*/
-/*
-void
-cl_memory_operator::set_data(t_mem *data_place, t_mem the_mask)
-{
-  data= data_place;
-  mask= the_mask;
-}
-*/
 
 t_mem
 cl_memory_operator::read(void)
@@ -607,7 +730,7 @@ cl_memory_operator::read(void)
   if (next_operator)
     return(next_operator->read());
   else if (cell)
-    return(/* *data*/cell->get());
+    return(cell->get());
   return 0;
 }
 
@@ -617,7 +740,7 @@ cl_memory_operator::write(t_mem val)
   if (next_operator)
     return(next_operator->write(val));
   else if (cell)
-    return(/* *data=*/cell->set(val/* & mask*/));
+    return(cell->set(val));
   return val;
 }
 
@@ -625,9 +748,8 @@ cl_memory_operator::write(t_mem val)
 /* Memory operator for bank switcher */
 
 cl_bank_switcher_operator::cl_bank_switcher_operator(class cl_memory_cell *acell,
-						     /*t_addr addr,*/
 						     class cl_banker *the_banker):
-  cl_memory_operator(acell/*, addr*/)
+  cl_memory_operator(acell)
 {
   banker= the_banker;
   set_name("bank_switcher");
@@ -638,20 +760,20 @@ cl_bank_switcher_operator::write(t_mem val)
 {
   if (next_operator)
     next_operator->write(val);
-  if (cell) /* *data=*/ cell->set(val /*& mask*/);
+  if (cell)
+    cell->set(val);
   banker->activate(NULL);
   if (cell)
     return cell->get();
-  return /* *data*/ 0;  
+  return 0;  
 }
 
 
 /* Memory operator for hw callbacks */
 
-cl_hw_operator::cl_hw_operator(class cl_memory_cell *acell/*, t_addr addr*/,
-			       //t_mem *data_place, t_mem the_mask,
+cl_hw_operator::cl_hw_operator(class cl_memory_cell *acell,
 			       class cl_hw *ahw):
-  cl_memory_operator(acell/*, addr*//*, data_place, the_mask*/)
+  cl_memory_operator(acell)
 {
   hw= ahw;
   set_name(chars("hw:")+hw->get_name());
@@ -663,24 +785,32 @@ cl_hw_operator::read(void)
 {
   t_mem d1= 0, d2= 0;
 
-  if (hw)
-    d1= hw->read(cell);
+  if (hw && !hw->active)
+    {
+      hw->active = true;
+      d1= hw->read(cell);
+      hw->active = false;
+    }
 
   if (next_operator)
     d2= next_operator->read();
 
-  return(hw?d1:d2);
+  return(hw && !hw->active ? d1 : d2);
 }
 
 t_mem
 cl_hw_operator::read(enum hw_cath skip)
 {
-  t_mem d1= 0/* *data*/, d2= d1;
+  t_mem d1= 0, d2= d1;
   bool use= false;
 
-  if (hw &&
-      hw->cathegory != skip)
-    use= true, d1= hw->read(cell);
+  if (hw && hw->category != skip && !hw->active)
+    {
+      use= true;
+      hw->active= true;
+      d1= hw->read(cell);
+      hw->active= false;
+    }
 
   if (next_operator)
     d2= next_operator->read();
@@ -695,21 +825,24 @@ cl_hw_operator::read(enum hw_cath skip)
 t_mem
 cl_hw_operator::write(t_mem val)
 {
-  if (hw)
-    hw->write(cell, &val);
+  if (hw && !hw->active)
+    {
+      hw->active= true;
+      hw->write(cell, &val);
+      hw->active= false;
+    }
+
   if (next_operator)
     val= next_operator->write(val);
-  //if (cell) return(/* *data=*//*cell->set(val & mask)*/val);
   return val;
 }
 
 
 /* Write event break on cell */
 
-cl_write_operator::cl_write_operator(class cl_memory_cell *acell/*, t_addr addr*/,
-				     //t_mem *data_place, t_mem the_mask,
+cl_write_operator::cl_write_operator(class cl_memory_cell *acell,
 				     class cl_uc *auc, class cl_brk *the_bp):
-  cl_event_break_operator(acell/*, addr*//*, data_place, the_mask*/, auc, the_bp)
+  cl_event_break_operator(acell, auc, the_bp)
 {
   uc= auc;
   bp= the_bp;
@@ -719,23 +852,21 @@ cl_write_operator::cl_write_operator(class cl_memory_cell *acell/*, t_addr addr*
 t_mem
 cl_write_operator::write(t_mem val)
 {
-  //printf("write event at 0x%x bp=%p\n",address,bp);
   if (bp->do_hit())
     uc->events->add(bp);
   if (next_operator)
     return(next_operator->write(val));
   else if (cell)
-    return(/* *data=*/cell->set(val /*& mask*/));
+    return(cell->set(val));
   return val;
 }
 
 
 /* Read event break on cell */
 
-cl_read_operator::cl_read_operator(class cl_memory_cell *acell/*, t_addr addr*/,
-				   //t_mem *data_place, t_mem the_mask,
+cl_read_operator::cl_read_operator(class cl_memory_cell *acell,
 				   class cl_uc *auc, class cl_brk *the_bp):
-  cl_event_break_operator(acell/*, addr*//*, data_place, the_mask*/, auc, the_bp)
+  cl_event_break_operator(acell, auc, the_bp)
 {
   uc= auc;
   bp= the_bp;
@@ -745,13 +876,12 @@ cl_read_operator::cl_read_operator(class cl_memory_cell *acell/*, t_addr addr*/,
 t_mem
 cl_read_operator::read(void)
 {
-  //printf("read event at 0x%x bp=%p\n",address,bp);
   if (bp->do_hit())
     uc->events->add(bp);
   if (next_operator)
     return(next_operator->read());
   else if (cell)
-    return(/* *data*/cell->get());
+    return(cell->get());
   return 0;
 }
 
@@ -760,58 +890,24 @@ cl_read_operator::read(void)
  *                                                                  Cell data
  */
 
-t_mem
-cl_cell_data::d()
-{
-  return data?(*data):0;
-}
-
-void
-cl_cell_data::d(t_mem v)
-{
-  data?(*data=v):0;
-}
-
-void
-cl_cell_data::dl(t_mem v)
-{
-  data?(*data=v):0;
-}
-
-// bit cell for bit spaces
-
-t_mem
-cl_bit_cell::d()
-{
-  if (!data)
-    return 0;
-  return (*data&mask)?1:0;
-}
-
-void
-cl_bit_cell::d(t_mem v)
-{
-  if (!data)
-    return;
-  if (v)
-    *data|= mask;
-  else
-    *data&= ~mask;
-}
-
-
 // 8 bit cell;
 
 t_mem
 cl_cell8::d()
 {
-  return data?((/*u8_t*/uchar)*data):0;
+  return data?(*((u8_t*)data)):0;
 }
 
 void
 cl_cell8::d(t_mem v)
 {
-  data?(*data=(/*u8_t*/uchar)v):0;
+  data?(*((u8_t*)data)=(u8_t)v):0;
+}
+
+void
+cl_cell8::dl(t_mem v)
+{
+  data?(*((u8_t*)data)=(u8_t)v):0;
 }
 
 // 8 bit cell for bit spaces
@@ -821,7 +917,7 @@ cl_bit_cell8::d()
 {
   if (!data)
     return 0;
-  /*u8_t*/uchar x= (/*u8_t*/uchar) *data;
+  u8_t x= *((u8_t*)data);
   x&= mask;
   return x?1:0;
 }
@@ -832,23 +928,30 @@ cl_bit_cell8::d(t_mem v)
   if (!data)
     return;
   if (v)
-    *data |= (/*u8_t*/uchar)mask;
+    *((u8_t*)data) |= (u8_t)mask;
   else
-    *data &= ~(/*u8_t*/uchar)mask;
+    *((u8_t*)data) &= ~((u8_t)mask);
 }
+
 
 // 16 bit cell;
 
 t_mem
 cl_cell16::d()
 {
-  return data?((u16_t)*data):0;
+  return data?(*((u16_t*)data)):0;
 }
 
 void
 cl_cell16::d(t_mem v)
 {
-  data?(*data=(u16_t)v):0;
+  data?(*((u16_t*)data)=(u16_t)v):0;
+}
+
+void
+cl_cell16::dl(t_mem v)
+{
+  data?(*((u16_t*)data)=(u16_t)v):0;
 }
 
 // 16 bit cell for bit spaces
@@ -858,7 +961,9 @@ cl_bit_cell16::d()
 {
   if (!data)
     return 0;
-  return (((u16_t)*data)&((u16_t)mask))?1:0;
+  u16_t x= *((u16_t*)data);
+  x&= mask;
+  return x?1:0;
 }
 
 void
@@ -867,9 +972,52 @@ cl_bit_cell16::d(t_mem v)
   if (!data)
     return;
   if (v)
-    *data |= (u16_t)mask;
+    *((u16_t*)data) |= (u16_t)mask;
   else
-    *data &= ~(u16_t)mask;
+    *((u16_t*)data) &= ~((u16_t)mask);
+}
+
+// 32 bit cell;
+
+t_mem
+cl_cell32::d()
+{
+  return data?(*((u32_t*)data)):0;
+}
+
+void
+cl_cell32::d(t_mem v)
+{
+  data?(*((u32_t*)data)=(u32_t)v):0;
+}
+
+void
+cl_cell32::dl(t_mem v)
+{
+  data?(*((u32_t*)data)=(u32_t)v):0;
+}
+
+// 32 bit cell for bit spaces
+
+t_mem
+cl_bit_cell32::d()
+{
+  if (!data)
+    return 0;
+  u32_t x= *((u32_t*)data);
+  x&= mask;
+  return x?1:0;
+}
+
+void
+cl_bit_cell32::d(t_mem v)
+{
+  if (!data)
+    return;
+  if (v)
+    *((u32_t*)data) |= (u32_t)mask;
+  else
+    *((u32_t*)data) &= ~((u32_t)mask);
 }
 
 
@@ -877,16 +1025,32 @@ cl_bit_cell16::d(t_mem v)
  *                                                                  Memory cell
  */
 
-cl_memory_cell::cl_memory_cell(uchar awidth)//: cl_base()
+cl_memory_cell::cl_memory_cell()
+{
+  data= 0;
+  flags= CELL_NON_DECODED;
+  width= 8;
+  def_data= 0;
+  operators= NULL;
+#ifdef STATISTIC
+  nuof_writes= nuof_reads= 0;
+#endif
+  mask= 1;
+  int w= width;
+  for (--w; w; w--)
+    {
+      mask<<= 1;
+      mask|= 1;
+    }
+}
+
+cl_memory_cell::cl_memory_cell(uchar awidth)
 {
   data= 0;
   flags= CELL_NON_DECODED;
   width= awidth;
-  //*data= 0;
   def_data= 0;
   operators= NULL;
-  //bank= 0;
-  //banked_data_ptrs= 0;
 #ifdef STATISTIC
   nuof_writes= nuof_reads= 0;
 #endif
@@ -901,29 +1065,27 @@ cl_memory_cell::cl_memory_cell(uchar awidth)//: cl_base()
 
 cl_memory_cell::~cl_memory_cell(void)
 {
-  if ((flags & CELL_NON_DECODED) && data)
-    {
-      //free(data);
-    }
 }
 
 int
 cl_memory_cell::init(void)
 {
-  //cl_base::init();
   data= &def_data;
-  //flags= CELL_NON_DECODED;
-  /*mask= 1;
+  return(0);
+}
+
+void
+cl_memory_cell::set_width(uchar awidth)
+{
+  width= awidth;
+  mask= 1;
   int w= width;
   for (--w; w; w--)
     {
       mask<<= 1;
       mask|= 1;
-      }*/
-  //set(0/*rand()*/);
-  return(0);
+    }
 }
-
 
 uchar
 cl_memory_cell::get_flags(void)
@@ -958,7 +1120,7 @@ cl_memory_cell::un_decode(void)
 {
   if ((flags & CELL_NON_DECODED) == 0)
     {
-      data= &def_data;//(t_mem *)malloc(sizeof(t_mem));
+      data= &def_data;
       flags|= CELL_NON_DECODED;
     }
 }
@@ -966,14 +1128,10 @@ cl_memory_cell::un_decode(void)
 void
 cl_memory_cell::decode(class cl_memory_chip *chip, t_addr addr)
 {
-  if (flags & CELL_NON_DECODED)
-    {
-      //free(data);
-    }
   data= chip->get_slot(addr);
   if (!data)
     {
-      data= &def_data;//(t_mem *)malloc(sizeof(t_mem));
+      data= &def_data;
       flags|= CELL_NON_DECODED;
     }
   else
@@ -981,7 +1139,7 @@ cl_memory_cell::decode(class cl_memory_chip *chip, t_addr addr)
 }
 
 void
-cl_memory_cell::decode(t_mem *data_ptr)
+cl_memory_cell::decode(void *data_ptr)
 {
   if (data_ptr == NULL)
     {
@@ -996,7 +1154,7 @@ cl_memory_cell::decode(t_mem *data_ptr)
 }
 
 void
-cl_memory_cell::decode(t_mem *data_ptr, t_mem bit_mask)
+cl_memory_cell::decode(void *data_ptr, t_mem bit_mask)
 {
   if (data_ptr == NULL)
     {
@@ -1019,7 +1177,7 @@ cl_memory_cell::read(void)
 #endif
   if (operators)
     return(operators->read());
-  return /* *data*/d();
+  return d();
 }
 
 t_mem
@@ -1030,13 +1188,13 @@ cl_memory_cell::read(enum hw_cath skip)
 #endif
   if (operators)
     return(operators->read(skip));
-  return /* *data*/d();
+  return d();
 }
 
 t_mem
 cl_memory_cell::get(void)
 {
-  return /* *data*/d();
+  return d();
 }
 
 t_mem
@@ -1064,8 +1222,8 @@ cl_memory_cell::set(t_mem val)
   if (width == 1)
     d(val);
   else
-    /* *data=*/d(val & mask);
-  return /* *data*/d();
+    d(val & mask);
+  return d();
 }
 
 t_mem
@@ -1074,83 +1232,19 @@ cl_memory_cell::download(t_mem val)
   if (width == 1)
     dl(val);
   else
-    /* *data=*/dl(val & mask);
-  return /* *data*/d();
+    dl(val & mask);
+  return d();
 }
-
-t_mem
-cl_memory_cell::add(long what)
-{
-  /* *data=*/ d( (*data + what) & mask);
-  return(/* *data*/d());
-}
-
-t_mem
-cl_memory_cell::wadd(long what)
-{
-  t_mem d= (*data + what) & mask;
-  return(write(d));
-}
-
-void
-cl_memory_cell::set_bit1(t_mem bits)
-{
-  bits&= mask;
-  /*(*data)|=*//*d*/set(d()| bits);
-}
-
-void
-cl_memory_cell::write_bit1(t_mem bits)
-{
-  bits&= mask;
-  /*(*data)|=*//*d*/write(d()| bits);
-}
-
-void
-cl_memory_cell::set_bit0(t_mem bits)
-{
-  bits&= mask;
-  /*(*data)&=*//*d*/set(d()& ~bits);
-}
-
-void
-cl_memory_cell::write_bit0(t_mem bits)
-{
-  bits&= mask;
-  /*(*data)&=*//*d*/write(d()& ~bits);
-}
-
-void
-cl_memory_cell::toggle_bits(t_mem bits)
-{
-  bits&= mask;
-  /*d*/set(d() ^ bits);
-}
-
-void
-cl_memory_cell::wtoggle_bits(t_mem bits)
-{
-  bits&= mask;
-  /*d*/write(d() ^ bits);
-}
-
 
 void
 cl_memory_cell::append_operator(class cl_memory_operator *op)
 {
-  if (!operators)
-    operators= op;
-  else
-    {
-      class cl_memory_operator *o= operators, *n;
-      n= o->get_next();
-      while (n)
-	{
-	  o= n;
-	  n= o->get_next();
-	}
-      o->set_next(op);
-    }
+  class cl_memory_operator **op_p;
+
+  for (op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
+    ;
+  op->next_operator = NULL;
+  *op_p = op;
 }
 
 void
@@ -1158,58 +1252,52 @@ cl_memory_cell::prepend_operator(class cl_memory_operator *op)
 {
   if (op)
     {
-      op->set_next(operators);
-      operators= op;
+      op->next_operator = operators;
+      operators = op;
+    }
+}
+
+void
+cl_memory_cell::remove_operator(class cl_memory_operator *op)
+{
+  for (class cl_memory_operator **op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
+    {
+      if (*op_p == op)
+        {
+          *op_p = op->next_operator;
+          op->next_operator = NULL;
+          break;
+        }
     }
 }
 
 void
 cl_memory_cell::del_operator(class cl_brk *brk)
 {
-  if (!operators)
-    return;
-  class cl_memory_operator *op= operators;
-  if (operators->match(brk))
+  for (class cl_memory_operator **op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
     {
-      operators= op->get_next();
-      delete op;
-    }
-  else
-    {
-      while (op->get_next() &&
-	     !op->get_next()->match(brk))
-	op= op->get_next();
-      if (op->get_next())
-	{
-	  class cl_memory_operator *m= op->get_next();
-	  op->set_next(m->get_next());;
-	  delete m;
-	}
+      if ((*op_p)->match(brk))
+        {
+          class cl_memory_operator *old = *op_p;
+          *op_p = (*op_p)->next_operator;
+          delete old;
+          break;
+        }
     }
 }
 
 void 	 
 cl_memory_cell::del_operator(class cl_hw *hw)
 {
-  if (!operators)
-    return;
-  class cl_memory_operator *op= operators;
-  if (operators->match(hw))
+  for (class cl_memory_operator **op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
     {
-      operators= op->get_next();
-      delete op;
-    }
-  else
-    {
-      while (op->get_next() &&
-	     !op->get_next()->match(hw))
-	op= op->get_next();
-      if (op->get_next())
-	{
-	  class cl_memory_operator *m= op->get_next();
-	  op->set_next(m->get_next());
-	  delete m;
-	}
+      if ((*op_p)->match(hw))
+        {
+          class cl_memory_operator *old = *op_p;
+          *op_p = (*op_p)->next_operator;
+          delete old;
+          break;
+        }
     }
 }
 
@@ -1230,9 +1318,9 @@ cl_memory_cell::get_banker(void)
 }
 
 class cl_memory_cell *
-cl_memory_cell::add_hw(class cl_hw *hw/*, t_addr addr*/)
+cl_memory_cell::add_hw(class cl_hw *hw)
 {
-  class cl_hw_operator *o= new cl_hw_operator(this/*, addr*//*, data, mask*/, hw);
+  class cl_hw_operator *o= new cl_hw_operator(this, hw);
   append_operator(o);
   return(this);
 }
@@ -1242,12 +1330,6 @@ cl_memory_cell::remove_hw(class cl_hw *hw)
 { 	 
   del_operator(hw); 	 
 }
-
-/*class cl_hw *
-cl_memory_cell::get_hw(int ith)
-{
-  return(0);
-}*/
 
 class cl_event_handler *
 cl_memory_cell::get_event_handler(void)
@@ -1259,8 +1341,6 @@ void
 cl_memory_cell::print_info(const char *pre, class cl_console_base *con)
 {
   con->dd_printf("%sFlags:", pre);
-  if (flags & CELL_VAR)
-    con->dd_printf(" VAR");
   if (flags & CELL_INST)
     con->dd_printf(" INST");
   if (flags & CELL_FETCH_BRK)
@@ -1294,20 +1374,32 @@ cl_memory_cell::print_operators(const char *pre, class cl_console_base *con)
  */
 
 t_mem
+cl_dummy_cell::d()
+{
+  return data?(*((u32_t*)data)):0;
+}
+
+void
+cl_dummy_cell::d(t_mem v)
+{
+  *((u32_t*)data)= (u32_t)v;
+}
+
+t_mem
 cl_dummy_cell::write(t_mem val)
 {
 #ifdef STATISTIC
   nuof_writes++;
 #endif
-  *data= rand() & mask;
-  return(*data);
+  *((u32_t*)data)= rand() & mask;
+  return(*((u32_t*)data));
 }
 
 t_mem
 cl_dummy_cell::set(t_mem val)
 {
-  *data= rand() & mask;
-  return(*data);
+  *((u32_t*)data)= rand() & mask;
+  return(*((u32_t*)data));
 }
 
 
@@ -1319,37 +1411,52 @@ cl_address_space::cl_address_space(const char *id,
 				   t_addr astart, t_addr asize, int awidth):
   cl_memory(id, asize, awidth)
 {
-  class cl_memory_cell c(awidth);
-  class cl_bit_cell8 bc8(awidth);
-  class cl_cell8 c8(awidth);
-  class cl_cell16 c16(awidth);
-  class cl_memory_cell *cell= &c;
   start_address= astart;
   decoders= new cl_decoder_list(2, 2, false);
   cella= (class cl_memory_cell *)malloc(size * sizeof(class cl_memory_cell));
-  if (awidth == 1)
-    cell= &bc8;
-  else if (awidth <= 8)
-    cell= &c8;
-  else if (awidth <= 16)
-    cell= &c16;
-  //cell->init();
-  int i;
+  dummy= new cl_dummy_cell(awidth);
+  dummy->init();
+}
+
+int
+cl_address_space::init(void)
+{
+  cl_memory::init();
+  class cl_memory_cell *cell= cell_template();
+  unsigned int i;
   for (i= 0; i < size; i++)
     {
       void *p1= &(cella[i]);
       void *p2= cell;
-      memcpy(p1, p2, sizeof(c));
+      memcpy(p1, p2, sizeof(class cl_cell32));
       cella[i].init();
     }
-  dummy= new cl_dummy_cell(awidth);
-  dummy->init();
+  return 0;
+}
+
+static class cl_bit_cell8 bc8_tmpl;
+static class cl_cell8 c8_tmpl;
+static class cl_cell16 c16_tmpl;
+static class cl_cell32 c32_tmpl;
+
+class cl_memory_cell *
+cl_address_space::cell_template()
+{
+  class cl_memory_cell *cell= &c32_tmpl;
+  if (width == 1)
+    cell= &bc8_tmpl;
+  else if (width <= 8)
+    cell= &c8_tmpl;
+  else if (width <= 16)
+    cell= &c16_tmpl;
+  if (cell) cell->set_width(width);
+  return cell;
 }
 
 cl_address_space::~cl_address_space(void)
 {
   delete decoders;
-  int i;
+  unsigned int i;
   for (i= 0; i < size; i++)
     {
       cella[i].~cl_memory_cell();
@@ -1439,7 +1546,7 @@ cl_address_space::download(t_addr addr, t_mem val)
     }
   /* *(cella[idx].data)=*/cella[idx].download( val/*&(data_mask)*/);
 }
-
+/*
 t_mem
 cl_address_space::wadd(t_addr addr, long what)
 {
@@ -1451,30 +1558,7 @@ cl_address_space::wadd(t_addr addr, long what)
     }
   return(cella[idx].wadd(what));
 }
-
-/* Set or clear bits, without callbacks */
-
-void
-cl_address_space::set_bit1(t_addr addr, t_mem bits)
-{
-  t_addr idx= addr-start_address;
-  if (idx >= size ||
-      addr < start_address)
-    return;
-  class cl_memory_cell *cell= &(cella[idx]);
-  cell->set_bit1(bits);
-}
-
-void
-cl_address_space::set_bit0(t_addr addr, t_mem bits)
-{
-  t_addr idx= addr-start_address;
-  if (idx >= size ||
-      addr < start_address)
-    return;
-  class cl_memory_cell *cell= &(cella[idx]);
-  cell->set_bit0(bits);
-}
+*/
 
 
 class cl_memory_cell *
@@ -1543,7 +1627,7 @@ cl_address_space::set_cell_flag(t_addr start_addr, t_addr end_addr, bool set_to,
 class cl_memory_cell *
 cl_address_space::search_cell(enum cell_flag flag, bool value, t_addr *addr)
 {
-  int i;
+  unsigned int i;
 
   for (i= 0; i < size; i++)
     {
@@ -1793,20 +1877,20 @@ cl_address_space::print_info(const char *pre, class cl_console_base *con)
  * List of address spaces
  */
 
-cl_address_space_list::cl_address_space_list(class cl_uc *the_uc):
-  cl_list(2, 2, "address spaces")
+cl_memory_list::cl_memory_list(class cl_uc *the_uc, const char *name):
+  cl_list(2, 2, name)
 {
   uc= the_uc;
 }
 
 t_index
-cl_address_space_list::add(class cl_address_space *mem)
+cl_memory_list::add(class cl_memory *mem)
 {
-  mem->set_uc(uc);
   t_index ret= cl_list::add(mem);
-  if (uc)
+  mem->set_uc(uc);
+  if (uc && mem->is_address_space())
     {
-      class cl_event_address_space_added e(mem);
+      class cl_event_address_space_added e((cl_address_space *)mem);
       uc->handle_event(e);
     }
   return(ret);
@@ -1817,13 +1901,27 @@ cl_address_space_list::add(class cl_address_space *mem)
  *                                                                  Memory chip
  */
 
+cl_chip_data::cl_chip_data(const char *id, t_addr asize, int awidth):
+  cl_memory(id, asize, awidth)
+{
+}
+
 cl_memory_chip::cl_memory_chip(const char *id,
 			       int asize,
 			       int awidth,
 			       int initial):
-  cl_memory(id, asize, awidth)
+  cl_chip_data(id, asize, awidth)
 {
-  array= (t_mem *)malloc(size * sizeof(t_mem));
+  if (awidth > 32)
+    width= 32;
+  if (width <= 8)
+    bwidth= 1;
+  else if (width <= 16)
+    bwidth= 2;
+  else
+    bwidth= 4;
+  alloc_size= size * sizeof(t_mem);
+  array= (t_mem *)malloc(alloc_size);
   init_value= initial;
   array_is_mine= true;
 }
@@ -1831,9 +1929,18 @@ cl_memory_chip::cl_memory_chip(const char *id,
 cl_memory_chip::cl_memory_chip(const char *id,
 			       int asize,
 			       int awidth,
-			       t_mem *aarray):
-  cl_memory(id, asize, awidth)
+			       void *aarray, int arrsize):
+  cl_chip_data(id, asize, awidth)
 {
+if (awidth > 32)
+    width= 32;
+  if (width <= 8)
+    bwidth= 1;
+  else if (width <= 16)
+    bwidth= 2;
+  else
+    bwidth= 4;
+  alloc_size= arrsize;
   array= aarray;
   init_value= 0;
   array_is_mine= false;
@@ -1850,7 +1957,7 @@ int
 cl_memory_chip::init(void)
 {
   cl_memory::init();
-  int i;
+  t_addr i;
   if (array_is_mine)
     {
       for (i= 0; i < size; i++)
@@ -1862,25 +1969,35 @@ cl_memory_chip::init(void)
 }
 
 
-t_mem *
+void *
 cl_memory_chip::get_slot(t_addr addr)
 {
+  u8_t *a= (u8_t*)array;
   if (!array ||
       size <= addr)
     return(0);
-  return(&array[addr]);
+  return(a+(addr*bwidth));
 }
 
 t_addr
-cl_memory_chip::is_slot(t_mem *data_ptr)
+cl_memory_chip::is_slot(/*t_mem*/void *data_ptr)
 {
-  if (data_ptr < &(array[0]))
+  u8_t *p= (u8_t *)data_ptr;
+  u8_t *a= (u8_t *)array;
+  if (p < &(a[0]))
     return -1;
-  if (data_ptr > &(array[size-1]))
+  if (p > &(a[alloc_size-1]))
     return -2;
-  return data_ptr - &(array[0]);
+  t_addr i= p - a;
+  if (width <= 8)
+    return i;
+  if (width <= 16)
+    return i/2;
+  if (width <= 32)
+    return i/4;
+  return i;
 }
-
+/*
 t_mem
 cl_memory_chip::get(t_addr addr)
 {
@@ -1889,7 +2006,8 @@ cl_memory_chip::get(t_addr addr)
     return(0);
   return(array[addr]);
 }
-
+*/
+/*
 void
 cl_memory_chip::set(t_addr addr, t_mem val)
 {
@@ -1898,25 +2016,7 @@ cl_memory_chip::set(t_addr addr, t_mem val)
     return;
   array[addr]= val & data_mask;
 }
-
-void
-cl_memory_chip::set_bit1(t_addr addr, t_mem bits)
-{
-  if (!array ||
-      size <= addr)
-    return;
-  array[addr]|= (bits & data_mask);
-}
-
-void
-cl_memory_chip::set_bit0(t_addr addr, t_mem bits)
-{
-  if (!array ||
-      size <= addr)
-    return;
-  array[addr]&= ((~bits) & data_mask);
-}
-
+*/
 void
 cl_memory_chip::print_info(const char *pre, class cl_console_base *con)
 {
@@ -1930,6 +2030,119 @@ cl_memory_chip::print_info(const char *pre, class cl_console_base *con)
 		     get_name(),
 		     width, data_format, addr_format);
     }
+}
+
+
+// Chip with 1 byte slots
+
+cl_chip8::cl_chip8(const char *id, int asize, int awidth, int initial):
+  cl_memory_chip(id, asize, awidth, initial)
+{}
+
+cl_chip8::cl_chip8(const char *id, int asize, int awidth, void *aarray, int arrsize):
+  cl_memory_chip(id, asize, awidth, aarray, arrsize)
+{}
+
+t_mem
+cl_chip8::d(t_addr addr)
+{
+  if (!array ||
+      size <= addr)
+    return 0;
+  return (((u8_t*)array)[addr]) & data_mask;
+}
+
+void
+cl_chip8::d(t_addr addr, t_mem v)
+{
+  if (!array ||
+      size <= addr)
+    return;
+  v&= data_mask;
+  ((u8_t*)array)[addr]= v;
+}
+
+
+// Chip with 2 byte slots
+
+cl_chip16::cl_chip16(const char *id, int asize, int awidth, int initial):
+  cl_memory_chip(id, asize, awidth, initial)
+{}
+
+cl_chip16::cl_chip16(const char *id, int asize, int awidth, void *aarray, int arrsize):
+  cl_memory_chip(id, asize, awidth, aarray, arrsize)
+{}
+
+t_mem
+cl_chip16::d(t_addr addr)
+{
+  if (!array ||
+      size <= addr)
+    return 0;
+  return (((u16_t*)array)[addr]) & data_mask;
+}
+
+void
+cl_chip16::d(t_addr addr, t_mem v)
+{
+  if (!array ||
+      size <= addr)
+    return;
+  v&= data_mask;
+  ((u16_t*)array)[addr]= v;
+}
+
+
+// Chip with 4 byte slots
+
+cl_chip32::cl_chip32(const char *id, int asize, int awidth, int initial):
+  cl_memory_chip(id, asize, awidth, initial)
+{}
+
+cl_chip32::cl_chip32(const char *id, int asize, int awidth, void *aarray, int arrsize):
+  cl_memory_chip(id, asize, awidth, aarray, arrsize)
+{}
+
+t_mem
+cl_chip32::d(t_addr addr)
+{
+  if (!array ||
+      size <= addr)
+    return 0;
+  return (((u32_t*)array)[addr]) & data_mask;
+}
+
+void
+cl_chip32::d(t_addr addr, t_mem v)
+{
+  if (!array ||
+      size <= addr)
+    return;
+  v&= data_mask;
+  ((u32_t*)array)[addr]= v;
+}
+
+class cl_memory_chip *
+new_chip(const char *id, int asize, int awidth, int initial)
+{
+  class cl_memory_chip *c= 0;
+  
+  if (awidth < 1)
+    awidth= 1;
+  if (awidth > 32)
+    awidth= 32;
+
+  if (awidth <= 8)
+    c= new cl_chip8(id, asize, awidth, initial);
+  else if (awidth <= 16)
+    c= new cl_chip16(id, asize, awidth, initial);
+  else
+    c= new cl_chip32(id, asize, awidth, initial);
+
+  if (c)
+    c->init();
+
+  return c;
 }
 
 
@@ -2373,7 +2586,7 @@ cl_banker::activate(class cl_console_base *con)
 {
   int b= actual_bank();
   t_addr i, s;
-  t_mem *data;
+  void *data;
   class cl_memory_cell *c;
 
   if (b == bank)
@@ -2398,7 +2611,7 @@ cl_banker::switch_to(int bank_nr, class cl_console_base *con)
 {
   int b= bank_nr;//actual_bank();
   t_addr i, s;
-  t_mem *data;
+  void *data;
   class cl_memory_cell *c;
 
   if (b == bank)
@@ -2503,7 +2716,7 @@ cl_bander::activate(class cl_console_base *con)
 	  b= 0;
 	  m= 1;
 	}
-      t_mem *slot= memchip->get_slot(ca);
+      void *slot= memchip->get_slot(ca);
       cl_memory_cell *c= address_space->get_cell(asa);
       c->decode(slot, m);
       b++;

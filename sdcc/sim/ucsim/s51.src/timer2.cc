@@ -178,7 +178,7 @@ cl_timer2::do_t2_baud(int cycles)
 {
   if (EXEN2 && t2ex_edge)
     {
-      cell_tcon->set_bit1(bmEXF2);
+      cell_tcon->set(cell_tcon->get() | bmEXF2);
       t2ex_edge= 0;
     }
 
@@ -192,8 +192,8 @@ cl_timer2::do_t2_baud(int cycles)
 
   while (cycles--)
     {
-      if (!cell_tl->add(1))
-	if (!cell_th->add(1))
+      if (!cell_tl->set(cell_tl->get() + 1))
+	if (!cell_th->set(cell_th->get() + 1))
 	  {
 	    cell_th->set(cell_rcap2h->get());
 	    cell_tl->set(cell_rcap2l->get());
@@ -213,7 +213,7 @@ cl_timer2::do_t2_capture(int cycles)
 {
   if (EXEN2 && t2ex_edge)
     {
-      cell_tcon->set_bit1(bmEXF2);
+      cell_tcon->set(cell_tcon->get() | bmEXF2);
       cell_rcap2h->set(cell_th->get());
       cell_rcap2l->set(cell_tl->get());
       t2ex_edge= 0;
@@ -225,10 +225,10 @@ cl_timer2::do_t2_capture(int cycles)
   if (C_T)
     (cycles= T_edge), T_edge= 0;
 
-  if (!cell_tl->add(1))
+  if (!cell_tl->set(cell_tl->get() + 1))
     {
-      if (!cell_th->add(1))
-	cell_tcon->set_bit1(bmTF2);
+      if (!cell_th->set(cell_th->get() + 1))
+	cell_tcon->set(cell_tcon->get() | bmTF2);
     }
 }
 
@@ -242,7 +242,7 @@ cl_timer2::do_t2_reload(int cycles)
 {
   if (EXEN2 && t2ex_edge)
     {
-      cell_tcon->set_bit1(bmEXF2);
+      cell_tcon->set(cell_tcon->get() | bmEXF2);
       cell_th->set(cell_rcap2h->get());
       cell_tl->set(cell_rcap2l->get());
       t2ex_edge= 0;
@@ -254,11 +254,11 @@ cl_timer2::do_t2_reload(int cycles)
   if (C_T)
     (cycles= T_edge), T_edge= 0;
 
-  if (!cell_tl->add(1))
+  if (!cell_tl->set(cell_tl->get() + 1))
     {
-      if (!cell_th->add(1))
+      if (!cell_th->set(cell_th->get() + 1))
 	{
-	  cell_tcon->set_bit1(mask_TF);
+	  cell_tcon->set(cell_tcon->get() | mask_TF);
 	  cell_th->set(cell_rcap2h->get());
 	  cell_tl->set(cell_rcap2l->get());
 	}
@@ -280,11 +280,11 @@ cl_timer2::do_t2_down(int cycles)
     {
       // UP
       while (cycles--)
-	if (!cell_tl->add(1))
+	if (!cell_tl->set(cell_tl->get() + 1))
 	  {
-	    if (!cell_th->add(1))
+	    if (!cell_th->set(cell_th->get() + 1))
 	      {
-		cell_tcon->set_bit1(mask_TF);
+		cell_tcon->set(cell_tcon->get() | mask_TF);
 		cell_th->set(cell_rcap2h->get());
 		cell_tl->set(cell_rcap2l->get());
 		toggle= true;
@@ -297,14 +297,14 @@ cl_timer2::do_t2_down(int cycles)
       while (cycles--)
 	{
 	  t_mem l, h;
-	  if ((l= cell_tl->add(-1)) == 0xff)
-	    h= cell_th->add(-1);
+	  if ((l= cell_tl->set(cell_tl->get() - 1)) == 0xff)
+	    h= cell_th->set(cell_th->get() - 1);
 	  else
 	    h= cell_th->get();
 	  if ((u16_t)(h*256+l) <
 	      (u16_t)(cell_rcap2h->get()*256+cell_rcap2l->get()))
 	    {
-	      cell_tcon->set_bit1(mask_TF);
+	      cell_tcon->set(cell_tcon->get() | mask_TF);
 	      cell_th->set(0xff);
 	      cell_tl->set(0xff);
 	      toggle= true;
@@ -325,7 +325,7 @@ cl_timer2::do_t2_clock_out(int cycles)
 {
   if (EXEN2 && t2ex_edge)
     {
-      cell_tcon->set_bit1(bmEXF2);
+      cell_tcon->set(cell_tcon->get() | bmEXF2);
       t2ex_edge= 0;
     }
 
@@ -339,8 +339,8 @@ cl_timer2::do_t2_clock_out(int cycles)
 
   while (cycles--)
     {
-      if (!cell_tl->add(1))
-	if (!cell_th->add(1))
+      if (!cell_tl->set(cell_tl->get() + 1))
+	if (!cell_th->set(cell_th->get() + 1))
 	  {
 	    cell_th->set(cell_rcap2h->get());
 	    cell_tl->set(cell_rcap2l->get());
@@ -362,7 +362,7 @@ cl_timer2::happen(class cl_hw *where, enum hw_event he, void *params)
 {
   struct ev_port_changed *ep= (struct ev_port_changed *)params;
 
-  if (where->cathegory == HW_PORT &&
+  if (where->category == HW_PORT &&
       he == EV_PORT_CHANGED &&
       ep->id == 1)
     {
@@ -382,7 +382,9 @@ void
 cl_timer2::print_info(class cl_console_base *con)
 {
   int t2con= cell_tcon->get();
-
+  class cl_memory_cell *iec= sfr?(sfr->get_cell(IE)):NULL;
+  u8_t ier= iec?(iec->get()):0;
+  
   con->dd_printf("%s[%d] 0x%04x", id_string, id,
 		 256*cell_th->get()+cell_tl->get());
   if (RCLK || TCLK)
@@ -400,7 +402,7 @@ cl_timer2::print_info(class cl_console_base *con)
   con->dd_printf(" %s", (C_T)?"counter":"timer");
   con->dd_printf(" %s", (TR)?"ON":"OFF");
   con->dd_printf(" irq=%c", (t2con&bmTF2)?'1':'0');
-  con->dd_printf(" %s", sfr?"?":((sfr->get(IE)&bmET2)?"en":"dis"));
+  con->dd_printf(" %s", (ier&bmET2)?"en":"dis");
   con->dd_printf(" prio=%d", uc->priority_of(bmPT2));
   con->dd_printf("\n");
   //print_cfg_info(con);

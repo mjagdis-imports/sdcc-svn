@@ -35,6 +35,7 @@
 #define OPTION_CODE_SEG        "--codeseg"
 #define OPTION_CONST_SEG       "--constseg"
 #define OPTION_ELF             "--out-fmt-elf"
+#define OPTION_SDCCCALL        "--sdcccall"
 
 extern DEBUGFILE dwarf2DebugFile;
 extern int dwarf2FinalizeFile(FILE *);
@@ -45,6 +46,7 @@ static OPTION stm8_options[] = {
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_ELF,             NULL, "Output executable in ELF format"},
+  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -53,6 +55,17 @@ enum
   P_CODESEG = 1,
   P_CONSTSEG,
 };
+
+static struct
+{
+  // Determine if we can put parameters in registers
+  struct
+  {
+    int n;
+    struct sym_link *ftype;
+  } regparam;
+}
+_G;
 
 static int
 stm8_do_pragma (int id, const char *name, const char *cp)
@@ -138,6 +151,10 @@ static char *stm8_keywords[] = {
   "interrupt",
   "trap",
   "naked",
+  "raisonance",
+  "iar",
+  "cosmic",
+  "z88dk_callee",
   NULL
 };
 
@@ -150,33 +167,41 @@ stm8_genAssemblerEnd (FILE *of)
     }
 }
 
+extern void stm8_init_asmops (void);
+
 static void
 stm8_init (void)
 {
   asm_addTree (&asm_asxxxx_mapping);
+
+  stm8_init_asmops ();
 }
 
 static void
-stm8_reset_regparm (struct sym_link *funcType)
+stm8_reset_regparm (struct sym_link *ftype)
 {
+  _G.regparam.n = 0;
+  _G.regparam.ftype = ftype;
 }
 
 static int
-stm8_reg_parm (sym_link * l, bool reentrant)
+stm8_reg_parm (sym_link *l, bool reentrant)
 {
-  return FALSE;
+  bool is_regarg = stm8IsRegArg(_G.regparam.ftype, ++_G.regparam.n, 0);
+
+  return (is_regarg ? _G.regparam.n : 0);
 }
 
 static bool
 stm8_parseOptions (int *pargc, char **argv, int *i)
 {
-  if (!strcmp (argv[*i], "--out-fmt-elf"))
+  if (!strncmp (argv[*i], OPTION_ELF, sizeof (OPTION_ELF) - 1))
   {
     options.out_fmt = 'E';
     debugFile = &dwarf2DebugFile;
-    return TRUE;
+    return true;
   }
-  return FALSE;
+  return false;
 }
 
 static void
@@ -326,8 +351,8 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
         int topbit, nonzero;
         
 
-        if (floatFromVal (valFromType (test)) < 0 || csdOfVal (&topbit, &nonzero, &add, &sub, valFromType (test)))
-          return FALSE;
+        if (floatFromVal (valFromType (test)) < 0 || csdOfVal (&topbit, &nonzero, &add, &sub, valFromType (test), 0xffff))
+          return false;
 
         int shifts = topbit;
 
@@ -352,7 +377,10 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, int size)
 {
-  return (op == GETABIT);
+  return (op == GETABIT || op == GETBYTE || op == GETWORD ||
+    op == SWAP && (size <= 2 || size == 4) ||
+    op == RLC && size <= 2 ||
+    op == RRC && size <= 2);
 }
 
 static const char *
@@ -445,7 +473,7 @@ PORT stm8_port =
     2,                          /* far ptr */
     2,                          /* generic ptr */
     2,                          /* func ptr */
-    0,                          /* banked func ptr */
+    3,                          /* banked func ptr */
     1,                          /* bit */
     4,                          /* float */
   },
@@ -479,6 +507,7 @@ PORT stm8_port =
     1                           /* No fancy alignments supported. */
   },
   { stm8_genExtraArea, NULL },
+  1,                            /* default ABI revision */
   {                             /* stack information */
     -1,                         /* stack grows down */
      0,
@@ -488,7 +517,10 @@ PORT stm8_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, TRUE },
+  { 
+    -1,                         /* shifts never use support routines */
+    true,                       /* use support routine for int x int -> long multiplication */
+  },
   { stm8_emitDebuggerSymbol,
     {
       stm8_dwarfRegNum,

@@ -77,7 +77,8 @@ static char *_hc08_keywords[] =
 
 void hc08_assignRegisters (ebbIndex *);
 
-static int regParmFlg = 0;      /* determine if we can register a parameter */
+static int regParmFlg;      /* determine if we can register a parameter */
+static struct sym_link *regParmFuncType;
 
 static void
 _hc08_init (void)
@@ -97,11 +98,15 @@ static void
 _hc08_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
+  regParmFuncType = funcType;
 }
 
 static int
 _hc08_regparm (sym_link * l, bool reentrant)
 {
+  if (IFFUNC_HASVARARGS (regParmFuncType))
+    return 0;
+
   int size = getSize(l);
 
   /* If they fit completely, the first two bytes of parameters can go */
@@ -134,16 +139,16 @@ _hc08_parseOptions (int *pargc, char **argv, int *i)
     {
       options.out_fmt = 'E';
       debugFile = &dwarf2DebugFile;
-      return TRUE;
+      return true;
     }
 
   if (!strcmp (argv[*i], "--oldralloc"))
     {
-      options.oldralloc = TRUE;
-      return TRUE;
+      options.oldralloc = true;
+      return true;
     }
 
-  return FALSE;
+  return false;
 }
 
 #define OPTION_SMALL_MODEL          "--model-small"
@@ -315,7 +320,7 @@ _hc08_genIVT (struct dbuf_s * oBuf, symbol ** interrupts, int maxInterrupts)
     }
   dbuf_printf (oBuf, "\t.dw\t%s", "__sdcc_gs_init_startup\n");
 
-  return TRUE;
+  return true;
 }
 
 /* Generate code to copy XINIT to XISEG */
@@ -361,9 +366,9 @@ hasExtBitOp (int op, int size)
       || op == GETBYTE
       || op == GETWORD
      )
-    return TRUE;
+    return true;
   else
-    return FALSE;
+    return false;
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -774,7 +779,7 @@ PORT hc08_port =
   NULL,                         /* Processor name */
   {
     glue,
-    FALSE,                      /* Emit glue around main */
+    false,                      /* Emit glue around main */
     MODEL_SMALL | MODEL_LARGE,
     MODEL_LARGE,
     NULL,                       /* model == target */
@@ -836,6 +841,7 @@ PORT hc08_port =
   },
   { _hc08_genExtraAreas,
     NULL },
+  0,                      // ABI revision
   {
     -1,         /* direction (-1 = stack grows down) */
     0,          /* bank_overhead (switch between register banks) */
@@ -846,7 +852,7 @@ PORT hc08_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-    5, FALSE
+    5, false
   },
   {
     hc08_emitDebuggerSymbol,
@@ -893,15 +899,15 @@ PORT hc08_port =
   _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
-  TRUE,                         /* use_dw_for_init */
-  FALSE,                        /* little_endian */
+  true,                         /* use_dw_for_init */
+  false,                        /* little_endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */
   1,                            /* transform >= to ! < */
   1,                            /* transform != to !(a == b) */
   0,                            /* leave == */
-  FALSE,                        /* No array initializer support. */
+  false,                        /* No array initializer support. */
   cseCostEstimation,
   NULL,                         /* no builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
@@ -919,7 +925,7 @@ PORT s08_port =
   NULL,                         /* Processor name */
   {
     glue,
-    FALSE,                      /* Emit glue around main */
+    false,                      /* Emit glue around main */
     MODEL_SMALL | MODEL_LARGE,
     MODEL_LARGE,
     NULL,                       /* model == target */
@@ -981,6 +987,7 @@ PORT s08_port =
   },
   { _hc08_genExtraAreas,
     NULL },
+  0,
   {
     -1,         /* direction (-1 = stack grows down) */
     0,          /* bank_overhead (switch between register banks) */
@@ -991,7 +998,7 @@ PORT s08_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-    5, FALSE
+    5, false
   },
   {
     hc08_emitDebuggerSymbol,
@@ -1038,15 +1045,15 @@ PORT s08_port =
   _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
-  TRUE,                         /* use_dw_for_init */
-  FALSE,                        /* little_endian */
+  true,                         /* use_dw_for_init */
+  false,                        /* little_endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */
   1,                            /* transform >= to ! < */
   1,                            /* transform != to !(a == b) */
   0,                            /* leave == */
-  FALSE,                        /* No array initializer support. */
+  false,                        /* No array initializer support. */
   cseCostEstimation,
   NULL,                         /* no builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */

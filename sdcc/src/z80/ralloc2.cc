@@ -27,7 +27,7 @@
 extern "C"
 {
   #include "z80.h"
-  unsigned char dryZ80iCode (iCode * ic);
+  float dryZ80iCode (iCode * ic);
   bool z80_assignment_optimal;
   bool should_omit_frame_ptr;
 }
@@ -91,7 +91,7 @@ float default_operand_cost(const operand *o, const assignment &a, unsigned short
 
               if(byteregs[0] == REG_A)
                 c -= 0.4f;
-              else if(OPTRALLOC_HL && byteregs[0] == REG_L)
+              else if(byteregs[0] == REG_L)
                 c -= 0.1f;
               else if((OPTRALLOC_IY && byteregs[0] == REG_IYL) || byteregs[0] == REG_IYH)
                 c += 0.1f;
@@ -553,7 +553,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if(SKIP_IC2(ic))
     return(true);
 
-  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127) || IS_GB);
+  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127) || IS_SM83);
 
   //std::cout << "Ainst_ok at " << G[i].ic->key << ": A = (" << ia.registers[REG_A][0] << ", " << ia.registers[REG_A][1] << "), inst " << i << ", " << ic->key << "\n";
 
@@ -581,13 +581,16 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     IS_TRUE_SYMOP (right) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (right)->etype))))
     return(false);
 
+  // For some iCodes, we can handle anything.
   if(ic->op == '~' || ic->op == IPUSH || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
+    ic->op == GETBYTE || ic->op == GETWORD || ic->op == SWAP && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G)) ||
     ic->op == LEFT_OP ||
     ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
     return(true);
 
-  if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))
+  if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right) ||
+    (ic->op == RRC || ic->op == RLC) && getSize(operandType(result)) == 1)
     return(true);
 
   // Can use non-destructive cp on == and < (> might swap operands).
@@ -599,11 +602,11 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   const cfg_dying_t &dying = G[i].dying;
   const bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
 
-  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_GB) &&
+  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_SM83) &&
     getSize(operandType(IC_RESULT(ic))) == 1 && dying_A)
     return(true);
 
-  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_GB) && // First byte of input and last byte of output may be in A.
+  if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_SM83) && // First byte of input and last byte of output may be in A.
     IS_ITEMP(result) && dying_A &&
     (IS_ITEMP(left) || IS_OP_LITERAL(left) || operand_on_stack(left, a, i, G)) &&
     (!right || IS_ITEMP(right) || IS_OP_LITERAL(right) || operand_on_stack(right, a, i, G)))
@@ -704,7 +707,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       ic->op != '>' &&
       ic->op != CALL &&
       ic->op != PCALL &&
-      ic->op != GETHBIT &&
       !((ic->op == LEFT_OP || ic->op == RIGHT_OP) && IS_OP_LITERAL(right)))
     {
       //std::cout << "First use: Dropping at " << i << ", " << ic->key << "(" << int(ic->op) << "\n";
@@ -721,7 +723,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 {
   const iCode *ic = G[i].ic;
 
-  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127) || IS_GB);
+  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127) || IS_SM83);
 
   const i_assignment_t &ia = a.i_assignment;
 
@@ -782,37 +784,41 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   // For some iCodes, code generation can handle anything.
   if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
-    !IS_GB && !IY_RESERVED && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
+    ic->op == GETBYTE || ic->op == GETWORD || ic->op == SWAP && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G)) ||
+    !((IS_SM83 || IY_RESERVED) && (operand_on_stack(result, a, i, G) || operand_on_stack(right, a, i, G))) && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
     ic->op == RECEIVE || ic->op == SEND)
     return(true);
 
+  if((ic->op == EQ_OP || ic->op == NE_OP) && IS_VALOP(right))
+    return(true);
+
   // Due to lack of ex hl, (sp), the generic push code generation fallback doesn't work for gbz80, so we need to be able to use hl if we can't just push a pair or use a.
-  if(IS_GB && ic->op == IPUSH && !operand_is_pair(left, a, i, G) && ia.registers[REG_A][1] >= 0 &&
+  if(IS_SM83 && ic->op == IPUSH && !operand_is_pair(left, a, i, G) && ia.registers[REG_A][1] >= 0 &&
     !(getSize(operandType(left)) == 1 && (operand_in_reg(left, REG_A, ia, i, G) || operand_in_reg(left, REG_B, ia, i, G) || operand_in_reg(left, REG_D, ia, i, G) || operand_in_reg(left, REG_H, ia, i, G))))
     return(false);
 
-  if(IS_GB && ic->op == GET_VALUE_AT_ADDRESS && !result_only_HL && (getSize(operandType(result)) >= 2 || !operand_is_pair(left, a, i, G)))
+  if(IS_SM83 && ic->op == GET_VALUE_AT_ADDRESS && !result_only_HL && (getSize(operandType(result)) >= 2 || !operand_is_pair(left, a, i, G)))
     return(false);
 
   // For some operations, the gbz80 stack access using hl will trash the value there.
-  if(IS_GB &&
+  if(IS_SM83 &&
     (ic->op == IPUSH && operand_on_stack(left, a, i, G) || ic->op == IFX && operand_on_stack(IC_COND(ic), a, i, G)))
     return(false);
-  if(IS_GB &&
+  if(IS_SM83 &&
     (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G)) && 
     (ic->op == RIGHT_OP || ic->op == LEFT_OP || ic->op == '=' || ic->op == CAST || ic->op == '-' || ic->op == UNARYMINUS) &&
     !(result_only_HL && getSize(operandType(result)) == 1)) // Size of result needs to be checked after checking ic->op to ensure that there is a result operand.
     return(false);
 
-  if(IS_GB && ic->op == GET_VALUE_AT_ADDRESS && !(result_only_HL || getSize(operandType(result)) == 1))
+  if(IS_SM83 && ic->op == GET_VALUE_AT_ADDRESS && !(result_only_HL || getSize(operandType(result)) == 1))
     return(false);
-  if(IS_GB && POINTER_GET(ic) && !(result_only_HL || getSize(operandType(right)) == 1))
-    return(false);
-
-  if((IS_GB || IY_RESERVED) && (IS_TRUE_SYMOP(left) || IS_TRUE_SYMOP(right)))
+  if(IS_SM83 && POINTER_GET(ic) && !(result_only_HL || getSize(operandType(right)) == 1))
     return(false);
 
-  if((IS_GB || IY_RESERVED) && IS_TRUE_SYMOP(result) && getSize(operandType(IC_RESULT(ic))) > 2)
+  if((IS_SM83 || IY_RESERVED) && (IS_TRUE_SYMOP(left) || IS_TRUE_SYMOP(right)))
+    return(false);
+
+  if((IS_SM83 || IY_RESERVED) && IS_TRUE_SYMOP(result) && getSize(operandType(IC_RESULT(ic))) > 2)
     return(false);
 
   // __z88dk_fastcall passes parameter in hl
@@ -843,12 +849,12 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
      (operand_in_reg(result, REG_L, ia, i, G) && I[ia.registers[REG_L][1]].byte == 0 && operand_in_reg(result, REG_H, ia, i, G)))
     return(true); // Uses inc hl.
 
-  if(!IS_GB && ic->op == '+' && getSize(operandType(result)) == 2 && !IS_TRUE_SYMOP (result) &&
+  if(!IS_SM83 && ic->op == '+' && getSize(operandType(result)) == 2 && !IS_TRUE_SYMOP (result) &&
     (result_only_HL || operand_in_reg(result, REG_IYL, ia, i, G) && operand_in_reg(result, REG_IYH, ia, i, G)) &&
     (ia.registers[REG_C][1] < 0 && ia.registers[REG_B][1] < 0 || ia.registers[REG_E][1] < 0 && ia.registers[REG_D][1] < 0)) // Can use ld rr, (nn) instead of (hl).
     return(true);
 
-  if(!IS_GB && ic->op == '+' && getSize(operandType(result)) == 2 && IS_TRUE_SYMOP (left) &&
+  if(!IS_SM83 && ic->op == '+' && getSize(operandType(result)) == 2 && IS_TRUE_SYMOP (left) &&
     (IS_OP_LITERAL (right) && ulFromVal (OP_VALUE (IC_RIGHT(ic))) <= 3 || IS_OP_LITERAL (left) && ulFromVal (OP_VALUE (IC_LEFT(ic))) <= 3) &&
     (operand_in_reg(result, REG_C, ia, i, G) && I[ia.registers[REG_C][1]].byte == 0 && operand_in_reg(result, REG_B, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G) && I[ia.registers[REG_E][1]].byte == 0 && operand_in_reg(result, REG_D, ia, i, G))) // Can use ld rr, (nn) followed by inc rr
     return(true);
@@ -857,7 +863,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     (IS_TRUE_SYMOP (result) && !operand_on_stack(result, a, i, G) || (operand_on_stack(left, a, i, G) ? exstk : IS_TRUE_SYMOP (left)) || (operand_on_stack(right, a, i, G) ? exstk : IS_TRUE_SYMOP (right)))) // Might use (hl).
     return(false);
 
-  if(IS_GB && ic->op == '+' && getSize(operandType(result)) > 1 && input_in_HL && operand_on_stack(result, a, i, G))
+  if(IS_SM83 && ic->op == '+' && getSize(operandType(result)) > 1 && input_in_HL && operand_on_stack(result, a, i, G))
     return(false);
 
   // HL overwritten by result.
@@ -879,7 +885,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 
   if(ic->op == LEFT_OP && getSize(operandType(result)) <= 2 && IS_OP_LITERAL (right) && result_only_HL)
     return(true);
-  if((ic->op == LEFT_OP || ic->op == RIGHT_OP) && (getSize(operandType(result)) <= 1 || !IS_TRUE_SYMOP(result) || !(IS_GB || IY_RESERVED)) &&
+  if((ic->op == LEFT_OP || ic->op == RIGHT_OP) && (getSize(operandType(result)) <= 1 || !IS_TRUE_SYMOP(result) || !(IS_SM83 || IY_RESERVED)) &&
      (!exstk ||
       ((!operand_on_stack(left,  a, i, G) || !input_in_HL && result_only_HL) &&
        (!operand_on_stack(right, a, i, G) || !input_in_HL && result_only_HL) &&
@@ -904,7 +910,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     return(true);
   if(POINTER_GET(ic) && input_in_L && input_in_H && (getSize(operandType(IC_RESULT(ic))) == 1 || !result_in_HL))
     return(true);
-  if(!IS_GB && ic->op == ADDRESS_OF &&
+  if(!IS_SM83 && ic->op == ADDRESS_OF &&
     (operand_in_reg(result, REG_IYL, ia, i, G) && ia.registers[REG_IYL][1] > 0 && I[ia.registers[REG_IYL][1]].byte == 0 && operand_in_reg(result, REG_IYH, ia, i, G) ||
     !OP_SYMBOL_CONST (left)->onStack && operand_in_reg(result, REG_C, ia, i, G) && ia.registers[REG_C][1] > 0 && I[ia.registers[REG_C][1]].byte == 0 && operand_in_reg(result, REG_B, ia, i, G) ||
     !OP_SYMBOL_CONST (left)->onStack && operand_in_reg(result, REG_E, ia, i, G) && ia.registers[REG_E][1] > 0 && I[ia.registers[REG_E][1]].byte == 0 && operand_in_reg(result, REG_D, ia, i, G)))
@@ -927,13 +933,10 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
          ic->op == '<' ||
          ic->op == EQ_OP ||*/
          (ic->op == '+' && getSize(operandType(IC_RESULT(ic))) == 1) ||
-         (ic->op == '+' && (result_only_HL || !IS_GB)) )))) // addition on gbz80 might need to use add hl, rr.
+         (ic->op == '+' && (result_only_HL || !IS_SM83)) )))) // addition on gbz80 might need to use add hl, rr.
     return(true);
 
   if((ic->op == '<' || ic->op == '>') && (IS_ITEMP(left) || IS_OP_LITERAL(left) || IS_ITEMP(right) || IS_OP_LITERAL(right))) // Todo: Fix for large stack.
-    return(true);
-    
-  if(ic->op == EQ_OP && IS_VALOP(right))
     return(true);
 
   if(ic->op == CALL)
@@ -976,8 +979,8 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 {
   const iCode *ic = G[i].ic;
 
-  // IY always unused on gbz80.
-  if(TARGET_IS_GBZ80)
+  // IY always unused on sm83.
+  if(IS_SM83)
     return(true);
 
   const i_assignment_t &ia = a.i_assignment;
@@ -1032,19 +1035,20 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(exstk && (operand_on_stack(result, a, i, G) || operand_on_stack(left, a, i, G) || operand_on_stack(right, a, i, G))) // Todo: Make this more accurate to get better code when using --fomit-frame-pointer
     return(false);
 
-  if(ic->op == CALL)
+  // Some instructions can handle anything.
+  if(ic->op == IPUSH || ic->op == CALL ||
+    ic->op == '+' ||
+    ic->op == '|' ||
+    ic->op == GETBYTE || ic->op == GETWORD || ic->op == SWAP && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G)) ||
+    ic->op == '=' && !POINTER_SET(ic) ||
+    ic->op == CAST ||
+    ic->op == SEND)
     return(true);
 
   if(!result_in_IY && !input_in_IY &&
     !(IC_RESULT(ic) && isOperandInDirSpace(IC_RESULT(ic))) &&
     !(IC_RIGHT(ic) && IS_TRUE_SYMOP(IC_RIGHT(ic))) &&
     !(IC_LEFT(ic) && IS_TRUE_SYMOP(IC_LEFT(ic))))
-    return(true);
-
-  // variables partially in IY can be pushed.
-  if(ic->op == IPUSH &&
-    operand_in_reg(left, REG_IYL, ia, i, G) && operand_in_reg(left, REG_IYH, ia, i, G) &&
-    (I[ia.registers[REG_IYL][1]].byte == 0 && I[ia.registers[REG_IYH][1]].byte == 1 || I[ia.registers[REG_IYL][1]].byte == 2 && I[ia.registers[REG_IYH][1]].byte == 3))
     return(true);
 
   // Code generator mostly cannot handle variables that are only partially in IY.
@@ -1077,17 +1081,12 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 #endif
 
   if(result_in_IY &&
-    (ic->op == '=' && !(POINTER_SET(ic) && isOperandInDirSpace(IC_RIGHT(ic))) ||
-    ic->op == CAST && getSize(operandType(IC_RESULT(ic))) <= getSize(operandType(IC_RIGHT(ic))) || 
-    ic->op == '+')) // todo: More instructions that can write iy.
+    (ic->op == '-' || ic->op == UNARYMINUS)) // todo: More instructions that can write iy.
     return(true);
 
   // Todo: Multiplication.
 
   if(ic->op == LEFT_OP)
-    return(true);
-
-  if(ic->op == '-' && result_in_IY && input_in_IY && IS_VALOP (IC_RIGHT (ic)) && operandLitValue (IC_RIGHT (ic)) < 4)
     return(true);
 
 #if 0
@@ -1105,16 +1104,10 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     operand_is_pair(IC_RESULT(ic), a, i, G)) // DirSpace access won't use iy here.
     return(true);
 
-  if(ic->op == IPUSH) // todo: More instructions that can use IY.
-    return(true);
-
   if(ic->op == GET_VALUE_AT_ADDRESS && isOperandInDirSpace(IC_RESULT(ic)))
     return(false);
 
-  if(input_in_IY && !result_in_IY &&
-    (ic->op == '=' && !POINTER_SET(ic) ||
-     ic->op == CAST && getSize(operandType(IC_RESULT(ic))) <= getSize(operandType(IC_RIGHT(ic))) ||
-     ic->op == GET_VALUE_AT_ADDRESS))
+  if(input_in_IY && !result_in_IY && ic->op == GET_VALUE_AT_ADDRESS)
     return(true);
 
 #if 0
@@ -1131,7 +1124,7 @@ static bool IYinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 template <class G_t, class I_t>
 bool DEinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
-  if(!IS_GB) // Only gbz80 might need de for code generation.
+  if(!IS_SM83) // Only sm83 might need de for code generation.
     return(true);
 
   const i_assignment_t &ia = a.i_assignment;
@@ -1156,7 +1149,7 @@ bool DEinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_
   if (ic->op == '=' && POINTER_SET(ic) && !operand_is_pair(result, a, i, G))
     return(false);
 
-  if((ic->op == '=' || ic->op == CAST) && getSize(operandType(result)) >= 2 &&
+  if((ic->op == '=' || ic->op == CAST) && getSize(operandType(result)) > 2 &&
      (operand_on_stack(right, a, i, G) || operand_in_reg(right, REG_L, ia, i, G) || operand_in_reg(right, REG_H, ia, i, G)) &&
      (operand_on_stack(result, a, i, G) || operand_in_reg(result, REG_L, ia, i, G) || operand_in_reg(result, REG_H, ia, i, G)))
     return(false);
@@ -1263,7 +1256,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
   if(!Ainst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
 
-  if(OPTRALLOC_HL && !HLinst_ok(a, i, G, I))
+  if(!HLinst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
 
   if(!DEinst_ok(a, i, G, I))
@@ -1302,7 +1295,9 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case EQ_OP:
     case AND_OP:
     case OR_OP:
-    case GETHBIT:
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
     case LEFT_OP:
     case RIGHT_OP:
     case GET_VALUE_AT_ADDRESS:
@@ -1382,8 +1377,7 @@ static bool assignment_hopeless(const assignment &a, unsigned short int i, const
   const i_assignment_t &ia = a.i_assignment;
 
   // Can only check for HLinst_ok() in some cases.
-  if(OPTRALLOC_HL &&
-      (ia.registers[REG_L][1] >= 0 && ia.registers[REG_H][1] >= 0) &&
+  if((ia.registers[REG_L][1] >= 0 && ia.registers[REG_H][1] >= 0) &&
       (ia.registers[REG_L][0] >= 0 && ia.registers[REG_H][0] >= 0) &&
       !HLinst_ok(a, i, G, I))
     return(true);
@@ -1410,7 +1404,7 @@ static void get_best_local_assignment_biased(assignment &a, typename boost::grap
         {
           varset_t::const_iterator vi, vi_end;
           for(vi = ai->local.begin(), vi_end = ai->local.end(); vi != vi_end; ++vi)
-            if(ai->global[*vi] == REG_A || OPTRALLOC_HL && (ai->global[*vi] == REG_H || ai->global[*vi] == REG_L) || OPTRALLOC_IY && (ai->global[*vi] == REG_IYH || ai->global[*vi] == REG_IYL))
+            if(ai->global[*vi] == REG_A || (ai->global[*vi] == REG_H || ai->global[*vi] == REG_L) || OPTRALLOC_IY && (ai->global[*vi] == REG_IYH || ai->global[*vi] == REG_IYL))
               goto too_risky;
           ai_best = ai;
         }
@@ -1434,8 +1428,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 
   c += weird_byte_order(a, I);
 
-  if(OPTRALLOC_HL &&
-     ia.registers[REG_L][1] >= 0 &&
+  if(ia.registers[REG_L][1] >= 0 &&
      ia.registers[REG_H][1] >= 0 &&
      ((ia.registers[REG_L][0] >= 0) == (ia.registers[REG_H][0] >= 0)) &&
      !HLinst_ok(a, i, G, I))
@@ -1444,7 +1437,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
   if(ia.registers[REG_A][1] < 0)
     c += 0.03f;
 
-  if(OPTRALLOC_HL && ia.registers[REG_L][1] < 0)
+  if(ia.registers[REG_L][1] < 0)
     c += 0.02f;
 
   // Using IY is rarely a good choice, so discard the IY-users first when in doubt.
@@ -1453,7 +1446,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
       varset_t::const_iterator vi, vi_end;
       for(vi = a.local.begin(), vi_end = a.local.end(); vi != vi_end; ++vi)
         if(a.global[*vi] == REG_IYL || a.global[*vi] == REG_IYH)
-          c += 8.0f;
+          c += 2.0f;
     }
 
   // An artifical ordering of assignments.
@@ -1600,16 +1593,17 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
 }
 
 // Omit the frame pointer for functions with low register pressure and few parameter accesses.
+// This is just a heuristic, including the magic value of 21. Many other, more complex heuristics have been tried, but didn't perform better for the regression tests.
 template <class G_t>
 static bool omit_frame_ptr(const G_t &G)
 {
-  if(IS_GB || IY_RESERVED || z80_opts.noOmitFramePtr)
+  if(IS_SM83 || IY_RESERVED || z80_opts.noOmitFramePtr)
     return(false);
 
   if(options.omitFramePtr)
     return(true);
-    
-  signed char omitcost = -16;
+
+  signed char omitcost = -10; // Overhead for setting up frame pointer is 10 bytes of code
   for(unsigned int i = 0; i < boost::num_vertices(G); i++)
     {
       if((int)G[i].alive.size() > port->num_regs - 4)
@@ -1618,6 +1612,7 @@ static bool omit_frame_ptr(const G_t &G)
       const iCode *const ic = G[i].ic;
       const operand *o;
       o = IC_RESULT(ic);
+      // Accesses without frame pointer, when using iy, tend to cost 6 bytes of overhead per variable (there is no difference in per-byte-specific costs).
       if(o && IS_SYMOP(o) && OP_SYMBOL_CONST(o)->_isparm && !IS_REGPARM (OP_SYMBOL_CONST(o)->etype))
         omitcost += 6;
       o = IC_LEFT(ic);
@@ -1627,7 +1622,7 @@ static bool omit_frame_ptr(const G_t &G)
       if(o && IS_SYMOP(o) && OP_SYMBOL_CONST(o)->_isparm && !IS_REGPARM (OP_SYMBOL_CONST(o)->etype))
         omitcost += 6;
 
-      if(omitcost > 14) // Chosen greater than zero, since the peephole optimizer often can optimize the use of iy into use of hl, reducing the cost.
+      if(omitcost > 20) // Chosen greater than zero, since the peephole optimizer often can optimize the use of iy into use of hl, reducing the cost.
         return(false);
     }
 
@@ -1637,7 +1632,7 @@ static bool omit_frame_ptr(const G_t &G)
 // Adjust stack location when deciding to omit frame pointer.
 void move_parms(void)
 {
-  if(!currFunc || IS_GB || options.omitFramePtr || !should_omit_frame_ptr)
+  if(!currFunc || IS_SM83 || options.omitFramePtr || !should_omit_frame_ptr)
     return;
 
   for(value *val = FUNC_ARGS (currFunc->type); val; val = val->next)

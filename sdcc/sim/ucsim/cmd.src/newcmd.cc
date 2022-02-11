@@ -174,12 +174,14 @@ cl_console_base::welcome(void)
 {
   if (!(flags & CONS_NOWELCOME))
     {
-      dd_printf("uCsim %s, Copyright (C) 1997 Daniel Drotos.\n"
+      dd_printf("uCsim%s, Copyright (C) %s Daniel Drotos.\n"
         "uCsim comes with ABSOLUTELY NO WARRANTY; for details type "
         "`show w'.\n"
         "This is free software, and you are welcome to redistribute it\n"
         "under certain conditions; type `show c' for details.\n",
-        VERSIONSTR);
+		(application->quiet)?"":(" " VERSIONSTR),
+		(application->quiet)?"":"1997"
+		);
     }
 }
 
@@ -233,6 +235,7 @@ cl_console_base::print_expr_result(t_mem val, const char *fmt)
 	    {
 	    case 'x': con->dd_printf("%x\n", MU(v)); break;
 	    case 'X': con->dd_printf("0x%x\n", MU(v)); break;
+	    case '$': con->dd_printf("$%x\n", MU(v)); break;
 	    case '0': con->dd_printf("0x%08x\n", MU32(v)); break;
 	    case 'd': con->dd_printf("%d\n", MI(v)); break;
 	    case 'o': con->dd_printf("%o\n", MU(v)); break;
@@ -241,25 +244,26 @@ cl_console_base::print_expr_result(t_mem val, const char *fmt)
 	    case 'B': con->dd_printf("%d\n", (v)?1:0); break;
 	    case 'L': con->dd_printf("%c\n", (v)?'T':'F'); break;
 	    case 'c':
-	      if (isprint(MI(v)))
-		con->dd_printf("'%c'\n",MI(v));
+	      if ((MU(v) < 0x100) && isprint(MI(v)))
+		con->dd_printf("'%c'",MI(v));
 	      else
 		{
 		  switch (MI(v))
 		    {
-		    case '\a': con->dd_printf("'\\a\n'"); break;
-		    case '\b': con->dd_printf("'\\b\n'"); break;
-		    case '\e': con->dd_printf("'\\e\n'"); break;
-		    case '\f': con->dd_printf("'\\f\n'"); break;
-		    case '\n': con->dd_printf("'\\n\n'"); break;
-		    case '\r': con->dd_printf("'\\r\n'"); break;
-		    case '\t': con->dd_printf("'\\t\n'"); break;
-		    case '\v': con->dd_printf("'\\v\n'"); break;
+		    case '\a': con->dd_printf("'\\a'"); break;
+		    case '\b': con->dd_printf("'\\b'"); break;
+		    case '\e': con->dd_printf("'\\e'"); break;
+		    case '\f': con->dd_printf("'\\f'"); break;
+		    case '\n': con->dd_printf("'\\n'"); break;
+		    case '\r': con->dd_printf("'\\r'"); break;
+		    case '\t': con->dd_printf("'\\t'"); break;
+		    case '\v': con->dd_printf("'\\v'"); break;
 		    default:
-		      con->dd_printf("'\\%03o'\n",MI(v));
+		      con->dd_printf("'\\%03o'",MI(v));
 		      break;
 		    }
 		}
+	      con->dd_printf("\n");
 	      break;
 	    }
 	}
@@ -924,19 +928,11 @@ int
 cl_commander_base::debug(const char *format, ...)
 {
   va_list ap;
-  int i, ret= 0;
 
-  for (i= 0; i < cons->count; i++)
-    {
-      class cl_console_base *c= (class cl_console_base*)(cons->at(i));
-      if (c->get_flag(CONS_DEBUG))
-        {
-          va_start(ap, format);
-          ret= c->cmd_do_cprint("debug", format, ap);
-          va_end(ap);
-        }
-    }
-  return(ret);
+  va_start(ap, format);
+  int ret = debug(format, ap);
+  va_end(ap);
+  return ret;
 }
 
 int
@@ -947,9 +943,17 @@ cl_commander_base::debug(const char *format, va_list ap)
   for (i= 0; i < cons->count; i++)
     {
       class cl_console_base *c= (class cl_console_base*)(cons->at(i));
-      if (c->get_flag(CONS_DEBUG))
+      if (c->get_flag(CONS_DEBUG) && !c->get_flag(CONS_INACTIVE))
         {
-          ret= c->cmd_do_cprint("debug", format, ap);
+          va_list aq;
+#ifdef va_copy
+          va_copy(aq, ap);
+          ret= c->cmd_do_cprint("debug", format, aq);
+          va_end(aq);
+#else
+	  memcpy(&aq, &ap, sizeof(va_list));
+          ret= c->cmd_do_cprint("debug", format, aq);
+#endif	  
         }
     }
   return(ret);

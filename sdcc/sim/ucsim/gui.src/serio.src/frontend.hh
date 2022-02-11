@@ -7,7 +7,6 @@
 
 #include <sys/types.h>
 #include <curses.h>
-#include <stdint.h>
 
 #include "config.h"
 
@@ -51,13 +50,13 @@ public:
 private:
   WINDOW *inp, *outp;
   COORDS win_c, inp_c, outp_c;
-  COORDINATES topleft, bottomright, current;
+  COORDINATES topleft, bottomright;//, current;
   int middle_y, middle_x;
   enum filter_t flt_in, flt_out;
   unsigned int ocnt, icnt;
   int line_length;
   
-  uint8_t ohex_buf[16], ihex_buf[16];
+  unsigned char ohex_buf[16];//, ihex_buf[16];
   int ohex_ptr, ihex_ptr, ihex_high, ihex_val;
 };
 

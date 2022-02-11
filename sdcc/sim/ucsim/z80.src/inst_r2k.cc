@@ -45,11 +45,11 @@ u32_t  rabbit_mmu::logical_addr_to_phys( u16_t logical_addr ) {
   {
     phys_addr += ((u32_t)xpc) << 12;
   }
-  else if (segnib >= ((segsize >> 4) & 0xf))
+  else if ((u8_t)segnib >= ((segsize >> 4) & 0xf))
   {
     phys_addr += ((u32_t)stackseg) << 12;    
   }
-  else if (segnib >= (segsize & 0xf))
+  else if ((u8_t)segnib >= (segsize & 0xf))
   {
     phys_addr += ((u32_t)dataseg) << 12;    
   }
@@ -389,6 +389,10 @@ cl_r2k::inst_rst(t_mem code)
     break;
     case 0xEF: // RST 28H
       //PC = 0x28;
+      /*push2(PC+2);
+      PC = iir + 0x28 * 2;
+      vc.wr+= 2;
+      break;*/
       switch (regs.raf.A) {
         case 0:
           return(resBREAKPOINT);

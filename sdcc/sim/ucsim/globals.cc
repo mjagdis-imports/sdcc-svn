@@ -31,7 +31,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "stypes.h"
 
-
 // No other global variable should exists!
 class cl_app *application;
 
@@ -39,32 +38,6 @@ class cl_app *application;
 /* Delimiters to split up command line */
 char delimiters[]= " ,;\t\r\n";
 
-struct id_element mem_ids[]= {
-  { MEM_ROM  , "ROM  " },
-  { MEM_XRAM , "XRAM " },
-  { MEM_IRAM , "IRAM " },
-  { MEM_SFR  , "SFR  " },
-  { MEM_IXRAM, "IXRAM" },
-  { MEM_DUMMY, "DUMMY" },
-  { 0, 0 }
-};
-
-struct id_element mem_classes[]= {
-  { MEM_ROM  , "rom" },
-  { MEM_XRAM , "xram" },
-  { MEM_IRAM , "iram" },
-  { MEM_SFR  , "sfr" },
-  { MEM_IXRAM, "ixram" },
-  { MEM_DUMMY, "dummy" },
-  { 0, 0 }
-};
-
-struct id_element cpu_states[]= {
-  { stGO,	"OK" },
-  { stIDLE,	"Idle" },
-  { stPD,	"PowerDown" },
-  { 0, 0 }
-};
 
 struct id_element error_type_names[]= {
   { err_unknown,	"unclassified" },
@@ -282,7 +255,7 @@ const char *copying=
 "signed it.  However, nothing else grants you permission to modify or\n"
 "distribute the Program or its derivative works.  These actions are\n"
 "prohibited by law if you do not accept this License.  Therefore, by\n"
-"odifying or distributing the Program (or any work based on the\n"
+"modifying or distributing the Program (or any work based on the\n"
 "Program), you indicate your acceptance of this License to do so, and\n"
 "all its terms and conditions for copying, distributing or modifying\n"
 "the Program or works based on it.\n"
@@ -433,6 +406,8 @@ struct cpu_entry cpus_z80[]=
     {"Z180"   , CPU_Z180,    0			, ""		, ""},
     {"R2K"    , CPU_R2K,     0			, ""		, ""},
     {"R3KA"   , CPU_R3KA,    0			, ""		, ""},
+
+    {"GB80"   , CPU_GB80,    0			, ""		, ""},
     {"LR35902", CPU_LR35902, 0			, ""		, ""},
 
     {"EZ80"   , CPU_EZ80,    0			, ""		, ""},

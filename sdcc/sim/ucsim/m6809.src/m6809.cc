@@ -31,9 +31,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "globals.h"
 #include "utils.h"
 
-#include "glob.h"
-#include "serialcl.h"
+#include "dregcl.h"
+#include "ciacl.h"
 #include "piacl.h"
+
+#include "glob.h"
+#include "irqcl.h"
 
 #include "m6809cl.h"
 
@@ -48,7 +51,7 @@ cl_m6809::init(void)
 {
   cl_uc::init();
 
-  xtal= 1000000;
+  set_xtal(1000000);
   
   reg8_ptr[0]= &A;
   reg8_ptr[1]= &B;
@@ -103,6 +106,24 @@ cl_m6809::mk_hw_elements(void)
   class cl_option *o;
   cl_uc::mk_hw_elements();
 
+  if ((o= application->options->get_option("serial0_in_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial0_in_file",
+			      "Input file for serial line uart0 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+  if ((o= application->options->get_option("serial0_out_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial0_out_file",
+			      "Output file for serial line uart0 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+
+
   if ((o= application->options->get_option("serial1_in_file")) == NULL)
     {
       o= new cl_string_option(this, "serial1_in_file",
@@ -111,11 +132,66 @@ cl_m6809::mk_hw_elements(void)
       o->init();
       o->hide();
     }
+  if ((o= application->options->get_option("serial1_out_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial1_out_file",
+			      "Output file for serial line uart1 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
 
-  add_hw(h= new cl_serial(this, 0, 0xc000));
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
+  
+  add_hw(h= new cl_m6809_irq(this));
   h->init();
 
-  add_hw(h= new cl_serial(this, 1, 0xc008));
+  src_irq= new cl_it_src(this,
+			 irq_irq,
+			 regs8->get_cell(3), flagI,
+			 h->cfg_cell(cpu_irq), 1,
+			 IRQ_AT,
+			 false,
+			 true,
+			 "Interrupt request",
+			 0);
+  src_irq->set_cid('i');
+  src_irq->set_ie_value(0);
+  src_irq->init();
+  it_sources->add(src_irq);
+  
+  src_firq= new cl_it_src(this,
+			  irq_firq,
+			  regs8->get_cell(3), flagF,
+			  h->cfg_cell(cpu_firq), 1,
+			  FIRQ_AT,
+			  false,
+			  true,
+			  "Fast interrupt request",
+			  0);
+  src_firq->set_cid('f');
+  src_firq->init();
+  it_sources->add(src_firq);
+  
+  src_nmi= new cl_it_src(this,
+			 irq_nmi,
+			 h->cfg_cell(cpu_nmi_en), 1,
+			 h->cfg_cell(cpu_nmi), 1,
+			 NMI_AT,
+			 false,
+			 true,
+			 "Non-maskable interrupt request",
+			 0);
+  src_nmi->set_cid('n');
+  src_nmi->set_nmi(true);
+  src_nmi->init();
+  it_sources->add(src_nmi);
+  
+  add_hw(h= new cl_cia(this, 0, 0xc000));
+  h->init();
+
+  add_hw(h= new cl_cia(this, 1, 0xc008));
   h->init();
 
   class cl_pia *p0, *p1;
@@ -217,8 +293,6 @@ cl_m6809::mk_hw_elements(void)
 void
 cl_m6809::make_cpu_hw(void)
 {
-  add_hw(cpu= new cl_m6809_cpu(this));
-  cpu->init();
 }
 
 void
@@ -233,7 +307,7 @@ cl_m6809::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x10000, 8);
+  chip= new cl_chip8("rom_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(as= rom/*address_space(MEM_ROM_ID)*/,
@@ -259,27 +333,134 @@ cl_m6809::make_memories(void)
   regs16->get_cell(3)->decode((t_mem*)&(reg.Y));
   regs16->get_cell(4)->decode((t_mem*)&(reg.acc.rD));
 
-  class cl_var *v;
-  
-  vars->add(v= new cl_var("A", regs8, 0, "CPU register A"));
-  v->init();
-  vars->add(v= new cl_var("B", regs8, 1, "CPU register B"));
-  v->init();
-  vars->add(v= new cl_var("DP", regs8, 2, "CPU register DP"));
-  v->init();
-  vars->add(v= new cl_var("CC", regs8, 3, "CPU register CC"));
-  v->init();
+  vars->add("A", regs8, 0, 7, 0, "CPU register A");
+  vars->add("B", regs8, 1, 7, 0, "CPU register B");
+  vars->add("DP", regs8, 2, 7, 0, "CPU register DP");
+  vars->add("CC", regs8, 3, 7, 0, "CPU register CC");
 
-  vars->add(v= new cl_var("U", regs16, 0, "CPU register U"));
-  v->init();
-  vars->add(v= new cl_var("S", regs16, 1, "CPU register S"));
-  v->init();
-  vars->add(v= new cl_var("X", regs16, 2, "CPU register X"));
-  v->init();
-  vars->add(v= new cl_var("Y", regs16, 3, "CPU register Y"));
-  v->init();
-  vars->add(v= new cl_var("D", regs16, 4, "CPU register D"));
-  v->init();
+  vars->add("U", regs16, 0, 15, 0, "CPU register U");
+  vars->add("S", regs16, 1, 15, 0, "CPU register S");
+  vars->add("X", regs16, 2, 15, 0, "CPU register X");
+  vars->add("Y", regs16, 3, 15, 0, "CPU register Y");
+  vars->add("D", regs16, 4, 15, 0, "CPU register D");
+}
+
+
+void
+cl_m6809::analyze_start(void)
+{
+  struct {
+    const char *name;
+    t_addr vector, addr;
+  } vectors[] = {
+    { ".reset", 0xfffe },
+    { ".nmi",   0xfffc },
+    { ".swi",   0xfffa },
+    { ".irq",   0xfff8 },
+    { ".firq",  0xfff6 },
+    { ".swi2",  0xfff4 },
+    { ".swi3",  0xfff2 },
+  };
+
+  for (size_t i = 0; i < sizeof(vectors) / sizeof(vectors[0]); i++)
+    {
+      vectors[i].addr = rom->read(vectors[i].vector) * 256 + rom->read(vectors[i].vector + 1);
+      class cl_var *v = new cl_var(vectors[i].name, rom, vectors[i].addr, chars("Auto-generated by analyze"), -1, -1);
+      v->init();
+      vars->add(v);
+    }
+
+  for (size_t i = 0; i < sizeof(vectors) / sizeof(vectors[0]); i++)
+    analyze(vectors[i].addr);
+}
+
+
+void
+cl_m6809::analyze(t_addr addr)
+{
+  struct dis_entry *tt, *di;
+  t_addr code;
+
+  code= rom->get(addr);
+  if (code == 0x10)
+    {
+      tt= disass_m6809_10;
+      code= rom->get(++addr);
+    }
+  else if (code == 0x11)
+    {
+      tt= disass_m6809_11;
+      code= rom->get(++addr);
+    }
+  else
+    tt= disass_m6809;
+  addr++;
+
+  for (di= tt; (code & di->mask) != di->code && di->mnemonic; di++);
+
+  while (!inst_at(addr) && di && (di->mnemonic!=NULL))
+    {
+      set_inst_at(addr);
+
+      if (di->branch != ' ')
+        {
+          t_addr target= addr;
+          char branch = di->branch;
+
+          switch (di->branch)
+            {
+              case 'x': // Returns or indirect jumps that end this execution path immediately
+                return;
+
+              case 'j': // Unconditional jumps
+              case 's': // Subroutine calls
+                    switch (code & 0x30)
+                      {
+                      case 0x00: // relative (BSR)
+                        target= rom->validate_address(addr + (i8_t)rom->get(addr));
+                        break;
+                      case 0x10: // direct
+                        target= rom->get(addr);
+                        break;
+                      case 0x20: // indexed
+                        return;
+                      case 0x30: // extended
+                        target= rom->get(addr)*256 + rom->get(addr+1);
+			addr+= 2;
+                        break;
+                      }
+                    break;
+
+              case 'b': // Conditional branches
+              case 'V':
+              case 'v':
+              case 'B': // Unconditional branches
+                if (tt == disass_m6809)
+                  {
+		    target= rom->validate_address(addr + (i8_t)rom->get(addr));
+		    addr++;
+		  }
+                else
+                  {
+		    target= rom->validate_address(addr + (i16_t)(rom->get(addr)*256 + rom->get(addr+1)));
+		    branch = 'b';
+		    addr+= 2;
+		  }
+                break;
+
+              default:
+                return;
+            }
+
+          analyze_jump(addr, target, branch);
+
+          // Unconditional jumps end this execution path
+          if (di->branch == 'j' || di->branch == 'B')
+            break;
+        }
+
+      addr= rom->validate_address(addr + di->length);
+    }
 }
 
 
@@ -368,7 +549,7 @@ cl_m6809::disass_indexed(t_addr *addr, chars *work, int siz)
 	  if ((idx & 0x10) == 0)
 	    work->append("??");
 	  else
-	    w.format("0x%04x", u16);
+	    w.format("$%04x", u16);
 	  break;
 	default:
 	  work->append("??");
@@ -392,11 +573,11 @@ cl_m6809::disass_immediate(t_addr *addr, chars *work, int siz)
   //work+= 'm';
   u8_t op8= rom->get(a++);
   if (siz==1)
-    work->appendf("#0x%02x", op8);
+    work->appendf("#$%02x", op8);
   else
     {
       u16_t op16= op8*256 + rom->get(a++);
-      work->appendf("#0x%04x", op16);
+      work->appendf("#$%04x", op16);
     }
   *addr= a;
 }
@@ -422,7 +603,7 @@ const char *reg_names[16]=
   };
    
 char *
-cl_m6809::disass(t_addr addr, const char *sep)
+cl_m6809::disass(t_addr addr)
 {
   chars work= chars(), temp= chars();
   const char *b;
@@ -502,7 +683,7 @@ cl_m6809::disass(t_addr addr, const char *sep)
 		  case 0x10: // direct
 		    //work+= 'd';
 		    op8= rom->get(addr++);
-		    work.appendf("DP:0x%02x", op8);
+		    work.appendf("DP:$%02x", op8);
 		    break;
 		  case 0x20: // index
 		    //work+= 'i';
@@ -512,7 +693,8 @@ cl_m6809::disass(t_addr addr, const char *sep)
 		    //work+= 'e';
 		    op16= rom->get(addr++)*256;
 		    op16+= rom->get(addr++);
-		    work.appendf("0x%04x", op16);
+		    work.appendf("$%04x", op16);
+		    addr_name(op16, rom, &work);
 		    break;
 		  }
 		break;
@@ -522,9 +704,10 @@ cl_m6809::disass(t_addr addr, const char *sep)
 		u8_t mode= code & 0x30;
 		switch (mode)
 		  {
-		  case 0x10: // direct
+		  case 0x00: // direct (JMP)
+		  case 0x10: // direct (JSR)
 		    op8= rom->get(addr++);
-		    work.appendf("DP:0x%02x", op8);
+		    work.appendf("DP:$%02x", op8);
 		    break;
 		  case 0x20: // indexed
 		    disass_indexed(&addr, &work, 1/*siz*/);
@@ -532,7 +715,8 @@ cl_m6809::disass(t_addr addr, const char *sep)
 		  case 0x30: // extended
 		    op16= rom->get(addr++)*256;
 		    op16+= rom->get(addr++);
-		    work.appendf("0x%04x", op16);
+		    work.appendf("$%04x", op16);
+		    addr_name(op16, rom, &work);
 		    break;
 		  }
 		break;
@@ -562,7 +746,9 @@ cl_m6809::disass(t_addr addr, const char *sep)
 		    i16= rom->get(addr++)*256;
 		    i16+= rom->get(addr++);
 		  }
-		work.appendf("0x%04x", addr+i16);
+		i16= (i16 + addr) & 0xffff;
+		work.appendf("$%04x", i16);
+		addr_name(i16, rom, &work);
 		break;
 	      }
 	    case 'p': case 'P':
@@ -597,7 +783,8 @@ cl_m6809::disass(t_addr addr, const char *sep)
 	      if (b[j]=='E')
 		op16= op16*256 + rom->get(addr++);
 	      op16= (addr + op16)&0xffff;
-	      work.appendf("0x%04x", op16);
+	      work.appendf("$%04x", op16);
+	      addr_name(op16, rom, &work);
 	      break;
 	    }
 	}
@@ -614,28 +801,28 @@ void
 cl_m6809::print_regs(class cl_console_base *con)
 {
   con->dd_color("answer");
-  con->dd_printf("A= 0x%02x %3d %+4d %c  ", A, A, (i8_t)A, isprint(A)?A:'.');
-  con->dd_printf("B= 0x%02x %3d %+4d %c  ", B, B, (i8_t)B, isprint(B)?B:'.');
-  con->dd_printf("D= 0x%04x %5d %+6d\n", D, D, (i16_t)D);
+  con->dd_printf("A= $%02x %3d %+4d %c  ", A, A, (i8_t)A, isprint(A)?A:'.');
+  con->dd_printf("B= $%02x %3d %+4d %c  ", B, B, (i8_t)B, isprint(B)?B:'.');
+  con->dd_printf("D= $%04x %5d %+6d\n", D, D, (i16_t)D);
   con->dd_printf("CC= "); con->print_bin(reg.CC, 8); con->dd_printf("\n");
   con->dd_printf("    EFHINZVC\n");
 
-  con->dd_printf("DP= 0x%02x\n", reg.DP);
+  con->dd_printf("DP= $%02x\n", reg.DP);
 
   con->dd_printf("X= ");
-  rom->dump(reg.X, reg.X+7, 8, con);
+  rom->dump(0, reg.X, reg.X+7, 8, con);
   con->dd_color("answer");
   
   con->dd_printf("Y= ");
-  rom->dump(reg.Y, reg.Y+7, 8, con);
+  rom->dump(0, reg.Y, reg.Y+7, 8, con);
   con->dd_color("answer");
   
   con->dd_printf("S= ");
-  rom->dump(reg.S, reg.S+7, 8, con);
+  rom->dump(0, reg.S, reg.S+7, 8, con);
   con->dd_color("answer");
   
   con->dd_printf("U= ");
-  rom->dump(reg.U, reg.U+7, 8, con);
+  rom->dump(0, reg.U, reg.U+7, 8, con);
   con->dd_color("answer");
   
   print_disass(PC, con);
@@ -743,7 +930,7 @@ cl_m6809::index2ea(u8_t idx, t_addr *res_ea)
   u16_t iv;
   i16_t off;
   u16_t *ir= &reg.X;
-  t_addr ea;
+  t_addr ea= 0;
 
   switch (idx & 0x60)
     {
@@ -921,7 +1108,7 @@ cl_m6809::pull_regs(bool do_cc)
 }
 
 int
-cl_m6809::inst_add8(t_mem code, u8_t *acc, u8_t op, int c, bool store, bool invert_c)
+cl_m6809::inst_add8(t_mem code, u8_t *acc, u8_t op, bool c, bool store, bool invert_c)
 {
   u8_t r;
   unsigned int d= *acc;
@@ -949,24 +1136,36 @@ cl_m6809::inst_add8(t_mem code, u8_t *acc, u8_t op, int c, bool store, bool inve
 
 
 int
-cl_m6809::inst_add16(t_mem code, u16_t *acc, u16_t op, int c, bool store, bool invert_c)
+cl_m6809::inst_add16(t_mem code, u16_t *acc, u16_t op, bool c,
+		     bool store, bool invert_c, bool is_sub)
 {
   u16_t r;
   unsigned int d= *acc;
   unsigned int o= op;
-  signed int res= (i16_t)d + (i16_t)o;
-
-  if (c) { ++res, ++o; }
+  u32_t res= d + o;
+  if (c)
+    res++;
+  r= res;
   
   reg.CC= ~(flagV|flagS|flagZ|flagC);
-  if ((res < (int)(0x8000)) || (res > (int)(0x7fff)))
-    reg.CC|= flagV;
-  if (d + o > 0xffff)
+  //if ((res < (int)(0x8000)) || (res > (int)(0x7fff)))
+  if (is_sub)
+    {
+      o= ~o;
+      if (0x8000 & ((d&~o&~r) | (~d&o&r)))
+	reg.CC|= flagV;
+    }
+  else
+    {
+      if (0x8000 & ((d&o&~r) | (~d&~o&r)))
+	reg.CC|= flagV;
+    }
+  if (res > 0xffff)
     reg.CC|= flagC;
   if (invert_c)
     reg.CC^= flagC;
 
-  r= res & 0xffff;
+  //r= res & 0xffff;
   if (r == 0)     reg.CC|= flagZ;
   if (r & 0x8000) reg.CC|= flagS;
 
@@ -1127,6 +1326,7 @@ cl_m6809::inst_alu(t_mem code)
       {
 	int c= 0;
 	int inv= false;
+	bool is_sub= false;
 	if ((code & 0x30) == 0)
 	  {
 	    op16= op8*256 + fetch();
@@ -1139,8 +1339,8 @@ cl_m6809::inst_alu(t_mem code)
 	    vc.rd++;
 	  }
 	if ((code & 0x40) == 0)
-	  op16= ~op16, c= 1, inv= true;
-	return inst_add16(code, &D, op16, c, true, inv);
+	  op16= ~op16, c= 1, inv= true, is_sub= true;
+	return inst_add16(code, &D, op16, c, true, inv, is_sub);
 	break;
       }
     case 0x04: // AND  AND  AND  AND  AND  AND  AND  AND
@@ -1180,7 +1380,7 @@ cl_m6809::inst_alu(t_mem code)
 	  vc.rd++;
 	}
       if ((code & 0x40) == 0)
-	return inst_add16(code, &(reg.X), ~op16, 1, false, true);
+	return inst_add16(code, &(reg.X), ~op16, 1, false, true, true);
       else
 	return inst_ld16(code, &D, op16);
       break;
@@ -1283,7 +1483,8 @@ cl_m6809::inst_10(t_mem code)
     case 0x09: // DAA
       {
 	u8_t cf= 0;
-	if ((reg.CC & flagC) || ((A&0x0f) > 9))
+	int r;
+	if ((reg.CC & flagH) || ((A&0x0f) > 9))
 	  cf|= 0x06;
 	if ((reg.CC & flagC) ||
 	    ((A&0xf0) > 0x90) ||
@@ -1293,9 +1494,12 @@ cl_m6809::inst_10(t_mem code)
 	     )
 	    )
 	  cf|= 0x60;
-	A= A + cf;
+	r= A + cf;
+	A= r;
 	SET_Z(A);
 	SET_S(A & 0x80);
+	if (r>0xff)
+	  reg.CC|= flagC;
 	tick(1);
 	break;
       }
@@ -1326,7 +1530,7 @@ cl_m6809::inst_10(t_mem code)
 	r2= op8&0xf;
 	if (((r1^r2)&0x08)!=0)
 	  return resINV_INST;
-	if (r1>=8)
+	if (r1<8)
 	  {
 	    u16_t *R1= reg16_ptr[r1&7];
 	    u16_t *R2= reg16_ptr[r2&7];
@@ -1385,7 +1589,7 @@ cl_m6809::inst_branch(t_mem code, bool l)
   bool z= reg.CC & flagZ;
   bool n= reg.CC & flagN;
   bool v= reg.CC & flagV;
-  bool t;
+  bool t= 0;
   
   switch (code & 0x0f)
     {
@@ -2069,7 +2273,7 @@ cl_m6809::inst_page1(t_mem code)
   t_addr ea;
   u8_t op8, idx;
   u16_t op16;
-  
+
   if ((code & 0xf0) == 0x20)
     return inst_branch(code, true);
   if (code == 0x3f)
@@ -2161,10 +2365,10 @@ cl_m6809::inst_page1(t_mem code)
   switch (cl)
     {
     case 3: // CMPD
-      inst_add16(code, &(D), ~op16, 1, false, true);
+      inst_add16(code, &(D), ~op16, 1, false, true, true);
       break;
     case 0xc: // CMPY
-      inst_add16(code, &(reg.Y), ~op16, 1, false, true);
+      inst_add16(code, &(reg.Y), ~op16, 1, false, true, true);
       break;
     case 0xe: // LDY, LDS
       if ((code & 0x40) == 0)
@@ -2259,13 +2463,13 @@ cl_m6809::inst_page2(t_mem code)
   if ((code & 0x0f) == 0x03)
     {
       // CMPU
-      inst_add16(code, &(reg.U), ~op16, 1, false, true);
+      inst_add16(code, &(reg.U), ~op16, 1, false, true, true);
       tick(1);
     }
   if ((code & 0x0f) == 0x0c)
     {
       // CMPS
-      inst_add16(code, &(reg.S), ~op16, 1, false, true);
+      inst_add16(code, &(reg.S), ~op16, 1, false, true, true);
       tick(1);
     }
 
@@ -2301,28 +2505,29 @@ cl_m6809::exec_inst(void)
 int
 cl_m6809::accept_it(class it_level *il)
 {
-  //class cl_m6809_src_base *org= NULL;
-  class cl_m6809_src_base *is= (class cl_m6809_src_base *)(il->source);
-  class cl_m6809_src_base *parent= NULL;
-
+  class cl_it_src *is= il->source;
+  //class cl_m6809_src_base *parent= NULL;
+  /*
   if (is)
     {
       if ((parent= is->get_parent()) != NULL)
 	{
-	  //org= is;
 	  is= parent;
 	  il->source= is;
 	}
     }
-  
+  */
   tick(3);
   reg.CC&= ~flagE;
-  reg.CC|= is->Evalue;
-  
+  if (is == src_irq || is == src_nmi)
+    reg.CC|= flagE;//is->Evalue;
+    
   if (!cwai)
     push_regs(true);
   cwai= false;
-  reg.CC|= is->IFvalue;
+  reg.CC|= flagI;//is->IFvalue;
+  if (is == src_firq || is == src_nmi)
+    reg.CC|= flagF;
   
   t_addr a= rom->read(is->addr) * 256 + rom->read(is->addr+1);
   tick(2);
@@ -2334,232 +2539,6 @@ cl_m6809::accept_it(class it_level *il)
   it_levels->push(il);
   tick(2);
   return resGO;
-}
-
-
-/* CPU hardware */
-
-class cl_m6809_src_base *
-cl_m6809_src_base::get_parent(void)
-{
-  class cl_m6809 *muc= (class cl_m6809 *)(application->get_uc());
-  switch (pass_to)
-    {
-    case irq_nmi:
-      return muc->src_nmi;
-      break;
-    case irq_firq:
-      return muc->src_firq;
-      break;
-    case irq_irq:
-      return muc->src_irq;
-      break;
-    default:
-      return NULL;
-    }
-  return NULL;
-}
-
-void
-cl_m6809_src_base::set_pass_to(t_mem value)
-{
-  if (value == 'f')
-    pass_to= irq_firq;
-  else if (value == 'n')
-    pass_to= irq_nmi;
-  else
-    pass_to= irq_irq;
-}
-
-bool
-cl_m6809_irq_src::enabled(void)
-{
-  if (!ie_cell)
-    return false;
-  t_mem e= ie_cell->get();
-  e&= ie_mask;
-  return e == 0;
-}
-
-bool
-cl_m6809_slave_src::enabled(void)
-{
-  if (!ie_cell)
-    return false;
-  t_mem e= ie_cell->get();
-  e&= ie_mask;
-  return e == ie_value;
-}
-
-
-/*
- * peripheral to handle CPU specific stuff
- */
-
-cl_m6809_cpu::cl_m6809_cpu(class cl_uc *auc):
-  cl_hw(auc, HW_CPU, 0, "cpu")
-{
-  muc= (class cl_m6809 *)auc;
-}
-
-int
-cl_m6809_cpu::init()
-{
-  class cl_var *v;
-
-  cl_hw::init();
-  uc->vars->add(v= new cl_var("NMI", cfg, cpu_nmi, "NMI request/clear"));
-  v->init();
-  uc->vars->add(v= new cl_var("IRQ", cfg, cpu_irq, "IRQ request/clear"));
-  v->init();
-  uc->vars->add(v= new cl_var("FIRQ", cfg, cpu_firq, "FIRQ request/clear"));
-  v->init();
-
-  muc->src_irq= new cl_m6809_irq_src(uc,
-				     irq_irq,
-				     muc->regs8->get_cell(3), flagI,
-				     cfg->get_cell(cpu_irq), 1,
-				     0xfff8,
-				     "Interrupt request",
-				     0,
-				     flagE,
-				     flagI,
-				     irq_none);
-  muc->src_irq->init();
-  uc->it_sources->add(muc->src_irq);
-
-  muc->src_firq= new cl_m6809_irq_src(uc,
-				      irq_firq,
-				      muc->regs8->get_cell(3), flagF,
-				      cfg->get_cell(cpu_firq), 1,
-				      0xfff6,
-				      "Fast interrupt request",
-				      0,
-				      0,
-				      flagI|flagF,
-				      irq_none);
-  muc->src_firq->init();
-  uc->it_sources->add(muc->src_firq);
-
-  muc->src_nmi= new cl_m6809_src_base(uc,
-				      irq_nmi,
-				      cfg->get_cell(cpu_nmi_en), 1,
-				      cfg->get_cell(cpu_nmi), 1,
-				      0xfffc,
-				      "Non-maskable interrupt request",
-				      0,
-				      flagE,
-				      flagI|flagF,
-				      irq_none);
-  muc->src_nmi->init();
-  uc->it_sources->add(muc->src_nmi);
-  
-  return 0;
-}
-
-void
-cl_m6809_cpu::reset(void)
-{
-  cfg_set(cpu_nmi, 0);
-  cfg_set(cpu_irq, 0);
-  cfg_set(cpu_firq, 0);
-  cfg_read(cpu_nmi_en);
-  cfg_read(cpu_irq_en);
-  cfg_read(cpu_firq_en);
-}
-
-const char *
-cl_m6809_cpu::cfg_help(t_addr addr)
-{
-  switch (addr)
-    {
-    case cpu_nmi_en	: return "NMI enable (RO)";
-    case cpu_nmi	: return "NMI request/clear (RW)";
-    case cpu_irq_en	: return "IRQ enable (RO)";
-    case cpu_irq	: return "IRQ request/clear (RW)";
-    case cpu_firq_en	: return "FIRQ enable (RO)";
-    case cpu_firq	: return "FIRQ request (RW)";
-    }
-  return cl_hw::cfg_help(addr);
-}
-
-t_mem
-cl_m6809_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
-{
-  class cl_m6809 *muc= (class cl_m6809 *)uc;
-  switch ((enum cpu_cfg)addr)
-    {
-    case cpu_nmi_en:
-      cell->set(muc->en_nmi?1:0);
-      break;
-    case cpu_nmi:
-      if (val)
-	{
-	  if (*val)
-	    *val= 1;
-	}
-      break;
-    case cpu_irq_en:
-      cell->set((muc->reg.CC & flagI)?0:1);
-      break;
-    case cpu_irq:
-      if (val)
-	{
-	  if (*val)
-	    *val= 1;
-	}
-      break;
-    case cpu_firq_en:
-      cell->set((muc->reg.CC & flagF)?0:1);
-      break;
-    case cpu_firq:
-      if (val)
-	{
-	  if (*val)
-	    *val= 1;
-	}
-      break;
-    case cpu_nr: break;
-    }
-  return cell->get();
-}
-
-void
-cl_m6809_cpu::print_info(class cl_console_base *con)
-{
-  int i;
-  con->dd_printf("  Handler  ISR    En  Pr Req Act Name\n");
-  for (i= 0; i < uc->it_sources->count; i++)
-    {
-      class cl_m6809_src_base *is=
-	(class cl_m6809_src_base *)(uc->it_sources->at(i));
-      class cl_m6809_src_base *pa= is->get_parent();
-      class cl_m6809_src_base *isp= (pa)?pa:is;
-      t_addr a= uc->rom->get(isp->addr) * 256 + uc->rom->get(isp->addr+1);
-      con->dd_printf("  [0x%04x] 0x%04x", AU(isp->addr), a);
-      con->dd_printf(" %-3s", (is->enabled())?"en":"dis");
-      con->dd_printf(" %2d", uc->priority_of(is->nuof));
-      con->dd_printf(" %-3s", (is->pending())?"YES":"no");
-      con->dd_printf(" %-3s", (is->active)?"act":"no");
-      con->dd_printf(" %s", object_name(is));
-      con->dd_printf("\n");
-    }
-  con->dd_printf("Active interrupt service(s):\n");
-  con->dd_printf("  Pr Handler  PC       Source\n");
-  for (i= 0; i < uc->it_levels->count; i++)
-    {
-      class it_level *il= (class it_level *)(uc->it_levels->at(i));
-      if (il->level >= 0)
-	{
-	  con->dd_printf("  %2d", il->level);
-	  con->dd_printf(" 0x%06x", AU(il->addr));
-	  con->dd_printf(" 0x%06x", AU(il->PC));
-	  con->dd_printf(" %s", (il->source)?(object_name(il->source)):
-			 "nothing");
-	  con->dd_printf("\n");
-	}
-    }
-  //print_cfg_info(con);
 }
 
 

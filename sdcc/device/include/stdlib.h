@@ -2,7 +2,7 @@
    stdlib.h - General utilities (ISO C 11 7.22)
 
    Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
-   Copyright (c) 2016, Philipp Klaus Krause, pkk@spth.de
+   Copyright (c) 2016-2021, Philipp Klaus Krause, pkk@spth.de
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -30,7 +30,7 @@
 #ifndef __SDCC_STDLIB_H
 #define __SDCC_STDLIB_H 1
 
-#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_ds400) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_ds400) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 #define __reentrant
 #endif
 
@@ -90,6 +90,21 @@ inline void *aligned_alloc(size_t alignment, size_t size)
 }
 #endif
 extern void free (void * ptr);
+
+#if __STDC_VERSION__ >= 202300L
+inline void free_sized(void *ptr, size_t size)
+{
+  (void)size;
+  free (ptr);
+}
+
+inline void free_aligned_sized(void *ptr, size_t alignment, size_t size)
+{
+  (void)alignment;
+  (void)size;
+  free (ptr);
+}
+#endif
 
 /* Searching and sorting utilities (ISO C11 7.22.5) */
 extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);

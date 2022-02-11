@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -90,7 +91,21 @@ usage (void)
            "Options:\n"
            "  -p             pack mode: the binary file size will be truncated to the last occupied byte\n"
            "  -s romsize     size of the binary file (default: rom banks * 16384)\n"
-           "  -Z             genarate GameBoy format binary file\n"
+           "  -Z             generate GameBoy format binary file\n"
+           "  -S             generate Sega Master System format binary file\n"
+           "  -o bytes       skip amount of bytes in binary file\n"
+
+           "SMS format options (applicable only with -S option):\n"
+           "  -xo n          rom size (0xa-0x2) (default: 0xc)\n"
+           "  -xj n          set region code (3-7) (default: 4)\n"
+           //"  -xc n          product code (0-159999)\n"
+           "  -xv n          version number (0-15) (default: 0)\n"
+           //"  -xV n          SDSC version number\n"
+           //"  -xd n          SDSC date\n"
+           //"  -xA n          SDSC author pointer\n"
+           //"  -xn n          SDSC program name pointer\n"
+           //"  -xD n          SDSC description pointer\n"
+
            "GameBoy format options (applicable only with -Z option):\n"
            "  -yo n          number of rom banks (default: 2) (autosize: A)\n"
            "  -ya n          number of ram banks (default: 0)\n"
@@ -103,6 +118,7 @@ usage (void)
            "  -ys            Super GameBoy\n"
            "  -yS            Convert .noi file named like input file to .sym\n"
            "  -yj            set non-Japanese region flag\n"
+           "  -yN            do not copy big N validation logo into ROM header\n"
            "  -yp addr=value Set address in ROM to given value (address 0x100-0x1FE)\n"
            "Arguments:\n"
            "  <in_file>      optional IHX input file, '-' means stdin. (default: stdin)\n"
@@ -124,7 +140,15 @@ struct gb_opt_s
   BYTE sym_conversion;            /* True if .noi file should be converted to .sym (default false)*/
   BYTE non_jp;                    /* True if non-Japanese region, false for all other*/
   BYTE rom_banks_autosize;        /* True if rom banks should be auto-sized (default false)*/
+  bool do_logo_copy;              /* True if the nintendo logo should be copied into the ROM (default true) */
   BYTE address_overwrite[16];     /* For limited compatibility with very old versions */
+};
+
+struct sms_opt_s
+{
+  BYTE rom_size;                  /* Doesn't have to be the real size, needed for checksum */
+  BYTE region_code;               /* Region code Japan/Export/International and SMS/GG */
+  BYTE version;                   /* Game version */
 };
 
 void
@@ -145,7 +169,10 @@ gb_postproc (BYTE * rom, int size, int *real_size, struct gb_opt_s *o)
    * If missing, an actual Game Boy won't run the ROM.
    */
 
-  memcpy (&rom[0x104], gb_logo, sizeof (gb_logo));
+  if (o->do_logo_copy)
+    {
+      memcpy (&rom[0x104], gb_logo, sizeof (gb_logo));
+    }
 
   rom[0x144] = o->licensee_str[0];
   rom[0x145] = o->licensee_str[1];
@@ -293,7 +320,7 @@ gb_postproc (BYTE * rom, int size, int *real_size, struct gb_opt_s *o)
     {
       if(o->address_overwrite[i] != 0xFF)
         {
-          rom[0x0100 & o->address_overwrite[i]] = o->address_overwrite[i+1];
+          rom[0x0100 | o->address_overwrite[i]] = o->address_overwrite[i+1];
           // warnings for builds ported from ancient GBDK
           fprintf (stderr, "caution: -yp0x01%02x=0x%02x is outdated", o->address_overwrite[i], o->address_overwrite[i+1]);
           if(o->address_overwrite[i] == 0x43)
@@ -346,6 +373,74 @@ gb_postproc (BYTE * rom, int size, int *real_size, struct gb_opt_s *o)
     *real_size = 0x150;
 }
 
+void
+sms_postproc (BYTE * rom, int size, int *real_size, struct sms_opt_s *o)
+{
+  // based on https://www.smspower.org/Development/ROMHeader
+  // 0x1ff0 and 0x3ff0 are also possible, but never used
+  static const char tmr_sega[] = "TMR SEGA  ";
+  short header_base = 0x7ff0;
+  int chk = 0;
+  unsigned long i;
+  // choose earlier positions for smaller roms
+  if (header_base > size)
+    header_base = 0x3ff0;
+  if (header_base > size)
+    header_base = 0x1ff0;
+
+  memcpy (&rom[header_base], tmr_sega, sizeof (tmr_sega) - 1);
+  // configure amounts of bytes to check
+  switch(o->rom_size)
+    {
+      case 0xa:
+      default:
+        i = 0x1FEF;
+        break;
+      case 0xb:
+        i = 0x3FEF;
+        break;
+      case 0xc:
+        i = 0x7FEF;
+        break;
+      case 0xd:
+        i = 0xBFEF;
+        break;
+      case 0xe:
+        i = 0xFFFF;
+        break;
+      case 0xf:
+        i = 0x1FFFF;
+        break;
+      case 0x0:
+        i = 0x3FFFF;
+        break;
+      case 0x1:
+        i = 0x7FFFF;
+        break;
+      case 0x2:
+        i = 0xFFFFF;
+        break;
+    }
+  // calculate checksum
+  for(;i > 0; --i)
+    {
+      chk += rom[i];
+      // 0x7FF0 - 0x7FFF is skipped
+      if(i == 0x8000)
+        i = 0x7FF0;
+    }
+  // we  skipped index 0
+  chk += rom[0];
+  // little endian
+  rom[header_base + 0xa] = chk & 0xff;
+  rom[header_base + 0xb] = (chk>>8) & 0xff;
+  // game version
+  rom[header_base + 0xe] &= 0xF0;
+  rom[header_base + 0xe] |= o->version;
+  // rom size
+  rom[header_base + 0xf] = (o->region_code << 4) | o->rom_size;
+}
+
 int
 rom_autosize_grow(BYTE **rom, int test_size, int *size, struct gb_opt_s *o)
 {
@@ -389,7 +484,8 @@ noi2sym (char *filename)
   char read = ' ';
   // no$gmb's implementation is limited to 32 character labels
   // we can safely throw away the rest
-  char label[33];
+  #define SYM_FILE_NAME_LEN_MAX 32
+  char label[SYM_FILE_NAME_LEN_MAX + 1];
   // 0x + 6 digit hex number
   // -> 65536 rom banks is the maximum homebrew cartrideges support (TPP1)
   char value[9];
@@ -445,7 +541,7 @@ noi2sym (char *filename)
       if (strncmp(value, "DEF ", 4) == 0)
         {
           // read label
-          for (i = 0; i < 32; ++i)
+          for (i = 0; i < (SYM_FILE_NAME_LEN_MAX - 1); ++i)
             {
               label[i] = read;
               if ((read = fgetc(noi)) == EOF || read == '\r' || read == '\n' || read == ' ')
@@ -479,7 +575,7 @@ noi2sym (char *filename)
           // we successfully read label and value
 
           // but filter out some invalid symbols
-          if (strcmp(label, ".__.ABS.") != 0 && strncmp(label, "l__", 3) != 0)
+          if (strcmp(label, ".__.ABS.") != 0)
             fprintf (sym, "%02X:%04X %s\n", (unsigned int)(strtoul(value, NULL, 0)>>16), (unsigned int)strtoul(value, NULL, 0)&0xFFFF, label);
         }
       else
@@ -593,14 +689,33 @@ read_ihx (FILE *fin, BYTE **rom, int *size, int *real_size, struct gb_opt_s *o)
 int
 main (int argc, char **argv)
 {
-  int size = 32768, pack = 0, real_size = 0, i = 0;
+  int size = 32768, offset = 0, pack = 0, real_size = 0, i = 0;
   char *token;
   BYTE *rom;
   FILE *fin, *fout;
   char *filename = NULL;
   int ret;
   int gb = 0;
-  struct gb_opt_s gb_opt = { "", {'0', '0'}, 0, 2, 0, 0x33, 0, 0, 0, 0, 0, {0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0}};
+  int sms = 0;
+
+  struct gb_opt_s gb_opt = {.cart_name="",
+                            .licensee_str={'0', '0'},
+                            .mbc_type=0,
+                            .nb_rom_banks=2,
+                            .nb_ram_banks=0,
+                            .licensee_id=0x33,
+                            .is_gbc=0,
+                            .is_sgb=0,
+                            .sym_conversion=0,
+                            .non_jp=0,
+                            .rom_banks_autosize=0,
+                            .do_logo_copy=true,
+                            .address_overwrite={0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0} };
+
+  // 32KiB, SMS Export, version 0 <- should work with most emulaters (<32K was never used, GG accepts SMS)
+  struct sms_opt_s sms_opt = {.rom_size=0xc,
+                              .region_code=4,
+                              .version=0 };
 
 #if defined(_WIN32)
   setmode (fileno (stdout), O_BINARY);
@@ -617,6 +732,15 @@ main (int argc, char **argv)
               return 1;
             }
           size = strtoul (*argv, NULL, 0);
+          break;
+
+        case 'o':
+          if (!*++argv)
+            {
+              usage ();
+              return 1;
+            }
+          offset = strtoul (*argv, NULL, 0);
           break;
 
         case 'h':
@@ -691,6 +815,7 @@ main (int argc, char **argv)
                   usage ();
                   return 1;
                 }
+              // we don't need \0
               strncpy (gb_opt.licensee_str, *argv, 2);
               break;
 
@@ -711,6 +836,10 @@ main (int argc, char **argv)
               gb_opt.is_gbc = 2;
               break;
 
+            case 'N':
+              gb_opt.do_logo_copy = false; // when switch is present, turn off logo copy
+              break;
+
             case 's':
               gb_opt.is_sgb = 1;
               break;
@@ -727,17 +856,90 @@ main (int argc, char **argv)
             case 'p':
               // remove "-yp"
               *argv += 3;
+
+              // also support -yp 0x143=0x80
+              if (!(*argv)[0])
+                if (!*++argv)
+                  {
+                    usage ();
+                    return 1;
+                  }
+
               // effectively split string into argv and token
               strtok(*argv, "=");
               token = strtok(NULL, "=");
               for (i = 0; i < 16; i+=2)
-                { 
-                  if(gb_opt.address_overwrite[i] == 0xFF)
+                {
+                  if (gb_opt.address_overwrite[i] == 0xFF)
                     {
                       gb_opt.address_overwrite[i] = strtoul (*argv, NULL, 0);
                       gb_opt.address_overwrite[i+1] = strtoul (token, NULL, 0);
                       break;
                     }
+                }
+              break;
+
+            default:
+              usage ();
+              return 1;
+            }
+          break;
+
+        case 'S':
+          /* generate SMS binary file */
+          sms = 1;
+          break;
+
+        case 'x':
+
+          switch (argv[0][2])
+            {
+            case 'o':
+              if (!*++argv)
+                {
+                  usage ();
+                  return 1;
+                }
+              sms_opt.rom_size = strtoul (*argv, NULL, 0);
+              if ( sms_opt.rom_size > 2 && (sms_opt.rom_size < 0xa || sms_opt.rom_size > 0xf ) )
+                {
+                  fprintf (stderr, "error: invalid rom size (0x%X)", sms_opt.rom_size);
+                  perror(NULL);
+                  return 1;
+                }
+              if ( sms_opt.rom_size == 0xd || sms_opt.rom_size == 0x2 )
+                {
+                  fprintf (stderr, "warning: this rom size (0x%X) is bugged in some BIOSes\n", sms_opt.rom_size);
+                }
+              break;
+
+            case 'j':
+              if (!*++argv)
+                {
+                  usage ();
+                  return 1;
+                }
+              sms_opt.region_code = strtoul (*argv, NULL, 0);
+              if ( sms_opt.region_code < 3 && sms_opt.region_code > 7 )
+                {
+                  fprintf (stderr, "error: invalid region code (0x%X)", sms_opt.region_code);
+                  perror(NULL);
+                  return 1;
+                }
+              break;
+
+            case 'v':
+              if (!*++argv)
+                {
+                  usage ();
+                  return 1;
+                }
+              sms_opt.version = strtoul (*argv, NULL, 0);
+              if ( sms_opt.version > 0xf )
+                {
+                  fprintf (stderr, "error: invalid version (0x%X)", sms_opt.version);
+                  perror(NULL);
+                  return 1;
                 }
               break;
 
@@ -803,6 +1005,8 @@ main (int argc, char **argv)
     {
       if (gb)
         gb_postproc (rom, size, &real_size, &gb_opt);
+      else if (sms)
+        sms_postproc (rom, size, &real_size, &sms_opt);
 
       if (*argv)
         {
@@ -816,8 +1020,14 @@ main (int argc, char **argv)
                 }
             }
         }
+      // skip offset
+      if (offset > 0)
+        {
+          memmove (rom, rom + offset, size - offset);
+          memset (rom + size - offset, FILL_BYTE, offset);
+        }
 
-      fwrite (rom, 1, (pack ? real_size : size), fout);
+      fwrite (rom, 1, (pack ? real_size : size) - offset, fout);
 
       fclose (fout);
 

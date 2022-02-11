@@ -39,6 +39,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 //#include "simcl.h"
 //#include "memcl.h"
 //#include "stackcl.h"
+#include "dregcl.h"
 
 // local
 #include "tlcscl.h"
@@ -96,8 +97,6 @@ cl_tlcs::cl_tlcs(class cl_sim *asim):
 int
 cl_tlcs::init(void)
 {
-  class cl_var *v;
-
   cl_uc::init(); /* Memories now exist */
   //ram= address_space(MEM_IRAM_ID);
   //rom= address_space(MEM_ROM_ID);
@@ -108,62 +107,51 @@ cl_tlcs::init(void)
     nas->set((t_addr) i, 0);
   }
 
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("F", regs8, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("B", regs8, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("C", regs8, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("D", regs8, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("E", regs8, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("H", regs8, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("L", regs8, 7, ""));
-  v->init();
+  vars->add("A", regs8, 0, 7, 0, "");
+  vars->add("F", regs8, 1, 7, 0, "");
+  vars->add("F_S", regs8, 1, 7, 7, "");
+  vars->add("F_Z", regs8, 1, 7, 7, "Zero");
+  vars->add("F_I", regs8, 1, 5, 5, "Interrupt Mask");
+  vars->add("F_H", regs8, 1, 4, 4, "Half Carry");
+  vars->add("F_X", regs8, 1, 3, 3, "");
+  vars->add("F_V", regs8, 1, 2, 2, "Overflow");
+  vars->add("F_N", regs8, 1, 1, 1, "Negative");
+  vars->add("F_C", regs8, 1, 0, 0, "Carry");
+  vars->add("B", regs8, 2, 7, 0, "");
+  vars->add("C", regs8, 3, 7, 0, "");
+  vars->add("D", regs8, 4, 7, 0, "");
+  vars->add("E", regs8, 5, 7, 0, "");
+  vars->add("H", regs8, 6, 7, 0, "");
+  vars->add("L", regs8, 7, 7, 0, "");
 
-  vars->add(v= new cl_var("ALT_A", regs8, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_F", regs8, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_B", regs8, 10, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_C", regs8, 11, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_D", regs8, 12, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_E", regs8, 13, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_H", regs8, 14, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_L", regs8, 15, ""));
-  v->init();
+  vars->add("ALT_A", regs8, 8, 7, 0, "");
+  vars->add("ALT_F", regs8, 9, 7, 0, "");
+  vars->add("ALT_F_S", regs8, 9, 7, 7, "");
+  vars->add("ALT_F_Z", regs8, 9, 7, 7, "Zero");
+  vars->add("ALT_F_I", regs8, 9, 5, 5, "Interrupt Mask");
+  vars->add("ALT_F_H", regs8, 9, 4, 4, "Half Carry");
+  vars->add("ALT_F_X", regs8, 9, 3, 3, "");
+  vars->add("ALT_F_V", regs8, 9, 2, 2, "Overflow");
+  vars->add("ALT_F_N", regs8, 9, 1, 1, "Negative");
+  vars->add("ALT_F_C", regs8, 9, 0, 0, "Carry");
+  vars->add("ALT_B", regs8, 10, 7, 0, "");
+  vars->add("ALT_C", regs8, 11, 7, 0, "");
+  vars->add("ALT_D", regs8, 12, 7, 0, "");
+  vars->add("ALT_E", regs8, 13, 7, 0, "");
+  vars->add("ALT_H", regs8, 14, 7, 0, "");
+  vars->add("ALT_L", regs8, 15, 7, 0, "");
 
-  vars->add(v= new cl_var("AF", regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("BC", regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("DE", regs16, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("HL", regs16, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("IX", regs16, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("IY", regs16, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("SP", regs16, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_AF", regs16, 7, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_BC", regs16, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_DE", regs16, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_HL", regs16, 11, ""));
-  v->init();
+  vars->add("AF", regs16, 0, 15, 0, "");
+  vars->add("BC", regs16, 1, 15, 0, "");
+  vars->add("DE", regs16, 2, 15, 0, "");
+  vars->add("HL", regs16, 3, 15, 0, "");
+  vars->add("IX", regs16, 4, 15, 0, "");
+  vars->add("IY", regs16, 5, 15, 0, "");
+  vars->add("SP", regs16, 6, 15, 0, "");
+  vars->add("ALT_AF", regs16, 7, 15, 0, "");
+  vars->add("ALT_BC", regs16, 8, 15, 0, "");
+  vars->add("ALT_DE", regs16, 9, 15, 0, "");
+  vars->add("ALT_HL", regs16, 11, 15, 0, "");
 
   return(0);
 }
@@ -185,8 +173,11 @@ cl_tlcs::make_cpu_hw(void)
 void
 cl_tlcs::mk_hw_elements(void)
 {
-  //class cl_hw *h;
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
 }
 
 
@@ -208,7 +199,7 @@ cl_tlcs::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("nas_chip", 0x10000, 8);
+  chip= new cl_chip8("nas_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(as= nas,
@@ -369,14 +360,14 @@ cl_tlcs::condname_C(u8_t cc)
 }
 
 char *
-cl_tlcs::disass(t_addr addr, const char *sep)
+cl_tlcs::disass(t_addr addr)
 {
   struct dis_entry *de;
+  t_addr operand;
   u64_t c;
   int i;
   chars s("");
   const char *t;
-  char l[20];
 
   c= 0;
   for (i= 7; i>=0; i--)
@@ -425,17 +416,43 @@ cl_tlcs::disass(t_addr addr, const char *sep)
 	    case 'C': /* cc in 2nd byte */ s+= condname_C(c>>8); break; // without ,
 	    case 'f': /* cc in 4th byte */ s+= condname_cc(c>>24); break; // with ,
 	    case 'F': /* cc in 3rd byte */ s+= condname_cc(c>>16); break; // with ,
-	    case 'n': /*  n in 2nd byte */ snprintf(l,19,"%02x",(int)((c>>8)&0xff));s+= l; break;
-	    case 'N': /*  n in 3rd byte */ snprintf(l,19,"%02x",(int)((c>>16)&0xff));s+= l; break;
-	    case 'o': /*  n in 4th byte */ snprintf(l,19,"%02x",(int)((c>>24)&0xff));s+= l; break;
-	    case 'O': /*  n in 5th byte */ snprintf(l,19,"%02x",(int)((c>>32)&0xff));s+= l; break;
-	    case '1': /*  PC+2+d in 2nd byte */ snprintf(l,19,"0x%04x",(int)(addr+2+i8_t((c>>8)&0xff))); s+= l; break;
-	    case 'd': /*  d in 2nd byte */ snprintf(l,19,"%+d",(int)(i8_t((c>>8)&0xff))); s+= l; break;
-	    case 'D': /* cd in 2,3 byte */ snprintf(l,19,"0x%04x",(int)(addr+3+i16_t((c>>8)&0xffff))); s+= l; break;	      
-	    case 'M': /* mn in 2,3 byte */ snprintf(l,19,"0x%04x",(int)((c>>8)&0xffff)); s+= l; break;
-	    case 'm': /* mn in 3,4 byte */ snprintf(l,19,"0x%04x",(int)((c>>16)&0xffff)); s+= l; break;
-	    case 'X': /* mn in 4,5 byte */ snprintf(l,19,"0x%04x",(int)((c>>24)&0xffff)); s+= l; break;
-	    case 'x': /* mn in 5,6 byte */ snprintf(l,19,"0x%04x",(int)((c>>32)&0xffff)); s+= l; break;
+	    case 'n': /*  n in 2nd byte */ s.appendf("%02x",(int)((c>>8)&0xff)); break;
+	    case 'N': /*  n in 3rd byte */ s.appendf("%02x",(int)((c>>16)&0xff)); break;
+	    case 'o': /*  n in 4th byte */ s.appendf("%02x",(int)((c>>24)&0xff)); break;
+	    case 'O': /*  n in 5th byte */ s.appendf("%02x",(int)((c>>32)&0xff)); break;
+	    case 'd': /*  d in 2nd byte */ s.appendf("%+d",(int)(i8_t((c>>8)&0xff))); break;
+
+	    case '1': /*  PC+2+d in 2nd byte */
+	      operand= (u16_t)(addr+2 + (i8_t)((c>>8)&0xff));
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'D': /* cd in 2,3 byte */
+	      operand= (u16_t)(addr+3 + (i16_t)((c>>8)&0xffff));
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'M': /* mn in 2,3 byte */
+	      operand= (u16_t)((c>>8)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'm': /* mn in 3,4 byte */
+	      operand= (u16_t)((c>>16)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'X': /* mn in 4,5 byte */
+	      operand= (u16_t)((c>>24)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'x': /* mn in 5,6 byte */
+	      operand= (u16_t)((c>>32)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+
 	    default: s+= '?'; break;
 	    }
 	}
@@ -479,6 +496,7 @@ cl_tlcs::inst_length(t_addr addr)
 void
 cl_tlcs::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("SZIHXVNC  Flags= 0x%02x %3d %c  ",
                  reg.raf.f, reg.raf.f, isprint(reg.raf.f)?reg.raf.f:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",
@@ -720,14 +738,14 @@ cl_tlcs::exec_inst2(u8_t c1)
     case 0x6D: inst_xor_a(c2); break; // XOR A,n
     case 0x6E: inst_or_a(c2); break; // OR A,n
     case 0x6F: op_cp_a(c2); break; // CP A,n
-    case 0x70: reg.hl= op_add_hl(t_addr(0xff00+c2)); break; // ADD HL,(0ffn)
-    case 0x71: reg.hl= op_adc_hl(t_addr(0xff00+c2)); break; // ADC HL,(0ffn)
-    case 0x72: reg.hl= op_sub_hl(t_addr(0xff00+c2)); break; // SUB HL,(0ffn)
-    case 0x73: reg.hl= op_sbc_hl(t_addr(0xff00+c2)); break; // SBC HL,(0ffn)
-    case 0x74: reg.hl= op_and_hl(t_addr(0xff00+c2)); break; // AND HL,(0ffn)
-    case 0x75: reg.hl= op_xor_hl(t_addr(0xff00+c2)); break; // XOR HL,(0ffn)
-    case 0x76: reg.hl= op_or_hl(t_addr(0xff00+c2)); break; // OR HL,(0ffn)
-    case 0x77: op_sub_hl(t_addr(0xff00+c2)); break; // CP HL,(0ffn)
+    case 0x70: reg.hl= op_add_hl_a(0xff00+c2); break; // ADD HL,(0ffn)
+    case 0x71: reg.hl= op_adc_hl_a(0xff00+c2); break; // ADC HL,(0ffn)
+    case 0x72: reg.hl= op_sub_hl_a(0xff00+c2); break; // SUB HL,(0ffn)
+    case 0x73: reg.hl= op_sbc_hl_a(0xff00+c2); break; // SBC HL,(0ffn)
+    case 0x74: reg.hl= op_and_hl_a(0xff00+c2); break; // AND HL,(0ffn)
+    case 0x75: reg.hl= op_xor_hl_a(0xff00+c2); break; // XOR HL,(0ffn)
+    case 0x76: reg.hl= op_or_hl_a(0xff00+c2); break; // OR HL,(0ffn)
+    case 0x77: op_sub_hl_a(0xff00+c2); break; // CP HL,(0ffn)
     case 0x87: inst_inc(n); break; // INC (0ffn)
     case 0x8F: inst_dec(n); break; // DEC (0ffn)
     default:
@@ -788,18 +806,18 @@ cl_tlcs::exec_inst2_f3(u8_t c2)
     case 0x65: res= inst_xor_a(cell_hl_a()); break; // XOR A,(HL+A)
     case 0x66: res= inst_or_a(cell_hl_a()); break; // OR A,(HL+A)
     case 0x67: res= op_cp_a(cell_hl_a()); break; // CP A,(HL+A)
-    case 0x70: reg.hl= op_add_hl((t_addr)(reg.hl+reg.raf.a)); break; // ADD HL,(HL+A)
-    case 0x71: reg.hl= op_adc_hl((t_addr)(reg.hl+reg.raf.a)); break; // ADC HL,(HL+A)
-    case 0x72: reg.hl= op_sub_hl((t_addr)(reg.hl+reg.raf.a)); break; // SUB HL,(HL+A)
-    case 0x73: reg.hl= op_sbc_hl((t_addr)(reg.hl+reg.raf.a)); break; // SBC HL,(HL+A)
-    case 0x74: reg.hl= op_and_hl((t_addr)(reg.hl+reg.raf.a)); break; // AND HL,(HL+A)
-    case 0x75: reg.hl= op_xor_hl((t_addr)(reg.hl+reg.raf.a)); break; // XOR HL,(HL+A)
-    case 0x76: reg.hl= op_or_hl((t_addr)(reg.hl+reg.raf.a)); break; // OR HL,(HL+A)
-    case 0x77: reg.hl= op_sub_hl((t_addr)(reg.hl+reg.raf.a)); break; // CP HL,(HL+A)
+    case 0x70: reg.hl= op_add_hl_a((reg.hl+reg.raf.a)); break; // ADD HL,(HL+A)
+    case 0x71: reg.hl= op_adc_hl_a((reg.hl+reg.raf.a)); break; // ADC HL,(HL+A)
+    case 0x72: reg.hl= op_sub_hl_a((reg.hl+reg.raf.a)); break; // SUB HL,(HL+A)
+    case 0x73: reg.hl= op_sbc_hl_a((reg.hl+reg.raf.a)); break; // SBC HL,(HL+A)
+    case 0x74: reg.hl= op_and_hl_a((reg.hl+reg.raf.a)); break; // AND HL,(HL+A)
+    case 0x75: reg.hl= op_xor_hl_a((reg.hl+reg.raf.a)); break; // XOR HL,(HL+A)
+    case 0x76: reg.hl= op_or_hl_a((reg.hl+reg.raf.a)); break; // OR HL,(HL+A)
+    case 0x77: reg.hl= op_sub_hl_a((reg.hl+reg.raf.a)); break; // CP HL,(HL+A)
     case 0x87: inst_inc(cell_hl_a()); break; // INC (HL+A)
     case 0x8f: inst_dec(cell_hl_a()); break; // DEC (HL+A)
-    case 0x97: inst_inc16((t_addr)(reg.hl+reg.raf.a)); break; // INCW (HL+A)
-    case 0x9f: inst_dec16((t_addr)(reg.hl+reg.raf.a)); break; // DECW (HL+A)
+    case 0x97: inst_inc16((reg.hl+reg.raf.a)); break; // INCW (HL+A)
+    case 0x9f: inst_dec16((reg.hl+reg.raf.a)); break; // DECW (HL+A)
     case 0xa0: inst_rlc(cell_hl_a()); break; // RLC (HL+A)
     case 0xa1: inst_rrc(cell_hl_a()); break; // RRC (HL+A)
     case 0xa2: inst_rl(cell_hl_a()); break; // RL (HL+A)
@@ -964,14 +982,14 @@ cl_tlcs::exec_inst2_e0gg(u8_t c1, u8_t c2)
     case 0x65: inst_xor_a(gg); break; // XOR A(gg)
     case 0x66: inst_or_a(gg); break; // OR A,(gg)
     case 0x67: op_cp_a(gg); break; // CP A,(gg)
-    case 0x70: reg.hl= op_add_hl((t_addr)*aof_reg16_gg(c1)); break; // ADD HL,(gg)
-    case 0x71: reg.hl= op_adc_hl((t_addr)*aof_reg16_gg(c1)); break; // ADC HL,(gg)
-    case 0x72: reg.hl= op_sub_hl((t_addr)*aof_reg16_gg(c1)); break; // SUB HL,(gg)
-    case 0x73: reg.hl= op_sbc_hl((t_addr)*aof_reg16_gg(c1)); break; // SBC HL,(gg)
-    case 0x74: reg.hl= op_and_hl((t_addr)*aof_reg16_gg(c1)); break; // AND HL,(gg)
-    case 0x75: reg.hl= op_xor_hl((t_addr)*aof_reg16_gg(c1)); break; // XOR HL,(gg)
-    case 0x76: reg.hl= op_or_hl((t_addr)*aof_reg16_gg(c1)); break; // OR HL,(gg)
-    case 0x77: reg.hl= op_sub_hl((t_addr)*aof_reg16_gg(c1)); break; // CP HL,(gg)
+    case 0x70: reg.hl= op_add_hl_a(*aof_reg16_gg(c1)); break; // ADD HL,(gg)
+    case 0x71: reg.hl= op_adc_hl_a(*aof_reg16_gg(c1)); break; // ADC HL,(gg)
+    case 0x72: reg.hl= op_sub_hl_a(*aof_reg16_gg(c1)); break; // SUB HL,(gg)
+    case 0x73: reg.hl= op_sbc_hl_a(*aof_reg16_gg(c1)); break; // SBC HL,(gg)
+    case 0x74: reg.hl= op_and_hl_a(*aof_reg16_gg(c1)); break; // AND HL,(gg)
+    case 0x75: reg.hl= op_xor_hl_a(*aof_reg16_gg(c1)); break; // XOR HL,(gg)
+    case 0x76: reg.hl= op_or_hl_a(*aof_reg16_gg(c1)); break; // OR HL,(gg)
+    case 0x77: reg.hl= op_sub_hl_a(*aof_reg16_gg(c1)); break; // CP HL,(gg)
     case 0x87: inst_inc(gg); break; // INC (gg)
     case 0x8f: inst_dec(gg); break; // DEC (gg)
     case 0x97: inst_inc16gg(c1, *aof_reg16_gg(c1)); break; // INCW (gg)
@@ -1093,14 +1111,14 @@ cl_tlcs::exec_inst2_f8gg(u8_t c1, u8_t c2)
 	case 0x65: inst_xor_a(*ga); break; // XOR A,g
 	case 0x66: inst_or_a(*ga); break; // OR A,g
 	case 0x67: op_cp_a(*ga); break; // CP A,g
-	case 0x70: reg.hl= op_add_hl((t_mem)*gga); break; // ADD HL,gg
-	case 0x71: reg.hl= op_adc_hl((t_mem)*gga); break; // ADC HL,gg
-	case 0x72: reg.hl= op_sub_hl((t_mem)*gga); break; // SUB HL,gg
-	case 0x73: reg.hl= op_sbc_hl((t_mem)*gga); break; // SBC HL,gg
-	case 0x74: reg.hl= op_and_hl((t_mem)*gga); break; // AND HL,gg
-	case 0x75: reg.hl= op_xor_hl((t_mem)*gga); break; // XOR HL,gg
-	case 0x76: reg.hl= op_or_hl((t_mem)*gga); break; // OR HL,gg
-	case 0x77: op_sub_hl((t_mem)*gga); break; // CP HL,gg
+	case 0x70: reg.hl= op_add_hl_v(*gga); break; // ADD HL,gg
+	case 0x71: reg.hl= op_adc_hl_v(*gga); break; // ADC HL,gg
+	case 0x72: reg.hl= op_sub_hl_v(*gga); break; // SUB HL,gg
+	case 0x73: reg.hl= op_sbc_hl_v(*gga); break; // SBC HL,gg
+	case 0x74: reg.hl= op_and_hl_v(*gga); break; // AND HL,gg
+	case 0x75: reg.hl= op_xor_hl_v(*gga); break; // XOR HL,gg
+	case 0x76: reg.hl= op_or_hl_v(*gga); break; // OR HL,gg
+	case 0x77: op_sub_hl_v(*gga); break; // CP HL,gg
 	case 0xA0: *ga= op_rlc(*ga, true); break; // RLC g
 	case 0xA1: *ga= op_rrc(*ga, true); break; // RRC g
 	case 0xA2: *ga= op_rl(*ga, true); break; // RL g
@@ -1157,14 +1175,14 @@ cl_tlcs::exec_inst3(u8_t c1, u8_t c2)
     case 0x1b: PC+= i16_t(c3*256 + c2); break; // JRL $+2+cd
     case 0x1c: inst_call(PC-3, c3*256 + c2); break; // CALL mn
     case 0x1d: inst_call(PC-3, PC + i16_t(c3*256 + c2)); break; // CALR $+2+cd
-    case 0x78: reg.hl= op_add_hl((t_mem)(c3*256+c2)); break; // ADD HL,mn
-    case 0x79: reg.hl= op_adc_hl((t_mem)(c3*256+c2)); break; // ADC HL,mn
-    case 0x7a: reg.hl= op_sub_hl((t_mem)(c3*256+c2)); break; // SUB HL,mn
-    case 0x7b: reg.hl= op_sbc_hl((t_mem)(c3*256+c2)); break; // SBC HL,mn
-    case 0x7c: reg.hl= op_and_hl((t_mem)(c3*256+c2)); break; // AND HL,mn
-    case 0x7d: reg.hl= op_xor_hl((t_mem)(c3*256+c2)); break; // XOR HL,mn
-    case 0x7e: reg.hl= op_or_hl((t_mem)(c3*256+c2)); break; // OR HL,mn
-    case 0x7f: op_sub_hl((t_mem)(c3*256+c2)); break; // CP HL,mn
+    case 0x78: reg.hl= op_add_hl_v((c3*256+c2)); break; // ADD HL,mn
+    case 0x79: reg.hl= op_adc_hl_v((c3*256+c2)); break; // ADC HL,mn
+    case 0x7a: reg.hl= op_sub_hl_v((c3*256+c2)); break; // SUB HL,mn
+    case 0x7b: reg.hl= op_sbc_hl_v((c3*256+c2)); break; // SBC HL,mn
+    case 0x7c: reg.hl= op_and_hl_v((c3*256+c2)); break; // AND HL,mn
+    case 0x7d: reg.hl= op_xor_hl_v((c3*256+c2)); break; // XOR HL,mn
+    case 0x7e: reg.hl= op_or_hl_v((c3*256+c2)); break; // OR HL,mn
+    case 0x7f: op_sub_hl_v((c3*256+c2)); break; // CP HL,mn
     default:
       switch (c1 & 0xf8)
 	{
@@ -1260,14 +1278,14 @@ cl_tlcs::exec_inst3_f0ix(u8_t c1)
     case 0x65: inst_xor_a(c); break; // XOR A,(ix+d)
     case 0x66: inst_or_a(c); break; // OR A,(ix+d)
     case 0x67: op_cp_a(c); break; // CP A,(ix+d)
-    case 0x70: reg.hl= op_add_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // ADD HL,(ix+d)
-    case 0x71: reg.hl= op_adc_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // ADC HL,(ix+d)
-    case 0x72: reg.hl= op_sub_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // SUB HL,(ix+d)
-    case 0x73: reg.hl= op_sbc_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // SBC HL,(ix+d)
-    case 0x74: reg.hl= op_and_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // AND HL,(ix+d)
-    case 0x75: reg.hl= op_xor_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // XOR HL,(ix+d)
-    case 0x76: reg.hl= op_or_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // OR HL,(ix+d)
-    case 0x77: op_sub_hl((t_mem)mem16ixd(c1,d)); vc.rd+= 2; break; // CP HL,(ix+d)
+    case 0x70: reg.hl= op_add_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // ADD HL,(ix+d)
+    case 0x71: reg.hl= op_adc_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // ADC HL,(ix+d)
+    case 0x72: reg.hl= op_sub_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // SUB HL,(ix+d)
+    case 0x73: reg.hl= op_sbc_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // SBC HL,(ix+d)
+    case 0x74: reg.hl= op_and_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // AND HL,(ix+d)
+    case 0x75: reg.hl= op_xor_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // XOR HL,(ix+d)
+    case 0x76: reg.hl= op_or_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // OR HL,(ix+d)
+    case 0x77: op_sub_hl_v(mem16ixd(c1,d)); vc.rd+= 2; break; // CP HL,(ix+d)
     case 0x87: inst_inc(c); break; // INC (ix+d)
     case 0x8F: inst_dec(c); break; // DEC (ix+d)
     case 0x97: inst_inc16ix(c1, a); break; // INCW (ix+d)
@@ -1340,18 +1358,18 @@ cl_tlcs::exec_inst4_e3(u8_t c1, u8_t c2, u8_t c3, u8_t c4)
     case 0x65: inst_xor_a(c); break; // XOR A,(mn)
     case 0x66: inst_or_a(c); break; // OR A,(mn)
     case 0x67: op_cp_a(c); break; // CP A,(mn)
-    case 0x70: reg.hl= op_add_hl((t_addr)mn); break; // ADD HL,(mn)
-    case 0x71: reg.hl= op_adc_hl((t_addr)mn); break; // ADC HL,(mn)
-    case 0x72: reg.hl= op_sub_hl((t_addr)mn); break; // SUB HL,(mn)
-    case 0x73: reg.hl= op_sbc_hl((t_addr)mn); break; // SBC HL,(mn)
-    case 0x74: reg.hl= op_and_hl((t_addr)mn); break; // AND HL,(mn)
-    case 0x75: reg.hl= op_xor_hl((t_addr)mn); break; // XOR HL,(mn)
-    case 0x76: reg.hl= op_or_hl((t_addr)mn); break; // OR HL,(mn)
-    case 0x77: op_sub_hl((t_addr)mn); break; // CP HL,(mn)
+    case 0x70: reg.hl= op_add_hl_a(mn); break; // ADD HL,(mn)
+    case 0x71: reg.hl= op_adc_hl_a(mn); break; // ADC HL,(mn)
+    case 0x72: reg.hl= op_sub_hl_a(mn); break; // SUB HL,(mn)
+    case 0x73: reg.hl= op_sbc_hl_a(mn); break; // SBC HL,(mn)
+    case 0x74: reg.hl= op_and_hl_a(mn); break; // AND HL,(mn)
+    case 0x75: reg.hl= op_xor_hl_a(mn); break; // XOR HL,(mn)
+    case 0x76: reg.hl= op_or_hl_a(mn); break; // OR HL,(mn)
+    case 0x77: op_sub_hl_a(mn); break; // CP HL,(mn)
     case 0x87: inst_inc(c); break; // INC (mn)
     case 0x8f: inst_dec(c); break; // DEC (mn)
-    case 0x97: inst_inc16((t_addr)mn); break; // INCW (mn)
-    case 0x9f: inst_dec16((t_addr)mn); break; // DECW (mn)
+    case 0x97: inst_inc16(mn); break; // INCW (mn)
+    case 0x9f: inst_dec16(mn); break; // DECW (mn)
     case 0xa0: inst_rlc(c); break; // RLC (mn)
     case 0xa1: inst_rrc(c); break; // RRC (mn)
     case 0xa2: inst_rl(c); break; // RL (mn)

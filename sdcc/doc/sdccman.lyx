@@ -263,13 +263,13 @@ status collapsed
 \end_inset
 
 , etc.), Dallas DS80C390 variants, NXP (formerly Freescale/Motorola) HC08
- based (hc08, s08), Zilog Z80 based MCUs (Z80, Z180, eZ80 in Z80 mode, gbz80,
+ based (hc08, s08), Zilog Z80 based MCUs (Z80, Z180, eZ80 in Z80 mode, SM83,
  Rabbit 2000/3000, Rabbit 3000A 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-Z80, Z180, GBZ80, Rabbit 2000/3000, Rabbit 3000A CPU
+Z80, Z180, SM83, Rabbit 2000/3000, Rabbit 3000A CPU
 \end_layout
 
 \end_inset
@@ -285,8 +285,9 @@ STM8
 \end_inset
 
 , Padauk PDK14 and PDK15.
- It can be retargeted for other microprocessors, support for Microchip PIC
- and Padauk PDK13 is under development.
+ It can be retargeted for other microprocessors, support for Padauk PDK13
+ and MOS6502 is under development, whereas Microchip PIC is currently unmaintain
+ed.
  The entire source code for the compiler is distributed under GPL.
  SDCC uses a modified version of ASXXXX
 \begin_inset Index idx
@@ -2623,7 +2624,7 @@ In 3.6.0, the default for char changed from signed to unsigned.
 
 \begin_layout Itemize
 In 3.7.0, the prototype for putchar() changed from void putchar(char) to int
- putchar(int)
+ putchar(int).
 \end_layout
 
 \begin_layout Itemize
@@ -2636,7 +2637,7 @@ In 3.7.0, the option –nojtbound and the corresponding pragma have been depreca
 
 \begin_layout Itemize
 In 3.7.0, the prototype for getchar() changed from char getchar(void) to int
- getchar().
+ getchar(void).
 \end_layout
 
 \begin_layout Itemize
@@ -2646,6 +2647,58 @@ In 3.8.6, the deprecated sdcclib was removed.
 \begin_layout Itemize
 In 4.0.3, _itoa, _uitoa, _ltoa, _ultoa were renamed to __itoa, __uitoa, __ltoa,
  __ultoa.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.1, typeof.h has been removed.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.3, support for -
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-oldralloc has been removed for the z80-related backends.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.10, the default calling convention switched from __sdccall(0) to __sdccall(
+1) for stm8 and sm83.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.10, support for –profile has been removed for gbz80.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.11, the minimum Z80N Core version for the z80n port has been raised
+ from 1.0 to 2.0.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.12, the default calling convention switched from __sdccall(0) to __sdccall(
+1) for z80, z180 and z80n.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.12, support for –profile has been removed for z80, z180, z80n.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.13, support for –profile has been removed.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.14, the gbz80 port was renamed to sm83.
 \end_layout
 
 \begin_layout Section
@@ -3069,7 +3122,7 @@ status collapsed
 
 \end_inset
 
--disable-gbz80-port Excludes the Game Boy gbz80 port
+-disable-sm83-port Excludes the SM83 port
 \end_layout
 
 \begin_layout Labeling
@@ -6540,6 +6593,17 @@ Building SDCC
 
 \end_layout
 
+\begin_layout Standard
+SDCC can be built for various host platforms using the instructions provided
+ below.
+ Note that the PIC14 and PIC16 library folders in the source distribution
+ contain Autotools-generated files.
+ These are included for convenience and to avoid introducing Autotools as
+ an additional dependency.
+ They have to be regenerated in case of a version mismatch.
+ Alternatively, the PIC backends can be disabled.
+\end_layout
+
 \begin_layout Subsection
 Building SDCC on Linux
 \begin_inset CommandInset label
@@ -7916,8 +7980,8 @@ Documentation
 \end_layout
 
 \begin_layout Standard
-Currently reading the document in pdf format is recommended, as for unknown
- reason the hyperlinks are working there whereas in the html version they
+Currently reading the document in PDF format is recommended, as for unknown
+ reason the hyperlinks are working there whereas in the HTML version they
  are not
 \begin_inset Foot
 status collapsed
@@ -7932,7 +7996,7 @@ If you should know why please drop us a note
 \begin_inset Newline newline
 \end_inset
 
-You'll find the pdf version
+You'll find the PDF version
 \begin_inset Index idx
 status collapsed
 
@@ -8774,7 +8838,7 @@ sdcc - The Compiler
 \end_layout
 
 \begin_layout Standard
-This is the actual compiler, it in turn uses the c-preprocessor and invokes
+This is the actual compiler, it in turn uses the C-preprocessor and invokes
  the assembler and linkage editor.
 \end_layout
 
@@ -9624,6 +9688,256 @@ Embedded C
 SDCC supports named address spaces.
  The support for fixed-point math in SDCC is inconsistent with the standard.
  Other parts of the standard are not supported.
+\end_layout
+
+\begin_layout Subsection
+Implementation-defined behavior
+\end_layout
+
+\begin_layout Subsubsection
+Translation
+\end_layout
+
+\begin_layout Itemize
+Diagnostics are output to stderr, in the format <filename>:<line-number>:
+ <warning|error> <diagnostic-number>: <diagnostic-description>
+\end_layout
+
+\begin_layout Itemize
+Nonempty sequences of white-space are retained in translation phase 3.
+\end_layout
+
+\begin_layout Subsubsection
+Environment
+\end_layout
+
+\begin_layout Itemize
+See SDCC source (and your own code if you use a custom crt0 for a target
+ that supports it) for any information on the environment.
+\end_layout
+
+\begin_layout Subsubsection
+Identifiers
+\end_layout
+
+\begin_layout Itemize
+See the compiler and assembler source for information on characters that
+ may appear in identifiers and on the number of significant initial characters.
+\end_layout
+
+\begin_layout Subsubsection
+Characters
+\end_layout
+
+\begin_layout Itemize
+There are 8 bits in a byte.
+\end_layout
+
+\begin_layout Itemize
+Values of members of the execution character set: TODO.
+\end_layout
+
+\begin_layout Itemize
+Values of members of the execution character set for escape sequences: TODO.
+\end_layout
+
+\begin_layout Itemize
+Value of char with something weird stored in it: TODO.
+\end_layout
+
+\begin_layout Itemize
+unsigned char has the same range, representation and behavior as 
+\begin_inset Quotes sld
+\end_inset
+
+plain
+\begin_inset Quotes srd
+\end_inset
+
+ char.
+\end_layout
+
+\begin_layout Itemize
+See the SDCC source for further information on character sets.
+\end_layout
+
+\begin_layout Subsubsection
+Integers
+\end_layout
+
+\begin_layout Itemize
+There are no extended integer types.
+\end_layout
+
+\begin_layout Subsubsection
+Floating point
+\end_layout
+
+\begin_layout Itemize
+See the implementation (soft float library) for any information on floating
+ point.
+\end_layout
+
+\begin_layout Subsubsection
+Arrays and Pointers
+\end_layout
+
+\begin_layout Itemize
+For the result of converting between pointers and integers see the SDCC
+ source code.
+\end_layout
+
+\begin_layout Itemize
+For the size of the result of subtracting two pointers to elements of the
+ same array see the SDCC source code.
+\end_layout
+
+\begin_layout Subsubsection
+Hints
+\end_layout
+
+\begin_layout Itemize
+The extend to which suggestions made by register are effective depends on
+ the target.
+\end_layout
+
+\begin_layout Itemize
+SDCC will inline functions if and only if they are declared using inline
+ and do not have variable arguments.
+\end_layout
+
+\begin_layout Subsubsection
+Structures, unions, enumerations and bit-fields
+\end_layout
+
+\begin_layout Itemize
+A plain int bit-field is treated as an unsigned int bit-field.
+\end_layout
+
+\begin_layout Itemize
+There are no allowed bit-field types other than _Bool, signed int and unsigned
+ int.
+\end_layout
+
+\begin_layout Itemize
+Atomic types are not permitted for bit-fields.
+\end_layout
+
+\begin_layout Itemize
+If a bit-fields does not fit into the same byte as the previous bit-fields,
+ it starts on the next byte.
+\end_layout
+
+\begin_layout Itemize
+bit-fields are allocated in the same order as they appear in the source.
+\end_layout
+
+\begin_layout Itemize
+Non-bit-field members of structures are aligned on byte boundaries (i.e.
+ there are no padding bytes).
+\end_layout
+
+\begin_layout Itemize
+For the integer types compatible with enum types see the SDCC source code.
+\end_layout
+
+\begin_layout Subsubsection
+Qualifiers
+\end_layout
+
+\begin_layout Itemize
+SDCC shall preserve all volatile reads and writes, but does not guarantee
+ them to be atomic (except for atomic types and volatile sig_atomic_t).
+\end_layout
+
+\begin_layout Subsubsection
+Preprocessing directives
+\end_layout
+
+\begin_layout Itemize
+See the preprocessor source for information on preprocessing directives.
+\end_layout
+
+\begin_layout Subsubsection
+Library functions
+\end_layout
+
+\begin_layout Itemize
+See the respective library headers for the library functions available.
+\end_layout
+
+\begin_layout Itemize
+See assert.h and library source for the format of the diagnostic printed
+ by the assert macro.
+\end_layout
+
+\begin_layout Itemize
+There is no fegetexceptflag function.
+\end_layout
+
+\begin_layout Itemize
+There is no feraiseexcept function.
+\end_layout
+
+\begin_layout Itemize
+There is no setlocale function.
+\end_layout
+
+\begin_layout Itemize
+There is no FLT_EVAL_METHOD macro.
+\end_layout
+
+\begin_layout Itemize
+There is no DEC_EVAL_METHOD macro.
+\end_layout
+
+\begin_layout Itemize
+There are no non-required domain errors for mathematics functions.
+\end_layout
+
+\begin_layout Itemize
+See library source for the values returned by mathematical functions on
+ domain error and pole error (and anything else on mathematical functions
+ and floating type encodings).
+\end_layout
+
+\begin_layout Itemize
+See library headers for the null-pointer constant to which NULL expands.
+\end_layout
+
+\begin_layout Itemize
+See library headers and source for anything else about the library.
+\end_layout
+
+\begin_layout Subsubsection
+Architecture
+\end_layout
+
+\begin_layout Itemize
+See the respective library headers for the values or expressions for macros
+ specified in float.h, limits.h, stdint.h.
+\end_layout
+
+\begin_layout Itemize
+Multithreading is not supported.
+\end_layout
+
+\begin_layout Itemize
+The number of bytes in any object is the minimum allowed (except for some
+ padding bits on bit-fields), byte order depends on the target.
+\end_layout
+
+\begin_layout Itemize
+No extended alignments are supported.
+\end_layout
+
+\begin_layout Itemize
+There are no valid alignments other than those returned by _Alignof.
+\end_layout
+
+\begin_layout Itemize
+sizeof always returns the smallest value allowed assuming an 8-bit char.
+ _Alignof always returns 0.
 \end_layout
 
 \begin_layout Section
@@ -11043,24 +11357,24 @@ status collapsed
 \labelwidthstring 00.00.0000
 
 \series bold
--mgbz80
+-msm83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
--mgbz80
+-msm83
 \end_layout
 
 \end_inset
 
 
 \series default
- Generate code for the LR35902 GameBoy Z80
+ Generate code for the Sharp SM83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-gbz80 (GameBoy Z80)
+sm83 (GameBoy Z80)
 \end_layout
 
 \end_inset
@@ -12741,12 +13055,13 @@ status collapsed
 \end_inset
 
  Setting this to a high value will result in increased compilation time
- and more optimized code being generated.
- Setting it to lower values speed up compilation, but does not optimize
+ (and increased memory use during compilation) and more optimized code being
+ generated.
+ Setting it to lower values speeds up compilation, but does not optimize
  as much.
  The default value is 3000.
- This option currently only affects the hc08, s08, z80, z180, r2k, r3ka
- and gbz80 ports.
+ This option currently does not affect the mcs51, ds390, pic14 and pic16
+ ports.
 \end_layout
 
 \begin_layout Labeling
@@ -17512,7 +17827,7 @@ status collapsed
 \end_layout
 
 \begin_layout Subsection
-Options common to all z80-related ports (z80, z180, r2k, r3ka, gbz80, tlcs90,
+Options common to all z80-related ports (z80, z180, r2k, r3ka, sm83, tlcs90,
  ez80_z80)
 \end_layout
 
@@ -17905,71 +18220,6 @@ status collapsed
 
 \end_inset
 
--oldralloc
-\series default
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Z80!Options!-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--oldralloc
-\end_layout
-
-\end_inset
-
-
-\size large
- 
-\size default
-Use old register allocator.
- The old register allocator is typically is faster than the current one,
- but the current one generates better code.
- This differences are the most noticeable, when a high value for -
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--max-allocs-per-node is used.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
 -fno-omit-frame-pointer
 \series default
 
@@ -18003,7 +18253,7 @@ Never omit the frame pointer.
 \end_layout
 
 \begin_layout Subsection
-GBZ80 Options
+SM83 Options
 \begin_inset Index idx
 status collapsed
 
@@ -18015,10 +18265,10 @@ Options GBZ80
 
 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-GBZ80
+SM83
 \end_layout
 
 \end_inset
@@ -23272,8 +23522,8 @@ Binary constants
 \end_layout
 
 \begin_layout Standard
-SDCC supports the use of binary constants, such as 0b01100010.
- This feature is only enabled when the compiler is invoked using 
+SDCC supports the use of C23 binary constants, such as 0b01100010 when the
+ compiler is invoked using 
 \begin_inset Flex Code
 status open
 
@@ -23283,7 +23533,17 @@ status open
 
 \end_inset
 
-.
+, even when the corresponding 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--std-cxx
+\end_layout
+
+\end_inset
+
+, does not.
 \end_layout
 
 \begin_layout Subsection
@@ -25524,7 +25784,7 @@ Interrupt handler can be interrupted by interrupts of higher priority only
 \end_layout
 
 \begin_layout Subsection
-GBZ80 and TLCS-90 Interrupt Service Routines
+SM83 and TLCS-90 Interrupt Service Routines
 \end_layout
 
 \begin_layout Standard
@@ -37215,7 +37475,7 @@ Defines created by the compiler
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="22" columns="2">
+<lyxtabular version="3" rows="23" columns="2">
 <features tabularvalignment="middle">
 <column alignment="left" valignment="top" width="3in">
 <column alignment="left" valignment="top" width="3in">
@@ -37268,7 +37528,7 @@ version macro
 
 \end_inset
 
- 
+
 \end_layout
 
 \end_inset
@@ -37397,7 +37657,6 @@ z80
 \begin_layout Plain Layout
 depending on the model used (e.g.: -mds390).
  Older versions used SDCC_mcs51, etc instead.
- 
 \end_layout
 
 \end_inset
@@ -37882,7 +38141,7 @@ TENBIT (ds390)
 
 \end_inset
 
- 
+
 \end_layout
 
 \end_inset
@@ -38480,7 +38739,7 @@ status collapsed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38525,7 +38784,7 @@ SIZE
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38547,6 +38806,36 @@ status collapsed
 -opt-code-size
 \emph default
  is used
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+__SDCCCALL
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SDCC!Defines!SDCCCALL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Default ABI version for calling convention
 \end_layout
 
 \end_inset
@@ -43664,8 +43953,8 @@ ftp://ftp.dalsemi.com/pub/tini/ds80c400/c_libraries/sdcc/index.html
 \end_layout
 
 \begin_layout Section
-The Z80, Z180, Rabbit 2000, Rabbit 2000A, Rabbit 3000A, GBZ80, eZ80 and
- TLCS-90 ports
+The Z80, Z180, Rabbit 2000, Rabbit 2000A, Rabbit 3000A, SM83 (GameBoy),
+ eZ80 and TLCS-90 ports
 \end_layout
 
 \begin_layout Standard
@@ -43680,12 +43969,12 @@ Z80
 \end_inset
 
 , Z180, eZ80 in Z80 mode, Rabbit 2000, Rabbit 2000A, Rabbit 3000A and LR35902,
- the Nintendo GameBoy's Z80-like gbz80
+ the Sharp SM83 (used .e.g in the Nintendo GameBoy) sm83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-gbz80 (GameBoy Z80)
+sm83 (GameBoy Z80)
 \end_layout
 
 \end_inset
@@ -43697,21 +43986,6 @@ gbz80 (GameBoy Z80)
 When a frame pointer is used, it resides in IX.
  Register A, B, C, D, E, H, L and IY are used as a temporary registers for
  holding variables.
- Return values
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Z80!return value
-\end_layout
-
-\end_inset
-
- for the Z80 port are stored in L (one byte), HL (two bytes), or DEHL (four
- bytes).
- The gbz80 port use the same set of registers for the return values, but
- in a different order of significance: E (one byte), DE (two bytes), or
- HLDE (four bytes).
 \end_layout
 
 \begin_layout Standard
@@ -43829,14 +44103,14 @@ SDCC has three rabbit-supporting ports: r2k for the Rabbit 2000, r2ka for
  a subset of the Rabbit 3000A instruction set.
  Code from the r2k backend will work on Rabbit 2000 to 3000A and code from
  the r2ka backend will work on Rabbit 2000A to 3000A.
- In some hardware confgurations (see below), code from the r2ka backend
+ In some hardware configurations (see below), code from the r2ka backend
  will work on the Rabbit 2000.
  Typically, code from the r3ka backend will be faster and smaller than code
  from the r2ka backend, and code from the r2ka backend will be faster and
  smaller than code from the r2k backend.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Rabbit wait states
 \end_layout
 
@@ -43872,6 +44146,239 @@ For all Rabbit ports, SDCC assumes that all data memory is at least as fast
 \end_layout
 
 \begin_layout Subsection
+Z80, Z180 and Z80N calling conventions
+\end_layout
+
+\begin_layout Standard
+The current default is the SDCC calling convention, version 1.
+ Using the command-line option –sdcccall 0, the default can be changed to
+ version 0.
+ There are three other calling conventions supported, which can be specified
+ using the keywords __smallc, __z88dk_fastcall and __z88dk_callee.
+ They are primarily intended for compatibility with libraries written for
+ other compilers.
+ For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
+ which is passed the same way as the return value of __sdcccall(0).
+ For __z88dk_callee, parameters are passed on the stack, but the stack is
+ not adjusted for the parameters after the call (thus the callee has to
+ do this instead).
+ __z88dk_callee can be combined with __smallc.
+\end_layout
+
+\begin_layout Subsubsection
+Z80 SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(1).
+ 8-bit return values are passed in a, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename z80-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: The first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in hl.
+ If it has 32 bits, it is passed in hlde.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in l; if the first is passed in a or hl, and the second has 16 bits, it
+ is passed in de; all other parameters are passed on the stack, right-to-left.
+ If __z88dk_callee is not used, after the call, the stack parameters are
+ cleaned up by the caller, with the following exceptions: functions that
+ do not have variable arguments and return void or a type of at most 16
+ bits, or have both a first parameter of type float and a return value of
+ type float.
+\end_layout
+
+\begin_layout Subsubsection
+Z80 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(0).
+ All parameters are passed on the stack, right-to-left.
+ 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
+ in dehl.
+ Except for the SM83, where 8-bit values are passed in e, 16-bit values
+ in de, 32-bit values in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ Unless __z88dk_callee is used, all stack parameters are cleaned up by the
+ caller.
+\end_layout
+
+\begin_layout Subsection
+Rabbit 2000, Rabbit 2000A, Rabbit 3000A, eZ80 and TLCS-90 calling conventions
+\end_layout
+
+\begin_layout Standard
+The default is Z80 SDCC calling convention, version 0 as above.
+ Using the command-line option –sdcccall 1, the default can be changed to
+ version 1 of the Rabbit SDCC calling convnetion.
+ There are four other calling conventions supported, which can be specified
+ using the keywords __smallc, __z88dk_fastcall and __z88dk_callee.
+ They are primarily intended for compatibility with libraries written for
+ other compilers.
+ For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
+ which is passed the same way as the return value.
+ For __z88dk_callee, parameters are passed on the stack, but the stack is
+ not adjusted for the parameters after the call (thus the callee has to
+ do this instead).
+ __z88dk_callee can be combined with __smallc.
+\end_layout
+
+\begin_layout Subsubsection
+Rabbit SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(1).
+ 8-bit return values are passed in a, 16-bit values in hl, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename r3ka-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: The first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in hl.
+ If it has 32 bits, it is passed in hlde.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in l; if the first is in hl or hlde, and the second has 8 bits, it is passed
+ in a; if the first is in a, and the second has 16 bits, it is passed in
+ hl; all other parameters are passed on the stack, right-to-left.
+ If __z88dk_callee is not used, after the call, the stack parameters are
+ cleaned up by the caller, with the following exceptions: functions that
+ do not have variable arguments and return void or a type of at most 16
+ bits, or have both a first parameter of type float and a return value of
+ type float.
+\end_layout
+
+\begin_layout Subsection
+SM83 calling conventions
+\end_layout
+
+\begin_layout Standard
+The current default is the SDCC calling convention, version 1.
+ Using the command-line option –sdcccall 0, the default can be changed to
+ version 0.
+\end_layout
+
+\begin_layout Subsubsection
+SM83 SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(1).
+\end_layout
+
+\begin_layout Standard
+8-bit return values are passed in a, 16-bit values in bc, 32-bit values
+ in debc.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename sm83-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: The first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in de.
+ If it has 32 bits, it is passed in debc.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in e; if the first is in bc or debc, and the second has 8 bits, it is passed
+ in a; if the first is passed in a, and the second has 16 bits, it is passed
+ in bc; if the first is passed in de, and the second has 16 bits, it is
+ passed in bc; all other parameters are passed on the stack, right-to-left.
+ The stack is adjusted by the callee (thus explicitly specifying __z88dk_callee
+ does not make a difference).
+\end_layout
+
+\begin_layout Subsubsection
+SM83 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(0).
+ 8-bit return values are passed in e, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ All parameters are passed on the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead), unless __z88dk_callee is specified.
+ __sdcccall(0) can be combined with __z88dk_callee.
+\end_layout
+
+\begin_layout Subsection
+Small-C calling convention
+\end_layout
+
+\begin_layout Standard
+Functions declared as __smallc are called using the Small-C calling convention
+ (passing arguments on-stack left-to-right, 1 byte arguments are passed
+ as 2 bytes, with the value in the lower byte).
+ 8-bit return values are passed in a, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ This way assembler routines originally written for Small-C or code generated
+ by Small-C can be called from SDCC.
+ Currently variable arguments are not yet supported (neither on the caller
+ nor on the callee side).
+\end_layout
+
+\begin_layout Subsection
 Complex instructions
 \end_layout
 
@@ -43894,56 +44401,36 @@ Depending on the target, code generation options and the parameters to the
 \end_layout
 
 \begin_layout Subsection
-Calling conventions
-\end_layout
-
-\begin_layout Standard
-By default, all parameters are passed on the stack, right-to-left.
- 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
- in dehl.
- Except for the GBZ80, where 8-bit values are passed in e, 16-bit values
- in de, 32-bit values in hlde.
- Larger return values are passed in memory in a location specified by the
- caller through a hidden pointer argument.
-\end_layout
-
-\begin_layout Standard
-There are three other calling conventions supported, which can be specified
- using the keywords __smallc, __z88dk_fastcall (not on GBZ80) and __z88dk_callee.
- They are primarily intended for compability with libraries written for
- other compilers.
- For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
- which is passed the same way as the return value.
- For __z88dk_callee, parameters are passed on the stack, but the stack is
- not adjusted for the parameters after the call (thus the callee has to
- do this instead).
- __z88dk_callee is currently supported on the caller side only.
- __z88dk_callee can be combined with __smallc.
-\end_layout
-
-\begin_layout Subsection
-Small-C calling convention
-\end_layout
-
-\begin_layout Standard
-Functions declared as __smallc are called using the Small-C calling convention
- (passing arguments on-stack left-to-right, 1 byte arguments are passed
- as 2 bytes, with the value in the lower byte).
- This way assembler routines originally written for Small-C or code generated
- by Small-C can be called from SDCC.
- Currently variable arguments are not yet supported (neither on the caller
- nor on the callee side).
-\end_layout
-
-\begin_layout Subsection
 Unsafe reads
 \end_layout
 
 \begin_layout Standard
-Usually, Z80-based systems (except for the Gameboy) have separate I/O and
- memory spaces, and any normal memory location can be read without side-effects.
+Usually, Z80-based systems (except for the SM83 and TLCS-90) have separate
+ I/O and memory spaces, and any normal memory location can be read without
+ side-effects.
  For such systems, the option –allow-unsafe-reads can be used to enable
- some extra optimizations.
+ some extra optimizations that rely on this.
+\end_layout
+
+\begin_layout Subsection
+Z80 banked calls
+\end_layout
+
+\begin_layout Standard
+Banked calls are supported via __banked.
+ Banked calls are done via a trampoline (__sdcc_bcall if --legacy-banking
+ us specified, __sdcc_bcall_abc for z88dk_fastcall, __sdcc_bcall_ehl for
+ other calls).
+ Default trampolines are provided in the library.
+ The default trampolines calls user supplied helper functions set_bank and
+ get_bank that set the current bank to the value inr egister a, or return
+ the current bank in register a.
+\end_layout
+
+\begin_layout Standard
+For banked functions, the calling convention is slightly different: the
+ stack is always cleared up by the caller.
+ Unless __z88dk_fastcall is used, all parameters are passed on the stack.
 \end_layout
 
 \begin_layout Section
@@ -44000,7 +44487,12 @@ The STM8 port
 \end_layout
 
 \begin_layout Subsection
-Calling convention
+Calling conventions
+\end_layout
+
+\begin_layout Standard
+By default, the SDCC calling convention, version 1 is used.
+ Using the option –sdcccall 0, the default can be changed to version 0.
 \end_layout
 
 \begin_layout Standard
@@ -44008,6 +44500,106 @@ Arguments are passed on the stack right-to-left.
  Return values are in a (8 bit), x (16 bit), xyl (24 bit), xy (32 bit) or
  use a hidden extra pointer parameter pointing to the location (anything
  wider than 32 bit).
+\end_layout
+
+\begin_layout Subsubsection
+SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename stm8-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments, all parameters are passed on
+ the stack.
+ For other functions, if the first parameter has 8 or 16 bits, it is passed
+ in a or x.
+ If the first parameter has 8 bits, and the second has 16 bits, the second
+ is passed in x.
+ If the first parameter has 16 bits, and the second has 8 bits, the second
+ is passed in a.
+ All other parameters are passed on the stack.
+ If __z88dk_callee is specified, the stack is always adjusted by the callee.
+ Otherwise, for the large memory model, the stack is always adjusted by
+ the caller.
+ For the medium memory model the stack is adjusted by the caller, with the
+ following exceptions: functions that do not have variable arguments and
+ return void or a type of at most 16 bits, or have both a first parameter
+ of type float and a return value of type float.
+\end_layout
+
+\begin_layout Subsubsection
+SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+For compability with functions written for older versions of SDCC, the __sdcccal
+l(0) calling convention is supported.
+ All parameters are passed on the stack.
+ The stack is the stack is not adjusted for the parameters after the call
+ (thus the callee has to do this instead), unless __z88dk_callee is specified.
+\end_layout
+
+\begin_layout Subsubsection
+Raisonance calling convention
+\end_layout
+
+\begin_layout Standard
+For compatibility with the 
+\lang british
+Raisonance
+\lang english
+ STM8 compiler, the __raisonance calling convention is supported.
+ If the first parameter is 8 or 16 bits, it is passed in a or x.
+ If the first parameter is 8 bits, and the second 16 bits, the second is
+ passed in x.
+ If the first parameter is 16 bits, and the second is 8 bits, the second
+ is passed in a.
+ All other parameters are passed on the stack.
+ If the return value is 8 bits, it is passed in a.
+ If it is 16 bits, it is passed in x.
+ Raisonance passes larger return values in pseudoregisters, which is not
+ supported by SDCC.
+\end_layout
+
+\begin_layout Subsubsection
+IAR calling convention
+\end_layout
+
+\begin_layout Standard
+For compatibility with the IAR STM8 compiler, the __iar calling convention
+ is supported.
+ The first 8-bit parameter is passed in a, the first 16-bit parameter in
+ x, the second 16-bit parameter in y.
+ Further parameters of up to 32 bits are passed in pseudoregisters, which
+ is not supported by SDCC.
+ All other parameters are passed on the stack.
+ If the return value is 8 bits, it is passed in a.
+ If it is 16 bits, it is passed in x.
+ IAR passes larger return values in pseudoregisters, which is not supported
+ by SDCC.
+\end_layout
+
+\begin_layout Subsubsection
+Cosmic calling convention
+\end_layout
+
+\begin_layout Standard
+For compatibility with the Cosmic STM8 compiler, the __cosmic calling convention
+ is supported.
+ If the first parameter is 8 or 16 bits, it is passed in a or x.
+ If the return value is 8 bits, it is passed in a.
+ If it is 16 bits, it is passed in x.
+ Cosmic passes larger return values in pseudoregisters, which is not supported
+ by SDCC.
+ Even for the medium memory model, __cosmic functions use a 24-bit return
+ address in their stack frame, and are called using callf.
 \end_layout
 
 \begin_layout Section
@@ -44400,8 +44992,8 @@ Make local functions static, as non static functions require code page selection
 \begin_inset Newline newline
 \end_inset
 
-Due to the way sdcc handles functions, place called functions prior to calling
- functions in the file wherever possible: Otherwise sdcc will insert unnecessary
+Due to the way SDCC handles functions, place called functions prior to calling
+ functions in the file wherever possible: Otherwise SDCC will insert unnecessary
  pagesel directives around the call, believing that the called function
  is externally defined.
 \end_layout
@@ -64091,17 +64683,7 @@ Endianness
 \end_layout
 
 \begin_layout Subsection
-Highest Order Bit
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Highest Order Bit
-\end_layout
-
-\end_inset
-
- / Any Order Bit
+Getting a Bit
 \begin_inset Index idx
 status collapsed
 
@@ -68189,10 +68771,10 @@ Register-Allocation
 \begin_layout Standard
 SDCC currently has two register allocators.
  One of them is optimal when optimizing for code size.
- This register allocator is used by default on the hc08, s08, z80, z180,
- ez80_z80, r2k, and r3ka ports.
- For the gbz80, stm8,pdk13, pdk14 and pdk15 ports it is the only available
- register allocator.
+ This register allocator is used by default on all ports except for mcs51,
+ ds390, pic14 and pic16.
+ With the exception of hc08 and s08, it is also the only available register
+ allocator for these ports.
  Even though it runs in polynomial time, it can be quite slow; therefore
  the 
 \begin_inset Flex Code
@@ -69513,7 +70095,7 @@ iCode
 \size footnotesize
 Figure II 
 \begin_inset Tabular
-<lyxtabular version="3" rows="39" columns="4">
+<lyxtabular version="3" rows="38" columns="4">
 <features islongtable="true" headBottomDL="true" longtabularalignment="center">
 <column alignment="block" valignment="top" width="13col%">
 <column alignment="left" valignment="top" width="13col%">
@@ -69756,52 +70338,6 @@ Rotate left with carry
 
 \size footnotesize
 IC_RESULT = (IC_LEFT << (sizeof(LC_LEFT)*8-1) ) | (IC_LEFT >> 1);
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-GETHBIT
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-IC_LEFT() IC_RESULT()
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-Get the highest order bit of IC_LEFT
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-IC_RESULT = (IC_LEFT >> (sizeof(IC_LEFT)*8 -1));
 \end_layout
 
 \end_inset

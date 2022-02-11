@@ -110,9 +110,9 @@ int
 cl_interrupt::tick(int cycles)
 {
   if (!bit_IT0 && !bit_INT0)
-    cell_tcon->set_bit1(bmIE0);
+    cell_tcon->set(cell_tcon->get() | bmIE0);
   if (!bit_IT1 && !bit_INT1)
-    cell_tcon->set_bit1(bmIE1);
+    cell_tcon->set(cell_tcon->get() | bmIE1);
   return(resGO);
 }
 
@@ -127,7 +127,7 @@ cl_interrupt::happen(class cl_hw *where, enum hw_event he, void *params)
 {
   struct ev_port_changed *ep= (struct ev_port_changed *)params;
 
-  if (where->cathegory == HW_PORT &&
+  if (where->category == HW_PORT &&
       he == EV_PORT_CHANGED &&
       ep->id == 3)
     {
@@ -136,11 +136,11 @@ cl_interrupt::happen(class cl_hw *where, enum hw_event he, void *params)
       if (bit_IT0 &&
 	  !(p3n & bm_INT0) &&
 	  (p3o & bm_INT0))
-	cell_tcon->set_bit1(bmIE0);
+	cell_tcon->set(cell_tcon->get() | bmIE0);
       if (bit_IT1 &&
 	  !(p3n & bm_INT1) &&
 	  (p3o & bm_INT1))
-	cell_tcon->set_bit1(bmIE1);
+	cell_tcon->set(cell_tcon->get() | bmIE1);
       bit_INT0= p3n & bm_INT0;
       bit_INT1= p3n & bm_INT1;
     }

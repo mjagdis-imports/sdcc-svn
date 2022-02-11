@@ -163,7 +163,7 @@ cl_tim::reset(void)
   regs[idx.arrl]->set(0xff);
 
   update_event();
-  regs[idx.sr1]->set_bit0(uif);
+  regs[idx.sr1]->set(regs[idx.sr1]->get() & ~uif);
 }
 
 void
@@ -197,7 +197,7 @@ cl_tim::read(class cl_memory_cell *cell)
   a-= base;
 
   if (a == idx.pscrl)
-    v= prescaler_preload && 0xff;
+    v= prescaler_preload & 0xff;
   else if (a == idx.pscrh)
     v= (prescaler_preload >> 8) & 0xff;
     
@@ -376,7 +376,7 @@ cl_tim::update_event(void)
   u8_t c1= regs[idx.cr1]->get();
 
   if (c1 & opm)
-    regs[idx.cr1]->set_bit0(cen);
+    regs[idx.cr1]->set(regs[idx.cr1]->get() & ~cen);
   else
     {
       if (get_dir())
@@ -391,7 +391,7 @@ cl_tim::update_event(void)
 	  set_counter(ar);
 	}
     }
-  regs[idx.sr1]->write_bit1(uif);
+  regs[idx.sr1]->write(regs[idx.sr1]->read() | uif);
 }
 
 // true: UP, false: down

@@ -27,6 +27,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include <stdlib.h>
 
+#include "dregcl.h"
+
 #include "glob.h"
 #include "portcl.h"
 
@@ -70,7 +72,12 @@ cl_p1516::set_PC(t_addr addr)
 void
 cl_p1516::mk_hw_elements(void)
 {
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
+  
   add_hw(pa= new cl_porto(this, 0xf000, "pa"));
   pa->init();
   add_hw(pb= new cl_porto(this, 0xf001, "pb"));
@@ -124,6 +131,7 @@ cl_p1516::mk_hw_elements(void)
   d.keyset = NULL;
   d.basx   = 15;
   d.basy   = 14;
+  u->add_port(&d, 2);
   uo->add_port(&d, 2);
 
   d.set_name("PD");
@@ -132,6 +140,7 @@ cl_p1516::mk_hw_elements(void)
   d.keyset = NULL;
   d.basx   = 15;
   d.basy   = 19;
+  u->add_port(&d, 3);
   uo->add_port(&d, 3);
 
   d.set_name("PI");
@@ -139,8 +148,8 @@ cl_p1516::mk_hw_elements(void)
   d.cell_in= pi->cfg_cell(port_pin);
   d.keyset = chars("                qwertyui12345678");
   d.basx   = 15;
-  d.basy   = 15;
-  u->add_port(&d, 2);
+  d.basy   = 24;
+  u->add_port(&d, 4);
   d.basy   = 4;
   ui->add_port(&d, 0);
 
@@ -149,8 +158,8 @@ cl_p1516::mk_hw_elements(void)
   d.cell_in= pj->cfg_cell(port_pin);
   d.keyset = chars("                asdfghjkzxcvbnm,");
   d.basx   = 15;
-  d.basy   = 20;
-  u->add_port(&d, 3);
+  d.basy   = 29;
+  u->add_port(&d, 5);
   d.basy   = 10;
   ui->add_port(&d, 1);
 }
@@ -168,11 +177,10 @@ cl_p1516::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x4000, 32);
+  chip= new cl_chip32("rom_chip", 0x4000, 32);
   chip->init();
   memchips->add(chip);
-  ad= new cl_address_decoder(as= rom/*address_space(MEM_ROM_ID)*/,
-			     chip, 0, 0x3fff, 0);
+  ad= new cl_address_decoder(as= rom, chip, 0, 0x3fff, 0);
   ad->init();
   as->decoders->add(ad);
   ad->activate(0);
@@ -186,12 +194,12 @@ cl_p1516::make_memories(void)
     }
   address_spaces->add(regs);
 
-  class cl_var *v;
+  chars n, d;
   for (i=0; i<16; i++)
     {
-      v= new cl_var(chars("", "R%d", i), regs, i, chars("", "CPU register %d",i));
-      v->init();
-      vars->add(v);
+      n.format("R%d", i);
+      d.format("CPU register %d", i);
+      vars->add(n, regs, i, d);
     }
 }
 
@@ -203,15 +211,12 @@ cl_p1516::dis_tbl(void)
 }
 
 char *
-cl_p1516::disass(t_addr addr, const char *sep)
+cl_p1516::disassc(t_addr addr, chars *comment)
 {
   chars work= chars(), temp= chars();
   const char *b;
   t_mem code, data= 0;
   int i;
-
-  //work= "";
-  //p= (char*)work;
 
   code= rom->get(addr);
   
@@ -252,48 +257,62 @@ cl_p1516::disass(t_addr addr, const char *sep)
 	    {
 	    case 'd': // Rd
 	      data= (code & 0x00f00000)>>20;
-	      temp.format("r%d", data);
+	      work.appendf("r%d", data);
 	      break;
 	    case 'a': // Ra
 	      data= (code & 0x000f0000)>>16;
-	      temp.format("r%d", data);
+	      work.appendf("r%d", data);
+	      break;
+	    case 'R': // Ra in LD, ST
+	      data= (code & 0x000f0000)>>16;
+	      work.appendf("r%d", data);
+	      if (comment)
+		{
+		  chars n= "";
+		  addr_name(R[data], rom, &n);
+		  comment->format("; [%08x%s]= %08x",
+				  R[data],
+				  n.c_str(),
+				  rom->get(R[data]));
+		}
 	      break;
 	    case 'b': // Rb
 	      data= (code & 0x0000f000)>>12;
-	      temp.format("r%d", data);
+	      work.appendf("r%d", data);
 	      break;
 	    case '0': // LDL0
 	      data= (code & 0x0000ffff);
-	      temp.format("0x0000%04x", data);
+	      work.appendf("0x0000%04x", data);
+	      addr_name(data, rom, &work);
 	      break;
-	    case 'O': // LDL0
+	    case 'O': // LDL0 -> jump
 	      data= (code & 0x0000ffff);
-	      temp.format("0x%04x", data);
+	      work.appendf("0x%04x", data);
+	      addr_name(data, rom, &work);
 	      break;
 	    case 'l': // LDL
 	      data= (code & 0x0000ffff);
-	      temp.format("0x....%04x", data);
+	      work.appendf("0x....%04x", data);
 	      break;
 	    case 'h': // LDH
 	      data= (code & 0x0000ffff);
-	      temp.format("0x%04x....", data);
+	      work.appendf("0x%04x....", data);
 	      break;
 	    case 'A': // CALL
 	      data= (code & 0x07ffffff);
-	      temp.format("0x%x", data);
+	      work.appendf("0x%x", data);
+	      addr_name(data, rom, &work);
 	      break;
 	    default:
 	      temp= "?";
 	      break;
 	    }
-	  //t= temp;
-	  //while (*t) *(p++)= *(t++);
-	  work+= temp;
+	  if (comment && temp.nempty())
+	    comment->append(temp);
 	}
       else
 	work.append(*(b++));
     }
-  //*p= '\0';
 
   return strdup(work.c_str());
 }

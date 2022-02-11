@@ -11,6 +11,11 @@ static const ASM_MAPPING _asxxxx_gb_mapping[] = {
     { "di", "di" },
     { "ei", "ei" },
     { "ldahli", "ld\ta, (hl+)"},
+    { "ldahld", "ld\ta, (hl-)"},
+    { "lldahli", "ld\t(hl+), a"},
+    { "lldahld", "ld\t(hl-), a"},
+    { "rldh", "ldh a, (%s + %d)"},
+    { "lldh", "ldh (%s + %d), a"},
     { "ldahlsp", "ldhl\tsp, #%d" },
     { "ldaspsp", "add sp, #%d" },
     { "mems", "(%s)" },
@@ -32,14 +37,7 @@ static const ASM_MAPPING _asxxxx_gb_mapping[] = {
     },
     { "adjustsp", "add sp, #-%d" },
     { "fileprelude", "" },
-    { "profileenter",
-      "ld a, #3\n"
-      "rst\t0x08"
-    },
-    { "profileexit",
-      "ld a, #4\n"
-      "rst\t0x08"
-    },
+    { "here", "." },
     { NULL, NULL }
 };
 
@@ -58,6 +56,15 @@ static const ASM_MAPPING _asxxxx_z80_mapping[] = {
     { "ldahli",
       "ld a, (hl)\n"
       "inc\thl" },
+    { "ldahld",
+      "ld a, (hl)\n"
+      "dec\thl" },
+    { "lldahli",
+      "ld (hl), a\n"
+      "inc\thl" },
+    { "lldahld",
+      "ld (hl), a\n"
+      "dec\thl" },
     { "ldahlsp",
       "ld hl, #%d\n"
       "add\thl, sp" },
@@ -87,14 +94,7 @@ static const ASM_MAPPING _asxxxx_z80_mapping[] = {
       "pop\taf"
     },
     { "adjustsp", "lda sp,-%d(sp)" },
-    { "profileenter",
-      "ld a,#3\n"
-      "rst\t0x08"
-    },
-    { "profileexit",
-      "ld a,#4\n"
-      "rst\t0x08"
-    },
+    { "here", "." },
     { NULL, NULL }
 };
 
@@ -113,6 +113,15 @@ static const ASM_MAPPING _asxxxx_r2k_mapping[] = {
     { "ldahli",
       "ld a, (hl)\n"
       "inc\thl" },
+    { "ldahld",
+      "ld a, (hl)\n"
+      "dec\thl" },
+    { "lldahli",
+      "ld (hl), a\n"
+      "inc\thl" },
+    { "lldahld",
+      "ld (hl), a\n"
+      "dec\thl" },
     { "ldahlsp",
       "ld hl, #%d\n"
       "add\thl, sp" },
@@ -142,14 +151,6 @@ static const ASM_MAPPING _asxxxx_r2k_mapping[] = {
       "pop\taf"
     },
     { "adjustsp", "lda sp,-%d(sp)" },
-    { "profileenter",
-      "ld a,#3\n"
-      "rst\t0x28"
-    },
-    { "profileexit",
-      "ld a,#4\n"
-      "rst\t0x28"
-    },
     { NULL, NULL }
 };
 
@@ -188,13 +189,14 @@ static const ASM_MAPPING _rgbds_mapping[] = {
     { "immedword", "$%04X" },
     { "immedbyte", "$%02X" },
     { "hashedstr", "%s" },
-    { "lsbimmeds", "%s & $FF" },
-    { "msbimmeds", "%s >> 8" },
+    { "lsbimmeds", "LOW(%s)" },
+    { "msbimmeds", "HIGH(%s)" },
     { "bankimmeds", "BANK(%s)" },
     { "hashedbankimmeds", "BANK(%s)" },
     { "module", "; MODULE %s" },
     { "equ", "EQU" },
     { "bequ", "\rb%s EQU %i" },
+    { "here", "@" },
     { NULL, NULL }
 };
 
@@ -218,7 +220,12 @@ static const ASM_MAPPING _rgbds_gb_mapping[] = {
     { "enters", "" },
     { "enterx",
       "add sp, -%d" },
+    { "rldh", "ldh a, [%s + %d]"},
+    { "lldh", "ldh [%s + %d], a"},
     { "ldahli", "ld a, [hl+]" },
+    { "ldahld", "ld a, [hl-]" },
+    { "lldahli", "ld [hl+], a" },
+    { "lldahld", "ld [hl-], a" },
     { "*hl", "[hl]" },
     { "jphl", "jp hl" },
     { "ldahlsp", "ld hl, sp+%d" },
@@ -308,6 +315,9 @@ static const ASM_MAPPING _isas_gb_mapping[] = {
     { "enter", "" },
     { "enters", "" },
     { "ldahli", "ld a, (hli)" },
+    { "ldahld", "ld a, (hld)" },
+    { "lldahli", "ld (hli), a" },
+    { "lldahld", "ld (hld), a" },
     { "*hl", "(hl)" },
     { "jphl", "jp (hl)" },
     { "ldahlsp", "ldhl sp, %d" },
@@ -384,6 +394,15 @@ static const ASM_MAPPING _z80asm_z80_mapping[] = {
     { "ldahli",
       "ld a, (hl)\n"
       "inc\thl" },
+    { "ldahld",
+      "ld a, (hl)\n"
+      "dec\thl" },
+    { "ldahli",
+      "ld (hl), a\n"
+      "inc\thl" },
+    { "ldahld",
+      "ld (hl), a\n"
+      "dec\thl" },
     { "ldahlsp",
       "ld hl, %d\n"
       "add\thl, sp" },
@@ -413,14 +432,6 @@ static const ASM_MAPPING _z80asm_z80_mapping[] = {
       "pop\taf"
     },
     { "adjustsp", "lda sp, (sp%+d)" },
-    { "profileenter",
-      "ld a,3\n"
-      "rst\t$08"
-    },
-    { "profileexit",
-      "ld a,4\n"
-      "rst\t$08"
-    },
     { NULL, NULL }
 };
 static const ASM_MAPPING _gas_gb_mapping[] = {
@@ -437,6 +448,9 @@ static const ASM_MAPPING _gas_gb_mapping[] = {
     { "di", "di" },
     { "ei", "ei" },
     { "ldahli", "ldi\ta, (hl)" },
+    { "ldahld", "ldd\ta, (hl)" },
+    { "lldahli", "ldi\t(hl), a" },
+    { "lldahld", "ldd\t(hl), a" },
     { "ldahlsp", "ldhl\tsp, #%d" },
     { "ldaspsp", "add\tsp, #%d" },
     { "mems", "(%s)" },
@@ -457,14 +471,6 @@ static const ASM_MAPPING _gas_gb_mapping[] = {
     },
     { "adjustsp", "lda\tsp, -%d (sp)" },
     { "fileprelude", "" },
-    { "profileenter",
-                "ld\ta, #3\n"
-                "rst\t0x08"
-    },
-    { "profileexit",
-                "ld\ta, #4\n"
-                "rst\t0x08"
-    },
     { NULL, NULL }
 };
 
@@ -490,6 +496,15 @@ static const ASM_MAPPING _gas_z80_mapping[] = {
     { "ldahli", 
 		"ld\ta,(hl)\n"
 		"inc\thl" },
+    { "ldahld", 
+		"ld\ta,(hl)\n"
+		"dec\thl" },
+    { "lldahli", 
+		"ld\t(hl),a\n"
+		"inc\thl" },
+    { "lldahld", 
+		"ld\t(hl),a\n"
+		"dec\thl" },
     { "ldahlsp", 
 		"ld\thl, #%d\n"
 		"add\thl, sp" },
@@ -518,14 +533,6 @@ static const ASM_MAPPING _gas_z80_mapping[] = {
 		"pop\taf"
     },
     { "adjustsp", "lda\tsp,-%d (sp)" },
-    { "profileenter",
-                "ld\ta, #3\n"
-                "rst\t0x08"
-    },
-    { "profileexit",
-                "ld\ta, #4\n"
-                "rst\t0x08"
-    },
     { NULL, NULL }
 };
 

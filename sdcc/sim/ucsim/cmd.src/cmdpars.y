@@ -16,7 +16,7 @@ static void yyerror (const char *msg);
 %token PTOK_LEFT_BRACKET PTOK_RIGHT_BRACKET
 %token PTOK_DOT PTOK_AMPERSAND PTOK_PIPE PTOK_CIRCUM
 %token PTOK_PERCENT PTOK_TILDE PTOK_QUESTION PTOK_COLON PTOK_EXCLAMATION
-%token PTOK_LESS PTOK_GREATHER PTOK_COMMA
+%token PTOK_LESS PTOK_GREATER PTOK_COMMA
 
 %token PTOK_AND_OP PTOK_OR_OP
 %token PTOK_INC_OP PTOK_DEC_OP
@@ -40,7 +40,8 @@ static void yyerror (const char *msg);
 %token <memory_object> PTOK_MEMORY_OBJECT
 %token <memory> PTOK_MEMORY
 %token <number> PTOK_NUMBER
-%token <bit> PTOK_BIT
+%token <bit> PTOK_BITS
+%token <cell> PTOK_CELL
 
 %type <number> ucsim_grammar expr
 %type <number> primary_expr postfix_expr
@@ -59,6 +60,7 @@ static void yyerror (const char *msg);
 %union {
   long number;
   class cl_memory *memory_object;
+  class cl_memory_cell *cell;
   struct {
     class cl_memory *memory;
     long address;
@@ -66,7 +68,7 @@ static void yyerror (const char *msg);
   struct {
     class cl_memory *memory;
     long mem_address, bit_address;
-    long mask;
+    int bitnr_high, bitnr_low;
   } bit;
 }
 
@@ -140,8 +142,14 @@ address_of_expression:
 primary_expr
 /*   : identifier      */
 : memory { $$= $1.memory->read($1.address); }
-| bit { $$= ($1.memory->read($1.mem_address) & $1.mask)?1:0; }
+| bit
+	{
+		t_mem mask = 0;
+		for (int i = $1.bitnr_low; i <= $1.bitnr_high; mask |= 1U << i++);
+		$$= ($1.memory->read($1.mem_address) & mask) >> $1.bitnr_low;
+	}
 | PTOK_NUMBER { $$= $1; }
+| PTOK_CELL { $$= $1->read(); }
      /*   | string_literal_val*/
 | PTOK_LEFT_PAREN expr PTOK_RIGHT_PAREN { $$= $2; }
      /*   | generic_selection*/
@@ -160,11 +168,21 @@ postfix_expr
 	  $$= $1.memory->read($1.address);
 	  $1.memory->write($1.address, $$+1);
 	}
+| PTOK_CELL PTOK_INC_OP
+	{
+	  $$= $1->read();
+	  $1->write($$+1);
+	}
 /*| postfix_expr PTOK_DEC_OP*/
 | memory PTOK_DEC_OP
 	{
 	  $$= $1.memory->read($1.address);
 	  $1.memory->write($1.address, $$-1);
+	}
+| PTOK_CELL PTOK_DEC_OP
+	{
+	  $$= $1->read();
+	  $1->write($$-1);
 	}
 ;
 /*
@@ -183,12 +201,24 @@ unary_expr
 	  $2.memory->write($2.address, $$+1);
 	  $$= $2.memory->read($2.address);
 	}
+| PTOK_INC_OP PTOK_CELL
+	{
+	  $$= $2->read();
+	  $2->write($$+1);
+	  $$= $2->read();
+	}
 /*| PTOK_DEC_OP unary_expr      */
 | PTOK_DEC_OP memory
 	{
 	  $$= $2.memory->read($2.address);
 	  $2.memory->write($2.address, $$-1);
 	  $$= $2.memory->read($2.address);
+	}
+| PTOK_DEC_OP PTOK_CELL
+	{
+	  $$= $2->read();
+	  $2->write($$-1);
+	  $$= $2->read();
 	}
 /*| unary_operator cast_expr	*/
 /*| PTOK_AMPERSAND unary_expr*/
@@ -266,7 +296,7 @@ shift_expr
 relational_expr
 : shift_expr { $$= $1; }
 | relational_expr PTOK_LESS shift_expr { $$= ($1 < $3)?1:0; }
-| relational_expr PTOK_GREATHER shift_expr { $$= ($1 > $3)?1:0; }
+| relational_expr PTOK_GREATER shift_expr { $$= ($1 > $3)?1:0; }
 | relational_expr PTOK_LE_OP shift_expr { $$= ($1 <= $3)?1:0; }
 | relational_expr PTOK_GE_OP shift_expr { $$= ($1 >= $3)?1:0; }
 ;
@@ -355,18 +385,53 @@ assignment_expr
 	}
 | bit PTOK_EQUAL assignment_expr
 	{
-	  if ($3)
+		t_mem mask = 0;
+		for (int i = $1.bitnr_low; i <= $1.bitnr_high; mask |= 1U << i++);
+		mask= ($1.memory->read($1.mem_address) & (~mask)) | (($3 & mask) << $1.bitnr_low);
+		$1.memory->write($1.mem_address, mask);
+		$$= mask;
+	}
+| PTOK_CELL assignment_operator assignment_expr
+	{
+	  t_mem org= $1->read();
+	  $$= $3;
+	  switch ($2)
 	    {
-	      $1.memory->write($1.mem_address,
-			       $1.memory->read($1.mem_address) | $1.mask);
-	      $$= 1;
+	    case PTOK_EQUAL:
+	      $1->write($3);
+	      break;
+	    case PTOK_MUL_ASSIGN:
+	      $1->write(org *= $3);
+	      break;
+	    case PTOK_DIV_ASSIGN:
+	      $1->write(org /= $3);
+	      break;
+	    case PTOK_MOD_ASSIGN:
+	      $1->write(org %= $3);
+	      break;
+	    case PTOK_ADD_ASSIGN:
+	      $1->write(org += $3);
+	      break;
+	    case PTOK_SUB_ASSIGN:
+	      $1->write(org -= $3);
+	      break;
+	    case PTOK_LEFT_ASSIGN:
+	      $1->write(org <<= $3);
+	      break;
+	    case PTOK_RIGHT_ASSIGN:
+	      $1->write(org >>= $3);
+	      break;
+	    case PTOK_AND_ASSIGN:
+	      $1->write(org &= $3);
+	      break;
+	    case PTOK_XOR_ASSIGN:
+	      $1->write(org ^= $3);
+	      break;
+	    case PTOK_OR_ASSIGN:
+	      $1->write(org |= $3);
+	      break;
 	    }
-	  else
-	    {
-	      $1.memory->write($1.mem_address,
-			       $1.memory->read($1.mem_address) & ~($1.mask));
-	      $$= 0;
-	    }
+	  $$= $1->read();
 	}
 ;
 
@@ -396,18 +461,35 @@ memory:
 	    $$.memory= $1;
 	    $$.address= $3;
 	  }
+	;
 
 bit:
-	  PTOK_BIT
+	  PTOK_BITS
 	| memory PTOK_DOT expr
 	  {
 	    $$.memory= $1.memory;
 	    $$.mem_address= $1.address;
-	    $$.mask= 1 << $3;
+	    $$.bitnr_low= $$.bitnr_high= $3;
 	    $$.bit_address= -1;
 	    class cl_uc *uc= application->get_uc();
 	    if (uc)
 	      $$.bit_address= uc->bit_address($1.memory, $1.address, $3);
+	  }
+	| memory PTOK_LEFT_BRACKET expr PTOK_COLON expr PTOK_RIGHT_BRACKET
+	  {
+	    $$.memory= $1.memory;
+	    $$.mem_address= $1.address;
+	    if ($3 < $5)
+	      {
+	        $$.bitnr_low= $3;
+	        $$.bitnr_high= $5;
+	      }
+	    else
+	      {
+	        $$.bitnr_low= $5;
+	        $$.bitnr_high= $3;
+	      }
+	    $$.bit_address= -1;
 	  }
 	;
 

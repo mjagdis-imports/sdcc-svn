@@ -279,7 +279,7 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
 
   if (!IS_ITEMP (IC_RIGHT (ic)) || OP_SYMBOL (IC_RIGHT (ic))->isind || OP_LIVETO (IC_RIGHT (ic)) > ic->seq)
     return 0;
-  
+
   /* Avoid having multiple named address spaces in one iCode. */
   if (IS_SYMOP (IC_RESULT (ic)) && SPEC_ADDRSPACE (OP_SYMBOL (IC_RESULT (ic))->etype))
     return 0;
@@ -361,14 +361,24 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
         }
     }
 
-  /* For now eliminate 8-bit temporary variables only.
+  // Can do wide shift by 1 in place.
+  if ((dic->op == LEFT_OP || dic->op == RIGHT_OP) && IS_OP_LITERAL (IC_RIGHT (dic)) && operandLitValue (IC_RIGHT (dic))  == 1 &&
+    IS_SYMOP (IC_LEFT (dic)) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_LEFT (dic)) == OP_SYMBOL (IC_RESULT (ic)))
+    ;
+  // Optimize out short-lived extra temporary.
+  else if ((dic->op == CAST ||
+    dic->op == UNARYMINUS || dic->op == '+' || dic->op == '-' || dic->op == '*' || dic->op == '%' ||
+    dic->op == '~' || dic->op == '^' || dic->op == '|' || dic->op == BITWISEAND ||
+    dic->op == LEFT_OP || dic->op == RIGHT_OP ||
+    dic->op == RRC || dic->op == RLC || dic->op == SWAP || dic->op == GETABIT) &&
+    dic->next == ic && IS_ITEMP (IC_RESULT (ic)))
+    ;
+  /* Otherwise, for now eliminate 8-bit temporary variables only.
      The STM8 instructions operating directly on memory
      operands are 8-bit, so the most benefit is in 8-bit
      operations. On the other hand, supporting wider
-     operations well in codegen is also more effort. */
-  if (bitsForType (operandType (IC_RESULT (dic))) > 8 &&
-    !((dic->op == LEFT_OP || dic->op == RIGHT_OP) && IS_OP_LITERAL (IC_RIGHT (dic)) && operandLitValue (IC_RIGHT (dic))  == 1 && // Can do wide shift by 1 in place.
-      IS_SYMOP (IC_LEFT (dic)) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_LEFT (dic)) == OP_SYMBOL (IC_RESULT (ic))))
+     operations well in codegen is also more effort. */ 
+  else if (bitsForType (operandType (IC_RESULT (dic))) > 8)
     return 0;
 
   /* if the result is on stack or iaccess then it must be
@@ -564,6 +574,21 @@ packRegisters (eBBlock * ebp)
             }
         }
 
+      /* if this is a +/- operation with a rematerializable
+         then mark this as rematerializable as well */
+      if ((ic->op == '+' || ic->op == '-') &&
+          IS_SYMOP (IC_LEFT (ic)) &&
+          IS_ITEMP (IC_RESULT (ic)) &&
+          IS_OP_LITERAL (IC_RIGHT (ic)) &&
+          OP_SYMBOL (IC_LEFT (ic))->remat &&
+          (!IS_SYMOP (IC_RIGHT (ic)) || !IS_CAST_ICODE (OP_SYMBOL (IC_RIGHT (ic))->rematiCode)) &&
+          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1)
+        {
+          OP_SYMBOL (IC_RESULT (ic))->remat = 1;
+          OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;
+          OP_SYMBOL (IC_RESULT (ic))->usl.spillLoc = NULL;
+        }
+
       /* In some cases redundant moves can be eliminated */
       if (ic->op == GET_VALUE_AT_ADDRESS || ic->op == SET_VALUE_AT_ADDRESS ||
         ic->op == IFX && operandSize (IC_COND (ic)) == 1 ||
@@ -746,8 +771,6 @@ stm8RegFix (eBBlock ** ebbs, int count)
     }
 }
 
-void stm8_init_asmops (void);
-
 /*-----------------------------------------------------------------*/
 /* assignRegisters - assigns registers to each live range as need  */
 /*-----------------------------------------------------------------*/
@@ -757,8 +780,6 @@ stm8_assignRegisters (ebbIndex *ebbi)
   eBBlock **ebbs = ebbi->bbOrder;
   int count = ebbi->count;
   iCode *ic;
-
-  stm8_init_asmops();
 
   transformPointerSet (ebbs, count);
 

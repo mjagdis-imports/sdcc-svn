@@ -66,11 +66,11 @@ cl_flash_as::cl_flash_as(const char *id, t_addr astart, t_addr asize):
   decoders= new cl_decoder_list(2, 2, false);
   cella= (class cl_memory_cell *)malloc(size * sizeof(class cl_memory_cell));
   //cell->init();
-  int i;
+  t_addr i;
   for (i= 0; i < size; i++)
     {
       void *p= &(cella[i]);
-      memcpy(p, cell, sizeof(class cl_memory_cell));
+      memcpy(p, (void*)cell, sizeof(class cl_memory_cell));
       cella[i].init();
     }
   dummy= new cl_dummy_cell(8);
@@ -120,7 +120,7 @@ cl_flash::tick(int cycles)
 {
   if (state & fs_busy)
     {
-      double now= uc->get_rtime();
+      double now= uc->ticks->get_rtime();
       double elapsed= (now - start_time) * 10e6;
 
       if ((state == fs_pre_erase) &&
@@ -165,9 +165,9 @@ void
 cl_flash::finish_program(bool ok)
 {
   if (ok)
-    iapsr->set_bit1(0x04);
+    iapsr->set(iapsr->get() | 0x04);
   else
-    iapsr->set_bit1(0x01);
+    iapsr->set(iapsr->get() | 0x01);
   state= fs_wait_mode;
 }
 
@@ -495,7 +495,7 @@ cl_flash::start_program(enum stm8_flash_state start_state)
 {
   uc->sim->app->debug("FLASH start prg %d\n", start_state);
   state= start_state;
-  start_time= uc->get_rtime();
+  start_time= uc->ticks->get_rtime();
 }
 
 const char *
@@ -566,12 +566,12 @@ cl_saf_flash::registration(void)
 					cr1r,0x02,
 					iapsr,0x04,
 					0x8008+24*4, false, false,
-					chars("end of flash programming"), 20*20+0));
+					"FLASH_EOP", 20*20+0));
   uc->it_sources->add(is= new cl_it_src(uc, 24,
 					cr1r,0x02,
 					iapsr,0x01,
 					0x8008+24*4, false, false,
-					chars("write attempted to protected page"), 20*20+1));
+					"FLASH_RO", 20*20+1));
   is->init();
 }
 
@@ -599,12 +599,12 @@ cl_l_flash::registration(void)
 					cr1r,0x02,
 					iapsr,0x04,
 					0x8008+1*4, false, false,
-					chars("end of flash programming"), 20*20+0));
+					"FLASH_EOP", 20*20+0));
   uc->it_sources->add(is= new cl_it_src(uc, 1,
 					cr1r,0x02,
 					iapsr,0x01,
 					0x8008+1*4, false, false,
-					chars("write attempted to protected page"), 20*20+1));
+					"FLASH_RO", 20*20+1));
   is->init();
 }
 

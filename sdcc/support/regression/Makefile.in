@@ -70,7 +70,7 @@ GENERATE_CASES = $(srcdir)/generate-cases.py
 # Each directory under ports/ is used as a port name.  Each port is tested.
 # Each port must have a spec.mk which describes how to build the object
 # files and how to run the emulator.
-ALL_PORTS = $(filter-out .svn rrz80 rrgbz80 pic16 pic14 mcs51-common,$(notdir $(wildcard $(PORTS_DIR)/*)))
+ALL_PORTS = $(filter-out .svn mos6502 mcs51-xstack-auto rrz80 rrgbz80 pic16 pic14 mcs51-common pdk13,$(notdir $(wildcard $(PORTS_DIR)/*)))
 
 # These  ports will be cleaned with 'make clean'
 CLEAN_PORTS = $(filter-out .svn mcs51-common,$(notdir $(wildcard $(PORTS_DIR)/*)))
@@ -134,7 +134,7 @@ test-ds390:
 	$(MAKE) test-port PORT=ds390
 
 # Helper rule for testing the z80 related ports only
-test-z80: test-ucz80 test-ucz80-resiy test-ucz180 test-ucz80n test-ucgbz80 test-ucr2k test-ucr2ka test-ucr3ka test-ez80-z80 test-tlcs90
+test-z80: test-ucz80 test-ucz80-resiy test-ucz180 test-ucz80-resiy test-ucz80n test-ucgbz80 test-ucr2k test-ucr2ka test-ucr3ka test-ez80-z80 test-tlcs90
 
 # Helper rule for testing the z80 port only (use uCsim simulator)
 test-ucz80:
@@ -156,6 +156,11 @@ test-ucz180:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucz180
 
+# Helper rule for testing the z180 port with --reserve-regs-iy only (use uCsim simulator)
+test-ucz180-resiy:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=ucz180-resiy
+
 # Helper rule for testing the gb/lr35902 port only(use uCsim simulator)
 test-ucgbz80:
 	$(MAKE) test-common
@@ -165,7 +170,7 @@ test-ucgbz80:
 test-ucr2k:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucr2k
-	
+
 # Helper rule for testing the r2ka port only(use uCsim simulator)
 test-ucr2ka:
 	$(MAKE) test-common
@@ -175,6 +180,10 @@ test-ucr2ka:
 test-ucr3ka:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucr3ka
+
+test-ucrxk3a:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=ucrxk3a
 
 # Helper rule for testing the hc08 port only(use uCsim simulator)
 test-hc08:
@@ -215,11 +224,19 @@ test-tlcs90:
 test-ez80-z80:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ez80-z80
-	
+
 # Helper rule for testing the z80n port only(use uCsim simulator)
 test-ucz80n:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucz80n
+
+# Helper rule for testing the pdk ports only
+test-pdk: test-pdk14 test-pdk15 test-pdk15-stack-auto
+
+# Helper rule for testing the pdk13 port only(use uCsim simulator)
+test-pdk13:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=pdk13
 
 # Helper rule for testing the pdk14 port only(use uCsim simulator)
 test-pdk14:
@@ -235,6 +252,16 @@ test-pdk15:
 test-pdk15-stack-auto:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=pdk15-stack-auto
+
+# Helper rule for testing the mos6502 port only(use sim65 simulator)
+test-mos6502:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=mos6502
+
+# Helper rule for testing the mos6502 port only(use uCsim simulator)
+test-uc6502:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=uc6502
 
 ### Helper rule for testing the host cc only
 test-host:
@@ -332,8 +359,8 @@ $(PORT_RESULTS_DIR)/%.out: $(PORT_CASES_DIR)/%/iterations.stamp
 
 # Rule to summarise the results for one port after all of the tests
 # have been run.
-port-results: $(PORT_RESULTS)
-	cat $(PORT_RESULTS) | $(PYTHON) $(srcdir)/collate-results.py $(PORT)
+$(RESULTS_DIR)/$(PORT).sum: $(PORT_RESULTS)
+	cat $(PORT_RESULTS) | $(PYTHON) $(srcdir)/collate-results.py $(PORT) > $@
 
 port-fwklib: $(EXTRAS) $(FWKLIB)
 
@@ -349,7 +376,8 @@ test-port:
 	# recurse: force vpath to re-read the $(CASES_DIR)
 	$(MAKE) port-dirs PORT=$(PORT)
 	$(MAKE) port-fwklib PORT=$(PORT)
-	$(MAKE) port-results PORT=$(PORT)
+	$(MAKE) $(RESULTS_DIR)/$(PORT).sum PORT=$(PORT)
+	cat $(RESULTS_DIR)/$(PORT).sum
 
 # Begin rules that process each iteration generated from the source
 # test
@@ -384,7 +412,7 @@ $(CASES_DIR)/timeout: $(srcdir)/fwk/lib/timeout.c $(CASES_DIR)/stamp
 # BeginGeneric rules
 
 clean:
-	rm -rf $(CASES_DIR) $(RESULTS_DIR) *.pyc
+	rm -rf $(CASES_DIR) $(RESULTS_DIR) *.pyc __pycache__
 	for i in $(CLEAN_PORTS); do \
 	  $(MAKE) -f $(PORTS_DIR)/$$i/spec.mk _clean PORTS_DIR=$(PORTS_DIR) PORT=$$i srcdir=$(srcdir); \
 	done

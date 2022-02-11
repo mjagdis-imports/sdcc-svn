@@ -52,6 +52,13 @@ public:
   class cl_sp_limit_opt *sp_limit_opt;
   t_addr sp_limit;
   bool IFF1, IFF2;
+  u8_t BIT_C;
+  u8_t BIT_N;
+  u8_t BIT_P;
+  u8_t BIT_A;
+  u8_t BIT_Z;
+  u8_t BIT_S;
+  u8_t BIT_ALL;
 public:
   cl_z80(struct cpu_entry *Itype, class cl_sim *asim);
   virtual int init(void);
@@ -66,7 +73,7 @@ public:
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
   virtual int longest_inst(void);
-  virtual char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr);
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);
@@ -214,7 +221,7 @@ class cl_z80_cpu: public cl_hw
 public:
   cl_z80_cpu(class cl_uc *auc);
   virtual int init(void);
-  virtual int cfg_size(void) { return z80cpu_nuof; }
+  virtual unsigned int cfg_size(void) { return z80cpu_nuof; }
   virtual const char *cfg_help(t_addr addr);
 
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
