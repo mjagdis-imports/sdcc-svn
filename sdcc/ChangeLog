@@ -1,3 +1,7 @@
+2022-02-16 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c (gatherImplicitVariables): fix bug #3320
+
 2022-02-16 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* device/lib/isspace.c,
