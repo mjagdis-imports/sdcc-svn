@@ -1,6 +1,6 @@
 /*
    bug-3322.c
-   A bug found by z88dk
+   A z80 code generation (overwriting a value in iy during an assignment) bug found by z88dk
    */
 
 #include <testfwk.h>

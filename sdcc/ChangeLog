@@ -2,6 +2,8 @@
 
 	* src/z80/gen.c:
 	  Fix bug #3322.
+	* support/regression/tests/bug-3320.c:
+	  Test for bug #3320.
 
 2022-02-16 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
