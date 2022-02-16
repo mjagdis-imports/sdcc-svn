@@ -1,3 +1,13 @@
+2022-02-16 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/isspace.c,
+	  device/lib/isxdigit.c:
+	  Check high and low byte separately for some targets, also sort compares by frequency and int value.
+	* device/lib/sm83/memcpy.s,
+	  device/lib/_memset.c,
+	  device/lib/gets.ch:
+	  Optimize sm83 assembly.
+
 2022-02-14 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* .version,
@@ -74,7 +84,7 @@
   	* sdcc/src/mos6502/gen.c:
   	  Add peephole rules to remove redundnat php/plp.
 
-2022-02-02 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+2022-02-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* sdcc/device/include/mcs51/p89lpc9321.h,
 	  sdcc/device/include/mcs51/p89lpc9331.h,

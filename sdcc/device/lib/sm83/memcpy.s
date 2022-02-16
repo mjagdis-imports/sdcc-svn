@@ -2,6 +2,7 @@
 ;  memcpy.s
 ;
 ;  Copyright (c) 2021, Philipp Klaus Krause
+;  Copyright (c) 2022, Sebastian 'basxto' Riedel
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -33,27 +34,22 @@
 
 _memcpy::
 ___memcpy::
+	;dest in de
+	;src in bc
+	;n in sp+2,sp+3
 	push	de
-
 	ldhl	sp, #4
-	ld	a, (hl)
-	ld	(hl), e
-
-	ldhl	sp, #0
-	ld	(hl), a
-
-	ldhl	sp, #5
-	ld	a, (hl)
-	ld	(hl), d
-
-	ldhl	sp, #1
-	ld	(hl), a	
-
+	ld	a, (hl+)
+	ld	h, (hl)
 	ld	l, c
+	ld	c, a
+	ld	a, h
 	ld	h, b
+	ld	b, a
 
-	pop	bc
-
+	;dest in de (backup in sp+0,sp+1)
+	;src in hl
+	;n in bc
 	inc	b
 	inc	c
 	jr	test
@@ -69,7 +65,7 @@ test:
 	jr	nz, loop
 
 end:
-	pop	hl
 	pop	bc
+	pop	hl
+	pop	af
 	jp	(hl)
-
