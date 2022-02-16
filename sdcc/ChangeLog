@@ -1,3 +1,8 @@
+2022-02-15 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3322.
+
 2022-02-16 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* src/SDCCast.c (gatherImplicitVariables): fix bug #3320
@@ -11,6 +16,11 @@
 	  device/lib/_memset.c,
 	  device/lib/gets.ch:
 	  Optimize sm83 assembly.
+
+2022-02-15 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-3322.c:
+	  Test for bug #3322.
 
 2022-02-14 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
