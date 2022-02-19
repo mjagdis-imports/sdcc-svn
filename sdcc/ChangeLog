@@ -17,6 +17,8 @@
   	  sdcc/configure.ac,
   	  sdcc/configure.ac:  	  
  	  Add mos6502 stack auto target.
+  	* sdcc/src/mos6502/main.c:
+	  Correct flags affected by cld.
 	  
 2022-02-19 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 

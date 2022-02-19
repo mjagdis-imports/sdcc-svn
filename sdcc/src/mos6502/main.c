@@ -5,7 +5,7 @@
 
   Hacked for the MOS6502:
   Copyright (C) 2020, Steven Hugg  hugg@fasterlight.com
-  Copyright (C) 2021, Gabriele Gorla
+  Copyright (C) 2021-2022, Gabriele Gorla
 
 
   This program is free software; you can redistribute it and/or modify it
@@ -74,10 +74,8 @@ static char *_keywords[] = {
   "critical",
   "data",
   "far",
-  //"idata",
   "interrupt",
   "near",
-  //"pdata",
   "reentrant",
   //"using",
   "xdata",
@@ -86,8 +84,6 @@ static char *_keywords[] = {
   "_generic",
   "_near",
   "_xdata",
-  //"_pdata",
-  //"_idata",
   "_naked",
   "_overlay",
   NULL
@@ -181,7 +177,7 @@ _m6502_setDefaultOptions (void)
 {
   options.code_loc = 0x200;
   options.data_loc = 0x20;	/* zero page */
-  options.xdata_loc = 0x8000;   /* 0 means immediately following data */
+  options.xdata_loc = 0x0;      /* 0 means immediately following data */
   options.stack_loc = 0x1ff;
 
   options.omitFramePtr = 1;     /* no frame pointer (we use SP */
@@ -372,6 +368,17 @@ newAsmLineNode (void)
   return aln;
 }
 
+/*
+processor flags
+N 0x80
+V 0x40
+B 0x10
+D 0x08
+I 0x04
+Z 0x02
+C 0x01
+*/
+
 /* These must be kept sorted by opcode name */
 static m6502opcodedata m6502opcodeDataTable[] =
   {
@@ -393,7 +400,7 @@ static m6502opcodedata m6502opcodeDataTable[] =
     {"bvs",   M6502OP_BR,  0,     0 },
     {"bra",   M6502OP_BR,  0,     0 }, // 65C02 only
     {"clc",   M6502OP_INH, 0,     0x01 },
-    {"cld",   M6502OP_INH, 0,     0x80 },
+    {"cld",   M6502OP_INH, 0,     0x08 },
     {"cli",   M6502OP_INH, 0,     0x04 },
     {"clv",   M6502OP_INH, 0,     0x40 },
     {"cmp",   M6502OP_REG, 0,     0xc3 },
