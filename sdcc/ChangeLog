@@ -4,6 +4,19 @@
 	  Remove incorrect loading of the second memset parameter.
   	* sdcc/support/regression/ports/u6502/spec.mk:
 	  Remove redundant --out-fmt-ihx parameter.
+  	* sdcc/device/lib/mos6502-stack-auto/Makefile.in,
+  	  sdcc/device/lib/mos6502-stack-auto/crt0.s,
+  	  sdcc/device/lib/mos6502-stack-auto/atomic_flasg_test_and_set.c,
+  	  sdcc/device/lib/mos6502-stack-auto/_setjmp.c,
+  	  sdcc/device/lib/mos6502-stack-auto/_rrulonglong.c,
+  	  sdcc/device/lib/mos6502-stack-auto/_rrslonglong.c,
+  	  sdcc/device/lib/mos6502-stack-auto/_ret.c,
+  	  sdcc/device/lib/mos6502-stack-auto/,
+  	  sdcc/device/lib/Makefile.in,
+  	  sdcc/device/lib/clean.mk,
+  	  sdcc/configure.ac,
+  	  sdcc/configure.ac:  	  
+ 	  Add mos6502 stack auto target.
 	  
 2022-02-19 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
