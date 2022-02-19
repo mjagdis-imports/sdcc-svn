@@ -1,6 +1,8 @@
 ;--------------------------------------------------------------------------
 ;  memcpy.s
 ;
+;  Copies in groups of four. Algorithm from GBDK-2020.
+;
 ;  Copyright (c) 2021, Philipp Klaus Krause
 ;  Copyright (c) 2022, Sebastian 'basxto' Riedel
 ;
@@ -32,40 +34,66 @@
 	.globl	_memcpy
 	.globl	___memcpy
 
+	; gets called by memmove for (s >= d)
+	; bigger than the old algorithm but faster for n>=5
 _memcpy::
 ___memcpy::
 	;dest in de
 	;src in bc
 	;n in sp+2,sp+3
 	push	de
-	ldhl	sp, #4
-	ld	a, (hl+)
-	ld	h, (hl)
-	ld	l, c
-	ld	c, a
-	ld	a, h
+	ldhl	sp, #5
+	ld	a, (hl-)
+	ld	l, (hl)
 	ld	h, b
 	ld	b, a
-
+	ld	a, l
+	ld	l, c
+	srl	b
+	rra
+	ld	c, a
 	;dest in de (backup in sp+0,sp+1)
 	;src in hl
-	;n in bc
+	;n/2 in bc
+	;LSB of bc in carry
+	jr nc, skip_one
+	ld	a, (hl+)
+	ld	(de), a
+	inc	de
+skip_one:
+	;n/2 in bc
+	;shift second LSB to carry
+	srl	b
+	rr	c
+	jr nc, skip_two
+	.rept	2
+	ld	a, (hl+)
+	ld	(de), a
+	inc	de
+	.endm
+skip_two:
+	;n/4 in bc
 	inc	b
 	inc	c
 	jr	test
 
-loop:
+copy_four:
+	.rept	4
 	ld	a, (hl+)
 	ld	(de), a
 	inc	de
+	.endm
 test:
 	dec	c
-	jr	nz, loop
+	jr	nz, copy_four
 	dec	b
-	jr	nz, loop
+	jr	nz, copy_four
 
 end:
+	;restore dest
 	pop	bc
+	;get return address
 	pop	hl
+	;throw away n
 	pop	af
 	jp	(hl)
