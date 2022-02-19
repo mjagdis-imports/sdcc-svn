@@ -1,3 +1,8 @@
+2022-02-19 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdcc/devicel/lib/mos6502/crt0.s:
+	  Remove incorrect loading of the second memset parameter.
+	  
 2022-02-19 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* device/lib/sm83/memcpy.s,

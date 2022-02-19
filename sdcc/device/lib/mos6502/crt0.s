@@ -75,7 +75,6 @@ __sdcc_init_data:
 ; _m6502_genXSEG() start
         lda #0x00
         sta _memset_PARM_2
-        sta _memset_PARM_2+1
         lda #<l_XSEG
         sta _memset_PARM_3
         lda #>l_XSEG
