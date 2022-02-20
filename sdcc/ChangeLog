@@ -1,5 +1,14 @@
 2022-02-19 Gabriele Gorla <gorlik@yahoo.com>
 
+	* sdcc/device/lib/mos6502/Makefile.in,
+	  sdcc/device/lib/mos6502/__sdcc_indirect_jsr.s,
+	  sdcc/device/lib/mos6502-stack-auto/Makefile.in,
+	  sdcc/device/lib/mos6502-stack-auto/__sdcc_indirect_jsr.s,
+	  sdcc/src/mos6502/gen.c:
+	  Add runtime support for indirect jsr.
+
+2022-02-19 Gabriele Gorla <gorlik@yahoo.com>
+
 	* sdcc/devicel/lib/mos6502/crt0.s:
 	  Remove incorrect loading of the second memset parameter.
   	* sdcc/support/regression/ports/u6502/spec.mk:

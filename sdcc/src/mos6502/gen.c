@@ -4471,7 +4471,7 @@ genPcall (iCode * ic)
   /* make the call */
   if (!IS_LITERAL (etype))
     {
-#if 0
+#if 1
       emit6502op("jsr","__sdcc_indirect_jsr");
 #else
       symbol *rlbl = safeNewiTempLabel (NULL);
