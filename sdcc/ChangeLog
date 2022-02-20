@@ -2,6 +2,12 @@
 
 	* sdcc/src/mos6502/gen.c:
 	  Improve genPointerSet. Make comments formatting more consistent.
+	* sdcc/support/regression/Makefile.in,
+	  sdcc/support/regression/ports/uc6502-stack-auto/spec.mk,
+	  sdcc/support/regression/ports/uc6502-stack-auto/support.c,
+	  sdcc/support/regression/ports/uc6502-stack-auto/uCsim.cmd,
+	  sdcc/support/regression/ports/uc6502-stack-auto:
+	  Add regression for mos6502-stack-auto target.
 
 2022-02-20 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 

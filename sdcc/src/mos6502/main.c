@@ -693,9 +693,9 @@ PORT mos6502_port =
     "IABS    (ABS)",      // iabs_name - absolute data
     NULL,                 // name of segment for initialized variables
     NULL,                 // name of segment for copies of initialized variables in code space
-    NULL,
-    NULL,
-    1,
+    NULL,                 // default location for auto vars
+    NULL,                 // default location for globl vars
+    1,                    // code space read-only 1=yes
     1                     // No fancy alignments supported.
   },
   { _m6502_genExtraAreas,
@@ -839,9 +839,9 @@ PORT mos65c02_port =
     "IABS    (ABS)",      // iabs_name - absolute data
     NULL,                 // name of segment for initialized variables
     NULL,                 // name of segment for copies of initialized variables in code space
-    NULL,
-    NULL,
-    1,                    /* CODE  is read-only */
+    NULL,                 // default location for auto vars
+    NULL,                 // default location for globl vars
+    1,                    // code space read-only 1=yes
     1                     // No fancy alignments supported.
   },
   { _m6502_genExtraAreas, NULL },
