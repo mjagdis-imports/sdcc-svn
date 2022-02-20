@@ -548,7 +548,7 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
           break;
         case X_IDX:            /* X to Y */
           if(m6502_reg_x->isLitConst) {
-            emit6502op ("ldy", IMMDFMT, m6502_reg_x->litConst);
+            loadRegFromConst (m6502_reg_y, m6502_reg_x->litConst);
           } else if(m6502_reg_a->isFree) {
           emit6502op ("txa", "");
           emit6502op ("tay", "");
@@ -569,7 +569,7 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
           break;
         case Y_IDX:            /* Y to X */
           if(m6502_reg_y->isLitConst) {
-            emit6502op ("ldx", IMMDFMT, m6502_reg_y->litConst);
+            loadRegFromConst (m6502_reg_x, m6502_reg_y->litConst);
           } else if(m6502_reg_a->isFree) {
           emit6502op ("tya", "");
           emit6502op ("tax", "");
@@ -684,8 +684,9 @@ storeRegTemp (reg_info * reg, bool freereg)
   if (freereg)
     m6502_freeReg (reg);
 
-  //emitcode("", "storeRegTemp overflow");
-  wassertl (_G.tempOfs <= NUM_TEMP_REGS, "storeRegTemp(): overflow");
+  if(_G.tempOfs > NUM_TEMP_REGS)
+    emitcode("ERROR", "storeRegTemp(): overflow");
+  //wassertl (_G.tempOfs <= NUM_TEMP_REGS, "storeRegTemp(): overflow");
 }
 
 /*--------------------------------------------------------------------------*/
@@ -701,7 +702,7 @@ loadRegTemp (reg_info * reg)
   }
     
   int regidx = reg->rIdx;
-  if(regidx<=Y_IDX) {
+  if(regidx==A_IDX || regidx==X_IDX || regidx==Y_IDX) {
     _G.tempOfs--;
     if(_G.tempAttr[_G.tempOfs].isLiteral) {
       loadRegFromConst(reg, _G.tempAttr[_G.tempOfs].literalValue);
@@ -1944,8 +1945,7 @@ forceStackedAop (asmop * aop, bool copyOrig)
         }
     }  
   newaop->stacked = 1;
-  // FIXME: use loadOrFree
-  if (needpula) loadRegTemp(reg);
+  loadOrFreeRegTemp(reg, needpulla);
   return newaop;
 }
 #endif
@@ -2200,8 +2200,6 @@ loadRegIndexed (reg_info * reg, int offset, char * rematOfs)
       break;
     case X_IDX:
     case Y_IDX:	
-//      pushReg (m6502_reg_a, false);
-//      needpula = true;
       needpula = pushRegIfSurv(m6502_reg_a);
       loadRegIndexed (m6502_reg_a, offset, rematOfs);
       transferRegReg (m6502_reg_a, reg, true);
@@ -2827,6 +2825,7 @@ aopCanIncDec (asmop * aop)
 {
   switch (aop->type) {
     case AOP_REG:
+      // FIXME: add A for 65C02
       if(aop->aopu.aop_reg[0]->rIdx == A_IDX) return false;
     case AOP_DIR:
     case AOP_EXT:
@@ -3169,7 +3168,7 @@ aopOpExtToIdx(asmop * result, asmop *left, asmop *right)
     return;
 
   /* Need to replace at least two extended mode accesses with indexed */
-  /* to break even with the extra cost of loading HX. Do a quick check */
+  /* to break even with the extra cost of loading YX. Do a quick check */
   /* to see if anything is using extended mode at all. */
   if (result && result->type == AOP_EXT)
     accesses += result->size;
@@ -3180,7 +3179,7 @@ aopOpExtToIdx(asmop * result, asmop *left, asmop *right)
   if (accesses<2)
     return;
   
-  /* If an operand is already using or going to H or X then we cannot */
+  /* If an operand is already using or going to Y or X then we cannot */
   /* use indexed addressing mode at the same time. */
   if (result && (IS_AOP_WITH_Y (result) || IS_AOP_WITH_X (result)))
     return;
@@ -3249,7 +3248,6 @@ isAddrSafe(operand* op, reg_info* reg)
       if (reg == m6502_reg_a && (m6502_reg_x->isFree || m6502_reg_y->isFree))
         return true;
   }
-  
   return false;
 }
 
@@ -3303,18 +3301,11 @@ aopAdrUnprepare (asmop * aop, int loffset)
     {
     case AOP_SOF:
         if (aopPrepareStoreTemp) {
-          if (aopPreparePreserveFlags) {
-            emit6502op("php", ""); // TODO: sucks
-          }
-#if 0
-          loadRegTemp(m6502_reg_y);
-          m6502_dirtyReg(m6502_reg_y, false);
-#else
+          if (aopPreparePreserveFlags)
+  	    loadRegTempNoFlags(m6502_reg_x, true);
+          else
 	  loadRegTemp(m6502_reg_x);
-#endif
-	  if (aopPreparePreserveFlags) {
-	    emit6502op("plp", ""); // TODO: sucks
-          }
+
 	  aopPreparePreserveFlags = 0;
 	  aopPrepareStoreTemp = 0;
         }
@@ -7173,7 +7164,6 @@ shiftL2Left2Result (operand * left, int offl, operand * result, int offr, int sh
 }
 
 
-
 /*-----------------------------------------------------------------*/
 /* shiftRLeftOrResult - shift right one byte from left,or to result */
 /*-----------------------------------------------------------------*/
@@ -7239,7 +7229,6 @@ genlshTwo (operand * result, operand * left, int shCount)
       loadRegFromAop (m6502_reg_xa, AOP (left), 0);
       XAccLsh (shCount);
       storeRegToFullAop (m6502_reg_xa, AOP (result), 0);
-// FIXME: check for loadOrFree
       loadOrFreeRegTemp (m6502_reg_x, needpullx);
       loadOrFreeRegTemp (m6502_reg_a, needpulla);
     }
@@ -8847,6 +8836,7 @@ genPointerGet (iCode * ic, iCode * ifx)
   needpulla = storeRegTempIfSurv (m6502_reg_a);
   bool needloady = storeRegTempIfSurv(m6502_reg_y);
   bool savea = false;
+
   if(IS_AOP_AX(AOP(left))) {
       savea = true;
       transferRegReg(m6502_reg_a, m6502_reg_y, true);
@@ -9995,9 +9985,7 @@ genReceive (iCode * ic)
 
   if (ic->argreg && IS_AOP_YX (AOP (IC_RESULT (ic))) && (offset + (ic->argreg - 1)) == 0)
     {
-      storeRegTemp (m6502_reg_x, true);
-      transferRegReg (m6502_reg_a, m6502_reg_x, true);
-      loadRegTemp (m6502_reg_y);
+      transferRegReg (m6502_reg_xa, m6502_reg_yx, true);
     }
   else if (ic->argreg)
     {
