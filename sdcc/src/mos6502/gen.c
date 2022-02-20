@@ -446,21 +446,24 @@ emitBranch (char *branchop, symbol * tlbl)
   }  
 }
 
-/*--------------------------------------------------------------------------*/
-/* smallAdjustReg - Adjust register by n bytes if possible.                              */
-/*--------------------------------------------------------------------------*/
-static int
+/**************************************************************************
+ * Adjust register by n bytes if possible.
+ *
+ * @param reg pointer to the register to adjust
+ * @param n amount of adjustment (can be positive or negative)
+ * @return return true if the ajdust was performed
+**************************************************************************/
+bool
 smallAdjustReg (reg_info *reg, int n)
 {
   int regidx = reg->rIdx;
-
   emitComment (REGOPS, __func__ );
 
   if( (regidx!=X_IDX) && (regidx!=Y_IDX) )
-    return n;  
+    return false;
   
   if (n <= -4 || n >= 4) {
-    return n;
+    return false;
   }
 
   while (n < 0) {
@@ -471,7 +474,7 @@ smallAdjustReg (reg_info *reg, int n)
     rmwWithReg ("inc", reg); /* 1 byte,  2 cycles */
     n--;
   }
-  return 0;
+  return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -4915,7 +4918,7 @@ genPlusIncr (iCode * ic)
 
   if (size==1 && AOP(result)->type==AOP_REG) {
     // if it's in a 8-bit register try to do small adjust
-    if(smallAdjustReg(AOP(result)->aopu.aop_reg[0], icount)==0) return true;   
+    if(smallAdjustReg(AOP(result)->aopu.aop_reg[0], icount)) return true;   
   }
 
   if(icount < 0 )
@@ -5098,7 +5101,7 @@ genMinusDec (iCode * ic)
     return false;
 
   // do dex/dey and inx/iny if icount is negative
-  if(!smallAdjustReg(AOP(result)->aopu.aop_reg[0],-icount))
+  if(smallAdjustReg(AOP(result)->aopu.aop_reg[0],-icount))
       return true;
 
   if ((icount > 1) || (icount < 0))
@@ -8804,6 +8807,7 @@ genPointerGet (iCode * ic, iCode * ifx)
       bool needloady = storeRegTempIfSurv(m6502_reg_y);
       tIdx = _G.tempOfs;
       if(AOP_TYPE(left) == AOP_REG) {
+        // FIXME: is it correct to free the registers?
         storeRegTemp(AOP(left)->aopu.aop_reg[0] ,true);
         storeRegTemp(AOP(left)->aopu.aop_reg[1] ,true);
       } else if(AOP_TYPE(left) == AOP_EXT || AOP_TYPE(left) == AOP_SOF) {
@@ -9468,6 +9472,7 @@ genPointerSet (iCode * ic)
      // just register content, no remat and no offset
      if(AOP_TYPE(result)==AOP_REG) {
        // already in registers just save to TEMP
+       // FIXME: is it correct to free the registers?
        storeRegTemp(AOP(result)->aopu.aop_reg[0], true);
        storeRegTemp(AOP(result)->aopu.aop_reg[1], true);
      } else {
@@ -9609,7 +9614,7 @@ genAddrOf (iCode * ic)
       m6502_useReg (m6502_reg_xa);
       emit6502op ("tsx", "");
       m6502_dirtyReg (m6502_reg_x);
-      offset=smallAdjustReg(m6502_reg_x, offset);
+      if(smallAdjustReg(m6502_reg_x, offset)) offset=0;
       transferRegReg (m6502_reg_x, m6502_reg_a, true);
       if (offset) {
           emit6502op ("clc", "");

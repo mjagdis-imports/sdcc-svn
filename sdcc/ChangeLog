@@ -7,7 +7,9 @@
 	  sdcc/src/mos6502/gen.c:
 	  Add runtime support for indirect jsr.
 	* sdcc/src/mos6502/peeph.def:
-	  Refactored rules and improved asm inline comments.	
+	  Refactored rules and improved asm inline comments.
+	* sdcc/src/mos6502/gen.c:
+	  Changed return type for smallAdjustReg().
 
 2022-02-19 Gabriele Gorla <gorlik@yahoo.com>
 
