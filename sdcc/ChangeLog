@@ -1,4 +1,11 @@
-2022-02-13 Gabriele Gorla <gorlik@yahoo.com>
+2022-02-20 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdcc/support/regression/tests/bp.c,
+	  sdcc/support/regression/tests/bug-2253.c,
+	  sdcc/support/regression/tests/bug-3003.c:
+	  Special case __SDCC_STACK_AUTO
+
+2022-02-20 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdcc/src/mos6502/gen.c:
 	  Improve genPointerSet. Make comments formatting more consistent.
@@ -14,7 +21,7 @@
 	* src/z80/gen.c:
 	  Improve stack cleaning before jp (hl) on sm83.
 
-2022-02-13 Gabriele Gorla <gorlik@yahoo.com>
+2022-02-19 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdcc/src/mos6502/gen.c:
 	  Replace assembly with generic code in a few places.
