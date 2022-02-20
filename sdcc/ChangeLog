@@ -6,6 +6,8 @@
 	  sdcc/device/lib/mos6502-stack-auto/__sdcc_indirect_jsr.s,
 	  sdcc/src/mos6502/gen.c:
 	  Add runtime support for indirect jsr.
+	* sdcc/src/mos6502/peeph.def:
+	  Refactored rules and improved asm inline comments.	
 
 2022-02-19 Gabriele Gorla <gorlik@yahoo.com>
 
