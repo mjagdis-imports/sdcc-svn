@@ -201,7 +201,7 @@ m6502_opcodeCycles(const m6502opcodedata *opcode, const char *arg)
             return 6;
           return 5;
         }
-	return 4; /* Otherwise, must be extended addressing mode */
+	return 4; /* Otherwise, must be absolute addressing mode */
 
       case M6502OP_ST:
         if (arg[0] == '*') { /* Zero page */
@@ -544,6 +544,7 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
 
   if (srcidx == dstidx)
     {
+      emitComment (REGOPS|VVDBG, "  %s: sameregs", __func__);
       m6502_useReg (dreg);
       return;
     }
@@ -634,7 +635,7 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
       error = 1;
     }
 
-  wassertl (!error, "bad combo in transferRegReg");
+  if(error) emitcode("ERROR", "bad combo in transferRegReg");
 
   m6502_useReg (dreg);
 
@@ -704,7 +705,7 @@ storeRegTemp (reg_info * reg, bool freereg)
       storeRegTemp (m6502_reg_x, freereg);
       break;
     default:
-      wassertl (0, "storeRegTemp()");
+      emitcode("ERROR", "bad reg in storeRegTemp()");
       break;
   }
 
@@ -812,7 +813,7 @@ loadRegTemp (reg_info * reg)
       loadRegTemp(m6502_reg_a);
       break;
     default:
-      wassertl (0, "loadRegTemp()");
+      emitcode("ERROR", "bad reg in loadRegTemp()");
       break;
   }
 
@@ -911,7 +912,7 @@ pushReg (reg_info * reg, bool freereg)
       pushReg(m6502_reg_a, freereg);
       break;
     default:
-      wassertl(0, "pushReg() error");
+      emitcode("ERROR", "bad reg in pushReg()");
       break;
     }
   if (freereg)
@@ -983,7 +984,8 @@ static void
 pullNull (int n)
 {
   emitComment (REGOPS, __func__ );
-  wassert (n >= 0);
+  if(n < 0) emitcode("ERROR", "pullNull called with negative parameter");
+
   adjustStack (n);
 }
 
@@ -1459,7 +1461,7 @@ storeRegToAop (reg_info *reg, asmop * aop, int loffset)
         }
       break;
     default:
-      wassert (0);
+      emitcode("ERROR", "bad reg in storeRegToAop()");
     }
 
   /* Disable the register tracking for now */
@@ -1618,9 +1620,9 @@ loadRegFromConst (reg_info * reg, int c)
   m6502_useReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* loadRegFromImm - Load register reg from immediate value c.               */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * loadRegFromImm - Load register reg from immediate value c.
+ *************************************************************************/
 static void
 loadRegFromImm (reg_info * reg, char * c)
 {
@@ -1659,9 +1661,9 @@ loadRegFromImm (reg_info * reg, char * c)
   m6502_useReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeConstToAop- Store constant c to logical offset loffset of asmop aop.*/
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeConstToAop- Store constant c to logical offset loffset of asmop aop
+ *************************************************************************/
 static void
 storeConstToAop (int c, asmop * aop, int loffset)
 {
@@ -1739,9 +1741,9 @@ storeConstToAop (int c, asmop * aop, int loffset)
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeImmToAop- Store immediate value c to logical offset loffset of asmop aop.*/
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeImmToAop- Store immediate value c to logical offset loffset of asmop aop
+ *************************************************************************/
 static void
 storeImmToAop (char *c, asmop * aop, int loffset)
 {
@@ -1805,13 +1807,13 @@ signExtendA()
       emit6502op ("eor", "#0xff");
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeRegSignToUpperAop - If isSigned is true, the sign bit of register   */
-/*                          reg is extended to fill logical offsets loffset */
-/*                          and above of asmop aop. Otherwise, logical      */
-/*                          offsets loffset and above of asmop aop are      */
-/*                          zeroed. reg must be an 8-bit register.          */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegSignToUpperAop - If isSigned is true, the sign bit of register
+ *                          reg is extended to fill logical offsets loffset
+ *                          and above of asmop aop. Otherwise, logical
+ *                          offsets loffset and above of asmop aop are
+ *                          zeroed. reg must be an 8-bit register.
+ *************************************************************************/
 static void
 storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bool isSigned)
 {
@@ -1841,11 +1843,11 @@ storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bool isSigned)
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeRegToFullAop - Store register reg to asmop aop with appropriate     */
-/*                     padding and/or truncation as needed. If isSigned is  */
-/*                     true, sign extension will take place in the padding. */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegToFullAop - Store register reg to asmop aop with appropriate
+ *                     padding and/or truncation as needed. If isSigned is
+ *                     true, sign extension will take place in the padding.
+ *************************************************************************/
 static void
 storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
 {
@@ -1889,14 +1891,14 @@ storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
         }
       break;
     default:
-      wassert (0);
+      emitcode("ERROR", "bad reg in storeRegToFullAop()");
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* transferAopAop - Transfer the value at logical offset srcofs of asmop    */
-/*                  srcaop to logical offset dstofs of asmop dstaop.        */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * transferAopAop - Transfer the value at logical offset srcofs of asmop
+ *                  srcaop to logical offset dstofs of asmop dstaop.
+ *************************************************************************/
 static void
 transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs)
 {
@@ -1937,6 +1939,7 @@ transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs)
   // same registers and offset, no transfer
   if (srcaop->type == AOP_REG && dstaop->type == AOP_REG)
     {
+      emitComment (TRACE_AOP|VVDBG, "  %s: regreg", __func__);
       transferRegReg(srcaop->aopu.aop_reg[srcofs], dstaop->aopu.aop_reg[dstofs], false);
       return;    
     }
@@ -1969,6 +1972,8 @@ transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs)
         }
     }
 
+  emitComment (TRACE_AOP|VVDBG, "  %s: general case", __func__);
+
   loadRegFromAop (reg, srcaop, srcofs);
   storeRegToAop (reg, dstaop, dstofs);
 
@@ -1977,11 +1982,11 @@ transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs)
 }
 
 #if 0
-/*--------------------------------------------------------------------------*/
-/* forceStackedAop - Reserve space on the stack for asmop aop; when         */
-/*                   freeAsmop is called with aop, the stacked data will    */
-/*                   be copied to the original aop location.                */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * forceStackedAop - Reserve space on the stack for asmop aop; when
+ *                   freeAsmop is called with aop, the stacked data will
+ *                   be copied to the original aop location.
+ *************************************************************************/
 // TODO????
 static asmop *
 forceStackedAop (asmop * aop, bool copyOrig)
@@ -2033,11 +2038,11 @@ forceStackedAop (asmop * aop, bool copyOrig)
 #endif
 
 // TODO: fix these
-/*--------------------------------------------------------------------------*/
-/* accopWithAop - Emit accumulator modifying instruction accop with the     */
-/*                byte at logical offset loffset of asmop aop.              */
-/*                Supports: adc, and, cmp, eor, ora, sbc                    */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * accopWithAop - Emit accumulator modifying instruction accop with the
+ *                byte at logical offset loffset of asmop aop.
+ *                Supports: adc, and, cmp, eor, ora, sbc
+ *************************************************************************/
 static void
 accopWithAop (char *accop, asmop *aop, int loffset)
 {
@@ -2071,13 +2076,12 @@ accopWithAop (char *accop, asmop *aop, int loffset)
     }
 }
 
-
-/*--------------------------------------------------------------------------*/
-/* rmwWithReg - Emit read/modify/write instruction rmwop with register reg. */
-/*              byte at logical offset loffset of asmop aop. Register reg   */
-/*              must be 8-bit.                                              */
-/*              Supports: com, dec, inc, lsl, lsr, neg, rol, ror            */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * rmwWithReg - Emit read/modify/write instruction rmwop with register reg.
+ *              byte at logical offset loffset of asmop aop. Register reg
+ *              must be 8-bit.
+ *              Supports: com, dec, inc, lsl, lsr, neg, rol, ror
+ *************************************************************************/
 static void
 rmwWithReg (char *rmwop, reg_info * reg)
 {
@@ -2143,17 +2147,17 @@ rmwWithReg (char *rmwop, reg_info * reg)
     }
   else
     {
-      wassertl(0, "rmwWithReg()");
+      emitcode("ERROR", "bad reg in rmwWithReg()");
     }
   // always dirty dest. register
   //  m6502_dirtyReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* rmwWithAop - Emit read/modify/write instruction rmwop with the byte at   */
-/*                logical offset loffset of asmop aop.                      */
-/*                Supports: bit, dec, inc, lsl, lsr, neg, rol, ror          */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * rmwWithAop - Emit read/modify/write instruction rmwop with the byte at
+ *                logical offset loffset of asmop aop.
+ *                Supports: bit, dec, inc, lsl, lsr, neg, rol, ror
+ *************************************************************************/
 static void
 rmwWithAop (char *rmwop, asmop * aop, int loffset)
 {
@@ -2219,10 +2223,10 @@ rmwWithAop (char *rmwop, asmop * aop, int loffset)
 
 }
 
-/*--------------------------------------------------------------------------*/
-/* loadRegIndexed - Load a register using indexed addressing mode.          */
-/*                  NOTE: offset is physical (not logical)                  */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * loadRegIndexed - Load a register using indexed addressing mode.
+ *                  NOTE: offset is physical (not logical)
+ *************************************************************************/
 static void
 loadRegIndexed (reg_info * reg, int offset, char * rematOfs)
 {
@@ -2302,7 +2306,7 @@ loadRegIndexed (reg_info * reg, int offset, char * rematOfs)
       loadRegIndexed (m6502_reg_x, offset+1, rematOfs);
       break;
     default:
-      wassert (0);
+      emitcode("ERROR", "bad reg in loadRegIndexed()");
     }
   pullOrFreeReg (m6502_reg_a, needpula);
 }
@@ -2311,10 +2315,10 @@ static int prepTempOfs = -1;
 static char* tempRematOfs = "???";
 static bool prepSwapAY;
 
-/*--------------------------------------------------------------------------*/
-/* storeRegIndexed - Store a register using indexed addressing mode.        */
-/*                   NOTE: offset is physical (not logical)                 */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegIndexed - Store a register using indexed addressing mode.
+ *                   NOTE: offset is physical (not logical)
+ *************************************************************************/
 static void
 storeRegIndexed (reg_info * reg, int offset, char * rematOfs)
 {
@@ -2397,16 +2401,16 @@ storeRegIndexed (reg_info * reg, int offset, char * rematOfs)
       storeRegIndexed (m6502_reg_a, offset, rematOfs);
       break;
     default:
-      wassert (0);
+      emitcode("ERROR", "bad reg in storeRegIndexed()");
     }
 }
 
 #if 0
-/*--------------------------------------------------------------------------*/
-/* storeRegIndexed2 - Store a register using indexed addressing mode.        */
-/*                   NOTE: offset is physical (not logical)                 */
-/* must call preparePointer() first */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegIndexed2 - Store a register using indexed addressing mode.
+ *                   NOTE: offset is physical (not logical)
+ * must call preparePointer() first
+ *************************************************************************/
 static void
 storeRegIndexed2 (reg_info * reg, int offset)
 {
@@ -2455,7 +2459,7 @@ storeRegIndexed2 (reg_info * reg, int offset)
       storeRegIndexed2 (m6502_reg_a, offset);
       break;
     default:
-      wassert (0);
+      emitcode("ERROR", "bad reg in storeRegIndexed2()");
     }
 }
 #endif
@@ -3643,7 +3647,9 @@ asmopToBool (asmop *aop, bool resultInA)
         }
       else
         {
-          werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "Bad rIdx in asmopToBool");
+         emitcode("ERROR", "Bad %02x regmask in asmopToBool", (aop)->regmask);
+
+//          werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "Bad rIdx in asmopToBool");
           return;
         }
       break;
@@ -3916,6 +3922,7 @@ genCpl (iCode * ic)
     AOP (IC_RESULT (ic))->aopu.aop_reg[0] == AOP (IC_LEFT (ic))->aopu.aop_reg[0] &&
     (size < 2 || AOP (IC_RESULT (ic))->aopu.aop_reg[1] == AOP (IC_LEFT (ic))->aopu.aop_reg[1]))
     {
+      emitComment (TRACEGEN|VVDBG, "  %s: sameRegs", __func__);
       while (size--)
         rmwWithReg ("com", AOP (IC_RESULT (ic))->aopu.aop_reg[offset++]);
       goto release;
@@ -3946,24 +3953,15 @@ genCpl (iCode * ic)
       goto release;
     }
 
-  reg = (m6502_reg_a->isDead && !(AOP_TYPE (IC_RESULT (ic)) == AOP_REG && AOP (IC_RESULT (ic))->aopu.aop_reg[0] == m6502_reg_a) ? m6502_reg_a : m6502_reg_x);
-
-  needpullreg = pushRegIfSurv (reg);
-  while (size--)
+  needpullreg = pushRegIfSurv (m6502_reg_a);
+  for(offset=size-1;offset>=0;offset--)
     {
-      bool needpullreg2 = (!size && AOP_TYPE (IC_RESULT (ic)) == AOP_REG && AOP (IC_RESULT (ic))->aopu.aop_reg[0] == reg || size && AOP_TYPE (IC_RESULT (ic)) == AOP_REG && AOP (IC_RESULT (ic))->aopu.aop_reg[1] == reg);
-      if (needpullreg2)
-        pushReg (reg, true);
-      loadRegFromAop (reg, AOP (IC_LEFT (ic)), offset);
-      rmwWithReg ("com", reg);
-      m6502_useReg (reg);
-      storeRegToAop (reg, AOP (IC_RESULT (ic)), offset);
-      m6502_freeReg (reg);
-      if (needpullreg2)
-        pullReg (reg);
-      offset++;
+      emitComment (TRACEGEN|VVDBG, "  %s: general case", __func__);
+      loadRegFromAop (m6502_reg_a, AOP (IC_LEFT (ic)), offset);
+      rmwWithReg ("com", m6502_reg_a);
+      storeRegToAop (m6502_reg_a, AOP (IC_RESULT (ic)), offset);
     }
-  pullOrFreeReg (reg, needpullreg);
+  pullOrFreeReg (m6502_reg_a, needpullreg);
 
   /* release the aops */
 release:
@@ -9557,6 +9555,8 @@ genPointerSet (iCode * ic)
   /* if bit then pack */
   if (IS_BITVAR (retype) || IS_BITVAR (letype))
     {
+      emitComment (TRACEGEN|VVDBG," %s : bitvar", __func__ );
+
       //int ptrofs =
       preparePointer (result, litOffset, rematOffset, right);
       genPackBits (result, left, (IS_BITVAR (retype) ? retype : letype), right);
@@ -9579,9 +9579,12 @@ genPointerSet (iCode * ic)
      if(AOP_TYPE(result)==AOP_REG) {
        // already in registers just save to TEMP
        // FIXME: is it correct to free the registers?
+      emitComment (TRACEGEN|VVDBG," %s : store regs", __func__ );
+
        storeRegTemp(AOP(result)->aopu.aop_reg[0], true);
        storeRegTemp(AOP(result)->aopu.aop_reg[1], true);
      } else {
+      emitComment (TRACEGEN|VVDBG," %s : aop load", __func__ );
        loadRegFromAop(m6502_reg_a, AOP(result), 0);
        storeRegTemp(m6502_reg_a, true);
        loadRegFromAop(m6502_reg_a, AOP(result), 1);

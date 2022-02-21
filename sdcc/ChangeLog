@@ -1,5 +1,10 @@
 2022-02-20 Gabriele Gorla <gorlik@yahoo.com>
 
+	* sdcc/src/mos6502/gen.c:
+	  Improve genCpl.
+
+2022-02-20 Gabriele Gorla <gorlik@yahoo.com>
+
 	* sdcc/support/regression/tests/bp.c,
 	  sdcc/support/regression/tests/bug-2253.c,
 	  sdcc/support/regression/tests/bug-3003.c:
