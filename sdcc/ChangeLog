@@ -1,3 +1,8 @@
+2022-02-21 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3327.
+
 2022-02-20 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdcc/src/mos6502/gen.c:
@@ -73,6 +78,11 @@
 	  Switch to GBDK-2020's algorithm with partial loop unrolling.
 	* device/lib/_memmove.c:
 	  On sm83 call memcpy where possible.
+
+2022-02-19 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* src/SDCCast.c:
+	  Fix an issue in the fix for bug #3320.
 
 2022-02-15 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
