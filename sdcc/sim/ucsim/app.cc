@@ -270,7 +270,9 @@ enum {
   SOPT_USART,
   SOPT_PORT,
   SOPT_IPORT,
-  SOPT_OPORT
+  SOPT_OPORT,
+  SOPT_RAW,
+  SOPT_ERROR
 };
 
 static const char *S_opts[]= {
@@ -281,6 +283,7 @@ static const char *S_opts[]= {
   /*[SOPT_PORT]=*/	"port",
   /*[SOPT_IPORT]=*/	"iport",
   /*[SOPT_OPORT]=*/	"oport",
+  /*[SOPT_RAW]=*/	"raw",
   NULL
 };
 
@@ -492,27 +495,33 @@ cl_app::proc_arguments(int argc, char *argv[])
       case 'S':
 	{
 	  char *iname= NULL, *oname= NULL;
-	  int uart=0, port=0, iport= 0, oport= 0;
-	  bool ifirst= false;
+	  int uart=0, port=0, iport= 0, oport= 0, so;
+	  bool ifirst= false, raw= false;
 	  subopts= optarg;
 	  while (*subopts != '\0')
 	    {
-	      switch (get_sub_opt(&subopts, S_opts, &value))
+	      so= get_sub_opt(&subopts, S_opts, &value);
+	      if (so != SOPT_RAW)
 		{
+		  if ((value == NULL) ||
+		      (*value == 0))
+		    so= SOPT_ERROR;
+		}
+	      switch (so)
+		{
+		case SOPT_ERROR:
+		  fprintf(stderr, "No value for -S suboption\n");
+		  exit(1);
+		  break;
+		case SOPT_RAW:
+		  raw= 1;
+		  break;
 		case SOPT_IN:
-		  if (value == NULL) {
-		    fprintf(stderr, "No value for -S in\n");
-		    exit(1);
-		  }
 		  iname= value;
 		  if (oname == NULL)
 		    ifirst= true;
 		  break;
 		case SOPT_OUT:
-		  if (value == NULL) {
-		    fprintf(stderr, "No value for -S out\n");
-		    exit(1);
-		  }
 		  oname= value;
 		  break;
 		case SOPT_UART: case SOPT_USART:
@@ -545,6 +554,18 @@ cl_app::proc_arguments(int argc, char *argv[])
 	    {
 	      char *s, *h;
 	      class cl_option *o;
+	      s= format_string("serial%d_raw", uart);
+	      if ((o= options->get_option(s)) == NULL)
+		{
+		  h= format_string("Use raw communication on uart%d files", uart);
+		  o= new cl_bool_option(this, s, h);
+		  o->init();
+		  o->hide();
+		  options->add(o);
+		  free(h);
+		}
+	      options->set_value(s, this, raw);
+	      free(s);
 	      s= format_string("serial%d_ifirst", uart);
 	      if ((o= options->get_option(s)) == NULL)
 		{
