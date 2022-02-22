@@ -16,7 +16,11 @@
 	  sdcc/device/lib/mos6502/__memcpy.s,
 	  sdcc/device/lib/mos6502-stack-auto/crt0.s,
 	  sdcc/device/lib/mos6502-stack-auto/_setjmp.c:
-	  Rename linker segments to 
+	  Rename linker segments.
+	* sdcc/src/mos6502/gen.h:
+	  Remove unused anonymous enum.
+	* sdcc/sdas/as6500/r65pst.c:
+	  Prepeare for additional asxxxx upstream merge.
 
 2022-02-22 Gabriele Gorla <gorlik@yahoo.com>
 

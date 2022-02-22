@@ -211,8 +211,8 @@ struct	mne	mne[] = {
     {   NULL,   ".odd",         S_BOUNDARY,     0,      O_ODD   },
     {   NULL,   ".bndry",       S_BOUNDARY,     0,      O_BNDRY },
 //    {	NULL,	".msg"	,	S_MSG,		0,	0	},
-//    { NULL,   ".assume",      S_ERROR,        0,      0       },
-//    { NULL,   ".error",       S_ERROR,        0,      1       },
+//    { NULL,   ".assume",      S_ERROR,        0,      O_ASSUME},
+//    { NULL,   ".error",       S_ERROR,        0,      O_ERROR	},
 /*    {	NULL,	".msb",		S_MSB,		0,	0	},	*/
 /*    {	NULL,	".lohi",	S_MSB,		0,	O_LOHI	},	*/
 /*    {	NULL,	".hilo",	S_MSB,		0,	O_HILO	},	*/
