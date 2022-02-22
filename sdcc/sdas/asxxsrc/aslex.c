@@ -41,6 +41,7 @@
  *      analysis routines for the assembler.
  *
  *      aslex.c contains the following functions:
+ *		VOID	chopcrlf()
  *              int     comma()
  *              char    endline()
  *              int     get()
@@ -53,6 +54,8 @@
  *              VOID    getst()
  *              int     more()
  *              int     nxtline()
+ *		int	replace()
+ *		VOID	scanline()
  *              VOID    unget()
  *
  *      aslex.c contains no local/static variables
@@ -215,9 +218,7 @@ getst(char *id, int c)
  */
 
 VOID
-getdstr(str, slen)
-char * str;
-int slen;
+getdstr(char *str, int slen)
 {
         char *p;
         int c, d;
@@ -492,8 +493,8 @@ getmap(int d)
  *
  *      called functions:
  *              int     getnb()         aslex.c
- *              VOID    qerr()          assubr.c
  *              VOID    unget()         aslex.c
+ *		VOID	xerr()		assubr.c
  *
  *      side effects:
  *              assembler-source text line pointer updated
@@ -506,7 +507,7 @@ comma(int flag)
 
         if ((c = getnb()) != ',') {
                 if (flag) {
-                        qerr();
+			xerr('q', "Expected a ','.");
                 } else {
                         unget(c);
                 }
@@ -788,6 +789,8 @@ loop:   if (asmc == NULL) return(0);
         }
         ib = (char *)dbuf_c_str (&dbuf_ib);
 
+	chopcrlf(ib);
+#if 0
         /* remove the trailing NL */
         if (len > 0 && '\n' == ib[len - 1])
           {
@@ -797,6 +800,7 @@ loop:   if (asmc == NULL) return(0);
             dbuf_set_length (&dbuf_ib, len);
             ib = (char *)dbuf_c_str (&dbuf_ib);
           }
+#endif
 
         dbuf_append_str (&dbuf_ic, ib);
         ic = (char *)dbuf_c_str (&dbuf_ic);
@@ -1131,3 +1135,41 @@ endline(void)
         c = getnb();
         return( (c == '\0' || c == ';') ? 0 : c );
 }
+
+/*)Function	VOID	chopcrlf(str)
+ *
+ *		char	*str		string to chop
+ *
+ *	The function chopcrlf() removes
+ *	LF, CR, LF/CR, or CR/LF from str.
+ *
+ *	local variables:
+ *		char *	p		temporary string pointer
+ *		char	c		temporary character
+ *
+ *	global variables:
+ *		none
+ *
+ *	functions called:
+ *		none
+ *
+ *	side effects:
+ *		All CR and LF characters removed.
+ */
+
+VOID
+chopcrlf(char *str)
+{
+	char *p;
+	char c;
+
+	p = str;
+	do {
+		c = *p++ = *str++;
+		if ((c == '\r') || (c == '\n')) {
+			p--;
+		}
+	} while (c != 0);
+}
+
+

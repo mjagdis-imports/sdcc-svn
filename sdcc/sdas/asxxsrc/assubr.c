@@ -59,8 +59,7 @@
  */
 
 VOID
-err(c)
-int c;
+err(int c)
 {
 	xerr(c, NULL);
 }
@@ -94,9 +93,7 @@ int c;
  */
 
 VOID
-xerr(c, str)
-int c;
-char *str;
+xerr(int c, char *str)
 {
         char *p;
 
@@ -139,7 +136,7 @@ char *str;
  */
 
 VOID
-diag()
+diag(void)
 {
         char *p,*errstr;
 
@@ -231,7 +228,7 @@ warnBanner(void)
  * Note an 'r' error.
  */
 VOID
-rerr()
+rerr(void)
 {
         err('r');
 }
@@ -240,7 +237,7 @@ rerr()
  * Note an 'a' error.
  */
 VOID
-aerr()
+aerr(void)
 {
         err('a');
 }
@@ -249,7 +246,7 @@ aerr()
  * Note a 'q' error.
  */
 VOID
-qerr()
+qerr(void)
 {
         err('q');
 }
@@ -302,8 +299,7 @@ char *errors[] = {
  *              error code string is returned.
  */
 char *
-geterr(c)
-int c;
+geterr(int c)
 {
         int i;
 
@@ -315,3 +311,5 @@ int c;
         sprintf(erb, "<e> %.*s", (int) (sizeof(erb)-5), ib);
         return(erb);
 }
+
+

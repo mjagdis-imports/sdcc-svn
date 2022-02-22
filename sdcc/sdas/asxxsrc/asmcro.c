@@ -480,8 +480,7 @@ int code;
  */
 
 VOID
-getdarg(np)
-struct mcrdef * np;
+getdarg(struct mcrdef *np)
 {
         struct strlst *str;
         char id[NCPS];
@@ -558,8 +557,7 @@ struct mcrdef * np;
  */
 
 VOID
-getxarg(np)
-struct mcrdef * np;
+getxarg(struct mcrdef *np)
 {
         struct strlst *str;
         char id[NCPS];
@@ -637,8 +635,7 @@ struct mcrdef * np;
  */
 
 VOID
-getxstr(id)
-char *id;
+getxstr(char *id)
 {
         char *p;
         int c, dc;
@@ -976,10 +973,7 @@ char *id;
  */
 
 char *
-fgetm(ptr, len, fp)
-char *ptr;
-int len;
-FILE *fp;
+fgetm(char *ptr, int len, FILE *fp)
 {
         struct macrofp *nfp;
         struct mcrdef *np;

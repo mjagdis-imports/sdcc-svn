@@ -5,6 +5,11 @@
 	  sdcc/sdas/asxxsrc/asexpr.c,
 	  sdcc/sdas/asxxsrc/asdata.c:
 	  Enable -v option (out of range errors) from upstream asxxxx 5.40.
+	* sdcc/sdas/asxxsrc/assubr.c,
+	  sdcc/sdas/asxxsrc/asout.c,
+	  sdcc/sdas/asxxsrc/asmcro.c,
+	  sdcc/sdas/asxxsrc/aslex.c:
+	  Change protoypes to ANSI C. Add some detailed error messages.
 	  
 2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
