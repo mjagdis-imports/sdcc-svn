@@ -12,6 +12,16 @@
 	  Several updates from upstream asxxxx 5.40
 	* sdcc/sdas/aasz80/z80pst.c:
 	  Use I_CODE in S_INCL entry instead of 0.
+	* sdcc/sdas/as6502/r65pst.c,
+	  sdcc/sdas/as6502/r65mch.c,
+	  sdcc/sdas/as6502/r65adr.c,
+	  sdcc/sdas/as6502/r6500.h:
+	  Add .incbin, .define, .undefine, .ifdef and .ifndef to the 6502 assembler.
+  	* sdcc/sdas/as6808/m6808.h,
+	  sdcc/sdas/as6808/m08pst.c,
+	  sdcc/sdas/as6808/m08mch.c,
+	  sdcc/sdas/as6808/m08adr.c:
+	  Add .incbin hc08/s08 assembler.
 	  
 2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
