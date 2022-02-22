@@ -34,12 +34,6 @@ enum
     AOP_EXT, AOP_SOF, AOP_DUMMY, AOP_IDX
   };
 
-enum
-  {
-    ACCUSE_XA = 1,
-    ACCUSE_YX
-  };
-
 /* type asmop : a homogenised type for 
    all the different spaces an operand can be
    in */
