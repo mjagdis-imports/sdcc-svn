@@ -1,7 +1,7 @@
 /* asexpr.c */
 
 /*
- *  Copyright (C) 1989-2010  Alan R. Baldwin
+ *  Copyright (C) 1989-2021  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -66,6 +66,13 @@
  *      stores its value and relocation information into
  *      the expr structure supplied by the user.
  *
+ *	Notes about the arithmetic:
+ *		The coding emulates N-Bit unsigned
+ *		arithmetic operations.  This allows
+ *		program compilation without regard to the
+ *		intrinsic integer length of the host
+ *		machine.
+ *
  *      local variables:
  *              a_uint  ae              value from expr esp
  *              a_uint  ar              value from expr re
@@ -82,12 +89,12 @@
  *      functions called:
  *              VOID    abscheck()      asexpr.c
  *              VOID    clrexpr()       asexpr.c
+ *		VOID	err()		assubr.c
  *              VOID    expr()          asexpr.c
  *              int     get()           aslex.c
  *              int     getnb()         aslex.c
  *              int     oprio()         asexpr.c
- *              VOID    qerr()          assubr.c
- *              VOID    rerr()          assubr.c
+ *		VOID	xerr()		assubr.c
  *              VOID    term()          asexpr.c
  *              VOID    unget()         aslex.c
  *
@@ -115,7 +122,7 @@ expr(struct expr *esp, int n)
                 if ((p = oprio(c)) <= n)
                         break;
                 if ((c == '>' || c == '<') && c != get())
-                        qerr();
+			xerr('q', "Binary operator >> or << expected.");
                 clrexpr(&re);
                 expr(&re, p);
                 esp->e_rlcf |= re.e_rlcf;
@@ -138,10 +145,10 @@ expr(struct expr *esp, int n)
                                 /*
                                  * re should be absolute (constant)
                                  */
-                                rerr();
+				xerr('r', "Arg1 + Arg2, Arg2 must be a constant.");
                         }
                         if (esp->e_flag && re.e_flag)
-                                rerr();
+				xerr('r', "Arg1 + Arg2, Both arguments cannot be external.");
                         if (re.e_flag)
                                 esp->e_flag = 1;
                         ae += ar;
@@ -154,11 +161,11 @@ expr(struct expr *esp, int n)
                                 if (esp->e_base.e_ap == ap) {
                                         esp->e_base.e_ap = NULL;
                                 } else {
-                                        rerr();
+					xerr('r', "Arg1 - Arg2, Arg2 must be in same area.");
                                 }
                         }
                         if (re.e_flag)
-                                rerr();
+				xerr('r', "Arg1 - Arg2, Arg2 cannot be external.");
                         ae -= ar;
                 } else {
                         /*
@@ -782,6 +789,11 @@ clrexpr(struct expr *esp)
  *
  *              a_uint  n               a signed /unsigned value
  *
+ *	The function rngchk() verifies that the
+ *	value of n is a signed or unsigned value
+ *	within the range of the current exprmasks()
+ *	settings and returns the value masked to
+ *	the current exprmasks() settings.
  *
  *      local variables:
  *              none

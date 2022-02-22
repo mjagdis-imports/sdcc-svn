@@ -187,6 +187,7 @@ search_path_fopen(const char *filename, const char *mode)
  *              int     c               character from argument string
  *              int     i               argument loop counter
  *              area *  ap              pointer to area structure
+ *		def *	dp		pointer to def structure
  *
  *      global variables:
  *              int     aflag           -a, make all symbols global flag
@@ -204,6 +205,8 @@ search_path_fopen(const char *filename, const char *mode)
  *              int *   cp              pointer to assembler output array cb[]
  *              int *   cpt             pointer to assembler relocation type
  *                                      output array cbt[]
+ *		time_t	curtim		current time string pointer
+ *		def *	defp		pointer to a def structure
  *              char    eb[]            array of generated error codes
  *              char *  ep              pointer into error list array eb[]
  *              int     fflag           -f(f), relocations flagged flag
@@ -297,6 +300,7 @@ main(int argc, char *argv[])
         char *q;
         int c, i;
         struct area *ap;
+	struct def *dp;
 
         if (intsiz() < 4) {
                 fprintf(stderr, "?ASxxxx-Error-Size of INT32 is not 32 bits or larger.\n\n");
@@ -322,9 +326,62 @@ main(int argc, char *argv[])
                         while ((c = *p++) != 0) {
                                 switch(c) {
 
-                                case 'a':
-                                case 'A':
-                                        ++aflag;
+//                                case 'i':
+                                case 'I':
+                                        search_path_append(p);
+                                        while (*p)
+                                                ++p;
+                                        break;
+
+				/*
+				 * Output:
+				 *   -l   Create list   file/outfile[.lst]
+				 *   -o   Create object file/outfile[.rel]
+				 *   -s   Create symbol file/outfile[.sym]
+				 */
+                                case 'l':
+                                case 'L':
+                                        ++lflag;
+                                        break;
+
+                                case 'o':
+                                case 'O':
+                                        ++oflag;
+                                        break;
+
+                                case 's':
+                                case 'S':
+                                        ++sflag;
+                                        break;
+
+				/*
+				 * Listing:
+				 *   -d   Decimal listing
+				 *   -q   Octal   listing
+				 *   -x   Hex     listing (default)
+				 *   -b   Display .define substitutions in listing
+				 *   -bb  and display without .define substitutions
+				 *   -c   Disable instruction cycle count in listing
+				 *   -f   Flag relocatable references by  `   in listing file
+				 *   -ff  Flag relocatable references by mode in listing file
+				 *   -k   Disable error output to listing file
+				 *   -p   Disable automatic listing pagination
+				 *   -u   Disable .list/.nlist processing
+				 *   -w   Wide listing format for symbol table
+				 */
+                                case 'd':
+                                case 'D':
+                                        xflag = 2;
+                                        break;
+
+                                case 'q':
+                                case 'Q':
+                                        xflag = 1;
+                                        break;
+
+                                case 'x':
+                                case 'X':
+                                        xflag = 0;
                                         break;
 
                                 case 'b':
@@ -337,51 +394,9 @@ main(int argc, char *argv[])
                                         cflag = 1;      /* Cycle counts in listing */
                                         break;
 
-                                case 'g':
-                                case 'G':
-                                        ++gflag;
-                                        break;
-
-                                case 'i':
-                                case 'I':
-                                        search_path_append(p);
-                                        while (*p)
-                                                ++p;
-                                        break;
-
-#if NOICE
-                                case 'j':               /* NoICE Debug  JLH */
-                                case 'J':
-                                        ++jflag;
-                                        ++oflag;        /* force object */
-                                        break;
-#endif
-
-#if SDCDB
-                                case 'y':               /* SDCC Debug */
-                                case 'Y':
-                                        ++yflag;
-                                        break;
-#endif
-
-                                case 'l':
-                                case 'L':
-                                        ++lflag;
-                                        break;
-
-                                case 'n':
-                                case 'N':
-                                        nflag = 1;
-                                        break;
-
-                                case 'o':
-                                case 'O':
-                                        ++oflag;
-                                        break;
-
-                                case 's':
-                                case 'S':
-                                        ++sflag;
+                                case 'f':
+                                case 'F':
+                                        ++fflag;
                                         break;
 
                                 case 'p':
@@ -399,30 +414,51 @@ main(int argc, char *argv[])
                                         ++wflag;
                                         break;
 
+				/*
+				 * Symbol Options:
+				 *   -a   All user symbols made global
+				 *   -g   Undefined symbols made global
+				 *   -z   Disable case sensitivity for symbols
+				 */
+                                case 'a':
+                                case 'A':
+                                        ++aflag;
+                                        break;
+
+                                case 'g':
+                                case 'G':
+                                        ++gflag;
+                                        break;
+
+                                case 'n':
+                                case 'N':
+                                        nflag = 1;
+                                        break;
+
                                 case 'z':
                                 case 'Z':
                                         ++zflag;
                                         break;
 
-                                case 'x':
-                                case 'X':
-                                        xflag = 0;
+				/*
+				 * Debug Options:
+				 *   -j   Enable NoICE Debug Symbols
+				 *   -y   Enable SDCC  Debug Symbols
+				 */
+#if NOICE
+                                case 'j':               /* NoICE Debug  JLH */
+                                case 'J':
+                                        ++jflag;
+                                        ++oflag;        /* force object */
                                         break;
+#endif
 
-                                case 'q':
-                                case 'Q':
-                                        xflag = 1;
+#if SDCDB
+                                case 'y':               /* SDCC Debug */
+                                case 'Y':
+                                        ++yflag;
                                         break;
-
-                                case 'd':
-                                case 'D':
-                                        xflag = 2;
-                                        break;
-
-                                case 'f':
-                                case 'F':
-                                        ++fflag;
-                                        break;
+#endif
 
                                 default:
                                         usage(ER_FATAL);
@@ -470,6 +506,7 @@ main(int argc, char *argv[])
                 tfp = afile(q, "sym", 1);
         exprmasks(2);
         syminit();
+	curtim = time(NULL);
         for (pass=0; pass<3; ++pass) {
                 aserr = 0;
                 if (gflag && pass == 1)
@@ -478,6 +515,11 @@ main(int argc, char *argv[])
                         allglob();
                 if (oflag && pass == 2)
                         outgsd();
+		dp = defp;
+		while (dp) {
+			dp->d_dflag = 0;
+			dp = dp->d_dp;
+		}
                 flevel = 0;
                 tlevel = 0;
                 lnlist = LIST_NORM;
@@ -496,14 +538,14 @@ main(int argc, char *argv[])
                 asmline = 0;
                 incline = 0;
                 asmc = asmp;
+                strcpy(afn, asmc->afn);
+                afp = asmc->afp;
                 while (asmc) {
                         if (asmc->fp)
                                 rewind(asmc->fp);
                         asmc = asmc->next;
                 }
                 asmc = asmp;
-                strcpy(afn, asmc->afn);
-                afp = asmc->afp;
                 ap = areap;
                 while (ap) {
                         ap->a_fuzz = 0;
@@ -654,6 +696,7 @@ asexit(int i)
  *              int     c               character from assembler-source
  *                                      text line
  *              area *  ap              pointer to an area structure
+ *		def *	dp		pointer to a  definition structure
  *              expr    e1              expression structure
  *              char    id[]            id string
  *              char    opt[]           options string
@@ -703,6 +746,7 @@ asexit(int i)
  *      functions called:
  *              a_uint  absexpr()       asexpr.c
  *              area *  alookup()       assym.c
+ *		def *	dlookup()	assym.c
  *              VOID    clrexpr()       asexpr.c
  *              int     digit()         asexpr.c
  *              char    endline()       aslex.c
@@ -747,6 +791,7 @@ asmbl(void)
         struct tsym *tp;
         int c;
         struct area  *ap;
+	struct def *dp;
         struct expr e1;
         char id[NCPS];
         char equ[NCPS];
@@ -1035,7 +1080,23 @@ loop:
                                         case O_IFLE:    n = (((v_sint) n) <= 0);        break;
                                         }
                                         break;
-
+				case O_IFDEF:	/* .if def,.... */
+				case O_IFNDEF:	/* .if ndef,.... */
+					getid(id, -1);
+					if (((dp = dlookup(id)) != NULL) && (dp->d_dflag != 0)) {
+						n = 1;
+					} else
+					if ((sp = slookup(id)) != NULL) {
+						n = (sp->s_type == S_USER) ? 1 : 0;
+					} else {
+						n = 0;
+					}
+					switch (mp->m_valu) {
+					default:
+					case O_IFDEF:	n = (((v_sint) n) != 0);	break;
+					case O_IFNDEF:	n = (((v_sint) n) == 0);	break;
+					}
+					break;
                                 case O_IFF:     /* .if f */
                                 case O_IFT:     /* .if t */
                                 case O_IFTF:    /* .if tf */
@@ -1447,8 +1508,7 @@ loop:
                          * Open File
                          */
                         if ((fp = fopen(fn, "rb")) == NULL) {
-                                //xerr('i', "File not found.");
-                                err('i');
+				xerr('i', "File not found.");
                                 break;
                         }
                         /*
@@ -1456,8 +1516,7 @@ loop:
                          */
                         fseek(fp, skp, SEEK_SET);
                         if (fread(&c, 1, 1, fp) != 1) {
-                                //xerr('i', "Offset past End-Of-File.");
-                                err('i');
+				xerr('i', "Offset past End-Of-File.");
                                 break;
                         }
                         fseek(fp, skp, SEEK_SET);
@@ -1479,7 +1538,7 @@ loop:
                         break;
 
 		default:
-                        err('i');
+			xerr('i', "Internal ___PST.C Error.");
 			break;
                 }
                 break;
@@ -1761,6 +1820,61 @@ loop:
                         break;
                 }
                 break;
+
+	case S_DEFINE:
+		/*
+		 * Extract the .(un)define key word.
+		 */
+		getid(id, -1);
+
+		switch(mp->m_valu) {
+		case O_DEF:
+			/*
+			 * Extract the substitution string
+			 */
+			comma(0);
+			*opt = 0;
+			if (more()) {
+				getdstr(opt, NCPS);
+			}
+			/*
+			 * Verify the definition or
+			 * add a new definition.
+			 */
+			dp = dlookup(id);
+			if (dp) {
+				if (!symeq(opt, dp->d_define, zflag)) {
+					if (dp->d_dflag) {
+						err('m');
+					}
+					dp->d_define = strsto(opt);
+				}
+				dp->d_dflag = 1;
+			} else {
+				dp = (struct def *) new (sizeof(struct def));
+				dp->d_dp = defp;
+				dp->d_id = strsto(id);
+				dp->d_define = strsto(opt);
+				dp->d_dflag = 1;
+				defp = dp;
+			}
+			break;
+
+		case O_UNDEF:
+			/*
+			 * Find and undefine the definition.
+			 */
+			dp = dlookup(id);
+			if (dp) {
+				dp->d_dflag = 0;
+			}
+			break;
+
+		default:
+			break;
+		}
+		lmode = SLIST;
+		break;
 
         case S_BOUNDARY:
                 switch(mp->m_valu) {
@@ -2205,35 +2319,43 @@ phase(struct area *ap, a_uint a)
 }
 
 char *usetxt[] = {
-        "Usage: [-Options] file",
-        "Usage: [-Options] outfile file1 [file2 file3 ...]",
+	"Usage: [-Options] [-Option with arg] file",
+	"Usage: [-Options] [-Option with arg] outfile file1 [file2 ...]",
+	"  -h   or NO ARGUMENTS  Show this help list",
+	"Input:",
+        "  -I   Add the named directory to the include file",
+        "       search path.  This option may be used more than once.",
+        "       Directories are searched in the order given.",
+	"Output:",
+	"  -l   Create list   file/outfile[.lst]",
+	"  -o   Create object file/outfile[.rel]",
+	"  -s   Create symbol file/outfile[.sym]",
+	"Listing:",
         "  -d   Decimal listing",
         "  -q   Octal   listing",
         "  -x   Hex     listing (default)",
-        "  -g   Undefined symbols made global",
-        "  -n   Don't resolve global assigned value symbols",
-        "  -a   All user symbols made global",
         "  -b   Display .define substitutions in listing",
         "  -bb  and display without .define substitutions",
         "  -c   Disable instruction cycle count in listing",
+        "  -f   Flag relocatable references by  `   in listing file",
+        "  -ff  Flag relocatable references by mode in listing file",
+        "  -p   Disable automatic listing pagination",
+        "  -u   Disable .list/.nlist processing",
+        "  -w   Wide listing format for symbol table",
+	"Symbols:",
+        "  -a   All user symbols made global",
+        "  -g   Undefined symbols made global",
+        "  -n   Don't resolve global assigned value symbols",
+        "  -z   Disable case sensitivity for symbols",
+#if (NOICE || SDCDB)
+	"Debugging:",
 #if NOICE
         "  -j   Enable NoICE Debug Symbols",
 #endif
 #if SDCDB
         "  -y   Enable SDCC  Debug Symbols",
 #endif
-        "  -l   Create list   file/outfile[.lst]",
-        "  -o   Create object file/outfile[.rel]",
-        "  -s   Create symbol file/outfile[.sym]",
-        "  -p   Disable automatic listing pagination",
-        "  -u   Disable .list/.nlist processing",
-        "  -w   Wide listing format for symbol table",
-        "  -z   Disable case sensitivity for symbols",
-        "  -f   Flag relocatable references by  `   in listing file",
-        "  -ff  Flag relocatable references by mode in listing file",
-        "  -I   Add the named directory to the include file",
-        "       search path.  This option may be used more than once.",
-        "       Directories are searched in the order given.",
+#endif
         "",
         NULL
 };
