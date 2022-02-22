@@ -587,6 +587,10 @@ struct  sym
 #define   O_EVEN     0          /* .even */
 #define   O_ODD      1          /* .odd */
 #define   O_BNDRY    2          /* .bndry */
+#define	S_MSG		23	/* .msg */
+#define	S_ERROR		24	/* .assume, .error */
+#define	  O_ASSUME   0		/* .assume */
+#define	  O_ERROR    1		/* .error */
 #define S_BITS          26      /* .8bit, .16bit, .24bit, .32bit */
 /*        O_1BYTE    1  */      /* .8bit */
 /*        O_2BYTE    2  */      /* .16bit */

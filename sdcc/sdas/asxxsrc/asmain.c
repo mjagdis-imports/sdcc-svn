@@ -764,6 +764,7 @@ asexit(int i)
  *              VOID    err()           assubr.c
  *              VOID    expr()          asexpr.c
  *              FILE *  fopen()         c_library
+ *		int	fseek()		c_library
  *              int     get()           aslex.c
  *              VOID    getid()         aslex.c
  *              int     getmap()        aslex.c
@@ -867,48 +868,34 @@ loop:
                 if (c != '$' || get() != ':')
                         qerr();
 
-                tp = symp->s_tsym;
-                if (pass == 0) {
-                        while (tp) {
-                                if (n == tp->t_num) {
-                                        tp->t_flg |= S_MDF;
-                                        break;
-                                }
-                                tp = tp->t_lnk;
-                        }
-                        if (tp == NULL) {
-                                tp=(struct tsym *) new (sizeof(struct tsym));
-                                tp->t_lnk = symp->s_tsym;
-                                tp->t_num = n;
-                                tp->t_flg = 0;
-                                tp->t_area = dot.s_area;
-                                tp->t_addr = dot.s_addr;
-                                symp->s_tsym = tp;
-                        }
-                } else {
-                        while (tp) {
-                                if (n == tp->t_num) {
-                                        break;
-                                }
-                                tp = tp->t_lnk;
-                        }
-                        if (tp) {
-                                if (pass == 1) {
-                                        fuzz = tp->t_addr - dot.s_addr;
-                                        tp->t_area = dot.s_area;
-                                        tp->t_addr = dot.s_addr;
-                                } else {
-                                        phase(tp->t_area, tp->t_addr);
-                                        if (tp->t_flg & S_MDF)
-                                                err('m');
-                                }
-                        } else {
-                                err('u');
-                        }
-                }
-                lmode = ALIST;
-                goto loop;
-        }
+		tp = symp->s_tsym;
+		while (tp) {
+			if (n == tp->t_num) {
+				if (pass == 0) {
+					tp->t_flg |= S_MDF;
+				}
+				break;
+			}
+			tp = tp->t_lnk;
+		}
+		if (tp == NULL) {
+			tp=(struct tsym *) new (sizeof(struct tsym));
+			tp->t_area = dot.s_area;
+			tp->t_addr = dot.s_addr;
+			tp->t_lnk = symp->s_tsym;
+			tp->t_num = n;
+			tp->t_flg = 0;
+			symp->s_tsym = tp;
+		}
+		if (tp->t_flg & S_MDF)
+			err('m');
+		phase(tp->t_area, tp->t_addr);
+		fuzz = tp->t_addr - dot.s_addr;
+		tp->t_area = dot.s_area;
+		tp->t_addr = dot.s_addr;
+		lmode = ALIST;
+		goto loop;
+	}
         /*
          * If the first character is a letter then assume a label,
          * symbol, assembler directive, or assembler mnemonic is
@@ -1916,6 +1903,30 @@ loop:
                 }
                 break;
 
+	case S_MSG:
+		lmode = SLIST;
+		/*
+		 * Print the .msg message
+		 */
+		getdstr(fn, FILSPC+FILSPC);
+		if (pass == 2) {
+			printf("%s\n", fn);
+		}
+		break;
+
+	case S_ERROR:
+		clrexpr(&e1);
+		if (more()) {
+			expr(&e1, 0);
+		}
+		if (e1.e_addr != 0) {
+			err('e');
+		}
+		lmode = ELIST;
+//		eqt_area = NULL;
+		laddr = e1.e_addr;
+		break;
+
         case S_MACRO:
                 lmode = SLIST;
                 mcrprc((int) mp->m_valu);
@@ -2084,12 +2095,30 @@ FILE *
 afile(char *fn, char *ft, int wf)
 {
         FILE *fp;
+	char *frmt;
 
         afilex(fn, ft);
 
+	/*
+	 * Select (Binary) Read/Write
+	 */
+	switch(wf) {
+	default:
+	case 0:	frmt = "r";	break;
         /* open file -- use "b" flag to write LF line endings on all host platforms */
-        if ((fp = fopen(afntmp, wf?"wb":"r")) == NULL) {
-            fprintf(stderr, "?ASxxxx-Error-<cannot %s> : \"%s\"\n", wf?"create":"open", afntmp);
+	/* this is currently set to match old sdas behavior */
+	case 1:	frmt = "wb";	break;
+#ifdef	DECUS
+	case 2:	frmt = "rn";	break;
+	case 3:	frmt = "wn";	break;
+#else
+	case 2:	frmt = "rb";	break;
+	case 3:	frmt = "wb";	break;
+#endif
+	}
+
+	if ((fp = fopen(afntmp, frmt)) == NULL) {
+	    fprintf(stderr, "?ASxxxx-Error-<cannot %s> : \"%s\"\n", (frmt[0] == 'w')?"create":"open", afntmp);
             asexit(ER_FATAL);
         }
 

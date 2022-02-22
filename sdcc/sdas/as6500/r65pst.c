@@ -210,9 +210,9 @@ struct	mne	mne[] = {
     {   NULL,   ".even",        S_BOUNDARY,     0,      O_EVEN  },
     {   NULL,   ".odd",         S_BOUNDARY,     0,      O_ODD   },
     {   NULL,   ".bndry",       S_BOUNDARY,     0,      O_BNDRY },
-//    {	NULL,	".msg"	,	S_MSG,		0,	0	},
-//    { NULL,   ".assume",      S_ERROR,        0,      O_ASSUME},
-//    { NULL,   ".error",       S_ERROR,        0,      O_ERROR	},
+    {	NULL,	".msg"	,	S_MSG,		0,	0	},
+    {	NULL,   ".assume",      S_ERROR,        0,      O_ASSUME},
+    {	NULL,   ".error",       S_ERROR,        0,      O_ERROR	},
 /*    {	NULL,	".msb",		S_MSB,		0,	0	},	*/
 /*    {	NULL,	".lohi",	S_MSB,		0,	O_LOHI	},	*/
 /*    {	NULL,	".hilo",	S_MSB,		0,	O_HILO	},	*/
@@ -249,14 +249,12 @@ struct	mne	mne[] = {
 
     {   NULL,   ".setdp",       S_SDP,          0,      0       },
 
-#if 0
 	/* Machines */
 
-    {	NULL,	".r6500",	S_R6500,	0,	0	},
-    {	NULL,	".r65f11",	S_R65F11,	0,	0	},
-    {	NULL,	".r65c00",	S_R65C00,	0,	0	},
-    {	NULL,	".r65c02",	S_R65C02,	0,	0	},
-#endif
+//    {	NULL,	".r6500",	S_R6500,	0,	0	},
+//    {	NULL,	".r65f11",	S_R65F11,	0,	0	},
+//    {	NULL,	".r65c00",	S_R65C00,	0,	0	},
+//    {	NULL,	".r65c02",	S_R65C02,	0,	0	},
 
 	/* 650X / 651X Family  Instructions */
 
