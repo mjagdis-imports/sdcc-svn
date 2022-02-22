@@ -29,17 +29,19 @@
 	.module crt0
 
 	;; Ordering of segments for the linker.
-        .area HOME    (CODE)
-        .area GSINIT  (CODE)
-        .area GSFINAL (CODE)
-        .area CSEG    (CODE)
-        .area XINIT   (CODE)
-        .area CONST   (CODE)
-        .area DSEG    (PAG)
-        .area OSEG    (PAG, OVR)
-        .area XSEG
-        .area XISEG
+        .area _CODE
+        .area GSINIT
+        .area GSFINAL
+        .area CODE
+        .area RODATA
+        .area XINIT
 
+        .area ZP      (PAG)
+        .area OSEG    (PAG, OVR)
+
+	.area _DATA
+        .area DATA
+        .area BSS
 
 	;; Reset/interrupt vectors
         .area   CODEIVT (ABS)
@@ -54,11 +56,9 @@ __sdcc_gs_init_startup:
         txs
 ;        ldx     #0x01         ; MSB of stack ptr
 ;        stx     __BASEPTR+1
-        jsr     __sdcc_external_startup
-        beq     __sdcc_init_data
-        jmp     __sdcc_program_startup
 
 __sdcc_init_data:
+;; initialize DATA
         lda #>l_XINIT
         pha
         lda #<l_XINIT
@@ -69,28 +69,27 @@ __sdcc_init_data:
         lda #<s_XINIT
         pha
 
-        lda #<s_XISEG
-        ldx #>s_XISEG
+        lda #<s_DATA
+        ldx #>s_DATA
         jsr ___memcpy
 	pla
 	pla
 	pla
 	pla
+
 ;; clear BSS
-        lda #>l_XSEG
+        lda #>l_BSS
         pha
-        lda #<l_XSEG
+        lda #<l_BSS
         pha
 
         lda #0x00
         pha
-        lda #<s_XSEG
-        ldx #>s_XSEG
+        lda #<s_BSS
+        ldx #>s_BSS
         jsr _memset
 
         .area GSFINAL
-        jmp     __sdcc_program_startup
-        .area CSEG
 __sdcc_program_startup:
         jsr     _main
         jmp     .
