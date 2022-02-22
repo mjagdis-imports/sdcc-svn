@@ -1,3 +1,18 @@
+2022-02-22 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdcc/sdas/asxxsrc/asxxxx.h,
+	  sdcc/sdas/asxxsrc/assym.c,
+	  sdcc/sdas/asxxsrc/assubr.c,
+	  sdcc/sdas/asxxsrc/asmcro.c,
+	  sdcc/sdas/asxxsrc/asmain.c,
+	  sdcc/sdas/asxxsrc/aslist.c,
+	  sdcc/sdas/asxxsrc/aslex.c,
+	  sdcc/sdas/asxxsrc/asexpr.c,
+	  sdcc/sdas/asxxsrc/asdata.c:
+	  Several updates from upstream asxxxx 5.40
+	* sdcc/sdas/aasz80/z80pst.c:
+	  Use I_CODE in S_INCL entry instead of 0.
+	  
 2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/peeph.def:
