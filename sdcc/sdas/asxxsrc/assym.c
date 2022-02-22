@@ -176,7 +176,7 @@ alookup(char *id)
                 /*
                  * JLH: case insensitive lookup always
                  */
-                if(symeq(id, ap->a_id, 0))
+                if(symeq(id, ap->a_id, 1))
                         return (ap);
                 ap = ap->a_ap;
         }

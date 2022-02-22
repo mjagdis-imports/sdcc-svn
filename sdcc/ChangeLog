@@ -10,7 +10,9 @@
 	  sdcc/sdas/asxxsrc/asmcro.c,
 	  sdcc/sdas/asxxsrc/aslex.c:
 	  Change protoypes to ANSI C. Add some detailed error messages.
-	  
+	* sdcc/sdas/asxxsrc/assym.c:
+	  Make area name comparisons case insensitive.
+
 2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* sdas/asgb/gbadr.c,
