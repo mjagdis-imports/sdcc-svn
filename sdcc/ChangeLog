@@ -1,5 +1,11 @@
 2022-02-22 Gabriele Gorla <gorlik@yahoo.com>
 
+	* sdcc/src/SDCC.lex,
+	  sdcc/src/mos6502/main.c:
+	  Add __zp keyword to the mos6502 port.
+
+2022-02-22 Gabriele Gorla <gorlik@yahoo.com>
+
 	* sdcc/sdas/asxxsrc/asxxxx.h,
 	  sdcc/sdas/asxxsrc/assym.c,
 	  sdcc/sdas/asxxsrc/assubr.c,
