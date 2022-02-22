@@ -22,6 +22,8 @@
 	  sdcc/sdas/as6808/m08mch.c,
 	  sdcc/sdas/as6808/m08adr.c:
 	  Add .incbin hc08/s08 assembler.
+  	* sdcc/sdas/asstm8/stm8pst.c:
+	  Use I_CODE in S_INCL entry instead of 0.
 	  
 2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
