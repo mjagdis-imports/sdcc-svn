@@ -799,19 +799,34 @@ clrexpr(struct expr *esp)
  *              none
  *
  *      global variables:
- *              none
+ *		a_uint	a_mask		Address mask
+ *		int	vflag		Enable flag
+ *		a_aint	v_mask		Value mask
  *
  *      functions called:
- *              none
+ *		VOID	err()		assubr.c
  *
  *      side effects:
- *              none
+ *		a 'v' error message may be generated.
+ *
+ *	Note:
+ *		When the default arithmetic size is the
+ *		same as the default sizeof(int) then the
+ *		arithmetic overflow cannot be determined.
+ *		This ambiguity is caused by the inability
+ *		to distinguish signed and unsigned values
+ *		at the instrinsic sizeof(int) size. 
  */
 
 a_uint
 rngchk(a_uint n)
 {
-        return n;
+	if (vflag) {
+		if ((n & ~a_mask) && ((n & ~a_mask) != ~a_mask)) {
+			err('v');
+		}
+	}
+	return((n & s_mask) ? (n | ~v_mask) : (n & v_mask));
 }
 
 /*)Function     VOID    exprmasks(esp)

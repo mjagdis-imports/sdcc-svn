@@ -50,7 +50,7 @@
  *              int     main(argc, argv)
  *              VOID    asexit(n)
  *              VOID    asmbl()
- *              VOID    equate()
+ *              VOID    equate(id, e1, equtype)
  *              FILE *  afile(fn, ft, wf)
  *              int     fndidx(str)
  *              int     intsiz()
@@ -282,6 +282,7 @@ search_path_fopen(const char *filename, const char *mode)
  *              char *  strcpy()        c_library
  *              VOID    symglob()       assym.c
  *              VOID    syminit()       assym.c
+ *		time_t	time()		c_library
  *              VOID    usage()         asmain.c
  *
  *      side effects:
@@ -413,6 +414,15 @@ main(int argc, char *argv[])
                                 case 'W':
                                         ++wflag;
                                         break;
+
+				/*
+				 * Assembly Processing Options:",
+				 *   -v   Enable out of range signed / unsigned errors
+				 */
+				case 'v':
+				case 'V':
+					++vflag;
+					break;
 
 				/*
 				 * Symbol Options:
@@ -2342,6 +2352,8 @@ char *usetxt[] = {
         "  -p   Disable automatic listing pagination",
         "  -u   Disable .list/.nlist processing",
         "  -w   Wide listing format for symbol table",
+	"Assembly:",
+	"  -v   Enable out of range signed / unsigned errors",
 	"Symbols:",
         "  -a   All user symbols made global",
         "  -g   Undefined symbols made global",
@@ -2391,7 +2403,9 @@ usage(int n)
         fprintf(stderr, "\n%s Assembler %s  (%s)\n\n", is_sdas() ? "sdas" : "ASxxxx", VERSION, cpu);
         fprintf(stderr, "\nCopyright (C) %s  Alan R. Baldwin", COPYRIGHT);
         fprintf(stderr, "\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n");
-        for (dp = usetxt; *dp; dp++)
+	for (dp = usetxt; *dp; dp++) {
                 fprintf(stderr, "%s\n", *dp);
+	}
         asexit(n);
 }
+

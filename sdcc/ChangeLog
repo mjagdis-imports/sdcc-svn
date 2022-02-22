@@ -1,3 +1,10 @@
+2022-02-22 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdcc/sdas/asxxsrc/asxxxx.h,
+	  sdcc/sdas/asxxsrc/asmain.c,
+	  sdcc/sdas/asxxsrc/asexpr.c,
+	  sdcc/sdas/asxxsrc/asdata.c:
+	  Enable -v option (out of range errors) from upstream asxxxx 5.40.
 	  
 2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 

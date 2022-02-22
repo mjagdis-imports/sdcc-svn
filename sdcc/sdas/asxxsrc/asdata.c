@@ -242,6 +242,8 @@ int     sflag;          /*      -s, generate symbol table flag
                          */
 int     uflag;          /*      -u, disable .list/.nlist processing flag
                          */
+int	vflag;		/*	-v, enable out of range signed / unsigned errors
+			 */
 int     wflag;          /*      -w, enable wide listing format
                          */
 int     xflag;          /*      -x, listing radix flag
@@ -526,3 +528,4 @@ char    ccase[256] = {
         '\360', '\361', '\362', '\363', '\364', '\365', '\366', '\367',
         '\370', '\371', '\372', '\373', '\374', '\375', '\376', '\377'
 };
+

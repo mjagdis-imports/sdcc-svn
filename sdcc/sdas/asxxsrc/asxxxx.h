@@ -996,6 +996,8 @@ extern  int     sflag;          /*      -s, generate symbol table flag
                                  */
 extern  int     uflag;          /*      -u, disable .list/.nlist processing flag
                                  */
+extern	int	vflag;		/*	-v, enable out of range signed / unsigned errors
+				 */
 extern  int     wflag;          /*      -w, enable wide listing format
                                  */
 extern  int     xflag;          /*      -x, listing radix flag
