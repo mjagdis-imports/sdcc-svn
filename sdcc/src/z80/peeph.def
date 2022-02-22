@@ -1,7 +1,7 @@
 // peeph.def - Common Z80 and gbz80 peephole rules
 //
 // (c) Philipp Klaus Krause (pkk@spth.de, philipp@colecovision.eu) 2006 - 2021
-// (c) Sebastian 'basxto' Riedel (sdcc@basxto.de) 2020 - 2021
+// (c) Sebastian 'basxto' Riedel (sdcc@basxto.de) 2020 - 2022
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
@@ -899,7 +899,7 @@ replace restart {
 	ld	hl, #%1 + %3
 	add	hl, sp
 	%5	%2, (hl)
-	; common peephole 67 used hl instead of %4.
+	; common peephole 67a used hl instead of %4.
 } if same(%5 'bit' 'res' 'set'), notUsed(%4 'hl')
 
 replace restart {
@@ -910,8 +910,30 @@ replace restart {
 	ld	hl, #%1 + %2
 	add	hl, sp
 	%5	%3, (hl)
-	; common peephole 68 used hl instead of %4.
+	; common peephole 67b used hl instead of %4.
 } if same(%5 'adc' 'add' 'and' 'ld' 'or' 'sbc' 'sub' 'xor'), notUsed(%4 'hl')
+
+replace restart {
+	inc	hl
+	ld	a, (hl-)
+	or	a, (hl)
+} by {
+	ld	a, (hl+)
+	or	a, (hl)
+	; common peephole 68a reversed ld and or.
+} if notUsed('hl')
+
+replace restart {
+	inc	hl
+	ld	a, (hl)
+	dec	hl
+	or	a, (hl)
+} by {
+	ld	a, (hl)
+	inc	hl
+	or	a, (hl)
+	; common peephole 68b reversed ld and or.
+} if notUsed('hl')
 
 // can be further optimized to (hl+) on gbz80
 replace restart {
@@ -1490,27 +1512,29 @@ replace restart {
 	ld	a, %1
 } if notUsed('cf')
 
+//TODO: check on other flags
 replace restart {
 	sbc	hl, %1
 	ld	a, h
 	or	a, l
-	jp	NZ, %2
+	jp	%2, %3
 } by {
 	sbc	hl, %1
-	jp	NZ, %2
+	jp	%2, %3
 	; common peephole 102c removed redundant or after sbc.
-}
+} if same(%2 'NZ' 'Z')
 
 replace restart {
-	sbc	hl, %1
-	ld	a, h
-	or	a, l
-	jp	Z, %2
+	sub	a, %1
+	ld	%2, a
+	or	a, a
+	jp	%3, %4
 } by {
-	sbc	hl, %1
-	jp	Z, %2
-	; common peephole 102d removed redundant or after sbc.
-}
+	sub	a, %1
+	ld	%2, a
+	; common peephole 102d removed redundant or after sub.
+	jp	%3, %4
+} if same(%3 'NZ' 'Z')
 
 replace {
 	ld	%1,%2
@@ -1854,9 +1878,23 @@ replace restart {
 	or	a,%1
 	jp	NZ,%2
 	or	a,%3
-	; common peephole 126 shortened or using a (which has just been tested to be #0x00).
+	; common peephole 126a shortened or using a (which has just been tested to be #0x00).
 } if canAssign('b' %3)
 // canAssign('b' %2) is true, iff or a,%2 is possible.
+
+replace restart {
+	or	a,%1
+	ld	%4, a
+	jp	NZ,%2
+	ld	a,%3
+	or	a,a
+} by {
+	or	a,%1
+	ld	%4, a
+	jp	NZ,%2
+	or	a,%3
+	; common peephole 126b shortened or using a (which has just been tested to be #0x00).
+} if canAssign('b' %3)
 
 replace restart {
 	sub	a,%1
@@ -1867,9 +1905,129 @@ replace restart {
 	sub	a,%1
 	jp	NZ,%2
 	or	a,%3
-	; common peephole 127 shortened or using a (which has just been tested to be #0x00).
+	; common peephole 127a shortened or using a (which has just been tested to be #0x00).
 } if canAssign('b' %3)
 // canAssign('b' %2) is true, iff or a,%2 is possible.
+
+replace restart {
+	sub	a,%1
+	ld	%4, a
+	jp	NZ,%2
+	ld	a,%3
+	or	a,a
+} by {
+	sub	a,%1
+	ld	%4, a
+	jp	NZ,%2
+	or	a,%3
+	; common peephole 127b shortened or using a (which has just been tested to be #0x00).
+} if canAssign('b' %3)
+
+//TODO: check on other flags
+replace restart {
+%3:
+	ld	a, (%1)
+	%4	a, a
+	jp	Z, %2
+	inc	%1
+	jp	%3
+%2:
+} by {
+%3:
+	ld	a, (%1)
+	inc	%1
+	%4	a, a
+	jp	NZ, %3
+	; common peephole 128a sped up loop body.
+	dec	%1
+%2:
+} if same(%4 'or' 'and'), canSplitReg(%1 %0 %0), labelRefCountChange(%2 -1)
+
+//TODO: check on other flags
+replace restart {
+%1:
+	ld	a, (%5)
+	inc	%5
+	ld	%3, a
+	ld	a, (%6)
+	inc	%6
+	sub	a, %3
+	ld	%4, a
+	jp	NZ, %2
+	or	a,%3
+	jp	NZ, %1
+%2:
+} by {
+%1:
+	ld	a, (%5)
+	inc	%5
+	ld	%3, a
+	ld	a, (%6)
+	inc	%6
+	sub	a, %3
+	jp	NZ, %2
+	cp	a,%3
+	jp	NZ, %1
+%2:
+	; common peephole 128b sped up loop body.
+	ld	%4, a
+} if canSplitReg(%5 %7 %8), canSplitReg(%6 %9 %10), operandsNotRelated(%3 %5 %6), operandsNotRelated(%3 %5 %6), notSame(%3 %4), labelRefCount(%2 1)
+
+replace restart {
+%1:
+	ld	a, (%5)
+	ld	%3, a
+	inc	%5
+	ld	a, (%6)
+	inc	%6
+	sub	a, %3
+	ld	%4, a
+	jp	NZ, %2
+	or	a,%3
+	jp	NZ, %1
+%2:
+} by {
+%1:
+	ld	a, (%5)
+	inc	%5
+	ld	%3, a
+	ld	a, (%6)
+	inc	%6
+	sub	a, %3
+	jp	NZ, %2
+	cp	a,%3
+	jp	NZ, %1
+%2:
+	; common peephole 128c sped up loop body.
+	ld	%4, a
+} if canSplitReg(%5 %7 %8), canSplitReg(%6 %9 %10), operandsNotRelated(%3 %5 %6), operandsNotRelated(%3 %5 %6), notSame(%3 %4), labelRefCount(%2 1)
+
+replace restart {
+%1:
+	ld	a, (hl+)
+	ld	%3, a
+	ld	a, (%6)
+	inc	%6
+	sub	a, %3
+	ld	%4, a
+	jp	NZ, %2
+	or	a,%3
+	jp	NZ, %1
+%2:
+} by {
+%1:
+	ld	a, (hl+)
+	ld	%3, a
+	ld	a, (%6)
+	inc	%6
+	sub	a, %3
+	jp	NZ, %2
+	cp	a,%3
+	jp	NZ, %1
+%2:
+	; common peephole 128d sped up loop body.
+	ld	%4, a
+} if canSplitReg(%6 %9 %10), operandsNotRelated(%3 %6 'hl'), operandsNotRelated(%3 %6 'hl'), notSame(%3 %4), labelRefCount(%2 1)
 
 replace restart {
 	ld	hl,#%1
@@ -2485,8 +2643,38 @@ replace restart {
 	ld	%2,%1
 } by {
 	ld	%1,%2
-	; common peephole 176 remove unnecessary load back
+	; common peephole 176a remove unnecessary load back
 } if notVolatile(%1), notVolatile(%2), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)')
+
+// dec is left there to be removed by other rules
+replace restart {
+	ld	(%1), a
+	inc	%1
+	ld	(%1), %2
+	ld	a, (%1)
+	dec	%1
+	or	a, (%1)
+} by {
+	ld	(%1), a
+	inc	%1
+	ld	(%1), %2
+	; common peephole 176b remove unnecessary load back
+	or	a, %2
+	dec	%1
+} if canSplitReg(%1 %0 %0)
+
+replace restart {
+	ld	(hl+), a
+	ld	(hl), %1
+	ld	a, (hl-)
+	or	a, (hl)
+} by {
+	ld	(hl+), a
+	ld	(hl), %1
+	; common peephole 176c remove unnecessary load back
+	or	a, %1
+	dec	hl
+}
 
 replace restart {
 	ld	a, %1

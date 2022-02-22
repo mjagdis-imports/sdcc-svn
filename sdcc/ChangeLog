@@ -1,3 +1,8 @@
+2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph.def:
+	  Add new rules to improve library code.
+
 2022-02-21 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* src/z80/gen.c:
@@ -25,6 +30,11 @@
 	  sdcc/support/regression/ports/uc6502-stack-auto/uCsim.cmd,
 	  sdcc/support/regression/ports/uc6502-stack-auto:
 	  Add regression for mos6502-stack-auto target.
+
+2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph.def:
+	  Add new rules to improve library code.
 
 2022-02-20 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
