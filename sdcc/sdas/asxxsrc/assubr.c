@@ -132,30 +132,33 @@ xerr(int c, char *str)
  *              int     getlnm()        assubr.c
  *
  *      side effects:
- *              none
+ *		Error strings output to stderr.
  */
 
 VOID
 diag(void)
 {
         char *p,*errstr;
+	FILE *fp;
 
+	fp = stderr;
         if (eb != ep) {
                 p = eb;
                 if (!is_sdas()) {
-                        fprintf(stderr, "?ASxxxx-Error-<");
+			fprintf(fp, "?ASxxxx-Error-<");
                         while (p < ep) {
-                                fprintf(stderr, "%c", *p++);
+				fprintf(fp, "%c", *p);
+				p++;
                         }
-                        fprintf(stderr, "> in line ");
-                        fprintf(stderr, "%d", getlnm());
-                        fprintf(stderr, " of %s\n", afn);
-                        p = eb;
+			fprintf(fp, "> in line ");
+			fprintf(fp, "%d", getlnm());
+			fprintf(fp, " of %s\n", afn);
                 }
+                p = eb;
                 while (p < ep) {
-                        if ((errstr = geterr(*p++)) != NULL) {
+                        if ((errstr = geterr(*p)) != NULL) {
                                 if (!is_sdas()) {
-                                        fprintf(stderr, "              %s\n", errstr);
+                                        fprintf(fp, "              %s\n", errstr);
                                 } else {
                                         /* Modified to conform to gcc error standard, M. Hope, 7 Feb 98. */
                                         fprintf(stderr, "%s:", afn);
@@ -163,6 +166,7 @@ diag(void)
                                         fprintf(stderr, " %s\n", errstr);
                                 }
                         }
+			p++;
                 }
         }
 }

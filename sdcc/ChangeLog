@@ -2,8 +2,12 @@
 
 	* sdcc/sdas/asxxsrc/asxxxx.h,
 	  sdcc/sdas/asxxsrc/asmain.c,
-	  sdcc/sdas/as6500/
-	  Add .error and .message directives/
+	  sdcc/sdas/as6500/r65pst.c:
+	  Add .error and .message directives.
+	* sdcc/sdas/asxxsrc/assubr.c,
+	  sdcc/sdas/asxxsrc/aslex.c,
+	  sdcc/sdas/asxxsrc/asexpr.c:
+	  More updates from upstream asxxxx 5.40
 
 2022-02-22 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -67,10 +71,10 @@
 	  Several updates from upstream asxxxx 5.40
 	* sdcc/sdas/aasz80/z80pst.c:
 	  Use I_CODE in S_INCL entry instead of 0.
-	* sdcc/sdas/as6502/r65pst.c,
-	  sdcc/sdas/as6502/r65mch.c,
-	  sdcc/sdas/as6502/r65adr.c,
-	  sdcc/sdas/as6502/r6500.h:
+	* sdcc/sdas/as6500/r65pst.c,
+	  sdcc/sdas/as6500/r65mch.c,
+	  sdcc/sdas/as6500/r65adr.c,
+	  sdcc/sdas/as6500/r6500.h:
 	  Add .incbin, .define, .undefine, .ifdef and .ifndef to the 6502 assembler.
   	* sdcc/sdas/as6808/m6808.h,
 	  sdcc/sdas/as6808/m08pst.c,

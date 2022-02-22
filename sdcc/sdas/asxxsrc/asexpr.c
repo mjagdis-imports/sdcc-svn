@@ -44,6 +44,7 @@
  *      asexpr.c contains the following functions:
  *              VOID    abscheck()
  *              a_uint  absexpr()
+ *		int	is_abs()
  *              VOID    clrexpr()
  *              int     digit()
  *              VOID    expr()

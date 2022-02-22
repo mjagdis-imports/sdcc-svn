@@ -559,8 +559,10 @@ comma(int flag)
  *              int     dbuf_getline()
  *              const char * dbuf_c_str()
  *              int     dbuf_append_str()
- *              int     fclose()        c-library
+ *		VOID	chopcrlf()	aslex.c
+ *		int	fclose()	c_library
  *              char *  fgetm()         asmcro.c
+ *		VOID	scanline()	aslex.c
  *              char *  strcpy()        c_library
  *
  *      side effects:
@@ -788,20 +790,7 @@ loop:   if (asmc == NULL) return(0);
                 break;
         }
         ib = (char *)dbuf_c_str (&dbuf_ib);
-
 	chopcrlf(ib);
-#if 0
-        /* remove the trailing NL */
-        if (len > 0 && '\n' == ib[len - 1])
-          {
-            --len;
-            if (len > 0 && '\r' == ib[len - 1])
-              --len;
-            dbuf_set_length (&dbuf_ib, len);
-            ib = (char *)dbuf_c_str (&dbuf_ib);
-          }
-#endif
-
         dbuf_append_str (&dbuf_ic, ib);
         ic = (char *)dbuf_c_str (&dbuf_ic);
 	scanline();
