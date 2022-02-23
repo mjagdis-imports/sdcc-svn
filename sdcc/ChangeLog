@@ -1,3 +1,10 @@
+2022-02-23 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph.def:
+	  Remove ldi/ldh rules.
+	* src/z80/peeph-sm83.def:
+	  Add ldi/ldh rules.
+
 2022-02-22 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdcc/sdas/asxxsrc/asxxxx.h,

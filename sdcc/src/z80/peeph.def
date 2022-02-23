@@ -915,16 +915,6 @@ replace restart {
 
 replace restart {
 	inc	hl
-	ld	a, (hl-)
-	or	a, (hl)
-} by {
-	ld	a, (hl+)
-	or	a, (hl)
-	; common peephole 68a reversed ld and or.
-} if notUsed('hl')
-
-replace restart {
-	inc	hl
 	ld	a, (hl)
 	dec	hl
 	or	a, (hl)
@@ -932,7 +922,7 @@ replace restart {
 	ld	a, (hl)
 	inc	hl
 	or	a, (hl)
-	; common peephole 68b reversed ld and or.
+	; common peephole 68 reversed ld and or.
 } if notUsed('hl')
 
 // can be further optimized to (hl+) on gbz80
@@ -2003,33 +1993,6 @@ replace restart {
 } if canSplitReg(%5 %7 %8), canSplitReg(%6 %9 %10), operandsNotRelated(%3 %5 %6), operandsNotRelated(%3 %5 %6), notSame(%3 %4), labelRefCount(%2 1)
 
 replace restart {
-%1:
-	ld	a, (hl+)
-	ld	%3, a
-	ld	a, (%6)
-	inc	%6
-	sub	a, %3
-	ld	%4, a
-	jp	NZ, %2
-	or	a,%3
-	jp	NZ, %1
-%2:
-} by {
-%1:
-	ld	a, (hl+)
-	ld	%3, a
-	ld	a, (%6)
-	inc	%6
-	sub	a, %3
-	jp	NZ, %2
-	cp	a,%3
-	jp	NZ, %1
-%2:
-	; common peephole 128d sped up loop body.
-	ld	%4, a
-} if canSplitReg(%6 %9 %10), operandsNotRelated(%3 %6 'hl'), operandsNotRelated(%3 %6 'hl'), notSame(%3 %4), labelRefCount(%2 1)
-
-replace restart {
 	ld	hl,#%1
 	add	hl,%2
 	inc	hl
@@ -2662,19 +2625,6 @@ replace restart {
 	or	a, %2
 	dec	%1
 } if canSplitReg(%1 %0 %0)
-
-replace restart {
-	ld	(hl+), a
-	ld	(hl), %1
-	ld	a, (hl-)
-	or	a, (hl)
-} by {
-	ld	(hl+), a
-	ld	(hl), %1
-	; common peephole 176c remove unnecessary load back
-	or	a, %1
-	dec	hl
-}
 
 replace restart {
 	ld	a, %1
