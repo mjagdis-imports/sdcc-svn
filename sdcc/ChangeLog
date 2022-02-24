@@ -1,3 +1,8 @@
+2022-02-24 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx:
+	  Fix a minor documentation issue.
+
 2022-02-23 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/peeph.def:
