@@ -755,28 +755,22 @@ list2(int t)
  *      The function slew() increments the page line count.
  *      If the page overflows and pagination is enabled:
  *              1)      put out a page skip,
- *		2)	assembler info and page number
- *		3)	Number Type and current time
- *		4)	a title,
- *		5)	a subtitle,
- *		6)	and reset the line count.
+ *              2)      a title,
+ *              3)      a subtitle,
+ *              4)      and reset the line count.
  *
  *      local variables:
- *		char *	frmt		string format
- *		char	np[]		new page string
- *		char	tp[]		temporary string	
+ *              none
  *
  *      global variables:
  *              int     a_bytes         T line addressing size
  *              char    cpu[]           cpu type string
- *		time_t	curtim		current time string pointer
  *              int     lop             current line number on page
  *              int     page            current page number
  *              char    stb[]           Subtitle string buffer
  *              char    tb[]            Title string buffer
  *
  *      functions called:
- *		char *	ctime()		c_library
  *              int     fprintf()       c_library
  *
  *      side effects:
@@ -788,8 +782,8 @@ VOID
 slew(FILE *fp, int flag)
 {
         char *frmt;
-	char np[80];
-	char tp[80];
+	char np[132];
+	char tp[132];
 	int n;
 
         if (lop++ >= NLPP) {
@@ -814,20 +808,11 @@ slew(FILE *fp, int flag)
 			 */
                         switch(xflag) {
                         default:
-			case 0:	frmt = "Hexadecimal [%d-Bits]"; break;
-			case 1:	frmt = "Octal [%d-Bits]"; break;
-			case 2:	frmt = "Decimal [%d-Bits]"; break;
+                        case 0: frmt = "Hexadecimal [%d-Bits]\n"; break;
+                        case 1: frmt = "Octal [%d-Bits]\n"; break;
+                        case 2: frmt = "Decimal [%d-Bits]\n"; break;
                         }
-			sprintf(tp, frmt, 8 * a_bytes);
-			sprintf(np, "%.24s", ctime(&curtim));
-		 	/*
-			 * Total string length is 78 characters.
-			 */
-			n = 78 - strlen(tp) - strlen(np);
-			/*
-			 * Output string.
-			 */
-			fprintf(fp, "%s%*s%s\n", tp, n, " ", np);
+                        fprintf(fp, frmt, 8 * a_bytes);
                         fprintf(fp, "%s\n", tb);
                         fprintf(fp, "%s\n\n", stb);
                         lop = 6;
