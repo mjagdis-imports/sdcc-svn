@@ -598,6 +598,12 @@ cl_uc::init(void)
   analyzer_option->option->set_value(analyzer);
   vars= new cl_var_list();
   make_variables();
+  // Some app level vars:
+  reg_cell_var(&(application->cperiod), NULL, "cperiod",
+	       "Cycles between input checks");
+  reg_cell_var(&(application->ccyc), NULL, "ccyc",
+	       "Nr of cycles executed during simulation");
+  // Memories
   make_memories();
   if (rom == NULL)
     rom= address_space("rom"/*MEM_ROM_ID*/);
@@ -757,10 +763,8 @@ cl_uc::mk_hw_elements(void)
 {
   class cl_hw *h;
 
-  add_hw(h= new cl_simulator_interface(this));
-  h->init();
-  add_hw(h= new cl_vcd(this, 0, "vcd"));
-  h->init();
+  init_add_hw(h= new cl_simulator_interface(this));
+  init_add_hw(h= new cl_vcd(this, 0, "vcd"));
 }
 
 void
@@ -1917,6 +1921,8 @@ void
 cl_uc::add_hw(class cl_hw *hw)
 {
   int i;
+  if (!hw)
+    return;
   for (i= 0; i < hws->count; i++)
     {
       class cl_hw *h= (class cl_hw *)(hws->at(i));
@@ -1929,6 +1935,16 @@ cl_uc::add_hw(class cl_hw *hw)
       if (h != hw)
 	h->new_hw_added(hw);
     }  
+}
+
+void
+cl_uc::init_add_hw(class cl_hw *hw)
+{
+  if (hw)
+    {
+      hw->init();
+      add_hw(hw);
+    }
 }
 
 int

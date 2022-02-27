@@ -421,7 +421,7 @@ cl_io::prepare_terminal()
       write(s, 7);
     }
 }
- 
+
 
 int
 mk_srv_socket(int port)
@@ -607,5 +607,6 @@ sigpipe_off()
 {
 }
 
+unsigned int cperiod_value() { return 50000; }
 
 /* End of fwio.cc */
