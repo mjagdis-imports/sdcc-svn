@@ -82,7 +82,6 @@ reg_info *m6502_reg_xa;
 reg_info *m6502_reg_sp;
 
 static void spillThis (symbol *);
-static void freeAllRegs ();
 
 /*-----------------------------------------------------------------*/
 /* m6502_regWithIdx - returns pointer to register with index number */
@@ -96,8 +95,7 @@ m6502_regWithIdx (int idx)
     if (regsm6502[i].rIdx == idx)
       return &regsm6502[i];
 
-  werror (E_INTERNAL_ERROR, __FILE__, __LINE__,
-          "regWithIdx not found");
+    printf("error: regWithIdx %d not found\n",idx);
   exit (1);
 }
 
@@ -240,8 +238,6 @@ m6502_dirtyReg (reg_info * reg)
       default:
         break;
     }
-//  if (freereg)
-//    m6502_freeReg(reg);
 }
 
 /*-----------------------------------------------------------------*/
@@ -594,21 +590,6 @@ regTypeNum (void)
           D (D_ALLOC, ("regTypeNum: #2 setting num of %p to 0\n", sym));
           sym->nRegs = 0;
         }
-    }
-}
-
-/*-----------------------------------------------------------------*/
-/* freeAllRegs - mark all registers as free                        */
-/*-----------------------------------------------------------------*/
-static void
-freeAllRegs ()
-{
-  int i;
-
-  for (i = 0; i < m6502_nRegs; i++)
-    {
-      regsm6502[i].isFree = 1;
-      regsm6502[i].aop = NULL;
     }
 }
 
@@ -1542,6 +1523,7 @@ m6502_assignRegisters (ebbIndex *ebbi)
   eBBlock ** ebbs = ebbi->bbOrder;
   int count = ebbi->count;
   iCode *ic;
+  int i;
 
   m6502_ptrRegReq = _G.stackExtend = _G.dataExtend = 0;
   m6502_nRegs = 7;
@@ -1613,7 +1595,11 @@ m6502_assignRegisters (ebbIndex *ebbi)
   setToNull ((void *) &_G.stackSpil);
   setToNull ((void *) &_G.spiltSet);
   /* mark all registers as free */
-  freeAllRegs ();
+  for (i = 0; i < m6502_nRegs; i++) {
+      reg_info *reg = m6502_regWithIdx (i);
+      m6502_freeReg (reg);
+      m6502_dirtyReg (reg);
+  }
 
   return;
 }

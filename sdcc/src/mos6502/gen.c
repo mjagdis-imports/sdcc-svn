@@ -3578,6 +3578,7 @@ asmopToBool (asmop *aop, bool resultInA)
       // result -> flags
       else if (IS_AOP_A(aop))
         {
+          // FIXME: should this be ORA #0x00?
           emit6502op ("cmp", "#0x00");
         }
       else if (IS_AOP_X(aop))
@@ -8440,6 +8441,7 @@ genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic
         }
       else
         {
+	// FIXME: better to do ORA #0x00 ???
           emit6502op ("cmp", "#0x00");
         }
       offset++;
@@ -9548,7 +9550,8 @@ genPointerSet (iCode * ic)
   needpully = storeRegTempIfSurv (m6502_reg_y);
   int tIdx;
 
- // if(needpulla) m6502_reg_a->isFree=false;
+  // if(needpulla) m6502_reg_a->isFree=false;
+  emitComment (TRACEGEN|VVDBG,"   %s - general case ", __func__);
 
   // general case
 
@@ -10278,14 +10281,16 @@ genm6502iCode (iCode *ic)
       return;
     }
 
-    for (i = A_IDX; i <= XA_IDX; i++)
+    for (i = 0; i < m6502_nRegs; i++)
       {
         reg = m6502_regWithIdx (i);
-        //if (reg->aop)
-        //  emitcode ("", "; %s = %s offset %d", reg->name, aopName (reg->aop), reg->aopofs);
-        reg->isFree = true;
+        m6502_freeReg (reg);
+        // if (reg->aop)
+        //   emitcode ("", "; %s = %s offset %d", reg->name, aopName (reg->aop), reg->aopofs);
+        // FIXME: removing the folowing generates worse code
         if (regalloc_dry_run)
-          reg->isLitConst = 0;
+          m6502_dirtyReg (reg);
+        //  reg->isLitConst = 0;
       }
 
     if (ic->op == IFX)
@@ -10571,13 +10576,11 @@ drym6502iCode (iCode *ic)
   if(optimize.codeSize) byte_cost_weight*=2;
   if(!optimize.codeSpeed) byte_cost_weight*=4;
 
-//   return (2* (float)regalloc_dry_run_cost_bytes + (float)regalloc_dry_run_cost_cycles* ic->count);
-
   return ((float)regalloc_dry_run_cost_bytes * byte_cost_weight + regalloc_dry_run_cost_cycles * ic->count);
 }
 
 /**************************************************************************
- * genm6502Code - generate code for M6502 based controllers
+ * genm6502Code - generate code for for a block of instructions
  *
  *************************************************************************/
 void
@@ -10606,8 +10609,8 @@ genm6502Code (iCode *lic)
 
   init_aop_pass();
 
-  for (ic = lic; ic; ic = ic->next)
-    ic->generated = false;
+//  for (ic = lic; ic; ic = ic->next)
+//    ic->generated = false;
 
   for (ic = lic; ic; ic = ic->next)
     {
