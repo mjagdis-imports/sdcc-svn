@@ -3918,6 +3918,9 @@ genCpl (iCode * ic)
   aopOp (IC_RESULT (ic), ic, true);
   size = AOP_SIZE (IC_RESULT (ic));
 
+  emitComment (TRACEGEN|VVDBG, "      %s - regmask %02x -> %02x", 
+               __func__, AOP(IC_LEFT (ic))->regmask, AOP(IC_RESULT (ic))->regmask );
+
   // TODO: use sameRegs?
   if(AOP_TYPE (IC_LEFT (ic)) == AOP_REG && AOP_TYPE (IC_RESULT (ic)) == AOP_REG &&
     AOP (IC_RESULT (ic))->aopu.aop_reg[0] == AOP (IC_LEFT (ic))->aopu.aop_reg[0] &&
@@ -4247,25 +4250,30 @@ assignResultValue (operand * oper)
 {
   int size = AOP_SIZE (oper);
   int offset = 0;
-  bool delayed_x = false;
 
   emitComment (TRACEGEN, __func__);
 
+  if(AOP_TYPE (oper) == AOP_REG) {//
+    if(size==1) {
+      transferRegReg(m6502_reg_a, (AOP(oper))->aopu.aop_reg[0], true);
+    } else {
+      if(IS_AOP_YX(AOP(oper)))
+        transferRegReg(m6502_reg_xa, m6502_reg_yx, true);
+      if(IS_AOP_XA(AOP(oper)))
+        transferRegReg(m6502_reg_xa, m6502_reg_xa, true);
+      if(IS_AOP_AX(AOP(oper)))
+        swapXA();
+    }
+    return;
+  }//
+
   while (size--)
     {
-      if (!offset && AOP_TYPE (oper) == AOP_REG && AOP_SIZE (oper) > 1 && AOP (oper)->aopu.aop_reg[0]->rIdx == X_IDX)
-        {
-          storeRegTemp (m6502_reg_a, true);
-          delayed_x = true;
-        }
-      else
-        transferAopAop (m6502_aop_pass[offset], 0, AOP (oper), offset);
+      transferAopAop (m6502_aop_pass[offset], 0, AOP (oper), offset);
       if (m6502_aop_pass[offset]->type == AOP_REG)
         m6502_freeReg (m6502_aop_pass[offset]->aopu.aop_reg[0]);
       offset++;
     }
-  if (delayed_x)
-    loadRegTemp (m6502_reg_x);
 }
 
 
@@ -9449,8 +9457,10 @@ genPointerSet (iCode * ic)
       needpulla = storeRegTempIfSurv (m6502_reg_a);
       needpully = storeRegTempIfUsed (m6502_reg_y);
 
-      if (IS_AOP_AX(AOP(right))) {
-        // reverse order so A is first
+      emitComment (TRACEGEN|VVDBG,"   %s - ptr already in zp ", __func__);
+
+      if (IS_AOP_AX(AOP(right))||IS_AOP_YX(AOP(right))) {
+        // reverse order so A or Y is first
         for (int i=size-1; i>=0; i--) {
           loadRegFromAop (m6502_reg_a, AOP (right), i);
           loadRegFromConst(m6502_reg_y, litOffset + i);
@@ -10290,7 +10300,7 @@ genm6502iCode (iCode *ic)
         // FIXME: removing the folowing generates worse code
         if (regalloc_dry_run)
           m6502_dirtyReg (reg);
-        //  reg->isLitConst = 0;
+        //  reg->isLitConst = 0; //
       }
 
     if (ic->op == IFX)

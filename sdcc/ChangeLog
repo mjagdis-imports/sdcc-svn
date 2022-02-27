@@ -2,7 +2,9 @@
 
 	* sdcc/src/mos6502/ralloc.c,
 	  sdcc/src/mos6502/gen.c:
-	  Revert changes in slew() which caused regression failures on z80 ports.
+	  Remove freeAllRegs()
+  	* sdcc/src/mos6502/gen.c:
+  	  Fix corner cases in assignResultValue() and genPointerSet()
 
 2022-02-26 Gabriele Gorla <gorlik@yahoo.com>
 
