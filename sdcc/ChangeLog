@@ -5,6 +5,8 @@
 	  Remove freeAllRegs()
   	* sdcc/src/mos6502/gen.c:
   	  Fix corner cases in assignResultValue() and genPointerSet()
+  	* sdcc/support/regression/ports/mos6502/spec.mk
+  	  Removed redundant --out-fmt-ihx command line option
 
 2022-02-26 Gabriele Gorla <gorlik@yahoo.com>
 
