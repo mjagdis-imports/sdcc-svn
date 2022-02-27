@@ -3977,14 +3977,6 @@ genCpl (iCode * ic)
         rmwWithReg ("com", m6502_reg_a);
       } 
       else
-      if(IS_AOP_AX(AOP(IC_LEFT (ic))) && IS_AOP_YX(AOP(IC_RESULT (ic)))) {
-        rmwWithReg ("com", m6502_reg_a);
-        transferRegReg(m6502_reg_a, m6502_reg_y, true);
-        transferRegReg(m6502_reg_x, m6502_reg_a, true);
-        rmwWithReg ("com", m6502_reg_a);
-        transferRegReg(m6502_reg_a, m6502_reg_x, true);
-      } 
-      else  
       if(IS_AOP_XA(AOP(IC_LEFT (ic))) && IS_AOP_YX(AOP(IC_RESULT (ic)))) {
         pushReg(m6502_reg_a, true);
         transferRegReg(m6502_reg_x, m6502_reg_a, true);
@@ -3995,6 +3987,14 @@ genCpl (iCode * ic)
         transferRegReg(m6502_reg_a, m6502_reg_x, true);
       } 
       else 
+      if(IS_AOP_AX(AOP(IC_LEFT (ic))) && IS_AOP_YX(AOP(IC_RESULT (ic)))) {
+        rmwWithReg ("com", m6502_reg_a);
+        transferRegReg(m6502_reg_a, m6502_reg_y, true);
+        transferRegReg(m6502_reg_x, m6502_reg_a, true);
+        rmwWithReg ("com", m6502_reg_a);
+        transferRegReg(m6502_reg_a, m6502_reg_x, true);
+      } 
+      else  
       {
         m6502_unimplemented("unknown register pair in genCpl");
       }
@@ -9623,6 +9623,8 @@ genPointerSet (iCode * ic)
 
       //int ptrofs =
       preparePointer (result, litOffset, rematOffset, right);
+      if(needpulla && IS_AOP_WITH_A (AOP(right)))
+          loadRegTempAt(m6502_reg_a, aloc);
       genPackBits (result, left, (IS_BITVAR (retype) ? retype : letype), right);
       unpreparePointer();
       goto release;
@@ -9662,24 +9664,54 @@ genPointerSet (iCode * ic)
     loadRegFromAop(m6502_reg_a, AOP(result), 0);
     emit6502op ("adc", "#<(%s+%d)", rematOffset, litOffset);
     storeRegTemp(m6502_reg_a, true);
-    loadRegFromAop(m6502_reg_a, AOP(result), 1);
+    if(IS_AOP_AX(AOP(result))) loadRegTempAt(m6502_reg_a, aloc);
+    else loadRegFromAop(m6502_reg_a, AOP(result), 1);
     emit6502op ("adc", "#>(%s+%d)", rematOffset, litOffset);
     storeRegTemp(m6502_reg_a, true);
   }
 
-    if(needpulla) loadRegTempAt(m6502_reg_a, aloc);
-//    pullOrFreeReg(m6502_reg_a,pa);
-//  if(savea) transferRegReg(m6502_reg_y, m6502_reg_a, true);
-    if(needpullx) loadRegTempAt(m6502_reg_x, xloc);
+    if (IS_AOP_XA (AOP(right)))
+       {
+          if(needpullx) loadRegTempAt(m6502_reg_a, xloc);
+          else transferRegReg(m6502_reg_x, m6502_reg_a, true);
 
-
+          loadRegFromConst(m6502_reg_y, 1);
+          emit6502op("sta",TEMPFMT_IY,tIdx);
+          loadRegTempAt(m6502_reg_a, aloc);
+          loadRegFromConst(m6502_reg_y, 0);
+          emit6502op("sta",TEMPFMT_IY,tIdx);
+    } 
+    else
     if (IS_AOP_YX (AOP(right)) || IS_AOP_AX (AOP(right)))
           {
-            // reverse order to avoid overwriting A or Y
-            loadRegFromAop (m6502_reg_a, AOP (right), 1);
+            if(IS_AOP_YX (AOP(right)))
+              transferRegReg(m6502_reg_y, m6502_reg_a, true);
+            else loadRegTempAt(m6502_reg_a, aloc);
             loadRegFromConst(m6502_reg_y, 1);
             emit6502op("sta",TEMPFMT_IY,tIdx);
-            loadRegFromAop (m6502_reg_a, AOP (right), 0);
+            if(needpullx) loadRegTempAt(m6502_reg_a, xloc);
+            else transferRegReg(m6502_reg_x, m6502_reg_a, true);
+            loadRegFromConst(m6502_reg_y, 0);
+            emit6502op("sta",TEMPFMT_IY,tIdx);
+          }
+    else 
+    if (size==1 && AOP_TYPE(right)==AOP_REG)
+          {
+            if(IS_AOP_A (AOP(right))) {
+              if(needpulla) loadRegTempAt(m6502_reg_a, aloc);
+            }
+            else 
+            if(IS_AOP_X (AOP(right))) {
+              if(needpullx) loadRegTempAt(m6502_reg_a, xloc);
+              else transferRegReg(m6502_reg_x, m6502_reg_a, true);
+            }
+           else
+            if(IS_AOP_Y (AOP(right))) {
+            //  if(needpullx) loadRegTempAt(m6502_reg_a, xloc);
+//              else 
+	        transferRegReg(m6502_reg_y, m6502_reg_a, true);
+            }
+
             loadRegFromConst(m6502_reg_y, 0);
             emit6502op("sta",TEMPFMT_IY,tIdx);
           }
@@ -9701,14 +9733,13 @@ release:
 
   loadOrFreeRegTemp (m6502_reg_y, needpully);
   loadOrFreeRegTemp (m6502_reg_x, needpullx);
-#if 0
-  if(needpulla && deadA) {
-      loadRegTemp(NULL);
+
+  if(deadA) {
+      if(needpulla) loadRegTemp(NULL);
       m6502_freeReg(m6502_reg_a);
-  } else 
-#else
+  } else {
   loadOrFreeRegTemp (m6502_reg_a, needpulla);
-#endif
+  }
 
 }
 

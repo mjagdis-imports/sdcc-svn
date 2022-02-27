@@ -26,7 +26,9 @@
   	  sdcc/device/lib/mos6502/abs.c:
   	  Add assembly implementation of divs, mod, mulchar and abs.
   	* sdcc/src/mos6502/gen.c:
-	  Add m6502_unimplemented() and refactopr genCpl().
+	  Add m6502_unimplemented()
+   	* sdcc/src/mos6502/gen.c:
+   	   Refactopr genCpl() and genPointerSet()
 
 2022-02-26 Gabriele Gorla <gorlik@yahoo.com>
 
