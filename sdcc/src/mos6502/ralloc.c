@@ -53,11 +53,8 @@ static struct
   {
     bitVect *spiltSet;
     set *stackSpil;
-    bitVect *regAssigned;
-    bitVect *totRegAssigned;    /* final set of LRs that got into registers */
     short blockSpil;
     int slocNum;
-    bitVect *funcrUsed;         /* registers used in a function */
     int stackExtend;
     int dataExtend;
   }
@@ -300,7 +297,6 @@ createStackSpil (symbol * sym)
 {
   symbol *sloc = NULL;
   struct dbuf_s dbuf;
-  int useXstack, model;
 
   /* first go try and find a free one that is already
      existing on the stack */
@@ -341,16 +337,16 @@ createStackSpil (symbol * sym)
      the spil from going to the external storage
    */
 
-  useXstack = options.useXstack;
-  model = options.model;
+//  useXstack = options.useXstack;
+//  model = options.model;
 /*     noOverlay = options.noOverlay; */
 /*     options.noOverlay = 1; */
-  options.model = options.useXstack = 0;
+//  options.model = options.useXstack = 0;
 
   allocLocal (sloc);
 
-  options.useXstack = useXstack;
-  options.model = model;
+//  options.useXstack = useXstack;
+//  options.model = model;
 /*     options.noOverlay = noOverlay; */
   sloc->isref = 1;              /* to prevent compiler warning */
 
@@ -392,9 +388,6 @@ spillThis (symbol * sym)
   /* mark it as spilt & put it in the spilt set */
   sym->isspilt = sym->spillA = 1;
   _G.spiltSet = bitVectSetBit (_G.spiltSet, sym->key);
-
-  bitVectUnSetBit (_G.regAssigned, sym->key);
-  bitVectUnSetBit (_G.totRegAssigned, sym->key);
 
   for (i = 0; i < sym->nRegs; i++)
     {
@@ -477,9 +470,6 @@ reassignLR (operand * op)
   /* not spilt any more */
   sym->isspilt = sym->spillA = sym->blockSpil = sym->remainSpil = 0;
   bitVectUnSetBit (_G.spiltSet, sym->key);
-
-  _G.regAssigned = bitVectSetBit (_G.regAssigned, sym->key);
-  _G.totRegAssigned = bitVectSetBit (_G.totRegAssigned, sym->key);
 
   _G.blockSpil--;
 
@@ -1507,7 +1497,6 @@ serialRegMark (eBBlock ** ebbs, int count)
                  or will not live beyond this instructions */
               if (!sym->nRegs ||
                   sym->isspilt ||
-                  bitVectBitValue (_G.regAssigned, sym->key) ||
                   sym->liveTo <= ic->seq)
                 {
                   D (D_ALLOC, ("serialRegMark: won't live long enough.\n"));
@@ -1554,9 +1543,6 @@ m6502_assignRegisters (ebbIndex *ebbi)
   int count = ebbi->count;
   iCode *ic;
 
-  setToNull ((void *) &_G.funcrUsed);
-  setToNull ((void *) &_G.regAssigned);
-  setToNull ((void *) &_G.totRegAssigned);
   m6502_ptrRegReq = _G.stackExtend = _G.dataExtend = 0;
   m6502_nRegs = 7;
   m6502_reg_a = m6502_regWithIdx(A_IDX);
@@ -1594,15 +1580,13 @@ m6502_assignRegisters (ebbIndex *ebbi)
   /* if stack was extended then tell the user */
   if (_G.stackExtend)
     {
-/*      werror(W_TOOMANY_SPILS,"stack", */
-/*             _G.stackExtend,currFunc->name,""); */
+//      printf("Stack spills for %s: %d\n", currFunc->name, _G.stackExtend);
       _G.stackExtend = 0;
     }
 
   if (_G.dataExtend)
     {
-/*      werror(W_TOOMANY_SPILS,"data space", */
-/*             _G.dataExtend,currFunc->name,""); */
+//      printf("Data spills for %s: %d\n", currFunc->name, _G.dataExtend);
       _G.dataExtend = 0;
     }
 

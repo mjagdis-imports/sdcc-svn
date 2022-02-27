@@ -2,6 +2,8 @@
 
 	* sdcc/sdas/asxxsrc/aslist.c:
 	  Revert changes in slew() which caused regression failures on z80 ports.
+	* sdcc/src/mos6502/ralloc.c:
+	  Remove dead code from old ralloc.
 
 2022-02-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
