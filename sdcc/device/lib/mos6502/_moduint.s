@@ -1,7 +1,6 @@
 ;-------------------------------------------------------------------------
-;   _mulint.s - routine for multiplication of 16 bit (unsigned) int
+;   _moduint.s - routine for remainder of 16 bit unsigned division
 ;
-;   Copyright (C) 2009, Ullrich von Bassewitz
 ;   Copyright (C) 2022, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
@@ -27,56 +26,29 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
+	.module _moduint
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulint_PARM_2
-	.globl __mulint
-
-;--------------------------------------------------------
-; overlayable function paramters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-__mulint_PARM_2:
-	.ds 2
-
+	.globl __moduint
+	
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define tmp "___SDCC_m6502_ret2"
+	.define res "___SDCC_m6502_ret0"
+	.define div "__moduint_PARM_2"
+	.define rem "___SDCC_m6502_ret2"
+	.define s1  "___SDCC_m6502_ret4"
+	.define s2  "___SDCC_m6502_ret5"
 
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
-
-__mulint:
-	sta	*___SDCC_m6502_ret0
-	stx	*___SDCC_m6502_ret1
-	lda	#0
-	sta	*tmp
-	ldy	#16
-	lsr	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-next_bit:
-	bcc	skip
-	clc
-	adc	*__mulint_PARM_2+0
-	tax
-	lda	*__mulint_PARM_2+1
-	adc	*tmp
-	sta	*tmp
-	txa
-skip:
-	ror	*tmp
-	ror	a
-	ror	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-	dey
-	bne	next_bit
-
-	lda	*___SDCC_m6502_ret0
-	ldx	*___SDCC_m6502_ret1
-	rts
+	
+__moduint:
+	jsr 	___udivmod16
+	lda	*rem+0
+	ldx	*rem+1
+	rts	

@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _mulint.s - routine for multiplication of 16 bit (unsigned) int
+;   _muluchar.s - routine for multiplication of 16 bit (unsigned) int
 ;
 ;   Copyright (C) 2009, Ullrich von Bassewitz
 ;   Copyright (C) 2022, Gabriele Gorla
@@ -27,56 +27,45 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
+	.module _muluchar
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulint_PARM_2
-	.globl __mulint
-
+	.globl __muluchar
+	.globl ___umul8
+	
 ;--------------------------------------------------------
 ; overlayable function paramters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-__mulint_PARM_2:
-	.ds 2
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define tmp "___SDCC_m6502_ret2"
+	.define arg1 "___SDCC_m6502_ret0"
+	.define arg2 "___SDCC_m6502_ret2"
 
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-__mulint:
-	sta	*___SDCC_m6502_ret0
-	stx	*___SDCC_m6502_ret1
-	lda	#0
-	sta	*tmp
-	ldy	#16
-	lsr	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-next_bit:
-	bcc	skip
-	clc
-	adc	*__mulint_PARM_2+0
-	tax
-	lda	*__mulint_PARM_2+1
-	adc	*tmp
-	sta	*tmp
-	txa
-skip:
-	ror	*tmp
-	ror	a
-	ror	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-	dey
-	bne	next_bit
-
-	lda	*___SDCC_m6502_ret0
-	ldx	*___SDCC_m6502_ret1
-	rts
+__muluchar:
+	sta     arg1
+	stx	arg2
+___umul8:
+        lda     #0              ; Clear byte 1
+        ldy     #8              ; Number of bits
+        lsr     arg2            ; Get first bit of RHS into carry
+L0:    	bcc	L1
+        clc
+        adc     arg1
+L1:    	ror
+        ror     arg2
+        dey
+        bne    	L0
+        tax
+;//        stx     arg2+1          ; Result in .XA and ptr1
+        lda     arg2            ; Load the result
+        rts                     ; Done

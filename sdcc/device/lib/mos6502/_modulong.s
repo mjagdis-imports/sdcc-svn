@@ -1,7 +1,6 @@
 ;-------------------------------------------------------------------------
-;   _mulint.s - routine for multiplication of 16 bit (unsigned) int
+;   _modulong.s - routine for remainder of 32 bit unsigned long division
 ;
-;   Copyright (C) 2009, Ullrich von Bassewitz
 ;   Copyright (C) 2022, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
@@ -27,56 +26,36 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
-
+	.module _modulong
+	
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulint_PARM_2
-	.globl __mulint
-
-;--------------------------------------------------------
-; overlayable function paramters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-__mulint_PARM_2:
-	.ds 2
-
+	.globl __modulong
+	
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define tmp "___SDCC_m6502_ret2"
-
+	.define res0 "__modulong_PARM_1+0"
+	.define res1 "__modulong_PARM_1+1"
+	.define res2 "___SDCC_m6502_ret2"
+	.define res3 "___SDCC_m6502_ret3"
+	.define den  "__modulong_PARM_2"
+	.define rem  "___SDCC_m6502_ret4"
+	.define s1   "___SDCC_m6502_ret0"
+	.define s2   "___SDCC_m6502_ret1"
+	
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-__mulint:
-	sta	*___SDCC_m6502_ret0
-	stx	*___SDCC_m6502_ret1
-	lda	#0
-	sta	*tmp
-	ldy	#16
-	lsr	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-next_bit:
-	bcc	skip
-	clc
-	adc	*__mulint_PARM_2+0
-	tax
-	lda	*__mulint_PARM_2+1
-	adc	*tmp
-	sta	*tmp
-	txa
-skip:
-	ror	*tmp
-	ror	a
-	ror	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-	dey
-	bne	next_bit
-
-	lda	*___SDCC_m6502_ret0
-	ldx	*___SDCC_m6502_ret1
+__modulong:
+	jsr 	___udivmod32
+	lda 	*rem+3
+	sta	*res3
+	lda	*rem+2
+	sta	*res2
+	ldx	*rem+1
+	lda	*rem+0
 	rts

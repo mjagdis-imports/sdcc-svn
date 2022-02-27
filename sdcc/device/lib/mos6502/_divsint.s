@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------
-;   _mulint.s - routine for multiplication of 16 bit (unsigned) int
+;   _divsint.s - routine for division of 16 bit signed int
 ;
-;   Copyright (C) 2009, Ullrich von Bassewitz
+;   Copyright (C) 1998, Ullrich von Bassewitz
 ;   Copyright (C) 2022, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
@@ -27,56 +27,57 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
+	.module _divsint
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulint_PARM_2
-	.globl __mulint
-
-;--------------------------------------------------------
-; overlayable function paramters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-__mulint_PARM_2:
-	.ds 2
+	.globl __divsint
+	.globl ___sdivmod16
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define tmp "___SDCC_m6502_ret2"
+	.define res "___SDCC_m6502_ret0"
+	.define den "__divsint_PARM_2"
+	.define rem "___SDCC_m6502_ret2"
+	.define s1  "___SDCC_m6502_ret4"
+	.define s2  "___SDCC_m6502_ret5"
 
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-__mulint:
-	sta	*___SDCC_m6502_ret0
-	stx	*___SDCC_m6502_ret1
-	lda	#0
-	sta	*tmp
-	ldy	#16
-	lsr	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-next_bit:
-	bcc	skip
-	clc
-	adc	*__mulint_PARM_2+0
-	tax
-	lda	*__mulint_PARM_2+1
-	adc	*tmp
-	sta	*tmp
-	txa
-skip:
-	ror	*tmp
-	ror	a
-	ror	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-	dey
-	bne	next_bit
-
-	lda	*___SDCC_m6502_ret0
-	ldx	*___SDCC_m6502_ret1
+__divsint:
+	jsr	___sdivmod16
+	lda	*res+0
+	ldx	*res+1
+	pha
+	lda	*s1
+	eor	*s2
+	bpl	pos
+	pla
+	jmp 	___negax
+pos:
+	pla
 	rts
+
+___sdivmod16:
+	stx	*s1
+	jsr	_abs
+	pha
+	lda     *__divsint_PARM_2+1
+	sta	*s2
+	bpl	skip
+	sec
+	lda	#0x00
+	sbc	*__divsint_PARM_2+0
+        sta     *__divsint_PARM_2+0
+	lda	#0x00
+	sbc	*__divsint_PARM_2+1
+        sta     *__divsint_PARM_2+1
+skip:
+	pla
+	jmp 	___udivmod16
+

@@ -7,6 +7,24 @@
   	  Fix corner cases in assignResultValue() and genPointerSet()
   	* sdcc/support/regression/ports/mos6502/spec.mk
   	  Removed redundant --out-fmt-ihx command line option
+  	* sdcc/device/lib/mos6502/_strcpy.s,
+  	  sdcc/device/lib/mos6502/_strcmp.s,
+  	  sdcc/device/lib/mos6502/_mullong.s,
+  	  sdcc/device/lib/mos6502/_mulint.s,
+  	  sdcc/device/lib/mos6502/_divuint.s,
+  	  sdcc/device/lib/mos6502/_divulong.s,
+  	  sdcc/device/lib/mos6502/__memcpy.s:
+  	  Move function parameters to overlay segment.
+  	* sdcc/device/lib/mos6502/_divsint.s,
+  	  sdcc/device/lib/mos6502/_divslong.s,
+  	  sdcc/device/lib/mos6502/_modsint.s,
+  	  sdcc/device/lib/mos6502/_modslong.s,
+  	  sdcc/device/lib/mos6502/_moduint.s,
+  	  sdcc/device/lib/mos6502/_modulong.s,
+  	  sdcc/device/lib/mos6502/_mulschar.s,
+  	  sdcc/device/lib/mos6502/_muluchar.s,
+  	  sdcc/device/lib/mos6502/abs.c:
+  	  Add assembly implementation of divs, mod, mulchar and abs.
 
 2022-02-26 Gabriele Gorla <gorlik@yahoo.com>
 

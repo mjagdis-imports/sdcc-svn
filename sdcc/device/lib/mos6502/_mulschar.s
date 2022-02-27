@@ -1,5 +1,5 @@
 ;-------------------------------------------------------------------------
-;   _mulint.s - routine for multiplication of 16 bit (unsigned) int
+;   _mulschar.s - routine for multiplication of 16 bit (unsigned) int
 ;
 ;   Copyright (C) 2009, Ullrich von Bassewitz
 ;   Copyright (C) 2022, Gabriele Gorla
@@ -27,56 +27,78 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
+	.module _mulschar
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulint_PARM_2
-	.globl __mulint
+	.globl __mulschar
+	.globl __muluschar
+	.globl __mulsuchar
 
 ;--------------------------------------------------------
 ; overlayable function paramters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-__mulint_PARM_2:
-	.ds 2
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define tmp "___SDCC_m6502_ret2"
+	.define arg1 "___SDCC_m6502_ret0"
+	.define arg2 "___SDCC_m6502_ret2"
+	.define s1 "___SDCC_m6502_ret4"
+	.define s2 "___SDCC_m6502_ret5"
 
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-__mulint:
-	sta	*___SDCC_m6502_ret0
-	stx	*___SDCC_m6502_ret1
-	lda	#0
-	sta	*tmp
-	ldy	#16
-	lsr	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-next_bit:
-	bcc	skip
-	clc
-	adc	*__mulint_PARM_2+0
-	tax
-	lda	*__mulint_PARM_2+1
-	adc	*tmp
-	sta	*tmp
+__mulschar:
+	sta	s1
+	cmp	#0x00
+	bpl 	pos1
+	sec
+	eor	#0xff
+	adc	#0x00
+pos1:	
+	sta     arg1
 	txa
-skip:
-	ror	*tmp
-	ror	a
-	ror	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-	dey
-	bne	next_bit
+	sta	s2
+	bpl 	pos2
+	sec
+	eor	#0xff
+	adc	#0x00
+pos2:	
+	sta     arg2
+	
+	jsr 	___umul8
+	lda	s1
+	eor	s2
+	bpl	skip
+	lda	arg2
+	jmp	___negax
 
-	lda	*___SDCC_m6502_ret0
-	ldx	*___SDCC_m6502_ret1
+skip:	lda 	arg2
 	rts
+
+__muluschar:
+	stx	__mulint_PARM_2
+	ldx	#0x00
+	stx	__mulint_PARM_2+1
+	cmp	#0x00
+	bpl	pos1m
+	ldx 	#0xff
+pos1m:
+	jmp	__mulint
+	
+__mulsuchar:
+	sta	__mulint_PARM_2
+	txa
+	ldx	#0x00
+	stx	__mulint_PARM_2+1
+	cmp	#0x00
+	bpl	pos2m
+	ldx 	#0xff
+pos2m:
+	jmp	__mulint

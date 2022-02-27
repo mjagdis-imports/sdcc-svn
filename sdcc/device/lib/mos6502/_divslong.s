@@ -1,7 +1,7 @@
 ;-------------------------------------------------------------------------
-;   _mulint.s - routine for multiplication of 16 bit (unsigned) int
+;   _divslong.s - routine for 32 bit signed long division
 ;
-;   Copyright (C) 2009, Ullrich von Bassewitz
+;   Copyright (C) 1998, Ullrich von Bassewitz
 ;   Copyright (C) 2022, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
@@ -27,56 +27,80 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _mulint
+	.module _divslong
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl __mulint_PARM_2
-	.globl __mulint
-
-;--------------------------------------------------------
-; overlayable function paramters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-__mulint_PARM_2:
-	.ds 2
+	.globl __divslong
+	.globl ___sdivmod32
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define tmp "___SDCC_m6502_ret2"
+	.define res0 "__divslong_PARM_1+0"
+	.define res1 "__divslong_PARM_1+1"
+	.define res2 "___SDCC_m6502_ret2"
+	.define res3 "___SDCC_m6502_ret3"
+	.define den  "__divslong_PARM_2"
+	.define rem  "___SDCC_m6502_ret4"
+	.define s1   "___SDCC_m6502_ret0"
+	.define s2   "___SDCC_m6502_ret1"
 
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
-
-__mulint:
-	sta	*___SDCC_m6502_ret0
-	stx	*___SDCC_m6502_ret1
-	lda	#0
-	sta	*tmp
-	ldy	#16
-	lsr	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-next_bit:
-	bcc	skip
-	clc
-	adc	*__mulint_PARM_2+0
+__divslong:
+	jsr	___sdivmod32
+	lda	*s1
+	eor	*s2
+	bpl	pos
+; neg res
+	sec
+	lda	#0x00
+	sbc	*res0
+	tay
+	lda	#0x00
+	sbc	*res1
 	tax
-	lda	*__mulint_PARM_2+1
-	adc	*tmp
-	sta	*tmp
-	txa
-skip:
-	ror	*tmp
-	ror	a
-	ror	*___SDCC_m6502_ret1
-	ror	*___SDCC_m6502_ret0
-	dey
-	bne	next_bit
-
-	lda	*___SDCC_m6502_ret0
-	ldx	*___SDCC_m6502_ret1
+	lda	#0x00
+	sbc	*res2
+	sta	*res2
+	lda	#0x00
+	sbc	*res3
+	sta	*res3
+	tya
 	rts
+pos:
+	lda	*res0
+	ldx	*res1
+	rts
+
+___sdivmod32:
+	lda	*__divslong_PARM_1+3
+	sta	*s1
+	bpl 	pos1
+	ldy	#0
+	jsr	___neg_div32_param
+pos1:
+	lda	*__divslong_PARM_2+3
+	sta	*s2
+	bpl 	pos2
+	ldy	#4
+	jsr	___neg_div32_param
+pos2:
+	jmp 	___udivmod32
+
+___neg_div32_param:
+	sec
+	ldx	#0x04
+loop:
+	lda	#0x00
+	sbc	*__divslong_PARM_1+0,y
+	sta	*__divslong_PARM_1+0,y
+	iny
+	dex
+	bne loop
+	rts
+
