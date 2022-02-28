@@ -1,3 +1,10 @@
+2022-02-28 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/asz80/z80adr.c,
+	  sdas/asz80/z80mch.c:
+	  Merge error messages from upstream ASxxxx 5.40.
+	  Add a few for extensions/custom ports. Part 2.
+
 2022-02-27 Gabriele Gorla <gorlik@yahoo.com>
 
 	* sdcc/src/mos6502/ralloc.c,
