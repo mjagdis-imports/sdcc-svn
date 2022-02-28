@@ -104,6 +104,7 @@ static const char *aopAdrStr (asmop * aop, int loffset, bool bit16);
 static void aopAdrUnprepare (asmop * aop, int loffset);
 static void updateiTempRegisterUse (operand * op);
 static void rmwWithReg (char *rmwop, reg_info * reg);
+static void doTSX(void);
 
 static asmop *m6502_aop_pass[8];
 static asmop tsxaop;
@@ -112,8 +113,9 @@ static char *IMMDFMT = "#0x%02x";
 static char *TEMPFMT = "*(__TEMP+%d)";
 static char *TEMPFMT_IND = "[__TEMP+%d]";
 static char *TEMPFMT_IY = "[__TEMP+%d],y";
-//static char *TEMPFMT_IX = "[(__TEMP+%d),x]";
 
+//static char *IDX_FMT = "0x%x,x";
+//static char *TEMPFMT_IX = "[(__TEMP+%d),x]";
 //static char *BASEPTR = "*(__BASEPTR)";
 
 const int STACK_TOP = 0x100;
@@ -1363,30 +1365,12 @@ getDeadByteReg()
 static void
 storeRegToAop (reg_info *reg, asmop * aop, int loffset)
 {
+  bool needpulla = false;
+  bool needpullx = false;
   int regidx = reg->rIdx;
 
   emitComment (TRACE_AOP, "      storeRegToAop (%s, %s, %d), stacked=%d",
                 reg->name, aopName (aop), loffset, aop->stacked);
-
-  if ((regidx == YX_IDX) && aop->stacked && (aop->stk_aop[loffset] || aop->stk_aop[loffset + 1]))
-    {
-      storeRegToAop (m6502_reg_y, aop, loffset + 1);
-      storeRegToAop (m6502_reg_x, aop, loffset);
-      return;
-    }
-
-  if ((regidx == XA_IDX) && aop->stacked && (aop->stk_aop[loffset] || aop->stk_aop[loffset + 1]))
-    {
-      storeRegToAop (m6502_reg_x, aop, loffset + 1);
-      storeRegToAop (m6502_reg_a, aop, loffset);
-      return;
-    }
-
-  if (aop->stacked && aop->stk_aop[loffset])
-    {
-      storeRegToAop (reg, aop->stk_aop[loffset], 0);
-      return;
-    }
 
   if (aop->type == AOP_DUMMY)
     return;
@@ -1394,94 +1378,111 @@ storeRegToAop (reg_info *reg, asmop * aop, int loffset)
   if (aop->type == AOP_CRY)     /* This can only happen if IFX was optimized */
     return;                     /* away, so just toss the result */
 
-  switch (regidx)
-    {
-    case A_IDX:
-      if ((aop->type == AOP_REG) && (loffset < aop->size))
-        transferRegReg (reg, aop->aopu.aop_reg[loffset], false);
-      else
-        {
-          emitComment (TRACE_AOP|VVDBG, "      storeRegToAop: A");
+  // handle reg to reg
+  if (aop->type == AOP_REG) {
+    switch(regidx) {
+      case A_IDX:
+      case X_IDX:
+      case Y_IDX:
+        transferRegReg (reg, aop->aopu.aop_reg[loffset], true);
+	break;
+      case XA_IDX:
+        if (IS_AOP_YX (aop)) {
+          transferRegReg (reg, m6502_reg_yx, false);
+        } else 
+        if (IS_AOP_AX (aop)) {
+          swapXA();
+        } else {
+          // FIXME: check if can reorder to improve performance
+          transferRegReg (m6502_reg_a, aop->aopu.aop_reg[0], true);
+          transferRegReg (m6502_reg_x, aop->aopu.aop_reg[1], true);
+        }
+        break;
+      case YX_IDX:
+        if (IS_AOP_XA (aop)) {
+          transferRegReg (reg, m6502_reg_xa, false);
+        } else {
+          // FIXME: check if can reorder to improve performance
+          transferRegReg (m6502_reg_x, aop->aopu.aop_reg[0], true);
+          transferRegReg (m6502_reg_y, aop->aopu.aop_reg[1], true);
+        }
+        break;
+    }
+    return;
+  }    
 
-          // TODO: i think this does not assemble?
-          aopAdrPrepare(aop, loffset);
-          emit6502op ("sta", aopAdrStr (aop, loffset, false));
-          aopAdrUnprepare(aop, loffset);
-        }
-      break;
-    case X_IDX:
-    case Y_IDX:
-      if ((aop->type == AOP_REG) && (loffset < aop->size))
-        transferRegReg (reg, aop->aopu.aop_reg[loffset], false);
-      else if (aop->type == AOP_SOF)
-        {
-          // TODO: push if live
-          bool needpulla = pushRegIfUsed (m6502_reg_a);
-          transferRegReg (reg, m6502_reg_a, false);
-          storeRegToAop (m6502_reg_a, aop, loffset);
-          pullOrFreeReg (m6502_reg_a, needpulla);
-        }
-      else
-        {
-          aopAdrPrepare(aop, loffset);
-          emit6502op (regidx==X_IDX?"stx":"sty", aopAdrStr (aop, loffset, false));
-          aopAdrUnprepare(aop, loffset);
-        }
-      break;
-    case YX_IDX:
-      if (aop->type == AOP_SOF) // TODO: will fail assemble
-        {
-          //     werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "storeRegToAop: aop->type == AOP_SOF");
-	  //     int offset = (_G.stackOfs + _G.stackPushes + aop->aopu.aop_stk + aop->size - loffset - 1);
-        }
-      if (aop->type == AOP_DIR || aop->type == AOP_EXT)
-        {
-          aopAdrPrepare(aop, loffset);
+  // handle ZP and absolute addresses
+  if (aop->type == AOP_DIR || aop->type == AOP_EXT) {
+    switch(regidx) {
+     case A_IDX:
+          emit6502op ("sta", aopAdrStr (aop, loffset, true));
+          break;
+     case X_IDX:
+          emit6502op ("stx", aopAdrStr (aop, loffset, true));
+          break;
+     case Y_IDX:
+          emit6502op ("sty", aopAdrStr (aop, loffset, true));
+          break;
+     case XA_IDX:
+          emit6502op ("sta", aopAdrStr (aop, loffset, true));
+          emit6502op ("stx", aopAdrStr (aop, loffset+1, true));
+          break;
+     case YX_IDX:
           emit6502op ("stx", aopAdrStr (aop, loffset, true));
           emit6502op ("sty", aopAdrStr (aop, loffset+1, true));
-          aopAdrUnprepare(aop, loffset);
-        }
-      else if (IS_AOP_XA (aop))
-        transferRegReg (reg, m6502_reg_xa, false);
-      else if (IS_AOP_YX (aop))
-        break;
-      else if (m6502_reg_a->isFree)
-        {
-          bool needpula;
-          needpula = pushRegIfUsed (m6502_reg_a);
-          transferRegReg (m6502_reg_y, m6502_reg_a, false);
-          storeRegToAop (m6502_reg_a, aop, loffset + 1);
-          storeRegToAop (m6502_reg_x, aop, loffset);
-          pullOrFreeReg (m6502_reg_a, needpula);
-        }
-      else
-        {
-          bool needloadx;
-          storeRegToAop (m6502_reg_x, aop, loffset);
-          needloadx = storeRegTempIfUsed (m6502_reg_x);
-          transferRegReg (m6502_reg_y, m6502_reg_x, false);
-          storeRegToAop (m6502_reg_x, aop, loffset + 1);
-          loadOrFreeRegTemp (m6502_reg_x, needloadx);
-        }
-      break;
-    case XA_IDX:
-      if (IS_AOP_YX (aop))
-        transferRegReg (reg, m6502_reg_yx, false);
-      else if (IS_AOP_XA (aop))
-        break;
-      else if (IS_AOP_AX (aop))
-        {
-          swapXA();
-        }
-      else
-        {
-          storeRegToAop (m6502_reg_a, aop, loffset);
-          storeRegToAop (m6502_reg_x, aop, loffset + 1);
-        }
-      break;
-    default:
-      emitcode("ERROR", "bad reg in storeRegToAop()");
+          break;
     }
+    return;
+  }
+
+  // handle stack
+  if (aop->type == AOP_SOF) {
+    int xofs = STACK_TOP + _G.stackOfs + _G.tsxStackPushes + aop->aopu.aop_stk + loffset + 1;
+
+    switch (regidx) {
+      case A_IDX:
+        emitComment (TRACE_AOP|VVDBG, "      storeRegToAop: A");
+        needpullx = storeRegTempIfUsed(m6502_reg_x);
+        doTSX();
+        emit6502op ("sta", aopAdrStr (aop, loffset, false));
+        emitComment (TRACE_AOP|VVDBG, "offset 0x%x", xofs);
+
+//        emit6502op ("sta", "0x%x,x", xofs);
+        loadOrFreeRegTemp(m6502_reg_x, needpullx);
+        break;
+      case X_IDX:
+      case Y_IDX:
+        // TODO: push if live
+        needpulla = pushRegIfUsed (m6502_reg_a);
+        transferRegReg (reg, m6502_reg_a, false);
+        storeRegToAop (m6502_reg_a, aop, loffset);
+        pullOrFreeReg (m6502_reg_a, needpulla);
+        break;
+      case YX_IDX:
+        needpulla = pushRegIfSurv(m6502_reg_a);
+        needpullx = storeRegTempIfSurv(m6502_reg_x);
+        transferRegReg (m6502_reg_x, m6502_reg_a, true);
+        doTSX();
+        emit6502op ("sta", aopAdrStr (aop, loffset, false));
+        transferRegReg (m6502_reg_y, m6502_reg_a, true);
+        emit6502op ("sta", aopAdrStr (aop, loffset + 1, false));
+        loadOrFreeRegTemp(m6502_reg_x, needpullx);
+        pullOrFreeReg(m6502_reg_a, needpulla);
+        break;
+      case XA_IDX:
+        pushReg(m6502_reg_a, true);
+        needpullx = storeRegTempIfSurv(m6502_reg_x);
+        transferRegReg (m6502_reg_x, m6502_reg_a, true);
+        doTSX();
+        emit6502op ("sta", aopAdrStr (aop, loffset + 1, false));
+        pullReg(m6502_reg_a);
+        emit6502op ("sta", aopAdrStr (aop, loffset, false));
+        loadOrFreeRegTemp(m6502_reg_x, needpullx);
+        break;
+      default:
+        emitcode("ERROR", "bad reg in storeRegToAop()");
+    }
+  }
 
   /* Disable the register tracking for now */
 #if 0
@@ -3380,32 +3381,30 @@ aopAdrPrepare (asmop * aop, int loffset)
   if (loffset > (aop->size - 1))
     return;
 
-  switch (aop->type)
+  if (aop->type==AOP_SOF)
     {
-    case AOP_SOF:
-        // can we get stack pointer?
-        if (m6502_reg_x->isFree) {
-          doTSX();
-          aopPrepareStoreTemp=0;
-        } else {
 #if 0
-          // code for lda [BASEPTR],y 
-          aopPrepareStoreTemp = storeRegTemp(m6502_reg_y, false);
-	  // FIXME: offset is wrong
-          emitComment (TRACE_AOP, "ofs=%d base=%d tsx=%d push=%d stk=%d loffset=%d", _G.stackOfs, _G.baseStackPushes, _G.tsxStackPushes, _G.stackPushes, aop->aopu.aop_stk, loffset);
-          loadRegFromConst(m6502_reg_y, _G.stackOfs + _G.baseStackPushes + aop->aopu.aop_stk + loffset + 1);
-	  // ORIG: loadRegFromConst(m6502_reg_y, _G.stackOfs - _G.baseStackPushes + aop->aopu.aop_stk + loffset + 1);
-          m6502_reg_y->aop = &tsxaop;
+      // code for lda [BASEPTR],y 
+      aopPrepareStoreTemp = storeRegTemp(m6502_reg_y, false);
+      // FIXME: offset is wrong
+      emitComment (TRACE_AOP, "ofs=%d base=%d tsx=%d push=%d stk=%d loffset=%d", _G.stackOfs, _G.baseStackPushes, _G.tsxStackPushes, _G.stackPushes, aop->aopu.aop_stk, loffset);
+      loadRegFromConst(m6502_reg_y, _G.stackOfs + _G.baseStackPushes + aop->aopu.aop_stk + loffset + 1);
+      // ORIG: loadRegFromConst(m6502_reg_y, _G.stackOfs - _G.baseStackPushes + aop->aopu.aop_stk + loffset + 1);
+      m6502_reg_y->aop = &tsxaop;
 #else
-          // FIXME: check if used/dead is ok
-//	  aopPrepareStoreTemp = storeRegTempIfSurv(m6502_reg_x);
-          storeRegTemp(m6502_reg_x, true);
-          aopPrepareStoreTemp = true;
-//          m6502_reg_x->isFree=true;
-          doTSX();
-#endif
-          aopPreparePreserveFlags = 1; // TODO: also need to make sure flags are needed by caller
+      // can we get stack pointer?
+      aopPrepareStoreTemp=0;
+      if (!m6502_reg_x->isFree) {
+        // FIXME: check if used/dead is ok
+        // aopPrepareStoreTemp = storeRegTempIfSurv(m6502_reg_x);
+        storeRegTemp(m6502_reg_x, true);
+        aopPrepareStoreTemp = true;
+        // m6502_reg_x->isFree=true;
       }
+
+      doTSX();
+#endif
+      aopPreparePreserveFlags = 1; // TODO: also need to make sure flags are needed by caller
     }
 }
 
@@ -3415,20 +3414,19 @@ aopAdrUnprepare (asmop * aop, int loffset)
   if (loffset > (aop->size - 1))
     return;
 
-  switch (aop->type)
+  if (aop->type==AOP_SOF)
     {
-    case AOP_SOF:
-        if (aopPrepareStoreTemp) {
-          if (aopPreparePreserveFlags)
-  	    loadRegTempNoFlags(m6502_reg_x, true);
-          else
+      if (aopPrepareStoreTemp) {
+        if (aopPreparePreserveFlags)
+          loadRegTempNoFlags(m6502_reg_x, true);
+        else
 	  loadRegTemp(m6502_reg_x);
 
-	  aopPreparePreserveFlags = 0;
-	  aopPrepareStoreTemp = 0;
-        }
+	aopPreparePreserveFlags = 0;
+	aopPrepareStoreTemp = 0;
       }
     }
+}
 
 
 /**************************************************************************
@@ -3505,7 +3503,10 @@ aopAdrStr (asmop * aop, int loffset, bool bit16)
         return "1,x"; // fake result, not needed
       } else {
         // did we get stack pointer in X?
-        if (m6502_reg_x->aop == &tsxaop) {
+           if (m6502_reg_x->aop != &tsxaop) {
+             // FIXME: should X be saved?
+             doTSX();
+          }
           // hc08's tsx returns +1, ours returns +0
           //DD( emitcode( "", "; %d + %d + %d + %d + 1", _G.stackOfs, _G.tsxStackPushes, aop->aopu.aop_stk, offset ));
           xofs = STACK_TOP + _G.stackOfs + _G.tsxStackPushes + aop->aopu.aop_stk + offset + 1;
@@ -3513,17 +3514,6 @@ aopAdrStr (asmop * aop, int loffset, bool bit16)
           rs = Safe_calloc (1, strlen (s) + 1);
           strcpy (rs, s);
           return rs;
-        // did we get base ptr in Y?
-        } else {
-          // FIXME: should X be saved?
-          doTSX();
-          xofs = STACK_TOP + _G.stackOfs + _G.tsxStackPushes + aop->aopu.aop_stk + offset + 1;
-          sprintf (s, "0x%x,x", xofs);
-          rs = Safe_calloc (1, strlen (s) + 1);
-          strcpy (rs, s);
-          return rs;
-
-        } 
 #if 0
 else if (m6502_reg_y->aop == &tsxaop) {
           return "[__BASEPTR],y";
@@ -3533,7 +3523,7 @@ else if (m6502_reg_y->aop == &tsxaop) {
           return "ERROR [__BASEPTR],y"; // TODO: is base ptr or Y loaded?
         }
 #endif
-      }
+     }
     case AOP_IDX:
       xofs = offset; /* For now, assume yx points to the base address of operand */
       // TODO: slow
