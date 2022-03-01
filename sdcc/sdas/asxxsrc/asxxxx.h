@@ -998,6 +998,8 @@ extern  int     pflag;          /*      -p, disable listing pagination
                                  */
 extern  int     sflag;          /*      -s, generate symbol table flag
                                  */
+extern  int     tflag;          /*      -t, output diagnostic parameters from assembler
+                                */
 extern  int     uflag;          /*      -u, disable .list/.nlist processing flag
                                  */
 extern	int	vflag;		/*	-v, enable out of range signed / unsigned errors
@@ -1152,7 +1154,7 @@ extern  int             fndidx(char *str);
 extern  int             intsiz(void);
 extern  VOID            newdot(struct area *nap);
 extern  VOID            phase(struct area *ap, a_uint a);
-extern  VOID            usage(int n);
+extern  VOID            usage(void);
 
 /* asmcro.c */
 extern  char *          fgetm(char *ptr, int len, FILE *fp);

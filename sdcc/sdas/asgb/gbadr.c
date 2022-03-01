@@ -195,24 +195,10 @@ char *str;
         }
 
         if (!*str)
-                if (any(*ptr," \t\n,);")) {
+                if (!(ctype[*ptr & 0x007F] & LTR16) && (*ptr & 0x007F) != '-' && (*ptr & 0x007F) != '+') {
                         ip = ptr;
                         return(1);
                 }
-        return(0);
-}
-
-/*
- *      any --- does str contain c?
- */
-int
-any(c,str)
-int c;
-char *str;
-{
-        while (*str)
-                if(*str++ == c)
-                        return(1);
         return(0);
 }
 
@@ -245,7 +231,6 @@ struct  adsym   R16[] = {
 
 struct  adsym   R16X[] = {
     {   "af",   AF|0400 },
-    {   "af'",  AF|0400 },
     {   "",     0000    }
 };
 

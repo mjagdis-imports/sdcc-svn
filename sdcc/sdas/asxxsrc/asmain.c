@@ -303,15 +303,20 @@ main(int argc, char *argv[])
         struct area *ap;
 	struct def *dp;
 
-        if (intsiz() < 4) {
-                fprintf(stderr, "?ASxxxx-Error-Size of INT32 is not 32 bits or larger.\n\n");
-                exit(ER_FATAL);
-        }
-
         /* sdas specific */
         /* sdas initialization */
         sdas_init(argv[0]);
         /* end sdas specific */
+
+	if (argc == 1) {
+		usage();
+		exit(ER_NONE);
+	}
+
+        if (intsiz() < 4) {
+                fprintf(stderr, "?ASxxxx-Error-Size of INT32 is not 32 bits or larger.\n\n");
+                exit(ER_FATAL);
+        }
 
         if (!is_sdas())
                 fprintf(stdout, "\n");
@@ -321,13 +326,25 @@ main(int argc, char *argv[])
         for (i=1; i<argc; ++i) {
                 p = argv[i];
                 if (*p == '-') {
-                        if (asmc != NULL)
-                                usage(ER_FATAL);
+                        if (asmc != NULL) {
+                                usage();
+				fprintf(stderr, "?ASxxxx-Error-Options come first.\n");
+                                asexit(ER_FATAL);
+                        }
                         ++p;
                         while ((c = *p++) != 0) {
                                 switch(c) {
+				/*
+				 * -h   Show the help list
+				 */
+				case 'h':
+				case 'H':
+					usage();
+					exit(ER_NONE);
+					break;
 
 //                                case 'i':
+                                /* TODO: collides with new Insert assembler line */
                                 case 'I':
                                         search_path_append(p);
                                         while (*p)
@@ -470,8 +487,25 @@ main(int argc, char *argv[])
                                         break;
 #endif
 
+				/*
+				 * Unlisted Options:
+				 *   -r   list line numbers in .hst help file
+				 *   -rr  list line numbers of NON listed lines
+				 *   -t   show internal block allocations
+				 */
+
+				case 't':
+				case 'T':
+					++tflag;
+					break;
+
+                                /*
+                                        * Unknown Options:
+                                        */
                                 default:
-                                        usage(ER_FATAL);
+                                        fprintf(stderr, "?ASxxxx-Warning-Unkown option -%c ignored\n", c);
+                                        //usage(ER_FATAL);
+                                        break;
                                 }
                         }
                 } else {
@@ -479,8 +513,11 @@ main(int argc, char *argv[])
                                 q = p;
                                 if (++i < argc) {
                                         p = argv[i];
-                                        if (*p == '-')
-                                                usage(ER_FATAL);
+                                        if (*p == '-') {
+                                                usage();
+                                                fprintf(stderr, "?ASxxxx-Error-Options come first.\n");
+                                                asexit(ER_FATAL);
+                                        }
                                 }
                                 asmp = (struct asmf *)
                                                 new (sizeof (struct asmf));
@@ -501,8 +538,11 @@ main(int argc, char *argv[])
                         asmc->afp = afp;
                 }
         }
-        if (asmp == NULL)
-                usage(ER_WARNING);
+        if (asmp == NULL) {
+                usage();
+                fprintf(stderr, "?ASxxxx-Error-Missing input file(s)\n");
+                asexit(ER_FATAL);
+        }
         if (lflag)
                 lfp = afile(q, "lst", 1);
         /* sdas specific */
@@ -649,9 +689,14 @@ intsiz(void)
  *              FILE *  lfp             list output file handle
  *              FILE *  ofp             relocation output file handle
  *              FILE *  tfp             symbol table output file handle
+ *		FILE *	stdout		standard output handle
+ *		int	maxinc		maximum include file level
+ *		int	maxmcr		maximum macro expansion level
+ *		int	mcrblk		macro allocation in 1K blocks
  *
  *      functions called:
  *              int     fclose()        c_library
+ *		int	fprintf()	c_library
  *              VOID    exit()          c_library
  *
  *      side effects:
@@ -686,6 +731,15 @@ asexit(int i)
                 remove(relFile);
         }
         /* end sdas specific */
+
+	if (tflag) {
+		fprintf(stderr, "?ASxxxx-Info-maxinc(include file level)    = %3d\n", maxinc);
+		fprintf(stderr, "?ASxxxx-Info-maxmcr(macro expansion level) = %3d\n", maxmcr);
+		//fprintf(stderr, "?ASxxxx-Info-asmblk(1K Byte Allocations)   = %3d\n", asmblk);
+		fprintf(stderr, "?ASxxxx-Info-mcrblk(1K Byte Allocations)   = %3d\n", mcrblk);
+		fprintf(stderr, "\n");
+	}
+
         exit(i);
 }
 
@@ -2401,9 +2455,7 @@ char *usetxt[] = {
         NULL
 };
 
-/*)Function     VOID    usage(n)
- *
- *              int     n               exit code
+/*)Function     VOID    usage()
  *
  *      The function usage() outputs to the stderr device the
  *      assembler name and version and a list of valid assembler options.
@@ -2417,15 +2469,14 @@ char *usetxt[] = {
  *              char *  usetxt[]        array of string pointers
  *
  *      functions called:
- *              VOID    asexit()        asmain.c
  *              int     fprintf()       c_library
  *
  *      side effects:
- *              program is terminated
+ *              none
  */
 
 VOID
-usage(int n)
+usage()
 {
         char   **dp;
 
@@ -2435,6 +2486,5 @@ usage(int n)
 	for (dp = usetxt; *dp; dp++) {
                 fprintf(stderr, "%s\n", *dp);
 	}
-        asexit(n);
 }
 

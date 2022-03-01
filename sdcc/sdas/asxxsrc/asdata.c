@@ -240,10 +240,12 @@ int     pflag;          /*      -p, disable listing pagination
                          */
 int     sflag;          /*      -s, generate symbol table flag
                          */
+int     tflag;          /*      -t, output diagnostic parameters from assembler
+                         */
 int     uflag;          /*      -u, disable .list/.nlist processing flag
                          */
-int	vflag;		/*	-v, enable out of range signed / unsigned errors
-			 */
+int     vflag;          /*      -v, enable out of range signed / unsigned errors
+                         */
 int     wflag;          /*      -w, enable wide listing format
                          */
 int     xflag;          /*      -x, listing radix flag
