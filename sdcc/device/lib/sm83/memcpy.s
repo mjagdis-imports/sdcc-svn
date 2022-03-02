@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  memcpy.s
 ;
-;  Copies in groups of four. Algorithm from GBDK-2020.
+;  Copies in groups of four. Algorithm is Duff's device.
 ;
 ;  Copyright (c) 2021, Philipp Klaus Krause
 ;  Copyright (c) 2022, Sebastian 'basxto' Riedel
@@ -65,20 +65,19 @@ skip_one:
 	;shift second LSB to carry
 	srl	b
 	rr	c
-	jr nc, skip_two
+	;n/4 in bc
+	inc	b
+	inc	c
+	jr nc, test
+	jr	copy_two
+copy_four:
 	.rept	2
 	ld	a, (hl+)
 	ld	(de), a
 	inc	de
 	.endm
-skip_two:
-	;n/4 in bc
-	inc	b
-	inc	c
-	jr	test
-
-copy_four:
-	.rept	4
+copy_two:
+	.rept	2
 	ld	a, (hl+)
 	ld	(de), a
 	inc	de

@@ -130,7 +130,7 @@ __naked
 	(void)c;//bc or for broken string function in a
 	(void)n;//stack+2, stack+3
 __asm
-        ; Algorithm from GBDK-2020
+        ; Algorithm is Duff`s device
 	ldhl	sp,	#3
 __endasm;
 #ifdef __SDCC_BROKEN_STRING_FUNCTIONS
@@ -160,18 +160,17 @@ skip_one:
 	;shift second LSB to carry
 	srl	b
 	rr	c
-	jr nc, skip_two
-        ld	(hl+), a
-        ld	(hl+), a
-skip_two:
-	;n/4 in bc
+        ;n/4 in bc
 	inc	b
 	inc	c
-	jr	test
+	jr nc, test
+	jr	copy_two
 copy_four:
-        .rept   4
+        ld	(hl+), a
 	ld	(hl+), a
-        .endm
+copy_two:
+        ld	(hl+), a
+	ld	(hl+), a
 test:
 	dec	c
 	jr	NZ, copy_four
