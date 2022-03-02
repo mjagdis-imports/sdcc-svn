@@ -1,5 +1,10 @@
 2022-03-02 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
+	* device/lib/sm83/mul.s:
+	  Speed up multiplication algorithm.
+
+2022-03-02 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
 	* device/lib/_memset.c,
 	  device/lib/sm83/abs.s,
 	  device/lib/sm83/crt0.s,
