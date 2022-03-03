@@ -23,6 +23,7 @@ replace restart {
 	; common peephole 0a removed redundant load from %1 into %1.
 } if notVolatile(%1)
 
+//TODO: works for the other ports, but slows at least some of them down
 replace restart {
 	ld	%2, %1
 	ld	%3, %4
@@ -31,7 +32,7 @@ replace restart {
 	ld	%2, %1
 	ld	%3, %4
 	; common peephole 0b removed redundant load from %2 back into %1.
-}if notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)'), operandsNotRelated(%3 %1), operandsNotRelated(%3 %2), notVolatile(%1), notVolatile(%2), 
+}if isPort('sm83'), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)'), operandsNotRelated(%3 %1), operandsNotRelated(%3 %2), notVolatile(%1), notVolatile(%2), 
 
 replace restart {
 	ld	%1, %2

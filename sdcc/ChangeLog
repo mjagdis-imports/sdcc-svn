@@ -1,5 +1,10 @@
 2022-03-02 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
+	* src/z80/peeph.def:
+	  Disable rule that pessimized some ports.
+
+2022-03-02 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
 	* src/z80/main.c:
 	  Add -bo and -ba for z80, apply patch #399.
 
