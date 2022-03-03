@@ -2655,12 +2655,16 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
             }
           else
             {
+              if (pairId == PAIR_HL && (aopInReg (aop, offset, IYL_IDX) || aopInReg (aop, offset, IYH_IDX)))
+                UNIMPLEMENTED;
               if (!aopInReg (aop, offset, _pairs[pairId].l_idx))
                 {
                    if (!regalloc_dry_run)
                      emit2 ("ld %s, %s", _pairs[pairId].l, aopGet (aop, offset, FALSE));
                    regalloc_dry_run_cost += ld_cost (ASMOP_L, 0, aop, offset);
                 }
+              if (pairId == PAIR_HL && (aopInReg (aop, offset + 1, IYL_IDX) || aopInReg (aop, offset + 1, IYH_IDX)))
+                UNIMPLEMENTED;
               if (!aopInReg (aop, offset + 1, _pairs[pairId].h_idx))
                 {
                    if (!regalloc_dry_run)
@@ -3371,6 +3375,8 @@ aopPut (asmop *aop, const char *s, int offset)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
+  // emitDebug ("; cheapMove");
+
   if (aopInReg (to, to_offset, A_IDX))
     a_dead = true;
 
@@ -4539,6 +4545,12 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
                   _push (PAIR_HL);
                   pushed_hl = true;
                 }
+            }
+          else if (result->type == AOP_IY && !iy_dead && !aopInReg (source, soffset + i, A_IDX))
+            {
+              via_a = true;
+              if (!a_dead)
+                _push (PAIR_AF);
             }
           else if (!premoved_a && source->type == AOP_IY && result->type == AOP_REG && a_dead && i == 0 && i + 1 == size) // Using free a is cheaper than using iy.
             via_a = true;
