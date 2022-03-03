@@ -1,3 +1,8 @@
+2022-03-03 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/sm83/memcpy.s:
+	  Replace redundancy with macros.
+
 2022-03-02 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/peeph.def:

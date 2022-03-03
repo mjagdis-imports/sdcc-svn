@@ -70,23 +70,19 @@ skip_one:
 	inc	c
 	jr nc, test
 	jr	copy_two
-copy_four:
+.irp	idx,copy_four,copy_two
+	idx:
 	.rept	2
-	ld	a, (hl+)
-	ld	(de), a
-	inc	de
+		ld	a, (hl+)
+		ld	(de), a
+		inc	de
 	.endm
-copy_two:
-	.rept	2
-	ld	a, (hl+)
-	ld	(de), a
-	inc	de
-	.endm
+.endm
 test:
-	dec	c
+.irp	idx,c,b
+	dec	idx
 	jr	nz, copy_four
-	dec	b
-	jr	nz, copy_four
+.endm
 
 end:
 	;restore dest
