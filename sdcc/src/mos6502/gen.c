@@ -557,7 +557,7 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
       return;
     }
 
-  emitComment (REGOPS, "  transferRegReg(%s,%s)", sreg->name, dreg->name);
+  emitComment (REGOPS, "  %s(%s,%s)", __func__, sreg->name, dreg->name);
   emitComment (REGOPS, "  %s %s", __func__, regInfoStr() );
 
   srcidx = sreg->rIdx;
@@ -1188,6 +1188,8 @@ canBitOp (const operand* aop)
     case AOP_LIT:
       return IS_MOS65C02;
     // TODO: ind,x for 65c02?
+    default:
+      break;
   }
   return false;
 }
@@ -2633,6 +2635,9 @@ tsxUseful(iCode *ic)
 static void doTSX()
 {
   // already did TSX
+  emitComment (TRACE_STACK|VVDBG, "%s: stackOfs=%d tsx=%d stackpush=%d",
+  __func__, _G.stackOfs, _G.tsxStackPushes, _G.stackPushes);
+
   if (m6502_reg_x->aop == &tsxaop)
     return;
   // put stack pointer in X
@@ -2926,6 +2931,8 @@ sameRegs (asmop * aop1, asmop * aop2)
 //            return false; // TODO: why?
         case AOP_EXT:
           return (!strcmp (aop1->aopu.aop_dir, aop2->aopu.aop_dir));
+        default:
+          break;
         }
     }
 
@@ -2946,6 +2953,8 @@ aopCanIncDec (asmop * aop)
     case AOP_DIR:
     case AOP_EXT:
       return true;
+    default:
+      break;
   }
   return false;
 }
@@ -2963,6 +2972,8 @@ aopCanShift (asmop * aop)
     case AOP_DIR:
     case AOP_EXT:
       return true;
+    default:
+      break;
   }
   return false;
 }
@@ -3366,6 +3377,8 @@ isAddrSafe(operand* op, reg_info* reg)
     case AOP_SOF:       // (BASEPTR),y
       if (reg == m6502_reg_a && (m6502_reg_x->isFree || m6502_reg_y->isFree))
         return true;
+    default:
+      break;
   }
   return false;
 }
@@ -3533,6 +3546,8 @@ else if (m6502_reg_y->aop == &tsxaop) {
         return "ERROR [__TEMP],y"; // TODO: what if != 0 tempOfs?
       } else
         return "ERROR"; // TODO: error
+     default:
+       break;
     }
 
   werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "aopAdrStr got unsupported aop->type");
@@ -4733,6 +4748,8 @@ genFunction (iCode * ic)
   genLine.lineCurr->isLabel = 1;
   ftype = operandType (IC_LEFT (ic));
 
+  // FIXME: make sure registers used for parameters are marked in use
+
   _G.stackOfs = 0;
   _G.stackPushes = 0;
   if (options.debug && !regalloc_dry_run)
@@ -4745,7 +4762,7 @@ genFunction (iCode * ic)
     }
 
   /* if this is an interrupt service routine then
-     save h  */
+     save y  */
   if (IFFUNC_ISISR (sym->type))
     {
       if (!inExcludeList ("y"))
@@ -5657,7 +5674,7 @@ genCmp (iCode * ic, iCode * ifx)
 
   size = max (AOP_SIZE (left), AOP_SIZE (right));
 
-  emitComment (TRACEGEN|VVDBG, "      genCmp", "(%s, size %d, sign %d)", nameCmp (opcode), size, sign);
+  emitComment (TRACEGEN|VVDBG, "      genCmp (%s, size %d, sign %d)", nameCmp (opcode), size, sign);
   
   if (!sign && size == 1 && IS_AOP_X (AOP (left)) && isAddrSafe(right, m6502_reg_x) )
     {
@@ -10198,6 +10215,9 @@ genReceive (iCode * ic)
   size = AOP_SIZE (IC_RESULT (ic));
   offset = 0;
 
+  emitComment (TRACEGEN|VVDBG, "  %s: size=%d regmask=%x", 
+               __func__, size, AOP (IC_RESULT (ic))->regmask );
+
   if (ic->argreg && IS_AOP_YX (AOP (IC_RESULT (ic))) && (offset + (ic->argreg - 1)) == 0)
     {
       transferRegReg (m6502_reg_xa, m6502_reg_yx, true);
@@ -10381,6 +10401,7 @@ genm6502iCode (iCode *ic)
       updateiTempRegisterUse (IC_JTCOND (ic));
     else if (ic->op == RECEIVE)
       {
+        // FIXME: should add entry icode to this.
         m6502_useReg (m6502_reg_a);
         m6502_useReg (m6502_reg_x); // TODO: x really is free if function only receives 1 byte
       }
@@ -10392,6 +10413,7 @@ genm6502iCode (iCode *ic)
         updateiTempRegisterUse (IC_RIGHT (ic));
       }
 
+    // FIXME: this is broken when reordering registers
     for (i = A_IDX; i <= Y_IDX; i++)
       {
         if (bitVectBitValue (ic->rSurv, i))
