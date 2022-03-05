@@ -5,6 +5,8 @@
 	  Change asmop.type to enum.
   	* src/mos6502/gen.c:
   	  Remove unused "result" parameter from aopOp().
+    	* src/mos6502/gen.c:
+  	  Allow AX in genCpl().
 
 2022-03-03 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 

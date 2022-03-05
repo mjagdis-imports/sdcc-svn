@@ -3944,7 +3944,8 @@ genCpl (iCode * ic)
 
   if (size==2 && AOP_TYPE (IC_RESULT (ic)) == AOP_REG && AOP_TYPE (IC_LEFT (ic)) == AOP_REG)
     {
-      if(IS_AOP_XA(AOP(IC_LEFT (ic))) && IS_AOP_XA(AOP(IC_RESULT (ic)))) {
+      if((IS_AOP_XA(AOP(IC_LEFT (ic))) && IS_AOP_XA(AOP(IC_RESULT (ic))))
+         || (IS_AOP_AX(AOP(IC_LEFT (ic))) && IS_AOP_AX(AOP(IC_RESULT (ic)))) ) {
         pushReg(m6502_reg_a, true);
         transferRegReg(m6502_reg_x, m6502_reg_a, true);
         rmwWithReg ("com", m6502_reg_a);
