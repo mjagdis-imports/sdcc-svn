@@ -27,11 +27,11 @@
     it easier to set a breakpoint using the debugger.
 */
 #include "common.h"
+#include "dbuf_string.h"
 #include "m6502.h"
-#include "main.h"
+
 #include "ralloc.h"
 #include "gen.h"
-#include "dbuf_string.h"
 
 #define OPTION_SMALL_MODEL          "--model-small"
 #define OPTION_LARGE_MODEL          "--model-large"
@@ -735,28 +735,28 @@ PORT mos6502_port =
   _m6502_init,
   _m6502_parseOptions,
   _mos6502_options,
-  NULL,
+  0,
   _m6502_finaliseOptions,
   _m6502_setDefaultOptions,
   m6502_assignRegisters,
   _m6502_getRegName,
   0,
-  NULL,
+  0,
   _keywords,
   _m6502_genAssemblerPreamble,
   _m6502_genAssemblerEnd,        /* no genAssemblerEnd */
   _m6502_genIVT,
   _m6502_genXINIT,
-  NULL,                         /* genInitStartup */
+  0,                            /* genInitStartup */
   _m6502_reset_regparm,
   _m6502_regparm,
-  NULL,                         /* process_pragma */
-  NULL,                         /* getMangledFunctionName */
+  0,                            /* process_pragma */
+  0,                            /* getMangledFunctionName */
   _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
   true,                         /* use_dw_for_init */
-  true,                         /* little_endian */
+  true,                         /* little endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */
@@ -784,11 +784,11 @@ PORT mos65c02_port =
     false,                      /* Emit glue around main */
     MODEL_SMALL | MODEL_LARGE,
     MODEL_LARGE,
-    NULL,                       /* model == target */
+    0,                       /* model == target */
   },
   {
     _asmCmd,
-    NULL,
+    0,
     "-plosgffwy",               /* Options with debug */
     "-plosgffw",                /* Options without debug */
     0,
@@ -880,28 +880,28 @@ PORT mos65c02_port =
   _m65c02_init,
   _m6502_parseOptions,
   _mos6502_options,
-  NULL,
+  0,
   _m6502_finaliseOptions,
   _m6502_setDefaultOptions,
   m6502_assignRegisters,
   _m6502_getRegName,
   0,
-  NULL,
+  0,
   _keywords,
   _m6502_genAssemblerPreamble,
   _m6502_genAssemblerEnd,        /* no genAssemblerEnd */
   _m6502_genIVT,
   _m6502_genXINIT,
-  NULL,                         /* genInitStartup */
+  0,                            /* genInitStartup */
   _m6502_reset_regparm,
   _m6502_regparm,
-  NULL,                         /* process_pragma */
-  NULL,                         /* getMangledFunctionName */
+  0,                            /* process_pragma */
+  0,                            /* getMangledFunctionName */
   _hasNativeMulFor,             /* hasNativeMulFor */
   hasExtBitOp,                  /* hasExtBitOp */
   oclsExpense,                  /* oclsExpense */
   true,                         /* use_dw_for_init */
-  true,                         /* little_endian */
+  true,                         /* little endian */
   0,                            /* leave lt */
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */

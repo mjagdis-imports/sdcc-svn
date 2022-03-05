@@ -3,12 +3,15 @@
 	* src/mos6502/gen.c,
 	  src/mos6502/gen.h:
 	  Change asmop.type to enum.
-  	* src/mos6502/gen.c:
-  	  Remove unused "result" parameter from aopOp().
-    	* src/mos6502/gen.c:
-  	  Allow AX in genCpl().
-    	* src/mos6502/gen.c:
-  	  Remove unused parameters in freeAsmop().
+	* src/mos6502/gen.c:
+	  Remove unused "result" parameter from aopOp().
+	* src/mos6502/gen.c:
+	  Allow AX in genCpl().
+	* src/mos6502/gen.c:
+	  Remove unused parameters in freeAsmop().
+	* src/mos6502/main.c,
+	  src/mos6502/main.h:
+	  Removed unnecessary main.h
 
 2022-03-03 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
