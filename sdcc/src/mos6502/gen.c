@@ -2673,7 +2673,7 @@ restoreBasePtr()
  *
  *************************************************************************/
 static asmop *
-aopForSym (iCode * ic, symbol * sym, bool result)
+aopForSym (iCode * ic, symbol * sym)
 {
   asmop *aop;
   memmap *space;
@@ -2983,7 +2983,7 @@ aopCanShift (asmop * aop)
  *
  *************************************************************************/
 static void
-aopOp (operand *op, iCode * ic, bool result)
+aopOp (operand *op, iCode * ic)
 {
   asmop *aop = NULL;
   symbol *sym;
@@ -3036,7 +3036,7 @@ aopOp (operand *op, iCode * ic, bool result)
   /* if this is a true symbol */
   if (IS_TRUE_SYMOP (op))
     {
-      op->aop = aop = aopForSym (ic, OP_SYMBOL (op), result);
+      op->aop = aop = aopForSym (ic, OP_SYMBOL (op));
       aop->op = op;
       //printf ("new symbol %s\n", OP_SYMBOL (op)->name);
       //printf (" with size = %d\n", aop->size);
@@ -3112,7 +3112,7 @@ aopOp (operand *op, iCode * ic, bool result)
               sym->usl.spillLoc->aop = NULL;
               //printf ("forcing new aop\n");
             }
-          sym->aop = op->aop = aop = aopForSym (ic, sym->usl.spillLoc, result);
+          sym->aop = op->aop = aop = aopForSym (ic, sym->usl.spillLoc);
           if (sym->usl.spillLoc->aop->size != getSize (sym->type))
             {
               /* Don't reuse the new aop, go with the last one */
@@ -3907,8 +3907,8 @@ genNot (iCode * ic)
   emitComment (TRACEGEN, __func__);
 
   /* assign asmOps to operand & result */
-  aopOp (IC_LEFT (ic), ic, false);
-  aopOp (IC_RESULT (ic), ic, true);
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
   needpulla = pushRegIfSurv (m6502_reg_a);
   asmopToBool (AOP (IC_LEFT (ic)), true);
 
@@ -3935,8 +3935,8 @@ genCpl (iCode * ic)
   emitComment (TRACEGEN, __func__);
 
   /* assign asmOps to operand & result */
-  aopOp (IC_LEFT (ic), ic, false);
-  aopOp (IC_RESULT (ic), ic, true);
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
   size = AOP_SIZE (IC_RESULT (ic));
 
   emitComment (TRACEGEN|VVDBG, "      %s - regmask %02x -> %02x", 
@@ -4069,8 +4069,8 @@ genUminus (iCode * ic)
   emitComment (TRACEGEN, __func__);
 
   /* assign asmops */
-  aopOp (IC_LEFT (ic), ic, false);
-  aopOp (IC_RESULT (ic), ic, true);
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
 
   optype = operandType (IC_LEFT (ic));
 
@@ -4261,7 +4261,7 @@ pushSide (operand *oper, int size, iCode *ic)
   int offset = 0;
 //  bool xIsFree = m6502_reg_x->isFree;
 
-  aopOp (oper, ic, false);
+  aopOp (oper, ic);
 
   if (AOP_TYPE (oper) == AOP_REG)
     {
@@ -4346,7 +4346,7 @@ genIpush (iCode * ic)
       if (OP_SYMBOL (IC_LEFT (ic))->isspilt)
         return;
 
-      aopOp (IC_LEFT (ic), ic, false);
+      aopOp (IC_LEFT (ic), ic);
       size = AOP_SIZE (IC_LEFT (ic));
       /* push it on the stack */
       for (offset=size-1; offset>=0; offset--)
@@ -4364,7 +4364,7 @@ genIpush (iCode * ic)
     saveRegisters (ic);
 
   /* then do the push */
-  aopOp (IC_LEFT (ic), ic, false);
+  aopOp (IC_LEFT (ic), ic);
 
   // pushSide(IC_LEFT(ic), AOP_SIZE(IC_LEFT(ic)));
   size = AOP_SIZE (IC_LEFT (ic));
@@ -4414,7 +4414,7 @@ genIpop (iCode * ic)
   if (OP_SYMBOL (IC_LEFT (ic))->isspilt)
     return;
 
-  aopOp (IC_LEFT (ic), ic, false);
+  aopOp (IC_LEFT (ic), ic);
   size = AOP_SIZE (IC_LEFT (ic));
   offset = size - 1;
   while (size--)
@@ -4449,7 +4449,7 @@ genSend (set *sendSet)
     {
       int size;
       /* case 1 or 2, this is fairly easy */
-      aopOp (IC_LEFT (send1), send1, false);
+      aopOp (IC_LEFT (send1), send1);
       size = AOP_SIZE (IC_LEFT (send1));
       wassert (size <= 2);
       if (size == 1)
@@ -4483,8 +4483,8 @@ genSend (set *sendSet)
           send1 = send2;
           send2 = sic;
         }
-      aopOp (IC_LEFT (send1), send1, false);
-      aopOp (IC_LEFT (send2), send2, false);
+      aopOp (IC_LEFT (send1), send1);
+      aopOp (IC_LEFT (send2), send2);
       if (IS_AOP_X (AOP (IC_LEFT (send1))) && IS_AOP_A (AOP (IC_LEFT (send2))))
         {
           /* If the parameters' register assignment is exactly backwards */
@@ -4569,7 +4569,7 @@ genCall (iCode * ic)
       m6502_useReg (m6502_reg_a);
       if (operandSize (IC_RESULT (ic)) > 1)
         m6502_useReg (m6502_reg_x);
-      aopOp (IC_RESULT (ic), ic, false);
+      aopOp (IC_RESULT (ic), ic);
 
       assignResultValue (IC_RESULT (ic));
 
@@ -4667,7 +4667,7 @@ genPcall (iCode * ic)
       m6502_useReg (m6502_reg_a);
       if (operandSize (IC_RESULT (ic)) > 1)
         m6502_useReg (m6502_reg_x);
-      aopOp (IC_RESULT (ic), ic, false);
+      aopOp (IC_RESULT (ic), ic);
 
       assignResultValue (IC_RESULT (ic));
 
@@ -4948,7 +4948,7 @@ genRet (iCode * ic)
 
   /* we have something to return then
      move the return value into place */
-  aopOp (IC_LEFT (ic), ic, false);
+  aopOp (IC_LEFT (ic), ic);
   size = AOP_SIZE (IC_LEFT (ic));
 
   if (AOP_TYPE (IC_LEFT (ic)) == AOP_LIT)
@@ -5144,9 +5144,9 @@ genPlus (iCode * ic)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp (IC_LEFT (ic), ic, false);
-  aopOp (IC_RIGHT (ic), ic, false);
-  aopOp (IC_RESULT (ic), ic, true);
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
 
   /* we want registers on the left and literals on the right */
   if ((AOP_TYPE (IC_LEFT (ic)) == AOP_LIT) || (AOP_TYPE (IC_RIGHT (ic)) == AOP_REG && !IS_AOP_WITH_A (AOP (IC_LEFT (ic)))))
@@ -5312,9 +5312,9 @@ genMinus (iCode * ic)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp (IC_LEFT (ic), ic, false);
-  aopOp (IC_RIGHT (ic), ic, false);
-  aopOp (IC_RESULT (ic), ic, true);
+  aopOp (IC_LEFT (ic), ic);
+  aopOp (IC_RIGHT (ic), ic);
+  aopOp (IC_RESULT (ic), ic);
 
   /* special cases :- */
   /* if I can do an decrement instead
@@ -5644,9 +5644,9 @@ genCmp (iCode * ic, iCode * ifx)
     }
 
   /* assign the amsops */
-  aopOp (left, ic, false);
-  aopOp (right, ic, false);
-  aopOp (result, ic, true);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   /* need register operand on left, prefer literal operand on right */
   if ((AOP_TYPE (right) == AOP_REG) || AOP_TYPE (left) == AOP_LIT)
@@ -5823,9 +5823,9 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
   emitComment (TRACEGEN|VVDBG, "      genCmpEQorNE (%s)", nameCmp (opcode));
 
   /* assign the amsops */
-  aopOp (left, ic, false);
-  aopOp (right, ic, false);
-  aopOp (result, ic, true);
+  aopOp (left, ic);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   /* need register operand on left, prefer literal operand on right */
   if ((AOP_TYPE (right) == AOP_REG) || AOP_TYPE (left) == AOP_LIT)
@@ -5984,9 +5984,9 @@ genAndOp (iCode * ic)
   /* note here that && operations that are in an
      if statement are taken away by backPatchLabels
      only those used in arthmetic operations remain */
-  aopOp ((left = IC_LEFT (ic)), ic, false);
-  aopOp ((right = IC_RIGHT (ic)), ic, false);
-  aopOp ((result = IC_RESULT (ic)), ic, false);
+  aopOp ((left = IC_LEFT (ic)), ic);
+  aopOp ((right = IC_RIGHT (ic)), ic);
+  aopOp ((result = IC_RESULT (ic)), ic);
 
   tlbl = safeNewiTempLabel (NULL);
   tlbl0 = safeNewiTempLabel (NULL);
@@ -6031,9 +6031,9 @@ genOrOp (iCode * ic)
   /* note here that || operations that are in an
      if statement are taken away by backPatchLabels
      only those used in arthmetic operations remain */
-  aopOp ((left = IC_LEFT (ic)), ic, false);
-  aopOp ((right = IC_RIGHT (ic)), ic, false);
-  aopOp ((result = IC_RESULT (ic)), ic, false);
+  aopOp ((left = IC_LEFT (ic)), ic);
+  aopOp ((right = IC_RIGHT (ic)), ic);
+  aopOp ((result = IC_RESULT (ic)), ic);
 
   tlbl = safeNewiTempLabel (NULL);
   tlbl0 = safeNewiTempLabel (NULL);
@@ -6104,9 +6104,9 @@ genAnd (iCode * ic, iCode * ifx)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp ((left = IC_LEFT (ic)), ic, false);
-  aopOp ((right = IC_RIGHT (ic)), ic, false);
-  aopOp ((result = IC_RESULT (ic)), ic, true);
+  aopOp ((left = IC_LEFT (ic)), ic);
+  aopOp ((right = IC_RIGHT (ic)), ic);
+  aopOp ((result = IC_RESULT (ic)), ic);
 
   emitComment (TRACEGEN|VVDBG, "  Type res[%d] = l[%d]&r[%d]", AOP_TYPE (result), AOP_TYPE (left), AOP_TYPE (right));
   emitComment (TRACEGEN|VVDBG, "  Size res[%d] = l[%d]&r[%d]", AOP_SIZE (result), AOP_SIZE (left), AOP_SIZE (right));
@@ -6401,9 +6401,9 @@ genOr (iCode * ic, iCode * ifx)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp ((left = IC_LEFT (ic)), ic, false);
-  aopOp ((right = IC_RIGHT (ic)), ic, false);
-  aopOp ((result = IC_RESULT (ic)), ic, true);
+  aopOp ((left = IC_LEFT (ic)), ic);
+  aopOp ((right = IC_RIGHT (ic)), ic);
+  aopOp ((result = IC_RESULT (ic)), ic);
 
   emitComment (TRACEGEN|VVDBG, "  Type res[%d] = l[%d]&r[%d]", AOP_TYPE (result), AOP_TYPE (left), AOP_TYPE (right));
   emitComment (TRACEGEN|VVDBG, "  Size res[%d] = l[%d]&r[%d]", AOP_SIZE (result), AOP_SIZE (left), AOP_SIZE (right));
@@ -6588,9 +6588,9 @@ genXor (iCode * ic, iCode * ifx)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp ((left = IC_LEFT (ic)), ic, false);
-  aopOp ((right = IC_RIGHT (ic)), ic, false);
-  aopOp ((result = IC_RESULT (ic)), ic, true);
+  aopOp ((left = IC_LEFT (ic)), ic);
+  aopOp ((right = IC_RIGHT (ic)), ic);
+  aopOp ((result = IC_RESULT (ic)), ic);
 
   emitComment (TRACEGEN|VVDBG, " Type res[%d] = l[%d]&r[%d]", AOP_TYPE (result), AOP_TYPE (left), AOP_TYPE (right));
   emitComment (TRACEGEN|VVDBG, " Size res[%d] = l[%d]&r[%d]", AOP_SIZE (result), AOP_SIZE (left), AOP_SIZE (right));
@@ -6720,7 +6720,7 @@ expand_symbols (iCode * ic, const char *inlin)
                 }
               else
                 {
-                  asmop *aop = aopForSym (ic, sym, false);
+                  asmop *aop = aopForSym (ic, sym);
                   const char *l = aopAdrStr (aop, aop->size - 1, true);
 
                   if ('#' == *l)
@@ -6845,8 +6845,8 @@ genRRC (iCode * ic)
   /* rotate right with carry */
   left = IC_LEFT (ic);
   result = IC_RESULT (ic);
-  aopOp (left, ic, false);
-  aopOp (result, ic, false);
+  aopOp (left, ic);
+  aopOp (result, ic);
 
   if ((AOP_TYPE (result) == AOP_REG) && (AOP (result)->aopu.aop_reg[0]->rIdx == A_IDX))
     resultInA = true;
@@ -6922,8 +6922,8 @@ genRLC (iCode * ic)
   /* rotate right with carry */
   left = IC_LEFT (ic);
   result = IC_RESULT (ic);
-  aopOp (left, ic, false);
-  aopOp (result, ic, false);
+  aopOp (left, ic);
+  aopOp (result, ic);
 
   if ((AOP_TYPE (result) == AOP_REG) && (AOP (result)->aopu.aop_reg[0]->rIdx == A_IDX))
     resultInA = true;
@@ -7563,8 +7563,8 @@ genLeftShiftLiteral (operand * left, operand * right, operand * result, iCode * 
 
   freeAsmop (right, NULL, ic, true);
 
-  aopOp (left, ic, false);
-  aopOp (result, ic, false);
+  aopOp (left, ic);
+  aopOp (result, ic);
 
   size = AOP_SIZE (result);
 
@@ -7625,7 +7625,7 @@ genLeftShift (iCode * ic)
   left = IC_LEFT (ic);
   result = IC_RESULT (ic);
 
-  aopOp (right, ic, false);
+  aopOp (right, ic);
 
   /* if the shift count is known then do it
      as efficiently as possible */
@@ -7641,8 +7641,8 @@ genLeftShift (iCode * ic)
      more that 32 bits make no sense anyway, ( the
      largest size of an object can be only 32 bits ) */
 
-  aopOp (result, ic, false);
-  aopOp (left, ic, false);
+  aopOp (result, ic);
+  aopOp (left, ic);
   aopResult = AOP (result);
 
 // TODO
@@ -7975,8 +7975,8 @@ genRightShiftLiteral (operand * left, operand * right, operand * result, iCode *
 
   freeAsmop (right, NULL, ic, true);
 
-  aopOp (left, ic, false);
-  aopOp (result, ic, false);
+  aopOp (left, ic);
+  aopOp (result, ic);
 
 #if VIEW_SIZE
   emitComment (TRACEGEN|VVDBG, "  shift right ", "result %d, left %d", AOP_SIZE (result), AOP_SIZE (left));
@@ -8062,7 +8062,7 @@ genRightShift (iCode * ic)
   left = IC_LEFT (ic);
   result = IC_RESULT (ic);
 
-  aopOp (right, ic, false);
+  aopOp (right, ic);
 
   /* if the shift count is known then do it
      as efficiently as possible */
@@ -8078,8 +8078,8 @@ genRightShift (iCode * ic)
      more that 32 bits make no sense anyway, ( the
      largest size of an object can be only 32 bits ) */
 
-  aopOp (result, ic, false);
-  aopOp (left, ic, false);
+  aopOp (result, ic);
+  aopOp (left, ic);
   aopResult = AOP (result);
 
 // TODO
@@ -8393,7 +8393,7 @@ genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic
   decodePointerOffset (right, &litOffset, &rematOffset);
   wassert (rematOffset==NULL);
 
-  aopOp (result, ic, true);
+  aopOp (result, ic);
   size = AOP_SIZE (result);
 
   derefaop = aopDerefAop (AOP (left), litOffset);
@@ -8592,7 +8592,7 @@ genDataPointerGet (operand * left, operand * right, operand * result, iCode * ic
   decodePointerOffset (right, &litOffset, &rematOffset);
   wassert (rematOffset==NULL);
 
-  aopOp (result, ic, true);
+  aopOp (result, ic);
   size = AOP_SIZE (result);
 
   // TODO: aopDerefAop(IMMD(_ftest_a_65536_8)), why?
@@ -8778,7 +8778,7 @@ genPointerGet (iCode * ic, iCode * ifx)
   if (size > 1)
     ifx = NULL;
 
-  aopOp (left, ic, false);
+  aopOp (left, ic);
 
   /* if left is rematerialisable */
   if (AOP_TYPE (left) == AOP_IMMD || AOP_TYPE (left) == AOP_LIT)
@@ -8791,7 +8791,7 @@ genPointerGet (iCode * ic, iCode * ifx)
           return;
     }
 
-  aopOp (result, ic, false);
+  aopOp (result, ic);
 
   /* if bit then unpack */
   if (IS_BITVAR (retype))
@@ -8801,7 +8801,7 @@ genPointerGet (iCode * ic, iCode * ifx)
     }
 
   // TODO? 
-  aopOp (right, ic, false);
+  aopOp (right, ic);
 
   decodePointerOffset (right, &litOffset, &rematOffset);
 
@@ -9265,7 +9265,7 @@ genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * 
   blen = SPEC_BLEN (etype);
   bstr = SPEC_BSTR (etype);
 
-  aopOp (right, ic, false);
+  aopOp (right, ic);
   size = AOP_SIZE (right);
   decodePointerOffset (left, &litOffset, &rematOffset);
   wassert (!rematOffset);
@@ -9426,7 +9426,7 @@ genDataPointerSet (operand * left, operand * right, operand * result, iCode * ic
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp (right, ic, false);
+  aopOp (right, ic);
   size = AOP_SIZE (right);
   decodePointerOffset (left, &litOffset, &rematOffset);
   wassert (!rematOffset);
@@ -9470,7 +9470,7 @@ genPointerSet (iCode * ic)
   // *(result (reg) + left (rematoffset+litoffset) = right
 
   
-  aopOp (result, ic, false);
+  aopOp (result, ic);
 
   /* if the result is rematerializable */
   if (AOP_TYPE (result) == AOP_IMMD || AOP_TYPE (result) == AOP_LIT)
@@ -9482,8 +9482,8 @@ genPointerSet (iCode * ic)
           return;
     }
 
-  aopOp (right, ic, false);
-  //aopOp (left, ic, false);
+  aopOp (right, ic);
+  //aopOp (left, ic);
 
   size = AOP_SIZE (right);
 
@@ -9761,7 +9761,7 @@ genIfx (iCode * ic, iCode * popIc)
   
   emitComment (TRACEGEN, __func__);
 
-  aopOp (cond, ic, false);
+  aopOp (cond, ic);
 
   /* If the condition is a literal, we can just do an unconditional */
   /* branch or no branch */
@@ -9820,7 +9820,7 @@ genAddrOf (iCode * ic)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp (IC_RESULT (ic), ic, false);
+  aopOp (IC_RESULT (ic), ic);
   //  aopr = AOP (IC_RESULT (ic));
 
   /* if the operand is on the stack then we
@@ -9948,8 +9948,8 @@ genAssign (iCode * ic)
   result = IC_RESULT (ic);
   right = IC_RIGHT (ic);
   
-  aopOp (right, ic, false);
-  aopOp (result, ic, true);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   if (!genAssignLit (result, right))
     genCopy (result, right);
@@ -9971,7 +9971,7 @@ genJumpTab (iCode * ic)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp (IC_JTCOND (ic), ic, false);
+  aopOp (IC_JTCOND (ic), ic);
 
 // TODO
     {
@@ -10051,8 +10051,8 @@ genCast (iCode * ic)
   if (operandsEqu (IC_RESULT (ic), IC_RIGHT (ic)))
     return;
 
-  aopOp (right, ic, false);
-  aopOp (result, ic, false);
+  aopOp (right, ic);
+  aopOp (result, ic);
 
   emitComment (TRACEGEN|VVDBG, "      genCast - size %d -> %d", right?AOP_SIZE(right):0, result?AOP_SIZE(result):0);
 
@@ -10211,7 +10211,7 @@ genReceive (iCode * ic)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp (IC_RESULT (ic), ic, false);
+  aopOp (IC_RESULT (ic), ic);
   size = AOP_SIZE (IC_RESULT (ic));
   offset = 0;
 
@@ -10251,7 +10251,7 @@ dummyRead (iCode* ic, operand* op, reg_info* reg)
 {
   if (op && IS_SYMOP (op))
     {
-      aopOp (op, ic, false);
+      aopOp (op, ic);
       int size = AOP_SIZE (op);
       for (int offset=0; offset<size; offset++) {
         loadRegFromAop (reg, AOP (op), offset);
@@ -10292,7 +10292,7 @@ genCritical (iCode * ic)
   emitComment (TRACEGEN, __func__);
 
   if (IC_RESULT (ic))
-    aopOp (IC_RESULT (ic), ic, true);
+    aopOp (IC_RESULT (ic), ic);
 
   emit6502op ("php", "");
   emit6502op ("sei", "");
@@ -10318,7 +10318,7 @@ genEndCritical (iCode * ic)
 
   if (IC_RIGHT (ic))
     {
-      aopOp (IC_RIGHT (ic), ic, false);
+      aopOp (IC_RIGHT (ic), ic);
       loadRegFromAop (m6502_reg_a, AOP (IC_RIGHT (ic)), 0);
       emit6502op ("pha", "");
       emit6502op ("plp", "");
