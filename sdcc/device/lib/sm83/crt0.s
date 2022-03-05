@@ -2,7 +2,7 @@
 ;  crt0.s -Generic crt0.s for a GBZ80.
 ;
 ;  Copyright (C) 2000, Michael Hope
-;  Copyright (C) 2022, Sebastian 'basxto' Riedel (sdcc@basxto.de)
+;  Copyright (C) 2021 - 2022, Sebastian 'basxto' Riedel (sdcc@basxto.de)
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the

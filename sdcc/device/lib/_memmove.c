@@ -2,7 +2,7 @@
 	_memmove.c - part of string library functions
 
 	Copyright (C) 1999, Sandeep Dutta . sandeep.dutta@usa.net
-	Copyright (C) 2022, Sebastian 'basxto' Riedel
+	Copyright (C) 2022, Sebastian 'basxto' Riedel . sdcc@basxto.de
 	Adapted By -  Erik Petrich  . epetrich@users.sourceforge.net
 	from _memcpy.c which was originally
 

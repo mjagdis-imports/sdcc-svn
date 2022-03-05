@@ -4,7 +4,7 @@
 ;  Copies in groups of four. Algorithm is Duff's device.
 ;
 ;  Copyright (c) 2021, Philipp Klaus Krause
-;  Copyright (c) 2022, Sebastian 'basxto' Riedel
+;  Copyright (c) 2022, Sebastian 'basxto' Riedel <sdcc@basxto.de>
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the

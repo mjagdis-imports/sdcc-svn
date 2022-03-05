@@ -2,6 +2,7 @@
   peep.c - source file for peephole optimizer helper functions
 
   Written By - Philipp Klaus Krause
+  Copyright (C) 2020, Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the

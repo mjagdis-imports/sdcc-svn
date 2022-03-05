@@ -2,6 +2,7 @@
   main.c - Z80 specific definitions.
 
   Michael Hope <michaelh@juju.net.nz> 2001
+  Copyright (C) 2021, Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the

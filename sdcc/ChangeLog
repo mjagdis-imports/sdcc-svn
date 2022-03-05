@@ -1,3 +1,16 @@
+2022-03-05 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/SDCCgen.c:
+	  Improve labels in inline assembly and fix bug #2831.
+	  Patch based on patch by Tom Li.
+	* device/lib/_memmove.c,
+	  device/lib/sm83/crt0.s,
+	  device/lib/sm83/memcpy.s,
+	  src/z80/gen.c,
+	  src/z80/main.c,
+	  src/z80/peep.c:
+	  Add missing copyright notices.
+
 2022-03-05 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
@@ -115,7 +128,7 @@
 
 2022-02-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
-	* sdas/asgb/gbmch.:
+	* sdas/asgb/gbmch.c:
 	  Add cycle table from upstream.
 
 2022-02-26 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
@@ -260,11 +273,6 @@
 	  support/regression/ports/uc6502-stack-auto:
 	  Add regression for mos6502-stack-auto target.
 
-2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
-
-	* src/z80/peeph.def:
-	  Add new rules to improve library code.
-
 2022-02-20 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/gen.c:
@@ -341,7 +349,7 @@
 	  Check high and low byte separately for some targets, also sort compares by frequency and int value.
 	* device/lib/sm83/memcpy.s,
 	  device/lib/_memset.c,
-	  device/lib/gets.ch:
+	  device/lib/gets.c:
 	  Optimize sm83 assembly.
 
 2022-02-15 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
