@@ -1,4 +1,9 @@
-2022-02-28 Gabriele Gorla <gorlik@yahoo.com>
+2022-03-05 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve debug output.
+
+2022-03-04 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,
 	  src/mos6502/gen.h:
