@@ -1,3 +1,9 @@
+2022-03-06 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sim/ucsim/z80.src/gb80.cc,
+	  sim/ucsim/z80.src/z80mac.h:
+	  Fix bug #3340 (`pop af` and `and`).
+
 2022-03-06 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/ralloc.c,
