@@ -63,13 +63,14 @@ public:
 public:
   cl_z80(struct cpu_entry *Itype, class cl_sim *asim);
   virtual int init(void);
+  virtual void reset(void);
   virtual const char *id_string(void);
-
+  
   //virtual t_addr get_mem_size(enum mem_class type);
   virtual void make_cpu_hw(void);
   virtual void mk_hw_elements(void);
   virtual void make_memories(void);
-
+  
   virtual struct dis_entry *dis_tbl(void);
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
@@ -78,7 +79,9 @@ public:
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);
-
+  virtual void inc_R(void);
+  virtual void xy(u8_t v);
+  
   virtual const char *get_disasm_info(t_addr addr,
                                       int *ret_len,
                                       int *ret_branch,
@@ -223,13 +226,15 @@ enum z80cpu_confs
 
 class cl_z80_cpu: public cl_hw
 {
+protected:
+  class cl_z80 *zuc;
 public:
   cl_z80_cpu(class cl_uc *auc);
   virtual int init(void);
   virtual unsigned int cfg_size(void) { return z80cpu_nuof; }
   virtual const char *cfg_help(t_addr addr);
-
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
+  virtual void print_info(class cl_console_base *con);
 };
 
 #endif
