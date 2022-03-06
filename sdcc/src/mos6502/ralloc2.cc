@@ -15,16 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-//
-// An optimal, polynomial-time register allocator.
 
 //#define DEBUG_RALLOC_DEC // Uncomment to get debug messages while doing register allocation on the tree decomposition.
 //#define DEBUG_RALLOC_DEC_ASS // Uncomment to get debug messages about assignments while doing register allocation on the tree decomposition (much more verbose than the one above).
 
-#define TD_SALLOC
-#define CH_SALLOC
-
 #include "SDCCralloc.hpp"
+#include "SDCCsalloc.hpp"
 
 extern "C"
 {
@@ -100,6 +96,7 @@ static bool operand_in_reg(const operand *o, reg_t r, const i_assignment_t &ia, 
   return(false);
 }
 
+// Return true, iff the operand is placed in a reg.
 template <class G_t, class I_t>
 static bool operand_is_ax(const operand *o, const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {  
@@ -319,6 +316,7 @@ static void set_surviving_regs(const assignment &a, unsigned short int i, const 
       if(a.global[*v] < 0)
         continue;
       ic->rMask = bitVectSetBit(ic->rMask, a.global[*v]);
+
       if(G[i].dying.find(*v) == G[i].dying.end())
         if(!((IC_RESULT(ic) && !POINTER_SET(ic)) && IS_SYMOP(IC_RESULT(ic)) && OP_SYMBOL_CONST(IC_RESULT(ic))->key == I[*v].v))
           ic->rSurv = bitVectSetBit(ic->rSurv, a.global[*v]);
@@ -338,17 +336,17 @@ static void assign_operand_for_cost(operand *o, const assignment &a, unsigned sh
       if(a.global[v] >= 0)
         { 
           sym->regs[I[v].byte] = regsm6502 + a.global[v];   
+          sym->accuse = 0;
           sym->isspilt = false;
           sym->nRegs = I[v].size;
-          sym->accuse = 0;
         }
       else
         {
-          for(int i = 0; i < I[v].size; i++)
-            sym->regs[i] = 0;
+          sym->isspilt = true;
           sym->accuse = 0;
           sym->nRegs = I[v].size;
-          sym->isspilt = true;
+          for(int i = 0; i < I[v].size; i++)
+            sym->regs[i] = 0;
         }
     }
 }
@@ -620,9 +618,9 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I)
       if(winner.global[v] >= 0)
         { 
           sym->regs[I[v].byte] = regsm6502 + winner.global[v];   
+          sym->accuse = 0;
           sym->isspilt = false;
           sym->nRegs = I[v].size;
-          sym->accuse = 0;
         }
       else
         {
@@ -631,7 +629,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I)
           sym->accuse = 0;
           sym->nRegs = I[v].size;
           wassert (sym->nRegs);
-          //spillThis(sym); Leave it to regFix, which can do some spillocation compaction. Todo: Use Thorup instead.
+          //m6502SpillThis(sym); Leave it to regFix, which can do some spillocation compaction. Todo: Use Thorup instead.
           sym->isspilt = false;
         }
     }
@@ -646,7 +644,6 @@ iCode *m6502_ralloc2_cc(ebbIndex *ebbi)
 {
   eBBlock **const ebbs = ebbi->bbOrder;
   const int count = ebbi->count;
-  iCode *ic;
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Processing " << currFunc->name << " from " << dstFileName << "\n"; std::cout.flush();
@@ -656,7 +653,7 @@ iCode *m6502_ralloc2_cc(ebbIndex *ebbi)
 
   con_t conflict_graph;
 
-  ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
+  iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
   if(options.dump_graphs)
     dump_cfg(control_flow_graph);

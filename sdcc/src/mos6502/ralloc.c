@@ -28,6 +28,30 @@
 
 #include "dbuf_string.h"
 
+/* Flags to turn on debugging code.
+ */
+enum
+{
+  D_ALLOC = 0,
+};
+
+#if 1
+#define D(_a, _s)       if (_a)  { printf _s; fflush(stdout); }
+#else
+#define D(_a, _s)
+#endif
+
+/** Local static variables */
+static struct
+  {
+    bitVect *spiltSet;
+    set *stackSpil;
+    short blockSpil;
+    int slocNum;
+    int stackExtend;
+    int dataExtend;
+} _G;
+
 /* 6502 registers */
 reg_info regsm6502[] =
 {
@@ -41,38 +65,13 @@ reg_info regsm6502[] =
   {0,       SP_IDX,  "sp", 0, NULL, 0, 1},
 };
 
-/* Flags to turn on debugging code.
- */
-enum
-{
-  D_ALLOC = 0,
-};
-
-/** Local static variables */
-static struct
-  {
-    bitVect *spiltSet;
-    set *stackSpil;
-    short blockSpil;
-    int slocNum;
-    int stackExtend;
-    int dataExtend;
-  }
-_G;
-
-#if 1
-#define D(_a, _s)       if (_a)  { printf _s; fflush(stdout); }
-#else
-#define D(_a, _s)
-#endif
 extern void genm6502Code (iCode *);
 
 /* Shared with gen.c */
 int m6502_ptrRegReq;             /* one byte pointer register required */
 
 
-
-int m6502_nRegs = 7;
+int m6502_nRegs = sizeof(regsm6502)/sizeof(reg_info);
 
 reg_info *m6502_reg_a;
 reg_info *m6502_reg_x;
@@ -81,7 +80,8 @@ reg_info *m6502_reg_yx;
 reg_info *m6502_reg_xa;
 reg_info *m6502_reg_sp;
 
-static void spillThis (symbol *);
+void m6502SpillThis (symbol *);
+static void updateRegUsage (iCode * ic);
 
 /*-----------------------------------------------------------------*/
 /* m6502_regWithIdx - returns pointer to register with index number */
@@ -141,99 +141,6 @@ m6502_freeReg (reg_info * reg)
         m6502_reg_a->isFree = 1;
         if (m6502_reg_y->isFree)
           m6502_reg_yx->isFree = 1;
-        break;
-      default:
-        break;
-    }
-}
-
-
-/*-----------------------------------------------------------------*/
-/* m6502_useReg - marks a register  as used                        */
-/*-----------------------------------------------------------------*/
-void
-m6502_useReg (reg_info * reg)
-{
-  reg->isFree = 0;
-
-  switch (reg->rIdx)
-    {
-      case A_IDX:
-        m6502_reg_xa->aop = NULL;
-        m6502_reg_xa->isFree = 0;
-        break;
-      case X_IDX:
-        m6502_reg_xa->aop = NULL;
-        m6502_reg_xa->isFree = 0;
-        m6502_reg_yx->aop = NULL;
-        m6502_reg_yx->isFree = 0;
-        break;
-      case Y_IDX:
-        m6502_reg_yx->aop = NULL;
-        m6502_reg_yx->isFree = 0;
-        break;
-      case YX_IDX:
-        m6502_reg_y->aop = NULL;
-        m6502_reg_y->isFree = 0;
-        m6502_reg_x->aop = NULL;
-        m6502_reg_x->isFree = 0;
-        break;
-      case XA_IDX:
-        m6502_reg_x->aop = NULL;
-        m6502_reg_x->isFree = 0;
-        m6502_reg_a->aop = NULL;
-        m6502_reg_a->isFree = 0;
-        break;
-      default:
-        break;
-    }
-}
-
-/*-----------------------------------------------------------------*/
-/* m6502_dirtyReg - marks a register as dirty                      */
-/*-----------------------------------------------------------------*/
-void
-m6502_dirtyReg (reg_info * reg)
-{
-  reg->aop = NULL;
-
-  switch (reg->rIdx)
-    {
-      case A_IDX:
-        m6502_reg_xa->aop = NULL;
-	m6502_reg_xa->isLitConst = 0;
-	m6502_reg_a->aop = NULL;
-	m6502_reg_a->isLitConst = 0;
-        break;
-      case X_IDX:
-        m6502_reg_xa->aop = NULL;
-	m6502_reg_xa->isLitConst = 0;
-        m6502_reg_yx->aop = NULL;
-	m6502_reg_yx->isLitConst = 0;
-	m6502_reg_x->aop = NULL;
-	m6502_reg_x->isLitConst = 0;
-        break;
-      case Y_IDX:
-        m6502_reg_yx->aop = NULL;
-	m6502_reg_yx->isLitConst = 0;
-	m6502_reg_y->aop = NULL;
-	m6502_reg_y->isLitConst = 0;
-        break;
-      case YX_IDX:
-        m6502_reg_yx->aop = NULL;
-	m6502_reg_yx->isLitConst = 0;
-        m6502_reg_y->aop = NULL;
-	m6502_reg_y->isLitConst = 0;
-        m6502_reg_x->aop = NULL;
-	m6502_reg_x->isLitConst = 0;
-        break;
-      case XA_IDX:
-        m6502_reg_xa->aop = NULL;
-	m6502_reg_xa->isLitConst = 0;
-        m6502_reg_x->aop = NULL;
-	m6502_reg_x->isLitConst = 0;
-        m6502_reg_a->aop = NULL;
-	m6502_reg_a->isLitConst = 0;
         break;
       default:
         break;
@@ -353,7 +260,9 @@ createStackSpil (symbol * sym)
       _G.stackExtend += getSize (sloc->type);
     }
   else
+    {
     _G.dataExtend += getSize (sloc->type);
+    }
 
   /* add it to the stackSpil set */
   addSetHead (&_G.stackSpil, sloc);
@@ -372,7 +281,7 @@ createStackSpil (symbol * sym)
 /* spillThis - spils a specific operand                            */
 /*-----------------------------------------------------------------*/
 void
-spillThis (symbol * sym)
+m6502SpillThis (symbol * sym)
 {
   int i;
   /* if this is rematerializable or has a spillLocation
@@ -397,29 +306,6 @@ spillThis (symbol * sym)
   if (sym->usl.spillLoc && !sym->remat)
     sym->usl.spillLoc->allocreq++;
   return;
-}
-
-/*-----------------------------------------------------------------*/
-/* updateRegUsage -  update the registers in use at the start of   */
-/*                   this icode                                    */
-/*-----------------------------------------------------------------*/
-static void
-updateRegUsage (iCode * ic)
-{
-  int reg;
-
-  // update the registers in use at the start of this icode
-  for (reg=0; reg<m6502_nRegs; reg++)
-    {
-      if (regsm6502[reg].isFree)
-        {
-          ic->riu &= ~(regsm6502[reg].mask);
-        }
-      else
-        {
-          ic->riu |= (regsm6502[reg].mask);
-        }
-    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -453,7 +339,6 @@ deassignLRs (iCode * ic, eBBlock * ebp)
     }
 }
 
-
 /*-----------------------------------------------------------------*/
 /* reassignLR - reassign this to registers                         */
 /*-----------------------------------------------------------------*/
@@ -475,7 +360,7 @@ reassignLR (operand * op)
 
 /*------------------------------------------------------------------*/
 /* verifyRegsAssigned - make sure an iTemp is properly initialized; */
-/* it should either have registers or have beed spilled. Otherwise, */
+/* it should either have registers or have been spilled. Otherwise, */
 /* there was an uninitialized variable, so just spill this to get   */
 /* the operand in a valid state.                                    */
 /*------------------------------------------------------------------*/
@@ -492,7 +377,7 @@ verifyRegsAssigned (operand *op, iCode * ic)
   if (!sym->nRegs) return;
   if (sym->regs[0]) return;
 
-  spillThis (sym);
+  m6502SpillThis (sym);
 }
 
 /*-----------------------------------------------------------------*/
@@ -593,18 +478,6 @@ regTypeNum (void)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* deallocStackSpil - this will set the stack pointer back         */
-/*-----------------------------------------------------------------*/
-static
-DEFSETFUNC (deallocStackSpil)
-{
-  symbol *sym = item;
-
-  deallocLocal (sym);
-  return 0;
-}
-
 #if 0
 /** Transform weird SDCC handling of writes via pointers
     into something more sensible. */
@@ -627,6 +500,18 @@ transformPointerSet (eBBlock **ebbs, int count)
     }
 }
 #endif
+
+/*-----------------------------------------------------------------*/
+/* deallocStackSpil - this will set the stack pointer back         */
+/*-----------------------------------------------------------------*/
+static
+DEFSETFUNC (deallocStackSpil)
+{
+  symbol *sym = item;
+
+  deallocLocal (sym);
+  return 0;
+}
 
 /*-----------------------------------------------------------------*/
 /* packRegsForAssign - register reduction for assignment           */
@@ -1371,45 +1256,6 @@ packRegisters (eBBlock ** ebpp, int count)
     }
 }
 
-void
-m6502RegFix (eBBlock ** ebbs, int count)
-{
-  int i;
-
-  /* Check for and fix any problems with uninitialized operands */
-  for (i = 0; i < count; i++)
-    {
-      iCode *ic;
-
-      if (ebbs[i]->noPath && (ebbs[i]->entryLabel != entryLabel && ebbs[i]->entryLabel != returnLabel))
-        continue;
-
-      for (ic = ebbs[i]->sch; ic; ic = ic->next)
-        {
-          deassignLRs (ic, ebbs[i]);
-
-          if (SKIP_IC2 (ic))
-            continue;
-
-          if (ic->op == IFX)
-            {
-              verifyRegsAssigned (IC_COND (ic), ic);
-              continue;
-            }
-
-          if (ic->op == JUMPTABLE)
-            {
-              verifyRegsAssigned (IC_JTCOND (ic), ic);
-              continue;
-            }
-
-          verifyRegsAssigned (IC_RESULT (ic), ic);
-          verifyRegsAssigned (IC_LEFT (ic), ic);
-          verifyRegsAssigned (IC_RIGHT (ic), ic);
-        }
-    }
-}
-
 /**
   Mark variables for assignment by the register allocator.
  */
@@ -1489,13 +1335,13 @@ serialRegMark (eBBlock ** ebbs, int count)
                  to be safe */
               if (_G.blockSpil && sym->liveTo > ebbs[i]->lSeq)
                 {
-                  spillThis (sym);
+                  m6502SpillThis (sym);
                   continue;
                 }
 
               if (sym->remat)
                 {
-                  spillThis (sym);
+                  m6502SpillThis (sym);
                   continue;
                 }
 
@@ -1506,10 +1352,52 @@ serialRegMark (eBBlock ** ebbs, int count)
                 }
               else if (!sym->for_newralloc)
                 {
-                  spillThis (sym);
+                  m6502SpillThis (sym);
                   printf ("Spilt %s due to byte limit.\n", sym->name);
                 }
             }
+        }
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* RegFix                                                          */
+/*-----------------------------------------------------------------*/
+void
+m6502RegFix (eBBlock ** ebbs, int count)
+{
+  int i;
+
+  /* Check for and fix any problems with uninitialized operands */
+  for (i = 0; i < count; i++)
+    {
+      iCode *ic;
+
+      if (ebbs[i]->noPath && (ebbs[i]->entryLabel != entryLabel && ebbs[i]->entryLabel != returnLabel))
+        continue;
+
+      for (ic = ebbs[i]->sch; ic; ic = ic->next)
+        {
+          deassignLRs (ic, ebbs[i]);
+
+          if (SKIP_IC2 (ic))
+            continue;
+
+          if (ic->op == IFX)
+            {
+              verifyRegsAssigned (IC_COND (ic), ic);
+              continue;
+            }
+
+          if (ic->op == JUMPTABLE)
+            {
+              verifyRegsAssigned (IC_JTCOND (ic), ic);
+              continue;
+            }
+
+          verifyRegsAssigned (IC_RESULT (ic), ic);
+          verifyRegsAssigned (IC_LEFT (ic), ic);
+          verifyRegsAssigned (IC_RIGHT (ic), ic);
         }
     }
 }
@@ -1526,14 +1414,12 @@ m6502_assignRegisters (ebbIndex *ebbi)
   int i;
 
   m6502_ptrRegReq = _G.stackExtend = _G.dataExtend = 0;
-  m6502_nRegs = 7;
   m6502_reg_a = m6502_regWithIdx(A_IDX);
   m6502_reg_x = m6502_regWithIdx(X_IDX);
   m6502_reg_y = m6502_regWithIdx(Y_IDX);
   m6502_reg_yx = m6502_regWithIdx(YX_IDX);
   m6502_reg_xa = m6502_regWithIdx(XA_IDX);
   m6502_reg_sp = m6502_regWithIdx(SP_IDX);
-  m6502_nRegs = 5;
 
 //  transformPointerSet (ebbs, count);
 
@@ -1594,6 +1480,7 @@ m6502_assignRegisters (ebbIndex *ebbi)
   _G.slocNum = 0;
   setToNull ((void *) &_G.stackSpil);
   setToNull ((void *) &_G.spiltSet);
+
   /* mark all registers as free */
   for (i = 0; i < m6502_nRegs; i++) {
       reg_info *reg = m6502_regWithIdx (i);
@@ -1602,5 +1489,120 @@ m6502_assignRegisters (ebbIndex *ebbi)
   }
 
   return;
+}
+
+/*-----------------------------------------------------------------*/
+/* m6502_useReg - marks a register  as used                        */
+/*-----------------------------------------------------------------*/
+void
+m6502_useReg (reg_info * reg)
+{
+  reg->isFree = 0;
+
+  switch (reg->rIdx)
+    {
+      case A_IDX:
+        m6502_reg_xa->aop = NULL;
+        m6502_reg_xa->isFree = 0;
+        break;
+      case X_IDX:
+        m6502_reg_xa->aop = NULL;
+        m6502_reg_xa->isFree = 0;
+        m6502_reg_yx->aop = NULL;
+        m6502_reg_yx->isFree = 0;
+        break;
+      case Y_IDX:
+        m6502_reg_yx->aop = NULL;
+        m6502_reg_yx->isFree = 0;
+        break;
+      case YX_IDX:
+        m6502_reg_y->aop = NULL;
+        m6502_reg_y->isFree = 0;
+        m6502_reg_x->aop = NULL;
+        m6502_reg_x->isFree = 0;
+        break;
+      case XA_IDX:
+        m6502_reg_x->aop = NULL;
+        m6502_reg_x->isFree = 0;
+        m6502_reg_a->aop = NULL;
+        m6502_reg_a->isFree = 0;
+        break;
+      default:
+        break;
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* m6502_dirtyReg - marks a register as dirty                      */
+/*-----------------------------------------------------------------*/
+void
+m6502_dirtyReg (reg_info * reg)
+{
+  reg->aop = NULL;
+
+  switch (reg->rIdx)
+    {
+      case A_IDX:
+        m6502_reg_xa->aop = NULL;
+	m6502_reg_xa->isLitConst = 0;
+	m6502_reg_a->aop = NULL;
+	m6502_reg_a->isLitConst = 0;
+        break;
+      case X_IDX:
+        m6502_reg_xa->aop = NULL;
+	m6502_reg_xa->isLitConst = 0;
+        m6502_reg_yx->aop = NULL;
+	m6502_reg_yx->isLitConst = 0;
+	m6502_reg_x->aop = NULL;
+	m6502_reg_x->isLitConst = 0;
+        break;
+      case Y_IDX:
+        m6502_reg_yx->aop = NULL;
+	m6502_reg_yx->isLitConst = 0;
+	m6502_reg_y->aop = NULL;
+	m6502_reg_y->isLitConst = 0;
+        break;
+      case YX_IDX:
+        m6502_reg_yx->aop = NULL;
+	m6502_reg_yx->isLitConst = 0;
+        m6502_reg_y->aop = NULL;
+	m6502_reg_y->isLitConst = 0;
+        m6502_reg_x->aop = NULL;
+	m6502_reg_x->isLitConst = 0;
+        break;
+      case XA_IDX:
+        m6502_reg_xa->aop = NULL;
+	m6502_reg_xa->isLitConst = 0;
+        m6502_reg_x->aop = NULL;
+	m6502_reg_x->isLitConst = 0;
+        m6502_reg_a->aop = NULL;
+	m6502_reg_a->isLitConst = 0;
+        break;
+      default:
+        break;
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* updateRegUsage -  update the registers in use at the start of   */
+/*                   this icode                                    */
+/*-----------------------------------------------------------------*/
+static void
+updateRegUsage (iCode * ic)
+{
+  int reg;
+
+  // update the registers in use at the start of this icode
+  for (reg=0; reg<m6502_nRegs; reg++)
+    {
+      if (regsm6502[reg].isFree)
+        {
+          ic->riu &= ~(regsm6502[reg].mask);
+        }
+      else
+        {
+          ic->riu |= (regsm6502[reg].mask);
+        }
+    }
 }
 

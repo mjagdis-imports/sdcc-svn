@@ -1,3 +1,10 @@
+2022-03-06 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/ralloc.c,
+	  src/mos6502/ralloc.h,
+	  src/mos6502/ralloc2.cc:
+	  Prepare for new spillt allocator.
+
 2022-03-06 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/peeph.def:
