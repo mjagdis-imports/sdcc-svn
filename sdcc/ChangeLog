@@ -1,3 +1,8 @@
+2022-03-06 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph.def:
+	  Remove rlca when sub already sets carry.
+
 2022-03-05 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/SDCCgen.c:

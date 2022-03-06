@@ -1241,7 +1241,7 @@ replace restart {
 	jp	Z, %1
 } by {
 	rlca
-	; common peephole 90 removed and by changing jump condition.
+	; common peephole 90a removed and by changing jump condition.
 	jp	NC, %1
 } if notUsed('a'), notUsedFrom(%1 'a')
 
@@ -1250,10 +1250,30 @@ replace restart {
 	and	a, #0x01
 	jp	NZ, %1
 } by {
-	; common peephole 91 removed and by changing jump condition.
+	; common peephole 90b removed and by changing jump condition.
 	rlca
 	jp	C, %1
 } if notUsed('a'), notUsedFrom(%1 'a')
+
+replace restart {
+	%6	a, %1
+	jp	NZ, %2
+	%5	a, %1
+	jp	NZ, %3
+%2:
+	ld	%4, a
+	rlca
+	sbc	a, a
+} by {
+	%6	a, %1
+	jp	NZ, %2
+	%5	a, %1
+	jp	NZ, %3
+%2:
+	ld	%4, a
+	; common peephole 91 removed redundant rlca.
+	sbc	a, a
+} if notSame('a' %1), notSame(%2 %3), same(%5 'or' 'cp' 'sub'), same(%6 'sub' 'sbc')
 
 replace {
 	ld	%5, #%1
