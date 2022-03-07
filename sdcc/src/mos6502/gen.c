@@ -72,8 +72,7 @@ static struct
   set *sendSet;
   int tempOfs;
   struct attr_t tempAttr[NUM_TEMP_REGS];
-}
-_G;
+} _G;
 
 extern int m6502_ptrRegReq;
 extern int m6502_nRegs;
@@ -470,7 +469,7 @@ emit6502op (const char *inst, const char *fmt, ...)
  *
  *************************************************************************/
 static void 
-m6502_unimplemented(char *msg)
+m6502_unimplemented(const char *msg)
 {
   emitcode("ERROR","Unimplemented %s", msg);
 #ifndef DEBUG_UNIMPLEMENTED
@@ -2481,65 +2480,6 @@ storeRegIndexed (reg_info * reg, int offset, char * rematOfs)
       emitcode("ERROR", "bad reg in storeRegIndexed()");
     }
 }
-
-#if 0
-/**************************************************************************
- * storeRegIndexed2 - Store a register using indexed addressing mode.
- *                   NOTE: offset is physical (not logical)
- * must call preparePointer() first
- *************************************************************************/
-static void
-storeRegIndexed2 (reg_info * reg, int offset)
-{
-  bool needpula = false;
-
-  emitComment (REGOPS, "      storeRegIndexed (%s, %d)", reg->name, offset);
-
-  /* force offset to signed 16-bit range */
-  offset &= 0xffff;
-  if (offset & 0x8000)
-    offset = offset - 0x10000;
-
-  switch (reg->rIdx)
-    {
-    case A_IDX:
-      if (prepTempOfs < 0)
-        {
-          emit6502op ("sta", "(%s+%d),y", tempRematOfs, offset);
-        }
-      else
-        {
-          loadRegFromConst(m6502_reg_y, offset);
-          emit6502op ("sta", TEMPFMT_IY, prepTempOfs);
-        }
-      break;
-    case X_IDX:
-      needpula = pushRegIfUsed (m6502_reg_a);
-      transferRegReg (m6502_reg_x, m6502_reg_a, true);
-      storeRegIndexed2 (m6502_reg_a, offset);
-      pullOrFreeReg (m6502_reg_a, needpula);
-      break;
-    case Y_IDX:
-      needpula = pushRegIfUsed (m6502_reg_a);
-      transferRegReg (m6502_reg_y, m6502_reg_a, true);
-      storeRegIndexed2 (m6502_reg_a, offset);
-      pullOrFreeReg (m6502_reg_a, needpula);
-      break;
-    case YX_IDX:
-      storeRegIndexed2 (m6502_reg_y, offset+1);
-      storeRegIndexed2 (m6502_reg_x, offset);
-      break;
-    case XA_IDX:
-      /* This case probably won't happen, but it's easy to implement */
-      /* SEH: it did happen in bug-1029883? */
-      storeRegIndexed2 (m6502_reg_x, offset+1);
-      storeRegIndexed2 (m6502_reg_a, offset);
-      break;
-    default:
-      emitcode("ERROR", "bad reg in storeRegIndexed2()");
-    }
-}
-#endif
 
 /**************************************************************************
  * newAsmop - creates a new asmOp
@@ -5095,6 +5035,10 @@ genLabel (iCode * ic)
       m6502_dirtyReg (m6502_regWithIdx (i));
       m6502_useReg (m6502_regWithIdx (i));
         }
+
+  for(i=0;i<NUM_TEMP_REGS;i++)
+    _G.tempAttr[i].isLiteral=0;
+
   /* special case never generate */
   if (IC_LABEL (ic) == entryLabel)
     return;
@@ -6932,7 +6876,6 @@ m6502_genInline (iCode * ic)
   genLine.lineElement.isInline -= (!options.asmpeep);
 }
 
-// TODO: are these called?
 /**************************************************************************
  * genRRC - rotate right with carry
  *************************************************************************/
@@ -8322,7 +8265,9 @@ decodePointerOffset (operand * opOffset, int * litOffset, char ** rematOffset)
     wassertl (0, "Pointer get/set with non-constant offset");
 }
 
-// does a BIT A with a constant, even for non-65C02
+/**************************************************************************
+ * does a BIT A with a constant, even for non-65C02
+ *************************************************************************/
 // TODO: lookup table for each new const?
 void bitAConst(int val)
 {
@@ -8403,11 +8348,9 @@ genUnpackBits (operand * result, operand * left, operand * right, iCode * ifx)
           /* signed bitfield */
           symbol *tlbl = safeNewiTempLabel (NULL);
 
-	  // FIXME
-          // emitcode ("bit11", IMMDFMT, 1 << (blen - 1));
           bitAConst(1 << (blen - 1));
-          emitcode ("beq", "%05d$", safeLabelKey2num (tlbl->key));
-          emitcode ("ora", IMMDFMT, (unsigned char) (0xff << blen));
+          emit6502op ("beq", "%05d$", safeLabelKey2num (tlbl->key));
+          emit6502op ("ora", IMMDFMT, (unsigned char) (0xff << blen));
           safeEmitLabel (tlbl);
         }
       storeRegToAop (m6502_reg_a, AOP (result), offset++);
@@ -8441,8 +8384,8 @@ genUnpackBits (operand * result, operand * left, operand * right, iCode * ifx)
           symbol *tlbl = safeNewiTempLabel (NULL);
 	  // FIXME: works but very ugly
           bitAConst(1 << (rlen - 1));
-          emitcode ("beq", "%05d$", safeLabelKey2num (tlbl->key));
-          emitcode ("ora", IMMDFMT, (unsigned char) (0xff << rlen));
+          emit6502op ("beq", "%05d$", safeLabelKey2num (tlbl->key));
+          emit6502op ("ora", IMMDFMT, (unsigned char) (0xff << rlen));
           safeEmitLabel (tlbl);
         }
       storeRegToAop (m6502_reg_a, AOP (result), offset++);
@@ -8553,7 +8496,7 @@ genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic
               jlbl = IC_FALSE (ifx);
               inst = "brset";
             }
-          emitcode (inst, "#%d,%s,%05d$", bstr, aopAdrStr (derefaop, 0, false), safeLabelKey2num ((tlbl->key)));
+          emit6502op (inst, "#%d,%s,%05d$", bstr, aopAdrStr (derefaop, 0, false), safeLabelKey2num ((tlbl->key)));
           emitBranch ("jmp", jlbl);
           safeEmitLabel (tlbl);
           ifx->generated = 1;
@@ -8876,11 +8819,9 @@ genPointerGet (iCode * ic, iCode * ifx)
   int tIdx;
 
   emitComment (TRACEGEN, __func__);
- 
   // result = right (remat+literal_offset) + left (register offset)
  
   size = getSize (operandType (result));
-
   if (size > 1)
     ifx = NULL;
 
@@ -8912,10 +8853,6 @@ genPointerGet (iCode * ic, iCode * ifx)
   decodePointerOffset (right, &litOffset, &rematOffset);
 
   printIC(ic);
-
-//  emitComment (TRACEGEN|VVDBG,"   %s -   res: %s ", __func__, aopName(AOP(result)));
-//  emitComment (TRACEGEN|VVDBG,"   %s -  left: %s ", __func__, aopName(AOP(left)));
-//  emitComment (TRACEGEN|VVDBG,"   %s - right: %s ", __func__, aopName(AOP(right)));
 
   /* force offset to signed 16-bit range */
   litOffset &= 0xffff;
@@ -9179,7 +9116,6 @@ genPointerGet (iCode * ic, iCode * ifx)
 }
 
 release:
-//  size = AOP_SIZE (result);
   freeAsmop (left, NULL);
   freeAsmop (result, NULL);
 
@@ -9599,10 +9535,6 @@ genPointerSet (iCode * ic)
   size = AOP_SIZE (right);
 
   decodePointerOffset (left, &litOffset, &rematOffset);
-
-//  emitComment (TRACEGEN|VVDBG,"   %s -   res: %s ", __func__, aopName(AOP(result)));
-//  emitComment (TRACEGEN|VVDBG,"   %s -  left: %s ", __func__, aopName(AOP(left)));
-//  emitComment (TRACEGEN|VVDBG,"   %s - right: %s ", __func__, aopName(AOP(right)));
 
   emitComment (TRACEGEN|VVDBG, "      genPointerSet (%s), size=%d, litoffset=%d, rematoffset=%s", 
                aopName(AOP(right)), size, litOffset, rematOffset );
@@ -10570,7 +10502,7 @@ genm6502iCode (iCode *ic)
          spilt live range, if there is an ifx statement
          following this pop then the if statement might
          be using some of the registers being popped which
-         would destory the contents of the register so
+         would destroy the contents of the register so
          we need to check for this condition and handle it */
       if (ic->next && ic->next->op == IFX && regsInCommon (left, IC_COND (ic->next)))
         genIfx (ic->next, ic);
