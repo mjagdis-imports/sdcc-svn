@@ -126,6 +126,7 @@ static bool operand_is_ax(const operand *o, const assignment &a, unsigned short 
   return(false);
 }
 
+// Return true, iff the operand is placed in xa
 template <class G_t, class I_t>
 static bool XAinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
@@ -155,6 +156,8 @@ static bool XAinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     ic->op == '^' ||
     ic->op == '|' ||
     ic->op == BITWISEAND ||
+    ic->op == RLC ||
+    ic->op == RRC ||
     ic->op == GETABIT ||
     ic->op == GETBYTE ||
     ic->op == GETWORD ||
@@ -520,14 +523,14 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     }
 }
 
-// For early removal of assignments that cannot be extended to valid assignments. This is just a dummy for now, it probably isn't really needed for m6502 due to the low number of registers.
+// For early removal of assignments that cannot be extended to valid assignments. This is just a dummy for now.
 template <class G_t, class I_t>
 static bool assignment_hopeless(const assignment &a, unsigned short int i, const G_t &G, const I_t &I, const var_t lastvar)
 {
   return(false);
 }
 
-// Increase chance of finding good compatible assignments at join nodes. This is just a dummy for now, it probably isn't really needed for m6502 due to the low number of registers.
+// Increase chance of finding good compatible assignments at join nodes.
 template <class T_t>
 static void get_best_local_assignment_biased(assignment &a, typename boost::graph_traits<T_t>::vertex_descriptor t, const T_t &T)
 {

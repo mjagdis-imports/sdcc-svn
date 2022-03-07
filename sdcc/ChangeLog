@@ -2,7 +2,10 @@
 
 	* src/mos6502/gen.c:
 	  Clear temp register literal values after a label.
-
+	* src/mos6502/gen.c,
+	  src/mos6502/ralloc2.cc:
+	  Add codegen for rotate.
+	  
 2022-03-07 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* sim/ucsim/z80.src/inst_gb80.cc:

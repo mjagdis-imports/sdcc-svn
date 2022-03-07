@@ -6885,8 +6885,7 @@ genRRC (iCode * ic)
   operand *left   = IC_LEFT (ic);
   operand *result = IC_RESULT (ic);
 
-  int size, offset = 0;
-  bool needpula = false;
+  int size, offset;
   bool resultInA = false;
   char *shift;
 
@@ -6897,58 +6896,56 @@ genRRC (iCode * ic)
   aopOp (result, ic);
   printIC(ic);
 
-  if ((AOP_TYPE (result) == AOP_REG) && (AOP (result)->aopu.aop_reg[0]->rIdx == A_IDX))
-    resultInA = true;
-
+  if(IS_AOP_WITH_A(AOP(result))) resultInA=true;
   size = AOP_SIZE (result);
   offset = size - 1;
 
   shift = "lsr";
-  if (sameRegs (AOP (left), AOP (result)))
-    {
+  if(IS_AOP_XA(AOP(result))&&IS_AOP_XA(AOP(left))) {
+     storeRegTemp(m6502_reg_x, true);
+     emit6502op("lsr", TEMPFMT, _G.tempOfs-1);
+     emit6502op("ror", "a");
+     storeRegTemp(m6502_reg_a, true);
+     loadRegFromConst(m6502_reg_a, 0);
+     emit6502op ("ror", "a");
+     emit6502op ("ora", TEMPFMT, _G.tempOfs-2);
+     transferRegReg(m6502_reg_a, m6502_reg_x, true);
+     loadRegTemp(m6502_reg_a);
+     loadRegTemp(NULL);
+     goto release;
+  } else
+  if (sameRegs (AOP (left), AOP (result))) {
       while (size--)
         {
           rmwWithAop (shift, AOP (result), offset--);
           shift = "ror";
         }
-    }
-  else
+    } else
     {
       while (size--)
         {
           loadRegFromAop (m6502_reg_a, AOP (left), offset);
           rmwWithReg (shift, m6502_reg_a);
-          storeRegToAop (m6502_reg_a, AOP (result), offset--);
-          m6502_freeReg (m6502_reg_a);
+          storeRegToAop (m6502_reg_a, AOP (result), offset);
           shift = "ror";
+          offset--;
         }
     }
 
-  if ((!m6502_reg_a->isFree) || resultInA)
-    {
-      pushReg (m6502_reg_a, true);
-      needpula = true;
-    }
+   if(resultInA) storeRegTemp(m6502_reg_a, true);
 
   /* now we need to put the carry into the
      highest order byte of the result */
   offset = AOP_SIZE (result) - 1;
   loadRegFromConst(m6502_reg_a, 0);
   emit6502op ("ror", "a");
-  if (resultInA)
-    {
-      // FIXME: unimplemented
-//      emitcode ("ora10", "1,s");
-      m6502_unimplemented("genRRC");
-      pullNull (1);
-      m6502_dirtyReg (m6502_reg_a);
-      needpula = false;
-    }
-  else
     accopWithAop ("ora", AOP (result), offset);
   storeRegToAop (m6502_reg_a, AOP (result), offset);
 
-  pullOrFreeReg (m6502_reg_a, needpula);
+  if(resultInA) loadRegTemp(m6502_reg_a);
+
+release:
+//  pullOrFreeReg (m6502_reg_a, needpula);
 
   freeAsmop (left, NULL);
   freeAsmop (result, NULL);
@@ -6963,10 +6960,10 @@ genRLC (iCode * ic)
   operand *left   = IC_LEFT (ic);
   operand *result = IC_RESULT (ic);
 
-  int size, offset = 0;
+  int size, offset;
   char *shift;
   bool resultInA = false;
-  bool needpula = false;
+//  bool needpula = false;
 
   emitComment (TRACEGEN, __func__);
 
@@ -6975,37 +6972,28 @@ genRLC (iCode * ic)
   aopOp (result, ic);
   printIC(ic);
 
-  if ((AOP_TYPE (result) == AOP_REG) && (AOP (result)->aopu.aop_reg[0]->rIdx == A_IDX))
-    resultInA = true;
-
+  if(IS_AOP_WITH_A(AOP(result))) resultInA=true;
   size = AOP_SIZE (result);
   offset = 0;
 
   shift = "asl";
-  if (sameRegs (AOP (left), AOP (result)))
-    {
+  if (!resultInA && sameRegs (AOP (left), AOP (result))) {
       while (size--)
         {
           rmwWithAop (shift, AOP (result), offset++);
           shift = "rol";
         }
-    }
-  else
+    } else
     {
       while (size--)
         {
           loadRegFromAop (m6502_reg_a, AOP (left), offset);
           rmwWithReg (shift, m6502_reg_a);
-          storeRegToAop (m6502_reg_a, AOP (result), offset++);
-          m6502_freeReg (m6502_reg_a);
+          if(offset==0 && resultInA) storeRegTemp (m6502_reg_a, true);
+          else storeRegToAop (m6502_reg_a, AOP (result), offset);
           shift = "rol";
+          offset++;
         }
-    }
-
-  if ((!m6502_reg_a->isFree) || resultInA)
-    {
-      pushReg (m6502_reg_a, true);
-      needpula = true;
     }
 
   /* now we need to put the carry into the
@@ -7015,18 +7003,15 @@ genRLC (iCode * ic)
   emit6502op ("rol", "a");
   if (resultInA)
     {
-      // FIXME: unimplemented
-      m6502_unimplemented("genRLC");
-//      emitcode ("ora11", "1,s");
-      pullNull (1);
-      m6502_dirtyReg (m6502_reg_a);
-      needpula = false;
+      emit6502op("ora", TEMPFMT, _G.tempOfs-1);
+      loadRegTemp(NULL);
     }
-  else
+  else {
     accopWithAop ("ora", AOP (result), offset);
+  }
   storeRegToAop (m6502_reg_a, AOP (result), offset);
 
-  pullOrFreeReg (m6502_reg_a, needpula);
+//  pullOrFreeReg (m6502_reg_a, needpula);
 
   freeAsmop (left, NULL);
   freeAsmop (result, NULL);
