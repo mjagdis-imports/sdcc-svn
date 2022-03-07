@@ -1,5 +1,13 @@
 2022-03-07 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
+	* sim/ucsim/z80.src/inst_gb80.cc:
+	  Add `ld (c), a`.
+	  support/regression/ports/ucgbz80/support.c,
+	  support/regression/ports/ucgbz80/uCsim.cmd:
+	  Reduce size of __put.
+
+2022-03-07 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
 	* sim/ucsim/z80.src/gb80.cc,
 	  sim/ucsim/z80.src/inst_cb.cc,
 	  sim/ucsim/z80.src/inst_gb80.cc:
