@@ -181,6 +181,14 @@ test-ucr3ka:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucr3ka
 
+test-ucrxk2:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=ucrxk2
+
+test-ucrxk2a:
+	$(MAKE) test-common
+	$(MAKE) test-port PORT=ucrxk2a
+
 test-ucrxk3a:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=ucrxk3a
