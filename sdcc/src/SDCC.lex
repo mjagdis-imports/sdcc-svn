@@ -30,7 +30,7 @@ E       [Ee][+-]?{D}+
 BE      [Pp][+-]?{D}+
 FS      (f|F|l|L)
 IS      (u|U|l|L)*
-WB      (wb|WB)
+WB      (u|U)?(wb|WB)
 CP      (L|u|U|u8)
 HASH    (#|%:)
 UCN     \\u{H}{4}|\\U{H}{8}
