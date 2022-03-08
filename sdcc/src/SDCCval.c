@@ -3045,7 +3045,7 @@ valLogicAndOr (value * lval, value * rval, int op, bool reduceType)
 /* valCastLiteral - casts a literal value to another type           */
 /*------------------------------------------------------------------*/
 value *
-valCastLiteral (sym_link * dtype, double fval, TYPE_TARGET_ULONGLONG llval)
+valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
 {
   value *val;
   unsigned long l = double2ul (fval);
@@ -3089,8 +3089,18 @@ valCastLiteral (sym_link * dtype, double fval, TYPE_TARGET_ULONGLONG llval)
       SPEC_CVAL (val->etype).v_uint = fval ? 1 : 0;
       break;
 
+    case V_BITINTBITFIELD:
+      l &= (1 << SPEC_BLEN (val->etype)) - 1;
+    case V_BITINT:
+      l &= (1 << SPEC_BITINTWIDTH (val->etype)) - 1;
+      if (SPEC_USIGN (val->etype))
+        SPEC_CVAL (val->etype).v_ulonglong = l;
+      else
+        SPEC_CVAL (val->etype).v_longlong = l;
+      break;
+
     case V_BITFIELD:
-      l &= (0xffffffffu >> (32 - SPEC_BLEN (val->etype)));
+      l &= (1 << SPEC_BLEN (val->etype)) - 1;
       if (SPEC_USIGN (val->etype))
         SPEC_CVAL (val->etype).v_uint = (TYPE_TARGET_UINT) l;
       else
