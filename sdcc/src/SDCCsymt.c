@@ -1119,7 +1119,6 @@ getSize (sym_link * p)
         case V_INT:
           return (IS_LONGLONG (p) ? LONGLONGSIZE : (IS_LONG (p) ? LONGSIZE : INTSIZE));
         case V_BITINT:
-        fprintf(stderr, "getSize for _BitInt: width %u size %u\n", SPEC_BITINTWIDTH (p), ((SPEC_BITINTWIDTH (p) / 8) + (SPEC_BITINTWIDTH (p) % 8 ? 1 : 0)));
           return ((SPEC_BITINTWIDTH (p) / 8) + (SPEC_BITINTWIDTH (p) % 8 ? 1 : 0));
         case V_FLOAT:
           return FLOATSIZE;

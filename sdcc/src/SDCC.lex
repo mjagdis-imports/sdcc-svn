@@ -30,6 +30,7 @@ E       [Ee][+-]?{D}+
 BE      [Pp][+-]?{D}+
 FS      (f|F|l|L)
 IS      (u|U|l|L)*
+WB      (wb|WB)
 CP      (L|u|U|u8)
 HASH    (#|%:)
 UCN     \\u{H}{4}|\\U{H}{8}
@@ -244,6 +245,9 @@ static void checkCurrFile (const char *s);
 0[xX]('?{H})+{IS}?           { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
 0('?[0-7])*{IS}?             { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
 [1-9]('?{D})*{IS}?           { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0[xX]('?{H})+{WB}            { count (); if (!options.std_c2x) werror (W_BITINTCONST_C23); yylval.val = constIntVal (yytext); return CONSTANT; }
+0('?[0-7])*{WB}              { count (); if (!options.std_c2x) werror (W_BITINTCONST_C23); yylval.val = constIntVal (yytext); return CONSTANT; }
+[1-9]('?{D})*{WB}            { count (); if (!options.std_c2x) werror (W_BITINTCONST_C23); yylval.val = constIntVal (yytext); return CONSTANT; }
 {CP}?'(\\.|[^\\'])+'         { count (); yylval.val = charVal (yytext); return CONSTANT; /* ' make syntax highlighter happy */ }
 {D}+{E}{FS}?                 { count (); yylval.val = constFloatVal (yytext); return CONSTANT; }
 {D}*"."{D}+({E})?{FS}?       { count (); yylval.val = constFloatVal (yytext); return CONSTANT; }

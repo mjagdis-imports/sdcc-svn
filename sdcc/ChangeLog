@@ -1,5 +1,15 @@
 2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  src/stm8/main.c:
+	  Infrastructure for bit-precise integer literals.
+
+2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
 	* device/include/limits.h,
 	  src/SDCC.lex,
 	  src/SDCC.y,

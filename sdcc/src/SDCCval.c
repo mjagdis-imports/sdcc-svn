@@ -1230,7 +1230,7 @@ constIntVal (const char *s)
   double dval;
   long long int llval;
   value *val = newValue ();
-  bool decimal, u_suffix = FALSE, l_suffix = FALSE, ll_suffix = FALSE;
+  bool decimal, u_suffix = false, l_suffix = false, ll_suffix = false, wb_suffix = false;
 
   val->type = val->etype = newLink (SPECIFIER);
   SPEC_SCLS (val->type) = S_LITERAL;
@@ -1286,20 +1286,46 @@ constIntVal (const char *s)
     {
       ll_suffix = TRUE;
       p2 += 2;
-      if (strchr (p2, 'l') || strchr (p2, 'L'))
+      if (strchr (p2, 'l') || strchr (p2, 'L') || strstr (p, "wb") || strstr (p, "WB"))
         werror (E_INTEGERSUFFIX, p);
     }
   else if ((p2 = strchr (p, 'l')) || (p2 = strchr (p, 'L')))
     {
       l_suffix = TRUE;
       p2++;
+      if (strchr (p2, 'l') || strchr (p2, 'L') || strstr (p, "wb") || strstr (p, "WB"))
+        werror (E_INTEGERSUFFIX, p);
+    }
+  else if ((p2 = strstr (p, "wb")) || (p2 = strstr (p, "WB")))
+    {
+      wb_suffix = true;
+      p2 += 2;
       if (strchr (p2, 'l') || strchr (p2, 'L'))
         werror (E_INTEGERSUFFIX, p);
     }
 
-  SPEC_NOUN (val->type) = V_INT;
+  SPEC_NOUN (val->type) = wb_suffix ? V_BITINT : V_INT;
 
-  if (u_suffix) // Choose first of unsigned int, unsigned long int, unsigned long long int that fits.
+  if (wb_suffix) // Choose narrowest.
+    {
+      int width;
+      if (u_suffix)
+        {
+          SPEC_USIGN (val->type) = 1;
+          for (width = 1; width <= port->s.bitint_maxwidth && (1ull << width) - 1 < llval; width++);
+          SPEC_CVAL (val->type).v_ulonglong = llval;
+        }
+      else
+        {
+          for (width = 2; width <= port->s.bitint_maxwidth && (-(1ll << (width - 1)) > llval || (1ull << (width - 1)) - 1 < llval); width++);
+          SPEC_CVAL (val->type).v_longlong = llval;
+        }
+      if (width > port->s.bitint_maxwidth)
+        werror (E_INVALID_BITINTWIDTH);
+      SPEC_BITINTWIDTH(val->type) = width;
+      return val;
+    }
+  else if (u_suffix) // Choose first of unsigned int, unsigned long int, unsigned long long int that fits.
     {
       SPEC_USIGN (val->type) = 1;
       if (ll_suffix || dval > 0xffffffff)
@@ -1883,7 +1909,7 @@ floatFromVal (value * val)
   if (SPEC_NOUN (val->etype) == V_FIXED16X16)
     return doubleFromFixed16x16 (SPEC_CVAL (val->etype).v_fixed16x16);
 
-  if (SPEC_LONGLONG (val->etype))
+  if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
     {
       if (SPEC_USIGN (val->etype))
         return (double)SPEC_CVAL (val->etype).v_ulonglong;
@@ -2120,7 +2146,7 @@ ullFromLit (sym_link * lit)
   if (SPEC_NOUN (etype) == V_FIXED16X16)
     return double2ul (doubleFromFixed16x16 (SPEC_CVAL (etype).v_fixed16x16)); /* FIXME: this loses bits */
 
-  if (SPEC_LONGLONG (etype))
+  if (SPEC_LONGLONG (etype) || SPEC_NOUN (etype) == V_BITINT)
     {
       if (SPEC_USIGN (etype))
         return SPEC_CVAL (etype).v_ulonglong;
