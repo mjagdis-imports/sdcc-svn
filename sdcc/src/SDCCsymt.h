@@ -567,6 +567,7 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_INT(x)        (IS_SPEC(x) && x->select.s.noun == V_INT)
 #define IS_VOID(x)       (IS_SPEC(x) && x->select.s.noun == V_VOID)
 #define IS_BOOL(x)       (IS_SPEC(x) && x->select.s.noun == V_BOOL)
+#define IS_BITINT(x)     (IS_SPEC(x) && x->select.s.noun == V_BITINT)
 #define IS_CHAR(x)       (IS_SPEC(x) && x->select.s.noun == V_CHAR)
 #define IS_EXTERN(x)     (IS_SPEC(x) && x->select.s.b_extern)
 #define IS_VOLATILE(x)   (isVolatile (x))

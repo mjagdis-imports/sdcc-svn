@@ -349,7 +349,7 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
       val >>= 8;
 
       // Leading zeroes
-      if (aop->size <= offset && !b)
+      if (aop->size <= offset && !b && aop->type != AOP_LIT)
         continue;
 
       if (aop->type != AOP_LIT)
@@ -2462,8 +2462,6 @@ adjustRegW (const asmop *result, int roffset, const asmop *source, int soffset, 
 static void
 genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global, bool x_dead_global, bool y_dead_global)
 {
-  int i;
-
   long val_x = -1;
   long val_y = -1;
 
@@ -2511,7 +2509,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   if (result->type == AOP_DIR && source->type == AOP_DIR && roffset == soffset && !strcmp(result->aopu.aop_dir, source->aopu.aop_dir))
     return;
 
-  for (i = 0; i < size;)
+  for (int i = 0; i < size;)
     {
       const bool x_dead = x_dead_global &&
         (!aopRS (result) || (result->regs[XL_IDX] >= (roffset + i) || result->regs[XL_IDX] < 0) && (result->regs[XH_IDX] >= (roffset + i) || result->regs[XH_IDX] < 0)) &&

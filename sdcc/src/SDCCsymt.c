@@ -2818,6 +2818,15 @@ compareType (sym_link *dest, sym_link *src)
   if (IS_BITFIELD (dest) && IS_BITFIELD (src) && (SPEC_BLEN (dest) != SPEC_BLEN (src) || SPEC_BSTR (dest) != SPEC_BSTR (src)))
     return -1;
 
+  if (SPEC_NOUN (dest) == V_BITINT && SPEC_NOUN (src) == V_BITINT)
+    {
+      if (SPEC_BITINTWIDTH (dest) != SPEC_BITINTWIDTH (src))
+        return 1;
+      if (SPEC_USIGN (dest) != SPEC_USIGN (src))
+        return -2;
+      return -1;
+    }
+
   /* it is a specifier */
   if (SPEC_NOUN (dest) != SPEC_NOUN (src))
     {
@@ -3801,6 +3810,10 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               else if (IS_LONG (type))
                 dbuf_append_str (dbuf, "long-");
               dbuf_append_str (dbuf, "int");
+              break;
+              
+            case V_BITINT:
+              dbuf_printf (dbuf, "_BitInt(%u)", SPEC_BITINTWIDTH (type));
               break;
 
             case V_BOOL:

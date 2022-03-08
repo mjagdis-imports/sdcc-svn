@@ -2331,7 +2331,7 @@ valUnaryPM (value * val, bool reduceType)
     SPEC_CVAL (val->etype).v_float = -1.0 * SPEC_CVAL (val->etype).v_float;
   else if (SPEC_NOUN (val->etype) == V_FIXED16X16)
     SPEC_CVAL (val->etype).v_fixed16x16 = (TYPE_TARGET_ULONG) - ((long) SPEC_CVAL (val->etype).v_fixed16x16);
-  else if (SPEC_LONGLONG (val->etype))
+  else if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
     {
       if (SPEC_USIGN (val->etype))
         SPEC_CVAL (val->etype).v_ulonglong = 0 - SPEC_CVAL (val->etype).v_ulonglong;
@@ -3090,13 +3090,22 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
       break;
 
     case V_BITINTBITFIELD:
-      l &= (1 << SPEC_BLEN (val->etype)) - 1;
+      llval &= (1 << SPEC_BLEN (val->etype)) - 1;
     case V_BITINT:
-      l &= (1 << SPEC_BITINTWIDTH (val->etype)) - 1;
-      if (SPEC_USIGN (val->etype))
-        SPEC_CVAL (val->etype).v_ulonglong = l;
+      if (!SPEC_USIGN (val->etype)) // Sign-extend
+        {
+          if (llval & ((1 << SPEC_BITINTWIDTH (val->etype) - 1)))
+            llval |= ~((1 << SPEC_BITINTWIDTH (val->etype)) - 1);
+          else
+            llval &= ((1 << SPEC_BITINTWIDTH (val->etype) - 1)) - 1;
+          SPEC_CVAL (val->etype).v_ulonglong = llval;
+        }
       else
-        SPEC_CVAL (val->etype).v_longlong = l;
+        {
+          llval &= (1 << SPEC_BITINTWIDTH (val->etype)) - 1;
+          SPEC_CVAL (val->etype).v_ulonglong = llval;
+        }
+
       break;
 
     case V_BITFIELD:
