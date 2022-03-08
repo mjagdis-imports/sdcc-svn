@@ -59,6 +59,8 @@ nounName (sym_link * sl)
           return "short";
         return "int";
       }
+    case V_BITINT:
+      return "_BitInt";
     case V_FLOAT:
       return "float";
     case V_FIXED16X16:
@@ -77,6 +79,8 @@ nounName (sym_link * sl)
       return "bitfield";
     case V_BBITFIELD:
       return "_Boolbitfield";
+    case V_BITINTBITFIELD:
+      return "_BitIntbitfield";
     case V_BIT:
       return "bit";
     case V_SBIT:
@@ -618,11 +622,14 @@ checkTypeSanity (sym_link *etype, const char *name)
       fprintf (stderr, "checking sanity for %s %p\n", name, (void *)etype);
     }
 
-  if ((SPEC_NOUN (etype) == V_BOOL ||
+  if ((SPEC_NOUN (etype) == V_BITINT ||
+       SPEC_NOUN (etype) == V_BOOL ||
        SPEC_NOUN (etype) == V_CHAR ||
        SPEC_NOUN (etype) == V_FLOAT ||
        SPEC_NOUN (etype) == V_FIXED16X16 ||
-       SPEC_NOUN (etype) == V_DOUBLE || SPEC_NOUN (etype) == V_VOID) && (SPEC_SHORT (etype) || SPEC_LONG (etype) || SPEC_LONGLONG (etype)))
+       SPEC_NOUN (etype) == V_DOUBLE ||
+       SPEC_NOUN (etype) == V_VOID)
+       && (SPEC_SHORT (etype) || SPEC_LONG (etype) || SPEC_LONGLONG (etype)))
     {                           // long or short for char float double or void
       werror (E_LONG_OR_SHORT_INVALID, noun, name);
     }
@@ -659,6 +666,13 @@ checkTypeSanity (sym_link *etype, const char *name)
   if (SPEC_SHORT (etype) && SPEC_LONG (etype))
     {                           // short AND long
       werror (E_LONG_AND_SHORT_INVALID, noun, name);
+    }
+
+  if (SPEC_NOUN (etype) == V_BITINT)
+    {
+      if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || // Check that port support bit-precise integers this wide
+       SPEC_BITINTWIDTH (etype) < (SPEC_USIGN (etype) ? 1 : 2))   // Check minimum wdth mandated by standard
+       werror (E_INVALID_BITINTWIDTH);
     }
 }
 
@@ -794,6 +808,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_LONGLONG (dest) |= SPEC_LONGLONG (src);
   SPEC_SHORT (dest) |= SPEC_SHORT (src);
   SPEC_USIGN (dest) |= SPEC_USIGN (src);
+  SPEC_BITINTWIDTH (dest) |= SPEC_BITINTWIDTH (src);
   dest->select.s.b_signed |= src->select.s.b_signed;
   SPEC_STAT (dest) |= SPEC_STAT (src);
   SPEC_EXTR (dest) |= SPEC_EXTR (src);
@@ -1103,6 +1118,9 @@ getSize (sym_link * p)
         {                       /* depending on the specifier type */
         case V_INT:
           return (IS_LONGLONG (p) ? LONGLONGSIZE : (IS_LONG (p) ? LONGSIZE : INTSIZE));
+        case V_BITINT:
+        fprintf(stderr, "getSize for _BitInt: width %u size %u\n", SPEC_BITINTWIDTH (p), ((SPEC_BITINTWIDTH (p) / 8) + (SPEC_BITINTWIDTH (p) % 8 ? 1 : 0)));
+          return ((SPEC_BITINTWIDTH (p) / 8) + (SPEC_BITINTWIDTH (p) % 8 ? 1 : 0));
         case V_FLOAT:
           return FLOATSIZE;
         case V_FIXED16X16:
@@ -1122,6 +1140,7 @@ getSize (sym_link * p)
           return BITSIZE;
         case V_BITFIELD:
         case V_BBITFIELD:
+        case V_BITINTBITFIELD:
           return ((SPEC_BLEN (p) / 8) + (SPEC_BLEN (p) % 8 ? 1 : 0));
         default:
           return 0;
@@ -1213,7 +1232,7 @@ checkStructFlexArray (symbol * sym, sym_link * p)
 /* bitsForType - returns # of bits required to store this type      */
 /*------------------------------------------------------------------*/
 unsigned int
-bitsForType (sym_link * p)
+bitsForType (sym_link *p)
 {
   /* if nothing return 0 */
   if (!p)
@@ -1229,6 +1248,8 @@ bitsForType (sym_link * p)
           if (IS_LONG (p))
             return LONGSIZE * 8;
           return INTSIZE * 8;
+        case V_BITINT:
+          return SPEC_BITINTWIDTH (p);
         case V_FLOAT:
           return FLOATSIZE * 8;
         case V_FIXED16X16:
@@ -1248,6 +1269,7 @@ bitsForType (sym_link * p)
           return 1;
         case V_BITFIELD:
         case V_BBITFIELD:
+        case V_BITINTBITFIELD:
           return SPEC_BLEN (p);
         default:
           return 0;
@@ -1639,6 +1661,11 @@ compStructSize (int su, structdef * sdef)
               SPEC_NOUN (loop->etype) = V_BITFIELD;
               if (loop->bitVar > port->s.int_size * 8)
                 werror (E_BITFLD_SIZE , port->s.int_size * 8);
+              break;
+            case V_BITINT:
+              SPEC_NOUN (loop->etype) = V_BITINTBITFIELD;
+              if (loop->bitVar > SPEC_BITINTWIDTH (loop->etype))
+                werror (E_BITFLD_SIZE , SPEC_BITINTWIDTH (loop->etype));
               break;
             default:
               werror (E_BITFLD_TYPE);
@@ -2036,7 +2063,7 @@ checkSClass (symbol *sym, int isProto)
   /* SBITS or SFRs or BIT                           */
   if ((IS_ARRAY (sym->type) || IS_PTR (sym->type)) &&
       (SPEC_NOUN (sym->etype) == V_BIT      || SPEC_NOUN (sym->etype) == V_SBIT      ||
-       SPEC_NOUN (sym->etype) == V_BITFIELD || SPEC_NOUN (sym->etype) == V_BBITFIELD ||
+       SPEC_NOUN (sym->etype) == V_BITFIELD || SPEC_NOUN (sym->etype) == V_BBITFIELD || SPEC_NOUN (sym->etype) == V_BITINTBITFIELD ||
        SPEC_SCLS (sym->etype) == S_SFR))
     {
       /* find out if this is the return type of a function */
@@ -2935,7 +2962,6 @@ compareTypeExact (sym_link * dest, sym_link * src, long level)
   /* if they have a different noun */
   if (SPEC_NOUN (dest) != SPEC_NOUN (src))
     return 0;
-
   /* if they are both bitfields then if the lengths
      and starts don't match */
   if (IS_BITFIELD (dest) && IS_BITFIELD (src) && (SPEC_BLEN (dest) != SPEC_BLEN (src) || SPEC_BSTR (dest) != SPEC_BSTR (src)))
@@ -2952,6 +2978,9 @@ compareTypeExact (sym_link * dest, sym_link * src, long level)
       if (SPEC_LONG (dest) != SPEC_LONG (src))
         return 0;
       if (SPEC_LONGLONG (dest) != SPEC_LONGLONG (src))
+        return 0;
+      // width must be the same for bit-precise types
+      if (SPEC_NOUN (dest) == V_BITINT && SPEC_BITINTWIDTH (dest) != SPEC_BITINTWIDTH (src))
         return 0;
     }
 
@@ -3814,6 +3843,10 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
             case V_BBITFIELD:
               dbuf_printf (dbuf, "_Boolbitfield {%d,%d}", SPEC_BSTR (type), SPEC_BLEN (type));
               break;
+              
+            case V_BITINTBITFIELD:
+              dbuf_printf (dbuf, "_BitIntbitfield {%d,%d}", SPEC_BSTR (type), SPEC_BLEN (type));
+              break;
 
             case V_DOUBLE:
               dbuf_append_str (dbuf, "double");
@@ -4092,6 +4125,10 @@ printTypeChainRaw (sym_link * start, FILE * of)
 
             case V_BBITFIELD:
               fprintf (of, "_Boolbitfield {%d,%d}", SPEC_BSTR (type), SPEC_BLEN (type));
+              break;
+
+            case V_BITINTBITFIELD:
+              fprintf (of, "_BitIntbitfield {%d,%d}", SPEC_BSTR (type), SPEC_BLEN (type));
               break;
 
             case V_DOUBLE:

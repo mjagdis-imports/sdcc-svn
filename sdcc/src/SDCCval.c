@@ -1955,7 +1955,7 @@ ulFromVal (const value *val)
   if (SPEC_NOUN (val->etype) == V_FIXED16X16)
     return double2ul (doubleFromFixed16x16 (SPEC_CVAL (val->etype).v_fixed16x16));
 
-  if (SPEC_LONGLONG (val->etype))
+  if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
     {
       if (SPEC_USIGN (val->etype))
         return (unsigned long)SPEC_CVAL (val->etype).v_ulonglong;
@@ -2008,7 +2008,7 @@ ulFromVal (const value *val)
 /*             other types will be extended with zero padding       */
 /*------------------------------------------------------------------*/
 unsigned char
-byteOfVal (value * val, int offset)
+byteOfVal (value *val, int offset)
 {
   unsigned char *p;
   int shift = 8*offset;
@@ -2048,7 +2048,7 @@ byteOfVal (value * val, int offset)
   if (SPEC_NOUN (val->etype) == V_FIXED16X16)
     return offset < 4 ? (SPEC_CVAL (val->etype).v_fixed16x16 >> shift) & 0xff : 0;
 
-  if (SPEC_LONGLONG (val->etype))
+  if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
     {
       if (SPEC_USIGN (val->etype))
         return offset < 8 ? (SPEC_CVAL (val->etype).v_ulonglong >> shift) & 0xff : 0;

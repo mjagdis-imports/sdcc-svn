@@ -1,5 +1,19 @@
 2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
 
+	* device/include/limits.h,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmain.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/port.h:
+	  Infrastructure for bit-precise integers.
+
+2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
 	* Merge sdcc-next branch to trunk.
 
 2022-03-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>

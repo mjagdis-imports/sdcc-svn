@@ -214,6 +214,7 @@ static void checkCurrFile (const char *s);
 "alignas"               { count (); TKEYWORD2X (ALIGNAS); }
 "_Alignas"              { count (); return ALIGNAS; }
 "_Generic"              { count (); return GENERIC; }
+"_BitInt"               { count (); return SD_BITINT; }
 ({L}|{UCN}|{UTF8IDF1ST})({L}|{D}|{UCN}|{UTF8IDF})*  {
   if (!options.dollars_in_ident && strchr (yytext, '$'))
     {

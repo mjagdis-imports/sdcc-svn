@@ -299,6 +299,7 @@ enum {
   E_COSMIC_LARGE_RETURN         = 269, /* large return value not supported for Cosmic calling convention */
   E_MULTIPLE_CALLINGCONVENTIONS = 270, /* multiple incompatible calling conventions */
   W_SFR_ADDRESS                 = 271, /* unsupported address of __sfr taken */
+  E_INVALID_BITINTWIDTH         = 272, /* invalid with for bit-precise integer type */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
