@@ -1607,7 +1607,7 @@ int z80instructionSize(lineNode *pl)
 
   if(IS_Z80N && (ISINST(pl->line, "swapnib") || ISINST(pl->line, "mirror") || ISINST(pl->line, "mul") ||
      ISINST(pl->line, "outinb") || ISINST(pl->line, "ldix") || ISINST(pl->line, "ldirx") ||
-     ISINST(pl->line, "lddx") || ISINST(pl->line, "lddrx") || ISINST(pl->line, "ldpirx") ||))
+     ISINST(pl->line, "lddx") || ISINST(pl->line, "lddrx") || ISINST(pl->line, "ldpirx")))
     return(2);
 
   if(IS_Z80N &&

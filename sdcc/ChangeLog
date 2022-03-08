@@ -1,3 +1,8 @@
+2022-03-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peep.c:
+	  Make it compile again.
+
 2022-03-07 Gabriele Gorla <gorlik@yahoo.com>
 
 	* support/regression/tests/bug3475630.c,
