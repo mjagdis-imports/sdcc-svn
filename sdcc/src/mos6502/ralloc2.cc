@@ -399,7 +399,8 @@ static bool operand_sane(const operand *o, const assignment &a, unsigned short i
     {
       const reg_t l = a.global[oi->second];
       const reg_t h = a.global[oi2->second];
-      if(l == REG_A && h == REG_Y || l == REG_Y)
+//      if(l == REG_A && h == REG_Y || l == REG_Y)
+      if(l != REG_A || h != REG_X)
         return(false);
     }
   

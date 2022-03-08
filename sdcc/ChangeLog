@@ -3,6 +3,10 @@
 	* support/regression/tests/bug3475630.c,
 	  support/regression/tests/bug2094505.c:
 	  Adjust tests parameters for stack-auto.
+  	* src/mos6502/gen.c,
+	  src/mos6502/main.c,
+	  src/mos6502/ralloc2.cc:
+  	  Use DPTR instead of YX for indexed addressing.
 
 2022-03-07 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 

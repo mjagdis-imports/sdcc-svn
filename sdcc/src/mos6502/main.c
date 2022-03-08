@@ -22,10 +22,6 @@
   along with this program; if not, write to the Free Software
   Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
-/*
-    Note that mlh prepended _m6502_ on the static functions.  Makes
-    it easier to set a breakpoint using the debugger.
-*/
 #include "common.h"
 #include "dbuf_string.h"
 #include "m6502.h"
@@ -201,11 +197,11 @@ _m6502_genAssemblerPreamble (FILE * of)
     {
       // global variables in zero page
       fprintf (of, "\t.globl __TEMP\n");
-      fprintf (of, "\t.globl __BASEPTR\n");
+      fprintf (of, "\t.globl __DPTR\n");
       
       fprintf (of, "\t.area %s\n",port->mem.data_name);
       fprintf (of, "__TEMP:\t.ds %d\n", NUM_TEMP_REGS);
-      fprintf (of, "__BASEPTR:\t.ds 2\n");
+      fprintf (of, "__DPTR:\t.ds 2\n");
     }
 }
 
