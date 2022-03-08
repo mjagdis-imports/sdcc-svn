@@ -1,3 +1,9 @@
+2022-03-07 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/bug3475630.c,
+	  support/regression/tests/bug2094505.c:
+	  Adjust tests parameters for stack-auto.
+
 2022-03-07 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/peep.c:
