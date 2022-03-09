@@ -28,20 +28,18 @@ void testBitIntArith(void)
 	// From here on, we do the computation on the left at runtime, the one on the right at compile time, to check both.
 
 	a = 23, b = -42;
+	ua = 23, ub = -42;
 
-#if {width} >= 8 // Signed overflow is undefined behaviour
-	
+#if {width} >= 8 // Signed overflow is undefined behaviour	
 	ASSERT(a + b == (bitinttype)(23) + (bitinttype)(-42));
 	ASSERT(a - b == (bitinttype)(23) - (bitinttype)(-42));
-#endif
-	//ASSERT(ua + ub == (ubitinttype)(23) + (ubitinttype)(-42));
-	//ASSERT(ua - ub == (ubitinttype)(23) - (ubitinttype)(-42));
-
 #if {width} >= 11 // Signed overflow is undefined behaviour
-	//ASSERT(a * b == (bitinttype)(23) * (bitinttype)(-42));
+	//ASSERT(a * b == (bitinttype)(23) * (bitinttype)(-42)); // todo: implement multiplication support
 #endif
-	//ua = 23, ub = -42;
-	//ASSERT(ua * ub == (ubitinttype)(23) * (ubitinttype)(-42));
+#endif
+	ASSERT(ua + ub == (ubitinttype)(23) + (ubitinttype)(-42)); // todo: implement unsigned wrap on overflow
+	//ASSERT(ua - ub == (ubitinttype)(23) - (ubitinttype)(-42)); // todo: implement unsigned wrap on overflow
+	//ASSERT(ua * ub == (ubitinttype)(23) * (ubitinttype)(-42)); // todo: implement unsigned wrap on overflow
 
 	ASSERT((a < b) == ((bitinttype)(23) < (bitinttype)(-42)));
 	ASSERT((a <= b) == ((bitinttype)(23) <= (bitinttype)(-42)));

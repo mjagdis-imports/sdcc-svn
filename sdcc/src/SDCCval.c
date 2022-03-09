@@ -2658,7 +2658,11 @@ valPlus (value * lval, value * rval, bool reduceType)
   else if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
-        SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+        {
+          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          if (IS_BITINT (val->type)) // unsigned wrap-around
+            SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
+        }
       else
         SPEC_CVAL (val->type).v_longlong = (TYPE_TARGET_LONGLONG) ullFromVal (lval) + (TYPE_TARGET_LONGLONG) ullFromVal (rval);
     }
@@ -2702,7 +2706,11 @@ valMinus (value * lval, value * rval, bool reduceType)
   else if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
-        SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) - (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+        {
+          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) - (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          if (IS_BITINT (val->type)) // unsigned wrap-around
+            SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
+        }
       else
         SPEC_CVAL (val->type).v_longlong = (TYPE_TARGET_LONGLONG) ullFromVal (lval) - (TYPE_TARGET_LONGLONG) ullFromVal (rval);
     }
@@ -2753,6 +2761,8 @@ valShift (value * lval, value * rval, int lr, bool reduceType)
           SPEC_CVAL (val->type).v_ulonglong = lr ?
             (TYPE_TARGET_ULONGLONG) ullFromVal (lval) << (TYPE_TARGET_ULONGLONG) ullFromVal (rval) :
             (TYPE_TARGET_ULONGLONG) ullFromVal (lval) >> (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          if (IS_BITINT (val->type)) // unsigned wrap-around
+            SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
         }
       else
         {

@@ -3,7 +3,8 @@
 	* src/SDCCast.c,
 	  src/SDCCval.c,
 	  support/regression/tests/bitint.c,
-	  support/regression/tests/bitintarith.c:
+	  support/regression/tests/bitintarith.c,
+	  src/stm8/gen.c:
 	  Various _BitInt fixes.
 
 2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
