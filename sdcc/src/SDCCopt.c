@@ -755,6 +755,12 @@ convilong (iCode * ic, eBBlock * ebp)
   left = IC_LEFT (ic);
   right = IC_RIGHT (ic);
 
+  if (IS_BITINT (leftType) || IS_BITINT (rightType))
+    {
+      werrorfl (filename, lineno, E_INVALID_OP, "");
+      return;
+    }
+
   // Special case: 16x16->32 multiplication.
   if (op == '*' && (muls16tos32[0] || muls16tos32[1] || port->hasNativeMulFor) &&
     (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 && bitVectnBitsOn (OP_USES (left)) == 1 || IS_OP_LITERAL (left) && operandLitValue (left) < 32768 && operandLitValue (left) >= -32768) &&

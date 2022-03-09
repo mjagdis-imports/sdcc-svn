@@ -1,3 +1,9 @@
+2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
+	  src/stm8/main.c:
+	  Improve diagnostics for unimplemented bit-precise operators.
+
 2022-03-08 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
