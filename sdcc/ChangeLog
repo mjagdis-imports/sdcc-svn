@@ -1,3 +1,15 @@
+2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c:
+	  Fix casts for bit-precise types.
+	* src/stm8/gen.c:
+	  Fix return of types with odd size greater than 4.
+	* support/regression/tests/bitint.c,
+	  support/regression/tests/bitintarith.c:
+	  Somethings already work for _BitInt, so we can test them!
+
 2022-03-08 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/peeph.def:

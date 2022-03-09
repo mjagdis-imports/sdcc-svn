@@ -2820,7 +2820,7 @@ compareType (sym_link *dest, sym_link *src)
 
   if (SPEC_NOUN (dest) == V_BITINT && SPEC_NOUN (src) == V_BITINT)
     {
-      if (SPEC_BITINTWIDTH (dest) != SPEC_BITINTWIDTH (src))
+      if (SPEC_BITINTWIDTH (dest) == SPEC_BITINTWIDTH (src))
         return 1;
       if (SPEC_USIGN (dest) != SPEC_USIGN (src))
         return -2;

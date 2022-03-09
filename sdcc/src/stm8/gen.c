@@ -4384,7 +4384,7 @@ genReturn (const iCode *ic)
 
       for(int i = 0; i < size;)
         {
-          if (aopInReg (left->aop, i, Y_IDX) || size > 2 && left->aop->regs[YL_IDX] < i && left->aop->regs[YH_IDX] < i && (aopOnStackNotExt (left->aop, i, 2) || left->aop->type == AOP_LIT))
+          if (aopInReg (left->aop, i, Y_IDX) || i + 1 < size && left->aop->regs[YL_IDX] < i && left->aop->regs[YH_IDX] < i && (aopOnStackNotExt (left->aop, i, 2) || left->aop->type == AOP_LIT))
             {
               genMove_o (ASMOP_Y, 0, left->aop, i, 2, TRUE, FALSE, TRUE);
               if (size - 2 - i)

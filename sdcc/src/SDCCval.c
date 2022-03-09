@@ -3090,26 +3090,26 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
       break;
 
     case V_BITINTBITFIELD:
-      llval &= (1 << SPEC_BLEN (val->etype)) - 1;
+      l &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
     case V_BITINT:
+      wassert (SPEC_BITINTWIDTH (val->etype) >= 1);
       if (!SPEC_USIGN (val->etype)) // Sign-extend
         {
-          if (llval & ((1 << SPEC_BITINTWIDTH (val->etype) - 1)))
-            llval |= ~((1 << SPEC_BITINTWIDTH (val->etype)) - 1);
+          if (llval & ((1ull << SPEC_BITINTWIDTH (val->etype) - 1)))
+            llval |= ~(0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->etype)));
           else
-            llval &= ((1 << SPEC_BITINTWIDTH (val->etype) - 1)) - 1;
-          SPEC_CVAL (val->etype).v_ulonglong = llval;
+            llval &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->etype) - 1));
+          SPEC_CVAL (val->etype).v_longlong = llval;
         }
       else
         {
-          llval &= (1 << SPEC_BITINTWIDTH (val->etype)) - 1;
+          llval &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->etype)));
           SPEC_CVAL (val->etype).v_ulonglong = llval;
         }
-
       break;
 
     case V_BITFIELD:
-      l &= (1 << SPEC_BLEN (val->etype)) - 1;
+      l &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
       if (SPEC_USIGN (val->etype))
         SPEC_CVAL (val->etype).v_uint = (TYPE_TARGET_UINT) l;
       else

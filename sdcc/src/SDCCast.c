@@ -2703,12 +2703,12 @@ addCast (ast * tree, RESULT_TYPE resultType, bool promote)
       break;
     case RESULT_TYPE_IFX:
     case RESULT_TYPE_OTHER:
-      if (!promote ||
+      if (!promote || IS_BITINT (tree->etype) ||
           /* return type is ifx, long, float: promote char to int */
           getSize (tree->etype) >= INTSIZE)
         return tree;
       newLink = newIntLink ();
-      upCasted = TRUE;
+      upCasted = true;
       break;
     default:
       return tree;
