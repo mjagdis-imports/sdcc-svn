@@ -779,13 +779,24 @@ convilong (iCode *ic, eBBlock *ebp)
 {
   int op = ic->op;
 
-  // Use long long multiplication function for _BitInt
+  // Use basic type multiplication function for _BitInt
   if ((op == '*' || op == '/' || op == '%') &&
     (IS_BITINT (operandType (IC_LEFT (ic))) || IS_BITINT (operandType (IC_RIGHT (ic)))))
     {
-      prependCast (ic, IC_LEFT (ic), newLongLongLink(), ebp);
-      prependCast (ic, IC_RIGHT (ic), newLongLongLink(), ebp);
-      appendCast (ic, newLongLongLink(), ebp);
+      // long multiplication is more efficient than long long, so use it if we can.
+      if (IS_BITINT (operandType (IC_LEFT (ic))) && SPEC_BITINTWIDTH (operandType (IC_LEFT (ic))) <= 32 &&
+        IS_BITINT (operandType (IC_RIGHT (ic))) && SPEC_BITINTWIDTH (operandType (IC_RIGHT (ic))) <= 32)
+        {
+          prependCast (ic, IC_LEFT (ic), newLongLink(), ebp);
+          prependCast (ic, IC_RIGHT (ic), newLongLink(), ebp);
+          appendCast (ic, newLongLink(), ebp);
+        }
+      else
+        {
+          prependCast (ic, IC_LEFT (ic), newLongLongLink(), ebp);
+          prependCast (ic, IC_RIGHT (ic), newLongLongLink(), ebp);
+          appendCast (ic, newLongLongLink(), ebp);
+        }
     }
   
   symbol *func = NULL;
