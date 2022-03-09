@@ -1,3 +1,16 @@
+2022-03-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peeph.def:
+	  Minor peephole optimizations.
+	* src/mos6502/gen.c:
+	  Special case 16b left and 8bit right in genPlus and genMinus.
+
+2022-03-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/as8xcxxx/ds8mch.c,
+	  sdas/asxxsrc/asxxxx.h:
+	  Fix ASxxxx warnings by merging with upstream for [bugs:#3347].
+
 2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCC.lex,
@@ -25,6 +38,11 @@
 	  src/SDCCval.c,
 	  src/port.h:
 	  Infrastructure for bit-precise integers.
+
+2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version:
+	  Start post-4.2.0 development.
 
 2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
 
