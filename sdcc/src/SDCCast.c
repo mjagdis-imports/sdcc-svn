@@ -539,7 +539,7 @@ isAstEqual (ast * t1, ast * t2)
 /* resolveSymbols - resolve symbols from the symbol table          */
 /*-----------------------------------------------------------------*/
 ast *
-resolveSymbols (ast * tree)
+resolveSymbols (ast *tree)
 {
   /* walk the entire tree and check for values */
   /* with symbols if we find one then replace  */

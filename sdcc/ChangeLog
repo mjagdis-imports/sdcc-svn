@@ -1,6 +1,14 @@
 2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCast.c,
+	  src/SDCCval.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/bitintarith.c:
+	  Various _BitInt fixes.
+
+2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCast.c,
 	  src/SDCCsymt.c,
 	  src/SDCCval.c:
 	  Fix casts for bit-precise types.

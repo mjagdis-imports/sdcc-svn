@@ -733,7 +733,7 @@ double2ul (double val)
 /* var type in comparisons and assignments                            */
 /*--------------------------------------------------------------------*/
 CCR_RESULT
-checkConstantRange (sym_link * var, sym_link * lit, int op, bool exchangeLeftRight)
+checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight)
 {
   sym_link *reType;
   TYPE_TARGET_LONGLONG litVal;
@@ -2655,7 +2655,7 @@ valPlus (value * lval, value * rval, bool reduceType)
     SPEC_CVAL (val->type).v_float = floatFromVal (lval) + floatFromVal (rval);
   else if (IS_FIXED16X16 (val->type))
     SPEC_CVAL (val->type).v_fixed16x16 = fixed16x16FromDouble (floatFromVal (lval) + floatFromVal (rval));
-  else if (SPEC_LONGLONG (val->type))
+  else if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
         SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
@@ -2699,7 +2699,7 @@ valMinus (value * lval, value * rval, bool reduceType)
     SPEC_CVAL (val->type).v_float = floatFromVal (lval) - floatFromVal (rval);
   else if (IS_FIXED16X16 (val->type))
     SPEC_CVAL (val->type).v_fixed16x16 = fixed16x16FromDouble (floatFromVal (lval) - floatFromVal (rval));
-  else if (SPEC_LONGLONG (val->type))
+  else if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
         SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) - (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
@@ -2746,7 +2746,7 @@ valShift (value * lval, value * rval, int lr, bool reduceType)
       werror (W_SHIFT_CHANGED, (lr ? "left" : "right"));
     }
 
-  if (SPEC_LONGLONG (val->type))
+  if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
         {
