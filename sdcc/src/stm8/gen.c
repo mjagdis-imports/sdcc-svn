@@ -3027,14 +3027,21 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 {
   int size, i, j;
   bool started;
-  bool pushed_a = FALSE;
-  bool result_in_a = FALSE;
+  bool pushed_a = false;
+  bool result_in_a = false;
+  sym_link *resulttype = operandType (IC_RESULT (ic));
+  unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+  bool maskedtopbyte = (topbytemask != 0xff);
   symbol *endlbl = 0;
-
+  
   size = result_aop->size;
 
   for (i = 0, started = FALSE; i < size;)
     {
+      bool maskedbyte = maskedtopbyte && (i + 1 == size);
+      bool maskedword = maskedtopbyte && (i + 2 == size);
+
       bool a_free = regDead (A_IDX, ic) && left_aop->regs[A_IDX] <= i && right_aop->regs[A_IDX] <= i && !result_in_a || pushed_a;
       bool xl_free = regDead (XL_IDX, ic) && (result_aop->regs[XL_IDX] >= i || result_aop->regs[XL_IDX] < 0) && left_aop->regs[XL_IDX] <= i + 1 && right_aop->regs[XL_IDX] < i;
       bool xh_free = regDead (XH_IDX, ic) && (result_aop->regs[XH_IDX] >= i || result_aop->regs[XH_IDX] < 0) && left_aop->regs[XH_IDX] <= i + 1 && right_aop->regs[XH_IDX] < i;
@@ -3044,7 +3051,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
       bool y_free = yl_free && yh_free;
 
       // Special case for rematerializing
-      if (!started && i == size - 2 &&
+      if (!started && !maskedword && i == size - 2 &&
         left_aop->type == AOP_STL && (right_aop->type == AOP_LIT || right_aop->type == AOP_DIR || aopOnStackNotExt (right_aop, i, 2)) &&
         (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX) || x_free || y_free || result_aop->regs[XL_IDX] < 0 && result_aop->regs[XH_IDX] < 0))
         {
@@ -3079,9 +3086,9 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           i += 2;
         }
-      else if (!started && left_aop->type == AOP_LIT && !byteOfVal (left_aop->aopu.aop_lit, i) &&
+      else if (!started && !maskedword && left_aop->type == AOP_LIT && !byteOfVal (left_aop->aopu.aop_lit, i) &&
         (!byteOfVal (left_aop->aopu.aop_lit, i + 1) && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) ||
-        !started && i == size - 1 && (aopInReg (result_aop, i, XL_IDX) && regDead (XH_IDX, ic) && right_aop->regs[XH_IDX] < 0 && result_aop->regs[XH_IDX] < 0 || aopInReg (result_aop, i, YL_IDX) && regDead (YH_IDX, ic) && right_aop->regs[YH_IDX] < 0 && result_aop->regs[YH_IDX] < 0)))
+        !started && !maskedword && i == size - 1 && (aopInReg (result_aop, i, XL_IDX) && regDead (XH_IDX, ic) && right_aop->regs[XH_IDX] < 0 && result_aop->regs[XH_IDX] < 0 || aopInReg (result_aop, i, YL_IDX) && regDead (YH_IDX, ic) && right_aop->regs[YH_IDX] < 0 && result_aop->regs[YH_IDX] < 0)))
         {
           bool half = (i == size - 1);
           bool x = aopInReg (result_aop, i, half ? XL_IDX : X_IDX);
@@ -3090,7 +3097,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = TRUE;
           i += 2;
         }
-      else if (!started &&
+      else if (!started && !maskedword &&
         aopOnStack (result_aop, i, 2) && aopOnStack (right_aop, i, 2) && result_aop->aopu.bytes[i].byteu.stk == right_aop->aopu.bytes[i].byteu.stk && result_aop->aopu.bytes[i + 1].byteu.stk == right_aop->aopu.bytes[i + 1].byteu.stk &&
         aopIsLitVal (right_aop, i, 2, 0x0000))
         {
@@ -3099,11 +3106,11 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i += 2;
         }
       // We can use incw / decw only for the only, top non-zero word, since it neither takes into account an existing carry nor does it update the carry.
-      else if (!started && i == size - 2 &&
+      else if (!started && !maskedword && i == size - 2 &&
         (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) &&
         right_aop->type == AOP_LIT && !byteOfVal (right_aop->aopu.aop_lit, i + 1) &&
         byteOfVal (right_aop->aopu.aop_lit, i) <= 1 + aopInReg (result_aop, i, X_IDX) ||
-        !started && i == size - 1 &&
+        !started && !maskedbyte && i == size - 1 &&
         !(aopInReg (left_aop, i, A_IDX) && regDead (A_IDX, ic)) &&
         (aopInReg (result_aop, i, XL_IDX) && regDead (XH_IDX, ic) && left_aop->regs[XH_IDX] < 0 && result_aop->regs[XH_IDX] < 0 || aopInReg (result_aop, i, YL_IDX) && regDead (YH_IDX, ic) && left_aop->regs[YH_IDX] < 0 && result_aop->regs[YH_IDX] < 0) &&
         right_aop->type == AOP_LIT && byteOfVal (right_aop->aopu.aop_lit, i) <= 1 + aopInReg (result_aop, i, XL_IDX))
@@ -3118,7 +3125,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i += 2;
          }
       // In some cases we gain so much by using decw that it is worth handling the carry explictly.
-      else if (started && i == size - 2 && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) && aopIsLitVal (left_aop, i, 2, 0x0000) &&
+      else if (started && !maskedword && i == size - 2 && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) && aopIsLitVal (left_aop, i, 2, 0x0000) &&
         (aopOnStack (right_aop, i, 2) || right_aop->type == AOP_DIR))
         {
           bool x = aopInReg (result_aop, i, X_IDX);
@@ -3133,7 +3140,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i += 2;
          }
        // In some cases we gain so much by using decw that it is worth handling the carry explictly.
-      else if (started && i == size - 2 && aopIsLitVal (right_aop, i, 2, 0x0000) &&
+      else if (started && !maskedword && i == size - 2 && aopIsLitVal (right_aop, i, 2, 0x0000) &&
         (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX) || x_free && (aopOnStack (result_aop, i, 2) || result_aop->type == AOP_DIR)))
         {
           bool x = !aopInReg (result_aop, i, Y_IDX);
@@ -3155,7 +3162,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             }
           i += 2;
         }
-      else if (!started &&
+      else if (!started && !maskedword &&
         (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) &&
         (right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD || aopOnStackNotExt (right_aop, i, 2) || right_aop->type == AOP_DIR && i + 1 < right_aop->size))
         {
@@ -3169,7 +3176,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             }
           i += 2;
         }
-      else if (!started && i == size - 2 && aopInReg (right_aop, i, X_IDX) && aopInReg (result_aop, i, X_IDX) &&
+      else if (!started && !maskedword && i == size - 2 && aopInReg (right_aop, i, X_IDX) && aopInReg (result_aop, i, X_IDX) &&
         (left_aop->type == AOP_DIR || aopOnStackNotExt (left_aop, i, 2)))
         {
           emit3w (A_NEGW, ASMOP_X, 0);
@@ -3178,14 +3185,14 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = TRUE;
           i += 2;
         }
-      else if (!started && aopIsLitVal (left_aop, i, 1, 0x00) &&
+      else if (!started && !maskedbyte && aopIsLitVal (left_aop, i, 1, 0x00) &&
         (aopOnStack (result_aop, i, 1) || result_aop->type == AOP_DIR) && aopSame (result_aop, i, right_aop, i, 1))
         {
           emit3_o (A_NEG, result_aop, i, 0, 0);
           started = TRUE;
           i++;
         }
-      else if (!started && i == size - 1 &&
+      else if (!started && !maskedbyte && i == size - 1 &&
         (aopOnStack (result_aop, i, 1) || result_aop->type == AOP_DIR) && aopSame (result_aop, i, left_aop, i, 1) &&
         right_aop->type == AOP_LIT && byteOfVal (right_aop->aopu.aop_lit, i) <= 2 + !a_free)
         {
@@ -3193,7 +3200,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             emit3_o (A_DEC, result_aop, i, 0, 0);
           i++;
         }
-      else if (!started && i == size - 1 &&
+      else if (!started && !maskedbyte && i == size - 1 &&
         (aopOnStack (result_aop, i, 1) || result_aop->type == AOP_DIR) && aopSame (result_aop, i, left_aop, i, 1) &&
         right_aop->type == AOP_LIT && byteOfVal (right_aop->aopu.aop_lit, i) >= 254 - !a_free)
         {
@@ -3201,7 +3208,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             emit3_o (A_INC, result_aop, i, 0, 0);
           i++;
         }
-      else if (!started && i + 1 < size && (x_free || aopInReg(left_aop, i, X_IDX) && regDead (X_IDX, ic)) &&
+      else if (!started && !maskedword && i + 1 < size && (x_free || aopInReg(left_aop, i, X_IDX) && regDead (X_IDX, ic)) &&
         (aopOnStackNotExt (right_aop, i, 2) || right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD || right_aop->type == AOP_DIR && i + 1 < right_aop->size) &&
         ((aopOnStack (result_aop, i, 2) || result_aop->type == AOP_DIR) && (aopRS (left_aop) && !aopInReg(left_aop, i, A_IDX) && !aopInReg(left_aop, i + 1, A_IDX) || left_aop->type == AOP_DIR) ||
         aopInReg(left_aop, i, X_IDX) && aopInReg(result_aop, i, Y_IDX) ||
@@ -3222,7 +3229,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = TRUE;
           i += 2;
         }
-      else if (!started && aopIsLitVal (left_aop, i, 1, 0x00))
+      else if (!started && !maskedbyte && aopIsLitVal (left_aop, i, 1, 0x00))
         {
           if (!a_free)
             {
@@ -3242,7 +3249,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             
           i++;
         }
-      else if (!started && i + 1 < size && (y_free || aopInReg(left_aop, i, Y_IDX) && regDead (Y_IDX, ic)) && 
+      else if (!started && !maskedword && i + 1 < size && (y_free || aopInReg(left_aop, i, Y_IDX) && regDead (Y_IDX, ic)) && 
         (aopOnStack (result_aop, i, 2) || result_aop->type == AOP_DIR) &&
         (aopOnStack (left_aop, i, 2) || aopInReg(left_aop, i, Y_IDX) || left_aop->type == AOP_DIR) &&
         (aopOnStackNotExt (right_aop, i, 2) || right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD || right_aop->type == AOP_DIR && i + 1 < right_aop->size))
@@ -3262,7 +3269,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = TRUE;
           i += 2;
         }
-      else if (!started && right_aop->type == AOP_LIT && 
+      else if (!started && !maskedbyte && right_aop->type == AOP_LIT && 
         (aopInReg (left_aop, i, XH_IDX) && aopInReg (result_aop, i, XH_IDX) || aopInReg (left_aop, i, YH_IDX) && aopInReg (result_aop, i, YH_IDX)))
         {
           emit2 ("subw", "%s, #%d", aopInReg (left_aop, i, YH_IDX) ? "y" : "x", byteOfVal (right_aop->aopu.aop_lit, i) << 8);
@@ -3270,7 +3277,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = TRUE;
           i++;
         }
-      else if (!started && i == size - 1 && right_aop->type == AOP_LIT && // For yl, we only save a cycle comapred to the normal way.
+      else if (!started && !maskedbyte && i == size - 1 && right_aop->type == AOP_LIT && // For yl, we only save a cycle comapred to the normal way.
         (aopInReg (left_aop, i, XL_IDX) && aopInReg (result_aop, i, XL_IDX) && xh_free || aopInReg (left_aop, i, YL_IDX) && aopInReg (result_aop, i, YL_IDX) && yh_free))
         {
           emit2 ("subw", "%s, #%d", aopInReg (left_aop, i, YL_IDX) ? "y" : "x", byteOfVal (right_aop->aopu.aop_lit, i));
@@ -3278,7 +3285,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = TRUE;
           i++;     
         }
-      else if (!started && i == size - 1 && aopOnStackNotExt (right_aop, i, 1) &&
+      else if (!started && !maskedbyte && i == size - 1 && aopOnStackNotExt (right_aop, i, 1) &&
         (aopInReg (left_aop, i, XL_IDX) && aopInReg (result_aop, i, XL_IDX) && xh_free || aopInReg (left_aop, i, YL_IDX) && aopInReg (result_aop, i, YL_IDX) && yh_free))
         {
           emit2 ("subw", "%s, (%d, sp)", aopInReg (left_aop, i, YL_IDX) ? "y" : "x", right_aop->aopu.bytes[i].byteu.stk + G.stack.pushed - 1);
@@ -3287,7 +3294,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i++;
         }
       // Fallback for rematerialization
-      else if (!started && (left_aop->type == AOP_STL || right_aop->type == AOP_STL) && x_free && left_aop->regs[XL_IDX] < 0 && left_aop->regs[XH_IDX] < 0)
+      else if (!started && !maskedword && (left_aop->type == AOP_STL || right_aop->type == AOP_STL) && x_free && left_aop->regs[XL_IDX] < 0 && left_aop->regs[XH_IDX] < 0)
         {
           genMove_o (ASMOP_X, 0, right_aop, i, 2, a_free, true, y_free);
           push (ASMOP_X, 0, 2);
@@ -3312,6 +3319,11 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cheapMove (ASMOP_A, 0, left_aop, i, false);
           emit2 (started ? "sbc" : "sub", "a, (1, sp)");
           cost (2, 1);
+          if (maskedbyte)
+            {
+              emit2 ("and", "a, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
           if (aopInReg (result_aop, i, A_IDX))
             {
               adjustStack (1, false, false, false);
@@ -3370,7 +3382,12 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 
               started = TRUE;
             }
-
+            
+          if (maskedbyte)
+            {
+              emit2 ("and", "a, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
           cheapMove (result_aop, i, ASMOP_A, 0, FALSE);
 
           if (aopInReg (result_aop, i, A_IDX))
@@ -4793,7 +4810,7 @@ genPlus (const iCode *ic)
           started = TRUE;
           i++;
         }
-      else if (!started && !maskedword && i == size - 1 && rightop->type == AOP_LIT && // For yl, we only save a cycle compared to the normal way.
+      else if (!started && !maskedbyte && i == size - 1 && rightop->type == AOP_LIT && // For yl, we only save a cycle compared to the normal way.
         (aopInReg (leftop, i, XL_IDX) && aopInReg (result->aop, i, XL_IDX) && xh_free || aopInReg (leftop, i, YL_IDX) && aopInReg (result->aop, i, YL_IDX) && yh_free))
         {
           emit2 ("addw", "%s, #%d", aopInReg (leftop, i, YL_IDX) ? "y" : "x", byteOfVal (rightop->aopu.aop_lit, i));
@@ -4801,7 +4818,7 @@ genPlus (const iCode *ic)
           started = TRUE;
           i++;
         }
-      else if (!started && !maskedword && i == size - 1 && aopOnStackNotExt (rightop, i, 1) &&
+      else if (!started && !maskedbyte && i == size - 1 && aopOnStackNotExt (rightop, i, 1) &&
         (aopInReg (leftop, i, XL_IDX) && aopInReg (result->aop, i, XL_IDX) && xh_free || aopInReg (leftop, i, YL_IDX) && aopInReg (result->aop, i, YL_IDX) && yh_free))
         {
           emit2 ("addw", "%s, (%d, sp)", aopInReg (leftop, i, YL_IDX) ? "y" : "x", rightop->aopu.bytes[i].byteu.stk + G.stack.pushed - 1);
