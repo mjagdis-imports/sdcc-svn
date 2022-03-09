@@ -1,6 +1,6 @@
 /** bit-precise integers
 
-    width: 2, 4, 7, 8, 9, 15, 16, 17, 24, 33, 40, 48, 63, 64, 65
+    width: 2, 4, 7, 8, 9, 15, 16, 17, 24, 32, 33, 40, 48, 63, 64, 65
 */
 
 #include <testfwk.h>
@@ -36,11 +36,15 @@ void testBitIntArith(void)
 #if {width} >= 11 // Signed overflow is undefined behaviour
 	ASSERT(a * b == (bitinttype)(23) * (bitinttype)(-42));
 #endif
+	ASSERT(a % b == (bitinttype)(23) % (bitinttype)(-42));
+	ASSERT(a / b == (bitinttype)(23) / (bitinttype)(-42));
 #endif
 	// Wrap on unsigned overflow
 	ASSERT(ua + ub == (ubitinttype)(23) + (ubitinttype)(-42));
 	ASSERT(ua - ub == (ubitinttype)(23) - (ubitinttype)(-42));
 	ASSERT(ua * ub == (ubitinttype)(23) * (ubitinttype)(-42));
+	ASSERT(ua % ub == (ubitinttype)(23) % (ubitinttype)(-42));
+	ASSERT(ua / ub == (ubitinttype)(23) / (ubitinttype)(-42));
 
 	ASSERT((a < b) == ((bitinttype)(23) < (bitinttype)(-42)));
 	ASSERT((a <= b) == ((bitinttype)(23) <= (bitinttype)(-42)));

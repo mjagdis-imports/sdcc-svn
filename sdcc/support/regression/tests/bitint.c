@@ -1,6 +1,6 @@
 /** bit-precise integers
 
-    width: 2, 4, 7, 8, 9, 15, 16, 17, 24, 33, 40, 48, 63, 64, 65
+    width: 2, 4, 7, 8, 9, 15, 16, 17, 24, 32, 33, 40, 48, 63, 64, 65
     sign: unsigned, signed
 */
 

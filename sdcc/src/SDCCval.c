@@ -2528,7 +2528,7 @@ valDiv (value * lval, value * rval, bool reduceType)
     {
       if (SPEC_USIGN (val->type))
         {
-          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) / (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
           if (IS_BITINT (val->type)) // unsigned wrap-around
             SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
         }
@@ -2575,7 +2575,7 @@ valMod (value * lval, value * rval, bool reduceType)
     {
       if (SPEC_USIGN (val->type))
         {
-          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) % (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
           if (IS_BITINT (val->type)) // unsigned wrap-around
             SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
         }
