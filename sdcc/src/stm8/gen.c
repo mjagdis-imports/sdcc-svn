@@ -8982,7 +8982,7 @@ genCast (const iCode *ic)
       unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
         (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
 
-      if (!regDead (A_IDX, ic) || result->aop->regs[A_IDX] > 0 && result->aop->regs[A_IDX] != result->aop->size - 1)
+      if (!regDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0 && result->aop->regs[A_IDX] != result->aop->size - 1)
         UNIMPLEMENTED;
       genMove (result->aop, right->aop, true, regDead (X_IDX, ic), regDead (Y_IDX, ic));
       cheapMove (ASMOP_A, 0, result->aop, result->aop->size - 1, false);
@@ -8991,9 +8991,7 @@ genCast (const iCode *ic)
       if (!SPEC_USIGN (resulttype)) // Sign-extend
         {
           symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-          push (ASMOP_A, 0, 1);
-          emit2 ("and", "a, #0x%02x", 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1));
-          pop (ASMOP_A, 0, 1);
+          emit2 ("bcp", "a, #0x%02x", 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1));
           if (!regalloc_dry_run)
             emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
           emit2 ("or", "a, #0x%02x", ~topbytemask & 0xff);

@@ -704,6 +704,7 @@ unsigned int bitsForType (sym_link *);
 sym_link *newIntLink ();
 sym_link *newCharLink ();
 sym_link *newLongLink ();
+sym_link *newLongLongLink ();
 sym_link *newBoolLink ();
 sym_link *newPtrDiffLink ();
 sym_link *newVoidLink ();

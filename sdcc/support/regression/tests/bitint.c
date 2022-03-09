@@ -25,6 +25,7 @@ bitinttype g(bitinttype a) // The backend needs to support parameters of arbitra
 #endif
 
 volatile int i = 42;
+volatile long long ll = 42;
 
 void testBitInt(void)
 {
@@ -43,8 +44,14 @@ void testBitInt(void)
 	bitinttype b = 1;
 	ASSERT(_Generic(++b, default: 1, bitinttype: 0) == 0); // ++a is not the same a += 1, but a += (bitinttype)1.
 
+	// Cast from int
 	ASSERT((bitinttype)i == (bitinttype)42); // Explicit cast
 	b = i; // Implicit cast
+	ASSERT(b == (bitinttype)42);
+
+	// Cast from long long
+	ASSERT((bitinttype)ll == (bitinttype)42); // Explicit cast
+	b = ll; // Implicit cast
 	ASSERT(b == (bitinttype)42);
 #endif
 }

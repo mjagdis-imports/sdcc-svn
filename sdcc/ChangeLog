@@ -1,6 +1,16 @@
 2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCopt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/stm8/gen.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/bitintarith.c:
+	  Multiplication of bit-precise integers.
+
+2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
 	  src/stm8/main.c:
 	  Improve diagnostics for unimplemented bit-precise operators.
 

@@ -2471,6 +2471,12 @@ valMult (value * lval, value * rval, bool reduceType)
     SPEC_CVAL (val->type).v_fixed16x16 = fixed16x16FromDouble (floatFromVal (lval) * floatFromVal (rval));
   /* signed and unsigned mul are the same, as long as the precision of the
      result isn't bigger than the precision of the operands. */
+  else if (IS_BITINT (val->type))
+    {
+      SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) * (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+      if (SPEC_USIGN (val->type))
+        SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
+    }
   else if (SPEC_LONGLONG (val->type))
     SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) * (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
   else if (SPEC_LONG (val->type))
@@ -2518,10 +2524,14 @@ valDiv (value * lval, value * rval, bool reduceType)
     SPEC_CVAL (val->type).v_float = floatFromVal (lval) / floatFromVal (rval);
   else if (IS_FIXED16X16 (val->type))
     SPEC_CVAL (val->type).v_fixed16x16 = fixed16x16FromDouble (floatFromVal (lval) / floatFromVal (rval));
-  else if (SPEC_LONGLONG (val->type))
+  else if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
-        SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) / (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+        {
+          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          if (IS_BITINT (val->type)) // unsigned wrap-around
+            SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
+        }
       else
         SPEC_CVAL (val->type).v_longlong = (TYPE_TARGET_LONGLONG) ullFromVal (lval) / (TYPE_TARGET_LONGLONG) ullFromVal (rval);
     }
@@ -2561,10 +2571,14 @@ valMod (value * lval, value * rval, bool reduceType)
   val->type = val->etype = computeType (lval->etype, rval->etype, RESULT_TYPE_INT, '%');
   SPEC_SCLS (val->etype) = S_LITERAL;   /* will remain literal */
 
-  if (SPEC_LONGLONG (val->type))
+  if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
-        SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) % (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+        {
+          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          if (IS_BITINT (val->type)) // unsigned wrap-around
+            SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
+        }
       else
         SPEC_CVAL (val->type).v_longlong = (TYPE_TARGET_LONGLONG) ullFromVal (lval) % (TYPE_TARGET_LONGLONG) ullFromVal (rval);
     }
@@ -2611,7 +2625,7 @@ valZeroResultFromOp (sym_link * type1, sym_link * type2, int op, bool reduceType
     SPEC_CVAL (val->type).v_float = 0;
   else if (IS_FIXED16X16 (val->type))
     SPEC_CVAL (val->type).v_fixed16x16 = 0;
-  else if (SPEC_LONGLONG (val->type))
+  else if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
     {
       if (SPEC_USIGN (val->type))
         SPEC_CVAL (val->type).v_ulonglong = 0;
