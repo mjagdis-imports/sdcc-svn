@@ -2859,7 +2859,7 @@ valCompare (value * lval, value * rval, int ctype, bool reduceType)
              Literals are reduced to their cheapest type, therefore left and
              right might have different types. It's necessary to find a
              common type: int (used for char too) or long */
-          if (!IS_LONGLONG (lval->etype) && !IS_LONGLONG (rval->etype))
+          if (!IS_LONGLONG (lval->etype) && !IS_BITINT (lval->etype) && !IS_LONGLONG (rval->etype) && !IS_BITINT (rval->etype))
             {
               r = (TYPE_TARGET_ULONG) r;
               l = (TYPE_TARGET_ULONG) l;
@@ -2893,7 +2893,7 @@ valCompare (value * lval, value * rval, int ctype, bool reduceType)
              Literals are reduced to their cheapest type, therefore left and
              right might have different types. It's necessary to find a
              common type: int (used for char too) or long */
-          if (!IS_LONGLONG (lval->etype) && !IS_LONGLONG (rval->etype))
+          if (!IS_LONGLONG (lval->etype) && !IS_BITINT (lval->etype) && !IS_LONGLONG (rval->etype) && !IS_BITINT (rval->etype))
             {
               r = (TYPE_TARGET_ULONG) r;
               l = (TYPE_TARGET_ULONG) l;
@@ -2929,7 +2929,7 @@ valBitwise (value * lval, value * rval, int op, bool reduceType)
   switch (op)
     {
     case '&':
-      if (SPEC_LONGLONG (val->type))
+      if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
         {
           if (SPEC_USIGN (val->type))
             SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) & (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
@@ -2953,7 +2953,7 @@ valBitwise (value * lval, value * rval, int op, bool reduceType)
       break;
 
     case '|':
-      if (SPEC_LONGLONG (val->type))
+      if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
         {
           if (SPEC_USIGN (val->type))
             SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) | (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
@@ -2978,7 +2978,7 @@ valBitwise (value * lval, value * rval, int op, bool reduceType)
       break;
 
     case '^':
-      if (SPEC_LONGLONG (val->type))
+      if (SPEC_LONGLONG (val->type) || IS_BITINT (val->type))
         {
           if (SPEC_USIGN (val->type))
             SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) ^ (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
