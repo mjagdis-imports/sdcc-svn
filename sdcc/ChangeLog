@@ -1,5 +1,11 @@
 2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
 
+	* src/SDCCsymt.c,
+	  support/regression/tests/bitintbitfield.c:
+	  Fix signed bit-precise bit-fields.
+
+2022-03-09 Philipp Klaus Krause <pkk AT spth.de>
+
 	* src/SDCCopt.c,
 	  src/SDCCsymt.h,
 	  src/SDCCval.c,

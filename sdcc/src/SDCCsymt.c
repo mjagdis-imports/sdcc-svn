@@ -670,8 +670,8 @@ checkTypeSanity (sym_link *etype, const char *name)
 
   if (SPEC_NOUN (etype) == V_BITINT)
     {
-      if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || // Check that port support bit-precise integers this wide
-       SPEC_BITINTWIDTH (etype) < (SPEC_USIGN (etype) ? 1 : 2))   // Check minimum wdth mandated by standard
+      if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || // Check that port supports bit-precise integers this wide.
+       SPEC_BITINTWIDTH (etype) < (SPEC_USIGN (etype) ? 1 : 2)) // Check minimum width mandated by standard.
        werror (E_INVALID_BITINTWIDTH);
     }
 }
@@ -1672,7 +1672,7 @@ compStructSize (int su, structdef * sdef)
 
           /* ISO/IEC 9899 J.3.9 implementation defined behaviour: */
           /* a "plain" int bitfield is unsigned */
-          if (!loop->etype->select.s.b_signed)
+          if (!loop->etype->select.s.b_signed && SPEC_NOUN (loop->etype) != V_BITINTBITFIELD)
             SPEC_USIGN (loop->etype) = 1;
 
           if (loop->bitVar == BITVAR_PAD)
