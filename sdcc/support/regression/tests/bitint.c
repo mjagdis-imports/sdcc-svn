@@ -24,6 +24,8 @@ bitinttype g(bitinttype a) // The backend needs to support parameters of arbitra
 
 #endif
 
+volatile int i = 42;
+
 void testBitInt(void)
 {
 #if __SDCC_BITINT_MAXWIDTH >= {width} // TODO: When we can regression-test in --std-c23 mode, use the standard macro from limits.h instead!
@@ -40,6 +42,10 @@ void testBitInt(void)
 	
 	bitinttype b = 1;
 	ASSERT(_Generic(++b, default: 1, bitinttype: 0) == 0); // ++a is not the same a += 1, but a += (bitinttype)1.
+
+	ASSERT((bitinttype)i == (bitinttype)42); // Explicit cast
+	b = i; // Implicit cast
+	ASSERT(b == (bitinttype)42);
 #endif
 }
 

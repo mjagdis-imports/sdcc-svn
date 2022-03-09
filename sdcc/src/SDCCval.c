@@ -3108,7 +3108,7 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
           if (llval & ((1ull << SPEC_BITINTWIDTH (val->etype) - 1)))
             llval |= ~(0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->etype)));
           else
-            llval &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->etype) - 1));
+            llval &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->etype) + 1));
           SPEC_CVAL (val->etype).v_longlong = llval;
         }
       else

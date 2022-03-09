@@ -37,9 +37,10 @@ void testBitIntArith(void)
 	//ASSERT(a * b == (bitinttype)(23) * (bitinttype)(-42)); // todo: implement multiplication support
 #endif
 #endif
-	ASSERT(ua + ub == (ubitinttype)(23) + (ubitinttype)(-42)); // todo: implement unsigned wrap on overflow
-	ASSERT(ua - ub == (ubitinttype)(23) - (ubitinttype)(-42)); // todo: implement unsigned wrap on overflow
-	//ASSERT(ua * ub == (ubitinttype)(23) * (ubitinttype)(-42)); // todo: implement unsigned wrap on overflow
+	// Wrap on unsigned overflow
+	ASSERT(ua + ub == (ubitinttype)(23) + (ubitinttype)(-42));
+	ASSERT(ua - ub == (ubitinttype)(23) - (ubitinttype)(-42));
+	//ASSERT(ua * ub == (ubitinttype)(23) * (ubitinttype)(-42)); // todo: implement multiplication support
 
 	ASSERT((a < b) == ((bitinttype)(23) < (bitinttype)(-42)));
 	ASSERT((a <= b) == ((bitinttype)(23) <= (bitinttype)(-42)));
