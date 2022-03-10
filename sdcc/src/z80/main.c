@@ -932,6 +932,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   if (ic->op != '*')
     return(false);
 
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
   if (IS_LITERAL (left))
     test = left;
   else if (IS_LITERAL (right))
@@ -1086,7 +1089,7 @@ PORT z80_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1217,8 +1220,8 @@ PORT z180_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
