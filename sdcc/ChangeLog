@@ -1,5 +1,14 @@
 2022-03-10 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
 
+	* src/ds390/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c:
+	  Explicitly state _BitInt non-support.
+
+2022-03-10 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
 	* src/SDCCmain.c
 	  src/pdk/gen.c
 	  src/pdk/main.c
