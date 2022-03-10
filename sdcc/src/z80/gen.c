@@ -7472,6 +7472,18 @@ genPlus (iCode * ic)
                   emit2 ("add hl, de");
                   regalloc_dry_run_cost += 1;
 
+                  if (maskedtopbyte)
+                    {
+                      if (!isRegDead (A_IDX, ic))
+                        _push (PAIR_AF);
+                      emit2 ("ld a, h");
+                      emit2 ("and a, #0x%02x", topbytemask);
+                      emit2 ("ld h, a");
+                      regalloc_dry_run_cost += 4;
+                      if (!isRegDead (A_IDX, ic))
+                        _pop (PAIR_AF);
+                    }
+
                   if (!isPairDead (PAIR_DE, ic))
                     _pop (PAIR_DE);
                 }
