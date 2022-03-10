@@ -3,7 +3,7 @@
 	* doc/sdccman.lyx,
 	  src/z80/gen.c,
 	  src/z80/main.c:
-	  Basic (no multiplicative operators yet) support for bit-precise types and bit-fields thereof for z80 and z180.
+	  Basic bit-precise types and bit-fields thereof for z80 and related (except sm83).
 
 2022-03-09 Gabriele Gorla <gorlik@yahoo.com>
 

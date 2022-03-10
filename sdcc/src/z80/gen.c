@@ -3705,17 +3705,22 @@ commitPair (asmop *aop, PAIR_ID id, const iCode *ic, bool dont_destroy) // Obsol
 static void
 genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, bool *assigned, int *size, bool a_free, bool hl_free, bool really_do_it_now)
 {
-  for (int i = 0; i < n;)
+  // Avoid overwriting source. Do not assume stack locations during dry run - they can change later.
+  int dir = (!regalloc_dry_run && result->aopu.aop_stk + roffset > source->aopu.aop_stk + soffset && result->aopu.aop_stk + roffset < source->aopu.aop_stk + soffset + n) ? -1 : 1;
+
+  for (int j = 0; j < n;)
     {
+      int i = (dir >= 0) ? j : (n - j - 1);
+
       if (assigned[i])
         {
-          i++;
+          j++;
           continue;
         }
 
       if (!aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
         {
-          i++;
+          j++;
           continue;
         }
   
@@ -3727,7 +3732,7 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
       if (result_fp_offset == source_fp_offset && !regalloc_dry_run) // Stack locations can change, so in dry run do not assume stack coalescing will happen.
         {
           assigned[i] = true;
-          i++;
+          j++;
           continue;
         }
 
@@ -3755,7 +3760,7 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
           assigned[i] = true;
           assigned[i + 1] = true;
           (*size) -= 2;
-          i += 2;
+          j += 2;
           continue;
         }
 
@@ -3768,11 +3773,11 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
             _pop (PAIR_HL);
           assigned[i] = true;
           (*size)--;
-          i++;
+          j++;
           continue;
         }
 
-       i++;
+       j++;
     }
 
   wassertl_bt (*size >= 0, "genCopyStack() copied more than there is to be copied.");
@@ -14303,7 +14308,14 @@ genAssign (const iCode *ic)
     }
   else
     {
-      if (!IS_SM83 && // sm83 doesn't have ldir, r2k and r2ka ldir is affected by a wait state bug when copying between different types of memory.
+      // ldir could overwrite if areas overlap.
+      bool down = false;
+      if ((result->aop->type == AOP_STK || result->aop->type == AOP_EXSTK) &&
+        (right->aop->type == AOP_STK || right->aop->type == AOP_EXSTK))
+          if (!regalloc_dry_run && result->aop->aopu.aop_stk > right->aop->aopu.aop_stk && result->aop->aopu.aop_stk < right->aop->aopu.aop_stk + size)
+            down = true;
+
+      if (!IS_SM83 && !down && // sm83 doesn't have ldir, r2k and r2ka ldir is affected by a wait state bug when copying between different types of memory.
           (result->aop->type == AOP_STK || result->aop->type == AOP_EXSTK || result->aop->type == AOP_DIR
            || result->aop->type == AOP_IY) && (right->aop->type == AOP_STK || right->aop->type == AOP_EXSTK
                || right->aop->type == AOP_DIR || right->aop->type == AOP_IY) && size >= 2)
