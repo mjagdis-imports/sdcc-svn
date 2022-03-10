@@ -8016,6 +8016,11 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
   int size, offset = 0;
   unsigned long long lit = 0L;
 
+  sym_link *resulttype = operandType (IC_RESULT (ic));
+  unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+  bool maskedtopbyte = (topbytemask != 0xff);
+
   /* special cases :- */
   /* if both left & right are in bit space */
   if (left->type == AOP_CRY && right->type == AOP_CRY)
@@ -8095,7 +8100,10 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
   /* if literal right, add a, #-lit, else normal subb */
   while (size)
     {
-      if (!IS_SM83 && size >= 2 &&
+      bool maskedbyte = maskedtopbyte && (size == 1);
+      bool maskedword = maskedtopbyte && (size == 2);
+
+      if (!IS_SM83 && !maskedword && size >= 2 &&
         isPairDead (PAIR_HL, ic) &&
         (aopInReg (result, offset, HL_IDX) || aopInReg (result, offset, DE_IDX) || IS_RAB && result->type == AOP_STK) &&
         (result->regs[L_IDX] < 0 || result->regs[L_IDX] >= offset) && (result->regs[H_IDX] < 0 || result->regs[H_IDX] >= offset) &&
@@ -8233,6 +8241,13 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
           else
             emit2 ("adc a, !immedbyte", (unsigned int) ((lit >> (offset * 8)) & 0x0FFL));
         }
+
+      if (maskedbyte)
+        {
+          emit2 ("and a, #0x%02x", topbytemask);
+          regalloc_dry_run_cost += 2;
+        }
+
       if (pushed_hl)
         _pop (PAIR_HL);
       size--;
