@@ -1737,8 +1737,8 @@ PORT sm83_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 8 /* non-compliant - C23 rewuires t least 64 here. SM83 has some special paths in codegen for + and - of more than 8 bits. Thos do not yet support _BitInt */ },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {

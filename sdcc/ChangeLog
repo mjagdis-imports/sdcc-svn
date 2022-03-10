@@ -2,8 +2,9 @@
 
 	* doc/sdccman.lyx,
 	  src/z80/gen.c,
-	  src/z80/main.c:
-	  Basic bit-precise types and bit-fields thereof for z80 and related (except sm83).
+	  src/z80/main.c,
+	  support/regression/tests/bitint.c:
+	  Bit-precise types and bit-fields thereof for z80-related (except sm83, which only gets support up to a width of 8 bits for now).
 
 2022-03-09 Gabriele Gorla <gorlik@yahoo.com>
 
