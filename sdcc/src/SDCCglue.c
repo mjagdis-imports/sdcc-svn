@@ -989,7 +989,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
 {
   symbol *lsym = *sym;
   initList *lilist = *ilist;
-  unsigned long ival = 0;
+  unsigned long long ival = 0;
   unsigned size = 0;
   unsigned bit_start = 0;
   unsigned long int bytes_written = 0;
@@ -1027,7 +1027,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
               werror (W_LIT_OVERFLOW);
             }
 
-          ival |= (ulFromVal (val) & ((1ul << bit_length) - 1ul)) << bit_start;
+          ival |= (ullFromVal (val) & (0xffffffffffffffffull >> (64 - bit_length))) << bit_start;
           lilist = lilist ? lilist->next : NULL;
         }
       bit_start += bit_length;
