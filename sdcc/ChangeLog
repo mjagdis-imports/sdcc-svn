@@ -1,7 +1,9 @@
 2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
 
 	* src/SDCCsymt.c,
-	  src/SDCCval.c:
+	  src/SDCCval.c,
+	  src/z80/gen.c:
+	  support/regression/tests/widebitintbitfield.c:
 	  Fixes for bit-precise bit-fields.
 
 2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
