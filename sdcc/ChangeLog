@@ -5,7 +5,7 @@
 	  src/SDCCval.c,
 	  support/regression/tests/bitint.c,
 	  support/regression/tests/bitintbitfield.c:
-	  Fix an issue in casts between bitprecise types of different sign.
+	  Fix issues in casts between bitprecise types of different sign.
 
 2022-03-10 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
 

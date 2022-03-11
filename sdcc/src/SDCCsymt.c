@@ -2820,9 +2820,10 @@ compareType (sym_link *dest, sym_link *src)
 
   if (SPEC_NOUN (dest) == V_BITINT && SPEC_NOUN (src) == V_BITINT)
     {
-      if (SPEC_BITINTWIDTH (dest) == SPEC_BITINTWIDTH (src))
-        return (SPEC_USIGN (dest) == SPEC_USIGN (src) ? 1 : -2);
-      return -1;
+      if (SPEC_BITINTWIDTH (dest) != SPEC_BITINTWIDTH (src) ||
+        SPEC_USIGN (dest) && !SPEC_USIGN (src) && SPEC_BITINTWIDTH (dest) % 8) // Cast from sgined to unsigned type cannot be omitted, since it requires masking top bits.
+        return -1;
+      return (SPEC_USIGN (dest) == SPEC_USIGN (src) ? 1 : -2);
     }
 
   /* it is a specifier */
