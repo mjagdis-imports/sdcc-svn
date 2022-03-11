@@ -751,9 +751,11 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
   signExtMask = varBits >= sizeof(TYPE_TARGET_ULONGLONG)*8 ? 0 : ~((1ull << varBits)-1);
 
 #if 0
+  printf("checkConstantRange\n");
+  printf("   varBits     = %d\n", varBits);
   printf("   ulitVal     = 0x%016lx\n", ulitVal);
   printf("   signExtMask = 0x%016lx\n", signExtMask);
-  printf("   signMask    = 0x%016lx\n",signMask);
+  printf("   signMask    = 0x%016lx\n", signMask);
 #endif
 
   //return CCR_OK; /* EEP - debug for long long */
@@ -834,6 +836,11 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
 
   reType = computeType (var, lit, RESULT_TYPE_NONE, op);
 
+#if 0
+  printf("   reType      = ");
+  printTypeChain (reType, 0);
+#endif
+
   if (SPEC_USIGN (reType))
     {
       /* unsigned operation */
@@ -901,8 +908,6 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
           maxValM &= opBitsMask;
         }
 #if 0
-      printf("   reType      = ");
-      printTypeChain (reType, NULL);
       printf("   ulitVal     = 0x%016lx\n", ulitVal);
       printf("   opBitsMask  = 0x%016lx\n", opBitsMask);
       printf("   maxValP     = 0x%016lx\n", maxValP);

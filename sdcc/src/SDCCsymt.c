@@ -2328,6 +2328,10 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
 
   etype2 = type2 ? getSpec (type2) : type1;
 
+#if 0
+  printf("computeType "); printTypeChain (type1, 0); printf (" "); printTypeChain (type2, 0); printf ("\n"); 
+#endif
+
   /* Conditional operator has some special type conversion rules */
   if (op == ':')
     {
@@ -2446,7 +2450,7 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
     {
     if (SPEC_NOUN (etype2) == V_BITINTBITFIELD && SPEC_BITINTWIDTH(etype2) > bitsForType (type1))
         {
-          rType = copyLinkChain (type1);
+          rType = copyLinkChain (type2);
         }
       else
         {
@@ -2510,6 +2514,10 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
           SPEC_SCLS (reType) = 0;
           SPEC_USIGN (reType) = 0;
           return rType;
+        }
+      else if (SPEC_NOUN (reType) == V_BITINTBITFIELD) // _BitInt(N) bit-field promotes to _BitInt(N).
+        {
+          SPEC_NOUN (reType) = V_BITINT ;
         }
       else if (IS_BITFIELD (reType))
         {

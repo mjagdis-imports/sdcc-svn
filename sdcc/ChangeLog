@@ -1,6 +1,7 @@
 2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
 
-	* src/SDCCsymt.c:
+	* src/SDCCsymt.c,
+	  src/SDCCval.c:
 	  Fixes for bit-precise bit-fields.
 
 2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
