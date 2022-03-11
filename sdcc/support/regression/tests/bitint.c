@@ -53,6 +53,10 @@ void testBitInt(void)
 	b = i; // Implicit cast
 	ASSERT(b == (bitinttype)42);
 
+	i = -23;
+	b = i; // Implicit cast
+	ASSERT(b == (bitinttype)-23);
+
 	// Cast from long long
 	ASSERT((bitinttype)ll == (bitinttype)42); // Explicit cast
 	b = ll; // Implicit cast
