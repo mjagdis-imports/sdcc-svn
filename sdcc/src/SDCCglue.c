@@ -1067,7 +1067,11 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
       bytes_written += 4;
       break;
     default:
-      wassert (0);
+      for (unsigned int i = 0; i < size ; i++)
+        {
+          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (((unsigned long long)ival >> i * 8) & 0xff));
+          bytes_written++;
+        }
     }
   *sym = lsym;
   *ilist = lilist;

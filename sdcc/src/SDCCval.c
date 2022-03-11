@@ -3078,6 +3078,10 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
     return NULL;
   if ((fval > 0x7ffffffful) || (-fval > 0x7ffffffful))
     l = (unsigned long)llval;
+    
+#if 0
+  printf("valCastLiteral: %lx to ", llval); printTypeChain (dtype, stdout); printf("\n");
+#endif
 
   val = newValue ();
   if (dtype)

@@ -44,7 +44,7 @@ void testBitInt(void)
 	ASSERT(_Generic((_BitInt(CHAR_BIT * sizeof(int)))(4) + 300, default: 1, int: 0) == 0); // Even when both are the same size.
 #endif
 #endif
-	
+
 	bitinttype b = 1;
 	ASSERT(_Generic(++b, default: 1, bitinttype: 0) == 0); // ++a is not the same a += 1, but a += (bitinttype)1.
 
@@ -57,6 +57,15 @@ void testBitInt(void)
 	ASSERT((bitinttype)ll == (bitinttype)42); // Explicit cast
 	b = ll; // Implicit cast
 	ASSERT(b == (bitinttype)42);
+
+	// Casts between bit-precise types
+#if {width} >= 6
+	b = 0x5aff;
+	unsigned _BitInt(6) b6 = b;
+	ASSERT((unsigned _BitInt(6))((bitinttype)0x5aff) == b6);
+	b = b6;
+	ASSERT((bitinttype)b6 == (bitinttype)(unsigned _BitInt(6))0x5aff);
+#endif
 #endif
 }
 
