@@ -2426,20 +2426,35 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
   else if (IS_BITVAR (etype1) && IS_BITVAR (etype2))
     rType = SPEC_BLEN (etype1) >= SPEC_BLEN (etype2) ? copyLinkChain (type1) : copyLinkChain (type2);
 
-  /* if only one of them is a bit variable then the other one prevails */
+  /* otherwise if only one of them is a bit variable then the other one prevails
+     exceptions for _BitInt apply */
   else if (IS_BITVAR (etype1) && !IS_BITVAR (etype2))
     {
-      rType = copyLinkChain (type2);
-      /* bitfield can have up to 16 bits */
-      if (getSize (etype1) > 1)
-        SPEC_NOUN (getSpec (rType)) = V_INT;
+      if (SPEC_NOUN (etype1) == V_BITINTBITFIELD && SPEC_BITINTWIDTH(etype1) > bitsForType (type2))
+        {
+          rType = copyLinkChain (type1);
+        }
+      else
+        {
+          rType = copyLinkChain (type2);
+          /* int bitfield can have up to 16 bits */
+          if (getSize (etype1) > 1)
+            SPEC_NOUN (getSpec (rType)) = V_INT;
+        }
     }
   else if (IS_BITVAR (etype2) && !IS_BITVAR (etype1))
     {
-      rType = copyLinkChain (type1);
-      /* bitfield can have up to 16 bits */
-      if (getSize (etype2) > 1)
-        SPEC_NOUN (getSpec (rType)) = V_INT;
+    if (SPEC_NOUN (etype2) == V_BITINTBITFIELD && SPEC_BITINTWIDTH(etype2) > bitsForType (type1))
+        {
+          rType = copyLinkChain (type1);
+        }
+      else
+        {
+           rType = copyLinkChain (type1);
+           /* int bitfield can have up to 16 bits */
+           if (getSize (etype2) > 1)
+            SPEC_NOUN (getSpec (rType)) = V_INT;
+        }
     }
 
   else if (bitsForType (type1) > bitsForType (type2))
