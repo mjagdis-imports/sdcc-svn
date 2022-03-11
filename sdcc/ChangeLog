@@ -1,5 +1,10 @@
 2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
 
+	* src/mcs51/gen.c:
+	  Basic _BitInt support for mcs51.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
 	* src/pdk/gen.c,
 	  src/stm8/gen.c,
 	  src/z80/gen.c,
