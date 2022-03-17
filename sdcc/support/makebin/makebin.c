@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -116,6 +117,7 @@ usage (void)
            "  -ys            Super GameBoy\n"
            "  -yS            Convert .noi file named like input file to .sym\n"
            "  -yj            set non-Japanese region flag\n"
+           "  -yN            do not copy big N validation logo into ROM header\n"
            "  -yp addr=value Set address in ROM to given value (address 0x100-0x1FE)\n"
            "Arguments:\n"
            "  <in_file>      optional IHX input file, '-' means stdin. (default: stdin)\n"
@@ -137,6 +139,7 @@ struct gb_opt_s
   BYTE sym_conversion;            /* True if .noi file should be converted to .sym (default false)*/
   BYTE non_jp;                    /* True if non-Japanese region, false for all other*/
   BYTE rom_banks_autosize;        /* True if rom banks should be auto-sized (default false)*/
+  bool do_logo_copy;              /* True if the nintendo logo should be copied into the ROM (default true) */
   BYTE address_overwrite[16];     /* For limited compatibility with very old versions */
 };
 
@@ -165,7 +168,10 @@ gb_postproc (BYTE * rom, int size, int *real_size, struct gb_opt_s *o)
    * If missing, an actual Game Boy won't run the ROM.
    */
 
-  memcpy (&rom[0x104], gb_logo, sizeof (gb_logo));
+  if (o->do_logo_copy)
+    {
+      memcpy (&rom[0x104], gb_logo, sizeof (gb_logo));
+    }
 
   rom[0x144] = o->licensee_str[0];
   rom[0x145] = o->licensee_str[1];
@@ -477,7 +483,8 @@ noi2sym (char *filename)
   char read = ' ';
   // no$gmb's implementation is limited to 32 character labels
   // we can safely throw away the rest
-  char label[33];
+  #define SYM_FILE_NAME_LEN_MAX 32
+  char label[SYM_FILE_NAME_LEN_MAX + 1];
   // 0x + 6 digit hex number
   // -> 65536 rom banks is the maximum homebrew cartrideges support (TPP1)
   char value[9];
@@ -533,7 +540,7 @@ noi2sym (char *filename)
       if (strncmp(value, "DEF ", 4) == 0)
         {
           // read label
-          for (i = 0; i < 32; ++i)
+          for (i = 0; i < (SYM_FILE_NAME_LEN_MAX - 1); ++i)
             {
               label[i] = read;
               if ((read = fgetc(noi)) == EOF || read == '\r' || read == '\n' || read == ' ')
@@ -567,7 +574,7 @@ noi2sym (char *filename)
           // we successfully read label and value
 
           // but filter out some invalid symbols
-          if (strcmp(label, ".__.ABS.") != 0 && strncmp(label, "l__", 3) != 0)
+          if (strcmp(label, ".__.ABS.") != 0)
             fprintf (sym, "%02X:%04X %s\n", (unsigned int)(strtoul(value, NULL, 0)>>16), (unsigned int)strtoul(value, NULL, 0)&0xFFFF, label);
         }
       else
@@ -689,8 +696,24 @@ main (int argc, char **argv)
   int ret;
   int gb = 0;
   int sms = 0;
-  struct gb_opt_s gb_opt = { "", {'0', '0'}, 0, 2, 0, 0x33, 0, 0, 0, 0, 0, {0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0}};
-  struct sms_opt_s sms_opt = { 0xa, 7, 0 };
+
+  struct gb_opt_s gb_opt = {.cart_name="",
+                            .licensee_str={'0', '0'},
+                            .mbc_type=0,
+                            .nb_rom_banks=2,
+                            .nb_ram_banks=0,
+                            .licensee_id=0x33,
+                            .is_gbc=0,
+                            .is_sgb=0,
+                            .sym_conversion=0,
+                            .non_jp=0,
+                            .rom_banks_autosize=0,
+                            .do_logo_copy=true,
+                            .address_overwrite={0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0, 0xFF, 0} };
+
+  struct sms_opt_s sms_opt = {.rom_size=0xa,
+                              .region_code=7,
+                              .version=0 };
 
 #if defined(_WIN32)
   setmode (fileno (stdout), O_BINARY);
@@ -799,6 +822,10 @@ main (int argc, char **argv)
 
             case 'C':
               gb_opt.is_gbc = 2;
+              break;
+
+            case 'N':
+              gb_opt.do_logo_copy = false; // when switch is present, turn off logo copy
               break;
 
             case 's':

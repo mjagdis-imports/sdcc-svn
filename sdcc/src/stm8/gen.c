@@ -1002,7 +1002,7 @@ aopForRemat (symbol *sym)
 {
   iCode *ic = sym->rematiCode;
   asmop *aop;
-  int val = 0;
+  long val = 0;
 
   wassert_bt (ic);
 
@@ -1012,18 +1012,18 @@ aopForRemat (symbol *sym)
         {
           if (isOperandLiteral (IC_RIGHT (ic)))
             {
-              val += (int) operandLitValue (IC_RIGHT (ic));
+              val += (long) operandLitValue (IC_RIGHT (ic));
               ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
             }
           else
             {
-              val += (int) operandLitValue (IC_LEFT (ic));
+              val += (long) operandLitValue (IC_LEFT (ic));
               ic = OP_SYMBOL (IC_RIGHT (ic))->rematiCode;
             }
         }
       else if (ic->op == '-')
         {
-          val -= (int) operandLitValue (IC_RIGHT (ic));
+          val -= (long) operandLitValue (IC_RIGHT (ic));
           ic = OP_SYMBOL (IC_LEFT (ic))->rematiCode;
         }
       else if (IS_CAST_ICODE (ic))
@@ -1032,7 +1032,7 @@ aopForRemat (symbol *sym)
         }
       else if (ic->op == ADDRESS_OF)
         {
-          val += (int) operandLitValue (IC_RIGHT (ic));
+          val += (long) operandLitValue (IC_RIGHT (ic));
           break;
         }
       else
@@ -2140,7 +2140,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
     const int ih = result->regs[XH_IDX] - roffset;
     const bool assign_l = (il >= 0 && il < n && !assigned[il] && aopInReg (source, soffset + il, YL_IDX));
     const bool assign_h = (ih >= 0 && ih < n && !assigned[ih] && aopInReg (source, soffset + ih, YH_IDX));
-    if (source->regs[XL_IDX] < 0 && source->regs[XH_IDX] < 0 &&
+    if (source->regs[XL_IDX] < soffset && source->regs[XH_IDX] < soffset &&
       (assign_l && assign_h || assign_l && xh_dead && ih < 0 || assign_h && xl_dead && il < 0))
     {
       emit3w (A_LDW, ASMOP_X, ASMOP_Y);
@@ -2165,7 +2165,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
     const int ih = result->regs[YH_IDX] - roffset;
     const bool assign_l = (il >= 0 && il < n && !assigned[il] && aopInReg (source, soffset + il, XL_IDX));
     const bool assign_h = (ih >= 0 && ih < n && !assigned[ih] && aopInReg (source, soffset + ih, XH_IDX));
-    if (source->regs[YL_IDX] < 0 && source->regs[YH_IDX] < 0 &&
+    if (source->regs[YL_IDX] < soffset && source->regs[YH_IDX] < soffset &&
       (assign_l && assign_h || assign_l && yh_dead && ih < 0 || assign_h && yl_dead && il < 0))
     {
       if(x_dead && assign_l && assign_h)
@@ -4319,7 +4319,7 @@ static void
 genReturn (const iCode *ic)
 {
   operand *left = IC_LEFT (ic);
-  int size, i;
+  int size;
   bool stacked = FALSE;
 
   D (emit2 ("; genReturn", ""));
@@ -4348,7 +4348,7 @@ genReturn (const iCode *ic)
     default:
       wassertl (size > 4, "Return not implemented for return value of this size.");
 
-      for(i = 0; i < size; i++)
+      for(int i = 0; i < size; i++)
         if (aopInReg (left->aop, i, XL_IDX) || aopInReg (left->aop, i, XH_IDX))
           {
             push (ASMOP_X, 0, 2);
@@ -4374,7 +4374,7 @@ genReturn (const iCode *ic)
         }
 
       // Clear a first.
-      for(i = 0; i < size; i++)
+      for(int i = 0; i < size; i++)
         if (aopInReg (left->aop, i, A_IDX))
           {
             emit2 ("ld", "(#%d, x), a", size - 1 - i);
@@ -4382,7 +4382,7 @@ genReturn (const iCode *ic)
             break;
           }
 
-      for(i = 0; i < size;)
+      for(int i = 0; i < size;)
         {
           if (aopInReg (left->aop, i, Y_IDX) || size > 2 && left->aop->regs[YL_IDX] < i && left->aop->regs[YH_IDX] < i && (aopOnStackNotExt (left->aop, i, 2) || left->aop->type == AOP_LIT))
             {
@@ -4421,7 +4421,7 @@ genReturn (const iCode *ic)
                 }
               i++;
             }
-          else
+          else // a, already stored early.
             i++;
         }
 
@@ -7308,6 +7308,32 @@ genLeftShift (const iCode *ic)
 
   size = result->aop->size;
 
+  if (skip_bytes + 2 == size && right->aop->type == AOP_LIT &&
+    (iterations <= 3 || iterations == 7) &&
+    (aopInReg (shiftop, skip_bytes, X_IDX) || aopInReg (shiftop, skip_bytes, Y_IDX)))
+    {
+      bool a_free = regDead (A_IDX, ic) && shiftop->regs[A_IDX] < 0;
+      if (iterations <= 3)
+        {
+          for(int i = 0; i < iterations; i++)
+            emit3w_o (A_SLLW, shiftop, skip_bytes, 0, 0);
+          goto postshift;
+        }
+      wassert (iterations == 7);
+      if (!a_free)
+        {
+          push (ASMOP_A, 0, 1);
+          pushed_a = true;
+        }
+      bool y = aopInReg (shiftop, skip_bytes, Y_IDX);
+      emit2 ("clr", "a");
+      emit2 ("rlwa", y ? "y" : "x");
+      emit2 ("srl", "a");
+      emit2 ("rrcw", y ? "y" : "x");
+      cost (4 + y * 2, 5);
+      goto postshift;
+    }
+
   for (i = 0; i < size; i++)
     {
       if (aopRS (shiftop) && (!aopInReg (shiftop, i, A_IDX) || aopInReg (right->aop, 0, A_IDX)) && shiftop->aopu.bytes[i].in_reg &&
@@ -7971,7 +7997,7 @@ genPointerGet (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
   int size, i;
-  unsigned offset;
+  long offset;
   bool use_y;
   bool pushed_x = false;
   bool pushed_a = false;
@@ -7996,8 +8022,7 @@ genPointerGet (const iCode *ic)
 
   size = result->aop->size;
 
-  // todo: What if right operand is negative?
-  offset = byteOfVal (right->aop->aopu.aop_lit, 1) * 256 + byteOfVal (right->aop->aopu.aop_lit, 0);
+  offset = operandLitValue (IC_RIGHT(ic));
 
   // Long pointer indirect long addressing mode is useful only in one very specific case:
   if (!bit_field && size == 1 && !offset && left->aop->type == AOP_DIR && !regDead (X_IDX, ic) && regDead (A_IDX, ic))

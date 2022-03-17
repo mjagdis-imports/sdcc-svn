@@ -1,7 +1,7 @@
 /*
- * Simulator of microcontrollers (shc08.cc)
+ * Simulator of microcontrollers (g11p1a.cc)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) @@S@@,@@Y@@ Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -25,34 +25,23 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-// prj
-#include "globals.h"
+#include <stdio.h>
 
-// sim.src
-//#include "appcl.h"
+#include "g11p1a.h"
 
-// local
-#include "simhc08cl.h"
+// code, mask, branch, len, mnem, iscall, ticks
+struct dis_entry disass11p1a[]= {
 
+  { 0x83, 0xff, ' ', 3, "CPD %B" },  
+  { 0x93, 0xff, ' ', 3, "CPD %D" },  
+  { 0xa3, 0xff, ' ', 3, "CPD %X" },  
+  { 0xb3, 0xff, ' ', 3, "CPD %E" },  
 
-int
-main(int argc, char *argv[])
-{
-  class cl_sim *sim;
+  { 0xad, 0xff, ' ', 3, "CPY %X" },
+  { 0xee, 0xff, ' ', 2, "LDY %x" },
+  { 0xef, 0xff, ' ', 2, "STY %x" },
 
-  cpus= cpus_hc08;
-  application= new cl_app();
-  application->set_name("shc08");
-  application->init(argc, argv);
-  sim= new cl_simhc08(application);
-  if (sim->init())
-    sim->state|= SIM_QUIT;
-  application->set_simulator(sim);
-  application->run();
-  application->done();
-  delete application;
-  return(0);
-}
+  { 0, 0, 0, 0, 0, 0 }
+};
 
-
-/* End of hc08.src/shc08.cc */
+/* End of m6800.src/g11p1a.cc */

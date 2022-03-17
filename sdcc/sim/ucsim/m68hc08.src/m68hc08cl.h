@@ -1,5 +1,5 @@
 /*
- * Simulator of microcontrollers (hc08cl.h)
+ * Simulator of microcontrollers (m68hc08cl.h)
  *
  * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
  *
@@ -88,7 +88,7 @@ class cl_hc08_cpu: public cl_hw
 public:
   cl_hc08_cpu(class cl_uc *auc);
   virtual int init(void);
-  virtual int cfg_size(void) { return hc08cpu_nuof; }
+  virtual unsigned int cfg_size(void) { return hc08cpu_nuof; }
   virtual const char *cfg_help(t_addr addr);
 
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
@@ -96,4 +96,4 @@ public:
 
 #endif
 
-/* End of hc08.src/hc08cl.h */
+/* End of hc08.src/m68hc08cl.h */
