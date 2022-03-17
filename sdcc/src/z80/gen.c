@@ -7274,7 +7274,7 @@ genPlus (iCode * ic)
     }
 
   // Handle AOP_EXSTK conflict with hl here, since setupToPreserveCarry() would cause problems otherwise.
-  if (IC_RESULT (ic)->aop->type == AOP_EXSTK && (getPairId (IC_LEFT (ic)->aop) == PAIR_HL || getPairId (IC_RIGHT (ic)->aop) == PAIR_HL) &&
+  if (IC_RESULT (ic)->aop->type == AOP_EXSTK && size <= 2 && (getPairId (IC_LEFT (ic)->aop) == PAIR_HL || getPairId (IC_RIGHT (ic)->aop) == PAIR_HL) &&
     (isPairDead (PAIR_DE, ic) || isPairDead (PAIR_BC, ic)) && isPairDead (PAIR_HL, ic))
     {
       PAIR_ID extrapair = isPairDead (PAIR_DE, ic) ? PAIR_DE : PAIR_BC;
@@ -7450,7 +7450,8 @@ genPlus (iCode * ic)
 
   // Avoid overwriting operand in h or l when setupToPreserveCarry () loads hl - only necessary if carry is actually used during addition.
   premoved = FALSE;
-  if (size > 1 && !(size == 2 && isPair (leftop) && (rightop->type == AOP_LIT || rightop->type == AOP_IY)))
+  if (size > 1 &&
+    !(size == 2 && isPair (leftop) && (rightop->type == AOP_LIT || rightop->type == AOP_IY)) && !(size == 2 && leftop->type == AOP_STL && isPairDead (PAIR_HL, ic))) // No need to setup if a single 16 bit addition is sufficient below.
     {
       if (!couldDestroyCarry (leftop) && (couldDestroyCarry (rightop) || couldDestroyCarry (IC_RESULT (ic)->aop)))
         {
@@ -7488,7 +7489,7 @@ genPlus (iCode * ic)
         (IC_RESULT (ic)->aop->regs[L_IDX] < 0 || IC_RESULT (ic)->aop->regs[L_IDX] >= i) && (IC_RESULT (ic)->aop->regs[H_IDX] < 0 || IC_RESULT (ic)->aop->regs[H_IDX] >= i);
 
       // Rematerialization of addresses on the stack.
-      if (leftop->type == AOP_STL && !i && rightop->type == AOP_LIT && hl_dead)
+      if (leftop->type == AOP_STL && !i && i + 1 < size && rightop->type == AOP_LIT && hl_dead)
         {
           emit2 ("ld hl, !immed%d", spOffset (leftop->aopu.aop_stk) + (ulFromVal (rightop->aopu.aop_lit) & 0xffff));
           emit2 ("add hl, sp");
@@ -7499,16 +7500,21 @@ genPlus (iCode * ic)
           i += 2;
           continue;
         }
-      else if (leftop->type == AOP_STL && !i && hl_dead && (getPairId (rightop) == PAIR_BC || getPairId (rightop) == PAIR_DE || de_dead))
+      else if (leftop->type == AOP_STL && !i && i + 1 < size && hl_dead && (size <= 2 || leftop->type != AOP_EXSTK /* (hl) would be pointed to result, overwritten by addition here */))
         {
           PAIR_ID pair = getPairId (rightop);
           if (pair != PAIR_BC)
             pair = PAIR_DE;
+          if (pair == PAIR_DE && !de_dead)
+            _push (PAIR_DE);
           genMove (pair == PAIR_BC ? ASMOP_BC : ASMOP_DE, rightop, true, true, de_dead, false);
           genMove (ASMOP_HL, leftop, true, true, de_dead && pair != PAIR_DE, false);
           emit2 ("add hl, %s", _pairs[pair].name);
+          spillPair (pair);
           regalloc_dry_run_cost++;
           started = true;
+          if (pair == PAIR_DE && !de_dead)
+            _pop (PAIR_DE);
           genMove_o (IC_RESULT (ic)->aop, 0, ASMOP_HL, 0, 2, true, true, de_dead, false, i + 2 == size);
           i += 2;
           continue;
@@ -7806,7 +7812,9 @@ genPlus (iCode * ic)
               rightop = IC_RIGHT (ic)->aop;
             }
 
-          if (!premoved)
+          if (aopInReg (rightop, i, A_IDX) && !aopInReg (leftop, i, A_IDX)) // Make sure we don't overwrite the other operand.
+            UNIMPLEMENTED;
+          else if (!premoved)
             cheapMove (ASMOP_A, 0, leftop, i, true);
           else
             premoved = FALSE;
@@ -7860,6 +7868,8 @@ genPlus (iCode * ic)
   for (size = 1; size >= 0; size--)
     if (cached[size] != -1)
       {
+        if (IC_RESULT (ic)->aop->regs[A_IDX] >= 0 && IC_RESULT (ic)->aop->regs[A_IDX] != size) // Don't overwrite still-needed a below.
+          UNIMPLEMENTED;
         _pop (PAIR_AF);
         cheapMove (IC_RESULT (ic)->aop, cached[size], ASMOP_A, 0, true);
       }
@@ -12847,28 +12857,33 @@ genPointerGet (const iCode *ic)
   wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "GET_VALUE_AT_ADDRESS with non-literal right operand");
   rightval = (int)operandLitValue (right);
   rightval_in_range = (rightval >= -128 && rightval + size - 1 < 127);
-  if (IS_GB)
-    wassert (!rightval);
 
   if (IS_GB && left->aop->type == AOP_STK) // Try to avoid (hl) to hl copy, which requires 3 instructions and free a.
     pair = PAIR_DE;
   if ((IS_GB || IY_RESERVED) && requiresHL (result->aop) && size > 1 && result->aop->type != AOP_REG)
     pair = PAIR_DE;
 
-  if (left->aop->type == AOP_IMMD && size == 1 && aopInReg (result->aop, 0, A_IDX) && !IS_BITVAR (retype))
+  if (IS_GB && size == 1 && left->aop->type == AOP_LIT && (((unsigned long)(operandLitValue (left) + rightval) & 0xff00) == 0xff00) && isRegDead (A_IDX, ic) && !IS_BITVAR (retype)) // SM83 has special instructions for address range 0xff00 - 0xffff.
     {
-      emit2 ("ld a, !mems", aopGetLitWordLong (left->aop, rightval, TRUE));
+      emit2 ("ldh a, !mems", aopGetLitWordLong (left->aop, rightval, true));
+      cost (2, 12);
+      cheapMove (result->aop, 0, ASMOP_A, 0, true);
+      goto release;
+    }
+  if ((left->aop->type == AOP_IMMD || left->aop->type == AOP_LIT && !rightval) && size == 1 && aopInReg (result->aop, 0, A_IDX) && !IS_BITVAR (retype))
+    {
+      emit2 ("ld a, !mems", aopGetLitWordLong (left->aop, rightval, true));
       regalloc_dry_run_cost += 3;
       goto release;
     }
-  else if (!IS_GB && left->aop->type == AOP_IMMD && isPair (result->aop) && !IS_BITVAR (retype))
+  else if (!IS_GB && (left->aop->type == AOP_IMMD || left->aop->type == AOP_LIT && !rightval) && isPair (result->aop) && !IS_BITVAR (retype))
     {
       PAIR_ID pair = getPairId (result->aop);
       emit2 ("ld %s, !mems", _pairs[pair].name, aopGetLitWordLong (left->aop, rightval, TRUE));
       regalloc_dry_run_cost += (pair == PAIR_HL ? 3 : 4);
       goto release;
     }
-  else if (!IS_GB && left->aop->type == AOP_IMMD && getPartPairId (result->aop, 0) != PAIR_INVALID && getPartPairId (result->aop, 2) != PAIR_INVALID)
+  else if (!IS_GB && (left->aop->type == AOP_IMMD) && getPartPairId (result->aop, 0) != PAIR_INVALID && getPartPairId (result->aop, 2) != PAIR_INVALID)
     {
       PAIR_ID pair;
       pair = getPartPairId (result->aop, 0);
@@ -12886,6 +12901,9 @@ genPointerGet (const iCode *ic)
       genMove (result->aop, &saop, !surviving_a, isPairDead(PAIR_HL, ic), isPairDead(PAIR_DE, ic), isPairDead(PAIR_IY, ic));
       goto release;
     }
+
+  if (IS_GB)
+    wassert (!rightval);
 
   if (isPair (left->aop) && size == 1 && !IS_BITVAR (retype) && !rightval)
     {
@@ -13615,6 +13633,14 @@ genPointerSet (iCode *ic)
   isBitvar = IS_BITVAR (retype) || IS_BITVAR (letype);
   emitDebug ("; isBitvar = %d", isBitvar);
 
+  if (IS_GB && size == 1 && result->aop->type == AOP_LIT && (((unsigned long)operandLitValue (result) & 0xff00) == 0xff00) && (isRegDead (A_IDX, ic) || aopInReg (right->aop, 0, A_IDX)) && !isBitvar) // SM83 has special instructions for address range 0xff00 - 0xffff.
+    {
+      cheapMove (ASMOP_A, 0, right->aop, 0, isRegDead (A_IDX, ic));
+      emit2 ("ldh !mems, a", aopGetLitWordLong (result->aop, 0, true));
+      cost (2, 12);
+      goto release;
+    }
+
   /* Handle the exceptions first */
   if (isPair (result->aop) && size == 1 && !isBitvar)
     {
@@ -14062,6 +14088,20 @@ genAssign (const iCode *ic)
   /* general case */
   size = result->aop->size;
   offset = 0;
+
+  // SM83 has special instruction for access to addresses 0xff00 to 0xffff, so use them here, when possible
+  if (IS_GB && size == 1 && aopInReg (result->aop, 0, A_IDX) && right->aop->type == AOP_HL && SPEC_ABSA (OP_SYM_ETYPE (right)) && (SPEC_ADDR (OP_SYM_ETYPE (right)) & 0xff00) == 0xff00)
+    {
+      emit2 ("ldh a, !mems", right->aop->aopu.aop_dir);
+      cost (2, 12);
+      goto release;
+    }
+  else if (IS_GB && size == 1 && aopInReg (right->aop, 0, A_IDX) && result->aop->type == AOP_HL && SPEC_ABSA (OP_SYM_ETYPE (result)) && (SPEC_ADDR (OP_SYM_ETYPE (result)) & 0xff00) == 0xff00)
+    {
+      emit2 ("ldh (#%x), a", result->aop->aopu.aop_dir);
+      cost (2, 12);
+      goto release;
+    }
 
   if (isPair (result->aop) && getPairId (result->aop) != PAIR_IY ||
     isPair (right->aop) && result->aop->type == AOP_IY && size == 2)
