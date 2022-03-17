@@ -2347,6 +2347,18 @@ cl_uc::tick(int cycles)
   return(0);
 }
 
+int
+cl_uc::tickt(t_mem code)
+{
+  int8_t *tt= tick_tab(code);
+  if (tt == NULL)
+    return tick(1);
+  int t= tt[code];
+  if (t)
+    return tick(t);
+  return 0;
+}
+
 class cl_ticker *
 cl_uc::get_counter(int nr)
 {
@@ -2571,13 +2583,14 @@ cl_uc::exec_inst_tab(instruction_wrapper_fn itab[])
       PC= instPC;
       return resNOT_DONE;
     }
+  tickt(c);
   res= itab[c](this, c);
   if (res == resNOT_DONE)
     {
       PC= instPC;
       return res;
     }
-  tick(1);
+  //tick(1);
   return res;
 }
 
@@ -2593,9 +2606,16 @@ cl_uc::post_inst(void)
 }
 
 
+static FILE *pc_dump= NULL;
+
 void
 cl_uc::save_hist()
 {
+  if (juj & 1)
+    {
+      if (pc_dump==NULL) pc_dump= fopen("addr.txt","w");
+      if (pc_dump!=NULL) {fprintf(pc_dump,"0x%06x\n",AU(PC));fflush(pc_dump);}
+    }
   hist->put();
 }
 

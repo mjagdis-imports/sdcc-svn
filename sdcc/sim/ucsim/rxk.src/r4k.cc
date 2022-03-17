@@ -1,7 +1,7 @@
 /*
  * Simulator of microcontrollers (r4k.cc)
  *
- * Copyright (C) @@S@@,@@Y@@ Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020,2021 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -32,9 +32,56 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "utils.h"
 
 #include "r4kwrap.h"
+#include "7fwrap.h"
 #include "glob.h"
+#include "gp0m3.h"
+#include "gp0m4.h"
+#include "gpddm3.h"
+#include "gpedm3a.h"
+#include "gpddm4.h"
+#include "gpedm3.h"
+#include "gpedm4.h"
 
 #include "r4kcl.h"
+
+
+u32_t
+px8(u32_t px, u8_t offset)
+{
+  bool log= ((px & 0xffff0000) == 0xffff0000);
+  px+= offset;
+  if (log) px|= 0xffff0000;
+  return px;
+}
+
+u32_t
+px8se(u32_t px, u8_t offset)
+{
+  bool log= ((px & 0xffff0000) == 0xffff0000);
+  i32_t o= (i8_t)offset;
+  px+= o;
+  if (log) px|= 0xffff0000;
+  return px;
+}
+
+u32_t
+px16(u32_t px, u16_t offset)
+{
+  bool log= ((px & 0xffff0000) == 0xffff0000);
+  px+= offset;
+  if (log) px|= 0xffff0000;
+  return px;
+}
+
+u32_t
+px16se(u32_t px, u16_t offset)
+{
+  bool log= ((px & 0xffff0000) == 0xffff0000);
+  i32_t o= (i16_t)offset;
+  px+= o;
+  if (log) px|= 0xffff0000;
+  return px;
+}
 
 
 cl_r4k::cl_r4k(class cl_sim *asim):
@@ -46,7 +93,36 @@ int
 cl_r4k::init(void)
 {
   cl_r3ka::init();
+#define RCV(R) reg_cell_var(&c ## R , &r ## R , "" #R "" , "CPU register " #R "")
+  RCV(BCDE);
+  RCV(JKHL);
+  RCV(aBCDE);
+  RCV(aJKHL);
+  RCV(J);
+  RCV(K);
+  RCV(JK);
+  RCV(aJ);
+  RCV(aK);
+  RCV(aJK);
+  RCV(PW);
+  RCV(PX);
+  RCV(PY);
+  RCV(PZ);
+  RCV(aPW);
+  RCV(aPX);
+  RCV(aPY);
+  RCV(aPZ);
+  RCV(HTR);
+#undef RCV
   //mode2k();
+  fill_7f_wrappers(itab_7f);
+
+  LXPC= new cl_cell16(12);
+  reg_cell_var(LXPC, mem->aof_lxpc(),
+  	       "LXPC", "MMU register: LXPC");
+  cpu->register_cell(LXPC);
+  cIRR= &cBCDE;
+  
   return 0;
 }
 
@@ -60,7 +136,7 @@ void
 cl_r4k::reset(void)
 {
   cl_r3ka::reset();
-  edmr= 0;
+  //edmr= 0;
   mode3k();  
 }
 
@@ -69,6 +145,258 @@ cl_r4k::make_cpu_hw(void)
 {
   add_hw(cpu= new cl_r4k_cpu(this));
   cpu->init();
+}
+
+static struct dis_entry de7f;
+
+struct dis_entry *
+cl_r4k::dis_entry(t_addr addr)
+{
+  u8_t code= rom->get(addr);
+  int i;
+  struct dis_entry *dt;
+  
+  if (code == 0xed)
+    {
+      code= rom->get(addr+1);
+      
+      dt= disass_pedm3;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	return &dt[i];
+      
+      dt= disass_pedm3a;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	return &dt[i];
+      
+      dt= disass_pedm4;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	return &dt[i];
+      
+      return NULL;
+    }
+  if ((code & 0xdd) == 0xdd)
+    {
+      if (code == 0xdd)
+	{
+	  cIR= &cIX;
+	}
+      else
+	{
+	  cIR= &cIY;
+	}
+      code= rom->get(addr+1);
+      dt= disass_pddm3;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	return &dt[i];
+      dt= disass_pddm4;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	return &dt[i];
+      return NULL;
+    }
+
+  if ((code == 0x6d) && (edmr & 0xc0))
+    {
+      // 6d page exists in 4k mode only!
+      return dis_6d_entry(addr);
+    }
+
+  if ((code == 0x7f) && (edmr & 0xc0))
+    {
+      // 7f page is special in 4k mode
+      code= rom->get(addr+1);
+      if ((code <= 0x3f) || (code >= 0xc0))
+	return NULL;
+      if ((code >= 0x40) && (code <= 0x6f))
+	{
+	  if ((code & 0x0f) == 0x06)
+	    return NULL;
+	  if ((code & 0x0f) == 0x0e)
+	    return NULL;
+	}
+      if ((code & 0xf0) == 0x70)
+	{
+	  if ((code == 0x7e) || (code <= 0x77))
+	    return NULL;
+	}
+      // pick from standard page0 table
+      dt= disass_p0m3;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	{
+	  memcpy(&de7f, &dt[i], sizeof(struct dis_entry));
+	  de7f.length++;
+	  return &de7f;
+	}
+      return NULL;
+    }
+  
+  dt= disass_rxk;
+  i= 0;
+  while (((code & dt[i].mask) != dt[i].code) &&
+	 dt[i].mnemonic)
+    i++;
+  if (dt[i].mnemonic != NULL)
+    return &dt[i];
+
+  if (edmr & 0xc0)
+    {
+      // mode: 4k
+      dt= disass_p0m4;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	return &dt[i];
+    }
+  else
+    {
+      // mode: 3k
+      dt= disass_p0m3;
+      i= 0;
+      while (((code & dt[i].mask) != dt[i].code) &&
+	     dt[i].mnemonic)
+	i++;
+      if (dt[i].mnemonic != NULL)
+	return &dt[i];
+    }
+  
+  return NULL;
+}
+
+struct dis_entry disass_6d[]= {
+  /* 0 */ {    0,    0, ' ', 0, NULL },
+  /* 1 */ { 0x6d, 0xff, ' ', 2, "LD L,L" },
+  /* 2 */ { 0x7f, 0xff, ' ', 2, "LD A,A" },
+  /* 3 */ {    0,    0, ' ', 0, 0, 0, 0 }
+};
+char mnemo[100];
+
+struct dis_entry *
+cl_r4k::dis_6d_entry(t_addr addr)
+{
+  u8_t h, l, code= rom->get(addr+1);
+  chars op, idx, offset;
+  
+  if (code == 0x6d)
+    return &disass_6d[1];
+  if (code == 0x7f)
+    return &disass_6d[2];
+  
+  h= code >> 4;
+  l= code & 15;
+  if ((l == 0xd) || (l == 0xf))
+    return &disass_6d[3];
+
+  disass_6d[0].length= 2;
+  switch (h&3)
+    {
+    case 0: idx= "PW"; break;
+    case 1: idx= "PX"; break;
+    case 2: idx= "PY"; break;
+    case 3: idx= "PZ"; break;
+    }
+  switch (h&0xc)
+    {
+    case 0x0:
+      if (l<=3)
+	op= "BC";
+      else
+	op= "PW";
+      break;
+    case 0x4:
+      if (l<=3)
+	op= "DE";
+      else
+	op= "PX";
+      break;
+    case 0x8: if (l<=3) op= "IX"; else op= "PY"; break;
+    case 0xc: if (l<=3) op= "IY"; else op= "PZ"; break;
+    }
+  switch (l&6)
+    {
+    case 0:
+      {
+	u8_t d= rom->get(addr+2);
+	disass_6d[0].length= 3;
+	if (l&1)
+	  offset.format("+%u", d);
+	else
+	  {
+	    i8_t io= d;
+	    //offset= (io<0)?"-":"+";
+	    offset.format("%+d", io);
+	  }
+	break;
+      }
+    case 2: offset= "+HL"; break;
+    case 3: offset= (l&1)?"IY":"IX"; break;
+    case 6: offset= "";
+    }
+
+  chars mn= "LD ";
+  if (l&4)
+    {
+      mn+= op+","+idx+offset;
+    }
+  else
+    {
+      if (l&1)
+	{
+	  mn+= "(";
+	  mn+= idx+offset+"),"+op;
+	}
+      else
+	{
+	  mn+= op+",("+idx+offset+")";
+	}
+    }
+  strcpy(mnemo, mn.c_str());
+  disass_6d[0].mnemonic= mnemo;
+  
+  return &disass_6d[0];
+}
+
+void
+cl_r4k::disass_irr(chars *work, bool dd)
+{
+  work->appendf("%s", dd?"BCDE":"JKHL");
+}
+
+void
+cl_r4k::disass_irrl(chars *work, bool dd)
+{
+  work->appendf("%s", dd?"DE":"HL");
+}
+
+void
+cl_r4k::select_IRR(bool dd)
+{
+  cIRR = dd?&cBCDE :&cJKHL;
+  caIRR= dd?&caBCDE:&caJKHL;
 }
 
 void
@@ -93,8 +421,8 @@ cl_r4k::print_regs(class cl_console_base *con)
   con->dd_color("answer");
   con->dd_printf("                  SZxxxVxC\n");
 
-  con->dd_printf("XPC= 0x%02x IP= 0x%02x IIR= 0x%02x EIR= 0x%02x\n",
-		 mem->xpc, rIP, rIIR, rEIR);
+  con->dd_printf("XPC= 0x%03x IP= 0x%02x IIR= 0x%02x EIR= 0x%02x\n",
+		 mem->get_xpc(), rIP, rIIR, rEIR);
   
   con->dd_printf("BC= ");
   rom->dump(0, rBC, rBC+7, 8, con);
@@ -111,16 +439,31 @@ cl_r4k::print_regs(class cl_console_base *con)
   con->dd_printf("IY= ");
   rom->dump(0, rIY, rIY+7, 8, con);
   con->dd_color("answer");
+  con->dd_printf("JK= ");
+  rom->dump(0, rJK, rJK+7, 8, con);
+  con->dd_color("answer");
   con->dd_printf("SP= ");
   rom->dump(0, rSP, rSP+7, 8, con);
   con->dd_color("answer");
 
-  con->dd_printf("aAF= 0x%02x-0x%02x  ", raA, raF);
-  con->dd_printf("aBC= 0x%02x-0x%02x  ", raB, raC);
-  con->dd_printf("aDE= 0x%02x-0x%02x  ", raD, raE);
-  con->dd_printf("aHL= 0x%02x-0x%02x  ", raH, raL);
+  con->dd_printf("aAF= 0x%02x-%02x  ", raA, raF);
+  con->dd_printf("aBC= 0x%02x-%02x  ", raB, raC);
+  con->dd_printf("aDE= 0x%02x-%02x  ", raD, raE);
+  con->dd_printf("aHL= 0x%02x-%02x  ", raH, raL);
+  con->dd_printf("aJK= 0x%02x-%02x  ", raJ, raK);
   con->dd_printf("\n");
-  
+
+  con->dd_printf(" PW= 0x%04x-%04x  ", rPW>>16, rPW&0xffff);
+  con->dd_printf(" PX= 0x%04x-%04x  ", rPX>>16, rPX&0xffff);
+  con->dd_printf(" PY= 0x%04x-%04x  ", rPY>>16, rPY&0xffff);
+  con->dd_printf(" PZ= 0x%04x-%04x  ", rPZ>>16, rPZ&0xffff);
+  con->dd_printf("\n");
+  con->dd_printf("aPW= 0x%04x-%04x  ", raPW>>16, raPW&0xffff);
+  con->dd_printf("aPX= 0x%04x-%04x  ", raPX>>16, raPX&0xffff);
+  con->dd_printf("aPY= 0x%04x-%04x  ", raPY>>16, raPY&0xffff);
+  con->dd_printf("aPZ= 0x%04x-%04x  ", raPZ>>16, raPZ&0xffff);
+  con->dd_printf("\n");
+    
   print_disass(PC, con);
 }
 
@@ -149,6 +492,7 @@ cl_r4k::mode3k(void)
   itab[0x6b]= instruction_wrapper_6b;
   itab[0x6c]= instruction_wrapper_6c;
   itab[0x80]= instruction_wrapper_80;
+  itab[0x88]= instruction_wrapper_88;
   itab[0x90]= instruction_wrapper_90;
 
   itab[0x45]= instruction_wrapper_45;
@@ -259,6 +603,7 @@ cl_r4k::mode4k(void)
   itab[0x6b]= instruction_wrapper_4knone;
   itab[0x6c]= instruction_wrapper_4knone;
   itab[0x80]= instruction_wrapper_4knone;
+  itab[0x88]= instruction_wrapper_4knone;
   itab[0x90]= instruction_wrapper_4knone;
   
   itab[0x45]= instruction_wrapper_4k45;
@@ -344,6 +689,132 @@ cl_r4k::mode4k(void)
   itab[0xbf]= instruction_wrapper_4kbf;
 }
 
+int
+cl_r4k::EXX(t_mem code)
+{
+  u16_t t;
+
+  cl_rxk::EXX(code);
+  
+  t= rJK;
+  cBC.W(raJK);
+  caJK.W(t);
+
+  return resGO;
+}
+
+int
+cl_r4k::PAGE_4K7F(t_mem code)
+{
+  code= fetch();
+  return itab_7f[code](this, code);
+}
+
+int
+cl_r4k::PAGE_4K6D(t_mem code)
+{
+  u8_t h, l;
+  class cl_memory_cell *op= &cPX, *idx= &cPW;
+  t_addr addr;
+  
+  code= fetch();
+  if (code == 0x6d)
+    return ld_r_g(destL(), rL);
+  if (code == 0x7f)
+    return ld_r_g(destA(), rA);
+  
+  h= code>>4;
+  l= code&0xf;
+  if ((l == 0xd) || (l == 0xf))
+    return resINV;
+  
+  switch (h&3)
+    {
+    case 0: idx= &cPW; break;
+    case 1: idx= &cPX; break;
+    case 2: idx= &cPY; break;
+    case 3: idx= &cPZ; break;
+    }
+  switch (h&0xc)
+    {
+    case 0x0:
+      if (l<=3)
+	op= (l&1)?(&cBC):&destBC();
+      else
+	op= &cPW;
+      break;
+    case 0x4:
+      if (l<=3)
+	op= (l&1)?(&cDE):&destDE();
+      else
+	op= &cPX;
+      break;
+    case 0x8: if (l<=3) op= &cIX; else op= &cPY; break;
+    case 0xc: if (l<=3) op= &cIY; else op= &cPZ; break;
+    }
+  addr= idx->get();
+  switch (l&6)
+    {
+    case 0:
+      {
+	u8_t d= fetch();
+	if (l&1)
+	  {
+	    u8_t offset= d;
+	    addr= px8(addr, offset);
+	  }
+	else
+	  {
+	    i8_t offset= d;
+	    addr= px8se(addr, offset);
+	  }
+	break;
+      }
+    case 2: addr= px16(addr, rHL); break;
+    case 4: addr= px16(addr, (l&1)?rIY:rIX); break;
+    case 6: break;
+    }
+
+  if (l&4)
+    {
+      // reg->reg
+      op->W(addr);
+    }
+  else
+    {
+      // mem rd/wr
+      u32_t v;
+      if (l&1)
+	{
+	  v= op->get();
+	  // Write
+	  mem->pxwrite(addr, v); addr++; v>>= 8; vc.wr++;
+	  mem->pxwrite(addr, v); addr++; v>>= 8; vc.wr++;
+	  if (op->get_width() > 16)
+	    {
+	      mem->pxwrite(addr, v); addr++; v>>= 8; vc.wr++;
+	      mem->pxwrite(addr, v); addr++; v>>= 8; vc.wr++;
+	    }
+	}
+      else
+	{
+	  // Read
+	  u8_t b;
+	  v= 0;
+	  b= mem->pxread(addr); addr++; v= (v<<8)|b; vc.rd++;
+	  b= mem->pxread(addr); addr++; v= (v<<8)|b; vc.rd++;
+	  if (op->get_width() > 16)
+	    {
+	      b= mem->pxread(addr); addr++; v= (v<<8)|b; vc.rd++;
+	      b= mem->pxread(addr); addr++; v= (v<<8)|b; vc.rd++;
+	    }
+	  op->W(v);
+	}
+    }
+  
+  return resGO;
+}
+
 
 /*
  * CPU peripheral for r4k
@@ -364,6 +835,15 @@ cl_r4k_cpu::init(void)
   uc->reg_cell_var(edmr, &(r4uc->edmr),
 		   "EDMR", "Enable dual-mode register");
   edmr->add_hw(this);
+
+  stacksegl= register_cell(ruc->ioi, 0x1a,
+			   "STACKSEGL", "MMU register STACKSEGL");
+  stacksegh= register_cell(ruc->ioi, 0x1b,
+			   "STACKSEGH", "MMU register STACKSEGH");
+  datasegl= register_cell(ruc->ioi, 0x1e,
+			  "DATASEGL", "MMU register DATASEGL");
+  datasegh= register_cell(ruc->ioi, 0x1f,
+			  "DATASEGH", "MMU register DATASEGH");
   return 0;
 }
 
@@ -381,9 +861,62 @@ cl_r4k_cpu::write(class cl_memory_cell *cell, t_mem *val)
   if (cell == edmr)
     {
       if (*val & 0xc0)
-	r4uc->mode3k();
-      else
 	r4uc->mode4k();
+      else
+	r4uc->mode3k();
+    }
+  
+  if (cell == dataseg)
+    {
+      (*val)&= 0xff;
+      datasegl->set(*val);
+      ruc->mem->set_dataseg(datasegh->read() * 256 + *val);
+    }
+  else if (cell == datasegl)
+    {
+      (*val)&= 0xff;
+      dataseg->set(*val);
+      ruc->mem->set_dataseg(datasegh->read() * 256 + *val);
+    }
+  else if (cell == datasegh)
+    {
+      (*val)&= 0x0f;
+      ruc->mem->set_dataseg((*val) * 256 + datasegl->read());
+    }
+  
+  else if (cell == stackseg)
+    {
+      (*val)&= 0xff;
+      stacksegl->set(*val);
+      ruc->mem->set_stackseg(stacksegh->read() * 256 + *val);
+    }
+  else if (cell == stacksegl)
+    {
+      (*val)&= 0xff;
+      stackseg->set(*val);
+      ruc->mem->set_stackseg(stacksegh->read() * 256 + *val);
+    }
+  else if (cell == stacksegh)
+    {
+      (*val)&= 0x0f;
+      ruc->mem->set_stackseg((*val) * 256 + stacksegl->read());
+    }
+
+  else if (cell == segsize)
+    {
+      (*val)&= 0xff;
+      ruc->mem->set_segsize(*val);
+    }
+
+  else if (cell == ruc->XPC)
+    {
+      (*val)&= 0xff;
+      ruc->mem->set_xpc(*val);
+    }
+  else if (cell == r4uc->LXPC)
+    {
+      (*val)&= 0xfff;
+      ruc->mem->set_lxpc(*val);
     }
 }
 
@@ -405,5 +938,6 @@ cl_r4k_cpu::print_info(class cl_console_base *con)
   cl_rxk_cpu::print_info(con);
   con->dd_printf("EDMR    : 0x%02x\n", edmr->read());
 }
+
 
 /* End of rxk.src/r4k.cc */

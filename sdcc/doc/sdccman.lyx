@@ -2669,6 +2669,29 @@ status collapsed
 -oldralloc has been removed for the z80-related backends.
 \end_layout
 
+\begin_layout Itemize
+In 4.1.10, the default calling convention switched from __sdccall(0) to __sdccall(
+1) for stm8 and gbz80.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.10, support for –profile has been removed for gbz80.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.11, the minimum Z80N Core version for the z80n port has been raised
+ from 1.0 to 2.0.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.12, the default calling convention switched from __sdccall(0) to __sdccall(
+1) for z80, z180 and z80n.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.12, support for –profile has been removed for z80, z180, z80n.
+\end_layout
+
 \begin_layout Section
 System Requirements
 \end_layout
@@ -37422,7 +37445,7 @@ Defines created by the compiler
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="22" columns="2">
+<lyxtabular version="3" rows="23" columns="2">
 <features tabularvalignment="middle">
 <column alignment="left" valignment="top" width="3in">
 <column alignment="left" valignment="top" width="3in">
@@ -37475,7 +37498,7 @@ version macro
 
 \end_inset
 
- 
+
 \end_layout
 
 \end_inset
@@ -37604,7 +37627,6 @@ z80
 \begin_layout Plain Layout
 depending on the model used (e.g.: -mds390).
  Older versions used SDCC_mcs51, etc instead.
- 
 \end_layout
 
 \end_inset
@@ -38089,7 +38111,7 @@ TENBIT (ds390)
 
 \end_inset
 
- 
+
 \end_layout
 
 \end_inset
@@ -38687,7 +38709,7 @@ status collapsed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38732,7 +38754,7 @@ SIZE
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38754,6 +38776,36 @@ status collapsed
 -opt-code-size
 \emph default
  is used
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+__SDCCCALL
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SDCC!Defines!SDCCCALL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Default ABI version for calling convention
 \end_layout
 
 \end_inset
@@ -43871,8 +43923,8 @@ ftp://ftp.dalsemi.com/pub/tini/ds80c400/c_libraries/sdcc/index.html
 \end_layout
 
 \begin_layout Section
-The Z80, Z180, Rabbit 2000, Rabbit 2000A, Rabbit 3000A, GBZ80, eZ80 and
- TLCS-90 ports
+The Z80, Z180, Rabbit 2000, Rabbit 2000A, Rabbit 3000A, SM83 (GameBoy),
+ eZ80 and TLCS-90 ports
 \end_layout
 
 \begin_layout Standard
@@ -43904,21 +43956,6 @@ gbz80 (GameBoy Z80)
 When a frame pointer is used, it resides in IX.
  Register A, B, C, D, E, H, L and IY are used as a temporary registers for
  holding variables.
- Return values
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Z80!return value
-\end_layout
-
-\end_inset
-
- for the Z80 port are stored in L (one byte), HL (two bytes), or DEHL (four
- bytes).
- The gbz80 port use the same set of registers for the return values, but
- in a different order of significance: E (one byte), DE (two bytes), or
- HLDE (four bytes).
 \end_layout
 
 \begin_layout Standard
@@ -44043,7 +44080,7 @@ SDCC has three rabbit-supporting ports: r2k for the Rabbit 2000, r2ka for
  smaller than code from the r2k backend.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Rabbit wait states
 \end_layout
 
@@ -44079,6 +44116,212 @@ For all Rabbit ports, SDCC assumes that all data memory is at least as fast
 \end_layout
 
 \begin_layout Subsection
+Z80, Z180 and Z80N calling conventions
+\end_layout
+
+\begin_layout Standard
+The current default is the SDCC calling convention, version 1.
+ Using the command-line option –sdcccall 0, the default can be changed to
+ version 0.
+ There are three other calling conventions supported, which can be specified
+ using the keywords __smallc, __z88dk_fastcall and __z88dk_callee.
+ They are primarily intended for compatibility with libraries written for
+ other compilers.
+ For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
+ which is passed the same way as the return value of __sdcccall(0).
+ For __z88dk_callee, parameters are passed on the stack, but the stack is
+ not adjusted for the parameters after the call (thus the callee has to
+ do this instead).
+ __z88dk_callee can be combined with __smallc.
+\end_layout
+
+\begin_layout Subsubsection
+Z80 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(0).
+ All parameters are passed on the stack, right-to-left.
+ 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
+ in dehl.
+ Except for the GBZ80, where 8-bit values are passed in e, 16-bit values
+ in de, 32-bit values in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ Unless __z88dk_callee is used, all stack parameters are cleaned up by the
+ caller.
+\end_layout
+
+\begin_layout Subsubsection
+Z80 SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(1).
+ 8-bit return values are passed in a, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: The first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in hl.
+ If it has 32 bits, it is passed in hlde.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in l; if the first is passed in a or hl, and the second has 16 bits, it
+ is passed in de; all other parameters are passed on the stack, right-to-left.
+ If __z88dk_callee is not used, after the call, the stack parameters are
+ cleaned up by the caller, with the following exceptions: functions that
+ do not have variable arguments and return void or a type of at most 16
+ bits, or have both a first parameter of type float and a return value of
+ type float.
+\end_layout
+
+\begin_layout Subsection
+Rabbit 2000, Rabbit 2000A, Rabbit 3000A, eZ80 and TLCS-90 calling conventions
+\end_layout
+
+\begin_layout Standard
+The default is Z80 SDCC calling convention, version 0 as above.
+ Using the command-line option –sdcccall 1, the default can be changed to
+ version 1 of the Rabbit SDCC calling convnetion.
+ There are four other calling conventions supported, which can be specified
+ using the keywords __smallc, __z88dk_fastcall and __z88dk_callee.
+ They are primarily intended for compatibility with libraries written for
+ other compilers.
+ For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
+ which is passed the same way as the return value.
+ For __z88dk_callee, parameters are passed on the stack, but the stack is
+ not adjusted for the parameters after the call (thus the callee has to
+ do this instead).
+ __z88dk_callee can be combined with __smallc.
+\end_layout
+
+\begin_layout Subsubsection
+Rabbit SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(1).
+ 8-bit return values are passed in a, 16-bit values in hl, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: The first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in hl.
+ If it has 32 bits, it is passed in hlde.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in l; if the first is in hl or hlde, and the second has 8 bits, it is passed
+ in a; if the first is in a, and the second has 16 bits, it is passed in
+ hl; all other parameters are passed on the stack, right-to-left.
+ If __z88dk_callee is not used, after the call, the stack parameters are
+ cleaned up by the caller, with the following exceptions: functions that
+ do not have variable arguments and return void or a type of at most 16
+ bits, or have both a first parameter of type float and a return value of
+ type float.
+\end_layout
+
+\begin_layout Subsection
+SM83 calling conventions
+\end_layout
+
+\begin_layout Standard
+The current default is the SDCC calling convention, version 1.
+ Using the command-line option –sdcccall 0, the default can be changed to
+ version 0.
+\end_layout
+
+\begin_layout Subsubsection
+SM83 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(0).
+ 8-bit return values are passed in e, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ All parameters are passed on the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead), unless __z88dk_callee is specified.
+ __sdcccall(0) can be combined with __z88dk_callee.
+\end_layout
+
+\begin_layout Subsubsection
+SM83 SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen for individual function via __sdcccall(1).
+\end_layout
+
+\begin_layout Standard
+8-bit return values are passed in a, 16-bit values in bc, 32-bit values
+ in debc.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: The first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in de.
+ If it has 32 bits, it is passed in debc.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in e; if the first is in bc or debc, and the second has 8 bits, it is passed
+ in a; if the first is passed in a, and the second has 16 bits, it is passed
+ in bc; if the first is passed in de, and the second has 16 bits, it is
+ passed in bc; all other parameters are passed on the stack, right-to-left.
+ The stack is adjusted by the callee (thus explicitly specifying __z88dk_callee
+ does not make a difference).
+\end_layout
+
+\begin_layout Subsection
+Small-C calling convention
+\end_layout
+
+\begin_layout Standard
+Functions declared as __smallc are called using the Small-C calling convention
+ (passing arguments on-stack left-to-right, 1 byte arguments are passed
+ as 2 bytes, with the value in the lower byte).
+ 8-bit return values are passed in a, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values are passed in memory in a location specified by the
+ caller through a hidden pointer argument.
+ This way assembler routines originally written for Small-C or code generated
+ by Small-C can be called from SDCC.
+ Currently variable arguments are not yet supported (neither on the caller
+ nor on the callee side).
+\end_layout
+
+\begin_layout Subsection
 Complex instructions
 \end_layout
 
@@ -44101,47 +44344,6 @@ Depending on the target, code generation options and the parameters to the
 \end_layout
 
 \begin_layout Subsection
-Calling conventions
-\end_layout
-
-\begin_layout Standard
-By default, all parameters are passed on the stack, right-to-left.
- 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
- in dehl.
- Except for the GBZ80, where 8-bit values are passed in e, 16-bit values
- in de, 32-bit values in hlde.
- Larger return values are passed in memory in a location specified by the
- caller through a hidden pointer argument.
-\end_layout
-
-\begin_layout Standard
-There are three other calling conventions supported, which can be specified
- using the keywords __smallc, __z88dk_fastcall (not on GBZ80) and __z88dk_callee.
- They are primarily intended for compatibility with libraries written for
- other compilers.
- For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
- which is passed the same way as the return value.
- For __z88dk_callee, parameters are passed on the stack, but the stack is
- not adjusted for the parameters after the call (thus the callee has to
- do this instead).
- __z88dk_callee can be combined with __smallc.
-\end_layout
-
-\begin_layout Subsection
-Small-C calling convention
-\end_layout
-
-\begin_layout Standard
-Functions declared as __smallc are called using the Small-C calling convention
- (passing arguments on-stack left-to-right, 1 byte arguments are passed
- as 2 bytes, with the value in the lower byte).
- This way assembler routines originally written for Small-C or code generated
- by Small-C can be called from SDCC.
- Currently variable arguments are not yet supported (neither on the caller
- nor on the callee side).
-\end_layout
-
-\begin_layout Subsection
 Unsafe reads
 \end_layout
 
@@ -44150,7 +44352,7 @@ Usually, Z80-based systems (except for the SM83 and TLCS-90) have separate
  I/O and memory spaces, and any normal memory location can be read without
  side-effects.
  For such systems, the option –allow-unsafe-reads can be used to enable
- some extra optimizations.
+ some extra optimizations that rely on this.
 \end_layout
 
 \begin_layout Section
@@ -44211,15 +44413,50 @@ Calling conventions
 \end_layout
 
 \begin_layout Standard
+By default, the SDCC calling convention, version 1 is used.
+ Using the option –sdcccall 0, the default can be changed to version 0.
+\end_layout
+
+\begin_layout Standard
 Arguments are passed on the stack right-to-left.
  Return values are in a (8 bit), x (16 bit), xyl (24 bit), xy (32 bit) or
  use a hidden extra pointer parameter pointing to the location (anything
  wider than 32 bit).
- There is another calling convention supported, which can be specified using
- the keyword __z88dk_callee.
- For __z88dk_callee, parameters are passed on the stack, but the stack is
- not adjusted for the parameters after the call (thus the callee has to
- do this instead).
+\end_layout
+
+\begin_layout Subsubsection
+SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments, all parameters are passed on
+ the stack.
+ For other functions, if the first parameter has 8 or 16 bits, it is passed
+ in a or x.
+ If the first parameter has 8 bits, and the second has 16 bits, the second
+ is passed in x.
+ If the first parameter has 16 bits, and the second has 8 bits, the second
+ is passed in a.
+ All other parameters are passed on the stack.
+ If __z88dk_callee is specified, the stack is always adjusted by the callee.
+ Otherwise, for the large memory model, the stack is always adjusted by
+ the caller.
+ For the medium memory model the stack is adjusted by the caller, with the
+ following exceptions: functions that do not have variable arguments and
+ return void or a type of at most 16 bits, or have both a first parameter
+ of type float and a return value of type float.
+\end_layout
+
+\begin_layout Subsubsection
+SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+For compability with functions written for older versions of SDCC, the __sdcccal
+l(0) calling convention is supported.
+ All parameters are passed on the stack.
+ The stack is the stack is not adjusted for the parameters after the call
+ (thus the callee has to do this instead), unless __z88dk_callee is specified.
 \end_layout
 
 \begin_layout Subsubsection
@@ -44259,7 +44496,7 @@ For compatibility with the IAR STM8 compiler, the __iar calling convention
  If the return value is 8 bits, it is passed in a.
  If it is 16 bits, it is passed in x.
  IAR passes larger return values in pseudoregisters, which is not supported
- in SDCC.
+ by SDCC.
 \end_layout
 
 \begin_layout Subsubsection

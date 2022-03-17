@@ -173,6 +173,9 @@ static void checkCurrFile (const char *s);
 "alignof"               { count (); TKEYWORD2X (ALIGNOF); }
 "_Alignof"              { count (); return ALIGNOF; }
 "__builtin_offsetof"    { count (); return OFFSETOF; }
+"__builtin_rlc"         { count (); return RLC; }
+"__builtin_rrc"         { count (); return RRC; }
+"__builtin_swap"        { count (); return SWAP; }
 "__sram"                { count (); TKEYWORD (XDATA); }
 "static"                { count (); return STATIC; }
 "struct"                { count (); return STRUCT; }
@@ -198,6 +201,7 @@ static void checkCurrFile (const char *s);
 "__raisonance"          { count (); TKEYWORD (RAISONANCE); }
 "__iar"                 { count (); TKEYWORD (IAR); }
 "__cosmic"              { count (); TKEYWORD (COSMIC); }
+"__sdcccall"            { count (); return SDCCCALL; }
 "__preserves_regs"      { count (); return PRESERVES_REGS; }
 "__z88dk_fastcall"      { count (); TKEYWORD (Z88DK_FASTCALL); }
 "__z88dk_callee"        { count (); TKEYWORD (Z88DK_CALLEE); }

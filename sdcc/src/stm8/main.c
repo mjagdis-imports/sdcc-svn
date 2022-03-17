@@ -35,6 +35,7 @@
 #define OPTION_CODE_SEG        "--codeseg"
 #define OPTION_CONST_SEG       "--constseg"
 #define OPTION_ELF             "--out-fmt-elf"
+#define OPTION_SDCCCALL        "--sdcccall"
 
 extern DEBUGFILE dwarf2DebugFile;
 extern int dwarf2FinalizeFile(FILE *);
@@ -45,6 +46,7 @@ static OPTION stm8_options[] = {
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_ELF,             NULL, "Output executable in ELF format"},
+  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -165,10 +167,14 @@ stm8_genAssemblerEnd (FILE *of)
     }
 }
 
+extern void stm8_init_asmops (void);
+
 static void
 stm8_init (void)
 {
   asm_addTree (&asm_asxxxx_mapping);
+
+  stm8_init_asmops ();
 }
 
 static void
@@ -189,13 +195,13 @@ stm8_reg_parm (sym_link *l, bool reentrant)
 static bool
 stm8_parseOptions (int *pargc, char **argv, int *i)
 {
-  if (!strcmp (argv[*i], "--out-fmt-elf"))
+  if (!strncmp (argv[*i], OPTION_ELF, sizeof (OPTION_ELF) - 1))
   {
     options.out_fmt = 'E';
     debugFile = &dwarf2DebugFile;
-    return TRUE;
+    return true;
   }
-  return FALSE;
+  return false;
 }
 
 static void
@@ -501,6 +507,7 @@ PORT stm8_port =
     1                           /* No fancy alignments supported. */
   },
   { stm8_genExtraArea, NULL },
+  1,                            /* default ABI revision */
   {                             /* stack information */
     -1,                         /* stack grows down */
      0,
@@ -510,7 +517,10 @@ PORT stm8_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, TRUE },
+  { 
+    -1,                         /* shifts never use support routines */
+    true,                       /* use support routine for int x int -> long multiplication */
+  },
   { stm8_emitDebuggerSymbol,
     {
       stm8_dwarfRegNum,

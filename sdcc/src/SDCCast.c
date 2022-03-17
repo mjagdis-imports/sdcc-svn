@@ -254,6 +254,7 @@ copyAst (ast * src)
   dest->funcName = src->funcName;
   dest->reversed = src->reversed;
   dest->inlined = src->inlined;
+  dest->initMode = src->initMode;
 
   if (src->ftype)
     dest->etype = getSpec (dest->ftype = copyLinkChain (src->ftype));
@@ -911,7 +912,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
   /* decorate parameter */
   resultType = defParm ? getResultTypeFromType (defParm->type) : RESULT_TYPE_NONE;
-  *actParm = decorateType (*actParm, resultType);
+  *actParm = decorateType (*actParm, resultType, true);
 
   if (IS_VOID ((*actParm)->ftype))
     {
@@ -975,7 +976,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
           (*actParm)->lineno = (*actParm)->right->lineno;
           AST_VALUES (*actParm, cast.implicitCast) = 1;
 
-          *actParm = decorateType (*actParm, resultType);
+          *actParm = decorateType (*actParm, resultType, true);
         }
       return 0;
     }                           /* vararg */
@@ -1010,7 +1011,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
       (*actParm)->filename = (*actParm)->right->filename;
       (*actParm)->lineno = (*actParm)->right->lineno;
       AST_VALUES (*actParm, cast.implicitCast) = 1;
-      *actParm = decorateType (*actParm, IS_GENPTR (defParm->type) ? RESULT_TYPE_GPTR : resultType);
+      *actParm = decorateType (*actParm, IS_GENPTR (defParm->type) ? RESULT_TYPE_GPTR : resultType, true);
     }
 
   /* make a copy and change the regparm type to the defined parm */
@@ -1045,10 +1046,10 @@ createIvalType (ast * sym, sym_link * type, initList * ilist)
     ilist = ilist->init.deep;
 
   if (ilist)
-    iExpr = decorateType (resolveSymbols (list2expr (ilist)), RESULT_TYPE_NONE);
+    iExpr = decorateType (resolveSymbols (list2expr (ilist)), RESULT_TYPE_NONE, true);
   else
     iExpr = newAst_VALUE (valueFromLit (0));
-  return decorateType (newNode ('=', sym, iExpr), RESULT_TYPE_NONE);
+  return decorateType (newNode ('=', sym, iExpr), RESULT_TYPE_NONE, true);
 }
 
 /*------------------------------------------------------------------*/
@@ -1165,15 +1166,15 @@ createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
           {
             ps->implicit = 1;
             lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (ps)));
-            lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE);
-            rast = decorateType (resolveSymbols (createIval (lAst, ps->type, NULL, rast, rootValue, 1)), RESULT_TYPE_NONE);          
+            lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
+            rast = decorateType (resolveSymbols (createIval (lAst, ps->type, NULL, rast, rootValue, 1)), RESULT_TYPE_NONE, true);          
           }
 
       /* initialize this field */
       sflds->implicit = 1;
       lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (sflds)));
-      lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE);
-      rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE);
+      lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
+      rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
       iloop = iloop ? iloop->next : NULL;
 
       /* Unions can only initialize a single field */
@@ -1213,17 +1214,17 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       ilist && ilist->type == INIT_NODE)
     if ((rast = createIvalCharPtr (sym,
                                    type,
-                                   decorateType (resolveSymbols (list2expr (ilist)), RESULT_TYPE_NONE),
+                                   decorateType (resolveSymbols (list2expr (ilist)), RESULT_TYPE_NONE, true),
                                    rootValue)))
-      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE);
+      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);
   /* char *p = {"abc"}; */
   if ((IS_CHAR (type->next) || IS_INT (type->next) && IS_UNSIGNED (type->next)) &&
       ilist && ilist->type == INIT_DEEP && ilist->init.deep && ilist->init.deep->type == INIT_NODE)
     if ((rast = createIvalCharPtr (sym,
                                    type,
-                                   decorateType (resolveSymbols (list2expr (ilist->init.deep)), RESULT_TYPE_NONE),
+                                   decorateType (resolveSymbols (list2expr (ilist->init.deep)), RESULT_TYPE_NONE, true),
                                    rootValue)))
-      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE);
+      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);
 
   /* not the special case */
   if (ilist && ilist->type != INIT_DEEP)
@@ -1248,7 +1249,7 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
     {
       ast *aSym;
 
-      aSym = decorateType (resolveSymbols (sym), RESULT_TYPE_NONE);
+      aSym = decorateType (resolveSymbols (sym), RESULT_TYPE_NONE, true);
 
       rast = newNode (ARRAYINIT, aSym, NULL);
       rast->values.constlist = literalL;
@@ -1304,7 +1305,7 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
             }
 
           aSym = newNode ('[', sym, newAst_VALUE (valueFromLit ((float) (idx))));
-          aSym = decorateType (resolveSymbols (aSym), RESULT_TYPE_NONE);
+          aSym = decorateType (resolveSymbols (aSym), RESULT_TYPE_NONE, true);
           rast = createIval (aSym, type->next, iloop, rast, rootValue, 0);
           idx++;
           iloop = (iloop ? iloop->next : NULL);
@@ -1321,7 +1322,7 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
         DCL_ELEM (type) = size;
     }
 
-  return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE);
+  return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1358,7 +1359,7 @@ createIvalCharPtr (ast * sym, sym_link * type, ast * iexpr, ast * rootVal)
                                             newAst_VALUE (valueFromLit ((float) i))), newAst_VALUE (valueFromLit (0))));
         }
 
-      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE);
+      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);
     }
 
   if ((IS_LITERAL (iexpr->etype) || (IS_SPEC (iexpr->etype) && SPEC_SCLS (iexpr->etype) == S_CODE)) && IS_ARRAY (iexpr->ftype))
@@ -1432,7 +1433,7 @@ createIvalCharPtr (ast * sym, sym_link * type, ast * iexpr, ast * rootVal)
             DCL_ELEM (type) = size;
         }
 
-      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE);
+      return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);
     }
 
   return NULL;
@@ -1452,7 +1453,7 @@ createIvalPtr (ast * sym, sym_link * type, initList * ilist, ast * rootVal)
     ilist = ilist->init.deep;
 
   if (ilist)
-    iexpr = decorateType (resolveSymbols (list2expr (ilist)), RESULT_TYPE_NONE);
+    iexpr = decorateType (resolveSymbols (list2expr (ilist)), RESULT_TYPE_NONE, true);
   else
     iexpr = newAst_VALUE (valueFromLit (0));
 
@@ -1492,9 +1493,9 @@ createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootV
     rast = createIvalType (sym, type, ilist);
 
   if (wid)
-    return decorateType (resolveSymbols (newNode (NULLOP, wid, rast)), RESULT_TYPE_NONE);
+    return decorateType (resolveSymbols (newNode (NULLOP, wid, rast)), RESULT_TYPE_NONE, true);
   else
-    return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE);
+    return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1773,7 +1774,7 @@ constExprTree (ast * cexpr)
       return TRUE;
     }
 
-  cexpr = decorateType (resolveSymbols (cexpr), RESULT_TYPE_NONE);
+  cexpr = decorateType (resolveSymbols (cexpr), RESULT_TYPE_NONE, true);
 
   switch (cexpr->type)
     {
@@ -1852,7 +1853,7 @@ constExprTree (ast * cexpr)
 value *
 constExprValue (ast * cexpr, int check)
 {
-  cexpr = decorateType (resolveSymbols (cexpr), RESULT_TYPE_NONE);
+  cexpr = decorateType (resolveSymbols (cexpr), RESULT_TYPE_NONE, true);
 
   /* if this is not a constant then */
   if (!IS_LITERAL (cexpr->ftype))
@@ -2404,7 +2405,7 @@ reverseLoop (ast * loop, symbol * sym, ast * init, ast * end)
                                                            newAst_VALUE (constVal ("1"))), rloop))));
 
   rloop->lineno = init->lineno;
-  return decorateType (rloop, RESULT_TYPE_NONE);
+  return decorateType (rloop, RESULT_TYPE_NONE, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -2482,7 +2483,7 @@ isInitiallyTrue (ast *initExpr, ast * condExpr)
   initExpr->opval.op = CAST;
   initExpr->left = newAst_LINK (LTYPE (initExpr));
   initExpr->decorated = 0;
-  decorateType (initExpr, RESULT_TYPE_NONE);
+  decorateType (initExpr, RESULT_TYPE_NONE, true);
   if (!IS_AST_LIT_VALUE (initExpr))
     return FALSE;
 
@@ -2498,7 +2499,7 @@ isInitiallyTrue (ast *initExpr, ast * condExpr)
       /* trigger a warning that may not apply to the original */
       /* source code. */
       original = setWarningDisabledState (W_COMP_RANGE, TRUE);
-      condExpr = decorateType (condExpr, RESULT_TYPE_NONE);
+      condExpr = decorateType (condExpr, RESULT_TYPE_NONE, true);
       setWarningDisabledState (W_COMP_RANGE, original);
     }
   if (!IS_AST_LIT_VALUE (condExpr))
@@ -2724,7 +2725,7 @@ addCast (ast * tree, RESULT_TYPE resultType, bool promote)
      but not when promoting from char to int */
   if (!upCasted)
     SPEC_USIGN (tree->left->opval.lnk) = IS_UNSIGNED (tree->right->etype) ? 1 : 0;
-  return decorateType (tree, resultType);
+  return decorateType (tree, resultType, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -2834,7 +2835,7 @@ gatherImplicitVariables (ast * tree, ast * block)
          compute type of RHS, and set the symbol's type to match */
       if (assignee->type == NULL && assignee->infertype)
         {
-          ast *dtr = decorateType (resolveSymbols (tree->right), RESULT_TYPE_NONE);
+          ast *dtr = decorateType (resolveSymbols (tree->right), RESULT_TYPE_NONE, true);
 
           if (dtr != tree->right)
             tree->right = dtr;
@@ -3282,7 +3283,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
 
       ast *lengthparm = newAst_VALUE (valCastLiteral (newIntLink(), strlength, strlength));
       lengthparm->lineno = parm->lineno;
-      decorateType (lengthparm, RESULT_TYPE_NONE);
+      decorateType (lengthparm, RESULT_TYPE_NONE, true);
       ast *node = newAst_OP (PARAM);
       node->lineno = parm->lineno;
 
@@ -3290,7 +3291,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
       node->left->values.cast.implicitCast = 1;
       node->left->lineno = parm->lineno;
       node->left->filename = node->left->left->filename = parm->filename;
-      node->left = decorateType (node->left, RESULT_TYPE_GPTR);
+      node->left = decorateType (node->left, RESULT_TYPE_GPTR, true);
       
       node->right = lengthparm;
       node->decorated = 1;
@@ -3390,7 +3391,7 @@ rewriteStructAssignment (ast *tree)
 
   /* copy source location and return decorated result */
   copyAstLoc (newTree, tree);
-  return decorateType (newTree, RESULT_TYPE_OTHER);
+  return decorateType (newTree, RESULT_TYPE_OTHER, true);
 }
 
 /*--------------------------------------------------------------------*/
@@ -3401,11 +3402,12 @@ rewriteStructAssignment (ast *tree)
 /* It also does constant folding, and parameter checking.             */
 /*--------------------------------------------------------------------*/
 ast *
-decorateType (ast *tree, RESULT_TYPE resultType)
+decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 {
   int parmNumber;
   sym_link *p;
   RESULT_TYPE resultTypeProp;
+  static int findingAddressOf=0;
 
   if (!tree)
     return tree;
@@ -3515,12 +3517,21 @@ decorateType (ast *tree, RESULT_TYPE resultType)
 
     /* Before decorating the left branch we've to decide in dependence
        upon tree->opval.op, if resultType can be propagated */
-    resultTypeProp = resultTypePropagate (tree, resultType);
-
-    if ((tree->opval.op == '?') && (resultTypeProp != RESULT_TYPE_BOOL))
-      dtl = decorateType (tree->left, RESULT_TYPE_IFX);
+    if (reduceTypeAllowed)
+      resultTypeProp = resultTypePropagate (tree, resultType);
     else
-      dtl = decorateType (tree->left, resultTypeProp);
+      resultTypeProp = RESULT_TYPE_OTHER;
+
+    if ((tree->opval.op == '?') && (resultTypeProp != RESULT_TYPE_BOOL) && reduceTypeAllowed)
+      dtl = decorateType (tree->left, RESULT_TYPE_IFX, reduceTypeAllowed);
+    else if ((tree->opval.op == '&') && (!tree->right))
+      {
+        findingAddressOf = 1;
+        dtl = decorateType (tree->left, resultTypeProp, reduceTypeAllowed);
+        findingAddressOf = 0;
+      }
+    else
+      dtl = decorateType (tree->left, resultTypeProp, reduceTypeAllowed);
 
     /* if an array node, we may need to swap branches */
     if (tree->opval.op == '[')
@@ -3537,8 +3548,11 @@ decorateType (ast *tree, RESULT_TYPE resultType)
     /* After decorating the left branch there's type information available
        in tree->left->?type. If the op is e.g. '=' we extract the type
        information from there and propagate it to the right branch. */
-    resultTypeProp = getLeftResultType (tree, resultTypeProp);
-
+    if (reduceTypeAllowed)
+      resultTypeProp = getLeftResultType (tree, resultTypeProp);
+    else
+      resultTypeProp = RESULT_TYPE_OTHER;
+      
     switch (tree->opval.op)
       {
       case '?':
@@ -3554,13 +3568,18 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       case SIZEOF:
         /* don't allocate string if it is a sizeof argument */
         ++noAlloc;
-        dtr = decorateType (tree->right, resultTypeProp);
+        resultTypeProp = RESULT_TYPE_OTHER;
+        reduceTypeAllowed = false;
+        dtr = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
         --noAlloc;
         break;
       default:
-        dtr = decorateType (tree->right, resultTypeProp);
+        dtr = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
         break;
       }
+
+    if (!reduceTypeAllowed)
+      resultType = RESULT_TYPE_OTHER;
 
     /* this is to take care of situations
        when the tree gets rewritten */
@@ -3614,7 +3633,9 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         {
           int arrayIndex = (int) ulFromVal (valFromType (RETYPE (tree)));
           int arraySize = DCL_ELEM (LTYPE (tree));
-          if (arraySize && arrayIndex >= arraySize)
+          int arrayLimit = findingAddressOf ? arraySize+1 : arraySize;
+          
+          if (arraySize && arrayIndex >= arrayLimit)
             {
               werrorfl (tree->filename, tree->lineno, W_IDX_OUT_OF_BOUNDS, arrayIndex, arraySize);
             }
@@ -3757,7 +3778,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
             {
               tree->type = EX_VALUE;
-              tree->opval.val = valBitwise (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), '&');
+              tree->opval.val = valBitwise (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), '&', reduceTypeAllowed);
 
               tree->right = tree->left = NULL;
               TETYPE (tree) = tree->opval.val->etype;
@@ -3786,34 +3807,34 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                   litTree->left = tree->right;
                   tree->right = tTree;
                   /* both operands in litTree are literal now */
-                  decorateType (parent, resultType);
+                  decorateType (parent, resultType, reduceTypeAllowed);
                 }
             }
 
           /* if ANDing boolean with literal then reduce literal LSB to boolean */
-          if (IS_LITERAL (RTYPE (tree)) && IS_BOOLEAN (LTYPE (tree)))
+          if (reduceTypeAllowed && IS_LITERAL (RTYPE (tree)) && IS_BOOLEAN (LTYPE (tree)))
             {
               unsigned long litval = AST_ULONG_VALUE (tree->right);
-              tree->right = decorateType (newAst_VALUE (constBoolVal (litval & 1)), resultType);
+              tree->right = decorateType (newAst_VALUE (constBoolVal (litval & 1, reduceTypeAllowed)), resultType, reduceTypeAllowed);
             }
 
           /* see if this is a GETABIT operation if yes
              then return that */
           otree = optimizeGetAbit (tree, resultType);
           if (otree != tree)
-            return decorateType (otree, RESULT_TYPE_NONE);
+            return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
 
           /* see if this is a GETBYTE operation if yes
              then return that */
           otree = optimizeGetByte (tree, resultType);
           if (otree != tree)
-            return decorateType (otree, RESULT_TYPE_NONE);
+            return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
 
           /* see if this is a GETWORD operation if yes
              then return that */
           otree = optimizeGetWord (tree, resultType);
           if (otree != tree)
-            return decorateType (otree, RESULT_TYPE_NONE);
+            return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
 
           /* if right is a literal and has the same size with left, 
              then also sync their signess to avoid unecessary cast */
@@ -3923,11 +3944,11 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       {
         ast *wtree = optimizeRRCRLC (tree);
         if (wtree != tree)
-          return decorateType (wtree, RESULT_TYPE_NONE);
+          return decorateType (wtree, RESULT_TYPE_NONE, reduceTypeAllowed);
 
         wtree = optimizeSWAP (tree);
         if (wtree != tree)
-          return decorateType (wtree, RESULT_TYPE_NONE);
+          return decorateType (wtree, RESULT_TYPE_NONE, reduceTypeAllowed);
       }
 
       /* if left is a literal exchange left & right */
@@ -3951,18 +3972,19 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               litTree->left = tree->right;
               tree->right = tTree;
               /* both operands in tTree are literal now */
-              decorateType (parent, resultType);
+              decorateType (parent, resultType, reduceTypeAllowed);
             }
         }
 
       /* if ORing boolean with literal then reduce literal to boolean */
-      if (IS_LITERAL (RTYPE (tree)) &&
+      if (reduceTypeAllowed &&
+          IS_LITERAL (RTYPE (tree)) &&
           IS_BOOLEAN (LTYPE (tree)) &&
           IS_INTEGRAL (RTYPE (tree)) &&
           resultType == RESULT_TYPE_BOOL)
         {
           unsigned long litval = AST_ULONG_VALUE (tree->right);
-          tree->right = decorateType (newAst_VALUE (constBoolVal (litval != 0)), resultType);
+          tree->right = decorateType (newAst_VALUE (constBoolVal (litval != 0, reduceTypeAllowed)), resultType, reduceTypeAllowed);
         }
 
       /* fall through */
@@ -3986,8 +4008,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /* if they are both literal then rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valBitwise (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), tree->opval.op));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valBitwise (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), tree->opval.op, reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* if left is a literal exchange left & right */
@@ -4011,12 +4033,13 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               litTree->left = tree->right;
               tree->right = tTree;
               /* both operands in litTree are literal now */
-              decorateType (parent, resultType);
+              decorateType (parent, resultType, reduceTypeAllowed);
             }
         }
 
       /* if XORing boolean with literal then reduce literal to boolean */
-      if (IS_LITERAL (RTYPE (tree)) &&
+      if (reduceTypeAllowed &&
+          IS_LITERAL (RTYPE (tree)) &&
           IS_BOOLEAN (LTYPE (tree)) &&
           IS_INTEGRAL (RTYPE (tree)) &&
           resultType == RESULT_TYPE_BOOL &&
@@ -4025,14 +4048,32 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           unsigned long litval = AST_ULONG_VALUE (tree->right);
           if (litval == 0 || litval == 1)
             {
-              tree->right = decorateType (newAst_VALUE (constBoolVal (litval != 0)), resultType);
+              tree->right = decorateType (newAst_VALUE (constBoolVal (litval != 0, reduceTypeAllowed)), resultType, reduceTypeAllowed);
             }
           else
             {
               tree->opval.op = '|';
-              tree->right = newAst_VALUE (constBoolVal (1));
+              tree->right = newAst_VALUE (constBoolVal (1, reduceTypeAllowed));
               tree->decorated = 0;
-              return decorateType (tree, resultType);
+              return decorateType (tree, resultType, reduceTypeAllowed);
+            }
+        }
+        
+      /* OR / XOR char with literal integral, try to reduce integral to CHAR if it fits in a CHAR */
+      if (reduceTypeAllowed && 
+          !TARGET_PDK_LIKE && // Temporary fix to avoid bug #3259 - Wrong opcodes
+          IS_LITERAL (RTYPE (tree)) &&
+          IS_INTEGRAL (RTYPE (tree)) &&
+          !IS_CHAR (RTYPE (tree)) &&
+          IS_CHAR(LTYPE(tree)))
+        {
+          unsigned long litval = AST_ULONG_VALUE (tree->right); 
+          if ((litval >= 0) && (litval <= 255) && reduceTypeAllowed)
+            {
+              ast *newAst = newAst_VALUE (valueFromLit (litval));
+              copyAstLoc (newAst, tree->right);
+              tree->right = decorateType (newAst, resultType, reduceTypeAllowed);
+              //SPEC_USIGN (RTYPE (tree)) = 1;
             }
         }
 
@@ -4065,8 +4106,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valDiv (valFromType (LETYPE (tree)), valFromType (RETYPE (tree))));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valDiv (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       LRVAL (tree) = RRVAL (tree) = 1;
@@ -4099,7 +4140,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                   litTree->right->lineno = tree->lineno;
 
                   tree->right->opval.val = constCharVal (1);
-                  decorateType (parent, resultType);
+                  decorateType (parent, resultType, reduceTypeAllowed);
                 }
               else
                 {
@@ -4107,7 +4148,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                      We can't call decorateType(parent, RESULT_TYPE_NONE), because
                      this would cause an infinit loop. */
                   parent->decorated = 1;
-                  decorateType (litTree, resultType);
+                  decorateType (litTree, resultType, reduceTypeAllowed);
                 }
             }
         }
@@ -4137,8 +4178,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valMod (valFromType (LETYPE (tree)), valFromType (RETYPE (tree))));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valMod (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
       LRVAL (tree) = RRVAL (tree) = 1;
       TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), RTYPE (tree), resultType, tree->opval.op));
@@ -4190,8 +4231,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valMult (valFromType (LETYPE (tree)), valFromType (RETYPE (tree))));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valMult (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* if left is a literal exchange left & right */
@@ -4215,7 +4256,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               litTree->left = tree->right;
               tree->right = tTree;
               /* both operands in litTree are literal now */
-              decorateType (parent, resultType);
+              decorateType (parent, resultType, reduceTypeAllowed);
             }
         }
 
@@ -4257,8 +4298,15 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               TETYPE (tree) = TTYPE (tree) = tree->opval.val->type;
               return tree;
             }
+          
           LRVAL (tree) = 1;
-          COPYTYPE (TTYPE (tree), TETYPE (tree), LTYPE (tree));
+          if (reduceTypeAllowed)
+              COPYTYPE (TTYPE (tree), TETYPE (tree), LTYPE (tree));
+          else
+            {
+              tree->left = addCast (tree->left, resultTypeProp, true);
+              TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), NULL, resultType, tree->opval.op));
+            }
           return tree;
         }
 
@@ -4292,8 +4340,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         {
           tree->left = addCast (tree->left, resultTypeProp, TRUE);
           tree->right = addCast (tree->right, resultTypeProp, TRUE);
-          rewriteAstNodeVal (tree, valPlus (valFromType (LETYPE (tree)), valFromType (RETYPE (tree))));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valPlus (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* if the right is a pointer or left is a literal
@@ -4343,7 +4391,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                       tree->opval.op = '-';
                     }
                 }
-              decorateType (parent, resultType);
+              decorateType (parent, resultType, reduceTypeAllowed);
             }
         }
 
@@ -4385,7 +4433,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           if (IS_LITERAL (LTYPE (tree)))
             {
               tree->type = EX_VALUE;
-              tree->opval.val = valUnaryPM (valFromType (LETYPE (tree)));
+              tree->opval.val = valUnaryPM (valFromType (LETYPE (tree)), reduceTypeAllowed);
               tree->left = NULL;
               TETYPE (tree) = TTYPE (tree) = tree->opval.val->type;
               return tree;
@@ -4426,8 +4474,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         {
           tree->left = addCast (tree->left, resultTypeProp, TRUE);
           tree->right = addCast (tree->right, resultTypeProp, TRUE);
-          rewriteAstNodeVal (tree, valMinus (valFromType (LETYPE (tree)), valFromType (RETYPE (tree))));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valMinus (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
        }
 
       /* if the left & right are equal then zero */
@@ -4435,16 +4483,16 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         isAstEqual (tree->left, tree->right))
         {
           tree->type = EX_VALUE;
+          tree->opval.val = valZeroResultFromOp(LTYPE (tree), RTYPE (tree), tree->opval.op, reduceTypeAllowed);
           tree->left = tree->right = NULL;
-          tree->opval.val = constVal ("0");
           TETYPE (tree) = TTYPE (tree) = tree->opval.val->type;
           return tree;
         }
 
       /* if both of them are pointers or arrays then */
-      /* the result is going to be an integer        */
+      /* the result is a ptrdiff */
       if ((IS_ARRAY (LTYPE (tree)) || IS_PTR (LTYPE (tree))) && (IS_ARRAY (RTYPE (tree)) || IS_PTR (RTYPE (tree))))
-        TETYPE (tree) = TTYPE (tree) = newIntLink ();
+        TETYPE (tree) = TTYPE (tree) = newPtrDiffLink();
       else
         /* if only the left is a pointer */
         /* then result is a pointer      */
@@ -4499,7 +4547,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                       litTree->opval.op = '+';
 
                       tree->decorated = 0;
-                      decorateType (tree, resultType);
+                      decorateType (tree, resultType, reduceTypeAllowed);
                     }
                   else
                     {
@@ -4509,7 +4557,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                       tree->right = tTree;
                     }
                 }
-              decorateType (litParent, resultType);
+              decorateType (litParent, resultType, reduceTypeAllowed);
             }
         }
       return tree;
@@ -4530,7 +4578,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       if (IS_LITERAL (LTYPE (tree)))
         {
           tree->type = EX_VALUE;
-          tree->opval.val = valComplement (valFromType (LETYPE (tree)));
+          tree->opval.val = valComplement (valFromType (LETYPE (tree)), reduceTypeAllowed);
           tree->left = NULL;
           TETYPE (tree) = TTYPE (tree) = tree->opval.val->type;
           return addCast (tree, resultTypeProp, TRUE);
@@ -4546,7 +4594,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
 
           /* optimize bit-result, even if we optimize a buggy source */
           tree->type = EX_VALUE;
-          tree->opval.val = constBoolVal (1);
+          tree->opval.val = constBoolVal (1, reduceTypeAllowed);
         }
       else
         tree->left = addCast (tree->left, resultTypeProp, TRUE);
@@ -4579,24 +4627,32 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           /* remove double '!!X' by 'X ? 1 : 0' */ /* TODO: Casts to _Bools tend to result in far more efficient code than '?' */
           tree->opval.op = '?';
           tree->left = tree->left->left;
-          tree->right = newNode (':', newAst_VALUE (constBoolVal (1)), newAst_VALUE (constBoolVal (0)));
+          tree->right = newNode (':', newAst_VALUE (constBoolVal (1, reduceTypeAllowed)), newAst_VALUE (constBoolVal (0, reduceTypeAllowed)));
           tree->right->filename = tree->filename;
           tree->right->lineno = tree->lineno;
           tree->decorated = 0;
-          return decorateType (tree, resultType);
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 #endif
 
       /* if left is a literal then do it */
       if (IS_LITERAL (LTYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valNot (valFromType (LETYPE (tree))));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valNot (valFromType (LETYPE (tree)), reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
       LRVAL (tree) = 1;
-      TTYPE (tree) = TETYPE (tree) = (resultTypeProp == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
-      if (IS_BOOLEAN (LTYPE (tree)))
-        SPEC_USIGN (TTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
+      if (reduceTypeAllowed)
+        {
+          TTYPE (tree) = TETYPE (tree) = (resultTypeProp == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
+          if (IS_BOOLEAN (LTYPE (tree)))
+            SPEC_USIGN (TTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
+        }
+      else
+        {
+          TTYPE (tree) = TETYPE (tree) = newIntLink ();
+          SPEC_USIGN (TTYPE (tree)) = 0;
+        }
       return tree;
 
       /*------------------------------------------------------------------*/
@@ -4643,8 +4699,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valShift (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), (tree->opval.op == LEFT_OP ? 1 : 0)));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valShift (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), (tree->opval.op == LEFT_OP ? 1 : 0), reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* see if this is a GETBYTE operation if yes
@@ -4653,7 +4709,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         ast *otree = optimizeGetByte (tree, resultType);
 
         if (otree != tree)
-          return decorateType (otree, RESULT_TYPE_NONE);
+          return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
       }
 
       /* see if this is a GETWORD operation if yes
@@ -4662,11 +4718,21 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         ast *otree = optimizeGetWord (tree, resultType);
 
         if (otree != tree)
-          return decorateType (otree, RESULT_TYPE_NONE);
+          return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
       }
 
       LRVAL (tree) = RRVAL (tree) = 1;
-      if (tree->opval.op == LEFT_OP)
+      if(!reduceTypeAllowed)
+        {
+          TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), NULL, resultType, tree->opval.op));
+          if(IS_INTEGRAL (TETYPE (tree)) && bitsForType (TETYPE (tree)) < INTSIZE * 8)
+            {
+              // Promote to int for smaller types
+              SPEC_NOUN (TETYPE (tree)) = V_INT;
+              SPEC_USIGN (TETYPE (tree)) = 0;
+            }
+        }
+      else if ((tree->opval.op == LEFT_OP))
         {
           TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), NULL, resultType, tree->opval.op));
         }
@@ -4684,7 +4750,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           /* Change shift op to comma op and replace the right operand with 0. */
           /* This preserves the left operand in case there were side-effects. */
           tree->opval.op = ',';
-          tree->right->opval.val = constVal ("0");
+          tree->right->opval.val = valZeroResultFromOp(LTYPE (tree), RTYPE (tree), tree->opval.op, reduceTypeAllowed);
           TETYPE (tree) = TTYPE (tree) = tree->right->opval.val->type;
           return tree;
         }
@@ -4699,7 +4765,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               /* Change shift op to comma op and replace the right operand with 0. */
               /* This preserves the left operand in case there were side-effects. */
               tree->opval.op = ',';
-              tree->right->opval.val = constVal ("0");
+              tree->right->opval.val = valZeroResultFromOp(LTYPE (tree), RTYPE (tree), tree->opval.op, reduceTypeAllowed);
               TETYPE (tree) = TTYPE (tree) = tree->right->opval.val->type;
               return tree;
             }
@@ -4955,11 +5021,11 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valLogicAndOr (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), tree->opval.op));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valLogicAndOr (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), tree->opval.op, reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
       LRVAL (tree) = RRVAL (tree) = 1;
-      TTYPE (tree) = TETYPE (tree) = (resultTypeProp == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
+      TTYPE (tree) = TETYPE (tree) = reduceTypeAllowed ? ((resultTypeProp == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ()) : newIntLink();
       return tree;
 
       /*------------------------------------------------------------------*/
@@ -5060,7 +5126,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           case CCR_ALWAYS_TRUE:
           case CCR_ALWAYS_FALSE:
             werrorfl (tree->filename, tree->lineno, W_COMP_RANGE, ccr_result == CCR_ALWAYS_TRUE ? "true" : "false");
-            newResult = newAst_VALUE (constBoolVal ((unsigned char) (ccr_result == CCR_ALWAYS_TRUE)));
+            newResult = newAst_VALUE (constBoolVal ((unsigned char) (ccr_result == CCR_ALWAYS_TRUE), reduceTypeAllowed));
+
             /* If there are side effects, join the non-literal side */
             /* to the boolean result with a comma operator */
             if (hasSEFcalls (tree))
@@ -5070,7 +5137,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                 else
                   newResult = newNode (',', tree->right, newResult);
               }
-            return decorateType (newResult, resultType);
+            return decorateType (newResult, resultType, reduceTypeAllowed);
           case CCR_OK:
           default:
             break;
@@ -5090,13 +5157,13 @@ decorateType (ast *tree, RESULT_TYPE resultType)
 
           /* (unsigned value) ? 1 : 0 */ /* TODO: Casts to _Bools tend to result in far more efficient code than '?' */
           tree->opval.op = '?';
-          tree->right = newNode (':', newAst_VALUE (constBoolVal (1)), tree->right);    /* val 0 */
+          tree->right = newNode (':', newAst_VALUE (constBoolVal (1, reduceTypeAllowed)), tree->right);    /* val 0 */
           tree->right->filename = tree->filename;
           tree->right->lineno = tree->lineno;
           tree->right->left->filename = tree->filename;
           tree->right->left->lineno = tree->lineno;
           tree->decorated = 0;
-          return decorateType (tree, resultType);
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* 'ifx (0 == op)' -> 'ifx (!(op))' */
@@ -5105,7 +5172,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           tree->opval.op == EQ_OP && (resultType == RESULT_TYPE_IFX || resultType == RESULT_TYPE_BOOL))
         {
           rewriteAstNodeOp (tree, '!', tree->right, NULL);
-          return decorateType (tree, resultType);
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* 'ifx (op == 0)' -> 'ifx (!(op))' */
@@ -5114,7 +5181,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           tree->opval.op == EQ_OP && (resultType == RESULT_TYPE_IFX || resultType == RESULT_TYPE_BOOL))
         {
           rewriteAstNodeOp (tree, '!', tree->left, NULL);
-          return decorateType (tree, resultType);
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* 'ifx (op == 1)' -> 'ifx (op)' for bool */
@@ -5123,15 +5190,15 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           tree->opval.op == EQ_OP && (resultType == RESULT_TYPE_IFX || resultType == RESULT_TYPE_BOOL))
         {
           tree = tree->left;
-          return decorateType (tree, resultType);
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* if they are both literal then */
       /* rewrite the tree */
       if (IS_LITERAL (RETYPE (tree)) && IS_LITERAL (LETYPE (tree)))
         {
-          rewriteAstNodeVal (tree, valCompare (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), tree->opval.op));
-          return decorateType (tree, resultType);
+          rewriteAstNodeVal (tree, valCompare (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), tree->opval.op, reduceTypeAllowed));
+          return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
       /* if one is 'signed char ' and the other one is 'unsigned char' */
@@ -5171,7 +5238,13 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         }
 
       LRVAL (tree) = RRVAL (tree) = 1;
-      TTYPE (tree) = TETYPE (tree) = (resultType == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
+      if (reduceTypeAllowed)
+          TTYPE (tree) = TETYPE (tree) = (resultType == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
+      else
+        {
+          TTYPE (tree) = TETYPE (tree) = newIntLink ();
+          SPEC_USIGN (TTYPE (tree)) = 0;
+        }
 
       /* condition transformations */
       {
@@ -5213,7 +5286,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
             tree = newNode ('!', tree, NULL);
             tree->filename = tree->left->filename;
             tree->lineno = tree->left->lineno;
-            return decorateType (tree, resultType);
+            return decorateType (tree, resultType, reduceTypeAllowed);
           }
       }
 
@@ -5350,7 +5423,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           ast * heir;
           
           ++noAlloc;
-          tree->right = decorateType (tree->right, resultTypeProp);
+          tree->right = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
           --noAlloc;
 
           if (((int) ulFromVal (valFromType (LETYPE (tree)))) != 0)
@@ -5358,7 +5431,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           else
             heir = tree->right->right;
             
-          heir = decorateType (heir, resultTypeProp);
+          heir = decorateType (heir, resultTypeProp, reduceTypeAllowed);
           if (IS_LITERAL (TETYPE (heir)))
             TTYPE (heir) = valRecastLitVal (TTYPE (tree->right), valFromType (TETYPE (heir)))->type;
           else
@@ -5367,7 +5440,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           return heir;
         }
 
-      tree->right = decorateType (tree->right, resultTypeProp);
+      tree->right = decorateType (tree->right, resultTypeProp, reduceTypeAllowed);
 
       if (IS_AST_LIT_VALUE (tree->right->left) && IS_AST_LIT_VALUE (tree->right->right) &&
           ((resultType == RESULT_TYPE_IFX) || (resultType == RESULT_TYPE_BOOL)))
@@ -5379,7 +5452,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
             {
               /* assign cond to result */
               tree->left->decorated = 0;
-              return decorateType (tree->left, resultTypeProp);
+              return decorateType (tree->left, resultTypeProp, reduceTypeAllowed);
             }
           else if ((valTrue == 0) && (valFalse != 0))
             {
@@ -5387,7 +5460,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               tree->opval.op = '!';
               tree->decorated = 0;
               tree->right = NULL;
-              return decorateType (tree, resultTypeProp);
+              return decorateType (tree, resultTypeProp, reduceTypeAllowed);
             }
           else
             {
@@ -5608,7 +5681,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
           goto errorTreeReturn;
         }
 
-      tree->right = decorateType (newNode ('+', copyAst (tree->left), tree->right), RESULT_TYPE_NONE);
+      tree->right = decorateType (newNode ('+', copyAst (tree->left), tree->right), RESULT_TYPE_NONE, reduceTypeAllowed);
       tree->opval.op = '=';
 
       return tree;
@@ -5765,7 +5838,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               tree->right->values.cast.implicitCast = 1;
               tree->right->lineno = tree->right->left->lineno = tree->lineno;
               tree->right->filename = tree->right->left->filename = tree->filename;
-              tree->right = decorateType (tree->right, IS_GENPTR (currFunc->type->next) ? RESULT_TYPE_GPTR : RESULT_TYPE_NONE);
+              tree->right = decorateType (tree->right, IS_GENPTR (currFunc->type->next) ? RESULT_TYPE_GPTR : RESULT_TYPE_NONE, reduceTypeAllowed);
             }
           else if (!typecompat)
             {
@@ -5817,9 +5890,9 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       /*----------------------------*/
     case FOR:
 
-      AST_FOR (tree, initExpr) = decorateType (resolveSymbols (AST_FOR (tree, initExpr)), RESULT_TYPE_NONE);
-      AST_FOR (tree, condExpr) = decorateType (resolveSymbols (AST_FOR (tree, condExpr)), RESULT_TYPE_NONE);
-      AST_FOR (tree, loopExpr) = decorateType (resolveSymbols (AST_FOR (tree, loopExpr)), RESULT_TYPE_NONE);
+      AST_FOR (tree, initExpr) = decorateType (resolveSymbols (AST_FOR (tree, initExpr)), RESULT_TYPE_NONE, reduceTypeAllowed);
+      AST_FOR (tree, condExpr) = decorateType (resolveSymbols (AST_FOR (tree, condExpr)), RESULT_TYPE_NONE, reduceTypeAllowed);
+      AST_FOR (tree, loopExpr) = decorateType (resolveSymbols (AST_FOR (tree, loopExpr)), RESULT_TYPE_NONE, reduceTypeAllowed);
 
       /* if the for loop is reversible then
          reverse it otherwise do what we normally
@@ -5843,7 +5916,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                                 AST_FOR (tree, loopExpr),
                                 tree->left,
                                 tree->right);
-            return decorateType (tree, RESULT_TYPE_NONE);
+            return decorateType (tree, RESULT_TYPE_NONE, reduceTypeAllowed);
           }
         else
           {
@@ -5856,7 +5929,7 @@ decorateType (ast *tree, RESULT_TYPE resultType)
                               AST_FOR (tree, loopExpr),
                               tree->left,
                               tree->right);
-            return decorateType (tree, RESULT_TYPE_NONE);
+            return decorateType (tree, RESULT_TYPE_NONE, reduceTypeAllowed);
           }
       }
     case PARAM:
@@ -6099,7 +6172,7 @@ createCase (ast * swStat, ast * caseVal, ast * stmnt)
       return NULL;
     }
 
-  caseVal = decorateType (resolveSymbols (caseVal), RESULT_TYPE_NONE);
+  caseVal = decorateType (resolveSymbols (caseVal), RESULT_TYPE_NONE, true);
   /* if not a constant then error  */
   if (!IS_LITERAL (caseVal->ftype))
     {
@@ -6493,7 +6566,7 @@ optimizeGetAbit (ast * tree, RESULT_TYPE resultType)
   if (port->hasExtBitOp && !port->hasExtBitOp (GETABIT, getSize (TTYPE (expr))))
     return tree;
 
-  return decorateType (newNode (GETABIT, expr, count), resultType);
+  return decorateType (newNode (GETABIT, expr, count), resultType, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -6535,7 +6608,7 @@ optimizeGetByte (ast * tree, RESULT_TYPE resultType)
   if (port->hasExtBitOp && !port->hasExtBitOp (GETBYTE, size))
     return tree;
 
-  return decorateType (newNode (GETBYTE, expr, count), RESULT_TYPE_NONE);
+  return decorateType (newNode (GETBYTE, expr, count), RESULT_TYPE_NONE, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -6578,7 +6651,7 @@ optimizeGetWord (ast *tree, RESULT_TYPE resultType)
   if (port->hasExtBitOp && !port->hasExtBitOp (GETWORD, size))
     return tree;
 
-  return decorateType (newNode (GETWORD, expr, count), RESULT_TYPE_NONE);
+  return decorateType (newNode (GETWORD, expr, count), RESULT_TYPE_NONE, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -6624,6 +6697,10 @@ optimizeRRCRLC (ast * root)
       if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
         goto tryNext0;
 
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
+        return root;
+
       /* make sure the port supports RLC */
       if (port->hasExtBitOp && !port->hasExtBitOp (RLC, getSize (TTYPE (root->left->left))))
         return root;
@@ -6653,6 +6730,10 @@ tryNext0:
 
       if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
         goto tryNext1;
+
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
+        return root;
 
       /* make sure the port supports RLC */
       if (port->hasExtBitOp && !port->hasExtBitOp (RLC, getSize (TTYPE (root->left->left))))
@@ -6685,6 +6766,10 @@ tryNext1:
       if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
         goto tryNext2;
 
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
+        return root;
+
       /* make sure the port supports RRC */
       if (port->hasExtBitOp && !port->hasExtBitOp (RRC, getSize (TTYPE (root->left->left))))
         return root;
@@ -6712,6 +6797,10 @@ tryNext2:
         return root;
 
       if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
+        return root;
+
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
         return root;
 
       /* make sure the port supports RRC */
@@ -6810,16 +6899,16 @@ optimizeCompare (ast * root)
         case '>':
         case '<':
         case NE_OP:
-          optExpr = newAst_VALUE (constBoolVal (0));
+          optExpr = newAst_VALUE (constBoolVal (0, true));
           break;
         case GE_OP:
         case LE_OP:
         case EQ_OP:
-          optExpr = newAst_VALUE (constBoolVal (1));
+          optExpr = newAst_VALUE (constBoolVal (1, true));
           break;
         }
 
-      return decorateType (optExpr, RESULT_TYPE_NONE);
+      return decorateType (optExpr, RESULT_TYPE_NONE, true);
     }
 
   vleft = (root->left->type == EX_VALUE ? root->left->opval.val : NULL);
@@ -6887,7 +6976,7 @@ optimizeCompare (ast * root)
               break;
             }
         }
-      return decorateType (resolveSymbols (optExpr), RESULT_TYPE_NONE);
+      return decorateType (resolveSymbols (optExpr), RESULT_TYPE_NONE, true);
     }                           /* end-of-if of BITVAR */
 
 noOptimize:
@@ -7388,25 +7477,21 @@ expandInlineFuncs (ast * tree, ast * block)
             werror (E_TOO_MANY_PARMS);
 
           /* Handle the return type */
-          if (!IS_VOID (func->type->next))
-            {
-              /* Generate return symbol coma statement;                   */
-              /* ...                                                      */
-              /* {{inline_function_code}}, retsym                         */
-
-              tree->opval.op = ',';
-              if (IFFUNC_ISCRITICAL (func->type))
-                inlinetree = newNode (CRITICAL, inlinetree, NULL);
-              tree->left = inlinetree;
+          /* Generate return symbol coma statement;                   */
+          /* ...                                                      */
+          /* {{inline_function_code}}, retsym                         */
+          tree->opval.op = ',';
+          if (IFFUNC_ISCRITICAL (func->type))
+            inlinetree = newNode (CRITICAL, inlinetree, NULL);
+          tree->left = inlinetree;
+          if (retsym)
               tree->right = newAst_VALUE (symbolVal (retsym));
-            }
           else
             {
-              tree->opval.op = NULLOP;
-              if (IFFUNC_ISCRITICAL (func->type))
-                inlinetree = newNode (CRITICAL, inlinetree, NULL);
-              tree->left = NULL;
-              tree->right = inlinetree;
+              /* create a literal void if the return type is void */
+              value * voidval = valFromType (newVoidLink ());
+              SPEC_SCLS (voidval->type) = S_LITERAL;
+              tree->right = newAst_VALUE (voidval);
             }
           inlineState.retsym = retsym;
 
@@ -7595,7 +7680,7 @@ createFunction (symbol * name, ast * body)
   SNPRINTF (name->rname, sizeof (name->rname), "%s%s", port->fun_prefix, name->name);
 
   body = resolveSymbols (body); /* resolve the symbols */
-  body = decorateType (body, RESULT_TYPE_NONE); /* propagateType & do semantic checks */
+  body = decorateType (body, RESULT_TYPE_NONE, true); /* propagateType & do semantic checks */
 
   /* save the stack information */
   if (options.useXstack)
@@ -7640,7 +7725,7 @@ createFunction (symbol * name, ast * body)
     {
       GcurMemmap = statsg;
       codeOutBuf = &statsg->oBuf;
-      eBBlockFromiCode (iCodeFromAst (decorateType (resolveSymbols (staticAutos), RESULT_TYPE_NONE)));
+      eBBlockFromiCode (iCodeFromAst (decorateType (resolveSymbols (staticAutos), RESULT_TYPE_NONE, true)));
       staticAutos = NULL;
     }
 

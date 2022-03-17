@@ -318,6 +318,14 @@ z80MightReadFlag(const lineNode *pl, const char *what)
   if(IS_RAB && (ISINST(pl->line, "ioi") || ISINST(pl->line, "ioe")))
     return(false);
 
+  if(IS_Z80N &&
+    (ISINST(pl->line, "bsla") ||
+    ISINST(pl->line, "bsra") ||
+    ISINST(pl->line, "bsrl") ||
+    ISINST(pl->line, "bsrf") ||
+    ISINST(pl->line, "brlc")))
+    return(false);
+
   return true;
 }
 
@@ -458,6 +466,12 @@ z80MightRead(const lineNode *pl, const char *what)
             return(true);
           arg += 3;
         }
+      else if(!strncmp(arg, "iy", 2) && *(arg + 2) == ',')
+        {
+          if(!strcmp(what, "iy"))
+            return(true);
+          arg += 3;
+        }
       return(argCont(arg, what));
     }
 
@@ -594,6 +608,14 @@ z80MightRead(const lineNode *pl, const char *what)
 
   if (IS_GB && (ISINST(pl->line, "lda") || ISINST(pl->line, "ldhl")))
     return(!strcmp(what, "sp"));
+
+  if(IS_Z80N &&
+    (ISINST(pl->line, "bsla") ||
+    ISINST(pl->line, "bsra") ||
+    ISINST(pl->line, "bsrl") ||
+    ISINST(pl->line, "bsrf") ||
+    ISINST(pl->line, "brlc")))
+    return(strchr("bde", *what));
 
   /* TODO: Can we know anything about rst? */
   if(ISINST(pl->line, "rst"))
@@ -1181,13 +1203,20 @@ z80canAssign (const char *op1, const char *op2, const char *exotic)
 
   // Can load immediate values directly into (hl).
   if(!strcmp(dst, "(hl)") && src[0] == '#')
-    return TRUE;
+    return true;
 
-  // Can load hl into sp
-  if(!strcmp(dst, "sp") && !strcmp(src, "hl"))
-    return TRUE;
+  // Can load between hl / ix / iy and sp.
+  if(!strcmp(dst, "sp") && (!strcmp(src, "hl") || !strcmp(src, "ix") || !strcmp(src, "iy")) ||
+    (!strcmp(dst, "hl") || !strcmp(dst, "ix") || !strcmp(dst, "iy")) && !strcmp(src, "sp"))
+    return true;
 
-  return FALSE;
+  // Rabbit can load between iy and hl.
+  if (IS_RAB &&
+    (!strcmp(dst, "hl") && (!strcmp(src, "ix") || !strcmp(src, "iy")) ||
+    (!strcmp(dst, "ix") || !strcmp(dst, "iy")) && !strcmp(src, "hl")))
+    return true;
+
+  return false;
 }
 
 static const char *
@@ -1549,7 +1578,15 @@ int z80instructionSize(lineNode *pl)
   if(IS_EZ80_Z80 && (ISINST(pl->line, "lea") || ISINST(pl->line, "pea")))
     return(3);
 
-  if(IS_GB || IS_Z80N && ISINST(pl->line, "swap"))
+  if((IS_GB || IS_Z80N) && ISINST(pl->line, "swap"))
+    return(2);
+
+  if(IS_Z80N &&
+    (ISINST(pl->line, "bsla") ||
+    ISINST(pl->line, "bsra") ||
+    ISINST(pl->line, "bsrl") ||
+    ISINST(pl->line, "bsrf") ||
+    ISINST(pl->line, "brlc")))
     return(2);
 
   if(ISINST(pl->line, ".db") || ISINST(pl->line, ".byte"))

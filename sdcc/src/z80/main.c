@@ -44,6 +44,7 @@
 #define OPTION_EMIT_EXTERNS    "--emit-externs"
 #define OPTION_LEGACY_BANKING  "--legacy-banking"
 #define OPTION_NMOS_Z80        "--nmos-z80"
+#define OPTION_SDCCCALL        "--sdcccall"
 
 static char _z80_defaultRules[] = {
 #include "peeph.rul"
@@ -94,6 +95,7 @@ static OPTION _z80_options[] = {
   {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
   {0, OPTION_NMOS_Z80,        &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
+  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -107,6 +109,7 @@ static OPTION _gbz80_options[] = {
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
   {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -190,6 +193,11 @@ static builtins _z80_builtins[] = {
   {NULL, NULL, 0, {NULL}}
 };
 
+extern reg_info gbz80_regs[];
+extern reg_info z80_regs[];
+extern void z80_init_asmops (void);
+extern reg_info *regsZ80;
+
 static void
 _z80_init (void)
 {
@@ -203,6 +211,9 @@ _z80_init (void)
       asm_addTree (&_asxxxx_z80);
       break;
     }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -218,6 +229,9 @@ _z180_init (void)
       asm_addTree (&_asxxxx_z80);
       break;
     }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -225,6 +239,9 @@ _r2k_init (void)
 {
   z80_opts.sub = SUB_R2K;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -232,6 +249,9 @@ _r2ka_init (void)
 {
   z80_opts.sub = SUB_R2KA;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -239,12 +259,18 @@ _r3ka_init (void)
 {
   z80_opts.sub = SUB_R3KA;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
 _gbz80_init (void)
 {
   z80_opts.sub = SUB_GBZ80;
+
+  regsZ80 = gbz80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -252,6 +278,9 @@ _tlcs90_init (void)
 {
   z80_opts.sub = SUB_TLCS90;
   asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -267,6 +296,9 @@ _ez80_z80_init (void)
       asm_addTree (&_asxxxx_z80);
       break;
     }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -274,6 +306,9 @@ _z80n_init (void)
 {
   z80_opts.sub = SUB_Z80N;
   asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -1079,8 +1114,12 @@ PORT z80_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
-  { -1, FALSE },
+  { 
+    -1,                         /* shifts never use support routines */
+    true,                       /* use support routine for int x int -> long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1207,6 +1246,7 @@ PORT z180_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1334,6 +1374,7 @@ PORT r2k_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1462,6 +1503,7 @@ PORT r2ka_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1590,6 +1632,7 @@ PORT r3ka_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1720,6 +1763,7 @@ PORT gbz80_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* default ABI revision */
   { -1, 0, 0, 2, 0, 4, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1848,6 +1892,7 @@ PORT tlcs90_port =
     1                           /* No fancy alignments supported. */
    },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -1976,6 +2021,7 @@ PORT ez80_z80_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  0,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
@@ -2104,6 +2150,7 @@ PORT z80n_port =
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 3, 0 },
   { -1, FALSE },
   { z80_emitDebuggerSymbol },

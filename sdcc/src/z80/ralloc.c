@@ -88,7 +88,7 @@ static struct
   int nRegs;
 } _G;
 
-static reg_info _gbz80_regs[] = {
+reg_info gbz80_regs[] = {
   {REG_GPR, A_IDX, "a", 1},
   {REG_GPR, C_IDX, "c", 1},
   {REG_GPR, B_IDX, "b", 1},
@@ -99,7 +99,7 @@ static reg_info _gbz80_regs[] = {
   {REG_CND, CND_IDX, "c", 1}
 };
 
-static reg_info _z80_regs[] = {
+reg_info z80_regs[] = {
   {REG_GPR, A_IDX, "a", 1},
   {REG_GPR, C_IDX, "c", 1},
   {REG_GPR, B_IDX, "b", 1},
@@ -115,8 +115,8 @@ static reg_info _z80_regs[] = {
 reg_info *regsZ80;
 
 /** Number of usable registers (all but C) */
-#define Z80_MAX_REGS ((sizeof(_z80_regs)/sizeof(_z80_regs[0]))-1)
-#define GBZ80_MAX_REGS ((sizeof(_gbz80_regs)/sizeof(_gbz80_regs[0]))-1)
+#define Z80_MAX_REGS ((sizeof(z80_regs)/sizeof(z80_regs[0]))-1)
+#define GBZ80_MAX_REGS ((sizeof(gbz80_regs)/sizeof(gbz80_regs[0]))-1)
 
 void z80SpillThis (symbol *);
 static void freeAllRegs ();
@@ -436,9 +436,6 @@ verifyRegsAssigned (operand *op, iCode *ic)
   if (sym->regs[0])
     return;
 
-  // Don't warn for new allocator, since this is now used by default.
-  if (options.oldralloc)
-    werrorfl (ic->filename, ic->lineno, W_LOCAL_NOINIT, sym->prereqv ? sym->prereqv->name : sym->name);
   z80SpillThis (sym);
 }
 
@@ -633,7 +630,7 @@ packRegsForAssign (iCode * ic, eBBlock * ebp)
 
   if (!IS_ITEMP (IC_RIGHT (ic)) || OP_SYMBOL (IC_RIGHT (ic))->isind || OP_LIVETO (IC_RIGHT (ic)) > ic->seq)
     return 0;
-  
+
   /* Avoid having multiple named address spaces in one iCode. */
   if (IS_SYMOP (IC_RESULT (ic)) && SPEC_ADDRSPACE (OP_SYMBOL (IC_RESULT (ic))->etype))
     return 0;
@@ -1325,8 +1322,6 @@ Z80RegFix (eBBlock ** ebbs, int count)
     }
 }
 
-void z80_init_asmops (void);
-
 /*-----------------------------------------------------------------*/
 /* Register allocator                                          */
 /*-----------------------------------------------------------------*/
@@ -1344,18 +1339,7 @@ z80_ralloc (ebbIndex *ebbi)
   setToNull ((void *) &_G.totRegAssigned);
   _G.stackExtend = _G.dataExtend = 0;
 
-  if (IS_GB)
-    {
-      _G.nRegs = GBZ80_MAX_REGS;
-      regsZ80 = _gbz80_regs;
-    }
-  else
-    {
-      _G.nRegs = Z80_MAX_REGS;
-      regsZ80 = _z80_regs;
-    }
-
-  z80_init_asmops ();
+  _G.nRegs = IS_GB ? GBZ80_MAX_REGS : Z80_MAX_REGS;
 
   /* change assignments this will remove some
      live ranges reducing some register pressure */

@@ -1,7 +1,7 @@
 /*
  * Simulator of microcontrollers (@@F@@)
  *
- * Copyright (C) @@S@@,@@Y@@ Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020,2021 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -31,31 +31,62 @@ cl_ras::cl_ras(chars id, class cl_memory_chip *achip):
   cl_address_space(id, 0, 0x10000, 8)
 {
   chip= achip;
+  segsize= 0xff;
+  dataseg= 0;
+  stackseg= 0;
 }
+
+int
+cl_ras::init(void)
+{
+  cl_address_space::init();
+  return 0;
+}
+
+
+/* 
+ * Convert LA (logical addr) into PA (physical addr)
+ */
 
 t_addr
 cl_ras::log2phy(t_addr log)
 {
-  u8_t h= (log >> 12)&0xf;
-  if (h < (segsize&0xf))
-    {
-      // code space
-      return log;
-    }
-  if (h < (segsize>>4))
-    {
+  u8_t x, y;
+  x= segsize>>4;
+  y= segsize&0xf;
+  if (log >= 0xe000)
+    // extended program space
+    return log + (xpc.lxpc<<12);
+  else if (log >= (x<<12))
+    // stack space
+    return log + (stackseg<<12);
+  else if (log >= (y<<12))
       // data space
       return log + (dataseg<<12);
-    }
-  if (h < 0xe)
-    {
-      // stack space
-      return log + (stackseg<<12);
-    }
-  // else
-  // extended program space
-  return log + (xpc<<12);
+  else
+    // code space
+    return log;
 }
+
+
+/*
+ * Convert Px register content into PA (physical addr)
+ */
+
+t_addr
+cl_ras::px2phy(u32_t px)
+{
+  if ((px & 0xffff0000) == 0xffff0000)
+    {
+      return log2phy(px & 0xffff);
+    }
+  return px;
+}
+
+
+/*
+ * Read from logical addr
+ */
 
 t_mem
 cl_ras::read(t_addr addr)
@@ -65,10 +96,20 @@ cl_ras::read(t_addr addr)
       err_inv_addr(addr);
       return dummy->read();
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   return cella[addr].read();
+}
+
+
+/*
+ * Read from content of Px reg
+ */
+
+t_mem
+cl_ras::pxread(t_addr pxaddr)
+{
+  if ((pxaddr & 0xffff0000) == 0xffff0000)
+    return read(pxaddr & 0xffff);
+  return phread(pxaddr);
 }
 
 t_mem
@@ -79,11 +120,30 @@ cl_ras::get(t_addr addr)
       err_inv_addr(addr);
       return dummy->get();
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   return cella[addr].get();
 }
+
+
+/*
+ * Get data at physical address
+ */
+
+t_mem
+cl_ras::phget(t_addr phaddr)
+{
+  if (phaddr >= chip->get_size())
+    {
+      err_inv_addr(phaddr);
+      return dummy->read();
+    }
+  u8_t *slot= (u8_t*)(chip->get_slot(phaddr));
+  return *slot;
+}
+
+
+/* 
+ * Write at logical address
+ */
 
 t_mem
 cl_ras::write(t_addr addr, t_mem val)
@@ -93,11 +153,26 @@ cl_ras::write(t_addr addr, t_mem val)
       err_inv_addr(addr);
       return dummy->write(val);
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   return cella[addr].write(val);
 }
+
+
+/*
+ * Write at content of Px reg
+ */
+
+t_mem
+cl_ras::pxwrite(t_addr pxaddr, t_mem val)
+{
+  if ((pxaddr & 0xffff0000) == 0xffff0000)
+    return write(pxaddr & 0xffff, val);
+  return phwrite(pxaddr, val);
+}
+
+
+/*
+ * Set at LA
+ */
 
 void
 cl_ras::set(t_addr addr, t_mem val)
@@ -107,22 +182,108 @@ cl_ras::set(t_addr addr, t_mem val)
       err_inv_addr(addr);
       dummy->set(val);
     }
-  t_addr ph= log2phy(addr);
-  void *slot= chip->get_slot(ph);
-  cella[addr].decode(slot);
   cella[addr].set(val);
 }
 
+
+/*
+ * Set at PA
+ */
+
 void
-cl_ras::download(t_addr addr, t_mem val)
+cl_ras::phset(t_addr phaddr, t_mem val)
 {
-  if (addr >= chip->get_size())
+  if (phaddr >- chip->get_size())
     {
-      err_inv_addr(addr);
+      err_inv_addr(phaddr);
       dummy->set(val);
     }
-  chip->set(addr, val);
+  u8_t *slot= (u8_t*)(chip->get_slot(phaddr));
+  *slot= val;
 }
 
+
+/*
+ * Download at PA
+ */
+
+void
+cl_ras::download(t_addr phaddr, t_mem val)
+{
+  if (phaddr >= chip->get_size())
+    {
+      err_inv_addr(phaddr);
+      dummy->set(val);
+    }
+  chip->set(phaddr, val);
+}
+
+
+/*
+ * Decode all logical slots
+ */
+
+void
+cl_ras::re_decode(void)
+{
+  t_addr a;
+  for (a= 0; a < get_size(); a++)
+    {
+      t_addr ph= log2phy(a);
+      void *slot= chip->get_slot(ph);
+      cella[a].decode(slot);
+    }
+}
+
+
+/*
+ * Set segment registers: xpc, segsize, dataseg, stackseg
+ */
+
+void
+cl_ras::set_xpc(u8_t val)
+{
+  xpc.r.xpc= val;
+  re_decode();
+}
+
+void
+cl_ras::set_lxpc(u16_t val)
+{
+  xpc.lxpc= val;
+  re_decode();
+}
+
+void
+cl_ras::set_segsize(u8_t val)
+{
+  if (segsize != val)
+    {
+      segsize= val;
+      re_decode();
+    }
+}
+
+void
+cl_ras::set_dataseg(u16_t val)
+{
+  val&= 0xfff;
+  if (dataseg != val)
+    {
+      dataseg= val&0xfff;
+      re_decode();
+    }
+}
+
+void
+cl_ras::set_stackseg(u16_t val)
+{
+  val&= 0xfff;
+  if (stackseg != val)
+    {
+      stackseg= val;
+      re_decode();
+    }
+}
 
 /* End of rxk.src/rmem.cc */

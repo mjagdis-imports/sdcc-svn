@@ -156,11 +156,11 @@ fi,
 enable_m6809_port="yes")
 
 AC_ARG_ENABLE(m6800-port,
-[  --enable-m6800-port     compile simulator for m6800],
+[  --disable-m6800-port    do not compile simulator for m6800],
 if test $enable_m6800_port  != "no"; then
     enable_m6800_port="yes"
 fi,
-enable_m6800_port="no")
+enable_m6800_port="yes")
 
 AC_ARG_ENABLE(m68hc12-port,
 [  --enable-m68hc12-port   compile simulator for m68hc12],
@@ -182,11 +182,11 @@ if test $enable_rxk_port  != "no"; then
 fi,
 enable_rxk_port="yes")
 AC_ARG_ENABLE(pblaze-port,
-[  --enable-pblaze-port    compile simulator for Xilinx PicoBlaze],
-if test $enable_pblaze_port  != "yes"; then
-    enable_pblaze_port="no"
+[  --disable-pblaze-port   do not compile simulator for Xilinx PicoBlaze],
+if test $enable_pblaze_port  != "no"; then
+    enable_pblaze_port="yes"
 fi,
-enable_pblaze_port="no")
+enable_pblaze_port="yes")
 AC_ARG_ENABLE(serio,
 [  --disable-serio         do not compile serio GUI tool (needs curses)],
 if test $enable_serio != "no"; then

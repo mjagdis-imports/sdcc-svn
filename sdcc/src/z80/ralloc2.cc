@@ -589,7 +589,8 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
     return(true);
 
-  if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))
+  if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right) ||
+    (ic->op == RRC || ic->op == RLC) && getSize(operandType(result)) == 1)
     return(true);
 
   // Can use non-destructive cp on == and < (> might swap operands).
@@ -784,7 +785,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
     ic->op == GETBYTE || ic->op == GETWORD || ic->op == SWAP && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G)) ||
-    !IS_GB && !IY_RESERVED && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
+    !((IS_GB || IY_RESERVED) && (operand_on_stack(result, a, i, G) || operand_on_stack(right, a, i, G))) && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
     ic->op == RECEIVE || ic->op == SEND)
     return(true);
 

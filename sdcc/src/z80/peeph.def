@@ -680,7 +680,7 @@ replace restart {
 	; common peephole 49a pushed %2 instead of %3.
 	ld	%2, %1
 	push	%2
-} if same(%3 'ix' 'iy'), notUsed(%3), unusedReg(%2 'bc' 'de' 'hl')
+} if same(%3 'ix' 'iy'), notUsed(%3), unusedReg(%2 'bc' 'de' 'hl'), canAssign(%2 %1)
 
 replace restart {
 	pop	%1
@@ -731,6 +731,15 @@ replace restart {
 	ld	hl, #%1 + %2
 	%3	%5, (hl)
 } if notUsed(%4 'hl'), same(%5 'a' 'b' 'c' 'd' 'e' 'h' 'l'), same(%3 'add' 'adc' 'and' 'ld' 'or' 'sbc' 'sub' 'xor')
+
+replace restart {
+	ld	%4, #%1
+	ld	l, %3 (%4)
+} by {
+	; common peephole 55l used hl instead of %4.
+	ld	hl, #%1 + %3
+	ld	l, (hl)
+} if notUsed(%4 'h')
 
 replace restart {
 	ld	%4, #%1

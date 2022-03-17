@@ -31,7 +31,7 @@ int
 cl_m6800::sub(class cl_cell8 &dest, u8_t op, bool c)
 {
   u8_t orgc= rF&flagC;
-  u8_t f= CC & ~(flagN|flagZ|flagV|flagC);
+  u8_t f= rF & ~(flagN|flagZ|flagV|flagC);
   u8_t a= dest.read(), b= op, r;
   u8_t a7, b7, r7, na7, nb7, nr7;
   r= a-b;
@@ -45,14 +45,13 @@ cl_m6800::sub(class cl_cell8 &dest, u8_t op, bool c)
   if ((na7&b7) | (b7&r7) | (r7&na7)) f|= flagC;
   dest.W(r);
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
 int
 cl_m6800::cmp(u8_t op1, u8_t op2)
 {
-  u8_t f= CC & ~(flagN|flagZ|flagV|flagC);
+  u8_t f= rF & ~(flagN|flagZ|flagV|flagC);
   u8_t a= op1, b= op2, r;
   u8_t a7, b7, r7, na7, nb7, nr7;
   r= a-b;
@@ -64,7 +63,6 @@ cl_m6800::cmp(u8_t op1, u8_t op2)
   if ((a7&nb7&nr7) | (na7&b7&r7)) f|= flagV;
   if ((na7&b7) | (b7&r7) | (r7&na7)) f|= flagC;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -72,7 +70,7 @@ int
 cl_m6800::add(class cl_cell8 &dest, u8_t op, bool c)
 {
   u8_t orgc= rF&flagC;
-  u8_t f= CC & ~(flagN|flagZ|flagV|flagC|flagH);
+  u8_t f= rF & ~(flagN|flagZ|flagV|flagC|flagH);
   u8_t a= dest.read(), b= op, r;
   u8_t a7, b7, r7, na7, nb7, nr7;
   r= a+b;
@@ -87,7 +85,6 @@ cl_m6800::add(class cl_cell8 &dest, u8_t op, bool c)
   if ((a7&b7) | (b7&nr7) | (nr7&a7)) f|= flagC;
   dest.W(r);
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -100,9 +97,8 @@ cl_m6800::neg(class cl_cell8 &dest)
   dest.W(op);
   if (op&0x80) f|= flagN;
   if (!op) f|= flagZ; else f|= flagC;
-  if (op == 0x80) f|= flagV;
+  if ((u8_t)op == 0x80) f|= flagV;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -116,7 +112,6 @@ cl_m6800::com(class cl_cell8 &dest)
   if (!op) f|= flagZ;
   if (op&0x80) f|= flagS;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -130,7 +125,6 @@ cl_m6800::lsr(class cl_cell8 &dest)
   dest.W(op);
   if (!op) f|= flagZ;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -145,11 +139,10 @@ cl_m6800::ror(class cl_cell8 &dest)
   if (c) op|= 0x80;
   dest.W(op);
   if (!op) f|= flagZ;
-  if (op^0x80) f|= flagN;
+  if (op&0x80) f|= flagN;
   //if (((f&flagN)?1:0) ^ ((f&flagC)?1:0)) f|= flagV;
   if ((f&flagC) ^ c) f|= flagV;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -164,10 +157,9 @@ cl_m6800::asr(class cl_cell8 &dest)
   op>>= 1;
   dest.W(op);
   if (!op) f|= flagZ;
-  if (op^0x80) f|= flagN;
+  if (op&0x80) f|= flagN;
   if (((f&flagN)?1:0) ^ ((f&flagC)?1:0)) f|= flagV;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -182,10 +174,9 @@ cl_m6800::asl(class cl_cell8 &dest)
   op<<= 1;
   dest.W(op);
   if (!op) f|= flagZ;
-  if (op^0x80) f|= flagN;
+  if (op&0x80) f|= flagN;
   if (((f&flagN)?1:0) ^ ((f&flagC)?1:0)) f|= flagV;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -200,10 +191,9 @@ cl_m6800::rol(class cl_cell8 &dest)
   if (c) op|= 1;
   dest.W(op);
   if (!op) f|= flagZ;
-  if (op^0x80) f|= flagN;
+  if (op&0x80) f|= flagN;
   if (((f&flagN)?1:0) ^ ((f&flagC)?1:0)) f|= flagV;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -217,7 +207,6 @@ cl_m6800::dec(class cl_cell8 &dest)
   if (!op) f|= flagZ;
   if (op&0x80) f|= flagN;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -231,7 +220,6 @@ cl_m6800::inc(class cl_cell8 &dest)
   if (!op) f|= flagZ;
   if (op&0x80) f|= flagN;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -242,7 +230,6 @@ cl_m6800::tst(u8_t op)
   if (!op) f|= flagZ;
   if (op&0x80) f|= flagN;
   cCC.W(f);
-  tick(1);
   return resGO;
 }
 
@@ -319,7 +306,6 @@ cl_m6800::INX(t_mem code)
     rF&= ~mZ;
   else
     rF|= mZ;
-  tick(3);
   return resGO;
 }
 
@@ -330,7 +316,6 @@ cl_m6800::DEX(t_mem code)
     rF&= ~mZ;
   else
     rF|= mZ;
-  tick(3);
   return resGO;
 }
 
@@ -338,7 +323,6 @@ int
 cl_m6800::CLV(t_mem code)
 {
   rF&= ~mV;
-  tick(1);
   return resGO;
 }
 
@@ -346,7 +330,6 @@ int
 cl_m6800::SEV(t_mem code)
 {
   rF|= mV;
-  tick(1);
   return resGO;
 }
 
@@ -354,7 +337,6 @@ int
 cl_m6800::CLC(t_mem code)
 {
   rF&= ~mC;
-  tick(1);
   return resGO;
 }
 
@@ -362,7 +344,6 @@ int
 cl_m6800::SEc(t_mem code)
 {
   rF|= mC;
-  tick(1);
   return resGO;
 }
 
@@ -370,7 +351,6 @@ int
 cl_m6800::CLI(t_mem code)
 {
   rF&= ~mI;
-  tick(1);
   return resGO;
 }
 
@@ -378,7 +358,6 @@ int
 cl_m6800::SEI(t_mem code)
 {
   rF|= mI;
-  tick(1);
   return resGO;
 }
 
@@ -409,7 +388,6 @@ cl_m6800::DAA(t_mem code)
     rF|= flagZ;
   cF.W(rF);
   cA.W(rA);
-  tick(1);
   return resGO;
 }
 
@@ -417,7 +395,6 @@ int
 cl_m6800::INS(t_mem code)
 {
   cSP.W(rSP+1);
-  tick(3);
   return resGO;
 }
 
@@ -425,7 +402,6 @@ int
 cl_m6800::DES(t_mem code)
 {
   cSP.W(rSP-1);
-  tick(3);
   return resGO;
 }
 

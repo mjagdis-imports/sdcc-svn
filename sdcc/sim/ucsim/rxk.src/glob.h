@@ -1,7 +1,7 @@
 /*
  * Simulator of microcontrollers (glob.h)
  *
- * Copyright (C) 2020,20 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020,2021 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -33,8 +33,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 
 extern instruction_wrapper_fn itab[256];
+extern instruction_wrapper_fn itab_dd[256];
+extern instruction_wrapper_fn itab_ed[256];
+extern instruction_wrapper_fn itab_fd[256];
+extern instruction_wrapper_fn itab_7f[256];
+
+extern u8_t sbox_tab[256];
+extern u8_t ibox_tab[256];
 
 extern struct dis_entry disass_rxk[];
+
+extern void init_sbox();
 
 
 #endif

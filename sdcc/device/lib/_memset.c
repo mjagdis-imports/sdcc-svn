@@ -44,9 +44,39 @@ void *memset (void *s, int c, size_t n)
 
 #if !defined (_SDCC_NO_ASM_LIB_FUNCS) && (\
               defined (__SDCC_z80) ||\
-              defined (__SDCC_ez80_z80) ||\
               defined (__SDCC_z180) ||\
-              defined (__SDCC_z80n) ||\
+              defined (__SDCC_z80n))
+#ifdef __SDCC_BROKEN_STRING_FUNCTIONS      
+#error Unimplemented broken string function
+#endif    
+__naked
+{
+  (void)s;
+  (void)c;
+  (void)n;
+  __asm
+    pop   iy
+    pop   bc
+    push  hl
+    ld    a, c
+    or    a, b
+    jr    Z, end
+    ld    (hl), e
+    dec   bc
+    ld    a, c
+    or    a, b
+    jr    Z, end
+    ld    e, l
+    ld    d, h
+    inc   de
+    ldir 
+end:
+    pop   de
+    jp	(iy)
+  __endasm;
+}
+#elif !defined (_SDCC_NO_ASM_LIB_FUNCS) && (\
+              defined (__SDCC_ez80_z80) ||\
               defined (__SDCC_r2k) ||\
               defined (__SDCC_z3ka))
 
@@ -92,39 +122,38 @@ __naked
   __endasm;
 }
 #elif !defined (_SDCC_NO_ASM_LIB_FUNCS) && defined(__SDCC_gbz80)
+#ifdef __SDCC_BROKEN_STRING_FUNCTIONS      
+#error Unimplemented broken string function
+#endif  
 __naked
 {
-  (void)s;
-  (void)c;
-  (void)n;
-  __asm
-    ldhl  sp,#2
-    ld    e, (hl)
-    inc   hl
-    ld    d, (hl)
-    inc   hl
-    ld    a, (hl)
-    inc   hl
-#ifndef __SDCC_BROKEN_STRING_FUNCTIONS
-    inc   hl
-#endif
-    ld    c, (hl)
-    inc   hl
-    ld    b, (hl)
-    ld    l, e
-    ld    h, d
-    inc   b
-    inc   c
-    jr    20$
-10$:
-    ld    (hl+),a
-20$:
-    dec   c
-    jr    NZ, 10$
-    dec   b
-    jr    NZ, 10$
-    ret
-  __endasm;
+	(void)s;
+	(void)c;
+	(void)n;
+__asm
+	ld	a, c
+	ldhl	sp,	#2
+	ld	c, (hl)
+	inc	hl
+	ld	b, (hl)
+	ld	l, e
+	ld	h, d
+	inc	c
+	inc	b
+	jr	test
+loop:
+	ld	(hl+), a
+test:
+	dec	c
+	jr	NZ, loop
+	dec	b
+	jr	NZ, loop
+	ld	c, e
+	ld	b, d
+	pop	hl
+	pop	af
+	jp	(hl)
+__endasm;
 }
 #else
 {

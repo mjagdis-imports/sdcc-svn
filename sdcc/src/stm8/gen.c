@@ -1188,18 +1188,20 @@ aopOp (operand *op, const iCode *ic)
 static asmop *
 aopRet (sym_link *ftype)
 {
+  wassert (IS_FUNC (ftype));
+
   int size = getSize (ftype->next);
 
   // Raisonance passes return values larger than 16 bits in pseudoregisters.
-  if (IFFUNC_ISRAISONANCE (ftype) && size > 2)
+  if (FUNC_ISRAISONANCE (ftype) && size > 2)
     werror (E_RAISONANCE_LARGE_RETURN);
 
   // IAR passes return values larger than 16 bits in pseudoregisters.
-  if (IFFUNC_ISIAR (ftype) && size > 2)
+  if (FUNC_ISIAR (ftype) && size > 2)
     werror (E_IAR_LARGE_RETURN);
 
   // Cosmic passes return values larger than 16 bits in pseudoregisters.
-  if (IFFUNC_ISCOSMIC (ftype) && size > 2)
+  if (FUNC_ISCOSMIC (ftype) && size > 2)
     werror (E_COSMIC_LARGE_RETURN);
 
   switch (size)
@@ -1222,43 +1224,25 @@ aopRet (sym_link *ftype)
 static asmop *
 aopArg (sym_link *ftype, int i)
 {
+  wassert (IS_FUNC (ftype));
+
   // Calling convention for variable arguments not documented in Raisonance C compiler manual. Needs reverse-engineering.
-  wassertl (!IFFUNC_ISRAISONANCE (ftype) || !IFFUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in Raisonance calling convention.");
+  wassertl (!FUNC_ISRAISONANCE (ftype) || !FUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in Raisonance calling convention.");
   // Calling convention for variable arguments not documented in IAR C/C++ development guide. Needs reverse-engineering.
-  wassertl (!IFFUNC_ISIAR (ftype) || !IFFUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in IAR calling convention.");
+  wassertl (!FUNC_ISIAR (ftype) || !FUNC_HASVARARGS (ftype), "Unimplemented support for variable arguments in IAR calling convention.");
 
   value *args = FUNC_ARGS(ftype);
   wassert (args);
 
-  if (IFFUNC_HASVARARGS (ftype))
+  if (FUNC_HASVARARGS (ftype))
     return 0;
 
-  // Raisonance calling convention.
-  if (IFFUNC_ISRAISONANCE (ftype))
-    {
-      int j;
-      value *arg;
-
-      for (j = 1, arg = args; j < i; j++, arg = arg->next)
-        wassert (arg);
-
-      if (i == 1 && getSize (arg->type) == 2)
-        return ASMOP_X;
-
-      if (i == 1 && getSize (arg->type) == 1)
-        return ASMOP_A;
-
-      if (i == 2 && aopArg (ftype, 1) == ASMOP_X && getSize (arg->type) == 1)
-        return ASMOP_A;
-
-      if (i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 2)
-        return ASMOP_X;
-
-      return 0;
-    }
+  // Old SDCC calling convention.
+  if (FUNC_SDCCCALL (ftype) == 0)
+    return 0;
     
   // IAR calling convention.
-  if (IFFUNC_ISIAR (ftype))
+  if (FUNC_ISIAR (ftype))
     {
       int j, num_1_byte_args, num_2_byte_args;
       value *arg;
@@ -1304,7 +1288,7 @@ aopArg (sym_link *ftype, int i)
     }
     
   // Cosmic calling convention.
-  if (IFFUNC_ISCOSMIC (ftype))
+  if (FUNC_ISCOSMIC (ftype))
     {
       if (i == 1 && getSize (args->type) == 1)
         return ASMOP_A;
@@ -1315,6 +1299,30 @@ aopArg (sym_link *ftype, int i)
       return 0;
     }
 
+  // Raisonance calling convention, same as current SDCC.
+  if (FUNC_ISRAISONANCE (ftype) || !FUNC_HASVARARGS (ftype))
+    {
+      int j;
+      value *arg;
+
+      for (j = 1, arg = args; j < i; j++, arg = arg->next)
+        wassert (arg);
+
+      if (i == 1 && getSize (arg->type) == 2)
+        return ASMOP_X;
+
+      if (i == 1 && getSize (arg->type) == 1)
+        return ASMOP_A;
+
+      if (i == 2 && aopArg (ftype, 1) == ASMOP_X && getSize (arg->type) == 1)
+        return ASMOP_A;
+
+      if (i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 2)
+        return ASMOP_X;
+
+      return 0;
+    }
+    
   return 0;
 }
 
@@ -1322,8 +1330,11 @@ aopArg (sym_link *ftype, int i)
 static bool
 isFuncCalleeStackCleanup (sym_link *ftype)
 {
+  wassert (IS_FUNC (ftype));
+
   const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
   int stackparmbytes = bigreturn * 2;
+
   for (value *arg = FUNC_ARGS(ftype); arg && !FUNC_HASVARARGS(ftype); arg = arg->next)
     {
       int argsize = getSize (arg->type);
@@ -1333,7 +1344,22 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   if (!stackparmbytes)
     return false;
 
-  return (IFFUNC_ISZ88DK_CALLEE (ftype));
+  if (IFFUNC_ISZ88DK_CALLEE (ftype))
+    return true;
+
+  if (FUNC_SDCCCALL (ftype) != 1 || FUNC_ISRAISONANCE (ftype) || FUNC_ISCOSMIC(ftype) || FUNC_ISIAR (ftype))
+    return false;
+
+  if (!IFFUNC_HASVARARGS (ftype) && options.model != MODEL_LARGE)
+    {
+      if (!ftype->next || getSize (ftype->next) <= 2)
+        return true;
+      else if (IS_FLOAT (ftype->next) && FUNC_ARGS(ftype) && IS_FLOAT(FUNC_ARGS(ftype)->etype))
+        return true;
+      return false;
+    }
+  
+  return false;
 }
 
 static void
@@ -3618,13 +3644,15 @@ genCall (const iCode *ic)
     }
   // Check if we can do tail call optimization.
   else if (!(currFunc && IFFUNC_ISISR (currFunc->type)) &&
-    (!SomethingReturned ||
-      aopInReg (IC_RESULT (ic)->aop, 0, aopRet (ftype)->aopu.bytes[0].byteu.reg->rIdx) &&
-        (IC_RESULT (ic)->aop->size < 2 || IC_RESULT (ic)->aop->size <= 2 && aopInReg (IC_RESULT (ic)->aop, 1, aopRet (ftype)->aopu.bytes[1].byteu.reg->rIdx))) &&
+    (!SomethingReturned || aopInReg (IC_RESULT (ic)->aop, 0, aopRet (ftype)->aopu.bytes[0].byteu.reg->rIdx) &&
+      (IC_RESULT (ic)->aop->size <= 1 || aopInReg (IC_RESULT (ic)->aop, 1, aopRet (ftype)->aopu.bytes[1].byteu.reg->rIdx)) &&
+      (IC_RESULT (ic)->aop->size <= 2 || aopInReg (IC_RESULT (ic)->aop, 2, aopRet (ftype)->aopu.bytes[2].byteu.reg->rIdx)) &&
+      (IC_RESULT (ic)->aop->size <= 3 || aopInReg (IC_RESULT (ic)->aop, 3, aopRet (ftype)->aopu.bytes[3].byteu.reg->rIdx)) &&
+      IC_RESULT (ic)->aop->size <= 4) &&
     !ic->parmBytes && !bigreturn &&
     (!isFuncCalleeStackCleanup (currFunc->type) || !ic->parmEscapeAlive && options.model != MODEL_LARGE && !IFFUNC_ISCOSMIC (ftype) && !optimize.codeSize && ic->op == CALL) &&
     !ic->localEscapeAlive &&
-    !(ic->op == PCALL && aopOnStack (left->aop, 0, left->aop->size)) &&
+    !(ic->op == PCALL && (left->aop->type == AOP_STK || left->aop->type == AOP_REGSTK)) && // Avoid destroying the pointer that we need to call
     !(options.model != MODEL_LARGE && !IFFUNC_ISCOSMIC (currFunc->type) && IFFUNC_ISCOSMIC (ftype))) // __cosmic uses 24 bits for return address on stack frame. Can only optimize tail call to __cosmic callee, if caller also uses 24 bits.
     {
       int limit = 16; // Avoid endless loops in the code putting us into an endless loop here.
@@ -3855,6 +3883,7 @@ genCall (const iCode *ic)
         {
           wassert (options.model != MODEL_LARGE && !IFFUNC_ISCOSMIC (ftype));
           bool use_y = stm8IsParmInCall(ftype, "x");
+          wassert (G.stack.pushed + 1 <= 255 && prestackadjust + 1 <= 255);
           emit2 ("ldw", use_y ? "y, (%d, sp)" : "x, (%d, sp)", G.stack.pushed + 1);
           emit2 ("ldw", use_y ? "(%d, sp), y" : "(%d, sp), x", prestackadjust + 1);
           cost (4, 4);
@@ -4180,20 +4209,20 @@ genEndFunction (iCode *ic)
   bool x_free = !aopRet (sym->type) || (aopRet (sym->type)->regs[XL_IDX] < 0 && aopRet (sym->type)->regs[XH_IDX] < 0);
   bool y_free = !aopRet (sym->type) || (aopRet (sym->type)->regs[YL_IDX] < 0 && aopRet (sym->type)->regs[YH_IDX] < 0);
 
-  /* adjust the stack for the function */
-  if (poststackadjust > 1 && x_free &&
+  // Adjust the stack for the function.
+  if ((poststackadjust > 1 && x_free || poststackadjust > 2 && y_free) && // Try to do both stack adjustments at once.
     options.model != MODEL_LARGE && !IFFUNC_ISCOSMIC (sym->type) &&
     sym->stack < 255 - 1 &&
     !IFFUNC_ISISR (sym->type) && !IFFUNC_ISCRITICAL (sym->type))
     {
-      emit2 ("ldw", "x, (%d, sp)", sym->stack+ 1);
+      emit2 ("ldw", x_free ? "x, (%d, sp)" : "y, (%d, sp)", sym->stack+ 1);
       cost (2, 2);
-      adjustStack (sym->stack + 2 + poststackadjust, a_free, x_free, y_free);
-      emit2 ("jp", "(x)");
-      cost (1, 1);
+      adjustStack (sym->stack + 2 + poststackadjust, a_free, false, x_free ? y_free : false);
+      emit2 ("jp", x_free ? "(x)" : "(y)");
+      cost (1 + !x_free, 1);
       return;
     }
-  else if (sym->stack)
+  else if (sym->stack) // Only do the first one for now.
     adjustStack (sym->stack, a_free, x_free, y_free);
 
   wassertl (!G.stack.pushed, "Unbalanced stack.");
@@ -5474,19 +5503,19 @@ branchInstCmp (int opcode, int sign, bool negated)
   return "brn";
 }
 
-/*------------------------------------------------------------------*/
-/* genCmp :- greater or less than (and maybe with equal) comparison */
-/* Handles cases where the decision can be made based on top bytes. */
-/*------------------------------------------------------------------*/
+/*---------------------------------------------------------------------*/
+/* genCmpTnz :- greater or less than (and maybe with equal) comparison */
+/* Handles cases where the decision can be made using tnz(w).          */
+/*---------------------------------------------------------------------*/
 static int
-genCmpTop (operand *left, operand *right, operand *result, const iCode *ic)
+genCmpTnz (operand *left, operand *right, operand *result, const iCode *ic)
 {
   sym_link *letype, *retype;
   int sign, opcode;
   int size;
   int ret = 0;
 
-  D (emit2 ("; genCmpTop", ""));
+  D (emit2 ("; genCmpTnz", ""));
 
   if (left->aop->type != AOP_LIT && right->aop->type != AOP_LIT)
     return 0;
@@ -5646,7 +5675,7 @@ genCmp (const iCode *ic, iCode *ifx)
     exchange = TRUE;
 
   /* Right operand is a special literal */
-  if ((special = genCmpTop(left, right, result, ic)) > 0)
+  if ((special = genCmpTnz(left, right, result, ic)) > 0)
     goto _genCmp_1;
 
   /* Cannot do multibyte signed comparison, except for 2-byte using cpw */
@@ -5670,7 +5699,8 @@ genCmp (const iCode *ic, iCode *ifx)
     (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || right->aop->type == AOP_STK) &&
     aopInReg (left->aop, 0, A_IDX))
     emit3 (A_CP, ASMOP_A, right->aop);
-  else if (size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || right->aop->type == AOP_STK))
+  else if (size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || right->aop->type == AOP_STK) &&
+    !(aopIsLitVal (right->aop, 0, 1, 0) && opcode != '<' && opcode != LE_OP && (aopInReg (left->aop, 1, A_IDX) || regDead (A_IDX, ic) && (aopOnStack(left->aop, 1, 1) || left->aop->type == AOP_DIR)))) // Do not use cpw here if cp in generic codegen is cheaper.
     {
       if (aopInReg (left->aop, 0, Y_IDX) && right->aop->type == AOP_STK)
         {
@@ -5722,11 +5752,14 @@ genCmp (const iCode *ic, iCode *ifx)
           const asmop *right_stacked = NULL;
           int right_offset;
 
-          if (!started && aopIsLitVal (right->aop, i, 2, 0) && (i + 1 < size)) // Skip over trailing 0x0000.
+          if (!started && opcode != '<' && opcode != LE_OP && aopIsLitVal (right->aop, i, 2, 0) && (i + 2 < size)) // Skip over trailing 0x0000.
             {
               i++;
               continue;
             }
+          else if (!started && opcode != '<' && opcode != LE_OP && aopIsLitVal (right->aop, i, 2, 0) && (i + 2 < size) && // Skip over trailing 0x00.
+            (aopInReg (left->aop, 1, A_IDX) || regDead (A_IDX, ic) && (aopOnStack(left->aop, 1, 1) || left->aop->type == AOP_DIR)))
+            continue;
 
           if (!started && (aopInReg (left->aop, i, X_IDX) || aopInReg (left->aop, i, Y_IDX) && !aopOnStack(right->aop, i, 2)) &&
             (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || aopOnStack(right->aop, i, 2)))
@@ -8651,9 +8684,11 @@ genIfx (const iCode *ic)
           cost (2, 0);
         }
     }
-  else if (cond->aop->type == AOP_IMMD)
+  else if (cond->aop->type == AOP_IMMD || cond->aop->type == AOP_STL) // An AOP_IMMD or AOP_STL points to something valid, so it is not a null pointer.
     {
-      // An AOP_IMMD points to something valid, so it is not a null pointer. Just fall through to the unconditional jump generated below.
+      if (IC_TRUE (ic))
+        emitJP (IC_TRUE (ic), 1.0f);
+      goto release;
     }
   else
     {
@@ -8677,6 +8712,7 @@ genIfx (const iCode *ic)
       emitLabel (tlbl);
     }
 
+release:
   freeAsmop (cond);
 }
 

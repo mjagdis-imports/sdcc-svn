@@ -273,10 +273,11 @@ typedef struct sym_link
     unsigned rbank:1;               /* seperate register bank               */
     unsigned inlinereq:1;           /* inlining requested                   */
     unsigned noreturn:1;            /* promised not to return               */
+    signed sdcccall;                /* ABI version used                     */
     unsigned smallc:1;              /* Small-C calling convention: Parameters on stack are passed left-to-right */
     unsigned raisonance:1;          /* Raisonance calling convention for STM8 */
-    unsigned iar:1;                 /* IAR calling convention */
-    unsigned cosmic:1;              /* Cosmic calling convention */
+    unsigned iar:1;                 /* IAR calling convention               */
+    unsigned cosmic:1;              /* Cosmic calling convention            */
     unsigned z88dk_fastcall:1;      /* For the z80-related ports: Function has a single paramter of at most 32 bits that is passed in dehl */
     unsigned z88dk_callee:1;        /* Stack pointer adjustment for parameters passed on the stack is done by the callee */
     unsigned z88dk_shortcall:1;     /* Short call available via rst (see values later) (Z80 only) */
@@ -433,6 +434,7 @@ extern sym_link *validateLink (sym_link * l,
 #define FUNC_ISISR(x) (x->funcAttrs.intrtn)
 #define IFFUNC_ISISR(x) (IS_FUNC(x) && FUNC_ISISR(x))
 #define FUNC_INTNO(x) (x->funcAttrs.intno)
+#define FUNC_SDCCCALL(x) (x->funcAttrs.sdcccall)
 #define FUNC_REGBANK(x) (x->funcAttrs.regbank)
 #define FUNC_HASSTACKPARM(x) (x->funcAttrs.hasStackParms)
 #define FUNC_ISINLINE(x) (x->funcAttrs.inlinereq)
@@ -694,6 +696,7 @@ sym_link *newIntLink ();
 sym_link *newCharLink ();
 sym_link *newLongLink ();
 sym_link *newBoolLink ();
+sym_link *newPtrDiffLink ();
 sym_link *newVoidLink ();
 int compareType (sym_link *, sym_link *);
 int compareTypeExact (sym_link *, sym_link *, long);
@@ -708,7 +711,7 @@ sym_link *structElemType (sym_link *, value *);
 symbol *getStructElement (structdef *, symbol *);
 sym_link *computeType (sym_link *, sym_link *, RESULT_TYPE, int);
 void processFuncPtrArgs (sym_link *);
-void processFuncArgs (symbol *);
+void processFuncArgs (symbol *, sym_link *);
 int isSymbolEqual (const symbol *, const symbol *);
 int powof2 (TYPE_TARGET_ULONG);
 void dbuf_printTypeChain (sym_link *, struct dbuf_s *);
@@ -735,6 +738,7 @@ int isConstant (sym_link * type);
 int isVolatile (sym_link * type);
 int isRestrict (sym_link * type);
 value *aggregateToPointer (value *);
+void leaveBlockScope (int block);
 
 
 extern char *nounName (sym_link *);     /* noun strings */

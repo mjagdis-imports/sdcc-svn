@@ -1,7 +1,7 @@
 /*
  * Simulator of microcontrollers (simrxk.cc)
  *
- * Copyright (C) 2020,20 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020,2021 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -34,16 +34,22 @@ struct cpu_entry cpus_rxk[]=
   {
     {"R2K"	, CPU_R2K , 0, "Rabbit 2000", ""},
     {"2K"	, CPU_R2K , 0, "Rabbit 2000", ""},
+    {"2"	, CPU_R2K , 0, "Rabbit 2000", ""},
     {"R3KA"	, CPU_R3KA, 0, "Rabbit 3000A", ""},
     {"3KA"	, CPU_R3KA, 0, "Rabbit 3000A", ""},
+    {"3A"	, CPU_R3KA, 0, "Rabbit 3000A", ""},
     {"R3K"	, CPU_R3K , 0, "Rabbit 3000", ""},
     {"3K"	, CPU_R3K , 0, "Rabbit 3000", ""},
+    {"3"	, CPU_R3K , 0, "Rabbit 3000", ""},
     {"R4K"	, CPU_R4K , 0, "Rabbit 4000", ""},
     {"4K"	, CPU_R4K , 0, "Rabbit 4000", ""},
+    {"4"	, CPU_R4K , 0, "Rabbit 4000", ""},
     {"R5K"	, CPU_R5K , 0, "Rabbit 5000", ""},
     {"5K"	, CPU_R5K , 0, "Rabbit 5000", ""},
+    {"5"	, CPU_R5K , 0, "Rabbit 5000", ""},
     {"R6K"	, CPU_R6K , 0, "Rabbit 6000", ""},
     {"6K"	, CPU_R6K , 0, "Rabbit 6000", ""},
+    {"6"	, CPU_R6K , 0, "Rabbit 6000", ""},
     {NULL, CPU_NONE, 0, "", ""}
   };
 

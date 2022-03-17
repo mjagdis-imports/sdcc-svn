@@ -99,14 +99,14 @@ pdk_genInitStartup (FILE *of)
   if (options.stack_loc >= 0)
     {
       fprintf (of, "\tmov\ta, #0x%02x\n", options.stack_loc);
-      fprintf (of, "\tmov\tsp, a\n");
+      fprintf (of, "\tmov.io\tsp, a\n");
     }
   else
     {
       fprintf (of, "\tmov\ta, #s_OSEG\n");
       fprintf (of, "\tadd\ta, #l_OSEG + 1\n");
       fprintf (of, "\tand\ta, #0xfe\n");
-      fprintf (of, "\tmov\tsp, a\n");
+      fprintf (of, "\tmov.io\tsp, a\n");
     }
 
   fprintf (of, "\tcall\t__sdcc_external_startup\n");
@@ -136,6 +136,8 @@ static void
 pdk_init (void)
 {
   asm_addTree (&asm_asxxxx_smallpdk_mapping);
+
+  pdk_init_asmops();
 }
 
 static void
@@ -316,6 +318,7 @@ PORT pdk13_port =
     1                           /* No fancy alignments supported. */
   },
   { 0, 0 },
+  0,                            /* ABI revision */
   {                             /* stack information */
      +1,                        /* direction: stack grows up */
      0,
@@ -482,6 +485,7 @@ PORT pdk14_port =
     1                           /* No fancy alignments supported. */
   },
   { 0, 0 },
+  0,                            /* ABI revision */
   {                             /* stack information */
      +1,                        /* direction: stack grows up */
      0,
@@ -648,6 +652,7 @@ PORT pdk15_port =
     1                           /* No fancy alignments supported. */
   },
   { 0, 0 },
+  0,                            /* ABI revision */
   {                             /* stack information */
      +1,                        /* direction: stack grows up */
      0,

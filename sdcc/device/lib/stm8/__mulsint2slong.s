@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  __mulsint2slong.s
 ;
-;  Copyright (C) 2016, Philipp Klaus Krause
+;  Copyright (C) 2016-2021, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -32,19 +32,22 @@
 .area CODE
 
 ___muluint2ulong:
-    clr a
-    ldw x, (5, sp)
-    jra right_nonneg
+	pushw	x
+
+	clr a
+	ldw x, (5, sp)
+	jra right_nonneg
 
 ___mulsint2slong:
+	pushw	x
 	
 	; Handle signed operands
 	clr	a
-	ldw	x, (3, sp)
+	tnzw	x
 	jrpl	left_nonneg
 	cpl	a
 	negw	x
-	ldw	(3, sp), x
+	ldw	(1, sp), x
 left_nonneg:
 	ldw	x, (5, sp)
 	jrpl	right_nonneg
@@ -57,12 +60,12 @@ right_nonneg:
 	push	a
 
 	; Multiply lower bytes
-	ld	a, (5+4, sp)
+	ld	a, (5+2, sp)
 	mul	x, a
 	ldw	(4, sp), x
 
 	; Multiply upper bytes
-	ldw	x, (5+2, sp)
+	ldw	x, (5+0, sp)
 	ld	a, (5+5, sp)
 	mul	x, a
 	ldw	(2, sp), x
@@ -70,24 +73,22 @@ right_nonneg:
 	; Multiply middle bytes
 	ld	a, (5+5, sp)
 	jreq	skip_m1
-	ldw	x, (5+3, sp)
+	ldw	x, (5+1, sp)
 	mul	x, a
 	addw	x, (3, sp)
 	ldw	(3, sp), x
-	ld	a, (2, sp)
-	adc	a, #0
-	ld	(2, sp), a
+	jrnc	skip_m1
+	inc	(2, sp)
 skip_m1:
 
-	ld	a, (5+3, sp)
+	ld	a, (5+1, sp)
 	jreq	skip_m2
 	ldw	x, (5+5, sp)
 	mul	x, a
 	addw	x, (3, sp)
 	ldw	(3, sp), x
-	ld	a, (2, sp)
-	adc	a, #0
-	ld	(2, sp), a
+	jrnc	skip_m2
+	inc	(2, sp)
 skip_m2:
 
 	; Handle signed result
@@ -102,5 +103,6 @@ jrnc	neg_y
 neg_y:
 	negw	y
 end:
+	addw	sp, #2
 	ret
 
