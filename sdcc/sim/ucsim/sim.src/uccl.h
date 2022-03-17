@@ -241,7 +241,6 @@ public:
   class cl_ticker *isr_ticks;	// Time in ISRs
   class cl_ticker *idle_ticks;	// Time in idle mode
   class cl_list *counters;	// User definable timers (tickers)
-  int inst_ticks;		// ticks of an instruction
   double xtal;			// Clock speed
   struct vcounter_t vc;		// Virtual clk counter
   bool stop_selfjump;		// Whether it should stop on selfjump
@@ -258,8 +257,8 @@ public:
   class cl_exec_hist *hist;
 
  public:
-  class cl_list *memchips;      // v3
-  class cl_address_space_list *address_spaces;
+  class cl_memory_list *memchips;      // v3
+  class cl_memory_list *address_spaces;
   class cl_address_space *rom;  // Required for almost every uc
   //class cl_list *address_decoders;
   class cl_address_space *variables;
@@ -283,6 +282,9 @@ public:
   virtual const char *id_string(void);
   virtual void reset(void);
   virtual void set_PC(t_addr addr) { PC= addr; }
+  virtual void reg_cell_var(class cl_memory_cell *cell,
+			    void *store,
+			    chars vname, chars vdesc);
   
   // making objects
   virtual void make_memories(void);
@@ -346,6 +348,8 @@ public:
   
   // execution
   virtual t_mem fetch(void);
+  virtual u8_t fetch8(void) { return (u8_t)fetch(); }
+  virtual i8_t fetchi8(void) { return (i8_t)fetch(); }
   virtual bool fetch(t_mem *code);
   virtual int do_inst(int step);
   virtual void pre_inst(void);
@@ -353,13 +357,15 @@ public:
   virtual int exec_inst_tab(instruction_wrapper_fn itab[]);
   virtual void post_inst(void);
   virtual void save_hist();
+  virtual int inst_unknown(t_mem code);
   
   virtual int do_interrupt(void);
   virtual int priority_of(uchar nuof_it) {return(0);}
   virtual int priority_main() { return 0; }
   virtual int accept_it(class it_level *il);
   virtual bool it_enabled(void) { return false; }
-
+  virtual class cl_it_src *search_it_src(int cid_or_nr);
+  
 #include "uccl_instructions.h"
   
   // stack tracking
@@ -384,7 +390,8 @@ public:
   virtual void stop_when(class cl_time_measurer *t);
   
   // disassembling and symbol recognition
-  virtual char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr);
+  virtual char *disassc(t_addr addr, chars *comment= NULL) { return disass(addr); }
   virtual struct dis_entry *dis_tbl(void);
   virtual int print_disass(t_addr addr, class cl_console_base *con, bool nl);
   virtual int print_disass(t_addr addr, class cl_console_base *con);
@@ -393,25 +400,27 @@ public:
   virtual int inst_branch(t_addr addr);
   virtual bool is_call(t_addr addr);
   virtual int longest_inst(void);
-  virtual bool addr_name(t_addr addr, class cl_address_space *as, char *buf);
-  virtual bool addr_name(t_addr addr, class cl_address_space *as, int bitnr, char *buf);
+  virtual const class cl_var *addr_name(t_addr addr, class cl_memory *mem, int bitnr_high, int bitnr_low, chars *buf, const class cl_var *context = 0);
+  const class cl_var *addr_name(t_addr addr, class cl_memory *mem, int bitnr, chars *buf, const class cl_var *context = 0) {
+    return addr_name(addr, mem, bitnr, bitnr, buf, context);
+  }
+  const class cl_var *addr_name(t_addr addr, class cl_memory *mem, chars *buf) {
+    return addr_name(addr, mem, -1, -1, buf);
+  }
   virtual bool symbol2address(char *sym,
-			      class cl_address_space **as,
+			      class cl_memory **mem,
 			      t_addr *addr);
-  virtual char *symbolic_bit_name(t_addr bit_address,
-				  class cl_memory *mem,
-				  t_addr mem_addr,
-				  t_mem bit_mask);
   virtual name_entry *get_name_entry(struct name_entry tabl[],
 				     char *name);
-  virtual chars cell_name(class cl_memory_cell *cell);
-  virtual class cl_var *var(char *nam);
-  virtual class cl_var *var(chars n);
+  virtual chars cell_name(class cl_memory_cell *cell, int bitnr_high, int bitnr_low);
+  virtual chars cell_name(class cl_memory_cell *cell) { return cell_name(cell, -1, -1); }
+  virtual t_addr read_addr(class cl_memory *m, t_addr start_addr);
   
   /* Converting abstract address spaces into real ones */
   virtual class cl_address_space *bit2mem(t_addr bitaddr,
 					  t_addr *memaddr,
-					  t_mem *bitmask);
+					  int *bitnr_high,
+					  int *bitnr_low);
   virtual t_addr bit_address(class cl_memory *mem,
                              t_addr mem_address,
                              int bit_number) { return(-1); }

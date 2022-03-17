@@ -89,10 +89,13 @@ uninstall:
 # --------------------
 check: test
 
-test: test_ser.ihx
+.PHONY:	test baseline
+test:
+	@$(MAKE) --no-print-directory -C test
 
-test_ser.ihx: test_ser.rel
-	$(SDCC) $(SDCFLAGS) $<
+baseline:
+	@$(MAKE) --no-print-directory -C test baseline
+
 
 # Performing installation test
 # ----------------------------

@@ -17,6 +17,11 @@ enable_st7_port     = @enable_st7_port@
 enable_pdk_port     = @enable_pdk_port@
 enable_p1516_port   = @enable_p1516_port@
 enable_m6809_port   = @enable_m6809_port@
+enable_m6800_port   = @enable_m6800_port@
+enable_m68hc12_port = @enable_m68hc12_port@
+enable_mcs6502_port = @enable_mcs6502_port@
+enable_rxk_port	    = @enable_rxk_port@
+enable_pblaze_port  = @enable_pblaze_port@
 
 ifeq ($(enable_mcs51_port),yes)
 S51		= s51.src
@@ -108,15 +113,46 @@ else
 M6809      =
 endif
 
+ifeq ($(enable_m6800_port),yes)
+M6800      	= m6800.src
+else
+M6800      =
+endif
+
+ifeq ($(enable_m68hc12_port),yes)
+M68HC12      	= m68hc12.src
+else
+M68HC12    =
+endif
+
+ifeq ($(enable_mcs6502_port),yes)
+MCS6502      	= mcs6502.src
+else
+MCS6502      =
+endif
+
+ifeq ($(enable_rxk_port),yes)
+RXK      	= rxk.src
+else
+RXK      =
+endif
+
+ifeq ($(enable_pblaze_port),yes)
+PBLAZE      	= pblaze.src
+else
+PBLAZE	=
+endif
+
 PKGS		= $(S51) $(S390) \
 		  $(SAVR) $(SZ80) $(SZ180) $(SGBZ80) $(SR2K) $(SR3KA) \
 		  $(TLCS) \
 		  $(SHC08) $(SS08) $(XA) $(STM8) $(ST7) $(PDK) $(P1516) \
-		  $(M6809) \
+		  $(M6809) $(M6800) $(M68HC12) $(MCS6502) $(RXK) $(PBLAZE) \
 		  doc
 
-PKGS_ALL	= cmd.src sim.src gui.src \
+PKGS_ALL	= cmd.src sim.src gui.src motorola.src \
 		  s51.src avr.src z80.src tlcs.src xa.src \
 		  hc08.src stm8.src st7.src pdk.src p1516.src \
-		  m6809.src \
+		  m6809.src m6800.src m68hc12.src mcs6502.src \
+		  rxk.src pblaze.src \
 		  doc

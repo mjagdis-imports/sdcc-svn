@@ -74,7 +74,6 @@ static ast *createIvalCharPtr (ast *, sym_link *, ast *, ast *);
 static ast *optimizeCompare (ast *);
 ast *optimizeRRCRLC (ast *);
 ast *optimizeSWAP (ast *);
-ast *optimizeGetHbit (ast *, RESULT_TYPE);
 ast *optimizeGetAbit (ast *, RESULT_TYPE);
 ast *optimizeGetByte (ast *, RESULT_TYPE);
 ast *optimizeGetWord (ast *, RESULT_TYPE);
@@ -2201,7 +2200,6 @@ isConformingBody (ast * pbody, symbol * sym, ast * body)
     case '!':
     case RRC:
     case RLC:
-    case GETHBIT:
     case SWAP:
       if (IS_AST_SYM_VALUE (pbody->left) && isSymbolEqual (AST_SYMBOL (pbody->left), sym))
         return FALSE;
@@ -2755,7 +2753,6 @@ resultTypePropagate (ast *tree, RESULT_TYPE resultType)
     case '~':
     case LEFT_OP:
     case LABEL:
-    case GETHBIT:
     case GETABIT:
     case GETBYTE:
     case GETWORD:
@@ -3233,6 +3230,8 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
         ((char *)(dbuf_get_buf (&dbuf)))[strlength - 2] = 0;
 
         parm->opval.val = stringToSymbol (rawStrVal (dbuf_get_buf (&dbuf), strlength - 1));
+        SPEC_REGPARM (parms->etype) = SPEC_REGPARM (FUNC_ARGS (puts_sym->type)->etype);
+        SPEC_ARGREG (parms->etype) = SPEC_ARGREG (FUNC_ARGS (puts_sym->type)->etype);
 	dbuf_destroy (&dbuf);
 
         freeStringSymbol (strsym);
@@ -3276,14 +3275,16 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
       if (strlength < minlength)
         return;
 
-      symbol *memcpy_sym = findSym (SymbolTab, NULL, !strcmp(funcname, "__builtin_strcpy") ? "__builtin_memcpy" : "memcpy");
+      symbol *memcpy_sym = findSym (SymbolTab, NULL, !strcmp(funcname, "__builtin_strcpy") ? "__builtin_memcpy" : "__memcpy");
 
       if(!memcpy_sym)
         return;
 
       ast *lengthparm = newAst_VALUE (valCastLiteral (newIntLink(), strlength, strlength));
+      lengthparm->lineno = parm->lineno;
       decorateType (lengthparm, RESULT_TYPE_NONE);
       ast *node = newAst_OP (PARAM);
+      node->lineno = parm->lineno;
 
       node->left = newNode (CAST, newAst_LINK (copyLinkChain (FUNC_ARGS(memcpy_sym->type)->type)), parm);
       node->left->values.cast.implicitCast = 1;
@@ -3294,7 +3295,14 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
       node->right = lengthparm;
       node->decorated = 1;
       parms->right = node;
+
       func->opval.val->sym = memcpy_sym;
+      SPEC_REGPARM (parms->left->etype) = SPEC_REGPARM (FUNC_ARGS (memcpy_sym->type)->etype);
+      SPEC_ARGREG (parms->left->etype) = SPEC_ARGREG (FUNC_ARGS (memcpy_sym->type)->etype);
+      SPEC_REGPARM (parms->right->left->etype) = SPEC_REGPARM (FUNC_ARGS (memcpy_sym->type)->next->etype);
+      SPEC_ARGREG (parms->right->left->etype) = SPEC_ARGREG (FUNC_ARGS (memcpy_sym->type)->next->etype);
+      SPEC_REGPARM (parms->right->right->etype) = SPEC_REGPARM (FUNC_ARGS (memcpy_sym->type)->next->next->etype);
+      SPEC_ARGREG (parms->right->right->etype) = SPEC_ARGREG (FUNC_ARGS (memcpy_sym->type)->next->next->etype);
     }
 }
 
@@ -3360,9 +3368,9 @@ rewriteStructAssignment (ast *tree)
   copyAstLoc (params, tree);
 
   /* create call to the appropriate memcpy function */
-  ast *memcpy_ast = newAst_VALUE (symbolVal (memcpy_builtin));
-  copyAstLoc (memcpy_ast, tree);
-  ast *call = newNode (CALL, memcpy_ast, params);
+  ast *ast_memcpy = newAst_VALUE (symbolVal (builtin_memcpy));
+  copyAstLoc (ast_memcpy, tree);
+  ast *call = newNode (CALL, ast_memcpy, params);
   copyAstLoc (call, tree);
 
   /* assemble the result expression depending on side effects */
@@ -3789,12 +3797,6 @@ decorateType (ast *tree, RESULT_TYPE resultType)
               tree->right = decorateType (newAst_VALUE (constBoolVal (litval & 1)), resultType);
             }
 
-          /* see if this is a GETHBIT operation if yes
-             then return that */
-          otree = optimizeGetHbit (tree, resultType);
-          if (otree != tree)
-            return decorateType (otree, RESULT_TYPE_NONE);
-
           /* see if this is a GETABIT operation if yes
              then return that */
           otree = optimizeGetAbit (tree, resultType);
@@ -3841,6 +3843,11 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         {
           werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of bit variable");
           goto errorTreeReturn;
+        }
+        
+      if ((TARGET_Z80_LIKE || TARGET_PDK_LIKE) && SPEC_SCLS (LETYPE (tree)) == S_SFR)
+        {
+          werror (W_SFR_ADDRESS);
         }
 
       if (LETYPE (tree) && SPEC_SCLS (tree->left->etype) == S_REGISTER)
@@ -4603,7 +4610,6 @@ decorateType (ast *tree, RESULT_TYPE resultType)
       TETYPE (tree) = LETYPE (tree);
       return tree;
 
-    case GETHBIT:
     case GETABIT:
       TTYPE (tree) = TETYPE (tree) = (resultTypeProp == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
       return tree;
@@ -5443,6 +5449,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         if (!found_expr)
           {
             werror (E_NO_MATCH_IN_GENERIC);
+            printTypeChain (type, stderr);
+            fprintf (stderr, "\n");
             goto errorTreeReturn;
           }
         
@@ -6454,40 +6462,6 @@ isBitAndPow2 (ast * tree)
 }
 
 /*-----------------------------------------------------------------*/
-/* optimizeGetHbit - get highest order bit of the expression       */
-/*-----------------------------------------------------------------*/
-ast *
-optimizeGetHbit (ast * tree, RESULT_TYPE resultType)
-{
-  unsigned int bit, msb;
-  ast *expr;
-
-  expr = isShiftRightLitVal_BitAndLitVal (tree);
-  if (expr)
-    {
-      if ((AST_ULONG_VALUE (tree->right) != 1) ||
-          ((bit = AST_ULONG_VALUE (tree->left->right)) != (msb = (bitsForType (TTYPE (expr)) - 1))))
-        expr = NULL;
-    }
-  if (!expr && (resultType == RESULT_TYPE_BOOL))
-    {
-      int bit = isBitAndPow2 (tree);
-      expr = tree->left;
-      msb = bitsForType (TTYPE (expr)) - 1;
-      if ((bit < 0) || (bit != (int) msb))
-        expr = NULL;
-    }
-  if (!expr || IS_BOOLEAN (TTYPE (expr)))
-    return tree;
-
-  /* make sure the port supports GETHBIT */
-  if (port->hasExtBitOp && !port->hasExtBitOp (GETHBIT, getSize (TTYPE (expr))))
-    return tree;
-
-  return decorateType (newNode (GETHBIT, expr, NULL), resultType);
-}
-
-/*-----------------------------------------------------------------*/
 /* optimizeGetAbit - get a single bit of the expression            */
 /*-----------------------------------------------------------------*/
 ast *
@@ -6786,6 +6760,10 @@ optimizeSWAP (ast * root)
         return root;
 
       if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 4))
+        return root;
+      
+      /* cannot have side effects or volatility */
+      if (hasSEFcalls (root))
         return root;
 
       /* make sure the port supports SWAP */
@@ -8126,13 +8104,6 @@ ast_print (ast * tree, FILE * outfile, int indent)
 
     case SWAP:
       fprintf (outfile, "SWAP (%p) type (", tree);
-      printTypeChain (tree->ftype, outfile);
-      fprintf (outfile, ")\n");
-      ast_print (tree->left, outfile, indent + 2);
-      return;
-
-    case GETHBIT:
-      fprintf (outfile, "GETHBIT (%p) type (", tree);
       printTypeChain (tree->ftype, outfile);
       fprintf (outfile, ")\n");
       ast_print (tree->left, outfile, indent + 2);

@@ -35,6 +35,7 @@ COMMAND_ON(uc,cl_file_cmd);
 COMMAND_ON(uc,cl_dl_cmd);
 COMMAND_ON(uc,cl_pc_cmd);
 COMMAND_ON(uc,cl_reset_cmd);
+COMMAND_ON(uc,cl_tick_cmd);
 COMMAND_ON(uc,cl_dump_cmd);
 COMMAND_ANCESTOR_ON(uc,cl_di_cmd,cl_dump_cmd);
 COMMAND_ANCESTOR_ON(uc,cl_dx_cmd,cl_dump_cmd);
@@ -54,6 +55,7 @@ COMMAND_DATA_ANCESTOR_ON(uc,cl_Where_cmd,cl_where_cmd,int last);
 
 COMMAND_ON(uc,cl_hole_cmd);
 COMMAND_ON(uc,cl_var_cmd);
+COMMAND_ON(uc,cl_rmvar_cmd);
   
 #endif
 

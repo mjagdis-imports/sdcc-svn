@@ -835,7 +835,15 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   FUNC_REGBANK (dest) |= FUNC_REGBANK (src);
   FUNC_ISINLINE (dest) |= FUNC_ISINLINE (src);
   FUNC_ISNORETURN (dest) |= FUNC_ISNORETURN (src);
+  if (FUNC_ISRAISONANCE (dest) && (FUNC_ISIAR (src) || FUNC_ISCOSMIC (src) || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_ISIAR (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISCOSMIC (src) || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_ISCOSMIC (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_ISZ88DK_CALLEE (src)) ||
+    FUNC_ISZ88DK_CALLEE (src) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (dest) || FUNC_ISCOSMIC (dest)))
+    werror (E_MULTIPLE_CALLINGCONVENTIONS, name);
   FUNC_ISSMALLC (dest) |= FUNC_ISSMALLC (src);
+  FUNC_ISRAISONANCE (dest) |= FUNC_ISRAISONANCE (src);
+  FUNC_ISIAR (dest) |= FUNC_ISIAR (src);
+  FUNC_ISCOSMIC (dest) |= FUNC_ISCOSMIC (src);
   FUNC_ISZ88DK_FASTCALL (dest) |= FUNC_ISZ88DK_FASTCALL (src);
   FUNC_ISZ88DK_CALLEE (dest) |= FUNC_ISZ88DK_CALLEE (src);
   for (i = 0; i < 9; i++)
@@ -1118,10 +1126,13 @@ getSize (sym_link * p)
     case CPOINTER:
       if (!IS_FUNCPTR(p))
         return (FARPTRSIZE);
-    case FUNCTION:
-      return (IFFUNC_ISBANKEDCALL (p) ? BFUNCPTRSIZE : FUNCPTRSIZE);
     case GPOINTER:
-      return (GPTRSIZE);
+      if (!IS_FUNCPTR(p))
+        return (GPTRSIZE);
+    case FUNCTION:
+      if (IS_FUNCPTR(p))
+        return ((IFFUNC_ISBANKEDCALL (p->next) || TARGET_IS_STM8 && IFFUNC_ISCOSMIC (p->next)) ? BFUNCPTRSIZE : FUNCPTRSIZE);
+      return ((IFFUNC_ISBANKEDCALL (p) || TARGET_IS_STM8 && IFFUNC_ISCOSMIC (p)) ? BFUNCPTRSIZE : FUNCPTRSIZE);
 
     default:
       return 0;
@@ -3379,7 +3390,7 @@ processFuncArgs (symbol *func)
       /* mark it as a register parameter if
          the function does not have VA_ARG
          and as port dictates */
-      if (!IFFUNC_HASVARARGS (funcType) && (argreg = (*port->reg_parm) (val->type, FUNC_ISREENT (funcType))))
+      if (argreg = (*port->reg_parm) (val->type, FUNC_ISREENT (funcType)))
         {
           SPEC_REGPARM (val->etype) = 1;
           SPEC_ARGREG (val->etype) = argreg;
@@ -3564,6 +3575,14 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 }
               if (IFFUNC_ISBANKEDCALL (type))
                 dbuf_append_str (dbuf, " __banked");
+              if (IFFUNC_ISSMALLC (type))
+                dbuf_append_str (dbuf, " __smallc");
+              if (IFFUNC_ISRAISONANCE (type))
+                dbuf_append_str (dbuf, " __raisonance");
+              if (IFFUNC_ISIAR (type))
+                dbuf_append_str (dbuf, " __iar");
+              if (IFFUNC_ISCOSMIC (type))
+                dbuf_append_str (dbuf, " __cosmic");
               if (IFFUNC_ISZ88DK_CALLEE (type))
                 dbuf_append_str (dbuf, " __z88dk_callee");
               if (IFFUNC_ISZ88DK_FASTCALL (type))
@@ -4045,11 +4064,11 @@ symbol *fp16x16conv[2][5][2];
 /* Dims: shift left/shift right, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
 symbol *rlrr[2][4][2];
 
-sym_link *charType;
 sym_link *floatType;
 sym_link *fixed16x16Type;
 
-symbol *memcpy_builtin;
+symbol *builtin_memcpy;
+symbol *nonbuiltin_memcpy;
 
 static const char *
 _mangleFunctionName (const char *in)
@@ -4277,15 +4296,16 @@ initCSupport (void)
 
   floatType = newFloatLink ();
   fixed16x16Type = newFixed16x16Link ();
-  charType = (options.signed_char) ? SCHARTYPE : UCHARTYPE;
+  sym_link *boolType = newLink (SPECIFIER); SPEC_NOUN (boolType) = V_BOOL; // Can't use newBoolLink, as it might give us a __bit.
+  sym_link *charType = (options.signed_char) ? SCHARTYPE : UCHARTYPE;
 
   fsadd = funcOfType ("__fsadd", floatType, floatType, 2, options.float_rent);
   fssub = funcOfType ("__fssub", floatType, floatType, 2, options.float_rent);
   fsmul = funcOfType ("__fsmul", floatType, floatType, 2, options.float_rent);
   fsdiv = funcOfType ("__fsdiv", floatType, floatType, 2, options.float_rent);
-  fseq = funcOfType ("__fseq", charType, floatType, 2, options.float_rent);
-  fsneq = funcOfType ("__fsneq", charType, floatType, 2, options.float_rent);
-  fslt = funcOfType ("__fslt", charType, floatType, 2, options.float_rent);
+  fseq = funcOfType ("__fseq", boolType, floatType, 2, options.float_rent);
+  fsneq = funcOfType ("__fsneq", boolType, floatType, 2, options.float_rent);
+  fslt = funcOfType ("__fslt", boolType, floatType, 2, options.float_rent);
 
   fps16x16_add = funcOfType ("__fps16x16_add", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
   fps16x16_sub = funcOfType ("__fps16x16_sub", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
@@ -4495,15 +4515,19 @@ initBuiltIns ()
     }
 
   /* initialize memcpy symbol for struct assignment */
-  memcpy_builtin = findSym (SymbolTab, NULL, "__builtin_memcpy");
-  /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
-  if (!memcpy_builtin)
+  builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy");
+  nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");
+
+  if (!nonbuiltin_memcpy)
     {
       const char *argTypeStrs[] = {"vg*", "Cvg*", "Ui"};
-      memcpy_builtin = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
-      FUNC_ISBUILTIN (memcpy_builtin->type) = 0;
-      FUNC_ISREENT (memcpy_builtin->type) = options.stackAuto;
+      nonbuiltin_memcpy = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
+      FUNC_ISBUILTIN (nonbuiltin_memcpy->type) = 0;
+      FUNC_ISREENT (nonbuiltin_memcpy->type) = options.stackAuto;
     }
+  /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
+  if (!builtin_memcpy)
+    builtin_memcpy = nonbuiltin_memcpy;
 }
 
 sym_link *

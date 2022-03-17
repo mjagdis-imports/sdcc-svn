@@ -344,9 +344,9 @@ FBYNAME (labelIsUncondJump)
     {
       if (pl->line && !pl->isDebug && !pl->isComment && pl->isLabel)
         {
-          if (strncmp(pl->line, label, len) == 0)
+          if (strncmp(pl->line, label, len) == 0 && pl->line[len] == ':')
             {
-              found = TRUE;
+              found = true;
               break; /* Found Label */
             }
           if (strlen(pl->line) != 7       || !ISCHARDIGIT(*(pl->line))   ||
@@ -365,9 +365,9 @@ FBYNAME (labelIsUncondJump)
         {
           if (pl->line && !pl->isDebug && !pl->isComment && pl->isLabel)
             {
-              if (strncmp(pl->line, label, len) == 0)
+              if (strncmp(pl->line, label, len) == 0 && pl->line[len] == ':')
                 {
-                  found = TRUE;
+                  found = true;
                   break; /* Found Label */
                 }
               if (strlen(pl->line) != 7       || !ISCHARDIGIT(*(pl->line))   ||
@@ -758,11 +758,15 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
         return global_not_volatile;
       if (strstr (var, "(de)"))
         return global_not_volatile;
-      if (strstr (var, "(hl)"))
+      if (strstr (var, "(hl"))
         return global_not_volatile;
       if (strstr (var, "(ix"))
         return global_not_volatile;
       if (strstr (var, "(iy"))
+        return global_not_volatile;
+      // gbz80 specific ldh can be volatile
+      // but HRAM doesn't have to be volatile
+      if (TARGET_ID_GBZ80 && strstr (var, "(c)"))
         return global_not_volatile;
     }
 
@@ -1068,6 +1072,85 @@ operandBaseName (const char *op)
   return op;
 }
 
+/*------------------------------------------------------------------*/
+/* optimizeFor - check optimization conditions                      */
+/* valid parameters:                                                */
+/*  code-size  -> checks for optimize.codeSize > 0                  */
+/*  code-speed -> checks for optimize.codeSpeed > 0                 */
+/*  add the ! symbol before each parameter to negate the condition  */
+/* combinations with multiple parameters                            */
+/*  '!code-speed' '!code-size': apply for balanced opt.             */
+/*  '!code-size': apply for balanced and when optimizing for speed  */
+/*  '!code-speed': apply unless optimizing for code speed           */
+/*------------------------------------------------------------------*/
+FBYNAME (optimizeFor)
+{
+  const char *cond;
+  int speed = 0, size = 0; // 0: nothing requested, >0 optimization requested, <0 negated optimization requested
+  
+  bool ret = false, error = false;
+
+  set *operands = setFromConditionArgs (cmdLine, vars);
+
+  if (!operands)
+  {
+    fprintf (stderr,
+             "*** internal error: optimizeFor peephole restriction"
+             " requires operand(s): %s\n", cmdLine);
+    return false;
+  }
+
+  // Loop through all conditions to check requested optimizations
+  for (cond = setFirstItem (operands); !error && cond != NULL; cond = setNextItem (operands))
+    {
+      const char *condTextSpeed = strstr (cond, "code-speed");
+      const char *condTextSize  = strstr (cond, "code-size");
+      const char *condNegated = strstr (cond, "!");
+      const char *condText = condTextSpeed ? condTextSpeed : condTextSize;
+      
+      // Check for invalid conditions or invalid combinations in the same string
+      if (!condText || condTextSpeed && condTextSize || condNegated && (condNegated + 1 != condText))
+        {
+          error = true;
+          break;
+        }
+      if (condTextSize)
+        {
+          if (size == 0)
+            size = condNegated ? -1 : 1;
+          else
+            error = true;
+        }
+      else
+        {
+          if (speed == 0)
+            speed = condNegated ? -1 : 1;
+          else
+            error = true;
+        }
+    }
+  // check error, invalid combination of both speed and size or nothing
+  if (error || (speed != -1) && (speed == size) )
+    {
+      fprintf (stderr,
+             "*** internal error: optimizeFor peephole restriction"
+             " malformed: %s\n", cmdLine);
+      error = true;
+    }
+  else
+    { // Check conditions and generate return value
+      ret = true;
+      if (speed != 0)
+        ret &= (speed < 0) ^ (optimize.codeSpeed > 0);
+        
+      if (size != 0)
+        ret &= (size < 0) ^ (optimize.codeSize > 0);
+    }
+    
+  deleteSet(&operands);
+  return (ret);
+}
+
 /*-----------------------------------------------------------------*/
 /* notUsed - Check, if values in all registers are not read again  */
 /*-----------------------------------------------------------------*/
@@ -1102,30 +1185,50 @@ FBYNAME (notUsed)
 }
 
 /*-----------------------------------------------------------------*/
-/* notUsedFrom - Check, if value in register is not read again     */
+/* notUsedFrom - Check, if values in registers are not read again  */
 /*           starting from label                                   */
+/*           Registers are checked from left to right              */
 /*-----------------------------------------------------------------*/
 FBYNAME (notUsedFrom)
 {
   const char *what, *label;
+  bool ret;
+  
+  if (!port->peep.notUsedFrom)
+    {
+      fprintf (stderr, "Function notUsedFrom not initialized in port structure\n");
+      return false;
+    }
+  
   set *operands = setFromConditionArgs (cmdLine, vars);
 
-  if (!operands || elementsInSet(operands) != 2)
+  if (!operands)
+  {
+    fprintf (stderr,
+             "*** internal error: notUsedFrom peephole restriction"
+             " requires operand(s): %s\n", cmdLine);
+    return false;
+  }
+  if (elementsInSet(operands) < 2)
   {
     fprintf (stderr,
              "*** internal error: notUsedFrom peephole restriction"
              " malformed: %s\n", cmdLine);
-    return FALSE;
+    deleteSet(&operands);
+    return false;
   }
+  
+  operands = reverseSet(operands);
 
-  what = setFirstItem (operands);
-  label = setNextItem (operands); 
+  label = setFirstItem (operands);
+  what = setNextItem (operands);
 
-  if (port->peep.notUsedFrom)
-    return port->peep.notUsedFrom (what, label, head);
+  for (ret = true; ret && what; what = setNextItem (operands))
+      ret = port->peep.notUsedFrom (what, label, head);
+  
+  deleteSet(&operands);
 
-  fprintf (stderr, "Function notUsedFrom not initialized in port structure\n");
-  return FALSE;
+  return (ret);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1592,15 +1695,88 @@ FBYNAME (same)
 }
 
 /*-----------------------------------------------------------------*/
+/* strIsSymbol - returns true if the parameter is a symbol         */
+/* That is: an underscore followed by one or more chars            */
+/*-----------------------------------------------------------------*/
+static bool
+strIsSymbol(const char *str)
+{
+  return *str == '_' && str[1] != '\0';
+}
+
+/*-----------------------------------------------------------------*/
+/* strIsLiteral - returns true if the parameter is a literal       */
+/* Checks these formats: binary, octal, decimal, hexadecimal       */
+/* Skips preceding signs.                                          */
+/*-----------------------------------------------------------------*/
+static bool
+strIsLiteral(const char *str)
+{
+  const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}; 
+  unsigned char base = 10;
+  unsigned char validDigits = 0;
+  
+  // has to start with a number or a sign
+  if(!isdigit( (unsigned char)(*str) ) && (*str) != '-' && (*str) != '+')
+    return false;
+  // skip sign
+  if ((*str) == '-' || (*str) == '+')
+    str++;
+
+  // handle 0b 0o 0d 0x
+  if((*str) == '0')
+    {
+      const char nextChar = tolower((unsigned char)(str[1]));
+      validDigits = 0;
+      if (nextChar == 'b')
+        {
+          base = 2;
+          ++str;
+        }
+      else if(nextChar == 'o')
+        {
+          base = 8;
+          ++str;
+        }
+      else if(nextChar == 'd')
+        {
+          base = 10;
+          ++str;
+        }
+      else if(nextChar == 'x')
+        {
+          base = 16;
+          ++str;
+        }
+      else
+        validDigits = 1; // the first '0' is a valid digit
+      
+      ++str;
+    }
+  
+  while((unsigned char)(*str) != '\0'){
+    unsigned char i;
+    for(i = 0; i < base; ++i){
+      if(tolower((unsigned char)(*str)) == digits[i])
+        break;
+    }
+    // number was too big or not valid
+    if(i >= base)
+      return false;
+    ++validDigits;
+    ++str;
+  }
+  return validDigits > 0;
+}
+
+/*-----------------------------------------------------------------*/
 /* operandsLiteral - returns true if the condition's operands are  */
 /* literals.                                                       */
 /*-----------------------------------------------------------------*/
 FBYNAME (operandsLiteral)
 {
-  set *operands;
+  set *operands = setFromConditionArgs (cmdLine, vars);
   const char *op;
-
-  operands = setFromConditionArgs (cmdLine, vars);
 
   if (!operands)
     {
@@ -1612,15 +1788,148 @@ FBYNAME (operandsLiteral)
 
   for (op = setFirstItem (operands); op; op = setNextItem (operands))
     {
-      if (!isdigit( (unsigned char)(*op) ))
+      if (!strIsLiteral(op))
         {
           deleteSet (&operands);
-          return FALSE;
+          return false;
         }
     }
 
   deleteSet (&operands);
-  return TRUE;
+  return true;
+}
+
+/*-----------------------------------------------------------------*/
+/* strIsLiteralOrSymbol - returns true if the parameter is a       */
+/* literal or compiler symbol                                      */
+/*-----------------------------------------------------------------*/
+static bool
+strIsLiteralOrSymbol(const char *str)
+{
+  return strIsSymbol(str) || strIsLiteral(str);
+}
+
+/*-----------------------------------------------------------------*/
+/* operandsLitOrSym - returns true if the condition's operands are */
+/* literals or compiler symbols.                                   */
+/*-----------------------------------------------------------------*/
+FBYNAME (operandsLitOrSym)
+{
+  set *operands;
+  const char *op;
+
+  operands = setFromConditionArgs (cmdLine, vars);
+
+  if (!operands)
+    {
+      fprintf (stderr,
+               "*** internal error: operandsLitOrSym peephole restriction"
+               " malformed: %s\n", cmdLine);
+      return false;
+    }
+
+  for (op = setFirstItem (operands); op; op = setNextItem (operands))
+    {
+      if (!strIsLiteralOrSymbol(op))
+        {
+          deleteSet (&operands);
+          return false;
+        }
+    }
+
+  deleteSet (&operands);
+  return true;
+}
+
+/*-----------------------------------------------------------------*/
+/* removeParentheses                                               */
+/* First operand: parameter to be parsed                           */
+/* Second operand: result of conversion                            */
+/* The function removes the input parameter parentheses if present,*/
+/* else it copies the input directly to the output.                */
+/* returns true if the input has not parentheses.                  */
+/* returns true if it has parametheses at first and last chars     */
+/*              and there was no other error                       */
+/*-----------------------------------------------------------------*/
+FBYNAME (removeParentheses)
+{
+  int dstKey;
+  int i;
+  
+  // Find space previous to last operand
+  for (i = strlen (cmdLine)-1; i >= 0 && ISCHARSPACE (cmdLine[i]); --i)
+    ;
+  for (; i >= 0 && !ISCHARSPACE (cmdLine[i]); --i)
+    ;
+  if (i < 0 || cmdLine[i+1] != '%' || (cmdLine[i+1] && (sscanf (&cmdLine[i+2], "%d", &dstKey) != 1 || dstKey < 0)))
+    {
+      fprintf (stderr,
+           "*** internal error: removeParentheses peephole restriction"
+           " has bad result container: %s\n", &cmdLine[i+1]);
+      return false;
+    }
+  //Parse cmd line without last operand
+  cmdLine[i] = '\0';
+  set *operands = setFromConditionArgs (cmdLine, vars);
+  cmdLine[i] = ' '; // Restore space
+    
+  if (!operands || elementsInSet(operands) > 1)
+    {
+      fprintf (stderr,
+               "*** internal error: removeParentheses peephole restriction"
+               " malformed: %s\n", cmdLine);
+      return false;
+    }
+  
+  // Parse the operand and remove the parenthesis
+  char r[128];  
+  const char *op = setFirstItem (operands);
+  
+  if (*op == '(')
+  {
+    if(op[strlen(op)-1] == ')')
+      op++; // Skip start parenthesis
+    else
+      {
+        // Abort if no matching closing parenthesis
+        deleteSet (&operands);
+        return false;
+      }
+  }
+  if (strlen(op) > 127) // Abort if string does not fit in buffer
+    {
+      deleteSet (&operands);
+      return false;
+    }
+  
+  // Do the copy and skip ending parenthesis
+  i = 0;
+  while (*op)
+  {
+    if (*op != ')')
+      {
+        r[i++] = *op++;
+      }
+    else
+      {
+        op++;
+        break;
+      }
+  }
+  r[i] = '\0';
+  
+  // Abort if remaining chars in source or no chars copied into result string
+  if ((*op) || (i == 0))
+    {
+      deleteSet (&operands);
+      return false;
+    }
+     
+  char *p[] = {r, NULL};  
+  bindVar (dstKey, p, &vars);
+
+  deleteSet (&operands);
+  return true;
 }
 
 static long *
@@ -1666,22 +1975,114 @@ immdError (const char *info, const char *param, const char *cmd)
 }
 
 /*-----------------------------------------------------------------*/
-/* immdInRange - returns true if the sum or difference of two      */
-/* immediates is in a give range.                                  */
+/* isPowerOfTwo - true if n is a power of 2                        */
+/*-----------------------------------------------------------------*/
+static bool
+isPowerOfTwo(unsigned long n)
+{  
+  return (n != 0) && ((n & (n - 1)) == 0);
+}  
+
+/*-----------------------------------------------------------------*/
+/* findBitPosition - Returns the bit position set or cleared in n  */
+/* Parameters:                                                     */
+/*  n: value to be tested.                                         */
+/*  bits: number of positions to test.                             */
+/*  complement: when true, the number must be bitwise complemented */
+/* Returns:                                                        */
+/*  -2 if bits is out of valid range (1..32)                       */
+/*  -1 if n has more than one bit set or cleared                   */
+/*  -1 if n has bits in positions over the bits param              */
+/*  bit position (starting at 0) when only 1 bit set or clear      */
+/* Examples:                                                       */
+/*  n=0x02, bits=8, complemented=false -> 1                        */
+/*  n=0x7F, bits=8, complemented=true  -> 7                        */
+/*-----------------------------------------------------------------*/
+static int
+findBitPosition(unsigned long n, unsigned long bits, bool complement)
+{
+  unsigned long mask;
+  int bitPos;
+  
+  if ((bits < 1) || (bits > 32)) //bits out of range?
+    return -2;
+  mask = (1ULL << bits) -1;
+  if (n != (n & mask)) // bits outside mask?
+    return -1;
+  
+  if (complement)
+    n = (~n) & mask;
+  if (!isPowerOfTwo (n)) // Not valid if more than one bit is set
+    return -1;
+  
+  bitPos = -1;
+  // One by one move the only set bit to right till it reaches end  
+  while (n)
+    {  
+      n >>= 1;
+      bitPos++; //count number of shifts
+    }
+  
+  return bitPos;
+}
+
+/*-----------------------------------------------------------------*/
+/* swapOperation - Calculates a swap operation with given params   */
+/* Parameters:                                                     */
+/*  n: value to be swapped.                                        */
+/*  bits: length of value to be swapped, in bits.                  */
+/* Returns 0 if no error:                                          */
+/*  -2 if bits is out of valid range: even numbers (2..32)         */
+/*  -1 if n has bits in positions over the bits param              */
+/*-----------------------------------------------------------------*/
+static int
+swapOperation (unsigned long n, unsigned long bits, unsigned long * result)
+{
+  unsigned long mask = (1ULL << bits) -1;
+  unsigned int shift = bits / 2;
+  
+  if ((bits < 1) || (bits > 32) || (bits & 0x01)) // bits out of range or odd
+    return -2;
+  if (n != (n & mask)) // bits outside mask?
+    return -1;
+  
+  *result = (((n << shift) | (n >> shift)) & mask);
+  return 0; // no error.
+}
+
+/*-----------------------------------------------------------------*/ 
+/* stringMatchesOperator - returns true if 'str' matches 'op'      */
+/* 'str' matches 'op' if they contain the same string              */
+/* 'str' also matches if surrounded by quotes or double quotes     */
+/*-----------------------------------------------------------------*/
+static bool 
+stringMatchesOperator (const char * str, const char *op)
+{
+  if (str && op)
+    {
+      if (strcmp(str, op) == 0)
+        {
+          return true;
+        }
+      else
+        {
+          size_t length = strlen(str);
+          // Check if quotes are present and they are the same at start and end.
+          if ((length >= 2) && ((str[0] == '\'') || (str[0] == '\"')) && (str[0] == str[length-1]))
+            return strncmp(&str[1], op, length-2) == 0;
+        }
+    }
+  return false;
+}
+/*-----------------------------------------------------------------*/ 
+/* immdInRange - returns true if the result of a given operation   */
+/* of two immediates is in a give range.                           */
 /*-----------------------------------------------------------------*/
 FBYNAME (immdInRange)
 {
-  char r[64], operator[8];
+  char r[64], operator[24];
   const char *op;
   long i, j, k, h, low, high, left_l, right_l, order;
-  const char *padd[] =    {"+", "'+'", "\"+\""};
-  const char *psub[] =    {"-", "'-'", "\"-\""};
-  const char *pmul[] =    {"*", "'*'", "\"*\""};
-  const char *pdiv[] =    {"/", "'/'", "\"/\""};
-  const char *pmod[] =    {"%", "'%'", "\"%\""};
-  const char *pbitand[] = {"&", "'&'", "\"&\""};
-  const char *pxor[] =    {"^", "'^'", "\"^\""};
-  const char *pbitor[] =  {"|", "'|'", "\"|\""};
 
   for (i = order = 0; order < 6;)
     {
@@ -1710,7 +2111,7 @@ FBYNAME (immdInRange)
               return immdError ("bad upper bound", r, cmdLine);
             break;
           case 2: // operator
-            if (sscanf (r, "%s", operator) != 1)
+            if (sscanf (r, "%23s", operator) != 1)
               return immdError ("bad operator", r, cmdLine);
             break;
           case 3: // left operand
@@ -1754,74 +2155,56 @@ FBYNAME (immdInRange)
     }
 
   // calculate
-  for (j = k = 0; k < sizeof (padd) / sizeof (padd[0]); k++) // add
-    if (strcmp (operator, padd[k]) == 0)
-      {
-        i = left_l + right_l;
-        j = 1;
-        break;
-      }
-  if (!j)
-    for (k = 0; k < sizeof (psub) / sizeof (psub[0]); k++) // sub
-      if (strcmp (operator, psub[k]) == 0)
-        {
-          i = left_l - right_l;
-          j = 1;
-          break;
-        }
-  if (!j)
-    for (k = 0; k < sizeof (pmul) / sizeof (pmul[0]); k++) // mul
-      if (strcmp (operator, pmul[k]) == 0)
-        {
-          i = left_l * right_l;
-          j = 1;
-          break;
-        }
-  if (!j)
-    for (k = 0; k < sizeof (pdiv) / sizeof (pdiv[0]); k++) // div
-      if (strcmp (operator, pdiv[k]) == 0)
-        {
-          if (right_l == 0)
-            return immdError ("division by zero", "", cmdLine);
-          i = left_l / right_l;
-          j = 1;
-          break;
-        }
-  if (!j)
-    for (k = 0; k < sizeof (pmod) / sizeof (pmod[0]); k++) // mod
-      if (strcmp (operator, pmod[k]) == 0)
-        {
-          if (right_l == 0)
-            return immdError ("division by zero", "", cmdLine);
-          i = left_l % right_l;
-          j = 1;
-          break;
-        }
-  if (!j)
-    for (k = 0; k < sizeof (pbitand) / sizeof (pbitand[0]); k++) // and
-      if (strcmp (operator, pbitand[k]) == 0)
-        {
-          i = left_l & right_l;
-          j = 1;
-          break;
-        }
-  if (!j)
-    for (k = 0; k < sizeof (pxor) / sizeof (pxor[0]); k++) // xor
-      if (strcmp (operator, pxor[k]) == 0)
-        {
-          i = left_l ^ right_l;
-          j = 1;
-          break;
-        }
-  if (!j)
-    for (k = 0; k < sizeof (pbitor) / sizeof (pbitor[0]); k++) // or
-      if (strcmp (operator, pbitor[k]) == 0)
-        {
-          i = left_l | right_l;
-          j = 1;
-          break;
-        }
-  if (!j)
+  if (stringMatchesOperator (operator, "+")) // add
+    {
+      i = left_l + right_l;
+    }
+  else if (stringMatchesOperator (operator, "-")) // sub
+    {
+      i = left_l - right_l;
+    }
+  else if (stringMatchesOperator (operator, "*")) // mul
+    {
+      i = left_l * right_l;
+    }
+  else if (stringMatchesOperator (operator, "/")) // div
+    {
+      if (right_l == 0)
+        return immdError ("division by zero", "", cmdLine);
+      i = left_l / right_l;
+    }
+  else if (stringMatchesOperator (operator, "%")) // mod
+    {
+      if (right_l == 0)
+        return immdError ("division by zero", "", cmdLine);
+      i = left_l % right_l;
+    }
+  else if (stringMatchesOperator (operator, "&")) // and
+    {
+      i = left_l & right_l;
+    }
+  else if (stringMatchesOperator (operator, "^")) // xor
+    {
+      i = left_l ^ right_l;
+    }
+  else if (stringMatchesOperator (operator, "|")) // or
+    {
+      i = left_l | right_l;
+    }
+  else if (stringMatchesOperator (operator, "singleSetBit") || stringMatchesOperator (operator, "singleResetBit")) // singleSetBit - singleResetBit
+    {
+      i = findBitPosition(left_l, right_l, stringMatchesOperator (operator, "singleResetBit"));
+      if(i < -1 )
+        return immdError ("bad right operand", operator, cmdLine);
+      if(i < 0)
+        return false;
+    }
+  else if (stringMatchesOperator (operator, "swap")) // swap
+    {
+      if (swapOperation(left_l, right_l, (unsigned long *)&i) != 0)
+        return immdError ("bad right operand", operator, cmdLine);
+    }
+  else
     return immdError ("bad operator", operator, cmdLine);
 
   // bind the result
@@ -1966,6 +2349,9 @@ ftab[] =                                            // sorted on the number of t
     "inSequence", inSequence                        // z88dk z80
   },
   {
+    "optimizeFor", optimizeFor
+  },
+  {
     "optimizeReturn", optimizeReturn                // ? just a guess
   },
   {
@@ -1976,6 +2362,12 @@ ftab[] =                                            // sorted on the number of t
   },
   {
     "operandsLiteral", operandsLiteral              // 6
+  },
+  {
+    "operandsLitOrSym", operandsLitOrSym
+  },
+  {
+    "removeParentheses", removeParentheses
   },
   {
     "labelIsUncondJump", labelIsUncondJump          // 4

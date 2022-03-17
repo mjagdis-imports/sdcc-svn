@@ -233,6 +233,7 @@ cl_console_base::print_expr_result(t_mem val, const char *fmt)
 	    {
 	    case 'x': con->dd_printf("%x\n", MU(v)); break;
 	    case 'X': con->dd_printf("0x%x\n", MU(v)); break;
+	    case '$': con->dd_printf("$%x\n", MU(v)); break;
 	    case '0': con->dd_printf("0x%08x\n", MU32(v)); break;
 	    case 'd': con->dd_printf("%d\n", MI(v)); break;
 	    case 'o': con->dd_printf("%o\n", MU(v)); break;
@@ -241,25 +242,26 @@ cl_console_base::print_expr_result(t_mem val, const char *fmt)
 	    case 'B': con->dd_printf("%d\n", (v)?1:0); break;
 	    case 'L': con->dd_printf("%c\n", (v)?'T':'F'); break;
 	    case 'c':
-	      if (isprint(MI(v)))
-		con->dd_printf("'%c'\n",MI(v));
+	      if ((MU(v) < 0x100) && isprint(MI(v)))
+		con->dd_printf("'%c'",MI(v));
 	      else
 		{
 		  switch (MI(v))
 		    {
-		    case '\a': con->dd_printf("'\\a\n'"); break;
-		    case '\b': con->dd_printf("'\\b\n'"); break;
-		    case '\e': con->dd_printf("'\\e\n'"); break;
-		    case '\f': con->dd_printf("'\\f\n'"); break;
-		    case '\n': con->dd_printf("'\\n\n'"); break;
-		    case '\r': con->dd_printf("'\\r\n'"); break;
-		    case '\t': con->dd_printf("'\\t\n'"); break;
-		    case '\v': con->dd_printf("'\\v\n'"); break;
+		    case '\a': con->dd_printf("'\\a'"); break;
+		    case '\b': con->dd_printf("'\\b'"); break;
+		    case '\e': con->dd_printf("'\\e'"); break;
+		    case '\f': con->dd_printf("'\\f'"); break;
+		    case '\n': con->dd_printf("'\\n'"); break;
+		    case '\r': con->dd_printf("'\\r'"); break;
+		    case '\t': con->dd_printf("'\\t'"); break;
+		    case '\v': con->dd_printf("'\\v'"); break;
 		    default:
-		      con->dd_printf("'\\%03o'\n",MI(v));
+		      con->dd_printf("'\\%03o'",MI(v));
 		      break;
 		    }
 		}
+	      con->dd_printf("\n");
 	      break;
 	    }
 	}
@@ -985,11 +987,14 @@ cl_commander_base::input_avail_on_frozen(void)
 class cl_console_base *
 cl_commander_base::exec_on(class cl_console_base *cons, char *file_name)
 {
-  FILE *dummy= fopen(file_name, "r");
+  FILE *dummy;
   bool oped= false;
+  if ((file_name == NULL) || (*file_name == 0))
+    return 0;
+  dummy= fopen(file_name, "r");
   if (dummy)
     oped= true, fclose(dummy);
-  if (!cons || !file_name || !oped)
+  if (!cons || !oped)
     return 0;
 
   class cl_console_base *subcon = cons->clone_for_exec(file_name);

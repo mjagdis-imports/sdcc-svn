@@ -64,7 +64,8 @@ AC_CHECK_PROGS(LEX, flex lex, :)
 dnl Don't use AC_PROG_YACC
 AC_CHECK_PROGS(YACC, 'bison -y' byacc yacc, :)
 
-AC_CHECK_PROGS(PYTHON, python3.6 python2.7 python2 python3, python)
+# 2.7 is just a guess for the minimum version. I know it works with 2.7 (and 3.6 and 3.9), but should test if a lower version is sufficient.
+AM_PATH_PYTHON([2.7],, [:])
 
 AC_DEFUN([SDCC_REQUIRE_PROG],
 [if test "$1" = ":"; then
@@ -774,7 +775,7 @@ AC_DO_PORT(z180,     z80,    Z180,     [Excludes the Z180 port])
 AC_DO_PORT(r2k,      z80,    R2K,      [Excludes the Rabbit 2000 port])
 AC_DO_PORT(r2ka,     z80,    R2KA,     [Excludes the Rabbit 2000A port])
 AC_DO_PORT(r3ka,     z80,    R3KA,     [Excludes the Rabbit 3000A port])
-AC_DO_PORT(gbz80,    z80,    GBZ80,    [Excludes the Gameboy gbz80 port])
+AC_DO_PORT(gbz80,    z80,    GBZ80,    [Excludes the SM83 port])
 AC_DO_PORT(tlcs90,   z80,    TLCS90,   [Excludes the TLCS-90 port])
 AC_DO_PORT(ez80_z80, z80,    EZ80_Z80, [Excludes the EZ80-Z80 port])
 AC_DO_PORT(z80n,     z80,    Z80N,     [Excludes the Z80N port])

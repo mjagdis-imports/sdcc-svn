@@ -59,7 +59,7 @@ public:
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
   virtual int longest_inst(void);
-  virtual char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr);
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);
@@ -76,7 +76,7 @@ public:
 #include "instcl.h"
 };
 
-
+/*
 class cl_pdk_cpu: public cl_hw
 {
  protected:
@@ -90,7 +90,7 @@ class cl_pdk_cpu: public cl_hw
   virtual t_mem read(class cl_memory_cell *cell);
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
 };
-
+*/
 
 #endif
 

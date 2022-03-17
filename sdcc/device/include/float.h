@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -47,10 +47,11 @@
 #define EXCESS		126
 #define SIGNBIT		((unsigned long)0x80000000)
 #define __INFINITY	((unsigned long)0x7F800000)
+#define __NAN       ((unsigned long)0xFFC00000)
 #define HIDDEN		(unsigned long)(1ul << 23)
 #define SIGN(fp)	(((unsigned long)(fp) >> (8*sizeof(fp)-1)) & 1)
 #define EXP(fp)		(((unsigned long)(fp) >> 23) & (unsigned int) 0x00FF)
-#define MANT(fp)	(((fp) & (unsigned long)0x007FFFFF) | HIDDEN)
+#define MANT(fp)	(((fp) & (unsigned long)0x00FFFFFF) | HIDDEN)
 #define NORM            0xff000000
 #define PACK(s,e,m)	((s) | ((unsigned long)(e) << 23) | (m))
 #endif
@@ -73,9 +74,9 @@ float __fssub (float, float);
 float __fsmul (float, float);
 float __fsdiv (float, float);
 
-char __fslt (float, float);
-char __fseq (float, float);
-char __fsgt (float, float);
+_Bool __fslt (float, float);
+_Bool __fseq (float, float);
+_Bool __fsgt (float, float);
 
 
 #if defined(__SDCC_FLOAT_LIB) && defined(__SDCC_mcs51) && !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)

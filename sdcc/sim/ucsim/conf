@@ -1,6 +1,6 @@
 #!/bin/bash
 
-[ -f Makefile ] && make distclean
+[ -f Makefile ] && ./distclean.sh
 
 TARGET=linux
 
@@ -56,6 +56,12 @@ case $TARGET in
 	    --enable-stm8-port \
 	    --enable-st7-port \
 	    --enable-p1516-port \
+	    --enable-m6809-port \
+	    --enable-m6800-port \
+	    --enable-m68hc12-port \
+	    --enable-mcs6502-port \
+	    --enable-rxk-port \
+	    --enable-pblaze-port
 	    "$@"
 	#--enable-ucsim
 	;;
@@ -81,6 +87,12 @@ case $TARGET in
 	    --enable-stm8-port \
 	    --enable-st7-port \
 	    --enable-p1516-port \
+	    --enable-m6809-port \
+	    --enable-m6800-port \
+	    --enable-m68hc12-port \
+	    --enable-mcs6502-port \
+	    --enable-rxk-port \
+	    --enable-pblaze-port \
 	    $HOST_OPT "$@"
 	#--enable-ucsim
 	;;
@@ -100,6 +112,12 @@ case $TARGET in
 	    --enable-stm8-port \
 	    --enable-st7-port \
 	    --enable-p1516-port \
+	    --enable-m6809-port \
+	    --enable-m6800-port \
+	    --enable-m68hc12-port \
+	    --enable-mcs6502-port \
+	    --enable-rxk-port \
+	    --enable-pblaze-port \
 	    $HOST_OPT "$@"
 	#--enable-ucsim
 	;;
@@ -107,6 +125,10 @@ case $TARGET in
 	echo >&2 "Do not know how to configure!"
 	;;
 esac
+
+for d in s51 m6809 stm8 tlcs z80; do
+    [ -L ${d}.src/dtest ] || ln -s ../../test/$d ${d}.src/dtest
+done
 
 if [ "$COMP" = "yes" ]; then
     make clean

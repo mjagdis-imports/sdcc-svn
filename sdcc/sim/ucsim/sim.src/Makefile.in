@@ -39,7 +39,7 @@ srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 OBJECTS         = stack.o mem.o sim.o itsrc.o brk.o arg.o \
-		  guiobj.o uc.o hw.o simif.o serial_hw.o port_hw.o \
+		  guiobj.o uc.o hw.o simif.o serial_hw.o port_hw.o dreg.o \
 		  iwrap.o var.o vcd.o
 
 
@@ -68,7 +68,12 @@ uninstall:
 check: test
 	./test_mem_speed
 
-test: test_mem_speed
+.PHONY:	test baseline
+test:
+	@$(MAKE) --no-print-directory -C test
+
+baseline:
+	@$(MAKE) --no-print-directory -C test baseline
 
 # Performing installation test
 # ----------------------------

@@ -89,7 +89,7 @@ static OPTION _z80_options[] = {
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
   {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
   {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
-  {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator"},
+  {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator (deprecated)"},
   {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
   {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
@@ -100,6 +100,7 @@ static OPTION _z80_options[] = {
 static OPTION _gbz80_options[] = {
   {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
   {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
@@ -123,9 +124,12 @@ ASM_TYPE;
 static struct
 {
   ASM_TYPE asmType;
-  /* determine if we can register a parameter */
-  int regParams;
-  bool z88dk_fastcall;
+  // Determine if we can put parameters in registers
+  struct
+  {
+    int n;
+    struct sym_link *ftype;
+  } regparam;
 }
 _G;
 
@@ -273,27 +277,28 @@ _z80n_init (void)
 }
 
 static void
-_reset_regparm (struct sym_link *funcType)
+_reset_regparm (struct sym_link *ftype)
 {
-  _G.regParams = 0;
-  _G.z88dk_fastcall = IFFUNC_ISZ88DK_FASTCALL (funcType);
-  if (_G.z88dk_fastcall && IFFUNC_HASVARARGS (funcType))
+  _G.regparam.n = 0;
+  _G.regparam.ftype = ftype;
+  if (IFFUNC_ISZ88DK_FASTCALL (ftype) && IFFUNC_HASVARARGS (ftype))
     werror (E_Z88DK_FASTCALL_PARAMETERS);
 }
 
 static int
 _reg_parm (sym_link *l, bool reentrant)
 {
-  if (_G.z88dk_fastcall)
+  if (IFFUNC_ISZ88DK_FASTCALL (_G.regparam.ftype))
     {
-      if (_G.regParams)
+      if (_G.regparam.n)
         werror (E_Z88DK_FASTCALL_PARAMETERS);
       if (getSize (l) > 4)
         werror (E_Z88DK_FASTCALL_PARAMETER);
-      _G.regParams++;
-      return TRUE;
     }
- return FALSE;
+
+  bool is_regarg = z80IsRegArg(_G.regparam.ftype, ++_G.regparam.n, 0);
+
+  return (is_regarg ? _G.regparam.n : 0);
 }
 
 enum
@@ -658,7 +663,12 @@ _parseOptions (int *pargc, char **argv, int *i)
       else if (!strncmp (argv[*i], OPTION_EMIT_EXTERNS, sizeof (OPTION_EMIT_EXTERNS) - 1))
         {
           port->assembler.externGlobal = 1;
-          return TRUE;
+          return true;
+        }
+      else if (!strncmp (argv[*i], OPTION_OLDRALLOC, sizeof (OPTION_OLDRALLOC) - 1))
+        {
+          werror (W_DEPRECATED_OPTION, "--oldralloc");
+          return true;
         }
     }
   return FALSE;
@@ -895,7 +905,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   /* Same for any multiplication with 8 bit result. */
   else if (result_size == 1 && !IS_GB)
     return(true);
-  else if (IS_RAB && !IS_R2K && result_size == 2 && getSize (left) == 2 && getSize(right) == 2)
+  // Rabbits have signed 16x16->32 multiplication, which is broken on original Rabbit 2000.
+  else if (IS_RAB && !IS_R2K && getSize (left) == 2 && getSize(right) == 2 &&
+    (result_size == 2 || result_size <= 4 && !IS_UNSIGNED (left) && !IS_UNSIGNED (right)))
     return(true);
   else
     return(false);
@@ -910,10 +922,18 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, int size)
 {
-  if (op == GETHBIT)
-    return TRUE;
-  else
-    return FALSE;
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+    case RLC:
+    case RRC:
+      return true;
+    case SWAP:
+      return size <= 4;
+    }
+  return false;
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -1628,7 +1648,7 @@ PORT gbz80_port =
 {
   TARGET_ID_GBZ80,
   "gbz80",
-  "Gameboy Z80-like",           /* Target name */
+  "Sharp SM83",           /* Target name */
   NULL,
   {
     glue,
@@ -1692,8 +1712,8 @@ PORT gbz80_port =
     "CABS (ABS)",               /* cabs_name */
     "DABS (ABS)",               /* xabs_name */
     NULL,                       /* iabs_name */
-    NULL,                       /* name of segment for initialized variables */
-    NULL,                       /* name of segment for copies of initialized variables in code space */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
     1,                          /* CODE is read-only */

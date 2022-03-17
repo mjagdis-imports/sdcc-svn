@@ -40,9 +40,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 class cl_hc08: public cl_uc
 {
 public:
-  class cl_memory *ram;
-  class cl_memory *rom;
-  class cl_address_space *regs8, *regs16;
+  class cl_address_space *ram, *regs8, *regs16;
   struct t_regs regs;
   t_addr sp_limit;
 public:
@@ -58,7 +56,7 @@ public:
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
   virtual int longest_inst(void);
-  virtual char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr);
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);

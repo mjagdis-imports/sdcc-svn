@@ -2,6 +2,7 @@
 ;  setjmp.s
 ;
 ;  Copyright (C) 2011-2014, Philipp Klaus Krause
+;  Copyright (C) 2021, Sebastian 'basxto' Riedel (sdcc@basxto.de)
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -31,39 +32,42 @@
 	.globl ___setjmp
 
 ___setjmp:
-	pop	bc
-	pop	de
-	push	de
-	push	bc
-
-	; Store stack pointer.
 	ldhl	sp, #0
-	push	de
-	push	hl
-	pop	de
-	pop	hl
-	ld	(hl), e
-	inc	hl
-	ld	(hl), d
-	inc	hl
+	; Load sp into de.
+	ld	e, l
+	ld	d, h
+	; Load return address into bc.
+	ld	a, (hl+)
+	ld	c, a
+	ld	a, (hl+)
+	ld	b, a
+	; Load env into hl.
+	ld	a, (hl+)
+	ld	h, (hl)
+	ld	l, a
 
 	; Store return address.
-	ld	(hl), c
-	inc	hl
-	ld	(hl), b
+	ld	a, c
+	ld	(hl+), a
+	ld	a, b
+	ld	(hl+), a
+
+	; Store stack pointer.
+	ld	a, e
+	ld	(hl+), a
+	ld	(hl), d
 
 	; Return 0.
-	xor	a, a
-	ld	e, a
-	ld	d, a
+	ld	de, #0
 	ret
 
 .globl _longjmp
 
 _longjmp:
+	; We'll never jump back, we can lose this
 	pop	af
-	pop	hl
-	pop	de
+	pop	hl ; env
+	pop	de ; return value
 
 	; Ensure that return value is non-zero.
 	ld	a, e
@@ -72,32 +76,25 @@ _longjmp:
 	inc	de
 0001$:
 
+	; Get return address.
+	ld	a, (hl+)
+	ld	c, a
+	ld	a, (hl+)
+	ld	b, a
 	; Get stack pointer.
-	ld	c, (hl)
-	inc	hl
-	ld	b, (hl)
-	inc	hl
+	ld	a, (hl+)
+	ld	h, (hl)
+	ld	l, a
 
 	; Adjust stack pointer.
-	push	hl
-	push	bc
-	pop	hl
-	pop	bc
 	ld	sp, hl
-	push	bc
-	pop	hl
-
-	; Get return address.
-	ld	c, (hl)
-	inc	hl
-	ld	b, (hl)
 
 	; Set return address.
+	ld	l, c
+	ld	h, b
 	pop	af
-	push	bc
 
 	; Return value is in de.
 
 	; Jump.
-	ret
-
+	jp	(hl)

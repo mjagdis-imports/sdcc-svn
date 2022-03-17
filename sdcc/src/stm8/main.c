@@ -54,6 +54,17 @@ enum
   P_CONSTSEG,
 };
 
+static struct
+{
+  // Determine if we can put parameters in registers
+  struct
+  {
+    int n;
+    struct sym_link *ftype;
+  } regparam;
+}
+_G;
+
 static int
 stm8_do_pragma (int id, const char *name, const char *cp)
 {
@@ -138,6 +149,10 @@ static char *stm8_keywords[] = {
   "interrupt",
   "trap",
   "naked",
+  "raisonance",
+  "iar",
+  "cosmic",
+  "z88dk_callee",
   NULL
 };
 
@@ -157,14 +172,18 @@ stm8_init (void)
 }
 
 static void
-stm8_reset_regparm (struct sym_link *funcType)
+stm8_reset_regparm (struct sym_link *ftype)
 {
+  _G.regparam.n = 0;
+  _G.regparam.ftype = ftype;
 }
 
 static int
-stm8_reg_parm (sym_link * l, bool reentrant)
+stm8_reg_parm (sym_link *l, bool reentrant)
 {
-  return FALSE;
+  bool is_regarg = stm8IsRegArg(_G.regparam.ftype, ++_G.regparam.n, 0);
+
+  return (is_regarg ? _G.regparam.n : 0);
 }
 
 static bool
@@ -352,7 +371,10 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, int size)
 {
-  return (op == GETABIT);
+  return (op == GETABIT ||
+    op == SWAP && (size <= 2 || size == 4) ||
+    op == RLC && size <= 2 ||
+    op == RRC && size <= 2);
 }
 
 static const char *
@@ -445,7 +467,7 @@ PORT stm8_port =
     2,                          /* far ptr */
     2,                          /* generic ptr */
     2,                          /* func ptr */
-    0,                          /* banked func ptr */
+    3,                          /* banked func ptr */
     1,                          /* bit */
     4,                          /* float */
   },

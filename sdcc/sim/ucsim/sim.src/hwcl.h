@@ -82,7 +82,7 @@ class cl_hw: public cl_guiobj
   virtual ~cl_hw(void);
 
   virtual int init(void);
-  virtual int cfg_size(void) { return 1; }
+  virtual int cfg_size(void) { return 0; }
   
   virtual void new_hw_adding(class cl_hw *new_hw);
   virtual void new_hw_added(class cl_hw *new_hw);
@@ -93,7 +93,7 @@ class cl_hw: public cl_guiobj
   virtual void write(class cl_memory_cell *cell, t_mem *val);
   virtual bool conf(class cl_memory_cell *cell, t_mem *val);
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
-  virtual class cl_memory_cell *cfg_cell(t_addr add);
+  virtual class cl_memory_cell *cfg_cell(t_addr addr);
   virtual void cfg_set(t_addr addr, t_mem val);
   virtual void cfg_write(t_addr addr, t_mem val);
   virtual t_mem cfg_get(t_addr addr);
@@ -101,8 +101,8 @@ class cl_hw: public cl_guiobj
   virtual const char *cfg_help(t_addr addr);
   
   virtual void set_cmd(class cl_cmdline *cmdline, class cl_console_base *con);
-  virtual class cl_memory_cell *register_cell(class cl_address_space *mem,
-					      t_addr addr);
+
+  virtual class cl_memory_cell *register_cell(class cl_address_space *mem, t_addr addr);
   virtual class cl_memory_cell *register_cell(class cl_memory_cell *cell);
   virtual void unregister_cell(class cl_memory_cell *cell);
 

@@ -41,6 +41,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // sim
 //#include "simcl.h"
+#include "dregcl.h"
 
 // local
 #include "z80cl.h"
@@ -62,6 +63,13 @@ cl_z80::cl_z80(struct cpu_entry *Itype, class cl_sim *asim):
   cl_uc(asim)
 {
   type= Itype;
+  BIT_C= 0x01;  // carry status(out of bit 7)
+  BIT_N= 0x02,  // Not addition: subtract status(1 after subtract).
+  BIT_P= 0x04,  // parity/overflow, 1=even, 0=odd parity.  arith:1=overflow
+  BIT_A= 0x10,  // aux carry status(out of bit 3)
+  BIT_Z= 0x40,  // zero status, 1=zero, 0=nonzero
+  BIT_S= 0x80,  // sign status(value of bit 7)
+  BIT_ALL= (BIT_C |BIT_N |BIT_P |BIT_A |BIT_Z |BIT_S);
 }
 
 int
@@ -129,8 +137,11 @@ void
 cl_z80::mk_hw_elements(void)
 {
   //class cl_base *o;
-  //class cl_hw *h;
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
 }
 
 void
@@ -145,7 +156,7 @@ cl_z80::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x10000, 8);
+  chip= new cl_chip8("rom_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(as= address_space("rom"), chip, 0, 0xffff, 0);
@@ -155,7 +166,7 @@ cl_z80::make_memories(void)
 
   inputs= new cl_address_space("inputs", 0, 0x10000, 8);
   inputs->init();
-  chip= new cl_memory_chip("in_chip", 0x10000, 8);
+  chip= new cl_chip8("in_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(inputs, chip, 0, 0xffff, 0);
@@ -164,7 +175,7 @@ cl_z80::make_memories(void)
   address_spaces->add(inputs);
   outputs= new cl_address_space("outputs", 0, 0x10000, 8);
   outputs->init();
-  chip= new cl_memory_chip("out_chip", 0x10000, 8);
+  chip= new cl_chip8("out_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(outputs, chip, 0, 0xffff, 0);
@@ -210,63 +221,47 @@ cl_z80::make_memories(void)
   address_spaces->add(regs8);
   address_spaces->add(regs16);
 
-  class cl_var *v;
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("F", regs8, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("B", regs8, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("C", regs8, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("D", regs8, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("E", regs8, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("H", regs8, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("L", regs8, 7, ""));
-  v->init();
+  vars->add("A", regs8, 0, 7, 0, "Accumulator");
+  vars->add("F", regs8, 1, 7, 0, "Flags");
+  vars->add("F_C", regs8, 1, BITPOS_C, BITPOS_C, "Carry");
+  vars->add("F_SUB", regs8, 1, BITPOS_SUB, BITPOS_SUB, "");
+  vars->add("F_P", regs8, 1, BITPOS_P, BITPOS_P, "");
+  vars->add("F_A", regs8, 1, BITPOS_A, BITPOS_A, "");
+  vars->add("F_Z", regs8, 1, BITPOS_Z, BITPOS_Z, "Zero");
+  vars->add("F_S", regs8, 1, BITPOS_S, BITPOS_S, "");
+  vars->add("B", regs8, 2, 7, 0, "");
+  vars->add("C", regs8, 3, 7, 0, "");
+  vars->add("D", regs8, 4, 7, 0, "");
+  vars->add("E", regs8, 5, 7, 0, "");
+  vars->add("H", regs8, 6, 7, 0, "");
+  vars->add("L", regs8, 7, 7, 0, "");
 
-  vars->add(v= new cl_var("ALT_A", regs8, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_F", regs8, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_B", regs8, 10, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_C", regs8, 11, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_D", regs8, 12, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_E", regs8, 13, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_H", regs8, 14, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_L", regs8, 15, ""));
-  v->init();
+  vars->add("ALT_A", regs8, 8, 7, 0, "Alt Accumulator");
+  vars->add("ALT_F", regs8, 9, 7, 0, "Alt Flags");
+  vars->add("ALT_F_C", regs8, 9, BITPOS_C, BITPOS_C, "Carry");
+  vars->add("ALT_F_SUB", regs8, 9, BITPOS_SUB, BITPOS_SUB, "");
+  vars->add("ALT_F_P", regs8, 9, BITPOS_P, BITPOS_P, "");
+  vars->add("ALT_F_A", regs8, 9, BITPOS_A, BITPOS_A, "");
+  vars->add("ALT_F_Z", regs8, 9, BITPOS_Z, BITPOS_Z, "Zero");
+  vars->add("ALT_F_S", regs8, 9, BITPOS_S, BITPOS_S, "");
+  vars->add("ALT_B", regs8, 10, 7, 0, "");
+  vars->add("ALT_C", regs8, 11, 7, 0, "");
+  vars->add("ALT_D", regs8, 12, 7, 0, "");
+  vars->add("ALT_E", regs8, 13, 7, 0, "");
+  vars->add("ALT_H", regs8, 14, 7, 0, "");
+  vars->add("ALT_L", regs8, 15, 7, 0, "");
 
-  vars->add(v= new cl_var("AF", regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("BC", regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("DE", regs16, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("HL", regs16, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("IX", regs16, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("IY", regs16, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("SP", regs16, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_AF", regs16, 7, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_BC", regs16, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_DE", regs16, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_HL", regs16, 10, ""));
-  v->init();
+  vars->add("AF", regs16, 0, 15, 0, "Accumulator/Flags");
+  vars->add("BC", regs16, 1, 15, 0, "");
+  vars->add("DE", regs16, 2, 15, 0, "");
+  vars->add("HL", regs16, 3, 15, 0, "");
+  vars->add("IX", regs16, 4, 15, 0, "");
+  vars->add("IY", regs16, 5, 15, 0, "");
+  vars->add("SP", regs16, 6, 15, 0, "");
+  vars->add("ALT_AF", regs16, 7, 15, 0, "Alt Accumulator/Flags");
+  vars->add("ALT_BC", regs16, 8, 15, 0, "");
+  vars->add("ALT_DE", regs16, 9, 15, 0, "");
+  vars->add("ALT_HL", regs16, 10, 15, 0, "");
 }
 
 
@@ -474,95 +469,76 @@ cl_z80::get_disasm_info(t_addr addr,
 }
 
 char *
-cl_z80::disass(t_addr addr, const char *sep)
+cl_z80::disass(t_addr addr)
 {
-  char work[256], temp[20];
+  chars work, temp;
   const char *b;
-  char *buf, *p, *t;
   int len = 0;
   int immed_offset = 0;
-
-  p= work;
+  bool first= true;
+  
+  work= "";
 
   b = get_disasm_info(addr, &len, NULL, &immed_offset, NULL);
 
-  if (b == NULL) {
-    buf= (char*)malloc(30);
-    strcpy(buf, "UNKNOWN/INVALID");
-    return(buf);
-  }
+  if (b == NULL)
+    {
+      return strdup("UNKNOWN/INVALID");
+    }
 
   while (*b)
     {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
       if (*b == '%')
         {
           b++;
+	  temp= "";
           switch (*(b++))
             {
             case 'd': // jump relative target, signed? byte immediate operand
-              sprintf(temp, "#%d", (signed char)(rom->get(addr+immed_offset)));
+              temp.format("#%d", (signed char)(rom->get(addr+immed_offset)));
               ++immed_offset;
               break;
             case 'w': // word immediate operand, little endian
-              sprintf(temp, "#0x%04x",
-		      (uint)((rom->get(addr+immed_offset)) |
-			     (rom->get(addr+immed_offset+1)<<8)) );
+              temp.format("#0x%04x",
+			  (uint)((rom->get(addr+immed_offset)) |
+				 (rom->get(addr+immed_offset+1)<<8)) );
               ++immed_offset;
               ++immed_offset;
               break;
             case 'W': // word immediate operand, big endian
-              sprintf(temp, "#0x%04x",
-		      (uint)((rom->get(addr+immed_offset)<<8) |
-			     (rom->get(addr+immed_offset+1))) );
+              temp.format("#0x%04x",
+			  (uint)((rom->get(addr+immed_offset)<<8) |
+				 (rom->get(addr+immed_offset+1))) );
               ++immed_offset;
               ++immed_offset;
               break;
             case 'b': // byte immediate operand
-              sprintf(temp, "#0x%02x", (uint)rom->get(addr+immed_offset));
+              temp.format("#0x%02x", (uint)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             default:
-              strcpy(temp, "?");
+              temp= "?";
               break;
             }
-          t= temp;
-          while (*t)
-            *(p++)= *(t++);
+          work+= temp;
         }
       else
-        *(p++)= *(b++);
+        work+= *(b++);
     }
-  *p= '\0';
 
-  p= strchr(work, ' ');
-  if (!p)
-    {
-      buf= strdup(work);
-      return(buf);
-    }
-  if (sep == NULL)
-    buf= (char *)malloc(8+strlen(p)+1);
-  else
-    buf= (char *)malloc((p-work)+strlen(sep)+strlen(p)+1);
-  for (p= work, t= buf; *p != ' '; p++, t++)
-    *t= *p;
-  p++;
-  *t= '\0';
-  if (sep == NULL)
-    {
-      while (strlen(buf) < 8)
-        strcat(buf, " ");
-    }
-  else
-    strcat(buf, sep);
-  strcat(buf, p);
-  return(buf);
+  return strdup(work.c_str());
 }
 
 
 void
 cl_z80::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("SZ-A-PNC  Flags= 0x%02x %3d %c  ",
                  regs.raf.F, regs.raf.F, isprint(regs.raf.F)?regs.raf.F:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",

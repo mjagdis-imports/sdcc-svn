@@ -85,12 +85,10 @@ cl_serial::init(void)
   else
     t2_baud= false;
   /*
-  cl_var *v;
   chars pn(id_string);
   pn.append("%d_", id);
-  uc->vars->add(v= new cl_var(pn+chars("on"), cfg, serconf_on));
-  uc->vars->add(v= new cl_var(pn+chars("check_often"), cfg, serconf_check_often));
-  v->init();
+  uc->vars->add(pn+chars("on"), cfg, serconf_on);
+  uc->vars->add(pn+chars("check_often"), cfg, serconf_check_often);
   */
   return(0);
 }
@@ -295,7 +293,8 @@ cl_serial::tick(int cycles)
       (s_tr_bit >= _bits))
     {
       s_sending= false;
-      scon->set_bit1(bmTI);
+      //scon->set(scon->get() | bmTI);
+      scon_bits[1]->write(1);
       io->write((char*)(&s_out), 1);
       s_tr_bit-= _bits;
     }
@@ -341,7 +340,8 @@ cl_serial::tick(int cycles)
 void
 cl_serial::received(int c)
 {
-  scon->set_bit1(bmRI);
+  //scon->set(scon->get() | bmRI);
+  scon_bits[0]->write(1);
   cfg_write(serconf_received, c);
 }
 

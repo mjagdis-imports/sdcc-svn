@@ -40,6 +40,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // sim
 #include "simcl.h"
+#include "dregcl.h"
 
 // local
 #include "st7cl.h"
@@ -135,7 +136,11 @@ void
 cl_st7::mk_hw_elements(void)
 {
   //class cl_base *o;
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
 }
 
 void
@@ -150,7 +155,7 @@ cl_st7::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x10000, 8);
+  chip= new cl_chip8("rom_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(as= address_space("rom"), chip, 0, 0xffff, 0);
@@ -173,18 +178,17 @@ cl_st7::make_memories(void)
   address_spaces->add(regs8);
   address_spaces->add(regs16);
 
-  class cl_var *v;
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("CC", regs8, 1, ""));
-  v->init();
-  
-  vars->add(v= new cl_var("X", regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("Y", regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("SP", regs16, 2, ""));
-  v->init();
+  vars->add("A",  regs8, 0, 7, 0, "Accumulator");
+  vars->add("CC", regs8, 1, 7, 0, "Condition Code Register");
+  vars->add("CC_C", regs8, 1, BITPOS_C, BITPOS_C, "Carry");
+  vars->add("CC_Z", regs8, 1, BITPOS_Z, BITPOS_Z, "Zero");
+  vars->add("CC_N", regs8, 1, BITPOS_N, BITPOS_N, "Negative");
+  vars->add("CC_I", regs8, 1, BITPOS_I, BITPOS_I, "Interrupt Mask");
+  vars->add("CC_H", regs8, 1, BITPOS_H, BITPOS_H, "Half Carry");
+
+  vars->add("X",  regs16, 0, 15, 0, "X Index Register");
+  vars->add("Y",  regs16, 1, 15, 0, "Y Index Register");
+  vars->add("SP", regs16, 2, 15, 0, "Stack Pointer");
 }
 
 
@@ -339,137 +343,96 @@ cl_st7::get_disasm_info(t_addr addr,
 }
 
 char *
-cl_st7::disass(t_addr addr, const char *sep)
+cl_st7::disass(t_addr addr)
 {
-  char work[256], temp[20];
+  chars work, temp;
   const char *b;
-  char *buf, *p, *t;
+  t_addr operand;
   int len = 0;
   int immed_offset = 0;
+  bool first= true;
 
-
-  p= work;
+  work= "";
 
   b = get_disasm_info(addr, &len, NULL, &immed_offset, NULL);
 
-  if (b == NULL) {
-    buf= (char*)malloc(30);
-    strcpy(buf, "UNKNOWN/INVALID");
-    return(buf);
-  }
+  if (b == NULL)
+    {
+      return strdup("UNKNOWN/INVALID");
+    }
 
   while (*b)
     {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
       if (*b == '%')
         {
           b++;
           switch (*(b++))
             {
-            //case 's': // s    signed byte immediate
-            //  sprintf(temp, "#%d", (char)rom->get(addr+immed_offset));
-            //  ++immed_offset;
-            //  break;
-            //case 'e': // e    extended 24bit immediate operand
-            //  sprintf(temp, "#0x%06lx",
-            //     (ulong)((rom->get(addr+immed_offset)<<16) |
-            //            (rom->get(addr+immed_offset+1)<<8) |
-            //            (rom->get(addr+immed_offset+2))) );
-            //  ++immed_offset;
-            //  ++immed_offset;
-            //  ++immed_offset;
-            //  break;
-            //case 'w': // w    word immediate operand
-            //  sprintf(temp, "#0x%04x",
-            //     (uint)((rom->get(addr+immed_offset)<<8) |
-            //            (rom->get(addr+immed_offset+1))) );
-            //  ++immed_offset;
-            //  ++immed_offset;
-            //  break;
             case 'b': // b    byte immediate operand
-              sprintf(temp, "#0x%02x", (uint)rom->get(addr+immed_offset));
+              temp.format("#0x%02x", rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             case 'd': // d    short direct addressing
-              sprintf(temp, "$0x%02x", (uint)rom->get(addr+immed_offset));
+              operand= rom->get(addr+immed_offset);
+              temp.format("$0x%02x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               break;
             case 'x': // x    long direct
-              sprintf(temp, "$0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
+              operand= (rom->get(addr+immed_offset)<<8) |
+                       (rom->get(addr+immed_offset+1));
+              temp.format("$0x%04x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               break;
-            //case '3': // 3    24bit index offset
-            //  sprintf(temp, "0x%06lx",
-            //     (ulong)((rom->get(addr+immed_offset)<<16) |
-            //            (rom->get(addr+immed_offset+1)<<8) |
-            //            (rom->get(addr+immed_offset+2))) );
-            //  ++immed_offset;
-            //  ++immed_offset;
-            //  ++immed_offset;
-            // break;
             case '2': // 2    word index offset
-              sprintf(temp, "0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
+              // Assumption: the word offset address is the address of a
+              // fixed table and the index register selects an entry.
+              operand= (rom->get(addr+immed_offset)<<8) |
+                       (rom->get(addr+immed_offset+1));
+              temp.format("0x%04x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               break;
             case '1': // b    byte index offset
-              sprintf(temp, "0x%02x", (uint)rom->get(addr+immed_offset));
+              // Assumption: the index register points to a struct/record
+              // and the byte offset selects an entry.
+              temp.format("0x%02x", rom->get(addr+immed_offset));
               ++immed_offset;
               break;
-            case 'p': // b    byte index offset
+            case 'p': // p    pc relative
 	      {
-		int i= (int)(addr+immed_offset+1
-			     +(char)rom->get(addr+immed_offset)); 
-		sprintf(temp, "0x%04x", i&0xffff);
+		operand= ((addr+immed_offset+1 + (i8_t)rom->get(addr+immed_offset))) & 0xffff;
+		temp.format("0x%04x", operand);
+		addr_name(operand, rom, &temp);
 		++immed_offset;
 		break;
 	      }
             default:
-              strcpy(temp, "?");
+              temp= "?";
               break;
             }
-          t= temp;
-          while (*t)
-            *(p++)= *(t++);
+	  work+= temp;
         }
       else
-        *(p++)= *(b++);
+        work+= *(b++);
     }
-  *p= '\0';
 
-  p= strchr(work, ' ');
-  if (!p)
-    {
-      buf= strdup(work);
-      return(buf);
-    }
-  if (sep == NULL)
-    buf= (char *)malloc(6+strlen(p)+1);
-  else
-    buf= (char *)malloc((p-work)+strlen(sep)+strlen(p)+1);
-  for (p= work, t= buf; *p != ' '; p++, t++)
-    *t= *p;
-  p++;
-  *t= '\0';
-  if (sep == NULL)
-    {
-      while (strlen(buf) < 6)
-        strcat(buf, " ");
-    }
-  else
-    strcat(buf, sep);
-  strcat(buf, p);
-  return(buf);
+  return strdup(work.c_str());
 }
 
 
 void
 cl_st7::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("---HINZC  Flags= 0x%02x %3d %c  ",
                  regs.CC, regs.CC, isprint(regs.CC)?regs.CC:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",

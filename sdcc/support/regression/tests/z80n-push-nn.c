@@ -51,3 +51,4 @@ void testBug3032(void)
     ASSERT (f() == 0x8765);
     ASSERT (g() == &memcpy);
 }
+

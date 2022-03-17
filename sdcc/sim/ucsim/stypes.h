@@ -143,8 +143,13 @@ enum cpu_type {
   CPU_R3KA      = 0x0010,
   CPU_EZ80	= 0x0020,
   CPU_Z80N      = 0x0040,
+  CPU_GB80      = 0x0080,
+  CPU_R3K	= 0x0100,
+  CPU_R4K	= 0x0200,
+  CPU_R5K	= 0x0400,
+  CPU_R6K	= 0x0800,
   CPU_ALL_Z80   = (CPU_Z80|CPU_Z180|CPU_R2K|CPU_LR35902|CPU_R3KA|CPU_EZ80|
-		   CPU_Z80N),
+		   CPU_Z80N|CPU_GB80),
 
   CPU_XA	= 0x0001,
   CPU_ALL_XA	= (CPU_XA),
@@ -152,6 +157,14 @@ enum cpu_type {
   CPU_HC08      = 0x0001,
   CPU_HCS08     = 0x0002,
   CPU_ALL_HC08  = (CPU_HC08|CPU_HCS08),
+
+  CPU_HC11      = 0x0004,
+  CPU_HC12      = 0x0008,
+  CPU_ALL_HC12  = (CPU_HC11|CPU_HC12),
+  
+  CPU_PBLAZE_3	= 0x0001,
+  CPU_PBLAZE_6	= 0x0002,
+  CPU_ALL_PBLAZE= (CPU_PBLAZE_3|CPU_PBLAZE_6),
 
   CPU_STM8S		= 0x0001,		// S and AF family
   CPU_STM8AF		= 0x0001,
@@ -248,6 +261,7 @@ enum mem_class
   MEM_SFR,
   MEM_DUMMY,
   MEM_IXRAM,
+  MEM_STACK,
   MEM_TYPES
 };
 
@@ -255,6 +269,8 @@ enum mem_class
 #define MEM_XRAM_ID	"xram"
 #define MEM_IXRAM_ID	"ixram"
 #define MEM_IRAM_ID	"iram"
+#define MEM_STACK_ID	"stack"
+#define MEM_ROM_ID	"rom"
 
 // States of simulator
 enum sim_state {
@@ -282,6 +298,7 @@ enum inst_result {
   resBREAKPOINT	= 104,	/* Fetch Breakpoint */
   resUSER	= 105,	/* Stopped by user */
   resINV_INST	= 106,	/* Invalid instruction */
+  resINST_INV	= 106,	/* Invalid instruction */
   resBITADDR	= 107,	/* Bit address is uninterpretable */
   resERROR	= 108,	/* Error happened during instruction exec */
   resSTEP	= 109,	/* Step command done, no more exex needed */

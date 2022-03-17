@@ -39,6 +39,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 //#include "simcl.h"
 //#include "memcl.h"
 //#include "stackcl.h"
+#include "dregcl.h"
 
 // local
 #include "tlcscl.h"
@@ -96,8 +97,6 @@ cl_tlcs::cl_tlcs(class cl_sim *asim):
 int
 cl_tlcs::init(void)
 {
-  class cl_var *v;
-
   cl_uc::init(); /* Memories now exist */
   //ram= address_space(MEM_IRAM_ID);
   //rom= address_space(MEM_ROM_ID);
@@ -108,62 +107,51 @@ cl_tlcs::init(void)
     nas->set((t_addr) i, 0);
   }
 
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("F", regs8, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("B", regs8, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("C", regs8, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("D", regs8, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("E", regs8, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("H", regs8, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("L", regs8, 7, ""));
-  v->init();
+  vars->add("A", regs8, 0, 7, 0, "");
+  vars->add("F", regs8, 1, 7, 0, "");
+  vars->add("F_S", regs8, 1, 7, 7, "");
+  vars->add("F_Z", regs8, 1, 7, 7, "Zero");
+  vars->add("F_I", regs8, 1, 5, 5, "Interrupt Mask");
+  vars->add("F_H", regs8, 1, 4, 4, "Half Carry");
+  vars->add("F_X", regs8, 1, 3, 3, "");
+  vars->add("F_V", regs8, 1, 2, 2, "Overflow");
+  vars->add("F_N", regs8, 1, 1, 1, "Negative");
+  vars->add("F_C", regs8, 1, 0, 0, "Carry");
+  vars->add("B", regs8, 2, 7, 0, "");
+  vars->add("C", regs8, 3, 7, 0, "");
+  vars->add("D", regs8, 4, 7, 0, "");
+  vars->add("E", regs8, 5, 7, 0, "");
+  vars->add("H", regs8, 6, 7, 0, "");
+  vars->add("L", regs8, 7, 7, 0, "");
 
-  vars->add(v= new cl_var("ALT_A", regs8, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_F", regs8, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_B", regs8, 10, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_C", regs8, 11, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_D", regs8, 12, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_E", regs8, 13, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_H", regs8, 14, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_L", regs8, 15, ""));
-  v->init();
+  vars->add("ALT_A", regs8, 8, 7, 0, "");
+  vars->add("ALT_F", regs8, 9, 7, 0, "");
+  vars->add("ALT_F_S", regs8, 9, 7, 7, "");
+  vars->add("ALT_F_Z", regs8, 9, 7, 7, "Zero");
+  vars->add("ALT_F_I", regs8, 9, 5, 5, "Interrupt Mask");
+  vars->add("ALT_F_H", regs8, 9, 4, 4, "Half Carry");
+  vars->add("ALT_F_X", regs8, 9, 3, 3, "");
+  vars->add("ALT_F_V", regs8, 9, 2, 2, "Overflow");
+  vars->add("ALT_F_N", regs8, 9, 1, 1, "Negative");
+  vars->add("ALT_F_C", regs8, 9, 0, 0, "Carry");
+  vars->add("ALT_B", regs8, 10, 7, 0, "");
+  vars->add("ALT_C", regs8, 11, 7, 0, "");
+  vars->add("ALT_D", regs8, 12, 7, 0, "");
+  vars->add("ALT_E", regs8, 13, 7, 0, "");
+  vars->add("ALT_H", regs8, 14, 7, 0, "");
+  vars->add("ALT_L", regs8, 15, 7, 0, "");
 
-  vars->add(v= new cl_var("AF", regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("BC", regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("DE", regs16, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("HL", regs16, 3, ""));
-  v->init();
-  vars->add(v= new cl_var("IX", regs16, 4, ""));
-  v->init();
-  vars->add(v= new cl_var("IY", regs16, 5, ""));
-  v->init();
-  vars->add(v= new cl_var("SP", regs16, 6, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_AF", regs16, 7, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_BC", regs16, 8, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_DE", regs16, 9, ""));
-  v->init();
-  vars->add(v= new cl_var("ALT_HL", regs16, 11, ""));
-  v->init();
+  vars->add("AF", regs16, 0, 15, 0, "");
+  vars->add("BC", regs16, 1, 15, 0, "");
+  vars->add("DE", regs16, 2, 15, 0, "");
+  vars->add("HL", regs16, 3, 15, 0, "");
+  vars->add("IX", regs16, 4, 15, 0, "");
+  vars->add("IY", regs16, 5, 15, 0, "");
+  vars->add("SP", regs16, 6, 15, 0, "");
+  vars->add("ALT_AF", regs16, 7, 15, 0, "");
+  vars->add("ALT_BC", regs16, 8, 15, 0, "");
+  vars->add("ALT_DE", regs16, 9, 15, 0, "");
+  vars->add("ALT_HL", regs16, 11, 15, 0, "");
 
   return(0);
 }
@@ -185,8 +173,11 @@ cl_tlcs::make_cpu_hw(void)
 void
 cl_tlcs::mk_hw_elements(void)
 {
-  //class cl_hw *h;
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
 }
 
 
@@ -208,7 +199,7 @@ cl_tlcs::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("nas_chip", 0x10000, 8);
+  chip= new cl_chip8("nas_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(as= nas,
@@ -369,14 +360,14 @@ cl_tlcs::condname_C(u8_t cc)
 }
 
 char *
-cl_tlcs::disass(t_addr addr, const char *sep)
+cl_tlcs::disass(t_addr addr)
 {
   struct dis_entry *de;
+  t_addr operand;
   u64_t c;
   int i;
   chars s("");
   const char *t;
-  char l[20];
 
   c= 0;
   for (i= 7; i>=0; i--)
@@ -425,17 +416,43 @@ cl_tlcs::disass(t_addr addr, const char *sep)
 	    case 'C': /* cc in 2nd byte */ s+= condname_C(c>>8); break; // without ,
 	    case 'f': /* cc in 4th byte */ s+= condname_cc(c>>24); break; // with ,
 	    case 'F': /* cc in 3rd byte */ s+= condname_cc(c>>16); break; // with ,
-	    case 'n': /*  n in 2nd byte */ snprintf(l,19,"%02x",(int)((c>>8)&0xff));s+= l; break;
-	    case 'N': /*  n in 3rd byte */ snprintf(l,19,"%02x",(int)((c>>16)&0xff));s+= l; break;
-	    case 'o': /*  n in 4th byte */ snprintf(l,19,"%02x",(int)((c>>24)&0xff));s+= l; break;
-	    case 'O': /*  n in 5th byte */ snprintf(l,19,"%02x",(int)((c>>32)&0xff));s+= l; break;
-	    case '1': /*  PC+2+d in 2nd byte */ snprintf(l,19,"0x%04x",(int)(addr+2+i8_t((c>>8)&0xff))); s+= l; break;
-	    case 'd': /*  d in 2nd byte */ snprintf(l,19,"%+d",(int)(i8_t((c>>8)&0xff))); s+= l; break;
-	    case 'D': /* cd in 2,3 byte */ snprintf(l,19,"0x%04x",(int)(addr+3+i16_t((c>>8)&0xffff))); s+= l; break;	      
-	    case 'M': /* mn in 2,3 byte */ snprintf(l,19,"0x%04x",(int)((c>>8)&0xffff)); s+= l; break;
-	    case 'm': /* mn in 3,4 byte */ snprintf(l,19,"0x%04x",(int)((c>>16)&0xffff)); s+= l; break;
-	    case 'X': /* mn in 4,5 byte */ snprintf(l,19,"0x%04x",(int)((c>>24)&0xffff)); s+= l; break;
-	    case 'x': /* mn in 5,6 byte */ snprintf(l,19,"0x%04x",(int)((c>>32)&0xffff)); s+= l; break;
+	    case 'n': /*  n in 2nd byte */ s.appendf("%02x",(int)((c>>8)&0xff)); break;
+	    case 'N': /*  n in 3rd byte */ s.appendf("%02x",(int)((c>>16)&0xff)); break;
+	    case 'o': /*  n in 4th byte */ s.appendf("%02x",(int)((c>>24)&0xff)); break;
+	    case 'O': /*  n in 5th byte */ s.appendf("%02x",(int)((c>>32)&0xff)); break;
+	    case 'd': /*  d in 2nd byte */ s.appendf("%+d",(int)(i8_t((c>>8)&0xff))); break;
+
+	    case '1': /*  PC+2+d in 2nd byte */
+	      operand= (u16_t)(addr+2 + (i8_t)((c>>8)&0xff));
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'D': /* cd in 2,3 byte */
+	      operand= (u16_t)(addr+3 + (i16_t)((c>>8)&0xffff));
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'M': /* mn in 2,3 byte */
+	      operand= (u16_t)((c>>8)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'm': /* mn in 3,4 byte */
+	      operand= (u16_t)((c>>16)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'X': /* mn in 4,5 byte */
+	      operand= (u16_t)((c>>24)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+	    case 'x': /* mn in 5,6 byte */
+	      operand= (u16_t)((c>>32)&0xffff);
+	      s.appendf("0x%04x", operand);
+	      addr_name(operand, rom, &s);
+	      break;
+
 	    default: s+= '?'; break;
 	    }
 	}
@@ -479,6 +496,7 @@ cl_tlcs::inst_length(t_addr addr)
 void
 cl_tlcs::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("SZIHXVNC  Flags= 0x%02x %3d %c  ",
                  reg.raf.f, reg.raf.f, isprint(reg.raf.f)?reg.raf.f:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",

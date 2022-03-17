@@ -4,6 +4,7 @@
 #include "SDCCgen.h"
 
 #include "peep.h"
+#include "gen.h"
 
 #define NOTUSEDERROR() do {werror(E_INTERNAL_ERROR, __FILE__, __LINE__, "error in notUsed()");} while(0)
 
@@ -29,6 +30,9 @@ static struct
 {
   lineNode *head;
 } _G;
+
+extern bool stm8_regs_used_as_parms_in_calls_from_current_function[YH_IDX + 1];
+extern bool stm8_regs_used_as_parms_in_pcalls_from_current_function[YH_IDX + 1];
 
 /*----------------------------------------------------------------------------*/
 /* strNextCharBlock - Returns the next block of chars (after spaces, comma)   */
@@ -600,13 +604,11 @@ findLabel (const lineNode *pl)
 
   /* 3. search lineNode with label definition and return it */
   for (cpl = _G.head; cpl; cpl = cpl->next)
-    {
-      if (   cpl->isLabel
-          && strncmp (p, cpl->line, strlen(p)) == 0)
-        {
-          return cpl;
-        }
-    }
+    if (cpl->isLabel &&
+      strncmp (p, cpl->line, strlen(p)) == 0 &&
+      cpl->line[strlen(p)] == ':')
+        return cpl;
+
   return NULL;
 }
 
@@ -628,8 +630,10 @@ static bool argCont(const char *arg, char what)
   if (arg[0] == '#')
     return FALSE;
 
-  if (arg[0] == '(' && arg[1] == '0' && (tolower(arg[2])) == 'x') 
-    arg += 3; // Skip hex prefix to avoid false x positive.
+  if (arg[0] == '(') 
+    arg++;
+  if (arg[0] == '0' && (tolower(arg[1])) == 'x') 
+    arg += 2; // Skip hex prefix to avoid false x positive.
 
   if (strlen(arg) == 0)
     return FALSE;
@@ -638,66 +642,6 @@ static bool argCont(const char *arg, char what)
     return FALSE;
 
   return (strchr(arg, what) != NULL);
-}
-
-static bool
-isReturned(const char *what)
-{
-  symbol *sym;
-  sym_link *sym_lnk;
-  int size;
-  lineNode *l;
-
-  l = _G.head;
-  do
-  {
-    l = l->next;
-  } while(l->isComment || l->ic == NULL || l->ic->op != FUNCTION);
-
-  sym = OP_SYMBOL(IC_LEFT(l->ic));
-
-  if(sym && IS_DECL(sym->type))
-    {
-      // Find size of return value.
-      specifier *spec;
-      if(sym->type->select.d.dcl_type != FUNCTION)
-        NOTUSEDERROR();
-      spec = &(sym->etype->select.s);
-      if(spec->noun == V_VOID)
-        size = 0;
-      else if(spec->noun == V_CHAR || spec->noun == V_BOOL)
-        size = 1;
-      else if(spec->noun == V_INT && !(spec->b_long))
-        size = 2;
-      else if(spec->noun == V_INT && spec->b_long || spec->noun == V_FLOAT)
-        size = 4;
-      else // long long is not returned in registers.
-        size = 0;
-
-      // Check for returned pointer.
-      sym_lnk = sym->type;
-      while (sym_lnk && !IS_PTR (sym_lnk))
-        sym_lnk = sym_lnk->next;
-      if(IS_PTR(sym_lnk))
-        size = IS_FUNCPTR(sym_lnk) ? FUNCPTRSIZE : GPTRSIZE;
-    }
-  else
-    {
-      NOTUSEDERROR();
-      return TRUE;
-    }
-
-  switch(*what)
-    {
-    case 'a':
-      return(size == 1);
-    case 'x':
-      return(size > 1);
-    case 'y':
-      return(size > 2);
-    default:
-      return FALSE;
-    }
 }
 
 static bool
@@ -710,10 +654,10 @@ stm8MightReadFlag(const lineNode *pl, const char *what)
      return (pl->line[5] == 'c');
 
   if (!strcmp (what, "n"))
-    return (ISINST (pl->line, "jrmi") || ISINST (pl->line, "jrpl") || ISINST (pl->line, "jrsge") || ISINST (pl->line, "jrsgte") || ISINST (pl->line, "jrsle") || ISINST (pl->line, "jrslt"));
+    return (ISINST (pl->line, "jrmi") || ISINST (pl->line, "jrpl") || ISINST (pl->line, "jrsge") || ISINST (pl->line, "jrsgt") || ISINST (pl->line, "jrsle") || ISINST (pl->line, "jrslt"));
 
   if (!strcmp (what, "z"))
-    return (ISINST (pl->line, "jreq") || ISINST (pl->line, "jrne") || ISINST (pl->line, "jrsgte") || ISINST (pl->line, "jrsle"));
+    return (ISINST (pl->line, "jreq") || ISINST (pl->line, "jrne") || ISINST (pl->line, "jrsgt") || ISINST (pl->line, "jrsle"));
 
   if (!strcmp (what, "c"))
     return (ISINST (pl->line, "jrc") || ISINST (pl->line, "jrnc") || ISINST (pl->line, "jruge") || ISINST (pl->line, "jrugt") || ISINST (pl->line, "jrule") || ISINST (pl->line, "jrult") ||
@@ -721,6 +665,44 @@ stm8MightReadFlag(const lineNode *pl, const char *what)
       ISINST (pl->line, "ccf") || ISINST (pl->line, "rlc") || ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrc") || ISINST (pl->line, "rrcw"));
 
   return true;
+}
+
+static bool
+stm8MightBeParmInCallFromCurrentFunction(const char *what)
+{
+  if (!strcmp(what, "a"))
+    return stm8_regs_used_as_parms_in_calls_from_current_function[A_IDX];
+    
+  if ((!strcmp(what, "x") || !strcmp(what, "xl")) && stm8_regs_used_as_parms_in_calls_from_current_function[XL_IDX])
+    return true;
+  if ((!strcmp(what, "x") || !strcmp(what, "xh")) && stm8_regs_used_as_parms_in_calls_from_current_function[XH_IDX])
+    return true;
+
+  if ((!strcmp(what, "y") || !strcmp(what, "yl")) && stm8_regs_used_as_parms_in_calls_from_current_function[YL_IDX])
+    return true;
+  if ((!strcmp(what, "yx") || !strcmp(what, "yh")) && stm8_regs_used_as_parms_in_calls_from_current_function[YH_IDX])
+    return true;
+
+  return false;
+}
+
+static bool
+stm8MightBeParmInPCallFromCurrentFunction(const char *what)
+{
+  if (!strcmp(what, "a"))
+    return stm8_regs_used_as_parms_in_pcalls_from_current_function[A_IDX];
+
+  if ((!strcmp(what, "x") || !strcmp(what, "xl")) && stm8_regs_used_as_parms_in_pcalls_from_current_function[XL_IDX])
+    return true;
+  if ((!strcmp(what, "x") || !strcmp(what, "xh")) && stm8_regs_used_as_parms_in_pcalls_from_current_function[XH_IDX])
+    return true;
+
+  if ((!strcmp(what, "y") || !strcmp(what, "yl")) && stm8_regs_used_as_parms_in_pcalls_from_current_function[YL_IDX])
+    return true;
+  if ((!strcmp(what, "yx") || !strcmp(what, "yh")) && stm8_regs_used_as_parms_in_pcalls_from_current_function[YH_IDX])
+    return true;
+
+  return false;
 }
 
 static bool
@@ -854,8 +836,20 @@ stm8MightRead(const lineNode *pl, const char *what)
         }
     }
 
-  if(ISINST(pl->line, "ret") || ISINST(pl->line, "retf"))
-    return(isReturned(what));
+  if (ISINST (pl->line, "call") || ISINST (pl->line, "callr") || ISINST (pl->line, "callf"))
+    {
+      const symbol *f = findSym (SymbolTab, 0, pl->line + (ISINST (pl->line, "call") ? 6 : 7));
+      if (f)
+        return stm8IsParmInCall(f->type, what);
+      else // Fallback needed for calls through function pointers and for calls to literal addresses.
+        return (stm8MightBeParmInCallFromCurrentFunction(what) || stm8MightBeParmInPCallFromCurrentFunction(what));
+    }
+
+  if(ISINST(pl->line, "ret")) // IAR calling convention uses ret for some calls via pointers
+    return(stm8IsReturned(what) || stm8MightBeParmInPCallFromCurrentFunction(what));
+
+  if(ISINST(pl->line, "retf")) // Large model uses retf for calls via function pointers
+    return(stm8IsReturned(what) || stm8MightBeParmInPCallFromCurrentFunction(what));
 
   return FALSE;
 }

@@ -42,6 +42,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // sim
 //#include "simcl.h"
+#include "dregcl.h"
 
 // local
 #include "stm8cl.h"
@@ -272,6 +273,9 @@ cl_stm8::mk_hw_elements(void)
       o->hide();
     }
   
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
+
   add_hw(d= new cl_port_ui(this, 0, "dport"));
   d->init();
   pd.init();
@@ -538,32 +542,34 @@ cl_stm8::make_memories(void)
   rom_chip->init();
   memchips->add(rom_chip);*/
 
-  ram_chip= new cl_memory_chip("ram_chip", 0x1800, 8);
+  ram_chip= new cl_chip8("ram_chip", 0x1800, 8);
   ram_chip->init();
   memchips->add(ram_chip);
-  eeprom_chip= new cl_memory_chip("eeprom_chip", 0x0800, 8, 0);
+  eeprom_chip= new cl_chip8("eeprom_chip", 0x0800, 8, 0);
   eeprom_chip->init();
   memchips->add(eeprom_chip);
-  option_chip= new cl_memory_chip("option_chip", 0x0800, 8, 0);
+  option_chip= new cl_chip8("option_chip", 0x0800, 8, 0);
   option_chip->init();
   memchips->add(option_chip);
-  io_chip= new cl_memory_chip("io_chip", 0x0800, 8);
+  io_chip= new cl_chip8("io_chip", 0x0800, 8);
   io_chip->init();
   memchips->add(io_chip);
   if (type->subtype & DEV_STM8S105)
-    boot_chip= new cl_memory_chip("boot_chip_s105", bl_s105_length, 8, bl_s105);
+    boot_chip= new cl_chip8("boot_chip_s105",
+			    bl_s105_length, 8, bl_s105, bl_s105_length);
   else if (type->subtype & DEV_STM8L15x46)
-    boot_chip= new cl_memory_chip("boot_chip_l15x46", bl_l15x46_length, 8, bl_l15x46);
+    boot_chip= new cl_chip8("boot_chip_l15x46",
+			    bl_l15x46_length, 8, bl_l15x46, bl_l15x46_length);
   /*else if (type->subtype & DEV_STM8L101)
     boot_chip= new cl_memory_chip("boot_chip_l101", bl_l15x46_length, 8, bl_l15x46);*/
   else
-    boot_chip= new cl_memory_chip("boot_chip", 0x0800, 8);
+    boot_chip= new cl_chip8("boot_chip", 0x0800, 8);
   boot_chip->init();
   memchips->add(boot_chip);
-  cpu_chip= new cl_memory_chip("cpu_chip", 0x0100, 8);
+  cpu_chip= new cl_chip8("cpu_chip", 0x0100, 8);
   cpu_chip->init();
   memchips->add(cpu_chip);
-  flash_chip= new cl_memory_chip("flash_chip", 0x20000, 8, 0);
+  flash_chip= new cl_chip8("flash_chip", 0x20000, 8, 0);
   flash_chip->init();
   memchips->add(flash_chip);
   /*
@@ -629,18 +635,19 @@ cl_stm8::make_memories(void)
   address_spaces->add(regs8);
   address_spaces->add(regs16);
 
-  class cl_var *v;
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("CC", regs8, 1, ""));
-  v->init();
+  vars->add("A",     regs8, 0, 7, 0, "Accumulator");
+  vars->add("CC",    regs8, 1, -1, -1, "Condition Code");
+  vars->add("CC_C",  regs8, 1, BITPOS_C,  BITPOS_C,  "Carry");
+  vars->add("CC_Z",  regs8, 1, BITPOS_Z,  BITPOS_Z,  "Zero");
+  vars->add("CC_N",  regs8, 1, BITPOS_N,  BITPOS_N,  "Negative");
+  vars->add("CC_I0", regs8, 1, BITPOS_I0, BITPOS_I0, "Interrupt mask level 0");
+  vars->add("CC_H",  regs8, 1, BITPOS_H,  BITPOS_H,  "Half carry");
+  vars->add("CC_I1", regs8, 1, BITPOS_I1, BITPOS_I1, "Interrupt mask level 1");
+  vars->add("CC_V",  regs8, 1, BITPOS_V,  BITPOS_V,  "Overflow");
   
-  vars->add(v= new cl_var("X", regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("Y", regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("SP", regs16, 2, ""));
-  v->init();
+  vars->add("X",  regs16, 0, 15, 0, "X index register");
+  vars->add("Y",  regs16, 1, 15, 0, "Y index register");
+  vars->add("SP", regs16, 2, 15, 0, "Stack pointer");
 }
 
 
@@ -820,144 +827,141 @@ cl_stm8::get_disasm_info(t_addr addr,
 }
 
 char *
-cl_stm8::disass(t_addr addr, const char *sep)
+cl_stm8::disass(t_addr addr)
 {
-  char work[256], temp[20];
+  const class cl_var *context = 0;
+  chars work, temp;
   const char *b;
-  char *buf, *p, *t;
   int len = 0;
   int immed_offset = 0;
+  t_addr operand= 0;
+  bool first= true;
 
-
-  p= work;
+  work= "";
 
   b = get_disasm_info(addr, &len, NULL, &immed_offset, NULL);
 
-  if (b == NULL) {
-    buf= (char*)malloc(30);
-    strcpy(buf, "UNKNOWN/INVALID");
-    return(buf);
-  }
+  if (b == NULL)
+    {
+      return strdup("UNKNOWN/INVALID");
+    }
 
   while (*b)
     {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
       if (*b == '%')
         {
+
           b++;
           switch (*(b++))
             {
             case 's': // s    signed byte immediate
-              sprintf(temp, "#%d", (char)rom->get(addr+immed_offset));
+              temp.format("#%d", (i8_t)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             case 'e': // e    extended 24bit immediate operand
-              sprintf(temp, "#0x%06lx",
-                 (ulong)((rom->get(addr+immed_offset)<<16) |
-                        (rom->get(addr+immed_offset+1)<<8) |
-                        (rom->get(addr+immed_offset+2))) );
+	      operand= ((rom->get(addr+immed_offset)<<16) |
+			  (rom->get(addr+immed_offset+1)<<8) |
+			  (rom->get(addr+immed_offset+2)));
+              temp.format("#0x%06lx", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               ++immed_offset;
               break;
             case 'w': // w    word immediate operand
-              sprintf(temp, "#0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
+	      operand=  ((rom->get(addr+immed_offset)<<8) |
+			 (rom->get(addr+immed_offset+1)));
+              temp.format("#0x%04x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               break;
             case 'b': // b    byte immediate operand
-              sprintf(temp, "#0x%02x", (uint)rom->get(addr+immed_offset));
+              operand= (uint)rom->get(addr+immed_offset);
+              temp.format("#0x%02x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               break;
             case 'x': // x    extended addressing
-              sprintf(temp, "0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
+	      operand= (uint)((rom->get(addr+immed_offset)<<8) |
+			 (rom->get(addr+immed_offset+1)));
+              temp.format("0x%04x", operand);
+              context = addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               break;
             case 'd': // d    direct addressing
-              sprintf(temp, "0x%02x", (uint)rom->get(addr+immed_offset));
+              temp.format("0x%02x", (uint)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             case '3': // 3    24bit index offset
-              sprintf(temp, "0x%06lx",
-                 (ulong)((rom->get(addr+immed_offset)<<16) |
-                        (rom->get(addr+immed_offset+1)<<8) |
-                        (rom->get(addr+immed_offset+2))) );
+              // Assumption: the 24bit offset address is the address of a
+              // fixed table and the index register selects an entry.
+	      operand= (ulong)((rom->get(addr+immed_offset)<<16) |
+			  (rom->get(addr+immed_offset+1)<<8) |
+			  (rom->get(addr+immed_offset+2)));
+              temp.format("0x%06lx", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               ++immed_offset;
-             break;
+              break;
             case '2': // 2    word index offset
-              sprintf(temp, "0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
+              // Assumption: the word offset address is the address of a
+              // fixed table and the index register selects an entry.
+	      operand= (uint)((rom->get(addr+immed_offset)<<8) |
+			 (rom->get(addr+immed_offset+1)));
+              temp.format("0x%04x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               break;
             case '1': // b    byte index offset
-              sprintf(temp, "0x%02x", (uint)rom->get(addr+immed_offset));
+              // Assumption: the index register points to a struct/record
+              // and the byte offset selects an entry.
+              operand= (uint)rom->get(addr+immed_offset);
+              temp.format("0x%02x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               break;
-            case 'p': // b    byte index offset
-	      {
-		long int base;
-		i8_t offs;
-		base= addr+immed_offset+1;
-		offs= rom->get(addr+immed_offset);
-		long int res= base+offs;
-		sprintf(temp, "0x%04lx",
-			/*(long int)(addr+immed_offset+1
-			  +(int)rom->get(addr+immed_offset))*/
-			res
-			);
-		++immed_offset;
-	      }
+            case 'p': // p    pc relative
+              operand = (addr+immed_offset+1 + (i8_t)rom->get(addr+immed_offset)) & 0xffff;
+              temp.format("0x%04lx", operand);
+              addr_name(operand, rom, &temp);
+              ++immed_offset;
+              break;
+            case 'B': // B    bit number
+              {
+                uint bit = (rom->get(addr+1) & 0xf) >> 1;
+                temp.format("%u", bit);
+                // N.B. The address comes before the bit so operand has already
+                // been set to the address when we get here.
+                addr_name(operand, rom, bit, bit, &temp, context);
+              }
               break;
             default:
-              strcpy(temp, "?");
+	      temp= "?";
               break;
             }
-          t= temp;
-          while (*t)
-            *(p++)= *(t++);
+	  work+= temp;
         }
       else
-        *(p++)= *(b++);
+        work+= *(b++);
     }
-  *p= '\0';
 
-  p= strchr(work, ' ');
-  if (!p)
-    {
-      buf= strdup(work);
-      return(buf);
-    }
-  if (sep == NULL)
-    buf= (char *)malloc(6+strlen(p)+1);
-  else
-    buf= (char *)malloc((p-work)+strlen(sep)+strlen(p)+1);
-  for (p= work, t= buf; *p != ' '; p++, t++)
-    *t= *p;
-  p++;
-  *t= '\0';
-  if (sep == NULL)
-    {
-      while (strlen(buf) < 6)
-        strcat(buf, " ");
-    }
-  else
-    strcat(buf, sep);
-  strcat(buf, p);
-  return(buf);
+  return strdup(work.c_str());
 }
 
 
 void
 cl_stm8::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("V-IHINZC  Flags= 0x%02x %3d %c  ",
                  regs.CC, regs.CC, isprint(regs.CC)?regs.CC:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",

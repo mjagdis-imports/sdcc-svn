@@ -2,6 +2,7 @@
 #include <stdio.h>
 //#include <stdint.h>
 #include <unistd.h>
+#include <string.h>
 #include "cmdlexcl.h"
 #include "cmdpars.hh"
 #include "cmdutil.h"
@@ -70,6 +71,11 @@ static int uc_yy_input(char *buf, int max_size);
   yylval.number = 0;
   for (int i= 2; yytext[i]; i++)
     yylval.number = (yylval.number << 1) | (yytext[i] == '0' ? 0 : 1);
+  return PTOK_NUMBER;
+}
+
+$[0-9a-fA-F]+ {
+  yylval.number= strtol(&yytext[1], 0, 16);
   return PTOK_NUMBER;
 }
 
@@ -166,34 +172,34 @@ uc_yy_check_id(char *token)
 	}
       
       t_addr addr;
-      class cl_address_space *as;
       bool found;
-      if ((found= uc->symbol2address(yytext, &as, &addr)))
+      if ((found= uc->symbol2address(yytext, &mem, &addr)))
 	  {
-	      yylval.memory.memory= as;
+	      yylval.memory.memory= mem;
 	      yylval.memory.address= addr;
 	      return PTOK_MEMORY;
 	  }
-      /*
-      else if ((found= uc->symbol2address(yytext, uc->sfr_tbl(), &addr)))
-	{
-	  //yylval.number= addr; return PTOK_NUMBER;
-	  yylval.memory.memory = uc->address_space(MEM_SFR_ID);
-	  yylval.memory.address = addr;
-	  return PTOK_MEMORY;
-	}
-      */
-      //found= uc->symbol2address(yytext, uc->bit_tbl(), &addr);
       if (found)
 	{
 	  t_addr memaddr;
-	  t_mem mask;
-	  yylval.bit.memory= uc->bit2mem(addr, &memaddr, &mask);
+	  int bitnr_low, bitnr_high;
+	  yylval.bit.memory= uc->bit2mem(addr, &memaddr, &bitnr_high, &bitnr_low);
 	  yylval.bit.mem_address = memaddr;
 	  yylval.bit.bit_address = addr;
-	  yylval.bit.mask = mask;
-	  return PTOK_BIT;
+	  yylval.bit.bitnr_high = bitnr_high;
+	  yylval.bit.bitnr_low = bitnr_low;
+	  return PTOK_BITS;
 	}
+      {
+	t_index i;
+	found= uc->vars->by_name.search(token, i);
+	if (found)
+	  {
+	    class cl_cvar *v= (class cl_cvar *)uc->vars->by_name.at(i);
+	    yylval.cell= v->get_cell();
+	    return PTOK_CELL;
+          }
+       }
     }
 
   return 0;

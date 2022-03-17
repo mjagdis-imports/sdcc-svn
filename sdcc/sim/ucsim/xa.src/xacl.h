@@ -68,8 +68,8 @@ public:
 
   virtual struct name_entry *sfr_tbl(void);
   virtual struct name_entry *bit_tbl(void);
-  virtual char *get_dir_name(short);
-  virtual char *get_bit_name(short);
+  virtual chars get_dir_name(short);
+  virtual chars get_bit_name(short);
 
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
@@ -82,7 +82,7 @@ public:
                        int *parms,
                        int *mnemonic);
 
-  virtual char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr);
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);

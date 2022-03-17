@@ -41,6 +41,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // sim
 #include "simcl.h"
+#include "dregcl.h"
 
 // local
 #include "hc08cl.h"
@@ -135,6 +136,9 @@ cl_hc08::mk_hw_elements(void)
   class cl_hw *h;
   cl_uc::mk_hw_elements();
 
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
+  
   add_hw(h= new cl_hc08_cpu(this));
   h->init();
 }
@@ -151,7 +155,7 @@ cl_hc08::make_memories(void)
   class cl_address_decoder *ad;
   class cl_memory_chip *chip;
 
-  chip= new cl_memory_chip("rom_chip", 0x10000, 8);
+  chip= new cl_chip8("rom_chip", 0x10000, 8);
   chip->init();
   memchips->add(chip);
   ad= new cl_address_decoder(as= address_space("rom"), chip, 0, 0xffff, 0);
@@ -175,18 +179,19 @@ cl_hc08::make_memories(void)
   address_spaces->add(regs8);
   address_spaces->add(regs16);
 
-  class cl_var *v;
-  vars->add(v= new cl_var("A", regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var("P", regs8, 1, ""));
-  v->init();
-  vars->add(v= new cl_var("H", regs8, 2, ""));
-  v->init();
-  vars->add(v= new cl_var("X", regs8, 3, ""));
-  v->init();
+  vars->add("A", regs8, 0, 7, 0, "Accumulator");
+  vars->add("P", regs8, 1, -1, -1, "Condition Code Register");
+  vars->add("CC", regs8, 1, -1, -1, "Condition Code Register");
+  vars->add("CC_C", regs8, 1, BITPOS_C, BITPOS_C, "Carry");
+  vars->add("CC_Z", regs8, 1, BITPOS_Z, BITPOS_Z, "Zero");
+  vars->add("CC_N", regs8, 1, BITPOS_N, BITPOS_N, "Negative");
+  vars->add("CC_I", regs8, 1, BITPOS_I, BITPOS_I, "Interrupt Mask");
+  vars->add("CC_H", regs8, 1, BITPOS_H, BITPOS_H, "Half Carry");
+  vars->add("CC_V", regs8, 1, BITPOS_V, BITPOS_V, "Two's Complement Overflow");
+  vars->add("H", regs8, 2, 7, 0, "H Index Register");
+  vars->add("X", regs8, 3, 7, 0, "X Index Register");
 
-  vars->add(v= new cl_var("SP", regs16, 0, ""));
-  v->init();
+  vars->add("SP", regs16, 0, 15, 0, "Stack Pointer");
 }
 
 
@@ -319,124 +324,113 @@ cl_hc08::get_disasm_info(t_addr addr,
 }
 
 char *
-cl_hc08::disass(t_addr addr, const char *sep)
+cl_hc08::disass(t_addr addr)
 {
-  char work[256], temp[20];
-  char *buf, *p, *t, *s;
+  chars work, temp;
+  t_addr operand;
   const char *b;
   int len = 0;
   int immed_offset = 0;
-
-  p= work;
+  bool first= true;
+  
+  work= "";
 
   b = get_disasm_info(addr, &len, NULL, &immed_offset, NULL);
 
   if (b == NULL) {
-    buf= (char*)malloc(30);
-    strcpy(buf, "UNKNOWN/INVALID");
-    return(buf);
+    return(strdup("UNKNOWN/INVALID"));
   }
 
   while (*b)
     {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
       if (*b == '%')
 	{
 	  b++;
+	  temp= "";
 	  switch (*(b++))
 	    {
 	    case 's': // s    signed byte immediate
-	      sprintf(temp, "#%d", (char)rom->get(addr+immed_offset));
+	      temp.format("#%d", (char)rom->get(addr+immed_offset));
 	      ++immed_offset;
 	      break;
 	    case 'w': // w    word immediate operand
-	      sprintf(temp, "#0x%04x",
-	         (uint)((rom->get(addr+immed_offset)<<8) |
-	                (rom->get(addr+immed_offset+1))) );
+	      operand= ((rom->get(addr+immed_offset)<<8) |
+		       (rom->get(addr+immed_offset+1)));
+	      temp.format("#$%04x", operand);
+	      addr_name(operand, rom, &temp);
 	      ++immed_offset;
 	      ++immed_offset;
 	      break;
 	    case 'b': // b    byte immediate operand
-	      sprintf(temp, "#0x%02x", (uint)rom->get(addr+immed_offset));
+	      temp.format("#$%02x", (uint)rom->get(addr+immed_offset));
 	      ++immed_offset;
 	      break;
 	    case 'x': // x    extended addressing
-	      sprintf(temp, "0x%04x",
-	         (uint)((rom->get(addr+immed_offset)<<8) |
-	                (rom->get(addr+immed_offset+1))) );
+	      operand= ((rom->get(addr+immed_offset)<<8) |
+		       (rom->get(addr+immed_offset+1)));
+	      temp.format("$%04x", operand);
+	      addr_name(operand, rom, &temp);
 	      ++immed_offset;
 	      ++immed_offset;
 	      break;
 	    case 'd': // d    direct addressing
-	      sprintf(temp, "*0x%02x", (uint)rom->get(addr+immed_offset));
+	      operand= rom->get(addr+immed_offset);
+	      temp.format("*$%02x", operand);
+	      addr_name(operand, rom, &temp);
 	      ++immed_offset;
 	      break;
 	    case '2': // 2    word index offset
 	      {
-		int i= (uint)((rom->get(addr+immed_offset)<<8) |
+		operand= ((rom->get(addr+immed_offset)<<8) |
 			      (rom->get(addr+immed_offset+1)));
-		sprintf(temp, "0x%04x", i & 0xffff);
+		// Assumption: the word offset address is the address of a
+		// fixed table and index register selects an entry.
+		temp.format("$%04x", operand);
+		addr_name(operand, rom, &temp);
 		++immed_offset;
 		++immed_offset;
 		break;
 	      }		
 	    case '1': // b    byte index offset
-              sprintf(temp, "0x%02x", (uint)rom->get(addr+immed_offset));
+	      // Assumption: the index register points to a struct/record
+	      // and the byte offset selects an entry.
+              temp.format("$%02x", (uint)rom->get(addr+immed_offset));
 	      ++immed_offset;
 	      break;
-	    case 'p': // b    byte index offset
+	    case 'p': // p    pc relative
 	      {
-		int i= addr+immed_offset+1
-		  +(char)rom->get(addr+immed_offset);
-		sprintf(temp, "0x%04x", i & 0xffff);
+		operand= (addr+immed_offset+1 + (i8_t)rom->get(addr+immed_offset)) & 0xffff;
+		temp.format("$%04x", operand);
+		addr_name(operand, rom, &temp);
 		++immed_offset;
 		break;
 	      }
 	    default:
-	      strcpy(temp, "?");
+	      temp= "?";
 	      break;
 	    }
-	  t= temp;
-	  while (*t)
-	    *(p++)= *(t++);
+	  work+= temp;
 	}
       else
-	*(p++)= *(b++);
+	work+= *(b++);
     }
-  *p= '\0';
 
-  p= strchr(work, ' ');
-  if (!p)
-    {
-      buf= strdup(work);
-      return(buf);
-    }
-  if (sep == NULL)
-    buf= (char *)malloc(6+strlen(p)+1);
-  else
-    buf= (char *)malloc((p-work)+strlen(sep)+strlen(p)+1);
-  for (p= work, s= buf; *p != ' '; p++, s++)
-    *s= *p;
-  p++;
-  *s= '\0';
-  if (sep == NULL)
-    {
-      while (strlen(buf) < 6)
-	strcat(buf, " ");
-    }
-  else
-    strcat(buf, sep);
-  strcat(buf, p);
-
-  return(buf);
+  return strdup(work.c_str());
 }
 
 
 void
 cl_hc08::print_regs(class cl_console_base *con)
 {
-  con->dd_printf("V--HINZC  Flags= 0x%02x %3d %c  ",
+  con->dd_color("answer");
+  con->dd_printf("V--HINZC  Flags= $%02x %3d %c  ",
 		 regs.P, regs.P, isprint(regs.P)?regs.P:'.');
-  con->dd_printf("A= 0x%02x %3d %c\n",
+  con->dd_printf("A= $%02x %3d %c\n",
 		 regs.A, regs.A, isprint(regs.A)?regs.A:'.');
   con->dd_printf("%c--%c%c%c%c%c  ",
 		 (regs.P&BIT_V)?'1':'0',
@@ -445,14 +439,14 @@ cl_hc08::print_regs(class cl_console_base *con)
 		 (regs.P&BIT_N)?'1':'0',
 		 (regs.P&BIT_Z)?'1':'0',
 		 (regs.P&BIT_C)?'1':'0');
-  con->dd_printf("    H= 0x%02x %3d %c  ",
+  con->dd_printf("    H= $%02x %3d %c  ",
 		 regs.H, regs.H, isprint(regs.H)?regs.H:'.');
-  con->dd_printf("X= 0x%02x %3d %c\n",
+  con->dd_printf("X= $%02x %3d %c\n",
 		 regs.X, regs.X, isprint(regs.X)?regs.X:'.');
-  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c",
+  con->dd_printf("SP= $%04x [SP+1]= %02x %3d %c",
                  regs.SP, ram->get(regs.SP+1), ram->get(regs.SP+1),
                  isprint(ram->get(regs.SP+1))?ram->get(regs.SP+1):'.');
-  con->dd_printf("  Limit= 0x%04x\n", AU(sp_limit));
+  con->dd_printf("  Limit= $%04x\n", AU(sp_limit));
   
   print_disass(PC, con);
 }
