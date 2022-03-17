@@ -161,7 +161,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       else
         {
           newic = newiCode ('=', NULL, left);
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type), false);
         }
 
       hTabAddItem (&iCodehTab, newic->key, newic);
@@ -180,7 +180,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       else
         {
           newic = newiCode ('=', NULL, right);
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next);
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next, false);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -231,7 +231,7 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
         OP_USES (left) = bitVectSetBit (OP_USES (left), newic->key);
     }
   /* insert the call */
-  newic = newiCode (CALL, operandFromSymbol (func), NULL);
+  newic = newiCode (CALL, operandFromSymbol (func, false), NULL);
   IC_RESULT (newic) = IC_RESULT (ic);
   bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
   OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
@@ -324,7 +324,7 @@ found:
       else
         {
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type), false);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -356,7 +356,7 @@ found:
     }
 
   /* make the call */
-  newic = newiCode (CALL, operandFromSymbol (func), NULL);
+  newic = newiCode (CALL, operandFromSymbol (func, false), NULL);
   IC_RESULT (newic) = IC_RESULT (ic);
   newic->parmBytes+=bytesPushed;
   ebp->hasFcall = 1;
@@ -435,7 +435,7 @@ found:
       else
         {
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type), false);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -467,7 +467,7 @@ found:
     }
 
   /* make the call */
-  newic = newiCode (CALL, operandFromSymbol (func), NULL);
+  newic = newiCode (CALL, operandFromSymbol (func, false), NULL);
   IC_RESULT (newic) = IC_RESULT (ic);
   newic->parmBytes+=bytesPushed;
   ebp->hasFcall = 1;
@@ -547,7 +547,7 @@ found:
       else
         {
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type), false);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -579,7 +579,7 @@ found:
     }
 
   /* make the call */
-  newic = newiCode (CALL, operandFromSymbol (func), NULL);
+  newic = newiCode (CALL, operandFromSymbol (func, false), NULL);
   IC_RESULT (newic) = IC_RESULT (ic);
   newic->parmBytes+=bytesPushed;
   ebp->hasFcall = 1;
@@ -666,7 +666,7 @@ found:
       else
         {
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type), false);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -698,7 +698,7 @@ found:
     }
 
   /* make the call */
-  newic = newiCode (CALL, operandFromSymbol (func), NULL);
+  newic = newiCode (CALL, operandFromSymbol (func, false), NULL);
   IC_RESULT (newic) = IC_RESULT (ic);
   newic->parmBytes+=bytesPushed;
   ebp->hasFcall = 1;
@@ -730,13 +730,75 @@ found:
 
 extern operand *geniCodeRValue (operand *, bool);
 
+/* Insert a cast of operand op of ic to type type */
+static void prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
+{
+  iCode *newic = newiCode (CAST, operandFromLink (type), op);
+  hTabAddItem (&iCodehTab, newic->key, newic);
+
+  IC_RESULT (newic) = newiTempOperand (type, 0);
+  bitVectSetBit (OP_USES (op), newic->key);
+  OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
+  bitVectUnSetBit (OP_USES (op), ic->key);
+  OP_USES (IC_RESULT (newic)) = bitVectSetBit (OP_USES (IC_RESULT (newic)), ic->key);
+  newic->filename = ic->filename;
+  newic->lineno = ic->lineno;
+
+  addiCodeToeBBlock (ebb, newic, ic);
+
+  if (isOperandEqual (op, IC_LEFT (ic)))
+    IC_LEFT (ic) = IC_RESULT (newic);
+
+  if (isOperandEqual (op, IC_RIGHT (ic)))
+    IC_RIGHT (ic) = IC_RESULT (newic);
+}
+
+/* Insert a cast of result of ic from type type */
+static void appendCast (iCode *ic, sym_link *type, eBBlock *ebb)
+{
+  iCode *newic = newiCode (CAST, operandFromLink (operandType (IC_RESULT (ic))), 0);
+  hTabAddItem (&iCodehTab, newic->key, newic);
+
+  IC_RESULT (newic) = IC_RESULT (ic);
+  bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
+  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), newic->key);
+  IC_RESULT (ic) = newiTempOperand (type, 0);
+  IC_RIGHT (newic) = operandFromOperand (IC_RESULT (ic));
+  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
+  bitVectSetBit (OP_USES (IC_RESULT (ic)), newic->key);
+  newic->filename = ic->filename;
+  newic->lineno = ic->lineno;
+  addiCodeToeBBlock (ebb, newic, ic->next);
+}
+
 /*-----------------------------------------------------------------*/
 /* convilong - converts int or long mults or divs to fcalls        */
 /*-----------------------------------------------------------------*/
 static void
-convilong (iCode * ic, eBBlock * ebp)
+convilong (iCode *ic, eBBlock *ebp)
 {
   int op = ic->op;
+
+  // Use basic type multiplication function for _BitInt
+  if ((op == '*' || op == '/' || op == '%') &&
+    (IS_BITINT (operandType (IC_LEFT (ic))) || IS_BITINT (operandType (IC_RIGHT (ic)))))
+    {
+      // long multiplication is more efficient than long long, so use it if we can.
+      if (IS_BITINT (operandType (IC_LEFT (ic))) && SPEC_BITINTWIDTH (operandType (IC_LEFT (ic))) <= 32 &&
+        IS_BITINT (operandType (IC_RIGHT (ic))) && SPEC_BITINTWIDTH (operandType (IC_RIGHT (ic))) <= 32)
+        {
+          prependCast (ic, IC_LEFT (ic), newLongLink(), ebp);
+          prependCast (ic, IC_RIGHT (ic), newLongLink(), ebp);
+          appendCast (ic, newLongLink(), ebp);
+        }
+      else
+        {
+          prependCast (ic, IC_LEFT (ic), newLongLongLink(), ebp);
+          prependCast (ic, IC_RIGHT (ic), newLongLongLink(), ebp);
+          appendCast (ic, newLongLongLink(), ebp);
+        }
+    }
+  
   symbol *func = NULL;
   iCode *ip = ic->next;
   iCode *newic;
@@ -777,7 +839,7 @@ convilong (iCode * ic, eBBlock * ebp)
                   OP_SYMBOL (left)->type = newIntLink();
                 }
               else
-                IC_LEFT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)));
+                IC_LEFT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
 
               if (ric)
                 {
@@ -785,7 +847,7 @@ convilong (iCode * ic, eBBlock * ebp)
                   OP_SYMBOL (right)->type = newIntLink();
                 }
               else
-                IC_RIGHT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)));
+                IC_RIGHT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
 
               if (func) // Use 16x16->32 support function
                 goto found;
@@ -876,7 +938,7 @@ found:
       else
         {
           newic = newiCode ('=', NULL, IC_LEFT (ic));
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type));
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type), false);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -894,7 +956,7 @@ found:
       else
         {
           newic = newiCode ('=', NULL, IC_RIGHT (ic));
-          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next);
+          IC_RESULT (newic) = operandFromValue (FUNC_ARGS(func->type)->next, false);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -948,7 +1010,7 @@ found:
     }
 
   /* for the result */
-  newic = newiCode (CALL, operandFromSymbol (func), NULL);
+  newic = newiCode (CALL, operandFromSymbol (func, false), NULL);
   IC_RESULT (newic) = IC_RESULT (ic);
   bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
   OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
@@ -1590,7 +1652,7 @@ switchAddressSpaceAt (iCode *ic, const symbol *const addrspace)
   const symbol *const laddrspace = getAddrspaceiCode (ic);
   wassertl(!laddrspace || laddrspace == addrspace, "Switching to invalid address space.");
 
-  newic = newiCode (CALL, operandFromSymbol (addrspace->addressmod[0]), 0);
+  newic = newiCode (CALL, operandFromSymbol (addrspace->addressmod[0], false), 0);
 
   IC_RESULT (newic) = newiTempOperand (newVoidLink (), 1);
   newic->filename = ic->filename;
@@ -2112,49 +2174,6 @@ discardDeadParamReceives (eBBlock ** ebbs, int count)
     }
 }
 
-/* Insert a cast of operand op of ic to type type */
-static void prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
-{
-  iCode *newic = newiCode (CAST, operandFromLink (type), op);
-  hTabAddItem (&iCodehTab, newic->key, newic);
-
-  IC_RESULT (newic) = newiTempOperand (type, 0);
-  bitVectSetBit (OP_USES (op), newic->key);
-  OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
-  bitVectUnSetBit (OP_USES (op), ic->key);
-  OP_USES (IC_RESULT (newic)) = bitVectSetBit (OP_USES (IC_RESULT (newic)), ic->key);
-  newic->filename = ic->filename;
-  newic->lineno = ic->lineno;
-
-  addiCodeToeBBlock (ebb, newic, ic);
-
-  if (isOperandEqual (op, IC_LEFT (ic)))
-    IC_LEFT (ic) = IC_RESULT (newic);
-
-  if (isOperandEqual (op, IC_RIGHT (ic)))
-    IC_RIGHT (ic) = IC_RESULT (newic);
-}
-
-/* Insert a cast of result of ic from type type */
-static void appendCast (iCode *ic, sym_link *type, eBBlock *ebb)
-{
-  iCode *newic = newiCode (CAST, operandFromLink (operandType (IC_RESULT (ic))), 0);
-  hTabAddItem (&iCodehTab, newic->key, newic);
-
-  IC_RESULT (newic) = IC_RESULT (ic);
-  bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
-  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), newic->key);
-  IC_RESULT (ic) = newiTempOperand (type, 0);
-  IC_RIGHT (newic) = operandFromOperand (IC_RESULT (ic));
-  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
-  bitVectSetBit (OP_USES (IC_RESULT (ic)), newic->key);
-  newic->filename = ic->filename;
-  newic->lineno = ic->lineno;
-  addiCodeToeBBlock (ebb, newic, ic->next);
-}
-
-
-
 /*-----------------------------------------------------------------*/
 /* optimizeOpWidth - reduce operation width.                       */
 /* Wide arithmetic operations where the result is cast to narrow   */
@@ -2328,7 +2347,7 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
 
           // Insert cast for comparison.
           if (IS_OP_LITERAL (IC_RIGHT (ic)))
-            IC_RIGHT (ic) = operandFromValue (valCastLiteral (newcountertype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))));
+            IC_RIGHT (ic) = operandFromValue (valCastLiteral (newcountertype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))), false);
           else
             prependCast (ic, IC_RIGHT (ic), newcountertype, ebbs[i]);
 
@@ -2415,7 +2434,7 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
             }
           else
             {
-              IC_LEFT (ic) = operandFromValue (valCastLiteral (newCharLink(), operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))));
+              IC_LEFT (ic) = operandFromValue (valCastLiteral (newCharLink(), operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))), false);
             }
 
           if (ric)
@@ -2434,7 +2453,7 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
             }
           else
             {
-              IC_LEFT (ic) = operandFromValue (valCastLiteral (newCharLink(), operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))));
+              IC_LEFT (ic) = operandFromValue (valCastLiteral (newCharLink(), operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))), false);
             }
 
           // Insert cast on result
@@ -2603,7 +2622,7 @@ optimize:
                   else
                     {
                       wassert (IS_OP_LITERAL (IC_LEFT (ic)));
-                      IC_LEFT (ic) = operandFromValue (valCastLiteral (clefttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))));
+                      IC_LEFT (ic) = operandFromValue (valCastLiteral (clefttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))), false);
                     }
                   if (ic->op != LEFT_OP && IS_SYMOP (IC_RIGHT (ic)))
                     {
@@ -2622,7 +2641,7 @@ optimize:
                   else if (ic->op != LEFT_OP && ic->op != UNARYMINUS)
                     {
                       wassert (IS_OP_LITERAL (IC_RIGHT (ic)));
-                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (crighttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))));
+                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (crighttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))), false);
                     }
                 }
               if (uic->op == CAST && ic->op != RIGHT_OP)
@@ -2855,7 +2874,7 @@ optimizeCastCast (eBBlock ** ebbs, int count)
                   if (!SPEC_USIGN (type1) && (mask >> (bitsForType (type1))))
                     continue;
 
-                  IC_RIGHT (uic) = operandFromValue (valCastLiteral (type1, operandLitValue (IC_RIGHT (uic)), operandLitValue (IC_RIGHT (uic))));
+                  IC_RIGHT (uic) = operandFromValue (valCastLiteral (type1, operandLitValue (IC_RIGHT (uic)), operandLitValue (IC_RIGHT (uic))), false);
                 }
               else if (uic->op == CAST) /* Otherwise this use must be a second cast */
                 {
