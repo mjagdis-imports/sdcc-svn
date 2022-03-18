@@ -56,10 +56,10 @@ static struct id_element cpu_states[]= {
 //		      class cl_cmdline *cmdline, class cl_console *con)
 COMMAND_DO_WORK_UC(cl_state_cmd)
 {
-  con->dd_printf("CPU state= %s PC= 0x%06x XTAL= %g\n",
+  con->dd_printf("CPU state= %s PC= 0x%06x frequency= %.0f HZ\n",
 		 get_id_string(cpu_states, uc->state),
 		 AU(uc->PC), 
-		 uc->xtal);
+		 uc->get_xtal());
   con->dd_printf("Operation since last reset= (%lu vclks)\n",
 		 (unsigned long)(uc->vc.fetch) +
 		 (unsigned long)(uc->vc.rd) +
@@ -68,20 +68,22 @@ COMMAND_DO_WORK_UC(cl_state_cmd)
   con->dd_printf("Fetch= %lu ", (unsigned long)(uc->vc.fetch));
   con->dd_printf("Read= %lu ", (unsigned long)(uc->vc.rd));
   con->dd_printf("Write= %lu\n", (unsigned long)(uc->vc.wr));
-  con->dd_printf("Total time since last reset= %g sec (%lu clks)\n",
-		 uc->get_rtime(), (unsigned long)(uc->ticks->ticks));
-  con->dd_printf("Time in isr = %g sec (%lu clks) %3.2g%%\n",
-		 uc->isr_ticks->get_rtime(uc->xtal),
-		 uc->isr_ticks->ticks,
-		 (uc->ticks->ticks == 0)?0.0:
-		 (100.0*((double)(uc->isr_ticks->ticks)/
-			 (double)(uc->ticks->ticks))));
-  con->dd_printf("Time in idle= %g sec (%lu clks) %3.2g%%\n",
-		 uc->idle_ticks->get_rtime(uc->xtal),
-		 uc->idle_ticks->ticks,
-		 (uc->ticks->ticks == 0)?0.0:
-		 (100.0*((double)(uc->idle_ticks->ticks)/
-			 (double)(uc->ticks->ticks))));
+
+  con->dd_printf("Total time since last reset= %.15f sec (%lu clks)\n",
+		 uc->ticks->get_rtime(), (unsigned long)(uc->ticks->get_ticks()));
+
+  con->dd_printf("Time in isr = %.15f sec (%lu clks) %3.2f%%\n",
+		 uc->isr_ticks->get_rtime(),
+		 uc->isr_ticks->get_ticks(),
+		 (uc->ticks->get_ticks() == 0 ? 0.0 :
+		   (100.0 * uc->isr_ticks->get_rtime() / uc->ticks->get_rtime())));
+
+  con->dd_printf("Time in idle= %.15f sec (%lu clks) %3.2f%%\n",
+		 uc->idle_ticks->get_rtime(),
+		 uc->idle_ticks->get_ticks(),
+		 (uc->ticks->get_ticks() == 0 ? 0.0 :
+		   (100.0 * uc->idle_ticks->get_rtime() / uc->ticks->get_rtime())));
+
   con->dd_printf("Max value of stack pointer= 0x%06x, avg= 0x%06x\n",
 		 AU(uc->sp_max), AU(uc->sp_avg));
   con->dd_printf("Simulation: %s\n",
@@ -953,5 +955,44 @@ CMDHELP(cl_rmvar_cmd,
 	"rmvar name",
 	"Remove variable",
 	"Deletes the name variable")
+
+/*
+ * Command: analyze
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_UC(cl_analyze_cmd)
+{
+  if (cmdline->nuof_params() == 0)
+    uc->analyze_init();
+  else
+    for (int i = 0; i < cmdline->nuof_params(); i++)
+      {
+        class cl_cmd_arg *param = cmdline->param(i);
+        if (param)
+          {
+            if (param->as_bit(uc))
+              {
+                if (param->value.bit.mem == uc->rom)
+                  uc->analyze(param->value.bit.mem_address);
+                else
+                  {
+                    con->dd_printf("%s[", param->value.bit.mem->get_name());
+                    con->dd_printf(param->value.bit.mem->addr_format, param->value.bit.mem_address);
+                    con->dd_printf("]: addresses to analyze must be in %s\n", uc->rom->get_name());
+                  }
+              }
+            else
+              con->dd_printf("%s cannot be interpreted as a rom address\n", cmdline->tokens->at(i));
+          }
+      }
+
+  return false;
+}
+
+CMDHELP(cl_analyze_cmd,
+	"analyze [addr...]",
+	"Analyze reachable code globally or from the address(es) given",
+	"long help of analyze")
 
 /* End of cmd.src/cmd_uc.cc */

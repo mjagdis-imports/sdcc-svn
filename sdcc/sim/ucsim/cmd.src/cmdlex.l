@@ -57,7 +57,7 @@ static int uc_yy_input(char *buf, int max_size);
 "?"			return(PTOK_QUESTION);
 ":"			return(PTOK_COLON);
 "<"			return(PTOK_LESS);
-">"			return(PTOK_GREATHER);
+">"			return(PTOK_GREATER);
 "!"			return(PTOK_EXCLAMATION);
 ","			return(PTOK_COMMA);
 
@@ -79,7 +79,7 @@ $[0-9a-fA-F]+ {
   return PTOK_NUMBER;
 }
 
-[a-zA-Z_][0-9a-zA-Z_]*	return(uc_yy_check_id(yytext));
+\.?[a-zA-Z_][0-9a-zA-Z_]*($[0-9]+)?	return(uc_yy_check_id(yytext));
 
 '.*' {
   char *s, *p;

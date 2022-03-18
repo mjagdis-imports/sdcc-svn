@@ -105,6 +105,8 @@ public:
   virtual int clock_per_cycle(void) { return 1; }
   
   virtual struct dis_entry *dis_tbl(void);
+  virtual void analyze_start(void);
+  virtual void analyze(t_addr addr);
   virtual void disass_indexed(t_addr *addr, chars *work, int siz);
   virtual void disass_immediate(t_addr *addr, chars *work, int siz);
   virtual char *disass(t_addr addr);
@@ -117,8 +119,8 @@ public:
   virtual void push_regs(bool do_cc);
   virtual void pull_regs(bool do_cc);
   
-  virtual int inst_add8 (t_mem code,  u8_t *acc,  u8_t op, int c, bool store, bool invert_c);
-  virtual int inst_add16(t_mem code, u16_t *acc, u16_t op, int c, bool store, bool invert_c);
+  virtual int inst_add8 (t_mem code,  u8_t *acc,  u8_t op, bool c, bool store, bool invert_c);
+  virtual int inst_add16(t_mem code, u16_t *acc, u16_t op, bool c, bool store, bool invert_c, bool is_sub);
   virtual int inst_bool (t_mem code, char bop, u8_t *acc, u8_t op, bool store);
   virtual int inst_ld8  (t_mem code,  u8_t *acc,  u8_t op);
   virtual int inst_ld16 (t_mem code, u16_t *acc, u16_t op);

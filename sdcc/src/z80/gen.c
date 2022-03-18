@@ -964,7 +964,7 @@ op8_cost (const asmop *op, int offset)
       cost2 (2, 7, 6, 4, 8, 4, 2);
       return;
     case AOP_STK:
-      if (true/*!IS_SM83 TODO: enable this condition! it currently causes a regtest failure, ie.e. exposes an exisiting codegen bug*/)
+      if (!IS_SM83)
         {
           cost2 (3, 19, 15, 9, 0, 10, 4);
           return;
@@ -2655,12 +2655,16 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
             }
           else
             {
+              if (pairId == PAIR_HL && (aopInReg (aop, offset, IYL_IDX) || aopInReg (aop, offset, IYH_IDX)))
+                UNIMPLEMENTED;
               if (!aopInReg (aop, offset, _pairs[pairId].l_idx))
                 {
                    if (!regalloc_dry_run)
                      emit2 ("ld %s, %s", _pairs[pairId].l, aopGet (aop, offset, FALSE));
                    regalloc_dry_run_cost += ld_cost (ASMOP_L, 0, aop, offset);
                 }
+              if (pairId == PAIR_HL && (aopInReg (aop, offset + 1, IYL_IDX) || aopInReg (aop, offset + 1, IYH_IDX)))
+                UNIMPLEMENTED;
               if (!aopInReg (aop, offset + 1, _pairs[pairId].h_idx))
                 {
                    if (!regalloc_dry_run)
@@ -3371,6 +3375,8 @@ aopPut (asmop *aop, const char *s, int offset)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
+  // emitDebug ("; cheapMove");
+
   if (aopInReg (to, to_offset, A_IDX))
     a_dead = true;
 
@@ -4539,6 +4545,12 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
                   _push (PAIR_HL);
                   pushed_hl = true;
                 }
+            }
+          else if (result->type == AOP_IY && !iy_dead && !aopInReg (source, soffset + i, A_IDX))
+            {
+              via_a = true;
+              if (!a_dead)
+                _push (PAIR_AF);
             }
           else if (!premoved_a && source->type == AOP_IY && result->type == AOP_REG && a_dead && i == 0 && i + 1 == size) // Using free a is cheaper than using iy.
             via_a = true;
@@ -8735,38 +8747,59 @@ no_mlt:
         }
     }
 
-  i = val;
-  for (int count = 0; count < 16; count++)
+  if (!add_in_hl) 
     {
-      if (count != 0 && active)
-        {
-          if (!add_in_hl)
-            emit2 ("add a, a");
-          else
-            emit2 ("add hl, hl");
-          regalloc_dry_run_cost += 1;
-        }
-      if (i & 0x8000u)
-        {
-          if (active)
-            {
-              if (!add_in_hl)
-                emit2 ("add a, %s", _pairs[pair].l);
-              else
-                emit2 ("add hl, %s", _pairs[pair].name);
-              regalloc_dry_run_cost += 1;
-            }
-          active = TRUE;
-        }
-      i <<= 1;
-    }
+      unsigned long long add, sub;
+      int topbit, nonzero;
 
-  spillPair (PAIR_HL);
+      wassert(!csdOfVal (&topbit, &nonzero, &add, &sub, IC_RIGHT (ic)->aop->aopu.aop_lit, 0xff));
+      
+      // If the leading digits of the cse are 1 0 -1 we can use 0 1 1 instead to reduce the number of shifts.
+      if (topbit >= 2 && (add & (1ull << topbit)) && (sub & (1ull << (topbit - 2))))
+        {
+          add = (add & ~(1u << topbit)) | (3u << (topbit - 2));
+          sub &= ~(1u << (topbit - 1));
+          topbit--;
+        }
+
+      for (int bit = topbit - 1; bit >= 0; bit--)
+        {
+          emit3 (A_ADD, ASMOP_A, ASMOP_A);
+          if ((add | sub) & (1ull << bit))
+            {
+              emit2 (add & (1ull << bit) ? "add a, %s" : "sub a, %s", _pairs[pair].l);
+              regalloc_dry_run_cost++;
+            }
+        }
+    }
+  else // Don't try to use CSD for hl, since subtraction there is more expensive than addition.
+    {
+      i = val;
+      for (int count = 0; count < 16; count++)
+        {
+          if (count != 0 && active)
+            {
+              emit2 ("add hl, hl");
+              regalloc_dry_run_cost++;
+            }
+          if (i & 0x8000u)
+            {
+              if (active)
+                {
+                  emit2 ("add hl, %s", _pairs[pair].name);
+                  regalloc_dry_run_cost++;
+                }
+              active = true;
+            }
+          i <<= 1;
+        }
+      spillPair (PAIR_HL);
+    }
 
   if (_G.stack.pushedDE)
     {
       _pop (PAIR_DE);
-      _G.stack.pushedDE = FALSE;
+      _G.stack.pushedDE = false;
     }
 
   genMove (IC_RESULT (ic)->aop, add_in_hl ? ASMOP_HL : ASMOP_A, true, add_in_hl || isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic), true);
@@ -10878,10 +10911,10 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
 
         if (aopInReg (right_aop, i, A_IDX) && left_aop->type != AOP_STL)
           {
-            if (requiresHL (right_aop) && right_aop->type != AOP_REG && !hl_free)
+            if (requiresHL (left_aop) && left_aop->type != AOP_REG && !hl_free)
               _push (PAIR_HL);
             emit3_o (A_XOR, ASMOP_A, 0, left_aop, i);
-            if (requiresHL (right_aop) && right_aop->type != AOP_REG && !hl_free)
+            if (requiresHL (left_aop) && left_aop->type != AOP_REG && !hl_free)
               _pop (PAIR_HL);
           }
         else if (right_aop->type == AOP_STL)
@@ -16111,7 +16144,7 @@ dryZ80Code (iCode * lic)
 #endif
 
 /*-------------------------------------------------------------------------------------*/
-/* genZ80Code - generate code for Z80 based controllers for a block of intructions     */
+/* genZ80Code - generate code for Z80 based controllers for a block of instructions    */
 /*-------------------------------------------------------------------------------------*/
 void
 genZ80Code (iCode * lic)

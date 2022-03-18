@@ -67,7 +67,7 @@ class cl_hw: public cl_guiobj
  public:
   int flags;
   class cl_uc *uc;
-  enum hw_cath cathegory;
+  enum hw_cath category;
   int id;
   const char *id_string;
   bool on;
@@ -77,13 +77,16 @@ class cl_hw: public cl_guiobj
   class cl_hw_io *io;
   int cache_run;
   unsigned int cache_time;
+ private:
+  bool active;
+  friend class cl_hw_operator;
  public:
   cl_hw(class cl_uc *auc, enum hw_cath cath, int aid, const char *aid_string);
   virtual ~cl_hw(void);
 
   virtual int init(void);
   virtual unsigned int cfg_size(void) { return 0; }
-  
+
   virtual void new_hw_adding(class cl_hw *new_hw);
   virtual void new_hw_added(class cl_hw *new_hw);
   virtual void added_to_uc(void) {}
@@ -143,7 +146,7 @@ class cl_partner_hw: public cl_base
 {
  protected:
   class cl_uc *uc;
-  enum hw_cath cathegory;
+  enum hw_cath category;
   int id;
   class cl_hw *partner;
  public:

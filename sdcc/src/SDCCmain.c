@@ -161,6 +161,7 @@ char buffer[PATH_MAX * 2];
 #define OPTION_DUMP_AST             "--dump-ast"
 #define OPTION_DUMP_I_CODE          "--dump-i-code"
 #define OPTION_DUMP_GRAPHS          "--dump-graphs"
+#define OPTION_INCLUDE              "--include"
 
 #define OPTION_SMALL_MODEL          "--model-small"
 #define OPTION_MEDIUM_MODEL         "--model-medium"
@@ -180,6 +181,7 @@ static const OPTION optionsTable[] = {
   {'U', NULL, NULL, "Undefine macro as in -Umacro"},
   {'M', NULL, NULL, "Preprocessor option"},
   {'W', NULL, NULL, "Pass through options to the pre-processor (p), assembler (a) or linker (l)"},
+  {0,   OPTION_INCLUDE, NULL, "Pre-include a file during pre-processing"},
   {'S', NULL, &noAssemble, "Compile only; do not assemble or link"},
   {'c', "--compile-only", &options.cc_only, "Compile and assemble, but do not link"},
   {'E', "--preprocessonly", &preProcOnly, "Preprocess only, do not compile"},
@@ -379,6 +381,12 @@ static PORT *_ports[] = {
 #endif
 #if !OPT_DISABLE_PDK15
   &pdk15_port,
+#endif
+#if !OPT_DISABLE_MOS6502
+  &mos6502_port,
+#endif
+#if !OPT_DISABLE_MOS65C02
+  &mos65c02_port,
 #endif
 };
 
@@ -1311,6 +1319,13 @@ parseCmdLine (int argc, char **argv)
               continue;
             }
 
+          if (strcmp (argv[i], OPTION_INCLUDE) == 0)
+            {
+              addSet (&preArgvSet, Safe_strdup ("-include"));
+              addSet (&preArgvSet, getStringArg (OPTION_INCLUDE, argv, &i, argc));
+              continue;
+            }
+
           werror (W_UNKNOWN_OPTION, argv[i]);
           continue;
         }
@@ -1706,7 +1721,7 @@ linkEdit (char **envp)
           exit (EXIT_FAILURE);
         }
 
-      if (TARGET_Z80_LIKE)
+      if (TARGET_Z80_LIKE||TARGET_MOS6502_LIKE)
         {
           fprintf (lnkfile, "-mjwx\n-%c %s\n", out_fmt, dbuf_c_str (&binFileName));
         }
@@ -1766,7 +1781,11 @@ linkEdit (char **envp)
              the best place for xdata */
           if (options.xdata_loc)
             {
-              WRITE_SEG_LOC (XDATA_NAME, options.xdata_loc);
+	      if(!TARGET_MOS6502_LIKE) {
+		WRITE_SEG_LOC (XDATA_NAME, options.xdata_loc);
+	      } else {
+		WRITE_SEG_LOC ("_DATA", options.xdata_loc);
+	      }
             }
 
           /* pdata/xstack segment start. If zero, the linker
@@ -1786,7 +1805,7 @@ linkEdit (char **envp)
           WRITE_SEG_LOC (BIT_NAME, 0);
 
           /* stack start */
-          if ((options.stack_loc) && (options.stack_loc < 0x100) && TARGET_MCS51_LIKE)
+          if ((options.stack_loc) && (options.stack_loc < 0x100) && TARGET_MCS51_LIKE && !TARGET_MOS6502_LIKE)
             {
               WRITE_SEG_LOC ("SSEG", options.stack_loc);
               /* with the disappearance of --no-pack-iram I don't think this is ever valid anymore */

@@ -248,6 +248,16 @@ cl_memory::dump(int smart, t_addr start, t_addr stop, int bitnr_high, int bitnr_
 
   while ((step>0)?(start < stop):(start > stop))
     {
+      if (smart && step > 0 && this == uc->rom && uc->inst_at(start))
+        {
+          uc->print_disass(start, con, true);
+          start += uc->inst_length(start);
+          dump_finished = start;
+          if (lines > 0 && --lines == 0)
+            break;
+          continue;
+        }
+
       int n;
 
       con->dd_color("dump_address");
@@ -442,7 +452,7 @@ cl_memory::dump(int smart, t_addr start, t_addr stop, int bitnr_high, int bitnr_
         {
           if (smart && n)
             {
-              if ((var = vi.first(this, start+n*step)))
+              if (uc->inst_at(start+n*step) || (var = vi.first(this, start+n*step)))
                 break;
             }
           con->dd_printf(" ");
@@ -470,6 +480,9 @@ cl_memory::dump(int smart, t_addr start, t_addr stop, int bitnr_high, int bitnr_
       if (lines > 0 && --lines == 0)
         break;
     }
+
+  if (dump_finished >= hva)
+    dump_finished= lva;
 
   return(dump_finished);
 }
@@ -520,7 +533,12 @@ cl_memory::dump_s(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
     }
   if (last != '\n')
     f->write_str("\n");
-  return dump_finished= a;
+
+  dump_finished= a;
+  if (dump_finished >= hva)
+    dump_finished= lva;
+
+  return dump_finished;
 }
 
 t_addr
@@ -545,7 +563,12 @@ cl_memory::dump_b(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
 	}
       d= read(++a);
     }
-  return dump_finished= a;
+
+  dump_finished= a;
+  if (dump_finished >= hva)
+    dump_finished= lva;
+
+  return dump_finished;
 }
 
 t_addr
@@ -614,7 +637,12 @@ cl_memory::dump_i(t_addr start, t_addr stop, int bpl, /*class cl_f *f*/class cl_
 	}
     }
   f->write_str(":00000001FF\r\n");
-  return dump_finished= a;
+
+  dump_finished= a;
+  if (dump_finished >= hva)
+    dump_finished= lva;
+
+  return dump_finished;
 }
 
 bool
@@ -757,13 +785,17 @@ cl_hw_operator::read(void)
 {
   t_mem d1= 0, d2= 0;
 
-  if (hw)
-    d1= hw->read(cell);
+  if (hw && !hw->active)
+    {
+      hw->active = true;
+      d1= hw->read(cell);
+      hw->active = false;
+    }
 
   if (next_operator)
     d2= next_operator->read();
 
-  return(hw?d1:d2);
+  return(hw && !hw->active ? d1 : d2);
 }
 
 t_mem
@@ -772,9 +804,13 @@ cl_hw_operator::read(enum hw_cath skip)
   t_mem d1= 0, d2= d1;
   bool use= false;
 
-  if (hw &&
-      hw->cathegory != skip)
-    use= true, d1= hw->read(cell);
+  if (hw && hw->category != skip && !hw->active)
+    {
+      use= true;
+      hw->active= true;
+      d1= hw->read(cell);
+      hw->active= false;
+    }
 
   if (next_operator)
     d2= next_operator->read();
@@ -789,8 +825,13 @@ cl_hw_operator::read(enum hw_cath skip)
 t_mem
 cl_hw_operator::write(t_mem val)
 {
-  if (hw)
-    hw->write(cell, &val);
+  if (hw && !hw->active)
+    {
+      hw->active= true;
+      hw->write(cell, &val);
+      hw->active= false;
+    }
+
   if (next_operator)
     val= next_operator->write(val);
   return val;

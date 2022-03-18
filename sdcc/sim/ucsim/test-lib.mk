@@ -38,7 +38,7 @@ ELIDE += -e 's/^(ucsim version ).*/\1[ELIDED]/'
 ELIDE += -e 's/^(Loading from ).*/\1[ELIDED]/'
 ELIDE += -e 's/( words read from ).*/\1[ELIDED]/'
 ELIDE += -e 's/( File: ).*/\1[ELIDED]/'
-ELIDE += -e 's/^(Simulated )[[:digit:]]\+( ticks )/\1[ELIDED]\2/'
+ELIDE += -e 's/^(Simulated [[:digit:]]+ ticks ).*/\1[ELIDED]/'
 ELIDE += -e 's/^(Host usage: ).*/\1[ELIDED]/'
 ELIDE += -e 's/([[:upper:]][[:alpha:]]{2} [[:upper:]][[:alpha:]]{2} .[[:digit:]] [[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2} [[:digit:]]{4})/[ELIDED]/'
 
@@ -51,7 +51,7 @@ ELIDE += -e 's/([[:upper:]][[:alpha:]]{2} [[:upper:]][[:alpha:]]{2} .[[:digit:]]
 # If there are no %.cmd prequisites and -e does not appear anywhere
 # in the sim args "-e run" is passed to the simulator.
 define run-sim =
-	-$(SIM) -R 0 $(SIM_ARGS) $(1) \
+	-$(SIM) -q -R 0 $(SIM_ARGS) $(1) \
 		$(if $(filter %.cmd, $+), \
 			$(foreach file, $(filter %.cmd, $+), -e 'exec "$(file)"'), \
 			$(if $(findstring -e, $(1)), , -g)) \

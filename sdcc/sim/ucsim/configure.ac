@@ -162,6 +162,13 @@ if test $enable_m6800_port  != "no"; then
 fi,
 enable_m6800_port="yes")
 
+AC_ARG_ENABLE(m68hc11-port,
+[  --disable-m68hc11-port  do not compile simulator for m68hc11],
+if test $enable_m68hc11_port  != "no"; then
+    enable_m68hc11_port="yes"
+fi,
+enable_m68hc11_port="yes")
+
 AC_ARG_ENABLE(m68hc12-port,
 [  --enable-m68hc12-port   compile simulator for m68hc12],
 if test $enable_m68hc12_port  != "no"; then
@@ -169,12 +176,12 @@ if test $enable_m68hc12_port  != "no"; then
 fi,
 enable_m68hc12_port="no")
 
-AC_ARG_ENABLE(mcs6502-port,
-[  --disable-mcs6502-port  do not compile simulator for mcs6502],
-if test $enable_mcs6502_port  != "no"; then
-    enable_mcs6502_port="yes"
+AC_ARG_ENABLE(mos6502-port,
+[  --disable-mos6502-port  do not compile simulator for mos6502],
+if test $enable_mos6502_port  != "no"; then
+    enable_mos6502_port="yes"
 fi,
-enable_mcs6502_port="yes")
+enable_mos6502_port="yes")
 AC_ARG_ENABLE(rxk-port,
 [  --disable-rxk-port      do not compile simulator for Rabbit rXk],
 if test $enable_rxk_port  != "no"; then
@@ -213,8 +220,9 @@ AC_SUBST(enable_pdk_port)
 AC_SUBST(enable_p1516_port)
 AC_SUBST(enable_m6809_port)
 AC_SUBST(enable_m6800_port)
+AC_SUBST(enable_m68hc11_port)
 AC_SUBST(enable_m68hc12_port)
-AC_SUBST(enable_mcs6502_port)
+AC_SUBST(enable_mos6502_port)
 AC_SUBST(enable_rxk_port)
 AC_SUBST(enable_pblaze_port)
 AC_SUBST(enable_serio)
@@ -269,7 +277,8 @@ AC_CHECK_HEADERS(termios.h)
 AC_CHECK_HEADERS(inttypes.h)
 AC_CHECK_HEADERS(cstdint.h)
 AC_CHECK_HEADERS(stdint.h)
-
+AC_CHECK_HEADERS(sys/wait.h)
+		     
 AC_CHECK_HEADER(curses.h,
   AC_DEFINE(HAVE_CURSES_H, 1, [XXX])
   curses_h_ok=yes,
@@ -412,6 +421,8 @@ AC_SUBST(panel_ok)
 AC_SUBST(curses_ok)
 AC_SUBST(CURSES_LIBS)
 
+AC_FUNC_FORK
+AC_CHECK_FUNCS(_exit dup2 dup3 pipe pipe2 waitpid)
 AC_CHECK_FUNCS(vasprintf)
 dnl AC_CHECK_FUNCS(strdup)
 dnl AC_CHECK_FUNCS(getline)
@@ -558,20 +569,10 @@ if test "$ac_cv_cxx_compiler_gnu" = "yes"; then
   # This is the first time when CFLAGS are set/modified!!
 
   sdcc_IS_VALID_OPTION(-ggdb)
-  sdcc_IS_VALID_OPTION(-gstabs)
-  if test "$sdcc_cv_cxx_gstabs" = "yes"; then
-    gopt="-gstabs+ -g3"
-  elif test "$sdcc_cv_cxx_ggdb" = "yes"; then
-    gopt="-ggdb -g3"
-  else
-    gopt="-g"
+  if test "$sdcc_cv_cxx_ggdb" = "yes"; then
+      CXXFLAGS="$CXXFLAGS -ggdb"
   fi
-  if test "$CXXFLAGS"x = x ;then
-    CXXFLAGS="$gopt"
-  else
-    CXXFLAGS="$CXXFLAGS $gopt"
-  fi
-
+dnl  sdcc_IS_VALID_OPTION(-gstabs)
   sdcc_IS_VALID_OPTION(-pipe)
   if test "$sdcc_cv_cxx_pipe" = "yes"; then
     CXXFLAGS="$CXXFLAGS -pipe"
@@ -630,7 +631,6 @@ else
     else
         : # FIXME
     fi
-#echo
 fi
 
 type_name()
@@ -755,8 +755,9 @@ avr.src/Makefile     avr.src/test/Makefile
 m68hc08.src/Makefile m68hc08.src/test/Makefile
 m6809.src/Makefile   m6809.src/test/Makefile
 m6800.src/Makefile   m6800.src/test/Makefile
+m68hc11.src/Makefile m68hc11.src/test/Makefile
 m68hc12.src/Makefile m68hc12.src/test/Makefile
-mcs6502.src/Makefile mcs6502.src/test/Makefile
+mos6502.src/Makefile mos6502.src/test/Makefile
 rxk.src/Makefile     rxk.src/test/Makefile
 pblaze.src/Makefile  pblaze.src/test/Makefile
 p1516.src/Makefile   p1516.src/test/Makefile

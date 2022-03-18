@@ -120,7 +120,7 @@ cl_flash::tick(int cycles)
 {
   if (state & fs_busy)
     {
-      double now= uc->get_rtime();
+      double now= uc->ticks->get_rtime();
       double elapsed= (now - start_time) * 10e6;
 
       if ((state == fs_pre_erase) &&
@@ -495,7 +495,7 @@ cl_flash::start_program(enum stm8_flash_state start_state)
 {
   uc->sim->app->debug("FLASH start prg %d\n", start_state);
   state= start_state;
-  start_time= uc->get_rtime();
+  start_time= uc->ticks->get_rtime();
 }
 
 const char *
@@ -566,12 +566,12 @@ cl_saf_flash::registration(void)
 					cr1r,0x02,
 					iapsr,0x04,
 					0x8008+24*4, false, false,
-					chars("end of flash programming"), 20*20+0));
+					"FLASH_EOP", 20*20+0));
   uc->it_sources->add(is= new cl_it_src(uc, 24,
 					cr1r,0x02,
 					iapsr,0x01,
 					0x8008+24*4, false, false,
-					chars("write attempted to protected page"), 20*20+1));
+					"FLASH_RO", 20*20+1));
   is->init();
 }
 
@@ -599,12 +599,12 @@ cl_l_flash::registration(void)
 					cr1r,0x02,
 					iapsr,0x04,
 					0x8008+1*4, false, false,
-					chars("end of flash programming"), 20*20+0));
+					"FLASH_EOP", 20*20+0));
   uc->it_sources->add(is= new cl_it_src(uc, 1,
 					cr1r,0x02,
 					iapsr,0x01,
 					0x8008+1*4, false, false,
-					chars("write attempted to protected page"), 20*20+1));
+					"FLASH_RO", 20*20+1));
   is->init();
 }
 

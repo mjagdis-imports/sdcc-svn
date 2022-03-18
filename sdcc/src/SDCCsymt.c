@@ -839,9 +839,11 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   if (FUNC_ISRAISONANCE (dest) && (FUNC_ISIAR (src) || FUNC_ISCOSMIC (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
     FUNC_ISIAR (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISCOSMIC (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
     FUNC_ISCOSMIC (dest) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_SDCCCALL (src) >= 0 || FUNC_ISZ88DK_CALLEE (src)) ||
-    FUNC_SDCCCALL (dest) >= 0 && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_ISCOSMIC (src)) || // __sdcccall can be combined with __z88dk_callee.
+    FUNC_SDCCCALL (dest) >= 0 && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (src) || FUNC_ISCOSMIC (src) || FUNC_SDCCCALL (src) >= 0 && FUNC_SDCCCALL (dest) != FUNC_SDCCCALL (src)) || // __sdcccall can be combined with __z88dk_callee.
     FUNC_ISZ88DK_CALLEE (src) && (FUNC_ISRAISONANCE (src) || FUNC_ISIAR (dest) || FUNC_ISCOSMIC (dest)))
     werror (E_MULTIPLE_CALLINGCONVENTIONS, name);
+  if (FUNC_SDCCCALL (dest) == -1)
+    FUNC_SDCCCALL (dest) = FUNC_SDCCCALL (src);
   FUNC_ISSMALLC (dest) |= FUNC_ISSMALLC (src);
   FUNC_ISRAISONANCE (dest) |= FUNC_ISRAISONANCE (src);
   FUNC_ISIAR (dest) |= FUNC_ISIAR (src);
@@ -2198,7 +2200,15 @@ leaveBlockScope (int block)
         {
           if (chain->block == block)
             {
-              ((symbol *)chain->sym)->isinscope = 0;
+              symbol *sym = (symbol *)chain->sym;
+              
+              /* Temporary fix for bug #3289 - leave enums in scope. */
+              /* This is also buggy but compatible with 4.1.0 and    */
+              /* earlier behavior and less likely to trigger errors. */
+              if (sym->etype && SPEC_ENUM(sym->etype))
+                continue;
+              /* Everything else, mark as out of scope. */
+              sym->isinscope = 0;
             }
         }
     }
@@ -3679,7 +3689,7 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               if (IFFUNC_ISZ88DK_FASTCALL (type))
                 dbuf_append_str (dbuf, " __z88dk_fastcall");
               if (FUNC_SDCCCALL (type) >= 0 && FUNC_SDCCCALL (type) != options.sdcccall)
-                dbuf_append_str (dbuf, FUNC_SDCCCALL (type) ? " __sdcccall(0)" : " __sdcccall(1)");
+                dbuf_printf (dbuf, " __sdcccall(%d)", FUNC_SDCCCALL (type));
               for (unsigned char i = 0; i < 9; i++)
                   if (type->funcAttrs.preserved_regs[i])
                   {
@@ -4511,7 +4521,7 @@ initCSupport (void)
           dbuf_init (&dbuf, 128);
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
-            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
+            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE ) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
                         options.intlong_rent);
           dbuf_destroy (&dbuf);
         }

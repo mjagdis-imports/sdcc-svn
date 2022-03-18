@@ -331,9 +331,9 @@ dwSizeofSLEB128 (int value)
 static void
 dwWriteString (const char * string, const char * comment)
 {
-  /* FIXME: need to safely handle nonalphanumeric data in string */
-  
-  tfprintf (dwarf2FilePtr, "\t!ascii\n", string);
+  char * escaped = string_escape (string);
+  tfprintf (dwarf2FilePtr, "\t!ascii\n", escaped);
+  Safe_free (escaped);
   dwWriteByte (NULL, 0, comment);
 }
 
@@ -1721,7 +1721,7 @@ dwWriteLineNumber (dwline * lp)
               /* ok, we can use a "special" opcode */
               
               /* If the deltaAddr value was symbolic, it can't be part */
-              /* of the "special" opcode, so encode it seperately      */
+              /* of the "special" opcode, so encode it separately      */
               if (!deltaAddrValid)
                 {
                   dwWriteByte (NULL, DW_LNS_advance_pc, NULL);

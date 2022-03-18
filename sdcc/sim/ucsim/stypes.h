@@ -96,12 +96,12 @@ enum error_type {
   err_warning  = 0x04
 };
 
-// table of dissassembled instructions
+// table of disassembled instructions
 struct dis_entry
 {
   /*uint64_t*/long long code, mask; // max 8 byte of code
   char  branch;
-  uchar length;
+  i8_t length;
   const char *mnemonic;
   bool is_call;
   uchar ticks;
@@ -240,6 +240,20 @@ enum cpu_type {
   CPU_ST7       = 0x0001,
   CPU_ALL_ST7   = (CPU_ST7),
 
+  // MOS6502 and variants
+  CPU_6502	= 0x0001,	// NMOS
+  CPU_6502C	= 0x0002,	// 6502 + HALT pin
+  CPU_6510	= 0x0004,	// 6502 + integrated port
+  CPU_8500	= 0x0008,	// 6510 CMOS
+  CPU_8502	= 0x0010,	// 8500 2 MHz
+  CPU_7501	= 0x0020,	// 6502 HMOS-1
+  CPU_8501	= 0x0040,	// 6502 HMOS-2
+
+  // 6502 based, but not 100% compatible
+  CPU_65C02	= 0x0100,	// extended inst.set
+  CPU_65SC02	= 0x0200,      	// 65C02 variant, different inst.set
+  CPU_65CE02	= 0x0400,	// extension of 65C02
+  
   // technology
   CPU_CMOS	= 0x0001,
   CPU_HMOS	= 0x0002,
@@ -298,7 +312,7 @@ enum inst_result {
   resGO		= 0,	/* OK, go on */
   resWDTRESET	= 1,	/* Reseted by WDT */
   resINTERRUPT	= 2,	/* Interrupt accepted */
-  resSTOP	= 100,	/* Stop if result greather then this */
+  resSTOP	= 100,	/* Stop if result greater then this */
   resHALT	= 101,	/* Serious error, halt CPU */
   resINV_ADDR	= 102,	/* Invalid indirect address */
   resSTACK_OV	= 103,	/* Stack overflow */
@@ -311,7 +325,7 @@ enum inst_result {
   resERROR	= 108,	/* Error happened during instruction exec */
   resSTEP	= 109,	/* Step command done, no more exex needed */
   resSIMIF	= 110,	/* Stopped by simulated prog itself through sim interface */
-  resNOT_DONE	= 111,	/* Intruction has not simulated */
+  resNOT_DONE	= 111,	/* Instruction has not simulated */
   resEVENTBREAK = 112,  /* Event breakpoint */
   resSELFJUMP	= 113,  /* Jump to itself */
 };
@@ -349,7 +363,7 @@ enum brk_event
 
 /* Interrupt levels */
 enum intr_levels {
-//IT_NO		= -1, /* not in interroupt service */
+//IT_NO		= -1, /* not in interrupt service */
   IT_LOW	= 1, /* low level interrupt service */
   IT_HIGH	= 2 /* service of high priority interrupt */
 };

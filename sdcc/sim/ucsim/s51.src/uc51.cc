@@ -876,7 +876,7 @@ cl_51core::make_address_spaces(void)
 void
 cl_51core::make_chips(void)
 {
-  rom_chip= new cl_chip8("rom_chip", 0x10000, 8, 0/*, 0xff*/);
+  rom_chip= new cl_chip8("rom_chip", 0x10000, 8, 0xff);
   rom_chip->init();
   memchips->add(rom_chip);
   
@@ -1187,7 +1187,8 @@ cl_51core::disass(t_addr addr)
 	    case 'r': // rel8 address at 2nd byte
 	      operand= (u16_t)(addr+2 + (i8_t)rom->get(addr+1));
 	      temp.appendf(rom->addr_format, operand);
-      break;
+	      addr_name(operand, rom, &temp);
+	      break;
 	    case 'R': // rel8 address at 3rd byte
 	      operand= (u16_t)(addr+3 + (i8_t)rom->get(addr+2));
 	      temp.appendf(rom->addr_format, operand);
@@ -1571,7 +1572,7 @@ cl_51core::clear_sfr(void)
 
 
 /*
- * Analyzing code and settig up instruction map
+ * Analyzing code and setting up instruction map
  */
 
 void
@@ -1593,46 +1594,41 @@ cl_51core::analyze(t_addr addr)
 	  a= (addr & 0xf800)|
 	    ((rom->get(addr+1)&0x07)*256+
 	     rom->get(addr+2));
-	  analyze(a);
-	  addr= addr+tabl->length;
+	  analyze_jump(addr, a, 's');
 	  break;
 	case 'A': // ajmp
 	  a= (addr & 0xf800)|
 	    (((rom->get(addr)>>5) & 0x07)*256 + rom->get(addr+1));
-	  addr= a;
-	  break;
+	  analyze_jump(addr, a, 'j');
+	  return;
 	case 'l': // lcall
 	  a= rom->get(addr+1)*256 + rom->get(addr+2);
-	  analyze(a);
-	  addr= addr+tabl->length;
+	  analyze_jump(addr, a, 's');
 	  break;
 	case 'L': // ljmp
 	  a= rom->get(addr+1)*256 + rom->get(addr+2);
-	  addr= a;
-	  break;
+	  analyze_jump(addr, a, 'j');
+	  return;
 	case 'r': // reljmp (2nd byte)
 	  a= rom->validate_address(addr+2+(signed char)(rom->get(addr+1)));
-	  analyze(a);
-	  addr= addr+tabl->length;
+	  analyze_jump(addr, a, 'j');
 	  break;
 	case 'R': // reljmp (3rd byte)
-	  analyze(rom->validate_address(addr+3+(signed char)(rom->get(addr+2))));
-	  addr= addr+tabl->length;
+	  a= rom->validate_address(addr+3+(signed char)(rom->get(addr+2)));
+	  analyze_jump(addr, a, 'j');
 	  break;
 	case 's': // sjmp
 	  {
-	    signed char target;
-	    target= rom->get(addr+1);
-	    addr+= 2;
-	    addr= rom->validate_address(addr+target);
-	    break;
+	    a= rom->validate_address(addr+(signed char)(rom->get(addr+1)));
+	    analyze_jump(addr, a, 'j');
+	    return;
 	  }
 	case '_':
 	  return;
 	default:
-	  addr= rom->validate_address(addr+tabl->length);
-	  break;
+	  return;
 	}
+      addr= rom->validate_address(addr+tabl->length);
       code= rom->get(addr);
       tabl= &(dis_tbl()[code]);
     }
@@ -1736,11 +1732,11 @@ cl_51core::high_movxri(void)
  * This is an endless loop if requested number of steps is negative.
  * In this case execution is stopped if an instruction results other
  * status than GO. Execution can be stopped if `cmd_in' is not NULL
- * and there is input available on that file. It is usefull if the
+ * and there is input available on that file. It is useful if the
  * command console is on a terminal. If input is available then a
  * complete line is read and dropped out because input is buffered
  * (inp_avail will be TRUE if ENTER is pressed) and it can confuse
- * command interepter.
+ * command interpreter.
  */
 //static class cl_console *c= NULL;
 int
@@ -1760,6 +1756,8 @@ cl_51core::do_inst(int step)
 	  pre_inst();
 	  PCsave= PC;
 	  result= exec_inst();
+	  if (result == resGO && !inst_at(PCsave))
+            analyze(PCsave);
 	  post_inst();
 	}
       else
@@ -1847,7 +1845,7 @@ cl_51core::do_interrupt(void)
 	  is->clear();
 	  sim->app->get_commander()->
 	    debug("%g sec (%d clks): Accepting interrupt `%s' PC= 0x%06x\n",
-			  get_rtime(), ticks->ticks, object_name(is), PC);
+			  ticks->get_rtime(), ticks->get_ticks(), object_name(is), PC);
 	  IL= new it_level(pr, is->addr, PC, is);
 	  return(accept_it(IL));
 	}
@@ -1894,7 +1892,7 @@ cl_51core::it_enabled(void)
 
 
 /* 
- * Check SP validity after stack (write) poeration
+ * Check SP validity after stack (write) operation
  */
 
 void
@@ -1929,7 +1927,7 @@ cl_51core::idle_pd(void)
       if (state != stIDLE)
 	sim->app->get_commander()->
 	  debug("%g sec (%d clks): CPU in Idle mode (PC=0x%x, PCON=0x%x)\n",
-		get_rtime(), ticks->ticks, PC, pcon);
+		ticks->get_rtime(), ticks->get_ticks(), PC, pcon);
       state= stIDLE;
       //was_reti= 1;
     }
@@ -1938,7 +1936,7 @@ cl_51core::idle_pd(void)
       if (state != stPD)
 	sim->app->get_commander()->
 	  debug("%g sec (%d clks): CPU in PowerDown mode\n",
-			get_rtime(), ticks->ticks);
+			ticks->get_rtime(), ticks->get_ticks());
       state= stPD;
     }
   return(resGO);

@@ -2472,7 +2472,7 @@ glue (void)
   if (overlay)
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; overlayable items in%s ram \n", mcs51_like ? " internal" : "");
+      fprintf (asmFile, "; overlayable items in%s ram\n", mcs51_like ? " internal" : "");
       fprintf (asmFile, "%s", iComments2);
       dbuf_write_and_destroy (&ovrBuf, asmFile);
     }
@@ -2481,7 +2481,7 @@ glue (void)
   if (mainf && IFFUNC_HASBODY (mainf->type))
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; Stack segment in internal ram \n");
+      fprintf (asmFile, "; Stack segment in internal ram\n");
       fprintf (asmFile, "%s", iComments2);
       fprintf (asmFile, "\t.area\tSSEG\n" "__start__stack:\n\t.ds\t1\n\n");
     }
@@ -2529,7 +2529,7 @@ glue (void)
   if (mainf && IFFUNC_HASBODY (mainf->type) && options.useXstack)
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; external stack \n");
+      fprintf (asmFile, "; external stack\n");
       fprintf (asmFile, "%s", iComments2);
       fprintf (asmFile, "\t.area XSTK (PAG,XDATA)\n" "__start__xstack:\n\t.ds\t1\n\n");
     }
@@ -2571,7 +2571,7 @@ glue (void)
   if (mainf && IFFUNC_HASBODY (mainf->type))
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; interrupt vector \n");
+      fprintf (asmFile, "; interrupt vector\n");
       fprintf (asmFile, "%s", iComments2);
       dbuf_write_and_destroy (&vBuf, asmFile);
     }

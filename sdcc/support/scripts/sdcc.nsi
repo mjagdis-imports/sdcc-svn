@@ -386,6 +386,7 @@ ${Section} "SDCC application files" SEC01
   File "${SDCC_ROOT}\bin\sdaspdk14.exe"
   File "${SDCC_ROOT}\bin\sdaspdk15.exe"
   File "${SDCC_ROOT}\bin\sdastlcs90.exe"
+  File "${SDCC_ROOT}\bin\sdas6500.exe"
   File "${SDCC_ROOT}\bin\sdld.exe"
   File "${SDCC_ROOT}\bin\sdldgb.exe"
   File "${SDCC_ROOT}\bin\sdld6808.exe"
@@ -655,6 +656,10 @@ ${Section} "SDCC library sources" SEC25
   File "${DEV_ROOT}\lib\src\tlcs90\*.s"
 #  File "${DEV_ROOT}\lib\src\tlcs90\Makefile"
 
+  SetOutPath "$INSTDIR\lib\src\mos6502"
+  File "${DEV_ROOT}\lib\src\mos6502\*.s"
+#  File "${DEV_ROOT}\lib\src\mos6502\Makefile"
+
   SetOutPath "$INSTDIR\lib\src\mcs51"
   File "${DEV_ROOT}\lib\src\mcs51\*.asm"
 #  File "${DEV_ROOT}\lib\src\mcs51\Makefile"
@@ -868,6 +873,12 @@ ${Section} "SDCC Rabbit 2000A library" SEC33
   File "${DEV_ROOT}\lib\r2ka\*.*"
 ${SectionEnd}
 
+${Section} "SDCC MOS 6502 library" SEC34
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\mos6502"
+  File "${DEV_ROOT}\lib\mos6502\*.*"
+${SectionEnd}
+
 ;--------------------------------
 ;Descriptions
 
@@ -904,6 +915,8 @@ LangString DESC_SEC29 ${LANG_ENGLISH} "SDCC PDK14 library"
 LangString DESC_SEC30 ${LANG_ENGLISH} "SDCC PDK15 library"
 LangString DESC_SEC31 ${LANG_ENGLISH} "SDCC PDK15 stack-auto library"
 LangString DESC_SEC32 ${LANG_ENGLISH} "SDCC Z80N library"
+LangString DESC_SEC33 ${LANG_ENGLISH} "SDCC Rabbit 2000A library"
+LangString DESC_SEC34 ${LANG_ENGLISH} "SDCC MOS 6502 library"
 
 ;Assign language strings to sections
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -941,6 +954,8 @@ LangString DESC_SEC32 ${LANG_ENGLISH} "SDCC Z80N library"
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC20} $(DESC_SEC30)
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC31} $(DESC_SEC31)
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC32} $(DESC_SEC32)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC33} $(DESC_SEC33)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC34} $(DESC_SEC34)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 ;--------------------------------
 
@@ -1018,6 +1033,8 @@ ${Section} Uninstall SECUNINSTALL
 
   RMDir "$SMPROGRAMS\$MUI_STARTMENUPAGE_VARIABLE"
 
+  Delete "$INSTDIR\lib\src\huge\Makefile"
+
   Delete "$INSTDIR\lib\src\large\Makefile"
 
   Delete "$INSTDIR\lib\src\medium\Makefile"
@@ -1058,7 +1075,7 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\src\sm83\Makefile"
 
   Delete "$INSTDIR\lib\src\r2k\*.s"
-  
+
   Delete "$INSTDIR\lib\src\r2ka\*.s"
 
   Delete "$INSTDIR\lib\src\r3ka\*.s"
@@ -1095,7 +1112,11 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\src\tlcs90\tlcs90.lib"
   Delete "$INSTDIR\lib\src\tlcs90\README"
   Delete "$INSTDIR\lib\src\tlcs90\Makefile"
-  
+
+  Delete "$INSTDIR\lib\src\mos6502\*.s"
+  Delete "$INSTDIR\lib\src\mos6502\mos6502.lib"
+  Delete "$INSTDIR\lib\src\mos6502\Makefile"
+
   Delete "$INSTDIR\lib\src\z80n\*.s"
   Delete "$INSTDIR\lib\src\z80n\z80n.lib"
   Delete "$INSTDIR\lib\src\z80n\README"
@@ -1131,7 +1152,7 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\r2ka\*.rel"
   Delete "$INSTDIR\lib\r2ka\*.lib"
-  
+
   Delete "$INSTDIR\lib\r3ka\*.rel"
   Delete "$INSTDIR\lib\r3ka\*.lib"
 
@@ -1143,6 +1164,8 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\medium\*.lib"
 
   Delete "$INSTDIR\lib\large\*.lib"
+
+  Delete "$INSTDIR\lib\huge\*.lib"
 
   Delete "$INSTDIR\lib\small-stack-auto\*.lib"
   Delete "$INSTDIR\lib\large-stack-auto\*.lib"
@@ -1164,7 +1187,10 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\tlcs90\*.rel"
   Delete "$INSTDIR\lib\tlcs90\*.lib"
-  
+
+  Delete "$INSTDIR\lib\mos6502\*.rel"
+  Delete "$INSTDIR\lib\mos6502\*.lib"
+
   Delete "$INSTDIR\lib\z80n\*.rel"
   Delete "$INSTDIR\lib\z80n\*.lib"
 
@@ -1208,6 +1234,7 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\bin\sdaspdk14.exe"
   Delete "$INSTDIR\bin\sdaspdk15.exe"
   Delete "$INSTDIR\bin\sdastlcs90.exe"
+  Delete "$INSTDIR\bin\sdas6500.exe"
   Delete "$INSTDIR\bin\sdld.exe"
   Delete "$INSTDIR\bin\sdldgb.exe"
   Delete "$INSTDIR\bin\sdld6808.exe"
@@ -1252,6 +1279,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\small"
   RMDir "$INSTDIR\lib\src\medium"
   RMDir "$INSTDIR\lib\src\large"
+  RMDir "$INSTDIR\lib\src\huge"
   RMDir "$INSTDIR\lib\src\mcs51"
   RMDir "$INSTDIR\lib\src\z80"
   RMDir "$INSTDIR\lib\src\z180"
@@ -1272,6 +1300,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\pdk15"
   RMDir "$INSTDIR\lib\src\pdk15-stack-auto"
   RMDir "$INSTDIR\lib\src\tlcs90"
+  RMDir "$INSTDIR\lib\src\mos6502"
   RMDir "$INSTDIR\lib\src\z80n"
   RMDir "$INSTDIR\lib\src"
   RMDir "$INSTDIR\non-free\lib\src"
@@ -1289,6 +1318,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\small"
   RMDir "$INSTDIR\lib\medium"
   RMDir "$INSTDIR\lib\large"
+  RMDir "$INSTDIR\lib\huge"
   RMDir "$INSTDIR\lib\small-stack-auto"
   RMDir "$INSTDIR\lib\large-stack-auto"
   RMDir "$INSTDIR\lib\sm83"
@@ -1303,6 +1333,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\pdk15"
   RMDir "$INSTDIR\lib\pdk15-stack-auto"
   RMDir "$INSTDIR\lib\tlcs90"
+  RMDir "$INSTDIR\lib\mos6502"
   RMDir "$INSTDIR\lib\z80n"
   RMDir "$INSTDIR\lib"
   RMDir "$INSTDIR\non-free\lib"

@@ -48,7 +48,7 @@ cl_hw::cl_hw(class cl_uc *auc, enum hw_cath cath, int aid, const char *aid_strin
 {
   flags= HWF_INSIDE;
   uc= auc;
-  cathegory= cath;
+  category= cath;
   id= aid;
   if (aid_string &&
       *aid_string)
@@ -63,6 +63,7 @@ cl_hw::cl_hw(class cl_uc *auc, enum hw_cath cath, int aid, const char *aid_strin
   free(s);
   cfg= 0;
   io= 0;
+  active= false;
 }
 
 cl_hw::~cl_hw(void)
@@ -235,7 +236,7 @@ cl_hw::register_cell(class cl_address_space *mem, t_addr addr,
       if (vname.nempty())
 	{
 	  class cl_cvar *v;
-	  uc->vars->add(v= new cl_cvar(vname, c, vdesc));
+	  uc->vars->add(v= new cl_var(vname, mem, addr, vdesc, c->get_width() - 1, 0));
 	  v->init();
 	}
     }
@@ -452,7 +453,7 @@ cl_hw::draw_state_time(bool force)
 	io->dd_cprintf("ui_stop", "%s", "Stop");
       cache_run= n;
     }
-  unsigned int t= (unsigned int)(uc->get_rtime()) * 1000;
+  unsigned int t= (unsigned int)(uc->ticks->get_rtime()) * 1000;
   if ((t != cache_time) ||
       force)
     {
@@ -624,9 +625,9 @@ cl_partner_hw::cl_partner_hw(class cl_uc *auc, enum hw_cath cath, int aid):
   cl_base()
 {
   uc= auc;
-  cathegory= cath;
+  category= cath;
   id= aid;
-  partner= uc->get_hw(cathegory, id, 0);
+  partner= uc->get_hw(category, id, 0);
 }
 
 class cl_hw *
@@ -638,7 +639,7 @@ cl_partner_hw::get_partner(void)
 void
 cl_partner_hw::refresh(void)
 {
-  class cl_hw *hw= uc->get_hw(cathegory, id, 0);
+  class cl_hw *hw= uc->get_hw(category, id, 0);
 
   if (!hw)
     return;
@@ -661,7 +662,7 @@ cl_partner_hw::refresh(class cl_hw *new_hw)
 {
   if (!new_hw)
     return;
-  if (cathegory == new_hw->cathegory &&
+  if (category == new_hw->category &&
       id == new_hw->id)
     {
       if (partner)

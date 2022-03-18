@@ -1499,7 +1499,7 @@ createIval (ast * sym, sym_link * type, initList * ilist, ast * wid, ast * rootV
 }
 
 /*-----------------------------------------------------------------*/
-/* initAggregates - initialises aggregate variables with initv     */
+/* initAggregates - initializes aggregate variables with initv     */
 /*-----------------------------------------------------------------*/
 ast *
 initAggregates (symbol *sym, initList *ival, ast *wid)
@@ -1543,7 +1543,7 @@ gatherAutoInit (symbol * autoChain)
       /* if this is a static variable & has an */
       /* initial value the code needs to be lifted */
       /* here to the main portion since they can be */
-      /* initialised only once at the start    */
+      /* initialized only once at the start    */
       if (IS_STATIC (sym->etype) && sym->ival && SPEC_SCLS (sym->etype) != S_CODE)
         {
           symbol *newSym;
@@ -2875,8 +2875,31 @@ gatherImplicitVariables (ast * tree, ast * block)
       tree->opval.val->etype = tree->opval.val->sym->etype;
     }
 
-  gatherImplicitVariables (tree->left, block);
-  gatherImplicitVariables (tree->right, block);
+  /* If entering a block with symbols defined, mark the symbols in-scope */
+  /* before continuing down the tree, and mark them out-of-scope again   */
+  /* on the way back up */ 
+  if (tree->type == EX_OP && tree->opval.op == BLOCK && tree->values.sym)
+    {
+      symbol * sym = tree->values.sym;
+      while (sym)
+        {
+          sym->isinscope = 1;
+          sym = sym->next;
+        }
+      gatherImplicitVariables (tree->left, block);
+      gatherImplicitVariables (tree->right, block);
+      sym = tree->values.sym;
+      while (sym)
+        {
+          sym->isinscope = 0;
+          sym = sym->next;
+        }
+    }
+  else
+    {
+      gatherImplicitVariables (tree->left, block);
+      gatherImplicitVariables (tree->right, block);
+    }
 }
 
 /*-----------------------------------------------------------------*/
