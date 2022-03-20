@@ -22,7 +22,7 @@ volatile char c = 1;
 void testBitIntArith(void)
 {
 #if __SDCC_BITINT_MAXWIDTH >= {width} // TODO: When we can regression-test in --std-c23 mode, use the standard macro from limits.h instead!
-#if {width} <= 40 || !defined (__SDCC_pdk14) // Lack of memory
+#if ({width} <= 40 || !defined (__SDCC_pdk14)) && ({width} <= 48 || !defined (__SDCC_pdk15)) // Lack of memory
 
 	a = -1, b = 1;
 	ASSERT(a + b == 0);
@@ -71,16 +71,23 @@ void testBitIntArith(void)
 	ASSERT(ua % ub == (ubitinttype)(23) % (ubitinttype)(-42));
 	ASSERT(ua / ub == (ubitinttype)(23) / (ubitinttype)(-42));
 
+#if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) // Bug #3355
 	ASSERT((a < b) == ((bitinttype)(23) < (bitinttype)(-42)));
 	ASSERT((a <= b) == ((bitinttype)(23) <= (bitinttype)(-42)));
 	ASSERT((ua < ub) == ((ubitinttype)(23) < (ubitinttype)(-42)));
 	ASSERT((ua <= ub) == ((ubitinttype)(23) <= (ubitinttype)(-42)));
+#endif
 
 	ASSERT((ua & ub) == ((ubitinttype)(23) & (ubitinttype)(-42)));
 	ASSERT((ua | ub) == ((ubitinttype)(23) | (ubitinttype)(-42)));
 	ASSERT((ua ^ ub) == ((ubitinttype)(23) ^ (ubitinttype)(-42)));
-#endif
 
+	// Test increment / decrement and it wraparound for unsigned _BitInt.
+	ua = 1;
+	ASSERT(--ua == 0);
+	ASSERT(--ua == (ubitinttype)0xffffffffffffffffull);
+	ASSERT(++ua == 0);
+#endif
 #endif
 #endif
 }

@@ -1,13 +1,272 @@
+2022-03-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Refactor genAnd(), genOr() and genXor().
+
+2022-03-16 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix access before array.
+	* support/regression/tests/gcc-torture-execute-20020206-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20071210-1.c,
+	  support/regression/tests/gcc-torture-execute-20131127-1.c,
+	  support/regression/tests/gcc-torture-execute-20170401-1.c,
+	  support/regression/tests/gcc-torture-execute-20171008-1.c,
+	  support/regression/tests/gcc-torture-execute-pr60017.c,
+	  support/regression/tests/gcc-torture-execute-pr82387.c,
+	  support/regression/tests/gcc-torture-execute-pr82388.c:
+	  Update reasons why we skip some gcc tests.
+	* device/include/uchar.h,
+	  src/SDCCval.c:
+	  In C23, u8-prefixed string literals are arrays of char8_t, a typedef for unsigned char. RFE #779.
+
+2022-03-16 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/ds390/spec.mk,
+	  support/regression/ports/ez80-z80/spec.mk,
+	  support/regression/ports/mcs51-common/spec.mk,
+	  support/regression/ports/pdk13/spec.mk,
+	  support/regression/ports/pdk15/spec.mk,
+	  support/regression/ports/pdk15-stack-auto/spec.mk,
+	  support/regression/ports/stm8/spec.mk,
+	  support/regression/ports/ucz180/spec.mk,
+	  support/regression/ports/ucz180-resiy/spec.mk,
+	  support/regression/ports/ucz80-nmos/spec.mk,
+	  support/regression/ports/ucz80n/spec.mk:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs).
+
+2022-03-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/div.c,
+	  device/lib/s08/Makefile.in,
+	  device/lib/hc08/Makefile.in,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+  	  device/lib/mos6502-stack-auto/Makefinle.in:
+	  Enable div and ldviv for mos6502 and hc08/s08 ports.
+	* src/mos6502/gen.c,
+	  src/mos6502/main.c:
+	  Add support for GETBYTE and GETWORD iCodes.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  device/lib/lldiv.c:
+	  Fix pdk heap corruption on returning large struct.
+	* src/stm8/gen.c:
+	  Fixes for large struct return.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* device/lib/div.c,
+	  device/lib/ldiv.c,
+	  device/lib/lldiv.c,
+	  support/regression/tests/div.c,
+	  device/lib/Makefile.in,
+	  device/lib/*/Makefile.in:
+	  Division functions, RFE #167.
+
+2022-03-15 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/gcc_attr.h:
+	  Compatibility macros for GCC attribute syntax.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/structreturn.c:
+	  Enable struct / union return for hc08, s08, mos6502, ds390.
+	* device/include/stdlib.h:
+	  Provide prototypes for division functions.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/z80/gen.c,
+	  src/SDCCsymt.c,
+	  doc/sdccman.lyx,
+	  support/regression/tests/structreturn.c:
+	  struct / union return support for pdk and z80 and related.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCcse.c,
+	  src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/SDCClrange.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/ds390/ralloc.c,
+	  src/mcs51/ralloc.c,
+	  src/pic14/glue.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/glue.c,
+	  src/pic16/ralloc.c,
+	  src/stm8/gen.c,
+	  src/z80/ralloc.c:
+	  struct / union return support for stm8.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* device/include/assert.h:
+	  Improve test for assert C23-compliance.
+
+2022-03-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  genPlusInc(), genMinusDec() and genlshTwo() improvements.
+	  
+2022-03-14 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/z80/main.c,
+	  src/z80/gen.c:
+	  Enable _BitInt for sm83 up to 64 bits.
+	* device/include/assert.h,
+	  support/regression/tests/assert.c:
+	  C23-compliant assert, RFE #780.
+
+2022-03-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/gcc-torture-execute-20021120-1.c:
+	  Make stack-auto exception only for mos6502 port. Enable test for S08 and HC08.
+
+2022-03-14 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintarith.c:
+	  Disable part of test for pdk14 to not run out of code memory.
+	* src/z80/gen.c,
+	  support/regression/tests/bitintbitfield.c,
+	  support/regression/tests/widebitintbitfield.c:
+	  Fix write to wide bit-field on z80.
+
+2022-03-14 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCval.c:
+	  Use unsigned long long to represent bit-field values at compile time.
+	* src/mcs51/main.c:
+	  Enable _BitInt for mcs51.
+	* support/regression/tests/bitintarith.c,
+	  support/regression/tests/bug-3355.c:
+	  Test for bug #3355 (disabled for now).
+	* src/ds390/main.c,
+	  src/ds390/gen.c:
+	  _BitInt for ds390.
+	* src/z80/gen.c,
+	  support/regression/tests/bitintarith.c:
+	  Fix a z80 _BitInt decrement issue.
+
+2022-03-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Make regInfoStr display SP relative values when appropriate.
+	  Additional improvements to genAddrOf().
+
+2022-03-13 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/gcc-torture-execute-20021120-1.c:
+	  Make large local allocation static when compiling with --stack-auto.
+
+2022-03-13 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/as6500/r65pst.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/as8xcxxx/ds8pst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asstm8/stm8pst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asz80/z80pst.c:
+	  Enable new mnemonics on all ports.
+
+2022-03-12 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintarith.c,
+	  src/pdk/main.c:
+	  Disable a test that failed on pdk15 for wide _BitInt due to lack of memory, reenable 64-_BitInt support for pdk.
+
+2022-03-12 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mod6502/gen.c:
+	  Small genCast() improvements.
+
+2022-03-12 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph.def:
+	  Eliminate nop jps.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/pdk/main.c:
+	  Limit _BitInt size to 16 for pdk (temporarily, until an issue is fixed).
+	* src/pdk/main.c:
+	  Fix handling of parameters of odd size > 2.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* Merge _BitInt branch.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/mcs51/gen.c:
+	  Basic _BitInt support for mcs51.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/widebitintbitfield.c:
+	  Fix cast from signed integer type to wider unsigned bit-precise type.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* Merge _BitInt branch.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  src/z80/gen.c:
+	  support/regression/tests/widebitintbitfield.c:
+	  Fixes for bit-precise bit-fields.
+
 2022-03-11 Daniel Drotos <drdani@mazsola.iit.uni-miskolc.hu>
 
 	* src/pdk/gen.c:
 	  Fix compile by gcc 9.4.0: label must be on statement
+	  
+2022-03-11 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCglue.c,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/bitintbitfield.c:
+	  Fix issues in casts between bitprecise types of different sign.
+
+2022-03-10 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/ds390/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c:
+	  Explicitly state _BitInt non-support.
 
 2022-03-10 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/SDCCglue.c:
 	  Make assembly comments more consistent.
-	* src/
+	* src/mos6502/main.c,
+	  src/mos6502/ralloc2.cc:
+	  Refactor to make files more similar to stm8 port.
 
 2022-03-10 Benedikt Freisen <b.freisen AT gmx.net>
 

@@ -344,7 +344,7 @@ aopForSym (const iCode *ic, symbol *sym)
       aop = newAsmop (AOP_STK);
       aop->size = getSize (sym->type);
       int base = sym->stack + (sym->stack < 0 ? G.stack.param_offset : 0);
-      for (int offset = 0; offset < aop->size; offset++)
+      for (int offset = 0; offset < aop->size && offset < 8; offset++)
         aop->aopu.bytes[offset].byteu.stk = base + offset;
     }
   /* sfr */
@@ -803,7 +803,8 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     {
       if (!p_dead)
         pushPF (true);
-      pointPStack(source->aopu.bytes[soffset].byteu.stk, true, f_dead);
+      int stk = soffset < 8 ? source->aopu.bytes[soffset].byteu.stk : source->aopu.bytes[0].byteu.stk + soffset;
+      pointPStack(stk, true, f_dead);
       emit2 ("idxm", "a, p");
       cost (1, 2);
       if (!p_dead)
@@ -1759,8 +1760,6 @@ genIpush (const iCode *ic)
   if (!ic->parmPush)
     wassertl (0, "Encountered an unsupported spill push.");
 
-  wassertl (left->aop->size == 1 || !(left->aop->size % 2), "Unimplemented operand size for parameter push");
-
   if (left->aop->type == AOP_DUMMY)
     adjustStack (left->aop->size + (left->aop->size % 2), regDead (A_IDX, ic), regDead(P_IDX, ic));
   else if (left->aop->size == 1)
@@ -1769,7 +1768,7 @@ genIpush (const iCode *ic)
       pushAF();
     }
   else
-    push (left->aop, 0, left->aop->size);
+    push (left->aop, 0, left->aop->size + left->aop->size % 2);
 
   freeAsmop (IC_LEFT (ic));
 }
@@ -2045,7 +2044,7 @@ genReturn (const iCode *ic)
 
   wassertl (currFunc, "return iCode outside of function");
 
-  if (left->aop->size > 2)
+  if (left->aop->size > 2 || IS_STRUCT (operandType (left)))
     {
       if (left->aop->type == AOP_STK)
         {
@@ -4903,15 +4902,14 @@ genCast (const iCode *ic)
   righttype = operandType (right);
 
   bool pushed_a = false;
+  unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
 
   // Cast to _BitInt can require mask of top byte.
   if (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && bitsForType (resulttype) < bitsForType (righttype))
     {
       aopOp (right, ic);
       aopOp (result, ic);
-
-      unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
-        (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
 
       if (!regDead (A_IDX, ic))
         {
@@ -4995,6 +4993,8 @@ genCast (const iCode *ic)
     }
   else // Cast to signed type
     {
+      bool maskedtopbyte = IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && SPEC_USIGN (resulttype);
+
       genMove_o (result->aop, 0, right->aop, 0, right->aop->size, regDead (A_IDX, ic), regDead (P_IDX, ic));
 
       int size = result->aop->size - right->aop->size;
@@ -5010,7 +5010,14 @@ genCast (const iCode *ic)
       cost (3, 3);
 
       while (size--)
-        cheapMove (result->aop, offset++, ASMOP_A, 0, true, regDead (P_IDX, ic), true);
+        {
+          if (!size && maskedtopbyte) // For casts from signed integers to wider unsigned _BitInt
+            {
+              emit2 ("and", "a, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
+          cheapMove (result->aop, offset++, ASMOP_A, 0, true, regDead (P_IDX, ic), true);
+        }
 
       if (!regDead (A_IDX, ic) || aopInReg (result->aop, 0, A_IDX))
         popAF ();

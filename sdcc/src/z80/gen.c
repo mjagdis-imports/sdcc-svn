@@ -1438,9 +1438,7 @@ aopForSym (const iCode * ic, symbol * sym, bool requires_a)
 
   /* if already has one */
   if (sym->aop)
-    {
-      return sym->aop;
-    }
+    return sym->aop;
 
   /* Assign depending on the storage class */
   if (sym->onStack || sym->iaccess)
@@ -1461,6 +1459,7 @@ aopForSym (const iCode * ic, symbol * sym, bool requires_a)
           sym->aop = aop = newAsmop (AOP_STK);
         }
 
+      memset (aop->regs, -1, sizeof(aop->regs));
       aop->size = getSize (sym->type);
       aop->aopu.aop_stk = sym->stack;
       return aop;
@@ -1863,6 +1862,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
   /* must be in a register */
   sym->aop = op->aop = aop = newAsmop (AOP_REG);
   aop->size = sym->nRegs;
+  memset (aop->regs, -1, sizeof(aop->regs));
   for (i = 0; i < sym->nRegs; i++)
     {
       wassertl (sym->regs[i], "Symbol in register, but no register assigned.");
@@ -3818,11 +3818,12 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       }
   
   // Move everything from registers to the stack.
-  for (int i = 0; i < n;)
+  wassert (source->type != AOP_REG || source->size < 8);
+  for (int i = 0; i < n && source->type == AOP_REG;)
     {
-      bool a_free = a_dead && (source->regs[A_IDX] < 0 || assigned[source->regs[A_IDX] - soffset] || i == source->regs[A_IDX] - soffset);
-      bool hl_free = hl_dead && (source->regs[L_IDX] < 0 || assigned[source->regs[L_IDX] - soffset] || i == source->regs[L_IDX] - soffset) && (source->regs[H_IDX] < 0 || assigned[source->regs[H_IDX] - soffset] || i == source->regs[H_IDX] - soffset);
-      bool de_free = de_dead && (source->regs[E_IDX] < 0 || assigned[source->regs[E_IDX] - soffset] || i == source->regs[E_IDX] - soffset) && (source->regs[D_IDX] < 0 || assigned[source->regs[D_IDX] - soffset] || i == source->regs[D_IDX] - soffset);
+      bool a_free = a_dead && (source->regs[A_IDX] < soffset || assigned[source->regs[A_IDX] - soffset] || i == source->regs[A_IDX] - soffset);
+      bool hl_free = hl_dead && (source->regs[L_IDX] < soffset || assigned[source->regs[L_IDX] - soffset] || i == source->regs[L_IDX] - soffset) && (source->regs[H_IDX] < soffset || assigned[source->regs[H_IDX] - soffset] || i == source->regs[H_IDX] - soffset);
+      bool de_free = de_dead && (source->regs[E_IDX] < soffset || assigned[source->regs[E_IDX] - soffset] || i == source->regs[E_IDX] - soffset) && (source->regs[D_IDX] < soffset || assigned[source->regs[D_IDX] - soffset] || i == source->regs[D_IDX] - soffset);
 
       int fp_offset = result->aopu.aop_stk + (result->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + roffset + i;
       int sp_offset = fp_offset + _G.stack.pushed + _G.stack.offset;
@@ -4171,15 +4172,16 @@ skip_byte:
     }
   
   // Last, move everything else from stack to registers.
-  for (int i = 0; i < n;)
+  wassert (result->type != AOP_REG || result->size < 8);
+  for (int i = 0; i < n && result->type == AOP_REG;)
     {
       const int fp_offset = source->aopu.aop_stk + soffset + i + (source->aopu.aop_stk > 0 ? _G.stack.param_offset : 0);
       const int sp_offset = fp_offset + _G.stack.pushed + _G.stack.offset;
 
-      bool a_free = a_dead && (result->regs[A_IDX] < 0 || !assigned[result->regs[A_IDX] - roffset]);
-      const bool hl_free = hl_dead && (result->regs[L_IDX] < 0 || !assigned[result->regs[L_IDX] - roffset]) && (result->regs[H_IDX] < 0 || !assigned[result->regs[H_IDX] - roffset]);
-      const bool e_free = de_dead && (result->regs[E_IDX] < 0 || !assigned[result->regs[E_IDX] - roffset]);
-      const bool d_free = de_dead && (result->regs[D_IDX] < 0 || !assigned[result->regs[D_IDX] - roffset]);
+      bool a_free = a_dead && (result->regs[A_IDX] < roffset || !assigned[result->regs[A_IDX] - roffset]);
+      const bool hl_free = hl_dead && (result->regs[L_IDX] < roffset || !assigned[result->regs[L_IDX] - roffset]) && (result->regs[H_IDX] < 0 || !assigned[result->regs[H_IDX] - roffset]);
+      const bool e_free = de_dead && (result->regs[E_IDX] < roffset || !assigned[result->regs[E_IDX] - roffset]);
+      const bool d_free = de_dead && (result->regs[D_IDX] < roffset || !assigned[result->regs[D_IDX] - roffset]);
       const bool de_free = e_free && d_free;
  
       if (assigned[i])
@@ -4610,22 +4612,6 @@ genMove (asmop *result, asmop *source, bool a_dead, bool hl_dead, bool de_dead, 
   genMove_o (result, 0, source, 0, result->size, a_dead, hl_dead, de_dead, iy_dead, true);
 }
 
-/*-----------------------------------------------------------------*/
-/* getDataSize - get the operand data size                         */
-/*-----------------------------------------------------------------*/
-static int
-getDataSize (operand * op)
-{
-  int size;
-  size = op->aop->size;
-  if (size == 3)
-    {
-      /* pointer */
-      wassertl (!IS_SM83, "Somehow got a three byte data pointer");
-    }
-  return size;
-}
-
 /*--------------------------------------------------------------------------*/
 /* adjustStack - Adjust the stack pointer by n bytes.                       */
 /*--------------------------------------------------------------------------*/
@@ -4801,7 +4787,7 @@ adjustStack (int n, bool af_free, bool bc_free, bool de_free, bool hl_free, bool
 static void
 outAcc (operand * result)
 {
-  int size = getDataSize (result);
+  int size = result->aop->size;
   if (size)
     {
       cheapMove (result->aop, 0, ASMOP_A, 0, true);
@@ -5781,7 +5767,7 @@ genCall (const iCode *ic)
 
   _saveRegsForCall (ic, FALSE);
 
-  const bool bigreturn = (getSize (ftype->next) > 4); // Return value of big type or returning struct or union.
+  const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next); // Return value of big type or returning struct or union.
   const bool SomethingReturned = IS_ITEMP (IC_RESULT (ic)) && (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir) ||
                        IS_TRUE_SYMOP (IC_RESULT (ic));
 
@@ -6331,7 +6317,7 @@ genFunction (const iCode * ic)
   /* adjust the stack for the function */
 //  _G.stack.last = sym->stack;
 
-  bigreturn = (getSize (ftype->next) > 4);
+  bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
   _G.stack.param_offset += bigreturn * 2;
 
   stackParm = FALSE;
@@ -6680,7 +6666,7 @@ genRet (const iCode *ic)
   aopOp (IC_LEFT (ic), ic, FALSE, FALSE);
   size = IC_LEFT (ic)->aop->size;
 
-  if (size <= 4)
+  if (size <= 4 && !IS_STRUCT (operandType (IC_LEFT (ic))))
     {
       /* TODO: get this working with floats */
       if (IC_LEFT (ic)->aop->type == AOP_LIT && size == 4 && !IS_FLOAT (IC_LEFT (ic)->aop->aopu.aop_lit->type) &&
@@ -6876,7 +6862,7 @@ static bool
 genPlusIncr (const iCode *ic)
 {
   unsigned int icount;
-  unsigned int size = getDataSize (IC_RESULT (ic));
+  unsigned int size = IC_RESULT (ic)->aop->size;
   PAIR_ID resultId = getPairId (IC_RESULT (ic)->aop);
 
   /* will try to generate an increment */
@@ -7212,7 +7198,7 @@ genPlus (iCode * ic)
   if (!maskedtopbyte && genPlusIncr (ic))
     goto release;
 
-  size = getDataSize (IC_RESULT (ic));
+  size = IC_RESULT (ic)->aop->size;
 
   /* Special case when left and right are constant */
   if (!maskedtopbyte && isPair (IC_RESULT (ic)->aop))
@@ -7407,7 +7393,7 @@ genPlus (iCode * ic)
      * If left or right are in bc then the loss is small - trap later
      * If the result is in bc then the loss is also small
    */
-  if (IS_SM83)
+  if (!maskedtopbyte && IS_SM83)
     {
       if (IC_LEFT (ic)->aop->type == AOP_STK || IC_RIGHT (ic)->aop->type == AOP_STK || IC_RESULT (ic)->aop->type == AOP_STK)
         {
@@ -7950,7 +7936,7 @@ static bool
 genMinusDec (const iCode *ic, asmop *result, asmop *left, asmop *right)
 {
   unsigned int icount;
-  unsigned int size = getDataSize (IC_RESULT (ic));
+  unsigned int size = IC_RESULT (ic)->aop->size;
 
   /* will try to generate a decrement */
   /* if the right side is not a literal we cannot */
@@ -7961,9 +7947,6 @@ genMinusDec (const iCode *ic, asmop *result, asmop *left, asmop *right)
      is greater than 4 then it is not worth it */
   if ((icount = (unsigned int) ulFromVal (right->aopu.aop_lit)) > 2)
     return false;
-
-  size = getDataSize (IC_RESULT (ic));
-
   /* if decrement 16 bits in register */
   if (sameRegs (left, result) && (size > 1) && isPair (result))
     {
@@ -8047,10 +8030,10 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
     }
 
   /* if I can do an decrement instead of subtract then GOOD for ME */
-  if (genMinusDec (ic, result, left, right) == TRUE)
+  if (!maskedtopbyte && genMinusDec (ic, result, left, right) == TRUE)
     return;
 
-  size = getDataSize (IC_RESULT (ic));
+  size = IC_RESULT (ic)->aop->size;
 
   if (right->type == AOP_LIT)
     {
@@ -8059,7 +8042,7 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
     }
 
   /* Same logic as genPlus */
-  if (IS_SM83)
+  if (!maskedtopbyte && IS_SM83)
     {
       if (left->type == AOP_STK || right->type == AOP_STK || result->type == AOP_STK)
         {
@@ -12844,10 +12827,9 @@ genUnpackBits (operand * result, int pair, const iCode *ic)
 
   /* TODO: what if pair == PAIR_DE ? */
   if (getPairId (result->aop) == PAIR_HL ||
-      result->aop->type == AOP_REG && rsize >= 2 && (result->aop->aopu.aop_reg[0]->rIdx == L_IDX
+      result->aop->type == AOP_REG && rsize == 2 && (result->aop->aopu.aop_reg[0]->rIdx == L_IDX
           || result->aop->aopu.aop_reg[0]->rIdx == H_IDX))
     {
-      wassertl (rsize == 2, "HL must be of size 2");
       emit2 ("!ldahli");
       if (result->aop->type != AOP_REG || result->aop->aopu.aop_reg[0]->rIdx != H_IDX)
         {
@@ -13133,7 +13115,7 @@ genPointerGet (const iCode *ic)
     }
 
   /* Using ldir is cheapest for large memory-to-memory transfers. */
-  if (!IS_SM83 && !IS_R2K && !IS_R2KA && (result->aop->type == AOP_STK || result->aop->type == AOP_EXSTK) && size > 2)
+  if (!IS_SM83 && !IS_R2K && !IS_R2KA && !IS_BITVAR (retype) && (result->aop->type == AOP_STK || result->aop->type == AOP_EXSTK) && size > 2)
     {
       int fp_offset, sp_offset;
 
@@ -13531,7 +13513,7 @@ genPackBits (sym_link * etype, operand * right, int pair, const iCode * ic)
   int rlen = 0;                 /* remaining bit-field length */
   unsigned blen;                /* bit-field length */
   unsigned bstr;                /* bit-field starting bit within byte */
-  int litval;                   /* source literal value (if AOP_LIT) */
+  unsigned long long litval;    /* source literal value (if AOP_LIT) */
   unsigned char mask;           /* bitmask within current byte */
   int extraPair;                /* a tempory register */
   bool needPopExtra = 0;        /* need to restore original value of temp reg */
@@ -13549,7 +13531,7 @@ genPackBits (sym_link * etype, operand * right, int pair, const iCode * ic)
 
       if (right->aop->type == AOP_LIT && blen == 1 && (pair == PAIR_HL || pair == PAIR_IX || pair == PAIR_IY))
         {
-          litval = (int) ulFromVal (right->aop->aopu.aop_lit);
+          litval = ullFromVal (right->aop->aopu.aop_lit);
           emit2 (litval & 1 ? "set %d, !mems" : "res %d, !mems", bstr, _pairs[pair].name);
           regalloc_dry_run_cost += (pair == PAIR_IX || pair == PAIR_IY) ? 4 : 2;
           return;
@@ -13664,7 +13646,7 @@ genPackBits (sym_link * etype, operand * right, int pair, const iCode * ic)
       if (right->aop->type == AOP_LIT)
         {
           /* Case with partial byte and literal source */
-          litval = (int) ulFromVal (right->aop->aopu.aop_lit);
+          litval = ullFromVal (right->aop->aopu.aop_lit);
           litval >>= (blen - rlen);
           litval &= (~mask) & 0xff;
 
@@ -14622,12 +14604,12 @@ genCast (const iCode *ic)
       wassertl (0, "Tried to cast to a bit");
     }
 
+  unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+   (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+
   // Cast to _BitInt can require mask of top byte.
   if (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && bitsForType (resulttype) < bitsForType (righttype))
     {
-      unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
-        (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
-
       if (!isRegDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0 && result->aop->regs[A_IDX] != result->aop->size - 1)
         _push (PAIR_AF), pushed_a = true;
       genMove (result->aop, right->aop, true, isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic));
@@ -14689,6 +14671,7 @@ genCast (const iCode *ic)
     }
   else
     {
+      bool maskedtopbyte = IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && SPEC_USIGN (resulttype);
       genMove_o (result->aop, 0, right->aop, 0, right->aop->size - 1, !surviving_a, isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic), true);
       bool de_dead = isPairDead (PAIR_DE, ic) && (result->aop->regs[E_IDX] < 0 || result->aop->regs[E_IDX] >= right->aop->size) && (result->aop->regs[D_IDX] < 0 || result->aop->regs[D_IDX] >= right->aop->size);
       bool iy_dead = isPairDead (PAIR_DE, ic) && (result->aop->regs[IYL_IDX] < 0 || result->aop->regs[IYL_IDX] >= right->aop->size) && (result->aop->regs[IYH_IDX] < 0 || result->aop->regs[IYH_IDX] >= right->aop->size);
@@ -14713,7 +14696,7 @@ genCast (const iCode *ic)
       /* we need to extend the sign */
       emit3 (A_RLCA, 0, 0);
 
-      if (!IS_SM83 && isPairDead (PAIR_HL, ic) && size == 2 && /* writing AOP_HL is so cheap, it is not worth the 2-byte sbc hl, hl here */
+      if (!IS_SM83 && !maskedtopbyte && isPairDead (PAIR_HL, ic) && size == 2 && /* writing AOP_HL is so cheap, it is not worth the 2-byte sbc hl, hl here */
         (aopInReg (result->aop, offset, HL_IDX) || result->aop->type == AOP_IY || (IS_RAB || IS_TLCS90 || IS_EZ80_Z80) && result->aop->type == AOP_STK))
         {
           emit2 ("sbc hl, hl");
@@ -14725,7 +14708,14 @@ genCast (const iCode *ic)
         {
           emit3 (A_SBC, ASMOP_A, ASMOP_A);
           while (size--)
-            cheapMove (result->aop, offset++, ASMOP_A, 0, true);
+            {
+              if (!size && maskedtopbyte) // For casts from signed integers to wider unsigned _BitInt
+                {
+                  emit2 ("and a, #0x%02x", topbytemask);
+                  regalloc_dry_run_cost += 2;
+                }
+              cheapMove (result->aop, offset++, ASMOP_A, 0, true);
+            }
         }
     }
 

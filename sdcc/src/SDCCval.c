@@ -751,9 +751,11 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
   signExtMask = varBits >= sizeof(TYPE_TARGET_ULONGLONG)*8 ? 0 : ~((1ull << varBits)-1);
 
 #if 0
+  printf("checkConstantRange\n");
+  printf("   varBits     = %d\n", varBits);
   printf("   ulitVal     = 0x%016lx\n", ulitVal);
   printf("   signExtMask = 0x%016lx\n", signExtMask);
-  printf("   signMask    = 0x%016lx\n",signMask);
+  printf("   signMask    = 0x%016lx\n", signMask);
 #endif
 
   //return CCR_OK; /* EEP - debug for long long */
@@ -834,6 +836,11 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
 
   reType = computeType (var, lit, RESULT_TYPE_NONE, op);
 
+#if 0
+  printf("   reType      = ");
+  printTypeChain (reType, 0);
+#endif
+
   if (SPEC_USIGN (reType))
     {
       /* unsigned operation */
@@ -901,8 +908,6 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
           maxValM &= opBitsMask;
         }
 #if 0
-      printf("   reType      = ");
-      printTypeChain (reType, NULL);
       printf("   ulitVal     = 0x%016lx\n", ulitVal);
       printf("   opBitsMask  = 0x%016lx\n", opBitsMask);
       printf("   maxValP     = 0x%016lx\n", maxValP);
@@ -1476,7 +1481,7 @@ constCharacterVal (unsigned long v, char type)
       SPEC_LONG (val->etype) = 1;
       SPEC_CVAL (val->type).v_ulong = (TYPE_UDWORD) v;
       break;
-    case '8':
+    case '8': // u8 character constant of type char8_t, a typedef for unsigned char.
       if (!options.std_c2x)
         werror (E_U8_CHAR_C2X);
       if (v >= 128)
@@ -1625,14 +1630,22 @@ strVal (const char *s)
   SPEC_SCLS (val->etype) = S_LITERAL;
   SPEC_CONST (val->etype) = 1;
 
-  if (s[0] == '"' || s[0] == 'u' && s[1] == '8' && s[2] == '"') // UTF-8 string literal
+  bool explicit_u8 = s[0] == 'u' && s[1] == '8' && s[2] == '"';
+
+  if (s[0] == '"' || explicit_u8) // UTF-8 string literal
     {
+      
       // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 (handling all escape sequences, etc).
       utf_8 = copyStr (s[0] == '"' ? s : s + 2, &utf_8_size);
 
       SPEC_NOUN (val->etype) = V_CHAR;
-      SPEC_USIGN (val->etype) = !options.signed_char;
-      val->etype->select.s.b_implicit_sign = true;
+      if (options.std_c2x && explicit_u8) // In C23, u8-prefixed string literals are of type char8_t *, ad char8_t is a typedef for unsigned char.
+        SPEC_USIGN (val->etype) = true;
+      else
+        {
+          SPEC_USIGN (val->etype) = !options.signed_char;
+          val->etype->select.s.b_implicit_sign = true;
+        }
       SPEC_CVAL (val->etype).v_char = utf_8;
       DCL_ELEM (val->type) = utf_8_size;
     }
@@ -3078,6 +3091,10 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
     return NULL;
   if ((fval > 0x7ffffffful) || (-fval > 0x7ffffffful))
     l = (unsigned long)llval;
+    
+#if 0
+  printf("valCastLiteral: %lx to ", llval); printTypeChain (dtype, stdout); printf("\n");
+#endif
 
   val = newValue ();
   if (dtype)
@@ -3114,7 +3131,7 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
       break;
 
     case V_BITINTBITFIELD:
-      l &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
+      llval &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
     case V_BITINT:
       wassert (SPEC_BITINTWIDTH (val->etype) >= 1);
       if (!SPEC_USIGN (val->etype)) // Sign-extend
@@ -3133,11 +3150,11 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
       break;
 
     case V_BITFIELD:
-      l &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
+      llval &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
       if (SPEC_USIGN (val->etype))
-        SPEC_CVAL (val->etype).v_uint = (TYPE_TARGET_UINT) l;
+        SPEC_CVAL (val->etype).v_uint = (TYPE_TARGET_UINT) llval;
       else
-        SPEC_CVAL (val->etype).v_int = (TYPE_TARGET_INT) l;
+        SPEC_CVAL (val->etype).v_int = (TYPE_TARGET_INT) llval;
       break;
 
     case V_CHAR:
@@ -3229,7 +3246,7 @@ valRecastLitVal (sym_link * dtype, value * val)
       break;
 
     case V_BITFIELD:
-      ull &= (0xffffffffu >> (32 - SPEC_BLEN (val->etype)));
+      ull &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
       if (SPEC_USIGN (val->etype))
         SPEC_CVAL (val->etype).v_uint = (TYPE_TARGET_UINT) ull;
       else

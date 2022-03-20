@@ -276,12 +276,15 @@ aopOnStack (const asmop *aop, int offset, int size)
     return (FALSE);
 
   if (offset + size > aop->size)
-    return (FALSE);
+    return (false);
+
+  if (aop->size > 8)
+    return (true);
 
   // Fully on stack?
   for (i = offset; i < offset + size; i++)
     if (aop->aopu.bytes[i].in_reg)
-      return (FALSE);
+      return (false);
 
   // Consecutive?
   stk_base = aop->aopu.bytes[offset].byteu.stk;
@@ -298,7 +301,10 @@ aopOnStack (const asmop *aop, int offset, int size)
 static bool
 aopOnStackNotExt (const asmop *aop, int offset, int size)
 {
-  return (aopOnStack (aop, offset, size) && (aop->aopu.bytes[offset].byteu.stk + G.stack.pushed <= 255 || regalloc_dry_run)); // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
+  if (!aopOnStack (aop, offset, size))
+    return (false);
+  int stk = offset < 8 ? aop->aopu.bytes[offset].byteu.stk : aop->aopu.bytes[0].byteu.stk - offset;
+  return (aopOnStack (aop, offset, size) && (stk + G.stack.pushed <= 255 || regalloc_dry_run)); // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
 }
 
 /*-----------------------------------------------------------------*/
@@ -312,14 +318,22 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
       if (offset1 >= aop1->size || offset2 >= aop2->size)
         return (false);
 
-      if (aopRS (aop1) && aopRS (aop2) && // Same register
-        aop1->aopu.bytes[offset1].in_reg && aop2->aopu.bytes[offset2].in_reg &&
+      if (aopRS (aop1) && aopRS (aop2)) // Same register
+        {
+          bool in_reg1 = offset1 < 8 && aop1->aopu.bytes[offset1].in_reg;
+          bool in_reg2 = offset2 < 8 && aop2->aopu.bytes[offset2].in_reg;
+          if (in_reg1 && in_reg2 &&
         aop1->aopu.bytes[offset1].byteu.reg == aop2->aopu.bytes[offset2].byteu.reg)
         continue;
+        }
 
-      if (aopOnStack (aop1, offset1, 1) && aopOnStack (aop2, offset2, 1) && // Same stack location
-        aop1->aopu.bytes[offset1].byteu.stk == aop2->aopu.bytes[offset2].byteu.stk)
-        continue;
+      if (aopOnStack (aop1, offset1, 1) && aopOnStack (aop2, offset2, 1)) // Same stack location
+        {
+          int stk1 = offset1 < 8 ? aop1->aopu.bytes[offset1].byteu.stk : aop1->aopu.bytes[0].byteu.stk - offset1;
+          int stk2 = offset2 < 8 ? aop2->aopu.bytes[offset2].byteu.stk : aop2->aopu.bytes[0].byteu.stk - offset2;
+          if (stk1 == stk2)
+            continue;
+        }
 
       if (aop1->type == AOP_LIT && aop2->type == AOP_LIT &&
         byteOfVal (aop1->aopu.aop_lit, offset1) == byteOfVal (aop2->aopu.aop_lit, offset2))
@@ -396,18 +410,18 @@ aopGet(const asmop *aop, int offset)
   if (offset >= aop->size)
     return ("#0x00");
 
-  if (aopRS (aop) && aop->aopu.bytes[offset].in_reg)
+  if (aopRS (aop) && offset < 8 && aop->aopu.bytes[offset].in_reg)
     return (aop->aopu.bytes[offset].byteu.reg->name);
 
-  if (aopRS (aop) && !aop->aopu.bytes[offset].in_reg)
+  if (aopRS (aop) && (offset >= 8 || !aop->aopu.bytes[offset].in_reg))
     {
-      long int soffset = aop->aopu.bytes[offset].byteu.stk + G.stack.pushed;
+      long int soffset = (offset < 8 ? aop->aopu.bytes[offset].byteu.stk : aop->aopu.bytes[0].byteu.stk - offset) + G.stack.pushed;
       
       wassert (soffset < (1 << 16) && soffset >= 0);
 
       if (soffset > 255)
         {
-          long int eoffset = (long int)(aop->aopu.bytes[offset].byteu.stk) + G.stack.size - 256l;
+          long int eoffset = (long int)(offset < 8 ? aop->aopu.bytes[offset].byteu.stk : aop->aopu.bytes[0].byteu.stk - offset) + G.stack.size - 256l;
 
           wassertl_bt (regalloc_dry_run || stm8_extend_stack, "Extended stack access, but y not prepared for extended stack access.");
           wassertl_bt (regalloc_dry_run || eoffset >= 0l && eoffset <= 0xffffl, "Stack access out of extended stack range."); // Stack > 64K.
@@ -622,8 +636,8 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2)
       op2type = op2->type;
     }
 
-  r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
-  r2Idx = ((aopRS (op2) && op2->aopu.bytes[offset2].in_reg)) ? op2->aopu.bytes[offset2].byteu.reg->rIdx : -1;
+  r1Idx = ((aopRS (op1) && offset1 < 8 && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+  r2Idx = ((aopRS (op2) && offset2 < 8 && op2->aopu.bytes[offset2].in_reg)) ? op2->aopu.bytes[offset2].byteu.reg->rIdx : -1;
 
   if (offset2 >= op2->size)
     op2type = AOP_LIT;
@@ -983,7 +997,7 @@ aopForSym (const iCode *ic, symbol *sym)
         base = 0;
       }
 
-      for(offset = 0; offset < aop->size; offset++)
+      for(offset = 0; offset < aop->size && offset < 8; offset++)
         aop->aopu.bytes[offset].byteu.stk = base + aop->size - offset;
     }
   else
@@ -1771,7 +1785,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   wassertl_bt (aopRS (result), "Invalid result type.");
 
   size = n;
-  for (i = 0, regsize = 0; i < n; i++)
+  for (i = 0, regsize = 0; i < n && soffset + i < 8; i++)
     regsize += source->aopu.bytes[soffset + i].in_reg;
 
   a_dead |= (result->regs[A_IDX] >= roffset && result->regs[A_IDX] < roffset + n);
@@ -1784,7 +1798,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
 
   // Do nothing for coalesced bytes.
   for (i = 0; i < n; i++)
-    if (result->aopu.bytes[roffset + i].in_reg && source->aopu.bytes[soffset + i].in_reg && result->aopu.bytes[roffset + i].byteu.reg == source->aopu.bytes[soffset + i].byteu.reg)
+    if (roffset + i < 8 && soffset + i < 8 && result->aopu.bytes[roffset + i].in_reg && source->aopu.bytes[soffset + i].in_reg && result->aopu.bytes[roffset + i].byteu.reg == source->aopu.bytes[soffset + i].byteu.reg)
       {
         assigned[i] = true;
         regsize--;
@@ -3634,23 +3648,25 @@ genCall (const iCode *ic)
           cost (180, 180);
         }
 
+      int stk = getSize (ftype->next) <= 8 ? IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk : (IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk - (getSize (ftype->next) - 1));
+
       if (stm8_extend_stack && !stm8IsParmInCall(ftype, "y") && ic->op != PCALL && optimize.codeSpeed) // 6 bytes, 4 cycles.
         {
-          emit2 ("addw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.size - 256 + G.stack.pushed);
+          emit2 ("addw", "y, #%d", stk + G.stack.size - 256 + G.stack.pushed);
           cost (4, 2);
           push (ASMOP_Y, 0, 2);
         }
       else if (!stm8IsParmInCall(ftype, "x")) // 5 bytes, 5 cycles.
         {
           emit2 ("ldw", "x, sp");
-          emit2 ("addw", "x, #%d", IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed);
+          emit2 ("addw", "x, #%d", stk + G.stack.pushed);
           cost (1 + 3, 1 + 2);
           push (ASMOP_X, 0, 2);
         }
       else if (!stm8IsParmInCall(ftype, "y")) // 8 bytes, 6 cycles.
         {
           emit2 ("ldw", "y, sp");
-          emit2 ("addw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed);
+          emit2 ("addw", "y, #%d", stk + G.stack.pushed);
           cost (2 + 4, 1 + 2);
           push (ASMOP_Y, 0, 2);
         }
@@ -4166,7 +4182,7 @@ genFunction (iCode *ic)
       cost (6, 3);
     }
 
-  bigreturn = (getSize (ftype->next) > 4);
+  bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
   G.stack.param_offset += bigreturn * 2;
 
   // Cosmic stack frame always uses 24-bit return address.
@@ -4351,6 +4367,10 @@ genReturn (const iCode *ic)
   aopOp (left, ic);
   size = left->aop->size;
 
+  // struct and union are always returned via hidden pointer parameter.
+  if (IS_STRUCT (operandType (IC_LEFT (ic))))
+    goto bigreturn;
+
   switch (size)
     {
     case 0:
@@ -4363,7 +4383,7 @@ genReturn (const iCode *ic)
       genMove (aopRet (currFunc->type), left->aop, true, true, true);
       break;
     default:
-      wassertl (size > 4, "Return not implemented for return value of this size.");
+bigreturn:
 
       for(int i = 0; i < size; i++)
         if (aopInReg (left->aop, i, XL_IDX) || aopInReg (left->aop, i, XH_IDX))
@@ -8889,7 +8909,7 @@ genAddrOf (const iCode *ic)
 
   wassert (result);
   wassert (left);
-  wassert (IS_TRUE_SYMOP (left));
+  wassert (IS_SYMOP (left));
   wassert (right && IS_OP_LITERAL (IC_RIGHT (ic)));
 
   sym = OP_SYMBOL_CONST (left);
@@ -9023,14 +9043,14 @@ genCast (const iCode *ic)
   resulttype = operandType (result);
   righttype = operandType (right);
 
+  unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+
   // Cast to _BitInt can require mask of top byte.
   if (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && bitsForType (resulttype) < bitsForType (righttype))
     {
       aopOp (right, ic);
       aopOp (result, ic);
-
-      unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
-        (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
 
       if (!regDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0 && result->aop->regs[A_IDX] != result->aop->size - 1)
         UNIMPLEMENTED;
@@ -9165,14 +9185,15 @@ genCast (const iCode *ic)
     }
   else // Cast to signed type
     {
-      bool pushed_a = FALSE;
+      bool pushed_a = false;
+      bool masktopbyte = IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && SPEC_USIGN (resulttype);
 
       genMove_o (result->aop, 0, right->aop, 0, right->aop->size, regDead (A_IDX, ic), regDead (X_IDX, ic), regDead (Y_IDX, ic));
 
       size = result->aop->size - right->aop->size;
       offset = right->aop->size;
 
-      if (size == 2 && (aopInReg (result->aop, offset, X_IDX) || aopInReg (result->aop, offset, Y_IDX)) &&
+      if (size == 2 && !masktopbyte && (aopInReg (result->aop, offset, X_IDX) || aopInReg (result->aop, offset, Y_IDX)) &&
         (aopInReg (result->aop, right->aop->size - 1, XH_IDX) || aopInReg (result->aop, right->aop->size - 1, YH_IDX) || aopInReg (result->aop, right->aop->size - 1, A_IDX) || aopOnStack (result->aop, right->aop->size - 1, 1) || result->aop->type == AOP_DIR))
         {
           symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
@@ -9202,7 +9223,6 @@ genCast (const iCode *ic)
 
       cheapMove (ASMOP_A, 0, result->aop, right->aop->size - 1, FALSE);
       emit3 (A_RLC, ASMOP_A, 0);
-     
 
       if (size == 2 && (aopInReg (result->aop, offset, X_IDX) || aopInReg (result->aop, offset, Y_IDX))) // Faster when just setting 16-bit reg.
         {
@@ -9224,6 +9244,12 @@ genCast (const iCode *ic)
       emit3 (A_SBC, ASMOP_A, ASMOP_ZERO);
       while (size--)
         {
+          if (!size && masktopbyte) // Cast signed int to wider unsigned _BitInt must zero top bits.
+            {
+              emit2 ("and", "a, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
+
           if (size && aopInReg (result->aop, offset, A_IDX))
             {
               push (ASMOP_A, 0, 1);

@@ -1,7 +1,7 @@
-/*-------------------------------------------------------------------------
-   assert.h - header file for assert ANSI routine
+/*---------------------------------------------------------------------
+   lldiv
 
-   Copyright (C) 2018-2022, Philipp Klaus Krause . pkk@spth.de
+   Copyright (c) 2022, Philipp Klaus Krause . krauseph@informatik.uni-freiburg.de
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -10,7 +10,7 @@
 
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License 
@@ -26,22 +26,17 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#undef assert
+#include <stdlib.h>
 
-#ifdef NDEBUG
-
-/* Debugging disabled -- do not evaluate assertions. */
-#define assert(...) ((void)0)
-
-#else
-
-/* Debugging enabled -- verify assertions at run time. */
-void __assert(const char *expression, const char *functionname, const char *filename, unsigned int linenumber);
-#define assert(...) ((__VA_ARGS__) ? (void)0 : __assert(#__VA_ARGS__, __func__, __FILE__, __LINE__))
-
-#if __STDC_VERSION__ >= 201112L // TODO: Replace by exact value from final version of C23 standard.
-#define static_assert _Static_assert
+#ifndef __SDCC_mcs51
+#ifndef __SDCC_ds390 // segfault
+lldiv_t lldiv(long long int numer, long long int denom)
+{
+	lldiv_t ret;
+	ret.quot = numer / denom;
+	ret.rem = numer % denom;
+	return(ret);
+}
 #endif
-
 #endif
 
