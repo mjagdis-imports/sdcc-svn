@@ -1058,7 +1058,8 @@ aopForRemat (symbol *sym)
   if (OP_SYMBOL (IC_LEFT (ic))->onStack)
     {
       aop = newAsmop (AOP_STL);
-      aop->aopu.stk_off = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + 1 + val;
+      long int base = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + (OP_SYMBOL (IC_LEFT (ic))->stack > 0 ? G.stack.param_offset : 0);
+      aop->aopu.stk_off = base + 1 + val;
     }
   else
     {
@@ -1274,6 +1275,8 @@ aopArg (sym_link *ftype, int i)
           stackarg |= (getSize (arg->type) > 4 || num_1_byte_args > 1 || num_2_byte_args > 2);
         }
 
+      wassertl (!IS_STRUCT (arg->type), "Unimplemented struct parameter for IAR calling convention"); // Todo: Implement!
+
       // IAR passes the first two 24-bit / 32-bit arguments in pseudoregisters.
       if ((getSize (arg->type) == 3 || getSize (arg->type) == 4))
         werror (E_IAR_PSEUDOPARM);
@@ -1306,6 +1309,8 @@ aopArg (sym_link *ftype, int i)
   // Cosmic calling convention.
   if (FUNC_ISCOSMIC (ftype))
     {
+      wassertl (!IS_STRUCT (args->type), "Unimplemented struct parameter for Cosmic calling convention"); // Todo: Implement!
+
       if (i == 1 && getSize (args->type) == 1)
         return ASMOP_A;
 
@@ -1323,6 +1328,11 @@ aopArg (sym_link *ftype, int i)
 
       for (j = 1, arg = args; j < i; j++, arg = arg->next)
         wassert (arg);
+
+      wassertl (!IS_STRUCT (arg->type) || !FUNC_ISRAISONANCE (ftype), "Unimplemented struct parameter for IAR calling convention"); // Todo: Implement!
+
+      if (IS_STRUCT (arg->type))
+        return 0;
 
       if (i == 1 && getSize (arg->type) == 2)
         return ASMOP_X;
@@ -3603,6 +3613,49 @@ genIpush (const iCode * ic)
           offset++;
           size--;
         }
+    }
+
+  freeAsmop (IC_LEFT (ic));
+}
+
+/*-----------------------------------------------------------------*/
+/* genPointerPush - generate code for pushing                      */
+/*-----------------------------------------------------------------*/
+static void
+genPointerPush (const iCode *ic)
+{
+  iCode *walk;
+
+  D (emit2 ("; genPointerPush", ""));
+
+  // Like in genIpush above.
+  for (walk = ic->next; walk->op != CALL && walk->op != PCALL; walk = walk->next);
+  if (!G.saved  && !regalloc_dry_run /* Cost is counted at CALL or PCALL instead */ )
+    saveRegsForCall (walk);
+
+  /* then do the push */
+  aopOp (IC_LEFT (ic), ic);
+
+  wassertl (IC_RIGHT (ic), "IPUSH_VALUE_AT_ADDRESS without right operand");
+  wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "IPUSH_VALUE_AT_ADDRESS with non-literal right operand");
+
+  int offset = operandLitValue (IC_RIGHT(ic));
+
+  if (!regDead (A_IDX, ic) || !regDead (X_IDX, ic) && !aopInReg (IC_LEFT (ic)->aop, 0, X_IDX) && !regDead (Y_IDX, ic) && !aopInReg (IC_LEFT (ic)->aop, 0, Y_IDX))
+    UNIMPLEMENTED;
+
+  bool use_y = !aopInReg (IC_LEFT (ic)->aop, 0, X_IDX) && (aopInReg (IC_LEFT (ic)->aop, 0, Y_IDX) || !regDead (X_IDX, ic));
+
+  genMove (use_y ? ASMOP_Y : ASMOP_X, IC_LEFT (ic)->aop, true, true, regDead (Y_IDX, ic));
+
+  int size = getSize (operandType (IC_LEFT (ic))->next);
+  for(int i = 0; i < size; i++)
+    {
+      int o = size - 1 - i + offset;
+
+      emit2 ("ld", "a, (%d, %s)", o, use_y ? "y" : "x");
+      cost (2 + use_y, 1);
+      push (ASMOP_A, 0, 1);
     }
 
   freeAsmop (IC_LEFT (ic));
@@ -8171,7 +8224,7 @@ genPointerGet (const iCode *ic)
     D (emit2 ("; Dummy read", ""));
 
   wassertl (right, "GET_VALUE_AT_ADDRESS without right operand");
-  wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "GET_VALUE_AT_ADDRESS with non-literal right operand");
+  wassertl (IS_OP_LITERAL (right), "GET_VALUE_AT_ADDRESS with non-literal right operand");
 
   size = result->aop->size;
 
@@ -9506,8 +9559,8 @@ genSTM8iCode (iCode *ic)
       genIpush (ic);
       break;
 
-    case IPOP:
-      wassertl (0, "Unimplemented iCode");
+   case IPUSH_VALUE_AT_ADDRESS:
+      genPointerPush (ic);
       break;
 
     case CALL:

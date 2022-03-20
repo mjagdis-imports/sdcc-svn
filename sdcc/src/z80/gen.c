@@ -1934,8 +1934,8 @@ aopArg (sym_link *ftype, int i)
 
   if (FUNC_ISZ88DK_FASTCALL (ftype))
     {
-      if (i != 1)
-        return false;
+      if (i != 1 || IS_STRUCT (args->type))
+        return 0;
 
       switch (getSize (args->type))
         {
@@ -1950,7 +1950,7 @@ aopArg (sym_link *ftype, int i)
         }
     }
     
-  // Old SDCC calling convention.
+  // Old SDCC calling convention: Pass everything on the stack.
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || IFFUNC_ISBANKEDCALL (ftype))
     return 0;
 
@@ -1963,6 +1963,9 @@ aopArg (sym_link *ftype, int i)
 
       for (j = 1, arg = args; j < i; j++, arg = arg->next)
         wassert (arg);
+
+      if (IS_STRUCT (arg->type))
+        return 0;
 
       if (i == 1 && getSize (arg->type) == 1)
         return ASMOP_A;
@@ -5635,38 +5638,84 @@ release:
 }
 
 /*-----------------------------------------------------------------*/
-/* genIpop - recover the registers: can happen only for spilling   */
+/* genPointerPush - generate code for pushing                      */
 /*-----------------------------------------------------------------*/
 static void
-genIpop (const iCode * ic)
+genPointerPush (const iCode *ic)
 {
-  int size, offset;
+   /* Scan ahead until we find the function that we are pushing parameters to.
+     Count the number of addSets on the way to figure out what registers
+     are used in the send set.
+   */
+  int nAddSets = 0;
+  iCode *walk = ic->next;
 
-  wassert (!regalloc_dry_run);
-
-  /* if the temp was not pushed then */
-  if (OP_SYMBOL (IC_LEFT (ic))->isspilt)
-    return;
-
-  aopOp (IC_LEFT (ic), ic, FALSE, FALSE);
-  size = IC_LEFT (ic)->aop->size;
-  offset = (size - 1);
-  if (isPair (IC_LEFT (ic)->aop))
+  while (walk)
     {
-      emit2 ("pop %s", getPairName (IC_LEFT (ic)->aop));
+      if (walk->op == SEND && !_G.saves.saved && !regalloc_dry_run)
+        nAddSets++;
+      else if (walk->op == CALL || walk->op == PCALL)
+        break; // Found it.
+
+      walk = walk->next; // Keep looking.
     }
-  else
+  if (!regalloc_dry_run && !_G.saves.saved && !regalloc_dry_run) /* Cost is counted at CALL or PCALL instead */
+    _saveRegsForCall (walk, false); /* Caller saves, and this is the first iPush. */
+
+  sym_link *ftype = operandType (IC_LEFT (walk));
+  if (walk->op == PCALL)
+    ftype = ftype->next;
+  const bool smallc = IFFUNC_ISSMALLC (ftype);
+
+  /* then do the push */
+  aopOp (IC_LEFT (ic), ic, false, false);
+
+  wassertl (IC_RIGHT (ic), "IPUSH_VALUE_AT_ADDRESS without right operand");
+  wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "IPUSH_VALUE_AT_ADDRESS with non-literal right operand");
+
+  int offset = operandLitValue (IC_RIGHT(ic));
+
+  wassert (!offset);
+  wassert (!smallc);
+
+  if (!isRegDead (HL_IDX, ic) && !isRegDead (DE_IDX, ic) || !isRegDead (A_IDX, ic))
+    UNIMPLEMENTED;
+
+  bool swap_de = !isRegDead (HL_IDX, ic);
+
+  if (swap_de)
     {
-      while (size--)
-        {
-          emit2 ("dec sp");
-          emit2 ("pop hl");
-          spillPair (PAIR_HL);
-          aopPut (IC_LEFT (ic)->aop, "l", offset--);
-        }
+      emit2 ("ex de, hl");
+      regalloc_dry_run_cost++;
     }
 
-  freeAsmop (IC_LEFT (ic), NULL);
+  genMove (ASMOP_HL, IC_LEFT (ic)->aop, true, true, swap_de ? false : isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
+
+  int size = getSize (operandType (IC_LEFT (ic))->next);
+  for(int i = 1; i < size; i++)
+    {
+      emit2 ("inc hl");
+      regalloc_dry_run_cost++;
+    }
+
+  for(int i = 0; i < size; i++)
+    {
+      emit2 ("ld a, (hl)");
+      emit2 ("dec hl");
+      emit2 ("push af");
+      emit2 ("inc sp");
+      regalloc_dry_run_cost += 4;
+      if (!regalloc_dry_run)
+        _G.stack.pushed++;
+    }
+
+  if (swap_de)
+    {
+      emit2 ("ex de, hl");
+      regalloc_dry_run_cost++;
+    }
+
+  freeAsmop (IC_LEFT (ic), 0);
 }
 
 /* This is quite unfortunate */
@@ -14114,10 +14163,6 @@ genIfx (iCode *ic, iCode *popIc)
   /* the result is now in the accumulator */
   freeAsmop (cond, NULL);
 
-  /* if there was something to be popped then do it */
-  if (popIc)
-    genIpop (popIc);
-
   /* if the condition is  a bit variable */
   if (isbit && IS_ITEMP (cond) && SPIL_LOC (cond))
     genIfxJump (ic, SPIL_LOC (cond)->rname);
@@ -16007,23 +16052,9 @@ genZ80iCode (iCode * ic)
       genIpush (ic);
       break;
 
-    case IPOP:
-      /* IPOP happens only when trying to restore a
-         spilt live range, if there is an ifx statement
-         following this pop then the if statement might
-         be using some of the registers being popped which
-         would destroy the contents of the register so
-         we need to check for this condition and handle it */
-      if (ic->next && ic->next->op == IFX && regsInCommon (IC_LEFT (ic), IC_COND (ic->next)))
-        {
-          emitDebug ("; genIfx");
-          genIfx (ic->next, ic);
-        }
-      else
-        {
-          emitDebug ("; genIpop");
-          genIpop (ic);
-        }
+    case IPUSH_VALUE_AT_ADDRESS:
+      emitDebug ("; genPointerPush");
+      genPointerPush (ic);
       break;
 
     case CALL:
@@ -16254,7 +16285,7 @@ genZ80iCode (iCode * ic)
       break;
 
     default:
-      ;
+      wassertl (0, "Unknown iCode");
     }
 }
 
