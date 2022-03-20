@@ -1,3 +1,128 @@
+2022-03-20 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCglue.c:
+	  Fix bug #3353.
+
+2022-03-20 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/bug-2368.c,
+	  support/regression/tests/bug-2770.c,
+	  support/regression/tests/bug-3231.c,
+	  support/regression/tests/bug3440327.c,
+	  support/regression/tests/cse.c,
+	  support/regression/tests/gcc-torture-execute-20021118-1.c,
+	  support/regression/tests/gcc-torture-execute-20040707-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/malloc.c,
+	  support/regression/tests/memory.c,
+	  support/regression/tests/preserves_regs.c,
+	  support/regression/tests/structparam.c:
+	  struct parameters for pdk (--stack-auto only).
+
+2022-03-19 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/pdk/ralloc2.cc,
+	  src/stm8/ralloc2.cc,
+	  src/z80/ralloc2.cc,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c:
+	  Fix a register allocation issue affecting calls to functions with multiple struct parameters.
+
+2022-03-19 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCcse.c,
+	  src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/gcc-torture-execute-20021118-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-struct-ret-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c,
+	  support/regression/tests/structparam.c:
+	  Rewrite struct parameter support to fix bug #3365.
+
+2022-03-19 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-stdarg-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c:
+	  Basic support for struct varargs.
+	* support/regression/tests/gcc-torture-execute-20040707-1.c,
+	  support/regression/tests/gcc-torture-execute-pr71700.c,
+	  support/regression/tests/gcc-torture-execute-struct-ini-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c:
+	  Enable some GCC tests that pass due to recent improvements in struct / union support.
+	* src/mos6502/gen.c,
+	  src/mos6502/ralloc.c,
+	  src/pdk/gen.c,
+	  src/pdk/ralloc.c,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c,
+	  src/z80/gen.c,
+	  src/z80/ralloc.c:
+	  Remove remains of support for unused IPOP.
+	* doc/README.txt,
+	  doc/sdccman.lyx,
+	  LICENSE:
+	  Make it a bit easier to read about the license situation.
+
+2022-03-19 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/mcs51/gen.c:
+	  Fix bug #3364.
+	* support/regression/tests/bitintvararg.c:
+	  Enable test for widths, for which it passes.
+	* support/regression/tests/gcc-torture-execute-bswap-2.c:
+	  Remove GCC test that requires int to be at least 32 bits wide.
+	* support/regression/tests/gcc-torture-execute-20020215-1.c,
+	  support/regression/tests/gcc-torture-execute-20020810-1.c,
+	  support/regression/tests/gcc-torture-execute-20021010-2.c,
+	  support/regression/tests/gcc-torture-execute-20021118-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20170401-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/gcc-torture-execute-restrict-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-stdarg-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-struct-ret-1.c:
+	  Enable some GCC tests that pass due to recent improvements in struct / union support.
+
+2022-03-18 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* device/include/stdarg.h,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCicode.c,
+	  support/regression/tests/gcc-torture-execute-pr60017.c,
+	  support/regression/tests/bitintvararg.c:
+	  Fixes for bit-precise varargs, bug #3361.
+
+2022-03-18 Philipp Klaus Krause <krauseph AT infromatik.uni-freiburg.de>
+
+	* src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/bug-3359.c,
+	  support/regression/tests/structparam.c,
+	  .version,
+	  doc/sdccman.lyx:
+	  Fix bug #3359 and implement struct / union parameters for stm8, z80 and related (and for pdk with --stack-auto), RFE #23.
+
 2022-03-16 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:

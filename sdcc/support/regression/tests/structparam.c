@@ -1,39 +1,36 @@
-/*
-20180131-1.c from the execute part of the gcc torture tests.
-*/
+/*  Test struct / union parameters
+
+    type: int, long, long long
+
+ */
 
 #include <testfwk.h>
 
-#pragma disable_warning 85
-
-/* PR rtl-optimization/84071 */
-/* Reported by Wilco <wilco@gcc.gnu.org> */
-
-typedef union 
-{
-  signed short ss;
-  unsigned short us;
-  int x;
-} U;
-
 #if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_mos6502) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && (!defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) || defined(__SDCC_STACK_AUTO)) // Todo: enable when struct parameters are supported!
-int f(int x, int y, int z, int a, U u);
-
-int f(int x, int y, int z, int a, U u)
+struct s
 {
-  return (u.ss <= 0) + u.us;
+	{type} a;
+	{type} b;
+};
+
+// Callee
+{type} f(struct s s)
+{
+	return s.a + s.b;
+}
+
+// Caller
+{type} g({type} i, {type} j)
+{
+	struct s s = {i, j};
+	return f(s);
 }
 #endif
 
-void
-testTortureExecute (void)
+void testParam (void)
 {
 #if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_mos6502) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && (!defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) || defined(__SDCC_STACK_AUTO)) // Todo: enable when struct parameters are supported!
-  U u = { .ss = -1 };
-
-  if (f (0, 0, 0, 0, u) != (1 << sizeof (short) * 8))
-    ASSERT (0);
-
-  return;
+	ASSERT (g(23, 42) == 23 + 42);
 #endif
 }
+

@@ -942,7 +942,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
       resultType = RESULT_TYPE_NONE;
 
       /* If it's a char, upcast to int. */
-      if (IS_INTEGRAL (ftype) && (getSize (ftype) < (unsigned) INTSIZE))
+      if (IS_INTEGRAL (ftype) && !IS_BITINT (ftype) && (getSize (ftype) < (unsigned) INTSIZE))
         {
           newType = newAst_LINK (INTTYPE);
         }
@@ -952,12 +952,6 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
           newType = newAst_LINK (copyLinkChain (ftype));
           DCL_TYPE (newType->opval.lnk) = port->unqualified_pointer;
           resultType = RESULT_TYPE_GPTR;
-        }
-
-      if (IS_STRUCT (ftype))
-        {
-          werrorfl ((*actParm)->filename, (*actParm)->lineno, E_STRUCT_AS_ARG, (*actParm)->opval.val->name);
-          return 1;
         }
 
       if (IS_ARRAY (ftype))

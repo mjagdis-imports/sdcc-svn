@@ -3132,17 +3132,17 @@ inCalleeSaveList (char *s)
 /*                         argument to a pointer to that type.     */
 /*-----------------------------------------------------------------*/
 value *
-aggregateToPointer (value * val)
+aggregateToPointer (value *val)
 {
-  if (IS_AGGREGATE (val->type))
+  // mcs51, ds390, hc08, s08 do not yet support struct parameters.
+  if ((TARGET_MCS51_LIKE || TARGET_HC08_LIKE) && IS_STRUCT (val->type))
     {
-      /* if this is a structure */
-      if (IS_STRUCT (val->type))
-        {
-          werror (E_STRUCT_AS_ARG, val->name);
-          return NULL;
-        }
+      werror (E_STRUCT_AS_ARG, val->name);
+      return 0;
+    }
 
+  if (IS_ARRAY (val->type))
+    {
       /* change to a pointer depending on the */
       /* storage class specified        */
       switch (SPEC_SCLS (val->etype))
