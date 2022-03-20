@@ -1,6 +1,6 @@
-// Philipp Klaus Krause, philipp@informatik.uni-frankfurt.de, pkk@spth.de, 2010 - 2011
+// Philipp Klaus Krause, philipp@informatik.uni-frankfurt.de, pkk@spth.de, 2010 - 2013
 //
-// (c) 2012 Goethe-Universität Frankfurt
+// (c) 2010 - 2013 Goethe-Universität Frankfurt
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
@@ -21,10 +21,8 @@
 //#define DEBUG_RALLOC_DEC // Uncomment to get debug messages while doing register allocation on the tree decomposition.
 //#define DEBUG_RALLOC_DEC_ASS // Uncomment to get debug messages about assignments while doing register allocation on the tree decomposition (much more verbose than the one above).
 
-#define TD_SALLOC
-#define CH_SALLOC
-
 #include "SDCCralloc.hpp"
+#include "SDCCsalloc.hpp"
 
 extern "C"
 {
@@ -37,6 +35,7 @@ extern "C"
 #define REG_A 0
 #define REG_X 1
 #define REG_Y 2
+
 
 template <class I_t>
 static void add_operand_conflicts_in_node(const cfg_node &n, I_t &I)
@@ -100,6 +99,7 @@ static bool operand_in_reg(const operand *o, reg_t r, const i_assignment_t &ia, 
   return(false);
 }
 
+// Return true, iff the operand is placed in a reg.
 template <class G_t, class I_t>
 static bool operand_is_ax(const operand *o, const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {  
@@ -129,6 +129,7 @@ static bool operand_is_ax(const operand *o, const assignment &a, unsigned short 
   return(false);
 }
 
+// Return true, iff the operand is placed in xa
 template <class G_t, class I_t>
 static bool XAinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
@@ -158,6 +159,8 @@ static bool XAinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     ic->op == '^' ||
     ic->op == '|' ||
     ic->op == BITWISEAND ||
+    ic->op == RLC ||
+    ic->op == RRC ||
     ic->op == GETABIT ||
     ic->op == GETBYTE ||
     ic->op == GETWORD ||
@@ -319,6 +322,7 @@ static void set_surviving_regs(const assignment &a, unsigned short int i, const 
       if(a.global[*v] < 0)
         continue;
       ic->rMask = bitVectSetBit(ic->rMask, a.global[*v]);
+
       if(G[i].dying.find(*v) == G[i].dying.end())
         if(!((IC_RESULT(ic) && !POINTER_SET(ic)) && IS_SYMOP(IC_RESULT(ic)) && OP_SYMBOL_CONST(IC_RESULT(ic))->key == I[*v].v))
           ic->rSurv = bitVectSetBit(ic->rSurv, a.global[*v]);
@@ -338,17 +342,17 @@ static void assign_operand_for_cost(operand *o, const assignment &a, unsigned sh
       if(a.global[v] >= 0)
         { 
           sym->regs[I[v].byte] = regsm6502 + a.global[v];   
+          sym->accuse = 0;
           sym->isspilt = false;
           sym->nRegs = I[v].size;
-          sym->accuse = 0;
         }
       else
         {
-          for(int i = 0; i < I[v].size; i++)
-            sym->regs[i] = 0;
+          sym->isspilt = true;
           sym->accuse = 0;
           sym->nRegs = I[v].size;
-          sym->isspilt = true;
+          for(int i = 0; i < I[v].size; i++)
+            sym->regs[i] = 0;
         }
     }
 }
@@ -398,7 +402,8 @@ static bool operand_sane(const operand *o, const assignment &a, unsigned short i
     {
       const reg_t l = a.global[oi->second];
       const reg_t h = a.global[oi2->second];
-      if(l == REG_A && h == REG_Y || l == REG_Y)
+//      if(l == REG_A && h == REG_Y || l == REG_Y)
+      if(l != REG_A || h != REG_X)
         return(false);
     }
   
@@ -441,17 +446,19 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     return(std::numeric_limits<float>::infinity());
 
 #if 0
-  std::cout << "Calculating at cost at ic " << ic->key << " for: ";
-  for(unsigned int i = 0; i < boost::num_vertices(I); i++)
-  {
-  	std::cout << "(" << i << ", " << int(a.global[i]) << ") ";
-  }
+  std::cout << "Calculating at cost at ic " << ic->key << ", op " << ic->op << " for: ";
+  print_assignment(a);
   std::cout << "\n";
   std::cout.flush();
 #endif
 
   if(ic->generated)
+    {
+#if 0
+  std::cout << "Skipping, already generated.\n";
+#endif
     return(0.0f);
+    }
 
   if(!XAinst_ok(a, i, G, I))
     return(std::numeric_limits<float>::infinity());
@@ -467,6 +474,9 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case LABEL:
     case GOTO:
     case INLINEASM:
+#if 0
+  std::cout << "Skipping, indepent from assignment.\n";
+#endif
       return(0.0f);
     case '!':
     case '~':
@@ -516,20 +526,23 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
       set_surviving_regs(a, i, G, I);
       c = drym6502iCode(ic);
       ic->generated = false;
+#if 0
+      std::cout << "Got cost " << c << "\n";
+#endif
       return(c);
     default:
       return(0.0f);
     }
 }
 
-// For early removal of assignments that cannot be extended to valid assignments. This is just a dummy for now, it probably isn't really needed for m6502 due to the low number of registers.
+// For early removal of assignments that cannot be extended to valid assignments. This is just a dummy for now.
 template <class G_t, class I_t>
 static bool assignment_hopeless(const assignment &a, unsigned short int i, const G_t &G, const I_t &I, const var_t lastvar)
 {
   return(false);
 }
 
-// Increase chance of finding good compatible assignments at join nodes. This is just a dummy for now, it probably isn't really needed for m6502 due to the low number of registers.
+// Increase chance of finding good compatible assignments at join nodes.
 template <class T_t>
 static void get_best_local_assignment_biased(assignment &a, typename boost::graph_traits<T_t>::vertex_descriptor t, const T_t &T)
 {
@@ -620,9 +633,9 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I)
       if(winner.global[v] >= 0)
         { 
           sym->regs[I[v].byte] = regsm6502 + winner.global[v];   
+          sym->accuse = 0;
           sym->isspilt = false;
           sym->nRegs = I[v].size;
-          sym->accuse = 0;
         }
       else
         {
@@ -631,7 +644,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I)
           sym->accuse = 0;
           sym->nRegs = I[v].size;
           wassert (sym->nRegs);
-          //spillThis(sym); Leave it to regFix, which can do some spillocation compaction. Todo: Use Thorup instead.
+          //m6502SpillThis(sym); Leave it to regFix, which can do some spillocation compaction. Todo: Use Thorup instead.
           sym->isspilt = false;
         }
     }
@@ -646,7 +659,6 @@ iCode *m6502_ralloc2_cc(ebbIndex *ebbi)
 {
   eBBlock **const ebbs = ebbi->bbOrder;
   const int count = ebbi->count;
-  iCode *ic;
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Processing " << currFunc->name << " from " << dstFileName << "\n"; std::cout.flush();
@@ -656,7 +668,7 @@ iCode *m6502_ralloc2_cc(ebbIndex *ebbi)
 
   con_t conflict_graph;
 
-  ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
+  iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
   if(options.dump_graphs)
     dump_cfg(control_flow_graph);
