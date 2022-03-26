@@ -2,8 +2,11 @@
 
 	* support/regression/Makefile.in,
 	  support/regression/cases/Makefile.in,
-	  support/regression/cases/mkdrv.py:
-	  Regression test infrastructure , picked from patch #430 by Felix Salfelder (felixs).
+	  support/regression/cases/mkdrv.py,
+	  support/regression/ports/*/spec.mk:
+	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs).
+	* support/regression/tests/structparam.c.in:
+	  Fix test file extension for parametrized test.
 
 2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
