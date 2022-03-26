@@ -22,9 +22,10 @@ INC_DIR = .
 EXTRAS = $(PORT_CASES_DIR)/testfwk$(OBJEXT) $(PORT_CASES_DIR)/support$(OBJEXT)
 include $(srcdir)/fwk/lib/spec.mk
 
-%.out: %$(BINEXT) $(CASES_DIR)/timeout
+OVERRIDE_EMU_RULE = YES
+%.out: %$(BINEXT) $(TMP_DIR)/timeout
 	mkdir -p $(dir $@)
-	-$(CASES_DIR)/timeout $(RUN_TIMEOUT) $< > $@
+	-$(TMP_DIR)/timeout $(RUN_TIMEOUT) $< > $@
 	-grep -n FAIL $@ /dev/null || true
 
 %$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB)

@@ -1,0 +1,59 @@
+# Makefile for "cases"
+# C code generated from "tests"
+
+# Comment this out for debugging.
+.SILENT:
+
+srcdir = @srcdir@
+top_builddir = @top_builddir@
+PYTHON = @PYTHON@
+
+# Script that takes a source test suite and generates the iterations
+GENERATE_CASES = $(srcdir)/generate-cases.py
+MAKE_DRV = $(srcdir)/mkdrv.py # BUG? use 1 line of sed?
+TESTS_DIR = $(srcdir)/../tests
+
+vpath %.c.in $(TESTS_DIR)
+vpath %.c $(TESTS_DIR)
+
+TPL_TESTS = $(shell (cd $(TESTS_DIR); ls *.c.in))
+C_TESTS = $(shell (cd $(TESTS_DIR); ls *.c))
+TPL_TEST_STEMS = $(TPL_TESTS:%.c.in=%)
+
+# expand tests with python script
+%/stamp: %.c.in
+	rm -rf $*
+	mkdir -p $*
+#	@echo expanding $*
+	@$(PYTHON) $(GENERATE_CASES) $< $*
+	touch $@
+
+# expand(?) tests with python script (BUG?)
+# mainly M4 tests
+%/stamp: %.c
+	rm -rf $*
+	mkdir -p $*
+#	@echo expanding $*
+	@$(PYTHON) $(GENERATE_CASES) $< $*
+	touch $@
+
+all: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS)
+
+# remove later
+all: $(C_TESTS:%.c=%/stamp)
+
+clean:
+	rm -f */*.c */*/stamp
+	rm -f *.c */stamp
+	-rmdir * # some are not directories.
+
+.PRECIOUS: %/stamp
+
+info:
+	@echo TESTS_DIR $(TESTS_DIR)
+	@echo VPATH $(VPATH)
+	@echo TPL_TEST_STEMS $(TPL_TEST_STEMS)
+	@echo C_TEST_SRCS $(C_TEST_SRCS)
+
+Makefile: $(srcdir)/Makefile.in
+	 cd $(top_builddir); ./config.status support/regression/cases/Makefile

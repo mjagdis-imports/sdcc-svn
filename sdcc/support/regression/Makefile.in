@@ -72,8 +72,9 @@ RESULTS_DIR = results
 PORTS_DIR = $(srcdir)/ports
 
 # Intermediate data directories
-# Directory that generated cases and the related object code go.
-CASES_DIR = gen
+# Directory where test cases and the generated object code go.
+CASES_DIR = cases
+TMP_DIR = gen
 
 # Script that takes a source test suite and generates the iterations
 GENERATE_CASES = $(srcdir)/generate-cases.py
@@ -92,7 +93,7 @@ CLEAN_PORTS = $(filter-out mcs51-common, $(PORTS))
 MAKE_LIBRARY =
 
 # support VPATH:
-vpath %.c $(CASES_DIR):$(TESTS_DIR)
+vpath %.c $(CASES_DIR)
 vpath %.c.in $(TESTS_DIR)
 
 all: test-ports
@@ -105,7 +106,6 @@ test-ports:
 
 # Helper rule for testing various ports
 ${PORTS:%=test-%} : test-%: test-common
-	$(MAKE) test-common
 	$(MAKE) test-port PORT=$*
 
 # Shorthand for testing the mcs51 port only
@@ -127,13 +127,17 @@ test-host2:
 # Do not do this for the individual test files, to avoid quadratic complexity.
 ifndef CASES
 ALL_C_TESTS_ = $(shell find $(TESTS_DIR) -name "*.c.in")
-ALL_C_TESTS = $(ALL_C_TESTS_:%.in=%) $(shell find $(TESTS_DIR) -name "*.c")
-ALL_M_TESTS = $(shell find $(TESTS_DIR) -name "*.m4")
+ALL_C_TESTS__ = $(shell find $(TESTS_DIR) -name "*.c")
+ALL_C_TESTS = $(ALL_C_TESTS_:%.in=%) $(ALL_C_TESTS__)
+# ALL_M_TESTS = $(shell find $(TESTS_DIR) -name "*.m4")
 M_CASES = $(ALL_M_TESTS:$(TESTS_DIR)/%.m4=$(CASES_DIR)/%.c)
 endif
 
 # Intermediate directory
-PORT_CASES_DIR = $(CASES_DIR)/$(PORT)
+PORT_TMP_DIR = $(TMP_DIR)/$(PORT)
+# BUG. used in spec.mk
+PORT_CASES_DIR = $(TMP_DIR)/$(PORT)
+# PORT_CASES_DIRR = $(TMP_DIR)/$(PORT)
 PORT_RESULTS_DIR = $(RESULTS_DIR)/$(PORT)
 # Each test generates a result log file
 ifndef CASES
@@ -143,6 +147,7 @@ endif
 SDCC_EXTRA_DIR = $(top_builddir)/../sdcc-extra
 
 # Defaults.  Override in spec.mk if required.
+PORT_BASE = $(PORT)
 # Path to SDCC
 ifdef SDCC_BIN_PATH
   SDCC = $(SDCC_BIN_PATH)/sdcc$(EXEEXT)
@@ -163,12 +168,27 @@ CC_FOR_BUILD = $(CC)
 
 # Only include if we're in a per-port call.
 ifdef PORT
+
+# run simulator with SIM_TIMEOUT seconds timeout
   # include ./$(PORT)/spec.mk if exists, else include $(PORTS_DIR)/$(PORT)/spec.mk
   ifeq ($(shell if test -f ./ports/$(PORT)/spec.mk; then echo OK; fi),OK)
     include ./ports/$(PORT)/spec.mk
   else
     include $(PORTS_DIR)/$(PORT)/spec.mk
   endif
+
+ifdef OVERRIDE_EMU_RULE
+# need rule from spec.mk (e.g. host/spec.mk)
+else
+# this one will do for all the others.
+%.out: %$(BINEXT) $(TMP_DIR)/timeout
+	mkdir -p $(dir $@)
+	-$(TMP_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $(EMU_PORT_FLAG) $(EMU_FLAGS) $< < $(PORTS_DIR)/$(PORT_BASE)/uCsim.cmd > $@ \
+	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
+	$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
+	-grep -n FAIL $@ /dev/null || true
+endif
+
 endif
 
 make_library: $(MAKE_LIBRARY)
@@ -180,60 +200,59 @@ endif
 
 # List of intermediate files to keep.  Pretty much keep everything as
 # disk space is free.
-.PRECIOUS: $(PORT_CASES_DIR)/% %$(OBJEXT) %$(EXEEXT) %$(BINEXT)
+.PRECIOUS: $(RESULTS_DIR) $(CASES_DIR)/% $(PORT_TMP_DIR)/% %$(OBJEXT) %$(EXEEXT) %$(BINEXT) \
+	$(CASES_DIR)/%/stamp
 
-# $(CASES_DIR)/stamp is really a proxy for $(CASES_DIR). We shouldn't use
-# $(CASES_DIR) as a dependency directly, because as a directory its time
+# $(TMP_DIR)/stamp is really a proxy for $(TMP_DIR). We shouldn't use
+# $(TMP_DIR) as a dependency directly, because as a directory its time
 # stamp updates every time something in the directory is updated (which
 # can then cause spurious rebuilds of other targets that can conflict
 # with parallel make jobs)
-$(CASES_DIR)/stamp:
-	mkdir -p $(CASES_DIR)
+$(TMP_DIR)/stamp:
+	mkdir -p $(TMP_DIR)
 	touch $@
 
 # Rule to generate .c files from .m4 files
-$(CASES_DIR)/%.c: $(TESTS_DIR)/%.m4 $(CASES_DIR)/stamp
+$(CASES_DIR)/%.c: $(TESTS_DIR)/%.m4
 	$(M4) -I $(srcdir)/m4include rtmacros.m4 $< > $@
 
 # Rule to generate the iterations of a test suite off the source suite.
-$(PORT_CASES_DIR)/%/iterations.stamp: %.c.in $(GENERATE_CASES)
-	rm -rf $(dir $@)
-	mkdir -p $(dir $@)
-	$(PYTHON) $(GENERATE_CASES) $< $(dir $@)
-	touch $@
-
-# BUG? also needed to process c files. (from M4 tests)
-$(PORT_CASES_DIR)/%/iterations.stamp: %.c $(GENERATE_CASES)
-	rm -rf $(dir $@)
-	mkdir -p $(dir $@)
-	$(PYTHON) $(GENERATE_CASES) $< $(dir $@)
+$(CASES_DIR)/%/stamp: $(TESTS_DIR)/%.c.in
+	$(MAKE) -C $(CASES_DIR) $*/stamp
 	touch $@
 
 # Rule linking the combined results log to all of the files in the
 # iteration directory.
-$(PORT_RESULTS_DIR)/%.out: $(PORT_CASES_DIR)/%/iterations.stamp
-	$(MAKE) iterations PORT=$(PORT) CASES=$(dir $<)
+$(PORT_RESULTS_DIR)/%.out: $(CASES_DIR)/%/stamp
+#	@echo creating $@
+	# mkdir -p $(dir $@)/$*
+#	@echo "$(MAKE) iterations PORT=$(PORT) CASES=$*/"
+	$(MAKE) iterations PORT=$(PORT) CASES=$*/
 	$(PYTHON) $(srcdir)/compact-results.py $* < $@
 
 # Rule to summarise the results for one port after all of the tests
 # have been run.
 $(RESULTS_DIR)/$(PORT).sum: $(PORT_RESULTS)
+	@echo "collating port results $(PORT_RESULTS)"
 	cat $(PORT_RESULTS) | $(PYTHON) $(srcdir)/collate-results.py $(PORT) > $@
 
-port-fwklib: $(EXTRAS) $(FWKLIB)
+port-fwklib: port-dirs $(EXTRAS) $(FWKLIB)
 
 port-dirs:
-	mkdir -p $(PORT_CASES_DIR) $(PORT_RESULTS_DIR)
-	echo Running $(PORT) regression tests
+	@echo "mkdir -p $(PORT_TMP_DIR) $(PORT_RESULTS_DIR)"
+	mkdir -p $(PORT_TMP_DIR) $(PORT_RESULTS_DIR)
 
 # Files shared between all ports need to be built by the test-common target,
 # which should always be built before the port specific targets.
-test-common: $(CASES_DIR)/stamp $(M_CASES) $(CASES_DIR)/timeout
+test-common: $(M_CASES) $(TMP_DIR)/timeout
+	$(MAKE) -C cases
 
 test-port:
 	# recurse: force vpath to re-read the $(CASES_DIR)
 	$(MAKE) port-dirs PORT=$(PORT)
+	@echo "$(MAKE) port-fwklib PORT=$(PORT)"
 	$(MAKE) port-fwklib PORT=$(PORT)
+	@echo "$(MAKE) $(RESULTS_DIR)/$(PORT).sum PORT=$(PORT)"
 	$(MAKE) $(RESULTS_DIR)/$(PORT).sum PORT=$(PORT)
 	cat $(RESULTS_DIR)/$(PORT).sum
 
@@ -241,19 +260,25 @@ test-port:
 # test
 
 # List of all of the generated iteration source files.
-SUB_CASES = $(sort $(wildcard $(CASES)*.c))
+SUB_CASES = $(sort $(wildcard $(CASES_DIR)/$(CASES)*.c))
 # List of all the sub result logs generated from the iterations.
-SUB_RESULTS = $(SUB_CASES:%.c=%.out)
+# these are stored in TMP_DIR...
+SUB_RESULTS_ = $(SUB_CASES:%.c=%.out)
+SUB_RESULTS = $(SUB_RESULTS_:cases%=$(TMP_DIR)/$(PORT)%)
 # Overall target.  Concatenation of all of the sub results.
-RESULTS = $(CASES:$(CASES_DIR)/%/$(DIREXT)=$(RESULTS_DIR)/%.out)
+RESULTS = $(CASES:%/$(DIREXT)=$(PORT_RESULTS_DIR)/%.out)
 
 iterations: $(RESULTS)
 
 # Rule to generate the overall target from the sub results.
 $(RESULTS): $(SUB_RESULTS)
-	cat $(SUB_RESULTS) > $@
+	cat $(SUB_RESULTS) > $@ # subresult rule
 
-$(CASES_DIR)/timeout: $(srcdir)/fwk/lib/timeout.c $(CASES_DIR)/stamp
+# BUG: just create where needed.
+results/$(PORT)/%.out: gen/$(PORT)/%.out
+	cp $< $@
+
+$(TMP_DIR)/timeout: $(srcdir)/fwk/lib/timeout.c $(TMP_DIR)/stamp
 	$(CC_FOR_BUILD) $(CFLAGS) $< -o $@
 
 # The remainder of the rules are in $PORT/spec.mk.  The port needs to
@@ -270,7 +295,8 @@ $(CASES_DIR)/timeout: $(srcdir)/fwk/lib/timeout.c $(CASES_DIR)/stamp
 # BeginGeneric rules
 
 clean:
-	rm -rf $(CASES_DIR) $(RESULTS_DIR) *.pyc __pycache__
+	$(MAKE) -C $(CASES_DIR) clean
+	rm -rf $(TMP_DIR) $(RESULTS_DIR) *.pyc __pycache__
 	for i in $(CLEAN_PORTS); do \
 	  $(MAKE) -f $(PORTS_DIR)/$$i/spec.mk _clean PORTS_DIR=$(PORTS_DIR) PORT=$$i srcdir=$(srcdir); \
 	done
@@ -278,6 +304,10 @@ clean:
 distclean: clean
 	rm -f $(PORTS_DIR)/host/spec.mk
 	rm -f Makefile
+
+$(PORT_CASES_DIR)/%$(OBJEXT): %.c
+	mkdir -p $(dir $@) # BUG?
+	$(SDCC) $(SDCCFLAGS) -c $< -o $@
 
 Makefile: $(srcdir)/Makefile.in
 	 cd $(top_builddir); ./config.status support/regression/Makefile

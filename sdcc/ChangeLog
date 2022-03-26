@@ -1,5 +1,14 @@
 2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* configure,
+	  configure.ac,
+	  support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in,
+	  support/regression/cases:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs), made less verbose.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/Makefile.in:
 	  Fix an issue in test-host regression test output, fix suggested via chat by Felix Salfelder (felixs).
 
