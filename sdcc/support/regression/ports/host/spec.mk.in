@@ -3,7 +3,8 @@
 # runtimeout in seconds
 RUN_TIMEOUT = 1
 
-SDCC = @CC@
+CC = @CC@
+SDCC =${CC}
 SDCCFLAGS = @CFLAGS@ @C99_FLAG@ $(CPPFLAGS) -DPORT_HOST=1 -DREENTRANT= -I$(top_builddir) -I$(top_srcdir)
 SDLDFLAGS = @LDFLAGS@
 # disable all warnings:
@@ -23,16 +24,18 @@ EXTRAS = $(PORT_CASES_DIR)/testfwk$(OBJEXT) $(PORT_CASES_DIR)/support$(OBJEXT)
 include $(srcdir)/fwk/lib/spec.mk
 
 OVERRIDE_EMU_RULE = YES
-%.out: %$(BINEXT) $(TMP_DIR)/timeout
+$(RESULTS_DIR)/%.out: $(TMP_DIR)/%$(BINEXT) $(TMP_DIR)/timeout
+	@echo running $<
 	mkdir -p $(dir $@)
-	-$(TMP_DIR)/timeout $(RUN_TIMEOUT) $< > $@
-	-grep -n FAIL $@ /dev/null || true
+	-${M_V_at}$(TMP_DIR)/timeout $(RUN_TIMEOUT) $< > $@
+	-${M_V_at}grep -n FAIL $@ /dev/null || true
 
 %$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB)
-	$(SDCC) $(SDCCFLAGS) $(SDLDFLAGS) -o $@ $< $(EXTRAS) $(FWKLIB) -lm
+	@echo compiling $@
+	${M_V_at}$(SDCC) $(SDCCFLAGS) $(SDLDFLAGS) -o $@ $< $(EXTRAS) $(FWKLIB) -lm
 
-%$(OBJEXT): %.c
-	$(SDCC) $(SDCCFLAGS) -c $< -o $@
+#%$(OBJEXT): %.c
+#	$(SDCC) $(SDCCFLAGS) -c $< -o $@
 
 $(PORT_CASES_DIR)/%$(OBJEXT): $(PORTS_DIR)/$(PORT)/%.c
 	$(SDCC) $(SDCCFLAGS) -c $< -o $@

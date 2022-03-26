@@ -175,7 +175,7 @@ ifdef OVERRIDE_EMU_RULE
 # need rule from spec.mk (e.g. host/spec.mk)
 else
 # this one will do for all the others.
-%.out: %$(BINEXT) $(TMP_DIR)/timeout
+$(RESULTS_DIR)/%.out: $(TMP_DIR)/%$(BINEXT) $(TMP_DIR)/timeout
 	mkdir -p $(dir $@)
 	-$(TMP_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $(EMU_PORT_FLAG) $(EMU_FLAGS) $< < $(PORTS_DIR)/$(PORT_BASE)/uCsim.cmd > $@ \
 	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
@@ -195,7 +195,7 @@ endif
 # List of intermediate files to keep.  Pretty much keep everything as
 # disk space is free.
 .PRECIOUS: $(RESULTS_DIR) $(CASES_DIR)/% $(PORT_TMP_DIR)/% %$(OBJEXT) %$(EXEEXT) %$(BINEXT) \
-	$(CASES_DIR)/%/stamp
+	$(CASES_DIR)/%/stamp $(RESULTS_DIR)/$(PORT)/%.out
 
 # $(TMP_DIR)/stamp is really a proxy for $(TMP_DIR). We shouldn't use
 # $(TMP_DIR) as a dependency directly, because as a directory its time
@@ -249,7 +249,7 @@ SUB_CASES = $(sort $(wildcard $(CASES_DIR)/$(CASES)*.c))
 # List of all the sub result logs generated from the iterations.
 # these are stored in TMP_DIR...
 SUB_RESULTS_ = $(SUB_CASES:%.c=%.out)
-SUB_RESULTS = $(SUB_RESULTS_:cases%=$(TMP_DIR)/$(PORT)%)
+SUB_RESULTS = $(SUB_RESULTS_:cases%=$(RESULTS_DIR)/$(PORT)%)
 # Overall target.  Concatenation of all of the sub results.
 RESULTS = $(CASES:%/$(DIREXT)=$(PORT_RESULTS_DIR)/%.out)
 
@@ -258,10 +258,6 @@ iterations: $(RESULTS)
 # Rule to generate the overall target from the sub results.
 $(RESULTS): $(SUB_RESULTS)
 	cat $(SUB_RESULTS) > $@ # subresult rule
-
-# BUG: just create where needed.
-results/$(PORT)/%.out: gen/$(PORT)/%.out
-	cp $< $@
 
 $(TMP_DIR)/timeout: $(srcdir)/fwk/lib/timeout.c $(TMP_DIR)/stamp
 	$(CC_FOR_BUILD) $(CFLAGS) $< -o $@

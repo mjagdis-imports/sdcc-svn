@@ -3,7 +3,8 @@
 	* support/regression/Makefile.in,
 	  support/regression/cases/Makefile.in,
 	  support/regression/cases/mkdrv.py,
-	  support/regression/ports/*/spec.mk:
+	  support/regression/ports/*/spec.mk,
+	  support/regression/ports/host/spec.mk.in:
 	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs).
 	* support/regression/tests/structparam.c.in:
 	  Fix test file extension for parametrized test.
