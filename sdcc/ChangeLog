@@ -1,5 +1,10 @@
 2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/tests/bitintvararg.c.in:
+	  Fix host test disable condition.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/Makefile.in,
 	  support/regression/cases/Makefile.in,
 	  support/regression/cases/mkdrv.py,
@@ -17,6 +22,19 @@
 	  support/regression/ports/host/spec.mk.in,
 	  support/regression/cases:
 	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs), made less verbose.
+
+
+
+2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/tlcs90/abs.s,
+	  device/lib/tlcs90/atomic_flag_test_and_set.s,
+	  device/lib/tlcs90/crt0.s,
+	  device/lib/tlcs90/memcpy.s,
+	  device/lib/tlcs90/memmove.s,
+	  device/lib/tlcs90/strcpy.s,
+	  device/lib/tlcs90/strlen.s:
+	  Optimize handwritten assembly.
 
 2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
@@ -90,7 +108,7 @@
 	  support/regression/tests/bug-3368.c:
 	  Fix bug #3368.
 	* support/regression/tests/bug-3235.c:
-	  Test for a bug that was fixd a while ago.
+	  Test for a bug that was fixed a while ago.
 
 2022-03-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
