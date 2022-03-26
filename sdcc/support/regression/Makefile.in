@@ -1,6 +1,7 @@
 # Test suite Makefile
 # Part of SDCC - http://sdcc.sourceforge.net/
 # Michael Hope <michaelh@juju.net.nz> 2001
+# refactored: Felix Salfelder 2022
 #
 # This Makefile builds and runs the test suites under tests/ for each
 # one of the supported ports located under ports/.  The test suite
@@ -119,16 +120,11 @@ test-host2:
 	$(MAKE) test-common
 	$(MAKE) test-port PORT=host
 
-# Begin per-port rules
-# List of all of the known source test suites.
-# Do not do this for the individual test files, to avoid quadratic complexity.
-ifndef CASES
-ALL_C_TESTS_ = $(shell find $(TESTS_DIR) -name "*.c.in")
-ALL_C_TESTS__ = $(shell find $(TESTS_DIR) -name "*.c")
-ALL_C_TESTS = $(ALL_C_TESTS_:%.in=%) $(ALL_C_TESTS__:%.c=%_p.c)
-# ALL_M_TESTS = $(shell find $(TESTS_DIR) -name "*.m4")
-M_CASES = $(ALL_M_TESTS:$(TESTS_DIR)/%.m4=$(CASES_DIR)/%.c)
-endif
+# generate test list (and possibly expand tests)
+cases/MakeList:
+	$(MAKE) -C cases MakeList
+
+include cases/MakeList
 
 # Intermediate directory
 PORT_TMP_DIR = $(TMP_DIR)/$(PORT)
@@ -136,9 +132,10 @@ PORT_TMP_DIR = $(TMP_DIR)/$(PORT)
 PORT_CASES_DIR = $(TMP_DIR)/$(PORT)
 # PORT_CASES_DIRR = $(TMP_DIR)/$(PORT)
 PORT_RESULTS_DIR = $(RESULTS_DIR)/$(PORT)
-# Each test generates a result log file
+
+# For each test we produce a result log file, %.out
 ifndef CASES
-PORT_RESULTS = $(sort $(patsubst %.c,$(PORT_RESULTS_DIR)/%.out,$(notdir $(ALL_C_TESTS))) $(patsubst %.m4,$(PORT_RESULTS_DIR)/%.out,$(notdir $(ALL_M_TESTS))))
+PORT_RESULTS = $(TEST_STEMS:%=$(PORT_RESULTS_DIR)/%.out)
 endif
 
 SDCC_EXTRA_DIR = $(top_builddir)/../sdcc-extra
@@ -209,24 +206,12 @@ $(TMP_DIR)/stamp:
 	mkdir -p $(TMP_DIR)
 	touch $@
 
-# Rule to generate .c files from .m4 files
-$(CASES_DIR)/%.c: $(TESTS_DIR)/%.m4
-	$(M4) -I $(srcdir)/m4include rtmacros.m4 $< > $@
-
-# Rule to generate the iterations of a test suite off the source suite.
-$(CASES_DIR)/%/stamp: $(TESTS_DIR)/%.c.in
-	$(MAKE) -C $(CASES_DIR) $*/stamp
-
-# Rule to generate driver
-$(CASES_DIR)/%_p.c: $(TESTS_DIR)/%.c
-	$(MAKE) -C $(CASES_DIR) $*_p.c
-
 # Rule linking the combined results log to all of the files in the
 # iteration directory.
 $(PORT_RESULTS_DIR)/%.out: $(CASES_DIR)/%/stamp
-#	@echo creating $@
+	@echo creating $@
 	# mkdir -p $(dir $@)/$*
-#	@echo "$(MAKE) iterations PORT=$(PORT) CASES=$*/"
+	@echo "$(MAKE) iterations PORT=$(PORT) CASES=$*/"
 	$(MAKE) iterations PORT=$(PORT) CASES=$*/
 	$(PYTHON) $(srcdir)/compact-results.py $* < $@
 

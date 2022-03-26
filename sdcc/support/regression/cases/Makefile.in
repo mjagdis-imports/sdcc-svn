@@ -1,12 +1,10 @@
 # Makefile for "cases"
 # C code generated from "tests"
 
-# Comment this out for debugging.
-.SILENT:
-
 srcdir = @srcdir@
 top_builddir = @top_builddir@
 PYTHON = @PYTHON@
+M4 = @M4@
 
 # Script that takes a source test suite and generates the iterations
 GENERATE_CASES = $(srcdir)/generate-cases.py
@@ -18,35 +16,42 @@ vpath %.c $(TESTS_DIR)
 
 TPL_TESTS = $(shell (cd $(TESTS_DIR); ls *.c.in))
 C_TESTS = $(shell (cd $(TESTS_DIR); ls *.c))
+M4_TESTS = $(shell (cd $(TESTS_DIR); ls *.m4))
+
 TPL_TEST_STEMS = $(TPL_TESTS:%.c.in=%)
-C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c)
+
+# maybe this is not necessary, just ship the _p.c files?
+# (does it matter?)
+C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c) $(M4_TESTS:%.m4=%.c)
+
+# Rule to generate .c files from .m4 files
+# bug/feature? run MAKE_DRV as well (requires magic filenames and paths)
+%.c: $(TESTS_DIR)/%.m4
+	$(M4) -I $(srcdir)/../m4include rtmacros.m4 $< > $*.m4c
+	$(PYTHON) $(MAKE_DRV) $*.m4c $*.c
+	touch $@
 
 # expand tests with python script
 %/stamp: %.c.in $(GENERATE_CASES)
 	rm -rf $*
 	mkdir -p $*
-#	@echo expanding $*
+	@echo expanding $*
 	@$(PYTHON) $(GENERATE_CASES) $< $*
 	touch $@
-
-# expand(?) tests with python script (BUG?)
-# mainly M4 tests
-%/stamp: %.c $(GENERATE_CASES)
-	rm -rf $*
-	mkdir -p $*
-#	@echo expanding $*
-	@$(PYTHON) $(GENERATE_CASES) $< $*
-	touch $@
-
 
 tst_%.c: %.c $(MAKE_DRV)
 	PYTHONPATH=$(srcdir)/.. $(PYTHON) $(MAKE_DRV) $< $@
 
-all: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS)
+all: MakeList
+
+MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS) Makefile
+	@echo populating MakeList...
+	@echo TEST_STEMS = $(TPL_TEST_STEMS) $(C_TEST_SRCS:%.c=%) > MakeList
 
 clean:
 	rm -f */*.c */*/stamp
-	rm -f *.c */stamp
+	rm -f *.m4c *.c */stamp
+	rm -r MakeList
 	-rmdir * # some are not directories.
 
 .PRECIOUS: %/stamp
@@ -56,6 +61,7 @@ info:
 	@echo VPATH $(VPATH)
 	@echo TPL_TEST_STEMS $(TPL_TEST_STEMS)
 	@echo C_TEST_SRCS $(C_TEST_SRCS)
+	@echo M4_TESTS $(M4_TESTS)
 
 Makefile: $(srcdir)/Makefile.in
 	 cd $(top_builddir); ./config.status support/regression/cases/Makefile
