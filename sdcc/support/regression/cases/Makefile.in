@@ -19,9 +19,10 @@ vpath %.c $(TESTS_DIR)
 TPL_TESTS = $(shell (cd $(TESTS_DIR); ls *.c.in))
 C_TESTS = $(shell (cd $(TESTS_DIR); ls *.c))
 TPL_TEST_STEMS = $(TPL_TESTS:%.c.in=%)
+C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c)
 
 # expand tests with python script
-%/stamp: %.c.in
+%/stamp: %.c.in $(GENERATE_CASES)
 	rm -rf $*
 	mkdir -p $*
 #	@echo expanding $*
@@ -30,17 +31,18 @@ TPL_TEST_STEMS = $(TPL_TESTS:%.c.in=%)
 
 # expand(?) tests with python script (BUG?)
 # mainly M4 tests
-%/stamp: %.c
+%/stamp: %.c $(GENERATE_CASES)
 	rm -rf $*
 	mkdir -p $*
 #	@echo expanding $*
 	@$(PYTHON) $(GENERATE_CASES) $< $*
 	touch $@
 
-all: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS)
 
-# remove later
-all: $(C_TESTS:%.c=%/stamp)
+tst_%.c: %.c $(MAKE_DRV)
+	PYTHONPATH=$(srcdir)/.. $(PYTHON) $(MAKE_DRV) $< $@
+
+all: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS)
 
 clean:
 	rm -f */*.c */*/stamp

@@ -1,5 +1,12 @@
 2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/cases/mkdrv.py:
+	  Regression test infrastructure , picked from patch #430 by Felix Salfelder (felixs).
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* configure,
 	  configure.ac,
 	  support/regression/Makefile.in,

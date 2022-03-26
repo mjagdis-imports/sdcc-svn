@@ -76,9 +76,6 @@ PORTS_DIR = $(srcdir)/ports
 CASES_DIR = cases
 TMP_DIR = gen
 
-# Script that takes a source test suite and generates the iterations
-GENERATE_CASES = $(srcdir)/generate-cases.py
-
 # The directories in PORTS_DIR correspond to ports.
 PORTS = $(filter-out .svn, $(notdir $(wildcard $(PORTS_DIR)/*)))
 
@@ -128,7 +125,7 @@ test-host2:
 ifndef CASES
 ALL_C_TESTS_ = $(shell find $(TESTS_DIR) -name "*.c.in")
 ALL_C_TESTS__ = $(shell find $(TESTS_DIR) -name "*.c")
-ALL_C_TESTS = $(ALL_C_TESTS_:%.in=%) $(ALL_C_TESTS__)
+ALL_C_TESTS = $(ALL_C_TESTS_:%.in=%) $(ALL_C_TESTS__:%.c=%_p.c)
 # ALL_M_TESTS = $(shell find $(TESTS_DIR) -name "*.m4")
 M_CASES = $(ALL_M_TESTS:$(TESTS_DIR)/%.m4=$(CASES_DIR)/%.c)
 endif
@@ -219,7 +216,10 @@ $(CASES_DIR)/%.c: $(TESTS_DIR)/%.m4
 # Rule to generate the iterations of a test suite off the source suite.
 $(CASES_DIR)/%/stamp: $(TESTS_DIR)/%.c.in
 	$(MAKE) -C $(CASES_DIR) $*/stamp
-	touch $@
+
+# Rule to generate driver
+$(CASES_DIR)/%_p.c: $(TESTS_DIR)/%.c
+	$(MAKE) -C $(CASES_DIR) $*_p.c
 
 # Rule linking the combined results log to all of the files in the
 # iteration directory.
@@ -247,7 +247,7 @@ port-dirs:
 test-common: $(M_CASES) $(TMP_DIR)/timeout
 	$(MAKE) -C cases
 
-test-port:
+test-port: test-common
 	# recurse: force vpath to re-read the $(CASES_DIR)
 	$(MAKE) port-dirs PORT=$(PORT)
 	@echo "$(MAKE) port-fwklib PORT=$(PORT)"
