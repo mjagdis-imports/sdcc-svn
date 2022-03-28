@@ -1,3 +1,91 @@
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/ports/tlcs90/spec.mk:
+	  Do not meit debug info to ease reading asm files.
+	* src/z80/ralloc2.cc:
+	  Fix code generation issues in use of iy.
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3373.
+
+2022-03-28 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sim/ucsim/z80.src/gb80.cc,
+	  sim/ucsim/z80.src/gb80cl.h,
+	  sim/ucsim/z80.src/inst.cc,
+	  sim/ucsim/z80.src/inst_gb80.cc:
+	  Fix cycle accuracy.
+
+2022-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/astlcs90/tt90.asm,
+	  sim/ucsim/tlcs.src/inst_arith.cc,
+	  sim/ucsim/tlcs.src/inst_jump.cc,
+	  sim/ucsim/tlcs.src/tlcs.cc:
+	  Improve cycle accuracy.
+
+2022-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/astlcs90/tt90.asm:
+	  Add some test assembly.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintvararg.c.in:
+	  Fix host test disable condition.
+
+2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/tlcs90/abs.s,
+	  device/lib/tlcs90/atomic_flag_test_and_set.s,
+	  device/lib/tlcs90/crt0.s,
+	  device/lib/tlcs90/memcpy.s,
+	  device/lib/tlcs90/memmove.s,
+	  device/lib/tlcs90/strcpy.s,
+	  device/lib/tlcs90/strlen.s:
+	  Optimize handwritten assembly.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Fix an issue in test-host regression test output, fix suggested via chat by Felix Salfelder (felixs).
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintvararg.c.in:
+	  Disable a test for clang 11.0 host, where it fails.
+	* device/lib/tlcs90/atomic_flag_test_and_set.s:
+	  Bring back previous atomic_flag_test_and_set implementation as comment, explain why it was chosen, and under which circumstances we might want to revert back to it.
+
+2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sim/ucsim/tlcs.src/inst_arith.cc
+	  sim/ucsim/tlcs.src/inst_bit.cc
+	  sim/ucsim/tlcs.src/inst_jump.cc
+	  sim/ucsim/tlcs.src/tlcs.cc:
+	  Add partial cycle counting.
+
+2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/include/stdatomic.h,
+	  device/lib/atomic_flag_clear.c,
+	  device/lib/tlcs90/atomic_flag_test_and_set.s:
+	  Switch to faster atomic test with shift. (8T vs 12T)
+
+2022-03-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/generate-cases.py,
+	  support/regression/tests/*.c.in:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs).
+
+2022-03-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs).
+
 2022-03-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCCglobl.h,
@@ -5,8 +93,9 @@
 	  src/z80/main.c,
 	  src/z80/z80.h,
 	  support/regression/ports/ucz80-undoc,
-	  support/regression/Makefile.in:
-	  Infrastructure for undocumented Z80 instructions.
+	  support/regression/Makefile.in,
+	  src/z80/gen.c:
+	  Support for undocumented Z80 instructions.
 
 2022-03-25 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
@@ -30,7 +119,7 @@
 	  support/regression/tests/bug-3368.c:
 	  Fix bug #3368.
 	* support/regression/tests/bug-3235.c:
-	  Test for a bug that was fixd a while ago.
+	  Test for a bug that was fixed a while ago.
 
 2022-03-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
