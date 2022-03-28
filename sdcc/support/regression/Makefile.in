@@ -86,7 +86,7 @@ PORTS = $(filter-out .svn, $(notdir $(wildcard $(PORTS_DIR)/*)))
 ALL_PORTS = $(filter-out mos6502 mos6502-stack-auto mcs51-xstack-auto rrz80 rrgbz80 pic16 pic14 mcs51-common pdk13,$(PORTS))
 
 # These  ports will be cleaned with 'make clean'
-CLEAN_PORTS = $(filter-out mcs51-common, $(PORTS))
+CLEAN_PORTS = $(filter-out mcs51-common host, $(PORTS))
 
 MAKE_LIBRARY =
 
