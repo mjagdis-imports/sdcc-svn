@@ -1,6 +1,13 @@
 2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  V flag to control verbosity, decouple test-ports and print-summary. Part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
 	  support/regression/ports/*/spec.mk:
 	  Deduplicate spec.mk by using rules in Makefile.in instead. Part of patch #430 by Felix Salfelder (felixs).
 

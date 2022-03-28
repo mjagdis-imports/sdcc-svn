@@ -31,6 +31,45 @@ C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c) $(M4_TESTS:%.m4=%.c)
 	$(PYTHON) $(MAKE_DRV) $*.m4c $*.c
 	touch $@
 
+gte_%.c: $(GCC_TESTS_DIR)/%.c Makefile
+	@printf .
+	@echo '#include <testfwk.h>' > $@
+	@echo '#ifdef __SDCC' >> $@
+	@echo '#pragma std_sdcc99' >> $@
+
+# stuff defined in gcc, but not in sdcc
+	@grep -q __CHAR_BIT__ $< && (echo "#include <limits.h>"; echo "#define __CHAR_BIT__ CHAR_BIT") >> $@ || :
+	@grep -q __INT_MAX__ $< && (echo "#include <limits.h>"; echo "#define __INT_MAX__ INT_MAX") >> $@ || :
+	@grep -q __SIZE_TYPE__ $< && (echo "#include <stddef.h>" ;echo "#define __SIZE_TYPE__ size_t") >> $@ || :
+	@grep -q __LONG_LONG_MAX__ $< && (echo "#include <limits.h>"; echo "#define __LONG_LONG_MAX__ LLONG_MAX") >> $@ || :
+	@grep -q __INTPTR_TYPE__ $< && echo "#define __INTPTR_TYPE__ intptr_t" >> $@ || :
+	@grep -q exit $< && echo "void exit__substitute(int i){ASSERT(!i);}" >> $@ || :
+	@grep -q exit $< && echo "#define exit exit__substitute" >> $@ || :
+	@grep -q __builtin_abort $< && echo "void __builtin_abort(){ASSERT(0);}" >> $@ || :
+	@grep -q __builtin_unreachable $< && echo "void __builtin_unreachable(){}" >> $@ || :
+	@grep -q __builtin_memset $< && (echo "#include <string.h>"; echo "#define __builtin_memset memset") >> $@ || :
+
+	@echo '#else // possibly gcc, clang?' >> $@
+	@grep -q exit $< && echo "// is this allowed?" >> $@ || :
+	@grep -q exit $< && echo "void exit__substitute(int i){ASSERT(!i);}" >> $@ || :
+	@grep -q exit $< && echo "#define exit exit__substitute" >> $@ || :
+	@echo '#endif // __SDCC' >> $@
+
+# redirect stuff a bit.
+	@echo '#define main main_' >> $@
+	@echo '#define assert ASSERT' >> $@
+	@echo 'void abort() {__fail(0,0,0,0);}' >> $@
+
+	@#find matching main arguments, none or 2
+	@echo -n '#define MAINARGS' >> $@
+	@(grep -q main.*argv $< && echo " 0, 0" || \
+	 (grep -q main.*argc $< && echo " 0" || echo )) >> $@
+
+	@echo '#include "$<"' >> $@
+	@echo 'void __runSuite(void) { __prints("Running main\\n"); main_(MAINARGS); }' >> $@
+	@echo 'const int __numCases = 1;' >> $@
+	@echo '__code const char * __getSuiteName(void) { return "{$*}"; }' >> $@
+
 # expand tests with python script
 %/stamp: %.c.in $(GENERATE_CASES)
 	rm -rf $*
@@ -40,13 +79,26 @@ C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c) $(M4_TESTS:%.m4=%.c)
 	touch $@
 
 tst_%.c: %.c $(MAKE_DRV)
-	PYTHONPATH=$(srcdir)/.. $(PYTHON) $(MAKE_DRV) $< $@
+	@printf .
+	@$(PYTHON) $(MAKE_DRV) $< $@
 
 all: MakeList
 
-MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS) Makefile
-	@echo populating MakeList...
-	@echo TEST_STEMS = $(TPL_TEST_STEMS) $(C_TEST_SRCS:%.c=%) > MakeList
+MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS) $(GCC_TEST_SRCS) Makefile
+	@echo
+	@echo populated MakeList...
+	@echo GCC_TEST_STEMS = $(GCC_TESTS:%.c=gte_%) > MakeList
+	@echo -n "gcc torture tests.. "
+	@echo $(GCC_TESTS) | wc -w
+	@echo -n "m4 tests.. "
+	@echo $(M4_TESTS) | wc -w
+	@echo -n "python template tests.. "
+	@echo $(TPL_TEST_STEMS) | wc -w
+	@echo -n "plain tests.. "
+	@echo $(C_TEST_SRCS) | wc -w
+	@echo TPL_TEST_STEMS = $(TPL_TEST_STEMS) >> MakeList
+	@echo C_TEST_STEMS = $(C_TEST_SRCS:%.c=%) >> MakeList
+	echo TEST_STEMS = '$$(C_TEST_STEMS) $$(TPL_TEST_STEMS)' >> MakeList
 
 clean:
 	rm -f */*.c */*/stamp
