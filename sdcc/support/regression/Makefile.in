@@ -133,9 +133,9 @@ PORT_CASES_DIR = $(TMP_DIR)/$(PORT)
 # PORT_CASES_DIRR = $(TMP_DIR)/$(PORT)
 PORT_RESULTS_DIR = $(RESULTS_DIR)/$(PORT)
 
-# For each test we produce a result log file, %.out
+# For each test we produce a result log file, %.log
 ifndef CASES
-PORT_RESULTS = $(TEST_STEMS:%=$(PORT_RESULTS_DIR)/%.out)
+PORT_RESULTS = $(TEST_STEMS:%=$(PORT_RESULTS_DIR)/%.log)
 endif
 
 SDCC_EXTRA_DIR = $(top_builddir)/../sdcc-extra
@@ -222,13 +222,17 @@ $(PORT_RESULTS_DIR)/%.out: $(CASES_DIR)/%/stamp
 	# mkdir -p $(dir $@)/$*
 	@echo "$(MAKE) iterations PORT=$(PORT) CASES=$*/"
 	$(MAKE) iterations PORT=$(PORT) CASES=$*/
-	$(PYTHON) $(srcdir)/compact-results.py $* < $@
+
+$(PORT_RESULTS_DIR)/%.log: $(PORT_RESULTS_DIR)/%.out
+	@# compact-results prints the stats. Do once per test.
+	$(PYTHON) $(srcdir)/compact-results.py $* < $< #1
+	touch $@
 
 # Rule to summarise the results for one port after all of the tests
 # have been run.
 $(RESULTS_DIR)/$(PORT).sum: $(PORT_RESULTS)
 	@echo "collating port results $(PORT_RESULTS)"
-	cat $(PORT_RESULTS) | $(PYTHON) $(srcdir)/collate-results.py $(PORT) > $@
+	cat $(PORT_RESULTS:%.log=%.out) | $(PYTHON) $(srcdir)/collate-results.py $(PORT) > $@
 
 port-fwklib: port-dirs $(EXTRAS) $(FWKLIB)
 
@@ -238,7 +242,7 @@ port-dirs:
 
 # Files shared between all ports need to be built by the test-common target,
 # which should always be built before the port specific targets.
-test-common: $(M_CASES) $(TMP_DIR)/timeout
+test-common: $(TMP_DIR)/timeout
 	$(MAKE) -C cases
 
 test-port: test-common
