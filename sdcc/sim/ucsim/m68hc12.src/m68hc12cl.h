@@ -95,7 +95,7 @@ public:
   virtual struct dis_entry *dis_tbl(void);
   virtual struct dis_entry *get_dis_entry(t_addr addr);
   virtual char *disassc(t_addr addr, chars *comment=NULL);
-  virtual void disass_xb(t_addr *addr, chars *work, chars *comment, int corr= 0, u32_t use_PC=0);
+  virtual void disass_xb(t_addr *addr, chars *work, chars *comment, int len, int corr= 0, u32_t use_PC=0);
   virtual void disass_b7(t_addr *addr, chars *work, chars *comment);
   virtual int inst_length(t_addr addr);
   virtual int longest_inst(void) { return 6; }
@@ -131,6 +131,7 @@ public:
   virtual int ediv(void);
   virtual int mul(void);
   virtual int emul(void);
+  virtual int daa(void);
   
   // MOVE
 #define ld16 ldsx
@@ -139,11 +140,17 @@ public:
   virtual int i_psh16(u16_t op);
   virtual int i_pul16(class cl_memory_cell &dest);
   virtual int movw_imid(void);
+  virtual int movb_imid(void);
   virtual int movw_exid(void);
+  virtual int movb_exid(void);
   virtual int movw_idid(void);
+  virtual int movb_idid(void);
   virtual int movw_imex(void);
+  virtual int movb_imex(void);
   virtual int movw_exex(void);
+  virtual int movb_exex(void);
   virtual int movw_idex(void);
+  virtual int movb_idex(void);
   
   // BRANCH
   virtual int call_e(void);

@@ -2,7 +2,33 @@
 
 	* support/regression/Makefile.in,
 	  support/regression/ports/host/spec.mk.in:
-	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs).
+	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs): fixes for error reporting, number of compact-results calls, CLEAN_PORTS.
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3373.
+
+2022-03-28 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sim/ucsim/z80.src/gb80.cc,
+	  sim/ucsim/z80.src/gb80cl.h,
+	  sim/ucsim/z80.src/inst.cc,
+	  sim/ucsim/z80.src/inst_gb80.cc:
+	  Fix cycle accuracy.
+
+2022-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/astlcs90/tt90.asm,
+	  sim/ucsim/tlcs.src/inst_arith.cc,
+	  sim/ucsim/tlcs.src/inst_jump.cc,
+	  sim/ucsim/tlcs.src/tlcs.cc:
+	  Improve cycle accuracy.
+
+2022-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/astlcs90/tt90.asm:
+	  Add some test assembly.
 
 2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
