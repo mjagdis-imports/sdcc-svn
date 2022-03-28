@@ -1,5 +1,12 @@
 2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/ports/tlcs90/spec.mk:
+	  Do not emit debug info to ease reading asm files.
+	* src/z80/ralloc2.cc:
+	  Fix code generation issues in use of iy.
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/Makefile.in:
 	  Conditional MakeList include, and conditional test-port, part of patch #430 by Felix Salfelder (felixs).
 
