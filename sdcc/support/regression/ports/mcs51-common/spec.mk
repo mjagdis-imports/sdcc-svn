@@ -51,17 +51,6 @@ FWKLIB += $(PORT_CASES_DIR)/T2_isr$(OBJEXT)
 %$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB) $(PORT_CASES_DIR)/fwk.lib
 	$(SDCC) $(SDCCFLAGS) $(LINKFLAGS) $(EXTRAS) $(PORT_CASES_DIR)/fwk.lib $< -o $@
 
-%$(OBJEXT): %.c
-	$(SDCC) $(SDCCFLAGS) -c $< -o $@
-
-$(PORT_CASES_DIR)/%$(OBJEXT): $(PORTS_DIR)/mcs51-common/%.c
-	$(SDCC) $(SDCCFLAGS) -c $< -o $@
-
-$(PORT_CASES_DIR)/%$(OBJEXT): $(srcdir)/fwk/lib/%.c
-	$(SDCC) $(SDCCFLAGS) -c $< -o $@
-
-$(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib $(PORTS_DIR)/mcs51-common/fwk.lib
-	cat < $(srcdir)/fwk/lib/fwk.lib > $@
-	cat < $(PORTS_DIR)/mcs51-common/fwk.lib >> $@
+SPEC_LIB = $(PORTS_DIR)/mcs51-common/fwk.lib
 
 _clean:

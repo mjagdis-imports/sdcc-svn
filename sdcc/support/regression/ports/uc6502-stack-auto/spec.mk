@@ -39,23 +39,7 @@ BINEXT = .ihx
 EXTRAS = $(PORT_CASES_DIR)/testfwk$(OBJEXT) $(PORT_CASES_DIR)/support$(OBJEXT)
 include $(srcdir)/fwk/lib/spec.mk
 
-# Rule to link into .ihx
-%$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB) $(PORT_CASES_DIR)/fwk.lib
-	$(SDCC) $(SDCCFLAGS) $(LINKFLAGS) $(EXTRAS) $(PORT_CASES_DIR)/fwk.lib $< -o $@
-
 %$(OBJEXT): %.asm
 	$(AS) -plosgff $<
-
-%$(OBJEXT): %.c
-	$(VALGRIND) $(SDCC) $(SDCCFLAGS) -c $< -o $@
-
-$(PORT_CASES_DIR)/%$(OBJEXT): $(PORTS_DIR)/$(PORT)/%.c
-	$(SDCC) $(SDCCFLAGS) -c $< -o $@
-
-$(PORT_CASES_DIR)/%$(OBJEXT): $(srcdir)/fwk/lib/%.c
-	$(SDCC) $(SDCCFLAGS) -c $< -o $@
-
-$(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib
-	cat < $(srcdir)/fwk/lib/fwk.lib > $@
 
 _clean:

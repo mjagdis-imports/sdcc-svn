@@ -299,9 +299,22 @@ distclean: clean
 	rm -f $(PORTS_DIR)/host/spec.mk
 	rm -f Makefile
 
+# Rule to link into .ihx
+%$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB) $(PORT_CASES_DIR)/fwk.lib
+	${M_V_CCLD}$(SDCC) $(SDCCFLAGS) $(LINKFLAGS) $(EXTRAS) $(PORT_CASES_DIR)/fwk.lib $< -o $@
+
 $(PORT_CASES_DIR)/%$(OBJEXT): %.c
-	mkdir -p $(dir $@) # BUG?
+	@mkdir -p $(dir $@) # BUG?
 	$(SDCC) $(SDCCFLAGS) -c $< -o $@
+
+$(PORT_CASES_DIR)/%$(OBJEXT): $(PORTS_DIR)/$(PORT_BASE)/%.c
+	$(SDCC) $(SDCCFLAGS) -c $< -o $@
+
+$(PORT_CASES_DIR)/%$(OBJEXT): $(srcdir)/fwk/lib/%.c
+	$(SDCC) $(SDCCFLAGS) -c $< -o $@
+
+$(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib ${SPEC_LIB}
+	cat < $(srcdir)/fwk/lib/fwk.lib ${SPEC_LIB} > $@
 
 Makefile: $(srcdir)/Makefile.in
 	 cd $(top_builddir); ./config.status support/regression/Makefile
