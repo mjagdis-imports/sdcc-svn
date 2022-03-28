@@ -74,7 +74,7 @@ gte_%.c: $(GCC_TESTS_DIR)/%.c Makefile
 %/stamp: %.c.in $(GENERATE_CASES)
 	rm -rf $*
 	mkdir -p $*
-	@echo expanding $*
+	@printf .
 	@$(PYTHON) $(GENERATE_CASES) $< $*
 	touch $@
 
