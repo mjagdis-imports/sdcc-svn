@@ -1,3 +1,9 @@
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs).
+
 2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/tests/bitintvararg.c.in:

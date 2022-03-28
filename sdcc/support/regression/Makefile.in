@@ -48,7 +48,7 @@
 
 # Uncomment this to show only errors and the summary.
 # Comment this out for debugging.
-.SILENT:
+# .SILENT:
 
 # delete failed attempts (so make will retry...)
 .DELETE_ON_ERROR:
@@ -175,10 +175,19 @@ ifdef OVERRIDE_EMU_RULE
 # need rule from spec.mk (e.g. host/spec.mk)
 else
 # this one will do for all the others.
-$(RESULTS_DIR)/%.out: $(TMP_DIR)/%$(BINEXT) $(TMP_DIR)/timeout
+$(RESULTS_DIR)/$(PORT)/%.out: $(CASES_DIR)/%.c $(TMP_DIR)/timeout
 	mkdir -p $(dir $@)
-	-$(TMP_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $(EMU_PORT_FLAG) $(EMU_FLAGS) $< < $(PORTS_DIR)/$(PORT_BASE)/uCsim.cmd > $@ \
-	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
+	-if $(MAKE) $(TMP_DIR)/$(PORT)/$*$(BINEXT) PORT=$(PORT); then \
+	  $(TMP_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $(EMU_PORT_FLAG) $(EMU_FLAGS) $(TMP_DIR)/$(PORT)/$*$(BINEXT) < $(PORTS_DIR)/$(PORT_BASE)/uCsim.cmd > $@; \
+	  if [ 0 -ne $$? ]; then \
+	    echo --- FAIL: \"timeout, simulation killed\" in $<"\n"--- Summary: 1/1/1: timeout >> $@; \
+	  fi \
+	else \
+	  echo --- Running: $< > $@; \
+	  echo --- FAIL: cannot compile/link $< "\n"--- Summary: 1/1/1: compile >> $@; \
+	fi
+
+	# always count ticks?
 	$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
 	-grep -n FAIL $@ /dev/null || true
 endif

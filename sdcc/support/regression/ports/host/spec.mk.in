@@ -24,10 +24,16 @@ EXTRAS = $(PORT_CASES_DIR)/testfwk$(OBJEXT) $(PORT_CASES_DIR)/support$(OBJEXT)
 include $(srcdir)/fwk/lib/spec.mk
 
 OVERRIDE_EMU_RULE = YES
-$(RESULTS_DIR)/%.out: $(TMP_DIR)/%$(BINEXT) $(TMP_DIR)/timeout
+$(RESULTS_DIR)/$(PORT)/%.out: $(CASES_DIR)/%.c $(TMP_DIR)/timeout
 	@echo running $<
 	mkdir -p $(dir $@)
-	-${M_V_at}$(TMP_DIR)/timeout $(RUN_TIMEOUT) $< > $@
+	-if $(MAKE) $(TMP_DIR)/$(PORT)/$*$(BINEXT); then \
+		$(TMP_DIR)/timeout $(RUN_TIMEOUT) $(TMP_DIR)/$(PORT)/$*$(BINEXT) >> $@; \
+	else \
+	  echo --- Running: $< >> $@; \
+	  echo --- FAIL: cannot compile/link $< "\n"--- Summary: 1/1/1: compile >> $@; \
+	fi
+
 	-${M_V_at}grep -n FAIL $@ /dev/null || true
 
 %$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB)
