@@ -1,5 +1,10 @@
 2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/Makefile.in:
+	  Conditional MakeList include, and conditional test-port, part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/Makefile.in,
 	  support/regression/cases/Makefile.in:
 	  Silence case expansion messages by default, part of patch #430 by Felix Salfelder (felixs).

@@ -168,7 +168,9 @@ test-host2:
 cases/MakeList:
 	$(MAKE) -C cases MakeList
 
+ifdef PORT
 include cases/MakeList
+endif
 
 # Intermediate directory
 PORT_TMP_DIR = $(TMP_DIR)/$(PORT)
@@ -286,11 +288,13 @@ port-dirs:
 test-common: $(TMP_DIR)/timeout
 	$(MAKE) -C cases
 
+ifdef PORT
 test-port: test-common port-dirs
 	@# recurse: force vpath to re-read the $(CASES_DIR)
 	${M_V_at}$(MAKE) $(MAKE_SUB_FLAGS) port-fwklib PORT=$(PORT) V=${V}
 	@echo Running ${PORT} regression tests
 	${M_V_at}$(MAKE) $(MAKE_SUB_FLAGS) $(RESULTS_DIR)/$(PORT).sum PORT=$(PORT)
+endif
 
 # Begin rules that process each iteration generated from the source
 # test
