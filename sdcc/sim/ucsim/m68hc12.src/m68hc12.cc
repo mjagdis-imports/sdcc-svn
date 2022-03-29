@@ -186,14 +186,15 @@ CL12::exec_inst(void)
     {
       code= fetch();
       fn= hc12wrap->page0x18[code];
+      inst_ticks= ticks12p18[code];
     }
   else
     {
       fn= hc12wrap->page0[code];
+      inst_ticks= ticks12p0[code];
     }
   if (fn)
     res= fn(this, code);
-  post_inst();
   if (res != resNOT_DONE)
     return res;
 
@@ -204,13 +205,10 @@ CL12::exec_inst(void)
 void
 CL12::post_inst(void)
 {
-  /*
-  if (post_inc_dec)
-    post_idx_reg->W(post_idx_reg->R() + post_inc_dec);
-  post_inc_dec= 0;
-  */
+  tick(inst_ticks);
   if (extra_ticks)
     tick(extra_ticks), extra_ticks= 0;
+  cl_m68hcbase::post_inst();
 }
 
 i16_t
@@ -253,10 +251,27 @@ CL12::xb_indirect(u8_t p)
   return false;
 }
 
-t_addr
-CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
+bool
+CL12::xb_PC(u8_t p)
 {
-  u8_t p, h, l, n;
+  int t= xb_type(p);
+  switch (t)
+    {
+    case 1: return (p&0xc0)==0xc0;
+    case 6: return (p&0x18)==0x18;
+    case 5: return (p&0x18)==0x18;
+    case 3: return false;
+    case 2: return (p&0x18)==0x18;
+    case 4: return (p&0x18)==0x18;
+    }
+  return false;
+}
+
+t_addr
+CL12::naddr(t_addr *addr /* of xb */, u8_t *pg, u32_t use_PC)
+{
+  u8_t p, h, l;
+  i8_t n;
   i16_t offset= 0;
   u16_t ival= 0, a= 0;
   //i8_t post_inc_dec= 0;
@@ -269,6 +284,7 @@ CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
     }
   else
     p= fetch();
+  use_PC&= 0xffff;
   
   switch (xb_type(p))
     {
@@ -279,7 +295,9 @@ CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
 	case 0x40: ival= rY; break;
 	case 0x80: ival= rSP; break;
 	case 0xc0:
-	  if (addr)
+	  if (use_PC)
+	    ival= use_PC;
+	  else if (addr)
 	    ival= (*addr)&0xffff;
 	  else
 	    ival= PC&0xffff;
@@ -297,7 +315,9 @@ CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
 	case 0x10: ival= rY; break;
 	case 0x08: ival= rSP; break;
 	case 0x18:
-	  if (addr)
+	  if (use_PC)
+	    ival= use_PC;
+	  else if (addr)
 	    ival= (*addr)&0xffff;
 	  else
 	    ival= PC&0xffff;
@@ -317,7 +337,9 @@ CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
 	case 0x10: ival= rY; break;
 	case 0x08: ival= rSP; break;
 	case 0x18:
-	  if (addr)
+	  if (use_PC)
+	    ival= use_PC;
+	  else if (addr)
 	    ival= (*addr)&0xffff;
 	  else
 	    ival= PC&0xffff;
@@ -350,22 +372,23 @@ CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
 	case 0x80: ival= rSP; post_idx_reg= &cSP; break;
 	}
       n= p&0xf;
-      if (n&0x08) n|= 0xf0;
+      if (n&0x08) n|= 0xf0; else n++;
       if (p&0x10)
 	{
 	  // post +-
+	  ival= (post_idx_reg->R() + (int)n);
 	  if (!addr)
 	    {
 	      //post_inc_dec= n;
-	      post_idx_reg->W(post_idx_reg->R() + n);
+	      post_idx_reg->W(ival);
 	    }
 	}
       else
 	{
 	  // pre +-
-	  ival= (post_idx_reg->R() + n);
 	  if (!addr)
 	    post_idx_reg->W(ival);
+	  ival= (post_idx_reg->R() + (int)n);
 	}
       return (u16_t)ival;
       break;
@@ -377,7 +400,9 @@ CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
 	case 0x10: ival= rY; break;
 	case 0x08: ival= rSP; break;
 	case 0x18:
-	  if (addr)
+	  if (use_PC)
+	    ival= use_PC;
+	  else if (addr)
 	    ival= (*addr)&0xffff;
 	  else
 	    ival= PC&0xffff;
@@ -422,7 +447,9 @@ CL12::naddr(t_addr *addr /* of xb */, u8_t *pg)
 	case 0x10: ival= rY; break;
 	case 0x08: ival= rSP; break;
 	case 0x18:
-	  if (addr)
+	  if (use_PC)
+	    ival= use_PC;
+	  else if (addr)
 	    ival= (*addr)&0xffff;
 	  else
 	    ival= PC&0xffff;

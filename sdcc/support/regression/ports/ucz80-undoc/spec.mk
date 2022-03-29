@@ -1,28 +1,28 @@
-# Regression test specification for the tlcs90 target running with uCsim
+# Regression test specification for the z80 target running with uCsim
 
 # simulation timeout in seconds
-SIM_TIMEOUT = 40
+SIM_TIMEOUT = 60
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
-  UCTLCS90C = $(SDCC_BIN_PATH)/ucsim_tlcs$(EXEEXT)
+  UCZ80C = $(SDCC_BIN_PATH)/ucsim_z80$(EXEEXT)
 
-  AS_TLCS90C = $(SDCC_BIN_PATH)/sdastlcs90$(EXEEXT)
+  AS_Z80C = $(SDCC_BIN_PATH)/sdasz80$(EXEEXT)
 else
   ifdef UCSIM_DIR
-    UCTLCS90A = $(UCSIM_DIR)/tlcs.src/ucsim_tlcs$(EXEEXT)
+    SZ80A = $(UCSIM_DIR)/z80.src/ucsim_z80$(EXEEXT)
   else
-    UCTLCS90A = $(top_builddir)/sim/ucsim/tlcs.src/ucsim_tlcs$(EXEEXT)
-    UCTLCS90B = $(top_builddir)/bin/ucsim_tlcs$(EXEEXT)
+    SZ80A = $(top_builddir)/sim/ucsim/z80.src/ucsim_z80$(EXEEXT)
+    SZ80B = $(top_builddir)/bin/ucsim_z80$(EXEEXT)
   endif
 
-  EMU = $(WINE) $(shell if [ -f $(UCTLCS90A) ]; then echo $(UCTLCS90A); else echo $(UCTLCS90B); fi)
+  EMU = $(WINE) $(shell if [ -f $(SZ80A) ]; then echo $(SZ80A); else echo $(SZ80B); fi)
 
-  AS = $(WINE) $(top_builddir)/bin/sdastlcs90$(EXEEXT)
+  AS = $(WINE) $(top_builddir)/bin/sdasz80$(EXEEXT)
 
 ifndef CROSSCOMPILING
   SDCCFLAGS += --nostdinc -I$(top_srcdir)
-  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/tlcs90
+  LINKFLAGS += --nostdlib -L$(top_builddir)/device/lib/build/z80
 endif
 endif
 
@@ -30,8 +30,8 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += -mtlcs90 --less-pedantic --out-fmt-ihx
-LINKFLAGS += tlcs90.lib
+SDCCFLAGS += -mz80 --allow-undocumented-instructions --less-pedantic
+LINKFLAGS += z80.lib
 
 OBJEXT = .rel
 BINEXT = .ihx
@@ -44,11 +44,14 @@ EXTRAS = $(PORT_CASES_DIR)/testfwk$(OBJEXT) $(PORT_CASES_DIR)/support$(OBJEXT)
 include $(srcdir)/fwk/lib/spec.mk
 
 # Rule to link into .ihx
-%$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB) $(PORT_CASES_DIR)/fwk.lib
+%.ihx: %$(OBJEXT) $(EXTRAS) $(FWKLIB) $(PORT_CASES_DIR)/fwk.lib
 	$(SDCC) $(SDCCFLAGS) $(LINKFLAGS) $(EXTRAS) $(PORT_CASES_DIR)/fwk.lib $< -o $@
 
-%$(OBJEXT): %.asm
-	$(AS) -plosgff $<
+$(PORT_CASES_DIR)/%$(OBJEXT): $(PORTS_DIR)/$(PORT)/%.asm
+	@# TODO: sdas should place it\'s output in the current dir
+	cp $< $(PORT_CASES_DIR)
+	$(AS) -plosgff $(PORT_CASES_DIR)/$(notdir $<)
+	rm $(PORT_CASES_DIR)/$(notdir $<)
 
 %$(OBJEXT): %.c
 	$(SDCC) $(SDCCFLAGS) -c $< -o $@
@@ -65,7 +68,7 @@ $(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib
 # run simulator with SIM_TIMEOUT seconds timeout
 %.out: %$(BINEXT) $(CASES_DIR)/timeout
 	mkdir -p $(dir $@)
-	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $< < $(PORTS_DIR)/$(PORT)/uCsim.cmd > $@ \
+	-$(CASES_DIR)/timeout $(SIM_TIMEOUT) $(EMU) -C $(PORTS_DIR)/$(PORT)/conf.cmd $< < $(PORTS_DIR)/$(PORT)/uCsim.cmd > $@ \
 	  || echo -e --- FAIL: \"timeout, simulation killed\" in $(<:$(BINEXT)=.c)"\n"--- Summary: 1/1/1: timeout >> $@
 	$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
 	-grep -n FAIL $@ /dev/null || true
