@@ -2849,10 +2849,104 @@ genIpush (iCode * ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genPointerPush - generate code for pushing                      */
+/*-----------------------------------------------------------------*/
+static void
+genPointerPush (iCode *ic)
+{
+  operand *left;
+  sym_link *type, *etype;
+  int p_type;
+
+  D (emitcode (";", "genPointerPush"));
+
+  left = IC_LEFT (ic);
+
+  wassertl (IC_RIGHT (ic), "IPUSH_VALUE_AT_ADDRESS without right operand");
+  wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "IPUSH_VALUE_AT_ADDRESS with non-literal right operand");
+  wassertl (!operandLitValue (IC_RIGHT(ic)), "IPUSH_VALUE_AT_ADDRESS with non-zero right operand");
+
+  /* depending on the type of pointer we need to
+     move it to the correct pointer register */
+  type = operandType (left);
+  etype = getSpec (type);
+  /* if left is of type of pointer then it is simple */
+  if (IS_PTR (type) && !IS_FUNC (type->next))
+    {
+      p_type = DCL_TYPE (type);
+    }
+  else
+    {
+      /* we have to go by the storage class */
+      p_type = PTR_TYPE (SPEC_OCLS (etype));
+    }
+
+  /* special case when cast remat */
+  while (IS_SYMOP (left) && OP_SYMBOL (left)->remat && IS_CAST_ICODE (OP_SYMBOL (left)->rematiCode))
+    {
+      left = IC_RIGHT (OP_SYMBOL (left)->rematiCode);
+      type = operandType (left);
+      p_type = DCL_TYPE (type);
+    }
+
+  aopOp (left, ic, false);
+
+  asmop *aop = 0;
+  reg_info *preg = 0;
+  if (p_type == POINTER || p_type == IPOINTER)
+    {
+      aop = newAsmop (0);
+      wassert (preg = getFreePtr (ic, aop, false));
+      emitcode ("mov", "%s,%s", preg->name, aopGet (left, 0, false, true));
+    }
+  else
+    loadDptrFromOperand (left, p_type == GPOINTER);
+
+  int size = getSize (operandType (IC_LEFT (ic))->next);
+
+  for (int i = 0; i < size; i++)
+    {
+      switch (p_type)
+        {
+        case POINTER:
+        case IPOINTER:
+          emitcode ("mov", "a,@%s", preg->name);
+          break;
+        case PPOINTER:
+        case FPOINTER:
+          emitcode ("movx", "a,@dptr");
+          break;
+        case CPOINTER:
+          emitcode ("clr", "a");
+          emitcode ("movc", "a,@a+dptr");
+          break;
+        case GPOINTER:
+          emitcode ("lcall", "__gptrget");
+          break;
+        default:
+          wassert (0);
+        }
+      if (options.useXstack)
+        wassert (0);
+      else
+        emitpush ("acc");
+      if (i + 1 < size)
+        if (p_type == POINTER || p_type == IPOINTER)
+          emitcode ("inc", "%s", preg->name);
+        else
+          emitcode ("inc", "dptr");
+    }
+
+  if (aop)
+    freeAsmop (0, aop, ic, false);
+  freeAsmop (left, 0, ic, true);
+}
+
+/*-----------------------------------------------------------------*/
 /* genIpop - recover the registers: can happen only for spilling   */
 /*-----------------------------------------------------------------*/
 static void
-genIpop (iCode * ic)
+genIpop (iCode *ic)
 {
   int size, offset;
 
@@ -3210,6 +3304,8 @@ genCall (iCode * ic)
 
   dtype = operandType (IC_LEFT (ic));
   etype = getSpec (dtype);
+  const bool bigreturn = IS_STRUCT (dtype->next);
+
   /* if send set is not empty then assign */
   if (_G.sendSet)
     {
@@ -3237,6 +3333,36 @@ genCall (iCode * ic)
   /* if caller saves & we have not saved then */
   if (!ic->regsSaved)
     saveRegisters (ic);
+
+  // Pass pointer for storing return value
+  if (bigreturn)
+    {
+      wassert (IC_RESULT (ic));
+      symbol *sym = OP_SYMBOL (IC_RESULT (ic));
+      wassert (sym);
+
+      if (sym->onStack)
+        {
+          emitcode ("mov", "a,%s", SYM_BP (sym));
+          if (stackoffset (sym))
+            emitcode ("add", "a,#!constbyte", stackoffset (sym) & 0xff);
+          emitpush ("acc");
+          emitcode ("clr", "a");
+          emitpush ("acc");
+          emitcode ("mov", "acc, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_RESULT (ic)))), 0, 0));
+          emitpush ("acc");
+        }
+      else
+        {
+          emitcode ("mov", "acc, #%s", sym->rname);
+          emitpush ("acc");
+          emitcode ("mov", "acc, #(%s >> 8)", sym->rname);
+          emitpush ("acc");
+          emitcode ("mov", "acc, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_RESULT (ic)))), 0, 0));
+          emitpush ("acc");
+        }
+      assignResultGenerated = true;
+    }
 
   if (swapBanks)
     {
@@ -3282,17 +3408,27 @@ genCall (iCode * ic)
         }
     }
 
+  // Adjust stack pointer for the hidden pointer parameter.
+  if (bigreturn)
+    {
+      emitpop (0);
+      emitpop (0);
+      emitpop (0);
+    }
+
   if (swapBanks)
     {
       selectRegBank (FUNC_REGBANK (currFunc->type), IS_BIT (etype));
     }
 
   /* if we need assign a result value */
-  if ((IS_ITEMP (IC_RESULT (ic)) &&
-       !IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) &&
-       (OP_SYMBOL (IC_RESULT (ic))->nRegs ||
-        OP_SYMBOL (IC_RESULT (ic))->accuse ||
-        OP_SYMBOL (IC_RESULT (ic))->spildir || IS_BIT (etype))) || IS_TRUE_SYMOP (IC_RESULT (ic)))
+  if (!assignResultGenerated &&
+       ((IS_ITEMP (IC_RESULT (ic)) &&
+         !IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) &&
+         (OP_SYMBOL (IC_RESULT (ic))->nRegs ||
+          OP_SYMBOL (IC_RESULT (ic))->accuse ||
+          OP_SYMBOL (IC_RESULT (ic))->spildir || IS_BIT (etype)))
+         || IS_TRUE_SYMOP (IC_RESULT (ic))))
     {
       _G.accInUse++;
       aopOp (IC_RESULT (ic), ic, FALSE);
@@ -3391,6 +3527,8 @@ genPcall (iCode * ic)
   if (IS_FUNCPTR (dtype))
     dtype = dtype->next;
   etype = getSpec (dtype);
+  const bool bigreturn = IS_STRUCT (dtype->next);
+
   /* if caller saves & we have not saved then */
   if (!ic->regsSaved)
     saveRegisters (ic);
@@ -3404,6 +3542,8 @@ genPcall (iCode * ic)
       swapBanks = TRUE;
       // need caution message to user here
     }
+
+  wassertl (!bigreturn, "Unimplemented struct / union return in call via function pointer");
 
   if (IS_LITERAL (etype))
     {
@@ -4483,6 +4623,57 @@ genRet (iCode * ic)
      move the return value into place */
   aopOp (IC_LEFT (ic), ic, FALSE);
   size = AOP_SIZE (IC_LEFT (ic));
+  const bool bigreturn = IS_STRUCT (operandType (IC_LEFT (ic)));
+
+  if (bigreturn)
+    {
+      bool framepointer = (IFFUNC_ISREENT (currFunc->type) || options.stackAuto) && !options.omitFramePtr;
+      asmop *aop = newAsmop (0);
+      reg_info *preg = getFreePtr (ic, aop, false);emitcode (";", "%d", currFunc->stack);
+      if (AOP_TYPE (IC_LEFT (ic)) == AOP_DPTR)
+        for (int i = 0; i < size; i++)
+          {
+            MOVA (aopGet (IC_LEFT (ic), i, false, false));
+            emitpush ("dpl");
+            emitpush ("dph");
+            emitpush ("acc");
+            emitcode ("mov", "a,sp");
+            emitcode ("add", "a,#0x%02x", 0xfc - IFFUNC_ISBANKEDCALL (currFunc->type) - currFunc->stack - framepointer - 3);
+            emitcode ("mov", "%s,a", preg->name);
+            emitcode ("mov", "dpl,@%s", preg->name);
+            emitcode ("inc", "%s", preg->name);
+            emitcode ("mov", "dph,@%s", preg->name);
+            emitcode ("inc", "%s", preg->name);
+            emitcode ("mov", "b,@%s", preg->name);
+            for (int j = 0; j < i; j++)
+              emitcode ("inc", "dptr");
+            emitpop ("acc");
+            emitcode ("lcall", "__gptrput");
+            emitpop ("dph");
+            emitpop ("dpl");
+          }
+      else
+        {
+          emitcode ("mov", "a,sp");
+          emitcode ("add", "a,#0x%02x", 0xfc - IFFUNC_ISBANKEDCALL (currFunc->type) - currFunc->stack - framepointer);
+          emitcode ("mov", "%s,a", preg->name);
+          emitcode ("mov", "dpl,@%s", preg->name);
+          emitcode ("inc", "%s", preg->name);
+          emitcode ("mov", "dph,@%s", preg->name);
+          emitcode ("inc", "%s", preg->name);
+          emitcode ("mov", "b,@%s", preg->name);
+          for (int i = 0; i < size; i++)
+            {
+              MOVA (aopGet (IC_LEFT (ic), i, false, false));
+              emitcode ("lcall", "__gptrput");
+              if (i + 1 < size)
+                emitcode ("inc", "dptr");
+            }
+        }
+      freeAsmop (0, aop, ic, true);
+      goto jumpret;
+    }
+ 
 
   if (IS_BIT (_G.currentFunc->etype))
     {
@@ -12210,6 +12401,10 @@ gen51Code (iCode * lic)
 
         case IPUSH:
           genIpush (ic);
+          break;
+
+        case IPUSH_VALUE_AT_ADDRESS:
+          genPointerPush (ic);
           break;
 
         case IPOP:
