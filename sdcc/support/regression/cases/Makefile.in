@@ -103,7 +103,7 @@ MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS) $(GCC_TEST_SRCS) Makefile
 clean:
 	rm -f */*.c */*/stamp
 	rm -f *.m4c *.c */stamp
-	rm -r MakeList
+	rm -f MakeList
 	-rmdir * # some are not directories.
 
 .PRECIOUS: %/stamp
