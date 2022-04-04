@@ -2,6 +2,8 @@
 
 	* support/regression/cases/Makefile.in:
 	  Fix rm flag for cleaning MakeList.
+	* support/regression/Makefile.in:
+	  Fix build of mcs51 regression test framework libraries, fix by Felix Salfelder (felixs).
 
 2022-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
