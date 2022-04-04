@@ -3287,6 +3287,39 @@ selectRegBank (short bank, bool keepFlags)
 }
 
 /*-----------------------------------------------------------------*/
+/* pushbigreturn - emit code to push hidden pointer for struct return */
+/*-----------------------------------------------------------------*/
+static void
+pushbigreturn (operand *result)
+{
+  wassert (result);
+
+  symbol *sym = OP_SYMBOL (result);
+  wassert (sym);
+
+  if (sym->onStack)
+    {
+      emitcode ("mov", "a,%s", SYM_BP (sym));
+      if (stackoffset (sym))
+        emitcode ("add", "a,#!constbyte", stackoffset (sym) & 0xff);
+      emitpush ("acc");
+      emitcode ("clr", "a");
+      emitpush ("acc");
+      emitcode ("mov", "acc, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (result))), 0, 0));
+      emitpush ("acc");
+    }
+  else
+    {
+      emitcode ("mov", "acc, #%s", sym->rname);
+      emitpush ("acc");
+      emitcode ("mov", "acc, #(%s >> 8)", sym->rname);
+      emitpush ("acc");
+      emitcode ("mov", "acc, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (result))), 0, 0));
+      emitpush ("acc");
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* genCall - generates a call statement                            */
 /*-----------------------------------------------------------------*/
 static void
@@ -3337,30 +3370,7 @@ genCall (iCode * ic)
   // Pass pointer for storing return value
   if (bigreturn)
     {
-      wassert (IC_RESULT (ic));
-      symbol *sym = OP_SYMBOL (IC_RESULT (ic));
-      wassert (sym);
-
-      if (sym->onStack)
-        {
-          emitcode ("mov", "a,%s", SYM_BP (sym));
-          if (stackoffset (sym))
-            emitcode ("add", "a,#!constbyte", stackoffset (sym) & 0xff);
-          emitpush ("acc");
-          emitcode ("clr", "a");
-          emitpush ("acc");
-          emitcode ("mov", "acc, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_RESULT (ic)))), 0, 0));
-          emitpush ("acc");
-        }
-      else
-        {
-          emitcode ("mov", "acc, #%s", sym->rname);
-          emitpush ("acc");
-          emitcode ("mov", "acc, #(%s >> 8)", sym->rname);
-          emitpush ("acc");
-          emitcode ("mov", "acc, #0x%02x", pointerTypeToGPByte (pointerCode (getSpec (operandType (IC_RESULT (ic)))), 0, 0));
-          emitpush ("acc");
-        }
+      pushbigreturn (IC_RESULT (ic));
       assignResultGenerated = true;
     }
 
@@ -3518,8 +3528,9 @@ genPcall (iCode * ic)
 {
   sym_link *dtype;
   sym_link *etype;
-  bool swapBanks = FALSE;
-  bool resultInF0 = FALSE;
+  bool swapBanks = false;
+  bool resultInF0 = false;
+  bool assignResultGenerated = false;
 
   D (emitcode (";", "genPcall"));
 
@@ -3543,8 +3554,6 @@ genPcall (iCode * ic)
       // need caution message to user here
     }
 
-  wassertl (!bigreturn, "Unimplemented struct / union return in call via function pointer");
-
   if (IS_LITERAL (etype))
     {
       /* if send set is not empty then assign */
@@ -3552,6 +3561,13 @@ genPcall (iCode * ic)
         {
           genSend (reverseSet (_G.sendSet));
           _G.sendSet = NULL;
+        }
+
+        // Pass pointer for storing return value
+      if (bigreturn)
+        {
+          pushbigreturn (IC_RESULT (ic));
+          assignResultGenerated = true;
         }
 
       if (swapBanks)
@@ -3582,6 +3598,13 @@ genPcall (iCode * ic)
     {
       if (IFFUNC_ISBANKEDCALL (dtype))
         {
+          // Pass pointer for storing return value
+          if (bigreturn)
+            {
+              pushbigreturn (IC_RESULT (ic));
+              assignResultGenerated = true;
+            }
+
           if (IFFUNC_CALLEESAVES (dtype))
             {
               werror (E_BANKED_WITH_CALLEESAVES);
@@ -3627,6 +3650,7 @@ genPcall (iCode * ic)
         }
       else if (_G.sendSet)      /* the send set is not empty */
         {
+          wassertl (!bigreturn, "Unimplemented struct / union return in call via function pointer");
           symbol *callLabel = newiTempLabel (NULL);
           symbol *returnLabel = newiTempLabel (NULL);
 
@@ -3656,6 +3680,13 @@ genPcall (iCode * ic)
         }
       else                      /* the send set is empty */
         {
+          // Pass pointer for storing return value
+          if (bigreturn)
+            {
+              pushbigreturn (IC_RESULT (ic));
+              assignResultGenerated = true;
+            }
+
           /* now get the called address into dptr */
           aopOp (IC_LEFT (ic), ic, FALSE);
 
@@ -3682,15 +3713,24 @@ genPcall (iCode * ic)
           emitcode ("lcall", "__sdcc_call_dptr");
         }
     }
+
+  // Adjust stack pointer for the hidden pointer parameter.
+  if (bigreturn)
+    {
+      emitpop (0);
+      emitpop (0);
+      emitpop (0);
+    }
+
   if (swapBanks)
     {
       selectRegBank (FUNC_REGBANK (currFunc->type), IS_BIT (etype));
     }
 
   /* if we need assign a result value */
-  if ((IS_ITEMP (IC_RESULT (ic)) &&
+  if (!assignResultGenerated && ((IS_ITEMP (IC_RESULT (ic)) &&
        !IS_BIT (OP_SYM_ETYPE (IC_RESULT (ic))) &&
-       (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->accuse || OP_SYMBOL (IC_RESULT (ic))->spildir)) || IS_TRUE_SYMOP (IC_RESULT (ic)))
+       (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->accuse || OP_SYMBOL (IC_RESULT (ic))->spildir)) || IS_TRUE_SYMOP (IC_RESULT (ic))))
     {
       _G.accInUse++;
       aopOp (IC_RESULT (ic), ic, FALSE);
@@ -4210,7 +4250,10 @@ genFunction (iCode * ic)
         }
     }
 
+  bool bigreturn = IS_STRUCT (ftype->next);
+  
   _G.stack.param_offset = options.useXstack ? _G.stack.xpushed : _G.stack.pushed;
+  _G.stack.param_offset += (!options.useXstack && bigreturn) * 3;
   _G.stack.pushedregs = _G.stack.pushed;
   _G.stack.xpushedregs = _G.stack.xpushed;
   _G.stack.pushed = 0;
@@ -4629,7 +4672,7 @@ genRet (iCode * ic)
     {
       bool framepointer = (IFFUNC_ISREENT (currFunc->type) || options.stackAuto) && !options.omitFramePtr;
       asmop *aop = newAsmop (0);
-      reg_info *preg = getFreePtr (ic, aop, false);emitcode (";", "%d", currFunc->stack);
+      reg_info *preg = getFreePtr (ic, aop, false);
       if (AOP_TYPE (IC_LEFT (ic)) == AOP_DPTR)
         for (int i = 0; i < size; i++)
           {
