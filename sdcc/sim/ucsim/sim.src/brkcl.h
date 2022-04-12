@@ -46,6 +46,7 @@ class cl_brk: public cl_base
 {
 protected:
   class cl_address_space *mem;
+  class cl_memory_cell *cell;
 public:
   int nr;
   t_addr addr;
@@ -57,10 +58,13 @@ public:
   
   cl_brk(class cl_address_space *imem, int inr, t_addr iaddr,
 	 enum brk_perm iperm, int ihit);
+  cl_brk(class cl_memory_cell *icell, int inr,
+	 enum brk_perm iperm, int ihit);
   virtual ~cl_brk(void);
 
   class cl_address_space *get_mem(void) { return(mem); }
-
+  class cl_memory_cell *get_cell(void);
+  
   virtual bool condition(void);
   virtual void activate(void);
   virtual void inactivate(void);
@@ -94,12 +98,30 @@ public:
 class cl_ev_brk: public cl_brk
 {
 public:
-  cl_ev_brk(class cl_address_space *imem, int inr, t_addr iaddr,
+  cl_ev_brk(class cl_address_space *imem,
+	    int inr,
+	    t_addr iaddr,
 	    enum brk_perm iperm,
-	    int ihit, enum brk_event ievent, const char *iid);
-  cl_ev_brk(class cl_address_space *imem, int inr, t_addr iaddr,
+	    int ihit,
+	    enum brk_event ievent,
+	    const char *iid);
+  cl_ev_brk(class cl_address_space *imem,
+	    int inr,
+	    t_addr iaddr,
 	    enum brk_perm iperm,
-	    int ihit, char op);
+	    int ihit,
+	    char op);
+  cl_ev_brk(class cl_memory_cell *icell,
+	    int inr,
+	    enum brk_perm iperm,
+	    int ihit,
+	    enum brk_event ievent,
+	    const char *iid);
+  cl_ev_brk(class cl_memory_cell *icell,
+	    int inr,
+	    enum brk_perm iperm,
+	    int ihit,
+	    char op);
   enum brk_event event;
   const char *id;
 

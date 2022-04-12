@@ -102,7 +102,8 @@ CL12::asl16(class cl_memory_cell &dest)
 int
 CL12::inxy(class cl_memory_cell &dest)
 {
-  u8_t f= rF & ~flagZ, v;
+  u8_t f= rF & ~flagZ;
+  u16_t v;
   dest.W(v= dest.R()+1);
   if (!v)
     f|= flagZ;
@@ -186,17 +187,17 @@ CL12::daa(void)
   int H= rF&flagH;
   u8_t nc= 0;
 
-  if (!C && (ah>=0x0) && (ah<=0x9) && !H && (al>=0x0) && (al<=0x9)) { rA+= 0x00; nc= 0; }
-  if (!C && (ah>=0x0) && (ah<=0x8) && !H && (al>=0xa) && (al<=0xf)) { rA+= 0x06; nc= 0; }
-  if (!C && (ah>=0x0) && (ah<=0x9) &&  H && (al>=0x0) && (al<=0x3)) { rA+= 0x06; nc= 0; }
+  if (!C && /*(ah>=0x0) &&*/ (ah<=0x9) && !H && /*(al>=0x0) &&*/ (al<=0x9)) { rA+= 0x00; nc= 0; }
+  if (!C && /*(ah>=0x0) &&*/ (ah<=0x8) && !H && (al>=0xa) && (al<=0xf)) { rA+= 0x06; nc= 0; }
+  if (!C && /*(ah>=0x0) &&*/ (ah<=0x9) &&  H && /*(al>=0x0) &&*/ (al<=0x3)) { rA+= 0x06; nc= 0; }
 
-  if (!C && (ah>=0xa) && (ah<=0xf) && !H && (al>=0x0) && (al<=0x9)) { rA+= 0x60; nc= 1; }
+  if (!C && (ah>=0xa) && (ah<=0xf) && !H && /*(al>=0x0) &&*/ (al<=0x9)) { rA+= 0x60; nc= 1; }
   if (!C && (ah>=0x9) && (ah<=0xf) && !H && (al>=0xa) && (al<=0xf)) { rA+= 0x66; nc= 1; }
-  if (!C && (ah>=0xa) && (ah<=0xf) &&  H && (al>=0x0) && (al<=0x3)) { rA+= 0x66; nc= 1; }
+  if (!C && (ah>=0xa) && (ah<=0xf) &&  H && /*(al>=0x0) &&*/ (al<=0x3)) { rA+= 0x66; nc= 1; }
 
-  if ( C && (ah>=0x0) && (ah<=0x2) && !H && (al>=0x0) && (al<=0x9)) { rA+= 0x60; nc= 1; }
-  if ( C && (ah>=0x0) && (ah<=0x2) && !H && (al>=0xa) && (al<=0xf)) { rA+= 0x66; nc= 1; }
-  if ( C && (ah>=0x0) && (ah<=0x3) &&  H && (al>=0x0) && (al<=0x3)) { rA+= 0x66; nc= 1; }
+  if ( C && /*(ah>=0x0) &&*/ (ah<=0x2) && !H && /*(al>=0x0) &&*/ (al<=0x9)) { rA+= 0x60; nc= 1; }
+  if ( C && /*(ah>=0x0) &&*/ (ah<=0x2) && !H && (al>=0xa) && (al<=0xf)) { rA+= 0x66; nc= 1; }
+  if ( C && /*(ah>=0x0) &&*/ (ah<=0x3) &&  H && /*(al>=0x0) &&*/ (al<=0x3)) { rA+= 0x66; nc= 1; }
 
   rF&= ~(flagN|flagZ|flagC);
   if (nc) rF|= flagC;
@@ -512,6 +513,108 @@ CL12::etbl(void)
     }
   else
     return resINV;
+  return resGO;
+}
+
+int
+CL12::mem(void)
+{
+  u16_t a= rX;
+  u8_t p1, p2, s1, s2;
+  p1= rom->read(a++);
+  p2= rom->read(a++);
+  s1= rom->read(a++);
+  s2= rom->read(a++);
+  vc.rd+= 4;
+  cX.W(a);
+  int d1, d2;
+  d1= rA-p1;
+  d2= p2-rA;
+  bool d12n= false;
+  if ((d1 < 0) || (d2 < 0))
+    d12n= true;
+  int g1= 0, g2= 0;
+  if (!d12n)
+    {
+      g1= s1*d1;
+      g2= s2*d2;
+    }
+  int g;
+  if (((s2 == 0) || (g2 > 0xff)) && (!d12n))
+    g= 0xff;
+  else
+    g= g2;
+  if (((s1 == 0) || (g1 > 0xff)) && (!d12n))
+    g= g;
+  else
+    g= g1;
+  rom->write(rY, g);
+  cY.W(rY+1);
+  vc.wr++;
+  return resGO;
+}
+
+int
+CL12::rev(void)
+{
+  bool V= rF&flagV;
+  switch (rev_st)
+    {
+    case 0: case 2: // prepare
+      rd_Rx= rom->read(rX);
+      vc.rd++;
+      cX.W(rX+1);
+      rev_st= 1;
+      tick(3);
+      PC= instPC;
+      break;
+    case 1: // step
+      Rx= rd_Rx;
+      if ((Rx == 0xfe) || (Rx == 0xff))
+	{
+	  rd_Fy= rom->read(rY+Rx);
+	  vc.rd++;
+	}
+      if (Rx == 0xFE)
+	{
+	  if (V)
+	    cA.W(0xff);
+	  cF.W(rF^flagV);
+	  V= rF&flagV;
+	}
+      if (Rx != 0xff)
+	{
+	  rd_Rx= rom->read(rX);
+	  cX.W(rX+1);
+	}
+      if (!V)
+	{
+	  Fy= rd_Fy;
+	  if (Rx == 0xfe)
+	    {
+	      if (Fy < rA)
+		cA.W(Fy);
+	    }
+	  // else {}
+	}
+      else
+	{
+	  Fy= rd_Fy;
+	  if ((Rx == 0xfe) || (Rx == 0xff))
+	    {
+	      if (rA > Fy)
+		{
+		  rom->write(rY+Rx, rA);
+		  vc.wr++;
+		}
+	    }
+	}
+      if (Rx == 0xff)
+	rev_st= 2;
+      else
+	PC= instPC;
+      break;
+    }
   return resGO;
 }
 

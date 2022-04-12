@@ -153,6 +153,7 @@ cl_m68hc12::reset(void)
   cl_m68hcbase::reset();
   rCC= flagStop|flagX|flagI;
   //post_inc_dec= 0;
+  rev_st= 0;
 }
 
 void
@@ -201,6 +202,7 @@ CL12::exec_inst(void)
   t_mem code;
   hcwrapper_fn fn= NULL;
 
+  instPC= PC;
   if (fetch(&code))
     return resBREAKPOINT;
   if (code == 0x18)
@@ -233,7 +235,7 @@ void
 CL12::post_inst(void)
 {
   if (inst_ticks & 0xf00)
-    inst_ticks>>= (4*xb_tick_shift);
+    inst_ticks= (inst_ticks>>(4*xb_tick_shift)) & 0xf;
   tick(inst_ticks);
   if (extra_ticks)
     tick(extra_ticks);
