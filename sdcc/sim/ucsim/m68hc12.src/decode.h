@@ -1,7 +1,7 @@
 #include "gen.h"
 
 // 00 BGND
-// 01 MEM
+DEC(0, 01,	mem	, _NONE		, "MEM"		, ' ', 1	, 5)
 DEC(0, 02,	inxy	, _cY		, "INY"		, ' ', 1	, 1)
 DEC(0, 03,	dexy	, _cY		, "INY"		, ' ', 1	, 1)
 // 04 loop
@@ -321,5 +321,9 @@ DEC(0x18, 2d,	lbranch	, code		, "LBLT %R"	, ' ', 4	, 1)
 DEC(0x18, 2e,	lbranch	, code		, "LBGT %R"	, ' ', 4	, 1)
 DEC(0x18, 2f,	lbranch	, code		, "LBLE %R"	, ' ', 4	, 1)
 
+DEC(0x18, 3a,	rev	, _NONE		, "REV"		, ' ', 2	, 3)
+// 0x18, 3b, REVW
+// 0x18, 3c, WAV
 DEC(0x18, 3d,	tbl	, _NONE		, "TBL %p"	, ' ', -3	, 6)
+// 0x18, 3e, STOP
 DEC(0x18, 3f,	etbl	, _NONE		, "ETBL %P"	, ' ', -3	, 10)

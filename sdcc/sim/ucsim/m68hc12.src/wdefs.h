@@ -1,3 +1,4 @@
+int wrap_0_01(class CL12 *uc, t_mem code) { return uc-> mem ( _NONE ); }
 int wrap_0_02(class CL12 *uc, t_mem code) { return uc-> inxy ( _cY ); }
 int wrap_0_03(class CL12 *uc, t_mem code) { return uc-> dexy ( _cY ); }
 int wrap_0_05(class CL12 *uc, t_mem code) { return uc-> jump ( _xba ); }
@@ -294,5 +295,6 @@ int wrap_0x18_2c(class CL12 *uc, t_mem code) { return uc-> lbranch ( code ); }
 int wrap_0x18_2d(class CL12 *uc, t_mem code) { return uc-> lbranch ( code ); }
 int wrap_0x18_2e(class CL12 *uc, t_mem code) { return uc-> lbranch ( code ); }
 int wrap_0x18_2f(class CL12 *uc, t_mem code) { return uc-> lbranch ( code ); }
+int wrap_0x18_3a(class CL12 *uc, t_mem code) { return uc-> rev ( _NONE ); }
 int wrap_0x18_3d(class CL12 *uc, t_mem code) { return uc-> tbl ( _NONE ); }
 int wrap_0x18_3f(class CL12 *uc, t_mem code) { return uc-> etbl ( _NONE ); }

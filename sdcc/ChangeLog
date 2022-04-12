@@ -1,3 +1,20 @@
+2022-04-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-3379.c:
+	  Fix bug #3379.
+
+2022-04-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-2981.c:
+	  Test for bug #2981.
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3255.c:
+	  Fix bug #3255.
+	* src/SDCCglue.c,
+	  support/valdiag/tests/generic.c:
+	  Fix part of bug #3145.
+
 2022-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/cases/Makefile.in:

@@ -1,3 +1,4 @@
+virtual void fill_0_01() { page0[0x01 ]= wrap_0_01; set_disass(0, 0x01, "MEM", ' ', 1); set_ticks(0, 0x01, 5); }
 virtual void fill_0_02() { page0[0x02 ]= wrap_0_02; set_disass(0, 0x02, "INY", ' ', 1); set_ticks(0, 0x02, 1); }
 virtual void fill_0_03() { page0[0x03 ]= wrap_0_03; set_disass(0, 0x03, "INY", ' ', 1); set_ticks(0, 0x03, 1); }
 virtual void fill_0_05() { page0[0x05 ]= wrap_0_05; set_disass(0, 0x05, "JMP %p", ' ', -2); set_ticks(0, 0x05, 0x643); }
@@ -294,5 +295,6 @@ virtual void fill_0x18_2c() { page0x18[0x2c ]= wrap_0x18_2c; set_disass(0x18, 0x
 virtual void fill_0x18_2d() { page0x18[0x2d ]= wrap_0x18_2d; set_disass(0x18, 0x2d, "LBLT %R", ' ', 4); set_ticks(0x18, 0x2d, 1); }
 virtual void fill_0x18_2e() { page0x18[0x2e ]= wrap_0x18_2e; set_disass(0x18, 0x2e, "LBGT %R", ' ', 4); set_ticks(0x18, 0x2e, 1); }
 virtual void fill_0x18_2f() { page0x18[0x2f ]= wrap_0x18_2f; set_disass(0x18, 0x2f, "LBLE %R", ' ', 4); set_ticks(0x18, 0x2f, 1); }
+virtual void fill_0x18_3a() { page0x18[0x3a ]= wrap_0x18_3a; set_disass(0x18, 0x3a, "REV", ' ', 2); set_ticks(0x18, 0x3a, 3); }
 virtual void fill_0x18_3d() { page0x18[0x3d ]= wrap_0x18_3d; set_disass(0x18, 0x3d, "TBL %p", ' ', -3); set_ticks(0x18, 0x3d, 6); }
 virtual void fill_0x18_3f() { page0x18[0x3f ]= wrap_0x18_3f; set_disass(0x18, 0x3f, "ETBL %P", ' ', -3); set_ticks(0x18, 0x3f, 10); }

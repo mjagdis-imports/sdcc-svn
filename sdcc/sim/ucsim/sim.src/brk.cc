@@ -44,6 +44,7 @@ cl_brk::cl_brk(class cl_address_space *imem, int inr, t_addr iaddr,
 	       enum brk_perm iperm, int ihit):
   cl_base()
 {
+  cell = 0;
   mem  = imem;
   nr   = inr;
   addr = iaddr;
@@ -52,6 +53,22 @@ cl_brk::cl_brk(class cl_address_space *imem, int inr, t_addr iaddr,
   cnt  = ihit;
   cond = chars("");
   commands= chars("");
+}
+
+cl_brk::cl_brk(class cl_memory_cell *icell, int inr,
+	       enum brk_perm iperm, int ihit):
+  cl_base()
+{
+  cell = icell;
+  mem  = 0;
+  nr   = inr;
+  addr = 0;
+  perm = iperm;
+  hit  = ihit;
+  cnt  = ihit;
+  cond = chars("");
+  commands= chars("");
+  
 }
 
 cl_brk::~cl_brk(void)
@@ -68,11 +85,26 @@ cl_brk::condition(void)
   return l!=0;
 }
 
+cl_memory_cell *
+cl_brk::get_cell(void)
+{
+  if (cell)
+    return cell;
+  if (mem)
+    {
+      cl_memory_cell *c= mem->get_cell(addr);
+      return c;
+    }
+  return NULL;
+}
+
 void
 cl_brk::activate(void)
 {
   if (mem)
     mem->set_brk(addr, this);
+  else if (cell)
+    cell->set_brk(application->get_uc(), this);
 }
 
 void
@@ -80,6 +112,8 @@ cl_brk::inactivate(void)
 {
   if (mem)
     mem->del_brk(addr, this);
+  else if (cell)
+    cell->del_brk(this);
 }
 
 bool
@@ -118,9 +152,13 @@ cl_fetch_brk::type(void)
  * Base of EVENT type of breakpoints
  */
 
-cl_ev_brk::cl_ev_brk(class cl_address_space *imem, int inr, t_addr iaddr,
-		     enum brk_perm iperm, int ihit,
-		     enum brk_event ievent, const char *iid):
+cl_ev_brk::cl_ev_brk(class cl_address_space *imem,
+		     int inr,
+		     t_addr iaddr,
+		     enum brk_perm iperm,
+		     int ihit,
+		     enum brk_event ievent,
+		     const char *iid):
   cl_brk(imem, inr, iaddr, iperm, ihit)
 {
   event= ievent;
@@ -128,11 +166,52 @@ cl_ev_brk::cl_ev_brk(class cl_address_space *imem, int inr, t_addr iaddr,
   mem  = imem;
 }
 
-cl_ev_brk::cl_ev_brk(class cl_address_space *imem, int inr, t_addr iaddr,
-		     enum brk_perm iperm, int ihit, char op):
+
+cl_ev_brk::cl_ev_brk(class cl_address_space *imem,
+		     int inr,
+		     t_addr iaddr,
+		     enum brk_perm iperm,
+		     int ihit,
+		     char op):
   cl_brk(imem, inr, iaddr, iperm, ihit)
 {
   mem  = imem;
+  if ((op= toupper(op)) == 'R')
+    {
+      event= brkREAD;
+      id= "read";
+    }
+  else if (op == 'W')
+    {
+      event= brkWRITE;
+      id= "write";
+    }
+  else
+    {
+      event= brkACCESS;
+      id= "access";
+    }
+}
+
+cl_ev_brk::cl_ev_brk(class cl_memory_cell *icell,
+		     int inr,
+		     enum brk_perm iperm,
+		     int ihit,
+		     enum brk_event ievent,
+		     const char *iid):
+  cl_brk(icell, inr, iperm, ihit)
+{
+  event= ievent;
+  id   = iid;
+}
+
+cl_ev_brk::cl_ev_brk(class cl_memory_cell *icell,
+		     int inr,
+		     enum brk_perm iperm,
+		     int ihit,
+		     char op):
+  cl_brk(icell, inr, iperm, ihit)
+{
   if ((op= toupper(op)) == 'R')
     {
       event= brkREAD;
