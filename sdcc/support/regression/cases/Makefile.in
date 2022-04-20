@@ -20,18 +20,19 @@ M4_TESTS = $(shell (cd $(TESTS_DIR); ls *.m4))
 
 TPL_TEST_STEMS = $(TPL_TESTS:%.c.in=%)
 
-# maybe this is not necessary, just ship the _p.c files?
+# maybe this is not necessary, just ship the tst_*.c files?
 # (does it matter?)
-C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c) $(M4_TESTS:%.m4=%.c)
+C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c)
+M4_TEST_SRCS = $(M4_TESTS:%.m4=m4_%.c)
 
 # Rule to generate .c files from .m4 files
 # bug/feature? run MAKE_DRV as well (requires magic filenames and paths)
-%.c: $(TESTS_DIR)/%.m4
+m4_%.c: $(TESTS_DIR)/%.m4
 	$(M4) -I $(srcdir)/../m4include rtmacros.m4 $< > $*.m4c
-	$(PYTHON) $(MAKE_DRV) $*.m4c $*.c
+	$(PYTHON) $(MAKE_DRV) $*.m4c $@
 	touch $@
 
-gte_%.c: $(GCC_TESTS_DIR)/%.c Makefile
+gte_%.c: $(GTE_TESTS_DIR)/%.c Makefile
 	@printf .
 	@echo '#include <testfwk.h>' > $@
 	@echo '#ifdef __SDCC' >> $@
@@ -84,27 +85,36 @@ tst_%.c: %.c $(MAKE_DRV)
 
 all: MakeList
 
-MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS) $(GCC_TEST_SRCS) Makefile
+MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(C_TEST_SRCS) $(M4_TEST_SRCS) $(GTE_TEST_SRCS) Makefile
 	@echo
 	@echo populated MakeList...
-	@echo GCC_TEST_STEMS = $(GCC_TESTS:%.c=gte_%) > MakeList
-	@echo -n "gcc torture tests.. "
-	@echo $(GCC_TESTS) | wc -w
-	@echo -n "m4 tests.. "
+	@echo GTE_TEST_STEMS = $(GCE_TESTS:%.c=gte_%) > MakeList
+	@echo -n "gce: gcc torture execute.. "
+	@echo $(GCE_TESTS) | wc -w
+	@echo -n "m4: macro tests.. "
 	@echo $(M4_TESTS) | wc -w
-	@echo -n "python template tests.. "
+	@echo -n "tpl: template tests.. "
 	@echo $(TPL_TEST_STEMS) | wc -w
-	@echo -n "plain tests.. "
+	@echo -n "tst: plain tests.. "
 	@echo $(C_TEST_SRCS) | wc -w
+
 	@echo TPL_TEST_STEMS = $(TPL_TEST_STEMS) >> MakeList
 	@echo C_TEST_STEMS = $(C_TEST_SRCS:%.c=%) >> MakeList
-	echo TEST_STEMS = '$$(C_TEST_STEMS) $$(TPL_TEST_STEMS)' >> MakeList
+	@echo M4_TEST_STEMS = $(M4_TEST_SRCS:%.c=%) >> MakeList
+	@echo GTE_TEST_STEMS = $(GTE_TEST_SRCS:%.c=%) >> MakeList
+
+	@echo TEST_STEMS = '$$(M4_TEST_STEMS)' >> MakeList
+	@echo TEST_STEMS += '$$(GTE_TEST_STEMS)' >> MakeList
+	@echo TEST_STEMS += '$$(C_TEST_STEMS)' >> MakeList
+	@echo TEST_STEMS += '$$(TPL_TEST_STEMS)' >> MakeList
+	@echo TEST_STEMS += '$$(QC_TEST_STEMS)' >> MakeList
+	@echo TEST_STEMS += '$$(TCC_TEST_STEMS)' >> MakeList
 
 clean:
 	rm -f */*.c */*/stamp
 	rm -f *.m4c *.c */stamp
-	rm -f MakeList
-	-rmdir * # some are not directories.
+	rm -rf MakeList
+	rmdir * 2> /dev/null || :
 
 .PRECIOUS: %/stamp
 
