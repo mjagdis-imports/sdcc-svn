@@ -14,8 +14,9 @@
 	  src/pic14/ralloc.c,
 	  src/pic16/glue.c,
 	  src/pic16/ralloc.c,
-	  support/regression/tests/bug-3254.c:
-	  Fix bug #3254.
+	  support/regression/tests/bug-3254.c,
+	  support/regression/tests/bug-3245.c:
+	  Fix bugs #3254, #3145.
 
 2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

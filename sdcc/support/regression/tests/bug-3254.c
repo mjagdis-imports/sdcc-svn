@@ -12,9 +12,9 @@ void f(void)
 }
 
 
-void
-testBug(void) {
+void testBug(void)
+{
 	f();
-    ASSERT (i == 1);
+    ASSERT(i == 1);
 }
 
