@@ -160,6 +160,7 @@ typedef struct specifier
 {
   NOUN noun;                        /* CHAR INT STRUCTURE LABEL   */
   STORAGE_CLASS sclass;             /* REGISTER,AUTO,FIX,CONSTANT */
+  bool sclass_implicitintrinsic:1;  /* intrinsic named address space implied by sclass has been assigned implicitly. */
   struct memmap *oclass;            /* output storage class       */
   unsigned b_long:1;                /* 1=long                     */
   unsigned b_longlong:1;            /* 1=long long                */
@@ -495,6 +496,7 @@ extern sym_link *validateLink (sym_link * l,
 #define SPEC_USIGN(x) validateLink(x, "SPEC_USIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_unsigned
 #define SPEC_SIGN(x) validateLink(x, "SPEC_SIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_signed
 #define SPEC_SCLS(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass
+#define SPEC_SCLS_IMPLICITINTRINSIC(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass_implicitintrinsic
 #define SPEC_ENUM(x) validateLink(x, "SPEC_ENUM", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_isenum
 #define SPEC_OCLS(x) validateLink(x, "SPEC_OCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.oclass
 #define SPEC_STAT(x) validateLink(x, "SPEC_STAT", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_static

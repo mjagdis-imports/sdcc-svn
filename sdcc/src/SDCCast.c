@@ -1667,6 +1667,7 @@ stringToSymbol (value *val)
   sym->etype = getSpec (sym->type);
   /* change to storage class & output class */
   SPEC_SCLS (sym->etype) = S_CODE;
+  SPEC_SCLS_IMPLICITINTRINSIC (sym->etype) = true;
   SPEC_CVAL (sym->etype).v_char = SPEC_CVAL (val->etype).v_char;
   SPEC_STAT (sym->etype) = 1;
   /* make the level & block = 0 */

@@ -1988,7 +1988,10 @@ checkSClass (symbol *sym, int isProto)
       while (IS_ARRAY (t))
         t = t->next;
       if (IS_CONSTANT (t))
-        SPEC_SCLS (sym->etype) = S_CODE;
+        {
+          SPEC_SCLS (sym->etype) = S_CODE;
+          SPEC_SCLS_IMPLICITINTRINSIC (sym->etype) = true;
+        }
     }
 
   /* global variable in code space is a constant */
@@ -2729,7 +2732,7 @@ compareFuncType (sym_link * dest, sym_link * src)
 }
 
 int
-comparePtrType (sym_link *dest, sym_link *src, bool mustCast)
+comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplicitintrinsic)
 {
   int res;
 
@@ -2740,7 +2743,7 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast)
     return mustCast ? -1 : 1;
   if ((IS_VOID (src->next) && !IS_VOID (dest->next)) || (!IS_VOID (src->next) && IS_VOID (dest->next)))
     return -1;
-  res = compareType (dest->next, src->next, false);
+  res = compareType (dest->next, src->next, ignoreimplicitintrinsic);
 
   /* All function pointers can be cast (6.6 in the ISO C11 standard) TODO: What about address spaces? */
   if (res == 0 && !mustCast && IS_DECL (src) && IS_FUNC (src->next) && IS_DECL (dest) && IS_FUNC (dest->next))
@@ -2785,17 +2788,18 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
                 return -1;
               if (IS_FUNC (dest->next) && IS_VOID (src->next))
                 return -1;
-              return comparePtrType (dest, src, FALSE);
+              return comparePtrType (dest, src, false, ignoreimplicitintrinsic);
             }
 
           if (DCL_TYPE (src) == DCL_TYPE (dest) ||
-            (IS_PTR (src) && ignoreimplicitintrinsic || IS_GENPTR (src)) && (IS_PTR (dest) && ignoreimplicitintrinsic || IS_GENPTR (dest)))
+            (IS_PTR (src) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (src) || IS_GENPTR (src)) &&
+              (IS_PTR (dest) && ignoreimplicitintrinsic && DCL_TYPE_IMPLICITINTRINSIC (dest) || IS_GENPTR (dest)))
             {
               if (IS_FUNC (src))
                 {
                   return compareFuncType (dest, src);
                 }
-              return comparePtrType (dest, src, FALSE);
+              return comparePtrType (dest, src, false, ignoreimplicitintrinsic);
             }
           if (IS_PTR (dest) && IS_GENPTR (src) && IS_VOID (src->next))
             {
@@ -2803,7 +2807,7 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             }
           if (IS_PTR (src) && (IS_GENPTR (dest) || ((DCL_TYPE (src) == POINTER) && (DCL_TYPE (dest) == IPOINTER))))
             {
-              return comparePtrType (dest, src, TRUE);
+              return comparePtrType (dest, src, true, ignoreimplicitintrinsic);
             }
           if (IS_PTR (dest) && IS_ARRAY (src))
             {
@@ -3184,6 +3188,7 @@ aggregateToPointer (value *val)
         default:
           DCL_TYPE (val->type) = port->unqualified_pointer;
         }
+      DCL_TYPE_IMPLICITINTRINSIC (val->type) = SPEC_SCLS_IMPLICITINTRINSIC (val->etype);
 
       /* is there is a symbol associated then */
       /* change the type of the symbol as well */
