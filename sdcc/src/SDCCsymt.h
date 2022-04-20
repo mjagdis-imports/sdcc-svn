@@ -227,6 +227,7 @@ DECLARATOR_TYPE;
 typedef struct declarator
 {
   DECLARATOR_TYPE dcl_type;         /* POINTER,ARRAY or FUNCTION  */
+  bool dcl_type_implicitintrinsic:1;/* intrinsic named address space indicated by dcltype has been assigned implicitly. */
   size_t num_elem;                  /* # of elems if type==array, */
   /* always 0 for flexible arrays */
   unsigned ptr_const:1;             /* pointer is constant        */
@@ -416,6 +417,7 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_OP_ACCUSE(x) (IS_SYMOP(x) && OP_SYMBOL(x) && OP_SYMBOL(x)->accuse)
 
 #define DCL_TYPE(l)  validateLink(l, "DCL_TYPE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.dcl_type
+#define DCL_TYPE_IMPLICITINTRINSIC(l)  validateLink(l, "DCL_TYPE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.dcl_type_implicitintrinsic
 #define DCL_ELEM(l)  validateLink(l, "DCL_ELEM", #l, DECLARATOR, __FILE__, __LINE__)->select.d.num_elem
 #define DCL_PTR_CONST(l) validateLink(l, "DCL_PTR_CONST", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_const
 #define DCL_PTR_VOLATILE(l) validateLink(l, "DCL_PTR_VOLATILE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_volatile
@@ -708,7 +710,7 @@ sym_link *newLongLongLink ();
 sym_link *newBoolLink ();
 sym_link *newPtrDiffLink ();
 sym_link *newVoidLink ();
-int compareType (sym_link *, sym_link *);
+int compareType (sym_link *, sym_link *, bool ignoreimplicitintrinsic);
 int compareTypeExact (sym_link *, sym_link *, long);
 int compareTypeInexact (sym_link *, sym_link *);
 int checkFunction (symbol *, symbol *);

@@ -1,5 +1,24 @@
 2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/SDCCast.c,
+	  src/SDCCcse.c,
+	  src/SDCCglue.c,
+	  src/SDCCicode.c,
+	  src/SDCClospre.hpp,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/ds390/ralloc.c,
+	  src/mcs51/ralloc.c,
+	  src/pic14/glue.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/glue.c,
+	  src/pic16/ralloc.c,
+	  support/regression/tests/bug-3254.c:
+	  Fix bug #3254.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/SDCCglue.c,
 	  support/valdiag/tests/generic.c:
 	  Fix another part of bug #3145.
