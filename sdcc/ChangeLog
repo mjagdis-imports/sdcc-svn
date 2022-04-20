@@ -1,5 +1,9 @@
 2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* Merge regtest branch.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/cases/Makefile.in:
 	  Test cases cleanup, patch by by Felix Salfelder (felixs).
 
