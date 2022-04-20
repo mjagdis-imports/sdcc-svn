@@ -416,6 +416,9 @@ pointerTypes (sym_link * ptr, sym_link * type)
   sym_link *p;
   sym_link *etype;
 
+  sym_link *otype = type;
+  sym_link *optr = ptr;
+
   if (IS_SPEC (ptr))
     return;
 
@@ -473,20 +476,20 @@ pointerTypes (sym_link * ptr, sym_link * type)
 
   /* now change all the remaining unknown pointers
      to generic pointers */
-  while (ptr)
+  while (optr)
     {
-      if (!IS_SPEC (ptr) && DCL_TYPE (ptr) == UPOINTER)
-        DCL_TYPE (ptr) = port->unqualified_pointer;
-      ptr = ptr->next;
+      if (!IS_SPEC (optr) && DCL_TYPE (optr) == UPOINTER)
+        DCL_TYPE (optr) = port->unqualified_pointer;
+      optr = optr->next;
     }
 
   /* same for the type although it is highly unlikely that
      type will have a pointer */
-  while (type)
+  while (otype)
     {
-      if (!IS_SPEC (type) && DCL_TYPE (type) == UPOINTER)
-        DCL_TYPE (type) = port->unqualified_pointer;
-      type = type->next;
+      if (!IS_SPEC (otype) && DCL_TYPE (otype) == UPOINTER)
+        DCL_TYPE (otype) = port->unqualified_pointer;
+      otype = otype->next;
     }
 }
 
@@ -2771,6 +2774,9 @@ compareType (sym_link *dest, sym_link *src)
     {
       if (IS_DECL (src))
         {
+          // UPOINTER results in false negatives if it reaches here.
+          wassertl (!IS_PTR (dest) || dest->select.d.dcl_type != UPOINTER, "UPOINTER is only for use during parsing");
+
           if (IS_GENPTR (dest) && IS_GENPTR (src))
             {
               /* banked function pointer */
@@ -3814,10 +3820,13 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
             dbuf_append_str (dbuf, "volatile-");
           if (SPEC_CONST (type))
             dbuf_append_str (dbuf, "const-");
-          if (SPEC_USIGN (type))
+          if (SPEC_NOUN (type) == V_CHAR) // char is a different type from both unsigned char and signed char
+            {
+              if (!getSpec (type)->select.s.b_implicit_sign)
+                dbuf_append_str (dbuf, SPEC_USIGN (type) ? "unsigned-" : "signed-");
+            }
+          else if (SPEC_USIGN (type))
             dbuf_append_str (dbuf, "unsigned-");
-          else if (SPEC_NOUN (type) == V_CHAR)
-            dbuf_append_str (dbuf, "signed-");
           switch (SPEC_NOUN (type))
             {
             case V_INT:
