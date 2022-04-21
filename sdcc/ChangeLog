@@ -1,7 +1,12 @@
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/Makefile.in:
-	  .PRECIOUS does not play with .DELETE_ON_ERROR, use .SECONDARY instead. Patch Felix Salfelder (felixs).
+	  Filter out tests listed in EXCLUDE_${PORT}, TEST_PREFIX: select tests by prefix (e.g. m4_), TEST_SLICE: slice test list (Python style). Patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  .PRECIOUS does not play with .DELETE_ON_ERROR, use .SECONDARY instead. Patch by Felix Salfelder (felixs).
 
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

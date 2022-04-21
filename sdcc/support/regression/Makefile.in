@@ -53,6 +53,25 @@ ifeq (${V},silent)
 MAKEFLAGS += --silent
 endif
 
+# TEST_PREFIX: select tests matching a pattern
+# All tests (default)
+TEST_PREFIX =
+#
+# only run m4 test
+# TEST_PREFIX = m4_
+
+# TEST_SLICE. Subselect tests from list of all tests.
+# This is Python syntax for slicing, start:stop:step
+#
+# All tests, 0 1 2... (default)
+TEST_SLICE = 0::1
+#
+# Select first 10
+# TEST_SLICE = 0:10
+#
+# Select 2 9 16...
+# TEST_SLICE = 2::7
+
 # delete failed attempts (so make will retry...)
 .DELETE_ON_ERROR:
 
@@ -207,11 +226,6 @@ PORT_CASES_DIR = $(TMP_DIR)/$(PORT)
 # PORT_CASES_DIRR = $(TMP_DIR)/$(PORT)
 PORT_RESULTS_DIR = $(RESULTS_DIR)/$(PORT)
 
-# For each test we produce a result log file, %.log
-ifndef CASES
-PORT_RESULTS = $(TEST_STEMS:%=$(PORT_RESULTS_DIR)/%.log)
-endif
-
 DCC_EXTRA_DIR = $(top_builddir)/../sdcc-extra
 
 # Defaults.  Override in spec.mk if required.
@@ -269,6 +283,14 @@ endif
 
 endif
 
+# For each test we produce a result log file, %.log
+ifndef CASES
+TEST_STEMS_FILTERED_ = $(filter-out ${EXCLUDE_${PORT}}, $(TEST_STEMS))
+TEST_STEMS_FILTERED__ = $(filter ${TEST_PREFIX}%, $(TEST_STEMS_FILTERED_))
+TEST_STEMS_FILTERED = $(shell ${PYTHON} -c 'for i in "${TEST_STEMS_FILTERED__}".split(" ")[${TEST_SLICE}]: print(i)')
+PORT_RESULTS = $(TEST_STEMS_FILTERED:%=$(PORT_RESULTS_DIR)/%.log)
+endif
+
 make_library: $(MAKE_LIBRARY)
 
 SDCCFLAGS += -I$(srcdir)/fwk/include -I$(srcdir)/tests
@@ -305,7 +327,7 @@ $(PORT_RESULTS_DIR)/%.log: $(PORT_RESULTS_DIR)/%.out
 # Rule to summarise the results for one port after all of the tests
 # have been run.
 $(RESULTS_DIR)/$(PORT).sum: $(PORT_RESULTS)
-	${M_V_at}cat $(PORT_RESULTS:%.log=%.out) | $(PYTHON) $(srcdir)/collate-results.py $(PORT) > $@
+	${M_V_at}echo | cat - $(PORT_RESULTS:%.log=%.out) | $(PYTHON) $(srcdir)/collate-results.py $(PORT) > $@
 
 port-fwklib: port-dirs $(EXTRAS) $(FWKLIB)
 
