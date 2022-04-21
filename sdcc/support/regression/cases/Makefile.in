@@ -21,6 +21,8 @@ TPL_TESTS = $(shell (cd $(TESTS_DIR); ls *.c.in))
 C_TESTS = $(shell (cd $(TESTS_DIR); ls *.c))
 M4_TESTS = $(shell (cd $(TESTS_DIR); ls *.m4))
 GTE_TESTS_WC = $(shell (cd $(GTE_TESTS_DIR); ls *.c))
+QC_TESTS_WC = $(shell (cd $(QC_TESTS_DIR); ls *.c))
+TCC_TESTS_WC = $(shell (cd $(TCC_TESTS_DIR); ls *.c))
 
 # GTE tests using asm (TODO: generate automatically)
 # these don't seem to work.
@@ -762,13 +764,163 @@ GTE_SKIP_TESTS += \
 
 GTE_TESTS = $(filter-out $(GTE_SKIP_TESTS), $(GTE_TESTS_WC))
 
-TPL_TEST_STEMS = $(TPL_TESTS:%.c.in=%)
+# some preprocessor testing, needs careful flags.
+QC_SKIP_TESTS += \
+	0064-sysinclude.c
 
-# maybe this is not necessary, just ship the tst_*.c files?
+# snprintf is missing
+QC_SKIP_TESTS += \
+	0108-callvararg.c
+
+# syntax error
+QC_SKIP_TESTS += \
+	0047-anonexport.c \
+	0101-bug.c
+
+QC_TESTS = $(filter-out $(QC_SKIP_TESTS), $(QC_TESTS_WC))
+
+# '___slonglong2fs' referenced by module
+TCC_SKIP_TESTS += \
+	110_average.c
+
+# compound literals require ISO C99 or later and are not implemented
+TCC_SKIP_TESTS += \
+	94_generic.c
+
+# pthread
+TCC_SKIP_TESTS += \
+	106_versym.c \
+	114_bound_signal.c \
+	116_bound_setjmp2.c \
+	124_atomic_counter.c
+
+# long double
+TCC_SKIP_TESTS += \
+	111_conversion.c
+
+# pass structure as function argument
+TCC_SKIP_TESTS += \
+	73_arm64.c \
+	109_float_struct_calling.c \
+	121_struct_return.c
+
+# misc syntax error
+TCC_SKIP_TESTS += \
+	03_struct.c \
+	100_c99array-decls.c \
+	101_cleanup.c \
+	102_alignas.c \
+	103_implicit_memmove.c \
+	108_constructor.c \
+	118_switch.c \
+	119_random_stuff.c \
+	120_alias.c \
+	123_vla_bug.c \
+	18_include.c \
+	33_ternary_op.c \
+	39_typedef.c \
+	40_stdio.c \
+	42_function_pointer.c \
+	46_grep.c \
+	76_dollars_in_identifiers.c \
+	82_attribs_position.c \
+	85_asm-outside-function.c \
+	87_dead_code.c \
+	88_codeopt.c \
+	89_nocode_wanted.c \
+	90_struct-init.c \
+	95_bitfields.c \
+	98_al_ax_extend.c \
+	99_fastcall.c
+
+# strdup declaration collision (old standard?)
+TCC_SKIP_TESTS += \
+	112_backtrace.c
+
+# multiple compilation units
+TCC_SKIP_TESTS += \
+	104_inline.c \
+	104+_inline.c \
+	113_btdll.c \
+	120_alias.c \
+	120+_alias.c
+
+# bultins
+TCC_SKIP_TESTS += \
+	117_builtins.c \
+
+# incompatible types
+TCC_SKIP_TESTS += \
+	17_enum.c
+
+# pp bug?
+TCC_SKIP_TESTS += \
+	77_push_pop_macro.c
+
+# heterogeneous main arguments
+TCC_SKIP_TESTS += \
+	32_led.c \
+	96_nodata_wanted.c
+
+# cannot assign values to arrays
+TCC_SKIP_TESTS += \
+	34_array_assignment.c
+
+# Initializer element is not a constant exp ression
+TCC_SKIP_TESTS += \
+	78_vla_label.c \
+	79_vla_continue.c \
+	115_bound_setjmp.c \
+	122_vla_reuse.c
+
+# bit-field size too wide for type (max 16 bits), per-port?
+TCC_SKIP_TESTS += \
+	93_integer_promotion.c \
+	95_bitfields.c \
+	95_bitfields_ms.c
+
+# sin function etc.
+TCC_SKIP_TESTS += \
+	22_floating_point.c \
+	24_math_library.c
+
+# ?ASlink-Warning-Undefined Global '_main_' referenced
+TCC_SKIP_TESTS += \
+	60_errors_and_warnings.c \
+	125_atomic_misc.c
+
+# struct/union/array '': initialization needs curly braces
+TCC_SKIP_TESTS += \
+	75_array_in_struct_init.c
+
+# int f9 (int ((int)), int);
+# BUG? Syntax error, declaration ignored at ','
+TCC_SKIP_TESTS += \
+	81_types.c
+
+# abnormal stop (on all ports but host)
+TCC_SKIP_TESTS += \
+	107_stack_safe.c \
+	71_macro_empty_arg.c
+
+# assertion failed (on all ports but host)
+TCC_SKIP_TESTS += \
+	84_hex-float.c \
+	86_memory-model.c
+
+TCC_TESTS = $(filter-out $(TCC_SKIP_TESTS), $(TCC_TESTS_WC))
+
+TPL_TEST_STEMS = $(TPL_TESTS:%.c.in=%)
+QC_TEST_STEMS = $(QC_TESTS_WC:%.c=%)
+TCC_TEST_STEMS = $(TCC_TESTS_WC:%.c=%)
+
+# maybe this is not necessary, just ship the tst_%.c files?
 # (does it matter?)
 C_TEST_SRCS = $(C_TESTS:%.c=tst_%.c)
 M4_TEST_SRCS = $(M4_TESTS:%.m4=m4_%.c)
 GTE_TEST_SRCS = $(GTE_TESTS:%.c=gte_%.c)
+QC_TEST_SRCS = $(QC_TESTS_WC:%.c=qct_%.c)
+TCC_TEST_SRCS = $(TCC_TESTS_WC:%.c=tcc_%.c)
 
 # Generate .c files from .m4 files
 # bug/feature? run MAKE_DRV as well (requires magic filenames and paths)
@@ -777,6 +929,51 @@ m4_%.c: $(TESTS_DIR)/%.m4
 	@$(M4) -I $(srcdir)/../m4include rtmacros.m4 $< > $*.m4c
 	@$(PYTHON) $(MAKE_DRV) $*.m4c $@
 	@touch $@
+
+qct_%.c: $(QC_TESTS_DIR)/%.c Makefile
+	@echo '#include <testfwk.h>' > $@
+	@echo '#ifdef __SDCC' >> $@
+	@echo '#pragma std_sdcc99' >> $@
+	@echo '#endif // __SDCC' >> $@
+	@echo 'const int __numCases = 1;' >> $@
+	@echo '__code const char * __getSuiteName(void) { return "qct/$*"; }' >> $@
+	@echo '#define main main_' >> $@
+
+	@#find matching main arguments, none or 2
+	@echo -n '#define MAINARGS' >> $@
+	@(grep -q main.*argv $< && echo " 0, 0" || \
+	 (grep -q main.*argc $< && echo " 0" || echo )) >> $@
+	@echo '#include "$<"' >> $@
+	@echo 'void __runSuite(void) { __prints("Running main\\n"); ASSERT(!main_(MAINARGS)); }' >> $@
+
+tcc_%.c: $(TCC_TESTS_DIR)/%.c Makefile
+	@echo '#include <testfwk.h>' > $@
+	@echo '#ifdef __SDCC' >> $@
+	@echo '#pragma std_sdcc99' >> $@
+	@echo '#endif // __SDCC' >> $@
+	@echo 'const int __numCases = 1;' >> $@
+	@echo '__code const char * __getSuiteName(void) { return "tcc/$*"; }' >> $@
+	@echo '#define main main_' >> $@
+
+	@#find matching main arguments, none or 2
+	@echo -n '#define MAINARGS' >> $@
+	@(grep -q main.*argv $< && echo " 0, 0" || \
+	 (grep -q main.*argc $< && echo " 0" || echo )) >> $@
+
+# non-standard __FUNCTION__
+	@grep -q __FUNCTION__ $< && echo "#define __FUNCTION__ __func__" >> $@ || :
+	@grep -q tcc_backtrace $< && echo "#define tcc_backtrace printf" >> $@ || :
+	@echo '#include "$<"' >> $@
+	@echo '#undef abort' >> $@ # yikes, 77_push_pop_macro.c
+
+	@echo '#ifdef __SDCC' >> $@
+	@echo 'extern void _putchar(char c);' >> $@
+	@echo 'int putchar(int c){_putchar(c);return(c);}' >> $@
+	@echo 'void abort() {__fail(0,0,0,0);}' >> $@
+	@echo '#endif' >> $@
+
+	@echo 'void __runSuite(void) { __prints("Running main\\n"); ASSERT(!main_(MAINARGS)); }' >> $@
+
 
 gte_%.c: $(GTE_TESTS_DIR)/%.c Makefile
 	@printf .
@@ -849,11 +1046,18 @@ MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(TEST_SRCS) Makefile
 	@echo $(GTE_TESTS) | wc -w
 	@echo -n "m4: macro tests.. "
 	@echo $(M4_TESTS) | wc -w
+	@echo -n "qct: QuickC tests.. "
+	@echo $(QC_TEST_STEMS) | wc -w
+	@echo -n "tcc: tinycc tests.. "
+	@echo $(TCC_TEST_STEMS) | wc -w
+
 	@echo -n "tpl: template tests.. "
 	@echo $(TPL_TEST_STEMS) | wc -w
 	@echo -n "tst: plain tests.. "
 	@echo $(C_TEST_SRCS) | wc -w
 
+	@echo QC_TEST_STEMS = $(QC_TESTS:%.c=qct_%) >> MakeList
+	@echo TCC_TEST_STEMS = $(TCC_TESTS:%.c=tcc_%) >> MakeList
 	@echo TPL_TEST_STEMS = $(TPL_TEST_STEMS) >> MakeList
 	@echo C_TEST_STEMS = $(C_TEST_SRCS:%.c=%) >> MakeList
 	@echo M4_TEST_STEMS = $(M4_TEST_SRCS:%.c=%) >> MakeList

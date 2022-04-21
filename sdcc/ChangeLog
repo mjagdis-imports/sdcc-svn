@@ -1,5 +1,13 @@
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in,
+	  support/regression/tcc,
+	  support/regression/qct:
+	  Add tests from TCC, QuickC, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/cases/Makefile.in:
 	  Disable some warnings in gce tests, patch by Felix Salfelder (felixs).
 	* support/regression/MakeList:
