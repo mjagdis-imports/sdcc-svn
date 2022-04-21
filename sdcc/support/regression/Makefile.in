@@ -396,9 +396,12 @@ distclean: clean
 %$(BINEXT): %$(OBJEXT) $(EXTRAS) $(FWKLIB) $(PORT_CASES_DIR)/fwk.lib
 	${M_V_CCLD}$(SDCC) $(SDCCFLAGS) $(LINKFLAGS) $(EXTRAS) $(PORT_CASES_DIR)/fwk.lib $< -o $@
 
+# ignore (preprocessor) warnings
+gen/%/tst_p99-conformance.rel: EXTRA_COMPILE_HACK=2>/dev/null
+
 $(PORT_CASES_DIR)/%$(OBJEXT): %.c
 	@mkdir -p $(dir $@) # BUG?
-	${M_V_CC}$(SDCC) $(SDCCFLAGS) -c $< -o $@
+	${M_V_CC}$(SDCC) $(SDCCFLAGS) -c $< -o $@ ${EXTRA_COMPILE_HACK}
 
 $(PORT_CASES_DIR)/%$(OBJEXT): $(PORTS_DIR)/$(PORT_BASE)/%.c
 	${M_V_CC}$(SDCC) $(SDCCFLAGS) -c $< -o $@
