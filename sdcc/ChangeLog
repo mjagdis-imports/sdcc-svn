@@ -1,5 +1,11 @@
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  Fix out creation logic to avoid duplicates, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/tests/genericnonintrinsicnaddr.c:
 	  Use PORT_HOST, just like the other tests, instead of TEST_HOST.
 
