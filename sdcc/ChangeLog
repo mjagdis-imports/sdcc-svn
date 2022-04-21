@@ -1,5 +1,10 @@
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/Makefile.in:
+	  .PRECIOUS does not play with .DELETE_ON_ERROR, use .SECONDARY instead. Patch Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* Merge implicitintrinsicnamedaddressspaces branch.
 
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>

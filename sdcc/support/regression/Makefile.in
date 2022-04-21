@@ -278,8 +278,9 @@ endif
 
 # List of intermediate files to keep.  Pretty much keep everything as
 # disk space is free.
-.PRECIOUS: $(RESULTS_DIR) $(CASES_DIR)/% $(PORT_TMP_DIR)/% %$(OBJEXT) %$(EXEEXT) %$(BINEXT) \
-	$(CASES_DIR)/%/stamp $(RESULTS_DIR)/$(PORT)/%.out
+.SECONDARY: $(RESULTS_DIR) $(CASES_DIR)/% $(PORT_TMP_DIR)/% %$(OBJEXT) %$(EXEEXT) %$(BINEXT) \
+	$(CASES_DIR)/%/stamp \
+	${TEST_STEMS:%=$(RESULTS_DIR)/$(PORT)/%.out}
 
 # $(TMP_DIR)/stamp is really a proxy for $(TMP_DIR). We shouldn't use
 # $(TMP_DIR) as a dependency directly, because as a directory its time
