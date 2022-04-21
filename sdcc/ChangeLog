@@ -6,6 +6,8 @@
 	  support/regression/ports/stm8/spec.mk,
 	  support/regression/gte:
 	  GCC tests from the execute part of the torture suite. Patch by Felix Salfelder (felixs).
+	* support/regression/gte/951204-1.c:
+	  Un-edit a GCC torture-execute test, patch by Felix Salfelder (felixs).
 
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
