@@ -3925,27 +3925,35 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       p = newLink (DECLARATOR);
+      
       if (!LETYPE (tree))
-        DCL_TYPE (p) = POINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_CODE)
-        DCL_TYPE (p) = CPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_XDATA)
-        DCL_TYPE (p) = FPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_XSTACK)
-        DCL_TYPE (p) = PPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_IDATA)
-        DCL_TYPE (p) = IPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_EEPROM)
-        DCL_TYPE (p) = EEPPOINTER;
-      else if (SPEC_OCLS (LETYPE (tree)))
         {
-          DCL_TYPE (p) = PTR_TYPE (SPEC_OCLS (LETYPE (tree)));
+          DCL_TYPE (p) = POINTER;
           DCL_TYPE_IMPLICITINTRINSIC (p) = true;
         }
       else
         {
-          DCL_TYPE (p) = POINTER;
-          DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+          DCL_TYPE_IMPLICITINTRINSIC (p) = SPEC_SCLS_IMPLICITINTRINSIC (LETYPE (tree));
+          if (SPEC_SCLS (LETYPE (tree)) == S_CODE)
+            DCL_TYPE (p) = CPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_XDATA)
+            DCL_TYPE (p) = FPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_XSTACK)
+            DCL_TYPE (p) = PPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_IDATA)
+            DCL_TYPE (p) = IPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_EEPROM)
+            DCL_TYPE (p) = EEPPOINTER;
+          else if (SPEC_OCLS (LETYPE (tree)))
+            {
+              DCL_TYPE (p) = PTR_TYPE (SPEC_OCLS (LETYPE (tree)));
+              DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+            }
+          else
+            {
+              DCL_TYPE (p) = POINTER;
+              DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+            }
         }
 
       if (IS_AST_SYM_VALUE (tree->left))

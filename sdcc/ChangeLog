@@ -3,6 +3,9 @@
 	* support/regression/tests/genericintrinsicnaddr.c,
 	  support/regression/tests/genericnonintrinsicnaddr.c:
 	  Test _Generic on pointers into named address spaces.
+	* src/SDCCmem.c,
+	  src/SDCCast.c:
+	  Fix a _Generic implicit intrinsic named address space issue affecting large and huge mcs51 memory model.
 
 2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
