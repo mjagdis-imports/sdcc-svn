@@ -1,6 +1,15 @@
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/ports/mcs51-common/spec.mk,
+	  support/regression/ports/stm8/spec.mk,
+	  support/regression/gte:
+	  GCC tests from the execute part of the torture suite. Patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
 	  support/regression/ports/host/spec.mk.in:
 	  Fix out creation logic to avoid duplicates, patch by Felix Salfelder (felixs).
 

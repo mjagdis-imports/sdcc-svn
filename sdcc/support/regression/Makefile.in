@@ -226,7 +226,11 @@ PORT_CASES_DIR = $(TMP_DIR)/$(PORT)
 # PORT_CASES_DIRR = $(TMP_DIR)/$(PORT)
 PORT_RESULTS_DIR = $(RESULTS_DIR)/$(PORT)
 
-DCC_EXTRA_DIR = $(top_builddir)/../sdcc-extra
+##### per-port exclude (cases, not tests) #####
+## BUG/Feature: after excluding tests, manually delete .sum
+include $(srcdir)/MakeList
+
+SDCC_EXTRA_DIR = $(top_builddir)/../sdcc-extra
 
 # Defaults.  Override in spec.mk if required.
 PORT_BASE = $(PORT)
