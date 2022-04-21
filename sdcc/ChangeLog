@@ -1,5 +1,10 @@
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/cases/Makefile.in:
+	  Disable some warnings in gce tests, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/Makefile.in,
 	  support/regression/cases/Makefile.in,
 	  support/regression/ports/mcs51-common/spec.mk,

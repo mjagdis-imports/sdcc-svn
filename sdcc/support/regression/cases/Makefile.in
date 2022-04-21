@@ -783,7 +783,13 @@ gte_%.c: $(GTE_TESTS_DIR)/%.c Makefile
 	@echo '#include <testfwk.h>' > $@
 	@echo '#ifdef __SDCC' >> $@
 	@echo '#pragma std_sdcc99' >> $@
+	@echo '#pragma disable_warning 24' >> $@
+	@echo '#pragma disable_warning 84' >> $@
+	@echo '#pragma disable_warning 85' >> $@
+	@echo '#pragma disable_warning 88' >> $@
 	@echo '#pragma disable_warning 93' >> $@
+	@echo '#pragma disable_warning 196' >> $@
+	@echo '#pragma disable_warning 127' >> $@
 
 # stuff defined in gcc, but not in sdcc
 	@grep -q __CHAR_BIT__ $< && (echo "#include <limits.h>"; echo "#define __CHAR_BIT__ CHAR_BIT") >> $@ || :
