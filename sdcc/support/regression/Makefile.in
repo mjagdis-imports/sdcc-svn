@@ -255,6 +255,8 @@ CC_FOR_BUILD = $(CC)
 # Only include if we're in a per-port call.
 ifdef PORT
 
+EMU_INPUT = < $(PORTS_DIR)/$(PORT_BASE)/uCsim.cmd
+
 # run simulator with SIM_TIMEOUT seconds timeout
   # include ./$(PORT)/spec.mk if exists, else include $(PORTS_DIR)/$(PORT)/spec.mk
   ifeq ($(shell if test -f ./ports/$(PORT)/spec.mk; then echo OK; fi),OK)
@@ -263,16 +265,12 @@ ifdef PORT
     include $(PORTS_DIR)/$(PORT)/spec.mk
   endif
 
-ifdef OVERRIDE_EMU_RULE
-# need rule from spec.mk (e.g. host/spec.mk)
-else
-# this one will do for all the others.
 $(RESULTS_DIR)/$(PORT)/%.out: $(CASES_DIR)/%.c $(TMP_DIR)/timeout
 	@mkdir -p $(dir $@)
 	echo --- Running: $< > $@; # BUG: need "Running" in .out, regardless of whether we run anything.
 
 	-${M_V_at}if $(MAKE) $(MAKE_SUB_FLAGS) $(TMP_DIR)/$(PORT)/$*$(BINEXT) PORT=$(PORT); then \
-	  ${M_V_EMU}$(TMP_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $(EMU_PORT_FLAG) $(EMU_FLAGS) $(TMP_DIR)/$(PORT)/$*$(BINEXT) < $(PORTS_DIR)/$(PORT_BASE)/uCsim.cmd > $@; \
+	  ${M_V_EMU}$(TMP_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $(EMU_PORT_FLAG) $(EMU_FLAGS) $(TMP_DIR)/$(PORT)/$*$(BINEXT) ${EMU_INPUT} > $@; \
 	  if [ 0 -ne $$? ]; then \
 	    echo --- FAIL: \"timeout, simulation killed\" in $<"\n"--- Summary: 1/1/1: timeout >> $@; \
 	  fi \
@@ -283,9 +281,8 @@ $(RESULTS_DIR)/$(PORT)/%.out: $(CASES_DIR)/%.c $(TMP_DIR)/timeout
 	@# always count ticks?
 	@$(PYTHON) $(srcdir)/get_ticks.py < $@ >> $@
 	@grep -n FAIL $@ /dev/null || true
-endif
 
-endif
+endif # PORT
 
 # For each test we produce a result log file, %.log
 ifndef CASES
