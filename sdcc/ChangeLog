@@ -1,5 +1,10 @@
 2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/MakeList:
+	  Exclude some tests for some mcs51 targets (due to lack of memory), patch by Felix Salfelder (felixs).
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* support/regression/tests/bug-1981238.c,
 	  support/regression/tests/bug-3368.c:
 	  Disable some warnings about stuff that is meant to be tested.

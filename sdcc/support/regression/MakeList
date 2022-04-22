@@ -33,14 +33,17 @@ EXCLUDE_mcs51-small += \
 	gte_920410-1 \
 	gte_921113-1 \
 	gte_loop-ivopts-1 \
-	gte_multi-ix \
 	gte_pr93434
+
+# Warning 21
+EXCLUDE_mcs51-small-stack-auto += \
+	gte_920410-1 \
+	gte_921113-1
 
 #?ASlink-Warning-Paged Area PSEG Boundary Error
 EXCLUDE_mcs51-medium += \
 	gte_920410-1 \
-	gte_921113-1 \
-	gte_multi-ix
+	gte_921113-1
 
 # Möglich, dass irgendwo die Größe als 16-bit-Wert behandelt wird, und dann (1 <<
 # 17) 0 ergibt, oder so. Da kann man einen Bugreport öffnen, um eine bessere
@@ -351,6 +354,12 @@ EXCLUDE_mcs51-large-stack-auto += \
 	gte_multi-ix
 EXCLUDE_mcs51-stack-auto += \
 	gte_multi-ix
+EXCLUDE_mcs51-small += \
+	gte_multi-ix
+EXCLUDE_mcs51-medium += \
+	gte_multi-ix
+EXCLUDE_mcs51-small-stack-auto += \
+	gte_multi-ix
 
 # Failure
 EXCLUDE_ARCH_mcs51 += \
@@ -456,6 +465,13 @@ EXCLUDE_mcs51-medium += \
 # Failure
 EXCLUDE_mcs51-small += \
 	qct_0080-arrays \
+	qct_0036-notneg \
+	qct_0039-sizeof \
+	qct_0041-queen \
+	qct_0051-inits
+
+# Failure
+EXCLUDE_mcs51-small-stack-auto += \
 	qct_0036-notneg \
 	qct_0039-sizeof \
 	qct_0041-queen \
