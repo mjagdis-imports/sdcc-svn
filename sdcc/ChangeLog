@@ -1,6 +1,11 @@
 2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/MakeList:
+	  Exclude a test for some pdk15-stack-auto target (due to lack of memory), patch by Felix Salfelder (felixs).
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
 	  Exclude some tests for some mcs51 targets (due to lack of memory), patch by Felix Salfelder (felixs).
 
 2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>

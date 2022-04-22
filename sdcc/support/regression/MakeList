@@ -562,12 +562,11 @@ EXCLUDE_pdk15 += \
 	qct_0051-inits \
 	qct_0039-sizeof
 
-#Failure
+# Failure
 EXCLUDE_pdk15-stack-auto += \
-	qct_0051-inits \
 	qct_0039-sizeof \
-	qct_0040-cast \
-	qct_0042-prime \
+	qct_0041-queen \
+	qct_0051-inits
 
 # too large
 EXCLUDE_pdk14 += \
