@@ -1,3 +1,10 @@
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/gte/README,
+	  support/regression/qct/README,
+	  support/regression/tcc/README:
+	  Document Licenses of imported tests, patch by Felix Salfelder (felixs).
+
 2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/MakeList,
