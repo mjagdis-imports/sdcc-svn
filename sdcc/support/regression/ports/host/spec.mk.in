@@ -26,11 +26,12 @@ include $(srcdir)/fwk/lib/spec.mk
 OVERRIDE_EMU_RULE = YES
 $(RESULTS_DIR)/$(PORT)/%.out: $(CASES_DIR)/%.c $(TMP_DIR)/timeout
 	@mkdir -p $(dir $@)
+	echo --- Running: $< > $@; # BUG: need "Running" in .out, regardless of whether we run anything.
+
 	${M_V_GEN}if $(MAKE) $(TMP_DIR)/$(PORT)/$*$(BINEXT); then \
-		echo --- Running: $< > $@; \
 		$(TMP_DIR)/timeout $(RUN_TIMEOUT) $(TMP_DIR)/$(PORT)/$*$(BINEXT) >> $@; \
 	else \
-	  echo --- FAIL: cannot compile/link $< "\n"--- Summary: 1/1/1: compile > $@; \
+	  echo --- FAIL: cannot compile/link $< "\n"--- Summary: 1/1/1: compile >> $@; \
 	fi || :
 
 	-${M_V_at}grep -n FAIL $@ /dev/null || true
