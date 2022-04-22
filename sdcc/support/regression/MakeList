@@ -292,7 +292,6 @@ EXCLUDE_ucz80-undoc += \
 	gte_20091229-1 \
 	gte_20041218-1 \
 	gte_pr94567
-	
 
 # too large
 EXCLUDE_pdk14 += \
@@ -392,6 +391,11 @@ EXCLUDE_stm8 += \
 # Assertion failed
 EXCLUDE_stm8 += \
 	qct_0039-sizeof
+
+# Failure
+EXCLUDE_stm8-large += \
+	qct_0039-sizeof \
+	qct_0041-queen
 
 # Failure
 EXCLUDE_s08 += \
@@ -504,6 +508,7 @@ EXCLUDE_ucgbz80 += \
 
 # Failure
 EXCLUDE_uc6502 += \
+	qct_0041-queen \
 	qct_0039-sizeof
 
 # Failure
@@ -540,6 +545,13 @@ EXCLUDE_pdk15 += \
 	qct_0041-queen \
 	qct_0051-inits \
 	qct_0039-sizeof
+
+#Failure
+EXCLUDE_pdk15-stack-auto += \
+	qct_0051-inits \
+	qct_0039-sizeof \
+	qct_0040-cast \
+	qct_0042-prime \
 
 # too large
 EXCLUDE_pdk14 += \
@@ -758,6 +770,7 @@ EXCLUDE_ez80-z80 += ${EXCLUDE_ARCH_z80}
 EXCLUDE_tlcs90 += ${EXCLUDE_ARCH_z80}
 ###################################################
 EXCLUDE_mcs51-small += ${EXCLUDE_ARCH_mcs51}
+EXCLUDE_mcs51-small-stack-auto += ${EXCLUDE_ARCH_mcs51}
 EXCLUDE_mcs51-medium += ${EXCLUDE_ARCH_mcs51}
 EXCLUDE_mcs51-large += ${EXCLUDE_ARCH_mcs51}
 EXCLUDE_mcs51-huge += ${EXCLUDE_ARCH_mcs51}

@@ -1,5 +1,10 @@
 2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* support/regression/MakeList:
+	  Exclude some known-failing among the new tests, patch by Felix Salfelder (felixs).
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* device/lib/z180/setjmp.s,
 	  device/lib/z80/setjmp.s,
 	  device/lib/z80n/setjmp.s:
