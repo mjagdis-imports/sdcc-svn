@@ -333,15 +333,12 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                   if (!constExprTree (ival))
                     {
                       werrorfl (ival->filename, ival->lineno, E_CONST_EXPECTED, "found expression");
-                      // Don't try to do it anyway, as this is likely to result in a segfault in codegen later, especially if the expression contains function calls.
+                      // but try to do it anyway
                     }
-                  else
-                    {
-                      allocInfo = 0;
-                      if (!astErrors (ival))
-                        eBBlockFromiCode (iCodeFromAst (ival));
-                      allocInfo = 1;
-                    }
+                  allocInfo = 0;
+                  if (!astErrors (ival))
+                    eBBlockFromiCode (iCodeFromAst (ival));
+                  allocInfo = 1;
                 }
             }
         }

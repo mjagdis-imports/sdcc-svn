@@ -754,22 +754,20 @@ EXCLUDE_ARCH_mcs51 += \
 	tcc_30_hanoi
 
 # Failure
+EXCLUDE_mcs51-stack-auto += \
+	tcc_49_bracket_evaluation
+
+# Failure
+EXCLUDE_mcs51-medium += \
+	tcc_49_bracket_evaluation
+
+# Failure
 EXCLUDE_mcs51-small += \
 	tcc_30_hanoi \
 	tcc_36_array_initialisers \
 	tcc_37_sprintf \
+	tcc_49_bracket_evaluation \
 	tcc_97_utf8_string_literal
-
-# Linker error
-EXCLUDE_mcs51-stack-auto += \
-	tcc_49_bracket_evaluation
-EXCLUDE_mcs51-small-stack-auto += \
-	tcc_49_bracket_evaluation
-EXCLUDE_mcs51-small += \
-	tcc_49_bracket_evaluation
-EXCLUDE_mcs51-medium += \
-	tcc_49_bracket_evaluation
-
 
 ###################################################
 EXCLUDE_ucz80 += ${EXCLUDE_ARCH_z80}

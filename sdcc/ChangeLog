@@ -1,13 +1,3 @@
-2022-05-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
-
-	* src/SDCCglue.c:
-	  Fix bug #3031.
-
-2022-05-02 Benedikt Freisen <b.freisen AT gmx.net>
-
-	* doc/sdccman.lyx:
-	  Document language override option -x.
-
 2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/Makefile.in,
