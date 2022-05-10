@@ -1,3 +1,175 @@
+2022-05-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c:
+	  Fix bug #3031.
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCutil.c,
+	  src/SDCC.lex,
+	  support/valdiag/tests/universal.c:
+	  ISO C23 diagnostics for invalid universal character names.
+
+2022-05-02 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Document language override option -x.
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-1981238.c,
+	  support/regression/tests/bug-3368.c:
+	  Disable some warnings about stuff that is meant to be tested.
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/lib/z180/setjmp.s,
+	  device/lib/z80/setjmp.s,
+	  device/lib/z80n/setjmp.s:
+	  Fix an issue triggered by tail-call optimization on calls to longjmp.
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/genericnonintrinsicnaddr.c:
+	  Use PORT_HOST, just like the other tests, instead of TEST_HOST.
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge implicitintrinsicnamedaddressspaces branch.
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/genericintrinsicnaddr.c,
+	  support/regression/tests/genericnonintrinsicnaddr.c:
+	  Test _Generic on pointers into named address spaces.
+	* src/SDCCmem.c,
+	  src/SDCCast.c:
+	  Fix a _Generic implicit intrinsic named address space issue affecting large and huge mcs51 memory model.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/gte:
+	  Import missing gcc torture execute tests, patch by by Felix Salfelder (felixs).
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge regtest branch.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/cases/Makefile.in:
+	  Test cases cleanup, patch by by Felix Salfelder (felixs).
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  src/SDCCcse.c,
+	  src/SDCCglue.c,
+	  src/SDCCicode.c,
+	  src/SDCClospre.hpp,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/ds390/ralloc.c,
+	  src/mcs51/ralloc.c,
+	  src/pic14/glue.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/glue.c,
+	  src/pic16/ralloc.c,
+	  support/regression/tests/bug-3254.c,
+	  support/regression/tests/bug-3245.c:
+	  Fix bugs #3254, #3145.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c,
+	  support/valdiag/tests/generic.c:
+	  Fix another part of bug #3145.
+
+2022-04-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c:
+	  Fix array-to-pointer decay in _Generic.
+
+2022-04-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-2629.c:
+	  Fix bug #2629.
+
+2022-04-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c:
+	  Assertion to catch bug #2629 earlier.
+	* support/regression/tests/bug-2629.c:
+	  (Disabled) test for bug #2629.
+
+2022-04-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c:
+	  Fix printing of plain char for error messages and debug output.
+
+2022-04-13 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx:
+	  Update documentation on standard compliance.
+
+2022-04-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-3379.c:
+	  Fix bug #3379.
+
+2022-04-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-2981.c:
+	  Test for bug #2981.
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3255.c:
+	  Fix bug #3255.
+	* src/SDCCglue.c,
+	  support/valdiag/tests/generic.c:
+	  Fix part of bug #3145.
+
+2022-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/cases/Makefile.in:
+	  Fix rm flag for cleaning MakeList.
+	* support/regression/Makefile.in:
+	  Fix build of mcs51 regression test framework libraries, fix by Felix Salfelder (felixs).
+
+2022-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/mcs51-small-stack-auto:
+	  Rename mcs51-stack-auto to mcs51-small-stack-auto for consistency with mcs51-small and mcs51-large-stack-auto.
+	* doc/sdccman.lyx:
+	  Clarify __z88dk_callee behaviour.
+
+2022-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/mcs51/gen.c,
+	  src/stm8/gen.c,
+	  support/regression/tests/funptrsstructreturn.c.in:
+	  Fixes for calls via function pointers to functions returning struct / union.
+
+2022-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  src/mcs51/gen.c,
+	  src/mcs51/main.c,
+	  support/regression/tests/structreturn.c.in,
+	  device/lib/div.c,
+	  device/lib/ldiv.c,
+	  device/lib/lldiv.c,
+	  device/lib/mcs51/Makefile.in,
+	  support/regression/tests/div.c,
+	  device/include/stdlib.h:
+	  struct / union return for mcs51.
+
 2022-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/mcs51/gen.c,
@@ -62,9 +234,39 @@
 2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/regression/ports/tlcs90/spec.mk:
-	  Do not meit debug info to ease reading asm files.
+	  Do not emit debug info to ease reading asm files.
 	* src/z80/ralloc2.cc:
 	  Fix code generation issues in use of iy.
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Conditional MakeList include, and conditional test-port, part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in:
+	  Silence case expansion messages by default, part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  V flag to control verbosity, decouple test-ports and print-summary. Part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/*/spec.mk:
+	  Deduplicate spec.mk by using rules in Makefile.in instead. Part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs): fixes for error reporting, number of compact-results calls, CLEAN_PORTS.
 
 2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
@@ -96,6 +298,28 @@
 
 	* support/regression/tests/bitintvararg.c.in:
 	  Fix host test disable condition.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/cases/mkdrv.py,
+	  support/regression/ports/*/spec.mk,
+	  support/regression/ports/host/spec.mk.in:
+	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs).
+	* support/regression/tests/structparam.c.in:
+	  Fix test file extension for parametrized test.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* configure,
+	  configure.ac,
+	  support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in,
+	  support/regression/cases:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs), made less verbose.
+
+
 
 2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 

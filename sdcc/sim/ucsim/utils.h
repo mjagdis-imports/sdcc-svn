@@ -56,8 +56,6 @@ extern const char *object_name(class cl_base *o);
 extern char *case_string(enum letter_case lcase, const char *str);
 extern chars cbin(long data, int bits);
 
-extern double dnow(void);
-
 extern int strispn(char *s, char c);
 extern bool strend(const char *search_in, const char *what);
 extern bool valid_sym_name(char *s);
@@ -66,6 +64,7 @@ extern bool is_hex_file(class cl_f *f);
 extern bool is_asc_file(class cl_f *f);
 extern bool is_omf_file(class cl_f *f);
 extern bool is_cdb_file(class cl_f *f);
+extern bool is_s19_file(class cl_f *f);
 
 extern chars colopt2ansiseq(char *opt);
 

@@ -11,10 +11,20 @@
 # include HEADER_SOCKET
 #endif
 
+#include <stdio.h>
+#include <wchar.h>
 #include <windows.h>
+#ifdef HAVE_WINCON_H
+#include <wincon.h>
+#endif
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 #include <io.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "fwiocl.h"
 
@@ -607,6 +617,92 @@ sigpipe_off()
 {
 }
 
-unsigned int cperiod_value() { return 50000; }
+unsigned int cperiod_value() { return 10000; }
+
+int
+set_console_mode()
+{
+  // Set output mode to handle virtual terminal sequences
+  HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (hOut == INVALID_HANDLE_VALUE)
+    {
+      return false;
+    }
+  HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+  if (hIn == INVALID_HANDLE_VALUE)
+    {
+      return false;
+    }
+  
+  DWORD dwOriginalOutMode = 0;
+  DWORD dwOriginalInMode = 0;
+  if (!GetConsoleMode(hOut, &dwOriginalOutMode))
+    {
+      return false;
+    }
+  if (!GetConsoleMode(hIn, &dwOriginalInMode))
+    {
+      return false;
+    }
+  
+  DWORD dwRequestedOutModes =
+#ifdef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#else
+    0x4
+#endif
+    |
+#ifdef DISABLE_NEWLINE_AUTO_RETURN
+    DISABLE_NEWLINE_AUTO_RETURN
+#else
+    0x8
+#endif
+    ;
+  //DWORD dwRequestedInModes = ENABLE_VIRTUAL_TERMINAL_INPUT;
+  
+  DWORD dwOutMode = dwOriginalOutMode | dwRequestedOutModes;
+  if (!SetConsoleMode(hOut, dwOutMode))
+    {
+      // we failed to set both modes, try to step down mode gracefully.
+      dwRequestedOutModes =
+#ifdef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+	ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#else
+	0x4
+#endif
+	;
+      dwOutMode = dwOriginalOutMode | dwRequestedOutModes;
+      if (!SetConsoleMode(hOut, dwOutMode))
+        {
+	  // Failed to set any VT mode, can't do anything here.
+	  return -1;
+        }
+    }
+  
+  DWORD dwInMode = dwOriginalInMode |
+#ifdef ENABLE_VIRTUAL_TERMINAL_INPUT
+    ENABLE_VIRTUAL_TERMINAL_INPUT
+#else
+    0x200
+#endif
+    ;
+  if (!SetConsoleMode(hIn, dwInMode))
+    {
+      // Failed to set VT input mode, can't do anything here.
+      return -1;
+    }
+  
+  return 0;
+}
+
+
+double
+dnow(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (double)tv.tv_sec + ((double)tv.tv_usec/1000000.0);
+}
+
 
 /* End of fwio.cc */

@@ -9465,7 +9465,13 @@ stack-auto
 
 
 \series default
- is specified in the mcs51, ds390, hc08, s08, pdk13, pdk14 and pdk15 ports.
+ is specified in the mcs51, ds390, hc08, s08, pdk13, pdk14, pdk15 and mos6502
+ ports.
+\end_layout
+
+\begin_layout Itemize
+struct and union can not be used as parameters or return values in the hc08,
+ s08, ds390, mos6502, pic14 and pic16 ports.
 \end_layout
 
 \begin_layout Subsection
@@ -13529,6 +13535,64 @@ F:/Projects/test3/output 1/
 
 \emph default
 .
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-x
+\begin_inset space ~
+\end_inset
+
+<type>
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-x <type>
+\end_layout
+
+\end_inset
+
+
+\series default
+ The specified type overrides the file type that SDCC detected based on
+ the file name extension.
+ The currently supported options are 
+\begin_inset Quotes sld
+\end_inset
+
+c
+\begin_inset Quotes srd
+\end_inset
+
+, 
+\begin_inset Quotes sld
+\end_inset
+
+c-header
+\begin_inset Quotes srd
+\end_inset
+
+ and 
+\begin_inset Quotes sld
+\end_inset
+
+none
+\begin_inset Quotes srd
+\end_inset
+
+.
+ The option 
+\begin_inset Quotes sld
+\end_inset
+
+none
+\begin_inset Quotes srd
+\end_inset
+
+ restores the default behavior.
 \end_layout
 
 \begin_layout Labeling
@@ -44220,10 +44284,9 @@ The current default is the SDCC calling convention, version 1.
  other compilers.
  For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
  which is passed the same way as the return value of __sdcccall(0).
- For __z88dk_callee, parameters are passed on the stack, but the stack is
- not adjusted for the parameters after the call (thus the callee has to
- do this instead).
- __z88dk_callee can be combined with __smallc.
+ For __z88dk_callee, the stack is not adjusted for stack parameters the
+ parameters after the call (thus the callee has to do this instead).
+ __z88dk_callee can be combined with __smallc, __sdcccall(0) or __sdcccall(1).
 \end_layout
 
 \begin_layout Subsubsection
@@ -44284,7 +44347,7 @@ This calling convention can be chosen per function via __sdcccall(0).
  Except for the SM83, where 8-bit values are passed in e, 16-bit values
  in de, 32-bit values in hlde.
  Larger return values (as well as struct and union independent of their
- size) are passed in memory in a location specified by the caller through
+ size) are passed in a memory in a location specified by the caller through
  a hidden pointer argument.
  Unless __z88dk_callee is used, all stack parameters are cleaned up by the
  caller.
@@ -44304,10 +44367,9 @@ The default is the Z80 SDCC calling convention, version 0 as described above.
  other compilers.
  For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
  which is passed the same way as the return value.
- For __z88dk_callee, parameters are passed on the stack, but the stack is
- not adjusted for the parameters after the call (thus the callee has to
- do this instead).
- __z88dk_callee can be combined with __smallc.
+ For __z88dk_callee, the stack is not adjusted for stack parameters the
+ parameters after the call (thus the callee has to do this instead).
+ __z88dk_callee can be combined with __smallc, __sdcccall(0) or __sdcccall(1).
 \end_layout
 
 \begin_layout Subsubsection

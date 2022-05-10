@@ -425,4 +425,20 @@ sigpipe_off()
 
 unsigned int cperiod_value() { return 1000000; }
 
+int
+set_console_mode()
+{
+  return 0;
+}
+
+
+double
+dnow(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (double)tv.tv_sec + ((double)tv.tv_usec/1000000.0);
+}
+
+
 /* End of fuio.cc */

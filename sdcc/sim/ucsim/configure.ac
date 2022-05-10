@@ -170,11 +170,11 @@ fi,
 enable_m68hc11_port="yes")
 
 AC_ARG_ENABLE(m68hc12-port,
-[  --enable-m68hc12-port   compile simulator for m68hc12],
+[  --disable-m68hc12-port  do not compile simulator for m68hc12],
 if test $enable_m68hc12_port  != "no"; then
     enable_m68hc12_port="yes"
 fi,
-enable_m68hc12_port="no")
+enable_m68hc12_port="yes")
 
 AC_ARG_ENABLE(mos6502-port,
 [  --disable-mos6502-port  do not compile simulator for mos6502],
@@ -278,7 +278,8 @@ AC_CHECK_HEADERS(inttypes.h)
 AC_CHECK_HEADERS(cstdint.h)
 AC_CHECK_HEADERS(stdint.h)
 AC_CHECK_HEADERS(sys/wait.h)
-		     
+AC_CHECK_HEADERS(wincon.h)
+
 AC_CHECK_HEADER(curses.h,
   AC_DEFINE(HAVE_CURSES_H, 1, [XXX])
   curses_h_ok=yes,
@@ -424,6 +425,7 @@ AC_SUBST(CURSES_LIBS)
 AC_FUNC_FORK
 AC_CHECK_FUNCS(_exit dup2 dup3 pipe pipe2 waitpid)
 AC_CHECK_FUNCS(vasprintf)
+AC_CHECK_FUNCS(vsnprintf)
 dnl AC_CHECK_FUNCS(strdup)
 dnl AC_CHECK_FUNCS(getline)
 dnl AC_CHECK_FUNCS(getdelim)

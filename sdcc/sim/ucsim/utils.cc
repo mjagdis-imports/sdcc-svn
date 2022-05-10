@@ -37,6 +37,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <stdlib.h>
 //#include <unistd.h>
 #include <sys/time.h>
+#include <time.h>
 #include <string.h>
 
   // prj
@@ -125,8 +126,13 @@ vformat_string(const char *format, va_list ap)
     msg = NULL;
   return(msg);
 #else
+#ifdef HAVE_VSNPRINTF
   msg = (char*)malloc(80*25);
   vsnprintf(msg, 80*25, format, ap);
+#else
+  msg= (char*)malloc(80*25);
+  vsprintf(msg, format, ap);
+#endif
 #endif
   return(msg);
 }
@@ -223,14 +229,6 @@ cbin(long data, int bits)
       mask>>= 1;
     }
   return c;
-}
-
-double
-dnow(void)
-{
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return (double)tv.tv_sec + ((double)tv.tv_usec/1000000.0);
 }
 
 int
@@ -346,6 +344,23 @@ is_cdb_file(class cl_f *f)
     return false;
 
   if (strend(n, ".cdb"))
+    return true;
+
+  return false;
+}
+
+bool
+is_s19_file(class cl_f *f)
+{
+  const char *n;
+  if (!f)
+    return false;
+  n= f->get_file_name();
+  if (!n ||
+      !*n)
+    return false;
+
+  if (strend(n, ".s19"))
     return true;
 
   return false;
