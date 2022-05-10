@@ -1,17 +1,22 @@
 2022-05-10 Felix Salfelder <felix AT salfelder.org>
 
+	* support/valdiag/Makefile.in:
+     adjust compact-results invocation, add Makefile rule.
+
+2022-05-10 Felix Salfelder <felix AT salfelder.org>
+
 	* support/regression/compact-results.py:
-	  simplify compact-results output
+	  simplify compact-results output.
 
 2022-05-10 Felix Salfelder <felix AT salfelder.org>
 
 	* support/regression/Makefile.in:
-	  honour EXCLUDE_PORTS in test-mcs51
+	  honour EXCLUDE_PORTS in test-mcs51.
 
 2022-05-10 Felix Salfelder <felix AT salfelder.org>
 
 	* support/regression/MakeList:
-	  tcc_49_bracket_evaluation excludes on mcs51
+	  tcc_49_bracket_evaluation excludes on mcs51.
 
 2022-05-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
