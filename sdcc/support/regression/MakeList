@@ -566,6 +566,7 @@ EXCLUDE_pdk15 += \
 EXCLUDE_pdk15-stack-auto += \
 	qct_0039-sizeof \
 	qct_0041-queen \
+	qct_0042-prime \
 	qct_0051-inits
 
 # too large
