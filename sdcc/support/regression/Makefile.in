@@ -275,7 +275,8 @@ EMU_INPUT = < $(PORTS_DIR)/$(PORT_BASE)/uCsim.cmd
 
 $(RESULTS_DIR)/$(PORT)/%.out: $(CASES_DIR)/%.c $(TMP_DIR)/timeout
 	@mkdir -p $(dir $@)
-	echo --- Running: $< > $@; # BUG: need "Running" in .out, regardless of whether we run anything.
+	@# BUG: need "Running" in .out, regardless of whether we run anything.
+	@echo --- Running: $< > $@;
 
 	-${M_V_at}if $(MAKE) $(MAKE_SUB_FLAGS) $(TMP_DIR)/$(PORT)/$*$(BINEXT) PORT=$(PORT); then \
 	  ${M_V_EMU}$(TMP_DIR)/timeout $(SIM_TIMEOUT) $(EMU) $(EMU_PORT_FLAG) $(EMU_FLAGS) $(TMP_DIR)/$(PORT)/$*$(BINEXT) ${EMU_INPUT} > $@; \

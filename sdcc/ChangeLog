@@ -1,7 +1,12 @@
+2022-05-11 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/Makefile.in:
+	 verbosity fix.
+
 2022-05-10 Felix Salfelder <felix AT salfelder.org>
 
 	* support/valdiag/Makefile.in:
-     adjust compact-results invocation, add Makefile rule.
+	  adjust compact-results invocation, add Makefile rule.
 
 2022-05-10 Felix Salfelder <felix AT salfelder.org>
 
