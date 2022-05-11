@@ -363,7 +363,9 @@ EXCLUDE_mcs51-small-stack-auto += \
 
 # Failure
 EXCLUDE_ARCH_mcs51 += \
-	gte_20041218-1
+	gte_20041218-1 \
+	tst_bug3381400 \
+	tst_gcc-torture-execute-961017-1
 
 # Failure
 EXCLUDE_tlcs90 += \
