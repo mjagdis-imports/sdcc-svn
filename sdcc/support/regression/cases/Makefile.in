@@ -102,7 +102,7 @@ GTE_SKIP_TESTS = \
 	stkalign.c \
 	pr49390.c
 
-# uses typeof
+# uses typeof. typeof was a GCC extension, which became standard in C23. RFE #738.
 GTE_SKIP_TESTS += \
 	20020412-1.c \
 	20020412-1.c \
@@ -119,20 +119,23 @@ GTE_SKIP_TESTS += \
 	va-arg-8.c \
 	980608-1.c
 
-# return aggregate
+# SDCC does not yet support compound literals (RFE #332)
 GTE_SKIP_TESTS += \
-	20000917-1.c \
-	complex-3.c \
-	991019-1.c \
-	991118-1.c \
-	991118-1.c \
-	991118-1.c \
-	991118-1.c \
-	pr30185.c \
-	pr41919.c \
+	20000917-1.c
+
+# Uses GCC implementation-defined long long bit-fields not supported in SDCC
+GTE_SKIP_TESTS += \
+	991118-1.c
+
+# SDCC bug #3394
+GTE_SKIP_TESTS += \
 	pr58365.c
 
-# old style C declaration
+# SDCC bug #3400
+GTE_SKIP_TESTS += \
+	pr35163.c
+
+# SDCC does not yet support K&R-style style functions (RFE #450)
 GTE_SKIP_TESTS += \
 	20020227-1.c \
 	20000914-1.c \
@@ -165,18 +168,23 @@ GTE_SKIP_TESTS += \
 	20050215-1.c \
 	strlen-6.c
 
-# BUGs? Failure on stm8
+# Test for GCC implementation-defined bit-field layout
 GTE_SKIP_TESTS += \
-	20001124-1.c \
-	20010116-1.c \
-	20070424-1.c \
-	980526-2.c \
-	bitfld-2.c \
-	call-trap-1.c \
+	bitfld-2.c
+
+# Requires int of at least 32 bits.
+GTE_SKIP_TESTS += \
+	20061101-1.c \
 	cmpsi-2.c \
-	pr31605.c \
+	pr29797-1.c \
+	pr45262.c \
+	pr66556.c \
 	vrp-5.c \
 	vrp-6.c
+
+# Bugs? These fail on stm8.
+GTE_SKIP_TESTS += \
+	pr48197.c
 
 # BUGs? abnormal stop on stm8
 GTE_SKIP_TESTS += \
@@ -205,24 +213,13 @@ GTE_SKIP_TESTS += \
 	va-arg-trap-1.c \
 	zerolen-1.c
 
-# fails on ds360 emulator (revisit later..)
+# Test for implementation-defined struct layout
 GTE_SKIP_TESTS += \
-	20000223-1.c \
-	20021127-1.c \
-	20061101-1.c \
-	pr29797-1.c \
-	pr35163.c \
-	pr45262.c \
-	pr48197.c \
-	pr66556.c
+	20000223-1.c
 
-# fails on mcs51-stack-auto emu
+# Test for GCC behaviour when library function is locally overwritten
 GTE_SKIP_TESTS += \
-	shiftdi-2.c
-
-# timeout on mcs51-stack-auto emu (80)
-GTE_SKIP_TESTS += \
-	loop-ivopts-2.c
+	20021127-1.c
 
 # misc syntax error
 GTE_SKIP_TESTS += \
@@ -523,32 +520,34 @@ GTE_SKIP_TESTS += \
 	pr78170.c \
 	pr98366.c
 
-# TODO? SDCC cannot pass structure as function argument
+# SDCC does not yet support omission of braces in initialization. RFE #562.
 GTE_SKIP_TESTS += \
 	20040703-1.c \
-	20040709-1.c \
-	pr100453.c \
-	pr20621-1.c \
-	pr58984.c
+	complex-3.c \
+	pr41919.c \
+	991201-1.c
+
+# Uses GCC extension __builtin_classify_type
+GTE_SKIP_TESTS += \
+	20040709-1.c
 
 # sys/types.h unavailable (POSIX, not part of C standard)
 GTE_SKIP_TESTS += \
 	loop-2f.c \
 	loop-2g.c
 
-# BUG? initialization needs curly braces
-GTE_SKIP_TESTS += \
-	991201-1.c
-
-# long double
+# SDCC does not yet support long double
 GTE_SKIP_TESTS += \
 	align-2.c \
 	960405-1.c \
 	pr44942.c
 
-# BUG? FATAL Compiler Internal Error
+# Bug #3398
 GTE_SKIP_TESTS += \
-	pr24851.c \
+	pr24851.c
+
+# Bug #3399
+GTE_SKIP_TESTS += \
 	pr52209.c \
 	pr59388.c
 
@@ -622,7 +621,7 @@ GTE_SKIP_TESTS += \
 # TODO?: printf
 GTE_SKIP_TESTS += 20020406-1.c
 
-# uses compound literals
+# SDCC does not yet support compound literals (RFE #332)
 GTE_SKIP_TESTS += \
 	20020206-2.c
 
@@ -631,7 +630,7 @@ GTE_SKIP_TESTS += \
 	20040308-1.c \
 	20040811-1.c
 
-# BUG: Caught signal 11: SIGSEGV
+# Bug #3405
 GTE_SKIP_TESTS += \
 	931004-12.c
 
@@ -715,7 +714,7 @@ GTE_SKIP_TESTS += \
 	strct-pack-4.c \
 	struct-ret-2.c
 
-# BUG: -:0: error 69: struct/union/array '': initialization needs curly braces
+# SDCC does not yet support omission of braces in initialization. RFE #562.
 GTE_SKIP_TESTS += \
 	pr33631.c
 
@@ -762,7 +761,16 @@ GTE_SKIP_TESTS += \
 GTE_SKIP_TESTS += \
 	bitintarith.c
 
+# Needs far too much memory for SDCC targets
+GTE_SKIP_TESTS += \
+	920410-1.c \
+	921113-1.c \
+	multi-ix.c
+	
 GTE_TESTS = $(filter-out $(GTE_SKIP_TESTS), $(GTE_TESTS_WC))
+
+##############
+# QuickC tests
 
 # some preprocessor testing, needs careful flags.
 QC_SKIP_TESTS += \
@@ -777,32 +785,33 @@ QC_SKIP_TESTS += \
 	0047-anonexport.c \
 	0101-bug.c
 
+# Tests for QuickC implementation-defined behaviour
+QC_SKIP_TESTS += \
+	0039-sizeof.c
+
+# Takes far too much time for SDCC targets
+QC_SKIP_TESTS += \
+	0041-queen.c
+
 QC_TESTS = $(filter-out $(QC_SKIP_TESTS), $(QC_TESTS_WC))
 
-# '___slonglong2fs' referenced by module
-TCC_SKIP_TESTS += \
-	110_average.c
+##############
+# Tiny C tests
 
-# compound literals require ISO C99 or later and are not implemented
+# SDCC does not yet support compound literals (RFE #332)
 TCC_SKIP_TESTS += \
 	94_generic.c
 
-# pthread
+# Uses POSIX threads
 TCC_SKIP_TESTS += \
 	106_versym.c \
 	114_bound_signal.c \
 	116_bound_setjmp2.c \
 	124_atomic_counter.c
 
-# long double
+# SDCC does not yet support long double.
 TCC_SKIP_TESTS += \
 	111_conversion.c
-
-# pass structure as function argument
-TCC_SKIP_TESTS += \
-	73_arm64.c \
-	109_float_struct_calling.c \
-	121_struct_return.c
 
 # misc syntax error
 TCC_SKIP_TESTS += \
@@ -866,18 +875,22 @@ TCC_SKIP_TESTS += \
 TCC_SKIP_TESTS += \
 	34_array_assignment.c
 
-# Initializer element is not a constant exp ression
+# Initializer element is not a constant expression
 TCC_SKIP_TESTS += \
 	78_vla_label.c \
 	79_vla_continue.c \
 	115_bound_setjmp.c \
 	122_vla_reuse.c
 
-# bit-field size too wide for type (max 16 bits), per-port?
+# Relies on TinyC implementation-defined support for long long bit-fields and integer width of 32 bits.
 TCC_SKIP_TESTS += \
 	93_integer_promotion.c \
 	95_bitfields.c \
 	95_bitfields_ms.c
+
+# Relies on implicit 0 return by main, but the test framework renames the mainfunction from the test.
+TCC_SKIP_TESTS += \
+	121_struct_return.c
 
 # sin function etc.
 TCC_SKIP_TESTS += \
@@ -889,12 +902,13 @@ TCC_SKIP_TESTS += \
 	60_errors_and_warnings.c \
 	125_atomic_misc.c
 
-# struct/union/array '': initialization needs curly braces
+# SDCC does not yet support omission of braces in initialization. RFE #562.
 TCC_SKIP_TESTS += \
+	73_arm64.c \
 	75_array_in_struct_init.c
 
 # int f9 (int ((int)), int);
-# BUG? Syntax error, declaration ignored at ','
+# BUG? Syntax error, declaration ignored at ','. Possibly related to bug #3358?
 TCC_SKIP_TESTS += \
 	81_types.c
 
@@ -905,8 +919,15 @@ TCC_SKIP_TESTS += \
 
 # assertion failed (on all ports but host)
 TCC_SKIP_TESTS += \
-	84_hex-float.c \
+	84_hex-float.c
+
+# Relies on implementation extensions common on GNU/Linux
+TCC_SKIP_TESTS += \
 	86_memory-model.c
+	
+# long long to float conversion function missing - Bug #3396
+TCC_SKIP_TESTS += \
+	110_average.c
 
 TCC_TESTS = $(filter-out $(TCC_SKIP_TESTS), $(TCC_TESTS_WC))
 
@@ -940,11 +961,13 @@ qct_%.c: $(QC_TESTS_DIR)/%.c Makefile
 	@echo '#define main main_' >> $@
 
 	@#find matching main arguments, none or 2
-	@echo -n '#define MAINARGS' >> $@
+	@#(using printf instead of echo -n for better portability)
+	@printf '#define MAINARGS' >> $@
 	@(grep -q main.*argv $< && echo " 0, 0" || \
 	 (grep -q main.*argc $< && echo " 0" || echo )) >> $@
 	@echo '#include "$<"' >> $@
-	@echo 'void __runSuite(void) { __prints("Running main\\n"); ASSERT(!main_(MAINARGS)); }' >> $@
+	@printf 'void __runSuite(void) { __prints("Running main\\n"); ASSERT(!main_(MAINARGS)); }' >> $@
+	@echo >> $@
 
 tcc_%.c: $(TCC_TESTS_DIR)/%.c Makefile
 	@echo '#include <testfwk.h>' > $@
@@ -956,7 +979,7 @@ tcc_%.c: $(TCC_TESTS_DIR)/%.c Makefile
 	@echo '#define main main_' >> $@
 
 	@#find matching main arguments, none or 2
-	@echo -n '#define MAINARGS' >> $@
+	@printf '#define MAINARGS' >> $@
 	@(grep -q main.*argv $< && echo " 0, 0" || \
 	 (grep -q main.*argc $< && echo " 0" || echo )) >> $@
 
@@ -969,10 +992,11 @@ tcc_%.c: $(TCC_TESTS_DIR)/%.c Makefile
 	@echo '#ifdef __SDCC' >> $@
 	@echo 'extern void _putchar(char c);' >> $@
 	@echo 'int putchar(int c){_putchar(c);return(c);}' >> $@
-	@echo 'void abort() {__fail(0,0,0,0);}' >> $@
+	@echo 'void abort() {ASSERT(0);}' >> $@
 	@echo '#endif' >> $@
 
-	@echo 'void __runSuite(void) { __prints("Running main\\n"); ASSERT(!main_(MAINARGS)); }' >> $@
+	@printf 'void __runSuite(void) { __prints("Running main\\n"); ASSERT(!main_(MAINARGS)); }' >> $@
+	@echo >> $@
 
 
 gte_%.c: $(GTE_TESTS_DIR)/%.c Makefile
@@ -1001,19 +1025,21 @@ gte_%.c: $(GTE_TESTS_DIR)/%.c Makefile
 	@echo '#endif // __SDCC' >> $@
 
 # redirect stuff a bit.
-	@grep -q exit $< && echo "void exit__substitute(int i){ASSERT(!i);}" >> $@ || :
-	@grep -q exit $< && echo "#define exit exit__substitute" >> $@ || :
-	@echo '#define main main_' >> $@
-	@echo '#define assert ASSERT' >> $@
-	@echo 'void abort() {__fail(0,0,0,0);}' >> $@
+	@grep -q exit $< && echo "#include <setjmp.h>" >> $@ \
+	                 && echo "jmp_buf after_main;" >> $@ \
+	                 && echo "void exit__substitute(int i){ASSERT(!i); longjmp(after_main, 1);}" >> $@ \
+	                 && echo "#define exit exit__substitute" >> $@ || :
+	@printf '#define main main_\n#define assert ASSERT\nvoid abort() {ASSERT(0);}\n' >> $@
 
 	@#find matching main arguments, none or 2
-	@echo -n '#define MAINARGS' >> $@
+	@printf '#define MAINARGS' >> $@
 	@(grep -q main.*argv $< && echo " 0, 0" || \
 	 (grep -q main.*argc $< && echo " 0" || echo )) >> $@
 
 	@echo '#include "$<"' >> $@
-	@echo 'void __runSuite(void) { __prints("Running main\\n"); main_(MAINARGS); }' >> $@
+	@printf 'void __runSuite(void) { __prints("Running main\\n");' >> $@
+	@grep -q exit $< && echo 'if(!setjmp(after_main))' >> $@ || :
+	@printf 'main_(MAINARGS); }\n' >> $@
 	@echo 'const int __numCases = 1;' >> $@
 	@echo '__code const char * __getSuiteName(void) { return "gte/$*"; }' >> $@
 
@@ -1042,18 +1068,18 @@ MakeList: $(TPL_TEST_STEMS:%=%/stamp) $(TEST_SRCS) Makefile
 	@echo
 	@echo populated MakeList...
 	@echo GTE_TEST_STEMS = $(GTE_TESTS:%.c=gte_%) > MakeList
-	@echo -n "gce: gcc torture execute.. "
+	@printf "gce: gcc torture execute.. "
 	@echo $(GTE_TESTS) | wc -w
-	@echo -n "m4: macro tests.. "
+	@printf "m4: macro tests.. "
 	@echo $(M4_TESTS) | wc -w
-	@echo -n "qct: QuickC tests.. "
+	@printf "qct: QuickC tests.. "
 	@echo $(QC_TEST_STEMS) | wc -w
-	@echo -n "tcc: tinycc tests.. "
+	@printf "tcc: tinycc tests.. "
 	@echo $(TCC_TEST_STEMS) | wc -w
 
-	@echo -n "tpl: template tests.. "
+	@printf "tpl: template tests.. "
 	@echo $(TPL_TEST_STEMS) | wc -w
-	@echo -n "tst: plain tests.. "
+	@printf "tst: plain tests.. "
 	@echo $(C_TEST_SRCS) | wc -w
 
 	@echo QC_TEST_STEMS = $(QC_TESTS:%.c=qct_%) >> MakeList
