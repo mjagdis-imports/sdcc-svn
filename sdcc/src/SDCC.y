@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------
 
-  SDCC.y - parser definition file for sdcc :
-          Written By : Sandeep Dutta . sandeep.dutta@usa.net (1997)
+  SDCC.y - parser definition file for sdcc
+
+  Written By : Sandeep Dutta . sandeep.dutta@usa.net (1997)
+  Revised by : Philipp Klaus Krause krauspeh@informatik.uni-freiburg.de (2022)
+  Using inspiration from the grammar by Jutta Degener as extended by Jens Gustedt (under Expat license)
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -574,6 +577,12 @@ type_specifier
                   SPEC_NOUN($$) = V_FLOAT;
                   ignoreTypedefType = 1;
                }
+   | DOUBLE    {
+                  $$=newLink(SPECIFIER);
+                  SPEC_NOUN($$) = V_FLOAT;
+                  ignoreTypedefType = 1;
+                  werror (W_DOUBLE_UNSUPPORTED);
+               }
    | SIGNED    {
                   $$=newLink(SPECIFIER);
                   $$->select.s.b_signed = 1;
@@ -584,16 +593,36 @@ type_specifier
                   SPEC_USIGN($$) = 1;
                   ignoreTypedefType = 1;
                }
-   | SD_BOOL   {
-                  $$=newLink(SPECIFIER);
-                  SPEC_NOUN($$) = V_BOOL;
-                  ignoreTypedefType = 1;
-               }
    | SD_BITINT '(' constant_expr ')'  {
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_BITINT;
                   SPEC_BITINTWIDTH($$) = (unsigned int) ulFromVal(constExprValue($3, TRUE));
                   ignoreTypedefType = 1;
+               }
+   | SD_BOOL   {
+                  $$=newLink(SPECIFIER);
+                  SPEC_NOUN($$) = V_BOOL;
+                  ignoreTypedefType = 1;
+               }
+   | COMPLEX   {
+                  $$=newLink(SPECIFIER);
+                  werror (E_COMPLEX_UNSUPPORTED);
+               }
+   | IMAGINARY {
+                  $$=newLink(SPECIFIER);
+                  werror (E_COMPLEX_UNSUPPORTED);
+               }
+   | DECIMAL32 {
+                  $$=newLink(SPECIFIER);
+                  werror (E_DECIMAL_FLOAT_UNSUPPORTED);
+               }
+   | DECIMAL64 {
+                  $$=newLink(SPECIFIER);
+                  werror (E_DECIMAL_FLOAT_UNSUPPORTED);
+               }
+   | DECIMAL128 {
+                  $$=newLink(SPECIFIER);
+                  werror (E_DECIMAL_FLOAT_UNSUPPORTED);
                }
    | struct_or_union_specifier  {
                                    uselessDecl = FALSE;

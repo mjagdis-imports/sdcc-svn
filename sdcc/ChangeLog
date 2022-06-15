@@ -1,6 +1,14 @@
 2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h:
+	  Lexer support for complex numbers and decimal floating point (to emit an error message for these unsupported features instead of a non-descriptive syntax error).
+
+2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
 	  src/SDCCval.c:
 	  Fix bug #3454.
 

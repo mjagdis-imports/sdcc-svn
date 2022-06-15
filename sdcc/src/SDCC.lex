@@ -2,7 +2,7 @@
   SDCC.lex - lexical analyser for use with sdcc (free open source
   compiler for 8/16 bit microcontrollers)
   Written by : Sandeep Dutta . sandeep.dutta@usa.net (1997)
-  Rewritten by : Philipp Klaus Krause krauspeh@informatik.uni-freiburg.de (2022)
+  Revised by : Philipp Klaus Krause krauspeh@informatik.uni-freiburg.de (2022)
   Using inspiration from the grammar by Jutta Degener as extended by Jens Gustedt (under Expat license)
 
   This program is free software; you can redistribute it and/or modify it
@@ -35,7 +35,7 @@ B       [01]
 L       [a-zA-Z_$]
 E       [Ee][+-]?{D}+
 BE      [Pp][+-]?{D}+
-FS      [fFlL]
+FS      (f|F|l|L|df|dd|dl|DF|DD|DL)
 IS      [uUlL]*
 WB      (((u|U)(wb|WB))|((wb|WB)(u|U)?))
 CP      (L|u|U|u8)
@@ -138,7 +138,7 @@ static void checkCurrFile (const char *s);
 "continue"              { count (); return CONTINUE; }
 "default"               { count (); return DEFAULT; }
 "do"                    { count (); return DO; }
-"double"                { count (); werror (W_DOUBLE_UNSUPPORTED); return SD_FLOAT; }
+"double"                { count (); return DOUBLE; }
 "else"                  { count (); return ELSE; }
 "enum"                  { count (); return ENUM; }
 "extern"                { count (); return EXTERN; }
