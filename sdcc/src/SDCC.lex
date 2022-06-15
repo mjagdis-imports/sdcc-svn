@@ -2,6 +2,8 @@
   SDCC.lex - lexical analyser for use with sdcc (free open source
   compiler for 8/16 bit microcontrollers)
   Written by : Sandeep Dutta . sandeep.dutta@usa.net (1997)
+  Rewritten by : Philipp Klaus Krause krauspeh@informatik.uni-freiburg.de (2022)
+  Using inspiration from the grammar by Jutta Degener as extended by Jens Gustedt (under BSD / Expat license)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -76,7 +78,6 @@ UTF8IDF         {UTF8IDF1ST}|\xcc[\x80-\xbf]|\xcd[\x80-\xaf]|\xe2\x83[\x90-\xbf]
                                 check_type())
 
 #define TKEYWORD99(token) return (options.std_c99 ? (token) : check_type())
-
 #define TKEYWORD2X(token) return (options.std_c2x ? (token) : check_type())
 
 int column = 0;         /* current column */
@@ -122,83 +123,108 @@ static void checkCurrFile (const char *s);
 <asm>.                  {
   dbuf_append_char(&asmbuff, *yytext);
 }
-"__asm__"               { count (); return ASM; }
-"__at"                  { count (); TKEYWORD (AT); }
+
+ /* C90 */
 "auto"                  { count (); return AUTO; }
-"__bit"                 { count (); TKEYWORD (BIT); }
-"bool"                  { count (); TKEYWORD2X (SD_BOOL); }
-"_Bool"                 { count (); TKEYWORD99 (SD_BOOL); }
 "break"                 { count (); return BREAK; }
 "case"                  { count (); return CASE; }
 "char"                  { count (); return SD_CHAR; }
-"__code"                { count (); TKEYWORD (CODE); }
 "const"                 { count (); return SD_CONST; }
 "continue"              { count (); return CONTINUE; }
-"__critical"            { count (); TKEYWORD (CRITICAL); }
-"__data"                { count (); TKEYWORD (DATA); }
 "default"               { count (); return DEFAULT; }
 "do"                    { count (); return DO; }
 "double"                { count (); werror (W_DOUBLE_UNSUPPORTED); return SD_FLOAT; }
 "else"                  { count (); return ELSE; }
 "enum"                  { count (); return ENUM; }
 "extern"                { count (); return EXTERN; }
-"__far"                 { count (); TKEYWORD (XDATA); }
-"__eeprom"              { count (); TKEYWORD (EEPROM); }
 "float"                 { count (); return SD_FLOAT; }
-"__fixed16x16"          { count (); TKEYWORD (FIXED16X16); }
-"__flash"               { count (); TKEYWORD (CODE); }
 "for"                   { count (); return FOR; }
 "goto"                  { count (); return GOTO; }
-"__idata"               { count (); TKEYWORD (IDATA); }
 "if"                    { count (); return IF; }
 "int"                   { count (); return SD_INT; }
-"__interrupt"           { count (); TKEYWORD (INTERRUPT); }
-"__nonbanked"           { count (); TKEYWORD (NONBANKED); }
-"__banked"              { count (); TKEYWORD (BANKED); }
-"__trap"                { count (); TKEYWORD (TRAP); }
 "long"                  { count (); return SD_LONG; }
-"__near"                { count (); TKEYWORD (DATA); }
-"__pdata"               { count (); TKEYWORD (PDATA); }
-"__reentrant"           { count (); TKEYWORD (REENTRANT); }
-"__shadowregs"          { count (); TKEYWORD (SHADOWREGS); }
-"__wparam"              { count (); TKEYWORD (SD_WPARAM); }
 "register"              { count (); return REGISTER; }
 "return"                { count (); return RETURN; }
-"__sfr"                 { count (); TKEYWORD (SFR); }
-"__sfr16"               { count (); TKEYWORD (SFR16); }
-"__sfr32"               { count (); TKEYWORD (SFR32); }
-"__sbit"                { count (); TKEYWORD (SBIT); }
 "short"                 { count (); return SD_SHORT; }
 "signed"                { count (); return SIGNED; }
 "sizeof"                { count (); return SIZEOF; }
-"__zp"                  { count (); TKEYWORD (DATA); }
-"alignof"               { count (); TKEYWORD2X (ALIGNOF); }
-"_Alignof"              { count (); return ALIGNOF; }
-"__builtin_offsetof"    { count (); return OFFSETOF; }
-"__builtin_rlc"         { count (); return RLC; }
-"__builtin_rrc"         { count (); return RRC; }
-"__builtin_swap"        { count (); return SWAP; }
-"__sram"                { count (); TKEYWORD (XDATA); }
 "static"                { count (); return STATIC; }
 "struct"                { count (); return STRUCT; }
 "switch"                { count (); return SWITCH; }
-"_Thread_local"         { count (); return THREAD_LOCAL; }
 "typedef"               { count (); return TYPEDEF; }
 "union"                 { count (); return UNION; }
 "unsigned"              { count (); return UNSIGNED; }
 "void"                  { count (); return SD_VOID; }
 "volatile"              { count (); return VOLATILE; }
+"while"                 { count (); return WHILE; }
+"..."                   { count (); return ELLIPSIS; }
+
+ /* C99 */
+"_Bool"                 { count (); TKEYWORD99 (SD_BOOL); }
+"_Complex"              { count (); return COMPLEX; }
+"_Imaginary"            { count (); return IMAGINARY; }
+"_Noreturn"             { count (); return NORETURN;}
+"_Static_assert"        { count (); return STATIC_ASSERT; }
+"inline"                { count (); TKEYWORD99 (INLINE); }
+"restrict"              { count (); TKEYWORD99 (RESTRICT); }
+
+ /* C11 */
+"_Alignas"              { count (); return ALIGNAS; }
+"_Alignof"              { count (); return ALIGNOF; }
+"_Atomic"               { count (); return ATOMIC; }
+"_Generic"              { count (); return GENERIC; }
+"_Thread_local"         { count (); return THREAD_LOCAL; }
+
+ /* C2X */
+"_BitInt"               { count (); return SD_BITINT; }
+"_Decimal32"            { count (); return DECIMAL32; }
+"_Decimal64"            { count (); return DECIMAL64; }
+"_Decimal128"           { count (); return DECIMAL128; }
+"alignas"               { count (); TKEYWORD2X (ALIGNAS); }
+"alignof"               { count (); TKEYWORD2X (ALIGNOF); }
+"bool"                  { count (); TKEYWORD2X (SD_BOOL); }
+"static_assert"         { count (); TKEYWORD2X (STATIC_ASSERT); }
+"true"                  { count (); TKEYWORD2X (TRUE); }
+"false"                 { count (); TKEYWORD2X (FALSE); }
+
+ /* SDCC-specific intrinsic named address spaces (as per Embedded C TS) */
+"__code"                { count (); TKEYWORD (CODE); }
+"__data"                { count (); TKEYWORD (DATA); }
+"__eeprom"              { count (); TKEYWORD (EEPROM); }
+"__far"                 { count (); TKEYWORD (XDATA); }
+"__flash"               { count (); TKEYWORD (CODE); }
+"__idata"               { count (); TKEYWORD (IDATA); }
+"__near"                { count (); TKEYWORD (DATA); }
+"__pdata"               { count (); TKEYWORD (PDATA); }
+"__sram"                { count (); TKEYWORD (XDATA); }
+"__xdata"               { count (); TKEYWORD (XDATA); }
+"__zp"                  { count (); TKEYWORD (DATA); }
+
+ /* SDCC language extensions */
+"__asm__"               { count (); return ASM; }
+"__at"                  { count (); TKEYWORD (AT); }
+"__bit"                 { count (); TKEYWORD (BIT); }
+"__critical"            { count (); TKEYWORD (CRITICAL); }
+"__fixed16x16"          { count (); TKEYWORD (FIXED16X16); }
+"__interrupt"           { count (); TKEYWORD (INTERRUPT); }
+"__nonbanked"           { count (); TKEYWORD (NONBANKED); }
+"__banked"              { count (); TKEYWORD (BANKED); }
+"__trap"                { count (); TKEYWORD (TRAP); }
+"__reentrant"           { count (); TKEYWORD (REENTRANT); }
+"__shadowregs"          { count (); TKEYWORD (SHADOWREGS); }
+"__wparam"              { count (); TKEYWORD (SD_WPARAM); }
+"__sfr"                 { count (); TKEYWORD (SFR); }
+"__sfr16"               { count (); TKEYWORD (SFR16); }
+"__sfr32"               { count (); TKEYWORD (SFR32); }
+"__sbit"                { count (); TKEYWORD (SBIT); }
+"__builtin_offsetof"    { count (); return OFFSETOF; }
+"__builtin_rlc"         { count (); return RLC; }
+"__builtin_rrc"         { count (); return RRC; }
+"__builtin_swap"        { count (); return SWAP; }
 "__using"               { count (); TKEYWORD (USING); }
 "__naked"               { count (); TKEYWORD (NAKED); }
-"while"                 { count (); return WHILE; }
-"__xdata"               { count (); TKEYWORD (XDATA); }
-"..."                   { count (); return VAR_ARGS; }
-"__typeof"              { count (); return TYPEOF; }
 "_JavaNative"           { count (); TKEYWORD (JAVANATIVE); }
 "__overlay"             { count (); TKEYWORD (OVERLAY); }
-"inline"                { count (); TKEYWORD99 (INLINE); }
-"_Noreturn"             { count (); return NORETURN;}
-"restrict"              { count (); TKEYWORD99 (RESTRICT); }
 "__smallc"              { count (); TKEYWORD (SMALLC); }
 "__raisonance"          { count (); TKEYWORD (RAISONANCE); }
 "__iar"                 { count (); TKEYWORD (IAR); }
@@ -210,12 +236,9 @@ static void checkCurrFile (const char *s);
 "__z88dk_shortcall"     { count (); return Z88DK_SHORTCALL; }
 "__z88dk_params_offset" { count (); return Z88DK_PARAMS_OFFSET; }
 "__addressmod"          { count (); return ADDRESSMOD; }
-"static_assert"         { count (); TKEYWORD2X (STATIC_ASSERT); }
-"_Static_assert"        { count (); return STATIC_ASSERT; }
-"alignas"               { count (); TKEYWORD2X (ALIGNAS); }
-"_Alignas"              { count (); return ALIGNAS; }
-"_Generic"              { count (); return GENERIC; }
-"_BitInt"               { count (); return SD_BITINT; }
+"__typeof"              { count (); return TYPEOF; }
+
+
 ({L}|{UCN}|{UTF8IDF1ST})({L}|{D}|{UCN}|{UTF8IDF})*  {
   if (!options.dollars_in_ident && strchr (yytext, '$'))
     {
@@ -289,6 +312,7 @@ static void checkCurrFile (const char *s);
 "="                     { count (); return '='; }
 "("                     { count (); ignoreTypedefType = 0; return '('; }
 ")"                     { count (); return ')'; }
+"[["|"<:<:"             { count (); return ATTR_START; } /* The double brackets of attributes. Otherwise the ambiguity of the grammar explodes. */
 "["|"<:"                { count (); return '['; }
 "]"|":>"                { count (); return ']'; }
 "."                     { count (); return '.'; }
@@ -305,7 +329,7 @@ static void checkCurrFile (const char *s);
 "^"                     { count (); return '^'; }
 "|"                     { count (); return '|'; }
 "?"                     { count (); return '?'; }
-"::"                    { count (); return ATTRIBCOLON; }
+"::"                    { count (); return TOK_SEP; }
 ^{HASH}pragma.*         { count (); process_pragma (yytext); }
 ^{HASH}.*               { count (); checkCurrFile (yytext); }
 
