@@ -3,7 +3,7 @@
   compiler for 8/16 bit microcontrollers)
   Written by : Sandeep Dutta . sandeep.dutta@usa.net (1997)
   Rewritten by : Philipp Klaus Krause krauspeh@informatik.uni-freiburg.de (2022)
-  Using inspiration from the grammar by Jutta Degener as extended by Jens Gustedt (under BSD / Expat license)
+  Using inspiration from the grammar by Jutta Degener as extended by Jens Gustedt (under Expat license)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -24,15 +24,20 @@
   what you give them.   Help stamp out software-hoarding!
 -------------------------------------------------------------------------*/
 
-B       [0-1]
+DC  '?[0-9]
+OC  '?[0-7]
+HC  '?[a-fA-F0-9]
+BC  '?[01]
+
 D       [0-9]
-L       [a-zA-Z_$]
 H       [a-fA-F0-9]
+B       [01]
+L       [a-zA-Z_$]
 E       [Ee][+-]?{D}+
 BE      [Pp][+-]?{D}+
-FS      (f|F|l|L)
-IS      (u|U|l|L)*
-WB      (u|U)?(wb|WB)
+FS      [fFlL]
+IS      [uUlL]*
+WB      (((u|U)(wb|WB))|((wb|WB)(u|U)?))
 CP      (L|u|U|u8)
 HASH    (#|%:)
 UCN     \\u{H}{4}|\\U{H}{8}
@@ -258,19 +263,12 @@ static void checkCurrFile (const char *s);
   count ();
   return check_type();
 }
-0[bB]('?{B})+{IS}?          {
-  if (!options.std_sdcc && !options.std_c2x)
-    werror (W_BINARY_INTEGER_CONSTANT_C23);
-  count ();
-  yylval.val = constIntVal (yytext);
-  return CONSTANT;
-}
-0[xX]('?{H})+{IS}?           { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
-0('?[0-7])*{IS}?             { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
-[1-9]('?{D})*{IS}?           { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
-0[xX]('?{H})+{WB}            { count (); if (!options.std_c2x) werror (W_BITINTCONST_C23); yylval.val = constIntVal (yytext); return CONSTANT; }
-0('?[0-7])*{WB}              { count (); if (!options.std_c2x) werror (W_BITINTCONST_C23); yylval.val = constIntVal (yytext); return CONSTANT; }
-[1-9]('?{D})*{WB}            { count (); if (!options.std_c2x) werror (W_BITINTCONST_C23); yylval.val = constIntVal (yytext); return CONSTANT; }
+
+
+[1-9]{DC}*({IS}|{WB})?       { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0[xX]{H}{HC}*({IS}|{WB})?    { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0{OC}*({IS}|{WB})?           { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0[bB]{B}{BC}*({IS}|{WB})?    { count (); yylval.val = constIntVal (yytext); return CONSTANT; } /* C2X binary integer constant. All standard version warnings on integer constants are done in constIntVal. */
 {CP}?'(\\.|[^\\'])+'         { count (); yylval.val = charVal (yytext); return CONSTANT; /* ' make syntax highlighter happy */ }
 {D}+{E}{FS}?                 { count (); yylval.val = constFloatVal (yytext); return CONSTANT; }
 {D}*"."{D}+({E})?{FS}?       { count (); yylval.val = constFloatVal (yytext); return CONSTANT; }

@@ -1,6 +1,12 @@
 2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCC.lex,
+	  src/SDCCval.c:
+	  Fix bug #3454.
+
+2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
 	  src/SDCC.y,
 	  src/pic14/ralloc.c,
 	  src/pic16/ralloc.c,
