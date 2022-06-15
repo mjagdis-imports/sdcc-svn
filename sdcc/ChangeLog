@@ -4,7 +4,9 @@
 	  src/SDCC.y,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h:
-	  Lexer support for complex numbers and decimal floating point (to emit an error message for these unsupported features instead of a non-descriptive syntax error).
+	  Lexer support for complex numbers and decimal floating point (to emit an error message for these unsupported features instead of a non-descriptive syntax error)
+	* tests/bitintconst.c.in:
+	  Test for bug #3454.
 
 2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
