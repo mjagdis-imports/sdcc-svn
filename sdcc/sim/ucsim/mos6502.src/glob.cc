@@ -41,6 +41,8 @@ instruction_wrapper_fn itab[256];
 	p abs.Y
 	r rel
 	# imm8
+	3 (ind)
+	4 (zind)
 */
 
 // code mask branch len mn call tick
@@ -221,19 +223,100 @@ struct dis_entry disass_mos6502[]=
     { 0, 0, 0, 0, 0, 0 }
   };
 
+struct dis_entry disass_mos65c02[]=
+  {
+    { 0x80, 0xff, 'b', 2, "BRA %r" },
+    
+    { 0x02, 0xff, ' ', 2, "NOP %#" },
+    { 0x12, 0xff, ' ', 2, "ORA %4" },
+    { 0x22, 0xff, ' ', 2, "NOP %#" },
+    { 0x32, 0xff, ' ', 2, "AND %4" },
+    { 0x42, 0xff, ' ', 2, "NOP %#" },
+    { 0x52, 0xff, ' ', 2, "EOR %4" },
+    { 0x62, 0xff, ' ', 2, "NOP %#" },
+    { 0x72, 0xff, ' ', 2, "ADC %4" },
+    { 0x82, 0xff, ' ', 2, "NOP %#" },
+    { 0x92, 0xff, ' ', 2, "STA %4" },
+    { 0xb2, 0xff, ' ', 2, "LDA %4" },
+    { 0xc2, 0xff, ' ', 2, "NOP %#" },
+    { 0xd2, 0xff, ' ', 2, "CMP %4" },
+    { 0xe2, 0xff, ' ', 2, "NOP %#" },
+    { 0xf2, 0xff, ' ', 2, "SBC %4" },
+
+    { 0x04, 0xff, ' ', 2, "TSB %z" },
+    { 0x14, 0xff, ' ', 2, "TRB %z" },
+    { 0x34, 0xff, ' ', 2, "BIT %X" },
+    { 0x44, 0xff, ' ', 2, "NOP %z" },
+    { 0x54, 0xff, ' ', 2, "NOP %X" },
+    { 0x64, 0xff, ' ', 2, "STZ %z" },
+    { 0x74, 0xff, ' ', 2, "STZ %X" },
+    { 0xd4, 0xff, ' ', 2, "NOP %X" },
+    { 0xf4, 0xff, ' ', 2, "NOP %X" },
+
+    { 0x89, 0xff, ' ', 2, "BIT %#" },
+
+    { 0x1a, 0xff, ' ', 1, "INA" },
+    { 0x3a, 0xff, ' ', 1, "DEA" },
+    { 0x5a, 0xff, ' ', 1, "PHY" },
+    { 0x7a, 0xff, ' ', 1, "PLY" },
+    { 0xda, 0xff, ' ', 1, "PHX" },
+    { 0xfa, 0xff, ' ', 1, "PLX" },
+    
+    { 0x0c, 0xff, ' ', 3, "TSB %a" },
+    { 0x1c, 0xff, ' ', 3, "TRB %a" },
+    { 0x3c, 0xff, ' ', 3, "BIT %i" },
+    { 0x5c, 0xff, ' ', 3, "NOP %a" },
+    { 0x7c, 0xff, 'x', 3, "JMP %I" },
+    { 0xdc, 0xff, ' ', 3, "NOP %a" },
+    { 0xfc, 0xff, ' ', 3, "NOP %a" },
+    { 0x9c, 0xff, ' ', 3, "STZ %a" },
+
+    { 0x9e, 0xff, ' ', 3, "STZ %i" },
+
+    { 0x03, 0x0f, ' ', 1, "NOP" },
+    { 0x0b, 0x0f, ' ', 1, "NOP" },
+    
+    { 0x07, 0x8f, ' ', 1, "NOP" },
+    { 0x87, 0x8f, ' ', 1, "NOP" },
+    { 0x0f, 0x8f, ' ', 1, "NOP" },
+    { 0x8f, 0x8f, ' ', 1, "NOP" },
+
+    { 0, 0, 0, 0, 0, 0 }
+  };
+  
+struct dis_entry disass_mos65c02s[]=
+  {
+    { 0xcb, 0xff, ' ', 1, "WAI" },
+    { 0xdb, 0xff, ' ', 1, "STP" },
+    
+    { 0x07, 0x8f, ' ', 2, "RMB%B %z" },
+    { 0x87, 0x8f, ' ', 2, "SMB%B %z" },
+    { 0x0f, 0x8f, 'B', 3, "BBR%B %z,%R" },
+    { 0x8f, 0x8f, 'B', 3, "BBS%B %z,%R" },
+    
+    { 0, 0, 0, 0, 0, 0 }
+  };
 
 struct cpu_entry cpus_6502[]=
   {
     {"6502"	, CPU_6502, 0		, "MOS6502", ""},
     {"02"	, CPU_6502, 0		, "MOS6502", ""},
+    {"7501"	, CPU_7501, 0		, "MOS7501", ""},
+    {"8501"	, CPU_8501, 0		, "MOS8501", ""},
     {"65C02"	, CPU_65C02, 0		, "MOS65C02", ""},
     {"C02"	, CPU_65C02, 0		, "MOS65C02", ""},
     {"C"	, CPU_65C02, 0		, "MOS65C02", ""},
     {"6510"	, CPU_6510, 0		, "MOS6510", ""},
     {"10"	, CPU_6510, 0		, "MOS6510", ""},
+    {"8500"	, CPU_8500, 0		, "MOS8500", ""},
+    {"8502"	, CPU_8502, 0		, "MOS8502", ""},
     {"65CE02"	, CPU_65CE02, 0		, "MOS65CE02", ""},
     {"CE02"	, CPU_65CE02, 0		, "MOS65CE02", ""},
     {"CE"	, CPU_65CE02, 0		, "MOS65CE02", ""},
+    {"65C02S"	, CPU_65C02S, 0		, "MOS65C02S", ""},
+    {"C02S"	, CPU_65C02S, 0		, "MOS65C02S", ""},
+    {"CS"	, CPU_65C02S, 0		, "MOS65C02S", ""},
+    {"S"	, CPU_65C02S, 0		, "MOS65C02S", ""},
     
     {NULL, CPU_NONE, 0, "", ""}
   };

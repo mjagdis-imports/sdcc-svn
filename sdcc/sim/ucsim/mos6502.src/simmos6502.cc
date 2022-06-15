@@ -30,6 +30,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "mos6502cl.h"
 #include "mos6510cl.h"
 #include "mos65c02cl.h"
+#include "mos65c02scl.h"
 #include "mos65ce02cl.h"
 #include "glob.h"
 
@@ -44,12 +45,13 @@ cl_simmos6502::mk_controller(void)
   int i;
   const char *typ= 0;
   class cl_optref type_option(this);
+  class cl_mos6502 *uc;
 
   type_option.init();
   type_option.use("cpu_type");
   i= 0;
   if ((typ= type_option.get_value(typ)) == 0)
-    typ= "6502";
+    typ= "65C02S";
   while ((cpus_6502[i].type_str != NULL) &&
 	 (strcasecmp(typ, cpus_6502[i].type_str) != 0))
     i++;
@@ -63,11 +65,30 @@ cl_simmos6502::mk_controller(void)
     {
     case CPU_6502:
       return(new cl_mos6502(this));
+    case CPU_7501:
+      uc= new cl_mos6502(this);
+      *(uc->my_id)= "MOS7501";
+      return uc;
+    case CPU_8501:
+      uc= new cl_mos6502(this);
+      *(uc->my_id)= "MOS8501";
+      return uc;
     case CPU_6510:
       return(new cl_mos6510(this));
+    case CPU_8500:
+      uc= new cl_mos6510(this);
+      *(uc->my_id)= "MOS8500";
+      return uc;
+    case CPU_8502:
+      uc= new cl_mos8502(this);
+      return uc;
+      break;
     case CPU_65C02:
       return(new cl_mos65c02(this));
+    case CPU_65C02S:
+      return(new cl_mos65c02s(this));
     case CPU_65CE02:
+      printf("Not implemented yet.\n"); return(NULL); 
       return(new cl_mos65ce02(this));
     default:
       fprintf(stderr, "Unknown processor type\n");

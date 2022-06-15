@@ -27,19 +27,15 @@ Configuration memory of vcd
 # first test loop.
 break 0x800c
 Breakpoint 1 at 0x00800c (cond="")
-
-0x0800c    <.loop$0>:
-0x0800c F  72 10 00 00    bset   0x0000 <loc1>,#0[0K
+0x0800c F? 72 10 00 00    bset   0x0000 <loc1>,#0[0K
 run
 Simulation started, PC=0x008000
 
 Stop at 0x00800c: (104) Breakpoint
 V-IHINZC  Flags= 0x2a  42 *  A= 0x00   0 .
 0-101010  X= 0x0000   0 .    Y= 0x0000   0 .
-SP= 0x17ff [SP+1]= 00   0 .  Limit= 0x1500
-
-0x0800c    <.loop$0>:
-0x0800c F  72 10 00 00    bset   0x0000 <loc1>,#0[0K
+SP= 0x17ff [SP+1]= 00   0 .  Limit= 0x14ff
+0x0800c F? 72 10 00 00    bset   0x0000 <loc1>,#0[0K
 F 0x00800c
 
 # Set up a vcd to monitor the bit changes in loc1 and the value of loc2.
@@ -63,10 +59,10 @@ vcd[0] value change dump
   Paused:     no
   Mode:       output
   Time scale: 1 ns
-  Start time: 0.000004000000000 s
-  Last event: 0.000004000000000 s
+  Start time: 0.000000625000000 s
+  Last event: 0.000000625000000 s
   Pause time: 
-  Simul time: 0.000004000000000 s
+  Simul time: 0.000000625000000 s
   Variables:
     Address           Symbol
     rom[0x00000].0    loc1.0
@@ -88,10 +84,8 @@ Simulation started, PC=0x00800c
 Stop at 0x00800c: (104) Breakpoint
 V-IHINZC  Flags= 0x28  40 (  A= 0x00   0 .
 0-101000  X= 0x0000   0 .    Y= 0x0000   0 .
-SP= 0x17ff [SP+1]= 00   0 .  Limit= 0x1500
-
-0x0800c    <.loop$0>:
-0x0800c F  72 10 00 00    bset   0x0000 <loc1>,#0[0K
+SP= 0x17ff [SP+1]= 00   0 .  Limit= 0x14ff
+0x0800c F? 72 10 00 00    bset   0x0000 <loc1>,#0[0K
 F 0x00800c
 
 # Remove the probe from every second bit.
@@ -113,10 +107,8 @@ Simulation started, PC=0x00800c
 Stop at 0x00800c: (104) Breakpoint
 V-IHINZC  Flags= 0x28  40 (  A= 0x00   0 .
 0-101000  X= 0x0000   0 .    Y= 0x0000   0 .
-SP= 0x17ff [SP+1]= 00   0 .  Limit= 0x1500
-
-0x0800c    <.loop$0>:
-0x0800c F  72 10 00 00    bset   0x0000 <loc1>,#0[0K
+SP= 0x17ff [SP+1]= 00   0 .  Limit= 0x14ff
+0x0800c F? 72 10 00 00    bset   0x0000 <loc1>,#0[0K
 F 0x00800c
 
 # Don't forget to close the vcd properly!

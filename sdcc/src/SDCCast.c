@@ -4120,7 +4120,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           !IS_CHAR (RTYPE (tree)) &&
           IS_CHAR(LTYPE(tree)))
         {
-          unsigned long litval = AST_ULONG_VALUE (tree->right); 
+          wassert (tree->right->type == EX_VALUE);
+          unsigned long litval = AST_ULONG_VALUE (tree->right);
           if ((litval >= 0) && (litval <= 255) && reduceTypeAllowed)
             {
               ast *newAst = newAst_VALUE (valueFromLit (litval));
@@ -5555,8 +5556,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               {
                 sym_link *assoc_type;
                 wassert (IS_AST_LINK (assoc->left));
+                
                 assoc_type = assoc->left->opval.lnk;
-                checkTypeSanity (assoc_type, "_Generic");
+                checkTypeSanity (assoc_type, "(_Generic)");
                 if (compareType (assoc_type, type, true) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
                   {
                     if (found_expr)
@@ -7623,6 +7625,7 @@ createFunctionDecl (symbol *name)
   if ((csym = findSym (SymbolTab, NULL, name->name)))
     {
       name = csym;
+
       /* special case for compiler defined functions
          we need to add the name to the publics list : this
          actually means we are now compiling the compiler
