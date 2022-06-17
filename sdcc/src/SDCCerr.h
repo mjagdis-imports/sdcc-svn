@@ -304,6 +304,7 @@ enum {
   E_INVALID_UNIVERSAL_IDENTIFIER = 274, /* universal character name %s invalid in identifier */
   E_COMPLEX_UNSUPPORTED         = 275, /* complex numbers are not supported */
   E_DECIMAL_FLOAT_UNSUPPORTED   = 276, /* decimal floating-point numbers are not supported */
+  E_ATOMIC_UNSUPPORTED          = 277, /* atomics are not supported */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

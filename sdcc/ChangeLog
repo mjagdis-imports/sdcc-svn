@@ -1,5 +1,13 @@
 2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h:
+	  Steps towards a parser suitable for C2X, inspired by the Jutta Degener grammar as extended by Jens Gustedt.
+
+2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* doc/sdccman.lyx:
 	  Document standard version pragmas.
 
