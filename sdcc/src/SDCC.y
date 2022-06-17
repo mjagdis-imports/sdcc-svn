@@ -73,7 +73,7 @@ bool uselessDecl = TRUE;
 #define YYDEBUG 1
 
 %}
-%expect 9
+%expect 8
 
 %union {
     attribute  *attr;       /* attribute                              */
@@ -678,7 +678,7 @@ type_specifier
                   /* add this to the storage class specifier  */
                   SPEC_ABSA($$) = 1;   /* set the absolute addr flag */
                   /* now get the abs addr from value */
-                  SPEC_ADDR($$) = (unsigned int) ulFromVal(constExprValue($2,TRUE));
+                  SPEC_ADDR($$) = (unsigned int) ulFromVal(constExprValue($2, true));
                }
 
 
@@ -1317,7 +1317,7 @@ array_declarator:
 
 declarator2_function_attributes
    : function_declarator                 { $$ = $1; }
-   | function_declarator function_attribute  {
+   | function_declarator function_attributes  {
            // copy the functionAttributes (not the args and hasVargs !!)
            struct value *args;
            unsigned hasVargs;
@@ -1402,13 +1402,13 @@ function_declarator
 
 pointer
    : unqualified_pointer { $$ = $1;}
-   | unqualified_pointer AT constant_expr /* Special case to allow __at at the end */
+   | unqualified_pointer AT '(' constant_expr ')' /* Special case to allow __at at the end */
          {
              sym_link *n = newLink(SPECIFIER);
              /* add this to the storage class specifier  */
              SPEC_ABSA(n) = 1;   /* set the absolute addr flag */
              /* now get the abs addr from value */
-             SPEC_ADDR(n) = (unsigned int) ulFromVal(constExprValue($3,TRUE));
+             SPEC_ADDR(n) = (unsigned int) ulFromVal(constExprValue($4,true));
              n->next = $1;
              $$ = n;
          }
@@ -1425,7 +1425,7 @@ pointer
              else
                  werror (W_PTR_TYPE_INVALID);
          }
-   | unqualified_pointer type_qualifier_list AT constant_expr /* Special case to allow __at at the end */
+   | unqualified_pointer type_qualifier_list AT '(' constant_expr ')' /* Special case to allow __at at the end */
          {
              if (IS_SPEC($2)) {
                  DCL_TSPEC($1) = $2;
@@ -1441,7 +1441,7 @@ pointer
              /* add this to the storage class specifier  */
              SPEC_ABSA(n) = 1;   /* set the absolute addr flag */
              /* now get the abs addr from value */
-             SPEC_ADDR(n) = (unsigned int) ulFromVal(constExprValue($4,TRUE));
+             SPEC_ADDR(n) = (unsigned int) ulFromVal(constExprValue($5,true));
              n->next = $1;
              $$ = n;
          }
@@ -2210,15 +2210,15 @@ file
 
 
 
-function_attribute
-   : function_attributes
+function_attributes
+   : function_attribute
    | function_attributes function_attribute { $$ = mergeSpec($1,$2,"function_attribute"); }
    ;
 
-function_attributes
-   :  USING constant_expr {
+function_attribute
+   :  USING '(' constant_expr ')' {
                         $$ = newLink(SPECIFIER);
-                        FUNC_REGBANK($$) = (int) ulFromVal(constExprValue($2,TRUE));
+                        FUNC_REGBANK($$) = (int) ulFromVal(constExprValue($3,TRUE));
                      }
    |  REENTRANT      {  $$ = newLink (SPECIFIER);
                         FUNC_ISREENT($$)=1;
@@ -2277,7 +2277,7 @@ function_attributes
    |  COSMIC         {  $$ = newLink (SPECIFIER);
                         FUNC_ISCOSMIC($$) = 1;
                      }
-   |  SDCCCALL '('constant_expr ')'
+   |  SDCCCALL '(' constant_expr ')'
                      {  $$ = newLink (SPECIFIER);
                         FUNC_SDCCCALL($$) = ulFromVal(constExprValue ($3, true));
                      }
@@ -2381,9 +2381,9 @@ string_literal_val
 
 Interrupt_storage
    : INTERRUPT { $$ = INTNO_UNSPEC; }
-   | INTERRUPT constant_expr
+   | INTERRUPT '(' constant_expr ')'
         { 
-          value *val = constExprValue($2,TRUE);
+          value *val = constExprValue($3,TRUE);
           int intno = (int) ulFromVal(val);
           if (val && (intno >= 0) && (intno <= INTNO_MAX))
             $$ = intno;

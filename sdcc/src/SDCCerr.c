@@ -618,7 +618,7 @@ struct
   { E_DECIMAL_FLOAT_UNSUPPORTED, ERROR_LEVEL_ERROR,
      "decimal floating-point numbers are not supported", 0 },
   { E_ATOMIC_UNSUPPORTED, ERROR_LEVEL_ERROR,
-     "stomics are not supported", 0 },
+     "atomics are not supported", 0 },
 };
 
 /* -------------------------------------------------------------------------------

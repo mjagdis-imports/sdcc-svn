@@ -3,7 +3,19 @@
 	* src/SDCC.lex,
 	  src/SDCC.y,
 	  src/SDCCerr.c,
-	  src/SDCCerr.h:
+	  src/SDCCerr.h,
+	  .version,
+	  doc/sdccman.lyx,
+	  device/include/mcs51/ser.h,
+	  device/include/mcs51/ser_ir.h,
+	  device/include/mcs51/serial.h,
+	  device/include/tinibios.h,
+	  support/regression/fwk/lib/testfwk.c,
+	  support/regression/ports/mcs51-common/T2_isr.c,
+	  support/regression/tests/bug1535242.c,
+	  support/regression/tests/critical.c,
+	  support/regression/tests/interrupt.c.in,
+	  support/regression/tests/setjmp.c:
 	  Steps towards a parser suitable for C2X, inspired by the Jutta Degener grammar as extended by Jens Gustedt.
 
 2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
