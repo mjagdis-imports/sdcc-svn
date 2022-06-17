@@ -1872,16 +1872,19 @@ labeled_statement
    ;
 
 label
-   : identifier ':'                    {  $$ = createLabel($1,NULL);
-                                          $1->isitmp = 0;  }
-   | CASE constant_expr ':'
+   : identifier ':'
+     {
+       $$ = createLabel($1,NULL);
+       $1->isitmp = 0;
+     }
+   | attribute_specifier_sequence_opt CASE constant_expr ':'
      {
        if (STACK_EMPTY(swStk))
-         $$ = createCase(NULL,$2,NULL);
+         $$ = createCase(NULL,$3,NULL);
        else
-         $$ = createCase(STACK_PEEK(swStk),$2,NULL);
+         $$ = createCase(STACK_PEEK(swStk),$3,NULL);
      }
-   | DEFAULT { $<asts>$ = newNode(DEFAULT,NULL,NULL); } ':'
+   | attribute_specifier_sequence_opt DEFAULT { $<asts>$ = newNode(DEFAULT,NULL,NULL); } ':'
      {
        if (STACK_EMPTY(swStk))
          $$ = createDefault(NULL,$<asts>2,NULL);
@@ -1936,6 +1939,7 @@ else_statement
    ;
 
 selection_statement
+   /* This gives us an unavoidable shift / reduce conflict, but yacc does the right thing for C */
    : IF '(' expression ')' { seqPointNo++;} statement else_statement
                            {
                               noLineno++;
@@ -1968,7 +1972,7 @@ selection_statement
                               STACK_POP(breakStack);
                            }
    ;
-   
+
 iteration_statement
    : while '(' expression ')' { seqPointNo++;} secondary_block
                          {
