@@ -68,12 +68,12 @@ STACK_DCL(swStk   ,ast   *,MAX_NEST_LEVEL)
 STACK_DCL(blockNum,int,MAX_NEST_LEVEL*3)
 
 value *cenum = NULL;        /* current enumeration  type chain*/
-bool uselessDecl = TRUE;
+bool uselessDecl = true;
 
 #define YYDEBUG 1
 
 %}
-%expect 8
+%expect 3
 
 %union {
     attribute  *attr;       /* attribute                              */
@@ -444,7 +444,7 @@ declaration
                  sdef->block = currBlockno;
                  sdef->tagsym = newSymbol (osdef->tagsym->name, NestLevel);
                  addSym (StructTab, sdef, sdef->tag, sdef->level, currBlockno, 0);
-                 uselessDecl = FALSE;
+                 uselessDecl = false;
                }
            }
          if (uselessDecl)
@@ -673,12 +673,19 @@ type_specifier
                   SPEC_BSTR($$) = 0;
                   ignoreTypedefType = 1;
                }
-   | AT constant_expr {
+   | AT CONSTANT {
                   $$=newLink(SPECIFIER);
                   /* add this to the storage class specifier  */
                   SPEC_ABSA($$) = 1;   /* set the absolute addr flag */
                   /* now get the abs addr from value */
-                  SPEC_ADDR($$) = (unsigned int) ulFromVal(constExprValue($2, true));
+                  SPEC_ADDR($$) = (unsigned int) ulFromVal(constExprValue(newAst_VALUE ($2), true));
+               }
+   | AT '(' constant_expr ')' {
+                  $$=newLink(SPECIFIER);
+                  /* add this to the storage class specifier  */
+                  SPEC_ABSA($$) = 1;   /* set the absolute addr flag */
+                  /* now get the abs addr from value */
+                  SPEC_ADDR($$) = (unsigned int) ulFromVal(constExprValue($3, true));
                }
 
 
@@ -1580,7 +1587,7 @@ array_abstract_declarator
                                        value *val;
                                        $$ = newLink (DECLARATOR);
                                        DCL_TYPE($$) = ARRAY;
-                                       DCL_ELEM($$) = (int) ulFromVal(val = constExprValue($3,TRUE));
+                                       DCL_ELEM($$) = (int) ulFromVal(val = constExprValue($3, true));
                                        if($1)
                                          $$->next = $1;
                                     }
@@ -2218,7 +2225,7 @@ function_attributes
 function_attribute
    :  USING '(' constant_expr ')' {
                         $$ = newLink(SPECIFIER);
-                        FUNC_REGBANK($$) = (int) ulFromVal(constExprValue($3,TRUE));
+                        FUNC_REGBANK($$) = (int) ulFromVal(constExprValue($3, true));
                      }
    |  REENTRANT      {  $$ = newLink (SPECIFIER);
                         FUNC_ISREENT($$)=1;
@@ -2298,8 +2305,8 @@ function_attribute
                      } 
    |  Z88DK_SHORTCALL '(' constant_expr ',' constant_expr ')'
                      {
-                        value *rst_v = constExprValue ($3, TRUE);
-                        value *value_v = constExprValue ($5, TRUE);
+                        value *rst_v = constExprValue ($3, true);
+                        value *value_v = constExprValue ($5, true);
                         int rst = -1, value = -1;
                         $$ = newLink(SPECIFIER);
 
@@ -2332,7 +2339,7 @@ function_attribute
                             if (!port->getRegByName || ((regnum = port->getRegByName(regsym->name)) < 0))
                               werror (W_UNKNOWN_REG, regsym->name);
                             else
-                              $$->funcAttrs.preserved_regs[regnum] = TRUE;
+                              $$->funcAttrs.preserved_regs[regnum] = true;
                           }
                      }
    ;
@@ -2383,7 +2390,7 @@ Interrupt_storage
    : INTERRUPT { $$ = INTNO_UNSPEC; }
    | INTERRUPT '(' constant_expr ')'
         { 
-          value *val = constExprValue($3,TRUE);
+          value *val = constExprValue($3, true);
           int intno = (int) ulFromVal(val);
           if (val && (intno >= 0) && (intno <= INTNO_MAX))
             $$ = intno;
@@ -2485,7 +2492,7 @@ opt_assign_expr
         {
           value *val;
 
-          val = constExprValue($2, TRUE);
+          val = constExprValue($2, true);
           if (!val) // Not a constant expression
             {
               werror (E_CONST_EXPECTED);
