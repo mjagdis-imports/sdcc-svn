@@ -1,3 +1,10 @@
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* SDCC.y,
+	  SDCCerr.h,
+	  SDCCerr.c:
+	  C2X allows labels in blocks even when not followed by a statement.
+
 2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCC.lex,

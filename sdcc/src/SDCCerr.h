@@ -257,7 +257,7 @@ enum {
   E_MULTIPLE_DEFAULT_IN_GENERIC = 227, /* multiple default expressions in generic association */
   E_MULTIPLE_MATCHES_IN_GENERIC = 228, /* multiple matching expressions in generic association */
   E_NO_MATCH_IN_GENERIC         = 229, /* no matching expression in generic association */
-  W_LABEL_WITHOUT_STATEMENT     = 230, /* label without statement, not allowed in standard C */
+  W_LABEL_WITHOUT_STATEMENT_C2X = 230, /* label without statement requires ISO C2X or later */
   E_WCHAR_CONST_C95             = 231, /* character constant of type wchar_t requires ISO C 95 or later */
   E_WCHAR_CONST_C11             = 232, /* character constant of type char16_t or char32_t equires ISO C 11 or later */
   E_WCHAR_STRING_C95            = 233, /* wide character string literal requires ISO C 95 or later */
