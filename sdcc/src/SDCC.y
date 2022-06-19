@@ -1821,9 +1821,8 @@ balanced_token
 statement
    : labeled_statement
    | unlabeled_statement
-   | critical_statement
-   | asm_statement
    ;
+   
 
 unlabeled_statement
    : expression_statement
@@ -1835,6 +1834,9 @@ unlabeled_statement
      {
        $$ = $2;
      }
+   | critical_statement
+   | asm_statement
+   ;
 
 primary_block
    : compound_statement
