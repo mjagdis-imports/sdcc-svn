@@ -1,5 +1,15 @@
 2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* SDCC.y:
+	  Support attribute specifier sequences on function parameters on the parser.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* SDCC.y:
+	  Restrict allowed declarations in function definitions.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/SDCC.y:
 	  Remove warning on label without statement, as it gives too many false positives.
 	* support/regression/tests/rotate2.c.in:
