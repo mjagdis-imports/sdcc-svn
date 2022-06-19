@@ -619,6 +619,8 @@ struct
      "decimal floating-point numbers are not supported", 0 },
   { E_ATOMIC_UNSUPPORTED, ERROR_LEVEL_ERROR,
      "atomics are not supported", 0 },
+  { W_RETURN_TYPE_OMITTED_INT, ERROR_LEVEL_WARNING,
+     "return type of function omitted, assuming int", 0 }
 };
 
 /* -------------------------------------------------------------------------------

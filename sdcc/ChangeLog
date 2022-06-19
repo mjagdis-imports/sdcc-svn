@@ -3,7 +3,7 @@
 	* SDCC.y,
 	  SDCCerr.h,
 	  SDCCerr.c:
-	  C2X allows labels in blocks even when not followed by a statement.
+	  C2X allows labels in blocks even when not followed by a statement. Warn on C90 implicit int return type.
 
 2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

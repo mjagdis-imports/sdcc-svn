@@ -305,6 +305,7 @@ enum {
   E_COMPLEX_UNSUPPORTED         = 275, /* complex numbers are not supported */
   E_DECIMAL_FLOAT_UNSUPPORTED   = 276, /* decimal floating-point numbers are not supported */
   E_ATOMIC_UNSUPPORTED          = 277, /* atomics are not supported */
+  W_RETURN_TYPE_OMITTED_INT     = 278, /* return type of function omitted, assuming int */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

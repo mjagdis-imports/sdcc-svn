@@ -2153,8 +2153,8 @@ external_declaration
 
 function_definition
    : declarator
-        {   /* function type not specified */
-            /* assume it to be 'int'       */
+        {   /* function return type not specified, which is allowed in C90 (and means int), but disallowed in C99 and later */
+            werror (W_RETURN_TYPE_OMITTED_INT);
             addDecl($1,0,newIntLink());
             $1 = createFunctionDecl($1);
             if ($1)
