@@ -178,8 +178,8 @@ primary_expression
    ;
 
 predefined_constant
-   : TOKEN_FALSE {}
-   | TOKEN_TRUE {}
+   : TOKEN_FALSE { $$ = newAst_VALUE (constBoolVal (false, true)); }
+   | TOKEN_TRUE  { $$ = newAst_VALUE (constBoolVal (true, true)); }
    ; /* add nullptr here if it gets approved for C23 */
 
 generic_selection
@@ -1528,61 +1528,30 @@ parameter_list
    ;
 
 parameter_declaration
-   : attribute_specifier_sequence_opt declaration_specifiers declarator
+   : declaration_specifiers declarator
         {
           symbol *loop;
 
-          if (IS_SPEC ($2) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($2))
+          if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
             {
-              werror (E_STORAGE_CLASS_FOR_PARAMETER, $3->name);
+              werror (E_STORAGE_CLASS_FOR_PARAMETER, $2->name);
             }
-          pointerTypes ($3->type, $2);
-          if (IS_SPEC ($3->etype))
-            SPEC_NEEDSPAR($3->etype) = 0;
-          addDecl ($3, 0, $2);
-          for (loop = $3; loop; loop->_isparm = 1, loop = loop->next)
+          pointerTypes ($2->type, $1);
+          if (IS_SPEC ($2->etype))
+            SPEC_NEEDSPAR($2->etype) = 0;
+          addDecl ($2, 0, $1);
+          for (loop = $2; loop; loop->_isparm = 1, loop = loop->next)
             ;
-          $$ = symbolVal ($3);
+          $$ = symbolVal ($2);
           ignoreTypedefType = 0;
         }
-   | attribute_specifier_sequence_opt declaration_specifiers abstract_declarator
+   | type_name
         {
-          /* go to the end of the list */
-          sym_link *p;
-
-          if (IS_SPEC ($2) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($2))
-            {
-              werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
-            }
-          pointerTypes ($3,$2);
-          for (p = $3; p && p->next; p = p->next)
-            ;
-          if (!p)
-            {
-              werror(E_SYNTAX_ERROR, yytext);
-            }
-          else
-            {
-              p->next = $2;
-            }
-          ignoreTypedefType = 0;
           $$ = newValue ();
-          $$->type = $3;
+          $$->type = $1;
           $$->etype = getSpec ($$->type);
           ignoreTypedefType = 0;
-        }
-   | attribute_specifier_sequence_opt declaration_specifiers
-        {
-          if (IS_SPEC ($2) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($2))
-            {
-              werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
-            }
-          ignoreTypedefType = 0;
-          $$ = newValue ();
-          $$->type = $2;
-          $$->etype = getSpec ($$->type);
-          ignoreTypedefType = 0;
-        }
+         }
    ;
 
 abstract_declarator
@@ -2185,7 +2154,7 @@ external_declaration
    ;
 
 function_definition
-   : declarator2_function_attributes
+   : declarator
         {   /* function return type not specified, which is allowed in C90 (and means int), but disallowed in C99 and later */
             werror (W_RETURN_TYPE_OMITTED_INT);
             addDecl($1,0,newIntLink());
@@ -2204,7 +2173,7 @@ function_definition
             if ($1 && FUNC_ISCRITICAL ($1->type))
                 inCriticalFunction = 0;
         }
-   | declaration_specifiers declarator2_function_attributes
+   | declaration_specifiers declarator
         {
             sym_link *p = copyLinkChain($1);
             pointerTypes($2->type,p);

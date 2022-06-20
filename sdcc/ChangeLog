@@ -1,12 +1,16 @@
-2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2022-06-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
-	* SDCC.y:
-	  Support attribute specifier sequences on function parameters on the parser.
+	* src/SDCC.y:
+	  Fix handling of C2X predefined constants.
+	* device/lib/ds390/tinibios.c:
+	  Fix use of __interrupt.
+	* support/regression/tests/compare_2_n.m4:
+	  Fix missing return type.
 
-2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+2022-06-20 Felix Salfelder <felix AT salfelder.org>
 
-	* SDCC.y:
-	  Restrict allowed declarations in function definitions.
+	* support/regression/cases/Makefile.in:
+	  suppress implicit return type warnings in gte main functions.
 
 2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
