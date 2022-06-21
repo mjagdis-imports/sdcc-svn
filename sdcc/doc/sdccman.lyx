@@ -22569,7 +22569,7 @@ at
 \begin_layout Verse
 
 \family typewriter
-__xdata __at (0x7ffe) unsigned int chksum;
+__xdata unsigned int __at (0x7ffe) chksum;
 \end_layout
 
 \begin_layout Standard
@@ -22649,7 +22649,7 @@ Variable initialization
 \begin_layout Verse
 
 \family typewriter
-__code __at (0x7ff0) char Id[5] = 
+__code char __at (0x7ff0) Id[5] = 
 \begin_inset Quotes sld
 \end_inset
 
@@ -22721,7 +22721,7 @@ xdata (mcs51, ds390 named address space)
 
 \end_inset
 
- __at
+ unsigned char __at
 \begin_inset Index idx
 status open
 
@@ -22756,7 +22756,7 @@ at
 
 \end_inset
 
- (0x8000) unsigned char PORTA_8255;
+ (0x8000) PORTA_8255;
 \end_layout
 
 \begin_layout Standard
@@ -24099,7 +24099,7 @@ __bit bvar;
 \begin_inset space ~
 \end_inset
 
-__data __at
+__data unsigned char __at
 \begin_inset Index idx
 status collapsed
 
@@ -24109,7 +24109,7 @@ at
 
 \end_inset
 
- (0x31) unsigned char j;
+ (0x31) j;
 \begin_inset Newline newline
 \end_inset
 
