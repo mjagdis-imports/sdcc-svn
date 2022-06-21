@@ -1,3 +1,87 @@
+2022-06-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Fix SDCC crash on error message for duplicate default label.
+
+2022-06-21 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCicode.c/h (PRINTFUNC, +piCode, iCodePrint): replaced
+	  void*/iCode* with const iCode*
+	* device/include/ds80c390.h,
+	  device/include/mcs51/at89S8252.h: use parentheses with __at
+	* device/include/mcs51/at89c55.h,
+	  device/include/mcs51/at89x51.h,
+	  device/include/mcs51/at89x52.h,
+	  device/include/mcs51/C8051F040.h,
+	  device/include/mcs51/C8051F060.h,
+	  device/include/mcs51/mcs51reg.h,
+	  device/include/mcs51/reg764.h,
+	  device/include/mcs51/regc515c.h,
+	  device/include/mcs51/sab80515.h: use compiler.h
+	* device/include/mcs51/at89x051.h: cosmetics
+	* device/lib/_setjmp.c: stack is in __idata
+	* device/lib/ds390/tinibios.c,
+	  device/lib/ds400/tinibios.c,
+	  device/lib/ser_ir.c: use parentheses with __interrupt
+	* device/lib/ser_ir_cts_rts.c: use __bit
+	* src/mos6502/gen.c,
+	  src/z80/gen.c: commented out some unused code to fix warnings
+	* src/z80/peeph.def: removed rule 88 as it is a duplicate of 85a
+
+2022-06-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Fix handling of C2X predefined constants.
+	* device/lib/ds390/tinibios.c:
+	  Fix use of __interrupt.
+	* support/regression/tests/compare_2_n.m4:
+	  Fix missing return type.
+
+2022-06-20 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/cases/Makefile.in:
+	  suppress implicit return type warnings in gte main functions.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Remove warning on label without statement, as it gives too many false positives.
+	* support/regression/tests/rotate2.c.in:
+	  Fix missing return type.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge from parser branch.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* SDCC.y,
+	  SDCCerr.h,
+	  SDCCerr.c:
+	  C2X allows labels in blocks even when not followed by a statement. Warn on C90 implicit int return type.
+
+2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  .version,
+	  doc/sdccman.lyx,
+	  device/include/mcs51/ser.h,
+	  device/include/mcs51/ser_ir.h,
+	  device/include/mcs51/serial.h,
+	  device/include/tinibios.h,
+	  support/regression/fwk/lib/testfwk.c,
+	  support/regression/ports/mcs51-common/T2_isr.c,
+	  support/regression/tests/bug1535242.c,
+	  support/regression/tests/critical.c,
+	  support/regression/tests/interrupt.c.in,
+	  support/regression/tests/setjmp.c,
+	  device/lib/_ser.c,
+	  device/lib/serial.c:
+	  Steps towards a parser suitable for C2X, inspired by the Jutta Degener grammar as extended by Jens Gustedt.
+
 2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* doc/sdccman.lyx:
