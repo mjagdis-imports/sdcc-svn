@@ -701,8 +701,8 @@ LIB_TYPE
 sdccconf_h_dir_separator
 C99_FLAG
 WALL_FLAG
-MAKEDEP
 MAKEDEP_CXX
+MAKEDEP
 HAVE_CXX11
 CCACHE
 pkgpyexecdir
@@ -6770,8 +6770,8 @@ printf "%s\n" "$ac_res" >&6; }
 
   WALL_FLAG="-Wall -Wno-parentheses"
   C99_FLAG="--std=c99"
-  MAKEDEP="$CC $sdcc_cv_MM"
   MAKEDEP_CXX="$CXX $sdcc_cv_MM"
+  MAKEDEP="$CC $sdcc_cv_MM"
 else
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether we are using the SunPRO C compiler" >&5
 printf %s "checking whether we are using the SunPRO C compiler... " >&6; }
@@ -6813,6 +6813,7 @@ printf "%s\n" "$sdcc_cv_c_compiler_sunpro" >&6; }
     MAKEDEP_CXX="$CXX -xM1"
   fi
 fi
+
 
 
 
@@ -9317,7 +9318,7 @@ if test $OPT_DISABLE_PDK16 = 0; then
 fi
 
 if test $OPT_DISABLE_F8 = 0; then
-  ac_config_files="$ac_config_files src/f8/Makefile"
+  ac_config_files="$ac_config_files src/f8/Makefile sdas/asf8/Makefile"
 
   test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/f8/Makefile"
 
@@ -10074,6 +10075,7 @@ do
     "device/lib/pdk15-stack-auto/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/pdk15-stack-auto/Makefile" ;;
     "sdas/aspdk16/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/aspdk16/Makefile" ;;
     "src/f8/Makefile") CONFIG_FILES="$CONFIG_FILES src/f8/Makefile" ;;
+    "sdas/asf8/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/asf8/Makefile" ;;
     "device/lib/f8/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/f8/Makefile" ;;
     "device/lib/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/Makefile" ;;
     "device/non-free/lib/Makefile") CONFIG_FILES="$CONFIG_FILES device/non-free/lib/Makefile" ;;
@@ -11055,7 +11057,6 @@ sdcc ${VERSION} is now configured for
   CPPFLAGS:             ${CPPFLAGS}
   LDFLAGS:              ${LDFLAGS}
   MAKEDEP:              ${MAKEDEP}
-  MAKEDEP_CXX:          ${MAKEDEP_CXX}
 
   ENABLED Ports:
     ds390               ${enable_ds390_port}
@@ -11136,7 +11137,6 @@ sdcc ${VERSION} is now configured for
   CPPFLAGS:             ${CPPFLAGS}
   LDFLAGS:              ${LDFLAGS}
   MAKEDEP:              ${MAKEDEP}
-  MAKEDEP_CXX:          ${MAKEDEP_CXX}
 
   ENABLED Ports:
     ds390               ${enable_ds390_port}

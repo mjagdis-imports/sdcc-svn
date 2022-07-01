@@ -1,3 +1,11 @@
+2022-07-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Makefile.in,
+	  configure,
+	  configure.ac,
+	  sdas/asf8:
+	  Infrastructure for f8 assembler.
+
 2022-06-29 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* device/include/float.h,
