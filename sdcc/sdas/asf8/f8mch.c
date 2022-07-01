@@ -186,7 +186,8 @@ struct mne *mp;
 
 	switch (rf) {
 	case S_2OP:
-		t1 = addr(&e2);
+	case S_2OPSUB:
+		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
 		t2 = addr(&e2);
@@ -198,7 +199,7 @@ struct mne *mp;
 
 		switch (t2) {
 		case S_IMM:
-			if (op == 0x00 || op == 0x08) // Immediate operand invalid for sub and sbc.
+			if (rf == S_2OPSUB) // Immediate operand invalid for sub and sbc.
 				aerr ();
 			outab(op | 0x00);
 			outrb(&e2, R_USGN);
@@ -207,9 +208,13 @@ struct mne *mp;
 			outab(op | 0x01);
 			outrw(&e2, R_USGN);
 			break;
-		case S_SPREL:
+		case S_SPREL: // todo: implement
+			outab(op | 0x02);
+			aerr ();
+			break;
 		case S_ZREL:
-			aerr (); // todo: implement these!
+			outab(op | 0x03);
+			aerr (); // todo: implement
 			break;
 		case S_REG:
 			switch (r2) {
@@ -232,11 +237,98 @@ struct mne *mp;
 		default:
 			aerr();
 		}
-
 		break;
 
-	//case S_JR:
-	//	break;
+	case S_1OP:
+		t1 = addr(&e1);
+		r1 = rcode;	
+
+		switch (t1) {
+		case S_DIR:
+			outab(op | 0x00);
+			outrw(&e1, R_USGN);
+			break;
+		case S_SPREL: // todo: implement
+			outab(op | 0x01);
+			aerr ();
+			break;
+		case S_REG:
+			if (r1 == XL) {
+				outab(op | 0x02);
+				break;
+			} else
+			if (r1 == ZH) {
+				outab(op | 0x03);
+				break;
+			} 
+		default:
+			aerr ();
+		}
+		break;
+
+	case S_2OPW:
+	case S_2OPWSUB:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+
+		if (t1 != S_REG || r1 != Y) { // todo: alternate or swapped accu
+			aerr ();
+		}
+
+		switch (t2) {
+		case S_IMM:
+			if (rf == S_2OPWSUB) // Immediate operand invalid for subw and sbcw.
+				aerr ();
+			outab(op | 0x00);
+			outrw(&e2, R_USGN);
+			break;
+		case S_DIR:
+			outab(op | 0x01);
+			outrw(&e2, R_USGN);
+			break;
+		case S_SPREL: // todo: implement
+			outab(op | 0x02);
+			aerr ();
+			break;
+		case S_REG:
+			if (r2 == X) {
+				outab(op | 0x03);
+				break;
+			}
+		default:
+			aerr ();
+		}
+		break;
+
+	case S_1OPW:
+		t1 = addr(&e1);
+		r1 = rcode;	
+
+		switch (t1) {
+		case S_DIR:
+			outab(op | 0x00);
+			outrw(&e1, R_USGN);
+			break;
+		case S_SPREL: // todo: implement
+			outab(op | 0x01);
+			aerr ();
+			break;
+		case S_ZREL: // todo: implement
+			outab(op | 0x02);
+			aerr ();
+			break;
+		case S_REG:
+			if (r1 == Y) {
+				outab(op | 0x03);
+				break;
+			}
+		default:
+			aerr ();
+		}
+		break;
 
 	default:
 		opcycles = OPCY_ERR;

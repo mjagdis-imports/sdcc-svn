@@ -84,18 +84,7 @@ struct expr *esp;
 				aerr();
 			}
 		} else { // Todo: Implement other addressing modes.
-			/*if ((c = getnb()) == '[') {
-				if (addr1(esp) == S_SHORT) {
-					esp->e_mode = S_INIXB;
-				} else {
-					esp->e_mode = S_INIX;
-				}
-				if (getnb() != ']') {
-					aerr();
-				}
-				addrsl(esp);
-			} else {
-				unget(c);
+			/*{
 				if (addr1(esp) == S_SHORT) {
 					esp->e_mode = S_IXB;
 				} else {

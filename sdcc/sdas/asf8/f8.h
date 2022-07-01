@@ -78,16 +78,18 @@
  * Instruction types
  */
 #define	S_2OP		60
-#define	S_1OP		61
-#define	S_2OPW		62
-#define	S_1OPW		63
-#define	S_LD		64
-#define	S_LDW		65
-#define	S_0OP		66
-#define	S_0OPW		67
-#define	S_BIT		68
-#define	S_JR		69
-#define	S_TRAP		70
+#define	S_2OPSUB	61
+#define	S_1OP		62
+#define	S_2OPW		63
+#define	S_2OPWSUB	64
+#define	S_1OPW		65
+#define	S_LD		66
+#define	S_LDW		67
+#define	S_0OP		68
+#define	S_0OPW		69
+#define	S_BIT		70
+#define	S_JR		71
+#define	S_TRAP		72
 
 struct adsym
 {

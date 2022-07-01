@@ -250,8 +250,8 @@ struct	mne	mne[] = {
 	/* f8 instructions */
 
 	/* 8-bit 2-op-instrustions */
-    {	NULL,	"sub",		S_2OP,		0,	0x00	},
-    {	NULL,	"sbc",		S_2OP,		0,	0x08	},
+    {	NULL,	"sub",		S_2OPSUB,	0,	0x00	},
+    {	NULL,	"sbc",		S_2OPSUB,	0,	0x08	},
     {	NULL,	"add",		S_2OP,		0,	0x10	},
     {	NULL,	"adc",		S_2OP,		0,	0x18	},
     {	NULL,	"cp",		S_2OP,		0,	0x20	},
@@ -271,8 +271,8 @@ struct	mne	mne[] = {
     {	NULL,	"push",		S_1OP,		0,	0x60	},
 
 	/* 16-bit 2-op-instrustions */
-    {	NULL,	"subw",		S_2OPW,		0,	0x70	},
-    {	NULL,	"sbcw",		S_2OPW,		0,	0x74	},
+    {	NULL,	"subw",		S_2OPWSUB,	0,	0x70	},
+    {	NULL,	"sbcw",		S_2OPWSUB,	0,	0x74	},
     {	NULL,	"addw",		S_2OPW,		0,	0x78	},
     {	NULL,	"adcw",		S_2OPW,		0,	0x7c	},
     {	NULL,	"orw",		S_2OPW,		0,	0xf0	},
