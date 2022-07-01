@@ -2,6 +2,7 @@
 
 /*
  *  Copyright (C) 2010  Alan R. Baldwin
+ *  Copyright (C) 2022  Philipp K. Krause
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -73,26 +74,17 @@ struct expr *esp;
 		expr(esp, 0);
 		esp->e_mode = S_IMM;
 	} else
-	if (c == '[') {
-		if (addr1(esp) == S_SHORT) {
-			esp->e_mode = S_INB;
-		} else {
-			esp->e_mode = S_IN;
-		}
-		if (getnb() != ']') {
-			aerr();
-		}
-		addrsl(esp);
-	} else
 	if (c == '(') {
 		if ((rcode = admode(REG)) != 0) {
-			rcode = rcode & 0xFF;
+		    if (rcode & 0xff != Y && rcode & 0xff != Z)
+		      aerr ();
+			rcode = rcode & 0xff;
 			esp->e_mode = S_IX;
 			if (getnb() != ')') {
 				aerr();
 			}
-		} else {
-			if ((c = getnb()) == '[') {
+		} else { // Todo: Implement other addressing modes.
+			/*if ((c = getnb()) == '[') {
 				if (addr1(esp) == S_SHORT) {
 					esp->e_mode = S_INIXB;
 				} else {
@@ -119,7 +111,8 @@ struct expr *esp;
 			if (getnb() != ')') {
 				aerr();
 			}
-			addrsl(esp);
+			addrsl(esp);*/
+			aerr();
 		}
 	} else {
 		unget(c);
@@ -127,29 +120,14 @@ struct expr *esp;
 			rcode = rcode & 0xFF;
 			esp->e_mode = S_REG;
 		} else {
-			addr1(esp);
+			expr(esp, 0);
+			esp->e_mode = S_DIR;
 		}
 	}
 	return (esp->e_mode);
 }
 
-int
-addr1(esp)
-struct expr *esp;
-{
-	int c;
-
-	if ((c = getnb()) == '*') {
-		expr(esp, 0);
-		esp->e_mode = S_SHORT;
-	} else {
-		unget(c);
-		expr(esp, 0);
-		esp->e_mode = S_LONG;
-	}
-	return (esp->e_mode);
-}
-
+#if 0
 int
 addrsl(esp)
 struct expr *esp;
@@ -169,6 +147,7 @@ struct expr *esp;
 	}
 	return (esp->e_mode);
 }
+#endif
 
 /*
  * Enter admode() to search a specific addressing mode table
@@ -232,15 +211,17 @@ char *str;
  */
 
 struct	adsym	REG[] = {
-    {	"a",	 A|0400	},
-    {	"x",	 X|0400	},
     {	"xl",	XL|0400	},
     {	"xh",	XH|0400	},
-    {	"y",	 Y|0400	},
     {	"yl",	YL|0400	},
     {	"yh",	YH|0400	},
+    {	"zl",	ZL|0400	},
+    {	"zh",	ZH|0400	},
+    {	"f",	F|0400	},
     {	"sp",	SP|0400	},
-    {	"cc",	CC|0400	},
+    {	"x",	X|0400	},
+    {	"y",	Y|0400	},
+    {	"z",	Z|0400	},
     {	"",	0000	}
 };
 

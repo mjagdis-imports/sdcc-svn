@@ -3,7 +3,8 @@
 	* Makefile.in,
 	  configure,
 	  configure.ac,
-	  sdas/asf8:
+	  sdas/asf8,
+	  src/f8/main.c:
 	  Infrastructure for f8 assembler.
 
 2022-07-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>

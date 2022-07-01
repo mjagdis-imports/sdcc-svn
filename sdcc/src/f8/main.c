@@ -263,7 +263,7 @@ get_model (void)
   switch (options.model)
     {
     case MODEL_MEDIUM:
-      return ("stm8");
+      return ("f8");
       break;
     case MODEL_LARGE:
       return ("stm8-large");
@@ -282,16 +282,16 @@ get_model (void)
 */
 static const char *_linkCmd[] =
 {
-  "sdldstm8", "-nf", "\"$1\"", NULL
+  "sdldf8", "-nf", "\"$1\"", NULL
 };
 
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
 static const char *f8AsmCmd[] =
 {
-  "sdasstm8", "$l", "$3", "\"$1.asm\"", NULL
+  "sdasf8", "$l", "$3", "\"$1.asm\"", NULL
 };
 
-static const char *const _libs_stm8[] = { "stm8", NULL, };
+static const char *const _libs_f8[] = { "f8", NULL, };
 
 PORT f8_port =
 {
@@ -321,7 +321,7 @@ PORT f8_port =
     ".rel",
     1,
     NULL,                       /* crt */
-    _libs_stm8,                 /* libs */
+    _libs_f8,                 /* libs */
   },
   {                             /* Peephole optimizer */
     f8_defaultRules,
