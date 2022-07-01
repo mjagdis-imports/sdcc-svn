@@ -924,10 +924,6 @@ TCC_SKIP_TESTS += \
 # Relies on implementation extensions common on GNU/Linux
 TCC_SKIP_TESTS += \
 	86_memory-model.c
-	
-# long long to float conversion function missing - Bug #3396
-TCC_SKIP_TESTS += \
-	110_average.c
 
 TCC_TESTS = $(filter-out $(TCC_SKIP_TESTS), $(TCC_TESTS_WC))
 
@@ -1011,6 +1007,7 @@ gte_%.c: $(GTE_TESTS_DIR)/%.c Makefile
 	@echo '#pragma disable_warning 93' >> $@
 	@echo '#pragma disable_warning 196' >> $@
 	@echo '#pragma disable_warning 127' >> $@
+	@grep main $< -C1 | grep -q ^int || echo '#pragma disable_warning 278' >> $@
 
 # stuff defined in gcc, but not in sdcc
 	@grep -q __CHAR_BIT__ $< && (echo "#include <limits.h>"; echo "#define __CHAR_BIT__ CHAR_BIT") >> $@ || :

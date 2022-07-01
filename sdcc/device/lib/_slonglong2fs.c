@@ -1,7 +1,8 @@
 /*-------------------------------------------------------------------------
-   ser_ir.h - header file for serial routines
-
-   Copyright (C) 1999, Josef Wolf <jw AT raven.inka.de>
+   _slonglong2fs.c - Floating point library in optimized assembly for 8051
+ 
+   Copyright (C) 2004, Paul Stoffregen, paul@pjrc.com
+                 2022, Benedikt Freisen
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -10,7 +11,7 @@
 
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License 
@@ -26,25 +27,15 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __SER_IR_H
-#define __SER_IR_H
 
-/* call this one first on startup */
-void ser_init (void);
+#define __SDCC_FLOAT_LIB
+#include <float.h>
 
-/* the following ones should be obvious */
-void ser_putc (unsigned char c);
-void ser_puts (unsigned char *s);
-void ser_gets (unsigned char *s, unsigned char len);
-unsigned char ser_getc (void);
 
-/* return the number of chars that can be received/transmitted without
-* blocking.
-*/
-unsigned char ser_can_rcv (void);
-unsigned char ser_can_xmt (void);
-
-/* needs to be defined somewhere :-() */
-void ser_handler (void) __interrupt (4);
-
-#endif  /* __SER_IR_H */
+/* convert signed long long to float */
+float __slonglong2fs (signed long long sll) {
+  if (sll<0) 
+    return -__ulonglong2fs(-sll);
+  else 
+    return __ulonglong2fs(sll);
+}
