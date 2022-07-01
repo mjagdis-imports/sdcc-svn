@@ -1,3 +1,45 @@
+2022-06-29 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/float.h,
+	  src/SDCCmain.c:
+	  Provide macros for double, as requested in [feature-requests:#304].
+
+2022-06-29 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/lib/_slonglong2fs.c,
+	  device/lib/_ulonglong2fs.c,
+	  device/lib/incl.mk,
+	  doc/sdccman.lyx,
+	  support/regression/cases/Makefile.in:
+	  Implement long long to float conversion, fixing bug #3396.
+
+2022-06-28 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCCargs.h,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h
+	  src/SDCCmain.c:
+	  Improve command line parser flexibility and GCC compatibility.
+
+2022-06-28 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/mcs51/at89c55.h,
+	  device/include/mcs51/at89x51.h,
+	  device/include/mcs51/at89x52.h,
+	  device/include/mcs51/C8051F040.h,
+	  device/include/mcs51/C8051F060.h,
+	  device/include/mcs51/mcs51reg.h,
+	  device/include/mcs51/reg764.h,
+	  device/include/mcs51/regc515c.h,
+	  device/include/mcs51/sab80515.h: fixed SBIT uses
+
+2022-06-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3458.c.in:
+	  Fix bug #3458.
+
 2022-06-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCC.y:
