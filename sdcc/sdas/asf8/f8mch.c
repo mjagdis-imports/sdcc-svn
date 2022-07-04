@@ -208,13 +208,16 @@ struct mne *mp;
 			outab(op | 0x01);
 			outrw(&e2, R_USGN);
 			break;
-		case S_SPREL: // todo: implement
+		case S_SPREL:
 			outab(op | 0x02);
-			aerr ();
+			if (ls_mode(&e2))
+				aerr ();
+			else
+				outrb(&e2, R_USGN);
 			break;
 		case S_ZREL:
 			outab(op | 0x03);
-			aerr (); // todo: implement
+			outrw(&e2, R_USGN);
 			break;
 		case S_REG:
 			switch (r2) {
@@ -248,9 +251,12 @@ struct mne *mp;
 			outab(op | 0x00);
 			outrw(&e1, R_USGN);
 			break;
-		case S_SPREL: // todo: implement
+		case S_SPREL:
 			outab(op | 0x01);
-			aerr ();
+			if (ls_mode(&e1))
+				aerr ();
+			else
+				outrb(&e1, R_USGN);
 			break;
 		case S_REG:
 			if (r1 == XL) {
@@ -289,9 +295,12 @@ struct mne *mp;
 			outab(op | 0x01);
 			outrw(&e2, R_USGN);
 			break;
-		case S_SPREL: // todo: implement
+		case S_SPREL:
 			outab(op | 0x02);
-			aerr ();
+			if (ls_mode(&e1))
+				aerr ();
+			else
+				outrb(&e2, R_USGN);
 			break;
 		case S_REG:
 			if (r2 == X) {
@@ -312,13 +321,17 @@ struct mne *mp;
 			outab(op | 0x00);
 			outrw(&e1, R_USGN);
 			break;
-		case S_SPREL: // todo: implement
+		case S_SPREL:
 			outab(op | 0x01);
-			aerr ();
+			if (ls_mode(&e1))
+				aerr ();
+			else
+				outrb(&e1, R_USGN);
 			break;
-		case S_ZREL: // todo: implement
+			break;
+		case S_ZREL:
 			outab(op | 0x02);
-			aerr ();
+			outrw(&e1, R_USGN);
 			break;
 		case S_REG:
 			if (r1 == Y) {
@@ -357,6 +370,7 @@ opcy_aerr()
 /*
  * Select the long or short addressing mode
  * based upon the expression type and value.
+ * Return 1 for 16-bit offset, 0 for 8-bit offset.
  */
 int
 ls_mode(e)

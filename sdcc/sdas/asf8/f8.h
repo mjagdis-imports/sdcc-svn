@@ -72,7 +72,10 @@
 #define	S_ZREL		0x03
 #define	S_REG		0x04
 #define	S_IX		0x05
-#define	S_IXREL		0x07
+#define	S_IXREL		0x06
+
+#define S_SHORT		0x07
+#define S_LONG		0x08
 
 /*
  * Instruction types

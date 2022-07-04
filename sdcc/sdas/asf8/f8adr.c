@@ -83,14 +83,8 @@ struct expr *esp;
 			if (getnb() != ')') {
 				aerr();
 			}
-		} else { // Todo: Implement other addressing modes.
-			/*{
-				if (addr1(esp) == S_SHORT) {
-					esp->e_mode = S_IXB;
-				} else {
-					esp->e_mode = S_IXO;
-				}
-			}
+		} else { // Relative addressing
+			expr(esp, 0);
 			comma(1);
 			if ((rcode = admode(REG)) != 0) {
 				rcode = rcode & 0xFF;
@@ -100,8 +94,13 @@ struct expr *esp;
 			if (getnb() != ')') {
 				aerr();
 			}
-			addrsl(esp);*/
-			aerr();
+			if (rcode == SP)
+				esp->e_mode = S_SPREL;
+			else if (rcode == Z)
+				esp->e_mode = S_ZREL;
+			else
+				aerr();
+			addrsl(esp);
 		}
 	} else {
 		unget(c);
@@ -116,7 +115,6 @@ struct expr *esp;
 	return (esp->e_mode);
 }
 
-#if 0
 int
 addrsl(esp)
 struct expr *esp;
@@ -128,7 +126,6 @@ struct expr *esp;
 		switch(ccase[d & 0x7F]) {
 		case 'b':	esp->e_mode = esp->e_mode | S_SHORT;	break;
 		case 'w':	esp->e_mode = esp->e_mode | S_LONG;	break;
-		case 'e':	esp->e_mode = esp->e_mode | S_EXT;	break;
 		default:	unget(d);	unget(c);		break;
 		}
 	} else {
@@ -136,7 +133,6 @@ struct expr *esp;
 	}
 	return (esp->e_mode);
 }
-#endif
 
 /*
  * Enter admode() to search a specific addressing mode table
