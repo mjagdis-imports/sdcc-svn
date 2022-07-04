@@ -273,7 +273,7 @@ struct	mne	mne[] = {
 	/* 16-bit 2-op-instrustions */
     {	NULL,	"subw",		S_2OPWSUB,	0,	0x70	},
     {	NULL,	"sbcw",		S_2OPWSUB,	0,	0x74	},
-    {	NULL,	"addw",		S_2OPW,		0,	0x78	},
+    {	NULL,	"addw",		S_2OPWADD,	0,	0x78	},
     {	NULL,	"adcw",		S_2OPW,		0,	0x7c	},
     {	NULL,	"orw",		S_2OPW,		0,	0xf0	},
 
@@ -350,6 +350,10 @@ struct	mne	mne[] = {
     {	NULL,	"jrle",		S_JR,		0,	0xdf	},
 
     /* other instructions */
+	{	NULL,	"call",		S_JP,		0,	0x66	},
+	{	NULL,	"jp",		S_JP,		0,	0x64	},
+	{	NULL,	"ret",		S_RET,		0,	0xba	},
+	{	NULL,	"reti",		S_RET,		0,	0xbb	},
 
     /* trap */
     {	NULL,	"trap",		S_TRAP,	S_EOL,	0x00	}

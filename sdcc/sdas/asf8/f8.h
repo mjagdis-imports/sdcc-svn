@@ -85,14 +85,17 @@
 #define	S_1OP		62
 #define	S_2OPW		63
 #define	S_2OPWSUB	64
-#define	S_1OPW		65
-#define	S_LD		66
-#define	S_LDW		67
-#define	S_0OP		68
-#define	S_0OPW		69
-#define	S_BIT		70
-#define	S_JR		71
-#define	S_TRAP		72
+#define	S_2OPWADD	65
+#define	S_1OPW		66
+#define	S_LD		67
+#define	S_LDW		68
+#define	S_0OP		69
+#define	S_0OPW		70
+#define	S_BIT		71
+#define	S_JR		72
+#define S_JP		73
+#define S_RET		74
+#define	S_TRAP		75
 
 struct adsym
 {

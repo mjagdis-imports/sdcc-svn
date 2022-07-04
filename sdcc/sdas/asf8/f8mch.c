@@ -274,11 +274,18 @@ struct mne *mp;
 
 	case S_2OPW:
 	case S_2OPWSUB:
+	case S_2OPWADD:
 		t1 = addr(&e1);
 		r1 = rcode;
 		comma(1);
 		t2 = addr(&e2);
 		r2 = rcode;
+
+		if (rf == S_2OPWADD && r1 == SP && !ls_mode(&e1)) { // add sp, #d
+			outab(0xea);
+			outab(e2.e_addr);
+			break;
+		}
 
 		if (t1 != S_REG || r1 != Y) { // todo: alternate or swapped accu
 			aerr ();
@@ -328,7 +335,6 @@ struct mne *mp;
 			else
 				outrb(&e1, R_USGN);
 			break;
-			break;
 		case S_ZREL:
 			outab(op | 0x02);
 			outrw(&e1, R_USGN);
@@ -343,6 +349,126 @@ struct mne *mp;
 		}
 		break;
 
+	case S_LD:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+
+		if (t1 == S_REG && r1 == XL) {
+			switch (t2) {
+			case S_DIR:
+				outab (op | 0x01);
+				outrw(&e2, R_USGN);
+				break;
+			case S_SPREL:
+				outab(op | 0x02);
+				if (ls_mode(&e2))
+					aerr ();
+				else
+					outrb(&e2, R_USGN);
+				break;
+			case S_ZREL:
+				outab(op | 0x03);
+				outrw(&e2, R_USGN);
+				break;
+			case S_IX:
+				if (r2 == Y)
+					outab(0x84);
+				else
+					aerr ();
+				break;
+			default:
+				aerr (); // todo
+			}
+			break;
+		}
+
+		aerr (); // todo
+		break;
+
+	case S_LDW:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+
+		if (t1 == S_REG && r1 == Y) {
+			switch (t2) {
+			case S_DIR:
+				outab (op | 0x01);
+				outrw(&e2, R_USGN);
+				break;
+			case S_SPREL:
+				outab(op | 0x02);
+				if (ls_mode(&e2))
+					aerr ();
+				else
+					outrb(&e2, R_USGN);
+				break;
+			case S_ZREL:
+				outab(op | 0x03);
+				outrw(&e2, R_USGN);
+				break;
+			case S_IX:
+				if (r2 == Y)
+					outab(0xc5);
+				else
+					aerr ();
+			default:
+				aerr (); // todo
+			}
+			break;
+		}
+		else if (t1 == S_SPREL && t2 == S_REG && r2 == Y) {
+			outab(0xc9);
+			if (ls_mode(&e2))
+				aerr ();
+			else
+				outrb(&e1, R_USGN);
+			break;
+		}
+
+		aerr (); // todo
+		break;
+
+	case S_0OP:
+		aerr (); // todo
+		break;
+
+	case S_0OPW:
+		aerr (); // todo
+		break;
+
+	case S_BIT:
+		aerr (); // todo
+		break;
+
+	case S_JR:
+		aerr (); // todo
+		break;
+
+	case S_JP:
+		t1 = addr(&e1);
+		r1 = rcode;
+
+		if (t1 == S_IMM) {
+			outab (op);
+			outrw(&e2, R_USGN);
+		}
+		else if (t1 == S_REG && r1 == Y) {
+			outab (op | 0x01);
+		}
+		else
+			aerr ();
+		break;
+
+	case S_RET:
+		outab (op);
+		break;
+	
 	default:
 		opcycles = OPCY_ERR;
 		err('o');

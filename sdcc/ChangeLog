@@ -3,7 +3,7 @@
 	* sdas/asf8/f8.h,
 	  sdas/asf8/f8adr.c,
 	  sdas/asf8/f8mch.c:
-	  Infrastructure for relative addressing in f8 assembler.
+	  Infrastructure for f8 assembler.
 
 2022-07-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
