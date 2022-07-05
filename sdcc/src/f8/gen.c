@@ -2013,7 +2013,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             {
               if (!y_dead)
                 push (ASMOP_Y, 0, 2);
-              emit2 ("ld", "y, #%ld", stack_offset);
+              emit2 ("ldw", "y, #%ld", stack_offset);
               emit2 ("addw", "y, sp");
               cost (3 + (labs(stack_offset) > 127), 2);
               int lsize = size - i;
@@ -2224,7 +2224,7 @@ adjustStack (int n, bool xl_free, bool y_free)
 {
   if (abs(n) > 512 && y_free)
    {
-     emit2 ("ldw", "#%d", n);
+     emit2 ("ldw", "y, #%d", n);
      emit2 ("addw", "y, sp");
      emit2 ("ldw", "sp, y");
      cost (5, 3);

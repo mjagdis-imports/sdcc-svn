@@ -407,9 +407,16 @@ opw:
 				break;
 			case S_IX:
 				if(r2 == Y)
-					outab(0x84);
+					outab(op | 0x04);
 				else
 					aerr();
+				break;
+			case S_YREL:
+				outab(op | 0x05);
+				if(ls_mode(&e2))
+					aerr();
+				else
+					outrb(&e2, R_USGN);
 				break;
 			case S_REG:
 				if(r2 == XH)
@@ -460,8 +467,25 @@ opw:
 				else
 					outrb(&e1, R_USGN);
 				break;
+			case S_ZREL:
+				outab(op | 0x03);
+				outrw(&e2, R_USGN);
+				break;
+			case S_IX:
+				if(r1== Y)
+					outab(op | 0x04);
+				else
+					aerr();
+				break;
+			case S_YREL:
+				outab(op | 0x05);
+				if(ls_mode(&e1))
+					aerr();
+				else
+					outrb(&e1, R_USGN);
+				break;
 			default:
-				aerr(); // todo
+				aerr();
 			}
 			break;
 		}
@@ -506,20 +530,42 @@ opw:
 				outab(op | 0x03);
 				outrw(&e2, R_USGN);
 				break;
+			case S_YREL:
+				outab(op | 0x04);
+				if(ls_mode(&e2))
+					aerr();
+				else
+					outrb(&e2, R_USGN);
+				break;
 			case S_IX:
 				if(r2 == Y)
-					outab(0xc5);
+					outab(op | 0x05);
 				else
 					aerr();
 				break;
 			case S_REG:
 				if(r2 == X)
-					outab(0xc6);
+					outab(op | 0x06);
 				else
 					aerr();
 				break;
 			default:
 				aerr(); // todo
+			}
+			break;
+		}
+		else if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == X) {
+			outab(0xcd);
+			break;
+		}
+		else if(t1 == S_YREL && t2 == S_REG && r2 == X) {
+			if(!ls_mode(&e2)) {
+				outab(0xce);
+				outrb(&e2, R_USGN);
+			}
+			else {
+				outab(0xcf);
+				outrw(&e2, R_USGN);
 			}
 			break;
 		}

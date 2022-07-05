@@ -75,6 +75,7 @@ struct expr *esp;
 		esp->e_mode = S_IMM;
 	} else
 	if (c == '(') {
+		int d;
 		if ((rcode = admode(REG)) != 0) {
 		    if (rcode & 0xff != Y && rcode & 0xff != Z)
 		      aerr ();
@@ -83,7 +84,17 @@ struct expr *esp;
 			if (getnb() != ')') {
 				aerr();
 			}
+		} else if((d = getnb()) == '(') {
+			rcode = admode(REG);
+			if (rcode & 0xff != Y)
+		      aerr ();
+			rcode = rcode & 0xff;
+			esp->e_mode = S_IIX;
+			if (getnb() != ')' || getnb() != ')') {
+				aerr();
+		}
 		} else { // Relative addressing
+			unget(d);
 			expr(esp, 0);
 			comma(1);
 			if ((rcode = admode(REG)) != 0) {
@@ -98,6 +109,8 @@ struct expr *esp;
 				esp->e_mode = S_SPREL;
 			else if (rcode == Z)
 				esp->e_mode = S_ZREL;
+			else if (rcode == Y)
+				esp->e_mode = S_YREL;
 			else
 				aerr();
 			addrsl(esp);

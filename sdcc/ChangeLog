@@ -1,6 +1,7 @@
 2022-07-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* sdas/asf8/f8.h,
+	  sdas/asf8/f8adr.c,
 	  sdas/asf8/f8mch.c,
 	  sdas/asf8/f8pst.c,
 	  src/f8/gen.c:
