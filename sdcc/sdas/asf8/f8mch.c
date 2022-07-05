@@ -583,6 +583,13 @@ opw:
 				else
 					outrb(&e1, R_USGN);
 				break;
+			case S_ISPREL:
+				outab(0x74);
+				if(ls_mode(&e1))
+					aerr();
+				else
+					outrb(&e1, R_USGN);
+				break;
 			default:
 				aerr(); // todo
 			}
@@ -650,9 +657,10 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if(t1 != S_REG || r1 != Y || t2 != S_REG || r2 != XL)
+		if(t1 != S_REG || t2 != S_REG || r2 != XL)
 			aerr();
 
+		altaccw(r1);
 		outab(op);
 		break;	
 

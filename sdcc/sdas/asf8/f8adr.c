@@ -81,18 +81,19 @@ struct expr *esp;
 		      aerr ();
 			rcode = rcode & 0xff;
 			esp->e_mode = S_IX;
-			if (getnb() != ')') {
+			if (getnb() != ')')
 				aerr();
-			}
 		} else if((d = getnb()) == '(') {
+			expr(esp, 0);
+			comma(1);
 			rcode = admode(REG);
-			if (rcode & 0xff != Y)
+			if (rcode & 0xff != SP)
 		      aerr ();
 			rcode = rcode & 0xff;
-			esp->e_mode = S_IIX;
-			if (getnb() != ')' || getnb() != ')') {
+			esp->e_mode = S_ISPREL;
+			addrsl(esp);
+			if (getnb() != ')' || getnb() != ')')
 				aerr();
-		}
 		} else { // Relative addressing
 			unget(d);
 			expr(esp, 0);
