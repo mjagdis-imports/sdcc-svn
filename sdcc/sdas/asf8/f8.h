@@ -80,22 +80,32 @@
 /*
  * Instruction types
  */
-#define	S_2OP		60
-#define	S_2OPSUB	61
-#define	S_1OP		62
-#define	S_2OPW		63
-#define	S_2OPWSUB	64
-#define	S_2OPWADD	65
-#define	S_1OPW		66
-#define	S_LD		67
-#define	S_LDW		68
-#define	S_0OP		69
-#define	S_0OPW		70
-#define	S_BIT		71
-#define	S_JR		72
-#define S_JP		73
-#define S_RET		74
-#define	S_TRAP		75
+enum insttype {
+S_2OP = 60,
+S_2OPSUB,
+S_1OP,
+S_1OPPUSH,
+S_2OPW,
+S_2OPWSUB,
+S_2OPWSBC,
+S_2OPWADD,
+S_2OPWADC,
+S_1OPW,
+S_1OPWPUSH,
+S_LD,
+S_LDW,
+S_0OP,
+S_0OPW,
+S_0OPWRLC,
+S_0OPWCP,
+S_0OPWDEC,
+S_0OPWSEX,
+S_BIT,
+S_JR,
+S_JP,
+S_RET,
+S_TRAP
+};
 
 struct adsym
 {
@@ -128,6 +138,8 @@ extern	VOID		valu_aerr(struct expr *e, int n);
 extern	int		ls_mode(struct expr *e);
 extern	int		setbit(int b);
 extern	int		getbit(void);
+extern	void	altacc(int reg);
+extern	void	altaccw(int reg);
 
 #else
 

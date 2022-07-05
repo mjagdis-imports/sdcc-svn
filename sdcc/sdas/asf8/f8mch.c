@@ -184,7 +184,7 @@ struct mne *mp;
 	op = (int) mp->m_valu;
 	rf = mp->m_type;
 
-	switch (rf) {
+	switch(rf) {
 	case S_2OP:
 	case S_2OPSUB:
 		t1 = addr(&e1);
@@ -193,14 +193,14 @@ struct mne *mp;
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (t1 != S_REG || r1 != XL) { // todo: alternate or swapped accu
-			aerr ();
-		}
+		if(t1 != S_REG) // todo: implement swapped operand
+			aerr();
+		altacc(r1);
 
-		switch (t2) {
+		switch(t2) {
 		case S_IMM:
-			if (rf == S_2OPSUB) // Immediate operand invalid for sub and sbc.
-				aerr ();
+			if(rf == S_2OPSUB) // Immediate operand invalid for sub and sbc.
+				aerr();
 			outab(op | 0x00);
 			outrb(&e2, R_USGN);
 			break;
@@ -210,8 +210,8 @@ struct mne *mp;
 			break;
 		case S_SPREL:
 			outab(op | 0x02);
-			if (ls_mode(&e2))
-				aerr ();
+			if(ls_mode(&e2))
+				aerr();
 			else
 				outrb(&e2, R_USGN);
 			break;
@@ -220,7 +220,7 @@ struct mne *mp;
 			outrw(&e2, R_USGN);
 			break;
 		case S_REG:
-			switch (r2) {
+			switch(r2) {
 			case ZL:
 				outab(op | 0x04);
 				break;
@@ -234,7 +234,7 @@ struct mne *mp;
 				outab(op | 0x07);
 				break;
 			default:
-				aerr ();
+				aerr();
 			}
 			break;
 		default:
@@ -243,58 +243,79 @@ struct mne *mp;
 		break;
 
 	case S_1OP:
+	case S_1OPPUSH:
 		t1 = addr(&e1);
 		r1 = rcode;	
 
-		switch (t1) {
+		if(rf == S_1OPPUSH && t1 == S_IMM) { // push #i
+			outab(0x90);
+			outrb(&e1, R_USGN);
+			break;
+		}
+
+		switch(t1) {
 		case S_DIR:
 			outab(op | 0x00);
-			outrw(&e1, R_USGN);
+			outrb(&e1, R_USGN);
 			break;
 		case S_SPREL:
 			outab(op | 0x01);
-			if (ls_mode(&e1))
-				aerr ();
+			if(ls_mode(&e1))
+				aerr();
 			else
 				outrb(&e1, R_USGN);
 			break;
 		case S_REG:
-			if (r1 == XL) {
-				outab(op | 0x02);
-				break;
-			} else
-			if (r1 == ZH) {
+			if(r1 == ZH) {
 				outab(op | 0x03);
 				break;
-			} 
+			}		
+			altacc(r1);
+			outab(op | 0x02);
+			break;
+
 		default:
-			aerr ();
+			aerr();
 		}
 		break;
 
 	case S_2OPW:
 	case S_2OPWSUB:
+	case S_2OPWSBC:
 	case S_2OPWADD:
+	case S_2OPWADC:
 		t1 = addr(&e1);
 		r1 = rcode;
-		comma(1);
+		if(!comma(rf != S_2OPWSBC && rf != S_2OPWADC)) { // Handle 1-op variants of sbcw and adcw
+			if(rf == S_2OPWSBC)
+				op = 0xac;
+			else if(S_2OPWADC)
+				op = 0xa8;
+			else
+				aerr();
+			goto opw;
+		}
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (rf == S_2OPWADD && r1 == SP && !ls_mode(&e1)) { // add sp, #d
+		if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && !ls_mode(&e1)) { // addw sp, #d
 			outab(0xea);
 			outab(e2.e_addr);
 			break;
 		}
-
-		if (t1 != S_REG || r1 != Y) { // todo: alternate or swapped accu
-			aerr ();
+		else if(rf == S_2OPWADD && t1 == S_REG && r1 == Y && t2 == S_REG && r2 == SP) { // addw y, sp
+			outab(0xeb);
+			break;
 		}
 
-		switch (t2) {
+		if(t1 != S_REG) // todo: implement swapped operand
+			aerr();
+		altaccw(r1);
+
+		switch(t2) {
 		case S_IMM:
-			if (rf == S_2OPWSUB) // Immediate operand invalid for subw and sbcw.
-				aerr ();
+			if(rf == S_2OPWSUB || rf == S_2OPWSBC) // Immediate operand invalid for subw and sbcw.
+				aerr();
 			outab(op | 0x00);
 			outrw(&e2, R_USGN);
 			break;
@@ -304,34 +325,41 @@ struct mne *mp;
 			break;
 		case S_SPREL:
 			outab(op | 0x02);
-			if (ls_mode(&e1))
-				aerr ();
+			if(ls_mode(&e1))
+				aerr();
 			else
 				outrb(&e2, R_USGN);
 			break;
 		case S_REG:
-			if (r2 == X) {
+			if(r2 == X) {
 				outab(op | 0x03);
 				break;
 			}
 		default:
-			aerr ();
+			aerr();
 		}
 		break;
 
 	case S_1OPW:
+	case S_1OPWPUSH:
 		t1 = addr(&e1);
 		r1 = rcode;	
+opw:
+		if(rf == S_1OPWPUSH && t1 == S_IMM) { // pushw #ii
+			outab(0xe8);
+			outrw(&e1, R_USGN);
+			break;
+		}
 
-		switch (t1) {
+		switch(t1) {
 		case S_DIR:
 			outab(op | 0x00);
 			outrw(&e1, R_USGN);
 			break;
 		case S_SPREL:
 			outab(op | 0x01);
-			if (ls_mode(&e1))
-				aerr ();
+			if(ls_mode(&e1))
+				aerr();
 			else
 				outrb(&e1, R_USGN);
 			break;
@@ -340,12 +368,11 @@ struct mne *mp;
 			outrw(&e1, R_USGN);
 			break;
 		case S_REG:
-			if (r1 == Y) {
-				outab(op | 0x03);
-				break;
-			}
+			altaccw(r1);
+			outab(op | 0x03);
+			break;
 		default:
-			aerr ();
+			aerr();
 		}
 		break;
 
@@ -356,16 +383,21 @@ struct mne *mp;
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (t1 == S_REG && r1 == XL) {
-			switch (t2) {
+		if(t1 == S_REG && !(t2 == S_REG && r2 == XL)) {
+			altacc(r1);
+			switch(t2) {
+			case S_IMM:
+				outab(op | 0x00);
+				outrb(&e2, R_USGN);
+				break;
 			case S_DIR:
-				outab (op | 0x01);
+				outab(op | 0x01);
 				outrw(&e2, R_USGN);
 				break;
 			case S_SPREL:
 				outab(op | 0x02);
-				if (ls_mode(&e2))
-					aerr ();
+				if(ls_mode(&e2))
+					aerr();
 				else
 					outrb(&e2, R_USGN);
 				break;
@@ -374,18 +406,67 @@ struct mne *mp;
 				outrw(&e2, R_USGN);
 				break;
 			case S_IX:
-				if (r2 == Y)
+				if(r2 == Y)
 					outab(0x84);
 				else
-					aerr ();
+					aerr();
+				break;
+			case S_REG:
+				if(r2 == XH)
+					outab(0x86);
+				else if(r2 == YL)
+					outab(0x87);
+				else if(r2 == YH)
+					outab(0x88);
+				else if(r2 == ZL)
+					outab(0x89);
+				else if(r2 == ZH)
+					outab(0x8a);
+				else
+					aerr();
 				break;
 			default:
-				aerr (); // todo
+				aerr(); // todo
+			}
+			break;
+		}
+		else if(t1 == S_REG && t2 == S_REG && r2 == XL) { // Use swapop prefix
+			outab(0x9c);
+			if(r1 == XH)
+				outab(0x86);
+			else if(r1 == YL)
+				outab(0x87);
+			else if(r1 == YH)
+				outab(0x88);
+			else if(r1 == ZL)
+				outab(0x89);
+			else if(r1 == ZH)
+				outab(0x8a);
+			else
+				aerr();
+			break;
+		}
+		else if(t2 == S_REG) {
+			altacc(r2);
+			switch(t1) {
+			case S_DIR:
+				outab(op | 0x0b);
+				outrw(&e1, R_USGN);
+				break;
+			case S_SPREL:
+				outab(op | 0x0c);
+				if(ls_mode(&e1))
+					aerr();
+				else
+					outrb(&e1, R_USGN);
+				break;
+			default:
+				aerr(); // todo
 			}
 			break;
 		}
 
-		aerr (); // todo
+		aerr(); // todo
 		break;
 
 	case S_LDW:
@@ -395,16 +476,29 @@ struct mne *mp;
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (t1 == S_REG && r1 == Y) {
-			switch (t2) {
+		if(t1 == S_REG && r1 == X && t2 == S_REG && r2 == Y) {
+			outab(op | 0x0b);
+			break;
+		}
+		else if(t1 == S_REG && r1 == Z && t2 == S_REG && r2 == Y) {
+			outab(op | 0x0c);
+			break;
+		}
+		else if(t1 == S_REG) {
+			altaccw(r1);
+			switch(t2) {
+			case S_IMM:
+				outab(op | 0x00);
+				outrw(&e2, R_USGN);
+				break;
 			case S_DIR:
-				outab (op | 0x01);
+				outab(op | 0x01);
 				outrw(&e2, R_USGN);
 				break;
 			case S_SPREL:
 				outab(op | 0x02);
-				if (ls_mode(&e2))
-					aerr ();
+				if(ls_mode(&e2))
+					aerr();
 				else
 					outrb(&e2, R_USGN);
 				break;
@@ -413,60 +507,146 @@ struct mne *mp;
 				outrw(&e2, R_USGN);
 				break;
 			case S_IX:
-				if (r2 == Y)
+				if(r2 == Y)
 					outab(0xc5);
 				else
-					aerr ();
+					aerr();
+				break;
+			case S_REG:
+				if(r2 == X)
+					outab(0xc6);
+				else
+					aerr();
+				break;
 			default:
-				aerr (); // todo
+				aerr(); // todo
 			}
 			break;
 		}
-		else if (t1 == S_SPREL && t2 == S_REG && r2 == Y) {
-			outab(0xc9);
-			if (ls_mode(&e2))
-				aerr ();
+		else if(t2 == S_REG) {
+			altaccw(r2);
+			switch(t1) {
+			case S_DIR:
+				outab(op | 0x0b);
+				outrw(&e1, R_USGN);
+				break;
+			case S_SPREL:
+				outab(op | 0x0c);
+				if(ls_mode(&e1))
+					aerr();
+				else
+					outrb(&e1, R_USGN);
+				break;
+			default:
+				aerr(); // todo
+			}
+			break;
+		}
+
+		aerr(); // todo
+		break;
+
+	case S_0OP:
+		t1 = addr(&e1);
+		r1 = rcode;
+
+		if(t1 == S_REG) {
+			altacc(r1);
+			outab(op);
+		}
+		else
+			aerr();
+
+		break;
+
+	case S_0OPW:
+	case S_0OPWRLC:
+	case S_0OPWDEC:
+		t1 = addr(&e1);
+		r1 = rcode;
+
+		if(t1 == S_REG && rf != S_0OPWDEC) {
+			altaccw(r1);
+			outab(op);
+		}
+		else if((rf == S_0OPWRLC || rf == S_0OPWDEC) && t1 == S_SPREL) {
+			outab(op + 0x04);
+			if(ls_mode(&e1))
+				aerr();
 			else
 				outrb(&e1, R_USGN);
 			break;
 		}
-
-		aerr (); // todo
+		else
+			aerr();
 		break;
 
-	case S_0OP:
-		aerr (); // todo
-		break;
+	case S_0OPWCP:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
 
-	case S_0OPW:
-		aerr (); // todo
+		if(t1 == S_REG && t2 == S_IMM) {
+			altaccw(r1);
+			outab(op);
+			outrw(&e1, R_USGN);
+		}
+		else
+			aerr();
 		break;
+		
+	case S_0OPWSEX:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+
+		if(t1 != S_REG || r1 != Y || t2 != S_REG || r2 != XL)
+			aerr();
+
+		outab(op);
+		break;	
 
 	case S_BIT:
-		aerr (); // todo
+		aerr(); // todo
 		break;
 
 	case S_JR:
-		aerr (); // todo
+		expr(&e1, 0);
+		outab(op);
+		if(mchpcr(&e1)) {
+			int v1 = (int)(e1.e_addr - dot.s_addr - 1);
+			if((v1 < -128) || (v1 > 127))
+				aerr();
+			outab(v1);
+		} else {
+			outrb(&e1, R_PCR);
+		}
+		if(e1.e_mode != S_USER) {
+			rerr();
+		}
 		break;
 
 	case S_JP:
 		t1 = addr(&e1);
 		r1 = rcode;
 
-		if (t1 == S_IMM) {
-			outab (op);
-			outrw(&e2, R_USGN);
-		}
-		else if (t1 == S_REG && r1 == Y) {
-			outab (op | 0x01);
+		if(t1 == S_REG && r1 == Y)
+			outab(op | 0x01);
+		else if(t1 == S_IMM) {
+			outab(op);
+			outrw(&e1, R_USGN);
 		}
 		else
-			aerr ();
+			aerr();
+
 		break;
 
 	case S_RET:
-		outab (op);
+		outab(op);
 		break;
 	
 	default:
@@ -646,5 +826,34 @@ getbit()
 		++bp;
 	}
 	return (f);
+}
+
+/* Emit prefix byte for alternative accumulator */
+extern
+void altacc(int reg)
+{
+	if(reg != XL) {
+		if(reg == XH)
+			outab(0x9d);
+		else if(reg == YL)
+			outab(0x9e);
+		else if(reg == ZL)
+			outab(0x9f);
+		else
+			aerr();
+	}
+}
+
+extern
+void altaccw(int reg)
+{
+	if(reg != Y) {
+		if(reg == X)
+			outab(0x9e);
+		else if(reg == Z)
+			outab(0x9f);
+		else
+			aerr();
+	}
 }
 

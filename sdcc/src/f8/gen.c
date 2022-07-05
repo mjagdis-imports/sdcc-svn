@@ -213,7 +213,7 @@ static void
 emitJP(const symbol *target, float probability)
 {
   if (!regalloc_dry_run)
-     emit2 ("jp", "!tlabel", labelKey2num (target->key));
+     emit2 ("jp", "#!tlabel", labelKey2num (target->key));
   cost (3, probability);
 }
 
@@ -2848,9 +2848,9 @@ genCall (const iCode *ic)
       adjustStack (prestackadjust, false, false);
 
       if (IS_LITERAL (etype))
-        emit2 (jump ? "jp" : "call", "0x%04X", ulFromVal (OP_VALUE (left)));
+        emit2 (jump ? "jp" : "call", "#0x%04X", ulFromVal (OP_VALUE (left)));
       else
-        emit2 (jump ? "jp" : "call", "%s",
+        emit2 (jump ? "jp" : "call", "#%s",
           (OP_SYMBOL (left)->rname[0] ? OP_SYMBOL (left)->rname : OP_SYMBOL (left)->name));
       cost (3, 1);
     }
@@ -3493,7 +3493,7 @@ genCmp (const iCode *ic, iCode *ifx)
         emit3_o (A_TSTW, left->aop, size - 2, 0, 0);
       symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
       if (!regalloc_dry_run)
-        emit2 (IC_TRUE (ifx) ? "jrp" : "jrn", "!tlabel", labelKey2num (tlbl->key));
+        emit2 (IC_TRUE (ifx) ? "jrnn" : "jrn", "!tlabel", labelKey2num (tlbl->key));
       cost (2, 1);
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
@@ -3536,7 +3536,7 @@ genCmp (const iCode *ic, iCode *ifx)
           if (!sign)
             emit2 (IC_TRUE (ifx) ? "jrgt" : "jrle", "!tlabel", labelKey2num (tlbl->key));
           else
-            emit2 (IC_TRUE (ifx) ? "jrsle" : "jsge", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrsle" : "jrsge", "!tlabel", labelKey2num (tlbl->key));
         }
       cost (2, 1);
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
@@ -3644,7 +3644,7 @@ genCmp (const iCode *ic, iCode *ifx)
           if (!sign)
             emit2 (IC_TRUE (ifx) ? "jrnc" : "jrc", "!tlabel", labelKey2num (tlbl->key));
           else
-            emit2 (IC_TRUE (ifx) ? "jrsgt" : "jslt", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrsgt" : "jrslt", "!tlabel", labelKey2num (tlbl->key));
         }
       cost (2, 1);
       emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
@@ -3737,7 +3737,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         {
           emit3 (A_CLRW, ASMOP_Y, 0);
           if (tlbl)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl->key));
           emit3 (A_INCW, ASMOP_Y, 0);
           emitLabel (tlbl);
         }
@@ -3750,7 +3750,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         {
           emit3_o (A_TSTW, left->aop, i, 0, 0);
           if (tlbl_NE)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
       else if (i + 1 < size && aopIsAcc16 (left->aop, i) &&
@@ -3758,7 +3758,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
         {
           emit3_o (A_CPW, left->aop, i, right->aop, i);
           if (tlbl_NE)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
       else if (i + 1 < size && aopIsOp16_2 (right->aop, i) && regDead (Y_IDX, ic))
@@ -3766,7 +3766,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
           genMove_o (ASMOP_Y, 0, left->aop, i, 2, false, false, true, false);
           emit3sub_o (A_SUBW, ASMOP_Y, 0, right->aop, i);
           if (tlbl_NE)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
       else if (i + 1 < size && aopIsOp16_2 (left->aop, i) && regDead (Y_IDX, ic))
@@ -3774,7 +3774,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
           genMove_o (ASMOP_Y, 0, right->aop, i, 2, false, false, true, false);
           emit3sub_o (A_SUBW, ASMOP_Y, 0, left->aop, i);
           if (tlbl_NE)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
       else if (i + 1 < size && aopInReg (left->aop, i, Y_IDX) && aopIsOp16_2 (right->aop, i))
@@ -3783,7 +3783,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
           emit3sub_o (A_SUBW, ASMOP_Y, 0, right->aop, i);
           pop (ASMOP_Y, 0, 2);
           if (tlbl_NE)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
       else if (i + 1 < size && aopInReg (right->aop, i, Y_IDX) && aopIsOp16_2 (left->aop, i))
@@ -3792,7 +3792,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
           emit3sub_o (A_SUBW, ASMOP_Y, 0, left->aop, i);
           pop (ASMOP_Y, 0, 2);
           if (tlbl_NE)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
       else
@@ -3809,7 +3809,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               emit3_o (A_CP, ASMOP_XL, 0, right->aop, i);
             }
           if (tlbl_NE)
-            emit2 ("jrne", "!tlabel", labelKey2num (tlbl_NE->key));
+            emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i++;
         }
     }
@@ -4034,9 +4034,9 @@ genAnd (const iCode *ic, iCode *ifx)
           if (!regalloc_dry_run)
             {
               if (byteOfVal (right->aop->aopu.aop_lit, i) == 0x80)
-                emit2 (IC_TRUE (ifx) ? "jrpl" : "jrmi", "!tlabel", labelKey2num (tlbl->key));
+                emit2 (IC_TRUE (ifx) ? "jrnn" : "jrn", "!tlabel", labelKey2num (tlbl->key));
               else // 0xff
-                emit2 (IC_TRUE (ifx) ? "jreq" : "jrne", "!tlabel", labelKey2num (tlbl->key));
+                emit2 (IC_TRUE (ifx) ? "jrz" : "jrnz", "!tlabel", labelKey2num (tlbl->key));
             }
           cost (2, 1);
         }
@@ -4045,7 +4045,7 @@ genAnd (const iCode *ic, iCode *ifx)
         {
           emit3 (A_TSTW, ASMOP_Y, 0);
           if (!regalloc_dry_run)
-            emit2 (IC_TRUE (ifx) ? "jrpl" : "jrmi", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrnn" : "jrn", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 1);
         }*/
       else // and in xl.
@@ -4057,7 +4057,7 @@ genAnd (const iCode *ic, iCode *ifx)
           if (!regDead (XL_IDX, ic))
             pop (ASMOP_XL, 0, 1);
           if (!regalloc_dry_run)
-            emit2 (IC_TRUE (ifx) ? "jreq" : "jrne", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrz" : "jrnz", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 1);
         }
 
@@ -4496,7 +4496,7 @@ genLeftShift (const iCode *ic)
 
       emit3 (A_TST, ASMOP_XL, 0);
       if (tlbl2)
-        emit2 ("jreq", "!tlabel", labelKey2num (tlbl2->key));
+        emit2 ("jrz", "!tlabel", labelKey2num (tlbl2->key));
       cost (2, 1);
         
       emitLabel (tlbl1);
@@ -4508,7 +4508,7 @@ genLeftShift (const iCode *ic)
 
       emit3 (A_DEC, ASMOP_XL, 0);
       if (tlbl1)
-        emit2 ("jrneq", "!tlabel", labelKey2num (tlbl1->key));
+        emit2 ("jrnz", "!tlabel", labelKey2num (tlbl1->key));
       cost (2, 1);
       emitLabel (tlbl2);
     }
@@ -4609,7 +4609,7 @@ genRightShift (const iCode *ic)
 
       emit3 (A_TST, ASMOP_XL, 0);
       if (tlbl2)
-        emit2 ("jreq", "!tlabel", labelKey2num (tlbl2->key));
+        emit2 ("jrz", "!tlabel", labelKey2num (tlbl2->key));
       cost (2, 1);
         
       emitLabel (tlbl1);
@@ -4621,7 +4621,7 @@ genRightShift (const iCode *ic)
 
       emit3 (A_DEC, ASMOP_XL, 0);
       if (tlbl1)
-        emit2 ("jrneq", "!tlabel", labelKey2num (tlbl1->key));
+        emit2 ("jrz", "!tlabel", labelKey2num (tlbl1->key));
       cost (2, 1);
       emitLabel (tlbl2);
       if (pushed_xl)
@@ -4810,7 +4810,7 @@ genPointerGet (const iCode *ic)
           emit2 ("and", "xh, #0x%02x", 0x80 >> (8 - blen));
           cost (4, 2);
           if (tlbl)
-            emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
+            emit2 ("jrz", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 0);
           emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
           cost (2, 1);
