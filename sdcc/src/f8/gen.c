@@ -3097,7 +3097,7 @@ genReturn (const iCode *ic)
       for(int i = 0; i < size; i++)
         if (aopInReg (left->aop, i, XL_IDX))
           {
-            emit2 ("ld", i ? "(%d, y), xl" : "ld (y), xl", i);
+            emit2 ("ld", i ? "(%d, y), xl" : "(y), xl", i);
             cost (1 + (bool)i, 1);
             break;
           }
@@ -3115,7 +3115,7 @@ genReturn (const iCode *ic)
           else if (!aopInReg (left->aop, i, XL_IDX))
             {
               genMove (ASMOP_XL, left->aop, true, false, false, false);
-              emit2 ("ld", i ? "(%d, y), xl" : "ld (y), xl", i);
+              emit2 ("ld", i ? "(%d, y), xl" : "(y), xl", i);
               cost (1 + (bool)i, 1);
               i++;
             }

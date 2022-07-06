@@ -579,15 +579,19 @@ opw:
 			altaccw(r2);
 			switch(t1) {
 			case S_DIR:
-				outab(op | 0x0b);
+				outab(op | 0x08);
 				outrw(&e1, R_USGN);
 				break;
 			case S_SPREL:
-				outab(op | 0x0c);
+				outab(op | 0x09);
 				if(ls_mode(&e1))
 					aerr();
 				else
 					outrb(&e1, R_USGN);
+				break;
+			case S_ZREL:
+				outab(op | 0x0a);
+				outrw(&e1, R_USGN);
 				break;
 			case S_ISPREL:
 				outab(0x74);
@@ -635,11 +639,18 @@ opw:
 		break;
 
 	case S_0OPW:
+	case S_0OPWSLL:
 	case S_0OPWRLC:
 	case S_0OPWDEC:
 		t1 = addr(&e1);
 		r1 = rcode;
 
+		if(rf == S_0OPWSLL && comma(0)) {
+			t2 = addr(&e2);
+			r2 = rcode;
+			goto sex;
+		}
+		
 		if(t1 == S_REG && rf != S_0OPWDEC) {
 			altaccw(r1);
 			outab(op);
@@ -678,7 +689,7 @@ opw:
 		comma(1);
 		t2 = addr(&e2);
 		r2 = rcode;
-
+sex:
 		if(t1 != S_REG || t2 != S_REG || r2 != XL)
 			aerr();
 
@@ -687,7 +698,22 @@ opw:
 		break;	
 
 	case S_BIT:
-		aerr(); // todo
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+		comma(1);
+		t3 = addr(&e3);
+		int v3 = (int) e3.e_addr;
+
+		if(t1 == S_REG && t2 == S_DIR && t3 == S_IMM && (v3 <= 7)) {
+			altacc(r1);
+			outab(op | v3);
+			outrw(&e2, R_USGN);
+		}
+		else
+			aerr();
 		break;
 
 	case S_JR:

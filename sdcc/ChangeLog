@@ -1,5 +1,12 @@
 2022-07-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* sdas/asf8/f8mch.c,
+	  sdas/asf8/f8pst.c,
+	  src/f8/gen.c:
+	  Improve f8 assembler instruction support.
+
+2022-07-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/f8/gen.c:
 	  Fix f8 codegen for large return value.
 	* src/SDCCglue.c,
