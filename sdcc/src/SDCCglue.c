@@ -2601,6 +2601,8 @@ glue (void)
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
         fprintf (asmFile, "\tjp\t__sdcc_program_startup\n");
+      else if (TARGET_IS_F8)
+        fprintf (asmFile, "\tjp\t#__sdcc_program_startup\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t__sdcc_program_startup\n");
       else
@@ -2624,6 +2626,8 @@ glue (void)
       /* put in jump or call to main */
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t_main\n" : "\tjp\t_main\n");
+      else if(TARGET_IS_F8)
+        fprintf (asmFile, "\tjp\t#_main\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t_main\n");
       else

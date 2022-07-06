@@ -2,6 +2,16 @@
 
 	* src/f8/gen.c:
 	  Fix f8 codegen for large return value.
+	* src/SDCCglue.c,
+	  src/SDCCpeeph.c,
+	  src/f8/main.c:
+	  Fix use of f8 vs. mcs51 jumps.
+	* support/regression/ports/f8/spec.mk:
+	  Update f8 regression test infrastructure.
+	* sdas/asf8/f8.h,
+	  sdas/asf8/f8mch.c,
+	  sdas/asf8/f8pst.c:
+	  Support f8 assembler instructions rot r, #i and ldw sp, rr.
 
 2022-07-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

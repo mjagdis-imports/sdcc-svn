@@ -301,7 +301,7 @@ PORT f8_port =
   NULL,                         /* Processor name */
   {
     glue,
-    TRUE,                       /* We want stm8_genIVT to be triggered */
+    true,                       /* We want f8_genIVT to be triggered */
     MODEL_MEDIUM | MODEL_LARGE,
     MODEL_MEDIUM,
     &get_model,                 /* model string used as library destination */
