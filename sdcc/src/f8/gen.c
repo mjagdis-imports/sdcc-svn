@@ -3104,11 +3104,11 @@ genReturn (const iCode *ic)
 
       for(int i = 0; i < size;)
         {
-          if (i + 1 < size && aopInReg (left->aop, i, Z_IDX) ||
-            i + 1 < size && (aopOnStack (left->aop, i, 2) || left->aop->type == AOP_DIR) && regDead (Z_IDX, ic) && left->aop->regs[ZL_IDX] <= i + 1 && left->aop->regs[ZH_IDX] <= i + 1)
+          if (i + 1 < size && aopInReg (left->aop, i, X_IDX) ||
+            i + 1 < size && (aopOnStack (left->aop, i, 2) || left->aop->type == AOP_DIR) && regDead (X_IDX, ic) && left->aop->regs[XL_IDX] <= i + 1 && left->aop->regs[XH_IDX] <= i + 1)
             {
-              genMove_o (ASMOP_Z, 0, left->aop, i, 2, true, false, false, true);
-              emit2 ("ldw", "(%d, y), z", i);
+              genMove_o (ASMOP_X, 0, left->aop, i, 2, true, false, false, true);
+              emit2 ("ldw", "(%d, y), x", i);
               cost (3, 1);
               i += 2;
             }
