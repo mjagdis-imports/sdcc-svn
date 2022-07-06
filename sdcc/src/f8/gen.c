@@ -2004,7 +2004,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 
           if (!y_dead && aopIsAcc16 (result, roffset + i) && !(soffset + i) && size >= 2)
             {
-              emit2 ("ld", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
+              emit2 ("ldw", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
               emit2 ("addw", "%s, sp", aopGet2 (result, roffset + i));
               cost (5 + (labs(stack_offset) > 127), 2);
               i += 2;
@@ -4812,7 +4812,7 @@ genPointerGet (const iCode *ic)
           if (tlbl)
             emit2 ("jrz", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 0);
-          emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
+          emit2 ("or", "xl, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
           cost (2, 1);
           emitLabel (tlbl);
         }
