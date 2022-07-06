@@ -296,7 +296,7 @@ struct	mne	mne[] = {
     {	NULL,	"sra",		S_0OP,		0,	0x96	},
     {	NULL,	"daa",		S_0OP,		0,	0x97	},
     {	NULL,	"pop",		S_0OP,		0,	0x99	},
-    {	NULL,	"xch",		S_0OP,		0,	0x90	},
+    {	NULL,	"xch",		S_0OPXCH,	0,	0x90	},
     {	NULL,	"msk",		S_0OP,		0,	0xb8	},
     {	NULL,	"cax",		S_0OP,		0,	0x9b	},
     {	NULL,	"mad",		S_0OP,		0,	0xbc	},
@@ -355,6 +355,9 @@ struct	mne	mne[] = {
 	{	NULL,	"ret",		S_RET,		0,	0xba	},
 	{	NULL,	"reti",		S_RET,		0,	0xbb	},
 
+	/* nop */
+    {	NULL,	"nop",		S_TRAP,		0,	0x08	},
+    
     /* trap */
     {	NULL,	"trap",		S_TRAP,	S_EOL,	0x00	}
 

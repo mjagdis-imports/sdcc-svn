@@ -193,7 +193,19 @@ struct mne *mp;
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if(t1 != S_REG) // todo: implement swapped operand
+		if(t2 == S_REG && r2 == XL) { // swapped operand.
+			int tr = r1;
+			r1 = r2;
+			r2 = tr;
+			int tt = t1;
+			t1 = t2;
+			t2 = tt;
+			struct expr te = e1;
+			e1 = e2;
+			e2 = te;
+			outab(0x94);
+		}
+		else if(t1 != S_REG)
 			aerr();
 		altacc(r1);
 
@@ -309,7 +321,19 @@ struct mne *mp;
 			break;
 		}
 
-		if(t1 != S_REG) // todo: implement swapped operand
+		if(t2 == S_REG && r2 == Y) { // swapped operand.
+			int tr = r1;
+			r1 = r2;
+			r2 = tr;
+			int tt = t1;
+			t1 = t2;
+			t2 = tt;
+			struct expr te = e1;
+			e1 = e2;
+			e2 = te;
+			outab(0x94);
+		}
+		else if(t1 != S_REG)
 			aerr();
 		altaccw(r1);
 
@@ -622,6 +646,49 @@ opw:
 
 		break;
 
+	case S_0OPXCH:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+
+		if (t1 != S_REG)
+			aerr();
+		switch(t2) {
+		case S_SPREL:
+			altacc(r1);
+			outab(0x91);
+			if(ls_mode(&e1))
+				aerr();
+			else
+				outrb(&e1, R_USGN);
+			break;
+		case S_IX:
+			altacc(r1);
+			if (r2 != Y)
+				aerr();
+			outab(0x92);
+			break;
+		case S_REG:
+			if (r1 == YL && r2 == YH)
+				outab(0x93);
+			else if (r1 == XL && r2 == XH) {
+				outab(0x9e);
+				outab(0x93);
+			}
+			else if (r1 == ZL && r2 == ZH) {
+				outab(0x9f);
+				outab(0x93);
+			}
+			else
+				aerr();
+			break;
+		default:
+			aerr();
+		}
+		break;
+
 	case S_0OPROT:
 		t1 = addr(&e1);
 		r1 = rcode;
@@ -748,9 +815,11 @@ sex:
 		break;
 
 	case S_RET:
+	case S_NOP:
+	case S_TRAP:
 		outab(op);
 		break;
-	
+
 	default:
 		opcycles = OPCY_ERR;
 		err('o');

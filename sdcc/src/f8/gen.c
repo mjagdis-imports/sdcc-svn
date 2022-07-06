@@ -1125,7 +1125,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
             emit2 ("addw", "%s, #0x%02x", aopGet2 (op0, offset0), (~litword + 1) & 0xffff);
           }
         else
-          emit2 ("addw", "%s, #~%s+1", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
+          emit2 ("addw", "%s, ~%s+1", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
         cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
         break;
       case A_SBCW:
@@ -1135,7 +1135,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
             emit2 ("adcw", "%s, #0x%02x", aopGet2 (op0, offset0), ~litword & 0xffff);
           }
         else
-          emit2 ("adcw", "%s, #~%s+1", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
+          emit2 ("adcw", "%s, ~%s+1", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
         cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
         break;
       default:
