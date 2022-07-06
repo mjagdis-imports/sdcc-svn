@@ -4714,10 +4714,18 @@ genPointerGet (const iCode *ic)
 
   if (aopInReg (left->aop, 0, Z_IDX) && !bit_field && size <= 2 && (aopInReg (result->aop, size - 2, Z_IDX) || result->aop->regs[ZL_IDX] < 0 && result->aop->regs[ZH_IDX] < 0))
     use_z = true;
-  else if (aopInReg (left->aop, 0, Y_IDX))
+  else if (aopInReg (left->aop, 0, Y_IDX) && (unsigned)offset + size - 1 <= 255)
     ;
   else if (y_dead && (size >= 2 && aopInReg (result->aop, size - 2, Y_IDX) || result->aop->regs[YL_IDX] < 0 && result->aop->regs[YH_IDX] < 0))
-    genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
+    {
+      if ((unsigned)offset + size - 1 >= 255)
+        {
+          emit2 ("addw", "y, %d", offset);
+          cost (3, 1);
+          offset = 0;
+        }
+      genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
+    }
   else
     UNIMPLEMENTED;
 
@@ -4917,7 +4925,7 @@ genPointerSet (const iCode *ic)
       unsigned int soffset = left->aop->aopu.bytes[0].byteu.stk + G.stack.pushed;
       bool use_y = regDead (Y_IDX, ic);
       genMove (use_y ? ASMOP_Y : ASMOP_X, right->aop, true, true, regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-      emit2 ("ldw", "((%u, sp)), %s", soffset, use_y ? "y" : "s");
+      emit2 ("ldw", "((%u, sp)), %s", soffset, use_y ? "y" : "x");
       cost (2 + !use_y, 1);
       goto release;
     }
