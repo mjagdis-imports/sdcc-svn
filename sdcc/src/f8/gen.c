@@ -1115,7 +1115,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
         if (op1->type == AOP_LIT)
           emit2 ("adc", "%s, #0x%02x", aopGet (op0, offset0), ~byteOfVal (op1->aopu.aop_lit, offset1) & 0xff);
         else
-          emit2 ("adc", "%s, ~#%s", aopGet (op0, offset0), aopGet (op1, offset1));
+          emit2 ("adc", "%s, #~%s", aopGet (op0, offset0), aopGet (op1, offset1));
         cost (2 + !aopInReg (op0, offset0, XL_IDX), 1 + !aopInReg (op0, offset0, XL_IDX));
         break;
       case A_SUBW:
@@ -1125,7 +1125,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
             emit2 ("addw", "%s, #0x%02x", aopGet2 (op0, offset0), (~litword + 1) & 0xffff);
           }
         else
-          emit2 ("addw", "%s, ~%s+1", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
+          emit2 ("addw", "%s, #~((%s+%d) >> %d)+1", aopGet2 (op0, offset0), op1->aopu.immd, op1->aopu.immd_off, offset1 * 8);
         cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
         break;
       case A_SBCW:
@@ -1135,7 +1135,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
             emit2 ("adcw", "%s, #0x%02x", aopGet2 (op0, offset0), ~litword & 0xffff);
           }
         else
-          emit2 ("adcw", "%s, ~%s+1", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
+          emit2 ("adcw", "%s, #~((%s+%d) >> %d)+1", aopGet2 (op0, offset0), op1->aopu.immd, op1->aopu.immd_off, offset1 * 8);
         cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
         break;
       default:
@@ -1144,7 +1144,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
   else
     emit3_o (inst, op0, offset0, op1, offset1);
 }
-   
+
 static void
 emit3sub (enum asminst inst, asmop *op0, asmop *op1)
 {
@@ -4720,7 +4720,7 @@ genPointerGet (const iCode *ic)
     {
       if ((unsigned)offset + size - 1 >= 255)
         {
-          emit2 ("addw", "y, %d", offset);
+          emit2 ("addw", "y, #%d", offset);
           cost (3, 1);
           offset = 0;
         }
