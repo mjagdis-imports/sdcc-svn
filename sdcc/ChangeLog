@@ -1,3 +1,39 @@
+2022-07-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c,
+	  support/regression/tests/bug-3461.c:
+	  Fix third and last part of bug #3461.
+
+2022-07-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/ds390/gen.c,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c,
+	  src/mos6502/gen.c,
+	  support/regression/tests/bug-3463.c:
+	  Fix bug #3463.
+
+2022-07-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/bug-3461.c:
+	  Fix bug #3461.
+
+2022-07-18 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-3410.c.in:
+	  Disable a test for mos6502, since that port it still lacks _BitInt.
+	* support/regression/tests/bug-3461.c:
+	  New (currently disabled) test for bug #3461.
+	* device/lib/ds400/ds400rom.c:
+	  Remove use of #pragma sdcc_hash.
+	* src/stm8/gen.c,
+	  src/pdk/gen.c,
+	  src/z80/gen.c:
+	  Partial fix for bug #3461.
+
 2022-07-16 Felix Salfelder <felix AT salfelder.org>
 
 	* src/SDCC.{lex,y}, support/cpp/libcpp/{init,macro}.c:
