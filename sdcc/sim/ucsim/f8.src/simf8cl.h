@@ -1,7 +1,7 @@
 /*
- * Simulator of microcontrollers (glob.h)
+ * Simulator of microcontrollers (simf8cl.h)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2022 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -25,16 +25,21 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#ifndef GLOB_HEADER
-#define GLOB_HEADER
+#ifndef SIMF8CL_HEADER
+#define SIMF8CL_HEADER
 
-#include "stypes.h"
+#include "simcl.h"
 
 
-extern struct dis_entry  disass_51[];
-extern u8_t ptab51[256];
+class cl_simf8: public cl_sim
+{
+public:
+  cl_simf8(class cl_app *the_app);
+
+  virtual class cl_uc *mk_controller(void);
+};
 
 
 #endif
 
-/* End of s51.src/glob.h */
+/* End of f8.src/simf8cl.h */

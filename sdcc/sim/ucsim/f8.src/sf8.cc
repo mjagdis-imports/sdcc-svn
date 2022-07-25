@@ -1,7 +1,7 @@
 /*
- * Simulator of microcontrollers (glob.h)
+ * Simulator of microcontrollers (sf8.cc)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2022 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -25,16 +25,34 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#ifndef GLOB_HEADER
-#define GLOB_HEADER
+// prj
+#include "globals.h"
+#include "utils.h"
 
-#include "stypes.h"
+// local
+#include "f8cl.h"
+#include "simf8cl.h"
+#include "glob.h"
 
+int
+main(int argc, char *argv[])
+{
+  class cl_sim *sim;
 
-extern struct dis_entry  disass_51[];
-extern u8_t ptab51[256];
+  app_start_at= dnow();
+  cpus= cpus_f8;
+  application= new cl_app();
+  application->set_name("sf8");
+  application->init(argc, argv);
+  sim= new cl_simf8(application);
+  if (sim->init())
+    sim->state|= SIM_QUIT;
+  application->set_simulator(sim);
+  //sim->main();
+  application->run();
+  application->done();
+  delete application;
+  return 0;
+}
 
-
-#endif
-
-/* End of s51.src/glob.h */
+/* End of f8.src/sf8.cc */

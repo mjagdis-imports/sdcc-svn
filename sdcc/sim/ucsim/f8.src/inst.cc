@@ -1,7 +1,7 @@
 /*
- * Simulator of microcontrollers (glob.h)
+ * Simulator of microcontrollers (inst.cc)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2022 Drotos Daniel, Talker Bt.
  * 
  * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
  *
@@ -25,16 +25,20 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#ifndef GLOB_HEADER
-#define GLOB_HEADER
-
-#include "stypes.h"
+#include "f8cl.h"
 
 
-extern struct dis_entry  disass_51[];
-extern u8_t ptab51[256];
+int
+cl_f8::NOP(t_mem code)
+{
+  return resGO;
+}
+
+int
+cl_f8::TRAP(t_mem code)
+{
+  return resHALT;
+}
 
 
-#endif
-
-/* End of s51.src/glob.h */
+/* End of f8.src/inst.cc */
