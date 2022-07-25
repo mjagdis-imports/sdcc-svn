@@ -65,19 +65,37 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 
 enum {
-  flagO	= 0x01,
-  flagZ	= 0x02,
-  flagN	= 0x04,
-  flagC	= 0x08,
-  flagH	= 0x10,
+  flagO	 = 0x01,
+  flagZ	 = 0x02,
+  flagN	 = 0x04,
+  flagC	 = 0x08,
+  flagH	 = 0x10,
 
-  flagS = flagN,
-  flagV = flagO,
+  flagS  = flagN,
+  flagV  = flagO,
+
+  flagCZ = flagC|flagZ,
+  flagZN = flagZ|flagN,
+  flagOZN= flagO|flagZ|flagN,
   
-  fAll  = flagO|flagZ|flagN|flagC|flagH,
-  fAll_H= flagO|flagZ|flagN|flagC
+  fAll   = flagO|flagZ|flagN|flagC|flagH,
+  fAll_H = flagO|flagZ|flagN|flagC
 };
 
+#define COND_Z		(rF&flagZ)
+#define COND_NZ		(!(rF&flagZ))
+#define COND_C		(rF&flagC)
+#define COND_NC		(!(rF&flagC))
+#define COND_N		(rF&flagN)
+#define COND_NN		(!(rF&flagN))
+#define COND_O		(rF&flagO)
+#define COND_NO		(!(rF&flagO))
+#define COND_SGE	((COND_N&&COND_O)||(!COND_N&&!COND_O))
+#define COND_SLT	((COND_N&&!COND_O)||(!COND_N&&COND_O))
+#define COND_SGT	(!(COND_Z||(COND_SLT)))
+#define COND_SLE	(!COND_SGT)
+#define COND_GT		(COND_C&&!COND_Z)
+#define COND_LE		(!COND_C||COND_Z)
 
 enum {
   P_NONE	= 0,
@@ -142,6 +160,7 @@ public:
   
   // memory cells addressed by 8 bit addressing modes
   // call necessary fetches
+  virtual class cl_cell8 &m_i(void);
   virtual class cl_cell8 &m_mm(void);
   virtual class cl_cell8 &m_n_sp(void);
   virtual class cl_cell8 &m_nn_z(void);
@@ -247,6 +266,73 @@ public:
   int XCHB_7(t_mem code) { return xchb(7); }
   
   // aritmetic (ALU) instuctions: ialu.cc
+  int add8(class cl_cell8 *op1, class cl_cell8 *op2, bool usec, bool memop);
+  int sub8(class cl_cell8 *op1, class cl_cell8 *op2, bool usec, bool memop, bool cmp);
+  int Or8 (class cl_cell8 *op1, class cl_cell8 *op2, bool memop);
+  int And8(class cl_cell8 *op1, class cl_cell8 *op2, bool memop);
+  int Xor8(class cl_cell8 *op1, class cl_cell8 *op2, bool memop);
+  int ADD_I  (t_mem code) { return add8(acc8, &m_i()   , false, false); }
+  int ADD_M  (t_mem code) { return add8(acc8, &m_mm()  , false, true ); }
+  int ADD_NSP(t_mem code) { return add8(acc8, &m_n_sp(), false, true ); }
+  int ADD_NNZ(t_mem code) { return add8(acc8, &m_nn_z(), false, true ); }
+  int ADD_ZL (t_mem code) { return add8(acc8, &cZL     , false, false); }
+  int ADD_XH (t_mem code) { return add8(acc8, &cXH     , false, false); }
+  int ADD_YL (t_mem code) { return add8(acc8, &cYL     , false, false); }
+  int ADD_YH (t_mem code) { return add8(acc8, &cYH     , false, false); }
+  int ADC_I  (t_mem code) { return add8(acc8, &m_i()   , true , false); }
+  int ADC_M  (t_mem code) { return add8(acc8, &m_mm()  , true , true ); }
+  int ADC_NSP(t_mem code) { return add8(acc8, &m_n_sp(), true , true ); }
+  int ADC_NNZ(t_mem code) { return add8(acc8, &m_nn_z(), true , true ); }
+  int ADC_ZL (t_mem code) { return add8(acc8, &cZL     , true , false); }
+  int ADC_XH (t_mem code) { return add8(acc8, &cXH     , true , false); }
+  int ADC_YL (t_mem code) { return add8(acc8, &cYL     , true , false); }
+  int ADC_YH (t_mem code) { return add8(acc8, &cYH     , true , false); }
+  int SUB_M  (t_mem code) { return sub8(acc8, &m_mm()  , false, true , false); }
+  int SUB_NSP(t_mem code) { return sub8(acc8, &m_n_sp(), false, true , false); }
+  int SUB_NNZ(t_mem code) { return sub8(acc8, &m_nn_z(), false, true , false); }
+  int SUB_ZL (t_mem code) { return sub8(acc8, &cZL     , false, false, false); }
+  int SUB_XH (t_mem code) { return sub8(acc8, &cXH     , false, false, false); }
+  int SUB_YL (t_mem code) { return sub8(acc8, &cYL     , false, false, false); }
+  int SUB_YH (t_mem code) { return sub8(acc8, &cYH     , false, false, false); }
+  int SBC_M  (t_mem code) { return sub8(acc8, &m_mm()  , true , true , false); }
+  int SBC_NSP(t_mem code) { return sub8(acc8, &m_n_sp(), true , true , false); }
+  int SBC_NNZ(t_mem code) { return sub8(acc8, &m_nn_z(), true , true , false); }
+  int SBC_ZL (t_mem code) { return sub8(acc8, &cZL     , true , false, false); }
+  int SBC_XH (t_mem code) { return sub8(acc8, &cXH     , true , false, false); }
+  int SBC_YL (t_mem code) { return sub8(acc8, &cYL     , true , false, false); }
+  int SBC_YH (t_mem code) { return sub8(acc8, &cYH     , true , false, false); }
+  int CP_I   (t_mem code) { return sub8(acc8, &m_i()   , false, true , true ); }
+  int CP_M   (t_mem code) { return sub8(acc8, &m_mm()  , false, true , true ); }
+  int CP_NSP (t_mem code) { return sub8(acc8, &m_n_sp(), false, true , true ); }
+  int CP_NNZ (t_mem code) { return sub8(acc8, &m_nn_z(), false, true , true ); }
+  int CP_ZL  (t_mem code) { return sub8(acc8, &cZL     , false, false, true ); }
+  int CP_XH  (t_mem code) { return sub8(acc8, &cXH     , false, false, true ); }
+  int CP_YL  (t_mem code) { return sub8(acc8, &cYL     , false, false, true ); }
+  int CP_YH  (t_mem code) { return sub8(acc8, &cYH     , false, false, true ); }
+  int OR_I   (t_mem code) { return Or8 (acc8, &m_i()   , true  ); }
+  int OR_M   (t_mem code) { return Or8 (acc8, &m_mm()  , true  ); }
+  int OR_NSP (t_mem code) { return Or8 (acc8, &m_n_sp(), true  ); }
+  int OR_NNZ (t_mem code) { return Or8 (acc8, &m_nn_z(), true  ); }
+  int OR_ZL  (t_mem code) { return Or8 (acc8, &cZL     , false ); }
+  int OR_XH  (t_mem code) { return Or8 (acc8, &cXH     , false ); }
+  int OR_YL  (t_mem code) { return Or8 (acc8, &cYL     , false ); }
+  int OR_YH  (t_mem code) { return Or8 (acc8, &cYH     , false ); }
+  int AND_I  (t_mem code) { return And8(acc8, &m_i()   , true  ); }
+  int AND_M  (t_mem code) { return And8(acc8, &m_mm()  , true  ); }
+  int AND_NSP(t_mem code) { return And8(acc8, &m_n_sp(), true  ); }
+  int AND_NNZ(t_mem code) { return And8(acc8, &m_nn_z(), true  ); }
+  int AND_ZL (t_mem code) { return And8(acc8, &cZL     , false ); }
+  int AND_XH (t_mem code) { return And8(acc8, &cXH     , false ); }
+  int AND_YL (t_mem code) { return And8(acc8, &cYL     , false ); }
+  int AND_YH (t_mem code) { return And8(acc8, &cYH     , false ); }
+  int XOR_I  (t_mem code) { return Xor8(acc8, &m_i()   , true  ); }
+  int XOR_M  (t_mem code) { return Xor8(acc8, &m_mm()  , true  ); }
+  int XOR_NSP(t_mem code) { return Xor8(acc8, &m_n_sp(), true  ); }
+  int XOR_NNZ(t_mem code) { return Xor8(acc8, &m_nn_z(), true  ); }
+  int XOR_ZL (t_mem code) { return Xor8(acc8, &cZL     , false ); }
+  int XOR_XH (t_mem code) { return Xor8(acc8, &cXH     , false ); }
+  int XOR_YL (t_mem code) { return Xor8(acc8, &cYL     , false ); }
+  int XOR_YH (t_mem code) { return Xor8(acc8, &cYH     , false ); }
 
   // branches: ibranch.cc
   virtual int JP_I(t_mem code);
@@ -256,7 +342,22 @@ public:
   virtual int RET(t_mem code);
   virtual int RETI(t_mem code);
   virtual int jr(bool cond);
-  virtual int JR(t_mem code) { return jr(true); }
+  virtual int JR(t_mem code)    { return jr(true); }
+  virtual int DNJNZ(t_mem code);
+  virtual int JRZ(t_mem code)   { return jr(COND_Z); }
+  virtual int JRNZ(t_mem code)  { return jr(COND_NZ); }
+  virtual int JRC(t_mem code)   { return jr(COND_C); }
+  virtual int JRNC(t_mem code)  { return jr(COND_NC); }
+  virtual int JRN(t_mem code)   { return jr(COND_N); }
+  virtual int JRNN(t_mem code)  { return jr(COND_NN); }
+  virtual int JRO(t_mem code)   { return jr(COND_O); }
+  virtual int JRNO(t_mem code)  { return jr(COND_NO); }
+  virtual int JRSGE(t_mem code) { return jr(COND_SGE); }
+  virtual int JRSLT(t_mem code) { return jr(COND_SLT); }
+  virtual int JRSGT(t_mem code) { return jr(COND_SGT); }
+  virtual int JRSLE(t_mem code) { return jr(COND_SLE); }
+  virtual int JRGT(t_mem code)  { return jr(COND_GT); }
+  virtual int JRLE(t_mem code)  { return jr(COND_LE); }
   
   // other instructions: inst.cc
   virtual int NOP(t_mem code);

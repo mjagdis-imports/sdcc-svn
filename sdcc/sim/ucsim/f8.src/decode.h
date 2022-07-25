@@ -120,6 +120,75 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define XCHB_7		instruction_6f
 
 // arithmetic instructions
+#define ADD_I		instruction_10
+#define ADD_M		instruction_11
+#define ADD_NSP		instruction_12
+#define ADD_NNZ		instruction_13
+#define ADD_ZL		instruction_14
+#define ADD_XH		instruction_15
+#define ADD_YL		instruction_16
+#define ADD_YH		instruction_17
+
+#define ADC_I		instruction_18
+#define ADC_M		instruction_19
+#define ADC_NSP		instruction_1a
+#define ADC_NNZ		instruction_1b
+#define ADC_ZL		instruction_1c
+#define ADC_XH		instruction_1d
+#define ADC_YL		instruction_1e
+#define ADC_YH		instruction_1f
+
+#define SUB_M		instruction_01
+#define SUB_NSP		instruction_02
+#define SUB_NNZ		instruction_03
+#define SUB_ZL		instruction_04
+#define SUB_XH		instruction_05
+#define SUB_YL		instruction_06
+#define SUB_YH		instruction_07
+
+#define SBC_M		instruction_09
+#define SBC_NSP		instruction_0a
+#define SBC_NNZ		instruction_0b
+#define SBC_ZL		instruction_0c
+#define SBC_XH		instruction_0d
+#define SBC_YL		instruction_0e
+#define SBC_YH		instruction_0f
+
+#define CP_I		instruction_20
+#define CP_M		instruction_21
+#define CP_NSP		instruction_22
+#define CP_NNZ		instruction_23
+#define CP_ZL		instruction_24
+#define CP_XH		instruction_25
+#define CP_YL		instruction_26
+#define CP_YH		instruction_27
+
+#define OR_I		instruction_28
+#define OR_M		instruction_29
+#define OR_NSP		instruction_2a
+#define OR_NNZ		instruction_2b
+#define OR_ZL		instruction_2c
+#define OR_XH		instruction_2d
+#define OR_YL		instruction_2e
+#define OR_YH		instruction_2f
+
+#define AND_I		instruction_30
+#define AND_M		instruction_31
+#define AND_NSP		instruction_32
+#define AND_NNZ		instruction_33
+#define AND_ZL		instruction_34
+#define AND_XH		instruction_35
+#define AND_YL		instruction_36
+#define AND_YH		instruction_37
+
+#define XOR_I		instruction_38
+#define XOR_M		instruction_39
+#define XOR_NSP		instruction_3a
+#define XOR_NNZ		instruction_3b
+#define XOR_ZL		instruction_3c
+#define XOR_XH		instruction_3d
+#define XOR_YL		instruction_3e
+#define XOR_YH		instruction_3f
 
 // branches
 #define JP_I		instruction_64
@@ -130,6 +199,21 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define RETI		instruction_bb
 
 #define JR		instruction_d0
+#define DNJNZ		instruction_d1
+#define JRZ		instruction_d2
+#define JRNZ		instruction_d3
+#define JRC		instruction_d4
+#define JRNC		instruction_d5
+#define JRN		instruction_d6
+#define JRNN		instruction_d7
+#define JRO		instruction_d8
+#define JRNO		instruction_d9
+#define JRSGE		instruction_da
+#define JRSLT		instruction_db
+#define JRSGT		instruction_dc
+#define JRSLE		instruction_dd
+#define JRGT		instruction_de
+#define JRLE		instruction_df
 
 // other instructions
 #define NOP		instruction_08
