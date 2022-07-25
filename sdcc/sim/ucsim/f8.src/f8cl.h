@@ -184,7 +184,7 @@ public:
   int LD8_NNZ_A(t_mem code) { return ld8_m_a(m_nn_z()); }
   int LD8_Y_A(t_mem code)   { return ld8_m_a(m_y()); }
   int LD8_NY_A(t_mem code)  { return ld8_m_a(m_n_y()); }
-  int LD8_YL_I(t_mem code);
+  int LD8_YH_I(t_mem code);
   // 16 bit moves
   int ldw_a_i(u16_t op2);
   int ldw_a_m(u16_t addr);
@@ -236,10 +236,27 @@ public:
   int CLRW_NSP(t_mem code);
   int CLRW_NNZ(t_mem code);
   int CLRW_A(t_mem code);
+  int xchb(int b);
+  int XCHB_0(t_mem code) { return xchb(0); }
+  int XCHB_1(t_mem code) { return xchb(1); }
+  int XCHB_2(t_mem code) { return xchb(2); }
+  int XCHB_3(t_mem code) { return xchb(3); }
+  int XCHB_4(t_mem code) { return xchb(4); }
+  int XCHB_5(t_mem code) { return xchb(5); }
+  int XCHB_6(t_mem code) { return xchb(6); }
+  int XCHB_7(t_mem code) { return xchb(7); }
   
   // aritmetic (ALU) instuctions: ialu.cc
 
   // branches: ibranch.cc
+  virtual int JP_I(t_mem code);
+  virtual int JP_A(t_mem code);
+  virtual int CALL_I(t_mem code);
+  virtual int CALL_A(t_mem code);
+  virtual int RET(t_mem code);
+  virtual int RETI(t_mem code);
+  virtual int jr(bool cond);
+  virtual int JR(t_mem code) { return jr(true); }
   
   // other instructions: inst.cc
   virtual int NOP(t_mem code);

@@ -27,4 +27,67 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "f8cl.h"
 
+
+int
+cl_f8::JP_I(t_mem code)
+{
+  u16_t a= fetch();
+  a+= fetch()*256;
+  PC= a;
+  return resGO;
+}
+
+int
+cl_f8::JP_A(t_mem code)
+{
+  PC= acc16->get();
+  return resGO;
+}
+
+int
+cl_f8::CALL_I(t_mem code)
+{
+  u16_t a= fetch();
+  a+= fetch()*256;
+  push2(PC);
+  PC= a;
+  return resGO;
+}
+
+int
+cl_f8::CALL_A(t_mem code)
+{
+  push2(PC);
+  PC= acc16->get();
+  return resGO;
+}
+
+int
+cl_f8::RET(t_mem code)
+{
+  set_PC(pop2());
+  return resGO;
+}
+
+int
+cl_f8::RETI(t_mem code)
+{
+  // TODO
+  set_PC(pop2());
+  return resGO;
+}
+
+int
+cl_f8::jr(bool cond)
+{
+  i8_t d= fetch();
+  u16_t a= PC;
+  if (cond)
+    {
+      set_PC(a+d);
+    }
+  return resGO;
+}
+
+
 /* End of f8.src/ibranch.cc */
