@@ -173,5 +173,149 @@ cl_f8::And8(class cl_cell8 *op1, class cl_cell8 *op2, bool memop)
   return resGO;
 }
 
+u16_t
+cl_f8::add16(u16_t a, u16_t b, int c, bool sub)
+{
+  u32_t rb= a+b+c;
+  u16_t r= rb;
+  rF&= ~fAll_H;
+  if (rb>0xffff) rF|= flagC;
+  if (r&0x8000) rF|= flagC;
+  if (!r) rF|= flagZ;
+  if (sub)
+    {
+      if (((a&~b&~r)|(~a&b&r))&0x8000) rF|= flagO;
+    }
+  else
+    {
+      if (((a&b&~r)|(~a&~b&r))&0x8000) rF|= flagO;
+    }
+  cF.W(rF);
+  return r;
+}
+
+int
+cl_f8::add16(u16_t opaddr, bool usec)
+{
+  u16_t op2= read_addr(rom, opaddr);
+  vc.rd+= 2;
+  int c= 0;
+  if (usec && (rF&flagC)) c= 1;
+  u16_t r= add16(acc16->get(), op2, c, false);
+  IFSWAP
+    {
+      // Mem= Mem+acc
+      rom->write(opaddr, r);
+      rom->write(opaddr+1, r>>8);
+      vc.wr+= 2;
+    }
+  else
+    {
+      // Acc= Mem+acc
+      acc16->W(r);
+    }
+  return resGO;
+}
+  
+int
+cl_f8::add16(/*op2=x*/bool usec)
+{
+  class cl_cell16 *op1= acc16, *op2= &cX;
+  IFSWAP
+    {
+      op1= &cX;
+      op2= acc16;
+    }
+  int c= 0;
+  if (usec && (rF&flagC)) c= 1;
+  op1->W(add16(op1->get(), op2->get(), c, false));
+  return resGO;
+}
+
+int
+cl_f8::sub16(u16_t opaddr, bool usec)
+{
+  u16_t op2= read_addr(rom, opaddr);
+  vc.rd+= 2;
+  int c= 1;
+  if (usec && !(rF&flagC)) c= 0;
+  u16_t r= add16(acc16->get(), op2, c, true);
+  IFSWAP
+    {
+      // Mem= Mem+acc
+      rom->write(opaddr, r);
+      rom->write(opaddr+1, r>>8);
+      vc.wr+= 2;
+    }
+  else
+    {
+      // Acc= Mem+acc
+      acc16->W(r);
+    }
+  return resGO;
+}
+  
+int
+cl_f8::sub16(/*op2=x*/bool usec)
+{
+  class cl_cell16 *op1= acc16, *op2= &cX;
+  IFSWAP
+    {
+      op1= &cX;
+      op2= acc16;
+    }
+  int c= 1;
+  if (usec && !(rF&flagC)) c= 0;
+  op1->W(add16(op1->get(), op2->get(), c, true));
+  return resGO;
+}
+
+u16_t
+cl_f8::or16(u16_t a, u16_t b)
+{
+  u16_t r= a|b;
+  rF&= flagOZN;
+  if (!r) rF|= flagZ;
+  if (r&0x8000) rF|= flagN;
+  // TODO flagO ?
+  cF.W(rF);
+  return r;
+}
+
+int
+cl_f8::or16(u16_t opaddr)
+{
+  u16_t op2= read_addr(rom, opaddr);
+  vc.rd+= 2;
+  u16_t r= or16(acc16->get(), op2);
+  IFSWAP
+    {
+      // Mem= Mem | acc;
+      rom->write(opaddr, r);
+      rom->write(opaddr+1, r>>8);
+      vc.wr+= 2;
+    }
+  else
+    {
+      // Acc= Mem | acc
+      acc16->W(r);
+    }
+  return resGO;
+}
+
+int
+cl_f8::or16(void)
+{
+  // op2=x
+  class cl_cell16 *op1= acc16, *op2= &cX;
+  IFSWAP
+    {
+      op1= &cX;
+      op2= acc16;
+    }
+  op1->W(or16(op1->get(), op2->get()));
+  return resGO;
+}
+
 
 /* End of f8.src/ialu.cc */

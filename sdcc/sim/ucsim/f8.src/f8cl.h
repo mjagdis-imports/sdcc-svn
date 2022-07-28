@@ -169,6 +169,7 @@ public:
 
   // memory addresses by addressing modes
   // call necessary fetches
+  virtual u16_t a_i(void);
   virtual u16_t a_mm(void);
   virtual u16_t a_n_sp(void);
   virtual u16_t a_nn_z(void);
@@ -266,6 +267,7 @@ public:
   int XCHB_7(t_mem code) { return xchb(7); }
   
   // aritmetic (ALU) instuctions: ialu.cc
+  // 8-bit 2-op-inst
   int add8(class cl_cell8 *op1, class cl_cell8 *op2, bool usec, bool memop);
   int sub8(class cl_cell8 *op1, class cl_cell8 *op2, bool usec, bool memop, bool cmp);
   int Or8 (class cl_cell8 *op1, class cl_cell8 *op2, bool memop);
@@ -333,7 +335,35 @@ public:
   int XOR_XH (t_mem code) { return Xor8(acc8, &cXH     , false ); }
   int XOR_YL (t_mem code) { return Xor8(acc8, &cYL     , false ); }
   int XOR_YH (t_mem code) { return Xor8(acc8, &cYH     , false ); }
-
+  // 8-bit 1-op-inst
+  // 16-bit 2-op-inst
+  virtual u16_t add16(u16_t a, u16_t b, int c, bool sub);
+  virtual int add16(u16_t opaddr, bool usec);
+  virtual int add16(/*op2=x*/bool usec);
+  virtual int sub16(u16_t opaddr, bool usec);
+  virtual int sub16(/*op2=x*/bool usec);
+  virtual u16_t or16(u16_t a, u16_t b);
+  virtual int or16(u16_t opaddr);
+  virtual int or16(void);
+  int SUBW_M  (t_mem code) { return sub16(a_mm()  , false); }
+  int SUBW_NSP(t_mem code) { return sub16(a_n_sp(), false); }
+  int SUBW_X  (t_mem code) { return sub16(          false); }
+  int SBCW_M  (t_mem code) { return sub16(a_mm()  , true); }
+  int SBCW_NSP(t_mem code) { return sub16(a_n_sp(), true); }
+  int SBCW_X  (t_mem code) { return sub16(          true); }
+  int ADDW_I  (t_mem code) { return add16(a_i()   , false); }
+  int ADDW_M  (t_mem code) { return add16(a_mm()  , false); }
+  int ADDW_NSP(t_mem code) { return add16(a_n_sp(), false); }
+  int ADDW_X  (t_mem code) { return add16(          false); }
+  int ADCW_I  (t_mem code) { return add16(a_i()   , true); }
+  int ADCW_M  (t_mem code) { return add16(a_mm()  , true); }
+  int ADCW_NSP(t_mem code) { return add16(a_n_sp(), true); }
+  int ADCW_X  (t_mem code) { return add16(          true); }
+  int ORW_I   (t_mem code) { return or16(a_i()   ); }
+  int ORW_M   (t_mem code) { return or16(a_mm()  ); }
+  int ORW_NSP (t_mem code) { return or16(a_n_sp()); }
+  int ORW_X   (t_mem code) { return or16(        ); }
+  
   // branches: ibranch.cc
   virtual int JP_I(t_mem code);
   virtual int JP_A(t_mem code);
