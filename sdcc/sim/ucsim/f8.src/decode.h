@@ -119,6 +119,19 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define XCHB_6		instruction_6e
 #define XCHB_7		instruction_6f
 
+#define INC_M		instruction_50
+#define INC_NSP		instruction_51
+#define INC_A		instruction_52
+#define INC_ZH		instruction_53
+#define DEC_M		instruction_54
+#define DEC_NSP		instruction_55
+#define DEC_A		instruction_56
+#define DEC_ZH		instruction_57
+#define TST_M		instruction_5c
+#define TST_NSP		instruction_5d
+#define TST_A		instruction_5e
+#define TST_ZH		instruction_5f
+
 // arithmetic instructions
 #define ADD_I		instruction_10
 #define ADD_M		instruction_11
