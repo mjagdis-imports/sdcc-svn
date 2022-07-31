@@ -1,3 +1,36 @@
+2022-07-29 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCC.y:
+	  Remove obsolete __func__ magic handling from parser.
+
+2022-07-26 Felix Salfelder <felix AT salfelder.org>
+
+	* device/lib/Makefile.in, device/lib/*/Makefile.in,
+	  device/lib/incl.mk:
+	  Deduplicate CC, introduce SDAR, add Makefile rules,
+	  fix error propagation.
+
+2022-07-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/lib/ds400/ds400rom.c:
+	  Fix use of macro for #.
+
+2022-07-22 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCC.lex:
+	  Skip "line" in lineinfo line. This fixes [r13587].
+
+2022-07-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3401.c:
+	  Fix bug #3401.
+
+2022-07-22 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/c-ppoutput.c:
+	  Add "line" to lineinfo lines, following the standard.
+
 2022-07-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCCglue.c,
