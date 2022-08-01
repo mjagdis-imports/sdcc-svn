@@ -2689,7 +2689,7 @@ status collapsed
 
 \begin_layout Itemize
 In 4.1.10, the default calling convention switched from __sdccall(0) to __sdccall(
-1) for stm8 and sm83.
+1) for stm8 and gbz80.
 \end_layout
 
 \begin_layout Itemize
@@ -2726,6 +2726,10 @@ In 4.2.3, support for non-parenthesized arguments to __using and __interrupt
 \begin_layout Itemize
 In 4.2.3, support for non-parenthesized arguments to __at that are not constants
  was dropped.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.4, the placement of __at in declarations was restricted.
 \end_layout
 
 \begin_layout Section

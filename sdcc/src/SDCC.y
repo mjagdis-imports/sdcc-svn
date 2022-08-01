@@ -139,7 +139,7 @@ bool uselessDecl = true;
 %type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier type_qualifier_list type_qualifier type_name
 %type <lnk> storage_class_specifier struct_or_union_specifier function_specifier alignment_specifier
 %type <lnk> declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
-%type <lnk> function_attribute function_attributes enum_specifier
+%type <lnk> function_attribute function_attributes enum_specifier enum_comma_opt
 %type <lnk> abstract_declarator direct_abstract_declarator direct_abstract_declarator_opt array_abstract_declarator function_abstract_declarator
 %type <lnk> unqualified_pointer
 %type <val> parameter_type_list parameter_list parameter_declaration opt_assign_expr
@@ -903,43 +903,13 @@ member_declarator
    ;
 
 enum_specifier
-   : ENUM '{' enumerator_list '}'
+    : ENUM '{' enumerator_list enum_comma_opt '}'
         {
           $$ = newEnumType ($3);
           SPEC_SCLS(getSpec($$)) = 0;
         }
-    | ENUM '{' enumerator_list ',' '}'
+     | ENUM identifier '{' enumerator_list enum_comma_opt '}'
         {
-          if (!options.std_c99)
-            werror (E_ENUM_COMMA_C99);
-          $$ = newEnumType ($3);
-          SPEC_SCLS(getSpec($$)) = 0;
-        }
-    | ENUM identifier '{' enumerator_list '}'
-        {
-          symbol *csym;
-          sym_link *enumtype;
-
-          csym = findSymWithLevel(enumTab, $2);
-          if ((csym && csym->level == $2->level))
-            {
-              werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
-              werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
-            }
-
-          enumtype = newEnumType ($4);
-          SPEC_SCLS(getSpec(enumtype)) = 0;
-          $2->type = enumtype;
-
-          /* add this to the enumerator table */
-          if (!csym)
-              addSym (enumTab, $2, $2->name, $2->level, $2->block, 0);
-          $$ = copyLinkChain(enumtype);
-        }
-     | ENUM identifier '{' enumerator_list ',' '}'
-        {
-          if (!options.std_c99)
-            werror (E_ENUM_COMMA_C99);
           symbol *csym;
           sym_link *enumtype;
 
@@ -973,6 +943,18 @@ enum_specifier
             }
         }
    ;
+
+enum_comma_opt
+   : 
+     {
+       $$ = NULL;
+     }
+   | ','
+     {
+       if (!options.std_c99)
+         werror (E_ENUM_COMMA_C99);
+       $$ = NULL;
+     }
 
 enumerator_list
    : enumerator

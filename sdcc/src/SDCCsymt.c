@@ -4735,7 +4735,7 @@ validateLink (sym_link * l, const char *macro, const char *args, const char sele
 /* newEnumType - create an integer type compatible with enumerations  */
 /*--------------------------------------------------------------------*/
 sym_link *
-newEnumType (symbol * enumlist)
+newEnumType (symbol *enumlist)
 {
   int min, max, v;
   symbol *sym;
