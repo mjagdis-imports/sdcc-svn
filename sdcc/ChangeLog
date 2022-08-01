@@ -1,5 +1,17 @@
 2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/SDCCval.h:
+	  Basic C2X nullptr support.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/SDCC.y:
 	  Simplify grammar rules for enum.
 

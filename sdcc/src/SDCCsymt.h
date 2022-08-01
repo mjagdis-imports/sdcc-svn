@@ -113,6 +113,7 @@ typedef enum
   V_FIXED16X16,
   V_BOOL,
   V_CHAR,
+  V_NULLPTR,
   V_VOID,
   V_STRUCT,
   V_LABEL,
@@ -569,6 +570,7 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_INLINE(x)     (IS_SPEC(x) && SPEC_INLINE(x))
 #define IS_NORETURN(x)   (IS_SPEC(x) && SPEC_NORETURN(x))
 #define IS_INT(x)        (IS_SPEC(x) && x->select.s.noun == V_INT)
+#define IS_NULLPTR(x)    (IS_SPEC(x) && x->select.s.noun == V_NULLPTR)
 #define IS_VOID(x)       (IS_SPEC(x) && x->select.s.noun == V_VOID)
 #define IS_BOOL(x)       (IS_SPEC(x) && x->select.s.noun == V_BOOL)
 #define IS_BITINT(x)     (IS_SPEC(x) && x->select.s.noun == V_BITINT)

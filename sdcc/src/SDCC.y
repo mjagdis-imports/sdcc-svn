@@ -98,7 +98,7 @@ bool uselessDecl = true;
 %token <yyint> MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token <yyint> SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
 %token <yyint> XOR_ASSIGN OR_ASSIGN
-%token TYPEDEF EXTERN STATIC AUTO REGISTER CODE EEPROM INTERRUPT SFR SFR16 SFR32 ADDRESSMOD
+%token TYPEDEF EXTERN STATIC AUTO REGISTER CONSTEXPR CODE EEPROM INTERRUPT SFR SFR16 SFR32 ADDRESSMOD
 %token AT SBIT REENTRANT USING  XDATA DATA IDATA PDATA ELLIPSIS CRITICAL
 %token NONBANKED BANKED SHADOWREGS SD_WPARAM
 %token SD_BOOL SD_CHAR SD_SHORT SD_INT SD_LONG SIGNED UNSIGNED SD_FLOAT DOUBLE FIXED16X16 SD_CONST VOLATILE SD_VOID BIT
@@ -117,7 +117,7 @@ bool uselessDecl = true;
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
 /* C2X problem: too many legacy FALSE and TRUE still in SDCC, workaround: prefix by TOKEN_*/
-%token TOKEN_FALSE TOKEN_TRUE TYPEOF SD_BITINT
+%token TOKEN_FALSE TOKEN_TRUE NULLPTR TYPEOF SD_BITINT
 %token DECIMAL32 DECIMAL64 DECIMAL128
 
 /* SDCC extensions */
@@ -180,6 +180,7 @@ primary_expression
 predefined_constant
    : TOKEN_FALSE { $$ = newAst_VALUE (constBoolVal (false, true)); }
    | TOKEN_TRUE  { $$ = newAst_VALUE (constBoolVal (true, true)); }
+   | NULLPTR     { $$ = newAst_VALUE (constNullptrVal ()); }
    ; /* add nullptr here if it gets approved for C23 */
 
 generic_selection
@@ -559,6 +560,10 @@ storage_class_specifier
    | REGISTER  {
                   $$ = newLink (SPECIFIER);
                   SPEC_SCLS($$) = S_REGISTER;
+               }
+   | CONSTEXPR {
+                  $$ = newLink (SPECIFIER);
+                  werror (E_CONSTEXPR);
                }
    ;
 
