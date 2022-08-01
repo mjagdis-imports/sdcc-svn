@@ -627,6 +627,8 @@ struct
      "unknown language standard '%s'", 0 },
   { E_CONSTEXPR, ERROR_LEVEL_ERROR,
      "constexpr not implemented", 0 },
+  { E_TYPEOF, ERROR_LEVEL_ERROR,
+     "typeof and typeof_unqual not implemented for nontrivial expressions", 0 },
 };
 
 /* -------------------------------------------------------------------------------

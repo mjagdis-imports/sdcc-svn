@@ -309,6 +309,7 @@ enum {
   W_SINGLE_DASH_LONG_OPT        = 279, /* use of single-dash long options is discouraged */
   E_UNKNOWN_LANGUAGE_STANDARD   = 280, /* unknown language standard */
   E_CONSTEXPR                   = 281, /* constexpr not implemented */
+  E_TYPEOF                      = 282, /* typeof and typeof_unqual not implemented for nontrivial expressions */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

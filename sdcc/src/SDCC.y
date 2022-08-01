@@ -117,7 +117,7 @@ bool uselessDecl = true;
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
 /* C2X problem: too many legacy FALSE and TRUE still in SDCC, workaround: prefix by TOKEN_*/
-%token TOKEN_FALSE TOKEN_TRUE NULLPTR TYPEOF SD_BITINT
+%token TOKEN_FALSE TOKEN_TRUE NULLPTR TYPEOF TYPEOF_UNQUAL SD_BITINT
 %token DECIMAL32 DECIMAL64 DECIMAL128
 
 /* SDCC extensions */
@@ -136,7 +136,7 @@ bool uselessDecl = true;
 %type <sym> declaration_after_statement
 %type <sym> declarator2_function_attributes while do for critical
 %type <sym> addressmod
-%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier type_qualifier_list type_qualifier type_name
+%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier typeof_specifier type_qualifier_list type_qualifier type_name
 %type <lnk> storage_class_specifier struct_or_union_specifier function_specifier alignment_specifier
 %type <lnk> declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
 %type <lnk> function_attribute function_attributes enum_specifier enum_comma_opt
@@ -664,7 +664,11 @@ type_specifier
             $$ = p = copyLinkChain(sym ? sym->type : NULL);
             SPEC_TYPEDEF(getSpec(p)) = 0;
             ignoreTypedefType = 1;
-         }            
+         }
+   | typeof_specifier
+     {
+       $$ = $1;
+     }          
    | FIXED16X16 {
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_FIXED16X16;
@@ -695,6 +699,54 @@ type_specifier
 
 
    | sfr_reg_bit;
+
+typeof_specifier
+   : TYPEOF '(' expression ')'
+     {
+       if (!IS_AST_LIT_VALUE($3))
+         {
+           werror (E_TYPEOF);
+           $$ = newLink (SPECIFIER);
+           SPEC_NOUN ($$) = V_VOID;
+           ignoreTypedefType = 1;
+         }
+       else
+         {
+           $$ = copyLinkChain ($3->opval.val->type);
+           SPEC_SCLS ($$) = 0;
+         }
+     }
+   | TYPEOF '(' type_name ')'
+     {
+       checkTypeSanity ($3, "(typeof)");
+       $$ = $3;
+     }
+   | TYPEOF_UNQUAL '(' expression ')'
+     {
+       if (!IS_AST_LIT_VALUE($3))
+         {
+           werror (E_TYPEOF);
+           $$ = newLink (SPECIFIER);
+           SPEC_NOUN ($$) = V_VOID;
+           ignoreTypedefType = 1;
+         }
+       else
+         {
+           $$ = copyLinkChain ($3->opval.val->type);
+           SPEC_SCLS ($$) = 0;
+         }
+     }
+   | TYPEOF_UNQUAL '(' type_name ')'
+     {
+       checkTypeSanity ($3, "(typeof_unqual)");
+       $$ = $3;
+       wassert (IS_SPEC ($$));
+       SPEC_CONST ($$) = 0;
+       SPEC_RESTRICT ($$) = 0;
+       SPEC_VOLATILE ($$) = 0;
+       SPEC_ATOMIC ($$) = 0;
+       SPEC_ADDRSPACE ($$) = 0;
+     }
 
 struct_or_union_specifier
    : struct_or_union attribute_specifier_sequence_opt opt_stag

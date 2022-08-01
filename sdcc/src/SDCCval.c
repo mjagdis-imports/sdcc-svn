@@ -2146,7 +2146,7 @@ byteOfVal (value *val, int offset)
                (SPEC_CVAL (val->etype).v_int < 0 ? 0xff : 0);
     }
 
-  if (IS_BOOL (val->etype) || IS_BITVAR (val->etype))
+  if (IS_BOOL (val->etype) || IS_NULLPTR (val->etype) || IS_BITVAR (val->etype))
     return offset < 2 ? (SPEC_CVAL (val->etype).v_uint >> shift) & 0xff : 0;
 
   /* we are lost ! */
@@ -2214,7 +2214,7 @@ ullFromLit (sym_link * lit)
         return (signed char) SPEC_CVAL (etype).v_int;
     }
 
-  if (IS_BOOL (etype) || IS_BITVAR (etype))
+  if (IS_BOOL (etype) || IS_NULLPTR (etype) || IS_BITVAR (etype))
     return SPEC_CVAL (etype).v_uint;
 
   if (SPEC_NOUN (etype) == V_VOID)

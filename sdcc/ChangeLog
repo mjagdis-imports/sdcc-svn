@@ -2,6 +2,19 @@
 
 	* src/SDCC.lex,
 	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.h,
+	  device/include/stddef.h,
+	  support/regression/tests/c2xkeywords.c,
+	  support/regression/tests/typeof.c:
+	  Basic C2X typeof and typeof_unqual support.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,
 	  src/SDCCsymt.c,
