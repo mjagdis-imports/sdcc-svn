@@ -1,5 +1,5 @@
 /*
-   test the new C2x keywords
+   The new C2X keywords
  */
 
 #include <testfwk.h>
