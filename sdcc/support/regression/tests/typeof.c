@@ -1,5 +1,5 @@
 /*
-   while.c
+   C2X typeof, typeof_unqual
 */
 
 #include <testfwk.h>

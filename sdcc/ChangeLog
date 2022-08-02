@@ -1,6 +1,14 @@
 2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  support/regression/tests/auto.c,
+	  support/valdiag/tests/bug-3464.c:
+	  C2X auto, RFE #849, fix bug #3464.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
 	  src/SDCCast.h,
 	  src/SDCCast.c,
 	  .version,

@@ -458,6 +458,8 @@ declaration
          /* add the specifier list to the id */
          symbol *sym , *sym1;
 
+         bool autocandidate = options.std_c2x && SPEC_SCLS($1) == S_AUTO;
+
          for (sym1 = sym = reverseSyms($2);sym != NULL;sym = sym->next) {
              sym_link *lnk = copyLinkChain($1);
              sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
@@ -480,6 +482,11 @@ declaration
                  break;
              if (l0 == NULL && l2 == NULL && l1 != NULL)
                werrorfl(sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+             if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE) // C2X auto type inference
+               {
+                 sym->type = sym->etype = typeofOp (sym->ival->init.node);
+                 SPEC_SCLS (lnk) = 0;
+               }
              /* do the pointer stuff */
              pointerTypes(sym->type,lnk);
              addDecl (sym,0,lnk);
