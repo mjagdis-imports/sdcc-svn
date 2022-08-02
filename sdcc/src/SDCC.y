@@ -465,13 +465,13 @@ declaration
              for (l0 = sym->type; l0 != NULL; l0 = l0->next)
                if (IS_PTR (l0))
                  break;
-             /* check if creating intances of structs with flexible arrays */
+             /* check if creating instances of structs with flexible arrays */
              for (l1 = lnk; l1 != NULL; l1 = l1->next)
                if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
                  break;
              if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR($1) != 1)
                werror (W_FLEXARRAY_INSTRUCT, sym->name);
-             /* check if creating intances of function type */
+             /* check if creating instances of function type */
              for (l1 = lnk; l1 != NULL; l1 = l1->next)
                if (IS_FUNC (l1))
                  break;
@@ -703,18 +703,8 @@ type_specifier
 typeof_specifier
    : TYPEOF '(' expression ')'
      {
-       if (!IS_AST_LIT_VALUE($3))
-         {
-           werror (E_TYPEOF);
-           $$ = newLink (SPECIFIER);
-           SPEC_NOUN ($$) = V_VOID;
-           ignoreTypedefType = 1;
-         }
-       else
-         {
-           $$ = copyLinkChain ($3->opval.val->type);
-           SPEC_SCLS ($$) = 0;
-         }
+       $$ = typeofOp ($3);
+       wassert ($$);
      }
    | TYPEOF '(' type_name ')'
      {
@@ -723,18 +713,14 @@ typeof_specifier
      }
    | TYPEOF_UNQUAL '(' expression ')'
      {
-       if (!IS_AST_LIT_VALUE($3))
-         {
-           werror (E_TYPEOF);
-           $$ = newLink (SPECIFIER);
-           SPEC_NOUN ($$) = V_VOID;
-           ignoreTypedefType = 1;
-         }
-       else
-         {
-           $$ = copyLinkChain ($3->opval.val->type);
-           SPEC_SCLS ($$) = 0;
-         }
+       $$ = typeofOp ($3);
+       wassert ($$);
+       wassert (IS_SPEC ($$));
+       SPEC_CONST ($$) = 0;
+       SPEC_RESTRICT ($$) = 0;
+       SPEC_VOLATILE ($$) = 0;
+       SPEC_ATOMIC ($$) = 0;
+       SPEC_ADDRSPACE ($$) = 0;
      }
    | TYPEOF_UNQUAL '(' type_name ')'
      {
