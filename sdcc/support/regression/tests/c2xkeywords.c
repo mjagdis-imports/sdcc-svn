@@ -1,5 +1,5 @@
 /*
-   test the new C2x keywords
+   The new C2X keywords
  */
 
 #include <testfwk.h>
@@ -11,11 +11,20 @@ alignas(int) int i = alignof(int);
 alignas(1) char c;
 static_assert(1);
 bool b = 0;
+bool t = true;
+bool f = false;
+void *p = nullptr;
 
 #endif
 
 void
 testC2Xkey(void)
 {
+#ifdef __SDCC
+  ASSERT(!b);
+  ASSERT(t);
+  ASSERT(!f);
+  ASSERT(!p);
+#endif
 }
 

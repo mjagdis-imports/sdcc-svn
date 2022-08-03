@@ -69,6 +69,8 @@ nounName (sym_link * sl)
       return "_Bool";
     case V_CHAR:
       return "char";
+    case V_NULLPTR:
+      return "nullptr_t";
     case V_VOID:
       return "void";
     case V_STRUCT:
@@ -1442,6 +1444,16 @@ addSymChain (symbol ** symHead)
                   if ((DCL_ELEM (csym->type) > DCL_ELEM (sym->type)) && elemsFromIval)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                 }
+              // Is one is a function declarator without a prototype (valid up to C17), and the other one with a prototype, use the prototype for both. */
+              if (IS_FUNC (csym->type) && IS_FUNC (sym->type) && (FUNC_NOPROTOTYPE (csym->type) ^ FUNC_NOPROTOTYPE (sym->type)))
+                {
+                  if (FUNC_NOPROTOTYPE (csym->type))
+                    FUNC_ARGS(csym->type) = FUNC_ARGS(sym->type);
+                  else
+                    FUNC_ARGS(sym->type) = FUNC_ARGS(csym->type);
+                  FUNC_NOPROTOTYPE (csym->type) = false;
+                  FUNC_NOPROTOTYPE (sym->type) = false;
+                }
 
 #if 0
               /* If only one of the definitions used the "at" keyword, copy */
@@ -1879,10 +1891,16 @@ checkSClass (symbol *sym, int isProto)
     }
 
   if (!sym->level && SPEC_SCLS (sym->etype) == S_AUTO)
-   {
-     werrorfl (sym->fileDef, sym->lineDef, E_AUTO_FILE_SCOPE);
-     SPEC_SCLS (sym->etype) = S_FIXED;
-   }
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_AUTO_FILE_SCOPE);
+      SPEC_SCLS (sym->etype) = S_FIXED;
+    }
+
+  if (SPEC_SCLS (sym->etype) == S_AUTO && SPEC_EXTR(sym->etype) ||
+    SPEC_SCLS (sym->etype) == S_AUTO && SPEC_STAT(sym->etype))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_TWO_OR_MORE_STORAGE_CLASSES, sym->name);
+    }
 
   /* type is literal can happen for enums change to auto */
   if (SPEC_SCLS (sym->etype) == S_LITERAL && !SPEC_ENUM (sym->etype))
@@ -2827,13 +2845,16 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
 
           return 0;
         }
-      else if (IS_PTR (dest) && IS_INTEGRAL (src))
+      else if (IS_PTR (dest) && (IS_INTEGRAL (src) || IS_NULLPTR (src)))
         return -1;
       else
         return 0;
     }
 
   if (IS_PTR (src) && (IS_INTEGRAL (dest) || IS_VOID (dest)))
+    return -1;
+
+  if (IS_NULLPTR (src) && IS_BOOL (dest))
     return -1;
 
   /* if one is a specifier and the other is not */
@@ -4255,6 +4276,7 @@ sym_link *fixed16x16Type;
 
 symbol *builtin_memcpy;
 symbol *nonbuiltin_memcpy;
+symbol *builtin_unreachable;
 
 static const char *
 _mangleFunctionName (const char *in)
@@ -4716,6 +4738,8 @@ initBuiltIns ()
   /* if there is no __builtin_memcpy, use __memcpy instead of an actual builtin */
   if (!builtin_memcpy)
     builtin_memcpy = nonbuiltin_memcpy;
+
+  builtin_unreachable = funcOfTypeVarg ("__builtin_unreachable", "v", 0, 0);
 }
 
 sym_link *
@@ -4737,7 +4761,7 @@ validateLink (sym_link * l, const char *macro, const char *args, const char sele
 /* newEnumType - create an integer type compatible with enumerations  */
 /*--------------------------------------------------------------------*/
 sym_link *
-newEnumType (symbol * enumlist)
+newEnumType (symbol *enumlist)
 {
   int min, max, v;
   symbol *sym;

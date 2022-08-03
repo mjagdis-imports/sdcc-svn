@@ -98,7 +98,7 @@ bool uselessDecl = true;
 %token <yyint> MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token <yyint> SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
 %token <yyint> XOR_ASSIGN OR_ASSIGN
-%token TYPEDEF EXTERN STATIC AUTO REGISTER CODE EEPROM INTERRUPT SFR SFR16 SFR32 ADDRESSMOD
+%token TYPEDEF EXTERN STATIC AUTO REGISTER CONSTEXPR CODE EEPROM INTERRUPT SFR SFR16 SFR32 ADDRESSMOD
 %token AT SBIT REENTRANT USING  XDATA DATA IDATA PDATA ELLIPSIS CRITICAL
 %token NONBANKED BANKED SHADOWREGS SD_WPARAM
 %token SD_BOOL SD_CHAR SD_SHORT SD_INT SD_LONG SIGNED UNSIGNED SD_FLOAT DOUBLE FIXED16X16 SD_CONST VOLATILE SD_VOID BIT
@@ -117,7 +117,7 @@ bool uselessDecl = true;
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
 /* C2X problem: too many legacy FALSE and TRUE still in SDCC, workaround: prefix by TOKEN_*/
-%token TOKEN_FALSE TOKEN_TRUE TYPEOF SD_BITINT
+%token TOKEN_FALSE TOKEN_TRUE NULLPTR TYPEOF TYPEOF_UNQUAL SD_BITINT
 %token DECIMAL32 DECIMAL64 DECIMAL128
 
 /* SDCC extensions */
@@ -136,10 +136,10 @@ bool uselessDecl = true;
 %type <sym> declaration_after_statement
 %type <sym> declarator2_function_attributes while do for critical
 %type <sym> addressmod
-%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier type_qualifier_list type_qualifier type_name
+%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier typeof_specifier type_qualifier_list type_qualifier type_name
 %type <lnk> storage_class_specifier struct_or_union_specifier function_specifier alignment_specifier
 %type <lnk> declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
-%type <lnk> function_attribute function_attributes enum_specifier
+%type <lnk> function_attribute function_attributes enum_specifier enum_comma_opt
 %type <lnk> abstract_declarator direct_abstract_declarator direct_abstract_declarator_opt array_abstract_declarator function_abstract_declarator
 %type <lnk> unqualified_pointer
 %type <val> parameter_type_list parameter_list parameter_declaration opt_assign_expr
@@ -180,6 +180,7 @@ primary_expression
 predefined_constant
    : TOKEN_FALSE { $$ = newAst_VALUE (constBoolVal (false, true)); }
    | TOKEN_TRUE  { $$ = newAst_VALUE (constBoolVal (true, true)); }
+   | NULLPTR     { $$ = newAst_VALUE (constNullptrVal ()); }
    ; /* add nullptr here if it gets approved for C23 */
 
 generic_selection
@@ -457,6 +458,8 @@ declaration
          /* add the specifier list to the id */
          symbol *sym , *sym1;
 
+         bool autocandidate = options.std_c2x && SPEC_SCLS($1) == S_AUTO;
+
          for (sym1 = sym = reverseSyms($2);sym != NULL;sym = sym->next) {
              sym_link *lnk = copyLinkChain($1);
              sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
@@ -464,13 +467,13 @@ declaration
              for (l0 = sym->type; l0 != NULL; l0 = l0->next)
                if (IS_PTR (l0))
                  break;
-             /* check if creating intances of structs with flexible arrays */
+             /* check if creating instances of structs with flexible arrays */
              for (l1 = lnk; l1 != NULL; l1 = l1->next)
                if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
                  break;
              if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR($1) != 1)
                werror (W_FLEXARRAY_INSTRUCT, sym->name);
-             /* check if creating intances of function type */
+             /* check if creating instances of function type */
              for (l1 = lnk; l1 != NULL; l1 = l1->next)
                if (IS_FUNC (l1))
                  break;
@@ -479,6 +482,11 @@ declaration
                  break;
              if (l0 == NULL && l2 == NULL && l1 != NULL)
                werrorfl(sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+             if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE) // C2X auto type inference
+               {
+                 sym->type = sym->etype = typeofOp (sym->ival->init.node);
+                 SPEC_SCLS (lnk) = 0;
+               }
              /* do the pointer stuff */
              pointerTypes(sym->type,lnk);
              addDecl (sym,0,lnk);
@@ -559,6 +567,10 @@ storage_class_specifier
    | REGISTER  {
                   $$ = newLink (SPECIFIER);
                   SPEC_SCLS($$) = S_REGISTER;
+               }
+   | CONSTEXPR {
+                  $$ = newLink (SPECIFIER);
+                  werror (E_CONSTEXPR);
                }
    ;
 
@@ -659,7 +671,11 @@ type_specifier
             $$ = p = copyLinkChain(sym ? sym->type : NULL);
             SPEC_TYPEDEF(getSpec(p)) = 0;
             ignoreTypedefType = 1;
-         }            
+         }
+   | typeof_specifier
+     {
+       $$ = $1;
+     }          
    | FIXED16X16 {
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_FIXED16X16;
@@ -690,6 +706,40 @@ type_specifier
 
 
    | sfr_reg_bit;
+
+typeof_specifier
+   : TYPEOF '(' expression ')'
+     {
+       $$ = typeofOp ($3);
+       wassert ($$);
+     }
+   | TYPEOF '(' type_name ')'
+     {
+       checkTypeSanity ($3, "(typeof)");
+       $$ = $3;
+     }
+   | TYPEOF_UNQUAL '(' expression ')'
+     {
+       $$ = typeofOp ($3);
+       wassert ($$);
+       wassert (IS_SPEC ($$));
+       SPEC_CONST ($$) = 0;
+       SPEC_RESTRICT ($$) = 0;
+       SPEC_VOLATILE ($$) = 0;
+       SPEC_ATOMIC ($$) = 0;
+       SPEC_ADDRSPACE ($$) = 0;
+     }
+   | TYPEOF_UNQUAL '(' type_name ')'
+     {
+       checkTypeSanity ($3, "(typeof_unqual)");
+       $$ = $3;
+       wassert (IS_SPEC ($$));
+       SPEC_CONST ($$) = 0;
+       SPEC_RESTRICT ($$) = 0;
+       SPEC_VOLATILE ($$) = 0;
+       SPEC_ATOMIC ($$) = 0;
+       SPEC_ADDRSPACE ($$) = 0;
+     }
 
 struct_or_union_specifier
    : struct_or_union attribute_specifier_sequence_opt opt_stag
@@ -903,43 +953,13 @@ member_declarator
    ;
 
 enum_specifier
-   : ENUM '{' enumerator_list '}'
+    : ENUM '{' enumerator_list enum_comma_opt '}'
         {
           $$ = newEnumType ($3);
           SPEC_SCLS(getSpec($$)) = 0;
         }
-    | ENUM '{' enumerator_list ',' '}'
+     | ENUM identifier '{' enumerator_list enum_comma_opt '}'
         {
-          if (!options.std_c99)
-            werror (E_ENUM_COMMA_C99);
-          $$ = newEnumType ($3);
-          SPEC_SCLS(getSpec($$)) = 0;
-        }
-    | ENUM identifier '{' enumerator_list '}'
-        {
-          symbol *csym;
-          sym_link *enumtype;
-
-          csym = findSymWithLevel(enumTab, $2);
-          if ((csym && csym->level == $2->level))
-            {
-              werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
-              werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
-            }
-
-          enumtype = newEnumType ($4);
-          SPEC_SCLS(getSpec(enumtype)) = 0;
-          $2->type = enumtype;
-
-          /* add this to the enumerator table */
-          if (!csym)
-              addSym (enumTab, $2, $2->name, $2->level, $2->block, 0);
-          $$ = copyLinkChain(enumtype);
-        }
-     | ENUM identifier '{' enumerator_list ',' '}'
-        {
-          if (!options.std_c99)
-            werror (E_ENUM_COMMA_C99);
           symbol *csym;
           sym_link *enumtype;
 
@@ -973,6 +993,18 @@ enum_specifier
             }
         }
    ;
+
+enum_comma_opt
+   : 
+     {
+       $$ = NULL;
+     }
+   | ','
+     {
+       if (!options.std_c99)
+         werror (E_ENUM_COMMA_C99);
+       $$ = NULL;
+     }
 
 enumerator_list
    : enumerator
@@ -1326,8 +1358,6 @@ declarator2_function_attributes
    : function_declarator                 { $$ = $1; }
    | function_declarator function_attributes  {
            // copy the functionAttributes (not the args and hasVargs !!)
-           struct value *args;
-           unsigned hasVargs;
            sym_link *funcType=$1->type;
 
            while (funcType && !IS_FUNC(funcType))
@@ -1337,14 +1367,16 @@ declarator2_function_attributes
              werror (E_FUNC_ATTR);
            else
              {
-               args=FUNC_ARGS(funcType);
-               hasVargs=FUNC_HASVARARGS(funcType);
+               struct value *args = FUNC_ARGS(funcType);
+               unsigned hasVargs = FUNC_HASVARARGS(funcType);
+               bool noprototype = FUNC_NOPROTOTYPE(funcType);
 
                memcpy (&funcType->funcAttrs, &$2->funcAttrs,
                    sizeof($2->funcAttrs));
 
                FUNC_ARGS(funcType)=args;
                FUNC_HASVARARGS(funcType)=hasVargs;
+               FUNC_NOPROTOTYPE(funcType)=noprototype;
 
                // just to be sure
                memset (&$2->funcAttrs, 0,
@@ -1357,9 +1389,17 @@ declarator2_function_attributes
 
 function_declarator
    : declarator2 '('  ')'
-        {
-          addDecl ($1, FUNCTION, NULL);
-        }
+     {
+       addDecl ($1, FUNCTION, NULL);
+
+       // Up to C17, this was a function declarator without a prototype.
+       if (!options.std_c2x)
+         {
+           FUNC_NOPROTOTYPE($1->type) = true;
+           if (!options.lessPedantic)
+             werror (W_FUNCDECL_WITH_NO_PROTOTYPE);
+         }
+     }
    | declarator2 '('
         {
           NestLevel += LEVEL_UNIT;

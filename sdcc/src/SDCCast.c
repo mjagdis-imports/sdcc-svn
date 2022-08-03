@@ -867,7 +867,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
   /* if defined parameters ended but actual parameters */
   /* exist and this is not defined as a variable arg   */
-  if (!defParm && *actParm && !IFFUNC_HASVARARGS (functype))
+  if (!defParm && *actParm && !IFFUNC_HASVARARGS (functype) && !IFFUNC_NOPROTOTYPE (functype))
     {
       werror (E_TOO_MANY_PARMS);
       return 1;
@@ -3601,6 +3601,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         dtr = tree->right;
         break;
       case SIZEOF:
+      case TYPEOF:
+      case TYPEOF_UNQUAL:
         /* don't allocate string if it is a sizeof argument */
         ++noAlloc;
         resultTypeProp = RESULT_TYPE_OTHER;
@@ -5365,99 +5367,12 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
         return tree;
       }
-
-      /*------------------------------------------------------------------*/
-      /*----------------------------*/
-      /*             typeof         */
-      /*----------------------------*/
     case TYPEOF:
-      /* return typeof enum value */
-      tree->type = EX_VALUE;
+    case TYPEOF_UNQUAL:
       {
-        int typeofv = 0;
-        struct dbuf_s dbuf;
-
-        if (IS_SPEC (tree->right->ftype))
-          {
-            switch (SPEC_NOUN (tree->right->ftype))
-              {
-              case V_INT:
-                if (SPEC_LONG (tree->right->ftype))
-                  typeofv = TYPEOF_LONG;
-                else
-                  typeofv = TYPEOF_INT;
-                break;
-              case V_FLOAT:
-                typeofv = TYPEOF_FLOAT;
-                break;
-              case V_FIXED16X16:
-                typeofv = TYPEOF_FIXED16X16;
-                break;
-              case V_BOOL:
-                typeofv = TYPEOF_BOOL;
-                break;
-              case V_CHAR:
-                typeofv = TYPEOF_CHAR;
-                break;
-              case V_VOID:
-                typeofv = TYPEOF_VOID;
-                break;
-              case V_STRUCT:
-                typeofv = TYPEOF_STRUCT;
-                break;
-              case V_BITFIELD:
-                typeofv = TYPEOF_BITFIELD;
-                break;
-              case V_BIT:
-                typeofv = TYPEOF_BIT;
-                break;
-              case V_SBIT:
-                typeofv = TYPEOF_SBIT;
-                break;
-              default:
-                break;
-              }
-          }
-        else
-          {
-            switch (DCL_TYPE (tree->right->ftype))
-              {
-              case POINTER:
-                typeofv = TYPEOF_POINTER;
-                break;
-              case FPOINTER:
-                typeofv = TYPEOF_FPOINTER;
-                break;
-              case CPOINTER:
-                typeofv = TYPEOF_CPOINTER;
-                break;
-              case GPOINTER:
-                typeofv = TYPEOF_GPOINTER;
-                break;
-              case PPOINTER:
-                typeofv = TYPEOF_PPOINTER;
-                break;
-              case IPOINTER:
-                typeofv = TYPEOF_IPOINTER;
-                break;
-              case ARRAY:
-                typeofv = TYPEOF_ARRAY;
-                break;
-              case FUNCTION:
-                typeofv = TYPEOF_FUNCTION;
-                break;
-              default:
-                break;
-              }
-          }
-        dbuf_init (&dbuf, 128);
-        dbuf_printf (&dbuf, "%d", typeofv);
-        tree->opval.val = constVal (dbuf_c_str (&dbuf));
-        dbuf_destroy (&dbuf);
-        tree->right = tree->left = NULL;
-        TETYPE (tree) = getSpec (TTYPE (tree) = tree->opval.val->type);
+        wassert (0);
+        return 0;
       }
-      return tree;
       /*------------------------------------------------------------------*/
       /*----------------------------*/
       /* conditional operator  '?'  */
@@ -6031,7 +5946,7 @@ sizeofOp (sym_link *type)
 }
 
 /*-----------------------------------------------------------------*/
-/* sizeofOp - processes alignment of operation                     */
+/* alignofOp - processes alignment of operation                    */
 /*-----------------------------------------------------------------*/
 value *
 alignofOp (sym_link *type)
@@ -6044,6 +5959,20 @@ alignofOp (sym_link *type)
   val = constVal ("1");
 
   return val;
+}
+
+/*-----------------------------------------------------------------*/
+/* sizeofOp - processes typeof for expression                      */
+/*-----------------------------------------------------------------*/
+sym_link *
+typeofOp (ast *tree)
+{
+  ++noAlloc;
+  decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
+  --noAlloc;
+  sym_link *type = copyLinkChain (tree->ftype);
+  SPEC_SCLS (type) = 0;
+  return type;
 }
 
 /*-----------------------------------------------------------------*/
