@@ -1125,9 +1125,9 @@ declarator
    ;
 
 direct_declarator
-   : identifier
+   : identifier attribute_specifier_sequence_opt
    | '(' declarator ')'     { $$ = $2; }
-   | array_declarator
+   | array_declarator attribute_specifier_sequence_opt
    | declarator2_function_attributes attribute_specifier_sequence_opt
    ;
 
