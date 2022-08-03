@@ -5,6 +5,9 @@
 	  src/SDCCsymt.h,
 	  support/regression/tests/bug-2664.c:
 	  Fix bug #2664.
+	* support/valdiag/tests/bug-3009.c,
+	  support/valdiag/tests/bug-3011.c:
+	  Ignore a warning that is irrelevant for these test cases.
 
 2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
