@@ -137,7 +137,7 @@ bool uselessDecl = true;
 %type <sym> declaration_after_statement
 %type <sym> declarator2_function_attributes while do for critical
 %type <sym> addressmod
-%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier typeof_specifier type_qualifier_list type_qualifier type_name
+%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier typeof_specifier type_qualifier_list type_qualifier_list_opt type_qualifier type_name
 %type <lnk> storage_class_specifier struct_or_union_specifier function_specifier alignment_specifier
 %type <lnk> declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
 %type <lnk> function_attribute function_attributes enum_specifier enum_comma_opt
@@ -1137,34 +1137,31 @@ declarator2
    | array_declarator
    ;
 
-array_declarator:
-   direct_declarator '[' ']'
-         {
-            sym_link   *p;
-
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-            DCL_ELEM(p) = 0;
-            addDecl($1,0,p);
-         }
-   | direct_declarator '[' type_qualifier_list ']'
+array_declarator
+   : direct_declarator '[' type_qualifier_list_opt ']'
          {
             sym_link *p, *n;
 
-            if (!options.std_c99)
-              werror (E_QUALIFIED_ARRAY_PARAM_C99);
-
             p = newLink (DECLARATOR);
             DCL_TYPE(p) = ARRAY;
             DCL_ELEM(p) = 0;
-            DCL_PTR_CONST(p) = SPEC_CONST ($3);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
-            addDecl($1,0,p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
+
+            if ($3)
+              {
+                if (!options.std_c99)
+                  werror (E_QUALIFIED_ARRAY_PARAM_C99);
+
+                DCL_PTR_CONST(p) = SPEC_CONST ($3);
+                DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+                DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+                DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+                addDecl($1,0,p);
+                n = newLink (SPECIFIER);
+                SPEC_NEEDSPAR(n) = 1;
+                addDecl($1,0,n);
+              }
+            else
+              addDecl($1,0,p);
          }
    | direct_declarator '[' constant_expr ']'
          {
@@ -1194,41 +1191,6 @@ array_declarator:
               }
             DCL_ELEM(p) = size;
             addDecl($1, 0, p);
-         }
-  | direct_declarator '[' STATIC constant_expr ']'
-         {
-            sym_link *p, *n;
-            value *tval;
-            int size;
-
-            if (!options.std_c99)
-              werror (E_STATIC_ARRAY_PARAM_C99);
-
-            tval = constExprValue($4, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
          }
   | direct_declarator '[' type_qualifier_list constant_expr ']'
          {
@@ -1269,17 +1231,14 @@ array_declarator:
             SPEC_NEEDSPAR(n) = 1;
             addDecl($1,0,n);
          }
-   | direct_declarator '[' STATIC type_qualifier_list constant_expr ']'
+   | direct_declarator '[' STATIC type_qualifier_list_opt constant_expr ']'
          {
             sym_link *p, *n;
             value *tval;
             int size;
 
             if (!options.std_c99)
-              {
-                werror (E_STATIC_ARRAY_PARAM_C99);
-                werror (E_QUALIFIED_ARRAY_PARAM_C99);
-              }
+              werror (E_STATIC_ARRAY_PARAM_C99);
 
             tval = constExprValue($5, true);
             /* if it is not a constant then Error  */
@@ -1302,10 +1261,16 @@ array_declarator:
                   }
               }
             DCL_ELEM(p) = size;
-            DCL_PTR_CONST(p) = SPEC_CONST ($4);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($4);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($4);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($4);
+
+            if ($4)
+              {
+                if (!options.std_c99)
+                  werror (E_QUALIFIED_ARRAY_PARAM_C99);
+                DCL_PTR_CONST(p) = SPEC_CONST ($4);
+                DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($4);
+                DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($4);
+                DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($4);
+               }
             addDecl($1, 0, p);
             n = newLink (SPECIFIER);
             SPEC_NEEDSPAR(n) = 1;
@@ -1558,6 +1523,17 @@ type_qualifier_list
                {
                  $$ = mergeDeclSpec($1, $2, "type_qualifier_list type_qualifier skipped");
                }
+  ;
+
+type_qualifier_list_opt
+  :
+    {
+      $$ = 0;
+    }
+  | type_qualifier_list
+    {
+      $$ = $1;
+    }
   ;
 
 parameter_type_list
