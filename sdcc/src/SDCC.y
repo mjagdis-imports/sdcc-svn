@@ -1412,13 +1412,19 @@ function_declarator
         {
           sym_link *funcType;
 
+          bool is_fptr = IS_FUNC($1->type); // Already a function, must be a function pointer.
+
           addDecl ($1, FUNCTION, NULL);
-
           funcType = $1->type;
-          while (funcType && !IS_FUNC(funcType))
-              funcType = funcType->next;
 
-          assert (funcType);
+          // For a function pointer, the parmeter list here is for the returned type.
+          if (is_fptr)
+            funcType = funcType->next;
+
+          while (funcType && !IS_FUNC(funcType))
+            funcType = funcType->next;
+
+          wassert (funcType);
 
           FUNC_HASVARARGS(funcType) = IS_VARG($4);
           FUNC_ARGS(funcType) = reverseVal($4);
