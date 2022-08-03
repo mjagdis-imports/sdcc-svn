@@ -1840,11 +1840,17 @@ attribute_token
      {
        $$ = $1;
        $$->next = 0;
+       werror (W_UNKNOWN_ATTRIBUTE, $1->name);
      }
    | identifier TOK_SEP identifier
      {
        $$ = $1;
        $$->next = $3;
+       struct dbuf_s dbuf;
+       dbuf_init (&dbuf, 64);
+       dbuf_printf (&dbuf, "%s::%s", $1->name, $3->name);
+       werror (W_UNKNOWN_ATTRIBUTE, dbuf_c_str (&dbuf));
+       dbuf_destroy (&dbuf);
      }
    ;
 
@@ -1861,6 +1867,7 @@ balanced_token_sequence
 balanced_token
    : identifier
    | STRING_LITERAL
+   | CONSTANT
    ;
 
    /* C2X A.2.3 Statements */
