@@ -1,5 +1,9 @@
 2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
+	* Merge parser branch to trunk.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
 	* src/SDCCerr.h,
 	  src/SDCCerr.c,
 	  src/SDCC.y:
