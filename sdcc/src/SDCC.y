@@ -1173,7 +1173,7 @@ array_declarator
             else
               addDecl($1,0,p);
          }
-   | direct_declarator '[' constant_expr ']'
+   | direct_declarator '[' assignment_expr ']'
          {
             sym_link *p;
             value *tval;
@@ -1186,10 +1186,10 @@ array_declarator
 
             if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
               {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
+                if (!options.std_c99)
+                  werror(E_VLA_TYPE_C99);
+                DCL_ARRAY_VLA(p) = true;
+                size = 0;
               }
             else
               {
@@ -1202,7 +1202,7 @@ array_declarator
             DCL_ELEM(p) = size;
             addDecl($1, 0, p);
          }
-  | direct_declarator '[' type_qualifier_list constant_expr ']'
+  | direct_declarator '[' type_qualifier_list assignment_expr ']'
          {
             sym_link *p, *n;
             value *tval;
@@ -1218,10 +1218,10 @@ array_declarator
 
             if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
               {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
+                if (!options.std_c99)
+                  werror(E_VLA_TYPE_C99);
+                DCL_ARRAY_VLA(p) = true;
+                size = 0;
               }
             else
               {
@@ -1241,7 +1241,7 @@ array_declarator
             SPEC_NEEDSPAR(n) = 1;
             addDecl($1,0,n);
          }
-   | direct_declarator '[' STATIC type_qualifier_list_opt constant_expr ']'
+   | direct_declarator '[' STATIC type_qualifier_list_opt assignment_expr ']'
          {
             sym_link *p, *n;
             value *tval;
@@ -1257,10 +1257,10 @@ array_declarator
 
             if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
               {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
+                if (!options.std_c99)
+                  werror(E_VLA_TYPE_C99);
+                DCL_ARRAY_VLA(p) = true;
+                size = 0;
               }
             else
               {
@@ -1286,7 +1286,7 @@ array_declarator
             SPEC_NEEDSPAR(n) = 1;
             addDecl($1,0,n);
          }
-   | direct_declarator '[' type_qualifier_list STATIC constant_expr ']'
+   | direct_declarator '[' type_qualifier_list STATIC assignment_expr ']'
          {
             sym_link *p, *n;
             value *tval;
@@ -1305,10 +1305,10 @@ array_declarator
 
             if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
               {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
+                if (!options.std_c99)
+                  werror(E_VLA_TYPE_C99);
+                DCL_ARRAY_VLA(p) = true;
+                size = 0;
               }
             else
               {
@@ -2705,8 +2705,11 @@ declaration_list
        }
        else
          $$ = $1;
-       ignoreTypedefType = 0;
-       addSymChain(&$1);
+       ignoreTypedefType = 0;/*printf("1 %s %d %d\n", $1->name, IS_ARRAY ($1->type), DCL_ARRAY_VLA ($1->type));
+       if (IS_ARRAY ($1->type) && DCL_ARRAY_VLA ($1->type))
+         werror (E_VLA_OBJECT);
+       else*/
+         addSymChain(&$1);
      }
 
    | declaration_list declaration
@@ -2729,8 +2732,11 @@ declaration_list
          else
            $$ = $2;
        }
-       ignoreTypedefType = 0;
-       addSymChain(&$2);
+       ignoreTypedefType = 0;/*printf("2 %s %d %d\n", $1->name, IS_ARRAY ($1->type), DCL_ARRAY_VLA ($1->type));
+       if (IS_ARRAY ($2->type) && DCL_ARRAY_VLA ($2->type))
+         werror (E_VLA_OBJECT);
+       else*/
+         addSymChain(&$2);
      }
    ;
 
