@@ -312,6 +312,8 @@ enum {
   E_TYPEOF                      = 282, /* typeof and typeof_unqual not implemented for nontrivial expressions */
   W_FUNCDECL_WITH_NO_PROTOTYPE  = 283, /* function declarator with no prototype */
   W_UNKNOWN_ATTRIBUTE           = 284, /* unknown attribute ignored*/
+  W_EMPTY_INIT_C2X              = 285, /* empty initializer requires ISO C2X or later */
+  E_EMPTY_INIT_UNKNOWN_SIZE     = 286, /* array of unknown size cannnot be initialized by an empty initializer */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

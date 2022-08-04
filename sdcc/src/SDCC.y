@@ -234,13 +234,23 @@ postfix_expression
                         $$ = newAst_VALUE (valueFromLit (0));
                       }
    | '(' type_name ')' '{' initializer_list ',' '}'
-                      {
-                        /* if (!options.std_c99) */
-                          werror(E_COMPOUND_LITERALS_C99);
+     {
+       // if (!options.std_c99)
+         werror(E_COMPOUND_LITERALS_C99);
 
-                        /* TODO: implement compound literals (C99) */
-                        $$ = newAst_VALUE (valueFromLit (0));
-                      }
+       // TODO: implement compound literals (C99)
+       $$ = newAst_VALUE (valueFromLit (0));
+     }
+   | '(' type_name ')' '{' '}'
+     {
+       if (!options.std_c2x)
+         werror(W_EMPTY_INIT_C2X);
+       // if (!options.std_c99)
+         werror(E_COMPOUND_LITERALS_C99);
+
+       // TODO: implement compound literals (C99)
+       $$ = newAst_VALUE (valueFromLit (0));
+     }
    ;
 
 argument_expr_list
@@ -1663,6 +1673,14 @@ function_abstract_declarator
 
 initializer
    : assignment_expr                { $$ = newiList(INIT_NODE,$1); }
+   | '{' '}'
+     {
+       if (!options.std_c2x)
+         werror(W_EMPTY_INIT_C2X);
+       // {} behaves mostly like {0}, so we emulate that, and use the isempty flag for the few cases where there is a difference.
+       $$ = newiList(INIT_DEEP, revinit(newiList(INIT_NODE, newAst_VALUE(constIntVal("0")))));
+       $$->isempty = true;
+     }
    | '{'  initializer_list '}'      { $$ = newiList(INIT_DEEP,revinit($2)); }
    | '{'  initializer_list ',' '}'  { $$ = newiList(INIT_DEEP,revinit($2)); }
    ;

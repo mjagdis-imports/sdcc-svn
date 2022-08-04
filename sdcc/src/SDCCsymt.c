@@ -2159,7 +2159,10 @@ checkDecl (symbol * sym, int isProto)
   /* if this is an array without any dimension
      then update the dimension from the initial value */
   if (IS_ARRAY (sym->type) && !DCL_ELEM (sym->type))
-    return DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+    if (sym->ival && sym->ival->isempty)
+      werror (E_EMPTY_INIT_UNKNOWN_SIZE);
+    else
+      return DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
 
   return 0;
 }
