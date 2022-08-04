@@ -41,6 +41,7 @@
 #include "SDCCutil.h"
 #include "SDCCbtree.h"
 #include "SDCCopt.h"
+#include "dbuf_string.h"
 
 extern int yyerror (char *);
 extern FILE     *yyin;
@@ -1149,185 +1150,157 @@ declarator2
 
 array_declarator
    : direct_declarator '[' type_qualifier_list_opt ']'
+     {
+       sym_link *p, *n;
+
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+       DCL_ELEM(p) = 0;
+
+       if ($3)
          {
-            sym_link *p, *n;
+           if (!options.std_c99)
+             werror (E_QUALIFIED_ARRAY_PARAM_C99);
 
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-            DCL_ELEM(p) = 0;
-
-            if ($3)
-              {
-                if (!options.std_c99)
-                  werror (E_QUALIFIED_ARRAY_PARAM_C99);
-
-                DCL_PTR_CONST(p) = SPEC_CONST ($3);
-                DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
-                DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
-                DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
-                addDecl($1,0,p);
-                n = newLink (SPECIFIER);
-                SPEC_NEEDSPAR(n) = 1;
-                addDecl($1,0,n);
-              }
-            else
-              addDecl($1,0,p);
+           DCL_PTR_CONST(p) = SPEC_CONST ($3);
+           DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+           DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+           DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+           addDecl($1,0,p);
+           n = newLink (SPECIFIER);
+           SPEC_NEEDSPAR(n) = 1;
+           addDecl($1,0,n);
          }
-   | direct_declarator '[' assignment_expr ']'
+       else
+         addDecl($1,0,p);
+     }
+   | direct_declarator '[' type_qualifier_list_opt assignment_expr ']'
+     {
+       sym_link *p, *n;
+       value *tval;
+       int size;
+
+       tval = constExprValue($4, true);
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+
+       if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
          {
-            sym_link *p;
-            value *tval;
-            int size;
-
-            tval = constExprValue($3, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                if (!options.std_c99)
-                  werror(E_VLA_TYPE_C99);
-                DCL_ARRAY_VLA(p) = true;
-                size = 0;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            addDecl($1, 0, p);
+           if (!options.std_c99)
+             werror(E_VLA_TYPE_C99);
+           DCL_ARRAY_VLA(p) = true;
+           size = 0;
          }
-  | direct_declarator '[' type_qualifier_list assignment_expr ']'
+       else
          {
-            sym_link *p, *n;
-            value *tval;
-            int size;
-
-            if (!options.std_c99)
-              werror (E_QUALIFIED_ARRAY_PARAM_C99);
-
-            tval = constExprValue($4, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                if (!options.std_c99)
-                  werror(E_VLA_TYPE_C99);
-                DCL_ARRAY_VLA(p) = true;
-                size = 0;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            DCL_PTR_CONST(p) = SPEC_CONST ($3);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
+           if ((size = (int) ulFromVal(tval)) < 0)
+             {
+               werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
+               size = 1;
+             }
          }
+       DCL_ELEM(p) = size;
+       if ($3)
+         {
+           if (!options.std_c99)
+             werror (E_QUALIFIED_ARRAY_PARAM_C99);
+           DCL_PTR_CONST(p) = SPEC_CONST ($3);
+           DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+           DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+           DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+           addDecl($1, 0, p);
+           n = newLink (SPECIFIER);
+           SPEC_NEEDSPAR(n) = 1;
+           addDecl($1,0,n);
+         }
+       else
+         addDecl($1, 0, p);
+     }
    | direct_declarator '[' STATIC type_qualifier_list_opt assignment_expr ']'
+     {
+       sym_link *p, *n;
+       value *tval;
+       int size;
+
+       if (!options.std_c99)
+         werror (E_STATIC_ARRAY_PARAM_C99);
+
+       tval = constExprValue($5, true);
+       /* if it is not a constant then Error  */
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+
+       if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
          {
-            sym_link *p, *n;
-            value *tval;
-            int size;
-
-            if (!options.std_c99)
-              werror (E_STATIC_ARRAY_PARAM_C99);
-
-            tval = constExprValue($5, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                if (!options.std_c99)
-                  werror(E_VLA_TYPE_C99);
-                DCL_ARRAY_VLA(p) = true;
-                size = 0;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-
-            if ($4)
-              {
-                if (!options.std_c99)
-                  werror (E_QUALIFIED_ARRAY_PARAM_C99);
-                DCL_PTR_CONST(p) = SPEC_CONST ($4);
-                DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($4);
-                DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($4);
-                DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($4);
-               }
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
+           if (!options.std_c99)
+             werror(E_VLA_TYPE_C99);
+           DCL_ARRAY_VLA(p) = true;
+           size = 0;
          }
+       else
+         {
+           if ((size = (int) ulFromVal(tval)) < 0)
+             {
+               werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
+               size = 1;
+             }
+         }
+       DCL_ELEM(p) = size;
+       if ($4)
+         {
+           if (!options.std_c99)
+             werror (E_QUALIFIED_ARRAY_PARAM_C99);
+           DCL_PTR_CONST(p) = SPEC_CONST ($4);
+           DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($4);
+           DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($4);
+           DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($4);
+         }
+       addDecl($1, 0, p);
+       n = newLink (SPECIFIER);
+       SPEC_NEEDSPAR(n) = 1;
+       addDecl($1,0,n);
+     }
    | direct_declarator '[' type_qualifier_list STATIC assignment_expr ']'
+     {
+       sym_link *p, *n;
+       value *tval;
+       int size;
+
+       if (!options.std_c99)
          {
-            sym_link *p, *n;
-            value *tval;
-            int size;
-
-            if (!options.std_c99)
-              {
-                werror (E_QUALIFIED_ARRAY_PARAM_C99);
-                werror (E_STATIC_ARRAY_PARAM_C99);
-              }
-
-            tval = constExprValue($5, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                if (!options.std_c99)
-                  werror(E_VLA_TYPE_C99);
-                DCL_ARRAY_VLA(p) = true;
-                size = 0;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            DCL_PTR_CONST(p) = SPEC_CONST ($3);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
+           werror (E_QUALIFIED_ARRAY_PARAM_C99);
+           werror (E_STATIC_ARRAY_PARAM_C99);
          }
+
+       tval = constExprValue($5, true);
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+
+       if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
+         {
+           if (!options.std_c99)
+             werror(E_VLA_TYPE_C99);
+           DCL_ARRAY_VLA(p) = true;
+           size = 0;
+         }
+       else
+         {
+           if ((size = (int) ulFromVal(tval)) < 0)
+             {
+               werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
+               size = 1;
+             }
+         }
+       DCL_ELEM(p) = size;
+       DCL_PTR_CONST(p) = SPEC_CONST ($3);
+       DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+       DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+       DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+       addDecl($1, 0, p);
+       n = newLink (SPECIFIER);
+       SPEC_NEEDSPAR(n) = 1;
+       addDecl($1,0,n);
+     }
    ;
 
 declarator2_function_attributes
