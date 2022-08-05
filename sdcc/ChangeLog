@@ -1,3 +1,11 @@
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-3465.c:
+	  Basic C99 VLA type support, RFE #786, fix bug #3465.
+
 2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCC.y,
