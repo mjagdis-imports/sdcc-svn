@@ -131,7 +131,10 @@ COMMON_SDCC = \
   puts.c \
   gets.c \
   __assert.c \
-  time.c
+  time.c \
+  __stdc_count_onesull.c \
+  __stdc_bit_widthull.c \
+  __stdc_bit_ceilull.c
 
 MODELS = small medium large huge
 

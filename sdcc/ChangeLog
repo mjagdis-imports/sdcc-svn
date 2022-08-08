@@ -1,3 +1,59 @@
+2022-08-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/c2xkeywords.c:
+	  Fix bug #3468.
+
+2022-08-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_bit_ceilull.c,
+	  device/lib/__stdc_bit_widthull.c,
+	  support/regression/tests/bitcount.c.in:
+	  Provide bit and byte utilitites bit width floor and ceiling functions.
+
+2022-08-05 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/stddef.h:
+	  Protect NULL macro with parentheses, fixing bug #3467.
+
+2022-08-05 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Missing K&R function support is not a deviation from C2X compliance.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/include/stdint.h,
+	  device/lib/_mulint.c,
+	  device/lib/_mullong.c,
+	  device/lib/_rlulonglong.c,
+	  device/lib/_rrslonglong.c,
+	  device/lib/_rrulonglong.c,
+	  device/lib/_startup.c,
+	  device/lib/__stdc_count_onesull.c,
+	  support/regression/tests/bitcount.c.in,
+	  device/lib/_mullong.c:
+	  Provide and use bit and byte utility types and macros. Provide bit and byte utilitites bit count and single-bit check functions.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* .version,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/regression/tests/bug-3462.c:
+	  Fix bug #3462.
+	* doc/sdccman.lyx:
+	  Update manual section on standard compliance for recent improvements.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
 2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCC.y,
@@ -5,6 +61,11 @@
 	  src/SDCCsymt.h,
 	  support/regression/tests/bug-3465.c:
 	  Basic C99 VLA type support, RFE #786, fix bug #3465.
+
+2022-08-04 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* support/scripts/sdcc.nsi:
+	  Correct STM8 memory model name from small to medium, fixing bug #3466.
 
 2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
