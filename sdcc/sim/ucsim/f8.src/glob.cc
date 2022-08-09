@@ -253,6 +253,33 @@ struct dis_entry disass_f8[]=
     { 0x5e, 0xff, ' ', 1, "tst %a" },
     { 0x5f, 0xff, ' ', 1, "tst zh" },
 
+    { 0xa4, 0xff, ' ', 3, "incw 'a16_16'" },
+    { 0xa5, 0xff, ' ', 2, "incw ('nsp_16')" },
+    { 0xa6, 0xff, ' ', 3, "incw ('nnz_16')" },
+    { 0xa7, 0xff, ' ', 1, "incw %A" },
+    { 0xa8, 0xff, ' ', 3, "adcw 'a16_16'" },
+    { 0xa9, 0xff, ' ', 2, "adcw ('nsp_16')" },
+    { 0xaa, 0xff, ' ', 3, "adcw ('nnz_16')" },
+    { 0xab, 0xff, ' ', 1, "adcw %A" },
+    { 0xac, 0xff, ' ', 3, "sbcw 'a16_16'" },
+    { 0xad, 0xff, ' ', 2, "sbcw ('nsp_16')" },
+    { 0xae, 0xff, ' ', 3, "sbcw ('nnz_16')" },
+    { 0xaf, 0xff, ' ', 1, "sbcw %A" },
+    { 0xb4, 0xff, ' ', 3, "tstw 'a16_16'" },
+    { 0xb5, 0xff, ' ', 2, "tstw ('nsp_16')" },
+    { 0xb6, 0xff, ' ', 3, "tstw ('nnz_16')" },
+    { 0xb7, 0xff, ' ', 1, "tstw %A" },
+
+    { 0x95, 0xff, ' ', 2, "rot %a,#'i8'" },
+    { 0x96, 0xff, ' ', 1, "sra %a" },
+    { 0x97, 0xff, ' ', 1, "daa %a" },
+    { 0x98, 0xff, ' ', 1, "bool %a" },
+    { 0xb8, 0xff, ' ', 2, "msk %L,%H,#'i8'" },
+    { 0xbc, 0xff, ' ', 3, "mad x,'a16_8',yl" },
+    { 0xbd, 0xff, ' ', 2, "mad x,('nsp_8'),yl" },
+    { 0xbe, 0xff, ' ', 3, "mad x,('nnz_8'),yl" },
+    { 0xbf, 0xff, ' ', 1, "mad x,('z_8'),yl" },
+
     // branch
     { 0x64, 0xff, ' ', 3, "jp #'a16'" },
     { 0x65, 0xff, ' ', 1, "jp %A" },
@@ -279,8 +306,9 @@ struct dis_entry disass_f8[]=
     { 0xdf, 0xff, ' ', 2, "jrle %r" },
     
     // other
-    { 0x00, 0xff, ' ', 1, "TRAP" },
-    { 0x08, 0xff, ' ', 1, "NOP" },
+    { 0x00, 0xff, ' ', 1, "trap" },
+    { 0x08, 0xff, ' ', 1, "nop" },
+    { 0x9a, 0xff, ' ', 1, "thrd %a" },
 
     { 0, 0, 0, 0, 0, 0 }
   };
@@ -336,9 +364,9 @@ u8_t allowed_prefs[256]= {
   /* 6_ */    PD,PD,PD,PD,  PN,P6,PN,P6,  PD,PD,PD,PD,  PD,PD,PD,PD,
   /* 7_ */    PD,P2,P2,P2,  PD,P2,P2,P2,  P6,P2,P2,P2,  P6,P2,P2,P2,
   /* 8_ */    PD,PD,PD,PD,  PD,PD,PA,PA,  PA,PA,PA,PD,  PD,PD,PD,PD,
-  /* 9_ */    PN,PD,PD,P6,  PN, 0, 0, 0,   0,PD, 0,PN,   0, 0,P6, 0,
-  /* a_ */    P6,P6,P6,P6,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
-  /* b_ */    P6,P6,P6,P6,   0, 0, 0, 0,   0, 0,PN,PN,   0, 0, 0, 0,
+  /* 9_ */    PN,PD,PD,P6,  PN,PD,PD,PD,  PD,PD, 0,PN,   0, 0,P6, 0,
+  /* a_ */    P6,P6,P6,P6,  P6,P6,P6,P6,  P6,P6,P6,P6,  P6,P6,P6,P6,
+  /* b_ */    P6,P6,P6,P6,  P6,P6,P6,P6,  P6, 0,PN,PN,  PN,PN,PN,PN,
   /* c_ */    P6,P6,P6,P6,  P6,P6,P6,P6,  P6,P6,P6,P6,  P6,P6,P6,P6,
   /* d_ */    PN,PN,PN,PN,  PN,PN,PN,PN,  PN,PN,PN,PN,  PN,PN,PN,PN,
   /* e_ */     0, 0, 0, 0,   0, 0, 0, 0,  PN, 0, 0, 0,   0, 0, 0, 0,

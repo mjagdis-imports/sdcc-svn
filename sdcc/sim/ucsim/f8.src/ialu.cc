@@ -735,4 +735,299 @@ cl_f8::TST_ZH(t_mem code)
 }
 
 
+int
+cl_f8::INCW_M(t_mem code)
+{
+  u16_t a= a_mm();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 1, 0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::INCW_NSP(t_mem code)
+{
+  u16_t a= a_n_sp();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 1, 0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::INCW_NNZ(t_mem code)
+{
+  u16_t a= a_nn_z();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 1, 0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::INCW_A(t_mem code)
+{
+  u16_t v= acc16->get();
+  add16(v, 1, 0, false);
+  acc16->write(v);
+  return resGO;
+}
+
+int
+cl_f8::ADCW1_M(t_mem code)
+{
+  u16_t a= a_mm();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 0, (rF&flagC)?1:0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::ADCW1_NSP(t_mem code)
+{
+  u16_t a= a_n_sp();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 0, (rF&flagC)?1:0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::ADCW1_NNZ(t_mem code)
+{
+  u16_t a= a_nn_z();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 0, (rF&flagC)?1:0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::ADCW1_A(t_mem code)
+{
+  u16_t v= acc16->get();
+  add16(v, 0, (rF&flagC)?1:0, false);
+  acc16->write(v);
+  return resGO;
+}
+
+int
+cl_f8::SBCW1_M(t_mem code)
+{
+  u16_t a= a_mm();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 0xffff, (rF&flagC)?1:0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::SBCW1_NSP(t_mem code)
+{
+  u16_t a= a_n_sp();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 0xffff, (rF&flagC)?1:0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::SBCW1_NNZ(t_mem code)
+{
+  u16_t a= a_nn_z();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  add16(v, 0xffff, (rF&flagC)?1:0, false);
+  rom->write(a  , v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+int
+cl_f8::SBCW1_A(t_mem code)
+{
+  u16_t v= acc16->get();
+  add16(v, 0xffff, (rF&flagC)?1:0, false);
+  acc16->write(v);
+  return resGO;
+}
+
+int
+cl_f8::TSTW1_M(t_mem code)
+{
+  u16_t a= a_mm();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  rF&= ~flagOZN;
+  rF|= flagC;
+  if (!v) rF|= flagZ;
+  if (v&0x8000) rF|= flagN;
+  rF|= ((ptab[v&0xff])^(ptab[v>>8])); // TODO: need to negate?
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::TSTW1_NSP(t_mem code)
+{
+  u16_t a= a_n_sp();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  rF&= ~flagOZN;
+  rF|= flagC;
+  if (!v) rF|= flagZ;
+  if (v&0x8000) rF|= flagN;
+  rF|= ((ptab[v&0xff])^(ptab[v>>8])); // TODO: need to negate?
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::TSTW1_NNZ(t_mem code)
+{
+  u16_t a= a_nn_z();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  rF&= ~flagOZN;
+  rF|= flagC;
+  if (!v) rF|= flagZ;
+  if (v&0x8000) rF|= flagN;
+  rF|= ((ptab[v&0xff])^(ptab[v>>8])); // TODO: need to negate?
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::TSTW1_A(t_mem code)
+{
+  u16_t v= acc16->get();
+  rF&= ~flagOZN;
+  rF|= flagC;
+  if (!v) rF|= flagZ;
+  if (v&0x8000) rF|= flagN;
+  rF|= ((ptab[v&0xff])^(ptab[v>>8])); // TODO: need to negate?
+  cF.W(rF);
+  return resGO;
+}
+
+
+int
+cl_f8::ROT(t_mem code)
+{
+  u8_t i= fetch(), v= acc8->get();
+  while (i--)
+    {
+      u8_t u= v&0x80;
+      v<<= 1;
+      if (u)
+	v|= 1;
+    }
+  acc8->W(v);
+  return resGO;
+}
+
+int
+cl_f8::SRA(t_mem code)
+{
+  i8_t v= acc8->get();
+  rF&= ~flagC;
+  if (v&1) rF|= flagC;
+  v>>= 1;
+  cF.W(rF);
+  acc8->W(v);
+  return resGO;
+}
+
+// TODO: ?
+int
+cl_f8::DAA(t_mem code)
+{
+  // Method of 8080...
+  u8_t rA= acc8->get();
+  u8_t corr= 0;
+  if (((rA & 0xf) > 9) || (rF & flagA))
+    corr= 6;
+  u8_t v= rA>>4, c= 10;
+  if (corr==6)
+    c= 9;
+  if ((v >= c) || (rF & flagC))
+    corr|= 0x60;
+  if (corr)
+    {
+      rA+= corr;
+      acc8->W(rA);
+    }
+  return resGO;
+}
+
+int
+cl_f8::BOOL_A(t_mem code)
+{
+  u8_t v= acc8->get();
+  if (v==0) // TODO: what is TRUE?
+    rF|= flagZ; // TODO: need negate?
+  else
+    rF&= ~flagZ;
+  cF.W(rF);
+  v= v?1:0;
+  acc8->W(v); // TODO: needed?
+  return resGO;
+}
+
+int
+cl_f8::MSK(t_mem code)
+{
+  // yl = (yl & i) | (yh & ~i) - really a 16-bit inst
+  REGPAIR(a,A,h,l);
+  a.A= acc16->get();
+  u8_t i= fetch();
+  u8_t r= (a.r.l & i) | (a.r.h & ~i);
+  a.r.l= r;
+  acc16->W(a.A);
+  return resGO;
+}
+
+int
+cl_f8::mad(class cl_cell8 &op)
+{
+  // x <- m * yl + xh + c
+  u32_t r= op.read();
+  r*= rYL;
+  r+= rXH;
+  if (rF&flagC) r++;
+  rF&= ~flagC;
+  if (r>0xffff) rF|= flagC;
+  cF.W(rF);
+  cX.W(r);
+  return resGO;
+}
+
+
 /* End of f8.src/ialu.cc */

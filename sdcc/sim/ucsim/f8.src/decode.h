@@ -241,6 +241,33 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define RLC_A		instruction_4e
 #define RLC_ZH		instruction_4f
 
+#define INCW_M		instruction_a4
+#define INCW_NSP	instruction_a5
+#define INCW_NNZ	instruction_a6
+#define INCW_A		instruction_a7
+#define ADCW1_M		instruction_a8
+#define ADCW1_NSP	instruction_a9
+#define ADCW1_NNZ	instruction_aa
+#define ADCW1_A		instruction_ab
+#define SBCW1_M		instruction_ac
+#define SBCW1_NSP	instruction_ad
+#define SBCW1_NNZ	instruction_ae
+#define SBCW1_A		instruction_af
+#define TSTW1_M		instruction_b4
+#define TSTW1_NSP	instruction_b5
+#define TSTW1_NNZ	instruction_b6
+#define TSTW1_A		instruction_b7
+
+#define ROT		instruction_95
+#define SRA		instruction_96
+#define DAA		instruction_97
+#define BOOL_A		instruction_98
+#define MSK		instruction_b8
+#define MAD_M		instruction_bc
+#define MAD_NSP		instruction_bd
+#define MAD_NNZ		instruction_be
+#define MAD_Z		instruction_bf
+
 // branches
 #define JP_I		instruction_64
 #define JP_A		instruction_65
@@ -269,6 +296,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 // other instructions
 #define NOP		instruction_08
 #define TRAP		instruction_00
+#define THRD		instruction_9a
 
 #endif
 

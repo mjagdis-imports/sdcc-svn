@@ -71,6 +71,7 @@ enum {
   flagC	 = 0x08,
   flagH	 = 0x10,
 
+  flagA  = flagH,
   flagS  = flagN,
   flagV  = flagO,
 
@@ -166,6 +167,7 @@ public:
   virtual class cl_cell8 &m_nn_z(void);
   virtual class cl_cell8 &m_y(void);
   virtual class cl_cell8 &m_n_y(void);
+  virtual class cl_cell8 &m_z(void);
 
   // memory addresses by addressing modes
   // call necessary fetches
@@ -392,6 +394,36 @@ public:
   int ORW_M   (t_mem code) { return or16(a_mm()  ); }
   int ORW_NSP (t_mem code) { return or16(a_n_sp()); }
   int ORW_X   (t_mem code) { return or16(        ); }
+
+  // 16-bit 1-op-inst
+  int INCW_M(t_mem code);
+  int INCW_NSP(t_mem code);
+  int INCW_NNZ(t_mem code);
+  int INCW_A(t_mem code);
+  int ADCW1_M(t_mem code);
+  int ADCW1_NSP(t_mem code);
+  int ADCW1_NNZ(t_mem code);
+  int ADCW1_A(t_mem code);
+  int SBCW1_M(t_mem code);
+  int SBCW1_NSP(t_mem code);
+  int SBCW1_NNZ(t_mem code);
+  int SBCW1_A(t_mem code);
+  int TSTW1_M(t_mem code);
+  int TSTW1_NSP(t_mem code);
+  int TSTW1_NNZ(t_mem code);
+  int TSTW1_A(t_mem code);
+
+  // 8-bit 0-op-inst
+  int mad(class cl_cell8 &op);
+  int ROT(t_mem code);
+  int SRA(t_mem code);
+  int DAA(t_mem code);
+  int BOOL_A(t_mem code);
+  int MSK(t_mem code);
+  int MAD_M(t_mem code)   { return mad(m_mm()); }
+  int MAD_NSP(t_mem code) { return mad(m_n_sp()); }
+  int MAD_NNZ(t_mem code) { return mad(m_nn_z()); }
+  int MAD_Z(t_mem code)   { return mad(m_z()); }
   
   // branches: ibranch.cc
   virtual int JP_I(t_mem code);
@@ -421,6 +453,7 @@ public:
   // other instructions: inst.cc
   virtual int NOP(t_mem code);
   virtual int TRAP(t_mem code);
+  virtual int THRD(t_mem code);
 };
 
 
