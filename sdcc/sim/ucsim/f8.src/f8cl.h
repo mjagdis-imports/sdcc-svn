@@ -77,6 +77,7 @@ enum {
 
   flagCZ = flagC|flagZ,
   flagZN = flagZ|flagN,
+  flagCZN= flagC|flagZ|flagN,
   flagOZN= flagO|flagZ|flagN,
   
   fAll   = flagO|flagZ|flagN|flagC|flagH,
@@ -424,6 +425,27 @@ public:
   int MAD_NSP(t_mem code) { return mad(m_n_sp()); }
   int MAD_NNZ(t_mem code) { return mad(m_nn_z()); }
   int MAD_Z(t_mem code)   { return mad(m_z()); }
+
+  // 16-bit 0-op-inst
+  int MUL(t_mem code);
+  int NEGW(t_mem code);
+  int BOOLW(t_mem code);
+  int SRLW(t_mem code);
+  int SLLW(t_mem code);
+  int RRCW(t_mem code);
+  int RLCW_A(t_mem code);
+  int RLCW_NSP(t_mem code);
+  int RRCW_NSP(t_mem code);
+  int SRAW(t_mem code);
+  int ADDW_SP_D(t_mem code);
+  int ADDW_A_D(t_mem code);
+  int ADDW_Y_SP(t_mem code);
+  int CPW(t_mem code);
+  int INCNW(t_mem code);
+  int DECW_NSP(t_mem code);
+  int SLLW_A_XL(t_mem code);
+  int SEX(t_mem code);
+  int ZEX(t_mem code);
   
   // branches: ibranch.cc
   virtual int JP_I(t_mem code);

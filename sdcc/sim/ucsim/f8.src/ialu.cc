@@ -957,9 +957,10 @@ int
 cl_f8::SRA(t_mem code)
 {
   i8_t v= acc8->get();
-  rF&= ~flagC;
+  rF&= ~flagCZ;
   if (v&1) rF|= flagC;
   v>>= 1;
+  if (!v) rF|= flagZ;
   cF.W(rF);
   acc8->W(v);
   return resGO;
@@ -1026,6 +1027,263 @@ cl_f8::mad(class cl_cell8 &op)
   if (r>0xffff) rF|= flagC;
   cF.W(rF);
   cX.W(r);
+  return resGO;
+}
+
+
+int
+cl_f8::MUL(t_mem code)
+{
+  REGPAIR(a,A,h,l);
+  a.A= acc16->get();
+  u16_t r= a.r.l * a.r.h;
+  rF&= ~flagCZN;
+  if (!r) rF|= flagZ;
+  if (r&0x8000) rF|= flagN;
+  cF.W(rF);
+  acc16->W(r);
+  return resGO;
+}
+
+int
+cl_f8::NEGW(t_mem code)
+{
+  u16_t a= acc16->get();
+  u16_t r= add16(~a, 1, 0, 0);
+  acc16->W(r);
+  return resGO;
+}
+
+int
+cl_f8::BOOLW(t_mem code)
+{
+  u16_t v= (acc16->get())?1:0;
+  rF&= ~flagZ;
+  if (!v) rF|= flagZ; // TODO, need negate?
+  acc16->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+/* 0->XXXXXXXX->C */
+
+int
+cl_f8::SRLW(t_mem code)
+{
+  u16_t v= acc16->get();
+  rF&= ~flagCZ;
+  if (v&1) rF|= flagC;
+  v>>= 1;
+  if (!v) rF|= flagZ;
+  acc16->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+/* C<-XXXXXXXX<-0 */
+
+int
+cl_f8::SLLW(t_mem code)
+{
+  u16_t v= acc16->get();
+  rF&= ~flagCZ;
+  if (v&0x8000) rF|= flagC;
+  v<<= 1;
+  if (!v) rF|= flagZ;
+  acc16->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+/* +->XXXXXXXX->C
+   |____________|
+*/
+
+int
+cl_f8::RRCW(t_mem code)
+{
+  u16_t v= acc16->get();
+  u16_t oldc= (rF&flagC)?0x8000:0;
+  rF&= ~flagCZ;
+  if (v&1) rF|= flagC;
+  v>>= 1;
+  v|= oldc;
+  if (!v) rF|= flagZ;
+  acc16->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::RRCW_NSP(t_mem code)
+{
+  u16_t a= a_n_sp();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  u16_t oldc= (rF&flagC)?0x8000:0;
+  rF&= ~flagCZ;
+  if (v&1) rF|= flagC;
+  v>>= 1;
+  v|= oldc;
+  if (!v) rF|= flagZ;
+  rom->write(a, v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  cF.W(rF);
+  return resGO;
+}
+
+/* C<-XXXXXXXX<-+
+   |____________|
+*/
+
+int
+cl_f8::RLCW_A(t_mem code)
+{
+  u16_t v= acc16->get();
+  u16_t oldc= (rF&flagC)?1:0;
+  rF&= ~flagCZ;
+  if (v&0x8000) rF|= flagC;
+  v<<= 1;
+  v|= oldc;
+  if (!v) rF|= flagZ;
+  acc16->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::RLCW_NSP(t_mem code)
+{
+  u16_t a= a_n_sp();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  u16_t oldc= (rF&flagC)?1:0;
+  rF&= ~flagCZ;
+  if (v&0x8000) rF|= flagC;
+  v<<= 1;
+  v|= oldc;
+  if (!v) rF|= flagZ;
+  rom->write(a, v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::SRAW(t_mem code)
+{
+  i16_t v= acc16->get();
+  rF&= ~flagCZ;
+  if (v&1) rF|= flagC;
+  v>>= 1;
+  if (!v) rF|= flagZ;
+  cF.W(rF);
+  acc16->W(v);
+  return resGO;
+}
+
+int
+cl_f8::ADDW_SP_D(t_mem code)
+{
+  i8_t d= fetch();
+  cSP.W(rSP+d);
+  return resGO;
+}
+
+int
+cl_f8::ADDW_A_D(t_mem code)
+{
+  u16_t v= fetch();
+  if (v&0x80)
+    v|= 0xff00;
+  u16_t r= add16(acc16->get(), v, 0, false);
+  acc16->W(r);
+  return resGO;
+}
+
+int
+cl_f8::ADDW_Y_SP(t_mem code)
+{
+  cY.W(rY+rSP);
+  return resGO;
+}
+
+int
+cl_f8::CPW(t_mem code)
+{
+  u16_t a, b;
+  a= acc16->get();
+  b= fetch();
+  b+= fetch()*256;
+  b= ~b;
+  b++;
+  add16(a, b, 0, true);
+  return resGO;
+}
+
+int
+cl_f8::INCNW(t_mem code)
+{
+  acc16->W(acc16->get() + 1);
+  return resGO;
+}
+
+int
+cl_f8::DECW_NSP(t_mem code)
+{
+  // TODO: flags untuched?
+  u16_t a= a_n_sp();
+  u16_t v= read_addr(rom, a);
+  vc.rd+= 2;
+  v--;
+  rom->write(a, v);
+  rom->write(a+1, v>>8);
+  vc.wr+= 2;
+  return resGO;
+}
+
+/* C<-XXXXXXXX<-0 */
+
+int
+cl_f8::SLLW_A_XL(t_mem code)
+{
+  u32_t v= acc16->get();
+  rF&= ~flagCZ;
+  v<<= rXL;
+  if (v & 0x10000) rF|= flagC;
+  v&= 0xffff;
+  if (!v) rF|= flagZ;
+  acc16->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::SEX(t_mem code)
+{
+  u16_t v= rXL;
+  rF&= ~flagZN;
+  if (v&0x80)
+    {
+      v|= 0xff00;
+      rF|= flagN;
+    }
+  if (!v) rF|= flagZ;
+  acc16->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_f8::ZEX(t_mem code)
+{
+  u16_t v= rXL;
+  rF&= ~flagZ;
+  if (!v) rF|= flagZ;
+  acc16->W(v);
+  cF.W(rF);
   return resGO;
 }
 
