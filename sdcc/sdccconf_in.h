@@ -122,6 +122,9 @@
 #undef OPT_DISABLE_EZ80_Z80
 
 /* XXX */
+#undef OPT_DISABLE_F8
+
+/* XXX */
 #undef OPT_DISABLE_HC08
 
 /* XXX */
