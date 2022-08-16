@@ -408,7 +408,13 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if(t1 == S_REG && !(t2 == S_REG && r2 == XL)) {
+		if (t1 == S_REG && r1 == YH && t2 == S_REG && (r2 == XH || r2 == ZL)) { // Use both swapop and altacc.
+			outab(0x9c);
+			altacc(r2);
+			outab(0x88);
+			break;
+		}
+		else if(t1 == S_REG && !(t2 == S_REG && r2 == XL)) {
 			altacc(r1);
 			switch(t2) {
 			case S_IMM:

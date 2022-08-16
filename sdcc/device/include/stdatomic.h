@@ -10,6 +10,13 @@ _Bool atomic_flag_test_and_set(volatile atomic_flag *object);
 
 void atomic_flag_clear(volatile atomic_flag *object);
 
+#elif defined(__SDCC_f8)
+
+#define ATOMIC_FLAG_INIT {0}
+_Bool atomic_flag_test_and_set(volatile atomic_flag *object);
+
+void atomic_flag_clear(volatile atomic_flag *object);
+
 #elif defined(__SDCC_mcs51)
 
 #define ATOMIC_FLAG_INIT {0}
