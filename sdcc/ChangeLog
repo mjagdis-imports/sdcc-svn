@@ -1,3 +1,10 @@
+2022-08-16 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  .version,
+	  support/regression/tests/pragma_pedantic_parse_number.c:
+	  Document dropped support for --pedantic-parse-number and #pragma pedantic_parse_number.
+
 2022-08-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* device/lib/pic16/startup/crt0.c,
