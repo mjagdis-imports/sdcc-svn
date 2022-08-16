@@ -2820,6 +2820,8 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplici
     return mustCast ? -1 : 1;
   if ((IS_VOID (src->next) && !IS_VOID (dest->next)) || (!IS_VOID (src->next) && IS_VOID (dest->next)))
     return -1;
+  if (IS_STRUCT (src->next) && IS_STRUCT (dest->next) && SPEC_STRUCT (src->next) == SPEC_STRUCT (dest->next))
+    return mustCast ? -1 : 1;
   res = compareType (dest->next, src->next, ignoreimplicitintrinsic);
 
   /* All function pointers can be cast (6.6 in the ISO C11 standard) TODO: What about address spaces? */
@@ -2849,6 +2851,10 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
 
   if (src && !dest)
     return 0;
+
+#if 0
+  printf("compareType: "); printTypeChain (dest, stdout); printf(" vs. "); printTypeChain (src, 0);
+#endif
 
   /* if dest is a declarator then */
   if (IS_DECL (dest))
@@ -2934,13 +2940,16 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
   if (IS_BITFIELD (dest) && IS_BITFIELD (src) && (SPEC_BLEN (dest) != SPEC_BLEN (src) || SPEC_BSTR (dest) != SPEC_BSTR (src)))
     return -1;
 
-  if (SPEC_NOUN (dest) == V_BITINT && SPEC_NOUN (src) == V_BITINT)
+  if ((SPEC_NOUN (dest) == V_BITINT || SPEC_NOUN (dest) == V_BITINTBITFIELD) && (SPEC_NOUN (src) == V_BITINT || SPEC_NOUN (src) == V_BITINTBITFIELD))
     {
       if (SPEC_BITINTWIDTH (dest) != SPEC_BITINTWIDTH (src) ||
         SPEC_USIGN (dest) && !SPEC_USIGN (src) && SPEC_BITINTWIDTH (dest) % 8) // Cast from sgined to unsigned type cannot be omitted, since it requires masking top bits.
         return -1;
       return (SPEC_USIGN (dest) == SPEC_USIGN (src) ? 1 : -2);
     }
+  else if (IS_ARITHMETIC (dest) && IS_ARITHMETIC (src) &&
+    ((SPEC_NOUN (dest) == V_BITINT) ^ (SPEC_NOUN (src) == V_BITINT)))
+    return -1;
 
   /* it is a specifier */
   if (SPEC_NOUN (dest) != SPEC_NOUN (src))
@@ -2963,8 +2972,19 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
     {
       if (SPEC_STRUCT (dest) != SPEC_STRUCT (src))
         return 0;
-      else
-        return 1;
+
+      structdef *destsdef = SPEC_STRUCT (dest);
+      structdef *srcsdef = SPEC_STRUCT (src);
+
+      for (symbol *dstfieldsym = destsdef->fields, *srcfieldsym = srcsdef->fields; srcfieldsym || dstfieldsym; dstfieldsym = dstfieldsym->next, srcfieldsym = srcfieldsym->next)
+        {
+          if (!srcfieldsym || !dstfieldsym)
+            return 0;
+          if (compareType (srcfieldsym->type, dstfieldsym->type, ignoreimplicitintrinsic) <= 0)
+            return 0;
+        }
+
+      return 1; 
     }
 
   if (SPEC_SHORT (dest) != SPEC_SHORT (src))

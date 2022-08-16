@@ -9788,7 +9788,7 @@ Compund literals are not supported.
 \end_layout
 
 \begin_layout Itemize
-Support for attributes is sightly incomplete.
+Support for attributes is slightly incomplete.
 \end_layout
 
 \begin_layout Itemize
@@ -9796,7 +9796,7 @@ The preprocessor is not C2X-compatible.
 \end_layout
 
 \begin_layout Itemize
-Checked integer arithmetic is not supported.
+Checked integer arithmetic is not supported for (unsigned) long long.
 \end_layout
 
 \begin_layout Itemize
@@ -9812,11 +9812,12 @@ constexpr is not implemented.
 \end_layout
 
 \begin_layout Itemize
-C2X tag compatibility rule changes are not implemented.
-\end_layout
-
-\begin_layout Itemize
-call_once is not implemented.
+SDCC deviates from the current C2X standard draft N3047 in tag compatibility
+ for unions: in SDCC, redeclarations of unions are required to have their
+ members in the same order as previous declarations.
+ The rule in N3047 is now considered a mistake by many, and will hopefully
+ be changed to the SDCC behaviour via a national body comment for the final
+ version of the standard.
 \end_layout
 
 \begin_layout Standard

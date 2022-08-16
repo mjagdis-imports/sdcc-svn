@@ -1,3 +1,92 @@
+2022-08-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* device/lib/pic16/startup/crt0.c,
+	  device/lib/pic16/startup/crt0i.c,
+	  device/lib/pic16/startup/crt0iz.c:
+	  Update interrupt syntax for new parser
+
+2022-08-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h:
+	  Fix bit and byte utilities find first leading bit functions for ports that don't have _BitInt yet.
+
+2022-08-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y:
+	  Document intentional deviation from C2X draft N3047 rules for tag compatibility for unions.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c:
+	  Fix handling of pointers to short, long and long long (without explicit int) in _Generic associations.
+	* device/include/stdckdint.h,
+	  device/lib/incl.mk,
+	  device/lib/ckd_add.c,
+	  device/lib/ckd_mul.c,
+	  device/lib/ckd_sub.c,
+	  doc/sdccman.lyx,
+	  .version:
+	  Checked integer arithmetic for all types except (unsigned) long long, part of RFE #749.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  .version,
+	  support/valdiag/tests/enum.c:
+	  C2X enum tag compatibility rules, RFE #852.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/struct.c:
+	  C2X struct / union tag compatibility rules, part of RFE #852.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/call_once.c:
+	  call_once, RFE #777.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_first_leading_one.c,
+	  support/regression/tests/bitfirstleading.c.in:
+	  Provide bit and byte utilities find first leading bit functions. RFE #854.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_count_leading_zeros.c,
+	  support/regression/tests/bitcountleading.c.in:
+	  Provide bit and byte utilities count leading bits functions. Part of RFE #854.
+	* src/SDCCast.c:
+	  Fix type handling for bit-precise types in _Generic association.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_first_trailing_oneull.c,
+	  support/regression/tests/bitfirst.c.in:
+	  Provide bit and byte utilities first trailing bit functions. Part of RFE #854.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/__stdc_count_trailing_onesull.c,
+	  device/lib/incl.mk,
+	  support/regression/tests/bitcounttrailing.c.in:
+	  Provide bit and byte utilities trailing bit count functions. Part of RFE #854.
+
 2022-08-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* src/SDCCsymt.c,
@@ -11,7 +100,7 @@
 	  device/lib/__stdc_bit_ceilull.c,
 	  device/lib/__stdc_bit_widthull.c,
 	  support/regression/tests/bitcount.c.in:
-	  Provide bit and byte utilitites bit width floor and ceiling functions.
+	  Provide bit and byte utilities bit width floor and ceiling functions. Part of RFE #854.
 
 2022-08-05 Benedikt Freisen <b.freisen AT gmx.net>
 
@@ -36,7 +125,7 @@
 	  device/lib/__stdc_count_onesull.c,
 	  support/regression/tests/bitcount.c.in,
 	  device/lib/_mullong.c:
-	  Provide and use bit and byte utility types and macros. Provide bit and byte utilitites bit count and single-bit check functions.
+	  Provide and use bit and byte utility types and macros. Provide bit and byte utilities bit count and single-bit check functions. Part of RFE #854.
 
 2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 

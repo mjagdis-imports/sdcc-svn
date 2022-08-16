@@ -758,7 +758,7 @@ struct_or_union_specifier
         {
           structdef *sdef;
 
-          if (! $3->tagsym)
+          if (!$3->tagsym)
             {
               /* no tag given, so new struct def for current scope */
               addSym (StructTab, $3, $3->tag, $3->level, currBlockno, 0);
@@ -772,14 +772,9 @@ struct_or_union_specifier
                   if (sdef->block == currBlockno)
                     {
                       if (sdef->fields)
-                        {
-                          werror(E_STRUCT_REDEF, $3->tag);
-                          werrorfl(sdef->tagsym->fileDef, sdef->tagsym->lineDef, E_PREVIOUS_DEF);
-                        }
-                      else
-                        {
-                          $3 = sdef; /* We are completing an incomplete type */
-                        }
+                        $3->redefinition = true;
+                      else // We are completing an incomplete type
+                        $3 = sdef;
                     }
                   else
                     {
@@ -837,10 +832,33 @@ struct_or_union_specifier
             }
 
           /* Create a structdef   */
-          sdef = $3;
-          sdef->fields = reverseSyms($6);        /* link the fields */
-          sdef->size = compStructSize($1, sdef); /* update size of  */
-          promoteAnonStructs ($1, sdef);
+          $3->fields = reverseSyms($6);        /* link the fields */
+          $3->size = compStructSize($1, $3);   /* update size of  */
+          promoteAnonStructs ($1, $3);
+
+          if ($3->redefinition) // Since C2X, multiple definitions for struct /union are allowed, if they are compatible and have the same tags. The current standard draft N3047 allows redeclaration sof unions to have a different oder of the members. We don't. The rule in N3047 is now considered a mistake by many, and will hopefully be changed to the SDCC behaviour via a national body comment for the final version of the standard.
+            {
+              sdef = findSymWithBlock (StructTab, $3->tagsym, currBlockno, NestLevel);
+              bool compatible = options.std_c2x && sdef->tagsym && $3->tagsym && !strcmp (sdef->tagsym->name, $3->tagsym->name);
+              for (symbol *fieldsym1 = sdef->fields, *fieldsym2 = $3->fields; compatible; fieldsym1 = fieldsym1->next, fieldsym2 = fieldsym2->next)
+                {
+                  if (!fieldsym1 && !fieldsym2)
+                    break;
+                  if (!fieldsym1 || !fieldsym2)
+                    compatible = false;
+                  else if (strcmp (fieldsym1->name, fieldsym2->name))
+                    compatible = false;
+                  else if (compareType (fieldsym1->type, fieldsym2->type, true) <= 0)
+                    compatible = false;
+               }
+              if (!compatible)
+                {
+                  werror(E_STRUCT_REDEF_INCOMPATIBLE, $3->tag);
+                  werrorfl(sdef->tagsym->fileDef, sdef->tagsym->lineDef, E_PREVIOUS_DEF);
+                }
+            }
+          else
+            sdef = $3;
 
           /* Create the specifier */
           $$ = newLink (SPECIFIER);
@@ -975,16 +993,19 @@ enum_specifier
           symbol *csym;
           sym_link *enumtype;
 
-          csym = findSymWithLevel(enumTab, $2);
-          if ((csym && csym->level == $2->level))
-            {
-              werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
-              werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
-            }
-
           enumtype = newEnumType ($4);
           SPEC_SCLS(getSpec(enumtype)) = 0;
           $2->type = enumtype;
+
+          csym = findSymWithLevel(enumTab, $2);
+          if ((csym && csym->level == $2->level))
+            {
+              if (!options.std_c2x || compareType (csym->type, $2->type, true) <= 0)
+                {
+                  werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
+                  werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
+                }
+            }
 
           /* add this to the enumerator table */
           if (!csym)
@@ -1032,18 +1053,26 @@ enumerator
         {
           symbol *sym;
 
-          // check if the symbol at the same level already exists
-          if ((sym = findSymWithLevel (SymbolTab, $1)) && sym->level == $1->level)
-            {
-              werrorfl ($1->fileDef, $1->lineDef, E_DUPLICATE_MEMBER, "enum", $1->name);
-              werrorfl (sym->fileDef, sym->lineDef, E_PREVIOUS_DEF);
-            }
           $1->type = copyLinkChain ($3->type);
           $1->etype = getSpec ($1->type);
           SPEC_ENUM ($1->etype) = 1;
           $$ = $1;
-          // do this now, so we can use it for the next enums in the list
-          addSymChain (&$1);
+
+          // check if the symbol at the same level already exists
+          if ((sym = findSymWithLevel (SymbolTab, $1)) && sym->level == $1->level)
+            {
+              // C2X allows redefinitions of enumeration constants with the same value as part of a redeclaration of the same enumerated type.
+              if (!options.std_c2x || ullFromVal (valFromType (sym->type)) != ullFromVal (valFromType ($1->type)))
+                {
+                  werrorfl ($1->fileDef, $1->lineDef, E_DUPLICATE_MEMBER, "enum", $1->name);
+                  werrorfl (sym->fileDef, sym->lineDef, E_PREVIOUS_DEF);
+                }
+            }
+          else
+            {
+              // do this now, so we can use it for the next enums in the list
+              addSymChain (&$1);
+            }
         }
    ;
 

@@ -59,6 +59,7 @@ COMMON_LONG = \
   _modulong.c
 
 COMMON_SDCC = \
+  call_once.c \
   isalnum.c \
   isalpha.c \
   isblank.c \
@@ -73,6 +74,9 @@ COMMON_SDCC = \
   isxdigit.c \
   tolower.c \
   toupper.c \
+  ckd_add.c \
+  ckd_sub.c \
+  ckd_mul.c \
   atoi.c \
   atol.c \
   atoll.c \
@@ -132,6 +136,10 @@ COMMON_SDCC = \
   gets.c \
   __assert.c \
   time.c \
+  __stdc_count_leading_zeros.c \
+  __stdc_count_trailing_onesull.c \
+  __stdc_first_leading_one.c \
+  __stdc_first_trailing_oneull.c \
   __stdc_count_onesull.c \
   __stdc_bit_widthull.c \
   __stdc_bit_ceilull.c
