@@ -23,6 +23,9 @@ F8_INT = $(COMMON_INT) \
   _mulint.c \
   _divsint.c \
   _divuint.c \
+  _moduchar.c \
+  _modschar.c \
+  _moduint.c \
   _modsint.c
 
 F8_LONG = $(COMMON_LONG) \
