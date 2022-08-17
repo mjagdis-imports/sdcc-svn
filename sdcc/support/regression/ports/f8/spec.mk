@@ -7,18 +7,18 @@ EMU_PORT_FLAG =
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
-  UCSTM8C = $(SDCC_BIN_PATH)/ucsim_stm8$(EXEEXT)
+  UCF8C = $(SDCC_BIN_PATH)/ucsim_f8$(EXEEXT)
 
-  AS_STM8C = $(SDCC_BIN_PATH)/sdasf8$(EXEEXT)
+  AS_F8C = $(SDCC_BIN_PATH)/sdasf8$(EXEEXT)
 else
   ifdef UCSIM_DIR
-    UCSTM8A = $(UCSIM_DIR)/stm8.src/ucsim_stm8$(EXEEXT)
+    UCF8A = $(UCSIM_DIR)/f8.src/ucsim_f8$(EXEEXT)
   else
-    UCSTM8A = $(top_builddir)/sim/ucsim/stm8.src/ucsim_stm8$(EXEEXT)
-    UCSTM8B = $(top_builddir)/bin/ucsim_stm8$(EXEEXT)
+    UCF8A = $(top_builddir)/sim/ucsim/f8.src/ucsim_f8$(EXEEXT)
+    UCF8B = $(top_builddir)/bin/ucsim_f8$(EXEEXT)
   endif
 
-  EMU = $(WINE) $(shell if [ -f $(UCSTM8A) ]; then echo $(UCSTM8A); else echo $(UCSTM8B); fi)
+  EMU = $(WINE) $(shell if [ -f $(UCF8A) ]; then echo $(UCF8A); else echo $(UCF8B); fi)
 
   AS = $(WINE) $(top_builddir)/bin/sdasf8$(EXEEXT)
 

@@ -2,6 +2,8 @@
 
 	* device/lib/f8/Makefile.in:
 	  Build small integer modulo support routines for f8.
+	* support/regression/ports/f8/spec.mk:
+	  f8 regression test infrastructure.
 
 2022-08-16 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
