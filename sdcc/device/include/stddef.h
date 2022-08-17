@@ -31,7 +31,7 @@
 #define __SDCC_STDDEF_H 1
 
 #ifndef NULL
-  #define NULL (void *)0
+  #define NULL ((void *)0)
 #endif
 
 #ifndef __PTRDIFF_T_DEFINED
@@ -73,6 +73,13 @@ typedef int errno_t;
 #endif
 
 #define offsetof(s, m) __builtin_offsetof (s, m)
+
+void __builtin_unreachable(void);
+#if __STDC_VERSION__ > 201112L // TODO: Replace by >= to exact value from final version of C2X standard.
+#define unreachable __builtin_unreachable
+
+typedef typeof(nullptr) nullptr_t;
+#endif
 
 #endif
 

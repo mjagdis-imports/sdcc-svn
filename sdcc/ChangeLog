@@ -1,3 +1,315 @@
+2022-08-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/ports/hc08/spec.mk,
+	  support/regression/ports/s08/spec.mk:
+	  Increase regression test timeout slightly, so a passive-cooled Raspi 4B can run the qct_0042-prime regression test in Summer.
+
+2022-08-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* device/lib/pic16/startup/crt0.c,
+	  device/lib/pic16/startup/crt0i.c,
+	  device/lib/pic16/startup/crt0iz.c:
+	  Update interrupt syntax for new parser
+
+2022-08-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h:
+	  Fix bit and byte utilities find first leading bit functions for ports that don't have _BitInt yet.
+
+2022-08-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y:
+	  Document intentional deviation from C2X draft N3047 rules for tag compatibility for unions.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c:
+	  Fix handling of pointers to short, long and long long (without explicit int) in _Generic associations.
+	* device/include/stdckdint.h,
+	  device/lib/incl.mk,
+	  device/lib/ckd_add.c,
+	  device/lib/ckd_mul.c,
+	  device/lib/ckd_sub.c,
+	  doc/sdccman.lyx,
+	  .version:
+	  Checked integer arithmetic for all types except (unsigned) long long, part of RFE #749.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  .version,
+	  support/valdiag/tests/enum.c:
+	  C2X enum tag compatibility rules, RFE #852.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/struct.c:
+	  C2X struct / union tag compatibility rules, part of RFE #852.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/call_once.c:
+	  call_once, RFE #777.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_first_leading_one.c,
+	  support/regression/tests/bitfirstleading.c.in:
+	  Provide bit and byte utilities find first leading bit functions. RFE #854.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_count_leading_zeros.c,
+	  support/regression/tests/bitcountleading.c.in:
+	  Provide bit and byte utilities count leading bits functions. Part of RFE #854.
+	* src/SDCCast.c:
+	  Fix type handling for bit-precise types in _Generic association.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_first_trailing_oneull.c,
+	  support/regression/tests/bitfirst.c.in:
+	  Provide bit and byte utilities first trailing bit functions. Part of RFE #854.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/__stdc_count_trailing_onesull.c,
+	  device/lib/incl.mk,
+	  support/regression/tests/bitcounttrailing.c.in:
+	  Provide bit and byte utilities trailing bit count functions. Part of RFE #854.
+
+2022-08-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/c2xkeywords.c:
+	  Fix bug #3468.
+
+2022-08-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_bit_ceilull.c,
+	  device/lib/__stdc_bit_widthull.c,
+	  support/regression/tests/bitcount.c.in:
+	  Provide bit and byte utilities bit width floor and ceiling functions. Part of RFE #854.
+
+2022-08-05 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/stddef.h:
+	  Protect NULL macro with parentheses, fixing bug #3467.
+
+2022-08-05 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Missing K&R function support is not a deviation from C2X compliance.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/include/stdint.h,
+	  device/lib/_mulint.c,
+	  device/lib/_mullong.c,
+	  device/lib/_rlulonglong.c,
+	  device/lib/_rrslonglong.c,
+	  device/lib/_rrulonglong.c,
+	  device/lib/_startup.c,
+	  device/lib/__stdc_count_onesull.c,
+	  support/regression/tests/bitcount.c.in,
+	  device/lib/_mullong.c:
+	  Provide and use bit and byte utility types and macros. Provide bit and byte utilities bit count and single-bit check functions. Part of RFE #854.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* .version,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/regression/tests/bug-3462.c:
+	  Fix bug #3462.
+	* doc/sdccman.lyx:
+	  Update manual section on standard compliance for recent improvements.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-3465.c:
+	  Basic C99 VLA type support, RFE #786, fix bug #3465.
+
+2022-08-04 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* support/scripts/sdcc.nsi:
+	  Correct STM8 memory model name from small to medium, fixing bug #3466.
+
+2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmem.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h:
+	  Infrastructure for VLA types.
+
+2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCval.h,
+	  C2X {} empty initializers, RFE #782.
+
+2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/util/dbuf_string.c:
+	  Code cleanup.
+	* src/SDCCglue.c:
+	  Fix area directive for sseg, patch by Tarn.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Refactor handling of array declarators.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCC.y:
+	  Allow more attribute arguments, warn on unknown attributes.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Allow attributes in direct declarators. Avoiding grammar conflicts for K&R function definitions made this a bit more complex.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-2664.c:
+	  Fix bug #2664.
+	* support/valdiag/tests/bug-3009.c,
+	  support/valdiag/tests/bug-3011.c:
+	  Ignore a warning that is irrelevant for these test cases.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-2222.c,
+	  support/regression/tests/bug-2263.c,
+	  support/regression/tests/bug-2320.c,
+	  support/regression/tests/bug-2629.c,
+	  support/regression/tests/bug-2956.c,
+	  support/regression/tests/bug-3079.c,
+	  support/regression/tests/bug-3081.c,
+	  support/regression/tests/bug-3093.c,
+	  support/regression/tests/bug-3135.c,
+	  support/regression/tests/bug-3169.c,
+	  support/regression/tests/bug-3215.c:
+	  Fix handling of pre-C2X function declarators without prototype, RFE #776.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  support/regression/tests/auto.c,
+	  support/valdiag/tests/bug-3464.c:
+	  C2X auto, RFE #849, fix bug #3464.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCast.h,
+	  src/SDCCast.c,
+	  .version,
+	  support/regression/tests/typeof.c:
+	  C2X typeof, typeof_unqual, RFE #739, RFE #783.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stddef.h,
+	  src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  support/regression/tests/unreachable.c:
+	  C2X unreachable, RFE #778.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/memalignment.c,
+	  support/regression/tests/memalignment.c.in:
+	  C2X memalignment, RFE #856.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.h,
+	  device/include/stddef.h,
+	  support/regression/tests/c2xkeywords.c,
+	  support/regression/tests/typeof.c:
+	  Basic C2X typeof and typeof_unqual support, part of RFE #739, RFE #783. RFE #853.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/SDCCval.h:
+	  Basic C2X nullptr support, part of RFE #853.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Simplify grammar rules for enum.
+
 2022-07-29 Felix Salfelder <felix AT salfelder.org>
 
 	* src/SDCC.y:
@@ -166,6 +478,22 @@
 
 	* src/SDCC.y:
 	  Fix SDCC crash on error message for duplicate default label.
+
+2022-06-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  device/lib/ds390/lcd390.c,
+	  device/lib/ds390/rtc390.c,
+	  support/regression/tests/absolute.c.in,
+	  support/regression/tests/bitfields-bits1.c.in,
+	  support/regression/tests/bitfields-checks.c.in,
+	  support/regression/tests/bitfields-dead-loop.c.in,
+	  support/regression/tests/bitfields-nibbles.c.in,
+	  support/regression/tests/bug1723128.c,
+	  support/regression/tests/bug1750318.c,
+	  support/regression/tests/bug663539.c,
+	  support/regression/tests/simplefloat.c:
+	  Place __at next to identifier in declarations.
 
 2022-06-21 Maarten Brock <sourceforge.brock AT dse.nl>
 

@@ -52,6 +52,12 @@
 
 #define MB_CUR_MAX 4
 
+#if __STDC_VERSION__ > 201112L // TODO: Replace by >= to exact value from final version of C2X standard.
+typedef bool once_flag;
+#define ONCE_FLAG_INIT false
+void call_once(once_flag *flag, void (*func)(void));
+#endif
+
 /* Numeric conversion functions (ISO C11 7.22.1) */
 extern float atof (const char *nptr);
 extern int atoi (const char *nptr);
@@ -91,7 +97,7 @@ inline void *aligned_alloc(size_t alignment, size_t size)
 #endif
 extern void free (void * ptr);
 
-#if __STDC_VERSION__ >= 202300L
+#if __STDC_VERSION__ >= 202300L // TODO: Replace by final value when C2X is published!
 inline void free_sized(void *ptr, size_t size)
 {
   (void)size;
@@ -150,6 +156,11 @@ int wctomb(char *s, wchar_t wc);
 #if __STDC_VERSION__ >= 199901L
 size_t mbstowcs(wchar_t *restrict pwcs, const char *restrict s, size_t n);
 size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n);
+#endif
+
+/* C2X Alignment of memory */
+#if __STDC_VERSION__ >= 202300L // TODO: Replace by final value when C2X is published!
+size_t memalignment(const void *p);
 #endif
 
 /* Bounds-checking interfaces from annex K of the C11 standard. */

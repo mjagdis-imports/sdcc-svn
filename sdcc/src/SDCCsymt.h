@@ -36,33 +36,6 @@
 
 #define BITVAR_PAD -1
 
-enum
-{
-  TYPEOF_INT = 1,
-  TYPEOF_SHORT,
-  TYPEOF_BOOL,
-  TYPEOF_CHAR,
-  TYPEOF_LONG,
-  TYPEOF_LONGLONG,
-  TYPEOF_FLOAT,
-  TYPEOF_FIXED16X16,
-  TYPEOF_BIT,
-  TYPEOF_BITFIELD,
-  TYPEOF_SBIT,
-  TYPEOF_SFR,
-  TYPEOF_VOID,
-  TYPEOF_STRUCT,
-  TYPEOF_ARRAY,
-  TYPEOF_FUNCTION,
-  TYPEOF_POINTER,
-  TYPEOF_FPOINTER,
-  TYPEOF_CPOINTER,
-  TYPEOF_GPOINTER,
-  TYPEOF_PPOINTER,
-  TYPEOF_IPOINTER,
-  TYPEOF_EEPPOINTER
-};
-
 // values for first byte (or 3 most significant bits) of generic pointer.
 #if 0
 #define GPTYPE_FAR       0x00
@@ -100,6 +73,7 @@ typedef struct structdef
   int type;                     /* STRUCT or UNION            */
   bool b_flexArrayMember;       /* has got a flexible array member,
                                    only needed for syntax checks */
+  bool redefinition;            /* is a redefinition only needed for syntax checks */
   struct symbol *tagsym;        /* tag symbol (NULL if no tag) */
 }
 structdef;
@@ -113,6 +87,7 @@ typedef enum
   V_FIXED16X16,
   V_BOOL,
   V_CHAR,
+  V_NULLPTR,
   V_VOID,
   V_STRUCT,
   V_LABEL,
@@ -174,9 +149,10 @@ typedef struct specifier
   unsigned b_noreturn:1;            /* promised not to return     */
   unsigned b_alignas:1;             /* alignment                  */
   unsigned b_absadr:1;              /* absolute address specfied  */
-  unsigned b_volatile:1;            /* is marked as volatile      */
   unsigned b_const:1;               /* is a constant              */
   unsigned b_restrict:1;            /* is restricted              */
+  unsigned b_volatile:1;            /* is marked as volatile      */
+  unsigned b_atomic:1;              /* is marked as _Atomic       */
   struct symbol *addrspace;         /* is in named address space  */
   unsigned b_typedef:1;             /* is typedefed               */
   unsigned b_isregparm:1;           /* is the first parameter     */
@@ -225,15 +201,20 @@ typedef enum
 }
 DECLARATOR_TYPE;
 
+typedef struct ast ast;
+
 typedef struct declarator
 {
   DECLARATOR_TYPE dcl_type;         /* POINTER,ARRAY or FUNCTION  */
   bool dcl_type_implicitintrinsic:1;/* intrinsic named address space indicated by dcltype has been assigned implicitly. */
   size_t num_elem;                  /* # of elems if type==array, */
+  ast *num_elem_ast;                /* ast for # of elems, used to calculate num_elem. */
   /* always 0 for flexible arrays */
   unsigned ptr_const:1;             /* pointer is constant        */
   unsigned ptr_volatile:1;          /* pointer is volatile        */
   unsigned ptr_restrict:1;          /* pointer is resticted       */
+  bool array_vla:1;                 // Array is known to be a VLA.
+  bool vla_check_visited:1;         // Already visited in check for VLA - implementation detail to prevent infinite recursion */
   struct symbol *ptr_addrspace;     /* pointer is in named address space  */
 
   struct sym_link *tspec;           /* pointer type specifier     */
@@ -278,6 +259,7 @@ typedef struct sym_link
     unsigned rbank:1;               /* seperate register bank               */
     unsigned inlinereq:1;           /* inlining requested                   */
     unsigned noreturn:1;            /* promised not to return               */
+    bool noprototype:1;             /* Up to C17 function declaratos without prototypes were allowed */
     signed sdcccall;                /* ABI version used                     */
     unsigned smallc:1;              /* Small-C calling convention: Parameters on stack are passed left-to-right */
     unsigned raisonance:1;          /* Raisonance calling convention for STM8 */
@@ -420,9 +402,11 @@ extern sym_link *validateLink (sym_link * l,
 #define DCL_TYPE(l)  validateLink(l, "DCL_TYPE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.dcl_type
 #define DCL_TYPE_IMPLICITINTRINSIC(l)  validateLink(l, "DCL_TYPE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.dcl_type_implicitintrinsic
 #define DCL_ELEM(l)  validateLink(l, "DCL_ELEM", #l, DECLARATOR, __FILE__, __LINE__)->select.d.num_elem
+#define DCL_ELEM_AST(l)  validateLink(l, "DCL_ELEM", #l, DECLARATOR, __FILE__, __LINE__)->select.d.num_elem_ast
 #define DCL_PTR_CONST(l) validateLink(l, "DCL_PTR_CONST", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_const
 #define DCL_PTR_VOLATILE(l) validateLink(l, "DCL_PTR_VOLATILE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_volatile
 #define DCL_PTR_RESTRICT(l) validateLink(l, "DCL_PTR_RESTRICT", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_restrict
+#define DCL_ARRAY_VLA(l) validateLink(l, "DCL_ARRAY_VLA", #l, DECLARATOR, __FILE__, __LINE__)->select.d.array_vla
 #define DCL_PTR_ADDRSPACE(l) validateLink(l, "DCL_PTR_ADDRSPACE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_addrspace
 #define DCL_TSPEC(l) validateLink(l, "DCL_TSPEC", #l, DECLARATOR, __FILE__, __LINE__)->select.d.tspec
 
@@ -447,6 +431,8 @@ extern sym_link *validateLink (sym_link * l,
 #define IFFUNC_ISINLINE(x) (IS_FUNC(x) && FUNC_ISINLINE(x))
 #define FUNC_ISNORETURN(x) (x->funcAttrs.noreturn)
 #define IFFUNC_ISNORETURN(x) (IS_FUNC(x) && FUNC_ISNORETURN(x))
+#define FUNC_NOPROTOTYPE(x) (x->funcAttrs.noprototype)
+#define IFFUNC_NOPROTOTYPE(x) (IS_FUNC(x) && FUNC_NOPROTOTYPE(x))
 
 #define FUNC_ISREENT(x) (x->funcAttrs.reent)
 #define IFFUNC_ISREENT(x) (IS_FUNC(x) && FUNC_ISREENT(x))
@@ -519,9 +505,10 @@ extern sym_link *validateLink (sym_link * l,
  * _bitStart field instead of defining a new field.
  */
 #define SPEC_ISR_SAVED_BANKS(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s._bitStart
-#define SPEC_VOLATILE(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_volatile
 #define SPEC_CONST(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_const
 #define SPEC_RESTRICT(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_restrict
+#define SPEC_VOLATILE(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_volatile
+#define SPEC_ATOMIC(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_atomic
 #define SPEC_ADDRSPACE(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.addrspace
 #define SPEC_STRUCT(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.v_struct
 #define SPEC_TYPEDEF(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_typedef
@@ -553,7 +540,7 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_FARPTR(x)     (IS_DECL(x) && DCL_TYPE(x) == FPOINTER)
 #define IS_CODEPTR(x)    (IS_DECL(x) && DCL_TYPE(x) == CPOINTER)
 #define IS_GENPTR(x)     (IS_DECL(x) && DCL_TYPE(x) == GPOINTER)
-#define IS_FUNCPTR(x)    (IS_DECL(x) && (DCL_TYPE(x) == CPOINTER || DCL_TYPE(x) == GPOINTER) && IS_FUNC(x->next))
+#define IS_FUNCPTR(x)    (IS_DECL(x) && (DCL_TYPE(x) == CPOINTER || DCL_TYPE(x) == GPOINTER || DCL_TYPE(x) == UPOINTER) && IS_FUNC(x->next))
 #define IS_FUNC(x)       (IS_DECL(x) && DCL_TYPE(x) == FUNCTION)
 #define IS_LONG(x)       (IS_SPEC(x) && x->select.s.b_long)
 #define IS_LONGLONG(x)   (IS_SPEC(x) && x->select.s.b_longlong)
@@ -569,6 +556,7 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_INLINE(x)     (IS_SPEC(x) && SPEC_INLINE(x))
 #define IS_NORETURN(x)   (IS_SPEC(x) && SPEC_NORETURN(x))
 #define IS_INT(x)        (IS_SPEC(x) && x->select.s.noun == V_INT)
+#define IS_NULLPTR(x)    (IS_SPEC(x) && x->select.s.noun == V_NULLPTR)
 #define IS_VOID(x)       (IS_SPEC(x) && x->select.s.noun == V_VOID)
 #define IS_BOOL(x)       (IS_SPEC(x) && x->select.s.noun == V_BOOL)
 #define IS_BITINT(x)     (IS_SPEC(x) && x->select.s.noun == V_BITINT)

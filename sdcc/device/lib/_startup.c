@@ -49,7 +49,7 @@ unsigned char _sdcc_external_startup (void) __nonbanked
 
 #else
 
-unsigned char _sdcc_external_startup ()
+unsigned char _sdcc_external_startup (void)
 {
     return 0;
 }

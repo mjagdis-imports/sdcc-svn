@@ -237,7 +237,7 @@ enum {
   E_INTEGERSUFFIX               = 207, /* Invalid integer suffix */
   E_AUTO_ADDRSPACE              = 208, /* named address space for auto var */
   W_NORETURNRETURN              = 209, /* return in _noreturn function */
-  E_STRUCT_REDEF                = 210, /* struct or union tag redefined */
+  E_STRUCT_REDEF_INCOMPATIBLE   = 210, /* struct or union tag redefined to incompatible type */
   W_STRING_CANNOT_BE_TERMINATED = 211, /* string cannot be terminated within array */
   W_LONGLONG_LITERAL            = 212, /* long long literal */
   S_SYNTAX_ERROR                = 213, /* syntax error */
@@ -308,6 +308,17 @@ enum {
   W_RETURN_TYPE_OMITTED_INT     = 278, /* return type of function omitted, assuming int */
   W_SINGLE_DASH_LONG_OPT        = 279, /* use of single-dash long options is discouraged */
   E_UNKNOWN_LANGUAGE_STANDARD   = 280, /* unknown language standard */
+  E_CONSTEXPR                   = 281, /* constexpr not implemented */
+  E_TYPEOF                      = 282, /* typeof and typeof_unqual not implemented for nontrivial expressions */
+  W_FUNCDECL_WITH_NO_PROTOTYPE  = 283, /* function declarator with no prototype */
+  W_UNKNOWN_ATTRIBUTE           = 284, /* unknown attribute ignored*/
+  W_EMPTY_INIT_C2X              = 285, /* empty initializer requires ISO C2X or later */
+  E_EMPTY_INIT_UNKNOWN_SIZE     = 286, /* array of unknown size cannnot be initialized by an empty initializer */
+  E_VLA_TYPE_C99                = 287, /* variable length array type requires ISO C99 or later */
+  E_VLA_OBJECT                  = 288, /* object of variable length array type not supported */
+  E_VLA_SCOPE                   = 289, /* variable length array declarators must have function prototype scope or block scope */
+  E_VLA_INIT                    = 290, /* variable length arrays can be initalized by empty initalizers only */
+  W_ENUM_INT_RANGE_C2X          = 291, /* enumeration constant outside the range of int requires ISO C2X or later */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

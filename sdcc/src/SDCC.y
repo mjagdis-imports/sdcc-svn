@@ -41,6 +41,7 @@
 #include "SDCCutil.h"
 #include "SDCCbtree.h"
 #include "SDCCopt.h"
+#include "dbuf_string.h"
 
 extern int yyerror (char *);
 extern FILE     *yyin;
@@ -98,7 +99,7 @@ bool uselessDecl = true;
 %token <yyint> MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token <yyint> SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
 %token <yyint> XOR_ASSIGN OR_ASSIGN
-%token TYPEDEF EXTERN STATIC AUTO REGISTER CODE EEPROM INTERRUPT SFR SFR16 SFR32 ADDRESSMOD
+%token TYPEDEF EXTERN STATIC AUTO REGISTER CONSTEXPR CODE EEPROM INTERRUPT SFR SFR16 SFR32 ADDRESSMOD
 %token AT SBIT REENTRANT USING  XDATA DATA IDATA PDATA ELLIPSIS CRITICAL
 %token NONBANKED BANKED SHADOWREGS SD_WPARAM
 %token SD_BOOL SD_CHAR SD_SHORT SD_INT SD_LONG SIGNED UNSIGNED SD_FLOAT DOUBLE FIXED16X16 SD_CONST VOLATILE SD_VOID BIT
@@ -117,7 +118,7 @@ bool uselessDecl = true;
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
 /* C2X problem: too many legacy FALSE and TRUE still in SDCC, workaround: prefix by TOKEN_*/
-%token TOKEN_FALSE TOKEN_TRUE TYPEOF SD_BITINT
+%token TOKEN_FALSE TOKEN_TRUE NULLPTR TYPEOF TYPEOF_UNQUAL SD_BITINT
 %token DECIMAL32 DECIMAL64 DECIMAL128
 
 /* SDCC extensions */
@@ -133,13 +134,14 @@ bool uselessDecl = true;
 %type <sym> member_declarator_list member_declaration member_declaration_list
 %type <sym> declaration init_declarator_list init_declarator
 %type <sym> declaration_list identifier_list
+%type <sym> kr_declaration kr_declaration_list
 %type <sym> declaration_after_statement
 %type <sym> declarator2_function_attributes while do for critical
 %type <sym> addressmod
-%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier type_qualifier_list type_qualifier type_name
+%type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier typeof_specifier type_qualifier_list type_qualifier_list_opt type_qualifier type_name
 %type <lnk> storage_class_specifier struct_or_union_specifier function_specifier alignment_specifier
 %type <lnk> declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
-%type <lnk> function_attribute function_attributes enum_specifier
+%type <lnk> function_attribute function_attributes enum_specifier enum_comma_opt
 %type <lnk> abstract_declarator direct_abstract_declarator direct_abstract_declarator_opt array_abstract_declarator function_abstract_declarator
 %type <lnk> unqualified_pointer
 %type <val> parameter_type_list parameter_list parameter_declaration opt_assign_expr
@@ -180,6 +182,7 @@ primary_expression
 predefined_constant
    : TOKEN_FALSE { $$ = newAst_VALUE (constBoolVal (false, true)); }
    | TOKEN_TRUE  { $$ = newAst_VALUE (constBoolVal (true, true)); }
+   | NULLPTR     { $$ = newAst_VALUE (constNullptrVal ()); }
    ; /* add nullptr here if it gets approved for C23 */
 
 generic_selection
@@ -232,13 +235,23 @@ postfix_expression
                         $$ = newAst_VALUE (valueFromLit (0));
                       }
    | '(' type_name ')' '{' initializer_list ',' '}'
-                      {
-                        /* if (!options.std_c99) */
-                          werror(E_COMPOUND_LITERALS_C99);
+     {
+       // if (!options.std_c99)
+         werror(E_COMPOUND_LITERALS_C99);
 
-                        /* TODO: implement compound literals (C99) */
-                        $$ = newAst_VALUE (valueFromLit (0));
-                      }
+       // TODO: implement compound literals (C99)
+       $$ = newAst_VALUE (valueFromLit (0));
+     }
+   | '(' type_name ')' '{' '}'
+     {
+       if (!options.std_c2x)
+         werror(W_EMPTY_INIT_C2X);
+       // if (!options.std_c99)
+         werror(E_COMPOUND_LITERALS_C99);
+
+       // TODO: implement compound literals (C99)
+       $$ = newAst_VALUE (valueFromLit (0));
+     }
    ;
 
 argument_expr_list
@@ -457,6 +470,8 @@ declaration
          /* add the specifier list to the id */
          symbol *sym , *sym1;
 
+         bool autocandidate = options.std_c2x && SPEC_SCLS($1) == S_AUTO;
+
          for (sym1 = sym = reverseSyms($2);sym != NULL;sym = sym->next) {
              sym_link *lnk = copyLinkChain($1);
              sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
@@ -464,13 +479,13 @@ declaration
              for (l0 = sym->type; l0 != NULL; l0 = l0->next)
                if (IS_PTR (l0))
                  break;
-             /* check if creating intances of structs with flexible arrays */
+             /* check if creating instances of structs with flexible arrays */
              for (l1 = lnk; l1 != NULL; l1 = l1->next)
                if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
                  break;
              if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR($1) != 1)
                werror (W_FLEXARRAY_INSTRUCT, sym->name);
-             /* check if creating intances of function type */
+             /* check if creating instances of function type */
              for (l1 = lnk; l1 != NULL; l1 = l1->next)
                if (IS_FUNC (l1))
                  break;
@@ -479,6 +494,11 @@ declaration
                  break;
              if (l0 == NULL && l2 == NULL && l1 != NULL)
                werrorfl(sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+             if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE) // C2X auto type inference
+               {
+                 sym->type = sym->etype = typeofOp (sym->ival->init.node);
+                 SPEC_SCLS (lnk) = 0;
+               }
              /* do the pointer stuff */
              pointerTypes(sym->type,lnk);
              addDecl (sym,0,lnk);
@@ -559,6 +579,10 @@ storage_class_specifier
    | REGISTER  {
                   $$ = newLink (SPECIFIER);
                   SPEC_SCLS($$) = S_REGISTER;
+               }
+   | CONSTEXPR {
+                  $$ = newLink (SPECIFIER);
+                  werror (E_CONSTEXPR);
                }
    ;
 
@@ -659,7 +683,11 @@ type_specifier
             $$ = p = copyLinkChain(sym ? sym->type : NULL);
             SPEC_TYPEDEF(getSpec(p)) = 0;
             ignoreTypedefType = 1;
-         }            
+         }
+   | typeof_specifier
+     {
+       $$ = $1;
+     }          
    | FIXED16X16 {
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_FIXED16X16;
@@ -691,12 +719,46 @@ type_specifier
 
    | sfr_reg_bit;
 
+typeof_specifier
+   : TYPEOF '(' expression ')'
+     {
+       $$ = typeofOp ($3);
+       wassert ($$);
+     }
+   | TYPEOF '(' type_name ')'
+     {
+       checkTypeSanity ($3, "(typeof)");
+       $$ = $3;
+     }
+   | TYPEOF_UNQUAL '(' expression ')'
+     {
+       $$ = typeofOp ($3);
+       wassert ($$);
+       wassert (IS_SPEC ($$));
+       SPEC_CONST ($$) = 0;
+       SPEC_RESTRICT ($$) = 0;
+       SPEC_VOLATILE ($$) = 0;
+       SPEC_ATOMIC ($$) = 0;
+       SPEC_ADDRSPACE ($$) = 0;
+     }
+   | TYPEOF_UNQUAL '(' type_name ')'
+     {
+       checkTypeSanity ($3, "(typeof_unqual)");
+       $$ = $3;
+       wassert (IS_SPEC ($$));
+       SPEC_CONST ($$) = 0;
+       SPEC_RESTRICT ($$) = 0;
+       SPEC_VOLATILE ($$) = 0;
+       SPEC_ATOMIC ($$) = 0;
+       SPEC_ADDRSPACE ($$) = 0;
+     }
+
 struct_or_union_specifier
    : struct_or_union attribute_specifier_sequence_opt opt_stag
         {
           structdef *sdef;
 
-          if (! $3->tagsym)
+          if (!$3->tagsym)
             {
               /* no tag given, so new struct def for current scope */
               addSym (StructTab, $3, $3->tag, $3->level, currBlockno, 0);
@@ -710,14 +772,9 @@ struct_or_union_specifier
                   if (sdef->block == currBlockno)
                     {
                       if (sdef->fields)
-                        {
-                          werror(E_STRUCT_REDEF, $3->tag);
-                          werrorfl(sdef->tagsym->fileDef, sdef->tagsym->lineDef, E_PREVIOUS_DEF);
-                        }
-                      else
-                        {
-                          $3 = sdef; /* We are completing an incomplete type */
-                        }
+                        $3->redefinition = true;
+                      else // We are completing an incomplete type
+                        $3 = sdef;
                     }
                   else
                     {
@@ -775,10 +832,33 @@ struct_or_union_specifier
             }
 
           /* Create a structdef   */
-          sdef = $3;
-          sdef->fields = reverseSyms($6);        /* link the fields */
-          sdef->size = compStructSize($1, sdef); /* update size of  */
-          promoteAnonStructs ($1, sdef);
+          $3->fields = reverseSyms($6);        /* link the fields */
+          $3->size = compStructSize($1, $3);   /* update size of  */
+          promoteAnonStructs ($1, $3);
+
+          if ($3->redefinition) // Since C2X, multiple definitions for struct /union are allowed, if they are compatible and have the same tags. The current standard draft N3047 allows redeclaration sof unions to have a different oder of the members. We don't. The rule in N3047 is now considered a mistake by many, and will hopefully be changed to the SDCC behaviour via a national body comment for the final version of the standard.
+            {
+              sdef = findSymWithBlock (StructTab, $3->tagsym, currBlockno, NestLevel);
+              bool compatible = options.std_c2x && sdef->tagsym && $3->tagsym && !strcmp (sdef->tagsym->name, $3->tagsym->name);
+              for (symbol *fieldsym1 = sdef->fields, *fieldsym2 = $3->fields; compatible; fieldsym1 = fieldsym1->next, fieldsym2 = fieldsym2->next)
+                {
+                  if (!fieldsym1 && !fieldsym2)
+                    break;
+                  if (!fieldsym1 || !fieldsym2)
+                    compatible = false;
+                  else if (strcmp (fieldsym1->name, fieldsym2->name))
+                    compatible = false;
+                  else if (compareType (fieldsym1->type, fieldsym2->type, true) <= 0)
+                    compatible = false;
+               }
+              if (!compatible)
+                {
+                  werror(E_STRUCT_REDEF_INCOMPATIBLE, $3->tag);
+                  werrorfl(sdef->tagsym->fileDef, sdef->tagsym->lineDef, E_PREVIOUS_DEF);
+                }
+            }
+          else
+            sdef = $3;
 
           /* Create the specifier */
           $$ = newLink (SPECIFIER);
@@ -903,56 +983,29 @@ member_declarator
    ;
 
 enum_specifier
-   : ENUM '{' enumerator_list '}'
+    : ENUM '{' enumerator_list enum_comma_opt '}'
         {
           $$ = newEnumType ($3);
           SPEC_SCLS(getSpec($$)) = 0;
         }
-    | ENUM '{' enumerator_list ',' '}'
-        {
-          if (!options.std_c99)
-            werror (E_ENUM_COMMA_C99);
-          $$ = newEnumType ($3);
-          SPEC_SCLS(getSpec($$)) = 0;
-        }
-    | ENUM identifier '{' enumerator_list '}'
+     | ENUM identifier '{' enumerator_list enum_comma_opt '}'
         {
           symbol *csym;
           sym_link *enumtype;
-
-          csym = findSymWithLevel(enumTab, $2);
-          if ((csym && csym->level == $2->level))
-            {
-              werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
-              werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
-            }
 
           enumtype = newEnumType ($4);
           SPEC_SCLS(getSpec(enumtype)) = 0;
           $2->type = enumtype;
 
-          /* add this to the enumerator table */
-          if (!csym)
-              addSym (enumTab, $2, $2->name, $2->level, $2->block, 0);
-          $$ = copyLinkChain(enumtype);
-        }
-     | ENUM identifier '{' enumerator_list ',' '}'
-        {
-          if (!options.std_c99)
-            werror (E_ENUM_COMMA_C99);
-          symbol *csym;
-          sym_link *enumtype;
-
           csym = findSymWithLevel(enumTab, $2);
           if ((csym && csym->level == $2->level))
             {
-              werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
-              werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
+              if (!options.std_c2x || compareType (csym->type, $2->type, true) <= 0)
+                {
+                  werrorfl($2->fileDef, $2->lineDef, E_DUPLICATE_TYPEDEF, csym->name);
+                  werrorfl(csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
+                }
             }
-
-          enumtype = newEnumType ($4);
-          SPEC_SCLS(getSpec(enumtype)) = 0;
-          $2->type = enumtype;
 
           /* add this to the enumerator table */
           if (!csym)
@@ -974,6 +1027,18 @@ enum_specifier
         }
    ;
 
+enum_comma_opt
+   : 
+     {
+       $$ = NULL;
+     }
+   | ','
+     {
+       if (!options.std_c99)
+         werror (E_ENUM_COMMA_C99);
+       $$ = NULL;
+     }
+
 enumerator_list
    : enumerator
    | enumerator_list ',' enumerator
@@ -988,18 +1053,26 @@ enumerator
         {
           symbol *sym;
 
-          // check if the symbol at the same level already exists
-          if ((sym = findSymWithLevel (SymbolTab, $1)) && sym->level == $1->level)
-            {
-              werrorfl ($1->fileDef, $1->lineDef, E_DUPLICATE_MEMBER, "enum", $1->name);
-              werrorfl (sym->fileDef, sym->lineDef, E_PREVIOUS_DEF);
-            }
           $1->type = copyLinkChain ($3->type);
           $1->etype = getSpec ($1->type);
           SPEC_ENUM ($1->etype) = 1;
           $$ = $1;
-          // do this now, so we can use it for the next enums in the list
-          addSymChain (&$1);
+
+          // check if the symbol at the same level already exists
+          if ((sym = findSymWithLevel (SymbolTab, $1)) && sym->level == $1->level)
+            {
+              // C2X allows redefinitions of enumeration constants with the same value as part of a redeclaration of the same enumerated type.
+              if (!options.std_c2x || ullFromVal (valFromType (sym->type)) != ullFromVal (valFromType ($1->type)))
+                {
+                  werrorfl ($1->fileDef, $1->lineDef, E_DUPLICATE_MEMBER, "enum", $1->name);
+                  werrorfl (sym->fileDef, sym->lineDef, E_PREVIOUS_DEF);
+                }
+            }
+          else
+            {
+              // do this now, so we can use it for the next enums in the list
+              addSymChain (&$1);
+            }
         }
    ;
 
@@ -1092,10 +1165,10 @@ declarator
    ;
 
 direct_declarator
-   : identifier
+   : identifier attribute_specifier_sequence_opt
    | '(' declarator ')'     { $$ = $2; }
-   | array_declarator
-   | declarator2_function_attributes
+   | array_declarator attribute_specifier_sequence_opt
+   | declarator2_function_attributes attribute_specifier_sequence_opt
    ;
 
 declarator2
@@ -1104,230 +1177,110 @@ declarator2
    | array_declarator
    ;
 
-array_declarator:
-   direct_declarator '[' ']'
+array_declarator
+   : direct_declarator '[' type_qualifier_list_opt ']'
+     {
+       sym_link *p, *n;
+
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+       DCL_ELEM(p) = 0;
+
+       if ($3)
          {
-            sym_link   *p;
+           if (!options.std_c99)
+             werror (E_QUALIFIED_ARRAY_PARAM_C99);
 
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-            DCL_ELEM(p) = 0;
-            addDecl($1,0,p);
+           DCL_PTR_CONST(p) = SPEC_CONST ($3);
+           DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+           DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+           DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+           addDecl($1,0,p);
+           n = newLink (SPECIFIER);
+           SPEC_NEEDSPAR(n) = 1;
+           addDecl($1,0,n);
          }
-   | direct_declarator '[' type_qualifier_list ']'
+       else
+         addDecl($1,0,p);
+     }
+   | direct_declarator '[' type_qualifier_list_opt assignment_expr ']'
+     {
+       sym_link *p, *n;
+
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+       DCL_ELEM_AST (p) = $4;
+
+       if ($3)
          {
-            sym_link *p, *n;
-
-            if (!options.std_c99)
-              werror (E_QUALIFIED_ARRAY_PARAM_C99);
-
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-            DCL_ELEM(p) = 0;
-            DCL_PTR_CONST(p) = SPEC_CONST ($3);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
-            addDecl($1,0,p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
+           if (!options.std_c99)
+             werror (E_QUALIFIED_ARRAY_PARAM_C99);
+           DCL_PTR_CONST(p) = SPEC_CONST ($3);
+           DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+           DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+           DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+           addDecl($1, 0, p);
+           n = newLink (SPECIFIER);
+           SPEC_NEEDSPAR(n) = 1;
+           addDecl($1,0,n);
          }
-   | direct_declarator '[' constant_expr ']'
+       else
+         addDecl($1, 0, p);
+     }
+   | direct_declarator '[' STATIC type_qualifier_list_opt assignment_expr ']'
+     {
+       sym_link *p, *n;
+
+       if (!options.std_c99)
+         werror (E_STATIC_ARRAY_PARAM_C99);
+
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+       DCL_ELEM_AST (p) = $5;
+
+       if ($4)
          {
-            sym_link *p;
-            value *tval;
-            int size;
-
-            tval = constExprValue($3, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            addDecl($1, 0, p);
+           if (!options.std_c99)
+             werror (E_QUALIFIED_ARRAY_PARAM_C99);
+           DCL_PTR_CONST(p) = SPEC_CONST ($4);
+           DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($4);
+           DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($4);
+           DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($4);
          }
-  | direct_declarator '[' STATIC constant_expr ']'
+       addDecl($1, 0, p);
+       n = newLink (SPECIFIER);
+       SPEC_NEEDSPAR(n) = 1;
+       addDecl($1,0,n);
+     }
+   | direct_declarator '[' type_qualifier_list STATIC assignment_expr ']'
+     {
+       sym_link *p, *n;
+
+       if (!options.std_c99)
          {
-            sym_link *p, *n;
-            value *tval;
-            int size;
-
-            if (!options.std_c99)
-              werror (E_STATIC_ARRAY_PARAM_C99);
-
-            tval = constExprValue($4, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
+           werror (E_QUALIFIED_ARRAY_PARAM_C99);
+           werror (E_STATIC_ARRAY_PARAM_C99);
          }
-  | direct_declarator '[' type_qualifier_list constant_expr ']'
-         {
-            sym_link *p, *n;
-            value *tval;
-            int size;
 
-            if (!options.std_c99)
-              werror (E_QUALIFIED_ARRAY_PARAM_C99);
+       p = newLink (DECLARATOR);
+       DCL_TYPE(p) = ARRAY;
+       DCL_ELEM_AST (p) = $5;
 
-            tval = constExprValue($4, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            DCL_PTR_CONST(p) = SPEC_CONST ($3);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
-         }
-   | direct_declarator '[' STATIC type_qualifier_list constant_expr ']'
-         {
-            sym_link *p, *n;
-            value *tval;
-            int size;
-
-            if (!options.std_c99)
-              {
-                werror (E_STATIC_ARRAY_PARAM_C99);
-                werror (E_QUALIFIED_ARRAY_PARAM_C99);
-              }
-
-            tval = constExprValue($5, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            DCL_PTR_CONST(p) = SPEC_CONST ($4);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($4);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($4);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($4);
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
-         }
-   | direct_declarator '[' type_qualifier_list STATIC constant_expr ']'
-         {
-            sym_link *p, *n;
-            value *tval;
-            int size;
-
-            if (!options.std_c99)
-              {
-                werror (E_QUALIFIED_ARRAY_PARAM_C99);
-                werror (E_STATIC_ARRAY_PARAM_C99);
-              }
-
-            tval = constExprValue($5, true);
-            /* if it is not a constant then Error  */
-            p = newLink (DECLARATOR);
-            DCL_TYPE(p) = ARRAY;
-
-            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
-              {
-                werror(E_CONST_EXPECTED);
-                /* Assume a single item array to limit the cascade */
-                /* of additional errors. */
-                size = 1;
-              }
-            else
-              {
-                if ((size = (int) ulFromVal(tval)) < 0)
-                  {
-                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
-                    size = 1;
-                  }
-              }
-            DCL_ELEM(p) = size;
-            DCL_PTR_CONST(p) = SPEC_CONST ($3);
-            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
-            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
-            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
-            addDecl($1, 0, p);
-            n = newLink (SPECIFIER);
-            SPEC_NEEDSPAR(n) = 1;
-            addDecl($1,0,n);
-         }
+       DCL_PTR_CONST(p) = SPEC_CONST ($3);
+       DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+       DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+       DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+       addDecl($1, 0, p);
+       n = newLink (SPECIFIER);
+       SPEC_NEEDSPAR(n) = 1;
+       addDecl($1,0,n);
+     }
    ;
 
 declarator2_function_attributes
    : function_declarator                 { $$ = $1; }
    | function_declarator function_attributes  {
            // copy the functionAttributes (not the args and hasVargs !!)
-           struct value *args;
-           unsigned hasVargs;
            sym_link *funcType=$1->type;
 
            while (funcType && !IS_FUNC(funcType))
@@ -1337,14 +1290,16 @@ declarator2_function_attributes
              werror (E_FUNC_ATTR);
            else
              {
-               args=FUNC_ARGS(funcType);
-               hasVargs=FUNC_HASVARARGS(funcType);
+               struct value *args = FUNC_ARGS(funcType);
+               unsigned hasVargs = FUNC_HASVARARGS(funcType);
+               bool noprototype = FUNC_NOPROTOTYPE(funcType);
 
                memcpy (&funcType->funcAttrs, &$2->funcAttrs,
                    sizeof($2->funcAttrs));
 
                FUNC_ARGS(funcType)=args;
                FUNC_HASVARARGS(funcType)=hasVargs;
+               FUNC_NOPROTOTYPE(funcType)=noprototype;
 
                // just to be sure
                memset (&$2->funcAttrs, 0,
@@ -1357,9 +1312,17 @@ declarator2_function_attributes
 
 function_declarator
    : declarator2 '('  ')'
-        {
-          addDecl ($1, FUNCTION, NULL);
-        }
+     {
+       addDecl ($1, FUNCTION, NULL);
+
+       // Up to C17, this was a function declarator without a prototype.
+       if (!options.std_c2x)
+         {
+           FUNC_NOPROTOTYPE($1->type) = true;
+           if (!options.lessPedantic)
+             werror (W_FUNCDECL_WITH_NO_PROTOTYPE);
+         }
+     }
    | declarator2 '('
         {
           NestLevel += LEVEL_UNIT;
@@ -1372,13 +1335,19 @@ function_declarator
         {
           sym_link *funcType;
 
+          bool is_fptr = IS_FUNC($1->type); // Already a function, must be a function pointer.
+
           addDecl ($1, FUNCTION, NULL);
-
           funcType = $1->type;
-          while (funcType && !IS_FUNC(funcType))
-              funcType = funcType->next;
 
-          assert (funcType);
+          // For a function pointer, the parmeter list here is for the returned type.
+          if (is_fptr)
+            funcType = funcType->next;
+
+          while (funcType && !IS_FUNC(funcType))
+            funcType = funcType->next;
+
+          wassert (funcType);
 
           FUNC_HASVARARGS(funcType) = IS_VARG($4);
           FUNC_ARGS(funcType) = reverseVal($4);
@@ -1513,6 +1482,17 @@ type_qualifier_list
                }
   ;
 
+type_qualifier_list_opt
+  :
+    {
+      $$ = 0;
+    }
+  | type_qualifier_list
+    {
+      $$ = $1;
+    }
+  ;
+
 parameter_type_list
         : parameter_list
         | parameter_list ',' ELLIPSIS { $1->vArgs = 1;}
@@ -1640,6 +1620,14 @@ function_abstract_declarator
 
 initializer
    : assignment_expr                { $$ = newiList(INIT_NODE,$1); }
+   | '{' '}'
+     {
+       if (!options.std_c2x)
+         werror(W_EMPTY_INIT_C2X);
+       // {} behaves mostly like {0}, so we emulate that, and use the isempty flag for the few cases where there is a difference.
+       $$ = newiList(INIT_DEEP, revinit(newiList(INIT_NODE, newAst_VALUE(constIntVal("0")))));
+       $$->isempty = true;
+     }
    | '{'  initializer_list '}'      { $$ = newiList(INIT_DEEP,revinit($2)); }
    | '{'  initializer_list ',' '}'  { $$ = newiList(INIT_DEEP,revinit($2)); }
    ;
@@ -1700,7 +1688,7 @@ static_assert_declaration
                                        value *val = constExprValue ($3, true);
                                        if (!val)
                                          werror (E_CONST_EXPECTED);
-                                       else if (!ulFromVal(val))
+                                       else if (!ullFromVal(val))
                                          werror (W_STATIC_ASSERTION, $5);
                                     }
    | STATIC_ASSERT '(' constant_expr ')' ';'
@@ -1710,7 +1698,7 @@ static_assert_declaration
                                          werror (E_STATIC_ASSERTION_C2X);
                                        if (!val)
                                          werror (E_CONST_EXPECTED);
-                                       else if (!ulFromVal(val))
+                                       else if (!ullFromVal(val))
                                          werror (W_STATIC_ASSERTION_2);
                                     }
    ;
@@ -1793,11 +1781,17 @@ attribute_token
      {
        $$ = $1;
        $$->next = 0;
+       werror (W_UNKNOWN_ATTRIBUTE, $1->name);
      }
    | identifier TOK_SEP identifier
      {
        $$ = $1;
        $$->next = $3;
+       struct dbuf_s dbuf;
+       dbuf_init (&dbuf, 64);
+       dbuf_printf (&dbuf, "%s::%s", $1->name, $3->name);
+       werror (W_UNKNOWN_ATTRIBUTE, dbuf_c_str (&dbuf));
+       dbuf_destroy (&dbuf);
      }
    ;
 
@@ -1814,6 +1808,7 @@ balanced_token_sequence
 balanced_token
    : identifier
    | STRING_LITERAL
+   | CONSTANT
    ;
 
    /* C2X A.2.3 Statements */
@@ -2203,20 +2198,20 @@ function_definition
 
 function_body
    : compound_statement
-   | declaration_list compound_statement
-                     {
-                       werror (E_OLD_STYLE, ($1 ? $1->name: ""));
-                       exit (1);
-                     }
+   | kr_declaration_list compound_statement
+     {
+       werror (E_OLD_STYLE, ($1 ? $1->name: ""));
+       exit (1);
+     }
    ;
 
    /* SDCC-specific stuff */
 
 file
    : /* empty */
-        {
-          werror(W_EMPTY_SOURCE_FILE);
-        }
+     {
+       werror(W_EMPTY_SOURCE_FILE);
+     }
    | translation_unit
    ;
 
@@ -2514,7 +2509,7 @@ opt_assign_expr
           else if (!IS_INT(val->type) && !IS_CHAR(val->type) && !IS_BOOL(val->type))
             {
               werror(E_ENUM_NON_INTEGER);
-              SNPRINTF(lbuff, sizeof(lbuff), "%d", (int) ulFromVal(val));
+              SNPRINTF(lbuff, sizeof(lbuff), "%lld", (long long int) ullFromVal(val));
               val = constVal(lbuff);
             }
           $$ = cenum = val;
@@ -2522,7 +2517,7 @@ opt_assign_expr
    |    {
           if (cenum)
             {
-              SNPRINTF(lbuff, sizeof(lbuff), "%d", (int) ulFromVal(cenum)+1);
+              SNPRINTF(lbuff, sizeof(lbuff), "%lld", (long long int) ullFromVal(cenum)+1);
               $$ = cenum = constVal(lbuff);
             }
           else
@@ -2657,11 +2652,98 @@ declaration_list
        }
        else
          $$ = $1;
-       ignoreTypedefType = 0;
-       addSymChain(&$1);
+       ignoreTypedefType = 0;/*printf("1 %s %d %d\n", $1->name, IS_ARRAY ($1->type), DCL_ARRAY_VLA ($1->type));
+       if (IS_ARRAY ($1->type) && DCL_ARRAY_VLA ($1->type))
+         werror (E_VLA_OBJECT);
+       else*/
+         addSymChain(&$1);
      }
 
    | declaration_list declaration
+     {
+       symbol   *sym;
+
+       /* if this is a typedef */
+       if ($2 && IS_TYPEDEF($2->etype)) {
+         allocVariables ($2);
+         $$ = $1;
+       }
+       else {
+         /* get to the end of the previous decl */
+         if ( $1 ) {
+           $$ = sym = $1;
+           while (sym->next)
+             sym = sym->next;
+           sym->next = $2;
+         }
+         else
+           $$ = $2;
+       }
+       ignoreTypedefType = 0;/*printf("2 %s %d %d\n", $1->name, IS_ARRAY ($1->type), DCL_ARRAY_VLA ($1->type));
+       if (IS_ARRAY ($2->type) && DCL_ARRAY_VLA ($2->type))
+         werror (E_VLA_OBJECT);
+       else*/
+         addSymChain(&$2);
+     }
+   ;
+
+// The parameter declarations in K&R-style functions need to be handled in a special way to avoid
+// ambiguities in the grammer. We do this by not allowing attributes on the parameter declarations.
+// Otherwise, in e.g.
+//  void f(x) [[attribute]] int x; {}
+// it would be unclear if the attribute applies to the type of f vs. the declaration of x.
+kr_declaration
+   : declaration_specifiers init_declarator_list ';'
+      {
+         /* add the specifier list to the id */
+         symbol *sym , *sym1;
+
+         for (sym1 = sym = reverseSyms($2);sym != NULL;sym = sym->next) {
+             sym_link *lnk = copyLinkChain($1);
+             sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
+             /* check illegal declaration */
+             for (l0 = sym->type; l0 != NULL; l0 = l0->next)
+               if (IS_PTR (l0))
+                 break;
+             /* check if creating instances of structs with flexible arrays */
+             for (l1 = lnk; l1 != NULL; l1 = l1->next)
+               if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
+                 break;
+             if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR($1) != 1)
+               werror (W_FLEXARRAY_INSTRUCT, sym->name);
+             /* check if creating instances of function type */
+             for (l1 = lnk; l1 != NULL; l1 = l1->next)
+               if (IS_FUNC (l1))
+                 break;
+             for (l2 = lnk; l2 != NULL; l2 = l2->next)
+               if (IS_PTR (l2))
+                 break;
+             if (l0 == NULL && l2 == NULL && l1 != NULL)
+               werrorfl(sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+             /* do the pointer stuff */
+             pointerTypes(sym->type,lnk);
+             addDecl (sym,0,lnk);
+         }
+
+         uselessDecl = true;
+         $$ = sym1;
+      }
+   ;
+
+kr_declaration_list
+   : kr_declaration
+     {
+       /* if this is typedef declare it immediately */
+       if ( $1 && IS_TYPEDEF($1->etype)) {
+         allocVariables ($1);
+         $$ = NULL;
+       }
+       else
+         $$ = $1;
+       ignoreTypedefType = 0;
+       addSymChain(&$1);
+     }
+   | kr_declaration_list kr_declaration
      {
        symbol   *sym;
 
