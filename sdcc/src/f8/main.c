@@ -193,6 +193,13 @@ f8_setDefaultOptions (void)
   options.intlong_rent = 1;
   options.float_rent = 1;
   options.noRegParams = 0;
+
+  options.data_loc = 0x2000; /* Assume a default of 8 KB of RAM for now. */
+  options.code_loc = 0x4000;
+
+  options.stack_loc = -1; /* Do not set the stack pointer in software- just use the device-specific reset value. */
+
+  options.out_fmt = 'i';        /* Default output format is ihx */
 }
 
 static const char *
