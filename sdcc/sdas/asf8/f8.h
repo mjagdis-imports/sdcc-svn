@@ -1,4 +1,4 @@
-/* ST8.h */
+/* f8.h */
 
 /*
  *  Copyright (C) 2010  Alan R. Baldwin
