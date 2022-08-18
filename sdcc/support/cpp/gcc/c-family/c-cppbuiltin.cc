@@ -63,7 +63,6 @@ static void builtin_define_float_constants (const char *,
 					    const char *,
 					    const char *,
 					    tree);
-#endif // sdcpp
 
 /* Return true if MODE provides a fast multiply/add (FMA) builtin function.
    Originally this function used the fma optab, but that doesn't work with
@@ -106,6 +105,7 @@ mode_has_fma (machine_mode mode)
 
   return false;
 }
+#endif // sdcpp
 
 /* Define NAME with value TYPE size_unit.  */
 void
@@ -120,6 +120,7 @@ builtin_define_type_sizeof (const char *name, tree type)
 
 /* Define the float.h constants for TYPE using NAME_PREFIX, FP_SUFFIX,
    and FP_CAST. */
+#if 0 // sdcpp
 static void
 builtin_define_float_constants (const char *name_prefix,
 		                const char *fp_suffix,
@@ -133,7 +134,6 @@ builtin_define_float_constants (const char *name_prefix,
    (void) fp_cast;
    (void) fma_suffix;
    (void) type;
-#if 0 // sdcpp
   /* Used to convert radix-based values to base 10 values in several cases.
 
      In the max_exp -> max_10_exp conversion for 128-bit IEEE, we need at
@@ -340,10 +340,8 @@ builtin_define_float_constants (const char *name_prefix,
   builtin_define_with_int_value (name,
 				 (fmt->ieee_bits == 0
 				  ? 0 : (fmt->round_towards_zero ? 1 : 2)));
-#endif // sdcpp
 }
 
-#if 0 // sdcpp
 /* Define __DECx__ constants for TYPE using NAME_PREFIX and SUFFIX. */
 static void
 builtin_define_decimal_float_constants (const char *name_prefix,
@@ -1791,9 +1789,9 @@ struct GTY(()) lazy_hex_fp_value_struct
    is called for FLT, DBL, LDBL and up to NUM_FLOATN_NX_TYPES times for
    FLTNN*.  */ 
 #define LAZY_HEX_FP_VALUES_CNT (5 * (3 + NUM_FLOATN_NX_TYPES))
+#if 0 // sdcpp
 static GTY(()) struct lazy_hex_fp_value_struct
   lazy_hex_fp_values[LAZY_HEX_FP_VALUES_CNT];
-#if 0 // sdcpp
 static GTY(()) unsigned lazy_hex_fp_value_count;
 
 static void

@@ -1611,7 +1611,7 @@ set_option (struct gcc_options *opts, struct gcc_options *opts_set,
     set_flag_var = option_flag_var (opt_index, opts_set);
 
   switch (option->var_type)
-    { untested();
+    {
     case CLVC_INTEGER:
 	if (option->cl_host_wide_int)
 	  { untested();
@@ -1821,7 +1821,7 @@ get_option_state (struct gcc_options *opts, int option,
     return false;
 
   switch (cl_options[option].var_type)
-    { untested();
+    {
     case CLVC_INTEGER:
     case CLVC_EQUAL:
     case CLVC_SIZE:

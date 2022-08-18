@@ -247,6 +247,7 @@ fe_file_change (const line_map_ordinary *new_map)
   input_location = new_map->start_location;
 }
 
+#if 0 // sdcpp
 static void
 cb_def_pragma (cpp_reader *pfile, location_t loc)
 {
@@ -273,8 +274,10 @@ cb_def_pragma (cpp_reader *pfile, location_t loc)
 		  space, name);
     }
 }
+#endif // sdcpp
 
 /* #define callback for DWARF and DWARF2 debug info.  */
+#if 0 // sdcpp
 static void
 cb_define (cpp_reader *pfile, location_t loc, cpp_hashnode *node)
 {
@@ -294,6 +297,7 @@ cb_undef (cpp_reader *pfile, location_t loc, cpp_hashnode *node)
   (*debug_hooks->undef) (SOURCE_LINE (linemap_check_ordinary (map), loc),
 			 (const char *) NODE_NAME (node));
 }
+#endif // sdcpp
 
 /* Wrapper around cpp_get_token to skip CPP_PADDING tokens
    and not consume CPP_EOF.  */

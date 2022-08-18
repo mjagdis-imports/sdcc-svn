@@ -39,10 +39,12 @@ static ggc_statistics *ggc_stats;
 
 struct traversal_state;
 
+#if 0 // sdcpp
 static int compare_ptr_data (const void *, const void *);
 static void relocate_ptrs (void *, void *, void *);
 static void write_pch_globals (const struct ggc_root_tab * const *tab,
 			       struct traversal_state *state);
+#endif // sdcpp
 
 /* Maintain global roots that are preserved during GC.  */
 
@@ -247,7 +249,7 @@ saving_hasher::equal (const ptr_data *p1, const void *p2)
 
 static hash_table<saving_hasher> *saving_htab;
 static vec<void *> callback_vec;
-static vec<void *> reloc_addrs_vec;
+// sdcpp static vec<void *> reloc_addrs_vec;
 
 /* Register an object in the hash table.  */
 
@@ -352,6 +354,7 @@ ggc_call_alloc (ptr_data **slot, traversal_state *state)
 
 /* Callback for qsort.  */
 
+#if 0 // sdcpp
 static int
 compare_ptr_data (const void *p1_p, const void *p2_p)
 {
@@ -392,8 +395,10 @@ relocate_ptrs (void *ptr_p, void *real_ptr_p, void *state_p)
 		   - (char *) state->ptrs[state->ptrs_i]->obj));
   reloc_addrs_vec.safe_push (addr);
 }
+#endif // sdcpp
 
 /* Write out, after relocation, the pointers in TAB.  */
+#if 0 // sdcpp
 static void
 write_pch_globals (const struct ggc_root_tab * const *tab,
 		   struct traversal_state *state)
@@ -424,9 +429,11 @@ write_pch_globals (const struct ggc_root_tab * const *tab,
 	    }
 	}
 }
+#endif // sdcpp
 
 /* Callback for qsort.  */
 
+#if 0 // sdcpp
 static int
 compare_ptr (const void *p1_p, const void *p2_p)
 {
@@ -435,6 +442,7 @@ compare_ptr (const void *p1_p, const void *p2_p)
   return (((uintptr_t)p1 > (uintptr_t)p2)
 	  - ((uintptr_t)p1 < (uintptr_t)p2));
 }
+#endif // sdcpp
 
 /* Decode one uleb128 from P, return first byte after it, store
    decoded value into *VAL.  */
@@ -461,6 +469,7 @@ read_uleb128 (unsigned char *p, size_t *val)
 
 /* Store VAL as uleb128 at P, return length in bytes.  */
 
+#if 0 // sdcpp
 static size_t
 write_uleb128 (unsigned char *p, size_t val)
 {
@@ -479,6 +488,7 @@ write_uleb128 (unsigned char *p, size_t val)
   while (val != 0);
   return len;
 }
+#endif // sdcpp
 
 /* Hold the information we need to mmap the file back in.  */
 
@@ -494,6 +504,10 @@ struct mmap_info
 void
 gt_pch_save (FILE *f)
 {
+#if 1 // sdcpp
+	(void) f;
+  fprintf(stderr, "unreachable %s %d\n", __FILE__, __LINE__);
+#else // sdcpp
   const struct ggc_root_tab *const *rt;
   const struct ggc_root_tab *rti;
   size_t i;
@@ -501,7 +515,6 @@ gt_pch_save (FILE *f)
   char *this_object = NULL;
   size_t this_object_size = 0;
   struct mmap_info mmi;
-  fprintf(stderr, "incomplete %s %d\n", __FILE__, __LINE__);
   const size_t mmap_offset_alignment = 0; // host_hooks.gt_pch_alloc_granularity ();
 
   gt_pch_save_stringpool ();
@@ -716,6 +729,7 @@ gt_pch_save (FILE *f)
   saving_htab = NULL;
   callback_vec.release ();
   reloc_addrs_vec.release ();
+#endif // sdcpp
 }
 
 /* Read the state of the compiler back in from F.  */
@@ -771,7 +785,7 @@ gt_pch_restore (FILE *f)
   void *orig_preferred_base = mmi.preferred_base;
 
   fprintf(stderr, "incomplete %s %d\n", __FILE__, __LINE__);
-//  result = host_hooks.gt_pch_use_address (mmi.preferred_base, mmi.size,
+  result = 0; // host_hooks.gt_pch_use_address (mmi.preferred_base, mmi.size,
 //					  fileno (f), mmi.offset);
 
   /* We could not mmap or otherwise allocate the required memory at the

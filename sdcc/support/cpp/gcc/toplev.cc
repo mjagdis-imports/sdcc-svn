@@ -110,7 +110,7 @@ static void init_asm_output (const char *);
 static void finalize (bool);
 
 static void crash_signal (int) ATTRIBUTE_NORETURN;
-static void compile_file (void);
+// sdcpp static void compile_file (void);
 
 /* Decoded options, and number of such options.  */
 struct cl_decoded_option *save_decoded_options;
@@ -2142,6 +2142,7 @@ finalize (bool no_backend)
   lang_hooks.finish ();
 }
 
+#if 0 // sdcpp
 static bool
 standard_type_bitsize (int bitsize)
 {
@@ -2156,6 +2157,7 @@ standard_type_bitsize (int bitsize)
     return true;
   return false;
 }
+#endif // sdcpp
 
 /* Initialize the compiler, and compile the input file.  */
 static void
@@ -2164,6 +2166,7 @@ do_compile (bool no_backend)
   /* Don't do any more if an error has already occurred.  */
   if (!seen_error ())
     {
+#if 0 // sdcpp
       int i;
 
       timevar_start (TV_PHASE_SETUP);
@@ -2174,13 +2177,12 @@ do_compile (bool no_backend)
 	//  dump_context::get ().set_json_writer (new optrecord_json_writer ());
 	}
 
-#if 0 // sdcpp
       /* This must be run always, because it is needed to compute the FP
 	 predefined macros, such as __LDBL_MAX__, for targets using non
 	 default FP formats.  */
       init_adjust_machine_modes ();
       init_derived_machine_modes ();
-#endif
+#endif // sdcpp
 
       /* This must happen after the backend has a chance to process
 	 command line options, but before the parsers are
@@ -2248,7 +2250,7 @@ do_compile (bool no_backend)
 
           compile_file ();
         }
-#endif
+#endif // sdcpp
       else
         {
           timevar_stop (TV_PHASE_SETUP);

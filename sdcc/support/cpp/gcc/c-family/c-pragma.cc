@@ -50,7 +50,7 @@ struct GTY(()) align_stack {
   struct align_stack * prev;
 };
 
-static GTY(()) struct align_stack * alignment_stack;
+// sdcpp static GTY(()) struct align_stack * alignment_stack;
 
 static void handle_pragma_pack (cpp_reader *);
 
@@ -59,6 +59,7 @@ static void handle_pragma_pack (cpp_reader *);
    maximum_field_alignment in effect.  When the final pop_alignment()
    happens, we restore the value to this, not to a value of 0 for
    maximum_field_alignment.  Value is in bits.  */
+#if 0 // sdcpp
 static int default_alignment;
 #define SET_GLOBAL_ALIGNMENT(ALIGN) (maximum_field_alignment = *(alignment_stack == NULL \
 	? &default_alignment \
@@ -121,6 +122,7 @@ pop_alignment (tree id)
 
   alignment_stack = entry;
 }
+#endif // sdcpp
 
 /* #pragma pack ()
    #pragma pack (N)
@@ -247,6 +249,7 @@ struct GTY(()) pending_weak
 };
 
 
+#if 0 // sdcpp
 static GTY(()) vec<pending_weak, va_gc> *pending_weaks;
 
 static void apply_pragma_weak (tree, tree);
@@ -255,9 +258,6 @@ static void handle_pragma_weak (cpp_reader *);
 static void
 apply_pragma_weak (tree decl, tree value)
 {
-	(void) decl;
-	(void) value;
-#if 0 // sdcpp
   if (value)
     {
       value = build_string (IDENTIFIER_LENGTH (value),
@@ -277,8 +277,8 @@ apply_pragma_weak (tree decl, tree value)
 // sdcpp	     "results in unspecified behavior", decl);
 
   declare_weak (decl);
-#endif // sdcpp
 }
+#endif // sdcpp
 
 #if 0 // sdcpp
 void

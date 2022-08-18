@@ -448,6 +448,7 @@ init_options_struct (struct gcc_options *opts, struct gcc_options *opts_set)
    to OPTS and OPTS_SET, diagnostic context DC, location LOC, with language
    mask LANG_MASK and option handlers HANDLERS.  */
 
+#if 0 // sdcpp
 static void
 maybe_default_option (struct gcc_options *opts,
 		      struct gcc_options *opts_set,
@@ -555,6 +556,7 @@ maybe_default_options (struct gcc_options *opts,
 			  level, size, fast, debug,
 			  lang_mask, handlers, loc, dc);
 }
+#endif // sdcpp
 
 /* Table of options enabled by default at different levels.
    Please keep this list sorted by level and alphabetized within

@@ -31,10 +31,10 @@ along with GCC; see the file COPYING3.  If not see
 #include "stringpool.h"
 #include "attribs.h"
 
+#if 0 // sdcpp
 static bool c_tree_printer (pretty_printer *, text_info *, const char *,
 			    int, bool, bool, bool, bool *, const char **);
 
-#if 0 // sdcpp
 bool
 c_missing_noreturn_ok_p (tree decl)
 {
@@ -262,6 +262,10 @@ c_tree_printer (pretty_printer *pp, text_info *text, const char *spec,
 		int precision, bool wide, bool set_locus, bool hash,
 		bool *quoted, const char **)
 {
+#if 0 //sdcpp
+	(void) pp; (void) text; (void) spec; (void) precision; (void) wide;
+	(void) set_locus; (void) hash; (void) quoted;
+#else // sdcpp
   tree t = NULL_TREE;
   // FIXME: the next cast should be a dynamic_cast, when it is permitted.
   c_pretty_printer *cpp = (c_pretty_printer *) pp;
@@ -324,6 +328,7 @@ c_tree_printer (pretty_printer *pp, text_info *text, const char *spec,
     }
 
   pp_string (cpp, _("({anonymous})"));
+#endif //sdcpp
   return true;
 }
 

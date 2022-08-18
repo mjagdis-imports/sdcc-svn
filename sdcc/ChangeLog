@@ -11,6 +11,21 @@
 	  support/regression/tests/pragma_pedantic_parse_number.c:
 	  Document dropped support for --pedantic-parse-number and #pragma pedantic_parse_number.
 
+2022-08-16 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp:
+	  Partially import gcc (12.1.0, 1ea978e3066a),
+	  Isolate, dissect, gcc/cpp,
+	  Create dummy target files,
+	  (Re)add -obj-ext option,
+	  Change # to #line in cpp output,
+	* Makefile.common.in:
+	  Set .DELETE_ON_ERROR
+	* configure.ac, src/Makefile.in:
+	  Obtain svn revision and paste into version.h
+	* configure.ac, Makefile.in, bin/*:
+	  Add Makefile, wrap executables, adjust rules.
+
 2022-08-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* device/lib/pic16/startup/crt0.c,

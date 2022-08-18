@@ -1,7 +1,7 @@
 // dummies for function used in cc1
 
 #define SDCPP_DUMMY_FCT() fprintf(stderr, "unreachable dummy in cc1%s\n", __func__); gcc_assert(false)
-#define SDCPP_DUMMY_FCT_() fprintf(stderr, "dummy in cc1%s\n", __func__)
+#define untested() fprintf(stderr, "untested in cc1: %s\n", __func__)
 #define CC1_DUMMIES
 
 #include "config.h"
@@ -47,7 +47,7 @@ int c_get_alias_set(tree_node*)
 	return 0;
 }
 int c_initialize_diagnostics(diagnostic_context*)
-{ SDCPP_DUMMY_FCT_();
+{
 	return 0;
 }
 int c_gimplify_expr(tree_node**, gimple**, gimple**)
@@ -75,10 +75,10 @@ int c_types_compatible_p(tree_node*, tree_node*)
 	return 0;
 }
 void default_options_optimization(gcc_options*, gcc_options*, cl_decoded_option*, unsigned int, unsigned int, unsigned int, cl_option_handlers const*, diagnostic_context*)
-{ SDCPP_DUMMY_FCT_();
+{
 }
 void define_language_independent_builtin_macros(cpp_reader*)
-{ SDCPP_DUMMY_FCT_();
+{ untested();
 }
 void dump_end(int, FILE*)
 { SDCPP_DUMMY_FCT();
@@ -97,24 +97,24 @@ void dump_go_spec_init(char const*, const struct gcc_debug_hooks*)
 { SDCPP_DUMMY_FCT();
 }
 bool dwarf2out_default_as_loc_support()
-{ SDCPP_DUMMY_FCT_();
+{
 	return false;
 }
 bool dwarf2out_default_as_locview_support()
-{ SDCPP_DUMMY_FCT_();
+{
 	return false;
 }
 void dwarf2out_do_cfi_asm()
 { SDCPP_DUMMY_FCT();
 }
 void emergency_dump_function()
-{ SDCPP_DUMMY_FCT_();
+{ untested();
 }
 void finalize_plugins()
-{ SDCPP_DUMMY_FCT_();
+{
 }
 void gcc::dump_manager::register_dumps()
-{ SDCPP_DUMMY_FCT_();
+{
 }
 int get_identifier(char const*)
 { SDCPP_DUMMY_FCT();
@@ -150,13 +150,13 @@ int hook_int_const_tree_int(tree_node const*, int)
 	return 0;
 }
 void init_stringpool()
-{ SDCPP_DUMMY_FCT_();
+{
 }
 void initialize_plugins()
-{ SDCPP_DUMMY_FCT_();
+{
 }
 bool lang_GNU_C()
-{ SDCPP_DUMMY_FCT_();
+{
 	return true;
 }
 void lhd_append_data(void const*, unsigned long, void*)
@@ -174,7 +174,7 @@ const char* lhd_decl_printable_name(tree_node*, int)
 	return 0;
 }
 void lhd_do_nothing()
-{ SDCPP_DUMMY_FCT_();
+{ untested();
 }
 void lhd_do_nothing_t(tree_node*)
 { SDCPP_DUMMY_FCT();
@@ -194,7 +194,7 @@ void lhd_overwrite_decl_assembler_name(tree_node*, tree_node*)
 { SDCPP_DUMMY_FCT();
 }
 void lhd_print_error_function(diagnostic_context*, char const*, diagnostic_info*)
-{ SDCPP_DUMMY_FCT_();
+{ untested();
 }
 void lhd_print_tree_nothing(FILE*, tree_node*, int)
 { SDCPP_DUMMY_FCT();
@@ -222,7 +222,7 @@ void parse_basever(int*, int*, int*)
 { SDCPP_DUMMY_FCT();
 }
 void pch_cpp_save_state()
-{ SDCPP_DUMMY_FCT_();
+{
 }
 void pch_init()
 { SDCPP_DUMMY_FCT();
@@ -242,7 +242,7 @@ int pushdecl(tree_node*)
 	return 0;
 }
 void tree_diagnostics_defaults(diagnostic_context*)
-{ SDCPP_DUMMY_FCT_();
+{
 }
 tree lhd_enum_underlying_base_type(tree_node const*)
 { SDCPP_DUMMY_FCT();
@@ -261,7 +261,7 @@ tree lhd_pass_through_t(tree_node*)
 	return tree();
 }
 void lhd_register_dumps(gcc::dump_manager*)
-{ SDCPP_DUMMY_FCT_();
+{ untested();
 }
 tree lhd_return_null_const_tree(tree_node const*)
 { SDCPP_DUMMY_FCT();
@@ -272,13 +272,13 @@ tree lhd_unit_size_without_reusable_padding(tree_node*)
 	return tree();
 }
 void statistics_early_init()
-{ SDCPP_DUMMY_FCT_();
+{
 }
 void virt_loc_aware_diagnostic_finalizer(diagnostic_context*, diagnostic_info*)
-{ SDCPP_DUMMY_FCT_();
+{ untested();
 }
 void warn_if_plugins()
-{ SDCPP_DUMMY_FCT_();
+{ untested();
 }
 /*----------------------------------------------------------------------*/
 namespace gcc{
@@ -292,7 +292,7 @@ dump_manager::~dump_manager()
 { SDCPP_DUMMY_FCT();
 }
 dump_manager::dump_manager()
-{ SDCPP_DUMMY_FCT_();
+{
 }
 }
 /*----------------------------------------------------------------------*/
