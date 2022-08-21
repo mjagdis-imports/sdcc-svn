@@ -345,7 +345,7 @@ $(PORT_RESULTS_DIR)/%.log: $(PORT_RESULTS_DIR)/%.out
 
 # Rule to summarise the results for one port after all of the tests
 # have been run.
-$(RESULTS_DIR)/$(PORT).sum: $(PORT_RESULTS)
+$(RESULTS_DIR)/$(PORT).sum: $(PORT_RESULTS) cases/MakeList
 	${M_V_at}echo | cat - $(PORT_RESULTS:%.log=%.out) | $(PYTHON) $(srcdir)/collate-results.py $(PORT) > $@
 
 port-fwklib: port-dirs $(EXTRAS) $(FWKLIB)

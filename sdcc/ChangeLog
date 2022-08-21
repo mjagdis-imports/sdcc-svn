@@ -1,3 +1,9 @@
+2022-08-21 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in:
+	  Test summary depends on test set.
+
 2022-08-20 Felix Salfelder <felix AT salfelder.org>
 
 	* support/cpp/gcc/Makefile.in:
