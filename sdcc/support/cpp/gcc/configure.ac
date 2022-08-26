@@ -2777,7 +2777,7 @@ changequote([,])dnl
 else
 	AC_MSG_RESULT($gcc_cv_ld)
 	in_tree_ld=no
-	gcc_cvs_ld_program=`dirname $gcc_cv_ld`/`basename $gcc_cv_ld $host_exeext`
+	gcc_cvs_ld_program=false # `dirname $gcc_cv_ld`/`basename $gcc_cv_ld $host_exeext`
 	ORIGINAL_LD_BFD_FOR_TARGET=${gcc_cvs_ld_program}.bfd$host_exeext
 	ORIGINAL_LD_GOLD_FOR_TARGET=${gcc_cvs_ld_program}.gold$host_exeext
 fi

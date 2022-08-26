@@ -1,3 +1,9 @@
+2022-08-23 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/configure, support/cpp/configure.ac,
+	  support/cpp/gcc/configure, support/cpp/gcc/configure.ac:
+	  Reduce diff against upstream gcc.
+
 2022-08-21 Felix Salfelder <felix AT salfelder.org>
 
 	* support/regression/Makefile.in,
