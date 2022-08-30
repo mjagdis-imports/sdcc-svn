@@ -1,7 +1,7 @@
 2022-08-30 Felix Salfelder <felix AT salfelder.org>
 
 	* support/cpp/configure, support/cpp/configure.ac:
-	  omit gmp/mpfr checks.
+	  Omit gmp/mpfr checks and GCC_TOPLEV_SUBDIRS.
 
 2022-08-23 Felix Salfelder <felix AT salfelder.org>
 

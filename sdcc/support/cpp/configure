@@ -740,9 +740,6 @@ LDFLAGS
 CFLAGS
 CC
 extra_liboffloadmic_configure_flags
-target_subdir
-build_subdir
-build_libsubdir
 AWK
 SED
 LN_S
@@ -817,7 +814,6 @@ alphaieee_frag
 ospace_frag'
 ac_user_opts='
 enable_option_checking
-with_build_libsubdir
 with_system_zlib
 enable_as_accelerator_for
 enable_offload_targets
@@ -1587,7 +1583,6 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-build-libsubdir=DIR  Directory where to find libraries for build system
   --with-system-zlib      use installed libz
   --with-mpc=PATH         specify prefix directory for installed MPC package.
                           Equivalent to --with-mpc-include=PATH/include plus
@@ -2859,41 +2854,7 @@ else
 fi
 
 # Find the build and target subdir names.
-
-# post-stage1 host modules use a different CC_FOR_BUILD so, in order to
-# have matching libraries, they should use host libraries: Makefile.tpl
-# arranges to pass --with-build-libsubdir=$(HOST_SUBDIR).
-# However, they still use the build modules, because the corresponding
-# host modules (e.g. bison) are only built for the host when bootstrap
-# finishes. So:
-# - build_subdir is where we find build modules, and never changes.
-# - build_libsubdir is where we find build libraries, and can be overridden.
-
-# Prefix 'build-' so this never conflicts with target_subdir.
-build_subdir="build-${build_noncanonical}"
-
-# Check whether --with-build-libsubdir was given.
-if test "${with_build_libsubdir+set}" = set; then :
-  withval=$with_build_libsubdir; build_libsubdir="$withval"
-else
-  build_libsubdir="$build_subdir"
-fi
-
-# --srcdir=. covers the toplevel, while "test -d" covers the subdirectories
-if ( test $srcdir = . && test -d gcc ) \
-   || test -d $srcdir/../host-${host_noncanonical}; then
-  host_subdir="host-${host_noncanonical}"
-else
-  host_subdir=.
-fi
-# No prefix.
-target_subdir=${target_noncanonical}
-
-# Be sure to cover against remnants of an in-tree build.
-if test $srcdir != .  && test -d $srcdir/host-${host_noncanonical}; then
-  as_fn_error $? "building out of tree but $srcdir contains host-${host_noncanonical}.
-Use a pristine source tree when building in a separate tree" "$LINENO" 5
-fi
+# sdcpp omitted
 
 # Skipdirs are removed silently.
 skipdirs=
