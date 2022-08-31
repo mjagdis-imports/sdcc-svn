@@ -3511,7 +3511,7 @@ enable_warning_as_error (const char *arg, int value, unsigned int lang_mask,
 char *
 option_name (diagnostic_context *context, int option_index,
 	     diagnostic_t orig_diag_kind, diagnostic_t diag_kind)
-{ untested();
+{
   if (option_index)
     {
       /* A warning classified as an error.  */

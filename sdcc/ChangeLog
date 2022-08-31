@@ -1,3 +1,9 @@
+2022-08-31 Felix Salfelder <felix AT salfelder.org>
+
+	* sdcc/support/cpp/gcc/opts.cc,
+	  sdcc/support/cpp/libcpp/mkdeps.cc:
+	  Test x2.
+
 2022-08-30 Felix Salfelder <felix AT salfelder.org>
 
 	* support/cpp/configure, support/cpp/configure.ac:

@@ -284,7 +284,7 @@ deps_add_default_target (const class cpp_reader *pfile, class mkdeps *d, const c
       const char *obj_ext;
 
       if (NULL == CPP_OPTION (pfile, obj_ext))
-        { untested();
+        {
           obj_ext = TARGET_OBJECT_SUFFIX;
         }
       else if (CPP_OPTION (pfile, obj_ext)[0] != '.')
