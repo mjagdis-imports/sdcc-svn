@@ -1,3 +1,9 @@
+2022-09-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/valdiag/tests/universal.c,
+	  support/valdiag/tests/universal2.c:
+	  Separate out a test that needs to reside in a file on its own, since the diagnostic is emitted even inside #if 0.
+
 2022-08-31 Felix Salfelder <felix AT salfelder.org>
 
 	* sdcc/support/cpp/gcc/opts.cc,
