@@ -1,3 +1,12 @@
+2022-09-02 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/cc1_dummies.cc,
+	  support/cpp/gcc/ggc-common.cc,
+	  support/cpp/gcc/hash-map.h,
+	  support/cpp/gcc/hash-table.h,
+	  support/cpp/gcc/vec.h:
+	  Fix compile warnings
+
 2022-09-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
 
 	* support/valdiag/tests/universal.c,

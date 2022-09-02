@@ -253,6 +253,7 @@ static vec<void *> callback_vec;
 
 /* Register an object in the hash table.  */
 
+#if 0 // sdcpp
 int
 gt_pch_note_object (void *obj, void *note_ptr_cookie,
 		    gt_note_pointers note_ptr_fn)
@@ -281,6 +282,7 @@ gt_pch_note_object (void *obj, void *note_ptr_cookie,
     (*slot)->size = ggc_get_size (obj);
   return 1;
 }
+#endif // sdcpp
 
 /* Register address of a callback pointer.  */
 void
@@ -301,6 +303,7 @@ gt_pch_note_callback (void *obj, void *base)
 
 /* Register an object in the hash table.  */
 
+#if 0 // sdcpp
 void
 gt_pch_note_reorder (void *obj, void *note_ptr_cookie,
 		     gt_handle_reorder reorder_fn)
@@ -316,6 +319,7 @@ gt_pch_note_reorder (void *obj, void *note_ptr_cookie,
 
   data->reorder_fn = reorder_fn;
 }
+#endif // sdcpp
 
 /* Handy state for the traversal functions.  */
 

@@ -1467,7 +1467,7 @@ public:
   { return m_vec != NULL; }
 
   bool is_empty (void) const
-  { return m_vec ? m_vec->is_empty () : true; }
+  { return /* sdcpp m_vec ? m_vec->is_empty () : */ true; }
 
   unsigned length (void) const
   { return m_vec ? m_vec->length () : 0; }

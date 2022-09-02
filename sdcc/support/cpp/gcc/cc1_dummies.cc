@@ -134,6 +134,9 @@ void gt_clear_caches()
 void gt_ggc_m_S(void const*)
 { SDCPP_DUMMY_FCT();
 }
+void gt_pch_note_reorder (void*, void*, gt_handle_reorder)
+{ SDCPP_DUMMY_FCT();
+}
 void gt_pch_p_S(void*, void*, void (*)(void*, void*, void*), void*)
 { SDCPP_DUMMY_FCT();
 }

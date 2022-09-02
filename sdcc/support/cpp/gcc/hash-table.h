@@ -956,6 +956,12 @@ hash_table<Descriptor, Lazy, Allocator>
 ::find_slot_with_hash (const compare_type &comparable, hashval_t hash,
 		       enum insert_option insert)
 {
+#if 1 // sdcpp
+	(void) comparable;
+	(void) hash;
+	(void) insert;
+	gcc_assert(0 && "unreachable");
+#else // sdcpp
   if (Lazy && m_entries == NULL)
     {
       if (insert == INSERT)
@@ -1016,6 +1022,7 @@ hash_table<Descriptor, Lazy, Allocator>
 
   m_n_elements++;
   return &m_entries[index];
+#endif // sdcpp
 }
 
 /* Verify that all existing elements in th hash table which are
@@ -1047,6 +1054,10 @@ void
 hash_table<Descriptor, Lazy, Allocator>
 ::remove_elt_with_hash (const compare_type &comparable, hashval_t hash)
 {
+#if 1 // sdcpp
+	(void) comparable;
+	(void) hash;
+#else // sdcpp
   value_type *slot = find_slot_with_hash (comparable, hash, NO_INSERT);
   if (slot == NULL)
     return;
@@ -1055,6 +1066,7 @@ hash_table<Descriptor, Lazy, Allocator>
 
   mark_deleted (*slot);
   m_n_deleted++;
+#endif // sdcpp
 }
 
 /* This function scans over the entire hash table calling CALLBACK for

@@ -167,6 +167,11 @@ public:
 
   bool put (const Key &k, const Value &v)
     {
+#if 1 //sdcpp
+		 gcc_assert(false);
+		 (void) k;
+		 (void) v;
+#else // sdcpp
       hash_entry *e = m_table.find_slot_with_hash (k, Traits::hash (k),
 						   INSERT);
       bool ins = hash_entry::is_empty (*e);
@@ -179,6 +184,7 @@ public:
 	e->m_value = v;
 
       return !ins;
+#endif // sdcpp
     }
 
   /* If the passed in key is in the map return pointer to its value
