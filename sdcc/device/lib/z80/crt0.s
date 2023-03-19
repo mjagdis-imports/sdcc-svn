@@ -61,8 +61,13 @@ init:
 	;; Set stack pointer directly above top of memory.
 	ld	sp,#0x0000
 
-	;; Initialise global variables
-	call	gsinit
+	call	___sdcc_external_startup
+
+	;; Initialise global variables. Skip if __sdcc_external_startup returned
+	;; non-zero value. Note: calling convention version 1 only.
+	or	a, a
+	call	Z, gsinit
+
 	call	_main
 	jp	_exit
 

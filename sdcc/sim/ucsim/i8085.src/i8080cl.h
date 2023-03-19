@@ -134,7 +134,8 @@ public:
   virtual void make_cpu_hw(void);
   virtual void make_memories(void);
   virtual class cl_memory_operator *make_flag_op(void);
-  
+
+  virtual double def_xtal(void) { return 1000000; }
   virtual int clock_per_cycle(void) { return 1; }
   virtual struct dis_entry *dis_tbl(void);
   virtual struct dis_entry *get_dis_entry(t_addr addr);
@@ -187,8 +188,8 @@ public:
   virtual int STAX_B(t_mem code) { return stax(rBC); }
   virtual int STAX_D(t_mem code) { return stax(rDE); }
   virtual int XCHG(t_mem code);
-  virtual int IN(t_mem code);
-  virtual int OUT(t_mem code);
+  virtual int IN_INST(t_mem code);
+  virtual int OUT_INST(t_mem code);
   virtual int PUSH_B(t_mem code) { push2(rBC); return resGO; }
   virtual int PUSH_D(t_mem code) { push2(rDE); return resGO; }
   virtual int PUSH_H(t_mem code) { push2(rHL); return resGO; }

@@ -84,6 +84,7 @@ public:
   virtual struct name_entry *sfr_tbl(void);
   virtual struct name_entry *bit_tbl(void);
 
+  virtual double def_xtal(void) { return 8000000; }
   virtual int clock_per_cycle(void) { return(2); }
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
@@ -95,7 +96,7 @@ public:
   virtual void read_interrupt_file(void);
   virtual void read_input_file(void);
 
-  virtual int do_inst(int step);
+  //virtual int do_inst(int step);
   virtual int exec_inst(void);
   virtual int do_interrupt(void);
 

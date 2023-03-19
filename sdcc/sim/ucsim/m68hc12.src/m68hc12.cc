@@ -84,6 +84,7 @@ cl_m68hc12::cl_m68hc12(class cl_sim *asim):
   hc12wrap= new cl_12wrap();
   hc12wrap->init();
   extra_ticks= 0;
+  cCC.decode(&CC);
 }
 
 int
@@ -96,7 +97,7 @@ cl_m68hc12::init(void)
   RCV(TMP2);
   RCV(TMP3);
   
-  set_xtal(8000000);
+  //set_xtal(8000000);
 
   for (i= 0; i<=255; i++)
     itab[i]= instruction_wrapper_invalid;

@@ -48,7 +48,7 @@ cl_f8::init(void)
 {
   cl_uc::init();
   fill_def_wrappers(itab);
-  set_xtal(25000000);
+  //set_xtal(25000000);
 
 #define RCV(R) reg_cell_var(&c ## R , &r ## R , "" #R "" , "CPU register " #R "")
   RCV(X); RCV(XH); RCV(XL);
@@ -81,7 +81,7 @@ cl_f8::reset(void)
 {
   cl_uc::reset();
   clear_prefixes();
-  PC= 0;
+  PC= 0x4000;
 }
 
 void
@@ -239,6 +239,14 @@ cl_f8::stack_check_overflow(t_addr sp_before)
 // Memory cells according to 8 bit addressing modes
 
 class cl_cell8 &
+cl_f8::m_i(void)
+{
+  class cl_cell8 *c= (class cl_cell8 *)rom->get_cell(PC);
+  fetch();
+  return *c;
+}
+
+class cl_cell8 &
 cl_f8::m_mm(void)
 {
   u16_t a= fetch();
@@ -280,6 +288,22 @@ cl_f8::m_n_y(void)
   u16_t a= rY+n;
   class cl_cell8 *c= (class cl_cell8 *)rom->get_cell(a);
   return *c;
+}
+
+class cl_cell8 &
+cl_f8::m_z(void)
+{
+  class cl_cell8 *c= (class cl_cell8 *)rom->get_cell(rZ);
+  return *c;
+}
+
+u16_t
+cl_f8::a_i()
+{
+  u16_t a= PC;
+  fetch();
+  fetch();
+  return a;
 }
 
 u16_t

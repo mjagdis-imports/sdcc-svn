@@ -71,8 +71,12 @@ init:
         ;; Set stack pointer directly above top of Work RAM.
         ld      sp,#0xe000
 
-        ;; Setup global data
-        call    gsinit
+        call	___sdcc_external_startup
+
+        ;; Initialise global variables. Skip if __sdcc_external_startup returned
+        ;; non-zero value. Note: calling convention version 1 only.
+        or      a, a
+        call    Z, gsinit
 
         ;; Use _main instead of main to bypass sdcc's intelligence
         call    _main
@@ -108,8 +112,8 @@ _exit::
         .area   _GSINIT
 gsinit::
         ; Default-initialized global variables.
-        ld      de, #s__DATA
-        ld	bc, #l__DATA + 0x0101
+        ld      hl, #s__DATA
+        ld      bc, #l__DATA + 0x0101
         xor     a, a
         jr      loop_implicit_compare
 loop_implicit:

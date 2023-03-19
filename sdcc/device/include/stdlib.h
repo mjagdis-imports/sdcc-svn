@@ -27,8 +27,8 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __SDCC_STDLIB_H
-#define __SDCC_STDLIB_H 1
+#ifndef __STDC_VERSION_STDLIB_H__
+#define __STDC_VERSION_STDLIB_H__ 201710L /* TODO: replace by __STDC_VERSION__ when this header becomes C23-compliant! */
 
 #if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_ds400) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 #define __reentrant
@@ -52,7 +52,7 @@
 
 #define MB_CUR_MAX 4
 
-#if __STDC_VERSION__ > 201112L // TODO: Replace by >= to exact value from final version of C2X standard.
+#if __STDC_VERSION__ >= 202311L
 typedef bool once_flag;
 #define ONCE_FLAG_INIT false
 void call_once(once_flag *flag, void (*func)(void));
@@ -97,7 +97,7 @@ inline void *aligned_alloc(size_t alignment, size_t size)
 #endif
 extern void free (void * ptr);
 
-#if __STDC_VERSION__ >= 202300L // TODO: Replace by final value when C2X is published!
+#if __STDC_VERSION__ >= 202311L
 inline void free_sized(void *ptr, size_t size)
 {
   (void)size;
@@ -159,7 +159,7 @@ size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n);
 #endif
 
 /* C2X Alignment of memory */
-#if __STDC_VERSION__ >= 202300L // TODO: Replace by final value when C2X is published!
+#if __STDC_VERSION__ >= 202311L
 size_t memalignment(const void *p);
 #endif
 

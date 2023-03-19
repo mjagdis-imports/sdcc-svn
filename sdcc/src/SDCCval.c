@@ -724,7 +724,7 @@ double2ul (double val)
  * This shows up on Mac OS X i386 platform which useus SSE unit instead of the x87 FPU for floating-point operations
  */
 /*
- * on Mac OS X ppc (long) 2147483648.0 equals to 2147483647, so we explicitely convert it to 0x80000000
+ * on Mac OS X ppc (long) 2147483648.0 equals to 2147483647, so we explicitly convert it to 0x80000000
  * on other known platforms (long) 2147483648.0 equals to -2147483648
  */
   return ((val) < 0) ? (((val) < -2147483647.0) ? 0x80000000UL : (unsigned long) -((long) -(val))) : (unsigned long) (val);
@@ -1905,7 +1905,7 @@ charVal (const char *s)
       free ((void *)ustr);
       return (val);
     }
-  else // Character constant that is not wide - compability with legacy encodings.
+  else // Character constant that is not wide - compatibility with legacy encodings.
     return constCharacterVal (*s, 0);
 }
 
@@ -1999,70 +1999,7 @@ floatFromVal (value * val)
 unsigned long
 ulFromVal (const value *val)
 {
-  if (!val)
-    return 0;
-
-  if (val->etype && SPEC_SCLS (val->etype) != S_LITERAL)
-    {
-      werror (E_CONST_EXPECTED, val->name);
-      return 0;
-    }
-
-  /* if it is not a specifier then we can assume that */
-  /* it will be an unsigned long                      */
-  if (!IS_SPEC (val->type))
-    return SPEC_CVAL (val->etype).v_ulong;
-
-  if (SPEC_NOUN (val->etype) == V_FLOAT)
-    return double2ul (SPEC_CVAL (val->etype).v_float);
-
-  if (SPEC_NOUN (val->etype) == V_FIXED16X16)
-    return double2ul (doubleFromFixed16x16 (SPEC_CVAL (val->etype).v_fixed16x16));
-
-  if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
-    {
-      if (SPEC_USIGN (val->etype))
-        return (unsigned long)SPEC_CVAL (val->etype).v_ulonglong;
-      else
-        return (unsigned long)SPEC_CVAL (val->etype).v_longlong;
-    }
-
-  if (SPEC_LONG (val->etype))
-    {
-      if (SPEC_USIGN (val->etype))
-        return SPEC_CVAL (val->etype).v_ulong;
-      else
-        return SPEC_CVAL (val->etype).v_long;
-    }
-
-  if (SPEC_NOUN (val->etype) == V_INT)
-    {
-      if (SPEC_USIGN (val->etype))
-        return SPEC_CVAL (val->etype).v_uint;
-      else
-        return SPEC_CVAL (val->etype).v_int;
-    }
-
-  if (SPEC_NOUN (val->etype) == V_CHAR)
-    {
-      if (SPEC_USIGN (val->etype))
-        return (unsigned char) SPEC_CVAL (val->etype).v_uint;
-      else
-        return (signed char) SPEC_CVAL (val->etype).v_int;
-    }
-
-  if (IS_BOOL (val->etype) || IS_BITVAR (val->etype))
-    return SPEC_CVAL (val->etype).v_uint;
-
-  if (SPEC_NOUN (val->etype) == V_VOID)
-    return SPEC_CVAL (val->etype).v_ulong;
-
-  if (SPEC_NOUN (val->etype) == V_STRUCT)
-    return SPEC_CVAL (val->etype).v_ulong;
-
-  /* we are lost ! */
-  werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "ulFromVal: unknown value");
-  return 0;
+  return ullFromVal (val);
 }
 
 /*------------------------------------------------------------------*/
@@ -2112,7 +2049,7 @@ byteOfVal (value *val, int offset)
   if (SPEC_NOUN (val->etype) == V_FIXED16X16)
     return offset < 4 ? (SPEC_CVAL (val->etype).v_fixed16x16 >> shift) & 0xff : 0;
 
-  if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
+  if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT || SPEC_NOUN (val->etype) == V_BITFIELD || SPEC_NOUN (val->etype) == V_BITINTBITFIELD)
     {
       if (SPEC_USIGN (val->etype))
         return offset < 8 ? (SPEC_CVAL (val->etype).v_ulonglong >> shift) & 0xff : 0;
@@ -2184,7 +2121,7 @@ ullFromLit (sym_link * lit)
   if (SPEC_NOUN (etype) == V_FIXED16X16)
     return double2ul (doubleFromFixed16x16 (SPEC_CVAL (etype).v_fixed16x16)); /* FIXME: this loses bits */
 
-  if (SPEC_LONGLONG (etype) || SPEC_NOUN (etype) == V_BITINT)
+  if (SPEC_LONGLONG (etype) || SPEC_NOUN (etype) == V_BITINT || SPEC_NOUN (etype) == V_BITFIELD || SPEC_NOUN (etype) == V_BITINTBITFIELD)
     {
       if (SPEC_USIGN (etype))
         return SPEC_CVAL (etype).v_ulonglong;
@@ -3118,7 +3055,7 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
     l = (unsigned long)llval;
     
 #if 0
-  printf("valCastLiteral: %lx to ", llval); printTypeChain (dtype, stdout); printf("\n");
+  printf("valCastLiteral: %llx to ", (unsigned long long)llval); printTypeChain (dtype, stdout); printf("\n");
 #endif
 
   val = newValue ();
@@ -3177,9 +3114,9 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
     case V_BITFIELD:
       llval &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
       if (SPEC_USIGN (val->etype))
-        SPEC_CVAL (val->etype).v_uint = (TYPE_TARGET_UINT) llval;
+        SPEC_CVAL (val->etype).v_ulonglong = (TYPE_TARGET_UINT) llval;
       else
-        SPEC_CVAL (val->etype).v_int = (TYPE_TARGET_INT) llval;
+        SPEC_CVAL (val->etype).v_longlong = (TYPE_TARGET_INT) llval;
       break;
 
     case V_CHAR:
@@ -3271,11 +3208,12 @@ valRecastLitVal (sym_link * dtype, value * val)
       break;
 
     case V_BITFIELD:
+    case V_BITINTBITFIELD:
       ull &= (0xffffffffffffffffull >> (64 - SPEC_BLEN (val->etype)));
       if (SPEC_USIGN (val->etype))
-        SPEC_CVAL (val->etype).v_uint = (TYPE_TARGET_UINT) ull;
+        SPEC_CVAL (val->etype).v_ulonglong = (TYPE_TARGET_ULONGLONG) ull;
       else
-        SPEC_CVAL (val->etype).v_int = (TYPE_TARGET_INT) ull;
+        SPEC_CVAL (val->etype).v_longlong = (TYPE_TARGET_LONGLONG) ull;
       break;
 
     case V_CHAR:
@@ -3286,7 +3224,7 @@ valRecastLitVal (sym_link * dtype, value * val)
       break;
 
     default:
-      if (SPEC_LONGLONG (val->etype))
+      if (SPEC_LONGLONG (val->etype) || SPEC_NOUN (val->etype) == V_BITINT)
         {
           if (SPEC_USIGN (val->etype))
             SPEC_CVAL (val->etype).v_ulonglong = (TYPE_TARGET_ULONGLONG) ull;

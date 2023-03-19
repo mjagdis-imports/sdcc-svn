@@ -434,7 +434,7 @@ defaultOClass (symbol *sym)
         {
           if (!sym->ival && !SPEC_ABSA (sym->etype) && !(IS_EXTERN (sym->etype) || IS_FUNC (sym->type)))
             {
-              sym->ival = newiList(INIT_DEEP, revinit(newiList(INIT_NODE, newAst_VALUE(constIntVal("0"))))); // Default initalization to 0.
+              sym->ival = newiList(INIT_DEEP, revinit(newiList(INIT_NODE, newAst_VALUE(constIntVal("0"))))); // Default initialization to 0.
               sym->ival->lineno = sym->lineDef;
             }
           SPEC_OCLS (sym->etype) = statsg;
@@ -1083,7 +1083,7 @@ clearStackOffsets (void)
 
   if (currFunc)
     {
-      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->sams.
+      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->syms.
       currFunc->stack = 0;
     }
 }

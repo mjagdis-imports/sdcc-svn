@@ -119,7 +119,7 @@ typedef struct
     /** TRUE if all types of glue functions should be inserted into
         the file that also defines main.
         We dont want this in cases like the z80 where the startup
-        code is provided by a seperate module.
+        code is provided by a separate module.
      */
     bool glue_up_main;
     /* OR of MODEL_* */
@@ -242,6 +242,7 @@ typedef struct
     struct memmap *default_local_map;   // default location for auto vars
     struct memmap *default_globl_map;   // default location for globl vars
     int code_ro;                        // code space read-only 1=yes
+    bool sfrupointer;                   // unqualified pointer can point to __sfr,
     unsigned int maxextalign;           // maximum extended alignment supported, nonnegative power of 2 (C11 standard, section 6.2.8).
   }
   mem;
@@ -320,7 +321,7 @@ typedef struct
   const char *fun_prefix;
 
   /** Called once the processor target has been selected.
-      First chance to initalise and set any port specific variables.
+      First chance to initialise and set any port specific variables.
       'port' is set before calling this.  May be NULL.
   */
   void (*init) (void);

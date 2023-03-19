@@ -470,7 +470,7 @@ declaration
          /* add the specifier list to the id */
          symbol *sym , *sym1;
 
-         bool autocandidate = options.std_c2x && SPEC_SCLS($1) == S_AUTO;
+         bool autocandidate = options.std_c2x && IS_SPEC ($1) && SPEC_SCLS($1) == S_AUTO;
 
          for (sym1 = sym = reverseSyms($2);sym != NULL;sym = sym->next) {
              sym_link *lnk = copyLinkChain($1);
@@ -606,7 +606,7 @@ type_specifier
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_INT;
                   ignoreTypedefType = 1;
-               }              
+               }
    | SD_LONG   {
                   $$=newLink(SPECIFIER);
                   SPEC_LONG($$) = 1;
@@ -619,9 +619,8 @@ type_specifier
                }
    | DOUBLE    {
                   $$=newLink(SPECIFIER);
-                  SPEC_NOUN($$) = V_FLOAT;
+                  SPEC_NOUN($$) = V_DOUBLE;
                   ignoreTypedefType = 1;
-                  werror (W_DOUBLE_UNSUPPORTED);
                }
    | SIGNED    {
                   $$=newLink(SPECIFIER);
@@ -836,7 +835,7 @@ struct_or_union_specifier
           $3->size = compStructSize($1, $3);   /* update size of  */
           promoteAnonStructs ($1, $3);
 
-          if ($3->redefinition) // Since C2X, multiple definitions for struct /union are allowed, if they are compatible and have the same tags. The current standard draft N3047 allows redeclaration sof unions to have a different oder of the members. We don't. The rule in N3047 is now considered a mistake by many, and will hopefully be changed to the SDCC behaviour via a national body comment for the final version of the standard.
+          if ($3->redefinition) // Since C2X, multiple definitions for struct / union are allowed, if they are compatible and have the same tags. The current standard draft N3047 allows redeclarations of unions to have a different order of the members. We don't. The rule in N3047 is now considered a mistake by many, and will hopefully be changed to the SDCC behaviour via a national body comment for the final version of the standard.
             {
               sdef = findSymWithBlock (StructTab, $3->tagsym, currBlockno, NestLevel);
               bool compatible = options.std_c2x && sdef->tagsym && $3->tagsym && !strcmp (sdef->tagsym->name, $3->tagsym->name);
@@ -1340,7 +1339,7 @@ function_declarator
           addDecl ($1, FUNCTION, NULL);
           funcType = $1->type;
 
-          // For a function pointer, the parmeter list here is for the returned type.
+          // For a function pointer, the parameter list here is for the returned type.
           if (is_fptr)
             funcType = funcType->next;
 
@@ -2176,6 +2175,8 @@ function_definition
             $2 = createFunctionDecl($2);
             if ($2)
                 {
+                	if (!strcmp ($2->name, "_sdcc_external_startup")) // The rename (and semantics change happened) in SDCC 4.2.10. Keep this warning for two major releases afterwards.
+                		werror (W__SDCC_EXTERNAL_STARTUP_DEF);
                     if (FUNC_ISCRITICAL ($2->type))
                         inCriticalFunction = 1;
                     // warn for loss of calling convention for inlined functions.
@@ -2210,7 +2211,7 @@ function_body
 file
    : /* empty */
      {
-       werror(W_EMPTY_SOURCE_FILE);
+       werror(W_EMPTY_TRANSLATION_UNIT);
      }
    | translation_unit
    ;
@@ -2377,15 +2378,12 @@ string_literal_val
            val->etype->select.s.b_implicit_sign = true;
          }
 
-         int ll = 1;
-         if(function_name){
-           ll += strlen(function_name);
-         }
+         int ll = 1 + strlen(function_name);
          char* s = (char*) Safe_alloc(ll*sizeof(char));
-         if(function_name){
-            s = strcpy(s, function_name);
+         if(ll > 1){
+           s = strncpy(s, function_name, ll);
          }else{
-            *s = 0;
+           *s = 0;
          }
          SPEC_CVAL (val->etype).v_char = s;
          DCL_ELEM (val->type) = ll;

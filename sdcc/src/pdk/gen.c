@@ -33,7 +33,6 @@ static unsigned int regalloc_dry_run_cycle_scale = 1;
 
 static struct
 {
-  short debugLine;
   struct
     {
       int pushed;
@@ -127,11 +126,19 @@ cost(unsigned int words, float cycles)
 }
 
 static void
-emitJP(const symbol *target, float probability)
+emitJP (const symbol *target, float probability)
 {
   if (!regalloc_dry_run)
     emit2 ("goto", "%05d$", labelKey2num (target->key));
   cost (1, 2 * probability);
+}
+
+/* Emit label for target of conditional execution - necessary to make peephole optimizer treat conditional skips as conditional jumps. */
+static void
+emitCondTargetLbl (void)
+{
+  if (!regalloc_dry_run)
+    emitLabel (newiTempLabel (0));
 }
 
 static bool
@@ -149,9 +156,9 @@ regDead (int idx, const iCode *ic)
 void
 pdk_emitDebuggerSymbol (const char *debugSym)
 {
-  G.debugLine = 1;
+  genLine.lineElement.isDebug = 1;
   emit2 ("", "%s ==.", debugSym);
-  G.debugLine = 0;
+  genLine.lineElement.isDebug = 0;
 }
 
 /*-----------------------------------------------------------------*/
@@ -1243,21 +1250,12 @@ genMove (asmop *result, asmop *source, bool a_dead, bool p_dead)
 static int
 isLiteralBit (unsigned long lit)
 {
-  unsigned long pw[32] =
-  {
-    1l, 2l, 4l, 8l, 16l, 32l, 64l, 128l,
-    0x100l, 0x200l, 0x400l, 0x800l,
-    0x1000l, 0x2000l, 0x4000l, 0x8000l,
-    0x10000l, 0x20000l, 0x40000l, 0x80000l,
-    0x100000l, 0x200000l, 0x400000l, 0x800000l,
-    0x1000000l, 0x2000000l, 0x4000000l, 0x8000000l,
-    0x10000000l, 0x20000000l, 0x40000000l, 0x80000000l
-  };
-  int idx;
-
-  for (idx = 0; idx < 32; idx++)
-    if (lit == pw[idx])
-      return idx;
+  if (!(lit & (lit-1)))
+    {
+      for (int idx = 0; idx < 32; idx++) // We could make the argument ull, and go all the way to 63, if needed. Currently all uses call this function with just an 8-bit value, though.
+        if (lit == (1ul << idx))
+          return idx;
+    }
   return -1;
 }
 
@@ -1308,8 +1306,10 @@ genNot (const iCode *ic)
                 popPF (true);
             }
           else
-            emit2 ("or", "a, %s", aopGet (left->aop, i));
-          cost (1, 1);
+            {
+              emit2 ("or", "a, %s", aopGet (left->aop, i));
+              cost (1, 1);
+            }
         }
       emit2 ("sub", "a, #0x01");
       emit2 ("mov", "a, #0x00");
@@ -2467,6 +2467,7 @@ genMinus (const iCode *ic, const iCode *ifx)
           emit2 ("dzsn", aopGet (left->aop, 0));
           cost (1, 1.8f);
           emitJP (IC_TRUE (ifx), 0.2f);
+          emitCondTargetLbl ();
         }
       else if (aopInReg (left->aop, 0, A_IDX) || aopInReg (left->aop, 1, A_IDX) && IC_TRUE (ifx))
         {
@@ -2480,6 +2481,7 @@ genMinus (const iCode *ic, const iCode *ifx)
           emit2 ("ceqsn", "a, #0x00");
           cost (1 + left->aop->size, left->aop->size + 1.8f);
           emitJP (IC_TRUE (ifx), 0.2f);
+          emitCondTargetLbl ();
           
           for (int i = 0; i < left->aop->size; i++)
             {
@@ -2488,6 +2490,7 @@ genMinus (const iCode *ic, const iCode *ifx)
               emit2 ("ceqsn", "a, %s", aopGet (left->aop, i));
               cost (1, 1.8f);
               emitJP (IC_TRUE (ifx), 0.2f);
+              emitCondTargetLbl ();
             }
         }
       else if (left->aop->size == 1 && IC_FALSE (ifx))
@@ -2500,6 +2503,7 @@ genMinus (const iCode *ic, const iCode *ifx)
           emit2 ("t0sn.io", "f, z");
           cost (2, 2.5f);
           emitJP (IC_FALSE (ifx), 0.5f);
+          emitCondTargetLbl ();
         }
       else
         {
@@ -2649,15 +2653,18 @@ genCmp (const iCode *ic, iCode *ifx)
               emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
               emit2 ("t1sn.io", "f, c");
               cost (2, 2.5);
+              emitCondTargetLbl ();
             }
           else
             {
               emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
               emit2 ("nop", "");
+              emitCondTargetLbl ();
               emit2 ("t0sn.io", "f, c");
               cost (3, 3.5);
             }
           emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+          emitCondTargetLbl ();
           goto release;
         }
       else if (ic->op == '<' && aopInReg (left->aop, 0, A_IDX) && (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || aopInReg (right->aop, 0, P_IDX)) && (IC_TRUE (ifx) || !regDead (A_IDX, ic)))
@@ -2667,6 +2674,7 @@ genCmp (const iCode *ic, iCode *ifx)
               emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
               emit2 ("t1sn.io", "f, c");
               cost (2, 2.5);
+              emitCondTargetLbl ();
             }
           else if ((TARGET_IS_PDK15 || TARGET_IS_PDK16) && (right->aop->type == AOP_DIR || aopInReg (right->aop, 0, P_IDX)))
             {
@@ -2678,10 +2686,12 @@ genCmp (const iCode *ic, iCode *ifx)
             {
               emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
               emit2 ("nop", "");
+              emitCondTargetLbl ();
               emit2 ("t0sn.io", "f, c");
               cost (3, 3.5);
             }
           emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+          emitCondTargetLbl ();
           goto release;
         }
     }
@@ -2708,6 +2718,7 @@ genCmp (const iCode *ic, iCode *ifx)
                        emit2 ("ceqsn", "a, #0x80");
                        emit2 ("nop", "");
                        cost (2, 2);
+                       emitCondTargetLbl ();
                      }
                    else
                      {
@@ -2722,9 +2733,11 @@ genCmp (const iCode *ic, iCode *ifx)
                    emit2 ("ceqsn", "a, #0x80");
                    emit2 ("t1sn.io", "f, c");
                    cost (2, 2.5);
+                   emitCondTargetLbl ();
                  }
 
                emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+               emitCondTargetLbl ();
             }
           else
             {
@@ -2765,7 +2778,7 @@ genCmp (const iCode *ic, iCode *ifx)
           emit2 ("subc", "a, p");
           cost (1, 1);
         }
-      else if (right->aop->type == AOP_STK)
+      else if (right->aop->type == AOP_STK || right->aop->type == AOP_STL)
         {
           if (!regDead (P_IDX, ic) || aopInReg (left->aop, i + 1, P_IDX))
             pushPF (!aopInReg (left->aop, i, A_IDX));
@@ -2804,6 +2817,7 @@ genCmp (const iCode *ic, iCode *ifx)
     {
       emit2 ("t0sn.io", "f, ov");
       emit2 ("xor", "a, #0x80");
+      emitCondTargetLbl ();
       emit2 ("sl", "a");
       cost (3, 3);
     }
@@ -2813,6 +2827,7 @@ genCmp (const iCode *ic, iCode *ifx)
       emit2 (IC_FALSE(ifx) ? "t1sn.io" : "t0sn.io", "f, c");
       cost (1, 1.5);
       emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+      emitCondTargetLbl ();
     }
   else
     {
@@ -2877,6 +2892,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       emit2 ("ceqsn", "a, %s", aopGet (right->aop, 1));
       cost (1, 1.0f);
       emitJP (lbl_ne, 1.0f);
+      emitCondTargetLbl ();
       
       if (ifx && ((ic->op == EQ_OP) ^ (bool)(IC_FALSE(ifx))))
         {
@@ -2888,6 +2904,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
               emitJP (tlbl, 0.0f);
               cost (2, 0);
+              emitCondTargetLbl ();
               emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
               emitLabel (tlbl);
             }
@@ -2896,6 +2913,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               emit2 ("cneqsn", "a, %s", aopGet (right->aop, 0));
               cost (1, 0);
               emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+              emitCondTargetLbl ();
             }
         }
       else if (aopInReg (left->aop, 0, P_IDX) && regDead (P_IDX, ic) && aopIsLitVal (right->aop, 0, 1, 0xff))
@@ -2903,6 +2921,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
           emit2 ("izsn", "p");
           cost (1, 0);
           emitJP (lbl_ne, 0.0f);
+          emitCondTargetLbl ();
         }
       else
         {
@@ -2911,6 +2930,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
           emit2 ("ceqsn", "a, %s", aopGet (right->aop, 0));
           cost (1, 0);
           emitJP (lbl_ne, 0.0f);
+          emitCondTargetLbl ();
         }
     }
   else
@@ -2955,6 +2975,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
                 emit2 ("ceqsn", "a, %s", (right->aop->type == AOP_SFR || right->aop->type == AOP_STK || right->aop->type == AOP_CODE || right->aop->type == AOP_STL && !i) ? "p" : aopGet (right->aop, i));
                 emitJP (tlbl, 0.0f);
                 cost (2, 3);
+                emitCondTargetLbl ();
                 emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
                 emitLabel (tlbl);
               }
@@ -2963,6 +2984,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
                 emit2 ("cneqsn", "a, %s", (right->aop->type == AOP_SFR || right->aop->type == AOP_STK || right->aop->type == AOP_CODE || right->aop->type == AOP_STL && !i) ? "p" : aopGet (right->aop, i));
                 cost (1, 1);
                 emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.0f);
+                emitCondTargetLbl ();
               }
           }
         else
@@ -2970,6 +2992,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit2 ("ceqsn", "a, %s", (right->aop->type == AOP_SFR || right->aop->type == AOP_STK || right->aop->type == AOP_CODE || right->aop->type == AOP_STL && !i) ? "p" : aopGet (right->aop, i));
             cost (1, 1);
             emitJP(lbl_ne, 0.0f);
+            emitCondTargetLbl ();
           }
       }
 
@@ -3216,6 +3239,7 @@ genAnd (const iCode *ic, iCode *ifx)
               emit2 ("ceqsn", "a, #0x00");
               cost (1, 1.5);
               emitJP (tlbl, 0.5f);
+              emitCondTargetLbl ();
               emitJP (IC_FALSE (ifx), 0.5f);
               emitLabel (tlbl);
               goto release;
@@ -3228,6 +3252,7 @@ genAnd (const iCode *ic, iCode *ifx)
         }
 
       emitJP (IC_FALSE (ifx) ? IC_FALSE (ifx) : IC_TRUE (ifx), 0.5f);
+      emitCondTargetLbl ();
 
       goto release;
     }
@@ -3289,6 +3314,7 @@ genAnd (const iCode *ic, iCode *ifx)
             }
 
           emitJP (IC_TRUE (ifx), 0.5f);
+          emitCondTargetLbl ();
         }
 
       goto release;
@@ -3478,12 +3504,19 @@ genLeftShift (const iCode *ic)
 
   int size = result->aop->size;
 
+  bool pushed_a_global = false;
   bool pushed_p = false;
   bool p_dead = regDead (P_IDX, ic);
 
+  if (!regDead (A_IDX, ic) && right->aop->type != AOP_LIT)
+    {
+      pushAF();
+      pushed_a_global = true;
+    }
+
   if (result->aop->type == AOP_STK && !p_dead)
     {
-      pushPF (regDead (A_IDX, ic) && !aopInReg (left->aop, 0, A_IDX) && !aopInReg (right->aop, 0, A_IDX));
+      pushPF ((regDead (A_IDX, ic) || pushed_a_global) && !aopInReg (left->aop, 0, A_IDX) && !aopInReg (right->aop, 0, A_IDX));
       pushed_p = true;
       p_dead = true;
     }
@@ -3584,6 +3617,7 @@ genLeftShift (const iCode *ic)
           if (!regalloc_dry_run)
             emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 2);
+          emitCondTargetLbl ();
         }
 
       regalloc_dry_run_cycle_scale = 1;
@@ -3615,6 +3649,7 @@ genLeftShift (const iCode *ic)
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
       cost (3, 3);
+      emitCondTargetLbl ();
     
       for(int i = 0; i < size; i++)
         {
@@ -3672,7 +3707,10 @@ genLeftShift (const iCode *ic)
     }
 
   if (pushed_p)
-    popPF (regDead (A_IDX, ic));
+    popPF (!aopInReg (result->aop, 0, A_IDX) && !aopInReg (result->aop, 1, A_IDX));
+
+  if (pushed_a_global)
+    popAF();
 
   freeAsmop (right);
   freeAsmop (left);
@@ -3696,15 +3734,22 @@ genRightShift (const iCode *ic)
   aopOp (result, ic);
 
   bool pushed_a = false;
+  bool pushed_a_global = false;
   bool pushed_p = false;
 
   int size = result->aop->size;
 
   bool p_dead = regDead (P_IDX, ic);
 
+  if (!regDead (A_IDX, ic) && right->aop->type != AOP_LIT)
+    {
+      pushAF();
+      pushed_a_global = true;
+    }
+ 
   if (result->aop->type == AOP_STK && !p_dead)
     {
-      pushPF (regDead (A_IDX, ic) && !aopInReg (left->aop, 0, A_IDX) && !aopInReg (right->aop, 0, A_IDX));
+      pushPF ((regDead (A_IDX, ic) || pushed_a_global) && !aopInReg (left->aop, 0, A_IDX) && !aopInReg (right->aop, 0, A_IDX));
       pushed_p = true;
       p_dead = true;
     }
@@ -3806,6 +3851,7 @@ genRightShift (const iCode *ic)
                    emit2 ("sl", "a");
                    emit2 ("t0sn.io", "f, c");
                    emit2 ("or", "a, #0x01", aopGet (result->aop, size - 1));
+                   emitCondTargetLbl ();
                    emit2 ("src", "a");
                    emit2 ("src", "a");
                    cost (5, 5);
@@ -3875,6 +3921,7 @@ genRightShift (const iCode *ic)
           if (!regalloc_dry_run)
             emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 2);
+          emitCondTargetLbl ();
         }
 
       regalloc_dry_run_cycle_scale = 1;
@@ -3908,6 +3955,7 @@ genRightShift (const iCode *ic)
       if (!regalloc_dry_run)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl2->key));
       cost (3, 3);
+      emitCondTargetLbl ();
 
       if (!SPEC_USIGN (getSpec (operandType (left))) || result->aop->type == AOP_STK)
         {
@@ -3926,6 +3974,7 @@ genRightShift (const iCode *ic)
               emit2 ("sl", "p");
               emit2 ("t0sn.io", "f, c");
               emit2 ("or", "p, a");
+              emitCondTargetLbl ();
               emit2 ("src", "p");
               emit2 ("src", "p");
               cheapMove (result->aop, size - 1, ASMOP_P, 0, true, true, size == 1);
@@ -3936,6 +3985,7 @@ genRightShift (const iCode *ic)
               emit2 ("sl", aopGet (result->aop, size - 1));
               emit2 ("t0sn.io", "f, c");
               emit2 ("or", "%s, a", aopGet (result->aop, size - 1));
+              emitCondTargetLbl ();
               emit2 ("src", aopGet (result->aop, size - 1));
               emit2 ("src", aopGet (result->aop, size - 1));
               cost (6, 6);
@@ -3990,8 +4040,11 @@ genRightShift (const iCode *ic)
     popAF();
 
   if (pushed_p)
-    popPF (regDead (A_IDX, ic));
+    popPF (!aopInReg (result->aop, 0, A_IDX) && !aopInReg (result->aop, 1, A_IDX));
 
+  if (pushed_a_global)
+    popAF();
+    
 release:
   freeAsmop (right);
   freeAsmop (left);
@@ -4042,9 +4095,11 @@ static void getBitFieldByte (int len, int str, bool sex)
       symbol *const tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
       emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - len));
       emit2 ("nop", "");
+      emitCondTargetLbl ();
       emit2 ("t0sn.io", "f, c");
       if (tlbl)
         emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
+      emitCondTargetLbl ();
       emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - len)) & 0xff);
       cost (5, 5);
       emitLabel (tlbl);
@@ -4298,6 +4353,21 @@ genPointerSet (iCode *ic)
   int blen, bstr;
   blen = bit_field ? (SPEC_BLEN (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
   bstr = bit_field ? (SPEC_BSTR (getSpec (operandType (IS_BITVAR (getSpec (operandType (right))) ? right : left)))) : 0;
+
+  sym_link *type = operandType (left);
+  int ptype = (IS_PTR (type) && !IS_FUNC (type->next)) ? DCL_TYPE (type) : PTR_TYPE (SPEC_OCLS (getSpec (type)));
+
+  if (left->aop->type == AOP_IMMD && ptype == GPOINTER && IS_SYMOP (left) && OP_SYMBOL (left)->remat)
+    ptype = left->aop->aopu.code ? CPOINTER : POINTER;
+  else if (left->aop->type == AOP_STL)
+    ptype = POINTER;
+
+  if (ptype == CPOINTER)
+    {
+      if (!regalloc_dry_run)
+        werror (W_CODEMEM_WRITE);
+      goto release;
+    }
 
 #if 0 // TODO: Implement alignment requirements - idxm needs 16-bit-aligned operand
   if (left->aop->type == AOP_DIR && TARGET_IS_PDK16 && !bit_field)
@@ -4553,6 +4623,7 @@ genPointerSet (iCode *ic)
                   emit2 ("t0sn.io", "f, c");
                   emit2 ("or", "a, #0x%02x", 1 << bstr);
                   cost (3, 3);
+                  emitCondTargetLbl ();
                 }
               else
                 {
@@ -4648,6 +4719,7 @@ genPointerSet (iCode *ic)
   if (pushed_a)
     popAF ();
 
+release:
   freeAsmop (right);
   freeAsmop (left);
 }
@@ -4729,9 +4801,11 @@ genIfx (const iCode *ic)
           emit2 ("ceqsn", "a, #0");
           cost (1, 1.5f);
           emitJP (IC_TRUE (ic), 0.5f);
+          emitCondTargetLbl ();
           emit2 ("ceqsn", "a, p");
           cost (1, 0.75f);
           emitJP (IC_TRUE (ic), 0.375f);
+          emitCondTargetLbl ();
           goto release;
         }
       else if (!TARGET_IS_PDK13)
@@ -4740,6 +4814,7 @@ genIfx (const iCode *ic)
           emit2 ("ceqsn", "a, #0");
           if (!regalloc_dry_run)
             emit2 ("goto", "#!tlabel", labelKey2num (tlbl->key));
+          emitCondTargetLbl ();
           emit2 ("cneqsn", "a, p");
           cost (3, 3.25f);
           emitJP (IC_FALSE (ic), 0.375f);
@@ -4790,6 +4865,7 @@ genIfx (const iCode *ic)
       emit2 ("ceqsn", "a, #0x00");
       emitJP (tlbl, 0.0f);
       cost (2, 3);
+      emitCondTargetLbl ();
       emitJP (IC_FALSE (ic), 0.0f);
       emitLabel (tlbl);
     }
@@ -4798,6 +4874,7 @@ genIfx (const iCode *ic)
       emit2 (IC_FALSE (ic) ? "cneqsn" : "ceqsn", "a, #0x00");
       cost (1, 1); 
       emitJP (IC_FALSE (ic) ? IC_FALSE (ic) : IC_TRUE (ic), 0.0f);
+      emitCondTargetLbl ();
     }
 
 release:
@@ -4943,9 +5020,11 @@ genCast (const iCode *ic)
           symbol *const tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
           emit2 ("ceqsn", "a, #0x%02x", 0x80 >> (8 - SPEC_BITINTWIDTH (resulttype) % 8));
           emit2 ("nop", "");
+          emitCondTargetLbl ();
           emit2 ("t0sn.io", "f, c");
           if (tlbl)
             emit2 ("goto", "!tlabel", labelKey2num (tlbl->key));
+          emitCondTargetLbl ();
           emit2 ("or", "a, #0x%02x", ~topbytemask & 0xff);
           cost (5, 5);
           emitLabel (tlbl);
@@ -5000,12 +5079,8 @@ genCast (const iCode *ic)
 
       emit2 ("ceqsn", "a, #0x00");
       emit2 ("mov", "a, #0x01");
-      if (!regalloc_dry_run) // Dummy label as target for ceqsn to prevent peephole optimizer from optimizing out mov.
-        {
-          symbol *tlbl = newiTempLabel (0);
-          emitLabel (tlbl);
-        }
       cost (2, 2);
+      emitCondTargetLbl ();
 
       cheapMove (result->aop, 0, ASMOP_A, 0, true, true, true);
     }
@@ -5078,6 +5153,7 @@ genDummyRead (const iCode *ic)
           emit2 ("ceqsn", "a, %s", aopGet (op->aop, i));
           emit2 ("nop", "");
           cost (2, 2);
+          emitCondTargetLbl ();
         }
   else
     {

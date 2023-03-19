@@ -22,9 +22,17 @@ EXCLUDE_host += \
 	gte_20040409-2w \
 	gte_20040409-3w
 
+# possibly unsupported.
+EXCLUDE_host += \
+	tcc_83_utf8_in_identifiers
+
 # Fails when compiled with clang on FreeBSD 13.1 on aarch64
 EXCLUDE_host += \
 	gte_20031003-1
+
+# Fails on GCC 7, which we still use on macOS PPC host.
+EXCLUDE_host += \
+	gte_pr94809
 
 # does not compile on ds390
 EXCLUDE_ds390 += \
@@ -213,19 +221,31 @@ EXCLUDE_mcs51-small-stack-auto += \
 EXCLUDE_mcs51-large-stack-auto += \
 	gte_pr30185
 
+# SDCC Bug #3540
+	EXCLUDE_mcs51-large-stack-auto += \
+	gte_pr58365
+
+# SDCC Bug #3540
+	EXCLUDE_mcs51-small-stack-auto += \
+	gte_pr58365
+
 # Target does not yet support struct/union return
 EXCLUDE_hc08 += \
 	gte_991019-1 \
-	gte_pr30185
+	gte_pr30185 \
+	gte_pr58365
 EXCLUDE_s08 += \
 	gte_991019-1 \
-	gte_pr30185
+	gte_pr30185 \
+	gte_pr58365
 EXCLUDE_ds390 += \
 	gte_991019-1 \
-	gte_pr30185
+	gte_pr30185 \
+	gte_pr58365
 EXCLUDE_uc6502 += \
 	gte_991019-1 \
-	gte_pr30185
+	gte_pr30185 \
+	gte_pr58365
 
 # TODO: Check these
 EXCLUDE_ARCH_pdk += \
@@ -252,6 +272,7 @@ EXCLUDE_pdk15-stack-auto += \
 	gte_pr30185 \
 	gte_pr40386
 EXCLUDE_pdk14 += \
+	gte_align-2 \
 	gte_pr102134 \
 	gte_pr27364 \
 	gte_pr30185 \
@@ -373,6 +394,7 @@ EXCLUDE_ARCH_pdk += \
 	tcc_37_sprintf \
 	tcc_38_multiple_array_index \
 	tcc_49_bracket_evaluation \
+	tcc_83_utf8_in_identifiers \
 	tcc_97_utf8_string_literal \
 	tcc_109_float_struct_calling
 EXCLUDE_pdk14 += \

@@ -31,7 +31,7 @@
 
 	.module crt0
 	.globl	_main
-	.globl	__sdcc_external_startup
+	.globl	___sdcc_external_startup
 
 GCSR		.equ	0x00 ; Global control / status register
 MMIDR		.equ	0x10
@@ -72,10 +72,15 @@ MB3CR		.equ	0x17 ; Memory Bank 3 Control Register
 	; Set stack pointer directly above top of stack segment
 	ld	sp, #0xe000
 
-	call __sdcc_external_startup
+	call ___sdcc_external_startup
 
-	; Initialise global variables
+	; Initialise global variables. Skip if __sdcc_external_startup returned
+	; non-zero value. Note: calling convention version 0 only.
+	ld	a, l
+	or	a, a
+	jr	NZ, skip_gsinit
 	call	gsinit
+skip_gsinit:
 
 	call	_main
 	jp	_exit

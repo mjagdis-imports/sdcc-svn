@@ -258,7 +258,7 @@ _hc08_genAssemblerPreamble (FILE * of)
         }
       else
         fprintf (of, "\trsp\n");
-      fprintf (of, "\tjsr\t__sdcc_external_startup\n");
+      fprintf (of, "\tjsr\t___sdcc_external_startup\n");
       fprintf (of, "\tbeq\t__sdcc_init_data\n");
       fprintf (of, "\tjmp\t__sdcc_program_startup\n");
       fprintf (of, "__sdcc_init_data:\n");
@@ -843,6 +843,7 @@ PORT hc08_port =
     NULL,
     NULL,
     1,
+    false,                // doesn't matter, as port has no __sfr anyway
     1                     // No fancy alignments supported.
   },
   { _hc08_genExtraAreas,
@@ -989,6 +990,7 @@ PORT s08_port =
     NULL,
     NULL,
     1,
+    false,                // doesn't matter, as port has no __sfr anyway
     1                     // No fancy alignments supported.
   },
   { _hc08_genExtraAreas,

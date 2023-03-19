@@ -54,6 +54,7 @@ enum cell_flag {
 
 #define CELL_GENERAL	(CELL_NORMAL|CELL_INST|CELL_FETCH_BRK)
 
+extern t_mem def_data;
 
 /*
  * 3rd version of memory system
@@ -73,11 +74,14 @@ public:
   int width; // in bits
   t_mem data_mask;
   bool hidden;
+  chars altname;
 protected:
   t_addr dump_finished;
 public:
   cl_memory(const char *id, t_addr asize, int awidth);
   virtual ~cl_memory(void);
+  virtual bool is_named(const char *the_name) const;
+  virtual bool is_inamed(const char *the_name) const;
   virtual int init(void);
 
   t_addr get_start_address(void) { return(start_address); }
@@ -231,10 +235,11 @@ class cl_memory_cell: public cl_cell_data
 #ifdef STATISTIC
  public:
   unsigned long nuof_writes, nuof_reads;
+  class cl_memory *as;
 #endif
  public:
   t_mem mask;
-  t_mem def_data;
+  //t_mem def_data;
  protected:
   uchar width;
   uchar flags;
@@ -495,7 +500,7 @@ public:
   virtual bool is_chip(void) { return(true); }
 
   virtual void *get_slot(t_addr addr);
-  virtual t_addr is_slot(/*t_mem*/void *data_ptr);
+  virtual bool is_slot(void *data_ptr, t_addr *addr_of);
   
   virtual t_mem read(t_addr addr) { return d(addr); }
   virtual t_mem read(t_addr addr, enum hw_cath skip) { return d(addr); }

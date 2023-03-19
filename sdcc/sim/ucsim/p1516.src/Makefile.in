@@ -52,7 +52,7 @@ infodir         = @infodir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
-OBJECTS_SHARED	= sim$(TN).o $(TN).o glob.o port.o
+OBJECTS_SHARED	= sim$(TN).o $(TN).o p2223.o glob.o port.o uart.o pmon.o
 
 OBJECTS_EXE	= s$(TN).o
 OBJECTS		= $(OBJECTS_SHARED) $(OBJECTS_EXE)
@@ -74,7 +74,7 @@ TEST_OBJ	=
 all: checkconf otherlibs $(TN).src
 
 
-# Compiling and installing everything and runing test
+# Compiling and installing everything and running test
 # ---------------------------------------------------
 install: all installdirs install_shared_lib
 	$(INSTALL) $(LEN) $(DESTDIR)$(bindir)/$(LEN)
