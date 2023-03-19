@@ -202,7 +202,11 @@ dbuf_printOperand (operand * op, struct dbuf_s *dbuf)
           /* if assigned to registers */
           if (OP_SYMBOL (op)->nRegs)
             {
-              if (OP_SYMBOL (op)->isspilt)
+              bool completely_spilt = OP_SYMBOL (op)->isspilt;
+              for (int i = 0; i < OP_SYMBOL (op)->nRegs; i++)
+                if (OP_SYMBOL (op)->regs[i]);
+                  completely_spilt = false;
+              if (completely_spilt)
                 {
                   if (!OP_SYMBOL (op)->remat)
                     if (OP_SYMBOL (op)->usl.spillLoc)
@@ -215,10 +219,19 @@ dbuf_printOperand (operand * op, struct dbuf_s *dbuf)
                 }
               else
                 {
-                  int i;
                   dbuf_append_char (dbuf, '[');
-                  for (i = 0; i < OP_SYMBOL (op)->nRegs; i++)
-                    dbuf_printf (dbuf, "%s ", port->getRegName (OP_SYMBOL (op)->regs[i]));
+                  for (int i = 0; i < OP_SYMBOL (op)->nRegs; i++)
+                    {
+                      if (OP_SYMBOL (op)->regs[i]) // A byte in a register.
+                        dbuf_printf (dbuf, "%s ", port->getRegName (OP_SYMBOL (op)->regs[i]));
+                      else // A spilt byte in an operand that has been partially assigned to registers, partially spilt.
+                        if (OP_SYMBOL (op)->usl.spillLoc)
+                          dbuf_printf (dbuf, "%s ", (OP_SYMBOL (op)->usl.spillLoc->rname[0] ?
+                                                  OP_SYMBOL (op)->usl.spillLoc->rname : OP_SYMBOL (op)->usl.spillLoc->name));
+                        else
+                          dbuf_append_str (dbuf, "[err]");
+                        
+                    }
                   dbuf_append_char (dbuf, ']');
                 }
             }
@@ -1361,7 +1374,7 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
         retval = operandFromValue (valCastLiteral (type, operandLitValue (left) * operandLitValue (right), operandLitValueUll (left) * operandLitValueUll (right)), false);
       break;
     case '/':
-      if ((TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0 && operandLitValueUll (right) == 0)
+      if (!IS_FLOAT (operandType (right)) && (TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0 && operandLitValueUll (right) == 0)
         {
           werror (E_DIVIDE_BY_ZERO);
           retval = right;
@@ -1384,7 +1397,12 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
                                                        (TYPE_TARGET_ULONG) double2ul (operandLitValue (right))), false);
         }
       else
-        retval = operandFromValue (valCastLiteral (type, operandLitValue (left) / operandLitValue (right), operandLitValueUll (left) / operandLitValueUll (right)), false);
+        {
+          if (IS_FLOAT (operandType (right))) // Avoid division by 0 for right operand close to 0.
+            retval = operandFromValue (valCastLiteral (type, operandLitValue (left) / operandLitValue (right), operandLitValue (left) / operandLitValue (right)), false);
+          else
+            retval = operandFromValue (valCastLiteral (type, operandLitValue (left) / operandLitValue (right), operandLitValueUll (left) / operandLitValueUll (right)), false);
+        }
       break;
     case '%':
       if ((TYPE_TARGET_ULONG) double2ul (operandLitValue (right)) == 0 && operandLitValueUll (right) == 0)
@@ -2138,7 +2156,7 @@ geniCodeCast (sym_link *type, operand *op, bool implicit)
       return operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValueUll (op)), false);
     }
 
-  checkPtrCast (type, optype, implicit, IS_LITERAL (opetype) && !operandLitValue (op));
+  checkPtrCast (type, optype, implicit, IS_OP_LITERAL (op) && !operandLitValue (op));
 
   ic = newiCode (CAST, operandFromLink (type), geniCodeRValue (op, FALSE));
   IC_RESULT (ic) = newiTempOperand (type, 0);
@@ -3542,8 +3560,10 @@ geniCodeParms (ast * parms, value * argVals, int *iArg, int *stack, sym_link * f
       if (is_structparm)
         {
           sym_link *ptr = newLink (DECLARATOR);
-          DCL_TYPE (ptr) = PTR_TYPE (SPEC_OCLS (getSpec(operandType(pval))));
+          DCL_TYPE (ptr) = PTR_TYPE (SPEC_OCLS (getSpec (operandType (pval))));
           ptr->next = copyLinkChain (parms->ftype);
+          if (IS_PTR (operandType (pval)))
+            pval = geniCodeCast (ptr, pval, true);
           setOperandType (pval, ptr);
         }
       // now decide whether to push or assign
@@ -3610,10 +3630,11 @@ geniCodeParms (ast * parms, value * argVals, int *iArg, int *stack, sym_link * f
             ic = newiCode (IPUSH, pval, NULL);
           ic->parmPush = 1;
           // update the stack adjustment
-          *stack += getSize (IS_ARRAY (parms->ftype) ? aggrToPtr (parms->ftype, false) : parms->ftype);
-          if (IFFUNC_ISSMALLC (ftype) && !IS_AGGREGATE (parms->ftype) && getSize (parms->ftype) == 1) // SmallC calling convention passes 8-bit parameters as 16-bit values.
+          sym_link *parmtype = IS_ARRAY (parms->ftype) ? aggrToPtr (parms->ftype, false) : parms->ftype;
+          *stack += getSize (parmtype);
+          if (IFFUNC_ISSMALLC (ftype) && getSize (parmtype) == 1) // SmallC calling convention passes 8-bit parameters as 16-bit values.
             (*stack)++;
-          if (TARGET_PDK_LIKE && !IS_AGGREGATE (parms->ftype) && getSize (parms->ftype) % 2) // So does pdk due to stack alignment requirements.
+          if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // So does pdk due to stack alignment requirements.
             (*stack)++;
           ADDTOCHAIN (ic);
         }
@@ -3660,7 +3681,7 @@ geniCodeCall (operand * left, ast * parms, int lvl)
       return operandFromValue (valueFromLit (0), false);
     }
 
-  // C2X unreachable. Just omit the call for now. TODO: Optimize based on this (remove preceding and subsequent icodes, up zo whole basic block when no side effects)
+  // C2X unreachable. Just omit the call for now. TODO: Optimize based on this (remove preceding and subsequent icodes, up to whole basic block when no side effects)
   if (!IS_FUNCPTR (ftype) && !strcmp(OP_SYMBOL (left)->name, "__builtin_unreachable"))
     return 0;
 
@@ -3738,6 +3759,9 @@ geniCodeCall (operand * left, ast * parms, int lvl)
       sym->type = copyLinkChain (type);
       sym->etype = getSpec (sym->type);
       SPEC_SCLS (sym->etype) = S_AUTO;
+      SPEC_OCLS (sym->etype) = NULL;
+      SPEC_EXTR (sym->etype) = 0;
+      SPEC_STAT (sym->etype) = 0;
       currFunc->stack += allocVariables (sym);
       IC_RESULT (ic) = operandFromSymbol (sym, false);
       return (operandFromSymbol (sym, true));

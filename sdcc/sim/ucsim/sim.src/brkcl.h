@@ -71,6 +71,7 @@ public:
   virtual enum brk_type type(void)= 0;
   virtual enum brk_event get_event(void)= 0;
   virtual bool do_hit(void);
+  virtual void breaking(void);
 };
 
 
@@ -88,6 +89,7 @@ public:
 
   virtual enum brk_type type(void);
   virtual enum brk_event get_event(void) { return(brkNONE); }
+  virtual void breaking(void);
 };
 
 
@@ -128,6 +130,7 @@ public:
   virtual enum brk_type type(void);
   virtual enum brk_event get_event(void) { return(event); }
   virtual bool match(struct event_rec *ev);
+  virtual void breaking(void);
 };
 
 
@@ -153,6 +156,35 @@ public:
   virtual class cl_brk *get_bp(t_addr addr, int *idx);
   virtual class cl_brk *get_bp(int nr);
   virtual bool bp_at(t_addr addr);
+};
+
+class cl_display: public chars
+{
+public:
+  int nr;
+  chars fmt;
+public:
+  cl_display(const chars &f, const chars &e): chars(e) { nr=0; fmt= f; }
+};
+
+class cl_display_list: public cl_list
+{
+protected:
+  int cnt;
+public:
+  cl_display_list(void): cl_list()
+  {
+    cnt= 0;
+  }
+  cl_display_list(t_index alimit, t_index adelta, const char *aname):
+    cl_list(alimit, adelta, aname)
+  {
+    cnt= 0;
+  }
+public:
+  virtual t_index  add(void *item);
+  virtual void undisplay(int nr);
+  virtual void do_display(class cl_console_base *con);
 };
 
 

@@ -31,7 +31,7 @@ endif
 
 CC              = $(top_builddir)/bin/sdcc
 # The predefined macros reflect what SDCC predefines (so we don't get any errors when generating Makefile.dep).
-CPP             = $(top_builddir)/bin/sdcpp -D__STDC_ISO_10646__=201409L -D__STDC_UTF_16__=1 -D__STDC_UTF_32__=1
+CPP             = $(top_builddir)/bin/sdcpp -D__STDC_ISO_10646__=201409L
 SDAR            = $(abs_top_builddir)/bin/sdar
 
 prefix          = @prefix@
@@ -51,7 +51,7 @@ lib_dir_suffix  = @lib_dir_suffix@
 sdcc_libdir     = $(DESTDIR)$(datadir)/$(lib_dir_suffix)
 
 CPPFLAGS        = -I$(INCDIR) -I$(PORTINCDIR)
-CFLAGS          = $(MODELFLAGS) --nostdinc --std-c11
+CFLAGS          = $(MODELFLAGS) --nostdinc --std-c2x
 
 BUILDDIR        = build
 # Default
@@ -724,7 +724,7 @@ dep: Makefile.dep
 Makefile.dep: $(SOURCES) $(INCDIR)/*.h $(PORTINCDIR)/*.h
 	rm -f Makefile.dep
 	for i in $(filter %.c,$^); do \
-	  $(CPP) -std=c11 -M $(CPPFLAGS) $$i >$${i}.dep; \
+	  $(CPP) -std=c2x -M $(CPPFLAGS) $$i >$${i}.dep; \
 	  cat $${i}.dep >>Makefile.dep; \
 	  rm $${i}.dep; \
 	done

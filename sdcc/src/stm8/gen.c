@@ -33,7 +33,6 @@ static unsigned int regalloc_dry_run_cycle_scale = 1;
 
 static struct
 {
-  short debugLine;
   struct
     {
       int pushed;
@@ -1554,7 +1553,7 @@ adjustStack (int n, bool a_free, bool x_free, bool y_free)
 {
   while (n)
     {
-      // The manual is ambigious (not even documenting if the #byte is signed), but it from experimenting with the hardware it
+      // The manual is ambiguous (not even documenting if the #byte is signed), but it from experimenting with the hardware it
       // seems addw sp, byte has a signed operand, while sub sp, #byte has an unsigned operand, also, in contrast to what the
       // manual states, addw sp, #byte only takes 1 cycle.
 
@@ -2689,9 +2688,9 @@ genMove (asmop *result, asmop *source, bool a_dead, bool x_dead, bool y_dead)
 void
 stm8_emitDebuggerSymbol (const char *debugSym)
 {
-  G.debugLine = 1;
+  genLine.lineElement.isDebug = 1;
   emit2 ("", "%s ==.", debugSym);
-  G.debugLine = 0;
+  genLine.lineElement.isDebug = 0;
 }
 
 /*-----------------------------------------------------------------*/
@@ -2848,7 +2847,7 @@ release:
 }
 
 /*-----------------------------------------------------------------*/
-/* genEor - generates code for bitwise exlusive or                 */
+/* genEor - generates code for bitwise exclusive or                 */
 /*-----------------------------------------------------------------*/
 static void
 genEor (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
@@ -3148,7 +3147,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = TRUE;
           i += 2;
          }
-      // In some cases we gain so much by using decw that it is worth handling the carry explictly.
+      // In some cases we gain so much by using decw that it is worth handling the carry explicitly.
       else if (started && !maskedword && i == size - 2 && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) && aopIsLitVal (left_aop, i, 2, 0x0000) &&
         (aopOnStack (right_aop, i, 2) || right_aop->type == AOP_DIR))
         {
@@ -3163,7 +3162,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           emit3w_o (A_NEGW, result_aop, i, 0, 0);
           i += 2;
          }
-       // In some cases we gain so much by using decw that it is worth handling the carry explictly.
+       // In some cases we gain so much by using decw that it is worth handling the carry explicitly.
       else if (started && !maskedword && i == size - 2 && aopIsLitVal (right_aop, i, 2, 0x0000) &&
         (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX) || x_free && (aopOnStack (result_aop, i, 2) || result_aop->type == AOP_DIR)))
         {
@@ -3734,7 +3733,7 @@ genCall (const iCode *ic)
       freeAsmop (IC_RESULT (ic));
     }
   // Check if we can do tail call optimization.
-  else if (!(currFunc && IFFUNC_ISISR (currFunc->type)) &&
+  else if (currFunc && !IFFUNC_ISISR (currFunc->type) &&
     (!SomethingReturned || aopInReg (IC_RESULT (ic)->aop, 0, aopRet (ftype)->aopu.bytes[0].byteu.reg->rIdx) &&
       (IC_RESULT (ic)->aop->size <= 1 || aopInReg (IC_RESULT (ic)->aop, 1, aopRet (ftype)->aopu.bytes[1].byteu.reg->rIdx)) &&
       (IC_RESULT (ic)->aop->size <= 2 || aopInReg (IC_RESULT (ic)->aop, 2, aopRet (ftype)->aopu.bytes[2].byteu.reg->rIdx)) &&
@@ -3970,7 +3969,7 @@ genCall (const iCode *ic)
     }
   else
     {
-      if (isFuncCalleeStackCleanup (currFunc->type) && prestackadjust && !IFFUNC_ISNORETURN (ftype)) // Copy return value into correct location on stack for tail call optimization.
+      if (currFunc && isFuncCalleeStackCleanup (currFunc->type) && prestackadjust && !IFFUNC_ISNORETURN (ftype)) // Copy return value into correct location on stack for tail call optimization.
         {
           wassert (options.model != MODEL_LARGE && !IFFUNC_ISCOSMIC (ftype));
           bool use_y = stm8IsParmInCall(ftype, "x");
@@ -4019,7 +4018,6 @@ genCall (const iCode *ic)
       else
         adjustStack (ic->parmBytes + bigreturn * 2, a_free, x_free, y_free);
     }
-
 
   const bool result_in_frameptr = stm8_extend_stack && SomethingReturned && !bigreturn && (aopRet (ftype)->regs[YL_IDX] >= 0 || aopRet (ftype)->regs[YH_IDX] >= 0);
 
@@ -4208,7 +4206,7 @@ genFunction (iCode *ic)
   if (IFFUNC_ISCRITICAL (ftype))
       genCritical (NULL);
 
-  // Workaround for hardware bug: Undocumented bit 6 of the condition code register needs to be cleared before div/divw. It is set during div/divw execution, and then reset. Without the workaround, the div and divw inside interrupt routines will give wrong results when the interrupt itself occured while another div or divw was executed.
+  // Workaround for hardware bug: Undocumented bit 6 of the condition code register needs to be cleared before div/divw. It is set during div/divw execution, and then reset. Without the workaround, the div and divw inside interrupt routines will give wrong results when the interrupt itself occurred while another div or divw was executed.
   // For more information see sections titled "Unexpected DIV/DIVW instruction result in ISR" in various STM8 errata notes (apparently all STM8 are affected).
   // The workaround here is the one recommended by STM in the erratum. There might be better ways to do it.
   if (IFFUNC_ISISR (sym->type) && !sym->funcDivFlagSafe)
@@ -4284,6 +4282,9 @@ genEndFunction (iCode *ic)
         debugFile->writeEndFunction (currFunc, ic, 0);
       return;
   }
+
+  if (!regalloc_dry_run && IFFUNC_ISZ88DK_CALLEE (sym->type) && FUNC_HASVARARGS (sym->type))
+    werror (E_Z88DK_CALLEE_VARARG); // We have no idea how many bytes on the stack we'd have to clean up.
 
   const bool bigreturn = (getSize (sym->type->next) > 4) || IS_STRUCT (sym->type->next);
   int stackparmbytes = bigreturn * 2;
@@ -4375,21 +4376,17 @@ genEndFunction (iCode *ic)
   if (IFFUNC_ISCRITICAL (sym->type))
       genEndCritical (NULL);
 
+  // If debug then send end of function.
+  if (options.debug && currFunc && !regalloc_dry_run)
+    debugFile->writeEndFunction (currFunc, ic, 1);
+
   if (IFFUNC_ISISR (sym->type))
     {
-      /* if debug then send end of function */
-      if (options.debug && currFunc && !regalloc_dry_run)
-        debugFile->writeEndFunction (currFunc, ic, 1);
-        
       emit2 ("iret", "");
       cost (1, 11);
     }
   else
     {
-      /* if debug then send end of function */
-      if (options.debug && currFunc && !regalloc_dry_run)
-        debugFile->writeEndFunction (currFunc, ic, 1);
-
       if (options.model == MODEL_LARGE || IFFUNC_ISCOSMIC (currFunc->type))
         {
           emit2 ("retf", "");
@@ -5922,8 +5919,10 @@ genCmp (const iCode *ic, iCode *ifx)
               emit2 (started ? "sbc" : "cp", "a, (%d, sp)", right_stacked ? right_offset : 1);
               cost (2, 1);
             }
-          else
+          else if (right->aop->type != AOP_STL)
             emit3_o (started ? A_SBC : A_CP, ASMOP_A, 0, right->aop, i);
+          else
+            UNIMPLEMENTED;
           started = true;
 
           if (right_stacked)
@@ -8170,7 +8169,7 @@ postshift:
 }
 
 /*------------------------------------------------------------------*/
-/* init_stackop - initalize asmop for stack location                */
+/* init_stackop - initialize asmop for stack location                */
 /*------------------------------------------------------------------*/
 static void 
 init_stackop (asmop *stackop, int size, long int stk_off)
@@ -8208,7 +8207,7 @@ genPointerGet (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
   int size, i;
-  long offset;
+  int offset;
   bool use_y;
   bool pushed_x = false;
   bool pushed_a = false;
@@ -9135,7 +9134,7 @@ genCast (const iCode *ic)
     }
 
   if ((getSize (resulttype) <= getSize (righttype) || !IS_SPEC (righttype) || (SPEC_USIGN (righttype) || IS_BOOL (righttype))) &&
-    (!IS_BOOL (resulttype) || IS_BOOL (righttype)))
+    (!IS_BOOL (resulttype) || IS_BOOLEAN (righttype)))
     {
       genAssign (ic);
       return;

@@ -288,12 +288,12 @@ static const UNSUPPORTEDOPT unsupportedOptTable[] = {
 static const char *_baseValues[] = {
   "cpp", "sdcpp",
   "cppextraopts", "",
-  /* Path seperator character */
+  /* Path separator character */
   "sep", DIR_SEPARATOR_STRING,
   NULL
 };
 
-static const char *_preCmd = "{cpp} -nostdinc -Wall {cppstd}{cppextraopts} {fullsrcfilename} {cppoutfilename}";
+static const char *_preCmd = "{cpp} -nostdinc -Wall {cppstd}{cppextraopts} -xc {fullsrcfilename} {cppoutfilename}";
 
 PORT *port;
 
@@ -510,7 +510,13 @@ printVersionInfo (FILE * stream)
   for (i = 0; i < NUM_PORTS; i++)
     fprintf (stream, "%s%s", i == 0 ? "" : "/", _ports[i]->target);
 
-  fprintf (stream, " " SDCC_VERSION_STR
+  fprintf (stream,
+#if HAVE_TREEDEC_COMBINATIONS_HPP
+           " "
+#else
+           " TD- "
+#endif
+           SDCC_VERSION_STR
 #ifdef SDCC_SUB_VERSION_STR
            "/" SDCC_SUB_VERSION_STR
 #endif
@@ -1951,8 +1957,8 @@ linkEdit (char **envp)
               for (p = port->linker.crt; NULL != *p; ++p)
                 {
                   /* Try to find where C runtime files are ...
-                     It is very important for this file to be first on the linking proccess
-                     so the areas are set in the correct order, expecially _GSINIT */
+                     It is very important for this file to be first on the linking process
+                     so the areas are set in the correct order, especially _GSINIT */
                   for (s = setFirstItem (libDirsSet); s != NULL; s = setNextItem (libDirsSet))
                     {
                       dbuf_set_length (&crtpath, 0);
@@ -2149,7 +2155,7 @@ preProcess (char **envp)
           struct dbuf_s dbuf;
 
           dbuf_init (&dbuf, 256);
-          dbuf_printf (&dbuf, "-obj-ext=%s", port->linker.rel_ext);
+          dbuf_printf (&dbuf, "--obj-ext=%s", port->linker.rel_ext);
           addSet (&preArgvSet, dbuf_detach_c_str (&dbuf));
         }
 
@@ -2322,6 +2328,9 @@ preProcess (char **envp)
         addSet (&preArgvSet, dbuf_detach_c_str (&dbuf));
       }
 
+      /* WORKARDOUND */
+//      addSet (&preArgvSet, Safe_strdup ("-D__func__=\\\"unknown_func\\\""));
+
       /* add port (processor information to processor */
       addSet (&preArgvSet, Safe_strdup ("-D__SDCC_{port}"));
 
@@ -2333,8 +2342,6 @@ preProcess (char **envp)
 
       /* Character encoding  - these need to be set in device/lib/Makefile.in for $CPP, too */
       addSet (&preArgvSet, Safe_strdup ("-D__STDC_ISO_10646__=201409L")); // wchar_t is UTF-32
-      addSet (&preArgvSet, Safe_strdup ("-D__STDC_UTF_16__=1")); // char16_t is UTF-16
-      addSet (&preArgvSet, Safe_strdup ("-D__STDC_UTF_32__=1")); // char32_t is UTF-32
 
       /* set __SIZEOF_x__ macros for internal use by the library */
       addSet (&preArgvSet, Safe_strdup ("-D__SIZEOF_FLOAT__=4"));
@@ -2633,10 +2640,11 @@ initValues (void)
    * corresponding to the --std used to start sdcc
    */
   setMainValue ("cppstd",
-    options.std_c11 ? "-std=c11 " :
+    options.std_c2x ? "-std=c2x " :
+    (options.std_c11 ? "-std=c11 " :
     (options.std_c99 ? "-std=c99 " :
     (options.std_c95 ? "-std=iso9899:199409 " :
-    "-std=c89 ")));
+    "-std=c89 "))));
 }
 
 static void
@@ -2745,7 +2753,7 @@ main (int argc, char **argv, char **envp)
 
   _findProcessor (argc, argv);
 
-  /* Initalise the port. */
+  /* Initialise the port. */
   if (port->init)
     port->init ();
 
@@ -2810,9 +2818,13 @@ main (int argc, char **argv, char **envp)
 
       yyparse ();
 
-      if (!options.c1mode)
-        if (sdcc_pclose (yyin))
+      if (!options.c1mode) {
+        int cl = sdcc_pclose (yyin);
+        if (cl){
+			 fprintf(stderr, "subprocess error %d\n", cl);
           fatalError = 1;
+		  }
+		}
 
       if (fatalError)
         exit (EXIT_FAILURE);

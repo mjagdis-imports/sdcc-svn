@@ -225,7 +225,7 @@ cl_io::check_dev(void)
         /*
          * Peek all pending console events
          */
-	//printf("win iput check on console id=%d handle=%p\n", file_id, handle);
+	//printf("win input check on console id=%d handle=%p\n", file_id, handle);
         if (INVALID_HANDLE_VALUE == handle)
 	  return ret;
 	if (!GetNumberOfConsoleInputEvents(handle, &NumPending))
@@ -387,7 +387,7 @@ cl_io::changed(void)
   if (server_port > 0)
     {
       //printf("win opened socket id=%d\n", file_id);
-      handle= (void *)file_id;
+      handle= (void *)((ULONG_PTR)file_id);
       type= F_SOCKET;
       deb("assuming TTY on socket %d\n", file_id);
       tty= true;

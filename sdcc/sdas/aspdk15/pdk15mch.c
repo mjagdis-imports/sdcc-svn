@@ -135,6 +135,11 @@ machine(struct mne *mp)
                 enot(def, m);
                 break;
         }
+        case S_SWAP: {
+                struct inst m = {0x0a00, 0xFF};
+                enot(def, m);
+                break;
+        }
 
         case S_SET1:
                 combine = 0x400;
@@ -212,14 +217,13 @@ machine(struct mne *mp)
                 epupo(def);
                 break;
 
-        case S_SWAP:
         case S_PCADD:
               eopta(def);
               break;
 
         case S_SWAPC:
               def.mask = 0x7F;
-              eswapc(op, def, /*N offset*/7);
+              eswapc(opWithFlags, def, /*N offset*/7);
               break;
 
         case S_COMP:

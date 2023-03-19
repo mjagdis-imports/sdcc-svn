@@ -36,7 +36,7 @@
     </dl>
     <p><b>Configuring virtual simif peripheral</b></p>
     <p>If you check hardware elements of simulated processor with <a href="cmd_general.html#conf">conf</a>
-      commmand, you will see one called <b>simif</b>. Setting of this
+      command, you will see one called <b>simif</b>. Setting of this
       peripheral will setup the simulator interface:</p>
     <pre>0&gt; <span style="color: #009900;">conf</span>
 ucsim version 0.6-pre56
@@ -108,7 +108,7 @@ Output file: <b>outfile.txt</b>
 #define SIF_ADDRESS_SPACE	__xdata
 #define SIF_ADDRESS		0xffff
 
-unsigned char SIF_ADDRESS_SPACE * volatile sif;<br><br>void
+volatile unsigned char SIF_ADDRESS_SPACE * sif;<br><br>void
 main(void)
 {
   sif= (unsigned char SIF_ADDRESS_SPACE *) SIF_ADDRESS;
@@ -361,7 +361,7 @@ sif_fin_avail()
     <div><b>Command: read</b></div>
     <div><br>
     </div>
-    <div>Commad character: r</div>
+    <div>Command character: r</div>
     <div>Answer: next byte from input file</div>
     <div><br>
     </div>

@@ -272,7 +272,8 @@ public:
   class cl_analyzer_opt *analyzer_opt;
   class cl_analyser_opt *analyser_opt;
   
-  t_addr PC, instPC;		// Program Counter
+  t_addr PC, instPC, PCmask;	// Program Counter
+  class cl_cell32 cPC;		// Cell of PC
   bool inst_exec;		// Instruction is executed
   class cl_ticker *ticks;	// Nr of XTAL clocks
   class cl_ticker *isr_ticks;	// Time in ISRs
@@ -287,6 +288,7 @@ public:
   int brk_counter;		// Number of breakpoints
   class brk_coll *fbrk;		// Collection of FETCH break-points
   class brk_coll *ebrk;		// Collection of EVENT breakpoints
+  class cl_display_list *displays;// Collection of displayed exprs on break
   class cl_sim *sim;
   //class cl_list *mems;
   class cl_time_measurer *stop_at_time;
@@ -330,7 +332,8 @@ public:
   double get_xtal(void) { return xtal; }
   double get_xtal_tick(void) { return xtal_tick; }
   void set_xtal(double freq) { xtal= freq; xtal_tick = 1 / freq; }
-
+  virtual double def_xtal(void) { return 11059200; }
+  
   // making objects
   virtual void make_memories(void);
   virtual void make_variables(void);
@@ -356,7 +359,9 @@ public:
   virtual long read_hex_file(cl_f *f);
   virtual long read_omf_file(cl_f *f);
   virtual long read_asc_file(cl_f *f);
+  virtual long read_p2h_file(cl_f *f);
   virtual long read_cdb_file(cl_f *f);
+  virtual long read_map_file(cl_f *f);
   virtual long read_s19_file(cl_f *f);
   virtual cl_f *find_loadable_file(chars nam);
   virtual long read_file(chars nam, class cl_console_base *con);
@@ -406,7 +411,7 @@ public:
   virtual u8_t fetch8(void) { return (u8_t)fetch(); }
   virtual i8_t fetchi8(void) { return (i8_t)fetch(); }
   virtual bool fetch(t_mem *code);
-  virtual int do_inst(int step);
+  virtual int do_inst(void/*int step*/);
   virtual void pre_inst(void);
   virtual int exec_inst(void);
   virtual int exec_inst_tab(instruction_wrapper_fn itab[]);
@@ -500,7 +505,7 @@ public:
 					  int *bitnr_low);
   virtual t_addr bit_address(class cl_memory *mem,
                              t_addr mem_address,
-                             int bit_number) { return(-1); }
+                             int bit_number) { return(AU(-1)); }
 
   // messages from app to handle and broadcast
   virtual bool handle_event(class cl_event &event);

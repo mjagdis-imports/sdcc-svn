@@ -249,7 +249,7 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                   if (!constExprTree (ival))
                     {
                       werrorfl (ival->filename, ival->lineno, E_CONST_EXPECTED, "found expression");
-                      // but try to do it anyway
+                      continue; // Don't even try to do it anyway to avoid segfaults later.
                     }
                 }
 
@@ -1110,6 +1110,10 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
     }
   else
     {
+      // Hack to avoid the hack below (the one that fixed bug #2643) breaking zero-length bit-fields as first member of a struct (bug #3542).
+      if(IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
+        sflds = sflds->next;
+
       while (sflds)
         {
           unsigned int oldoffset = sflds->offset;
@@ -1829,6 +1833,10 @@ printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf,
             }
         }
 
+      // Give up here, to avoid reading invalid memory below.
+      if (ilist->init.node->isError)
+        goto ilist_done;
+
       // and the type must match
       itype = ilist->init.node->ftype;
 
@@ -1856,6 +1864,7 @@ printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf,
             }
         }
     }
+ilist_done:
 
   /* if this is a pointer */
   if (IS_PTR (type))
@@ -2070,8 +2079,17 @@ emitMaps (void)
 void
 flushStatics (void)
 {
+  if (!setFirstItem (statsg->syms))
+    return;
+
+  if (options.const_seg)
+    dbuf_tprintf (&code->oBuf, "\t!area\n", options.const_seg);
+
   emitStaticSeg (statsg, codeOutBuf);
-  statsg->syms = NULL;
+  statsg->syms = 0;
+
+  if (options.const_seg)
+    dbuf_tprintf (&code->oBuf, "\t!area\n", options.code_seg);
 }
 
 /*-----------------------------------------------------------------*/
@@ -2610,7 +2628,7 @@ glue (void)
        */
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
-        fprintf (asmFile, "\tjp\t__sdcc_program_startup\n");
+        fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
       else if (TARGET_IS_F8)
         fprintf (asmFile, "\tjp\t#__sdcc_program_startup\n");
       else if(TARGET_PDK_LIKE)

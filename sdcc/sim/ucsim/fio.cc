@@ -71,7 +71,6 @@ cl_history::cl_history(const char *aname):
 cl_ustrings(100, 10, aname)
 {
   nr= 0;
-  //actual_line= "";
 }
 
 cl_history::~cl_history(void)
@@ -84,7 +83,9 @@ cl_history::up(chars line)
   replace(line);
   if (nr > 0)
     nr--;
-  return (char*)Items[nr];
+  if (nr < count)
+    return (char*)Items[nr];
+  return NULL;
 }
 
 const char *
@@ -102,11 +103,7 @@ void
 cl_history::enter(chars line)
 {
   if (count > 1000)
-    {
-      free_at(0);
-      /*if (nr > count)
-	nr= count;*/
-    }
+    free_at(0);
   if (!line.empty())
     {
       add(strdup(line));
@@ -151,6 +148,7 @@ cl_f::cl_f(void)
   hist= new cl_history("history");
   proc_telnet= false;
   proc_escape= false;
+  type= F_UNKNOWN;
 }
 
 cl_f::cl_f(chars fn, chars mode):
@@ -174,6 +172,8 @@ cl_f::cl_f(chars fn, chars mode):
   attributes_saved= 0;
   hist= new cl_history("history");
   proc_telnet= false;
+  proc_escape= false;
+  type= F_UNKNOWN;
 }
 
 cl_f::cl_f(int the_server_port)
@@ -196,6 +196,8 @@ cl_f::cl_f(int the_server_port)
   attributes_saved= 0;
   hist= new cl_history("history");
   proc_telnet= false;
+  proc_escape= false;
+  type= F_UNKNOWN;
 }
 
 class cl_f *

@@ -1401,7 +1401,7 @@ cl_51core::bit_address(class cl_memory *mem,
   if (bit_number < 0 ||
       bit_number > 7 ||
       mem_address < 0)
-    return(-1);
+    return(AU(-1));
   class cl_memory *sfrchip= memory("sfr_chip");
   if (mem == sfrchip)
     {
@@ -1413,17 +1413,17 @@ cl_51core::bit_address(class cl_memory *mem,
       if (mem_address < 128 ||
 	  mem_address % 8 != 0 ||
 	  mem_address > 255)
-	return(-1);
+	return(AU(-1));
       return(128 + (mem_address-128) + bit_number);
     }
   if (mem == iram)
     {
       if (mem_address < 0x20 ||
 	  mem_address >= 0x20+32)
-	return(-1);
+	return(AU(-1));
       return((mem_address-0x20)*8 + bit_number);
     }
-  return(-1);
+  return(AU(-1));
 }
 
 /* Get name of directly addressed iram/sfr cell */
@@ -1705,67 +1705,52 @@ cl_51core::high_movxri(void)
 
 /*
  * Simulating execution of next instruction
- *
- * This is an endless loop if requested number of steps is negative.
- * In this case execution is stopped if an instruction results other
- * status than GO. Execution can be stopped if `cmd_in' is not NULL
- * and there is input available on that file. It is useful if the
- * command console is on a terminal. If input is available then a
- * complete line is read and dropped out because input is buffered
- * (inp_avail will be TRUE if ENTER is pressed) and it can confuse
- * command interpreter.
  */
-//static class cl_console *c= NULL;
+
 int
-cl_51core::do_inst(int step)
+cl_51core::do_inst(void)
 {
   t_addr PCsave= PC;
   result= resGO;
-  while ((result == resGO) &&
-	 (state != stPD) &&
-	 (step != 0))
+
+  save_hist();
+  if (state == stGO)
     {
-      if (step > 0)
-	step--;
-      if (state == stGO)
-	{
-	  interrupt->was_reti= false;
-	  pre_inst();
-	  PCsave= PC;
-	  result= exec_inst();
-	  if (result == resGO && !inst_at(PCsave))
-            analyze(PCsave);
-	  post_inst();
-	}
-      else
-	{
-	  // tick hw in idle state
-	  tick(1);
-	}
-
-      if ((result == resGO) && (PC == PCsave) && stop_selfjump)
-	{
-	  result= resSELFJUMP;
-	  sim->stop(result);
-	  break;
-	}
-
-      if (result == resGO)
-	{
-	  int res;
-	  if ((res= do_interrupt()) != resGO)
-	    result= res;
-	  else
-	    result= idle_pd();
-	}
-      if (((result == resINTERRUPT) &&
-	   stop_at_it) ||
-	  result >= resSTOP)
-	{
-	  sim->stop(result);
-	  break;
-	}
+      interrupt->was_reti= false;
+      pre_inst();
+      PCsave= PC;
+      result= exec_inst();
+      if (result == resGO && !inst_at(PCsave) && analyzer)
+	analyze(PCsave);
+      post_inst();
     }
+  else
+    {
+      // tick hw in idle state
+      tick(1);
+    }
+
+  if ((result == resGO) && (PC == PCsave) && stop_selfjump)
+    {
+      result= resSELFJUMP;
+      return result;
+    }
+  
+  if (result == resGO)
+    {
+      int res;
+      if ((res= do_interrupt()) != resGO)
+	result= res;
+      else
+	result= idle_pd();
+    }
+  if ((result == resINTERRUPT) &&
+      stop_at_it)
+    {
+      sim->stop(result);
+      return result;
+    }
+
   if (state == stPD)
     {
       //FIXME: tick outsiders eg. watchdog
@@ -2017,7 +2002,7 @@ cl_uc51_cpu::cfg_help(t_addr addr)
     case uc51cpu_aof_mdps1h:
       return "Address of multi_DPTR_sfr DPH1 (int, RW)";
     case uc51cpu_aof_mdpc:
-      return "Address of multi_DPTR_chip selector, WR selects this stlye of multi_DPTR (int, RW)";
+      return "Address of multi_DPTR_chip selector, WR selects this style of multi_DPTR (int, RW)";
     case uc51cpu_mask_mdpc:
       return "Mask in multi_DPTR_chip selector (int, RW)";
     case uc51cpu_mdp_mode:

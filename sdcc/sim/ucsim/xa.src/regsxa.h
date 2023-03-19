@@ -138,7 +138,7 @@ This user guide has got the detailed information on the XA chip.
 
 http://www.semiconductors.philips.com/acrobat/various/XA_USER_GUIDE_1.pdf
 
-f: {unused slot(word accessable only) for R8-R15}
+f: {unused slot(word accessible only) for R8-R15}
 e: R7h,R7l  Stack pointer, ptr to USP(PSW.SM=0), or SSP(PSW.SM=1)
 c: R6h,R6l
 a: R5h,R5l
@@ -179,11 +179,11 @@ MOVC instructions use either PC(SSEL.4=0) or CS(SSEL.4=1) register.
 Core SFRs:
 PCON, SCR, SSEL, PSWH, PSWL, CS, ES, DS
 (1K SFR space)
-400H-43FH are bit or byte accesable.
+400H-43FH are bit or byte accessible.
 400H-5FFH is for built in SFR hardware.
 600H-7FFH is for external SFR hardware access.
 SFR access is independent of segment regs.
-SFR inacessable from indirect addressing(must use direct-addr in opcodes).
+SFR inaccessible from indirect addressing(must use direct-addr in opcodes).
 
 Bit space:
 0 to ffH - R0 to R15
@@ -233,7 +233,7 @@ Any direct address references between 400H and 7FFH access the SFRs
 regardless of the segment register contents.
 
 To access any external memory which overlaps the 2K onchip memory
-ues the MOVX instruction.
+use the MOVX instruction.
 
 ---------------------------
 Proposed segment layout use for SDCC/XA compiler:

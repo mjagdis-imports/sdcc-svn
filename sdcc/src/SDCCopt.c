@@ -733,6 +733,16 @@ extern operand *geniCodeRValue (operand *, bool);
 /* Insert a cast of operand op of ic to type type */
 static void prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
 {
+  if (IS_OP_LITERAL (op))
+    {
+      operand *newop = operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValue (op)), false);
+      if (isOperandEqual (op, IC_LEFT (ic)))
+        IC_LEFT (ic) = newop;
+      if (isOperandEqual (op, IC_RIGHT (ic)))
+        IC_RIGHT (ic) = newop;
+      return;
+    }
+            
   iCode *newic = newiCode (CAST, operandFromLink (type), op);
   hTabAddItem (&iCodehTab, newic->key, newic);
 
@@ -891,8 +901,13 @@ convilong (iCode *ic, eBBlock *ebp)
               if ((op=='*' || op=='/' || op=='%'))
                 {
                   int ret = compareType (rightType, multypes[bwd][su], false);
-                  if (ret != 1)
+                  if (ret != 1 && isOperandLiteral (right) && SPEC_NOUN (multypes[bwd][su]) == V_CHAR && operandLitValue (right) >= 0 && operandLitValue (right) <= 127)
+                    ;
+                  else if (ret != 1)
                     {
+                      printf ("leftType: "); printTypeChain (leftType, 0);
+                      printf ("rightType: "); printTypeChain (rightType, 0);
+                      printf ("multypes[bwd][su]: "); printTypeChain (multypes[bwd][su], 0);
                       assert(0);
                     }
                 }
@@ -1364,7 +1379,7 @@ isPowerOf2 (unsigned long val)
 static void
 miscOpt (eBBlock ** ebbs, int count)
 {
-/* Borut: disabled optimization of comparision unsigned with 2^n literal
+/* Borut: disabled optimization of comparison unsigned with 2^n literal
  * since it is broken; see bug #2165 Broken comparison */
 #if 0
   int i;
@@ -1384,9 +1399,9 @@ miscOpt (eBBlock ** ebbs, int count)
                Transformation depends on lt_nge, gt_nle, bool le_ngt,
                ge_nlt, ne_neq and eq_nne members of PORT structure.
              MB: Why do we need IFX in the first case and not in the second ?
-             Borutr: Because the result of comparision is logically negated,
+             Borutr: Because the result of comparison is logically negated,
                so in case of IFX the jump logic is inverted for '<' and '<='.
-               TODO: The logical negation of the result should be implemeted
+               TODO: The logical negation of the result should be implemented
                for '<' and '<=' in case when the following instruction is not IFX.
              Philipp: Added the test for ifx in the second case, too:
              We want 0 or 1 as a result, the bitwise and won't do, unless we add a cast to bool.
@@ -1603,7 +1618,7 @@ getAddrspaceiCode (const iCode *ic)
   result = IC_RESULT (ic);
 
   /* Previous transformations in separateAddressSpaces() should
-     ensure that at most one addressspace occours in each iCode. */
+     ensure that at most one addressspace occurs in each iCode. */
   if (left && ic->op != ADDRESS_OF && IS_SYMOP (left))
     {
       if (POINTER_GET (ic))
@@ -2346,10 +2361,7 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
             }
 
           // Insert cast for comparison.
-          if (IS_OP_LITERAL (IC_RIGHT (ic)))
-            IC_RIGHT (ic) = operandFromValue (valCastLiteral (newcountertype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))), false);
-          else
-            prependCast (ic, IC_RIGHT (ic), newcountertype, ebbs[i]);
+          prependCast (ic, IC_RIGHT (ic), newcountertype, ebbs[i]);
 
           // Bonus: Can narrow a multiplication in the loop.
           if (mul)
@@ -2673,7 +2685,7 @@ optimize:
 }
 
 /*-----------------------------------------------------------------*/
-/* Go back a chain of assigments / casts to try to find a string   */
+/* Go back a chain of assignments / casts to try to find a string   */
 /* literal symbol that op really is.                               */
 /*-----------------------------------------------------------------*/
 static symbol *findStrLitDef (operand *op, iCode **def)
@@ -2864,6 +2876,9 @@ optimizeCastCast (eBBlock ** ebbs, int count)
               /* Cast to bool must be preserved to ensure that all nonzero values are correctly cast to true */
               if (SPEC_NOUN (type2) == V_BOOL && SPEC_NOUN(type3) != V_BOOL)
                  continue;
+              /* Similarly for singed->unsigned->signed widening casts to ensure that negative values end up as nonnegative ones in the end. */
+              if (!SPEC_USIGN (type1) && SPEC_USIGN (type2) && !SPEC_USIGN (type3) && bitsForType (type3) > bitsForType (type2))
+                continue;
 
               /* Special case: Second use is a bit test */
               if (uic->op == BITWISEAND && IS_OP_LITERAL (IC_RIGHT (uic)) && ifxForOp (IC_RESULT (uic), uic))
@@ -2896,7 +2911,6 @@ optimizeCastCast (eBBlock ** ebbs, int count)
                 }
               else
                 continue;
-
 
               /* Change the first cast to a simple assignment and */
               /* let the second cast do all the work */
@@ -3417,7 +3431,7 @@ eBBlockFromiCode (iCode *ic)
      operations to be as they are for optimizations */
   convertToFcall (ebbi->bbOrder, ebbi->count);
 
-  /* miscelaneous optimizations */
+  /* miscellaneous optimizations */
   miscOpt (ebbi->bbOrder, ebbi->count);
 
   /* Split any live-ranges that became non-connected in dead code elimination. */

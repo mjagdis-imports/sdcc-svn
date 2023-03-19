@@ -264,6 +264,14 @@ stm8_genInitStartup (FILE *of)
       fprintf (of, "\tldw\tsp, x\n");
     }
 
+  /* Call external startup code */
+  fprintf (of, options.model == MODEL_LARGE ? "\tcallf\t___sdcc_external_startup\n" : "\tcall\t___sdcc_external_startup\n");
+
+  /* If external startup returned non-zero, skip init */
+  fprintf (of, "\ttnz\ta\n");
+  fprintf (of, "\tjreq\t__sdcc_init_data\n");
+  fprintf (of, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
+
   /* Init static & global variables */
   fprintf (of, "__sdcc_init_data:\n");
   fprintf (of, "; stm8_genXINIT() start\n");
@@ -352,7 +360,6 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
         unsigned long long add, sub;
         int topbit, nonzero;
-        
 
         if (floatFromVal (valFromType (test)) < 0 || csdOfVal (&topbit, &nonzero, &add, &sub, valFromType (test), 0xffff))
           return false;
@@ -508,6 +515,7 @@ PORT stm8_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // doesn't matter, as port has no __sfr anyway
     1                           /* No fancy alignments supported. */
   },
   { stm8_genExtraArea, NULL },

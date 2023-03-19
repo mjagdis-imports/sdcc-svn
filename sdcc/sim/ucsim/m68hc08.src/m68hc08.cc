@@ -74,7 +74,7 @@ cl_hc08::init(void)
 {
   cl_uc::init(); /* Memories now exist */
 
-  set_xtal(8000000);
+  //set_xtal(8000000);
 
   //rom= address_space(MEM_ROM_ID);
 //  ram= mem(MEM_XRAM);
@@ -681,13 +681,7 @@ cl_hc08::exec_inst(void)
     default: return(resHALT);
   }
 
-  /*if (PC)
-    PC--;
-  else
-  PC= get_mem_size(MEM_ROM_ID)-1;*/
-  PC= rom->inc_address(PC, -1);
-
-  sim->stop(resINV_INST);
+  //PC= instPC;
   return(resINV_INST);
 }
 

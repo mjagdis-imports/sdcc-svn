@@ -98,7 +98,7 @@ cl_stm8::init(void)
   cl_uc::init(); /* Memories now exist */
   sp_limit= 0x14ff;
 
-  set_xtal(8000000);
+  //set_xtal(8000000);
 
   //rom = address_space(MEM_ROM_ID);
   //ram = mem(MEM_XRAM);
@@ -1889,14 +1889,6 @@ cl_stm8::exec_inst(void)
       
    }
 
-   //printf("************* bad code !!!!\n");
-  /*if (PC)
-    PC--;
-  else
-  PC= get_mem_size(MEM_ROM_ID)-1;*/
-  //PC= rom->inc_address(PC, -1);
-
-  //sim->stop(resINV_INST);
   return(resINV_INST);
 }
 
