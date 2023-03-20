@@ -955,7 +955,7 @@ minit()
 	/*
 	 * Byte Order
 	 */
-	hilo = 1;
+	hilo = 0; // Little-endian
 
 	/*
 	 * Reset Bit Table

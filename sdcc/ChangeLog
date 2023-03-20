@@ -1,3 +1,10 @@
+2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
+	  Fix f8 byte order.
+	* sim/ucsim/f8.src/f8cl.h:
+	  Fix duplicate declarations.
+
 2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
