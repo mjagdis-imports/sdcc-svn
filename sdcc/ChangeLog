@@ -1,3 +1,8 @@
+2023-03-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/f8/Makefile.in:
+	  Fix C standard version used for library.
+
 2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:
