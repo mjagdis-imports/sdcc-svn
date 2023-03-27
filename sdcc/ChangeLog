@@ -4,6 +4,8 @@
 	  Compile f8 regression tests without --debug, like for the other ports.
 	* sdas/asf8/f8mch.c:
 	  Fix 1-operand 8-bit instructions.
+	* src/f8/main.c:
+	  f8 startup code.
 
 2023-03-25 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -226,11 +226,48 @@ f8_genExtraArea (FILE *of, bool hasMain)
 static void
 f8_genInitStartup (FILE *of)
 {
+  fprintf (of, "\tldw\ty, #0x%04x ; set stack pointer one above stack\n", options.stack_loc >= 0 ? (options.stack_loc + 1) : 0x4000);
+  fprintf (of, "\tldw\tsp, y\n");
+
+  /* Call external startup code */
+  fprintf (of, "\tcall\t#___sdcc_external_startup\n");
+
+  /* If external startup returned non-zero, skip init */
+  fprintf (of, "\ttst\txl\n");
+  fprintf (of, "\tjrz\t__sdcc_init_data\n");
+  fprintf (of, "\tjp\t#__sdcc_program_startup\n");
+
+  /* Init static & global variables */
+  fprintf (of, "__sdcc_init_data:\n");
+  
+  /* Zeroing memory (required by standard for static & global variables) */
+  fprintf (of, "\tldw z, #l_DATA\n");
+  fprintf (of, "\ttstw z\n");
+  fprintf (of, "\tjrnz\t00002$\n");
+  fprintf (of, "\tclr\txl\n");
+  fprintf (of, "00001$:\n");
+  fprintf (of, "\tld (s_DATA - 1, z), xl\n");
+  fprintf (of, "\taddw z, #-1\n");
+  fprintf (of, "\tjrnz\t00001$\n");
+  fprintf (of, "00002$:\n");
+
+  /* Copy l_INITIALIZER bytes from s_INITIALIZER to s_INITIALIZED */  // TODO
+  fprintf (of, "\tldw\tz, #l_INITIALIZER\n");
+  fprintf (of, "\ttstw z\n");
+  fprintf (of, "\tjrz\t00004$\n");
+  fprintf (of, "00003$:\n");
+  fprintf (of, "\tld\txl, (s_INITIALIZER - 1, z)\n");
+  fprintf (of, "\tld\t(s_INITIALIZED - 1, z), xl\n");
+  fprintf (of, "\taddw\tz, #-1\n");
+  fprintf (of, "\tjrnz\t00003$\n");
+  fprintf (of, "00004$:\n");
 }
 
 int
 f8_genIVT(struct dbuf_s * oBuf, symbol ** intTable, int intCount)
 {
+  dbuf_tprintf (oBuf, "\tjp #s_GSINIT ; reset\n");
+
   return true;
 }
 
