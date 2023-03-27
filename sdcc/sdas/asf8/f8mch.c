@@ -500,7 +500,7 @@ opw:
 				break;
 			case S_ZREL:
 				outab(op | 0x0d);
-				outrw(&e2, R_USGN);
+				outrw(&e1, R_USGN);
 				break;
 			case S_IX:
 				if(r1== Y)
