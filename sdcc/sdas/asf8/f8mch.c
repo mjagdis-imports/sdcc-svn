@@ -499,17 +499,17 @@ opw:
 					outrb(&e1, R_USGN);
 				break;
 			case S_ZREL:
-				outab(op | 0x03);
+				outab(op | 0x0d);
 				outrw(&e2, R_USGN);
 				break;
 			case S_IX:
 				if(r1== Y)
-					outab(op | 0x04);
+					outab(op | 0x0e);
 				else
 					aerr();
 				break;
 			case S_YREL:
-				outab(op | 0x05);
+				outab(op | 0x0f);
 				if(ls_mode(&e1))
 					aerr();
 				else

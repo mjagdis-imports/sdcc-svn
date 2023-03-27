@@ -243,7 +243,7 @@ f8_genInitStartup (FILE *of)
   /* Zeroing memory (required by standard for static & global variables) */
   fprintf (of, "\tldw z, #l_DATA\n");
   fprintf (of, "\ttstw z\n");
-  fprintf (of, "\tjrnz\t00002$\n");
+  fprintf (of, "\tjrz\t00002$\n");
   fprintf (of, "\tclr\txl\n");
   fprintf (of, "00001$:\n");
   fprintf (of, "\tld (s_DATA - 1, z), xl\n");
