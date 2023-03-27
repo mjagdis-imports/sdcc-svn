@@ -268,7 +268,7 @@ struct mne *mp;
 		switch(t1) {
 		case S_DIR:
 			outab(op | 0x00);
-			outrb(&e1, R_USGN);
+			outrw(&e2, R_USGN);
 			break;
 		case S_SPREL:
 			outab(op | 0x01);

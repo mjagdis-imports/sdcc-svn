@@ -32,8 +32,8 @@ ifdef CROSSCOMPILING
   SDCCFLAGS += -I$(top_srcdir)
 endif
 
-SDCCFLAGS += --debug -mf8 --less-pedantic --out-fmt-ihx
-LINKFLAGS += --debug f8.lib
+SDCCFLAGS += -mf8 --less-pedantic --out-fmt-ihx
+LINKFLAGS += f8.lib
 
 OBJEXT = .rel
 BINEXT = .ihx
