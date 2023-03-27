@@ -313,7 +313,7 @@ struct	mne	mne[] = {
     {	NULL,	"rlcw",		S_0OPWRLC,	0,	0xe3	},
     {	NULL,	"sraw",		S_0OPW,		0,	0xe4	},
     {	NULL,	"mul",		S_0OPW,		0,	0xb9	},
-    {	NULL,	"popw",		S_0OPW,		0,	0xe8	},
+    {	NULL,	"popw",		S_0OPW,		0,	0xe9	},
     {	NULL,	"xchw",		S_0OPW,		0,	0xf4	},
     {	NULL,	"caxw",		S_0OPW,		0,	0xf9	},
 //    {	NULL,	"addw",		S_0OPW,		0,	0xea	},

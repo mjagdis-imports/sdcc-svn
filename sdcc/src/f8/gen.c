@@ -5132,7 +5132,7 @@ genIfx (const iCode *ic)
 
 jump:
   if (tlbl)
-    emit2 (IC_FALSE (ic) ? "jrz" : "jrnz", "!tlabel", labelKey2num (tlbl->key));
+    emit2 (IC_FALSE (ic) ? "jrnz" : "jrz", "!tlabel", labelKey2num (tlbl->key));
   emitJP (IC_TRUE (ic) ? IC_TRUE (ic) : IC_FALSE (ic), 0.0f);
   emitLabel (tlbl);
   // todo : cost.

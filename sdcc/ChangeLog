@@ -1,5 +1,14 @@
 2023-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/f8/gen.c:
+	  Fix inversion of jump condition.
+	* sdas/asf8/f8pst.c:
+	  Fix popw.
+	* sim/ucsim/f8.src/ialu.cc:
+	  Fix incw.
+
+2023-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* sdas/asf8/f8mch.c:
 	  Fix ld with register source and indirect destination.
 
