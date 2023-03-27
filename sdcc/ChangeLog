@@ -6,6 +6,8 @@
 	  Fix 1-operand 8-bit instructions.
 	* src/f8/main.c:
 	  f8 startup code.
+	* sim/ucsim/f8.src/f8.cc:
+	  Fix handling of altacc'' prefix in 16-bit mode.
 
 2023-03-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
