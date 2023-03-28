@@ -9,6 +9,8 @@
 	  Fix disassembly for (y) adressing.
 	* sim/ucsim/f8.src/glob.cc:
 	  Fix push disassembly.
+	* src/f8/gen.c:
+	  Fix jump on unsigned comparison.
 
 2023-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
 

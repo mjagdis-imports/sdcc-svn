@@ -3642,7 +3642,7 @@ genCmp (const iCode *ic, iCode *ifx)
         {
           tlbl = newiTempLabel (0);
           if (!sign)
-            emit2 (IC_TRUE (ifx) ? "jrnc" : "jrc", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrc" : "jrnc", "!tlabel", labelKey2num (tlbl->key));
           else
             emit2 (IC_TRUE (ifx) ? "jrsgt" : "jrslt", "!tlabel", labelKey2num (tlbl->key));
         }
