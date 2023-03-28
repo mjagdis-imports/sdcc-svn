@@ -2706,7 +2706,49 @@ genIpush (const iCode * ic)
 
   freeAsmop (IC_LEFT (ic));
 }
-    
+
+/*-----------------------------------------------------------------*/
+/* genPointerPush - generate code for pushing                      */
+/*-----------------------------------------------------------------*/
+static void
+genPointerPush (const iCode *ic)
+{
+  iCode *walk;
+
+  D (emit2 ("; genPointerPush", ""));
+
+  // Like in genIpush above.
+  for (walk = ic->next; walk->op != CALL && walk->op != PCALL; walk = walk->next);
+  if (!G.saved  && !regalloc_dry_run /* Cost is counted at CALL or PCALL instead */ )
+    saveRegsForCall (walk);
+
+  /* then do the push */
+  aopOp (IC_LEFT (ic), ic);
+
+  wassertl (IC_RIGHT (ic), "IPUSH_VALUE_AT_ADDRESS without right operand");
+  wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "IPUSH_VALUE_AT_ADDRESS with non-literal right operand");
+
+  int offset = operandLitValue (IC_RIGHT(ic));
+
+  if (!regDead (Z_IDX, ic) || IC_LEFT (ic)->aop->regs[ZL_IDX] >= 0 || IC_LEFT (ic)->aop->regs[ZH_IDX] >= 0 || !regDead (XL_IDX, ic))
+    UNIMPLEMENTED;
+
+  genMove (ASMOP_Z, IC_LEFT (ic)->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), true);
+
+  int size = getSize (operandType (IC_LEFT (ic))->next);
+
+  for(int i = 0; i < size; i++)
+    {
+      int o = size - 1 - i + offset;
+
+      emit2 ("ld", "xl, (%d, z)", o);
+      cost (3, 1);
+      push (ASMOP_XL, 0, 1);
+    }
+
+  freeAsmop (IC_LEFT (ic));
+}
+
 /*-----------------------------------------------------------------*/
 /* genCall - generates a call statement                            */
 /*-----------------------------------------------------------------*/
@@ -5497,6 +5539,10 @@ genF8iCode (iCode *ic)
 
     case IPUSH:
       genIpush (ic);
+      break;
+
+   case IPUSH_VALUE_AT_ADDRESS:
+      genPointerPush (ic);
       break;
 
     case IPOP:
