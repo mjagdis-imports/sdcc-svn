@@ -7,6 +7,8 @@
 	  Fix decw (n, sp).
 	* sim/ucsim/f8.src/disass.cc:
 	  Fix disassembly for (y) adressing.
+	* sim/ucsim/f8.src/glob.cc:
+	  Fix push disassembly.
 
 2023-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
