@@ -2,6 +2,9 @@
 
 	* sdas/asf8/f8mch.c:
 	  Fix clr with direct addressing.
+	* sdas/asf8/f8pst.c,
+	  sim/ucsim/f8.src/glob.cc:
+	  Fix decw (n, sp).
 
 2023-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
