@@ -5,6 +5,8 @@
 	* sdas/asf8/f8pst.c,
 	  sim/ucsim/f8.src/glob.cc:
 	  Fix decw (n, sp).
+	* sim/ucsim/f8.src/disass.cc:
+	  Fix disassembly for (y) adressing.
 
 2023-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
