@@ -1,6 +1,11 @@
 2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:
+	  Fix handling of expressions for 8-bit immediate adressing mode.
+
+2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
 	  Support some more ld corner cases.
 	* src/f8/gen.c:
 	  Fixes in subtraction abstraction.

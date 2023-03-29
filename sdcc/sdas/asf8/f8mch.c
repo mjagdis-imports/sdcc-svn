@@ -214,7 +214,7 @@ struct mne *mp;
 			if(rf == S_2OPSUB) // Immediate operand invalid for sub and sbc.
 				aerr();
 			outab(op | 0x00);
-			outrb(&e2, R_USGN);
+			outrb(&e2, R_NORM);
 			break;
 		case S_DIR:
 			outab(op | 0x01);
@@ -261,7 +261,7 @@ struct mne *mp;
 
 		if(rf == S_1OPPUSH && t1 == S_IMM) { // push #i
 			outab(0x90);
-			outrb(&e1, R_USGN);
+			outrb(&e1, R_NORM);
 			break;
 		}
 
@@ -421,7 +421,7 @@ opw:
 			switch(t2) {
 			case S_IMM:
 				outab(op | 0x00);
-				outrb(&e2, R_USGN);
+				outrb(&e2, R_NORM);
 				break;
 			case S_DIR:
 				outab(op | 0x01);
@@ -707,7 +707,7 @@ opw:
 		if (t1 == S_REG && t2 == S_IMM) {
 			altacc(r1);
 			outab(op);
-			outrb(&e2, R_USGN);
+			outrb(&e2, R_NORM);
 		}
 		else
 			aerr ();
