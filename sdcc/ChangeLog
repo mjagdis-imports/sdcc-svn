@@ -1,3 +1,8 @@
+2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
+	  Support some more ld corner cases.
+
 2023-03-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:

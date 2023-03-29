@@ -408,7 +408,9 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (t1 == S_REG && r1 == YH && t2 == S_REG && (r2 == XH || r2 == ZL)) { // Use both swapop and altacc.
+		if (t1 == S_REG && t2 == S_REG && // Use both swapop and altacc.
+		  (r1 == YH && (r2 == XH || r2 == YL || r2 == ZL) ||
+		  r1 == ZH && (r2 == XH || r2 == YL || r2 == ZL))) { 
 			outab(0x9c);
 			altacc(r2);
 			outab(0x88);
