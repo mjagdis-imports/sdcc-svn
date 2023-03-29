@@ -1105,12 +1105,8 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
     switch (inst)
       {
       case A_SUB:
-        if (op1->type == AOP_LIT)
-          emit2 ("add", "%s, #0x%02x", aopGet (op0, offset0), (~byteOfVal (op1->aopu.aop_lit, offset1) + 1) & 0xff);
-        else
-          emit2 ("add", "%s, #~%s+1", aopGet (op0, offset0), aopGet (op1, offset1));
-        cost (2 + !aopInReg (op0, offset0, XL_IDX), 1 + !aopInReg (op0, offset0, XL_IDX));
-        break;
+        emit2 ("tstw", "y"); // Set carry
+        cost (1, 1);
       case A_SBC:
         if (op1->type == AOP_LIT)
           emit2 ("adc", "%s, #0x%02x", aopGet (op0, offset0), ~byteOfVal (op1->aopu.aop_lit, offset1) & 0xff);
@@ -1119,14 +1115,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
         cost (2 + !aopInReg (op0, offset0, XL_IDX), 1 + !aopInReg (op0, offset0, XL_IDX));
         break;
       case A_SUBW:
-        if (op1->type == AOP_LIT)
-          {
-            litword = (byteOfVal (op1->aopu.aop_lit, offset1 + 1) << 8) | byteOfVal (op1->aopu.aop_lit, offset1);
-            emit2 ("addw", "%s, #0x%02x", aopGet2 (op0, offset0), (~litword + 1) & 0xffff);
-          }
-        else
-          emit2 ("addw", "%s, #~((%s+%d) >> %d)+1", aopGet2 (op0, offset0), op1->aopu.immd, op1->aopu.immd_off, offset1 * 8);
-        cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
+        emit2 ("tstw", "y"); // Set carry
         break;
       case A_SBCW:
         if (op1->type == AOP_LIT)
@@ -1135,7 +1124,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
             emit2 ("adcw", "%s, #0x%02x", aopGet2 (op0, offset0), ~litword & 0xffff);
           }
         else
-          emit2 ("adcw", "%s, #~((%s+%d) >> %d)+1", aopGet2 (op0, offset0), op1->aopu.immd, op1->aopu.immd_off, offset1 * 8);
+          emit2 ("adcw", "%s, #~((%s+%d) >> %d)", aopGet2 (op0, offset0), op1->aopu.immd, op1->aopu.immd_off, offset1 * 8);
         cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
         break;
       default:
