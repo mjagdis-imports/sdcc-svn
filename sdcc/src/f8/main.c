@@ -437,7 +437,7 @@ PORT f8_port =
   },     
   { 
     -1,                         /* shifts never use support routines */
-    true,                       /* use support routine for int x int -> long multiplication */
+    false,                      /* don't use support routine for int x int -> long multiplication */
   },
   { f8_emitDebuggerSymbol,
     {

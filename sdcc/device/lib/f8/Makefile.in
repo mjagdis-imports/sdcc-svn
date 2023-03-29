@@ -22,6 +22,7 @@ F8_INT = $(COMMON_INT) \
   _modschar.c \
   _mulint.c \
   _divsint.c \
+  _divuchar.c \
   _divuint.c \
   _moduchar.c \
   _modschar.c \

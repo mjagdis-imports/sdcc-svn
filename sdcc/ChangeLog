@@ -2,6 +2,9 @@
 
 	* sdas/asf8/f8mch.c:
 	  Fix handling of expressions for 8-bit immediate adressing mode.
+	* src/f8/main.c,
+	  device/lib/f8/Makefile.in:
+	  Fix use of some support functions for multiplicative operators.
 
 2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
