@@ -5,6 +5,10 @@
 	* src/f8/main.c,
 	  device/lib/f8/Makefile.in:
 	  Fix use of some support functions for multiplicative operators.
+	* support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-3167.c,
+	  support/regression/tests/bug3379723.c:
+	  Disable tests for f8 that depend on features not avilable for this port.
 
 2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
