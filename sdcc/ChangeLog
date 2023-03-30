@@ -1,7 +1,7 @@
 2023-03-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Fix shift with global result.
+	  Fix shift with global result. Fix 24-bit return values.
 
 2023-03-30 Philipp Klaus Krause <philipp@colecovision.eu>
 

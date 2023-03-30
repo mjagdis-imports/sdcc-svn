@@ -135,13 +135,14 @@ static const char *asminstnames[] =
 bool f8_regs_used_as_parms_in_calls_from_current_function[ZH_IDX + 1];
 bool f8_regs_used_as_parms_in_pcalls_from_current_function[ZH_IDX + 1];
 
-static struct asmop asmop_xl, asmop_xh, asmop_x, asmop_y, asmop_z, asmop_xy, asmop_zero, asmop_one, asmop_mone;
+static struct asmop asmop_xl, asmop_xh, asmop_x, asmop_y, asmop_z, asmop_xy, asmop_xly, asmop_zero, asmop_one, asmop_mone;
 static struct asmop *const ASMOP_XL = &asmop_xl;
 static struct asmop *const ASMOP_XH = &asmop_xh;
 static struct asmop *const ASMOP_X = &asmop_x;
 static struct asmop *const ASMOP_Y = &asmop_y;
 static struct asmop *const ASMOP_Z = &asmop_z;
 static struct asmop *const ASMOP_XY = &asmop_xy;
+static struct asmop *const ASMOP_XLY = &asmop_xly;
 static struct asmop *const ASMOP_ZERO = &asmop_zero;
 static struct asmop *const ASMOP_ONE = &asmop_one;
 static struct asmop *const ASMOP_MONE = &asmop_mone;
@@ -172,6 +173,7 @@ f8_init_asmops (void)
   f8_init_reg_asmop(&asmop_y, (const signed char[]){YL_IDX, YH_IDX, -1});
   f8_init_reg_asmop(&asmop_z, (const signed char[]){ZL_IDX, ZH_IDX, -1});
   f8_init_reg_asmop(&asmop_xy, (const signed char[]){YL_IDX, YH_IDX, XL_IDX, XH_IDX, -1});
+  f8_init_reg_asmop(&asmop_xly, (const signed char[]){YL_IDX, YH_IDX, XL_IDX, -1});
 
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
@@ -2134,6 +2136,8 @@ aopRet (sym_link *ftype)
       return (ASMOP_XL);
     case 2:
       return (ASMOP_Y);
+    case 3:
+      return (ASMOP_XLY);
     case 4:
       return (ASMOP_XY);
     default:
@@ -2806,7 +2810,9 @@ genCall (const iCode *ic)
     }
   // Check if we can do tail call optimization.
   else if (currFunc && !IFFUNC_ISISR (currFunc->type) &&
-    (!SomethingReturned || aopInReg (IC_RESULT (ic)->aop, 0, aopRet (ftype)->aopu.bytes[0].byteu.reg->rIdx) &&
+    (!SomethingReturned ||
+    aopInReg (IC_RESULT (ic)->aop, 0,
+    aopRet (ftype)->aopu.bytes[0].byteu.reg->rIdx) &&
       (IC_RESULT (ic)->aop->size <= 1 || aopInReg (IC_RESULT (ic)->aop, 1, aopRet (ftype)->aopu.bytes[1].byteu.reg->rIdx)) &&
       (IC_RESULT (ic)->aop->size <= 2 || aopInReg (IC_RESULT (ic)->aop, 2, aopRet (ftype)->aopu.bytes[2].byteu.reg->rIdx)) &&
       (IC_RESULT (ic)->aop->size <= 3 || aopInReg (IC_RESULT (ic)->aop, 3, aopRet (ftype)->aopu.bytes[3].byteu.reg->rIdx)) &&
