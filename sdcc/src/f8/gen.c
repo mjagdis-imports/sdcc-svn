@@ -4463,10 +4463,15 @@ init_shiftop(asmop *shiftop, const asmop *result, const asmop *left, const asmop
           shiftop->regs[YH_IDX] = i + 1;
           i += 2;
         }
+      else if (result->type != AOP_REGSTK)
+        {
+          memcpy (shiftop, result, sizeof(*shiftop));
+          return;
+        }
       else
         {
           shiftop->aopu.bytes[i] = result->aopu.bytes[i];
-          if (result->aopu.bytes[i].in_reg)
+          if (result->type == AOP_REGSTK && result->aopu.bytes[i].in_reg)
             shiftop->regs[result->aopu.bytes[i].byteu.reg->rIdx] = i;
           i++;
         }
