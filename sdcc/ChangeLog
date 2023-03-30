@@ -1,3 +1,9 @@
+2023-03-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/main.c,
+	  src/f8/gen.c:
+	  Implement some more codegen.
+
 2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:
@@ -8,7 +14,7 @@
 	* support/regression/tests/bug-2305.c,
 	  support/regression/tests/bug-3167.c,
 	  support/regression/tests/bug3379723.c:
-	  Disable tests for f8 that depend on features not avilable for this port.
+	  Disable tests for __sfr for f8 (__sfr does not make sense for hardware which has all i/o in the generic address space).
 
 2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
 

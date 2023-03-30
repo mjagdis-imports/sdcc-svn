@@ -132,6 +132,7 @@ static char f8_defaultRules[] = {
 
 
 static char *f8_keywords[] = {
+  "at",
   "critical",
   "interrupt",
   "naked",
@@ -394,6 +395,7 @@ PORT f8_port =
     3,                          /* banked func ptr */
     1,                          /* bit */
     4,                          /* float */
+    64,                         /* bit-precise integer types up to _BitInt (64) */
   },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
@@ -422,6 +424,7 @@ PORT f8_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // doesn't matter, as port has no __sfr anyway
     1                           /* No fancy alignments supported. */
   },
   { f8_genExtraArea, NULL },

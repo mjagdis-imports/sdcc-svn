@@ -2702,6 +2702,7 @@ genIpush (const iCode * ic)
 static void
 genPointerPush (const iCode *ic)
 {
+  operand *left = IC_LEFT (ic);
   iCode *walk;
 
   D (emit2 ("; genPointerPush", ""));
@@ -2712,28 +2713,50 @@ genPointerPush (const iCode *ic)
     saveRegsForCall (walk);
 
   /* then do the push */
-  aopOp (IC_LEFT (ic), ic);
+  aopOp (left, ic);
 
   wassertl (IC_RIGHT (ic), "IPUSH_VALUE_AT_ADDRESS without right operand");
   wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "IPUSH_VALUE_AT_ADDRESS with non-literal right operand");
 
+  int size = getSize (operandType (left)->next);
+
   int offset = operandLitValue (IC_RIGHT(ic));
 
-  if (!regDead (Z_IDX, ic) || IC_LEFT (ic)->aop->regs[ZL_IDX] >= 0 || IC_LEFT (ic)->aop->regs[ZH_IDX] >= 0 || !regDead (XL_IDX, ic))
-    UNIMPLEMENTED;
-
-  genMove (ASMOP_Z, IC_LEFT (ic)->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), true);
-
-  int size = getSize (operandType (IC_LEFT (ic))->next);
-
-  for(int i = 0; i < size; i++)
+  if (regDead (Z_IDX, ic) || aopInReg (left->aop, 0, Z_IDX))
     {
-      int o = size - 1 - i + offset;
-
-      emit2 ("ld", "xl, (%d, z)", o);
-      cost (3, 1);
-      push (ASMOP_XL, 0, 1);
+      //bool use_y = (regDead (Y_IDX, ic) && !aopInReg (IC_LEFT (ic)->aop, 0, Z_IDX) || aopInReg (IC_LEFT (ic)->aop, 0, Y_IDX)) && offset >= 0 && size - 1 + offset <= 255;
+      genMove (ASMOP_Z, IC_LEFT (ic)->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      for(int i = size - 1; i >= 0;)
+        {
+          int o = i + offset;
+          if (i >= 2)
+            {
+              emit2 ("pushw", "(%d, z)", o - 1);
+              cost (3, 1);
+              G.stack.pushed += 2;
+              updateCFA ();
+              i -= 2;
+            }
+          else if (regDead (XL_IDX, ic))
+            {
+              emit2 ("ld", "xl, (%d, z)", o);
+              cost (2, 1);
+              push (ASMOP_XL, 0, 1);
+              i -= 1;
+            }
+          else
+            {
+              emit2 ("pushw", "(%d, z)", o - 1);
+              emit2 ("addw", "sp, #1");
+              cost (5, 2);
+              G.stack.pushed++;
+              updateCFA ();
+              i -= 1;
+            }
+        }
     }
+  else
+    UNIMPLEMENTED;
 
   freeAsmop (IC_LEFT (ic));
 }
@@ -2957,6 +2980,22 @@ restore:
   G.saved = false;
 }
 
+/*---------------------------------------------------------------------*/
+/* genCritical - mask interrupts until important block completes       */
+/*---------------------------------------------------------------------*/
+
+static void
+genCritical (iCode * ic)
+{
+  // TODO
+}
+
+static void
+genEndCritical (iCode * ic)
+{
+  // TODO
+}
+
 /*-----------------------------------------------------------------*/
 /* genFunction - generated code for function entry                 */
 /*-----------------------------------------------------------------*/
@@ -3108,7 +3147,7 @@ genReturn (const iCode *ic)
       genMove (aopRet (currFunc->type), left->aop, true, true, true, true);
       break;
     default:
-      wassertl (size > 6, "Return not implemented for return value of this size.");
+      wassertl (size < 256, "Return not implemented for return value of this size.");
 
       for(int i = 0; i < size; i++)
         if (aopInReg (left->aop, i, YL_IDX) || aopInReg (left->aop, i, YH_IDX))
@@ -3150,7 +3189,7 @@ genReturn (const iCode *ic)
               cost (1 + (bool)i, 1);
               i++;
             }
-          else // xl, already stored early.
+          else // xl, already stored earlier.
             i++;
         }
     }
@@ -5095,6 +5134,13 @@ genIfx (const iCode *ic)
 
   int size = cond->aop->size;
 
+  if (cond->aop->type == AOP_IMMD || cond->aop->type == AOP_STL) // An AOP_IMMD or AOP_STL points to something valid, so it is not a null pointer.
+    {
+      if (IC_TRUE (ic))
+        emitJP (IC_TRUE (ic), 1.0f);
+      goto release;
+    }
+
   if (cond->aop->regs[XL_IDX] > 0)
     UNIMPLEMENTED;
 
@@ -5168,6 +5214,7 @@ jump:
   emitLabel (tlbl);
   // todo : cost.
 
+release:
   freeAsmop (cond);
 }
 
@@ -5687,11 +5734,11 @@ genF8iCode (iCode *ic)
       break;
 
     case CRITICAL:
-      wassertl (0, "Unimplemented iCode");
+      genCritical (ic);
       break;
 
     case ENDCRITICAL:
-      wassertl (0, "Unimplemented iCode");
+      genEndCritical (ic);
       break;
 
     default:
