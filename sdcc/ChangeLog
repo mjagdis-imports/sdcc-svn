@@ -3,6 +3,9 @@
 	* src/f8/main.c,
 	  src/f8/gen.c:
 	  Implement some more codegen.
+	* sim/ucsim/f8.src/glob.cc,
+	  sim/ucsim/f8.src/decode.h:
+	  Fix wide rotate with sp-relative addressing.
 
 2023-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
