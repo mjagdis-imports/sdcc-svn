@@ -1217,7 +1217,7 @@ aopForSym (const iCode *ic, symbol *sym)
         base = 0;
       }
 
-      for(offset = 0; offset < aop->size; offset++)
+      for(offset = 0; offset < aop->size && offset < 8; offset++)
         aop->aopu.bytes[offset].byteu.stk = base + offset;
     }
   else

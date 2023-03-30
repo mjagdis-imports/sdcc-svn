@@ -4,6 +4,8 @@
 	  Fix subw.
 	* sim/ucsim/f8.src/glob.cc:
 	  altacc'' fix.
+	* src/f8/gen.c:
+	  Fix an issue in callee-side handling of return values wider than 8 bytes.
 
 2023-03-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
