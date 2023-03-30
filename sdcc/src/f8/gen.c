@@ -3143,16 +3143,22 @@ genReturn (const iCode *ic)
   aopOp (left, ic);
   size = left->aop->size;
 
+  if (IS_STRUCT (operandType (IC_LEFT (ic))))
+    goto bigreturn;
+
   switch (size)
     {
     case 0:
       break;
     case 1:
     case 2:
+    case 3:
     case 4:
       genMove (aopRet (currFunc->type), left->aop, true, true, true, true);
       break;
     default:
+bigreturn:
+
       wassertl (size < 256, "Return not implemented for return value of this size.");
 
       for(int i = 0; i < size; i++)
