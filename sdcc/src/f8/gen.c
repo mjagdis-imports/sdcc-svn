@@ -2699,28 +2699,29 @@ genIpush (const iCode * ic)
   // Then do the push
   aopOp (left, ic);
 
-  for (int size = left->aop->size, i = 0; i < size;)
+  int size = left->aop->size;
+  for (int i = size - 1; i >= 0;)
     {
-      if (i + 1 < size && (aopIsOp16_1 (left->aop, i) || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD))
+      if (i > 0 && (aopIsOp16_1 (left->aop, i - 1) || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD))
         {
-          push (left->aop, i, 2);
-          i += 2;
+          push (left->aop, i - 1, 2);
+          i -= 2;
         }
       else if (aopIsOp8_1 (left->aop, i) || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)
         {
           push (left->aop, i, 1);
-          i++;
+          i--;
         }
-      else if (i == 0 && size == 2 && regDead (Y_IDX, ic))
+      else if (i == 1 && size == 2 && regDead (Y_IDX, ic))
         {
           genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
           push (ASMOP_Y, 0, 2);
-          i += 2;
+          i -= 2;
         }
       else
         {
           UNIMPLEMENTED;
-          i++;
+          i--;
         }
     }
 
@@ -4852,7 +4853,7 @@ genPointerGet (const iCode *ic)
 
   if (aopInReg (left->aop, 0, Z_IDX) && !bit_field && size <= 2 && (aopInReg (result->aop, size - 2, Z_IDX) || result->aop->regs[ZL_IDX] < 0 && result->aop->regs[ZH_IDX] < 0))
     use_z = true;
-  else if (aopInReg (left->aop, 0, Y_IDX) && (unsigned)offset + size - 1 <= 255)
+  else if (aopInReg (left->aop, 0, Y_IDX) && (unsigned)offset + size - 1 <= 255 && (size >= 2 && aopInReg (result->aop, size - 2, Y_IDX) || result->aop->regs[YL_IDX] < 0 && result->aop->regs[YH_IDX] < 0))
     ;
   else if (y_dead && (size >= 2 && aopInReg (result->aop, size - 2, Y_IDX) || result->aop->regs[YL_IDX] < 0 && result->aop->regs[YH_IDX] < 0))
     {
