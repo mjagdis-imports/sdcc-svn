@@ -182,7 +182,7 @@ cl_f8::add16(u16_t a, u16_t b, int c, bool sub)
   u16_t r= rb;
   rF&= ~fAll_H;
   if (rb>0xffff) rF|= flagC;
-  if (r&0x8000) rF|= flagC;
+  if (r&0x8000) rF|= flagN;
   if (!r) rF|= flagZ;
   if (((a&b&~r)|(~a&~b&r))&0x8000) rF|= flagO;
   cF.W(rF);
@@ -630,7 +630,7 @@ cl_f8::DEC_M(t_mem code)
   u8_t v= c.read()-1;
   vc.rd++;
   rF&= ~flagCZ;
-  if (v==0xff) rF|= flagC;
+  if (v!=0xff) rF|= flagC;
   if (!v) rF|= flagZ;
   c.W(v);
   vc.wr++;
@@ -645,7 +645,7 @@ cl_f8::DEC_NSP(t_mem code)
   u8_t v= c.read()-1;
   vc.rd++;
   rF&= ~flagCZ;
-  if (v==0xff) rF|= flagC;
+  if (v!=0xff) rF|= flagC;
   if (!v) rF|= flagZ;
   c.W(v);
   vc.wr++;
@@ -658,7 +658,7 @@ cl_f8::DEC_A(t_mem code)
 {
   u8_t v= acc8->read()-1;
   rF&= ~flagCZ;
-  if (v==0xff) rF|= flagC;
+  if (v!=0xff) rF|= flagC;
   if (!v) rF|= flagZ;
   acc8->W(v);
   cF.W(rF);
@@ -670,7 +670,7 @@ cl_f8::DEC_ZH(t_mem code)
 {
   u8_t v= rZH-1;
   rF&= ~flagCZ;
-  if (v==0xff) rF|= flagC;
+  if (v!=0xff) rF|= flagC;
   if (!v) rF|= flagZ;
   cZH.W(v);
   cF.W(rF);

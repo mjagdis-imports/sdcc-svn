@@ -2894,10 +2894,32 @@ genCall (const iCode *ic)
 
   if (ic->op == PCALL)
     {
-      adjustStack (prestackadjust, false, false);
-      genMove (ASMOP_Y, left->aop, true, true, true, true);
-      emit2 (jump ? "jp" : "call", "y");
-      cost (1, 1);
+      bool xl_free = !f8IsParmInCall (ftype, "xl");
+      bool xh_free = !f8IsParmInCall (ftype, "xh");
+      bool x_free = !f8IsParmInCall (ftype, "x");
+      bool y_free = !f8IsParmInCall (ftype, "y");
+      bool z_free = !f8IsParmInCall (ftype, "z");
+      adjustStack (prestackadjust, xl_free, y_free);
+      if (y_free)
+        {
+          genMove (ASMOP_Y, left->aop, xl_free, xh_free, y_free, z_free);
+          emit2 (jump ? "jp" : "call", "y");
+          cost (1, 1);
+        }
+      else if (x_free)
+        {
+          genMove (ASMOP_X, left->aop, xl_free, xh_free, y_free, z_free);
+          emit2 (jump ? "jp" : "call", "x");
+          cost (2, 2);
+        }
+      else if (z_free)
+        {
+          genMove (ASMOP_Z, left->aop, xl_free, xh_free, y_free, z_free);
+          emit2 (jump ? "jp" : "call", "z");
+          cost (2, 2);
+        }
+      else
+        UNIMPLEMENTED;
     }
   else
     {
@@ -2906,7 +2928,7 @@ genCall (const iCode *ic)
           UNIMPLEMENTED;
         }
 
-      adjustStack (prestackadjust, false, false);
+      adjustStack (prestackadjust, !f8IsParmInCall (ftype, "xl"), !f8IsParmInCall (ftype, "y"));
 
       if (IS_LITERAL (etype))
         emit2 (jump ? "jp" : "call", "#0x%04X", ulFromVal (OP_VALUE (left)));
@@ -3617,9 +3639,9 @@ genCmp (const iCode *ic, iCode *ifx)
         {
           tlbl = newiTempLabel (0);
           if (!sign)
-            emit2 (IC_TRUE (ifx) ? "jrgt" : "jrle", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrnc" : "jrc", "!tlabel", labelKey2num (tlbl->key));
           else
-            emit2 (IC_TRUE (ifx) ? "jrsle" : "jrsge", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrsle" : "jrsgt", "!tlabel", labelKey2num (tlbl->key));
         }
       cost (2, 1);
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
@@ -3727,7 +3749,7 @@ genCmp (const iCode *ic, iCode *ifx)
           if (!sign)
             emit2 (IC_TRUE (ifx) ? "jrc" : "jrnc", "!tlabel", labelKey2num (tlbl->key));
           else
-            emit2 (IC_TRUE (ifx) ? "jrsgt" : "jrslt", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrsge" : "jrslt", "!tlabel", labelKey2num (tlbl->key));
         }
       cost (2, 1);
       emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);

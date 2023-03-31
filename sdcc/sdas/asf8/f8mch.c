@@ -811,8 +811,10 @@ sex:
 		t1 = addr(&e1);
 		r1 = rcode;
 
-		if(t1 == S_REG && r1 == Y)
+		if(t1 == S_REG) {
+			altaccw(r1);
 			outab(op | 0x01);
+		}
 		else if(t1 == S_IMM) {
 			outab(op);
 			outrw(&e1, R_USGN);

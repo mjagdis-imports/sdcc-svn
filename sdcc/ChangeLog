@@ -1,9 +1,10 @@
 2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c,
+	  sim/ucsim/f8.src/f8cl.h,
 	  sim/ucsim/f8.src/ialu.cc,
 	  src/f8/gen.c:
-	  Equality operator fixes.
+	  Comparison fixes.
 
 2023-03-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
