@@ -469,7 +469,7 @@ public:
   virtual int JRNO(t_mem code)  { return jr(COND_NO); }
   virtual int JRSGE(t_mem code) { return jr(COND_SGE); }
   virtual int JRSLT(t_mem code) { return jr(COND_SLT); }
-  virtual int JRSGT(t_mem code) {printf("jrsgt C %d Z %d O %d SGT %d SLE %d\n", COND_C, COND_Z, COND_O, COND_SGT, COND_SLE); return jr(COND_SGT); }
+  virtual int JRSGT(t_mem code) { return jr(COND_SGT); }
   virtual int JRSLE(t_mem code) { return jr(COND_SLE); }
   virtual int JRGT(t_mem code)  { return jr(COND_GT); }
   virtual int JRLE(t_mem code)  { return jr(COND_LE); }

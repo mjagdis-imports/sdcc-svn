@@ -4,7 +4,8 @@
 	  Fixes in handling of 32-bit operands.
 	* sdas/asf8/f8mch.c:
 	  Fixes for #d operands.
-	* sdas/asf8/f8.h:
+	* sdas/asf8/f8.h,
+	  sim/ucsim/f8.src/f8cl.h:
 	  Cleanup.
 
 2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>

@@ -315,12 +315,12 @@ struct mne *mp;
 			outab(0xec);
 			break;
 		}
-		else if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && !ld_mode(&e2)) { // addw sp, #d
+		else if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && t2 == S_IMM && !ld_mode(&e2)) { // addw sp, #d
 			outab(0xea);
 			outab(e2.e_addr);
 			break;
 		}
-		else if(rf == S_2OPWADD && t1 == S_REG && !ld_mode(&e2)) { // addw y, #d
+		else if(rf == S_2OPWADD && t1 == S_REG && t2 == S_IMM && !ld_mode(&e2)) { // addw y, #d
 			altaccw(r1);
 			outab(0xeb);
 			outab(e2.e_addr);
