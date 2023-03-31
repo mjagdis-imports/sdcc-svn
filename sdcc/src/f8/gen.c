@@ -4588,14 +4588,14 @@ genLeftShift (const iCode *ic)
     }
   else if (regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0)
     {
-      genMove (shiftop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      genMove (shiftop, left->aop, regDead (XL_IDX, ic) && right->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && right->aop->regs[XH_IDX] < 0, false, false);
 
       symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (0));
       symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (0));
 
       if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
         UNIMPLEMENTED;
-      genMove (ASMOP_XL, right->aop, true, false, false, false);
+      genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
 
       if (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && regDead (YH_IDX, ic))
         {
@@ -4706,7 +4706,7 @@ genRightShift (const iCode *ic)
 
       bool pushed_xl = false;
 
-      genMove (shiftop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      genMove (shiftop, left->aop, regDead (XL_IDX, ic) && right->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && right->aop->regs[XH_IDX] < 0, false, false);
 
       if (!regDead (XL_IDX, ic) || shiftop->regs[XL_IDX] >= 0)
         {
@@ -4715,7 +4715,7 @@ genRightShift (const iCode *ic)
         }
       if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
         UNIMPLEMENTED;
-      genMove (ASMOP_XL, right->aop, true, false, false, false);
+      genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
 
       emit3 (A_TST, ASMOP_XL, 0);
       if (tlbl2)
@@ -4731,7 +4731,7 @@ genRightShift (const iCode *ic)
 
       emit3 (A_DEC, ASMOP_XL, 0);
       if (tlbl1)
-        emit2 ("jrz", "!tlabel", labelKey2num (tlbl1->key));
+        emit2 ("jrnz", "!tlabel", labelKey2num (tlbl1->key));
       cost (2, 1);
       emitLabel (tlbl2);
       if (pushed_xl)
