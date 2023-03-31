@@ -323,6 +323,7 @@ struct mne *mp;
 		else if(rf == S_2OPWADD && t1 == S_REG && !ls_mode(&e1)) { // addw y, #d
 			altaccw(r1);
 			outab(0xeb);
+			outab(e2.e_addr);
 			break;
 		}
 

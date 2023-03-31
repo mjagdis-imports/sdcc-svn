@@ -1097,45 +1097,9 @@ emit3 (enum asminst inst, asmop *op0, asmop *op1)
   emit3_o (inst, op0, 0, op1, 0);
 }
 
-// A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents.
+// A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents. USed to be definedhere, but has been moved further down, since some workarounds for assembler issues require the use of pop and push.
 static void
-emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1) // todo: allow to pass size, so insetad of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
-{
-  unsigned int litword;
-
-  if (op1->type == AOP_LIT || op1->type == AOP_IMMD)
-    switch (inst)
-      {
-      case A_SUB:
-        emit2 ("tstw", "y"); // Set carry
-        cost (1, 1);
-      case A_SBC:
-        if (op1->type == AOP_LIT)
-          emit2 ("adc", "%s, #0x%02x", aopGet (op0, offset0), ~byteOfVal (op1->aopu.aop_lit, offset1) & 0xff);
-        else
-          emit2 ("adc", "%s, #~%s", aopGet (op0, offset0), aopGet (op1, offset1));
-        cost (2 + !aopInReg (op0, offset0, XL_IDX), 1 + !aopInReg (op0, offset0, XL_IDX));
-        break;
-      case A_SUBW:
-        emit2 ("tstw", "y"); // Set carry
-      case A_SBCW:
-        if (op1->type == AOP_LIT)
-          {
-            litword = (byteOfVal (op1->aopu.aop_lit, offset1 + 1) << 8) | byteOfVal (op1->aopu.aop_lit, offset1);
-            emit2 ("adcw", "%s, #0x%02x", aopGet2 (op0, offset0), ~litword & 0xffff);
-          }
-        //else if // todo: implement when supported by assembler
-        //  emit2 ("adcw", "%s, #~%s", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
-        else
-          UNIMPLEMENTED;
-        cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
-        break;
-      default:
-        wassertl_bt (0, "Invalid instruction for emit3sub_o");
-      }
-  else
-    emit3_o (inst, op0, offset0, op1, offset1);
-}
+emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1); // todo: allow to pass size, so insetad of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
 
 static void
 emit3sub (enum asminst inst, asmop *op0, asmop *op1)
@@ -1523,6 +1487,68 @@ pop (const asmop *op, int offset, int size)
 
   G.stack.pushed -= size;
   updateCFA ();
+}
+
+// A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents.
+static void
+emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1) // todo: allow to pass size, so insetad of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
+{
+  unsigned int litword;
+
+  if (op1->type == AOP_LIT || op1->type == AOP_IMMD)
+    switch (inst)
+      {
+      case A_SUB:
+        emit2 ("tstw", "y"); // Set carry
+        cost (1, 1);
+      case A_SBC:
+        if (op1->type == AOP_LIT)
+          {
+            emit2 ("adc", "%s, #0x%02x", aopGet (op0, offset0), ~byteOfVal (op1->aopu.aop_lit, offset1) & 0xff);
+            cost (2 + !aopInReg (op0, offset0, XL_IDX), 1);
+          }
+        //else // todo: implement when supported by assembler
+        //  emit2 ("adc", "%s, ~%s", aopGet (op0, offset0), aopGet (op1, offset1));
+        else if (!aopInReg (op0, offset0, XH_IDX))
+          {
+            push (ASMOP_XH, 0, 1);
+            emit3_o (A_LD, ASMOP_XH, 0, op1, offset1);
+            emit3 (A_XOR, ASMOP_XH, ASMOP_MONE);
+            emit2 ("adc", "%s, xh", aopGet (op0, offset0));
+            cost (1 + !aopInReg (op0, offset0, XL_IDX), 1);
+            pop (ASMOP_XH, 0, 1);
+          }
+        else
+          UNIMPLEMENTED;
+        break;
+      case A_SUBW:
+        emit2 ("tstw", "y"); // Set carry
+      case A_SBCW:
+        if (op1->type == AOP_LIT)
+          {
+            litword = (byteOfVal (op1->aopu.aop_lit, offset1 + 1) << 8) | byteOfVal (op1->aopu.aop_lit, offset1);
+            emit2 ("adcw", "%s, #0x%02x", aopGet2 (op0, offset0), ~litword & 0xffff);
+            cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
+          }
+        //else // todo: implement when supported by assembler
+        //  emit2 ("adcw", "%s, ~%s", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
+        else if (!aopInReg (op0, offset0, X_IDX))
+          {
+            push (ASMOP_X, 0, 1);
+            emit3_o (A_LDW, ASMOP_X, 0, op1, offset1);
+            emit3 (A_XOR, ASMOP_X, ASMOP_MONE);
+            emit2 ("adcw", "%s, x", aopGet2 (op0, offset0));
+            cost (1 + !aopInReg (op0, offset0, Y_IDX), 1);
+            pop (ASMOP_X, 0, 1);
+          }
+        else
+          UNIMPLEMENTED;
+        break;
+      default:
+        wassertl_bt (0, "Invalid instruction for emit3sub_o");
+      }
+  else
+    emit3_o (inst, op0, offset0, op1, offset1);
 }
 
 /*-----------------------------------------------------------------*/
@@ -3335,6 +3361,8 @@ genPlus (const iCode *ic)
           cost (2 + labs(offset) > 127 + !aopInReg (taop, 0, Y_IDX), 1 + !aopInReg (taop, 0, Y_IDX));
           if (!lit)
             emit3_o (A_ADDW, taop, 0, leftop->type == AOP_STL ? rightop : leftop, i);
+          emit2 ("addw", "%s, sp", aopGet2 (taop, 0));
+          cost (1 + !aopInReg (taop, 0, Y_IDX), 1);
           genMove_o (result->aop, i, taop, 0, 2, xl_free2, false, y_free2, false);
           started = true;
           i += 2;

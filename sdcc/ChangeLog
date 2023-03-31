@@ -1,5 +1,20 @@
 2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* device/lib/f8/Makefile.in:
+	  Enable div function family for f8.
+	* sdas/asf8/f8mch.c:
+	  Fix addw y, #d.
+	* src/f8/gen.c:
+	  Fix subtraction workaround.
+
+2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c,
+	  src/f8/gen.c:
+	  Initialization fixes.
+
+2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/f8/gen.c:
 	  Shift fixes.
 	* sdas/asf8/f8mch.c:
