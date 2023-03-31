@@ -605,11 +605,11 @@ opw:
 		else if(t1 == S_YREL && t2 == S_REG && r2 == X) {
 			if(!ls_mode(&e2)) {
 				outab(0xce);
-				outrb(&e2, R_USGN);
+				outrb(&e1, R_USGN);
 			}
 			else {
 				outab(0xcf);
-				outrw(&e2, R_USGN);
+				outrw(&e1, R_USGN);
 			}
 			break;
 		}

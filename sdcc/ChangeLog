@@ -1,7 +1,7 @@
 2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Fixes in handling of 32-bit operands.
+	  Fixes in handling of 32-bit operands. Fix return values wider than 32 bit.
 	* sdas/asf8/f8mch.c:
 	  Fixes for #d operands.
 	* sdas/asf8/f8.h,

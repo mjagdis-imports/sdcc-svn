@@ -2829,7 +2829,7 @@ genCall (const iCode *ic)
       if (IC_RESULT (ic)->aop->type != AOP_STK)
         UNIMPLEMENTED;
 
-      emit2 ("ldw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed);
+      emit2 ("ldw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
       emit2 ("addw", "y, sp");
       cost (3 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
       push (ASMOP_Y, 0, 2);
@@ -3215,7 +3215,7 @@ bigreturn:
         if (aopInReg (left->aop, i, YL_IDX) || aopInReg (left->aop, i, YH_IDX))
           UNIMPLEMENTED;
 
-      unsigned int o = G.stack.pushed + 3;
+      unsigned int o = G.stack.pushed + 2;
 
       if (o <= 255)
         {
@@ -3246,7 +3246,7 @@ bigreturn:
             }
           else if (!aopInReg (left->aop, i, XL_IDX))
             {
-              genMove (ASMOP_XL, left->aop, true, false, false, false);
+              genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false);
               emit2 ("ld", i ? "(%d, y), xl" : "(y), xl", i);
               cost (1 + (bool)i, 1);
               i++;
