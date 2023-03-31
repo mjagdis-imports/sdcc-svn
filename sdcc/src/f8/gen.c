@@ -295,6 +295,9 @@ aopOnStack (const asmop *aop, int offset, int size)
   if (offset + size > aop->size)
     return (false);
 
+  if (offset > 8)
+    return(true);
+
   // Fully on stack?
   for (i = offset; i < offset + size; i++)
     if (aop->aopu.bytes[i].in_reg)
@@ -439,18 +442,18 @@ aopGet(const asmop *aop, int offset)
   if (offset >= aop->size)
     return ("#0x00");
 
-  if (aopRS (aop) && aop->aopu.bytes[offset].in_reg)
+  if (aopRS (aop) && offset < 8 && aop->aopu.bytes[offset].in_reg)
     return (aop->aopu.bytes[offset].byteu.reg->name);
 
-  if (aopRS (aop) && !aop->aopu.bytes[offset].in_reg)
+  if (aopRS (aop) && (offset >= 8 || !aop->aopu.bytes[offset].in_reg))
     {
-      long int soffset = aop->aopu.bytes[offset].byteu.stk + G.stack.pushed;
+      long int soffset = aop->aopu.bytes[0].byteu.stk + offset + G.stack.pushed;
       
       wassert (soffset < (1 << 16) && soffset >= 0);
 
       if (soffset > 255)
         {
-          long int eoffset = (long int)(aop->aopu.bytes[offset].byteu.stk) + G.stack.size - 256l;
+          long int eoffset = (long int)(aop->aopu.bytes[0].byteu.stk) + offset + G.stack.size - 256l;
 
           wassertl_bt (regalloc_dry_run || f8_extend_stack, "Extended stack access, but z not prepared for extended stack access.");
           wassertl_bt (regalloc_dry_run || eoffset >= 0l && eoffset <= 0xffffl, "Stack access out of extended stack range."); // Stack > 64K.
@@ -698,8 +701,8 @@ op2w_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
 static int
 ld_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
-  int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
-  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+  int r0Idx = ((aopRS (op0) && offset0 < 8 && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && offset1 < 8 && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
 
   if (r0Idx == XL_IDX)
     {
