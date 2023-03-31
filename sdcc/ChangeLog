@@ -2,6 +2,8 @@
 
 	* src/f8/gen.c:
 	  Shift fixes.
+	* sdas/asf8/f8mch.c:
+	  Fix addw y, sp.
 
 2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
