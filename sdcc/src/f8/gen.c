@@ -1099,7 +1099,7 @@ emit3 (enum asminst inst, asmop *op0, asmop *op1)
 
 // A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents.
 static void
-emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
+emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1) // todo: allow to pass size, so insetad of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
 {
   unsigned int litword;
 
@@ -1118,15 +1118,16 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
         break;
       case A_SUBW:
         emit2 ("tstw", "y"); // Set carry
-        break;
       case A_SBCW:
         if (op1->type == AOP_LIT)
           {
             litword = (byteOfVal (op1->aopu.aop_lit, offset1 + 1) << 8) | byteOfVal (op1->aopu.aop_lit, offset1);
             emit2 ("adcw", "%s, #0x%02x", aopGet2 (op0, offset0), ~litword & 0xffff);
           }
+        //else if // todo: implement when supported by assembler
+        //  emit2 ("adcw", "%s, #~%s", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
         else
-          emit2 ("adcw", "%s, #~((%s+%d) >> %d)", aopGet2 (op0, offset0), op1->aopu.immd, op1->aopu.immd_off, offset1 * 8);
+          UNIMPLEMENTED;
         cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
         break;
       default:

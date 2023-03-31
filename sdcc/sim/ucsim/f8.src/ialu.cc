@@ -1212,9 +1212,7 @@ cl_f8::CPW(t_mem code)
   a= acc16->get();
   b= fetch();
   b+= fetch()*256;
-  b= ~b;
-  b++;
-  add16(a, b, 0, true);
+  add16(a, b, 1, true);
   return resGO;
 }
 

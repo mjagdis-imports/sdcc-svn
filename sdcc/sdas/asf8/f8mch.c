@@ -752,7 +752,7 @@ opw:
 		if(t1 == S_REG && t2 == S_IMM) {
 			altaccw(r1);
 			outab(op);
-			outrw(&e1, R_USGN);
+			outrw(&e2, R_USGN);
 		}
 		else
 			aerr();
