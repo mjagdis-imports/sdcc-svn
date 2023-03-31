@@ -315,12 +315,12 @@ struct mne *mp;
 			outab(0xec);
 			break;
 		}
-		else if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && !ls_mode(&e1)) { // addw sp, #d
+		else if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && !ld_mode(&e2)) { // addw sp, #d
 			outab(0xea);
 			outab(e2.e_addr);
 			break;
 		}
-		else if(rf == S_2OPWADD && t1 == S_REG && !ls_mode(&e1)) { // addw y, #d
+		else if(rf == S_2OPWADD && t1 == S_REG && !ld_mode(&e2)) { // addw y, #d
 			altaccw(r1);
 			outab(0xeb);
 			outab(e2.e_addr);
@@ -889,6 +889,43 @@ struct expr *e;
 			e->e_addr -= fuzz;
 		}
 		flag = (v & ~0xFF) ? 1 : 0;
+		return(setbit(flag) ? 1 : 0);
+	} else {
+		return(getbit() ? 1 : 0);
+	}
+	return(1);
+}
+
+/*
+ * Select the long or short addressing mode
+
+ * based upon the expression type and value.
+ * Return 1 for 16-bit offset, 0 for 8-bit offset.
+ */
+int
+ld_mode(e)
+struct expr *e;
+{
+	int flag, v;
+
+	v = (int) e->e_addr;
+	/*
+	 * 1) area based arguments (e_base.e_ap != 0) use longer mode
+	 * 2) constant arguments (e_base.e_ap == 0) use
+	 * 	shorter mode if (arg & ~0x7F) == 0 or ~0x7f
+	 *	longer  mode otherwise
+	 */
+	if (pass == 0) {
+		;
+	} else
+	if (e->e_base.e_ap) {
+		;
+	} else
+	if (pass == 1) {
+		if (e->e_addr >= dot.s_addr) {
+			e->e_addr -= fuzz;
+		}
+		flag = ((v & ~0x7f) == ~0x7f || (v & ~0x7f) == 0) ? 0 : 1;
 		return(setbit(flag) ? 1 : 0);
 	} else {
 		return(getbit() ? 1 : 0);

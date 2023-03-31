@@ -123,8 +123,6 @@ extern	struct	adsym	REG[];
 extern	int	rcode;
 
 	/* machine dependent functions */
-
-#ifdef	OTHERSYSTEM
 	
         /* ST8adr.c */
 extern	int		addr(struct expr *esp);
@@ -141,30 +139,9 @@ extern	VOID		minit(void);
 extern	VOID		opcy_aerr(void);
 extern	VOID		valu_aerr(struct expr *e, int n);
 extern	int		ls_mode(struct expr *e);
+extern	int		ld_mode(struct expr *e);
 extern	int		setbit(int b);
 extern	int		getbit(void);
 extern	void	altacc(int reg);
 extern	void	altaccw(int reg);
-
-#else
-
-	/* ST8adr.c */
-extern	int		addr();
-extern	int		addr1();
-extern	int		addrsl();
-extern	int		admode();
-extern	int		any();
-extern	int		srch();
-
-	/* ST8mch.c */
-extern	VOID		machine();
-extern	int		mchpcr();
-extern	VOID		minit();
-extern	VOID		opcy_aerr();
-extern	VOID		valu_aerr();
-extern	int		ls_mode();
-extern	int		setbit();
-extern	int		getbit();
-
-#endif
 
