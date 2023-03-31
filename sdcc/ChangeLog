@@ -8,7 +8,7 @@
 	  sim/ucsim/f8.src/f8cl.h:
 	  Cleanup.
 	* sim/ucsim/f8.src/ialu.cc:
-	  Fix orw flags.
+	  Fix orw, sbc flags.
 
 2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
