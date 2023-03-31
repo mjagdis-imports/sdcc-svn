@@ -269,7 +269,7 @@ u16_t
 cl_f8::or16(u16_t a, u16_t b)
 {
   u16_t r= a|b;
-  rF&= flagOZN;
+  rF&= ~flagOZN;
   if (!r) rF|= flagZ;
   if (r&0x8000) rF|= flagN;
   // TODO flagO ?
