@@ -295,17 +295,14 @@ aopOnStack (const asmop *aop, int offset, int size)
   if (offset + size > aop->size)
     return (false);
 
-  if (offset > 8)
-    return(true);
-
   // Fully on stack?
   for (i = offset; i < offset + size; i++)
-    if (aop->aopu.bytes[i].in_reg)
+    if (i < 8 && aop->aopu.bytes[i].in_reg)
       return (false);
 
   // Consecutive?
   stk_base = aop->aopu.bytes[offset].byteu.stk;
-  for (i = 1; i < size; i++)
+  for (i = 1; i < size && i < 8; i++)
     if (!regalloc_dry_run && aop->aopu.bytes[offset + i].byteu.stk != stk_base + i) // Todo: Stack offsets might be unavailable during dry run (messes with addition costs, so we should have a mechanism to do it better).
       return (false);
 
@@ -447,13 +444,21 @@ aopGet(const asmop *aop, int offset)
 
   if (aopRS (aop) && (offset >= 8 || !aop->aopu.bytes[offset].in_reg))
     {
-      long int soffset = aop->aopu.bytes[0].byteu.stk + offset + G.stack.pushed;
-      
+      long int soffset;
+      if (offset < 8)
+        soffset = aop->aopu.bytes[offset].byteu.stk + G.stack.pushed;
+      else
+        soffset = aop->aopu.bytes[0].byteu.stk + offset + G.stack.pushed;
+
       wassert (soffset < (1 << 16) && soffset >= 0);
 
       if (soffset > 255)
         {
-          long int eoffset = (long int)(aop->aopu.bytes[0].byteu.stk) + offset + G.stack.size - 256l;
+          long int eoffset;
+          if (offset < 8)
+            eoffset = (long int)(aop->aopu.bytes[offset].byteu.stk) + G.stack.size - 256l;
+          else
+            eoffset = (long int)(aop->aopu.bytes[0].byteu.stk) + offset + G.stack.size - 256l;
 
           wassertl_bt (regalloc_dry_run || f8_extend_stack, "Extended stack access, but z not prepared for extended stack access.");
           wassertl_bt (regalloc_dry_run || eoffset >= 0l && eoffset <= 0xffffl, "Stack access out of extended stack range."); // Stack > 64K.
@@ -786,8 +791,8 @@ ld_cost (const asmop *op0, int offset0, const asmop *op1, int offset1)
 static int
 ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int offset1)
 {
-  int r0Idx = ((aopRS (op0) && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
-  int r1Idx = ((aopRS (op1) && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+  int r0Idx = ((aopRS (op0) && offset0 < 8 && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
+  int r1Idx = ((aopRS (op1) && offset1 < 8 && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
 
   if (r0Idx >= 0)
     {
@@ -1637,11 +1642,11 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
 
   int size = n;
   int regsize = 0;
-  for (int i = 0; i < n; i++)
+  for (int i = 0; roffset + i < 8 && soffset + i < 8 && i < n; i++)
     regsize += source->aopu.bytes[soffset + i].in_reg;
 
   // Do nothing for coalesced bytes.
-  for (int i = 0; i < n; i++)
+  for (int i = 0; roffset + i < 8 && soffset + i < 8 && i < n; i++)
     if (result->aopu.bytes[roffset + i].in_reg && source->aopu.bytes[soffset + i].in_reg && result->aopu.bytes[roffset + i].byteu.reg == source->aopu.bytes[soffset + i].byteu.reg)
       {
         assigned[i] = true;
@@ -1979,7 +1984,7 @@ skip_byte:
           fprintf (stderr, "%d bytes left.\n", size);
           fprintf (stderr, "left type %d source type %d\n", result->type, source->type);
           for (int i = 0; i < n ; i++)
-            fprintf (stderr, "Byte %d, result in reg %d, source in reg %d. %s assigned.\n", i, result->aopu.bytes[roffset + i].in_reg ? result->aopu.bytes[roffset + i].byteu.reg->rIdx : -1, source->aopu.bytes[soffset + i].in_reg ? source->aopu.bytes[soffset + i].byteu.reg->rIdx : -1, assigned[i] ? "" : "not");
+            fprintf (stderr, "Byte %d, result in reg %d, source in reg %d. %s assigned.\n", i, (roffset + i < 8 && result->aopu.bytes[roffset + i].in_reg) ? result->aopu.bytes[roffset + i].byteu.reg->rIdx : -1, (soffset + i < 8 && source->aopu.bytes[soffset + i].in_reg) ? source->aopu.bytes[soffset + i].byteu.reg->rIdx : -1, assigned[i] ? "" : "not");
         }
       cost (180, 180);
     }
