@@ -1253,7 +1253,8 @@ aopForRemat (symbol *sym)
   if (OP_SYMBOL (IC_LEFT (ic))->onStack)
     {
       aop = newAsmop (AOP_STL);
-      aop->aopu.stk_off = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + val;
+      long int base = (long)(OP_SYMBOL (IC_LEFT (ic))->stack) + (OP_SYMBOL (IC_LEFT (ic))->stack > 0 ? G.stack.param_offset : 0);
+      aop->aopu.stk_off = base + val;
     }
   else
     {
@@ -3126,7 +3127,7 @@ genFunction (iCode *ic)
       cost (6, 2);
     }
 
-  bigreturn = (getSize (ftype->next) > 4);
+  bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
   G.stack.param_offset += bigreturn * 2;
 
   if (options.debug && !regalloc_dry_run)
