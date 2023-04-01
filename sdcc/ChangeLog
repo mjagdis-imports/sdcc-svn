@@ -1,6 +1,11 @@
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
+	  Shift fixes.
+
+2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
 	  Fixes for return values wider than 64 bit.
 	* device/lib/f8/Makefile.in,
 	  device/lib/f8/heap.s,

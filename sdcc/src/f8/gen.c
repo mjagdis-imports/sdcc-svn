@@ -4564,7 +4564,20 @@ genLeftShift (const iCode *ic)
   struct asmop shiftop_impl;
   struct asmop *shiftop = result->aop;
 
-  int size = result->aop->size; 
+  int size = result->aop->size;
+  bool premoved_count = false;
+
+  // Avoid overwriting shift count on stack when moving to shiftop.
+  if (aopOnStack (right->aop, 0, 1) && aopRS (shiftop))
+    for (int i = 0; i < left->aop->size; i++)
+      if (aopOnStack (shiftop, i, 1) && shiftop->aopu.bytes[i].byteu.stk == right->aop->aopu.bytes[0].byteu.stk)
+        {
+          genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && left->aop->regs[XH_IDX] < 0, false, false);
+          premoved_count = true;
+          if (left->aop->regs[XL_IDX] >= 0 || shiftop->regs[XL_IDX] >= 0)
+            UNIMPLEMENTED;
+          break;
+        }
 
   if (right->aop->type == AOP_LIT)
     {
@@ -4620,14 +4633,18 @@ genLeftShift (const iCode *ic)
     }
   else if (regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0)
     {
-      genMove (shiftop, left->aop, regDead (XL_IDX, ic) && right->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && right->aop->regs[XH_IDX] < 0, false, false);
+      bool xl_dead = regDead (XL_IDX, ic) && (premoved_count ? false : (right->aop->regs[XL_IDX] < 0));
+      bool xh_dead = regDead (XH_IDX, ic) && (right->aop->regs[XH_IDX] < 0 || premoved_count);
+
+      genMove (shiftop, left->aop, xl_dead, xh_dead, false, false);
 
       symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (0));
       symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (0));
 
-      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
+      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0 && !premoved_count) // Right register operand overwritten by result
         UNIMPLEMENTED;
-      genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
+      if (!premoved_count)
+        genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
 
       if (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && regDead (YH_IDX, ic))
         {
@@ -4686,6 +4703,19 @@ genRightShift (const iCode *ic)
 
   bool sign =  !SPEC_USIGN (getSpec (operandType (left)));
   int size = result->aop->size;
+  bool premoved_count = false;
+
+  // Avoid overwriting shift count on stack when moving to shiftop.
+  if (aopOnStack (right->aop, 0, 1) && aopRS (shiftop))
+    for (int i = 0; i < left->aop->size; i++)
+      if (aopOnStack (shiftop, i, 1) && shiftop->aopu.bytes[i].byteu.stk == right->aop->aopu.bytes[0].byteu.stk)
+        {
+          genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && left->aop->regs[XH_IDX] < 0, false, false);
+          premoved_count = true;
+          if (left->aop->regs[XL_IDX] >= 0 || shiftop->regs[XL_IDX] >= 0)
+            UNIMPLEMENTED;
+          break;
+        }
 
   if (right->aop->type == AOP_LIT)
     {
@@ -4733,21 +4763,25 @@ genRightShift (const iCode *ic)
     }
   else
     {
+      bool xl_dead = regDead (XL_IDX, ic) && (premoved_count ? false : (right->aop->regs[XL_IDX] < 0));
+      bool xh_dead = regDead (XH_IDX, ic) && (right->aop->regs[XH_IDX] < 0 || premoved_count);
+
       symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (0));
       symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (0));
 
       bool pushed_xl = false;
 
-      genMove (shiftop, left->aop, regDead (XL_IDX, ic) && right->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && right->aop->regs[XH_IDX] < 0, false, false);
+      genMove (shiftop, left->aop, xl_dead, xh_dead, false, false);
 
       if (!regDead (XL_IDX, ic) || shiftop->regs[XL_IDX] >= 0)
         {
           push (ASMOP_XL, 0, 1);
           pushed_xl = true;
         }
-      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0) // Right operand overwritten by result
+      if (aopRS (right->aop) && right->aop->aopu.bytes[0].in_reg && shiftop->regs[right->aop->aopu.bytes[0].byteu.reg->rIdx] > 0 && !premoved_count) // Right register operand overwritten by result
         UNIMPLEMENTED;
-      genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
+      if (!premoved_count)
+        genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
 
       emit3 (A_TST, ASMOP_XL, 0);
       if (tlbl2)
