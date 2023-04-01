@@ -3099,8 +3099,8 @@ genFunction (iCode *ic)
     {
       G.stack.size = f8_call_stack_size + (sym->stack ? sym->stack : 0);
       D (emit2 (";", "Setup z for extended stack access."));
-      emit2 ("ldw", "z, #%ld", (~(G.stack.size - 256) + 1) & 0xffff);
-      emit2 ("addw", "z, sp");
+      emit2 ("ldw", "z, sp");
+      emit2 ("addw", "z, #%ld", (~(G.stack.size - 256) + 1) & 0xffff);
       cost (6, 2);
     }
 
