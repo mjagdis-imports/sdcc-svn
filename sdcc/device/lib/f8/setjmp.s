@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  setjmp.s
 ;
-;  Copyright (C) 2014-2021, Philipp Klaus Krause
+;  Copyright (C) 2014-2023, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -32,37 +32,34 @@
 
 ___setjmp:
 	; store stack pointer
-	ldw	y, sp
-	ldw	(2, x), y
+	ldw	x, sp
+	ldw	(2, y), x
 
 	; store return address
-	popw	y
-	ldw	(x), y
+	popw	x
+	ldw	(y), x
 
 	; return 0
-	clrw	x
+	clrw	y
 
-	jp	(y)
+	jp	x
 
 	.globl _longjmp
 
 _longjmp:
-	ldw	y, (3, sp)
-
-	; Restore stack pointer
-	pushw	x
-	ldw	x, (2, x)
-	ldw	(1, x), y
-	popw	y
-	ldw	sp, x
+	ldw	z, (2, sp)
 
 	; Calculate return value
-	popw	x
-	tnzw	x
-	jrne	jump
-	incw	x
+	ldw	y, (4, sp)
+	tstw	y
+	jrnz	jump
+	incw	y
 jump:
+	; Restore stack pointer
+	ldw	y, (2, z)
+	ldw	sp, y
+
 	; Return
-	ldw	y, (y)
-	jp	(y)
+	ldw	x, (0, z)
+	jp	x
 

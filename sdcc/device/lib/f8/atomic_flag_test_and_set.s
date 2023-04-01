@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  atomic_flag_test_and_set.s
 ;
-;  Copyright (C) 2020-2021, Philipp Klaus Krause
+;  Copyright (C) 2020-2023, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -31,9 +31,7 @@
 	.globl _atomic_flag_test_and_set
 
 _atomic_flag_test_and_set:
-	clr	a
-	srl	(x)
-	ccf
-	rlc	a
+	clr	xl
+	xch	xl, (y)
 	ret
 

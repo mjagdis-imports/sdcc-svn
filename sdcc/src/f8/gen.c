@@ -2030,8 +2030,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 
           if (!y_dead && aopIsAcc16 (result, roffset + i) && !(soffset + i) && size >= 2)
             {
-              emit2 ("ldw", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
-              emit2 ("addw", "%s, sp", aopGet2 (result, roffset + i));
+              emit2 ("ldw", "%s, sp", aopGet2 (result, roffset + i));
+              emit2 ("addw", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
               cost (5 + (labs(stack_offset) > 127), 2);
               i += 2;
             }
@@ -2039,8 +2039,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             {
               if (!y_dead)
                 push (ASMOP_Y, 0, 2);
-              emit2 ("ldw", "y, #%ld", stack_offset);
-              emit2 ("addw", "y, sp");
+              emit2 ("ldw", "y, sp");
+              emit2 ("addw", "y, #%ld", stack_offset);
               cost (3 + (labs(stack_offset) > 127), 2);
               int lsize = size - i;
               genMove_o (result, roffset + i, ASMOP_Y, soffset + i, lsize, xl_dead, xh_dead, true, z_dead);
@@ -2252,8 +2252,8 @@ adjustStack (int n, bool xl_free, bool y_free)
 {
   if (abs(n) > 512 && y_free)
    {
-     emit2 ("ldw", "y, #%d", n);
-     emit2 ("addw", "y, sp");
+     emit2 ("ldw", "y, sp");
+     emit2 ("addw", "y, #%d", n);
      emit2 ("ldw", "sp, y");
      cost (5, 3);
      G.stack.pushed -= n;
@@ -2837,8 +2837,8 @@ genCall (const iCode *ic)
       if (IC_RESULT (ic)->aop->type != AOP_STK)
         UNIMPLEMENTED;
 
-      emit2 ("ldw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
-      emit2 ("addw", "y, sp");
+      emit2 ("ldw", "y, sp");
+      emit2 ("addw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
       cost (3 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
       push (ASMOP_Y, 0, 2);
 
@@ -3359,21 +3359,16 @@ genPlus (const iCode *ic)
         (aopIsAcc16 (result->aop, i) || regDead (Y_IDX, ic)))
         {
           struct asmop *taop = regDead (Y_IDX, ic) ? ASMOP_Y : result->aop; // We save 2 bytes by using y, which is usually worth the 1 byte extra ldw.
-          long offset = 0;
-          bool lit = leftop->type == AOP_LIT || rightop->type == AOP_LIT;
-          if (lit)
-            offset = byteOfVal ((leftop->type == AOP_LIT ? left : right)->aop->aopu.aop_lit, 1) * 256 + byteOfVal ((leftop->type == AOP_LIT ? left : right)->aop->aopu.aop_lit, 0);
-          if (lit && !offset && aopIsAcc16 (result->aop, i))
+          if (aopIsAcc16 (result->aop, i))
             taop = result->aop;
-          offset += (long)((leftop->type == AOP_STL ? left : right)->aop->aopu.stk_off) + G.stack.pushed;
-          emit2 ("ldw", "%s, #%ld", aopGet2 (taop, 0), offset);
-          cost (2 + labs(offset) > 127 + !aopInReg (taop, 0, Y_IDX), 1 + !aopInReg (taop, 0, Y_IDX));
-          if (!lit)
-            emit3_o (A_ADDW, taop, 0, leftop->type == AOP_STL ? rightop : leftop, i);
-          emit2 ("addw", "%s, sp", aopGet2 (taop, 0));
+          emit2 ("ldw", "%s, sp", aopGet2 (taop, 0));
           cost (1 + !aopInReg (taop, 0, Y_IDX), 1);
+          if (!aopIsLitVal (leftop->type == AOP_STL ? rightop : leftop, i, 2, 0x0000))
+            {
+              emit3_o (A_ADDW, taop, 0, leftop->type == AOP_STL ? rightop : leftop, i);
+              started = true;
+            }
           genMove_o (result->aop, i, taop, 0, 2, xl_free2, false, y_free2, false);
-          started = true;
           i += 2;
           continue;
         } 
@@ -5337,10 +5332,11 @@ genAddrOf (const iCode *ic)
         {
           
           long soffset = (long)(sym->stack) + G.stack.pushed + (long)(operandLitValue (right));
-          emit2 ("ldw", "%s, #%ld", aopGet2 (aop, 0), soffset);
-          cost (2 + !aopInReg (aop, 0, Y_IDX) + (labs(soffset) > 127), 1 + !aopInReg (aop, 0, Y_IDX));
-          emit2 ("addw", "%s, sp", aopGet2 (aop, 0));
+          
+          emit2 ("ldw", "%s, sp", aopGet2 (aop, 0));
           cost (1 + !aopInReg (aop, 0, Y_IDX), 1 + !aopInReg (aop, 0, Y_IDX));
+          emit2 ("addw", "%s, #%ld", aopGet2 (aop, 0), soffset);
+          cost (2 + !aopInReg (aop, 0, Y_IDX) + (labs(soffset) > 127), 1 + !aopInReg (aop, 0, Y_IDX));
         }
       genMove (result->aop, aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
     }

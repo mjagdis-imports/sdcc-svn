@@ -1199,13 +1199,6 @@ cl_f8::ADDW_A_D(t_mem code)
 }
 
 int
-cl_f8::ADDW_Y_SP(t_mem code)
-{
-  cY.W(rY+rSP);
-  return resGO;
-}
-
-int
 cl_f8::CPW(t_mem code)
 {
   u16_t a, b;

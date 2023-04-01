@@ -310,12 +310,7 @@ struct mne *mp;
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if(rf == S_2OPWADD && t1 == S_REG && t2 == S_REG && r2 == SP) { // addw y, sp
-			altaccw(r1);
-			outab(0xec);
-			break;
-		}
-		else if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && t2 == S_IMM && !ld_mode(&e2)) { // addw sp, #d
+		if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && t2 == S_IMM && !ld_mode(&e2)) { // addw sp, #d
 			outab(0xea);
 			outab(e2.e_addr);
 			break;
@@ -550,6 +545,11 @@ opw:
 		else if(t1 == S_REG && r1 == SP && t2 == S_REG) {
 			altaccw(r2);
 			outab(0x70);
+			break;
+		}
+		else if (t1 == S_REG && t2 == S_REG && r2 == SP) { // ldw y, sp
+			altaccw(r1);
+			outab(0xec);
 			break;
 		}
 		else if(t1 == S_REG) {
