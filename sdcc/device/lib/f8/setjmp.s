@@ -31,13 +31,15 @@
 	.globl ___setjmp
 
 ___setjmp:
-	; store stack pointer
-	ldw	x, sp
-	ldw	(2, y), x
+	ldw	z, y
 
 	; store return address
 	popw	x
-	ldw	(y), x
+	ldw	(0, z), x
+
+	; store stack pointer
+	ldw	y, sp
+	ldw	(2, z), y
 
 	; return 0
 	clrw	y
