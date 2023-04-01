@@ -47,17 +47,17 @@ ___setjmp:
 	.globl _longjmp
 
 _longjmp:
-	ldw	z, (2, sp)
+	ldw	z, y
 
 	; Calculate return value
-	ldw	y, (4, sp)
+	ldw	y, (2, sp)
 	tstw	y
 	jrnz	jump
 	incw	y
 jump:
 	; Restore stack pointer
-	ldw	y, (2, z)
-	ldw	sp, y
+	ldw	x, (2, z)
+	ldw	sp, x
 
 	; Return
 	ldw	x, (0, z)

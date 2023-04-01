@@ -292,7 +292,7 @@ struct dis_entry disass_f8[]=
     { 0xe4, 0xff, ' ', 1, "sraw %A"},
     { 0xea, 0xff, ' ', 2, "addw sp,#%d"},
     { 0xeb, 0xff, ' ', 2, "addw %A,#%d"},
-    { 0xec, 0xff, ' ', 2, "ldw y,sp"},
+    { 0xec, 0xff, ' ', 1, "ldw %A,sp"},
     { 0xf8, 0xff, ' ', 3, "cpw %A,#'i16'"},
     { 0xf6, 0xff, ' ', 1, "incnw %A"},
     { 0xf7, 0xff, ' ', 2, "decw ('nsp_16')"},
@@ -389,7 +389,7 @@ u8_t allowed_prefs[256]= {
   /* b_ */    P6,P6,P6,P6,  P6,P6,P6,P6,  P6,P6,PN,PN,  PN,PN,PN,PN,
   /* c_ */    P6,P6,P6,P6,  P6,P6,P6,P6,  P6,P6,P6,P6,  P6,P6,P6,P6,
   /* d_ */    PN,PN,PN,PN,  PN,PN,PN,PN,  PN,PN,PN,PN,  PN,PN,PN,PN,
-  /* e_ */    P6,P6,P6,P6,  P6,P6,PN,PN,  PN,P6,PN,P6,  PN, 0,P6,P6,
+  /* e_ */    P6,P6,P6,P6,  P6,P6,PN,PN,  PN,P6,PN,P6,  PD, 0,P6,P6,
   /* f_ */    PN,P2,P2,P2,  PN,PN,P6,PN,  P6,PN,P6,P6,   0, 0, 0, 0
 };
 
