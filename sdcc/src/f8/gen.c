@@ -2837,10 +2837,29 @@ genCall (const iCode *ic)
       if (IC_RESULT (ic)->aop->type != AOP_STK)
         UNIMPLEMENTED;
 
-      emit2 ("ldw", "y, sp");
-      emit2 ("addw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
-      cost (3 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
-      push (ASMOP_Y, 0, 2);
+      if (!f8IsParmInCall (ftype, "y") && (ic->op != PCALL || left->aop->regs[YL_IDX] < 0 && left->aop->regs[YH_IDX] < 0))
+        {
+          emit2 ("ldw", "y, sp");
+          emit2 ("addw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
+          cost (3 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
+          push (ASMOP_Y, 0, 2);
+        }
+      else if (!f8IsParmInCall (ftype, "x") && (ic->op != PCALL || left->aop->regs[XL_IDX] < 0 && left->aop->regs[XH_IDX] < 0))
+        {
+          emit2 ("ldw", "x, sp");
+          emit2 ("addw", "x, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
+          cost (5 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
+          push (ASMOP_X, 0, 2);
+        }
+      else if (!f8IsParmInCall (ftype, "z") && (ic->op != PCALL || left->aop->regs[ZL_IDX] < 0 && left->aop->regs[ZH_IDX] < 0 && !f8_extend_stack))
+        {
+          emit2 ("ldw", "z, sp");
+          emit2 ("addw", "z, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
+          cost (5 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
+          push (ASMOP_Z, 0, 2);
+        }
+      else
+        UNIMPLEMENTED;
 
       freeAsmop (IC_RESULT (ic));
     }

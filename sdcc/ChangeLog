@@ -1,6 +1,11 @@
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
+	  Fix call to function pointer to function returning struct / union.
+
+2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
 	  Shift fixes.
 
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
