@@ -31,7 +31,7 @@
 	.globl _atomic_flag_test_and_set
 
 _atomic_flag_test_and_set:
-	clr	xl
+	ld	xl, #1
 	xch	xl, (y)
 	ret
 

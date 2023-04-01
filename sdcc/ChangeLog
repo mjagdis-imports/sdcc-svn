@@ -3,7 +3,6 @@
 	* src/f8/gen.c:
 	  Fixes for return values wider than 64 bit.
 	* device/lib/f8/Makefile.in,
-	  device/lib/f8/atomic_flag_test_and_set.s,
 	  device/lib/f8/heap.s,
 	  device/lib/f8/setjmp.s,
 	  sdas/asf8/f8mch.c,
@@ -14,6 +13,8 @@
 	  sim/ucsim/f8.src/imove.cc,
 	  src/f8/gen.c:
 	  Replace addw y, sp by ldw y, sp.
+	* device/lib/f8/atomic_flag_test_and_set.s:
+	  Fix atomic_flag_test_and_set.
 
 2023-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
