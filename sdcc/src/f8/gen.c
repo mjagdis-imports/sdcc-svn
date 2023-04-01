@@ -2198,6 +2198,9 @@ aopArg (sym_link *ftype, int i)
   for (j = 1, arg = args; j < i; j++, arg = arg->next)
     wassert (arg);
 
+  if (IS_STRUCT (arg->type))
+    return 0;
+
   if (i == 1 && getSize (arg->type) == 2)
     return ASMOP_Y;
 
