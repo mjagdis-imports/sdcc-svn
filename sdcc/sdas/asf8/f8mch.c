@@ -729,6 +729,7 @@ opw:
 		if(rf == S_0OPWSLL && comma(0)) {
 			t2 = addr(&e2);
 			r2 = rcode;
+			op = 0xe5;
 			goto sex;
 		}
 		
