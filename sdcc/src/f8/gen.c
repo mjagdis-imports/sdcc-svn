@@ -1896,8 +1896,8 @@ skip_byte:
           else // Go through xl instead.
             {
               bool xl_free = xl_dead_global &&
-                (source->regs[XL_IDX] < soffset || source->regs[XL_IDX] >= soffset + size || assigned[source->regs[XL_IDX] - soffset]) &&
-                (result->regs[XL_IDX] < roffset || result->regs[XL_IDX] >= roffset + size || !assigned[result->regs[XL_IDX] - roffset]);
+                (source->regs[XL_IDX] < soffset || source->regs[XL_IDX] >= soffset + n || assigned[source->regs[XL_IDX] - soffset]) &&
+                (result->regs[XL_IDX] < roffset || result->regs[XL_IDX] >= roffset + n || !assigned[result->regs[XL_IDX] - roffset]);
               if (!xl_free)
                 push (ASMOP_XL, 0, 1);
               emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
@@ -2012,16 +2012,16 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   for (int i = 0; i < size;)
     {
       const bool xl_dead = xl_dead_global &&
-        (!aopRS (result) || (result->regs[XL_IDX] >= (roffset + i) || result->regs[XL_IDX] < 0)) &&
+        (!aopRS (result) || (result->regs[XL_IDX] >= (roffset + i) || result->regs[XL_IDX] < roffset)) &&
         (!aopRS (source) || source->regs[XL_IDX] <= i);
       const bool xh_dead = xh_dead_global &&
-        (!aopRS (result) || (result->regs[XH_IDX] >= (roffset + i) || result->regs[XH_IDX] < 0)) &&
+        (!aopRS (result) || (result->regs[XH_IDX] >= (roffset + i) || result->regs[XH_IDX] < roffset)) &&
         (!aopRS (source) || source->regs[XH_IDX] <= i);
       const bool y_dead = y_dead_global &&
-        (!aopRS (result) || (result->regs[YL_IDX] >= (roffset + i) || result->regs[YL_IDX] < 0) && (result->regs[YH_IDX] >= (roffset + i) || result->regs[YH_IDX] < 0)) &&
+        (!aopRS (result) || (result->regs[YL_IDX] >= (roffset + i) || result->regs[YL_IDX] < 0) && (result->regs[YH_IDX] >= (roffset + i) || result->regs[YH_IDX] < roffset)) &&
         (!aopRS (source) || source->regs[YL_IDX] <= i + 1 && source->regs[YH_IDX] <= i + 1);
       const bool z_dead = z_dead_global &&
-        (!aopRS (result) || (result->regs[ZL_IDX] >= (roffset + i) || result->regs[ZL_IDX] < 0) && (result->regs[ZH_IDX] >= (roffset + i) || result->regs[ZH_IDX] < 0)) &&
+        (!aopRS (result) || (result->regs[ZL_IDX] >= (roffset + i) || result->regs[ZL_IDX] < 0) && (result->regs[ZH_IDX] >= (roffset + i) || result->regs[ZH_IDX] < roffset)) &&
         (!aopRS (source) || source->regs[ZL_IDX] <= i + 1 && source->regs[ZH_IDX] <= i + 1);
 
       // Rematerialized stack location
@@ -2115,7 +2115,6 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           continue;
         }
         
-
       bool via_xl =
         !aopInReg (result, roffset + i, XL_IDX) && !aopInReg (source, soffset + i, XL_IDX) &&
         !((aopInReg (result, roffset + i, XH_IDX) || aopInReg (result, roffset + i, YL_IDX) || aopInReg (result, roffset + i, ZL_IDX)) && (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR)) &&
