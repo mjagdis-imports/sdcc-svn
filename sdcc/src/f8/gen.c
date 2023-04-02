@@ -4483,9 +4483,9 @@ static void emitRightShift (asmop *aop, int offset, int size, bool rrc, bool sig
                   *xl_pushed = true;
                   xl_dead = true;
                 }
-              genMove (ASMOP_XL, aop, true, false, false, false);
+              genMove_o (ASMOP_XL, 0, aop, ri, 1, true, false, false, false);
               emit3 (A_SRA, ASMOP_XL, 0);
-              genMove (aop, ASMOP_XL, true, false, false, false);
+              genMove_o (aop, ri, ASMOP_XL, 0, 1, true, false, false, false);
             }
           else
             UNIMPLEMENTED;
