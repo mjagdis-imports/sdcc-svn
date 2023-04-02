@@ -4708,6 +4708,26 @@ genLeftShift (const iCode *ic)
 shifted:
   genMove (result->aop, shiftop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
+  sym_link *resulttype = operandType (IC_RESULT (ic));
+  unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+  bool maskedtopbyte = (topbytemask != 0xff);
+  if (maskedtopbyte)
+    {
+      bool pushed_xl = false;
+      if (!regDead (XL_IDX, ic) || result->aop->regs[XL_IDX] >= 0 && result->aop->regs[XL_IDX] != result->aop->size - 1)
+        {
+          push (ASMOP_XL, 0, 1);
+          pushed_xl = true;
+        }
+      genMove_o (ASMOP_XL, 0, result->aop, result->aop->size - 1, 1, true, false, false, false);
+      emit2 ("and", "xl, #0x%02x", topbytemask);
+      cost (2, 1);
+      genMove_o (result->aop, result->aop->size - 1, ASMOP_XL, 0, 1, true, false, false, false);
+      if (pushed_xl)
+        pop (ASMOP_XL, 0, 1);
+    }
+
   freeAsmop (left);
   freeAsmop (result);
   freeAsmop (right);
@@ -5431,6 +5451,38 @@ genCast (const iCode *ic)
   resulttype = operandType (result);
   righttype = operandType (right);
 
+  unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+
+  // Cast to _BitInt can require mask of top byte.
+  if (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && bitsForType (resulttype) < bitsForType (righttype))
+    {
+      aopOp (right, ic);
+      aopOp (result, ic);
+
+      if (!regDead (XL_IDX, ic) || result->aop->regs[XL_IDX] >= 0 && result->aop->regs[XL_IDX] != result->aop->size - 1)
+        UNIMPLEMENTED;
+      genMove (result->aop, right->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      genMove_o (ASMOP_XL, 0, result->aop, result->aop->size - 1, 1, true, false, false, false);
+      emit2 ("and", "xl, #0x%02x", topbytemask);
+      cost (2, 1);
+      if (!SPEC_USIGN (resulttype)) // Sign-extend
+        {
+          symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+          push (ASMOP_XL, 0, 1);
+          emit2 ("and", "xl, #0x%02x", 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1));
+          pop (ASMOP_XL, 0, 1);
+          if (!regalloc_dry_run)
+            emit2 ("jrz", "!tlabel", labelKey2num (tlbl->key));
+          emit2 ("or", "xl, #0x%02x", ~topbytemask & 0xff);
+          cost (6, 2.5);
+          emitLabel (tlbl);
+        }
+      genMove_o (result->aop, result->aop->size - 1, ASMOP_XL, 0, 1, true, false, false, false);
+
+      goto release;
+    }
+
   if ((getSize (resulttype) <= getSize (righttype) || !IS_SPEC (righttype) || (SPEC_USIGN (righttype) || IS_BOOL (righttype))) &&
     (!IS_BOOL (resulttype) || IS_BOOL (righttype)))
     {
@@ -5481,8 +5533,8 @@ genCast (const iCode *ic)
       else
         UNIMPLEMENTED;
     }
-  // Cast to signed type
-  else if (result->aop->size == 2 &&
+  // Signed cast
+  else if (result->aop->size == 2 && (topbytemask == 0xff || !SPEC_USIGN (resulttype)) &&
     (aopInReg (result->aop, 0, Y_IDX) || aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Z_IDX)))
     {
       if (!regDead (XL_IDX, ic) && !aopInReg (right->aop, 0, XL_IDX))
@@ -5495,6 +5547,8 @@ genCast (const iCode *ic)
     }
   else 
     {
+      bool masktopbyte = IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && SPEC_USIGN (resulttype);
+
       genMove_o (result->aop, 0, right->aop, 0, right->aop->size, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
       if (!regDead (Y_IDX, ic) ||
@@ -5507,11 +5561,21 @@ genCast (const iCode *ic)
 
       genMove_o (ASMOP_XL, 0, result->aop, right->aop->size - 1, 1, true, false, true, false);
       emit2 ("sex", "y, xl");
+      emit2 ("ld", "xl, yh");
+      cost (2, 2);
 
       for (int i = right->aop->size; i < result->aop->size; i++)
-        genMove_o (result->aop, i, ASMOP_Y, 1, 1, regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i), false, false, false);
+        {
+          if (masktopbyte && i + 1 == result->aop->size)
+            {
+              emit2 ("and", "xl, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
+          genMove_o (result->aop, i, ASMOP_XL, 0, 1, false, false, false, false);
+        }
     }
 
+release:
   freeAsmop (right);
   freeAsmop (result);
 }

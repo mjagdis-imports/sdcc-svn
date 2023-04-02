@@ -1,7 +1,7 @@
 2023-04-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Equality operator fix.
+	  Equality operator fix. _BitInt fixes.
 
 2023-04-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
