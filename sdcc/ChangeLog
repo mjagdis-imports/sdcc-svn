@@ -1,4 +1,9 @@
-2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2023-04-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Equality operator fix.
+
+2023-04-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
 	  Fix !. Shift fixes.

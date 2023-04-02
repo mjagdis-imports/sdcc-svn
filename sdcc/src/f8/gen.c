@@ -3909,6 +3909,8 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
   for (int i = 0; i < size;)
     {
+      bool y_dead2 = regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i + 1 && left->aop->regs[YH_IDX] <= i + 1 && right->aop->regs[YL_IDX] <= i + 1 && right->aop->regs[YH_IDX] <= i + 1;
+
       if (i + 1 < size && aopIsOp16_1 (left->aop, i) && aopIsLitVal (right->aop, i, 2, 0x0000))
         {
           emit3_o (A_TSTW, left->aop, i, 0, 0);
@@ -3924,7 +3926,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
-      else if (i + 1 < size && aopIsOp16_2 (right->aop, i) && regDead (Y_IDX, ic))
+      else if (i + 1 < size && aopIsOp16_2 (right->aop, i) && y_dead2)
         {
           genMove_o (ASMOP_Y, 0, left->aop, i, 2, false, false, true, false);
           emit3sub_o (A_SUBW, ASMOP_Y, 0, right->aop, i);
@@ -3932,7 +3934,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit2 ("jrnz", "!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;
         }
-      else if (i + 1 < size && aopIsOp16_2 (left->aop, i) && regDead (Y_IDX, ic))
+      else if (i + 1 < size && aopIsOp16_2 (left->aop, i) && y_dead2)
         {
           genMove_o (ASMOP_Y, 0, right->aop, i, 2, false, false, true, false);
           emit3sub_o (A_SUBW, ASMOP_Y, 0, left->aop, i);
