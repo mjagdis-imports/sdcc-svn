@@ -1,6 +1,13 @@
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
+	  Fix !. Shift fixes.
+	* sdas/asf8/f8mch.c:
+	  Fix ld zh, xh.
+
+2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
 	  Fixes for struct / union return values and parameters.
 
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>

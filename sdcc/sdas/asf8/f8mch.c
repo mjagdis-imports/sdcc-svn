@@ -414,7 +414,7 @@ opw:
 		  r1 == ZH && (r2 == XH || r2 == YL || r2 == ZL))) { 
 			outab(0x9c);
 			altacc(r2);
-			outab(0x88);
+			outab(r1 == YH ? 0x88 : 0x8a);
 			break;
 		}
 		else if(t1 == S_REG && !(t2 == S_REG && r2 == XL)) {

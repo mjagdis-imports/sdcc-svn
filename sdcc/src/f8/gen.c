@@ -2091,7 +2091,9 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           i++;
           continue;
         }
-      else if (i + 1 < size && (result->type == AOP_DIR || aopOnStack (result, roffset + i, 2)) && aopIsAcc16 (source, soffset + i))
+      else if (i + 1 < size &&
+        ((result->type == AOP_DIR || aopOnStack (result, roffset + i, 2)) && aopIsAcc16 (source, soffset + i) ||
+        aopIsAcc16 (result, roffset + i) && (aopInReg (source, soffset + i, X_IDX) || aopInReg (source, soffset + i, Y_IDX))))
         {
           emit3_o (A_LDW, result, roffset + i, source, soffset + i);
           i += 2;
@@ -2352,6 +2354,7 @@ genNot (const iCode *ic)
         {
           emit3 (A_CLR, ASMOP_XL, 0);
           emit3 (A_RLC, ASMOP_XL, 0);
+          emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
           genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
         }
     }
@@ -2363,6 +2366,7 @@ genNot (const iCode *ic)
         {
           emit3 (A_CLRW, ASMOP_Y, 0);
           emit3 (A_RLCW, ASMOP_Y, 0);
+          emit3 (A_XOR, ASMOP_Y, ASMOP_ONE);
           genMove (result->aop, ASMOP_Y, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
         }
     }
@@ -4069,7 +4073,8 @@ genOr (const iCode *ic)
            continue;
          }
 
-       if (i + 1 < size && aopIsAcc16 (result->aop, i) && aopIsOp16_2 (right->aop, i))
+       if (i + 1 < size && aopIsAcc16 (result->aop, i) && aopIsOp16_2 (right->aop, i) &&
+         !(aopRS (right->aop) && (right->aop->regs[result->aop->aopu.bytes[i].byteu.reg->rIdx] >= i || right->aop->regs[result->aop->aopu.bytes[i + 1].byteu.reg->rIdx] >= i)))
          {
            genMove_o (result->aop, i, left->aop, i, 2, xl_free, xh_free, false, false);
            if ((aopInReg (result->aop, i, XL_IDX) || aopInReg (result->aop, i, ZL_IDX)) &&
@@ -4080,7 +4085,8 @@ genOr (const iCode *ic)
            i += 2;
            continue;
          }
-       else if (i + 1 < size && aopIsAcc16 (result->aop, i) && aopIsOp16_2 (left->aop, i))
+       else if (i + 1 < size && aopIsAcc16 (result->aop, i) && aopIsOp16_2 (left->aop, i)  &&
+         !(aopRS (left->aop) && (left->aop->regs[result->aop->aopu.bytes[i].byteu.reg->rIdx] >= i || left->aop->regs[result->aop->aopu.bytes[i + 1].byteu.reg->rIdx] >= i)))
          {
            genMove_o (result->aop, i, right->aop, i, 2, xl_free, xh_free, false, false);
            if ((aopInReg (result->aop, i, XL_IDX) || aopInReg (result->aop, i, ZL_IDX)) &&
@@ -4616,7 +4622,8 @@ genLeftShift (const iCode *ic)
           init_shiftop (shiftop, result->aop, left->aop, right->aop, ic);
         }
 
-      if (shCount % 8 == 7 && aopIsOp8_1 (left->aop, size - (shCount + 1) / 8))
+      if (shCount % 8 == 7 && aopIsOp8_1 (left->aop, size - (shCount + 1) / 8) &&
+        aopRS (left->aop) && left->aop->aopu.bytes[size - (shCount + 1) / 8].in_reg && regDead (left->aop->aopu.bytes[size - (shCount + 1) / 8].byteu.reg->rIdx, ic))
         {
           emit3_o (A_SRL, left->aop, size - (shCount + 1) / 8, 0, 0); // Move the one bit we still need into carry.
           genMove_o (shiftop, (shCount + 1) / 8, left->aop, 0, size - (shCount + 1) / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
@@ -4755,7 +4762,8 @@ genRightShift (const iCode *ic)
 
       if (!sign)
         {
-          if (shCount % 8 == 7 && !sign && aopIsOp8_1 (left->aop, shCount / 8))
+          if (shCount % 8 == 7 && !sign && aopIsOp8_1 (left->aop, shCount / 8) &&
+            aopRS (left->aop) && left->aop->aopu.bytes[size - (shCount + 1) / 8].in_reg && regDead (left->aop->aopu.bytes[size - (shCount + 1) / 8].byteu.reg->rIdx, ic))
             {
               emit3_o (A_SLL, left->aop, shCount / 8, 0, 0); // Move the one bit we still need into carry.
               genMove_o (shiftop, 0, left->aop, (shCount + 1) / 8, size - (shCount + 1) / 8, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
