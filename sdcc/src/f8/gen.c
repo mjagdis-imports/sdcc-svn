@@ -4642,7 +4642,7 @@ genLeftShift (const iCode *ic)
       shCount %= 8;
 
       bool xl_pushed = false;
-      bool xl_free = regDead (XL_IDX, ic);
+      bool xl_free = regDead (XL_IDX, ic) && shiftop->regs[XL_IDX] < 0;
       if (rrc)
         emitRightShift (shiftop, offset, size - offset, true, false, xl_free, &xl_pushed);
       else if (size - offset == 2 && aopInReg (shiftop, offset, Y_IDX) && xl_free && shCount >= 4)
