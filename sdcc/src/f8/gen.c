@@ -2003,6 +2003,10 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassertl_bt (result->type != AOP_IMMD, "Trying to write to immediate.");
   wassertl_bt (roffset + size <= result->size, "Trying to write beyond end of operand");
 
+#if 0
+  emit2 (";", "genMove_o xl_dead_global %d xh_dead_global %d", xl_dead_global, xh_dead_global);
+#endif
+
   if (aopRS (result) && aopRS (source))
     {
       genCopy (result, roffset, source, soffset, size, xl_dead_global, xh_dead_global, y_dead_global, z_dead_global);
@@ -5186,8 +5190,8 @@ genPointerSet (const iCode *ic)
     {
       bool xl_dead = regDead (XL_IDX, ic) && (right->aop->regs[XL_IDX] <= i);
       bool xl_dead2 = regDead (XL_IDX, ic) && (right->aop->regs[XL_IDX] <= i + 1);
-      bool xh_dead2 = regDead (XL_IDX, ic) && (right->aop->regs[XL_IDX] <= i + 1);
-      bool x_dead2 = xl_dead2 || xh_dead2;
+      bool xh_dead2 = regDead (XH_IDX, ic) && (right->aop->regs[XH_IDX] <= i + 1);
+      bool x_dead2 = xl_dead2 && xh_dead2;
 
       if (!bit_field && i + 1 < size &&
         (aopInReg (right->aop, i, X_IDX) || x_dead2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2))))
