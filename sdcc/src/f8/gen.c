@@ -3734,7 +3734,7 @@ genCmp (const iCode *ic, iCode *ifx)
                   if (!started && aopIsLitVal (right->aop, i, 2, 0xffff))
                     emit3 (A_INCW, ASMOP_Y, 0);
                   else if (started && (aopIsLitVal (right->aop, i, 2, 0x0000) || aopIsLitVal (right->aop, i, 2, 0xffff)))
-                    emit3 (aopIsLitVal (right->aop, i, 2, 0x0000) ? A_ADCW : A_SBCW, ASMOP_Y, 0);
+                    emit3 (aopIsLitVal (right->aop, i, 2, 0x0000) ? A_SBCW : A_ADCW, ASMOP_Y, 0);
                   else
                     {
                       emit2 (started ? "adcw" : "addw", "y, #0x%04x", (~(byteOfVal (right->aop->aopu.aop_lit, i) + byteOfVal (right->aop->aopu.aop_lit, i + 1) * 256) + !started) & 0xffff);
