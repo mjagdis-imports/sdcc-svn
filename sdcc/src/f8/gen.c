@@ -3735,11 +3735,13 @@ genCmp (const iCode *ic, iCode *ifx)
                     emit3 (A_INCW, ASMOP_Y, 0);
                   else if (started && (aopIsLitVal (right->aop, i, 2, 0x0000) || aopIsLitVal (right->aop, i, 2, 0xffff)))
                     emit3 (aopIsLitVal (right->aop, i, 2, 0x0000) ? A_SBCW : A_ADCW, ASMOP_Y, 0);
-                  else
+                  else if (!started)
                     {
-                      emit2 (started ? "adcw" : "addw", "y, #0x%04x", (~(byteOfVal (right->aop->aopu.aop_lit, i) + byteOfVal (right->aop->aopu.aop_lit, i + 1) * 256) + !started) & 0xffff);
+                      emit2 ("cpw", "y, #0x%04x", byteOfVal (right->aop->aopu.aop_lit, i) + byteOfVal (right->aop->aopu.aop_lit, i + 1) * 256);
                       cost (3, 1);
                     }
+                  else
+                    emit3sub_o (A_SBCW, ASMOP_Y, 0, right->aop, i);
                 }
               else
                 emit3sub_o (started ? A_SBCW : A_SUBW, ASMOP_Y, 0, right->aop, i);
@@ -3757,10 +3759,7 @@ genCmp (const iCode *ic, iCode *ifx)
                   else if (started && (aopIsLitVal (right->aop, i, 2, 0x0000) || aopIsLitVal (right->aop, i, 2, 0xffff)))
                     emit3_o (aopIsLitVal (right->aop, i, 2, 0x0000) ? A_ADCW : A_SBCW, left->aop, i, 0, 0);
                   else
-                    {
-                      emit2 (started ? "adcw" : "addw", "%s, #0x%04x", aopGet2 (left->aop, i), (~(byteOfVal (right->aop->aopu.aop_lit, i) + byteOfVal (right->aop->aopu.aop_lit, i + 1) * 256) + !started) & 0xffff);
-                      cost (3, 1);
-                    }
+                    emit3sub_o (started ? A_SBCW : A_SUBW, left->aop, i, right->aop, i);
                 }
               else
                 emit3sub_o (started ? A_SBCW : A_SUBW, left->aop, i, right->aop, i);

@@ -1,7 +1,7 @@
 2023-04-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Equality operator fix. Wide pointer write fix. Comparison fix.
+	  Equality operator fix. Wide pointer write fix. Comparison fixes.
 	  sim/ucsim/f8.src/ialu.cc:
 	  Fix adcw, sbcw.
 
