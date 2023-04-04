@@ -1,5 +1,10 @@
 2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sim/ucsim/f8.src/ialu.cc:
+	  Fix decw.
+
+2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/f8/gen.c:
 	  Bit-field fix. Pointer read fix. _BitInt fixes.
 
