@@ -3292,7 +3292,7 @@ bigreturn:
 
       for(int i = 0; i < size;)
         {
-          if (i + 1 < size && aopInReg (left->aop, i, X_IDX) ||
+          if (/*i + 1 < size && aopInReg (left->aop, i, X_IDX)*/ false ||
             i + 1 < size && (aopOnStack (left->aop, i, 2) || left->aop->type == AOP_DIR) && regDead (X_IDX, ic) && left->aop->regs[XL_IDX] <= i + 1 && left->aop->regs[XH_IDX] <= i + 1)
             {
               genMove_o (ASMOP_X, 0, left->aop, i, 2, true, false, false, true);
@@ -3866,6 +3866,12 @@ genCmp (const iCode *ic, iCode *ifx)
         }
       cost (2, 1);
       emit3 (A_SLL, ASMOP_XL, 0);
+    }
+  else
+    {
+      emit3 (A_RLC, ASMOP_XL, 0);
+      emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
+      emit3 (A_RRC, ASMOP_XL, 0);
     }
 
 return_c:

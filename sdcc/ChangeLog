@@ -2,6 +2,8 @@
 
 	* sim/ucsim/f8.src/ialu.cc:
 	  Fix decw.
+	* src/f8/gen.c:
+	  Comparison fix. long long return fix.
 
 2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
