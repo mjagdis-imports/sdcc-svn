@@ -5004,6 +5004,8 @@ genPointerGet (const iCode *ic)
       if ((!bit_field || blen >= 8) &&
         (aopInReg (result->aop, i, XH_IDX) || aopInReg (result->aop, i, YL_IDX) || aopInReg (result->aop, i, ZL_IDX)))
         {
+          if (i + 1 < size && (use_z ? aopInReg (result->aop, i, ZL_IDX) : aopInReg (result->aop, i, YL_IDX))) // Would overwrite pointer still needed for next byte.
+            UNIMPLEMENTED;
           if (!(offset + i) && !use_z)
             {
               emit2 ("ld", "%s, (y)", aopGet (result->aop, i));
