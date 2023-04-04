@@ -1,7 +1,7 @@
 2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Bit-field fix. Pointer read fix.
+	  Bit-field fix. Pointer read fix. _BitInt fixes.
 
 2023-04-03 Philipp Klaus Krause <philipp@colecovision.eu>
 

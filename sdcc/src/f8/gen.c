@@ -2483,6 +2483,11 @@ genCpl (const iCode *ic)
 static void
 genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 {
+  sym_link *resulttype = operandType (IC_RESULT (ic));
+  unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+  bool maskedtopbyte = (topbytemask != 0xff);
+
   int size = result_aop->size;
 
   bool started = false;
@@ -2501,6 +2506,9 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 
   for (int i = 0; i < size;)
     {
+      bool maskedbyte = maskedtopbyte && (i + 1 == size);
+      bool maskedword = maskedtopbyte && (i + 2 == size);
+
       bool xl_free = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i && right_aop->regs[XL_IDX] <= i && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
       bool xl_free2 = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i + 1 && right_aop->regs[XL_IDX] <= i + 1 && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
       //bool yl_free2 = regDead (YL_IDX, ic) && leftop->regs[YL_IDX] <= i + 1 && rightop->regs[YL_IDX] <= i + 1 && (result->aop->regs[YL_IDX] < 0 || result->aop->regs[YL_IDX] >= i);
@@ -2516,7 +2524,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
            continue;
          }
 
-      if (i + 1 < size && !started && aopIsLitVal (left_aop, i, 2, 0) && aopIsAcc16 (result_aop, i)) // Use negw
+      if (i + 1 < size && !started && !maskedword && aopIsLitVal (left_aop, i, 2, 0) && aopIsAcc16 (result_aop, i)) // Use negw
         {
           genMove_o (result_aop, i, right_aop, i, 2, xl_free2, false, false, false);
           emit3_o (A_NEGW, result_aop, i, 0, 0);
@@ -2524,7 +2532,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
-      else if (i + 1 < size && !started && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place incw
+      else if (i + 1 < size && !started && !maskedword && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place incw
         aopIsLitVal (right_aop, i, 2, 0xffff))
         {
           emit3_o (A_INCW, left_aop, i, 0, 0);
@@ -2532,7 +2540,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
-      else if (i + 1 < size && !started && aopSame (result_aop, i, left_aop, i, 2) && aopOnStackNotExt (left_aop, i, 2) && // Use in-place incw
+      else if (i + 1 < size && !started && !maskedword && aopSame (result_aop, i, left_aop, i, 2) && aopOnStackNotExt (left_aop, i, 2) && // Use in-place incw
         aopIsLitVal (right_aop, i, 2, 1))
         {
           emit3_o (A_DECW, left_aop, i, 0, 0);
@@ -2540,7 +2548,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
-      else if (i + 1 < size && !started && aopInReg (result_aop, i, Y_IDX) && // Use incw y
+      else if (i + 1 < size && !started && !maskedword && aopInReg (result_aop, i, Y_IDX) && // Use incw y
         aopIsLitVal (right_aop, i, 2, 0xffff))
         {
           genMove (ASMOP_Y, left_aop, xl_free2, false, true, false);
@@ -2549,7 +2557,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           continue;
         }
-      else if (i + 1 < size && started && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place adcw / sbcw
+      else if (i + 1 < size && started && !maskedword && aopSame (result_aop, i, left_aop, i, 2) && aopIsOp16_1 (left_aop, i) && // Use in-place adcw / sbcw
         (aopIsLitVal (right_aop, i, 2, 0) || aopIsLitVal (right_aop, i, 2, 0xffff)))
         {
           emit3_o (aopIsLitVal (right_aop, i, 2, 0) ? A_SBCW : A_ADCW, left_aop, i, 0, 0);
@@ -2558,7 +2566,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           continue;
         }
 
-      if (!started && aopSame (result_aop, i, left_aop, i, 1) && aopIsOp8_1 (left_aop, i) && // Use in-place inc / dec
+      if (!started && !maskedword && aopSame (result_aop, i, left_aop, i, 1) && aopIsOp8_1 (left_aop, i) && // Use in-place inc / dec
          (aopIsLitVal (right_aop, i, 1, 1) || aopIsLitVal (right_aop, i, 1, 0xffff)))
          {
            emit3_o (aopIsLitVal (right_aop, i, 1, 1) ? A_DEC : A_INC, left_aop, i, 0, 0);
@@ -2567,7 +2575,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
            continue;
          }
 
-      if (i + 1 < size && aopIsOp16_2 (right_aop, i) &&
+      if (i + 1 < size && !maskedword && aopIsOp16_2 (right_aop, i) &&
         (aopInReg (left_aop, i, X_IDX) && regDead (X_IDX, ic) || aopInReg (left_aop, i, Y_IDX) && regDead (Y_IDX, ic) || aopInReg (left_aop, i, Z_IDX) && regDead (Z_IDX, ic)))
         {
           if (aopIsLitVal (right_aop, i, 2, 0xffff))
@@ -2578,7 +2586,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           i += 2;
         }
-      else if (i + 1 < size && aopIsOp16_2 (right_aop, i) &&
+      else if (i + 1 < size && !maskedword && aopIsOp16_2 (right_aop, i) &&
         (aopInReg (result_aop, i, X_IDX) && regDead (X_IDX, ic) && left_aop->regs[XL_IDX] < i + 1 && left_aop->regs[XH_IDX] < i + 1 && right_aop->regs[XL_IDX] < i + 1 && right_aop->regs[XH_IDX] < i + 1 ||
           aopInReg (result_aop, i, Y_IDX) && regDead (Y_IDX, ic) && left_aop->regs[YL_IDX] < i + 1 && left_aop->regs[YH_IDX] < i + 1 && right_aop->regs[YL_IDX] < i + 1 && right_aop->regs[YH_IDX] < i + 1||
           aopInReg (result_aop, i, Z_IDX) && regDead (Z_IDX, ic) && left_aop->regs[ZL_IDX] < i + 1 && left_aop->regs[ZH_IDX] < i + 1 && right_aop->regs[ZL_IDX] < i + 1 && right_aop->regs[ZH_IDX] < i + 1 ||
@@ -2589,7 +2597,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           i += 2;
         }
-      else if (i + 1 < size && aopIsOp16_2 (right_aop, i) &&
+      else if (i + 1 < size && !maskedword && aopIsOp16_2 (right_aop, i) &&
         regDead (Y_IDX, ic) && left_aop->regs[YL_IDX] <= i + 1 && left_aop->regs[YH_IDX] <= i + 1 && right_aop->regs[YL_IDX] < i && right_aop->regs[YH_IDX] < i && result_aop->regs[YL_IDX] < 0 && result_aop->regs[YH_IDX] < 0 &&
         (aopOnStack (result_aop, i, 2) || result_aop->type == AOP_DIR))
         {
@@ -2610,6 +2618,11 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
                 push (ASMOP_XL, 0, 1);
               genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false);
               emit3sub_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right_aop, i);
+              if (maskedbyte)
+                {
+                  emit2 ("and", "xl, #0x%02x", topbytemask);
+                  cost (2, 1);
+                }
               genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false);
               if (!xl_free)
                 pop (ASMOP_XL, 0, 1);
@@ -2621,6 +2634,11 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
               push (right_aop, i, 1);
               emit2 (started ? "sbc" : "sub", "xl, (0, sp)");
               cost (2, 1);
+              if (maskedbyte)
+                {
+                  emit2 ("and", "xl, #0x%02x", topbytemask);
+                  cost (2, 1);
+                }
               adjustStack (1, true, false);
               genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false);
             }
@@ -3345,6 +3363,11 @@ genPlus (const iCode *ic)
   asmop *leftop;
   asmop *rightop;
 
+  sym_link *resulttype = operandType (result);
+  unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+    (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+  bool maskedtopbyte = (topbytemask != 0xff);
+
   D (emit2 ("; genPlus", ""));
 
   aopOp (IC_LEFT (ic), ic);
@@ -3366,6 +3389,9 @@ genPlus (const iCode *ic)
 
   for (int i = 0, started = false; i < size;)
     {
+      bool maskedbyte = maskedtopbyte && (i + 1 == size);
+      bool maskedword = maskedtopbyte && (i + 2 == size);
+
       bool xl_free = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i && rightop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
       bool xl_free2 = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i + 1 && rightop->regs[XL_IDX] <= i + 1 && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
       bool yl_free2 = regDead (YL_IDX, ic) && leftop->regs[YL_IDX] <= i + 1 && rightop->regs[YL_IDX] <= i + 1 && (result->aop->regs[YL_IDX] < 0 || result->aop->regs[YL_IDX] >= i);
@@ -3373,7 +3399,7 @@ genPlus (const iCode *ic)
       bool y_free2 = yl_free2 && yh_free2;
 
       // Special case for rematerializing sums
-      if (!started && i == size - 2 && (leftop->type == AOP_IMMD && rightop->type == AOP_LIT) &&
+      if (!started && i == size - 2 && !maskedword && (leftop->type == AOP_IMMD && rightop->type == AOP_LIT) &&
         (aopInReg (result->aop, i, Y_IDX) || aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Z_IDX) || y_free2 && aopOnStack (result->aop, i, 2)))
         {
           unsigned offset = byteOfVal (right->aop->aopu.aop_lit, i + 1) * 256 + byteOfVal (right->aop->aopu.aop_lit, i);
@@ -3384,7 +3410,7 @@ genPlus (const iCode *ic)
           i += 2;
           continue;
         }
-      else if (!started && !i && i == size - 2 &&
+      else if (!started && !i && i == size - 2 && !maskedword &&
         (leftop->type == AOP_STL && aopIsOp16_2 (rightop, i) || rightop->type == AOP_STL && aopIsOp16_2 (leftop, i)) &&
         (aopIsAcc16 (result->aop, i) || regDead (Y_IDX, ic)))
         {
@@ -3410,7 +3436,7 @@ genPlus (const iCode *ic)
            continue;
          }
 
-       if (i + 1 < size && !started && aopSame (result->aop, i, leftop, i, 2) && aopIsOp16_1 (leftop, i) && // Use in-place incw
+       if (i + 1 < size && !started && !maskedword && aopSame (result->aop, i, leftop, i, 2) && aopIsOp16_1 (leftop, i) && // Use in-place incw
          aopIsLitVal (rightop, i, 2, 1))
          {
            emit3_o (A_INCW, leftop, i, 0, 0);
@@ -3418,7 +3444,7 @@ genPlus (const iCode *ic)
            started = true;
            continue;
          }
-       else if (i + 1 < size && !started && aopInReg (result->aop, i, Y_IDX) && // Use incw y
+       else if (i + 1 < size && !started && !maskedword && aopInReg (result->aop, i, Y_IDX) && // Use incw y
          aopIsLitVal (rightop, i, 2, 1))
          {
            genMove (ASMOP_Y, leftop, xl_free2, false, true, false);
@@ -3427,7 +3453,7 @@ genPlus (const iCode *ic)
            started = true;
            continue;
          }
-       else if (i + 1 < size && started && aopSame (result->aop, i, leftop, i, 2) && aopIsOp16_1 (leftop, i) && // Use in-place adcw / sbcw
+       else if (i + 1 < size && started && !maskedword && aopSame (result->aop, i, leftop, i, 2) && aopIsOp16_1 (leftop, i) && // Use in-place adcw / sbcw
          (aopIsLitVal (rightop, i, 2, 0) || aopIsLitVal (rightop, i, 2, -1)))
          {
            emit3_o (aopIsLitVal (rightop, i, 2, 0) ? A_ADCW : A_SBCW, leftop, i, 0, 0);
@@ -3436,7 +3462,7 @@ genPlus (const iCode *ic)
            continue;
          }
 
-       if (!started && aopSame (result->aop, i, leftop, i, 1) && aopIsOp8_1 (leftop, i) && // Use in-place inc / dec
+       if (!started && !maskedbyte && aopSame (result->aop, i, leftop, i, 1) && aopIsOp8_1 (leftop, i) && // Use in-place inc / dec
          (aopIsLitVal (rightop, i, 1, 1) || aopIsLitVal (rightop, i, 1, -1)))
          {
            emit3_o (aopIsLitVal (rightop, i, 1, 1) ? A_INC : A_DEC, leftop, i, 0, 0);
@@ -3445,7 +3471,7 @@ genPlus (const iCode *ic)
            continue;
          }
 
-       if (i + 1 < size && aopSame (result->aop, i, leftop, i, 2) && aopIsAcc16 (leftop, i) && aopIsOp16_2 (rightop, i)) // Use addw / adcw
+       if (i + 1 < size && !maskedword && aopSame (result->aop, i, leftop, i, 2) && aopIsAcc16 (leftop, i) && aopIsOp16_2 (rightop, i)) // Use addw / adcw
          {
            if (!started && aopIsLitVal (rightop, i, 2, 1))
              emit3_o (A_INCW, result->aop, i, 0, 0);
@@ -3459,7 +3485,7 @@ genPlus (const iCode *ic)
            started = true;
            continue;
          }
-       else if (i + 1 < size && aopSame (result->aop, i, rightop, i, 2) && aopIsAcc16 (rightop, i) && aopIsOp16_2 (leftop, i))
+       else if (i + 1 < size && !maskedword && aopSame (result->aop, i, rightop, i, 2) && aopIsAcc16 (rightop, i) && aopIsOp16_2 (leftop, i))
          {
            emit3_o (started ? A_ADCW : A_ADDW, result->aop, i, leftop, i);
            i += 2;
@@ -3467,7 +3493,7 @@ genPlus (const iCode *ic)
            continue;
          }
 
-       if (i + 1 < size && aopIsOp16_2 (rightop, i) && // Use addw / adcw in y
+       if (i + 1 < size && !maskedword && aopIsOp16_2 (rightop, i) && // Use addw / adcw in y
          (aopInReg (result->aop, i, Y_IDX) || y_free2 && aopOnStack (leftop, i, 2) && aopOnStack (result->aop, i, 2)))
          {
            genMove_o (ASMOP_Y, 0, leftop, i, 2, xl_free2 && rightop->regs[XL_IDX] < i, false, true, false);
@@ -3482,7 +3508,7 @@ genPlus (const iCode *ic)
            started = true;
            continue;
          }
-       else if (i + 1 < size && aopIsOp16_2 (leftop, i) &&
+       else if (i + 1 < size && !maskedword && aopIsOp16_2 (leftop, i) &&
          (aopInReg (result->aop, i, Y_IDX) || y_free2 && aopOnStack (rightop, i, 2) && aopOnStack (result->aop, i, 2)))
          {
            genMove_o (ASMOP_Y, 0, rightop, i, 2, xl_free2 && leftop->regs[XL_IDX] < i, false, true, false);
@@ -3495,7 +3521,7 @@ genPlus (const iCode *ic)
            started = true;
            continue;
          }
-       else if (i + 1 < size && aopIsOp16_2 (rightop, i) &&
+       else if (i + 1 < size && !maskedword && aopIsOp16_2 (rightop, i) &&
          (aopInReg (leftop, i, X_IDX) && regDead (X_IDX, ic) || aopInReg (leftop, i, Z_IDX) && regDead (Z_IDX, ic)) &&
          (aopOnStack (result->aop, i, 2) || result->aop->type == AOP_DIR))
          {
@@ -3511,6 +3537,11 @@ genPlus (const iCode *ic)
        else if (xl_free && aopInReg (rightop, i, XL_IDX) && aopIsOp8_2 (leftop, i))
          {
            emit3_o (started ? A_ADC : A_ADD, ASMOP_XL, 0, leftop, i);
+           if (maskedbyte)
+            {
+              emit2 ("and", "xl, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
            genMove_o (result->aop, i, ASMOP_XL, 0, true, false, false, false, false);
            i++;
            started = true;
@@ -3532,6 +3563,11 @@ genPlus (const iCode *ic)
              emit3 (aopIsLitVal (rightop, i, 1, 1) ? A_INC : A_DEC, ASMOP_XL, 0);
            else
              emit3_o (started ? A_ADC : A_ADD, ASMOP_XL, 0, rightop, i);
+           if (maskedbyte)
+            {
+              emit2 ("and", "xl, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
          }
        else
          UNIMPLEMENTED;
