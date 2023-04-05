@@ -6,6 +6,9 @@
 	  Fix orw prefixes.
 	* src/f8/gen.c:
 	  Fix width-extending load move from global to local variable parts. Comparison fix. Stack address rematerialization fix.
+	* support/regression/tests/gcc-torture-execute-20031012-1.c,
+	  support/regression/tests/gcc-torture-execute-pr91137.c:
+	  Disable tests that need excessive amounts of RAM for f8.
 
 2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
