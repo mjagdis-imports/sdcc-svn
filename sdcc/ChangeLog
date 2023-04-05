@@ -1,7 +1,14 @@
+2023-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/f8.src/ialu.cc:
+	  Fix decw result.
+	* sim/ucsim/f8.src/glob.cc:
+	  Fix orw prefixes.
+
 2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sim/ucsim/f8.src/ialu.cc:
-	  Fix decw.
+	  Fix decw flags.
 	* src/f8/gen.c:
 	  Comparison fix. long long return fix.
 
