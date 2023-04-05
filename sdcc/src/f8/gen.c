@@ -2003,8 +2003,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassertl_bt (result->type != AOP_IMMD, "Trying to write to immediate.");
   wassertl_bt (roffset + size <= result->size, "Trying to write beyond end of operand");
 
-#if 0
-  emit2 (";", "genMove_o xl_dead_global %d xh_dead_global %d", xl_dead_global, xh_dead_global);
+#if 1
+  emit2 (";", "genMove_o size %d, xl_dead_global %d xh_dead_global %d", size, xl_dead_global, xh_dead_global);
 #endif
 
   if (aopRS (result) && aopRS (source))
@@ -2078,7 +2078,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           continue;
         }
       else if (i + 1 < size && aopIsAcc16 (result, roffset + i) &&
-        (source->type == AOP_LIT || source->type == AOP_IMMD || source->type == AOP_DIR || aopOnStack (source, soffset + i, 2)) ||
+        (source->type == AOP_LIT || source->type == AOP_IMMD || (source->type == AOP_DIR && soffset + i + 1 < source->size) || aopOnStack (source, soffset + i, 2)) ||
         (result->type == AOP_DIR || aopOnStack (source, soffset + i, 2)) && i + 1 < size &&
         aopInReg (source, soffset + i, Y_IDX))
         {
@@ -3728,7 +3728,7 @@ genCmp (const iCode *ic, iCode *ifx)
       emit3 (A_CPW, left->aop, right->aop);
       goto return_c;
     }
-  else if (ifx && // Use inverse jump condition
+  /*else if (ifx && // Use inverse jump condition WRONG result when both operand are equal
     (size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0) || size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
     {
       emit3 ((size == 1) ? A_CP : A_CPW, right->aop, left->aop);
@@ -3745,7 +3745,7 @@ genCmp (const iCode *ic, iCode *ifx)
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
       goto release;
-    }
+    }*/
   else
     {
       bool started = false;
