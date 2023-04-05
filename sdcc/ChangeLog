@@ -5,7 +5,7 @@
 	* sim/ucsim/f8.src/glob.cc:
 	  Fix orw prefixes.
 	* src/f8/gen.c:
-	  Fix width-extending load move from global to local variable parts. Comparison fix.
+	  Fix width-extending load move from global to local variable parts. Comparison fix. Stack address rematerialization fix.
 
 2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 

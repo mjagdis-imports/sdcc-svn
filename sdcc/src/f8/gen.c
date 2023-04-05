@@ -2044,6 +2044,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             {
               if (!y_dead)
                 push (ASMOP_Y, 0, 2);
+              stack_offset = (long)(source->aopu.stk_off) + G.stack.pushed; // Recalculate after push.
               emit2 ("ldw", "y, sp");
               emit2 ("addw", "y, #%ld", stack_offset);
               cost (3 + (labs(stack_offset) > 127), 2);
