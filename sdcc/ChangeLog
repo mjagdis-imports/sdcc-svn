@@ -1,7 +1,9 @@
 2023-04-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Fix cast from global unsigned char to local int. Subtraction fix.
+	  Fix cast from global unsigned char to local int. Subtraction fix. Fix read from signed bit-field into xh register.
+	* sim/ucsim/f8.src/disass.cc:
+	  Fix (n, y) disassembly.
 
 2023-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
 

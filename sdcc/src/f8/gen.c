@@ -5095,7 +5095,7 @@ genPointerGet (const iCode *ic)
         }
       if (bit_field && blen <= 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
         {
-          if (!regDead (XH_IDX, ic) || result->aop->regs[XH_IDX] > 0)
+          if (!regDead (XH_IDX, ic) || result->aop->regs[XH_IDX] >= 0)
             UNIMPLEMENTED;
 
           symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
