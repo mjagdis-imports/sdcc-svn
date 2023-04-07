@@ -403,7 +403,7 @@ aopIsAcc16 (const asmop *aop, int offset)
 static bool
 aopIsOp16_2 (const asmop *aop, int offset)
 {
-  return (aop->type == AOP_LIT || aop->type == AOP_DIR || aop->type == AOP_IMMD || offset >= aop->size ||
+  return (aop->type == AOP_LIT || aop->type == AOP_IMMD || offset >= aop->size || aop->type == AOP_DIR && offset + 1 <= aop->size ||
     aopOnStackNotExt (aop, offset, 2) ||
     aopInReg (aop, offset, X_IDX));
 }
@@ -415,7 +415,7 @@ aopIsOp16_2 (const asmop *aop, int offset)
 static bool
 aopIsOp16_1 (const asmop *aop, int offset)
 {
-  return (aop->type == AOP_DIR ||
+  return (aop->type == AOP_DIR && offset + 1 <= aop->size ||
     aopOnStack (aop, offset, 2) ||
     aopInReg (aop, offset, Y_IDX) || aopInReg (aop, offset, X_IDX) || aopInReg (aop, offset, Z_IDX));
 }
@@ -2106,7 +2106,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         }
       else if (i + 1 < size && y_dead &&
         (result->type == AOP_DIR || aopOnStack (result, roffset + i, 2)) &&
-        (source->type == AOP_DIR || source->type == AOP_LIT || source->type == AOP_IMMD || aopOnStack (source, soffset + i, 2)))
+        (source->type == AOP_DIR && soffset + i + 1 < source->size || source->type == AOP_LIT || source->type == AOP_IMMD || aopOnStack (source, soffset + i, 2)))
         {
           emit3_o (A_LDW, ASMOP_Y, 0, source, soffset + i);
           emit3_o (A_LDW, result, roffset + i, ASMOP_Y, 0);
@@ -2640,7 +2640,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
                   emit2 ("and", "xl, #0x%02x", topbytemask);
                   cost (2, 1);
                 }
-              adjustStack (1, true, false);
+              adjustStack (1, false, false);
               genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false);
             }
           else
