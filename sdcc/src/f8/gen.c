@@ -2633,6 +2633,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           else if (aopIsOp8_1 (right_aop, i))
             {
               push (right_aop, i, 1);
+              genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false);
               emit2 (started ? "sbc" : "sub", "xl, (0, sp)");
               cost (2, 1);
               if (maskedbyte)
