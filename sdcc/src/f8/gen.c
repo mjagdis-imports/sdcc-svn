@@ -5626,10 +5626,10 @@ genCast (const iCode *ic)
 
       if (!regDead (Y_IDX, ic) ||
         result->aop->regs[YL_IDX] >= 0 && result->aop->regs[YL_IDX] != right->aop->size - 1 ||
-        result->aop->regs[YH_IDX] >= 0 && result->aop->regs[YH_IDX] != right->aop->size)
+        result->aop->regs[YH_IDX] >= 0 && result->aop->regs[YH_IDX] < right->aop->size)
         UNIMPLEMENTED;
       if (!regDead (XL_IDX, ic) ||
-        result->aop->regs[XL_IDX] >= 0 && result->aop->regs[XL_IDX] != right->aop->size - 1)
+        result->aop->regs[XL_IDX] >= 0 && result->aop->regs[XL_IDX] < right->aop->size)
         UNIMPLEMENTED;
 
       genMove_o (ASMOP_XL, 0, result->aop, right->aop->size - 1, 1, true, false, true, false);
