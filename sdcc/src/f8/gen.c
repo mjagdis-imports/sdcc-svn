@@ -3417,13 +3417,17 @@ genPlus (const iCode *ic)
         (aopIsAcc16 (result->aop, i) || regDead (Y_IDX, ic)))
         {
           struct asmop *taop = regDead (Y_IDX, ic) ? ASMOP_Y : result->aop; // We save 2 bytes by using y, which is usually worth the 1 byte extra ldw.
-          if (aopIsAcc16 (result->aop, i))
+          struct asmop *stlop = leftop->type == AOP_STL ? leftop : rightop;
+          struct asmop *otherop = leftop->type == AOP_STL ? rightop : leftop;
+          if (aopIsAcc16 (result->aop, i) && otherop->regs[result->aop->aopu.bytes[0].byteu.reg->rIdx] < 0 && otherop->regs[result->aop->aopu.bytes[1].byteu.reg->rIdx] < 0)
             taop = result->aop;
-          emit2 ("ldw", "%s, sp", aopGet2 (taop, 0));
+          if (aopRS (result->aop) && (result->aop->aopu.bytes[0].in_reg && otherop->regs[result->aop->aopu.bytes[0].byteu.reg->rIdx] >= 0 || result->aop->aopu.bytes[1].in_reg && otherop->regs[result->aop->aopu.bytes[1].byteu.reg->rIdx] >= 0))
+            UNIMPLEMENTED;
+          genMove (taop, stlop, regDead (XL_IDX, ic) && otherop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && otherop->regs[XH_IDX] < 0, false, false);
           cost (1 + !aopInReg (taop, 0, Y_IDX), 1);
-          if (!aopIsLitVal (leftop->type == AOP_STL ? rightop : leftop, i, 2, 0x0000))
+          if (!aopIsLitVal (otherop, i, 2, 0x0000))
             {
-              emit3_o (A_ADDW, taop, 0, leftop->type == AOP_STL ? rightop : leftop, i);
+              emit3_o (A_ADDW, taop, 0, otherop, i);
               started = true;
             }
           genMove_o (result->aop, i, taop, 0, 2, xl_free2, false, y_free2, false);
