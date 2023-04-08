@@ -1,9 +1,11 @@
-2023-04-07 Philipp Klaus Krause <philipp@colecovision.eu>
+2023-04-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
 	  Stack address rematerialization fix. Fix branch on negative zero. Comparison fixes. Signed cast fix.
 	* sdas/asf8/f8mch.c:
 	  Fix operand swap prefix for wide addition / subtraction.
+	* support/regression/ports/f8/spec.mk:
+	  Increase f8 regression test timeout.
 
 2023-04-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
