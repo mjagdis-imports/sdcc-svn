@@ -1567,63 +1567,97 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
 static void
 genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, bool *assigned, int *size, bool xl_free, bool xh_free, bool y_free, bool z_free, bool really_do_it_now)
 {
-  for (int i = 0; i < n;)
+  bool copy_down = source->aopu.stk_off + soffset < result->aopu.stk_off + roffset &&
+                     source->aopu.stk_off + soffset + n > result->aopu.stk_off + roffset;
+#if 0
+  emit2 (";", "genCopyStack copy_down %d rstk_off %d sstk_off %d", copy_down, result->aopu.stk_off, source->aopu.stk_off);
+#endif
+  if (copy_down)
     {
-      if (!aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
+      for (int i = n - 1; i >= 0;)
         {
-          i++;
-          continue;
-        }
+          if (!aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
+            {
+              i--;
+              continue;
+            }
+    
+          // Same location.
+          if (!assigned[i] &&
+            result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
+            {
+              wassert_bt (*size >= 1);
+    
+              assigned[i] = true;
+              (*size)--;
+              i--;
+              continue;
+            }
 
-      // Same location.
-      if (!assigned[i] &&
-        result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
+          // todo: attempt two-byte transfer, like below.
+
+          if (!assigned[i] && (xl_free || really_do_it_now))
+            {
+              if (!xl_free)
+                push (ASMOP_XL, 0, 1);
+              emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
+              emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
+              if (!xl_free)
+                pop (ASMOP_XL, 0, 1);
+              assigned[i] = true;
+              (*size)--;
+            }
+          i--;  
+        }
+    }
+  else
+    {
+      for (int i = 0; i < n;)
         {
-          wassert_bt (*size >= 1);
-
-          assigned[i] = TRUE;
-          (*size)--;
-          i++;
-          continue;
+          if (!aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
+            {
+              i++;
+              continue;
+            }
+    
+          // Same location.
+          if (!assigned[i] &&
+            result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
+            {
+              wassert_bt (*size >= 1);
+    
+              assigned[i] = true;
+              (*size)--;
+              i++;
+              continue;
+            }
+    
+          if (i + 1 < n && !assigned[i] && !assigned[i + 1] && aopOnStack (result, roffset + i + 1, 1) && aopOnStack (source, soffset + i + 1, 1) && // Transfer two bytes at once
+            (y_free || (xl_free && xh_free))) // Prefer y, since it is cheaper. Using x is still cheaper than using xl twice below, though.
+            {
+              asmop *taop = y_free ? ASMOP_Y : ASMOP_X;
+              emit3_o (A_LDW, taop, 0, source, soffset + i);
+              emit3_o (A_LDW, result, roffset + i, taop, 0);
+              assigned[i] = true;
+              assigned[i + 1] = true;
+              (*size) -= 2;
+              i += 2;
+              continue;
+            }
+    
+          if (!assigned[i] && (xl_free || really_do_it_now))
+            {
+              if (!xl_free)
+                push (ASMOP_XL, 0, 1);
+              emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
+              emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
+              if (!xl_free)
+                pop (ASMOP_XL, 0, 1);
+              assigned[i] = true;
+              (*size)--;
+            }
+          i++;  
         }
-
-      // Same location.
-      if (!assigned[i] &&
-        result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
-        {
-          wassert_bt (*size >= 1);
-
-          assigned[i] = true;
-          (*size)--;
-          i++;
-          continue;
-        }
-
-      if (i + 1 < n && !assigned[i] && !assigned[i + 1] && aopOnStack (result, roffset + i + 1, 1) && aopOnStack (source, soffset + i + 1, 1) && // Transfer two bytes at once
-        (y_free || (xl_free && xh_free))) // Prefer y, since it is cheaper. Using x is still cheaper than using xl twice below, though.
-        {
-          asmop *taop = y_free ? ASMOP_Y : ASMOP_X;
-          emit3_o (A_LDW, taop, 0, source, soffset + i);
-          emit3_o (A_LDW, result, roffset + i, taop, 0);
-          assigned[i] = true;
-          assigned[i + 1] = true;
-          (*size) -= 2;
-          i += 2;
-          continue;
-        }
-
-      if (!assigned[i] && (xl_free || really_do_it_now))
-        {
-          if (!xl_free)
-            push (ASMOP_XL, 0, 1);
-          emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
-          emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
-          if (!xl_free)
-            pop (ASMOP_XL, 0, 1);
-          assigned[i] = true;
-          (*size)--;
-        }
-      i++;  
     }
 }
 
@@ -1688,6 +1722,14 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   // Move everything from registers to the stack.
   for (int i = 0; i < n;)
     {
+      if (aopOnStack (result, roffset + i, 1)) // Check that we don't overwrite a still-needed byte on the stack.
+        for (int j = 0; j < n; j++)
+          if (!assigned[j] && aopOnStack (source, soffset + j, 1) && result->aopu.stk_off + roffset + i == source->aopu.stk_off + soffset + j)
+            {
+              i++;
+              goto outer_continue;
+            }
+
       bool xl_free = xl_dead_global &&
         (source->regs[XL_IDX] < soffset || source->regs[XL_IDX] >= soffset + size || assigned[source->regs[XL_IDX] - soffset]) &&
         (result->regs[XL_IDX] < roffset || result->regs[XL_IDX] >= roffset + size || !assigned[result->regs[XL_IDX] - roffset]);
@@ -1726,6 +1768,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
       else // This byte is not a register-to-stack copy.
         i++;
+outer_continue:
     }
 
   // Copy (stack-to-stack) what we can with whatever free regs we have.
