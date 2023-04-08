@@ -403,7 +403,7 @@ aopIsAcc16 (const asmop *aop, int offset)
 static bool
 aopIsOp16_2 (const asmop *aop, int offset)
 {
-  return (aop->type == AOP_LIT || aop->type == AOP_IMMD || offset >= aop->size || aop->type == AOP_DIR && offset + 1 <= aop->size ||
+  return (aop->type == AOP_LIT || aop->type == AOP_IMMD || offset >= aop->size || aop->type == AOP_DIR && offset + 1 < aop->size ||
     aopOnStackNotExt (aop, offset, 2) ||
     aopInReg (aop, offset, X_IDX));
 }
@@ -415,7 +415,7 @@ aopIsOp16_2 (const asmop *aop, int offset)
 static bool
 aopIsOp16_1 (const asmop *aop, int offset)
 {
-  return (aop->type == AOP_DIR && offset + 1 <= aop->size ||
+  return (aop->type == AOP_DIR && offset + 1 < aop->size ||
     aopOnStack (aop, offset, 2) ||
     aopInReg (aop, offset, Y_IDX) || aopInReg (aop, offset, X_IDX) || aopInReg (aop, offset, Z_IDX));
 }
@@ -3522,7 +3522,7 @@ genPlus (const iCode *ic)
          }
 
        if (i + 1 < size && !maskedword && aopSame (result->aop, i, leftop, i, 2) && aopIsAcc16 (leftop, i) && aopIsOp16_2 (rightop, i)) // Use addw / adcw
-         {
+         {emit2(";", "X");
            if (!started && aopIsLitVal (rightop, i, 2, 1))
              emit3_o (A_INCW, result->aop, i, 0, 0);
            else if (!started && aopOnStackNotExt (result->aop, i, 2) && aopIsLitVal (rightop, i, 2, -1))
