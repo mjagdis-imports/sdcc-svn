@@ -1,7 +1,7 @@
 2023-04-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Stack address rematerialization fix. Fix branch on negative zero.
+	  Stack address rematerialization fix. Fix branch on negative zero. Equality comparison fix.
 
 2023-04-07 Philipp Klaus Krause <philipp@colecovision.eu>
 

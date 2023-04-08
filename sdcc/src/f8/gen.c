@@ -1545,7 +1545,8 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
           {
             push (ASMOP_X, 0, 1);
             emit3_o (A_LDW, ASMOP_X, 0, op1, offset1);
-            emit3 (A_XOR, ASMOP_X, ASMOP_MONE);
+            emit3_o (A_XOR, ASMOP_X, 0, ASMOP_MONE, 0);
+            emit3_o (A_XOR, ASMOP_X, 1, ASMOP_MONE, 1);
             emit2 ("adcw", "%s, x", aopGet2 (op0, offset0));
             cost (1 + !aopInReg (op0, offset0, Y_IDX), 1);
             pop (ASMOP_X, 0, 1);
