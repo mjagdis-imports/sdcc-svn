@@ -3421,7 +3421,7 @@ genPlus (const iCode *ic)
           struct asmop *otherop = leftop->type == AOP_STL ? rightop : leftop;
           if (aopIsAcc16 (result->aop, i) && otherop->regs[result->aop->aopu.bytes[0].byteu.reg->rIdx] < 0 && otherop->regs[result->aop->aopu.bytes[1].byteu.reg->rIdx] < 0)
             taop = result->aop;
-          if (aopRS (result->aop) && (result->aop->aopu.bytes[0].in_reg && otherop->regs[result->aop->aopu.bytes[0].byteu.reg->rIdx] >= 0 || result->aop->aopu.bytes[1].in_reg && otherop->regs[result->aop->aopu.bytes[1].byteu.reg->rIdx] >= 0))
+          if (aopRS (taop) && (taop->aopu.bytes[0].in_reg && otherop->regs[taop->aopu.bytes[0].byteu.reg->rIdx] >= 0 || taop->aopu.bytes[1].in_reg && otherop->regs[taop->aopu.bytes[1].byteu.reg->rIdx] >= 0))
             UNIMPLEMENTED;
           genMove (taop, stlop, regDead (XL_IDX, ic) && otherop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && otherop->regs[XH_IDX] < 0, false, false);
           cost (1 + !aopInReg (taop, 0, Y_IDX), 1);
