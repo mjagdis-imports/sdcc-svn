@@ -3728,12 +3728,12 @@ genCmp (const iCode *ic, iCode *ifx)
   else if (!ifx && !sign && size == 1 && aopIsOp8_2 (right->aop, 0) && aopIsAcc8 (left->aop, 0))
     {
       emit3 (A_CP, left->aop, right->aop);
-      goto return_c;
+      //goto return_c;
     }
   else if (!ifx && !sign && size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && aopIsAcc16 (left->aop, 0))
     {
       emit3 (A_CPW, left->aop, right->aop);
-      goto return_c;
+      //goto return_c;
     }
   /*else if (ifx && // Use inverse jump condition WRONG result when both operand are equal
     (size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0) || size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
