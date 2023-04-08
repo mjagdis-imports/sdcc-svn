@@ -2,6 +2,8 @@
 
 	* src/f8/gen.c:
 	  Stack address rematerialization fix. Fix branch on negative zero. Comparison fixes. Signed cast fix.
+	* sdas/asf8/f8mch.c:
+	  Fix operand swap prefix for wide addition / subtraction.
 
 2023-04-07 Philipp Klaus Krause <philipp@colecovision.eu>
 

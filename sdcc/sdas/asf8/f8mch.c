@@ -332,7 +332,7 @@ struct mne *mp;
 			struct expr te = e1;
 			e1 = e2;
 			e2 = te;
-			outab(0x94);
+			outab(0x9c);
 		}
 		else if(t1 != S_REG)
 			aerr();
