@@ -5363,13 +5363,13 @@ genIfx (const iCode *ic)
   if (cond->aop->regs[XL_IDX] > 0)
     UNIMPLEMENTED;
 
-  if (size == 1 && aopIsOp8_1 (cond->aop, 0))
+  if (size == 1 && !IS_FLOAT(type) && aopIsOp8_1 (cond->aop, 0))
     {
       emit3 (A_TST, cond->aop, 0);
       goto jump;
     }
 
-  if (size == 2 &&
+  if (size == 2 && !IS_FLOAT(type) &&
     (aopInReg (cond->aop, 0, Y_IDX) || cond->aop->type == AOP_DIR || aopOnStack (cond->aop, 0, 2) || aopInReg (cond->aop, 0, Z_IDX) ||
       (aopInReg (cond->aop, 0, X_IDX) && !regDead (XL_IDX, ic))))
     {
@@ -5377,7 +5377,7 @@ genIfx (const iCode *ic)
       goto jump;
     }
 
-  if (size == 4 &&
+  if (size == 4 && !IS_FLOAT(type) && 
     (aopInReg (cond->aop, 0, Y_IDX) && aopIsOp16_2 (cond->aop, 2) || aopInReg (cond->aop, 2, Y_IDX) && aopIsOp16_2 (cond->aop, 0)))
     {
       if (!regDead (Y_IDX, ic))
@@ -5387,7 +5387,7 @@ genIfx (const iCode *ic)
         pop (ASMOP_Y, 0, 2);
       goto jump;
     }
-  else if (size == 4 && regDead (Y_IDX, ic) &&
+  else if (size == 4 && !IS_FLOAT(type) &&  regDead (Y_IDX, ic) &&
     aopOnStack (cond->aop, 0, 2) && aopIsOp16_2 (cond->aop, 2) && cond->aop->regs[XL_IDX] < 0 && cond->aop->regs[XH_IDX] < 0)
     {
       genMove_o (ASMOP_Y, 0, cond->aop, 0, 2, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, false);
@@ -5398,11 +5398,25 @@ genIfx (const iCode *ic)
   if (!regDead (XL_IDX, ic))
     push (ASMOP_XL, 0, 1);
 
-  genMove (ASMOP_XL, cond->aop, true, regDead (XH_IDX, ic) && cond->aop->regs[XH_IDX] <= 0, regDead (Y_IDX, ic) && cond->aop->regs[YL_IDX] <= 0 && cond->aop->regs[YH_IDX] <= 0, false);
+  int skipbyte;
 
-  for (int i = 1; i < size;)
+  if (IS_FLOAT (type))
     {
-      if (aopIsOp8_2 (cond->aop, i))
+      genMove_o (ASMOP_XL, 0, cond->aop, size - 1, 1, true, regDead (XH_IDX, ic) && cond->aop->regs[XH_IDX] <= 0, regDead (Y_IDX, ic) && cond->aop->regs[YL_IDX] <= 0 && cond->aop->regs[YH_IDX] <= 0, false);
+      emit3 (A_SLL, ASMOP_XL, 0);
+      skipbyte = size - 1;
+    }
+  else
+    {
+      genMove (ASMOP_XL, cond->aop, true, regDead (XH_IDX, ic) && cond->aop->regs[XH_IDX] <= 0, regDead (Y_IDX, ic) && cond->aop->regs[YL_IDX] <= 0 && cond->aop->regs[YH_IDX] <= 0, false);
+      skipbyte = 0;
+    }
+
+  for (int i = 0; i < size;)
+    {
+      if (i == skipbyte)
+        ;
+      else if (aopIsOp8_2 (cond->aop, i))
         {
           emit3_o (A_OR, ASMOP_XL, 0, cond->aop, i);
           z_current = true;
