@@ -3812,7 +3812,7 @@ genCmp (const iCode *ic, iCode *ifx)
             }
           else if (((!sign || ifx) && i + 1 < size || i + 2 < size) &&
             aopIsOp16_2 (right->aop, i) &&
-            (regDead (Y_IDX, ic) && (aopInReg (left->aop, i, Y_IDX) || left->aop->type == AOP_LIT || left->aop->type == AOP_DIR || aopOnStack (left->aop, i, 2)) && right->aop->regs[YL_IDX] < i && right->aop->regs[YH_IDX] < i))
+            regDead (Y_IDX, ic) && (aopInReg (left->aop, i, Y_IDX) || left->aop->type == AOP_LIT || left->aop->type == AOP_DIR || aopOnStack (left->aop, i, 2)) && right->aop->regs[YL_IDX] < i && right->aop->regs[YH_IDX] < i && left->aop->regs[YL_IDX] <= i + 1 && left->aop->regs[YH_IDX] <= i + 1)
             {
               genMove_o (ASMOP_Y, 0, left->aop, i, 2, false, true, false, false);
               if (right->aop->type == AOP_LIT)
