@@ -1,6 +1,11 @@
 2023-04-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
+	  f8 codegen fixes.
+
+2023-04-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
 	  Fix _BitInt *.
 	* support/regression/ports/f8/support.c,
 	  support/regression/ports/f8/uCsim.cmd:

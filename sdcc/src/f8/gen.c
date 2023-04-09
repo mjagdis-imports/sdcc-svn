@@ -1536,7 +1536,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
         if (op1->type == AOP_LIT)
           {
             litword = (byteOfVal (op1->aopu.aop_lit, offset1 + 1) << 8) | byteOfVal (op1->aopu.aop_lit, offset1);
-            emit2 ("adcw", "%s, #0x%02x", aopGet2 (op0, offset0), ~litword & 0xffff);
+            emit2 ("adcw", "%s, #0x%04x", aopGet2 (op0, offset0), ~litword & 0xffff);
             cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
           }
         //else // todo: implement when supported by assembler
@@ -1915,7 +1915,7 @@ outer_continue:
         {
           int j;
 
-          if (assigned[i] || !source->aopu.bytes[soffset + i].in_reg)
+          if (assigned[i] || !source->aopu.bytes[soffset + i].in_reg || !result->aopu.bytes[roffset + i].in_reg)
             continue;
 
           for (j = 0; j < n; j++)
@@ -2627,7 +2627,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
             emit3_o (A_INCW, left_aop, i, 0, 0);
           else
             emit3sub_o (started ? A_SBCW : A_SUBW, left_aop, i, right_aop, i);
-          genMove_o (result_aop, i, left_aop, 0, 2, false, false, false, false);
+          genMove_o (result_aop, i, left_aop, i, 2, false, false, false, false);
           started = true;
           i += 2;
         }
@@ -5682,12 +5682,20 @@ genCast (const iCode *ic)
 
       for (int i = right->aop->size; i < result->aop->size; i++)
         {
+          bool pushed_xl = false;
           if (masktopbyte && i + 1 == result->aop->size)
             {
+              if (result->aop->regs[XL_IDX] >= 0 && result->aop->regs[XL_IDX] < i)
+                {
+                  push (ASMOP_XL, 0, 1);
+                  pushed_xl = true;
+                }
               emit2 ("and", "xl, #0x%02x", topbytemask);
               cost (2, 1);
             }
           genMove_o (result->aop, i, ASMOP_XL, 0, 1, false, false, false, false);
+          if (pushed_xl)
+            pop (ASMOP_XL, 0, 1);
         }
     }
 
