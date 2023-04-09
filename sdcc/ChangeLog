@@ -1,3 +1,8 @@
+2023-04-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix _BitInt *.
+
 2023-04-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
