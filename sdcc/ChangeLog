@@ -2,6 +2,9 @@
 
 	* src/f8/gen.c:
 	  Fix _BitInt *.
+	* support/regression/ports/f8/support.c,
+	  support/regression/ports/f8/uCsim.cmd:
+	  Move simulator interface I/O to a free address.
 
 2023-04-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
