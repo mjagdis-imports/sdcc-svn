@@ -1588,10 +1588,21 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
 static void
 genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, bool *assigned, int *size, bool xl_free, bool xh_free, bool y_free, bool z_free, bool really_do_it_now)
 {
-  bool copy_down = source->aopu.stk_off + soffset < result->aopu.stk_off + roffset &&
-                     source->aopu.stk_off + soffset + n > result->aopu.stk_off + roffset;
+  wassert (result->type == AOP_REGSTK || result->type == AOP_STK);
+  wassert (source->type == AOP_REGSTK || source->type == AOP_STK);
+  int rstk = -1, sstk = -1;
+  for (int i = 0; i < n && i < 8; i++)
+    {
+      if (!result->aopu.bytes[roffset + i].in_reg)
+        rstk = result->aopu.bytes[roffset + i].byteu.stk - i;
+      if (!source->aopu.bytes[soffset + i].in_reg)
+        sstk = source->aopu.bytes[soffset + i].byteu.stk - i;
+    }
+  
+  bool copy_down = (sstk < rstk) && (sstk + n > rstk);
+
 #if 0
-  emit2 (";", "genCopyStack copy_down %d rstk_off %d sstk_off %d", copy_down, result->aopu.stk_off, source->aopu.stk_off);
+  emit2 (";", "genCopyStack copy_down %d rstk %d sstk %d sstk + n %d", copy_down, rstk, sstk, sstk + n);
 #endif
   if (copy_down)
     {
@@ -4103,7 +4114,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit3_o (A_CP, left->aop, i, right->aop, i);
           else if (aopIsAcc8 (right->aop, i) && aopIsOp8_2 (left->aop, i))
             emit3_o (A_CP, right->aop, i, left->aop, i);
-          else if (!regDead (XL_IDX, ic) || !aopIsOp8_2 (right->aop, i))
+          else if (!aopIsOp8_2 (right->aop, i))
             UNIMPLEMENTED;
           else
             {

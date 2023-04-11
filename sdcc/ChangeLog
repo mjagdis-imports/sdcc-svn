@@ -1,5 +1,10 @@
 2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/f8/gen.c:
+	  Codegen fixes.
+
+2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* sdas/asf8/f8mch.c,
 	  sim/ucsim/f8.src/decode.h,
 	  sim/ucsim/f8.src/f8.cc,
