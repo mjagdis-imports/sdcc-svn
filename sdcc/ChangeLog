@@ -1,7 +1,7 @@
 2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Codegen fixes.
+	  Codegen fixes and improvements.
 
 2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
 

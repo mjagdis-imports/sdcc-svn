@@ -1521,9 +1521,11 @@ pop (const asmop *op, int offset, int size) // todo: xl_dead parameter for more 
 
 // A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents.
 static void
-emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1) // todo: allow to pass size, so instead of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
+emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
 {
-  unsigned int litword;
+  unsigned int litword1;
+  if (op1->type == AOP_LIT)
+    litword1 = (byteOfVal (op1->aopu.aop_lit, offset1 + 1) << 8) | byteOfVal (op1->aopu.aop_lit, offset1);
 
   if (op1->type == AOP_LIT || op1->type == AOP_IMMD)
     switch (inst)
@@ -1552,12 +1554,17 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
           UNIMPLEMENTED;
         break;
       case A_SUBW:
+        if (op1->type == AOP_LIT && (~litword1 & 0xffff) + 1 <= 0xffff)
+          {
+            emit2 ("addw", "%s, #0x%04x", aopGet2 (op0, offset0), (~litword1 & 0xffff) + 1);
+            cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
+            break;
+          }
         emit2 ("tstw", "y"); // Set carry
       case A_SBCW:
         if (op1->type == AOP_LIT)
           {
-            litword = (byteOfVal (op1->aopu.aop_lit, offset1 + 1) << 8) | byteOfVal (op1->aopu.aop_lit, offset1);
-            emit2 ("adcw", "%s, #0x%04x", aopGet2 (op0, offset0), ~litword & 0xffff);
+            emit2 ("adcw", "%s, #0x%04x", aopGet2 (op0, offset0), ~litword1 & 0xffff);
             cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
           }
         //else // todo: implement when supported by assembler
@@ -2111,13 +2118,17 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 
           if (!y_dead && aopIsAcc16 (result, roffset + i) && !(soffset + i) && size >= 2)
             {
-              if (!c_dead)
-                push (ASMOP_F, 0, 1);
               emit2 ("ldw", "%s, sp", aopGet2 (result, roffset + i));
-              emit2 ("addw", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
-              cost (5 + (labs(stack_offset) > 127), 2);
-              if (!c_dead)
-                pop (ASMOP_F, 0, 1);
+              cost (2, 1);
+              if (stack_offset)
+                {
+                  if (!c_dead)
+                    push (ASMOP_F, 0, 1);
+                  emit2 ("addw", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
+                  cost (2 + (labs(stack_offset) > 127), 1);
+                  if (!c_dead)
+                    pop (ASMOP_F, 0, 1);
+                }
               i += 2;
             }
           else if (y_dead || result->regs[YL_IDX] < 0 && result->regs[YH_IDX] < 0)
@@ -2125,13 +2136,17 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
               if (!y_dead)
                 push (ASMOP_Y, 0, 2);
               stack_offset = (long)(source->aopu.stk_off) + G.stack.pushed; // Recalculate after push.
-              if (!c_dead)
-                push (ASMOP_F, 0, 1);
               emit2 ("ldw", "y, sp");
-              emit2 ("addw", "y, #%ld", stack_offset);
-              cost (3 + (labs(stack_offset) > 127), 2);
-              if (!c_dead)
-                pop (ASMOP_F, 0, 1);
+              cost (1, 1);
+              if (stack_offset)
+                {
+                  if (!c_dead)
+                    push (ASMOP_F, 0, 1);
+                  emit2 ("addw", "y, #%ld", stack_offset);
+                  cost (2 + (labs(stack_offset) > 127), 1);
+                  if (!c_dead)
+                    pop (ASMOP_F, 0, 1);
+                }
               int lsize = size - i;
               genMove_o (result, roffset + i, ASMOP_Y, soffset + i, lsize, xl_dead, xh_dead, true, z_dead, c_dead);
               if (!y_dead)
@@ -4114,6 +4129,12 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
             emit3_o (A_CP, left->aop, i, right->aop, i);
           else if (aopIsAcc8 (right->aop, i) && aopIsOp8_2 (left->aop, i))
             emit3_o (A_CP, right->aop, i, left->aop, i);
+          else if (xl_dead && xh_dead && !aopIsOp8_2 (right->aop, i) && left->aop->regs[XH_IDX] < i)
+            {
+              genMove_o (ASMOP_XH, 0, right->aop, i, 1, true, true, false, false, true);
+              genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false, true);
+              emit3 (A_CP, ASMOP_XL, ASMOP_XH);
+            }
           else if (!aopIsOp8_2 (right->aop, i))
             UNIMPLEMENTED;
           else
