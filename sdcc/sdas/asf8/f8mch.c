@@ -543,13 +543,14 @@ opw:
 			break;
 		}
 		else if(t1 == S_REG && r1 == SP && t2 == S_REG) {
+			outab(0x9c);
 			altaccw(r2);
 			outab(0x70);
 			break;
 		}
 		else if (t1 == S_REG && t2 == S_REG && r2 == SP) { // ldw y, sp
 			altaccw(r1);
-			outab(0xec);
+			outab(0x70);
 			break;
 		}
 		else if(t1 == S_REG) {
@@ -666,6 +667,12 @@ opw:
 		comma(1);
 		t2 = addr(&e2);
 		r2 = rcode;
+
+        if (t1 == S_REG && r1 == XL && t2 == S_SPREL) // Todo: Error on nonzero sp offset
+          {
+            outab(0xec);
+            break;
+          }
 
 		if (t1 != S_REG)
 			aerr();

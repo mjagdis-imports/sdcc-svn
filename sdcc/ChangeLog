@@ -1,3 +1,24 @@
+2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c,
+	  sim/ucsim/f8.src/decode.h,
+	  sim/ucsim/f8.src/f8.cc,
+	  sim/ucsim/f8.src/f8cl.h,
+	  sim/ucsim/f8.src/glob.cc,
+	  sim/ucsim/f8.src/imove.cc,
+	  src/f8/gen.c,
+	  src/f8/ralloc.h:
+	  Flag register handling fix.
+	* support/regression/tests/absolute.c.in,
+	  support/regression/tests/bitfields-bits1.c.in,
+	  support/regression/tests/bitfields-checks.c.in,
+	  support/regression/tests/bitfields-dead-loop.c.in,
+	  support/regression/tests/bitfields-nibbles.c.in,
+	  support/regression/tests/bug-2304.c,
+	  support/regression/tests/bug2686159.c,
+	  support/regression/tests/bug3027957.c,
+	  Fix use of absolute address in tests for f8.
+
 2023-04-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:

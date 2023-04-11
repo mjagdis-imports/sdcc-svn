@@ -36,6 +36,7 @@ enum
   YH_IDX,    // Upper byte of Y
   ZL_IDX,    // Lower byte of Z
   ZH_IDX,    // Upper byte of Z
+  F_IDX,     // Flag register
   C_IDX,     // Carry
 
   X_IDX,     // X - for use with code generation support functions only.
