@@ -3214,10 +3214,17 @@ genFunction (iCode *ic)
       return;
   }
 
-  if (IFFUNC_ISCRITICAL (ftype))
-      wassert (0);
+  if (IFFUNC_ISISR (sym->type) && !sym->funcDivFlagSafe)
+    {
+      push (ASMOP_F, 0, 1);
+      push (ASMOP_X, 0, 2);
+      push (ASMOP_Y, 0, 2);
+      push (ASMOP_Z, 0, 2);
+    }
 
-  
+  if (IFFUNC_ISCRITICAL (ftype))
+      genCritical (0);
+
   if (f8_extend_stack) // Setup for extended stack access.
     {
       G.stack.size = f8_call_stack_size + (sym->stack ? sym->stack : 0);
@@ -3283,7 +3290,7 @@ genEndFunction (iCode *ic)
     wassert (0);
 
   if (IFFUNC_ISCRITICAL (sym->type))
-      wassert (0);
+    genEndCritical (0);
 
   /* if debug then send end of function */
   if (options.debug && currFunc && !regalloc_dry_run)
@@ -3291,8 +3298,12 @@ genEndFunction (iCode *ic)
         
   if (IFFUNC_ISISR (sym->type))
     {
+      pop (ASMOP_Z, 0, 2);
+      pop (ASMOP_X, 0, 2);
+      pop (ASMOP_Y, 0, 2);
+      pop (ASMOP_F, 0, 1);
       emit2 ("reti", "");
-      cost (1, 1); // todo: mightbe more expensive
+      cost (1, 1);
     }
   else
     {
