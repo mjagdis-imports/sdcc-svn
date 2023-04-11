@@ -7,6 +7,8 @@
 	  sim/ucsim/f8.src/glob.cc,
 	  sim/ucsim/f8.src/imove.cc,
 	  src/f8/gen.c,
+	  src/f8/gen.h,
+	  src/f8/ralloc.h,
 	  src/f8/ralloc.h:
 	  Flag register handling fix.
 	* support/regression/tests/absolute.c.in,

@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   gen.c - code generator for F8.
 
-  Copyright (C) 2021, Philipp Klaus Krause krauseph@informatik.uni-freiburg.de)
+  Copyright (C) 2021-2023, Philipp Klaus Krause krauseph@informatik.uni-freiburg.de)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -191,10 +191,7 @@ f8_init_asmops (void)
   memset (asmop_one.regs, -1, sizeof(asmop_mone.regs));
   asmop_mone.aopu.aop_lit = constVal ("-1");
 
-  asmop_f.type = AOP_DIR;
-  asmop_f.size = 1;
-  memset (asmop_one.regs, -1, sizeof(asmop_mone.regs));
-  asmop_f.aopu.aop_dir = "1"; // Flag register at address 1.
+  f8_init_reg_asmop(&asmop_f, (const signed char[]){F_IDX, -1});
 }
 
 static void
@@ -1441,7 +1438,7 @@ push (const asmop *op, int offset, int size)
   if (size == 1 && aopInReg (op, offset, F_IDX))
     {
       emit2 ("push", "#0x00");
-      emit2 ("xchh", "f, (0, sp)");
+      emit2 ("xch", "f, (0, sp)");
       cost (3, 2);
     }
   else if (size == 1)
@@ -1485,8 +1482,8 @@ pop (const asmop *op, int offset, int size) // todo: xl_dead parameter for more 
   if (size == 1 && aopInReg (op, offset, F_IDX))
     {
       emit2 ("xch", "f, (0, sp)");
-      emit2 ("incw", "sp");
-      cost (2, 2);
+      emit2 ("addw", "sp, #1");
+      cost (2, 3);
     }
   else if (size == 1 && op->type == AOP_DIR)
     {

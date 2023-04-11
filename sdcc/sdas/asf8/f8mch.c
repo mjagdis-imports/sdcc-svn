@@ -668,7 +668,7 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-        if (t1 == S_REG && r1 == XL && t2 == S_SPREL) // Todo: Error on nonzero sp offset
+        if (t1 == S_REG && r1 == F && t2 == S_SPREL) // Todo: Error on nonzero sp offset
           {
             outab(0xec);
             break;

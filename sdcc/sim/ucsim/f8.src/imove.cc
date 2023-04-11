@@ -133,8 +133,8 @@ int
 cl_f8::XCH_F_0SP(t_mem code)
 {
   class cl_cell8 &c= *(class cl_cell8 *)rom->get_cell(rSP);
-  u8_t t= rXL;
-  rXL = c.R();
+  u8_t t= rF;
+  rF = c.R();
   vc.rd++;
   c.W(t);
   vc.wr++;

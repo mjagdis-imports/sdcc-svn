@@ -11,6 +11,7 @@ reg_info f8_regs[] =
   {REG_GPR, YH_IDX,  "yh"},
   {REG_GPR, ZL_IDX,  "zl"},
   {REG_GPR, ZH_IDX,  "zh"},
+  {REG_CND, F_IDX,   "f"},
   {REG_CND, C_IDX,   "c"},
   {REG_GPR, X_IDX,   "x"},
   {REG_GPR, Y_IDX,   "y"},
