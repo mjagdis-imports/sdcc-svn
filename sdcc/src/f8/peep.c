@@ -11,6 +11,9 @@
 // #define D(_s) { printf _s; fflush(stdout); }
 #define D(_s)
 
+#define ISINST(l, i) (!STRNCASECMP((l), (i), sizeof(i) - 1) && (!(l)[sizeof(i) - 1] || isspace((unsigned char)((l)[sizeof(i) - 1]))))
+#define STARTSINST(l, i) (!STRNCASECMP((l), (i), sizeof(i) - 1))
+
 typedef enum
 {
   S4O_CONDJMP,
@@ -128,13 +131,14 @@ f8MightRead(const lineNode *pl, const char *what)
 static bool
 f8UncondJump(const lineNode *pl)
 {
-  return false;
+  return (ISINST(pl->line, "jp") || ISINST(pl->line, "jr"));
 }
 
 static bool
 f8CondJump(const lineNode *pl)
 {
-  return false;
+  return (!f8UncondJump(pl) && STARTSINST(pl->line, "jr") ||
+    ISINST(pl->line, "dnjz"));
 }
 
 static bool

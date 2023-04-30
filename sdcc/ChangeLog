@@ -1,3 +1,11 @@
+2023-04-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/peeph.def,
+	  src/f8/peep.c,
+	  src/f8/gen.c,
+	  src/f8/main.c:
+	  Peephole optimization of jumps.
+
 2023-04-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCdwarf2.c:
