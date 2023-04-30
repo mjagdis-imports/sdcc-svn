@@ -2,6 +2,8 @@
 
 	* src/f8/gen.c:
 	  Improve jump on comparison.
+	* sdas/asf8/f8mch.c:
+	  Use ldw y, #d instead of ldw y, #ii where appropriate.
 
 2023-04-30 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -557,6 +557,11 @@ opw:
 			altaccw(r1);
 			switch(t2) {
 			case S_IMM:
+				if (!ld_mode(&e2)) { // ldw y, #d
+					outab(op | 0x07);
+					outrb(&e2, R_USGN);
+					break;
+				}
 				outab(op | 0x00);
 				outrw(&e2, R_USGN);
 				break;
