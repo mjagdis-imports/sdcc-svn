@@ -1,6 +1,14 @@
 // peeph.def - F8 peephole rules
 
 replace restart {
+	ldw	(%1, sp), %2
+	ldw	%2, (%1, sp)
+} by {
+	ldw	(%1, sp), %2
+	; peephole 1 removed redundant load from (%1, sp) into %2.
+}
+
+replace restart {
 	jp	#%1
 %1:
 } by {

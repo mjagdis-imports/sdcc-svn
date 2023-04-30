@@ -4,7 +4,7 @@
 	  src/f8/peep.c,
 	  src/f8/gen.c,
 	  src/f8/main.c:
-	  Peephole optimization of jumps.
+	  A few first peephole optimizer rules.
 
 2023-04-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
