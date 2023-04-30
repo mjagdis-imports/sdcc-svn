@@ -3703,12 +3703,12 @@ buildLabelRefCountHash (lineNode *head)
           do
           	l = l->next;
           while(l && (l->isComment || l->isDebug || l->isLabel));
-          do
-          	l = l->next;
-          while(l && (l->isComment || l->isDebug));
+          if (l)
+            do
+          	  l = l->next;
+            while(l && (l->isComment || l->isDebug));
 
-          wassert (l);
-          if (l->isLabel && isLabelDefinition (l->line, &label, &labelLen, false))
+          if (l && l->isLabel && isLabelDefinition (l->line, &label, &labelLen, false))
             {
               char name[SDCC_NAME_MAX];
               strcpy(name, label);
@@ -3723,10 +3723,7 @@ buildLabelRefCountHash (lineNode *head)
                 e->refCount++;
             }
           else
-            {
-              wassertl (0, "skip instruction has no target label:");
-              fprintf (stderr, "\'%s\'\n", line->line);
-            }
+            werror (E_NO_SKIP_TARGET, line->line);
         }
 
       for (i = 0; i < HTAB_SIZE; i++)

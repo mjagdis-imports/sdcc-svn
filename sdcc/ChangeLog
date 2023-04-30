@@ -1,3 +1,23 @@
+2023-04-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdwarf2.c:
+	  Fix bug #3576.
+
+2023-04-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asz80/z80mch.c:
+	  Fix error message on use of undocumented inc/dec ixl/ixh/iyl/iyh. Fix error message on undocumented load between ix/iy l/h. Fix bug #3574.
+
+2023-04-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.c:
+	  Improve error message on missing skip instruction target label at end of inline asm in __naked function. Fix bug #3566.
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3570.c:
+	  Fix bug #3570.
+	* src/SDCCmem.c:
+	  Fix bug #3030.
+
 2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
@@ -267,12 +287,23 @@
 	* device/lib/f8/Makefile.in:
 	  Fix C standard version used for library.
 
+2023-03-21 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCCmain.c:
+	  Use -MF to pass dependency output file to sdcpp, fixing bug #3541.
+	  See https://gcc.gnu.org/onlinedocs/cpp/Invocation.html#Invocation.
+
 2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:
 	  Fix f8 byte order.
 	* sim/ucsim/f8.src/f8cl.h:
 	  Fix duplicate declarations.
+
+2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3567.c:
+	  Disable a test for mcs51 small model, where it fails due to lack of memory.
 
 2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
