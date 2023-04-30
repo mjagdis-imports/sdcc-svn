@@ -2086,7 +2086,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassertl_bt (result->type != AOP_IMMD, "Trying to write to immediate.");
   wassertl_bt (roffset + size <= result->size, "Trying to write beyond end of operand");
 
-#if 1
+#if 0
   emit2 (";", "genMove_o size %d, xl_dead_global %d xh_dead_global %d", size, xl_dead_global, xh_dead_global);
 #endif
 
@@ -3790,10 +3790,32 @@ genCmp (const iCode *ic, iCode *ifx)
   aopOp (right, ic);
   aopOp (result, ic);
 
+  bool pushed_xl = false;
   int size = max (left->aop->size, right->aop->size);
   bool sign = false;
   if (IS_SPEC (operandType (left)) && IS_SPEC (operandType (right)))
     sign = !(SPEC_USIGN (operandType (left)) | SPEC_USIGN (operandType (right)));
+
+  // To not swap operands if doing so complicates the code.
+  if (ic->op == '>' && ifx && !sign &&
+    (size == 1 && aopIsOp8_2 (right->aop, 0) && aopIsAcc8 (left->aop, 0) ||
+     size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && aopIsAcc16 (left->aop, 0)))
+    {
+      if (size == 1)
+        emit3 (A_CP, left->aop, right->aop);
+      else
+        emit3 (A_CPW, left->aop, right->aop);
+      symbol *tlbl = 0;
+      if (!regalloc_dry_run)
+        {
+          tlbl = newiTempLabel (0);
+          emit2 (IC_TRUE (ifx) ? "jrle" : "jrgt", "#!tlabel", labelKey2num (tlbl->key));
+        }
+      cost (2, 1);
+      emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
+      emitLabel (tlbl);
+      goto release;
+    }
 
   if (ic->op == '>')
     {
@@ -3801,8 +3823,6 @@ genCmp (const iCode *ic, iCode *ifx)
       right = left;
       left = t;  
     }
-
-  bool pushed_xl = false;
 
   if (ifx && right->aop->type == AOP_LIT && sign && aopIsLitVal (right->aop, 0, size, 0) && (aopIsOp8_1 (left->aop, size - 1) || size >= 2 && aopIsOp16_1 (left->aop, size - 2))) // Use tst(w)
     {
@@ -3834,16 +3854,10 @@ genCmp (const iCode *ic, iCode *ifx)
         }
       goto return_c;
     }
-  else if (!ifx && !sign && size == 1 && aopIsOp8_2 (right->aop, 0) && aopIsAcc8 (left->aop, 0))
-    {
-      emit3 (A_CP, left->aop, right->aop);
-      //goto return_c;
-    }
-  else if (!ifx && !sign && size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && aopIsAcc16 (left->aop, 0))
-    {
-      emit3 (A_CPW, left->aop, right->aop);
-      //goto return_c;
-    }
+  else if (!sign && size == 1 && aopIsOp8_2 (right->aop, 0) && aopIsAcc8 (left->aop, 0))
+    emit3 (A_CP, left->aop, right->aop);
+  else if (!sign && size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && aopIsAcc16 (left->aop, 0))
+    emit3 (A_CPW, left->aop, right->aop);
   /*else if (ifx && // Use inverse jump condition WRONG result when both operand are equal
     (size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0) || size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
     {
@@ -3965,7 +3979,7 @@ genCmp (const iCode *ic, iCode *ifx)
             emit2 (IC_TRUE (ifx) ? "jrsge" : "jrslt", "#!tlabel", labelKey2num (tlbl->key));
         }
       cost (2, 1);
-      emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
+      emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
       goto release;
     }
