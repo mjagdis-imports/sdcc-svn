@@ -85,7 +85,7 @@ enum asminst
   A_TST,
   A_TSTW,
   A_XCH,
-  A_XOR
+  A_XOR,
 };
 
 static const char *asminstnames[] =
@@ -2430,24 +2430,37 @@ genNot (const iCode *ic)
       else
         {
           genMove (ASMOP_XL, left->aop, true, false, regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-          emit3 (A_DEC, ASMOP_XL, 0);
+          emit3 (A_BOOL, ASMOP_XL, 0);
         }
     }
-  else if (left->aop->size >= 2 && left->aop->size % 2 == 0 &&
-    (aopOnStack (left->aop, 2, left->aop->size - 2) || left->aop->type == AOP_DIR))
+  else
     {
-      if (!regDead (Y_IDX, ic))
+      if (!regDead (Y_IDX, ic) || left->aop->regs[YL_IDX] >= 2 || left->aop->regs[YH_IDX] >= 2)
         UNIMPLEMENTED;
       else
         {
           genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
-          for (int i = 2; i < left->aop->size; i += 2)
-            emit3_o (A_ORW, ASMOP_Y, 0, left->aop, i);
-          emit3sub (A_SUBW, ASMOP_Y, ASMOP_ONE);
+          for (int i = 2; i < left->aop->size;)
+            {
+              if (i + 1 < left->aop->size && aopIsOp16_2 (left->aop, i))
+                {
+                  emit3_o (A_ORW, ASMOP_Y, 0, left->aop, i);
+                  i += 2;
+                }
+              else if (aopIsOp8_2 (left->aop, i))
+                {
+                  emit3_o (A_OR, ASMOP_Y, 0, left->aop, i);
+                  i++;
+                }
+              else
+                {
+                  UNIMPLEMENTED;
+                  i++;
+                }
+            }
+          emit3 (A_BOOLW, ASMOP_Y, 0);
         }
     }
-  else
-    UNIMPLEMENTED;
 
   if (result->aop->size == 1)
     {
@@ -2455,26 +2468,27 @@ genNot (const iCode *ic)
         UNIMPLEMENTED;
       else
         {
-          emit3 (A_CLR, ASMOP_XL, 0);
-          emit3 (A_RLC, ASMOP_XL, 0);
+          if (left->aop->size != 1)
+            emit3 (A_LD, ASMOP_XL, ASMOP_Y);
           emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
           genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
         }
     }
-  else if (left->aop->size >= 2)
+  else
     {
       if (!regDead (Y_IDX, ic))
         UNIMPLEMENTED;
       else
         {
-          emit3 (A_CLRW, ASMOP_Y, 0);
-          emit3 (A_RLCW, ASMOP_Y, 0);
+          if (left->aop->size == 1)
+            {
+              emit2 ("zex", "y, xl");
+              cost (1, 1);
+            }
           emit3 (A_XOR, ASMOP_Y, ASMOP_ONE);
           genMove (result->aop, ASMOP_Y, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
         }
     }
-  else
-    UNIMPLEMENTED;
 
   freeAsmop (left);
   freeAsmop (result);
