@@ -187,6 +187,6 @@ replace restart {
 replace restart {
 %1:
 } by {
-	; peephole j30 removed unused label %1.
+	; peephole j18 removed unused label %1.
 } if labelRefCount(%1 0)
 

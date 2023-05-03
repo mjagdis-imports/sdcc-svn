@@ -3944,7 +3944,7 @@ genCmp (const iCode *ic, iCode *ifx)
                   if (!started && aopIsLitVal (right->aop, i, 2, 0xffff))
                     emit3_o (A_INCW, left->aop, i, 0, 0);
                   else if (started && (aopIsLitVal (right->aop, i, 2, 0x0000) || aopIsLitVal (right->aop, i, 2, 0xffff)))
-                    emit3_o (aopIsLitVal (right->aop, i, 2, 0x0000) ? A_ADCW : A_SBCW, left->aop, i, 0, 0);
+                    emit3_o (aopIsLitVal (right->aop, i, 2, 0x0000) ? A_SBCW : A_ADCW, left->aop, i, 0, 0);
                   else
                     emit3sub_o (started ? A_SBCW : A_SUBW, left->aop, i, right->aop, i);
                 }
@@ -3958,6 +3958,27 @@ genCmp (const iCode *ic, iCode *ifx)
               emit3_o (A_CP, left->aop, i, right->aop, i);
               started = true;
               i++;
+            }
+          else if (((!sign || ifx) && i + 1 < size || i + 2 < size) &&
+            (aopOnStack (left->aop, i, 2) || left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && aopIsOp16_2 (right->aop, i) &&
+            (regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i && left->aop->regs[YH_IDX] <= i && right->aop->regs[YL_IDX] <= i && right->aop->regs[YH_IDX] <= i ||
+            regDead (X_IDX, ic) && left->aop->regs[XL_IDX] <= i && left->aop->regs[XH_IDX] <= i && right->aop->regs[XL_IDX] <= i && right->aop->regs[XH_IDX] <= i))
+            {
+              asmop *laop = (regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i && left->aop->regs[YH_IDX] <= i && right->aop->regs[YL_IDX] <= i && right->aop->regs[YH_IDX] <= i) ? ASMOP_Y : ASMOP_X; 
+              genMove_o (laop, 0, left->aop, i, 2, false, true, false, false, !started);
+              if (right->aop->type == AOP_LIT)
+                {
+                  if (!started && aopIsLitVal (right->aop, i, 2, 0xffff))
+                    emit3 (A_INCW, laop, 0);
+                  else if (started && (aopIsLitVal (right->aop, i, 2, 0x0000) || aopIsLitVal (right->aop, i, 2, 0xffff)))
+                    emit3 (aopIsLitVal (right->aop, i, 2, 0x0000) ? A_SBCW : A_ADCW, laop, 0);
+                  else
+                    emit3sub_o (started ? A_SBCW : A_SUBW, laop, 0, right->aop, i);
+                }
+              else
+                emit3sub_o (started ? A_SBCW : A_SUBW, laop, 0, right->aop, i);
+              started = true;
+              i += 2;
             }
           else
             {
