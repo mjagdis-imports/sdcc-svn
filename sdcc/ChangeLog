@@ -1,4 +1,11 @@
-2023-05-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2023-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Improve comparison.
+	* src/f8/peeph.def:
+	  Peephole optimizer rule to remove unused labels.
+
+2023-05-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
 	  Improve negation.

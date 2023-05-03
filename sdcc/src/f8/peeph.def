@@ -183,3 +183,10 @@ replace restart {
 %1:
 } if labelRefCountChange(%1 -1)
 
+// Should be one of the last ones. Opens the code to further peephole optimization.
+replace restart {
+%1:
+} by {
+	; peephole j30 removed unused label %1.
+} if labelRefCount(%1 0)
+

@@ -3904,6 +3904,13 @@ genCmp (const iCode *ic, iCode *ifx)
               started = true;
               i += 2;
             }
+          else if (((!sign || ifx) && i + 1 < size || i + 2 < size) && !started && // Try to use negw
+            aopIsAcc16 (right->aop, 0) && aopIsLitVal (left->aop, i, 2, 0x0000) && regDead (right->aop->aopu.bytes[i].byteu.reg->rIdx, ic) && regDead (right->aop->aopu.bytes[i + 1].byteu.reg->rIdx, ic))
+            {
+              emit3_o (A_NEGW, right->aop, i, 0, 0);
+              started = true;
+              i += 2;
+            }
           else if (((!sign || ifx) && i + 1 < size || i + 2 < size) &&
             aopIsOp16_2 (right->aop, i) &&
             regDead (Y_IDX, ic) && (aopInReg (left->aop, i, Y_IDX) || left->aop->type == AOP_LIT || left->aop->type == AOP_DIR || aopOnStack (left->aop, i, 2)) && right->aop->regs[YL_IDX] < i && right->aop->regs[YH_IDX] < i && left->aop->regs[YL_IDX] <= i + 1 && left->aop->regs[YH_IDX] <= i + 1)
