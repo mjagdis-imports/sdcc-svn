@@ -1,5 +1,17 @@
 2023-05-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/f8/gen.c:
+	  Improve equality comparison.
+	* device/lib/f8/_mulint.s,
+	  device/lib/f8/Makefile.in:
+	  Hand-written 16x16->16 multiplication support routine.
+	* sdas/asf8/f8mch.c:
+	  Fix handling of swapped operands on 8-bit two-operand instructions.
+	* sim/ucsim/f8.src/glob.cc:
+	  Fix disassembly of xch.
+
+2023-05-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c,
 	  support/regression/tests/bug-3579.c:
 	  iy handling fixes in code generation.

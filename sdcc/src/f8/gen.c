@@ -4152,9 +4152,16 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       bool xh_dead = regDead (XH_IDX, ic) && left->aop->regs[XH_IDX] <= i && right->aop->regs[XH_IDX] <= i;
       bool y_dead2 = regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i + 1 && left->aop->regs[YH_IDX] <= i + 1 && right->aop->regs[YL_IDX] <= i + 1 && right->aop->regs[YH_IDX] <= i + 1;
 
-      if (i + 1 < size && aopIsOp16_1 (left->aop, i) && aopIsLitVal (right->aop, i, 2, 0x0000))
+      if (i + 1 < size && aopIsOp16_1 (left->aop, i) && aopIsLitVal (right->aop, i, 2, 0x0000)) // Use tstw
         {
           emit3_o (A_TSTW, left->aop, i, 0, 0);
+          if (tlbl_NE)
+            emit2 ("jrnz", "#!tlabel", labelKey2num (tlbl_NE->key));
+          i += 2;
+        }
+      else if (i + 1 < size && aopInReg (left->aop, i, Y_IDX) && regDead (Y_IDX, ic) && aopIsLitVal (right->aop, i, 2, 0xffff)) // Use incw
+        {
+          emit3_o (A_INCW, left->aop, i, 0, 0);
           if (tlbl_NE)
             emit2 ("jrnz", "#!tlabel", labelKey2num (tlbl_NE->key));
           i += 2;

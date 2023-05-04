@@ -108,7 +108,7 @@ struct dis_entry disass_f8[]=
 
     { 0x91, 0xff, ' ', 2, "xch %a,('nsp_8')" },
     { 0x92, 0xff, ' ', 1, "xch %a,('y_8')" },
-    { 0x93, 0xff, ' ', 1, "xch %L,%H," },
+    { 0x93, 0xff, ' ', 1, "xch %L,%H" },
     { 0xf4, 0xff, ' ', 1, "xchw y,('z_16')" },
     { 0xf5, 0xff, ' ', 1, "xchw z,('nsp_16')" },
 

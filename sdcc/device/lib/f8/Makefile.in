@@ -20,7 +20,6 @@ F8_INT = $(COMMON_INT) \
   _mulschar.c \
   _divschar.c \
   _modschar.c \
-  _mulint.c \
   _divsint.c \
   _divuchar.c \
   _divuint.c \
@@ -65,7 +64,7 @@ F8_SDCC = $(COMMON_SDCC) \
 F8SOURCES = $(addprefix ../,$(F8_FLOAT) $(F8_INT) $(F8_LONG) $(F8_LONGLONG) $(F8_SDCC))
 F8OBJECTS = $(patsubst %.c,%.rel,$(F8_FLOAT) $(F8_INT) $(F8_LONG) $(F8_LONGLONG) $(F8_SDCC))
 
-OBJ = setjmp.rel heap.rel atomic_flag_test_and_set.rel
+OBJ = setjmp.rel _mulint.rel heap.rel atomic_flag_test_and_set.rel
 
 LIB = f8.lib
 CC = $(SCC)
