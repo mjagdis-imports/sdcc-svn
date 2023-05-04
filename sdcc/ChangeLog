@@ -1,5 +1,11 @@
 2023-05-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3579.c:
+	  iy handling fixes in code generation.
+
+2023-05-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/f8/gen.c:
 	  A few small codegen improvements.
 
