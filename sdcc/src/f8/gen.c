@@ -3623,11 +3623,25 @@ genPlus (const iCode *ic)
            continue;
          }
 
-       if (i + 1 < size && !maskedword && aopIsOp16_2 (rightop, i) && // Use addw / adcw in y
+       if (i + 1 < size && !maskedword && aopIsAcc16 (result->aop, i) && (aopOnStack (leftop, i, 2) || leftop->type == AOP_DIR) && // Use incw / adcw in destination
+         (!started && aopIsLitVal (rightop, i, 2, 0x0001) || started && aopIsLitVal (rightop, i, 2, 0x0000)))
+         {
+           genMove_o (result->aop, i, leftop, i, 2, xl_free2 && rightop->regs[XL_IDX] < i, false, false, false, !started);
+           if (!started && aopIsLitVal (rightop, i, 2, 1))
+             emit3_o (A_INCW, result->aop, i, 0, 0);
+           else if (started && aopIsLitVal (rightop, i, 2, 0x0000))
+             emit3_o (A_ADCW, result->aop, i, 0, 0);
+           else
+             wassert (0);
+           i += 2;
+           started = true;
+           continue;
+         }
+       else if (i + 1 < size && !maskedword && aopIsOp16_2 (rightop, i) && // Use addw / adcw in y
          (aopInReg (result->aop, i, Y_IDX) || y_free2 && aopOnStack (leftop, i, 2) && aopOnStack (result->aop, i, 2)))
          {
            genMove_o (ASMOP_Y, 0, leftop, i, 2, xl_free2 && rightop->regs[XL_IDX] < i, false, true, false, !started);
-           if (!started && aopIsLitVal (rightop, i, 2, 1))
+           if (!started && aopIsLitVal (rightop, i, 2, 0x0001))
              emit3 (A_INCW, ASMOP_Y, 0);
            else if (started && aopIsLitVal (rightop, i, 2, 0x0000))
              emit3 (A_ADCW, ASMOP_Y, 0);
@@ -3911,6 +3925,14 @@ genCmp (const iCode *ic, iCode *ifx)
               started = true;
               i += 2;
             }
+          else if (((!sign || ifx) && i + 1 < size || i + 2 < size) && !started && // Try to use cpw
+            (regDead (Y_IDX, ic) && aopInReg (left->aop, i, Y_IDX) && aopInReg (left->aop, i, X_IDX) ||
+            regDead (X_IDX, ic) && aopInReg (left->aop, i, X_IDX) && aopInReg (left->aop, i, Y_IDX)))
+            {
+              emit3sub_o (started ? A_SBCW : A_SUBW, left->aop, i, right->aop, i);
+              started = true;
+              i += 2;
+            }
           else if (((!sign || ifx) && i + 1 < size || i + 2 < size) &&
             aopIsOp16_2 (right->aop, i) &&
             regDead (Y_IDX, ic) && (aopInReg (left->aop, i, Y_IDX) || left->aop->type == AOP_LIT || left->aop->type == AOP_DIR || aopOnStack (left->aop, i, 2)) && right->aop->regs[YL_IDX] < i && right->aop->regs[YH_IDX] < i && left->aop->regs[YL_IDX] <= i + 1 && left->aop->regs[YH_IDX] <= i + 1)
@@ -3961,8 +3983,8 @@ genCmp (const iCode *ic, iCode *ifx)
             }
           else if (((!sign || ifx) && i + 1 < size || i + 2 < size) &&
             (aopOnStack (left->aop, i, 2) || left->aop->type == AOP_DIR || left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && aopIsOp16_2 (right->aop, i) &&
-            (regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i && left->aop->regs[YH_IDX] <= i && right->aop->regs[YL_IDX] <= i && right->aop->regs[YH_IDX] <= i ||
-            regDead (X_IDX, ic) && left->aop->regs[XL_IDX] <= i && left->aop->regs[XH_IDX] <= i && right->aop->regs[XL_IDX] <= i && right->aop->regs[XH_IDX] <= i))
+            (regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i && left->aop->regs[YH_IDX] <= i && right->aop->regs[YL_IDX] < i && right->aop->regs[YH_IDX] < i ||
+            regDead (X_IDX, ic) && left->aop->regs[XL_IDX] <= i && left->aop->regs[XH_IDX] <= i && right->aop->regs[XL_IDX] < i && right->aop->regs[XH_IDX] < i))
             {
               asmop *laop = (regDead (Y_IDX, ic) && left->aop->regs[YL_IDX] <= i && left->aop->regs[YH_IDX] <= i && right->aop->regs[YL_IDX] <= i && right->aop->regs[YH_IDX] <= i) ? ASMOP_Y : ASMOP_X; 
               genMove_o (laop, 0, left->aop, i, 2, false, true, false, false, !started);
@@ -5371,7 +5393,7 @@ genPointerSet (const iCode *ic)
       goto release;
     }
   else if (!bit_field && size == 2 && aopOnStackNotExt (left->aop, 0, 2) &&
-    (!regalloc_dry_run || !f8_extend_stack) && // Avoid getting into a situation where stack allocation make scode generation impossible
+    (!regalloc_dry_run || !f8_extend_stack) && // Avoid getting into a situation where stack allocation makes code generation impossible
     aopIsAcc16 (right->aop, 0))
     {
       unsigned int soffset = left->aop->aopu.bytes[0].byteu.stk + G.stack.pushed;
