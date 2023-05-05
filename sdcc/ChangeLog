@@ -1,3 +1,9 @@
+2023-05-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/f8/_divuint.s,
+	  device/lib/f8/Makefile.in:
+	  Hand-written 16x16->16 unsigned division support routine.
+
 2023-05-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
