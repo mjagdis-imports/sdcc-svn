@@ -4566,6 +4566,27 @@ genGetABit (const iCode *ic, iCode *ifx)
 
   shCount = (int) ulFromVal ((right->aop)->aopu.aop_lit);
 
+  if (ifx && result->aop->type == AOP_CND) // Use tst(w)
+    {
+      wassert (shCount % 8 == 7);
+
+      symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
+
+      if (aopInReg (left->aop, shCount / 8, YH_IDX))
+        emit3 (A_TSTW, ASMOP_Y, 0);
+      else if (aopIsOp8_1 (left->aop, shCount / 8))
+        emit3_o (A_TST, left->aop, shCount / 8, 0, 0);
+
+      if (!regalloc_dry_run)
+        emit2 (IC_TRUE (ifx) ? "jrnn" : "jrn", "#!tlabel", labelKey2num (tlbl->key));
+      cost (2, 1);
+
+      emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 1.0f);
+      emitLabel (tlbl);
+
+      goto release;
+    }
+
   if (!regDead (XL_IDX, ic))
     push (ASMOP_XL, 0, 1);
 
@@ -4602,6 +4623,7 @@ write_to_xl:
   if (!regDead (XL_IDX, ic))
     pop (ASMOP_XL, 0, 1);
 
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -6157,7 +6179,7 @@ genF8iCode (iCode *ic)
       break;
 
     case GETABIT:
-      genGetABit (ic, /*ifxForOp (IC_RESULT (ic), ic)*/0);
+      genGetABit (ic, ifxForOp (IC_RESULT (ic), ic));
       break;
 
     case GETBYTE:

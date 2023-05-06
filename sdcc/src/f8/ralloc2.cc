@@ -376,7 +376,7 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 static void extra_ic_generated(iCode *ic)
 {
   if(ic->op == '>' || ic->op == '<' || ic->op == LE_OP || ic->op == GE_OP || ic->op == EQ_OP || ic->op == NE_OP ||
-    ic->op == BITWISEAND && (IS_OP_LITERAL (IC_LEFT (ic)) || IS_OP_LITERAL (IC_RIGHT (ic))) /*|| ic->op == GETABIT*/)
+    ic->op == BITWISEAND && (IS_OP_LITERAL (IC_LEFT (ic)) || IS_OP_LITERAL (IC_RIGHT (ic))) || ic->op == GETABIT)
     {
       iCode *ifx;
 
