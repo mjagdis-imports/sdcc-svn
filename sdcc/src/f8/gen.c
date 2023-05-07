@@ -41,6 +41,7 @@ static struct
       int param_offset;
     } stack;
   bool saved; // Saved the caller-save registers at call.
+  int c; // Track state of carry bit. -1 for unknown.
 }
 G;
 
@@ -1100,6 +1101,31 @@ emit3_o (const enum asminst inst, asmop *op0, int offset0, asmop *op1, int offse
     }
   else
     emit2 (asminstnames[inst], "%s", wide ? aopGet2 (op0, offset0) : aopGet (op0, offset0));
+
+  switch (inst)
+    {
+    case A_TST:
+      G.c = 0;
+      break;
+    case A_TSTW:
+      G.c = 1;
+      break;
+    case A_AND:
+    case A_BOOL:
+    case A_BOOLW:
+    case A_CLR:
+    case A_CLRW:
+    case A_LD:
+    case A_LDW:
+    case A_OR:
+    case A_ORW:
+    case A_SEX:
+    case A_XCH:
+    case A_XOR:
+      break;
+    default:
+      G.c = -1;
+    }
 }
 
 static void
@@ -1110,7 +1136,7 @@ emit3 (enum asminst inst, asmop *op0, asmop *op1)
 
 // A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents. USed to be definedhere, but has been moved further down, since some workarounds for assembler issues require the use of pop and push.
 static void
-emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1); // todo: allow to pass size, so insetad of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
+emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1); // todo: allow to pass size, so instead of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
 
 static void
 emit3sub (enum asminst inst, asmop *op0, asmop *op1)
@@ -1433,6 +1459,39 @@ updateCFA (void)
 }
 
 static void
+spillReg (int rIdx)
+{
+  switch (rIdx)
+    {
+    case C_IDX:
+      G.c = -1;
+      break;
+    }
+}
+
+static void
+spillAllRegs (void)
+{
+  spillReg (C_IDX);
+}
+
+// Clear carry flag
+static void
+clrc (void)
+{
+  if (G.c != 0)
+    emit3 (A_TST, ASMOP_XL, 0);
+}
+
+// Set carry flag
+static void
+setc (void)
+{
+  if (G.c != 1)
+    emit3 (A_TSTW, ASMOP_Y, 0);
+}
+
+static void
 push (const asmop *op, int offset, int size)
 {
   if (size == 1 && aopInReg (op, offset, F_IDX))
@@ -1531,13 +1590,20 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
     switch (inst)
       {
       case A_SUB:
-        emit2 ("tstw", "y"); // Set carry
-        cost (1, 1);
+        if (op1->type == AOP_LIT && (~litword1 & 0xff) + 1 <= 0xff)
+          {
+            emit2 ("add", "%s, #0x%02x", aopGet (op0, offset0), (~litword1 & 0xff) + 1);
+            cost (2 + !aopInReg (op0, offset0, XL_IDX), 1);
+            spillReg (C_IDX);
+            break;
+          }
+        setc ();
       case A_SBC:
         if (op1->type == AOP_LIT)
           {
             emit2 ("adc", "%s, #0x%02x", aopGet (op0, offset0), ~byteOfVal (op1->aopu.aop_lit, offset1) & 0xff);
             cost (2 + !aopInReg (op0, offset0, XL_IDX), 1);
+            spillReg (C_IDX);
           }
         //else // todo: implement when supported by assembler
         //  emit2 ("adc", "%s, ~%s", aopGet (op0, offset0), aopGet (op1, offset1));
@@ -1548,6 +1614,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
             emit3 (A_XOR, ASMOP_XH, ASMOP_MONE);
             emit2 ("adc", "%s, xh", aopGet (op0, offset0));
             cost (1 + !aopInReg (op0, offset0, XL_IDX), 1);
+            spillReg (C_IDX);
             pop (ASMOP_XH, 0, 1);
           }
         else
@@ -1558,14 +1625,16 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
           {
             emit2 ("addw", "%s, #0x%04x", aopGet2 (op0, offset0), (~litword1 & 0xffff) + 1);
             cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
+            spillReg (C_IDX);
             break;
           }
-        emit2 ("tstw", "y"); // Set carry
+        setc ();
       case A_SBCW:
         if (op1->type == AOP_LIT)
           {
             emit2 ("adcw", "%s, #0x%04x", aopGet2 (op0, offset0), ~litword1 & 0xffff);
             cost (2 + !aopInReg (op0, offset0, Y_IDX), 1 + !aopInReg (op0, offset0, Y_IDX));
+            spillReg (C_IDX);
           }
         //else // todo: implement when supported by assembler
         //  emit2 ("adcw", "%s, ~%s", aopGet2 (op0, offset0), aopGet2 (op1, offset1));
@@ -1577,6 +1646,7 @@ emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1)
             emit3_o (A_XOR, ASMOP_X, 1, ASMOP_MONE, 1);
             emit2 ("adcw", "%s, x", aopGet2 (op0, offset0));
             cost (1 + !aopInReg (op0, offset0, Y_IDX), 1);
+            spillReg (C_IDX);
             pop (ASMOP_X, 0, 1);
           }
         else
@@ -2128,6 +2198,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
                   cost (2 + (labs(stack_offset) > 127), 1);
                   if (!c_dead)
                     pop (ASMOP_F, 0, 1);
+                  else
+                    spillReg (C_IDX);
                 }
               i += 2;
             }
@@ -2146,6 +2218,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
                   cost (2 + (labs(stack_offset) > 127), 1);
                   if (!c_dead)
                     pop (ASMOP_F, 0, 1);
+                  else
+                    spillReg (C_IDX);
                 }
               int lsize = size - i;
               genMove_o (result, roffset + i, ASMOP_Y, soffset + i, lsize, xl_dead, xh_dead, true, z_dead, c_dead);
@@ -2365,6 +2439,7 @@ adjustStack (int n, bool xl_free, bool y_free)
      emit2 ("addw", "y, #%d", n);
      emit2 ("ldw", "sp, y");
      cost (6, 3);
+     spillReg (C_IDX);
      G.stack.pushed -= n;
      updateCFA ();
      return;
@@ -2986,6 +3061,7 @@ genCall (const iCode *ic)
           emit2 ("ldw", "y, sp");
           emit2 ("addw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
           cost (3 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
+          spillReg (C_IDX);
           push (ASMOP_Y, 0, 2);
         }
       else if (!f8IsParmInCall (ftype, "x") && (ic->op != PCALL || left->aop->regs[XL_IDX] < 0 && left->aop->regs[XH_IDX] < 0))
@@ -2993,6 +3069,7 @@ genCall (const iCode *ic)
           emit2 ("ldw", "x, sp");
           emit2 ("addw", "x, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
           cost (5 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
+          spillReg (C_IDX);
           push (ASMOP_X, 0, 2);
         }
       else if (!f8IsParmInCall (ftype, "z") && (ic->op != PCALL || left->aop->regs[ZL_IDX] < 0 && left->aop->regs[ZH_IDX] < 0 && !f8_extend_stack))
@@ -3000,6 +3077,7 @@ genCall (const iCode *ic)
           emit2 ("ldw", "z, sp");
           emit2 ("addw", "z, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
           cost (5 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
+          spillReg (C_IDX);
           push (ASMOP_Z, 0, 2);
         }
       else
@@ -3118,6 +3196,7 @@ genCall (const iCode *ic)
         }
       else
         UNIMPLEMENTED;
+      spillAllRegs (); // Todo: Support __preserves_regs
     }
   else
     {
@@ -3134,6 +3213,7 @@ genCall (const iCode *ic)
         emit2 (jump ? "jp" : "call", "#%s",
           (OP_SYMBOL (left)->rname[0] ? OP_SYMBOL (left)->rname : OP_SYMBOL (left)->name));
       cost (3, 1);
+      spillAllRegs (); // Todo: Support __preserves_regs
     }
 
   freeAsmop (left);
@@ -3272,6 +3352,7 @@ genFunction (iCode *ic)
       emit2 ("ldw", "z, sp");
       emit2 ("addw", "z, #%ld", (~(G.stack.size - 256) + 1) & 0xffff);
       cost (6, 2);
+      spillReg (C_IDX);
     }
 
   bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
@@ -3463,6 +3544,7 @@ genLabel (const iCode *ic)
     debugFile->writeLabel (IC_LABEL (ic), ic);
 
   emitLabel (IC_LABEL (ic));
+  spillAllRegs ();
 }
 
 /*-----------------------------------------------------------------*/
@@ -3842,6 +3924,8 @@ genCmp (const iCode *ic, iCode *ifx)
       cost (2, 1);
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
+      if (IC_TRUE (ifx))
+        G.c = 1;
       goto release;
     }
 
@@ -3948,6 +4032,7 @@ genCmp (const iCode *ic, iCode *ifx)
                     {
                       emit2 ("cpw", "y, #0x%04x", byteOfVal (right->aop->aopu.aop_lit, i) + byteOfVal (right->aop->aopu.aop_lit, i + 1) * 256);
                       cost (3, 1);
+                      spillReg (C_IDX);
                     }
                   else
                     emit3sub_o (A_SBCW, ASMOP_Y, 0, right->aop, i);
@@ -4049,6 +4134,8 @@ genCmp (const iCode *ic, iCode *ifx)
       cost (2, 1);
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
+      if (!sign)
+        G.c = (bool)(IC_TRUE (ifx));
       goto release;
     }
 
@@ -4080,6 +4167,7 @@ return_c:
     }
   emit3 (A_CLR, ASMOP_XL, 0);
   emit3 (A_RLC, ASMOP_XL, 0);
+  G.c = 0;
   genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       
   if (pushed_xl)
@@ -4620,6 +4708,7 @@ genGetABit (const iCode *ic, iCode *ifx)
 write_to_xl:
       emit3 (A_CLR, ASMOP_XL, 0);
       emit3 (A_RLC, ASMOP_XL, 0);
+      G.c = 0;
     }
 
   genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
@@ -4699,7 +4788,7 @@ static void emitLeftShift (asmop *aop, int offset, int size, bool rlc, bool xl_d
         {
           if (!i && !rlc && aopOnStackNotExt (aop, ri, 2)) // There is no on-stack sllw. Emulate it.
             {
-              emit3 (A_TST, ASMOP_XL, 0);
+              clrc ();
               emit3_o (A_RLCW, aop, ri, 0, 0);
             }
           else
@@ -4750,7 +4839,7 @@ static void emitRightShift (asmop *aop, int offset, int size, bool rrc, bool sig
         {
           if (i == size - 1 && !rrc && aopOnStackNotExt (aop, ri - 1, 2)) // There is no on-stack srlw. Emulate it.
             {
-              emit3 (A_TST, ASMOP_XL, 0);
+              clrc ();
               emit3_o (A_RRCW, aop, ri - 1, 0, 0);
             }
           else
@@ -4936,6 +5025,7 @@ genLeftShift (const iCode *ic)
           emit2 ("ld", "xl, #%d", shCount);
           emit2 ("sllw", "y, xl");
           cost (2, 4);
+          spillReg (C_IDX);
         }
       else
         for (int c = 0; c < shCount; c++)
@@ -4965,6 +5055,7 @@ genLeftShift (const iCode *ic)
         {
           emit2 ("sllw", "y, xl");
           cost (2, 1);
+          spillReg (C_IDX);
           goto shifted;
         }
 
@@ -4974,6 +5065,7 @@ genLeftShift (const iCode *ic)
       cost (2, 1);
         
       emitLabel (tlbl1);
+      spillReg (C_IDX);
 
       bool xl_pushed = false;
       emitLeftShift (shiftop, 0, size, false, false, &xl_pushed);
@@ -4985,6 +5077,7 @@ genLeftShift (const iCode *ic)
         emit2 ("jrnz", "#!tlabel", labelKey2num (tlbl1->key));
       cost (2, 1);
       emitLabel (tlbl2);
+      spillReg (C_IDX);
     }
   else
     UNIMPLEMENTED;
@@ -5131,6 +5224,7 @@ genRightShift (const iCode *ic)
       cost (2, 1);
         
       emitLabel (tlbl1);
+      spillReg (C_IDX);
 
       emitRightShift (shiftop, 0, size, false, sign, false, &xl_pushed);
       if (xl_pushed)
@@ -5141,6 +5235,7 @@ genRightShift (const iCode *ic)
         emit2 ("jrnz", "#!tlabel", labelKey2num (tlbl1->key));
       cost (2, 1);
       emitLabel (tlbl2);
+      spillReg (C_IDX);
     }
 
   genMove (result->aop, shiftop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
@@ -5238,6 +5333,7 @@ genPointerGet (const iCode *ic)
         {
           emit2 ("addw", "y, #%d", offset);
           cost (3, 1);
+          spillReg (C_IDX);
           offset = 0;
         }
     }
@@ -5726,6 +5822,7 @@ genAddrOf (const iCode *ic)
           cost (1 + !aopInReg (aop, 0, Y_IDX), 1 + !aopInReg (aop, 0, Y_IDX));
           emit2 ("addw", "%s, #%ld", aopGet2 (aop, 0), soffset);
           cost (2 + !aopInReg (aop, 0, Y_IDX) + (labs(soffset) > 127), 1 + !aopInReg (aop, 0, Y_IDX));
+          spillReg (C_IDX);
         }
       genMove (result->aop, aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
     }
@@ -6267,6 +6364,8 @@ dryF8iCode (iCode *ic)
   regalloc_dry_run_cost_bytes = 0;
   regalloc_dry_run_cost_cycles = 0;
 
+  spillAllRegs ();
+
   initGenLineElement ();
 
   genF8iCode (ic);
@@ -6304,6 +6403,8 @@ genF8Code (iCode *lic)
 
   regalloc_dry_run_cost_bytes = 0;
   regalloc_dry_run_cost_cycles = 0;
+
+  spillAllRegs ();
 
   for (ic = lic; ic; ic = ic->next)
     {

@@ -1,3 +1,8 @@
+2023-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Carry bit tracking.
+
 2023-05-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
