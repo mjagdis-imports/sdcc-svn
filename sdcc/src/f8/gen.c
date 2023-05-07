@@ -3856,7 +3856,7 @@ genMult (const iCode *ic)
 
   if (size == 2 && aopInReg (result->aop, 0, X_IDX))
     mulop = ASMOP_X;
-  else if (size == 2 && aopInReg (result->aop, 0, X_IDX))
+  else if (size == 2 && aopInReg (result->aop, 0, Z_IDX))
     mulop = ASMOP_Z;
   else if (regDead (Y_IDX, ic))
     mulop = ASMOP_Y;
@@ -4645,6 +4645,7 @@ genGetABit (const iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
   int shCount;
+  bool pushed_xl = false;
 
   D (emit2 ("; genGetABit", ""));
 
@@ -4680,15 +4681,29 @@ genGetABit (const iCode *ic, iCode *ifx)
     }
 
   if (!regDead (XL_IDX, ic))
-    push (ASMOP_XL, 0, 1);
+    {
+      push (ASMOP_XL, 0, 1);
+      pushed_xl = true;
+    }
 
-  if ((aopInReg (left->aop, shCount / 8, YL_IDX) || aopInReg (left->aop, shCount / 8, YH_IDX)) &&
+  if (aopInReg (left->aop, shCount / 8, ZL_IDX) && (shCount % 8 || !regDead (XL_IDX, ic)) &&
+    (result->aop->size == 1 && aopInReg (result->aop, 0, ZL_IDX) && regDead (ZH_IDX, ic) ||
+    result->aop->size == 2 && aopInReg (result->aop, 0, Z_IDX)))
+    {
+      emit3_o (A_CLR, ASMOP_Z, 1, 0, 0);
+      emit2 ("and", "zl, #0x%02x", 1 << (shCount % 8));
+      cost (3, 2);
+      emit3 (A_BOOLW, ASMOP_Z, 0);
+      goto release;
+    }
+  else if ((shCount % 8) == 7 && aopInReg (left->aop, shCount / 8, YH_IDX) && regDead (Y_IDX, ic) &&
     (result->aop->size == 1 && aopInReg (result->aop, 0, YL_IDX) && regDead (YH_IDX, ic) ||
     result->aop->size == 2 && aopInReg (result->aop, 0, Y_IDX)))
     {
-      emit2 ("andw", "y, #0x%04x", (aopInReg (left->aop, shCount / 8, YL_IDX) ? 0x0001 : 0x0100) << (shCount % 8));
-      cost (3, 1);
-      emit3 (A_BOOLW, ASMOP_Y, 0);
+      emit3 (A_SLLW, ASMOP_Y, 0);
+      emit3 (A_CLRW, ASMOP_Y, 0);
+      emit3 (A_RLCW, ASMOP_Y, 0);
+      G.c = 0;
       goto release;
     }
   else if ((shCount % 8) == 7 && aopInReg (left->aop, shCount / 8, YH_IDX) && regDead (Y_IDX, ic))
@@ -4711,10 +4726,10 @@ genGetABit (const iCode *ic, iCode *ifx)
 store_xl:
   genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
-  if (!regDead (XL_IDX, ic))
+release:
+  if (pushed_xl)
     pop (ASMOP_XL, 0, 1);
 
-release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -6440,7 +6455,7 @@ genF8Code (iCode *lic)
       genF8iCode(ic);
 
 #if 0
-      fprintf (stderr, "ic %d: stack %d\n", ic->key, G.stack.pushed);
+      fprintf (stderr, "ic %d: (op %d) stack %d\n", ic->key, ic->op, G.stack.pushed);
 #endif
 
 #if 0

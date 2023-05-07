@@ -1,7 +1,9 @@
 2023-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Carry bit tracking.
+	  Carry bit tracking, improve codegen.
+	* src/f8/ralloc.c:
+	  Improve rematerialization.
 
 2023-05-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
