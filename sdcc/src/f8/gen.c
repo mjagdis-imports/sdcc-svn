@@ -4644,7 +4644,7 @@ static void
 genGetABit (const iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
-  int shCount, leftcost, rightcost;
+  int shCount;
 
   D (emit2 ("; genGetABit", ""));
 
@@ -4682,35 +4682,33 @@ genGetABit (const iCode *ic, iCode *ifx)
   if (!regDead (XL_IDX, ic))
     push (ASMOP_XL, 0, 1);
 
-  if ((shCount % 8) == 7 && aopInReg (left->aop, shCount / 8, YH_IDX) && regDead (Y_IDX, ic))
+  if ((aopInReg (left->aop, shCount / 8, YL_IDX) || aopInReg (left->aop, shCount / 8, YH_IDX)) &&
+    (result->aop->size == 1 && aopInReg (result->aop, 0, YL_IDX) && regDead (YH_IDX, ic) ||
+    result->aop->size == 2 && aopInReg (result->aop, 0, Y_IDX)))
+    {
+      emit2 ("andw", "y, #0x%04x", (aopInReg (left->aop, shCount / 8, YL_IDX) ? 0x0001 : 0x0100) << (shCount % 8));
+      cost (3, 1);
+      emit3 (A_BOOLW, ASMOP_Y, 0);
+      goto release;
+    }
+  else if ((shCount % 8) == 7 && aopInReg (left->aop, shCount / 8, YH_IDX) && regDead (Y_IDX, ic))
     {
       emit3 (A_SLLW, ASMOP_Y, 0);
-      goto write_to_xl;
+      emit3 (A_CLR, ASMOP_XL, 0);
+      emit3 (A_RLC, ASMOP_XL, 0);
+      G.c = 0;
+      goto store_xl;
     }
 
   genMove_o (ASMOP_XL, 0, left->aop, shCount / 8, 1, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic), true);
   shCount %= 8;
 
-  rightcost = 2 + shCount % 4;
-  leftcost = 2 + (8 - shCount) % 4;
+  emit2 ("and", "xl, #0x%02x", 1 << shCount);
+  cost (2, 1);
+  if (shCount)
+    emit3 (A_BOOL, ASMOP_XL, 0);
 
-  if (rightcost < leftcost)
-    {
-      while (shCount--)
-        emit3 (A_SRL, ASMOP_XL, 0);
-      emit3 (A_AND, ASMOP_XL, ASMOP_ONE);
-      cost (2, 1);
-    }
-  else
-    {
-      while (shCount++ < 8)
-        emit3 (A_SLL, ASMOP_XL, 0);
-write_to_xl:
-      emit3 (A_CLR, ASMOP_XL, 0);
-      emit3 (A_RLC, ASMOP_XL, 0);
-      G.c = 0;
-    }
-
+store_xl:
   genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
   if (!regDead (XL_IDX, ic))
