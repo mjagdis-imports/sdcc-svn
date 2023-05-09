@@ -1013,8 +1013,9 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
   case A_SUBW:
     wassertl_bt (!op1 || op1->type != AOP_LIT && op1->type != AOP_IMMD, "Subtraction with constant right operand not available.");
   case A_ADCW:
-    if (inst == A_ADCW && op1 &&
-      (op1->type == AOP_LIT && byteOfVal (op1->aopu.aop_lit, offset1 + 1) == ((byteOfVal (op1->aopu.aop_lit, offset1) & 0x80) ? 0xff : 0x00) || offset1 >= op1->size)) // adcw y, #d
+  case A_ADDW:
+    if (inst == A_ADDW && op1 &&
+      (op1->type == AOP_LIT && byteOfVal (op1->aopu.aop_lit, offset1 + 1) == ((byteOfVal (op1->aopu.aop_lit, offset1) & 0x80) ? 0xff : 0x00) || offset1 >= op1->size)) // addw y, #d
       {
         if (aopInReg (op0, offset0, Y_IDX))
           cost (1, 1);
@@ -1024,7 +1025,6 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
           wassertl_bt (0, "Tried to get cost for invalid instruction");
         break;
       }
-  case A_ADDW:
   case A_ORW:
     if (op1)
       op2w_cost (op0, offset0, op1, offset1);

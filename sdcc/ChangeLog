@@ -3,6 +3,10 @@
 	* sdas/asf8/f8.h,
 	  sdas/asf8/f8mch.c:
 	  Enable #d adressing mode for negative constants.
+	* src/f8/gen.c:
+	  Fix cost for addw y, #d.
+	* src/f8/peeph.def:
+	  More peephole optimizer rules for jump optimizations.
 
 2023-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -26,6 +26,54 @@ replace restart {
 	; peephole j1 removed redundant jump.
 } if labelRefCountChange(%1 -1)
 
+replace restart {
+	jp	#%1
+	jp	#%2
+} by {
+	jp	#%1
+	; peephole j2a removed unreachable jump to %2.
+} if labelRefCountChange(%2 -1)
+
+replace restart {
+	jr	#%1
+	jp	#%2
+} by {
+	jr	#%1
+	; peephole j2b removed unreachable jump to %2.
+} if labelRefCountChange(%2 -1)
+
+replace restart {
+	jp	#%1
+	jr	#%2
+} by {
+	jp	#%1
+	; peephole jc2 removed unreachable jump to %2.
+} if labelRefCountChange(%2 -1)
+
+replace restart {
+	jr	#%1
+	jr	#%2
+} by {
+	jr	#%1
+	; peephole j2d removed unreachable jump to %2.
+} if labelRefCountChange(%2 -1)
+
+replace {
+	jp	#%5
+	ret
+} by {
+	jp	#%5
+	; peephole j3 removed unreachable ret.
+}
+
+replace restart {
+	jp	#%5
+	addw	sp, %1
+} by {
+	jp	#%5
+	; peephole j4 removed unreachable addw.
+}
+
 // Ensure jump-to-jump optimization of absolute jumps above is done before other jump-related optimizations.
 barrier
 
@@ -33,14 +81,14 @@ replace restart {
 	jp	#%5
 } by {
 	ret
-	; peephole j2 replaced jump by return.
+	; peephole j5 replaced jump by return.
 } if labelIsReturnOnly(%5), labelRefCountChange(%5 -1)
 
 replace restart {
 	jp	#%5
 } by {
 	jr	#%5
-	; peephole j3 changed absolute to relative unconditional jump.
+	; peephole j6 changed absolute to relative unconditional jump.
 } if labelInRange(%5)
 
 replace restart {
@@ -49,7 +97,7 @@ replace restart {
 %1:
 } by {
 	jrnz	#%5
-	; peephole j4 removed jr by using inverse jump logic
+	; peephole j7 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -59,7 +107,7 @@ replace restart {
 %1:
 } by {
 	jrz	#%5
-	; peephole j5 removed jr by using inverse jump logic
+	; peephole j8 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -69,7 +117,7 @@ replace restart {
 %1:
 } by {
 	jrnc	#%5
-	; peephole j6 removed jr by using inverse jump logic
+	; peephole j9 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -79,7 +127,7 @@ replace restart {
 %1:
 } by {
 	jrc	#%5
-	; peephole j7 removed jr by using inverse jump logic
+	; peephole j10 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -89,7 +137,7 @@ replace restart {
 %1:
 } by {
 	jrnn	#%5
-	; peephole j8 removed jr by using inverse jump logic
+	; peephole j11 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -99,7 +147,7 @@ replace restart {
 %1:
 } by {
 	jrn	#%5
-	; peephole j9 removed jr by using inverse jump logic
+	; peephole j12 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -109,7 +157,7 @@ replace restart {
 %1:
 } by {
 	jrno	#%5
-	; peephole j10 removed jr by using inverse jump logic
+	; peephole j13 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -119,7 +167,7 @@ replace restart {
 %1:
 } by {
 	jro	#%5
-	; peephole j11 removed jr by using inverse jump logic
+	; peephole j14 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -129,7 +177,7 @@ replace restart {
 %1:
 } by {
 	jrslt	#%5
-	; peephole j12 removed jr by using inverse jump logic
+	; peephole j15 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -139,7 +187,7 @@ replace restart {
 %1:
 } by {
 	jrsge	#%5
-	; peephole j13 removed jr by using inverse jump logic
+	; peephole j16 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -149,7 +197,7 @@ replace restart {
 %1:
 } by {
 	jrsle	#%5
-	; peephole j14 removed jr by using inverse jump logic
+	; peephole j17 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -159,7 +207,7 @@ replace restart {
 %1:
 } by {
 	jrsgt	#%5
-	; peephole j15 removed jr by using inverse jump logic
+	; peephole j18 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -169,7 +217,7 @@ replace restart {
 %1:
 } by {
 	jrle	#%5
-	; peephole j16 removed jr by using inverse jump logic
+	; peephole j19 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -179,7 +227,7 @@ replace restart {
 %1:
 } by {
 	jrgt	#%5
-	; peephole j17 removed jr by using inverse jump logic
+	; peephole j20 removed jr by using inverse jump logic
 %1:
 } if labelRefCountChange(%1 -1)
 
@@ -187,6 +235,6 @@ replace restart {
 replace restart {
 %1:
 } by {
-	; peephole j18 removed unused label %1.
+	; peephole j21 removed unused label %1.
 } if labelRefCount(%1 0)
 
