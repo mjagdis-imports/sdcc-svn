@@ -139,7 +139,7 @@ extern	VOID		minit(void);
 extern	VOID		opcy_aerr(void);
 extern	VOID		valu_aerr(struct expr *e, int n);
 extern	int		ls_mode(struct expr *e);
-extern	int		ld_mode(struct expr *e);
+extern	int		d_mode(struct expr *e);
 extern	int		setbit(int b);
 extern	int		getbit(void);
 extern	void	altacc(int reg);

@@ -310,12 +310,12 @@ struct mne *mp;
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && t2 == S_IMM && !ld_mode(&e2)) { // addw sp, #d
+		if(rf == S_2OPWADD && t1 == S_REG && r1 == SP && t2 == S_IMM && !d_mode(&e2)) { // addw sp, #d
 			outab(0xea);
 			outab(e2.e_addr);
 			break;
 		}
-		else if(rf == S_2OPWADD && t1 == S_REG && t2 == S_IMM && !ld_mode(&e2)) { // addw y, #d
+		else if(rf == S_2OPWADD && t1 == S_REG && t2 == S_IMM && !d_mode(&e2)) { // addw y, #d
 			altaccw(r1);
 			outab(0xeb);
 			outab(e2.e_addr);
@@ -557,7 +557,7 @@ opw:
 			altaccw(r1);
 			switch(t2) {
 			case S_IMM:
-				if (!ld_mode(&e2)) { // ldw y, #d
+				if (!d_mode(&e2)) { // ldw y, #d
 					outab(op | 0x07);
 					outrb(&e2, R_USGN);
 					break;
@@ -910,13 +910,13 @@ struct expr *e;
 }
 
 /*
- * Select the long or short addressing mode
+ * Select the long or short immediate mode
 
  * based upon the expression type and value.
- * Return 1 for 16-bit offset, 0 for 8-bit offset.
+ * Return 1 for 16-bit, 0 for 8-bit.
  */
 int
-ld_mode(e)
+d_mode(e)
 struct expr *e;
 {
 	int flag, v;
@@ -938,7 +938,7 @@ struct expr *e;
 		if (e->e_addr >= dot.s_addr) {
 			e->e_addr -= fuzz;
 		}
-		flag = ((v & ~0x7f) == ~0x7f || (v & ~0x7f) == 0) ? 0 : 1;
+		flag = (((v & ~0x7f) & 0xffff) == (~0x7f & 0xffff) || (v & ~0x7f) == 0) ? 0 : 1;
 		return(setbit(flag) ? 1 : 0);
 	} else {
 		return(getbit() ? 1 : 0);

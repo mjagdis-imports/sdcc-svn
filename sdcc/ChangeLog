@@ -1,3 +1,9 @@
+2023-05-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8.h,
+	  sdas/asf8/f8mch.c:
+	  Enable #d adressing mode for negative constants.
+
 2023-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
