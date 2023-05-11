@@ -3419,7 +3419,9 @@ poppairwithsavedreg (PAIR_ID pair, short survivingreg, short tempreg)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
-  // emitDebug ("; cheapMove");
+#if 0
+  emitDebug ("; cheapMove");
+#endif
 
   if (aopInReg (to, to_offset, A_IDX))
     a_dead = true;
@@ -3495,6 +3497,19 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       regalloc_dry_run_cost += ld_cost (to, 0, from_offset < from->size ? from : ASMOP_ZERO, from_offset);
       return;
     }
+  else if (to_index && HAS_IYL_INST)
+    {
+      if (!a_dead)
+        _push (PAIR_AF);
+      cheapMove (ASMOP_A, 0, from, from_offset, true);
+      if (!regalloc_dry_run)
+        aopPut (to, "a", to_offset);
+      spillPairReg (to->aopu.aop_reg[to_offset]->name);
+      regalloc_dry_run_cost += 2;
+      if (!a_dead)
+        _pop (PAIR_AF);
+      return;
+    }
 
   if (to->type == AOP_REG && from_index && !to_index && - _G.stack.pushed - _G.stack.offset >= -128 && !_G.omitFramePtr)
     {
@@ -3515,7 +3530,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       _pop(PAIR_IY);
       return;
     }
-  
+
   if (from_index && !to_index && !aopInReg (to, to_offset, L_IDX) && !aopInReg (to, to_offset, H_IDX))
     {
       _push (PAIR_IY);
@@ -4416,7 +4431,7 @@ skip_byte:
 static void
 genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global, bool hl_dead_global, bool de_dead_global, bool iy_dead_global, bool f_dead)
 {
-  emitDebug ("; genMove_o");
+  emitDebug ("; genMove_o size %d", size);
   wassert (result->size >= roffset + size);
 
   if (aopSame (result, roffset, source, soffset, size))
@@ -5528,6 +5543,8 @@ genIpush (const iCode *ic)
         bool e_free = isRegDead (E_IDX, ic) && (IC_LEFT (ic)->aop->regs[E_IDX] < 0 || IC_LEFT (ic)->aop->regs[E_IDX] >= size - 1);
         bool h_free = isRegDead (H_IDX, ic) && (IC_LEFT (ic)->aop->regs[H_IDX] < 0 || IC_LEFT (ic)->aop->regs[H_IDX] >= size - 1);
         bool l_free = isRegDead (L_IDX, ic) && (IC_LEFT (ic)->aop->regs[L_IDX] < 0 || IC_LEFT (ic)->aop->regs[L_IDX] >= size - 1);
+        bool iyh_free = isRegDead (IYH_IDX, ic) && (IC_LEFT (ic)->aop->regs[IYH_IDX] < 0 || IC_LEFT (ic)->aop->regs[IYH_IDX] >= size - 1);
+        bool iyl_free = isRegDead (IYL_IDX, ic) && (IC_LEFT (ic)->aop->regs[IYL_IDX] < 0 || IC_LEFT (ic)->aop->regs[IYL_IDX] >= size - 1);
         bool hl_free = isPairDead (PAIR_HL, ic) && (h_free || IC_LEFT (ic)->aop->regs[H_IDX] >= size - 2) && (l_free || IC_LEFT (ic)->aop->regs[L_IDX] >= size - 2);
         bool de_free = isPairDead (PAIR_DE, ic) && (d_free || IC_LEFT (ic)->aop->regs[D_IDX] >= size - 2) && (e_free || IC_LEFT (ic)->aop->regs[E_IDX] >= size - 2);
         bool bc_free = isPairDead (PAIR_BC, ic) && (b_free || IC_LEFT (ic)->aop->regs[B_IDX] >= size - 2) && (c_free || IC_LEFT (ic)->aop->regs[C_IDX] >= size - 2);
@@ -5678,7 +5695,7 @@ genIpush (const iCode *ic)
          }
        else if (a_free)
          {
-           genMove_o (ASMOP_A, 0, IC_LEFT (ic)->aop, size - 1, 1, true, h_free && l_free, d_free && e_free, true, true);
+           genMove_o (ASMOP_A, 0, IC_LEFT (ic)->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
            emit2 ("push af");
            emit2 ("inc sp");
            regalloc_dry_run_cost += 2;
@@ -5686,7 +5703,7 @@ genIpush (const iCode *ic)
          }
        else if (h_free)
          {
-           cheapMove (ASMOP_H, 0, IC_LEFT (ic)->aop, size - 1, false);
+           genMove_o (ASMOP_H, 0, IC_LEFT (ic)->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
            emit2 ("push hl");
            emit2 ("inc sp");
            regalloc_dry_run_cost += 2;
@@ -5694,7 +5711,7 @@ genIpush (const iCode *ic)
          }
        else if (d_free)
          {
-           cheapMove (ASMOP_D, 0, IC_LEFT (ic)->aop, size - 1, false);
+           genMove_o (ASMOP_D, 0, IC_LEFT (ic)->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
            emit2 ("push de");
            emit2 ("inc sp");
            regalloc_dry_run_cost += 2;
@@ -5702,7 +5719,7 @@ genIpush (const iCode *ic)
          }
        else if (b_free)
          {
-           cheapMove (ASMOP_B, 0, IC_LEFT (ic)->aop, size - 1, false);
+           genMove_o (ASMOP_B, 0, IC_LEFT (ic)->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
            emit2 ("push bc");
            emit2 ("inc sp");
            regalloc_dry_run_cost += 2;
@@ -5718,7 +5735,7 @@ genIpush (const iCode *ic)
        else if (!IS_SM83)
          {
            emit2 ("push hl");
-           cheapMove (ASMOP_H, 0, IC_LEFT (ic)->aop, size - 1, false);
+           genMove_o (ASMOP_H, 0, IC_LEFT (ic)->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
            emit2 ("ex (sp), hl");
            spillPair (PAIR_HL);
            emit2 ("inc sp");
@@ -6088,10 +6105,19 @@ genCall (const iCode *ic)
           emit2 (jump ? "!jphl" : "call ___sdcc_call_hl");
           regalloc_dry_run_cost += 3;
         }
-      else if (!IS_SM83 && !IY_RESERVED && !z80IsParmInCall (ftype, "iy"))
+      else if (!IS_SM83 && !IY_RESERVED && !z80IsParmInCall (ftype, "iy")) // Ensure that we don't access the stack via iy when reading IC_LEFT (ic).
         {
           spillPair (PAIR_IY);
-          genMove (ASMOP_IY, IC_LEFT (ic)->aop, a_free_pre_call, hl_free_pre_call, de_free_pre_call, true);
+          if (IC_LEFT (ic)->aop->type == AOP_EXSTK) // Ensure that we don't directly overwrite iyl while accessing the stack via iy.
+            {
+              _push (PAIR_HL);
+              genMove (ASMOP_HL, IC_LEFT (ic)->aop, a_free_pre_call, true, de_free_pre_call, true);
+              emit2 ("ex (sp), hl");
+              regalloc_dry_run_cost += (1 + IS_RAB);
+              _pop (PAIR_IY);
+            }
+          else
+            genMove (ASMOP_IY, IC_LEFT (ic)->aop, a_free_pre_call, hl_free_pre_call, de_free_pre_call, true);
           adjustStack (prestackadjust, a_free_pre_call, bc_free_pre_call, de_free_pre_call, hl_free_pre_call, false);
           emit2 (jump ? "jp (iy)" : "call ___sdcc_call_iy");
           regalloc_dry_run_cost += 3;

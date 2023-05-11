@@ -1,3 +1,57 @@
+2023-05-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3352.c,
+	  support/regression/tests/bug-3465.c,
+	  support/regression/tests/bug-3523.c,
+	  support/regression/tests/bug-3532.c,
+	  support/regression/tests/bug-3547.c:
+	  Disable warning 85 for some tests (as parameters are intentionally unused in these).
+
+2023-05-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3563.c:
+	  Regression test for bug #3563 (disabled for mcs51, as the bug is not yet fixed).
+	* src/SDCCmem.c,
+	  support/regression/tests/*.c:
+	  Fix bug #2874.
+
+2023-05-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3579.c:
+	  iy handling fixes in code generation.
+
+2023-04-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdwarf2.c:
+	  Fix bug #3576.
+
+2023-04-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asz80/z80mch.c:
+	  Fix error message on use of undocumented inc/dec ixl/ixh/iyl/iyh. Fix error message on undocumented load between ix/iy l/h. Fix bug #3574.
+
+2023-04-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.c:
+	  Improve error message on missing skip instruction target label at end of inline asm in __naked function. Fix bug #3566.
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3570.c:
+	  Fix bug #3570.
+	* src/SDCCmem.c:
+	  Fix bug #3030.
+
+2023-03-21 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCCmain.c:
+	  Use -MF to pass dependency output file to sdcpp, fixing bug #3541.
+	  See https://gcc.gnu.org/onlinedocs/cpp/Invocation.html#Invocation.
+
+2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3567.c:
+	  Disable a test for mcs51 small model, where it fails due to lack of memory.
+
 2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,

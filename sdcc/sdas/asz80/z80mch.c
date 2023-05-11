@@ -1306,7 +1306,7 @@ struct mne *mp;
                  * ld  iyl,iyl
                  */
                 if ( allow_undoc &&
-                     ((t1 == S_R8U1) &&  (t2 == S_R8U1)) || ((t1 == S_R8U2) &&  (t2 == S_R8U2)) )
+                     ((t1 == S_R8U1) &&  (t2 == S_R8U1) || (t1 == S_R8U2) &&  (t2 == S_R8U2)) )
                   {
                     outab( ((t1 == S_R8U1) ? 0xDD : 0xFD ) );
                     outab( (e1.e_addr << 3) | (0x40 + e2.e_addr) );
@@ -1446,7 +1446,7 @@ struct mne *mp;
                  * op  IYL
                  * op  IYH
                  */
-                if ((t1 == S_R8U1)||(t1 == S_R8U2)) {
+                if (allow_undoc && ((t1 == S_R8U1)||(t1 == S_R8U2))) {
                         outab( ((t1 == S_R8U1) ? 0xDD : 0xFD ) );
                         outab(op|(v1<<3));
                         break;
