@@ -5053,8 +5053,11 @@ genLeftShift (const iCode *ic)
     {
       bool xl_dead = regDead (XL_IDX, ic) && (premoved_count ? false : (right->aop->regs[XL_IDX] < 0));
       bool xh_dead = regDead (XH_IDX, ic) && (right->aop->regs[XH_IDX] < 0 || premoved_count);
+      bool yl_dead = regDead (YL_IDX, ic) && (right->aop->regs[YL_IDX] < 0 || premoved_count);
+      bool yh_dead = regDead (YH_IDX, ic) && (right->aop->regs[YH_IDX] < 0 || premoved_count);
+      bool y_dead = yl_dead && yh_dead;
 
-      genMove (shiftop, left->aop, xl_dead, xh_dead, false, false);
+      genMove (shiftop, left->aop, xl_dead, xh_dead, y_dead, false);
 
       symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (0));
       symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (0));
@@ -5165,6 +5168,9 @@ genRightShift (const iCode *ic)
       if (shCount > (size * 8))
         shCount = size * 8;
 
+      if (sign && shCount > 4 && size > 2) // todo: better estimate, that also takes optimization goals into account.
+        goto makeloop;
+
       if (shCount <= 6)
         {
           shiftop = &shiftop_impl;
@@ -5192,9 +5198,7 @@ genRightShift (const iCode *ic)
           shCount %= 8;
         }
       else
-        {
-          genMove (shiftop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-        }
+        genMove (shiftop, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
 
       bool xl_pushed = false;
       bool xl_free = regDead (XL_IDX, ic);
@@ -5211,15 +5215,19 @@ genRightShift (const iCode *ic)
     }
   else
     {
+makeloop:
       bool xl_dead = regDead (XL_IDX, ic) && (premoved_count ? false : (right->aop->regs[XL_IDX] < 0));
       bool xh_dead = regDead (XH_IDX, ic) && (right->aop->regs[XH_IDX] < 0 || premoved_count);
+      bool yl_dead = regDead (YL_IDX, ic) && (right->aop->regs[YL_IDX] < 0 || premoved_count);
+      bool yh_dead = regDead (YH_IDX, ic) && (right->aop->regs[YH_IDX] < 0 || premoved_count);
+      bool y_dead = yl_dead && yh_dead;
 
       symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (0));
       symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (0));
 
       bool xl_pushed = false;
 
-      genMove (shiftop, left->aop, xl_dead, xh_dead, false, false);
+      genMove (shiftop, left->aop, xl_dead, xh_dead, y_dead, false);
 
       if (!regDead (XL_IDX, ic))
         {
@@ -5231,16 +5239,19 @@ genRightShift (const iCode *ic)
       if (!premoved_count)
         genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic) && shiftop->regs[XH_IDX] < 0, false, false);
 
-      emit3 (A_TST, ASMOP_XL, 0);
-      if (tlbl2)
-        emit2 ("jrz", "#!tlabel", labelKey2num (tlbl2->key));
-      cost (2, 1);
+      if (right->aop->type != AOP_LIT)
+        {
+          emit3 (A_TST, ASMOP_XL, 0);
+          if (tlbl2)
+            emit2 ("jrz", "#!tlabel", labelKey2num (tlbl2->key));
+          cost (2, 1);
+        }
         
       emitLabel (tlbl1);
       spillReg (C_IDX);
 
       emitRightShift (shiftop, 0, size, false, sign, false, &xl_pushed);
-      if (xl_pushed)
+      if (xl_pushed && regDead (XL_IDX, ic))
         pop (ASMOP_XL, 0, 1);
 
       emit3 (A_DEC, ASMOP_XL, 0);
@@ -5249,6 +5260,8 @@ genRightShift (const iCode *ic)
       cost (2, 1);
       emitLabel (tlbl2);
       spillReg (C_IDX);
+      if (xl_pushed && !regDead (XL_IDX, ic))
+        pop (ASMOP_XL, 0, 1);
     }
 
   genMove (result->aop, shiftop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
@@ -5871,6 +5884,51 @@ genAddrOf (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genJumpTab - generate code for jump table                       */
+/*-----------------------------------------------------------------*/
+static void
+genJumpTab (const iCode *ic)
+{
+  symbol *jtab = regalloc_dry_run ? 0 : newiTempLabel (0);
+  operand *cond;
+
+  D (emit2 ("; genJumpTab", ""));
+
+  cond = IC_JTCOND (ic);
+
+  aopOp (cond, ic);
+
+  if (!regDead (Y_IDX, ic))
+    {
+      wassertl (regalloc_dry_run, "Need free Y for jump table.");
+      cost (180, 180);
+    }
+
+  genMove (ASMOP_Y, cond->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+
+  emit3 (A_SLLW, ASMOP_Y, 0);
+
+  if (!regalloc_dry_run)
+    {
+      //emit2 ("ldw", "y, (#!tlabel, y)", labelKey2num (jtab->key)); todo: make this work to save a byte and a cycle!
+      emit2 ("addw", "y, #!tlabel", labelKey2num (jtab->key));
+      emit2 ("ldw", "y, (y)");
+      emit2 ("jp", "y");
+    }
+  cost (4, 3);
+
+  emitLabel (jtab);
+  for (jtab = setFirstItem (IC_JTLABELS (ic)); jtab; jtab = setNextItem (IC_JTLABELS (ic)))
+    {
+      if (!regalloc_dry_run)
+        emit2 (".dw", "#!tlabel", labelKey2num (jtab->key));
+      cost (2, 0);
+    }
+
+  freeAsmop (cond);
+}
+
+/*-----------------------------------------------------------------*/
 /* genCast - generate code for cast                                */
 /*-----------------------------------------------------------------*/
 static void
@@ -6363,7 +6421,7 @@ genF8iCode (iCode *ic)
       break;
 
     case JUMPTABLE:
-      wassertl (0, "Unimplemented iCode");
+      genJumpTab (ic);
       break;
 
     case CAST:

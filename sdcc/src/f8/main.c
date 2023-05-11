@@ -458,12 +458,12 @@ PORT f8_port =
     },
   },
   {
-    -1,                         /* maxCount */
+    32767,                      /* maxCount */
     2,                          /* sizeofElement */
-    {4, 5, 5},                  /* sizeofMatchJump[] */
-    {4, 5, 5},                  /* sizeofRangeCompare[] */
+    {4, 5, 5},                  /* sizeofMatchJump[] todo: check!*/
+    {4, 5, 5},                  /* sizeofRangeCompare[] todo:check!*/
     3,                          /* sizeofSubtract */
-    5,                          /* sizeofDispatch */
+    5,                          /* sizeofDispatch - 1 byte for sllw y followed by 3 bytes for ldw y, (..., y) and 1 byte for jp (y) */
   },
   "_",
   f8_init,

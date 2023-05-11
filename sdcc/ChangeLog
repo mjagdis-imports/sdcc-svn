@@ -1,7 +1,8 @@
 2023-05-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* src/f8/gen.c:
-	  Improve narrow write via pointer.
+	* src/f8/gen.c,
+	  src/f8/main.c:
+	  Improve narrow write via pointer. Jumptable support. Improved signed right shift.
 
 2023-05-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
