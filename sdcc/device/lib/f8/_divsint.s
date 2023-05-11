@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
-;  _mulint.s
+;  _divsint.s
 ;
-;  Copyright (c) 2023, Philipp Klaus Krause
+;  Copyright (C) 2023, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -26,31 +26,34 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-.globl __divuint
+	.globl __divsint
+	.globl __divuint
 
-.area CODE
+	.area CODE
 
-; _divuint (int x, int y)
-__divuint:
+; _divsint (int x, int y)
+__divsint:
+	ld	xl, yh
+	tst	xl
+	jrnn	x_nonnegative
+	negw	y
+x_nonnegative:
 
-	clrw	z
-	ld	xl, #0x10
+	ldw	z, (2, sp)
+	tstw	z
+	jrnn	y_nonnegative
+	negw	z
+	xor	xl, #0x80
+y_nonnegative:
 
-1$:
-
-	sllw	z
-	sllw	y
-	adcw	z
-
-	incw	y
-	subw	z, (2, sp)
-	jrc	#2$
-	addw	y, #-1
-	addw	z, (2, sp)
-2$:
-
-	dec	xl
-	jrnz	#1$
+	push	xl
+	pushw	z
+	call	#__divuint
+	tst	(2, sp)
+	jrnn	return_nonnegative
+	negw	y
+return_nonnegative:
+	addw	sp, #3
 
 	ret
 
