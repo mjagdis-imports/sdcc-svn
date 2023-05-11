@@ -5556,6 +5556,19 @@ genPointerSet (const iCode *ic)
       goto release;
     }
 
+  if (!bit_field && size == 2 && aopInReg (left->aop, 0, Z_IDX) && aopIsAcc16 (right->aop, 0))
+    {
+      emit2 ("ldw", "(0, z), %s", aopGet2 (right->aop, 0));
+      cost (3 + !aopInReg (right->aop, 0, Y_IDX), 1);
+      goto release;
+    }
+  else if (!bit_field && size == 1 && aopInReg (left->aop, 0, Z_IDX) && aopIsAcc8 (right->aop, 0))
+    {
+      emit2 ("ld", "(0, z), %s", aopGet (right->aop, 0));
+      cost (3 + !aopInReg (right->aop, 0, XL_IDX), 1);
+      goto release;
+    }
+
   if (aopInReg (left->aop, 0, Y_IDX))
     ;
   else
@@ -5589,10 +5602,22 @@ genPointerSet (const iCode *ic)
           blen -= 8;
           continue;
         }
-
-      if (aopInReg (right->aop, i, XL_IDX))
-        ;
-      else if (xl_dead)
+      else if ((!bit_field || blen >= 8) && aopIsAcc8 (right->aop, i))
+        {
+          if (!i)
+            {
+              emit2 ("ld", "(y), %s", aopGet (right->aop, i));
+              cost (1 + !aopInReg (right->aop, i, XL_IDX), 1);
+            }
+          else
+            {
+              emit2 ("ld", "(%d, y), %s", i, aopGet (right->aop, i));
+              cost (2 + !aopInReg (right->aop, i, XL_IDX), 1);
+            }
+          continue;
+        }
+        
+      if (xl_dead)
         genMove_o (ASMOP_XL, 0, right->aop, i, 1, true, false, false, false, true);
       else
         UNIMPLEMENTED;

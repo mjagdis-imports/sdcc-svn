@@ -1,5 +1,10 @@
 2023-05-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/f8/gen.c:
+	  Improve narrow write via pointer.
+
+2023-05-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* support/regression/tests/bug-3352.c,
 	  support/regression/tests/bug-3465.c,
 	  support/regression/tests/bug-3523.c,
