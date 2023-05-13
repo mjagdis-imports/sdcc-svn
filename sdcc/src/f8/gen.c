@@ -5296,6 +5296,48 @@ init_stackop (asmop *stackop, int size, long int stk_off)
   stackop->type = AOP_STK;
 }
 
+// Shifting, masking, and sign-extending of top bit-field byte.
+static void
+handle_bitfield_topbyte_in_xl (int blen, int bstr, bool sign_extend, bool xh_dead)
+{
+  // Shift
+  if (blen < 8) 
+    {
+      if (bstr <= 1)
+        while (bstr--)
+          emit3 (A_SRL, ASMOP_XL, 0);
+      else
+        {
+          emit2 ("rot", "xl, #%d", 8 - bstr);
+          cost (2, 1);
+        }
+    }
+
+  if (blen == 8)
+    return;
+
+  // Mask
+  emit2 ("and", "xl, #0x%02x", 0xff >> (8 - blen));
+  cost (2, 1);
+
+  if (!sign_extend)
+    return;
+
+  // Sign-extend
+  if (!xh_dead)
+    UNIMPLEMENTED;
+  symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
+  emit2 ("ld", "xh, xl");
+  emit2 ("and", "xh, #0x%02x", 0x80 >> (8 - blen));
+  cost (4, 2);
+  if (tlbl)
+    emit2 ("jrz", "#!tlabel", labelKey2num (tlbl->key));
+  cost (2, 0);
+  emit2 ("or", "xl, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
+  cost (2, 1);
+  emitLabel (tlbl);
+}
+
 /*-----------------------------------------------------------------*/
 /* genPointerGet - generate code for read via pointer              */
 /*-----------------------------------------------------------------*/
@@ -5306,6 +5348,7 @@ genPointerGet (const iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
   bool use_z = false;
+  int i = 0;
 
   bool bit_field = IS_BITVAR (getSpec (operandType (result)));
   int blen = bit_field ? SPEC_BLEN (getSpec (operandType (result))) : 0;
@@ -5330,14 +5373,14 @@ genPointerGet (const iCode *ic)
   bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0;
 
   if (!bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && result->aop->type != AOP_DUMMY &&
-    (size == 1 && aopInReg (result->aop, 0, XL_IDX) || size == 2 && aopInReg (result->aop, 0, Y_IDX)))
+    (size == 1 && aopIsAcc8 (result->aop, 0) || size == 2 && aopIsAcc16 (result->aop, 0)))
     {
       bool wide = size > 1;
       if (left->aop->type == AOP_LIT)
         emit2(wide ? "ldw" : "ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
       else
         emit2(wide ? "ldw" : "ld", offset ? "%s, %s+%d" : "%s, %s+%d", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
-      cost (3, 1);
+      cost (3 + wide ? !aopInReg (result->aop, 0, Y_IDX) : !aopInReg (result->aop, 0, XL_IDX), 1);
       goto release;
     }
   else if (!bit_field && left->aop->type == AOP_STL && result->aop->type != AOP_DUMMY)
@@ -5347,6 +5390,18 @@ genPointerGet (const iCode *ic)
       genMove (result->aop, &stackop_impl, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       goto release;
     }
+  else if (bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && result->aop->type != AOP_DUMMY && blen <= 8 && aopInReg (result->aop, 0, XL_IDX))
+    {
+      if (left->aop->type == AOP_LIT)
+        emit2("ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+      else
+        emit2("ld", offset ? "%s, %s+%d" : "%s, %s+%d", aopGet (result->aop, 0), left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+      cost (3, 1);
+      handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
+      i = 1;
+      goto release;
+    }
+    
 
   if (aopInReg (left->aop, 0, Z_IDX) && !bit_field && size <= 2 && (aopInReg (result->aop, size - 2, Z_IDX) || result->aop->regs[ZL_IDX] < 0 && result->aop->regs[ZH_IDX] < 0))
     use_z = true;
@@ -5366,7 +5421,6 @@ genPointerGet (const iCode *ic)
   else
     UNIMPLEMENTED;
 
-  int i = 0;
   for (i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
     {
       bool xl_dead = regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
@@ -5431,44 +5485,15 @@ genPointerGet (const iCode *ic)
           cost (2 + (use_z || offset + i > 255), 1);
         }
 
-      if (bit_field && blen < 8 && !i) // The only byte might need shifting.
-        {
-          if (bstr <= 1)
-            while (bstr--)
-              emit3 (A_SRL, ASMOP_XL, 0);
-          else
-            {
-              emit2 ("rot", "xl, #%d", 8 - bstr);
-              cost (2, 1);
-            }
-        }
-      if (bit_field && blen < 8) // The partial byte.
-        {
-          emit2 ("and", "xl, #0x%02x", 0xff >> (8 - blen));
-          cost (2, 1);
-        }
-      if (bit_field && blen <= 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
-        {
-          if (!regDead (XH_IDX, ic) || result->aop->regs[XH_IDX] >= 0)
-            UNIMPLEMENTED;
-
-          symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
-          emit2 ("ld", "xh, xl");
-          emit2 ("and", "xh, #0x%02x", 0x80 >> (8 - blen));
-          cost (4, 2);
-          if (tlbl)
-            emit2 ("jrz", "#!tlabel", labelKey2num (tlbl->key));
-          cost (2, 0);
-          emit2 ("or", "xl, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
-          cost (2, 1);
-          emitLabel (tlbl);
-        }
+      if (bit_field && blen <= 8) // Sign extension for partial byte of signed bit-field
+        handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
 
       if (result->aop->type == AOP_DUMMY) // Pointer dereference where the result is ignored, but wasn't optimized out (typically due to use of volatile).
         continue;
       genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, false, false, false, true);
     }
 
+release:
   if (bit_field && i < size)
     {
       if (SPEC_USIGN (getSpec (operandType (result))))
@@ -5477,7 +5502,6 @@ genPointerGet (const iCode *ic)
         wassertl (0, "Unimplemented multibyte sign extension for bit-field.");
     }
 
-release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -5629,7 +5653,36 @@ genPointerSet (const iCode *ic)
             }
           continue;
         }
-        
+
+      if (bit_field && blen < 8 && right->aop->type == AOP_LIT) // We can save a lot of shifting and masking using the known literal value
+        {
+          unsigned char bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr);
+
+          if (!i)
+            {
+              emit2 ("ld", "xl, (y)", i);
+              cost (1, 1);
+            }
+          else
+            {
+              emit2 ("ld", "xl, (%d, y)", i);
+              cost (2, 1);
+            }
+                
+          if (((~((0xff >> (8 - blen)) << bstr) & 0xff) | bval) != 0xff)
+            {
+              emit2 ("and", "xl, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
+              cost (2, 1);
+            }
+
+          if (bval)
+            {
+              emit2 ("or", "xl, #0x%02x", bval);
+              cost (2, 1);
+            }
+          goto store;
+        }
+
       if (xl_dead)
         genMove_o (ASMOP_XL, 0, right->aop, i, 1, true, false, false, false, true);
       else
@@ -5649,14 +5702,23 @@ genPointerSet (const iCode *ic)
             }
           emit2 ("and", "xl, #0x%02x", (0xff >> (8 - blen)) << bstr);
           cost (2, 1);
-          emit2 ("ld", "xh, (%d, y)", i);
-          cost (3, 1);
+          if (!i)
+            {
+              emit2 ("ld", "xh, (y)", i);
+              cost (2, 1);
+            }
+          else
+            {
+              emit2 ("ld", "xh, (%d, y)", i);
+              cost (3, 1);
+            }
           emit2 ("and", "xh, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
           cost (3, 1);
           emit2 ("or", "xl, xh");
           cost (1, 1);
         }
 
+store:
       if (!i)
         {
           emit2 ("ld", "(y), xl");

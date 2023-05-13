@@ -9,6 +9,22 @@ replace restart {
 }
 
 replace restart {
+	%1	%2, %3
+	tst	%2
+} by {
+	%1	%2, %3
+	; peephole 2 removed redundant tst after %1
+} if same(%1 'and' 'or' 'xor'), notVolatile(%2)
+
+replace restart {
+	orw	%2, %3
+	tstw	%2
+} by {
+	orw	%2, %3
+	; peephole 3 removed redundant tst after orw
+} if notVolatile(%2)
+
+replace restart {
 	jp	#%1
 %1:
 } by {
