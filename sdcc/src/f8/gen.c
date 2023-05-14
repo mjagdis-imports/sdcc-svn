@@ -3962,7 +3962,10 @@ genCmp (const iCode *ic, iCode *ifx)
               pushed_xl = true;
             }
           genMove_o (ASMOP_XL, 0, left->aop, size - 1, 1, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic), true);
-          emit3 (A_SLL, ASMOP_XL, 0);
+          emit2 ("and", "xl, #0x80");
+          cost (2, 1);
+          emit3 (A_BOOL, ASMOP_XL, 0);
+          goto return_xl;
         }
       goto return_c;
     }
@@ -4168,6 +4171,7 @@ return_c:
   emit3 (A_CLR, ASMOP_XL, 0);
   emit3 (A_RLC, ASMOP_XL, 0);
   G.c = 0;
+return_xl:
   genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       
   if (pushed_xl)
@@ -5342,7 +5346,7 @@ handle_bitfield_topbyte_in_xl (int blen, int bstr, bool sign_extend, bool xh_dea
 /* genPointerGet - generate code for read via pointer              */
 /*-----------------------------------------------------------------*/
 static void
-genPointerGet (const iCode *ic)
+genPointerGet (const iCode *ic, iCode *ifx)
 {
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
@@ -5372,14 +5376,125 @@ genPointerGet (const iCode *ic)
   
   bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0;
 
-  if (!bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && result->aop->type != AOP_DUMMY &&
+  if (ifx && result->aop->type == AOP_CND && (!bit_field || blen == 8))
+    {
+      wassert (size <= 2 || bit_field);
+      bool wide = (size > 1 && !bit_field);
+      if (left->aop->type == AOP_LIT)
+        {
+          emit2 (wide ? "tstw" : "tst", offset ? "0x%02x%02x+%d" : "0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+          cost (3 + wide ? !aopInReg (result->aop, 0, Y_IDX) : !aopInReg (result->aop, 0, XL_IDX), 1);
+        }
+      else if (left->aop->type == AOP_IMMD)
+        {
+          emit2 (wide ? "tstw" : "tst", offset ? "%s+%d" : "%s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+          cost (3 + wide ? !aopInReg (result->aop, 0, Y_IDX) : !aopInReg (result->aop, 0, XL_IDX), 1);
+        }
+      else if (wide && aopInReg (left->aop, 0, Z_IDX))
+        {
+          emit2 ("tstw", "(%u, z)", offset);
+          cost (3, 1);
+        }
+      else if (wide && (y_dead || aopInReg (left->aop, 0, Y_IDX)))
+        {
+          genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+          if (!offset)
+            {
+              emit2 ("ldw", "y, (y)");
+              cost (1, 1);
+            }
+          else
+            {
+              emit2 ("ldw", "y, (%u, y)", offset);
+              cost (2 + (offset > 255), 1);
+            }
+          emit3 (A_TSTW, ASMOP_Y, 0);
+        }
+      else if (!wide && (y_dead || aopInReg (left->aop, 0, Y_IDX)) && regDead (XL_IDX, ic) && offset <= 255)
+        {
+          genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+          if (!offset)
+            {
+              emit2 ("ld", "xl, (y)");
+              cost (1, 1);
+            }
+          else
+            {
+              emit2 ("ld", "xl, (%u, y)", offset);
+              cost (2, 1);
+            }
+          emit3 (A_TST, ASMOP_XL, 0);
+        }
+      else if (wide && regDead (Z_IDX, ic))
+        {
+          genMove (ASMOP_Z, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), y_dead, true);
+          emit2 ("tstw", "(%u, z)", offset);
+          cost (3, 1);
+        }
+      else
+        UNIMPLEMENTED;
+      symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+      if (!regalloc_dry_run)
+        emit2 (IC_TRUE (ifx) ? "jrz" : "jrnz", "#!tlabel", labelKey2num (tlbl->key));
+      cost (2, 1);
+      emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
+      emitLabel (tlbl);
+      goto release;
+    }
+  else if (ifx && result->aop->type == AOP_CND && bit_field)
+    {
+      wassert (blen <= 8);
+      if (!regDead (XL_IDX, ic))
+        UNIMPLEMENTED;
+      if (left->aop->type == AOP_LIT)
+        emit2 ("ld", offset ? "xl, 0x%02x%02x+%d" : "xl, 0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+      else if (left->aop->type == AOP_IMMD)
+        emit2 ("ld", offset ? "xl, %s+%d" : "xl, %s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+      else if (aopInReg (left->aop, 0, Z_IDX))
+        {
+          emit2 ("ld", "xl, (%u, z)", offset);
+          cost (3, 1);
+        }
+      else if ((y_dead || aopInReg (left->aop, 0, Y_IDX)) && offset <= 255)
+        {
+          genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+          if (!offset)
+            {
+              emit2 ("ld", "xl, (y)");
+              cost (1, 1);
+            }
+          else
+            {
+              emit2 ("ldw", "xl, (%u, y)", offset);
+              cost (2, 1);
+            }
+        }
+      else if (regDead (Z_IDX, ic))
+        {
+          genMove (ASMOP_Z, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), y_dead, true);
+          emit2 ("ld", "xl, (%u, z)", offset);
+          cost (3, 1);
+        }
+      else
+        UNIMPLEMENTED;
+      emit2 ("and", "xl, #0x%02x", 0xff >> (8 - blen) << bstr);
+      cost (2, 1);
+      symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+      if (!regalloc_dry_run)
+        emit2 (IC_TRUE (ifx) ? "jrz" : "jrnz", "#!tlabel", labelKey2num (tlbl->key));
+      cost (2, 1);
+      emitJP(IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
+      emitLabel (tlbl);
+      goto release;
+    }
+  else if (!bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && result->aop->type != AOP_DUMMY &&
     (size == 1 && aopIsAcc8 (result->aop, 0) || size == 2 && aopIsAcc16 (result->aop, 0)))
     {
       bool wide = size > 1;
       if (left->aop->type == AOP_LIT)
-        emit2(wide ? "ldw" : "ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+        emit2 (wide ? "ldw" : "ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
       else
-        emit2(wide ? "ldw" : "ld", offset ? "%s, %s+%d" : "%s, %s+%d", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+        emit2 (wide ? "ldw" : "ld", offset ? "%s, %s+%d" : "%s, %s+%d", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
       cost (3 + wide ? !aopInReg (result->aop, 0, Y_IDX) : !aopInReg (result->aop, 0, XL_IDX), 1);
       goto release;
     }
@@ -5399,7 +5514,7 @@ genPointerGet (const iCode *ic)
       cost (3, 1);
       handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
       i = 1;
-      goto release;
+      goto extend_bitfield;
     }
     
 
@@ -5493,7 +5608,7 @@ genPointerGet (const iCode *ic)
       genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, false, false, false, true);
     }
 
-release:
+extend_bitfield:
   if (bit_field && i < size)
     {
       if (SPEC_USIGN (getSpec (operandType (result))))
@@ -5501,7 +5616,7 @@ release:
       else
         wassertl (0, "Unimplemented multibyte sign extension for bit-field.");
     }
-
+release:
   freeAsmop (right);
   freeAsmop (left);
   freeAsmop (result);
@@ -6462,7 +6577,7 @@ genF8iCode (iCode *ic)
       break;
 
     case GET_VALUE_AT_ADDRESS:
-      genPointerGet (ic);
+      genPointerGet (ic, ifxForOp (IC_RESULT (ic), ic));
       break;
 
     case SET_VALUE_AT_ADDRESS:

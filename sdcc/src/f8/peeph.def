@@ -17,6 +17,15 @@ replace restart {
 } if same(%1 'and' 'or' 'xor'), notVolatile(%2)
 
 replace restart {
+	ld	(%1, sp), xl
+	tst	(%1, sp)
+} by {
+	ld	(%1, sp), xl
+	tst	xl
+	; peephole 3 tested xl instead of %1
+}
+
+replace restart {
 	orw	%2, %3
 	tstw	%2
 } by {
