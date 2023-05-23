@@ -138,12 +138,14 @@ hc08_freeReg (reg_info * reg)
       case HX_IDX:
         hc08_reg_h->isFree = 1;
         hc08_reg_x->isFree = 1;
+        hc08_reg_hx->isFree = 1;
         if (hc08_reg_a->isFree)
           hc08_reg_xa->isFree = 1;
         break;
       case XA_IDX:
         hc08_reg_x->isFree = 1;
         hc08_reg_a->isFree = 1;
+        hc08_reg_xa->isFree = 1;
         if (hc08_reg_h->isFree)
           hc08_reg_hx->isFree = 1;
         break;
@@ -280,7 +282,7 @@ DEFSETFUNC (isFree)
   /* if it is free && and the itmp assigned to
      this does not have any overlapping live ranges
      with the one currently being assigned and
-     the size can be accomodated  */
+     the size can be accommodated  */
   if (sym->isFree &&
       noOverLap (sym->usl.itmpStack, fsym) &&
       getSize (sym->type) >= getSize (fsym->type))

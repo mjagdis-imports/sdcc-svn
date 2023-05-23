@@ -28,12 +28,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "port_hwcl.h"
+
 #include "mos6510cl.h"
+
+#include "port10cl.h"
 
 
 cl_mos6510::cl_mos6510(class cl_sim *asim):
   cl_mos6502(asim)
 {
+  *my_id= "MOS6510";
 }
 
 int
@@ -43,10 +48,50 @@ cl_mos6510::init(void)
   return 0;
 }
 
-const char *
-cl_mos6510::id_string(void)
+void
+cl_mos6510::mk_hw_elements(void)
 {
-  return "MOS6510";
+  class cl_port10 *p;
+
+  cl_mos6502::mk_hw_elements();
+
+  add_hw(p= new cl_port10(this, "port"));
+  p->init();
+  
+  class cl_port_ui *u= new cl_port_ui(this, 0, "dport");
+  u->init();
+  add_hw(u);
+
+  class cl_port_data d;
+  d.init();
+  d.cell_dir= p->cddr;
+  d.width= 8;
+  d.set_name("port");
+  d.cell_p = p->cdr;
+  d.cell_in= p->cpin;
+  d.keyset = keysets[0];
+  d.basx   = 5;
+  d.basy   = 5;
+  u->add_port(&d, 0);
+  
+}
+
+/*
+ * 8502
+ */
+
+cl_mos8502::cl_mos8502(class cl_sim *asim):
+  cl_mos6510(asim)
+{
+  *my_id= "MOS8502";
+}
+
+int
+cl_mos8502::init(void)
+{
+  cl_mos6510::init();
+  //set_xtal(2000000);
+  return 0;
 }
 
 

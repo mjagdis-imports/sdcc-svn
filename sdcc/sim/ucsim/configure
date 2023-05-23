@@ -686,6 +686,8 @@ LDFLAGS
 CXXFLAGS
 CXX
 enable_serio
+enable_f8_port
+enable_i8085_port
 enable_pblaze_port
 enable_rxk_port
 enable_mos6502_port
@@ -783,6 +785,8 @@ enable_m68hc12_port
 enable_mos6502_port
 enable_rxk_port
 enable_pblaze_port
+enable_i8085_port
+enable_f8_port
 enable_serio
 enable_statistic
 '
@@ -1443,10 +1447,12 @@ Optional Features:
   --disable-m6809-port    do not compile simulator for m6809
   --disable-m6800-port    do not compile simulator for m6800
   --disable-m68hc11-port  do not compile simulator for m68hc11
-  --enable-m68hc12-port   compile simulator for m68hc12
+  --disable-m68hc12-port  do not compile simulator for m68hc12
   --disable-mos6502-port  do not compile simulator for mos6502
   --disable-rxk-port      do not compile simulator for Rabbit rXk
   --disable-pblaze-port   do not compile simulator for Xilinx PicoBlaze
+  --disable-i8085-port    do not compile simulator for i8085
+  --disable-f8-port       do not compile simulator for f8
   --disable-serio         do not compile serio GUI tool (needs curses)
   --enable-statistic      compile statistical features (slower simulation)
 
@@ -3254,7 +3260,7 @@ enable_ucsim="no"
 fi
 
 # ignore setting, always use NO
-enable_ucsim="no"
+#enable_ucsim="no"
 
 # Check whether --enable-dlso was given.
 if test ${enable_dlso+y}
@@ -3466,7 +3472,7 @@ then :
     enable_m68hc12_port="yes"
 fi
 else $as_nop
-  enable_m68hc12_port="no"
+  enable_m68hc12_port="yes"
 fi
 
 
@@ -3500,6 +3506,26 @@ else $as_nop
   enable_pblaze_port="yes"
 fi
 
+# Check whether --enable-i8085-port was given.
+if test ${enable_i8085_port+y}
+then :
+  enableval=$enable_i8085_port; if test $enable_i8085_port  != "no"; then
+    enable_i8085_port="yes"
+fi
+else $as_nop
+  enable_i8085_port="yes"
+fi
+
+# Check whether --enable-f8-port was given.
+if test ${enable_f8_port+y}
+then :
+  enableval=$enable_f8_port; if test $enable_f8_port  != "no"; then
+    enable_f8_port="yes"
+fi
+else $as_nop
+  enable_f8_port="yes"
+fi
+
 # Check whether --enable-serio was given.
 if test ${enable_serio+y}
 then :
@@ -3509,6 +3535,8 @@ fi
 else $as_nop
   enable_serio="yes"
 fi
+
+
 
 
 
@@ -5854,6 +5882,13 @@ then :
 
 fi
 
+ac_fn_cxx_check_header_compile "$LINENO" "wincon.h" "ac_cv_header_wincon_h" "$ac_includes_default"
+if test "x$ac_cv_header_wincon_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_WINCON_H 1" >>confdefs.h
+
+fi
+
 
 ac_fn_cxx_check_header_compile "$LINENO" "curses.h" "ac_cv_header_curses_h" "$ac_includes_default"
 if test "x$ac_cv_header_curses_h" = xyes
@@ -7001,6 +7036,13 @@ then :
 
 fi
 
+ac_fn_cxx_check_func "$LINENO" "vsnprintf" "ac_cv_func_vsnprintf"
+if test "x$ac_cv_func_vsnprintf" = xyes
+then :
+  printf "%s\n" "#define HAVE_VSNPRINTF 1" >>confdefs.h
+
+fi
+
 ac_fn_cxx_check_func "$LINENO" "yylex" "ac_cv_func_yylex"
 if test "x$ac_cv_func_yylex" = xyes
 then :
@@ -7551,8 +7593,14 @@ fi
 # Checks for typedefs, structures, and compiler characteristics.
 # ===========================================================================
 
-if test "$cross_compiling" = "no"; then
-# The cast to long int works around a bug in the HP C Compiler
+if $CXX -v 2>&1|grep "mingw" >/dev/null 2>&1; then
+    ac_cv_sizeof_char=1
+    ac_cv_sizeof_short=2
+    ac_cv_sizeof_int=4
+    ac_cv_sizeof_long=4
+    ac_cv_sizeof_long_long=4
+else
+    # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
 # This bug is HP SR number 8606223364.
@@ -7585,7 +7633,7 @@ printf "%s\n" "$ac_cv_sizeof_char" >&6; }
 printf "%s\n" "#define SIZEOF_CHAR $ac_cv_sizeof_char" >>confdefs.h
 
 
-# The cast to long int works around a bug in the HP C Compiler
+    # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
 # This bug is HP SR number 8606223364.
@@ -7618,7 +7666,7 @@ printf "%s\n" "$ac_cv_sizeof_short" >&6; }
 printf "%s\n" "#define SIZEOF_SHORT $ac_cv_sizeof_short" >>confdefs.h
 
 
-# The cast to long int works around a bug in the HP C Compiler
+    # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
 # This bug is HP SR number 8606223364.
@@ -7651,7 +7699,7 @@ printf "%s\n" "$ac_cv_sizeof_int" >&6; }
 printf "%s\n" "#define SIZEOF_INT $ac_cv_sizeof_int" >>confdefs.h
 
 
-# The cast to long int works around a bug in the HP C Compiler
+    # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
 # This bug is HP SR number 8606223364.
@@ -7684,7 +7732,7 @@ printf "%s\n" "$ac_cv_sizeof_long" >&6; }
 printf "%s\n" "#define SIZEOF_LONG $ac_cv_sizeof_long" >>confdefs.h
 
 
-# The cast to long int works around a bug in the HP C Compiler
+    # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
 # This bug is HP SR number 8606223364.
@@ -7717,16 +7765,6 @@ printf "%s\n" "$ac_cv_sizeof_long_long" >&6; }
 printf "%s\n" "#define SIZEOF_LONG_LONG $ac_cv_sizeof_long_long" >>confdefs.h
 
 
-else
-    if $CXX -v 2>&1|grep "mingw" >/dev/null 2>&1; then
-        ac_cv_sizeof_char=1
-        ac_cv_sizeof_short=2
-        ac_cv_sizeof_int=4
-        ac_cv_sizeof_long=4
-        ac_cv_sizeof_long_long=4
-    else
-        : # FIXME
-    fi
 fi
 
 type_name()
@@ -7874,7 +7912,7 @@ printf "%s\n" "#define _M_ \"${M}\"" >>confdefs.h
 # Generating output files
 # ===========================================================================
 
-ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk cmd.src/Makefile motorola.src/Makefile sim.src/Makefile sim.src/test/Makefile avr.src/Makefile avr.src/test/Makefile m68hc08.src/Makefile m68hc08.src/test/Makefile m6809.src/Makefile m6809.src/test/Makefile m6800.src/Makefile m6800.src/test/Makefile m68hc11.src/Makefile m68hc11.src/test/Makefile m68hc12.src/Makefile m68hc12.src/test/Makefile mos6502.src/Makefile mos6502.src/test/Makefile rxk.src/Makefile rxk.src/test/Makefile pblaze.src/Makefile pblaze.src/test/Makefile p1516.src/Makefile p1516.src/test/Makefile pdk.src/Makefile pdk.src/test/Makefile s51.src/Makefile s51.src/test/Makefile st7.src/Makefile st7.src/test/Makefile stm8.src/Makefile stm8.src/test/Makefile tlcs.src/Makefile tlcs.src/test/Makefile xa.src/Makefile xa.src/test/Makefile z80.src/Makefile z80.src/test/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
+ac_config_files="$ac_config_files Makefile main.mk:main_in.mk packages.mk:packages_in.mk cmd.src/Makefile motorola.src/Makefile sim.src/Makefile sim.src/test/Makefile avr.src/Makefile avr.src/test/Makefile m68hc08.src/Makefile m68hc08.src/test/Makefile m6809.src/Makefile m6809.src/test/Makefile m6800.src/Makefile m6800.src/test/Makefile m68hc11.src/Makefile m68hc11.src/test/Makefile m68hc12.src/Makefile m68hc12.src/test/Makefile mos6502.src/Makefile mos6502.src/test/Makefile rxk.src/Makefile rxk.src/test/Makefile pblaze.src/Makefile pblaze.src/test/Makefile i8085.src/Makefile i8085.src/test/Makefile f8.src/Makefile f8.src/test/Makefile p1516.src/Makefile p1516.src/test/Makefile pdk.src/Makefile pdk.src/test/Makefile s51.src/Makefile s51.src/test/Makefile st7.src/Makefile st7.src/test/Makefile stm8.src/Makefile stm8.src/test/Makefile tlcs.src/Makefile tlcs.src/test/Makefile xa.src/Makefile xa.src/test/Makefile z80.src/Makefile z80.src/test/Makefile gui.src/Makefile gui.src/serio.src/Makefile doc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8589,6 +8627,10 @@ do
     "rxk.src/test/Makefile") CONFIG_FILES="$CONFIG_FILES rxk.src/test/Makefile" ;;
     "pblaze.src/Makefile") CONFIG_FILES="$CONFIG_FILES pblaze.src/Makefile" ;;
     "pblaze.src/test/Makefile") CONFIG_FILES="$CONFIG_FILES pblaze.src/test/Makefile" ;;
+    "i8085.src/Makefile") CONFIG_FILES="$CONFIG_FILES i8085.src/Makefile" ;;
+    "i8085.src/test/Makefile") CONFIG_FILES="$CONFIG_FILES i8085.src/test/Makefile" ;;
+    "f8.src/Makefile") CONFIG_FILES="$CONFIG_FILES f8.src/Makefile" ;;
+    "f8.src/test/Makefile") CONFIG_FILES="$CONFIG_FILES f8.src/test/Makefile" ;;
     "p1516.src/Makefile") CONFIG_FILES="$CONFIG_FILES p1516.src/Makefile" ;;
     "p1516.src/test/Makefile") CONFIG_FILES="$CONFIG_FILES p1516.src/test/Makefile" ;;
     "pdk.src/Makefile") CONFIG_FILES="$CONFIG_FILES pdk.src/Makefile" ;;

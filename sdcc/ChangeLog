@@ -1,3 +1,2988 @@
+2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix a segdfault in a corner case in stm8 codegen.
+	* device/lib/strtoul.c:
+	  Improve strtoul range error check.
+	* support/regression/tests/mulextra.c:
+	  Improve test coverage for multiplication with operands of different types.
+
+2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/main.c:
+	  mos6502 _BitInt support.
+	* device/lib/strtoul.c,
+	  support/regression/tests/strto.c:
+	  Fix C23 binary prefix for strtoo(u)l.
+	* src/hc08/gen.c:
+	  Comparison codegen improvement.
+	* device/lib/strtoul.c,
+	  support/regression/tests/strto.c:
+	  Fix a corner case in strtoul range check.
+
+2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c
+	  src/hc08/main.c,
+	  doc/sdccman.lyx:
+	  hc08/s08 _BitInt support up to 64 bits.
+
+2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c,
+	  src/hc08/main.c:
+	  hc08/s08 _BitInt support: codegen for addition, subtraction and 16-bit shifts. Enable _BitInt up to 16 bits.
+
+2023-05-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/ralloc2.cc,
+	  src/hc08/gen.c:
+	  Prepare for hc08/s08 _BitInt support: codegen for casts.
+
+2023-05-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Fix whitespace in cross-build configure example.
+	* support/regression/tests/gcc-torture-execute-strlen-4.c:
+	  Enable some more bits of this test that now pass.
+
+2023-05-16 Felix Salfelder <felix AT salfelder.org>
+
+	* bin/sd{ar,cpp,nm,objcopy,ranlib}.in:
+	  fix #3587 (with Philipp).
+
+2023-05-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCClrange.c,
+	  support/regression/tests/bug-3455.c:
+	  Fix bug #3455.
+	* support/regression/tests/sizeof.c.in:
+	  Disable a warning where we intentionally test something that is implementation-defined in SDCC (though undefined in the standard).
+	* device/lib/ds400/Makefile.in:
+	  Fix invokation of sdar during ds400 library build.
+
+2023-05-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/linksrc/Makefile.in,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkout.c,
+	  sdas/linksrc/lks19.c:
+	  Port Motorola SREC format support from upstream asxxxx 5.40 to fix bug #3559.
+
+2023-05-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-3585.c:
+	  Fix bug #3585.
+
+2023-05-01 Felix Salfelder <felix AT salfelder.org>
+
+	* support/sdbinutils/bfd/{asxxxx,targets}.c:
+	  Fix bug #3569 and a memory leak.
+
+2023-05-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3352.c,
+	  support/regression/tests/bug-3465.c,
+	  support/regression/tests/bug-3523.c,
+	  support/regression/tests/bug-3532.c,
+	  support/regression/tests/bug-3547.c:
+	  Disable warning 85 for some tests (as parameters are intentionally unused in these).
+
+2023-05-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3563.c:
+	  Regression test for bug #3563 (disabled for mcs51, as the bug is not yet fixed).
+	* src/SDCCmem.c,
+	  support/regression/tests/*.c:
+	  Fix bug #2874.
+
+2023-05-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3579.c:
+	  iy handling fixes in code generation.
+
+2023-04-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdwarf2.c:
+	  Fix bug #3576.
+
+2023-04-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asz80/z80mch.c:
+	  Fix error message on use of undocumented inc/dec ixl/ixh/iyl/iyh. Fix error message on undocumented load between ix/iy l/h. Fix bug #3574.
+
+2023-04-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.c:
+	  Improve error message on missing skip instruction target label at end of inline asm in __naked function. Fix bug #3566.
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3570.c:
+	  Fix bug #3570.
+	* src/SDCCmem.c:
+	  Fix bug #3030.
+
+2023-03-21 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCCmain.c:
+	  Use -MF to pass dependency output file to sdcpp, fixing bug #3541.
+	  See https://gcc.gnu.org/onlinedocs/cpp/Invocation.html#Invocation.
+
+2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3567.c:
+	  Disable a test for mcs51 small model, where it fails due to lack of memory.
+
+2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3567.c:
+	  Fix bug #3567.
+
+2023-03-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/bug-3556.c:
+	  Fix an issue in pdk shift codegen for non-dead shift amount in acc.
+
+2023-03-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3564.c:
+	  Fix bug #3564.
+
+2023-03-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bigreturn-remat.c.in,
+	  support/regression/tests/rotate.c.in:
+	  Improve test coverage.
+
+2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/atomic.c,
+	  support/regression/tests/bug-1918.c,
+	  support/regression/tests/bug-2124.c,
+	  support/regression/tests/bug-2181.c,
+	  support/regression/tests/bug-2271.c,
+	  support/regression/tests/bug-2373.c,
+	  support/regression/tests/bug-2455.c,
+	  support/regression/tests/bug-2497.c,
+	  support/regression/tests/bug-716242.c,
+	  support/regression/tests/bug1908493.c,
+	  support/regression/tests/gcc-torture-execute-20030714-1.c,
+	  support/regression/tests/gcc-torture-execute-980707-1.c:
+	  Document why some regression tests are disabled for pdk.
+	* device/include/mcs51/stc89.h,
+	  src/SDCC.y,
+	  src/SDCCmem.c,
+	  src/SDCCsymt.c:
+	  Fix typos.
+	* src/SDCCicode.c:
+	  Fix bug #3290.
+
+2023-02-28 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/rtrack.c: placed all comment emitting code in D(),
+	  (_mcs51_rtrackUpdate): enabled literal mov to register part by removing D(),
+	                         enabled tracking dptr by removing if(options.verboseAsm)
+	* device/lib/ds390/Makefile.in,
+	* device/lib/ds390/lcd390.c: removed buggy lcd390.c, the DS80C390 has no native LCD interface
+
+2023-02-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCloop.c,
+	  support/regression/tests/bug-3560.c:
+	  Fix bug #3560.
+
+2023-02-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/_minimal.c:
+	  Pick minimal regression test from MP8 fork of sdcc to ease initial debugging of new ports.
+
+2023-02-20 Felix Salfelder <felix AT salfelder.org>
+
+	* Makefile.in:
+	  fix literal sdcc-sdbinutils dep, towards fixing bug #3491.
+
+2023-02-17 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/libcpp/files.cc:
+	  Remove stray assert, fix bug #3483.
+
+2023-02-16 Felix Salfelder <felix AT salfelder.org>
+
+	* src/clean.mk: Delete Makefile target only.
+
+2023-02-10 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCerr.h,
+	  src/SDCCerr.c: changed possible to probable
+	* src/SDCCast.c,
+	  doc/sdccman.lyx: fixed spelling
+
+2023-02-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Fix bug #3382.
+	* support/regression/tests/*.c,
+	  src/*:
+	  Spelling fixes for comments, from patch #459 by Konstantin Kim.
+
+2023-02-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  support/regression/tests/bug-2776.c,
+	  support/regression/tests/bug-3368.c:
+	  Fix bugs #2776, #3378.
+
+2023-02-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  support/regression/tests/bug-3352.c:
+	  Fix bug #3352.
+	* device/lib/sm83/crt0.s:
+	  Fix bug #3548.
+	* support/regression/tests/gcc-torture-execute-pr91137.c:
+	  Fix bug #3549.
+	* support/regression/tests/bug1723128.c:
+	  Fix bug #3550.
+
+2023-02-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3547.c:
+	  Fix bug #3547.
+
+2023-02-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCC.y:
+	  Warn on deprecated _sdcc_external_startup, RFE #868.
+	* device/lib/printf_large.c,
+	  .version,
+	  doc/sdccman.lyx,
+	  support/regression/tests/snprintf.c.in:
+	  Fix endiannness of %p output, based on patch #457 by Basil Hussain, bug #3543.
+	* src/SDCCast.c,
+	  src/SDCCglue.c,
+	  support/valdiag/tests/bug-3060.c:
+	  Fix bug #3060.
+	* src/SDCCpeeph.c:
+	  Fix bug #3545.
+
+2023-02-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/cases/Makefile.in:
+	  Disable a test that often times out on slower machines in the compile farm (due a large number of slow operations in a loop).
+
+2023-02-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3249.c:
+	  Do not test non-intrinsic named address space areas for mcs51, as DATA is overwritten by stack there.
+	* support/regression/MakeList:
+	  Disable a test for -mmcs51 --model-small --stack-auto that is known to fail for mcs51 with --stack-auto (bug #3540).
+	* src/SDCCglue.c,
+	  support/regression/tests/bug-1981238.c:
+	  Fix bug #3542.
+
+2023-01-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCglue.c:
+	  Fix bug #2837 for z80 and related.
+
+2023-01-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-3025.c,
+	  support/regression/cases/Makefile.in,
+	  Fix bug #3025.
+	* src/mos6502/peeph.def:
+	  Disable a rule that uses not-yet-implemented notUsed.
+	* src/pdk/gen.c:
+	  Fix a pdk issue similar to mcs51 bug #3023.
+	* src/SDCC.y,
+	  device/lib/printf_large.c,
+	  device/lib/printfl.c,
+	  device/lib/sprintf.c,
+	  device/lib/vprintf.c:
+	  Fix bug #3497.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3249.c:
+	  Fix bug #3249.
+	* support/regression/tests/inline.c:
+	  Disable a test for host, which fails on GNU/Linux on aarch64 using GCC 12.2.
+	* src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h:
+	  Fix error message test for empty translation units.
+
+2023-01-29 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/float.h,
+	  device/lib/_divsint.c,
+	  device/lib/_divslong.c,
+	  device/lib/_divslonglong.c,
+	  device/lib/_divuint.c,
+	  device/lib/_divulong.c,
+	  device/lib/_divulonglong.c,
+	  device/lib/_modsint.c,
+	  device/lib/_modslong.c,
+	  device/lib/_modslonglong.c,
+	  device/lib/_moduint.c,
+	  device/lib/_modulong.c,
+	  device/lib/_modulonglong.c,
+	  device/lib/_mulint.c,
+	  device/lib/_mullong.c,
+	  device/lib/_mullonglong.c,
+	  device/lib/_rlslonglong.c,
+	  device/lib/_rlulonglong.c,
+	  device/lib/_rrslonglong.c,
+	  device/lib/_rrulonglong.c,
+	  device/lib/_slonglong2fs.c,
+	  device/lib/_ulonglong2fs.c:
+	  Add conditional `__nonbanked` to fix mcs51 library build.
+
+2023-01-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/ds390/gen.c,
+	  src/mcs51/gen.c,
+	  support/regression/tests/bug-3023.c:
+	  Fix bug #3023.
+
+2023-01-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/port.h,
+	  src/*/main.c:
+	  Fix bug #3160.
+	* src/mos6502/ralloc.c,
+	  src/z80/ralloc.c:
+	  Code cleanup.
+
+2023-01-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  support/regression/cases/Makefile.in,
+	  support/regression/MakeList:
+	  Fix bug #3394.
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/valdiag/tests/bug-3228.c:
+	  Fix bug #3228.
+	* src/SDCCsymt.c,
+	  .version,
+	  doc/sdccman.lyx:
+	  Fix bug #3263.
+
+2023-01-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/aspdk15/pdk15mch.c:
+	  Fix bug #3191.
+	* src/SDCCsymt.c:
+	  Fix bug #3516.
+	* src/SDCCopt.c,
+	  support/regression/cases/Makefile.in:
+	  Fix bug #3400.
+
+2023-01-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCval.c:
+	  Make ulFromVal a wrapper for ullFromVal to remove duplicate code and partially fix bug #3539.
+	* src/z80/gen.c:
+	  Fix an sm83 issue similar to z80 bug #3503.
+	* doc/sdccman.lyx:
+	  Add _BitInt to type list in manual.
+	* src/SDCCglue.c:
+	  Skip invalid init list bits. Fix bug #2928.
+	* src/SDCCicode.c,
+	  support/regression/tests/bug-2983.c:
+	  Fix bug #2983.
+	* src/pdk/peeph.def:
+	  Fix an issue in two pdk peephole rule conditions.s
+	* src/SDCCsymt.c:
+	  Fix bug #2998.
+	* src/SDCC.lex,
+	  support/valdiag/tests/bug-3012.c:
+	  Fix bug #3012.
+
+2023-01-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCval.c:
+	  Type fixes (fixing regressions visible on 32-bit big-endian hosts), partial fix for bug #3539.
+	* src/stm8/gen.c:
+	  Fix an stm8 issue similar to z80 bug #3503.
+	* src/pdk/peeph.def:
+	  Fix use of cneqsn, which is not supported on pdk13.
+
+2023-01-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  doc/z80-stack-cleanup.svg:
+	  Improve documentation on stack cleanup (support request #182).
+	* src/SDCCpeeph.c,
+	  src/pdk/gen.c,
+	  src/pdk/peeph.def,
+	  support/regression/tests/bug-3525.c:
+	  Fix bug #3525.
+
+2023-01-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCbtree.cc:
+	  Fix bug #3505.
+	* src/ds390/gen.c,
+	  src/mcs51/gen.c,
+	  src/z80/gen.c:
+	  Type fixes for code generation (fixing regressions visible on 32-bit big-endian hosts), partial fix for bug #3539.
+	* device/include/stdckdint.h,
+	  device/lib/strtol.c,
+	  device/lib/strtoul.c,
+	  support/regression/tests/bug-3474.c,
+	  support/regression/tests/bug-2854.c
+	  Fix bug #3474.
+	* support/regression/tests/gcc-torture-execute-p18298.c:
+	  extern declaration for inline function to pass host regression tests where the host compiler does not inline.
+	* support/regression/MakeList:
+	  Exclude test for host, since it fails for GCC 7, which is still used on the PPC macOS machine in the compile farm.
+	* src/z80/gen.c,
+	  src/pdk/gen.c,
+	  support/regression/tests/bug-3503.c:
+	  Fix bug #3503.
+
+2023-01-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mos6502/main.c:
+	  stdlib selection, patch #454 by Basil Hussain.
+	* debugger/mcs51/cmd.c:
+	  Avoid debugger segfault, patch #449 by Mark Symonds.
+	* doc/sdccman.lyx:
+	  Enhance documentation for __sdcc_external_startup, patch #456 by Basil Hussain.
+	* src/SDCC.y:
+	  Remove null-pointer checks on something that is not a pointer in current SDCC, patch #442 by Reini Urban.
+	* src/pdk/main.c,
+	  .version:
+	  __sdcc_external_startup return checking for pdk, patch #455 by Basil Hussain.
+	* src/mos6502/peeph.def:
+	  mos6502 peephole rule fix, patch #453 by Michel Iwaniec.
+	* src/stm8/gen.c
+	  Type fix for code generation (fixing regressions visible on 32-bit big-endian hosts), partial fix for bug #3539.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3532.c:
+	  Fix bug #3532.
+	* src/SDCCbtree.cc,
+	  support/regression/tests/bug-3523.c,
+	  support/regression/tests/bug-3487.c:
+	  Fix bugs #3523, #3487.
+
+2023-01-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/*/crt0.s,
+	  src/SDCCglue.c,
+	  src/stm8/main.c,
+	  .version:
+	  Patch #453 by Basil Hussain to further harmonize __sdcc_external_startup (RFE #859).
+	* src/z80/gen.c,
+	  src/ds390/gen.c,
+	  src/mcs51/gen.c:
+	  Type fixes for code generation (fixing regressions visible on 32-bit big-endian hosts), partial fix for bug #3539.
+	* doc/sdccman.lyx:
+	  Improve __sdcc_external_startup documentation.
+
+2023-01-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/gcc-torture-execute-va-arg-5.c:
+	  Disable Test for GCC up to 11, since it still fails on x86 hosts for that version.
+	* support/regression/cases/Makefile.in:
+	  Disable Test that tests for GCC implementation-defined behaviour (GIMPLE memory model).
+
+2023-01-10 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCcse.c: Improve pointer aliasing handling,
+	  minor reduction in memory leakage
+	* support/regression/tests/bug-2957.c,
+	  support/regression/tests/gcc-torture-execute-pr20466-1.c:
+	  Reenable tests
+
+2023-01-08 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCmain.c:
+	  Add "TD-" to the version string of treedec-less builds.
+
+2023-01-08 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Amend claims concerning intrinsic address space support.
+
+2023-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3504.c:
+	  Fix bug #3504.
+
+2022-12-31 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCClabel.c (labelUnreach, deleteIfx),
+	  src/SDCCcse.c (ifxOptimize): disable conditional flow change and
+	  unreachable code warnings within function inlining
+	* src/SDCClabel.c (labelJumptable,iCodeLabelOptimize),
+	  src/SDCCcse.c (cseBBlock): optimize jump tables
+	* src/SDCClabel.c (labelUnreach): clean up dead code def/use info
+
+2022-12-24 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/cpp/gcc/configure.ac,
+	  support/cpp/gcc/configure: disable some assembler and
+	  target tests unneeded for the preprocessor
+
+2022-12-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Fix bug #3500.
+	* src/stm8/gen.c,
+	  src/pdk/gen.c:
+	  Fix bug #3515.
+
+2022-12-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-941021-1.c:
+	  Remove a test that apparently relies on implementation-defined floating-point rounding behaviour.
+
+2022-12-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2567.c,
+	  support/regression/tests/bug-2752.c:
+	  Provide external declaration of inline function to pass test-host for non-inlining host compilers.
+	* sdas/aspdk14/pdk14mch.c,
+	  sdas/aspdk15/pdk15mch.c:
+	  Fix bug #3376, patch by Free-PDK.
+
+2022-12-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/sm83/divint.s,
+	  support/regression/tests/muldiv.c.in,
+	  support/regression/tests/onebyte.c.in:
+	  Fix a % sm83 library issue, patch by Job Bolle.
+	* src/stm8/main.c:
+	  Fix __sdcc_external_startup handling for stm8 large memory model.
+	* src/z80/peeph.def:
+	  Fix bug #3528.
+
+2022-12-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3522.c:
+	  Fix bug #3522.
+
+2022-12-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/_startup.c,
+	  device/lib/ds390/tinibios.c,
+	  device/lib/ez80_z80/crt0.s,
+	  device/lib/mcs51/crtstart.asm,
+	  device/lib/mcs51/crtxstack.asm,
+	  device/lib/mos6502/crt0.s,
+	  device/lib/mos6502-stack-auto/crt0.s,
+	  device/lib/r2k/crt0.s,
+	  device/lib/r2ka/crt0.s,
+	  device/lib/r3ka/crt0.s,
+	  device/lib/sm83/crt0.s,
+	  device/lib/tlcs90/crt0.s,
+	  device/lib/z180/crt0.s,
+	  device/lib/z80/crt0.s,
+	  device/lib/z80n/crt0.s,
+	  doc/sdccman.lyx,
+	  src/ds390/main.c,
+	  src/hc08/main.c,
+	  src/pdk/main.c,
+	  src/stm8/main.c,
+	  support/regression/ports/mcs51-common/support.c:
+	  Rename _sdcc_external_startup to __sdcc_external_startup and make it work for all ports. Fixes bug #3520.
+
+2022-11-30 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/cpp/gcc/pretty-print.cc: define some console
+	  attribute constants if they are missing
+	* support/cpp/gcc/gcc.cc,
+	  support/cpp/gcc/opts.cc,
+	  support/cpp/gcc/opts-common.cc,
+	  support/cpp/gcc/opts-global.cc,
+	  support/cpp/gcc/prefix.cc,
+	  support/cpp/gcc/toplev.cc,
+	  support/cpp/libcpp/lex.cc,
+	  support/cpp/libcpp/mkdeps.cc,
+	  support/cpp/gcc/c-family/c-opts.cc,
+	  support/cpp/gcc/c-family/c-ppoutput.cc:
+	  Possible fix for bug #3524
+
+2022-11-29 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/cpp/gcc/system.h: don't try to check inodes when
+	  compiled for Windows
+
+2022-11-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/peep.c,
+	  src/pdk/gen.c:
+	  Pdk peephole infrastructure improvements, patch #446 by Konstantin Kim.
+
+2022-11-28 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/scripts/sdcc.nsi: add cc1.exe
+	* support/cpp/gcc/Makefile.in,
+	  support/cpp/gcc/cc1_dummies.cc,
+	  support/cpp/gcc/c/Make-lang.in,
+	  support/cpp/gcc/c-family/c-common.h,
+	  support/cpp/gcc/c-family/c-opts.cc: remove some unneeded
+	  compile time executable requirement so cross compile with
+	  mingw can succeed
+
+2022-11-26 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/cpp/gcc/Makefile.in: add missing $(exeext)
+	* support/cpp/gcc/gcc.cc,
+	  support/cpp/gcc/opts.cc,
+	  support/cpp/gcc/opts-common.cc,
+	  support/cpp/gcc/prefix.cc,
+	  support/cpp/gcc/toplev.cc,
+	  support/cpp/libcpp/lex.cc,
+	  support/cpp/libcpp/mkdeps.cc,
+	  support/cpp/gcc/c-family/c-opts.cc,
+	  support/cpp/gcc/c-family/c-ppoutput.cc: move iostream header
+	  last to avoid inconsistent struct offsets and thus segfaults
+
+2022-11-24 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCClabel.c (labelGotoGoto, labelUnreach),
+	  src/SDCCBBlock.c (iCodeFromeBBlock),
+	  src/SDCCicode.h: fix bug #3501
+
+2022-11-23 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCC.lex: process #line directive in __asm__ blocks
+
+2022-11-14 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/pic16/pcodepeep.c:
+	  Fix type mismatches, one of them critical. See [bugs:#3179].
+
+2022-11-11 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/config.gcc:
+	  Workaround: Ignore "unsupported target"
+	  ... as suggested by Free-PDK in bug #3517.
+
+2022-11-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix an issue related to bug #3471.
+
+2022-11-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c,
+	  src/z80/peeph.def:
+	  Fix iy handling in peephole optimizer, variant of patch #441 by Job Bolle.
+	* src/stm8/peeph.def,
+	  support/regression/tests/modulong.c,
+	  support/regression/ports/stm8/spec.mk:
+	  clr-push stm8 peephole optimizer rule, variant of patch #443 by Basil Hussain.
+
+2022-11-03 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* support/cpp/gcc/config/riscv/arch-canonicalize:
+	  Add missing file from GCC CPP.
+
+2022-10-25 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/cc1_dummies.cc:
+	  Fix argument type in dummy, #3492.
+
+2022-10-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Fix a typo noticed by Basil Hussain, that makes an aspect of the stm8 calling convention, version 0, ambiguous.
+
+2022-10-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Relax type match requirements on literal operands to multiplication support functions.
+
+2022-10-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/pdk/gen.c,
+	  src/pdk/ralloc.c,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c:
+	  Small improvements in reads of bool bit-fields.
+
+2022-10-07 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/cc1_dummies.cc:
+	  Add two more dummies.
+
+2022-10-03 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/gcc_attr.h:
+	  Use C23 version macro.
+
+2022-10-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/MakeList:
+	  Disable a test for pdk14 that fails due to lack of memory on the target device.
+
+2022-09-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def:
+	  Use mov in more cases, patch by Basil Hussain.
+	* device/include/assert.h:
+	  Fix static_assert for C11.
+
+2022-09-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCmain.c,
+	  support/cpp/libcpp/init.cc:
+	  Fix handling of c2x standard for preprocessor.
+	* device/include/stdlib.h,
+	  device/lib/Makefile.in,
+	  device/lib/__stdc_count_leading_zeros.c,
+	  device/lib/__stdc_first_leading_one.c,
+	  device/lib/__stdc_first_trailing_oneull.c,
+	  device/lib/_divslonglong.c,
+	  device/lib/_divulonglong.c,
+	  device/lib/_modslonglong.c,
+	  device/lib/_mullonglong.c,
+	  device/lib/_rlslonglong.c,
+	  device/lib/_rlulonglong.c,
+	  device/lib/_rrslonglong.c,
+	  device/lib/_rrulonglong.c,
+	  device/lib/aligned_alloc.c,
+	  device/lib/*/Makefile.in,
+	  device/lib/ds390/lcd390.c,
+	  device/lib/printf_large.c,
+	  device/lib/printfl.c,
+	  device/lib/sprintf.c,
+	  device/lib/vprintf.c:
+	  Fix bug #3496.
+
+2022-09-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/assert.h,
+	  device/include/ctype.h,
+	  device/include/limits.h,
+	  device/include/stdarg.h,
+	  device/include/stdbool.h,
+	  device/include/stddef.h,
+	  device/include/stdlib.h,
+	  device/include/uchar.h,
+	  device/include/setjmp.h,
+	  device/include/stdalign.h,
+	  device/include/stdint.h:
+	  Replace include guards by C23 header version macros.
+
+2022-09-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/peep.c:
+	  Improve handling of iyl, iyh in peephole rules, based on patch by Job Bolle.
+
+2022-09-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/peep.c:
+	  Handling of immediates in canAssign for z80 and related.
+
+2022-09-20 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/z80/peeph.def: fixed rules 85a, 85b to fix bug #3486,
+	  Thanks Job Bolle
+
+2022-09-19 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCCmain.c:
+	  Pass -xc to preprocessor, overriding file-type-by-extension magic.
+
+2022-09-18 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/cmd.c: applied patch #439,
+	    also applied patch from bug #3485, Thanks Mark Symonds,
+	    also cleaned up many whitespace irregularities
+
+2022-09-17 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/MakeList,
+	  support/regression/tcc/83_utf8_in_identifiers.c:
+	  Revive erroneously disabled utf8 test.
+
+2022-09-13 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/ds390/gen.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c:
+	  struct / union parameters on the stack for ds390, copied from mcs51.
+
+2022-09-13 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/{system,double-int}.h:
+	  Remove wrong/unneeded gmp use.
+
+2022-09-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/tinibios.h,
+	  device/lib/ds390/tinibios.c,
+	  device/lib/ds400/tinibios.c:
+	  Provide function prototypes for tinybios.
+
+2022-09-11 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCsymt.c,
+	  support/regression/cases/Makefile.in:
+	  Handle types double and long double in checkTypeSanity.
+
+2022-09-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  src/SDCCast.c,
+	  support/regression/tests/bug-3481.c:
+	  Fix part of bug #3481.
+
+2022-09-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3480.
+
+2022-09-08 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/libbacktrace/allocfail.sh:
+	  Delete unused file.
+
+2022-09-08 Felix Salfelder <felix AT salfelder.org>
+
+	* device/lib/incl.mk:
+	  Fix %.rel rules. Thanks to Job Bolle, see discussion/1865.
+
+2022-09-08 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/Makefile.in:
+	  avoid tm-preds.h cleanup once more.
+
+2022-09-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCpeeph.c,
+	  src/z80/peeph.def,
+	  support/regression/tests/bug-3478.c:
+	  Fix bug #3478.
+
+2022-09-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3471.c:
+	  Fix bug #3471.
+
+2022-09-06 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/Makefile.in,
+	  support/cpp/libbacktrace/Makefile.am:
+	  Revisit don't clean no-longer autogenerated files.
+
+2022-09-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCcse.c,
+	  support/regression/tests/bug-3470.c:
+	  Fix part of bug #3470.
+
+2022-09-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge cpp branch to trunk.
+
+2022-09-04 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/hash-table.h:
+	  Revert a compile warning fix.
+
+2022-09-02 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/cc1_dummies.cc,
+	  support/cpp/gcc/ggc-common.cc,
+	  support/cpp/gcc/hash-map.h,
+	  support/cpp/gcc/hash-table.h,
+	  support/cpp/gcc/vec.h:
+	  Fix compile warnings
+
+2022-09-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/valdiag/tests/universal.c,
+	  support/valdiag/tests/universal2.c:
+	  Separate out a test that needs to reside in a file on its own, since the diagnostic is emitted even inside #if 0.
+
+2022-08-31 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/checkedint.c.in:
+	  Disable test for mcs51 medium memory model, where it fails due to lack of memory.
+
+2022-08-31 Felix Salfelder <felix AT salfelder.org>
+
+	* sdcc/support/cpp/gcc/opts.cc,
+	  sdcc/support/cpp/libcpp/mkdeps.cc:
+	  Test x2.
+
+2022-08-30 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/configure, support/cpp/configure.ac:
+	  Omit gmp/mpfr checks and GCC_TOPLEV_SUBDIRS.
+
+2022-08-23 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/configure, support/cpp/configure.ac,
+	  support/cpp/gcc/configure, support/cpp/gcc/configure.ac:
+	  Reduce diff against upstream gcc.
+
+2022-08-21 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in:
+	  Test summary depends on test set.
+
+2022-08-20 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/Makefile.in:
+	  Do not clean no-longer autogenerated files.
+
+2022-08-30 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/cases/Makefile.in:
+	  Add distclean rule.
+
+2022-08-30 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCmem.c,
+	  support/regression/tests/bug-3040.c.in:
+	  Fix bug #3073.
+	* support/regression/tests/checkedint.c.in:
+	  Test checked integers, part of RFE #749.
+	* tests/gcc-torture-execute-920711-1.c:
+	  Remove a test that relies on undefined behaviour on signed integer overflow.
+	* src/SDCCcse.c,
+	  support/valdiag/tests/bug-3457.c:
+	  Fix bug #3457.
+	* src/SDCCmem.c,
+	  src/SDCCval.c,
+	  support/valdiag/tests/bug-3031.c:
+	  Fix bug #3383.
+
+2022-08-29 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/cases/Makefile.in:
+	  Disable a GCC test that tests for GCC implementation-defined floating-point behaviour.
+
+2022-08-26 Felix Salfelder <felix AT salfelder.org>
+
+	* regression/ports/pic14/spec.mk:
+	  LDFLAGS & EMU invocation fixes
+
+2022-08-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/ports/hc08/spec.mk,
+	  support/regression/ports/s08/spec.mk:
+	  Increase regression test timeout slightly, so a passive-cooled Raspi 4B can run the qct_0042-prime regression test in Summer.
+
+2022-08-16 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  .version,
+	  support/regression/tests/pragma_pedantic_parse_number.c:
+	  Document dropped support for --pedantic-parse-number and #pragma pedantic_parse_number.
+
+2022-08-16 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp:
+	  Partially import gcc (12.1.0, 1ea978e3066a),
+	  Isolate, dissect, gcc/cpp,
+	  Create dummy target files,
+	  (Re)add -obj-ext option,
+	  Change # to #line in cpp output,
+	* Makefile.common.in:
+	  Set .DELETE_ON_ERROR
+	* configure.ac, src/Makefile.in:
+	  Obtain svn revision and paste into version.h
+	* configure.ac, Makefile.in, bin/*:
+	  Add Makefile, wrap executables, adjust rules.
+
+2022-08-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* device/lib/pic16/startup/crt0.c,
+	  device/lib/pic16/startup/crt0i.c,
+	  device/lib/pic16/startup/crt0iz.c:
+	  Update interrupt syntax for new parser
+
+2022-08-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h:
+	  Fix bit and byte utilities find first leading bit functions for ports that don't have _BitInt yet.
+
+2022-08-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y:
+	  Document intentional deviation from C2X draft N3047 rules for tag compatibility for unions.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c:
+	  Fix handling of pointers to short, long and long long (without explicit int) in _Generic associations.
+	* device/include/stdckdint.h,
+	  device/lib/incl.mk,
+	  device/lib/ckd_add.c,
+	  device/lib/ckd_mul.c,
+	  device/lib/ckd_sub.c,
+	  doc/sdccman.lyx,
+	  .version:
+	  Checked integer arithmetic for all types except (unsigned) long long, part of RFE #749.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  .version,
+	  support/valdiag/tests/enum.c:
+	  C2X enum tag compatibility rules, RFE #852.
+
+2022-08-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/struct.c:
+	  C2X struct / union tag compatibility rules, part of RFE #852.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/call_once.c:
+	  call_once, RFE #777.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_first_leading_one.c,
+	  support/regression/tests/bitfirstleading.c.in:
+	  Provide bit and byte utilities find first leading bit functions. RFE #854.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_count_leading_zeros.c,
+	  support/regression/tests/bitcountleading.c.in:
+	  Provide bit and byte utilities count leading bits functions. Part of RFE #854.
+	* src/SDCCast.c:
+	  Fix type handling for bit-precise types in _Generic association.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_first_trailing_oneull.c,
+	  support/regression/tests/bitfirst.c.in:
+	  Provide bit and byte utilities first trailing bit functions. Part of RFE #854.
+
+2022-08-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/__stdc_count_trailing_onesull.c,
+	  device/lib/incl.mk,
+	  support/regression/tests/bitcounttrailing.c.in:
+	  Provide bit and byte utilities trailing bit count functions. Part of RFE #854.
+
+2022-08-07 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/c2xkeywords.c:
+	  Fix bug #3468.
+
+2022-08-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_bit_ceilull.c,
+	  device/lib/__stdc_bit_widthull.c,
+	  support/regression/tests/bitcount.c.in:
+	  Provide bit and byte utilities bit width floor and ceiling functions. Part of RFE #854.
+
+2022-08-05 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/stddef.h:
+	  Protect NULL macro with parentheses, fixing bug #3467.
+
+2022-08-05 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Missing K&R function support is not a deviation from C2X compliance.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdbit.h,
+	  device/include/stdint.h,
+	  device/lib/_mulint.c,
+	  device/lib/_mullong.c,
+	  device/lib/_rlulonglong.c,
+	  device/lib/_rrslonglong.c,
+	  device/lib/_rrulonglong.c,
+	  device/lib/_startup.c,
+	  device/lib/__stdc_count_onesull.c,
+	  support/regression/tests/bitcount.c.in,
+	  device/lib/_mullong.c:
+	  Provide and use bit and byte utility types and macros. Provide bit and byte utilities bit count and single-bit check functions. Part of RFE #854.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* .version,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/regression/tests/bug-3462.c:
+	  Fix bug #3462.
+	* doc/sdccman.lyx:
+	  Update manual section on standard compliance for recent improvements.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-05 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-3465.c:
+	  Basic C99 VLA type support, RFE #786, fix bug #3465.
+
+2022-08-04 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* support/scripts/sdcc.nsi:
+	  Correct STM8 memory model name from small to medium, fixing bug #3466.
+
+2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmem.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h:
+	  Infrastructure for VLA types.
+
+2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCval.h,
+	  C2X {} empty initializers, RFE #782.
+
+2022-08-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/util/dbuf_string.c:
+	  Code cleanup.
+	* src/SDCCglue.c:
+	  Fix area directive for sseg, patch by Tarn.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Refactor handling of array declarators.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCC.y:
+	  Allow more attribute arguments, warn on unknown attributes.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Allow attributes in direct declarators. Avoiding grammar conflicts for K&R function definitions made this a bit more complex.
+
+2022-08-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-2664.c:
+	  Fix bug #2664.
+	* support/valdiag/tests/bug-3009.c,
+	  support/valdiag/tests/bug-3011.c:
+	  Ignore a warning that is irrelevant for these test cases.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/bug-2222.c,
+	  support/regression/tests/bug-2263.c,
+	  support/regression/tests/bug-2320.c,
+	  support/regression/tests/bug-2629.c,
+	  support/regression/tests/bug-2956.c,
+	  support/regression/tests/bug-3079.c,
+	  support/regression/tests/bug-3081.c,
+	  support/regression/tests/bug-3093.c,
+	  support/regression/tests/bug-3135.c,
+	  support/regression/tests/bug-3169.c,
+	  support/regression/tests/bug-3215.c:
+	  Fix handling of pre-C2X function declarators without prototype, RFE #776.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCsymt.c,
+	  support/regression/tests/auto.c,
+	  support/valdiag/tests/bug-3464.c:
+	  C2X auto, RFE #849, fix bug #3464.
+
+2022-08-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCast.h,
+	  src/SDCCast.c,
+	  .version,
+	  support/regression/tests/typeof.c:
+	  C2X typeof, typeof_unqual, RFE #739, RFE #783.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stddef.h,
+	  src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  support/regression/tests/unreachable.c:
+	  C2X unreachable, RFE #778.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/memalignment.c,
+	  support/regression/tests/memalignment.c.in:
+	  C2X memalignment, RFE #856.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge parser branch to trunk.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.h,
+	  device/include/stddef.h,
+	  support/regression/tests/c2xkeywords.c,
+	  support/regression/tests/typeof.c:
+	  Basic C2X typeof and typeof_unqual support, part of RFE #739, RFE #783. RFE #853.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/SDCCval.h:
+	  Basic C2X nullptr support, part of RFE #853.
+
+2022-08-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Simplify grammar rules for enum.
+
+2022-07-29 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCC.y:
+	  Remove obsolete __func__ magic handling from parser.
+
+2022-07-26 Felix Salfelder <felix AT salfelder.org>
+
+	* device/lib/Makefile.in, device/lib/*/Makefile.in,
+	  device/lib/incl.mk:
+	  Deduplicate CC, introduce SDAR, add Makefile rules,
+	  fix error propagation.
+
+2022-07-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/lib/ds400/ds400rom.c:
+	  Fix use of macro for #.
+
+2022-07-22 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCC.lex:
+	  Skip "line" in lineinfo line. This fixes [r13587].
+
+2022-07-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3401.c:
+	  Fix bug #3401.
+
+2022-07-22 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/c-ppoutput.c:
+	  Add "line" to lineinfo lines, following the standard.
+
+2022-07-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c,
+	  support/regression/tests/bug-3461.c:
+	  Fix third and last part of bug #3461.
+
+2022-07-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/ds390/gen.c,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c,
+	  src/mos6502/gen.c,
+	  support/regression/tests/bug-3463.c:
+	  Fix bug #3463.
+
+2022-07-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/bug-3461.c:
+	  Fix bug #3461.
+
+2022-07-18 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-3410.c.in:
+	  Disable a test for mos6502, since that port it still lacks _BitInt.
+	* support/regression/tests/bug-3461.c:
+	  New (currently disabled) test for bug #3461.
+	* device/lib/ds400/ds400rom.c:
+	  Remove use of #pragma sdcc_hash.
+	* src/stm8/gen.c,
+	  src/pdk/gen.c,
+	  src/z80/gen.c:
+	  Partial fix for bug #3461.
+
+2022-07-16 Felix Salfelder <felix AT salfelder.org>
+
+	* src/SDCC.{lex,y}, support/cpp/libcpp/{init,macro}.c:
+	  move __func__ elaboration entirely to sdcc.
+
+2022-07-16 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-1952.c,
+	  support/valdiag/tests/bug-1952.c:
+	  Tests for __func__.
+	* support/regression/tests/bug-3410.c.in:
+	  Disable a test for mos65c02, since that port it still lacks _BitInt.
+
+2022-07-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-3410.c.in:
+	  Fix bug #3410.
+	* src/SDCCsalloc.hpp:
+	  Fix bug #3397.
+
+2022-07-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3459.c:
+	  Fix bug #3459.
+
+2022-07-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-3456.c,
+	  support/regression/tests/bug-3459.c,
+	  support/regression/tests/bug-3460.c.in:
+	  Fix bug #3460.
+
+2022-07-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-3459.c:
+	  An attempt at creating a regression test for bug #3459.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3456.c:
+	  Fix bug #3456.
+
+2022-07-06 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
+	  Exclude a test for host (since it fails when compiled with clang on FreeBSD 13.1 on aarch64).
+
+2022-07-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
+	  Disable tcc/110_average test for pdk, due to lack of memory on those targets.
+
+2022-06-29 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/float.h,
+	  src/SDCCmain.c:
+	  Provide macros for double, as requested in [feature-requests:#304].
+
+2022-06-29 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/lib/_slonglong2fs.c,
+	  device/lib/_ulonglong2fs.c,
+	  device/lib/incl.mk,
+	  doc/sdccman.lyx,
+	  support/regression/cases/Makefile.in:
+	  Implement long long to float conversion, fixing bug #3396.
+
+2022-06-28 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCCargs.h,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h
+	  src/SDCCmain.c:
+	  Improve command line parser flexibility and GCC compatibility.
+
+2022-06-28 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/mcs51/at89c55.h,
+	  device/include/mcs51/at89x51.h,
+	  device/include/mcs51/at89x52.h,
+	  device/include/mcs51/C8051F040.h,
+	  device/include/mcs51/C8051F060.h,
+	  device/include/mcs51/mcs51reg.h,
+	  device/include/mcs51/reg764.h,
+	  device/include/mcs51/regc515c.h,
+	  device/include/mcs51/sab80515.h: fixed SBIT uses
+
+2022-06-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3458.c.in:
+	  Fix bug #3458.
+
+2022-06-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Fix SDCC crash on error message for duplicate default label.
+
+2022-06-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  device/lib/ds390/lcd390.c,
+	  device/lib/ds390/rtc390.c,
+	  support/regression/tests/absolute.c.in,
+	  support/regression/tests/bitfields-bits1.c.in,
+	  support/regression/tests/bitfields-checks.c.in,
+	  support/regression/tests/bitfields-dead-loop.c.in,
+	  support/regression/tests/bitfields-nibbles.c.in,
+	  support/regression/tests/bug1723128.c,
+	  support/regression/tests/bug1750318.c,
+	  support/regression/tests/bug663539.c,
+	  support/regression/tests/simplefloat.c:
+	  Place __at next to identifier in declarations.
+
+2022-06-21 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCicode.c/h (PRINTFUNC, +piCode, iCodePrint): replaced
+	  void*/iCode* with const iCode*
+	* device/include/ds80c390.h,
+	  device/include/mcs51/at89S8252.h: use parentheses with __at
+	* device/include/mcs51/at89c55.h,
+	  device/include/mcs51/at89x51.h,
+	  device/include/mcs51/at89x52.h,
+	  device/include/mcs51/C8051F040.h,
+	  device/include/mcs51/C8051F060.h,
+	  device/include/mcs51/mcs51reg.h,
+	  device/include/mcs51/reg764.h,
+	  device/include/mcs51/regc515c.h,
+	  device/include/mcs51/sab80515.h: use compiler.h
+	* device/include/mcs51/at89x051.h: cosmetics
+	* device/lib/_setjmp.c: stack is in __idata
+	* device/lib/ds390/tinibios.c,
+	  device/lib/ds400/tinibios.c,
+	  device/lib/ser_ir.c: use parentheses with __interrupt
+	* device/lib/ser_ir_cts_rts.c: use __bit
+	* src/mos6502/gen.c,
+	  src/z80/gen.c: commented out some unused code to fix warnings
+	* src/z80/peeph.def: removed rule 88 as it is a duplicate of 85a
+
+2022-06-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Fix handling of C2X predefined constants.
+	* device/lib/ds390/tinibios.c:
+	  Fix use of __interrupt.
+	* support/regression/tests/compare_2_n.m4:
+	  Fix missing return type.
+
+2022-06-20 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/cases/Makefile.in:
+	  suppress implicit return type warnings in gte main functions.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y:
+	  Remove warning on label without statement, as it gives too many false positives.
+	* support/regression/tests/rotate2.c.in:
+	  Fix missing return type.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge from parser branch.
+
+2022-06-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* SDCC.y,
+	  SDCCerr.h,
+	  SDCCerr.c:
+	  C2X allows labels in blocks even when not followed by a statement. Warn on C90 implicit int return type.
+
+2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  .version,
+	  doc/sdccman.lyx,
+	  device/include/mcs51/ser.h,
+	  device/include/mcs51/ser_ir.h,
+	  device/include/mcs51/serial.h,
+	  device/include/tinibios.h,
+	  support/regression/fwk/lib/testfwk.c,
+	  support/regression/ports/mcs51-common/T2_isr.c,
+	  support/regression/tests/bug1535242.c,
+	  support/regression/tests/critical.c,
+	  support/regression/tests/interrupt.c.in,
+	  support/regression/tests/setjmp.c,
+	  device/lib/_ser.c,
+	  device/lib/serial.c:
+	  Steps towards a parser suitable for C2X, inspired by the Jutta Degener grammar as extended by Jens Gustedt.
+
+2022-06-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx:
+	  Document standard version pragmas.
+
+2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge from parser branch.
+
+2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h:
+	  Lexer support for complex numbers and decimal floating point (to emit an error message for these unsupported features instead of a non-descriptive syntax error)
+	* tests/bitintconst.c.in:
+	  Test for bug #3454.
+
+2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCCval.c:
+	  Fix bug #3454.
+
+2022-06-15 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/z80/peeph.def: fixed rules 79 to 82 to fix bug #3387
+	* support/regression/tests/bug-3387.c: new, added
+
+2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx:
+	  Fix two typos in the manual
+
+2022-06-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCC.y,
+	  src/pic14/ralloc.c,
+	  src/pic16/ralloc.c,
+	  src/altlex.c,
+	  src/Makefile.in:
+	  Steps towards a lexer suitable for C2X, inspired by the Jutta Degener grammar as extended by Jens Gustedt.
+
+2022-06-14 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx:
+	  Improve calling convention documentation, fix bug #3412.
+
+2022-06-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3406.c:
+	  Fix bug #3406.
+
+2022-06-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c:
+	  Add an assertion to show the underlying issue of bug #3401.
+
+2022-05-31 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/cases/Makefile.in:
+	  Document reasons for some failing gte tests, enable tests that failed due to bug #3402 before.
+
+2022-05-31 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/cases/Makefile.in:
+	  jump to end of gte test in wrapped exit(0) calls, enable two
+	  more, 20010116-1.c, 20070424-1.c
+
+2022-05-29 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/sdbinutils/include/ansidecl.h: revert to previous
+	* support/sdbinutils/libiberty/Makefile.in: check local include
+	  files first
+
+2022-05-27 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/cases/Makefile.in: replace "echo -n" with
+	  "printf" to handle hosts that don't support "-n" option
+	* support/sdbinutils/include/ansidecl.h: disable some attributes
+	  when compiling with clang so the Mac OS snapshot will build
+
+2022-05-24 Daniel Drotos <drdani AT mazsola.iit.uni-miskolc.hu>
+
+	* support/scripts/sdcc.nsi: install/deinstall more uCsim
+	  binaries with correct names
+
+2022-05-24 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/scripts/sdcc.nsi: update for hc08 simulator name change
+	* support/regression/Makefile.in: only display first 20 failures
+	  per test file (check the .out file if you need all of them)
+
+2022-05-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in:
+	  Document reasons for some failing gte tests.
+
+2022-05-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in:
+	  Document reasons for some failing TinyC tests.
+
+2022-05-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in:
+	  Document reasons for some failing gte tests.
+
+2022-05-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in:
+	  Document reasons for failing QuickC tests (lack of memory / speed vs. SDCC bugs).
+
+2022-05-21 Felix Salfelder <felix AT salfelder.org>
+
+	* support/sdbinutils/bfd/asxxxx.c:
+	  name 2 unnamed parameters to comply with c99 & al.
+
+2022-05-20 Felix Salfelder <felix AT salfelder.org>
+
+	* support/sdbinutils/bfd/asxxxx.c:
+	  edit out C++ style comments.
+
+2022-05-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
+	  Disable a test for targets that cannot complete it within reasonable time.
+
+2022-05-19 Felix Salfelder <felix AT salfelder.org>
+
+	* support/packihx/Makefile.in:
+	  packihx: fix build (MAKEDEP related).
+
+2022-05-19 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/cases/Makefile.in:
+	  avoid segv in __fail, ASSERT(0) instead.
+
+2022-05-18 Felix Salfelder <felix AT salfelder.org>
+
+	* Makefile.common.in, Makefile.in,
+	  sdas/*/Makefile.in, src/Makefile.in, src/port.mk:
+	  deduplicate dependency generation and fix for ports
+
+2022-05-18 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in:
+	  Disable a test that tests for QuickC implementation-defined behaviour.
+
+2022-05-18 Felix Salfelder <felix AT salfelder.org>
+
+	* Makefile.common.in, configure, configure.ac, src/Makefile.in:
+	  C vs. C++ distinction in dependency generation.
+
+2022-05-18 Felix Salfelder <felix AT salfelder.org>
+
+	* support/sdbinutils:
+	  Merge upstream GNU Binutils 2.38 (feature request #766).
+	* support/regression/Makefile.in:
+	  clean-results rule
+
+2022-05-18 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/setjmp.c,
+	  support/regression/tests/loop.c.in:
+	  Disable two tests for FreeBSD 13.1, since a known issue from FreeBSD 13.0 is still present.
+	* support/regression/MakeList:
+	  Disable a test for targets that cannot complete it within reasonable time.
+	* support/regression/tests/bug-3385.c:
+	  Disable new test for mos6502, where it fails (bug #3386).
+	* support/regression/tests/gcc-torture-execute-20040409-?.c:
+	  Disable parts of tests that test for GCC implementation-defined behaviour.
+	* support/regression/tests/mm-pnvi-ae-udi-pointer_from_int_disambiguation_1_xy.c,
+	  support/regression/tests/mm-pnvi-ae-udi-provenance_basic_using_uintptr_t_auto_yx.c,
+	  support/regression/tests/mm-pnvi-ae-udi-provenance_basic_using_uintptr_t_global_xy.c:
+	  Disable tests for clang 13 that fail there due to clang 13 TS 6010 Provenance non-compliance.
+
+2022-05-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge regtest branch.
+
+2022-05-17 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCval.c,
+	  src/SDCCast.c:
+	  support/regression/tests/bug-3391.c:
+	  Fix bug #3391.
+
+2022-05-16 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/Makefile.in:
+	  avoid various newline compound echo arguments.
+
+2022-05-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3388.
+	* src/SDCCsymt.c,
+	  support/valdiag/tests/bug-3389.c:
+	  device/include/float.h,
+	  support/regression/tests/bug-1805702.c:
+	  Fix bug #3389.
+
+2022-05-13 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-3385.c:
+	  Disable new test for hc08 and s08, where it fails (bug #3386).
+
+2022-05-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge regtest branch.
+
+2022-05-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/peeph.def,
+	  support/regression/tests/bug-3385.c:
+	  Fix bug #3385, patch by Ryan Hartlage (ryanplusplus).
+
+2022-05-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
+	  Exclude tests that fail on mcs51 due to abnormal stops.
+
+2022-05-11 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/MakeList
+	  exclude queen on pdk15-stack-auto.
+
+2022-05-11 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/Makefile.in:
+	  verbosity fix.
+
+2022-05-10 Felix Salfelder <felix AT salfelder.org>
+
+	* support/valdiag/Makefile.in:
+	  adjust compact-results invocation, add Makefile rule.
+
+2022-05-10 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/compact-results.py:
+	  simplify compact-results output.
+
+2022-05-10 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/Makefile.in:
+	  honour EXCLUDE_PORTS in test-mcs51.
+
+2022-05-10 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/MakeList:
+	  tcc_49_bracket_evaluation excludes on mcs51.
+
+2022-05-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c:
+	  Fix bug #3031.
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCutil.c,
+	  src/SDCC.lex,
+	  support/valdiag/tests/universal.c:
+	  ISO C23 diagnostics for invalid universal character names.
+
+2022-05-02 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Document language override option -x.
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  Deduplicate EMU rule: handle test-host similar to other targets, patch by Felix Salfelder (felixs).
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
+	  Exclude a test for some pdk15-stack-auto target (due to lack of memory), patch by Felix Salfelder (felixs).
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
+	  Exclude some tests for some mcs51 targets (due to lack of memory), patch by Felix Salfelder (felixs).
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-1981238.c,
+	  support/regression/tests/bug-3368.c:
+	  Disable some warnings about stuff that is meant to be tested.
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList:
+	  Exclude some known-failing among the new tests, patch by Felix Salfelder (felixs).
+	* support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  Work around a linker error reporting issue, patch by Felix Salfelder (felixs).
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/lib/z180/setjmp.s,
+	  device/lib/z80/setjmp.s,
+	  device/lib/z80n/setjmp.s:
+	  Fix an issue triggered by tail-call optimization on calls to longjmp.
+
+2022-04-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/gte/README,
+	  support/regression/qct/README,
+	  support/regression/tcc/README:
+	  Document Licenses of imported tests, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in,
+	  support/regression/tcc,
+	  support/regression/qct:
+	  Add tests from TCC, QuickC, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/cases/Makefile.in:
+	  Disable some warnings in gce tests, patch by Felix Salfelder (felixs).
+	* support/regression/MakeList:
+	  Disable new tests for z80-undoc (where they fail), patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/ports/mcs51-common/spec.mk,
+	  support/regression/ports/stm8/spec.mk,
+	  support/regression/gte:
+	  GCC tests from the execute part of the torture suite. Patch by Felix Salfelder (felixs).
+	* support/regression/gte/951204-1.c:
+	  Un-edit a GCC torture-execute test, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  Fix out creation logic to avoid duplicates, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/genericnonintrinsicnaddr.c:
+	  Use PORT_HOST, just like the other tests, instead of TEST_HOST.
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Hack to silence trigraph warning in p99 test, patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Filter out tests listed in EXCLUDE_${PORT}, TEST_PREFIX: select tests by prefix (e.g. m4_), TEST_SLICE: slice test list (Python style). Patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  .PRECIOUS does not play with .DELETE_ON_ERROR, use .SECONDARY instead. Patch by Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge implicitintrinsicnamedaddressspaces branch.
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Split EXCLUDE_PORTS, add uc6502-stack-auto, patch Felix Salfelder (felixs).
+
+2022-04-21 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/genericintrinsicnaddr.c,
+	  support/regression/tests/genericnonintrinsicnaddr.c:
+	  Test _Generic on pointers into named address spaces.
+	* src/SDCCmem.c,
+	  src/SDCCast.c:
+	  Fix a _Generic implicit intrinsic named address space issue affecting large and huge mcs51 memory model.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/MakeList,
+	  support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/gte:
+	  Import missing gcc torture execute tests, patch by by Felix Salfelder (felixs).
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge regtest branch.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/cases/Makefile.in:
+	  Test cases cleanup, patch by Felix Salfelder (felixs).
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  src/SDCCcse.c,
+	  src/SDCCglue.c,
+	  src/SDCCicode.c,
+	  src/SDCClospre.hpp,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/ds390/ralloc.c,
+	  src/mcs51/ralloc.c,
+	  src/pic14/glue.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/glue.c,
+	  src/pic16/ralloc.c,
+	  support/regression/tests/bug-3254.c,
+	  support/regression/tests/bug-3245.c:
+	  Fix bugs #3254, #3145.
+
+2022-04-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c,
+	  support/valdiag/tests/generic.c:
+	  Fix another part of bug #3145.
+
+2022-04-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c:
+	  Fix array-to-pointer decay in _Generic.
+
+2022-04-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-2629.c:
+	  Fix bug #2629.
+
+2022-04-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c:
+	  Assertion to catch bug #2629 earlier.
+	* support/regression/tests/bug-2629.c:
+	  (Disabled) test for bug #2629.
+
+2022-04-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c:
+	  Fix printing of plain char for error messages and debug output.
+
+2022-04-13 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx:
+	  Update documentation on standard compliance.
+
+2022-04-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-3379.c:
+	  Fix bug #3379.
+
+2022-04-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bug-2981.c:
+	  Test for bug #2981.
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3255.c:
+	  Fix bug #3255.
+	* src/SDCCglue.c,
+	  support/valdiag/tests/generic.c:
+	  Fix part of bug #3145.
+
+2022-04-04 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/cases/Makefile.in:
+	  Fix rm flag for cleaning MakeList.
+	* support/regression/Makefile.in:
+	  Fix build of mcs51 regression test framework libraries, fix by Felix Salfelder (felixs).
+
+2022-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/mcs51-small-stack-auto:
+	  Rename mcs51-stack-auto to mcs51-small-stack-auto for consistency with mcs51-small and mcs51-large-stack-auto.
+	* doc/sdccman.lyx:
+	  Clarify __z88dk_callee behaviour.
+
+2022-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/mcs51/gen.c,
+	  src/stm8/gen.c,
+	  support/regression/tests/funptrsstructreturn.c.in:
+	  Fixes for calls via function pointers to functions returning struct / union.
+
+2022-04-03 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  src/mcs51/gen.c,
+	  src/mcs51/main.c,
+	  support/regression/tests/structreturn.c.in,
+	  device/lib/div.c,
+	  device/lib/ldiv.c,
+	  device/lib/lldiv.c,
+	  device/lib/mcs51/Makefile.in,
+	  support/regression/tests/div.c,
+	  device/include/stdlib.h:
+	  struct / union return for mcs51.
+
+2022-04-02 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/mcs51/gen.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c,
+	  support/regression/tests/structparam.c,
+	  support/regression/tests/structparam.c.in:
+	  struct / union parameters on the stack for mcs51.
+
+2022-04-01 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* ChangeLog,
+	  src/SDCCicode.c,
+	  src/SDCCmem.c,
+	  support/regression/ports/mcs51-common/spec.mk,
+	  support/regression/tests/gcc-torture-execute-20040707-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/structparam.c:
+	  Fix bug #3377.
+
+2022-03-31 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  src/ds390/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/mos6502/main.c,
+	  support/regression/tests/bug-3368.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c,
+	  support/regression/tests/structparam.c,
+	  support/regression/tests/gcc-torture-execute-20021118-1.c,
+	  support/regression/tests/gcc-torture-execute-20040707-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c:
+	  struct parameter support for non-reentrant functions.
+
+2022-03-29 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Reference section 3.2.5 in 3.2.4, fix typo in 1.2.
+
+2022-03-29 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/sdbinutils/bfd/*:
+	  Delete unused files as suggested by Felix Salfelder (felixs).
+
+2022-03-28 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/tlcs90/strlen.s:
+	  Fix regression from [r13318].
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/ports/tlcs90/spec.mk:
+	  Do not emit debug info to ease reading asm files.
+	* src/z80/ralloc2.cc:
+	  Fix code generation issues in use of iy.
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Conditional MakeList include, and conditional test-port, part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in:
+	  Silence case expansion messages by default, part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  V flag to control verbosity, decouple test-ports and print-summary. Part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/*/spec.mk:
+	  Deduplicate spec.mk by using rules in Makefile.in instead. Part of patch #430 by Felix Salfelder (felixs).
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in:
+	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs): fixes for error reporting, number of compact-results calls, CLEAN_PORTS.
+
+2022-03-28 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix bug #3373.
+
+2022-03-28 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sim/ucsim/z80.src/gb80.cc,
+	  sim/ucsim/z80.src/gb80cl.h,
+	  sim/ucsim/z80.src/inst.cc,
+	  sim/ucsim/z80.src/inst_gb80.cc:
+	  Fix cycle accuracy.
+
+2022-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/astlcs90/tt90.asm,
+	  sim/ucsim/tlcs.src/inst_arith.cc,
+	  sim/ucsim/tlcs.src/inst_jump.cc,
+	  sim/ucsim/tlcs.src/tlcs.cc:
+	  Improve cycle accuracy.
+
+2022-03-27 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/astlcs90/tt90.asm:
+	  Add some test assembly.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintvararg.c.in:
+	  Fix host test disable condition.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/cases/Makefile.in,
+	  support/regression/cases/mkdrv.py,
+	  support/regression/ports/*/spec.mk,
+	  support/regression/ports/host/spec.mk.in:
+	  Regression test infrastructure, picked from patch #430 by Felix Salfelder (felixs).
+	* support/regression/tests/structparam.c.in:
+	  Fix test file extension for parametrized test.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* configure,
+	  configure.ac,
+	  support/regression/Makefile.in,
+	  support/regression/ports/host/spec.mk.in,
+	  support/regression/cases:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs), made less verbose.
+
+
+
+2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/lib/tlcs90/abs.s,
+	  device/lib/tlcs90/atomic_flag_test_and_set.s,
+	  device/lib/tlcs90/crt0.s,
+	  device/lib/tlcs90/memcpy.s,
+	  device/lib/tlcs90/memmove.s,
+	  device/lib/tlcs90/strcpy.s,
+	  device/lib/tlcs90/strlen.s:
+	  Optimize handwritten assembly.
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Fix an issue in test-host regression test output, fix suggested via chat by Felix Salfelder (felixs).
+
+2022-03-26 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintvararg.c.in:
+	  Disable a test for clang 11.0 host, where it fails.
+	* device/lib/tlcs90/atomic_flag_test_and_set.s:
+	  Bring back previous atomic_flag_test_and_set implementation as comment, explain why it was chosen, and under which circumstances we might want to revert back to it.
+
+2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sim/ucsim/tlcs.src/inst_arith.cc
+	  sim/ucsim/tlcs.src/inst_bit.cc
+	  sim/ucsim/tlcs.src/inst_jump.cc
+	  sim/ucsim/tlcs.src/tlcs.cc:
+	  Add partial cycle counting.
+
+2022-03-26 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* device/include/stdatomic.h,
+	  device/lib/atomic_flag_clear.c,
+	  device/lib/tlcs90/atomic_flag_test_and_set.s:
+	  Switch to faster atomic test with shift. (8T vs 12T)
+
+2022-03-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/generate-cases.py,
+	  support/regression/tests/*.c.in:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs).
+
+2022-03-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs).
+
+2022-03-25 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglobl.h,
+	  src/SDCCglue.c,
+	  src/z80/main.c,
+	  src/z80/z80.h,
+	  support/regression/ports/ucz80-undoc,
+	  support/regression/Makefile.in,
+	  src/z80/gen.c:
+	  Support for undocumented Z80 instructions.
+
+2022-03-25 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/asz80/z80mch.c:
+	  Disable undocumented instructions for Z180.
+
+2022-03-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/generate-cases.py:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs).
+
+2022-03-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  support/regression/tests/widebitintbitfield.c:
+	  _BitInt promotion fix.
+	* src/SDCCicode.c:
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/bug-3368.c:
+	  Fix bug #3368.
+	* support/regression/tests/bug-3235.c:
+	  Test for a bug that was fixed a while ago.
+
+2022-03-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-3372.c:
+	  Fix bug #3372.
+	* src/SDCCsymt.c:
+	  Improve debug output for bit-fields.
+
+2022-03-24 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/as8xcxxx/ds8adr.c,
+	  sdas/as8xcxxx/ds8mch.c:
+	  Merge error messages from upstream ASxxxx 5.40.
+
+2022-03-24 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/as8xcxxx/ds8pst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asstm8/stm8pst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asz80/z80pst.c:
+	  Enable .incbin for all targets.
+
+2022-03-24 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/widebitintbitfield.c:
+	  Disable a test that had been accidentially enabled even for ports where the feature is not supported.
+
+2022-03-24 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/as8051/i51adr.c,
+	  sdas/as8051/i51mch.c,
+	  sdas/as8051/i51pst.c:
+	  Merge error messages from upstream ASxxxx 5.40.
+
+2022-03-24 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/asz80/z80.h:
+	  Fix .allow_undocumented for z80 [bugs:#3275].
+
+2022-03-24 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/asxxsrc/assubr.c:
+	  Fix detailed error messages in sdas.
+
+2022-03-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/widebitintbitfield.c:
+	  Temporarily disable new failing _BitInt test.
+
+2022-03-23 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitint.c,
+	  support/regression/tests/bitintarith.c,
+	  support/regression/tests/bitintbitfield.c,
+	  support/regression/tests/bitintvararg.c,
+	  support/regression/tests/widebitintbitfield.c:
+	  Enable some tests for bit-precise integers on clang 11 host.
+
+2022-03-22 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCcse.c,
+	  support/regression/tests/bitint.c:
+	  Fix bug #3371.
+
+2022-03-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/asz80/z80mch.c:
+	  Fix/add cycles of z80 and z80n.
+
+2022-03-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c:
+	  Fix bug #3353.
+
+2022-03-20 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/bug-2368.c,
+	  support/regression/tests/bug-2770.c,
+	  support/regression/tests/bug-3231.c,
+	  support/regression/tests/bug3440327.c,
+	  support/regression/tests/cse.c,
+	  support/regression/tests/gcc-torture-execute-20021118-1.c,
+	  support/regression/tests/gcc-torture-execute-20040707-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/malloc.c,
+	  support/regression/tests/memory.c,
+	  support/regression/tests/preserves_regs.c,
+	  support/regression/tests/structparam.c:
+	  struct parameters for pdk (--stack-auto only).
+
+2022-03-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/ralloc2.cc,
+	  src/stm8/ralloc2.cc,
+	  src/z80/ralloc2.cc,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c:
+	  Fix a register allocation issue affecting calls to functions with multiple struct parameters.
+
+2022-03-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.y,
+	  src/SDCCcse.c,
+	  src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/gcc-torture-execute-20021118-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-struct-ret-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c,
+	  support/regression/tests/structparam.c:
+	  Rewrite struct parameter support to fix bug #3365.
+
+2022-03-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-stdarg-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c:
+	  Basic support for struct varargs.
+	* support/regression/tests/gcc-torture-execute-20040707-1.c,
+	  support/regression/tests/gcc-torture-execute-pr71700.c,
+	  support/regression/tests/gcc-torture-execute-struct-ini-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c:
+	  Enable some GCC tests that pass due to recent improvements in struct / union support.
+	* src/mos6502/gen.c,
+	  src/mos6502/ralloc.c,
+	  src/pdk/gen.c,
+	  src/pdk/ralloc.c,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c,
+	  src/z80/gen.c,
+	  src/z80/ralloc.c:
+	  Remove remains of support for unused IPOP.
+	* doc/README.txt,
+	  doc/sdccman.lyx,
+	  LICENSE:
+	  Make it a bit easier to read about the license situation.
+
+2022-03-19 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/mcs51/gen.c:
+	  Fix bug #3364.
+	* support/regression/tests/bitintvararg.c:
+	  Enable test for widths, for which it passes.
+	* support/regression/tests/gcc-torture-execute-bswap-2.c:
+	  Remove GCC test that requires int to be at least 32 bits wide.
+	* support/regression/tests/gcc-torture-execute-20020215-1.c,
+	  support/regression/tests/gcc-torture-execute-20020810-1.c,
+	  support/regression/tests/gcc-torture-execute-20021010-2.c,
+	  support/regression/tests/gcc-torture-execute-20021118-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20170401-1.c,
+	  support/regression/tests/gcc-torture-execute-20180131-1.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/gcc-torture-execute-pr67226.c,
+	  support/regression/tests/gcc-torture-execute-restrict-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-stdarg-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-struct-ret-1.c:
+	  Enable some GCC tests that pass due to recent improvements in struct / union support.
+
+2022-03-18 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/stdarg.h,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCicode.c,
+	  support/regression/tests/gcc-torture-execute-pr60017.c,
+	  support/regression/tests/bitintvararg.c:
+	  Fixes for bit-precise varargs, bug #3361.
+
+2022-03-18 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/bug-3359.c,
+	  support/regression/tests/structparam.c,
+	  .version,
+	  doc/sdccman.lyx:
+	  Fix bug #3359 and implement struct / union parameters for stm8, z80 and related (and for pdk with --stack-auto), RFE #23.
+
+2022-03-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Refactor genAnd(), genOr() and genXor().
+
+2022-03-16 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c:
+	  Fix access before array.
+	* support/regression/tests/gcc-torture-execute-20020206-1.c,
+	  support/regression/tests/gcc-torture-execute-20050713-1.c,
+	  support/regression/tests/gcc-torture-execute-20071210-1.c,
+	  support/regression/tests/gcc-torture-execute-20131127-1.c,
+	  support/regression/tests/gcc-torture-execute-20170401-1.c,
+	  support/regression/tests/gcc-torture-execute-20171008-1.c,
+	  support/regression/tests/gcc-torture-execute-pr60017.c,
+	  support/regression/tests/gcc-torture-execute-pr82387.c,
+	  support/regression/tests/gcc-torture-execute-pr82388.c:
+	  Update reasons why we skip some gcc tests.
+	* device/include/uchar.h,
+	  src/SDCCval.c:
+	  In C23, u8-prefixed string literals are arrays of char8_t, a typedef for unsigned char. RFE #779.
+
+2022-03-16 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/Makefile.in,
+	  support/regression/ports/ds390/spec.mk,
+	  support/regression/ports/ez80-z80/spec.mk,
+	  support/regression/ports/mcs51-common/spec.mk,
+	  support/regression/ports/pdk13/spec.mk,
+	  support/regression/ports/pdk15/spec.mk,
+	  support/regression/ports/pdk15-stack-auto/spec.mk,
+	  support/regression/ports/stm8/spec.mk,
+	  support/regression/ports/ucz180/spec.mk,
+	  support/regression/ports/ucz180-resiy/spec.mk,
+	  support/regression/ports/ucz80-nmos/spec.mk,
+	  support/regression/ports/ucz80n/spec.mk:
+	  Regression test infrastructure improvements, picked from patch #430 by Felix Salfelder (felixs).
+
+2022-03-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/div.c,
+	  device/lib/s08/Makefile.in,
+	  device/lib/hc08/Makefile.in,
+	  device/lib/mos6502/Makefile.in,
+	  device/lib/mos65c02/Makefile.in,
+  	  device/lib/mos6502-stack-auto/Makefinle.in:
+	  Enable div and ldviv for mos6502 and hc08/s08 ports.
+	* src/mos6502/gen.c,
+	  src/mos6502/main.c:
+	  Add support for GETBYTE and GETWORD iCodes.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  device/lib/lldiv.c:
+	  Fix pdk heap corruption on returning large struct.
+	* src/stm8/gen.c:
+	  Fixes for large struct return.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/lib/div.c,
+	  device/lib/ldiv.c,
+	  device/lib/lldiv.c,
+	  support/regression/tests/div.c,
+	  device/lib/Makefile.in,
+	  device/lib/*/Makefile.in:
+	  Division functions, RFE #167.
+
+2022-03-15 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/gcc_attr.h:
+	  Compatibility macros for GCC attribute syntax.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/structreturn.c:
+	  Enable struct / union return for hc08, s08, mos6502, ds390.
+	* device/include/stdlib.h:
+	  Provide prototypes for division functions.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/z80/gen.c,
+	  src/SDCCsymt.c,
+	  doc/sdccman.lyx,
+	  support/regression/tests/structreturn.c:
+	  struct / union return support for pdk and z80 and related.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCcse.c,
+	  src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/SDCClrange.c,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/ds390/ralloc.c,
+	  src/mcs51/ralloc.c,
+	  src/pic14/glue.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/glue.c,
+	  src/pic16/ralloc.c,
+	  src/stm8/gen.c,
+	  src/z80/ralloc.c:
+	  struct / union return support for stm8.
+
+2022-03-15 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/assert.h:
+	  Improve test for assert C23-compliance.
+
+2022-03-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  genPlusInc(), genMinusDec() and genlshTwo() improvements.
+
+2022-03-14 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/main.c,
+	  src/z80/gen.c:
+	  Enable _BitInt for sm83 up to 64 bits.
+	* device/include/assert.h,
+	  support/regression/tests/assert.c:
+	  C23-compliant assert, RFE #780.
+
+2022-03-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/gcc-torture-execute-20021120-1.c:
+	  Make stack-auto exception only for mos6502 port. Enable test for S08 and HC08.
+
+2022-03-14 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintarith.c:
+	  Disable part of test for pdk14 to not run out of code memory.
+	* src/z80/gen.c,
+	  support/regression/tests/bitintbitfield.c,
+	  support/regression/tests/widebitintbitfield.c:
+	  Fix write to wide bit-field on z80.
+
+2022-03-14 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCval.c:
+	  Use unsigned long long to represent bit-field values at compile time.
+	* src/mcs51/main.c:
+	  Enable _BitInt for mcs51.
+	* support/regression/tests/bitintarith.c,
+	  support/regression/tests/bug-3355.c:
+	  Test for bug #3355 (disabled for now).
+	* src/ds390/main.c,
+	  src/ds390/gen.c:
+	  _BitInt for ds390.
+	* src/z80/gen.c,
+	  support/regression/tests/bitintarith.c:
+	  Fix a z80 _BitInt decrement issue.
+
+2022-03-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Make regInfoStr display SP relative values when appropriate.
+	  Additional improvements to genAddrOf().
+
+2022-03-13 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/gcc-torture-execute-20021120-1.c:
+	  Make large local allocation static when compiling with --stack-auto.
+
+2022-03-13 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/as6500/r65pst.c,
+	  sdas/as6808/m08pst.c,
+	  sdas/as8051/i51pst.c,
+	  sdas/as8xcxxx/ds8pst.c,
+	  sdas/aspdk13/pdk13pst.c,
+	  sdas/aspdk14/pdk14pst.c,
+	  sdas/aspdk15/pdk15pst.c,
+	  sdas/aspdk16/pdk16pst.c,
+	  sdas/asrab/rabpst.c,
+	  sdas/asstm8/stm8pst.c,
+	  sdas/astlcs90/t90pst.c,
+	  sdas/asz80/z80pst.c:
+	  Enable new mnemonics on all ports.
+
+2022-03-12 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* support/regression/tests/bitintarith.c,
+	  src/pdk/main.c:
+	  Disable a test that failed on pdk15 for wide _BitInt due to lack of memory, reenable 64-_BitInt support for pdk.
+
+2022-03-12 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mod6502/gen.c:
+	  Small genCast() improvements.
+
+2022-03-12 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/z80/peeph.def:
+	  Eliminate nop jps.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/main.c:
+	  Limit _BitInt size to 16 for pdk (temporarily, until an issue is fixed).
+	* src/pdk/main.c:
+	  Fix handling of parameters of odd size > 2.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge _BitInt branch.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/mcs51/gen.c:
+	  Basic _BitInt support for mcs51.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/widebitintbitfield.c:
+	  Fix cast from signed integer type to wider unsigned bit-precise type.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge _BitInt branch.
+
+2022-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  src/z80/gen.c:
+	  support/regression/tests/widebitintbitfield.c:
+	  Fixes for bit-precise bit-fields.
+
+2022-03-11 Daniel Drotos <drdani@mazsola.iit.uni-miskolc.hu>
+
+	* src/pdk/gen.c:
+	  Fix compile by gcc 9.4.0: label must be on statement
+
+2022-03-11 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCglue.c,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/bitintbitfield.c:
+	  Fix issues in casts between bitprecise types of different sign.
+
+2022-03-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/ds390/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c:
+	  Explicitly state _BitInt non-support.
+
+2022-03-10 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/SDCCglue.c:
+	  Make assembly comments more consistent.
+	* src/mos6502/main.c,
+	  src/mos6502/ralloc2.cc:
+	  Refactor to make files more similar to stm8 port.
+
+2022-03-10 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Clarify --std-cxx and --std-sdccxx.
+
+2022-03-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge _BitInt branch.
+
+2022-03-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* src/SDCCpeeph.c:
+	  Calculate size of general ASxxx directives, apply [patches:428].
+
+2022-03-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCmain.c
+	  src/pdk/gen.c
+	  src/pdk/main.c
+	  src/pdk/peep.c
+	  Support for bit-precise integer types on pdk.
+	* src/stm8/gen.c,
+	  src/stm8/main.c,
+	  src/z80/gen.c,
+	  support/regression/tests/bitintarith.c:
+	  Fix left shift of bit-precise integer types.
+
+2022-03-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Support for bit-precise integer types on sm83 up to a width of 16.
+
+2022-03-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge _BitInt branch.
+
+2022-03-10 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* doc/sdccman.lyx,
+	  src/z80/gen.c,
+	  src/z80/main.c,
+	  support/regression/tests/bitint.c:
+	  Bit-precise types and bit-fields thereof for z80-related (except sm83, which only gets support up to a width of 8 bits for now).
+
+2022-03-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/main.c,
+	  src/mos6502/ralloc.h:
+	  Avoid marking the accumulator dirty after a compare operation.
+
+2022-03-10 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/asxxsrc/asmain.c,
+	  sdas/asxxsrc/asxxxx.h:
+	  Merge all kinds of .if directives from upstream ASxxxx.
+	* sdas/asgb/gbpst.c:
+	  Enable in sm83 for testing.
+
+2022-03-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peeph.def:
+	  Add rules for redundant stores after loads.
+	* device/lib/mos6502/crt0.s:
+	  Use ZP for memcpy and memset parameters.
+
+2022-03-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* Merge _BitInt branch.
+
+2022-03-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bitintbitfield.c:
+	  Fix signed bit-precise bit-fields.
+
+2022-03-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCopt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/stm8/gen.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/bitintarith.c:
+	  Multiplicative operators for bit-precise integers.
+
+2022-03-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCopt.c,
+	  src/stm8/main.c:
+	  Improve diagnostics for unimplemented bit-precise operators.
+
+2022-03-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Fix corner cases in genPointerSet() and genPointerGet().
+
+2022-03-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  src/SDCCval.c,
+	  support/regression/tests/bitint.c,
+	  support/regression/tests/bitintarith.c,
+	  src/stm8/gen.c:
+	  Various _BitInt fixes.
+
+2022-03-09 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCCast.c,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c:
+	  Fix casts for bit-precise types.
+	* src/stm8/gen.c:
+	  Fix return of types with odd size greater than 4.
+	* support/regression/tests/bitint.c,
+	  support/regression/tests/bitintarith.c:
+	  Somethings already work for _BitInt, so we can test them!
+
+2022-03-09 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* doc/sdccman.lyx: fixed bug #3343
+
+2022-03-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peeph.def:
+	  Minor peephole optimizations.
+	* src/mos6502/gen.c:
+	  Special case 16b left and 8bit right in genPlus and genMinus.
+
+2022-03-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
+
+	* sdas/as8xcxxx/ds8mch.c,
+	  sdas/asxxsrc/asxxxx.h:
+	  Fix ASxxxx warnings by merging with upstream for [bugs:#3347].
+
+2022-03-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  src/stm8/main.c,
+	  src/SDCCglue.c,
+	  src/SDCCast.c,
+	  src/SDCCsymt.h,
+	  src/stm8/gen.c:
+	  Infrastructure for bit-precise integer literals.
+
+2022-03-08 Philipp Klaus Krause <krauseph AT informatik.uni-freiburg.de>
+
+	* device/include/limits.h,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmain.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.c,
+	  src/port.h:
+	  Infrastructure for bit-precise integers.
+
+2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* .version:
+	  Start post-4.2.0 development.
+
+2022-03-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* Merge sdcc-next branch to trunk.
+
 2022-03-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/peep.c:
@@ -25,7 +3010,7 @@
 	* src/mos6502/gen.c,
 	  src/mos6502/ralloc2.cc:
 	  Add codegen for rotate.
-	  
+
 2022-03-07 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* sim/ucsim/z80.src/inst_gb80.cc:
@@ -153,32 +3138,32 @@
 	* src/mos6502/ralloc.c,
 	  src/mos6502/gen.c:
 	  Remove freeAllRegs()
-  	* src/mos6502/gen.c:
-  	  Fix corner cases in assignResultValue() and genPointerSet()
-  	* support/regression/ports/mos6502/spec.mk
-  	  Removed redundant --out-fmt-ihx command line option
-  	* device/lib/mos6502/_strcpy.s,
-  	  device/lib/mos6502/_strcmp.s,
-  	  device/lib/mos6502/_mullong.s,
-  	  device/lib/mos6502/_mulint.s,
-  	  device/lib/mos6502/_divuint.s,
-  	  device/lib/mos6502/_divulong.s,
-  	  device/lib/mos6502/__memcpy.s:
-  	  Move function parameters to overlay segment.
-  	* device/lib/mos6502/_divsint.s,
-  	  device/lib/mos6502/_divslong.s,
-  	  device/lib/mos6502/_modsint.s,
-  	  device/lib/mos6502/_modslong.s,
-  	  device/lib/mos6502/_moduint.s,
-  	  device/lib/mos6502/_modulong.s,
-  	  device/lib/mos6502/_mulschar.s,
-  	  device/lib/mos6502/_muluchar.s,
-  	  device/lib/mos6502/abs.c:
-  	  Add assembly implementation of divs, mod, mulchar and abs.
-  	* src/mos6502/gen.c:
+	* src/mos6502/gen.c:
+	  Fix corner cases in assignResultValue() and genPointerSet()
+	* support/regression/ports/mos6502/spec.mk
+	  Removed redundant --out-fmt-ihx command line option
+	* device/lib/mos6502/_strcpy.s,
+	  device/lib/mos6502/_strcmp.s,
+	  device/lib/mos6502/_mullong.s,
+	  device/lib/mos6502/_mulint.s,
+	  device/lib/mos6502/_divuint.s,
+	  device/lib/mos6502/_divulong.s,
+	  device/lib/mos6502/__memcpy.s:
+	  Move function parameters to overlay segment.
+	* device/lib/mos6502/_divsint.s,
+	  device/lib/mos6502/_divslong.s,
+	  device/lib/mos6502/_modsint.s,
+	  device/lib/mos6502/_modslong.s,
+	  device/lib/mos6502/_moduint.s,
+	  device/lib/mos6502/_modulong.s,
+	  device/lib/mos6502/_mulschar.s,
+	  device/lib/mos6502/_muluchar.s,
+	  device/lib/mos6502/abs.c:
+	  Add assembly implementation of divs, mod, mulchar and abs.
+	* src/mos6502/gen.c:
 	  Add m6502_unimplemented()
-   	* src/mos6502/gen.c:
-   	   Refactopr genCpl() and genPointerSet()
+	* src/mos6502/gen.c:
+	  Refactopr genCpl() and genPointerSet()
 
 2022-02-26 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -293,14 +3278,14 @@
 	  sdas/as6500/r65adr.c,
 	  sdas/as6500/r6500.h:
 	  Add .incbin, .define, .undefine, .ifdef and .ifndef to the 6502 assembler.
-  	* sdas/as6808/m6808.h,
+	* sdas/as6808/m6808.h,
 	  sdas/as6808/m08pst.c,
 	  sdas/as6808/m08mch.c,
 	  sdas/as6808/m08adr.c:
 	  Add .incbin hc08/s08 assembler.
-  	* sdas/asstm8/stm8pst.c:
+	* sdas/asstm8/stm8pst.c:
 	  Use I_CODE in S_INCL entry instead of 0.
-	  
+
 2022-02-22 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* src/z80/peeph.def:
@@ -361,24 +3346,24 @@
 
 	* sdcc/devicel/lib/mos6502/crt0.s:
 	  Remove incorrect loading of the second memset parameter.
-  	* support/regression/ports/u6502/spec.mk:
+	* support/regression/ports/u6502/spec.mk:
 	  Remove redundant --out-fmt-ihx parameter.
-  	* device/lib/mos6502-stack-auto/Makefile.in,
-  	  device/lib/mos6502-stack-auto/crt0.s,
-  	  device/lib/mos6502-stack-auto/atomic_flasg_test_and_set.c,
-  	  device/lib/mos6502-stack-auto/_setjmp.c,
-  	  device/lib/mos6502-stack-auto/_rrulonglong.c,
-  	  device/lib/mos6502-stack-auto/_rrslonglong.c,
-  	  device/lib/mos6502-stack-auto/_ret.c,
-  	  device/lib/mos6502-stack-auto/,
-  	  device/lib/Makefile.in,
-  	  device/lib/clean.mk,
-  	  sdcc/configure.ac,
-  	  sdcc/configure.ac:  	  
- 	  Add mos6502 stack auto target.
-  	* src/mos6502/main.c:
+	* device/lib/mos6502-stack-auto/Makefile.in,
+	  device/lib/mos6502-stack-auto/crt0.s,
+	  device/lib/mos6502-stack-auto/atomic_flasg_test_and_set.c,
+	  device/lib/mos6502-stack-auto/_setjmp.c,
+	  device/lib/mos6502-stack-auto/_rrulonglong.c,
+	  device/lib/mos6502-stack-auto/_rrslonglong.c,
+	  device/lib/mos6502-stack-auto/_ret.c,
+	  device/lib/mos6502-stack-auto/,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  sdcc/configure.ac,
+	  sdcc/configure.ac:
+	  Add mos6502 stack auto target.
+	* src/mos6502/main.c:
 	  Correct flags affected by cld.
-	  
+
 2022-02-19 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
 	* device/lib/sm83/memcpy.s,
@@ -613,7 +3598,7 @@
 	  src/mos6502/main.c,
 	  src/mos6502/ralloc.c,
 	  src/mos6502/ralloc.h,
-	  src/mos6502/ralloc2.cc:  
+	  src/mos6502/ralloc2.cc:
 	  Removed dead code and refactored load/stroreRegTemp.
 
 2022-02-02 Benedikt Freisen <b.freisen AT gmx.net>
@@ -732,7 +3717,7 @@
 	* src/hc08/gen.c,
 	  src/hc08/ralloc2.cc:
 	  Fix a overflow bug in dry run cost calculation.
-    
+
 2022-01-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,
@@ -6754,8 +9739,8 @@
 	  support/regression/tests/bug-2822.c,
 	  support/regression/tests/bug-441448.c,
 	  support/regression/tests/bug-460010.c,
-          support/regression/tests/bug-2712.c,
-          support/regression/tests/bug1665511.c,
+	  support/regression/tests/bug-2712.c,
+	  support/regression/tests/bug1665511.c,
 	  support/regression/tests/bug1757671.c,
 	  support/regression/tests/bug1928022.c,
 	  support/regression/tests/bug2729218.c,
@@ -12302,7 +15287,7 @@
 2016-04-24 Ben Shi <powerstudio1st AT 163 DOT com>
 
 	* src/SDCCast.c
-	  Change the signess of the literal operand in bitwise operation.
+	  Change the signedness of the literal operand in bitwise operation.
 	* support/regression/tests/bug-1929.c
 	  Add a new test case.
 	* support/regression/tests/gcc-torture-execute-20020506-1.c

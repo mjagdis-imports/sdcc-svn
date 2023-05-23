@@ -46,6 +46,7 @@ class cl_brk: public cl_base
 {
 protected:
   class cl_address_space *mem;
+  class cl_memory_cell *cell;
 public:
   int nr;
   t_addr addr;
@@ -57,16 +58,20 @@ public:
   
   cl_brk(class cl_address_space *imem, int inr, t_addr iaddr,
 	 enum brk_perm iperm, int ihit);
+  cl_brk(class cl_memory_cell *icell, int inr,
+	 enum brk_perm iperm, int ihit);
   virtual ~cl_brk(void);
 
   class cl_address_space *get_mem(void) { return(mem); }
-
+  class cl_memory_cell *get_cell(void);
+  
   virtual bool condition(void);
   virtual void activate(void);
   virtual void inactivate(void);
   virtual enum brk_type type(void)= 0;
   virtual enum brk_event get_event(void)= 0;
   virtual bool do_hit(void);
+  virtual void breaking(void);
 };
 
 
@@ -84,6 +89,7 @@ public:
 
   virtual enum brk_type type(void);
   virtual enum brk_event get_event(void) { return(brkNONE); }
+  virtual void breaking(void);
 };
 
 
@@ -94,18 +100,37 @@ public:
 class cl_ev_brk: public cl_brk
 {
 public:
-  cl_ev_brk(class cl_address_space *imem, int inr, t_addr iaddr,
+  cl_ev_brk(class cl_address_space *imem,
+	    int inr,
+	    t_addr iaddr,
 	    enum brk_perm iperm,
-	    int ihit, enum brk_event ievent, const char *iid);
-  cl_ev_brk(class cl_address_space *imem, int inr, t_addr iaddr,
+	    int ihit,
+	    enum brk_event ievent,
+	    const char *iid);
+  cl_ev_brk(class cl_address_space *imem,
+	    int inr,
+	    t_addr iaddr,
 	    enum brk_perm iperm,
-	    int ihit, char op);
+	    int ihit,
+	    char op);
+  cl_ev_brk(class cl_memory_cell *icell,
+	    int inr,
+	    enum brk_perm iperm,
+	    int ihit,
+	    enum brk_event ievent,
+	    const char *iid);
+  cl_ev_brk(class cl_memory_cell *icell,
+	    int inr,
+	    enum brk_perm iperm,
+	    int ihit,
+	    char op);
   enum brk_event event;
   const char *id;
 
   virtual enum brk_type type(void);
   virtual enum brk_event get_event(void) { return(event); }
   virtual bool match(struct event_rec *ev);
+  virtual void breaking(void);
 };
 
 
@@ -131,6 +156,35 @@ public:
   virtual class cl_brk *get_bp(t_addr addr, int *idx);
   virtual class cl_brk *get_bp(int nr);
   virtual bool bp_at(t_addr addr);
+};
+
+class cl_display: public chars
+{
+public:
+  int nr;
+  chars fmt;
+public:
+  cl_display(const chars &f, const chars &e): chars(e) { nr=0; fmt= f; }
+};
+
+class cl_display_list: public cl_list
+{
+protected:
+  int cnt;
+public:
+  cl_display_list(void): cl_list()
+  {
+    cnt= 0;
+  }
+  cl_display_list(t_index alimit, t_index adelta, const char *aname):
+    cl_list(alimit, adelta, aname)
+  {
+    cnt= 0;
+  }
+public:
+  virtual t_index  add(void *item);
+  virtual void undisplay(int nr);
+  virtual void do_display(class cl_console_base *con);
 };
 
 

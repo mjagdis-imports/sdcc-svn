@@ -34,7 +34,7 @@ LDFLAGS		= @LDFLAGS@
 
 EXEEXT		= @EXEEXT@
 
-LIB_LIST	= sim ucsimutil guiucsim cmd ucsimutil sim
+LIB_LIST	= sim ucsimutil guiucsim cmd sim
 UCSIM_LIBS	= $(patsubst %,-l%,$(LIB_LIST)) @LIBS@
 UCSIM_LIB_FILES	= $(patsubst %,lib%.a,$(LIB_LIST))
 
@@ -79,7 +79,7 @@ libs: libucsimutil.a
 
 main_app: checkconf ucsim_app relay_app
 
-# Compiling and installing everything and runing test
+# Compiling and installing everything and running test
 # ---------------------------------------------------
 install: all installdirs
 

@@ -94,6 +94,7 @@ cl_m6800::cl_m6800(class cl_sim *asim):
   SWI_AT	= 0xfffa;
   NMI_AT	= 0xfffc;
   RESET_AT	= 0xfffe;
+  cCC.decode(&CC);
 }
 
 int
@@ -104,7 +105,7 @@ cl_m6800::init(void)
   mop16.set_uc(this);
   fill_def_wrappers(itab);
   
-  set_xtal(1000000);
+  //set_xtal(1000000);
     
 #define RCV(R) reg_cell_var(&c ## R , &r ## R , "" #R "" , "CPU register " #R "")
   RCV(A);
@@ -474,8 +475,8 @@ cl_m6800::analyze_start(void)
       vars->add(v);
     }
 
-  for (size_t i = 0; i < sizeof(vectors) / sizeof(vectors[0]); i++)
-    analyze(vectors[i].addr);
+  //for (size_t i = 0; i < sizeof(vectors) / sizeof(vectors[0]); i++)
+  analyze(vectors[0].addr);
 }
 
 void
@@ -580,7 +581,7 @@ cl_m6800::exec_inst(void)
     return res;
 
   inst_unknown(rom->read(instPC));
-  return(res);
+  return(resINV);
 }
 
 int

@@ -57,7 +57,7 @@ typedef unsigned TYPE_DWORD u32_t;
 typedef   signed TYPE_QWORD i64_t;
 typedef unsigned TYPE_QWORD u64_t;
 
-typedef i64_t		t_addr;		/* 32 bit max */
+typedef /*i64_t*/u32_t		t_addr;		/* 32 bit max */
 typedef u32_t		t_mem;		/* 32 bit max */
 typedef i32_t		t_smem;		/* signed 32 bit memory */
 
@@ -251,16 +251,25 @@ enum cpu_type {
 
   // 6502 based, but not 100% compatible
   CPU_65C02	= 0x0100,	// extended inst.set
-  CPU_65SC02	= 0x0200,      	// 65C02 variant, different inst.set
+  CPU_65C02S	= 0x0200,      	// 65C02 variant, different inst.set
   CPU_65CE02	= 0x0400,	// extension of 65C02
+
+  // Intel 8080, 8085
+  CPU_I8080	= 0x0001,
+  CPU_I8085	= 0x0002,
+
+  CPU_PDK13	= 0x0001,
+  CPU_PDK14	= 0x0002,
+  CPU_PDK15	= 0x0003,
+
+  CPU_F8	= 0x0001,
+
+  CPU_P1516	= 0x0001,
+  CPU_P2223	= 0x0002,
   
   // technology
   CPU_CMOS	= 0x0001,
   CPU_HMOS	= 0x0002,
-
-  CPU_PDK13 = 0x0001,
-  CPU_PDK14 = 0x0002,
-  CPU_PDK15 = 0x0003,
 };
 
 
@@ -310,9 +319,9 @@ enum cpu_state {
 /* Result of instruction simulation */
 enum inst_result {
   resGO		= 0,	/* OK, go on */
-  resWDTRESET	= 1,	/* Reseted by WDT */
+  resWDTRESET	= 1,	/* Reset by WDT */
   resINTERRUPT	= 2,	/* Interrupt accepted */
-  resSTOP	= 100,	/* Stop if result greater then this */
+  resSTOP	= 100,	/* Stop if result greater than this */
   resHALT	= 101,	/* Serious error, halt CPU */
   resINV_ADDR	= 102,	/* Invalid indirect address */
   resSTACK_OV	= 103,	/* Stack overflow */
@@ -368,7 +377,7 @@ enum intr_levels {
   IT_HIGH	= 2 /* service of high priority interrupt */
 };
 
-/* cathegories of hw elements (peripherials) */
+/* cathegories of hw elements (peripherals) */
 enum hw_cath {
   HW_DUMMY	= 0x0000,
   HW_TIMER	= 0x0002,

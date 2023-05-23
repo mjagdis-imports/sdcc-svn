@@ -180,7 +180,7 @@ DEFSETFUNC (isFree)
   /* if it is free && and the itmp assigned to
      this does not have any overlapping live ranges
      with the one currently being assigned and
-     the size can be accomodated  */
+     the size can be accommodated  */
   if (sym->isFree
       && noOverLap (sym->usl.itmpStack, fsym)
       && getSize (sym->type) >= getSize (fsym->type))
@@ -337,25 +337,6 @@ deassignLRs (iCode * ic, eBBlock * ebp)
           continue;
         }
     }
-}
-
-/*-----------------------------------------------------------------*/
-/* reassignLR - reassign this to registers                         */
-/*-----------------------------------------------------------------*/
-static void
-reassignLR (operand * op)
-{
-  symbol *sym = OP_SYMBOL (op);
-  int i;
-
-  /* not spilt any more */
-  sym->isspilt = sym->spillA = sym->blockSpil = sym->remainSpil = 0;
-  bitVectUnSetBit (_G.spiltSet, sym->key);
-
-  _G.blockSpil--;
-
-  for (i = 0; i < sym->nRegs; i++)
-    sym->regs[i]->isFree = 0;
 }
 
 /*------------------------------------------------------------------*/
@@ -1282,11 +1263,6 @@ serialRegMark (eBBlock ** ebbs, int count)
         {
           updateRegUsage(ic);
 
-          /* if this is an ipop that means some live
-             range will have to be assigned again */
-          if (ic->op == IPOP)
-              reassignLR (IC_LEFT (ic));
-
           /* if result is present && is a true symbol */
           if (IC_RESULT (ic) && ic->op != IFX &&
               IS_TRUE_SYMOP (IC_RESULT (ic)))
@@ -1303,7 +1279,6 @@ serialRegMark (eBBlock ** ebbs, int count)
               ic->op == JUMPTABLE ||
               ic->op == IFX ||
               ic->op == IPUSH ||
-              ic->op == IPOP ||
               (IC_RESULT (ic) && POINTER_SET (ic)))
               continue;
 

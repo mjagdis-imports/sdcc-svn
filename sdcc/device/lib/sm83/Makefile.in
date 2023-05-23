@@ -3,14 +3,21 @@
 VPATH  = @srcdir@
 srcdir = @srcdir@
 top_builddir = @top_builddir@
+abs_top_builddir = @abs_top_builddir@
 
 LIB_TYPE     = @LIB_TYPE@
 
-SCC = $(top_builddir)/bin/sdcc -msm83 --max-allocs-per-node 25000
+EXTRA_CFLAGS = -msm83 --max-allocs-per-node 25000
 SAS = $(top_builddir)/bin/sdasgb
 
 # override PORTDIR defined by super (parent) makefile
 override PORTDIR = ../build/sm83
+
+%.rel: %.s
+	@# TODO: sdas should place it\'s output in the current dir
+	test $(srcdir) = . || cp $< .
+	-$(AS) $(ASFLAGS) $(notdir $<)
+	test $(srcdir) = . || rm $(notdir $<)
 
 include $(srcdir)/../incl.mk
 
@@ -33,6 +40,9 @@ Z80_SDCC = $(COMMON_SDCC) \
   __itoa.c \
   __ltoa.c \
   _startup.c \
+  div.c \
+  ldiv.c \
+  lldiv.c \
   sprintf.c \
   vprintf.c \
   _strcmp.c \
@@ -43,16 +53,15 @@ Z80_SDCC = $(COMMON_SDCC) \
 Z80SOURCES = $(addprefix ../,$(Z80_FLOAT) $(Z80_INT) $(Z80_LONG) $(Z80_LONGLONG) $(Z80_SDCC))
 Z8OBJECTS = $(patsubst %.c,%.rel,$(Z80_FLOAT) $(Z80_INT) $(Z80_LONG) $(Z80_LONGLONG) $(Z80_SDCC))
 
-OBJ = div.rel mul.rel memcpy.rel abs.rel \
+OBJ = divint.rel mul.rel memcpy.rel abs.rel \
       __initrleblock.rel heap.rel __sdcc_call_hl.rel \
       setjmp.rel atomic_flag_test_and_set.rel strlen.rel
 
 LIB = sm83.lib
-CC = $(SCC)
 AS = $(SAS)
 ASFLAGS = -plosgff
 
-CFLAGS = -I$(srcdir)/../../include -I. --std-c11
+CFLAGS = -I$(srcdir)/../../include -I. --std-c2x
 
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 
@@ -68,10 +77,10 @@ ifeq ($(LIB_TYPE), SDCCLIB)
 	$(top_builddir)/bin/sdcclib -a $@ $(OBJ) $(Z8OBJECTS)
 else
   ifeq ($(LIB_TYPE), AR)
-	$(top_builddir)/bin/sdar -rcSD $@ $(OBJ) $(Z8OBJECTS)
+	$(SDAR) -rcSD $@ $(OBJ) $(Z8OBJECTS)
   else
     ifeq ($(LIB_TYPE), RANLIB)
-	$(top_builddir)/bin/sdar -rcD $@ $(OBJ) $(Z8OBJECTS)
+	$(SDAR) -rcD $@ $(OBJ) $(Z8OBJECTS)
     else
 	for i in $(basename $(OBJ) $(Z8OBJECTS)); do echo $$i >>$@; done
 	cp $(OBJ) $(Z8OBJECTS) $(PORTDIR)
@@ -79,20 +88,11 @@ else
   endif
 endif
 
-%.rel: %.c
-	$(CC) $(CFLAGS) -c $<
-
-%.rel: %.s
-	@# TODO: sdas should place it\'s output in the current dir
-	test $(srcdir) = . || cp $< .
-	-$(AS) $(ASFLAGS) $(notdir $<)
-	test $(srcdir) = . || rm $(notdir $<)
-
-%.rel: ../%.c
-	$(CC) $(CFLAGS) -c $<
-
 clean:
 	rm -f *.rel *.sym *.lst *~ $(CLEANSPEC) *.dump* *.asm *.lib
 
 distclean: clean
 	rm -f Makefile
+
+Makefile: $(srcdir)/Makefile.in
+	cd $(top_builddir); ./config.status device/lib/sm83/Makefile

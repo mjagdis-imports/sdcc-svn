@@ -52,6 +52,8 @@
 static class cl_mem_error_registry mem_error_registry;
 static unsigned int mem_uids= 0;
 
+t_mem def_data;
+
 /*
  *                                                3rd version of memory system
  */
@@ -76,6 +78,30 @@ cl_memory::~cl_memory(void)
     free(addr_format);
   if (data_format)
     free(data_format);
+}
+
+bool
+cl_memory::is_named(const char *the_name) const
+{
+  bool b1= cl_base::is_named(the_name);
+  if (!the_name || !*the_name)
+    return false;
+  if (b1 || altname.empty())
+    return b1;
+  bool b2= altname==the_name;
+  return b2;
+}
+
+bool
+cl_memory::is_inamed(const char *the_name) const
+{
+  bool b1= cl_base::is_inamed(the_name);
+  if (!the_name || !*the_name)
+    return false;
+  if (b1 || altname.empty())
+    return b1;
+  bool b2= strcasecmp(altname.c_str(), the_name) == 0;
+  return b2;
 }
 
 int
@@ -722,15 +748,12 @@ cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell):
     {
       mask= ~0;
     }
-  next_operator= 0;
 }
 
 t_mem
 cl_memory_operator::read(void)
 {
-  if (next_operator)
-    return(next_operator->read());
-  else if (cell)
+  if (cell)
     return(cell->get());
   return 0;
 }
@@ -738,10 +761,8 @@ cl_memory_operator::read(void)
 t_mem
 cl_memory_operator::write(t_mem val)
 {
-  if (next_operator)
-    return(next_operator->write(val));
-  else if (cell)
-    return(cell->set(val));
+  /*if (cell)
+    return(cell->set(val));*/
   return val;
 }
 
@@ -759,8 +780,6 @@ cl_bank_switcher_operator::cl_bank_switcher_operator(class cl_memory_cell *acell
 t_mem
 cl_bank_switcher_operator::write(t_mem val)
 {
-  if (next_operator)
-    next_operator->write(val);
   if (cell)
     cell->set(val);
   banker->activate(NULL);
@@ -784,57 +803,49 @@ cl_hw_operator::cl_hw_operator(class cl_memory_cell *acell,
 t_mem
 cl_hw_operator::read(void)
 {
-  t_mem d1= 0, d2= 0;
+  t_mem d1= 0;
 
-  if (hw && !hw->active)
+  if (hw)
     {
+      bool act= hw->active;
       hw->active = true;
       d1= hw->read(cell);
-      hw->active = false;
+      hw->active = act;
+      return d1;
     }
-
-  if (next_operator)
-    d2= next_operator->read();
-
-  return(hw && !hw->active ? d1 : d2);
+  
+  return cl_memory_operator::read();
 }
 
 t_mem
 cl_hw_operator::read(enum hw_cath skip)
 {
-  t_mem d1= 0, d2= d1;
-  bool use= false;
+  t_mem d1= 0;
 
-  if (hw && hw->category != skip && !hw->active)
+  if (hw && (hw->category != skip))
     {
-      use= true;
+      bool act= hw->active;
       hw->active= true;
       d1= hw->read(cell);
-      hw->active= false;
+      hw->active= act;
+      return d1;
     }
 
-  if (next_operator)
-    d2= next_operator->read();
-  else if (cell)
-    d2= cell->get();
-  else
-    return use= true;
-
-  return(use?d1:d2);
+  return cl_memory_operator::read();
 }
 
 t_mem
 cl_hw_operator::write(t_mem val)
 {
-  if (hw && !hw->active)
+  if (hw)
     {
+      bool act= hw->active;
       hw->active= true;
       hw->write(cell, &val);
-      hw->active= false;
+      hw->active= act;
+      return val;
     }
 
-  if (next_operator)
-    val= next_operator->write(val);
   return val;
 }
 
@@ -855,10 +866,8 @@ cl_write_operator::write(t_mem val)
 {
   if (bp->do_hit())
     uc->events->add(bp);
-  if (next_operator)
-    return(next_operator->write(val));
-  else if (cell)
-    return(cell->set(val));
+  /*if (cell)
+    return(cell->set(val));*/
   return val;
 }
 
@@ -879,9 +888,7 @@ cl_read_operator::read(void)
 {
   if (bp->do_hit())
     uc->events->add(bp);
-  if (next_operator)
-    return(next_operator->read());
-  else if (cell)
+  if (cell)
     return(cell->get());
   return 0;
 }
@@ -896,19 +903,22 @@ cl_read_operator::read(void)
 t_mem
 cl_cell8::d()
 {
+  return *((u8_t*)data);
   return data?(*((u8_t*)data)):0;
 }
 
 void
 cl_cell8::d(t_mem v)
 {
-  data?(*((u8_t*)data)=(u8_t)v):0;
+  *((u8_t*)data)=(u8_t)v;
+  //data?(*((u8_t*)data)=(u8_t)v):0;
 }
 
 void
 cl_cell8::dl(t_mem v)
 {
-  data?(*((u8_t*)data)=(u8_t)v):0;
+  *((u8_t*)data)=(u8_t)v;
+  //data?(*((u8_t*)data)=(u8_t)v):0;
 }
 
 // 8 bit cell for bit spaces
@@ -916,8 +926,7 @@ cl_cell8::dl(t_mem v)
 t_mem
 cl_bit_cell8::d()
 {
-  if (!data)
-    return 0;
+  //if (!data) return 0;
   u8_t x= *((u8_t*)data);
   x&= mask;
   return x?1:0;
@@ -926,8 +935,7 @@ cl_bit_cell8::d()
 void
 cl_bit_cell8::d(t_mem v)
 {
-  if (!data)
-    return;
+  //if (!data) return;
   if (v)
     *((u8_t*)data) |= (u8_t)mask;
   else
@@ -983,19 +991,22 @@ cl_bit_cell16::d(t_mem v)
 t_mem
 cl_cell32::d()
 {
+  return *((u32_t*)data);
   return data?(*((u32_t*)data)):0;
 }
 
 void
 cl_cell32::d(t_mem v)
 {
-  data?(*((u32_t*)data)=(u32_t)v):0;
+  *((u32_t*)data)=(u32_t)v;
+  //data?(*((u32_t*)data)=(u32_t)v):0;
 }
 
 void
 cl_cell32::dl(t_mem v)
 {
-  data?(*((u32_t*)data)=(u32_t)v):0;
+  *((u32_t*)data)=(u32_t)v;
+  //data?(*((u32_t*)data)=(u32_t)v):0;
 }
 
 // 32 bit cell for bit spaces
@@ -1003,8 +1014,7 @@ cl_cell32::dl(t_mem v)
 t_mem
 cl_bit_cell32::d()
 {
-  if (!data)
-    return 0;
+  //if (!data) return 0;
   u32_t x= *((u32_t*)data);
   x&= mask;
   return x?1:0;
@@ -1013,8 +1023,7 @@ cl_bit_cell32::d()
 void
 cl_bit_cell32::d(t_mem v)
 {
-  if (!data)
-    return;
+  //if (!data) return;
   if (v)
     *((u32_t*)data) |= (u32_t)mask;
   else
@@ -1031,8 +1040,8 @@ cl_memory_cell::cl_memory_cell()
   data= 0;
   flags= CELL_NON_DECODED;
   width= 8;
-  def_data= 0;
-  operators= NULL;
+  //def_data= 0;
+  ops= NULL;
 #ifdef STATISTIC
   nuof_writes= nuof_reads= 0;
 #endif
@@ -1050,8 +1059,8 @@ cl_memory_cell::cl_memory_cell(uchar awidth)
   data= 0;
   flags= CELL_NON_DECODED;
   width= awidth;
-  def_data= 0;
-  operators= NULL;
+  //def_data= 0;
+  ops= NULL;
 #ifdef STATISTIC
   nuof_writes= nuof_reads= 0;
 #endif
@@ -1066,6 +1075,13 @@ cl_memory_cell::cl_memory_cell(uchar awidth)
 
 cl_memory_cell::~cl_memory_cell(void)
 {
+  if (ops)
+    {
+      /*int i;
+      for (i=0; ops[i]; i++)
+      delete ops[i];*/
+      free(ops);
+    }
 }
 
 int
@@ -1176,8 +1192,13 @@ cl_memory_cell::read(void)
 #ifdef STATISTIC
   nuof_reads++;
 #endif
-  if (operators)
-    return(operators->read());
+  if (ops && ops[0])
+    {
+      t_mem r= 0;
+      for (int i=0; ops[i]; i++)
+	r= ops[i]->read();
+      return r;
+    }
   return d();
 }
 
@@ -1187,8 +1208,13 @@ cl_memory_cell::read(enum hw_cath skip)
 #ifdef STATISTIC
   nuof_reads++;
 #endif
-  if (operators)
-    return(operators->read(skip));
+  if (ops && ops[0])
+    {
+      t_mem r;
+      for (int i=0; ops[i]; i++)
+	r= ops[i]->read(skip);
+      return r;
+    }
   return d();
 }
 
@@ -1204,8 +1230,11 @@ cl_memory_cell::write(t_mem val)
 #ifdef STATISTIC
   nuof_writes++;
 #endif
-  if (operators)
-    val= operators->write(val);
+  if (ops && ops[0])
+    {
+      for (int i=0; ops[i]; i++)
+	val= ops[i]->write(val);
+    }
   if (flags & CELL_READ_ONLY)
     return d();
   if (width == 1)
@@ -1237,85 +1266,173 @@ cl_memory_cell::download(t_mem val)
   return d();
 }
 
+// Number of operator, NULL termination is not included
+int
+cl_memory_cell::nuof_ops(void)
+{
+  int i;
+  if (!ops)
+    return 0;
+  for (i=0; ops[i]!=NULL; i++) ;
+  return i;
+}
+
 void
 cl_memory_cell::append_operator(class cl_memory_operator *op)
 {
   class cl_memory_operator **op_p;
-
-  for (op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
-    ;
-  op->next_operator = NULL;
-  *op_p = op;
+  int i= nuof_ops()+2;
+  if (!ops)
+    {
+      op_p= (cl_memory_operator**)malloc(sizeof(void*) * i);
+      op_p[0]= NULL;
+    }
+  else
+    op_p= (cl_memory_operator**)realloc(ops, sizeof(void*) * i);
+  ops= op_p;
+  for (i=0; ops[i]!=NULL; i++) ;
+  ops[i]= op;
+  ops[i+1]= NULL;
 }
 
 void
 cl_memory_cell::prepend_operator(class cl_memory_operator *op)
 {
-  if (op)
-    {
-      op->next_operator = operators;
-      operators = op;
-    }
+  if (!op)
+    return;
+  int i= nuof_ops() + 2;
+  class cl_memory_operator **p=
+    (cl_memory_operator**)malloc(sizeof(void*) * i);
+  p[0]= op;
+  for (i=0; ops && ops[i]!=NULL; i++)
+    p[i+1]= ops[i];
+  p[i+1]= NULL;
+  if (ops)
+    free(ops);
+  ops= p;
 }
 
 void
 cl_memory_cell::remove_operator(class cl_memory_operator *op)
 {
-  for (class cl_memory_operator **op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
+  int src, dst;
+  for (src=dst=0; ops && ops[src]!=NULL; src++)
     {
-      if (*op_p == op)
-        {
-          *op_p = op->next_operator;
-          op->next_operator = NULL;
-          break;
-        }
+      if (ops[src]!=op)
+	{
+	  if (src!=dst)
+	    ops[dst]= ops[src];
+	  dst++;
+	}
     }
+  ops[dst]= NULL;
+  if (dst == 0)
+    free(ops), ops= NULL;
 }
 
 void
 cl_memory_cell::del_operator(class cl_brk *brk)
 {
-  for (class cl_memory_operator **op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
+  class cl_memory_operator *old;
+  int src, dst;
+  old= NULL;
+  for (src=dst=0; ops && ops[src]!=NULL; src++)
     {
-      if ((*op_p)->match(brk))
-        {
-          class cl_memory_operator *old = *op_p;
-          *op_p = (*op_p)->next_operator;
-          delete old;
-          break;
-        }
+      if (!(ops[src]->match(brk)))
+	{
+	  if (src!=dst)
+	    ops[dst]= ops[src];
+	  dst++;
+	}
+      else
+	old= ops[src];
     }
+  ops[dst]= NULL;
+  if (old)
+    delete old;
+  if (dst==0)
+    free(ops), ops= NULL;
 }
 
 void 	 
 cl_memory_cell::del_operator(class cl_hw *hw)
 {
-  for (class cl_memory_operator **op_p = &operators; *op_p; op_p = &(*op_p)->next_operator)
+  class cl_memory_operator *old;
+  int src, dst;
+  old= NULL;
+  for (src=dst=0; ops && ops[src]!=NULL; src++)
     {
-      if ((*op_p)->match(hw))
-        {
-          class cl_memory_operator *old = *op_p;
-          *op_p = (*op_p)->next_operator;
-          delete old;
-          break;
-        }
+      if (!(ops[src]->match(hw)))
+	{
+	  if (src!=dst)
+	    ops[dst]= ops[src];
+	  dst++;
+	}
+      else
+	old= ops[src];
     }
+  ops[dst]= NULL;
+  if (old)
+    delete old;
+  if (dst==0)
+    free(ops), ops= NULL;
 }
 
 class cl_banker *
 cl_memory_cell::get_banker(void)
 {
-  class cl_memory_operator *op= operators;
   class cl_banker *b= NULL;
-
-  while (op)
-    {
-      b= op->get_banker();
-      if (b)
-	return b;
-      op= op->get_next();
-    }
+  for (int i=0; ops && ops[i]; i++)
+    if ((b= ops[i]->get_banker())!=NULL)
+      return b;
   return NULL;
+}
+
+void
+cl_memory_cell::set_brk(class cl_uc *uc, class cl_brk *brk)
+{
+  class cl_memory_operator *op;
+
+  if (!brk) return;
+  switch (brk->get_event())
+    {
+    case brkWRITE: case brkWXRAM: case brkWIRAM: case brkWSFR:
+      //e= 'W';
+      op= new cl_write_operator(this, uc, brk);
+      break;
+    case brkREAD: case brkRXRAM: case brkRCODE: case brkRIRAM: case brkRSFR:
+      //e= 'R';
+      op= new cl_read_operator(this, uc, brk);
+      break;
+    case brkNONE:
+      set_flag(CELL_FETCH_BRK, true);
+      return;
+      break;
+    default:
+      //e= '.';
+      op= 0;
+      break;
+    }
+  if (op)
+    append_operator(op);
+}
+
+void
+cl_memory_cell::del_brk(class cl_brk *brk)
+{
+  if (!brk) return;
+  switch (brk->get_event())
+    {
+    case brkWRITE: case brkWXRAM: case brkWIRAM: case brkWSFR:
+    case brkREAD: case brkRXRAM: case brkRCODE: case brkRIRAM: case brkRSFR:
+      del_operator(brk);
+      break;
+    case brkNONE:
+      set_flag(CELL_FETCH_BRK, false);
+      break;
+    default:
+      break;
+    }
 }
 
 class cl_memory_cell *
@@ -1357,15 +1474,10 @@ cl_memory_cell::print_info(const char *pre, class cl_console_base *con)
 void
 cl_memory_cell::print_operators(const char *pre, class cl_console_base *con)
 {
-  class cl_memory_operator *o= operators;
-  if (!operators)
-    return;
-  int i= 0;
-  while (o)
+  for (int i=0; ops && ops[i]!=NULL; i++)
     {
-      printf("%s %02d. %s\n", pre, i, o->get_name("?"));
-      i++;
-      o= o->get_next();
+      if (con) con->dd_printf("%s [%d] %s\n", pre, i, (ops[i])->get_name("?"));
+      else printf("%s [%d] %s\n", pre, i, (ops[i])->get_name("?"));
     }
 }
 
@@ -1424,13 +1536,17 @@ cl_address_space::init(void)
 {
   cl_memory::init();
   class cl_memory_cell *cell= cell_template();
-  unsigned int i;
+  unsigned int i, s= sizeof(class cl_cell32);
+  cell->as= this;
+  u8_t *p1= (u8_t*)cella;
+  //void *p1;
+  cell->init();
   for (i= 0; i < size; i++)
     {
-      void *p1= &(cella[i]);
-      void *p2= cell;
-      memcpy(p1, p2, sizeof(class cl_cell32));
-      cella[i].init();
+      //p1= &(cella[i]);
+      memcpy(p1, (void*)cell, s);
+      //cella[i].init();
+      p1+= s;
     }
   return 0;
 }
@@ -1762,7 +1878,7 @@ cl_address_space::undecode_area(class cl_address_decoder *skip,
 	    }
 	  else
 	    {
-	      D("    Shrinked to 0x%lx-0x%lx -> %s[0x%lx]\n",
+	      D("    Shrunk to 0x%lx-0x%lx -> %s[0x%lx]\n",
 		d->as_begin, d->as_end, (d->memchip)?(d->memchip->get_name()):"(none)", d->chip_begin);
 	    }
 	}
@@ -1808,19 +1924,18 @@ cl_address_space::set_brk(t_addr addr, class cl_brk *brk)
       addr < start_address)
     return;
   class cl_memory_cell *cell= &cella[idx];
-  class cl_memory_operator *op;
+  /*
+  class cl_memory_operator *op= 0;
 
   switch (brk->get_event())
     {
     case brkWRITE: case brkWXRAM: case brkWIRAM: case brkWSFR:
       //e= 'W';
-      op= new cl_write_operator(cell/*, addr*/, //cell->get_data(), cell->get_mask(),
-				uc, brk);
+      op= new cl_write_operator(cell, uc, brk);
       break;
     case brkREAD: case brkRXRAM: case brkRCODE: case brkRIRAM: case brkRSFR:
       //e= 'R';
-      op= new cl_read_operator(cell/*, addr*/, //cell->get_data(), cell->get_mask(),
-			       uc, brk);
+      op= new cl_read_operator(cell, uc, brk);
       break;
     case brkNONE:
       set_cell_flag(addr, true, CELL_FETCH_BRK);
@@ -1833,6 +1948,8 @@ cl_address_space::set_brk(t_addr addr, class cl_brk *brk)
     }
   if (op)
     cell->append_operator(op);
+  */
+  cell->set_brk(uc, brk);
 }
 
 void
@@ -1843,7 +1960,7 @@ cl_address_space::del_brk(t_addr addr, class cl_brk *brk)
       addr < start_address)
     return;
   class cl_memory_cell *cell= &cella[idx];
-
+  /*
   switch (brk->get_event())
     {
     case brkWRITE: case brkWXRAM: case brkWIRAM: case brkWSFR:
@@ -1857,6 +1974,8 @@ cl_address_space::del_brk(t_addr addr, class cl_brk *brk)
     default:
       break;
     }
+  */
+  cell->del_brk(brk);
 }
 
 void
@@ -1980,23 +2099,25 @@ cl_memory_chip::get_slot(t_addr addr)
   return(a+(addr*bwidth));
 }
 
-t_addr
-cl_memory_chip::is_slot(/*t_mem*/void *data_ptr)
+bool
+cl_memory_chip::is_slot(void *data_ptr, t_addr *addr_of)
 {
   u8_t *p= (u8_t *)data_ptr;
   u8_t *a= (u8_t *)array;
   if (p < &(a[0]))
-    return -1;
+    return false;
   if (p > &(a[alloc_size-1]))
-    return -2;
+    return false;
   t_addr i= p - a;
   if (width <= 8)
-    return i;
+    /*i*/;
   if (width <= 16)
-    return i/2;
+    i= i/2;
   if (width <= 32)
-    return i/4;
-  return i;
+    i= i/4;
+  if (addr_of)
+    *addr_of= i;
+  return true;
 }
 /*
 t_mem
@@ -2499,7 +2620,7 @@ cl_banker::init()
   if (c)
     {
       class cl_bank_switcher_operator *o=
-	new cl_bank_switcher_operator(c/*, banker_addr*/, this);
+	new cl_bank_switcher_operator(c, this);
       c->prepend_operator(o);
       op1= o;
     }
@@ -2510,7 +2631,7 @@ cl_banker::init()
       if (c)
 	{
 	  class cl_bank_switcher_operator *o=
-	    new cl_bank_switcher_operator(c/*, banker_addr*/, this);
+	    new cl_bank_switcher_operator(c, this);
 	  c->prepend_operator(o);
 	  op2= o;
 	}

@@ -27,8 +27,8 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#ifndef __SDCC_STDLIB_H
-#define __SDCC_STDLIB_H 1
+#ifndef __STDC_VERSION_STDLIB_H__
+#define __STDC_VERSION_STDLIB_H__ 201710L /* TODO: replace by __STDC_VERSION__ when this header becomes C23-compliant! */
 
 #if !defined(__SDCC_mcs51) && !defined(__SDCC_ds390) && !defined(__SDCC_ds400) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) && !defined(__SDCC_pic14) && !defined(__SDCC_pic16) && !defined(__SDCC_pdk13) && !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15)
 #define __reentrant
@@ -51,6 +51,12 @@
 #define RAND_MAX 32767
 
 #define MB_CUR_MAX 4
+
+#if __STDC_VERSION__ >= 202311L
+typedef bool once_flag;
+#define ONCE_FLAG_INIT false
+void call_once(once_flag *flag, void (*func)(void));
+#endif
 
 /* Numeric conversion functions (ISO C11 7.22.1) */
 extern float atof (const char *nptr);
@@ -91,7 +97,7 @@ inline void *aligned_alloc(size_t alignment, size_t size)
 #endif
 extern void free (void * ptr);
 
-#if __STDC_VERSION__ >= 202300L
+#if __STDC_VERSION__ >= 202311L
 inline void free_sized(void *ptr, size_t size)
 {
   (void)size;
@@ -118,6 +124,27 @@ int abs(int j);
 #endif
 long int labs(long int j);
 
+typedef struct
+{
+	int quot;
+	int rem;
+} div_t;
+typedef struct
+{
+	long int quot;
+	long int rem;
+} ldiv_t;
+typedef struct
+{
+	long long int quot;
+	long long int rem;
+} lldiv_t;
+#if !defined(__SDCC_ds390) && !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) // struct return not yet supported
+div_t div(int numer, int denom);
+ldiv_t ldiv(long int numer, long int denom);
+lldiv_t lldiv(long long int numer, long long int denom);
+#endif
+
 /* C99 Multibyte/wide character conversion functions (ISO C11 7.22.7) */
 #if __STDC_VERSION__ >= 199901L
 int mblen(const char *s, size_t n);
@@ -129,6 +156,11 @@ int wctomb(char *s, wchar_t wc);
 #if __STDC_VERSION__ >= 199901L
 size_t mbstowcs(wchar_t *restrict pwcs, const char *restrict s, size_t n);
 size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n);
+#endif
+
+/* C2X Alignment of memory */
+#if __STDC_VERSION__ >= 202311L
+size_t memalignment(const void *p);
 #endif
 
 /* Bounds-checking interfaces from annex K of the C11 standard. */

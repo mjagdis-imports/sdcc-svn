@@ -149,28 +149,38 @@ cl_stop_selfjump_option::option_changed(void)
   uc->stop_selfjump= b;
 }
 
-cl_analyzer_option::cl_analyzer_option(class cl_uc *the_uc):
-  cl_optref(the_uc)
-{
-  uc= the_uc;
-}
 
-int
-cl_analyzer_option::init(void)
+cl_analyzer_opt::cl_analyzer_opt(class cl_uc *Iuc):
+  cl_bool_option(Iuc, "analyzer", "Analyze and label code")
 {
-  cl_optref::init();
-  create(uc, bool_opt, "analyzer", "Analyze and label code");
-  return 0;
+  uc= Iuc;
 }
 
 void
-cl_analyzer_option::option_changed(void)
+cl_analyzer_opt::set_value(const char *s)
 {
   bool b;
-  option->get_value(&b);
-  uc->analyzer= b;
-  if (uc->rom)
-    uc->analyze_init();
+  cl_bool_option::set_value(s);
+  get_value(&b);
+  uc->set_analyzer(b);
+  if (uc->analyser_opt) uc->analyser_opt->set_raw(b);
+}
+
+
+cl_analyser_opt::cl_analyser_opt(class cl_uc *Iuc):
+  cl_bool_option(Iuc, "analyser", "Analyse and label code")
+{
+  uc= Iuc;
+}
+
+void
+cl_analyser_opt::set_value(const char *s)
+{
+  bool b;
+  cl_bool_option::set_value(s);
+  get_value(&b);
+  uc->set_analyzer(b);
+  if (uc->analyzer_opt) uc->analyzer_opt->set_raw(b);
 }
 
 /* Time measurer */
@@ -511,8 +521,9 @@ cl_exec_hist::get_insts()
  */
 
 cl_uc::cl_uc(class cl_sim *asim):
-  cl_base()
+  cl_itab()
 {
+  PCmask= 0xffff;
   type= NULL;
   //int i;
   sim = asim;
@@ -529,8 +540,8 @@ cl_uc::cl_uc(class cl_sim *asim):
   xtal_option->init();
   stop_selfjump_option= new cl_stop_selfjump_option(this);
   stop_selfjump_option->init();
-  analyzer_option= new cl_analyzer_option(this);
-  analyzer_option->init();
+  analyzer_opt= NULL;
+  analyser_opt= NULL;
   counters= new cl_list(2, 2, "counters");
   ticks= new cl_ticker(+1, TICK_ANY, "time", false);
   add_counter(ticks, ticks->get_name());
@@ -547,8 +558,8 @@ cl_uc::cl_uc(class cl_sim *asim):
   stack_ops= new cl_list(2, 2, "stack operations");
   errors= new cl_list(2, 2, "errors in uc");
   events= new cl_list(2, 2, "events in uc");
-  sp_max= 0;
-  sp_avg= 0;
+  sp_most= 0;
+  //sp_avg= 0;
   inst_exec= false;
   hist= new cl_exec_hist(this);
 }
@@ -568,6 +579,7 @@ cl_uc::~cl_uc(void)
   delete events;
   delete fbrk;
   delete ebrk;
+  delete displays;
   delete it_levels;
   delete it_sources;
   delete stack_ops;
@@ -585,30 +597,45 @@ int
 cl_uc::init(void)
 {
   int i;
-
+  double x= 0;
+  
   set_name("controller");
   cl_base::init();
   if (xtal_option->use("xtal"))
-    set_xtal(xtal_option->get_value(xtal));
-  else
-    set_xtal(11059200);
+    x= xtal_option->get_value(xtal);
+  if (x==0)
+    x= def_xtal();
+  set_xtal(x);
   stop_selfjump= false;
   stop_selfjump_option->option->set_value(stop_selfjump);
-  analyzer= true;
-  analyzer_option->option->set_value(analyzer);
+  analyzer= false;
+  analyzer_opt= new cl_analyzer_opt(this);
+  analyzer_opt->init();
+  analyzer_opt->set_raw(analyzer);
+  analyser_opt= new cl_analyser_opt(this);
+  analyser_opt->init();
+  analyser_opt->set_raw(analyzer);
+  application->options->add(analyzer_opt);
+  application->options->add(analyser_opt);
   vars= new cl_var_list();
   make_variables();
   // Some app level vars:
-  reg_cell_var(&(application->cperiod), NULL, "cperiod",
+  reg_cell_var(&(application->cperiod),
+	       &(application->period),
+	       "cperiod",
 	       "Cycles between input checks");
-  reg_cell_var(&(application->ccyc), NULL, "ccyc",
+  reg_cell_var(&(application->ccyc),
+	       &(application->cyc),
+	       "ccyc",
 	       "Nr of cycles executed during simulation");
+  reg_cell_var(&cPC, &PC, "PC", "Program counter");
   // Memories
   make_memories();
   if (rom == NULL)
     rom= address_space("rom"/*MEM_ROM_ID*/);
   ebrk= new brk_coll(2, 2, rom);
   fbrk= new brk_coll(2, 2, rom);
+  displays= new cl_display_list(2, 2, "displays");
   fbrk->Duplicates= false;
   brk_counter= 0;
   stop_at_time= 0;
@@ -662,8 +689,8 @@ cl_uc::reset(void)
       delete il;
       il= (class it_level *)(it_levels->top());
     }
-  sp_max= 0;
-  sp_avg= 0;
+  sp_most= 0;
+  //sp_avg= 0;
 
   stack_ops->free_all();
 
@@ -690,6 +717,7 @@ cl_uc::reg_cell_var(class cl_memory_cell *cell,
 	  class cl_cvar *v;
 	  vars->add(v= new cl_cvar(vname, cell, vdesc));
 	  v->init();
+	  v->set_by(VBY_PRE);
 	}
     }
 }
@@ -838,6 +866,12 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
 
   cmdset->add(cmd= new cl_commands_cmd("commands", 0));
   cmd->init();
+
+  cmdset->add(cmd= new cl_display_cmd("display", 0));
+  cmd->init();
+  
+  cmdset->add(cmd= new cl_undisplay_cmd("undisplay", 0));
+  cmd->init();
   
   {
     super_cmd= (class cl_super_cmd *)(cmdset->get_cmd("get"));
@@ -943,6 +977,8 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
     cset->add(cmd= new cl_timer_value_cmd("set", 0));
     cmd->init();
     cmd->add_name("value");
+    cset->add(cmd= new cl_timer_list_cmd("list", 0));
+    cmd->init();
     if (!super_cmd) {
       cmdset->add(cmd= new cl_super_cmd("timer", 0, cset));
       cmd->init();
@@ -1070,7 +1106,8 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
   cmdset->add(cmd= new cl_rmvar_cmd("rmvar", 0));
   cmd->init();
 
-  cmdset->add(cmd= new cl_analyze_cmd("analyze", 0));
+  cmdset->add(cmd= new cl_analyze_cmd("analyse", 0));
+  cmd->add_name("analyze");
   cmd->init();
 }
 
@@ -1113,20 +1150,6 @@ cl_uc::set_mem(const char *id, t_addr addr, t_mem val)
     m->set(addr, val);
 }
 
-
-/*
-class cl_memory *
-cl_uc::mem(enum mem_class type)
-{
-  class cl_m *m;
-
-  if (mems->count < type)
-    m= (class cl_m *)(mems->at(MEM_DUMMY));
-  else
-    m= (class cl_m *)(mems->at(type));
-  return(m);
-}
-*/
 
 class cl_address_space *
 cl_uc::address_space(const char *id)
@@ -1367,7 +1390,7 @@ cl_uc::read_hex_file(cl_f *f)
   int c;
   long written= 0, recnum= 0;
 
-  uint  base= 0;  // extended address, added to every adress
+  uint  base= 0;  // extended address, added to every address
   uchar dnum;     // data number
   uchar rtyp=0;   // record type
   uint  addr= 0;  // address
@@ -1549,7 +1572,7 @@ cl_uc::read_asc_file(cl_f *f)
 		s= word.c_str();
 		if (isxdigit(*s))
 		  {
-		    t_mem d= strtoll(s, 0, 16);
+		    t_mem d= chars(s).htoi();//strtoll(s, 0, 16);
 		    set_rom(addr, d);
 		    addr++;
 		  }
@@ -1572,7 +1595,41 @@ cl_uc::read_asc_file(cl_f *f)
     }
   return addr;
 }
-  
+
+long
+cl_uc::read_p2h_file(cl_f *f)
+{
+  chars line= chars();
+  int c;
+  long nr= 0;
+  while ((c= f->get_c()) &&
+	 (!f->eof()))
+    {
+      if ((c=='\n') || (c=='\r'))
+	{
+	  line.trim();
+	  line.start_parse();
+	  chars w1= line.token(" \t");
+	  chars w2= line.token(" \t");
+	  chars w3= line.token(" \t");
+	  if (w1.nempty() && w2.nempty() && w3.nempty())
+	    {
+	      if ((w2 == "//C") || (w2 == "//I"))
+		{
+		  t_mem v= w1.htoi();//strtol(w1.c_str(), 0, 16);
+		  t_addr a= w3.htoi();//strtol(w3.c_str(), 0, 16);
+		  set_rom(a, v);
+		  nr++;		  
+		}
+	    }
+	  line= "";
+	}
+      else
+	line.append(c);
+    }
+  return nr;
+}
+
 long
 cl_uc::read_cdb_file(cl_f *f)
 {
@@ -1597,7 +1654,9 @@ cl_uc::read_cdb_file(cl_f *f)
 		  chars n= ln.token("$");
 		  if ((r= fns->rec(n)) != NULL)
 		    {
-		      vars->add(n, rom, r->addr, "");
+		      class cl_cvar *v;
+		      v= vars->add(n, rom, r->addr, "");
+		      v->set_by(VBY_DEBUG);
 		      fns->del(n);
 		      cnt++;
 		    }
@@ -1617,11 +1676,13 @@ cl_uc::read_cdb_file(cl_f *f)
 		  chars n= ln.token("$");
 		  chars t= ln.token(":");
 		  t= ln.token(" ");
-		  t_addr a= strtol(t.c_str(), 0, 16);
+		  t_addr a= t.htoi();//strtol(t.c_str(), 0, 16);
 		  if ((r= fns->rec(n)) != NULL)
 		    {
 		      fns->del(n);
-		      vars->add(n, rom, a, "");
+		      class cl_cvar *v;
+		      v= vars->add(n, rom, a, "");
+		      v->set_by(VBY_DEBUG);
 		      cnt++;
 		    }
 		  else
@@ -1636,6 +1697,261 @@ cl_uc::read_cdb_file(cl_f *f)
   return cnt;
 }
 
+static bool is_area(chars w1, chars w2, chars w3)
+{
+  if (w1.empty() || w2.empty() || w3.empty())
+    return false;
+  if (w1 != "Area")
+    return false;
+  if (w2 != "Addr")
+    return false;
+  if (w3 != "Size")
+    return false;
+  return true;
+}
+
+static bool is_code_seg(chars wlast)
+{
+  return wlast == "(REL,CON,CODE)";
+}
+
+static bool is_ncode_seg(chars w1, chars wlast)
+{
+  return (wlast == "(REL,CON)")
+    &&
+    (
+     (w1 == "CODE") ||
+     (w1 == "_CODE")
+     );
+}
+
+static bool is_addr(chars w)
+{
+  int l= w.len();
+  if (l != 8) return false;
+  const char *s= w.c_str();
+  int i;
+  for (i= 0; i<l; i++)
+    if (!isxdigit(s[i])) return false;
+  return true;
+}
+
+long
+cl_uc::read_map_file(cl_f *f)
+{
+  int cnt= 0;
+  chars ln;
+  chars s, w1, w2, w3, wlast, w;
+  enum { s_wait_area, s_wait_seginfo, s_wait_sym, s_wait_nsym } stat;
+  class cl_cvar *v;
+  
+  stat= s_wait_area;
+  ln= f->get_s();
+  while (ln.nempty())
+    {
+      ln= f->get_s();
+      s= ln.c_str();
+      ln.start_parse();
+      w1= ln.token(" \t\v");
+      if (w1.nempty()) wlast= w1;
+      w2= ln.token(" \t\v");
+      if (w2.nempty()) wlast= w2;
+      w3= ln.token(" \t\v");
+      if (w3.nempty()) wlast= w3;
+      w= ln.token(" \t\v");
+      while (w.nempty())
+	{
+	  wlast= w;
+	  w= ln.token(" \t\v");
+	}
+      switch (stat)
+	{
+	case s_wait_area:
+	  if (is_area(w1, w2, w3))
+	    stat= s_wait_seginfo;
+	  break;
+	case s_wait_seginfo:
+	  if (is_code_seg(wlast))
+	    stat= s_wait_sym;
+	  else if (is_ncode_seg(w1, wlast))
+	    stat= s_wait_nsym;
+	  break;
+	case s_wait_sym:
+	  if (is_area(w1, w2, w3))
+	    stat= s_wait_seginfo;
+	  else
+	    {
+	      if ((w1 == "C:") && is_addr(w2) && (w3.c(0) == '_'))
+		{
+		  w3= &(w3.c_str()[1]);
+		  t_addr a= w2.htoi();//strtol(w2.c_str(), NULL, 16);
+		  //printf("%s %08x\n", w3.c_str(), AU(a));
+		  v= vars->add(w3, rom, a, "");
+		  v->set_by(VBY_DEBUG);
+		  cnt++;
+		}
+	    }
+	  break;
+	case s_wait_nsym:
+	  if (is_area(w1, w2, w3))
+	    stat= s_wait_seginfo;
+	  else
+	    {
+	      if (is_addr(w1) && (w2.c(0) == '_'))
+		{
+		  w2= &(w2.c_str()[1]);
+		  t_addr a= w1.htoi();//strtol(w1.c_str(), NULL, 16);
+		  //printf("%s %08x\n", w2.c_str(), AU(a));
+		  v= vars->add(w2, rom, a, "");
+		  v->set_by(VBY_DEBUG);
+		  cnt++;
+		}
+	    }
+	  break;
+	}
+    }
+  return cnt;
+}
+
+static int h1(const char *s, int p)
+{
+  int r= 0;
+  if (isxdigit(s[p]))
+    {
+      if (s[p]>='a')
+	r= 10+(s[p]-'a');
+      else if (s[p]>='A')
+	r= 10+(s[p]-'A');
+      else
+	r= s[p]-'0';
+    }
+  return r;
+}
+
+static int h2(const char *s, int p)
+{
+  int r= 0;
+  if (isxdigit(s[p]) && isxdigit(s[p+1]))
+    {
+      r= 16 * h1(s, p);
+      r+= h1(s, p+1);
+    }
+  return r;
+}
+
+static t_addr a16(const char *s, int p)
+{
+  t_addr a;
+  a= h2(s, p);
+  a<<= 8;
+  a+= h2(s, p+2);
+  return a;
+}
+
+static t_addr a24(const char *s, int p)
+{
+  t_addr a;
+  a= h2(s, p);
+  a<<= 8;
+  a+= h2(s, p+2);
+  a<<= 8;
+  a+= h2(s, p+4);
+  return a;
+}
+
+static t_addr a32(const char *s, int p)
+{
+  t_addr a;
+  a= h2(s, p);
+  a<<= 8;
+  a+= h2(s, p+2);
+  a<<= 8;
+  a+= h2(s, p+4);
+  a<<= 8;
+  a+= h2(s, p+6);
+  return a;
+}
+
+static int s19(class cl_uc *uc, t_addr a, const char *s, int p, int data_bytes)
+{
+  int b= 0;
+  if (data_bytes < 1)
+    return 0;
+  while (b < data_bytes)
+    {
+      u8_t d= h2(s, p);
+      uc->set_rom(a, d);
+      a++;
+      p+= 2;
+      b++;
+    }
+  return data_bytes;
+}
+
+long
+cl_uc::read_s19_file(cl_f *f)
+{
+  chars line;
+  int cnt;
+  long int written= 0;
+  while (!f->eof())
+    {
+      line= f->get_s();
+      if (line.empty())
+	continue;
+      const char *s= line.c_str();
+      if (s[0] != 'S')
+	continue;
+      if (line.length() < 4)
+	continue;
+      cnt= h2(s, 2);
+      if (line.length() < 4+cnt*2)
+	continue;
+      int b= 0, sum= 0, p= 2;
+      while (b<cnt)
+	{
+	  if (s[p] && s[p+1])
+	    sum+= h2(s, p);
+	  b++;
+	  p+= 2;
+	}
+      if (b!=cnt)
+	continue;
+      int chk= h2(s, 2+cnt*2);
+      sum&= 0xff;
+      sum^= 0xff;
+      if (sum != chk)
+	continue;
+      t_addr a;
+      switch (s[1])
+	{
+	case '0': break;
+	case '1':
+	  a= a16(s, 4);
+	  p=  8;
+	  written+= s19(this, a, s, p, cnt-2-1);
+	  break;
+	case '2':
+	  a= a24(s, 4);
+	  p= 10;
+	  written+= s19(this, a, s, p, cnt-3-1);
+	  break;
+	case '3':
+	  a= a32(s, 4);
+	  p= 12;
+	  written+= s19(this, a, s, p, cnt-4-1);
+	  break;
+	case '4': break;
+	case '5': break;
+	case '6': break;
+	case '7': break;
+	case '8': break;
+	case '9': break;
+	}
+    }
+  return written;
+}
+
 cl_f *
 cl_uc::find_loadable_file(chars nam)
 {
@@ -1648,6 +1964,11 @@ cl_uc::find_loadable_file(chars nam)
   if (o)
     return f;
 
+  c= chars("", "%s.p2h", nam.c_str());
+  f->open(c, "r");
+  o= (f->opened());
+  if (o)
+    return f;
   c= chars("", "%s.asc", nam.c_str());
   f->open(c, "r");
   o= (f->opened());
@@ -1664,6 +1985,11 @@ cl_uc::find_loadable_file(chars nam)
   if (o)
     return f;
   c= chars("", "%s.ihex", nam.c_str());
+  f->open(c, "r");
+  o= (f->opened());
+  if (o)
+    return f;
+  c= chars("", "%s.s19", nam.c_str());
   f->open(c, "r");
   o= (f->opened());
   if (o)
@@ -1695,6 +2021,12 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
     }
   if (!application->quiet)
     printf("Loading from %s\n", f->get_file_name());
+  if (is_p2h_file(f))
+    {
+      l= read_p2h_file(f);
+      if (!application->quiet)
+	printf("%ld words read from %s\n", l, f->get_fname());
+    }
   if (is_asc_file(f))
     {
       l= read_asc_file(f);
@@ -1707,6 +2039,12 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
       if (!application->quiet)
 	printf("%ld words read from %s\n", l, f->get_fname());
     }
+  else if (is_s19_file(f))
+    {
+      l= read_s19_file(f);
+      if (!application->quiet)
+	printf("%ld words read from %s\n", l, f->get_fname());
+    }
   else if (is_omf_file(f))
     {
       l= read_omf_file(f);
@@ -1716,6 +2054,12 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
   else if (is_cdb_file(f))
     {
       l= read_cdb_file(f);
+      if (!application->quiet)
+	printf("%ld symbols read from %s\n", l, f->get_fname());
+    }
+  else if (is_map_file(f))
+    {
+      l= read_map_file(f);
       if (!application->quiet)
 	printf("%ld symbols read from %s\n", l, f->get_fname());
     }
@@ -1732,12 +2076,33 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
 	}
       delete c;
     }
+  if (strcmp(nam, f->get_fname()) != 0)
+    {
+      chars n= nam;
+      n+= ".map";
+      cl_f *c= mk_io(n, "r");
+      if (c->opened())
+	{
+	  l= read_map_file(c);
+	  if (!application->quiet)
+	    printf("%ld symbols read from %s\n", l, c->get_fname());
+	}
+      delete c;
+    }
   delete f;
 
   analyze_init();
   return l;
 }
 
+
+void
+cl_uc::set_analyzer(bool val)
+{
+  analyzer= val;
+  if (rom)
+    analyze_init();
+}
 
 void
 cl_uc::analyze_init(void)
@@ -1763,10 +2128,12 @@ cl_uc::analyze_init(void)
 void
 cl_uc::analyze_start(void)
 {
-  class cl_var *v = new cl_var(".reset", rom, 0, chars("Auto-generated by analyze"), -1, -1);
+  class cl_var *v = new cl_var(".reset", rom, reset_addr(),
+			       chars("Auto-generated by analyze"), -1, -1);
   v->init();
   vars->add(v);
-
+  v->set_by(VBY_ANALYZE);
+  
   analyze(0);
 }
 
@@ -1831,6 +2198,7 @@ cl_uc::analyze_jump(t_addr addr, t_addr target, char type, unsigned int bit)
       class cl_var *v = new cl_var(label, rom, target, chars("Auto-generated by analyze"), -1, -1);
       v->init();
       vars->add(v);
+      v->set_by(VBY_ANALYZE);
     }
 
   // If we didn't know the target was code we do now, but don't cross
@@ -2328,6 +2696,30 @@ cl_uc::symbol2address(char *sym,
   return false;
 }
 
+bool
+cl_uc::symbol2cell(char *sym,
+		   class cl_memory_cell **cell)
+{
+  t_index i;
+
+  if (!sym ||
+      !*sym)
+    return false;
+  if (vars->by_name.search(sym, i))
+    {
+      class cl_cvar *v= vars->by_name.at(i);
+      class cl_memory_cell *c= v->get_cell();
+      if (c)
+	{
+	  if (cell)
+	    *cell= c;
+	  return true;
+	}
+    }
+  return false;
+}
+
+
 /*
  * Searching for a name in the specified table
  */
@@ -2484,7 +2876,7 @@ cl_uc::check_errors(void)
 	      class cl_console_base *con;
 	      con= c->actual_console;
 	      if (!con)
-		con= c->frozen_console;
+		con= c->frozen_or_actual();
 	      if (con)
 		{
 		  con->dd_printf("Erroneous instruction: ");
@@ -2523,12 +2915,14 @@ int
 cl_uc::tick_hw(int cycles)
 {
   class cl_hw *hw;
+  int c= cycles;
   int i;//, cpc= clock_per_cycle();
 
   // tick hws
-  while (cycles-- > 0)
+  while (c-- > 0)
     {
-      for (i= 0; i < hws->count; i++)
+      int hc= hws->count;
+      for (i= 0; i < hc; i++)
         {
           hw= (class cl_hw *)(hws->at(i));
           if ((hw->flags & HWF_INSIDE) &&
@@ -2682,7 +3076,9 @@ cl_uc::fetch(void)
     return(0);
 
   code= rom->read(PC);
-  PC= rom->inc_address(PC);
+  //PC= ++PC & PCmask;//rom->inc_address(PC);
+  PC++;
+  PC&= PCmask;
   vc.fetch++;
   return(code);
 }
@@ -2733,60 +3129,40 @@ cl_uc::fetch(t_mem *code)
 }
 
 int
-cl_uc::do_inst(int step)
+cl_uc::do_inst(void)
 {
-  t_addr PCsave= PC;
   int res= resGO;
 
-  if (step < 0)
-    step= 1;
-  while (step-- &&
-         res == resGO &&
-	 (
-	  (state == stGO) || (state == stIDLE)
-	  )
-	 )
+  save_hist();
+  if (state == stGO)
     {
-      if (state == stGO)
-	{
-	  pre_inst();
-	  PCsave = PC;
-	  res= exec_inst();
-
-	  if (res == resINV_INST)
-	    /* backup to start of instruction */
-	    PC = PCsave;
-	  else if (res == resGO && !inst_at(PCsave) && analyzer)
-            analyze(PCsave);
-	}
-
-      post_inst();
-
-      if ((res == resGO) && (PC == PCsave) && stop_selfjump)
-	{
-	  res= resSELFJUMP;
-	  sim->stop(res);
-	  break;
-	}
-      
-      if ((res == resGO || res == resNOT_DONE) &&
-	  1/*irq*/)
-	{
-	  int r= do_interrupt();
-	  if (r != resGO)
-	    res= r;
-	}
-
-      if (stop_at_time &&
-	  stop_at_time->reached())
-	{
-	  delete stop_at_time;
-	  stop_at_time= NULL;
-	  res= resBREAKPOINT;
-	}
+      pre_inst();
+      instPC= PC;
+      res= exec_inst();
+      if (res == resINV_INST)
+	/* backup to start of instruction */
+	PC= instPC;
+      else
+	if (res == resGO && !inst_at(instPC) && analyzer)
+	  {
+	    analyze(instPC);
+	  }
     }
-  if (res != resGO && res != resNOT_DONE)
-    sim->stop(res);
+  post_inst();
+
+  if ((res == resGO) && (PC == instPC) && stop_selfjump)
+    {
+      res= resSELFJUMP;
+      return res;
+    }
+      
+  if ((res == resGO || res == resNOT_DONE))
+    {
+      int r= do_interrupt();
+      if (r != resGO)
+	res= r;
+    }
+
   return(res);
 }
 
@@ -2796,12 +3172,12 @@ cl_uc::pre_inst(void)
   inst_exec= true;
   events->disconn_all();
   vc.inst++;
+  inst_ticks= 0;
 }
 
 int
 cl_uc::exec_inst(void)
 {
-  instPC= PC;
   return(resGO);
 }
 
@@ -2810,7 +3186,6 @@ cl_uc::exec_inst_tab(instruction_wrapper_fn itab[])
 {
   t_mem c;
   int res= resGO;
-  instPC= PC;
   if (fetch(&c))
     return resBREAKPOINT;
   if (itab[c] == NULL)
@@ -2830,11 +3205,35 @@ cl_uc::exec_inst_tab(instruction_wrapper_fn itab[])
 }
 
 
+int
+cl_uc::exec_inst_uctab()
+{
+  t_mem c;
+  int res= resGO;
+  if (fetch(&c))
+    return resBREAKPOINT;
+  if (uc_itab[c] == NULL)
+    {
+      PC= instPC;
+      return resNOT_DONE;
+    }
+  tickt(c);
+  res= (this->*uc_itab[c])(c);
+  if (res == resNOT_DONE)
+    {
+      PC= instPC;
+      return res;
+    }
+  //tick(1);
+  return res;
+}
+
+
 void
 cl_uc::post_inst(void)
 {
+  cPC.W(PC);
   tick_hw(inst_ticks);
-  inst_ticks= 0;
   if (errors->count)
     check_errors();
   if (events->count)
@@ -2853,7 +3252,7 @@ cl_uc::save_hist()
       if (pc_dump==NULL) pc_dump= fopen("addr.txt","w");
       if (pc_dump!=NULL)
 	{
-	  fprintf(pc_dump,"0x%06x\n",AU(PC));
+	  fprintf(pc_dump,"%x 0x%06x\n", MU(application->cyc), AU(PC));
 	  fflush(pc_dump);
 	}
     }
@@ -2997,6 +3396,20 @@ cl_uc::touch(void)
  */
 
 void
+cl_uc::stack_write(void)
+{
+  stack_check_overflow();
+  return ;
+}
+
+void
+cl_uc::stack_write(t_addr sp_before)
+{
+  stack_check_overflow(sp_before);
+  return ;
+}
+
+void
 cl_uc::stack_write(class cl_stack_op *op)
 {
   stack_check_overflow(op);
@@ -3011,6 +3424,12 @@ cl_uc::stack_write(class cl_stack_op *op)
       return;
     }
   stack_ops->push(op);
+}
+
+void
+cl_uc::stack_read(void)
+{
+  return ;
 }
 
 void
@@ -3097,6 +3516,16 @@ cl_uc::stack_read(class cl_stack_op *op)
 
 void
 cl_uc::stack_check_overflow(class cl_stack_op *op)
+{
+}
+
+void
+cl_uc::stack_check_overflow(void)
+{
+}
+
+void
+cl_uc::stack_check_overflow(t_addr sp_before)
 {
 }
 
@@ -3239,16 +3668,29 @@ cl_uc::mk_ebrk(enum brk_perm perm, class cl_address_space *mem,
   return(b);
 }
 
+class cl_ev_brk *
+cl_uc::mk_ebrk(enum brk_perm perm, class cl_memory_cell *cell,
+	       char op, int hit)
+{
+  class cl_ev_brk *b;
+  op= toupper(op);
+
+  b= new cl_ev_brk(cell, make_new_brknr(), perm, hit, op);
+  b->init();
+  return(b);
+}
+
 void
 cl_uc::check_events(void)
 {
   int i;
-  //sim->stop(resEVENTBREAK);
+  if (events->count)
+    sim->stop(resEVENTBREAK);
   for (i= 0; i < events->count; i++)
     {
       class cl_ev_brk *brk=
 	dynamic_cast<class cl_ev_brk *>(events->object_at(i));
-      sim->stop(resEVENTBREAK, brk);
+      brk->breaking();
     }
 }
 

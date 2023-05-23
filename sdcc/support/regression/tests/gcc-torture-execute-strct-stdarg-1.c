@@ -15,7 +15,6 @@ struct tiny
   char g;
 };
 
-#if 0 // TODO: enable when SDCC supports passing struct arguments!
 f (int n, ...)
 {
   struct tiny x;
@@ -44,12 +43,10 @@ f (int n, ...)
   }
   va_end (ap);
 }
-#endif
 
 void
 testTortureExecute (void)
 {
-#if 0 // TODO: enable when SDCC supports passing struct arguments!
   struct tiny x[3];
   x[0].c = 10;
   x[1].c = 11;
@@ -66,7 +63,8 @@ testTortureExecute (void)
   x[0].g = 50;
   x[1].g = 51;
   x[2].g = 52;
+#if 0 // TODO: Enable when bug #3365 (passign array element as struct param) is fixed
   f (3, x[0], x[1], x[2], (long) 123);
-  return;
 #endif
+  return;
 }

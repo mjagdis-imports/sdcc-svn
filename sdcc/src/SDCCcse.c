@@ -841,6 +841,83 @@ DEFSETFUNC (ifPointerSet)
   return 0;
 }
 
+
+/*-----------------------------------------------------------------*/
+/* promoteptrdcl - promote specialized pointer DCL value to more   */
+/*                 generalized pointer DCL value                   */
+/*-----------------------------------------------------------------*/
+static int
+promoteptrdcl (const int dcl)
+{
+  switch (dcl)
+    {
+      case POINTER:
+        if (TARGET_HC08_LIKE)
+          return FPOINTER; /* zero page part of full address space */
+        break;
+      case IPOINTER:
+        /* Hypothetically qualified with TARGET_MCS51_LIKE, but */
+        /* IPOINTER isn't used anywhere else so just assume it  */
+        return POINTER; /* same pointer type for the CPU */
+      case PPOINTER:
+        if (TARGET_MCS51_LIKE)
+          return FPOINTER; /* paged memory part of external memory */
+        break;
+    }
+  return dcl;
+}
+
+
+/*-----------------------------------------------------------------*/
+/* ifPointersAlias - returns true if this is a pointer operation   */
+/*                   that may alias a pointer at an iCode          */
+/*-----------------------------------------------------------------*/
+DEFSETFUNC (ifPointersAlias)
+{
+  operand *ptrop2;
+  int ptrop1dcl, ptrop2dcl;
+  cseDef *cdp = item;
+  V_ARG (operand *, ptrop1);
+  V_ARG (iCode *, ic);
+
+  if (POINTER_SET (cdp->diCode))
+    ptrop2 = IC_RESULT (cdp->diCode);
+  else if (POINTER_GET (cdp->diCode))
+    ptrop2 = IC_LEFT (cdp->diCode);
+  else
+    return 0; /* only consider pointer operations */
+
+  /* A pointer always aliases itself */
+  if (ptrop1->key && ptrop1->key == ptrop2->type)
+    return 1;
+
+  /* We'll need this eventually but suppress the unused variable */
+  /* warning for now. */
+  (void)ic;
+
+  /* We could be more precise about the aliasing situation if there */
+  /* was information about how the pointer value was derived. In the */
+  /* meantime, do what we can with the pointer type. */
+
+  ptrop1dcl = DCL_TYPE (operandType (ptrop1));
+  ptrop2dcl = DCL_TYPE (operandType (ptrop2));
+
+  /* A generic pointer can point to anything, so assume worst case */
+  if (ptrop1dcl == GPOINTER || ptrop2dcl == GPOINTER)
+    return 1;
+
+  ptrop1dcl = promoteptrdcl (ptrop1dcl);
+  ptrop2dcl = promoteptrdcl (ptrop2dcl);
+
+  /* If these are unrelated pointer types, we can safely claim */
+  /* that they can not alias each other. */
+  if (ptrop1dcl != ptrop2dcl)
+    return 0;
+
+  return 1;
+}
+
+
 /*-----------------------------------------------------------------*/
 /* ifDiCodeIsX - will return 1 if the symbols match                 */
 /*-----------------------------------------------------------------*/
@@ -873,6 +950,8 @@ iCode *findBackwardDef(operand *op,iCode *ic)
 static void
 algebraicOpts (iCode * ic, eBBlock * ebp)
 {
+  lineno = ic->lineno; // For error messages
+
   /* we don't deal with the following iCodes
      here */
   if (ic->op == IFX ||
@@ -908,6 +987,7 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
       IS_OP_LITERAL (IC_LEFT (ic)) &&
       !IC_RIGHT (ic))
     {
+      lineno = ic->lineno;
       IC_RIGHT (ic) = operandOperation (IC_LEFT (ic),
                                         IC_RIGHT (ic),
                                         ic->op,
@@ -975,7 +1055,7 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
         {
           int typematch;
           typematch = compareType (operandType (IC_RESULT (ic)),
-                                   operandType (IC_RIGHT (ic)));
+                                   operandType (IC_RIGHT (ic)), false);
           if ((typematch<0) || (IS_TRUE_SYMOP (IC_RIGHT (ic))))
             {
               ic->op = CAST;
@@ -1001,7 +1081,7 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
         {
           int typematch;
           typematch = compareType (operandType (IC_RESULT (ic)),
-                                   operandType (IC_LEFT (ic)));
+                                   operandType (IC_LEFT (ic)), false);
           if ((typematch<0) || (IS_TRUE_SYMOP (IC_LEFT (ic))))
             {
               ic->op = CAST;
@@ -1082,7 +1162,7 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
               /* '*' can have two unsigned chars as operands */
               /* and an unsigned int as result.              */
               if (compareType (operandType (IC_RESULT (ic)),
-                               operandType (IC_RIGHT (ic))) == 1)
+                               operandType (IC_RIGHT (ic)), false) == 1)
                 {
                   ic->op = '=';
                   IC_LEFT (ic) = NULL;
@@ -1123,7 +1203,7 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
               /* '*' can have two unsigned chars as operands */
               /* and an unsigned int as result.              */
               if (compareType (operandType (IC_RESULT (ic)),
-                               operandType (IC_LEFT (ic))) == 1)
+                               operandType (IC_LEFT (ic)), false) == 1)
                 {
                   ic->op = '=';
                   IC_RIGHT (ic) = IC_LEFT (ic);
@@ -1266,6 +1346,7 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
           if (IS_OP_LITERAL (IC_RIGHT (ic)))
             {
               double litval = operandLitValue (IC_RIGHT (ic));
+              unsigned long long llitval = operandLitValueUll (IC_RIGHT (ic));
               if (IS_GENPTR(ctype) && IS_PTR(otype))
                 {
                   unsigned long gpVal = 0;
@@ -1275,16 +1356,16 @@ algebraicOpts (iCode * ic, eBBlock * ebp)
                   if (!IS_GENPTR(otype))
                     gpVal = pointerTypeToGPByte (DCL_TYPE (otype), NULL, name);
                   gpVal <<= ((GPTRSIZE - 1) * 8);
-                  gpVal |= (unsigned long)litval;
-                  litval = gpVal;
+                  gpVal |= llitval;
+                  litval = llitval = gpVal;
                 }
               ic->op = '=';
-              IC_RIGHT (ic) = operandFromValue (valCastLiteral (operandType (IC_LEFT (ic)), litval, litval));
+              IC_RIGHT (ic) = operandFromValue (valCastLiteral (operandType (IC_LEFT (ic)), litval, llitval), false);
               IC_LEFT (ic) = NULL;
               SET_ISADDR (IC_RESULT (ic), 0);
             }
           /* if casting to the same */
-          if (compareType (operandType (IC_RESULT (ic)), operandType (IC_RIGHT (ic))) == 1)
+          if (compareType (operandType (IC_RESULT (ic)), operandType (IC_RIGHT (ic)), false) == 1)
             {
               ic->op = '=';
               IC_LEFT (ic) = NULL;
@@ -1769,7 +1850,8 @@ ifxOptimize (iCode * ic, set * cseSet,
       /* too often, if it does happen then the user pays */
       /* the price */
       computeControlFlow (ebbi);
-      werrorfl (ic->filename, ic->lineno, W_CONTROL_FLOW);
+      if (!ic->inlined)
+        werrorfl (ic->filename, ic->lineno, W_CONTROL_FLOW);
       return;
     }
 
@@ -1780,7 +1862,8 @@ ifxOptimize (iCode * ic, set * cseSet,
   if (elementsInSet (ebb->succList) == 1 &&
       isinSet (ebb->succList, eBBWithEntryLabel (ebbi, label)))
     {
-      werrorfl (ic->filename, ic->lineno, W_CONTROL_FLOW);
+      if (!ic->inlined)
+        werrorfl (ic->filename, ic->lineno, W_CONTROL_FLOW);
       if (IS_OP_VOLATILE (IC_COND (ic)))
         {
           IC_RIGHT (ic) = IC_COND (ic);
@@ -1862,7 +1945,7 @@ constFold (iCode * ic, set * cseSet)
   if (!(applyToSet (cseSet, diCodeForSym, IC_LEFT (ic), &dic)))
     return 0;
 
-  if (ic->op == BITWISEAND) /* Optimize out bitwise and of comparion results */
+  if (ic->op == BITWISEAND) /* Optimize out bitwise and of comparison results */
     {
       /* check that this results in 0 or 1 only */
       if(dic->op != EQ_OP && dic->op != NE_OP && dic->op != LE_OP && dic->op != GE_OP && dic->op != '<' && dic->op != '>' && dic->op != '!')
@@ -2058,7 +2141,7 @@ fixUpTypes (iCode * ic)
   /* for pointer_gets if the types of result & left r the
      same then change it type of result to next */
   if (IS_PTR (t1) &&
-      compareType (t2 = operandType (IC_RESULT (ic)), t1) == 1)
+      compareType (t2 = operandType (IC_RESULT (ic)), t1, false) == 1)
     {
       setOperandType (IC_RESULT (ic), t2->next);
     }
@@ -2074,6 +2157,7 @@ static int isSignedOp (iCode *ic)
     case '~':
     case UNARYMINUS:
     case IPUSH:
+    case IPUSH_VALUE_AT_ADDRESS:
     case IPOP:
     case CALL:
     case PCALL:
@@ -2240,7 +2324,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
 
       /* for pcall & ipush we need to add to the useSet */
       if ((ic->op == PCALL ||
-           ic->op == IPUSH ||
+           ic->op == IPUSH || ic->op == IPUSH_VALUE_AT_ADDRESS ||
            ic->op == IPOP ||
            ic->op == SEND) &&
           IS_SYMOP (IC_LEFT (ic)))
@@ -2282,10 +2366,21 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
         {
           if (IS_SYMOP (IC_JTCOND (ic)))
             {
-              OP_USES(IC_JTCOND (ic)) =
-                bitVectSetBit (OP_USES (IC_JTCOND (ic)), ic->key);
-              setUsesDefs (IC_JTCOND (ic), ebb->defSet,
-                           ebb->outDefs, &ebb->usesDefs);
+              pdop = NULL;
+              applyToSetFTrue (cseSet, findCheaperOp, IC_JTCOND (ic), &pdop, true);
+              if (pdop)
+                {
+                  ReplaceOpWithCheaperOp (&IC_JTCOND (ic), pdop);
+                  change = 1;
+                }
+              /* recheck since this may no longer be a symbol */
+              if (IS_SYMOP (IC_JTCOND (ic)))
+                {
+                  OP_USES(IC_JTCOND (ic)) =
+                    bitVectSetBit (OP_USES (IC_JTCOND (ic)), ic->key);
+                  setUsesDefs (IC_JTCOND (ic), ebb->defSet,
+                               ebb->outDefs, &ebb->usesDefs);
+                }
             }
           continue;
         }
@@ -2481,7 +2576,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
         {
           applyToSet (cseSet, findPrevIc, ic, &pdic);
           if (pdic && compareType (operandType (IC_RESULT (pdic)),
-                                   operandType (IC_RESULT (ic))) != 1)
+                                   operandType (IC_RESULT (ic)), false) != 1)
             {
               pdic = NULL;
             }
@@ -2511,6 +2606,29 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
             }
         }
 
+      /* if this is a pointer get then see if we can replace
+         this with a previously assigned pointer value */
+      if (!computeOnly && POINTER_GET (ic) &&
+          !(IS_BITFIELD (OP_SYMBOL (IC_RESULT (ic))->etype) ||
+            isOperandVolatile (IC_LEFT (ic), TRUE)))
+        {
+          pdop = NULL;
+          applyToSet (ptrSetSet, findPointerSet, IC_LEFT (ic), &pdop, IC_RESULT (ic));
+
+          /* if pointer set found, replace the pointer get with
+             an assignment of the value used in the pointer set */
+          if (pdop)
+            {
+              ic->op = '=';
+              IC_LEFT (ic) = NULL;
+              ReplaceOpWithCheaperOp (&IC_RIGHT (ic), pdop);
+              SET_ISADDR (IC_RESULT (ic), 0);
+              replaced = 1;
+            }
+        }
+
+      /* Now maybe add this iCode to cseSet. Can't modify the iCode */
+      /* after this point or the cse info will be wrong. */
       if (!(POINTER_SET (ic)) && IC_RESULT (ic))
         {
           cseDef *csed;
@@ -2535,29 +2653,13 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
           ebb->ptrsSet = bitVectSetBit (ebb->ptrsSet, IC_RIGHT (ic)->key);
         }
 
-      /* if this is a pointerget then see if we can replace
-         this with a previously assigned pointer value */
-      if (POINTER_GET (ic) &&
-          !(IS_BITFIELD (OP_SYMBOL (IC_RESULT (ic))->etype) ||
-            isOperandVolatile (IC_LEFT (ic), TRUE)))
-        {
-          pdop = NULL;
-          applyToSet (ptrSetSet, findPointerSet, IC_LEFT (ic), &pdop, IC_RESULT (ic));
-          /* if we find it then locally replace all
-             references to the result with what we assigned */
-          if (pdop)
-            {
-              replaceAllSymBySym (ic->next, IC_RESULT (ic), pdop, &ebb->ndompset);
-            }
-        }
-
       /* delete from the cseSet anything that has */
       /* operands matching the result of this     */
       /* except in case of pointer access         */
       if (!(POINTER_SET (ic)) && IS_SYMOP (IC_RESULT (ic)))
         {
           destructItemIf (&cseSet, freeLocalCseDef, ifOperandsHave, IC_RESULT (ic));
-          deleteItemIf (&ptrSetSet, ifOperandsHave, IC_RESULT (ic));
+          destructItemIf (&ptrSetSet, freeLocalCseDef, ifOperandsHave, IC_RESULT (ic));
           /* delete any previous definitions */
           ebb->defSet = bitVectCplAnd (ebb->defSet, OP_DEFS (IC_RESULT (ic)));
 
@@ -2567,7 +2669,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
            {
              memmap *map = SPEC_OCLS (getSpec (operandType (IC_RESULT (ic))));
              destructItemIf (&cseSet, freeLocalCseDef, ifAnyUnrestrictedGetPointer, map->ptrType);
-             deleteItemIf (&ptrSetSet, ifAnyUnrestrictedSetPointer, map->ptrType);
+             destructItemIf (&ptrSetSet, freeLocalCseDef, ifAnyUnrestrictedSetPointer, map->ptrType);
            }
         }
 
@@ -2589,7 +2691,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
       /* for the result it is special case, put the result */
       /* in the defuseSet if it is a pointer or array access */
       if (POINTER_SET (defic) &&
-		  (IS_SYMOP (IC_RESULT (ic)) || IS_OP_LITERAL (IC_RESULT (ic))))
+          (IS_SYMOP (IC_RESULT (ic)) || IS_OP_LITERAL (IC_RESULT (ic))))
         {
           sym_link *ptype = operandType (IC_RESULT (ic));
 
@@ -2606,9 +2708,10 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
           for (i = 0; i < count; ebbs[i++]->visited = 0);
           applyToSet (ebb->succList, delGetPointerSucc, IC_RESULT (ic), ebb->dfnum);
 
-          /* delete from cseSet all other pointer sets
-             for this operand */
-          deleteItemIf (&ptrSetSet, ifPointerSet, IC_RESULT (ic));
+          /* delete from ptrSetSet all other pointer sets for this operand */
+          destructItemIf (&ptrSetSet, freeLocalCseDef, ifPointerSet, IC_RESULT (ic));
+          /* delete from ptrSetSet all other pointer sets that may alias this */
+          destructItemIf (&ptrSetSet, freeLocalCseDef, ifPointersAlias, IC_RESULT (ic), ic);
           /* add to the local pointerset set */
           addSetHead (&ptrSetSet, newCseDef (IC_RESULT (ic), ic));
 

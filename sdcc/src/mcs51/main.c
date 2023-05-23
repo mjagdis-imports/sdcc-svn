@@ -107,9 +107,16 @@ _mcs51_reset_regparm (struct sym_link *funcType)
 }
 
 static int
-_mcs51_regparm (sym_link * l, bool reentrant)
+_mcs51_regparm (sym_link *l, bool reentrant)
 {
   if (IFFUNC_HASVARARGS (regParmFuncType))
+    return 0;
+
+  if (IS_STRUCT (l))
+    return 0;
+
+  // For struct return keep regs free for pushing hidden parameter.
+  if (IS_STRUCT(regParmFuncType->next))
     return 0;
 
   if (IS_SPEC(l) && (SPEC_NOUN(l) == V_BIT))
@@ -361,6 +368,9 @@ oclsExpense (struct memmap *oclass)
 static bool
 _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
   return getSize (left) == 1 && getSize (right) == 1;
 }
 
@@ -845,8 +855,8 @@ PORT mcs51_port =
     NULL,
     NULL,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -874,6 +884,7 @@ PORT mcs51_port =
     NULL,
     NULL,
     1,
+    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
     1                           // No fancy alignments supported.
   },
   { _mcs51_genExtraAreas, NULL },

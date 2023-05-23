@@ -501,6 +501,7 @@ cl_vcd::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
     cmdline->param(4)
   };
 
+  /*
   if (cmdline->syntax_match(uc, BIT)) // ADD
     {
       add_var(con, params[0]->value.bit.mem, params[0]->value.bit.mem_address, params[0]->value.bit.bitnr_high, params[0]->value.bit.bitnr_low);
@@ -535,6 +536,22 @@ cl_vcd::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
     {
       add_var(con, params[0]->value.cell, -1, -1);
       return;
+    }
+  else
+  */
+  if (0)
+    ;
+  else if (cmdline->syntax_match(uc, STRING CELL)) // DEL|ADD
+    {
+      char *p1= params[0]->value.string.string;
+      if (p1 && *p1)
+        {
+          if (strcmp(p1, "add") == 0)
+            add_var(con, params[1]->value.cell, -1, -1);
+          else if (strstr(p1, "del") == p1)
+            del_var(con, params[1]->value.cell, -1, -1);
+          return;
+        }
     }
   else if (cmdline->syntax_match(uc, STRING BIT)) // DEL|ADD
     {
@@ -623,18 +640,6 @@ cl_vcd::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
             add_var(con, params[1]->value.cell, params[2]->value.number, params[2]->value.number);
           else if (strstr(p1, "del") == p1)
             del_var(con, params[1]->value.cell, params[2]->value.number, params[2]->value.number);
-          return;
-        }
-    }
-  else if (cmdline->syntax_match(uc, STRING CELL)) // DEL|ADD
-    {
-      char *p1= params[0]->value.string.string;
-      if (p1 && *p1)
-        {
-          if (strcmp(p1, "add") == 0)
-            add_var(con, params[1]->value.cell, -1, -1);
-          else if (strstr(p1, "del") == p1)
-            del_var(con, params[1]->value.cell, -1, -1);
           return;
         }
     }

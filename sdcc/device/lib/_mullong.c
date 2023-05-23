@@ -35,6 +35,12 @@
      mcs51 small stack-auto
 */
 
+#ifdef __SDCC_mcs51
+#define __SDCC_NONBANKED __nonbanked
+#else
+#define __SDCC_NONBANKED
+#endif
+
 #if !defined(__SDCC_USE_XSTACK) && !defined(_SDCC_NO_ASM_LIB_FUNCS)
 #  if defined(__SDCC_mcs51)
 #    if defined(__SDCC_MODEL_SMALL)
@@ -629,8 +635,10 @@ struct some_struct {
 	short a ;
 	char b;
 	long c ;};
-#if defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_stm8)
-/* big endian order */
+	
+#include <stdbit.h>
+
+#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
 union bil {
         struct {unsigned char b3,b2,b1,b0 ;} b;
         struct {unsigned short hi,lo ;} i;
@@ -638,7 +646,6 @@ union bil {
         struct { unsigned char b3; unsigned short i12; unsigned char b0;} bi;
 } ;
 #else
-/* little endian order */
 union bil {
         struct {unsigned char b0,b1,b2,b3 ;} b;
         struct {unsigned short lo,hi ;} i;
@@ -733,7 +740,7 @@ _mullong (long a, long b)
 }
 #else
 long
-_mullong (long a, long b)
+_mullong (long a, long b) __SDCC_NONBANKED
 {
         union bil t;
 

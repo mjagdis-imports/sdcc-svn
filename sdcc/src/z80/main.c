@@ -30,22 +30,22 @@
 #include "SDCCargs.h"
 #include "dbuf_string.h"
 
-#define OPTION_BO              "-bo"
-#define OPTION_BA              "-ba"
-#define OPTION_CODE_SEG        "--codeseg"
-#define OPTION_CONST_SEG       "--constseg"
-#define OPTION_DATA_SEG        "--dataseg"
-#define OPTION_CALLEE_SAVES_BC "--callee-saves-bc"
-#define OPTION_PORTMODE        "--portmode="
-#define OPTION_ASM             "--asm="
-#define OPTION_NO_STD_CRT0     "--no-std-crt0"
-#define OPTION_RESERVE_IY      "--reserve-regs-iy"
-#define OPTION_OLDRALLOC       "--oldralloc"
-#define OPTION_FRAMEPOINTER    "--fno-omit-frame-pointer"
-#define OPTION_EMIT_EXTERNS    "--emit-externs"
-#define OPTION_LEGACY_BANKING  "--legacy-banking"
-#define OPTION_NMOS_Z80        "--nmos-z80"
-#define OPTION_SDCCCALL        "--sdcccall"
+#define OPTION_BO               "-bo"
+#define OPTION_BA               "-ba"
+#define OPTION_CODE_SEG         "--codeseg"
+#define OPTION_CONST_SEG        "--constseg"
+#define OPTION_DATA_SEG         "--dataseg"
+#define OPTION_CALLEE_SAVES_BC  "--callee-saves-bc"
+#define OPTION_PORTMODE         "--portmode="
+#define OPTION_ASM              "--asm="
+#define OPTION_NO_STD_CRT0      "--no-std-crt0"
+#define OPTION_RESERVE_IY       "--reserve-regs-iy"
+#define OPTION_FRAMEPOINTER     "--fno-omit-frame-pointer"
+#define OPTION_EMIT_EXTERNS     "--emit-externs"
+#define OPTION_LEGACY_BANKING   "--legacy-banking"
+#define OPTION_NMOS_Z80         "--nmos-z80"
+#define OPTION_SDCCCALL         "--sdcccall"
+#define OPTION_ALLOW_UNDOC_INST "--allow-undocumented-instructions"
 
 static char _z80_defaultRules[] = {
 #include "peeph.rul"
@@ -82,6 +82,25 @@ static char _z80n_defaultRules[] = {
 
 Z80_OPTS z80_opts;
 
+static OPTION _z80_like_options[] = {
+  {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
+  {0, OPTION_PORTMODE,        NULL, "Determine PORT I/O mode (z80/z180)"},
+  {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
+  {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
+  {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
+  {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
+  {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
+  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
+  {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
+  {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
+  {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
+  {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_NMOS_Z80,        &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
+  {0, OPTION_SDCCCALL,        &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
+  {0, NULL}
+};
+
 static OPTION _z80_options[] = {
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_PORTMODE,        NULL, "Determine PORT I/O mode (z80/z180)"},
@@ -93,12 +112,12 @@ static OPTION _z80_options[] = {
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
   {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
   {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
-  {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator (deprecated)"},
   {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
   {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
   {0, OPTION_NMOS_Z80,        &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
-  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
+  {0, OPTION_SDCCCALL,        &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
+  {0, OPTION_ALLOW_UNDOC_INST,&options.allow_undoc_inst, "Allow use of undocumented instructions"},
   {0, NULL}
 };
 
@@ -112,7 +131,7 @@ static OPTION _sm83_options[] = {
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
   {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
   {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
-  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
+  {0, OPTION_SDCCCALL,        &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -703,11 +722,6 @@ _parseOptions (int *pargc, char **argv, int *i)
           port->assembler.externGlobal = 1;
           return true;
         }
-      else if (!strncmp (argv[*i], OPTION_OLDRALLOC, sizeof (OPTION_OLDRALLOC) - 1))
-        {
-          werror (W_DEPRECATED_OPTION, "--oldralloc");
-          return true;
-        }
     }
   return FALSE;
 }
@@ -797,10 +811,6 @@ _setValues (void)
   dbuf_printf (&dbuf, "-b_CODE=0x%04X -b_DATA=0x%04X", options.code_loc, options.data_loc);
   setMainValue ("z80bases", dbuf_c_str (&dbuf));
   dbuf_destroy (&dbuf);
-
-  /* For the old register allocator (with the new one we decide to omit the frame pointer for each function individually) */
-  if (!IS_SM83 && options.omitFramePtr)
-    port->stack.call_overhead = 2;
 }
 
 static void
@@ -840,6 +850,7 @@ _setDefaultOptions (void)
   options.noRegParams = 0;
   /* Default code and data locations. */
   options.code_loc = 0x200;
+  options.allow_undoc_inst = false;
 
   if (IS_SM83)
     options.data_loc = 0xc000;
@@ -931,6 +942,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
   if (ic->op != '*')
     return(false);
+
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
 
   if (IS_LITERAL (left))
     test = left;
@@ -1085,8 +1099,8 @@ PORT z80_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1114,6 +1128,7 @@ PORT z80_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -1217,8 +1232,8 @@ PORT z180_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1246,6 +1261,7 @@ PORT z180_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -1264,7 +1280,7 @@ PORT z180_port =
   "_",
   _z180_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1345,8 +1361,8 @@ PORT r2k_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1374,6 +1390,7 @@ PORT r2k_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -1392,7 +1409,7 @@ PORT r2k_port =
   "_",
   _r2k_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1474,8 +1491,8 @@ PORT r2ka_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1503,6 +1520,7 @@ PORT r2ka_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -1521,7 +1539,7 @@ PORT r2ka_port =
   "_",
   _r2ka_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1603,8 +1621,8 @@ PORT r3ka_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1632,6 +1650,7 @@ PORT r3ka_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -1650,7 +1669,7 @@ PORT r3ka_port =
   "_",
   _r3ka_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1734,8 +1753,8 @@ PORT sm83_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 /* non-compliant - C23 rewuires t least 64 here. SM83 has some special paths in codegen for + and - of more than 16 bits. Those do not yet support _BitInt */ },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1763,6 +1782,7 @@ PORT sm83_port =
     NULL,
     NULL,
     1,                          /* CODE is read-only */
+    true,                       // unqualified pointers can point to __sfr (the i/o space is part of the flat address space).
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -1863,8 +1883,8 @@ PORT tlcs90_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1892,6 +1912,7 @@ PORT tlcs90_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // doesn't matter, as port has no __sfr anyway
     1                           /* No fancy alignments supported. */
    },
   { NULL, NULL },
@@ -1910,7 +1931,7 @@ PORT tlcs90_port =
   "_",
   _tlcs90_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1992,8 +2013,8 @@ PORT ez80_z80_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -2021,6 +2042,7 @@ PORT ez80_z80_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -2039,7 +2061,7 @@ PORT ez80_z80_port =
   "_",
   _ez80_z80_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -2121,8 +2143,8 @@ PORT z80n_port =
     z80canJoinRegs,
     z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -2150,6 +2172,7 @@ PORT z80n_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
@@ -2168,7 +2191,7 @@ PORT z80n_port =
   "_",
   _z80n_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,

@@ -39,6 +39,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "brkcl.h"
 #include "stackcl.h"
 #include "varcl.h"
+#include "itabcl.h"
 
 
 class cl_uc;
@@ -98,14 +99,25 @@ public:
   virtual void option_changed(void);
 };
 
-class cl_analyzer_option: public cl_optref
+
+class cl_analyzer_opt: public cl_bool_option
 {
 protected:
   class cl_uc *uc;
 public:
-  cl_analyzer_option(class cl_uc *the_uc);
-  virtual int init(void);
-  virtual void option_changed(void);
+  cl_analyzer_opt(class cl_uc *Iuc);
+  virtual void set_value(const char *s);
+  virtual void set_raw(bool val) { value.bval= val; }
+};
+
+class cl_analyser_opt: public cl_bool_option
+{
+protected:
+  class cl_uc *uc;
+public:
+  cl_analyser_opt(class cl_uc *Iuc);
+  virtual void set_value(const char *s);
+  virtual void set_raw(bool val) { value.bval= val; }
 };
 
 struct vcounter_t {
@@ -244,7 +256,7 @@ public:
 
 /* Abstract microcontroller */
 
-class cl_uc: public cl_base
+class cl_uc: public /*cl_base*/cl_itab
 {
 private:
   double xtal;			// Clock speed
@@ -258,9 +270,11 @@ public:
   //class cl_list *options;
   class cl_xtal_option *xtal_option;
   class cl_stop_selfjump_option *stop_selfjump_option;
-  class cl_analyzer_option *analyzer_option;
+  class cl_analyzer_opt *analyzer_opt;
+  class cl_analyser_opt *analyser_opt;
   
-  t_addr PC, instPC;		// Program Counter
+  t_addr PC, instPC, PCmask;	// Program Counter
+  class cl_cell32 cPC;		// Cell of PC
   bool inst_exec;		// Instruction is executed
   class cl_ticker *ticks;	// Nr of XTAL clocks
   class cl_ticker *isr_ticks;	// Time in ISRs
@@ -275,6 +289,7 @@ public:
   int brk_counter;		// Number of breakpoints
   class brk_coll *fbrk;		// Collection of FETCH break-points
   class brk_coll *ebrk;		// Collection of EVENT breakpoints
+  class cl_display_list *displays;// Collection of displayed exprs on break
   class cl_sim *sim;
   //class cl_list *mems;
   class cl_time_measurer *stop_at_time;
@@ -299,8 +314,8 @@ public:
   class cl_list *errors;	// Errors of instruction execution
   class cl_list *events;	// Events happened during inst exec
 
-  t_addr sp_max;
-  t_addr sp_avg;
+  t_addr sp_most;
+  //t_addr sp_avg;
 
   bool vcd_break;
 
@@ -318,7 +333,8 @@ public:
   double get_xtal(void) { return xtal; }
   double get_xtal_tick(void) { return xtal_tick; }
   void set_xtal(double freq) { xtal= freq; xtal_tick = 1 / freq; }
-
+  virtual double def_xtal(void) { return 11059200; }
+  
   // making objects
   virtual void make_memories(void);
   virtual void make_variables(void);
@@ -344,11 +360,16 @@ public:
   virtual long read_hex_file(cl_f *f);
   virtual long read_omf_file(cl_f *f);
   virtual long read_asc_file(cl_f *f);
+  virtual long read_p2h_file(cl_f *f);
   virtual long read_cdb_file(cl_f *f);
+  virtual long read_map_file(cl_f *f);
+  virtual long read_s19_file(cl_f *f);
   virtual cl_f *find_loadable_file(chars nam);
   virtual long read_file(chars nam, class cl_console_base *con);
   
   // instructions, code analyzer
+  virtual void set_analyzer(bool val);
+  virtual t_addr reset_addr(void) { return 0; }
   void analyze_init(void);
   virtual void analyze_start(void);
   virtual void analyze(t_addr addr);
@@ -391,10 +412,11 @@ public:
   virtual u8_t fetch8(void) { return (u8_t)fetch(); }
   virtual i8_t fetchi8(void) { return (i8_t)fetch(); }
   virtual bool fetch(t_mem *code);
-  virtual int do_inst(int step);
+  virtual int do_inst(void/*int step*/);
   virtual void pre_inst(void);
   virtual int exec_inst(void);
   virtual int exec_inst_tab(instruction_wrapper_fn itab[]);
+  virtual int exec_inst_uctab(void);
   virtual void post_inst(void);
   virtual void save_hist();
   virtual int inst_unknown(t_mem code);
@@ -410,8 +432,13 @@ public:
   
   // stack tracking
   virtual void stack_write(class cl_stack_op *op);
+  virtual void stack_write(void);
+  virtual void stack_write(t_addr sp_before);
   virtual void stack_read(class cl_stack_op *op);
+  virtual void stack_read(void);
   virtual void stack_check_overflow(class cl_stack_op *op);
+  virtual void stack_check_overflow(void);
+  virtual void stack_check_overflow(t_addr sp_before);
   
   // breakpoints
   virtual class cl_fetch_brk *fbrk_at(t_addr addr);
@@ -426,6 +453,9 @@ public:
   virtual class cl_ev_brk *mk_ebrk(enum brk_perm perm,
 				   class cl_address_space *mem,
 				   char op, t_addr addr, int hit);
+  virtual class cl_ev_brk *mk_ebrk(enum brk_perm perm,
+				   class cl_memory_cell *cell,
+				   char op, int hit);
   virtual void check_events(void);
   virtual void stop_when(class cl_time_measurer *t);
   
@@ -463,6 +493,7 @@ public:
   virtual bool symbol2address(char *sym,
 			      class cl_memory **mem,
 			      t_addr *addr);
+  virtual bool symbol2cell(char *sym, class cl_memory_cell **cell);
   virtual name_entry *get_name_entry(struct name_entry tabl[],
 				     char *name);
   virtual chars cell_name(class cl_memory_cell *cell, int bitnr_high, int bitnr_low);
@@ -476,7 +507,7 @@ public:
 					  int *bitnr_low);
   virtual t_addr bit_address(class cl_memory *mem,
                              t_addr mem_address,
-                             int bit_number) { return(-1); }
+                             int bit_number) { return(AU(-1)); }
 
   // messages from app to handle and broadcast
   virtual bool handle_event(class cl_event &event);

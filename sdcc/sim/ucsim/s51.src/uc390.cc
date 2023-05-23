@@ -363,6 +363,7 @@ cl_uc390::make_memories(void)
   decode_dptr();
   
   ad= new cl_address_decoder(ixram, ixram_chip, 0, 0xfff, 0);
+  //ad= new cl_address_decoder(ixram, xram_chip, 0, 0xfff, 0x400000);
   ad->init();
   ixram->decoders->add(ad);
   ad->activate(0);
@@ -383,7 +384,7 @@ cl_uc390::make_address_spaces(void)
   sfr->init();
   address_spaces->add(sfr);
 
-  xram= new cl_address_space("xram", 0, 0x100000+128, 8);
+  xram= new cl_address_space("xram", 0, 0x100000+128/*+4096*/, 8);
   xram->init();
   address_spaces->add(xram);
 
@@ -411,7 +412,7 @@ cl_uc390::make_chips(void)
   iram_chip->init();
   memchips->add(iram_chip);
 
-  xram_chip= new cl_chip8("xram_chip", 0x100000+128, 8, 0);
+  xram_chip= new cl_chip8("xram_chip", 0x100000+128/*+4096*/, 8, 0);
   xram_chip->init();
   memchips->add(xram_chip);
 
@@ -439,7 +440,7 @@ cl_uc390::decode_xram(void)
 {
   class cl_address_decoder *ad;
   
-  ad= new cl_address_decoder(xram, xram_chip, 0, 0x10007f, 0);
+  ad= new cl_address_decoder(xram, xram_chip, 0, 0x100000+128/*+4096*/-1, 0);
   ad->init();
   xram->decoders->add(ad);
   ad->activate(0);
@@ -491,59 +492,67 @@ cl_uc390::clear_sfr(void)
   sfr->write(0xe3, 0x09); /* C1C    */
 }
 
-
+/*
 t_mem
-cl_uc390::read_mem(const char *id/*enum mem_class type*/, t_addr addr)
+cl_uc390::read_mem(const char *id, t_addr addr)
 {
 
-  if (strcmp(/*type*/id,/* == */MEM_XRAM_ID)==0 &&
+  if (strcmp(id,MEM_XRAM_ID)==0 &&
       addr >= 0x400000 &&
-      (sfr->get (ACON) & 0x02)) /* AM1 set: 24-bit flat? */
+      (sfr->get (ACON) & 0x02)) // AM1 set: 24-bit flat?
     {
       addr -= 0x400000;
-      id/*type*/ = MEM_IXRAM_ID;
+      id = MEM_IXRAM_ID;
     }
-  return cl_51core::read_mem(id/*type*/, addr); /* 24 bit */
+  return cl_51core::read_mem(id, addr); // 24 bit
 }
+*/
 
+/*
 t_mem
-cl_uc390::get_mem (const char *id/*enum mem_class type*/, t_addr addr)
+cl_uc390::get_mem (const char *id, t_addr addr)
 {
-  if (strcmp(/*type*/id/* == */,MEM_XRAM_ID)==0 &&
+  if (strcmp(id,MEM_XRAM_ID)==0 &&
       addr >= 0x400000 &&
-      (sfr->get (ACON) & 0x02)) /* AM1 set: 24-bit flat? */
+      (sfr->get (ACON) & 0x02)) // AM1 set: 24-bit flat?
     {
       addr -= 0x400000;
-      /*type*/id = MEM_IXRAM_ID;
+      id = MEM_IXRAM_ID;
     }
-  return cl_51core::get_mem (/*type*/id, addr);
+  return cl_51core::get_mem (id, addr);
 }
+*/
 
+/*
 void
-cl_uc390::write_mem (const char *id/*enum mem_class type*/, t_addr addr, t_mem val)
+cl_uc390::write_mem (const char *id, t_addr addr, t_mem val)
 {
-  if (strcmp(/*type ==*/id, MEM_XRAM_ID)==0 &&
+  if (strcmp(id, MEM_XRAM_ID)==0 &&
       addr >= 0x400000 &&
-      (sfr->get (ACON) & 0x02)) /* AM1 set: 24-bit flat? */
+      (sfr->get (ACON) & 0x02)) // AM1 set: 24-bit flat?
     {
       addr -= 0x400000;
-      /*type*/id = MEM_IXRAM_ID;
+      id = MEM_IXRAM_ID;
     }
-  cl_51core::write_mem (/*type*/id, addr, val);
+  cl_51core::write_mem (id, addr, val);
 }
+*/
 
+/*
 void
-cl_uc390::set_mem (/*enum mem_class type*/const char *id, t_addr addr, t_mem val)
+cl_uc390::set_mem (const char *id, t_addr addr, t_mem val)
 {
-  if (/*type == */strcmp(id,MEM_XRAM_ID)==0 &&
+  if (strcmp(id,MEM_XRAM_ID)==0 &&
       addr >= 0x400000 &&
-      (sfr->get (ACON) & 0x02)) /* AM1 set: 24-bit flat? */
+      (sfr->get (ACON) & 0x02)) // AM1 set: 24-bit flat?
     {
       addr -= 0x400000;
-      /*type*/id = MEM_IXRAM_ID;
+      id = MEM_IXRAM_ID;
     }
-  cl_51core::set_mem (id/*type*/, addr, val);
+  cl_51core::set_mem (id, addr, val);
 }
+*/
+
 
 /*
  *____________________________________________________________________________
@@ -555,19 +564,19 @@ cl_uc390::push_byte (t_mem uc)
   t_addr sp;
 
   sp = sfr->write(SP, sfr->read(SP) + 1);
-  if (sfr->get (ACON) & 0x04) /* SA: 10 bit stack */
+  if (sfr->get (ACON) & 0x04) // SA: 10 bit stack
     {
-      if (sp == 0) /* overflow SP */
+      if (sp == 0) // overflow SP
         sfr->write(R51_ESP, sfr->read(R51_ESP) + 1);
       sp += (sfr->read (R51_ESP) & 0x3) * 256;
-      write_mem (MEM_IXRAM_ID, sp, uc); // fixme
+      ixram->write(sp, uc);//write_mem (MEM_IXRAM_ID, sp, uc); // fixme
     }
   else
     {
-      class cl_memory_cell *stck;
-
-      stck = iram->get_cell (sp);
-      stck->write (uc);
+      //class cl_memory_cell *stck;
+      iram->write(sp, uc);
+      //stck = iram->get_cell (sp);
+      //stck->write (uc);
     }
 }
 
@@ -577,23 +586,22 @@ cl_uc390::pop_byte (void)
   t_mem temp;
   t_addr sp;
 
-  if (sfr->get (ACON) & 0x04) /* SA: 10 bit stack */
+  if (sfr->get (ACON) & 0x04) // SA: 10 bit stack
     {
       sp = sfr->read (SP);
       sp += (sfr->read (R51_ESP) & 0x3) * 256;
-      temp = read_mem (MEM_IXRAM_ID, sp); // fixme
+      temp = ixram->read(sp);
       sp = sfr->write(SP, sfr->read(SP) - 1);
-      if (sp == 0xff) /* underflow SP */
+      if (sp == 0xff) // underflow SP
         sfr->write(R51_ESP, sfr->read(R51_ESP) - 1);
       return temp;
     }
   else
     {
-      class cl_memory_cell *stck;
-
-      stck = iram->get_cell (sfr->get (SP));
-      temp = stck->read();
-      sp = sfr->write(SP, sfr->read(SP) - 1);
+      //class cl_memory_cell *stck;
+      //stck = iram->get_cell (sfr->get (SP));
+      temp = iram->read(sp= sfr->read(SP));//stck->read();
+      sfr->write(SP, sp - 1);
       return temp;
     }
 }
@@ -816,7 +824,8 @@ int
 cl_uc390::instruction_e0/*inst_movx_a_Sdptr*/ (t_mem/*uchar*/ code)
 {
   uchar pl, ph, px, dps;
-
+  u8_t acon= sfr->get(ACON);
+  
   dps = sfr->get (DPS);
   if (dps & 0x01)
     {
@@ -830,14 +839,23 @@ cl_uc390::instruction_e0/*inst_movx_a_Sdptr*/ (t_mem/*uchar*/ code)
       ph = DPH;
       px = DPX;
     }
-
-  if (sfr->get (ACON) & 0x02) /* AM1 set: 24-bit flat? */
-    acc->write (read_mem (MEM_XRAM_ID,
-                sfr->read (px) * 256*256 + sfr->read (ph) * 256 + sfr->read (pl)));
+  t_addr a;
+  if (acon & 0x02) /* AM1 set: 24-bit flat? */
+    a= sfr->read (px) * 256*256 + sfr->read (ph) * 256 + sfr->read (pl);
   else
-    acc->write (read_mem (MEM_XRAM_ID,
-                sfr->read (ph) * 256 + sfr->read (pl)));
+    a= sfr->read (ph) * 256 + sfr->read (pl);
 
+  u8_t v;
+  //v= read_mem (MEM_XRAM_ID,a);
+  //v= xram->read(a);
+  if ((a >= 0x400000) &&
+      (acon & 0x02))
+    v= ixram->read(a-0x400000);
+  else
+    v= xram->read(a);
+  
+  acc->W(v);
+  
   if (dps & 0x20)                      /* auto-switch dptr */
     sfr->write (DPS, dps ^ 1);   /* toggle dual-dptr switch */
 
@@ -855,7 +873,8 @@ int
 cl_uc390::instruction_f0/*inst_movx_Sdptr_a*/ (t_mem/*uchar*/ code)
 {
   uchar pl, ph, px, dps;
-
+  u8_t acon= sfr->get(ACON);
+  
   dps = sfr->get (DPS);
   if (dps & 0x01)
     {
@@ -869,16 +888,20 @@ cl_uc390::instruction_f0/*inst_movx_Sdptr_a*/ (t_mem/*uchar*/ code)
       ph = DPH;
       px = DPX;
     }
-
+  t_addr a;
   if (sfr->get (ACON) & 0x02) /* AM1 set: 24-bit flat? */
-    write_mem (MEM_XRAM_ID,
-               sfr->read (px) * 256*256 + sfr->read (ph) * 256 + sfr->read (pl),
-               acc->read());
+    a= sfr->read (px) * 256*256 + sfr->read (ph) * 256 + sfr->read (pl);
   else
-    write_mem (MEM_XRAM_ID,
-               sfr->read (ph) * 256 + sfr->read (pl),
-               acc->read());
+    a= sfr->read (ph) * 256 + sfr->read (pl);
 
+  if ((a >=  0x400000) &&
+      (acon & 0x02))
+    ixram->write(a-0x400000, acc->read());
+  else
+    xram->write(a, acc->read());
+  //xram->write(a, acc->read());
+  //write_mem (MEM_XRAM_ID, a, acc->read());
+  
   if (dps & 0x20)                      /* auto-switch dptr */
     sfr->write (DPS, dps ^ 1);   /* toggle dual-dptr switch */
 
@@ -1245,50 +1268,93 @@ cl_uc390::print_regs (class cl_console_base *con)
       return;
     }
   start = sfr->get (PSW) & 0x18;
-  iram->dump (start, start + 7, 8, con/*->get_fout()*/);
-  con->dd_printf("     R0 R1 R2 R3 R4 R5 R6 R7\n");
+  //iram->dump (start, start + 7, 8, con/*->get_fout()*/);
+  con->dd_printf("     R0 R1 R2 R3 R4 R5 R6 R7\n    ");
+  for (t_addr i= 0; i < 8; i++)
+    con->dd_cprintf("dump_number", " %02x", iram->get(start + i));
+  con->dd_printf ("\n");
+
   data = iram->get (iram->get (start));
   con->dd_printf ("@R0 %02x %c", data, isprint (data) ? data : '.');
   con->dd_printf ("  ACC= 0x%02x %3d %c  B= 0x%02x",
                   sfr->get (ACC), sfr->get (ACC),
                   isprint (sfr->get (ACC)) ?
                   (sfr->get (ACC)) : '.', sfr->get (B));
+  con->dd_printf("\n");
+  
   eram2xram ();
+    
+  data = iram->get (iram->get (start + 1));
+  con->dd_printf ("@R1 %02x %c", data, isprint (data) ? data : '.');
+  con->dd_printf ("  AP= 0x%02x", sfr->get (AP));
+
+  data= sfr->get (PSW);
+  con->dd_printf ("  PSW= 0x%02x CY=%c AC=%c OV=%c P=%c    ",
+                  data,
+                  (data & bmCY) ? '1' : '0', (data & bmAC) ? '1' : '0',
+                  (data & bmOV) ? '1' : '0', (data & bmP ) ? '1' : '0');
+  con->dd_printf("\n");
+
   dps = sfr->get(DPS);
+  
   data = get_mem (MEM_XRAM_ID,
                   sfr->get (DPX) * 256*256 + sfr->get (DPH) * 256 + sfr->get (DPL));
   con->dd_printf ("  %cDPTR0= 0x%02x%02x%02x @DPTR0= 0x%02x %3d %c",
                   dps & 0x01 ? ' ' : dps & 0x20 ? 't' : '*',
                   sfr->get (DPX), sfr->get (DPH), sfr->get (DPL),
                   data, data, isprint (data) ? data : '.');
+  con->dd_printf("\n");
+
   data = get_mem (MEM_XRAM_ID,
                   sfr->get (DPX1) * 256*256 + sfr->get (DPH1) * 256 + sfr->get (DPL1));
-  con->dd_printf ("  %cDPTR1= 0x%02x%02x%02x @DPTR1= 0x%02x %3d %c\n",
+  con->dd_printf ("  %cDPTR1= 0x%02x%02x%02x @DPTR1= 0x%02x %3d %c",
                   dps & 0x01 ? dps & 0x20 ? 't' : '*' : ' ',
                   sfr->get (DPX1), sfr->get (DPH1), sfr->get (DPL1),
                   data, data, isprint (data) ? data : '.');
-  data = iram->get (iram->get (start + 1));
-  con->dd_printf ("@R1 %02x %c", data, isprint (data) ? data : '.');
-  con->dd_printf ("  AP= 0x%02x", sfr->get (AP));
-  data= sfr->get (PSW);
-  con->dd_printf ("  PSW= 0x%02x CY=%c AC=%c OV=%c P=%c    ",
-                  data,
-                  (data & bmCY) ? '1' : '0', (data & bmAC) ? '1' : '0',
-                  (data & bmOV) ? '1' : '0', (data & bmP ) ? '1' : '0');
+  con->dd_printf("\n");
+  
   /* show stack pointer */
-  if (sfr->get (ACON) & 0x04)
-    {
-      /* SA: 10 bit stack */
+
+  long int s, e;
+  bool sp10= sfr->get (ACON) & 0x04;
+  con->dd_printf("SP%s ", sp10?"10":"");
+  if (sp10)
       start = (sfr->get (R51_ESP) & 3) * 256 + sfr->get (SP);
-      con->dd_printf ("SP10 ", start);
-      ixram->dump (start, start - 7, 8, con);
+  else
+      start = sfr->get (SP);  
+  con->dd_cprintf("dump_address", sp10?"0x%03x":"0x%02x", start);
+  class cl_address_space *spm= sp10?ixram:iram;
+  s= start;
+  e= (start<7)?0:start-7;
+  for (; s>=e; s--)
+    con->dd_cprintf("dump_number", " %02x", spm->get(s));
+  /*
+  if (sp10)
+    {
+      // SA: 10 bit stack 
+      start = (sfr->get (R51_ESP) & 3) * 256 + sfr->get (SP);
+      con->dd_printf ("SP10 ");
+      con->dd_cprintf("dump_address", "0x%03x", start);
+      s= start;
+      e= s - 7;
+      if (s<7)
+	e= 0;
+      ixram->dump ((t_addr)s, (t_addr)e, 8, con);
     }
   else
     {
       start = sfr->get (SP);
-      con->dd_printf ("SP ", start);
-      iram->dump (start, start - 7, 8, con);
+      con->dd_printf ("SP ");
+      con->dd_cprintf("dump_address", "0x%02x", start);
+      long int s, e;
+      s= start;
+      e= s - 7;
+      if (s<7)
+	e= 0;
+      iram->dump ((t_addr)s, (t_addr)e, 8, con);
     }
+  */
+  con->dd_printf("\n");
 
   print_disass (PC, con);
 }

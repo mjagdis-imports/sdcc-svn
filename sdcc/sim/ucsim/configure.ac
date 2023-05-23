@@ -44,7 +44,7 @@ fi,
 #default
 enable_ucsim="no")
 # ignore setting, always use NO
-enable_ucsim="no"
+#enable_ucsim="no"
 
 AC_ARG_ENABLE(dlso,
 [  --enable-dlso           compile dynamically loadable shared libraries],
@@ -170,11 +170,11 @@ fi,
 enable_m68hc11_port="yes")
 
 AC_ARG_ENABLE(m68hc12-port,
-[  --enable-m68hc12-port   compile simulator for m68hc12],
+[  --disable-m68hc12-port  do not compile simulator for m68hc12],
 if test $enable_m68hc12_port  != "no"; then
     enable_m68hc12_port="yes"
 fi,
-enable_m68hc12_port="no")
+enable_m68hc12_port="yes")
 
 AC_ARG_ENABLE(mos6502-port,
 [  --disable-mos6502-port  do not compile simulator for mos6502],
@@ -194,6 +194,18 @@ if test $enable_pblaze_port  != "no"; then
     enable_pblaze_port="yes"
 fi,
 enable_pblaze_port="yes")
+AC_ARG_ENABLE(i8085-port,
+[  --disable-i8085-port    do not compile simulator for i8085],
+if test $enable_i8085_port  != "no"; then
+    enable_i8085_port="yes"
+fi,
+enable_i8085_port="yes")
+AC_ARG_ENABLE(f8-port,
+[  --disable-f8-port       do not compile simulator for f8],
+if test $enable_f8_port  != "no"; then
+    enable_f8_port="yes"
+fi,
+enable_f8_port="yes")
 AC_ARG_ENABLE(serio,
 [  --disable-serio         do not compile serio GUI tool (needs curses)],
 if test $enable_serio != "no"; then
@@ -225,6 +237,8 @@ AC_SUBST(enable_m68hc12_port)
 AC_SUBST(enable_mos6502_port)
 AC_SUBST(enable_rxk_port)
 AC_SUBST(enable_pblaze_port)
+AC_SUBST(enable_i8085_port)
+AC_SUBST(enable_f8_port)
 AC_SUBST(enable_serio)
 
 AC_ARG_ENABLE(statistic,
@@ -278,7 +292,8 @@ AC_CHECK_HEADERS(inttypes.h)
 AC_CHECK_HEADERS(cstdint.h)
 AC_CHECK_HEADERS(stdint.h)
 AC_CHECK_HEADERS(sys/wait.h)
-		     
+AC_CHECK_HEADERS(wincon.h)
+
 AC_CHECK_HEADER(curses.h,
   AC_DEFINE(HAVE_CURSES_H, 1, [XXX])
   curses_h_ok=yes,
@@ -424,6 +439,7 @@ AC_SUBST(CURSES_LIBS)
 AC_FUNC_FORK
 AC_CHECK_FUNCS(_exit dup2 dup3 pipe pipe2 waitpid)
 AC_CHECK_FUNCS(vasprintf)
+AC_CHECK_FUNCS(vsnprintf)
 dnl AC_CHECK_FUNCS(strdup)
 dnl AC_CHECK_FUNCS(getline)
 dnl AC_CHECK_FUNCS(getdelim)
@@ -614,23 +630,18 @@ AC_SUBST(dlso_ok)
 # Checks for typedefs, structures, and compiler characteristics.
 # ===========================================================================
 
-dnl AC_TYPE_SIGNAL
-if test "$cross_compiling" = "no"; then
-AC_CHECK_SIZEOF(char)
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(long long)
+if $CXX -v 2>&1|grep "mingw" >/dev/null 2>&1; then
+    ac_cv_sizeof_char=1
+    ac_cv_sizeof_short=2
+    ac_cv_sizeof_int=4
+    ac_cv_sizeof_long=4
+    ac_cv_sizeof_long_long=4
 else
-    if $CXX -v 2>&1|grep "mingw" >/dev/null 2>&1; then
-        ac_cv_sizeof_char=1
-        ac_cv_sizeof_short=2
-        ac_cv_sizeof_int=4
-        ac_cv_sizeof_long=4
-        ac_cv_sizeof_long_long=4
-    else
-        : # FIXME
-    fi
+    AC_CHECK_SIZEOF(char)
+    AC_CHECK_SIZEOF(short)
+    AC_CHECK_SIZEOF(int)
+    AC_CHECK_SIZEOF(long)
+    AC_CHECK_SIZEOF(long long)
 fi
 
 type_name()
@@ -760,6 +771,8 @@ m68hc12.src/Makefile m68hc12.src/test/Makefile
 mos6502.src/Makefile mos6502.src/test/Makefile
 rxk.src/Makefile     rxk.src/test/Makefile
 pblaze.src/Makefile  pblaze.src/test/Makefile
+i8085.src/Makefile   i8085.src/test/Makefile
+f8.src/Makefile      f8.src/test/Makefile
 p1516.src/Makefile   p1516.src/test/Makefile
 pdk.src/Makefile     pdk.src/test/Makefile
 s51.src/Makefile     s51.src/test/Makefile

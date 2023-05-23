@@ -244,7 +244,7 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
       j++;
     }
 
-  // Edges for aligment conflict
+  // Edges for alignment conflict
   typename SI_t::edge_iterator ei, ei_end;
   for(boost::tie(ei, ei_end) = boost::edges(scon); ei != ei_end; ++ei)
     scon[*ei].alignment_conflict_only = false;
@@ -310,8 +310,8 @@ void color_stack_var_greedily(const var_t v, SI_t &SI, int alignment, int *ssize
   const int size = getSize(sym->type);
  
   // Find a suitable free stack location.
-  boost::icl::interval_set<int>::iterator si;
-  for(si = SI[v].free_stack.begin();; ++si)
+  boost::icl::interval_set<int>::iterator si, si_end;
+  for(si = SI[v].free_stack.begin(), si_end = SI[v].free_stack.end(); si != si_end; ++si)
     {
        start = boost::icl::first(*si);
 
@@ -344,8 +344,11 @@ void color_stack_var_greedily(const var_t v, SI_t &SI, int alignment, int *ssize
        if(boost::icl::last(*si) >= start + size - 1)
          break; // Found one.
     }
-    
-  color_stack_var(v, SI, start, ssize);
+
+  if (si == si_end)
+    werror (E_CANNOT_ALLOC, SI[v].sym->name);
+  else
+    color_stack_var(v, SI, start, ssize);
 }
 
 static

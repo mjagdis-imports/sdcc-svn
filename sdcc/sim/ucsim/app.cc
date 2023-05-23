@@ -73,6 +73,11 @@ cl_app::cl_app(void)
   quiet= false;
   if (app_start_at == 0)
     app_start_at= dnow();
+  srnd(0);
+  set_console_mode();
+  period= 0;
+  cyc= 0;
+  acyc= 0;
 }
 
 cl_app::~cl_app(void)
@@ -80,6 +85,7 @@ cl_app::~cl_app(void)
   remove_simulator();
   delete commander;
   delete in_files;
+  delete ocon;
   delete options;
 }
 
@@ -95,6 +101,8 @@ cl_app::init(int argc, char *argv[])
   class cl_cmdset *cmdset= new cl_cmdset();
   cmdset->init();
   build_cmdset(cmdset);
+  ocon= new cl_console_stdout(this);
+  ocon->init();
   commander= new cl_commander(this, cmdset/*, sim*/);
   commander->init();
   return(0);
@@ -113,10 +121,9 @@ int
 cl_app::run(void)
 {
   int done= 0;
-  double input_last_checked= 0;
+  //double input_last_checked= 0;
   class cl_option *o= options->get_option("go");
   bool g_opt= false;
-  //unsigned int cyc= 0, period= 10000;
   enum run_states rs= rs_config;
 
   cperiod.set(cperiod_value());
@@ -138,7 +145,6 @@ cl_app::run(void)
 		  long l;
 		  if ((l= sim->uc->read_file(fname, NULL)) >= 0)
 		    {
-		      ///*commander->all_printf*/printf("%ld words read from %s\n", l, fname);
 		      sim->uc->reset();
 		    }
 		}
@@ -147,15 +153,12 @@ cl_app::run(void)
 	}
       if (rs == rs_start)
 	{
-	  //if (startup_command.nempty())
-	  //exec(startup_command);
 	  if (o)
 	    o->get_value(&g_opt);
 	  if (sim && g_opt)
 	    sim->start(0, 0);
 	  rs= rs_run;
 	}
-      ccyc.set(ccyc.get()+1);
       if (!sim)
 	{
 	  commander->wait_input();
@@ -163,21 +166,23 @@ cl_app::run(void)
 	}
       else
         {
+	  acyc++;
           if (sim->state & SIM_GO)
             {
-	      if (ccyc.get() - input_last_checked > cperiod.get())
+	      if (++cyc > period)
 		{
-		  input_last_checked= ccyc.get();
+		  cyc= 0;
 		  if (sim->uc)
 		    sim->uc->touch();
 		  if (commander->input_avail())
 		    done= commander->proc_input();
 		}
 	      sim->step();
-	      if (jaj && commander->frozen_console)
+	      if (jaj) ocon->dd_printf("** %u\n",MU(acyc));
+	      if (jaj && commander->frozen_or_actual())
 		{
-		  sim->uc->print_regs(commander->frozen_console),
-		    commander->frozen_console->dd_printf("\n");
+		  sim->uc->print_regs(commander->frozen_or_actual()),
+		    commander->frozen_or_actual()->dd_printf("\n");
 		}
             }
 	  else
@@ -830,12 +835,7 @@ cl_app::eval(chars expr)
 void
 cl_app::exec(chars line)
 {
-  class cl_console_base *c= commander->frozen_console;
-  if (c == NULL)
-    {
-      c= new cl_console_dummy();
-      c->init();
-    }
+  class cl_console_base *c= commander->frozen_or_actual();
   do
     {
       c->un_redirect();
@@ -860,8 +860,38 @@ cl_app::exec(chars line)
       delete cmdline;
     }
   while (!line.empty());
-  if (c != commander->frozen_console)
-    delete c;
+}
+
+void
+cl_app::exec(chars line, class cl_console_base *con)
+{
+  if (!con)
+    return;
+  do
+    {
+      con->un_redirect();
+      class cl_cmdline *cmdline= new cl_cmdline(this, line, con);
+      cmdline->init();
+      class cl_cmd *cm= commander->cmdset->get_cmd(cmdline, false/*c->is_interactive()*/);
+      if (cm)
+	{
+	  cm->work(this, cmdline, con);
+	}
+      else if (cmdline->get_name() != 0)
+	{
+	  char *e= cmdline->cmd;
+	  if (strlen(e) > 0)
+	    {
+	      t_mem l= eval(e);
+	      con->dd_color("result");
+	      con->print_expr_result(l, NULL);
+	      
+	    }
+	}
+      line= cmdline->rest;
+      delete cmdline;
+    }
+  while (!line.empty());
 }
 
 /*
@@ -918,11 +948,19 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
 
   cmdset->add(cmd= new cl_quit_cmd("quit", 0));
   cmd->init();
-
+  cmd->add_name("exit");
+  
   cmdset->add(cmd= new cl_kill_cmd("kill", 0));
   cmd->init();
 
   cmdset->add(cmd= new cl_exec_cmd("exec", 0));
+  cmd->init();
+
+  cmdset->add(cmd= new cl_echo_cmd("echo", 0));
+  cmd->init();
+  cmd->add_name("print");
+
+  cmdset->add(cmd= new cl_dev_cmd("dev", 0));
   cmd->init();
 
   cmdset->add(cmd= new cl_expression_cmd("expression", 0));
@@ -1051,7 +1089,7 @@ cl_app::mk_options(void)
   options->new_option(o= new cl_float_option(this, "xtal",
 					     "Frequency of XTAL in Hz"));
   o->init();
-  o->set_value(11059200.0);
+  o->set_value(0.0);
 
   options->new_option(o= new cl_string_option(this, "cpu_type",
 					      "Type of controller (-t)"));

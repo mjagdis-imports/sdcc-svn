@@ -407,8 +407,8 @@ if test "$ac_cv_c_compiler_gnu" = "yes"; then
 
   WALL_FLAG="-Wall -Wno-parentheses"
   C99_FLAG="--std=c99"
-  # We use CXX instead of CC here, since some of the C++ source files require a C++ compiler even during dependency generation.
-  MAKEDEP="$CXX $sdcc_cv_MM"
+  MAKEDEP_CXX="$CXX $sdcc_cv_MM"
+  MAKEDEP="$CC $sdcc_cv_MM"
 else
   sdcc_IS_SUNPRO
   if test "$sdcc_cv_c_compiler_sunpro" = "yes"; then
@@ -417,10 +417,12 @@ else
     CXXFLAGS="-xO2 ${CXXFLAGS}"
     WALL_FLAG=
     MAKEDEP="$CC ${C99_FLAG} -xM1"
+    MAKEDEP_CXX="$CXX -xM1"
   fi
 fi
 
 AC_SUBST(MAKEDEP)
+AC_SUBST(MAKEDEP_CXX)
 AC_SUBST(WALL_FLAG)
 AC_SUBST(C99_FLAG)
 
@@ -777,6 +779,21 @@ AC_DEFUN([AC_DO_PORT_ENABLER], [
   fi
 ])
 
+# Revision number
+# ===============
+
+dnl Check for Git short SHA to tag version
+dnl The release package should also keep it on the config.h
+GIT_REVISION=""
+SVN_REVISION="unknown"
+if test -d "${srcdir}/.git"; then
+  GIT_REVISION=$( git log --pretty=format:'%h' -n 1u )
+  echo "Found Git repo... $GIT_REVISION"
+  SVN_REVISION=$( git log -1 | tail -n1 | cut -f2 -d @ | cut -f1 -d" " )
+fi
+AC_SUBST(GIT_REVISION)
+AC_SUBST(SVN_REVISION)
+
 # Now handle the port selection
 # ===========================================================================
 rm -f ports.all ports.build
@@ -974,17 +991,25 @@ test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/Makefile])
 test $OPT_DISABLE_DEVICE_LIB = 0 && test $OPT_DISABLE_NON_FREE = 0 && AC_CONFIG_FILES([device/non-free/lib/Makefile])
 
 AC_CONFIG_FILES([main.mk:main_in.mk
+bin/Makefile
 src/Makefile
 device/include/Makefile
 sdas/linksrc/Makefile
 support/makebin/Makefile
 support/regression/Makefile
+support/regression/cases/Makefile
 support/valdiag/Makefile
 support/scripts/Makefile
 support/regression/ports/host/spec.mk:support/regression/ports/host/spec.mk.in
 Makefile
 Makefile.common:Makefile.common.in
 ])
+AC_CONFIG_FILES([bin/sdcc], [chmod +x bin/sdcc])
+AC_CONFIG_FILES([bin/sdcpp], [chmod +x bin/sdcpp])
+AC_CONFIG_FILES([bin/sdar], [chmod +x bin/sdar])
+AC_CONFIG_FILES([bin/sdnm], [chmod +x bin/sdnm])
+AC_CONFIG_FILES([bin/sdranlib], [chmod +x bin/sdranlib])
+AC_CONFIG_FILES([bin/sdobjcopy], [chmod +x bin/sdobjcopy])
 if test $OPT_DISABLE_NON_FREE = 0; then
   AC_CONFIG_FILES([device/non-free/include/Makefile])
 fi
@@ -1030,6 +1055,7 @@ sdcc ${VERSION} is now configured for
   CPPFLAGS:             ${CPPFLAGS}
   LDFLAGS:              ${LDFLAGS}
   MAKEDEP:              ${MAKEDEP}
+  MAKEDEP_CXX:          ${MAKEDEP_CXX}
 
   ENABLED Ports:
     ds390               ${enable_ds390_port}

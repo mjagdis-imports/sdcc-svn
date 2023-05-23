@@ -78,7 +78,7 @@ DEFSETFUNC (isFreeSTM8)
   /* if it is free && and the itmp assigned to
      this does not have any overlapping live ranges
      with the one currently being assigned and
-     the size can be accomodated  */
+     the size can be accommodated  */
   if (sym->isFree && noOverLap (sym->usl.itmpStack, fsym) && getSize (sym->type) >= getSize (fsym->type))
     {
       *sloc = sym;
@@ -550,7 +550,7 @@ packRegisters (eBBlock * ebp)
       /* if straight assignment then carry remat flag if this is the
          only definition */
       if (ic->op == '=' && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the paramter is not accounted for in DEFS */
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the parameter is not accounted for in DEFS */
         !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
@@ -561,7 +561,7 @@ packRegisters (eBBlock * ebp)
          cast is remat, then we can remat this cast as well */
       if (ic->op == CAST &&
         IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the paramter is not accounted for in DEFS */
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the parameter is not accounted for in DEFS */
         !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           sym_link *to_type = operandType (IC_LEFT (ic));
@@ -631,16 +631,13 @@ serialRegMark (eBBlock ** ebbs, int count)
               stm8_call_stack_size = ic->parmBytes + 5 + 2 * (getSize (ftype->next) > 4);
             }
 
-          if (ic->op == IPOP)
-            wassert (0);
-
           /* if result is present && is a true symbol */
           if (IC_RESULT (ic) && ic->op != IFX && IS_TRUE_SYMOP (IC_RESULT (ic)))
             OP_SYMBOL (IC_RESULT (ic))->allocreq++;
 
           /* some don't need registers, since there is no result. */
           if (SKIP_IC2 (ic) ||
-              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == IPOP || ic->op == SET_VALUE_AT_ADDRESS)
+              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == SET_VALUE_AT_ADDRESS)
             continue;
 
           /* now we need to allocate registers only for the result */
@@ -656,7 +653,7 @@ serialRegMark (eBBlock ** ebbs, int count)
                   sym->isspilt = FALSE;
                 }
 
-              /* Make sure any spill location is definately allocated */
+              /* Make sure any spill location is definitely allocated */
               if (sym->isspilt && !sym->remat && sym->usl.spillLoc && !sym->usl.spillLoc->allocreq)
                 sym->usl.spillLoc->allocreq++;
 
@@ -676,7 +673,7 @@ serialRegMark (eBBlock ** ebbs, int count)
                   sym->isspilt = false;
                 }
 
-              if (sym->nRegs > 4 && ic->op == CALL) // To be allocated to stack due to the way long long return values are handled via a hidden pointer.
+              if (sym->nRegs > 4 && (ic->op == CALL || ic->op == PCALL)) // To be allocated to stack due to the way long long return values are handled via a hidden pointer.
                 {
                   sym->for_newralloc = 0;
                   stm8SpillThis (sym, TRUE);

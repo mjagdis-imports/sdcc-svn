@@ -79,7 +79,7 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
       if (!sim->uc->inst_at(start))
 	con->dd_printf("Warning: maybe not instruction at 0x%06x\n",
 		       AI(start));
-      sim->uc->PC= start;
+      sim->uc->set_PC(start);
       if (params[1])
 	{
 	  if (start == end)
@@ -100,10 +100,6 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
 	}
     }
   con->dd_printf("Simulation started, PC=0x%06x\n", AI(sim->uc->PC));
-  /*
-  if (sim->uc->fbrk_at(sim->uc->PC))
-    sim->uc->do_inst(1);
-  */
   sim->start(con, 0);
   return(false);
 }
@@ -111,7 +107,7 @@ COMMAND_DO_WORK_SIM(cl_run_cmd)
 CMDHELP(cl_run_cmd,
 	"run [start [stop]]",
 	"Go",
-	"long help of run")
+	"")
 
 /*
  * Command: stop
@@ -131,7 +127,7 @@ COMMAND_DO_WORK_SIM(cl_stop_cmd)
 CMDHELP(cl_stop_cmd,
 	"stop",
 	"Stop",
-	"long help of stop")
+	"")
 
 /*
  * Command: step
@@ -237,7 +233,7 @@ COMMAND_DO_WORK_SIM(cl_step_cmd)
 CMDHELP(cl_step_cmd,
 	"step [number[unit]]",
 	"Step",
-	"long help of step")
+	"")
 
 /*
  * Command: next
@@ -282,22 +278,13 @@ COMMAND_DO_WORK_SIM(cl_next_cmd)
 			      next, brkDYNAMIC, 1);
 
 	  b->init();
-//	  sim->uc->fbrk->add_bp(b);
-
 	  sim->uc->fbrk->add(b);
 	  b->activate();
 	}
-      /*if (sim->uc->fbrk_at(sim->uc->PC))
-	sim->uc->do_inst(1);*/
       sim->start(con, 0);
-      //sim->uc->do_inst(-1);
     }
   else {
-    //sim->uc->do_inst(1);
     sim->start(con, 1);
-    //sim->step();
-    //sim->stop(resSTEP);
-    //sim->uc->print_regs(con);
   }
   return(false);
 }
@@ -305,7 +292,7 @@ COMMAND_DO_WORK_SIM(cl_next_cmd)
 CMDHELP(cl_next_cmd,
 	"next",
 	"Next",
-	"long help of next")
+	"")
 
 /*
  * Command: help
@@ -376,7 +363,7 @@ COMMAND_DO_WORK_APP(cl_help_cmd)
 CMDHELP(cl_help_cmd,
 	"help [command [subcommand]]",
 	"List of known commands, or description of specified command",
-	"Long help of help command")
+	"")
 
 bool
 cl_help_cmd::do_set(class cl_cmdline *cmdline, int pari,
@@ -433,7 +420,7 @@ COMMAND_DO_WORK(cl_quit_cmd)
 CMDHELP(cl_quit_cmd,
 	"quit",
 	"Quit",
-	"long help of quit")
+	"")
 
 /*
  * Command: kill
@@ -454,7 +441,7 @@ COMMAND_DO_WORK_APP(cl_kill_cmd)
 CMDHELP(cl_kill_cmd,
 	"kill",
 	"Shutdown simulator",
-	"long help of kill")
+	"")
 
 /*
  * EXEC file
@@ -483,7 +470,7 @@ COMMAND_DO_WORK_APP(cl_exec_cmd)
 CMDHELP(cl_exec_cmd,
 	"exec \"file\"",
 	"Execute commands from file",
-	"long help of exec")
+	"")
 
 /*
  * expression expression
@@ -542,9 +529,69 @@ CMDHELP(cl_expression_cmd,
 	" /B C style boolean value with 1|0: 1\n"
 	" /L logical boolean value with T|F: T\n"
 	" /c ascii character in C style escape: \'\\5137\'\n"
+	" /n print nothing\n"
 	"If more format characters are specified then result is printed in all\n"
 	"requested format.\n"
 	)
+
+
+/*
+ * ECHO command
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_APP(cl_echo_cmd)
+{
+  class cl_cmd_arg *parm;
+  int i;
+  bool printed= false;
+  con->dd_color("answer");
+  for (i= 0; true; i++)
+    {
+      parm= cmdline->param(i);
+      if (!parm)
+	break;
+      if (!parm->as_string())
+	continue;
+      char *s= parm->value.string.string;
+      if (i)
+	con->dd_printf(" ");
+      con->dd_printf("%s", s);
+      printed= true;
+    }
+  if (printed)
+    con->dd_printf("\n");
+  return false;
+}
+
+CMDHELP(cl_echo_cmd,
+	"echo params...",
+	"Print parameters",
+	"");
+
+
+COMMAND_DO_WORK_APP(cl_dev_cmd)
+{
+  class cl_cmd_arg *parm;
+  int i;
+  con->dd_color("answer");
+  for (i= 0; true; i++)
+    {
+      parm= cmdline->param(i);
+      if (!parm)
+	break;
+      if (!parm->as_string())
+	continue;
+      char *s= parm->value.string.string;
+      class cl_console_sout *c= new cl_console_sout(app);
+      app->exec(chars(s), c);
+      printf("got: \"%s\"\n", c->sout.c_str());
+      delete c;
+    }
+  return false;
+}
+
+CMDHELP(cl_dev_cmd, "", "", "");
 
 
 /*
@@ -565,7 +612,7 @@ COMMAND_DO_WORK_UC(cl_hist_cmd)
 CMDHELP(cl_hist_cmd,
 	"history",
 	"Execution history",
-	"long help of history")
+	"")
 
 
 /*
@@ -589,7 +636,7 @@ COMMAND_DO_WORK_UC(cl_hist_info_cmd)
 CMDHELP(cl_hist_info_cmd,
 	"history info",
 	"Information about execution history",
-	"long help of history info")
+	"")
 
 
 /*
@@ -612,7 +659,7 @@ COMMAND_DO_WORK_UC(cl_hist_clear_cmd)
 CMDHELP(cl_hist_clear_cmd,
 	"history clear",
 	"Clear execution history",
-	"long help of history clear")
+	"")
 
 
 /*
@@ -640,7 +687,7 @@ COMMAND_DO_WORK_UC(cl_hist_list_cmd)
 CMDHELP(cl_hist_list_cmd,
 	"history list [nr]",
 	"List last `nr' elements of execution history",
-	"long help of history list")
+	"")
 
 
 /* End of cmd.src/cmd_exec.cc */

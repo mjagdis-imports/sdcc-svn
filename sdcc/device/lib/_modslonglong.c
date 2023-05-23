@@ -26,14 +26,18 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#pragma std_c99
-
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __SDCC_mcs51
+#define __SDCC_NONBANKED __nonbanked
+#else
+#define __SDCC_NONBANKED
+#endif
+
 #ifdef __SDCC_LONGLONG
 long long 
-_modslonglong (long long numerator, long long denominator)
+_modslonglong (long long numerator, long long denominator) __SDCC_NONBANKED
 {
   bool numeratorneg = (numerator < 0);
   bool denominatorneg = (denominator < 0);

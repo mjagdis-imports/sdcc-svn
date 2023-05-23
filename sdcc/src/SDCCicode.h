@@ -150,6 +150,7 @@ typedef struct iCode
   bool localEscapeAlive:1;      /* At this iCode, a local variable, a pointer to which has escaped (e.g. by having been stored in a global variable, cast to integer, passed to function) might be alive. */
   bool parmEscapeAlive:1;       /* At this iCode, a stack parameter, a pointer to which has escaped (e.g. by having been stored in a global variable, cast to integer, passed to function) might be alive. */
   unsigned inlined:1;           /* from an inlined function */
+  unsigned mergedElsewhere:1;   /* merged into another iCode during optimization */
 
   struct iCode *next;           /* next in chain */
   struct iCode *prev;           /* previous in chain */
@@ -213,7 +214,7 @@ typedef struct icodeFuncTable
 {
   int icode;
   char *printName;
-  void (*iCodePrint) (struct dbuf_s *, iCode *, char *);
+  void (*iCodePrint) (struct dbuf_s *, const iCode *, char *);
   iCode *(*iCodeCopy) (iCode *);
 }
 iCodeTable;
@@ -230,6 +231,7 @@ iCodeTable;
 
 #define SKIP_IC(x)   (x->op == PCALL        ||    \
                       x->op == IPUSH        ||    \
+                      x->op == IPUSH_VALUE_AT_ADDRESS || \
                       x->op == IPOP         ||    \
                       x->op == JUMPTABLE    ||    \
                       x->op == RECEIVE      ||    \
@@ -336,13 +338,13 @@ symbol *newiTempLoopHeaderLabel (bool);
 iCode *newiCode (int, operand *, operand *);
 sym_link *operandType (const operand *);
 unsigned int operandSize (operand *);
-operand *operandFromValue (value *);
-operand *operandFromSymbol (symbol *);
+operand *operandFromValue (value *, bool convert_sym_to_ptr);
+operand *operandFromSymbol (symbol *, bool convert_sym_to_ptr);
 operand *operandFromLink (sym_link *);
 sym_link *aggrToPtr (sym_link *, bool);
 int aggrToPtrDclType (sym_link *, bool);
 void setOClass (sym_link * ptr, sym_link * spec);
-int piCode (void *, FILE *);
+int piCode (const iCode *, FILE *);
 int dbuf_printOperand (operand *, struct dbuf_s *);
 int printOperand (operand *, FILE *);
 void setOperandType (operand *, sym_link *);

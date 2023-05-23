@@ -183,7 +183,7 @@ pic16emitRegularMap (memmap * map, bool addPublics, bool arFlag)
                                         sym->implicit = 1;
 #endif
 
-                                reg = pic16_allocDirReg( operandFromSymbol( sym ));
+                                reg = pic16_allocDirReg (operandFromSymbol (sym, false));
 
                                 if(reg) {
                                   for(ssym=setFirstItem(sectSyms); ssym; ssym=setNextItem(sectSyms)) {
@@ -238,7 +238,7 @@ pic16emitRegularMap (memmap * map, bool addPublics, bool arFlag)
                                                 sym->implicit = 1;              // mark as implicit
 #endif
                                         if(!sym->ival) {
-                                                reg = pic16_allocDirReg( operandFromSymbol(sym) );
+                                                reg = pic16_allocDirReg (operandFromSymbol (sym, false));
                                                 if(reg) {
                                                         if(checkAddReg(&pic16_fix_udata, reg)) {
                                                                 /* and add to globals list if not exist */
@@ -266,7 +266,7 @@ pic16emitRegularMap (memmap * map, bool addPublics, bool arFlag)
                                         if(IS_AGGREGATE(sym->type)) {
                                                 reg=pic16_allocRegByName(sym->rname, getSize( sym->type ), NULL);
                                         } else {
-                                                reg = pic16_allocDirReg( operandFromSymbol( sym ) );
+                                                reg = pic16_allocDirReg (operandFromSymbol (sym, false));
                                         }
 
                                         {
@@ -397,7 +397,7 @@ pic16_initPointer (initList * ilist, sym_link *toType)
       (expr->opval.op == '+' || expr->opval.op == '-') &&
       IS_AST_SYM_VALUE (expr->left) &&
       (IS_ARRAY(expr->left->ftype) || IS_PTR(expr->left->ftype)) &&
-      compareType(toType, expr->left->ftype) &&
+      compareType(toType, expr->left->ftype, false) &&
       IS_AST_LIT_VALUE (expr->right)) {
     return valForCastAggr (expr->left, expr->left->ftype,
                            expr->right,
@@ -407,7 +407,7 @@ pic16_initPointer (initList * ilist, sym_link *toType)
   /* (char *)&a */
   if (IS_AST_OP(expr) && expr->opval.op==CAST &&
       IS_AST_OP(expr->right) && expr->right->opval.op=='&') {
-    if (compareType(toType, expr->left->ftype)!=1) {
+    if (compareType(toType, expr->left->ftype, false)!=1) {
       werror (W_INIT_WRONG);
       printFromToType(expr->left->ftype, toType);
     }
@@ -662,7 +662,7 @@ pic16_printIvalChar (symbol *sym, sym_link * type, initList * ilist, const char 
         DCL_ELEM (type) = ilen;
 #endif
 
-      /* len is 0 if declartion equals initializer,
+      /* len is 0 if declaration equals initializer,
        * >0 if declaration greater than initializer
        * <0 if declaration less than initializer
        * Strategy: if >0 emit 0x00 for the rest of the length,
@@ -1037,7 +1037,7 @@ pic16_printIvalFuncPtr (sym_link * type, initList * ilist, char ptype, void *p)
   }
 
   if (IS_LITERAL(val->etype)) {
-    if (0 && compareType(type, val->etype) == 0) {
+    if (0 && compareType(type, val->etype, false) == 0) {
       werrorfl (ilist->filename, ilist->lineno, E_INCOMPAT_TYPES);
       printFromToType (val->type, type);
     }
@@ -1046,7 +1046,7 @@ pic16_printIvalFuncPtr (sym_link * type, initList * ilist, char ptype, void *p)
   }
 
   /* check the types   */
-  if ((dLvl = compareType (val->type, type->next)) <= 0)
+  if ((dLvl = compareType (val->type, type->next, false)) <= 0)
     {
       pic16_emitDB(0x00, ptype, p);
       return;
@@ -1110,7 +1110,7 @@ pic16_printIvalPtr (symbol * sym, sym_link * type, initList * ilist, char ptype,
       return;
 
   /* check the type      */
-  if (compareType (type, val->type) == 0) {
+  if (compareType (type, val->type, false) == 0) {
     werrorfl (ilist->filename, ilist->lineno, W_INIT_WRONG);
     printFromToType (val->type, type);
   }
@@ -1659,7 +1659,7 @@ pic16emitOverlay (struct dbuf_s *aBuf)
              declarations into one chunk and will not overlay
              sad but true */
           dbuf_printf (aBuf, ";\t.area _DUMMY\n");
-          /* output the area informtion */
+          /* output the area information */
           dbuf_printf (aBuf, ";\t.area\t%s\n", port->mem.overlay_name); /* MOF */
         }
 

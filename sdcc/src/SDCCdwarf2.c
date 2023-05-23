@@ -170,7 +170,7 @@ dwWriteHalf (const char * label, int offset, char * comment)
 static void
 dwWriteWord (const char * label, int offset, char * comment)
 {
-  /* FIXME: need to implement !dd pseudo-op in the assember. In the */
+  /* FIXME: need to implement !dd pseudo-op in the assembler. In the */
   /* meantime, we use dw with zero padding and hope the values fit  */
   /* in only 16 bits.                                               */
 #if 0
@@ -1742,8 +1742,15 @@ dwWriteLineNumber (dwline * lp)
       /* encode this the long way.                                */
       if (!usedSpecial)
         {
+#if 0 // Fails to assemble for initializations of local static variables. TODO: Use this, when possible, as DW_LNS_fixed_advance_pc is much shorter than DW_LNE_set_address below.
           dwWriteByte (NULL, DW_LNS_fixed_advance_pc, NULL);
           dwWriteHalfDelta (lp->label, curLabel, lp->offset-curOffset);
+#else // Todo: This was implemented to make initializations of local static variables compile, but stepping through those initializations in gdb reports "Cannot find bounds of current function".
+          dwWriteByte (NULL, 0, NULL);
+          dwWriteULEB128 (NULL, 1+port->debugger.dwarf.addressSize, NULL);
+          dwWriteByte (NULL, DW_LNE_set_address, NULL);
+          dwWriteAddress (lp->label, lp->offset, NULL);
+#endif
           curLabel = lp->label;
           curOffset = lp->offset;
         

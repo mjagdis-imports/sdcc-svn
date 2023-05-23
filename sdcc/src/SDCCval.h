@@ -63,6 +63,7 @@ typedef struct initList
   int type;
   int lineno;
   char *filename;
+  bool isempty;                         // C2X empty initializer
   struct designation *designation;
   union
   {
@@ -117,6 +118,7 @@ value *constIntVal (const char *);
 value *constCharacterVal (unsigned long v, char type);
 value *constCharVal (unsigned char v);
 value *constBoolVal (bool v, bool reduceType);
+value *constNullptrVal (void);
 value *reverseVal (value *);
 value *reverseValWithType (value *);
 value *copyValue (value *);

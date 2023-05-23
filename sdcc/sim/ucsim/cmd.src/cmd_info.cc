@@ -52,30 +52,59 @@ COMMAND_DO_WORK_UC(cl_info_bp_cmd)
 {
   int i;
   bool extra;
-
-  con->dd_printf("Num Type       Disp Hit   Cnt   Address  Cond  What\n");
+  chars sa;
+  class cl_memory_cell *c;
+  class cl_var *v;
+  
+  con->dd_printf("Num Type       Disp Hit   Cnt   Address  Cond\n");
   for (i= 0; i < uc->fbrk->count; i++)
     {
       class cl_brk *fb= (class cl_brk *)(uc->fbrk->at(i));
-      con->dd_printf("%-3d %-10s %s %-5d %-5d 0x%06x %-5s ", fb->nr,
+      class cl_memory *mem= fb->get_mem();
+      if (mem)
+	  sa.format("0x%06x", fb->addr);
+      else
+	{
+	  c= fb->get_cell();
+	  v= uc->vars->by_cell(c);
+	  if (v)
+	    sa= v->get_name();
+	  else
+	    sa= "cell";	  
+	  sa.substr(0,8);
+	}
+      con->dd_printf("%-3d %-10s %s %-5d %-5d %8s %-5s ", fb->nr,
                      "fetch", (fb->perm==brkFIX)?"keep":"del ",
-                     fb->hit, fb->cnt, AU(fb->addr),
+                     fb->hit, fb->cnt, sa.c_str(),
 		     fb->condition()?"true":"false");
-      uc->print_disass(fb->addr, con);
+      //uc->print_disass(fb->addr, con);
       extra= false;
       if (!(fb->cond.empty()))
 	con->dd_printf("     cond=\"%s\"", fb->cond.c_str()), extra= true;
       if (!(fb->commands.empty()))
 	con->dd_printf("     cmd=\"%s\"", fb->commands.c_str()), extra= true;
-      if (extra) con->dd_printf("\n");
+      /*if (extra)*/ con->dd_printf("\n");
     }
   for (i= 0; i < uc->ebrk->count; i++)
     {
       class cl_ev_brk *eb= (class cl_ev_brk *)(uc->ebrk->at(i));
-      con->dd_printf("%-3d %-10s %s %-5d %-5d 0x%06x %s\n", eb->nr,
+      class cl_memory *mem= eb->get_mem();
+      if (mem)
+	sa.format("0x%06x", eb->addr);
+      else
+	{
+	  c= eb->get_cell();
+	  v= uc->vars->by_cell(c);
+	  if (v)
+	    sa= v->get_name();
+	  else
+	    sa= "cell";
+	  sa.substr(0,8);
+	}
+      con->dd_printf("%-3d %-10s %s %-5d %-5d %8s %s\n", eb->nr,
 		     "event", (eb->perm==brkFIX)?"keep":"del ",
 		     eb->hit, eb->cnt,
-		     AU(eb->addr), eb->id);
+		     sa.c_str(), eb->id);
       extra= false;
       if (!(eb->cond.empty()))
 	con->dd_printf("     cond=\"%s\"", eb->cond.c_str()), extra= true;
@@ -89,7 +118,7 @@ COMMAND_DO_WORK_UC(cl_info_bp_cmd)
 CMDHELP(cl_info_bp_cmd,
 	"info breakpoints",
 	"Status of user-settable breakpoints",
-	"long help of info breakpoints")
+	"")
 
 /*
  * INFO REGISTERS command
@@ -104,7 +133,7 @@ COMMAND_DO_WORK_UC(cl_info_reg_cmd)
 CMDHELP(cl_info_reg_cmd,
 	"info registers",
 	"List of integer registers and their contents",
-	"long help of info registers")
+	"")
 
 /*
  * INFO HW command
@@ -145,7 +174,7 @@ COMMAND_DO_WORK_UC(cl_info_hw_cmd)
 CMDHELP(cl_info_hw_cmd,
 	"info hardware category",
 	"Status of hardware elements of the CPU",
-	"long help of info hardware")
+	"")
 
 /*
  * INFO STACK command
@@ -168,7 +197,7 @@ COMMAND_DO_WORK_UC(cl_info_stack_cmd)
 /*CMDHELP(cl_info_stack_cmd,
 	"info stack",
 	"Status of stack of the CPU",
-	"long help of info stack")*/
+	"")*/
 
 /*
  * INFO MEMORY command
@@ -225,7 +254,7 @@ COMMAND_DO_WORK_UC(cl_info_memory_cmd)
 CMDHELP(cl_info_memory_cmd,
 	"info memory",
 	"Information about memory system",
-	"long help of info memory")
+	"")
 
 /*
  * INFO VARIABLES command
@@ -236,30 +265,56 @@ COMMAND_DO_WORK_UC(cl_info_var_cmd)
 {
   class cl_cvar *v;
   int i;
-  class cl_cmd_arg *params[1]= { cmdline->param(0) };
-  char *s= NULL;
-  
-  if (cmdline->syntax_match(uc, STRING))
+  //class cl_cmd_arg *params[2]= { cmdline->param(0), cmdline->param(1) };
+  chars src;
+  chars filter_by;
+
+  i= 0;
+  class cl_cmd_arg *a= cmdline->param(i);
+  while (a != NULL)
     {
-      s= params[0]->get_svalue();
-      if (!s ||
-	  !*s)
-	s= NULL;
+      char *ps= a->get_svalue();
+      if (ps && *ps)
+	{
+	  if (ps[0] == '/')
+	    filter_by= &ps[1];
+	  else
+	    src= ps;
+	}	
+      i++;
+      a= cmdline->param(i);
     }
+
   for (i= 0; i < uc->vars->by_name.count; i++)
     {
       v= uc->vars->by_name.at(i);
-      if ((s == NULL && *(v->get_name()) != '.') ||
-          (s != NULL && strstr(v->get_name(), s) != NULL))
-      v->print_info(con);
+      if ((src.empty() && *(v->get_name()) != '.') ||
+          (src.nempty() && strstr(v->get_name(), src.c_str()) != NULL))
+	{
+	  if (filter_by.nempty())
+	    {
+	      if (strchr(filter_by.c_str(), (char)(v->defined_by)) == NULL)
+		continue;
+	    }
+	  v->print_info(con);
+	}
     }
   return 0;
 }
 
 CMDHELP(cl_info_var_cmd,
-	"info variables [filter]",
+	"info variables [[/filter] search]",
 	"Information about variables",
-	"long help of info variables")
+	"This command prints info about all or selected variables.\n"
+	"To select some variables, \"search\" string can be used,\n"
+	"in this case those variables will be printed which name\n"
+	"contains the specified search string.\n"
+	"Filter option can be used to select variables according to\n"
+	"place where the variable is defined.\n"
+	" /p list predefined variables,\n"
+	" /u list user defined variables (by var command),\n"
+	" /d list variables read from debug info (cdb) file.\n" 
+	)
 
 
 /* End of cmd.src/cmd_info.cc */

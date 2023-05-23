@@ -50,8 +50,11 @@ public:
 
   //virtual t_addr get_mem_size(enum mem_class type);
   virtual void mk_hw_elements(void);
+  virtual void make_cpu_hw(void);
   virtual void make_memories(void);
 
+  virtual double def_xtal(void) { return 8000000; }
+  
   virtual struct dis_entry *dis_tbl(void);
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
@@ -96,4 +99,4 @@ public:
 
 #endif
 
-/* End of hc08.src/m68hc08cl.h */
+/* End of m68hc08.src/m68hc08cl.h */

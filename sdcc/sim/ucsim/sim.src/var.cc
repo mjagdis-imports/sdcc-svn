@@ -51,6 +51,7 @@ cl_cvar::cl_cvar(chars iname, class cl_memory_cell *icell, chars adesc, int ibit
   desc= adesc;
   
   set_name(iname);
+  defined_by= VBY_PRE;
   
   cell= icell;
 }
@@ -89,7 +90,7 @@ void
 cl_cvar::print_info(cl_console_base *con) const
 {
   con->dd_printf("%s ", get_name("?"));
-  t_mem m= cell->get();
+  t_mem m= cell->/*get*/read();
   if (bitnr_high >= 0)
     {
       if (bitnr_high != bitnr_low)
@@ -148,7 +149,7 @@ cl_var::print_info(cl_console_base *con) const
   con->dd_printf("[");
   con->dd_printf(mem->addr_format, addr);
   con->dd_printf("]");
-  t_mem m= mem->get(addr);
+  t_mem m= mem->read(addr);
   if (bitnr_high >= 0)
     {
       if (bitnr_high != bitnr_low)
@@ -480,6 +481,20 @@ cl_var_list::add(chars prefix, class cl_memory *mem, t_addr base, const struct v
           add(var);
         }
     }
+}
+
+class cl_var *
+cl_var_list::by_cell(class cl_memory_cell *c)
+{
+  t_index i;
+  for (i= 0; i<by_name.count; i++)
+    {
+      class cl_var *v= (class cl_var *)(by_name.at(i));
+      class cl_memory_cell *cell= v->get_cell();
+      if (cell == c)
+	return v;
+    }
+  return NULL;
 }
 
 t_mem

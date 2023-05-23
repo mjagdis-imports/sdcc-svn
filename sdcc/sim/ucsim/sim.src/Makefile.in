@@ -39,7 +39,7 @@ infodir         = @infodir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
-OBJECTS         = stack.o mem.o sim.o itsrc.o brk.o arg.o \
+OBJECTS         = stack.o mem.o sim.o itsrc.o brk.o arg.o itab.o \
 		  guiobj.o uc.o hw.o simif.o serial_hw.o port_hw.o dreg.o \
 		  iwrap.o var.o vcd.o
 
@@ -54,7 +54,7 @@ test_mem_speed: $(top_builddir)/lib*.a test_mem_speed.o
 sim.src: all
 
 
-# Compiling and installing everything and runing test
+# Compiling and installing everything and running test
 # ---------------------------------------------------
 install: all installdirs
 

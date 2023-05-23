@@ -228,7 +228,10 @@ L80:
 	
 _astart:
 	ld    sp, #0x0FFA0	; stack
-	
+
+    call ___sdcc_external_startup
+	push hl
+
 	;halt
 	;swi
 	
@@ -276,11 +279,15 @@ _astart:
 	
 	call  _wd_reset_asm
 	
-        ;; Initialise global variables
+	;; Initialise global variables. Skip if __sdcc_external_startup returned
+	;; non-zero value. Note: calling convention version 0 only.
 
 	;call _boot3
 	
-        call gsinit
+	pop hl
+	ld a, l
+	or a, a
+	call Z, gsinit
 
 	;call _boot4
 	
@@ -474,20 +481,19 @@ _wd_reset_asm:
 gsinit::
 
 	; Default-initialized global variables.
-        ld      bc, #l__DATA
-        ld      a, b
-        or      a, c
-        jr      Z, zeroed_data
-        ld      hl, #s__DATA
-        ld      (hl), #0x00
-        dec     bc
-        ld      a, b
-        or      a, c
-        jr      Z, zeroed_data
-        ld      e, l
-        ld      d, h
-        inc     de
-        ldir
+	ld	bc, #l__DATA
+	ld	a, b
+	or	a, c
+	jr	Z, zeroed_data
+	ld	hl, #s__DATA
+	ld	(hl), #0x00
+	dec	bc
+	ld	a, b
+	or	a, c
+	jr	Z, zeroed_data
+	ld	de, hl
+	inc	de
+	ldir
 zeroed_data:
 
 	; Explicitly initialized global variables.

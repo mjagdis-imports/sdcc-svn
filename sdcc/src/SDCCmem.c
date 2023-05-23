@@ -432,6 +432,11 @@ defaultOClass (symbol *sym)
         }
       else
         {
+          if (!sym->ival && !SPEC_ABSA (sym->etype) && !(IS_EXTERN (sym->etype) || IS_FUNC (sym->type)))
+            {
+              sym->ival = newiList(INIT_DEEP, revinit(newiList(INIT_NODE, newAst_VALUE(constIntVal("0"))))); // Default initialization to 0.
+              sym->ival->lineno = sym->lineDef;
+            }
           SPEC_OCLS (sym->etype) = statsg;
         }
       break;
@@ -602,6 +607,8 @@ allocGlobal (symbol * sym)
         }
       else
         {
+          if (SPEC_SCLS (sym->etype) != S_XDATA)
+            SPEC_SCLS_IMPLICITINTRINSIC (sym->etype) = true;
           SPEC_SCLS (sym->etype) = S_XDATA;
         }
     }
@@ -655,7 +662,7 @@ allocParms (value *val, bool smallc)
       /* if automatic variables r 2b stacked */
       if (options.stackAuto || IFFUNC_ISREENT (currFunc->type))
         {
-          int paramsize = getSize (lval->type) + (getSize (lval->type) == 1 && (smallc || TARGET_PDK_LIKE));
+          int paramsize = getSize (lval->type) + (getSize (lval->type) == 1 && smallc) + (getSize (lval->type) % 2 && TARGET_PDK_LIKE);
 
           if (lval->sym)
             lval->sym->onStack = 1;
@@ -717,7 +724,8 @@ allocParms (value *val, bool smallc)
           /* otherwise depending on the memory model */
           SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) =
               port->mem.default_local_map;
-          if (options.model == MODEL_SMALL)
+          if (options.model == MODEL_SMALL ||
+            options.model == NO_MODEL && !TARGET_PIC_LIKE /* The test for NO_MODEL was introduced to fix an issue for pdk (pdk has no xdata) maybe it is the right thing to do for pic, too. But I don't know about pic*/)
             {
               /* note here that we put it into the overlay segment
                  first, we will remove it from the overlay segment
@@ -814,6 +822,12 @@ allocLocal (symbol * sym)
             port->fun_prefix,
             currFunc->name, sym->name, sym->level, sym->block);
 
+  if (!sym->ismyparm && IS_ARRAY(sym->type) && DCL_ARRAY_VLA (sym->type))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_VLA_OBJECT);
+      return;
+    }
+
   sym->islocal = 1;
   sym->localof = currFunc;
 
@@ -893,7 +907,9 @@ allocLocal (symbol * sym)
   /* again note that we have put it into the overlay segment
      will remove and put into the 'data' segment if required after
      overlay  analysis has been done */
-  if (options.model == MODEL_SMALL)
+  if (options.model == MODEL_SMALL &&
+    // Do not put anything into overlay segment for non-extern, non-static inline function, since it would never get removed (was bug #3030).
+    !(FUNC_ISINLINE (sym->localof->type) && !IS_EXTERN (getSpec (sym->localof->type)) && !IS_STATIC (getSpec (sym->localof->type))))
     {
       SPEC_OCLS (sym->etype) =
         (options.noOverlay ? port->mem.default_local_map : overlay);
@@ -1070,7 +1086,7 @@ clearStackOffsets (void)
 
   if (currFunc)
     {
-      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->sams.
+      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->syms.
       currFunc->stack = 0;
     }
 }
@@ -1267,8 +1283,16 @@ canOverlayLocals (eBBlock ** ebbs, int count)
     {
       return FALSE;
     }
+
+  wassert (currFunc);
+
   /* if this is a forces overlay */
   if (IFFUNC_ISOVERLAY(currFunc->type)) return TRUE;
+
+  // struct / union parameters are written using memcpy, which goes very wrong if they are overlaid with memcpy's parameters.
+  for (value *arg = FUNC_ARGS (currFunc->type); arg; arg = arg->next)
+    if (IS_STRUCT (arg->type))
+      return false;
 
   /* otherwise do thru the blocks and see if there
      any function calls if found then return false */

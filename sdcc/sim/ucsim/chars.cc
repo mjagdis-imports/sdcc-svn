@@ -120,6 +120,16 @@ chars::deallocate_string(void)
 }
 
 
+char
+chars::c(int idx)
+{
+  if (!chars_string)
+    return 0;
+  if (idx>=chars_length)
+    return 0;
+  return chars_string[idx];
+}
+
 chars
 chars::token(const char *delims) const
 {
@@ -156,12 +166,34 @@ chars::token(const char *delims) const
   return c;
 }
 
+unsigned int
+chars::htoi(void)
+{
+  unsigned int v= 0;
+  int i, x;
+  if (!chars_string)
+    return 0;
+  for (i= 0; chars_string[i]; i++)
+    {
+      char c= toupper(chars_string[i]);
+      if ((c>='0') && (c<='9'))
+	x= c-'0';
+      else if ((c>='A') && (c<='F'))
+	x= 10+c-'A';
+      else
+	x= 0;
+      v<<= 4;
+      v|= x;
+    }
+  return v;
+}
+
 
 void
 chars::ltrim(void)
 {
   char *p= chars_string;
-  if (!p)
+  if (empty())
     return;
   while (*p && isspace(*p))
     p++;
@@ -171,18 +203,50 @@ chars::ltrim(void)
 void
 chars::rtrim(void)
 {
-  char *p= chars_string;
-  if (!p)
+  int i;
+  if (empty())
     return;
-  if (*p == 0)
-    return;
-  p= p+len()-1;
-  while ((p!=chars_string) && isspace(*p))
-    p--;
-  if (isspace(*p))
-    *p= 0;
+  i= chars_length-1;
+  while (i>=0)
+    {
+      if (isspace(chars_string[i]))
+	chars_string[i]= 0;
+      else
+	break;
+      i--;
+    }
 }
 
+void
+chars::lrip(const char *cset)
+{
+  int skip;
+  if (empty())
+    return;
+  if (!cset || !*cset)
+    return;
+  skip= strspn(chars_string, cset);
+  if (skip > 0)
+    allocate_string(chars_string+skip);
+}
+void
+chars::rrip(const char *cset)
+{
+  if (empty())
+    return;
+  if (!cset || !*cset)
+    return;
+  int i= chars_length-1;
+  while (i>=0)
+    {
+      char c= chars_string[i];
+      if (strchr(cset, c) != NULL)
+	chars_string[i]= 0;
+      else
+	break;
+      i--;
+    }
+}
 
 bool
 chars::starts_with(const char *x) const
@@ -274,6 +338,27 @@ chars::appendf(const char *format, ...)
 }
 
 chars &
+chars::appendn(const char *src, int n)
+{
+  char *temp= (char*)malloc(chars_length + n + 1);
+  if (chars_string)
+    {
+      strcpy(temp, chars_string);
+      if (dynamic)
+	free(chars_string);
+    }
+  else
+    temp[0]= 0;
+  int s= 0;
+  while (src[s] && (s<n))
+    temp[chars_length++]= src[s++];
+  temp[chars_length]= '\0';
+  chars_string= temp;
+  dynamic= true;
+  return *this;
+}
+
+chars &
 chars::format(const char *format, ...)
 {
   deallocate_string();
@@ -326,6 +411,25 @@ chars::subst(const char *what, char with)
 
   return *this;
 }
+
+chars &
+chars::substr(int start, int maxlen)
+{
+  if (!chars_string)
+    return *this;
+
+  char *s= (char*)malloc(maxlen+1);
+  int i, l;
+  for (i= start, l= 0; i<chars_length && chars_string[i] && l<maxlen; i++, l++)
+    s[l]= chars_string[i];
+  s[l]= 0;
+  deallocate_string();
+  chars_string= s;
+  chars_length= l;
+  dynamic= true;
+  return *this;
+}
+
 
 // Assignment operators
 chars &

@@ -559,14 +559,6 @@ replace restart {
 } if notVolatile(%1), notVolatile(%2), notSame(%1 '(hl+)' '(hl-)'), notSame(%2 '(hl+)' '(hl-)'), operandsNotRelated(%1 %3)
 
 replace restart {
-	ld	%1 (%4), %2
-	ld	%1 (%4), %3
-} by {
-	; common peephole 41b remove double load to %1 (%4).
-	ld	%1 (%4), %3
-}
-
-replace restart {
 	push	af
 	inc	sp
 	ld	a, c
@@ -718,14 +710,14 @@ replace restart {
 	pop	%1
 	push	%1
 } by {
-	; common peephole 50a eleminated dead pop/push %1 pair.
+	; common peephole 50a eliminated dead pop/push %1 pair.
 } if notUsed(%1)
 
 replace restart {
 	push	%1
 	pop	%1
 } by {
-	; common peephole 50b eleminated dead push/pop pair.
+	; common peephole 50b eliminated dead push/pop pair.
 }
 
 replace restart {
@@ -733,7 +725,7 @@ replace restart {
 	inc	sp
 	inc	sp
 } by {
-	; common peephole 50c eleminated dead push/inc sp pair.
+	; common peephole 50c eliminated dead push/inc sp pair.
 }
 
 replace restart {
@@ -741,7 +733,7 @@ replace restart {
 	ld	%2 (ix), %3
 	push	%1
 } by {
-	; common peephole 51 eleminated dead pop/push pair.
+	; common peephole 51 eliminated dead pop/push pair.
 	ld	%2 (ix), %3
 } if notUsed(%1), operandsNotRelated(%1 %3)
 
@@ -1126,7 +1118,7 @@ replace restart {
 	jp	C,%2
 	; common peephole 79 removed jp by using inverse jump logic
 %1:
-} if labelRefCountChange(%1 -1)
+} if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
 
 replace restart {
 	jp	C,%1
@@ -1136,7 +1128,7 @@ replace restart {
 	jp	NC,%2
 	; common peephole 80 removed jp by using inverse jump logic
 %1:
-} if labelRefCountChange(%1 -1)
+} if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
 
 replace restart {
 	jp	NZ,%1
@@ -1146,7 +1138,7 @@ replace restart {
 	jp	Z,%2
 	; common peephole 81 removed jp by using inverse jump logic
 %1:
-} if labelRefCountChange(%1 -1)
+} if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
 
 replace restart {
 	jp	Z,%1
@@ -1156,7 +1148,7 @@ replace restart {
 	jp	NZ,%2
 	; common peephole 82 removed jp by using inverse jump logic
 %1:
-} if labelRefCountChange(%1 -1)
+} if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
 
 replace restart {
 	jp	%5
@@ -1174,13 +1166,21 @@ replace restart {
 
 replace restart {
 	jp	%1
+%1:
+} by {
+	; common peephole 85a eliminated jump.
+%1:
+} if notInJumpTable(), labelRefCountChange(%1 -1)
+
+replace restart {
+	jp	%1
 %2:
 %1:
 } by {
-   ; common peephole 85 eliminated jump.
+	; common peephole 85b eliminated jump.
 %2:
 %1:
-} if labelRefCountChange(%1 -1)
+} if notInJumpTable(), labelRefCountChange(%1 -1)
 
 // A peephole that makes the code longer. Let's hope it's worth it in speed gain and further optimization potential.
 replace restart {
@@ -1215,16 +1215,6 @@ replace restart {
 	; common peephole 87b removed unreachable jump to %3
 	jp	%1
 } if labelRefCount(%2 0), labelRefCountChange(%3 -1)
-
-replace restart {
-	ld	%1, %2
-	jp	%3
-%3:
-} by {
-	ld	%1, %2
-%3:
-	; common peephole 88 removed redundant jump to %3.
-} if labelRefCountChange(%3 -1)
 
 replace restart {
 	ld	%1, #0x01
@@ -1894,7 +1884,7 @@ replace {
 	ld	a, #%1
 	sbc	a, %3
 } by {
-	; common peephole 122a optimized carry substraction by 0.
+	; common peephole 122a optimized carry subtraction by 0.
 	sbc	a, a
 	sub	a, %3
 } if operandsLiteral(%1), immdInRange(0 0 '+' %1 0 %2), notVolatile(%3), notUsed('f')
@@ -1903,7 +1893,7 @@ replace {
 	ld	a, #%1
 	sub	a, %3
 } by {
-	; common peephole 122b optimized carry substraction by 0.
+	; common peephole 122b optimized carry subtraction by 0.
 	xor	a, a
 	sub	a, %3
 } if operandsLiteral(%1), immdInRange(0 0 '+' %1 0 %2), notVolatile(%3), notUsed('f')
@@ -1912,7 +1902,7 @@ replace {
 	ld	a, #%1
 	sbc	a, %2 (ix)
 } by {
-	; common peephole 122c optimized carry substraction by 0.
+	; common peephole 122c optimized carry subtraction by 0.
 	sbc	a, a
 	sub	a, %2 (ix)
 } if operandsLiteral(%1), immdInRange(0 0 '+' %1 0 %3), notUsed('f')
@@ -1921,7 +1911,7 @@ replace {
 	ld	a, #%1
 	sbc	a, %2
 } by {
-	; common peephole 122d optimized carry substraction by 0.
+	; common peephole 122d optimized carry subtraction by 0.
 	sbc	a, a
 	sub	a, %2
 } if operandsLiteral(%1), immdInRange(0 0 '+' %1 0 %3), notUsed('f')
@@ -2172,14 +2162,14 @@ replace {
 replace {
 	ld	%1, #%2 - %3
 } by {
-	; common peephole 130e substracted -%3 from immediate %2
+	; common peephole 130e subtracted -%3 from immediate %2
 	ld	%1, #%4
 } if operandsLiteral(%2 %3), immdInRange(0 0xFF '-' %2 %3 %x4)
 
 replace {
 	ld	%1, #%2 - %3
 } by {
-	; common peephole 130f substracted -%3 from to immediate %2
+	; common peephole 130f subtracted -%3 from to immediate %2
 	ld	%1, #%4
 } if operandsLiteral(%2 %3), immdInRange(0 0xFFFF '-' %2 %3 %x4), canSplitReg(%1 %0 %0)
 
@@ -2708,7 +2698,7 @@ replace restart {
 	push	%6
 } if canJoinRegs(%2 %1 %7), same(%7 %5), canJoinRegs(%4 %3 %6), notUsed(%5)
 
-// have to be apllied late, slows down asm otherwise
+// have to be applied late, slows down asm otherwise
 replace restart {
 	ld	%1, #%3
 	ld	%2, #%4
@@ -2732,7 +2722,7 @@ replace restart {
 	; common peephole 174b reused value still in %1.
 	ld	%7, %5
 	ld	%8, %6
-} if notSame(%1 'hl'), notSame(%2 'hl'), canSplitReg(%1 %5 %6), canSplitReg(%2 %7 %8), operandsLiteral(%3 %4), immdInRange(0 0 '-' %3 %4 %9)
+} if notSame(%1 'hl'), notSame(%2 'hl'), canSplitReg(%1 %5 %6), canSplitReg(%2 %7 %8), operandsLiteral(%3 %4), immdInRange(0 0 '-' %3 %4 %9), notSame(%1 'ix' 'iy'), notSame(%2 'ix' 'iy')
 
 replace restart {
 	ld	%1,%2

@@ -342,7 +342,7 @@ rematable (symbol * sym, eBBlock * ebp, iCode * ic)
 static int
 notUsedInRemaining (symbol * sym, eBBlock * ebp, iCode * ic)
 {
-  return ((usedInRemaining (operandFromSymbol (sym), ic) ? 0 : 1) && allDefsOutOfRange (sym->defs, ebp->fSeq, ebp->lSeq));
+  return ((usedInRemaining (operandFromSymbol (sym, false), ic) ? 0 : 1) && allDefsOutOfRange (sym->defs, ebp->fSeq, ebp->lSeq));
 }
 
 /*-----------------------------------------------------------------*/
@@ -454,7 +454,7 @@ DEFSETFUNC (isFree)
   /* if it is free && and the itmp assigned to
      this does not have any overlapping live ranges
      with the one currently being assigned and
-     the size can be accomodated  */
+     the size can be accommodated  */
   if (sym->isFree && noOverLap (sym->usl.itmpStack, fsym) && getSize (sym->type) >= getSize (fsym->type)
       && (IS_BIT (sym->type) == IS_BIT (fsym->type)))
     {
@@ -816,10 +816,10 @@ spilSomething (iCode * ic, eBBlock * ebp, symbol * forSym)
      at the start & end of block respectively */
   if (ssym->blockSpil)
     {
-      iCode *nic = newiCode (IPUSH, operandFromSymbol (ssym), NULL);
+      iCode *nic = newiCode (IPUSH, operandFromSymbol (ssym, false), NULL);
       /* add push to the start of the block */
       addiCodeToeBBlock (ebp, nic, (ebp->sch->op == LABEL ? ebp->sch->next : ebp->sch));
-      nic = newiCode (IPOP, operandFromSymbol (ssym), NULL);
+      nic = newiCode (IPOP, operandFromSymbol (ssym, false), NULL);
       /* add pop to the end of the block */
       addiCodeToeBBlock (ebp, nic, NULL);
     }
@@ -830,11 +830,11 @@ spilSomething (iCode * ic, eBBlock * ebp, symbol * forSym)
   if (ssym->remainSpil)
     {
 
-      iCode *nic = newiCode (IPUSH, operandFromSymbol (ssym), NULL);
+      iCode *nic = newiCode (IPUSH, operandFromSymbol (ssym, false), NULL);
       /* add push just before this instruction */
       addiCodeToeBBlock (ebp, nic, ic);
 
-      nic = newiCode (IPOP, operandFromSymbol (ssym), NULL);
+      nic = newiCode (IPOP, operandFromSymbol (ssym, false), NULL);
       /* add pop to the end of the block */
       addiCodeToeBBlock (ebp, nic, NULL);
     }
@@ -1063,7 +1063,7 @@ deassignLRs (iCode * ic, eBBlock * ebp)
         continue;
 
       /* special case check if this is an IFX &
-         the privious one was a pop and the
+         the previous one was a pop and the
          previous one was not spilt then keep track
          of the symbol */
       if (ic->op == IFX && ic->prev && ic->prev->op == IPOP && !ic->prev->parmPush && !OP_SYMBOL (IC_LEFT (ic->prev))->isspilt)
@@ -1088,7 +1088,7 @@ deassignLRs (iCode * ic, eBBlock * ebp)
               !result->isspilt &&       /* and does not already have them */
               !result->remat && !bitVectBitValue (_G.regAssigned, result->key) &&
               /* the number of free regs + number of regs in this LR
-                 can accomodate the what result Needs */
+                 can accommodate the what result Needs */
               ((nfreeRegsType (result->regType) + sym->nRegs) >= result->nRegs))
             {
 
@@ -1295,7 +1295,7 @@ unusedLRs (eBBlock * ebp)
 }
 
 /*-----------------------------------------------------------------*/
-/* deassignUnsedLRs - if this baisc block ends in a return then    */
+/* deassignUnsedLRs - if this basic block ends in a return then    */
 /*                    deassign symbols not used in this block      */
 /*-----------------------------------------------------------------*/
 bitVect *
@@ -1662,7 +1662,7 @@ fillGaps ()
           if (sym->uptr && sym->dptr == 0 && !sym->ruonly && size < 4 && size > 1)
             {
 
-              if (packRegsDPTRuse (operandFromSymbol (sym)))
+              if (packRegsDPTRuse (operandFromSymbol (sym, false)))
                 {
 
                   /* if this was assigned to registers then */
@@ -1683,7 +1683,7 @@ fillGaps ()
                 }
 
               /* try assigning other dptrs */
-              if (sym->dptr == 0 && packRegsDPTRnuse (operandFromSymbol (sym), 1) && !getenv ("DPTRnDISABLE"))
+              if (sym->dptr == 0 && packRegsDPTRnuse (operandFromSymbol (sym, false), 1) && !getenv ("DPTRnDISABLE"))
                 {
                   /* if this was ssigned to registers then */
                   if (bitVectBitValue (_G.totRegAssigned, sym->key))
@@ -3240,7 +3240,7 @@ packRegisters (eBBlock ** ebpp, int blockno)
         packRegsForSupport (ic, ebp);
 #endif
       /* some cases the redundant moves can
-         can be eliminated for return statements . Can be elminated for the first SEND */
+         can be eliminated for return statements . Can be eliminated for the first SEND */
       if ((ic->op == RETURN ||
            ((ic->op == SEND || ic->op == RECEIVE) && ic->argreg == 1)) && !isOperandInFarSpace (IC_LEFT (ic)) && !options.model)
         {
@@ -3316,7 +3316,7 @@ packRegisters (eBBlock ** ebpp, int blockno)
 
               /* if the type from and type to are the same
                  then if this is the only use then packit */
-              if (compareType (operandType (IC_RIGHT (ic)), operandType (IC_LEFT (ic))) == 1)
+              if (compareType (operandType (IC_RIGHT (ic)), operandType (IC_LEFT (ic)), false) == 1)
                 {
                   iCode *dic = packRegsDPTRuse (IC_RIGHT (ic));
                   if (dic)

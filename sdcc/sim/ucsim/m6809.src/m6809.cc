@@ -51,7 +51,7 @@ cl_m6809::init(void)
 {
   cl_uc::init();
 
-  set_xtal(1000000);
+  //set_xtal(1000000);
   
   reg8_ptr[0]= &A;
   reg8_ptr[1]= &B;
@@ -370,8 +370,8 @@ cl_m6809::analyze_start(void)
       vars->add(v);
     }
 
-  for (size_t i = 0; i < sizeof(vectors) / sizeof(vectors[0]); i++)
-    analyze(vectors[i].addr);
+  //for (size_t i = 0; i < sizeof(vectors) / sizeof(vectors[0]); i++)
+  analyze(vectors[0].addr);
 }
 
 

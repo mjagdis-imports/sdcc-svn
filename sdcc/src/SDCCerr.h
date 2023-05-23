@@ -47,7 +47,7 @@ enum {
   E_AUTO_ABSA                   =  17, /* abs addr for auto var*/
   W_INIT_WRONG                  =  18, /* initializer type !=  */
   E_FUNC_REDEF                  =  19, /* func name redefined  */
-  E_ID_UNDEF                    =  20, /* identifer undefined  */
+  E_ID_UNDEF                    =  20, /* Undefined identifier '%s' */
   W_STACK_OVERFLOW              =  21, /* stack overflow       */
   E_NEED_ARRAY_PTR              =  22, /* array or pointer reqd*/
   E_IDX_NOT_INT                 =  23, /* index not an integer */
@@ -81,7 +81,7 @@ enum {
   E_DUPLICATE_TYPEDEF           =  51, /* typedef name duplicate */
   E_ARG_TYPE                    =  52, /* arg type mismatch   */
   E_RET_VALUE                   =  53, /* return value mismatch */
-  E_FUNC_AGGR                   =  54, /* function returing aggr */
+  E_FUNC_AGGR                   =  54, /* Function cannot return aggregate. Func body ignored */
   E_FUNC_DEF                    =  55, /* ANSI Style def neede */
   E_DUPLICATE_LABEL             =  56, /* duplicate label name */
   E_LABEL_UNDEF                 =  57, /* undefined label used */
@@ -141,7 +141,7 @@ enum {
   W_PTR_TYPE_INVALID            = 111, /* invalid type specifier for pointer */
   W_IMPLICIT_FUNC               = 112, /* function declared implicitly */
   W_CONTINUE                    = 113, /* more than one line  */
-  I_EXTENDED_STACK_SPILS        = 114, /* too many spils occured */
+  I_EXTENDED_STACK_SPILS        = 114, /* extended stack by %d bytes for compiler temp(s) :in function  '%s': %s  */
   W_UNKNOWN_PRAGMA              = 115, /* #pragma directive unsupported */
   W_SHIFT_CHANGED               = 116, /* shift changed to zero */
   W_UNKNOWN_OPTION              = 117, /* don't know the option */
@@ -167,7 +167,7 @@ enum {
   W_ESC_SEQ_OOR_FOR_CHAR        = 137, /* Escape sequence of of range for char */
   E_INVALID_HEX                 = 138, /* \x used with no following hex digits */
   W_FUNCPTR_IN_USING_ISR        = 139, /* Call via function pointer in ISR with using attribute. */
-  E_NO_SUCH_BANK                = 140, /* 'using' attribute specifies non-existant register bank. */
+  E_NO_SUCH_BANK                = 140, /* called function uses unknown register bank %d. */
   E_TWO_OR_MORE_DATA_TYPES      = 141, /* two or more data types in declaration for '%s' */
   E_LONG_OR_SHORT_INVALID       = 142, /* long or short invalid for .. */
   E_SIGNED_OR_UNSIGNED_INVALID  = 143, /* signed or unsigned invalid for .. */
@@ -217,7 +217,7 @@ enum {
   W_C89_NO_FLEXARRAY            = 187, /* ISO C90 does not support flexible array members */
   E_FLEXARRAY_NOTATEND          = 188, /* flexible array member not at end of struct */
   E_FLEXARRAY_INEMPTYSTRCT      = 189, /* flexible array in otherwise empty struct */
-  W_EMPTY_SOURCE_FILE           = 190, /* ISO C forbids an empty source file */
+  W_EMPTY_TRANSLATION_UNIT      = 190, /* ISO C forbids an empty translation unit */
   W_BAD_PRAGMA_ARGUMENTS        = 191, /* #pragma %s: bad argument(s); pragma ignored */
   E_BAD_RESTRICT                = 192, /* Only object pointers may be qualified with 'restrict' */
   E_BAD_INLINE                  = 193, /* Only functions may be qualified with 'inline' */
@@ -231,13 +231,13 @@ enum {
   W_DEPRECATED_OPTION           = 201, /* deprecated compiler option '%s' */
   E_BAD_DESIGNATOR              = 202, /* Bad designated initializer */
   W_DUPLICATE_INIT              = 203, /* duplicate initializer */
-  E_INVALID_UNIVERSAL           = 204, /* invalid universal character name %s. */
+  W_INVALID_UNIVERSAL           = 204, /* invalid universal character name %s. */
   W_UNIVERSAL_C95               = 205, /* universal character names are only valid in C95 or later */
   E_SHORTLONG                   = 206, /* Invalid combination of short / long */
   E_INTEGERSUFFIX               = 207, /* Invalid integer suffix */
   E_AUTO_ADDRSPACE              = 208, /* named address space for auto var */
   W_NORETURNRETURN              = 209, /* return in _noreturn function */
-  E_STRUCT_REDEF                = 210, /* struct or union tag redefined */
+  E_STRUCT_REDEF_INCOMPATIBLE   = 210, /* struct or union tag redefined to incompatible type */
   W_STRING_CANNOT_BE_TERMINATED = 211, /* string cannot be terminated within array */
   W_LONGLONG_LITERAL            = 212, /* long long literal */
   S_SYNTAX_ERROR                = 213, /* syntax error */
@@ -257,7 +257,7 @@ enum {
   E_MULTIPLE_DEFAULT_IN_GENERIC = 227, /* multiple default expressions in generic association */
   E_MULTIPLE_MATCHES_IN_GENERIC = 228, /* multiple matching expressions in generic association */
   E_NO_MATCH_IN_GENERIC         = 229, /* no matching expression in generic association */
-  W_LABEL_WITHOUT_STATEMENT     = 230, /* label without statement, not allowed in standard C */
+  W_LABEL_WITHOUT_STATEMENT_C2X = 230, /* label without statement requires ISO C2X or later */
   E_WCHAR_CONST_C95             = 231, /* character constant of type wchar_t requires ISO C 95 or later */
   E_WCHAR_CONST_C11             = 232, /* character constant of type char16_t or char32_t equires ISO C 11 or later */
   E_WCHAR_STRING_C95            = 233, /* wide character string literal requires ISO C 95 or later */
@@ -298,7 +298,31 @@ enum {
   E_IAR_PSEUDOPARM              = 268, /* IAR function call with parameter in pseudoregister */
   E_COSMIC_LARGE_RETURN         = 269, /* large return value not supported for Cosmic calling convention */
   E_MULTIPLE_CALLINGCONVENTIONS = 270, /* multiple incompatible calling conventions */
-  W_SFR_ADDRESS                 = 271, /* unsupported address of __sfr taken */
+  E_SFR_POINTER                 = 271, /* unsupported pointer to __sfr */
+  E_INVALID_BITINTWIDTH         = 272, /* invalid with for bit-precise integer type */
+  W_BITINTCONST_C23             = 273, /* bit-precise integer constant requires ISO C23 or later */
+  E_INVALID_UNIVERSAL_IDENTIFIER = 274, /* universal character name %s invalid in identifier */
+  E_COMPLEX_UNSUPPORTED         = 275, /* complex numbers are not supported */
+  E_DECIMAL_FLOAT_UNSUPPORTED   = 276, /* decimal floating-point numbers are not supported */
+  E_ATOMIC_UNSUPPORTED          = 277, /* atomics are not supported */
+  W_RETURN_TYPE_OMITTED_INT     = 278, /* return type of function omitted, assuming int */
+  W_SINGLE_DASH_LONG_OPT        = 279, /* use of single-dash long options is discouraged */
+  E_UNKNOWN_LANGUAGE_STANDARD   = 280, /* unknown language standard */
+  E_CONSTEXPR                   = 281, /* constexpr not implemented */
+  E_TYPEOF                      = 282, /* typeof and typeof_unqual not implemented for nontrivial expressions */
+  W_FUNCDECL_WITH_NO_PROTOTYPE  = 283, /* function declarator with no prototype */
+  W_UNKNOWN_ATTRIBUTE           = 284, /* unknown attribute ignored*/
+  W_EMPTY_INIT_C2X              = 285, /* empty initializer requires ISO C2X or later */
+  E_EMPTY_INIT_UNKNOWN_SIZE     = 286, /* array of unknown size cannnot be initialized by an empty initializer */
+  E_VLA_TYPE_C99                = 287, /* variable length array type requires ISO C99 or later */
+  E_VLA_OBJECT                  = 288, /* object of variable length array type not supported */
+  E_VLA_SCOPE                   = 289, /* variable length array declarators must have function prototype scope or block scope */
+  E_VLA_INIT                    = 290, /* variable length arrays can be initialized by empty initalizers only */
+  W_ENUM_INT_RANGE_C2X          = 291, /* enumeration constant outside the range of int requires ISO C2X or later */
+  E_Z88DK_CALLEE_VARARG         = 292, /* __z88dk_callee with variable arguments not supported */
+  W_CODEMEM_WRITE               = 293, /* attempt to write to read-only-memory */
+  W__SDCC_EXTERNAL_STARTUP_DEF  = 294, /* _sdcc_external_startup function definition - probable deprecated old-style variant of __sdcc_external_startup */
+  E_NO_SKIP_TARGET              = 295, /* target label missing for skip instruction */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
@@ -368,7 +392,7 @@ FILE * SetErrorOut (FILE *NewErrorOut);
 
 /*
 -------------------------------------------------------------------------------
-vwerror - Output a standard eror message with variable number of arguements
+vwerror - Output a standard error message with variable number of arguments
 
 -------------------------------------------------------------------------------
 */
@@ -377,7 +401,7 @@ int vwerror (int errNum, va_list marker);
 
 /*
 -------------------------------------------------------------------------------
-werror - Output a standard eror message with variable number of arguements
+werror - Output a standard error message with variable number of arguments
 
 -------------------------------------------------------------------------------
 */
@@ -395,7 +419,7 @@ int werror_bt (int errNum, ... );
 
 /*
 -------------------------------------------------------------------------------
-werrorfl - Output a standard eror message with variable number of arguements.
+werrorfl - Output a standard error message with variable number of arguments.
            Use a specified filename and line number instead of the default.
 
 -------------------------------------------------------------------------------
@@ -405,7 +429,7 @@ int werrorfl (char *newFilename, int newLineno, int errNum, ...);
 
 /*
 -------------------------------------------------------------------------------
-fatal - Output a standard eror message with variable number of arguements and
+fatal - Output a standard error message with variable number of arguments and
         call exit()
 -------------------------------------------------------------------------------
 */

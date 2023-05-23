@@ -26,15 +26,21 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#pragma std_c99
-
 #include <stdint.h>
+
+#include <stdbit.h>
+
+#ifdef __SDCC_mcs51
+#define __SDCC_NONBANKED __nonbanked
+#else
+#define __SDCC_NONBANKED
+#endif
 
 #ifdef __SDCC_LONGLONG
 
-#if defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_stm8) // Big-endian
+#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
 
-unsigned long long _rlulonglong(unsigned long long l, char s)
+unsigned long long _rlulonglong(unsigned long long l, char s) __SDCC_NONBANKED
 {
 	uint32_t *const top = (uint32_t *)((char *)(&l) + 0);
 	uint16_t *const middle = (uint16_t *)((char *)(&l) + 4);
@@ -56,9 +62,9 @@ unsigned long long _rlulonglong(unsigned long long l, char s)
 	return(l);
 }
 
-#else // Little-endian
+#else
 
-unsigned long long _rlulonglong(unsigned long long l, char s)
+unsigned long long _rlulonglong(unsigned long long l, char s) __SDCC_NONBANKED
 {
 	uint32_t *const top = (uint32_t *)((char *)(&l) + 4);
 	uint16_t *const middle = (uint16_t *)((char *)(&l) + 2);

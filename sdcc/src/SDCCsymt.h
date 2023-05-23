@@ -36,33 +36,6 @@
 
 #define BITVAR_PAD -1
 
-enum
-{
-  TYPEOF_INT = 1,
-  TYPEOF_SHORT,
-  TYPEOF_BOOL,
-  TYPEOF_CHAR,
-  TYPEOF_LONG,
-  TYPEOF_LONGLONG,
-  TYPEOF_FLOAT,
-  TYPEOF_FIXED16X16,
-  TYPEOF_BIT,
-  TYPEOF_BITFIELD,
-  TYPEOF_SBIT,
-  TYPEOF_SFR,
-  TYPEOF_VOID,
-  TYPEOF_STRUCT,
-  TYPEOF_ARRAY,
-  TYPEOF_FUNCTION,
-  TYPEOF_POINTER,
-  TYPEOF_FPOINTER,
-  TYPEOF_CPOINTER,
-  TYPEOF_GPOINTER,
-  TYPEOF_PPOINTER,
-  TYPEOF_IPOINTER,
-  TYPEOF_EEPPOINTER
-};
-
 // values for first byte (or 3 most significant bits) of generic pointer.
 #if 0
 #define GPTYPE_FAR       0x00
@@ -100,6 +73,7 @@ typedef struct structdef
   int type;                     /* STRUCT or UNION            */
   bool b_flexArrayMember;       /* has got a flexible array member,
                                    only needed for syntax checks */
+  bool redefinition;            /* is a redefinition only needed for syntax checks */
   struct symbol *tagsym;        /* tag symbol (NULL if no tag) */
 }
 structdef;
@@ -108,16 +82,19 @@ structdef;
 typedef enum
 {
   V_INT = 1,
+  V_BITINT,
   V_FLOAT,
   V_FIXED16X16,
   V_BOOL,
   V_CHAR,
+  V_NULLPTR,
   V_VOID,
   V_STRUCT,
   V_LABEL,
-  V_BIT,
   V_BITFIELD,
   V_BBITFIELD,
+  V_BITINTBITFIELD,
+  V_BIT,
   V_SBIT,
   V_DOUBLE
 }
@@ -158,6 +135,7 @@ typedef struct specifier
 {
   NOUN noun;                        /* CHAR INT STRUCTURE LABEL   */
   STORAGE_CLASS sclass;             /* REGISTER,AUTO,FIX,CONSTANT */
+  bool sclass_implicitintrinsic:1;  /* intrinsic named address space implied by sclass has been assigned implicitly. */
   struct memmap *oclass;            /* output storage class       */
   unsigned b_long:1;                /* 1=long                     */
   unsigned b_longlong:1;            /* 1=long long                */
@@ -171,15 +149,17 @@ typedef struct specifier
   unsigned b_noreturn:1;            /* promised not to return     */
   unsigned b_alignas:1;             /* alignment                  */
   unsigned b_absadr:1;              /* absolute address specfied  */
-  unsigned b_volatile:1;            /* is marked as volatile      */
   unsigned b_const:1;               /* is a constant              */
   unsigned b_restrict:1;            /* is restricted              */
+  unsigned b_volatile:1;            /* is marked as volatile      */
+  unsigned b_atomic:1;              /* is marked as _Atomic       */
   struct symbol *addrspace;         /* is in named address space  */
   unsigned b_typedef:1;             /* is typedefed               */
   unsigned b_isregparm:1;           /* is the first parameter     */
   unsigned b_isenum:1;              /* is an enumerated type      */
   unsigned b_bitUnnamed:1;          /* is an unnamed bit-field    */
   unsigned b_needspar:1;            /* has to be a parameter      */
+  unsigned bitintwidth;             /* width of bit-precise type  */
   unsigned _bitStart;               /* bit start position         */
   unsigned _bitLength;              /* bit length                 */
   unsigned _addr;                   /* address of symbol          */
@@ -221,14 +201,20 @@ typedef enum
 }
 DECLARATOR_TYPE;
 
+typedef struct ast ast;
+
 typedef struct declarator
 {
   DECLARATOR_TYPE dcl_type;         /* POINTER,ARRAY or FUNCTION  */
+  bool dcl_type_implicitintrinsic:1;/* intrinsic named address space indicated by dcltype has been assigned implicitly. */
   size_t num_elem;                  /* # of elems if type==array, */
+  ast *num_elem_ast;                /* ast for # of elems, used to calculate num_elem. */
   /* always 0 for flexible arrays */
   unsigned ptr_const:1;             /* pointer is constant        */
   unsigned ptr_volatile:1;          /* pointer is volatile        */
   unsigned ptr_restrict:1;          /* pointer is resticted       */
+  bool array_vla:1;                 // Array is known to be a VLA.
+  bool vla_check_visited:1;         // Already visited in check for VLA - implementation detail to prevent infinite recursion */
   struct symbol *ptr_addrspace;     /* pointer is in named address space  */
 
   struct sym_link *tspec;           /* pointer type specifier     */
@@ -270,15 +256,16 @@ typedef struct sym_link
     unsigned banked:1;              /* function has the banked attribute    */
     unsigned critical:1;            /* critical function                    */
     unsigned intrtn:1;              /* this is an interrupt routine         */
-    unsigned rbank:1;               /* seperate register bank               */
+    unsigned rbank:1;               /* separate register bank               */
     unsigned inlinereq:1;           /* inlining requested                   */
     unsigned noreturn:1;            /* promised not to return               */
+    bool noprototype:1;             /* Up to C17 function declaratos without prototypes were allowed */
     signed sdcccall;                /* ABI version used                     */
     unsigned smallc:1;              /* Small-C calling convention: Parameters on stack are passed left-to-right */
     unsigned raisonance:1;          /* Raisonance calling convention for STM8 */
     unsigned iar:1;                 /* IAR calling convention               */
     unsigned cosmic:1;              /* Cosmic calling convention            */
-    unsigned z88dk_fastcall:1;      /* For the z80-related ports: Function has a single paramter of at most 32 bits that is passed in dehl */
+    unsigned z88dk_fastcall:1;      /* For the z80-related ports: Function has a single parameter of at most 32 bits that is passed in dehl */
     unsigned z88dk_callee:1;        /* Stack pointer adjustment for parameters passed on the stack is done by the callee */
     unsigned z88dk_shortcall:1;     /* Short call available via rst (see values later) (Z80 only) */
     unsigned z88dk_has_params_offset:1;     /* Has a parameter offset (Z80 only) */
@@ -413,10 +400,13 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_OP_ACCUSE(x) (IS_SYMOP(x) && OP_SYMBOL(x) && OP_SYMBOL(x)->accuse)
 
 #define DCL_TYPE(l)  validateLink(l, "DCL_TYPE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.dcl_type
+#define DCL_TYPE_IMPLICITINTRINSIC(l)  validateLink(l, "DCL_TYPE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.dcl_type_implicitintrinsic
 #define DCL_ELEM(l)  validateLink(l, "DCL_ELEM", #l, DECLARATOR, __FILE__, __LINE__)->select.d.num_elem
+#define DCL_ELEM_AST(l)  validateLink(l, "DCL_ELEM", #l, DECLARATOR, __FILE__, __LINE__)->select.d.num_elem_ast
 #define DCL_PTR_CONST(l) validateLink(l, "DCL_PTR_CONST", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_const
 #define DCL_PTR_VOLATILE(l) validateLink(l, "DCL_PTR_VOLATILE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_volatile
 #define DCL_PTR_RESTRICT(l) validateLink(l, "DCL_PTR_RESTRICT", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_restrict
+#define DCL_ARRAY_VLA(l) validateLink(l, "DCL_ARRAY_VLA", #l, DECLARATOR, __FILE__, __LINE__)->select.d.array_vla
 #define DCL_PTR_ADDRSPACE(l) validateLink(l, "DCL_PTR_ADDRSPACE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_addrspace
 #define DCL_TSPEC(l) validateLink(l, "DCL_TSPEC", #l, DECLARATOR, __FILE__, __LINE__)->select.d.tspec
 
@@ -441,6 +431,8 @@ extern sym_link *validateLink (sym_link * l,
 #define IFFUNC_ISINLINE(x) (IS_FUNC(x) && FUNC_ISINLINE(x))
 #define FUNC_ISNORETURN(x) (x->funcAttrs.noreturn)
 #define IFFUNC_ISNORETURN(x) (IS_FUNC(x) && FUNC_ISNORETURN(x))
+#define FUNC_NOPROTOTYPE(x) (x->funcAttrs.noprototype)
+#define IFFUNC_NOPROTOTYPE(x) (IS_FUNC(x) && FUNC_NOPROTOTYPE(x))
 
 #define FUNC_ISREENT(x) (x->funcAttrs.reent)
 #define IFFUNC_ISREENT(x) (IS_FUNC(x) && FUNC_ISREENT(x))
@@ -490,6 +482,7 @@ extern sym_link *validateLink (sym_link * l,
 #define SPEC_USIGN(x) validateLink(x, "SPEC_USIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_unsigned
 #define SPEC_SIGN(x) validateLink(x, "SPEC_SIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_signed
 #define SPEC_SCLS(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass
+#define SPEC_SCLS_IMPLICITINTRINSIC(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass_implicitintrinsic
 #define SPEC_ENUM(x) validateLink(x, "SPEC_ENUM", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_isenum
 #define SPEC_OCLS(x) validateLink(x, "SPEC_OCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.oclass
 #define SPEC_STAT(x) validateLink(x, "SPEC_STAT", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_static
@@ -500,6 +493,7 @@ extern sym_link *validateLink (sym_link * l,
 #define SPEC_ADDR(x) validateLink(x, "SPEC_ADDR", #x, SPECIFIER, __FILE__, __LINE__)->select.s._addr
 #define SPEC_STAK(x) validateLink(x, "SPEC_STAK", #x, SPECIFIER, __FILE__, __LINE__)->select.s._stack
 #define SPEC_CVAL(x) validateLink(x, "SPEC_CVAL", #x, SPECIFIER, __FILE__, __LINE__)->select.s.const_val
+#define SPEC_BITINTWIDTH(x) validateLink(x, "SPEC_BITINTWIDTH", #x, SPECIFIER, __FILE__, __LINE__)->select.s.bitintwidth
 #define SPEC_BSTR(x) validateLink(x, "SPEC_BSTR", #x, SPECIFIER, __FILE__, __LINE__)->select.s._bitStart
 #define SPEC_BLEN(x) validateLink(x, "SPEC_BLEN", #x, SPECIFIER, __FILE__, __LINE__)->select.s._bitLength
 #define SPEC_BUNNAMED(x) validateLink(x, "SPEC_BUNNAMED", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_bitUnnamed
@@ -511,9 +505,10 @@ extern sym_link *validateLink (sym_link * l,
  * _bitStart field instead of defining a new field.
  */
 #define SPEC_ISR_SAVED_BANKS(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s._bitStart
-#define SPEC_VOLATILE(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_volatile
 #define SPEC_CONST(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_const
 #define SPEC_RESTRICT(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_restrict
+#define SPEC_VOLATILE(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_volatile
+#define SPEC_ATOMIC(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_atomic
 #define SPEC_ADDRSPACE(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.addrspace
 #define SPEC_STRUCT(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.v_struct
 #define SPEC_TYPEDEF(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_typedef
@@ -545,7 +540,7 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_FARPTR(x)     (IS_DECL(x) && DCL_TYPE(x) == FPOINTER)
 #define IS_CODEPTR(x)    (IS_DECL(x) && DCL_TYPE(x) == CPOINTER)
 #define IS_GENPTR(x)     (IS_DECL(x) && DCL_TYPE(x) == GPOINTER)
-#define IS_FUNCPTR(x)    (IS_DECL(x) && (DCL_TYPE(x) == CPOINTER || DCL_TYPE(x) == GPOINTER) && IS_FUNC(x->next))
+#define IS_FUNCPTR(x)    (IS_DECL(x) && (DCL_TYPE(x) == CPOINTER || DCL_TYPE(x) == GPOINTER || DCL_TYPE(x) == UPOINTER) && IS_FUNC(x->next))
 #define IS_FUNC(x)       (IS_DECL(x) && DCL_TYPE(x) == FUNCTION)
 #define IS_LONG(x)       (IS_SPEC(x) && x->select.s.b_long)
 #define IS_LONGLONG(x)   (IS_SPEC(x) && x->select.s.b_longlong)
@@ -561,22 +556,28 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_INLINE(x)     (IS_SPEC(x) && SPEC_INLINE(x))
 #define IS_NORETURN(x)   (IS_SPEC(x) && SPEC_NORETURN(x))
 #define IS_INT(x)        (IS_SPEC(x) && x->select.s.noun == V_INT)
+#define IS_NULLPTR(x)    (IS_SPEC(x) && x->select.s.noun == V_NULLPTR)
 #define IS_VOID(x)       (IS_SPEC(x) && x->select.s.noun == V_VOID)
 #define IS_BOOL(x)       (IS_SPEC(x) && x->select.s.noun == V_BOOL)
+#define IS_BITINT(x)     (IS_SPEC(x) && x->select.s.noun == V_BITINT)
 #define IS_CHAR(x)       (IS_SPEC(x) && x->select.s.noun == V_CHAR)
 #define IS_EXTERN(x)     (IS_SPEC(x) && x->select.s.b_extern)
 #define IS_VOLATILE(x)   (isVolatile (x))
-#define IS_INTEGRAL(x)   (IS_SPEC(x) && (x->select.s.noun == V_INT       || \
-                                         x->select.s.noun == V_BOOL      || \
-                                         x->select.s.noun == V_CHAR      || \
-                                         x->select.s.noun == V_BITFIELD  || \
-                                         x->select.s.noun == V_BBITFIELD || \
-                                         x->select.s.noun == V_BIT       || \
+#define IS_INTEGRAL(x)   (IS_SPEC(x) && (x->select.s.noun == V_INT            || \
+                                         x->select.s.noun == V_BITINT         || \
+                                         x->select.s.noun == V_BOOL           || \
+                                         x->select.s.noun == V_CHAR           || \
+                                         x->select.s.noun == V_BITFIELD       || \
+                                         x->select.s.noun == V_BBITFIELD      || \
+                                         x->select.s.noun == V_BITINTBITFIELD || \
+                                         x->select.s.noun == V_BIT            || \
                                          x->select.s.noun == V_SBIT ))
-#define IS_BITFIELD(x)   (IS_SPEC(x) && (x->select.s.noun == V_BITFIELD  || \
-                                         x->select.s.noun == V_BBITFIELD ))
+#define IS_BITFIELD(x)   (IS_SPEC(x) && (x->select.s.noun == V_BITFIELD       || \
+                                         x->select.s.noun == V_BBITFIELD      || \
+                                         x->select.s.noun == V_BITINTBITFIELD ))
 #define IS_BITVAR(x)     (IS_SPEC(x) && (x->select.s.noun == V_BITFIELD  || \
                                          x->select.s.noun == V_BBITFIELD || \
+                                         x->select.s.noun == V_BITINTBITFIELD || \
                                          x->select.s.noun == V_BIT       || \
                                          x->select.s.noun == V_SBIT ))
 #define IS_BIT(x)        (IS_SPEC(x) && (x->select.s.noun == V_BIT       || \
@@ -631,9 +632,9 @@ extern symbol *muldiv[3][4][4];
 extern symbol *muls16tos32[2];
 /* Dims: BYTE/WORD/DWORD/QWORD SIGNED/UNSIGNED */
 extern sym_link *multypes[4][2];
-/* Dims: to/from float, BYTE/WORD/DWORD/QWORD, SIGNED/USIGNED */
+/* Dims: to/from float, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
 extern symbol *conv[2][4][2];
-/* Dims: to/from fixed16x16, BYTE/WORD/DWORD/QWORD/FLOAT, SIGNED/USIGNED */
+/* Dims: to/from fixed16x16, BYTE/WORD/DWORD/QWORD/FLOAT, SIGNED/UNSIGNED */
 extern symbol *fp16x16conv[2][5][2];
 /* Dims: shift left/shift right, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
 extern symbol *rlrr[2][4][2];
@@ -695,10 +696,11 @@ unsigned int bitsForType (sym_link *);
 sym_link *newIntLink ();
 sym_link *newCharLink ();
 sym_link *newLongLink ();
+sym_link *newLongLongLink ();
 sym_link *newBoolLink ();
 sym_link *newPtrDiffLink ();
 sym_link *newVoidLink ();
-int compareType (sym_link *, sym_link *);
+int compareType (sym_link *, sym_link *, bool ignoreimplicitintrinsic);
 int compareTypeExact (sym_link *, sym_link *, long);
 int compareTypeInexact (sym_link *, sym_link *);
 int checkFunction (symbol *, symbol *);

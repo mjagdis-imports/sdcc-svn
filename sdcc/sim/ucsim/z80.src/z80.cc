@@ -96,6 +96,7 @@ cl_z80::init(void)
 void
 cl_z80::reset(void)
 {
+  cl_uc::reset();
   regs.SP= 0xffff;
   regs.AF= 0xffff;
   IFF1= false;
@@ -182,6 +183,7 @@ cl_z80::make_memories(void)
   ad->init();
   inputs->decoders->add(ad);
   address_spaces->add(inputs);
+  ad->activate(0);
   outputs= new cl_address_space("outputs", 0, 0x10000, 8);
   outputs->init();
   chip= new cl_chip8("out_chip", 0x10000, 8);
@@ -191,6 +193,7 @@ cl_z80::make_memories(void)
   ad->init();
   outputs->decoders->add(ad);
   address_spaces->add(outputs);
+  ad->activate(0);
   
   regs8= new cl_address_space("regs8", 0, 18, 8);
   regs8->init();
@@ -801,13 +804,7 @@ cl_z80::exec_inst(void)
     case 0xff: return(inst_rst(code));
     }
 
-  /*if (PC)
-    PC--;
-  else
-  PC= get_mem_size(MEM_ROM_ID)-1;*/
-  PC= rom->inc_address(PC, -1);
-
-  sim->stop(resINV_INST);
+  //PC= instPC;//rom->inc_address(PC, -1);
   return(resINV_INST);
 }
 

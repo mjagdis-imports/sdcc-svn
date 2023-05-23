@@ -489,7 +489,8 @@ cl_irq_stop_option::option_changed(void)
   uc51->stop_at_it= b;
 }
 
-instruction_wrapper_fn itab51[256];
+
+//instruction_wrapper_fn itab51[256];
 
 /*
  * Making a new micro-controller and reset it
@@ -513,7 +514,8 @@ cl_51core::cl_51core(struct cpu_entry *Itype, class cl_sim *asim):
 int
 cl_51core::init(void)
 {
-  fill_def_wrappers(itab51);
+  //fill_def_wrappers(itab51);
+  /*
   itab51[0x89]= itab51[0x88];
   itab51[0x8a]= itab51[0x88];
   itab51[0x8b]= itab51[0x88];
@@ -693,6 +695,187 @@ cl_51core::init(void)
   itab51[0xf3]= itab51[0xf2];
 
   itab51[0xf7]= itab51[0xf6];
+  */
+  
+  uc_itab[0x89]= uc_itab[0x88];
+  uc_itab[0x8a]= uc_itab[0x88];
+  uc_itab[0x8b]= uc_itab[0x88];
+  uc_itab[0x8c]= uc_itab[0x88];
+  uc_itab[0x8d]= uc_itab[0x88];
+  uc_itab[0x8e]= uc_itab[0x88];
+  uc_itab[0x8f]= uc_itab[0x88];
+
+  uc_itab[0xf9]= uc_itab[0xf8];
+  uc_itab[0xfa]= uc_itab[0xf8];
+  uc_itab[0xfb]= uc_itab[0xf8];
+  uc_itab[0xfc]= uc_itab[0xf8];
+  uc_itab[0xfd]= uc_itab[0xf8];
+  uc_itab[0xfe]= uc_itab[0xf8];
+  uc_itab[0xff]= uc_itab[0xf8];
+
+  uc_itab[0x21]= uc_itab[0x01];
+  uc_itab[0x41]= uc_itab[0x01];
+  uc_itab[0x61]= uc_itab[0x01];
+  uc_itab[0x81]= uc_itab[0x01];
+  uc_itab[0xa1]= uc_itab[0x01];
+  uc_itab[0xc1]= uc_itab[0x01];
+  uc_itab[0xe1]= uc_itab[0x01];
+
+  uc_itab[0x07]= uc_itab[0x06];
+
+  uc_itab[0x09]= uc_itab[0x08];
+  uc_itab[0x0a]= uc_itab[0x08];
+  uc_itab[0x0b]= uc_itab[0x08];
+  uc_itab[0x0c]= uc_itab[0x08];
+  uc_itab[0x0d]= uc_itab[0x08];
+  uc_itab[0x0e]= uc_itab[0x08];
+  uc_itab[0x0f]= uc_itab[0x08];
+
+  uc_itab[0x31]= uc_itab[0x11];
+  uc_itab[0x51]= uc_itab[0x11];
+  uc_itab[0x71]= uc_itab[0x11];
+  uc_itab[0x91]= uc_itab[0x11];
+  uc_itab[0xb1]= uc_itab[0x11];
+  uc_itab[0xd1]= uc_itab[0x11];
+  uc_itab[0xf1]= uc_itab[0x11];
+
+  uc_itab[0x17]= uc_itab[0x16];
+
+  uc_itab[0x19]= uc_itab[0x18];
+  uc_itab[0x1a]= uc_itab[0x18];
+  uc_itab[0x1b]= uc_itab[0x18];
+  uc_itab[0x1c]= uc_itab[0x18];
+  uc_itab[0x1d]= uc_itab[0x18];
+  uc_itab[0x1e]= uc_itab[0x18];
+  uc_itab[0x1f]= uc_itab[0x18];
+
+  uc_itab[0x29]= uc_itab[0x28];
+  uc_itab[0x2a]= uc_itab[0x28];
+  uc_itab[0x2b]= uc_itab[0x28];
+  uc_itab[0x2c]= uc_itab[0x28];
+  uc_itab[0x2d]= uc_itab[0x28];
+  uc_itab[0x2e]= uc_itab[0x28];
+  uc_itab[0x2f]= uc_itab[0x28];
+
+  uc_itab[0x27]= uc_itab[0x26];
+
+  uc_itab[0x37]= uc_itab[0x36];
+  
+  uc_itab[0x39]= uc_itab[0x38];
+  uc_itab[0x3a]= uc_itab[0x38];
+  uc_itab[0x3b]= uc_itab[0x38];
+  uc_itab[0x3c]= uc_itab[0x38];
+  uc_itab[0x3d]= uc_itab[0x38];
+  uc_itab[0x3e]= uc_itab[0x38];
+  uc_itab[0x3f]= uc_itab[0x38];
+
+  uc_itab[0x47]= uc_itab[0x46];
+
+  uc_itab[0x49]= uc_itab[0x48];
+  uc_itab[0x4a]= uc_itab[0x48];
+  uc_itab[0x4b]= uc_itab[0x48];
+  uc_itab[0x4c]= uc_itab[0x48];
+  uc_itab[0x4d]= uc_itab[0x48];
+  uc_itab[0x4e]= uc_itab[0x48];
+  uc_itab[0x4f]= uc_itab[0x48];
+
+  uc_itab[0x97]= uc_itab[0x96];
+
+  uc_itab[0x99]= uc_itab[0x98];
+  uc_itab[0x9a]= uc_itab[0x98];
+  uc_itab[0x9b]= uc_itab[0x98];
+  uc_itab[0x9c]= uc_itab[0x98];
+  uc_itab[0x9d]= uc_itab[0x98];
+  uc_itab[0x9e]= uc_itab[0x98];
+  uc_itab[0x9f]= uc_itab[0x98];
+
+  uc_itab[0xb7]= uc_itab[0xb6];
+
+  uc_itab[0xb9]= uc_itab[0xb8];
+  uc_itab[0xba]= uc_itab[0xb8];
+  uc_itab[0xbb]= uc_itab[0xb8];
+  uc_itab[0xbc]= uc_itab[0xb8];
+  uc_itab[0xbd]= uc_itab[0xb8];
+  uc_itab[0xbe]= uc_itab[0xb8];
+  uc_itab[0xbf]= uc_itab[0xb8];
+
+  uc_itab[0xd9]= uc_itab[0xd8];
+  uc_itab[0xda]= uc_itab[0xd8];
+  uc_itab[0xdb]= uc_itab[0xd8];
+  uc_itab[0xdc]= uc_itab[0xd8];
+  uc_itab[0xdd]= uc_itab[0xd8];
+  uc_itab[0xde]= uc_itab[0xd8];
+  uc_itab[0xdf]= uc_itab[0xd8];
+
+  uc_itab[0x57]= uc_itab[0x56];
+
+  uc_itab[0x59]= uc_itab[0x58];
+  uc_itab[0x5a]= uc_itab[0x58];
+  uc_itab[0x5b]= uc_itab[0x58];
+  uc_itab[0x5c]= uc_itab[0x58];
+  uc_itab[0x5d]= uc_itab[0x58];
+  uc_itab[0x5e]= uc_itab[0x58];
+  uc_itab[0x5f]= uc_itab[0x58];
+
+  uc_itab[0x67]= uc_itab[0x66];
+
+  uc_itab[0x69]= uc_itab[0x68];
+  uc_itab[0x6a]= uc_itab[0x68];
+  uc_itab[0x6b]= uc_itab[0x68];
+  uc_itab[0x6c]= uc_itab[0x68];
+  uc_itab[0x6d]= uc_itab[0x68];
+  uc_itab[0x6e]= uc_itab[0x68];
+  uc_itab[0x6f]= uc_itab[0x68];
+
+  uc_itab[0x77]= uc_itab[0x76];
+
+  uc_itab[0x79]= uc_itab[0x78];
+  uc_itab[0x7a]= uc_itab[0x78];
+  uc_itab[0x7b]= uc_itab[0x78];
+  uc_itab[0x7c]= uc_itab[0x78];
+  uc_itab[0x7d]= uc_itab[0x78];
+  uc_itab[0x7e]= uc_itab[0x78];
+  uc_itab[0x7f]= uc_itab[0x78];
+
+  uc_itab[0x87]= uc_itab[0x86];
+
+  uc_itab[0xa7]= uc_itab[0xa6];
+
+  uc_itab[0xa9]= uc_itab[0xa8];
+  uc_itab[0xaa]= uc_itab[0xa8];
+  uc_itab[0xab]= uc_itab[0xa8];
+  uc_itab[0xac]= uc_itab[0xa8];
+  uc_itab[0xad]= uc_itab[0xa8];
+  uc_itab[0xae]= uc_itab[0xa8];
+  uc_itab[0xaf]= uc_itab[0xa8];
+
+  uc_itab[0xc7]= uc_itab[0xc6];
+
+  uc_itab[0xc9]= uc_itab[0xc8];
+  uc_itab[0xca]= uc_itab[0xc8];
+  uc_itab[0xcb]= uc_itab[0xc8];
+  uc_itab[0xcc]= uc_itab[0xc8];
+  uc_itab[0xcd]= uc_itab[0xc8];
+  uc_itab[0xce]= uc_itab[0xc8];
+  uc_itab[0xcf]= uc_itab[0xc8];
+
+  uc_itab[0xd7]= uc_itab[0xd6];
+
+  uc_itab[0xe3]= uc_itab[0xe2];
+
+  uc_itab[0xe7]= uc_itab[0xe6];
+
+  uc_itab[0xe9]= uc_itab[0xe8];
+  uc_itab[0xea]= uc_itab[0xe8];
+  uc_itab[0xeb]= uc_itab[0xe8];
+  uc_itab[0xec]= uc_itab[0xe8];
+  uc_itab[0xed]= uc_itab[0xe8];
+  uc_itab[0xee]= uc_itab[0xe8];
+  uc_itab[0xef]= uc_itab[0xe8];
+
+  uc_itab[0xf3]= uc_itab[0xf2];
+
+  uc_itab[0xf7]= uc_itab[0xf6];
 
   irq_stop_option->init();
   dptr= 0;
@@ -702,7 +885,6 @@ cl_51core::init(void)
   reset();
 
   make_vars();
-
   return(0);
 }
 
@@ -871,7 +1053,7 @@ cl_51core::make_address_spaces(void)
   bits->init();
   address_spaces->add(bits);
 
-  dptr= new cl_address_space("dptr", 0, 2, 8);
+  dptr= new cl_address_space("dptr", 0, 4, 8);
   dptr->init();
   address_spaces->add(dptr);
 }
@@ -1401,7 +1583,7 @@ cl_51core::bit_address(class cl_memory *mem,
   if (bit_number < 0 ||
       bit_number > 7 ||
       mem_address < 0)
-    return(-1);
+    return(AU(-1));
   class cl_memory *sfrchip= memory("sfr_chip");
   if (mem == sfrchip)
     {
@@ -1413,17 +1595,17 @@ cl_51core::bit_address(class cl_memory *mem,
       if (mem_address < 128 ||
 	  mem_address % 8 != 0 ||
 	  mem_address > 255)
-	return(-1);
+	return(AU(-1));
       return(128 + (mem_address-128) + bit_number);
     }
   if (mem == iram)
     {
       if (mem_address < 0x20 ||
 	  mem_address >= 0x20+32)
-	return(-1);
+	return(AU(-1));
       return((mem_address-0x20)*8 + bit_number);
     }
-  return(-1);
+  return(AU(-1));
 }
 
 /* Get name of directly addressed iram/sfr cell */
@@ -1599,6 +1781,7 @@ cl_51core::analyze(t_addr addr)
 	    analyze_jump(addr, a, 'j');
 	    return;
 	  }
+	case ' ': break;
 	case '_':
 	  return;
 	default:
@@ -1660,7 +1843,8 @@ cl_51core::exec_inst(void)
   t_mem code;
   int res= resGO;
 
-  if ((res= exec_inst_tab(itab51)) == resNOT_DONE)
+  //if ((res= exec_inst_tab(itab51)) == resNOT_DONE)
+  if ((res= exec_inst_uctab()) == resNOT_DONE)
     {
       fetch(&code);
       res= inst_unknown(code);
@@ -1704,67 +1888,52 @@ cl_51core::high_movxri(void)
 
 /*
  * Simulating execution of next instruction
- *
- * This is an endless loop if requested number of steps is negative.
- * In this case execution is stopped if an instruction results other
- * status than GO. Execution can be stopped if `cmd_in' is not NULL
- * and there is input available on that file. It is useful if the
- * command console is on a terminal. If input is available then a
- * complete line is read and dropped out because input is buffered
- * (inp_avail will be TRUE if ENTER is pressed) and it can confuse
- * command interpreter.
  */
-//static class cl_console *c= NULL;
+
 int
-cl_51core::do_inst(int step)
+cl_51core::do_inst(void)
 {
   t_addr PCsave= PC;
   result= resGO;
-  while ((result == resGO) &&
-	 (state != stPD) &&
-	 (step != 0))
+
+  save_hist();
+  if (state == stGO)
     {
-      if (step > 0)
-	step--;
-      if (state == stGO)
-	{
-	  interrupt->was_reti= false;
-	  pre_inst();
-	  PCsave= PC;
-	  result= exec_inst();
-	  if (result == resGO && !inst_at(PCsave))
-            analyze(PCsave);
-	  post_inst();
-	}
-      else
-	{
-	  // tick hw in idle state
-	  tick(1);
-	}
-
-      if ((result == resGO) && (PC == PCsave) && stop_selfjump)
-	{
-	  result= resSELFJUMP;
-	  sim->stop(result);
-	  break;
-	}
-
-      if (result == resGO)
-	{
-	  int res;
-	  if ((res= do_interrupt()) != resGO)
-	    result= res;
-	  else
-	    result= idle_pd();
-	}
-      if (((result == resINTERRUPT) &&
-	   stop_at_it) ||
-	  result >= resSTOP)
-	{
-	  sim->stop(result);
-	  break;
-	}
+      interrupt->was_reti= false;
+      pre_inst();
+      PCsave= PC;
+      result= exec_inst();
+      if (result == resGO && !inst_at(PCsave) && analyzer)
+	analyze(PCsave);
+      post_inst();
     }
+  else
+    {
+      // tick hw in idle state
+      tick(1);
+    }
+
+  if ((result == resGO) && (PC == PCsave) && stop_selfjump)
+    {
+      result= resSELFJUMP;
+      return result;
+    }
+  
+  if (result == resGO)
+    {
+      int res;
+      if ((res= do_interrupt()) != resGO)
+	result= res;
+      else
+	result= idle_pd();
+    }
+  if ((result == resINTERRUPT) &&
+      stop_at_it)
+    {
+      sim->stop(result);
+      return result;
+    }
+
   if (state == stPD)
     {
       //FIXME: tick outsiders eg. watchdog
@@ -2016,7 +2185,7 @@ cl_uc51_cpu::cfg_help(t_addr addr)
     case uc51cpu_aof_mdps1h:
       return "Address of multi_DPTR_sfr DPH1 (int, RW)";
     case uc51cpu_aof_mdpc:
-      return "Address of multi_DPTR_chip selector, WR selects this stlye of multi_DPTR (int, RW)";
+      return "Address of multi_DPTR_chip selector, WR selects this style of multi_DPTR (int, RW)";
     case uc51cpu_mask_mdpc:
       return "Mask in multi_DPTR_chip selector (int, RW)";
     case uc51cpu_mdp_mode:
@@ -2038,33 +2207,19 @@ cl_uc51_cpu::write(class cl_memory_cell *cell, t_mem *val)
     return;
   if (cell == cell_sp)
     {
-      if (*val > uc->sp_max)
-	uc->sp_max= *val;
-      uc->sp_avg= (uc->sp_avg+(*val))/2;
+      if (*val > uc->sp_most)
+	uc->sp_most= *val;
     }
-  else 
+  else // ACC and its bits
     {
-      bool p;
-      int i;
       uchar uc, n= *val;
-
       if (cell != cell_acc)
 	{
 	  cell->set(*val);
 	  n= cell_acc->get();
 	}
-      p = false;
-      uc= n;
-      for (i= 0; i < 8; i++)
-	{
-	  if (uc & 1)
-	    p= !p;
-	  uc>>= 1;
-	}
-      if (p)
-	cell_psw->set(cell_psw->get() | bmP);
-      else
-	cell_psw->set(cell_psw->get() & ~bmP);
+      uc= cell_psw->get() & ~bmP;
+      cell_psw->set(uc | ptab51[n]);
     }
   /*else if (cell == cell_pcon)
     {

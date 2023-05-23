@@ -38,6 +38,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define _cC		uc->cCC
 #define _cX		uc->cIX
 #define _cY		uc->cIY
+#define _cS		uc->cSP
+#define _cSP		uc->cSP
+
+#define _i8		uc->i8()
 
 #define _d		uc->ddst()
 #define _d_Aop		uc->ddst(),uc->acc.DAB.a8.Ar
@@ -96,6 +100,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define _Aop_dop	uc->acc.DAB.a8.Ar,uc->dop()
 #define _Aop_eop	uc->acc.DAB.a8.Ar,uc->eop()
 #define _Aop_xbop8	uc->acc.DAB.a8.Ar,uc->xbop8()
+#define _Aop_Bop	uc->acc.DAB.a8.Ar,uc->acc.DAB.a8.Br
 
 #define _B_i8		uc->cB,uc->i8()
 #define _B_dop		uc->cB,uc->dop()
@@ -160,6 +165,19 @@ public:
   virtual void set_ticks(int page, int code, int ticks);
   virtual int init()
   {
+    {
+      int i;
+      chars s;
+      for (i= 0; i<256; i++)
+	{
+	  s.format("TRAP $%02x", i);
+	  disass12p18[i].code= i;
+	  disass12p18[i].branch= ' ';
+	  disass12p18[i].length= 2;
+	  disass12p18[i].mnemonic= strdup(s.c_str());
+	  ticks12p18[i]= 11;
+	}
+    }
     fill_0_00();
     fill_0_01();
     fill_0_02();
@@ -673,20 +691,6 @@ public:
     fill_0x18_fd();
     fill_0x18_fe();
     fill_0x18_ff();
-
-    {
-      int i;
-      chars s;
-      for (i= 0; i<256; i++)
-	{
-	  s.format("TRAP $%02x", i);
-	  disass12p18[i].code= i;
-	  disass12p18[i].branch= ' ';
-	  disass12p18[i].length= 2;
-	  disass12p18[i].mnemonic= strdup(s.c_str());
-	  ticks12p18[i]= 11;
-	}
-    }
     return 0;
   }
   virtual void fill_0_00() { page0[0x00]= wrap_INV; }

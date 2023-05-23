@@ -26,16 +26,19 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#pragma std_c99
-
 #include <stdint.h>
+
+#ifdef __SDCC_mcs51
+#define __SDCC_NONBANKED __nonbanked
+#else
+#define __SDCC_NONBANKED
+#endif
 
 #ifdef __SDCC_LONGLONG
 // This function is the same as the one from rrulonglong_rrx_s.c, except for the type of top.
 
-#if defined(__SDCC_hc08) || defined(__SDCC_s08) || defined(__SDCC_stm8) // Big-endian
-
-long long _rrslonglong(long long l, char s)
+#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
+long long _rrslonglong(long long l, char s) __SDCC_NONBANKED
 {
 	int32_t *top = (uint32_t *)((char *)(&l) + 0);
 	uint32_t *middle = (uint16_t *)((char *)(&l) + 2);
@@ -56,10 +59,8 @@ long long _rrslonglong(long long l, char s)
 
 	return(l);
 }
-
-#else // Little-endian
-
-long long _rrslonglong(long long l, char s)
+#else
+long long _rrslonglong(long long l, char s) __SDCC_NONBANKED
 {
 	int32_t *top = (uint32_t *)((char *)(&l) + 4);
 	uint16_t *middle = (uint16_t *)((char *)(&l) + 3);

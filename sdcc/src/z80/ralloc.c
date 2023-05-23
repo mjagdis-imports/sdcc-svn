@@ -4,12 +4,12 @@
     Note: much of this is ripped straight from Sandeep's mcs51 code.
 
     This code maps the virtual symbols and code onto the real
-    hardware.  It allocates based on usage and how long the varible
+    hardware.  It allocates based on usage and how long the variable
     lives into registers or temporary memory on the stack.
 
     On the Z80 hl and ix and a are reserved for the code generator,
     leaving bc and de for allocation.  iy is unusable due to currently
-    as it's only adressable as a pair.  The extra register pressure
+    as it's only addressable as a pair.  The extra register pressure
     from reserving hl is made up for by how much easier the sub
     operations become.  You could swap hl for iy if the undocumented
     iyl/iyh instructions are available.
@@ -20,9 +20,9 @@
     ix+4:       param 0
     ix+2:       return address
     ix+0:       calling functions ix
-    ix-n:       local varibles
+    ix-n:       local variables
     ...
-    sp:         end of local varibles
+    sp:         end of local variables
 
     There is currently no support for bit spaces or banked functions.
 
@@ -190,7 +190,7 @@ DEFSETFUNC (isFree)
   /* if it is free && and the itmp assigned to
      this does not have any overlapping live ranges
      with the one currently being assigned and
-     the size can be accomodated  */
+     the size can be accommodated  */
   if (sym->isFree && noOverLap (sym->usl.itmpStack, fsym) && getSize (sym->type) >= getSize (fsym->type))
     {
       *sloc = sym;
@@ -359,13 +359,6 @@ deassignLRs (iCode *ic, eBBlock *ebp)
       if (!bitVectBitValue (_G.regAssigned, sym->key))
         continue;
 
-      /* special case check if this is an IFX &
-         the privious one was a pop and the
-         previous one was not spilt then keep track
-         of the symbol */
-      if (ic->op == IFX && ic->prev && ic->prev->op == IPOP && !ic->prev->parmPush && !OP_SYMBOL (IC_LEFT (ic->prev))->isspilt)
-        psym = OP_SYMBOL (IC_LEFT (ic->prev));
-
       D (D_ALLOC, ("deassignLRs: in loop on sym %p nregs %u\n", sym, sym->nRegs));
 
       if (sym->nRegs)
@@ -387,29 +380,6 @@ deassignLRs (iCode *ic, eBBlock *ebp)
             }
         }
     }
-}
-
-/** Reassign this to registers.
- */
-static void
-reassignLR (operand *op)
-{
-  symbol *sym = OP_SYMBOL (op);
-  int i;
-
-  D (D_ALLOC, ("reassingLR: on sym %p\n", sym));
-
-  /* not spilt any more */
-  sym->isspilt = sym->spillA = sym->blockSpil = sym->remainSpil = 0;
-  bitVectUnSetBit (_G.spiltSet, sym->key);
-
-  _G.regAssigned = bitVectSetBit (_G.regAssigned, sym->key);
-  _G.totRegAssigned = bitVectSetBit (_G.totRegAssigned, sym->key);
-
-  _G.blockSpil--;
-
-  for (i = 0; i < sym->nRegs; i++)
-    sym->regs[i]->isFree = 0;
 }
 
 /*------------------------------------------------------------------*/
@@ -1161,7 +1131,7 @@ joinPushes (iCode * lic)
       val = constVal (dbuf_c_str (&dbuf));
       dbuf_destroy (&dbuf);
       SPEC_NOUN (val->type) = V_INT;
-      IC_LEFT (ic) = operandFromValue (val);
+      IC_LEFT (ic) = operandFromValue (val, false);
 
       /* Now remove the second one from the list. */
       ic->next = uic->next;
@@ -1197,14 +1167,6 @@ serialRegMark (eBBlock ** ebbs, int count)
       /* for all instructions do */
       for (ic = ebbs[i]->sch; ic; ic = ic->next)
         {
-          /* if this is an ipop that means some live
-             range will have to be assigned again */
-          if (ic->op == IPOP)
-            {
-              wassert (0);
-              reassignLR (IC_LEFT (ic));
-            }
-
           /* if result is present && is a true symbol */
           if (IC_RESULT (ic) && ic->op != IFX && IS_TRUE_SYMOP (IC_RESULT (ic)))
             {
@@ -1217,7 +1179,7 @@ serialRegMark (eBBlock ** ebbs, int count)
 
           /* some don't need registers */
           if (SKIP_IC2 (ic) ||
-              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == IPOP || (IC_RESULT (ic) && POINTER_SET (ic)))
+              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || (IC_RESULT (ic) && POINTER_SET (ic)))
             {
               continue;
             }
@@ -1229,7 +1191,7 @@ serialRegMark (eBBlock ** ebbs, int count)
 
               D (D_ALLOC, ("serialRegAssign: in loop on result %p (%s)\n", sym, sym->name));
 
-              /* Make sure any spill location is definately allocated */
+              /* Make sure any spill location is definitely allocated */
               if (sym->isspilt && !sym->remat && sym->usl.spillLoc && !sym->usl.spillLoc->allocreq)
                 {
                   sym->usl.spillLoc->allocreq++;

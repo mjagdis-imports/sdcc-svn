@@ -39,10 +39,26 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 enum flags
   {
    S= 1,
+   N= 1,
    C= 2,
    Z= 4,
-   O= 8
+   O= 8,
+   V= 8,
+   // p2223 flags
+   P= 0x10, // 1:Pre 0:Post
+   U= 0x20 // 1:Up  0:Down
   };
+
+
+class cl_pc_write: public cl_memory_operator
+{
+protected:
+  class cl_uc *uc;
+public:
+  cl_pc_write(class cl_memory_cell *acell, class cl_uc *the_uc);
+  virtual t_mem write(t_mem val);
+};
+
 
 class cl_p1516: public cl_uc
 {
@@ -50,35 +66,41 @@ public:
   u8_t F;
   u32_t R[16];
   cl_memory_cell *RC[16];
+  cl_cell8 cF;
   cl_address_space *regs;
   class cl_porto *pa, *pb, *pc, *pd;
   class cl_porti *pi, *pj;
+  class cl_memory_chip *rom_chip;
 public:
-  class cl_address_space *rom;
+  //class cl_address_space *rom;
  public:
   cl_p1516(class cl_sim *asim);
   virtual int init(void);
   virtual const char *id_string(void);
   virtual void reset(void);
   virtual void set_PC(t_addr addr);
-
+  
   virtual void mk_hw_elements(void);
   virtual void make_memories(void);
-  virtual int clock_per_cycle(void) { return 4; }
+  virtual int clock_per_cycle(void) { return 1; }
+  virtual double def_xtal(void) { return 25000000; }
   
   virtual struct dis_entry *dis_tbl(void);
   virtual char *disassc(t_addr addr, chars *comment);
+  virtual void analyze_start(void);
+  virtual void analyze(t_addr addr);
   virtual void print_regs(class cl_console_base *con);
 
+  virtual bool cond(t_mem code);
   virtual t_mem inst_ad(t_mem ra, t_mem rb, u32_t c);
   virtual int inst_alu(t_mem code);
   virtual int exec_inst(void);
 };
 
-#define SET_C(v) ( F= (F&~C) | ((v)?C:0) )
-#define SET_Z(v) ( F= (F&~Z) | ((v==0)?Z:0) )
-#define SET_S(v) ( F= (F&~S) | ((v)?S:0) )
+#define SET_C(v) ( cF.W( (F&~C) | ((v)?C:0) ))
+#define SET_Z(v) ( cF.W( (F&~Z) | ((v==0)?Z:0) ))
+#define SET_S(v) ( cF.W( (F&~S) | ((v)?S:0) ))
 
 #endif
 
-/* End of p1516.src/p1516.cc */
+/* End of p1516.src/p1516cl.h */

@@ -3,19 +3,35 @@
 ////////////////////////////////////////////////////////
 
 replace restart {
-        sta	%1
-        stx	%2
+	sta	%1
+	stx	%2
+	lda	%1
+	sta	%3
+	lda	%2
+	sta	%4
+} by {
+	sta	%1
+	stx	%2
+    ; Peephole Function Entry  - eliminated unnecessary lda
+	sta	%3
+    ; Peephole Function Entry  - eliminated unnecessary lda
+	stx	%4
+}
+
+replace restart {
+	sta	%1
+	stx	%2
 	lda     %1
 	ldx     %2
 } by {
-        sta	%1
-        stx	%2
+	sta	%1
+	stx	%2
     ; Peephole Function Entry  - eliminated redundant lda/ldx
 } if notVolatile(%1), notVolatile(%2)
 
 replace restart {
-      	ldx	%1
-        ldy	%2
+	ldx	%1
+	ldy	%2
 	clc
 	txa
 	adc	%3
@@ -30,32 +46,33 @@ replace restart {
 	clc
 	adc	%3
 	sta	%4
-        lda	%2
+	lda	%2
     ; Peephole genpointer YX   - replaced tya with lda
-	adc     %5
+	adc	%5
 	sta	%6
 }
 
-replace restart {
-      	lda	%1
-        ldx	%2
-	clc
-	adc	%3
-	sta	%4
-	txa
-	adc     %5
-	sta	%6
-} by {
-	lda	%1
-    ; Peephole genpointer XA   - eliminated ldx
-	clc
-	adc	%3
-	sta	%4
-        lda	%2
-    ; Peephole genpointer XA   - replaced txa with lda
-	adc     %5
-	sta	%6
-}
+// TODO: Enable when notUsed() gets implemented!
+//replace restart {
+//	lda	%1
+//	ldx	%2
+//	clc
+//	adc	%3
+//	sta	%4
+//	txa
+//	adc	%5
+//	sta	%6
+//} by {
+//	lda	%1
+//	; Peephole genpointer XA   - eliminated ldx
+//	clc
+//	adc	%3
+//	sta	%4
+//	lda	%2
+//	; Peephole genpointer XA   - replaced txa with lda
+//	adc	%5
+//	sta	%6
+//} if notUsed('x')
 
 
 ////////////////////////////////////////////////////////
@@ -150,11 +167,11 @@ replace restart {
 
 replace restart {
 	lda	%1
-	pla
+	%2
 } by {
 	; Peephole load 11 - removed dead lda
-	pla
-}
+	%2
+} if same(%2 'txa' 'tya' 'pla' )
 
 replace restart {
 	lda	%4
@@ -214,7 +231,7 @@ replace restart {
 	%1
 	lda	%2
 } by {
-	; Peephole regop 1 - removed dead %1 folowed by lda
+	; Peephole regop 1 - removed dead %1 followed by lda
 	lda	%2
 } if same(%1 'txa' 'tya')
 
@@ -222,7 +239,7 @@ replace restart {
 	%1 %3
 	lda	%2
 } by {
-	; Peephole regop 2 - removed dead %1 folowed by lda
+	; Peephole regop 2 - removed dead %1 followed by lda
 	lda	%2
 } if same(%1 'and' 'eor' 'ora' )
 
@@ -331,7 +348,7 @@ replace restart {
 	cmp	#0x00
 } by {
 	lda	%1,%2
-	; Peephole 3a1	- eliminated unnecessary cmp #0x00
+	; Peephole cmp 2 - eliminated unnecessary cmp #0x00
 }
 
 replace restart {
@@ -339,7 +356,7 @@ replace restart {
 	cmp	#0x00
 } by {
 	%1
-	; Peephole cmp 2 - eliminated unnecessary cmp #0x00
+	; Peephole cmp 3 - eliminated unnecessary cmp #0x00
 } if same(%1 'pla' 'txa' 'tya' )
 
 replace restart {
@@ -347,7 +364,7 @@ replace restart {
 	cpx	#0x00
 } by {
 	ldx	%1
-	; Peephole cmp 3 - eliminated unnecessary cpx #0x00
+	; Peephole cmp 4 - eliminated unnecessary cpx #0x00
 }
 
 replace restart {
@@ -355,7 +372,7 @@ replace restart {
 	cpy	#0x00
 } by {
 	ldy	%1
-	; Peephole cmp 4 - eliminated unnecessary cpy #0x00
+	; Peephole cmp 5 - eliminated unnecessary cpy #0x00
 }
 
 replace restart {
@@ -363,7 +380,7 @@ replace restart {
 	cpx	#0x00
 } by {
 	%1
-	; Peephole cmp 5 - eliminated unnecessary cpx #0x00
+	; Peephole cmp 6 - eliminated unnecessary cpx #0x00
 } if same(%1 'inx' 'dex' 'tax' )
 
 replace restart {
@@ -371,7 +388,7 @@ replace restart {
 	cpy	#0x00
 } by {
 	%1
-	; Peephole cmp 6 - eliminated unnecessary cpy #0x00
+	; Peephole cmp 7 - eliminated unnecessary cpy #0x00
 } if same(%1 'iny' 'dey' 'tay' )
 
 ////////////////////////////////////////////////////////
@@ -387,32 +404,60 @@ replace restart {
 } if notVolatile(%2)
 
 replace restart {
-	ldx	%2
-	stx	%2
+	lda	%2
+	%1
+	sta	%2
 } by {
-	ldx	%2
-	; Peephole store 2 - removed redundant stx
-} if notVolatile(%2)
-
-replace restart {
-	ldy	%2
-	sty	%2
-} by {
-	ldy	%2
-	; Peephole store 3 - removed redundant sty
-} if notVolatile(%2)
+	lda	%2
+	%1
+	; Peephole store 2 - removed redundant sta
+} if notSame(%1 'pla' 'txa' 'tya'), notVolatile(%2)
 
 replace restart {
 	lda	%2
 	%1 	a
 	sta	%2
 } by {
-	; Peephole store 4 - removed redundant sta
+	; Peephole store 3 - removed redundant sta
 	%1	%2
 	lda	%2
 } if same(%1 'asl' 'rol' 'ror'), notVolatile(%2)
 
+replace restart {
+	ldx	%2
+	stx	%2
+} by {
+	ldx	%2
+	; Peephole store 4 - removed redundant stx
+} if notVolatile(%2)
 
+replace restart {
+	ldx	%2
+	%1
+	stx	%2
+} by {
+	ldx	%2
+	%1
+	; Peephole store 5 - removed redundant stx
+} if notSame(%1 'tax' 'inx' 'dex'), notVolatile(%2)
+
+replace restart {
+	ldy	%2
+	sty	%2
+} by {
+	ldy	%2
+	; Peephole store 6 - removed redundant sty
+} if notVolatile(%2)
+
+replace restart {
+	ldy	%2
+	%1
+	sty	%2
+} by {
+	ldy	%2
+	%1
+	; Peephole store 7 - removed redundant sty
+} if notSame(%1 'tay' 'iny' 'dey'), notVolatile(%2)
 
 ////////////////////////////////////////////////////////
 // Replace jmp with branch

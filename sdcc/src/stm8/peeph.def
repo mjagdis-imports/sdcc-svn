@@ -89,6 +89,14 @@ replace restart {
 }
 
 replace restart {
+	ld	a, %1
+	ld	%2, a
+} by {
+	mov	%2, %1
+	; peephole 4d replaced pair of mem-to-mem load with mov.
+} if operandsLitOrSym(%1), operandsLitOrSym(%2), notUsed('a' 'n' 'z')
+
+replace restart {
 	ld	%1, a
 	exg	a, %1
 } by {
@@ -182,7 +190,7 @@ replace restart {
 	; peephole 10a moved addition of offset into storage instruction
 	ldw	%3, %4
 	ldw	(0x02, %1), %3
-} if notUsed(%1)
+} if notUsed(%1), notSame(%1 %4)
 
 replace restart {
 	addw	%1, #(_%2)
@@ -856,6 +864,16 @@ replace restart {
 	jrne	%2
 	; peephole 22d removed redundant clrw %1.
 }
+
+replace restart {
+	push	a
+	clr	a
+	clr	(%1, sp)
+} by {
+	clr	a
+	push	a
+	; peephole 22e optimise 'push-clr-clr' sequence, remove 'clr (%1, sp)' and reorder to 'clr-push'.
+} if immdInRange(1 1 '+' 0 %1 %2)
 
 replace restart {
 	%3	a, %1
@@ -1627,7 +1645,7 @@ replace restart {
 	; peephole j2d-ne removed unreachable jump to %2.
 } if labelRefCountChange(%2 -1)
 
-// Ensure jump-to-jump optimiation of absolute jumps above is done before other jump-related optimizations.
+// Ensure jump-to-jump optimization of absolute jumps above is done before other jump-related optimizations.
 barrier
 
 replace restart {
@@ -1917,7 +1935,6 @@ replace restart {
 } by {
 	; peephole j30 removed unused label %1.
 } if labelRefCount(%1 0)
-
 
 replace restart {
 	ldw	x, (%1, sp)

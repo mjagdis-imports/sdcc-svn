@@ -69,6 +69,7 @@ using namespace std;
 cl_pblaze::cl_pblaze(struct cpu_entry *cputype, class cl_sim *asim):
   cl_uc(asim)
 {
+  PCmask= 0x3ff;
   type = cputype;
 }
 
@@ -96,7 +97,7 @@ cl_pblaze::init(void)
 
   cl_uc::init(); /* Memories now exist */
 
-  set_xtal(8000000);
+  //set_xtal(8000000);
 
   // loading file with interrupts
   read_interrupt_file();
@@ -713,7 +714,7 @@ cl_pblaze::load_state(class cl_console_base *con, char *file_name)
   TiXmlElement *root = doc.FirstChildElement("picoblaze");
   TiXmlElement *element;
 
-  // TODO lover/uppper case
+  // TODO lover/upper case
   if (strcmp(root->Attribute("type"), id_string()) != 0) {
     con->dd_printf("Error: types of Picoblaze don't match current configuration.");
     return;
@@ -835,7 +836,7 @@ cl_pblaze::load_state(class cl_console_base *con, char *file_name)
  */
 
 
-
+/*
 int
 cl_pblaze::do_inst(int step)
 {
@@ -852,7 +853,6 @@ cl_pblaze::do_inst(int step)
       post_inst();
 
       if (result == resINV_INST)
-        /* backup to start of instruction */
         PC = PCsave;
       else if (result == resGO) {
           if (!inst_at(PCsave))
@@ -867,7 +867,7 @@ cl_pblaze::do_inst(int step)
     sim->stop(result);
   return(result);
 }
-
+*/
 
 int
 cl_pblaze::exec_inst(void)
@@ -977,10 +977,7 @@ cl_pblaze::exec_inst(void)
             break;
     }
 
-  // this shouldnt be executed. If so, something bad happend in simulated program
-  PC = rom->inc_address(PC, -1);
-
-  sim->stop(resINV_INST);
+  // this shouldn't be executed. If so, something bad happened in simulated program
   return(resINV_INST);
 }
 
@@ -1153,7 +1150,7 @@ cl_pblaze::pblaze_read_hex_file(const char *nam)
       addr++;
       written++;
 
-      // skip unnecesary characters (white space etc)
+      // skip unnecessary characters (white space etc)
       if (fscanf(f, "%*[ \n\r\t]"))
         {} // if statement only for prevent warning during compilation
     }

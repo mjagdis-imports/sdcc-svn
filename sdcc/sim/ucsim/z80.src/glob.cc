@@ -30,11 +30,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "stypes.h"
 
-#ifndef R2K
 #define  DISASS_NAME(X)  disass_z80##X
-#else
-#define  DISASS_NAME(X)  disass_r2k##X
-#endif
 
 /* 
 %d - signed compl.,byte jump 
@@ -43,13 +39,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
   */
 /*  uint  code, mask;  char  branch;  uchar length;  char  *mnemonic; */
 
-struct dis_entry
-#ifndef R2K
-disass_z80
-#else
-disass_r2k
-#endif
-  []= {
+struct dis_entry disass_z80[]= {
   { 0x0000, 0x00ff, ' ', 1, "NOP" },
   { 0x0001, 0x00ff, ' ', 3, "LD BC,%w" },
   { 0x0002, 0x00ff, ' ', 1, "LD (BC),A" },
@@ -93,11 +83,7 @@ disass_r2k
   { 0x0024, 0x00ff, ' ', 1, "INC H" },
   { 0x0025, 0x00ff, ' ', 1, "DEC H" },
   { 0x0026, 0x00ff, ' ', 2, "LD H,%b" },
-#ifndef R2K
   { 0x0027, 0x00ff, ' ', 1, "DAA" },
-#else
-  { 0x0027, 0x00ff, ' ', 2, "ADD SP,%d" },
-#endif
 
   { 0x0028, 0x00ff, 'R', 2, "JR Z,%d" },
   { 0x0029, 0x00ff, ' ', 1, "ADD HL,HL" },
@@ -186,11 +172,7 @@ disass_r2k
   { 0x0073, 0x00ff, ' ', 1, "LD (HL),E" },
   { 0x0074, 0x00ff, ' ', 1, "LD (HL),H" },
   { 0x0075, 0x00ff, ' ', 1, "LD (HL),L" },
-#ifndef R2K
   { 0x0076, 0x00ff, ' ', 1, "HALT" },
-#else
-  { 0x0076, 0x00ff, ' ', 1, "ALTD" },
-#endif
   { 0x0077, 0x00ff, ' ', 1, "LD (HL),A" },
 
   { 0x0078, 0x00ff, ' ', 1, "LD A,B" },
@@ -278,47 +260,26 @@ disass_r2k
   { 0x00c1, 0x00ff, ' ', 1, "POP BC" },
   { 0x00c2, 0x00ff, 'A', 3, "JP NZ, %w" },
   { 0x00c3, 0x00ff, 'A', 3, "JP %w" },
-#ifndef R2K
   { 0x00c4, 0x00ff, 'l', 3, "CALL NZ,%w", true },
-#else
-  { 0x00c4, 0x00ff, ' ', 2, "LD HL,(SP+%d)" },
-#endif
   { 0x00c5, 0x00ff, ' ', 1, "PUSH BC" },
   { 0x00c6, 0x00ff, ' ', 2, "ADD A,%b" },
-#ifndef R2K
   { 0x00c7, 0x00ff, ' ', 1, "RST 0", true },
-#else
-  { 0x00c7, 0x00ff, ' ', 4, "LJP %w,%b" },
-#endif
 
   { 0x00c8, 0x00ff, ' ', 1, "RET Z" },
   { 0x00c9, 0x00ff, ' ', 1, "RET" },
   { 0x00ca, 0x00ff, 'A', 3, "JP Z,%w" },
   { 0x00cb, 0x00ff, ' ', 2, "?cb?" }, /* ESC code to lots of op-codes, all 2-byte */
 
-#ifndef R2K
   { 0x00cc, 0x00ff, 'l', 3, "CALL Z,%w", true },
-#else
-  { 0x00cc, 0x00ff, 'l', 1, "BOOL  HL" },  
-#endif
   { 0x00cd, 0x00ff, 'l', 3, "CALL %w", true },
   { 0x00ce, 0x00ff, ' ', 2, "ADC A,%b" },
-#ifndef R2K
   { 0x00cf, 0x00ff, ' ', 1, "RST 8", true },
-#else
-  { 0x00cf, 0x00ff, ' ', 4, "LCALL  %w,%b", true },
-#endif
   
   { 0x00d0, 0x00ff, ' ', 1, "RET NC" },
   { 0x00d1, 0x00ff, ' ', 1, "POP DE" },
   { 0x00d2, 0x00ff, 'A', 3, "JP NC,%w" },
-#ifndef R2K
   { 0x00d3, 0x00ff, ' ', 2, "OUT (%b),A" },
   { 0x00d4, 0x00ff, 'l', 3, "CALL NC,%w", true },
-#else
-  { 0x00d3, 0x00ff, ' ', 1, "IOI" },
-  { 0x00d4, 0x00ff, 'l', 2, "LD (SP+%d),HL" },
-#endif
   { 0x00d5, 0x00ff, ' ', 1, "PUSH DE" },
   { 0x00d6, 0x00ff, ' ', 2, "sub %b" },
   { 0x00d7, 0x00ff, ' ', 1, "RST 10H", true },
@@ -326,13 +287,8 @@ disass_r2k
   { 0x00d8, 0x00ff, ' ', 1, "RET C" },
   { 0x00d9, 0x00ff, ' ', 1, "EXX" },
   { 0x00da, 0x00ff, 'A', 3, "JP C,%w" },
-#ifndef R2K
   { 0x00db, 0x00ff, ' ', 2, "IN A,(%b)" },
   { 0x00dc, 0x00ff, 'l', 3, "CALL C,%w", true },
-#else
-  { 0x00db, 0x00ff, ' ', 1, "IOE" },
-  { 0x00dc, 0x00ff, 'l', 1, "AND HL,DE" },
-#endif
   { 0x00dd, 0x00ff, ' ', 2, "?dd?" },  /* 0xdd - ESC codes,about 284, vary lengths, IX centric */
   { 0x00de, 0x00ff, ' ', 2, "SBC A,%b" },
   { 0x00df, 0x00ff, ' ', 1, "RST 18H", true },
@@ -340,13 +296,8 @@ disass_r2k
   { 0x00e0, 0x00ff, ' ', 1, "RET PO" },
   { 0x00e1, 0x00ff, ' ', 1, "POP HL" },
   { 0x00e2, 0x00ff, 'A', 3, "JP PO,%w" },
-#ifndef R2K
   { 0x00e3, 0x00ff, ' ', 1, "EX (SP),HL" },
   { 0x00e4, 0x00ff, 'l', 3, "CALL PO,%w", true },
-#else
-  { 0x00e3, 0x00ff, ' ', 1, "EX DE',HL" },
-  { 0x00e4, 0x00ff, 'l', 2, "LD HL,(IX+%d)" },
-#endif
   { 0x00e5, 0x00ff, ' ', 1, "PUSH HL" },
   { 0x00e6, 0x00ff, ' ', 2, "AND %b" },
   { 0x00e7, 0x00ff, ' ', 1, "RST 20H", true },
@@ -355,13 +306,8 @@ disass_r2k
   { 0x00e9, 0x00ff, 'A', 1, "JP (HL)" },
   { 0x00ea, 0x00ff, 'A', 3, "JP PE,%w" },
   { 0x00eb, 0x00ff, ' ', 1, "EX DE,HL" },
-#ifndef R2K
   { 0x00ec, 0x00ff, 'l', 3, "CALL PE, %w", true },
   { 0x00ed, 0x00ff, ' ', 2, "?ed?" },  /* ESC code to about 80 opcodes of various lengths */
-#else
-  { 0x00ec, 0x00ff, 'l', 1, "OR HL,DE" },
-  { 0x00ed, 0x00ff, ' ', 1, "?ed?" },  /* ESC code to about 80 opcodes of various lengths */
-#endif
   
   { 0x00ee, 0x00ff, ' ', 2, "XOR %b" },
   { 0x00ef, 0x00ff, ' ', 1, "RST 28H", true },
@@ -369,30 +315,16 @@ disass_r2k
   { 0x00f0, 0x00ff, ' ', 1, "RET P" },
   { 0x00f1, 0x00ff, ' ', 1, "POP AF" },
   { 0x00f2, 0x00ff, 'A', 3, "JP P,%w" },
-#ifndef R2K
   { 0x00f3, 0x00ff, ' ', 1, "DI" },
   { 0x00f4, 0x00ff, 'l', 3, "CALL P,%w", true },
-#else
-  { 0x00f3, 0x00ff, ' ', 1, "RL DE" },
-  { 0x00f4, 0x00ff, 'l', 2, "LD (IX+%d),HL" },
-#endif
   { 0x00f5, 0x00ff, ' ', 1, "PUSH AF" },
   { 0x00f6, 0x00ff, ' ', 2, "OR %b" },
-#ifndef R2K
   { 0x00f7, 0x00ff, ' ', 1, "RST 30H", true },
-#else
-  { 0x00f7, 0x00ff, ' ', 1, "MUL" },
-#endif
   { 0x00f8, 0x00ff, ' ', 1, "RET M" },
   { 0x00f9, 0x00ff, ' ', 1, "LD SP,HL" },
   { 0x00fa, 0x00ff, ' ', 3, "JP M,%w" },
-#ifndef R2K
   { 0x00fb, 0x00ff, ' ', 1, "EI" },
   { 0x00fc, 0x00ff, 'l', 3, "CALL M,%w", true },
-#else
-  { 0x00fb, 0x00ff, ' ', 1, "RR DE" },
-  { 0x00fc, 0x00ff, 'l', 1, "RR HL" },
-#endif
   { 0x00fd, 0x00ff, ' ', 1, "?fd?" }, /* ESC codes,about 284, vary lengths, IY centric */
   { 0x00fe, 0x00ff, ' ', 2, "CP %b" },
   { 0x00ff, 0x00ff, ' ', 1, "RST 38H", true },
@@ -401,7 +333,6 @@ disass_r2k
 };
 
 
-#ifndef R2K
 struct dis_entry disass_z80n_ed[]=
   {
    { 0x00a4, 0x00ff, ' ', 1, "LDIX" },
@@ -500,89 +431,6 @@ struct dis_entry disass_z80_ed[]= {
   { 0x00BB, 0x00ff, ' ', 1, "OTDR" },
   { 0, 0, 0, 0, NULL }
 };
-#endif
-
-#ifdef R2K
-struct dis_entry disass_r2k_ed[]= {
-#if 0 /* oops, rabbit 4000 only */
-  { 0x0000, 0x00ff, ' ', 2, "CBM %d" },
-  { 0x0002, 0x00ff, ' ', 1, "SBOX A" },
-  { 0x0010, 0x00ff, 'R', 2, "DWJNZ %d" },
-  
-  { 0x0040, 0x00ff, ' ', 1, "LD HTR,A" },
-#endif
-  { 0x0041, 0x00ff, ' ', 1, "LD BC',DE" },
-  { 0x0042, 0x00ff, ' ', 1, "SBC HL,BC" },
-  { 0x0043, 0x00ff, ' ', 3, "LD (%w),BC" },
-  { 0x0044, 0x00ff, ' ', 1, "NEG" },
-  { 0x0045, 0x00ff, ' ', 1, "LRET" },
-  { 0x0046, 0x00ff, ' ', 1, "IPSET 0" },
-  { 0x0047, 0x00ff, ' ', 1, "LD EIR,A" },
-
-  { 0x0048, 0x00ff, ' ', 1, "CP HL,DE" },
-  { 0x0049, 0x00ff, ' ', 1, "LD BC',BC" },
-  { 0x004A, 0x00ff, ' ', 1, "ADC HL,BC" },
-  { 0x004B, 0x00ff, ' ', 3, "LD BC,(%w)" },
-  { 0x004C, 0x00ff, ' ', 1, "TEST BC" },
-  { 0x004D, 0x00ff, ' ', 1, "RETI" },
-  { 0x004E, 0x00ff, ' ', 1, "IPSET 2" },
-  { 0x004F, 0x00ff, ' ', 1, "LD IIR,A" },
-  
-  /* { 0x0050, 0x00ff, ' ', 1, "LD A,HTR" }, * rabbit 4000 only */
-  { 0x0051, 0x00ff, ' ', 1, "LD DE',DE" },
-  { 0x0052, 0x00ff, ' ', 1, "SBC HL,DE" },
-  { 0x0053, 0x00ff, ' ', 3, "LD (%w),DE" },
-  { 0x0056, 0x00ff, ' ', 1, "IPSET 1" },
-  { 0x0057, 0x00ff, ' ', 1, "LD A,EIR" },
-  
-  { 0x0059, 0x00ff, ' ', 1, "LD DE',BC" },
-  { 0x005A, 0x00ff, ' ', 1, "ADC HL,DE" },
-  { 0x005B, 0x00ff, ' ', 3, "LD DE,(%w)" },
-  { 0x005D, 0x00ff, ' ', 1, "IPRES" },
-  { 0x005E, 0x00ff, ' ', 1, "IPSET 3" },
-  { 0x005F, 0x00ff, ' ', 1, "LD A,IIR" },
-  
-  { 0x0061, 0x00ff, ' ', 1, "LD HL',DE" },
-  { 0x0062, 0x00ff, ' ', 1, "SBC HL,HL" },
-  { 0x0063, 0x00ff, ' ', 3, "LD (nnnn),HL" },
-  { 0x0064, 0x00ff, ' ', 1, "LDP (HL),HL" },
-  { 0x0065, 0x00ff, ' ', 3, "LDP (%w),HL" },
-  { 0x0067, 0x00ff, ' ', 1, "LD XPC,A" },
-  
-  { 0x006A, 0x00ff, ' ', 1, "ADC HL,HL" },
-  { 0x006B, 0x00ff, ' ', 3, "LD HL,(nnnn)" },
-  { 0x006C, 0x00ff, ' ', 1, "LDP HL,(HL)" },
-  { 0x006D, 0x00ff, ' ', 3, "LDP HL,(%w)" },
-  { 0x0072, 0x00ff, ' ', 1, "SBC HL,SP" },
-  { 0x0073, 0x00ff, ' ', 3, "LD (nnnn),SP" },
-  { 0x0076, 0x00ff, ' ', 1, "PUSH IP" },
-  { 0x0077, 0x00ff, ' ', 1, "LD A,XPC" },
-  
-  { 0x007A, 0x00ff, ' ', 1, "ADC HL,SP" },
-  { 0x007B, 0x00ff, ' ', 3, "LD SP,(nnnn)" },
-  { 0x007E, 0x00ff, ' ', 1, "POP IP" },
-  
-#if 0
-  { 0x0080, 0x00ff, ' ', 1, "COPY" },   /* Rabbit 4000 and up */
-  { 0x0083, 0x00ff, ' ', 1, "SRET" },   /* Rabbit 4000 and up */  
-  { 0x0088, 0x00ff, ' ', 1, "COPYR" },  /* Rabbit 4000 and up */
-  { 0x008B, 0x00ff, ' ', 1, "LLRET" },  /* Rabbit 4000 and up */  
-  
-  { 0x0090, 0x00ff, ' ', 1, "LDISR" },  /* Rabbit 3000 and up */
-  { 0x0098, 0x00ff, ' ', 1, "LDDSR" },  /* Rabbit 3000 and up */
-#endif
-  
-  { 0x00A0, 0x00ff, ' ', 1, "LDI" },
-  { 0x00A8, 0x00ff, ' ', 1, "LDD" },
-  
-  { 0x00B0, 0x00ff, ' ', 1, "LDIR" },
-  { 0x00B8, 0x00ff, ' ', 1, "LDDR" },
-  
-  { 0x00EA, 0x00ff, ' ', 1, "CALL (HL)", true },
-  
-  { 0, 0, 0, 0, NULL }
-};
-#endif
 
 struct dis_entry DISASS_NAME(_cb)[]= {
   { 0x0000, 0x00ff, ' ', 1, "RLC B" },
@@ -860,32 +708,23 @@ struct dis_entry DISASS_NAME(_dd)[]= {
   { 0x0054, 0x00ff, ' ', 1, "LD D,HX" },
   { 0x0055, 0x00ff, ' ', 1, "LD D,LX" },
   { 0x0056, 0x00ff, ' ', 2, "LD D,(IX+%d)" },
-  { 0x005C, 0x00ff, ' ', 1, "LD E,H" },
-  { 0x005D, 0x00ff, ' ', 1, "LD E,L" },
+  { 0x005C, 0x00ff, ' ', 1, "LD E,HX" },
+  { 0x005D, 0x00ff, ' ', 1, "LD E,LX" },
   { 0x005E, 0x00ff, ' ', 2, "LD E,(IX+%d)" },
   { 0x0060, 0x00ff, ' ', 1, "LD HX,B" },
   { 0x0061, 0x00ff, ' ', 1, "LD HX,C" },
   { 0x0062, 0x00ff, ' ', 1, "LD HX,D" },
   { 0x0063, 0x00ff, ' ', 1, "LD HX,E" },
-#ifndef R2K
   { 0x0064, 0x00ff, ' ', 1, "LD HX,HX" },
-#else
-  { 0x0064, 0x00ff, ' ', 1, "LDP (IX),HL" },
-#endif
-  { 0x0065, 0x00ff, ' ', 3, "LDP (%w),IX" },
+  { 0x0065, 0x00ff, ' ', 1, "LD HX,LX" },
   { 0x0066, 0x00ff, ' ', 2, "LD H,(IX+%d)" },
   { 0x0067, 0x00ff, ' ', 1, "LD HX,A" },
   { 0x0068, 0x00ff, ' ', 1, "LD LX,B" },
   { 0x0069, 0x00ff, ' ', 1, "LD LX,C" },
   { 0x006A, 0x00ff, ' ', 1, "LD LX,D" },
   { 0x006B, 0x00ff, ' ', 1, "LD LX,E" },
-#ifndef R2K
   { 0x006C, 0x00ff, ' ', 1, "LD LX,HX" },
   { 0x006D, 0x00ff, ' ', 1, "LD LX,LX" },
-#else
-  { 0x006C, 0x00ff, ' ', 1, "LDP HL,(IX)" },
-  { 0x006D, 0x00ff, ' ', 3, "LDP IX,(%w)" },
-#endif
   { 0x006E, 0x00ff, ' ', 2, "LD L,(IX+%d)" },
   { 0x006F, 0x00ff, ' ', 1, "LD LX,A" },
   { 0x0070, 0x00ff, ' ', 2, "LD (IX+%d),B" },
@@ -895,13 +734,8 @@ struct dis_entry DISASS_NAME(_dd)[]= {
   { 0x0074, 0x00ff, ' ', 2, "LD (IX+%d),H" },
   { 0x0075, 0x00ff, ' ', 2, "LD (IX+%d),L" },
   { 0x0077, 0x00ff, ' ', 2, "LD (IX+%d),A" },
-#ifndef R2K
   { 0x007C, 0x00ff, ' ', 1, "LD A,HX" },
   { 0x007D, 0x00ff, ' ', 1, "LD A,LX" },
-#else
-  { 0x007C, 0x00ff, ' ', 1, "LD HL,IX" },
-  { 0x007D, 0x00ff, ' ', 1, "LD IX,HL" },
-#endif
   { 0x007E, 0x00ff, ' ', 2, "LD A,(IX+%d)" },
   { 0x00F9, 0x00ff, ' ', 1, "LD SP,IX" },
 
@@ -956,47 +790,38 @@ struct dis_entry DISASS_NAME(_dd)[]= {
 struct dis_entry DISASS_NAME(_fd)[]= {
   { 0x0021, 0x00ff, ' ', 3, "LD IY,%w" },
   { 0x0022, 0x00ff, ' ', 3, "LD (%w),IY" },
-  { 0x0026, 0x00ff, ' ', 2, "LD HX,%b" },
+  { 0x0026, 0x00ff, ' ', 2, "LD HY,%b" },
   { 0x002A, 0x00ff, ' ', 3, "LD IY,(%w)" },
-  { 0x002E, 0x00ff, ' ', 2, "LD LX,%b" },
+  { 0x002E, 0x00ff, ' ', 2, "LD LY,%b" },
   { 0x0036, 0x00ff, ' ', 3, "LD (IY+%d),%b" },
-  { 0x0044, 0x00ff, ' ', 1, "LD B,HX" },
-  { 0x0045, 0x00ff, ' ', 1, "LD B,LX" },
+  { 0x0044, 0x00ff, ' ', 1, "LD B,HY" },
+  { 0x0045, 0x00ff, ' ', 1, "LD B,LY" },
   { 0x0046, 0x00ff, ' ', 2, "LD B,(IY+%d)" },
-  { 0x004C, 0x00ff, ' ', 1, "LD C,HX" },
-  { 0x004D, 0x00ff, ' ', 1, "LD C,LX" },
+  { 0x004C, 0x00ff, ' ', 1, "LD C,HY" },
+  { 0x004D, 0x00ff, ' ', 1, "LD C,LY" },
   { 0x004E, 0x00ff, ' ', 2, "LD C,(IY+%d)" },
-  { 0x0054, 0x00ff, ' ', 1, "LD D,HX" },
-  { 0x0055, 0x00ff, ' ', 1, "LD D,LX" },
+  { 0x0054, 0x00ff, ' ', 1, "LD D,HY" },
+  { 0x0055, 0x00ff, ' ', 1, "LD D,LY" },
   { 0x0056, 0x00ff, ' ', 2, "LD D,(IY+%d)" },
-  { 0x005C, 0x00ff, ' ', 1, "LD E,H" },
-  { 0x005D, 0x00ff, ' ', 1, "LD E,L" },
+  { 0x005C, 0x00ff, ' ', 1, "LD E,HY" },
+  { 0x005D, 0x00ff, ' ', 1, "LD E,LY" },
   { 0x005E, 0x00ff, ' ', 2, "LD E,(IY+%d)" },
-  { 0x0060, 0x00ff, ' ', 1, "LD HX,B" },
-  { 0x0061, 0x00ff, ' ', 1, "LD HX,C" },
-  { 0x0062, 0x00ff, ' ', 1, "LD HX,D" },
-  { 0x0063, 0x00ff, ' ', 1, "LD HX,E" },
-#ifndef R2K
-  { 0x0064, 0x00ff, ' ', 1, "LD HX,HX" },
-#else
-  { 0x0064, 0x00ff, ' ', 1, "LDP (IY),HL" },
-#endif
-  { 0x0065, 0x00ff, ' ', 3, "LDP (%w),IY" },
+  { 0x0060, 0x00ff, ' ', 1, "LD HY,B" },
+  { 0x0061, 0x00ff, ' ', 1, "LD HY,C" },
+  { 0x0062, 0x00ff, ' ', 1, "LD HY,D" },
+  { 0x0063, 0x00ff, ' ', 1, "LD HY,E" },
+  { 0x0064, 0x00ff, ' ', 1, "LD HY,HY" },
+  { 0x0065, 0x00ff, ' ', 1, "LD HY,LY" },
   { 0x0066, 0x00ff, ' ', 2, "LD H,(IY+%d)" },
-  { 0x0067, 0x00ff, ' ', 1, "LD HX,A" },
-  { 0x0068, 0x00ff, ' ', 1, "LD LX,B" },
-  { 0x0069, 0x00ff, ' ', 1, "LD LX,C" },
-  { 0x006A, 0x00ff, ' ', 1, "LD LX,D" },
-  { 0x006B, 0x00ff, ' ', 1, "LD LX,E" },
-#ifndef R2K
-  { 0x006C, 0x00ff, ' ', 1, "LD LX,HX" },
-  { 0x006D, 0x00ff, ' ', 1, "LD LX,LX" },
-#else
-  { 0x006C, 0x00ff, ' ', 1, "LDP HL,(IY)" },
-  { 0x006D, 0x00ff, ' ', 3, "LDP IY,(%w)" },
-#endif
+  { 0x0067, 0x00ff, ' ', 1, "LD HY,A" },
+  { 0x0068, 0x00ff, ' ', 1, "LD LY,B" },
+  { 0x0069, 0x00ff, ' ', 1, "LD LY,C" },
+  { 0x006A, 0x00ff, ' ', 1, "LD LY,D" },
+  { 0x006B, 0x00ff, ' ', 1, "LD LY,E" },
+  { 0x006C, 0x00ff, ' ', 1, "LD LY,HY" },
+  { 0x006D, 0x00ff, ' ', 1, "LD LY,LY" },
   { 0x006E, 0x00ff, ' ', 2, "LD L,(IY+%d)" },
-  { 0x006F, 0x00ff, ' ', 1, "LD LX,A" },
+  { 0x006F, 0x00ff, ' ', 1, "LD LY,A" },
   { 0x0070, 0x00ff, ' ', 2, "LD (IY+%d),B" },
   { 0x0071, 0x00ff, ' ', 2, "LD (IY+%d),C" },
   { 0x0072, 0x00ff, ' ', 2, "LD (IY+%d),D" },
@@ -1004,54 +829,49 @@ struct dis_entry DISASS_NAME(_fd)[]= {
   { 0x0074, 0x00ff, ' ', 2, "LD (IY+%d),H" },
   { 0x0075, 0x00ff, ' ', 2, "LD (IY+%d),L" },
   { 0x0077, 0x00ff, ' ', 2, "LD (IY+%d),A" },
-#ifndef R2K
-  { 0x007C, 0x00ff, ' ', 1, "LD A,HX" },
-  { 0x007D, 0x00ff, ' ', 1, "LD A,LX" },
-#else
-  { 0x007C, 0x00ff, ' ', 1, "LD HL,IX" },
-  { 0x007D, 0x00ff, ' ', 1, "LD IX,HL" },
-#endif
+  { 0x007C, 0x00ff, ' ', 1, "LD A,HY" },
+  { 0x007D, 0x00ff, ' ', 1, "LD A,LY" },
   { 0x007E, 0x00ff, ' ', 2, "LD A,(IY+%d)" },
   { 0x00F9, 0x00ff, ' ', 1, "LD SP,IY" },
 
   { 0x0023, 0x00ff, ' ', 1, "INC IY" },
-  { 0x0024, 0x00ff, ' ', 1, "INC HX" },
-  { 0x002C, 0x00ff, ' ', 1, "INC LX" },
+  { 0x0024, 0x00ff, ' ', 1, "INC HY" },
+  { 0x002C, 0x00ff, ' ', 1, "INC LY" },
   { 0x0034, 0x00ff, ' ', 2, "INC (IY+%d)" },
 
   { 0x0009, 0x00ff, ' ', 1, "ADD IY,BC" },
   { 0x0019, 0x00ff, ' ', 1, "ADD IY,DE" },
   { 0x0029, 0x00ff, ' ', 1, "ADD IY,IY" },
   { 0x0039, 0x00ff, ' ', 1, "ADD IY,SP" },
-  { 0x0084, 0x00ff, ' ', 1, "ADD A,HX" },
-  { 0x0085, 0x00ff, ' ', 1, "ADD A,LX" },
+  { 0x0084, 0x00ff, ' ', 1, "ADD A,HY" },
+  { 0x0085, 0x00ff, ' ', 1, "ADD A,LY" },
   { 0x0086, 0x00ff, ' ', 2, "ADD A,(IY+%d)" },
 
-  { 0x0025, 0x00ff, ' ', 1, "DEC HX" },
+  { 0x0025, 0x00ff, ' ', 1, "DEC HY" },
   { 0x002B, 0x00ff, ' ', 1, "DEC IY" },
-  { 0x002D, 0x00ff, ' ', 1, "DEC LX" },
+  { 0x002D, 0x00ff, ' ', 1, "DEC LY" },
   { 0x0035, 0x00ff, ' ', 2, "DEC (IY+%d)" },
 
-  { 0x008C, 0x00ff, ' ', 1, "ADC A,HX" },
-  { 0x008D, 0x00ff, ' ', 1, "ADC A,LX" },
+  { 0x008C, 0x00ff, ' ', 1, "ADC A,HY" },
+  { 0x008D, 0x00ff, ' ', 1, "ADC A,LY" },
   { 0x008E, 0x00ff, ' ', 2, "ADC A,(IY+%d)" },
-  { 0x0094, 0x00ff, ' ', 1, "SUB HX" },
-  { 0x0095, 0x00ff, ' ', 1, "SUB LX" },
+  { 0x0094, 0x00ff, ' ', 1, "SUB HY" },
+  { 0x0095, 0x00ff, ' ', 1, "SUB LY" },
   { 0x0096, 0x00ff, ' ', 2, "SUB (IY+%d)" },
-  { 0x009C, 0x00ff, ' ', 1, "SBC A,HX" },
-  { 0x009D, 0x00ff, ' ', 1, "SBC A,LX" },
+  { 0x009C, 0x00ff, ' ', 1, "SBC A,HY" },
+  { 0x009D, 0x00ff, ' ', 1, "SBC A,LY" },
   { 0x009E, 0x00ff, ' ', 2, "SBC A,(IY+%d)" },
-  { 0x00A4, 0x00ff, ' ', 1, "AND HX" },
-  { 0x00A5, 0x00ff, ' ', 1, "AND LX" },
+  { 0x00A4, 0x00ff, ' ', 1, "AND HY" },
+  { 0x00A5, 0x00ff, ' ', 1, "AND LY" },
   { 0x00A6, 0x00ff, ' ', 2, "AND (IY+%d)" },
-  { 0x00AC, 0x00ff, ' ', 1, "XOR HX" },
-  { 0x00AD, 0x00ff, ' ', 1, "XOR LX" },
+  { 0x00AC, 0x00ff, ' ', 1, "XOR HY" },
+  { 0x00AD, 0x00ff, ' ', 1, "XOR LY" },
   { 0x00AE, 0x00ff, ' ', 2, "XOR (IY+%d)" },
-  { 0x00B4, 0x00ff, ' ', 1, "OR HX" },
-  { 0x00B5, 0x00ff, ' ', 1, "OR LX" },
+  { 0x00B4, 0x00ff, ' ', 1, "OR HY" },
+  { 0x00B5, 0x00ff, ' ', 1, "OR LY" },
   { 0x00B6, 0x00ff, ' ', 2, "OR (IY+%d)" },
-  { 0x00BC, 0x00ff, ' ', 1, "CP HX" },
-  { 0x00BD, 0x00ff, ' ', 1, "CP LX" },
+  { 0x00BC, 0x00ff, ' ', 1, "CP HY" },
+  { 0x00BD, 0x00ff, ' ', 1, "CP LY" },
   { 0x00BE, 0x00ff, ' ', 2, "CP (IY+%d)" },
   { 0x00CB, 0x00ff, ' ', 1, "escape" },
   { 0x00E1, 0x00ff, ' ', 1, "POP IY" },
@@ -1482,5 +1302,23 @@ struct dis_entry DISASS_NAME(_fdcb)[]= {
   { 0x00FF, 0x00ff, ' ', 2, "SET 7,(IY+%d)->A" },
   { 0, 0, 0, 0, NULL }
 };
+
+struct cpu_entry cpus_z80[]=
+  {
+    {"Z80"    , CPU_Z80,     0			, ""		, ""},
+
+    {"Z180"   , CPU_Z180,    0			, ""		, ""},
+
+    {"GB80"   , CPU_GB80,    0			, ""		, ""},
+    {"LR35902", CPU_LR35902, 0			, ""		, ""},
+    {"LR"     , CPU_LR35902, 0			, ""		, ""},
+
+    {"EZ80"   , CPU_EZ80,    0			, ""		, ""},
+
+    {"Z80N"   , CPU_Z80N,    0                  , ""            , ""},
+    
+    {NULL, CPU_NONE, 0, "", ""}
+  };
+
 
 /* glob.cc */

@@ -183,6 +183,7 @@ cl_m68hcbase::print_regs(class cl_console_base *con)
 cl_m68hc11::cl_m68hc11(class cl_sim *asim):
   cl_m68hcbase(asim)
 {
+  cCC.decode(&CC);
 }
 
 
@@ -191,7 +192,7 @@ cl_m68hc11::init(void)
 {
   cl_m68hcbase::init();
   
-  set_xtal(8000000);
+  //set_xtal(8000000);
   
   return 0;
 }

@@ -264,6 +264,14 @@ stm8_genInitStartup (FILE *of)
       fprintf (of, "\tldw\tsp, x\n");
     }
 
+  /* Call external startup code */
+  fprintf (of, options.model == MODEL_LARGE ? "\tcallf\t___sdcc_external_startup\n" : "\tcall\t___sdcc_external_startup\n");
+
+  /* If external startup returned non-zero, skip init */
+  fprintf (of, "\ttnz\ta\n");
+  fprintf (of, "\tjreq\t__sdcc_init_data\n");
+  fprintf (of, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
+
   /* Init static & global variables */
   fprintf (of, "__sdcc_init_data:\n");
   fprintf (of, "; stm8_genXINIT() start\n");
@@ -327,6 +335,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   int result_size = IS_SYMOP (IC_RESULT (ic)) ? getSize (OP_SYM_TYPE (IC_RESULT(ic))) : 4;
   sym_link *test = NULL;
 
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
   if (IS_LITERAL (left))
     test = left;
   else if (IS_LITERAL (right))
@@ -349,7 +360,6 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
         unsigned long long add, sub;
         int topbit, nonzero;
-        
 
         if (floatFromVal (valFromType (test)) < 0 || csdOfVal (&topbit, &nonzero, &add, &sub, valFromType (test), 0xffff))
           return false;
@@ -462,7 +472,7 @@ PORT stm8_port =
     NULL,
     NULL,
   },
-  /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
+  /* Sizes */
   {
     1,                          /* char */
     2,                          /* short */
@@ -476,6 +486,7 @@ PORT stm8_port =
     3,                          /* banked func ptr */
     1,                          /* bit */
     4,                          /* float */
+    64,                         /* bit-precise integer types up to _BitInt (64) */
   },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
@@ -504,6 +515,7 @@ PORT stm8_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // doesn't matter, as port has no __sfr anyway
     1                           /* No fancy alignments supported. */
   },
   { stm8_genExtraArea, NULL },

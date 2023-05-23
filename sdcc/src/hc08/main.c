@@ -107,6 +107,9 @@ _hc08_regparm (sym_link * l, bool reentrant)
   if (IFFUNC_HASVARARGS (regParmFuncType))
     return 0;
 
+  if (IS_STRUCT (l))
+    return 0;
+
   int size = getSize(l);
 
   /* If they fit completely, the first two bytes of parameters can go */
@@ -255,7 +258,7 @@ _hc08_genAssemblerPreamble (FILE * of)
         }
       else
         fprintf (of, "\trsp\n");
-      fprintf (of, "\tjsr\t__sdcc_external_startup\n");
+      fprintf (of, "\tjsr\t___sdcc_external_startup\n");
       fprintf (of, "\tbeq\t__sdcc_init_data\n");
       fprintf (of, "\tjmp\t__sdcc_program_startup\n");
       fprintf (of, "__sdcc_init_data:\n");
@@ -410,6 +413,9 @@ hc08_dwarfRegNum (const struct reg_info *reg)
 static bool
 _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
   return getSize (left) == 1 && getSize (right) == 1;
 }
 
@@ -807,8 +813,8 @@ PORT hc08_port =
     hc08_getInstructionSize,
   },
   {
-    /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-    1, 2, 2, 4, 8, 2, 2, 2, 2, 0, 1, 4
+    /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+    1, 2, 2, 4, 8, 2, 2, 2, 2, 0, 1, 4, 64
   },
   /* tags for generic pointers */
   { 0x00, 0x00, 0x00, 0x00 },           /* far, near, xstack, code */
@@ -837,6 +843,7 @@ PORT hc08_port =
     NULL,
     NULL,
     1,
+    false,                // doesn't matter, as port has no __sfr anyway
     1                     // No fancy alignments supported.
   },
   { _hc08_genExtraAreas,
@@ -953,8 +960,8 @@ PORT s08_port =
     hc08_getInstructionSize,
   },
   {
-    /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-    1, 2, 2, 4, 8, 2, 2, 2, 2, 0, 1, 4
+    /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+    1, 2, 2, 4, 8, 2, 2, 2, 2, 0, 1, 4, 64
   },
   /* tags for generic pointers */
   { 0x00, 0x00, 0x00, 0x00 },           /* far, near, xstack, code */
@@ -983,6 +990,7 @@ PORT s08_port =
     NULL,
     NULL,
     1,
+    false,                // doesn't matter, as port has no __sfr anyway
     1                     // No fancy alignments supported.
   },
   { _hc08_genExtraAreas,

@@ -54,6 +54,7 @@ enum cell_flag {
 
 #define CELL_GENERAL	(CELL_NORMAL|CELL_INST|CELL_FETCH_BRK)
 
+extern t_mem def_data;
 
 /*
  * 3rd version of memory system
@@ -73,11 +74,14 @@ public:
   int width; // in bits
   t_mem data_mask;
   bool hidden;
+  chars altname;
 protected:
   t_addr dump_finished;
 public:
   cl_memory(const char *id, t_addr asize, int awidth);
   virtual ~cl_memory(void);
+  virtual bool is_named(const char *the_name) const;
+  virtual bool is_inamed(const char *the_name) const;
   virtual int init(void);
 
   t_addr get_start_address(void) { return(start_address); }
@@ -136,13 +140,9 @@ class cl_memory_operator: public cl_base
 {
 public:
   t_mem mask;
-  class cl_memory_operator *next_operator;
   class cl_memory_cell *cell;
 public:
-  cl_memory_operator(class cl_memory_cell *acell/*, t_addr addr*/);
-
-  virtual class cl_memory_operator *get_next(void) { return(next_operator); }
-  virtual void set_next(class cl_memory_operator *next) { next_operator= next;}
+  cl_memory_operator(class cl_memory_cell *acell);
 
   virtual bool match(class cl_hw *the_hw) { return(false); }
   virtual bool match(class cl_brk *brk) { return(false); }
@@ -235,14 +235,16 @@ class cl_memory_cell: public cl_cell_data
 #ifdef STATISTIC
  public:
   unsigned long nuof_writes, nuof_reads;
+  class cl_memory *as;
 #endif
  public:
   t_mem mask;
-  t_mem def_data;
+  //t_mem def_data;
  protected:
   uchar width;
   uchar flags;
-  class cl_memory_operator *operators;
+  //class cl_memory_operator *operators;
+  class cl_memory_operator **ops;
  public:
   cl_memory_cell();
   cl_memory_cell(uchar awidth);
@@ -272,13 +274,16 @@ class cl_memory_cell: public cl_cell_data
   virtual t_mem W(t_mem val) { return write(val); }
   virtual t_mem set(t_mem val);
   virtual t_mem download(t_mem val);
-  
+
+  virtual int nuof_ops(void);
   virtual void append_operator(class cl_memory_operator *op);
   virtual void prepend_operator(class cl_memory_operator *op);
   virtual void remove_operator(class cl_memory_operator *op);
   virtual void del_operator(class cl_brk *brk);
   virtual void del_operator(class cl_hw *hw);
   virtual class cl_banker *get_banker(void);
+  virtual void set_brk(class cl_uc *uc, class cl_brk *brk);
+  virtual void del_brk(class cl_brk *brk);
   
   virtual class cl_memory_cell *add_hw(class cl_hw *hw/*, t_addr addr*/);
   virtual void remove_hw(class cl_hw *hw);
@@ -495,7 +500,7 @@ public:
   virtual bool is_chip(void) { return(true); }
 
   virtual void *get_slot(t_addr addr);
-  virtual t_addr is_slot(/*t_mem*/void *data_ptr);
+  virtual bool is_slot(void *data_ptr, t_addr *addr_of);
   
   virtual t_mem read(t_addr addr) { return d(addr); }
   virtual t_mem read(t_addr addr, enum hw_cath skip) { return d(addr); }

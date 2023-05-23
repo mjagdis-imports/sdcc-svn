@@ -539,7 +539,7 @@ isAstEqual (ast * t1, ast * t2)
 /* resolveSymbols - resolve symbols from the symbol table          */
 /*-----------------------------------------------------------------*/
 ast *
-resolveSymbols (ast * tree)
+resolveSymbols (ast *tree)
 {
   /* walk the entire tree and check for values */
   /* with symbols if we find one then replace  */
@@ -867,7 +867,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
   /* if defined parameters ended but actual parameters */
   /* exist and this is not defined as a variable arg   */
-  if (!defParm && *actParm && !IFFUNC_HASVARARGS (functype))
+  if (!defParm && *actParm && !IFFUNC_HASVARARGS (functype) && !IFFUNC_NOPROTOTYPE (functype))
     {
       werror (E_TOO_MANY_PARMS);
       return 1;
@@ -921,14 +921,14 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
     }
 
   /* If this is a varargs function... */
-  if (!defParm && *actParm && IFFUNC_HASVARARGS (functype))
+  if (!defParm && *actParm && (IFFUNC_HASVARARGS (functype) || FUNC_NOPROTOTYPE (functype)))
     {
       ast *newType = NULL;
       sym_link *ftype;
 
       /* don't perform integer promotion of explicitly typecasted variable arguments
        * if sdcc extensions are enabled */
-      if (options.std_sdcc && !TARGET_PDK_LIKE &&
+      if (options.std_sdcc && !TARGET_PDK_LIKE && IFFUNC_HASVARARGS (functype) &&
           (IS_CAST_OP (*actParm) ||
            (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
            (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
@@ -942,7 +942,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
       resultType = RESULT_TYPE_NONE;
 
       /* If it's a char, upcast to int. */
-      if (IS_INTEGRAL (ftype) && (getSize (ftype) < (unsigned) INTSIZE))
+      if (IS_INTEGRAL (ftype) && !IS_BITINT (ftype) && (getSize (ftype) < (unsigned) INTSIZE))
         {
           newType = newAst_LINK (INTTYPE);
         }
@@ -952,12 +952,6 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
           newType = newAst_LINK (copyLinkChain (ftype));
           DCL_TYPE (newType->opval.lnk) = port->unqualified_pointer;
           resultType = RESULT_TYPE_GPTR;
-        }
-
-      if (IS_STRUCT (ftype))
-        {
-          werrorfl ((*actParm)->filename, (*actParm)->lineno, E_STRUCT_AS_ARG, (*actParm)->opval.val->name);
-          return 1;
         }
 
       if (IS_ARRAY (ftype))
@@ -978,8 +972,17 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
           *actParm = decorateType (*actParm, resultType, true);
         }
+
+      if (IFFUNC_HASVARARGS (functype))
+        return 0;
+    }
+
+  if (FUNC_NOPROTOTYPE (functype))
+    {
+      // Todo: implement this! Idea: build a temporarty function type that can be used for processFuncArgs, which then can be used here.
+      wassertl (0, "Setting of register parameter vs. other parameter not yet implemented for functions without prototype.");
       return 0;
-    }                           /* vararg */
+    }
 
   /* if defined parameters ended but actual has not & */
   /* reentrant */
@@ -990,7 +993,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
   resolveSymbols (*actParm);
 
   /* the parameter type must be at least castable */
-  if (compareType (defParm->type, (*actParm)->ftype) == 0)
+  if (compareType (defParm->type, (*actParm)->ftype, false) == 0)
     {
       werror (E_INCOMPAT_TYPES);
       printFromToType ((*actParm)->ftype, defParm->type);
@@ -999,7 +1002,7 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
   /* if the parameter is castable then add the cast */
   if ((IS_ARRAY((*actParm)->ftype) && IS_PTR(defParm->type)) ||
-      (compareType (defParm->type, (*actParm)->ftype) == -1))
+      (compareType (defParm->type, (*actParm)->ftype, false) == -1))
     {
       ast *pTree;
 
@@ -1105,12 +1108,10 @@ static int aggregateIsAutoVar = 0;
 /* createIvalStruct - generates initial value for structures       */
 /*-----------------------------------------------------------------*/
 static ast *
-createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
+createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
 {
   ast *rast = NULL;
   ast *lAst;
-  symbol *sflds, *old_sflds, *ps;
-  initList *iloop;
   sym_link *etype = getSpec (type);
 
   if (ilist && ilist->type != INIT_DEEP)
@@ -1119,62 +1120,68 @@ createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       return NULL;
     }
 
-  iloop = ilist ? ilist->init.deep : NULL;
+  initList *iloop = ilist ? ilist->init.deep : NULL;
 
-  for (sflds = SPEC_STRUCT (type)->fields; ; sflds = sflds->next)
+  set *initialized_fields = newSet ();
+
+  // Handle designated initializers first.
+  for (;iloop && iloop->designation; iloop = iloop->next)
     {
+      symbol *sflds;
+
+      if (iloop->designation->type != DESIGNATOR_STRUCT)
+        {
+          werrorfl (iloop->filename, iloop->lineno, E_BAD_DESIGNATOR);
+          break;
+        }
+      else // Find this designated element
+        {
+          sflds = findStructField(SPEC_STRUCT (type)->fields, iloop->designation->designator.tag);
+          if (sflds)
+            {
+              if (iloop->designation->next)
+                {
+                  iloop = moveNestedInit(iloop);
+                }
+            }
+          else
+            {
+              werrorfl (iloop->filename, iloop->lineno, E_NOT_MEMBER,
+                        iloop->designation->designator.tag->name);
+              break;
+            }
+        }
+      
+      sflds->implicit = 1;
+      lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (sflds)));
+      lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
+      rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
+      addSet (&initialized_fields, sflds);
+
+      if (SPEC_STRUCT (type)->type == UNION)
+        goto release;
+    }
+
+  // Handle the rest and fill in the gaps.
+  for (symbol *sflds = SPEC_STRUCT (type)->fields; sflds; sflds = sflds->next)
+    {
+      if (isinSet (initialized_fields, sflds)) // Already initalized by designated initializer
+        continue;
+
       /* skip past unnamed bitfields */
       if (sflds && IS_BITFIELD (sflds->type) && SPEC_BUNNAMED (sflds->etype))
         continue;
 
-      old_sflds = sflds;
-      /* designated initializer? */
-      if (iloop && iloop->designation)
-        {
-          if (iloop->designation->type != DESIGNATOR_STRUCT)
-            {
-              werrorfl (iloop->filename, iloop->lineno, E_BAD_DESIGNATOR);
-            }
-          else /* find this designated element */
-            {
-              sflds = findStructField(SPEC_STRUCT (type)->fields,
-                                      iloop->designation->designator.tag);
-              if (sflds)
-                {
-                  if (iloop->designation->next)
-                    {
-                      iloop = moveNestedInit(iloop);
-                    }
-                }
-              else
-                {
-                  werrorfl (iloop->filename, iloop->lineno, E_NOT_MEMBER,
-                            iloop->designation->designator.tag->name);
-                  sflds = SPEC_STRUCT (type)->fields; /* fixup */
-                }
-            }
-        }
-
       /* if we have come to end */
-      if (!sflds)
-        break;
       if (!iloop && (!AST_SYMBOL (rootValue)->islocal || SPEC_STAT (etype)))
         break;
-
-      if (aggregateIsAutoVar && (SPEC_STRUCT (type)->type != UNION))
-        for (ps = old_sflds; ps != sflds && ps != NULL; ps = ps->next)
-          {
-            ps->implicit = 1;
-            lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (ps)));
-            lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
-            rast = decorateType (resolveSymbols (createIval (lAst, ps->type, NULL, rast, rootValue, 1)), RESULT_TYPE_NONE, true);          
-          }
 
       /* initialize this field */
       sflds->implicit = 1;
       lAst = newNode (PTR_OP, newNode ('&', sym, NULL), newAst_VALUE (symbolVal (sflds)));
       lAst = decorateType (resolveSymbols (lAst), RESULT_TYPE_NONE, true);
       rast = decorateType (resolveSymbols (createIval (lAst, sflds->type, iloop, rast, rootValue, 1)), RESULT_TYPE_NONE, true);
+      addSet (&initialized_fields, sflds);
       iloop = iloop ? iloop->next : NULL;
 
       /* Unions can only initialize a single field */
@@ -1190,6 +1197,9 @@ createIvalStruct (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       else
         werrorfl (sym->filename, sym->lineno, E_INIT_COUNT);
     }
+
+release:
+  deleteSet (&initialized_fields);
 
   return rast;
 }
@@ -1673,6 +1683,7 @@ stringToSymbol (value *val)
   sym->etype = getSpec (sym->type);
   /* change to storage class & output class */
   SPEC_SCLS (sym->etype) = S_CODE;
+  SPEC_SCLS_IMPLICITINTRINSIC (sym->etype) = true;
   SPEC_CVAL (sym->etype).v_char = SPEC_CVAL (val->etype).v_char;
   SPEC_STAT (sym->etype) = 1;
   /* make the level & block = 0 */
@@ -1763,7 +1774,7 @@ processBlockVars (ast * tree, int *stack, int action)
 /*                 expression                                  */
 /*-------------------------------------------------------------*/
 bool
-constExprTree (ast * cexpr)
+constExprTree (ast *cexpr)
 {
   if (!cexpr)
     {
@@ -1826,6 +1837,10 @@ constExprTree (ast * cexpr)
       if (cexpr->opval.op == '&')
         {
           return TRUE;
+        }
+      if (cexpr->opval.op == PTR_OP && !IS_ARRAY (TTYPE (cexpr)))
+        {
+          return FALSE;
         }
       if (cexpr->opval.op == CALL || cexpr->opval.op == PCALL)
         {
@@ -2656,19 +2671,27 @@ getResultTypeFromType (sym_link * type)
 static ast *
 addCast (ast * tree, RESULT_TYPE resultType, bool promote)
 {
-  sym_link *newLink;
-  bool upCasted = FALSE;
+  sym_link *newlink;
+  bool upCasted = false;
 
   switch (resultType)
     {
     case RESULT_TYPE_NONE:
       /* if thing smaller than int must be promoted to int */
-      if (!promote || getSize (tree->etype) >= INTSIZE)
+      if (!promote || getSize (tree->etype) >= INTSIZE || IS_BITINT (tree->etype))
         /* promotion not necessary or already an int */
         return tree;
+      else if (SPEC_NOUN (tree->etype) == V_BITINTBITFIELD) // Promotes to corresponding _BitInt type
+        {
+           newlink = newLink (SPECIFIER);
+           SPEC_NOUN (newlink) = V_BITINT;
+           SPEC_BITINTWIDTH (newlink) = SPEC_BITINTWIDTH (tree->etype);
+           SPEC_USIGN (newlink) = SPEC_USIGN (tree->etype);
+           break;
+        }
       /* char and bits: promote to int */
-      newLink = newIntLink ();
-      upCasted = TRUE;
+      newlink = newIntLink ();
+      upCasted = true;
       break;
     case RESULT_TYPE_BOOL:
       if (!promote ||
@@ -2678,13 +2701,13 @@ addCast (ast * tree, RESULT_TYPE resultType, bool promote)
              hopefully know everything about promotion rules */
           bitsForType (tree->etype) == 1)
         return tree;
-      newLink = newIntLink ();
-      upCasted = TRUE;
+      newlink = newIntLink ();
+      upCasted = true;
       break;
     case RESULT_TYPE_CHAR:
       if (IS_CHAR (tree->etype) || IS_FLOAT (tree->etype) || IS_FIXED (tree->etype))
         return tree;
-      newLink = newCharLink ();
+      newlink = newCharLink ();
       break;
     case RESULT_TYPE_INT:
     case RESULT_TYPE_GPTR:
@@ -2698,23 +2721,30 @@ addCast (ast * tree, RESULT_TYPE resultType, bool promote)
       /* char: promote to int */
       if (!promote || getSize (tree->etype) >= INTSIZE)
         return tree;
-      newLink = newIntLink ();
-      upCasted = TRUE;
+      newlink = newIntLink ();
+      upCasted = true;
       break;
     case RESULT_TYPE_IFX:
     case RESULT_TYPE_OTHER:
-      if (!promote ||
+      if (!promote || IS_BITINT (tree->etype) ||
           /* return type is ifx, long, float: promote char to int */
           getSize (tree->etype) >= INTSIZE)
         return tree;
-      newLink = newIntLink ();
-      upCasted = TRUE;
+      else if (SPEC_NOUN (tree->etype) == V_BITINTBITFIELD) // Promotes to corresponding _BitInt type
+        {
+           newlink = newLink (SPECIFIER);
+           SPEC_NOUN (newlink) = V_BITINT;
+           SPEC_BITINTWIDTH (newlink) = SPEC_BITINTWIDTH (tree->etype);
+           break;
+        }
+      newlink = newIntLink ();
+      upCasted = true;
       break;
     default:
       return tree;
     }
+  tree = newNode (CAST, newAst_LINK (newlink), tree);
   tree->decorated = 0;
-  tree = newNode (CAST, newAst_LINK (newLink), tree);
   tree->filename = tree->right->filename;
   tree->lineno = tree->right->lineno;
   /* keep unsigned type during cast to smaller type,
@@ -3541,7 +3571,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     else
       resultTypeProp = RESULT_TYPE_OTHER;
 
-    if ((tree->opval.op == '?') && (resultTypeProp != RESULT_TYPE_BOOL) && reduceTypeAllowed)
+    if (tree->opval.op == GENERIC) // Preserve type of controlling expression for _Generic (and don't allocate string argument)
+      {
+        ++noAlloc;
+        dtl = decorateType (tree->left, resultTypeProp, false);
+        --noAlloc;
+      }
+    else if ((tree->opval.op == '?') && (resultTypeProp != RESULT_TYPE_BOOL) && reduceTypeAllowed)
       dtl = decorateType (tree->left, RESULT_TYPE_IFX, reduceTypeAllowed);
     else if ((tree->opval.op == '&') && (!tree->right))
       {
@@ -3585,6 +3621,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         dtr = tree->right;
         break;
       case SIZEOF:
+      case TYPEOF:
+      case TYPEOF_UNQUAL:
         /* don't allocate string if it is a sizeof argument */
         ++noAlloc;
         resultTypeProp = RESULT_TYPE_OTHER;
@@ -3856,7 +3894,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
 
           /* if right is a literal and has the same size with left, 
-             then also sync their signess to avoid unecessary cast */
+             then also sync their signedness to avoid unnecessary cast */
           if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
             SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
 
@@ -3885,9 +3923,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
         
-      if ((TARGET_Z80_LIKE || TARGET_PDK_LIKE) && SPEC_SCLS (LETYPE (tree)) == S_SFR)
+      if (SPEC_SCLS (LETYPE (tree)) == S_SFR && !port->mem.sfrupointer)
         {
-          werror (W_SFR_ADDRESS);
+          werror (E_SFR_POINTER);
         }
 
       if (LETYPE (tree) && SPEC_SCLS (tree->left->etype) == S_REGISTER)
@@ -3909,22 +3947,36 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       p = newLink (DECLARATOR);
+      
       if (!LETYPE (tree))
-        DCL_TYPE (p) = POINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_CODE)
-        DCL_TYPE (p) = CPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_XDATA)
-        DCL_TYPE (p) = FPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_XSTACK)
-        DCL_TYPE (p) = PPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_IDATA)
-        DCL_TYPE (p) = IPOINTER;
-      else if (SPEC_SCLS (LETYPE (tree)) == S_EEPROM)
-        DCL_TYPE (p) = EEPPOINTER;
-      else if (SPEC_OCLS (LETYPE (tree)))
-        DCL_TYPE (p) = PTR_TYPE (SPEC_OCLS (LETYPE (tree)));
+        {
+          DCL_TYPE (p) = POINTER;
+          DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+        }
       else
-        DCL_TYPE (p) = POINTER;
+        {
+          DCL_TYPE_IMPLICITINTRINSIC (p) = SPEC_SCLS_IMPLICITINTRINSIC (LETYPE (tree));
+          if (SPEC_SCLS (LETYPE (tree)) == S_CODE)
+            DCL_TYPE (p) = CPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_XDATA)
+            DCL_TYPE (p) = FPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_XSTACK)
+            DCL_TYPE (p) = PPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_IDATA)
+            DCL_TYPE (p) = IPOINTER;
+          else if (SPEC_SCLS (LETYPE (tree)) == S_EEPROM)
+            DCL_TYPE (p) = EEPPOINTER;
+          else if (SPEC_OCLS (LETYPE (tree)))
+            {
+              DCL_TYPE (p) = PTR_TYPE (SPEC_OCLS (LETYPE (tree)));
+              DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+            }
+          else
+            {
+              DCL_TYPE (p) = POINTER;
+              DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+            }
+        }
 
       if (IS_AST_SYM_VALUE (tree->left))
         {
@@ -4060,10 +4112,11 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (reduceTypeAllowed &&
           IS_LITERAL (RTYPE (tree)) &&
           IS_BOOLEAN (LTYPE (tree)) &&
-          IS_INTEGRAL (RTYPE (tree)) &&
+          IS_AST_LIT_VALUE (tree->right) &&
           resultType == RESULT_TYPE_BOOL &&
           tree->opval.op == '^')   /* the same source is used by 'bitwise or' */
         {
+          wassert (tree->right->type == EX_VALUE);
           unsigned long litval = AST_ULONG_VALUE (tree->right);
           if (litval == 0 || litval == 1)
             {
@@ -4077,16 +4130,17 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               return decorateType (tree, resultType, reduceTypeAllowed);
             }
         }
-        
+
       /* OR / XOR char with literal integral, try to reduce integral to CHAR if it fits in a CHAR */
       if (reduceTypeAllowed && 
           !TARGET_PDK_LIKE && // Temporary fix to avoid bug #3259 - Wrong opcodes
-          IS_LITERAL (RTYPE (tree)) &&
+          IS_AST_LIT_VALUE (tree->right) &&
           IS_INTEGRAL (RTYPE (tree)) &&
           !IS_CHAR (RTYPE (tree)) &&
           IS_CHAR(LTYPE(tree)))
         {
-          unsigned long litval = AST_ULONG_VALUE (tree->right); 
+          wassert (tree->right->type == EX_VALUE);
+          unsigned long litval = AST_ULONG_VALUE (tree->right);
           if ((litval >= 0) && (litval <= 255) && reduceTypeAllowed)
             {
               ast *newAst = newAst_VALUE (valueFromLit (litval));
@@ -4097,7 +4151,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       /* if right is a literal and has the same size with left, 
-         then also sync their signess to avoid unecessary cast */
+         then also sync their signedness to avoid unnecessary cast */
       if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
         SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
 
@@ -4744,7 +4798,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if(!reduceTypeAllowed)
         {
           TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), NULL, resultType, tree->opval.op));
-          if(IS_INTEGRAL (TETYPE (tree)) && bitsForType (TETYPE (tree)) < INTSIZE * 8)
+          if(IS_INTEGRAL (TETYPE (tree)) && bitsForType (TETYPE (tree)) < INTSIZE * 8 && !IS_BITINT (TETYPE (tree)))
             {
               // Promote to int for smaller types
               SPEC_NOUN (TETYPE (tree)) = V_INT;
@@ -5074,14 +5128,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /* if they are pointers they must be castable */
       else if (IS_PTR (LTYPE (tree)) && IS_PTR (RTYPE (tree)))
         {
-          if (tree->opval.op == EQ_OP && !IS_GENPTR (LTYPE (tree)) && IS_GENPTR (RTYPE (tree)))
-            {
-              // we cannot cast a gptr to a !gptr: switch the leaves
-              struct ast *s = tree->left;
-              tree->left = tree->right;
-              tree->right = s;
-            }
-          if (compareType (LTYPE (tree), RTYPE (tree)) == 0)
+          if (compareType (LTYPE (tree), RTYPE (tree), false) == 0 && compareType (RTYPE (tree), LTYPE (tree), false) == 0) // Compare both ways, just cast to the one that is more generic.
             {
               werrorfl (tree->filename, tree->lineno, E_INCOMPAT_TYPES);
               fprintf (stderr, "comparing type ");
@@ -5101,9 +5148,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                     && ((IS_FUNC (LTYPE (tree)) && IS_LITERAL (RTYPE (tree)) && !ullFromVal (valFromType (RTYPE (tree))))
                         || (IS_FUNC (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)) && !ullFromVal (valFromType (LTYPE (tree))))))))
 
-            if (compareType (LTYPE (tree), RTYPE (tree)) == 0)
+            if (compareType (LTYPE (tree), RTYPE (tree), false) == 0)
               {
-                if (compareType (RTYPE (tree), LTYPE (tree)) != 0)
+                if (compareType (RTYPE (tree), LTYPE (tree), false) != 0)
                   {
                     struct ast *s = tree->left;
                     tree->left = tree->right;
@@ -5333,99 +5380,12 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
         return tree;
       }
-
-      /*------------------------------------------------------------------*/
-      /*----------------------------*/
-      /*             typeof         */
-      /*----------------------------*/
     case TYPEOF:
-      /* return typeof enum value */
-      tree->type = EX_VALUE;
+    case TYPEOF_UNQUAL:
       {
-        int typeofv = 0;
-        struct dbuf_s dbuf;
-
-        if (IS_SPEC (tree->right->ftype))
-          {
-            switch (SPEC_NOUN (tree->right->ftype))
-              {
-              case V_INT:
-                if (SPEC_LONG (tree->right->ftype))
-                  typeofv = TYPEOF_LONG;
-                else
-                  typeofv = TYPEOF_INT;
-                break;
-              case V_FLOAT:
-                typeofv = TYPEOF_FLOAT;
-                break;
-              case V_FIXED16X16:
-                typeofv = TYPEOF_FIXED16X16;
-                break;
-              case V_BOOL:
-                typeofv = TYPEOF_BOOL;
-                break;
-              case V_CHAR:
-                typeofv = TYPEOF_CHAR;
-                break;
-              case V_VOID:
-                typeofv = TYPEOF_VOID;
-                break;
-              case V_STRUCT:
-                typeofv = TYPEOF_STRUCT;
-                break;
-              case V_BITFIELD:
-                typeofv = TYPEOF_BITFIELD;
-                break;
-              case V_BIT:
-                typeofv = TYPEOF_BIT;
-                break;
-              case V_SBIT:
-                typeofv = TYPEOF_SBIT;
-                break;
-              default:
-                break;
-              }
-          }
-        else
-          {
-            switch (DCL_TYPE (tree->right->ftype))
-              {
-              case POINTER:
-                typeofv = TYPEOF_POINTER;
-                break;
-              case FPOINTER:
-                typeofv = TYPEOF_FPOINTER;
-                break;
-              case CPOINTER:
-                typeofv = TYPEOF_CPOINTER;
-                break;
-              case GPOINTER:
-                typeofv = TYPEOF_GPOINTER;
-                break;
-              case PPOINTER:
-                typeofv = TYPEOF_PPOINTER;
-                break;
-              case IPOINTER:
-                typeofv = TYPEOF_IPOINTER;
-                break;
-              case ARRAY:
-                typeofv = TYPEOF_ARRAY;
-                break;
-              case FUNCTION:
-                typeofv = TYPEOF_FUNCTION;
-                break;
-              default:
-                break;
-              }
-          }
-        dbuf_init (&dbuf, 128);
-        dbuf_printf (&dbuf, "%d", typeofv);
-        tree->opval.val = constVal (dbuf_c_str (&dbuf));
-        dbuf_destroy (&dbuf);
-        tree->right = tree->left = NULL;
-        TETYPE (tree) = getSpec (TTYPE (tree) = tree->opval.val->type);
+        wassert (0);
+        return 0;
       }
-      return tree;
       /*------------------------------------------------------------------*/
       /*----------------------------*/
       /* conditional operator  '?'  */
@@ -5519,12 +5479,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               }
             else
               {
-                sym_link *assoc_type;
+                sym_link *assoc_type, *assoc_etype;
                 wassert (IS_AST_LINK (assoc->left));
-                assoc_type = assoc->left->opval.lnk;
-                checkTypeSanity (assoc_type, "_Generic");
 
-                if (compareType (type, assoc->left->opval.lnk) > 0 && !(SPEC_NOUN (type) == V_CHAR && type->select.s.b_implicit_sign != assoc->left->opval.lnk->select.s.b_implicit_sign))
+                assoc_type = assoc->left->opval.lnk;
+                for (assoc_etype = assoc_type; !IS_SPEC(assoc_etype); assoc_etype = assoc_etype->next);
+                checkTypeSanity (assoc_etype, "(_Generic)");
+                if (compareType (assoc_type, type, true) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
                   {
                     if (found_expr)
                       {
@@ -5557,7 +5518,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       return tree;
 
     case ':':
-      if ((compareType (LTYPE (tree), RTYPE (tree)) == 0) && (compareType (RTYPE (tree), LTYPE (tree)) == 0))
+      if ((compareType (LTYPE (tree), RTYPE (tree), false) == 0) && (compareType (RTYPE (tree), LTYPE (tree), false) == 0))
         {
           if (IS_PTR (LTYPE (tree)) && !IS_GENPTR (LTYPE (tree)))
             DCL_TYPE (LTYPE(tree)) = GPOINTER;
@@ -5565,8 +5526,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             DCL_TYPE (RTYPE(tree)) = GPOINTER;
         }
 
-      if ((compareType (LTYPE (tree), RTYPE (tree)) == 0) &&
-        (compareType (RTYPE (tree), LTYPE (tree)) == 0) &&
+      if ((compareType (LTYPE (tree), RTYPE (tree), false) == 0) &&
+        (compareType (RTYPE (tree), LTYPE (tree), false) == 0) &&
         !(IS_ARRAY(LTYPE (tree)) && IS_INTEGRAL(RTYPE (tree))) &&
         !(IS_ARRAY(RTYPE (tree)) && IS_INTEGRAL(LTYPE (tree))))
         {
@@ -5708,7 +5669,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /*------------------------------------------------------------------*/
       /*----------------------------*/
-      /*      straight assignemnt   */
+      /*      straight assignment   */
       /*----------------------------*/
     case '=':
       /* cannot be an array */
@@ -5719,7 +5680,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
 
       /* they should either match or be castable */
-      if (compareType (LTYPE (tree), RTYPE (tree)) == 0)
+      if (compareType (LTYPE (tree), RTYPE (tree), false) == 0)
         {
           if (IS_CODEPTR (LTYPE (tree)) && IS_FUNC (LTYPE (tree)->next))        /* function pointer */
             {
@@ -5846,7 +5807,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                 }
             }
 
-          typecompat = compareType (currFunc->type->next, RTYPE (tree));
+          typecompat = compareType (currFunc->type->next, RTYPE (tree), false);
 
           /* if there is going to be a casting required then add it */
           if (typecompat == -1)
@@ -5954,7 +5915,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case PARAM:
       werrorfl (tree->filename, tree->lineno, E_INTERNAL_ERROR, __FILE__, __LINE__, "node PARAM shouldn't be processed here");
       /* but in processParms() */
-      return tree;
+      goto errorTreeReturn;
     case INLINEASM:
       formatInlineAsm (tree->values.inlineasm);
       TTYPE (tree) = TETYPE (tree) = NULL;
@@ -5999,7 +5960,7 @@ sizeofOp (sym_link *type)
 }
 
 /*-----------------------------------------------------------------*/
-/* sizeofOp - processes alignment of operation                     */
+/* alignofOp - processes alignment of operation                    */
 /*-----------------------------------------------------------------*/
 value *
 alignofOp (sym_link *type)
@@ -6012,6 +5973,20 @@ alignofOp (sym_link *type)
   val = constVal ("1");
 
   return val;
+}
+
+/*-----------------------------------------------------------------*/
+/* sizeofOp - processes typeof for expression                      */
+/*-----------------------------------------------------------------*/
+sym_link *
+typeofOp (ast *tree)
+{
+  ++noAlloc;
+  decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
+  --noAlloc;
+  sym_link *type = copyLinkChain (tree->ftype);
+  SPEC_SCLS (type) = 0;
+  return type;
 }
 
 /*-----------------------------------------------------------------*/
@@ -7590,6 +7565,7 @@ createFunctionDecl (symbol *name)
   if ((csym = findSym (SymbolTab, NULL, name->name)))
     {
       name = csym;
+
       /* special case for compiler defined functions
          we need to add the name to the publics list : this
          actually means we are now compiling the compiler
@@ -7753,7 +7729,7 @@ skipall:
   processBlockVars (body, &stack, DEALLOCATE);
   if (!fatalError)
     outputDebugStackSymbols ();
-  /* deallocate paramaters */
+  /* deallocate parameters */
   deallocParms (FUNC_ARGS (name->type));
 
   if (IFFUNC_ISREENT (name->type))
@@ -7895,7 +7871,7 @@ ast_print (ast * tree, FILE * outfile, int indent)
       if (IS_LITERAL (tree->opval.val->etype))
         {
           fprintf (outfile, "CONSTANT (%p) value = ", tree);
-          if (SPEC_LONGLONG (tree->opval.val->etype))
+          if (SPEC_LONGLONG (tree->opval.val->etype) || IS_BITINT (tree->opval.val->etype))
             {
               unsigned long long ull = ullFromVal (tree->opval.val);
 
@@ -8447,7 +8423,7 @@ ast_print (ast * tree, FILE * outfile, int indent)
 
     /*------------------------------------------------------------------*/
     /*----------------------------*/
-    /*      straight assignemnt   */
+    /*      straight assignment   */
     /*----------------------------*/
     case '=':
       fprintf (outfile, "ASSIGN(=) (%p) type (", tree);

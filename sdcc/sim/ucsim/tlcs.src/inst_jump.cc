@@ -71,6 +71,7 @@ cl_tlcs::inst_djnz_b(i8_t d)
   reg.rbc.b--;
   if (reg.rbc.b != 0)
     PC+= d;
+  tick(8);
   return resGO;
 }
 

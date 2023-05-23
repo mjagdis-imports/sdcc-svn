@@ -118,6 +118,9 @@ _ds390_regparm (sym_link * l, bool reentrant)
   if (IFFUNC_HASVARARGS (regParmFuncType))
     return 0;
 
+  if (IS_STRUCT (l))
+    return 0;
+
     if (IS_SPEC(l) && (SPEC_NOUN(l) == V_BIT))
         return 0;
     if (options.parms_in_bank1 == 0) {
@@ -377,7 +380,7 @@ _ds390_genInitStartup (FILE *of)
       fprintf (of, "\tmov\tsp,#__start__stack - 1\n");     /* MOF */
     }
 
-  fprintf (of, "\tlcall\t__sdcc_external_startup\n");
+  fprintf (of, "\tlcall\t___sdcc_external_startup\n");
   fprintf (of, "\tmov\ta,dpl\n");
   fprintf (of, "\tjz\t__sdcc_init_data\n");
   fprintf (of, "\tljmp\t__sdcc_program_startup\n");
@@ -473,9 +476,12 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 
 bool _ds390_nativeMulCheck(iCode *ic, sym_link *left, sym_link *right)
 {
-    return
-      getSize (left) == 1 && getSize (right) == 1 ||
-      options.useAccelerator && getSize (left) == 2 && getSize (right) == 2;
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
+  return
+    getSize (left) == 1 && getSize (right) == 1 ||
+    options.useAccelerator && getSize (left) == 2 && getSize (right) == 2;
 }
 
 /* Indicate which extended bit operations this port supports */
@@ -1032,8 +1038,8 @@ PORT ds390_port =
     NULL,
     NULL,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, bit, float */
-  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4, 64 },
 
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },           /* far, near, xstack, code */
@@ -1063,6 +1069,7 @@ PORT ds390_port =
     NULL,
     NULL,
     1,
+    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
     1                           // No fancy alignments supported.
   },
   { NULL, NULL },
@@ -1372,8 +1379,8 @@ PORT tininative_port =
     NULL,
     NULL,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 1, 3, 3, 3, 3, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 1, 3, 3, 3, 3, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },           /* far, near, xstack, code */
 
@@ -1402,6 +1409,7 @@ PORT tininative_port =
     NULL,
     NULL,
     1,
+    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
     1                           // No fancy alignments supported.
   },
   { NULL, NULL },
@@ -1628,8 +1636,8 @@ PORT ds400_port =
     NULL,
     NULL,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4, 64 },
 
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },           /* far, near, xstack, code */
@@ -1658,6 +1666,8 @@ PORT ds400_port =
     NULL,                       // name of segment for copies of initialized variables in code space
     NULL,
     NULL,
+    1,
+    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
     1
   },
   { _ds400_generateRomDataArea, _ds400_linkRomDataArea },

@@ -93,7 +93,6 @@ class cl_history: public cl_ustrings
 {
  protected:
   int nr;
-  //chars actual_line;
  public:
   cl_history(char *aname);
   cl_history(const char *aname);
@@ -233,6 +232,8 @@ extern bool check_inputs(class cl_list *active, class cl_list *avail);
 extern void msleep(int msec);
 extern void loop_delay();
 extern unsigned int cperiod_value();
+extern int set_console_mode();
+extern double dnow(void);
 
 extern const char *fio_type_name(enum file_type t);
 extern void  sigpipe_off();

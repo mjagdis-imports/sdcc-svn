@@ -49,23 +49,32 @@ private:
 
 public:
   const char *c_str(void) const { return chars_string; }
+  const char *cstr(void) const { return chars_string; }
+  char *str(void) { return chars_string; }
+  char c(int idx);
   chars &append(const char *s);
   chars &append(char c);
   chars &appendf(const char *format, ...);
+  chars &appendn(const char *src, int n);
   chars &format(const char *format, ...);
   bool empty() const { return chars_length == 0; }
   bool nempty() const { return !empty(); }
   bool is_null()const { return !chars_string; }
   chars &uppercase(void);
   chars &subst(const char *what, char with);
+  chars &substr(int start, int maxlen);
   int len() const { return chars_length; }
   int length() const { return chars_length; }
   void start_parse(void) const { start_parse(0); }
   void start_parse(int at) const { pars_pos= at; }
   chars token(const char *delims) const;
+  unsigned int htoi(void);
   void ltrim(void);
   void rtrim(void);
   void trim() { ltrim(); rtrim(); }
+  void lrip(const char *cset);
+  void rrip(const char *cset);
+  void rip(const char *cset) { lrip(cset); rrip(cset); }
   // search
   bool starts_with(const char *x) const;
 public:
