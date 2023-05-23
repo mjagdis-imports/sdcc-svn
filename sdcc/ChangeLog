@@ -1,3 +1,12 @@
+2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix a segdfault in a corner case in stm8 codegen.
+	* device/lib/strtoul.c:
+	  Improve strtoul range error check.
+	* support/regression/tests/mulextra.c:
+	  Improve test coverage for multiplication with operands of different types.
+
 2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/mos6502/gen.c,
@@ -5,7 +14,12 @@
 	  mos6502 _BitInt support.
 	* device/lib/strtoul.c,
 	  support/regression/tests/strto.c:
-	  Fix C23 binary prefix for stro(u)l.
+	  Fix C23 binary prefix for strtoo(u)l.
+	* src/hc08/gen.c:
+	  Comparison codegen improvement.
+	* device/lib/strtoul.c,
+	  support/regression/tests/strto.c:
+	  Fix a corner case in strtoul range check.
 
 2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
