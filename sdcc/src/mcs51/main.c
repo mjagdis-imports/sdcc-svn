@@ -898,7 +898,7 @@ PORT mcs51_port =
     1,          /* banked_overhead (switch between code banks) */
     0           /* sp points directly at last item pushed */
   },
-  { -1, FALSE },
+  { -1, false, false },         // Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine.
   { mcs51_emitDebuggerSymbol },
   {
     256,        /* maxCount */

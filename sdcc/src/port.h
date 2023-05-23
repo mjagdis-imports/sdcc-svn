@@ -283,8 +283,10 @@ typedef struct
     /** Size of the biggest shift the port can handle. -1 if port can handle shifts of arbitrary size. */
     signed int shift;
 
-    /* Has support routines for int x int -> long multiplication and unsigned int x unsigned int -> unsigned long multiplication */
+    // Has support routines for int x int -> long multiplication and unsigned int x unsigned int -> unsigned long multiplication
     bool has_mulint2long;
+    // Has support routine for unsigned long x unsigned char -> unsigned long long multiplication.
+    bool has_mululonguchar2ulonglong;
   }
   support;
 

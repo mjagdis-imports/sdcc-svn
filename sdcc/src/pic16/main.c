@@ -1377,7 +1377,7 @@ PORT pic16_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-     -1, FALSE
+    -1, false, false         // Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine.
   },
   {
     pic16_emitDebuggerSymbol

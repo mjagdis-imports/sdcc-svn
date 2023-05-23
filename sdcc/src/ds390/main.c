@@ -1416,7 +1416,7 @@ PORT tininative_port =
   0,                            // ABI revision
   { +1, 1, 4, 1, 1, 0, 0 },
   /* ds390 has an 16 bit mul & div */
-  { -1, FALSE },
+  { -1, false, false },         /* Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine. */
   { ds390_emitDebuggerSymbol },
   {
     255/4,      /* maxCount */
@@ -1673,7 +1673,7 @@ PORT ds400_port =
   { _ds400_generateRomDataArea, _ds400_linkRomDataArea },
   0,                            // ABI revision
   { +1, 1, 4, 1, 1, 0, 0 },
-  { -1, FALSE },
+  { -1, false, false },         /* Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine. */
   { ds390_emitDebuggerSymbol },
   {
     255/4,      /* maxCount */

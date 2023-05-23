@@ -532,6 +532,7 @@ PORT stm8_port =
   { 
     -1,                         /* shifts never use support routines */
     true,                       /* use support routine for int x int -> long multiplication */
+    true,                       /* use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
   },
   { stm8_emitDebuggerSymbol,
     {

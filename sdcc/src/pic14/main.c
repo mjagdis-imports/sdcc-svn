@@ -430,7 +430,7 @@ PORT pic_port =
   },
     /* pic14 has an 8 bit mul */
   {
-    -1, FALSE
+    -1, false, false         // Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine.
   },
   {
     pic14_emitDebuggerSymbol

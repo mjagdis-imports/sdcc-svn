@@ -350,7 +350,7 @@ PORT pdk13_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, false },                /* no int x int -> long multiplication support routine. */
+  { -1, false, false },         /* Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine. */
   { pdk_emitDebuggerSymbol,
     {
       0,
@@ -519,7 +519,7 @@ PORT pdk14_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, false },                /* no int x int -> long multiplication support routine. */
+  { -1, false, false },         /* Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine. */
   { pdk_emitDebuggerSymbol,
     {
       0,
@@ -688,7 +688,7 @@ PORT pdk15_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, false },                /* no int x int -> long multiplication support routine. */
+  { -1, false, false },         /* Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine. */
   { pdk_emitDebuggerSymbol,
     {
       0,

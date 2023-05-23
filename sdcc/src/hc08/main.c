@@ -859,7 +859,7 @@ PORT hc08_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-    5, false
+    5, false, false
   },
   {
     hc08_emitDebuggerSymbol,
@@ -1006,7 +1006,7 @@ PORT s08_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-    5, false
+    5, false, false
   },
   {
     hc08_emitDebuggerSymbol,

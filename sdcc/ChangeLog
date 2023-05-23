@@ -1,5 +1,18 @@
 2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* device/lib/stm8/__mululonguchar2ulonglong.s,
+	  device/lib/stm8-large/__mululonguchar2ulonglong.s,
+	  device/lib/stm8/Makefile.in,
+	  device/lib/stm8-large/Makefile.in,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/port.h,
+	  src/*/main.c:
+	  Special handling of 32x8->64 unsigned multiplication for optimization.
+
+2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/stm8/gen.c:
 	  Fix a segdfault in a corner case in stm8 codegen.
 	* device/lib/strtoul.c:
