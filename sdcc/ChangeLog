@@ -2,6 +2,8 @@
 
 	* src/SDCCopt.c:
 	  Optimize out some redundant iTemps.
+	* src/SDCClrange.c:
+	  Live range separation fixes.
 
 2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -3262,16 +3262,20 @@ removeRedundantTemps (iCode *sic)
         continue;
       if (ic->op != '=' || POINTER_SET (ic) || !IS_ITEMP (IC_RESULT (ic)) || !IS_ITEMP (IC_RIGHT (ic)))
         continue;
+      if (POINTER_SET (pic) || !isOperandEqual (IC_RESULT (pic), IC_RIGHT (ic)))
+        continue;
       if (bitVectnBitsOn (OP_DEFS (IC_RIGHT (ic))) != 1)
         continue;
       if (bitVectnBitsOn (OP_USES (IC_RIGHT (ic))) != 1)
         continue;
       if (compareType (operandType (IC_RESULT (ic)), operandType (IC_RIGHT (ic)), false) != 1)
         continue;
-      if (IC_RESULT (pic) != IC_RIGHT (ic))
-        continue;
       if (IS_BITFIELD (operandType (IC_RESULT (pic))))
         continue;
+
+#if 0
+      printf ("removeRedundantTemps: in %s optimized out ic %d: %s = %s\n", (currFunc ? currFunc->name : "NO_FUNCTION"), ic->key, OP_SYMBOL (IC_RESULT (ic))->name, OP_SYMBOL (IC_RIGHT (ic))->name);
+#endif
 
       bitVectUnSetBit (OP_DEFS (IC_RESULT (pic)), pic->key);
       IC_RESULT (pic) = IC_RESULT (ic);
@@ -3445,8 +3449,7 @@ eBBlockFromiCode (iCode *ic)
       separateLiveRanges (ic, ebbi);
     }
 
-  if (TARGET_IS_STM8 || TARGET_HC08_LIKE || TARGET_Z80_LIKE) // Todo: enable this for all ports after fixing regressions (observed at least for for mcs51-small and all pdk)
-    removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
+  removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
 
   /* Break down again and redo some steps to not confuse live range analysis later. */
   freeeBBlockData (ebbi);
@@ -3526,6 +3529,7 @@ eBBlockFromiCode (iCode *ic)
     adjustIChain (ebbi->bbOrder, ebbi->count);
     ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
     change = separateLiveRanges (ic, ebbi);
+    removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
     freeeBBlockData (ebbi);
     ebbi = iCodeBreakDown (ic);
     computeControlFlow (ebbi);
