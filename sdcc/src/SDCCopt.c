@@ -3445,9 +3445,8 @@ eBBlockFromiCode (iCode *ic)
       separateLiveRanges (ic, ebbi);
     }
 
-#if 0
-  removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
-#endif
+  if (TARGET_IS_STM8 || TARGET_HC08_LIKE || TARGET_Z80_LIKE) // Todo: enable this for all ports after fixing regressions (observed at least for for mcs51-small and all pdk)
+    removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
 
   /* Break down again and redo some steps to not confuse live range analysis later. */
   freeeBBlockData (ebbi);

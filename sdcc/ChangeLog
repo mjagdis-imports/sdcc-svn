@@ -1,5 +1,10 @@
 2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCopt.c:
+	  Optimize out some redundant iTemps.
+
+2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* device/lib/stm8/__mululonguchar2ulonglong.s,
 	  device/lib/stm8-large/__mululonguchar2ulonglong.s,
 	  device/lib/stm8/Makefile.in,
