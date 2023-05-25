@@ -1,3 +1,18 @@
+2023-05-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-2854.,
+	  support/regression/tests/bug-3474.c,
+	  support/regression/tests/strto.c:
+	  Disable tests for mcs51 medium model that need too much memory since recent strotul fixes (see also RFE #875).
+
+2023-05-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bigstack.c.in:
+	  Improve guards against a potential issue in the interaction of function entry stack adjustment and register parameters.
+	* src/mos6502/gen.c:
+	  Fix missing statement after label.
+
 2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCopt.c:
@@ -21,7 +36,7 @@
 2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c:
-	  Fix a segdfault in a corner case in stm8 codegen.
+	  Fix a segfault in a corner case in stm8 codegen.
 	* device/lib/strtoul.c:
 	  Improve strtoul range error check.
 	* support/regression/tests/mulextra.c:
