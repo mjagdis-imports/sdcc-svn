@@ -18,7 +18,7 @@ const char string6[] = "-0x23test";
 void
 testStrto(void)
 {
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Lack of memory
+#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) && !defined(__SDCC_mcs51) // Lack of memory
   char *e;
 
   ASSERT(strtoul("", 0, 10) == 0);
@@ -29,6 +29,11 @@ testStrto(void)
   ASSERT(strtoul("23", 0, 0) == 23);
   ASSERT(strtoul("023", 0, 0) == 023);
   ASSERT(strtoul("0x23", 0, 0) == 0x23);
+  
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202300L // C2X introduces binary prefix.
+  ASSERT(strtoul("0b11", 0, 0) == 0b11);
+  ASSERT(strtoul("0b11", 0, 2) == 0b11);
+#endif
 
   ASSERT(strtoul("+23", 0, 0) == +23);
   ASSERT(strtoul("+023", 0, 0) == +023);
@@ -38,6 +43,12 @@ testStrto(void)
   ASSERT(strtol("-042", 0, 0) == -042);
   ASSERT(strtol("-0x42", 0, 0) == -0x42);
   ASSERT(strtol("-0x42", 0, 16) == -0x42);
+
+#if ULONG_MAX == 4294967295
+  errno = 0;
+  strtoul("4294967296", 0, 10);
+  ASSERT(errno == ERANGE);
+#endif
 
   errno = 0;
   ASSERT(strtol(string1, &e, 10) == LONG_MIN);

@@ -1,3 +1,101 @@
+2023-05-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-2854.,
+	  support/regression/tests/bug-3474.c,
+	  support/regression/tests/strto.c:
+	  Disable tests for mcs51 medium model that need too much memory since recent strotul fixes (see also RFE #875).
+
+2023-05-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  support/regression/tests/bigstack.c.in:
+	  Improve guards against a potential issue in the interaction of function entry stack adjustment and register parameters.
+	* src/mos6502/gen.c:
+	  Fix missing statement after label.
+
+2023-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix a segfault in a corner case in stm8 codegen.
+	* device/lib/strtoul.c:
+	  Improve strtoul range error check.
+	* support/regression/tests/mulextra.c:
+	  Improve test coverage for multiplication with operands of different types.
+
+2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/main.c:
+	  mos6502 _BitInt support.
+	* device/lib/strtoul.c,
+	  support/regression/tests/strto.c:
+	  Fix C23 binary prefix for strtoo(u)l.
+	* src/hc08/gen.c:
+	  Comparison codegen improvement.
+	* device/lib/strtoul.c,
+	  support/regression/tests/strto.c:
+	  Fix a corner case in strtoul range check.
+
+2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c
+	  src/hc08/main.c,
+	  doc/sdccman.lyx:
+	  hc08/s08 _BitInt support up to 64 bits.
+
+2023-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c,
+	  src/hc08/main.c:
+	  hc08/s08 _BitInt support: codegen for addition, subtraction and 16-bit shifts. Enable _BitInt up to 16 bits.
+
+2023-05-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/ralloc2.cc,
+	  src/hc08/gen.c:
+	  Prepare for hc08/s08 _BitInt support: codegen for casts.
+
+2023-05-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Fix whitespace in cross-build configure example.
+	* support/regression/tests/gcc-torture-execute-strlen-4.c:
+	  Enable some more bits of this test that now pass.
+
+2023-05-16 Felix Salfelder <felix AT salfelder.org>
+
+	* bin/sd{ar,cpp,nm,objcopy,ranlib}.in:
+	  fix #3587 (with Philipp).
+
+2023-05-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCClrange.c,
+	  support/regression/tests/bug-3455.c:
+	  Fix bug #3455.
+	* support/regression/tests/sizeof.c.in:
+	  Disable a warning where we intentionally test something that is implementation-defined in SDCC (though undefined in the standard).
+	* device/lib/ds400/Makefile.in:
+	  Fix invokation of sdar during ds400 library build.
+
+2023-05-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/linksrc/Makefile.in,
+	  sdas/linksrc/aslink.h,
+	  sdas/linksrc/lkout.c,
+	  sdas/linksrc/lks19.c:
+	  Port Motorola SREC format support from upstream asxxxx 5.40 to fix bug #3559.
+
+2023-05-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-3585.c:
+	  Fix bug #3585.
+
+2023-05-01 Felix Salfelder <felix AT salfelder.org>
+
+	* support/sdbinutils/bfd/{asxxxx,targets}.c:
+	  Fix bug #3569 and a memory leak.
+
 2023-05-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-3352.c,
