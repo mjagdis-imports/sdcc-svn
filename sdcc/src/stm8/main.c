@@ -385,8 +385,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
+  int size = getSize (left);
   return (op == GETABIT || op == GETBYTE || op == GETWORD ||
     op == SWAP && (size <= 2 || size == 4) ||
     op == RLC && size <= 2 ||

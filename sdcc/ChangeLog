@@ -1,5 +1,12 @@
 2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/port.h,
+	  src/SDCCast.c,
+	  src/*/main.c:
+	  Prepare for generalized swap / rotation support.
+
+2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* configure,
 	  configure.ac,
 	  device/lib/Makefile.in,

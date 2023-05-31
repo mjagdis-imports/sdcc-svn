@@ -360,11 +360,11 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
   if (op == RRC
       || op == RLC
-      || (op == SWAP && size <= 2)
+      || (op == SWAP && getSize (left) <= 2)
       || op == GETABIT
       || op == GETBYTE
       || op == GETWORD

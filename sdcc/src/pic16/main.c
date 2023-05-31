@@ -1229,15 +1229,9 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == RRC
-      || op == RLC
-      || op == GETABIT
-     )
-    return TRUE;
-  else
-    return FALSE;
+  return (op == RRC || op == RLC || op == GETABIT);
 }
 
 /* Indicate the expense of an access to an output storage class */

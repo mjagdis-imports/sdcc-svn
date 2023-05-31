@@ -6557,7 +6557,7 @@ optimizeGetAbit (ast * tree, RESULT_TYPE resultType)
     return tree;
 
   /* make sure the port supports GETABIT */
-  if (port->hasExtBitOp && !port->hasExtBitOp (GETABIT, getSize (TTYPE (expr))))
+  if (port->hasExtBitOp && !port->hasExtBitOp (GETABIT, TTYPE (expr), count))
     return tree;
 
   return decorateType (newNode (GETABIT, expr, count), resultType, true);
@@ -6599,7 +6599,7 @@ optimizeGetByte (ast * tree, RESULT_TYPE resultType)
     return tree;
 
   /* make sure the port supports GETBYTE */
-  if (port->hasExtBitOp && !port->hasExtBitOp (GETBYTE, size))
+  if (port->hasExtBitOp && !port->hasExtBitOp (GETBYTE, TTYPE (expr), count))
     return tree;
 
   return decorateType (newNode (GETBYTE, expr, count), RESULT_TYPE_NONE, true);
@@ -6642,7 +6642,7 @@ optimizeGetWord (ast *tree, RESULT_TYPE resultType)
     return tree;
 
   /* make sure the port supports GETWORD */
-  if (port->hasExtBitOp && !port->hasExtBitOp (GETWORD, size))
+  if (port->hasExtBitOp && !port->hasExtBitOp (GETWORD, TTYPE (expr), count))
     return tree;
 
   return decorateType (newNode (GETWORD, expr, count), RESULT_TYPE_NONE, true);
@@ -6696,7 +6696,7 @@ optimizeRRCRLC (ast * root)
         return root;
 
       /* make sure the port supports RLC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (RLC, getSize (TTYPE (root->left->left))))
+      if (port->hasExtBitOp && !port->hasExtBitOp (RLC, TTYPE (root->left->left), 1))
         return root;
 
       /* whew got the first case : create the AST */
@@ -6730,7 +6730,7 @@ tryNext0:
         return root;
 
       /* make sure the port supports RLC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (RLC, getSize (TTYPE (root->left->left))))
+      if (port->hasExtBitOp && !port->hasExtBitOp (RLC, TTYPE (root->left->left), 1))
         return root;
 
       /* whew got the first case : create the AST */
@@ -6765,7 +6765,7 @@ tryNext1:
         return root;
 
       /* make sure the port supports RRC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (RRC, getSize (TTYPE (root->left->left))))
+      if (port->hasExtBitOp && !port->hasExtBitOp (RRC, TTYPE (root->left->left), 1))
         return root;
 
       /* whew got the first case : create the AST */
@@ -6798,7 +6798,7 @@ tryNext2:
         return root;
 
       /* make sure the port supports RRC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (RRC, getSize (TTYPE (root->left->left))))
+      if (port->hasExtBitOp && !port->hasExtBitOp (RRC, TTYPE (root->left->left), 1))
         return root;
 
       /* whew got the first case : create the AST */
@@ -6850,7 +6850,7 @@ optimizeSWAP (ast * root)
         return root;
 
       /* make sure the port supports SWAP */
-      if (port->hasExtBitOp && !port->hasExtBitOp (SWAP, getSize (TTYPE (root->left->left))))
+      if (port->hasExtBitOp && !port->hasExtBitOp (SWAP, TTYPE (root->left->left), bitsForType (TTYPE (root->left->left)) / 2))
         return root;
 
       /* found it : create the AST */

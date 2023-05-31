@@ -972,7 +972,7 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
   switch (op)
     {
@@ -983,7 +983,7 @@ hasExtBitOp (int op, int size)
     case RRC:
       return true;
     case SWAP:
-      return size <= 4;
+      return getSize (left) <= 4;
     }
   return false;
 }

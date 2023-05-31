@@ -486,16 +486,16 @@ bool _ds390_nativeMulCheck(iCode *ic, sym_link *left, sym_link *right)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
   if (op == RRC
       || op == RLC
       || op == GETABIT
-      || (op == SWAP && size <= 2)
+      || (op == SWAP && getSize (left) <= 2)
      )
-    return TRUE;
+    return true;
   else
-    return FALSE;
+    return false;
 }
 
 /* Indicate the expense of an access to an output storage class */

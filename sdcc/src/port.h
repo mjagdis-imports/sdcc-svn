@@ -391,8 +391,13 @@ typedef struct
 
   /** Returns true if the port has implemented certain bit
       manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
+      right parameter: value of right operand if in range -63..63; INT_MIN if non-literal.
    */
-  bool (*hasExtBitOp) (int op, int size);
+  bool (*hasExtBitOp) (int op, sym_link *left, int right);
+
+  /** Returns true if the port has implemented certain bit
+      manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
+   */
 
   /** Returns the relative expense of accessing a particular output
       storage class. Larger values indicate higher expense.

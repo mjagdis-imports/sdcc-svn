@@ -220,9 +220,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
 /* Indicate which extended bit operations this backend supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  return (op == GETBYTE || op == SWAP && size == 1);
+  return (op == GETBYTE || op == SWAP && getSize (left) == 1);
 }
 
 static const char *
