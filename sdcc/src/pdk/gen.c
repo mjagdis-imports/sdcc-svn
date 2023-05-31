@@ -3458,30 +3458,57 @@ genRot (iCode *ic)
   aopOp (result, ic);
   aopOp (left, ic);
 
-  wassert (result->aop->size == 1 && IS_OP_LITERAL(right) && operandLitValueUll (right) == 4);
+  int s = operandLitValueUll (right) % 8;
 
-  if (TARGET_IS_PDK16 && // swap m is supported in pdk16, but not pdk13 and pdk14. Some pdk15 devices support it officially, some support it as undocumented feature. It is unclear if there are pdk15 that do not support it.
-    (result->aop->type == AOP_DIR || aopInReg (result->aop, 0, P_IDX)) &&
-    aopSame (left->aop, 0, result->aop, 0, 1))
-    {
-      emit2 ("swap", "%s", aopGet (result->aop, 0));
-      cost (1, 1);
-    }
-  else
-    {
-      if (!regDead (A_IDX, ic))
-        pushAF ();
-    
-      cheapMove (ASMOP_A, 0, left->aop, 0, true, regDead (P_IDX, ic), true);
+  wassert (result->aop->size == 1 && IS_OP_LITERAL(right));
+
+  bool a_free = regDead (A_IDX, ic);
+  bool pushed_a = false;
   
-      emit2 ("swap", "a");
-      cost (1, 1);
-  
-      cheapMove (result->aop, 0, ASMOP_A, 0, true, regDead (P_IDX, ic), true);
-    
-      if (!regDead (A_IDX, ic))
-        popAF ();
+  asmop *shiftop = ASMOP_A;
+  if ((TARGET_IS_PDK16 || s < 3 || s > 5) && // swap m is supported in pdk16, but not pdk13 and pdk14. Some pdk15 devices support it officially, some support it as undocumented feature. It is unclear if there are pdk15 that do not support it.
+    (result->aop->type == AOP_DIR || aopInReg (result->aop, 0, P_IDX)))
+    shiftop = result->aop;
+  else if (!a_free)
+    {
+      pushAF ();
+      pushed_a = true;
+      a_free = true;
     }
+
+  cheapMove (shiftop, 0, left->aop, 0, a_free, regDead (P_IDX, ic), true);
+  while (s)
+    {
+      if (s == 3 || s == 4 || s == 5)
+        {
+          emit2 ("swap", "%s", aopGet (shiftop, 0));
+          cost (1, 1);
+          s = s + 4;
+        }
+      else if (s < 3)
+        {
+          emit2 ("sl", "%s", aopGet (shiftop, 0));
+          emit2 ("t0sn.io", "f, c");
+          emit2 ("or", "%s, #0x01", aopGet (shiftop, 0));
+          emitCondTargetLbl ();
+          cost (3, 3);
+          s--;
+        }
+      else if (s > 5)
+        {
+          emit2 ("sr", "%s", aopGet (shiftop, 0));
+          emit2 ("t0sn.io", "f, c");
+          emit2 ("or", "%s, #0x80", aopGet (shiftop, 0));
+          emitCondTargetLbl ();
+          cost (3, 3);
+          s++;
+        }
+      s %= 8;
+    }
+  cheapMove (result->aop, 0, shiftop, 0, a_free, regDead (P_IDX, ic), true);
+
+  if (pushed_a)
+    popAF ();
 
   freeAsmop (left);
   freeAsmop (result);

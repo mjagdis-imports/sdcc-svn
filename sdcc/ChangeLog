@@ -1,5 +1,11 @@
 2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/pdk/main.c,
+	  src/pdk/gen.c:
+	  Support arbitrary rotations of 8-bit values in pdk code generation.
+
+2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* .version,
 	  doc/sdccman.lyx,
 	  src/SDCC.lex,
