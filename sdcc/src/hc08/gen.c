@@ -7137,30 +7137,28 @@ genRLC (iCode * ic)
         }
     }
 
-  if ((!hc08_reg_a->isFree) || resultInA)
-    {
-      pushReg (hc08_reg_a, true);
-      needpula = true;
-    }
-
   /* now we need to put the carry into the
      lowest order byte of the result */
-  offset = 0;
-  emitcode ("clra", "");
-  emitcode ("rola", "");
-  regalloc_dry_run_cost += 2;
-  hc08_dirtyReg (hc08_reg_a, false);
   if (resultInA)
     {
-      emitcode ("ora", "1,s");
-      pullNull (1);
-      regalloc_dry_run_cost += 3;
-      hc08_dirtyReg (hc08_reg_a, false);
-      needpula = false;
+      emitcode ("adc", "#0x00");
+      regalloc_dry_run_cost += 2;
     }
   else
-    accopWithAop ("ora", AOP (result), offset);
-  storeRegToAop (hc08_reg_a, AOP (result), offset);
+    {
+      if (!hc08_reg_a->isFree)
+        {
+          pushReg (hc08_reg_a, true);
+          needpula = true;
+        }
+      offset = 0;
+      emitcode ("clra", "");
+      emitcode ("rola", "");
+      regalloc_dry_run_cost += 2;
+      hc08_dirtyReg (hc08_reg_a, false);
+      accopWithAop ("ora", AOP (result), offset);
+      storeRegToAop (hc08_reg_a, AOP (result), offset);
+    }
 
   pullOrFreeReg (hc08_reg_a, needpula);
 
@@ -11107,8 +11105,8 @@ genhc08Code (iCode *lic)
 
       regalloc_dry_run_cost = 0;
       genhc08iCode(ic);
-      /*if (options.verboseAsm)
-        emitcode (";", "iCode %d (key %d) total cost: %d\n", ic->seq, ic->key, (int) regalloc_dry_run_cost);*/
+      //if (options.verboseAsm)
+      //  emitcode (";", "iCode %d (key %d) total cost: %d\n", ic->seq, ic->key, (int) regalloc_dry_run_cost);
 
       if (!hc08_reg_a->isFree)
         DD (emitcode ("", "; forgot to free a"));

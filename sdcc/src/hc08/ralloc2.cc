@@ -168,7 +168,7 @@ static bool XAinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     ic->op == ADDRESS_OF ||
     ic->op == CAST ||
     ic->op == DUMMY_READ_VOLATILE ||
-    ic->op == ROT && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic))))
+    ic->op == ROT && IS_OP_LITERAL (IC_RIGHT (ic)) && (bitsForType (operandType (IC_LEFT (ic))) == 8 || operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))))
     return(true);
 
   if(ic->op == IFX && ic->generated)
@@ -267,7 +267,7 @@ static bool AXinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
     ic->op == DUMMY_READ_VOLATILE ||
     ic->op == CRITICAL ||
     ic->op == ENDCRITICAL ||
-    ic->op == ROT && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic))))
+    ic->op == ROT && IS_OP_LITERAL (IC_RIGHT (ic)) && (bitsForType (operandType (IC_LEFT (ic))) == 8 || operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))))
     return(true);
 
   bool unused_A = (ia.registers[REG_A][1] < 0);

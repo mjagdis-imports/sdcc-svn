@@ -6,6 +6,9 @@
 	* src/stm8/main.c,
 	  src/stm8/gen.c:
 	  Support arbitrary rotations of 8-bit values in stm8 code generation.
+	* src/hc08/gen.c,
+	  src/hc08/ralloc2.cc:
+	  Improve code generation for hc08/s08 rotations.
 
 2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
