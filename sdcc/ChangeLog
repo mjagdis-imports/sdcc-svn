@@ -3,6 +3,9 @@
 	* src/pdk/main.c,
 	  src/pdk/gen.c:
 	  Support arbitrary rotations of 8-bit values in pdk code generation.
+	* src/stm8/main.c,
+	  src/stm8/gen.c:
+	  Support arbitrary rotations of 8-bit values in stm8 code generation.
 
 2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
 

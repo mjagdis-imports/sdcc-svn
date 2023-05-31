@@ -6803,61 +6803,6 @@ genRotate (const iCode *ic)
   
   switch (left->aop->size)
     {
-    case 1:
-      if (aopSame (result->aop, 0, left->aop, 0, 1) && left->aop->type == AOP_DIR) // Use bccm
-        {
-          emit3 (rlc ? A_SLL : A_SRL, left->aop, 0);
-          emit2 ("bccm", rlc ? "%s, #0" : "%s, #7", aopGet (left->aop, 0));
-          cost (4, 1);
-        }
-      else if (rlc && aopSame (result->aop, 0, left->aop, 0, 1) && aopOnStack (left->aop, 0, 1))
-        {
-          emit3 (A_SLL, left->aop, 0);
-          symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
-          if (!regalloc_dry_run)
-              emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
-          emit2 ("inc", aopGet (left->aop, 0));
-          cost (2, 2);
-          emitLabel (tlbl);
-        }
-      else
-        {
-          if (!regDead (A_IDX, ic))
-            push (ASMOP_A, 0, 1);
-          cheapMove (ASMOP_A, 0, left->aop, 0, false);
-          if (rlc) // 3 bytes, 2 cycles.
-            {
-              emit3 (A_SLL, ASMOP_A, 0);
-              emit3 (A_ADC, ASMOP_A, ASMOP_ZERO);
-            }
-          else if (aopOnStack (left->aop, 0, 1) || (!aopInReg (left->aop, 0, A_IDX) && left->aop->type == AOP_REG)) // 3 or 4 bytes, 3 cycles.
-            {
-              emit3 (A_SRL, ASMOP_A, 0); // Get lowest bit into carry
-              cheapMove (ASMOP_A, 0, left->aop, 0, false);
-              emit3 (A_RRC, ASMOP_A, 0); // Rotate
-            }
-          else if (optimize.codeSpeed) // 5 bytes, 3 cycles
-            {
-              emit3 (A_SRL, ASMOP_A, 0);
-              symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
-              if (!regalloc_dry_run)
-                emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
-              emit2 ("or", "#0x80");
-              cost (4, 2);
-              emitLabel (tlbl);
-            }
-          else // 4 bytes, 4 cycles.
-            {
-              push (ASMOP_A, 0, 1);
-              emit3 (A_SRL, ASMOP_A, 0); // Get lowest bit into carry
-              pop (ASMOP_A, 0, 1);
-              emit3 (A_RRC, ASMOP_A, 0); // Rotate
-            }
-          cheapMove (result->aop, 0, ASMOP_A, 0, false);
-          if (!regDead (A_IDX, ic))
-            pop (ASMOP_A, 0, 1);
-        }
-      break;
     case 2:
       if (rlc && aopSame (result->aop, 0, left->aop, 0, 2) && left->aop->type == AOP_DIR)  // Use bccm
         {
@@ -6938,8 +6883,6 @@ genSwap (const iCode *ic)
 {
   operand *left, *result;
 
-  D (emit2 ("; genSwap", ""));
-
   aopOp (left = IC_LEFT (ic), ic);
   aopOp (result = IC_RESULT (ic), ic);
 
@@ -6949,23 +6892,6 @@ genSwap (const iCode *ic)
 
   switch (left->aop->size)
     {
-    case 1:
-      if (aopSame (result->aop, 0, left->aop, 0, 1) &&
-        (aopOnStack (result->aop, 0, 1) || result->aop->type == AOP_DIR))
-        emit3 (A_SWAP, result->aop, 0);
-      else
-        {
-          if (!regDead (A_IDX, ic))
-            push (ASMOP_A, 0, 1);
-
-          cheapMove (ASMOP_A, 0, left->aop, 0, false);
-          emit3 (A_SWAP, ASMOP_A, 0);
-          cheapMove (result->aop, 0, ASMOP_A, 0, false);
-  
-          if (!regDead (A_IDX, ic))
-            pop (ASMOP_A, 0, 1);
-        }
-      break;
     case 2:
       if (result->aop->type == AOP_REG) // Let genMove handle all the coalescing, swapw, exg, rlwa, etc).
         {
@@ -7143,6 +7069,102 @@ init_shiftop(asmop *shiftop, const asmop *result, const asmop *left, const asmop
 }
 
 /*-----------------------------------------------------------------*/
+/* genRot1 - generates code for 1 Byte rotation                    */
+/*-----------------------------------------------------------------*/
+static void
+genRot1 (iCode *ic)
+{
+  operand *left, *result;
+
+  aopOp (left = IC_LEFT (ic), ic);
+  aopOp (result = IC_RESULT (ic), ic);
+
+  wassert (result->aop->size == 1 && left->aop->size == 1 && IS_OP_LITERAL (IC_RIGHT (ic)));
+
+  int s = operandLitValueUll (IC_RIGHT (ic)) % 8;
+
+  if (s == 4 && aopSame (result->aop, 0, left->aop, 0, 1) &&
+    (aopOnStack (result->aop, 0, 1) || result->aop->type == AOP_DIR))
+    emit3 (A_SWAP, result->aop, 0);
+  else if ((s == 1 || s == 7) && aopSame (result->aop, 0, left->aop, 0, 1) && left->aop->type == AOP_DIR) // Use bccm
+    {
+      emit3 ((s == 1) ? A_SLL : A_SRL, left->aop, 0);
+      emit2 ("bccm", (s == 1) ? "%s, #0" : "%s, #7", aopGet (left->aop, 0));
+      cost (4, 1);
+    }
+  else if (s == 1 && aopSame (result->aop, 0, left->aop, 0, 1) && aopOnStack (left->aop, 0, 1))
+    {
+      emit3 (A_SLL, left->aop, 0);
+      symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
+      if (!regalloc_dry_run)
+          emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
+      emit2 ("inc", aopGet (left->aop, 0));
+      cost (2, 2);
+      emitLabel (tlbl);
+    }
+  else
+    {
+      if (!regDead (A_IDX, ic))
+        push (ASMOP_A, 0, 1);
+      cheapMove (ASMOP_A, 0, left->aop, 0, false);
+
+      bool started = false;
+      while (s)
+        {
+          if (!started && (s == 7 || s == 3) && // 3 or 4 bytes, 3 cycles.
+            (aopOnStack (left->aop, 0, 1) || (!aopInReg (left->aop, 0, A_IDX) && left->aop->type == AOP_REG)))
+            {
+              emit3 (A_SRL, ASMOP_A, 0); // Get lowest bit into carry
+              cheapMove (ASMOP_A, 0, left->aop, 0, false);
+              emit3 (A_RRC, ASMOP_A, 0); // Rotate
+              s++;
+            }
+          else if (s >= 3 && s <= 6)
+            {
+              emit3 (A_SWAP, ASMOP_A, 0);
+              s += 4;
+            }
+          else if (s == 7)
+            {
+              if (optimize.codeSpeed) // 5 bytes, 3 cycles
+                {
+                  emit3 (A_SRL, ASMOP_A, 0);
+                  symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
+                  if (!regalloc_dry_run)
+                    emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
+                  emit2 ("or", "#0x80");
+                  cost (4, 2);
+                  emitLabel (tlbl);
+                }
+              else // 4 bytes, 4 cycles.
+                {
+                  push (ASMOP_A, 0, 1);
+                  emit3 (A_SRL, ASMOP_A, 0); // Get lowest bit into carry
+                  pop (ASMOP_A, 0, 1);
+                  emit3 (A_RRC, ASMOP_A, 0); // Rotate
+                }
+              s++;
+              started = true;
+            }
+          else // 3 bytes, 2 cycles.
+            {
+              emit3 (A_SLL, ASMOP_A, 0);
+              emit3 (A_ADC, ASMOP_A, ASMOP_ZERO);
+              s--;
+            }
+          s %= 8;
+        }
+
+      cheapMove (result->aop, 0, ASMOP_A, 0, false);
+      if (!regDead (A_IDX, ic))
+        pop (ASMOP_A, 0, 1);
+    }
+
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genRot - generates code for rotation                            */
 /*-----------------------------------------------------------------*/
 static void
@@ -7150,8 +7172,13 @@ genRot (iCode *ic)
 {
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
+
+  D (emit2 ("; genRot", ""));
+
   unsigned int lbits = bitsForType (operandType (left));
-  if (IS_OP_LITERAL (right) && (operandLitValueUll (right) % lbits == 1 || operandLitValueUll (right) % lbits == lbits - 1))
+  if (lbits == 8)
+    genRot1 (ic);
+  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) % lbits == 1 || operandLitValueUll (right) % lbits == lbits - 1))
     genRotate (ic);
   else if (IS_OP_LITERAL (right) && operandLitValueUll (right) %lbits == lbits / 2)
     genSwap (ic);
