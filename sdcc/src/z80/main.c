@@ -979,13 +979,15 @@ hasExtBitOp (int op, sym_link *left, int right)
     case GETABIT:
     case GETBYTE:
     case GETWORD:
-    case RLC:
-    case RRC:
-      return true;
-    case SWAP:
-      return getSize (left) <= 4;
+      return (true);
+    case ROT:
+      if (right == 1 || right == -1)
+        return (true);
+      if (getSize (left) <= 4 && bitsForType (left) == right * 2)
+        return (true);
+      return (false);
     }
-  return false;
+  return (false);
 }
 
 /* Indicate the expense of an access to an output storage class */

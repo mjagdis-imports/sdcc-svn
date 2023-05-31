@@ -8859,6 +8859,21 @@ release:
   pic16_freeAsmop (result, NULL, ic, TRUE);
 }
 
+/*-----------------------------------------------------------------*/
+/* genRot - generates code for rotation                            */
+/*-----------------------------------------------------------------*/
+static void
+genRot (iCode *ic)
+{
+  operand *right = IC_RIGHT (ic);
+  if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == 1)
+    genRLC (ic);
+  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == (-1 & 0xff))
+    genRRC (ic);
+  else
+    wassertl (0, "Unsupported rotation.");
+}
+
 static void
 genLeftShift (iCode * ic)
 {
@@ -11450,16 +11465,12 @@ genpic16Code (iCode * lic)
           pic16_genInline (ic);
           break;
 
-        case RRC:
-          genRRC (ic);
-          break;
-
-        case RLC:
-          genRLC (ic);
-          break;
-
         case GETABIT:
           genGetABit (ic);
+          break;
+
+        case ROT:
+          genRot (ic);
           break;
 
         case LEFT_OP:

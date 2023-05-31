@@ -1231,7 +1231,7 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 static bool
 hasExtBitOp (int op, sym_link *left, int right)
 {
-  return (op == RRC || op == RLC || op == GETABIT);
+  return (op == ROT && (right == 1 || right == -1) || op == GETABIT);
 }
 
 /* Indicate the expense of an access to an output storage class */

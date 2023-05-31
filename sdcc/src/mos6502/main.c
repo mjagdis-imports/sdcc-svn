@@ -298,17 +298,17 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 static bool
 hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == RRC
-      || op == RLC
-      //|| (op == SWAP && size <= 2)
-      // TODO?
-      //|| op == GETABIT
-      || op == GETBYTE
-      || op == GETWORD
-     )
-    return true;
-  else
-    return false;
+  switch (op)
+    {
+    case GETBYTE:
+    case GETWORD:
+      return true;
+    case ROT:
+      if (right == 1 || right == -1)
+        return true;
+      return false;
+    }
+  return false;
 }
 
 /* Indicate the expense of an access to an output storage class */

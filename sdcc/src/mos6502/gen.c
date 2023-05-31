@@ -7902,6 +7902,21 @@ genlshFour (operand * result, operand * left, int shCount)
     }
 }
 
+/*-----------------------------------------------------------------*/
+/* genRot - generates code for rotation                            */
+/*-----------------------------------------------------------------*/
+static void
+genRot (iCode *ic)
+{
+  operand *right = IC_RIGHT (ic);
+  if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == 1)
+    genRLC (ic);
+  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == (-1 & 0xff))
+    genRRC (ic);
+  else
+    wassertl (0, "Unsupported rotation.");
+}
+
 /**************************************************************************
  * genLeftShiftLiteral - left shifting by known count
  *************************************************************************/
@@ -10690,15 +10705,6 @@ genm6502iCode (iCode *ic)
       m6502_genInline (ic);
       break;
 
-    case RRC:
-      genRRC (ic);
-      break;
-
-    case RLC:
-      genRLC (ic);
-      break;
-
-    case SWAP:
     case GETABIT:
       wassertl (0, "Unimplemented iCode");
       break;
@@ -10709,6 +10715,10 @@ genm6502iCode (iCode *ic)
 
     case GETWORD:
       genGetWord(ic);
+      break;
+
+    case ROT:
+      genRot (ic);
       break;
 
     case LEFT_OP:

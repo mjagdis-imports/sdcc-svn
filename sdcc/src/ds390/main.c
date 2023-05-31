@@ -488,14 +488,18 @@ bool _ds390_nativeMulCheck(iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == RRC
-      || op == RLC
-      || op == GETABIT
-      || (op == SWAP && getSize (left) <= 2)
-     )
-    return true;
-  else
-    return false;
+  switch (op)
+    {
+    case GETABIT:
+      return true;
+    case ROT:
+      if (right == 1 || right == -1)
+        return true;
+      if (getSize (left) <= 2 && bitsForType (left) == right * 2)
+        return true;
+      return false;
+    }
+  return false;
 }
 
 /* Indicate the expense of an access to an output storage class */

@@ -1,5 +1,21 @@
 2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* .version,
+	  doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCcse.c,
+	  src/SDCCicode.c,
+	  src/SDCClospre.cc,
+	  src/SDCCopt.c,
+	  src/*/gen.c,
+	  src/*/main.c,
+	  src/*/ralloc2.cc:
+	  Replace RLC, RRC, SWAP by ROT, RFE #877.
+
+2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/port.h,
 	  src/SDCCast.c,
 	  src/*/main.c:

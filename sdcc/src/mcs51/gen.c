@@ -9342,6 +9342,24 @@ genlshAny (operand *result, operand *left, int shCount)
 }
 
 /*-----------------------------------------------------------------*/
+/* genRot - generates code for rotation                            */
+/*-----------------------------------------------------------------*/
+static void
+genRot (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == 1)
+    genRLC (ic);
+  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == (-1 & 0xff))
+    genRRC (ic);
+  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) * 2 == bitsForType (operandType (left)))
+    genSwap (ic);
+  else
+    wassertl (0, "Unsupported rotation.");
+}
+
+/*-----------------------------------------------------------------*/
 /* genLeftShiftLiteral - left shifting by known count              */
 /*-----------------------------------------------------------------*/
 static void
@@ -12557,14 +12575,6 @@ gen51Code (iCode * lic)
           genInline (ic);
           break;
 
-        case RRC:
-          genRRC (ic);
-          break;
-
-        case RLC:
-          genRLC (ic);
-          break;
-
         case GETABIT:
           genGetAbit (ic);
           break;
@@ -12575,6 +12585,10 @@ gen51Code (iCode * lic)
 
         case GETWORD:
           genGetWord (ic);
+          break;
+
+        case ROT:
+          genRot (ic);
           break;
 
         case LEFT_OP:
@@ -12630,10 +12644,6 @@ gen51Code (iCode * lic)
 
         case ENDCRITICAL:
           genEndCritical (ic);
-          break;
-
-        case SWAP:
-          genSwap (ic);
           break;
 
         default:

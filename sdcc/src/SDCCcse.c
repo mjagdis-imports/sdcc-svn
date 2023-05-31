@@ -2171,6 +2171,7 @@ static int isSignedOp (iCode *ic)
     case '|':
     case BITWISEAND:
     case INLINEASM:
+    case ROT:
     case LEFT_OP:
     case GET_VALUE_AT_ADDRESS:
     case '=':
@@ -2186,8 +2187,6 @@ static int isSignedOp (iCode *ic)
     case LE_OP:
     case GE_OP:
     case NE_OP:
-    case RRC:
-    case RLC:
     case GETABIT:
     case GETBYTE:
     case GETWORD:

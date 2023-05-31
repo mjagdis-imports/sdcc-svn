@@ -3444,20 +3444,21 @@ genGetByte (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
-/* genSwap - generates code for nibble swapping                    */
+/* genRot - generates code for rotation                            */
 /*-----------------------------------------------------------------*/
 static void
-genSwap (const iCode *ic)
+genRot (iCode *ic)
 {
   operand *result = IC_RESULT (ic);
   operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
 
-  D (emit2 ("; genSwap", ""));
+  D (emit2 ("; genRot", ""));
 
   aopOp (result, ic);
   aopOp (left, ic);
 
-  wassert (result->aop->size == 1);
+  wassert (result->aop->size == 1 && IS_OP_LITERAL(right) && operandLitValueUll (right) == 4);
 
   if (TARGET_IS_PDK16 && // swap m is supported in pdk16, but not pdk13 and pdk14. Some pdk15 devices support it officially, some support it as undocumented feature. It is unclear if there are pdk15 that do not support it.
     (result->aop->type == AOP_DIR || aopInReg (result->aop, 0, P_IDX)) &&
@@ -5326,11 +5327,6 @@ genPdkiCode (iCode *ic)
       genInline (ic);
       break;
 
-    case RRC:
-    case RLC:
-      wassertl (0, "Unimplemented iCode");
-      break;
-
     case GETABIT:
       wassertl (0, "Unimplemented iCode");
       break;
@@ -5343,8 +5339,8 @@ genPdkiCode (iCode *ic)
       wassertl (0, "Unimplemented iCode");
       break;
       
-    case SWAP:
-      genSwap (ic);
+    case ROT:
+      genRot (ic);
       break;
 
     case LEFT_OP:

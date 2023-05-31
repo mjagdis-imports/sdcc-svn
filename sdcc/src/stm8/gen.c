@@ -6794,8 +6794,10 @@ genRotate (const iCode *ic)
 
   aopOp (left = IC_LEFT (ic), ic);
   aopOp (result = IC_RESULT (ic), ic);
-  
-  const bool rlc = (ic->op == RLC);
+
+  wassert (IS_OP_LITERAL (IC_RIGHT (ic)) && (operandLitValueUll (IC_RIGHT (ic)) == 1 || (operandLitValueUll (IC_RIGHT (ic)) & 0xff) == (-1 & 0xff)));
+
+  const bool rlc = (operandLitValueUll (IC_RIGHT (ic)) == 1);
   
   wassert (left->aop->size == result->aop->size);
   
@@ -7138,6 +7140,22 @@ init_shiftop(asmop *shiftop, const asmop *result, const asmop *left, const asmop
     if (!shiftop->aopu.bytes[i].in_reg)
       all_in_reg = FALSE;
   shiftop->type = all_in_reg ? AOP_REG : AOP_REGSTK;
+}
+
+/*-----------------------------------------------------------------*/
+/* genRot - generates code for rotation                            */
+/*-----------------------------------------------------------------*/
+static void
+genRot (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  if (IS_OP_LITERAL (right) && ((operandLitValueUll (right) & 0xff) == 1 || (operandLitValueUll (right) & 0xff) == (-1 & 0xff)))
+    genRotate (ic);
+  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) * 2 == bitsForType (operandType (left)))
+    genSwap (ic);
+  else
+    wassertl (0, "Unsupported rotation.");
 }
 
 /*------------------------------------------------------------------*/
@@ -9638,11 +9656,6 @@ genSTM8iCode (iCode *ic)
       genInline (ic);
       break;
 
-    case RRC:
-    case RLC:
-      genRotate (ic);
-      break;
-
     case GETABIT:
       genGetABit (ic, ifxForOp (IC_RESULT (ic), ic));
       break;
@@ -9655,8 +9668,8 @@ genSTM8iCode (iCode *ic)
       genGetWord (ic);
       break;
 
-    case SWAP:
-      genSwap (ic);
+    case ROT:
+      genRot (ic);
       break;
 
     case LEFT_OP:

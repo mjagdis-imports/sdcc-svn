@@ -442,6 +442,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     //case GETABIT:
     //case GETBYTE:
     //case GETWORD:
+    case ROT:
     case LEFT_OP:
     case RIGHT_OP:
     case GET_VALUE_AT_ADDRESS:
@@ -456,7 +457,6 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case DUMMY_READ_VOLATILE:
     /*case CRITICAL:
     case ENDCRITICAL:*/
-    case SWAP:
       assign_operands_for_cost(a, i, G, I);
       set_surviving_regs(a, i, G, I);
       c = dryPdkiCode(ic);

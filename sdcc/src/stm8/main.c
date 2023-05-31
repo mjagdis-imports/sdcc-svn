@@ -388,10 +388,22 @@ static bool
 hasExtBitOp (int op, sym_link *left, int right)
 {
   int size = getSize (left);
-  return (op == GETABIT || op == GETBYTE || op == GETWORD ||
-    op == SWAP && (size <= 2 || size == 4) ||
-    op == RLC && size <= 2 ||
-    op == RRC && size <= 2);
+
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+      return (true);
+    case ROT:
+      if (size <= 2 && (right == 1 || right == -1))
+        return (true);
+      if ((getSize (left) <= 2 || getSize (left) == 4) && bitsForType (left) == right * 2)
+        return (true);
+      return (false);
+    }
+
+  return (false);
 }
 
 static const char *

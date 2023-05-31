@@ -958,10 +958,6 @@ convilong (iCode *ic, eBBlock *ebp)
                 func = muldiv[1][bwd][su];
               else if (op == '%')
                 func = muldiv[2][bwd][su];
-              else if (op == RRC)
-                func = rlrr[1][bwd][su];
-              else if (op == RLC)
-                func = rlrr[0][bwd][su];
               else if (op == RIGHT_OP)
                 func = rlrr[1][bwd][su];
               else if (op == LEFT_OP)
@@ -1381,7 +1377,7 @@ convertToFcall (eBBlock ** ebbs, int count)
                 }
             }
 
-          if (ic->op == RRC || ic->op == RLC || ic->op == LEFT_OP || ic->op == RIGHT_OP)
+          if (ic->op == ROT || ic->op == LEFT_OP || ic->op == RIGHT_OP)
             {
               sym_link *type = operandType (IC_LEFT (ic));
 
