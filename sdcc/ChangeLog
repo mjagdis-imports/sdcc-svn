@@ -1,3 +1,13 @@
+2023-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/s08-stack-auto,
+	  support/regression/ports/s08-stack-auto:
+	  Infrastructure for testing s08 port with --stack-auto.
+
 2023-05-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* aclocal.m4,

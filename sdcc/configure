@@ -9621,7 +9621,7 @@ fi
 if test $OPT_DISABLE_HC08 = 0 || test $OPT_DISABLE_S08 = 0; then
   ac_config_files="$ac_config_files src/hc08/Makefile sdas/as6808/Makefile"
 
-  test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/hc08/Makefile device/lib/s08/Makefile"
+  test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/hc08/Makefile device/lib/s08/Makefile device/lib/s08-stack-auto/Makefile"
 
 fi
 
@@ -10453,6 +10453,7 @@ do
     "sdas/as6808/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/as6808/Makefile" ;;
     "device/lib/hc08/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/hc08/Makefile" ;;
     "device/lib/s08/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/s08/Makefile" ;;
+    "device/lib/s08-stack-auto/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/s08-stack-auto/Makefile" ;;
     "src/mos6502/Makefile") CONFIG_FILES="$CONFIG_FILES src/mos6502/Makefile" ;;
     "sdas/as6500/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/as6500/Makefile" ;;
     "device/lib/mos6502/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/mos6502/Makefile" ;;

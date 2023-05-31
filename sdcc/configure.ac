@@ -866,7 +866,8 @@ if test $OPT_DISABLE_HC08 = 0 || test $OPT_DISABLE_S08 = 0; then
   AC_CONFIG_FILES([src/hc08/Makefile
                    sdas/as6808/Makefile])
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/hc08/Makefile
-                                                       device/lib/s08/Makefile])
+                                                       device/lib/s08/Makefile
+                                                       device/lib/s08-stack-auto/Makefile])
 fi
 
 if test $OPT_DISABLE_MOS6502 = 0 || test $OPT_DISABLE_MOS65C02 = 0; then
