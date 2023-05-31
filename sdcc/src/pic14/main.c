@@ -251,7 +251,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, sym_link *left, int right)
 {
-  return (op == ROT && (right == 1 || right == -1) || op == GETABIT);
+  unsigned int lbits = bitsForType (left);
+  return (op == ROT && (right & lbits == 1 || right % lbits == lbits - 1) ||
+    op == GETABIT);
 }
 
 /* Indicate the expense of an access to an output storage class */

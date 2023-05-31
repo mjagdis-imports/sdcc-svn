@@ -6795,11 +6795,11 @@ genRotate (const iCode *ic)
   aopOp (left = IC_LEFT (ic), ic);
   aopOp (result = IC_RESULT (ic), ic);
 
-  wassert (IS_OP_LITERAL (IC_RIGHT (ic)) && (operandLitValueUll (IC_RIGHT (ic)) == 1 || (operandLitValueUll (IC_RIGHT (ic)) & 0xff) == (-1 & 0xff)));
+  unsigned int lbits = bitsForType (operandType (IC_LEFT (ic)));
+  const bool rlc = (operandLitValueUll (IC_RIGHT (ic)) % lbits == 1);
 
-  const bool rlc = (operandLitValueUll (IC_RIGHT (ic)) == 1);
-  
   wassert (left->aop->size == result->aop->size);
+  wassert (IS_OP_LITERAL (IC_RIGHT (ic)) && (operandLitValueUll (IC_RIGHT (ic)) % lbits == 1 || operandLitValueUll (IC_RIGHT (ic)) % lbits == lbits - 1));
   
   switch (left->aop->size)
     {
@@ -7150,9 +7150,10 @@ genRot (iCode *ic)
 {
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
-  if (IS_OP_LITERAL (right) && ((operandLitValueUll (right) & 0xff) == 1 || (operandLitValueUll (right) & 0xff) == (-1 & 0xff)))
+  unsigned int lbits = bitsForType (operandType (left));
+  if (IS_OP_LITERAL (right) && (operandLitValueUll (right) % lbits == 1 || operandLitValueUll (right) % lbits == lbits - 1))
     genRotate (ic);
-  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) * 2 == bitsForType (operandType (left)))
+  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) %lbits == lbits / 2)
     genSwap (ic);
   else
     wassertl (0, "Unsupported rotation.");

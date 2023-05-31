@@ -391,7 +391,7 @@ typedef struct
 
   /** Returns true if the port has implemented certain bit
       manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
-      right parameter: value of right operand if in range -63..63; INT_MIN if non-literal.
+      right parameter: value of right operand if in >= 0; negative if non-literal.
    */
   bool (*hasExtBitOp) (int op, sym_link *left, int right);
 

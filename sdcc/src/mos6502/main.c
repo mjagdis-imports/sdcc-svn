@@ -304,8 +304,9 @@ hasExtBitOp (int op, sym_link *left, int right)
     case GETWORD:
       return true;
     case ROT:
-      if (right == 1 || right == -1)
-        return true;
+      unsigned int lbits = bitsForType (left);
+      if (right % lbits  == 1 || right % lbits == lbits - 1)
+        return (true);
       return false;
     }
   return false;

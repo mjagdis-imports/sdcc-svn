@@ -6550,7 +6550,7 @@ optimizeGetAbit (ast * tree, RESULT_TYPE resultType)
     return tree;
 
   /* make sure the port supports GETABIT */
-  if (port->hasExtBitOp && !port->hasExtBitOp (GETABIT, TTYPE (expr), count))
+  if (port->hasExtBitOp && !port->hasExtBitOp (GETABIT, TTYPE (expr), AST_ULONG_VALUE (count)))
     return tree;
 
   return decorateType (newNode (GETABIT, expr, count), resultType, true);
@@ -6592,7 +6592,7 @@ optimizeGetByte (ast * tree, RESULT_TYPE resultType)
     return tree;
 
   /* make sure the port supports GETBYTE */
-  if (port->hasExtBitOp && !port->hasExtBitOp (GETBYTE, TTYPE (expr), count))
+  if (port->hasExtBitOp && !port->hasExtBitOp (GETBYTE, TTYPE (expr), AST_ULONG_VALUE (count)))
     return tree;
 
   return decorateType (newNode (GETBYTE, expr, count), RESULT_TYPE_NONE, true);
@@ -6635,7 +6635,7 @@ optimizeGetWord (ast *tree, RESULT_TYPE resultType)
     return tree;
 
   /* make sure the port supports GETWORD */
-  if (port->hasExtBitOp && !port->hasExtBitOp (GETWORD, TTYPE (expr), count))
+  if (port->hasExtBitOp && !port->hasExtBitOp (GETWORD, TTYPE (expr), AST_ULONG_VALUE (count)))
     return tree;
 
   return decorateType (newNode (GETWORD, expr, count), RESULT_TYPE_NONE, true);
@@ -6672,31 +6672,30 @@ optimizeRRCRLC (ast * root)
         return root;
 
       if (!IS_AST_LIT_VALUE (root->left->right) || !IS_AST_LIT_VALUE (root->right->right))
-        goto tryNext0;
+        goto tryNext;
 
       /* make sure it is the same expression */
       if (!isAstEqual (root->left->left, root->right->left))
-        goto tryNext0;
+        goto tryNext;
 
-      if (AST_ULONG_VALUE (root->left->right) != 1)
-        goto tryNext0;
+      unsigned char s = AST_ULONG_VALUE (root->left->right);
 
-      if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
-        goto tryNext0;
+      if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - s))
+        goto tryNext;
 
       /* cannot have side effects or volatility */
       if (hasSEFcalls (root))
         return root;
 
-      /* make sure the port supports RLC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), 1))
-        return root;
+      /* make sure the port supports RLC/RRC */
+      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), s))
+        goto tryNext;
 
       /* whew got the first case : create the AST */
-      return newNode (ROT, root->left->left, newAst_VALUE (constIntVal ("1")));
+      return newNode (ROT, root->left->left, newAst_VALUE (constCharVal (s)));
     }
 
-tryNext0:
+tryNext:
   /* check for second case */
   /* (?expr >> 7) | (?expr << 1) */
   if (IS_LEFT_OP (root->right) && IS_RIGHT_OP (root->left))
@@ -6706,96 +6705,27 @@ tryNext0:
         return root;
 
       if (!IS_AST_LIT_VALUE (root->left->right) || !IS_AST_LIT_VALUE (root->right->right))
-        goto tryNext1;
-
-      /* make sure it is the same symbol */
-      if (!isAstEqual (root->left->left, root->right->left))
-        goto tryNext1;
-
-      if (AST_ULONG_VALUE (root->right->right) != 1)
-        goto tryNext1;
-
-      if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
-        goto tryNext1;
-
-      /* cannot have side effects or volatility */
-      if (hasSEFcalls (root))
-        return root;
-
-      /* make sure the port supports RLC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), 1))
-        return root;
-
-      /* whew got the first case : create the AST */
-      return newNode (ROT, root->left->left, newAst_VALUE (constIntVal ("1")));
-
-    }
-
-tryNext1:
-  /* third case for RRC */
-  /*  (?symbol >> 1) | (?symbol << 7) */
-  if (IS_LEFT_OP (root->right) && IS_RIGHT_OP (root->left))
-    {
-
-      if (!SPEC_USIGN (TETYPE (root->left->left)))
-        return root;
-
-      if (!IS_AST_LIT_VALUE (root->left->right) || !IS_AST_LIT_VALUE (root->right->right))
-        goto tryNext2;
-
-      /* make sure it is the same symbol */
-      if (!isAstEqual (root->left->left, root->right->left))
-        goto tryNext2;
-
-      if (AST_ULONG_VALUE (root->left->right) != 1)
-        goto tryNext2;
-
-      if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
-        goto tryNext2;
-
-      /* cannot have side effects or volatility */
-      if (hasSEFcalls (root))
-        return root;
-
-      /* make sure the port supports RRC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), -1))
-        return root;
-
-      /* whew got the first case : create the AST */
-      return newNode (ROT, root->left->left, newAst_VALUE (constIntVal ("-1")));
-
-    }
-tryNext2:
-  /* fourth and last case for now */
-  /* (?symbol << 7) | (?symbol >> 1) */
-  if (IS_RIGHT_OP (root->right) && IS_LEFT_OP (root->left))
-    {
-      if (!SPEC_USIGN (TETYPE (root->left->left)))
-        return root;
-
-      if (!IS_AST_LIT_VALUE (root->left->right) || !IS_AST_LIT_VALUE (root->right->right))
         return root;
 
       /* make sure it is the same symbol */
       if (!isAstEqual (root->left->left, root->right->left))
         return root;
 
-      if (AST_ULONG_VALUE (root->right->right) != 1)
-        return root;
+      unsigned char s = AST_ULONG_VALUE (root->right->right);
 
-      if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - 1))
+      if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - s))
         return root;
 
       /* cannot have side effects or volatility */
       if (hasSEFcalls (root))
         return root;
 
-      /* make sure the port supports RRC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), -1))
+      /* make sure the port supports RLC/RRC */
+      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), s))
         return root;
 
       /* whew got the first case : create the AST */
-      return newNode (ROT, root->left->left, newAst_VALUE (constIntVal ("-1")));
+      return newNode (ROT, root->left->left, newAst_VALUE (constCharVal (s)));
     }
 
   /* not found return root */

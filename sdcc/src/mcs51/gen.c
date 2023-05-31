@@ -9349,11 +9349,12 @@ genRot (iCode *ic)
 {
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
-  if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == 1)
+  unsigned int lbits = bitsForType (operandType (left));
+  if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits == 1)
     genRLC (ic);
-  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) == (-1 & 0xff))
+  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits ==  lbits - 1)
     genRRC (ic);
-  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) & 0xff) * 2 == bitsForType (operandType (left)))
+  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) %lbits == lbits / 2)
     genSwap (ic);
   else
     wassertl (0, "Unsupported rotation.");
