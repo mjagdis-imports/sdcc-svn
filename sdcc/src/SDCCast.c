@@ -72,8 +72,7 @@ symbol *currFunc = NULL;
 static ast *createIval (ast *, sym_link *, initList *, ast *, ast *, int);
 static ast *createIvalCharPtr (ast *, sym_link *, ast *, ast *);
 static ast *optimizeCompare (ast *);
-ast *optimizeRRCRLC (ast *);
-ast *optimizeSWAP (ast *);
+ast *optimizeROT (ast *);
 ast *optimizeGetAbit (ast *, RESULT_TYPE);
 ast *optimizeGetByte (ast *, RESULT_TYPE);
 ast *optimizeGetWord (ast *, RESULT_TYPE);
@@ -4012,11 +4011,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case '|':
       /* if the rewrite succeeds then don't go any further */
       {
-        ast *wtree = optimizeRRCRLC (tree);
-        if (wtree != tree)
-          return decorateType (wtree, RESULT_TYPE_NONE, reduceTypeAllowed);
-
-        wtree = optimizeSWAP (tree);
+        ast *wtree = optimizeROT (tree);
         if (wtree != tree)
           return decorateType (wtree, RESULT_TYPE_NONE, reduceTypeAllowed);
       }
@@ -6642,10 +6637,10 @@ optimizeGetWord (ast *tree, RESULT_TYPE resultType)
 }
 
 /*-----------------------------------------------------------------*/
-/* optimizeRRCRLC :- optimize for Rotate Left/Right with carry     */
+/* optimizeROT :- optimize for Rotate Left/Right                   */
 /*-----------------------------------------------------------------*/
 ast *
-optimizeRRCRLC (ast * root)
+optimizeROT (ast * root)
 {
   /* will look for trees of the form
      (?expr << 1) | (?expr >> 7) or
@@ -6726,58 +6721,6 @@ tryNext:
 
       /* whew got the first case : create the AST */
       return newNode (ROT, root->left->left, newAst_VALUE (constCharVal (s)));
-    }
-
-  /* not found return root */
-  return root;
-}
-
-/*-----------------------------------------------------------------*/
-/* optimizeSWAP :- optimize for nibble/byte/word swaps             */
-/*-----------------------------------------------------------------*/
-ast *
-optimizeSWAP (ast * root)
-{
-  /* will look for trees of the form
-     (?expr << 4) | (?expr >> 4) or
-     (?expr >> 4) | (?expr << 4) will make that
-     into a SWAP : operation ..
-     note : by 4 I mean (number of bits required to hold the
-     variable /2 ) */
-  /* if the root operation is not a | operation then not */
-  if (!IS_BITOR (root))
-    return root;
-
-  /* (?expr << 4) | (?expr >> 4) */
-  if ((IS_LEFT_OP (root->left) && IS_RIGHT_OP (root->right)) || (IS_RIGHT_OP (root->left) && IS_LEFT_OP (root->right)))
-    {
-
-      if (!SPEC_USIGN (TETYPE (root->left->left)))
-        return root;
-
-      if (!IS_AST_LIT_VALUE (root->left->right) || !IS_AST_LIT_VALUE (root->right->right))
-        return root;
-
-      /* make sure it is the same expression */
-      if (!isAstEqual (root->left->left, root->right->left))
-        return root;
-
-      if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 4))
-        return root;
-
-      if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 4))
-        return root;
-      
-      /* cannot have side effects or volatility */
-      if (hasSEFcalls (root))
-        return root;
-
-      /* make sure the port supports SWAP */
-      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), bitsForType (TTYPE (root->left->left)) / 2))
-        return root;
-
-      /* found it : create the AST */
-      return newNode (ROT, root->left->left, newAst_VALUE (constCharVal (bitsForType (TTYPE (root->left->left)) / 2)));
     }
 
   /* not found return root */

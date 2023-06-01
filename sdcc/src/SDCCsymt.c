@@ -2489,7 +2489,7 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
     }
 
   /* shift operators have the important type in the left operand */
-  if (op == LEFT_OP || op == RIGHT_OP)
+  if (op == LEFT_OP || op == RIGHT_OP || op == ROT)
     rType = copyLinkChain(type1);
   /* If difference between pointers or arrays then the result is a ptrdiff */
   else if ((op == '-') && (IS_PTR (type1) || IS_ARRAY (type1)) && (IS_PTR (type2) || IS_ARRAY (type2)))

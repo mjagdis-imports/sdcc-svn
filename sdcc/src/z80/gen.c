@@ -12435,7 +12435,7 @@ genLeftShift (const iCode *ic)
   save_a_outer = (!isRegDead (A_IDX, ic) && countreg == A_IDX && !(shift_by_lit && shiftcount == 1));
   
   if(save_a_outer)
-      _push (PAIR_AF);
+    _push (PAIR_AF);
     
   if (!shift_by_lit)
     cheapMove (asmopregs[countreg], 0, right->aop, 0, true);

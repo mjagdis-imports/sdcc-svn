@@ -6798,7 +6798,7 @@ genRotate (const iCode *ic)
   unsigned int lbits = bitsForType (operandType (IC_LEFT (ic)));
   const bool rlc = (operandLitValueUll (IC_RIGHT (ic)) % lbits == 1);
 
-  wassert (left->aop->size == result->aop->size);
+  wassert (left->aop->size == result->aop->size && bitsForType (operandType (left)) == bitsForType (operandType (result)) && !(bitsForType (operandType (left)) % 8));
   wassert (IS_OP_LITERAL (IC_RIGHT (ic)) && (operandLitValueUll (IC_RIGHT (ic)) % lbits == 1 || operandLitValueUll (IC_RIGHT (ic)) % lbits == lbits - 1));
   
   switch (left->aop->size)
@@ -6888,7 +6888,9 @@ genSwap (const iCode *ic)
 
   asmop swapped_aop;
 
-  wassert (left->aop->size == result->aop->size);
+  wassert (left->aop->size == result->aop->size &&
+    bitsForType (operandType (left)) == bitsForType (operandType (result)) &&
+    !(bitsForType (operandType (left)) % 8));
 
   switch (left->aop->size)
     {
@@ -7079,7 +7081,8 @@ genRot1 (iCode *ic)
   aopOp (left = IC_LEFT (ic), ic);
   aopOp (result = IC_RESULT (ic), ic);
 
-  wassert (result->aop->size == 1 && left->aop->size == 1 && IS_OP_LITERAL (IC_RIGHT (ic)));
+  wassert (result->aop->size == 1 && left->aop->size == 1 &&
+    bitsForType (operandType (result)) == 8 && IS_OP_LITERAL (IC_RIGHT (ic)));
 
   int s = operandLitValueUll (IC_RIGHT (ic)) % 8;
 
@@ -7101,6 +7104,40 @@ genRot1 (iCode *ic)
       emit2 ("inc", aopGet (left->aop, 0));
       cost (2, 2);
       emitLabel (tlbl);
+    }
+  else if (regDead (A_IDX, ic) && (regDead (X_IDX, ic) || aopInReg (left->aop, 0, A_IDX)) &&
+    (aopInReg (result->aop, 0, XL_IDX) && s >= 6 || aopInReg (result->aop, 0, XH_IDX) && s <= 3))
+    {
+      if (aopInReg (left->aop, 0, XH_IDX))
+        {
+          cheapMove (ASMOP_A, 0, left->aop, 0, true);
+          cheapMove (ASMOP_X, 0, left->aop, 0, true);
+        }
+      else if (aopInReg (left->aop, 0, XL_IDX))
+        {
+          cheapMove (ASMOP_A, 0, left->aop, 0, true);
+          cheapMove (ASMOP_X, 1, left->aop, 0, true);
+        }
+      else
+        {
+          cheapMove (ASMOP_A, 0, left->aop, 0, true);
+          cheapMove (ASMOP_X, 0, left->aop, 0, false);
+          cheapMove (ASMOP_X, 1, left->aop, 0, false);
+        }
+      while (s)
+        {
+          if (aopInReg (result->aop, 0, XH_IDX)) // rotate left
+            {
+              emit3w (A_SLLW, ASMOP_X, 0);
+              s--;
+            }
+          else // rotate right
+            {
+              emit3w (A_SRLW, ASMOP_X, 0);
+              s++;
+            }
+          s %= 8;
+        }
     }
   else
     {
