@@ -1,5 +1,12 @@
 2023-06-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/regression/ports/host/spec.mk.in:
+	  Fix C99 flag handling.
+	* support/regression/tests/align.c.in:
+	  Fix test for current state of SDCC and host compilers wrt. C11 alignment support.
+
+2023-06-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCast.c:
 	  Fix type of result in optimization of shifts wider than operand.
 	* src/z80/gen.c:
