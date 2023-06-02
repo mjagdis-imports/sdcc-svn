@@ -7,6 +7,9 @@
 	  src/pdk/gen.c,
 	  src/pdk/peeph.def:
 	  Improve pdk rotations.
+	* src/mcs51/main.c,
+	  src/mcs51/gen.c:
+	  Improve mcs51 rotations.
 
 2023-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
