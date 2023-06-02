@@ -587,7 +587,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     ic->op == GETBYTE || ic->op == GETWORD ||
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     ic->op == LEFT_OP ||
-    ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
+    ic->op == RECEIVE || ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
     return(true);
 
   if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))

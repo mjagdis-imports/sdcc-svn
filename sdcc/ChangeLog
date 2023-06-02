@@ -2,7 +2,7 @@
 
 	* src/z80/main.c,
 	  src/z80/gen.c:
-	  z80 rotation fixes.
+	  Improve z80 rotations.
 	* src/pdk/main.c,
 	  src/pdk/gen.c,
 	  src/pdk/peeph.def:
