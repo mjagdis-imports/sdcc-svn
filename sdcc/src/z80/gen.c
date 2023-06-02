@@ -11323,10 +11323,10 @@ genRRC (const iCode * ic)
            result->aop->type == AOP_EXSTK || result->aop->type == AOP_REG)
     {
       if (!isRegDead (A_IDX, ic))
-      {
-        _push (PAIR_AF);
-        pushed_a = true;
-      }
+        {
+          _push (PAIR_AF);
+          pushed_a = true;
+        }
       if (left->aop->type != AOP_REG && !operandsEqu (result, left))
         {
           /* always prefer register operations */
@@ -12309,7 +12309,7 @@ genRot (iCode *ic)
     genRLC (ic);
   else if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits ==  lbits - 1)
     genRRC (ic);
-  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) %lbits == lbits / 2)
+  else if (IS_OP_LITERAL (right) && (operandLitValueUll (right) % lbits) * 2 == lbits)
     genSwap (ic);
   else
     wassertl (0, "Unsupported rotation.");

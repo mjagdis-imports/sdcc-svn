@@ -222,7 +222,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, sym_link *left, int right)
 {
-  return (op == GETBYTE || op == ROT && getSize (left) == 1);
+  return (op == GETBYTE ||
+    op == ROT && bitsForType (left) == 8 ||
+    op == ROT && !(bitsForType (left) % 8) && right <= 2);
 }
 
 static const char *

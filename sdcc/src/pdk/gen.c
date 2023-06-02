@@ -3444,6 +3444,82 @@ genGetByte (const iCode *ic)
 }
 
 /*-----------------------------------------------------------------*/
+/* genRotW - generates code for wide rotation                      */
+/*-----------------------------------------------------------------*/
+static void
+genRotW (iCode *ic)
+{
+  operand *result = IC_RESULT (ic);
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  wassert (IS_OP_LITERAL(right));
+
+  aopOp (result, ic);
+  aopOp (left, ic);
+
+  bool pushed_a = false, pushed_p = false;
+
+  int size = result->aop->size;
+  int bits = bitsForType (operandType (result));
+  int s = operandLitValueUll (right) % bits;
+  wassert (!(bits % 8));
+
+  if (result->aop->type == AOP_STK && !regDead (A_IDX, ic))
+    {
+      pushAF();
+      pushed_a = true;
+    }
+  if (result->aop->type == AOP_STK && !regDead (P_IDX, ic))
+    {
+      pushPF (!aopInReg (left->aop, 0, A_IDX) && !aopInReg (left->aop, 1, A_IDX));
+      pushed_p = true;
+    }
+
+  genMove (result->aop, left->aop, regDead (A_IDX, ic) || pushed_a, regDead (P_IDX, ic) || pushed_p);
+
+  while (s)
+    {
+      for (int i = 0; i < size; i++)
+        {
+          if (result->aop->type == AOP_STK)
+            {
+              cheapMove (ASMOP_A, 0, result->aop, i, true, true, !i);
+              emit2 (i ? "slc" : "sl", "a");
+              cost (1, 1);
+              cheapMove (result->aop, i, ASMOP_A, 0, true, true, false);
+            }
+          else
+            {
+              emit2 (i ? "slc" : "sl", "%s", aopGet (result->aop, i));
+              cost (1, 1);
+            }
+        }
+      if (result->aop->type == AOP_STK)
+        {
+          cheapMove (ASMOP_A, 0, result->aop, 0, true, true, false);
+          emit2 ("addc", "a");
+          cost (1, 1);
+          cheapMove (result->aop, 0, ASMOP_A, 0, true, true, true);
+        }
+      else
+        {
+          emit2 ("addc", "%s", aopGet (result->aop, 0));
+          cost (1, 1);
+        }
+      s--;
+    }
+
+  if (pushed_p)
+    popPF (true);
+  if (pushed_a)
+    popAF ();
+
+  freeAsmop (left);
+  freeAsmop (result);
+}
+
+/*-----------------------------------------------------------------*/
 /* genRot - generates code for rotation                            */
 /*-----------------------------------------------------------------*/
 static void
@@ -3455,12 +3531,18 @@ genRot (iCode *ic)
 
   D (emit2 ("; genRot", ""));
 
+  wassert (IS_OP_LITERAL(right));
+
+  if (bitsForType (operandType (result)) != 8)
+    {
+      genRotW (ic);
+      return;
+    }
+
   aopOp (result, ic);
   aopOp (left, ic);
 
   int s = operandLitValueUll (right) % 8;
-
-  wassert (result->aop->size == 1 && IS_OP_LITERAL(right));
 
   bool a_free = regDead (A_IDX, ic);
   bool pushed_a = false;
@@ -3479,22 +3561,20 @@ genRot (iCode *ic)
   cheapMove (shiftop, 0, left->aop, 0, a_free, regDead (P_IDX, ic), true);
   while (s)
     {
-      if (s == 3 || s == 4 || s == 5)
+      if (s >= 3 && s <= 6)
         {
           emit2 ("swap", "%s", aopGet (shiftop, 0));
           cost (1, 1);
           s = s + 4;
         }
-      else if (s < 3)
+      else if (s <= 2)
         {
           emit2 ("sl", "%s", aopGet (shiftop, 0));
-          emit2 ("t0sn.io", "f, c");
-          emit2 ("or", "%s, #0x01", aopGet (shiftop, 0));
-          emitCondTargetLbl ();
-          cost (3, 3);
+          emit2 ("addc", "%s", aopGet (shiftop, 0));
+          cost (2, 2);
           s--;
         }
-      else if (s > 5)
+      else if (s == 7)
         {
           emit2 ("sr", "%s", aopGet (shiftop, 0));
           emit2 ("t0sn.io", "f, c");
