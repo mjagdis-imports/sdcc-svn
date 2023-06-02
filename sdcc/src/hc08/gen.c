@@ -7319,15 +7319,6 @@ genSwap (iCode * ic)
 
   switch (AOP_SIZE (left))
     {
-    case 1:                    /* swap nibbles in byte */
-      needpulla = pushRegIfSurv (hc08_reg_a);
-      loadRegFromAop (hc08_reg_a, AOP (left), 0);
-      emitcode ("nsa", "");
-      regalloc_dry_run_cost++;
-      hc08_dirtyReg (hc08_reg_a, false);
-      storeRegToAop (hc08_reg_a, AOP (result), 0);
-      pullOrFreeReg (hc08_reg_a, needpulla);
-      break;
     case 2:                    /* swap bytes in a word */
       if (IS_AOP_XA (AOP (left)) && IS_AOP_AX (AOP (result)) ||
         IS_AOP_AX (AOP (left)) && IS_AOP_XA (AOP (result)))
@@ -7363,7 +7354,6 @@ genSwap (iCode * ic)
   freeAsmop (result, NULL, ic, true);
 }
 
-#if 0
 /*-----------------------------------------------------------------*/
 /* AccRol - rotate left accumulator by known count                 */
 /*-----------------------------------------------------------------*/
@@ -7377,38 +7367,61 @@ AccRol (int shCount)
     case 0:
       break;
     case 1:
-      emitcode ("rola", "");    /* 1 cycle */
+      emitcode ("lsla", "");    /* 1 cycle */
+      emitcode ("adc", "#0x00");/* 2 cycles */
+      regalloc_dry_run_cost += 3;
       break;
     case 2:
-      emitcode ("rola", "");    /* 1 cycle */
-      emitcode ("rola", "");    /* 1 cycle */
+      emitcode ("lsla", "");    /* 1 cycle */
+      emitcode ("adc", "#0x00");/* 2 cycles */
+      emitcode ("lsla", "");    /* 1 cycle */
+      emitcode ("adc", "#0x00");/* 2 cycles */
+      regalloc_dry_run_cost += 6;
       break;
     case 3:
-      emitcode ("nsa", "");
-      emitcode ("rora", "");
-      break;
+      emitcode ("nsa", "");     /* 3 cycles */
+      regalloc_dry_run_cost++;
+      goto ror;
     case 4:
       emitcode ("nsa", "");     /* 3 cycles */
+      regalloc_dry_run_cost++;
       break;
     case 5:
       emitcode ("nsa", "");     /* 3 cycles */
-      emitcode ("rola", "");    /* 1 cycle */
+      emitcode ("lsla", "");    /* 1 cycle */
+      emitcode ("adc", "#0x00");/* 2 cycles */
+      regalloc_dry_run_cost += 4;
       break;
     case 6:
       emitcode ("nsa", "");     /* 3 cycles */
-      emitcode ("rola", "");    /* 1 cycle */
-      emitcode ("rola", "");    /* 1 cycle */
+      emitcode ("lsla", "");    /* 1 cycle */
+      emitcode ("adc", "#0x00");/* 2 cycles */
+      emitcode ("lsla", "");    /* 1 cycle */
+      emitcode ("adc", "#0x00");/* 2 cycles */
+      regalloc_dry_run_cost += 7;
       break;
     case 7:
-      emitcode ("nsa", "");     /* 3 cycles */
-      emitcode ("rola", "");    /* 1 cycle */
-      emitcode ("rola", "");    /* 1 cycle */
-      emitcode ("rola", "");    /* 1 cycle */
+ror:
+      emitcode ("lsra", "");     /* 1 cycle */
+      emitcode ("psha", "");     /* 2 cycles */
+      emitcode ("clra", "");     /* 1 cycle */
+      emitcode ("rora", "");     /* 1 cycles */
+      emitcode ("ora", "1, s"); /* 1 cycles */
+      regalloc_dry_run_cost += 6;
+      if (hc08_reg_h->isFree && optimize.codeSize)
+        {
+          emitcode ("pulh", "");      /* 1 byte,  3 cycles */
+          regalloc_dry_run_cost++;
+        }
+      else
+        {
+          emitcode ("ais", "#1"); /* 2 bytes, 2 cycles */
+          regalloc_dry_run_cost += 2;
+        }
       break;
     }
+  hc08_dirtyReg (hc08_reg_a, false);
 }
-#endif
-
 
 /*-----------------------------------------------------------------*/
 /* AccLsh - left shift accumulator by known count                  */
@@ -8104,6 +8117,34 @@ genlshFour (operand * result, operand * left, int shCount)
 }
 
 /*-----------------------------------------------------------------*/
+/* genRot1 - generates code for rotation of 8-bit values           */
+/*-----------------------------------------------------------------*/
+static void
+genRot1 (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  operand *result = IC_RESULT (ic);
+
+  aopOp (left, ic, false);
+  aopOp (result, ic, false);
+
+  wassert (bitsForType (operandType (left)) == 8);
+  wassert (IS_OP_LITERAL (right));
+
+  int s = operandLitValueUll (right) % 8;
+
+  bool needpulla = pushRegIfSurv (hc08_reg_a);
+  loadRegFromAop (hc08_reg_a, left->aop, 0);
+  AccRol (s);
+  storeRegToAop (hc08_reg_a, result->aop, 0);
+  pullOrFreeReg (hc08_reg_a, needpulla);
+
+  freeAsmop (result, NULL, ic, true);
+  freeAsmop (left, NULL, ic, true);
+}
+
+/*-----------------------------------------------------------------*/
 /* genRot - generates code for rotation                            */
 /*-----------------------------------------------------------------*/
 static void
@@ -8112,7 +8153,9 @@ genRot (iCode *ic)
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
   unsigned int lbits = bitsForType (operandType (left));
-  if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits == 1)
+  if (lbits == 8)
+    genRot1 (ic);
+  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits == 1)
     genRLC (ic);
   else if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits ==  lbits - 1)
     genRRC (ic);

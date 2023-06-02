@@ -10,6 +10,9 @@
 	* src/mcs51/main.c,
 	  src/mcs51/gen.c:
 	  Improve mcs51 rotations.
+	* src/hc08/main.c,
+	  src/hc08/gen.c:
+	  Improve hc08 rotations.
 
 2023-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
