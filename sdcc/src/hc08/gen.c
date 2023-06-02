@@ -7930,6 +7930,11 @@ genlshTwo (operand *result, operand *left, int shCount)
         {
           loadRegFromAop (hc08_reg_a, AOP (left), 0);
           AccLsh (shCount);
+          if (maskedtopbyte)
+            {
+              emitcode ("and", "#0x%02x", topbytemask);
+              regalloc_dry_run_cost += 2;
+            }
           storeRegToAop (hc08_reg_a, AOP (result), 1);
         }
       storeConstToAop (0, AOP (result), LSB);
@@ -8344,6 +8349,13 @@ genLeftShift (iCode *ic)
 
   if (!regalloc_dry_run)
     emitLabel (tlbl1);
+
+  // After loop, countreg is 0
+  if (countreg)
+    {
+      countreg->isLitConst = 1;
+      countreg->litConst = 0;
+    }
 
   if (!countreg)
     pullNull (1);
@@ -8770,6 +8782,13 @@ genRightShift (iCode * ic)
 
   if (!regalloc_dry_run)
     emitLabel (tlbl1);
+
+  // After loop, countreg is 0
+  if (countreg)
+    {
+      countreg->isLitConst = 1;
+      countreg->litConst = 0;
+    }
 
   if (!countreg)
     pullNull (1);
