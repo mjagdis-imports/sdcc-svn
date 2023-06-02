@@ -6,7 +6,7 @@
 	* src/pdk/main.c,
 	  src/pdk/gen.c,
 	  src/pdk/peeph.def:
-	  Improve pdk rotatins.
+	  Improve pdk rotations.
 
 2023-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
 

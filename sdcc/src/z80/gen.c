@@ -11304,7 +11304,14 @@ genRRC (const iCode * ic)
 
   wassert (size >= 2);
 
-  if (left->aop->type == AOP_REG || result->aop->type == AOP_STK ||
+  if (IS_Z80N && size == 2 && aopInReg (result->aop, 0, DE_IDX) && isRegDead (B_IDX, ic))
+    {
+      genMove (ASMOP_DE, left->aop, isRegDead (A_IDX, ic), isRegDead (HL_IDX, ic), true, true);
+      emit2 ("ld b, !immedbyte", 15u);
+      emit2 ("brlc de, b");
+      regalloc_dry_run_cost += 4;
+    }
+  else if (left->aop->type == AOP_REG || result->aop->type == AOP_STK ||
            result->aop->type == AOP_HL || result->aop->type == AOP_IY ||
            result->aop->type == AOP_EXSTK || result->aop->type == AOP_REG)
     {
@@ -11385,6 +11392,32 @@ genRLC (const iCode * ic)
       emit2 ("ld b, !immedbyte", 1u);
       emit2 ("brlc de, b");
       regalloc_dry_run_cost += 4;
+    }
+  else if (IS_RAB && size == 2 && (aopInReg (result->aop, 0, DE_IDX) || aopInReg (left->aop, 0, DE_IDX) && isPairDead (PAIR_DE, ic)))
+    {
+      if (!isRegDead (A_IDX, ic))
+        _push (PAIR_AF);
+      genMove (ASMOP_DE, left->aop, true, isPairDead (PAIR_HL, ic), true, isPairDead (PAIR_IY, ic));
+      emit3 (A_LD, ASMOP_A, ASMOP_E);
+      emit3 (A_RLCA, 0, 0);
+      emit2 ("rl de");
+      cost (1, 2);
+      genMove (result->aop, ASMOP_DE, true, isPairDead (PAIR_HL, ic), true, isPairDead (PAIR_IY, ic));
+      if (!isRegDead (A_IDX, ic))
+        _pop (PAIR_AF);
+    }
+  else if (!IS_SM83 && size == 2 && (aopInReg (result->aop, 0, HL_IDX) || aopInReg (left->aop, 0, HL_IDX) && isPairDead (PAIR_HL, ic)))
+    {
+      if (!isRegDead (A_IDX, ic))
+        _push (PAIR_AF);
+      genMove (ASMOP_HL, left->aop, true, true, isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic));
+      emit3 (A_LD, ASMOP_A, ASMOP_L);
+      emit3 (A_RLCA, 0, 0);
+      emit2 ("adc hl, hl");
+      cost2 (2, 15, 10, 4, 0, 8, 2);
+      genMove (result->aop, ASMOP_HL, true, true, isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic));
+      if (!isRegDead (A_IDX, ic))
+        _pop (PAIR_AF);
     }
   else if (left->aop->type == AOP_REG || result->aop->type == AOP_STK ||
            result->aop->type == AOP_HL || result->aop->type == AOP_IY ||
@@ -12296,6 +12329,17 @@ genRot1 (iCode *ic)
       emit3 (A_RRD, 0, 0);
       if (!isRegDead (A_IDX, ic))
         _pop (PAIR_AF);
+    }
+  else if ((s == 1 || s == 7) &&  aopSame (result->aop, 0, left->aop, 0, 1) &&
+    ((result->aop->type == AOP_EXSTK || IS_SM83 && result->aop->type == AOP_STK) || result->aop->type == AOP_DIR || result->aop->type == AOP_HL || result->aop->type == AOP_IY) && isPairDead (PAIR_HL, ic))
+    {
+      pointPairToAop (PAIR_HL, result->aop, 0);
+      emit2 (s == 1 ? "rlc (hl)" : "rrc (hl)");
+      cost2 (2, 15, 13, 10, 16, 8, 5);
+    }
+  else if ((s == 1 || s == 7) && aopSame (result->aop, 0, left->aop, 0, 1) && result->aop->type == AOP_STK && !IS_SM83)
+    {
+      emit3 (s == 1 ? A_RLC : A_RRC, result->aop, 0);
     }
   else
     {
