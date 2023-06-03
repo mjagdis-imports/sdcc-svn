@@ -1,3 +1,8 @@
+2023-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList:
+	  Disable trigraph test for host, since many host compilers no longer support trigraphs.
+
 2023-06-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/ports/host/spec.mk.in:
