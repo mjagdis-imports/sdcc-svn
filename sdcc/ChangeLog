@@ -1,3 +1,8 @@
+2023-06-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve z80 rotation.
+
 2023-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/MakeList:
