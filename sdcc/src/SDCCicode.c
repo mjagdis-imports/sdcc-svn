@@ -2017,6 +2017,11 @@ usualBinaryConversions (operand ** op1, operand ** op2, RESULT_TYPE resultType, 
           return ctype;
         }
       break;
+    case LEFT_OP:
+    case RIGHT_OP:
+    case ROT:
+      *op1 = geniCodeCast (ctype, *op1, true);
+      return ctype;
     default:
       break;
     }

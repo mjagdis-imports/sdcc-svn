@@ -959,9 +959,15 @@ convilong (iCode *ic, eBBlock *ebp)
               else if (op == '%')
                 func = muldiv[2][bwd][su];
               else if (op == RIGHT_OP)
-                func = rlrr[1][bwd][su];
+                {
+                  func = rlrr[1][bwd][su];
+                  prependCast (ic, IC_RIGHT (ic), FUNC_ARGS(func->type)->next->type, ebp);
+                }
               else if (op == LEFT_OP)
-                func = rlrr[0][bwd][su];
+                {
+                  func = rlrr[0][bwd][su];
+                  prependCast (ic, IC_RIGHT (ic), FUNC_ARGS(func->type)->next->type, ebp);
+                }
               else
                 assert (0);
               goto found;

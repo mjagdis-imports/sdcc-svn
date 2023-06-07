@@ -11038,6 +11038,7 @@ genhc08iCode (iCode *ic)
 
     default:
       wassertl (0, "Unknown iCode");
+      fprintf (stderr, "ic->op: %d\n", ic->op);
     }
 }
 

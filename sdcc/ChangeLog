@@ -4,6 +4,9 @@
 	  Improve z80 rotation.
 	* src/mcs51/ralloc.c:
 	  Work around a mcs51 register saving issue (codegen cannot handle a return value in a bit if other bits are live at the call).
+	* src/SDCCicode.c,
+	  src/SDCCopt.c:
+	  Fix bug #3595.
 
 2023-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
