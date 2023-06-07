@@ -1,5 +1,10 @@
 2023-06-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/hc08/gen.c:
+	  hc08/s08 --stack-auto struct/union parameters.
+
+2023-06-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCsymt.c,
 	  src/hc08/gen.c:
 	  Caller-side support for hc08/s08 struct/union return.

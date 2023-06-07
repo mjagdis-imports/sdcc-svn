@@ -3727,8 +3727,6 @@ assignResultValue (operand * oper)
     pullReg (hc08_reg_x);
 }
 
-
-
 /*-----------------------------------------------------------------*/
 /* genIpush - generate code for pushing this gets a little complex */
 /*-----------------------------------------------------------------*/
@@ -3797,6 +3795,35 @@ genIpush (iCode * ic)
     }
 
 release:
+  freeAsmop (IC_LEFT (ic), NULL, ic, true);
+}
+
+/*-----------------------------------------------------------------*/
+/* genPointerPush - generate code for pushing                      */
+/*-----------------------------------------------------------------*/
+static void
+genPointerPush (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+
+  D (emitcode (";     genPointerPush", ""));
+
+  aopOp (left, ic, false);
+
+  wassertl (IC_RIGHT (ic), "IPUSH_VALUE_AT_ADDRESS without right operand");
+  wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "IPUSH_VALUE_AT_ADDRESS with non-literal right operand");
+  wassertl (!operandLitValue (IC_RIGHT(ic)), "IPUSH_VALUE_AT_ADDRESS with non-zero right operand");
+
+  loadRegFromAop (hc08_reg_hx, left->aop, 0);
+  /* so hx now contains the address */
+
+  int size = getSize (operandType (IC_LEFT (ic))->next);
+  while (size--)
+    {
+      loadRegIndexed (hc08_reg_a, size, 0);
+      pushReg (hc08_reg_a, true);
+    }
+
   freeAsmop (IC_LEFT (ic), NULL, ic, true);
 }
 
@@ -10920,6 +10947,10 @@ genhc08iCode (iCode *ic)
           genIpush (ic);
           break;
 
+    case IPUSH_VALUE_AT_ADDRESS:
+          genPointerPush (ic);
+          break;
+  
     case IPOP:
       /* IPOP happens only when trying to restore a
          spilt live range, if there is an ifx statement
