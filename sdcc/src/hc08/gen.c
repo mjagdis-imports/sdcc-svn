@@ -3907,6 +3907,49 @@ genSend (set *sendSet)
 }
 
 /*-----------------------------------------------------------------*/
+/* pushbigreturn - emit code to push hidden pointer for struct return */
+/*-----------------------------------------------------------------*/
+static void
+pushbigreturn (operand *result)
+{
+  wassert (result);
+
+  symbol *sym = OP_SYMBOL (result);
+  wassert (sym);
+
+  if (sym->onStack)
+    {
+      /* if it has an offset then we need to compute it */
+      int offset = _G.stackOfs + _G.stackPushes + sym->stack;
+      hc08_useReg (hc08_reg_hx);
+      emitcode ("tsx", "");
+      hc08_dirtyReg (hc08_reg_hx, false);
+      regalloc_dry_run_cost++;
+      while (offset > 127)
+        {
+          emitcode ("aix", "#127");
+          regalloc_dry_run_cost += 2;
+          offset -= 127;
+        }
+      while (offset < -128)
+        {
+          emitcode ("aix", "#-128");
+          regalloc_dry_run_cost += 2;
+          offset += 128;
+        }
+      if (offset)
+        {
+          emitcode ("aix", "#%d", offset);
+          regalloc_dry_run_cost += 2;
+        }
+    }
+  else
+    loadRegFromImm (hc08_reg_hx, sym->rname);
+
+  pushReg (hc08_reg_hx, true);
+}
+
+/*-----------------------------------------------------------------*/
 /* genCall - generates a call statement                            */
 /*-----------------------------------------------------------------*/
 static void
@@ -3925,6 +3968,8 @@ genCall (iCode * ic)
 
   dtype = operandType (IC_LEFT (ic));
   etype = getSpec (dtype);
+  const bool bigreturn = IS_STRUCT (dtype->next);
+
   /* if send set is not empty then assign */
   if (_G.sendSet && !regalloc_dry_run)
     {
@@ -3938,6 +3983,10 @@ genCall (iCode * ic)
         }
       _G.sendSet = NULL;
     }
+
+  // Pass pointer for storing return value
+  if (bigreturn)
+    pushbigreturn (IC_RESULT (ic));
 
   /* make the call */
   if (IS_LITERAL (etype))
@@ -3957,8 +4006,12 @@ genCall (iCode * ic)
   hc08_dirtyReg (hc08_reg_a, false);
   hc08_dirtyReg (hc08_reg_hx, false);
 
+  // Adjust stack pointer for the hidden pointer parameter.
+  if (bigreturn)
+    adjustStack (2);
+
   /* if we need assign a result value */
-  if ((IS_ITEMP (IC_RESULT (ic)) &&
+  else if ((IS_ITEMP (IC_RESULT (ic)) &&
        (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir)) || IS_TRUE_SYMOP (IC_RESULT (ic)))
     {
       hc08_useReg (hc08_reg_a);
@@ -4356,6 +4409,14 @@ genRet (iCode * ic)
      move the return value into place */
   aopOp (IC_LEFT (ic), ic, false);
   size = AOP_SIZE (IC_LEFT (ic));
+  const bool bigreturn = IS_STRUCT (operandType (IC_LEFT (ic)));
+
+  if (bigreturn) // todo: implement!
+    {
+      if (!regalloc_dry_run)
+        werror ( E_FUNC_AGGR);
+      goto jumpret;
+    }
 
   if (AOP_TYPE (IC_LEFT (ic)) == AOP_LIT)
     {
