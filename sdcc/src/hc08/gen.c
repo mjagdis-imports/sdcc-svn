@@ -8835,7 +8835,7 @@ genRightShift (iCode * ic)
   else if(!IS_AOP_A (AOP (result)) && !IS_AOP_XA (AOP (result)) && !IS_AOP_AX (AOP (result)))
     countreg = hc08_reg_a;
   needpullcountreg = (countreg && pushRegIfSurv (countreg));
-  wassert (right->aop); // This can fail is left and right are the same, resulting in a segfault later (bug #).
+  wassert (right->aop); // This can fail is left and right are the same, resulting in a segfault later (bug #3598).
   if(countreg)
     {
       countreg->isFree = false;
