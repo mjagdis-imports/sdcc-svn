@@ -9420,7 +9420,7 @@ Some features of this standard are not supported in some ports:
 \end_layout
 
 \begin_layout Itemize
-hc08, s08, mos6502, pic14, pic16: structures
+mos6502, pic14, pic16: structures
 \begin_inset Index idx
 status collapsed
 
@@ -9440,7 +9440,8 @@ union
 
 \end_inset
 
- cannot be passed as function parameters and cannot be a return value
+ cannot be passed as function parameters; hc08, s08, mos6502, pic14, pic16:
+ they cannot be a return value
 \begin_inset Index idx
 status collapsed
 
@@ -9916,7 +9917,7 @@ Some features of this standard are not supported in some ports:
 \end_layout
 
 \begin_layout Itemize
-hc08, s08, mos6502, pic14, pic16: structures
+mos6502, pic14, pic16: structures
 \begin_inset Index idx
 status collapsed
 
@@ -9936,7 +9937,8 @@ union
 
 \end_inset
 
- cannot be passed as function parameters and cannot be a return value
+ cannot be passed as function parameters; hc08, s08, mos6502, pic14, pic16:
+ they cannot be a return value
 \begin_inset Index idx
 status collapsed
 

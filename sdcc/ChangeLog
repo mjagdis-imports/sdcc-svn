@@ -2,6 +2,8 @@
 
 	* support/regression/MakeList:
 	  Disable tests that fail due to known -ms08 --stack-auto bugs.
+	* doc/sdccman.lyx:
+	  Document hc08/s08 struct/union parameter support.
 
 2023-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
