@@ -8367,7 +8367,7 @@ genLeftShift (iCode *ic)
 
   /* now move the left to the result if they are not the
      same */
-  if (IS_AOP_HX (AOP (result)))
+  if (IS_AOP_HX (aopResult) && !aopResult->stacked)
     loadRegFromAop (hc08_reg_hx, AOP (left), 0);
   else if (IS_AOP_AX (AOP (result)) && IS_AOP_XA (AOP (left)) || IS_AOP_XA (AOP (result)) && IS_AOP_AX (AOP (left)))
     {
@@ -8467,7 +8467,7 @@ genLeftShift (iCode *ic)
           pullOrFreeReg (hc08_reg_a, needpull);
         }
     }
-      
+
   freeAsmop (result, NULL, ic, true);
   freeAsmop (right, NULL, ic, true);
 }
@@ -8799,7 +8799,7 @@ genRightShift (iCode * ic)
 
   /* now move the left to the result if they are not the
      same */
-  if (IS_AOP_HX (AOP (result)))
+  if (IS_AOP_HX (aopResult) && !aopResult->stacked)
     loadRegFromAop (hc08_reg_hx, AOP (left), 0);
   else if (IS_AOP_AX (AOP (result)) && IS_AOP_XA (AOP (left)) || IS_AOP_XA (AOP (result)) && IS_AOP_AX (AOP (left)))
     {
