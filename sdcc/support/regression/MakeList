@@ -26,6 +26,11 @@ EXCLUDE_host += \
 EXCLUDE_s08-stack-auto += \
 	tst_gcc-torture-execute-pr47148
 
+# Bug #3599
+EXCLUDE_s08-stack-auto += \
+	tst_gcc-torture-execute-ssad-run \
+	tst_gcc-torture-execute-usad-run
+
 # possibly unsupported.
 EXCLUDE_host += \
 	tst_p99-conformance \

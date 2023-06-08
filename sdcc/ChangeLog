@@ -1,5 +1,10 @@
 2023-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/regression/MakeList:
+	  Disable tests that fail due to known -ms08 --stack-auto bugs.
+
+2023-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/hc08/gen.c,
 	  src/mos6502/gen.c,
 	  src/z80/gen.c:
