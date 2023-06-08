@@ -8450,8 +8450,7 @@ genRightShift (iCode * ic)
 
   /* if signed then we do it the hard way preserve the
      sign bit moving it inwards */
-  retype = getSpec (operandType (result));
-  sign = !SPEC_USIGN (retype);
+  sign = !SPEC_USIGN (getSpec (operandType (left)));
 
   /* signed & unsigned types are treated the same : i.e. the
      signed is NOT propagated inwards : quoting from the

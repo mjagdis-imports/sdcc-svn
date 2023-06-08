@@ -12875,7 +12875,6 @@ genRightShift (const iCode * ic)
 {
   operand *right, *left, *result;
   asmop *shiftop;
-  sym_link *retype;
   int size, offset, first = 1;
   bool is_signed;
   int countreg;
@@ -12886,15 +12885,13 @@ genRightShift (const iCode * ic)
 
   symbol *tlbl = 0, *tlbl1 = 0;
 
-  /* if signed then we do it the hard way preserve the
-     sign bit moving it inwards */
-  retype = getSpec (operandType (IC_RESULT (ic)));
-
-  is_signed = !SPEC_USIGN (retype);
-
   right = IC_RIGHT (ic);
   left = IC_LEFT (ic);
   result = IC_RESULT (ic);
+
+  /* if signed then we do it the hard way preserve the
+     sign bit moving it inwards */
+  is_signed = !SPEC_USIGN (getSpec (operandType (left)));
 
   aopOp (right, ic, FALSE, FALSE);
 

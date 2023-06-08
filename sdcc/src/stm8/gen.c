@@ -7862,7 +7862,7 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
 
   size = getSize (operandType (result));
 
-  sign =  !SPEC_USIGN (getSpec (operandType (left)));
+  sign = !SPEC_USIGN (getSpec (operandType (left)));
 
   /* I suppose that the left size >= result size */
   wassert ((int) getSize (operandType (left)) >= size);

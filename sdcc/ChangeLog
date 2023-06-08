@@ -1,6 +1,14 @@
 2023-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/hc08/gen.c,
+	  src/mos6502/gen.c,
+	  src/z80/gen.c:
+	  support/regression/MakeList:
+	  Fix a right-shift codegen sign issue triggered by register packing.
+
+2023-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c,
 	  support/regression/MakeList:
 	  Catch bug #3598 early.
 

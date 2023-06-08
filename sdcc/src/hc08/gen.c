@@ -8746,7 +8746,6 @@ static void
 genRightShift (iCode * ic)
 {
   operand *right, *left, *result;
-  sym_link *retype;
   int size, offset;
   symbol *tlbl, *tlbl1;
   char *shift;
@@ -8756,11 +8755,6 @@ genRightShift (iCode * ic)
   reg_info *countreg = NULL;
 
   D (emitcode (";     genRightShift", ""));
-
-  /* if signed then we do it the hard way preserve the
-     sign bit moving it inwards */
-  retype = getSpec (operandType (IC_RESULT (ic)));
-  sign = !SPEC_USIGN (retype);
 
   /* signed & unsigned types are treated the same : i.e. the
      signed is NOT propagated inwards : quoting from the
@@ -8772,6 +8766,10 @@ genRightShift (iCode * ic)
   right = IC_RIGHT (ic);
   left = IC_LEFT (ic);
   result = IC_RESULT (ic);
+
+  /* if signed then we do it the hard way preserve the
+     sign bit moving it inwards */
+  sign = !SPEC_USIGN (getSpec (operandType (left)));
 
   aopOp (right, ic, false);
 
