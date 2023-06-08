@@ -22,6 +22,10 @@ EXCLUDE_host += \
 	gte_20040409-2w \
 	gte_20040409-3w
 
+# Bug #3598
+EXCLUDE_s08-stack-auto += \
+	tst_gcc-torture-execute-pr47148
+
 # possibly unsupported.
 EXCLUDE_host += \
 	tst_p99-conformance \
