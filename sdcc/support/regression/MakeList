@@ -31,6 +31,14 @@ EXCLUDE_s08-stack-auto += \
 	tst_gcc-torture-execute-ssad-run \
 	tst_gcc-torture-execute-usad-run
 
+# Bug #3600
+EXCLUDE_s08-stack-auto += \
+	tst_gcc-torture-execute-930628-1
+	
+# Bug #3601
+EXCLUDE_s08-stack-auto += \
+	gte_20091229-1
+
 # possibly unsupported.
 EXCLUDE_host += \
 	tst_p99-conformance \
