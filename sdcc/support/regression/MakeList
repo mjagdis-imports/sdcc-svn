@@ -239,6 +239,10 @@ EXCLUDE_s08 += \
 	gte_991019-1 \
 	gte_pr30185 \
 	gte_pr58365
+EXCLUDE_s08-stack-auto += \
+	gte_991019-1 \
+	gte_pr30185 \
+	gte_pr58365
 EXCLUDE_ds390 += \
 	gte_991019-1 \
 	gte_pr30185 \

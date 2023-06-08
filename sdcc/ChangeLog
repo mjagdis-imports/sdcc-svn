@@ -2,6 +2,8 @@
 
 	* src/hc08/gen.c:
 	  Fix stacked hx result in shifts.
+	* support/regression/MakeList:
+	  Exclude some tests that need features not yet supported by s08 from s08-stack-auto testing.
 
 2023-06-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
