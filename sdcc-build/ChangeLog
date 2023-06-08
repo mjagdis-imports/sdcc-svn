@@ -1,3 +1,8 @@
+2023-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc-build-bootstrap.sh:
+	  Use this branch.
+
 2023-04-26 Philipp Klaus Krause <pkk AT spth.de>
 
 	* lib/doc-archive.mk:

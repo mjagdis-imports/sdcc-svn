@@ -15,7 +15,7 @@ BUILDROOT=$HOME/build
 #  BUILDROOT=/var/tmp/`whoami`/build
 
 # SVN sdcc-build repository
-SVNROOT=svn://svn.code.sf.net/p/sdcc/code/trunk
+SVNROOT=svn://svn.code.sf.net/p/sdcc/code/branches/nativecrosstools
 
 BUILDDATE=`date +%Y%m%d`
 
