@@ -92,7 +92,7 @@ create_cfg_genconstprop (cfg_t &cfg, iCode *start_ic, ebbIndex *ebbi)
         boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, returnLabel)->sch->key], cfg);
       else if (ic->op == IFX)
         boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, IC_TRUE(ic) ? IC_TRUE(ic) : IC_FALSE(ic))->sch->key], cfg);
-      else if (ic->op == JUMPTABLE)
+      else if (ic->op == JUMPTABLE) // This can create a multigraph. We actually need those multiple edges later for correctness of the analysis.
         for (symbol *lbl = (symbol *)(setFirstItem (IC_JTLABELS (ic))); lbl; lbl = (symbol *)(setNextItem (IC_JTLABELS (ic))))
           boost::add_edge(key_to_index[ic->key], key_to_index[eBBWithEntryLabel(ebbi, lbl)->sch->key], cfg);
     }
@@ -341,7 +341,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               struct valinfo v_true = v;
               struct valinfo v_false = v;
               v_true.min = std::max (v.min, litval + 1);
-              v_false.max = std::min (v.min, litval);
+              v_false.max = std::min (v.max, litval);
               int key_true = IC_TRUE (ic) ? eBBWithEntryLabel(ebbi, IC_TRUE(ic))->sch->key : ic->next->key;
               int key_false = IC_FALSE (ic) ? eBBWithEntryLabel(ebbi, IC_FALSE(ic))->sch->key : ic->next->key;
               boost::tie(out, out_end) = boost::out_edges(i, G);
@@ -366,12 +366,18 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
         ;
-      else if ((ic->op == '<' || ic->op == LE_OP) && !leftvalinfo.anything && !rightvalinfo.anything)
+      else if (ic->op == '<' || ic->op == GE_OP)
         {
-          bool one = (leftvalinfo.max < rightvalinfo.min) ^ (ic->op == LE_OP);
           resultvalinfo.nothing = leftvalinfo.nothing || rightvalinfo.nothing;
-          resultvalinfo.min = one;
-          resultvalinfo.max = one;
+          resultvalinfo.min = 0;
+          resultvalinfo.max = 1;
+          if (!leftvalinfo.anything && !rightvalinfo.anything)
+            {
+              if (leftvalinfo.max < rightvalinfo.min)
+                resultvalinfo.min = resultvalinfo.max = (ic->op == '<');
+              else if (leftvalinfo.min >= rightvalinfo.max)
+                resultvalinfo.min = resultvalinfo.max = (ic->op == GE_OP);
+            }
         }
       else if ((ic->op == NE_OP || ic->op == EQ_OP) && !leftvalinfo.anything && !rightvalinfo.anything &&
         leftvalinfo.min == leftvalinfo.max && rightvalinfo.min == rightvalinfo.max)
@@ -390,7 +396,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         resultvalinfo = rightvalinfo;
 
       if (resultsym)
-        {G[*out].map[resultsym->key] = resultvalinfo;std::cout << "result keys: " << IC_RESULT (ic)->key << ", " << resultsym->key << "\n";}
+        G[*out].map[resultsym->key] = resultvalinfo;
       if (todo.second.find (boost::target(*out, G)) == todo.second.end())
         {
           todo.first.push (boost::target(*out, G));
@@ -456,26 +462,33 @@ optimizeValinfo (iCode *sic)
           valinfo vright = getOperandValinfo (ic, right);
           if (left && IS_ITEMP (left) && !vleft.anything && vleft.min == vleft.max)
             {
+              std::cout << "replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
               bitVectUnSetBit (OP_USES (left), ic->key);
-              IC_LEFT (ic) = operandFromLit (vleft.min);
+              ic->left = operandFromValue (valCastLiteral (operandType (left), vleft.min, vleft.min), false);
             }
           if (right && IS_ITEMP (right) && !vright.anything && vright.min == vright.max)
             {
+              std::cout << "replace right at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
               bitVectUnSetBit (OP_USES (right), ic->key);
-              IC_RIGHT (ic) = operandFromLit (vright.min);
+              ic->right = operandFromValue (valCastLiteral (operandType (right), vright.min, vright.min), false);
             }
           if (ic->op == '+' || ic->op == '-')
             {
+              std::cout << "replace result at " << ic->key << "?\n";
               valinfo vresult = getTypeValinfo (operandType (result));
               if (ic->op == '+')
                 valinfoPlus (&vresult, vleft, vright);
               else
                 valinfoMinus (&vresult, vleft, vright);
               if (!vresult.anything && vresult.min == vresult.max)
-                {
+                {std::cout << "anything " << vresult.anything << " min " << vresult.min << " max " << vresult.max << "\n";
+                  if (IS_SYMOP (left))
+                    bitVectUnSetBit (OP_USES (left), ic->key);
+                  if (IS_SYMOP (right))
+                    bitVectUnSetBit (OP_USES (right), ic->key);
                   ic->op = '=';
-                  IC_LEFT(ic) = NULL;
-                  IC_RIGHT(ic) = operandFromLit (vresult.min);
+                  ic->left = NULL;
+                  ic->right = operandFromValue (valCastLiteral (operandType (result), vresult.min, vresult.min), false);
                 }
             }
           

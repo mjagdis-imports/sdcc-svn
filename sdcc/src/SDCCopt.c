@@ -3427,8 +3427,8 @@ eBBlockFromiCode (iCode *ic)
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-  //recomputeValinfos (ic, ebbi);
-  //optimizeValinfo (ic);
+  recomputeValinfos (ic, ebbi);
+  optimizeValinfo (ic);
   freeeBBlockData (ebbi);
   ebbi = iCodeBreakDown (ic);
 
@@ -3540,7 +3540,7 @@ eBBlockFromiCode (iCode *ic)
   computeDataFlow (ebbi);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
   recomputeValinfos (ic, ebbi);
-  //optimizeValinfo (ic);
+  optimizeValinfo (ic);
   freeeBBlockData (ebbi);
   ebbi = iCodeBreakDown (ic);
   computeControlFlow (ebbi);
