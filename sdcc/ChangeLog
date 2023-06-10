@@ -1,7 +1,7 @@
 2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:
-	  A few more bits of generalized constant propagation analysis.
+	  A few more bits of generalized constant propagation analysis and optimization.
 
 2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
 

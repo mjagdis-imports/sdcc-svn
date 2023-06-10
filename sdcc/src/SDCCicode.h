@@ -164,6 +164,7 @@ typedef struct iCode
   bitVect *rMask;               /* registers in use during this instruction */
   bitVect *rSurv;               /* registers that survive this instruction (i.e. they are in use, it is not their last use and they are not in the return) */
   struct valinfos *valinfos;    /* Information on the possible values of symbols just before this iCode. */
+  struct valinfo *resultvalinfo;/* Information on the possible values of the result. */ 
 
   operand *left;                // left if any
   operand *right;               // right if any

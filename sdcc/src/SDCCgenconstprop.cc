@@ -161,20 +161,20 @@ getOperandValinfo (const iCode *ic, operand *op)
 static bool
 valinfo_union (struct valinfo *v0, const struct valinfo &v1)
 {
-	bool change = false;
-	auto new_anything = v0->anything || v1.anything;
-	change |= (v0->anything != new_anything);
-	v0->anything = new_anything;
-	auto new_nothing = v0->nothing && v1.nothing;
-	change |= (v0->nothing != new_nothing);
-	v0->nothing = new_nothing;
-	auto new_min = std::min (v0->min, v1.min);
-	change |= (v0->min != new_min);
-	v0->min = new_min;
-	auto new_max = std::max (v0->max, v1.max);
-	change |= (v0->max != new_max);
-	v0->max = new_max;
-	return (change);
+  bool change = false;
+  auto new_anything = v0->anything || v1.anything;
+  change |= (v0->anything != new_anything);
+  v0->anything = new_anything;
+  auto new_nothing = v0->nothing && v1.nothing;
+  change |= (v0->nothing != new_nothing);
+  v0->nothing = new_nothing;
+  auto new_min = std::min (v0->min, v1.min);
+  change |= (v0->min != new_min);
+  v0->min = new_min;
+  auto new_max = std::max (v0->max, v1.max);
+  change |= (v0->max != new_max);
+  v0->max = new_max;
+  return (change);
 }
 
 bool
@@ -375,8 +375,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         resultvalinfo = getTypeValinfo (operandType (IC_RESULT (ic)));
 
 #ifdef DEBUG_GCP
-     if (localchange)
-       std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
+      if (localchange)
+        std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
 #endif
 
       if (!localchange) // Input didn't change. No need to recompute result.
@@ -414,7 +414,12 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoCast (&resultvalinfo, operandType (IC_RESULT (ic)), rightvalinfo );
 
       if (resultsym)
-        G[*out].map[resultsym->key] = resultvalinfo;
+        {
+          if (!ic->resultvalinfo)
+            ic->resultvalinfo = new struct valinfo;
+          *ic->resultvalinfo = resultvalinfo;
+          G[*out].map[resultsym->key] = resultvalinfo;
+        }
       if (todo.second.find (boost::target(*out, G)) == todo.second.end())
         {
           todo.first.push (boost::target(*out, G));
@@ -440,6 +445,8 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi)
     {
       delete G[i].ic->valinfos;
       G[i].ic->valinfos = NULL;
+      delete G[i].ic->resultvalinfo;
+      G[i].ic->resultvalinfo = NULL;
       recompute_node (G, i, ebbi, todo, true, false);
     }
 
@@ -480,43 +487,39 @@ optimizeValinfo (iCode *sic)
           operand *left = IC_LEFT (ic);
           operand *right = IC_RIGHT (ic);
           operand *result = IC_RESULT (ic);
-          valinfo vleft = getOperandValinfo (ic, left);
-          valinfo vright = getOperandValinfo (ic, right);
-          if (left && IS_ITEMP (left) && !vleft.anything && vleft.min == vleft.max)
+          const valinfo vleft = getOperandValinfo (ic, left);
+          const valinfo vright = getOperandValinfo (ic, right);
+          if (ic->resultvalinfo && !ic->resultvalinfo->anything && ic->resultvalinfo->min == ic->resultvalinfo->max)
             {
+              const valinfo &vresult = *ic->resultvalinfo;
 #ifdef DEBUG_GCP
-              std::cout << "Replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
+              std::cout << "Replace result at " << ic->key << ". anything " << vresult.anything << " min " << vresult.min << " max " << vresult.max << "\n";
 #endif
-              bitVectUnSetBit (OP_USES (left), ic->key);
-              ic->left = operandFromValue (valCastLiteral (operandType (left), vleft.min, vleft.min), false);
+              if (IS_SYMOP (left))
+                bitVectUnSetBit (OP_USES (left), ic->key);
+              if (IS_SYMOP (right))
+                bitVectUnSetBit (OP_USES (right), ic->key);
+              ic->op = '=';
+              ic->left = NULL;
+              ic->right = operandFromValue (valCastLiteral (operandType (result), vresult.min, vresult.min), false);
             }
-          if (right && IS_ITEMP (right) && !vright.anything && vright.min == vright.max)
+          else
             {
-#ifdef DEBUG_GCP
-              std::cout << "Replace right at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
-#endif
-              bitVectUnSetBit (OP_USES (right), ic->key);
-              ic->right = operandFromValue (valCastLiteral (operandType (right), vright.min, vright.min), false);
-            }
-          if (ic->op == '+' || ic->op == '-')
-            {
-              valinfo vresult = getTypeValinfo (operandType (result));
-              if (ic->op == '+')
-                valinfoPlus (&vresult, vleft, vright);
-              else
-                valinfoMinus (&vresult, vleft, vright);
-              if (!vresult.anything && vresult.min == vresult.max)
+              if (left && IS_ITEMP (left) && !vleft.anything && vleft.min == vleft.max)
                 {
 #ifdef DEBUG_GCP
-                  std::cout << "Replace result at " << ic->key << ". anything " << vresult.anything << " min " << vresult.min << " max " << vresult.max << "\n";
+                  std::cout << "Replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
 #endif
-                  if (IS_SYMOP (left))
-                    bitVectUnSetBit (OP_USES (left), ic->key);
-                  if (IS_SYMOP (right))
-                    bitVectUnSetBit (OP_USES (right), ic->key);
-                  ic->op = '=';
-                  ic->left = NULL;
-                  ic->right = operandFromValue (valCastLiteral (operandType (result), vresult.min, vresult.min), false);
+                  bitVectUnSetBit (OP_USES (left), ic->key);
+                  ic->left = operandFromValue (valCastLiteral (operandType (left), vleft.min, vleft.min), false);
+                }
+              if (right && IS_ITEMP (right) && !vright.anything && vright.min == vright.max)
+                {
+#ifdef DEBUG_GCP
+                  std::cout << "Replace right at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
+#endif
+                  bitVectUnSetBit (OP_USES (right), ic->key);
+                  ic->right = operandFromValue (valCastLiteral (operandType (right), vright.min, vright.min), false);
                 }
             }
           
