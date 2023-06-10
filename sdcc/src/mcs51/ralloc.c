@@ -1957,6 +1957,8 @@ static bool isFlagVar (symbol *sym)
 
       iCode *ic = hTabItemWithKey (iCodehTab, key);
 
+      if (ic->op == CALL || ic->op == PCALL) // Codegen cannot deal with a return value in a bit, if another bit is live (push/pop of bit to save the live one will overwrite result).
+        return (false);
       if (ic->op == AND_OP || ic->op == OR_OP || ic->op == EQ_OP || ic->op == '<' || ic->op == '>' || ic->op == CAST || ic->op == '!')
         gooduses++;
       else if (ic->op == '=' &&

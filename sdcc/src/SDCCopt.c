@@ -841,12 +841,12 @@ convilong (iCode *ic, eBBlock *ebp)
         {
           func = muls16tos32[SPEC_USIGN (operandType (left))];
 
-          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (IC_RIGHT (lic)),operandType (IC_RIGHT (ric))))
+          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (IC_RIGHT (lic)), operandType (IC_RIGHT (ric))))
             {
               if (lic)
                 {
                   lic->op = '=';
-                  OP_SYMBOL (left)->type = newIntLink();
+                  OP_SYMBOL (left)->type = newIntLink ();
                 }
               else
                 IC_LEFT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
@@ -854,12 +854,53 @@ convilong (iCode *ic, eBBlock *ebp)
               if (ric)
                 {
                   ric->op = '=';
-                  OP_SYMBOL (right)->type = newIntLink();
+                  OP_SYMBOL (right)->type = newIntLink ();
                 }
               else
                 IC_RIGHT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
 
               if (func) // Use 16x16->32 support function
+                goto found;
+              else // Native
+                return;
+            }
+        }
+    }
+  if (op == '*' && (mulu32u8tou64 || port->hasNativeMulFor) &&
+    (IS_SYMOP (left) && bitVectnBitsOn (OP_DEFS (left)) == 1 && bitVectnBitsOn (OP_USES (left)) == 1 /*|| IS_OP_LITERAL (left) && operandLitValue (left) < 256 && operandLitValue (left) >= 0*/) &&
+    (IS_SYMOP (right) && bitVectnBitsOn (OP_DEFS (right)) == 1 && bitVectnBitsOn (OP_USES (right)) == 1 /*|| IS_OP_LITERAL (right) && operandLitValue (right) < 256 && operandLitValue (right) >= 0*/) &&
+    getSize (leftType) == 8 && getSize (rightType) == 8)
+    {
+      iCode *lic = IS_SYMOP (left) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (left))) : 0;
+      iCode *ric = IS_SYMOP (right) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (right))) : 0;
+
+      if ((lic && lic->op == CAST && getSize (operandType (IC_RIGHT (lic))) <= 4 && SPEC_USIGN (operandType (IC_RIGHT (lic)))) && // Todo: Allow !lic / !ric for literal operands?
+        (ric && ric->op == CAST && getSize (operandType (IC_RIGHT (ric))) <= 1 && SPEC_USIGN (operandType (IC_RIGHT (ric)))))
+        {
+          func = mulu32u8tou64;
+
+          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (IC_RIGHT (lic)), operandType (IC_RIGHT (ric))))
+            {
+              if (lic)
+                {
+                  if (getSize (operandType (IC_RIGHT (lic))) == 4)
+                    lic->op = '=';
+                  OP_SYMBOL (left)->type = newLongLink ();
+                  SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
+                }
+              else
+                IC_LEFT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
+
+              if (ric)
+                {
+                  ric->op = '=';
+                  OP_SYMBOL (right)->type = newCharLink ();
+                  SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
+                }
+              else
+                IC_RIGHT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
+
+              if (func) // Use 32x8->64 support function
                 goto found;
               else // Native
                 return;
@@ -917,14 +958,16 @@ convilong (iCode *ic, eBBlock *ebp)
                 func = muldiv[1][bwd][su];
               else if (op == '%')
                 func = muldiv[2][bwd][su];
-              else if (op == RRC)
-                func = rlrr[1][bwd][su];
-              else if (op == RLC)
-                func = rlrr[0][bwd][su];
               else if (op == RIGHT_OP)
-                func = rlrr[1][bwd][su];
+                {
+                  func = rlrr[1][bwd][su];
+                  prependCast (ic, IC_RIGHT (ic), FUNC_ARGS(func->type)->next->type, ebp);
+                }
               else if (op == LEFT_OP)
-                func = rlrr[0][bwd][su];
+                {
+                  func = rlrr[0][bwd][su];
+                  prependCast (ic, IC_RIGHT (ic), FUNC_ARGS(func->type)->next->type, ebp);
+                }
               else
                 assert (0);
               goto found;
@@ -1340,7 +1383,7 @@ convertToFcall (eBBlock ** ebbs, int count)
                 }
             }
 
-          if (ic->op == RRC || ic->op == RLC || ic->op == LEFT_OP || ic->op == RIGHT_OP)
+          if (ic->op == ROT || ic->op == LEFT_OP || ic->op == RIGHT_OP)
             {
               sym_link *type = operandType (IC_LEFT (ic));
 
@@ -3208,6 +3251,49 @@ narrowReads(ebbIndex *ebbi)
 }
 
 /*-----------------------------------------------------------------*/
+/* Remove redundant temporaries (leftover from other opts)         */
+/*-----------------------------------------------------------------*/
+int
+removeRedundantTemps (iCode *sic)
+{
+  int change = 0;
+  for (iCode *ic = sic; ic; ic = ic->next)
+    {
+      iCode *pic = ic->prev;
+      if (!pic)
+        continue;
+      if (ic->op != '=' || POINTER_SET (ic) || !IS_ITEMP (IC_RESULT (ic)) || !IS_ITEMP (IC_RIGHT (ic)))
+        continue;
+      if (POINTER_SET (pic) || !isOperandEqual (IC_RESULT (pic), IC_RIGHT (ic)))
+        continue;
+      if (bitVectnBitsOn (OP_DEFS (IC_RIGHT (ic))) != 1)
+        continue;
+      if (bitVectnBitsOn (OP_USES (IC_RIGHT (ic))) != 1)
+        continue;
+      if (compareType (operandType (IC_RESULT (ic)), operandType (IC_RIGHT (ic)), false) != 1)
+        continue;
+      if (IS_BITFIELD (operandType (IC_RESULT (pic))))
+        continue;
+
+#if 0
+      printf ("removeRedundantTemps: in %s optimized out ic %d: %s = %s\n", (currFunc ? currFunc->name : "NO_FUNCTION"), ic->key, OP_SYMBOL (IC_RESULT (ic))->name, OP_SYMBOL (IC_RIGHT (ic))->name);
+#endif
+
+      bitVectUnSetBit (OP_DEFS (IC_RESULT (pic)), pic->key);
+      IC_RESULT (pic) = IC_RESULT (ic);
+      bitVectSetBit (OP_DEFS (IC_RESULT (pic)), pic->key);
+
+      // Assignment to self will get optimized out later
+      bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
+      IC_RESULT (ic) = IC_RIGHT (ic);
+      bitVectSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
+
+      change++;
+    }
+  return (change);
+}
+
+/*-----------------------------------------------------------------*/
 /* eBBlockFromiCode - creates extended basic blocks from iCode     */
 /*                    will return an array of eBBlock pointers     */
 /*-----------------------------------------------------------------*/
@@ -3376,6 +3462,8 @@ eBBlockFromiCode (iCode *ic)
       separateLiveRanges (ic, ebbi);
     }
 
+  removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
+
   /* Break down again and redo some steps to not confuse live range analysis later. */
   freeeBBlockData (ebbi);
   ebbi = iCodeBreakDown (ic);
@@ -3468,6 +3556,7 @@ eBBlockFromiCode (iCode *ic)
     adjustIChain (ebbi->bbOrder, ebbi->count);
     ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
     change = separateLiveRanges (ic, ebbi);
+    removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
     freeeBBlockData (ebbi);
     ebbi = iCodeBreakDown (ic);
     computeControlFlow (ebbi);
