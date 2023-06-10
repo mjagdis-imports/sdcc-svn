@@ -1,5 +1,10 @@
 2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCicode.h:
+	  Store operands of IFX and JUMPTAB the same way as operands of other iCodes.
+
+2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCdflow.h,
 	  src/SDCCicode.c,
 	  src/SDCCicode.h,
