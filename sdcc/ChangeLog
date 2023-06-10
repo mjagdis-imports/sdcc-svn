@@ -1,7 +1,12 @@
 2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:
-	  Improve proof-of-concept for generalized constant propagation analysis and optimization to the point hwere it almost passes regression tests.
+	  A few more bits of generalized constant propagation analysis.
+
+2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Improve proof-of-concept for generalized constant propagation analysis and optimization to the point where it almost passes regression tests.
 	* src/SDCCglobl.h,
 	  src/SDCCmain.c,
 	  src/SDCCopt.c:

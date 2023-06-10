@@ -17,7 +17,7 @@
 //
 // Generalized constant propagation.
 
-#define DEBUG_GCP
+#undef DEBUG_GCP
 
 #include <map>
 #include <set>
@@ -278,6 +278,19 @@ valinfoMinus (struct valinfo *result, const struct valinfo left, const struct va
     }
 }
 
+static void
+valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo right)
+{
+  *result = getTypeValinfo (targettype);
+  if (right.nothing)
+    result->nothing = true;
+  else if (!right.anything && !result->anything && right.min >= result->min && right.max <= result->max)
+    {
+      result->min = right.min;
+      result->max = right.max;
+    }
+}
+
 #define PASS_LIMIT = 4;
 
 static void
@@ -396,8 +409,9 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoPlus (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '-')
         valinfoMinus (&resultvalinfo, leftvalinfo, rightvalinfo);
-      else if (ic->op == '=' && !POINTER_SET (ic))
-        resultvalinfo = rightvalinfo;
+      else if (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
+        //resultvalinfo = rightvalinfo; Doesn't work for = - sometimes = with mismatched types arrive here.
+        valinfoCast (&resultvalinfo, operandType (IC_RESULT (ic)), rightvalinfo );
 
       if (resultsym)
         G[*out].map[resultsym->key] = resultvalinfo;
@@ -454,6 +468,9 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi)
 void
 optimizeValinfo (iCode *sic)
 {
+#ifdef DEBUG_GCP
+  std::cout << "optimizeValifo at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
+#endif
   for (iCode *ic = sic; ic; ic = ic->next)
     {
       if (SKIP_IC2 (ic))
@@ -468,7 +485,7 @@ optimizeValinfo (iCode *sic)
           if (left && IS_ITEMP (left) && !vleft.anything && vleft.min == vleft.max)
             {
 #ifdef DEBUG_GCP
-              std::cout << "replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
+              std::cout << "Replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
 #endif
               bitVectUnSetBit (OP_USES (left), ic->key);
               ic->left = operandFromValue (valCastLiteral (operandType (left), vleft.min, vleft.min), false);
@@ -476,7 +493,7 @@ optimizeValinfo (iCode *sic)
           if (right && IS_ITEMP (right) && !vright.anything && vright.min == vright.max)
             {
 #ifdef DEBUG_GCP
-              std::cout << "replace right at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
+              std::cout << "Replace right at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
 #endif
               bitVectUnSetBit (OP_USES (right), ic->key);
               ic->right = operandFromValue (valCastLiteral (operandType (right), vright.min, vright.min), false);
