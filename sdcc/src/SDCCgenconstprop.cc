@@ -17,7 +17,8 @@
 //
 // Generalized constant propagation.
 
-#undef DEBUG_GCP
+#undef DEBUG_GCP_ANALYSIS
+#define DEBUG_GCP_OPT
 
 #include <map>
 #include <set>
@@ -234,6 +235,16 @@ dump_cfg_genconstprop (const cfg_t &cfg)
       if (ic->right)
         dump_op_info (os, ic, IC_RIGHT (ic));
       os << ")";
+      if (ic->resultvalinfo)
+        {
+          os << " -> ";
+          if (ic->resultvalinfo->nothing)
+            os << "X";
+          else if (ic->resultvalinfo->anything)
+            os << "*";
+          else
+            os << "[" << ic->resultvalinfo->min << ", " << ic->resultvalinfo->max << "]";
+        }
       name[i] = os.str();
     }
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, " generalized constant propagation"));
@@ -275,6 +286,36 @@ valinfoMinus (struct valinfo *result, const struct valinfo left, const struct va
           result->min = min;
           result->max = max;
         }
+    }
+}
+
+static void
+valinfoAnd (struct valinfo *result, const struct valinfo left, const struct valinfo right)
+{
+  if (!left.anything && !right.anything &&
+    left.min >= 0 && right.min >= 0)
+    {
+      result->anything = false;
+      result->nothing = left.nothing || right.nothing;
+      result->min = 0;
+      auto max = std::min(left.max, right.max);
+      if (max <= result->max)
+        result->max = max;
+    }
+}
+
+static void
+valinfoRight (struct valinfo *result, const struct valinfo left, const struct valinfo right)
+{
+  if (!left.anything && !right.anything &&
+    left.min >= 0 && right.min >= 0 && right.min <= 60)
+    {
+      result->anything = false;
+      result->nothing = left.nothing || right.nothing;
+      result->min = 0;
+      auto max = (left.max >> right.min);
+      if (max <= result->max)
+        result->max = max;
     }
 }
 
@@ -366,6 +407,23 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                 else if (G[boost::target(*out, G)].ic->key == key_false)
                   G[*out].map[cic->left->key] = v_false;
             }
+          if (cic->op == '<' && IS_ITEMP (cic->left) && !IS_FLOAT (operandType (cic->left)) &&
+            IS_OP_LITERAL (IC_RIGHT (cic)) && !v.anything && !v.nothing && operandLitValueUll(IC_RIGHT (cic)) < 0xffffffff)
+            {
+              long long litval = operandLitValueUll (IC_RIGHT (cic));
+              struct valinfo v_true = v;
+              struct valinfo v_false = v;
+              v_true.max = std::min (v.max, litval - 1);
+              v_false.min = std::max (v.min, litval);
+              int key_true = IC_TRUE (ic) ? eBBWithEntryLabel(ebbi, IC_TRUE(ic))->sch->key : ic->next->key;
+              int key_false = IC_FALSE (ic) ? eBBWithEntryLabel(ebbi, IC_FALSE(ic))->sch->key : ic->next->key;
+              boost::tie(out, out_end) = boost::out_edges(i, G);
+              for(; out != out_end; ++out)
+                if (G[boost::target(*out, G)].ic->key == key_true)
+                  G[*out].map[cic->left->key] = v_true;
+                else if (G[boost::target(*out, G)].ic->key == key_false)
+                  G[*out].map[cic->left->key] = v_false;
+            }
         }
       break;
     default:
@@ -374,7 +432,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       if (resultsym)
         resultvalinfo = getTypeValinfo (operandType (IC_RESULT (ic)));
 
-#ifdef DEBUG_GCP
+#ifdef DEBUG_GCP_ANALYSIS
       if (localchange)
         std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
 #endif
@@ -383,6 +441,14 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
         ;
+      else if (ic-> op == UNARYMINUS)
+        {
+          struct valinfo z;
+          z.nothing = false;
+          z.anything = false;
+          z.min = z.max = 0;
+          valinfoMinus (&resultvalinfo, z, leftvalinfo);
+        }
       else if (ic->op == '<' || ic->op == GE_OP)
         {
           resultvalinfo.nothing = leftvalinfo.nothing || rightvalinfo.nothing;
@@ -394,6 +460,19 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                 resultvalinfo.min = resultvalinfo.max = (ic->op == '<');
               else if (leftvalinfo.min >= rightvalinfo.max)
                 resultvalinfo.min = resultvalinfo.max = (ic->op == GE_OP);
+            }
+        }
+      else if (ic->op == '>' || ic->op == LE_OP)
+        {
+          resultvalinfo.nothing = leftvalinfo.nothing || rightvalinfo.nothing;
+          resultvalinfo.min = 0;
+          resultvalinfo.max = 1;
+          if (!leftvalinfo.anything && !rightvalinfo.anything)
+            {
+              if (leftvalinfo.min > rightvalinfo.max)
+                resultvalinfo.min = resultvalinfo.max = (ic->op == '>');
+              else if (leftvalinfo.max <= rightvalinfo.min)
+                resultvalinfo.min = resultvalinfo.max = (ic->op == LE_OP);
             }
         }
       else if ((ic->op == NE_OP || ic->op == EQ_OP) && !leftvalinfo.anything && !rightvalinfo.anything &&
@@ -409,9 +488,13 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoPlus (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '-')
         valinfoMinus (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == BITWISEAND)
+        valinfoAnd (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == RIGHT_OP)
+        valinfoRight (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
-        //resultvalinfo = rightvalinfo; Doesn't work for = - sometimes = with mismatched types arrive here.
-        valinfoCast (&resultvalinfo, operandType (IC_RESULT (ic)), rightvalinfo );
+        //resultvalinfo = rightvalinfo; // Doesn't work for = - sometimes = with mismatched types arrive here.
+        valinfoCast (&resultvalinfo, operandType (IC_RESULT (ic)), rightvalinfo);
 
       if (resultsym)
         {
@@ -458,7 +541,7 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi)
       todo.first.pop ();
       todo.second.erase (i);
 
-#ifdef DEBUG_GCP
+#ifdef DEBUG_GCP_ANALYSIS
       std::cout << "Round " << round << " node " << i << " ic " << G[i].ic->key << "\n";
 #endif
       recompute_node (G, i, ebbi, todo, false, round >= max_rounds);
@@ -475,7 +558,7 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi)
 void
 optimizeValinfo (iCode *sic)
 {
-#ifdef DEBUG_GCP
+#ifdef DEBUG_GCP_OPT
   std::cout << "optimizeValifo at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
 #endif
   for (iCode *ic = sic; ic; ic = ic->next)
@@ -492,7 +575,7 @@ optimizeValinfo (iCode *sic)
           if (ic->resultvalinfo && !ic->resultvalinfo->anything && ic->resultvalinfo->min == ic->resultvalinfo->max)
             {
               const valinfo &vresult = *ic->resultvalinfo;
-#ifdef DEBUG_GCP
+#ifdef DEBUG_GCP_OPT
               std::cout << "Replace result at " << ic->key << ". anything " << vresult.anything << " min " << vresult.min << " max " << vresult.max << "\n";
 #endif
               if (IS_SYMOP (left))
@@ -507,7 +590,7 @@ optimizeValinfo (iCode *sic)
             {
               if (left && IS_ITEMP (left) && !vleft.anything && vleft.min == vleft.max)
                 {
-#ifdef DEBUG_GCP
+#ifdef DEBUG_GCP_OPT
                   std::cout << "Replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
 #endif
                   bitVectUnSetBit (OP_USES (left), ic->key);
@@ -515,7 +598,7 @@ optimizeValinfo (iCode *sic)
                 }
               if (right && IS_ITEMP (right) && !vright.anything && vright.min == vright.max)
                 {
-#ifdef DEBUG_GCP
+#ifdef DEBUG_GCP_OPT
                   std::cout << "Replace right at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
 #endif
                   bitVectUnSetBit (OP_USES (right), ic->key);
