@@ -1,5 +1,10 @@
 2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCgenconstprop.cc:
+	  Refactor proof-of-concept for generalized constant propagation analysis using new iCode operand handling.
+
+2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCicode.h:
 	  Store operands of IFX and JUMPTAB the same way as operands of other iCodes.
 

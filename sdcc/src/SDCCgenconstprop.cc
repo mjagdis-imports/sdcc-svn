@@ -226,18 +226,11 @@ dump_cfg_genconstprop (const cfg_t &cfg)
       std::ostringstream os;
       iCode *ic = cfg[i].ic;
       os << i << ", " << ic->key << ": (";
-      if (ic->op == IFX)
-        dump_op_info (os, ic, IC_COND (ic));
-      else if (ic->op == IFX)
-        dump_op_info (os, ic, IC_JTCOND (ic));
-      else
-        {
-          if (IC_LEFT (ic))
-            dump_op_info (os, ic, IC_LEFT (ic));
-          os << ", ";
-          if (IC_RIGHT (ic))
-            dump_op_info (os, ic, IC_RIGHT (ic));
-        }
+      if (ic->left)
+        dump_op_info (os, ic, IC_LEFT (ic));
+      os << ", ";
+      if (ic->right)
+        dump_op_info (os, ic, IC_RIGHT (ic));
       os << ")";
       name[i] = os.str();
     }
@@ -293,8 +286,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
 
   operand *left = IC_LEFT (ic);
   operand *right = IC_RIGHT (ic);
-  struct valinfo oldleftvalinfo = getOperandValinfo (ic, (ic->op != IFX && ic->op != JUMPTABLE) ? left : 0);
-  struct valinfo oldrightvalinfo = getOperandValinfo (ic, (ic->op != IFX && ic->op != JUMPTABLE) ? right : 0);
+  struct valinfo oldleftvalinfo = getOperandValinfo (ic, left);
+  struct valinfo oldrightvalinfo = getOperandValinfo (ic, right);
 
   if (!ic->valinfos)
     ic->valinfos = new struct valinfos;
@@ -319,9 +312,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
     resultsym = 0;
   struct valinfo resultvalinfo;
 
-  struct valinfo leftvalinfo = getOperandValinfo (ic, (ic->op != IFX && ic->op != JUMPTABLE) ? left : 0);
-  struct valinfo rightvalinfo = getOperandValinfo (ic, (ic->op != IFX && ic->op != JUMPTABLE) ? right : 0);
-  struct valinfo condvalinfo = getOperandValinfo (ic, (ic->op == IFX) ? IC_COND (ic) : (ic->op == JUMPTABLE ? IC_JTCOND (ic) : 0));
+  struct valinfo leftvalinfo = getOperandValinfo (ic, left);
+  struct valinfo rightvalinfo = getOperandValinfo (ic, right);
 
   bool localchange = externchange || leftvalinfo != oldleftvalinfo || rightvalinfo != oldrightvalinfo;
 
@@ -338,12 +330,11 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               todo.second.insert (boost::target(*out, G));
             }
         }
-      if (ic->op == IFX && bitVectnBitsOn (OP_DEFS (IC_COND (ic))) == 1) // Propagate some info ont eh condition into the branches.
+      if (ic->op == IFX && bitVectnBitsOn (OP_DEFS (IC_COND (ic))) == 1) // Propagate some info on the condition into the branches.
         {
           iCode *cic = (iCode *)hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (IC_COND (ic))));
-          operand *cic_left = IC_LEFT (cic);
-          struct valinfo v = getOperandValinfo (ic, cic_left);
-          if (cic->op == '>' && IS_ITEMP (cic_left) && !IS_FLOAT (operandType (cic_left)) &&
+          struct valinfo v = getOperandValinfo (ic, cic->left);
+          if (cic->op == '>' && IS_ITEMP (cic->left) && !IS_FLOAT (operandType (cic->left)) &&
             IS_OP_LITERAL (IC_RIGHT (cic)) && !v.anything && !v.nothing && operandLitValueUll(IC_RIGHT (cic)) < +1000)
             {
               long long litval = operandLitValueUll (IC_RIGHT (cic));
@@ -356,9 +347,9 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               boost::tie(out, out_end) = boost::out_edges(i, G);
               for(; out != out_end; ++out)
                 if (G[boost::target(*out, G)].ic->key == key_true)
-                  G[*out].map[cic_left->key] = v_true;
+                  G[*out].map[cic->left->key] = v_true;
                 else if (G[boost::target(*out, G)].ic->key == key_false)
-                  G[*out].map[cic_left->key] = v_false;
+                  G[*out].map[cic->left->key] = v_false;
             }
         }
       break;
@@ -454,25 +445,7 @@ optimizeValinfo (iCode *sic)
 {
   for (iCode *ic = sic; ic; ic = ic->next)
     {
-      if (ic->op == IFX)
-        {
-          valinfo v = getOperandValinfo (ic, IC_COND (ic));
-          if (!v.anything && v.min == v.max)
-            {
-              bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
-              IC_COND (ic) = operandFromLit (v.min);
-            }
-        }
-      else if (ic->op == JUMPTABLE)
-        {
-          valinfo v = getOperandValinfo (ic, IC_JTCOND (ic));
-          if (!v.anything && v.min == v.max)
-            {
-              bitVectUnSetBit (OP_USES (IC_JTCOND (ic)), ic->key);
-              IC_JTCOND (ic) = operandFromLit (v.min);
-            }
-        }
-      else if (SKIP_IC2 (ic))
+      if (SKIP_IC2 (ic))
         ;
       else
         {
