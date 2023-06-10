@@ -3423,14 +3423,17 @@ eBBlockFromiCode (iCode *ic)
   offsetFoldGet (ebbi->bbOrder, ebbi->count);
 
   // Generalized constant propagation - do it here a first time before the first call to computeLiveRanges to ensure uninitalized variables are still recognized as such.
-  computeControlFlow (ebbi);
-  loops = createLoopRegions (ebbi);
-  computeDataFlow (ebbi);
-  ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-  recomputeValinfos (ic, ebbi);
-  optimizeValinfo (ic);
-  freeeBBlockData (ebbi);
-  ebbi = iCodeBreakDown (ic);
+  if (optimize.genconstprop)
+    {
+      computeControlFlow (ebbi);
+      loops = createLoopRegions (ebbi);
+      computeDataFlow (ebbi);
+      ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+      recomputeValinfos (ic, ebbi);
+      optimizeValinfo (ic);
+      freeeBBlockData (ebbi);
+      ebbi = iCodeBreakDown (ic);
+    }
 
   // lospre
   computeControlFlow (ebbi);
@@ -3535,18 +3538,21 @@ eBBlockFromiCode (iCode *ic)
   miscOpt (ebbi->bbOrder, ebbi->count);
 
   // Generalized constant propagation - second time.
-  computeControlFlow (ebbi);
-  loops = createLoopRegions (ebbi);
-  computeDataFlow (ebbi);
-  ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-  recomputeValinfos (ic, ebbi);
-  optimizeValinfo (ic);
-  freeeBBlockData (ebbi);
-  ebbi = iCodeBreakDown (ic);
-  computeControlFlow (ebbi);
-  loops = createLoopRegions (ebbi);
-  computeDataFlow (ebbi);
-  killDeadCode (ebbi);
+  if (optimize.genconstprop)
+    {
+      computeControlFlow (ebbi);
+      loops = createLoopRegions (ebbi);
+      computeDataFlow (ebbi);
+      ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+      recomputeValinfos (ic, ebbi);
+      optimizeValinfo (ic);
+      freeeBBlockData (ebbi);
+      ebbi = iCodeBreakDown (ic);
+      computeControlFlow (ebbi);
+      loops = createLoopRegions (ebbi);
+      computeDataFlow (ebbi);
+      killDeadCode (ebbi);
+    }
 
   /* Split any live-ranges that became non-connected in dead code elimination. */
   change = 0;

@@ -2,6 +2,10 @@
 
 	* src/SDCCgenconstprop.cc:
 	  Improve proof-of-concept for generalized constant propagation analysis and optimization to the point hwere it almost passes regression tests.
+	* src/SDCCglobl.h,
+	  src/SDCCmain.c,
+	  src/SDCCopt.c:
+	  Introduce --nogenconstprop option.
 
 2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -17,6 +17,8 @@
 //
 // Generalized constant propagation.
 
+#define DEBUG_GCP
+
 #include <map>
 #include <set>
 #include <queue>
@@ -441,7 +443,7 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi)
       recompute_node (G, i, ebbi, todo, false, round >= max_rounds);
     }
 
-  // Refinement pass.
+  // Refinement backward pass.
   // TODO
 
   if(options.dump_graphs)

@@ -209,6 +209,7 @@ struct optimize
     int codeSpeed;
     int codeSize;
     int lospre;
+    int genconstprop;
     int allow_unsafe_read;
     int noStdLibCall;
   };
