@@ -3336,10 +3336,21 @@ eBBlockFromiCode (iCode *ic)
 
   offsetFoldGet (ebbi->bbOrder, ebbi->count);
 
-  /* lospre */
+  // Generalized constant propagation - do it here a first time before the first call to computeLiveRanges to ensure uninitalized variables are still recognized as such.
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
+  ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+  //recomputeValinfos (ic, ebbi);
+  //optimizeValinfo (ic);
+  freeeBBlockData (ebbi);
+  ebbi = iCodeBreakDown (ic);
+
+  // lospre
+  computeControlFlow (ebbi);
+  loops = createLoopRegions (ebbi);
+  computeDataFlow (ebbi);
+  killDeadCode (ebbi); // Ensure lospre doesn't resurrect dead code.
   computeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);
   while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
     optimizeCastCast (ebbi->bbOrder, ebbi->count);
@@ -3434,6 +3445,20 @@ eBBlockFromiCode (iCode *ic)
 
   /* miscellaneous optimizations */
   miscOpt (ebbi->bbOrder, ebbi->count);
+
+  // Generalized constant propagation - second time.
+  computeControlFlow (ebbi);
+  loops = createLoopRegions (ebbi);
+  computeDataFlow (ebbi);
+  ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+  recomputeValinfos (ic, ebbi);
+  //optimizeValinfo (ic);
+  freeeBBlockData (ebbi);
+  ebbi = iCodeBreakDown (ic);
+  computeControlFlow (ebbi);
+  loops = createLoopRegions (ebbi);
+  computeDataFlow (ebbi);
+  killDeadCode (ebbi);
 
   /* Split any live-ranges that became non-connected in dead code elimination. */
   change = 0;

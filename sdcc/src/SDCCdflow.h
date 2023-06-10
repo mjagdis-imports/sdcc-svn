@@ -25,6 +25,7 @@
 -------------------------------------------------------------------------*/
 
 #include "SDCCset.h"
+#include "SDCCicode.h"
 
 #ifndef SDCCDFLOW_H
 #define SDCCDFLOW_H 1
@@ -36,4 +37,18 @@ DEFSETFUNC (mergeInDefs);
 DEFSETFUNC (isDefAlive);
 iCode *usedInRemaining (operand *, iCode *);
 int usedBetweenPoints (operand *, iCode *, iCode *);
+
+struct valinfos;
+
+struct valinfo
+{
+	bool nothing, anything;
+	long long int min, max;
+};
+
+struct valinfo getOperandValinfo (const iCode *ic, operand *op);
+void recomputeValinfos (iCode *sic, ebbIndex *ebbi);
+void optimizeValinfo (iCode *sic);
+
 #endif
+

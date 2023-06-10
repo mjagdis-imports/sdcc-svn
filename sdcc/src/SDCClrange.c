@@ -1101,8 +1101,9 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
 
   for(sym = setFirstItem (candidates); sym; sym = setNextItem (candidates))
     {
-      // printf("Looking at %s, %d definitions\n", sym->name, bitVectnBitsOn (sym->defs));
-
+#if 0
+      printf("Looking at %s, %d definitions\n", sym->name, bitVectnBitsOn (sym->defs));
+#endif
       set *defs = 0;
       set *uses = 0;
       bool skip_uses = false;
@@ -1134,9 +1135,9 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
 
           wassert (defs);
           wassert (setFirstItem (defs));
-
-          // printf("Looking at def at %d now\n", ((iCode *)(setFirstItem (defs)))->key);
-
+#if 0
+          printf("Looking at def at %d now\n", ((iCode *)(setFirstItem (defs)))->key);
+#endif
           if (!bitVectBitValue (((iCode *)(setFirstItem (defs)))->rlive, sym->key))
             {
               werror (W_INTERNAL_ERROR, __FILE__, __LINE__, "Variable is not alive at one of its definitions");
@@ -1152,7 +1153,9 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
               setFirstItem (defs);
               for(iCode *ic = setNextItem (defs); ic; ic = setNextItem (defs))
                 {
-                  // printf("Looking at other def at %d now\n", ic->key);
+#if 0
+                  printf("Looking at other def at %d now\n", ic->key);
+#endif
                   set *visited2 = 0;
                   set *intersection = 0;
                   visit (&visited2, ic, sym->key);
@@ -1174,9 +1177,9 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
           if (newdefs && defs)
             {
               operand *tmpop = newiTempOperand (operandType (IC_RESULT ((iCode *)(setFirstItem (newdefs)))), TRUE);
-
-              // printf("Splitting %s from %s, using def at %d, op %d\n", OP_SYMBOL_CONST(tmpop)->name, sym->name, ((iCode *)(setFirstItem (newdefs)))->key, ((iCode *)(setFirstItem (newdefs)))->op);
-
+#if 0
+              printf("Splitting %s from %s, using def at %d, op %d\n", OP_SYMBOL_CONST(tmpop)->name, sym->name, ((iCode *)(setFirstItem (newdefs)))->key, ((iCode *)(setFirstItem (newdefs)))->op);
+#endif
               for (iCode *ic = setFirstItem (visited); ic; ic = setNextItem (visited))
                 {
                   if (IC_LEFT (ic) && IS_ITEMP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic)) == sym)
