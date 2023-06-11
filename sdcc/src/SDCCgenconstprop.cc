@@ -109,7 +109,13 @@ getTypeValinfo (sym_link *type)
   v.nothing = false;
   v.min = v.max = 0;
 
-  if (IS_UNSIGNED (type) && bitsForType (type) < 64)
+  if (IS_BOOL (type))
+    {
+      v.anything = false;
+      v.min = 0;
+      v.max = 1;
+    }
+  else if (IS_UNSIGNED (type) && bitsForType (type) < 64)
     {
       v.anything = false;
       v.min = 0;
@@ -255,15 +261,15 @@ static void
 valinfoPlus (struct valinfo *result, const struct valinfo left, const struct valinfo right)
 {
   if (!left.anything && !right.anything &&
-    llabs(left.min) > -1000 && llabs(right.min) > -1000 &&
-    llabs(left.max) < +1000 && llabs(right.max) < +1000)
+    left.min > LLONG_MIN / 2 && right.min > LLONG_MIN / 2 &&
+    left.max < LLONG_MAX / 2 && right.max < LLONG_MAX / 2)
     {
-      result->anything = false;
       result->nothing = left.nothing || right.nothing;
       auto min = left.min + right.min;
       auto max = left.max + right.max;
-      if (min >= result->min && max <= result->max)
+      if (result->anything || min >= result->min && max <= result->max)
         {
+          result->anything = false;
           result->min = min;
           result->max = max;
         }
@@ -274,15 +280,15 @@ static void
 valinfoMinus (struct valinfo *result, const struct valinfo left, const struct valinfo right)
 {
   if (!left.anything && !right.anything &&
-    llabs(left.min) > -1000 && llabs(right.min) > -1000 &&
-    llabs(left.max) < +1000 && llabs(right.max) < +1000)
+    left.min > LLONG_MIN / 2 && right.min > LLONG_MIN / 2 &&
+    left.max < LLONG_MAX / 2 && right.max < LLONG_MAX / 2)
     {
-      result->anything = false;
       result->nothing = left.nothing || right.nothing;
       auto min = left.min - right.max;
       auto max = left.max - right.min;
-      if (min >= result->min && max <= result->max)
+      if (result->anything || min >= result->min && max <= result->max)
         {
+          result->anything = false;
           result->min = min;
           result->max = max;
         }
@@ -325,8 +331,10 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
   *result = getTypeValinfo (targettype);
   if (right.nothing)
     result->nothing = true;
-  else if (!right.anything && !result->anything && right.min >= result->min && right.max <= result->max)
+  else if (!right.anything && !IS_FLOAT (targettype) && 
+    (!result->anything && right.min >= result->min && right.max <= result->max || result->anything))
     {
+      result->anything = false;
       result->min = right.min;
       result->max = right.max;
     }
@@ -452,6 +460,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       else if (ic->op == '<' || ic->op == GE_OP)
         {
           resultvalinfo.nothing = leftvalinfo.nothing || rightvalinfo.nothing;
+          resultvalinfo.anything = false;
           resultvalinfo.min = 0;
           resultvalinfo.max = 1;
           if (!leftvalinfo.anything && !rightvalinfo.anything)
@@ -465,6 +474,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       else if (ic->op == '>' || ic->op == LE_OP)
         {
           resultvalinfo.nothing = leftvalinfo.nothing || rightvalinfo.nothing;
+          resultvalinfo.anything = false;
           resultvalinfo.min = 0;
           resultvalinfo.max = 1;
           if (!leftvalinfo.anything && !rightvalinfo.anything)
@@ -475,14 +485,18 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                 resultvalinfo.min = resultvalinfo.max = (ic->op == LE_OP);
             }
         }
-      else if ((ic->op == NE_OP || ic->op == EQ_OP) && !leftvalinfo.anything && !rightvalinfo.anything &&
-        leftvalinfo.min == leftvalinfo.max && rightvalinfo.min == rightvalinfo.max)
+      else if (ic->op == NE_OP || ic->op == EQ_OP)
         {
-          bool one = (leftvalinfo.min == rightvalinfo.min) ^ (ic->op == NE_OP);
-          resultvalinfo.anything = false;
           resultvalinfo.nothing = leftvalinfo.nothing || rightvalinfo.nothing;
-          resultvalinfo.min = one;
-          resultvalinfo.max = one;
+          resultvalinfo.anything = false;
+          resultvalinfo.min = 0;
+          resultvalinfo.max = 1;
+          if (!leftvalinfo.anything && !rightvalinfo.anything && leftvalinfo.min == leftvalinfo.max && rightvalinfo.min == rightvalinfo.max)
+            {
+              bool one = (leftvalinfo.min == rightvalinfo.min) ^ (ic->op == NE_OP);
+              resultvalinfo.min = one;
+              resultvalinfo.max = one;
+            }
         }
       else if (ic->op == '+')
         valinfoPlus (&resultvalinfo, leftvalinfo, rightvalinfo);
