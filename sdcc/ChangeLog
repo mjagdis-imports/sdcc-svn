@@ -1,5 +1,13 @@
 2023-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h:
+	  Basic generalized constant propagation operation narrowing optimization.
+
+2023-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCgenconstprop.cc:
 	  Improve generalized constant propagation analysis.
 

@@ -37,12 +37,7 @@
 
 extern "C"
 {
-#include "SDCCsymt.h"
-#include "SDCCicode.h"
-#include "SDCCBBlock.h"
-#include "SDCCdflow.h"
-#include "SDCClrange.h"
-#include "SDCCy.h"
+#include "common.h"
 }
 
 static bool
@@ -115,13 +110,13 @@ getTypeValinfo (sym_link *type)
       v.min = 0;
       v.max = 1;
     }
-  else if (IS_UNSIGNED (type) && bitsForType (type) < 64)
+  else if (IS_INTEGRAL (type) && IS_UNSIGNED (type) && bitsForType (type) < 64)
     {
       v.anything = false;
       v.min = 0;
       v.max = 0xffffffffffffffffull >> (64 - bitsForType (type));
     }
-  else if (!IS_UNSIGNED (type) && bitsForType (type) < 63)
+  else if (IS_INTEGRAL (type) && !IS_UNSIGNED (type) && bitsForType (type) < 63)
     {
       v.anything = false;
       v.max = 0x7fffffffffffffffull >> (64 - bitsForType (type));
@@ -131,7 +126,7 @@ getTypeValinfo (sym_link *type)
 }
 
 struct valinfo
-getOperandValinfo (const iCode *ic, operand *op)
+getOperandValinfo (const iCode *ic, const operand *op)
 {
   wassert (ic);
 
@@ -145,7 +140,7 @@ getOperandValinfo (const iCode *ic, operand *op)
 
   sym_link *type = operandType (op);
 
-  if (IS_OP_LITERAL (op) && !IS_FLOAT (type) && bitsForType (type) < 64) // Todo: More exact check than this bits thing?
+  if (IS_OP_LITERAL (op) && IS_INTEGRAL (type) && bitsForType (type) < 64) // Todo: More exact check than this bits thing?
     {
       long long litval = operandLitValueUll (op);
       v.anything = false;
@@ -258,8 +253,9 @@ dump_cfg_genconstprop (const cfg_t &cfg)
 }
 
 static void
-valinfoPlus (struct valinfo *result, const struct valinfo left, const struct valinfo right)
+valinfoPlus (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
+  // todo: rewrite using ckd_add when we can assume host compiler has c2x support!
   if (!left.anything && !right.anything &&
     left.min > LLONG_MIN / 2 && right.min > LLONG_MIN / 2 &&
     left.max < LLONG_MAX / 2 && right.max < LLONG_MAX / 2)
@@ -277,8 +273,9 @@ valinfoPlus (struct valinfo *result, const struct valinfo left, const struct val
 }
 
 static void
-valinfoMinus (struct valinfo *result, const struct valinfo left, const struct valinfo right)
+valinfoMinus (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
+  // todo: rewrite using ckd_sub when we can assume host compiler has c2x support!
   if (!left.anything && !right.anything &&
     left.min > LLONG_MIN / 2 && right.min > LLONG_MIN / 2 &&
     left.max < LLONG_MAX / 2 && right.max < LLONG_MAX / 2)
@@ -296,7 +293,7 @@ valinfoMinus (struct valinfo *result, const struct valinfo left, const struct va
 }
 
 static void
-valinfoAnd (struct valinfo *result, const struct valinfo left, const struct valinfo right)
+valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
     left.min >= 0 && right.min >= 0)
@@ -311,7 +308,7 @@ valinfoAnd (struct valinfo *result, const struct valinfo left, const struct vali
 }
 
 static void
-valinfoRight (struct valinfo *result, const struct valinfo left, const struct valinfo right)
+valinfoRight (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
     left.min >= 0 && right.min >= 0 && right.min <= 60)
@@ -326,12 +323,12 @@ valinfoRight (struct valinfo *result, const struct valinfo left, const struct va
 }
 
 static void
-valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo right)
+valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right)
 {
   *result = getTypeValinfo (targettype);
   if (right.nothing)
     result->nothing = true;
-  else if (!right.anything && !IS_FLOAT (targettype) && 
+  else if (!right.anything && IS_INTEGRAL (targettype) && 
     (!result->anything && right.min >= result->min && right.max <= result->max || result->anything))
     {
       result->anything = false;
@@ -394,11 +391,11 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               todo.second.insert (boost::target(*out, G));
             }
         }
-      if (ic->op == IFX && bitVectnBitsOn (OP_DEFS (IC_COND (ic))) == 1) // Propagate some info on the condition into the branches.
+      if (ic->op == IFX && bitVectnBitsOn (OP_DEFS (ic->left)) == 1) // Propagate some info on the condition into the branches.
         {
-          iCode *cic = (iCode *)hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (IC_COND (ic))));
+          iCode *cic = (iCode *)hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (ic->left)));
           struct valinfo v = getOperandValinfo (ic, cic->left);
-          if (cic->op == '>' && IS_ITEMP (cic->left) && !IS_FLOAT (operandType (cic->left)) &&
+          if (cic->op == '>' && IS_ITEMP (cic->left) && IS_INTEGRAL (operandType (cic->left)) &&
             IS_OP_LITERAL (IC_RIGHT (cic)) && !v.anything && !v.nothing && operandLitValueUll(IC_RIGHT (cic)) < +1000)
             {
               long long litval = operandLitValueUll (IC_RIGHT (cic));
@@ -415,7 +412,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                 else if (G[boost::target(*out, G)].ic->key == key_false)
                   G[*out].map[cic->left->key] = v_false;
             }
-          if (cic->op == '<' && IS_ITEMP (cic->left) && !IS_FLOAT (operandType (cic->left)) &&
+          if (cic->op == '<' && IS_ITEMP (cic->left) && IS_INTEGRAL (operandType (cic->left)) &&
             IS_OP_LITERAL (IC_RIGHT (cic)) && !v.anything && !v.nothing && operandLitValueUll(IC_RIGHT (cic)) < 0xffffffff)
             {
               long long litval = operandLitValueUll (IC_RIGHT (cic));
@@ -568,12 +565,12 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi)
     dump_cfg_genconstprop(G);
 }
 
-// Do optimizations based on valinfos.
-void
-optimizeValinfo (iCode *sic)
+// Try to replace operands by constants
+static void
+optimizeValinfoConst (iCode *sic)
 {
 #ifdef DEBUG_GCP_OPT
-  std::cout << "optimizeValifo at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
+  std::cout << "optimizeValifoConst at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
 #endif
   for (iCode *ic = sic; ic; ic = ic->next)
     {
@@ -623,5 +620,202 @@ optimizeValinfo (iCode *sic)
           
         }
     }
+}
+
+static void
+optimizeNarrowOpCandidate (struct valinfo *v, operand *op)
+{
+  wassert (v && op);
+  if (!IS_INTEGRAL (operandType (op)))
+    v->anything = true;
+  else if (IS_OP_LITERAL (op))
+    {
+      long long litval = operandLitValueUll (op);
+      v->anything = litval < -100000 || litval > 100000;
+      v->min = litval;
+      v->max = litval;
+    }
+  else if (bitVectnBitsOn (OP_USES (op)) != 1)
+    v->anything = true;
+  else
+    {
+      bitVect *defs = bitVectCopy (OP_DEFS (op));
+      for (int key = bitVectFirstBit (defs); bitVectnBitsOn (defs); bitVectUnSetBit (defs, key), key = bitVectFirstBit (defs))
+        {
+          iCode *dic = (iCode *)hTabItemWithKey (iCodehTab, key);
+          wassert (dic && dic->resultvalinfo);
+          valinfo_union (v, *dic->resultvalinfo);
+        }
+      freeBitVect (defs);
+    }
+}
+
+static void
+optimizeNarrowResultCandidate (struct valinfo *v, operand *op)
+{
+  wassert (v && op);
+  if (!IS_INTEGRAL (operandType (op)))
+    v->anything = true;
+  else if (bitVectnBitsOn (OP_DEFS (op)) != 1)
+    v->anything = true;
+  else
+    {
+      bitVect *uses = bitVectCopy (OP_USES (op));
+      for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
+        {
+          iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
+          if (!uic)
+            bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
+          else if (uic->op == CAST)
+            ;
+          else if (uic->op == EQ_OP) // todo: more
+            {
+              const operand *otherop = isOperandEqual (op, uic->left) ? uic->right: uic->left;
+              valinfo_union (v, getOperandValinfo (uic, otherop));
+            }
+          else
+            {
+              v->anything = true;
+              break;
+            }
+        }
+      freeBitVect (uses);
+    }
+}
+
+static void
+reTypeOp (operand *op, sym_link *newtype)
+{
+  if (IS_OP_LITERAL (op))
+    {
+      op->svt.valOperand = valCastLiteral (newtype, operandLitValue (op), operandLitValueUll (op));
+      return;
+    }
+  bitVect *uses = bitVectCopy (OP_USES (op));
+  for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
+    {std::cout << "Replace def at " << key << "\n";
+      iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
+      wassert (uic);
+      if (isOperandEqual (op, uic->left))
+        setOperandType (uic->left, newtype);
+      if (isOperandEqual (op, uic->right))
+        setOperandType (uic->right, newtype);
+    }
+  freeBitVect (uses);
+  bitVect *defs = bitVectCopy (OP_DEFS (op));
+  for (int key = bitVectFirstBit (defs); bitVectnBitsOn (defs); bitVectUnSetBit (defs, key), key = bitVectFirstBit (defs))
+    {std::cout << "Replace use at " << key << "\n";
+      iCode *dic = (iCode *)hTabItemWithKey (iCodehTab, key);
+      wassert (dic && dic->result && isOperandEqual (op, dic->result));
+      setOperandType (dic->result, newtype);
+    }
+  freeBitVect (defs);
+}
+
+// todo: Remove this, use stdc_bit_width instead once we can assume C2X support on host compiler
+unsigned int my_stdc_bit_width (unsigned long long value)
+{
+  unsigned int width = 0;
+  for (int i = 0; i < ULLONG_WIDTH; i++)
+    if (value & (1ull << i))
+      width = (i + 1);
+  return width;
+}
+
+static void
+optimizeBinaryOpWithoutResult (iCode *ic)
+{
+  // todo
+}
+
+static void
+optimizeBinaryOpWithResult (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  operand *result = IC_RESULT (ic);
+
+  if (!IS_INTEGRAL (operandType (result)) || !IS_ITEMP (result) || bitVectnBitsOn (OP_DEFS (result)) != 1 || !ic->resultvalinfo)
+    return;
+
+  if (!IS_ITEMP (left) && !IS_OP_LITERAL (left) || !IS_ITEMP (right) && !IS_OP_LITERAL (right))
+    return;
+
+  struct valinfo leftv = getOperandValinfo (ic, left);
+  struct valinfo rightv = getOperandValinfo (ic, right);
+  struct valinfo resultv = *ic->resultvalinfo;
+  
+  optimizeNarrowOpCandidate (&leftv, left);
+  optimizeNarrowOpCandidate (&rightv, right);
+  optimizeNarrowResultCandidate (&resultv, result);
+
+  valinfo_union (&resultv, leftv);
+  valinfo_union (&resultv, rightv);
+
+  if (resultv.anything || resultv.min < 0) // Todo: Relax this by also using signed _BitInt where doing so makes sense.
+    return;
+
+  unsigned int width = my_stdc_bit_width (resultv.max);
+  width = ((width + 7) & (-8)); // Round up to multiple of 8.
+  if (width >= bitsForType (operandType (result)))
+    return;
+  if (width > port->s.bitint_maxwidth)
+    return;
+
+#ifdef DEBUG_GCP_OPT
+  std::cout << "Replacing operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+#endif
+
+  sym_link *newtype = newBitIntLink (width);
+  SPEC_USIGN (newtype) = true;
+
+  reTypeOp (left, newtype);
+  reTypeOp (right, newtype);
+  reTypeOp (result, newtype);
+
+  // Now also retype the other operand at some uses of the result.
+  bitVect *uses = bitVectCopy (OP_USES (result));
+  for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
+    {
+      iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
+      wassert (uic);
+      if (uic->op == CAST)
+        ;
+      else if (uic->op == EQ_OP || uic->op == NE_OP ||
+        uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
+        {
+        std::cout << "Replace other at " << ic->key << "\n";
+          if (!isOperandEqual (result, uic->left))
+            reTypeOp (uic->left, newtype);
+          if (!isOperandEqual (result, uic->right))
+            reTypeOp (uic->right, newtype);
+        }
+      else
+        wassert (0);
+    }
+}
+
+// Try to narrow operations
+static void
+optimizeValinfoNarrow (iCode *sic)
+{
+#ifdef DEBUG_GCP_OPT
+  std::cout << "optimizeValifoNarrow at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
+#endif
+  for (iCode *ic = sic; ic; ic = ic->next)
+    { 
+      if (ic->op == '<' || ic->op == '>' || ic->op == LE_OP || ic->op == GE_OP || ic->op == EQ_OP || ic->op == NE_OP)
+        optimizeBinaryOpWithoutResult (ic);
+      else if (ic->op == '+' || ic->op == '-' || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND)
+        optimizeBinaryOpWithResult (ic);
+    }
+}
+
+// Do machine-independent optimizations based on valinfos.
+void
+optimizeValinfo (iCode *sic)
+{
+  optimizeValinfoConst (sic);
+  optimizeValinfoNarrow (sic);
 }
 

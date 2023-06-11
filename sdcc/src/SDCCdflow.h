@@ -46,7 +46,7 @@ struct valinfo
 	long long int min, max;
 };
 
-struct valinfo getOperandValinfo (const iCode *ic, operand *op);
+struct valinfo getOperandValinfo (const iCode *ic, const operand *op);
 void recomputeValinfos (iCode *sic, ebbIndex *ebbi);
 void optimizeValinfo (iCode *sic);
 
