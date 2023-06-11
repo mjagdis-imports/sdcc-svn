@@ -572,7 +572,8 @@ optimizeValinfo (iCode *sic)
           operand *result = IC_RESULT (ic);
           const valinfo vleft = getOperandValinfo (ic, left);
           const valinfo vright = getOperandValinfo (ic, right);
-          if (ic->resultvalinfo && !ic->resultvalinfo->anything && ic->resultvalinfo->min == ic->resultvalinfo->max)
+          if (ic->resultvalinfo && !ic->resultvalinfo->anything && ic->resultvalinfo->min == ic->resultvalinfo->max &&
+            !(ic->op == '=' && IS_OP_LITERAL (right)))
             {
               const valinfo &vresult = *ic->resultvalinfo;
 #ifdef DEBUG_GCP_OPT
