@@ -1,3 +1,8 @@
+2023-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/stdckdint.h:
+	  Work around an issue in inlining _Generic results to mitigate strtotul code size regression.
+
 2023-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCicode.h:
