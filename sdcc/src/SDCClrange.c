@@ -1108,21 +1108,24 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
       set *uses = 0;
       bool skip_uses = false;
 
-      // Gather definitions nad uses.
+      // Gather definitions and uses.
       for (int i = 0; i < sym->defs->size; i++)
         {
           if (bitVectBitValue (sym->defs, i))
             {
               iCode *dic;
               if (dic = hTabItemWithKey (iCodehTab, i))
-                addSet (&defs, dic);
+                {
+                  wassert (dic->result && OP_SYMBOL (dic->result) == sym);
+                  addSet (&defs, dic);
+                }
               else // Can happen if one of the definitions was in an ebblock, that due to optimizations is no longer reachable, and thus its ics are not in current iCodehTab.
                 bitVectUnSetBit (sym->defs, i); // This might not be the right place to do it, but better here than nowhere.
             }
           if (bitVectBitValue (sym->uses, i))
             {
               iCode *uic;
-              if(uic = hTabItemWithKey (iCodehTab, i))
+              if (uic = hTabItemWithKey (iCodehTab, i))
                 addSet (&uses, uic);
               else
                 bitVectUnSetBit (sym->uses, i); // This might not be the right place to do it, but better here than nowhere.
@@ -1137,7 +1140,7 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
           wassert (defs);
           wassert (setFirstItem (defs));
 #if 0
-          printf("Looking at def at %d now\n", ((iCode *)(setFirstItem (defs)))->key);
+          printf("Looking at def of %s at %d now\n", OP_SYMBOL (((iCode *)(setFirstItem (defs)))->result)->name,  ((iCode *)(setFirstItem (defs)))->key);
 #endif
           if (!bitVectBitValue (((iCode *)(setFirstItem (defs)))->rlive, sym->key))
             {
@@ -1154,8 +1157,8 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
               setFirstItem (defs);
               for(iCode *ic = setNextItem (defs); ic; ic = setNextItem (defs))
                 {
-#if 0 
-                  printf("Looking at other def at %d now\n", ic->key);
+#if 0
+                  printf("Looking at other def of %s at %d now\n", OP_SYMBOL(ic->result)->name, ic->key);
 #endif
                   set *visited2 = 0;
                   set *intersection = 0;
@@ -1188,7 +1191,7 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
                   if (IC_RIGHT (ic) && IS_ITEMP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic)) == sym && (!ic->prev || isinSet (visited, ic->prev)))
                     IC_RIGHT (ic) = operandFromOperand (tmpop);
                   if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym && !POINTER_SET(ic) &&
-                    ic->next && (!isinSet (visited, ic->next) || isinSet (defs, ic->next) || isinSet (newdefs, ic->next)))
+                    ic->next && (!isinSet (visited, ic->next) || isinSet (newdefs, ic->next)))
                     continue;
                   if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym)
                     {
