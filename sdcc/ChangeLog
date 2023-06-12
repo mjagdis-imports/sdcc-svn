@@ -1,3 +1,8 @@
+2023-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCClrange.c:
+	  Fix a corner case in live-range separation that would hang SDCC on compiling the pic14 library (and result in some missed optimizations for other ports).
+
 2023-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/include/stdckdint.h:
