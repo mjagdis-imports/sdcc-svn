@@ -1108,20 +1108,24 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
       set *uses = 0;
       bool skip_uses = false;
 
+      // Gather definitions and uses.
       for (int i = 0; i < sym->defs->size; i++)
         {
           if (bitVectBitValue (sym->defs, i))
             {
               iCode *dic;
               if (dic = hTabItemWithKey (iCodehTab, i))
-                addSet (&defs, dic);
+                {
+                  wassert (dic->result && OP_SYMBOL (dic->result) == sym);
+                  addSet (&defs, dic);
+                }
               else // Can happen if one of the definitions was in an ebblock, that due to optimizations is no longer reachable, and thus its ics are not in current iCodehTab.
                 bitVectUnSetBit (sym->defs, i); // This might not be the right place to do it, but better here than nowhere.
             }
           if (bitVectBitValue (sym->uses, i))
             {
               iCode *uic;
-              if(uic = hTabItemWithKey (iCodehTab, i))
+              if (uic = hTabItemWithKey (iCodehTab, i))
                 addSet (&uses, uic);
               else
                 bitVectUnSetBit (sym->uses, i); // This might not be the right place to do it, but better here than nowhere.
@@ -1185,8 +1189,9 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
                   if (IC_LEFT (ic) && IS_ITEMP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic)) == sym && (!ic->prev || isinSet (visited, ic->prev)))
                     IC_LEFT (ic) = operandFromOperand (tmpop);
                   if (IC_RIGHT (ic) && IS_ITEMP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic)) == sym && (!ic->prev || isinSet (visited, ic->prev)))
-                      IC_RIGHT (ic) = operandFromOperand (tmpop);
-                  if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym && !POINTER_SET(ic) && ic->next && !isinSet (visited, ic->next))
+                    IC_RIGHT (ic) = operandFromOperand (tmpop);
+                  if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym && !POINTER_SET(ic) &&
+                    ic->next && (!isinSet (visited, ic->next) || isinSet (newdefs, ic->next)))
                     continue;
                   if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym)
                     {

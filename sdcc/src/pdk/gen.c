@@ -3233,7 +3233,7 @@ genAnd (const iCode *ic, iCode *ifx)
               emit2 ("and", "a, %s", aopGet (right->aop, i));
               cost (1, 1);
             }
-          if (TARGET_IS_PDK13 && IC_FALSE (ic)) // pdk13 does not have cneqsn
+          if (TARGET_IS_PDK13 && IC_FALSE (ifx)) // pdk13 does not have cneqsn
             {
               symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
               emit2 ("ceqsn", "a, #0x00");
