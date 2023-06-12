@@ -39,12 +39,14 @@ struct _dumpFiles dumpFiles[] = {
   {DUMP_LOOP, ".dumploop", NULL},
   {DUMP_LOOPG, ".dumploopg", NULL},
   {DUMP_LOOPD, ".dumploopd", NULL},
+  {DUMP_LOSPRE, ".dumplospre", NULL},
+  {DUMP_GENCONSTPROP, ".dumpgenconstprop", NULL},
   {DUMP_RANGE, ".dumprange", NULL},
   {DUMP_PACK, ".dumppack", NULL},
   {DUMP_RASSGN, ".dumprassgn", NULL},
   {DUMP_LRANGE, ".dumplrange", NULL},
-  {DUMP_LOSPRE, ".dumplospre", NULL},
-  {DUMP_CUSTOM, ".dumpcustom", NULL},
+  {DUMP_CUSTOM0, ".dumpcustom0", NULL},
+  {DUMP_CUSTOM1, ".dumpcustom1", NULL},
   {0, NULL, NULL}
 };
 

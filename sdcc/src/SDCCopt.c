@@ -3555,6 +3555,8 @@ eBBlockFromiCode (iCode *ic)
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
       killDeadCode (ebbi);
+      if (options.dump_i_code)
+        dumpEbbsToFileExt (DUMP_GENCONSTPROP, ebbi);
     }
 
   /* Split any live-ranges that became non-connected in dead code elimination. */
