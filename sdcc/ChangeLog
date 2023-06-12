@@ -2,6 +2,8 @@
 
 	* src/SDCClrange.c:
 	  Fix a corner case in live-range separation that would hang SDCC on compiling the pic14 library (and result in some missed optimizations for other ports).
+	* src/pdk/gen.c:
+	  Fix a pdk codegen issue that could result in invalid asm for pdk13 on bitwise and in if condition.
 
 2023-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
