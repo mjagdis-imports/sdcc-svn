@@ -1216,6 +1216,9 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
               // Eliminate uses of undefined variables.
               for (iCode *ic = setFirstItem (undefined_uses); ic; ic = setNextItem (undefined_uses))
                 {
+#if 0
+                  printf("Removing use of undefined variable %s at ic %d\n", sym->name, ic->key);
+#endif
                   iCode *prev = ic->prev;
                   iCode *next = ic->next;
                   if (prev && next)
