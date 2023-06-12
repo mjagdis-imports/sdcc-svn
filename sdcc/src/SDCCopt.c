@@ -978,12 +978,15 @@ convilong (iCode *ic, eBBlock *ebp)
   fprintf (stderr, "op %d\n", op);
   return;
 found:
+  // Update left and right - they might have changed due to inserted casts.
+  left = IC_LEFT (ic);
+  right = IC_RIGHT (ic);
   remiCodeFromeBBlock (ebp, ic);
 
   if (IS_SYMOP (left))
-      bitVectUnSetBit (OP_USES (left), ic->key);
+    bitVectUnSetBit (OP_USES (left), ic->key);
   if (IS_SYMOP (right))
-      bitVectUnSetBit (OP_USES (right), ic->key);
+    bitVectUnSetBit (OP_USES (right), ic->key);
 
   /* if int & long support routines NOT compiled as reentrant */
   if (!options.intlong_rent)
@@ -1004,7 +1007,7 @@ found:
       newic->filename = filename;
       newic->lineno = lineno;
       if (IS_SYMOP (left))
-          OP_USES (left) = bitVectSetBit (OP_USES (left), newic->key);
+        OP_USES (left) = bitVectSetBit (OP_USES (left), newic->key);
 
       /* second one */
       if (IS_REGPARM (FUNC_ARGS(func->type)->next->etype))
@@ -1022,7 +1025,7 @@ found:
       newic->filename = filename;
       newic->lineno = lineno;
       if (IS_SYMOP (right))
-          OP_USES (right) = bitVectSetBit (OP_USES (right), newic->key);
+        OP_USES (right) = bitVectSetBit (OP_USES (right), newic->key);
     }
   else
     {
@@ -1045,7 +1048,7 @@ found:
       newic->filename = filename;
       newic->lineno = lineno;
       if (IS_SYMOP (right))
-          OP_USES (right) = bitVectSetBit (OP_USES (right), newic->key);
+        OP_USES (right) = bitVectSetBit (OP_USES (right), newic->key);
 
       /* insert push left */
       if (IS_REGPARM (FUNC_ARGS(func->type)->etype))
@@ -1065,7 +1068,7 @@ found:
       newic->filename = filename;
       newic->lineno = lineno;
       if (IS_SYMOP (left))
-          OP_USES (left) = bitVectSetBit (OP_USES (left), newic->key);
+        OP_USES (left) = bitVectSetBit (OP_USES (left), newic->key);
     }
 
   /* for the result */
