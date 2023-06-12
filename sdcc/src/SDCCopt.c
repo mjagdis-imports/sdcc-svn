@@ -1180,7 +1180,7 @@ convert:
   /* Reverse parameters. */
   for (icc = ic; icc->op != CALL; icc = icc->next)
     {
-      if(icc->next->op != CALL)
+      if (icc->next->op != CALL)
         icc->prev = icc->next;
       else
         icc->prev = icp;
@@ -1193,7 +1193,7 @@ convert:
     }
   for(; icc != icp; ico = icc, icc = icc->prev)
     {
-      if(icc->op != CALL)
+      if (icc->op != CALL)
         icc->next = ico;
     }
 }
@@ -3536,6 +3536,7 @@ eBBlockFromiCode (iCode *ic)
      this at this point since I want all the
      operations to be as they are for optimizations */
   convertToFcall (ebbi->bbOrder, ebbi->count);
+  adjustIChain (ebbi->bbOrder, ebbi->count); // Fix ebb->sch pointers potentially messed up by convertToFcall.
 
   /* miscellaneous optimizations */
   miscOpt (ebbi->bbOrder, ebbi->count);
