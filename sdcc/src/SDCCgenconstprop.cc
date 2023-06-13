@@ -293,6 +293,17 @@ valinfoMinus (struct valinfo *result, const struct valinfo &left, const struct v
 }
 
 static void
+valinfoOr (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+{
+  if (!left.anything && !right.anything &&
+    left.min >= 0 && right.min >= 0 && !result->anything)
+    {
+      result->nothing = left.nothing || right.nothing;
+      result->min = std::max (left.max, right.max);
+    }
+}
+
+static void
 valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
@@ -441,11 +452,22 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       if (localchange)
         std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
 #endif
-// todo: handle more operations: !, |, ^.
+// todo: handle more operations: |, ^.
       if (!localchange) // Input didn't change. No need to recompute result.
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
         ;
+      else if (ic->op == '!')
+        {
+          resultvalinfo.nothing = leftvalinfo.nothing;
+          resultvalinfo.anything = false;
+          resultvalinfo.min = 0;
+          resultvalinfo.max = 1;
+          if (!leftvalinfo.anything && (leftvalinfo.min > 0 || leftvalinfo.max < 0))
+            resultvalinfo.max = 0;
+          else if (!leftvalinfo.anything && leftvalinfo.min == 0 && leftvalinfo.max == 0)
+            resultvalinfo.min = 1;
+        }
       else if (ic-> op == UNARYMINUS)
         {
           struct valinfo z;
@@ -499,6 +521,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoPlus (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '-')
         valinfoMinus (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == '|')
+        valinfoOr (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == BITWISEAND)
         valinfoAnd (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == RIGHT_OP)
@@ -673,7 +697,8 @@ optimizeNarrowResultCandidate (struct valinfo *v, operand *op)
             bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
           else if (uic->op == CAST)
             ;
-          else if (uic->op == EQ_OP || uic->op == NE_OP) // todo: more
+          else if (uic->op == EQ_OP || uic->op == NE_OP ||
+            uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
             {
               const operand *otherop = isOperandEqual (op, uic->left) ? uic->right: uic->left;
               valinfo_union (v, getOperandValinfo (uic, otherop));

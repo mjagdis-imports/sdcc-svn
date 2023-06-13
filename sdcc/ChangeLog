@@ -1,7 +1,7 @@
 2023-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:
-	  Fixes and improvements for generalized constant propagation optimization.
+	  Fixes and improvements for generalized constant propagation optimization and analysis.
 
 2023-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
