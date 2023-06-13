@@ -104,7 +104,7 @@ getTypeValinfo (sym_link *type)
   v.nothing = false;
   v.min = v.max = 0;
 
-  if (IS_BOOL (type))
+  if (IS_BOOLEAN (type))
     {
       v.anything = false;
       v.min = 0;
@@ -441,7 +441,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       if (localchange)
         std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
 #endif
-
+// todo: handle more operations: !, |, ^.
       if (!localchange) // Input didn't change. No need to recompute result.
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
@@ -779,7 +779,7 @@ optimizeBinaryOpWithResult (iCode *ic)
     {
       iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
       wassert (uic);
-      if (uic->op == CAST)
+      if (uic->op == CAST) // todo: allow more: ifx, !.
         ;
       else if (uic->op == EQ_OP || uic->op == NE_OP ||
         uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
