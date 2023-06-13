@@ -2104,6 +2104,7 @@ killDeadCode (ebbIndex * ebbi)
                     {
                       if (SPIL_LOC (IC_RESULT (ic)))
                         {
+                          bitVectUnSetBit (OP_DEFS (ic->result), ic->key);
                           IC_RESULT (ic) = newiTempFromOp (IC_RESULT (ic));
                           SPIL_LOC (IC_RESULT (ic)) = NULL;
                         }
@@ -3425,27 +3426,29 @@ eBBlockFromiCode (iCode *ic)
 
   offsetFoldGet (ebbi->bbOrder, ebbi->count);
 
+  computeControlFlow (ebbi);
+  loops = createLoopRegions (ebbi);
+  computeDataFlow (ebbi);
+  computeLiveRanges (ebbi->bbOrder, ebbi->count, true);
+
   // Generalized constant propagation - do it here a first time before the first call to computeLiveRanges to ensure uninitalized variables are still recognized as such.
   if (optimize.genconstprop)
     {
-      computeControlFlow (ebbi);
-      loops = createLoopRegions (ebbi);
-      computeDataFlow (ebbi);
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
       recomputeValinfos (ic, ebbi);
       optimizeValinfo (ic);
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
+      computeControlFlow (ebbi);
+      loops = createLoopRegions (ebbi);
+      computeDataFlow (ebbi);
     }
 
   // lospre
-  computeControlFlow (ebbi);
-  loops = createLoopRegions (ebbi);
-  computeDataFlow (ebbi);
-  killDeadCode (ebbi); // Ensure lospre doesn't resurrect dead code.
-  computeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);
+  recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
   while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
     optimizeCastCast (ebbi->bbOrder, ebbi->count);
+  killDeadCode (ebbi); // Ensure lospre doesn't resurrect dead code.
   adjustIChain (ebbi->bbOrder, ebbi->count);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
   shortenLiveRanges (ic, ebbi);
@@ -3476,9 +3479,7 @@ eBBlockFromiCode (iCode *ic)
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
-
   killDeadCode (ebbi);
-
   offsetFoldUse (ebbi->bbOrder, ebbi->count);
   killDeadCode (ebbi);
 
@@ -3547,6 +3548,7 @@ eBBlockFromiCode (iCode *ic)
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
+      recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
       recomputeValinfos (ic, ebbi);
       optimizeValinfo (ic);
@@ -3564,8 +3566,8 @@ eBBlockFromiCode (iCode *ic)
   change = 0;
   do
   {
-    recomputeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
     adjustIChain (ebbi->bbOrder, ebbi->count);
+    recomputeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
     ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
     change = separateLiveRanges (ic, ebbi);
     removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
@@ -3574,9 +3576,9 @@ eBBlockFromiCode (iCode *ic)
     computeControlFlow (ebbi);
     loops = createLoopRegions (ebbi);
     computeDataFlow (ebbi);
+    killDeadCode (ebbi); /* iCodeLabelOptimize() above might result in dead code, when both branches of an ifx go to the same destination. */
   }
   while (change);
-  killDeadCode (ebbi); /* iCodeLabelOptimize() above might result in dead code, when both branches of an ifx go to the same destination. */
 
   /* compute the live ranges */
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);

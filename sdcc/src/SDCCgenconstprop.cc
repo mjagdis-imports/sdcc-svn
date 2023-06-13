@@ -299,7 +299,7 @@ valinfoOr (struct valinfo *result, const struct valinfo &left, const struct vali
     left.min >= 0 && right.min >= 0 && !result->anything)
     {
       result->nothing = left.nothing || right.nothing;
-      result->min = std::max (left.max, right.max);
+      result->min = std::max (left.min, right.min);
     }
 }
 
@@ -452,7 +452,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       if (localchange)
         std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
 #endif
-// todo: handle more operations: |, ^.
+// todo: handle more operations: ^.
       if (!localchange) // Input didn't change. No need to recompute result.
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
@@ -647,7 +647,7 @@ optimizeValinfoConst (iCode *sic)
 }
 
 static void
-optimizeNarrowOpCandidate (struct valinfo *v, operand *op)
+optimizeNarrowOpCandidate (struct valinfo *v, operand *op, const iCode *ic)
 {
   wassert (v && op);
   if (!IS_INTEGRAL (operandType (op)))
@@ -659,8 +659,6 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op)
       v->min = litval;
       v->max = litval;
     }
-  else if (bitVectnBitsOn (OP_USES (op)) != 1)
-    v->anything = true;
   else
     {
       bitVect *defs = bitVectCopy (OP_DEFS (op));
@@ -668,7 +666,8 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op)
         {
           iCode *dic = (iCode *)hTabItemWithKey (iCodehTab, key);
           wassert (dic && dic->resultvalinfo);
-          if (dic->op != CAST && !(dic->op == '=' && !POINTER_SET (dic)))
+          if (dic->op != CAST && !(dic->op == '=' && !POINTER_SET (dic)) && // Def ok: we could just change to suitable cast.
+            !bitVectBitValue (OP_USES (op), dic->key)) // Def ok: it is a use, and would be narrowed, too.
             {
               v->anything = true;
               return;
@@ -676,26 +675,63 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op)
           valinfo_union (v, *dic->resultvalinfo);
         }
       freeBitVect (defs);
+      bitVect *uses = bitVectCopy (OP_USES (op));
+      for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
+        {
+          if (key == ic->key)
+            continue;
+          iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
+          if (!uic)
+            bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
+          else if (uic->op == CAST)
+            valinfo_union (v, getOperandValinfo (uic, uic->right));
+          else if ((uic->op == EQ_OP || uic->op == NE_OP || uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP) &&
+            isOperandEqual (uic->left, ic->result))
+            valinfo_union (v, getOperandValinfo (uic, uic->right));
+          else if (uic->op == IFX)
+            ;
+          else 
+            {
+              v->anything = true;
+              return;
+            }
+        }
+      freeBitVect (uses);
     }
 }
 
 static void
-optimizeNarrowResultCandidate (struct valinfo *v, operand *op)
+optimizeNarrowResultCandidate (struct valinfo *v, operand *op, const iCode *ic)
 {
   wassert (v && op);
   if (!IS_INTEGRAL (operandType (op)))
     v->anything = true;
-  else if (bitVectnBitsOn (OP_DEFS (op)) != 1)
-    v->anything = true;
   else
     {
+      bitVect *defs = bitVectCopy (OP_DEFS (op));
+      for (int key = bitVectFirstBit (defs); bitVectnBitsOn (defs); bitVectUnSetBit (defs, key), key = bitVectFirstBit (defs))
+        {
+          if (key == ic->key)
+            continue;
+          iCode *dic = (iCode *)hTabItemWithKey (iCodehTab, key);
+          if (!dic)
+            bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
+          else if ((dic->op == CAST || dic->op == '=' && !POINTER_SET (dic)) && dic->resultvalinfo)
+            valinfo_union (v, *(dic->resultvalinfo));
+          else
+            {
+              v->anything = true;
+              return;
+            }
+        }
+      freeBitVect (defs);
       bitVect *uses = bitVectCopy (OP_USES (op));
       for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
         {
           iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
           if (!uic)
             bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
-          else if (uic->op == CAST)
+          else if (uic->op == CAST || uic->op == IFX)
             ;
           else if (uic->op == EQ_OP || uic->op == NE_OP ||
             uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
@@ -703,6 +739,8 @@ optimizeNarrowResultCandidate (struct valinfo *v, operand *op)
               const operand *otherop = isOperandEqual (op, uic->left) ? uic->right: uic->left;
               valinfo_union (v, getOperandValinfo (uic, otherop));
             }
+          else if (bitVectBitValue (OP_DEFS (op), uic->key)) // Ok: The use is the definition, that would get narrowed.
+            ;
           else
             {
               v->anything = true;
@@ -766,7 +804,39 @@ unsigned int my_stdc_bit_width (unsigned long long value)
 static void
 optimizeBinaryOpWithoutResult (iCode *ic)
 {
-  // todo
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+
+  if (!IS_INTEGRAL (operandType (left)) || !IS_ITEMP (left) && !IS_OP_LITERAL (left) || !IS_INTEGRAL (operandType (right)) || !IS_ITEMP (right) && !IS_OP_LITERAL (right))
+    return;
+
+  struct valinfo leftv = getOperandValinfo (ic, left);
+  struct valinfo rightv = getOperandValinfo (ic, right);
+
+  optimizeNarrowOpCandidate (&leftv, left, ic);
+  optimizeNarrowOpCandidate (&rightv, right, ic);
+
+  valinfo_union (&leftv, rightv);
+
+  if (leftv.anything || leftv.min < 0) // Todo: Relax this by also using signed _BitInt where doing so makes sense.
+    return;
+
+  unsigned int width = my_stdc_bit_width (leftv.max);
+  width = ((width + 7) & (-8)); // Round up to multiple of 8.
+  if (width >= bitsForType (operandType (left)) || width >= bitsForType (operandType (right)))
+    return;
+  if (width > port->s.bitint_maxwidth)
+    return;
+
+#ifdef DEBUG_GCP_OPT
+  std::cout << "Replacing operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+#endif
+
+  sym_link *newtype = newBitIntLink (width);
+  SPEC_USIGN (newtype) = true;
+
+  reTypeOp (left, newtype);
+  reTypeOp (right, newtype);
 }
 
 static void
@@ -776,7 +846,7 @@ optimizeBinaryOpWithResult (iCode *ic)
   operand *right = IC_RIGHT (ic);
   operand *result = IC_RESULT (ic);
 
-  if (!IS_INTEGRAL (operandType (result)) || !IS_ITEMP (result) || bitVectnBitsOn (OP_DEFS (result)) != 1 || !ic->resultvalinfo)
+  if (!IS_INTEGRAL (operandType (result)) || !IS_ITEMP (result) || !ic->resultvalinfo)
     return;
 
   if (!IS_ITEMP (left) && !IS_OP_LITERAL (left) || !IS_ITEMP (right) && !IS_OP_LITERAL (right))
@@ -786,9 +856,9 @@ optimizeBinaryOpWithResult (iCode *ic)
   struct valinfo rightv = getOperandValinfo (ic, right);
   struct valinfo resultv = *ic->resultvalinfo;
   
-  optimizeNarrowOpCandidate (&leftv, left);
-  optimizeNarrowOpCandidate (&rightv, right);
-  optimizeNarrowResultCandidate (&resultv, result);
+  optimizeNarrowOpCandidate (&leftv, left, ic);
+  optimizeNarrowOpCandidate (&rightv, right, ic);
+  optimizeNarrowResultCandidate (&resultv, result, ic);
 
   valinfo_union (&resultv, leftv);
   valinfo_union (&resultv, rightv);
@@ -820,12 +890,13 @@ optimizeBinaryOpWithResult (iCode *ic)
     {
       iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
       wassert (uic);
-      if (uic->op == CAST) // todo: allow more: ifx, !.
+      if (uic->key == ic->key)
+        ;
+      else if (uic->op == CAST || uic->op == IFX) // todo: allow more: negation?
         ;
       else if (uic->op == EQ_OP || uic->op == NE_OP ||
         uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
         {
-        std::cout << "Replace other at " << ic->key << "\n";
           if (!isOperandEqual (result, uic->left))
             reTypeOp (uic->left, newtype);
           if (!isOperandEqual (result, uic->right))

@@ -1145,6 +1145,7 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
           if (!bitVectBitValue (((iCode *)(setFirstItem (defs)))->rlive, sym->key))
             {
               werror (W_INTERNAL_ERROR, __FILE__, __LINE__, "Variable is not alive at one of its definitions");
+              fprintf (stderr, "\"Definition\" of %s at ic %d\n", sym->name, sym->key);
               break;
             }
  
