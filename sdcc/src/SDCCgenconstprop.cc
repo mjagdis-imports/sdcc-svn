@@ -644,6 +644,11 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op)
         {
           iCode *dic = (iCode *)hTabItemWithKey (iCodehTab, key);
           wassert (dic && dic->resultvalinfo);
+          if (dic->op != CAST && !(dic->op == '=' && !POINTER_SET (dic)))
+            {
+              v->anything = true;
+              return;
+            }
           valinfo_union (v, *dic->resultvalinfo);
         }
       freeBitVect (defs);
@@ -668,7 +673,7 @@ optimizeNarrowResultCandidate (struct valinfo *v, operand *op)
             bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
           else if (uic->op == CAST)
             ;
-          else if (uic->op == EQ_OP) // todo: more
+          else if (uic->op == EQ_OP || uic->op == NE_OP) // todo: more
             {
               const operand *otherop = isOperandEqual (op, uic->left) ? uic->right: uic->left;
               valinfo_union (v, getOperandValinfo (uic, otherop));
@@ -691,6 +696,8 @@ reTypeOp (operand *op, sym_link *newtype)
       op->svt.valOperand = valCastLiteral (newtype, operandLitValue (op), operandLitValueUll (op));
       return;
     }
+
+  // Replace at uses.
   bitVect *uses = bitVectCopy (OP_USES (op));
   for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
     {std::cout << "Replace def at " << key << "\n";
@@ -702,12 +709,21 @@ reTypeOp (operand *op, sym_link *newtype)
         setOperandType (uic->right, newtype);
     }
   freeBitVect (uses);
+
+  // Replace at definitions.
   bitVect *defs = bitVectCopy (OP_DEFS (op));
   for (int key = bitVectFirstBit (defs); bitVectnBitsOn (defs); bitVectUnSetBit (defs, key), key = bitVectFirstBit (defs))
-    {std::cout << "Replace use at " << key << "\n";
+    {
       iCode *dic = (iCode *)hTabItemWithKey (iCodehTab, key);
       wassert (dic && dic->result && isOperandEqual (op, dic->result));
       setOperandType (dic->result, newtype);
+      if (dic->op == '=' && IS_OP_LITERAL (dic->right))
+        reTypeOp (dic->right, newtype);
+      else if (dic->op == CAST || dic->op == '=')
+        {
+          dic->op = CAST;
+          dic->left = operandFromLink (newtype);
+        }
     }
   freeBitVect (defs);
 }

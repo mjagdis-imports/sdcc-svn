@@ -1,5 +1,10 @@
 2023-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCgenconstprop.cc:
+	  Fixes and improvements for generalized constant propagation optimization.
+
+2023-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/mos6502/gen.c
 	  Fix negation of literals for mos6502.
 	* src/SDCCgenconstprop.cc:
