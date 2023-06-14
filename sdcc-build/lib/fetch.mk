@@ -13,7 +13,7 @@ _FETCH_DOER = mkdir -p $(STAMPDIR); \
 	then \
 	  svn $(SVNFLAGS) export $(SVN_ROOT)/tags/$(SVNTAG)/$(_FETCH_TREE) $(_FETCH_TREE) && touch $@; \
 	else \
-	  svn $(SVNFLAGS) export $(SVN_ROOT)/trunk/$(_FETCH_TREE) $(_FETCH_TREE) && touch $@; \
+	  svn $(SVNFLAGS) export $(SVN_ROOT)/branches/nativecrosstools/$(_FETCH_TREE) $(_FETCH_TREE) && touch $@; \
 	fi; \
 	echo "--- $(_FETCH_TREE) svn download finished on `date` ---"
 
