@@ -1,7 +1,7 @@
 2023-06-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/scripts/sdcc.nsi:
-	  Change references to bin\cc1.exe to libexec\sdcc\cc1.
+	  Change references to bin\cc1.exe to libexec\sdcc\cc1. Remove readline5.dll.
 
 2023-06-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
