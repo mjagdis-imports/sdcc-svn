@@ -3238,7 +3238,7 @@ narrowRead (iCode *ic, operand **opp, eBBlock *ebp)
 }
 
 /*-----------------------------------------------------------------*/
-/* narrowRead() - Will read fewer bytes by eliminating downcasts.  */
+/* narrowReads() - Will read fewer bytes by eliminating downcasts. */
 /*-----------------------------------------------------------------*/
 static void
 narrowReads(ebbIndex *ebbi)
@@ -3435,7 +3435,7 @@ eBBlockFromiCode (iCode *ic)
   if (optimize.genconstprop)
     {
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-      recomputeValinfos (ic, ebbi);
+      recomputeValinfos (ic, ebbi, "_0");
       optimizeValinfo (ic);
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
@@ -3550,7 +3550,7 @@ eBBlockFromiCode (iCode *ic)
       computeDataFlow (ebbi);
       recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-      recomputeValinfos (ic, ebbi);
+      recomputeValinfos (ic, ebbi, "_1");
       optimizeValinfo (ic);
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);

@@ -546,6 +546,8 @@ iCode *stm8_ralloc2_cc(ebbIndex *ebbi)
 
   iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
+  recomputeValinfos (ic, ebbi, "_2");
+
   if(options.dump_graphs)
     dump_cfg(control_flow_graph);
 

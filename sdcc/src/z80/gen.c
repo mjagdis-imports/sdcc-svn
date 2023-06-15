@@ -459,6 +459,11 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
       if (aop->size <= offset && !b && aop->type != AOP_LIT)
         continue;
 
+      // Information from generalized constant propagation analysis
+      if (!aop->valinfo.anything &&
+        (aop->valinfo.knownbitsmask >> (offset * 8)) == 0xff && (aop->valinfo.knownbits >> (offset * 8)) == b)
+        continue;
+
       if (aop->type != AOP_LIT)
         return (false);
 
@@ -1420,6 +1425,7 @@ newAsmop (short type)
   aop = traceAlloc (&_G.trace.aops, Safe_alloc (sizeof (asmop)));
   aop->type = type;
   memset (aop->regs, -1, 9);
+  aop->valinfo.anything = true;
   return aop;
 }
 
@@ -1762,6 +1768,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
       op->aop = aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
+      if (!result)
+        op->aop->valinfo = getOperandValinfo (ic, op);
       return;
     }
 
@@ -1790,6 +1798,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
   if (IS_TRUE_SYMOP (op))
     {
       op->aop = aopForSym (ic, OP_SYMBOL (op), requires_a);
+      if (!result)
+        op->aop->valinfo = getOperandValinfo (ic, op);
       return;
     }
 
@@ -1825,6 +1835,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
         {
           sym->aop = op->aop = aop = aopForRemat (sym);
           aop->size = getSize (sym->type);
+          if (!result)
+            aop->valinfo = getOperandValinfo (ic, op);
           return;
         }
 
@@ -1833,6 +1845,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
         {
           sym->aop = op->aop = aop = newAsmop (_G.omitFramePtr ? AOP_EXSTK : AOP_STK);
           aop->size = getSize (sym->type);
+          if (!result)
+            aop->valinfo = getOperandValinfo (ic, op);
           return;
         }
 
@@ -1854,18 +1868,24 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
               sym->usl.spillLoc->aop = oldAsmOp;
             }
           aop->size = getSize (sym->type);
+          if (!result)
+            aop->valinfo = getOperandValinfo (ic, op);
           return;
         }
 
       /* else must be a dummy iTemp */
       sym->aop = op->aop = aop = newAsmop (AOP_DUMMY);
       aop->size = getSize (sym->type);
+      if (!result)
+        aop->valinfo = getOperandValinfo (ic, op);
       return;
     }
 
   /* must be in a register */
   sym->aop = op->aop = aop = newAsmop (AOP_REG);
   aop->size = sym->nRegs;
+  if (!result)
+    aop->valinfo = getOperandValinfo (ic, op);
   memset (aop->regs, -1, sizeof(aop->regs));
   for (i = 0; i < sym->nRegs; i++)
     {

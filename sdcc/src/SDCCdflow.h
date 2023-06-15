@@ -44,10 +44,12 @@ struct valinfo
 {
 	bool nothing, anything;
 	long long int min, max;
+	unsigned long long knownbitsmask;
+	unsigned long long knownbits;
 };
 
 struct valinfo getOperandValinfo (const iCode *ic, const operand *op);
-void recomputeValinfos (iCode *sic, ebbIndex *ebbi);
+void recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix);
 void optimizeValinfo (iCode *sic);
 
 #endif

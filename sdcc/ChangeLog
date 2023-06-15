@@ -1,3 +1,16 @@
+2023-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCopt.c,
+	  src/z80/gen.c,
+	  src/z80/gen.h,
+	  src/z80/ralloc2.cc,
+	  src/stm8/gen.c,
+	  src/stm8/gen.h,
+	  src/stm8/ralloc2.cc:
+	  Basic generalized constant propgation analysis and optimization for individual operand bits.
+
 2023-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:

@@ -932,6 +932,8 @@ newAsmop (short type)
   aop->regs[YH_IDX] = -1;
   aop->regs[C_IDX] = -1;
 
+  aop->valinfo.anything = true;
+
   return (aop);
 }
 

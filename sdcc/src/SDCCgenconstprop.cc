@@ -103,24 +103,32 @@ getTypeValinfo (sym_link *type)
   v.anything = true;
   v.nothing = false;
   v.min = v.max = 0;
+  v.knownbitsmask = 0;
+  v.knownbits = 0;
 
   if (IS_BOOLEAN (type))
     {
       v.anything = false;
       v.min = 0;
       v.max = 1;
+      v.knownbitsmask = ~1ull;
+      v.knownbits = 0;
     }
   else if (IS_INTEGRAL (type) && IS_UNSIGNED (type) && bitsForType (type) < 64)
     {
       v.anything = false;
       v.min = 0;
       v.max = 0xffffffffffffffffull >> (64 - bitsForType (type));
+      v.knownbitsmask = ~(0xffffffffffffffffull >> (64 - bitsForType (type)));
+      v.knownbits = 0;
     }
   else if (IS_INTEGRAL (type) && !IS_UNSIGNED (type) && bitsForType (type) < 63)
     {
       v.anything = false;
       v.max = 0x7fffffffffffffffull >> (64 - bitsForType (type));
       v.min = -v.max - 1;
+      v.knownbitsmask = ~(0xffffffffffffffffull >> (64 - bitsForType (type)));
+      v.knownbits = 0;
     }
   return (v);
 }
@@ -146,6 +154,8 @@ getOperandValinfo (const iCode *ic, const operand *op)
       v.anything = false;
       v.min = litval;
       v.max = litval;
+      v.knownbitsmask = ~0ull;
+      v.knownbits = litval;
       return (v);
     }
   else if (IS_ITEMP (op))
@@ -176,6 +186,9 @@ valinfo_union (struct valinfo *v0, const struct valinfo &v1)
   auto new_max = std::max (v0->max, v1.max);
   change |= (v0->max != new_max);
   v0->max = new_max;
+  auto new_knownbitsmask = v0->knownbitsmask & v1.knownbitsmask & ~(v0->knownbits ^ v1.knownbits);
+  change |= (v0->knownbitsmask != new_knownbitsmask);
+  v0->knownbitsmask = new_knownbitsmask;
   return (change);
 }
 
@@ -215,14 +228,14 @@ dump_op_info (std::ostream &os, const iCode *ic, operand *op)
   if (v.anything)
     os << "*";
   else
-    os << "[" << v.min << ", " << v.max << "]";
+    os << "[" << v.min << ", " << v.max << "] " << v.knownbitsmask;
 }
 
 // Dump cfg.
 static void
-dump_cfg_genconstprop (const cfg_t &cfg)
+dump_cfg_genconstprop (const cfg_t &cfg, std::string suffix)
 {
-  std::ofstream dump_file ((std::string (dstFileName) + ".dumpgenconstpropcfg" + (currFunc ? currFunc->rname : "__global") + ".dot").c_str());
+  std::ofstream dump_file ((std::string (dstFileName) + ".dumpgenconstpropcfg" + suffix + (currFunc ? currFunc->rname : "__global") + ".dot").c_str());
 
   std::string *name = new std::string[num_vertices (cfg)];
   for (unsigned int i = 0; i < boost::num_vertices (cfg); i++)
@@ -300,14 +313,23 @@ valinfoOr (struct valinfo *result, const struct valinfo &left, const struct vali
     {
       result->nothing = left.nothing || right.nothing;
       result->min = std::max (left.min, right.min);
+      result->max = std::max (left.max, right.max);
+      long long max = std::min (left.max, right.max);
+      for(int i = 0; max > 0; i++)
+        {
+          result->max |= (1 << i);
+          max >>= 1;
+        } 
     }
+  result->knownbitsmask = left.knownbitsmask | right.knownbitsmask;
+  result->knownbits = left.knownbits | right.knownbits;
 }
 
 static void
 valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
-    left.min >= 0 && right.min >= 0)
+    (left.min >= 0 || right.min >= 0))
     {
       result->anything = false;
       result->nothing = left.nothing || right.nothing;
@@ -315,6 +337,45 @@ valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct val
       auto max = std::min(left.max, right.max);
       if (max <= result->max)
         result->max = max;
+    }
+  result->knownbitsmask = left.knownbitsmask | right.knownbitsmask;
+  result->knownbits = left.knownbits & right.knownbits;
+}
+
+static void
+valinfoGetABit (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+{
+  result->anything = false;
+  result->nothing = left.nothing || right.nothing;
+  if (result->max > 0)
+    {
+      result->min = 0;
+      result->max = 1;
+    }
+  result->knownbitsmask = ~1ull;
+}
+
+static void
+valinfoLeft (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+{
+  if (!left.anything && !right.anything && right.min == right.max && right.max < 64)
+    {
+      result->nothing = left.nothing || right.nothing;
+      result->knownbitsmask = (left.knownbitsmask << right.max) | ~(~0ull << right.max);
+      result->knownbits = left.knownbits << right.max;
+      struct valinfo rv;
+      rv.nothing = result->nothing;
+      rv.anything = false;
+      rv.min = left.min;
+      rv.max = left.max;
+      for(long long r = right.max; r; r--)
+        {
+          if ((rv.min << 1) < (-1ll << 61) || (rv.max << 1) > (1ll << 61))
+            return;
+          rv.min <<= 1;
+          rv.max <<= 1;
+        }
+      *result = rv;
     }
 }
 
@@ -330,6 +391,11 @@ valinfoRight (struct valinfo *result, const struct valinfo &left, const struct v
       auto max = (left.max >> right.min);
       if (max <= result->max)
         result->max = max;
+      if (right.min == right.max)
+        {
+          result->knownbitsmask = left.knownbitsmask >> right.min;
+          result->knownbits = left.knownbits >> right.min;
+        }
     }
 }
 
@@ -345,6 +411,8 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
       result->anything = false;
       result->min = right.min;
       result->max = right.max;
+      result->knownbitsmask = right.knownbitsmask;
+      result->knownbits = right.knownbits;
     }
 }
 
@@ -525,6 +593,10 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoOr (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == BITWISEAND)
         valinfoAnd (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == GETABIT)
+        valinfoGetABit (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == LEFT_OP)
+        valinfoLeft (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == RIGHT_OP)
         valinfoRight (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
@@ -548,7 +620,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
 
 // Calculate valinfos for all iCodes in function.
 void
-recomputeValinfos (iCode *sic, ebbIndex *ebbi)
+recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
 {
   unsigned int max_rounds = 1000; // Rapidly end analysis once this number of rounds has been exceeded.
 
@@ -586,7 +658,7 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi)
   // TODO
 
   if(options.dump_graphs)
-    dump_cfg_genconstprop(G);
+    dump_cfg_genconstprop(G, suffix);
 }
 
 // Try to replace operands by constants
