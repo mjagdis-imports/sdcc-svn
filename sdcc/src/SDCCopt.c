@@ -1645,21 +1645,6 @@ getAddrspaceiCode (const iCode *ic)
   const symbol *leftaddrspace = 0, *rightaddrspace = 0, *resultaddrspace = 0;
   const symbol *addrspace;
 
-  /* Not safe to use IC_LEFT, IC_RIGHT, or IC_RESULT macros on */
-  /* IFX or JUMPTABLE iCodes. Handle these as a special case.  */
-  if (ic->op == IFX || ic->op == JUMPTABLE)
-    {
-      operand *cond;
-      if (ic->op == IFX)
-        cond = IC_COND (ic);
-      else
-        cond = IC_JTCOND (ic);
-      if (IS_SYMOP (cond))
-        return getAddrspace (OP_SYMBOL (cond)->type);
-      else
-        return NULL;
-    }
-
   left = IC_LEFT (ic);
   right = IC_RIGHT (ic);
   result = IC_RESULT (ic);
@@ -1835,26 +1820,6 @@ replaceRegEqv (ebbIndex * ebbi)
           if (SKIP_IC2 (ic))
             continue;
 
-          if (ic->op == IFX)
-            {
-              if (IS_TRUE_SYMOP (IC_COND (ic)))
-                {
-                  OP_DEFS (IC_COND (ic)) = NULL;
-                  OP_USES (IC_COND (ic)) = NULL;
-                }
-              continue;
-            }
-
-          if (ic->op == JUMPTABLE)
-            {
-              if (IS_TRUE_SYMOP (IC_JTCOND (ic)))
-                {
-                  OP_DEFS (IC_JTCOND (ic)) = NULL;
-                  OP_USES (IC_JTCOND (ic)) = NULL;
-                }
-              continue;
-            }
-
           if (IS_TRUE_SYMOP (IC_RESULT (ic)))
             {
               OP_DEFS (IC_RESULT (ic)) = NULL;
@@ -1893,20 +1858,6 @@ replaceRegEqv (ebbIndex * ebbi)
           if (SKIP_IC2 (ic))
             continue;
 
-          if (ic->op == IFX)
-            {
-              if (IS_TRUE_SYMOP (IC_COND (ic)))
-                replaceRegEqvOperand (ic, &IC_COND (ic), 0, 0);
-              continue;
-            }
-
-          if (ic->op == JUMPTABLE)
-            {
-              if (IS_TRUE_SYMOP (IC_JTCOND (ic)))
-                replaceRegEqvOperand (ic, &IC_JTCOND (ic), 0, 0);
-              continue;
-            }
-
           if (ic->op == RECEIVE)
             {
               if (OP_SYMBOL (IC_RESULT (ic))->addrtaken)
@@ -1944,30 +1895,15 @@ findReqv (symbol * prereqv, eBBlock ** ebbs, int count)
       /* for all instructions in the block do */
       for (ic = ebbs[i]->sch; ic; ic = ic->next)
         {
-          if (ic->op == IFX)
-            {
-              if (IS_ITEMP (IC_COND (ic))
-                  && OP_SYMBOL (IC_COND (ic))->prereqv == prereqv)
-                return IC_COND (ic);
-            }
-          else if (ic->op == JUMPTABLE)
-            {
-              if (IS_ITEMP (IC_JTCOND (ic))
-                  && OP_SYMBOL (IC_JTCOND (ic))->prereqv == prereqv)
-                return IC_JTCOND (ic);
-            }
-          else
-            {
-              if (IS_ITEMP (IC_LEFT (ic))
-                  && OP_SYMBOL (IC_LEFT (ic))->prereqv == prereqv)
-                return IC_LEFT (ic);
-              if (IS_ITEMP (IC_RIGHT (ic))
-                  && OP_SYMBOL (IC_RIGHT (ic))->prereqv == prereqv)
-                return IC_RIGHT (ic);
-              if (IS_ITEMP (IC_RESULT (ic))
-                  && OP_SYMBOL (IC_RESULT (ic))->prereqv == prereqv)
-                return IC_RESULT (ic);
-            }
+          if (IS_ITEMP (IC_LEFT (ic))
+              && OP_SYMBOL (IC_LEFT (ic))->prereqv == prereqv)
+            return IC_LEFT (ic);
+          if (IS_ITEMP (IC_RIGHT (ic))
+              && OP_SYMBOL (IC_RIGHT (ic))->prereqv == prereqv)
+            return IC_RIGHT (ic);
+          if (IS_ITEMP (IC_RESULT (ic))
+              && OP_SYMBOL (IC_RESULT (ic))->prereqv == prereqv)
+            return IC_RESULT (ic);
         }
     }
 
