@@ -227,6 +227,12 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
       if (aop->type == AOP_IMMD && offset > (aop->aopu.code ? 1 : 0) && !b)
         continue;
 
+      // Information from generalized constant propagation analysis
+      if (!aop->valinfo.anything &&
+        ((aop->valinfo.knownbitsmask >> (offset * 8)) & 0xff) == 0xff &&
+        ((aop->valinfo.knownbits >> (offset * 8)) & 0xff) == b)
+        continue;
+
       if (aop->size <= offset)
         return (false);
 
@@ -298,6 +304,7 @@ newAsmop (short type)
 
   aop = Safe_calloc (1, sizeof (asmop));
   aop->type = type;
+  aop->valinfo.anything = true;
 
   return (aop);
 }
@@ -460,6 +467,7 @@ aopOp (operand *op, const iCode *ic)
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
       op->aop = aop;
+      op->aop->valinfo = getOperandValinfo (ic, op);
       return;
     }
 
@@ -469,6 +477,7 @@ aopOp (operand *op, const iCode *ic)
   if (IS_TRUE_SYMOP (op))
     {
       op->aop = aopForSym (ic, sym);
+      op->aop->valinfo = getOperandValinfo (ic, op);
       return;
     }
 
@@ -482,6 +491,7 @@ aopOp (operand *op, const iCode *ic)
       if (completely_spilt)
         {
           op->aop = aopForRemat (sym);
+          op->aop->valinfo = getOperandValinfo (ic, op);
           return;
         }
     }
@@ -500,6 +510,7 @@ aopOp (operand *op, const iCode *ic)
     {
       sym->aop = op->aop = aopForSym (ic, sym->usl.spillLoc);
       op->aop->size = getSize (sym->type);
+      op->aop->valinfo = getOperandValinfo (ic, op);
       return;
     }
 
@@ -511,6 +522,7 @@ aopOp (operand *op, const iCode *ic)
 
     aop->size = getSize (operandType (op));
     op->aop = aop;
+    aop->valinfo = getOperandValinfo (ic, op);
 
     for (int i = 0; i < aop->size; i++)
       {
@@ -805,7 +817,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
       emit2 ("call", "%s+%d", source->aopu.aop_dir, soffset);
       cost (1, 4);
     }
-  else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX) && !aopIsLitVal (source, soffset, 1, 0))
+  else if (source->type == AOP_STK && aopInReg (result, roffset, A_IDX) && !aopIsLitVal (source, soffset, 1, 0x00))
     {
       if (!p_dead)
         pushPF (true);
@@ -830,7 +842,7 @@ cheapMove (const asmop *result, int roffset, const asmop *source, int soffset, b
     {
       if (!dummy)
         {
-          emit2 (source->type == AOP_SFR ? "mov.io" : "mov", "a, %s", aopGet (source, soffset));
+          emit2 (source->type == AOP_SFR ? "mov.io" : "mov", "a, %s", aopIsLitVal (source, soffset, 1, 0x00) ? "#0x00" : aopGet (source, soffset));
           cost (1, 1);
         }
     }
@@ -3090,10 +3102,10 @@ genOr (const iCode *ic)
 
       int bit = right->aop->type == AOP_LIT ? isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) : -1;
 
-      if (aopIsLitVal (right->aop, i, 1, 0x00))
-        {
-          cheapMove (result->aop, i, left->aop, i, a_free, p_free, true);
-        }
+      if (aopIsLitVal (left->aop, i, 1, 0x00))
+        cheapMove (result->aop, i, right->aop, i, a_free, p_free, true);
+      else if (aopIsLitVal (right->aop, i, 1, 0x00))
+        cheapMove (result->aop, i, left->aop, i, a_free, p_free, true);
       else if ((left->aop->type == AOP_SFR || aopInReg (left->aop, i, P_IDX)) && aopSame (left->aop, i, result->aop, i, 1) && bit >= 0)
         {
           emit2 (left->aop->type == AOP_SFR ? "set1.io" : "set1", "%s, #%d", aopGet (left->aop, i), bit);

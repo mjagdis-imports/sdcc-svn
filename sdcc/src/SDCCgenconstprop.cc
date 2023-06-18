@@ -46,7 +46,9 @@ operator != (const valinfo &v0, const valinfo &v1)
 {
   if (v0.nothing && v1.nothing)
     return (true);
-  return (v0.nothing != v1.nothing || v0.anything != v1.anything || v0.min != v1.min || v0.max != v1.max);
+  return (v0.nothing != v1.nothing || v0.anything != v1.anything ||
+    v0.min != v1.min || v0.max != v1.max ||
+    v0.knownbitsmask != v1.knownbitsmask);
 }
 
 struct valinfos
@@ -346,6 +348,26 @@ valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct val
 }
 
 static void
+valinfoXor (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+{
+  if (!left.anything && !right.anything &&
+    left.min >= 0 && right.min >= 0 && !result->anything)
+    {
+      result->nothing = left.nothing || right.nothing;
+      result->min = 0;
+      result->max = std::max (left.max, right.max);
+      long long max = std::min (left.max, right.max);
+      for(int i = 0; max > 0; i++)
+        {
+          result->max |= (1 << i);
+          max >>= 1;
+        } 
+    }
+  result->knownbitsmask = (left.knownbitsmask & right.knownbitsmask);
+  result->knownbits = left.knownbits ^ right.knownbits;
+}
+
+static void
 valinfoGetABit (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   result->anything = false;
@@ -414,8 +436,11 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
       result->anything = false;
       result->min = right.min;
       result->max = right.max;
-      result->knownbitsmask = right.knownbitsmask;
-      result->knownbits = right.knownbits;
+      if (result->min >= 0) // Don't handle sign extension for now.
+        {
+          result->knownbitsmask = right.knownbitsmask;
+          result->knownbits = right.knownbits;
+        }
     }
 }
 
@@ -598,6 +623,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoOr (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == BITWISEAND)
         valinfoAnd (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == '^')
+        valinfoXor (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == GETABIT)
         valinfoGetABit (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == LEFT_OP)

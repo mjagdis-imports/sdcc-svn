@@ -5965,7 +5965,7 @@ genCall (const iCode *ic)
 
   aopOp (IC_LEFT (ic), ic, false, false);
   if (SomethingReturned && !bigreturn)
-    aopOp (IC_RESULT (ic), ic, false, false);
+    aopOp (IC_RESULT (ic), ic, true, false);
 
   if (bigreturn)
     {
@@ -5974,7 +5974,7 @@ genCall (const iCode *ic)
 
       if (ic->op == PCALL && IS_SM83 || !hl_free_pre_call)
         _push (PAIR_HL);
-      aopOp (IC_RESULT (ic), ic, false, false);
+      aopOp (IC_RESULT (ic), ic, true, false);
       wassert (IC_RESULT (ic)->aop->type == AOP_STK || IC_RESULT (ic)->aop->type == AOP_EXSTK);
       fp_offset =
         IC_RESULT (ic)->aop->aopu.aop_stk + (IC_RESULT (ic)->aop->aopu.aop_stk >
@@ -11952,8 +11952,8 @@ genSwap (iCode * ic)
   
   left = IC_LEFT (ic);
   result = IC_RESULT (ic);
-  aopOp (left, ic, FALSE, FALSE);
-  aopOp (result, ic, FALSE, FALSE);
+  aopOp (left, ic, false, false);
+  aopOp (result, ic, true, false);
   bool pushed_a = false;
   switch (left->aop->size)
     {
@@ -12301,7 +12301,7 @@ genRot1 (iCode *ic)
   operand *result = IC_RESULT (ic);
 
   aopOp (left, ic, false, false);
-  aopOp (result, ic, false, false);
+  aopOp (result, ic, true, false);
 
   wassert (bitsForType (operandType (left)) == 8);
   wassert (IS_OP_LITERAL (right));
@@ -12425,8 +12425,8 @@ genLeftShiftLiteral (operand *left, operand *right, operand *result, const iCode
 
   freeAsmop (right, NULL);
 
-  aopOp (left, ic, FALSE, FALSE);
-  aopOp (result, ic, FALSE, FALSE);
+  aopOp (left, ic, false, false);
+  aopOp (result, ic, true, false);
 
   size = getSize (operandType (result));
 
@@ -12493,8 +12493,8 @@ genLeftShift (const iCode *ic)
   if (shift_by_lit)
     shiftcount = ulFromVal (right->aop->aopu.aop_lit);
 
-  aopOp (result, ic, FALSE, FALSE);
-  aopOp (left, ic, FALSE, FALSE);
+  aopOp (result, ic, true, false);
+  aopOp (left, ic, false, false);
 
   bool z80n_de = ((result->aop->size == 2 && (aopInReg (result->aop, 0, DE_IDX) || aopInReg (left->aop, 0, DE_IDX)) ||
       result->aop->size == 1 && (aopInReg (result->aop, 0, D_IDX) || aopInReg (left->aop, 0, D_IDX)))) && isRegDead (PAIR_DE, ic);
@@ -12866,8 +12866,8 @@ genRightShiftLiteral (operand * left, operand * right, operand * result, const i
 
   freeAsmop (right, NULL);
 
-  aopOp (left, ic, FALSE, FALSE);
-  aopOp (result, ic, FALSE, FALSE);
+  aopOp (left, ic, false, false);
+  aopOp (result, ic, true, false);
 
   size = getSize (operandType (result));
 
@@ -12950,8 +12950,8 @@ genRightShift (const iCode * ic)
   if (shift_by_lit)
     shiftcount = ulFromVal (right->aop->aopu.aop_lit);
 
-  aopOp (result, ic, FALSE, FALSE);
-  aopOp (left, ic, FALSE, FALSE);
+  aopOp (result, ic, true, false);
+  aopOp (left, ic, false, false);
     
   if (right->aop->type == AOP_REG && !bitVectBitValue (ic->rSurv, right->aop->aopu.aop_reg[0]->rIdx) && right->aop->aopu.aop_reg[0]->rIdx != IYL_IDX && (sameRegs (left->aop, result->aop) || left->aop->type != AOP_REG) &&
     (result->aop->type != AOP_REG ||
@@ -13343,8 +13343,8 @@ genPointerGet (const iCode *ic)
   result = IC_RESULT (ic);
   bool bit_field = IS_BITVAR (operandType (result)); // Should be IS_BITVAR (operandType (left)->next), but conflicts with optimizations that reuses pointers (when reading from a union of a struct containing bit-fields and other types).
 
-  aopOp (left, ic, FALSE, FALSE);
-  aopOp (result, ic, FALSE, FALSE);
+  aopOp (left, ic, false, false);
+  aopOp (result, ic, true, false);
   size = result->aop->size;
 
   /* Historically GET_VALUE_AT_ADDRESS didn't have a right operand */
@@ -14508,7 +14508,7 @@ genAddrOf (const iCode * ic)
   wassert (IS_TRUE_SYMOP (IC_LEFT (ic)));
   wassert (right && IS_OP_LITERAL (IC_RIGHT (ic)));
   sym = OP_SYMBOL (IC_LEFT (ic));
-  aopOp (IC_RESULT (ic), ic, FALSE, FALSE);
+  aopOp (IC_RESULT (ic), ic, true, false);
 
   if (sym->onStack)
     {
@@ -14953,8 +14953,8 @@ genCast (const iCode *ic)
   if (operandsEqu (IC_RESULT (ic), IC_RIGHT (ic)))
     return;
 
-  aopOp (right, ic, FALSE, FALSE);
-  aopOp (result, ic, FALSE, FALSE);
+  aopOp (right, ic, false, false);
+  aopOp (result, ic, true, false);
 
   /* if the result is a bit */
   if (result->aop->type == AOP_CRY)
@@ -15091,7 +15091,7 @@ static void
 genReceive (const iCode *ic)
 {
   operand *result = IC_RESULT (ic);
-  aopOp (result, ic, FALSE, FALSE);
+  aopOp (result, ic, true, false);
   
   wassert (currFunc && ic->argreg);
 
@@ -16085,7 +16085,7 @@ genBuiltInStrcpy (const iCode *ic, int nParams, operand **pparams)
   spillPair (PAIR_HL);
 
   if (SomethingReturned)
-    aopOp (IC_RESULT (ic), ic, FALSE, FALSE);
+    aopOp (IC_RESULT (ic), ic, true, false);
 
   if (!SomethingReturned || SomethingReturned && getPairId (IC_RESULT (ic)->aop) != PAIR_INVALID)
     {
@@ -16207,7 +16207,7 @@ genBuiltInStrchr (const iCode *ic, int nParams, operand **pparams)
     aopOp (pparams[i], ic, FALSE, FALSE);
 
   if (SomethingReturned)
-    aopOp (IC_RESULT (ic), ic, FALSE, FALSE);
+    aopOp (IC_RESULT (ic), ic, true, false);
 
   if (getPairId (s->aop) != PAIR_INVALID && getPairId (s->aop) != PAIR_IY)
     pair = getPairId (s->aop);
