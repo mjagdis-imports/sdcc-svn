@@ -466,8 +466,8 @@ aopOp (operand *op, const iCode *ic)
       asmop *aop = newAsmop (AOP_LIT);
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
+      aop->valinfo = getOperandValinfo (ic, op);
       op->aop = aop;
-      op->aop->valinfo = getOperandValinfo (ic, op);
       return;
     }
 

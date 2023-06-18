@@ -2,7 +2,8 @@
 
 	* src/SDCCgenconstprop.cc,
 	  src/z80/gen.c,
-	  src/pdk/gen.c:
+	  src/pdk/gen.c,
+	  src/stm8/gen.c:
 	  Use information from generalized constant propagation analysis in code generation.
 
 2023-06-15 Philipp Klaus Krause <philipp@colecovision.eu>

@@ -12497,7 +12497,7 @@ genLeftShift (const iCode *ic)
   aopOp (left, ic, false, false);
 
   bool z80n_de = ((result->aop->size == 2 && (aopInReg (result->aop, 0, DE_IDX) || aopInReg (left->aop, 0, DE_IDX)) ||
-      result->aop->size == 1 && (aopInReg (result->aop, 0, D_IDX) || aopInReg (left->aop, 0, D_IDX)))) && isRegDead (PAIR_DE, ic);
+    result->aop->size == 1 && (aopInReg (result->aop, 0, D_IDX) || aopInReg (left->aop, 0, D_IDX)))) && isRegDead (PAIR_DE, ic);
 
   if (right->aop->type == AOP_REG && !bitVectBitValue (ic->rSurv, right->aop->aopu.aop_reg[0]->rIdx) && right->aop->aopu.aop_reg[0]->rIdx != IYL_IDX && (sameRegs (left->aop, result->aop) || left->aop->type != AOP_REG) &&
     (result->aop->type != AOP_REG ||
@@ -12578,6 +12578,7 @@ genLeftShift (const iCode *ic)
       if (save_a_inner)
         _pop (PAIR_AF);
     }
+  shiftop->valinfo.anything = true;
 
   if (!regalloc_dry_run)
     {
@@ -13026,6 +13027,7 @@ genRightShift (const iCode * ic)
       if (save_a)
         _pop (PAIR_AF);
     }
+  shiftop->valinfo.anything = true;
 
   shift_by_one = (shift_by_lit && shiftcount == 1);
   shift_by_zero = (shift_by_lit && shiftcount == 0);
