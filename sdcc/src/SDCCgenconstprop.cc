@@ -24,6 +24,7 @@
 #include <set>
 #include <queue>
 #include <iostream>
+#include <ios>
 
 // Workaround for boost bug #11880
 #include <boost/version.hpp>
@@ -243,6 +244,7 @@ dump_cfg_genconstprop (const cfg_t &cfg, std::string suffix)
       std::ostringstream os;
       iCode *ic = cfg[i].ic;
       os << i << ", " << ic->key << ": (";
+      os << std::showbase << std::hex;
       if (ic->left)
         dump_op_info (os, ic, IC_LEFT (ic));
       os << ", ";
@@ -257,11 +259,12 @@ dump_cfg_genconstprop (const cfg_t &cfg, std::string suffix)
           else if (ic->resultvalinfo->anything)
             os << "*";
           else
-            os << "[" << ic->resultvalinfo->min << ", " << ic->resultvalinfo->max << "]";
+            os << "[" << ic->resultvalinfo->min << ", " << ic->resultvalinfo->max << "] " << ic->resultvalinfo->knownbitsmask;
         }
       name[i] = os.str();
     }
   boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, " generalized constant propagation"));
+
   delete[] name;
 }
 
@@ -321,7 +324,7 @@ valinfoOr (struct valinfo *result, const struct valinfo &left, const struct vali
           max >>= 1;
         } 
     }
-  result->knownbitsmask = left.knownbitsmask | right.knownbitsmask;
+  result->knownbitsmask = (left.knownbitsmask & right.knownbitsmask) | (left.knownbitsmask & left.knownbits) | (right.knownbitsmask & right.knownbits);
   result->knownbits = left.knownbits | right.knownbits;
 }
 
@@ -338,7 +341,7 @@ valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct val
       if (max <= result->max)
         result->max = max;
     }
-  result->knownbitsmask = left.knownbitsmask | right.knownbitsmask;
+  result->knownbitsmask = (left.knownbitsmask & right.knownbitsmask) | (left.knownbitsmask & ~left.knownbits) | (right.knownbitsmask & ~right.knownbits);
   result->knownbits = left.knownbits & right.knownbits;
 }
 
@@ -524,6 +527,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       if (!localchange) // Input didn't change. No need to recompute result.
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
+        ;
+      else if (IS_OP_VOLATILE (IC_RESULT (ic)))
         ;
       else if (ic->op == '!')
         {

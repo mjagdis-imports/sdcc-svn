@@ -461,7 +461,8 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
 
       // Information from generalized constant propagation analysis
       if (!aop->valinfo.anything &&
-        (aop->valinfo.knownbitsmask >> (offset * 8)) == 0xff && (aop->valinfo.knownbits >> (offset * 8)) == b)
+        ((aop->valinfo.knownbitsmask >> (offset * 8)) & 0xff) == 0xff &&
+        ((aop->valinfo.knownbits >> (offset * 8)) & 0xff) == b)
         continue;
 
       if (aop->type != AOP_LIT)
@@ -10707,7 +10708,6 @@ genOr (const iCode * ic, iCode * ifx)
   operand *left, *right, *result;
   int size, offset = 0;
   unsigned long long lit = 0;
-  int bytelit = 0;
 
   aopOp (IC_LEFT (ic), ic, FALSE, FALSE);
   aopOp (IC_RIGHT (ic), ic, FALSE, FALSE);
@@ -10791,7 +10791,7 @@ genOr (const iCode * ic, iCode * ifx)
           if (!a_free) // Hard to handle pop with ifx
             UNIMPLEMENTED;
 
-          bytelit = (lit >> (offset * 8)) & 0x0FFull;
+          int bytelit = (lit >> (offset * 8)) & 0x0FFull;
 
           cheapMove (ASMOP_A, 0, left->aop, offset, true);
 
@@ -10839,21 +10839,42 @@ genOr (const iCode * ic, iCode * ifx)
             pushed_a = false;
         }
 
+      if (aopIsLitVal (left->aop, i, 1, 0x00) && !pushed_a)
+        {
+          int end;
+          for(end = i; end < size && aopIsLitVal (left->aop, end, 1, 0x00); end++);
+            genMove_o (result->aop, i, right->aop, i, end - i, a_free, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
+          if (result->aop->regs[A_IDX] >= i && result->aop->regs[A_IDX] < end)
+            a_free = false;
+          i = end;
+          continue;
+        }
+      else if (aopIsLitVal (right->aop, i, 1, 0x00) && !pushed_a)
+        {
+          int end;
+          for(end = i; end < size && aopIsLitVal (right->aop, end, 1, 0x00); end++);
+            genMove_o (result->aop, i, left->aop, i, end - i, a_free, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
+          if (result->aop->regs[A_IDX] >= i && result->aop->regs[A_IDX] < end)
+            a_free = false;
+          i = end;
+          continue;
+        }
+      else if (aopIsLitVal (left->aop, i, 1, 0xff) || aopIsLitVal (right->aop, i, 1, 0xff))
+        {
+          int end;
+          for(end = i; end < size && (aopIsLitVal (left->aop, end, 1, 0xff) || aopIsLitVal (right->aop, end, 1, 0xff)); end++);
+            genMove_o (result->aop, i, ASMOP_MONE, i, end - i, a_free, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
+          if (result->aop->regs[A_IDX] >= i && result->aop->regs[A_IDX] < end)
+            a_free = false;
+          i = end;
+          continue;
+        }
+
       if (right->aop->type == AOP_LIT)
         {
-          bytelit = byteOfVal (right->aop->aopu.aop_lit, i);
+          int bytelit = byteOfVal (right->aop->aopu.aop_lit, i);
 
-          if (bytelit == 0x00 || bytelit == 0xff)
-            {
-              int end;
-              for(end = i; end < size && byteOfVal (right->aop->aopu.aop_lit, end) == bytelit; end++);
-              genMove_o (result->aop, i, bytelit == 0x00 ? left->aop : ASMOP_MONE, i, end - i, a_free, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
-              if (result->aop->regs[A_IDX] >= i && result->aop->regs[A_IDX] < end)
-                a_free = false;
-              i = end;
-              continue;
-            }
-          else if (isLiteralBit (bytelit) >= 0 && aopSame (result->aop, i, left->aop, i, 1) &&
+          if (isLiteralBit (bytelit) >= 0 && aopSame (result->aop, i, left->aop, i, 1) &&
             (result->aop->type == AOP_STK || result->aop->type == AOP_DIR || result->aop->type == AOP_REG && !aopInReg (result->aop, i, IYL_IDX) && !aopInReg (result->aop, i, IYH_IDX)))
             {
               cheapMove (result->aop, i, left->aop, i, a_free);
