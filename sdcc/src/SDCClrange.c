@@ -237,26 +237,6 @@ findNextUseSym (eBBlock *ebp, iCode *ic, symbol * sym)
       if (SKIP_IC2(uic))
         continue;
 
-      if (uic->op == JUMPTABLE)
-        {
-          if (IS_ITEMP(IC_JTCOND(uic)) && IC_JTCOND(uic)->key == sym->key)
-            {
-	      markAlive(ic, uic, sym->key);
-	      return 1;
-	    }
-	   continue;
-	}
-
-      if (uic->op == IFX)
-        {
-          if (IS_ITEMP(IC_COND(uic)) && IC_COND(uic)->key == sym->key)
-            {
-	      markAlive(ic, uic, sym->key);
-	      return 1;
-	    }
-	   continue;
-	}
-
       if (IS_ITEMP (IC_LEFT (uic)))
         if (IC_LEFT (uic)->key == sym->key)
           {
@@ -624,41 +604,6 @@ rlivePoint (eBBlock **ebbs, int count, bool emitWarnings)
 	  if (SKIP_IC2(ic))
 	    continue;
       if (ebbs[i]->noPath) continue;
-	  if (ic->op == JUMPTABLE && IS_SYMOP(IC_JTCOND(ic)))
-	    {
-	      incUsed (ic, IC_JTCOND(ic));
-
-	      if (!IS_AUTOSYM(IC_JTCOND(ic)))
-	        continue;
-
-	      change += findPrevUse (ebbs[i], ic, IC_JTCOND(ic), ebbs, count, emitWarnings);
-              if (IS_ITEMP(IC_JTCOND(ic)))
-                {
-                  unvisitBlocks(ebbs, count);
-                  ic->rlive = bitVectSetBit (ic->rlive, IC_JTCOND(ic)->key);
-                  findNextUse (ebbs[i], ic->next, IC_JTCOND(ic));
-                }
-
-	      continue;
-	    }
-
-	  if (ic->op == IFX && IS_SYMOP(IC_COND(ic)))
-	    {
-	      incUsed (ic, IC_COND(ic));
-
-	      if (!IS_AUTOSYM(IC_COND(ic)))
-	        continue;
-
-	      change += findPrevUse (ebbs[i], ic, IC_COND(ic), ebbs, count, emitWarnings);
-              if (IS_ITEMP(IC_COND(ic)))
-                {
-                  unvisitBlocks (ebbs, count);
-                  ic->rlive = bitVectSetBit (ic->rlive, IC_COND(ic)->key);
-                  findNextUse (ebbs[i], ic->next, IC_COND(ic));
-                }
-
-	      continue;
-	    }
 
 	  if (IS_SYMOP(IC_LEFT(ic)))
 	    {

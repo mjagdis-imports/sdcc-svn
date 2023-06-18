@@ -1,5 +1,17 @@
 2023-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCBBlock.c,
+	  src/SDCCcse.c,
+	  src/SDCCdflow.c,
+	  src/SDCClrange.c,
+	  src/SDCCopt.c,
+	  src/SDCCralloc.hpp,
+	  src/*/ralloc.c,
+	  src/*/ralloc2.cc:
+	  Simplify based on IC_(JT)COND now being an alias for IC_LEFT.
+
+2023-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCdflow.h,
 	  src/SDCCgenconstprop.cc,
 	  src/SDCCopt.c,

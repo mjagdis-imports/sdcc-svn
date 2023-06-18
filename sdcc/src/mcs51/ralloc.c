@@ -1479,18 +1479,6 @@ serialRegAssign (eBBlock ** ebbs, int count)
           if (SKIP_IC2 (ic))
             continue;
 
-          if (ic->op == IFX)
-            {
-              verifyRegsAssigned (IC_COND (ic), ic);
-              continue;
-            }
-
-          if (ic->op == JUMPTABLE)
-            {
-              verifyRegsAssigned (IC_JTCOND (ic), ic);
-              continue;
-            }
-
           verifyRegsAssigned (IC_RESULT (ic), ic);
           verifyRegsAssigned (IC_LEFT (ic), ic);
           verifyRegsAssigned (IC_RIGHT (ic), ic);
@@ -1790,21 +1778,6 @@ regsUsedIniCode (iCode * ic)
 {
   bitVect *rmask = newBitVect (mcs51_nRegs);
 
-  /* do the special cases first */
-  if (ic->op == IFX)
-    {
-      rmask = bitVectUnion (rmask, mcs51_rUmaskForOp (IC_COND (ic)));
-      goto ret;
-    }
-
-  /* for the jumptable */
-  if (ic->op == JUMPTABLE)
-    {
-      rmask = bitVectUnion (rmask, mcs51_rUmaskForOp (IC_JTCOND (ic)));
-      goto ret;
-    }
-
-  /* of all other cases */
   if (IC_LEFT (ic))
     rmask = bitVectUnion (rmask, mcs51_rUmaskForOp (IC_LEFT (ic)));
 
@@ -2359,28 +2332,14 @@ findAssignToSym (operand * op, iCode * ic)
         break;                  /* found where this temp was defined */
 
       /* if we find an usage then we cannot delete it */
+      if (IC_LEFT (dic) && IC_LEFT (dic)->key == op->key)
+        return NULL;
 
-      if (dic->op == IFX)
-        {
-          if (IC_COND (dic) && IC_COND (dic)->key == op->key)
-            return NULL;
-        }
-      else if (dic->op == JUMPTABLE)
-        {
-          if (IC_JTCOND (dic) && IC_JTCOND (dic)->key == op->key)
-            return NULL;
-        }
-      else
-        {
-          if (IC_LEFT (dic) && IC_LEFT (dic)->key == op->key)
-            return NULL;
+      if (IC_RIGHT (dic) && IC_RIGHT (dic)->key == op->key)
+        return NULL;
 
-          if (IC_RIGHT (dic) && IC_RIGHT (dic)->key == op->key)
-            return NULL;
-
-          if (POINTER_SET (dic) && IC_RESULT (dic)->key == op->key)
-            return NULL;
-        }
+      if (POINTER_SET (dic) && IC_RESULT (dic)->key == op->key)
+        return NULL;
     }
 
   if (!dic)
