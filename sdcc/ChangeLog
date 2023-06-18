@@ -1,6 +1,12 @@
 2023-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,
+	  src/pdk/gen.c:
+	  Improve generalized constant propgation analysis and optimization.
+
+2023-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
 	  src/z80/gen.c,
 	  src/pdk/gen.c,
 	  src/stm8/gen.c:

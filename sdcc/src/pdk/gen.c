@@ -3648,6 +3648,7 @@ genLeftShift (const iCode *ic)
 
       genMove_o (result->aop, offset, left->aop, 0, result->aop->size - shCount / 8, regDead (A_IDX, ic), p_dead);
       genMove_o (result->aop, 0, ASMOP_ZERO, 0, offset, regDead (A_IDX, ic), p_dead);
+      result->aop->valinfo.anything = true;
       shCount %= 8;
 
       if (!shCount)
@@ -3754,6 +3755,7 @@ genLeftShift (const iCode *ic)
           pushed_counter = true;
         }
       genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX), p_dead && !aopInReg (right->aop, 0, P_IDX));
+      result->aop->valinfo.anything = true;
 
       symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
@@ -3827,7 +3829,7 @@ genLeftShift (const iCode *ic)
     }
 
   if (pushed_p)
-    popPF (!aopInReg (result->aop, 0, A_IDX) && !aopInReg (result->aop, 1, A_IDX));
+    popPF (!aopInReg (result->aop, 0, A_IDX) && !aopInReg (result->aop, 1, A_IDX) && (regDead (A_IDX, ic) || pushed_a_global));
 
   if (pushed_a_global)
     popAF();
@@ -3888,6 +3890,7 @@ genRightShift (const iCode *ic)
         }
       else
         genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX), p_dead);
+      result->aop->valinfo.anything = true;
 
       if (!shCount)
         goto release;
@@ -4059,6 +4062,7 @@ genRightShift (const iCode *ic)
         }
 
       genMove (result->aop, left->aop, !aopInReg (right->aop, 0, A_IDX), !aopInReg (right->aop, 0, P_IDX));
+      result->aop->valinfo.anything = true;
 
       symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
       symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);

@@ -792,6 +792,8 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op, const iCode *ic)
           else if ((uic->op == EQ_OP || uic->op == NE_OP || uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP) &&
             isOperandEqual (uic->left, ic->result))
             valinfo_union (v, getOperandValinfo (uic, uic->right));
+          else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) && !isOperandEqual (uic->left, op))
+            ;
           else if (uic->op == IFX)
             ;
           else 
@@ -843,6 +845,8 @@ optimizeNarrowResultCandidate (struct valinfo *v, operand *op, const iCode *ic)
               const operand *otherop = isOperandEqual (op, uic->left) ? uic->right: uic->left;
               valinfo_union (v, getOperandValinfo (uic, otherop));
             }
+          else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) && !isOperandEqual (uic->left, op))
+            ;
           else if (bitVectBitValue (OP_DEFS (op), uic->key)) // Ok: The use is the definition, that would get narrowed.
             ;
           else
@@ -996,7 +1000,7 @@ optimizeBinaryOpWithResult (iCode *ic)
       wassert (uic);
       if (uic->key == ic->key)
         ;
-      else if (uic->op == CAST || uic->op == IFX) // todo: allow more: negation?
+      else if (uic->op == CAST || uic->op == IFX || uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) // todo: allow more: negation?
         ;
       else if (uic->op == EQ_OP || uic->op == NE_OP ||
         uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
