@@ -4700,8 +4700,6 @@ genPlus (iCode *ic)
       IC_LEFT (ic) = t;
     }
 
-
-
   /* if I can do an increment instead
      of add then GOOD for ME */
   if (!maskedtopbyte && genPlusIncr (ic))
@@ -4734,7 +4732,7 @@ genPlus (iCode *ic)
         pullReg (hc08_reg_a);
       else
         loadRegFromAop (hc08_reg_a, leftOp, offset);
-      if (!mayskip || AOP_TYPE (IC_RIGHT (ic)) != AOP_LIT || (byteOfVal (AOP (IC_RIGHT (ic))->aopu.aop_lit, offset) != 0x00) )
+      if (!mayskip || !aopIsLitVal (rightOp, offset, 1, 0x00))
         {
           accopWithAop (add, rightOp, offset);
           if (!size && maskedtopbyte)
@@ -6646,11 +6644,9 @@ genAnd (iCode * ic, iCode * ifx)
     }
   while (size--)
     {
-      bytemask = (lit >> (offset * 8)) & 0xff;
-
       if (earlystore && offset == 1)
         pullReg (hc08_reg_a);
-      if (AOP_TYPE (right) == AOP_LIT && bytemask == 0)
+      if (aopIsLitVal (right->aop, offset, 1, 0x00))
         {
           if (isOperandVolatile (left, false))
             {
@@ -6659,7 +6655,7 @@ genAnd (iCode * ic, iCode * ifx)
             }
           storeConstToAop (0, AOP (result), offset);
         }
-      else if (AOP_TYPE (right) == AOP_LIT && bytemask == 0xff)
+      else if (aopIsLitVal (right->aop, offset, 1, 0xff))
         {
           transferAopAop (AOP (left), offset, AOP (result), offset);
         }
@@ -6965,7 +6961,8 @@ genXor (iCode * ic, iCode * ifx)
       if (earlystore && offset == 1)
         pullReg (hc08_reg_a);
       loadRegFromAop (hc08_reg_a, AOP (left), offset);
-      accopWithAop ("eor", AOP (right), offset);
+      if (!aopIsLitVal (right->aop, offset, 1, 0x00))
+        accopWithAop ("eor", right->aop, offset);
       storeRegToAop (hc08_reg_a, AOP (result), offset);
       if (AOP_TYPE (result) == AOP_REG && size && AOP (result)->aopu.aop_reg[offset]->rIdx == A_IDX)
         {
