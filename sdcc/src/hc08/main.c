@@ -145,12 +145,6 @@ _hc08_parseOptions (int *pargc, char **argv, int *i)
       return true;
     }
 
-  if (!strcmp (argv[*i], "--oldralloc"))
-    {
-      options.oldralloc = true;
-      return true;
-    }
-
   return false;
 }
 
@@ -162,7 +156,6 @@ static OPTION _hc08_options[] =
     {0, OPTION_SMALL_MODEL, NULL, "8-bit address space for data"},
     {0, OPTION_LARGE_MODEL, NULL, "16-bit address space for data (default)"},
     {0, "--out-fmt-elf", NULL, "Output executable in ELF format" },
-    {0, "--oldralloc", NULL, "Use old register allocator"},
     {0, NULL }
   };
 
