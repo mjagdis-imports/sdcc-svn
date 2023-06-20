@@ -992,7 +992,7 @@ optimizeBinaryOpWithoutResult (iCode *ic)
     return;
 
 #ifdef DEBUG_GCP_OPT
-  std::cout << "Replacing operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+  std::cout << "Replacing binary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
 #endif
 
   sym_link *newtype = newBitIntLink (width);
@@ -1037,7 +1037,7 @@ optimizeBinaryOpWithResult (iCode *ic)
     return;
 
 #ifdef DEBUG_GCP_OPT
-  std::cout << "Replacing operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+  std::cout << "Replacing binary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
 #endif
 
   sym_link *newtype = newBitIntLink (width);
@@ -1045,6 +1045,101 @@ optimizeBinaryOpWithResult (iCode *ic)
 
   reTypeOp (left, newtype);
   reTypeOp (right, newtype);
+  reTypeOp (result, newtype);
+
+  // Now also retype the other operand at some uses of the result.
+  bitVect *uses = bitVectCopy (OP_USES (result));
+  for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
+    {
+      iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
+      wassert (uic);
+      if (uic->key == ic->key)
+        ;
+      else if (uic->op == '!' || uic->op == CAST || uic->op == IFX || uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT)
+        ;
+      else if (uic->op == EQ_OP || uic->op == NE_OP ||
+        uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
+        {
+          if (!isOperandEqual (result, uic->left))
+            reTypeOp (uic->left, newtype);
+          if (!isOperandEqual (result, uic->right))
+            reTypeOp (uic->right, newtype);
+        }
+      else
+        wassert (0);
+    }
+}
+
+static void
+optimizeUnaryOpWithoutResult (iCode *ic)
+{
+  operand *op = (ic->op == '!' || ic->op == IFX) ? IC_LEFT (ic) : IC_RIGHT (ic);
+
+  if (!IS_INTEGRAL (operandType (op)) || !IS_ITEMP (op))
+    return;
+
+  struct valinfo opv = getOperandValinfo (ic, op);
+
+  optimizeNarrowOpCandidate (&opv, op, ic);
+
+  if (opv.anything || opv.min < 0) // Todo: Relax this by also using signed _BitInt where doing so makes sense.
+    return;
+
+  unsigned int width = my_stdc_bit_width (opv.max);
+  width = ((width + 7) & (-8)); // Round up to multiple of 8.
+  if (width >= bitsForType (operandType (op)))
+    return;
+  if (width > port->s.bitint_maxwidth)
+    return;
+
+#ifdef DEBUG_GCP_OPT
+  std::cout << "Replacing unary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+#endif
+
+  sym_link *newtype = newBitIntLink (width);
+  SPEC_USIGN (newtype) = true;
+
+  reTypeOp (op, newtype);
+}
+
+static void
+optimizeUnaryOpWithResult (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *result = IC_RESULT (ic);
+
+  if (!IS_INTEGRAL (operandType (result)) || !IS_ITEMP (result) || !ic->resultvalinfo)
+    return;
+
+  if (!IS_ITEMP (left))
+    return;
+
+  struct valinfo leftv = getOperandValinfo (ic, left);
+  struct valinfo resultv = *ic->resultvalinfo;
+  
+  optimizeNarrowOpCandidate (&leftv, left, ic);
+  optimizeNarrowResultCandidate (&resultv, result, ic);
+
+  valinfo_union (&resultv, leftv);
+
+  if (resultv.anything || resultv.min < 0) // Todo: Relax this by also using signed _BitInt where doing so makes sense.
+    return;
+
+  unsigned int width = my_stdc_bit_width (resultv.max);
+  width = ((width + 7) & (-8)); // Round up to multiple of 8.
+  if (width >= bitsForType (operandType (result)))
+    return;
+  if (width > port->s.bitint_maxwidth)
+    return;
+
+#ifdef DEBUG_GCP_OPT
+  std::cout << "Replacing binary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+#endif
+
+  sym_link *newtype = newBitIntLink (width);
+  SPEC_USIGN (newtype) = true;
+
+  reTypeOp (left, newtype);
   reTypeOp (result, newtype);
 
   // Now also retype the other operand at some uses of the result.
@@ -1129,6 +1224,10 @@ optimizeValinfoNarrow (iCode *sic)
         optimizeBinaryOpWithoutResult (ic);
       else if (ic->op == '+' || ic->op == '-' || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND)
         optimizeBinaryOpWithResult (ic);
+      else if (ic->op == '!' || ic->op == CAST || ic->op == IFX || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == ROT)
+        optimizeUnaryOpWithoutResult (ic);
+      else if (ic->op == '~' || ic->op == UNARYMINUS || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == ROT)
+        optimizeUnaryOpWithResult (ic);
     }
 
   for (iCode *ic = sic; ic; ic = ic->next)
