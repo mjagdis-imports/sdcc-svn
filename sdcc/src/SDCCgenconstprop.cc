@@ -334,6 +334,26 @@ valinfoMinus (struct valinfo *result, const struct valinfo &left, const struct v
 }
 
 static void
+valinfoMult (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+{
+  // todo: rewrite using ckd_mul when we can assume host compiler has c2x support!
+  if (!left.anything && !right.anything &&
+    left.min >=0 && right.min >= 0 &&
+    left.max < LLONG_MAX / 4 && right.max < LLONG_MAX / 4)
+    {
+      result->nothing = left.nothing || right.nothing;
+      auto min = left.min * right.min;
+      auto max = left.max * right.max;
+      if (result->anything || min >= result->min && max <= result->max)
+        {
+          result->anything = false;
+          result->min = min;
+          result->max = max;
+        }
+    }
+}
+
+static void
 valinfoOr (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
@@ -646,6 +666,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoPlus (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '-')
         valinfoMinus (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == '*')
+        valinfoMult (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '|')
         valinfoOr (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == BITWISEAND)
@@ -822,7 +844,7 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op, const iCode *ic)
             valinfo_union (v, getOperandValinfo (uic, uic->right));
           else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) && !isOperandEqual (uic->left, op))
             ;
-          else if (uic->op == IFX)
+          else if (uic->op == '!' || uic->op == IFX)
             ;
           else 
             {
@@ -865,7 +887,7 @@ optimizeNarrowResultCandidate (struct valinfo *v, operand *op, const iCode *ic)
           iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
           if (!uic)
             bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
-          else if (uic->op == CAST || uic->op == IFX)
+          else if (uic->op == '!' || uic->op == CAST || uic->op == IFX)
             ;
           else if (uic->op == EQ_OP || uic->op == NE_OP ||
             uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
@@ -899,7 +921,7 @@ reTypeOp (operand *op, sym_link *newtype)
   // Replace at uses.
   bitVect *uses = bitVectCopy (OP_USES (op));
   for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
-    {std::cout << "Replace def at " << key << "\n";
+    {
       iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
       wassert (uic);
       if (isOperandEqual (op, uic->left))
@@ -1028,7 +1050,7 @@ optimizeBinaryOpWithResult (iCode *ic)
       wassert (uic);
       if (uic->key == ic->key)
         ;
-      else if (uic->op == CAST || uic->op == IFX || uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) // todo: allow more: negation?
+      else if (uic->op == '!' || uic->op == CAST || uic->op == IFX || uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT)
         ;
       else if (uic->op == EQ_OP || uic->op == NE_OP ||
         uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
@@ -1041,6 +1063,52 @@ optimizeBinaryOpWithResult (iCode *ic)
       else
         wassert (0);
     }
+}
+
+static void
+optimizeMult (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  operand *result = IC_RESULT (ic);
+
+  sym_link *oldoptype = operandType (left);
+  sym_link *oldresulttype = operandType (result);
+  
+  if (!IS_INTEGRAL (oldresulttype) || bitsForType (oldresulttype) <= 16 || bitsForType (oldoptype) <= 8)
+    return;
+
+  struct valinfo leftv = getOperandValinfo (ic, left);
+  struct valinfo rightv = getOperandValinfo (ic, right);
+  struct valinfo resultv = *ic->resultvalinfo;
+
+  if (leftv.anything || rightv.anything || leftv.min < 0 || rightv.min < 0 || leftv.max > 0xffff || rightv.max > 0xffff || resultv.max > 0xffff)
+    return;
+
+  std::cout << "* Candidate at " << ic->key << "\n";
+
+  sym_link *newoptype;
+  sym_link *newresulttype;
+  if (leftv.max <= 0xff && rightv.max <= 0xff) // Use unsigned char, as that allows 8x8->16 multiplication.
+    {
+      newoptype = newCharLink ();
+      SPEC_USIGN (newoptype) = true;
+      newresulttype = (resultv.max <= 0xff) ? newCharLink () : newIntLink ();
+      SPEC_USIGN (newresulttype) = true;
+    }
+  else
+    {
+      newoptype = newBitIntLink (16);
+      SPEC_USIGN (newoptype) = true;
+      newresulttype = newBitIntLink (16);
+      SPEC_USIGN (newresulttype) = true;
+    }
+
+  std::cout << "Proceed with new types.\n";
+  
+  prependCast (ic, left, newoptype, 0);
+  prependCast (ic, right, newoptype, 0);
+  appendCast (ic, newresulttype, 0);
 }
 
 // Try to narrow operations
@@ -1057,6 +1125,10 @@ optimizeValinfoNarrow (iCode *sic)
       else if (ic->op == '+' || ic->op == '-' || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND)
         optimizeBinaryOpWithResult (ic);
     }
+
+  for (iCode *ic = sic; ic; ic = ic->next)
+    if (ic->op == '*')
+      optimizeMult (ic);
 }
 
 // Do machine-independent optimizations based on valinfos.

@@ -1,5 +1,13 @@
 2023-06-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCBBlock.c,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCopt.c,
+	  src/SDCCopt.h:
+	  Replace a multiplication narrowing optimization by a more generic one based on generalized constant propagation.
+
+2023-06-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCgenconstprop.cc:
 	  Improve generalized constant propgation analysis and optimization.
 	* src/hc08/gen.c,

@@ -451,7 +451,7 @@ edgesTo (eBBlock * to)
 /* addiCodeToeBBlock - will add an iCode to the end of a block     */
 /*-----------------------------------------------------------------*/
 void
-addiCodeToeBBlock (eBBlock * ebp, iCode * ic, iCode * ip)
+addiCodeToeBBlock (eBBlock *ebp, iCode *ic, iCode *ip)
 {
   ic->prev = ic->next = NULL;
   /* if the insert point is given */
@@ -464,11 +464,16 @@ addiCodeToeBBlock (eBBlock * ebp, iCode * ic, iCode * ip)
       ip->prev = ic;
       ic->next = ip;
       if (!ic->prev)
-        ebp->sch = ic;
+        {
+          wassert (ebp);
+          ebp->sch = ic;
+        }
       else
         ic->prev->next = ic;
       return;
     }
+
+  wassert (ebp);
 
   /* if the block has no  instructions */
   if (ebp->ech == NULL)
