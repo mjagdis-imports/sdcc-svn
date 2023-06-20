@@ -2,6 +2,12 @@
 
 	* src/SDCCgenconstprop.cc:
 	  Improve generalized constant propgation analysis and optimization.
+	* src/hc08/gen.c,
+	  src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  src/mos6502/ralloc2.cc:
+	  Further use of information from generalized constant propagation analysis in code generation.
 
 2023-06-19 Philipp Klaus Krause <philipp@colecovision.eu>
 

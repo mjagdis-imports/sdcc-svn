@@ -6646,19 +6646,24 @@ genAnd (iCode * ic, iCode * ifx)
     {
       if (earlystore && offset == 1)
         pullReg (hc08_reg_a);
-      if (aopIsLitVal (right->aop, offset, 1, 0x00))
+      if (aopIsLitVal (left->aop, offset, 1, 0x00) || aopIsLitVal (right->aop, offset, 1, 0x00))
         {
           if (isOperandVolatile (left, false))
             {
               loadRegFromAop (hc08_reg_a, AOP (left), offset);
               hc08_freeReg (hc08_reg_a);
             }
+          if (isOperandVolatile (right, false))
+            {
+              loadRegFromAop (hc08_reg_a, AOP (left), offset);
+              hc08_freeReg (hc08_reg_a);
+            }
           storeConstToAop (0, AOP (result), offset);
         }
-      else if (aopIsLitVal (right->aop, offset, 1, 0xff))
-        {
-          transferAopAop (AOP (left), offset, AOP (result), offset);
-        }
+      else if (aopIsLitVal (right->aop, offset, 1, 0xff) && !isOperandVolatile (left, false))
+        transferAopAop (left->aop, offset, result->aop, offset);
+      else if (aopIsLitVal (left->aop, offset, 1, 0xff) && !isOperandVolatile (right, false))
+        transferAopAop (right->aop, offset, result->aop, offset);
       else
         {
           loadRegFromAop (hc08_reg_a, AOP (left), offset);
@@ -6839,13 +6844,9 @@ genOr (iCode * ic, iCode * ifx)
           transferAopAop (AOP (right), offset, AOP (result), offset);
         }
       else if (aopIsLitVal (right->aop, offset, 1, 0x00))
-        {
-          transferAopAop (left->aop, offset, result->aop, offset);
-        }
+        transferAopAop (left->aop, offset, result->aop, offset);
       else if (aopIsLitVal (left->aop, offset, 1, 0x00))
-        {
-          transferAopAop (right->aop, offset, result->aop, offset);
-        }
+        transferAopAop (right->aop, offset, result->aop, offset);
       else
         {
           loadRegFromAop (hc08_reg_a, AOP (left), offset);

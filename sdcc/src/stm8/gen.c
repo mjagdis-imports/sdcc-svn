@@ -6057,8 +6057,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
           /* Try to use flag setting from ldw */
           if((aopOnStackNotExt (left->aop, i, 2) || left->aop->type == AOP_DIR) &&
-            right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i, 2, 0x0000) &&
-            (x_dead || y_dead))
+            aopIsLitVal (right->aop, i, 2, 0x0000) && (x_dead || y_dead))
             {
               emit2 ("ldw", x_dead ? "x, %s" : "y, %s", aopGet2 (left->aop, i));
               cost (2 + (left->aop->type == AOP_DIR) * (2 - x_dead), 2);
@@ -6117,8 +6116,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
 
           cheapMove (ASMOP_A, 0, left->aop, i, FALSE);
 
-          if (right->aop->type == AOP_LIT &&
-            !(aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic)) &&
+          if (!(aopInReg (left->aop, i, A_IDX) && !regDead (A_IDX, ic)) &&
             (aopIsLitVal (right->aop, i, 1, 0x01) || aopIsLitVal (right->aop, i, 1, 0xff)))
             emit3 (aopIsLitVal (right->aop, i, 1, 0x01) ? A_DEC : A_INC, ASMOP_A, 0);
           else
@@ -6769,7 +6767,7 @@ genAnd (const iCode *ic, iCode *ifx)
           i = j;
         }
       else if ((aopInReg (result->aop, i, X_IDX) && !aopInReg (left->aop, i, XL_IDX) && !aopInReg (left->aop, i, XH_IDX) || aopInReg (result->aop, i, Y_IDX) && !aopInReg (left->aop, i, YL_IDX) && !aopInReg (left->aop, i, YH_IDX)) &&
-        right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i + 1, 1, 0x00)) // Use clrw to efficiently clear upper byte before writing lower byte.
+        (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 1)) && aopIsLitVal (right->aop, i + 1, 1, 0x00)) // Use clrw to efficiently clear upper byte before writing lower byte.
         {
           emit3w_o (A_CLRW, result->aop, i, 0, 0);
           cheapMove (ASMOP_A, 0, left->aop, i, false);

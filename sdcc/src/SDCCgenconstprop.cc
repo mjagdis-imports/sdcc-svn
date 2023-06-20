@@ -17,7 +17,7 @@
 //
 // Generalized constant propagation.
 
-#define DEBUG_GCP_ANALYSIS
+#undef DEBUG_GCP_ANALYSIS
 #define DEBUG_GCP_OPT
 
 #include <map>
@@ -289,7 +289,7 @@ valinfoUpdate (struct valinfo *v)
           v->knownbitsmask |= (~0ull << i);
           v->knownbits &= ~(~0ull << i);
         }
-    }std::cout << std::hex << "valinfoUpdate min " << v->min << " max " << v->max << " knownbitsmask " << v->knownbitsmask << "\n";
+    }
   // Todo: Also update min/max from knownbits. Also update knownbits from min/max for negative min.
 }
 

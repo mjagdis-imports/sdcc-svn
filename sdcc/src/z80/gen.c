@@ -3511,7 +3511,12 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 #endif
     }
 
-  if(HAS_IYL_INST && to_index && (from->type == AOP_LIT || from->type == AOP_IMMD))
+  if (from->type != AOP_REG && from->type != AOP_LIT && aopIsLitVal (from, from_offset, 1, 0x00))
+    {
+      cheapMove (to, to_offset, ASMOP_ZERO, 0, a_dead);
+      return;
+    }
+  else if (HAS_IYL_INST && to_index && (from->type == AOP_LIT || from->type == AOP_IMMD))
     {
       if (!regalloc_dry_run)
         aopPut (to, aopGet (from, from_offset, false), to_offset);
@@ -11165,58 +11170,55 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
             
         // normal case
         // result = left ^ right
-        if (right_aop->type == AOP_LIT)
+        if (aopIsLitVal (right_aop, i, 1, 0x00))
+          {
+            int end;
+            for (end = i; end < size && aopIsLitVal (right_aop, end, 1, 0x00); end++);
+            genMove_o (result_aop, i, left_aop, i, end - i, a_free, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
+            if (result_aop->type == AOP_REG &&
+              (left_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] >= end || right_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] >= end))
+              {
+                wassert(regalloc_dry_run);
+                regalloc_dry_run_cost += 500;
+              }
+            if (result_aop->regs[A_IDX] >= i && result_aop->regs[A_IDX] < end)
+              a_free = false;
+            i = end;
+            continue;
+          }
+        else if (IS_TLCS90 && right_aop->type == AOP_LIT &&
+          (aopInReg (left_aop, i, HL_IDX) && aopInReg (result_aop, i, HL_IDX) || aopInReg (left_aop, i, H_IDX) && aopInReg (left_aop, i + 1, L_IDX) && aopInReg (result_aop, i, H_IDX) && aopInReg (result_aop, i + 1, L_IDX)))
           {
             unsigned int bytelit = byteOfVal (right_aop->aopu.aop_lit, i);
-
-            if (bytelit == 0x00)
-              {
-                int end;
-                for(end = i; end < size && byteOfVal (right_aop->aopu.aop_lit, end) == bytelit; end++);
-                genMove_o (result_aop, i, left_aop, i, end - i, a_free, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
-                if(result_aop->type == AOP_REG &&
-                  (left_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] >= end || right_aop->regs[result_aop->aopu.aop_reg[i]->rIdx] >= end))
-                  {
-                    wassert(regalloc_dry_run);
-                    regalloc_dry_run_cost += 500;
-                  }
-                if (result_aop->regs[A_IDX] >= i && result_aop->regs[A_IDX] < end)
-                  a_free = false;
-                i = end;
-                continue;
-              }
-            else if (IS_TLCS90 &&
-              (aopInReg (left_aop, i, HL_IDX) && aopInReg (result_aop, i, HL_IDX) || aopInReg (left_aop, i, H_IDX) && aopInReg (left_aop, i + 1, L_IDX) && aopInReg (result_aop, i, H_IDX) && aopInReg (result_aop, i + 1, L_IDX)))
-              {
-                unsigned int mask = aopInReg (result_aop, i, L_IDX) ? (bytelit + (byteOfVal (right_aop->aopu.aop_lit, i + 1) << 8)) : (byteOfVal (right_aop->aopu.aop_lit, i + 1) + (bytelit << 8));
-                emit2 ("xor hl, !immedword", mask);
-                regalloc_dry_run_cost += 3;
-                i += 2;
-                continue;
-              }
-            else if (IS_RAB && bytelit == 0x01 &&
-              (aopInReg (left_aop, i, L_IDX) && aopInReg (result_aop, i, L_IDX) || aopInReg (left_aop, i, E_IDX) && aopInReg (result_aop, i, E_IDX)))
-              {
-                bool de = aopInReg (result_aop, i, E_IDX);
-                emit2 (de ? "rr de" : "rr hl");
-                emit2 ("ccf");
-                emit2 (de ? "rl de" : "adc hl, hl");
-                regalloc_dry_run_cost += 4 - de;
-                i++;
-                continue;
-              }
-            else if (IS_RAB && bytelit == 0x80 &&
-              (aopInReg (left_aop, i, H_IDX) && aopInReg (result_aop, i, H_IDX) || aopInReg (left_aop, i, D_IDX) && aopInReg (result_aop, i, D_IDX)))
-              {
-                bool de = aopInReg (result_aop, i, D_IDX);
-                emit2 (de ? "rl de" : "add hl, hl");
-                emit2 ("ccf");
-                emit2 (de ? "rr de" : "rr hl");
-                regalloc_dry_run_cost += 3;
-                i++;
-                continue;
-              }
+            unsigned int mask = aopInReg (result_aop, i, L_IDX) ? (bytelit + (byteOfVal (right_aop->aopu.aop_lit, i + 1) << 8)) : (byteOfVal (right_aop->aopu.aop_lit, i + 1) + (bytelit << 8));
+            emit2 ("xor hl, !immedword", mask);
+            regalloc_dry_run_cost += 3;
+            i += 2;
+            continue;
           }
+        else if (IS_RAB && aopIsLitVal (right_aop, i, 1, 0x01) &&
+          (aopInReg (left_aop, i, L_IDX) && aopInReg (result_aop, i, L_IDX) || aopInReg (left_aop, i, E_IDX) && aopInReg (result_aop, i, E_IDX)))
+          {
+            bool de = aopInReg (result_aop, i, E_IDX);
+            emit2 (de ? "rr de" : "rr hl");
+            emit2 ("ccf");
+            emit2 (de ? "rl de" : "adc hl, hl");
+            regalloc_dry_run_cost += 4 - de;
+            i++;
+            continue;
+          }
+        else if (IS_RAB && aopIsLitVal (right_aop, i, 1, 0x80) &&
+          (aopInReg (left_aop, i, H_IDX) && aopInReg (result_aop, i, H_IDX) || aopInReg (left_aop, i, D_IDX) && aopInReg (result_aop, i, D_IDX)))
+          {
+            bool de = aopInReg (result_aop, i, D_IDX);
+            emit2 (de ? "rl de" : "add hl, hl");
+            emit2 ("ccf");
+            emit2 (de ? "rr de" : "rr hl");
+            regalloc_dry_run_cost += 3;
+            i++;
+            continue;
+          }
+
         // faster than result <- left, anl result,right
         // and better if result is SFR
         if (!a_free)
