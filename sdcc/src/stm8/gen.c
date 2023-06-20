@@ -1798,7 +1798,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   bool a_free, x_free, y_free, xl_dead, xh_dead , yl_dead, yh_dead;
 
 #if 0
-  D (emit2(";  genCopy", "%d %d %d", a_dead, x_dead, y_dead));
+  D (emit2(";  genCopy", "sizex %d %d %d %d", sizex, a_dead, x_dead, y_dead));
 #endif
 
   wassertl_bt (n <= 8, "Invalid size for genCopy().");
@@ -2396,7 +2396,7 @@ skip_byte:
           i++;
           continue;
         }
-        
+
       int s = 1;
       for (int j = i + 1; j < sizex && !assigned[j]; j++, s++);
 
@@ -6085,10 +6085,9 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
               if (!cmp_y && !x_dead && !aopInReg (left->aop, i, X_IDX))
                 push (ASMOP_X, 0, 2);
               genMove_o (aopInReg (left->aop, i, Y_IDX) ? ASMOP_Y : ASMOP_X, 0, left->aop, i, 2, regDead (A_IDX, ic) && left->aop->regs[A_IDX] <= i + 1 && right->aop->regs[A_IDX] <= i + 1, TRUE, FALSE);
-              if (right->aop->type == AOP_LIT && aopIsLitVal (right->aop, i, 2, 0x0000))
+              if (aopIsLitVal (right->aop, i, 2, 0x0000))
                 emit3w (A_TNZW, cmp_y ? ASMOP_Y : ASMOP_X, 0);
-              else if (right->aop->type == AOP_LIT &&
-                (!cmp_y && (x_dead || !aopInReg (left->aop, i, X_IDX)) || cmp_y && regDead (Y_IDX, ic)) &&
+              else if ((!cmp_y && (x_dead || !aopInReg (left->aop, i, X_IDX)) || cmp_y && regDead (Y_IDX, ic)) &&
                 (aopIsLitVal (right->aop, i, 2, 0x0001) || aopIsLitVal (right->aop, i, 2, 0xffff)))
                 emit3w (aopIsLitVal (right->aop, i, 2, 0x0001) ? A_DECW : A_INCW, cmp_y ? ASMOP_Y : ASMOP_X, 0);
               else

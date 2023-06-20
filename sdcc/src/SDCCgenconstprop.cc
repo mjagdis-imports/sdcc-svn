@@ -17,7 +17,7 @@
 //
 // Generalized constant propagation.
 
-#undef DEBUG_GCP_ANALYSIS
+#define DEBUG_GCP_ANALYSIS
 #define DEBUG_GCP_OPT
 
 #include <map>
@@ -270,6 +270,29 @@ dump_cfg_genconstprop (const cfg_t &cfg, std::string suffix)
   delete[] name;
 }
 
+// Update fields of valinfo struct from each other.
+static void
+valinfoUpdate (struct valinfo *v)
+{
+  if (v->anything || v->nothing)
+    return;
+  if (v->min == v->max)
+    {
+      v->knownbitsmask = ~0ull;
+      v->knownbits = v->min;
+      return;
+    }
+  for (int i = 0; i < 62; i++)
+    {
+      if (v->min >= 0 && v->max < (1ll << i))
+        {
+          v->knownbitsmask |= (~0ull << i);
+          v->knownbits &= ~(~0ull << i);
+        }
+    }std::cout << std::hex << "valinfoUpdate min " << v->min << " max " << v->max << " knownbitsmask " << v->knownbitsmask << "\n";
+  // Todo: Also update min/max from knownbits. Also update knownbits from min/max for negative min.
+}
+
 static void
 valinfoPlus (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
@@ -322,7 +345,7 @@ valinfoOr (struct valinfo *result, const struct valinfo &left, const struct vali
       long long max = std::min (left.max, right.max);
       for(int i = 0; max > 0; i++)
         {
-          result->max |= (1 << i);
+          result->max |= (1ll << i);
           max >>= 1;
         } 
     }
@@ -334,12 +357,12 @@ static void
 valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
-    (left.min >= 0 || right.min >= 0))
+    (left.min >= 0 && right.min >= 0))
     {
       result->anything = false;
       result->nothing = left.nothing || right.nothing;
       result->min = 0;
-      auto max = std::min(left.max, right.max);
+      auto max = std::min (left.max, right.max);
       if (max <= result->max)
         result->max = max;
     }
@@ -359,7 +382,7 @@ valinfoXor (struct valinfo *result, const struct valinfo &left, const struct val
       long long max = std::min (left.max, right.max);
       for(int i = 0; max > 0; i++)
         {
-          result->max |= (1 << i);
+          result->max |= (1ll << i);
           max >>= 1;
         } 
     }
@@ -395,7 +418,7 @@ valinfoLeft (struct valinfo *result, const struct valinfo &left, const struct va
       rv.max = left.max;
       for(long long r = right.max; r; r--)
         {
-          if ((rv.min << 1) < (-1ll << 61) || (rv.max << 1) > (1ll << 61))
+          if (rv.min < (-1ll << 61) || rv.max > (1ll << 61))
             return;
           rv.min <<= 1;
           rv.max <<= 1;
@@ -510,6 +533,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               struct valinfo v_false = v;
               v_true.min = std::max (v.min, litval + 1);
               v_false.max = std::min (v.max, litval);
+              valinfoUpdate (&v_true);
+              valinfoUpdate (&v_false);
               int key_true = IC_TRUE (ic) ? eBBWithEntryLabel(ebbi, IC_TRUE(ic))->sch->key : ic->next->key;
               int key_false = IC_FALSE (ic) ? eBBWithEntryLabel(ebbi, IC_FALSE(ic))->sch->key : ic->next->key;
               boost::tie(out, out_end) = boost::out_edges(i, G);
@@ -527,6 +552,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               struct valinfo v_false = v;
               v_true.max = std::min (v.max, litval - 1);
               v_false.min = std::max (v.min, litval);
+              valinfoUpdate (&v_true);
+              valinfoUpdate (&v_false);
               int key_true = IC_TRUE (ic) ? eBBWithEntryLabel(ebbi, IC_TRUE(ic))->sch->key : ic->next->key;
               int key_false = IC_FALSE (ic) ? eBBWithEntryLabel(ebbi, IC_FALSE(ic))->sch->key : ic->next->key;
               boost::tie(out, out_end) = boost::out_edges(i, G);
@@ -634,6 +661,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       else if (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
         //resultvalinfo = rightvalinfo; // Doesn't work for = - sometimes = with mismatched types arrive here.
         valinfoCast (&resultvalinfo, operandType (IC_RESULT (ic)), rightvalinfo);
+      valinfoUpdate (&resultvalinfo);
 
       if (resultsym)
         {
