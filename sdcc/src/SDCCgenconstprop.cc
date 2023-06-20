@@ -151,9 +151,14 @@ getOperandValinfo (const iCode *ic, const operand *op)
 
   sym_link *type = operandType (op);
 
-  if (IS_OP_LITERAL (op) && IS_INTEGRAL (type) && bitsForType (type) < 64) // Todo: More exact check than this bits thing?
+  if (IS_INTEGRAL (type) && bitsForType (type) < 64 && !IS_OP_VOLATILE (op) &&// Todo: More exact check than this bits thing?
+    (IS_OP_LITERAL (op) || IS_SYMOP (op) && SPEC_CONST (type) && OP_SYMBOL_CONST (op)->ival && IS_AST_VALUE (list2expr (OP_SYMBOL_CONST (op)->ival))))
     {
-      long long litval = operandLitValueUll (op);
+      long long litval;
+      if (IS_OP_LITERAL (op))
+        litval = operandLitValueUll (op);
+      else
+        litval = ullFromVal (list2expr (OP_SYMBOL_CONST (op)->ival)->opval.val);
       v.anything = false;
       v.min = litval;
       v.max = litval;
@@ -161,7 +166,7 @@ getOperandValinfo (const iCode *ic, const operand *op)
       v.knownbits = litval;
       return (v);
     }
-  else if (IS_ITEMP (op))
+  else if (IS_ITEMP (op) && !IS_OP_VOLATILE (op))
     {
       if (ic->valinfos && ic->valinfos->map.find (op->key) != ic->valinfos->map.end ())
         return (ic->valinfos->map[op->key]);
@@ -377,12 +382,12 @@ static void
 valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
-    (left.min >= 0 && right.min >= 0))
+    (left.min >= 0 || right.min >= 0))
     {
       result->anything = false;
       result->nothing = left.nothing || right.nothing;
       result->min = 0;
-      auto max = std::min (left.max, right.max);
+      long long max = std::min ((unsigned long long)left.max, (unsigned long long)right.max);
       if (max <= result->max)
         result->max = max;
     }
