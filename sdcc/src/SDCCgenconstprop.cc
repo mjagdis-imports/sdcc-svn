@@ -350,7 +350,7 @@ valinfoMult (struct valinfo *result, const struct valinfo &left, const struct va
   // todo: rewrite using ckd_mul when we can assume host compiler has c2x support!
   if (!left.anything && !right.anything &&
     left.min >=0 && right.min >= 0 &&
-    left.max < LLONG_MAX / 4 && right.max < LLONG_MAX / 4)
+    left.max < (1ll << 31) && right.max < (1ll << 31))
     {
       result->nothing = left.nothing || right.nothing;
       auto min = left.min * right.min;
@@ -627,6 +627,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           resultvalinfo.anything = false;
           resultvalinfo.min = 0;
           resultvalinfo.max = 1;
+          resultvalinfo.knownbitsmask = ~1ull;
+          resultvalinfo.knownbits = 0ull;
           if (!leftvalinfo.anything && (leftvalinfo.min > 0 || leftvalinfo.max < 0))
             resultvalinfo.max = 0;
           else if (!leftvalinfo.anything && leftvalinfo.min == 0 && leftvalinfo.max == 0)
@@ -646,6 +648,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           resultvalinfo.anything = false;
           resultvalinfo.min = 0;
           resultvalinfo.max = 1;
+          resultvalinfo.knownbitsmask = ~1ull;
+          resultvalinfo.knownbits = 0ull;
           if (!leftvalinfo.anything && !rightvalinfo.anything)
             {
               if (leftvalinfo.max < rightvalinfo.min)
@@ -660,6 +664,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           resultvalinfo.anything = false;
           resultvalinfo.min = 0;
           resultvalinfo.max = 1;
+          resultvalinfo.knownbitsmask = ~1ull;
+          resultvalinfo.knownbits = 0ull;
           if (!leftvalinfo.anything && !rightvalinfo.anything)
             {
               if (leftvalinfo.min > rightvalinfo.max)
@@ -674,6 +680,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           resultvalinfo.anything = false;
           resultvalinfo.min = 0;
           resultvalinfo.max = 1;
+          resultvalinfo.knownbitsmask = ~1ull;
+          resultvalinfo.knownbits = 0ull;
           if (!leftvalinfo.anything && !rightvalinfo.anything && leftvalinfo.min == leftvalinfo.max && rightvalinfo.min == rightvalinfo.max)
             {
               bool one = (leftvalinfo.min == rightvalinfo.min) ^ (ic->op == NE_OP);
@@ -723,6 +731,10 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
 void
 recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
 {
+#ifdef DEBUG_ANALYSIS
+  std::cout << "recomputeValinfos at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
+#endif
+
   unsigned int max_rounds = 1000; // Rapidly end analysis once this number of rounds has been exceeded.
 
   cfg_t G;
