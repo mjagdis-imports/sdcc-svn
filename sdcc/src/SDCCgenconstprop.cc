@@ -18,7 +18,7 @@
 // Generalized constant propagation.
 
 #undef DEBUG_GCP_ANALYSIS
-#define DEBUG_GCP_OPT
+#undef DEBUG_GCP_OPT
 
 #include <map>
 #include <set>
@@ -136,6 +136,9 @@ getTypeValinfo (sym_link *type)
   return (v);
 }
 
+static void
+valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right);
+
 struct valinfo
 getOperandValinfo (const iCode *ic, const operand *op)
 {
@@ -154,16 +157,19 @@ getOperandValinfo (const iCode *ic, const operand *op)
   if (IS_INTEGRAL (type) && bitsForType (type) < 64 && !IS_OP_VOLATILE (op) &&// Todo: More exact check than this bits thing?
     (IS_OP_LITERAL (op) || IS_SYMOP (op) && SPEC_CONST (type) && OP_SYMBOL_CONST (op)->ival && IS_AST_VALUE (list2expr (OP_SYMBOL_CONST (op)->ival))))
     {
+      struct valinfo v2;
       long long litval;
       if (IS_OP_LITERAL (op))
         litval = operandLitValueUll (op);
       else
         litval = ullFromVal (list2expr (OP_SYMBOL_CONST (op)->ival)->opval.val);
-      v.anything = false;
-      v.min = litval;
-      v.max = litval;
-      v.knownbitsmask = ~0ull;
-      v.knownbits = litval;
+      v2.anything = false;
+      v2.nothing = false;
+      v2.min = litval;
+      v2.max = litval;
+      v2.knownbitsmask = ~0ull;
+      v2.knownbits = litval;
+      valinfoCast (&v, type, v2); // Need to cast: ival could be out of range of type.
       return (v);
     }
   else if (IS_ITEMP (op) && !IS_OP_VOLATILE (op))
@@ -489,6 +495,14 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
           result->knownbitsmask = right.knownbitsmask;
           result->knownbits = right.knownbits;
         }
+    }
+  else if (!right.anything && IS_INTEGRAL (targettype) && SPEC_USIGN(targettype) && right.min == right.max)
+    {
+      result->anything = false;
+      result->min = right.min & ~result->knownbitsmask;
+      result->max = right.max & ~result->knownbitsmask;
+      result->knownbitsmask = ~0ull;
+      result->knownbits = result->min;
     }
 }
 
@@ -1133,7 +1147,7 @@ optimizeUnaryOpWithResult (iCode *ic)
     return;
 
 #ifdef DEBUG_GCP_OPT
-  std::cout << "Replacing binary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+  std::cout << "Replacing unary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
 #endif
 
   sym_link *newtype = newBitIntLink (width);
@@ -1185,8 +1199,6 @@ optimizeMult (iCode *ic)
   if (leftv.anything || rightv.anything || leftv.min < 0 || rightv.min < 0 || leftv.max > 0xffff || rightv.max > 0xffff || resultv.max > 0xffff)
     return;
 
-  std::cout << "* Candidate at " << ic->key << "\n";
-
   sym_link *newoptype;
   sym_link *newresulttype;
   if (leftv.max <= 0xff && rightv.max <= 0xff) // Use unsigned char, as that allows 8x8->16 multiplication.
@@ -1203,8 +1215,6 @@ optimizeMult (iCode *ic)
       newresulttype = newBitIntLink (16);
       SPEC_USIGN (newresulttype) = true;
     }
-
-  std::cout << "Proceed with new types.\n";
   
   prependCast (ic, left, newoptype, 0);
   prependCast (ic, right, newoptype, 0);
@@ -1226,7 +1236,7 @@ optimizeValinfoNarrow (iCode *sic)
         optimizeBinaryOpWithResult (ic);
       else if (ic->op == '!' || ic->op == CAST || ic->op == IFX || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == ROT)
         optimizeUnaryOpWithoutResult (ic);
-      else if (ic->op == '~' || ic->op == UNARYMINUS || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == ROT)
+      else if (ic->op == '~' || ic->op == UNARYMINUS || ic->op == LEFT_OP || ic->op == RIGHT_OP) // Not ROT, since the width of the left operand matters for the semantics.
         optimizeUnaryOpWithResult (ic);
     }
 

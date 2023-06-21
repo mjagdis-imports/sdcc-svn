@@ -1,3 +1,10 @@
+2023-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  src/SDCCopt.c,
+	  src/hc08/main.c:
+	  Fixes for generalized constant propagation and support functions for _BitInt.
+
 2023-06-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:
