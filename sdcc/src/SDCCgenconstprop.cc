@@ -281,12 +281,14 @@ dump_cfg_genconstprop (const cfg_t &cfg, std::string suffix)
   delete[] name;
 }
 
-// Update fields of valinfo struct from each other.
+// Update fields of valinfo struct from each other. TODO: Make some of this work also for negative v->min.
 static void
 valinfoUpdate (struct valinfo *v)
 {
   if (v->anything || v->nothing)
     return;
+
+  // Update bits from min/max.
   if (v->min == v->max)
     {
       v->knownbitsmask = ~0ull;
@@ -301,7 +303,17 @@ valinfoUpdate (struct valinfo *v)
           v->knownbits &= ~(~0ull << i);
         }
     }
-  // Todo: Also update min/max from knownbits. Also update knownbits from min/max for negative min.
+
+  // Update min/max from bits.
+  if (v->min >= 0)
+    {
+      unsigned long long bitmax = (v->knownbitsmask & v->knownbits) | ~v->knownbitsmask;
+      if (bitmax < (unsigned long long)(v->max))
+        v->max = bitmax;
+      unsigned long long bitmin = v->knownbitsmask & v->knownbits;
+      if (bitmin < (unsigned long long)(v->min))
+        v->min = bitmin;
+    }
 }
 
 static void
@@ -385,17 +397,21 @@ valinfoOr (struct valinfo *result, const struct valinfo &left, const struct vali
 }
 
 static void
-valinfoAnd (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+valinfoAnd (struct valinfo *result, sym_link *resulttype, const struct valinfo &left_orig, const struct valinfo &right_orig)
 {
+  // In iCode, bitwise and sometimes has operands of different type.
+  struct valinfo left, right;
+  valinfoCast (&left, resulttype, left_orig);
+  valinfoCast (&right, resulttype, right_orig);
+
   if (!left.anything && !right.anything &&
     (left.min >= 0 || right.min >= 0))
     {
       result->anything = false;
       result->nothing = left.nothing || right.nothing;
       result->min = 0;
-      long long max = std::min ((unsigned long long)left.max, (unsigned long long)right.max);
-      if (max <= result->max)
-        result->max = max;
+      if (left.min >= 0 && right.min >= 0)
+        result->max = std::min (left.max, right.max);
     }
   result->knownbitsmask = (left.knownbitsmask & right.knownbitsmask) | (left.knownbitsmask & ~left.knownbits) | (right.knownbitsmask & ~right.knownbits);
   result->knownbits = left.knownbits & right.knownbits;
@@ -490,10 +506,16 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
       result->anything = false;
       result->min = right.min;
       result->max = right.max;
-      if (result->min >= 0) // Don't handle sign extension for now.
+      if (result->min >= 0)
         {
           result->knownbitsmask = right.knownbitsmask;
           result->knownbits = right.knownbits;
+        }
+      else if (result->max < 0 && bitsForType (targettype) < 64)
+        {
+          unsigned long long topmask = (~0ull << bitsForType (targettype));
+          result->knownbitsmask = right.knownbitsmask | topmask;
+          result->knownbits = right.knownbits | topmask;
         }
     }
   else if (!right.anything && IS_INTEGRAL (targettype) && SPEC_USIGN(targettype) && right.min == right.max)
@@ -698,7 +720,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       else if (ic->op == '|')
         valinfoOr (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == BITWISEAND)
-        valinfoAnd (&resultvalinfo, leftvalinfo, rightvalinfo);
+        valinfoAnd (&resultvalinfo, operandType (IC_RESULT (ic)), leftvalinfo, rightvalinfo);
       else if (ic->op == '^')
         valinfoXor (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == GETABIT)

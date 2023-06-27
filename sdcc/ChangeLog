@@ -1,5 +1,10 @@
 2023-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCgenconstprop.cc:
+	  Improve interval / bit synchronization in generalized constant propagation analysis.
+
+2023-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCast.c,
 	  support/valdiag/tests/bug-3603.c:
 	  Fix bug #3603.
