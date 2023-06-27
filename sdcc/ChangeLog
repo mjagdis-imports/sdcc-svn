@@ -3,6 +3,10 @@
 	* src/SDCCast.c,
 	  support/valdiag/tests/bug-3603.c:
 	  Fix bug #3603.
+	* src/SDCCmain.c,
+	  src/pdk/main.c,
+	  src/z80/main.c:
+	  Improve error message on invalid -mmarch option, part of RFE #881.
 
 2023-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
