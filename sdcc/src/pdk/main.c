@@ -256,7 +256,7 @@ PORT pdk13_port =
 {
   TARGET_ID_PDK13,
   "pdk13",
-  "PDK13",                       /* Target name */
+  "Padauk PDK13",                /* Target name */
   0,                             /* Processor name */
   {
     glue,
@@ -427,7 +427,7 @@ PORT pdk14_port =
 {
   TARGET_ID_PDK14,
   "pdk14",
-  "PDK14",                       /* Target name */
+  "Padauk PDK14",                /* Target name */
   0,                             /* Processor name */
   {
     glue,
@@ -596,7 +596,7 @@ PORT pdk15_port =
 {
   TARGET_ID_PDK15,
   "pdk15",
-  "PDK15",                       /* Target name */
+  "Padauk PDK15",                /* Target name */
   0,                             /* Processor name */
   {
     glue,

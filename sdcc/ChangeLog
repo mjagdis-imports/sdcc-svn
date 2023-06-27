@@ -1,3 +1,13 @@
+2023-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  support/valdiag/tests/bug-3603.c:
+	  Fix bug #3603.
+	* src/SDCCmain.c,
+	  src/pdk/main.c,
+	  src/z80/main.c:
+	  Improve error message on invalid -mmarch option, part of RFE #881.
+
 2023-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,

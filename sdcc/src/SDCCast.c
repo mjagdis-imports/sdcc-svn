@@ -3677,13 +3677,6 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
-      /* if the left is an rvalue then error */
-      if (LRVAL (tree))
-        {
-          werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "array access");
-          goto errorTreeReturn;
-        }
-
       if (IS_LITERAL (RTYPE (tree)))
         {
           int arrayIndex = (int) ulFromVal (valFromType (RETYPE (tree)));
@@ -3896,7 +3889,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
             SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
 
-          LRVAL (tree) = RRVAL (tree) = 1;
+          TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
 
           TTYPE (tree) = computeType (LTYPE (tree), RTYPE (tree), resultType, tree->opval.op);
           TETYPE (tree) = getSpec (TTYPE (tree));
@@ -3926,6 +3919,12 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werror (E_SFR_POINTER);
         }
 
+      if (LRVAL (tree))
+        {
+          werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "address of");
+          goto errorTreeReturn;
+        }
+
       if (LETYPE (tree) && SPEC_SCLS (tree->left->etype) == S_REGISTER)
         {
           werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of register variable");
@@ -3935,12 +3934,6 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (IS_LITERAL (LTYPE (tree)))
         {
           werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of literal");
-          goto errorTreeReturn;
-        }
-
-      if (LRVAL (tree))
-        {
-          werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "address of");
           goto errorTreeReturn;
         }
 
@@ -4149,7 +4142,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (IS_LITERAL (RTYPE (tree)) && getSize (RTYPE (tree)) == getSize (LTYPE (tree)))
         SPEC_USIGN (RTYPE (tree)) = SPEC_USIGN (LTYPE (tree));
 
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
 
       TTYPE (tree) = computeType (LTYPE (tree), RTYPE (tree), resultType, tree->opval.op);
       TETYPE (tree) = getSpec (TTYPE (tree));
@@ -4177,7 +4170,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           return decorateType (tree, resultType, reduceTypeAllowed);
         }
 
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
 
       TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), RTYPE (tree), resultType, tree->opval.op));
 
@@ -4248,7 +4241,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           rewriteAstNodeVal (tree, valMod (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), reduceTypeAllowed));
           return decorateType (tree, resultType, reduceTypeAllowed);
         }
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
       TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), RTYPE (tree), resultType, tree->opval.op));
       return tree;
 
@@ -4265,11 +4258,6 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               goto errorTreeReturn;
             }
 
-          if (LRVAL (tree))
-            {
-              werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "pointer deref");
-              goto errorTreeReturn;
-            }
           if (IS_ADDRESS_OF_OP (tree->left))
             {
               /* replace *&obj with obj */
@@ -4327,7 +4315,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
         }
 
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
 
       { // cast happen only if both left and right can be casted to result type
         ast *l = addCast (tree->left, resultTypeProp, FALSE);
@@ -4366,7 +4354,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               return tree;
             }
           
-          LRVAL (tree) = 1;
+          TRVAL (tree) = LRVAL (tree) = 1;
           if (reduceTypeAllowed)
               COPYTYPE (TTYPE (tree), TETYPE (tree), LTYPE (tree));
           else
@@ -4462,7 +4450,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
         }
 
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
 
       /* if the left is a pointer */
       if (IS_PTR (LTYPE (tree)) || IS_AGGREGATE (LTYPE (tree)))
@@ -4507,7 +4495,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
           tree->left = addCast (tree->left, resultTypeProp, TRUE);
           TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), NULL, resultType, tree->opval.op));
-          LRVAL (tree) = 1;
+          TRVAL (tree) = LRVAL (tree) = 1;
           return tree;
         }
 
@@ -4579,7 +4567,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           SPEC_SCLS (TETYPE (tree)) = 0;
         }
 
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
 
       /* if right is a literal and */
       /* left is also an addition/subtraction with a literal then */
@@ -4665,7 +4653,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
       else
         tree->left = addCast (tree->left, resultTypeProp, TRUE);
-      LRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = 1;
       COPYTYPE (TTYPE (tree), TETYPE (tree), LTYPE (tree));
       return tree;
 
@@ -4708,7 +4696,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           rewriteAstNodeVal (tree, valNot (valFromType (LETYPE (tree)), reduceTypeAllowed));
           return decorateType (tree, resultType, reduceTypeAllowed);
         }
-      LRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = 1;
       if (reduceTypeAllowed)
         {
           TTYPE (tree) = TETYPE (tree) = (resultTypeProp == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
@@ -4782,7 +4770,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           return decorateType (otree, RESULT_TYPE_NONE, reduceTypeAllowed);
       }
 
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
       if(!reduceTypeAllowed)
         {
           TETYPE (tree) = getSpec (TTYPE (tree) = computeType (LTYPE (tree), NULL, resultType, tree->opval.op));
@@ -5033,7 +5021,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                     }
                 }
               checkPtrCast (LTYPE (tree), RTYPE (tree), tree->values.cast.implicitCast, !ullFromVal (valFromType (RTYPE (tree))));
-              LRVAL (tree) = 1;
+              TRVAL (tree) = LRVAL (tree) = 1;
               tree->type = EX_VALUE;
               tree->opval.val = valCastLiteral (LTYPE (tree), gpVal | pVal, gpVal | pVal);
               TTYPE (tree) = tree->opval.val->type;
@@ -5053,7 +5041,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             DCL_TYPE (LTYPE (tree)) = PTR_TYPE (SPEC_OCLS (RETYPE (tree)));
         }
       TTYPE (tree) = LTYPE (tree);
-      LRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = 1;
 
 #endif
       TETYPE (tree) = getSpec (TTYPE (tree));
@@ -5085,7 +5073,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           rewriteAstNodeVal (tree, valLogicAndOr (valFromType (LETYPE (tree)), valFromType (RETYPE (tree)), tree->opval.op, reduceTypeAllowed));
           return decorateType (tree, resultType, reduceTypeAllowed);
         }
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL(tree) = LRVAL (tree) = RRVAL (tree) = 1;
       TTYPE (tree) = TETYPE (tree) = reduceTypeAllowed ? ((resultTypeProp == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ()) : newIntLink();
       return tree;
 
@@ -5291,7 +5279,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
         }
 
-      LRVAL (tree) = RRVAL (tree) = 1;
+      TRVAL (tree) = LRVAL (tree) = RRVAL (tree) = 1;
       if (reduceTypeAllowed)
           TTYPE (tree) = TETYPE (tree) = (resultType == RESULT_TYPE_BOOL) ? newBoolLink () : newCharLink ();
       else
@@ -5696,7 +5684,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         tree = rewriteStructAssignment (tree);
       else
         {
-          RRVAL (tree) = 1;
+          TRVAL(tree) = RRVAL (tree) = 1;
           LLVAL (tree) = 1;
         }
       if (!tree->initMode)
@@ -5706,7 +5694,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         }
       if (tree->initMode && SPEC_STAT (getSpec (LTYPE (tree))) && !constExprTree (tree->right))
         werrorfl (tree->filename, tree->lineno, E_CONST_EXPECTED, "=");
-      if (LRVAL (tree))
+      if (TRVAL(tree) = LRVAL (tree))
         {
           werrorfl (tree->filename, tree->lineno, E_LVALUE_REQUIRED, "=");
           goto errorTreeReturn;

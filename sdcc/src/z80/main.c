@@ -2140,7 +2140,7 @@ PORT z80n_port =
 {
   TARGET_ID_Z80N,
   "z80n",
-  "z80n",                       /* Target name */
+  "Z80N",                       /* Target name */
   NULL,                         /* Processor name */
   {
     glue,
