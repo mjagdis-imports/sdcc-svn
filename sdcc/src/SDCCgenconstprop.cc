@@ -1,5 +1,7 @@
 // (c) 2023 Philipp Klaus Krause, philipp@colecovision.eu
 //
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
 // Free Software Foundation; either version 2, or (at your option) any
@@ -377,6 +379,33 @@ valinfoMult (struct valinfo *result, const struct valinfo &left, const struct va
 }
 
 static void
+valinfoDiv (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+{
+  if (!left.anything && left.min >= result->min && left.max <= result->max)
+    {
+      if (!right.anything && right.min >= 0)
+        {
+          result->min = std::min (left.min, 0ll);
+          result->max = std::max (left.max, 0ll);
+        }
+    }
+  if (!right.anything && right.min > 0 && result->max >= 0)
+    result->max /= right.min;
+}
+
+static void
+valinfoMod (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+{
+  if (!left.anything && left.min >= result->min && left.max <= result->max)
+    {
+      result->min = std::min (left.min, 0ll);
+      result->max = std::max (left.max, 0ll);
+    }
+  if (!left.anything && !right.anything && left.min >= 0 && right.min >= 0 && right.max <= result->max);
+    result->max = right.max - 1;
+}
+
+static void
 valinfoOr (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
@@ -717,6 +746,10 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoMinus (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '*')
         valinfoMult (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == '/')
+        valinfoDiv (&resultvalinfo, leftvalinfo, rightvalinfo);
+      else if (ic->op == '%')
+        valinfoMod (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '|')
         valinfoOr (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == BITWISEAND)
