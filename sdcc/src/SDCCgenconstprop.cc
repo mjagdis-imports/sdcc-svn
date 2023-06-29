@@ -615,7 +615,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           iCode *cic = (iCode *)hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (ic->left)));
           struct valinfo v = getOperandValinfo (ic, cic->left);
-          if (cic->op == '>' && IS_ITEMP (cic->left) && IS_INTEGRAL (operandType (cic->left)) &&
+          if (cic->op == '>' && IS_ITEMP (cic->left) && !IS_OP_VOLATILE (cic->left) && IS_INTEGRAL (operandType (cic->left)) &&
             IS_OP_LITERAL (IC_RIGHT (cic)) && !v.anything && !v.nothing && operandLitValueUll(IC_RIGHT (cic)) < +1000)
             {
               long long litval = operandLitValueUll (IC_RIGHT (cic));
@@ -634,7 +634,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                 else if (G[boost::target(*out, G)].ic->key == key_false)
                   G[*out].map[cic->left->key] = v_false;
             }
-          if (cic->op == '<' && IS_ITEMP (cic->left) && IS_INTEGRAL (operandType (cic->left)) &&
+          if (cic->op == '<' && IS_ITEMP (cic->left) && !IS_OP_VOLATILE (cic->left) && IS_INTEGRAL (operandType (cic->left)) &&
             IS_OP_LITERAL (IC_RIGHT (cic)) && !v.anything && !v.nothing && operandLitValueUll(IC_RIGHT (cic)) < 0xffffffff)
             {
               long long litval = operandLitValueUll (IC_RIGHT (cic));
@@ -665,12 +665,12 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       if (localchange)
         std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
 #endif
-// todo: handle more operations: ^.
+
       if (!localchange) // Input didn't change. No need to recompute result.
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
         ;
-      else if (IS_OP_VOLATILE (IC_RESULT (ic)))
+      else if (IS_OP_VOLATILE (IC_RESULT (ic))) // No point trying to find out what we write to a volatil eoperand. At the next use, it could be anything, anyway.
         ;
       else if (ic->op == '!')
         {
