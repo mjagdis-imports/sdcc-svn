@@ -1,3 +1,8 @@
+2023-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Improve 16-bit comparisons.
+
 2023-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,
