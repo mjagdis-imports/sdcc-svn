@@ -5816,6 +5816,9 @@ genCmp (const iCode *ic, iCode *ifx)
       opcode = exchangedCmp (opcode);
     }
 
+  bool need_w = (size == 2) && // jrsle and jrsgt test the Z flag, which only works correctly when we do the whole subtraction as 16 bit.
+    (!strcmp (branchInstCmp (opcode, sign, ifx && IC_TRUE (ifx)), "jrsle") || !strcmp (branchInstCmp (opcode, sign, ifx && IC_TRUE (ifx)), "jrsgt"));
+
   if (size == 1 &&
     (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || right->aop->type == AOP_STK) &&
     aopInReg (left->aop, 0, A_IDX))
@@ -5839,17 +5842,22 @@ genCmp (const iCode *ic, iCode *ifx)
               emit3w (A_EXGW, ASMOP_X, ASMOP_Y);
             }
         }
+      else if (aopInReg (left->aop, 0, Y_IDX) || !regDead (X_IDX, ic) && regDead (Y_IDX, ic) && left->aop->type == AOP_STK && right->aop->type != AOP_STK)
+        {
+          genMove (ASMOP_Y, left->aop, regDead (A_IDX, ic), regDead (X_IDX, ic), regDead (Y_IDX, ic));
+          emit2 ("cpw", "y, %s", aopGet2 (right->aop, 0));
+          cost (4, 2);
+        }
       else
         {
-          bool save_x = !regDead (X_IDX, ic) && !aopInReg (left->aop, 0, X_IDX) && !aopInReg (left->aop, 0, Y_IDX);
+          bool save_x = !regDead (X_IDX, ic) && !aopInReg (left->aop, 0, X_IDX);
           if (save_x)
             push (ASMOP_X, 0, 2);
 
-          if (!aopInReg (left->aop, 0, Y_IDX))
-            genMove (ASMOP_X, left->aop, regDead (A_IDX, ic), TRUE, regDead (Y_IDX, ic));
+          genMove (ASMOP_X, left->aop, regDead (A_IDX, ic), TRUE, regDead (Y_IDX, ic));
 
-          emit2 ("cpw", aopInReg (left->aop, 0, Y_IDX) ? "y, %s" : "x, %s", aopGet2 (right->aop, 0));
-          cost (3 + aopInReg (left->aop, 0, Y_IDX), 2);
+          emit2 ("cpw", "x, %s", aopGet2 (right->aop, 0));
+          cost (3, 2);
 
           if (save_x)
             pop (ASMOP_X, 0, 2);
@@ -5903,6 +5911,9 @@ genCmp (const iCode *ic, iCode *ifx)
               started = true;
               continue;
             }
+
+          if (need_w)
+            UNIMPLEMENTED;
 
           if (!regDead (A_IDX, ic) && !pushed_a && !aopInReg (left->aop, i, A_IDX))
             {

@@ -670,7 +670,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         resultsym = 0;
       else if (end_it_quickly) // Just use the very rough approximation from the type info only to speed up analysis.
         ;
-      else if (IS_OP_VOLATILE (IC_RESULT (ic))) // No point trying to find out what we write to a volatil eoperand. At the next use, it could be anything, anyway.
+      else if (IS_OP_VOLATILE (IC_RESULT (ic))) // No point trying to find out what we write to a volatile operand. At the next use, it could be anything, anyway.
         ;
       else if (ic->op == '!')
         {

@@ -1,3 +1,20 @@
+2023-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Fix bug #3609.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3606.c:
+	  Fix bug #3606.
+	* src/hc08/gen.c:
+	  Fix bug #3604.
+	* doc/README.txt:
+	  Fix bug #3605.
+
+2023-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Improve 16-bit comparisons.
+
 2023-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:

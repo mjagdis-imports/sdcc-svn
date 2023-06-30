@@ -11872,6 +11872,9 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
         }
       else
         {
+          if (!use_b && !isRegDead (A_IDX, ic))
+            _push (PAIR_AF);
+
           /* Left is already in result - so now do the shift */
           if (shCount > 1)
             {
@@ -11885,9 +11888,6 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
               if (requiresHL (shiftaop))
                 spillPair (PAIR_HL);
             }
-
-          if (!use_b && !isRegDead (A_IDX, ic))
-            _push (PAIR_AF);
 
           while (size--)
             {
