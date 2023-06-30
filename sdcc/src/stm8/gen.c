@@ -5803,6 +5803,9 @@ genCmp (const iCode *ic, iCode *ifx)
       opcode = exchangedCmp (opcode);
     }
 
+  bool need_w = (size == 2) && // jrsle and jrsgt test the Z flag, which only works correctly when we do the whole subtraction as 16 bit.
+    (!strcmp (branchInstCmp (opcode, sign, ifx && IC_TRUE (ifx)), "jrsle") || !strcmp (branchInstCmp (opcode, sign, ifx && IC_TRUE (ifx)), "jrsgt"));
+
   if (size == 1 &&
     (right->aop->type == AOP_LIT || right->aop->type == AOP_DIR || right->aop->type == AOP_STK) &&
     aopInReg (left->aop, 0, A_IDX))
@@ -5895,6 +5898,9 @@ genCmp (const iCode *ic, iCode *ifx)
               started = true;
               continue;
             }
+
+          if (need_w)
+            UNIMPLEMENTED;
 
           if (!regDead (A_IDX, ic) && !pushed_a && !aopInReg (left->aop, i, A_IDX))
             {

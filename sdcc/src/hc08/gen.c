@@ -9781,7 +9781,7 @@ genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * 
         {
           /* Case with a bitfield length <8 and literal source
            */
-          litval = (int) ulFromVal (AOP (right)->aopu.aop_lit);
+          litval = ullFromVal (AOP (right)->aopu.aop_lit);
           litval <<= bstr;
           litval &= (~mask) & 0xff;
 
@@ -9794,7 +9794,7 @@ genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * 
             }
           if (litval)
             {
-              emitcode ("ora", "#0x%02x", litval);
+              emitcode ("ora", "#0x%02llx", litval);
               regalloc_dry_run_cost += 2;
             }
           hc08_dirtyReg (hc08_reg_a, false);
@@ -9855,7 +9855,7 @@ genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * 
             }
           if (litval)
             {
-              emitcode ("ora", "#0x%02x", litval);
+              emitcode ("ora", "#0x%02llx", litval);
               regalloc_dry_run_cost += 2;
             }
           hc08_dirtyReg (hc08_reg_a, false);
