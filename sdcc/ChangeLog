@@ -1,3 +1,9 @@
+2023-07-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/gen.c,
+	  support/regression/tests/bug-3607.c:
+	  Fix bug #3607, using a variant of the patch by Oleg Endo.
+
 2023-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c:
