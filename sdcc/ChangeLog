@@ -1,3 +1,9 @@
+2023-07-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/gen.c,
+	  support/regression/tests/bug-3607.c:
+	  Fix bug #3607, using a variant of the patch by Oleg Endo.
+
 2023-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c:
@@ -34,6 +40,11 @@
 	  src/pdk/main.c,
 	  src/z80/main.c:
 	  Improve error message on invalid -mmarch option, part of RFE #881.
+
+2023-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/sdcc.nsi:
+	  Change references to bin\cc1.exe to libexec\sdcc\cc1 (picked from nativecrosstools branch).
 
 2023-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
 

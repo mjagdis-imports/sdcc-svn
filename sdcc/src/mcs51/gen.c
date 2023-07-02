@@ -8588,9 +8588,47 @@ genGetWord (iCode * ic)
   aopOp (result, ic, FALSE);
 
   offset = (int) ulFromVal (AOP (right)->aopu.aop_lit) / 8;
+
+  if (AOP (result)->type == AOP_REG && AOP (left)->type == AOP_REG)
+    {
+      // assume that the result always has 2 regs and
+      // the left operand has two or more regs.
+      wassert (AOP (result)->size == 2 && (AOP (left)->size - offset) >= 2);
+  
+      if (AOP (result)->aopu.aop_reg[0]->rIdx == AOP (left)->aopu.aop_reg[offset + 1]->rIdx
+            && AOP (result)->aopu.aop_reg[1]->rIdx == AOP (left)->aopu.aop_reg[offset]->rIdx)
+        {
+          D (emitcode (";", "overlapping regs (1)"));
+    
+          // [r0:r1] -> [r1:r0]
+          // swap registers by ferrying them through the accumulator
+          //
+          //                 a    r0    r1
+          // xch  a,r0      r0    a
+          // xch  a,r1      r1          r0
+          // xch  a,r0      a     r1
+    
+          emitcode ("xch", "a,%s", aopGet (left, offset, false, false));
+          emitcode ("xch", "a,%s", aopGet (left, offset + 1, false, false));
+          emitcode ("xch", "a,%s", aopGet (left, offset, false, false));
+          goto done;
+        }
+      else if (AOP (left)->aopu.aop_reg[offset+1]->rIdx == AOP (result)->aopu.aop_reg[0]->rIdx)
+        {
+          D (emitcode (";", "overlapping regs (3)"));
+    
+          // [r0:r3] -> [r1:r0]
+    
+          aopPut (result, aopGet (left, offset + 1, false, false), 1);
+          aopPut (result, aopGet (left, offset, false, false), 0);
+          goto done;
+        }
+    }
+
   aopPut (result, aopGet (left, offset, FALSE, FALSE), 0);
   aopPut (result, aopGet (left, offset + 1, FALSE, FALSE), 1);
 
+done:
   freeAsmop (result, NULL, ic, TRUE);
   freeAsmop (right, NULL, ic, TRUE);
   freeAsmop (left, NULL, ic, TRUE);
