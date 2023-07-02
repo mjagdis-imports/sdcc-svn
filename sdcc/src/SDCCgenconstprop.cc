@@ -119,6 +119,30 @@ getTypeValinfo (sym_link *type)
       v.knownbitsmask = ~1ull;
       v.knownbits = 0;
     }
+  else if (IS_PTR (type))
+    {
+      v.anything = false;
+      v.min = 0;
+      v.max = (1ul << (GPTRSIZE * 8)) - 1;
+      if (TARGET_PDK_LIKE && IS_PTR (type))
+        {
+          int codeaddrbits = 10 + TARGET_IS_PDK14 * 1 + TARGET_IS_PDK15 * 2 + TARGET_IS_PDK16 * 3;
+          int ramaddrbits = 6 + TARGET_IS_PDK14 * 1 + TARGET_IS_PDK15 * 2 + TARGET_IS_PDK16 * 3;
+          if (DCL_TYPE(type) == CPOINTER) // To ROM
+            {
+              unsigned long long addrmask = ~(~0ull << codeaddrbits);
+              v.knownbitsmask |= ~addrmask;
+              v.knownbits &= addrmask;
+              v.knownbits |= 0x010000;
+            }
+          else if (DCL_TYPE(type) == POINTER) // To RAM
+            {
+              unsigned long long addrmask = ~(~0ull << ramaddrbits);
+              v.knownbitsmask |= ~addrmask;
+              v.knownbits &= addrmask;
+            }
+        }
+    }
   else if (IS_INTEGRAL (type) && IS_UNSIGNED (type) && bitsForType (type) < 64)
     {
       v.anything = false;
@@ -529,7 +553,7 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
   *result = getTypeValinfo (targettype);
   if (right.nothing)
     result->nothing = true;
-  else if (!right.anything && IS_INTEGRAL (targettype) && 
+  else if (!right.anything && (IS_INTEGRAL (targettype) || IS_GENPTR (targettype)) && 
     (!result->anything && right.min >= result->min && right.max <= result->max || result->anything))
     {
       result->anything = false;

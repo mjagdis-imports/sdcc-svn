@@ -1,6 +1,11 @@
 2023-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:
+	  Basic generalized constant propagation analysis for pdk pointers.
+
+2023-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
 	  Fix dumping of generalized constant propagation analysis graph debug info for initialization of global objects.
 
 2023-07-01 Philipp Klaus Krause <philipp@colecovision.eu>
