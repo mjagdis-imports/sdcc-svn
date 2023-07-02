@@ -278,7 +278,7 @@ dump_cfg_genconstprop (const cfg_t &cfg, std::string suffix)
         }
       name[i] = os.str();
     }
-  boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter(currFunc->rname, " generalized constant propagation"));
+  boost::write_graphviz(dump_file, cfg, boost::make_label_writer(name), boost::default_writer(), cfg_titlewriter((currFunc ? currFunc->rname : "__global"), " generalized constant propagation"));
 
   delete[] name;
 }
