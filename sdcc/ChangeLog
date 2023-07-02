@@ -1,7 +1,7 @@
 2023-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc:
-	  Basic generalized constant propagation analysis for pdk pointers.
+	  Basic generalized constant propagation analysis for pdk and mcs51 pointers.
 
 2023-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
 

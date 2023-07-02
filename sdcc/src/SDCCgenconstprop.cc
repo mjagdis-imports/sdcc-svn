@@ -124,23 +124,27 @@ getTypeValinfo (sym_link *type)
       v.anything = false;
       v.min = 0;
       v.max = (1ul << (GPTRSIZE * 8)) - 1;
-      if (TARGET_PDK_LIKE && IS_PTR (type))
+      if (TARGET_IS_MCS51 && !IS_GENPTR (type) ||
+        TARGET_PDK_LIKE && IS_PTR (type) && (DCL_TYPE (type) == CPOINTER || DCL_TYPE (type) == POINTER))
         {
-          int codeaddrbits = 10 + TARGET_IS_PDK14 * 1 + TARGET_IS_PDK15 * 2 + TARGET_IS_PDK16 * 3;
-          int ramaddrbits = 6 + TARGET_IS_PDK14 * 1 + TARGET_IS_PDK15 * 2 + TARGET_IS_PDK16 * 3;
-          if (DCL_TYPE(type) == CPOINTER) // To ROM
+          int addrbits;
+          if (TARGET_IS_MCS51)
             {
-              unsigned long long addrmask = ~(~0ull << codeaddrbits);
-              v.knownbitsmask |= ~addrmask;
-              v.knownbits &= addrmask;
-              v.knownbits |= 0x010000;
+              if (DCL_TYPE (type) == POINTER)
+                addrbits = 7;
+              else if (DCL_TYPE (type) == IPOINTER || DCL_TYPE (type) == PPOINTER)
+                addrbits = 8;
+              else
+                addrbits = 16;
             }
-          else if (DCL_TYPE(type) == POINTER) // To RAM
-            {
-              unsigned long long addrmask = ~(~0ull << ramaddrbits);
-              v.knownbitsmask |= ~addrmask;
-              v.knownbits &= addrmask;
-            }
+          else if (TARGET_PDK_LIKE)
+            addrbits = (DCL_TYPE (type) == CPOINTER ? 10 : 6) + TARGET_IS_PDK14 * 1 + TARGET_IS_PDK15 * 2 + TARGET_IS_PDK16 * 3;
+          else
+            wassert (0);
+          unsigned long long addrmask = ~(~0ull << addrbits);
+          v.knownbitsmask |= ~addrmask;
+          v.knownbits &= addrmask;
+          v.knownbits |= (unsigned long long)pointerTypeToGPByte (DCL_TYPE (type), 0, 0) << 16;
         }
     }
   else if (IS_INTEGRAL (type) && IS_UNSIGNED (type) && bitsForType (type) < 64)
@@ -580,8 +584,6 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
       result->knownbits = result->min;
     }
 }
-
-#define PASS_LIMIT = 4;
 
 static void
 recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<unsigned int>, std::set<unsigned int> > &todo, bool externchange, bool end_it_quickly)
