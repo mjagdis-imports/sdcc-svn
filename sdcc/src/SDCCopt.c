@@ -2776,7 +2776,7 @@ optimizeCastCast (eBBlock ** ebbs, int count)
               /* Cast to bool must be preserved to ensure that all nonzero values are correctly cast to true */
               if (SPEC_NOUN (type2) == V_BOOL && SPEC_NOUN(type3) != V_BOOL)
                  continue;
-              /* Similarly for singed->unsigned->signed widening casts to ensure that negative values end up as nonnegative ones in the end. */
+              /* Similarly for signed->unsigned->signed widening casts to ensure that negative values end up as nonnegative ones in the end. */
               if (!SPEC_USIGN (type1) && SPEC_USIGN (type2) && !SPEC_USIGN (type3) && bitsForType (type3) > bitsForType (type2))
                 continue;
 
@@ -3300,6 +3300,7 @@ eBBlockFromiCode (iCode *ic)
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
   while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
     optimizeCastCast (ebbi->bbOrder, ebbi->count);
+  recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false); // Recompute again before killing dead code, since dead code elimination needs updated ic->seq - the old ones might have been invalidated in optimizeOpWidth above.
   killDeadCode (ebbi); // Ensure lospre doesn't resurrect dead code.
   adjustIChain (ebbi->bbOrder, ebbi->count);
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
@@ -3317,7 +3318,7 @@ eBBlockFromiCode (iCode *ic)
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
-      recomputeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
+      recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
       adjustIChain (ebbi->bbOrder, ebbi->count);
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
       separateLiveRanges (ic, ebbi);
@@ -3419,7 +3420,7 @@ eBBlockFromiCode (iCode *ic)
   do
   {
     adjustIChain (ebbi->bbOrder, ebbi->count);
-    recomputeLiveRanges (ebbi->bbOrder, ebbi->count, FALSE);
+    recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
     ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
     change = separateLiveRanges (ic, ebbi);
     removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
@@ -3433,7 +3434,7 @@ eBBlockFromiCode (iCode *ic)
   while (change);
 
   /* compute the live ranges */
-  recomputeLiveRanges (ebbi->bbOrder, ebbi->count, TRUE);
+  recomputeLiveRanges (ebbi->bbOrder, ebbi->count, true);
 
   if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_RANGE, ebbi);
