@@ -1,5 +1,10 @@
 2023-07-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/ds390/gen.c:
+	  Fix an issue in ds390 casts to _BitInt.
+
+2023-07-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCgenconstprop.cc,
 	  src/pdk/main.c:
 	  Generalized constant propagation optimization for pdk and mcs51 pointers.

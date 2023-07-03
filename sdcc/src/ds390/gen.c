@@ -12334,7 +12334,7 @@ genCast (iCode * ic)
       bool masktopbyte = IS_BITINT (ctype) && (SPEC_BITINTWIDTH (ctype) % 8) && bitsForType (ctype) < bitsForType (rtype);
 
       /* if they are in the same place */
-      if (sameRegs (AOP (right), AOP (result)))
+      if (!masktopbyte && sameRegs (AOP (right), AOP (result)))
         goto release;
 
       /* if they in different places then copy */
