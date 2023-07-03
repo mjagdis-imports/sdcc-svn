@@ -127,7 +127,7 @@ getTypeValinfo (sym_link *type)
       if (TARGET_IS_MCS51 && !IS_GENPTR (type) ||
         TARGET_PDK_LIKE && IS_PTR (type) && (DCL_TYPE (type) == CPOINTER || DCL_TYPE (type) == POINTER))
         {
-          int addrbits;
+          int addrbits = GPTRSIZE * 8;
           if (TARGET_IS_MCS51)
             {
               if (DCL_TYPE (type) == POINTER)
@@ -144,7 +144,12 @@ getTypeValinfo (sym_link *type)
           unsigned long long addrmask = ~(~0ull << addrbits);
           v.knownbitsmask |= ~addrmask;
           v.knownbits &= addrmask;
-          v.knownbits |= (unsigned long long)pointerTypeToGPByte (DCL_TYPE (type), 0, 0) << 16;
+          if (TARGET_IS_MCS51)
+            v.knownbits |= (unsigned long long)pointerTypeToGPByte (DCL_TYPE (type), 0, 0) << 16;
+          else if (TARGET_PDK_LIKE)
+            v.knownbits |= (DCL_TYPE (type) == CPOINTER ? 0x8000 : 0x0000);
+          else
+            wassert (0);
         }
     }
   else if (IS_INTEGRAL (type) && IS_UNSIGNED (type) && bitsForType (type) < 64)
@@ -347,7 +352,7 @@ valinfoUpdate (struct valinfo *v)
 }
 
 static void
-valinfoPlus (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+valinfoPlus (struct valinfo *result, sym_link *resulttype, const struct valinfo &left, const struct valinfo &right)
 {
   // todo: rewrite using ckd_add when we can assume host compiler has c2x support!
   if (!left.anything && !right.anything &&
@@ -364,11 +369,60 @@ valinfoPlus (struct valinfo *result, const struct valinfo &left, const struct va
           result->max = max;
         }
     }
+  if (IS_PTR (resulttype) && !left.anything && !right.anything)
+    {
+      if (TARGET_IS_MCS51)
+        {
+          result->knownbitsmask |= (left.knownbitsmask & 0xff0000ull);
+          result->knownbits = result->knownbits & ~0xff0000ull | left.knownbits & 0xff0000ull;
+        }
+      else if (TARGET_PDK_LIKE)
+        {
+          result->knownbitsmask |= (left.knownbitsmask & 0x8000ull);
+          result->knownbits = result->knownbits & ~0x8000ull | left.knownbits & 0x8000ull;
+        }
+    }
+  if (!left.anything && !right.anything &&
+    left.min >= 0 && right.min >= 0)
+    {
+      for (int i = 0; i < 61; i++) // If there are 0 bits in the same position on both sides, carry will be absorbed and not affect the following bit.
+        {
+          unsigned long long mask = (0x3ull << i);
+          if ((left.knownbitsmask & mask) != mask)
+            continue;
+          if ((right.knownbitsmask & mask) != mask)
+            continue;
+          unsigned long long mask1 = (0x1ull << i);
+          if ((left.knownbits & mask1) || (right.knownbits & mask1))
+            continue;
+          unsigned long long mask2 = (0x2ull << i);
+          if ((left.knownbits & mask2) && (right.knownbits & mask2))
+            continue;
+          result->knownbitsmask |= mask2;
+          if ((left.knownbits & mask2) || (right.knownbits & mask2))
+            result->knownbits |= mask2; 
+          else
+            result->knownbits &= ~mask2; 
+        }
+    }
 }
 
 static void
-valinfoMinus (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
+valinfoMinus (struct valinfo *result, sym_link *resulttype, const struct valinfo &left, const struct valinfo &right)
 {
+  if (IS_PTR (resulttype) && !left.anything && !right.anything)
+    {
+      if (TARGET_IS_MCS51)
+        {
+          result->knownbitsmask |= (left.knownbitsmask & 0xff0000ull);
+          result->knownbits = result->knownbits & ~0xff0000ull | left.knownbits & 0xff0000ull;
+        }
+      else if (TARGET_PDK_LIKE)
+        {
+          result->knownbitsmask |= (left.knownbitsmask & 0x8000ull);
+          result->knownbits = result->knownbits & ~0x8000ull | left.knownbits & 0x8000ull;
+        }
+    }
   // todo: rewrite using ckd_sub when we can assume host compiler has c2x support!
   if (!left.anything && !right.anything &&
     left.min > LLONG_MIN / 2 && right.min > LLONG_MIN / 2 &&
@@ -717,7 +771,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           z.nothing = false;
           z.anything = false;
           z.min = z.max = 0;
-          valinfoMinus (&resultvalinfo, z, leftvalinfo);
+          valinfoMinus (&resultvalinfo, operandType (ic->result), z, leftvalinfo);
         }
       else if (ic->op == '<' || ic->op == GE_OP)
         {
@@ -767,9 +821,9 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
             }
         }
       else if (ic->op == '+')
-        valinfoPlus (&resultvalinfo, leftvalinfo, rightvalinfo);
+        valinfoPlus (&resultvalinfo, operandType (ic->result), leftvalinfo, rightvalinfo);
       else if (ic->op == '-')
-        valinfoMinus (&resultvalinfo, leftvalinfo, rightvalinfo);
+        valinfoMinus (&resultvalinfo, operandType (ic->result), leftvalinfo, rightvalinfo);
       else if (ic->op == '*')
         valinfoMult (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '/')
@@ -779,7 +833,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       else if (ic->op == '|')
         valinfoOr (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == BITWISEAND)
-        valinfoAnd (&resultvalinfo, operandType (IC_RESULT (ic)), leftvalinfo, rightvalinfo);
+        valinfoAnd (&resultvalinfo, operandType (ic->result), leftvalinfo, rightvalinfo);
       else if (ic->op == '^')
         valinfoXor (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == GETABIT)
@@ -860,7 +914,7 @@ static void
 optimizeValinfoConst (iCode *sic)
 {
 #ifdef DEBUG_GCP_OPT
-  std::cout << "optimizeValifoConst at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
+  std::cout << "optimizeValinfoConst at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
 #endif
   for (iCode *ic = sic; ic; ic = ic->next)
     {
@@ -916,7 +970,7 @@ static void
 optimizeNarrowOpCandidate (struct valinfo *v, operand *op, const iCode *ic)
 {
   wassert (v && op);
-  if (!IS_INTEGRAL (operandType (op)))
+  if (!IS_INTEGRAL (operandType (op)) && !IS_GENPTR (operandType (op)))
     v->anything = true;
   else if (IS_OP_LITERAL (op))
     {
@@ -933,6 +987,7 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op, const iCode *ic)
           iCode *dic = (iCode *)hTabItemWithKey (iCodehTab, key);
           wassert (dic && dic->resultvalinfo);
           if (dic->op != CAST && !(dic->op == '=' && !POINTER_SET (dic)) && // Def ok: we could just change to suitable cast.
+            dic->op != ADDRESS_OF &&
             !bitVectBitValue (OP_USES (op), dic->key)) // Def ok: it is a use, and would be narrowed, too.
             {
               v->anything = true;
@@ -958,6 +1013,8 @@ optimizeNarrowOpCandidate (struct valinfo *v, operand *op, const iCode *ic)
             ;
           else if (uic->op == '!' || uic->op == IFX)
             ;
+          else if (uic->op == GET_VALUE_AT_ADDRESS && !isOperandEqual (IS_INTEGRAL (operandType (op)) ? uic->left : uic->right, op))
+            ;
           else 
             {
               v->anything = true;
@@ -972,7 +1029,7 @@ static void
 optimizeNarrowResultCandidate (struct valinfo *v, operand *op, const iCode *ic)
 {
   wassert (v && op);
-  if (!IS_INTEGRAL (operandType (op)))
+  if (!IS_INTEGRAL (operandType (op)) && !IS_GENPTR (operandType (op)))
     v->anything = true;
   else
     {
@@ -1010,6 +1067,8 @@ optimizeNarrowResultCandidate (struct valinfo *v, operand *op, const iCode *ic)
           else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) && !isOperandEqual (uic->left, op))
             ;
           else if (bitVectBitValue (OP_DEFS (op), uic->key)) // Ok: The use is the definition, that would get narrowed.
+            ;
+          else if (uic->op == GET_VALUE_AT_ADDRESS && !isOperandEqual (IS_INTEGRAL (operandType (op)) ? uic->left : uic->right, op))
             ;
           else
             {
@@ -1116,7 +1175,7 @@ optimizeBinaryOpWithResult (iCode *ic)
   operand *right = IC_RIGHT (ic);
   operand *result = IC_RESULT (ic);
 
-  if (!IS_INTEGRAL (operandType (result)) || !IS_ITEMP (result) || !ic->resultvalinfo)
+  if (!IS_INTEGRAL (operandType (result)) && !IS_PTR (operandType (result)) || !IS_ITEMP (result) || !ic->resultvalinfo)
     return;
 
   if (!IS_ITEMP (left) && !IS_OP_LITERAL (left) || !IS_ITEMP (right) && !IS_OP_LITERAL (right))
@@ -1127,32 +1186,81 @@ optimizeBinaryOpWithResult (iCode *ic)
   struct valinfo resultv = *ic->resultvalinfo;
   
   optimizeNarrowOpCandidate (&leftv, left, ic);
-  optimizeNarrowOpCandidate (&rightv, right, ic);
-  optimizeNarrowResultCandidate (&resultv, result, ic);
-
   valinfo_union (&resultv, leftv);
-  valinfo_union (&resultv, rightv);
+  if (IS_INTEGRAL (operandType (result)))
+    {
+      optimizeNarrowOpCandidate (&rightv, right, ic);
+      valinfo_union (&resultv, rightv);
+    }
+  optimizeNarrowResultCandidate (&resultv, result, ic);
 
   if (resultv.anything || resultv.min < 0) // Todo: Relax this by also using signed _BitInt where doing so makes sense.
     return;
 
-  unsigned int width = my_stdc_bit_width (resultv.max);
-  width = ((width + 7) & (-8)); // Round up to multiple of 8.
-  if (width >= bitsForType (operandType (result)))
-    return;
-  if (width > port->s.bitint_maxwidth)
-    return;
+  sym_link *newtype;
+  if (IS_INTEGRAL (operandType (result)))
+    {
+      unsigned int width = my_stdc_bit_width (resultv.max);
+      width = ((width + 7) & (-8)); // Round up to multiple of 8.
+      if (width >= bitsForType (operandType (result)))
+        return;
+      if (width > port->s.bitint_maxwidth)
+        return;
 
 #ifdef DEBUG_GCP_OPT
-  std::cout << "Replacing binary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+      std::cout << "Replacing binary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
 #endif
+      newtype = newBitIntLink (width);
+      SPEC_USIGN (newtype) = true;
+    }
+  else // Ptr
+    {
+      if (!IS_GENPTR (operandType (result)) || !TARGET_PDK_LIKE && !TARGET_IS_MCS51)
+        return;
 
-  sym_link *newtype = newBitIntLink (width);
-  SPEC_USIGN (newtype) = true;
+      if (TARGET_IS_MCS51 && (resultv.knownbitsmask & 0xff0000) != 0xff0000) // Check if we fully know the GPByte, and thus the intrinsic named address space this pointer points to.
+        return;
+      if (TARGET_PDK_LIKE && !(resultv.knownbitsmask & 0x8000)) // Check if we know the topmost bit, and thus the intrinsic named address space this pointer points to.
+        return;
+#ifdef DEBUG_GCP_OPT
+      std::cout << "Known intrinsic named address space at " << ic->key << " for " << OP_SYMBOL (result)->name << ": " << std::hex << resultv.knownbits << "\n";
+#endif
+      newtype = copyLinkChain (operandType (result));
+
+      if (TARGET_IS_MCS51)
+        {
+          int gpbyte = (resultv.knownbits & 0xff0000) >> 16;
+          if (gpbyte == GPTYPE_NEAR)
+            DCL_TYPE (newtype) = IPOINTER;
+          else if (gpbyte == GPTYPE_XSTACK)
+            DCL_TYPE (newtype) = PPOINTER;
+          else if (gpbyte == GPTYPE_FAR)
+            DCL_TYPE (newtype) = FPOINTER;
+          else if (gpbyte == GPTYPE_CODE)
+            DCL_TYPE (newtype) = CPOINTER;
+          else
+            {
+              std::cerr << "Odd gpbyte " << std::hex << gpbyte << "\n";
+              wassert (0);
+            }
+        }
+      else if (TARGET_PDK_LIKE)
+        {
+          if (resultv.knownbits & 0x8000)
+            DCL_TYPE (newtype) = CPOINTER;
+          else
+            DCL_TYPE (newtype) = POINTER;
+        }
+      else
+        wassert (0);
+    }
 
   reTypeOp (left, newtype);
-  reTypeOp (right, newtype);
   reTypeOp (result, newtype);
+
+  if (IS_PTR (operandType (result)))
+    return;
+  reTypeOp (right, newtype);
 
   // Now also retype the other operand at some uses of the result.
   bitVect *uses = bitVectCopy (OP_USES (result));
@@ -1180,9 +1288,9 @@ optimizeBinaryOpWithResult (iCode *ic)
 static void
 optimizeUnaryOpWithoutResult (iCode *ic)
 {
-  operand *op = (ic->op == '!' || ic->op == IFX) ? IC_LEFT (ic) : IC_RIGHT (ic);
+  operand *op = (ic->op == '!' || ic->op == IFX || ic->op == GET_VALUE_AT_ADDRESS) ? ic->left : ic->right;
 
-  if (!IS_INTEGRAL (operandType (op)) || !IS_ITEMP (op))
+  if (!IS_INTEGRAL (operandType (op)) && !IS_PTR (operandType (op)) || !IS_ITEMP (op))
     return;
 
   struct valinfo opv = getOperandValinfo (ic, op);
@@ -1192,19 +1300,62 @@ optimizeUnaryOpWithoutResult (iCode *ic)
   if (opv.anything || opv.min < 0) // Todo: Relax this by also using signed _BitInt where doing so makes sense.
     return;
 
-  unsigned int width = my_stdc_bit_width (opv.max);
-  width = ((width + 7) & (-8)); // Round up to multiple of 8.
-  if (width >= bitsForType (operandType (op)))
-    return;
-  if (width > port->s.bitint_maxwidth)
-    return;
-
+  sym_link *newtype;
+  if (IS_INTEGRAL (operandType (op)))
+    {
+      unsigned int width = my_stdc_bit_width (opv.max);
+      width = ((width + 7) & (-8)); // Round up to multiple of 8.
+      if (width >= bitsForType (operandType (op)))
+        return;
+      if (width > port->s.bitint_maxwidth)
+        return;
 #ifdef DEBUG_GCP_OPT
-  std::cout << "Replacing unary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
+      std::cout << "Replacing unary operation at " << ic->key << ", by cheaper one on unsigned _BitInt(" << width << ")\n";
 #endif
+      newtype = newBitIntLink (width);
+      SPEC_USIGN (newtype) = true;
+    }
+  else
+    {
+      if (!IS_GENPTR (operandType (op)) || !TARGET_PDK_LIKE && !TARGET_IS_MCS51)
+        return;
 
-  sym_link *newtype = newBitIntLink (width);
-  SPEC_USIGN (newtype) = true;
+      if (TARGET_IS_MCS51 && (opv.knownbitsmask & 0xff0000) != 0xff0000) // Check if we fully know the GPByte, and thus the intrinsic named address space this pointer points to.
+        return;
+      if (TARGET_PDK_LIKE && !(opv.knownbitsmask & 0x8000)) // Check if we know the topmost bit, and thus the intrinsic named address space this pointer points to.
+        return;
+#ifdef DEBUG_GCP_OPT
+      std::cout << "Known intrinsic named address space at " << ic->key << " for " << OP_SYMBOL (op)->name << ": " << std::hex << opv.knownbits << "\n";
+#endif
+      newtype = copyLinkChain (operandType (op));
+
+      if (TARGET_IS_MCS51)
+        {
+          int gpbyte = (opv.knownbits & 0xff0000) >> 16;
+          if (gpbyte == GPTYPE_NEAR)
+            DCL_TYPE (newtype) = IPOINTER;
+          else if (gpbyte == GPTYPE_XSTACK)
+            DCL_TYPE (newtype) = PPOINTER;
+          else if (gpbyte == GPTYPE_FAR)
+            DCL_TYPE (newtype) = FPOINTER;
+          else if (gpbyte == GPTYPE_CODE)
+            DCL_TYPE (newtype) = CPOINTER;
+          else
+            {
+              std::cerr << "Odd gpbyte " << std::hex << gpbyte << "\n";
+              wassert (0);
+            }
+        }
+      else if (TARGET_PDK_LIKE)
+        {
+          if (opv.knownbits & 0x8000)
+            DCL_TYPE (newtype) = CPOINTER;
+          else
+            DCL_TYPE (newtype) = POINTER;
+        }
+      else
+        wassert (0);
+    }
 
   reTypeOp (op, newtype);
 }
@@ -1212,8 +1363,8 @@ optimizeUnaryOpWithoutResult (iCode *ic)
 static void
 optimizeUnaryOpWithResult (iCode *ic)
 {
-  operand *left = IC_LEFT (ic);
-  operand *result = IC_RESULT (ic);
+  operand *left =ic->left;
+  operand *result = ic->result;
 
   if (!IS_INTEGRAL (operandType (result)) || !IS_ITEMP (result) || !ic->resultvalinfo)
     return;
@@ -1322,12 +1473,12 @@ optimizeValinfoNarrow (iCode *sic)
   std::cout << "optimizeValifoNarrow at " << (currFunc ? currFunc->name : "[NOFUNC]") << "\n";
 #endif
   for (iCode *ic = sic; ic; ic = ic->next)
-    { 
+    {
       if (ic->op == '<' || ic->op == '>' || ic->op == LE_OP || ic->op == GE_OP || ic->op == EQ_OP || ic->op == NE_OP)
         optimizeBinaryOpWithoutResult (ic);
       else if (ic->op == '+' || ic->op == '-' || ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND)
         optimizeBinaryOpWithResult (ic);
-      else if (ic->op == '!' || ic->op == CAST || ic->op == IFX || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == ROT)
+      else if (ic->op == '!' || ic->op == CAST || ic->op == IFX || ic->op == LEFT_OP || ic->op == RIGHT_OP || ic->op == ROT || ic->op == GET_VALUE_AT_ADDRESS)
         optimizeUnaryOpWithoutResult (ic);
       else if (ic->op == '~' || ic->op == UNARYMINUS || ic->op == LEFT_OP || ic->op == RIGHT_OP) // Not ROT, since the width of the left operand matters for the semantics.
         optimizeUnaryOpWithResult (ic);
