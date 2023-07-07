@@ -1,5 +1,13 @@
 2022-07-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/f8/gen.c,
+	  src/f8/main.c,
+	  src/f8/ralloc.c,
+	  src/f8/ralloc2.cc:
+	  Update for changes from next branch.
+
+2022-07-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge next branch to trunk.
 	* device/lib/stm8/support:
 	  Cleanup.

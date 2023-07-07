@@ -6547,11 +6547,6 @@ genF8iCode (iCode *ic)
       genInline (ic);
       break;
 
-    case RRC:
-    case RLC:
-      wassertl (0, "Unimplemented iCode");
-      break;
-
     case GETABIT:
       genGetABit (ic, ifxForOp (IC_RESULT (ic), ic));
       break;
@@ -6564,7 +6559,7 @@ genF8iCode (iCode *ic)
       genGetWord (ic);
       break;
  
-    case SWAP:
+    case ROT:
       wassertl (0, "Unimplemented iCode");
       break;
 
