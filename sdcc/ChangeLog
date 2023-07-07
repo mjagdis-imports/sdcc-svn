@@ -1,5 +1,10 @@
 2022-07-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* .version:
+	  Bump version for generalized constant propagation.
+
+2022-07-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge next branch to trunk.
 	* device/lib/stm8/support:
 	  Cleanup.
