@@ -509,37 +509,6 @@ verifyRegsAssigned (operand *op, iCode * ic)
 }
 
 /*-----------------------------------------------------------------*/
-/* rUmaskForOp :- returns register mask for an operand             */
-/*-----------------------------------------------------------------*/
-bitVect *
-hc08_rUmaskForOp (operand * op)
-{
-  bitVect *rumask;
-  symbol *sym;
-  int j;
-
-  /* only temporaries are assigned registers */
-  if (!IS_ITEMP (op))
-    return NULL;
-
-  sym = OP_SYMBOL (op);
-
-  /* if spilt or no registers assigned to it
-     then nothing */
-  if (sym->isspilt || !sym->nRegs)
-    return NULL;
-
-  rumask = newBitVect (hc08_nRegs);
-
-  for (j = 0; j < sym->nRegs; j++)
-    {
-      rumask = bitVectSetBit (rumask, sym->regs[j]->rIdx);
-    }
-
-  return rumask;
-}
-
-/*-----------------------------------------------------------------*/
 /* regTypeNum - computes the type & number of registers required   */
 /*-----------------------------------------------------------------*/
 static void
