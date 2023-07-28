@@ -8,7 +8,10 @@
 	  configure.ac,
 	  src/SDCCmain.c,
 	  src/port.h,
-	  src/z80/main.c:
+	  src/z80/main.c,
+	  src/SDCCglue.c,
+      src/z80/gen.c,
+      src/z80/z80.h:
 	  Infrastructure for r800 port.
 
 2023-07-27 Philipp Klaus Krause <philipp@colecovision.eu>

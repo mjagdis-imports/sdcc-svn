@@ -334,6 +334,16 @@ _z80n_init (void)
 }
 
 static void
+_r800_init (void)
+{
+  z80_opts.sub = SUB_R800;
+  asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
+}
+
+static void
 _reset_regparm (struct sym_link *ftype)
 {
   _G.regparam.n = 0;
@@ -2365,7 +2375,7 @@ PORT r800_port =
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
-  _z80_init,
+  _r800_init,
   _parseOptions,
   _z80_like_options,
   NULL,

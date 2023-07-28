@@ -355,6 +355,8 @@ cost2(unsigned int bytes, unsigned int z80_states /* also z80n */, unsigned int 
     regalloc_dry_run_cost_states += tlcs90_states;
   else if(IS_EZ80_Z80)
     regalloc_dry_run_cost_states += ez80_z80_cycles;
+  else if(IS_R800) // Todo: Replace by r800_cycles!
+    regalloc_dry_run_cost_states += z80_states;
   else
     wassert (0);
 }
