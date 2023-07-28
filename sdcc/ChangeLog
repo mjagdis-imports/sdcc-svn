@@ -1,3 +1,10 @@
+2023-07-28 Philipp Klaus Krause <pkk@spth.de>
+
+	* sdas/asz80/z80.h,
+	  sdas/asz80/z80mch.c,
+	  sdas/asz80/z80pst.c:
+	  Basic R800 assembler support.
+
 2023-07-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/lib/mbrtowc.c,
