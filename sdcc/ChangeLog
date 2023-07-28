@@ -4,6 +4,12 @@
 	  sdas/asz80/z80mch.c,
 	  sdas/asz80/z80pst.c:
 	  Basic R800 assembler support.
+	* configure,
+	  configure.ac,
+	  src/SDCCmain.c,
+	  src/port.h,
+	  src/z80/main.c:
+	  Infrastructure for r800 port.
 
 2023-07-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
