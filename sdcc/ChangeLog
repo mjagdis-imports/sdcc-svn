@@ -12,7 +12,12 @@
 	  src/SDCCglue.c,
       src/z80/gen.c,
       src/z80/z80.h,
-      src/z80/peep.c:
+      src/z80/peep.c,
+      device/include/*.h,
+      device/lib/Makefile.in,
+      device/lib/_memset.c,
+      device/lib/clean.mk,
+      device/lib/r800:
 	  Infrastructure for r800 port, use multu for 8x8->16 multiplication.
 
 2023-07-27 Philipp Klaus Krause <philipp@colecovision.eu>

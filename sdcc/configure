@@ -9696,7 +9696,7 @@ fi
 if test $OPT_DISABLE_Z80 = 0 || test $OPT_DISABLE_Z180 = 0 || test $OPT_DISABLE_EZ80_Z80 = 0 || test $OPT_DISABLE_Z80N = 0 || test $OPT_DISABLE_R800 = 0; then
   ac_config_files="$ac_config_files sdas/asz80/Makefile"
 
-  test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/z80/Makefile device/lib/z180/Makefile device/lib/ez80_z80/Makefile device/lib/z80n/Makefile"
+  test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/z80/Makefile device/lib/z180/Makefile device/lib/ez80_z80/Makefile device/lib/z80n/Makefile device/lib/r800/Makefile"
 
 fi
 
@@ -10502,6 +10502,7 @@ do
     "device/lib/z180/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/z180/Makefile" ;;
     "device/lib/ez80_z80/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/ez80_z80/Makefile" ;;
     "device/lib/z80n/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/z80n/Makefile" ;;
+    "device/lib/r800/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/r800/Makefile" ;;
     "sdas/asrab/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/asrab/Makefile" ;;
     "device/lib/r2k/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/r2k/Makefile" ;;
     "device/lib/r2ka/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/r2ka/Makefile" ;;
