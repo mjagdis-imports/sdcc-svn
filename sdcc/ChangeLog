@@ -1,3 +1,23 @@
+2023-07-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  src/pdk/ralloc.c:
+	  Fix some issues, mostly in generalized constant propagation.
+
+2023-07-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCcse.c,
+	  src/SDCCcse.h,
+	  src/SDCCopt.c,
+	  support/regression/tests/bug-3636.c:
+	  Fix bug #3626.
+	* src/SDCCsymt.c,
+	  support/regression/tests/bug-3597.c:
+	  Fix bug #3597.
+	* src/SDCCast.c,
+	  support/valdiag/tests/bug-2240.c:
+	  Fix bug #2240.
+
 2023-07-28 Philipp Klaus Krause <pkk@spth.de>
 
 	* sdas/asz80/z80.h,
