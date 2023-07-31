@@ -604,6 +604,9 @@ newiCode (int op, operand *left, operand *right)
   ic->localEscapeAlive = true;
   ic->parmEscapeAlive = true;
 
+  ic->valinfos = 0;
+  ic->resultvalinfo = 0;
+
   return ic;
 }
 
@@ -1521,9 +1524,11 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
       retval = operandFromLit (operandLitValue (left) || operandLitValue (right));
       break;
     case ROT:
-      TYPE_TARGET_ULONG i = (TYPE_TARGET_ULONG) double2ul (operandLitValue (left));
-      unsigned s = operandLitValue (right) >= 0 ? operandLitValue (right) : bitsForType (operandType (left)) - operandLitValue (right);
-      retval = operandFromLit ((i << s) | (i >> (bitsForType (operandType (left)) - s)));
+      {
+        TYPE_TARGET_ULONG i = (TYPE_TARGET_ULONG) double2ul (operandLitValue (left));
+        unsigned s = operandLitValue (right) >= 0 ? operandLitValue (right) : bitsForType (operandType (left)) - operandLitValue (right);
+        retval = operandFromLit ((i << s) | (i >> (bitsForType (operandType (left)) - s)));
+      }
       break;
     case GETABIT:
       retval = operandFromLit (((TYPE_TARGET_ULONG) double2ul (operandLitValue (left)) >>

@@ -422,11 +422,10 @@ DEFSETFUNC (findCheaperOp)
           return 0;
         }
 
+      *opp = operandFromOperand (*opp);
+
       if ((*opp)->isaddr != cop->isaddr && IS_ITEMP (cop))
-        {
-          *opp = operandFromOperand (*opp);
-          (*opp)->isaddr = cop->isaddr;
-        }
+        (*opp)->isaddr = cop->isaddr;
 
       /* copy signedness to literal operands */
       if (IS_SPEC(operandType (cop)) && IS_SPEC(operandType (*opp))
@@ -446,7 +445,6 @@ DEFSETFUNC (findCheaperOp)
               SPEC_NOUN(operandType(*opp)) == V_CHAR &&
               SPEC_NOUN(operandType(cop)) == V_INT)
             {
-              *opp = operandFromOperand (*opp);
               SPEC_NOUN(operandType(*opp)) = V_INT;
             }
           else
@@ -2321,7 +2319,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
             {
               pdop = NULL;
               applyToSetFTrue (cseSet, findCheaperOp, IC_JTCOND (ic), &pdop, true);
-              if (pdop)
+              if (pdop && !computeOnly)
                 {
                   ReplaceOpWithCheaperOp (&IC_JTCOND (ic), pdop);
                   change = 1;
@@ -2792,5 +2790,6 @@ freeCSEdata (eBBlock * ebb)
   freeBitVect (ebb->inPtrsSet);
   freeBitVect (ebb->ndompset);
   deleteSet (&ebb->addrOf);
-
+  freeBitVect (ebb->linds);
 }
+

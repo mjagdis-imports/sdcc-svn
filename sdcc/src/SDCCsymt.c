@@ -1056,6 +1056,23 @@ newLongLongLink ()
 }
 
 /*------------------------------------------------------------------*/
+/* newBitIntLink() - creates a BitInt type                          */
+/*------------------------------------------------------------------*/
+sym_link *
+newBitIntLink (unsigned int width)
+{
+  wassert (width <= port->s.bitint_maxwidth);
+
+  sym_link *p;
+
+  p = newLink (SPECIFIER);
+  SPEC_NOUN (p) = V_BITINT;
+  SPEC_BITINTWIDTH (p) = width;
+
+  return p;
+}
+
+/*------------------------------------------------------------------*/
 /* newIntLink() - creates an int type                               */
 /*------------------------------------------------------------------*/
 sym_link *
@@ -1499,11 +1516,13 @@ addSymChain (symbol ** symHead)
             {
               /* If the previous definition was for an array with incomplete
                  type, and the new definition has completed the type, update
-                 the original type to match */
+                 the original type to match (or the otehr way round) */
               if (IS_ARRAY (csym->type) && IS_ARRAY (sym->type))
                 {
                   if (!DCL_ELEM (csym->type) && DCL_ELEM (sym->type))
                     DCL_ELEM (csym->type) = DCL_ELEM (sym->type);
+                  else if (DCL_ELEM (csym->type) && !DCL_ELEM (sym->type))
+                    DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                   if ((DCL_ELEM (csym->type) > DCL_ELEM (sym->type)) && elemsFromIval)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                 }
@@ -1546,7 +1565,7 @@ addSymChain (symbol ** symHead)
               if (IS_EXTERN (csym->etype) || IS_EXTERN (sym->etype))
                 werror (E_EXTERN_MISMATCH, sym->name);
               else
-                werror (E_DUPLICATE, sym->name);printf("previous %p\n", csym);
+                werror (E_DUPLICATE, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
 #if 0
               fprintf (stderr, "from type '");
