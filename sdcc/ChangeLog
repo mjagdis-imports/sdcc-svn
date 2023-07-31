@@ -1,3 +1,8 @@
+2023-07-31 Philipp Klaus Krause <pkk@spth.de>
+
+	* support/regression/ports/ucr800/spec.mk:
+	  Infrastructure for future r800 regression testing.
+
 2023-07-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,
