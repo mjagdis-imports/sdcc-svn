@@ -7,15 +7,16 @@ typedef enum logic [4:0] {
 	ALUINST_OR,
 	ALUINST_XOR,
 	ALUINST_SRL,
+	ALUINST_SEX,
 	ALUINST_PASS,
 	ALUINST_PASSW}
 	aluinst_t;
 
-module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, op1, op2, input aluinst_t aluinst, input logic c_in, output logic c_out, output logic z_out, output logic n_out);
+module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, op1, op2, input aluinst_t aluinst, input logic c_in, output logic z_out,  output logic n_out, output logic c_out);
 	wire [16:0] result;
 	wire wideop;
 
-	assign wideop = (aluinst == ALUINST_PASSW);
+	assign wideop = (aluinst == ALUINST_SEX || aluinst == ALUINST_PASSW);
 
 	assign result =
 		aluinst == ALUINST_ADD ? op0[7:0] + op1[7:0] :
@@ -26,6 +27,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_OR ? op0[7:0] | op1[7:0] :
 		aluinst == ALUINST_XOR ? op0[7:0] ^ op1[7:0] :
 		aluinst == ALUINST_SRL ? {1'b0, op0[7:0]} >> 1 :
+		aluinst == ALUINST_SEX ? signed'(op0[7:0]) :
 		aluinst == ALUINST_PASS ? op0[7:0] :
 		'x;
 

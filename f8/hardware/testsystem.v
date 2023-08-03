@@ -1,6 +1,8 @@
 `include "cpu.v"
 `include "memory.v"
 
+`begin_keywords "1800-2009"
+
 module clkgen (clk);
 	output reg clk;
 
@@ -41,4 +43,6 @@ module testsystem ();
 		$finish;
 	end
 endmodule
+
+`end_keywords
 

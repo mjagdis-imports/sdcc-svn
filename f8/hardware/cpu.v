@@ -77,11 +77,13 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 	wire [15 : 0] result_reg, result_mem;
 	aluinst_t aluinst;
 	wire c_in, c_out, z_out, n_out;
+	reg [7:0] flags;
 
 	alu alu(.*);
 
 	wire [15:0] x, y, z, sp;
 	wire [15 : 0] next_x, next_y, next_z, next_sp;
+	logic [7:0] next_flags;
 	wire [1 : 0] regwrite_en;
 	wire [1 : 0] regwrite_addr;
 
@@ -98,8 +100,8 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 		pc <= next_pc;
 	always @(posedge clk)
 		inst <= next_inst;
-	always_comb
 
+	always_comb
 	begin
 		if(reset)
 			next_pc = 16'h4000;
@@ -107,9 +109,12 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 			next_pc = next_inst[31:8];
 		else if(next_opcode == OPCODE_JP_Y)
 			next_pc = next_y;
-		else if(next_opcode == OPCODE_JR_D)
+		else if(next_opcode == OPCODE_JR_D ||
+			next_opcode == OPCODE_JRZ_D && next_flags[3] || next_opcode == OPCODE_JRNZ_D && !next_flags[3] ||
+			next_opcode == OPCODE_JRC_D && next_flags[1] || next_opcode == OPCODE_JRNC_D && !next_flags[1] ||
+			next_opcode == OPCODE_JRN_D && next_flags[2] || next_opcode == OPCODE_JRNN_D && !next_flags[2])
 			next_pc = signed'(pc) + signed'(next_inst[15:8]);
-		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode) || opcode_is_jr_d(next_opcode))
+		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode) || opcode_is_jr_d(next_opcode) || next_opcode == OPCODE_LDW_Y_D)
 			next_pc = pc + 2;
 		else if(opcode_is_16_immd(next_opcode) || opcode_is_dir(next_opcode) || opcode_is_zrel(next_opcode))
 			next_pc = pc + 3;
@@ -136,13 +141,15 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 			dread_addr = 'x;
 	end
 
+	assign c_in = flags[1];
+
 	always_comb
 	begin
 		if(opcode_is_8_2(opcode))
 			op0 = {8'bx, x[7:0]};
 		else if(opcode_is_16_2(opcode))
 			op0 = x;
-		else if(opcode == OPCODE_LD_XL_IMMD)
+		else if(opcode == OPCODE_LD_XL_IMMD || opcode == OPCODE_LDW_Y_D)
 			op0 = {8'bx, inst[15:8]};
 		else
 			op0 = 'x;
@@ -155,6 +162,10 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 			op1 = z[7:0];
 		else if(opcode_is_8_2_xh(opcode))
 			op1 = x[15:8];
+		else if(opcode_is_8_2_yl(opcode))
+			op1 = y[7:0];
+		else if(opcode_is_8_2_yh(opcode))
+			op1 = y[15:8];
 		else
 			op1 = 'x;
 
@@ -170,20 +181,43 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 			aluinst = ALUINST_SUB;
 		else if (opcode_is_srl(opcode))
 			aluinst = ALUINST_SRL;
-		/* todo: more*/
+		else if (opcode == OPCODE_LDW_Y_D)
+			aluinst = ALUINST_SEX;
+		/* todo: more instructions here*/
 		else
 			aluinst = ALUINST_PASS;
+
+		if (0)
+			;
+		else
+			next_flags[0] = flags[0];
+		if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode))
+			next_flags[1] = c_out;
+		else
+			next_flags[1] = flags[1];
+		if (opcode_is_8_2(opcode))
+			next_flags[2] = n_out;
+		else
+			next_flags[2] = flags[2];
+		if (opcode_is_8_2(opcode))
+			next_flags[3] = z_out;
+		else
+			next_flags[3] = flags[3];
+		if (0)
+			;
+		else
+			next_flags[4] = flags[4];
 	end
 
 	assign regwrite_addr =
-		opcode_is_8_2(opcode) ? 0 :
-		opcode == OPCODE_LDW_Y_IMMD ? 1 :
+		(opcode_is_8_2(opcode) || opcode == OPCODE_LD_XL_IMMD) ? 0 :
+		(opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_LDW_Y_D) ? 1 :
 		opcode == OPCODE_LDW_SP_Y ? 3 :
 		'x;
 
 	assign regwrite_en =
-		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) ? 2'b01 :
-		(opcode_is_16_2(opcode) || opcode == OPCODE_LDW_Y_IMMD) ? 2'b11 :
+		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) || opcode == OPCODE_LD_XL_IMMD) ? 2'b01 :
+		(opcode_is_16_2(opcode) || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_LDW_Y_D) ? 2'b11 :
 		0;
 
 	assign dwrite_addr =
@@ -196,6 +230,14 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 
 	assign trap =
 		!reset && (opcode == OPCODE_TRAP);
+
+	always @(posedge clk)
+	begin
+		if(reset)
+			flags = 8'b00000000;
+		else
+			flags = next_flags;
+	end
 
 	always @(negedge clk)
 	begin

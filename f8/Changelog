@@ -1,5 +1,13 @@
 2023-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/alu.v,
+	  hardware/cpu.v,
+	  hardware/opcode.v,
+	  hardware/testsystem.v:
+	  Basic support for some f8 flags.
+
+2023-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* tests/_minimal,
 	  tests/_minimal_jp,
 	  tests/_minimal_jr,

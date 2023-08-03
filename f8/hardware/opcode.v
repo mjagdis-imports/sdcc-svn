@@ -58,19 +58,20 @@ typedef enum logic [7:0] {
 	OPCODE_LD_XL_IMMD =   8'b10000000, // ld xl, #i
 	OPCODE_LD_XL_IY =     8'b10001000, // ld xl, (y)
 	OPCODE_LD_IY_XL =     8'b10001110, // ld (y), xl
-    OPCODE_LDW_Y_IMMD =   8'b11001000, // ldw y, #ii
-    OPCODE_JR_D =         8'b11010000, // jr #d
-    OPCODE_DNJNZ_YH_D =   8'b11010001, // dnjnz yh, #d
-    OPCODE_JRZ_D =        8'b11010010, // jrz, #d
-    OPCODE_JRNZ_D =       8'b11010011, // jrnz, #d
-    OPCODE_JRC_D =        8'b11010100, // jrc, #d
-    OPCODE_JRNC_D =       8'b11010101, // jrnc, #d
-    OPCODE_JRN_D =        8'b11010110, // jrn, #d
-    OPCODE_JRNN_D =       8'b11010111, // jrnn, #d
-    OPCODE_RESERVED_FC,
-    OPCODE_RESERVED_FD,
-    OPCODE_RESERVED_FE,
-    OPCODE_RESERVED_FF
+	OPCODE_LDW_Y_IMMD =   8'b11000000, // ldw y, #ii
+	OPCODE_LDW_Y_D =      8'b11000111, // ldw y, #d
+	OPCODE_JR_D =         8'b11010000, // jr #d
+	OPCODE_DNJNZ_YH_D =   8'b11010001, // dnjnz yh, #d
+	OPCODE_JRZ_D =        8'b11010010, // jrz, #d
+	OPCODE_JRNZ_D =       8'b11010011, // jrnz, #d
+	OPCODE_JRC_D =        8'b11010100, // jrc, #d
+	OPCODE_JRNC_D =       8'b11010101, // jrnc, #d
+	OPCODE_JRN_D =        8'b11010110, // jrn, #d
+	OPCODE_JRNN_D =       8'b11010111, // jrnn, #d
+	OPCODE_RESERVED_FC,
+	OPCODE_RESERVED_FD,
+	OPCODE_RESERVED_FE,
+	OPCODE_RESERVED_FF
 	} opcode_t;
 
 typedef enum {
@@ -157,8 +158,16 @@ function automatic logic opcode_is_8_2_xh(opcode_t opcode);
 	return(opcode == OPCODE_SUB_XL_XH|| opcode == OPCODE_SBC_XL_XH || opcode == OPCODE_ADD_XL_XH || opcode == OPCODE_ADC_XL_XH);
 endfunction
 
+function automatic logic opcode_is_8_2_yl(opcode_t opcode);
+	return(opcode == OPCODE_SUB_XL_YL|| opcode == OPCODE_SBC_XL_YL || opcode == OPCODE_ADD_XL_YL || opcode == OPCODE_ADC_XL_YL);
+endfunction
+
+function automatic logic opcode_is_8_2_yh(opcode_t opcode);
+	return(opcode == OPCODE_SUB_XL_YH|| opcode == OPCODE_SBC_XL_YH || opcode == OPCODE_ADD_XL_YH || opcode == OPCODE_ADC_XL_YH);
+endfunction
+
 function automatic logic opcode_is_8_2_reg(opcode_t opcode);
-	return(opcode_is_8_2_zl(opcode) || opcode_is_8_2_xh(opcode));
+	return(opcode_is_8_2_zl(opcode) || opcode_is_8_2_xh(opcode) || opcode_is_8_2_yl(opcode) || opcode_is_8_2_yh(opcode));
 endfunction
 
 function automatic logic opcode_is_8_2(opcode_t opcode);
