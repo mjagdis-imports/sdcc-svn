@@ -2,7 +2,7 @@
 
 /*
  *  Copyright (C) 2010  Alan R. Baldwin
- *  Copyright (C) 2022  Philipp K. Krause
+ *  Copyright (C) 2022-2023  Philipp K. Krause
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -814,11 +814,12 @@ sex:
 		expr(&e1, 0);
 		outab(op);
 		if(mchpcr(&e1)) {
-			int v1 = (int)(e1.e_addr - dot.s_addr - 1);
+			int v1 = (int)(e1.e_addr - dot.s_addr + 1);
 			if((v1 < -128) || (v1 > 127))
 				aerr();
 			outab(v1);
 		} else {
+			e1.e_addr -= 1;
 			outrb(&e1, R_PCR);
 		}
 		if(e1.e_mode != S_USER) {

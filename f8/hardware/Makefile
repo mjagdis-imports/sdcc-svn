@@ -26,7 +26,7 @@ TESTSYSTEMVCDS = $(TESTDIRS:=/testsystem.vcd)
 %.vmem: %.ihx
 	objcopy --input-target ihex --output-target verilog $< $@
 
-%testsystem.vcd: f8-testsystem %/test.vmem
+%/testsystem.vcd: f8-testsystem %/test.vmem
 	cd $*; ../../f8-testsystem
 
 tests: f8-testsystem $(TESTSYSTEMVCDS)

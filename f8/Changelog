@@ -1,5 +1,16 @@
 2023-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* tests/_minimal,
+	  tests/_minimal_jp,
+	  tests/_minimal_jr,
+	  tests/cp,
+	  Makefile,
+	  cpu.v,
+	  opcode.v:
+	  Basic relative jumps.
+
+2023-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* *:
 	  Bring f8 Verilog code into repository.
 

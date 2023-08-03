@@ -99,6 +99,7 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 	always @(posedge clk)
 		inst <= next_inst;
 	always_comb
+
 	begin
 		if(reset)
 			next_pc = 16'h4000;
@@ -106,7 +107,9 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 			next_pc = next_inst[31:8];
 		else if(next_opcode == OPCODE_JP_Y)
 			next_pc = next_y;
-		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode))
+		else if(next_opcode == OPCODE_JR_D)
+			next_pc = signed'(pc) + signed'(next_inst[15:8]);
+		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode) || opcode_is_jr_d(next_opcode))
 			next_pc = pc + 2;
 		else if(opcode_is_16_immd(next_opcode) || opcode_is_dir(next_opcode) || opcode_is_zrel(next_opcode))
 			next_pc = pc + 3;
@@ -139,6 +142,8 @@ module cpu(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, 
 			op0 = {8'bx, x[7:0]};
 		else if(opcode_is_16_2(opcode))
 			op0 = x;
+		else if(opcode == OPCODE_LD_XL_IMMD)
+			op0 = {8'bx, inst[15:8]};
 		else
 			op0 = 'x;
 

@@ -55,9 +55,18 @@ typedef enum logic [7:0] {
 	OPCODE_SUBW_Y_DIR =   8'b01110001, // subw y, mm
 	OPCODE_SUBW_Y_SPREL = 8'b01110010, // subw y, (n, sp)
 	OPCODE_SUBW_Y_X =     8'b01110011, // subw y, x
+	OPCODE_LD_XL_IMMD =   8'b10000000, // ld xl, #i
 	OPCODE_LD_XL_IY =     8'b10001000, // ld xl, (y)
 	OPCODE_LD_IY_XL =     8'b10001110, // ld (y), xl
     OPCODE_LDW_Y_IMMD =   8'b11001000, // ldw y, #ii
+    OPCODE_JR_D =         8'b11010000, // jr #d
+    OPCODE_DNJNZ_YH_D =   8'b11010001, // dnjnz yh, #d
+    OPCODE_JRZ_D =        8'b11010010, // jrz, #d
+    OPCODE_JRNZ_D =       8'b11010011, // jrnz, #d
+    OPCODE_JRC_D =        8'b11010100, // jrc, #d
+    OPCODE_JRNC_D =       8'b11010101, // jrnc, #d
+    OPCODE_JRN_D =        8'b11010110, // jrn, #d
+    OPCODE_JRNN_D =       8'b11010111, // jrnn, #d
     OPCODE_RESERVED_FC,
     OPCODE_RESERVED_FD,
     OPCODE_RESERVED_FE,
@@ -125,7 +134,7 @@ function automatic logic opcode_is_subw(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_2_immd(opcode_t opcode);
-	return(opcode == OPCODE_ADD_XL_IMMD || opcode == OPCODE_ADC_XL_IMMD);
+	return(opcode == OPCODE_ADD_XL_IMMD || opcode == OPCODE_ADC_XL_IMMD || opcode == OPCODE_CP_XL_IMMD);
 endfunction
 
 function automatic logic opcode_is_8_2_dir(opcode_t opcode);
@@ -185,7 +194,7 @@ function automatic logic opcode_is_16_2(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_immd(opcode_t opcode);
-	return(opcode_is_8_2_immd(opcode));
+	return(opcode_is_8_2_immd(opcode) || opcode == OPCODE_LD_XL_IMMD);
 endfunction
 
 function automatic logic opcode_is_16_immd(opcode_t opcode);
@@ -202,5 +211,9 @@ endfunction
 
 function automatic logic opcode_is_zrel(opcode_t opcode);
 	return(opcode_is_8_2_zrel(opcode));
+endfunction
+
+function automatic logic opcode_is_jr_d(opcode_t opcode);
+	return(opcode == OPCODE_JR_D || opcode == OPCODE_DNJNZ_YH_D || opcode == OPCODE_JRZ_D || opcode == OPCODE_JRNZ_D || opcode == OPCODE_JRC_D || opcode == OPCODE_JRNC_D || opcode == OPCODE_JRN_D || opcode == OPCODE_JRNN_D);
 endfunction
 
