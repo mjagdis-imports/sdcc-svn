@@ -24,11 +24,11 @@ endmodule
 
 // Memory subsystem - ideal memory for simulation. TODO: Build an implementation from dualportram above, using ivalid to resolve read conflicts.
 // Has three ports (instruction read, data read, data write)
-module memory(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk);
+module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk);
 	parameter ramsize = 32768;
 	input [15 : 0] iread_addr;
 	output reg [23 : 0] iread_data;
-	output reg ivalid;
+	output reg iread_valid;
 	input [15 : 0] dread_addr;
 	output reg [15 : 0] dread_data;
 	input [15 : 0] dwrite_addr;
@@ -57,7 +57,7 @@ module memory(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_add
 			(dread_addr == dwrite_addr && dwrite_en[1]) ? dwrite_data[15:8] :
 			(dread_addr + 1 == dwrite_addr && dwrite_en[0]) ? dwrite_data[7:0] :
 			mem[dread_addr + 1];
-		ivalid <= 1;
+		iread_valid <= 1;
 	end
 endmodule
 

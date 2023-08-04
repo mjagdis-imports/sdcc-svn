@@ -16,7 +16,7 @@ module testsystem ();
 	wire [15:0] iread_addr, dread_addr, dwrite_addr;
 	wire [23:0] iread_data;
 	wire [15:0] dread_data, dwrite_data;
-	wire ivalid;
+	wire iread_valid;
 	wire [1:0] dwrite_en;
 	wire clk;
 	reg reset;

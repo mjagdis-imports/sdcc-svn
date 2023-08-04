@@ -49,6 +49,17 @@ l4trap:
 	trap
 l4:	
 
+	ldw	y, #0x8000
+	addw	y, #0x8000
+	jrnc	#l5trap
+	jrnz	#l5trap
+	jrn	#l5trap
+	cpw	y, #0x0000
+	jrz	#l5
+l5trap:
+	trap
+l5:
+
 loop:
 	jr	#loop	; An endless loop, so we never fail until we reach the time limit.
 
