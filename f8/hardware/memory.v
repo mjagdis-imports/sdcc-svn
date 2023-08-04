@@ -33,7 +33,7 @@ module memory(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_add
 	output reg [15 : 0] dread_data;
 	input [15 : 0] dwrite_addr;
 	input [15 : 0] dwrite_data;
-	input dwrite_en;
+	input [1:0] dwrite_en;
 	input clk;
 
 	reg [7:0] mem[ramsize - 1 : 0];
@@ -42,15 +42,21 @@ module memory(iread_addr, iread_data, ivalid, dread_addr, dread_data, dwrite_add
 		
 	always @(posedge clk)
 	begin
-		if (dwrite_en) begin
-			mem[dwrite_addr] <= dwrite_data[7 : 0];
-			mem[dwrite_addr + 1] <= dwrite_data[15 : 8];
-		end
+		if (dwrite_en[0])
+			mem[dwrite_addr] <= dwrite_data[7:0];
+		if (dwrite_en[1])
+			mem[dwrite_addr + 1] <= dwrite_data[15:8];
 		iread_data[7 : 0] <= mem[iread_addr];
 		iread_data[15 : 8] <= mem[iread_addr + 1];
 		iread_data[23 : 16] <= mem[iread_addr + 2];
-		dread_data[7 : 0] <= (dread_addr == dwrite_addr && dwrite_en) ? dwrite_data[7 : 0] : mem[dread_addr]; // Todo: Handle upper byte on write as well, might need wider dwrite_en anyway.
-		dread_data[15 : 8] <= (dread_addr == dwrite_addr && dwrite_en) ? dwrite_data[15 : 8] : mem[dread_addr + 1];
+		dread_data[7:0] <=
+			(dread_addr == dwrite_addr && dwrite_en[0]) ? dwrite_data[7:0] :
+			(dread_addr == dwrite_addr + 1 && dwrite_en[1]) ? dwrite_data[15:8] :
+			mem[dread_addr];
+		dread_data[15:8] <=
+			(dread_addr == dwrite_addr && dwrite_en[1]) ? dwrite_data[15:8] :
+			(dread_addr + 1 == dwrite_addr && dwrite_en[0]) ? dwrite_data[7:0] :
+			mem[dread_addr + 1];
 		ivalid <= 1;
 	end
 endmodule

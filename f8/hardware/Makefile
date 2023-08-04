@@ -16,6 +16,7 @@ TESTSS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
 TESTSYSTEMVCDS = $(TESTDIRS:=/testsystem.vcd)
+TESTLOGS = $(TESTDIRS:=/test.log)
 
 %.rel: %.s
 	$(SDAS) -plosgff $@ $<
@@ -26,9 +27,11 @@ TESTSYSTEMVCDS = $(TESTDIRS:=/testsystem.vcd)
 %.vmem: %.ihx
 	objcopy --input-target ihex --output-target verilog $< $@
 
-%/testsystem.vcd: f8-testsystem %/test.vmem
-	cd $*; ../../f8-testsystem
+%/test.vcd %/test.log &: f8-testsystem %/test.vmem
+	cd $*; ../../f8-testsystem > test.log
 
-tests: f8-testsystem $(TESTSYSTEMVCDS)
-	echo $(TESTDIRS); echo $(TESTVMEMS)
+tests: $(TESTLOGS)
+	for testlog in $(TESTLOGS); do \
+		echo -n $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+	done
 

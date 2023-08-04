@@ -1,3 +1,8 @@
+2023-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/*:
+	  Make a few more f8 instructions work.
+
 2023-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu.v,

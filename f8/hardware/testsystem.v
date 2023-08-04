@@ -27,12 +27,12 @@ module testsystem ();
 	
 	initial
 	begin
-		$dumpfile("testsystem.vcd");
+		$dumpfile("test.vcd");
     	$dumpvars(0,testsystem);
     	reset <= 1;
     	#20
     	reset <= 0;
-		#380
+		#780
 		$finish;
 	end
 
