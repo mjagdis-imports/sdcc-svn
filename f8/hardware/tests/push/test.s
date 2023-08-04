@@ -38,6 +38,14 @@ l4:
 	trap
 l5:
 
+	ldw	y, #0x55
+	push	yl
+	ld	xl, #0x55
+	cp	xl, (0, sp)	
+	jrz	#l6
+	trap
+l6:
+
 loop:
 	jr	#loop	; An endless loop, so we never fail until we reach the time limit.
 

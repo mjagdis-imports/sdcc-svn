@@ -10,6 +10,8 @@ typedef enum logic [4:0] {
 	ALUINST_SLL,
 	ALUINST_RRC,
 	ALUINST_RLC,
+	ALUINST_INC,
+	ALUINST_DEC,
 	ALUINST_SUBW,
 	ALUINST_SEX,
 	ALUINST_PASS0,
@@ -36,6 +38,8 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_SLL ? {op0[7:0], 1'b0} << 1 :
 		aluinst == ALUINST_RRC ? {c_in, op0[7:0]} >> 1 :
 		aluinst == ALUINST_RLC ? {op0[7:0], c_in} << 1 :
+		aluinst == ALUINST_INC ? op0[7:0] + 8'h01 :
+		aluinst == ALUINST_DEC ? op0[7:0] + 8'hff :
 		aluinst == ALUINST_SUBW ? op0[15:0] + ~op1[15:0] + 1 :
 		aluinst == ALUINST_SEX ? signed'(op0[7:0]) :
 		aluinst == ALUINST_PASS0 ? op0[7:0] :
