@@ -168,6 +168,10 @@ typedef enum logic [7:0] {
 	OPCODE_POPW_Y =       8'he9, // popw y
 	OPCODE_ADDW_SP_D =    8'hea, // addw sp, #d
 	OPCODE_ADDW_Y_D =     8'heb, // addw y, #d
+	OPCODE_ORW_Y_IMMD =   8'hf0, // orw y, #ii
+	OPCODE_ORW_Y_DIR =    8'hf1, // orw y, mm
+	OPCODE_ORW_Y_SPREL =  8'hf2, // orw y, (n, sp)
+	OPCODE_ORW_Y_X =      8'hf3, // orw y, x
 	// todo
 	OPCODE_CPW_Y_IMMD =   8'hf8, // cpw y, #ii
 	// todo
@@ -297,6 +301,10 @@ function automatic logic opcode_is_adcw(opcode_t opcode);
 	return(opcode == OPCODE_ADDW_Y_IMMD || opcode == OPCODE_ADCW_Y_DIR || opcode == OPCODE_ADCW_Y_SPREL || opcode == OPCODE_ADCW_Y_X);
 endfunction
 
+function automatic logic opcode_is_orw(opcode_t opcode);
+	return(opcode == OPCODE_ORW_Y_IMMD || opcode == OPCODE_ORW_Y_DIR || opcode == OPCODE_ORW_Y_SPREL || opcode == OPCODE_ORW_Y_X);
+endfunction
+
 function automatic logic opcode_is_pushw(opcode_t opcode);
 	return(opcode == OPCODE_PUSHW_IMMD);
 endfunction
@@ -316,7 +324,7 @@ function automatic logic opcode_is_8_2_immd(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_2_dir(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_DIR || opcode == OPCODE_SBC_XL_DIR || opcode == OPCODE_ADD_XL_DIR || opcode == OPCODE_ADC_XL_DIR ||
+	return(opcode == OPCODE_SUB_XL_DIR || opcode == OPCODE_SBC_XL_DIR || opcode == OPCODE_ADD_XL_DIR || opcode == OPCODE_ADC_XL_DIR || opcode == OPCODE_CP_XL_DIR ||
 		opcode == OPCODE_OR_XL_DIR || opcode == OPCODE_AND_XL_DIR || opcode == OPCODE_XOR_XL_DIR);
 endfunction
 
@@ -332,7 +340,7 @@ endfunction
 
 function automatic logic opcode_is_8_2_zl(opcode_t opcode);
 	return(opcode == OPCODE_SUB_XL_ZL || opcode == OPCODE_SBC_XL_ZL || opcode == OPCODE_ADD_XL_ZL || opcode == OPCODE_ADC_XL_ZL ||
-	opcode == OPCODE_OR_XL_ZL || opcode == OPCODE_AND_XL_ZL || opcode == OPCODE_AND_XL_ZL);
+	opcode == OPCODE_OR_XL_ZL || opcode == OPCODE_AND_XL_ZL || opcode == OPCODE_XOR_XL_ZL);
 endfunction
 
 function automatic logic opcode_is_8_2_xh(opcode_t opcode);
@@ -341,11 +349,13 @@ function automatic logic opcode_is_8_2_xh(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_2_yl(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_YL|| opcode == OPCODE_SBC_XL_YL || opcode == OPCODE_ADD_XL_YL || opcode == OPCODE_ADC_XL_YL || opcode == OPCODE_OR_XL_YL);
+	return(opcode == OPCODE_SUB_XL_YL|| opcode == OPCODE_SBC_XL_YL || opcode == OPCODE_ADD_XL_YL || opcode == OPCODE_ADC_XL_YL ||
+		opcode == OPCODE_OR_XL_YL || opcode == OPCODE_AND_XL_YL || opcode == OPCODE_XOR_XL_YL);
 endfunction
 
 function automatic logic opcode_is_8_2_yh(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_YH|| opcode == OPCODE_SBC_XL_YH || opcode == OPCODE_ADD_XL_YH || opcode == OPCODE_ADC_XL_YH || opcode == OPCODE_OR_XL_YH);
+	return(opcode == OPCODE_SUB_XL_YH|| opcode == OPCODE_SBC_XL_YH || opcode == OPCODE_ADD_XL_YH || opcode == OPCODE_ADC_XL_YH ||
+	opcode == OPCODE_OR_XL_YH || opcode == OPCODE_AND_XL_YH || opcode == OPCODE_XOR_XL_YH);
 endfunction
 
 function automatic logic opcode_is_8_2_reg(opcode_t opcode);
@@ -385,19 +395,19 @@ function automatic logic opcode_is_8_1(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_16_2_immd(opcode_t opcode);
-	return(opcode == OPCODE_ADDW_Y_IMMD || opcode == OPCODE_ADCW_Y_IMMD);
+	return(opcode == OPCODE_ADDW_Y_IMMD || opcode == OPCODE_ADCW_Y_IMMD || opcode == OPCODE_ORW_Y_IMMD);
 endfunction
 
 function automatic logic opcode_is_16_2_dir(opcode_t opcode);
-	return(opcode == OPCODE_SUBW_Y_DIR || opcode == OPCODE_SBCW_Y_DIR || opcode == OPCODE_ADDW_Y_DIR || opcode == OPCODE_ADCW_Y_DIR);
+	return(opcode == OPCODE_SUBW_Y_DIR || opcode == OPCODE_SBCW_Y_DIR || opcode == OPCODE_ADDW_Y_DIR || opcode == OPCODE_ADCW_Y_DIR || opcode == OPCODE_ORW_Y_DIR);
 endfunction
 
 function automatic logic opcode_is_16_2_sprel(opcode_t opcode);
-	return(opcode == OPCODE_SUBW_Y_SPREL || opcode == OPCODE_SBCW_Y_SPREL || opcode == OPCODE_ADDW_Y_SPREL || opcode == OPCODE_ADCW_Y_SPREL);
+	return(opcode == OPCODE_SUBW_Y_SPREL || opcode == OPCODE_SBCW_Y_SPREL || opcode == OPCODE_ADDW_Y_SPREL || opcode == OPCODE_ADCW_Y_SPREL || opcode == OPCODE_ORW_Y_SPREL);
 endfunction
 
 function automatic logic opcode_is_16_2_x(opcode_t opcode);
-	return(opcode == OPCODE_SUBW_Y_X || opcode == OPCODE_SBCW_Y_X || opcode == OPCODE_ADDW_Y_X || opcode == OPCODE_ADCW_Y_X);
+	return(opcode == OPCODE_SUBW_Y_X || opcode == OPCODE_SBCW_Y_X || opcode == OPCODE_ADDW_Y_X || opcode == OPCODE_ADCW_Y_X || opcode == OPCODE_ORW_Y_X);
 endfunction
 
 function automatic logic opcode_is_16_2(opcode_t opcode);
@@ -405,7 +415,7 @@ function automatic logic opcode_is_16_2(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_immd(opcode_t opcode);
-	return(opcode_is_8_2_immd(opcode) || opcode == OPCODE_LD_XL_IMMD);
+	return(opcode_is_8_2_immd(opcode) || opcode == OPCODE_PUSH_IMMD || opcode == OPCODE_LD_XL_IMMD);
 endfunction
 
 function automatic logic opcode_is_16_immd(opcode_t opcode);

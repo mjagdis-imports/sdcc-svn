@@ -61,13 +61,14 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	wire [15:0] x, y, z;
 	wire [15 : 0] next_x, next_y, next_z;
 	logic [7:0] next_flags;
-	wire [1 : 0] regwrite_en;
-	wire [1 : 0] regwrite_addr;
+	logic [1:0] regwrite_en;
+	logic [1:0] regwrite_addr;
+	logic [15:0] regwrite_data;
 
 	logic [15:0] sp, next_sp;
 	logic [15:0] pc, old_pc, next_pc;
 
-	regfile regfile(.addr_in(regwrite_addr), .data_in(result_reg), .write_en(regwrite_en), .*);
+	regfile regfile(.addr_in(regwrite_addr), .data_in(regwrite_data), .write_en(regwrite_en), .*);
 
 	assign next_opcode = next_inst[7:0];
 	assign opcode = inst[7:0];
@@ -257,6 +258,8 @@ always_comb
 			aluinst = ALUINST_ADDW;
 		else if (opcode_is_adcw(opcode))
 			aluinst = ALUINST_ADCW;
+		else if (opcode_is_orw(opcode))
+			aluinst = ALUINST_ORW;
 		else if (opcode_is_xchb(opcode))
 			aluinst = ALUINST_XCHB;
 		else if (opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
@@ -331,9 +334,12 @@ always_comb
 		'x;
 
 	assign regwrite_en =
-		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ? 2'b01 :
+		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ?
+			(accsel_in == 1 ? 2'b10 : 2'b01) :
 		(opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_POPW_Y) ? 2'b11 :
 		0;
+	assign regwrite_data =
+		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode) || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) && accsel_in == 1) ? {result_reg[7:0], 8'bx} : result_reg;
 
 	assign dwrite_addr =
 		opcode == OPCODE_LD_IY_XL ? y :
