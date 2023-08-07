@@ -29,6 +29,7 @@ typedef enum logic [5:0] {
 	ALUINST_SRAW,
 	ALUINST_MUL,
 	ALUINST_MAD,
+	ALUINST_CLTZ,
 	ALUINST_SEX,
 	ALUINST_ADSW,
 	ALUINST_PASS0,
@@ -52,6 +53,38 @@ function automatic carry15(logic [14:0] op0, op1, input logic c_in);
 	logic [15:0] result;
 	result = op0 + op1 + c_in;
 	return result[15];
+endfunction
+
+function automatic clz(logic [15:0] op);
+	logic [7:0] count = 16;
+	begin: loop
+	for (int i = 0; count < 16; i++)
+	begin
+		if (op[15 - i])
+		begin
+			count = i;
+			//break; // Icarus Verilog 11 doesn't support break. Icarus Verilog 12 does.
+			disable loop;
+		end
+	end
+	end: loop
+	return count;
+endfunction
+
+function automatic ctz(logic [15:0] op);
+	logic [7:0] count = 16;
+	begin: loop
+	for (int i = 0; i < 16; i++)
+	begin
+		if (op[i])
+		begin
+			count = i;
+			//break; // Icarus Verilog 11 doesn't support break. Icarus Verilog 12 does.
+			disable loop;
+		end
+	end
+	end: loop
+	return count;
 endfunction
 
 module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, op1, op2, input aluinst_t aluinst, input logic swapop_in, input logic c_in, output logic o_out, output logic z_out, output logic n_out, output logic c_out);
@@ -100,6 +133,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_SRAW ? {op0[15], op0[15:0]} >> 1 :
 		aluinst == ALUINST_MUL ? op1[7:0] * op2[7:0] :
 		aluinst == ALUINST_MAD ? op1[7:0] * op2[7:0] + op0[7:0] :
+		aluinst == ALUINST_CLTZ ? {ctz(op0), clz(op0)} :
 		aluinst == ALUINST_SEX ? {{8{op0[7]}}, op0[7:0]} :
 		aluinst == ALUINST_ADSW ? op0[15:0] + {{8{op1[7]}}, op1[7:0]} + 0 :
 		aluinst == ALUINST_PASS0 ? op0[7:0] :

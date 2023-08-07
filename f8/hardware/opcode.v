@@ -186,9 +186,11 @@ typedef enum logic [7:0] {
 	OPCODE_LDW_Y_SPREL =  8'hc2, // ldw y, (n, sp)
 	OPCODE_LDW_Y_ZREL =   8'hc3, // ldw y, (nn, z)
 	// todo
+	OPCODE_LDW_Y_X =      8'hc6, // ldw y, x
 	OPCODE_LDW_Y_D =      8'hc7, // ldw y, #d
 	// todo
 	OPCODE_LDW_X_Y =      8'hcb, // ldw x, y
+	OPCODE_LDW_Z_Y =      8'hcc, // ldw z, y
 	// todo
 	OPCODE_JR_D =         8'hd0, // jr #d
 	OPCODE_DNJNZ_YH_D =   8'hd1, // dnjnz yh, #d
@@ -214,6 +216,7 @@ typedef enum logic [7:0] {
 	OPCODE_ADDW_SP_D =    8'hea, // addw sp, #d
 	OPCODE_ADDW_Y_D =     8'heb, // addw y, #d
 	OPCODE_XCH_F_SPREL =  8'hec, // xch f, (n, sp)
+	OPCODE_CLTZ_Y =       8'hed, // cltz y
 	// todo
 	OPCODE_ORW_Y_IMMD =   8'hf0, // orw y, #ii
 	OPCODE_ORW_Y_DIR =    8'hf1, // orw y, mm
@@ -360,6 +363,14 @@ function automatic logic opcode_is_incw(opcode_t opcode);
 	return(opcode == OPCODE_INCW_DIR || opcode == OPCODE_INCW_SPREL || opcode == OPCODE_INCW_ZREL || opcode == OPCODE_INCW_Y);
 endfunction
 
+function automatic logic opcode_is_adcw0(opcode_t opcode);
+	return(opcode == OPCODE_ADCW_DIR || opcode == OPCODE_ADCW_SPREL || opcode == OPCODE_ADCW_ZREL || opcode == OPCODE_ADCW_Y);
+endfunction
+
+function automatic logic opcode_is_sbcw0(opcode_t opcode);
+	return(opcode == OPCODE_SBCW_DIR || opcode == OPCODE_SBCW_SPREL || opcode == OPCODE_SBCW_ZREL || opcode == OPCODE_SBCW_Y);
+endfunction
+
 function automatic logic opcode_is_pushw(opcode_t opcode);
 	return(opcode == OPCODE_PUSHW_DIR || opcode == OPCODE_PUSHW_SPREL || opcode == OPCODE_PUSHW_ZREL || opcode == OPCODE_PUSHW_Y || opcode == OPCODE_PUSHW_IMMD);
 endfunction
@@ -374,7 +385,7 @@ function automatic logic opcode_is_ld_xl(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_ldw_y(opcode_t opcode);
-	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL ||opcode == OPCODE_LDW_Y_D);
+	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_Y_D);
 endfunction
 
 function automatic logic opcode_is_mad(opcode_t opcode);
