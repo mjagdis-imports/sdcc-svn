@@ -673,9 +673,13 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-        if (t1 == S_REG && r1 == F && t2 == S_SPREL) // Todo: Error on nonzero sp offset
+        if (t1 == S_REG && r1 == F && t2 == S_SPREL) // xch f, (n, sp)
           {
             outab(0xec);
+            if(ls_mode(&e2))
+				aerr();
+			else
+				outrb(&e2, R_USGN);
             break;
           }
 
@@ -729,6 +733,48 @@ opw:
 		}
 		else
 			aerr ();
+		break;
+
+	case S_0OPMAD:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+		comma(1);
+		t3 = addr(&e3);
+		r3 = rcode;
+
+		if(t1 != S_REG || r1 != X)
+			aerr();
+		if(t3 != S_REG || r3 != YL)
+			aerr();
+
+		switch(t2) {
+		case S_DIR:
+			outab(0xbc);
+			outrw(&e2, R_USGN);
+			break;
+		case S_SPREL:
+			outab(0xbd);
+			if(ls_mode(&e2))
+				aerr();
+			else
+				outrb(&e2, R_USGN);
+			break;
+		case S_ZREL:
+			outab(0xbe);
+			outrw(&e2, R_USGN);
+			break;
+		case S_IX:
+			if(r2 == Z)
+				outab(0xbf);
+			else
+				aerr();
+			break;
+		default:
+			aerr();
+		}
 		break;
 
 	case S_0OPW:
