@@ -53,6 +53,30 @@ l9:
 	trap
 la:
 
+	pushw	#0x00ff
+	clr	xh
+	xchb	xh, 0x3ffc, #7
+	jrnz #lb
+	trap
+lb:
+	cp	xh, #1
+	jrz	#lc
+	trap
+lc:
+	xchb	xh, 0x3ffc, #0
+	jrnz #ld
+	trap
+ld:
+	cp	xh, #1
+	jrz	#le
+	trap
+le:
+	ld	xh, #0x7f
+	cp	xh, (0, sp)
+	jrz	#lf
+	trap
+lf:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

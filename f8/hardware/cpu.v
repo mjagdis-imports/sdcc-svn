@@ -95,7 +95,8 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		else if(next_opcode == OPCODE_JR_D ||
 			next_opcode == OPCODE_JRZ_D && next_flags[3] || next_opcode == OPCODE_JRNZ_D && !next_flags[3] ||
 			next_opcode == OPCODE_JRC_D && next_flags[1] || next_opcode == OPCODE_JRNC_D && !next_flags[1] ||
-			next_opcode == OPCODE_JRN_D && next_flags[2] || next_opcode == OPCODE_JRNN_D && !next_flags[2])
+			next_opcode == OPCODE_JRN_D && next_flags[2] || next_opcode == OPCODE_JRNN_D && !next_flags[2] ||
+			next_opcode == OPCODE_JRO_D && next_flags[4] || next_opcode == OPCODE_JRNO_D && !next_flags[4])
 			next_pc = signed'(pc) + signed'(next_inst[15:8]);
 		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode) || opcode_is_jr_d(next_opcode) || next_opcode == OPCODE_LDW_Y_D || next_opcode == OPCODE_ADDW_Y_D || next_opcode == OPCODE_ADDW_SP_D)
 			next_pc = pc + 2;
@@ -149,11 +150,11 @@ always_comb
 	always_comb
 	begin 
 		if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_LD_SPREL_XL)
-			op0 =
-				(accsel_in == 1) ? {8'bx, x[15:8]} :
-				(accsel_in == 2) ? {8'bx, y[7:0]} :
-				(accsel_in == 3) ? {8'bx, z[7:0]} :
-				{8'bx, x[7:0]};
+			op0 = {8'bx,
+				(accsel_in == 1) ? x[15:8] :
+				(accsel_in == 2) ? y[7:0] :
+				(accsel_in == 3) ? z[7:0] :
+				x[7:0]};
 		else if(opcode_is_8_1_zh(opcode))
 			op0 = {8'bx, z[15:8]};
 		else if(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode == OPCODE_POP_XL || opcode == OPCODE_LD_XL_SPREL)
@@ -163,6 +164,10 @@ always_comb
 				(accsel_in == 2) ? x :
 				(accsel_in == 3) ? z :
 				y;
+		else if (opcode_is_mad(opcode))
+			op0 = {8'bx, x[15:8]};
+		else if (opcode == OPCODE_XCH_F_SPREL)
+			op0 = {8'bx, flags};
 		else if (opcode == OPCODE_POPW_Y)
 			op0 = dread_data[15:0];
 		else if(opcode == OPCODE_LD_XL_IMMD || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_PUSH_IMMD)
@@ -180,7 +185,7 @@ always_comb
 
 		if(opcode_is_8_2_immd(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
 			op1 = {8'bx, inst[15:8]};
-		else if(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode) || opcode_is_xchb(opcode))
+		else if(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode) || opcode_is_xchb(opcode) || opcode_is_mad(opcode) || opcode == OPCODE_XCH_F_SPREL)
 			op1 = {8'bx, dread_data[7:0]};
 		else if(opcode_is_8_2_zl(opcode))
 			op1 = z[7:0];
@@ -196,6 +201,11 @@ always_comb
 			op1 = dread_data[15:0];
 		else if(opcode_is_16_2_x(opcode))
 			op1 = x;
+		else if (opcode == OPCODE_MUL_Y)
+			op1 = {8'bx,
+				(accsel_in == 2) ? x[15:8] :
+				(accsel_in == 3) ? z[15:8] :
+				y[15:8]};
 		else
 			op1 = 'x;
 
@@ -215,6 +225,13 @@ always_comb
 			op2 = 6;
 		else if(opcode == OPCODE_XCHB_XL_MM_7)
 			op2 = 7;
+		else if (opcode == OPCODE_MUL_Y)
+			op2 = {8'bx,
+				(accsel_in == 2) ? x[7:0] :
+				(accsel_in == 3) ? z[7:0] :
+				y[7:0]};
+		else if (opcode_is_mad(opcode))
+			op2 = {8'bx, y[7:0]};
 		else
 			op2 = 'x;
 
@@ -264,11 +281,17 @@ always_comb
 			aluinst = ALUINST_XCHB;
 		else if (opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
 			aluinst = ALUINST_ADSW;
+		else if (opcode == OPCODE_MUL_Y)
+			aluinst = ALUINST_MUL;
+		else if (opcode_is_mad(opcode))
+			aluinst = ALUINST_MAD;
 		else if (opcode == OPCODE_LDW_Y_D)
 			aluinst = ALUINST_SEX;
 		else if (opcode == OPCODE_CPW_Y_IMMD) // Same operation as subw, but result is discarded.
 			aluinst = ALUINST_SUBW;
-		else if (opcode == OPCODE_LDW_ISPREL_Y) // Same operation as subw, but result is discarded.
+		else if (opcode == OPCODE_XCH_F_SPREL)
+			aluinst = ALUINST_XCHW;
+		else if (opcode == OPCODE_LDW_ISPREL_Y)
 			aluinst = ALUINST_XCHW;
 		/* todo: more instructions here*/
 		else if (opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y || OPCODE_POPW_Y)
@@ -278,8 +301,8 @@ always_comb
 
 		if (opcode == OPCODE_PUSH_IMMD)
 			next_flags = flags;
-		else if (opcode == OPCODE_XCH_D_SPREL)
-			next_flags = result_reg;
+		else if (opcode == OPCODE_XCH_F_SPREL)
+			next_flags = result_reg[7:0];
 		else
 		begin
 			// todo: h flag
@@ -297,7 +320,8 @@ always_comb
 			else
 				next_flags[1] = flags[1];
 			// n flag
-			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD)
+			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
+				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode))
 				next_flags[2] = n_out;
 			else
 				next_flags[2] = flags[2];
@@ -305,7 +329,8 @@ always_comb
 			if (opcode_is_8_2(opcode) ||
 				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode_is_xchb(opcode) ||
-				opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD) 
+				opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
+				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode)) 
 				next_flags[3] = z_out;
 			else
 				next_flags[3] = flags[3];
@@ -336,16 +361,18 @@ always_comb
 			(accsel_in == 2 ? 1 : accsel_in == 3 ? 2 : 0) :
 		(opcode == OPCODE_LDW_X_Y) ?
 			0 :
-		(opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode_is_ldw_y(opcode) || opcode == OPCODE_POPW_Y) ?
+		(opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_ldw_y(opcode) || opcode == OPCODE_POPW_Y) ?
 			(accsel_in == 2 ? 0 : accsel_in == 3 ? 2 : 1) :
 		opcode_is_8_1_zh(opcode) ?
 			2 :
+		opcode_is_mad(opcode) ?
+			0 :
 		'x;
 
 	assign regwrite_en =
 		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ?
 			(accsel_in == 1 ? 2'b10 : 2'b01) :
-		(opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_POPW_Y) ? 2'b11 :
+		(opcode_is_16_2(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) || opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_POPW_Y) ? 2'b11 :
 		0;
 	assign regwrite_data =
 		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode) || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) && accsel_in == 1) ? {result_reg[7:0], 8'bx} : result_reg;
@@ -354,15 +381,17 @@ always_comb
 		opcode == OPCODE_LD_IY_XL ? y :
 		opcode_is_push(opcode) ? sp - 1 :
 		(opcode_is_8_1_dir(opcode) || opcode_is_xchb(opcode) || (opcode_is_8_2_dir(opcode) || opcode_is_16_2_dir(opcode)) && swapop_in) ? inst[23:8] :
-		(opcode_is_8_1_sprel(opcode) || (opcode_is_8_2_sprel(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in || opcode == OPCODE_LD_SPREL_XL) ? sp + inst[15:8] :
-		(opcode_is_8_2_zrel(opcode) && swapop_in) ? z + inst[23:8] :
+		(opcode_is_8_1_sprel(opcode) || opcode == OPCODE_XCH_F_SPREL || (opcode_is_8_2_sprel(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in || opcode == OPCODE_LD_SPREL_XL) ? sp + inst[15:8] :
+		(opcode_is_8_2_zrel(opcode) && swapop_in || opcode == OPCODE_MAD_X_ZREL_YL) ? z + inst[23:8] :
 		opcode_is_pushw(opcode) ? sp - 2 :
 		(opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y) ? sp - 2 :
 		opcode == OPCODE_LDW_ISPREL_Y ? result_reg :
 		'x;
 	assign dwrite_en =
 		reset ? 2'b00 :
-		(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_push(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_SPREL_XL ||
+		(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_push(opcode) || opcode_is_xchb(opcode) ||
+			opcode == OPCODE_XCH_F_SPREL ||
+			opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_SPREL_XL ||
 			(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode)) && !opcode_is_cp(opcode) && swapop_in) ? 2'b01 :
 		(opcode_is_pushw(opcode) || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y || opcode == OPCODE_LDW_ISPREL_Y ||
 			(opcode_is_16_2_dir(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in) ? 2'b11 :

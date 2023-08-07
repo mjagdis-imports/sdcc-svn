@@ -22,7 +22,7 @@ module dualportram(din, write_en, waddr, wclk, raddr, rclk, dout);
 endmodule
 
 
-// Memory subsystem - ideal memory for simulation. TODO: Build an implementation from dualportram above, using ivalid to resolve read conflicts.
+// Memory subsystem - ideal memory for simulation. TODO: Build an implementation from dualportram above, using ivalid to resolve read conflicts?
 // Has three ports (instruction read, data read, data write)
 module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk);
 	parameter ramsize = 32768;
