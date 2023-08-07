@@ -11,12 +11,17 @@ clean:
 f8-testsystem: *.v
 	iverilog -g2009 -o $@ testsystem.v
 
+f8-simpletestsystem: *.v
+	iverilog -g2009 -o $@ simpletestsystem.v
+
 TESTDIRS = ${shell find tests/* -type d -print}
 TESTSS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
 TESTSYSTEMVCDS = $(TESTDIRS:=/testsystem.vcd)
+SIMPLETESTSYSTEMVCDS = $(TESTDIRS:=/simpletestsystem.vcd)
 TESTLOGS = $(TESTDIRS:=/test.log)
+SIMPLETESTLOGS = $(TESTDIRS:=/simpletest.log)
 
 %.rel: %.s
 	$(SDAS) -plosgff $@ $<
@@ -30,8 +35,14 @@ TESTLOGS = $(TESTDIRS:=/test.log)
 %/test.vcd %/test.log &: f8-testsystem %/test.vmem
 	cd $*; ../../f8-testsystem > test.log
 
-tests: $(TESTLOGS)
+%/simpletest.vcd %/simpletest.log &: f8-simpletestsystem %/test.vmem
+	cd $*; ../../f8-simpletestsystem > simpletest.log
+
+tests: $(TESTLOGS) $(SIMPLETESTLOGS)
 	for testlog in $(TESTLOGS); do \
-		echo -n $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+		echo -n "testsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+	done
+	for simpletestlog in $(SIMPLETESTLOGS); do \
+		echo -n "simpletestsystem": $$simpletestlog ""; grep ERROR $$simpletestlog | tr -d '\n'; echo ""; \
 	done
 
