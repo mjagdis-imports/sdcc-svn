@@ -1,4 +1,4 @@
-typedef enum logic [4:0] {
+typedef enum logic [5:0] {
 	ALUINST_ADD,
 	ALUINST_ADC,
 	ALUINST_SUB,
@@ -22,6 +22,11 @@ typedef enum logic [4:0] {
 	ALUINST_INCW,
 	ALUINST_ADCW0,
 	ALUINST_SBCW0,
+	ALUINST_SLLW,
+	ALUINST_SRLW,
+	ALUINST_RRCW,
+	ALUINST_RLCW,
+	ALUINST_SRAW,
 	ALUINST_MUL,
 	ALUINST_MAD,
 	ALUINST_SEX,
@@ -88,6 +93,11 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_ADCW ? op0[15:0] + op1[15:0] + c_in :
 		aluinst == ALUINST_ORW ? op0[15:0] | op1[15:0] :
 		aluinst == ALUINST_XCHB ? (op1[7:0] & ~(1 << op2[2:0]) | (op0[0] << op2[2:0])) :
+		aluinst == ALUINST_SRLW ? {1'b0, op0[15:0]} >> 1 :
+		aluinst == ALUINST_SLLW ? {op0[14:0], 1'b0} :
+		aluinst == ALUINST_RRCW ? {c_in, op0[15:0]} >> 1 :
+		aluinst == ALUINST_RLCW ? {op0[14:0], c_in} :
+		aluinst == ALUINST_SRAW ? {op0[15], op0[15:0]} >> 1 :
 		aluinst == ALUINST_MUL ? op1[7:0] * op2[7:0] :
 		aluinst == ALUINST_MAD ? op1[7:0] * op2[7:0] + op0[7:0] :
 		aluinst == ALUINST_SEX ? {{8{op0[7]}}, op0[7:0]} :
@@ -121,6 +131,8 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 	assign c_out = 
 		(aluinst == ALUINST_SRL || aluinst == ALUINST_RRC) ? op0[0] :
 		(aluinst == ALUINST_SLL || aluinst == ALUINST_RLC) ? op0[7] :
+		(aluinst == ALUINST_SRLW || aluinst == ALUINST_RRCW || aluinst == ALUINST_SRAW) ? op0[0] :
+		(aluinst == ALUINST_SLLW || aluinst == ALUINST_RLCW) ? op0[15] :
 		wideop ? result[16] : result[8];
 	assign n_out = wideop ? result[15] : result[7];
 	assign z_out = !(wideop ? |result_reg[15:0] : |result_reg[7:0]);
