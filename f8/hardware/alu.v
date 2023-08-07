@@ -12,13 +12,16 @@ typedef enum logic [4:0] {
 	ALUINST_RLC,
 	ALUINST_INC,
 	ALUINST_DEC,
-	ALUINST_CLR,
 	ALUINST_SUBW,
 	ALUINST_SBCW,
 	ALUINST_ADDW,
 	ALUINST_ADCW,
 	ALUINST_ORW,
 	ALUINST_XCHB,
+	ALUINST_CLRW,
+	ALUINST_INCW,
+	ALUINST_ADCW0,
+	ALUINST_SBCW0,
 	ALUINST_MUL,
 	ALUINST_MAD,
 	ALUINST_SEX,
@@ -28,14 +31,38 @@ typedef enum logic [4:0] {
 	ALUINST_XCHW}
 	aluinst_t;
 
-module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, op1, op2, input aluinst_t aluinst, input logic swapop_in, input logic c_in, output logic z_out,  output logic n_out, output logic c_out);
+function automatic carry4(logic [3:0] op0, op1, input logic c_in);
+	logic [4:0] result;
+	result = op0 + op1 + c_in;
+	return result[4];
+endfunction
+
+function automatic carry7(logic [6:0] op0, op1, input logic c_in);
+	logic [7:0] result;
+	result = op0 + op1 + c_in;
+	return result[7];
+endfunction
+
+function automatic carry15(logic [14:0] op0, op1, input logic c_in);
+	logic [15:0] result;
+	result = op0 + op1 + c_in;
+	return result[15];
+endfunction
+
+module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, op1, op2, input aluinst_t aluinst, input logic swapop_in, input logic c_in, output logic o_out, output logic z_out, output logic n_out, output logic c_out);
 	wire [16:0] result;
-	wire wideop;
+	wire wideop, arithop;
 
 	assign wideop =
 		(aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ORW ||
+		aluinst == ALUINST_INCW || aluinst == ALUINST_ADCW0 || aluinst == ALUINST_SBCW0 ||
 		aluinst == ALUINST_MUL || aluinst == ALUINST_MAD ||
 		aluinst == ALUINST_ADSW || aluinst == ALUINST_SEX || aluinst == ALUINST_PASSW0);
+	assign arithop = (
+		aluinst == ALUINST_ADD || aluinst == ALUINST_ADC || aluinst == ALUINST_SUB || aluinst == ALUINST_SBC ||
+		aluinst == ALUINST_INC || aluinst == ALUINST_DEC ||
+		aluinst == ALUINST_INCW || aluinst == ALUINST_ADCW0 || aluinst == ALUINST_SBCW0 ||
+		aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ADSW);
 
 	assign result =
 		aluinst == ALUINST_ADD ? op0[7:0] + op1[7:0] + 0:
@@ -51,7 +78,10 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_RLC ? {op0[6:0], c_in} :
 		aluinst == ALUINST_INC ? op0[7:0] + 8'h01 :
 		aluinst == ALUINST_DEC ? op0[7:0] + 8'hff :
-		aluinst == ALUINST_CLR ? 0 :
+		aluinst == ALUINST_CLRW ? 0 :
+		aluinst == ALUINST_INCW ? op0[15:0] + 8'h01 :
+		aluinst == ALUINST_ADCW0 ? op0[15:0] + c_in :
+		aluinst == ALUINST_SBCW0 ? op0[15:0] + 16'hffff + c_in :
 		aluinst == ALUINST_SUBW ? (swapop_in ? op1[15:0] + ~op0[15:0] : op0[15:0] + ~op1[15:0]) + 1 :
 		aluinst == ALUINST_SBCW ? (swapop_in ? op1[15:0] + ~op0[15:0] : op0[15:0] + ~op1[15:0]) + c_in :
 		aluinst == ALUINST_ADDW ? op0[15:0] + op1[15:0] + 0 :
@@ -66,6 +96,21 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_PASSW0 ? op0 :
 		'x;
 
+	assign overflow = 
+		aluinst == ALUINST_ADD ? carry7 (op0[7:0], op1[7:0], 0) ^ c_out :
+		aluinst == ALUINST_ADC ? carry7 (op0[7:0], op1[7:0], c_in) ^ c_out :
+		aluinst == ALUINST_SUB ? carry7 (op0[7:0], ~op1[7:0], 0) ^ c_out :
+		aluinst == ALUINST_SBC ? carry7 (op0[7:0], ~op1[7:0], c_in) ^ c_out :
+		aluinst == ALUINST_INC ? carry7 (op0[7:0], 0, 1) ^ c_out :
+		aluinst == ALUINST_INCW ? carry15 (op0[15:0], 0, 1) ^ c_out :
+		aluinst == ALUINST_ADCW0 ? carry15 (op0[15:0], 0, c_in) ^ c_out :
+		aluinst == ALUINST_SBCW0 ? carry15 (op0[15:0], 16'hffff, c_in) ^ c_out :
+		aluinst == ALUINST_ADDW ? carry15 (op0[15:0], op1[15:0], 0) ^ c_out :
+		aluinst == ALUINST_ADCW ? carry15 (op0[15:0], op1[15:0], c_in) ^ c_out :
+		aluinst == ALUINST_SUBW ? carry15 (op0[15:0], ~op1[15:0], 1) ^ c_out :
+		aluinst == ALUINST_SBCW ? carry15 (op0[15:0], ~op1[15:0], c_in) ^ c_out :
+		'x;
+
 	assign result_reg =
 		(aluinst == ALUINST_XCHW) ? op1 :
 		(aluinst == ALUINST_XCHB) ? op1[op2[2:0]] :
@@ -77,8 +122,10 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		(aluinst == ALUINST_SRL || aluinst == ALUINST_RRC) ? op0[0] :
 		(aluinst == ALUINST_SLL || aluinst == ALUINST_RLC) ? op0[7] :
 		wideop ? result[16] : result[8];
-	assign z_out = !(wideop ? |result_reg[15:0] : |result_reg[7:0]);
 	assign n_out = wideop ? result[15] : result[7];
+	assign z_out = !(wideop ? |result_reg[15:0] : |result_reg[7:0]);
+	assign o_out = arithop ? overflow :
+		wideop ? ^result_reg[15:0] : ^result_reg[7:0];
 
 	//always @(op2)
 	//begin
