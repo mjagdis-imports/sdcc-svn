@@ -33,7 +33,7 @@ module testsystem ();
     	reset <= 1;
     	#20
     	reset <= 0;
-		#1580
+		#1980
 		$finish;
 	end
 

@@ -87,9 +87,10 @@ function automatic logic [7:0] ctz(logic [15:0] op);
 	return count;
 endfunction
 
-module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, op1, op2, input aluinst_t aluinst, input logic swapop_in, input logic c_in, output logic o_out, output logic z_out, output logic n_out, output logic c_out);
+module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, op1, op2, input aluinst_t aluinst, input logic swapop_in, input logic c_in, output logic o_out, output logic z_out, output logic n_out, output logic c_out, output logic h_out);
 	wire [16:0] result;
 	wire wideop, arithop;
+	wire logic overflow, halfcarry;
 
 	assign wideop =
 		(aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ORW ||
@@ -154,6 +155,13 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_SUBW ? carry15 (op0[15:0], ~op1[15:0], 1) ^ c_out :
 		aluinst == ALUINST_SBCW ? carry15 (op0[15:0], ~op1[15:0], c_in) ^ c_out :
 		'x;
+	assign halfcarry =
+		aluinst == ALUINST_ADD ? carry4 (op0[7:0], op1[7:0], 0) :
+		aluinst == ALUINST_ADC ? carry4 (op0[7:0], op1[7:0], c_in) :
+		aluinst == ALUINST_SUB ? carry4 (op0[7:0], ~op1[7:0], 0) :
+		aluinst == ALUINST_SBC ? carry4 (op0[7:0], ~op1[7:0], c_in) :
+		aluinst == ALUINST_INC ? carry4 (op0[7:0], 0, 1) :
+		'x;
 
 	assign result_reg =
 		(aluinst == ALUINST_XCHW) ? op1 :
@@ -172,6 +180,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 	assign z_out = !(wideop ? |result_reg[15:0] : |result_reg[7:0]);
 	assign o_out = arithop ? overflow :
 		wideop ? ^result_reg[15:0] : ^result_reg[7:0];
+	assign h_out = halfcarry;
 
 	//always @(op2)
 	//begin

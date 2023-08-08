@@ -53,7 +53,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	wire [15:0] result_reg, result_mem;
 	aluinst_t aluinst;
 	logic [1:0] accsel_in, next_accsel_in;
-	logic c_in, swapop_in, c_out, z_out, n_out, o_out;
+	logic c_in, swapop_in, c_out, z_out, n_out, o_out, h_out;
 	reg [7:0] flags;
 
 	alu alu(.*);
@@ -157,7 +157,7 @@ always_comb
 				x[7:0]};
 		else if(opcode_is_8_1_zh(opcode))
 			op0 = {8'bx, z[15:8]};
-		else if(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode == OPCODE_POP_XL || opcode == OPCODE_LD_XL_SPREL)
+		else if(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode == OPCODE_POP_XL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LD_XL_SPREL)
 			op0 = {8'bx, dread_data[7:0]};
 		else if(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_LDW_Y_SP && swapop_in ||
 			opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_CPW_Y_IMMD || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_LDW_ISPREL_Y)
@@ -322,8 +322,8 @@ always_comb
 		else
 		begin
 			// todo: h flag
-			if (0)
-				;
+			if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode))
+				next_flags[0] = h_out;
 			else
 				next_flags[0] = flags[0];
 			// c flag
@@ -381,8 +381,11 @@ always_comb
 	end
 
 	assign regwrite_addr =
-		(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ?
+		(opcode_is_8_2(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ?
 			(accsel_in == 2 ? 1 : accsel_in == 3 ? 2 : 0) :
+		(opcode_is_8_2_xh(opcode) && swapop_in) ? 0 :
+		(opcode_is_8_2_zl(opcode) && swapop_in) ? 2 :
+		((opcode_is_8_2_yl(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 1 :
 		(opcode == OPCODE_LDW_X_Y) ?
 			0 :
 		(opcode == OPCODE_LDW_Z_Y) ?
@@ -398,11 +401,15 @@ always_comb
 	assign regwrite_en =
 		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ?
 			(accsel_in == 1 ? 2'b10 : 2'b01) :
+		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :
+		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in) ? 2'b01 :
 		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
 		opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_POPW_Y) ? 2'b11 :
 		0;
 	assign regwrite_data =
-		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode) || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) && accsel_in == 1) ? {result_reg[7:0], 8'bx} : result_reg;
+		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) && accsel_in == 1 || (opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? {result_reg[7:0], 8'bx} :
+		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) && accsel_in == 1) ? {result_reg[7:0], 8'bx} :
+		result_reg;
 
 	assign dwrite_addr =
 		opcode == OPCODE_LD_IY_XL ? y :
