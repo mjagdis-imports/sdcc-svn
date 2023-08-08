@@ -1,5 +1,5 @@
 typedef enum logic [5:0] {
-	ALUINST_ADD,
+	ALUINST_ADD,	// 0x00
 	ALUINST_ADC,
 	ALUINST_SUB,
 	ALUINST_SBC,
@@ -15,7 +15,7 @@ typedef enum logic [5:0] {
 	ALUINST_SUBW,
 	ALUINST_SBCW,
 	ALUINST_ADDW,
-	ALUINST_ADCW,
+	ALUINST_ADCW,	// 0x10
 	ALUINST_ORW,
 	ALUINST_XCHB,
 	ALUINST_CLRW,
@@ -31,7 +31,7 @@ typedef enum logic [5:0] {
 	ALUINST_MAD,
 	ALUINST_CLTZ,
 	ALUINST_SEX,
-	ALUINST_ADSW,
+	ALUINST_ADSW,	// 0x20
 	ALUINST_PASS0,
 	ALUINST_PASSW0,
 	ALUINST_XCHW}
@@ -55,10 +55,10 @@ function automatic carry15(logic [14:0] op0, op1, input logic c_in);
 	return result[15];
 endfunction
 
-function automatic clz(logic [15:0] op);
+function automatic logic [7:0] clz(logic [15:0] op);
 	logic [7:0] count = 16;
 	begin: loop
-	for (int i = 0; count < 16; i++)
+	for (int i = 0; i < 16; i++)
 	begin
 		if (op[15 - i])
 		begin
@@ -71,7 +71,7 @@ function automatic clz(logic [15:0] op);
 	return count;
 endfunction
 
-function automatic ctz(logic [15:0] op);
+function automatic logic [7:0] ctz(logic [15:0] op);
 	logic [7:0] count = 16;
 	begin: loop
 	for (int i = 0; i < 16; i++)

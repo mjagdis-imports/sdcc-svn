@@ -295,6 +295,8 @@ always_comb
 			aluinst = ALUINST_RRCW;
 		else if (opcode == OPCODE_RLCW_Y || opcode == OPCODE_RLCW_SPREL)
 			aluinst = ALUINST_RLCW;
+		else if (opcode == OPCODE_CLTZ_Y)
+			aluinst = ALUINST_CLTZ;
 		else if (opcode == OPCODE_MUL_Y)
 			aluinst = ALUINST_MUL;
 		else if (opcode_is_mad(opcode))
