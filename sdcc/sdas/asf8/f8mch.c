@@ -896,6 +896,59 @@ sex:
 		outab(op);
 		break;
 
+	case S_0OPMSK:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+		comma(1);
+		t3 = addr(&e3);
+		r3 = rcode;
+
+		if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == XL && t3 == S_IMM) {
+			outab(op);
+			outrb(&e2, R_NORM);
+		}
+		else
+			aerr();
+
+		break;
+
+	case S_0OPCAX:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+		comma(1);
+		t3 = addr(&e3);
+		r3 = rcode;
+
+		if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == ZL && t3 == S_REG && r3 == XL)
+			outab(op);
+		else
+			aerr();
+
+		break;
+
+	case S_0OPWCAX:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+		comma(1);
+		t3 = addr(&e3);
+		r3 = rcode;
+
+		if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == Z && t3 == S_REG && r3 == X)
+			outab(op);
+		else
+			aerr();
+
+		break;
+
 	default:
 		opcycles = OPCY_ERR;
 		err('o');

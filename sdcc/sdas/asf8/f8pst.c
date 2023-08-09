@@ -297,11 +297,12 @@ struct	mne	mne[] = {
     {	NULL,	"daa",		S_0OP,		0,	0x97	},
     {	NULL,	"pop",		S_0OP,		0,	0x99	},
     {	NULL,	"xch",		S_0OPXCH,	0,	0x90	},
-    {	NULL,	"msk",		S_0OP,		0,	0xb8	},
+    {	NULL,	"msk",		S_0OPMSK,	0,	0xb8	},
     {	NULL,	"cax",		S_0OP,		0,	0x9b	},
     {	NULL,	"mad",		S_0OPMAD,	0,	0xbc	},
     {	NULL,	"rot",		S_0OPROT,	0,	0x95	},
     {	NULL,	"thrd",		S_0OP,		0,	0x9a	},
+	{	NULL,	"cax",		S_0OPCAX,	0,	0x9b	},
     //{	NULL,	"push",		S_0OP,		0,	0x90	},
     
     /* 16-bit 0-op-instrustions */
@@ -328,6 +329,7 @@ struct	mne	mne[] = {
     {	NULL,	"sex",		S_0OPWSEX,	0,	0xee	},
     {	NULL,	"zex",		S_0OPWSEX,	0,	0xef	},
 //    {	NULL,	"addw",		S_0OPW,		0,	0xec	},
+	{	NULL,	"caxw",		S_0OPWCAX,	0,	0xf9	},
 
     /* bit instructions */
     {	NULL,	"xchb",		S_BIT,		0,	0x68	},

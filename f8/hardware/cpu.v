@@ -6,14 +6,6 @@
 module regfile(output logic [15:0] x, y, z, output logic [15:0] next_x, next_y, next_z, input logic [1:0] addr_in, input logic [15:0] data_in, input logic [1:0] write_en, input logic clk);
 	logic [15:0] regs[3];
 
-	// Just some values suitable for a few tests I'm running - remove this later!
-	initial
-	begin
-		regs[0] = 16'h0201;
-		regs[1] = 16'h0100;
-		regs[2] = 16'haa55;
-	end
-
 	assign x = regs[0];
 	assign y = regs[1];
 	assign z = regs[2];
@@ -53,7 +45,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	wire [15:0] result_reg, result_mem;
 	aluinst_t aluinst;
 	logic [1:0] accsel_in, next_accsel_in;
-	logic c_in, swapop_in, c_out, z_out, n_out, o_out, h_out;
+	logic h_in, c_in, swapop_in, c_out, z_out, n_out, o_out, h_out;
 	reg [7:0] flags;
 
 	alu alu(.*);
@@ -134,7 +126,7 @@ always_comb
 			dread_addr = next_sp + next_inst[15:8];
 		else if(opcode_is_zrel(next_opcode))
 			dread_addr = next_z + next_inst[23:8];
-		else if (next_opcode == OPCODE_LD_XL_IY)
+		else if (next_opcode == OPCODE_LD_XL_IY || next_opcode == OPCODE_CAX_IY_ZL_XL || next_opcode == OPCODE_CAXW_IY_Z_X)
 			dread_addr = next_y;
 		else if (next_opcode == OPCODE_POP_XL || OPCODE_POPW_Y)
 			dread_addr = next_sp;
@@ -145,11 +137,12 @@ always_comb
 	assign swapop_in = flags[5];
 	assign accsel_in = flags[7:6];
 	assign next_accsel_in = next_flags[7:6];
+	assign h_in = flags[0];
 	assign c_in = flags[1];
 
 	always_comb
 	begin 
-		if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_LD_SPREL_XL)
+		if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_LD_SPREL_XL)
 			op0 = {8'bx,
 				(accsel_in == 1) ? x[15:8] :
 				(accsel_in == 2) ? y[7:0] :
@@ -170,6 +163,7 @@ always_comb
 		else if (opcode == OPCODE_XCH_F_SPREL)
 			op0 = {8'bx, flags};
 		else if (opcode == OPCODE_POPW_Y || opcode_is_16_1_dir(opcode) || opcode_is_16_1_sprel(opcode) || opcode_is_16_1_zrel(opcode) ||
+			opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X ||
 			opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL)
 			op0 = dread_data[15:0];
 		else if(opcode == OPCODE_LD_XL_IMMD || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_PUSH_IMMD)
@@ -185,7 +179,7 @@ always_comb
 		else
 			op0 = 'x;
 
-		if(opcode_is_8_2_immd(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
+		if(opcode_is_8_2_immd(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
 			op1 = {8'bx, inst[15:8]};
 		else if(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode) || opcode_is_xchb(opcode) || opcode_is_mad(opcode) || opcode == OPCODE_XCH_F_SPREL)
 			op1 = {8'bx, dread_data[7:0]};
@@ -201,7 +195,7 @@ always_comb
 			op1 = inst[31:8];
 		else if(opcode_is_16_2_dir(opcode) || opcode_is_16_2_sprel(opcode) || opcode == OPCODE_LDW_ISPREL_Y)
 			op1 = dread_data[15:0];
-		else if(opcode_is_16_2_x(opcode))
+		else if(opcode_is_16_2_x(opcode) || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X)
 			op1 = x;
 		else if (opcode == OPCODE_MUL_Y)
 			op1 = {8'bx,
@@ -234,6 +228,8 @@ always_comb
 				y[7:0]};
 		else if (opcode_is_mad(opcode))
 			op2 = {8'bx, y[7:0]};
+		else if (opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X)
+			op2 = z;
 		else
 			op2 = 'x;
 
@@ -269,8 +265,12 @@ always_comb
 			aluinst = ALUINST_CLRW;
 		else if (opcode_is_tst(opcode))
 			aluinst = ALUINST_PASS0;
+		else if (opcode == OPCODE_DAA_XL)
+			aluinst = ALUINST_DAA;
 		else if (opcode == OPCODE_BOOL_XL)
 			aluinst = ALUINST_BOOL;
+		else if (opcode == OPCODE_ROT_XL_IMMD)
+			aluinst = ALUINST_ROT;
 		else if (opcode_is_subw(opcode))
 			aluinst = ALUINST_SUBW;
 		else if (opcode_is_sbcw(opcode))
@@ -307,6 +307,10 @@ always_comb
 			aluinst = ALUINST_MUL;
 		else if (opcode_is_mad(opcode))
 			aluinst = ALUINST_MAD;
+		else if (opcode == OPCODE_CAX_IY_ZL_XL)
+			aluinst = ALUINST_CAX;
+		else if (opcode == OPCODE_CAXW_IY_Z_X)
+			aluinst = ALUINST_CAXW;
 		else if (opcode == OPCODE_LDW_Y_D)
 			aluinst = ALUINST_SEX;
 		else if (opcode == OPCODE_CPW_Y_IMMD) // Same operation as subw, but result is discarded.
@@ -338,7 +342,7 @@ always_comb
 			else if (opcode_is_tstw(opcode))
 				next_flags[1] = 1;
 			else if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) ||
-				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) ||
+				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode == OPCODE_DAA_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD)
 				next_flags[1] = c_out;
@@ -355,11 +359,12 @@ always_comb
 			if (opcode_is_8_2(opcode) ||
 				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode_is_xchb(opcode) ||
-				opcode == OPCODE_BOOL_XL ||
+				opcode == OPCODE_DAA_XL || opcode == OPCODE_BOOL_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
 				opcode == OPCODE_BOOLW_Y ||
-				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode)) 
+				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
+				opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) 
 				next_flags[3] = z_out;
 			else
 				next_flags[3] = flags[3];
@@ -389,14 +394,14 @@ always_comb
 	end
 
 	assign regwrite_addr =
-		(opcode_is_8_2(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ?
+		(opcode_is_8_2(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode_is_ld_xl(opcode)) ?
 			(accsel_in == 2 ? 1 : accsel_in == 3 ? 2 : 0) :
 		(opcode_is_8_2_xh(opcode) && swapop_in) ? 0 :
 		(opcode_is_8_2_zl(opcode) && swapop_in) ? 2 :
 		((opcode_is_8_2_yl(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 1 :
 		(opcode == OPCODE_LDW_X_Y) ?
 			0 :
-		(opcode == OPCODE_LDW_Z_Y) ?
+		(opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) ?
 			2 :
 		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_ldw_y(opcode) || opcode == OPCODE_POPW_Y) ?
 			(accsel_in == 2 ? 0 : accsel_in == 3 ? 2 : 1) :
@@ -405,22 +410,21 @@ always_comb
 		opcode_is_mad(opcode) ?
 			0 :
 		'x;
-
 	assign regwrite_en =
-		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) ?
+		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode_is_ld_xl(opcode)) ?
 			(accsel_in == 1 ? 2'b10 : 2'b01) :
 		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :
-		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in) ? 2'b01 :
-		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
+		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in || opcode == OPCODE_CAX_IY_ZL_XL && !z_out) ? 2'b01 :
+		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) || opcode == OPCODE_CAXW_IY_Z_X && !z_out ||
 		opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_POPW_Y) ? 2'b11 :
 		0;
 	assign regwrite_data =
 		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) && accsel_in == 1 || (opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? {result_reg[7:0], 8'bx} :
-		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode_is_ld_xl(opcode)) && accsel_in == 1) ? {result_reg[7:0], 8'bx} :
+		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode_is_ld_xl(opcode)) && accsel_in == 1) ? {result_reg[7:0], 8'bx} :
 		result_reg;
 
 	assign dwrite_addr =
-		opcode == OPCODE_LD_IY_XL ? y :
+		(opcode == OPCODE_LD_IY_XL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) ? y :
 		opcode_is_push(opcode) ? sp - 1 :
 		(opcode_is_8_1_dir(opcode) || opcode_is_xchb(opcode) || opcode_is_16_1_dir(opcode) || (opcode_is_8_2_dir(opcode) || opcode_is_16_2_dir(opcode)) && swapop_in) ? inst[23:8] :
 		(opcode_is_8_1_sprel(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_F_SPREL || (opcode_is_8_2_sprel(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in || opcode == OPCODE_LD_SPREL_XL) ? sp + inst[15:8] :
@@ -432,11 +436,11 @@ always_comb
 	assign dwrite_en =
 		reset ? 2'b00 :
 		(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_push(opcode) || opcode_is_xchb(opcode) ||
-			opcode == OPCODE_XCH_F_SPREL ||
+			opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_CAX_IY_ZL_XL && z_out ||
 			opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_SPREL_XL ||
 			(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode)) && !opcode_is_cp(opcode) && swapop_in) ? 2'b01 :
 			opcode_is_pushw(opcode) || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y || opcode == OPCODE_LDW_ISPREL_Y ||
-			((opcode_is_16_2_dir(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in) ||
+			((opcode_is_16_2_dir(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in) || opcode == OPCODE_CAXW_IY_Z_X && z_out||
 			opcode_is_16_1_dir(opcode) || opcode_is_16_1_sprel(opcode) || opcode_is_16_1_zrel(opcode)  ? 2'b11 :
 		2'b00;
 	assign dwrite_data = dwrite_en ? result_mem : 'x;
