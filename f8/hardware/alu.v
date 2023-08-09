@@ -12,10 +12,11 @@ typedef enum logic [5:0] {
 	ALUINST_RLC,
 	ALUINST_INC,
 	ALUINST_DEC,
+	ALUINST_BOOL,
 	ALUINST_SUBW,
 	ALUINST_SBCW,
-	ALUINST_ADDW,
-	ALUINST_ADCW,	// 0x10
+	ALUINST_ADDW,	// 0x10
+	ALUINST_ADCW,
 	ALUINST_ORW,
 	ALUINST_XCHB,
 	ALUINST_CLRW,
@@ -27,11 +28,12 @@ typedef enum logic [5:0] {
 	ALUINST_RRCW,
 	ALUINST_RLCW,
 	ALUINST_SRAW,
+	ALUINST_BOOLW,
 	ALUINST_MUL,
 	ALUINST_MAD,
-	ALUINST_CLTZ,
+	ALUINST_CLTZ,	// 0x20
 	ALUINST_SEX,
-	ALUINST_ADSW,	// 0x20
+	ALUINST_ADSW,
 	ALUINST_PASS0,
 	ALUINST_PASSW0,
 	ALUINST_XCHW}
@@ -95,7 +97,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 	assign wideop =
 		(aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ORW ||
 		aluinst == ALUINST_INCW || aluinst == ALUINST_ADCW0 || aluinst == ALUINST_SBCW0 ||
-		aluinst == ALUINST_MUL || aluinst == ALUINST_MAD ||
+		aluinst == ALUINST_BOOLW || aluinst == ALUINST_MUL || aluinst == ALUINST_MAD ||
 		aluinst == ALUINST_ADSW || aluinst == ALUINST_SEX || aluinst == ALUINST_PASSW0);
 	assign arithop = (
 		aluinst == ALUINST_ADD || aluinst == ALUINST_ADC || aluinst == ALUINST_SUB || aluinst == ALUINST_SBC ||
@@ -117,6 +119,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_RLC ? {op0[6:0], c_in} :
 		aluinst == ALUINST_INC ? op0[7:0] + 8'h01 :
 		aluinst == ALUINST_DEC ? op0[7:0] + 8'hff :
+		aluinst == ALUINST_BOOL ? |op0[7:0] :
 		aluinst == ALUINST_CLRW ? 0 :
 		aluinst == ALUINST_INCW ? op0[15:0] + 8'h01 :
 		aluinst == ALUINST_ADCW0 ? op0[15:0] + c_in :
@@ -132,6 +135,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_RRCW ? {c_in, op0[15:0]} >> 1 :
 		aluinst == ALUINST_RLCW ? {op0[14:0], c_in} :
 		aluinst == ALUINST_SRAW ? {op0[15], op0[15:0]} >> 1 :
+		aluinst == ALUINST_BOOLW ? |op0[15:0] :
 		aluinst == ALUINST_MUL ? op1[7:0] * op2[7:0] :
 		aluinst == ALUINST_MAD ? op1[7:0] * op2[7:0] + op0[7:0] :
 		aluinst == ALUINST_CLTZ ? {ctz(op0), clz(op0)} :

@@ -269,6 +269,8 @@ always_comb
 			aluinst = ALUINST_CLRW;
 		else if (opcode_is_tst(opcode))
 			aluinst = ALUINST_PASS0;
+		else if (opcode == OPCODE_BOOL_XL)
+			aluinst = ALUINST_BOOL;
 		else if (opcode_is_subw(opcode))
 			aluinst = ALUINST_SUBW;
 		else if (opcode_is_sbcw(opcode))
@@ -295,8 +297,12 @@ always_comb
 			aluinst = ALUINST_RRCW;
 		else if (opcode == OPCODE_RLCW_Y || opcode == OPCODE_RLCW_SPREL)
 			aluinst = ALUINST_RLCW;
+		else if (opcode == OPCODE_SRAW_Y)
+			aluinst = ALUINST_SRAW;
 		else if (opcode == OPCODE_CLTZ_Y)
 			aluinst = ALUINST_CLTZ;
+		else if (opcode == OPCODE_BOOLW_Y)
+			aluinst = ALUINST_BOOLW;
 		else if (opcode == OPCODE_MUL_Y)
 			aluinst = ALUINST_MUL;
 		else if (opcode_is_mad(opcode))
@@ -333,13 +339,13 @@ always_comb
 				next_flags[1] = 1;
 			else if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) ||
 				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) ||
-				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) ||
+				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD)
 				next_flags[1] = c_out;
 			else
 				next_flags[1] = flags[1];
 			// n flag
-			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) ||
+			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode))
 				next_flags[2] = n_out;
@@ -349,8 +355,10 @@ always_comb
 			if (opcode_is_8_2(opcode) ||
 				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode_is_xchb(opcode) ||
+				opcode == OPCODE_BOOL_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
+				opcode == OPCODE_BOOLW_Y ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode)) 
 				next_flags[3] = z_out;
 			else

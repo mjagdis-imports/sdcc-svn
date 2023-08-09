@@ -202,7 +202,7 @@ lc:
 	adc	(0, z), xl
 	xch	f, (1, sp)
 	ld	xl,	0x3ffe
-	cp	xl, #0x10
+	cp	xl, #0x00
 	jrnz	ldtrap
 	ld	xl, (1, sp)
 	and	xl, #0x1f	; clear hidden flags

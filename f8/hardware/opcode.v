@@ -144,6 +144,8 @@ typedef enum logic [7:0] {
 	OPCODE_LD_IY_XL =     8'h8e, // ld (y), xl
 	OPCODE_LD_YREL_XL =   8'h8f, // ld (n, y), xl
 	OPCODE_PUSH_IMMD =    8'h90, // push #i
+	// todo
+	OPCODE_BOOL_XL =      8'h98, // bool xl
 	OPCODE_POP_XL =       8'h99, // pop xl
 	OPCODE_SWAPOP =       8'h9c, // swapop (prefix)
 	OPCODE_ALTACC1 =      8'h9d, // altacc (prefix)
@@ -225,6 +227,7 @@ typedef enum logic [7:0] {
 	// todo
 	OPCODE_CPW_Y_IMMD =   8'hf8, // cpw y, #ii
 	// todo
+	OPCODE_BOOLW_Y    =   8'hfb, // boolw y
 	OPCODE_RESERVED_FC =  8'hfc,
 	OPCODE_RESERVED_FD =  8'hfd,
 	OPCODE_RESERVED_FE =  8'hfe,
@@ -455,7 +458,8 @@ endfunction
 function automatic logic opcode_is_8_1_xl(opcode_t opcode);
 	return(opcode == OPCODE_SRL_XL || opcode == OPCODE_SLL_XL || opcode == OPCODE_RLC_XL || opcode == OPCODE_RRC_XL ||
 		opcode == OPCODE_INC_XL || opcode == OPCODE_DEC_XL ||
-		opcode == OPCODE_CLR_XL || opcode == OPCODE_TST_XL ||opcode == OPCODE_PUSH_XL);
+		opcode == OPCODE_CLR_XL || opcode == OPCODE_TST_XL ||opcode == OPCODE_PUSH_XL ||
+		opcode == OPCODE_BOOL_XL);
 endfunction
 
 function automatic logic opcode_is_8_1_zh(opcode_t opcode);
@@ -507,7 +511,7 @@ endfunction
 function automatic logic opcode_is_16_1_y(opcode_t opcode);
 	return(opcode == OPCODE_CLRW_Y || opcode == OPCODE_INCW_Y || opcode == OPCODE_ADCW_Y || opcode == OPCODE_SBCW_Y ||
 		opcode == OPCODE_PUSHW_Y || opcode == OPCODE_TSTW_Y ||
-		opcode == OPCODE_RRCW_Y || opcode == OPCODE_RLCW_Y || opcode == OPCODE_CLTZ_Y);
+		opcode == OPCODE_RRCW_Y || opcode == OPCODE_RLCW_Y || opcode == OPCODE_SRAW_Y || opcode == OPCODE_BOOLW_Y || opcode == OPCODE_CLTZ_Y);
 endfunction
 
 function automatic logic opcode_is_16_1(opcode_t opcode);
