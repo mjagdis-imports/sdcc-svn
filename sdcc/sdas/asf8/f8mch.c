@@ -908,7 +908,7 @@ sex:
 
 		if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == XL && t3 == S_IMM) {
 			outab(op);
-			outrb(&e2, R_NORM);
+			outrb(&e3, R_NORM);
 		}
 		else
 			aerr();
