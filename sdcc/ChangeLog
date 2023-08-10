@@ -1,5 +1,17 @@
 2023-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sdas/asf8/f8adr.c,
+	  sdas/asf8/f8mch.c,
+	  sim/ucsim/f8.src/decode.h,
+	  sim/ucsim/f8.src/disass.cc,
+	  sim/ucsim/f8.src/f8.cc,
+	  sim/ucsim/f8.src/f8cl.h,
+	  sim/ucsim/f8.src/glob.cc,
+	  src/f8/gen.c:
+	  Switch to new f8 altacc prefixes.
+
+2023-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* sdas/asf8/f8pst.c:
 	  Fix assembly of f8 instruction xch xl, (n, sp).
 

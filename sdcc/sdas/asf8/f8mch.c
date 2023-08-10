@@ -704,11 +704,11 @@ opw:
 			if (r1 == YL && r2 == YH)
 				outab(0x93);
 			else if (r1 == XL && r2 == XH) {
-				outab(0x9e);
+				outab(0x9f);
 				outab(0x93);
 			}
 			else if (r1 == ZL && r2 == ZH) {
-				outab(0x9f);
+				outab(0x9e);
 				outab(0x93);
 			}
 			else
@@ -830,10 +830,9 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 sex:
-		if(t1 != S_REG || t2 != S_REG || r2 != XL)
+		if(t1 != S_REG || t2 != S_REG || !(r1 == Y && r2 == XL || r1 == Y && r2 == XH || r1 == Z && r2 == YL || r1 == X && r2 == ZL))
 			aerr();
-
-		altaccw(r1);
+		altacc(r2);
 		outab(op);
 		break;	
 
@@ -906,7 +905,9 @@ sex:
 		t3 = addr(&e3);
 		r3 = rcode;
 
-		if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == XL && t3 == S_IMM) {
+		if(t1 == S_IX && t2 == S_REG && t3 == S_IMM &&
+			(r1 == Y && r2 == XL || r1 == Y && r2 == XH || r1 == Z && r2 == YL || r1 == X && r2 == ZL)) {
+			altacc(r2);
 			outab(op);
 			outrb(&e3, R_NORM);
 		}
@@ -1186,9 +1187,9 @@ void altaccw(int reg)
 {
 	if(reg != Y) {
 		if(reg == X)
-			outab(0x9e);
-		else if(reg == Z)
 			outab(0x9f);
+		else if(reg == Z)
+			outab(0x9e);
 		else
 			aerr();
 	}

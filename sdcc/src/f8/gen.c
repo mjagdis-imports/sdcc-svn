@@ -1819,7 +1819,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       }
 
   // Try to use zex.
-  if (n == 1 && sizex == 2 && aopIsAcc16 (result, roffset) && aopInReg (source, soffset, XL_IDX))
+  if (n == 1 && sizex == 2 && /*aopIsAcc16 (result, roffset) */ aopInReg (result, roffset, Y_IDX) && aopInReg (source, soffset, XL_IDX)) // todo: reenable zex use with fixed right operand!
     {
       emit2 ("zex", "%s, xl", aopGet2 (result, roffset));
       cost (1 + !aopInReg (result, roffset, Y_IDX), 1 + !aopInReg (result, roffset, Y_IDX));
@@ -6231,7 +6231,7 @@ genCast (const iCode *ic)
     }
   // Signed cast
   else if (result->aop->size == 2 && (topbytemask == 0xff || !SPEC_USIGN (resulttype)) &&
-    (aopInReg (result->aop, 0, Y_IDX) || aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Z_IDX)))
+    (aopInReg (result->aop, 0, Y_IDX) /*|| aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Z_IDX)*/)) // todo: reenable with fixed right operand!
     {
       if (!regDead (XL_IDX, ic) && !aopInReg (right->aop, 0, XL_IDX))
         push (ASMOP_XL, 0, 1);

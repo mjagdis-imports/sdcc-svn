@@ -77,7 +77,7 @@ struct expr *esp;
 	if (c == '(') {
 		int d;
 		if ((rcode = admode(REG)) != 0) {
-		    if (rcode & 0xff != Y && rcode & 0xff != Z)
+		    if ((rcode & 0xff) != Y && (rcode & 0xff) != Z && (rcode & 0xff) != X)
 		      aerr ();
 			rcode = rcode & 0xff;
 			esp->e_mode = S_IX;

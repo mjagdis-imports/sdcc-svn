@@ -6,7 +6,7 @@ SDLD = /home/philipp/sdcc-branches/f8/sdcc/bin/sdldf8
 all: f8-testsystem
 
 clean:
-	rm -f f8-testsystem f8-simpletestsystem tests/*/*.lst tests/*/*.sym tests/*/*.vcd tests/*/*.vmem
+	rm -f f8-testsystem f8-simpletestsystem tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.vcd tests/*/*.log
 
 f8-testsystem: *.v
 	iverilog -g2009 -o $@ testsystem.v
