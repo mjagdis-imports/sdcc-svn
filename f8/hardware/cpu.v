@@ -151,7 +151,8 @@ always_comb
 
 	always_comb
 	begin 
-		if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)
+		if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL ||
+			opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)
 			op0 = {8'bx,
 				(accsel_in == ACCSEL_XH_Y) ? x[15:8] :
 				(accsel_in == ACCSEL_YL_Z) ? y[7:0] :
@@ -163,7 +164,7 @@ always_comb
 			op0 = {8'bx, dread_data[7:0]};
 		else if (opcode == OPCODE_NEGW_Y)
 			op0 = 0;
-		else if(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_LDW_Y_SP && swapop_in ||
+		else if(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_SLLW_Y_XL || opcode == OPCODE_LDW_Y_SP && swapop_in ||
 			opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_CPW_Y_IMMD || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_LDW_ISPREL_Y)
 			op0 =
 				(accsel_in == ACCSEL_ZL_X) ? x :
@@ -244,7 +245,7 @@ always_comb
 				y[7:0]};
 		else if (opcode_is_mad(opcode))
 			op2 = {8'bx, y[7:0]};
-		else if (opcode == OPCODE_MSK_IY_XL_IMMD)
+		else if (opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_SLLW_Y_XL)
 			op2 = {8'bx,
 				(accsel_in == ACCSEL_XH_Y) ? x[15:8] :
 				(accsel_in == ACCSEL_YL_Z) ? y[7:0] :
@@ -319,12 +320,18 @@ always_comb
 			aluinst = ALUINST_SBCW0;
 		else if (opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
 			aluinst = ALUINST_ADSW;
+		else if (opcode == OPCODE_SRLW_Y)
+			aluinst = ALUINST_SRLW;
+		else if (opcode == OPCODE_SLLW_Y)
+			aluinst = ALUINST_SLLW;
 		else if (opcode == OPCODE_RRCW_Y || opcode == OPCODE_RRCW_SPREL)
 			aluinst = ALUINST_RRCW;
 		else if (opcode == OPCODE_RLCW_Y || opcode == OPCODE_RLCW_SPREL)
 			aluinst = ALUINST_RLCW;
 		else if (opcode == OPCODE_SRAW_Y)
 			aluinst = ALUINST_SRAW;
+		else if (opcode == OPCODE_SLLW_Y_XL)
+			aluinst = ALUINST_SLLW1;
 		else if (opcode == OPCODE_SEX_Y_XL)
 			aluinst = ALUINST_SEX;
 		else if (opcode == OPCODE_CLTZ_Y)
@@ -353,8 +360,7 @@ always_comb
 			aluinst = ALUINST_XCHW;
 		else if (opcode == OPCODE_LDW_ISPREL_Y)
 			aluinst = ALUINST_XCHW;
-		/* todo: more instructions here*/
-		else if (opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y || OPCODE_POPW_Y)
+		else if (opcode_is_ldw_y(opcode) || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y || opcode_is_tstw(opcode) || opcode_is_pushw(opcode) || opcode == OPCODE_POPW_Y)
 			aluinst = ALUINST_PASSW0;
 		else
 			aluinst = ALUINST_PASS0;
@@ -385,7 +391,8 @@ always_comb
 			// n flag
 			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y && opcode != OPCODE_XCH_YL_YH ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
-				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode))
+				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
+				opcode == OPCODE_SEX_Y_XL)
 				next_flags[2] = n_out;
 			else
 				next_flags[2] = flags[2];
@@ -396,8 +403,9 @@ always_comb
 				opcode == OPCODE_DAA_XL || opcode == OPCODE_BOOL_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_XCH_YL_YH ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
-				opcode == OPCODE_BOOLW_Y ||
+				opcode == OPCODE_SLLW_Y_XL ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
+				opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL ||
 				opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) 
 				next_flags[3] = z_out;
 			else
@@ -437,7 +445,7 @@ always_comb
 			0 :
 		(opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) ?
 			2 :
-		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_ldw_y(opcode) || opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL || opcode == OPCODE_POPW_Y) ?
+		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_SLLW_Y_XL || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_ldw_y(opcode) || opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL || opcode == OPCODE_POPW_Y) ?
 			(accsel_in == ACCSEL_ZL_X ? 0 : accsel_in == ACCSEL_YL_Z ? 2 : 1) :
 		opcode_is_8_1_zh(opcode) ?
 			2 :
@@ -449,12 +457,12 @@ always_comb
 			(accsel_in == ACCSEL_XH_Y ? 2'b10 : 2'b01) :
 		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :
 		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in || opcode == OPCODE_CAX_IY_ZL_XL && !z_out) ? 2'b01 :
-		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) || opcode == OPCODE_CAXW_IY_Z_X && !z_out ||
+		(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_SLLW_Y_XL || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) || opcode == OPCODE_CAXW_IY_Z_X && !z_out ||
 		opcode_is_ldw_y(opcode) || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL || opcode == OPCODE_POPW_Y) ? 2'b11 :
 		0;
 	assign regwrite_data =
 		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) && accsel_in == ACCSEL_XH_Y || (opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? {result_reg[7:0], 8'bx} :
-		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode_is_ld_xl(opcode)) && accsel_in == ACCSEL_XH_Y) ? {result_reg[7:0], 8'bx} :
+		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode_is_ld_xl(opcode)) && accsel_in == ACCSEL_XH_Y) ? {result_reg[7:0], 8'bx} :
 		opcode == OPCODE_THRD_XL ? 0 : // todo: fix for multithreaded implementations
 		result_reg;
 

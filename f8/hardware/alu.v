@@ -7,7 +7,7 @@ typedef enum logic [5:0] {
 	ALUINST_OR,
 	ALUINST_XOR,
 	ALUINST_SRL,
-	ALUINST_SLL,
+	ALUINST_SLL,    // 0x80
 	ALUINST_RRC,
 	ALUINST_RLC,
 	ALUINST_SRA,
@@ -15,7 +15,7 @@ typedef enum logic [5:0] {
 	ALUINST_DEC,
 	ALUINST_BOOL,
 	ALUINST_DAA,
-	ALUINST_ROT,
+	ALUINST_ROT,    // 0x10
 	ALUINST_SUBW,
 	ALUINST_SBCW,
 	ALUINST_ADDW,	// 0x13
@@ -31,16 +31,17 @@ typedef enum logic [5:0] {
 	ALUINST_SRLW,
 	ALUINST_RRCW,
 	ALUINST_RLCW,
-	ALUINST_SRAW,
+	ALUINST_SRAW,   // 0x20
+	ALUINST_SLLW1,
 	ALUINST_BOOLW,
 	ALUINST_XCH0,
 	ALUINST_MUL,
 	ALUINST_MAD,
-	ALUINST_CLTZ,	// 0x25
+	ALUINST_CLTZ,	// 0x26
 	ALUINST_SEX,
 	ALUINST_MSK,
 	ALUINST_CAX,
-	ALUINST_CAXW,
+	ALUINST_CAXW,   // 0x2a
 	ALUINST_ADSW,
 	ALUINST_PASS0,
 	ALUINST_PASSW0,
@@ -124,6 +125,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		(aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ORW ||
 		aluinst == ALUINST_INCW || aluinst == ALUINST_DECW || aluinst == ALUINST_ADCW0 || aluinst == ALUINST_SBCW0 ||
 		aluinst == ALUINST_XCH0 ||
+		aluinst == ALUINST_SRLW || aluinst == ALUINST_SLLW || aluinst == ALUINST_RRCW || aluinst == ALUINST_RLCW || aluinst == ALUINST_SRAW || aluinst == ALUINST_SLLW1 ||
 		aluinst == ALUINST_BOOLW || aluinst == ALUINST_MUL || aluinst == ALUINST_MAD ||
 		aluinst == ALUINST_ADSW || aluinst == ALUINST_SEX || aluinst == ALUINST_CAXW ||
 		aluinst == ALUINST_PASSW0);
@@ -168,6 +170,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_RRCW ? {c_in, op0[15:0]} >> 1 :
 		aluinst == ALUINST_RLCW ? {op0[14:0], c_in} :
 		aluinst == ALUINST_SRAW ? {op0[15], op0[15:0]} >> 1 :
+		aluinst == ALUINST_SLLW1 ? op0[15:0] << op2[3:0] :
 		aluinst == ALUINST_BOOLW ? |op0[15:0] :
 		aluinst == ALUINST_MUL ? op1[7:0] * op2[7:0] :
 		aluinst == ALUINST_MAD ? op1[7:0] * op2[7:0] + op0[7:0] :
