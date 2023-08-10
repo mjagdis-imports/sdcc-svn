@@ -146,11 +146,11 @@ typedef enum logic [7:0] {
 	OPCODE_PUSH_IMMD =    8'h90, // push #i
 	// todo
 	OPCODE_ROT_XL_IMMD =  8'h95, // rot xl, #i
-	// todo
+	OPCODE_SRA_XL =       8'h96, // sra xl
 	OPCODE_DAA_XL =       8'h97, // daa xl
 	OPCODE_BOOL_XL =      8'h98, // bool xl
 	OPCODE_POP_XL =       8'h99, // pop xl
-	// todo
+	OPCODE_THRD_XL =      8'h9a, // thrd xl
 	OPCODE_CAX_IY_ZL_XL = 8'h9b, // cax (y), zl, xl
 	OPCODE_SWAPOP =       8'h9c, // swapop (prefix)
 	OPCODE_ALTACC1 =      8'h9d, // altacc (prefix)
@@ -230,6 +230,7 @@ typedef enum logic [7:0] {
 	OPCODE_ORW_Y_SPREL =  8'hf2, // orw y, (n, sp)
 	OPCODE_ORW_Y_X =      8'hf3, // orw y, x
 	// todo
+	OPCODE_DECW_SPREL =   8'hf7, // decw (n, sp)
 	OPCODE_CPW_Y_IMMD =   8'hf8, // cpw y, #ii
 	OPCODE_CAXW_IY_Z_X =  8'hf9, // caxw (y), z, x
 	OPCODE_NEGW_Y =       8'hfa, // negw y
@@ -462,7 +463,7 @@ function automatic logic opcode_is_8_1_sprel(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_1_xl(opcode_t opcode);
-	return(opcode == OPCODE_SRL_XL || opcode == OPCODE_SLL_XL || opcode == OPCODE_RLC_XL || opcode == OPCODE_RRC_XL ||
+	return(opcode == OPCODE_SRL_XL || opcode == OPCODE_SLL_XL || opcode == OPCODE_RLC_XL || opcode == OPCODE_RRC_XL ||  opcode == OPCODE_SRA_XL ||
 		opcode == OPCODE_INC_XL || opcode == OPCODE_DEC_XL ||
 		opcode == OPCODE_CLR_XL || opcode == OPCODE_TST_XL ||opcode == OPCODE_PUSH_XL ||
 		opcode == OPCODE_DAA_XL || opcode == OPCODE_BOOL_XL);
@@ -505,6 +506,7 @@ endfunction
 
 function automatic logic opcode_is_16_1_sprel(opcode_t opcode);
 	return(opcode == OPCODE_CLRW_SPREL || opcode == OPCODE_INCW_SPREL || opcode == OPCODE_ADCW_SPREL || opcode == OPCODE_SBCW_SPREL ||
+		opcode == OPCODE_DECW_SPREL ||
 		opcode == OPCODE_PUSHW_SPREL || opcode == OPCODE_TSTW_SPREL ||
 		opcode == OPCODE_RRCW_SPREL || opcode == OPCODE_RLCW_SPREL);
 endfunction
@@ -517,7 +519,7 @@ endfunction
 function automatic logic opcode_is_16_1_y(opcode_t opcode);
 	return(opcode == OPCODE_CLRW_Y || opcode == OPCODE_INCW_Y || opcode == OPCODE_ADCW_Y || opcode == OPCODE_SBCW_Y ||
 		opcode == OPCODE_PUSHW_Y || opcode == OPCODE_TSTW_Y ||
-		opcode == OPCODE_RRCW_Y || opcode == OPCODE_RLCW_Y || opcode == OPCODE_SRAW_Y || opcode == OPCODE_BOOLW_Y || opcode == OPCODE_CLTZ_Y);
+		opcode == OPCODE_RRCW_Y || opcode == OPCODE_RLCW_Y || opcode == OPCODE_SRAW_Y || opcode == OPCODE_NEGW_Y || opcode == OPCODE_BOOLW_Y || opcode == OPCODE_CLTZ_Y);
 endfunction
 
 function automatic logic opcode_is_16_1(opcode_t opcode);

@@ -152,6 +152,8 @@ always_comb
 			op0 = {8'bx, z[15:8]};
 		else if(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LD_XL_SPREL)
 			op0 = {8'bx, dread_data[7:0]};
+		else if (opcode == OPCODE_NEGW_Y)
+			op0 = 0;
 		else if(opcode_is_16_2(opcode) || opcode_is_16_1_y(opcode) || opcode == OPCODE_LDW_Y_SP && swapop_in ||
 			opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_Z_Y || opcode == OPCODE_CPW_Y_IMMD || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_LDW_ISPREL_Y)
 			op0 =
@@ -202,6 +204,11 @@ always_comb
 				(accsel_in == 2) ? x[15:8] :
 				(accsel_in == 3) ? z[15:8] :
 				y[15:8]};
+		else if (opcode == OPCODE_NEGW_Y)
+			op1 =
+				(accsel_in == 2) ? x :
+				(accsel_in == 3) ? z :
+				y;
 		else
 			op1 = 'x;
 
@@ -263,6 +270,8 @@ always_comb
 			aluinst = ALUINST_RRC;
 		else if (opcode_is_rlc(opcode))
 			aluinst = ALUINST_RLC;
+		else if (opcode == OPCODE_SRA_XL)
+			aluinst = ALUINST_SRA;
 		else if (opcode_is_inc(opcode))
 			aluinst = ALUINST_INC;
 		else if (opcode_is_dec(opcode))
@@ -293,6 +302,8 @@ always_comb
 			aluinst = ALUINST_CLRW;
 		else if (opcode_is_incw(opcode))
 			aluinst = ALUINST_INCW;
+		else if (opcode == OPCODE_DECW_SPREL)
+			aluinst = ALUINST_DECW;
 		else if (opcode_is_adcw0(opcode))
 			aluinst = ALUINST_ADCW0;
 		else if (opcode_is_sbcw0(opcode))
@@ -307,6 +318,8 @@ always_comb
 			aluinst = ALUINST_SRAW;
 		else if (opcode == OPCODE_CLTZ_Y)
 			aluinst = ALUINST_CLTZ;
+		else if (opcode == OPCODE_NEGW_Y)
+			aluinst = ALUINST_SUBW;
 		else if (opcode == OPCODE_BOOLW_Y)
 			aluinst = ALUINST_BOOLW;
 		else if (opcode == OPCODE_MUL_Y)
@@ -350,7 +363,7 @@ always_comb
 			else if (opcode_is_tstw(opcode))
 				next_flags[1] = 1;
 			else if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) ||
-				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode == OPCODE_DAA_XL ||
+				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode == OPCODE_SRA_XL || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode == OPCODE_DAA_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD)
 				next_flags[1] = c_out;
@@ -365,7 +378,7 @@ always_comb
 				next_flags[2] = flags[2];
 			// z flag
 			if (opcode_is_8_2(opcode) ||
-				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
+				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) ||  opcode == OPCODE_SRA_XL || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode_is_xchb(opcode) ||
 				opcode == OPCODE_DAA_XL || opcode == OPCODE_BOOL_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) ||
@@ -380,7 +393,7 @@ always_comb
 			if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) ||
 				opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode_is_addw(opcode) || opcode_is_adcw(opcode) || opcode_is_subw(opcode) || opcode_is_sbcw(opcode) ||
-				opcode_is_incw(opcode) || opcode_is_adcw0(opcode) || opcode_is_sbcw0(opcode) || opcode_is_tstw(opcode))
+				opcode_is_incw(opcode) || opcode == OPCODE_DECW_SPREL || opcode_is_adcw0(opcode) || opcode_is_sbcw0(opcode) || opcode == OPCODE_NEGW_Y || opcode_is_tstw(opcode))
 				next_flags[4] = o_out;
 			else
 				next_flags[4] = flags[4];
@@ -402,7 +415,7 @@ always_comb
 	end
 
 	assign regwrite_addr =
-		(opcode_is_8_2(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode_is_ld_xl(opcode)) ?
+		(opcode_is_8_2(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode)) ?
 			(accsel_in == 2 ? 1 : accsel_in == 3 ? 2 : 0) :
 		(opcode_is_8_2_xh(opcode) && swapop_in) ? 0 :
 		(opcode_is_8_2_zl(opcode) && swapop_in) ? 2 :
@@ -419,7 +432,7 @@ always_comb
 			0 :
 		'x;
 	assign regwrite_en =
-		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode_is_ld_xl(opcode)) ?
+		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL ||opcode_is_ld_xl(opcode)) ?
 			(accsel_in == 1 ? 2'b10 : 2'b01) :
 		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :
 		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in || opcode == OPCODE_CAX_IY_ZL_XL && !z_out) ? 2'b01 :
@@ -429,6 +442,7 @@ always_comb
 	assign regwrite_data =
 		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) && accsel_in == 1 || (opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? {result_reg[7:0], 8'bx} :
 		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode_is_ld_xl(opcode)) && accsel_in == 1) ? {result_reg[7:0], 8'bx} :
+		opcode == OPCODE_THRD_XL ? 0 : // todo: fix for multithreaded implementations
 		result_reg;
 
 	assign dwrite_addr =
