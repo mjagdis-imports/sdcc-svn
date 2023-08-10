@@ -692,7 +692,7 @@ opw:
 			if(ls_mode(&e1))
 				aerr();
 			else
-				outrb(&e1, R_USGN);
+				outrb(&e2, R_USGN);
 			break;
 		case S_IX:
 			altacc(r1);

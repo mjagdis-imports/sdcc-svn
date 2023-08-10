@@ -144,6 +144,9 @@ typedef enum logic [7:0] {
 	OPCODE_LD_IY_XL =     8'h8e, // ld (y), xl
 	OPCODE_LD_YREL_XL =   8'h8f, // ld (n, y), xl
 	OPCODE_PUSH_IMMD =    8'h90, // push #i
+	OPCODE_XCH_XL_SPREL = 8'h91, // xch	xl, (n, sp)
+	OPCODE_XCH_XL_IY =    8'h92, // xch	xl, (y)
+	OPCODE_XCH_YL_YH =    8'h93, // xch	yl, yh
 	// todo
 	OPCODE_ROT_XL_IMMD =  8'h95, // rot xl, #i
 	OPCODE_SRA_XL =       8'h96, // sra xl
@@ -519,7 +522,8 @@ endfunction
 function automatic logic opcode_is_16_1_y(opcode_t opcode);
 	return(opcode == OPCODE_CLRW_Y || opcode == OPCODE_INCW_Y || opcode == OPCODE_ADCW_Y || opcode == OPCODE_SBCW_Y ||
 		opcode == OPCODE_PUSHW_Y || opcode == OPCODE_TSTW_Y ||
-		opcode == OPCODE_RRCW_Y || opcode == OPCODE_RLCW_Y || opcode == OPCODE_SRAW_Y || opcode == OPCODE_NEGW_Y || opcode == OPCODE_BOOLW_Y || opcode == OPCODE_CLTZ_Y);
+		opcode == OPCODE_RRCW_Y || opcode == OPCODE_RLCW_Y || opcode == OPCODE_SRAW_Y || opcode == OPCODE_NEGW_Y || opcode == OPCODE_BOOLW_Y || opcode == OPCODE_CLTZ_Y ||
+		opcode == OPCODE_XCH_YL_YH);
 endfunction
 
 function automatic logic opcode_is_16_1(opcode_t opcode);
@@ -539,7 +543,7 @@ function automatic logic opcode_is_dir(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_sprel(opcode_t opcode);
-	return(opcode_is_8_2_sprel(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_16_2_sprel(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_MAD_X_SPREL_YL || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_LDW_ISPREL_Y || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LDW_Y_SPREL);
+	return(opcode_is_8_2_sprel(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_16_2_sprel(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_MAD_X_SPREL_YL || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_LDW_ISPREL_Y || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LDW_Y_SPREL);
 endfunction
 
 function automatic logic opcode_is_zrel(opcode_t opcode);
