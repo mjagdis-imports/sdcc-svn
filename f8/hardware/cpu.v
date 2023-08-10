@@ -133,11 +133,13 @@ always_comb
 			dread_addr = next_sp + next_inst[15:8];
 		else if(opcode_is_zrel(next_opcode))
 			dread_addr = next_z + next_inst[23:8];
-		else if (next_opcode == OPCODE_LD_XL_IY || next_opcode == OPCODE_CAX_IY_ZL_XL || next_opcode == OPCODE_CAXW_IY_Z_X)
+		else if(opcode_is_yrel(next_opcode))
+			dread_addr = next_y + next_inst[15:8];
+		else if (next_opcode == OPCODE_LD_XL_IY || next_opcode == OPCODE_CAX_IY_ZL_XL || next_opcode == OPCODE_CAXW_IY_Z_X || next_opcode == OPCODE_LDW_Y_IY)
 			dread_addr = next_y;
 		else if (next_opcode == OPCODE_MSK_IY_XL_IMMD)
 			dread_addr = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
-		else if (next_opcode == OPCODE_POP_XL || OPCODE_POPW_Y)
+		else if (next_opcode == OPCODE_POP_XL || opcode == OPCODE_POPW_Y)
 			dread_addr = next_sp;
 		else
 			dread_addr = 'x;
@@ -176,7 +178,7 @@ always_comb
 			op0 = {8'bx, flags};
 		else if (opcode == OPCODE_POPW_Y || opcode_is_16_1_dir(opcode) || opcode_is_16_1_sprel(opcode) || opcode_is_16_1_zrel(opcode) ||
 			opcode == OPCODE_CAXW_IY_Z_X ||
-			opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL)
+			opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY)
 			op0 = dread_data[15:0];
 		else if(opcode == OPCODE_LD_XL_IMMD || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_PUSH_IMMD)
 			op0 = {8'bx, inst[15:8]};
@@ -188,6 +190,8 @@ always_comb
 			op0 = old_pc + 1;
 		else if(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_ADDW_SP_D)
 			op0 = sp;
+		else if(opcode == OPCODE_LDW_Y_X)
+			op0 = x;
 		else
 			op0 = 'x;
 

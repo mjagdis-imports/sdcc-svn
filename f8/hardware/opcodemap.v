@@ -197,13 +197,18 @@ typedef enum logic [7:0] {
 	OPCODE_LDW_Y_DIR   =  8'hc1, // ldw y, mm
 	OPCODE_LDW_Y_SPREL =  8'hc2, // ldw y, (n, sp)
 	OPCODE_LDW_Y_ZREL =   8'hc3, // ldw y, (nn, z)
-	// todo
+	OPCODE_LDW_Y_YREL =   8'hc4, // ldw y, (n, y)
+	OPCODE_LDW_Y_IY =     8'hc5, // ldw y, (y)
 	OPCODE_LDW_Y_X =      8'hc6, // ldw y, x
 	OPCODE_LDW_Y_D =      8'hc7, // ldw y, #d
-	// todo
+	OPCODE_LDW_DIR_Y =    8'hc8, // ldw mm, y
+	OPCODE_LDW_SPREL_Y =  8'hc9, // ldw (n, sp), y
+	OPCODE_LDW_ZREL_Y =   8'hca, // ldw (nn, z), y
 	OPCODE_LDW_X_Y =      8'hcb, // ldw x, y
 	OPCODE_LDW_Z_Y =      8'hcc, // ldw z, y
-	// todo
+	OPCODE_LDW_IY_X =     8'hcd, // ldw (y), x
+	OPCODE_LDW_YREL_X =   8'hce, // ldw (n, y), x
+	OPCODE_LDW_ZREL_X =   8'hcf, // ldw (nn, y), x
 	OPCODE_JR_D =         8'hd0, // jr #d
 	OPCODE_DNJNZ_YH_D =   8'hd1, // dnjnz yh, #d
 	OPCODE_JRZ_D =        8'hd2, // jrz #d

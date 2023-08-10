@@ -122,7 +122,7 @@ function automatic logic opcode_is_ld_xl(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_ldw_y(opcode_t opcode);
-	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_Y_D);
+	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_Y_D);
 endfunction
 
 function automatic logic opcode_is_mad(opcode_t opcode);
@@ -272,6 +272,10 @@ endfunction
 
 function automatic logic opcode_is_zrel(opcode_t opcode);
 	return(opcode_is_8_2_zrel(opcode) || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_MAD_X_ZREL_YL);
+endfunction
+
+function automatic logic opcode_is_yrel(opcode_t opcode);
+	return(opcode == OPCODE_LDW_Y_YREL);
 endfunction
 
 function automatic logic opcode_is_jr_d(opcode_t opcode);
