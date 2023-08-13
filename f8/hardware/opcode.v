@@ -271,7 +271,7 @@ function automatic logic opcode_is_sprel(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_zrel(opcode_t opcode);
-	return(opcode_is_8_2_zrel(opcode) || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_ZREL_Y || opcode == OPCODE_MAD_X_ZREL_YL);
+	return(opcode_is_8_2_zrel(opcode) || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LD_XL_ZREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_ZREL_Y || opcode == OPCODE_MAD_X_ZREL_YL);
 endfunction
 
 function automatic logic opcode_is_yrel(opcode_t opcode);

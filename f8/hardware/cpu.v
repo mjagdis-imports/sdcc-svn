@@ -162,7 +162,7 @@ always_comb
 				x[7:0]};
 		else if(opcode_is_8_1_zh(opcode))
 			op0 = {8'bx, z[15:8]};
-		else if(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LD_XL_SPREL)
+		else if(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LD_XL_ZREL)
 			op0 = {8'bx, dread_data[7:0]};
 		else if (opcode == OPCODE_NEGW_Y)
 			op0 = 0;
