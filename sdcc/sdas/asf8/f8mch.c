@@ -696,7 +696,7 @@ opw:
 			break;
 		case S_IX:
 			altacc(r1);
-			if (r2 != Y)
+			if (!((r1 == XL || r1 == XH) && r2 == Y) && !(r1 == YL && r2 == Z) && !(r1 == ZL && r2 == X))
 				aerr();
 			outab(0x92);
 			break;

@@ -1,3 +1,8 @@
+2023-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
+	  Fix f8 instruction xch xl, (y).
+
 2023-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8adr.c,
