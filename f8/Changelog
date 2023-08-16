@@ -1,7 +1,7 @@
 2023-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/*:
-	  Fix f8 instruction xch xl, (y).
+	  Make a few more f8 instructions work.
 
 2023-08-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
