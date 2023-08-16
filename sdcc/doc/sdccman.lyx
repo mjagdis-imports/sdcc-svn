@@ -2800,6 +2800,24 @@ In 4.2.9, support for –pedantic-parse-number and #pragma pedantic_parse_numer
 \end_layout
 
 \begin_layout Itemize
+In 4.2.9, support for #pragma sdcc_hash was dropped, necessitating a wrapper
+ macro for literal 
+\begin_inset Quotes sld
+\end_inset
+
+#
+\begin_inset Quotes srd
+\end_inset
+
+ characters in macro bodies.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.9, support for arguments to -MMD was dropped.
+ The output file can be specified via -MF instead.
+\end_layout
+
+\begin_layout Itemize
 In 4.2.10, _sdcc_external_startup was renamed to __sdcc_external_startup and
  support for it was added to further ports.
 \end_layout
@@ -2813,6 +2831,11 @@ In 4.2.13, for the sm83 port, __sfr addresses need to be specified using the
 In 4.2.14, byte order in output from the %p specifier of printf()-family functions
  was corrected for big-endian platforms (stm8, hc08, s08, mos6502) to match
  uintptr_t.
+\end_layout
+
+\begin_layout Itemize
+In 4.3.1, __builtin_rlc, __builtin_rrc and __builtin_swap were replaced by
+ __builtin_rot.
 \end_layout
 
 \begin_layout Section
@@ -9410,7 +9433,7 @@ Some features of this standard are not supported in some ports:
 \end_layout
 
 \begin_layout Itemize
-hc08, s08, mos6502, pic14, pic16: structures
+mos6502, pic14, pic16: structures
 \begin_inset Index idx
 status collapsed
 
@@ -9430,7 +9453,8 @@ union
 
 \end_inset
 
- cannot be passed as function parameters and cannot be a return value
+ cannot be passed as function parameters; hc08, s08, mos6502, pic14, pic16:
+ they cannot be a return value
 \begin_inset Index idx
 status collapsed
 
@@ -9906,7 +9930,7 @@ Some features of this standard are not supported in some ports:
 \end_layout
 
 \begin_layout Itemize
-hc08, s08, mos6502, pic14, pic16: structures
+mos6502, pic14, pic16: structures
 \begin_inset Index idx
 status collapsed
 
@@ -9926,7 +9950,8 @@ union
 
 \end_inset
 
- cannot be passed as function parameters and cannot be a return value
+ cannot be passed as function parameters; hc08, s08, mos6502, pic14, pic16:
+ they cannot be a return value
 \begin_inset Index idx
 status collapsed
 
@@ -13768,6 +13793,54 @@ Preprocessor
 \labelwidthstring 00.00.0000
 
 \series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-syntax-only
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-syntax-only
+\end_layout
+
+\end_inset
+
+
+\series default
+\size large
+ 
+\size default
+Parse and verify syntax only, no output files are produced.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
 -o
 \begin_inset space ~
 \end_inset
@@ -14024,7 +14097,6 @@ status collapsed
 
 \series default
 -float-reent.
- 
 \end_layout
 
 \begin_layout Labeling
@@ -37735,7 +37807,17 @@ hash
 
 \end_inset
 
- (+ | -) - Allow "naked" hash in macro definition, for example:
+ (+ | -) - 
+\begin_inset Flex Emph
+status open
+
+\begin_layout Plain Layout
+Until SDCC 4.2.8:
+\end_layout
+
+\end_inset
+
+ Allow "naked" hash in macro definition, for example:
 \begin_inset Newline newline
 \end_inset
 

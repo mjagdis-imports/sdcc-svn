@@ -1056,6 +1056,23 @@ newLongLongLink ()
 }
 
 /*------------------------------------------------------------------*/
+/* newBitIntLink() - creates a BitInt type                          */
+/*------------------------------------------------------------------*/
+sym_link *
+newBitIntLink (unsigned int width)
+{
+  wassert (width <= port->s.bitint_maxwidth);
+
+  sym_link *p;
+
+  p = newLink (SPECIFIER);
+  SPEC_NOUN (p) = V_BITINT;
+  SPEC_BITINTWIDTH (p) = width;
+
+  return p;
+}
+
+/*------------------------------------------------------------------*/
 /* newIntLink() - creates an int type                               */
 /*------------------------------------------------------------------*/
 sym_link *
@@ -1499,11 +1516,13 @@ addSymChain (symbol ** symHead)
             {
               /* If the previous definition was for an array with incomplete
                  type, and the new definition has completed the type, update
-                 the original type to match */
+                 the original type to match (or the otehr way round) */
               if (IS_ARRAY (csym->type) && IS_ARRAY (sym->type))
                 {
                   if (!DCL_ELEM (csym->type) && DCL_ELEM (sym->type))
                     DCL_ELEM (csym->type) = DCL_ELEM (sym->type);
+                  else if (DCL_ELEM (csym->type) && !DCL_ELEM (sym->type))
+                    DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                   if ((DCL_ELEM (csym->type) > DCL_ELEM (sym->type)) && elemsFromIval)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                 }
@@ -1546,7 +1565,7 @@ addSymChain (symbol ** symHead)
               if (IS_EXTERN (csym->etype) || IS_EXTERN (sym->etype))
                 werror (E_EXTERN_MISMATCH, sym->name);
               else
-                werror (E_DUPLICATE, sym->name);printf("previous %p\n", csym);
+                werror (E_DUPLICATE, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
 #if 0
               fprintf (stderr, "from type '");
@@ -2427,7 +2446,7 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
   etype2 = type2 ? getSpec (type2) : type1;
 
 #if 0
-  printf("computeType types "); printTypeChain (type1, stdout); printf (" vs. "); printTypeChain (type2, 0);
+  printf("computeType %d types ", op); printTypeChain (type1, stdout); printf (" vs. "); printTypeChain (type2, 0);
 #endif
 
   /* Conditional operator has some special type conversion rules */
@@ -2489,7 +2508,7 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
     }
 
   /* shift operators have the important type in the left operand */
-  if (op == LEFT_OP || op == RIGHT_OP)
+  if (op == LEFT_OP || op == RIGHT_OP || op == ROT)
     rType = copyLinkChain(type1);
   /* If difference between pointers or arrays then the result is a ptrdiff */
   else if ((op == '-') && (IS_PTR (type1) || IS_ARRAY (type1)) && (IS_PTR (type2) || IS_ARRAY (type2)))
@@ -3371,7 +3390,7 @@ checkFunction (symbol * sym, symbol * csym)
     sym->type->next = sym->etype = newIntLink ();
 
   /* function cannot return aggregate */
-  if ((TARGET_IS_DS390 || TARGET_HC08_LIKE || TARGET_IS_MOS6502)  && IS_AGGREGATE (sym->type->next))
+  if ((TARGET_IS_DS390 || TARGET_IS_MOS6502)  && IS_AGGREGATE (sym->type->next))
     {
       werrorfl (sym->fileDef, sym->lineDef, E_FUNC_AGGR, sym->name);
       return 0;
@@ -4363,6 +4382,7 @@ symbol *fps16x16_gteq;
 /* Dims: mul/div/mod, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED/BOTH */
 symbol *muldiv[3][4][4];
 symbol *muls16tos32[2];
+symbol *mulu32u8tou64;
 /* Dims: BYTE/WORD/DWORD/QWORD SIGNED/UNSIGNED */
 sym_link *multypes[4][2];
 /* Dims: to/from float, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
@@ -4800,6 +4820,10 @@ initCSupport (void)
     const char *uiparams[] = {"Ui", "Ui"};
     muls16tos32[0] = port->support.has_mulint2long ? funcOfTypeVarg ("__mulsint2slong", "l", 2, iparams) : 0;
     muls16tos32[1] = port->support.has_mulint2long ? funcOfTypeVarg ("__muluint2ulong", "Ul", 2, uiparams) : 0;
+  }
+  {
+    const char *uiparams[] = {"Ul", "Uc"};
+    mulu32u8tou64 = port->support.has_mululonguchar2ulonglong ? funcOfTypeVarg ("__mululonguchar2ulonglong", "UL", 2, uiparams) : 0;
   }
 }
 
