@@ -63,6 +63,7 @@ int BitBankUsed;                /* MB: overlayable bit bank */
 struct optimize optimize;
 struct options options;
 int preProcOnly = 0;
+int SyntaxOnly = 0;
 int noAssemble = 0;
 set *preArgvSet = NULL;         /* pre-processor arguments  */
 set *asmOptionsSet = NULL;      /* set of assembler options */
@@ -154,6 +155,7 @@ char buffer[PATH_MAX * 2];
 #define OPTION_DUMP_I_CODE          "--dump-i-code"
 #define OPTION_DUMP_GRAPHS          "--dump-graphs"
 #define OPTION_INCLUDE              "--include"
+#define OPTION_NO_GENCONSTPROP      "--nogenconstprop"
 
 #define OPTION_SMALL_MODEL          "--model-small"
 #define OPTION_MEDIUM_MODEL         "--model-medium"
@@ -174,9 +176,10 @@ static const OPTION optionsTable[] = {
   {'M', NULL, NULL, "Preprocessor option"},
   {'W', NULL, NULL, "Pass through options to the pre-processor (p), assembler (a) or linker (l)"},
   {0,   OPTION_INCLUDE, NULL, "Pre-include a file during pre-processing"},
+  {'E', "--preprocessonly", &preProcOnly, "Preprocess only, do not compile"},
+  {0,   "--syntax-only", &SyntaxOnly, "Parse and verify syntax only, do not compile"},
   {'S', NULL, &noAssemble, "Compile only; do not assemble or link"},
   {'c', "--compile-only", &options.cc_only, "Compile and assemble, but do not link"},
-  {'E', "--preprocessonly", &preProcOnly, "Preprocess only, do not compile"},
   {0,   "--c1mode", &options.c1mode, "Act in c1 mode.  The standard input is preprocessed code, the output is assembly code."},
   {'o', NULL, NULL, "Place the output into the given path resp. file"},
   {'x', NULL, NULL, "Optional file type override (c, c-header or none), valid until the next -x"},
@@ -215,24 +218,25 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_DATA_SEG, NULL, "<name> use this name for the data segment"},
 
   {0,   NULL, NULL, "Optimization options"},
+  {0,   OPTION_OPT_CODE_SPEED, NULL, "Optimize for code speed rather than size"},
+  {0,   OPTION_OPT_CODE_SIZE, NULL, "Optimize for code size rather than speed"},
+  {0,   OPTION_MAX_ALLOCS_PER_NODE, &options.max_allocs_per_node, "Maximum number of register assignments considered at each node of the tree decomposition", CLAT_INTEGER},
+  {0,   "--no-reg-params", &options.noRegParams, "On some ports, disable passing some parameters in registers"},
+  {0,   "--nostdlibcall", &optimize.noStdLibCall, "Disable optimization of calls to standard library"},
   {0,   "--nooverlay", &options.noOverlay, "Disable overlaying leaf function auto variables"},
   {0,   OPTION_NO_GCSE, NULL, "Disable the GCSE optimisation"},
+  {0,   OPTION_NO_LOSPRE, NULL, "Disable lospre"},
+  {0,   OPTION_NO_GENCONSTPROP, NULL, "Disable generalized constant propagation"},
   {0,   OPTION_NO_LABEL_OPT, NULL, "Disable label optimisation"},
   {0,   OPTION_NO_LOOP_INV, NULL, "Disable optimisation of invariants"},
   {0,   OPTION_NO_LOOP_IND, NULL, "Disable loop variable induction"},
   {0,   "--noloopreverse", &optimize.noLoopReverse, "Disable the loop reverse optimisation"},
   {0,   "--no-peep", &options.nopeep, "Disable the peephole assembly file optimisation"},
-  {0,   "--no-reg-params", &options.noRegParams, "On some ports, disable passing some parameters in registers"},
   {0,   "--peep-asm", &options.asmpeep, "Enable peephole optimization on inline assembly"},
   {0,   OPTION_PEEP_RETURN, NULL, "Enable peephole optimization for return instructions"},
   {0,   OPTION_NO_PEEP_RETURN, NULL, "Disable peephole optimization for return instructions"},
   {0,   OPTION_PEEP_FILE, &options.peep_file, "<file> use this extra peephole file", CLAT_STRING},
-  {0,   OPTION_OPT_CODE_SPEED, NULL, "Optimize for code speed rather than size"},
-  {0,   OPTION_OPT_CODE_SIZE, NULL, "Optimize for code size rather than speed"},
-  {0,   OPTION_MAX_ALLOCS_PER_NODE, &options.max_allocs_per_node, "Maximum number of register assignments considered at each node of the tree decomposition", CLAT_INTEGER},
-  {0,   OPTION_NO_LOSPRE, NULL, "Disable lospre"},
   {0,   OPTION_ALLOW_UNSAFE_READ, NULL, "Allow optimizations to read any memory location anytime"},
-  {0,   "--nostdlibcall", &optimize.noStdLibCall, "Disable optimization of calls to standard library"},
 
   {0,   NULL, NULL, "Internal debugging options"},
   {0,   OPTION_DUMP_AST, &options.dump_ast, "Dump front-end AST before generating i-code"},
@@ -381,17 +385,25 @@ static PORT *_ports[] = {
 static void
 _setPort (const char *name)
 {
-  int i;
-  for (i = 0; i < NUM_PORTS; i++)
+  size_t maxnamelen = 0;
+  for (int i = 0; i < NUM_PORTS; i++)
     {
       if (!strcmp (_ports[i]->target, name))
         {
           port = _ports[i];
           return;
         }
+      size_t namelen = strlen (_ports[i]->target_name);
+      maxnamelen = namelen > maxnamelen ? namelen: maxnamelen;
     }
   /* Error - didnt find */
   werror (E_UNKNOWN_TARGET, name);
+
+  fprintf (stderr, "Supported ports and corresponding port selection options:\n");
+  wassert (maxnamelen <= INT_MAX);
+  for (int i = 0; i < NUM_PORTS; i++)
+    fprintf (stderr, "%-*s-m%s\n", (int)(maxnamelen + 4), _ports[i]->target_name, _ports[i]->target);
+
   exit (EXIT_FAILURE);
 }
 
@@ -657,6 +669,7 @@ setDefaultOptions (void)
   options.max_allocs_per_node = 3000;
   optimize.lospre = 1;
   optimize.allow_unsafe_read = 0;
+  optimize.genconstprop = 1;
 
   /* now for the ports */
   port->setDefaultOptions ();
@@ -1059,7 +1072,7 @@ parseCmdLine (int argc, char **argv)
 {
   int i;
 
-  /* go thru all whole command line */
+  /* go thru whole command line */
   for (i = 1; i < argc; i++)
     {
       if (i >= argc)
@@ -1084,7 +1097,6 @@ parseCmdLine (int argc, char **argv)
       /* options */
       if (argv[i][0] == '-')
         {
-
           /* handle (usually double-dash) long options, first */
           size_t charsConsumed = 0;
 
@@ -1165,6 +1177,12 @@ parseCmdLine (int argc, char **argv)
           if (strcmp (argv[i], OPTION_NO_GCSE) == 0)
             {
               optimize.global_cse = 0;
+              continue;
+            }
+
+          if (strcmp (argv[i], OPTION_NO_GENCONSTPROP) == 0)
+            {
+              optimize.genconstprop = 0;
               continue;
             }
 
@@ -1425,12 +1443,6 @@ parseCmdLine (int argc, char **argv)
                * already been done. */
               break;
 
-            case 'c':
-              verifyShortOption (argv[i]);
-
-              options.cc_only = 1;
-              break;
-
             case 'L':
               addSet (&libPathsSet, Safe_strdup (getStringArg ("-L", argv, &i, argc)));
               break;
@@ -1629,11 +1641,11 @@ parseCmdLine (int argc, char **argv)
       deleteSet (&relFilesSet);
       deleteSet (&libFilesSet);
 
-      if (options.cc_only || noAssemble || preProcOnly)
+      if (options.cc_only || noAssemble || SyntaxOnly || preProcOnly)
         {
           werror (W_ILLEGAL_OPT_COMBINATION);
         }
-      options.cc_only = noAssemble = preProcOnly = 0;
+      options.cc_only = noAssemble = SyntaxOnly = preProcOnly = 0;
       if (!dstFileName)
         {
           werror (E_NEED_OPT_O_IN_C1);
@@ -2816,13 +2828,18 @@ main (int argc, char **argv, char **envp)
 
       yyparse ();
 
-      if (!options.c1mode) {
-        int cl = sdcc_pclose (yyin);
-        if (cl){
-			 fprintf(stderr, "subprocess error %d\n", cl);
-          fatalError = 1;
-		  }
-		}
+      if (SyntaxOnly)
+        exit (fatalError ? EXIT_FAILURE : EXIT_SUCCESS);
+
+      if (!options.c1mode)
+        {
+          int cl = sdcc_pclose (yyin);
+          if (cl)
+            {
+              fprintf(stderr, "subprocess error %d\n", cl);
+              fatalError = 1;
+            }
+        }
 
       if (fatalError)
         exit (EXIT_FAILURE);

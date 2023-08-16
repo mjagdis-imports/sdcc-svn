@@ -329,7 +329,10 @@ public:
   virtual void reg_cell_var(class cl_memory_cell *cell,
 			    void *store,
 			    chars vname, chars vdesc);
-
+  virtual void mk_cvar(class cl_memory_cell *cell,
+		       chars vname, chars vdesc,
+		       enum var_by vby= VBY_PRE);
+  
   double get_xtal(void) { return xtal; }
   double get_xtal_tick(void) { return xtal_tick; }
   void set_xtal(double freq) { xtal= freq; xtal_tick = 1 / freq; }
@@ -394,7 +397,7 @@ public:
   virtual int tick_hw(int cycles);
   virtual void do_extra_hw(int cycles);
   virtual int tick(int cycles);
-  virtual int8_t *tick_tab(t_mem code) { return NULL; }
+  virtual i8_t *tick_tab(t_mem code) { return NULL; }
   virtual int tickt(t_mem code);
   virtual class cl_ticker *get_counter(int nr);
   virtual class cl_ticker *get_counter(const char *nam);
@@ -412,15 +415,18 @@ public:
   virtual u8_t fetch8(void) { return (u8_t)fetch(); }
   virtual i8_t fetchi8(void) { return (i8_t)fetch(); }
   virtual bool fetch(t_mem *code);
-  virtual int do_inst(void/*int step*/);
+  virtual int do_inst(void);
+  virtual int do_emu(void);
   virtual void pre_inst(void);
+  virtual void pre_emu(void);
   virtual int exec_inst(void);
   virtual int exec_inst_tab(instruction_wrapper_fn itab[]);
   virtual int exec_inst_uctab(void);
   virtual void post_inst(void);
+  virtual void post_emu(void);
   virtual void save_hist();
   virtual int inst_unknown(t_mem code);
-  
+
   virtual int do_interrupt(void);
   virtual int priority_of(uchar nuof_it) {return(0);}
   virtual int priority_main() { return 0; }

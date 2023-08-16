@@ -2970,6 +2970,7 @@ aopOp (operand *op, const iCode * ic)
       aop->aopu.aop_lit = OP_VALUE (op);
       aop->size = getSize (operandType (op));
       op->aop = aop;
+      aop->op = op; // asmopToBool needs the op to check thetype of the literal.
       return;
     }
 
@@ -7904,6 +7905,23 @@ genlshFour (operand * result, operand * left, int shCount)
     }
 }
 
+/*-----------------------------------------------------------------*/
+/* genRot - generates code for rotation                            */
+/*-----------------------------------------------------------------*/
+static void
+genRot (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  unsigned int lbits = bitsForType (operandType (left));
+  if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits == 1)
+    genRLC (ic);
+  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits ==  lbits - 1)
+    genRRC (ic);
+  else
+    wassertl (0, "Unsupported rotation.");
+}
+
 /**************************************************************************
  * genLeftShiftLiteral - left shifting by known count
  *************************************************************************/
@@ -8433,8 +8451,7 @@ genRightShift (iCode * ic)
 
   /* if signed then we do it the hard way preserve the
      sign bit moving it inwards */
-  retype = getSpec (operandType (result));
-  sign = !SPEC_USIGN (retype);
+  sign = !SPEC_USIGN (getSpec (operandType (left)));
 
   /* signed & unsigned types are treated the same : i.e. the
      signed is NOT propagated inwards : quoting from the
@@ -10706,15 +10723,6 @@ genm6502iCode (iCode *ic)
       m6502_genInline (ic);
       break;
 
-    case RRC:
-      genRRC (ic);
-      break;
-
-    case RLC:
-      genRLC (ic);
-      break;
-
-    case SWAP:
     case GETABIT:
       wassertl (0, "Unimplemented iCode");
       break;
@@ -10725,6 +10733,10 @@ genm6502iCode (iCode *ic)
 
     case GETWORD:
       genGetWord(ic);
+      break;
+
+    case ROT:
+      genRot (ic);
       break;
 
     case LEFT_OP:

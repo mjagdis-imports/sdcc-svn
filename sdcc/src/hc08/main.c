@@ -145,12 +145,6 @@ _hc08_parseOptions (int *pargc, char **argv, int *i)
       return true;
     }
 
-  if (!strcmp (argv[*i], "--oldralloc"))
-    {
-      options.oldralloc = true;
-      return true;
-    }
-
   return false;
 }
 
@@ -162,7 +156,6 @@ static OPTION _hc08_options[] =
     {0, OPTION_SMALL_MODEL, NULL, "8-bit address space for data"},
     {0, OPTION_LARGE_MODEL, NULL, "16-bit address space for data (default)"},
     {0, "--out-fmt-elf", NULL, "Output executable in ELF format" },
-    {0, "--oldralloc", NULL, "Use old register allocator"},
     {0, NULL }
   };
 
@@ -360,18 +353,29 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == RRC
-      || op == RLC
-      || (op == SWAP && size <= 2)
-      || op == GETABIT
-      || op == GETBYTE
-      || op == GETWORD
-     )
-    return true;
-  else
-    return false;
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+      return true;
+    case ROT:
+      {
+        unsigned int lbits = bitsForType (left);
+        if (lbits % 8)
+          return false;
+        if (lbits == 8)
+          return true;
+        if (right % lbits  == 1 || right % lbits == lbits - 1)
+          return true;
+        if (lbits <= 16 && lbits == right * 2)
+          return true;
+      }
+      return false;
+    }
+  return false;
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -413,6 +417,8 @@ hc08_dwarfRegNum (const struct reg_info *reg)
 static bool
 _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
+  wassert (ic->op == '*' || ic->op == '/' || ic->op == '%');
+
   if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
     return false;
 
@@ -859,7 +865,7 @@ PORT hc08_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-    5, false
+    5, false, false
   },
   {
     hc08_emitDebuggerSymbol,
@@ -1006,7 +1012,7 @@ PORT s08_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-    5, false
+    5, false, false
   },
   {
     hc08_emitDebuggerSymbol,

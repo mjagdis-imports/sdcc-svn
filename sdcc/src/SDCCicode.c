@@ -79,8 +79,7 @@ PRINTFUNC (picEndCritical);
 iCodeTable codeTable[] = {
   {'!', "not", picGenericOne, NULL},
   {'~', "~", picGenericOne, NULL},
-  {RRC, "rrc", picGenericOne, NULL},
-  {RLC, "rlc", picGenericOne, NULL},
+  {ROT, "rot", picGenericOne, NULL},
   {GETABIT, "gabit", picGenericOne, NULL},
   {GETBYTE, "gbyte", picGenericOne, NULL},
   {GETWORD, "gword", picGenericOne, NULL},
@@ -127,7 +126,6 @@ iCodeTable codeTable[] = {
   {DUMMY_READ_VOLATILE, "dummy = (volatile)", picDummyRead, NULL},
   {CRITICAL, "critical_start", picCritical, NULL},
   {ENDCRITICAL, "critical_end", picEndCritical, NULL},
-  {SWAP, "swap", picGenericOne, NULL}
 };
 
 /*-----------------------------------------------------------------*/
@@ -605,6 +603,9 @@ newiCode (int op, operand *left, operand *right)
   // Err on the save side for now, setting this to false later is up to later analysis.
   ic->localEscapeAlive = true;
   ic->parmEscapeAlive = true;
+
+  ic->valinfos = 0;
+  ic->resultvalinfo = 0;
 
   return ic;
 }
@@ -1522,25 +1523,11 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
     case OR_OP:
       retval = operandFromLit (operandLitValue (left) || operandLitValue (right));
       break;
-    case RRC:
+    case ROT:
       {
         TYPE_TARGET_ULONG i = (TYPE_TARGET_ULONG) double2ul (operandLitValue (left));
-
-        retval = operandFromLit ((i >> (getSize (operandType (left)) * 8 - 1)) | (i << 1));
-      }
-      break;
-    case RLC:
-      {
-        TYPE_TARGET_ULONG i = (TYPE_TARGET_ULONG) double2ul (operandLitValue (left));
-
-        retval = operandFromLit ((i << (getSize (operandType (left)) * 8 - 1)) | (i >> 1));
-      }
-      break;
-    case SWAP:
-      {
-        TYPE_TARGET_ULONG i = (TYPE_TARGET_ULONG) double2ul (operandLitValue (left));
-        unsigned sz = getSize (operandType (left)) * 4;
-        retval = operandFromLit ((i >> sz) | (i << sz));
+        unsigned s = operandLitValue (right) >= 0 ? operandLitValue (right) : bitsForType (operandType (left)) - operandLitValue (right);
+        retval = operandFromLit ((i << s) | (i >> (bitsForType (operandType (left)) - s)));
       }
       break;
     case GETABIT:
@@ -2035,6 +2022,11 @@ usualBinaryConversions (operand ** op1, operand ** op2, RESULT_TYPE resultType, 
           return ctype;
         }
       break;
+    case LEFT_OP:
+    case RIGHT_OP:
+    case ROT:
+      *op1 = geniCodeCast (ctype, *op1, true);
+      return ctype;
     default:
       break;
     }
@@ -4601,14 +4593,18 @@ ast2iCode (ast * tree, int lvl)
 #endif
 
     case '~':
-    case RRC:
-    case RLC:
-    case SWAP:
       return geniCodeUnary (geniCodeRValue (left, FALSE), tree->opval.op, tree->ftype);
 
     case '!':
       {
         operand *op = geniCodeUnary (geniCodeRValue (left, FALSE), tree->opval.op, tree->ftype);
+        return op;
+      }
+    case ROT:
+      {
+        operand *op = geniCodeBinary (geniCodeRValue (left, false),
+                                      geniCodeRValue (right, false),
+                                      tree->opval.op, tree->ftype);
         return op;
       }
     case GETABIT:
