@@ -1,3 +1,29 @@
+2023-08-15 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sim/ucsim/test-target.mk: do not remove ihx files that are in svn
+
+2023-08-14 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCmain.c: added --syntax-only option, implements RFE #886
+	* doc/sdccman.lyx: documented --syntax-only
+
+2023-08-11 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/tests/charconst.c,
+	  support/regression/tests/wchar.c.in: disable for MacOS host test
+
+2023-08-09 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/tests/bug-2855.c: disable for MacOS host test
+	* support/regression/tests/charconst.c,
+	  support/regression/tests/string.c,
+	  support/regression/tests/wchar.c.in: work around missing uchar.h
+	  on MacOS host test
+
+2023-08-08 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/scripts/sdcc.nsi: Remove unused/unbuilt simulators
+
 2023-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/ds390/gen.c,
