@@ -413,7 +413,13 @@ z80MightRead(const lineNode *pl, const char *what)
      IS_R800 && ISINST(pl->line, "multu") ||
      IS_R800 && ISINST(pl->line, "multuw"))
     {
-      const char *arg = pl->line + 4;
+      const char *arg;
+      if (ISINST(pl->line, "multu"))
+        arg = pl->line + 5;
+      else if (ISINST(pl->line, "multuw"))
+        arg = pl->line + 6;
+      else
+        arg = pl->line + 4;
       while(isspace(*arg))
         arg++;
       if(arg[0] == 'a' && arg[1] == ',')

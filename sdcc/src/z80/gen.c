@@ -8669,6 +8669,7 @@ genMultOneChar (const iCode * ic)
           if (!regalloc_dry_run)
             emit2 ("multu a, %s", aopGet (ic->right->aop, 0, false));
           cost (2, 14);
+          goto store_hl;
         }
       else if (aopInReg (ic->left->aop, 0, C_IDX) || aopInReg (ic->left->aop, 0, B_IDX) || aopInReg (ic->left->aop, 0, E_IDX) || aopInReg (ic->left->aop, 0, D_IDX))
         {
@@ -8676,6 +8677,7 @@ genMultOneChar (const iCode * ic)
           if (!regalloc_dry_run)
             emit2 ("multu a, %s", aopGet (ic->left->aop, 0, false));
           cost (2, 14);
+          goto store_hl;
         }
       else if (isRegDead (B_IDX, ic))
         {
@@ -8688,6 +8690,7 @@ genMultOneChar (const iCode * ic)
             }
           emit2 ("multu a, b");
           cost (2, 14);
+          goto store_hl;
         }
       else
         UNIMPLEMENTED;
@@ -8754,6 +8757,7 @@ genMultOneChar (const iCode * ic)
   else
     regalloc_dry_run_cost += 12;
 
+store_hl:
   spillPair (PAIR_HL);
 
   if (savedB)

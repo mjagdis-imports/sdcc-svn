@@ -1,3 +1,10 @@
+2023-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/z80.src/inst_ed.cc,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
+	  Fixes for R800 multiplication instructions.
+
 2023-08-27 Felix Salfelder <felix AT salfelder.org>
 
 	* support/regression/Makefile.in: deal with longer subresult list.
