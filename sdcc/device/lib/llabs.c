@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-   _rlslonglong.c - routine for left shift of 64 bit long long
+   llabs.c - computes absolute value of a long long integer.
 
-   Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
+   Copyright (C) 2023, Benedikt Freisen, b.freisen@gmx.net
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -26,20 +26,7 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
-#include <stdint.h>
-
-#ifdef __SDCC_mcs51
-#define __SDCC_NONBANKED __nonbanked
-#else
-#define __SDCC_NONBANKED
-#endif
-
-#ifdef __SDCC_LONGLONG
-
-long long _rlslonglong(long long l, char s) __SDCC_NONBANKED
+long long int llabs(long long int j)
 {
-	return((unsigned long long)(l) << s);
+  return (j < 0) ? -j : j;
 }
-
-#endif
-

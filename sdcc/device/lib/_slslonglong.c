@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _rlulonglong.c - routine for left shift of 64 bit unsigned long long
+   _slslonglong.c - routine for shift left of 64 bit signed long long
 
    Copyright (C) 2012, Philipp Klaus Krause . philipp@informatik.uni-frankfurt.de
 
@@ -13,7 +13,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -28,65 +28,14 @@
 
 #include <stdint.h>
 
-#include <stdbit.h>
-
-#ifdef __SDCC_mcs51
-#define __SDCC_NONBANKED __nonbanked
-#else
-#define __SDCC_NONBANKED
-#endif
+#include <sdcc-lib.h>
 
 #ifdef __SDCC_LONGLONG
 
-#if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_BIG__
-
-unsigned long long _rlulonglong(unsigned long long l, char s) __SDCC_NONBANKED
+long long _slslonglong(long long l, char s) __SDCC_NONBANKED
 {
-	uint32_t *const top = (uint32_t *)((char *)(&l) + 0);
-	uint16_t *const middle = (uint16_t *)((char *)(&l) + 4);
-	uint32_t *const bottom = (uint32_t *)((char *)(&l) + 4);
-	uint16_t *const b = (uint16_t *)(&l);
-
-	for(;s >= 16; s-= 16)
-	{
-		b[0] = b[1];
-		b[1] = b[2];
-		b[2] = b[3];
-		b[3] = 0;
-	}
-
-	(*top) <<= s;
-	(*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
-	(*bottom) <<= s;
-
-	return(l);
+    return((unsigned long long)(l) << s);
 }
-
-#else
-
-unsigned long long _rlulonglong(unsigned long long l, char s) __SDCC_NONBANKED
-{
-	uint32_t *const top = (uint32_t *)((char *)(&l) + 4);
-	uint16_t *const middle = (uint16_t *)((char *)(&l) + 2);
-	uint32_t *const bottom = (uint32_t *)(&l);
-	uint16_t *const b = (uint16_t *)(&l);
-
-	for(;s >= 16; s-= 16)
-	{
-		b[3] = b[2];
-		b[2] = b[1];
-		b[1] = b[0];
-		b[0] = 0;
-	}
-
-	(*top) <<= s;
-	(*top) |= (((uint32_t)((*middle) & 0xffffu) << s) >> 16);
-	(*bottom) <<= s;
-
-	return(l);
-}
-
-#endif
 
 #endif
 

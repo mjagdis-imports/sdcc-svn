@@ -129,7 +129,7 @@ VOID  machine(struct mne * mp)
                 break;
 
         case S_PUSH:
-                if (admode(R16X)) {
+                if (admode(R16AF)) {
                         outab(op+0x30);
                         break;
                 } else if ((v1 = admode(R8IP)) != 0) {
@@ -724,6 +724,15 @@ VOID  machine(struct mne * mp)
                         outab(0x9F);
                         break;
                 }
+
+                if ((t1 == S_R16_ALT) && (t2 == S_R16)) {
+                        if ((v2 == BC) || (v2 == DE)) {
+                                /* LD BC'|DE'|HL', BC|DE */
+                                outab(0xED);
+                                outab(((v2 == BC) ? 0x49 : 0x41) | (v1 << 4));
+                                break;
+                        }
+                }
       
                 /* 16-bit operations valid only in rabbit 4000 mode */
                 if (r4k_mode && (t1 == S_R16) && (t2 == S_R16)) {
@@ -810,6 +819,19 @@ VOID  machine(struct mne * mp)
                                         break;
                                 }
                         }
+                        else if (t1 == S_R16_ALT) {
+                                if ((v1 == DE) && (v2 == HL)) {
+                                        /* EX DE', HL */
+                                        outab(0xE3);
+                                        break;
+                                }
+                                if (r4k_mode && (v1==BC) && (v2==HL)) {
+                                        /* EX BC', HL */
+                                        outab(0xED);
+                                        outab(0x74);
+                                        break;
+                                }
+                        }
         
                         if ((t1 == S_IDSP) && (v1 == 0)) {
                                 /* 0xE3 is EX DE',HL on rabbit 2000 
@@ -826,7 +848,7 @@ VOID  machine(struct mne * mp)
                                 }
                         }
                 }
-                if ((t1 == S_R16X) && (t2 == S_R16X)) {
+                if ((t1 == S_R16AF) && (t2 == S_R16AF_ALT)) {
                         outab(0x08);
                         break;
                 }
