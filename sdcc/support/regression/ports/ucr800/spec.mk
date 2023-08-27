@@ -3,7 +3,7 @@
 # simulation timeout in seconds
 SIM_TIMEOUT = 50
 
-EMU_PORT_FLAG = -tr800
+EMU_PORT_FLAG = -tR800
 
 # path to uCsim
 ifdef SDCC_BIN_PATH
