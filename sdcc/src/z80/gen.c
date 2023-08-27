@@ -35,21 +35,6 @@
    stuff. This is what it is all about CODE GENERATION for a specific MCU.
    Some of the routines may be reusable, will have to see */
 
-/* Z80 calling convention description.
-   Parameters are passed right to left.  As the stack grows downwards,
-   the parameters are arranged in left to right in memory.
-
-   Everything is caller saves. i.e. the caller must save any registers
-   that it wants to preserve over the call, except for ix, which is callee saves.
-   GB: The return value is returned in DEHL.  DE is normally used as a
-   working register pair.  Caller saves allows it to be used for a
-   return value.
-   va args functions do not use register parameters.  All arguments
-   are passed on the stack.
-   IX is used as an index register to the top of the local variable
-   area.  ix-0 is the top most local variable.
-*/
-
 enum
 {
   /* Set to enable debugging trace statements in the output assembly code. */
@@ -2019,9 +2004,9 @@ aopArg (sym_link *ftype, int i)
       if (!IS_SM83 && i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 1)
         return ASMOP_L;
 
-      if ((IS_Z80 || IS_Z180 || IS_Z80N) && i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 2)
+      if ((IS_Z80 || IS_Z180 || IS_Z80N || IS_R800) && i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 2)
         return ASMOP_DE;
-      if ((IS_Z80 || IS_Z180 || IS_Z80N) && i == 2 && aopArg (ftype, 1) == ASMOP_HL && getSize (arg->type) == 2)
+      if ((IS_Z80 || IS_Z180 || IS_Z80N || IS_R800) && i == 2 && aopArg (ftype, 1) == ASMOP_HL && getSize (arg->type) == 2)
         return ASMOP_DE;
 
       if ((IS_RAB || IS_TLCS90 || IS_EZ80_Z80) && i == 2 && aopArg (ftype, 1) == ASMOP_A && getSize (arg->type) == 2)
@@ -6599,7 +6584,7 @@ genEndFunction (iCode *ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
   /* __critical __interrupt without an interrupt number is the non-maskable interrupt */
-  bool is_nmi = (IS_Z80 || IS_Z180 || IS_EZ80_Z80 || IS_Z80N) && IFFUNC_ISCRITICAL (sym->type) && FUNC_INTNO (sym->type) == INTNO_UNSPEC;
+  bool is_nmi = (IS_Z80 || IS_Z180 || IS_EZ80_Z80 || IS_Z80N || IS_R800) && IFFUNC_ISCRITICAL (sym->type) && FUNC_INTNO (sym->type) == INTNO_UNSPEC;
   bool bc_free = !aopRet (sym->type) || aopRet (sym->type)->regs[C_IDX] < 0 && aopRet (sym->type)->regs[B_IDX] < 0;
   bool de_free = !aopRet (sym->type) || aopRet (sym->type)->regs[E_IDX] < 0 && aopRet (sym->type)->regs[D_IDX] < 0;
   bool hl_free = !aopRet (sym->type) || aopRet (sym->type)->regs[L_IDX] < 0 && aopRet (sym->type)->regs[H_IDX] < 0;
@@ -13981,7 +13966,7 @@ genPackBits (sym_link * etype, operand * right, int pair, const iCode * ic)
           regalloc_dry_run_cost += (pair == PAIR_IX || pair == PAIR_IY) ? 3 : 1;
           return;
         }
-      else if (blen == 4 && bstr % 4 == 0 && pair == PAIR_HL && !aopInReg (right->aop, 0, A_IDX) && !requiresHL (right->aop) && (IS_Z80 || IS_Z180 || IS_EZ80_Z80 || IS_Z80N))
+      else if (blen == 4 && bstr % 4 == 0 && pair == PAIR_HL && !aopInReg (right->aop, 0, A_IDX) && !requiresHL (right->aop) && (IS_Z80 || IS_Z180 || IS_EZ80_Z80 || IS_Z80N || IS_R800))
         {
           emit3 ((bstr ? A_RLD : A_RRD), 0, 0);
           cheapMove (ASMOP_A, 0, right->aop, 0, true);
