@@ -1,3 +1,260 @@
+2023-08-27 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-3165.c: enabled for mcs51 & ds390,
+	  fixed warnings
+
+2023-08-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asrab/rab.h,
+	  sdas/asrab/rabadr.c,
+	  sdas/asrab/rabmch.c:
+	  Fix handling of some valid instructions in Rabbit assembler (bug #3636, patch by by D-mo).
+	* support/regression/tests/bug-3636.c:
+	  Regression test for bug #3636.
+
+2023-08-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asrab/rab.h,
+	  sdas/asrab/rabadr.c,
+	  sdas/asrab/rabmch.c:
+	  Fix handling of some invalid instructions in Rabbit assembler (bug #3638, patch by by D-mo).
+
+2023-08-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3165.c,
+	  support/regression/tests/bug-3167.c:
+	  Rename regression test to match correct bug number.
+
+2023-08-26 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/pic16/libc/string/memchr.c,
+	* device/lib/pic16/libc/string/memchrpgm.c,
+	* device/lib/pic16/libc/string/memchrram.c: fixed buggy implementations
+	* src/pic14/genarith.c(genPlus): fixed warning
+	* support/regression/qct/0026-implicitret.c: disable expected warning 278
+	* support/regression/tcc/97_utf8_string_literal.c: replaced abort() by
+	  return, is this test even linked, let alone run?
+	* support/regression/tests/gcc-torture-execute-930106-1.c: very odd test,
+	  fixed warnings
+	* support/regression/tests/gcc-torture-execute-cmpsf-1.c: enabled for mcs51
+	  with correct_results[] const, fixed warnings
+	* support/regression/tests/gcc-torture-execute-strct-varg-1.c: enabled for
+	  hc08 & s08, fixed warnings
+	* support/regression/tests/lonesha256.c: disabled for mcs51-stack-auto
+	* support/regression/tests/mm-pnvi-ae-udi-pointer_from_int_disambiguation_2_xy.c:
+	  added comment about incorrect warning 127
+	* support/regression/tcc/109_float_struct_calling.c,
+	* support/regression/tcc/10_pointer.c,
+	* support/regression/tcc/11_precedence.c,
+	* support/regression/tcc/30_hanoi.c,
+	* support/regression/tcc/52_unnamed_enum.c,
+	* support/regression/tcc/54_goto.c,
+	* support/regression/tcc/55_lshift_type.c,
+	* support/regression/tests/gcc-torture-execute-20000717-3.c,
+	* support/regression/tests/gcc-torture-execute-20020201-1.c,
+	* support/regression/tests/gcc-torture-execute-20020328-1.c,
+	* support/regression/tests/gcc-torture-execute-20020819-1.c,
+	* support/regression/tests/gcc-torture-execute-20041019-1.c,
+	* support/regression/tests/gcc-torture-execute-20100430-1.c,
+	* support/regression/tests/gcc-torture-execute-20120427-1.c,
+	* support/regression/tests/gcc-torture-execute-20120427-2.c,
+	* support/regression/tests/gcc-torture-execute-920202-1.c,
+	* support/regression/tests/gcc-torture-execute-920428-1.c,
+	* support/regression/tests/gcc-torture-execute-920520-1.c,
+	* support/regression/tests/gcc-torture-execute-920812-1.c,
+	* support/regression/tests/gcc-torture-execute-921123-1.c,
+	* support/regression/tests/gcc-torture-execute-930123-1.c,
+	* support/regression/tests/gcc-torture-execute-930518-1.c,
+	* support/regression/tests/gcc-torture-execute-930603-2.c,
+	* support/regression/tests/gcc-torture-execute-931017-1.c,
+	* support/regression/tests/gcc-torture-execute-950322-1.c,
+	* support/regression/tests/gcc-torture-execute-950621-1.c,
+	* support/regression/tests/gcc-torture-execute-950809-1.c,
+	* support/regression/tests/gcc-torture-execute-960219-1.c,
+	* support/regression/tests/gcc-torture-execute-960302-1.c,
+	* support/regression/tests/gcc-torture-execute-960327-1.c,
+	* support/regression/tests/gcc-torture-execute-960402-1.c,
+	* support/regression/tests/gcc-torture-execute-980701-1.c,
+	* support/regression/tests/gcc-torture-execute-990106-1.c,
+	* support/regression/tests/gcc-torture-execute-991023-1.c,
+	* support/regression/tests/gcc-torture-execute-cmpsi-1.c,
+	* support/regression/tests/gcc-torture-execute-divconst-1.c,
+	* support/regression/tests/gcc-torture-execute-divmod-1.c,
+	* support/regression/tests/gcc-torture-execute-lto-tbaa-1.c,
+	* support/regression/tests/gcc-torture-execute-packed-1.c,
+	* support/regression/tests/gcc-torture-execute-postmod-1.c,
+	* support/regression/tests/gcc-torture-execute-strct-stdarg-1.c,
+	* support/regression/tests/gcc-torture-execute-string-opt-5.c,
+	* support/regression/tests/gcc-torture-execute-va-arg-1.c,
+	* support/regression/tests/gcc-torture-execute-va-arg-5.c,
+	* support/regression/tests/gcc-torture-execute-va-arg-6.c: fixed warnings
+
+2023-08-25 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/mcs51/rtrack.c(_mcs51_rtrackUpdate): added dptr+=2 case,
+	  added detecting modified bits in B
+
+2023-08-21 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/mcs51/Makefile.in: reverted accidental commit
+
+2023-08-19 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/asm/default/features.h,
+	* device/include/asm/ds390/features.h,
+	* device/include/asm/mcs51/features.h,
+	* device/include/asm/pic14/features.h,
+	* device/include/asm/pic16/features.h,
+	* device/include/asm/r2k/features.h,
+	* device/include/asm/r3ka/features.h,
+	* device/include/asm/sm83/features.h,
+	* device/include/asm/stm8/features.h,
+	* device/include/asm/tlcs90/features.h,
+	* device/include/asm/z80/features.h: added __SDCC_NONBANKED
+	* device/include/float.h: use __SDCC_NONBANKED for __SDCC_FLOAT_NONBANKED
+	* device/include/sdcc-lib.h: cosmetics
+	* device/lib/_divsint.c,
+	* device/lib/_divslong.c,
+	* device/lib/_divslonglong.c,
+	* device/lib/_divuint.c,
+	* device/lib/_divulong.c,
+	* device/lib/_divulonglong.c,
+	* device/lib/_modsint.c,
+	* device/lib/_modslong.c,
+	* device/lib/_modslonglong.c,
+	* device/lib/_moduint.c,
+	* device/lib/_modulong.c,
+	* device/lib/_modulonglong.c,
+	* device/lib/_mulint.c,
+	* device/lib/_mullong.c,
+	* device/lib/_mullonglong.c: moved __SDCC_NONBANKED to sdcc-lib.h
+	* device/lib/_slonglong2fs.c: cosmetics
+	* device/lib/Makefile.in,
+	* device/lib/hc08/Makefile.in,
+	* device/lib/mos6502/Makefile.in,
+	* device/lib/mos6502-stack-auto/Makefile.in,
+	* device/lib/mos65c02/Makefile.in,
+	* device/lib/pdk13/Makefile.in,
+	* device/lib/pdk14/Makefile.in,
+	* device/lib/pdk15/Makefile.in,
+	* device/lib/pdk15-stack-auto/Makefile.in,
+	* device/lib/s08/Makefile.in,
+	* device/lib/s08-stack-auto/Makefile.in,
+	* device/lib/stm8/Makefile.in,
+	* device/lib/stm8-large/Makefile.in,
+	* src/SDCCsymt.c (initCSupport): renamed _r[lr][su]longlong.c to
+	  _s[lr][su]longlong.c because they are shifts not rotates
+	* device/lib/_slslonglong.c: renamed from _rlslonglong.c,
+	  moved __SDCC_NONBANKED to sdcc-lib.h
+	* device/lib/_slulonglong.c: renamed from _rlulonglong.c,
+	  moved __SDCC_NONBANKED to sdcc-lib.h,
+	  use _AUTOMEM for better code generation
+	* device/lib/_srslonglong.c: renamed from _rrslonglong.c,
+	  bugfix little endian variant,
+	  moved __SDCC_NONBANKED to sdcc-lib.h,
+	  use _AUTOMEM for better code generation,
+	  removed comment about non-existing rrulonglong_rrx_s.c
+	* device/lib/_srulonglong.c: renamed from _rrulonglong.c,
+	  moved __SDCC_NONBANKED to sdcc-lib.h,
+	  use _AUTOMEM for better code generation,
+	  removed comment about non-existing rrulonglong_rrx_s.c
+	* device/lib/mos6502/_srslonglong.c: renamed from _rrslonglong.c
+	* device/lib/mos6502/_srulonglong.c: renamed from _rrulonglong.c
+	* device/lib/mos6502-stack-auto/_srslonglong.c: renamed from _rrslonglong.c
+	* device/lib/mos6502-stack-auto/_srulonglong.c: renamed from _rrulonglong.c
+
+	* device/lib/atomic_flag_clear.c: generate external definition for
+	  inline definition with external linkage
+	* device/include/stdatomic.h: inline atomic_flag_clear(),
+	  use 0xfe for z80-like,
+	  use __SDCC_NONBANKED
+	* device/lib/ez80_z80/atomic_flag_test_and_set.s,
+	* device/lib/r2k/atomic_flag_test_and_set.s,
+	* device/lib/r2ka/atomic_flag_test_and_set.s,
+	* device/lib/r3ka/atomic_flag_test_and_set.s,
+	* device/lib/sm83/atomic_flag_test_and_set.s,
+	* device/lib/z180/atomic_flag_test_and_set.s,
+	* device/lib/z80/atomic_flag_test_and_set.s,
+	* device/lib/z80n/atomic_flag_test_and_set.s: use sra on 0xfe and drop ccf
+
+	* device/lib/strtoull.c: drop oldret
+	* device/lib/wcstoull.c: drop oldret,
+	  (_isdigit): fix L'a',
+	  (strtoull): bugfix, renamed to wcstoull() & use iswblank()
+
+	* debugger/mcs51/sdcdb.c (readCdb): fixed warning/bug
+	* src/SDCC.y: fixed warnings
+	* src/SDCCval.h,
+	* src/SDCCval.c (ullFromVal): make val const to fix warnings
+	* src/mcs51/ralloc.c (regsUsedIniCode): removed label to fix warning
+	* src/mos6502/gen.c (opInfo): fix warning,
+	  (genRightShift): fixed warning
+	* src/z80/ralloc.c (regsUsedIniCode): removed label to fix warning
+	* support/cpp/gcc/diagnostic.cc (fancy_abort): fixed warning,
+	  removed formfeeds
+	* support/cpp/gcc/gcc.cc (insert_comments,get_random_number): fixed warnings
+	  removed formfeeds
+	* support/cpp/libcpp/expr.cc (cpp_classify_number): fixed warnings,
+	  removed formfeeds
+	* support/cpp/libcpp/macro.cc (update,create_iso_definition): fixed warnings
+	* support/makebin/makebin.c: fixed warning
+
+2023-08-17 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/inttypes.h,
+	  device/include/stdlib.h,
+	  device/include/wchar.h,
+	  device/lib/Makefile.in,
+	  device/lib/imaxabs.c,
+	  device/lib/imaxdiv.c,
+	  device/lib/incl.mk,
+	  device/lib/llabs.c,
+	  device/lib/strtoimax.c,
+	  device/lib/strtoll.c,
+	  device/lib/strtoul.c,
+	  device/lib/strtoull.c,
+	  device/lib/strtoumax.c,
+	  device/lib/wcsncmp.c,
+	  device/lib/wcstoimax.c,
+	  device/lib/wcstol.c,
+	  device/lib/wcstoll.c,
+	  device/lib/wcstoul.c,
+	  device/lib/wcstoull.c,
+	  device/lib/wcstoumax.c,
+	  support/regression/tests/wcsto.c:
+	  Add inttypes.h and missing dependencies.
+
+2023-08-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/gen.c:
+	  Fix a bug in pdk code generation for shifts.
+	* support/regression/tests/shifts2.c.in:
+	  Disable a part of a test for configurations where it fails due to lack of memory.
+
+2023-08-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/pic14/glue.c,
+	* src/pic16/glue.c: moved no_assemble into options
+
+2023-08-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/shifts2.c.in,
+	  support/regression/tests/bitintshift.c.in:
+	  Improve test coverage for shifts of wide variables.
+	* device/lib/_rlulonglong.c,
+	  device/lib/_rrslonglong.c,
+	  device/lib/_rrulonglong.c:
+	  Fix choice of endiannness for support functions for shifts of wide variables.
+
+2023-08-16 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* debugger/mcs51/cmd.c: fixed compiler warning
+	* src/SDCCglobl.h,
+	* src/SDCCglue.c,
+	* src/SDCCmain.c: moved syntax_only & no_assemble into options
+	* src/SDCCopt.c(eBBlockFromiCode): do not call assignRegisters() for
+	    --syntax-only
+
 2023-08-15 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* sim/ucsim/test-target.mk: do not remove ihx files that are in svn
