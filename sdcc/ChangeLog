@@ -1,3 +1,11 @@
+2023-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/f8.src/decode.h,
+	  sim/ucsim/f8.src/f8cl.h,
+	  sim/ucsim/f8.src/glob.cc,
+	  sim/ucsim/f8.src/imove.cc:
+	  Fix simulator for change in xch f, (n, sp).
+
 2023-08-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asrab/rab.h,
