@@ -23,6 +23,8 @@ inline void atomic_flag_clear(volatile atomic_flag __idata *object) __SDCC_NONBA
 
 #elif defined(__SDCC_f8)
 
+#define ATOMIC_FLAG_INIT {0}
+
 _Bool atomic_flag_test_and_set(volatile atomic_flag *object);
 
 __SDCC_ATOMIC_EXTERN
