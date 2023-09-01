@@ -1,3 +1,97 @@
+2023-08-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asrab/rab.h,
+	  sdas/asrab/rabmch.c,
+	  sdas/asrab/rabpst.c:
+	  Fix handling of some valid instructions in Rabbit assembler (bug #3639, patch by by D-mo).
+	* support/regression/tests/bug-3639.c:
+	  Regression test for bug #3639.
+
+2023-08-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/README.txt,
+	  doc/sdccman.lyx:
+	  Basic r800 port documentation.
+	* support/scripts/sdcc.nsi:
+	  Include r800 library in Windows installer.
+	* src/z80/gen.c:
+	  Cost function fixes for z80-related backends.
+
+2023-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge r800 branch to trunk.
+	* support/regression/Makefile.in:
+	  Include r800 port in test-z80 regression test target.
+	* support/regression/MakeList:
+	  Disable a test for r800 that fails for all z80-related ports.
+
+2023-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/z80.src/inst_ed.cc,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
+	  Fixes for R800 multiplication instructions.
+
+2023-08-27 Felix Salfelder <felix AT salfelder.org>
+
+	* support/regression/Makefile.in: deal with longer subresult list.
+	* support/regression/tests/bitintshift.c.in: more subcases.
+
+2023-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/fwk/include/testfwk.h,
+	  support/regression/ports/ucr800/spec.mk:
+	  r800 regression test infrstructure.
+	* src/z80/gen.c:
+	  r800 calling convention fix.
+
+2023-08-27 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/gte/960830-1.c: deleted, is only relevant for i386
+	* support/regression/ports/mcs51-common/support.c: don't include mcs51reg.h,
+	  define TI & SBUF directly instead, prevents name clash with B
+	* support/regression/MakeList: enabled tcc_30_hanoi
+	* support/regression/cases/Makefile.in: remove disabled warnings,
+	  fixed warnings
+	* support/regression/collate-results.py,
+	* support/regression/compact-results.py: cosmetics
+	* support/regression/gte/20001124-1.c,
+	* support/regression/gte/20001229-1.c,
+	* support/regression/gte/20010119-1.c,
+	* support/regression/gte/20030216-1.c,
+	* support/regression/gte/20091229-1.c,
+	* support/regression/gte/900409-1.c,
+	* support/regression/gte/930930-2.c,
+	* support/regression/gte/950426-2.c,
+	* support/regression/gte/951204-1.c,
+	* support/regression/gte/960405-1.c,
+	* support/regression/gte/970214-1.c,
+	* support/regression/gte/970214-2.c,
+	* support/regression/gte/990324-1.c,
+	* support/regression/gte/991019-1.c,
+	* support/regression/gte/alias-access-path-2.c,
+	* support/regression/gte/pr17252.c,
+	* support/regression/gte/pr22493-1.c,
+	* support/regression/gte/pr23047.c,
+	* support/regression/gte/pr38048-2.c,
+	* support/regression/gte/pr40493.c,
+	* support/regression/gte/pr49712.c: fixed warnings
+	* support/regression/gte/20010329-1.c,
+	* support/regression/gte/20030404-1.c,
+	* support/regression/gte/20080222-1.c,
+	* support/regression/gte/980526-2.c,
+	* support/regression/gte/pr17133.c,
+	* support/regression/gte/pr29798.c,
+	* support/regression/gte/pr34099-2.c,
+	* support/regression/gte/pr43629.c,
+	* support/regression/gte/pr44942.c,
+	* support/regression/gte/pr53465.c: suppressed valid warnings
+	* support/regression/qct/0025-string.c,
+	* support/regression/qct/0027-charval.c,
+	* support/regression/qct/0032-indec.c,
+	* support/regression/qct/0059-multistring.c,
+	* support/regression/tcc/30_hanoi.c: cosmetics
+
 2023-08-27 Maarten Brock <sourceforge.brock AT dse.nl>
 
 	* support/regression/tests/bug-3165.c: enabled for mcs51 & ds390,
@@ -355,6 +449,11 @@
 	  src/z80/gen.c:
 	  Fix various bugs found by sanitizers.
 
+2023-07-31 Philipp Klaus Krause <pkk@spth.de>
+
+	* support/regression/ports/ucr800/spec.mk:
+	  Infrastructure for future r800 regression testing.
+
 2023-07-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,
@@ -374,6 +473,28 @@
 	* src/SDCCast.c,
 	  support/valdiag/tests/bug-2240.c:
 	  Fix bug #2240.
+
+2023-07-28 Philipp Klaus Krause <pkk@spth.de>
+
+	* sdas/asz80/z80.h,
+	  sdas/asz80/z80mch.c,
+	  sdas/asz80/z80pst.c:
+	  Basic R800 assembler support.
+	* configure,
+	  configure.ac,
+	  src/SDCCmain.c,
+	  src/port.h,
+	  src/z80/main.c,
+	  src/SDCCglue.c,
+      src/z80/gen.c,
+      src/z80/z80.h,
+      src/z80/peep.c,
+      device/include/*.h,
+      device/lib/Makefile.in,
+      device/lib/_memset.c,
+      device/lib/clean.mk,
+      device/lib/r800:
+	  Infrastructure for r800 port, use multu for 8x8->16 multiplication.
 
 2023-07-27 Philipp Klaus Krause <philipp@colecovision.eu>
 

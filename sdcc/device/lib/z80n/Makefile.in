@@ -91,5 +91,3 @@ clean:
 distclean: clean
 	rm -f Makefile
 
-Makefile: $(srcdir)/Makefile.in
-	cd $(top_builddir); ./config.status device/lib/z80n/Makefile

@@ -148,6 +148,10 @@ EXCLUDE_ucz80 += \
 EXCLUDE_ucz80-nmos += \
 	gte_20091229-1
 
+# Fail
+EXCLUDE_ucr800 += \
+	gte_20091229-1
+
 # fail
 EXCLUDE_hc08 += \
 	gte_memcpy-1
@@ -378,10 +382,6 @@ EXCLUDE_ARCH_pdk += \
 	tcc_67_macro_concat \
 	tcc_70_floating_point_literals \
 	tcc_91_ptr_longlong_arith32
-
-# Fails since symbol B from test conflicts with symbol B defined in mcs51-common/support.c (via processor register include)
-EXCLUDE_ARCH_mcs51 += \
-	tcc_30_hanoi
 
 # Target doesn't have enough memory
 EXCLUDE_ARCH_pdk += \
