@@ -1,3 +1,38 @@
+2023-09-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCcse.c,
+	  src/SDCClrange.c:
+	  Fix issues that resulted in isaddr flag value loss, confusing the ds390 register allocator.
+	* src/SDCCgenconstprop.cc:
+	  Improve optimizations based on information from generalized constant propagation.
+	* support/regression/tests/bug-3641.c:
+	  Disable test for target where it fails due to known bug #3643.
+
+2023-09-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3641.c:
+	  Support pre-C23 hosts in test for bug #3641.
+
+2023-09-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3641.c:
+	  Regression test for bug #3641.
+
+2023-09-05 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/hc08/gen.c (genAssignLit): fix bug #3641
+
+2023-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  src/pdk/gen.c:
+	  Optimize some pointer writes using intrinsic named address space information from generalized constant propagation.
+
+2023-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bitintshift.c.in:
+	  Disable parts of test that fail due to known bug #3634.
+
 2023-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sim/ucsim/f8.src/decode.h,
