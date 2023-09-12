@@ -5397,9 +5397,8 @@ genPointerGet (const iCode *ic, iCode *ifx)
   wassertl (IS_OP_LITERAL (IC_RIGHT (ic)), "GET_VALUE_AT_ADDRESS with non-literal right operand");
 
   int size = result->aop->size;
-  // todo: What if right operand is negative?
-  int offset = byteOfVal (right->aop->aopu.aop_lit, 1) * 256 + byteOfVal (right->aop->aopu.aop_lit, 0);
-  
+  long int offset = operandLitValueUll (IC_RIGHT(ic));
+
   bool y_dead = regDead (Y_IDX, ic) && right->aop->regs[YL_IDX] < 0 && right->aop->regs[YH_IDX] < 0;
 
   if (ifx && result->aop->type == AOP_CND && (!bit_field || blen == 8))
@@ -5408,17 +5407,17 @@ genPointerGet (const iCode *ic, iCode *ifx)
       bool wide = (size > 1 && !bit_field);
       if (left->aop->type == AOP_LIT)
         {
-          emit2 (wide ? "tstw" : "tst", offset ? "0x%02x%02x+%d" : "0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+          emit2 (wide ? "tstw" : "tst", offset ? "0x%02x%02x+%d" : "0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), (int)(offset));
           cost (3 + wide ? !aopInReg (result->aop, 0, Y_IDX) : !aopInReg (result->aop, 0, XL_IDX), 1);
         }
       else if (left->aop->type == AOP_IMMD)
         {
-          emit2 (wide ? "tstw" : "tst", offset ? "%s+%d" : "%s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+          emit2 (wide ? "tstw" : "tst", offset ? "%s+%d" : "%s+%d", left->aop->aopu.immd, (int)(left->aop->aopu.immd_off + offset));
           cost (3 + wide ? !aopInReg (result->aop, 0, Y_IDX) : !aopInReg (result->aop, 0, XL_IDX), 1);
         }
       else if (wide && aopInReg (left->aop, 0, Z_IDX))
         {
-          emit2 ("tstw", "(%u, z)", offset);
+          emit2 ("tstw", "(%u, z)", (unsigned int)offset);
           cost (3, 1);
         }
       else if (wide && (y_dead || aopInReg (left->aop, 0, Y_IDX)))
@@ -5431,7 +5430,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
             }
           else
             {
-              emit2 ("ldw", "y, (%u, y)", offset);
+              emit2 ("ldw", "y, (%u, y)", (unsigned int)offset);
               cost (2 + (offset > 255), 1);
             }
           emit3 (A_TSTW, ASMOP_Y, 0);
@@ -5446,7 +5445,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
             }
           else
             {
-              emit2 ("ld", "xl, (%u, y)", offset);
+              emit2 ("ld", "xl, (%u, y)", (unsigned int)offset);
               cost (2, 1);
             }
           emit3 (A_TST, ASMOP_XL, 0);
@@ -5454,7 +5453,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
       else if (wide && regDead (Z_IDX, ic))
         {
           genMove (ASMOP_Z, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), y_dead, true);
-          emit2 ("tstw", "(%u, z)", offset);
+          emit2 ("tstw", "(%u, z)", (unsigned int)offset);
           cost (3, 1);
         }
       else
@@ -5473,12 +5472,12 @@ genPointerGet (const iCode *ic, iCode *ifx)
       if (!regDead (XL_IDX, ic))
         UNIMPLEMENTED;
       if (left->aop->type == AOP_LIT)
-        emit2 ("ld", offset ? "xl, 0x%02x%02x+%d" : "xl, 0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+        emit2 ("ld", offset ? "xl, 0x%02x%02x+%d" : "xl, 0x%02x%02x", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), (int)(offset));
       else if (left->aop->type == AOP_IMMD)
-        emit2 ("ld", offset ? "xl, %s+%d" : "xl, %s+%d", left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+        emit2 ("ld", offset ? "xl, %s+%d" : "xl, %s+%d", left->aop->aopu.immd, (int)(left->aop->aopu.immd_off + offset));
       else if (aopInReg (left->aop, 0, Z_IDX))
         {
-          emit2 ("ld", "xl, (%u, z)", offset);
+          emit2 ("ld", "xl, (%u, z)", (unsigned int)offset);
           cost (3, 1);
         }
       else if ((y_dead || aopInReg (left->aop, 0, Y_IDX)) && offset <= 255)
@@ -5491,14 +5490,14 @@ genPointerGet (const iCode *ic, iCode *ifx)
             }
           else
             {
-              emit2 ("ldw", "xl, (%u, y)", offset);
+              emit2 ("ldw", "xl, (%u, y)", (unsigned int)offset);
               cost (2, 1);
             }
         }
       else if (regDead (Z_IDX, ic))
         {
           genMove (ASMOP_Z, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), y_dead, true);
-          emit2 ("ld", "xl, (%u, z)", offset);
+          emit2 ("ld", "xl, (%u, z)", (unsigned int)offset);
           cost (3, 1);
         }
       else
@@ -5518,25 +5517,25 @@ genPointerGet (const iCode *ic, iCode *ifx)
     {
       bool wide = size > 1;
       if (left->aop->type == AOP_LIT)
-        emit2 (wide ? "ldw" : "ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+        emit2 (wide ? "ldw" : "ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), (int)(offset));
       else
-        emit2 (wide ? "ldw" : "ld", offset ? "%s, %s+%d" : "%s, %s+%d", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+        emit2 (wide ? "ldw" : "ld", offset ? "%s, %s+%d" : "%s, %s+%d", wide ? aopGet2 (result->aop, 0) : aopGet (result->aop, 0), left->aop->aopu.immd, (int)(left->aop->aopu.immd_off + offset));
       cost (3 + wide ? !aopInReg (result->aop, 0, Y_IDX) : !aopInReg (result->aop, 0, XL_IDX), 1);
       goto release;
     }
   else if (!bit_field && left->aop->type == AOP_STL && result->aop->type != AOP_DUMMY)
     {
       struct asmop stackop_impl;
-      init_stackop (&stackop_impl, result->aop->size, left->aop->aopu.stk_off + (long)offset);
+      init_stackop (&stackop_impl, result->aop->size, left->aop->aopu.stk_off + offset);
       genMove (result->aop, &stackop_impl, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       goto release;
     }
   else if (bit_field && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) && result->aop->type != AOP_DUMMY && blen <= 8 && aopInReg (result->aop, 0, XL_IDX))
     {
       if (left->aop->type == AOP_LIT)
-        emit2("ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), offset);
+        emit2("ld", offset ? "%s, 0x%02x%02x+%d" : "%s, 0x%02x%02x", aopGet (result->aop, 0), byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), (unsigned int)offset);
       else
-        emit2("ld", offset ? "%s, %s+%d" : "%s, %s+%d", aopGet (result->aop, 0), left->aop->aopu.immd, left->aop->aopu.immd_off + offset);
+        emit2("ld", offset ? "%s, %s+%d" : "%s, %s+%d", aopGet (result->aop, 0), left->aop->aopu.immd, (int)(left->aop->aopu.immd_off + offset));
       cost (3, 1);
       handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
       i = 1;
@@ -5553,7 +5552,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
       genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
       if ((unsigned)offset + size - 1 >= 255)
         {
-          emit2 ("addw", "y, #%d", offset);
+          emit2 ("addw", "y, #%ld", offset);
           cost (3, 1);
           spillReg (C_IDX);
           offset = 0;
@@ -5583,7 +5582,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
             }
           else
             {
-              emit2 ("ldw", use_z ? "%s, (%d, z)" : "%s, (%d, y)", aopGet2 (taop, 0), offset + i);
+              emit2 ("ldw", use_z ? "%s, (%d, z)" : "%s, (%d, y)", aopGet2 (taop, 0), (int)(offset + i));
               cost (2 + (use_z || offset + i > 255), 1);
             }
           genMove_o (result->aop, i, taop, 0, 2, xl_dead, false, true, false, true);
@@ -5606,7 +5605,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
             }
           else
             {
-              emit2 ("ld", use_z ? "%s, (%d, z)" : "%s, (%d, y)", aopGet (result->aop, i), offset + i);
+              emit2 ("ld", use_z ? "%s, (%d, z)" : "%s, (%d, y)", aopGet (result->aop, i), (int)(offset + i));
               cost (3 + (use_z || offset + i > 255), 1);
             }
           continue;
@@ -5622,7 +5621,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
         }
       else
         {
-          emit2 ("ld", use_z ? "xl, (%d, z)" : "xl, (%d, y)", offset + i);
+          emit2 ("ld", use_z ? "xl, (%d, z)" : "xl, (%d, y)", (int)(offset + i));
           cost (2 + (use_z || offset + i > 255), 1);
         }
 
