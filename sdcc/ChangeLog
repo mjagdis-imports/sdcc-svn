@@ -1,3 +1,119 @@
+2023-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Fix a use of an uninitialized struct member in generalized constant propagation analysis of some left shifts: bugs #3625, #3665.
+
+2023-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCmain.c (parseCmdLine): place -Wl-f options in linkOptionsSet2,
+	  (linkEdit): pass linkOptionsSet2 for $L,
+	  (assemble): pass NULL for $L
+	* src/SDCCutil.h,
+	* src/SDCCutil.c (buildCmdLine): added list2 for $L command line options
+	* src/ds390/main.c (_tininative_do_assemble): pass NULL for $L
+	* src/avr/main.c (_linkCmd),
+	* src/ds390/main.c (_linkCmd),
+	* src/hc08/main.c (_linkCmd),
+	* src/mcs51/main.c (_linkCmd),
+	* src/mos6502/main.c (_linkCmd),
+	* src/pdk/main.c (_linkCmd),
+	* src/stm8/main.c (_linkCmd),
+	* src/z80/main.c (_z80LinkCmd): added $L for command line options
+	* src/z80/main.c (_sm83_rgblink): pass NULL for $L
+	* src/SDCCsymt.c (checkSClass): cosmetics
+
+2023-10-05 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/linksrc/lkmain.c (parse): warn about ignored nested linker script
+
+2023-10-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3660.c:
+	  Fix bug #3660.
+
+2023-10-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Rabbit interrupt handling fixes, based on patch by D-mo.
+
+2023-10-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asrab/rabmch.c:
+	  Fix bug #3661, patch by D-mo.
+	* support/regression/tests/bug-3661.c:
+	  Regression test for bug #3661.
+
+2023-09-30 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/ports/uc6502-stack-auto/support.c,
+	* support/regression/ports/uc6502-stack-auto/uCsim.cmd,
+	* support/regression/ports/uc6502/support.c,
+	* support/regression/ports/uc6502/uCsim.cmd: moved simif to safer location
+
+2023-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/r2k/crt0.s,
+	  device/lib/r2ka/crt0.s,
+	  device/lib/r3ka/crt0.s:
+	  Place interrupt vector table at multiple of 512B, as required on Rabbit 3000 and above.
+
+2023-09-27 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/bug-3563.c: revert accidental enable of failing test
+
+2023-09-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/mm-pnvi-ae-udi-pointer_from_int_disambiguation_1_xy.c:
+	  Disable test for FreeBSD 13 / clang-14, where it fails due to known bug.
+
+2023-09-25 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/mos6502-stack-auto/crt0.s,
+	* device/lib/mos6502/crt0.s: clear zero page, reorder areas
+	* src/mos6502/main.c(m6502_finaliseOptions): use whole zero page,
+	  improved default memory map
+	  (m6502_genAssemblerPreamble): move __DPTR & __TEMP to fixed
+	  address from 0 and up,
+	  (m6502_genIVT): fixed, allow only 2 interrupts
+	* support/regression/ports/uc6502-stack-auto/spec.mk,
+	* support/regression/ports/uc6502/spec.mk: use more logical memory map
+	* support/regression/gte/pr34099.c: suppress valid warning
+	* support/regression/gte/pr97404.c,
+	* support/regression/gte/pr97836.c,
+	* support/regression/tests/bug-3563.c: fixed warnings
+
+2023-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asstm8/stm8.h,
+	  sdas/asstm8/stm8mch.c,
+	  sdas/linksrc/lklist.c,
+	  src/SDCCopt.c,
+	  src/SDCCval.c:
+	  Fix a few cases of undefined behavior.
+	* device/lib/r*k*/crt0.s:
+	  Fix location of secondary watchdog interrupt vector (part of bug #3652).
+
+2023-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/charconst.c,
+	  support/regression/tests/escape.c,
+	  support/regression/tests/new_wide.c,
+	  support/regression/tests/string.c,
+	  support/regression/tests/wchar.c.in:
+	  Handle hosts that are C11-compliant on the compiler side, but not the library side better.
+	* support/regression/tests/wchar.c.in:
+	  Disable a test for OpenBSD, where it fails due to known OpenBSD bug.
+
+2023-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/mm-pnvi-ae-udi-pointer_from_int_disambiguation_1_xy.c,
+	  support/regression/tests/mm-pnvi-ae-udi-provenance_basic_using_uintptr_t_auto_yx.c,
+	  support/regression/tests/mm-pnvi-ae-udi-provenance_basic_using_uintptr_t_global_xy.c,
+	  support/regression/tests/setjmp.c,
+	  support/regression/tests/wchar.c.in:
+	  Disable tests where they fail due to known FreeBSD 13 bugs.
+
 2023-09-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
@@ -13,7 +129,7 @@
 	* support/regression/tests/bug-3641.c:
 	  Disable test for target where it fails due to known bug #3643.
 
-2023-09-09 Philipp Klaus Krause <philipp@colecovision.eu>
+2023-09-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-3641.c:
 	  Support pre-C23 hosts in test for bug #3641.
