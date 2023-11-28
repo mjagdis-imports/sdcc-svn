@@ -1737,9 +1737,9 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
 -
@@ -1755,7 +1755,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \end_layout
 
 \end_inset
@@ -1960,9 +1960,9 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
 -
@@ -1978,7 +1978,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \end_layout
 
 \end_inset
@@ -2707,7 +2707,24 @@ In 3.7.0 mcs51 and ds390 got a full _Bool/bool type, separate from __bit.
 \end_layout
 
 \begin_layout Itemize
-In 3.7.0, the option –nojtbound and the corresponding pragma have been deprecated.
+In 3.7.0, the option 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nojtbound
+\series default
+ and the corresponding pragma have been deprecated.
 \end_layout
 
 \begin_layout Itemize
@@ -2729,7 +2746,9 @@ In 4.1.1, typeof.h has been removed.
 \end_layout
 
 \begin_layout Itemize
-In 4.1.3, support for -
+In 4.1.3, support for 
+\series bold
+-
 \begin_inset ERT
 status collapsed
 
@@ -2742,7 +2761,9 @@ status collapsed
 
 \end_inset
 
--oldralloc has been removed for the z80-related backends.
+-oldralloc
+\series default
+ has been removed for the z80-related backends.
 \end_layout
 
 \begin_layout Itemize
@@ -2751,7 +2772,24 @@ In 4.1.10, the default calling convention switched from __sdccall(0) to __sdccal
 \end_layout
 
 \begin_layout Itemize
-In 4.1.10, support for –profile has been removed for gbz80.
+In 4.1.10, support for
+\series bold
+ -
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-profile
+\series default
+ has been removed for gbz80.
 \end_layout
 
 \begin_layout Itemize
@@ -2765,11 +2803,45 @@ In 4.1.12, the default calling convention switched from __sdccall(0) to __sdccal
 \end_layout
 
 \begin_layout Itemize
-In 4.1.12, support for –profile has been removed for z80, z180, z80n.
+In 4.1.12, support for 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-profile
+\series default
+ has been removed for z80, z180, z80n.
 \end_layout
 
 \begin_layout Itemize
-In 4.1.13, support for –profile has been removed.
+In 4.1.13, support for 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-profile
+\series default
+ has been removed.
 \end_layout
 
 \begin_layout Itemize
@@ -2796,8 +2868,24 @@ In 4.2.6, bool is chosen as the underlying integer type for enumerations with
 \end_layout
 
 \begin_layout Itemize
-In 4.2.9, support for –pedantic-parse-number and #pragma pedantic_parse_numer
- was dropped.
+In 4.2.9, support for
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-pedantic-parse-number
+\series default
+ and #pragma pedantic_parse_numer was dropped.
 \end_layout
 
 \begin_layout Itemize
@@ -2837,6 +2925,27 @@ In 4.2.14, byte order in output from the %p specifier of printf()-family functio
 \begin_layout Itemize
 In 4.3.1, __builtin_rlc, __builtin_rrc and __builtin_swap were replaced by
  __builtin_rot.
+\end_layout
+
+\begin_layout Itemize
+In 4.3.6, support for 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-parms-in-bank1
+\series default
+ was removed from the mcs51 port.
 \end_layout
 
 \begin_layout Section
@@ -9772,7 +9881,7 @@ Except for the issues mentioned in the section above, this standard is supported
 \end_layout
 
 \begin_layout Subsection
-ISO C2X
+ISO C23
 \end_layout
 
 \begin_layout Standard
@@ -9791,7 +9900,7 @@ status open
 
 \end_inset
 
--std-c2x
+-std-c23
 \begin_inset Index idx
 status open
 
@@ -9809,7 +9918,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \end_layout
 
 \end_inset
@@ -9890,15 +9999,11 @@ not supported.
 \end_layout
 
 \begin_layout Itemize
-Compund literals are not supported.
+Compound literals are not supported.
 \end_layout
 
 \begin_layout Itemize
 Support for attributes is slightly incomplete.
-\end_layout
-
-\begin_layout Itemize
-The preprocessor is not C2X-compatible.
 \end_layout
 
 \begin_layout Itemize
@@ -9918,9 +10023,9 @@ constexpr is not implemented.
 \end_layout
 
 \begin_layout Itemize
-SDCC deviates from the current C2X standard draft N3047 in tag compatibility
- for unions: in SDCC, redeclarations of unions are required to have their
- members in the same order as previous declarations.
+SDCC deviates from the C2X standard draft N3047 in tag compatibility for
+ unions: in SDCC, redeclarations of unions are required to have their members
+ in the same order as previous declarations.
  The rule in N3047 is now considered a mistake by many, and will hopefully
  be changed to the SDCC behaviour via a national body comment for the final
  version of the standard.
@@ -15588,9 +15693,9 @@ iso9899:2018
 \labelwidthstring 00.00.0000
 
 \series bold
-c2x 
+c23 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
 -
@@ -15606,17 +15711,17 @@ status collapsed
 
 \end_inset
 
--std-sdcc2x
+-std-sdcc23
 \end_layout
 
 \end_inset
 
 
 \series default
- Follow the ISO C2X standard.
+ Follow the ISO C23 standard.
  Alternative spelling: 
 \series bold
-c23
+c2x
 \end_layout
 
 \begin_layout Labeling
@@ -15761,9 +15866,9 @@ sdcc18
 \labelwidthstring 00.00.0000
 
 \series bold
-sdcc2x 
+sdcc23 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
 -
@@ -15779,18 +15884,18 @@ status collapsed
 
 \end_inset
 
--std-sdcc2x
+-std-sdcc23
 \end_layout
 
 \end_inset
 
 
 \series default
- Generally follow the ISO C2X standard, but allow some SDCC behaviour that
+ Generally follow the ISO C23 standard, but allow some SDCC behaviour that
  conflicts with the standard.
  Alternative spelling: 
 \series bold
-sdcc23
+sdcc2x
 \end_layout
 
 \end_deeper
@@ -37210,7 +37315,51 @@ c11
 \begin_layout Itemize
 
 \series bold
-std_c2x
+std_sdcc11
+\series default
+ 
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma std
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+sdcc11
+\end_layout
+
+\end_inset
+
+- Follow the C11 standard, but allow SDCC features that conflict with the
+ standard.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+std_c23
 \series default
 
 \begin_inset Index idx
@@ -37242,13 +37391,61 @@ _
 
 \end_inset
 
-c2x
+c23
 \end_layout
 
 \end_inset
 
-- Follow the C2X standard and disable SDCC features that conflict with the
- standard.
+- Follow the C23 standard and disable SDCC features that conflict with the
+ standard (for backwards compatibility, 
+\series bold
+std_c2x
+\series default
+ still exists as an alias).
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+std_sdcc99
+\series default
+ 
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma std
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+sdcc23
+\end_layout
+
+\end_inset
+
+- Generally follow the C23 standard, but allow SDCC features that conflict
+ with the standard.
 \end_layout
 
 \begin_layout Itemize
@@ -42976,8 +43173,8 @@ ACC (mcs51, ds390 register)
 
 
 \emph default
- to pass the first (non-bit) parameter to a function, and also to pass the
- return value 
+ to pass the first (non-bit, non-struct) parameter to a function, and also
+ to pass the return value 
 \begin_inset Index idx
 status collapsed
 
@@ -43074,7 +43271,8 @@ This might not be the case of certain memory models (medium???)
 \end_layout
 
 \begin_layout Standard
-The second parameter onwards is either allocated on the stack (for reentrant
+Further such parameters (and all struct parameters, as well as the bit parameter
+s from the 9th onwards) are either allocated on the stack (for reentrant
  routines or if -
 \begin_inset ERT
 status collapsed
@@ -43092,8 +43290,9 @@ status collapsed
 \end_layout
 
 \begin_layout Standard
-Bit parameters are passed in a virtual register called 'bits' in bit-addressable
- space for reentrant functions or allocated directly in bit memory otherwise.
+The first 8 bit parameters are passed in a virtual register called 'bits'
+ in bit-addressable space for reentrant functions or allocated directly
+ in bit memory otherwise.
 \end_layout
 
 \begin_layout Standard
@@ -70544,11 +70743,11 @@ wiki
 
  (preliminary link 
 \begin_inset Flex URL
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
-http://sdcc.sourceforge.net/wiki/index.php/SDCC_internals_and_porting
+https://sourceforge.net/p/sdcc/wiki/Adding%20a%20port/
 \end_layout
 
 \end_inset

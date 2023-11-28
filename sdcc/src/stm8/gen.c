@@ -354,7 +354,8 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
 }
 
 /*-----------------------------------------------------------------*/
-/* aopIsLitVal - asmop from offset is val                          */
+/* aopIsLitVal - asmop from offset is val.                         */
+/* False negatives are possible.                                   */
 /*-----------------------------------------------------------------*/
 static bool
 aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
@@ -384,6 +385,49 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
     }
 
   return (true);
+}
+
+/*-----------------------------------------------------------------*/
+/* aopIsNotLitVal - asmop from offset is not val.                  */
+/* False negatives are possible.                                   */
+/* Note that both aopIsLitVal and aopIsNotLitVal can be false for  */
+/* same arguments: we might just not have enough information.      */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsNotLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
+{
+  wassert (size <= sizeof (unsigned long long int)); // Make sure we are not testing outside of argument val.
+
+  for(; size; size--, offset++)
+    {
+      unsigned char b = val & 0xff;
+      val >>= 8;
+
+      // Leading zeroes
+      if (aop->size <= offset && b)
+        return (true);
+
+      // Information from generalized constant propagation analysis
+      if (!aop->valinfo.anything && offset < 8)
+        {
+          unsigned char knownbitsmask = aop->valinfo.knownbitsmask >> (offset * 8);
+          unsigned char knownbits = aop->valinfo.knownbits >> (offset * 8);
+
+          if (knownbits & knownbitsmask != b & knownbitsmask)
+            return (true);
+          if (!offset && aop->valinfo.min > 0 && aop->valinfo.max <= 255 &&
+            (aop->valinfo.min > b || aop->valinfo.min < b))
+            return (true);
+        }
+
+      if (aop->type != AOP_LIT)
+        continue;
+
+      if (byteOfVal (aop->aopu.aop_lit, offset) != b)
+        return (true);
+    }
+
+  return (false);
 }
 
 static void
@@ -1238,6 +1282,10 @@ aopRet (sym_link *ftype)
   // Cosmic passes return values larger than 16 bits in pseudoregisters.
   if (FUNC_ISCOSMIC (ftype) && size > 2)
     werror (E_COSMIC_LARGE_RETURN);
+
+  const bool bigreturn = (size > 4) || IS_STRUCT (ftype->next);
+  if (bigreturn)
+    return (0);
 
   switch (size)
     {
@@ -2256,12 +2304,10 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       // Find lowest byte that can be assigned and needs to be assigned.
       for (i = 0; i < n; i++)
         {
-          int j;
-
           if (assigned[i] || !source->aopu.bytes[soffset + i].in_reg)
             continue;
 
-          for (j = 0; j < n; j++)
+          for (int j = 0; j < n; j++)
             {
               if (!source->aopu.bytes[soffset + j].in_reg || !result->aopu.bytes[roffset + i].in_reg)
                 continue;
@@ -3377,6 +3423,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
               cheapMove (result_aop, i, ASMOP_A, 0, false);
               pushed_a = true;
             }
+          started = true;
           i++;
         }
       else
@@ -7226,7 +7273,7 @@ genRot1 (iCode *ic)
                   symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
                   if (!regalloc_dry_run)
                     emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
-                  emit2 ("or", "#0x80");
+                  emit2 ("or", "a, #0x80");
                   cost (4, 2);
                   emitLabel (tlbl);
                 }
@@ -7555,7 +7602,7 @@ genLeftShift (const iCode *ic)
   else
     shiftop = result->aop;
 
-  iterations = (right->aop->type == AOP_LIT ? byteOfVal (right->aop->aopu.aop_lit, 0) : 2);
+  iterations = (right->aop->type == AOP_LIT ? byteOfVal (right->aop->aopu.aop_lit, 0) : 2); // Use 2 as a guess for estimating hte cycle count.
 
   // Avoid overwriting shift count on stack when moving to shiftop.
   if (aopOnStack (right->aop, 0, 1) && aopRS (shiftop))
@@ -7655,7 +7702,7 @@ genLeftShift (const iCode *ic)
   else
     cheapMove (ASMOP_A, 0, right->aop, 0, false);
 
-  if (right->aop->type != AOP_LIT || aopIsLitVal (right->aop, 0, 1, 0))
+  if (!aopIsNotLitVal (right->aop, 0, 1, 0))
     {
       if (!aopOnStack (right->aop, 0, 1) && right->aop->type != AOP_DIR || premoved_count)
         emit3 (A_TNZ, ASMOP_A, 0);
@@ -8238,7 +8285,7 @@ genRightShift (const iCode *ic)
   else
     cheapMove (ASMOP_A, 0, right->aop, 0, false);
 
-  if (right->aop->type != AOP_LIT || aopIsLitVal (right->aop, 0, 1, 0))
+  if (!aopIsNotLitVal (right->aop, 0, 1, 0))
     {
       if (!aopOnStack (right->aop, 0, 1) && right->aop->type != AOP_DIR)
         emit3 (A_TNZ, ASMOP_A, 0);
@@ -9874,7 +9921,7 @@ drySTM8iCode (iCode *ic)
 
   wassert (regalloc_dry_run);
 
-  const unsigned int byte_cost_weight = 2 << (optimize.codeSize * 3 + !optimize.codeSpeed * 3);
+  const unsigned int byte_cost_weight = 2u << (optimize.codeSize * 3 + !optimize.codeSpeed * 3);
 
   return ((float)regalloc_dry_run_cost_bytes * byte_cost_weight + (float)regalloc_dry_run_cost_cycles * ic->count);
 }

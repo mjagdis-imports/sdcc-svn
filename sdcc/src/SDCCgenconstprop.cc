@@ -108,7 +108,7 @@ getTypeValinfo (sym_link *type)
   v.anything = true;
   v.nothing = false;
   // Initialize all members of v, to ensure we don't read uninitalized memory later.
-  v.min = v.max = 0;
+  v.min = v.max = 0ll;
   v.knownbitsmask = 0ull;
   v.knownbits = 0ull;
 
@@ -124,8 +124,8 @@ getTypeValinfo (sym_link *type)
     {
       v.anything = false;
       v.min = 0;
-      v.max = (1ul << (GPTRSIZE * 8)) - 1;
-      v.knownbitsmask = ~((unsigned long)v.max);
+      v.max = (1ll << (GPTRSIZE * 8)) - 1;
+      v.knownbitsmask = ~((unsigned long long)v.max);
       if (TARGET_IS_MCS51 && IS_PTR (type) && !IS_GENPTR (type) ||
         TARGET_PDK_LIKE && IS_PTR (type) && (DCL_TYPE (type) == CPOINTER || DCL_TYPE (type) == POINTER))
         {
@@ -350,7 +350,7 @@ valinfoUpdate (struct valinfo *v)
       if (bitmax < (unsigned long long)(v->max))
         v->max = bitmax;
       unsigned long long bitmin = v->knownbitsmask & v->knownbits;
-      if (bitmin < (unsigned long long)(v->min))
+      if (bitmin > (unsigned long long)(v->min))
         v->min = bitmin;
     }
 }
@@ -760,7 +760,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
 
 #ifdef DEBUG_GCP_ANALYSIS
       if (localchange)
-        std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
+        std::cout << "Recompute node " << i << " ic " << ic->key << "\n";std::cout << "getTypeValinfo: resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << std::dec << "\n";
 #endif
 
       if (!localchange) // Input didn't change. No need to recompute result.
@@ -867,7 +867,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           valinfoUpdate (&resultvalinfo);
 #ifdef DEBUG_GCP_ANALYSIS
-          std::cout << "resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << std::dec << "\n";
+          std::cout << "resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << " knownbits 0x" << resultvalinfo.knownbits << std::dec << " min " << resultvalinfo.min << "\n";
 #endif
           if (!ic->resultvalinfo)
             ic->resultvalinfo = new struct valinfo;
@@ -954,12 +954,9 @@ optimizeValinfoConst (iCode *sic)
 #ifdef DEBUG_GCP_OPT
               std::cout << "Replace result at " << ic->key << ". anything " << vresult.anything << " min " << vresult.min << " max " << vresult.max << "\n";
 #endif
-              if (IS_SYMOP (left))
-                bitVectUnSetBit (OP_USES (left), ic->key);
-              if (IS_SYMOP (right))
-                bitVectUnSetBit (OP_USES (right), ic->key);
+              detachiCodeOperand (&ic->left, ic);
+              detachiCodeOperand (&ic->right, ic);
               ic->op = '=';
-              ic->left = NULL;
               ic->right = operandFromValue (valCastLiteral (operandType (result), vresult.min, vresult.min), false);
             }
           else
@@ -969,16 +966,14 @@ optimizeValinfoConst (iCode *sic)
 #ifdef DEBUG_GCP_OPT
                   std::cout << "Replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
 #endif
-                  bitVectUnSetBit (OP_USES (left), ic->key);
-                  ic->left = operandFromValue (valCastLiteral (operandType (left), vleft.min, vleft.min), false);
+                  attachiCodeOperand (operandFromValue (valCastLiteral (operandType (left), vleft.min, vleft.min), false), &ic->left, ic);
                 }
               if (right && IS_ITEMP (right) && !vright.anything && vright.min == vright.max)
                 {
 #ifdef DEBUG_GCP_OPT
                   std::cout << "Replace right at " << ic->key << "\n";std::cout << "anything " << vleft.anything << " min " << vleft.min << " max " << vleft.max << "\n";
 #endif
-                  bitVectUnSetBit (OP_USES (right), ic->key);
-                  ic->right = operandFromValue (valCastLiteral (operandType (right), vright.min, vright.min), false);
+                  attachiCodeOperand (operandFromValue (valCastLiteral (operandType (right), vright.min, vright.min), false), &ic->right, ic);
                 }
             }
           

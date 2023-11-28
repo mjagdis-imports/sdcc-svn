@@ -239,26 +239,6 @@ static void invalidateAll()
   rtrack_data_unset (A_IDX);
 }
 
-
-static int regidxfromregname (const char* const s)
-{
-  unsigned int i;
-
-  for (i = 0; i < END_IDX; i++)
-    {
-       if (regs8051[i].name)
-         if (!strncmp (s, regs8051[i].name, strlen(regs8051[i].name)))
-            return i;
-
-       if (regs8051[i].dname)
-         if (!strncmp (s, regs8051[i].dname, strlen(regs8051[i].dname)))
-            return i;
-    }
-
-  return -1;
-}
-
-
 static int valuefromliteral (const char* const s)
 {
   char* tmp = NULL;
@@ -307,13 +287,16 @@ bool _mcs51_rtrackUpdate (const char *line)
       /* mov to register (r0..r7, dpl, dph, a, b)*/
       if (!strncmp (line, "mov\t", 4))
         {
-          int regIdx = regidxfromregname (line + 4);
+          int regIdx = mcs51_regname_to_idx (line + 4);
 
           if (0 <= regIdx)
             {
               char *argument = strstr (line, ",") + 1;
               char *s;
               int value;
+
+              while (*argument && isblank (*argument))
+                argument++;
 
               value = strtol (argument + 1, &s, 16);
 
@@ -329,15 +312,16 @@ bool _mcs51_rtrackUpdate (const char *line)
                       (regIdx != A_IDX) && (regIdx != DPL_IDX) && (regIdx != DPH_IDX))
                       /* ignore DPL/DPH for now as peephole rule for MOV DPTR is much better */
                     {
-                      D(emitcode (";", "genFromRTrack replaced\t%s", line));
+                      /* occurs in regression test mcs51-small */
+                      D(emitcode (";", "genFromRTrack-1 replaced\t%s", line));
                       emitcode ("mov", "%s,a", regs8051[regIdx].dname);
                       modified = true;
                     }
                   else if (regs8051[regIdx].rtrack.valueKnown && (value == regs8051[regIdx].rtrack.value + 1) &&
                            ((regIdx != A_IDX) || (0xff != regs8051[regIdx].rtrack.value)))
                     {
-                      /* does not occur in regression test mcs51-small */
-                      D(emitcode (";", "genFromRTrack replaced\t%s", line));
+                      /* occurs in regression test mcs51-small */
+                      D(emitcode (";", "genFromRTrack-2 replaced\t%s", line));
                       emitcode ("inc", "%s", regs8051[regIdx].name);
                       modified = true;
                     }
@@ -345,7 +329,8 @@ bool _mcs51_rtrackUpdate (const char *line)
                            ((regIdx != A_IDX) || (0x01 != regs8051[regIdx].rtrack.value)))
                     {
                       /* does not occur in regression test mcs51-small */
-                      D(emitcode (";", "genFromRTrack replaced\t%s", line));
+                      /* occurs in regression test mcs51-small-stack-auto */
+                      D(emitcode (";", "genFromRTrack-3 replaced\t%s", line));
                       emitcode ("dec", "%s", regs8051[regIdx].name);
                       modified = true;
                     }
@@ -358,9 +343,9 @@ bool _mcs51_rtrackUpdate (const char *line)
                   rtrack_data_set_symbol (regIdx, argument + 1);
                 }
               /* check mov from register to register */
-              else if (0 <= regidxfromregname (argument))
+              else if (0 <= mcs51_regname_to_idx (argument))
                 {
-                  rtrack_data_copy_dst_src (regIdx, regidxfromregname (argument));
+                  rtrack_data_copy_dst_src (regIdx, mcs51_regname_to_idx (argument));
                 }
               else
                 {
@@ -410,40 +395,40 @@ bool _mcs51_rtrackUpdate (const char *line)
                        const char* parm;
                     } reachable[] =
                     {
-                      {   1, "inc", "dptr"},
-                      {   2, "inc", "dptr"},
-                      { 256, "inc", "dph"},
-                      {-256, "dec", "dph"},
-                      {-255, "inc", "dpl"},    /* if overflow */
-                      {  -1, "dec", "dpl"},    /* if no overflow */
-                      { 255, "dec", "dpl"}     /* if overflow */
+                      {   1, "inc", "dptr"},  /* occurs in regression test mcs51-small */
+                      {   2, "inc", "dptr"},  /* occurs in regression test mcs51-small */
+                      { 256, "inc", "dph"},   /*                 does not occur in any regression test */
+                      {-256, "dec", "dph"},   /*                 does not occur in any regression test */
+                      {-255, "inc", "dpl"},   /* if overflow,    does not occur in any regression test */
+                      {  -1, "dec", "dpl"},   /* if no overflow, does not occur in any regression test */
+                      { 255, "dec", "dpl"}    /* if overflow,    does not occur in any regression test */
                     };
 
-                   unsigned int dptr = (regs8051[DPH_IDX].rtrack.value << 8 ) |
-                                        regs8051[DPL_IDX].rtrack.value;
-                   unsigned int i;
+                  unsigned int dptr = (regs8051[DPH_IDX].rtrack.value << 8 ) |
+                                       regs8051[DPL_IDX].rtrack.value;
+                  unsigned int i;
 
-                   for (i = 0; i < sizeof (reachable) / sizeof (reachable[0]); i++)
-                     {
-                       if (dptr + reachable[i].offset == value)
-                         {
-                           /* check if an overflow would occur */
-                           if ((reachable[i].offset == -255) && ((dptr & 0xff) != 0xff)) continue;
-                           if ((reachable[i].offset ==   -1) && ((dptr & 0xff) == 0x00)) continue;
-                           if ((reachable[i].offset ==  255) && ((dptr & 0xff) != 0x00)) continue;
+                  for (i = 0; i < sizeof (reachable) / sizeof (reachable[0]); i++)
+                    {
+                      if (dptr + reachable[i].offset == value)
+                        {
+                          /* check if an overflow would occur */
+                          if ((reachable[i].offset == -255) && ((dptr & 0xff) != 0xff)) continue;
+                          if ((reachable[i].offset ==   -1) && ((dptr & 0xff) == 0x00)) continue;
+                          if ((reachable[i].offset ==  255) && ((dptr & 0xff) != 0x00)) continue;
 
-                           /* does not occur in regression test mcs51-small */
-                           D(emitcode (";", "genFromRTrack replaced\t%s", line));
-                           emitcode (reachable[i].inst, "%s", reachable[i].parm);
-                           if (reachable[i].offset == 2)
-                             {
-                               emitcode (reachable[i].inst, "%s", reachable[i].parm);
-                             }
-                           modified = true;
-                           foundshortcut = 1;
-                           break;
-                         }
-                     };
+                          /* occurs in regression test mcs51-small */
+                          D(emitcode (";", "genFromRTrack-4 (%d) replaced\t%s", i, line));
+                          emitcode (reachable[i].inst, "%s", reachable[i].parm);
+                          if (reachable[i].offset == 2)
+                            {
+                              emitcode (reachable[i].inst, "%s", reachable[i].parm);
+                            }
+                          modified = true;
+                          foundshortcut = 1;
+                          break;
+                        }
+                    };
                 }
 
               if (!foundshortcut &&
@@ -455,8 +440,8 @@ bool _mcs51_rtrackUpdate (const char *line)
 
                   if (s != rtrackGetLit(s))
                     {
-                      /* does not occur in regression test mcs51-small */
-                      D(emitcode (";", "genFromRTrack replaced\t%s", line));
+                      /* does not occur in any regression test */
+                      D(emitcode (";", "genFromRTrack-5 replaced\t%s", line));
                       emitcode ("mov", "dpl,%s", rtrackGetLit (s));
                       modified = true;
                       foundshortcut = 1;
@@ -471,8 +456,8 @@ bool _mcs51_rtrackUpdate (const char *line)
 
                   if (s != rtrackGetLit (s))
                     {
-                      /* does not occur in regression test mcs51-small */
-                      D(emitcode (";", "genFromRTrack replaced\t%s", line));
+                      /* does not occur in any regression test */
+                      D(emitcode (";", "genFromRTrack-6 replaced\t%s", line));
                       emitcode ("mov", "dph,%s", rtrackGetLit (s));
                       modified = true;
                       foundshortcut = 1;
@@ -523,7 +508,8 @@ bool _mcs51_rtrackUpdate (const char *line)
               if (s != rtrackGetLit (s))
                 {
                   int lengthuptoargument = argument - (line + 4);
-                  D(emitcode (";", "1-genFromRTrack replaced\t%s", line));
+                  /* occurs in regression test mcs51-small */
+                  D(emitcode (";", "genFromRTrack-7 replaced\t%s", line));
                   emitcode ("mov", "%.*s%s",
                                   lengthuptoargument,
                                   line + 4,
@@ -560,7 +546,7 @@ bool _mcs51_rtrackUpdate (const char *line)
 
   if (!strncmp (line, "pop\t", 4))
     {
-      int regIdx = regidxfromregname (line + 4);
+      int regIdx = mcs51_regname_to_idx (line + 4);
       if (0 <= regIdx)
         {
           rtrack_data_unset (regIdx);
@@ -595,7 +581,7 @@ bool _mcs51_rtrackUpdate (const char *line)
         }
       if (!strncmp (line, "inc\t", 4))
         {
-          int regIdx = regidxfromregname (line + 4);
+          int regIdx = mcs51_regname_to_idx (line + 4);
           if (0 <= regIdx)
             {
               if (regs8051[regIdx].rtrack.valueKnown)
@@ -639,7 +625,7 @@ bool _mcs51_rtrackUpdate (const char *line)
      r2 is known to be 8 */
   if (!strncmp (line, "cjne\t", 5))
     {
-      int regIdx = regidxfromregname (line + 5);
+      int regIdx = mcs51_regname_to_idx (line + 5);
       if (0 <= regIdx)
         {
           char *argument = strstr (line, ",") + 1;
@@ -672,7 +658,7 @@ bool _mcs51_rtrackUpdate (const char *line)
 
   if (!strncmp (line, "djnz\t", 5))
     {
-      int regIdx = regidxfromregname (line + 5);
+      int regIdx = mcs51_regname_to_idx (line + 5);
       if (0 <= regIdx)
         {
           rtrack_data_set_val (regIdx, 0x00); // branch not taken
@@ -723,7 +709,7 @@ bool _mcs51_rtrackUpdate (const char *line)
         {
           if (!strncmp (line, "add\ta,", 6))
             {
-              int regIdx = regidxfromregname (line + 6);
+              int regIdx = mcs51_regname_to_idx (line + 6);
 
               if (0 <= regIdx && regs8051[regIdx].rtrack.valueKnown)
                 {
@@ -739,7 +725,7 @@ bool _mcs51_rtrackUpdate (const char *line)
 
           if (!strncmp (line, "anl\ta,", 6))
             {
-              int regIdx = regidxfromregname (line + 6);
+              int regIdx = mcs51_regname_to_idx (line + 6);
 
               if (0 <= regIdx && regs8051[regIdx].rtrack.valueKnown)
                 {
@@ -755,7 +741,7 @@ bool _mcs51_rtrackUpdate (const char *line)
 
           if (!strncmp (line, "orl\ta,", 6))
             {
-              int regIdx = regidxfromregname (line + 6);
+              int regIdx = mcs51_regname_to_idx (line + 6);
 
               if (0 <= regIdx && regs8051[regIdx].rtrack.valueKnown)
                 {
@@ -771,7 +757,7 @@ bool _mcs51_rtrackUpdate (const char *line)
 
           if (!strncmp (line, "xrl\ta,", 6))
             {
-              int regIdx = regidxfromregname (line + 6);
+              int regIdx = mcs51_regname_to_idx (line + 6);
 
               if (0 <= regIdx && regs8051[regIdx].rtrack.valueKnown)
                 {
@@ -803,7 +789,7 @@ bool _mcs51_rtrackUpdate (const char *line)
 
   if (!strncmp (line, "dec\t", 4))
     {
-      int regIdx = regidxfromregname (line + 4);
+      int regIdx = mcs51_regname_to_idx (line + 4);
       if (0 <= regIdx)
         {
           if (regs8051[regIdx].rtrack.valueKnown)
@@ -937,7 +923,7 @@ bool _mcs51_rtrackUpdate (const char *line)
   if (!strncmp (line, "xch\ta,", 6))
     {
       /* handle xch from register (r0..r7, dpl, dph, b) */
-      int regIdx = regidxfromregname (line + 6);
+      int regIdx = mcs51_regname_to_idx (line + 6);
       if (0 <= regIdx)
         {
           void* swap = Safe_malloc (sizeof regs8051[A_IDX].rtrack);
