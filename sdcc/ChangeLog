@@ -1,3 +1,9 @@
+2023-11-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/f8/Makefile.in,
+	  src/f8/ralloc2.cc:
+	  Update f8 port for changes in trunk.
+
 2023-11-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/mcs51/main.c:
