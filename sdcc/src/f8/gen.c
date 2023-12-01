@@ -1704,7 +1704,7 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
     {
       for (int i = n - 1; i >= 0;)
         {
-          if (!aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
+          if (assigned[i] || !aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
             {
               i--;
               continue;
@@ -1722,9 +1722,26 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
               continue;
             }
 
-          // todo: attempt two-byte transfer, like below.
+          // Do not overwrite still-needed byte on stack.
+          for (int j = 0; j < n; j++)
+            if (!assigned[j] && aopOnStack (source, soffset + j, 1) && result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + j].byteu.stk)
+              goto outer_continue_down;
 
-          if (!assigned[i] && (xl_free || really_do_it_now))
+          // Do two bytes at once, if possible.
+          if (i > 0 && !assigned[i - 1] && aopOnStack (result, roffset + i - 1, 1) && aopOnStack (source, soffset + i - 1, 1) &&
+            (y_free || (xl_free && xh_free))) // Prefer y, since it is cheaper. Using x is still cheaper than using xl twice below, though.
+            {
+              asmop *taop = y_free ? ASMOP_Y : ASMOP_X;
+              emit3_o (A_LDW, taop, 0, source, soffset + i - 1);
+              emit3_o (A_LDW, result, roffset + i - 1, taop, 0);
+              assigned[i] = true;
+              assigned[i - 1] = true;
+              (*size) -= 2;
+              i -= 2;
+              continue;
+            }
+
+          if (xl_free || really_do_it_now)
             {
               if (!xl_free)
                 push (ASMOP_XL, 0, 1);
@@ -1735,22 +1752,22 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
               assigned[i] = true;
               (*size)--;
             }
-          i--;  
+outer_continue_down:
+          i--;
         }
     }
   else
     {
       for (int i = 0; i < n;)
         {
-          if (!aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
+          if (assigned[i] || !aopOnStack (result, roffset + i, 1) || !aopOnStack (source, soffset + i, 1))
             {
               i++;
               continue;
             }
     
           // Same location.
-          if (!assigned[i] &&
-            result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
+          if (result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
             {
               wassert_bt (*size >= 1);
     
@@ -1759,8 +1776,14 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
               i++;
               continue;
             }
-    
-          if (i + 1 < n && !assigned[i] && !assigned[i + 1] && aopOnStack (result, roffset + i + 1, 1) && aopOnStack (source, soffset + i + 1, 1) && // Transfer two bytes at once
+
+          // Do not overwrite still-needed byte on stack.
+          for (int j = 0; j < n; j++)
+            if (!assigned[j] && aopOnStack (source, soffset + j, 1) && result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + j].byteu.stk)
+              goto outer_continue_up;
+
+          // Do two bytes at once, if possible.
+          if (i + 1 < n && !assigned[i + 1] && aopOnStack (result, roffset + i + 1, 1) && aopOnStack (source, soffset + i + 1, 1) &&
             (y_free || (xl_free && xh_free))) // Prefer y, since it is cheaper. Using x is still cheaper than using xl twice below, though.
             {
               asmop *taop = y_free ? ASMOP_Y : ASMOP_X;
@@ -1773,7 +1796,7 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
               continue;
             }
     
-          if (!assigned[i] && (xl_free || really_do_it_now))
+          if (xl_free || really_do_it_now)
             {
               if (!xl_free)
                 push (ASMOP_XL, 0, 1);
@@ -1784,7 +1807,8 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
               assigned[i] = true;
               (*size)--;
             }
-          i++;  
+outer_continue_up:
+          i++;
         }
     }
 }
@@ -6163,10 +6187,14 @@ genCast (const iCode *ic)
       cost (2, 1);
       if (!SPEC_USIGN (resulttype)) // Sign-extend
         {
+          unsigned testmask = 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1);
           symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-          push (ASMOP_XL, 0, 1);
-          emit2 ("and", "xl, #0x%02x", 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1));
-          pop (ASMOP_XL, 0, 1);
+          if (testmask != topbytemask)
+            {
+              push (ASMOP_XL, 0, 1);
+              emit2 ("and", "xl, #0x%02x", testmask);
+              pop (ASMOP_XL, 0, 1);
+            }
           if (!regalloc_dry_run)
             emit2 ("jrz", "#!tlabel", labelKey2num (tlbl->key));
           emit2 ("or", "xl, #0x%02x", ~topbytemask & 0xff);
