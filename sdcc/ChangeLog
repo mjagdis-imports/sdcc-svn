@@ -1,7 +1,7 @@
 2023-12-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Fixes and improvements for (partial) stack-to-stack copies.
+	  Fixes and improvements for (partial) stack-to-stack copies. Improve struct argument passing codegen.
 
 2023-11-30 Philipp Klaus Krause <philipp@colecovision.eu>
 

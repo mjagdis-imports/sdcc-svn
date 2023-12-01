@@ -3025,7 +3025,7 @@ genPointerPush (const iCode *ic)
 
   int size = getSize (operandType (left)->next);
 
-  int offset = operandLitValue (IC_RIGHT(ic));
+  int offset = operandLitValue (ic->right);
 
   if (regDead (Z_IDX, ic) || aopInReg (left->aop, 0, Z_IDX))
     {
@@ -3045,7 +3045,7 @@ genPointerPush (const iCode *ic)
           else if (regDead (XL_IDX, ic))
             {
               emit2 ("ld", "xl, (%d, z)", o);
-              cost (2, 1);
+              cost (3, 1);
               push (ASMOP_XL, 0, 1);
               i -= 1;
             }
@@ -3058,6 +3058,18 @@ genPointerPush (const iCode *ic)
               updateCFA ();
               i -= 1;
             }
+        }
+    }
+  else if ((regDead (Y_IDX, ic) || aopInReg (left->aop, 0, Y_IDX)) && regDead (XL_IDX, ic) && offset + size - 1 <= 255)
+    {
+      genMove (ASMOP_Y, ic->left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+      for(int i = size - 1; i >= 0;)
+        {
+          int o = i + offset;
+          emit2 ("ld", "xl, (%d, y)", o);
+          cost (2, 1);
+          push (ASMOP_XL, 0, 1);
+          i -= 1;
         }
     }
   else
