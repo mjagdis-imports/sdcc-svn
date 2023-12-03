@@ -85,6 +85,55 @@ l4trap:
 	trap
 l4:
 
+	; unprefixed loads from (y) and (n, y)
+	pushw	#0xa55a
+	ldw	y, sp
+	ld	xl, (y)
+	cp	xl, #0x5a
+	jrnz	l5trap
+	ld	xl, (1, y)
+	cp	xl, #0xa5
+	jrz	l5
+l5trap:
+	trap
+l5:
+
+	; altacc loads from (y) and (n, y)
+	ld	xh, (y)
+	cp	xh, #0x5a
+	jrnz	l6trap
+	ld	xh, (1, y)
+	cp	xh, #0xa5
+	jrz	l6
+l6trap:
+	trap
+l6:
+
+	; altacc'' loads from (y) and (n, y)
+	ld	zl, (y)
+	cp	zl, #0x5a
+	jrnz	l7trap
+	ld	zl, (1, y)
+	cp	zl, #0xa5
+	jrz	l7
+l7trap:
+	trap
+l7:
+
+	; altacc' loads from (y) and (n, y)
+	pushw	#0xa55a
+	ldw	y, sp
+	ld	yl, (y)
+	cp	yl, #0x5a
+	jrnz	l8trap
+	ldw	y, sp
+	ld	yl, (1, y)
+	cp	yl, #0xa5
+	jrz	l8
+l8trap:
+	trap
+l8:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

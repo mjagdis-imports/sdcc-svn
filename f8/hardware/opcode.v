@@ -275,7 +275,7 @@ function automatic logic opcode_is_zrel(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_yrel(opcode_t opcode);
-	return(opcode == OPCODE_LDW_Y_YREL);
+	return(opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL);
 endfunction
 
 function automatic logic opcode_is_jr_d(opcode_t opcode);
