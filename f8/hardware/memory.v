@@ -50,12 +50,12 @@ module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrit
 		iread_data[15 : 8] <= mem[iread_addr + 1];
 		iread_data[23 : 16] <= mem[iread_addr + 2];
 		dread_data[7:0] <=
-			(dread_addr == dwrite_addr && dwrite_en[0]) ? dwrite_data[7:0] :
-			(dread_addr == dwrite_addr + 1 && dwrite_en[1]) ? dwrite_data[15:8] :
+			(dwrite_en[0] && dread_addr == dwrite_addr) ? dwrite_data[7:0] :
+			(dwrite_en[1] && dread_addr == dwrite_addr + 1) ? dwrite_data[15:8] :
 			mem[dread_addr];
 		dread_data[15:8] <=
-			(dread_addr == dwrite_addr && dwrite_en[1]) ? dwrite_data[15:8] :
-			(dread_addr + 1 == dwrite_addr && dwrite_en[0]) ? dwrite_data[7:0] :
+			(dwrite_en[1] && dread_addr == dwrite_addr) ? dwrite_data[15:8] :
+			(dwrite_en[0] && dread_addr + 1 == dwrite_addr) ? dwrite_data[7:0] :
 			mem[dread_addr + 1];
 		iread_valid <= 1;
 	end

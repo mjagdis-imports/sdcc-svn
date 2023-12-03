@@ -28,7 +28,7 @@
 	ld	xl, #0x5a
 	ld	(0xe, z), xl
 	ldw	y, (0, sp)
-	cpw	y, #0x5aa5
+	cpw	y, #0xa55a
 	jrnz	l1trap
 	ldw	y, #0x3ffe
 	ld	xl, #0xaa
@@ -41,6 +41,41 @@
 l1trap:
 	trap
 l1:	
+
+	; altacc
+	ld	xh, #0xa5
+	ld	(0, sp), xh
+	ld	xh, #0x5a
+	ld	(1, sp), xh
+	ldw	y, (0, sp)
+	cpw	y, #0x5aa5
+	jrnz	l2trap
+	ld	xh, #0xaa
+	ld	0x3fff, xh
+	ld	xh, #0x55
+	ld	0x3ffe, xh
+	ldw	y, (0, sp)
+	cpw	y, #0xaa55
+	jrnz	l2trap
+	ldw	z, #0x3ff0
+	ld	xh, #0xa5
+	ld	(0xf, z), xh
+	ld	xh, #0x5a
+	ld	(0xe, z), xh
+	ldw	y, (0, sp)
+	cpw	y, #0xa55a
+	jrnz	l2trap
+	ldw	y, #0x3ffe
+	ld	xh, #0xaa
+	ld	(y), xh
+	ld	xh, #0x55
+	ld	(1, y), xh
+	ldw	y, (y)
+	cpw	y, #0x55aa
+	jrz	l2
+l2trap:
+	trap
+l2:	
 
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.

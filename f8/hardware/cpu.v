@@ -154,7 +154,8 @@ always_comb
 	always_comb
 	begin 
 		if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY ||
-			opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)
+			opcode == OPCODE_LD_DIR_XL ||opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL ||
+			opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)
 			op0 = {8'bx,
 				(accsel_in == ACCSEL_XH_Y) ? x[15:8] :
 				(accsel_in == ACCSEL_YL_Z) ? y[7:0] :
@@ -492,10 +493,11 @@ always_comb
 		(opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_MSK_IY_XL_IMMD) ? (accsel_in == ACCSEL_ZL_X ? x : accsel_in == ACCSEL_YL_Z ? z : y) :
 		(opcode == OPCODE_LD_IY_XL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) ? y :
 		opcode_is_push(opcode) ? sp - 1 :
-		(opcode_is_8_1_dir(opcode) || opcode_is_xchb(opcode) || opcode_is_16_1_dir(opcode) || (opcode_is_8_2_dir(opcode) || opcode_is_16_2_dir(opcode)) && swapop_in || opcode == OPCODE_LDW_DIR_Y) ? inst[23:8] :
+		(opcode_is_8_1_dir(opcode) || opcode_is_xchb(opcode) || opcode_is_16_1_dir(opcode) || (opcode_is_8_2_dir(opcode) || opcode_is_16_2_dir(opcode)) && swapop_in || opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LDW_DIR_Y) ? inst[23:8] :
 		(opcode_is_8_1_sprel(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_F_SPREL ||
 		(opcode_is_8_2_sprel(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LDW_SPREL_Y) ? sp + inst[15:8] :
-		(opcode_is_8_2_zrel(opcode) && swapop_in || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_MAD_X_ZREL_YL || opcode == OPCODE_LDW_ZREL_Y) ? z + inst[23:8] :
+		(opcode_is_8_2_zrel(opcode) && swapop_in || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_MAD_X_ZREL_YL || opcode == OPCODE_LDW_ZREL_Y) ? z + inst[23:8] :
+		opcode == OPCODE_LD_YREL_XL ? y + inst[15:8] : 
 		opcode_is_pushw(opcode) ? sp - 2 :
 		(opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y) ? sp - 2 :
 		opcode == OPCODE_LDW_ISPREL_Y ? result_reg :
@@ -504,7 +506,7 @@ always_comb
 		reset ? 2'b00 :
 		(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_push(opcode) || opcode_is_xchb(opcode) ||
 			opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_CAX_IY_ZL_XL && z_out ||
-			opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_SPREL_XL ||
+			opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL ||
 			(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode)) && !opcode_is_cp(opcode) && swapop_in) ? 2'b01 :
 			opcode_is_pushw(opcode) || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y ||
 			opcode == OPCODE_LDW_DIR_Y || opcode == OPCODE_LDW_SPREL_Y || opcode == OPCODE_LDW_ZREL_Y || opcode == OPCODE_LDW_ISPREL_Y ||
