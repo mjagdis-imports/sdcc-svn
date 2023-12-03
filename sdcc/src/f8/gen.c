@@ -6000,7 +6000,7 @@ genIfx (const iCode *ic)
         pop (ASMOP_Y, 0, 2);
       goto jump;
     }
-  else if (size == 4 && !IS_FLOAT(type) &&  regDead (Y_IDX, ic) &&
+  else if (size == 4 && !IS_FLOAT(type) && regDead (Y_IDX, ic) &&
     aopOnStack (cond->aop, 0, 2) && aopIsOp16_2 (cond->aop, 2) && cond->aop->regs[XL_IDX] < 0 && cond->aop->regs[XH_IDX] < 0)
     {
       genMove_o (ASMOP_Y, 0, cond->aop, 0, 2, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, false, true);

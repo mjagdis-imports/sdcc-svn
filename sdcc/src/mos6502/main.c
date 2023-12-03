@@ -5,7 +5,7 @@
 
   Hacked for the MOS6502:
   Copyright (C) 2020, Steven Hugg  hugg@fasterlight.com
-  Copyright (C) 2021-2022, Gabriele Gorla
+  Copyright (C) 2021-2023, Gabriele Gorla
 
 
   This program is free software; you can redistribute it and/or modify it
@@ -234,6 +234,13 @@ m6502_genAssemblerPreamble (FILE * of)
 }
 
 static void
+m65c02_genAssemblerPreamble (FILE * of)
+{
+  fprintf(of, "\t.r65c02\n\n");
+  m6502_genAssemblerPreamble (of);
+}
+
+static void
 m6502_genAssemblerEnd (FILE * of)
 {
   if (options.out_fmt == 'E' && options.debug)
@@ -427,12 +434,12 @@ static m6502opcodedata m6502opcodeDataTable[] =
     {"ora",   M6502OP_REG, A_IDX, 0x82 },
     {"pha",   M6502OP_SPH, 0,     0 },
     {"php",   M6502OP_SPH, 0,     0 },
-    {"phy",   M6502OP_SPH, 0,     0 }, // 65C02 only
     {"phx",   M6502OP_SPH, 0,     0 }, // 65C02 only
+    {"phy",   M6502OP_SPH, 0,     0 }, // 65C02 only
     {"pla",   M6502OP_SPL, A_IDX, 0x82 },
     {"plp",   M6502OP_SPL, 0,     0xdf },
-    {"ply",   M6502OP_SPL, Y_IDX, 0x82 }, // 65C02 only
     {"plx",   M6502OP_SPL, X_IDX, 0x82 }, // 65C02 only
+    {"ply",   M6502OP_SPL, Y_IDX, 0x82 }, // 65C02 only
     {"rmb",   M6502OP_REG, 0,     0 }, // Rockwell and WDC only
     {"rol",   M6502OP_RMW, 0,     0x83 },
     {"ror",   M6502OP_RMW, 0,     0x83 },
@@ -615,10 +622,17 @@ m6502_getInstructionSize (lineNode *line)
 static const char *
 get_model (void)
 {
-  if (options.stackAuto)
-    return "mos6502-stack-auto";
-  else
-    return "mos6502";
+  if(IS_MOS65C02) {
+    if (options.stackAuto)
+      return "mos65c02-stack-auto";
+    else
+      return "mos65c02";
+  } else {
+    if (options.stackAuto)
+      return "mos6502-stack-auto";
+    else
+      return "mos6502";
+  }
 }
 
 /** $1 is always the basename.
@@ -833,7 +847,7 @@ PORT mos65c02_port =
     NULL,
     ".rel",
     1,
-    NULL,                       /* crt */
+    _crt,                       /* crt */
     _libs_m65c02,               /* libs */
   },
   {                             /* Peephole optimizer */
@@ -935,7 +949,7 @@ PORT mos65c02_port =
   0,
   NULL,
   m6502_keywords,
-  m6502_genAssemblerPreamble,
+  m65c02_genAssemblerPreamble,
   m6502_genAssemblerEnd,        /* genAssemblerEnd */
   m6502_genIVT,
   m6502_genXINIT,

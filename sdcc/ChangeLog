@@ -1,3 +1,99 @@
+2023-12-02 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c,
+  	  support/regression/tests/structreturn.c.in,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c,
+  	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-struct-ret-1.c,
+  	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-pr60017.c,
+  	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/funptrsstructreturn.c,
+  	  support/regression/tests/div.c,
+	  support/regression/tests/bug-3385.c,
+	  support/regression/tests/bug-3368.c,
+	  support/regression/tests/bug-2776.c,
+	  support/regression/tests/bigreturn-remat.c.in,
+	  support/regression/MakeList,
+  	  Implement IPUSH_VALUE_AT_ADDRESS iCode and enable corresponding regression tests.
+  	  Disable failing tests for mos65c02.
+	* src/mos6502/gen.c
+	  Make sure result is a register before dereferencing the pointer (fix bug #3631)
+  	
+2023-12-02 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/main.c
+	  Correct opcode ordering.
+	  Fix get_model() reporting.
+   	* src/mos6502/gen.c
+	  Make mos65c02 register transfer code use phx/phy/plx/ply.
+   	* src/mos6502/gen.c,
+   	  src/hc08/gen.c
+	  Reformat comments to match other ports.
+
+2023-12-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/ports/pic16/spec.mk:
+	  pic16 regression test infrastructure fix, patch by Jonathon Hall.
+	* support/regression/tests/sdcccall.c.in:
+	  Disable a long long test for pic16, which does not support long long yet, patch by Jonathon Hall.
+
+2023-12-02 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/asz80/z80pst.c,
+	  sdas/asz80/z80.h,
+	  sdas/asxxsrc/asxxxx.h,
+	  sdas/as6808/m6808.h,
+	  sdas/as6808/m08pst.c:
+	  Change several constants to match upstream asxxxx.
+	* sdas/as6500/r6500.h,
+	  sdas/as6500/r65mch.c,
+	  sdas/as6500/r65pst.c:
+	  Enable cpu type selection for as6500.
+	* device/lib/mos65c02/Makefile.in,
+	  device/lib/mos65c02/crt0.s,
+	  device/lib/mos65c02/abs.c,
+	  device/lib/mos65c02/_srulonglong.c,
+	  device/lib/mos65c02/_srslonglong.c,
+	  device/lib/mos65c02/_setjmp.c,
+	  device/lib/mos65c02/_ret4567.s,
+	  device/lib/mos65c02/_ret23.s,
+	  device/lib/mos65c02/_ret01.s,
+	  device/lib/mos65c02/_muluchar.s,
+	  device/lib/mos65c02/_mulschar.s,
+	  device/lib/mos65c02/_mulint.s,
+	  device/lib/mos65c02/__memcpy.s
+	  Make the mos65c02 library compile.
+	* support/regression/ports/uc65c02/uCsim.cmd,
+	  support/regression/ports/uc65c02/support.c,
+	  support/regression/ports/uc65c02/spec.mk
+	  Add regression for mos65c02 using uCsim.
+  	* src/mos6502/main.c
+	  Add crt to mos65c02 link step by default.
+	* src/mos6502/gen.c
+	  Implement GenAnd and GenOr for mos65c02.
+	  	  	  
+2023-12-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-2776.c,
+	  support/regression/tests/bug-3368.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-4.c:
+	  Enable struct parameter tests for all ports except mos6502 (which doesn't support them yet).
+
+2023-12-01 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/asxxsrc/asmain.c:
+	  simplify parsing of number radix (similar to upstream asxxxx).
+	* src/mos6502/main.c:
+	  add ".r56c02" to the assembler output for mos65c02 port.
+	* src/device/lib/mos65c02/Makefile.in,
+	  src/device/lib/mos65c02/__sdcc_indirect_jsr.s,
+	  src/device/lib/mos65c02/_dptr.s,
+	  src/device/lib/mos65c02/_temp.s
+	  add missing files to the mos65c02 std lib.
+	  
 2023-12-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c:
@@ -16,6 +112,11 @@
 	  src/f8/ralloc2.cc:
 	  Update f8 port for changes in trunk.
 
+2023-11-29 Gabriele Gorla <gorlik@yahoo.com>
+
+	* sdas/as6500/r65mch.c:
+	  enable 24bit address in sdas for mos6502 (patch #436).
+	  
 2023-11-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/mcs51/main.c:
