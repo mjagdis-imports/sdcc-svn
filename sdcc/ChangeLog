@@ -1,3 +1,89 @@
+2023-12-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/gen.c:
+	  Fix a popP bug.
+
+2023-12-07 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/memcpy.s,
+  	  device/lib/mos6502/_memcmp.s,
+  	  device/lib/mos6502/_setjmp.s,
+  	  device/lib/mos6502/Makefile.in
+  	  optimize memcpy, memcmp amd setjump implemetations
+  	
+2023-12-06 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_muluchar.s,
+  	  device/lib/mos6502/_mulschar.s
+  	  use ZP instead of absolute address
+   	* device/lib/mos6502/_strcpy.s,
+  	  device/lib/mos6502/_strcmp.s
+  	  use DPTR instead of temp
+   	* device/lib/mos6502/_strlen.s
+	  implement strlen in asm
+   	* device/lib/mos6502/_memset.s,
+   	  device/lib/mos6502/crt0.s
+   	  implement memset in asm
+   	* device/lib/mos6502/abs.s,
+   	  device/lib/mos6502/abs.c
+   	  rename abs.c to abs.s
+   	* doc/sdccman.lyx
+   	  add mos6502 port documentation to SDCC manual
+   	  
+2023-12-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/pic16/pic16devices.txt,
+	  device/lib/pic16/startup/crt0iz.c,
+	  src/pic16/glue.c,
+	  support/regression/ports/pic16/spec.mk:
+	  pic16 memory zeroing fixes, patch by Jonathon Hall.
+
+2023-12-04 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_setjump.c,
+  	  device/lib/mos65c02/_setjump.c,
+  	  device/lib/mos6502-stack-auto/_setjump.c
+  	  Reduce ZP usage in setjump.
+  	* device/lib/mos6502/_ret01.s,
+  	  device/lib/mos6502/_ret23.s,
+	  device/lib/mos6502/_ret4567.s,
+	  device/lib/mos65c02/_ret01.s,
+  	  device/lib/mos65c02/_ret23.s,
+	  device/lib/mos65c02/_ret4567.s,
+	  device/lib/mos6502-stack-auto/_ret01.s,
+  	  device/lib/mos6502-stack-auto/_ret23.s,
+	  device/lib/mos6502-stack-auto/_ret4567.s
+	  Remove unnecessary .optsdcc directive.
+	* src/SDCCmem.c,
+	  src/SDCCglobl.h,
+	  src/mos6502/ralloc.c,
+	  src/mos6502/main.c
+	  Add --no-zp-spill option to avoid register spills in ZP.
+	  
+2023-12-03 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c
+	  Fix bug #3511
+	* src/mos6502/gen.c,
+	  src/SDCCsymt.c
+  	  Add limited support to return aggregates to mos6502 port.
+  	* device/lib/div.c,
+  	  device/lib/ldiv.c,
+  	  device/include/stdlib.h
+  	  Add div and ldiv to the mos6502 standard library.
+  	* device/lib/_divulonglong.c
+  	  Trivial spelling fix.
+  	* sdas/as6500/r6500.h,
+  	  sdas/as6500/r65adr.c,
+  	  sdas/as6500/r65mch.c,
+  	  sdas/as6500/pst.c
+  	  Merge several minor changes from upstream asxxxx 5.50
+  	* support/regression/MakeList,
+  	  support/regression/tests/bigstack.c.in,
+  	  support/regression/tests/div.c,
+  	  support/regression/tests/gcc-roture-execute-20131127-1.c
+  	  Enable additional tests for mos6502.
+
 2023-12-02 Gabriele Gorla <gorlik@yahoo.com>
 
   	* src/mos6502/gen.c,

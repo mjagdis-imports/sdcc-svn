@@ -1,8 +1,9 @@
 ;-------------------------------------------------------------------------
-;   _strcmp.s - standard C library function
+;   memcmp.s - standarc C library
 ;
-;   Copyright (C) 1998, Ullrich von Bassewitz
-;   Copyright (C) 2022, Gabriele Gorla
+;   Copyright (C) 2003, Ullrich von Bassewitz
+;   Copyright (C) 2009, Christian Krueger
+;   Copyright (C) 2023, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -27,54 +28,73 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _strcmp
+	.module memcmp
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl _strcmp_PARM_2
-	.globl _strcmp
+	.globl _memcmp_PARM_2
+	.globl _memcmp_PARM_3
+	.globl _memcmp
 
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-_strcmp_PARM_2:
+_memcmp_PARM_2:
+	.ds 2
+_memcmp_PARM_3:
 	.ds 2
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define _str2 "_strcmp_PARM_2"
-	.define _str1 "DPTR"
+	.define s1    "DPTR"
+	.define s2    "_memcmp_PARM_2"
+	.define count "_memcmp_PARM_3"
+
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
+	
+;--------------------------------------------------------
+; int memcmp (int *s1, int *s2, int count)
+;--------------------------------------------------------
 
-_strcmp:
-	sta	*_str1+0
-	stx	*_str1+1
-
+_memcmp:
+	sta	*s1+0
+	stx	*s1+1
 	ldy	#0
-loop:
-	lda	[_str1],y
-	cmp	[_str2],y
-	bne	L1
-	tax
-	beq	end
+	ldx	*count+1
+	beq	endhi
+hiloop:
+	lda	[s1],y
+	cmp	[s2],y
+	bne	noteq
 	iny
-	bne	loop
-	inc	*_str1+1
-	inc	*_str2+1
-	bne	loop
-L1:
+	bne	hiloop
+	inc	*s1+1
+	inc	*s2+1
+	dex
+	bne	hiloop
+endhi:
+	ldx	*count+0
+	beq	end
+loloop:
+	lda	[s1],y
+	cmp	[s2],y
+	bne	noteq
+	iny
+	dex
+	bne	loloop
+end:
+	txa
+	rts
+noteq:
 	bcs	L2
 	ldx	#0xFF
-;//	txa
 	rts
 L2:
 	ldx	#0x01
-;//	txa
-end:
 	rts

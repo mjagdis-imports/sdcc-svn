@@ -1,8 +1,7 @@
 ;-------------------------------------------------------------------------
-;   _strcmp.s - standard C library function
+;   abs.s - standard C library function
 ;
-;   Copyright (C) 1998, Ullrich von Bassewitz
-;   Copyright (C) 2022, Gabriele Gorla
+;   Copyright (C) 2023, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -27,54 +26,32 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _strcmp
+	.module _abs
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl _strcmp_PARM_2
-	.globl _strcmp
+	.globl _abs
+	.globl ___negax
 
-;--------------------------------------------------------
-; overlayable function parameters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-_strcmp_PARM_2:
-	.ds 2
-
-;--------------------------------------------------------
-; local aliases
-;--------------------------------------------------------
-	.define _str2 "_strcmp_PARM_2"
-	.define _str1 "DPTR"
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
+
 	.area CODE
-
-_strcmp:
-	sta	*_str1+0
-	stx	*_str1+1
-
-	ldy	#0
-loop:
-	lda	[_str1],y
-	cmp	[_str2],y
-	bne	L1
+_abs:
+	cpx #0x00
+	bpl skip
+___negax:
+  	sec
+	eor #0xff
+	adc #0x00
+	pha
+	txa
+	eor #0xff
+	adc #0x00
 	tax
-	beq	end
-	iny
-	bne	loop
-	inc	*_str1+1
-	inc	*_str2+1
-	bne	loop
-L1:
-	bcs	L2
-	ldx	#0xFF
-;//	txa
+	pla
+skip:
 	rts
-L2:
-	ldx	#0x01
-;//	txa
-end:
-	rts
+

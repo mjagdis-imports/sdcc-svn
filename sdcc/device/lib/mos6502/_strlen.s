@@ -1,8 +1,8 @@
 ;-------------------------------------------------------------------------
-;   _strcmp.s - standard C library function
+;   _strlen.s - standard C library function
 ;
 ;   Copyright (C) 1998, Ullrich von Bassewitz
-;   Copyright (C) 2022, Gabriele Gorla
+;   Copyright (C) 2023, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -27,54 +27,37 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _strcmp
+	.module _strlen
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl _strcmp_PARM_2
-	.globl _strcmp
-
-;--------------------------------------------------------
-; overlayable function parameters in zero page
-;--------------------------------------------------------
-	.area	OSEG    (PAG, OVR)
-_strcmp_PARM_2:
-	.ds 2
+	.globl _strlen
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define _str2 "_strcmp_PARM_2"
-	.define _str1 "DPTR"
+	.define _src "DPTR"
+	
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-_strcmp:
-	sta	*_str1+0
-	stx	*_str1+1
+_strlen:
+	sta	*_src+0
+	stx	*_src+1
 
-	ldy	#0
+	ldy	#0x00
+	ldx	#0x00
 loop:
-	lda	[_str1],y
-	cmp	[_str2],y
-	bne	L1
-	tax
+	lda	[_src],y
 	beq	end
 	iny
 	bne	loop
-	inc	*_str1+1
-	inc	*_str2+1
+	inc	*_src+1
+	inx
 	bne	loop
-L1:
-	bcs	L2
-	ldx	#0xFF
-;//	txa
-	rts
-L2:
-	ldx	#0x01
-;//	txa
 end:
+	tya
 	rts

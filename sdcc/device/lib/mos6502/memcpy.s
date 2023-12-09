@@ -1,8 +1,9 @@
 ;-------------------------------------------------------------------------
-;   _strcmp.s - standard C library function
+;   memcpy.s - standarc C library
 ;
-;   Copyright (C) 1998, Ullrich von Bassewitz
-;   Copyright (C) 2022, Gabriele Gorla
+;   Copyright (C) 2003, Ullrich von Bassewitz
+;   Copyright (C) 2009, Christian Krueger
+;   Copyright (C) 2022-2023, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -27,54 +28,74 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _strcmp
+;	.module __memcpy
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl _strcmp_PARM_2
-	.globl _strcmp
+	.globl ___memcpy_PARM_2
+	.globl ___memcpy_PARM_3
+	.globl ___memcpy
+	.globl _memcpy_PARM_2
+	.globl _memcpy_PARM_3
+	.globl _memcpy
 
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-_strcmp_PARM_2:
+_memcpy_PARM_2:
+___memcpy_PARM_2:
+	.ds 2
+_memcpy_PARM_3:
+___memcpy_PARM_3:
 	.ds 2
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define _str2 "_strcmp_PARM_2"
-	.define _str1 "DPTR"
+	.define save  "REGTEMP+0"
+	.define dst   "DPTR"
+	.define src   "___memcpy_PARM_2"
+	.define count "___memcpy_PARM_3"
+
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
 	.area CODE
 
-_strcmp:
-	sta	*_str1+0
-	stx	*_str1+1
+_memcpy:
+___memcpy:
+	sta	*save+0
+	stx	*save+1
+	sta	*dst+0
+	stx	*dst+1
 
 	ldy	#0
-loop:
-	lda	[_str1],y
-	cmp	[_str2],y
-	bne	L1
-	tax
-	beq	end
+	ldx	*count+1
+	beq	00002$
+00001$:
+	lda	[src],y
+	sta	[dst],y
 	iny
-	bne	loop
-	inc	*_str1+1
-	inc	*_str2+1
-	bne	loop
-L1:
-	bcs	L2
-	ldx	#0xFF
-;//	txa
-	rts
-L2:
-	ldx	#0x01
-;//	txa
-end:
+	lda	[src],y
+	sta	[dst],y
+	iny
+	bne	00001$
+	inc	*src+1
+	inc	*dst+1
+	dex
+	bne	00001$
+00002$:
+	ldx	*count+0
+	beq	00004$
+00003$:
+	lda	[src],y
+	sta	[dst],y
+	iny
+	dex
+	bne	00003$
+00004$:
+	lda	*save+0
+	ldx	*save+1
 	rts

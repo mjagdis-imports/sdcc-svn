@@ -1,8 +1,8 @@
 ;-------------------------------------------------------------------------
-;   _strcmp.s - standard C library function
+;   setjmp.s - source file for ANSI routines setjmp & longjmp
 ;
-;   Copyright (C) 1998, Ullrich von Bassewitz
-;   Copyright (C) 2022, Gabriele Gorla
+;   Copyright (C) 2020, Steven Hugg. hugg@efasterlight.com
+;   Copyright (C) 2023, Gabriele Gorla
 ;
 ;   This library is free software; you can redistribute it and/or modify it
 ;   under the terms of the GNU General Public License as published by the
@@ -27,54 +27,89 @@
 ;   might be covered by the GNU General Public License.
 ;-------------------------------------------------------------------------
 
-	.module _strcmp
+	.module _setjmp
 
 ;--------------------------------------------------------
 ; exported symbols
 ;--------------------------------------------------------
-	.globl _strcmp_PARM_2
-	.globl _strcmp
-
+	.globl ___setjmp    ; 
+        .globl _longjmp
+        .globl _longjmp_PARM_2
+	
 ;--------------------------------------------------------
 ; overlayable function parameters in zero page
 ;--------------------------------------------------------
 	.area	OSEG    (PAG, OVR)
-_strcmp_PARM_2:
-	.ds 2
+_longjmp_PARM_2:
+        .ds 2
 
 ;--------------------------------------------------------
 ; local aliases
 ;--------------------------------------------------------
-	.define _str2 "_strcmp_PARM_2"
-	.define _str1 "DPTR"
+	.define ptr "DPTR"
+	.define rv "_longjmp_PARM_2"
+
 ;--------------------------------------------------------
 ; code
 ;--------------------------------------------------------
-	.area CODE
+        .area CODE
 
-_strcmp:
-	sta	*_str1+0
-	stx	*_str1+1
+;------------------------------------------------------------
+; int __setjmp (jmp_buf buf)
+;------------------------------------------------------------
 
-	ldy	#0
-loop:
-	lda	[_str1],y
-	cmp	[_str2],y
-	bne	L1
-	tax
-	beq	end
-	iny
-	bne	loop
-	inc	*_str1+1
-	inc	*_str2+1
-	bne	loop
-L1:
-	bcs	L2
-	ldx	#0xFF
-;//	txa
-	rts
-L2:
-	ldx	#0x01
-;//	txa
-end:
-	rts
+___setjmp:
+        stx	*(ptr + 1)		; msb(buf)
+        sta	*(ptr + 0)		; lsb(buf)
+
+        ; save stack pointer
+        tsx
+        ldy	#0
+        txa
+        sta	[ptr],y
+
+        ; save return address
+        lda	0x101,x
+        iny
+        sta	[ptr],y
+        lda	0x102,x
+        iny
+        sta	[ptr],y
+
+        ; return 0
+        lda	#0
+        tax
+        rts
+
+;------------------------------------------------------------
+; int longjmp (jmp_buf buf, int rv)
+;------------------------------------------------------------
+
+_longjmp:
+        stx	*(ptr + 1)		; msb(buf)
+        sta	*(ptr + 0)		; lsb(buf)
+
+        ; restore stack pointer
+        ldy	#0
+        lda	[ptr],y
+        tax
+        txs
+
+        ; set return address
+        iny
+        lda	[ptr],y
+        sta	0x101,x
+        iny
+        lda	[ptr],y
+        sta	0x102,x
+
+;_setjmp.c:224: return rv ? rv : 1;
+        ldx    *(rv + 1)
+        txa
+        ora    *(rv + 0)
+        beq     0001$
+        lda    *(rv + 0)
+        rts
+0001$:
+        lda     #0x01
+        rts
