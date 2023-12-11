@@ -722,6 +722,15 @@ cl_uc::reg_cell_var(class cl_memory_cell *cell,
     }
 }
 
+void
+cl_uc::mk_cvar(class cl_memory_cell *cell, chars vname, chars vdesc,
+	       enum var_by vby)
+{
+  class cl_cvar *v;
+  vars->add(v= new cl_cvar(vname, cell, vdesc));
+  v->init();
+  v->set_by(vby);
+}
 
 /*
  * Making elements
@@ -817,6 +826,9 @@ cl_uc::build_cmdset(class cl_cmdset *cmdset)
   cmdset->add(cmd= new cl_dl_cmd("download", 0));
   cmd->init();
   cmd->add_name("dl");
+
+  cmdset->add(cmd= new cl_check_cmd("check", 0));
+  cmd->init();
 
   cmdset->add(cmd= new cl_pc_cmd("pc", 0));
   cmd->init();
@@ -1204,7 +1216,7 @@ cl_uc::memory(const char *id)
   for (i= 0; i < address_spaces->count; i++)
     {
       class cl_base *b= address_spaces->object_at(i);
-      class cl_memory *m= dynamic_cast<cl_memory *>(b);
+      class cl_memory *m= (class cl_memory *)(b);
       if (!m ||
 	  !m->have_real_name())
 	continue;
@@ -1597,7 +1609,7 @@ cl_uc::read_asc_file(cl_f *f)
 }
 
 long
-cl_uc::read_p2h_file(cl_f *f)
+cl_uc::read_p2h_file(cl_f *f, bool just_check)
 {
   chars line= chars();
   int c;
@@ -1618,7 +1630,17 @@ cl_uc::read_p2h_file(cl_f *f)
 		{
 		  t_mem v= w1.htoi();//strtol(w1.c_str(), 0, 16);
 		  t_addr a= w3.htoi();//strtol(w3.c_str(), 0, 16);
-		  set_rom(a, v);
+		  if (just_check)
+		    {
+		      t_mem mv= rom->read(a);
+		      if (mv != v)
+			{
+			  application->dd_printf("Diff at %08x, FILE=%08x MEM=%08x\n",
+						 AU32(a), MU32(v), MU32(mv));
+			}
+		    }
+		  else
+		    set_rom(a, v);
 		  nr++;		  
 		}
 	    }
@@ -2006,7 +2028,7 @@ cl_uc::find_loadable_file(chars nam)
 }
 
 long
-cl_uc::read_file(chars nam, class cl_console_base *con)
+cl_uc::read_file(chars nam, class cl_console_base *con, bool just_check)
 {
   cl_f *f= find_loadable_file(nam);
   long l= 0;
@@ -2023,7 +2045,7 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
     printf("Loading from %s\n", f->get_file_name());
   if (is_p2h_file(f))
     {
-      l= read_p2h_file(f);
+      l= read_p2h_file(f, just_check);
       if (!application->quiet)
 	printf("%ld words read from %s\n", l, f->get_fname());
     }
@@ -2091,7 +2113,8 @@ cl_uc::read_file(chars nam, class cl_console_base *con)
     }
   delete f;
 
-  analyze_init();
+  if (!just_check)
+    analyze_init();
   return l;
 }
 
@@ -2611,16 +2634,21 @@ cl_uc::addr_name(t_addr addr,
       cl_address_decoder *ad = ((cl_address_space *)mem)->get_decoder_of(addr);
       if (ad)
         {
-          mem = ad->memchip;
-          addr = ad->as_to_chip(addr);
-
-          if (vars->by_addr.search(mem, addr, bitnr_high, bitnr_low, i))
-            var = vars->by_addr.at(i);
-          else if (vars->by_addr.search(mem, addr, mem->width - 1, 0, i))
-            var = vars->by_addr.at(i);
-          else if (bitnr_high >= 0 && vars->by_addr.search(mem, addr, -1, -1, i))
-            var = vars->by_addr.at(i);
-        }
+          class cl_memory *chip = ad->memchip;
+	  if (chip)
+	    {
+	      addr = ad->as_to_chip(addr);
+	      
+	      if (vars->by_addr.search(chip, addr, bitnr_high, bitnr_low, i))
+		var = vars->by_addr.at(i);
+	      else if (vars->by_addr.search(chip, addr, chip->width - 1, 0, i))
+		var = vars->by_addr.at(i);
+	      else if (bitnr_high >= 0 && vars->by_addr.search(chip, addr, -1, -1, i))
+		var = vars->by_addr.at(i);
+	    }
+	  else if (vars->by_addr.search(mem, addr, -1, -1, i))
+	    var = vars->by_addr.at(i);
+	}
     }
 
   if (var)
@@ -2629,7 +2657,7 @@ cl_uc::addr_name(t_addr addr,
 
       // If there is a context var and its name prefixes the var for this
       // addr we strip the prefix off.
-      size_t len;
+      size_t len= 0;
       if (context && (len = strlen(context->get_name())) &&
           !strncmp(name, context->get_name(), len) &&
           (name[len] == '\0' || name[len] == '_'))
@@ -2795,14 +2823,14 @@ cl_uc::handle_event(class cl_event &event)
     {
     case ev_address_space_added:
       {
-	try {
+	//try {
 	  class cl_event_address_space_added &e=
-	    dynamic_cast<class cl_event_address_space_added &>(event);
+	    (class cl_event_address_space_added &)(event);
 	  address_space_added(e.as);
 	  e.handle();
-	}
-	catch (...)
-	  { break; }
+	  //}
+	  //catch (...)
+	  //{ break; }
 	break;
       }
     default:
@@ -2968,7 +2996,7 @@ cl_uc::tick(int cycles)
 int
 cl_uc::tickt(t_mem code)
 {
-  int8_t *tt= tick_tab(code);
+  i8_t *tt= tick_tab(code);
   if (tt == NULL)
     return tick(1);
   int t= tt[code];
@@ -3076,9 +3104,7 @@ cl_uc::fetch(void)
     return(0);
 
   code= rom->read(PC);
-  //PC= ++PC & PCmask;//rom->inc_address(PC);
-  PC++;
-  PC&= PCmask;
+  set_PC((PC+1)&PCmask);
   vc.fetch++;
   return(code);
 }
@@ -3143,14 +3169,19 @@ cl_uc::do_inst(void)
 	/* backup to start of instruction */
 	PC= instPC;
       else
-	if (res == resGO && !inst_at(instPC) && analyzer)
-	  {
-	    analyze(instPC);
-	  }
+	{
+	  if (analyzer)
+	    {
+	      if (res == resGO && !inst_at(instPC))
+		{
+		  analyze(instPC);
+		}
+	    }
+	}
     }
   post_inst();
 
-  if ((res == resGO) && (PC == instPC) && stop_selfjump)
+  if ((res == resGO) && (PC == instPC) && stop_selfjump && !repeating)
     {
       res= resSELFJUMP;
       return res;
@@ -3166,8 +3197,44 @@ cl_uc::do_inst(void)
   return(res);
 }
 
+int
+cl_uc::do_emu(void)
+{
+  int res= resGO;
+
+  if (state == stGO)
+    {
+      pre_emu();
+      instPC= PC;
+      res= exec_inst();
+      if (res == resINV_INST)
+	/* backup to start of instruction */
+	PC= instPC;
+    }
+  post_emu();
+
+  if ((res == resGO || res == resNOT_DONE))
+    {
+      int r= do_interrupt();
+      if (r != resGO)
+	res= r;
+    }
+
+  return(res);
+}
+
 void
 cl_uc::pre_inst(void)
+{
+  inst_exec= true;
+  events->disconn_all();
+  vc.inst++;
+  inst_ticks= 0;
+  repeating= false;
+}
+
+void
+cl_uc::pre_emu(void)
 {
   inst_exec= true;
   events->disconn_all();
@@ -3238,6 +3305,14 @@ cl_uc::post_inst(void)
     check_errors();
   if (events->count)
     check_events();
+  inst_exec= false;
+}
+
+void
+cl_uc::post_emu(void)
+{
+  tick_hw(inst_ticks);
+  errors->free_all();
   inst_exec= false;
 }
 
@@ -3689,7 +3764,7 @@ cl_uc::check_events(void)
   for (i= 0; i < events->count; i++)
     {
       class cl_ev_brk *brk=
-	dynamic_cast<class cl_ev_brk *>(events->object_at(i));
+	(class cl_ev_brk *)(events->object_at(i));
       brk->breaking();
     }
 }
@@ -3717,7 +3792,7 @@ cl_error_unknown_code::cl_error_unknown_code(class cl_uc *the_uc)
 void
 cl_error_unknown_code::print(class cl_commander_base *c)
 {
-  c->dd_printf("%s: unknown instruction code at ", get_type_name());
+  c->dd_printf("%s: unknown instruction code at ", (char*)get_type_name());
   if (uc->rom)
     {
       c->dd_printf(uc->rom->addr_format, PC);

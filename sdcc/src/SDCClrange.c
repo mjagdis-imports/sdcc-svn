@@ -1084,12 +1084,15 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
 
           wassert (defs);
           wassert (setFirstItem (defs));
+
 #if 0
           printf("Looking at def of %s at %d now\n", OP_SYMBOL (((iCode *)(setFirstItem (defs)))->result)->name,  ((iCode *)(setFirstItem (defs)))->key);
 #endif
+
           if (!bitVectBitValue (((iCode *)(setFirstItem (defs)))->rlive, sym->key))
             {
               werror (W_INTERNAL_ERROR, __FILE__, __LINE__, "Variable is not alive at one of its definitions");
+              fprintf (stderr, "\"Definition\" of %s at ic %d\n", sym->name, sym->key);
               break;
             }
  
@@ -1105,6 +1108,7 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
 #if 0
                   printf("Looking at other def of %s at %d now\n", OP_SYMBOL(ic->result)->name, ic->key);
 #endif
+
                   set *visited2 = 0;
                   set *intersection = 0;
                   visit (&visited2, ic, sym->key);
@@ -1131,11 +1135,16 @@ separateLiveRanges (iCode *sic, ebbIndex *ebbi)
 #endif
               for (iCode *ic = setFirstItem (visited); ic; ic = setNextItem (visited))
                 {
-                  if (IC_LEFT (ic) && IS_ITEMP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic)) == sym && (!ic->prev || isinSet (visited, ic->prev)))
-                    IC_LEFT (ic) = operandFromOperand (tmpop);
+                  if (IC_LEFT (ic) && IS_ITEMP (IC_LEFT (ic)) && OP_SYMBOL (IC_LEFT (ic)) == sym &&
+                    (!ic->prev || isinSet (visited, ic->prev) && !(IC_RESULT (ic->prev) && IS_ITEMP (IC_RESULT (ic->prev)) && OP_SYMBOL (IC_RESULT (ic->prev)) == sym && !POINTER_SET (ic->prev) && !isinSet (newdefs, ic->prev))))
+                    {
+                      bool pget = POINTER_GET (ic);
+                      IC_LEFT (ic) = operandFromOperand (tmpop);
+                      SET_ISADDR (IC_LEFT (ic), pget);
+                    }
                   if (IC_RIGHT (ic) && IS_ITEMP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic)) == sym && (!ic->prev || isinSet (visited, ic->prev)))
                     IC_RIGHT (ic) = operandFromOperand (tmpop);
-                  if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym && !POINTER_SET(ic) &&
+                  if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym && !POINTER_SET (ic) &&
                     ic->next && (!isinSet (visited, ic->next) || isinSet (newdefs, ic->next)))
                     continue;
                   if (IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)) && OP_SYMBOL (IC_RESULT (ic)) == sym)
@@ -1250,12 +1259,9 @@ shortenLiveRanges (iCode *sic, ebbIndex *ebbi)
         }
 
       if (IC_LEFT (nic) == IC_RESULT (pic))
-        IC_LEFT (nic) = IC_RIGHT (pic);
+        attachiCodeOperand (pic->right, &nic->left, nic);
       if (IC_RIGHT (nic) == IC_RESULT (pic))
-        IC_RIGHT (nic) = IC_RIGHT (pic);
-      bitVectUnSetBit (OP_USES (IC_RESULT (pic)), nic->key);
-      if (IS_SYMOP (IC_RIGHT (pic)))
-        bitVectSetBit (OP_USES (IC_RIGHT (pic)), nic->key);
+        attachiCodeOperand (pic->right, &nic->right, nic);
 
       // Assignment to self will get optimized out later
       IC_LEFT (pic) = IC_RESULT (pic); 

@@ -187,7 +187,7 @@ stm8_reset_regparm (struct sym_link *ftype)
 static int
 stm8_reg_parm (sym_link *l, bool reentrant)
 {
-  bool is_regarg = stm8IsRegArg(_G.regparam.ftype, ++_G.regparam.n, 0);
+  bool is_regarg = stm8IsRegArg (_G.regparam.ftype, ++_G.regparam.n, 0);
 
   return (is_regarg ? _G.regparam.n : 0);
 }
@@ -396,15 +396,17 @@ hasExtBitOp (int op, sym_link *left, int right)
     case GETWORD:
       return (true);
     case ROT:
-      unsigned int lbits = bitsForType (left);
-      if (lbits % 8)
-        return (false);
-      if (size <= 1)
-        return (true);
-      if (size <= 2 && (right % lbits  == 1 || right % lbits == lbits - 1))
-        return (true);
-      if ((size <= 2 || size == 4) && lbits == right * 2)
-        return (true);
+      {
+        unsigned int lbits = bitsForType (left);
+        if (lbits % 8)
+          return (false);
+        if (size <= 1)
+          return (true);
+        if (size <= 2 && (right % lbits  == 1 || right % lbits == lbits - 1))
+          return (true);
+        if ((size <= 2 || size == 4) && lbits == right * 2)
+          return (true);
+      }
       return (false);
     }
 
@@ -432,11 +434,12 @@ get_model (void)
     $2 is always the output file.
     $3 varies
     $l is the list of extra options that should be there somewhere...
+    $L is the list of extra options that should be passed on the command line...
     MUST be terminated with a NULL.
 */
 static const char *_linkCmd[] =
 {
-  "sdldstm8", "-nf", "\"$1\"", NULL
+  "sdldstm8", "-nf", "\"$1\"", "$L", NULL
 };
 
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */

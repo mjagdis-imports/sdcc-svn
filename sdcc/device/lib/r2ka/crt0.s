@@ -47,8 +47,8 @@ MB3CR		.equ	0x17 ; Memory Bank 3 Control Register
 	; Reset vector - assuming smode0 and smode1 input pins are grounded
 	.org 	0
 
-	; setup internal interrupts
-	ld	a, #1
+	; Setup internal interrupts. Upper byte of interrupt vector table address. For compatibility with Rabbit 3000, we choose this even here (Rabbit 2000 allows odd values, so #1 could be used to save space).
+	ld	a, #2
 	ld	iir, a
 
 	; Configure physical address space.
@@ -58,8 +58,8 @@ MB3CR		.equ	0x17 ; Memory Bank 3 Control Register
 	ioi
 	ld	(MB2CR), a;
 
-	; Configure logical address space. 32 KB root segment followed by 8 KB data segment, 16 KB stack segement, 8 KB xpc segment.
-	; By default, SDCC will use the root segment for code and constant data, stack segment for data (including stack). data segment and xpc segement are then unused.
+	; Configure logical address space. 32 KB root segment followed by 8 KB data segment, 16 KB stack segment, 8 KB xpc segment.
+	; By default, SDCC will use the root segment for code and constant data, stack segment for data (including stack). data segment and xpc segment are then unused.
 	ld	a, #0xa8	; 16 KB stack segment at 0xa000, 8 KB data segment at 0x8000
 	ioi
 	ld	(SEGSIZE), a
@@ -76,7 +76,6 @@ MB3CR		.equ	0x17 ; Memory Bank 3 Control Register
 
 	; Initialise global variables. Skip if __sdcc_external_startup returned
 	; non-zero value. Note: calling convention version 0 only.
-	ld	a, l
 	or	a, a
 	jr	NZ, skip_gsinit
 	call	gsinit
@@ -86,70 +85,79 @@ skip_gsinit:
 	jp	_exit
 
 	; Periodic Interrupt
-	.org	0x100
+	.org	0x200
 	push	af
 	ioi
 	ld	a, (GCSR) ; clear interrupt
 	pop	af
-	reti
+	ipres
+	ret
 
 	; Secondary Watchdog - Rabbit 3000A only
-	.org	0x100
-	reti
+	.org	0x210
+	ipres
+	ret
 
 	; rst 0x10
-	.org	0x120
+	.org	0x220
 	ret
 
 	; rst 0x18
-	.org	0x130
+	.org	0x230
 	ret
 
 	; rst 0x20
-	.org	0x140
+	.org	0x240
 	ret
 
 	; rst 0x28
-	.org	0x150
+	.org	0x250
 	ret
 
 	; Syscall instruction - Rabbit 3000A only
-	.org	0x160
+	.org	0x260
 	ret
 
 	; rst 0x38
-	.org	0x170
+	.org	0x270
 	ret
 
 	; Slave Port
-	.org	0x180
-	reti
+	.org	0x280
+	ipres
+	ret
 
 	; Timer A
-	.org	0x1a0
-	reti
+	.org	0x2a0
+	ipres
+	ret
 
 	; Timer B
-	.org	0x1b0
-	reti
+	.org	0x2b0
+	ipres
+	ret
 
 	; Serial Port A
-	.org	0x1c0
-	reti
+	.org	0x2c0
+	ipres
+	ret
 
 	; Serial Port B
-	.org	0x1d0
-	reti
+	.org	0x2d0
+	ipres
+	ret
 
 	; Serial Port C
-	.org	0x1e0
-	reti
+	.org	0x2e0
+	ipres
+	ret
 
 	; Serial Port D
-	.org	0x1f0
-	reti
+	.org	0x2f0
+	ipres
+	ret
 
-	.org	0x200
+	.org	0x300
 
 	;; Ordering of segments for the linker.
 	.area	_HOME

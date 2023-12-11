@@ -45,7 +45,7 @@ cl_general_uc::make_memories(void)
   class cl_memory_chip *ch;
   class cl_address_decoder *ad;
 
-  as= new cl_address_space("nas", 0, 0x100000, 8);
+  rom= as= new cl_address_space("nas", 0, 0x100000, 8);
   as->init();
   address_spaces->add(as);
 
@@ -77,6 +77,14 @@ main(int argc, char *argv[])
   class cl_sim *sim;
   
   app_start_at= dnow();
+  {
+    volatile double d= 0;
+    unsigned int i= 0;
+    while (++i < 100000000) d+= 1.0;
+    d= dnow()-app_start_at;
+    d= 100.0/d;
+    printf("%f\n", d);
+  }
   application= new cl_app();
   application->set_name("ucsim");
   application->init(argc, argv);

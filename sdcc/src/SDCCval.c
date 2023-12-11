@@ -1181,7 +1181,7 @@ constVal (const char *s)
 /*-----------------------------------------------------------------*/
 /* sepStrToUll - like stroull, but also handles digit separators   */
 /*-----------------------------------------------------------------*/
-static unsigned long long 
+static unsigned long long
 sepStrToUll (const char *nptr, char **endptr, int base)
 {
   wassert (base >= 2 && base <= 16);
@@ -1199,7 +1199,7 @@ sepStrToUll (const char *nptr, char **endptr, int base)
           separated = true;
           continue;
         }
-      
+
       // Assumes 0-9, a-f and A-F are consecutive in character set.
       if (next >= 'a' && next <= 'f')
         next = next - 'a' + 10;
@@ -1212,12 +1212,12 @@ sepStrToUll (const char *nptr, char **endptr, int base)
 
       if (!(next >= 0 && next < base))
         break;
-        
+
       ret *= base;
       ret += next;
     }
 
-  if(separated && !options.std_c2x)
+  if(separated && !options.std_c23)
     werror (W_DIGIT_SEPARATOR_C23);
 
   if (endptr) 
@@ -1250,7 +1250,7 @@ constIntVal (const char *s)
     {
       if (s[1] == 'b' || s[1] == 'B')
         {
-          if (!options.std_sdcc && !options.std_c2x)
+          if (!options.std_sdcc && !options.std_c23)
             werror (W_BINARY_INTEGER_CONSTANT_C23);
           llval = sepStrToUll (s + 2, &p, 2);
         }
@@ -1313,7 +1313,7 @@ constIntVal (const char *s)
       p2 += 2;
       if (strchr (p2, 'l') || strchr (p2, 'L'))
         werror (E_INTEGERSUFFIX, p);
-      else if (!options.std_c2x)
+      else if (!options.std_c23)
         werror (W_BITINTCONST_C23);
     }
 
@@ -1490,8 +1490,8 @@ constCharacterVal (unsigned long v, char type)
       SPEC_CVAL (val->type).v_ulong = (TYPE_UDWORD) v;
       break;
     case '8': // u8 character constant of type char8_t, a typedef for unsigned char.
-      if (!options.std_c2x)
-        werror (E_U8_CHAR_C2X);
+      if (!options.std_c23)
+        werror (E_U8_CHAR_C23);
       if (v >= 128)
         werror (E_U8_CHAR_INVALID);
       SPEC_NOUN (val->type) = V_CHAR;
@@ -1526,9 +1526,9 @@ constBoolVal (bool v, bool reduceType)
       val->type = val->etype = newLink (SPECIFIER); /* create the specifier */
       SPEC_SCLS (val->type) = S_LITERAL;
       SPEC_CONST (val->type) = 1;
-    
+
       SPEC_NOUN (val->type) = (bit) ? V_BIT : V_BOOL;
-    
+
       SPEC_CVAL (val->type).v_uint = (unsigned int) v;
       return val;
     }
@@ -1539,7 +1539,7 @@ constBoolVal (bool v, bool reduceType)
 }
 
 /*-----------------------------------------------------------------*/
-/* constNullptrVal - a value of C2X nullptr_t                      */
+/* constNullptrVal - a value of C23 nullptr_t                      */
 /*-----------------------------------------------------------------*/
 value *
 constNullptrVal (void)
@@ -1548,9 +1548,9 @@ constNullptrVal (void)
   val->type = val->etype = newLink (SPECIFIER); /* create the specifier */
   SPEC_SCLS (val->type) = S_LITERAL;
   SPEC_CONST (val->type) = 1;
-    
+
   SPEC_NOUN (val->type) = V_NULLPTR;
-    
+
   SPEC_CVAL (val->type).v_uint = 0;
   return val;
 }
@@ -1659,12 +1659,11 @@ strVal (const char *s)
 
   if (s[0] == '"' || explicit_u8) // UTF-8 string literal
     {
-      
       // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 (handling all escape sequences, etc).
       utf_8 = copyStr (s[0] == '"' ? s : s + 2, &utf_8_size);
 
       SPEC_NOUN (val->etype) = V_CHAR;
-      if (options.std_c2x && explicit_u8) // In C23, u8-prefixed string literals are of type char8_t *, ad char8_t is a typedef for unsigned char.
+      if (options.std_c23 && explicit_u8) // In C23, u8-prefixed string literals are of type char8_t *, ad char8_t is a typedef for unsigned char.
         SPEC_USIGN (val->etype) = true;
       else
         {
@@ -1678,7 +1677,7 @@ strVal (const char *s)
     {
       // Convert input string (mixed UTF-8 and UTF-32) to UTF-8 first (handling all escape sequences, etc).
       utf_8 = copyStr (s + 1, &utf_8_size);
-      
+
       size_t utf_32_size;
       // Convert to UTF-32 next, since converting UTF-32 to UTF-16 is easier than UTF-8 to UTF-16.
       const TYPE_UDWORD *utf_32 = utf_32_from_utf_8 (&utf_32_size, utf_8, utf_8_size);
@@ -1718,7 +1717,7 @@ rawStrVal (const char *s, size_t size)
 {
   struct dbuf_s dbuf;
   value *val = newValue ();
-  
+
   dbuf_init (&dbuf, size);
   wassert (dbuf_append (&dbuf, s, size));
 
@@ -2024,7 +2023,7 @@ byteOfVal (value *val, int offset)
       werror (E_CONST_EXPECTED, val->name);
       return 0;
     }
- 
+
   /* if it is not a specifier then we can assume that */
   /* it will be an unsigned long                      */
   /* 2012-Apr-30 EEP - Why is this true?              */
@@ -2043,7 +2042,7 @@ byteOfVal (value *val, int offset)
 #else
       p += offset;
 #endif
-      return *p;      
+      return *p;
     }
 
   if (SPEC_NOUN (val->etype) == V_FIXED16X16)
@@ -2054,7 +2053,7 @@ byteOfVal (value *val, int offset)
       if (SPEC_USIGN (val->etype))
         return offset < 8 ? (SPEC_CVAL (val->etype).v_ulonglong >> shift) & 0xff : 0;
       else
-        return offset < 8 ? (SPEC_CVAL (val->etype).v_longlong >> shift) & 0xff : 
+        return offset < 8 ? (SPEC_CVAL (val->etype).v_longlong >> shift) & 0xff :
                (SPEC_CVAL (val->etype).v_longlong < 0 ? 0xff : 0);
     }
 
@@ -2063,7 +2062,7 @@ byteOfVal (value *val, int offset)
       if (SPEC_USIGN (val->etype))
         return offset < 4 ? (SPEC_CVAL (val->etype).v_ulong >> shift) & 0xff : 0;
       else
-        return offset < 4 ? (SPEC_CVAL (val->etype).v_long >> shift) & 0xff : 
+        return offset < 4 ? (SPEC_CVAL (val->etype).v_long >> shift) & 0xff :
                (SPEC_CVAL (val->etype).v_long < 0 ? 0xff : 0);
     }
 
@@ -2171,7 +2170,7 @@ ullFromLit (sym_link * lit)
 /* ullFromVal - value to unsigned long long conversion              */
 /*------------------------------------------------------------------*/
 unsigned long long
-ullFromVal (value * val)
+ullFromVal (const value * val)
 {
   if (!val)
     return 0;
@@ -2408,7 +2407,7 @@ valNot (value * val, bool reduceType)
         SPEC_CVAL (val->etype).v_int = !SPEC_CVAL (val->etype).v_int;
 
     }
-    
+
   /* ANSI: result type is int, value is 0 or 1 */
   /* If reduction is allowed SDCC will hold this in an 'unsigned char' */
   if (reduceType)
@@ -2652,26 +2651,26 @@ valPlus (value * lval, value * rval, bool reduceType)
     {
       if (SPEC_USIGN (val->type))
         {
-          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG) ullFromVal (lval) + (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
+          SPEC_CVAL (val->type).v_ulonglong = (TYPE_TARGET_ULONGLONG)(ullFromVal (lval) + ullFromVal (rval));
           if (IS_BITINT (val->type)) // unsigned wrap-around
             SPEC_CVAL (val->type).v_ulonglong &= (0xffffffffffffffffull >> (64 - SPEC_BITINTWIDTH (val->type)));
         }
       else
-        SPEC_CVAL (val->type).v_longlong = (TYPE_TARGET_LONGLONG) ullFromVal (lval) + (TYPE_TARGET_LONGLONG) ullFromVal (rval);
+        SPEC_CVAL (val->type).v_longlong = (TYPE_TARGET_LONGLONG)(ullFromVal (lval) + ullFromVal (rval));
     }
   else if (SPEC_LONG (val->type))
     {
       if (SPEC_USIGN (val->type))
-        SPEC_CVAL (val->type).v_ulong = (TYPE_TARGET_ULONG) ulFromVal (lval) + (TYPE_TARGET_ULONG) ulFromVal (rval);
+        SPEC_CVAL (val->type).v_ulong =  (TYPE_TARGET_ULONG)(ulFromVal (lval) + ulFromVal (rval));
       else
-        SPEC_CVAL (val->type).v_long = (TYPE_TARGET_LONG) ulFromVal (lval) + (TYPE_TARGET_LONG) ulFromVal (rval);
+        SPEC_CVAL (val->type).v_long = (TYPE_TARGET_LONG)(ulFromVal (lval) + ulFromVal (rval));
     }
   else
     {
       if (SPEC_USIGN (val->type))
-        SPEC_CVAL (val->type).v_uint = (TYPE_TARGET_UINT) ulFromVal (lval) + (TYPE_TARGET_UINT) ulFromVal (rval);
+        SPEC_CVAL (val->type).v_uint =  (TYPE_TARGET_UINT)(ulFromVal (lval) + ulFromVal (rval));
       else
-        SPEC_CVAL (val->type).v_int = (TYPE_TARGET_INT) ulFromVal (lval) + (TYPE_TARGET_INT) ulFromVal (rval);
+        SPEC_CVAL (val->type).v_int =  (TYPE_TARGET_INT)(ulFromVal (lval) + ulFromVal (rval));
     }
   return reduceType ? cheapestVal (val) : val;
 }
@@ -2760,7 +2759,7 @@ valShift (value * lval, value * rval, int lr, bool reduceType)
       else
         {
           SPEC_CVAL (val->type).v_longlong = lr ?
-            (TYPE_TARGET_LONGLONG) ullFromVal (lval) << (TYPE_TARGET_ULONGLONG) ullFromVal (rval) :
+            (TYPE_TARGET_LONGLONG) (ullFromVal (lval) << (TYPE_TARGET_ULONGLONG) ullFromVal (rval)) :
             (TYPE_TARGET_LONGLONG) ullFromVal (lval) >> (TYPE_TARGET_ULONGLONG) ullFromVal (rval);
         }
     }
@@ -2775,7 +2774,7 @@ valShift (value * lval, value * rval, int lr, bool reduceType)
       else
         {
           SPEC_CVAL (val->type).v_long = lr ?
-            (TYPE_TARGET_LONG) ulFromVal (lval) << (TYPE_TARGET_ULONG) ulFromVal (rval) :
+            (TYPE_TARGET_LONG) (ulFromVal (lval) << (TYPE_TARGET_ULONG) ulFromVal (rval)) :
             (TYPE_TARGET_LONG) ulFromVal (lval) >> (TYPE_TARGET_ULONG) ulFromVal (rval);
         }
     }
@@ -2790,7 +2789,7 @@ valShift (value * lval, value * rval, int lr, bool reduceType)
       else
         {
           SPEC_CVAL (val->type).v_int = lr ?
-            (TYPE_TARGET_INT) ulFromVal (lval) << (TYPE_TARGET_ULONG) ulFromVal (rval) :
+            (TYPE_TARGET_INT) (ulFromVal (lval) << (TYPE_TARGET_ULONG) ulFromVal (rval)) :
             (TYPE_TARGET_INT) ulFromVal (lval) >> (TYPE_TARGET_ULONG) ulFromVal (rval);
         }
     }
@@ -2810,7 +2809,7 @@ valCompare (value * lval, value * rval, int ctype, bool reduceType)
   val->type = val->etype = newCharLink ();
   val->type->xclass = SPECIFIER;
   SPEC_SCLS (val->type) = S_LITERAL;    /* will remain literal */
-  
+
   if (reduceType)
     {
       SPEC_NOUN (val->type) = V_CHAR;       /* type is char */
@@ -3021,7 +3020,7 @@ valLogicAndOr (value * lval, value * rval, int op, bool reduceType)
   val->type = val->etype = newCharLink ();
   val->type->xclass = SPECIFIER;
   SPEC_SCLS (val->type) = S_LITERAL;    /* will remain literal */
-  
+
   if (reduceType)
       SPEC_USIGN (val->type) = 1;
   else
@@ -3057,7 +3056,7 @@ valCastLiteral (sym_link *dtype, double fval, TYPE_TARGET_ULONGLONG llval)
     return NULL;
   if ((fval > 0x7ffffffful) || (-fval > 0x7ffffffful))
     l = (unsigned long)llval;
-    
+
 #if 0
   printf("valCastLiteral: %llx to ", (unsigned long long)llval); printTypeChain (dtype, stdout); printf("\n");
 #endif

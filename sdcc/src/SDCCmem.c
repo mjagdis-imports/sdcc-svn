@@ -645,7 +645,7 @@ allocParms (value *val, bool smallc)
           fatalError++;
           return;
         }
-        
+
       /* check the declaration */
       checkDecl (lval->sym, 0);
 
@@ -964,6 +964,7 @@ overlay2data ()
        sym = setNextItem (overlay->syms))
     {
 
+//      SPEC_OCLS (sym->etype) = (options.xdata_spill)?xdata:data;
       SPEC_OCLS (sym->etype) = data;
       allocIntoSeg (sym);
     }
@@ -1248,12 +1249,15 @@ printAllocInfoSeg (memmap * map, symbol * func, struct dbuf_s *oBuf)
                 stack_offset = func->stack;
             }
 
+          if (IS_STRUCT (func->type->next) && sym->stack < 0)
+            stack_offset += GPTRSIZE;
+
           stack_offset += port->stack.offset; /* in case sp/bp points to the next location instead of last */
 
           if (port->stack.direction < 0)
             stack_offset = -stack_offset;
 
-          dbuf_printf (oBuf, "to stack - %s %+d\n", SYM_BP (sym), sym->stack - stack_offset);
+          dbuf_printf (oBuf, "to stack - %s %+d %+d \n", SYM_BP (sym), sym->stack - stack_offset, getSize (sym->type));
           continue;
         }
 

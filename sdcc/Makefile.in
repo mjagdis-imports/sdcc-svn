@@ -48,7 +48,7 @@ SDCC_LD        += sdcc-ld8051
 SDCC_MISC      += debugger/mcs51
 endif
 
-ifneq ($(OPT_DISABLE_Z80)$(OPT_DISABLE_Z180)$(OPT_DISABLE_Z80N), 111)
+ifneq ($(OPT_DISABLE_Z80)$(OPT_DISABLE_Z180)$(OPT_DISABLE_Z80N)$(OPT_DISABLE_R800), 1111)
 SDCC_AS        += sdas/asz80
 SDCC_LD        += sdcc-ldz80
 endif
@@ -98,7 +98,6 @@ SDCC_BINUTILS   =
 ifeq ($(OPT_DISABLE_SDBINUTILS), 0)
 TARGETS        += sdcc-sdbinutils
 PKGS           += $(SDCC_SDBINUTILS)
-SDBINUTILS_BINS = sdar$(EXEEXT) sdranlib$(EXEEXT) sdnm$(EXEEXT) sdobjcopy$(EXEEXT)
 SDCC_BINUTILS   = sdcc-sdbinutils
 endif
 
@@ -142,7 +141,7 @@ all: checkconf sdcc
 
 tini: checkconf sdcc-tini
 
-sdcc-libs: ${SDCC_SDBINUTILS}
+sdcc-libs: ${SDCC_BINUTILS}
 	for lib in $(SDCC_LIBS); do $(MAKE) -C $$lib; done
 
 sdcc-cc: sdcc-libs

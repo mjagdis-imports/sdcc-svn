@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   _divslonglong.c - routine for divsion of 64 bit unsigned long long
+   _divulonglong.c - routine for division of 64 bit unsigned long long
 
    Copyright (C) 1999, Jean-Louis Vern <jlvern AT gmail.com>
    Copyright (C) 2012, Philipp Klaus Krause . pkk@spth.de
@@ -14,7 +14,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -30,11 +30,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef __SDCC_mcs51
-#define __SDCC_NONBANKED __nonbanked
-#else
-#define __SDCC_NONBANKED
-#endif
+#include <sdcc-lib.h>
 
 #ifdef __SDCC_LONGLONG
 #define MSB_SET(x) ((x >> (8*sizeof(x)-1)) & 1)

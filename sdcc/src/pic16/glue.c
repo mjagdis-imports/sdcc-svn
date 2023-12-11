@@ -1796,6 +1796,20 @@ pic16glue ()
         pic16_addpCode2pBlock(pb,pic16_newpCode(POC_RETURN,NULL));
     }
 
+    /* Emit a label denoting the end of SRAM for crt0iz to zero the correct */
+    /* amount of memory for this device */
+    if(mainf && IFFUNC_HASBODY(mainf->type)) {
+      unsigned long ramsize = pic16 ? pic16->RAMsize : 0x200;
+      symbol *sym;
+
+      reg = newReg (REG_SFR, PO_SFR_REGISTER, ramsize-1, "_sram_end", 0, 0, NULL);
+      addSet (&pic16_fix_udata, reg);
+
+      sym = newSymbol ("sram_end", 0);
+      SNPRINTF(sym->rname, sizeof(sym->rname), "_%s", sym->name);
+      addSet (&publics, sym);
+    }
+
     /* At this point we've got all the code in the form of pCode structures */
     /* Now it needs to be rearranged into the order it should be placed in the */
     /* code space */
@@ -1839,7 +1853,7 @@ pic16glue ()
 
     /* now put it all together into the assembler file */
     /* create the assembler file name */
-    if((noAssemble || options.c1mode)  && fullDstFileName) {
+    if((options.no_assemble || options.c1mode)  && fullDstFileName) {
       SNPRINTF(buffer, sizeof(buffer), "%s", fullDstFileName);
     } else {
       SNPRINTF(buffer, sizeof(buffer), "%s.asm", dstFileName);

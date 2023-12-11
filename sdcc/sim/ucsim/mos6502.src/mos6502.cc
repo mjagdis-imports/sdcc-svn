@@ -295,7 +295,7 @@ cl_mos6502::analyze_start(void)
 void
 cl_mos6502::analyze(t_addr addr)
 {
-  struct dis_entry *de;
+  struct dis_entry *de= 0;
 
   while (!inst_at(addr) && (de = get_dis_entry(addr)))
     {
@@ -647,7 +647,8 @@ cl_mos6502::print_regs(class cl_console_base *con)
   con->dd_printf("   NV BDIZC\n");
 
   con->dd_printf("S= ");
-  rom->dump(0, 0x100+SP, 0x100+SP+7, 8, con);
+  class cl_dump_ads ads(0x100+SP, 0x100+SP+7);
+  rom->dump(0, /*0x100+SP, 0x100+SP+7*/&ads, 8, con);
   con->dd_color("answer");
   
   if (!ojaj)
@@ -676,6 +677,24 @@ cl_mos6502::print_regs(class cl_console_base *con)
       con->dd_printf("\n");
     }
   jaj= ojaj;
+}
+
+int
+cl_mos6502::inst_length(t_addr addr)
+{
+  struct dis_entry *de= get_dis_entry(addr);
+  if (!de)
+    return 0;
+  return de->length;
+}
+
+bool
+cl_mos6502::is_call(t_addr addr)
+{
+  struct dis_entry *de= get_dis_entry(addr);
+  if (!de)
+    return false;
+  return de->branch == 's';
 }
 
 int

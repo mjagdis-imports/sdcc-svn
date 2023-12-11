@@ -28,10 +28,10 @@ HC08_LONG = $(COMMON_LONG) \
   _divulong.c
 
 HC08_LONGLONG = $(COMMON_LONGLONG) \
-  _rrulonglong.c \
-  _rrslonglong.c \
-  _rlulonglong.c \
-  _rlslonglong.c \
+  _srulonglong.c \
+  _srslonglong.c \
+  _slulonglong.c \
+  _slslonglong.c \
   _mullonglong.c \
   _divslonglong.c \
   _divulonglong.c \
@@ -65,7 +65,7 @@ LIB = hc08.lib
 AS = $(SAS)
 ASFLAGS = -plosgff
 
-CFLAGS = -I$(srcdir)/../../include -I. --std-c2x
+CFLAGS = -I$(srcdir)/../../include -I. --std-c23
 
 all: $(PORTDIR)/$(LIB)
 

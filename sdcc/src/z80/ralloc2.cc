@@ -1398,9 +1398,9 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 
   // An artificial ordering of assignments.
   if(ia.registers[REG_E][1] < 0)
-    c += 0.0001f;
+    c += 0.001f;
   if(ia.registers[REG_D][1] < 0)
-    c += 0.00001f;
+    c += 0.0001f;
 
   if(a.marked)
     c -= 0.5f;
@@ -1443,6 +1443,24 @@ static float rough_cost_estimate(const assignment &a, unsigned short int i, cons
 // Code for another ic is generated when generating this one. Mark the other as generated.
 static void extra_ic_generated(iCode *ic)
 {
+  // djnz
+  if(ic->op == '-' && ic->next && ic->next->op == IFX && ic->next->left->key == ic->result->key && getSize (operandType (ic->result)) == 1)
+    {
+      iCode *ifx = ic->next;
+
+      if (!IS_ITEMP (ic->result) /*&& !isOperandGlobal (ic->left)*/)
+        return;
+
+      if (!IS_OP_LITERAL (ic->right))
+        return;
+
+      if (ullFromVal (OP_VALUE (ic->right)) != 1)
+        return;
+
+      ifx->generated = true;
+      return;
+    }
+
   if(ic->op == '>' || ic->op == '<' || ic->op == LE_OP || ic->op == GE_OP || ic->op == EQ_OP || ic->op == NE_OP ||
     (ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND) && (IS_OP_LITERAL (IC_LEFT (ic)) || IS_OP_LITERAL (IC_RIGHT (ic))))
     {
@@ -1483,6 +1501,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
     add_edge(boost::source(*e, I), boost::target(*e, I), I2);
 
   assignment ac;
+  ac.s = 0.0f;
   assignment_optimal = true;
   tree_dec_ralloc_nodes(T, find_root(T), G, I2, ac, &assignment_optimal);
 
@@ -1606,11 +1625,16 @@ iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 
   iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
 
+  if (optimize.genconstprop)
+    recomputeValinfos (ic, ebbi, "_2");
+
   should_omit_frame_ptr = omit_frame_ptr(control_flow_graph);
   move_parms();
 
   if(options.dump_graphs)
     dump_cfg(control_flow_graph);
+
+  guessCounts (ic, ebbi);
 
   if(options.dump_graphs)
     dump_con(conflict_graph);

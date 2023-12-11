@@ -422,11 +422,10 @@ DEFSETFUNC (findCheaperOp)
           return 0;
         }
 
+      *opp = operandFromOperand (*opp);
+
       if ((*opp)->isaddr != cop->isaddr && IS_ITEMP (cop))
-        {
-          *opp = operandFromOperand (*opp);
-          (*opp)->isaddr = cop->isaddr;
-        }
+        (*opp)->isaddr = cop->isaddr;
 
       /* copy signedness to literal operands */
       if (IS_SPEC(operandType (cop)) && IS_SPEC(operandType (*opp))
@@ -446,8 +445,12 @@ DEFSETFUNC (findCheaperOp)
               SPEC_NOUN(operandType(*opp)) == V_CHAR &&
               SPEC_NOUN(operandType(cop)) == V_INT)
             {
-              *opp = operandFromOperand (*opp);
               SPEC_NOUN(operandType(*opp)) = V_INT;
+            }
+          // more special cases: we need this one to avoid regressions from _BOOL -> __bit optimization.
+          else if (IS_BOOL (operandType(cop)) && SPEC_NOUN(operandType(*opp)) == V_BIT)
+            {
+              SPEC_NOUN(operandType(*opp)) = V_BOOL;
             }
           else
             {
@@ -2321,7 +2324,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
             {
               pdop = NULL;
               applyToSetFTrue (cseSet, findCheaperOp, IC_JTCOND (ic), &pdop, true);
-              if (pdop)
+              if (pdop && !computeOnly)
                 {
                   ReplaceOpWithCheaperOp (&IC_JTCOND (ic), pdop);
                   change = 1;
@@ -2443,6 +2446,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
                       if (bitVectBitValue (ebb->ndompset, IC_LEFT (ic)->key))
                           ebb->ptrsSet = bitVectSetBit (ebb->ptrsSet, pdop->key);
                       ReplaceOpWithCheaperOp (&IC_LEFT (ic), pdop);
+                      SET_ISADDR (IC_LEFT (ic), 1);
                       change = replaced = 1;
                     }
                   /* check if there is a pointer set
@@ -2792,5 +2796,6 @@ freeCSEdata (eBBlock * ebb)
   freeBitVect (ebb->inPtrsSet);
   freeBitVect (ebb->ndompset);
   deleteSet (&ebb->addrOf);
-
+  freeBitVect (ebb->linds);
 }
+

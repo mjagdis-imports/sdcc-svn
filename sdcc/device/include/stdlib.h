@@ -62,11 +62,13 @@ void call_once(once_flag *flag, void (*func)(void));
 extern float atof (const char *nptr);
 extern int atoi (const char *nptr);
 extern long int atol (const char *nptr);
-#ifdef __SDCC_LONGLONG
-extern long long int atoll (const char *nptr);
-#endif
 extern long int strtol(const char *nptr, char **endptr, int base);
 extern unsigned long int strtoul(const char *nptr, char **endptr, int base);
+#ifdef __SDCC_LONGLONG
+extern long long int atoll (const char *nptr);
+extern long long int strtoll(const char *nptr, char **endptr, int base);
+extern unsigned long long int strtoull(const char *nptr, char **endptr, int base);
+#endif
 
 /* SDCC extensions */
 extern void __uitoa(unsigned int, char *, unsigned char);
@@ -117,12 +119,15 @@ extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t siz
 extern void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);
 
 /* Integer arithmetic functions (ISO C11 7.22.6) */
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80) || defined (__SDCC_z80n)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80) || defined (__SDCC_z80n) || defined(__SDCC_r800)
 int abs(int j) __preserves_regs(b, c, iyl, iyh);
 #else
 int abs(int j);
 #endif
 long int labs(long int j);
+#ifdef __SDCC_LONGLONG
+long long int llabs(long long int j);
+#endif
 
 typedef struct
 {
@@ -139,10 +144,12 @@ typedef struct
 	long long int quot;
 	long long int rem;
 } lldiv_t;
-#if !defined(__SDCC_ds390) && !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) && !defined(__SDCC_mos6502) // struct return not yet supported
+#if !defined(__SDCC_ds390) && !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // struct return not yet supported
 div_t div(int numer, int denom);
 ldiv_t ldiv(long int numer, long int denom);
+#if !defined(__SDCC_mos6502) && !defined(__SDCC_mos65c02) // size of struct return is limited to <= 8 
 lldiv_t lldiv(long long int numer, long long int denom);
+#endif
 #endif
 
 /* C99 Multibyte/wide character conversion functions (ISO C11 7.22.7) */

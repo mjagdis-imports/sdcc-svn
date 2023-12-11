@@ -2,12 +2,25 @@
 #include "ddconfig.h"
 
 #include <stdio.h>
+
 #if defined HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
+#endif
+#if defined HAVE_NEED_SELECT_H
 # include <sys/select.h>
+#endif
+#if defined HAVE_NEED_TIME_H
+# include <sys/time.h>
+#endif
+#if defined HAVE_NEED_TYPES_H
+# include <sys/types.h>
+#endif
+#if defined HAVE_NEED_GNUTYPES_H
+# include <gnu/types.h>
+#endif
+
 # include <netinet/in.h>
 # include <arpa/inet.h>
-#endif
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -170,6 +183,8 @@ cl_io::check_dev(void)
     case F_SOCKET:
     case F_LISTENER:
     case F_PIPE:
+      if (last_used != first_free)
+	return true;
       FD_ZERO(&s);
       FD_SET(file_id, &s);
       i= select(file_id+1, &s, NULL, NULL, &tv);
@@ -186,7 +201,7 @@ cl_io::check_dev(void)
 	}
       break;
     }
-  return 0;
+  return false;
 }
 
 
@@ -419,6 +434,7 @@ void
 sigpipe_off()
 {
   struct sigaction sa;
+  sigaction(SIGPIPE, NULL, &sa);
   sa.sa_handler= SIG_IGN;
   sigaction(SIGPIPE, &sa, NULL);
 }
@@ -438,6 +454,44 @@ dnow(void)
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return (double)tv.tv_sec + ((double)tv.tv_usec/1000000.0);
+}
+
+static int in_attribs_saved= 0;
+static int out_attribs_saved= 0;
+static struct termios in_attribs;
+static struct termios out_attribs;
+
+void
+save_std_attribs()
+{
+  if (!in_attribs_saved)
+    {
+      if (isatty(STDIN_FILENO))
+	{
+	  tcgetattr(STDIN_FILENO, &in_attribs);
+	  in_attribs_saved= 1;
+	}
+    }
+  if (!out_attribs_saved)
+    {
+      if (isatty(STDOUT_FILENO))
+	{
+	  tcgetattr(STDOUT_FILENO, &out_attribs);
+	  out_attribs_saved= 1;
+	}
+    }
+}
+
+void
+restore_std_attribs()
+{
+  if (in_attribs_saved)
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &in_attribs);
+  if (out_attribs_saved)
+    {
+      //out_attribs.c_lflag|= ICANON|ECHO;
+      tcsetattr(STDOUT_FILENO, TCSAFLUSH, &out_attribs);
+    }
 }
 
 

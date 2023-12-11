@@ -52,8 +52,6 @@ OPTYPE;
 #define IS_VALOP(op) (op && op->type == VALUE)
 #define IS_TYPOP(op) (op && op->type == TYPE)
 
-#define ADDTOCHAIN(x) addSetHead(&iCodeChain,x)
-
 #define LRFTYPE       sym_link *ltype = operandType(left), \
                            *rtype = operandType(right) ;
 #define LRETYPE       sym_link *letype= getSpec(ltype)   , \
@@ -131,6 +129,8 @@ extern const operand *validateOpTypeConst (const operand * op,
 #define IC_INLINE(x)     (x)->inlineAsm
 #define IC_ARRAYILIST(x) (x)->arrayInitList
 
+struct valinfos;
+
 typedef struct iCode
 {
   unsigned int op;              /* operation defined */
@@ -161,6 +161,8 @@ typedef struct iCode
   bitVect *rUsed;               /* registers used by this instruction */
   bitVect *rMask;               /* registers in use during this instruction */
   bitVect *rSurv;               /* registers that survive this instruction (i.e. they are in use, it is not their last use and they are not in the return) */
+  struct valinfos *valinfos;    /* Information on the possible values of symbols just before this iCode. */
+  struct valinfo *resultvalinfo;/* Information on the possible values of the result. */ 
 
   operand *left;                // left if any
   operand *right;               // right if any

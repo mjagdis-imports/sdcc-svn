@@ -304,14 +304,14 @@ scan4op (lineNode **pl, const char *pReg, const char *untilOp,
   len = strlen (pReg);
 
   /* get index into pReg table */
-  for (rIdx = 0; rIdx < mcs51_nRegs; ++rIdx)
-    if (strcmp (regs8051[rIdx].name, pReg + 1) == 0)
-      break;
+  rIdx = mcs51_regname_to_idx (pReg);
 
-  /* sanity check */
-  if (rIdx >= mcs51_nRegs)
+  if (rIdx < 0)
     {
-      DEADMOVEERROR();
+      /* This can happen if a wrong register name is passed from the peephole pattern. */
+      char msg[256];
+      sprintf (msg, "scan4op -- got invalid register name: '%s'", pReg);
+      werror (W_INTERNAL_ERROR, __FILE__, __LINE__, msg);
       return S4O_ABORT;
     }
 
@@ -513,12 +513,8 @@ scan4op (lineNode **pl, const char *pReg, const char *untilOp,
                   return S4O_ABORT;  /* not a function? */
                 if (FUNC_CALLEESAVES (currFunc->type))
                   return S4O_ABORT; /* returning from callee saves function */
-                if (getSize(currFunc->etype) > 4)
-                  {
-                    for (unsigned i = 0; i < getSize(currFunc->etype); i++)
-                      if (strstr (pReg, fReturn8051[i]))
-                        return S4O_ABORT; /* return value is partially in r4-r7 */
-                  }
+                if (mcs51IsReturned (pReg))
+                  return S4O_ABORT;
                 return S4O_TERM;
               }
             break;
@@ -773,6 +769,12 @@ removeDeadPushPop (const char *pReg, lineNode *currPl, lineNode *head)
 /*-----------------------------------------------------------------*/
 /* removeDeadMove - remove superflous 'mov r%1,%2'                 */
 /*-----------------------------------------------------------------*/
+
+//#define dbglog_deadmove(...) do { __VA_ARGS__; } while (0)
+#ifndef dbglog_deadmove
+  #define dbglog_deadmove(...) do { } while (0)
+#endif
+
 static bool
 removeDeadMove (const char *pReg, lineNode *currPl)
 {
@@ -791,14 +793,45 @@ removeDeadMove (const char *pReg, lineNode *currPl)
       ; callee save), "reti" or write access of r0 terminate
       ; the search, and the "mov r0,a" can safely be removed.
   */
+
+  dbglog_deadmove (printf ("removeDeadMove %s\n", pReg));
+
   pl = currPl->next;
   if (!doTermScan (&pl, pReg))
     return FALSE;
 
-  if (!checkLabelRef())
-    return FALSE;
-
   return TRUE;
+}
+
+/*-----------------------------------------------------------------*/
+/* canonicalizeRegName                                             */
+/*   Operands from the peephole patterns can be passed either as   */
+/*   explicity numbered and named registers or just as a number.   */
+/*   Convert it into explicit form for our internal processing.    */
+/*-----------------------------------------------------------------*/
+static char*
+canonicalizeRegName (char* outBuf, unsigned int outBufSz, const char* inBuf)
+{
+  if (outBufSz < 4)
+    return outBuf;
+
+  if (strlen (inBuf) == 1)
+    {
+      /* single digit 0-7 refers to ar0-ar7  */
+      int c = inBuf[0] - '0';
+      if (c >= 0 && c <= 7)
+        {
+          outBuf[0] = 'a';
+          outBuf[1] = 'r';
+          outBuf[2] = inBuf[0];
+          outBuf[3] = '\0';
+          return outBuf;
+        }
+    }
+
+  strncpy (outBuf, inBuf, outBufSz - 1);
+  outBuf[outBufSz - 1] = '\0';
+  return outBuf;
 }
 
 /*-----------------------------------------------------------------*/
@@ -809,10 +842,12 @@ removeDeadMove (const char *pReg, lineNode *currPl)
 bool
 mcs51DeadMove (const char *reg, lineNode *currPl, lineNode *head)
 {
-  char pReg[5] = "ar";
+  dbglog_deadmove (printf ("mcs51DeadMove  reg: %s  line: %s\n", reg, currPl->line));
 
   _G.head = head;
-  strcat (pReg, reg);
+
+  char pReg[32];
+  canonicalizeRegName (pReg, sizeof (pReg), reg);
 
   unvisitLines (_G.head);
   cleanLabelRef();
@@ -821,9 +856,6 @@ mcs51DeadMove (const char *reg, lineNode *currPl, lineNode *head)
     return removeDeadPopPush (pReg, currPl, head);
   else if (strncmp (currPl->line, "push", 4) == 0)
     return removeDeadPushPop (pReg, currPl, head);
-  else if (strncmp (currPl->line, "mov", 3) == 0 &&
-           (currPl->line[3] == ' ' || currPl->line[3] == '\t'))
-    return removeDeadMove (pReg, currPl);
   else
     {
       fprintf (stderr, "Error: "
@@ -832,4 +864,52 @@ mcs51DeadMove (const char *reg, lineNode *currPl, lineNode *head)
                        "\t%s\n", currPl->line);
       return FALSE;
     }
+}
+
+/*-----------------------------------------------------------------*/
+/* mcs51notUsed - Check that 'what' is never read after 'endPl'.   */
+/*-----------------------------------------------------------------*/
+bool
+mcs51notUsed (const char *what, lineNode *endPl, lineNode *head)
+{
+  dbglog_deadmove (printf ("mcs51notUsed %s  after line: %s\n", what, endPl->line));
+
+  wassert (what);
+
+  if (!strcmp (what, "dptr"))
+    return (mcs51notUsed ("dpl", endPl, head) && mcs51notUsed ("dph", endPl, head));
+
+  if (!strcmp (what, "acc"))
+    return (mcs51notUsed ("a", endPl, head));
+
+  // If we don't know what it is, assume it might be used.
+  // todo: allow a, and support it in removeDeadMove.
+  // todo: allow dpl, dph, and support it in removeDeadMove.
+  if (!(what[0] == 'r' && isdigit(what[1])) && !(what[0] == 'a' && what[0] == 'r' && isdigit(what[2]))) // Allow r?
+    return (false);
+
+  _G.head = head;
+
+  unvisitLines (_G.head);
+  cleanLabelRef();
+
+  char pReg[32];
+  canonicalizeRegName (pReg, sizeof (pReg), what);
+
+  bool r = removeDeadMove (pReg, endPl);
+  dbglog_deadmove (printf ("  -> %d\n", r));
+  return r;
+}
+
+/*----------------------------------------------------------------------------*/
+/* mcs51notUsedFrom - Check that 'what' is never read starting from 'label'.  */
+/*----------------------------------------------------------------------------*/
+bool
+mcs51notUsedFrom (const char *what, const char *label, lineNode *head)
+{
+  for (lineNode *cpl = head; cpl; cpl = cpl->next)
+    if (cpl->isLabel && !strncmp (label, cpl->line, strlen(label)))
+      return (mcs51notUsed (what, cpl, head));
+
+  return false;
 }

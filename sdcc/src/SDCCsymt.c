@@ -1056,6 +1056,23 @@ newLongLongLink ()
 }
 
 /*------------------------------------------------------------------*/
+/* newBitIntLink() - creates a BitInt type                          */
+/*------------------------------------------------------------------*/
+sym_link *
+newBitIntLink (unsigned int width)
+{
+  wassert (width <= port->s.bitint_maxwidth);
+
+  sym_link *p;
+
+  p = newLink (SPECIFIER);
+  SPEC_NOUN (p) = V_BITINT;
+  SPEC_BITINTWIDTH (p) = width;
+
+  return p;
+}
+
+/*------------------------------------------------------------------*/
 /* newIntLink() - creates an int type                               */
 /*------------------------------------------------------------------*/
 sym_link *
@@ -1499,11 +1516,13 @@ addSymChain (symbol ** symHead)
             {
               /* If the previous definition was for an array with incomplete
                  type, and the new definition has completed the type, update
-                 the original type to match */
+                 the original type to match (or the otehr way round) */
               if (IS_ARRAY (csym->type) && IS_ARRAY (sym->type))
                 {
                   if (!DCL_ELEM (csym->type) && DCL_ELEM (sym->type))
                     DCL_ELEM (csym->type) = DCL_ELEM (sym->type);
+                  else if (DCL_ELEM (csym->type) && !DCL_ELEM (sym->type))
+                    DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                   if ((DCL_ELEM (csym->type) > DCL_ELEM (sym->type)) && elemsFromIval)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                 }
@@ -1546,7 +1565,7 @@ addSymChain (symbol ** symHead)
               if (IS_EXTERN (csym->etype) || IS_EXTERN (sym->etype))
                 werror (E_EXTERN_MISMATCH, sym->name);
               else
-                werror (E_DUPLICATE, sym->name);printf("previous %p\n", csym);
+                werror (E_DUPLICATE, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
 #if 0
               fprintf (stderr, "from type '");
@@ -2030,8 +2049,8 @@ checkSClass (symbol *sym, int isProto)
         if (((addr >> n) & 0xFF) < 0x80)
           werror (W_SFR_ABSRANGE, sym->name);
     }
-  else if (TARGET_IS_SM83 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR) // Unlike the otehr z80-like ports, sm83 has I/P in the 0xff00-0xffff range.
-    {
+  else if (TARGET_IS_SM83 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+    {// Unlike the other z80-like ports, sm83 has memory mapped I/O in the 0xff00-0xffff range.
       if (SPEC_ADDR (sym->etype) < 0xff00 || SPEC_ADDR (sym->etype) > 0xffff)
         werror (W_SFR_ABSRANGE, sym->name);
     }
@@ -3371,7 +3390,7 @@ checkFunction (symbol * sym, symbol * csym)
     sym->type->next = sym->etype = newIntLink ();
 
   /* function cannot return aggregate */
-  if ((TARGET_IS_DS390 || TARGET_IS_MOS6502)  && IS_AGGREGATE (sym->type->next))
+  if ((TARGET_IS_DS390)  && IS_AGGREGATE (sym->type->next))
     {
       werrorfl (sym->fileDef, sym->lineDef, E_FUNC_AGGR, sym->name);
       return 0;
@@ -4562,7 +4581,7 @@ initCSupport (void)
     "s", "su", "us", "u"
   };
   const char *srlrr[] = {
-    "rl", "rr"
+    "sl", "sr"
   };
   /* type as character codes for typeFromStr() */
   const char *sbwdCodes[] = {

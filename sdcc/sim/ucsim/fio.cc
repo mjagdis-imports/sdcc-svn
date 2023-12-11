@@ -238,6 +238,7 @@ cl_f::init(void)
 	  own= false;
 	  return -1;
 	}
+      //fprintf(stdout, "Start listening on port %d\n", server_port);
       listen(file_id, 50);
       own= true;
       tty= false;
@@ -397,8 +398,16 @@ cl_f::get(void)
     {
       return -1;
     }
-  int c= buffer[last_used] & 0xff;
+  int c= buffer[prev_last_used= last_used] & 0xff;
   last_used= (last_used + 1) % 1024;
+  return c;
+}
+
+int
+cl_f::unget(int c)
+{
+  buffer[prev_last_used]= c;
+  last_used= prev_last_used;
   return c;
 }
 

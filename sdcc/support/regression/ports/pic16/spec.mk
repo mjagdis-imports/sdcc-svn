@@ -10,6 +10,10 @@ else
   GPSIM := $(WINE) gpsim$(EXEEXT)
 endif
 
+EMU = $(GPSIM)
+EMU_FLAGS = -i -s
+EMU_INPUT = -c $(PORTS_DIR)/pic16/gpsim.cmd
+
 ifndef SDCC_BIN_PATH
   ifndef CROSSCOMPILING
     SDCCFLAGS += --nostdinc -I$(top_srcdir)/device/include/pic16 -I$(top_srcdir)/device/non-free/include/pic16 -I$(top_srcdir)

@@ -56,6 +56,8 @@ static signed char _isdigit(const char c, unsigned char base)
   return (v);
 }
 
+// NOTE for maintenance: strtoull, wcstoul and wcstoull have been derived from strtoul
+
 unsigned long int strtoul(const char *nptr, char **endptr, int base)
 {
   const char *ptr = nptr;
@@ -117,7 +119,7 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base)
 
       if (digit < 0)
         break;
-  
+
 #if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
       range_error |= ckd_mul (&ret, ret, b);
       range_error |= ckd_add (&ret, ret, digit);
