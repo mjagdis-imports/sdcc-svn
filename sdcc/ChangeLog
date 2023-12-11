@@ -1,3 +1,20 @@
+2023-12-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/pic16/libc/Makefile.am,
+	  device/lib/pic16/libc/Makefile.in,
+	  device/include/pic16/setjmp.h,
+	  device/lib/pic16/libc/stdlib/setjmp.c:
+	  setjmp for pic16, patch by Jonathon Hall.
+
+2023-12-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/pdk.src/inst.cc:
+	  Fix simulation of z flag for not and neg.
+	* src/pdk/gen.c:
+	  pdk code generation improvements.
+	* src/z80/gen.c:
+	  Fix a Rabbit multiplication code generation bug.
+
 2023-12-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/gen.c:

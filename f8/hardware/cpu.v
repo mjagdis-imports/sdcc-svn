@@ -73,11 +73,10 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	assign opcode = inst[7:0];
 
 	// Handle program counter
-	always @(posedge clk)
 	begin
 		pc <= next_pc;
 		old_pc = pc;
-		sp <= next_sp;
+		sp <= next_sp;	always @(posedge clk)
 	end
 
 	always @(posedge clk)
@@ -107,15 +106,15 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 
 always_comb
 	begin
-		if (opcode_is_push(opcode))
+		if(opcode_is_push(opcode))
 			next_sp = sp - 1;
-		else if (opcode == OPCODE_POP_XL)
+		else if(opcode == OPCODE_POP_XL)
 			next_sp = sp + 1;
-		else if (opcode_is_pushw(opcode) || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y)
+		else if(opcode_is_pushw(opcode) || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y)
 			next_sp = sp - 2;
-		else if (opcode == OPCODE_POPW_Y)
+		else if(opcode == OPCODE_POPW_Y)
 			next_sp = sp + 2;
-		else if (opcode == OPCODE_LDW_Y_SP && swapop_in || opcode == OPCODE_ADDW_SP_D)
+		else if(opcode == OPCODE_LDW_Y_SP && swapop_in || opcode == OPCODE_ADDW_SP_D)
 			next_sp = result_reg;
 		else
 			next_sp = sp;
