@@ -6265,6 +6265,7 @@ genCall (const iCode *ic)
   // Check if we can do tail call optimization.
   else if (currFunc && !IFFUNC_ISISR (currFunc->type) &&
     !ic->parmBytes &&
+    !_G.stack.pushedHL && !_G.stack.pushedBC && !_G.stack.pushedDE && !_G.stack.pushedIY && // If for some reason something got pushed, we don't have the return address in place.
     (!isFuncCalleeStackCleanup (currFunc->type) || !ic->parmEscapeAlive && ic->op == CALL && 0 /* todo: test and enable depending on optimization goal - as done for stm8 - for z80 and r3ka this will be slower and bigger than without tail call optimization, but it saves RAM */) &&
     !ic->localEscapeAlive &&
     !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL (ftype) &&
@@ -7840,9 +7841,8 @@ genPlus (iCode * ic)
       bool save_pair = FALSE;
       PAIR_ID pair;
 
-      if (getPairId (IC_RIGHT (ic)->aop) == PAIR_IY || getPairId (IC_LEFT (ic)->aop) == PAIR_BC
-          || getPairId (IC_LEFT (ic)->aop) == PAIR_DE || getPairId (IC_LEFT (ic)->aop) != PAIR_IY
-          && (IC_RIGHT (ic)->aop->type == AOP_IMMD || IC_RIGHT (ic)->aop->type == AOP_LIT))
+      if (getPairId (IC_RIGHT (ic)->aop) == PAIR_IY || getPairId (IC_LEFT (ic)->aop) == PAIR_BC || getPairId (IC_LEFT (ic)->aop) == PAIR_DE ||
+          ic->left->aop->regs[IYL_IDX] < 0 && ic->left->aop->regs[IYH_IDX] < 0 && (ic->right->aop->type == AOP_IMMD || ic->right->aop->type == AOP_LIT))
         {
           operand *t = IC_RIGHT (ic);
           IC_RIGHT (ic) = IC_LEFT (ic);
