@@ -1,3 +1,35 @@
+2023-12-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  doc/INSTALL.txt,
+	  sdcc.spec:
+	  Set version to 4.4.0 to prepare for release.
+	* sdcc/support/scripts/sdcc.nsi
+	  Enable mos65c02 port.
+
+2023-12-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/configure,
+	  sdcc/configure.ac:
+	  Enable mos65c02 port.
+
+2023-12-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix bug #3681.
+	* src/z80/peeph.def:
+	  Whitespace fix.
+	* src/stm8/gen.c:
+	  Fix bug #3683.
+
+2023-12-17 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/main.c
+  	  fix bra in the opcode table. Use strncmp in the opcode search to support 65C02 bit manipulation instructions.
+	* src/mos6502/gen.c
+	  fix wrong offset for struct return in mos6502-stack-auto port
+	  indentation changes
+
 2023-12-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-3685.c:
@@ -16,7 +48,7 @@
 
 2023-12-12 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* src/mos650/gen.c
+  	* src/mos6502/gen.c
   	  fix bug3223041 regression failure for mos6502-stack-auto port
   	  fix bug3531687 regression failure for mos6502-stack-auto port
   	* device/lib/mos65c02/Makefile.in,
