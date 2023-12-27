@@ -8,6 +8,8 @@
 	  Peephole rule application limit, fixes bug #3557.
 	* src/SDCCgenconstprop.cc:
 	  Improve narrowing of multiplicative operators based on generalized constant propagation.
+	* src/mcs51/peeph.def:
+	  Peephole optimizer rule to optimize another variant of __code array access.
 
 2023-12-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
