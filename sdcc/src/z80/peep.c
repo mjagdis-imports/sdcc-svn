@@ -251,8 +251,7 @@ z80MightReadFlag(const lineNode *pl, const char *what)
      ISINST(pl->line, "rld") ||
      ISINST(pl->line, "rrd") ||
      ISINST(pl->line, "mlt") ||
-     ISINST(pl->line, "multu") ||
-     ISINST(pl->line, "multuw"))
+     ISINST(pl->line, "out"))
     return false;
   if(ISINST(pl->line, "halt") ||
      ISINST(pl->line, "rlca") ||
@@ -275,6 +274,11 @@ z80MightReadFlag(const lineNode *pl, const char *what)
 
   if((IS_SM83 || IS_Z80N) &&
       ISINST(pl->line, "swap"))
+    return false;
+
+  if(IS_R800 &&
+     (ISINST(pl->line, "multu") ||
+     ISINST(pl->line, "multuw")))
     return false;
 
   if(ISINST(pl->line, "rl") ||
@@ -760,7 +764,46 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
 }
 
 static bool
-z80SurelyWrites(const lineNode *pl, const char *what)
+callSurelyWrites (const lineNode *pl, const char *what)
+{
+  const symbol *f = 0;
+  if (ISINST(pl->line, "call") && !strchr(pl->line, ','))
+    f = findSym (SymbolTab, 0, pl->line + 6);
+  else if ((ISINST(pl->line, "jp") || ISINST(pl->line, "jr")) && !strchr(pl->line, ','))
+    f = findSym (SymbolTab, 0, pl->line + 4);
+
+  const bool *preserved_regs;
+
+  if(!strcmp(what, "ix"))
+    return(false);
+
+  if(f)
+    preserved_regs = f->type->funcAttrs.preserved_regs;
+  else if (ISINST(pl->line, "call")) // Err on the safe side.
+    preserved_regs = z80_regs_preserved_in_calls_from_current_function;
+  else
+    return (false);
+
+  if (!strcmp (what, "c"))
+    return !preserved_regs[C_IDX];
+  if (!strcmp (what, "b"))
+    return !preserved_regs[B_IDX];
+  if (!strcmp (what, "e"))
+    return !preserved_regs[E_IDX];
+  if (!strcmp (what, "d"))
+    return !preserved_regs[D_IDX];
+  if (!strcmp (what, "l"))
+    return !preserved_regs[L_IDX];
+  if (!strcmp (what, "h"))
+    return !preserved_regs[H_IDX];
+  if (!strcmp (what, "iy"))
+    return !preserved_regs[IYL_IDX] && !preserved_regs[IYH_IDX];
+
+  return (false);
+}
+
+static bool
+z80SurelyWrites (const lineNode *pl, const char *what)
 {
   if(strcmp(what, "iyl") == 0 || strcmp(what, "iyh") == 0)
     what = "iy";
@@ -795,34 +838,9 @@ z80SurelyWrites(const lineNode *pl, const char *what)
 
   if(ISINST(pl->line, "pop") && strstr(pl->line + 4, what))
     return(true);
-  if(ISINST(pl->line, "call") && strchr(pl->line, ',') == 0)
-    {
-      const symbol *f = findSym (SymbolTab, 0, pl->line + 6);
-      const bool *preserved_regs;
+  if (ISINST(pl->line, "call") && strchr(pl->line, ',') == 0)
+    return (callSurelyWrites (pl, what));
 
-      if(!strcmp(what, "ix"))
-        return(false);
-
-      if(f)
-          preserved_regs = f->type->funcAttrs.preserved_regs;
-      else // Err on the safe side.
-        preserved_regs = z80_regs_preserved_in_calls_from_current_function;
-
-      if(!strcmp(what, "c"))
-        return !preserved_regs[C_IDX];
-      if(!strcmp(what, "b"))
-        return !preserved_regs[B_IDX];
-      if(!strcmp(what, "e"))
-        return !preserved_regs[E_IDX];
-      if(!strcmp(what, "d"))
-        return !preserved_regs[D_IDX];
-      if(!strcmp(what, "l"))
-        return !preserved_regs[L_IDX];
-      if(!strcmp(what, "h"))
-        return !preserved_regs[H_IDX];
-      if(!strcmp(what, "iy"))
-        return !preserved_regs[IYL_IDX] && !preserved_regs[IYH_IDX];
-    }
   if(strcmp(pl->line, "ret") == 0)
     return true;
 
@@ -942,41 +960,56 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
         }
       else
         {
-        if(z80MightRead(*pl, what))
-          {
-            D(("S4O_RD_OP\n"));
-            return S4O_RD_OP;
-          }
+          if (z80MightRead (*pl, what))
+            {
+              D (("S4O_RD_OP\n"));
+              return S4O_RD_OP;
+            }
         }
 
-      if(z80UncondJump(*pl))
+      if (z80UncondJump (*pl))
         {
-          *pl = findLabel (*pl);
-            if (!*pl)
-              {
-                D(("S4O_ABORT\n"));
-                return S4O_ABORT;
-              }
+          lineNode *tlbl = findLabel (*pl);
+          if (!tlbl) // jp/jr could be a tail call.
+            {
+              const symbol *f = findSym (SymbolTab, 0, (*pl)->line + 4);
+              if (f && z80IsParmInCall(f->type, what))
+                {
+                  D (("S4O_RD_OP\n"));
+                  return S4O_RD_OP;
+                }
+              else if(callSurelyWrites (*pl, what))
+                {
+                  D (("S4O_WR_OP\n"));
+                  return S4O_WR_OP;
+                }
+            }
+          *pl = tlbl;
+          if (!*pl)
+            {
+              D (("S4O_ABORT\n"));
+              return S4O_ABORT;
+            }
         }
-      if(z80CondJump(*pl))
+      if (z80CondJump(*pl))
         {
           *plCond = findLabel (*pl);
           if (!*plCond)
             {
-              D(("S4O_ABORT\n"));
+              D (("S4O_ABORT\n"));
               return S4O_ABORT;
             }
-          D(("S4O_CONDJMP\n"));
+          D (("S4O_CONDJMP\n"));
           return S4O_CONDJMP;
         }
 
-      if(isFlag)
+      if (isFlag)
         {
-        if(z80SurelyWritesFlag(*pl, what))
-          {
-            D(("S4O_WR_OP (flag)\n"));
-            return S4O_WR_OP;
-          }
+          if (z80SurelyWritesFlag (*pl, what))
+            {
+              D (("S4O_WR_OP (flag)\n"));
+              return S4O_WR_OP;
+            }
         }
       else
         {
