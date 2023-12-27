@@ -368,6 +368,10 @@ bool mos6502notUsed (const char *what, lineNode *endPl, lineNode *head)
 
   unvisitLines (_G.head);
 
+  // Todo: Implement WDC 65C02 support, remove this check!
+  if (TARGET_IS_MOS65C02)
+    return (false);
+
   pl = endPl->next;
   return (doTermScan (&pl, what));
 }

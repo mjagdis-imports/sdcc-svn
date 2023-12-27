@@ -869,6 +869,15 @@ PORT mos65c02_port =
   {                             /* Peephole optimizer */
     _m65c02_defaultRules,
     m6502_getInstructionSize,
+    NULL,
+    NULL,
+    NULL,
+    mos6502notUsed,
+    NULL,
+    mos6502notUsedFrom,
+    NULL,
+    NULL,
+    NULL,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
   {
