@@ -29,6 +29,7 @@
 #include "gen.h"
 #include "dbuf_string.h"
 #include "m6502.h"
+#include "peep.h"
 
 #define OPTION_SMALL_MODEL          "--model-small"
 #define OPTION_LARGE_MODEL          "--model-large"
@@ -698,6 +699,15 @@ PORT mos6502_port =
   {                             /* Peephole optimizer */
     _m6502_defaultRules,
     m6502_getInstructionSize,
+    NULL,
+    NULL,
+    NULL,
+    mos6502notUsed,
+    NULL,
+    mos6502notUsedFrom,
+    NULL,
+    NULL,
+    NULL,
   },
   /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
   // TODO: banked func ptr and bit-precise integers

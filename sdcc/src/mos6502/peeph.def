@@ -98,22 +98,21 @@ replace restart {
     ; Peephole load 2 - replaced redundant lda by ora
 } if notVolatile(%1)
 
-// TODO: Enable when notUsed() gets implemented!
-//replace restart {
-//        stx	%1
-//	ldx     %1
-//} by {
-//        stx	%1
-//    ; Peephole load 3 - eliminated redundant ldx
-//} if notVolatile(%1), notUsed ('z')
-//
-//replace restart {
-//        sty	%1
-//	ldy     %1
-//} by {
-//        sty	%1
-//    ; Peephole load 4 - eliminated redundant ldy
-//} if notVolatile(%1), notUsed ('z')
+replace restart {
+	stx	%1
+	ldx     %1
+} by {
+	stx	%1
+    ; Peephole load 3 - eliminated redundant ldx
+} if notVolatile(%1), notUsed('n' 'z')
+
+replace restart {
+	sty	%1
+	ldy     %1
+} by {
+	sty	%1
+    ; Peephole load 4 - eliminated redundant ldy
+} if notVolatile(%1), notUsed('n' 'z')
 
 ////////////////////////////////////////////////////////
 // Remove dead loads
@@ -339,63 +338,62 @@ replace restart {
 // Remove unnecessary cmp/cpx/cpy #00
 ////////////////////////////////////////////////////////
 
-// TODO: Enable when notUsed() gets implemented!
-//replace restart {
-//	lda	%1
-//	cmp	#0x00
-//} by {
-//	lda	%1
-//	; Peephole cmp 1 - eliminated unnecessary cmp #0x00
-//} if notUsed ('c')
-//
-//replace restart {
-//	lda	%1,%2
-//	cmp	#0x00
-//} by {
-//	lda	%1,%2
-//	; Peephole cmp 2 - eliminated unnecessary cmp #0x00
-//} if notUsed ('c')
-//
-//replace restart {
-//	%1
-//	cmp	#0x00
-//} by {
-//	%1
-//	; Peephole cmp 3 - eliminated unnecessary cmp #0x00
-//} if same(%1 'pla' 'txa' 'tya' ), notUsed ('c')
-//
-//replace restart {
-//	ldx	%1
-//	cpx	#0x00
-//} by {
-//	ldx	%1
-//	; Peephole cmp 4 - eliminated unnecessary cpx #0x00
-//} if notUsed ('c')
-//
-//replace restart {
-//	ldy	%1
-//	cpy	#0x00
-//} by {
-//	ldy	%1
-//	; Peephole cmp 5 - eliminated unnecessary cpy #0x00
-//} if notUsed ('c')
-//
-//replace restart {
-//	%1
-//	cpx	#0x00
-//} by {
-//	%1
-//	; Peephole cmp 6 - eliminated unnecessary cpx #0x00
-//} if same(%1 'inx' 'dex' 'tax' ), notUsed ('c')
-//
-//replace restart {
-//	%1
-//	cpy	#0x00
-//} by {
-//	%1
-//	; Peephole cmp 7 - eliminated unnecessary cpy #0x00
-//} if same(%1 'iny' 'dey' 'tay' ), notUsed ('c')
-//
+replace restart {
+	lda	%1
+	cmp	#0x00
+} by {
+	lda	%1
+	; Peephole cmp 1 - eliminated unnecessary cmp #0x00
+} if notUsed('c')
+
+replace restart {
+	lda	%1,%2
+	cmp	#0x00
+} by {
+	lda	%1,%2
+	; Peephole cmp 2 - eliminated unnecessary cmp #0x00
+} if notUsed('c')
+
+replace restart {
+	%1
+	cmp	#0x00
+} by {
+	%1
+	; Peephole cmp 3 - eliminated unnecessary cmp #0x00
+} if same(%1 'pla' 'txa' 'tya' ), notUsed('c')
+
+replace restart {
+	ldx	%1
+	cpx	#0x00
+} by {
+	ldx	%1
+	; Peephole cmp 4 - eliminated unnecessary cpx #0x00
+} if notUsed('c')
+
+replace restart {
+	ldy	%1
+	cpy	#0x00
+} by {
+	ldy	%1
+	; Peephole cmp 5 - eliminated unnecessary cpy #0x00
+} if notUsed('c')
+
+replace restart {
+	%1
+	cpx	#0x00
+} by {
+	%1
+	; Peephole cmp 6 - eliminated unnecessary cpx #0x00
+} if same(%1 'inx' 'dex' 'tax' ), notUsed('c')
+
+replace restart {
+	%1
+	cpy	#0x00
+} by {
+	%1
+	; Peephole cmp 7 - eliminated unnecessary cpy #0x00
+} if same(%1 'iny' 'dey' 'tay' ), notUsed('c')
+
 ////////////////////////////////////////////////////////
 // Remove redundant stores
 ////////////////////////////////////////////////////////

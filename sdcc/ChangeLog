@@ -10,6 +10,11 @@
 	  Improve narrowing of multiplicative operators based on generalized constant propagation.
 	* src/mcs51/peeph.def:
 	  Peephole optimizer rule to optimize another variant of __code array access.
+	* src/mos6502/main.c,
+	  src/mos6502/peeph.def,
+	  src/mos6502/peep.c,
+	  src/mos6502/peep.h:
+	  notUsed/notUsedFrom for mos6502 flags.
 
 2023-12-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
