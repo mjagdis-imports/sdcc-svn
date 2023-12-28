@@ -1,3 +1,8 @@
+2023-12-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/peeph.def:
+	  Optimize out some unnecessary register use.
+
 2023-12-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peep.c:

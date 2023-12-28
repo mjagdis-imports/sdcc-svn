@@ -5052,11 +5052,19 @@ replace restart {
 	;	Peephole 301	push ar%1 removed
 } if deadMove(%1)
 
-replace {
+replace restart {
 	mov	%1, %2
 } by {
 	;	Peephole 302 removed dead mov %1, %2
 } if notVolatile(%2), notUsed(%1)
+
+replace restart {
+	mov	%1, a
+	mov	%2, %1
+} by {
+	mov	%2, a
+	;	Peephole 303 used a directly instead of going through %1
+} if notVolatile(%1), notUsed(%1)
 
 // applies to: void test( char c ) { if( c ) func1(); else func2(); }
 replace {
