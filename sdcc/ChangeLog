@@ -1,3 +1,8 @@
+2023-12-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/peep.c:
+	  pdk peephole optimizer improvmenets, mostly from patch #447 by Konstantin Kim.
+
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c,

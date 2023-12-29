@@ -164,7 +164,7 @@ static bool argIs(const char *arg, const char *what)
     arg++;
 
   return !strncmp(arg, what, strlen(what)) &&
-    (!arg[strlen(what)] || isspace((unsigned char)(arg[strlen(what)])) || arg[strlen(what)] == ',');
+    (!arg[strlen(what)] || isspace((unsigned char)(arg[strlen(what)])) || arg[strlen(what)] == ',' || arg[strlen(what)] == '.');
 }
 
 static bool
@@ -241,9 +241,9 @@ pdkMightRead(const lineNode *pl, const char *what)
     ISINST (pl->line, "stt16"))
     return argIs (pl->line + 5, what);
 
-  // Todo: addc, subc, xch
+  // Todo: addc, subc, xch, swapc.io
 
-  return true;
+  return true; // Fail-safe: we have no idea what happens at this line, so assume it might read anything.
 }
 
 static bool
@@ -269,7 +269,8 @@ pdkSurelyWritesFlag(const lineNode *pl, const char *what)
   if (ISINST (pl->line, "sl") ||
     ISINST (pl->line, "slc") ||
     ISINST (pl->line, "sr") ||
-    ISINST (pl->line, "src"))
+    ISINST (pl->line, "src") ||
+    ISINST (pl->line, "swapc.io"))
       return !strcmp(what, "c");
 
   // Instructions that write z only
@@ -289,7 +290,7 @@ pdkSurelyWritesFlag(const lineNode *pl, const char *what)
         return true;
     }
 
-  return false;
+  return false; // Fail-safe: we have no idea what happens at this line, so assume it writes nothing.
 }
 
 static bool
@@ -298,10 +299,16 @@ pdkSurelyWrites(const lineNode *pl, const char *what)
   if (!strcmp(what, "z") || !strcmp(what, "c") || !strcmp(what, "ac") || !strcmp(what, "ov"))
     return (pdkSurelyWritesFlag(pl, what));
 
-  if (ISINST(pl->line, "mov") || ISINST(pl->line, "idxm"))
+  if (ISINST(pl->line, "mov") || ISINST(pl->line, "idxm") ||
+    ISINST (pl->line, "set1") ||
+    ISINST (pl->line, "set0"))
     return argIs (pl->line + 4, what);
-  if (ISINST(pl->line, "mov.io"))
+  if (ISINST(pl->line, "mov.io") ||
+    ISINST (pl->line, "set1.io") ||
+    ISINST (pl->line, "set0.io"))
     return argIs (pl->line + 7, what);
+  if (ISINST (pl->line, "swapc.io"))
+    return argIs (pl->line + 9, what);
 
   if (ISINST (pl->line, "pop") && argIs (pl->line + 4, "af") || ISINST (pl->line, "popaf"))
     return !strcmp(what, "a");
@@ -311,12 +318,17 @@ pdkSurelyWrites(const lineNode *pl, const char *what)
   // One-operand instructions that write their argument
   if (ISINST (pl->line, "neg") ||
     ISINST (pl->line, "not") ||
+    ISINST (pl->line, "inc") ||
+    ISINST (pl->line, "dec") ||
+    ISINST (pl->line, "xch") ||
+    ISINST (pl->line, "not") ||
     ISINST (pl->line, "sl") ||
     ISINST (pl->line, "slc") ||
     ISINST (pl->line, "sr") ||
     ISINST (pl->line, "src"))
     return argIs (pl->line + 3, what);
   if (ISINST (pl->line, "dzsn") ||
+    ISINST (pl->line, "clear") ||
     ISINST (pl->line, "izsn") ||
     ISINST (pl->line, "ldt16"))
     return argIs (pl->line + 5, what);
