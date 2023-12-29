@@ -1,3 +1,11 @@
+2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/hc08/gen.c,
+	  src/hc08/gen.h:
+	  remove unused aop_immd2 from aop structure.
+	
 2023-12-28 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/_divuchar.s,

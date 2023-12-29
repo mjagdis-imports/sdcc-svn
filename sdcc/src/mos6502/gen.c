@@ -1195,7 +1195,7 @@ static char * aopName (asmop * aop)
 
   switch (aop->type) {
   case AOP_IMMD:
-    sprintf (buf, "IMMD(%s)", aop->aopu.aop_immd.aop_immd1);
+    sprintf (buf, "IMMD(%s)", aop->aopu.aop_immd);
     return buf;
   case AOP_LIT:
     sprintf (buf, "LIT(%s)", aopLiteral (aop->aopu.aop_lit, 0));
@@ -2531,8 +2531,8 @@ static asmop * aopForSym (const iCode * ic, symbol * sym)
   /* special case for a function */
   if (IS_FUNC (sym->type)) {
     sym->aop = aop = newAsmop (AOP_IMMD);
-    aop->aopu.aop_immd.aop_immd1 = Safe_calloc (1, strlen (sym->rname) + 1 + 6);
-    sprintf (aop->aopu.aop_immd.aop_immd1, "(%s)", sym->rname); // function pointer; take back one for RTS
+    aop->aopu.aop_immd = Safe_calloc (1, strlen (sym->rname) + 1 + 6);
+    sprintf (aop->aopu.aop_immd, "(%s)", sym->rname); // function pointer; take back one for RTS
     aop->size = FARPTRSIZE;
     return aop;
   }
@@ -2629,8 +2629,7 @@ static asmop * aopForRemat (symbol * sym)
     }
 
     aop = newAsmop (AOP_IMMD);
-    aop->aopu.aop_immd.aop_immd1 = Safe_strdup (buffer);
-    /* set immd2 field if required */
+    aop->aopu.aop_immd = Safe_strdup (buffer);
   } else if (ic->op == '=') {
     val += (int) operandLitValue (IC_RIGHT (ic));
     val &= 0xffff;
@@ -3047,10 +3046,10 @@ static asmop * aopDerefAop (asmop * aop, int offset)
     else
       newaop = newAsmop (AOP_EXT);
     if (!offset)
-      newaop->aopu.aop_dir = aop->aopu.aop_immd.aop_immd1;
+      newaop->aopu.aop_dir = aop->aopu.aop_immd;
     else {
       dbuf_init (&dbuf, 64);
-      dbuf_printf (&dbuf, "(%s+%d)", aop->aopu.aop_immd.aop_immd1, offset);
+      dbuf_printf (&dbuf, "(%s+%d)", aop->aopu.aop_immd, offset);
       newaop->aopu.aop_dir = dbuf_detach_c_str (&dbuf);
     }
     break;
@@ -3253,12 +3252,12 @@ static const char * aopAdrStr (asmop * aop, int loffset, bool bit16)
   case AOP_IMMD:
     if (loffset) {
       if (loffset > 1)
-	sprintf (s, "#(%s >> %d)", aop->aopu.aop_immd.aop_immd1, loffset * 8);
+	sprintf (s, "#(%s >> %d)", aop->aopu.aop_immd, loffset * 8);
       else
-	sprintf (s, "#>%s", aop->aopu.aop_immd.aop_immd1);
+	sprintf (s, "#>%s", aop->aopu.aop_immd);
     }
     else
-      sprintf (s, "#%s", aop->aopu.aop_immd.aop_immd1);
+      sprintf (s, "#%s", aop->aopu.aop_immd);
     rs = Safe_calloc (1, strlen (s) + 1);
     strcpy (rs, s);
     return rs;
@@ -7996,7 +7995,7 @@ static void decodePointerOffset (operand * opOffset, int * litOffset, char ** re
     if (aop->type == AOP_LIT)
       *litOffset = (int) floatFromVal (aop->aopu.aop_lit);
     else if (aop->type == AOP_IMMD)
-      *rematOffset = aop->aopu.aop_immd.aop_immd1;
+      *rematOffset = aop->aopu.aop_immd;
   }
   else
     wassertl (0, "Pointer get/set with non-constant offset");
@@ -9343,10 +9342,9 @@ static bool genAssignLit (operand * result, operand * right)
   return true;
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genAssign - generate code for assignment                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAssign - generate code for assignment
+ *************************************************************************/
 static void
 genAssign (iCode * ic)
 {
