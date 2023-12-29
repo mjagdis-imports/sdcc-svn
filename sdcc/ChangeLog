@@ -1,7 +1,12 @@
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
-	  Imporve use of BIT instruction
+	  Imporve use of BIT instruction.
+	* src/mos6502/ralloc.c,
+	  src/mos6502/ralloc.h:
+	  Prepare for improved register pair handling.
+	* src/mos6502/gen.c:
+	  correct constant size in isLiteralBit().
 
 2023-12-29 Philipp Klaus Krause <philipp@colecovision.eu>
 

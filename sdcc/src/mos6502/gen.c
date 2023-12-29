@@ -5758,7 +5758,7 @@ static int isLiteralBit (unsigned long long lit)
   int idx;
 
   for (idx = 0; idx < 64; idx++)
-    if (lit == 1<<idx)
+    if (lit == 1ull<<idx)
       return idx + 1;
   return 0;
 }
