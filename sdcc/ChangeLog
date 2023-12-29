@@ -1,9 +1,11 @@
 2023-12-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/peep.c:
-	  pdk peephole optimizer improvmenets, mostly from patch #447 by Konstantin Kim.
+	  pdk peephole optimizer improvements, mostly from patch #447 by Konstantin Kim.
 	* support/regression/tests/iobit.c.in:
 	  Improve test coverage for bit access on __sfr, inspired by discussion of patch #447.
+	* src/pdk/peeph.def:
+	  Add a peephole optimizer rule from patch #447 by Konstantin Kim.
 
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 
