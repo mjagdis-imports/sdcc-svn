@@ -1,3 +1,8 @@
+2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Imporve use of BIT instruction
+
 2023-12-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/peep.c:

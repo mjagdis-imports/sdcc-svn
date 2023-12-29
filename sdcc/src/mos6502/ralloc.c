@@ -17,15 +17,10 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
-   In other words, you are welcome to use, share and improve this program.
-   You are forbidden to forbid anyone else to use, share and improve
-   what you give them.   Help stamp out software-hoarding!
 -------------------------------------------------------------------------*/
 
 #include "ralloc.h"
 #include "gen.h"
-
 #include "dbuf_string.h"
 
 /* Flags to turn on debugging code.
@@ -58,18 +53,15 @@ reg_info regsm6502[] =
   {REG_GPR, A_IDX,   "a",  M6502MASK_A,  NULL, 0, 1},
   {REG_GPR, X_IDX,   "x",  M6502MASK_X,  NULL, 0, 1},
   {REG_GPR, Y_IDX,   "y",  M6502MASK_Y,  NULL, 0, 1},
+  {REG_CND, CND_IDX, "C",  0, NULL, 0, 1},
   {REG_GPR, XA_IDX,  "xa", M6502MASK_XA, NULL, 0, 1},
 //  {REG_GPR, YA_IDX,  "ya", M6502MASK_YA, NULL, 0, 1},
   {REG_GPR, YX_IDX,  "yx", M6502MASK_YX, NULL, 0, 1},
-  {REG_CND, CND_IDX, "C",  0, NULL, 0, 1},
   {0,       SP_IDX,  "sp", 0, NULL, 0, 1},
 };
 
-extern void genm6502Code (iCode *);
-
 /* Shared with gen.c */
 int m6502_ptrRegReq;             /* one byte pointer register required */
-
 
 int m6502_nRegs = sizeof(regsm6502)/sizeof(reg_info);
 
@@ -81,8 +73,10 @@ reg_info *m6502_reg_xa;
 reg_info *m6502_reg_yx;
 reg_info *m6502_reg_sp;
 
-void m6502SpillThis (symbol *);
+static void m6502SpillThis (symbol *);
 static void updateRegUsage (iCode * ic);
+extern void genm6502Code (iCode *);
+
 
 /*-----------------------------------------------------------------*/
 /* m6502_regWithIdx - returns pointer to register with index number */
@@ -287,7 +281,7 @@ createStackSpil (symbol * sym)
 /*-----------------------------------------------------------------*/
 /* spillThis - spills a specific operand                           */
 /*-----------------------------------------------------------------*/
-void
+static void
 m6502SpillThis (symbol * sym)
 {
   int i;
@@ -1250,9 +1244,9 @@ packRegisters (eBBlock ** ebpp, int count)
     }
 }
 
-/**
-  Mark variables for assignment by the register allocator.
- */
+/*-----------------------------------------------------------------*/
+/*   Mark variables for assignment by the register allocator.      */
+/*-----------------------------------------------------------------*/
 static void
 serialRegMark (eBBlock ** ebbs, int count)
 {

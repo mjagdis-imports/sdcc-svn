@@ -5904,9 +5904,10 @@ static void genAnd (iCode * ic, iCode * ifx)
      }
   */
 
-#if 0
   // special case for bit 7 and 6
-  if (AOP_TYPE (result) == AOP_CRY && AOP_TYPE (right) == AOP_LIT) {
+  if (AOP_TYPE (result) == AOP_CRY && AOP_TYPE (right) == AOP_LIT && canBitOp(left)) {
+    emitComment (TRACEGEN|VVDBG, "  %s: special case bit %d", __func__, bitpos);
+
     if (bitpos >= 0 && (bitpos & 7) == 7) {
       rmwWithAop ("bit", AOP (left), bitpos >> 3);
       genIfxJump (ifx, "n");
@@ -5918,7 +5919,6 @@ static void genAnd (iCode * ic, iCode * ifx)
       goto release;
     }
   }
-#endif
 
   // test A for flags only
   if (AOP_TYPE (result) == AOP_CRY && size == 1 && (IS_AOP_A (AOP (left)) || IS_AOP_A (AOP (right)))) {
@@ -8008,13 +8008,27 @@ static void decodePointerOffset (operand * opOffset, int * litOffset, char ** re
 static void bitAConst(int val)
 {
   wassertl (val >= 0 && val <= 0xff, "bitAConst()");
-  if (IS_MOS65C02) {
-    emit6502op ("bit", IMMDFMT, val);
-  } else {
-    storeRegTemp (m6502_reg_a, true);
-    emit6502op ("and", IMMDFMT, val);
-    loadRegTempNoFlags (m6502_reg_a, true);
-  }
+  if (IS_MOS65C02)
+    {
+      emit6502op ("bit", IMMDFMT, val);
+    } 
+  else 
+    {
+      reg_info *reg=getFreeByteReg();
+      if(reg)
+        {
+          loadRegFromConst(reg,val);
+          storeRegTemp (reg, true);
+          emit6502op ("bit", TEMPFMT, _G.tempOfs-1);
+          loadRegTemp(NULL);
+        }
+      else
+        {
+          storeRegTemp (m6502_reg_a, true);
+          emit6502op ("and", IMMDFMT, val);
+          loadRegTempNoFlags (m6502_reg_a, true);
+        }
+    }
 }
 
 /**************************************************************************

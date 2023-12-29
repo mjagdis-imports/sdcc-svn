@@ -34,10 +34,10 @@ enum
     X_IDX,
     Y_IDX,
 //    Z_IDX,
+    CND_IDX,
     XA_IDX,
 //    YA_IDX,   
     YX_IDX,
-    CND_IDX,
     SP_IDX
   };
 
@@ -119,10 +119,8 @@ bitVect *m6502_rUmaskForOp (operand * op);
 const m6502opcodedata *m6502_getOpcodeData(const char *inst);
 int m6502_opcodeSize(const m6502opcodedata *opcode, const char *arg);
 
-void m6502SpillThis (symbol *);
 iCode *m6502_ralloc2_cc(ebbIndex *ebbi);
 
 void m6502RegFix (eBBlock **ebbs, int count);
 
 #endif
-
