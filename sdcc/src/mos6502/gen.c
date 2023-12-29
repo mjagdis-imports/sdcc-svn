@@ -604,15 +604,15 @@ void m6502_emitDebuggerSymbol (const char *debugSym)
   genLine.lineElement.isDebug = 0;
 }
 
-/*--------------------------------------------------------------------------*/
-/* Transfer from register(s) sreg to register(s) dreg.                      */
-/* If freesrc is true, sreg is marked free and available for reuse.         */
-/* sreg and dreg must be of equal size                                      */
-/*                                                                          */
-/* @param sreg pointer to the source register                               */
-/* @param dreg pointer to the destination register                          */
-/* @param freesrc free the source register if true                          */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * Transfer from register(s) sreg to register(s) dreg.
+ * If freesrc is true, sreg is marked free and available for reuse.
+ * sreg and dreg must be of equal size
+ *
+ * @param sreg pointer to the source register
+ * @param dreg pointer to the destination register
+ * @param freesrc free the source register if true
+ *************************************************************************/
 static void transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
 {
   int srcidx;
@@ -750,10 +750,11 @@ static void transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
     m6502_freeReg (sreg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* updateCFA - update the debugger information to reflect the current       */
-/*             canonical frame address relative to the stack pointer        */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * updateCFA - update the debugger information to reflect the current
+ *             canonical frame address relative to the stack pointer
+ *************************************************************************/
+
 static void updateCFA (void)
 {
   /* there is no frame unless there is a function */
@@ -951,10 +952,10 @@ static void dirtyRegTemp (int temp_reg_idx)
   _G.tempAttr[temp_reg_idx].isLiteral=false;
 }
 
-/*--------------------------------------------------------------------------*/
-/* pushReg - Push register reg onto the stack. If freereg is true, reg is   */
-/*           marked free and available for reuse.                           */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * pushReg - Push register reg onto the stack. If freereg is true, reg is
+ *           marked free and available for reuse.
+ *************************************************************************/
 static void pushReg (reg_info * reg, bool freereg)
 {
   int regidx = reg->rIdx;
@@ -1005,9 +1006,9 @@ static void pushReg (reg_info * reg, bool freereg)
     m6502_freeReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* pullReg - Pull register reg off the stack.                               */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * pullReg - Pull register reg off the stack.
+ *************************************************************************/
 static void pullReg (reg_info * reg)
 {
   int regidx = reg->rIdx;
@@ -1060,9 +1061,9 @@ static void pullReg (reg_info * reg)
   m6502_dirtyReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* pullNull - Discard n bytes off the top of the stack                      */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * pullNull - Discard n bytes off the top of the stack
+ *************************************************************************/
 static void pullNull (int n)
 {
   emitComment (REGOPS, __func__ );
@@ -1071,10 +1072,10 @@ static void pullNull (int n)
   adjustStack (n);
 }
 
-/*--------------------------------------------------------------------------*/
-/* pushRegIfUsed - Push register reg if marked in use. Returns true if the  */
-/*                 push was performed, false otherwise.                     */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * pushRegIfUsed - Push register reg if marked in use. Returns true if the
+ *                 push was performed, false otherwise.
+ *************************************************************************/
 static bool pushRegIfUsed (reg_info *reg)
 {
   if (!reg->isFree)
@@ -1086,10 +1087,10 @@ static bool pushRegIfUsed (reg_info *reg)
     return false;
 }
 
-/*--------------------------------------------------------------------------*/
-/* pushRegIfSurv - Push register reg if marked surviving. Returns true if   */
-/*                 the push was performed, false otherwise.                 */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * pushRegIfSurv - Push register reg if marked surviving. Returns true if
+ *                 the push was performed, false otherwise.
+ *************************************************************************/
 static bool pushRegIfSurv (reg_info *reg)
 {
   if (!reg->isDead) {
@@ -1099,10 +1100,10 @@ static bool pushRegIfSurv (reg_info *reg)
     return false;
 }
 
-/*--------------------------------------------------------------------------*/
-/* pullOrFreeReg - If needpull is true, register reg is pulled from the     */
-/*                 stack. Otherwise register reg is marked as free.         */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * pullOrFreeReg - If needpull is true, register reg is pulled from the
+ *                 stack. Otherwise register reg is marked as free.
+ *************************************************************************/
 static void pullOrFreeReg (reg_info * reg, bool needpull)
 {
   if (needpull)
@@ -1111,9 +1112,9 @@ static void pullOrFreeReg (reg_info * reg, bool needpull)
     m6502_freeReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* adjustStack - Adjust the stack pointer by n bytes.                       */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * adjustStack - Adjust the stack pointer by n bytes.
+ *************************************************************************/
 // TODO: optimize for 65C02
 static void adjustStack (int n)
 {
@@ -1181,9 +1182,9 @@ static void swapXA ()
   }
 }
 
-/*--------------------------------------------------------------------------*/
-/* aopName - Return a string with debugging information about an asmop.     */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * Return a string with debugging information about an asmop.
+ *************************************************************************/
 static char * aopName (asmop * aop)
 {
   static char buffer[276];
@@ -1243,10 +1244,10 @@ static bool canBitOp (const operand* aop)
   return false;
 }
 
-/*--------------------------------------------------------------------------*/
-/* loadRegFromAop - Load register reg from logical offset loffset of aop.   */
-/*                  For multi-byte registers, loffset is of the lsb reg.    */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * Load register reg from logical offset loffset of aop.
+ * For multi-byte registers, loffset is of the lsb reg.
+ *************************************************************************/
 static void loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
 {
   int regidx = reg->rIdx;
@@ -1367,7 +1368,9 @@ static void loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
   m6502_useReg (reg);
 }
 
-// get any free 8-bit register
+/**************************************************************************
+ * Find any free 8-bit register
+ *************************************************************************/
 static reg_info* getFreeByteReg()
 {
   if (m6502_reg_a->isFree)
@@ -1393,10 +1396,10 @@ static reg_info* getDeadByteReg()
     return NULL;
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeRegToAop - Store register reg to logical offset loffset of aop.     */
-/*                 For multi-byte registers, loffset is of the lsb reg.     */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegToAop - Store register reg to logical offset loffset of aop.
+ *                 For multi-byte registers, loffset is of the lsb reg.
+ *************************************************************************/
 static void storeRegToAop (reg_info *reg, asmop * aop, int loffset)
 {
   bool needpulla = false;
@@ -1550,9 +1553,9 @@ static void storeRegToAop (reg_info *reg, asmop * aop, int loffset)
 #endif
 }
 
-/*--------------------------------------------------------------------------*/
-/* loadRegFromConst - Load register reg from constant c.                    */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * loadRegFromConst - Load register reg from constant c.
+ *************************************************************************/
 static void loadRegFromConst (reg_info * reg, int c)
 {
   emitComment (REGOPS, __func__ );
@@ -1669,9 +1672,9 @@ static void loadRegFromConst (reg_info * reg, int c)
   m6502_useReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* loadRegFromImm - Load register reg from immediate value c.               */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * loadRegFromImm - Load register reg from immediate value c.
+ *************************************************************************/
 static void loadRegFromImm (reg_info * reg, char * c)
 {
   emitComment (REGOPS, __func__ );
@@ -1708,9 +1711,10 @@ static void loadRegFromImm (reg_info * reg, char * c)
   m6502_useReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeConstToAop- Store constant c to logical offset loffset of asmop aop.*/
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeConstToAop - Store constant c to logical offset loffset of 
+ *                   asmop aop.
+ *************************************************************************/
 static void storeConstToAop (int c, asmop * aop, int loffset)
 {
   emitComment (REGOPS, __func__ );
@@ -1782,9 +1786,10 @@ static void storeConstToAop (int c, asmop * aop, int loffset)
   }
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeImmToAop- Store immediate value c to logical offset loffset of asmop aop.*/
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeImmToAop - Store immediate value c to logical offset
+ *                 loffset of asmop aop.
+ *************************************************************************/
 static void storeImmToAop (char *c, asmop * aop, int loffset)
 {
   emitComment (TRACE_AOP, __func__ );
@@ -1841,13 +1846,13 @@ static void signExtendA()
   emit6502op ("eor", "#0xff");
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeRegSignToUpperAop - If isSigned is true, the sign bit of register   */
-/*                          reg is extended to fill logical offsets loffset */
-/*                          and above of asmop aop. Otherwise, logical      */
-/*                          offsets loffset and above of asmop aop are      */
-/*                          zeroed. reg must be an 8-bit register.          */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegSignToUpperAop - If isSigned is true, the sign bit of register
+ *                          reg is extended to fill logical offsets loffset
+ *                          and above of asmop aop. Otherwise, logical
+ *                          offsets loffset and above of asmop aop are
+ *                          zeroed. reg must be an 8-bit register.
+ *************************************************************************/
 static void storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bool isSigned)
 {
   emitComment (TRACE_AOP, __func__ );
@@ -1876,11 +1881,11 @@ static void storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bo
     }
 }
 
-/*--------------------------------------------------------------------------*/
-/* storeRegToFullAop - Store register reg to asmop aop with appropriate     */
-/*                     padding and/or truncation as needed. If isSigned is  */
-/*                     true, sign extension will take place in the padding. */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * storeRegToFullAop - Store register reg to asmop aop with appropriate
+ *                     padding and/or truncation as needed. If isSigned is
+ *                     true, sign extension will take place in the padding.
+ *************************************************************************/
 static void storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
 {
   int regidx = reg->rIdx;
@@ -1925,10 +1930,10 @@ static void storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
   }
 }
 
-/*--------------------------------------------------------------------------*/
-/* transferAopAop - Transfer the value at logical offset srcofs of asmop    */
-/*                  srcaop to logical offset dstofs of asmop dstaop.        */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * transferAopAop - Transfer the value at logical offset srcofs of asmop
+ *                  srcaop to logical offset dstofs of asmop dstaop.
+ *************************************************************************/
 static void transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs)
 {
   bool needpula = false;
@@ -2059,11 +2064,11 @@ static asmop * forceStackedAop (asmop * aop, bool copyOrig)
 #endif
 
 // TODO: fix these
-/*--------------------------------------------------------------------------*/
-/* accopWithAop - Emit accumulator modifying instruction accop with the     */
-/*                byte at logical offset loffset of asmop aop.              */
-/*                Supports: adc, and, cmp, eor, ora, sbc                    */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * accopWithAop - Emit accumulator modifying instruction accop with
+ *                the byte at logical offset loffset of asmop aop.
+ *                Supports: adc, and, cmp, eor, ora, sbc
+ *************************************************************************/
 static void accopWithAop (char *accop, asmop *aop, int loffset)
 {
   emitComment (TRACE_AOP, __func__ );
@@ -2092,12 +2097,12 @@ static void accopWithAop (char *accop, asmop *aop, int loffset)
   }
 }
 
-/*--------------------------------------------------------------------------*/
-/* rmwWithReg - Emit read/modify/write instruction rmwop with register reg. */
-/*              byte at logical offset loffset of asmop aop. Register reg   */
-/*              must be 8-bit.                                              */
-/*              Supports: com, dec, inc, lsl, lsr, neg, rol, ror - FIXME    */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * rmwWithReg - Emit read/modify/write instruction rmwop with register reg.
+ *              byte at logical offset loffset of asmop aop. Register reg
+ *              must be 8-bit.
+ *              Supports: com, dec, inc, lsl, lsr, neg, rol, ror
+ *************************************************************************/
 static void rmwWithReg (char *rmwop, reg_info * reg)
 {
   if (reg->rIdx == A_IDX) {
@@ -2161,11 +2166,11 @@ static void rmwWithReg (char *rmwop, reg_info * reg)
   //  m6502_dirtyReg (reg);
 }
 
-/*--------------------------------------------------------------------------*/
-/* rmwWithAop - Emit read/modify/write instruction rmwop with the byte at   */
-/*                logical offset loffset of asmop aop.                      */
-/*                Supports: bit, dec, inc, lsl, lsr, neg, rol, ror          */
-/*--------------------------------------------------------------------------*/
+/**************************************************************************
+ * rmwWithAop - Emit read/modify/write instruction rmwop with the byte at
+ *                logical offset loffset of asmop aop.
+ *                Supports: bit, dec, inc, lsl, lsr, neg, rol, ror
+ *************************************************************************/
 static void rmwWithAop (char *rmwop, asmop * aop, int loffset)
 {
   bool needpull = false;
@@ -2260,10 +2265,10 @@ static void storeRegToDPTR(reg_info *reg, int dofs)
   m6502_freeReg(reg);
 }
 
-/*-----------------------------------------------------------------*/
-/* sets up DPTR for a indexed operation                            */
-/* clobbers A if savea==false and clobbers Y if savea==true        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * sets up DPTR for a indexed operation
+ * clobbers A if savea==false and clobbers Y if savea==true
+ *************************************************************************/
 static int setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
 {
   emitComment (TRACEGEN, __func__);
@@ -2333,10 +2338,9 @@ static int setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
   }
 }
 
-
-/*-----------------------------------------------------------------*/
-/* newAsmop - creates a new asmOp                                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * newAsmop - creates a new asmOp
+ *************************************************************************/
 static asmop * newAsmop (short type)
 {
   asmop *aop;
@@ -2348,9 +2352,9 @@ static asmop * newAsmop (short type)
 }
 
 #if 0
-/*-----------------------------------------------------------------*/
-/* operandConflictsWithYX - true if operand in y and/or x register */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * operandConflictsWithYX - true if operand in y and/or x register
+ *************************************************************************/
 static bool operandConflictsWithYX (operand *op)
 {
   symbol *sym;
@@ -2370,9 +2374,9 @@ static bool operandConflictsWithYX (operand *op)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* operandConflictsWithX - true if operand in x register           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * operandConflictsWithX - true if operand in x register
+ *************************************************************************/
 static bool operandConflictsWithX (operand *op)
 {
   symbol *sym;
@@ -2392,9 +2396,9 @@ static bool operandConflictsWithX (operand *op)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* operandOnStack - returns True if operand is on the stack        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * operandOnStack - returns True if operand is on the stack
+ *************************************************************************/
 static bool operandOnStack(operand *op)
 {
   symbol *sym;
@@ -2413,10 +2417,10 @@ static bool operandOnStack(operand *op)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* tsxUseful - returns True if tsx could help at least one         */
-/*             anticipated stack references                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * tsxUseful - returns True if tsx could help at least one
+ *             anticipated stack references
+ *************************************************************************/
 static bool tsxUseful(const iCode *ic)
 {
   operand *right  = IC_RIGHT(ic);
@@ -2504,9 +2508,9 @@ restoreBasePtr()
   // we recompute with saveBasePtr() after each jsr
 }
 
-/*-----------------------------------------------------------------*/
-/* aopForSym - for a true symbol                                   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopForSym - for a true symbol
+ *************************************************************************/
 static asmop * aopForSym (const iCode * ic, symbol * sym)
 {
   asmop *aop;
@@ -2588,9 +2592,9 @@ static asmop * aopForSym (const iCode * ic, symbol * sym)
   return aop;
 }
 
-/*-----------------------------------------------------------------*/
-/* aopForRemat - rematerializes an object                          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopForRemat - rematerializes an object
+ *************************************************************************/
 static asmop * aopForRemat (symbol * sym)
 {
   iCode *ic = sym->rematiCode;
@@ -2641,9 +2645,9 @@ static asmop * aopForRemat (symbol * sym)
 }
 
 #if 0 // No longer used?
-/*-----------------------------------------------------------------*/
-/* regsInCommon - two operands have some registers in common       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * regsInCommon - two operands have some registers in common
+ *************************************************************************/
 static bool regsInCommon (operand * op1, operand * op2)
 {
   symbol *sym1, *sym2;
@@ -2679,9 +2683,9 @@ static bool regsInCommon (operand * op1, operand * op2)
 }
 #endif
 
-/*-----------------------------------------------------------------*/
-/* operandsEqu - equivalent                                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * operandsEqu - equivalent
+ *************************************************************************/
 static bool operandsEqu (operand *op1, operand *op2)
 {
   symbol *sym1, *sym2;
@@ -2716,9 +2720,9 @@ static bool operandsEqu (operand *op1, operand *op2)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* sameRegs - two asmops have the same registers                   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * sameRegs - two asmops have the same registers
+ *************************************************************************/
 static bool sameRegs (asmop * aop1, asmop * aop2)
 {
   int i;
@@ -2788,9 +2792,9 @@ static bool aopCanShift (asmop * aop)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* aopOp - allocates an asmop for an operand  :                    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopOp - allocates an asmop for an operand
+ *************************************************************************/
 static void aopOp (operand *op, const iCode * ic)
 {
   asmop *aop = NULL;
@@ -2959,9 +2963,9 @@ static void aopOp (operand *op, const iCode * ic)
   aop->op = op;
 }
 
-/*-----------------------------------------------------------------*/
-/* freeAsmop - free up the asmop given to an operand               */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * freeAsmop - free up the asmop given to an operand
+ *************************************************************************/
 static void freeAsmop (operand * op, asmop * aaop)
 {
   asmop *aop;
@@ -3008,10 +3012,10 @@ static void freeAsmop (operand * op, asmop * aaop)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* aopDerefAop - treating the aop parameter as a pointer, return   */
-/*               an asmop for the object it references             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopDerefAop - treating the aop parameter as a pointer, return an asmop
+ *               for the object it references
+ *************************************************************************/
 static asmop * aopDerefAop (asmop * aop, int offset)
 {
   int adr;
@@ -3074,10 +3078,9 @@ static asmop * aopDerefAop (asmop * aop, int offset)
   return newaop;
 }
 
-
-/*-----------------------------------------------------------------*/
-/* aopOpExtToIdx - attempt to convert AOP_EXT to AOP_IDX           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopOpExtToIdx - attempt to convert AOP_EXT to AOP_IDX
+ *************************************************************************/
 static void aopOpExtToIdx(asmop * result, asmop *left, asmop *right)
 {
   int accesses=0;
@@ -3226,9 +3229,9 @@ static void aopAdrUnprepare (asmop * aop, int loffset)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* aopAdrStr - for referencing the address of the aop              */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * aopAdrStr - for referencing the address of the aop
+ *************************************************************************/
 /* loffset seems to have a weird meaning here. It seems to be nonzero in some places where one would expect an offset to be zero */
 static const char * aopAdrStr (asmop * aop, int loffset, bool bit16)
 {
@@ -3299,7 +3302,9 @@ static const char * aopAdrStr (asmop * aop, int loffset, bool bit16)
       // this is a workaround for the assembler incorrectly
       // generating ZP,x instead of ABS,x
       if((_G.stackOfs + _G.tsxStackPushes + aop->aopu.aop_stk + offset + 1)<0)
+	{
 	m6502_dirtyReg(m6502_reg_x);
+        }
       doTSX();
       // hc08's tsx returns +1, ours returns +0
       //DD( emitcode( "", "; %d + %d + %d + %d + 1", _G.stackOfs, _G.tsxStackPushes, aop->aopu.aop_stk, offset ));
@@ -3339,11 +3344,11 @@ static const char * aopAdrStr (asmop * aop, int loffset, bool bit16)
   exit (1);
 }
 
-/*-----------------------------------------------------------------*/
-/* asmopToBool - Emit code to convert an asmop to a boolean.       */
-/*               Result left in A (0=false, 1=true) if ResultInA,  */
-/*               otherwise result left in Z flag (1=false, 0=true) */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * asmopToBool - Emit code to convert an asmop to a boolean.
+ *               Result left in A (0=false, 1=true) if ResultInA,
+ *               otherwise result left in Z flag (1=false, 0=true)
+ *************************************************************************/
 static void asmopToBool (asmop *aop, bool resultInA)
 {
   bool isFloat;
@@ -3536,10 +3541,10 @@ static void asmopToBool (asmop *aop, bool resultInA)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genCopy - Copy the value from one operand to another            */
-/*           The caller is responsible for aopOp and freeAsmop     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCopy - Copy the value from one operand to another
+ *           The caller is responsible for aopOp and freeAsmop
+ *************************************************************************/
 static void genCopy (operand * result, operand * source)
 {
   int size = AOP_SIZE (result);
@@ -3610,9 +3615,9 @@ static void genCopy (operand * result, operand * source)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genNot - generate code for ! operation                          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genNot - generate code for ! operation
+ *************************************************************************/
 static void genNot (iCode * ic)
 {
   operand *left = IC_LEFT (ic);
@@ -3637,9 +3642,9 @@ static void genNot (iCode * ic)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* genCpl - generate code for complement                           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCpl - generate code for complement
+ *************************************************************************/
 static void genCpl (iCode * ic)
 {
   operand *left = IC_LEFT (ic);
@@ -3728,9 +3733,9 @@ static void genCpl (iCode * ic)
   freeAsmop (left, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genUminusFloat - unary minus for floating points                */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genUminusFloat - unary minus for floating points
+ *************************************************************************/
 static void genUminusFloat (operand * op, operand * result)
 {
   int size, offset = 0;
@@ -3755,9 +3760,9 @@ static void genUminusFloat (operand * op, operand * result)
   pullOrFreeReg (m6502_reg_a, needpula);
 }
 
-/*-----------------------------------------------------------------*/
-/* genUminus - unary minus code generation                         */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genUminus - unary minus code generation
+ *************************************************************************/
 static void genUminus (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
@@ -3871,9 +3876,9 @@ static void genUminus (iCode * ic)
   freeAsmop (left, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* saveRegisters - will look for a call and save the registers     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * saveRegisters - will look for a call and save the registers
+ *************************************************************************/
 static void saveRegisters (iCode *lic)
 {
   int i;
@@ -3919,9 +3924,9 @@ static void saveRegisters (iCode *lic)
     loadRegTemp (m6502_reg_a);
 }
 
-/*-----------------------------------------------------------------*/
-/* unsaveRegisters - pop the pushed registers                      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * unsaveRegisters - pop the pushed registers
+ *************************************************************************/
 static void unsaveRegisters (iCode *ic)
 {
   int i;
@@ -3943,10 +3948,9 @@ static void unsaveRegisters (iCode *ic)
     loadRegTemp (m6502_reg_a);
 }
 
-
-/*-----------------------------------------------------------------*/
-/* pushSide -                                                      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * pushSide
+ *************************************************************************/
 static void pushSide (operand *oper, int size, iCode *ic)
 {
   int offset = 0;
@@ -3978,9 +3982,9 @@ static void pushSide (operand *oper, int size, iCode *ic)
   //    m6502_freeReg (m6502_reg_x);
 }
 
-/*-----------------------------------------------------------------*/
-/* assignResultValue -                                             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * assignResultValue
+ *************************************************************************/
 static void assignResultValue (operand * oper)
 {
   int size = AOP_SIZE (oper);
@@ -4015,9 +4019,9 @@ static void assignResultValue (operand * oper)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genIpush - generate code for pushing this gets a little complex */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genIpush - generate code for pushing this gets a little complex
+ *************************************************************************/
 static void genIpush (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
@@ -4081,9 +4085,9 @@ static void genIpush (iCode * ic)
   freeAsmop (left, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genPointerPush - generate code for pushing                      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPointerPush - generate code for pushing
+ *************************************************************************/
 static void genPointerPush (iCode *ic)
 {
   operand *left = IC_LEFT (ic);
@@ -4111,9 +4115,9 @@ static void genPointerPush (iCode *ic)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* genSend - gen code for SEND                                     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genSend - gen code for SEND
+ *************************************************************************/
 static void genSend (set *sendSet)
 {
   iCode *send1;
@@ -4175,9 +4179,9 @@ static void genSend (set *sendSet)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genCall - generates a call statement                            */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCall - generates a call statement
+ *************************************************************************/
 static void genCall (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
@@ -4251,9 +4255,9 @@ static void genCall (iCode * ic)
     unsaveRegisters (ic);
 }
 
-/*-----------------------------------------------------------------*/
-/* genPcall - generates a call by pointer statement                */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPcall - generates a call by pointer statement
+ *************************************************************************/
 static void genPcall (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
@@ -4344,9 +4348,9 @@ static void genPcall (iCode * ic)
     unsaveRegisters (ic);
 }
 
-/*-----------------------------------------------------------------*/
-/* resultRemat - result  is rematerializable                       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * resultRemat - result  is rematerializable
+ *************************************************************************/
 static int resultRemat (iCode * ic)
 {
   operand *result = IC_RESULT (ic);
@@ -4363,9 +4367,9 @@ static int resultRemat (iCode * ic)
   return 0;
 }
 
-/*-----------------------------------------------------------------*/
-/* inExcludeList - return 1 if the string is in exclude Reg list   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * inExcludeList - return 1 if the string is in exclude Reg list
+ *************************************************************************/
 static int regsCmp (void *p1, void *p2)
 {
   return (STRCASECMP ((char *) p1, (char *) (p2)) == 0);
@@ -4382,9 +4386,9 @@ static bool inExcludeList (char *s)
   return isinSetWith (options.excludeRegsSet, s, regsCmp);
 }
 
-/*-----------------------------------------------------------------*/
-/* genFunction - generated code for function entry                 */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genFunction - generated code for function entry
+ *************************************************************************/
 static void genFunction (iCode * ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
@@ -4492,9 +4496,9 @@ static void genFunction (iCode * ic)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genEndFunction - generates epilogue for functions               */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genEndFunction - generates epilogue for functions
+ *************************************************************************/
 static void genEndFunction (iCode * ic)
 {
   symbol *sym = OP_SYMBOL (IC_LEFT (ic));
@@ -4566,9 +4570,9 @@ static void genEndFunction (iCode * ic)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genRet - generate code for return statement                     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genRet - generate code for return statement
+ *************************************************************************/
 static void genRet (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
@@ -4643,9 +4647,9 @@ static void genRet (iCode * ic)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genLabel - generates a label                                    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genLabel - generates a label
+ *************************************************************************/
 static void genLabel (iCode * ic)
 {
   int i;
@@ -4677,9 +4681,9 @@ static void genLabel (iCode * ic)
   emitLabel (IC_LABEL (ic));
 }
 
-/*-----------------------------------------------------------------*/
-/* genGoto - generates a jmp                                      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genGoto - generates a jmp
+ *************************************************************************/
 static void genGoto (iCode * ic)
 {
   emitComment (TRACEGEN, __func__);
@@ -4687,9 +4691,9 @@ static void genGoto (iCode * ic)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* genPlusIncr :- does addition with increment if possible         */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPlusIncr :- does addition with increment if possible
+ *************************************************************************/
 static bool genPlusIncr (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -4787,11 +4791,9 @@ static bool genPlusIncr (iCode * ic)
   return true;
 }
 
-
-
-/*-----------------------------------------------------------------*/
-/* genPlus - generates code for addition                           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPlus - generates code for addition
+ *************************************************************************/
 static void genPlus (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -4912,9 +4914,9 @@ static void genPlus (iCode * ic)
   freeAsmop (left, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genMinusDec :- does subtraction with decrement if possible      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genMinusDec :- does subtraction with decrement if possible
+ *************************************************************************/
 static bool genMinusDec (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -4983,9 +4985,9 @@ static bool genMinusDec (iCode * ic)
   return true;
 }
 
-/*-----------------------------------------------------------------*/
-/* addSign - complete with sign                                    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * addSign - complete with sign
+ *************************************************************************/
 static void addSign (operand * result, int offset, int sign)
 {
   int size = (AOP_SIZE (result) - offset);
@@ -5001,9 +5003,9 @@ static void addSign (operand * result, int offset, int sign)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* genMinus - generates code for subtraction                       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genMinus - generates code for subtraction
+ *************************************************************************/
 static void genMinus (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -5167,9 +5169,9 @@ static void genMod (iCode * ic)
   wassertl (0, "Division is handled through support function calls");
 }
 
-/*-----------------------------------------------------------------*/
-/* genIfxJump :- will create a jump depending on the ifx           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genIfxJump :- will create a jump depending on the ifx
+ *************************************************************************/
 static void genIfxJump (iCode * ic, char *jval)
 {
   symbol *jlbl;
@@ -5215,10 +5217,10 @@ static void genIfxJump (iCode * ic, char *jval)
 }
 
 
-/*-----------------------------------------------------------------*/
-/* exchangedCmp : returns the opcode need if the two operands are  */
-/*                exchanged in a comparison                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * exchangedCmp : returns the opcode need if the two operands are
+ *                exchanged in a comparison
+ *************************************************************************/
 static int exchangedCmp (int opcode)
 {
   switch (opcode) {
@@ -5240,10 +5242,10 @@ static int exchangedCmp (int opcode)
   return EQ_OP;                 /* shouldn't happen, but need to return something */
 }
 
-/*------------------------------------------------------------------*/
-/* negatedCmp : returns the equivalent opcode for when a comparison */
-/*              if not true                                         */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * negatedCmp : returns the equivalent opcode for when a comparison
+ *              if not true
+ *************************************************************************/
 static int negatedCmp (int opcode)
 {
   switch (opcode) {
@@ -5265,9 +5267,9 @@ static int negatedCmp (int opcode)
   return EQ_OP;                 /* shouldn't happen, but need to return something */
 }
 
-/*------------------------------------------------------------------*/
-/* nameCmp : helper function for human readable debug output        */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * nameCmp : helper function for human readable debug output
+ *************************************************************************/
 static char * nameCmp (int opcode)
 {
   switch (opcode) {
@@ -5288,10 +5290,10 @@ static char * nameCmp (int opcode)
   }
 }
 
-/*------------------------------------------------------------------*/
-/* branchInstCmp : returns the conditional branch instruction that  */
-/*                 will branch if the comparison is true            */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * branchInstCmp : returns the conditional branch instruction that
+ *                 will branch if the comparison is true
+ *************************************************************************/
 static char * branchInstCmp (int opcode, int sign)
 {
   switch (opcode) {
@@ -5326,9 +5328,9 @@ static char * branchInstCmp (int opcode, int sign)
 }
 
 
-/*------------------------------------------------------------------*/
-/* genCmp :- greater or less than (and maybe with equal) comparison */
-/*------------------------------------------------------------------*/
+/**************************************************************************
+ * genCmp :- greater or less than (and maybe with equal) comparison
+ *************************************************************************/
 static void genCmp (iCode * ic, iCode * ifx)
 {
   operand *right  = IC_RIGHT (ic);
@@ -5491,9 +5493,9 @@ static void genCmp (iCode * ic, iCode * ifx)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genCmpEQorNE - equal or not equal comparison                    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCmpEQorNE - equal or not equal comparison
+ *************************************************************************/
 static void genCmpEQorNE (iCode * ic, iCode * ifx)
 {
   operand *right  = IC_RIGHT (ic);
@@ -5649,9 +5651,9 @@ static void genCmpEQorNE (iCode * ic, iCode * ifx)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genAndOp - for && operation                                     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAndOp - for && operation
+ *************************************************************************/
 static void genAndOp (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -5700,10 +5702,9 @@ static void genAndOp (iCode * ic)
   freeAsmop (result, NULL);
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genOrOp - for || operation                                      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genOrOp - for || operation
+ *************************************************************************/
 static void genOrOp (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -5799,9 +5800,9 @@ bool isXorTrivial(operand *op, unsigned char mask)
   return false;
 }
 
-/*-----------------------------------------------------------------*/
-/* genAnd  - code for and                                          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAnd  - code for and
+ *************************************************************************/
 static void genAnd (iCode * ic, iCode * ifx)
 {
   operand *right  = IC_RIGHT (ic);
@@ -6105,9 +6106,9 @@ static void genAnd (iCode * ic, iCode * ifx)
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genOr  - code for or                                            */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genOr  - code for or
+ *************************************************************************/
 static void genOr (iCode * ic, iCode * ifx)
 {
   operand *right  = IC_RIGHT (ic);
@@ -6156,8 +6157,7 @@ static void genOr (iCode * ic, iCode * ifx)
      storeRegTemp (m6502_reg_a, true);
 
      offset = 0;
-     while (size--)
-     {
+     while (size--) {
      // FIXME: unimplemented
      loadRegFromAop (m6502_reg_a, AOP (left), offset);
      accopWithAop ("ora", AOP (right), offset);
@@ -6316,9 +6316,9 @@ static void genOr (iCode * ic, iCode * ifx)
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genXor - code for Exclusive or                                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genXor - code for Exclusive or
+ *************************************************************************/
 static void genXor (iCode * ic, iCode * ifx)
 {
   operand *right  = IC_RIGHT (ic);
@@ -6417,10 +6417,10 @@ static void genXor (iCode * ic, iCode * ifx)
       accopWithAop ("eor", AOP (right), 1);
       storeRegToAop (m6502_reg_a, AOP (result), 1);
     }
-    if(savea)
+    if(savea) {
       loadRegTempAt(m6502_reg_a, aloc);
-  } else
-    if(IS_AOP_XA(AOP(result))) {
+    }
+  } else if(IS_AOP_XA(AOP(result))) {
       // reverse order
       int i;
       for(i=size-1; i>=0;i--) {
@@ -6525,9 +6525,9 @@ static const char * expand_symbols (iCode * ic, const char *inlin)
   return dbuf_detach_c_str (&dbuf);
 }
 
-/*-----------------------------------------------------------------*/
-/* genInline - write the inline code out                           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genInline - write the inline code out
+ *************************************************************************/
 static void m6502_genInline (iCode * ic)
 {
   char *buf, *bp, *begin;
@@ -6635,9 +6635,9 @@ static void genGetWord (const iCode *ic)
   freeAsmop (left, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genRRC - rotate right with carry                                */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genRRC - rotate right with carry
+ *************************************************************************/
 static void genRRC (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
@@ -6671,8 +6671,7 @@ static void genRRC (iCode * ic)
     loadRegTemp(m6502_reg_a);
     loadRegTemp(NULL);
     goto release;
-  } else
-    if(IS_AOP_XA(AOP(left))) {
+  } else if(IS_AOP_XA(AOP(left))) {
       storeRegTemp(m6502_reg_x, true);
       emit6502op("lsr", TEMPFMT, _G.tempOfs-1);
       emit6502op("ror", "a");
@@ -6719,9 +6718,9 @@ static void genRRC (iCode * ic)
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genRLC - generate code for rotate left with carry               */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genRLC - generate code for rotate left with carry
+ *************************************************************************/
 static void genRLC (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
@@ -6779,9 +6778,9 @@ static void genRLC (iCode * ic)
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* AccLsh - left shift accumulator by known count                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * AccLsh - left shift accumulator by known count
+ *************************************************************************/
 static void AccLsh (int shCount)
 {
   int i;
@@ -6811,10 +6810,9 @@ static void AccLsh (int shCount)
     emit6502op ("asl", "a");
 }
 
-
-/*-----------------------------------------------------------------*/
-/* AccSRsh - signed right shift accumulator by known count         */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * AccSRsh - signed right shift accumulator by known count
+ *************************************************************************/
 static void AccSRsh (int shCount)
 {
   int i;
@@ -6849,9 +6847,9 @@ static void AccSRsh (int shCount)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* AccRsh - right shift accumulator by known count                 */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * AccRsh - right shift accumulator by known count
+ *************************************************************************/
 static void AccRsh (int shCount, bool sign)
 {
   int i;
@@ -7037,10 +7035,9 @@ static void XAccRsh (int shCount, bool sign)
   }
 }
 
-
-/*-----------------------------------------------------------------*/
-/* shiftL1Left2Result - shift left one byte from left to result    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * shiftL1Left2Result - shift left one byte from left to result
+ *************************************************************************/
 static void shiftL1Left2Result (operand * left, int offl, operand * result, int offr, int shCount)
 {
   sym_link *resulttype = operandType (result);
@@ -7064,9 +7061,9 @@ static void shiftL1Left2Result (operand * left, int offl, operand * result, int 
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* movLeft2Result - move byte from left to result                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * movLeft2Result - move byte from left to result
+ *************************************************************************/
 static void movLeft2Result (operand * left, int offl, operand * result, int offr, int sign)
 {
   if (!sameRegs (AOP (left), AOP (result)) || (offl != offr)) {
@@ -7075,9 +7072,9 @@ static void movLeft2Result (operand * left, int offl, operand * result, int offr
 }
 
 
-/*-----------------------------------------------------------------*/
-/* shiftL2Left2Result - shift left two bytes from left to result   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * shiftL2Left2Result - shift left two bytes from left to result
+ *************************************************************************/
 static void shiftL2Left2Result (operand * left, int offl, operand * result, int offr, int shCount)
 {
   int i;
@@ -7118,9 +7115,9 @@ static void shiftL2Left2Result (operand * left, int offl, operand * result, int 
 
 
 
-/*-----------------------------------------------------------------*/
-/* shiftRLeftOrResult - shift right one byte from left,or to result */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * shiftRLeftOrResult - shift right one byte from left,or to result
+ *************************************************************************/
 static void shiftRLeftOrResult (operand * left, int offl, operand * result, int offr, int shCount)
 {
   loadRegFromAop (m6502_reg_a, AOP (left), offl);
@@ -7133,9 +7130,9 @@ static void shiftRLeftOrResult (operand * left, int offl, operand * result, int 
   m6502_freeReg (m6502_reg_a);
 }
 
-/*-----------------------------------------------------------------*/
-/* genlshOne - left shift a one byte quantity by known count       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genlshOne - left shift a one byte quantity by known count
+ *************************************************************************/
 static void genlshOne (operand * result, operand * left, int shCount)
 {
   emitComment (TRACEGEN, __func__);
@@ -7143,9 +7140,9 @@ static void genlshOne (operand * result, operand * left, int shCount)
   shiftL1Left2Result (left, LSB, result, LSB, shCount);
 }
 
-/*-----------------------------------------------------------------*/
-/* genlshTwo - left shift two bytes by known amount != 0           */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genlshTwo - left shift two bytes by known amount != 0
+ *************************************************************************/
 static void genlshTwo (operand * result, operand * left, int shCount)
 {
   bool needpulla, needpullx;
@@ -7221,10 +7218,10 @@ static void genlshTwo (operand * result, operand * left, int shCount)
   ;
 }
 
-/*-----------------------------------------------------------------*/
-/* shiftLLong - shift left one long from left to result            */
-/* offr = LSB or MSB16                                             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * shiftLLong - shift left one long from left to result
+ * offr = LSB or MSB16
+ *************************************************************************/
 static void shiftLLong (operand * left, operand * result, int offr)
 {
   bool needpulla = false;
@@ -7268,9 +7265,9 @@ static void shiftLLong (operand * left, operand * result, int offr)
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genlshFour - shift four byte by a known amount != 0             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genlshFour - shift four byte by a known amount != 0
+ *************************************************************************/
 static void genlshFour (operand * result, operand * left, int shCount)
 {
   emitComment (TRACEGEN, __func__);
@@ -7363,9 +7360,9 @@ static void genlshFour (operand * result, operand * left, int shCount)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genRot - generates code for rotation                            */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genRot - generates code for rotation
+ *************************************************************************/
 static void genRot (iCode *ic)
 {
   operand *left = IC_LEFT (ic);
@@ -7379,9 +7376,9 @@ static void genRot (iCode *ic)
     wassertl (0, "Unsupported rotation.");
 }
 
-/*-----------------------------------------------------------------*/
-/* genLeftShiftLiteral - left shifting by known count              */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genLeftShiftLiteral - left shifting by known count
+ *************************************************************************/
 static void genLeftShiftLiteral (operand * left, operand * right, operand * result, iCode * ic)
 {
   int shCount = (int) ulFromVal (AOP (right)->aopu.aop_lit);
@@ -7425,9 +7422,9 @@ static void genLeftShiftLiteral (operand * left, operand * right, operand * resu
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genLeftShift - generates code for left shifting                 */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genLeftShift - generates code for left shifting
+ *************************************************************************/
 static void genLeftShift (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -7584,9 +7581,9 @@ static void genLeftShift (iCode * ic)
   freeAsmop (right, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genrshOne - right shift a one byte quantity by known count      */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genrshOne - right shift a one byte quantity by known count
+ *************************************************************************/
 static void genrshOne (operand * result, operand * left, int shCount, int sign)
 {
   bool needpulla;
@@ -7599,9 +7596,9 @@ static void genrshOne (operand * result, operand * left, int shCount, int sign)
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genrshTwo - right shift two bytes by known amount != 0          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genrshTwo - right shift two bytes by known amount != 0
+ *************************************************************************/
 static void genrshTwo (operand * result, operand * left, int shCount, int sign)
 {
   bool needpulla, needpullx;
@@ -7631,10 +7628,10 @@ static void genrshTwo (operand * result, operand * left, int shCount, int sign)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* shiftRLong - shift right one long from left to result           */
-/* offl = LSB or MSB16                                             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * shiftRLong - shift right one long from left to result
+ * offl = LSB or MSB16
+ *************************************************************************/
 static void shiftRLong (operand * left, int offl, operand * result, int sign)
 {
   bool needpulla = pushRegIfSurv (m6502_reg_a);
@@ -7697,9 +7694,9 @@ static void shiftRLong (operand * left, int offl, operand * result, int sign)
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genrshFour - shift four byte by a known amount != 0             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genrshFour - shift four byte by a known amount != 0
+ *************************************************************************/
 static void genrshFour (operand * result, operand * left, int shCount, int sign)
 {
   bool needpulla = false;
@@ -7770,9 +7767,9 @@ static void genrshFour (operand * result, operand * left, int shCount, int sign)
   loadOrFreeRegTemp (m6502_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genRightShiftLiteral - right shifting by known count            */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genRightShiftLiteral - right shifting by known count
+ *************************************************************************/
 static void genRightShiftLiteral (operand * left, operand * right, operand * result, iCode * ic, int sign)
 {
   int shCount = (int) ulFromVal (AOP (right)->aopu.aop_lit);
@@ -7827,9 +7824,9 @@ static void genRightShiftLiteral (operand * left, operand * right, operand * res
 
 // TODO: can refactor lots of left shift with right shift
 
-/*-----------------------------------------------------------------*/
-/* genRightShift - generate code for right shifting                */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genRightShift - generate code for right shifting
+ *************************************************************************/
 static void genRightShift (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -7979,10 +7976,10 @@ static void genRightShift (iCode * ic)
   freeAsmop (right, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* decodePointerOffset - decode a pointer offset operand into a    */
-/*                    literal offset and a rematerializable offset */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * decodePointerOffset - decode a pointer offset operand into a
+ *                    literal offset and a rematerializable offset
+ *************************************************************************/
 static void decodePointerOffset (operand * opOffset, int * litOffset, char ** rematOffset)
 {
   *litOffset = 0;
@@ -8021,9 +8018,9 @@ static void bitAConst(int val)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genUnpackBits - generates code for unpacking bits               */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genUnpackBits - generates code for unpacking bits
+ *************************************************************************/
 static void genUnpackBits (operand * result, operand * left, operand * right, iCode * ifx)
 {
   int offset = 0;               /* result byte offset */
@@ -8142,10 +8139,9 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genUnpackBitsImmed - generates code for unpacking bits          */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genUnpackBitsImmed - generates code for unpacking bits
+ *************************************************************************/
 static void genUnpackBitsImmed (operand * left, operand *right, operand * result, iCode * ic, iCode * ifx)
 {
   int size;
@@ -8322,10 +8318,9 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genDataPointerGet - generates code when ptr offset is known     */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genDataPointerGet - generates code when ptr offset is known
+ *************************************************************************/
 static void genDataPointerGet (operand * left, operand * right, operand * result, iCode * ic, iCode * ifx)
 {
   int size;
@@ -8371,9 +8366,9 @@ static void genDataPointerGet (operand * left, operand * right, operand * result
 }
 
 
-/*-----------------------------------------------------------------*/
-/* genPointerGet - generate code for pointer get                   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPointerGet - generate code for pointer get
+ *************************************************************************/
 static void genPointerGet (iCode * ic, iCode * ifx)
 {
   operand *right  = IC_RIGHT (ic);
@@ -8608,9 +8603,9 @@ static void genPointerGet (iCode * ic, iCode * ifx)
   }
 }
 
-/*-----------------------------------------------------------------*/
-/* genPackBits - generates code for packed bit storage             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPackBits - generates code for packed bit storage
+ *************************************************************************/
 static void genPackBits (operand * result, operand * left, sym_link * etype, operand * right)
 {
   int offset = 0;               /* source byte offset */
@@ -8773,9 +8768,9 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
   pullOrFreeReg (m6502_reg_a, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genPackBitsImmed - generates code for packed bit storage        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPackBitsImmed - generates code for packed bit storage
+ *************************************************************************/
 static void genPackBitsImmed (operand * result, operand * left, sym_link * etype, operand * right, iCode * ic)
 {
   asmop *derefaop;
@@ -8930,9 +8925,9 @@ static void genPackBitsImmed (operand * result, operand * left, sym_link * etype
   freeAsmop (NULL, derefaop);
 }
 
-/*-----------------------------------------------------------------*/
-/* genDataPointerSet - remat pointer to data space                 */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genDataPointerSet - remat pointer to data space
+ *************************************************************************/
 static void genDataPointerSet (operand * left, operand * right, operand * result, iCode * ic)
 {
   int size;
@@ -8959,10 +8954,9 @@ static void genDataPointerSet (operand * left, operand * right, operand * result
   freeAsmop (NULL, derefaop);
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genPointerSet - stores the value into a pointer location        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genPointerSet - stores the value into a pointer location
+ *************************************************************************/
 static void genPointerSet (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -9185,9 +9179,9 @@ static void genPointerSet (iCode * ic)
 }
 
 // TODO: genIfx sometimes does a cmp #0 but has flags already, peephole might fix
-/*-----------------------------------------------------------------*/
-/* genIfx - generate code for Ifx statement                        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genIfx - generate code for Ifx statement
+ *************************************************************************/
 static void genIfx (iCode * ic, iCode * popIc)
 {
   operand *cond = IC_COND (ic);
@@ -9228,9 +9222,9 @@ static void genIfx (iCode * ic, iCode * popIc)
   ic->generated = 1;
 }
 
-/*-----------------------------------------------------------------*/
-/* genAddrOf - generates code for address of                       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAddrOf - generates code for address of
+ *************************************************************************/
 static void genAddrOf (iCode * ic)
 {
   operand *result = IC_RESULT (ic);
@@ -9294,10 +9288,10 @@ static void genAddrOf (iCode * ic)
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genAssignLit - Try to generate code for literal assignment.     */
-/*                result and right should already be asmOped       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genAssignLit - Try to generate code for literal assignment.
+ *                result and right should already be asmOped
+ *************************************************************************/
 static bool genAssignLit (operand * result, operand * right)
 {
   char assigned[8];
@@ -9375,9 +9369,9 @@ genAssign (iCode * ic)
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genJumpTab - generates code for jump table                       */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genJumpTab - generates code for jump table
+ *************************************************************************/
 static void genJumpTab (iCode * ic)
 {
   symbol *jtab;
@@ -9447,9 +9441,9 @@ static void genJumpTab (iCode * ic)
     }
 }
 
-/*-----------------------------------------------------------------*/
-/* genCast - generate code for casting                             */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCast - generate code for casting
+ *************************************************************************/
 static void genCast (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -9648,9 +9642,9 @@ static void genCast (iCode * ic)
 
 }
 
-/*-----------------------------------------------------------------*/
-/* genReceive - generate code for a receive iCode                  */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genReceive - generate code for a receive iCode
+ *************************************************************************/
 static void genReceive (iCode * ic)
 {
   operand *result = IC_RESULT (ic);
@@ -9702,10 +9696,9 @@ static void dummyRead (iCode* ic, operand* op, reg_info* reg)
   }
 }
 
-
-/*-----------------------------------------------------------------*/
-/* genDummyRead - generate code for dummy read of volatiles        */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genDummyRead - generate code for dummy read of volatiles
+ *************************************************************************/
 static void genDummyRead (iCode * ic)
 {
   bool needpulla = false;
@@ -9725,9 +9718,9 @@ static void genDummyRead (iCode * ic)
   pullOrFreeReg (reg, needpulla);
 }
 
-/*-----------------------------------------------------------------*/
-/* genCritical - generate code for start of a critical sequence    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genCritical - generate code for start of a critical sequence
+ *************************************************************************/
 static void genCritical (iCode * ic)
 {
   operand *result = IC_RESULT (ic);
@@ -9750,9 +9743,9 @@ static void genCritical (iCode * ic)
     freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* genEndCritical - generate code for end of a critical sequence   */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genEndCritical - generate code for end of a critical sequence
+ *************************************************************************/
 static void genEndCritical (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
@@ -9786,9 +9779,8 @@ static void updateiTempRegisterUse (operand * op)
 }
 
 /**************************************************************************
- * genm6502iCode - generate code for M6502 based controllers for a single
- * iCode instruction
- *
+ * genm6502iCode - generate code for M6502 based controllers for a
+ *                 single iCode instruction
  *************************************************************************/
 static void genm6502iCode (iCode *ic)
 {
@@ -10103,9 +10095,9 @@ float drym6502iCode (iCode *ic)
   return ((float)regalloc_dry_run_cost_bytes * byte_cost_weight + regalloc_dry_run_cost_cycles * ic->count);
 }
 
-/*-----------------------------------------------------------------*/
-/* genm6502Code - generate code for for a block of instructions    */
-/*-----------------------------------------------------------------*/
+/**************************************************************************
+ * genm6502Code - generate code for for a block of instructions
+ *************************************************************************/
 void
 genm6502Code (iCode *lic)
 {
