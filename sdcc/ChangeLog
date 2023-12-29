@@ -1,4 +1,5 @@
 2023-12-28 Gabriele Gorla <gorlik@yahoo.com>
+
 	* device/lib/mos6502/_divuchar.s,
 	  device/lib/mos6502/_moduchar.s:
 	  Fix regression failures introduced by r14555
@@ -8,6 +9,8 @@
 	  Fix bug #2987 and enable gcc-torture-execute-strlen-4 for mos6502 and hc08.
 	* src/SDCCicode.c:
 	  Fix small debug print bug.
+	* src/mos6502/peep.c:
+	  Fix affected flags and add "sec".
 
 2023-12-28 Philipp Klaus Krause <philipp@colecovision.eu>
 

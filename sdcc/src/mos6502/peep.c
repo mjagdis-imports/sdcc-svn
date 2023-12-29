@@ -108,10 +108,10 @@ mos6502MightReadFlag(const lineNode *pl, const char *what)
     return (!strcmp(what, "z"));
 
   if (ISINST (pl->line, "bmi") || ISINST (pl->line, "bpl"))
-    return (!strcmp(what, "c"));
+    return (!strcmp(what, "n"));
 
   if (ISINST (pl->line, "bvc") || ISINST (pl->line, "bvs"))
-    return (!strcmp(what, "c"));
+    return (!strcmp(what, "v"));
 
   return false;
 }
@@ -164,7 +164,8 @@ mos6502SurelyWritesFlag(const lineNode *pl, const char *what)
   if (ISINST (pl->line, "bit"))
     return (!strcmp(what, "n") || !strcmp(what, "z") || !strcmp(what, "v"));
 
-  if (ISINST (pl->line, "clc"))
+  if (ISINST (pl->line, "clc") ||
+    ISINST (pl->line, "sec"))
     return (!strcmp(what, "c"));
 
   if (ISINST (pl->line, "clv"))
