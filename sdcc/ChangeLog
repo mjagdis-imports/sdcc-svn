@@ -7,7 +7,9 @@
 	  Prepare for improved register pair handling.
 	* src/mos6502/gen.c:
 	  correct constant size in isLiteralBit().
-
+	* src/mos6502/gen.c:
+	  Prepare for improved register pair handling.
+	  
 2023-12-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/peep.c:

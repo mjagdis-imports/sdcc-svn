@@ -793,16 +793,16 @@ static void storeRegTemp (reg_info * reg, bool freereg)
   case Y_IDX:
     emit6502op ("sty", TEMPFMT, _G.tempOfs++);
     break;
-  case YX_IDX:
-    storeRegTemp (m6502_reg_x, freereg);
-    storeRegTemp (m6502_reg_y, freereg);
-    break;
   case XA_IDX:
     storeRegTemp (m6502_reg_a, freereg);
     storeRegTemp (m6502_reg_x, freereg);
     break;
+  case YX_IDX:
+    storeRegTemp (m6502_reg_x, freereg);
+    storeRegTemp (m6502_reg_y, freereg);
+    break;
   default:
-    emitcode("ERROR", "bad reg %02x in storeRegTemp()", regidx);
+    emitcode("ERROR", "%s : bad reg %02x (%s)", __func__, regidx, reg->name);
     break;
   }
   
@@ -811,7 +811,6 @@ static void storeRegTemp (reg_info * reg, bool freereg)
 
   if(_G.tempOfs > NUM_TEMP_REGS)
     emitcode("ERROR", "storeRegTemp(): overflow");
-  //wassertl (_G.tempOfs <= NUM_TEMP_REGS, "storeRegTemp(): overflow");
 }
 
 /**************************************************************************
@@ -1309,8 +1308,8 @@ static void loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
 #endif
 
   switch (regidx) {
-  case X_IDX:
   case A_IDX:
+  case X_IDX:
   case Y_IDX:
     if (aop->type == AOP_REG) {
       if (loffset < aop->size)
@@ -1904,14 +1903,6 @@ static void storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
     if (size > 1 && isSigned && aop->type == AOP_REG && aop->aopu.aop_reg[0]->rIdx == A_IDX)
       pullReg (m6502_reg_a);
     break;
-  case YX_IDX:
-    if (size == 1) {
-      storeRegToAop (m6502_reg_x, aop, 0);
-    } else {
-      storeRegToAop (reg, aop, 0);
-      storeRegSignToUpperAop (m6502_reg_y, aop, 2, isSigned);
-    }
-    break;
   case XA_IDX:
     if (size == 1) {
       storeRegToAop (m6502_reg_a, aop, 0);
@@ -1923,6 +1914,14 @@ static void storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
 	loadRegFromAop(m6502_reg_a, aop, 1);
 	storeRegSignToUpperAop (m6502_reg_a, aop, 2, isSigned);
       }
+    }
+    break;
+  case YX_IDX:
+    if (size == 1) {
+      storeRegToAop (m6502_reg_x, aop, 0);
+    } else {
+      storeRegToAop (reg, aop, 0);
+      storeRegSignToUpperAop (m6502_reg_y, aop, 2, isSigned);
     }
     break;
   default:
