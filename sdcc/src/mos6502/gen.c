@@ -596,7 +596,6 @@ bool smallAdjustReg (reg_info *reg, int n)
 
 /**************************************************************************
  * Associate the current code location with a debugger symbol
- *
  *************************************************************************/
 void m6502_emitDebuggerSymbol (const char *debugSym)
 {
@@ -1966,9 +1965,6 @@ static void transferAopAop (asmop *srcaop, int srcofs, asmop *dstaop, int dstofs
   emitComment (TRACE_AOP|VVDBG, "    transferAopAop   to (%s, %d, %x)",
                aopName (dstaop), dstofs, dstaop->regmask);
 
-  //  DD(emitcode ("", "; srcaop->type = %d, regmask = %x", srcaop->type, srcaop->regmask));
-  //  DD(emitcode ("", "; dstaop->type = %d, regmask = %x", dstaop->type, dstaop->regmask));
-
   if (dstofs >= dstaop->size)
     return;
 
@@ -2234,7 +2230,6 @@ static void rmwWithAop (char *rmwop, asmop * aop, int loffset)
 
 /**************************************************************************
  * stores reg in DPTR at offset dofs
- *
  *************************************************************************/
 static void storeRegToDPTR(reg_info *reg, int dofs)
 {
@@ -2828,10 +2823,10 @@ static void aopOp (operand *op, const iCode * ic)
     emitComment (VVDBG|TRACE_AOP, "    %s: POINTER_SET", __func__);
   }
 
-  //  printf("checking literal\n");
   /* if this a literal */
   if (IS_OP_LITERAL (op)) {
-    emitComment (VVDBG|TRACE_AOP, "    %s: LITERAL", __func__);
+    emitComment (VVDBG|TRACE_AOP, "    %s: LITERAL = 0x%x:%d",
+		 __func__, ulFromVal(OP_VALUE (op)), getSize(operandType(op)) );
     aop = newAsmop (AOP_LIT);
     aop->aopu.aop_lit = OP_VALUE (op);
     aop->size = getSize (operandType (op));
@@ -3027,7 +3022,6 @@ static asmop * aopDerefAop (asmop * aop, int offset)
 
   emitComment (TRACE_AOP, "      aopDerefAop(%s)", aopName (aop));
   if (aop->op) {
-
     type = operandType (aop->op);
     etype = getSpec (type);
     /* if op is of type of pointer then it is simple */
@@ -3370,7 +3364,6 @@ static void asmopToBool (asmop *aop, bool resultInA)
     m6502_freeReg (m6502_reg_a);
 
   if (IS_BOOL (type)) {
-
     if (resultInA) {
       // result -> A
       loadRegFromAop (m6502_reg_a, aop, 0);
@@ -3480,9 +3473,7 @@ static void asmopToBool (asmop *aop, bool resultInA)
 	loadRegFromAop (m6502_reg_a, aop, 0);
 	loadRegTempNoFlags(m6502_reg_a,needloada);
       }
-      break;
-    }
-    else if (size == 2) {
+    } else if (size == 2) {
       if (m6502_reg_a->isFree) {
 	loadRegFromAop (m6502_reg_a, aop, 0);
 	accopWithAop ("ora", aop, 1);
@@ -3505,8 +3496,6 @@ static void asmopToBool (asmop *aop, bool resultInA)
 	loadOrFreeRegTemp (m6502_reg_x, needloadx);
 	loadOrFreeRegTemp (m6502_reg_a, needloada);
 	emit6502op ("plp", "" );
-
-	break;
       }
     } else {
       needpula = storeRegTempIfSurv (m6502_reg_a);
@@ -4544,10 +4533,8 @@ static void genEndFunction (iCode * ic)
   }
 
   if (IFFUNC_ISISR (sym->type)) {
-
     if (!inExcludeList ("y"))
       pullReg (m6502_reg_y); // TODO?
-
 
     /* if debug then send end of function */
     if (options.debug && currFunc && !regalloc_dry_run) {
@@ -4813,7 +4800,6 @@ static void genPlus (iCode * ic)
 
   int size, offset = 0;
   bool clc = true;
-  asmop *leftOp, *rightOp;
   bool needpulla;
   bool earlystore = false;
   bool delayedstore = false;
@@ -4853,9 +4839,6 @@ static void genPlus (iCode * ic)
 
   size = AOP_SIZE (result);
 
-  leftOp = AOP (left);
-  rightOp = AOP (right);
-
   offset = 0;
 
   // FIXME: should make this more general
@@ -4894,22 +4877,24 @@ static void genPlus (iCode * ic)
     if (earlystore && offset == 1)
       pullReg (m6502_reg_a);
     else
-      loadRegFromAop (m6502_reg_a, leftOp, offset);
+      loadRegFromAop (m6502_reg_a, AOP(left), offset);
     if (clc)
       emit6502op ("clc", "");
     if (!mayskip || AOP_TYPE (right) != AOP_LIT || (byteOfVal (AOP (right)->aopu.aop_lit, offset) != 0x00) ) {
-      accopWithAop ("adc", rightOp, offset);
+      accopWithAop ("adc", AOP(right), offset);
       if (!size && maskedtopbyte)
 	emit6502op ("and", IMMDFMT, topbytemask);
       mayskip = false;
       skip = false;
-    } else
+    } else {
       skip = true;
+    }
     if (size && AOP_TYPE (result) == AOP_REG && AOP (result)->aopu.aop_reg[offset]->rIdx == A_IDX) {
       pushReg (m6502_reg_a, true);
       delayedstore = true;
-    } else
+    } else {
       storeRegToAop (m6502_reg_a, AOP (result), offset);
+    }
     offset++;
     m6502_freeReg (m6502_reg_a);
     if (!skip)
@@ -5578,7 +5563,6 @@ static void genCmpEQorNE (iCode * ic, iCode * ifx)
 	if (!(AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == A_IDX)) {
 	  if(AOP_TYPE(right) == AOP_REG) {
 	    emitComment (TRACEGEN|VVDBG, "   genCmpEQorNE right is reg: %s",AOP (right)->aopu.aop_reg[offset]->name);
-
 	  }
 
 	  // FIXME: always?
@@ -5766,29 +5750,22 @@ static void genOrOp (iCode * ic)
   freeAsmop (result, NULL);
 }
 
-/*-----------------------------------------------------------------*/
-/* isLiteralBit - test if lit == 2^n                               */
-/*-----------------------------------------------------------------*/
-static int isLiteralBit (unsigned long lit)
+/**************************************************************************
+ * isLiteralBit - test if lit == 2^n
+ *************************************************************************/
+static int isLiteralBit (unsigned long long lit)
 {
-  unsigned long pw[32] =
-    {
-      1L, 2L, 4L, 8L, 16L, 32L, 64L, 128L,
-      0x100L, 0x200L, 0x400L, 0x800L,
-      0x1000L, 0x2000L, 0x4000L, 0x8000L,
-      0x10000L, 0x20000L, 0x40000L, 0x80000L,
-      0x100000L, 0x200000L, 0x400000L, 0x800000L,
-      0x1000000L, 0x2000000L, 0x4000000L, 0x8000000L,
-      0x10000000L, 0x20000000L, 0x40000000L, 0x80000000L
-    };
   int idx;
 
-  for (idx = 0; idx < 32; idx++)
-    if (lit == pw[idx])
+  for (idx = 0; idx < 64; idx++)
+    if (lit == 1<<idx)
       return idx + 1;
   return 0;
 }
 
+/**************************************************************************
+ * litmask - return the mask based on the operand size
+ *************************************************************************/
 static unsigned long long litmask (int size)
 {
   unsigned long long ret = 0xffffffffffffffffull;
@@ -5864,14 +5841,7 @@ static void genAnd (iCode * ic, iCode * ifx)
 
   if (AOP_TYPE (right) == AOP_LIT) {
     lit = ullFromVal (AOP (right)->aopu.aop_lit);
-    if (size == 1)
-      lit &= 0xff;
-    else if (size == 2)
-      lit &= 0xffff;
-    else if (size == 4)
-      lit &= 0xffffffff;
-    else if (size == 8)
-      lit &= 0xffffffffffffffff;
+    lit &= litmask(size);
     bitpos = isLiteralBit (lit) - 1;
   }
 
@@ -6915,7 +6885,6 @@ static void AccRsh (int shCount, bool sign)
   for (i = 0; i < shCount; i++)
     emit6502op ("lsr", "a");
 }
-
 
 /**************************************************************************
  * XAccLsh - left shift register pair XA by known count
@@ -8040,7 +8009,7 @@ static void decodePointerOffset (operand * opOffset, int * litOffset, char ** re
  * does a BIT A with a constant, even for non-65C02
  *************************************************************************/
 // TODO: lookup table for each new const?
-void bitAConst(int val)
+static void bitAConst(int val)
 {
   wassertl (val >= 0 && val <= 0xff, "bitAConst()");
   if (IS_MOS65C02) {
