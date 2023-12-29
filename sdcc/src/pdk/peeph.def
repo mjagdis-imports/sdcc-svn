@@ -246,6 +246,6 @@ replace restart {
 } by {
 	ret
 	; peephole j14 replaced goto by ret.
-} if labelIsReturnOnly(%1)
+} if labelIsReturnOnly(%1), labelRefCountChange(%1 -1)
 
 
