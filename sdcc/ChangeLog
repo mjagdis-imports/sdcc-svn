@@ -2,6 +2,9 @@
 
 	* src/pdk/peeph.def:
 	  Fixes for z flag handling in pdk peephole optimizer rules.
+	* src/pdk/gen.c,
+	  src/pdk/peeph.def:
+	  Optimize out some redundant stores to a, insprired by parts of patch #447 by Konstantin Kim.
 
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 

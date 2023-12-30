@@ -1221,26 +1221,48 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
       cost (size + 1, size + 1);
       return;
     }
-  else if (size >= 2 && result->type == AOP_STK && source->type == AOP_LIT) // Cache lit values in a.
+  else if (size >= 2 && (result->type == AOP_DIR || result->type == AOP_STK) && source->type == AOP_LIT) // Cache lit values in a.
     {
       int a_litval = -1;
       if (!a_dead_global)
         pushAF ();
-      if (!p_dead_global)
-        pushPF (true);
-      for (unsigned int i = 0; i < size; i++)
+      if (result->type == AOP_DIR)
+        for (unsigned int i = 0; i < size; i++)
+          {
+            if (!byteOfVal (source->aopu.aop_lit, soffset + i))
+              {
+                emit2 ("clear", "%s", aopGet (result, roffset + i));
+                cost (1, 1);
+              }
+            else
+              {
+                if (a_litval != byteOfVal (source->aopu.aop_lit, soffset + i))
+                  {
+                    cheapMove (ASMOP_A, 0, source, soffset + i, true, false, true);
+                    a_litval = byteOfVal (source->aopu.aop_lit, soffset + i);
+                  }
+                emit2 ("mov", "%s, a", aopGet (result, roffset + i));
+                cost (1, 1);
+              }
+          }
+      else
         {
-          pointPStack(result->aopu.bytes[roffset + i].byteu.stk, !i, true);
-          if (a_litval != byteOfVal (source->aopu.aop_lit, soffset + i))
+          if (!p_dead_global)
+            pushPF (true);
+          for (unsigned int i = 0; i < size; i++)
             {
-              cheapMove (ASMOP_A, 0, source, soffset + i, true, false, true);
-              a_litval = byteOfVal (source->aopu.aop_lit, soffset + i);
+              pointPStack(result->aopu.bytes[roffset + i].byteu.stk, !i, true);
+              if (a_litval != byteOfVal (source->aopu.aop_lit, soffset + i))
+                {
+                  cheapMove (ASMOP_A, 0, source, soffset + i, true, false, true);
+                  a_litval = byteOfVal (source->aopu.aop_lit, soffset + i);
+                }
+              emit2 ("idxm", "p, a");
+              cost (1, 2);
             }
-          emit2 ("idxm", "p, a");
-          cost (1, 2);
+          if (!p_dead_global)
+            popPF (true);
         }
-      if (!p_dead_global)
-        popPF (true);
       if (!a_dead_global)
         popAF ();
       return;
@@ -4741,7 +4763,8 @@ genPointerSet (iCode *ic)
           if (!regDead (P_IDX, ic) || aopInReg (right->aop, 0, P_IDX) || aopInReg (right->aop, 1, P_IDX))
             UNIMPLEMENTED;
         }
-      
+
+      int a_litval = -1;
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           if (!ptr_aop && aopIsLitVal (right->aop, i, 1, 0) && !(bit_field || blen >= 8))
@@ -4769,6 +4792,7 @@ genPointerSet (iCode *ic)
                       emit2 ("mov", "a, #0x%02x", bval);
                       emit2 ("or", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
                       cost (2, 2);
+                      a_litval = bval;
                       continue;
                     }
                   else if (!ptr_aop && !bval)
@@ -4776,6 +4800,7 @@ genPointerSet (iCode *ic)
                       emit2 ("mov", "a, #0x%02x", mval);
                       emit2 ("and", "%s+%d, a", left->aop->aopu.immd, left->aop->aopu.immd_off + i);
                       cost (2, 2);
+                      a_litval = mval;
                       continue;
                     }
 
@@ -4879,6 +4904,7 @@ genPointerSet (iCode *ic)
                       cost (1, 1);
                     }
                 }
+              a_litval = -1;
             }
           else if (!swapped)
             {
@@ -4887,7 +4913,9 @@ genPointerSet (iCode *ic)
                   pushAF ();
                   pushed_a = true;
                 }
-              cheapMove (ASMOP_A, 0, right->aop, i, true, regDead (P_IDX, ic) || pushed_p, true);
+              if (right->aop->type != AOP_LIT || byteOfVal (right->aop->aopu.aop_lit, i) != a_litval)
+                cheapMove (ASMOP_A, 0, right->aop, i, true, regDead (P_IDX, ic) || pushed_p, true);
+              a_litval = (right->aop->type == AOP_LIT) ? byteOfVal (right->aop->aopu.aop_lit, i) : -1;
             }
 
           if (!ptr_aop)
