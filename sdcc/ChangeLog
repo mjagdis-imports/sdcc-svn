@@ -1,3 +1,8 @@
+2023-12-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/peeph.def:
+	  Fixes for z flag handling in pdk peephole optimizer rules.
+
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:

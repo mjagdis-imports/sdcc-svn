@@ -1,10 +1,24 @@
 // peeph.def - PDK peephole rules
 
+// Reads from RAM or I/O change z flag.
 replace restart {
 	mo%3	%1, %2
 } by {
 	; peephole 0 removed dead load into %1 from %2.
-} if notUsed(%1), notVolatile(%1), notVolatile(%2)
+} if notUsed(%1), notUsed('z'), notVolatile(%1), notVolatile(%2)
+
+// Write to memory or I/O does not change z flag.
+replace restart {
+	mo%3	%1, a
+} by {
+	; peephole 0a removed dead load into %1 from %2.
+} if notUsed(%1), notVolatile(%1)
+
+replace restart {
+	mo%3	%1, #%2
+} by {
+	; peephole 0b removed dead load into %1 from #%2.
+} if notUsed(%1)
 
 replace restart {
 	clear	%1
@@ -18,7 +32,7 @@ replace restart {
 } by {
 	mo%3	%1, a
 	; peephole 2 removed redundant load from %1 into a.
-} if notVolatile(%1)
+} if notVolatile(%1), notUsed('z')
 
 replace restart {
 	push	%1
