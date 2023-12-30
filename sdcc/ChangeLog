@@ -9,6 +9,8 @@
 	  Fix notVolatile('a') for pdk.
 	* src/pdk/peep.c:
 	  Improve flag handling in pdk peephole optimizer.
+	* src/z80/peep.c:
+	  Improve flag handling in z80 peephole optimizer.
 
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 

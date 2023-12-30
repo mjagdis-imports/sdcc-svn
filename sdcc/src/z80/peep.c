@@ -264,12 +264,16 @@ z80MightReadFlag(const lineNode *pl, const char *what)
      ISINST(pl->line, "ldir") ||
      ISINST(pl->line, "outd") ||
      ISINST(pl->line, "outi") ||
-     ISINST(pl->line, "jdnz"))
+     ISINST(pl->line, "djnz"))
+    return false;
+
+  if(IS_RAB &&
+    ISINST(pl->line, "bool"))
     return false;
 
   if(IS_SM83 &&
-     (ISINST(pl->line, "stop") ||
-      ISINST(pl->line, "ldh")))
+    (ISINST(pl->line, "stop") ||
+    ISINST(pl->line, "ldh")))
     return false;
 
   if((IS_SM83 || IS_Z80N) &&
@@ -323,7 +327,7 @@ z80MightReadFlag(const lineNode *pl, const char *what)
   if (IS_SM83 && ISINST(pl->line, "ldhl"))
     return false;
     
-  if(IS_RAB && (ISINST(pl->line, "ioi") || ISINST(pl->line, "ioe")))
+  if(IS_RAB && (ISINST(pl->line, "ioi") || ISINST(pl->line, "ioe") || ISINST(pl->line, "ipres")))
     return(false);
 
   if(IS_Z80N &&
@@ -334,7 +338,11 @@ z80MightReadFlag(const lineNode *pl, const char *what)
     ISINST(pl->line, "brlc")))
     return(false);
 
-  return true;
+  if((IS_Z180 || IS_EZ80_Z80 || IS_Z80N) &&
+    ISINST(pl->line, "tst"))
+    return(false);
+ 
+  return true; // Fail-safe: we have no idea what happens at this line, so assume it might read anything.
 }
 
 static bool
@@ -724,21 +732,33 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
   if(ISINST(pl->line, "daa"))
     return (!!strcmp(what, "nf"));
 
-  if(ISINST(pl->line, "scf") ||
-     ISINST(pl->line, "ccf"))
-    return (!!strcmp(what, "zf") && !!strcmp(what, "sf") && !!strcmp(what, "pf"));
+  if(ISINST(pl->line, "ccf") ||
+    ISINST(pl->line, "scf"))
+    return (!strcmp(what, "hf") || !strcmp(what, "nf") || !strcmp(what, "cf"));
 
   if(ISINST(pl->line, "cpl"))
-    return (!!strcmp(what, "zf") && !!strcmp(what, "cf"));
+    return (!strcmp(what, "hf") || !strcmp(what, "nf"));
 
-  // only for simple registers
-  if((ISINST(pl->line, "inc") ||
-      ISINST(pl->line, "dec")) && (strlen(pl->line+4) == 1))
-    return (!!strcmp(what, "cf"));
+  if(ISINST(pl->line, "inc") || ISINST(pl->line, "dec"))
+    {
+      // 8-bit inc affects all flags other than c.
+      if (strlen(pl->line + 4) == 1 || // 8-bit register
+        !strcmp(pl->line + 4, "(hl)") ||
+        !strcmp(pl->line + 6, "(ix)") ||
+        !strcmp(pl->line + 6, "(iy)"))
+        return (!!strcmp(what, "cf"));
+      return false; // 16-bit inc does not affect flags.
+    }
 
   if(ISINST(pl->line, "add"))
     return (argCont(pl->line + 4, "a") ||
            (!!strcmp(what, "zf") && !!strcmp(what, "sf") && !!strcmp(what, "pf")));
+
+  if(ISINST(pl->line, "ldd") ||
+    ISINST(pl->line, "lddr") ||
+    ISINST(pl->line, "ldi") ||
+    ISINST(pl->line, "ldir"))
+    return (!strcmp(what, "hf") || !strcmp(what, "pf") || !strcmp(what, "nf"));
 
   // pop af writes
   if(ISINST(pl->line, "pop"))
@@ -749,18 +769,50 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
      ISINST(pl->line, "call"))
     return true;
 
+  if(ISINST(pl->line, "rld") ||
+    ISINST(pl->line, "rrd"))
+    return (!strcmp(what, "hf") || !strcmp(what, "pf") || !strcmp(what, "nf"));
+
+  if(ISINST(pl->line, "djnz") ||
+    ISINST(pl->line, "ex") ||
+    ISINST(pl->line, "nop") ||
+    ISINST(pl->line, "out") ||
+    ISINST(pl->line, "push") ||
+    ISINST(pl->line, "res") ||
+    ISINST(pl->line, "set"))
+    return false;
+
   if(IS_SM83 &&
      (ISINST(pl->line, "swap") ||
       ISINST(pl->line, "ldhl") ||
       ISINST(pl->line, "lda")))
     return true;
 
+  if(IS_Z80N &&
+    ISINST(pl->line, "swap"))
+    return false;
+
   /* handle IN0 r,(n) and IN r,(c) instructions */
   if(ISINST(pl->line, "in0") || (!strncmp(pl->line, "in\t", 3) &&
      (!strcmp(pl->line+5, "(c)") || !strcmp(pl->line+5, "(bc)"))))
     return (!!strcmp(what, "cf"));
 
-  return false;
+  if(IS_RAB &&
+    ISINST(pl->line, "bool"))
+    return true;
+
+  if(IS_RAB &&
+    ISINST(pl->line, "ipres"))
+    return false;
+
+  if(ISINST(pl->line, "mlt"))
+    return (!IS_Z80N);
+
+  if((IS_Z180 || IS_EZ80_Z80 || IS_Z80N) &&
+    ISINST(pl->line, "tst"))
+    return true;
+
+  return false; // Fail-safe: we have no idea what happens at this line, so assume it writes nothing.
 }
 
 static bool
