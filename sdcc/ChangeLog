@@ -5,6 +5,8 @@
 	* src/pdk/gen.c,
 	  src/pdk/peeph.def:
 	  Optimize out some redundant stores to a, insprired by parts of patch #447 by Konstantin Kim.
+	* src/SDCCpeeph.c:
+	  Fix notVolatile('a') for pdk.
 
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 

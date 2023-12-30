@@ -1052,7 +1052,7 @@ notVolatileVariable(const char *var, lineNode *currPl, lineNode *endPl)
     {
       if (var[0] == '#')
         return true;
-      if (!strcmp (var, "p"))
+      if (!strcmp (var, "a") || !strcmp (var, "p"))
         return true;
     }
 
