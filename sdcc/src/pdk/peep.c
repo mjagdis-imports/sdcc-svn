@@ -290,6 +290,17 @@ pdkSurelyWritesFlag(const lineNode *pl, const char *what)
         return true;
     }
 
+  if (ISINST (pl->line, "mov") || ISINST (pl->line, "mov.io") ||
+    ISINST (pl->line, "clear") ||
+    ISINST (pl->line, "xch") ||
+    ISINST (pl->line, "swap") ||
+    ISINST (pl->line, "idxm"))
+    return false;
+
+  // By calling convention, caller has to save flags.
+  if (ISINST (pl->line, "ret") || ISINST (pl->line, "call"))
+    return true;
+
   return false; // Fail-safe: we have no idea what happens at this line, so assume it writes nothing.
 }
 

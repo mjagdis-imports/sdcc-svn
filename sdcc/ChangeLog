@@ -7,6 +7,8 @@
 	  Optimize out some redundant stores to a, insprired by parts of patch #447 by Konstantin Kim.
 	* src/SDCCpeeph.c:
 	  Fix notVolatile('a') for pdk.
+	* src/pdk/peep.c:
+	  Improve flag handling in pdk peephole optimizer.
 
 2023-12-29 Gabriele Gorla <gorlik@yahoo.com>
 
