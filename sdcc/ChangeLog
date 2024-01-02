@@ -1,3 +1,8 @@
+2024-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/satcounteroverflow.c.in:
+	  Regression test for saturating counter implemented via overflow-check-revert, inspired by discussion of patch #447 by Konstantin Kim.
+
 2023-12-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/peeph.def:
