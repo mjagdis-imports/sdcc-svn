@@ -1,3 +1,12 @@
+2024-01-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/_divuchar.c,
+	  device/lib/_moduchar.c:
+	  Fix optimization turning division support troutines into infinite loops.
+	* device/lib/pdk*/Makefile.in,
+	  device/lib/pdk*/_muluchar.s:
+	  Improve pdk 8x8 multiplication efficiency, based on patch #470 by Konstantin Kim.
+
 2024-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/satcounteroverflow.c.in:

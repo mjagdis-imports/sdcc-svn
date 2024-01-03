@@ -1031,7 +1031,7 @@ static void
 genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global, bool p_dead_global)
 {
 #if 0
-  D (emit2 ("; genMove_o", "a_dead_global %d p_dead_global %d", a_dead_global, p_dead_global));
+  D (emit2 ("; genMove_o", "size %d a_dead_global %d p_dead_global %d", size, a_dead_global, p_dead_global));
 #endif
   // Handle I/O first.
   if (result->type == AOP_SFR && source->type == AOP_SFR)
