@@ -4676,7 +4676,7 @@ static void genLabel (iCode * ic)
   if (options.debug && !regalloc_dry_run)
     debugFile->writeLabel (IC_LABEL (ic), ic);
 
-  emitLabel (IC_LABEL (ic));
+  safeEmitLabel (IC_LABEL (ic));
 }
 
 /**************************************************************************
@@ -5990,8 +5990,7 @@ static void genAnd (iCode * ic, iCode * ifx)
       }
       offset++;
     }
-    if (tlbl)
-      emitLabel (tlbl);
+    safeEmitLabel (tlbl);
 
     // TODO: better way to preserve flags?
     if (ifx) {
@@ -6204,8 +6203,7 @@ static void genOr (iCode * ic, iCode * ifx)
       }
       offset++;
     }
-    if (tlbl)
-      emitLabel (tlbl);
+    safeEmitLabel (tlbl);
 
     if (ifx) {
       loadRegTempNoFlags (m6502_reg_a, needpulla);
@@ -9501,7 +9499,7 @@ static void genCast (iCode * ic)
       pullReg (m6502_reg_a);
       emit6502op ("ora", IMMDFMT, ~topbytemask & 0xff);
       pushReg (m6502_reg_a, true);
-      emitLabel (tlbl);
+      safeEmitLabel (tlbl);
       pullReg (m6502_reg_a);
     }
     storeRegToAop (m6502_reg_a, result->aop, result->aop->size - 1);

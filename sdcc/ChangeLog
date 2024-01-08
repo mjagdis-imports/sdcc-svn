@@ -1,3 +1,8 @@
+2024-01-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  replace all instances of emitLabel() with safeEmitLabel().
+
 2024-01-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/lib/_divuchar.c,
