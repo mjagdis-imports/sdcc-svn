@@ -123,13 +123,16 @@
 #define S_R8X           32
 
 #define S_R16           34
-#define S_R16X          35
+#define S_R16_ALT       35
 #define S_CND           36
 #define S_FLAG          37
 
 #define S_R32_BCDE      38
 #define S_R32_JKHL      39
 #define S_RXPC          40
+
+#define S_R16AF         41
+#define S_R16AF_ALT     42
 
 /*
  * Indexing modes
@@ -199,7 +202,7 @@
 #define X_LJP                97
 #define X_LCALL              98
 #define X_BOOL               99
-
+#define X_LDP               100
 #define X_R3K_MODE          101
 #define R3K_INH1            102
 #define R3K_INH2            103
@@ -225,7 +228,9 @@ extern  struct  adsym   R8[];
 extern  struct  adsym   R8X[];
 extern  struct  adsym   R8IP[];
 extern  struct  adsym   R16[];
-extern  struct  adsym   R16X[];
+extern  struct  adsym   R16_ALT[];
+extern  struct  adsym   R16AF[];
+extern  struct  adsym   R16AF_ALT[];
 
 extern  struct  adsym   R32_JKHL[];
 extern  struct  adsym   R32_BCDE[];

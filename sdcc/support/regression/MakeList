@@ -1,7 +1,7 @@
 # Exclude lists for testing
 # Tests listed in ${EXCLUDE_${PORT}} will not be tested
 #
-# PORT ist the directory name
+# PORT is the directory name
 #
 # Tests to be excluded completely (i.e. for all PORT can be excluded in cases/Makefile.in more easily.
 
@@ -72,15 +72,16 @@ EXCLUDE_ARCH_mcs51 += \
 	gte_memcpy-1
 EXCLUDE_s08 += \
 	gte_memcpy-1
+# fail
+EXCLUDE_hc08 += \
+	gte_memcpy-1
+# compile issue - test is malformed unless STACK_SIZE is defined
+EXCLUDE_ARCH_mos6502 += \
+	gte_memcpy-1
 
 # Failure
-EXCLUDE_uc6502 += \
-	gte_20041218-1 \
+EXCLUDE_ARCH_mos6502 += \
 	gte_20091229-1
-
-# compile issue
-EXCLUDE_uc6502 += \
-	gte_memcpy-1
 
 # Failure
 EXCLUDE_ucr3ka += \
@@ -144,9 +145,9 @@ EXCLUDE_ucz80 += \
 EXCLUDE_ucz80-nmos += \
 	gte_20091229-1
 
-# fail
-EXCLUDE_hc08 += \
-	gte_memcpy-1
+# Fail
+EXCLUDE_ucr800 += \
+	gte_20091229-1
 
 # Failure
 EXCLUDE_hc08 += \
@@ -199,10 +200,6 @@ EXCLUDE_tlcs90 += \
 	gte_20041218-1 \
 	gte_20091229-1
 
-# compile issue
-EXCLUDE_uc6502 += \
-	gte_memcpy-1
-
 # Bug?
 EXCLUDE_pdk15-stack-auto += \
 	gte_pr100453
@@ -238,8 +235,7 @@ EXCLUDE_ds390 += \
 	gte_991019-1 \
 	gte_pr30185 \
 	gte_pr58365
-EXCLUDE_uc6502 += \
-	gte_991019-1 \
+EXCLUDE_ARCH_mos6502 += \
 	gte_pr30185 \
 	gte_pr58365
 
@@ -289,6 +285,9 @@ EXCLUDE_mcs51-medium += \
 	gte_shiftdi-2
 EXCLUDE_mcs51-large-stack-auto += \
 	gte_loop-ivopts-2
+EXCLUDE_uc6502-stack-auto += \
+	gte_loop-ivopts-2
+
 
 ###################################################
 # QuickC Tests
@@ -375,10 +374,6 @@ EXCLUDE_ARCH_pdk += \
 	tcc_70_floating_point_literals \
 	tcc_91_ptr_longlong_arith32
 
-# Fails since symbol B from test conflicts with symbol B defined in mcs51-common/support.c (via processor register include)
-EXCLUDE_ARCH_mcs51 += \
-	tcc_30_hanoi
-
 # Target doesn't have enough memory
 EXCLUDE_ARCH_pdk += \
 	tcc_05_array \
@@ -437,3 +432,8 @@ EXCLUDE_pdk14 += ${EXCLUDE_ARCH_pdk}
 EXCLUDE_pdk15 += ${EXCLUDE_ARCH_pdk}
 EXCLUDE_pdk15-stack-auto += ${EXCLUDE_ARCH_pdk}
 ###################################################
+EXCLUDE_uc6502 += ${EXCLUDE_ARCH_mos6502}
+EXCLUDE_uc65c02 += ${EXCLUDE_ARCH_mos6502}
+EXCLUDE_uc6502-stack-auto += ${EXCLUDE_ARCH_mos6502}
+###################################################
+

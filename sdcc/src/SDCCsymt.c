@@ -2049,8 +2049,8 @@ checkSClass (symbol *sym, int isProto)
         if (((addr >> n) & 0xFF) < 0x80)
           werror (W_SFR_ABSRANGE, sym->name);
     }
-  else if (TARGET_IS_SM83 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR) // Unlike the otehr z80-like ports, sm83 has I/P in the 0xff00-0xffff range.
-    {
+  else if (TARGET_IS_SM83 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
+    {// Unlike the other z80-like ports, sm83 has memory mapped I/O in the 0xff00-0xffff range.
       if (SPEC_ADDR (sym->etype) < 0xff00 || SPEC_ADDR (sym->etype) > 0xffff)
         werror (W_SFR_ABSRANGE, sym->name);
     }
@@ -3390,7 +3390,7 @@ checkFunction (symbol * sym, symbol * csym)
     sym->type->next = sym->etype = newIntLink ();
 
   /* function cannot return aggregate */
-  if ((TARGET_IS_DS390 || TARGET_IS_MOS6502)  && IS_AGGREGATE (sym->type->next))
+  if ((TARGET_IS_DS390)  && IS_AGGREGATE (sym->type->next))
     {
       werrorfl (sym->fileDef, sym->lineDef, E_FUNC_AGGR, sym->name);
       return 0;
@@ -4581,7 +4581,7 @@ initCSupport (void)
     "s", "su", "us", "u"
   };
   const char *srlrr[] = {
-    "rl", "rr"
+    "sl", "sr"
   };
   /* type as character codes for typeFromStr() */
   const char *sbwdCodes[] = {

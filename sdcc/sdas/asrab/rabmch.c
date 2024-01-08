@@ -129,7 +129,7 @@ VOID  machine(struct mne * mp)
                 break;
 
         case S_PUSH:
-                if (admode(R16X)) {
+                if (admode(R16AF)) {
                         outab(op+0x30);
                         break;
                 } else if ((v1 = admode(R8IP)) != 0) {
@@ -724,6 +724,15 @@ VOID  machine(struct mne * mp)
                         outab(0x9F);
                         break;
                 }
+
+                if ((t1 == S_R16_ALT) && (t2 == S_R16)) {
+                        if ((v2 == BC) || (v2 == DE)) {
+                                /* LD BC'|DE'|HL', BC|DE */
+                                outab(0xED);
+                                outab(((v2 == BC) ? 0x49 : 0x41) | (v1 << 4));
+                                break;
+                        }
+                }
       
                 /* 16-bit operations valid only in rabbit 4000 mode */
                 if (r4k_mode && (t1 == S_R16) && (t2 == S_R16)) {
@@ -810,6 +819,19 @@ VOID  machine(struct mne * mp)
                                         break;
                                 }
                         }
+                        else if (t1 == S_R16_ALT) {
+                                if ((v1 == DE) && (v2 == HL)) {
+                                        /* EX DE', HL */
+                                        outab(0xE3);
+                                        break;
+                                }
+                                if (r4k_mode && (v1==BC) && (v2==HL)) {
+                                        /* EX BC', HL */
+                                        outab(0xED);
+                                        outab(0x74);
+                                        break;
+                                }
+                        }
         
                         if ((t1 == S_IDSP) && (v1 == 0)) {
                                 /* 0xE3 is EX DE',HL on rabbit 2000 
@@ -826,7 +848,7 @@ VOID  machine(struct mne * mp)
                                 }
                         }
                 }
-                if ((t1 == S_R16X) && (t2 == S_R16X)) {
+                if ((t1 == S_R16AF) && (t2 == S_R16AF_ALT)) {
                         outab(0x08);
                         break;
                 }
@@ -1062,6 +1084,81 @@ VOID  machine(struct mne * mp)
                 xerr('a', "Invalid Addressing Mode.");
                 break;
 
+        case X_LDP:
+                t1 = addr(&e1);
+                v1 = (int) e1.e_addr;
+                comma(1);
+                t2 = addr(&e2);
+                v2 = (int) e2.e_addr;
+                /* LDP (mn), HL|IX|IY */
+                if ((t1 == S_INDM) && (t2 == S_R16)) {
+                        if ((v2 != HL) && (v2 != IX) && (v2 != IY)) {
+                                aerr();
+                                break;
+                        }
+                        if (v2 == HL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(v2);
+                        }
+                        outab(op | 0x01);
+                        outrw(&e1, 0);
+                        break;
+                }
+                /* LDP HL|IX|IY, (mn) */
+                if ((t1 == S_R16) && (t2 == S_INDM)) {
+                        if ((v1 != HL) && (v1 != IX) && (v1 != IY)) {
+                                aerr();
+                                break;
+                        }
+                        if (v1 == HL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(v1);
+                        }
+                        outab(op | 0x09);
+                        outrw(&e2, 0);
+                        break;
+                }
+                /* LDP (HL|IX|IY), HL */
+                if ((t2 == S_R16) && (v2 == HL)) {
+                        if ((t1 != S_IDHL) && (t1 != S_IDIX) && (t1 != S_IDIY)) {
+                                aerr();
+                                break;
+                        }
+                        if ((e1.e_base.e_ap != NULL) || (v1 != 0)) {
+                                aerr();
+                                break;
+                        }
+                        if (t1 == S_IDHL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(t1);
+                        }
+                        outab(op);
+                        break;
+                }
+                /* LDP HL, (HL|IX|IY) */
+                if ((t1 == S_R16) && (v1 == HL)) {
+                        if ((t2 != S_IDHL) && (t2 != S_IDIX) && (t2 != S_IDIY)) {
+                                aerr();
+                                break;
+                        }
+                        if ((e2.e_base.e_ap != NULL) || (v2 != 0)) {
+                                aerr();
+                                break;
+                        }
+                        if (t2 == S_IDHL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(t2);
+                        }
+                        outab(op | 0x08);
+                        break;
+                }
+                aerr();
+                break;
+
         case R3K_INH1:
                 if (!(r3k_mode || r4k_mode))
                         xerr('o', "A Rabbit 3000/4000 Instruction.");
@@ -1249,6 +1346,11 @@ minit(void)
          * Byte Order
          */
         hilo = 0;
+
+        /*
+         * Address Space
+         */
+        exprmasks(3);
 
         if (pass == 0) {
                 mchtyp = X_R2K;

@@ -46,7 +46,7 @@ int noInit = 0;                 /* no initialization */
 
 
 char *
-aopLiteralGptr (const char * name, value * val)
+aopLiteralGptr (const char *name, const value *val)
 {
   unsigned long v = ulFromVal (val);
   struct dbuf_s dbuf;
@@ -2104,7 +2104,7 @@ createInterruptVect (struct dbuf_s *vBuf)
   /* only if the main function exists */
   if (!(mainf = findSymWithLevel (SymbolTab, mainf)))
     {
-      if (!options.cc_only && !noAssemble && !options.c1mode)
+      if (!options.cc_only && !options.no_assemble && !options.c1mode)
         werror (E_NO_MAIN);
       return;
     }
@@ -2113,7 +2113,7 @@ createInterruptVect (struct dbuf_s *vBuf)
   if (!IFFUNC_HASBODY (mainf->type))
     {
       /* if ! compile only then main function should be present */
-      if (!options.cc_only && !noAssemble)
+      if (!options.cc_only && !options.no_assemble)
         werror (E_NO_MAIN);
       return;
     }
@@ -2310,7 +2310,7 @@ glue (void)
 
   /* -o option overrides default name? */
   dbuf_init (&asmFileName, PATH_MAX);
-  if ((noAssemble || options.c1mode) && fullDstFileName)
+  if ((options.no_assemble || options.c1mode) && fullDstFileName)
     {
       dbuf_append_str (&asmFileName, fullDstFileName);
     }
@@ -2342,6 +2342,8 @@ glue (void)
     fprintf (asmFile, "\t.ez80\n");
   else if (TARGET_IS_Z80N)
     fprintf (asmFile, "\t.zxn\n");
+  else if (TARGET_IS_R800)
+    fprintf (asmFile, "\t.r800\n");
   else if (TARGET_IS_Z80 && options.allow_undoc_inst)
     fprintf (asmFile, "\t.allow_undocumented\n");
 

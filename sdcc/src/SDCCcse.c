@@ -447,6 +447,11 @@ DEFSETFUNC (findCheaperOp)
             {
               SPEC_NOUN(operandType(*opp)) = V_INT;
             }
+          // more special cases: we need this one to avoid regressions from _BOOL -> __bit optimization.
+          else if (IS_BOOL (operandType(cop)) && SPEC_NOUN(operandType(*opp)) == V_BIT)
+            {
+              SPEC_NOUN(operandType(*opp)) = V_BOOL;
+            }
           else
             {
               // No clue...
@@ -2441,6 +2446,7 @@ cseBBlock (eBBlock * ebb, int computeOnly, ebbIndex * ebbi)
                       if (bitVectBitValue (ebb->ndompset, IC_LEFT (ic)->key))
                           ebb->ptrsSet = bitVectSetBit (ebb->ptrsSet, pdop->key);
                       ReplaceOpWithCheaperOp (&IC_LEFT (ic), pdop);
+                      SET_ISADDR (IC_LEFT (ic), 1);
                       change = replaced = 1;
                     }
                   /* check if there is a pointer set

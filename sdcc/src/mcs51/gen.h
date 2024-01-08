@@ -28,7 +28,7 @@
 enum
 {
   AOP_LIT = 1,
-  AOP_REG, AOP_DIR,
+  AOP_REG, AOP_DIR, AOP_SFR,
   AOP_DPTR, AOP_R0, AOP_R1,
   AOP_STK, AOP_IMMD, AOP_STR,
   AOP_CRY, AOP_ACC, AOP_DUMMY
@@ -44,6 +44,7 @@ typedef struct asmop
      AOP_LIT    -  operand is a literal value
      AOP_REG    -  is in registers
      AOP_DIR    -  direct just a name
+     AOP_SFR    -  special function register
      AOP_DPTR   -  dptr contains address of operand
      AOP_R0/R1  -  r0/r1 contains address of operand
      AOP_STK    -  should be pushed on stack this
@@ -58,6 +59,9 @@ typedef struct asmop
   short size;                   /* total size */
   unsigned code:1;              /* is in Code space */
   unsigned paged:1;             /* in paged memory  */
+  bool aop_lit_is_funcptr : 1;
+  bool aop_litimmd_is_gptr : 1;
+  bool aop_is_volatile : 1;
   unsigned short allocated;     /* number of times allocated */
   union
   {
@@ -72,16 +76,27 @@ typedef struct asmop
       char *aop_immd2;          /* cast remat will generate this   */
     } aop_immd;
     symbol *aop_sym;            /* symbol when AOP_STK */
-    char *aop_str[8];           /* just a string array containing the location */
+    const char *aop_str[8];     /* just a string array containing the location */
   }
   aopu;
+  signed char regs[24]; // Byte of this aop that is in the register. -1 if no byte of this aop is in the reg. Todo: Reorder regs in ralloc.h, so this can be shortened to save some bytes.
+  struct valinfo valinfo;
 }
 asmop;
 
 void gen51Code (iCode *);
 void mcs51_emitDebuggerSymbol (const char *);
 
-extern char *fReturn8051[];
+bool mcs51IsReturned (const char *what);
+
+// Check if what is part of the ith argument (counting from 1) to a function of type ftype.
+// If what is 0, just check if the ith argument is in registers.
+bool mcs51IsRegArg (struct sym_link *ftype, int i, const char *what);
+
+// Check if what is part of the any argument (counting from 1) to a function of type ftype.
+bool stm8IsParmInCall(sym_link *ftype, const char *what);
+
+extern const char *fReturn8051[];
 extern unsigned fReturnSizeMCS51;
 //extern char **fReturn;
 

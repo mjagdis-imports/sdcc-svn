@@ -252,7 +252,7 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
 
 /*--------------------------------------------------------------------------*/
 /* updateCFA - update the debugger information to reflect the current       */
-/*             connonical frame address relative to the stack pointer       */
+/*             canonical frame address relative to the stack pointer        */
 /*--------------------------------------------------------------------------*/
 static void
 updateCFA (void)
@@ -1722,17 +1722,18 @@ accopWithAop (char *accop, asmop *aop, int loffset)
   if (aop->type == AOP_DUMMY)
     return;
 
-  if (loffset >= aop->size)
+  if (aop->type == AOP_REG)
     {
-      emitcode (accop, "#0");
-      regalloc_dry_run_cost += 2;
-    }
-  else if (aop->type == AOP_REG)
+  if (loffset < aop->size)
     {
       pushReg (aop->aopu.aop_reg[loffset], false);
       emitcode (accop, "1,s");
       regalloc_dry_run_cost += 3;
       pullNull (1);
+    } else {
+      emitcode (accop, "#0");
+      regalloc_dry_run_cost += 2;
+    }
     }
   else
     {
@@ -2630,7 +2631,7 @@ aopOp (operand *op, iCode * ic, bool result)
 
 /*-----------------------------------------------------------------*/
 /* freeAsmop - free up the asmop given to an operand               */
-/*----------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
 static void
 freeAsmop (operand * op, asmop * aaop, iCode * ic, bool pop)
 {
@@ -10304,7 +10305,6 @@ genAssignLit (operand * result, operand * right)
           assigned[offset] = 1;
           assigned[offset+1] = 1;
         }
-      return true;
     }
 
   remaining = size;

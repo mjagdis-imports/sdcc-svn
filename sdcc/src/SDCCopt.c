@@ -1159,7 +1159,7 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       goto convert;
     }
 
-  if ((TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_RABBIT || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N) && (!strcmp (bif->name, "__builtin_memcpy") || !strcmp (bif->name, "__builtin_strncpy") || !strcmp (bif->name, "__builtin_memset")))
+  if ((TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_RABBIT || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N || TARGET_IS_R800) && (!strcmp (bif->name, "__builtin_memcpy") || !strcmp (bif->name, "__builtin_strncpy") || !strcmp (bif->name, "__builtin_memset")))
     {
       /* Replace iff return value is used or last parameter is not an integer constant (except for memcpy, where non-integers can be handled). */
       if (bitVectIsZero (OP_USES (IC_RESULT (icc))) && (IS_OP_LITERAL (IC_LEFT (lastparam)) || !strcmp (bif->name, "__builtin_memcpy")))
@@ -1327,11 +1327,9 @@ convertToFcall (eBBlock ** ebbs, int count)
                   /* modulo by 1: no remainder */
                   if (litVal == 1)
                     {
+                      detachiCodeOperand (&ic->left, ic);
                       ic->op = '=';
                       IC_RIGHT (ic) = operandFromLit (0);
-                      if (IS_SYMOP (IC_LEFT (ic)))
-                        bitVectUnSetBit (OP_USES (IC_LEFT (ic)), ic->key);
-                      IC_LEFT (ic) = NULL;
                       continue;
                     }
                   // See if literal value is a power of 2.
@@ -1964,7 +1962,7 @@ killDeadCode (ebbIndex * ebbi)
               int kill, j;
               kill = 0;
 
-              if (SKIP_IC (ic) ||
+              if (SKIP_IC (ic) && ic->op != RECEIVE ||
                   ic->op == IFX ||
                   ic->op == RETURN ||
                   ic->op == DUMMY_READ_VOLATILE ||
@@ -2412,6 +2410,8 @@ optimizeOpWidth (eBBlock ** ebbs, int count)
                 {
                   skipuic = uic;
                   uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (IC_RESULT (uic))));
+                  if (!uic)
+                    continue;
                 }
 
               /* Try to handle a few cases where the result has multiple uses */
@@ -2560,11 +2560,7 @@ optimize:
                 {
                   uic->op = '=';
                   if (skipuic)
-                    {
-                      bitVectUnSetBit (OP_USES (IC_RIGHT (uic)), uic->key);
-                      IC_RIGHT (uic) = IC_RIGHT (skipuic);
-                      OP_USES (IC_RIGHT (uic)) = bitVectSetBit (OP_USES (IC_RIGHT (uic)), uic->key);
-                    }
+                    attachiCodeOperand (skipuic->right, &uic->right, uic);
                 }
               if (skipuic && skipuic->op == '=' &&
                   compareType (operandType (IC_RESULT (skipuic)), operandType (IC_RIGHT (skipuic)), false) != 1)
@@ -2783,7 +2779,7 @@ optimizeCastCast (eBBlock ** ebbs, int count)
               /* Special case: Second use is a bit test */
               if (uic->op == BITWISEAND && IS_OP_LITERAL (IC_RIGHT (uic)) && ifxForOp (IC_RESULT (uic), uic))
                 {
-                  unsigned long long mask = operandLitValue (IC_RIGHT (uic));
+                  unsigned long long mask = operandLitValueUll (IC_RIGHT (uic));
 
                   /* Signed cast might set bits above the width of type1 */
                   if (!SPEC_USIGN (type1) && (mask >> (bitsForType (type1))))
@@ -3447,7 +3443,8 @@ eBBlockFromiCode (iCode *ic)
   narrowReads(ebbi);
 
   /* allocate registers & generate code */
-  port->assignRegisters (ebbi);
+  if (!options.syntax_only)
+    port->assignRegisters (ebbi);
 
   /* throw away blocks */
   setToNull ((void *) &graphEdges);

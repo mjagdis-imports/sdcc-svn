@@ -58,15 +58,12 @@ LIB = z80.lib
 AS = $(SAS)
 ASFLAGS = -plosgff
 
-CFLAGS = -I$(srcdir)/../../include -I. --std-c2x
+CFLAGS = -I$(srcdir)/../../include -I. --std-c23
 
 all: $(PORTDIR)/$(LIB) $(PORTDIR)/crt0.rel
 
 $(PORTDIR)/crt0.rel: crt0.rel
 	cp crt0.rel $(PORTDIR)/crt0.rel
-
-Makefile: $(srcdir)/Makefile.in
-	cd $(top_builddir); ./config.status device/lib/z80/Makefile
 
 $(PORTDIR)/$(LIB): $(OBJ) $(Z8OBJECTS) Makefile
 	rm -f $@
@@ -91,3 +88,5 @@ clean:
 distclean: clean
 	rm -f Makefile
 
+Makefile: $(srcdir)/Makefile.in
+	cd $(top_builddir); ./config.status device/lib/z80/Makefile

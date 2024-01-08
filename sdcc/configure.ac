@@ -81,6 +81,8 @@ AC_LANG([C])
 
 AC_CHECK_HEADERS(endian.h sys/endian.h machine/endian.h sys/isa_defs.h)
 AC_CHECK_HEADERS(uchar.h)
+# zlib is not needed by sdcc itself, but by sdcpp and sdbinutils.
+AC_CHECK_HEADERS(zlib.h,,AC_MSG_ERROR([[zlib library not found (zlib.h).]]))
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS(treedec/combinations.hpp,,AC_MSG_NOTICE([[treedec library missing, falling back to Thorup.]]))
 AC_CHECK_HEADERS(gala/graph.h)
@@ -785,6 +787,7 @@ AC_DO_PORT(sm83,     z80,    SM83,     [Excludes the SM83 port])
 AC_DO_PORT(tlcs90,   z80,    TLCS90,   [Excludes the TLCS-90 port])
 AC_DO_PORT(ez80_z80, z80,    EZ80_Z80, [Excludes the EZ80-Z80 port])
 AC_DO_PORT(z80n,     z80,    Z80N,     [Excludes the Z80N port])
+AC_DO_PORT(r800,     z80,    R800,     [Excludes the R800 port])
 AC_DO_PORT(ds390,    ds390,  DS390,    [Excludes the DS390 port])
 AC_DEFINE_UNQUOTED(OPT_DISABLE_TININative, $OPT_DISABLE_DS390, [XXX])
 AC_DO_PORT(ds400,    ds390,  DS400,    [Excludes the DS400 port])
@@ -798,7 +801,7 @@ AC_DO_PORT(pdk14,    pdk,    PDK14,    [Excludes the PDK14 port])
 AC_DO_PORT(pdk15,    pdk,    PDK15,    [Excludes the PDK15 port])
 AC_DO_PORT_ENABLER(pdk16,    pdk,    PDK16,    [Includes the PDK16 port])
 AC_DO_PORT(mos6502,  mos6502,MOS6502,  [Excludes the MOS6502 port])
-AC_DO_PORT_ENABLER(mos65c02, mos6502,MOS65C02, [Includes the MOS65C02 port])
+AC_DO_PORT(mos65c02, mos6502,MOS65C02, [Excludes the MOS65C02 port])
 
 # Unsupported targets
 ####AC_DO_PORT_ENABLER(avr,   avr,   AVR,   [Includes the AVR port (disabled by default)])
@@ -903,16 +906,17 @@ if test $OPT_DISABLE_PIC16 = 0 && test $OPT_DISABLE_NON_FREE = 0; then
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_SUBDIRS(device/non-free/lib/pic16)
 fi
 
-if test $OPT_DISABLE_Z80 = 0 || test $OPT_DISABLE_Z180 = 0 || test $OPT_DISABLE_R2K = 0 || test $OPT_DISABLE_R2KA = 0 || test $OPT_DISABLE_R3KA = 0 || test $OPT_DISABLE_SM83 = 0 || test $OPT_DISABLE_TLCS90 = 0 || test $OPT_DISABLE_EZ80_Z80 = 0 || test $OPT_DISABLE_Z80N = 0; then
+if test $OPT_DISABLE_Z80 = 0 || test $OPT_DISABLE_Z180 = 0 || test $OPT_DISABLE_R2K = 0 || test $OPT_DISABLE_R2KA = 0 || test $OPT_DISABLE_R3KA = 0 || test $OPT_DISABLE_SM83 = 0 || test $OPT_DISABLE_TLCS90 = 0 || test $OPT_DISABLE_EZ80_Z80 = 0 || test $OPT_DISABLE_Z80N = 0 || test $OPT_DISABLE_R800 = 0; then
   AC_CONFIG_FILES([src/z80/Makefile])
 fi
 
-if test $OPT_DISABLE_Z80 = 0 || test $OPT_DISABLE_Z180 = 0 || test $OPT_DISABLE_EZ80_Z80 = 0 || test $OPT_DISABLE_Z80N = 0; then
+if test $OPT_DISABLE_Z80 = 0 || test $OPT_DISABLE_Z180 = 0 || test $OPT_DISABLE_EZ80_Z80 = 0 || test $OPT_DISABLE_Z80N = 0 || test $OPT_DISABLE_R800 = 0; then
   AC_CONFIG_FILES([sdas/asz80/Makefile])
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/z80/Makefile
                                                        device/lib/z180/Makefile
                                                        device/lib/ez80_z80/Makefile
-                                                       device/lib/z80n/Makefile])
+                                                       device/lib/z80n/Makefile
+                                                       device/lib/r800/Makefile])
 fi
 
 if test $OPT_DISABLE_R2K = 0 || test $OPT_DISABLE_R2KA = 0 || test $OPT_DISABLE_R3KA = 0; then
@@ -1051,6 +1055,7 @@ sdcc ${VERSION} is now configured for
     tlcs90              ${enable_tlcs90_port}
     ez80_z80            ${enable_ez80_z80_port}
     z80n                ${enable_z80n_port}
+    r800                ${enable_r800_port}
     stm8                ${enable_stm8_port}
     pdk13               ${enable_pdk13_port}
     pdk14               ${enable_pdk14_port}

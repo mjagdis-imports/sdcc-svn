@@ -157,15 +157,7 @@
 /*
  * CPU Types
  */
-#define	S_CPU	83
-
-/*
- * Processor Types (S_CPU)
- */
-#define	X_Z80	0
-#define	X_HD64	1
-#define	X_ZXN	2
-#define	X_EZ80	3
+#define	S_CPU	84
 
 /*
  * HD64180 Instructions
@@ -176,6 +168,15 @@
 #define	X_MLT	93
 #define	X_TST	94
 #define	X_TSTIO	95
+
+/*
+ * Processor Types (S_CPU)
+ */
+#define	X_Z80	0
+#define	X_HD64	1
+#define	X_ZXN	2
+#define	X_EZ80	3
+#define X_R800  4
 
 /*
  * Z80-ZX Next Instructions
@@ -196,6 +197,12 @@
 #define	X_EZ_INH2	111
 #define	X_EZ_LEA	112
 #define	X_EZ_PEA	113
+
+/*
+ * R800/Z280 Instructions
+ */
+#define X_Z280_MULTU   120  
+#define X_Z280_MULTUW  121  
 
 /*
  * eZ80 specific addressing extensions (used in mne m_flag)

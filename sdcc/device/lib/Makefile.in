@@ -51,7 +51,7 @@ lib_dir_suffix  = @lib_dir_suffix@
 sdcc_libdir     = $(DESTDIR)$(datadir)/$(lib_dir_suffix)
 
 CPPFLAGS        = -I$(INCDIR) -I$(PORTINCDIR)
-CFLAGS          = $(MODELFLAGS) --nostdinc --std-c2x
+CFLAGS          = $(MODELFLAGS) --nostdinc --std-c23
 
 BUILDDIR        = build
 # Default
@@ -78,6 +78,7 @@ OPT_DISABLE_R2KA     = @OPT_DISABLE_R2KA@
 OPT_DISABLE_R3KA     = @OPT_DISABLE_R3KA@
 OPT_DISABLE_TLCS90   = @OPT_DISABLE_TLCS90@
 OPT_DISABLE_SM83     = @OPT_DISABLE_SM83@
+OPT_DISABLE_R800     = @OPT_DISABLE_R800@
 OPT_DISABLE_STM8     = @OPT_DISABLE_STM8@
 OPT_DISABLE_PDK13    = @OPT_DISABLE_PDK13@
 OPT_DISABLE_PDK14    = @OPT_DISABLE_PDK14@
@@ -93,7 +94,7 @@ SOURCES_FLOAT = $(COMMON_FLOAT) \
   _fsreturnval.c \
   _fsrshift.c \
   _fsswapargs.c \
-  _logexpf.c 
+  _logexpf.c
 
 SOURCES_INT = $(COMMON_INT) \
   _divsint.c \
@@ -107,10 +108,10 @@ SOURCES_LONG = $(COMMON_LONG) \
   _mullong.c
 
 SOURCES_LONGLONG = $(COMMON_LONGLONG) \
-  _rrulonglong.c \
-  _rrslonglong.c \
-  _rlulonglong.c \
-  _rlslonglong.c \
+  _srulonglong.c \
+  _srslonglong.c \
+  _slulonglong.c \
+  _slslonglong.c \
   _mullonglong.c \
   _divslonglong.c \
   _divulonglong.c \
@@ -141,6 +142,7 @@ SOURCES_SDCC = $(COMMON_SDCC) \
   div.c \
   ldiv.c \
   lldiv.c \
+  imaxdiv.c \
   sprintf.c \
   vprintf.c \
   printf_fast.c \
@@ -261,6 +263,10 @@ endif
 
 ifeq ($(OPT_DISABLE_SM83), 0)
 TARGETS        += model-sm83
+endif
+
+ifeq ($(OPT_DISABLE_R800), 0)
+TARGETS        += model-r800
 endif
 
 ifeq ($(OPT_DISABLE_STM8), 0)
@@ -412,6 +418,11 @@ model-tlcs90:
 model-sm83:
 	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
 	  $(MAKE) MODELFLAGS="-msm83" PORT=sm83 objects-z80 OEXT=.o || exit 1; \
+	fi
+
+model-r800:
+	if grep '^z80$$' $(top_builddir)/ports.build > /dev/null; then \
+	  $(MAKE) MODELFLAGS="-mr800" PORT=r800 objects-z80 OEXT=.o || exit 1; \
 	fi
 
 objects-z80:
@@ -658,15 +669,15 @@ clean_intermediate-pic14:
 install: all installdirs
 	[ ! -d "$(BUILDDIR)" ] || $(CP_U) -r $(BUILDDIR)/* $(sdcc_libdir)
 	$(CP_U) -r $(MODELS) $(srcdir)/mcs51 $(srcdir)/ds390 $(srcdir)/ds400 \
-	                     $(srcdir)/z80 $(srcdir)/z180 $(srcdir)/ez80_z80 $(srcdir)/z80n $(srcdir)/r2k $(srcdir)/r2ka $(srcdir)/r3ka $(srcdir)/tlcs90 $(srcdir)/sm83 \
+	                     $(srcdir)/z80 $(srcdir)/z180 $(srcdir)/ez80_z80 $(srcdir)/z80n $(srcdir)/r2k $(srcdir)/r2ka $(srcdir)/r3ka $(srcdir)/tlcs90 $(srcdir)/sm83 $(srcdir)/r800 \
 	                     $(srcdir)/hc08 $(srcdir)/s08 \
 	                     $(srcdir)/mos6502 $(srcdir)/mos65c02 \
 	                     $(srcdir)/stm8 \
 	                     $(srcdir)/pdk13 $(srcdir)/pdk14 $(srcdir)/pdk15 \
 	                     $(srcdir)/pic14 $(srcdir)/pic16 $(srcdir)/*.c $(sdcc_libdir)/src
-	$(CP_U) -r $(MODELS) mcs51 ds390 ds400 z80 z180 ez80_z80 z80n r2k r2ka r3ka tlcs90 sm83 hc08 s08 stm8 pdk13 pdk14 pdk15 $(sdcc_libdir)/src
+	$(CP_U) -r $(MODELS) mcs51 ds390 ds400 z80 z180 ez80_z80 z80n r2k r2ka r3ka tlcs90 sm83 r800 hc08 s08 stm8 pdk13 pdk14 pdk15 $(sdcc_libdir)/src
 
-	for src in $(MODELS) ds390 ds400 z80 z180 ez80_z80 z80n r2k r2ka r3ka tlcs90 sm83 hc08 s08 mos6502 mos65c02 stm8 pdk13 pdk14 pdk15 pic14 pic16; do \
+	for src in $(MODELS) ds390 ds400 z80 z180 ez80_z80 z80n r2k r2ka r3ka tlcs90 sm83 r800 hc08 s08 mos6502 mos65c02 stm8 pdk13 pdk14 pdk15 pic14 pic16; do \
 	  find $(sdcc_libdir)/src/$$src -depth \
 	    \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
 	    -name '*.lst' -o -name '*.asm' -o -name '.svn' -o -name 'autom4te.cache' -o \
@@ -714,7 +725,7 @@ dep: Makefile.dep
 Makefile.dep: $(SOURCES) $(INCDIR)/*.h $(PORTINCDIR)/*.h
 	rm -f Makefile.dep
 	for i in $(filter %.c,$^); do \
-	  $(CPP) -std=c2x -M $(CPPFLAGS) $$i >$${i}.dep; \
+	  $(CPP) -std=c23 -M $(CPPFLAGS) $$i >$${i}.dep; \
 	  cat $${i}.dep >>Makefile.dep; \
 	  rm $${i}.dep; \
 	done

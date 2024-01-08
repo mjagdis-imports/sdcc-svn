@@ -63,11 +63,10 @@ int BitBankUsed;                /* MB: overlayable bit bank */
 struct optimize optimize;
 struct options options;
 int preProcOnly = 0;
-int SyntaxOnly = 0;
-int noAssemble = 0;
 set *preArgvSet = NULL;         /* pre-processor arguments  */
 set *asmOptionsSet = NULL;      /* set of assembler options */
 set *linkOptionsSet = NULL;     /* set of linker options */
+set *linkOptionsSet2 = NULL;    /* set of linker options that must be passed on command line */
 set *libFilesSet = NULL;
 set *libPathsSet = NULL;
 set *relFilesSet = NULL;
@@ -177,8 +176,8 @@ static const OPTION optionsTable[] = {
   {'W', NULL, NULL, "Pass through options to the pre-processor (p), assembler (a) or linker (l)"},
   {0,   OPTION_INCLUDE, NULL, "Pre-include a file during pre-processing"},
   {'E', "--preprocessonly", &preProcOnly, "Preprocess only, do not compile"},
-  {0,   "--syntax-only", &SyntaxOnly, "Parse and verify syntax only, do not compile"},
-  {'S', NULL, &noAssemble, "Compile only; do not assemble or link"},
+  {0,   "--syntax-only", &options.syntax_only, "Parse and verify syntax only, do not compile"},
+  {'S', NULL, &options.no_assemble, "Compile only; do not assemble or link"},
   {'c', "--compile-only", &options.cc_only, "Compile and assemble, but do not link"},
   {0,   "--c1mode", &options.c1mode, "Act in c1 mode.  The standard input is preprocessed code, the output is assembly code."},
   {'o', NULL, NULL, "Place the output into the given path resp. file"},
@@ -193,7 +192,7 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_WERROR, NULL, "Treat the warnings as errors"},
   {0,   OPTION_DEBUG, NULL, "Enable debugging symbol output"},
   {0,   "--cyclomatic", &options.cyclomatic, "Display complexity of compiled functions"},
-  {0,   OPTION_STD, NULL, "Determine the language standard (c89, c99, c11, c2x, sdcc89 etc.)"},
+  {0,   OPTION_STD, NULL, "Determine the language standard (c89, c99, c11, c23, sdcc89 etc.)"},
   {0,   OPTION_DOLLARS_IN_IDENT, &options.dollars_in_ident, "Permit '$' as an identifier character"},
   {0,   OPTION_SIGNED_CHAR, &options.signed_char, "Make \"char\" signed by default"},
   {0,   OPTION_USE_NON_FREE, &options.use_non_free, "Search / include non-free licensed libraries and header files"},
@@ -331,6 +330,9 @@ static PORT *_ports[] = {
 #endif
 #if !OPT_DISABLE_Z80N
   &z80n_port,
+#endif
+#if !OPT_DISABLE_R800
+  &r800_port,
 #endif
 #if !OPT_DISABLE_AVR
   &avr_port,
@@ -647,7 +649,7 @@ setDefaultOptions (void)
   options.std_c95 = 1;
   options.std_c99 = 1;
   options.std_c11 = 1;          /* default to C11 (we want inline by default, so we need at least C99, and support for C11 is more complete than C99) */
-  options.std_c2x = 0;
+  options.std_c23 = 0;
   options.code_seg = CODE_NAME ? Safe_strdup (CODE_NAME) : NULL;        /* default to CSEG for generated code */
   options.const_seg = CONST_NAME ? Safe_strdup (CONST_NAME) : NULL;     /* default to CONST for generated code */
   options.data_seg = DATA_NAME ? Safe_strdup (DATA_NAME) : NULL;        /* default to DATA for non-initialized data */
@@ -1261,7 +1263,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c95 = 0;
                   options.std_c99 = 0;
                   options.std_c11 = 0;
-                  options.std_c2x = 0;
+                  options.std_c23 = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
@@ -1271,7 +1273,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c95 = 1;
                   options.std_c99 = 0;
                   options.std_c11 = 0;
-                  options.std_c2x = 0;
+                  options.std_c23 = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
@@ -1281,7 +1283,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c95 = 1;
                   options.std_c99 = 1;
                   options.std_c11 = 0;
-                  options.std_c2x = 0;
+                  options.std_c23 = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
@@ -1292,17 +1294,17 @@ parseCmdLine (int argc, char **argv)
                   options.std_c95 = 1;
                   options.std_c99 = 1;
                   options.std_c11 = 1;
-                  options.std_c2x = 0;
+                  options.std_c23 = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
 
-              if (strcmp (langVer, "c2x") == 0 || strcmp (langVer, "c23") == 0)
+              if (strcmp (langVer, "c23") == 0 || strcmp (langVer, "c2x") == 0)
                 {
                   options.std_c95 = 1;
                   options.std_c99 = 1;
                   options.std_c11 = 1;
-                  options.std_c2x = 1;
+                  options.std_c23 = 1;
                   options.std_sdcc = 0;
                   continue;
                 }
@@ -1312,7 +1314,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c95 = 0;
                   options.std_c99 = 0;
                   options.std_c11 = 0;
-                  options.std_c2x = 0;
+                  options.std_c23 = 0;
                   options.std_sdcc = 1;
                   continue;
                 }
@@ -1322,7 +1324,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c95 = 1;
                   options.std_c99 = 1;
                   options.std_c11 = 0;
-                  options.std_c2x = 0;
+                  options.std_c23 = 0;
                   options.std_sdcc = 1;
                   continue;
                 }
@@ -1332,17 +1334,17 @@ parseCmdLine (int argc, char **argv)
                   options.std_c95 = 1;
                   options.std_c99 = 1;
                   options.std_c11 = 1;
-                  options.std_c2x = 0;
+                  options.std_c23 = 0;
                   options.std_sdcc = 1;
                   continue;
                 }
 
-              if (strcmp (langVer, "sdcc2x") == 0 || strcmp (langVer, "sdcc23") == 0)
+              if (strcmp (langVer, "sdcc23") == 0 || strcmp (langVer, "sdcc2x") == 0)
                 {
                   options.std_c95 = 1;
                   options.std_c99 = 1;
                   options.std_c11 = 1;
-                  options.std_c2x = 1;
+                  options.std_c23 = 1;
                   options.std_sdcc = 1;
                   continue;
                 }
@@ -1509,7 +1511,13 @@ parseCmdLine (int argc, char **argv)
               /* linker options */
               else if (argv[i][2] == 'l')
                 {
-                  setParseWithComma (&linkOptionsSet, getStringArg ("-Wl", argv, &i, argc));
+                  char *arg = getStringArg ("-Wl", argv, &i, argc);
+                  while (*arg == ' ')
+                    arg++;
+                  if (arg[0] == '-' && arg[1] == 'f')
+                    setParseWithComma (&linkOptionsSet2, arg);
+                  else
+                    setParseWithComma (&linkOptionsSet, arg);
                 }
               /* assembler options */
               else if (argv[i][2] == 'a')
@@ -1641,11 +1649,11 @@ parseCmdLine (int argc, char **argv)
       deleteSet (&relFilesSet);
       deleteSet (&libFilesSet);
 
-      if (options.cc_only || noAssemble || SyntaxOnly || preProcOnly)
+      if (options.cc_only || options.no_assemble || options.syntax_only || preProcOnly)
         {
           werror (W_ILLEGAL_OPT_COMBINATION);
         }
-      options.cc_only = noAssemble = SyntaxOnly = preProcOnly = 0;
+      options.cc_only = options.no_assemble = options.syntax_only = preProcOnly = 0;
       if (!dstFileName)
         {
           werror (E_NEED_OPT_O_IN_C1);
@@ -1867,11 +1875,14 @@ linkEdit (char **envp)
              the best place for xdata */
           if (options.xdata_loc)
             {
-	      if(!TARGET_MOS6502_LIKE) {
-		WRITE_SEG_LOC (XDATA_NAME, options.xdata_loc);
-	      } else {
-		WRITE_SEG_LOC ("_DATA", options.xdata_loc);
-	      }
+              if (!TARGET_MOS6502_LIKE)
+                {
+                  WRITE_SEG_LOC (XDATA_NAME, options.xdata_loc);
+                }
+              else
+                {
+                  WRITE_SEG_LOC ("_DATA", options.xdata_loc);
+                }
             }
 
           /* pdata/xstack segment start. If zero, the linker
@@ -2021,7 +2032,7 @@ linkEdit (char **envp)
       char *b3 = shell_escape (dbuf_c_str (&linkerScriptFileName));
       char *bfn = shell_escape (dbuf_c_str (&binFileName));
 
-      buf = buildCmdLine (port->linker.cmd, b3, bfn, NULL, linkOptionsSet);
+      buf = buildCmdLine (port->linker.cmd, b3, bfn, NULL, linkOptionsSet, linkOptionsSet2);
       Safe_free (b3);
       Safe_free (bfn);
     }
@@ -2097,7 +2108,8 @@ assemble (char **envp)
           char *asmn = shell_escape (dbuf_c_str (&asmName));
 
           buf = buildCmdLine (port->assembler.cmd, dfn, asmn,
-                    options.debug ? port->assembler.debug_opts : port->assembler.plain_opts, asmOptionsSet);
+                              options.debug ? port->assembler.debug_opts : port->assembler.plain_opts,
+                              asmOptionsSet, NULL);
           Safe_free (dfn);
           Safe_free (asmn);
         }
@@ -2650,7 +2662,7 @@ initValues (void)
    * corresponding to the --std used to start sdcc
    */
   setMainValue ("cppstd",
-    options.std_c2x ? "-std=c2x " :
+    options.std_c23 ? "-std=c23 " :
     (options.std_c11 ? "-std=c11 " :
     (options.std_c99 ? "-std=c99 " :
     (options.std_c95 ? "-std=iso9899:199409 " :
@@ -2813,6 +2825,13 @@ main (int argc, char **argv, char **envp)
   /* finalize common options */
   finalizeOptions ();
 
+  /* When a non-default calling convetion is requested, the default stdlib and crt0 can't be used */
+  /* This is a warning, not an error, since some users like to compile their own stdlib, and use it in the stdlib location. */
+  if (options.sdcccall != port->sdcccall &&
+  	(TARGET_IS_STM8 && !options.nostdlib ||
+  	TARGET_Z80_LIKE && (!options.nostdlib || !options.no_std_crt0)))
+  	werror (W_SDCCCALL_STD_LIB_CRT0);
+
   if (fullSrcFileName || options.c1mode)
     {
       preProcess (envp);
@@ -2828,7 +2847,7 @@ main (int argc, char **argv, char **envp)
 
       yyparse ();
 
-      if (SyntaxOnly)
+      if (options.syntax_only)
         exit (fatalError ? EXIT_FAILURE : EXIT_SUCCESS);
 
       if (!options.c1mode)
@@ -2857,7 +2876,7 @@ main (int argc, char **argv, char **envp)
       if (fatalError)
         exit (EXIT_FAILURE);
 
-      if (!options.c1mode && !noAssemble)
+      if (!options.c1mode && !options.no_assemble)
         {
           if (options.verbose)
             printf ("sdcc: Calling assembler...\n");
@@ -2869,7 +2888,8 @@ main (int argc, char **argv, char **envp)
   if (options.debug && debugFile)
     debugFile->closeFile ();
 
-  if (!options.cc_only && !fatalError && !noAssemble && !options.c1mode && (fullSrcFileName || peekSet (relFilesSet) != NULL))
+  if (!options.cc_only && !fatalError && !options.no_assemble && !options.c1mode &&
+      (fullSrcFileName || peekSet (relFilesSet) != NULL))
     {
       if (options.verbose)
         printf ("sdcc: Calling linker...\n");
