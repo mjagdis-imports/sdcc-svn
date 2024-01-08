@@ -1,7 +1,13 @@
 2024-01-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* support/regression/ports/pic16/spec.mk:
-	  pic16 regression test infrastructure fix, from patch #471 by Jonathon Hall.
+	* support/regression/ports/pic16/spec.mk,
+	  sdcc/src/pic16/gen.c,
+	  sdcc/src/pic16/gen.h,
+	  sdcc/src/pic16/genutils.c,
+	  sdcc/src/pic16/genutils.h,
+	  sdcc/src/pic16/ralloc.c,
+	  sdcc/src/SDCCsymt.c:
+	  Basic pic16 long long support, patch #471 by Jonathon Hall.
 
 2024-01-08 Gabriele Gorla <gorlik@yahoo.com>
 
