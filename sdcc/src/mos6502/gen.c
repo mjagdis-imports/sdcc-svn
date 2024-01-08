@@ -75,6 +75,7 @@ static struct
   //  int baseStackPushes;
   set *sendSet;
   int tempOfs;
+  int lastflag;
   struct attr_t tempAttr[NUM_TEMP_REGS];
   struct attr_t DPTRAttr[2];
 } _G;
@@ -146,7 +147,7 @@ const int STACK_TOP = 0x100;
 
 #define safeLabelKey2num(a) ((regalloc_dry_run)?0:labelKey2num(a))
 #define safeNewiTempLabel(a) ((regalloc_dry_run)?0:newiTempLabel(a))
-#define safeEmitLabel(a) do { if(!regalloc_dry_run && a) emitLabel(a); } while(0)
+#define safeEmitLabel(a) do { if(!regalloc_dry_run && a) emitLabel(a); _G.lastflag=-1; } while(0)
 
 
 #define LSB     0
@@ -265,8 +266,9 @@ void emitComment (unsigned int level, const char *fmt, ...)
  *************************************************************************/
 const char * regInfoStr()
 {
-  static char outstr[30];
+  static char outstr[40];
   char regstring[3][10];
+  char *flagreg;
 
   if(m6502_reg_a->isLitConst) snprintf(regstring[0],10,"A:%c%c:#%02x ",
 				       (m6502_reg_a->isFree)?'-':'U',
@@ -304,8 +306,10 @@ const char * regInfoStr()
                 (m6502_reg_y->isFree)?'-':'U',
                 (m6502_reg_y->isDead)?'-':'L');
   
-  snprintf(outstr, 30, "%s %s %s",
-           regstring[0], regstring[1], regstring[2] );
+  flagreg = (_G.lastflag>=0)?m6502_regWithIdx(_G.lastflag)->name:"?";
+  
+  snprintf(outstr, 40, "%s %s %s F:%s",
+           regstring[0], regstring[1], regstring[2], flagreg );
   
   return outstr;
 }
@@ -386,7 +390,11 @@ void emit6502op (const char *inst, const char *fmt, ...)
   if(opcode) {
     isize = m6502_opcodeSize(opcode, fmt);
     cycles = m6502_opcodeCycles(opcode, fmt);
-    reg_info *dst_reg = m6502_regWithIdx(opcode->dest);
+    reg_info *dst_reg = (opcode->dest>=0)?m6502_regWithIdx(opcode->dest):NULL;
+
+    if(opcode->flags&0x82) // zero and negative flags
+      _G.lastflag=opcode->dest;
+
 
     // mark the destination register dirty as necessary
     // transfers are handled in the instruction generator
@@ -414,12 +422,21 @@ void emit6502op (const char *inst, const char *fmt, ...)
 	}
       }
 #endif
-      m6502_dirtyReg (m6502_regWithIdx(opcode->dest));
+      if(dst_reg) m6502_dirtyReg (dst_reg);
       break;
     case M6502OP_CMP:
+      if(!strcmp(fmt,"#0x00")) {
+        if(inst[2]=='p') _G.lastflag=A_IDX;
+        else if(inst[2]=='x') _G.lastflag=X_IDX;
+        else if(inst[2]=='y') _G.lastflag=Y_IDX;
+      }
       break;
     case M6502OP_RMW: // target is accumulator
-      if (!strcmp(fmt, "a")) m6502_dirtyReg (m6502_reg_a);
+      if (!strcmp(fmt, "a")) {
+        m6502_dirtyReg (m6502_reg_a);
+        _G.lastflag=A_IDX;
+      }
+      // FIXME: add 65c02 INC/DEC A literal
       break;
     case M6502OP_SPL: // stack pull
       _G.stackPushes--;
@@ -938,9 +955,11 @@ static void loadOrFreeRegTemp (reg_info * reg, bool needpull)
 static void loadRegTempNoFlags (reg_info * reg, bool needpull)
 {
   if (needpull) {
+    int tempflag=_G.lastflag;
     emit6502op("php", "");
     loadRegTemp (reg);
     emit6502op("plp", "");
+    _G.lastflag=tempflag;
   } else {
     m6502_freeReg (reg);
   }
@@ -3372,12 +3391,14 @@ static void asmopToBool (asmop *aop, bool resultInA)
       loadRegFromAop (m6502_reg_a, aop, 0);
     } else if (IS_AOP_A(aop)) {
       // result -> flags
-      // FIXME: should this be ORA #0x00?
-      emit6502op ("cmp", "#0x00");
+      if(_G.lastflag!=A_IDX) 
+        emit6502op ("cmp", "#0x00");
     } else if (IS_AOP_X(aop)) {
-      emit6502op ("cpx", "#0x00");
+      if(_G.lastflag!=X_IDX) 
+        emit6502op ("cpx", "#0x00");
     } else if (IS_AOP_Y(aop)) {
-      emit6502op ("cpy", "#0x00");
+      if(_G.lastflag!=Y_IDX) 
+        emit6502op ("cpy", "#0x00");
     } else {  // TODO: more cases? use transfer reg?
       // ldx or ldy? or lda?
       reg_info* freereg = getDeadByteReg();
@@ -3404,12 +3425,15 @@ static void asmopToBool (asmop *aop, bool resultInA)
   switch (aop->type) {
   case AOP_REG:
     if (IS_AOP_A (aop)) {
-      emit6502op ("cmp", "#0x00");
+      if(_G.lastflag!=A_IDX) 
+        emit6502op ("cmp", "#0x00");
       flagsonly = false; // because it's in A
     } else if (IS_AOP_X (aop)) {
-      emit6502op ("cpx", "#0x00");
+      if(_G.lastflag!=X_IDX) 
+        emit6502op ("cpx", "#0x00");
     } else if (IS_AOP_Y (aop)) {
-      emit6502op ("cpy", "#0x00");
+      if(_G.lastflag!=Y_IDX) 
+        emit6502op ("cpy", "#0x00");
     } else if (IS_AOP_XA (aop) || IS_AOP_AX (aop)) {
       symbol *tlbl = safeNewiTempLabel (NULL);
       emit6502op ("cmp", "#0x00");
@@ -4224,6 +4248,8 @@ static void genCall (iCode * ic)
   m6502_dirtyReg (m6502_reg_a);
   m6502_dirtyReg (m6502_reg_x);
   m6502_dirtyReg (m6502_reg_y);
+  _G.lastflag=-1;
+
 
   /* do we need to recompute the base ptr? */
   if (_G.funcHasBasePtr) {
@@ -4317,6 +4343,7 @@ static void genPcall (iCode * ic)
   m6502_dirtyReg (m6502_reg_a);
   m6502_dirtyReg (m6502_reg_x);
   m6502_dirtyReg (m6502_reg_y);
+  _G.lastflag=-1;
 
   /* do we need to recompute the base ptr? */
   if (_G.funcHasBasePtr) {
@@ -4417,6 +4444,7 @@ static void genFunction (iCode * ic)
   _G.stackOfs = 0;
   _G.stackPushes = 0;
   _G.tsxStackPushes = 0;
+  _G.lastflag=-1;
 
   if (options.debug && !regalloc_dry_run)
     debugFile->writeFrameAddress (NULL, m6502_reg_sp, 0);
@@ -4656,22 +4684,24 @@ static void genLabel (iCode * ic)
   emitComment (REGOPS, "  %s %s", __func__, regInfoStr() );
 
 
-  /* For the high level labels we cannot depend on any */
-  /* register's contents. Amnesia time.                */
-  for (i = A_IDX; i <= YX_IDX; i++) {
-    m6502_dirtyReg (m6502_regWithIdx (i));
-    m6502_useReg (m6502_regWithIdx (i));
-  }
-
   for(i=0;i<NUM_TEMP_REGS;i++)
     _G.tempAttr[i].isLiteral=0;
 
   _G.DPTRAttr[0].isLiteral=0;
   _G.DPTRAttr[1].isLiteral=0;
 
+  _G.lastflag=-1;
+
   /* special case never generate */
   if (IC_LABEL (ic) == entryLabel)
     return;
+
+  /* For the high level labels we cannot depend on any */
+  /* register's contents. Amnesia time.                */
+  for (i = A_IDX; i <= YX_IDX; i++) {
+    m6502_dirtyReg (m6502_regWithIdx (i));
+    m6502_useReg (m6502_regWithIdx (i));
+  }
 
   if (options.debug && !regalloc_dry_run)
     debugFile->writeLabel (IC_LABEL (ic), ic);
@@ -5626,7 +5656,7 @@ static void genCmpEQorNE (iCode * ic, iCode * ifx)
 	tlbl_EQ = safeNewiTempLabel (NULL);
       emitBranch ("beq", tlbl_EQ);
       if (tlbl_NE)
-	emitLabel (tlbl_NE);
+	safeEmitLabel (tlbl_NE);
       loadRegFromConst (m6502_reg_a, 0);
       emitBranch ("bra", tlbl);
       safeEmitLabel (tlbl_EQ);
