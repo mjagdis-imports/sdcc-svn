@@ -1,7 +1,9 @@
 2024-01-09 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
-	  additional carry flag tracking optimizations.
+	  Additional carry flag tracking optimizations.
+  	* src/mos6502/gen.c:
+	  Improve debug messages.
 	  
 2024-01-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
