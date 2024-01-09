@@ -57,15 +57,15 @@ ifeq ($(TARGETOS), x86_64-w64-mingw32)
 # Windows 64bit:
 # include readline5.dll in the package
 	cp $(HOME)/local-$(HOSTNAME)/cross-tools-w64/x86_64-w64-mingw32/dll/readline5.dll $(BUILDDIR)$(PREFIX)/bin
-	cp /usr/lib/gcc/$(PREFIX)/13-win32/libgcc_s_*-1.dll $(BUILDDIR)$(PREFIX)/bin
-	cp /usr/lib/gcc/$(PREFIX)/13-win32/libstdc++-6.dll $(BUILDDIR)$(PREFIX)/bin
-	cp /usr/$(PREFIX)/lib/libwinpthread-1.dll $(BUILDDIR)$(PREFIX)/bin
+	cp /usr/lib/gcc/$(TARGET_PLATFORM)/13-win32/libgcc_s_*-1.dll $(BUILDDIR)$(PREFIX)/bin
+	cp /usr/lib/gcc/$(TARGET_PLATFORM)/13-win32/libstdc++-6.dll $(BUILDDIR)$(PREFIX)/bin
+	cp /usr/$(TARGET_PLATFORM)/lib/libwinpthread-1.dll $(BUILDDIR)$(PREFIX)/bin
 else
 # Windows 32bit:
 # include readline5.dll in the package
 	cp $(HOME)/local-$(HOSTNAME)/cross-tools-w64/i686-w64-mingw32/dll/readline5.dll $(BUILDDIR)$(PREFIX)/bin
-	cp /usr/lib/gcc/$(PREFIX)/13-win32/libgcc_s_*-1.dll $(BUILDDIR)$(PREFIX)/bin
-	cp /usr/lib/gcc/$(PREFIX)/13-win32/libstdc++-6.dll $(BUILDDIR)$(PREFIX)/bin
+	cp /usr/lib/gcc/$(TARGET_PLATFORM)/13-win32/libgcc_s_*-1.dll $(BUILDDIR)$(PREFIX)/bin
+	cp /usr/lib/gcc/$(TARGET_PLATFORM)/13-win32/libstdc++-6.dll $(BUILDDIR)$(PREFIX)/bin
 endif
 # convert as2gbmap.py to a batch file in bin directory
 	echo '@setlocal enabledelayedexpansion && python -x "%~f0" %* & exit /b !ERRORLEVEL!' | \
