@@ -403,9 +403,9 @@ ${Section} "SDCC application files" SEC01
   File "${SDCC_ROOT}\bin\sdcpp.exe"
   File "${SDCC_ROOT}\libexec\sdcc\cc1"
   File "${SDCC_ROOT}\bin\as2gbmap.cmd"
-!ifdef WIN64
   File "${SDCC_ROOT}\bin\libgcc_s_*-1.dll"
   File "${SDCC_ROOT}\bin\libstdc++-6.dll"
+!ifdef WIN64
   File "${SDCC_ROOT}\bin\libwinpthread-1.dll"
 !endif
 ${SectionEnd}
@@ -1288,9 +1288,9 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\bin\sdcpp.exe"
   Delete "$INSTDIR\bin\cc1"
   Delete "$INSTDIR\bin\as2gbmap.cmd"
-!ifdef WIN64
   Delete "$INSTDIR\bin\libgcc_s_*-1.dll"
   Delete "$INSTDIR\bin\libstdc++-6.dll"
+!ifdef WIN64
   Delete "$INSTDIR\bin\libwinpthread-1.dll"
 !endif
 

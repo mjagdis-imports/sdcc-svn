@@ -1,3 +1,8 @@
+2024-01-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/sdcc.nsi:
+	  Include some more DLLs in 32-bit installer, as required by current MinGW (previously these were required for 64-bit only).
+
 2023-12-28 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/_divuchar.s,
