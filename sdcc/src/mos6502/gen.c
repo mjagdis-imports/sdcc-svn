@@ -603,12 +603,12 @@ static void emitBranch (char *branchop, symbol * tlbl)
 }
 
 /**************************************************************************
- * emitCarryOp - emit CLC/SEC if necessary
+ * emitSetCarry - emit CLC/SEC if necessary
  *
  * @param c carry value to set
  *************************************************************************/
 static void
-emitCarryOp(int c)
+emitSetCarry(int c)
 {
   if(_G.carryValid && _G.carry==c)
     return;
@@ -1181,7 +1181,7 @@ static void adjustStack (int n)
     storeRegTemp(m6502_reg_xa, true);
     emit6502op ("tsx", "");
     transferRegReg (m6502_reg_x, m6502_reg_a, true);
-    emitCarryOp(0);
+    emitSetCarry(0);
     emit6502op ("adc", IMMDFMT, n&0xff);
     transferRegReg (m6502_reg_a, m6502_reg_x, true);
     emit6502op ("txs", "");
@@ -2165,22 +2165,21 @@ static void rmwWithReg (char *rmwop, reg_info * reg)
       if (IS_MOS65C02) {
 	emit6502op (rmwop, "a");
       } else {
-        // FIXME - can optimize either way.
-	emitCarryOp(0);
-	emit6502op ("adc", "#0x01");
+	  emitSetCarry(0);
+	  emit6502op ("adc", "#0x01");
       }
     } else if (!strcmp(rmwop, "dec")) {
       if (IS_MOS65C02) {
 	emit6502op (rmwop, "a");
       } else {
-	emitCarryOp(1);
-	emit6502op ("sbc", "#0x01");
+          emitSetCarry(1);
+          emit6502op ("sbc", "#0x01");
       }
     } else if (!strcmp(rmwop, "com")) {
       emit6502op ("eor", "#0xff");
     } else if (!strcmp(rmwop, "neg")) {
       emit6502op ("eor", "#0xff");
-      emitCarryOp(0);
+      emitSetCarry(0);
       emit6502op ("adc", "#0x01");
     } else if (!strcmp(rmwop, "asr")) {
       emit6502op ("cmp", "#0x80");
@@ -2371,7 +2370,7 @@ static int setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
 
     if(savea) transferRegReg(m6502_reg_a, m6502_reg_y, true);
 
-    emitCarryOp(0);
+    emitSetCarry(0);
     if (IS_AOP_AX(AOP(op))) {
       if(!savea) transferRegReg(m6502_reg_a, m6502_reg_y, true);
       loadRegFromAop(m6502_reg_a, AOP(op), 0);
@@ -3486,7 +3485,6 @@ static void asmopToBool (asmop *aop, bool resultInA)
       safeEmitLabel (tlbl);
     } else {
       emitcode("ERROR", "Bad %02x regmask in asmopToBool", (aop)->regmask);
-
       //          werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "Bad rIdx in asmopToBool");
       return;
     }
@@ -3893,7 +3891,7 @@ static void genUminus (iCode * ic)
       rmwWithReg ("neg", m6502_reg_a);
     else {
       loadRegFromConst (m6502_reg_a, 0);
-      emit6502op("sec", "");
+      emitSetCarry(1);
       accopWithAop ("sbc", AOP (left), 0);
     }
     if (result0 == m6502_reg_a || (result0 && result0 == left1))
@@ -3921,7 +3919,7 @@ static void genUminus (iCode * ic)
   while (size--) {
     loadRegFromConst (m6502_reg_a, 0);
     if (carry) {
-      emit6502op("sec", "");
+      emitSetCarry(1);
     }
     accopWithAop ("sbc", AOP (left), offset);
     storeRegToAop (m6502_reg_a, AOP(result), offset++);
@@ -4796,7 +4794,7 @@ static bool genPlusIncr (iCode * ic)
     loadRegFromAop (m6502_reg_xa, AOP (left), 0);
     if(icount) {
       tlbl = safeNewiTempLabel (NULL);
-      emitCarryOp(0);
+      emitSetCarry(0);
       accopWithAop ("adc", AOP (right), 0);
       emitBranch ("bcc", tlbl);
       emit6502op ("inx", "");
@@ -4840,7 +4838,7 @@ static bool genPlusIncr (iCode * ic)
     else
       needpula = false;
     loadRegFromAop (m6502_reg_a, AOP (result), 0);
-    emitCarryOp(0);
+    emitSetCarry(0);
     accopWithAop ("adc", AOP (right), 0);
     storeRegToAop (m6502_reg_a, AOP (result), 0);
     if (size > 1)
@@ -4922,7 +4920,7 @@ static void genPlus (iCode * ic)
     if (sameRegs(AOP(result),AOP(left))) {
       symbol *skipInc = safeNewiTempLabel (NULL);
       needpulla = pushRegIfSurv (m6502_reg_a);
-      emitCarryOp(0);
+      emitSetCarry(0);
       loadRegFromAop (m6502_reg_a, AOP(left), 0);
       accopWithAop ("adc", AOP(right), 0);
       storeRegToAop (m6502_reg_a, AOP (result), 0);
@@ -4951,7 +4949,7 @@ static void genPlus (iCode * ic)
     else
       loadRegFromAop (m6502_reg_a, AOP(left), offset);
     if (clc)
-      emitCarryOp(0);
+      emitSetCarry(0);
     if (!mayskip || AOP_TYPE (right) != AOP_LIT || (byteOfVal (AOP (right)->aopu.aop_lit, offset) != 0x00) ) {
       accopWithAop ("adc", AOP(right), offset);
       if (!size && maskedtopbyte)
@@ -5016,7 +5014,7 @@ static bool genMinusDec (iCode * ic)
     loadRegFromAop (m6502_reg_xa, AOP (left), 0);
     if(icount) {
       tlbl = safeNewiTempLabel (NULL);
-      emit6502op ("sec", "");
+      emitSetCarry (1);
       accopWithAop ("sbc", AOP (right), 0);
       emitBranch ("bcs", tlbl);
       emit6502op ("dex", "");
@@ -5128,7 +5126,7 @@ static void genMinus (iCode * ic)
     symbol *skipDec = safeNewiTempLabel (NULL);
 
     needpulla = pushRegIfSurv (m6502_reg_a);
-    emitCarryOp(1);
+    emitSetCarry(1);
     loadRegFromAop (m6502_reg_a, AOP(left), 0);
     accopWithAop ("sbc", AOP(right), 0);
     storeRegToAop (m6502_reg_a, AOP (result), 0);
@@ -5147,7 +5145,7 @@ static void genMinus (iCode * ic)
   if (IS_AOP_A (rightOp)) {
     // op - a = neg(a - op) = not(a - op) + 1 = not(a - op - 1)
     needpulla = pushRegIfSurv (m6502_reg_a);
-    emitCarryOp(0);
+    emitSetCarry(0);
     accopWithAop ("sbc", leftOp, offset);
     emit6502op("eor", "#0xff");
     if (maskedtopbyte)
@@ -5173,7 +5171,7 @@ static void genMinus (iCode * ic)
       storeRegTemp (m6502_reg_a, true);
       loadRegFromAop (m6502_reg_a, leftOp, offset);
       if (carry) {
-	emit6502op("sec", "");
+        emitSetCarry(1);
       }
       emit6502op ("sbc", TEMPFMT, _G.tempOfs - 1);
       loadRegTemp (NULL);
@@ -5182,7 +5180,7 @@ static void genMinus (iCode * ic)
 
       loadRegFromAop (m6502_reg_a, leftOp, offset);
       if (carry) {
-	emit6502op("sec", "");
+        emitSetCarry(1);
       }
       accopWithAop ("sbc", rightOp, offset);
     }
@@ -5502,7 +5500,7 @@ static void genCmp (iCode * ic, iCode * ifx)
 	storeRegTemp(m6502_reg_a, true);
 	loadRegFromAop (m6502_reg_a, AOP (left), offset);
 	if (!strcmp(sub, "sub")) {
-	  emitCarryOp(1);
+	  emitSetCarry(1);
 	  emit6502op ("sbc", TEMPFMT, _G.tempOfs - 1);
 	} else {
 	  emit6502op (sub, TEMPFMT, _G.tempOfs - 1);
@@ -5511,7 +5509,7 @@ static void genCmp (iCode * ic, iCode * ifx)
       } else {
 	loadRegFromAop (m6502_reg_a, AOP (left), offset);
 	if (!strcmp(sub, "sub")) {
-	  emitCarryOp(1);
+	  emitSetCarry(1);
 	  accopWithAop ("sbc", AOP (right), offset);
 	} else {
 	  accopWithAop (sub, AOP (right), offset);
@@ -6898,10 +6896,10 @@ static void AccSRsh (int shCount)
   if (shCount == 6) {
     symbol *tlbl = safeNewiTempLabel (NULL);
     emit6502op ("ora", "#0x3f");
-    emit6502op ("sec", "");
+    emitSetCarry(1);
     emit6502op ("bmi", "%05d$", safeLabelKey2num (tlbl->key));
     emit6502op ("and", "#0xc0");
-    emit6502op ("clc", "");
+    emitSetCarry(0);
     safeEmitLabel(tlbl);
     emit6502op ("rol", "a");
     emit6502op ("rol", "a");
@@ -7587,11 +7585,14 @@ static void genLeftShift (iCode * ic)
   if (countreg) {
     // TODO: can combine these with load of count reg?
     if (countreg == m6502_reg_a)
-      emit6502op("cmp", "#0x00");
+      if(_G.lastflag!=A_IDX) 
+        emit6502op("cmp", "#0x00");
     if (countreg == m6502_reg_x)
-      emit6502op("cpx", "#0x00");
+      if(_G.lastflag!=X_IDX)
+        emit6502op("cpx", "#0x00");
     if (countreg == m6502_reg_y)
-      emit6502op("cpy", "#0x00");
+      if(_G.lastflag!=Y_IDX)
+        emit6502op("cpy", "#0x00");
     emitBranch ("beq", tlbl1);
   } else {
     emit6502op ("dec", TEMPFMT, count_offset);
@@ -7733,9 +7734,9 @@ static void shiftRLong (operand * left, int offl, operand * result, int sign)
     loadRegFromAop (m6502_reg_a, AOP (left), 3);
     if(sign) {
       symbol *tlbl = safeNewiTempLabel (NULL);
-      emit6502op("clc","");
+      emitSetCarry(0);
       emit6502op("bpl","%05d$", safeLabelKey2num (tlbl->key));
-      emit6502op("sec","");
+      emitSetCarry(1);
       loadRegFromConst(m6502_reg_x,0xff);
       safeEmitLabel(tlbl);
       rmwWithReg ("ror", m6502_reg_a);
@@ -7997,11 +7998,14 @@ static void genRightShift (iCode * ic)
   if (countreg) {
     // TODO: combine with load index?
     if (countreg == m6502_reg_a)
-      emit6502op("cmp", "#0x00");
+      if(_G.lastflag!=A_IDX)
+        emit6502op("cmp", "#0x00");
     if (countreg == m6502_reg_x)
-      emit6502op("cpx", "#0x00");
+      if(_G.lastflag!=X_IDX)
+        emit6502op("cpx", "#0x00");
     if (countreg == m6502_reg_y)
-      emit6502op("cpy", "#0x00");
+      if(_G.lastflag!=Y_IDX)
+        emit6502op("cpy", "#0x00");
     emitBranch ("beq", tlbl1);
   } else {
     emit6502op ("dec", TEMPFMT, count_offset);
@@ -9332,7 +9336,7 @@ static void genAddrOf (iCode * ic)
       offset=0;
     transferRegReg (m6502_reg_x, m6502_reg_a, true);
     if (offset) {
-      emitCarryOp(0);
+      emitSetCarry(0);
       emit6502op ("adc", IMMDFMT, offset&0xff);
     }
     if(IS_AOP_XA(AOP(result))) {
