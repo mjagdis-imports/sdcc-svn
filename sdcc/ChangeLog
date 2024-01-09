@@ -16,6 +16,8 @@
  	* src/mos6502/gen.c,
  	  src/mos6502/main.c:
       enable last operation flag tracking.
+   	* src/mos6502/gen.c:
+	  enable carry flag tracking.
  
 2024-01-03 Philipp Klaus Krause <philipp@colecovision.eu>
 

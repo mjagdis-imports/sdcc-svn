@@ -75,6 +75,8 @@ static struct
   //  int baseStackPushes;
   set *sendSet;
   int tempOfs;
+  unsigned carryValid:1;
+  unsigned carry:1;
   int lastflag;
   struct attr_t tempAttr[NUM_TEMP_REGS];
   struct attr_t DPTRAttr[2];
@@ -147,7 +149,7 @@ const int STACK_TOP = 0x100;
 
 #define safeLabelKey2num(a) ((regalloc_dry_run)?0:labelKey2num(a))
 #define safeNewiTempLabel(a) ((regalloc_dry_run)?0:newiTempLabel(a))
-#define safeEmitLabel(a) do { if(!regalloc_dry_run && a) emitLabel(a); _G.lastflag=-1; } while(0)
+#define safeEmitLabel(a) do { if(!regalloc_dry_run && a) emitLabel(a); _G.lastflag=-1; _G.carryValid=0; } while(0)
 
 
 #define LSB     0
@@ -308,9 +310,10 @@ const char * regInfoStr()
   
   flagreg = (_G.lastflag>=0)?m6502_regWithIdx(_G.lastflag)->name:"?";
   
-  snprintf(outstr, 40, "%s %s %s F:%s",
-           regstring[0], regstring[1], regstring[2], flagreg );
+  char carry = (_G.carryValid)?((_G.carry)?'1':'0'):'?';
   
+  snprintf(outstr, 40, "%s %s %s F:%s C:%c",
+           regstring[0], regstring[1], regstring[2], flagreg, carry );  
   return outstr;
 }
 
@@ -394,6 +397,9 @@ void emit6502op (const char *inst, const char *fmt, ...)
 
     if(opcode->flags&0x82) // zero and negative flags
       _G.lastflag=opcode->dest;
+    if(opcode->flags&0x01) { // carry flag
+      _G.carryValid=0;
+    }
 
 
     // mark the destination register dirty as necessary
@@ -429,7 +435,22 @@ void emit6502op (const char *inst, const char *fmt, ...)
         if(inst[2]=='p') _G.lastflag=A_IDX;
         else if(inst[2]=='x') _G.lastflag=X_IDX;
         else if(inst[2]=='y') _G.lastflag=Y_IDX;
+        _G.carryValid=1;
+        _G.carry=1;
       }
+      break;
+    case M6502OP_INH:
+	if(!strcmp(inst,"clc")) {
+	  _G.carryValid=1;
+          _G.carry=0;
+	  break;
+	}
+	if(!strcmp(inst,"sec")) {
+	  _G.carryValid=1;
+          _G.carry=1;
+	  break;
+	}
+
       break;
     case M6502OP_RMW: // target is accumulator
       if (!strcmp(fmt, "a")) {
@@ -579,6 +600,22 @@ static void emitBranch (char *branchop, symbol * tlbl)
       branchop = "jmp";
     emit6502op (branchop, "%05d$", safeLabelKey2num (tlbl->key));
   }
+}
+
+/**************************************************************************
+ * emitCarryOp - emit CLC/SEC if necessary
+ *
+ * @param c carry value to set
+ *************************************************************************/
+static void
+emitCarryOp(int c)
+{
+  if(_G.carryValid && _G.carry==c)
+    return;
+  if(c)
+    emit6502op("sec", "");
+  else
+    emit6502op ("clc", "");
 }
 
 /**************************************************************************
@@ -1144,7 +1181,7 @@ static void adjustStack (int n)
     storeRegTemp(m6502_reg_xa, true);
     emit6502op ("tsx", "");
     transferRegReg (m6502_reg_x, m6502_reg_a, true);
-    emit6502op ("clc", "");
+    emitCarryOp(0);
     emit6502op ("adc", IMMDFMT, n&0xff);
     transferRegReg (m6502_reg_a, m6502_reg_x, true);
     emit6502op ("txs", "");
@@ -2128,21 +2165,22 @@ static void rmwWithReg (char *rmwop, reg_info * reg)
       if (IS_MOS65C02) {
 	emit6502op (rmwop, "a");
       } else {
-	emit6502op ("clc", "");
+        // FIXME - can optimize either way.
+	emitCarryOp(0);
 	emit6502op ("adc", "#0x01");
       }
     } else if (!strcmp(rmwop, "dec")) {
       if (IS_MOS65C02) {
 	emit6502op (rmwop, "a");
       } else {
-	emit6502op ("sec", "");
+	emitCarryOp(1);
 	emit6502op ("sbc", "#0x01");
       }
     } else if (!strcmp(rmwop, "com")) {
       emit6502op ("eor", "#0xff");
     } else if (!strcmp(rmwop, "neg")) {
       emit6502op ("eor", "#0xff");
-      emit6502op ("clc", "");
+      emitCarryOp(0);
       emit6502op ("adc", "#0x01");
     } else if (!strcmp(rmwop, "asr")) {
       emit6502op ("cmp", "#0x80");
@@ -2333,7 +2371,7 @@ static int setupDPTR(operand *op, int offset, char * rematOfs, bool savea)
 
     if(savea) transferRegReg(m6502_reg_a, m6502_reg_y, true);
 
-    emit6502op ("clc", "");
+    emitCarryOp(0);
     if (IS_AOP_AX(AOP(op))) {
       if(!savea) transferRegReg(m6502_reg_a, m6502_reg_y, true);
       loadRegFromAop(m6502_reg_a, AOP(op), 0);
@@ -4249,6 +4287,7 @@ static void genCall (iCode * ic)
   m6502_dirtyReg (m6502_reg_x);
   m6502_dirtyReg (m6502_reg_y);
   _G.lastflag=-1;
+  _G.carryValid=0;
 
 
   /* do we need to recompute the base ptr? */
@@ -4344,6 +4383,7 @@ static void genPcall (iCode * ic)
   m6502_dirtyReg (m6502_reg_x);
   m6502_dirtyReg (m6502_reg_y);
   _G.lastflag=-1;
+  _G.carryValid=0;
 
   /* do we need to recompute the base ptr? */
   if (_G.funcHasBasePtr) {
@@ -4445,6 +4485,7 @@ static void genFunction (iCode * ic)
   _G.stackPushes = 0;
   _G.tsxStackPushes = 0;
   _G.lastflag=-1;
+  _G.carryValid=0;
 
   if (options.debug && !regalloc_dry_run)
     debugFile->writeFrameAddress (NULL, m6502_reg_sp, 0);
@@ -4691,6 +4732,7 @@ static void genLabel (iCode * ic)
   _G.DPTRAttr[1].isLiteral=0;
 
   _G.lastflag=-1;
+  _G.carryValid=0;
 
   /* special case never generate */
   if (IC_LABEL (ic) == entryLabel)
@@ -4754,7 +4796,7 @@ static bool genPlusIncr (iCode * ic)
     loadRegFromAop (m6502_reg_xa, AOP (left), 0);
     if(icount) {
       tlbl = safeNewiTempLabel (NULL);
-      emit6502op ("clc", "");
+      emitCarryOp(0);
       accopWithAop ("adc", AOP (right), 0);
       emitBranch ("bcc", tlbl);
       emit6502op ("inx", "");
@@ -4798,7 +4840,7 @@ static bool genPlusIncr (iCode * ic)
     else
       needpula = false;
     loadRegFromAop (m6502_reg_a, AOP (result), 0);
-    emit6502op("clc", "");
+    emitCarryOp(0);
     accopWithAop ("adc", AOP (right), 0);
     storeRegToAop (m6502_reg_a, AOP (result), 0);
     if (size > 1)
@@ -4880,7 +4922,7 @@ static void genPlus (iCode * ic)
     if (sameRegs(AOP(result),AOP(left))) {
       symbol *skipInc = safeNewiTempLabel (NULL);
       needpulla = pushRegIfSurv (m6502_reg_a);
-      emit6502op ("clc", "");
+      emitCarryOp(0);
       loadRegFromAop (m6502_reg_a, AOP(left), 0);
       accopWithAop ("adc", AOP(right), 0);
       storeRegToAop (m6502_reg_a, AOP (result), 0);
@@ -4909,7 +4951,7 @@ static void genPlus (iCode * ic)
     else
       loadRegFromAop (m6502_reg_a, AOP(left), offset);
     if (clc)
-      emit6502op ("clc", "");
+      emitCarryOp(0);
     if (!mayskip || AOP_TYPE (right) != AOP_LIT || (byteOfVal (AOP (right)->aopu.aop_lit, offset) != 0x00) ) {
       accopWithAop ("adc", AOP(right), offset);
       if (!size && maskedtopbyte)
@@ -5086,7 +5128,7 @@ static void genMinus (iCode * ic)
     symbol *skipDec = safeNewiTempLabel (NULL);
 
     needpulla = pushRegIfSurv (m6502_reg_a);
-    emit6502op ("sec", "");
+    emitCarryOp(1);
     loadRegFromAop (m6502_reg_a, AOP(left), 0);
     accopWithAop ("sbc", AOP(right), 0);
     storeRegToAop (m6502_reg_a, AOP (result), 0);
@@ -5105,7 +5147,7 @@ static void genMinus (iCode * ic)
   if (IS_AOP_A (rightOp)) {
     // op - a = neg(a - op) = not(a - op) + 1 = not(a - op - 1)
     needpulla = pushRegIfSurv (m6502_reg_a);
-    emit6502op("clc", "");
+    emitCarryOp(0);
     accopWithAop ("sbc", leftOp, offset);
     emit6502op("eor", "#0xff");
     if (maskedtopbyte)
@@ -5460,7 +5502,7 @@ static void genCmp (iCode * ic, iCode * ifx)
 	storeRegTemp(m6502_reg_a, true);
 	loadRegFromAop (m6502_reg_a, AOP (left), offset);
 	if (!strcmp(sub, "sub")) {
-	  emit6502op ("sec", "");
+	  emitCarryOp(1);
 	  emit6502op ("sbc", TEMPFMT, _G.tempOfs - 1);
 	} else {
 	  emit6502op (sub, TEMPFMT, _G.tempOfs - 1);
@@ -5469,7 +5511,7 @@ static void genCmp (iCode * ic, iCode * ifx)
       } else {
 	loadRegFromAop (m6502_reg_a, AOP (left), offset);
 	if (!strcmp(sub, "sub")) {
-	  emit6502op ("sec", "");
+	  emitCarryOp(1);
 	  accopWithAop ("sbc", AOP (right), offset);
 	} else {
 	  accopWithAop (sub, AOP (right), offset);
@@ -9290,7 +9332,7 @@ static void genAddrOf (iCode * ic)
       offset=0;
     transferRegReg (m6502_reg_x, m6502_reg_a, true);
     if (offset) {
-      emit6502op ("clc", "");
+      emitCarryOp(0);
       emit6502op ("adc", IMMDFMT, offset&0xff);
     }
     if(IS_AOP_XA(AOP(result))) {
