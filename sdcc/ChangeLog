@@ -1,3 +1,8 @@
+2024-01-10 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Implement a few 65C02 optimizations.
+	  
 2024-01-09 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
