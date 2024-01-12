@@ -1,3 +1,8 @@
+2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/peep.c:
+	  Improve pdk notUsed() accuracy.
+
 2024-01-10 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:

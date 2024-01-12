@@ -184,7 +184,7 @@ pdkMightReadFlag(const lineNode *pl, const char *what)
 }
 
 static bool
-pdkMightRead(const lineNode *pl, const char *what)
+pdkMightRead (const lineNode *pl, const char *what)
 {
 //printf("pdkMightRead() for |%s|%s|\n", pl->line, what);
   if (!strcmp(what, "z") || !strcmp(what, "c") || !strcmp(what, "ac") || !strcmp(what, "ov"))
@@ -193,21 +193,25 @@ pdkMightRead(const lineNode *pl, const char *what)
     return true;
 
   // Instructions that never read anything.
-  if (ISINST(pl->line, "engint") ||
-    ISINST(pl->line, "disgint") ||
-    ISINST(pl->line, "nop") ||
-    ISINST(pl->line, "pop") || ISINST(pl->line, "popaf") ||
-    ISINST(pl->line, "stopsys") ||
-    ISINST(pl->line, "wdreset"))
+  if (ISINST (pl->line, "clear") ||
+    ISINST (pl->line, "engint") ||
+    ISINST (pl->line, "disgint") ||
+    ISINST (pl->line, "goto") ||
+    ISINST (pl->line, "nop") ||
+    ISINST (pl->line, "pop") || ISINST (pl->line, "popaf") ||
+    ISINST (pl->line, "set0.io") || ISINST (pl->line, "set1.io") ||
+    ISINST (pl->line, "stopsys") ||
+    ISINST (pl->line, "t0sn.io") || ISINST (pl->line, "t1sn.io") || // They read I/O (maybe flags) but neither a nor p.
+    ISINST (pl->line, "wdreset"))
     return false;
 
-  if (ISINST(pl->line, "ret") && strchr(pl->line + 2, '#') && !strcmp(what, "a"))
+  if (ISINST (pl->line, "ret") && strchr (pl->line + 2, '#') && !strcmp (what, "a"))
     return false;
-  if (ISINST(pl->line, "ret"))
+  if (ISINST (pl->line, "ret"))
     return isReturned(what);
 
-  if (ISINST(pl->line, "mov") ||
-    ISINST(pl->line, "mov.io"))
+  if (ISINST (pl->line, "mov") ||
+    ISINST (pl->line, "mov.io"))
     return argIs (strchr (pl->line, ','), what);
 
   if (ISINST (pl->line, "push") && argIs (pl->line + 4, "af") || ISINST (pl->line, "pushaf"))
@@ -218,6 +222,7 @@ pdkMightRead(const lineNode *pl, const char *what)
     ISINST (pl->line, "and") ||
     ISINST (pl->line, "or") ||
     ISINST (pl->line, "sub") ||
+    ISINST (pl->line, "xch") ||
     ISINST (pl->line, "xor"))
     return argIs (pl->line + 3, what) || argIs (strchr (pl->line, ','), what);
   if (ISINST(pl->line, "idxm"))
@@ -228,20 +233,25 @@ pdkMightRead(const lineNode *pl, const char *what)
     return argIs (pl->line + 6, what) || argIs (strchr (pl->line, ','), what);
 
   // One-operand instructions
-  if (ISINST (pl->line, "neg") ||
+  if (ISINST (pl->line, "dec") ||
+    ISINST (pl->line, "inc") ||
+    ISINST (pl->line, "neg") ||
     ISINST (pl->line, "not") ||
     ISINST (pl->line, "sl") ||
     ISINST (pl->line, "slc") ||
     ISINST (pl->line, "sr") ||
     ISINST (pl->line, "src"))
     return argIs (pl->line + 3, what);
+  if (ISINST (pl->line, "addc") && !strchr (pl->line + 4, ',') || // addc a / addc M
+    ISINST (pl->line, "set0") || ISINST (pl->line, "set1") || // Technically two-operand, but second operand is a literal
+    ISINST (pl->line, "subc") && !strchr (pl->line + 4, ',') || // subc a / subc M)
+    ISINST (pl->line, "swap"))
+    return argIs (pl->line + 4, what);
   if (ISINST (pl->line, "dzsn") ||
     ISINST (pl->line, "izsn") ||
     ISINST (pl->line, "pcadd") ||
     ISINST (pl->line, "stt16"))
     return argIs (pl->line + 5, what);
-
-  // Todo: addc, subc, xch, swapc.io
 
   return true; // Fail-safe: we have no idea what happens at this line, so assume it might read anything.
 }
@@ -263,7 +273,7 @@ pdkSurelyWritesFlag(const lineNode *pl, const char *what)
     ISINST (pl->line, "izsn") ||
     ISINST (pl->line, "sub") ||
     ISINST (pl->line, "subc"))
-      return true;
+    return true;
 
   // Instructions that write c only
   if (ISINST (pl->line, "sl") ||
@@ -271,7 +281,7 @@ pdkSurelyWritesFlag(const lineNode *pl, const char *what)
     ISINST (pl->line, "sr") ||
     ISINST (pl->line, "src") ||
     ISINST (pl->line, "swapc.io"))
-      return !strcmp(what, "c");
+    return !strcmp(what, "c");
 
   // Instructions that write z only
   if (ISINST (pl->line, "and") ||
@@ -280,7 +290,7 @@ pdkSurelyWritesFlag(const lineNode *pl, const char *what)
     ISINST (pl->line, "or") ||
     ISINST (pl->line, "xor") ||
     ISINST (pl->line, "xor.io"))
-      return !strcmp(what, "z");
+    return !strcmp(what, "z");
 
   // mov writes z iff the destination is a and the source not an immediate.
   if (!strcmp(what, "z") && !strchr(pl->line, '#'))
@@ -292,6 +302,9 @@ pdkSurelyWritesFlag(const lineNode *pl, const char *what)
 
   if (ISINST (pl->line, "mov") || ISINST (pl->line, "mov.io") ||
     ISINST (pl->line, "clear") ||
+    ISINST (pl->line, "goto") ||
+    ISINST (pl->line, "t0sn") || ISINST (pl->line, "t0sn.io") ||
+    ISINST (pl->line, "t1sn") || ISINST (pl->line, "t1sn.io") ||
     ISINST (pl->line, "xch") ||
     ISINST (pl->line, "swap") ||
     ISINST (pl->line, "idxm"))
@@ -310,7 +323,7 @@ pdkSurelyWrites(const lineNode *pl, const char *what)
   if (!strcmp(what, "z") || !strcmp(what, "c") || !strcmp(what, "ac") || !strcmp(what, "ov"))
     return (pdkSurelyWritesFlag(pl, what));
 
-  if (ISINST(pl->line, "mov") || ISINST(pl->line, "idxm") ||
+  if (ISINST (pl->line, "mov") || ISINST (pl->line, "idxm") ||
     ISINST (pl->line, "set1") ||
     ISINST (pl->line, "set0"))
     return argIs (pl->line + 4, what);
@@ -322,9 +335,14 @@ pdkSurelyWrites(const lineNode *pl, const char *what)
     return argIs (pl->line + 9, what);
 
   if (ISINST (pl->line, "pop") && argIs (pl->line + 4, "af") || ISINST (pl->line, "popaf"))
-    return !strcmp(what, "a");
+    return !strcmp (what, "a");
 
-  // TODO: Other instructions
+  // Instructions that never write anything
+  if (ISINST (pl->line, "ceqsn") || ISINST (pl->line, "cneqsn") || // Might write flags, but nothing else.
+    ISINST (pl->line, "goto") ||
+    ISINST (pl->line, "t0sn") || ISINST (pl->line, "t0sn.io") ||
+    ISINST (pl->line, "t1sn") || ISINST (pl->line, "t1sn.io"))
+    return false;
 
   // One-operand instructions that write their argument
   if (ISINST (pl->line, "neg") ||
