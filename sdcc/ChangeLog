@@ -3,6 +3,13 @@
 	* src/pdk/peep.c:
 	  Improve pdk notUsed() accuracy.
 
+2023-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/main.c:
+	  Fix bug #3693.
+	* support/scripts/sdcc.nsi:
+	  Fix bug #3686.
+
 2024-01-10 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
@@ -92,7 +99,7 @@
 	  src/hc08/gen.c,
 	  src/hc08/gen.h:
 	  remove unused aop_immd2 from aop structure.
-	
+
 2023-12-28 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/_divuchar.s,
