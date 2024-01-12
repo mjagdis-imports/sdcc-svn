@@ -1,7 +1,12 @@
+2023-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc-build/lib/bootstrap.mk:
+	  Fix bug #3686.
+
 2024-01-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* lib/bootstrap.mk:
-	  Adjust paths for use of native build tools (except for readline5.dll, whichis not part of Debian).
+	  Adjust paths for use of native build tools (except for readline5.dll, which is not part of Debian).
 
 2023-12-20 Philipp Klaus Krause <philipp@colecovision.eu>
 

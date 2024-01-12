@@ -1,3 +1,10 @@
+2023-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/main.c:
+	  Fix bug #3693.
+	* support/scripts/sdcc.nsi:
+	  Fix bug #3686.
+
 2024-01-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/scripts/sdcc.nsi:
