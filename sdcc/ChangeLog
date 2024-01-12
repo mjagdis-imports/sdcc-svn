@@ -3,6 +3,11 @@
 	* src/mos6502/gen.c:
 	  Improve asmopToBool.
 
+2023-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/main.c:
+	  Fix bug #3690.
+
 2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/peep.c:
