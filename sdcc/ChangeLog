@@ -6,6 +6,18 @@
 	  Add instruction cost for IPUSH_VALUE_AT_ADDRESS icode.
 	* src/mos6502/peep.def:
 	  Add several new rules that take advantage of if used().
+	* support/regression/ports/uc6502-stack-auto/spec.mk,
+	  support/regression/tests/gcc-torture-execute-20010129-1.c,
+	  support/regression/tests/gcc-torture-execute-20030916-1.c,
+	  support/regression/tests/gcc-torture-execute-20071030-1.c,
+	  support/regression/tests/gcc-torture-execute-930614-2.c,
+	  support/regression/tests/gcc-torture-execute-930628-1.c,
+	  support/regression/tests/gcc-torture-execute-990513-1.c,
+	  support/regression/tests/gcc-torture-execute-ssad-run.c,
+	  support/regression/tests/gcc-torture-execute-usad-run.c,
+	  support/regression/tests/lonesha256.c,
+	  support/regression/tests/tinyaes.c.in:
+	  disable tests failing in the mos6502-stack-auto port due to stack size limitation.
 	  
 2024-01-12 Gabriele Gorla <gorlik@yahoo.com>
 
