@@ -1,7 +1,9 @@
 2024-01-13 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
-	  Fix constanRange regression failure for mos6502-stack-auto. 
+	  Fix constanRange regression failure for mos6502-stack-auto.
+	* src/mos6502/ralloc2.cc:
+	  Add instruction cost for IPUSH_VALUE_AT_ADDRESS icode.
 	  
 2024-01-12 Gabriele Gorla <gorlik@yahoo.com>
 
