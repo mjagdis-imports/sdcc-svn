@@ -8,7 +8,7 @@
   Copyright (C) 2003, Erik Petrich
   Hacked for the MOS6502:
   Copyright (C) 2020, Steven Hugg  hugg@fasterlight.com
-  Copyright (C) 2021-2023, Gabriele Gorla
+  Copyright (C) 2021-2024, Gabriele Gorla
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -642,7 +642,7 @@ emitCpz (int reg_idx)
         emit6502op("cpy", "#0x00");
         break;
       default:
-        emitcode ("ERROR", "illegal $d reg_idx in emitCpz", reg_idx);
+        emitcode ("ERROR", "illegal %d reg_idx in emitCpz", reg_idx);
         break;
 }
   return true;
@@ -8221,6 +8221,7 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
     emit6502op("lda", INDFMT_IY);
     AccRsh (bstr, false);
     emit6502op ("and", IMMDFMT, ((unsigned char) - 1) >> (8 - blen));
+    m6502_reg_a->isFree=false;
     if (!SPEC_USIGN (etype)) {
       /* signed bitfield */
       symbol *tlbl = safeNewiTempLabel (NULL);

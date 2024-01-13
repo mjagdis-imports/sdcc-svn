@@ -1,3 +1,8 @@
+2024-01-13 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Fix constanRange regression failure for mos6502-stack-auto. 
+	  
 2024-01-12 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
