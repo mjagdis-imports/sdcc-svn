@@ -4,6 +4,8 @@
 	  Fix constanRange regression failure for mos6502-stack-auto.
 	* src/mos6502/ralloc2.cc:
 	  Add instruction cost for IPUSH_VALUE_AT_ADDRESS icode.
+	* src/mos6502/peep.def:
+	  Add several new rules that take advantage of if used().
 	  
 2024-01-12 Gabriele Gorla <gorlik@yahoo.com>
 

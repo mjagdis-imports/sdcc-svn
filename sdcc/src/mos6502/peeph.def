@@ -79,6 +79,14 @@ replace restart {
 // Remove unnecessary loads
 ////////////////////////////////////////////////////////
 
+replace restart {
+        sta	%1
+	lda     %1
+} by {
+        sta	%1
+    ; Peephole load 1 - removed redundant lda
+} if notVolatile(%1), notUsed('n' 'z')
+
 // ora is cheaper than lda (except for lda from immediate, but that can't happen for the two rules below)
 replace restart {
         sta	%1
@@ -86,7 +94,7 @@ replace restart {
 } by {
         sta	%1
         ora	#0x00
-    ; Peephole load 1 - replaced redundant lda by ora
+    ; Peephole load 1a - replaced redundant lda by ora
 } if notVolatile(%1)
 
 replace restart {
@@ -94,8 +102,16 @@ replace restart {
 	lda     %1, %2
 } by {
         sta	%1, %2
+    ; Peephole load 2 - removed redundant lda
+} if notVolatile(%1), notUsed('n' 'z')
+
+replace restart {
+        sta	%1, %2
+	lda     %1, %2
+} by {
+        sta	%1, %2
         ora	#0x00
-    ; Peephole load 2 - replaced redundant lda by ora
+    ; Peephole load 2a - replaced redundant lda by ora
 } if notVolatile(%1)
 
 replace restart {
@@ -224,7 +240,17 @@ replace restart {
 	; Peephole load 16 - removed dead ldx
 	%1 
 	ldx	%2
-} if notSame(%1 'txa' 'txs'), notVolatile(%3)
+} if notSame(%1 'txa' 'txs' 'phx'), notVolatile(%3)
+
+replace restart {
+	ldy	%3
+	%1
+	ldy	%2
+} by {
+	; Peephole load 17 - removed dead ldy
+	%1 
+	ldy	%2
+} if notSame(%1 'phy'), notVolatile(%3)
 
 ////////////////////////////////////////////////////////
 // Remove dead register operation/transfers
@@ -333,6 +359,20 @@ replace restart {
 	; Peephole stack 4 - removed dead php/plp
 }
 
+////////////////////////////////////////////////////////
+// Remove unnecessary ora #00
+////////////////////////////////////////////////////////
+replace restart {
+	ora	#0x00
+} by {
+	; Peephole or 1 - eliminated unnecessary ora #0x00
+} if notUsed('n' 'z')
+
+replace restart {
+	cmp	#0x00
+} by {
+	; Peephole or 2 - eliminated unnecessary cmp #0x00
+} if notUsed('n' 'z' 'c')
 
 ////////////////////////////////////////////////////////
 // Remove unnecessary cmp/cpx/cpy #00
