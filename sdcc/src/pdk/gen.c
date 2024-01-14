@@ -3314,6 +3314,11 @@ genAnd (const iCode *ic, iCode *ifx)
           emit2 (IC_FALSE  (ifx) ? "t1sn" : "t0sn", "p, #%d", bit);
           cost (1, 1.5);
         }
+      else if (left->aop->type == AOP_SFR && bit >= 0)
+        {
+          emit2 (IC_FALSE  (ifx) ? "t1sn.io" : "t0sn.io", "%s, #%d", aopGet (left->aop, i), bit);
+          cost (1, 1.5);
+        }
       else if (aopInReg (left->aop, i, P_IDX) && regDead (P_IDX, ic) &&
         (aopIsLitVal (right->aop, i, 1, 0x7f) || aopIsLitVal (right->aop, i, 1, 0xfe)))
         {
@@ -3323,6 +3328,8 @@ genAnd (const iCode *ic, iCode *ifx)
         }
       else
         {
+          if (!regDead (A_IDX, ic))
+            UNIMPLEMENTED;
           cheapMove (ASMOP_A, 0, left->aop, i, true, true, true);
           if (!aopIsLitVal (right->aop, i, 1, 0xff))
             {
@@ -3365,6 +3372,11 @@ genAnd (const iCode *ic, iCode *ifx)
               emit2 ("t0sn", "p, #%d", bit);
               cost (1, 1.5);
             }
+          else if (left->aop->type == AOP_SFR && bit >= 0)
+            {
+              emit2 ("t0sn.io", "%s, #%d", aopGet (left->aop, i), bit);
+              cost (1, 1.5);
+            }
           else if (aopInReg (left->aop, i, P_IDX) && regDead (P_IDX, ic) &&
             (aopIsLitVal (right->aop, i, 1, 0x7f) || aopIsLitVal (right->aop, i, 1, 0xfe)))
             {
@@ -3379,6 +3391,8 @@ genAnd (const iCode *ic, iCode *ifx)
               while(j > 0 && aopIsLitVal (right->aop, j, 1, 0x00)) // Avoid wrongly loading the last byte, if that one is to be ignored.
                 j--;
               cheapMove (ASMOP_A, 0, left->aop, j, true, true, true);
+              if (!regDead (A_IDX, ic) || !i && left->aop->size == 1 && aopInReg (left->aop, 1, A_IDX))
+                UNIMPLEMENTED;
               if (!(aopIsLitVal (right->aop, j, 1, 0xff) || aopIsLitVal (right->aop, j, 1, 0x00)))
                 {
                   emit2 ("and", "a, %s", aopGet (right->aop, j));

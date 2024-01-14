@@ -1,3 +1,8 @@
+2023-01-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/main.c:
+	  Optimize pdk register packing for some operations on __sfr.
+
 2024-01-13 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
