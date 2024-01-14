@@ -59,7 +59,6 @@ enum
 #define M6502MASK_XA (M6502MASK_X | M6502MASK_A)
 //#define M6502MASK_YA (M6502MASK_Y | M6502MASK_A)
 #define M6502MASK_YX (M6502MASK_Y | M6502MASK_X)
-#define M6502MASK_AX (M6502MASK_REV | M6502MASK_X | M6502MASK_A)
     
 /* definition for the registers */
 typedef struct reg_info
@@ -77,25 +76,27 @@ typedef struct reg_info
     int litConst;		/* last literal constant */
 } reg_info;
 
-#define M6502OP_REG 1
-#define M6502OP_LD  2
-#define M6502OP_ST  3
-#define M6502OP_RMW 4
-#define M6502OP_INH 5
-#define M6502OP_SPH 6
-#define M6502OP_SPL 7
-#define M6502OP_JMP 8
-#define M6502OP_BR  9
-#define M6502OP_BBR 10
-#define M6502OP_IDD 11
-#define M6502OP_IDI 12
-#define M6502OP_CMP 13
+typedef enum {
+M6502OP_REG,
+M6502OP_LD,
+M6502OP_ST,
+M6502OP_RMW,
+M6502OP_INH,
+M6502OP_SPH,
+M6502OP_SPL,
+M6502OP_JMP,
+M6502OP_BR,
+M6502OP_BBR,
+M6502OP_IDD,
+M6502OP_IDI,
+M6502OP_CMP
+} m6505_op_type;
 
 /* opcode table */
 typedef struct m6502opcodedata
   {
     char name[6];
-    char type;
+    m6505_op_type type;
     int  dest;
     unsigned char flags;
     /* info for registers used and/or modified by an instruction will be added here */
@@ -108,6 +109,7 @@ extern reg_info *m6502_reg_x;
 extern reg_info *m6502_reg_y;
 extern reg_info *m6502_reg_yx;
 extern reg_info *m6502_reg_xa;
+//extern reg_info *m6502_reg_ya;
 extern reg_info *m6502_reg_sp;
 
 reg_info *m6502_regWithIdx (int);

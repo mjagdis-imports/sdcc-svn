@@ -21,6 +21,9 @@
 	  disable tests failing in the mos6502-stack-auto port due to stack size limitation.
   	* src/mos6502/main.c:
       Rearrange memory segments to support systems without ROM space.
+   	* src/mos6502/gen.c,
+   	  src/mos6502/ralloc.h:
+   	  Remove dead code to support registers in reverse order.
       	  
 2024-01-12 Gabriele Gorla <gorlik@yahoo.com>
 
