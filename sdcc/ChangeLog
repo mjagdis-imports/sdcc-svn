@@ -19,7 +19,9 @@
 	  support/regression/tests/lonesha256.c,
 	  support/regression/tests/tinyaes.c.in:
 	  disable tests failing in the mos6502-stack-auto port due to stack size limitation.
-	  
+  	* src/mos6502/main.c:
+      Rearrange memory segments to support systems without ROM space.
+      	  
 2024-01-12 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:

@@ -217,12 +217,6 @@ m6502_genAssemblerPreamble (FILE * of)
   //  if(options.xdata_overlay==0) 
   //      tfprintf (of, "\t!area    (PAG, OVR)\n", OVERLAY_NAME);
 
-  tfprintf (of, "\t!area\n", "_DATA");
-  tfprintf (of, "\t!area\n", XIDATA_NAME);
-  //  if(options.xdata_overlay) 
-  //      tfprintf (of, "\t!area    (OVR)\n", OVERLAY_NAME);
-  tfprintf (of, "\t!area\n", XDATA_NAME);
-
   tfprintf (of, "\t!area\n", HOME_NAME);
   tfprintf (of, "\t!area\n", STATIC_NAME);
   tfprintf (of, "\t!area\n", "GSFINAL");
@@ -230,14 +224,12 @@ m6502_genAssemblerPreamble (FILE * of)
   tfprintf (of, "\t!area\n", CONST_NAME);
   tfprintf (of, "\t!area\n", XINIT_NAME);
 
-#if 0
-  symbol *mainExists = newSymbol("main", 0);
-  mainExists->block = 0;
+  tfprintf (of, "\t!area\n", "_DATA");
+  tfprintf (of, "\t!area\n", XIDATA_NAME);
+//  if(options.xdata_overlay) 
+//      tfprintf (of, "\t!area    (OVR)\n", OVERLAY_NAME);
+  tfprintf (of, "\t!area\n", XDATA_NAME);
 
-  if ((mainExists=findSymWithLevel(SymbolTab, mainExists)))
-    {
-    }
-#endif
 }
 
 static void
