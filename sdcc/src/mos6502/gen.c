@@ -632,19 +632,19 @@ emitCpz (int reg_idx)
 
   switch(reg_idx)
     {
-      case A_IDX:
-        emit6502op("cmp", "#0x00");
-        break;
-      case X_IDX:
-        emit6502op("cpx", "#0x00");
-        break;
-      case Y_IDX:
-        emit6502op("cpy", "#0x00");
-        break;
-      default:
-        emitcode ("ERROR", "illegal %d reg_idx in emitCpz", reg_idx);
-        break;
-}
+    case A_IDX:
+      emit6502op("cmp", "#0x00");
+      break;
+    case X_IDX:
+      emit6502op("cpx", "#0x00");
+      break;
+    case Y_IDX:
+      emit6502op("cpy", "#0x00");
+      break;
+    default:
+      emitcode ("ERROR", "illegal %d reg_idx in emitCpz", reg_idx);
+      break;
+    }
   return true;
 }
 /**************************************************************************
@@ -1415,7 +1415,8 @@ static void loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
       loadOrFreeRegTemp(m6502_reg_a,needloada);
       //          break;
     } else {
-      emitComment (TRACE_STACK|VVDBG, "      loadRegFromAop: A [%d, %d]",aop->aopu.aop_stk, loffset);
+      if(aop->type == AOP_SOF)
+        emitComment (TRACE_STACK|VVDBG, "      loadRegFromAop: A [%d, %d]",aop->aopu.aop_stk, loffset);
       aopAdrPrepare(aop, loffset);
       const char *l = aopAdrStr (aop, loffset, false);
       emit6502op (regidx == A_IDX ? "lda" : regidx == X_IDX ? "ldx" : "ldy", l);
@@ -2187,12 +2188,12 @@ static void accopWithAop (char *accop, asmop *aop, int loffset)
     }
   } else {
     aopAdrPrepare(aop, loffset);
-//    emit6502op (accop, aopAdrStr (aop, loffset, false));
+    //    emit6502op (accop, aopAdrStr (aop, loffset, false));
     char *arg = aopAdrStr (aop, loffset, false);
     if ( ucp && _G.lastflag==A_IDX && !strcmp(arg,"#0x00") )
       {
-       // do nothing
-    } else 
+	// do nothing
+      } else 
       emit6502op (accop, arg);
     aopAdrUnprepare(aop, loffset);
   }
@@ -3396,7 +3397,7 @@ static const char * aopAdrStr (asmop * aop, int loffset, bool bit16)
 
   case AOP_SOF: // TODO?
     if (regalloc_dry_run) {
-      return "1,x"; // fake result, not needed
+      return "0x100,x"; // fake result, not needed
     } else {
       // FIXME FIXME: force emit of TSX to avoid offset < 0x100
       // this is a workaround for the assembler incorrectly
@@ -5454,6 +5455,8 @@ static void genCmp (iCode * ic, iCode * ifx)
   char *sub;
   symbol *jlbl = NULL;
   bool needloada = false;
+  bool bmi = false;
+  bool bit = false;
 
   emitComment (TRACEGEN, __func__);
 
@@ -5498,7 +5501,15 @@ static void genCmp (iCode * ic, iCode * ifx)
 
   emitComment (TRACEGEN|VVDBG, "      genCmp (%s, size %d, sign %d)", nameCmp (opcode), size, sign);
 
-  if (!sign && size == 1 && IS_AOP_X (AOP (left)) && isAddrSafe(right, m6502_reg_x) ) {
+  if (sign && (AOP_TYPE (right) == AOP_LIT) && opcode=='<' && ullFromVal (AOP (right)->aopu.aop_lit) ==0 && canBitOp(left) ) {
+    accopWithAop ("bit", AOP (left), size-1);
+    bit=true;
+    bmi=true;
+  } else if (sign && (AOP_TYPE (right) == AOP_LIT) && opcode==GE_OP && ullFromVal (AOP (right)->aopu.aop_lit) ==0 && canBitOp(left) ) {
+    accopWithAop ("bit", AOP (left), size-1);
+    bit=true;
+    bmi=false;
+  } else if (!sign && size == 1 && IS_AOP_X (AOP (left)) && isAddrSafe(right, m6502_reg_x) ) {
     accopWithAop ("cpx", AOP (right), offset);
   } else if (!sign && size == 1 && IS_AOP_Y (AOP (left)) && isAddrSafe(right, m6502_reg_y) ) {
     accopWithAop ("cpy", AOP (right), offset);
@@ -5576,8 +5587,13 @@ static void genCmp (iCode * ic, iCode * ifx)
 
     freeAsmop (result, NULL);
 
-    inst = branchInstCmp (opcode, sign);
-    emitBranch (inst, tlbl);
+    if (!bit) {
+      inst = branchInstCmp (opcode, sign);
+      emitBranch (inst, tlbl);
+    } else {
+      if(bmi) emitBranch ("bmi", tlbl);
+      else emitBranch ("bpl", tlbl);
+    }
     emitBranch ("jmp", jlbl);
     safeEmitLabel (tlbl);
 
@@ -5590,7 +5606,11 @@ static void genCmp (iCode * ic, iCode * ifx)
     if (!needloada)
       needloada = storeRegTempIfSurv (m6502_reg_a);
 
-    emitBranch (branchInstCmp (opcode, sign), tlbl1);
+    if(!bit) emitBranch (branchInstCmp (opcode, sign), tlbl1);
+    else {
+      if(bmi) emitBranch ("bmi", tlbl1);
+      else emitBranch ("bpl", tlbl1);
+    }
     loadRegFromConst (m6502_reg_a, 0);
     emitBranch ("bra", tlbl2);
     safeEmitLabel (tlbl1);
@@ -6033,7 +6053,7 @@ static void genAnd (iCode * ic, iCode * ifx)
   // test A for flags only
   if (AOP_TYPE (result) == AOP_CRY && size == 1 && IS_AOP_A (AOP (left)))
     {
-    emitComment (TRACEGEN|VVDBG, "  %s: test A for flags", __func__);
+      emitComment (TRACEGEN|VVDBG, "  %s: test A for flags", __func__);
 
       if  (m6502_reg_a->isDead)
 	accopWithAop ("and", AOP (right), 0);
@@ -6152,7 +6172,7 @@ static void genAnd (iCode * ic, iCode * ifx)
   unsigned char bmask0 = (lit >> (0 * 8)) & 0xff;
   unsigned char bmask1 = (lit >> (1 * 8)) & 0xff;
 
- if(IS_AOP_XA(AOP(result)) && IS_AOP_XA(AOP(left))) {
+  if(IS_AOP_XA(AOP(result)) && IS_AOP_XA(AOP(left))) {
     // special case XA -> XA
     if (AOP_TYPE (right) != AOP_LIT || bmask0 != 0x00) {
       if( AOP_TYPE (right) != AOP_LIT
@@ -6509,7 +6529,7 @@ static void genXor (iCode * ic, iCode * ifx)
     while (size--) {
       loadRegFromAop (m6502_reg_a, AOP (left), offset);
       if (AOP_TYPE (right) == AOP_LIT && ((ullFromVal (AOP (right)->aopu.aop_lit) >> (offset * 8)) & 0xff) == 0) {
-      emitCpz(A_IDX);
+	emitCpz(A_IDX);
       } else
 	accopWithAop ("eor", AOP (right), offset);
 

@@ -2,6 +2,7 @@
 
 	* src/mos6502/gen.c:
 	  Fix constanRange regression failure for mos6502-stack-auto.
+	  Implement special case for genCompare < 0
 	* src/mos6502/ralloc2.cc:
 	  Add instruction cost for IPUSH_VALUE_AT_ADDRESS icode.
 	* src/mos6502/peep.def:
