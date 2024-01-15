@@ -200,7 +200,7 @@ replace restart {
 	; Peephole load 12 - removed dead lda not followed by store or branch
 	%1	%2
 	lda	%3
-} if notSame(%1 'sta' 'adc' 'sbc' 'cmp' 'bne' 'beq' 'bpl' 'bmi' 'jsr' 'jmp'), notSame(%2 'a'), notVolatile(%4)
+} if notSame(%1 'sta' 'adc' 'sbc' 'cmp' 'bne' 'beq' 'bpl' 'bmi' 'bcc' 'bcs' 'jsr' 'jmp'), notSame(%2 'a'), notVolatile(%4)
 
 replace restart {
 	ldx	%4
