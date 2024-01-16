@@ -1403,8 +1403,21 @@ static void loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
       transferRegReg (m6502_reg_yx, m6502_reg_xa, false);
     else {
       emitComment (REGOPS, "XA");
-      loadRegFromAop (m6502_reg_a, aop, loffset);
-      loadRegFromAop (m6502_reg_x, aop, loffset + 1);
+      if(IS_AOP_X(aop))
+        {
+          transferRegReg(m6502_reg_x, m6502_reg_a, false);
+          loadRegFromConst (m6502_reg_x, 0);
+        }
+      else if(aop->type == AOP_SOF)
+        {
+          loadRegFromAop (m6502_reg_a, aop, loffset);
+          loadRegFromAop (m6502_reg_x, aop, loffset + 1);
+        }
+      else
+        {
+          loadRegFromAop (m6502_reg_x, aop, loffset + 1);
+          loadRegFromAop (m6502_reg_a, aop, loffset);
+        }
     }
     break;
   case YX_IDX:
@@ -1925,13 +1938,25 @@ static void storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bo
   else
     {
       /* Signed case */
-      transferRegReg (reg, m6502_reg_a, false);
-      signExtendA();
-      m6502_useReg (m6502_reg_a);
-      while (loffset < size)
-        storeRegToAop (m6502_reg_a, aop, loffset++);
-      m6502_freeReg (m6502_reg_a);
+      if(reg!=m6502_reg_a) {
+        symbol *tlbl = safeNewiTempLabel (NULL);
+        if(reg==m6502_reg_x) emit6502op("cpx","#0x80");
+        else emit6502op("cpy","#0x80");
+        loadRegFromConst(reg, 0);
+	emitBranch ("bcc", tlbl);
+        loadRegFromConst(reg, 0xff);
+        safeEmitLabel (tlbl);
+        m6502_dirtyReg(reg);
+      } else {
+        transferRegReg (reg, m6502_reg_a, false);
+        signExtendA();
+        m6502_useReg (m6502_reg_a);
     }
+      while (loffset < size)
+        storeRegToAop (reg, aop, loffset++);
+      m6502_freeReg (reg);
+
+  }
 }
 
 /**************************************************************************
@@ -3614,58 +3639,68 @@ static void genCopy (operand * result, operand * source)
       !isOperandVolatile (source, false))
     return;
 
-  /* The source and destinations may be different size due to optimizations. */
-  /* This is not a cast, so there is no need to worry about sign extension. */
-  /* When this happens, it is usually just 1 byte source to 2 byte dest, so */
-  /* nothing significant to optimize. */
-  if (srcsize < size) {
-    size -= srcsize;
-    while (srcsize) {
-      transferAopAop (AOP (source), offset, AOP (result), offset);
-      offset++;
-      srcsize--;
-    }
-    while (size) {
-      storeConstToAop (0, AOP (result), offset);
-      offset++;
-      size--;
-    }
-
-    return;
-  }
-
   /* if they are the same registers */
-  if (sameRegs (AOP (source), AOP (result)))
+  if (sameRegs (AOP (source), AOP (result)) && srcsize == size )
     return;
 
-  /* either source or result is two-byte register pair */
-  if (IS_AOP_YX (AOP (result)) && srcsize == 2) {
-    loadRegFromAop (m6502_reg_yx, AOP (source), 0);
-    return;
-  }
-  if (IS_AOP_YX (AOP (source)) && size == 2) {
-    storeRegToAop (m6502_reg_yx, AOP (result), 0);
-    return;
-  }
-  if (IS_AOP_XA (AOP (result)) && srcsize == 2) {
-    loadRegFromAop (m6502_reg_xa, AOP (source), 0);
-    return;
-  }
   if (IS_AOP_XA (AOP (source)) && size == 2) {
     storeRegToAop (m6502_reg_xa, AOP (result), 0);
     return;
   }
+
+  if(IS_AOP_XA (AOP (result)) && IS_AOP_X (AOP (source)) )
+    {
+      transferRegReg(m6502_reg_x, m6502_reg_a, true);
+      loadRegFromConst(m6502_reg_x, 0);
+      return;
+    }
+
+
+#if 0
+  // FIXME: enabling this produces worse code.
+  // likely something not optimal in loadRegFromAop
+  if(IS_AOP_XA (AOP (result))) {
+    loadRegFromAop (m6502_reg_xa, AOP(source), 0);
+    return;
+  }
+#endif
 
   // TODO?
   //  if (IS_MOS6502 && (size > 2))
   //    aopOpExtToIdx (AOP (result), NULL, AOP (source));
 
   /* general case */
-  // TODO: sucks for copying registers
   emitComment (TRACEGEN|VVDBG, "      genCopy (general case)", "");
-  for (offset=0; offset<size; offset++) {
-    transferAopAop( AOP(source), offset, AOP(result), offset);
-  }
+
+#if 0
+  while (srcsize && size)
+    {
+      transferAopAop (AOP (source), offset, AOP (result), offset);
+      offset++;
+      srcsize--;
+      size--;
+    }
+  while (size)
+    {
+      storeConstToAop (0, AOP (result), offset);
+      offset++;
+      size--;
+    }
+#else 
+  // reverse order
+  offset=size-1;
+
+  while ( offset >= srcsize )
+    {
+      storeConstToAop (0, AOP (result), offset);
+      offset--;
+    }
+  while (offset>=0)
+    {
+      transferAopAop (AOP (source), offset, AOP (result), offset);
+      offset--;
+    }
+#endif
 }
 
 /**************************************************************************
@@ -9574,10 +9609,9 @@ static void genCast (iCode * ic)
     emit6502op ("and", IMMDFMT, topbytemask);
     if (!SPEC_USIGN (resulttype)) {
       // sign extend
-      symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+      symbol *tlbl = safeNewiTempLabel (NULL);
       pushReg (m6502_reg_a, true);
       emit6502op ("and", IMMDFMT, 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1));
-      if (!regalloc_dry_run)
 	emitBranch ("beq", tlbl);
       pullReg (m6502_reg_a);
       emit6502op ("ora", IMMDFMT, ~topbytemask & 0xff);
@@ -9599,87 +9633,38 @@ static void genCast (iCode * ic)
     goto release;
   }
 
-  /* If the result is 1 byte, then just copy the one byte; there is */
-  /* nothing special required. */
-  if (AOP_SIZE (result) == 1) {
-    transferAopAop (AOP (right), 0, AOP (result), 0);
-    goto release;
-  }
+  // if the result size is <= source just copy
+  if(AOP_SIZE (result) <= AOP_SIZE (right) 
+     && !(AOP_TYPE (result) == AOP_SOF && AOP_TYPE (result) == AOP_SOF) ) 
+    {
+      genCopy (result, right);
+      goto release;
+    }
 
   signExtend = AOP_SIZE (result) > AOP_SIZE (right) && !IS_BOOL (righttype) && IS_SPEC (righttype) && !SPEC_USIGN (righttype);
   bool masktopbyte = IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && SPEC_USIGN (resulttype);
 
-#if 0
-  if(AOP_TYPE (right)==AOP_REG) {
-    if(IS_AOP_A(AOP(right))) {
-      storeRegToFullAop (m6502_reg_a, AOP (result), signExtend);
-    } else
-      if(IS_AOP_X(AOP(right))) {
-	storeRegToFullAop (m6502_reg_x, AOP (result), signExtend);
-      } else
-	if(IS_AOP_Y(AOP(right))) {
-	  storeRegToFullAop (m6502_reg_y, AOP (result), signExtend);
-	} else
-#endif
-
-	  if(IS_AOP_XA(AOP(right))) {
-	    storeRegToFullAop (m6502_reg_xa, AOP (result), signExtend);
-	    goto release;
-	  }
-    //    goto release;
-    //  }
-  
-    /* If the result is 2 bytes and in registers, we have to be careful */
-    /* to make sure the registers are not overwritten prematurely. */
-    if (AOP_SIZE (result) == 2 && AOP (result)->type == AOP_REG) {
-      if (IS_AOP_YX (AOP (result)) && (AOP_SIZE (right) == 2)) {
-	loadRegFromAop (m6502_reg_yx, AOP (right), 0);
-	goto release;
-      }
-    
-      if (AOP_SIZE (right) == 1) {
-	transferAopAop (AOP (right), 0, AOP (result), 0);
-	if (!signExtend) {
-	  storeConstToAop (0, AOP (result), 1);
-	} else {
-	  save_a = (AOP (result)->aopu.aop_reg[0] == m6502_reg_a || !m6502_reg_a->isDead);
-	
-	  /* we need to extend the sign :{ */
-	  // TODO: try to avoid doing this
-	  if (save_a)
-	    pushReg(m6502_reg_a, false);
-	  if (AOP (result)->aopu.aop_reg[0] != m6502_reg_a)
-	    loadRegFromAop (m6502_reg_a, AOP (right), 0);
-	  signExtendA();
-	  storeRegToAop (m6502_reg_a, AOP (result), 1);
-	  if (save_a)
-	    pullReg(m6502_reg_a);
-	}
-	goto release;
-      }
-    
-      if (AOP (right)->type == AOP_REG) {
-	wassert (AOP_SIZE (right) == 2);
-	/* Source and destination are the same size; no need for sign */
-	/* extension or zero padding. Just copy in the order that */
-	/* won't prematurely overwrite the source. */
-	if (AOP (result)->aopu.aop_reg[0] == AOP (right)->aopu.aop_reg[1]) {
-	  transferAopAop (AOP (right), 1, AOP (result), 1);
-	  transferAopAop (AOP (right), 0, AOP (result), 0);
-	} else {
-	  transferAopAop (AOP (right), 0, AOP (result), 0);
-	  transferAopAop (AOP (right), 1, AOP (result), 1);
-	}
-	goto release;
-      } else {
-	/* Source is at least 2 bytes and not in registers; no need */
-	/* for sign extension or zero padding. Just copy. */
-	transferAopAop (AOP (right), 0, AOP (result), 0);
-	transferAopAop (AOP (right), 1, AOP (result), 1);
-	goto release;
-      }
+  if(IS_AOP_XA(AOP(right)))
+    {
+      storeRegToFullAop (m6502_reg_xa, AOP (result), signExtend);
+      goto release;
     }
   
+  if (IS_AOP_XA (AOP (result) ) && AOP_SIZE (right) == 1 )
+    {
+      genCopy (result, right);
+      if (signExtend)
+        {
+          symbol *tlbl = safeNewiTempLabel (NULL);
+          emitCpz(A_IDX);
+	  emitBranch ("bpl", tlbl);
+          storeConstToAop (0xff, AOP (result), 1);
+          safeEmitLabel (tlbl);
+          m6502_dirtyReg(m6502_reg_x);
+	}
+      goto release;
+    }
+ 
     wassert (AOP (result)->type != AOP_REG);
   
     save_a = !m6502_reg_a->isDead && signExtend;
@@ -9730,7 +9715,6 @@ static void genCast (iCode * ic)
   release:
     freeAsmop (right, NULL);
     freeAsmop (result, NULL);
-
   }
 
   /**************************************************************************
