@@ -1436,20 +1436,27 @@ genXorImpl (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_ao
       left_aop = t;
     }
 
-  bool a_free = regDead (A_IDX, ic);
-  bool p_free = regDead (P_IDX, ic);
+  bool a_free = regDead (A_IDX, ic) && !aopInReg (left_aop, 0, A_IDX) && !aopInReg (right_aop, 0, A_IDX) && !aopInReg (left_aop, 1, A_IDX) && !aopInReg (right_aop, 1, A_IDX);
+  bool result_in_a = false;
+  bool p_free = regDead (P_IDX, ic) && !aopInReg (left_aop, 0, P_IDX) && !aopInReg (right_aop, 0, P_IDX) && !aopInReg (left_aop, 1, P_IDX) && !aopInReg (right_aop, 1, P_IDX);
+  bool result_in_p = false;
   bool pushed_a = false;
 
+  // Handle byte in a first (to free a for later use, if possible).
   for (int i = 0; i < size; i++)
     if (aopInReg (left_aop, i, A_IDX))
       {
-        genXorByte (result_aop, left_aop, right_aop, i, &pushed_a, a_free, p_free && !aopInReg (left_aop, !i, P_IDX));
+        a_free = regDead (A_IDX, ic);
+        if (aopInReg (left_aop, i, P_IDX))
+          p_free = regDead (P_IDX, ic);
+        genXorByte (result_aop, left_aop, right_aop, i, &pushed_a, a_free && !result_in_a, p_free && !result_in_p);
         skip_byte = i;
 
-        if (aopInReg (result_aop, i, A_IDX))
-          a_free = false;
-        if (aopInReg (result_aop, i, P_IDX))
-          p_free = false;
+        result_in_a |= aopInReg (result_aop, i, A_IDX);
+        result_in_p |= aopInReg (result_aop, i, P_IDX);
+
+        if (result_in_a && !a_free || result_in_p && !p_free)
+          UNIMPLEMENTED;
       }
 
   for (int i = 0; i < size; i++)
@@ -1457,12 +1464,17 @@ genXorImpl (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_ao
       if (i == skip_byte)
         continue;
 
-      genXorByte (result_aop, left_aop, right_aop, i, &pushed_a, a_free, p_free);
+      if (aopInReg (left_aop, i, A_IDX) || aopInReg (right_aop, i, A_IDX))
+        a_free = regDead (A_IDX, ic);
+      if (aopInReg (left_aop, i, P_IDX) || aopInReg (right_aop, i, P_IDX))
+        p_free = regDead (P_IDX, ic);
+      genXorByte (result_aop, left_aop, right_aop, i, &pushed_a, a_free && !result_in_a, p_free && !result_in_p);
 
-      if (aopInReg (result_aop, i, A_IDX))
-        a_free = false;
-      if (aopInReg (result_aop, i, P_IDX))
-        p_free = false;
+      result_in_a |= aopInReg (result_aop, i, A_IDX);
+      result_in_p |= aopInReg (result_aop, i, P_IDX);
+
+      if (result_in_a && !a_free || result_in_p && !p_free)
+        UNIMPLEMENTED;
     }
 
   if (pushed_a)
