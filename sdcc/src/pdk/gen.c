@@ -2787,7 +2787,8 @@ genCmp (const iCode *ic, iCode *ifx)
             }
           else
             {
-              if (!regDead (A_IDX, ic) && !aopInReg (left->aop, i, A_IDX))
+              if (!regDead (A_IDX, ic) && !aopInReg (left->aop, i, A_IDX) ||
+                aopInReg (left->aop, i + 1, A_IDX) || aopInReg (right->aop, i + 1, A_IDX))
                 UNIMPLEMENTED;
               cheapMove (ASMOP_A, 0, left->aop, i, true, true, true);
               if (ifx)
@@ -2835,12 +2836,17 @@ genCmp (const iCode *ic, iCode *ifx)
         ;
       else if (started && aopIsLitVal (right->aop, i, 1, 0x00))
         {
+          if (!regDead (A_IDX, ic) && !aopInReg (left->aop, i, A_IDX) ||
+            aopInReg (left->aop, i + 1, A_IDX) || aopInReg (right->aop, i + 1, A_IDX))
+            UNIMPLEMENTED;
           cheapMove (ASMOP_A, 0, left->aop, i, true, true, !i);
           emit2 ("subc", "a");
           cost (1, 1);
         }
       else if (started && (right->aop->type == AOP_LIT && !aopIsLitVal (right->aop, i, 1, 0x00) || right->aop->type == AOP_IMMD)) // Work around lack of subc a, #nn.
         {
+          if (aopInReg (left->aop, i + 1, A_IDX) || aopInReg (right->aop, i + 1, A_IDX))
+            UNIMPLEMENTED;
           if (aopInReg (left->aop, i, P_IDX))
             {
               cheapMove (ASMOP_A, 0, right->aop, i, true, false, !i);
@@ -2886,7 +2892,8 @@ genCmp (const iCode *ic, iCode *ifx)
         }
       else
         {
-          if (aopInReg (right->aop, i, A_IDX))
+          if (aopInReg (right->aop, i, A_IDX) ||
+            aopInReg (left->aop, i + 1, A_IDX) || aopInReg (right->aop, i + 1, A_IDX))
             UNIMPLEMENTED;
           cheapMove (ASMOP_A, 0, left->aop, i, true, !aopInReg (right->aop, i, P_IDX), !i);
           emit2 (started ? "subc" : "sub", "a, %s", aopGet (right->aop, i));
