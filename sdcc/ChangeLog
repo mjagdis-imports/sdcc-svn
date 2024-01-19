@@ -1,7 +1,7 @@
-2024-01-18 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-01-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/gen.c:
-	  Fix a pdk bitwise xor code generation issue, bug #3697.
+	  Fix pdk code generation issues, bug #3697.
 
 2024-01-16 Benedikt Freisen <b.freisen AT gmx.net>
 

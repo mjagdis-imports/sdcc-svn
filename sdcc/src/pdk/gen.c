@@ -3247,9 +3247,17 @@ genOr (const iCode *ic)
         }
 
       if (aopInReg (result->aop, i, P_IDX))
-        p_free = false;
+        {
+          if (!p_free)
+            UNIMPLEMENTED;
+          p_free = false;
+        }
       if (aopInReg (result->aop, i, A_IDX))
-        a_free = false;
+        {
+          if (!a_free)
+            UNIMPLEMENTED;
+          a_free = false;
+        }
     }
 
   freeAsmop (right);
@@ -3320,6 +3328,8 @@ genAnd (const iCode *ic, iCode *ifx)
         }
       else
         {
+          if (!regDead (A_IDX, ic))
+            UNIMPLEMENTED;
           cheapMove (ASMOP_A, 0, left->aop, i, true, true, true);
           if (!aopIsLitVal (right->aop, i, 1, 0xff))
             {
@@ -3375,6 +3385,8 @@ genAnd (const iCode *ic, iCode *ifx)
               for(j = i; j + 1 < right->aop->size && (aopIsLitVal (right->aop, j, 1, 0xff) || aopIsLitVal (right->aop, j, 1, 0x00)); j++); // Find a byte that does need an and-mask, and handle it first.
               while(j > 0 && aopIsLitVal (right->aop, j, 1, 0x00)) // Avoid wrongly loading the last byte, if that one is to be ignored.
                 j--;
+              if (!regDead (A_IDX, ic))
+                UNIMPLEMENTED;
               cheapMove (ASMOP_A, 0, left->aop, j, true, true, true);
               if (!(aopIsLitVal (right->aop, j, 1, 0xff) || aopIsLitVal (right->aop, j, 1, 0x00)))
                 {
@@ -3396,6 +3408,8 @@ genAnd (const iCode *ic, iCode *ifx)
             }
           else
             {
+              if (!regDead (A_IDX, ic))
+                UNIMPLEMENTED;
               cheapMove (ASMOP_A, 0, left->aop, i, true, true, true);
               if (!aopIsLitVal (right->aop, i, 1, 0xff))
                 {
@@ -3473,7 +3487,7 @@ genAnd (const iCode *ic, iCode *ifx)
           cheapMove (result->aop, i, ASMOP_A, 0, true, true, true);
           if (!p_free)
             popPF (!aopInReg (result->aop, i, A_IDX));
-           if (!a_free)
+          if (!a_free)
             popAF();
         }
       else if (aopInReg (left->aop, i, P_IDX) && aopInReg (result->aop, i, P_IDX) && !a_free)
@@ -3514,9 +3528,17 @@ genAnd (const iCode *ic, iCode *ifx)
         }
 
       if (aopInReg (result->aop, i, P_IDX))
-        p_free = false;
+        {
+          if (!p_free)
+            UNIMPLEMENTED;
+          p_free = false;
+        }
       if (aopInReg (result->aop, i, A_IDX))
-        a_free = false;
+        {
+          if (!a_free)
+            UNIMPLEMENTED;
+          a_free = false;
+        }
     }
 
 release:
