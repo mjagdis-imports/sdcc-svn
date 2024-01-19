@@ -1527,7 +1527,12 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
   for (int i = 0; i < size; i++)
     {
       bool maskedbyte = maskedtopbyte && (i + 1 == size);
-      bool a_dead = regDead (A_IDX, ic) && !(i && aopInReg (result_aop, i - 1, A_IDX));
+      bool a_dead = regDead (A_IDX, ic) &&
+        !(i && aopInReg (result_aop, i - 1, A_IDX)) &&
+        !(!i && (aopInReg (left_aop, i + 1, A_IDX) || aopInReg (right_aop, i + 1, A_IDX)));
+
+      if (!a_dead && aopInReg (result_aop, i, A_IDX))
+        UNIMPLEMENTED;
 
       if (!started && !maskedbyte && aopIsLitVal (right_aop, i, 1, 0x00))
         {
@@ -2164,6 +2169,8 @@ genReturn (const iCode *ic)
         {
           for (int i = 0; i < left->aop->size; i++)
             {
+              if (!regDead (A_IDX, ic))
+                UNIMPLEMENTED;
               cheapMove (ASMOP_A, 0, left->aop, i, true, true, true);
               pushAF ();
               pointPStack (-4, true, true);
@@ -3174,9 +3181,9 @@ genOr (const iCode *ic)
           left = t;
         }
 
-      if (regDead (P_IDX, ic) && aopInReg (left->aop, i, P_IDX))
+      if (regDead (P_IDX, ic) && (aopInReg (left->aop, i, P_IDX) || aopInReg (right->aop, i, P_IDX)))
         p_free = true;
-      if (regDead (A_IDX, ic) && aopInReg (left->aop, i, A_IDX))
+      if (regDead (A_IDX, ic) && (aopInReg (left->aop, i, A_IDX) || aopInReg (right->aop, i, A_IDX)))
         a_free = true;
 
       int bit = right->aop->type == AOP_LIT ? isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) : -1;
