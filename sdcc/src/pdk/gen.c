@@ -2169,8 +2169,6 @@ genReturn (const iCode *ic)
         {
           for (int i = 0; i < left->aop->size; i++)
             {
-              if (!regDead (A_IDX, ic))
-                UNIMPLEMENTED;
               cheapMove (ASMOP_A, 0, left->aop, i, true, true, true);
               pushAF ();
               pointPStack (-4, true, true);
@@ -2391,6 +2389,8 @@ genPlus (const iCode *ic)
 
       if (!moved_to_a && !maskedbyte && (left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX)) && right->aop->type != AOP_STK && aopSame (left->aop, i, result->aop, i, 1))
         {
+          if (!i && (aopInReg (left->aop, 1, A_IDX) || aopInReg (right->aop, 1, A_IDX)))
+            UNIMPLEMENTED;
           cheapMove (ASMOP_A, 0, right->aop, i, true, p_dead && !aopInReg (left->aop, i, P_IDX), !started);
           emit2 (started ? "addc" : "add", "%s, a", aopGet (left->aop, i));
           cost (1, 1);
@@ -2421,12 +2421,16 @@ genPlus (const iCode *ic)
         }
       else if (!moved_to_a && aopInReg (left->aop, i, P_IDX))
         {
+          if (!i && (aopInReg (left->aop, 1, A_IDX) || aopInReg (right->aop, 1, A_IDX)))
+            UNIMPLEMENTED;
           cheapMove (ASMOP_A, 0, right->aop, i, true, false, !started);
           emit2 (started ? "addc" : "add", "a, p");
           cost (1, 1);
         }
       else if (started && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && !aopIsLitVal (right->aop, i, 1, 0x00) && i + 1 == size)
         {
+          if (!i && (aopInReg (left->aop, 1, A_IDX) || aopInReg (right->aop, 1, A_IDX)))
+            UNIMPLEMENTED;
           if (!moved_to_a)
             cheapMove (ASMOP_A, 0, left->aop, i, true, p_dead, false);
           emit2 ("addc", "a");
@@ -2455,6 +2459,8 @@ genPlus (const iCode *ic)
         }
       else
         {
+          if (!i && (aopInReg (left->aop, 1, A_IDX) || aopInReg (right->aop, 1, A_IDX)))
+            UNIMPLEMENTED;
           if (!moved_to_a)
             cheapMove (ASMOP_A, 0, left->aop, i, true, p_dead && !aopInReg (right->aop, i, P_IDX), !started);
           if (started || !aopIsLitVal (right->aop, i, 1, 0x00))
