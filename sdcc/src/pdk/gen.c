@@ -1534,6 +1534,9 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
       if (!a_dead && aopInReg (result_aop, i, A_IDX))
         UNIMPLEMENTED;
 
+      if (pushed_a && (aopInReg (left_aop, i, A_IDX) || aopInReg (right_aop, i, A_IDX)))
+        UNIMPLEMENTED;
+
       if (!started && !maskedbyte && aopIsLitVal (right_aop, i, 1, 0x00))
         {
           cheapMove (result_aop, i, left_aop, i, regDead (A_IDX, ic), true, true);
@@ -2333,6 +2336,9 @@ genPlus (const iCode *ic)
 
        if (aopInReg (left->aop, i, P_IDX) || aopInReg (right->aop, i, P_IDX))
          p_dead = true;
+
+       if (pushed_a && (aopInReg (left->aop, i, A_IDX) || aopInReg (right->aop, i, A_IDX)))
+        UNIMPLEMENTED;
 
        if (!started && !maskedbyte && !moved_to_a && (left->aop->type == AOP_DIR || aopInReg (left->aop, i, P_IDX)) && aopIsLitVal (right->aop, i, 1, 0x01) && aopSame (left->aop, i, result->aop, i, 1))
         {
