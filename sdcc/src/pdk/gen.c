@@ -1530,8 +1530,14 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
       bool a_dead = regDead (A_IDX, ic) &&
         !(i && aopInReg (result_aop, i - 1, A_IDX)) &&
         !(!i && (aopInReg (left_aop, i + 1, A_IDX) || aopInReg (right_aop, i + 1, A_IDX)));
+      bool p_dead = regDead (P_IDX, ic) &&
+        !(i && aopInReg (result_aop, i - 1, P_IDX)) &&
+        !(!i && (aopInReg (left_aop, i + 1, P_IDX) || aopInReg (right_aop, i + 1, P_IDX)));
 
       if (!a_dead && aopInReg (result_aop, i, A_IDX))
+        UNIMPLEMENTED;
+
+      if (!p_dead && aopInReg (result_aop, i, P_IDX))
         UNIMPLEMENTED;
 
       if (pushed_a && (aopInReg (left_aop, i, A_IDX) || aopInReg (right_aop, i, A_IDX)))
