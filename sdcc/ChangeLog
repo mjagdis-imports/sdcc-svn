@@ -1,3 +1,8 @@
+2024-01-16 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/Makefile.in:
+	  Makeshift fix for bug #3694: Delete sdcpp in uninstall.
+
 2024-01-15 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/peep.def:
@@ -6,7 +11,7 @@
 	  src/mos6502/peep.def:
 	  Improvements in genCast(), genCopy() and loadRegFromAop().
 
-2023-01-15 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-01-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/scripts/sdcc.nsi:
 	  Fix bug #3695.
@@ -51,16 +56,27 @@
 	  Improve asmopToBool.
 
 2023-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
+||||||| .merge-left.r14616
+2023-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
+=======
+2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
+>>>>>>> .merge-right.r14635
 
 	* src/hc08/main.c:
 	  Fix bug #3690.
 
+<<<<<<< .working
 2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/peep.c:
 	  Improve pdk notUsed() accuracy.
 
 2023-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
+||||||| .merge-left.r14616
+2023-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
+=======
+2024-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
+>>>>>>> .merge-right.r14635
 
 	* src/z80/main.c:
 	  Fix bug #3693.
