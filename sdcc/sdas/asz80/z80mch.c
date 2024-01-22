@@ -2145,7 +2145,7 @@ minit()
         /*
          * Address Space
          */
-        exprmasks(3);
+        exprmasks(4);
 
         if (pass == 0) {
                 mchtyp = X_Z80;

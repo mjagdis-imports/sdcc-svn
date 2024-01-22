@@ -2,6 +2,8 @@
 
 	* src/pdk/gen.c:
 	  Fix pdk code generation issues, bug #3697.
+	* sdas/asz80/z80mch.c:
+	  Export 32-bit addresses from z80 assembler (instead of 24-bit).
 
 2024-01-16 Benedikt Freisen <b.freisen AT gmx.net>
 
