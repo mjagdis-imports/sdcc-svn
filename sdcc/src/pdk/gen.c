@@ -1676,14 +1676,17 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
         }
       else if (right_aop->type == AOP_STK || right_aop->type == AOP_STL && !i || right_aop->type == AOP_CODE || right_aop->type == AOP_SFR)
         {
-          if (i + 1 < size && aopInReg (left_aop, i + 1, P_IDX))
+          if (!p_dead && !pushed_p)
             pushPF (!aopInReg (left_aop, i, A_IDX));
           cheapMove (ASMOP_A, 0, left_aop, i, true, true, !started);
           cheapMove (ASMOP_P, 0, right_aop, i, false, true, !started);
           emit2 (started ? "subc" : "sub", "a, p");
           cost (1, 1);
-          if (i + 1 < size && aopInReg (left_aop, i + 1, P_IDX))
-            popP (false);
+          if (!p_dead && !pushed_p)
+            if (i + 1 < size && aopInReg (left_aop, i + 1, P_IDX))
+              popP (false);
+            else
+              pushed_p = true;
           started = true;
         }
      else if (started && (right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD) && !aopIsLitVal (right_aop, i, 1, 0x00) && i + 1 == size)
@@ -1694,7 +1697,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           cost (2, 2);
         }
       else if ((started && (right_aop->type == AOP_LIT || right_aop->type == AOP_IMMD) && !aopIsLitVal (right_aop, i, 1, 0x00) || aopInReg (right_aop, i, A_IDX)) &&
-        regDead (A_IDX, ic) && regDead (P_IDX, ic) && !aopInReg(left_aop, P_IDX, i + 1) && !aopInReg(right_aop, P_IDX, i + 1))
+        a_dead && (p_dead || pushed_p))
         {
           cheapMove (ASMOP_P, 0, right_aop, i, !aopInReg (left_aop, i, A_IDX), true, !started);
           cheapMove (ASMOP_A, 0, left_aop, i, true, false, !started);
@@ -1704,7 +1707,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
         }
       else if (aopInReg (right_aop, i, A_IDX))
         {
-          if (i + 1 < size && aopInReg (right_aop, i + 1, P_IDX) || !regDead (P_IDX, ic) && !pushed_p)
+          if (!p_dead && !pushed_p)
             pushPF (false);
           if (aopInReg (left_aop, i, P_IDX))
             {
@@ -1720,7 +1723,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           emit2 (started ? "subc" : "sub", "a, p");
           cost (1, 1);
           started = true;
-          if (i + 1 < size && aopInReg (right_aop, i + 1, P_IDX) || !regDead (P_IDX, ic) && !pushed_p)
+          if (!p_dead && !pushed_p)
             {
               if (!pushed_a && !regDead (P_IDX, ic) && !pushed_p)
                 pushed_p = true;
