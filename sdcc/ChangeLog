@@ -1,6 +1,8 @@
 2024-01-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* sdas/asgb/gbmch.c:
+	* sdas/asgb/gbmch.c
+	  .version,
+	  doc/sdccman.lyx:
 	  Export 32-bit addresses from gb assembler (instead of 24-bit).
 
 2024-01-22 Philipp Klaus Krause <philipp@colecovision.eu>
