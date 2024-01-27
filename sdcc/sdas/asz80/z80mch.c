@@ -1279,6 +1279,8 @@ struct mne *mp;
                      allow_undoc &&
                      ((t2 == S_R8U1) || (t2 == S_R8U2)) )
                   {
+                    if ( (e1.e_addr == H) || (e1.e_addr == L) )
+                      aerr();
                     outab( ((t2 == S_R8U1) ? 0xDD : 0xFD ) );
                     outab( (e1.e_addr << 3) | (0x40 + e2.e_addr) );
                     break;
