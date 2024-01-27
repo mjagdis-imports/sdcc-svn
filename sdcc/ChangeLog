@@ -2,6 +2,8 @@
 
 	* src/mos6502/ralloc.c:
 	  Small cleanup of m6502_dirtyReg.
+   	* src/mos6502/gen.c:
+   	  Imporvements to genCmp.
 
 2024-01-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
