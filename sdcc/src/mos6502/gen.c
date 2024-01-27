@@ -3100,7 +3100,8 @@ static bool aopCanShift (asmop * aop)
 /**************************************************************************
  * aopOp - allocates an asmop for an operand
  *************************************************************************/
-static void aopOp (operand *op, const iCode * ic)
+static void
+aopOp (operand *op, const iCode * ic)
 {
   asmop *aop = NULL;
   symbol *sym;
@@ -3112,20 +3113,22 @@ static void aopOp (operand *op, const iCode * ic)
     return;
 
   /* if already has an asmop */
-  if (op->aop) {
-    emitComment (VVDBG|TRACE_AOP, "    %s: skip", __func__);
-    if (IS_SYMOP (op) && OP_SYMBOL (op)->aop) {
-      if(op->aop->type==AOP_SOF) {
-	emitComment (VVDBG|TRACE_AOP, "    asmop symbol: %s [%d:%d] - %d",
-		     OP_SYMBOL (op)->name, OP_SYMBOL (op)->stack, op->aop->size,
-		     op->aop->aopu.aop_stk );
-	// FIXME: ugly fix to correct stack offset for some symbols
-	// Should find the source of the bug
-	op->aop->aopu.aop_stk = OP_SYMBOL (op)->stack;
-      }
+  if (op->aop)
+    {
+      emitComment (VVDBG|TRACE_AOP, "    %s: skip", __func__);
+      if (IS_SYMOP (op) && OP_SYMBOL (op)->aop)
+	{
+	  if(op->aop->type==AOP_SOF) {
+	    emitComment (VVDBG|TRACE_AOP, "    asmop symbol: %s [%d:%d] - %d",
+			 OP_SYMBOL (op)->name, OP_SYMBOL (op)->stack, op->aop->size,
+			 op->aop->aopu.aop_stk );
+	    // FIXME: ugly fix to correct stack offset for some symbols
+	    // Should find the source of the bug
+	    op->aop->aopu.aop_stk = OP_SYMBOL (op)->stack;
+	  }
+	}
+      return;
     }
-    return;
-  }
 
   // Is this a pointer set result?
   if ((op == IC_RESULT (ic)) && POINTER_SET (ic))
@@ -3134,45 +3137,48 @@ static void aopOp (operand *op, const iCode * ic)
     }
 
   /* if this a literal */
-  if (IS_OP_LITERAL (op)) {
-    emitComment (VVDBG|TRACE_AOP, "    %s: LITERAL = 0x%x:%d",
-		 __func__, ulFromVal(OP_VALUE (op)), getSize(operandType(op)) );
-    aop = newAsmop (AOP_LIT);
-    aop->aopu.aop_lit = OP_VALUE (op);
-    aop->size = getSize (operandType (op));
-    op->aop = aop;
-    aop->op = op; // asmopToBool needs the op to check thetype of the literal.
-    return;
-  }
+  if (IS_OP_LITERAL (op))
+    {
+      emitComment (VVDBG|TRACE_AOP, "    %s: LITERAL = 0x%x:%d",
+		   __func__, ulFromVal(OP_VALUE (op)), getSize(operandType(op)) );
+      aop = newAsmop (AOP_LIT);
+      aop->aopu.aop_lit = OP_VALUE (op);
+      aop->size = getSize (operandType (op));
+      op->aop = aop;
+      aop->op = op; // asmopToBool needs the op to check thetype of the literal.
+      return;
+    }
 
 
   //  printf("checking underlying sym\n");
   /* if the underlying symbol has a aop */
-  if (IS_SYMOP (op) && OP_SYMBOL (op)->aop) {
-    emitComment (VVDBG|TRACE_AOP, "    %s: SYMOP", __func__);
-    op->aop = aop = Safe_calloc (1, sizeof (*aop));
-    memcpy (aop, OP_SYMBOL (op)->aop, sizeof (*aop));
-    //op->aop = aop = OP_SYMBOL (op)->aop;
-    aop->size = getSize (operandType (op));
-    emitComment (VVDBG|TRACE_AOP, "    symbol: %s [%d]",
-		 OP_SYMBOL (op)->name, OP_SYMBOL (op)->stack );
-    //printf ("reusing underlying symbol %s\n",OP_SYMBOL (op)->name);
-    //printf (" with size = %d\n", aop->size);
+  if (IS_SYMOP (op) && OP_SYMBOL (op)->aop)
+    {
+      emitComment (VVDBG|TRACE_AOP, "    %s: SYMOP", __func__);
+      op->aop = aop = Safe_calloc (1, sizeof (*aop));
+      memcpy (aop, OP_SYMBOL (op)->aop, sizeof (*aop));
+      //op->aop = aop = OP_SYMBOL (op)->aop;
+      aop->size = getSize (operandType (op));
+      emitComment (VVDBG|TRACE_AOP, "    symbol: %s [%d]",
+		   OP_SYMBOL (op)->name, OP_SYMBOL (op)->stack );
+      //printf ("reusing underlying symbol %s\n",OP_SYMBOL (op)->name);
+      //printf (" with size = %d\n", aop->size);
 
-    aop->op = op;
-    return;
-  }
+      aop->op = op;
+      return;
+    }
 
   //  printf("checking true sym\n");
   /* if this is a true symbol */
-  if (IS_TRUE_SYMOP (op)) {
-    emitComment (VVDBG|TRACE_AOP, "    %s: TRUE_SYMOP", __func__);
-    op->aop = aop = aopForSym (ic, OP_SYMBOL (op));
-    aop->op = op;
-    //printf ("new symbol %s\n", OP_SYMBOL (op)->name);
-    //printf (" with size = %d\n", aop->size);
-    return;
-  }
+  if (IS_TRUE_SYMOP (op))
+    {
+      emitComment (VVDBG|TRACE_AOP, "    %s: TRUE_SYMOP", __func__);
+      op->aop = aop = aopForSym (ic, OP_SYMBOL (op));
+      aop->op = op;
+      //printf ("new symbol %s\n", OP_SYMBOL (op)->name);
+      //printf (" with size = %d\n", aop->size);
+      return;
+    }
 
   /* this is a temporary : this has
      only five choices :
@@ -3188,71 +3194,81 @@ static void aopOp (operand *op, const iCode * ic)
 
   //  printf("checking conditional\n");
   /* if the type is a conditional */
-  if (sym->regType == REG_CND) {
-    sym->aop = op->aop = aop = newAsmop (AOP_CRY);
-    aop->size = 0;
-    aop->op = op;
-    return;
-  }
+  if (sym->regType == REG_CND)
+    {
+      sym->aop = op->aop = aop = newAsmop (AOP_CRY);
+      aop->size = 0;
+      aop->op = op;
+      return;
+    }
 
   //  printf("checking spilt\n");
   /* if it is spilt then two situations
      a) is rematerialize
      b) has a spill location */
-  if (sym->isspilt || sym->nRegs == 0) {
-    //      printf("checking remat\n");
-    /* rematerialize it NOW */
-    if (sym->remat) {
-      sym->aop = op->aop = aop = aopForRemat (sym);
+  if (sym->isspilt || sym->nRegs == 0)
+    {
+      //      printf("checking remat\n");
+      /* rematerialize it NOW */
+      if (sym->remat)
+	{
+	  sym->aop = op->aop = aop = aopForRemat (sym);
+	  aop->size = getSize (sym->type);
+	  aop->op = op;
+	  return;
+	}
+
+      wassertl (!sym->ruonly, "sym->ruonly not supported");
+
+      if (regalloc_dry_run)
+	{
+	  // Todo: Handle dummy iTemp correctly
+	  if (options.stackAuto || (currFunc && IFFUNC_ISREENT (currFunc->type)))
+	    {
+	      sym->aop = op->aop = aop = newAsmop (AOP_SOF);
+	      aop->aopu.aop_stk = 8; /* bogus stack offset, high enough to prevent optimization */
+	    }
+	  else
+	    {
+	      sym->aop = op->aop = aop = newAsmop (AOP_DIR);
+	      aop->aopu.aop_dir = sym->name; //TODO? avoids crashing in sameRegs()
+	    }
+	  aop->size = getSize (sym->type);
+	  aop->op = op;
+	  return;
+	}
+
+      /* else spill location  */
+      if (sym->isspilt && sym->usl.spillLoc || regalloc_dry_run)
+	{
+	  asmop *oldAsmOp = NULL;
+
+	  if (sym->usl.spillLoc->aop && sym->usl.spillLoc->aop->size != getSize (sym->type))
+	    {
+	      /* force a new aop if sizes differ */
+	      oldAsmOp = sym->usl.spillLoc->aop;
+	      sym->usl.spillLoc->aop = NULL;
+	      //printf ("forcing new aop\n");
+	    }
+	  sym->aop = op->aop = aop = aopForSym (ic, sym->usl.spillLoc);
+	  if (sym->usl.spillLoc->aop->size != getSize (sym->type))
+	    {
+	      /* Don't reuse the new aop, go with the last one */
+	      sym->usl.spillLoc->aop = oldAsmOp;
+	    }
+	  aop->size = getSize (sym->type);
+	  aop->op = op;
+	  //printf ("spill symbol %s\n", OP_SYMBOL (op)->name);
+	  //printf (" with size = %d\n", aop->size);
+	  return;
+	}
+
+      /* else must be a dummy iTemp */
+      sym->aop = op->aop = aop = newAsmop (AOP_DUMMY);
       aop->size = getSize (sym->type);
       aop->op = op;
       return;
     }
-
-    wassertl (!sym->ruonly, "sym->ruonly not supported");
-
-    if (regalloc_dry_run) {
-      // Todo: Handle dummy iTemp correctly
-      if (options.stackAuto || (currFunc && IFFUNC_ISREENT (currFunc->type))) {
-	sym->aop = op->aop = aop = newAsmop (AOP_SOF);
-	aop->aopu.aop_stk = 8; /* bogus stack offset, high enough to prevent optimization */
-      } else {
-	sym->aop = op->aop = aop = newAsmop (AOP_DIR);
-	aop->aopu.aop_dir = sym->name; //TODO? avoids crashing in sameRegs()
-      }
-      aop->size = getSize (sym->type);
-      aop->op = op;
-      return;
-    }
-
-    /* else spill location  */
-    if (sym->isspilt && sym->usl.spillLoc || regalloc_dry_run) {
-      asmop *oldAsmOp = NULL;
-
-      if (sym->usl.spillLoc->aop && sym->usl.spillLoc->aop->size != getSize (sym->type)) {
-	/* force a new aop if sizes differ */
-	oldAsmOp = sym->usl.spillLoc->aop;
-	sym->usl.spillLoc->aop = NULL;
-	//printf ("forcing new aop\n");
-      }
-      sym->aop = op->aop = aop = aopForSym (ic, sym->usl.spillLoc);
-      if (sym->usl.spillLoc->aop->size != getSize (sym->type)) {
-	/* Don't reuse the new aop, go with the last one */
-	sym->usl.spillLoc->aop = oldAsmOp;
-      }
-      aop->size = getSize (sym->type);
-      aop->op = op;
-      //printf ("spill symbol %s\n", OP_SYMBOL (op)->name);
-      //printf (" with size = %d\n", aop->size);
-      return;
-    }
-
-    /* else must be a dummy iTemp */
-    sym->aop = op->aop = aop = newAsmop (AOP_DUMMY);
-    aop->size = getSize (sym->type);
-    aop->op = op;
-    return;
-  }
 
   //  printf("assuming register\n");
   /* must be in a register */
@@ -3265,8 +3281,8 @@ static void aopOp (operand *op, const iCode * ic)
       aop->aopu.aop_reg[i] = sym->regs[i];
       aop->regmask |= sym->regs[i]->mask;
     }
-  if ((sym->nRegs > 1) && (sym->regs[0]->mask > sym->regs[1]->mask))
-    aop->regmask |= M6502MASK_REV;
+  //  if ((sym->nRegs > 1) && (sym->regs[0]->mask > sym->regs[1]->mask))
+  //    aop->regmask |= M6502MASK_REV;
   aop->op = op;
 }
 
