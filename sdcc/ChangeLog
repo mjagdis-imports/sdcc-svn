@@ -1,7 +1,9 @@
 2024-01-28 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
-	  refactor asmopToBool().
+	  Refactor asmopToBool().
+  	* src/mos6502/gen.c:
+  	  Improvements to genAnd().
 
 2024-01-27 Gabriele Gorla <gorlik@yahoo.com>
 
