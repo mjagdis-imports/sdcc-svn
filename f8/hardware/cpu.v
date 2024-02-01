@@ -73,10 +73,11 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	assign opcode = inst[7:0];
 
 	// Handle program counter
+	always @(posedge clk)
 	begin
 		pc <= next_pc;
 		old_pc = pc;
-		sp <= next_sp;	always @(posedge clk)
+		sp <= next_sp;
 	end
 
 	always @(posedge clk)
@@ -100,6 +101,10 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			next_pc = pc + 2;
 		else if(opcode_is_16_immd(next_opcode) || opcode_is_dir(next_opcode) || opcode_is_zrel(next_opcode))
 			next_pc = pc + 3;
+		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && !next_flags[5])
+			next_pc = pc;
+		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && next_flags[5])
+			next_pc = dread_data;
 		else
 			next_pc = pc + 1;
 	end
@@ -116,6 +121,8 @@ always_comb
 			next_sp = sp + 2;
 		else if(opcode == OPCODE_LDW_Y_SP && swapop_in || opcode == OPCODE_ADDW_SP_D)
 			next_sp = result_reg;
+		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && next_flags[5])
+			next_sp = sp + 2;
 		else
 			next_sp = sp;
 	end
@@ -138,7 +145,7 @@ always_comb
 			dread_addr = next_y;
 		else if(next_opcode == OPCODE_MSK_IY_XL_IMMD)
 			dread_addr = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
-		else if(next_opcode == OPCODE_POP_XL || next_opcode == OPCODE_POPW_Y)
+		else if(next_opcode == OPCODE_POP_XL || next_opcode == OPCODE_POPW_Y || next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI)
 			dread_addr = next_sp;
 		else
 			dread_addr = 'x;
@@ -435,7 +442,8 @@ always_comb
 			else
 				next_flags[4] = flags[4];
 
-			if (opcode == OPCODE_SWAPOP)
+			if (opcode == OPCODE_SWAPOP ||
+				(opcode == OPCODE_RET || opcode == OPCODE_RETI) && !flags[5])
 				next_flags[5] = 1;
 			else
 				next_flags[5] = 0;

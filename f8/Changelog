@@ -1,3 +1,9 @@
+2023-02-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/cpu.v,
+	  hardware/tests/ret:
+	  Implement ret f8 instruction.
+
 2023-12-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
