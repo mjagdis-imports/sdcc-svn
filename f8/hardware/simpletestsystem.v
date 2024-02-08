@@ -20,12 +20,15 @@ module testsystem ();
 	wire [1:0] dwrite_en;
 	wire clk;
 	reg reset;
+	wire interrupt;
 	wire trap;
 
 	clkgen clkgen(.*);
 	memory memory(.*);
 	cpu cpu(.*);
-	
+
+	assign interrupt = 0;
+
 	initial
 	begin
 		$dumpfile("simpletest.vcd");

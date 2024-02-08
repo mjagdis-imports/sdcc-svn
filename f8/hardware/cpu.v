@@ -30,22 +30,22 @@ typedef enum logic [1:0] {
 	ACCSEL_ZL_X = 2'b11
 } accsel_t;
 
-module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk, reset, trap);
-	output [15 : 0] iread_addr;
-	input [23 : 0] iread_data;
+module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk, reset, interrupt, trap);
+	output [15:0] iread_addr;
+	input [23:0] iread_data;
 	input iread_valid;
 	output logic [15:0] dread_addr;
 	input [15 : 0] dread_data;
 	output [15 : 0] dwrite_addr;
 	output [15 : 0] dwrite_data;
 	output logic [1:0] dwrite_en;
-	input clk, reset;
+	input clk, reset, interrupt;
 	output trap;
 
-	wire [23 : 0] next_inst;
+	wire [23:0] next_inst;
 	wire [7:0] next_opcode;
 	wire nextinst_valid;
-	reg [23 : 0] inst;
+	reg [23:0] inst;
 	wire [7:0] opcode;
 
 	logic [15:0] op0, op1, op2;
@@ -55,10 +55,13 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	logic h_in, c_in, swapop_in, c_out, z_out, n_out, o_out, h_out;
 	reg [7:0] flags;
 
+	wire interupt_start;
+	reg interrupt_active;
+
 	alu alu(.*);
 
 	wire [15:0] x, y, z;
-	wire [15 : 0] next_x, next_y, next_z;
+	wire [15:0] next_x, next_y, next_z;
 	logic [7:0] next_flags;
 	logic [1:0] regwrite_en;
 	logic [1:0] regwrite_addr;
@@ -83,10 +86,24 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	always @(posedge clk)
 		inst <= next_inst;
 
+	// Interupts
+	assign interrupt_start = interrupt && !interrupt_active;
+	always @(posedge clk)
+	begin
+		if(reset)
+			interrupt_active = 0;
+		else if(interrupt && !interrupt_active)
+			interrupt_active = 1;
+		else if(interrupt_active && opcode == OPCODE_TRAP && next_flags[5])
+			interrupt_active = 0;
+	end
+
 	always_comb
 	begin
 		if(reset)
 			next_pc = 16'h4000;
+		else if(interrupt_start)
+			next_pc = 16'h4004;
 		else if(next_opcode == OPCODE_JP_IMMD || next_opcode == OPCODE_CALL_IMMD)
 			next_pc = next_inst[31:8];
 		else if(next_opcode == OPCODE_JP_Y || next_opcode == OPCODE_CALL_Y)
@@ -111,7 +128,9 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 
 always_comb
 	begin
-		if(opcode_is_push(opcode))
+		if(interrupt_start)
+			next_sp = sp - 2;
+		else if(opcode_is_push(opcode))
 			next_sp = sp - 1;
 		else if(opcode == OPCODE_POP_XL)
 			next_sp = sp + 1;
@@ -159,7 +178,9 @@ always_comb
 
 	always_comb
 	begin 
-		if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY ||
+		if (interrupt_start)
+			op0 = old_pc;
+		else if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY ||
 			opcode == OPCODE_LD_DIR_XL ||opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL ||
 			opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)
 			op0 = {8'bx,
@@ -278,7 +299,9 @@ always_comb
 		else
 			op2 = 'x;
 
-		if (opcode_is_sub(opcode))
+		if (interrupt_start)
+			aluinst = ALUINST_PASSW0;
+		else if (opcode_is_sub(opcode))
 			aluinst = ALUINST_SUB;
 		else if (opcode_is_sbc(opcode))
 			aluinst = ALUINST_SBC;
@@ -497,6 +520,7 @@ always_comb
 		result_reg;
 
 	assign dwrite_addr =
+		interrupt_start ? sp - 2 :
 		(opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_MSK_IY_XL_IMMD) ? (accsel_in == ACCSEL_ZL_X ? x : accsel_in == ACCSEL_YL_Z ? z : y) :
 		(opcode == OPCODE_LD_IY_XL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) ? y :
 		opcode_is_push(opcode) ? sp - 1 :
@@ -511,6 +535,7 @@ always_comb
 		'x;
 	assign dwrite_en =
 		reset ? 2'b00 :
+		interrupt_start ? 2'b11 :
 		(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_push(opcode) || opcode_is_xchb(opcode) ||
 			opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_CAX_IY_ZL_XL && z_out ||
 			opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL ||
