@@ -785,7 +785,6 @@ ${Section} "SDCC library sources" SEC25
 #  File "${DEV_ROOT}\lib\src\pic16\libio\usart\Makefile"
 
   SetOutPath "$INSTDIR\lib\src\pic16\libm"
-  File "${DEV_ROOT}\lib\src\pic16\libm\*.c"
 #  File "${DEV_ROOT}\lib\src\pic16\libm\Makefile"
 
   SetOutPath "$INSTDIR\lib\src\pic16\libsdcc"
@@ -799,10 +798,6 @@ ${Section} "SDCC library sources" SEC25
   File "${DEV_ROOT}\lib\src\pic16\libsdcc\fixed16x16\*.c"
   File "${DEV_ROOT}\lib\src\pic16\libsdcc\fixed16x16\*.S"
 #  File "${DEV_ROOT}\lib\src\pic16\libsdcc\fixed16x16\Makefile"
-
-  SetOutPath "$INSTDIR\lib\src\pic16\libsdcc\float"
-  File "${DEV_ROOT}\lib\src\pic16\libsdcc\float\*.c"
-#  File "${DEV_ROOT}\lib\src\pic16\libsdcc\float\Makefile"
 
   SetOutPath "$INSTDIR\lib\src\pic16\libsdcc\gptr"
   File "${DEV_ROOT}\lib\src\pic16\libsdcc\gptr\*.c"
