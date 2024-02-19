@@ -16,6 +16,7 @@
 	cpw	y, #0x5aa5
 	jrnz	l1trap
 	ld	xl, #0xaa
+	ld	0x3ff0, xl	; there used to be a bug in advancing of the pc. With the lower byte of the destiantion being 0xf0, this will trap for the bug.
 	ld	0x3fff, xl
 	ld	xl, #0x55
 	ld	0x3ffe, xl

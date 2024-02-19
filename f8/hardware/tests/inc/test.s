@@ -51,6 +51,16 @@ l4trap:
 	trap
 l4:
 
+	clr	(0, sp)
+	inc	(0, sp)
+	inc	0x3fff
+	ld	xl, #2
+	cp	xl, (0, sp)
+	jrz	#l5
+l5trap:
+	trap
+l5:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

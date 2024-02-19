@@ -262,8 +262,12 @@ function automatic logic opcode_is_16_immd(opcode_t opcode);
 	return(opcode_is_16_2_immd(opcode) || opcode == OPCODE_PUSHW_IMMD || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_CPW_Y_IMMD);
 endfunction
 
+function automatic logic opcode_is_dir_read(opcode_t opcode);
+	return(opcode_is_8_2_dir(opcode) || opcode_is_8_1_dir(opcode) || opcode_is_xchb(opcode) || opcode_is_16_2_dir(opcode) || opcode_is_16_1_dir(opcode) || opcode == OPCODE_MAD_X_DIR_YL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LDW_Y_DIR);
+endfunction
+
 function automatic logic opcode_is_dir(opcode_t opcode);
-	return(opcode_is_8_2_dir(opcode) || opcode_is_8_1_dir(opcode) || opcode_is_xchb(opcode) || opcode_is_16_2_dir(opcode) || opcode_is_16_1_dir(opcode) || opcode == OPCODE_MAD_X_DIR_YL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_DIR_Y);
+	return(opcode_is_dir_read(opcode) || opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LDW_DIR_Y);
 endfunction
 
 function automatic logic opcode_is_sprel(opcode_t opcode);

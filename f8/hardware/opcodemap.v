@@ -187,8 +187,8 @@ typedef enum logic [7:0] {
 	OPCODE_TSTW_Y =       8'hb7, // tstw y
 	OPCODE_MSK_IY_XL_IMMD = 8'hb8, // msk (y), xl, #i
 	OPCODE_MUL_Y =        8'hb9, // mul y
-	OPCODE_RET =          8'hba, // ret?
-	OPCODE_RETI =         8'hbb, // reti?
+	OPCODE_RET =          8'hba, // ret
+	OPCODE_RETI =         8'hbb, // reti
 	OPCODE_MAD_X_DIR_YL = 8'hbc, // mad x, mm, yl
 	OPCODE_MAD_X_SPREL_YL = 8'hbd, // mad x, (n, sp), yl
 	OPCODE_MAD_X_ZREL_YL = 8'hbe, // mad x, (nn, z), yl

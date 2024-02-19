@@ -187,10 +187,12 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 	assign overflow = 
 		aluinst == ALUINST_ADD ? carry7 (op0[7:0], op1[7:0], 0) ^ c_out :
 		aluinst == ALUINST_ADC ? carry7 (op0[7:0], op1[7:0], c_in) ^ c_out :
+		aluinst == ALUINST_DEC ? carry7 (op0[7:0], 8'hff, 0) ^ c_out :
+		aluinst == ALUINST_DECW ? carry15 (op0[15:0], 16'hffff, 0) ^ c_out :
 		aluinst == ALUINST_SUB ? carry7 (op0[7:0], ~op1[7:0], 0) ^ c_out :
 		aluinst == ALUINST_SBC ? carry7 (op0[7:0], ~op1[7:0], c_in) ^ c_out :
-		aluinst == ALUINST_INC ? carry7 (op0[7:0], 0, 1) ^ c_out :
-		aluinst == ALUINST_INCW ? carry15 (op0[15:0], 0, 1) ^ c_out :
+		aluinst == ALUINST_INC ? carry7 (op0[7:0], 8'h01, 0) ^ c_out :
+		aluinst == ALUINST_INCW ? carry15 (op0[15:0], 16'h0001, 0) ^ c_out :
 		aluinst == ALUINST_ADCW0 ? carry15 (op0[15:0], 0, c_in) ^ c_out :
 		aluinst == ALUINST_SBCW0 ? carry15 (op0[15:0], 16'hffff, c_in) ^ c_out :
 		aluinst == ALUINST_ADDW ? carry15 (op0[15:0], op1[15:0], 0) ^ c_out :
@@ -201,9 +203,10 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 	assign halfcarry =
 		aluinst == ALUINST_ADD ? carry4 (op0[7:0], op1[7:0], 0) :
 		aluinst == ALUINST_ADC ? carry4 (op0[7:0], op1[7:0], c_in) :
+		aluinst == ALUINST_DEC ? carry4 (op0[7:0], 8'hff, 0) :
 		aluinst == ALUINST_SUB ? carry4 (op0[7:0], ~op1[7:0], 0) :
 		aluinst == ALUINST_SBC ? carry4 (op0[7:0], ~op1[7:0], c_in) :
-		aluinst == ALUINST_INC ? carry4 (op0[7:0], 0, 1) :
+		aluinst == ALUINST_INC ? carry4 (op0[7:0], 8'h01, 0) :
 		'x;
 
 	assign result_reg =
@@ -230,9 +233,5 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		wideop ? ^result_reg[15:0] : ^result_reg[7:0];
 	assign h_out = halfcarry;
 
-	//always @(op2)
-	//begin
-	//	$display("ALU negedge op0 %h op1 %h op2 %h", op0, op1, op2);
-	//end
 endmodule
 

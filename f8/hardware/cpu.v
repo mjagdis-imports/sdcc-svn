@@ -68,7 +68,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	logic [15:0] regwrite_data;
 
 	logic [15:0] sp, next_sp;
-	logic [15:0] pc, old_pc, next_pc;
+	logic [15:0] pc, old_pc, next_pc_noint, next_pc;
 
 	regfile regfile(.addr_in(regwrite_addr), .data_in(regwrite_data), .write_en(regwrite_en), .*);
 
@@ -86,47 +86,50 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	always @(posedge clk)
 		inst <= next_inst;
 
-	// Interupts
+	// Interrupts
 	assign interrupt_start = interrupt && !interrupt_active;
 	always @(posedge clk)
 	begin
 		if(reset)
 			interrupt_active = 0;
-		else if(interrupt && !interrupt_active)
+		else if(interrupt_start && !interrupt_active)
 			interrupt_active = 1;
-		else if(interrupt_active && opcode == OPCODE_TRAP && next_flags[5])
+		else if(interrupt_active && opcode == OPCODE_RETI && next_flags[5])
 			interrupt_active = 0;
 	end
 
 	always_comb
 	begin
-		if(reset)
-			next_pc = 16'h4000;
-		else if(interrupt_start)
-			next_pc = 16'h4004;
-		else if(next_opcode == OPCODE_JP_IMMD || next_opcode == OPCODE_CALL_IMMD)
-			next_pc = next_inst[31:8];
+		if(next_opcode == OPCODE_JP_IMMD || next_opcode == OPCODE_CALL_IMMD)
+			next_pc_noint = next_inst[31:8];
 		else if(next_opcode == OPCODE_JP_Y || next_opcode == OPCODE_CALL_Y)
-			next_pc = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
+			next_pc_noint = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
 		else if(next_opcode == OPCODE_JR_D ||
 			next_opcode == OPCODE_JRZ_D && next_flags[3] || next_opcode == OPCODE_JRNZ_D && !next_flags[3] ||
 			next_opcode == OPCODE_JRC_D && next_flags[1] || next_opcode == OPCODE_JRNC_D && !next_flags[1] ||
 			next_opcode == OPCODE_JRN_D && next_flags[2] || next_opcode == OPCODE_JRNN_D && !next_flags[2] ||
 			next_opcode == OPCODE_JRO_D && next_flags[4] || next_opcode == OPCODE_JRNO_D && !next_flags[4])
-			next_pc = signed'(pc) + signed'(next_inst[15:8]);
+			next_pc_noint = signed'(pc) + signed'(next_inst[15:8]);
 		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode) || opcode_is_yrel(next_opcode) || opcode_is_jr_d(next_opcode) || next_opcode == OPCODE_LDW_Y_D || next_opcode == OPCODE_ADDW_Y_D || next_opcode == OPCODE_ADDW_SP_D)
-			next_pc = pc + 2;
+			next_pc_noint = pc + 2;
 		else if(opcode_is_16_immd(next_opcode) || opcode_is_dir(next_opcode) || opcode_is_zrel(next_opcode))
-			next_pc = pc + 3;
+			next_pc_noint = pc + 3;
 		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && !next_flags[5])
-			next_pc = pc;
+			next_pc_noint = pc;
 		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && next_flags[5])
-			next_pc = dread_data;
+			next_pc_noint = dread_data;
 		else
-			next_pc = pc + 1;
+			next_pc_noint = pc + 1;
+			
+		if(reset)
+			next_pc = 16'h4000;
+		else if(interrupt_start)
+			next_pc = 16'h4004;
+		else
+			next_pc = next_pc_noint;
 	end
 
-always_comb
+	always_comb
 	begin
 		if(interrupt_start)
 			next_sp = sp - 2;
@@ -152,7 +155,7 @@ always_comb
 	// Handle memory reads
 	always_comb
 	begin
-		if(opcode_is_dir(next_opcode))
+		if(opcode_is_dir_read(next_opcode))
 			dread_addr = next_inst[23:8];
 		else if(opcode_is_sprel(next_opcode))
 			dread_addr = next_sp + next_inst[15:8];
@@ -164,7 +167,7 @@ always_comb
 			dread_addr = next_y;
 		else if(next_opcode == OPCODE_MSK_IY_XL_IMMD)
 			dread_addr = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
-		else if(next_opcode == OPCODE_POP_XL || next_opcode == OPCODE_POPW_Y || next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI)
+		else if(next_opcode == OPCODE_POP_XL || next_opcode == OPCODE_POPW_Y || next_opcode == OPCODE_RET && !next_flags[5] || next_opcode == OPCODE_RETI && !next_flags[5])
 			dread_addr = next_sp;
 		else
 			dread_addr = 'x;
@@ -436,6 +439,7 @@ always_comb
 				next_flags[1] = flags[1];
 			// n flag
 			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y && opcode != OPCODE_XCH_YL_YH ||
+				opcode_is_inc(opcode) || opcode_is_dec(opcode) ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
 				opcode == OPCODE_SEX_Y_XL)
@@ -503,6 +507,7 @@ always_comb
 			0 :
 		'x;
 	assign regwrite_en =
+		interrupt_start ? 0 :
 		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
 			(accsel_in == ACCSEL_XH_Y ? 2'b10 : 2'b01) :
 		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :

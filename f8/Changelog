@@ -1,3 +1,11 @@
+2023-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/*.v,
+	  hardware/tests/inc/test.s
+	  hardware/tests/ld_mem_xl/test.s
+	  hardware/tests/timer:
+	  Basic interrupt support.
+
 2023-02-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
