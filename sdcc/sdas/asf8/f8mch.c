@@ -777,6 +777,23 @@ opw:
 		}
 		break;
 
+	case S_0OPWXCH:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		altaccw(r1);
+		if(t2 == S_IX && r2 == Z)
+			outab(0xf4);
+		else if(t2 != S_SPREL || ls_mode(&e2))
+			aerr();
+		else {
+			outab(0xf5);
+			outrb(&e2, R_USGN);
+		}
+		break;
+
+
 	case S_0OPW:
 	case S_0OPWSLL:
 	case S_0OPWRLC:

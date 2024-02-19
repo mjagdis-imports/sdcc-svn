@@ -438,7 +438,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			else
 				next_flags[1] = flags[1];
 			// n flag
-			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y && opcode != OPCODE_XCH_YL_YH ||
+			if (opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y && opcode != OPCODE_XCH_YL_YH && opcode != OPCODE_INCNW_Y ||
 				opcode_is_inc(opcode) || opcode_is_dec(opcode) ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
@@ -464,7 +464,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) ||
 				opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode_is_addw(opcode) || opcode_is_adcw(opcode) || opcode_is_subw(opcode) || opcode_is_sbcw(opcode) ||
-				opcode_is_incw(opcode) || opcode == OPCODE_DECW_SPREL || opcode_is_adcw0(opcode) || opcode_is_sbcw0(opcode) || opcode == OPCODE_NEGW_Y || opcode_is_tstw(opcode))
+				opcode_is_incw(opcode) && opcode != OPCODE_INCNW_Y || opcode == OPCODE_DECW_SPREL || opcode_is_adcw0(opcode) || opcode_is_sbcw0(opcode) || opcode == OPCODE_NEGW_Y || opcode_is_tstw(opcode))
 				next_flags[4] = o_out;
 			else
 				next_flags[4] = flags[4];

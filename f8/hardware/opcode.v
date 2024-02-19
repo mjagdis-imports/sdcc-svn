@@ -97,7 +97,7 @@ function automatic logic opcode_is_clrw(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_incw(opcode_t opcode);
-	return(opcode == OPCODE_INCW_DIR || opcode == OPCODE_INCW_SPREL || opcode == OPCODE_INCW_ZREL || opcode == OPCODE_INCW_Y);
+	return(opcode == OPCODE_INCW_DIR || opcode == OPCODE_INCW_SPREL || opcode == OPCODE_INCW_ZREL || opcode == OPCODE_INCW_Y || opcode == OPCODE_INCNW_Y);
 endfunction
 
 function automatic logic opcode_is_adcw0(opcode_t opcode);
@@ -247,7 +247,7 @@ function automatic logic opcode_is_16_1_y(opcode_t opcode);
 	return(opcode == OPCODE_CLRW_Y || opcode == OPCODE_INCW_Y || opcode == OPCODE_ADCW_Y || opcode == OPCODE_SBCW_Y ||
 		opcode == OPCODE_PUSHW_Y || opcode == OPCODE_TSTW_Y ||
 		opcode == OPCODE_SRLW_Y || opcode == OPCODE_SLLW_Y || opcode == OPCODE_RRCW_Y || opcode == OPCODE_RLCW_Y || opcode == OPCODE_SRAW_Y || opcode == OPCODE_NEGW_Y || opcode == OPCODE_BOOLW_Y || opcode == OPCODE_CLTZ_Y ||
-		opcode == OPCODE_XCH_YL_YH);
+		opcode == OPCODE_XCH_YL_YH || opcode == OPCODE_INCNW_Y);
 endfunction
 
 function automatic logic opcode_is_16_1(opcode_t opcode);

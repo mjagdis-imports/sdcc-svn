@@ -23,7 +23,7 @@ typedef enum logic [5:0] {
 	ALUINST_ORW,
 	ALUINST_XCHB,
 	ALUINST_CLRW,
-	ALUINST_INCW,
+	ALUINST_INCW,   // 0x18
 	ALUINST_DECW,
 	ALUINST_ADCW0,
 	ALUINST_SBCW0,
@@ -173,7 +173,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_SLLW1 ? op0[15:0] << op2[3:0] :
 		aluinst == ALUINST_BOOLW ? |op0[15:0] :
 		aluinst == ALUINST_MUL ? op1[7:0] * op2[7:0] :
-		aluinst == ALUINST_MAD ? op1[7:0] * op2[7:0] + op0[7:0] :
+		aluinst == ALUINST_MAD ? op1[7:0] * op2[7:0] + op0[7:0] + c_in :
 		aluinst == ALUINST_CLTZ ? {ctz(op0), clz(op0)} :
 		aluinst == ALUINST_SEX ? {{8{op0[7]}}, op0[7:0]} :
 		aluinst == ALUINST_MSK ? (op0[7:0] & ~op1[7:0] | op2[7:0] & op1[7:0]) :

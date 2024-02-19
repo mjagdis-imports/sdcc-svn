@@ -1,10 +1,21 @@
 2023-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* alu.v,
+	  cpu.v,
+	  opcode.v,
+	  opcodemap.v,
+	  tests/incnw:
+	  Implement incnw.
+
+2023-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/*.v,
 	  hardware/tests/inc/test.s
 	  hardware/tests/ld_mem_xl/test.s
 	  hardware/tests/timer:
 	  Basic interrupt support.
+	* tests/dec:
+	  Test 8-bit decrement.
 
 2023-02-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
