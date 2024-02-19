@@ -6,6 +6,8 @@
 	ldw	y, #0x4000
 	ldw	sp, y
 
+	; Test sp-relative xchw
+
 	pushw	#0xa55a
 	ldw	y, #0xb44b
 	push	#0x00
@@ -59,6 +61,46 @@ l2:
 l3trap:
 	trap
 l3:
+
+	; Test other xchw
+
+	pushw	#0xa55a
+	ldw	x, #0xb44b
+	ldw	y, sp
+	push	#0x00
+	xch	f, (0, sp)
+	xchw	x, (y)
+	xch	f, (0, sp)
+	pop	yl
+	cpw	x, #0xa55a
+	jrnz	l4trap
+	popw	x
+	cpw	x, #0xb44b
+	jrnz	l4trap
+	cp	yl, #0x00
+	jrz	l4
+l4trap:
+	trap
+l4:
+
+	pushw	#0xa56b
+	ldw	x, #0xb34b
+	ldw	z, sp
+	push	#0x00
+	xch	f, (0, sp)
+	xchw	x, (z)
+	xch	f, (0, sp)
+	pop	yl
+	cpw	x, #0xa56b
+	jrnz	l5trap
+	popw	x
+	cpw	x, #0xb34b
+	jrnz	l5trap
+	cp	yl, #0x00
+	jrz	l5
+l5trap:
+	trap
+l5:
 
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.

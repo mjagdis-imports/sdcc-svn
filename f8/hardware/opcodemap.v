@@ -240,7 +240,7 @@ typedef enum logic [7:0] {
 	OPCODE_ORW_Y_DIR =    8'hf1, // orw y, mm
 	OPCODE_ORW_Y_SPREL =  8'hf2, // orw y, (n, sp)
 	OPCODE_ORW_Y_X =      8'hf3, // orw y, x
-	// todo
+	OPCODE_XCHW_X_IY =    8'hf4, // xchw x, (y)
 	OPCODE_XCHW_Y_SPREL = 8'hf5, // xchw y, (n, sp)
 	OPCODE_INCNW_Y =      8'hf6, // incnw y
 	OPCODE_DECW_SPREL =   8'hf7, // decw (n, sp)

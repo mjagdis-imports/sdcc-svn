@@ -604,7 +604,8 @@ opw:
 			}
 			break;
 		}
-		else if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == X) {
+		else if(t1 == S_IX && (r1 == Y || r1 == Z) && t2 == S_REG && r2 == X) {
+			altaccw(r1);
 			outab(0xcd);
 			break;
 		}
@@ -782,12 +783,15 @@ opw:
 		r1 = rcode;
 		comma(1);
 		t2 = addr(&e2);
-		altaccw(r1);
-		if(t2 == S_IX && r2 == Z)
+		r2 = rcode;
+		if(t1 == S_REG && r1 == X && t2 == S_IX && (r2 == Y || r2 == Z)) {
+			altaccw(r2);
 			outab(0xf4);
+		}
 		else if(t2 != S_SPREL || ls_mode(&e2))
 			aerr();
 		else {
+			altaccw(r1);
 			outab(0xf5);
 			outrb(&e2, R_USGN);
 		}

@@ -3,7 +3,7 @@
 	* sdcc/sdas/asf8/f8.h,
 	  sdcc/sdas/asf8/f8mch.c,
 	  sdcc/sdas/asf8/f8pst.c:
-	  Implement f8 xchw y, (n, sp).
+	  Implement f8 xchw.
 
 2024-02-19 Gabriele Gorla <gorlik@yahoo.com>
 
