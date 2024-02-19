@@ -4,6 +4,8 @@
 	  sdcc/sdas/asf8/f8mch.c,
 	  sdcc/sdas/asf8/f8pst.c:
 	  Implement f8 xchw.
+	* src/f8/gen.c:
+	  Enable use of all jump instructions in comparison codegen.
 
 2024-02-19 Gabriele Gorla <gorlik@yahoo.com>
 

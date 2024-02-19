@@ -4031,7 +4031,7 @@ genCmp (const iCode *ic, iCode *ifx)
     emit3 (A_CP, left->aop, right->aop);
   else if (!sign && size == 2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && aopIsAcc16 (left->aop, 0))
     emit3 (A_CPW, left->aop, right->aop);
-  /*else if (ifx && // Use inverse jump condition WRONG result when both operand are equal
+  else if (ifx && // Use inverse jump condition.
     (size == 1 && aopIsAcc8 (right->aop, 0) && aopIsOp8_2 (left->aop, 0) || size == 2 && aopIsAcc16 (right->aop, 0) && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD)))
     {
       emit3 ((size == 1) ? A_CP : A_CPW, right->aop, left->aop);
@@ -4040,7 +4040,7 @@ genCmp (const iCode *ic, iCode *ifx)
         {
           tlbl = newiTempLabel (0);
           if (!sign)
-            emit2 (IC_TRUE (ifx) ? "jrnc" : "jrc", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrle" : "jrgt", "!tlabel", labelKey2num (tlbl->key));
           else
             emit2 (IC_TRUE (ifx) ? "jrsle" : "jrsgt", "!tlabel", labelKey2num (tlbl->key));
         }
@@ -4048,7 +4048,7 @@ genCmp (const iCode *ic, iCode *ifx)
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);
       emitLabel (tlbl);
       goto release;
-    }*/
+    }
   else
     {
       bool started = false;
