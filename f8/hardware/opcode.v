@@ -271,7 +271,7 @@ function automatic logic opcode_is_dir(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_sprel(opcode_t opcode);
-	return(opcode_is_8_2_sprel(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_16_2_sprel(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_MAD_X_SPREL_YL || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_LDW_ISPREL_Y || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_SPREL_Y);
+	return(opcode_is_8_2_sprel(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_16_2_sprel(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_MAD_X_SPREL_YL || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_LDW_ISPREL_Y || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_SPREL_Y || opcode == OPCODE_XCHW_Y_SPREL);
 endfunction
 
 function automatic logic opcode_is_zrel(opcode_t opcode);
