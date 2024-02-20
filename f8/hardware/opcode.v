@@ -283,6 +283,6 @@ function automatic logic opcode_is_yrel(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_jr_d(opcode_t opcode);
-	return(opcode == OPCODE_JR_D || opcode == OPCODE_DNJNZ_YH_D || opcode == OPCODE_JRZ_D || opcode == OPCODE_JRNZ_D || opcode == OPCODE_JRC_D || opcode == OPCODE_JRNC_D || opcode == OPCODE_JRN_D || opcode == OPCODE_JRNN_D || opcode == OPCODE_JRO_D || opcode == OPCODE_JRNO_D);
+	return(opcode == OPCODE_JR_D || opcode == OPCODE_DNJNZ_YH_D || opcode == OPCODE_JRZ_D || opcode == OPCODE_JRNZ_D || opcode == OPCODE_JRC_D || opcode == OPCODE_JRNC_D || opcode == OPCODE_JRN_D || opcode == OPCODE_JRNN_D || opcode == OPCODE_JRO_D || opcode == OPCODE_JRNO_D || opcode == OPCODE_JRSGE_D || opcode == OPCODE_JRSLT_D || opcode == OPCODE_JRSGT_D || opcode == OPCODE_JRSLE_D || opcode == OPCODE_JRGT_D || opcode == OPCODE_JRLE_D);
 endfunction
 

@@ -108,7 +108,10 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			next_opcode == OPCODE_JRZ_D && next_flags[3] || next_opcode == OPCODE_JRNZ_D && !next_flags[3] ||
 			next_opcode == OPCODE_JRC_D && next_flags[1] || next_opcode == OPCODE_JRNC_D && !next_flags[1] ||
 			next_opcode == OPCODE_JRN_D && next_flags[2] || next_opcode == OPCODE_JRNN_D && !next_flags[2] ||
-			next_opcode == OPCODE_JRO_D && next_flags[4] || next_opcode == OPCODE_JRNO_D && !next_flags[4])
+			next_opcode == OPCODE_JRO_D && next_flags[4] || next_opcode == OPCODE_JRNO_D && !next_flags[4] ||
+			next_opcode == OPCODE_JRSGE_D && !(next_flags[2] ^ next_flags[4]) || next_opcode == OPCODE_JRSLT_D && (next_flags[2] ^ next_flags[4]) ||
+			next_opcode == OPCODE_JRSGT_D && !(next_flags[3] || (next_flags[2] ^ next_flags[4])) || next_opcode == OPCODE_JRSLE_D && (next_flags[3] || (next_flags[2] ^ next_flags[4])) ||
+			next_opcode == OPCODE_JRGT_D && (next_flags[1] && !next_flags[3]) || next_opcode == OPCODE_JRLE_D && (!next_flags[1] || next_flags[3]))
 			next_pc_noint = signed'(pc) + signed'(next_inst[15:8]);
 		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode) || opcode_is_yrel(next_opcode) || opcode_is_jr_d(next_opcode) || next_opcode == OPCODE_LDW_Y_D || next_opcode == OPCODE_ADDW_Y_D || next_opcode == OPCODE_ADDW_SP_D)
 			next_pc_noint = pc + 2;
@@ -420,7 +423,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			next_flags = result_reg[7:0];
 		else
 		begin
-			// todo: h flag
+			// h flag
 			if (opcode_is_sub(opcode) || opcode_is_sbc(opcode) || opcode_is_add(opcode) || opcode_is_adc(opcode) || opcode_is_cp(opcode) || opcode_is_inc(opcode) || opcode_is_dec(opcode))
 				next_flags[0] = h_out;
 			else
@@ -469,12 +472,12 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			else
 				next_flags[4] = flags[4];
 
+			// hidden flags used internally
 			if (opcode == OPCODE_SWAPOP ||
 				(opcode == OPCODE_RET || opcode == OPCODE_RETI) && !flags[5])
 				next_flags[5] = 1;
 			else
 				next_flags[5] = 0;
-
 			if (opcode == OPCODE_ALTACC1)
 				next_flags[7:6] = 1;
 			else if (opcode == OPCODE_ALTACC2)
