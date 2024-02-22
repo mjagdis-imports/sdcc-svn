@@ -7,7 +7,7 @@ typedef enum logic [5:0] {
 	ALUINST_OR,
 	ALUINST_XOR,
 	ALUINST_SRL,
-	ALUINST_SLL,    // 0x80
+	ALUINST_SLL,    // 0x08
 	ALUINST_RRC,
 	ALUINST_RLC,
 	ALUINST_SRA,

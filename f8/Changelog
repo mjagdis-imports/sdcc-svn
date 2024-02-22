@@ -1,7 +1,13 @@
 2023-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/alu.v,
+	  hardware/cpu.v,
+	  hardware/tests/dnjnz:
+	  Implement dnjnz.
+
+2023-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/cpu.v,
-	  hardware/tests/interrupt/test.s,
 	  hardware/tests/interrupt:
 	  Interrupt handling fixes.
 
