@@ -73,13 +73,16 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	regfile regfile(.addr_in(regwrite_addr), .data_in(regwrite_data), .write_en(regwrite_en), .*);
 
 	assign next_opcode = next_inst[7:0];
-	assign opcode = inst[7:0];
+	assign opcode = interrupt_start ? OPCODE_NOP : inst[7:0];
 
 	// Handle program counter
 	always @(posedge clk)
 	begin
 		pc <= next_pc;
-		old_pc = pc;
+		/*if (next_opcode == OPCODE_RETI && opcode != OPCODE_RETI) // Do not update old_pc during first cycle of reti (otherwise reti can get executed twice, after an interrupt that was pending at the end of the previous interrupt handler).
+			old_pc = old_pc;
+		else*/
+			old_pc = pc;
 		sp <= next_sp;
 	end
 
@@ -94,7 +97,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			interrupt_active = 0;
 		else if(interrupt_start && !interrupt_active)
 			interrupt_active = 1;
-		else if(interrupt_active && opcode == OPCODE_RETI && next_flags[5])
+		else if(interrupt_active && opcode == OPCODE_RETI && next_opcode != OPCODE_RETI)
 			interrupt_active = 0;
 	end
 
@@ -117,10 +120,10 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			next_pc_noint = pc + 2;
 		else if(opcode_is_16_immd(next_opcode) || opcode_is_dir(next_opcode) || opcode_is_zrel(next_opcode))
 			next_pc_noint = pc + 3;
-		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && !next_flags[5])
-			next_pc_noint = pc;
-		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && next_flags[5])
+		else if(next_opcode == OPCODE_RET && next_flags[5] || next_opcode == OPCODE_RETI && opcode == OPCODE_RETI) // Second cycle of ret / reti.
 			next_pc_noint = dread_data;
+		else if(next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI)
+			next_pc_noint = pc;
 		else
 			next_pc_noint = pc + 1;
 			
@@ -146,14 +149,14 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			next_sp = sp + 2;
 		else if(opcode == OPCODE_LDW_Y_SP && swapop_in || opcode == OPCODE_ADDW_SP_D)
 			next_sp = result_reg;
-		else if((next_opcode == OPCODE_RET || next_opcode == OPCODE_RETI) && next_flags[5])
+		else if(opcode == OPCODE_RET && flags[5] || next_opcode == OPCODE_RETI && opcode == OPCODE_RETI)
 			next_sp = sp + 2;
 		else
 			next_sp = sp;
 	end
 
 	assign iread_addr = next_pc;
-	assign next_inst = iread_data;
+	assign next_inst = interrupt_start ? {16'h0000, OPCODE_NOP} : iread_data;
 
 	// Handle memory reads
 	always_comb
@@ -170,7 +173,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			dread_addr = next_y;
 		else if(next_opcode == OPCODE_MSK_IY_XL_IMMD)
 			dread_addr = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
-		else if(next_opcode == OPCODE_POP_XL || next_opcode == OPCODE_POPW_Y || next_opcode == OPCODE_RET && !next_flags[5] || next_opcode == OPCODE_RETI && !next_flags[5])
+		else if(next_opcode == OPCODE_POP_XL || next_opcode == OPCODE_POPW_Y || next_opcode == OPCODE_RET && !next_flags[5] || next_opcode == OPCODE_RETI && opcode != OPCODE_RETI)
 			dread_addr = next_sp;
 		else
 			dread_addr = 'x;
@@ -185,7 +188,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	always_comb
 	begin 
 		if (interrupt_start)
-			op0 = old_pc;
+			op0 = opcode == OPCODE_RETI ? next_pc_noint : old_pc;
 		else if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY ||
 			opcode == OPCODE_LD_DIR_XL ||opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL ||
 			opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)
@@ -473,19 +476,23 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				next_flags[4] = flags[4];
 
 			// hidden flags used internally
-			if (opcode == OPCODE_SWAPOP ||
-				(opcode == OPCODE_RET || opcode == OPCODE_RETI) && !flags[5])
-				next_flags[5] = 1;
-			else
-				next_flags[5] = 0;
-			if (opcode == OPCODE_ALTACC1)
-				next_flags[7:6] = 1;
-			else if (opcode == OPCODE_ALTACC2)
-				next_flags[7:6] = 2;
-			else if (opcode == OPCODE_ALTACC3)
-				next_flags[7:6] = 3;
-			else
-				next_flags[7:6] = 0;
+			if (opcode == OPCODE_NOP || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_RETI && next_opcode != OPCODE_RET)
+				next_flags[7:5] = flags[7:5];
+			else begin
+				if (opcode == OPCODE_SWAPOP ||
+					opcode == OPCODE_RET && !flags[5])
+					next_flags[5] = 1;
+				else
+					next_flags[5] = 0;
+				if (opcode == OPCODE_ALTACC1)
+					next_flags[7:6] = 1;
+				else if (opcode == OPCODE_ALTACC2)
+					next_flags[7:6] = 2;
+				else if (opcode == OPCODE_ALTACC3)
+					next_flags[7:6] = 3;
+				else
+					next_flags[7:6] = 0;
+			end
 		end
 	end
 

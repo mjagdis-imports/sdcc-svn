@@ -1,12 +1,27 @@
+2023-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/cpu.v,
+	  hardware/tests/interrupt/test.s,
+	  hardware/tests/interrupt:
+	  Interrupt handling fixes.
+
+2023-02-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/cpu.v,
+	  hardware/opcode.v,
+	  hardware/opcodemap.v,
+	  hardware/tests/jr/test.s:
+	  Implement remaining jr variants.
+
 2023-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* alu.v,
-	  cpu.v,
-	  opcode.v,
-	  opcodemap.v,
-	  tests/incnw,
-	  tests/xchw,
-	  tests/ldw_mem_x,
+	* hardware/alu.v,
+	  hardware/cpu.v,
+	  hardware/opcode.v,
+	  hardware/opcodemap.v,
+	  hardware/tests/incnw,
+	  hardware/tests/xchw,
+	  hardware/tests/ldw_mem_x,
 	  Implement incnw, xchw y, ldw (y), x, ldw (n, y), x.
 
 2023-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
@@ -16,7 +31,7 @@
 	  hardware/tests/ld_mem_xl/test.s
 	  hardware/tests/timer:
 	  Basic interrupt support.
-	* tests/dec:
+	* hardware/tests/dec:
 	  Test 8-bit decrement.
 
 2023-02-08 Philipp Klaus Krause <philipp@colecovision.eu>
