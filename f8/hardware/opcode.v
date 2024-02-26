@@ -255,7 +255,7 @@ function automatic logic opcode_is_16_1(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_immd(opcode_t opcode);
-	return(opcode_is_8_2_immd(opcode) || opcode == OPCODE_PUSH_IMMD || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LD_XL_IMMD);
+	return(opcode_is_8_2_immd(opcode) || opcode == OPCODE_PUSH_IMMD || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LD_XL_IMMD || opcode == OPCODE_LD_YH_IMMD);
 endfunction
 
 function automatic logic opcode_is_16_immd(opcode_t opcode);

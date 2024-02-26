@@ -149,7 +149,7 @@ typedef enum logic [7:0] {
 	OPCODE_XCH_XL_SPREL = 8'h91, // xch	xl, (n, sp)
 	OPCODE_XCH_XL_IY =    8'h92, // xch	xl, (y)
 	OPCODE_XCH_YL_YH =    8'h93, // xch	yl, yh
-	// todo
+	OPCODE_LD_YH_IMMD =   8'h94, // ld yh, #i
 	OPCODE_ROT_XL_IMMD =  8'h95, // rot xl, #i
 	OPCODE_SRA_XL =       8'h96, // sra xl
 	OPCODE_DAA_XL =       8'h97, // daa xl

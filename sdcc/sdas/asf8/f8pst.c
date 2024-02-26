@@ -336,7 +336,6 @@ struct	mne	mne[] = {
 
 	/* relative jumps */
     {	NULL,	"jr",		S_JR,		0,	0xd0	},
-    {	NULL,	"dnjz",		S_JR,		0,	0xd1	},
     {	NULL,	"jrz",		S_JR,		0,	0xd2	},
     {	NULL,	"jrnz",		S_JR,		0,	0xd3	},
     {	NULL,	"jrc",		S_JR,		0,	0xd4	},
@@ -351,6 +350,7 @@ struct	mne	mne[] = {
     {	NULL,	"jrsle",	S_JR,		0,	0xdd	},
     {	NULL,	"jrgt",		S_JR,		0,	0xde	},
     {	NULL,	"jrle",		S_JR,		0,	0xdf	},
+    {	NULL,	"dnjnz",	S_DNJNZ,	0,	0xd1	},
 
     /* other instructions */
 	{	NULL,	"call",		S_JP,		0,	0x66	},

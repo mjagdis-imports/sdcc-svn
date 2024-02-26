@@ -1,3 +1,10 @@
+2023-02-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/cpu.v,
+	  hardware/opcode.v,
+	  hardware/opcodemap.v,
+	  hardware/tests/ld_yh:
+
 2023-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu.v,

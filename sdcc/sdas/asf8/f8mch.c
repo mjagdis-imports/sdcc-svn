@@ -417,6 +417,13 @@ opw:
 			outab(r1 == YH ? 0x88 : 0x8a);
 			break;
 		}
+		else if (t1 == S_REG && t2 == S_IMM && // Use both swapop and altacc.
+		  (r1 == YH || r1 == ZH)) { 
+		    altaccw(r1 == ZH ? Z : Y);
+			outab(0x94);
+			outrb(&e2, R_NORM);
+			break;
+		}
 		else if(t1 == S_REG && !(t2 == S_REG && r2 == XL)) {
 			altacc(r1);
 			switch(t2) {
@@ -889,6 +896,34 @@ sex:
 			outrb(&e1, R_PCR);
 		}
 		if(e1.e_mode != S_USER) {
+			rerr();
+		}
+		break;
+
+	case S_DNJNZ:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		if (t1 == S_REG && r1 == YH)
+			altaccw(Y);
+		else if (t1 == S_REG && r1 == XH)
+			altaccw(X);
+		else if (t1 == S_REG && r1 == ZH)
+			altaccw(Z);
+		else
+			aerr();
+		expr(&e2, 0);
+		outab(op);
+		if(mchpcr(&e2)) {
+			int v2 = (int)(e2.e_addr - dot.s_addr + 1);
+			if((v2 < -128) || (v2 > 127))
+				aerr();
+			outab(v2);
+		} else {
+			e1.e_addr -= 1;
+			outrb(&e2, R_PCR);
+		}
+		if(e2.e_mode != S_USER) {
 			rerr();
 		}
 		break;
