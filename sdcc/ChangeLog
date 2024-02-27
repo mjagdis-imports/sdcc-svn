@@ -1,3 +1,8 @@
+2024-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/main.c:
+	  Code cleanup: f8 port does not support different memory models.
+
 2024-02-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8.h,

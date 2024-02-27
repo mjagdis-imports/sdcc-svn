@@ -305,23 +305,6 @@ hasExtBitOp (int op, sym_link *left, int right)
   return (op == GETABIT || op == GETBYTE || op == GETWORD);
 }
 
-static const char *
-get_model (void)
-{
-  switch (options.model)
-    {
-    case MODEL_MEDIUM:
-      return ("f8");
-      break;
-    case MODEL_LARGE:
-      return ("stm8-large");
-      break;
-    default:
-      werror (W_UNKNOWN_MODEL, __FILE__, __LINE__);
-      return "unknown";
-    }
-}
-
 /** $1 is always the basename.
     $2 is always the output file.
     $3 varies
@@ -345,14 +328,14 @@ PORT f8_port =
 {
   TARGET_ID_F8,
   "f8",
-  "F8",                       /* Target name */
+  "F8",                         /* Target name */
   NULL,                         /* Processor name */
   {
     glue,
     true,                       /* We want f8_genIVT to be triggered */
-    MODEL_MEDIUM | MODEL_LARGE,
-    MODEL_MEDIUM,
-    &get_model,                 /* model string used as library destination */
+    NO_MODEL,
+    NO_MODEL,
+    0,
   },
   {                             /* Assembler */
     f8AsmCmd,
