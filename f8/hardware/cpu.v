@@ -55,7 +55,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	logic h_in, c_in, swapop_in, c_out, z_out, n_out, o_out, h_out;
 	reg [7:0] flags;
 
-	wire interupt_start;
+	wire interrupt_start;
 	reg interrupt_active;
 
 	alu alu(.*);
@@ -104,7 +104,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	always_comb
 	begin
 		if(next_opcode == OPCODE_JP_IMMD || next_opcode == OPCODE_CALL_IMMD)
-			next_pc_noint = next_inst[31:8];
+			next_pc_noint = next_inst[23:8];
 		else if(next_opcode == OPCODE_JP_Y || next_opcode == OPCODE_CALL_Y)
 			next_pc_noint = (next_accsel_in == ACCSEL_ZL_X) ? next_x : (next_accsel_in == ACCSEL_YL_Z) ? next_z : next_y;
 		else if(next_opcode == OPCODE_JR_D ||
@@ -262,7 +262,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		else if(opcode_is_8_2_yh(opcode))
 			op1 = y[15:8];
 		else if(opcode_is_16_2_immd(opcode) || opcode == OPCODE_CPW_Y_IMMD || opcode == OPCODE_MSK_IY_XL_IMMD)
-			op1 = inst[31:8];
+			op1 = inst[23:8];
 		else if(opcode_is_16_2_dir(opcode) || opcode_is_16_2_sprel(opcode) || opcode == OPCODE_LDW_ISPREL_Y || opcode == OPCODE_XCHW_Y_SPREL)
 			op1 = dread_data[15:0];
 		else if(opcode_is_16_2_x(opcode) || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X)

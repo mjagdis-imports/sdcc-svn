@@ -4,7 +4,8 @@
 	  hardware/tests/watchdog/test.s,
 	  hardware/testsystem.v,
 	  hardware/timer.v:
-	  hardware/tests/watchdog:
+	  hardware/tests/watchdog,
+	  hardware/Makefile:
 	  Implement basic watchdog and trap reset.
 
 2023-02-26 Philipp Klaus Krause <philipp@colecovision.eu>

@@ -9,10 +9,10 @@ clean:
 	rm -f f8-testsystem f8-simpletestsystem tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.vcd tests/*/*.log
 
 f8-testsystem: *.v
-	iverilog -g2009 -o $@ testsystem.v
+	iverilog -g2009 -Wall -o $@ testsystem.v
 
 f8-simpletestsystem: *.v
-	iverilog -g2009 -o $@ simpletestsystem.v
+	iverilog -g2009 -Wall -o $@ simpletestsystem.v
 
 TESTDIRS = ${shell find tests/* -type d -print}
 TESTSS = $(TESTDIRS:=/test.s)
