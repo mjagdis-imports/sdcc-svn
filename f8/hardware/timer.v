@@ -78,6 +78,7 @@ module timer #(parameter NUM_INPUTS = 1) (output logic [15:0] counter_out, reloa
 			countreg[15:8] = counter_in[15:8];
 	end
 	assign counter_out = countreg;
+	assign reload_out = reloadreg;
 	assign compare_out = comparereg;
 
 	// Config

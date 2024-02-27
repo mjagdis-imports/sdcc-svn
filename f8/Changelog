@@ -1,3 +1,12 @@
+2023-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/cpu.v,
+	  hardware/tests/watchdog/test.s,
+	  hardware/testsystem.v,
+	  hardware/timer.v:
+	  hardware/tests/watchdog:
+	  Implement basic watchdog and trap reset.
+
 2023-02-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,

@@ -40,7 +40,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	output [15 : 0] dwrite_data;
 	output logic [1:0] dwrite_en;
 	input clk, reset, interrupt;
-	output trap;
+	output reg trap;
 
 	wire [23:0] next_inst;
 	wire [7:0] next_opcode;
@@ -570,8 +570,13 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		2'b00;
 	assign dwrite_data = dwrite_en ? result_mem : 'x;
 
-	assign trap =
-		!reset && (opcode == OPCODE_TRAP);
+	always @(posedge clk)
+	begin
+		if (!reset && (opcode == OPCODE_TRAP))
+			trap = 1;
+		else
+			trap = 0;
+	end
 
 	always @(posedge clk)
 	begin
@@ -581,10 +586,10 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			flags = next_flags;
 	end
 
-	always @(negedge clk)
-	begin
-		$display("CPU negedge pc %h nextinst %h inst %h", pc, next_inst, inst);
-	end
+	//always @(negedge clk)
+	//begin
+	//	$display("CPU negedge pc %h nextinst %h inst %h", pc, next_inst, inst);
+	//end
 endmodule
 
 `end_keywords
