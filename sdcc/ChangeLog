@@ -1,3 +1,36 @@
+2024-02-29 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  change safeLabelKey2num macro to safeLabeNum function.
+
+2024-02-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/gen.c,
+	  src/SDCCsymt.c,
+	  support/regression/tests/bug-3711.c:
+	  Fix bug #3711.
+
+2024-02-20 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Rename jflag in genIfxJump from "a" to "z".
+	  Refactor genAnd, GenOr, GenXor.
+	
+2024-02-19 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Remove a few dead code paths.
+	  Improve tracking of literals in the RegTemp stack.
+	* src/mos6502/peeph.def:
+	  Add rule for tax/tay followed by tax/tay.
+	
+2024-02-17 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/main.c,
+	  src/mos6502/ralloc.c:
+	  Fix compile warnings and a few typos.
+	
 2024-02-10 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* device/include/mcs51/stc89.h:
