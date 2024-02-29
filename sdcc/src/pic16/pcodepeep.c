@@ -32,7 +32,7 @@
 #include "pcodeflow.h"
 #include "ralloc.h"
 
-pCodeOp *pic16_popCopyGPR2Bit(pCodeOpReg *pc, int bitval);
+pCodeOp *pic16_popCopyGPR2Bit(pCodeOp *pc, int bitval);
 
 pCodeOp *pic16_newpCodeOpWild(int id, pCodeWildBlock *pcwb, pCodeOp *subtype);
 pCodeOp *pic16_newpCodeOpWild2(int id, int id2, pCodeWildBlock *pcwb, pCodeOp *subtype, pCodeOp *subtype2);
@@ -41,7 +41,7 @@ pCode * pic16_findNextInstruction(pCode *pc);
 int pic16_getpCode(char *mnem,int dest);
 int pic16_getpCodePeepCommand(char *cmd);
 void pic16_pBlockMergeLabels(pBlock *pb);
-char *pic16_pCode2str(char *str, int size, pCode *pc);
+char *pic16_pCode2str(char *str, size_t size, pCode *pc);
 //char *pic16_get_op(pCodeOp *pcop,char *buf, size_t buf_size);
 pCodeOp *pic16_popCombine2(pCodeOp *, pCodeOp *, int);
 
@@ -302,14 +302,14 @@ static pCodeOp *cvt_extract_status(const char *reg, char *bit)
   if(len == 1) {
     // check C,Z
     if(toupper((unsigned char)*bit) == 'C')
-      return PCOP(pic16_popCopyGPR2Bit(&pic16_pc_status,PIC_C_BIT));
+      return PCOP(pic16_popCopyGPR2Bit(&pic16_pc_status.pcop,PIC_C_BIT));
     if(toupper((unsigned char)*bit) == 'Z')
-      return PCOP(pic16_popCopyGPR2Bit(&pic16_pc_status,PIC_Z_BIT));
+      return PCOP(pic16_popCopyGPR2Bit(&pic16_pc_status.pcop,PIC_Z_BIT));
   }
 
   // Check DC
   if(len ==2 && toupper((unsigned char)bit[0]) == 'D' && toupper((unsigned char)bit[1]) == 'C')
-    return PCOP(pic16_popCopyGPR2Bit(&pic16_pc_status,PIC_DC_BIT));
+    return PCOP(pic16_popCopyGPR2Bit(&pic16_pc_status.pcop,PIC_DC_BIT));
 
   return NULL;
 
@@ -923,7 +923,7 @@ static void * cvt_altpat_mnem4a(void *pp, pCodeWildBlock *pcwb)
 /*                    by SDCCpeeph.c into a string of tokens.      */
 /*                                                                 */
 /*                                                                 */
-/* The tokenizer is of the classic type. When an item is encounterd*/
+/* The tokenizer is of the classic type. When an item is encountered*/
 /* it is converted into a token. The token is a structure that     */
 /* encodes the item's type and it's value (when appropriate).      */
 /*                                                                 */
@@ -1618,7 +1618,7 @@ static void printpCodeString(FILE *of, pCode *pc, int max)
 /* DLList * DLL_append                                             */
 /*                                                                 */
 /* Append a DLList object to the end of a DLList (doubly linked    */
-/* list). If The list to which we want to append is non-existant   */
+/* list). If The list to which we want to append is non-existent   */
 /* then one is created. Other wise, the end of the list is sought  */
 /* out and a new DLList object is appended to it. In either case,  */
 /* the void *data is added to the newly created DLL object.        */
@@ -1830,7 +1830,7 @@ static int pCodePeepMatchLabels(pCodePeep *peepBlock, pCode *pcs, pCode *pcd)
 /* ination has no wild cards, then MatchLine will compare the two  */
 /* pcodes (src and dest) for a one-to-one match. If the destination*/
 /* has wildcards, then those get expanded. When a wild card is     */
-/* encountered for the first time it autmatically is considered a  */
+/* encountered for the first time it automatically is considered a  */
 /* match and the object that matches it is referenced in the       */
 /* variables or opcodes array (depending on the type of match).    */
 /*                                                                 */

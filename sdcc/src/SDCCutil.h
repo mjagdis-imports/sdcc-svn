@@ -39,6 +39,11 @@ hTab *populateStringHash (const char **pin);
  */
 char *shell_escape (const char *str);
 
+/** Escape string for string constants.
+ *  Returns dynamically allocated string, which should be free-ed.
+ */
+char *string_escape (const char *str);
+
 /** Prints elements of the set to the file, each element on new line
  */
 void fputStrSet (FILE * fp, set * list);
@@ -48,7 +53,7 @@ void fputStrSet (FILE * fp, set * list);
  */
 set *processStrSet (set * list, const char *pre, const char *post, char *(*file) (const char *));
 
-/** Given a set returns a string containing all of the strings seperated
+/** Given a set returns a string containing all of the strings separated
  *  by spaces. The returned string is on the heap.
  */
 const char *joinStrSet (set * list);
@@ -86,7 +91,7 @@ char *buildMacros (const char *cmd);
 
 void populateMainValues (const char **ppin);
 
-char *buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3, set *list);
+char *buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3, set *list, set *list2);
 
 char *buildCmdLine2 (const char *pcmd, ...);
 

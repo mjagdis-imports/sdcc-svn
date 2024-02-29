@@ -30,6 +30,11 @@
  */
 
 /*
+ * xerr messages Copyright (C) 1989-2021  Alan R. Baldwin
+ * from ASxxxx 5.40
+ */
+
+/*
  * Extensions: P. Felber
  *
  * Altered by Leland Morrison to support rabbit 2000 
@@ -116,7 +121,7 @@ VOID  machine(struct mne * mp)
                         if ((v1 = admode(CND)) != 0) {
                                 outab(op | (v1<<3));
                         } else {
-                                qerr();
+                                xerr('a', "Condition code required.");
                         }
                 } else {
                         outab(0xC9);
@@ -124,7 +129,7 @@ VOID  machine(struct mne * mp)
                 break;
 
         case S_PUSH:
-                if (admode(R16X)) {
+                if (admode(R16AF)) {
                         outab(op+0x30);
                         break;
                 } else if ((v1 = admode(R8IP)) != 0) {
@@ -153,7 +158,7 @@ VOID  machine(struct mne * mp)
                                 break;
                         }
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_RST:
@@ -164,11 +169,11 @@ VOID  machine(struct mne * mp)
                  *   rabbit processor
                  */
                 if ((v1 == 0x00) || (v1 == 0x08) || (v1 == 0x30)) {
-                        aerr( );
+                        xerr('a', "Rabbit 2000/4000: 0x00, 0x08, and 0x30 are not allowed");
                         v1 = 0;
                 }
                 if (v1 & ~0x38) {
-                        aerr();
+                        xerr('a', "Allowed values: N * 0x08, N = 0 -> 7."); 
                         v1 = 0;
                 }
                 outab(op|v1);
@@ -180,7 +185,7 @@ VOID  machine(struct mne * mp)
                 expr(&e1, 0);
                 abscheck(&e1);
                 if (e1.e_addr > 3) {
-                        aerr();
+                        xerr('a', "Values of 0, 1, 2, and 3 are valid.");
                         e1.e_addr = 0;
                 }
                 outab(op);
@@ -200,7 +205,7 @@ VOID  machine(struct mne * mp)
                 addr(&e2);
                 abscheck(&e1);
                 if (genop(0xCB, op, &e2, 0) || t1)
-                        aerr();
+                        xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_RL:
@@ -331,7 +336,7 @@ VOID  machine(struct mne * mp)
                         /* sbc  hl, [bc|de|hl|sp] */
                         if ( v2 != gixiy(v2) )
                                 /* sorry, sbc hl, [ix|iy] do not exist */
-                                aerr( );
+                                xerr('a', "Second argument: must be BC, DE, HL or SP.");
 
                         outab(0xED);
                         outab(0x42 | v2 << 4);
@@ -346,7 +351,7 @@ VOID  machine(struct mne * mp)
                         /*  EC     or   hl, de */
                         /*  ED 48  cp   hl, de */
                         if (rf == S_SBC) /* op == 0x98 */
-                                aerr( );
+                                xerr('a', "Not valid for SBC.");
 
                         switch( op ) {
                         case 0x90:  /* sub */ outab(0x55); break;
@@ -377,7 +382,7 @@ VOID  machine(struct mne * mp)
                         /* ED F6   or   jkhl, bcde  */
                         /* ED 58   cp   jkhl, bcde  */
                         if (rf == S_SBC) /* op == 0x98 */
-                                aerr( );
+                                xerr('a', "Not valid for SBC.");
 
                         outab(0xED);
                         switch( op ) {
@@ -397,7 +402,7 @@ VOID  machine(struct mne * mp)
                         break;
                 }
 
-                aerr( );
+                xerr('a', "Not valid for SBC.");
                 break;
 
         case S_ADD:
@@ -421,7 +426,7 @@ VOID  machine(struct mne * mp)
                         }
 
                         if (genop(0, op, &e1, 1))
-                                aerr();
+                                xerr('a', "Invalid Addressing Mode.");
                         break;
                 }
                 if ((t1 == S_R8) && (e1.e_addr == A)) {
@@ -430,7 +435,7 @@ VOID  machine(struct mne * mp)
                                 outab(0x7F);
 
                         if (genop(0, op, &e2, 1))
-                                aerr();
+                                xerr('a', "Second argument: Invalid Addressing Mode.");
                         break;
                 }
 
@@ -478,7 +483,7 @@ VOID  machine(struct mne * mp)
                         outab(0x09 | (v2 << 4));
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_LD:
@@ -499,7 +504,7 @@ VOID  machine(struct mne * mp)
                                 /* exception for "ld a,a" 
                                  * on rabbit 4000 0x7F is a prefix instead of "ld a,a"
                                  */
-                                aerr( );
+                                xerr('a', "Not A Rabbit 4000 Instruction");
                         }
 
                         if ((v1 == A) && (t2 == S_R8)) {
@@ -719,6 +724,15 @@ VOID  machine(struct mne * mp)
                         outab(0x9F);
                         break;
                 }
+
+                if ((t1 == S_R16_ALT) && (t2 == S_R16)) {
+                        if ((v2 == BC) || (v2 == DE)) {
+                                /* LD BC'|DE'|HL', BC|DE */
+                                outab(0xED);
+                                outab(((v2 == BC) ? 0x49 : 0x41) | (v1 << 4));
+                                break;
+                        }
+                }
       
                 /* 16-bit operations valid only in rabbit 4000 mode */
                 if (r4k_mode && (t1 == S_R16) && (t2 == S_R16)) {
@@ -785,7 +799,7 @@ VOID  machine(struct mne * mp)
                                 break;
                         }
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
       
         case S_EX:
@@ -805,6 +819,19 @@ VOID  machine(struct mne * mp)
                                         break;
                                 }
                         }
+                        else if (t1 == S_R16_ALT) {
+                                if ((v1 == DE) && (v2 == HL)) {
+                                        /* EX DE', HL */
+                                        outab(0xE3);
+                                        break;
+                                }
+                                if (r4k_mode && (v1==BC) && (v2==HL)) {
+                                        /* EX BC', HL */
+                                        outab(0xED);
+                                        outab(0x74);
+                                        break;
+                                }
+                        }
         
                         if ((t1 == S_IDSP) && (v1 == 0)) {
                                 /* 0xE3 is EX DE',HL on rabbit 2000 
@@ -821,7 +848,7 @@ VOID  machine(struct mne * mp)
                                 }
                         }
                 }
-                if ((t1 == S_R16X) && (t2 == S_R16X)) {
+                if ((t1 == S_R16AF) && (t2 == S_R16AF_ALT)) {
                         outab(0x08);
                         break;
                 }
@@ -829,7 +856,7 @@ VOID  machine(struct mne * mp)
                         outab(0xB4);
                         break;
                 }
-                aerr();
+		xerr('a', "Invalid Addressing Mode.");
                 break;
       
         case S_IN:
@@ -865,7 +892,7 @@ VOID  machine(struct mne * mp)
                                 break;
                         }
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
       
         case S_NEG:
@@ -903,7 +930,7 @@ VOID  machine(struct mne * mp)
                         if ((v1 &= 0xFF) <= 0x03) {
                                 op += (v1+1)<<3;
                         } else {
-                                aerr();
+                                xerr('a', "Condition code required.");
                         }
                         comma(1);
                 }
@@ -912,7 +939,7 @@ VOID  machine(struct mne * mp)
                 if (mchpcr(&e2)) {
                         v2 = (int) (e2.e_addr - dot.s_addr - 1);
                         if (pass == 2 && ((v2 < -128) || (v2 > 127)))
-                                aerr();
+                                xerr('a', "Branching Range Exceeded.");
                         outab(v2);
                 } else {
                         outrb(&e2, R_PCR);
@@ -947,7 +974,7 @@ VOID  machine(struct mne * mp)
                         outab(0xE9);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 /*
     case X_HD64:
@@ -955,12 +982,16 @@ VOID  machine(struct mne * mp)
       break;
 */
         case HD_INH2:
+                if (mchtyp != X_HD64)
+                        xerr('a', "A Z180 Instruction.");
                 outab(0xED);
                 outab(op);
                 break;
       
         case HD_IN:
         case HD_OUT:
+                if (mchtyp != X_HD64)
+                        xerr('a', "A Z180 Instruction.");
                 if (rf == HD_IN) {
                         t1 = addr(&e1);
                         comma(1);
@@ -976,20 +1007,24 @@ VOID  machine(struct mne * mp)
                         outrb(&e2, 0);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
       
         case HD_MLT:
+                if (mchtyp != X_HD64)
+                        xerr('a', "A Z180 Instruction.");
                 t1 = addr(&e1);
                 if ((t1 == S_R16) && ((v1 = (int) e1.e_addr) <= SP)) {
                         outab(0xED);
                         outab(op | (v1<<4));
                         break;
                 }
-                aerr();
+                xerr('a', "Only BC, DE, HL and SP are allowed.");
                 break;
       
         case HD_TST:
+                if (mchtyp != X_HD64)
+                        xerr('a', "A Z180 Instruction.");
                 t1 = addr(&e1);
                 if (t1 == S_R8) {
                         outab(0xED);
@@ -1007,10 +1042,12 @@ VOID  machine(struct mne * mp)
                         outrb(&e1, 0);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
       
         case HD_TSTIO:
+                if (mchtyp != X_HD64)
+                        xerr('a', "A Z180 Instruction.");
                 t1 = addr(&e1);
                 if (t1 == S_IMMED) {
                         outab(0xED);
@@ -1018,7 +1055,7 @@ VOID  machine(struct mne * mp)
                         outrb(&e1, 0);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case X_LJP:
@@ -1044,19 +1081,94 @@ VOID  machine(struct mne * mp)
                         outab(op);
                         break;
                 }
-                aerr( );
+                xerr('a', "Invalid Addressing Mode.");
+                break;
+
+        case X_LDP:
+                t1 = addr(&e1);
+                v1 = (int) e1.e_addr;
+                comma(1);
+                t2 = addr(&e2);
+                v2 = (int) e2.e_addr;
+                /* LDP (mn), HL|IX|IY */
+                if ((t1 == S_INDM) && (t2 == S_R16)) {
+                        if ((v2 != HL) && (v2 != IX) && (v2 != IY)) {
+                                xerr('a', "Second argument: must be HL, IX, or IY.");
+                                break;
+                        }
+                        if (v2 == HL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(v2);
+                        }
+                        outab(op | 0x01);
+                        outrw(&e1, 0);
+                        break;
+                }
+                /* LDP HL|IX|IY, (mn) */
+                if ((t1 == S_R16) && (t2 == S_INDM)) {
+                        if ((v1 != HL) && (v1 != IX) && (v1 != IY)) {
+                                xerr('a', "First argument: must be HL, IX, or IY.");
+                                break;
+                        }
+                        if (v1 == HL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(v1);
+                        }
+                        outab(op | 0x09);
+                        outrw(&e2, 0);
+                        break;
+                }
+                /* LDP (HL|IX|IY), HL */
+                if ((t2 == S_R16) && (v2 == HL)) {
+                        if ((t1 != S_IDHL) && (t1 != S_IDIX) && (t1 != S_IDIY)) {
+                                xerr('a', "First argument: must be (HL), (IX), or (IY).");
+                                break;
+                        }
+                        if ((e1.e_base.e_ap != NULL) || (v1 != 0)) {
+                                xerr('a', "First argument: (HL+D, (IX+D), and (IY+D) are invalid.");
+                                break;
+                        }
+                        if (t1 == S_IDHL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(t1);
+                        }
+                        outab(op);
+                        break;
+                }
+                /* LDP HL, (HL|IX|IY) */
+                if ((t1 == S_R16) && (v1 == HL)) {
+                        if ((t2 != S_IDHL) && (t2 != S_IDIX) && (t2 != S_IDIY)) {
+                                xerr('a', "Second argument: must be (HL), (IX), or (IY).");
+                                break;
+                        }
+                        if ((e2.e_base.e_ap != NULL) || (v2 != 0)) {
+                                xerr('a', "Second argument: (HL+D, (IX+D), and (IY+D) are invalid.");
+                                break;
+                        }
+                        if (t2 == S_IDHL) {
+                                outab(0xED);
+                        } else {
+                                gixiy(t2);
+                        }
+                        outab(op | 0x08);
+                        break;
+                }
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case R3K_INH1:
                 if (!(r3k_mode || r4k_mode))
-                        err('o');
+                        xerr('o', "A Rabbit 3000/4000 Instruction.");
       
                 outab(op);
                 break;
       
         case R3K_INH2:
                 if (!(r3k_mode || r4k_mode))
-                        err('o');
+                        xerr('o', "A Rabbit 3000/4000 Instruction.");
       
                 outab(0xED);
                 outab(op);
@@ -1064,7 +1176,7 @@ VOID  machine(struct mne * mp)
 
         case R4K_INH2:
                 if (!r4k_mode)
-                        err('o');
+                        xerr('o', "A Rabbit 4000 Instruction.");
       
                 outab(0xED);
                 outab(op);
@@ -1072,14 +1184,14 @@ VOID  machine(struct mne * mp)
       
         case X_R4K_MULU:
                 if (!r4k_mode)
-                        err('o');
+                        xerr('o', "A Rabbit 4000 Instruction.");
       
                 outab(op);
                 break;
       
         case X_JRE:
                 if (!r4k_mode)
-                        err('o');
+                        xerr('o', "A Rabbit 4000 Instruction.");
       
                 if ((v1 = admode(ALT_CND)) != 0) {
                         op += v1<<3;
@@ -1104,7 +1216,7 @@ VOID  machine(struct mne * mp)
       
         case X_CLR:
                 if (!r4k_mode)
-                        err('o');
+                        xerr('o', "A Rabbit 4000 Instruction.");
                 t1 = addr(&e1);
                 v1 = (int) e1.e_addr;
                 if ((t1 == S_R16) && (v1 == HL)) {
@@ -1115,7 +1227,8 @@ VOID  machine(struct mne * mp)
                 break;
 
         default:
-                err('o');
+                xerr('o', "Internal Opcode Error.");
+                break;
         }
 }
 
@@ -1142,7 +1255,7 @@ genop(int pop, int op, struct expr *esp, int f)
          */
         if (t1 == S_IDHL) {
                 if ((esp->e_base.e_ap != NULL) || (esp->e_addr != 0))
-                        aerr();
+                        xerr('a', "(HL+D) is invalid.");
                 if (pop)
                         outab(pop);
                 outab(op|0x06);
@@ -1233,6 +1346,11 @@ minit(void)
          * Byte Order
          */
         hilo = 0;
+
+        /*
+         * Address Space
+         */
+        exprmasks(3);
 
         if (pass == 0) {
                 mchtyp = X_R2K;

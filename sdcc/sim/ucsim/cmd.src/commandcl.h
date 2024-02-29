@@ -62,15 +62,19 @@ public:
   class cl_console_base *con;
 
 public:
-  cl_cmdline(class cl_app *the_app, char *acmd, class cl_console_base *acon);
+  cl_cmdline(class cl_app *the_app, const char *acmd, class cl_console_base *acon);
   virtual ~cl_cmdline(void);
   virtual int init(void);
 
 private:
   virtual void split_out_string(char **_start, char **_end);
   virtual void split_out_output_redirection(char **_start, char **_end);
+  virtual void add_bit(char *dot, char *colon, class cl_cmd_arg *sfr);
   virtual void split_out_bit(char *dot, char *param_str);
   virtual void split_out_array(char *dot, char *param_str);
+  virtual int token_length(char *start);
+  virtual chars get_token(char *start);
+  virtual bool expand_commands(chars *params);
 public:
   virtual int split(void);
   virtual int shift(void);
@@ -231,9 +235,9 @@ CLASS_NAME::do_work(class cl_uc *uc,\
   void \
   CLASS_NAME::set_help(void) \
   { \
-    usage_help=(char*)USAGE_HLP;		\
-    short_help=(char*)SHORT_HLP;		\
-    long_help=(char*)LONG_HLP;			\
+    usage_help=USAGE_HLP;		\
+    short_help=SHORT_HLP;		\
+    long_help=LONG_HLP;			\
   }
 
 // Command set is list of cl_cmd objects

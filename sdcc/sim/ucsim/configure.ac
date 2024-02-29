@@ -3,9 +3,60 @@
 AC_PREREQ(2.60)
 AC_INIT
 AC_CONFIG_SRCDIR(.version)
-AC_CONFIG_HEADER(ddconfig.h:ddconfig_in.h)
+AC_CONFIG_HEADERS([ddconfig.h:ddconfig_in.h])
+
+def_ucsim="yes"
+def_dlso="no"
+def_mcs51_port="yes"
+def_p1516="yes"
+def_avr="yes"
+def_serio="yes"
+def_z80="yes"
+def_tlcs="yes"
+def_m6800="yes"
+def_m6809="yes"
+def_m68hc11="yes"
+def_m68hc12="yes"
+def_pblaze="yes"
+def_i8085="yes"
+def_i8048="yes"
+def_st7="yes"
+
+in_sdcc="no"
+src_root=$(dirname $0)
+dnl echo "src_root=$src_root"
+if test "$src_root"x == "x" -o "$src_root" == "." ; then
+    src_root=$(pwd)
+fi
+dnl echo "src_root=$src_root"
+last_root=$(basename $src_root)
+dnl echo "last_root=$last_root"
+if test $last_root == "ucsim" ; then
+    up_src=$(dirname $src_root)
+    if test $(basename $up_src) == "sim" ; then
+	in_sdcc="yes"
+    fi
+fi
+echo "In SDCC tree: $in_sdcc"
+
+if test $in_sdcc == "yes" ; then
+    def_ucsim="no"
+    def_p1516="no"
+    def_avr="no"
+    def_serio="no"
+    def_m6800="no"
+    def_m6809="no"
+    def_m68hc11="no"
+    def_m68hc12="no"
+    def_pblaze="no"
+    def_i8085="no"
+    def_i8048="no"
+    def_st7="no"
+fi
+
 
 AC_PROG_AWK
+AC_PROG_SED
 
 AC_MSG_CHECKING(version of the package)
 if test -f ${srcdir}/.version; then
@@ -37,81 +88,47 @@ fi
 AC_SUBST(docdir)
 
 AC_ARG_ENABLE(ucsim,
-[  --enable-ucsim          obsolete, ignored],
-if test $enable_ucsim != "no"; then
-    enable_ucsim="yes"
-fi,
-#default
-enable_ucsim="no")
-# ignore setting, always use NO
-enable_ucsim="no"
+	      AS_HELP_STRING([--enable-ucsim=ARG],
+			     [en/disable compile of exe wrapper (unfinished)]),
+	      ,
+	      enable_ucsim=$def_ucsim)
 
 AC_ARG_ENABLE(dlso,
-[  --enable-dlso           compile dynamically loadable shared libraries],
-if test $enable_dlso != "no"; then
-    enable_dlso="yes"
-fi,
-enable_dlso="no")
+	      AS_HELP_STRING([--enable-dlso=ARG],
+			     [en/disable compile shared objects]),
+	      ,
+	      enable_dlso=$def_dlso)
+
 AC_ARG_ENABLE(mcs51-port,
-[  --disable-mcs51-port    do not compile simulator for mcs51],
-if test $enable_mcs51_port != "no"; then
-    enable_mcs51_port="yes"
-fi,
-enable_mcs51_port="yes")
-AC_ARG_ENABLE(ds390-port,
-[  --disable-ds390-port    do not compile simulator for ds390],
-if test $enable_ds390_port != "no"; then
-    enable_ds390_port="yes"
-fi,
-enable_ds390_port="yes")
+	      AS_HELP_STRING([--enable-mcs51-port=ARG],
+			     [en/disable compile mcs51 simulator]),
+	      ,
+	      enable_mcs51_port=$def_mcs51_port)
+
 AC_ARG_ENABLE(avr-port,
-[  --enable-avr-port       compile simulator for AVR],
-if test $enable_avr_port != "no"; then
-    enable_avr_port="yes"
-fi,
-enable_avr_port="no")
+	      AS_HELP_STRING([--enable-avr-port=ARG],
+			     [en/disable compile avr simulator]),
+	      ,
+	      enable_avr_port=$def_avr)
+
 AC_ARG_ENABLE(z80-port,
-[  --disable-z80-port      do not compile simulator for z80],
-if test $enable_z80_port != "no"; then
-    enable_z80_port="yes"
-fi,
-enable_z80_port="yes")
-AC_ARG_ENABLE(z180-port,
-[  --disable-z180-port     do not compile simulator for z180],
-if test $enable_z180_port != "no"; then
-    enable_z180_port="yes"
-fi,
-enable_z180_port="yes")
-AC_ARG_ENABLE(gbz80-port,
-[  --disable-gbz80-port    do not compile simulator for gbz80],
-if test $enable_gbz80_port != "no"; then
-    enable_gbz80_port="yes"
-fi,
-enable_gbz80_port="yes")
-AC_ARG_ENABLE(r2k-port,
-[  --disable-r2k-port      do not compile simulator for r2k],
-if test $enable_r2k_port != "no"; then
-    enable_r2k_port="yes"
-fi,
-enable_r2k_port="yes")
-AC_ARG_ENABLE(r3ka-port,
-[  --disable-r3ka-port     do not compile simulator for r3ka],
-if test $enable_r3ka_port != "no"; then
-    enable_r3ka_port="yes"
-fi,
-enable_r3ka_port="yes")
+	      AS_HELP_STRING([--enable-z80-port=ARG],
+			     [en/disable compile z80 simulator]),
+	      ,
+	      enable_z80_port=$def_z80)
+
 AC_ARG_ENABLE(tlcs-port,
-[  --disable-tlcs-port    do not compile simulator for TLCS],
-if test $enable_tlcs_port != "no"; then
-    enable_tlcs_port="yes"
+	      AS_HELP_STRING([--enable-tlcs-port=ARG],
+			     [en/disable compile tlcs simulator]),
+	      ,
+	      enable_tlcs_port=$def_tlcs)
+
+AC_ARG_ENABLE(m68hc08-port,
+[  --disable-m68hc08-port  do not compile simulator for m68hc08],
+if test $enable_m68hc08_port != "no"; then
+    enable_m68hc08_port="yes"
 fi,
-enable_tlcs_port="yes")
-AC_ARG_ENABLE(hc08-port,
-[  --disable-hc08-port     do not compile simulator for hc08],
-if test $enable_hc08_port != "no"; then
-    enable_hc08_port="yes"
-fi,
-enable_hc08_port="yes")
+enable_m68hc08_port="yes")
 AC_ARG_ENABLE(s08-port,
 [  --disable-s08-port      do not compile simulator for s08],
 if test $enable_s08_port != "no"; then
@@ -119,11 +136,11 @@ if test $enable_s08_port != "no"; then
 fi,
 enable_s08_port="yes")
 AC_ARG_ENABLE(xa-port,
-[  --enable-xa-port        compile simulator for xa],
+[  --disable-xa-port       do not compile simulator for xa],
 if test $enable_xa_port != "no"; then
     enable_xa_port="yes"
 fi,
-enable_xa_port="no")
+enable_xa_port="yes")
 AC_ARG_ENABLE(stm8-port,
 [  --disable-stm8-port     do not compile simulator for stm8],
 if test $enable_stm8_port != "no"; then
@@ -136,36 +153,115 @@ if test $enable_pdk_port != "no"; then
     enable_pdk_port="yes"
 fi,
 enable_pdk_port="yes")
+
 AC_ARG_ENABLE(st7-port,
-[  --enable-st7-port       compile simulator for st7],
-if test $enable_st7_port  != "no"; then
-    enable_st7_port="yes"
+	      AS_HELP_STRING([--enable-st7-port=ARG],
+			     [en/disable compile st7 simulator]),
+	      ,
+	      enable_st7_port=$def_st7)
+
+AC_ARG_ENABLE(p1516-port,
+	      AS_HELP_STRING([--disable-p1516-port],
+			     [en/dsbale compile p1516 simulator]),
+	      ,
+	      enable_p1516_port=$def_p1516)
+
+AC_ARG_ENABLE(m6800-port,
+	      AS_HELP_STRING([--enable-m6800-port=ARG],
+			     [en/disable compile m6800 simulator]),
+	      ,
+	      enable_m6800_port=$def_m6800)
+
+AC_ARG_ENABLE(m6809-port,
+	      AS_HELP_STRING([--enable-m6809-port=ARG],
+			     [en/disable compile m6809 simulator]),
+	      ,
+	      enable_m6809_port=$def_m6809)
+
+AC_ARG_ENABLE(m68hc11-port,
+	      AS_HELP_STRING([--enable-m68hc11-port=ARG],
+			     [en/disable compile m68hc11 simulator]),
+	      ,
+	      enable_m68hc11_port=$def_m68hc11)
+
+AC_ARG_ENABLE(m68hc12-port,
+	      AS_HELP_STRING([--enable-m68hc12-port=ARG],
+			     [en/disable compile m68hc12 simulator]),
+	      ,
+	      enable_m68hc12_port=$def_m68hc12)
+
+AC_ARG_ENABLE(mos6502-port,
+[  --disable-mos6502-port  do not compile simulator for mos6502],
+if test $enable_mos6502_port  != "no"; then
+    enable_mos6502_port="yes"
 fi,
-enable_st7_port="no")
+enable_mos6502_port="yes")
+AC_ARG_ENABLE(rxk-port,
+[  --disable-rxk-port      do not compile simulator for Rabbit rXk],
+if test $enable_rxk_port  != "no"; then
+    enable_rxk_port="yes"
+fi,
+enable_rxk_port="yes")
+
+AC_ARG_ENABLE(pblaze-port,
+	      AS_HELP_STRING([--enable-pblaze-port=ARG],
+			     [en/disable compile picoblaze simulator]),
+	      ,
+	      enable_pblaze_port=$def_pblaze)
+
+AC_ARG_ENABLE(i8085-port,
+	      AS_HELP_STRING([--enable-i8085-port=ARG],
+			     [en/disable compile i8085 simulator]),
+	      ,
+	      enable_i8085_port=$def_i8085)
+
+AC_ARG_ENABLE(f8-port,
+[  --disable-f8-port       do not compile simulator for f8],
+if test $enable_f8_port  != "no"; then
+    enable_f8_port="yes"
+fi,
+enable_f8_port="yes")
+
+AC_ARG_ENABLE(i8048-port,
+	      AS_HELP_STRING([--enable-i8048-port=ARG],
+			     [en/disable compile i8048 simulator]),
+	      ,
+	      enable_i8048_port=$def_i8048)
+
 AC_ARG_ENABLE(serio,
-[  --enable-serio          compile serio GUI tool (needs curses)],
-if test $enable_serio != "no"; then
-    enable_serio="yes"
-fi,
-enable_serio="no")
+	      AS_HELP_STRING([--enable-serio=ARG],
+			     [en/disable compile serio GUI tool (needs curses)]),
+	      ,
+	      enable_serio=$def_serio)
+
 AC_SUBST(enable_ucsim)
 AC_SUBST(enable_dlso)
 AC_SUBST(enable_mcs51_port)
-AC_SUBST(enable_ds390_port)
 AC_SUBST(enable_avr_port)
 AC_SUBST(enable_z80_port)
-AC_SUBST(enable_z180_port)
 AC_SUBST(enable_gbz80_port)
 AC_SUBST(enable_r2k_port)
 AC_SUBST(enable_r3ka_port)
 AC_SUBST(enable_tlcs_port)
-AC_SUBST(enable_hc08_port)
+AC_SUBST(enable_m68hc08_port)
 AC_SUBST(enable_s08_port)
 AC_SUBST(enable_xa_port)
 AC_SUBST(enable_stm8_port)
 AC_SUBST(enable_st7_port)
 AC_SUBST(enable_pdk_port)
+AC_SUBST(enable_p1516_port)
+AC_SUBST(enable_m6809_port)
+AC_SUBST(enable_m6800_port)
+AC_SUBST(enable_m68hc11_port)
+AC_SUBST(enable_m68hc12_port)
+AC_SUBST(enable_mos6502_port)
+AC_SUBST(enable_rxk_port)
+AC_SUBST(enable_pblaze_port)
+AC_SUBST(enable_i8085_port)
+AC_SUBST(enable_f8_port)
+AC_SUBST(enable_i8048_port)
 AC_SUBST(enable_serio)
+
 
 AC_ARG_ENABLE(statistic,
 [  --enable-statistic      compile statistical features (slower simulation)],
@@ -186,34 +282,39 @@ dnl AC_LANG_CPLUSPLUS
 
 AC_CHECK_TOOL(STRIP, strip)
 AC_CHECK_TOOL(AR, ar)
-AC_CHECK_TOOL(SREC_CAT, srec_cat)
+dnl AC_CHECK_TOOL(SREC_CAT, srec_cat)
 
-AC_LIBTOOL_DLOPEN
-dnl AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+dnl AC_LIBTOOL_DLOPEN
+dnl dnl AC_LIBTOOL_WIN32_DLL
+dnl AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 
-AC_PROG_LEX
+AC_PROG_LEX(noyywrap)
 if test ${LEX} = "flex"; then
         AC_DEFINE(HAVE_FLEX, 1, [XXX])
 fi
 AC_PROG_YACC
 
 
-AC_LANG_CPLUSPLUS
+AC_LANG([C++])
 
 # Checking for header files.
 # ===========================================================================
 
-if test -d /stuff/include; then
-  CPPFLAGS="$CPPFLAGS -I/stuff/include"
-fi
+#if test -d /stuff/include; then
+#  CPPFLAGS="$CPPFLAGS -I/stuff/include"
+#fi
 
-AC_HEADER_STDC
+dnl AC_HEADER_STDC
 AC_CHECK_HEADERS(endian.h sys/endian.h machine/endian.h sys/isa_defs.h)
 AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(termios.h)
+AC_CHECK_HEADERS(inttypes.h)
+AC_CHECK_HEADERS(cstdint.h)
+AC_CHECK_HEADERS(stdint.h)
+AC_CHECK_HEADERS(sys/wait.h)
+AC_CHECK_HEADERS(wincon.h)
 
 AC_CHECK_HEADER(curses.h,
   AC_DEFINE(HAVE_CURSES_H, 1, [XXX])
@@ -275,7 +376,12 @@ AC_EGREP_CPP(yes, [
 #include <sys/select.h>
 #ifdef FD_ZERO
 yes
-#endif], ucsim_cv_fd="<sys/select.h>")])
+#endif], ucsim_cv_fd="<sys/select.h>")
+AC_EGREP_CPP(yes, [
+#include <gnu/types.h>
+#ifdef FD_ZERO
+yes
+#endif], ucsim_cv_fd="<gnu/types.h>")])
 
 ucsim_cv_header_ok=0
 if echo $ucsim_cv_fd|grep time >/dev/null 2>&1; then
@@ -284,18 +390,28 @@ ucsim_cv_header_ok=1
 else
 AC_DEFINE(FD_NEED_TIME_H, 0, [XXX])
 fi
-if echo $ucsim_cv_fd|grep types >/dev/null 2>&1; then
+
+if echo $ucsim_cv_fd|grep sys/types >/dev/null 2>&1; then
 AC_DEFINE(FD_NEED_TYPES_H, 1, [XXX])
 ucsim_cv_header_ok=1
 else
 AC_DEFINE(FD_NEED_TYPES_H, 0, [XXX])
 fi
+
+if echo $ucsim_cv_fd|grep gnu/types >/dev/null 2>&1; then
+AC_DEFINE(FD_NEED_GNUTYPES_H, 1, [XXX])
+ucsim_cv_header_ok=1
+else
+AC_DEFINE(FD_NEED_GNUTYPES_H, 0, [XXX])
+fi
+
 if echo $ucsim_cv_fd|grep select >/dev/null 2>&1; then
 AC_DEFINE(FD_NEED_SELECT_H, 1, [XXX])
 ucsim_cv_header_ok=1
 else
 AC_DEFINE(FD_NEED_SELECT_H, 0, [XXX])
 fi
+
 if echo $ucsim_cv_fd|grep winsock2 >/dev/null 2>&1; then
 AC_DEFINE(FD_NEED_WINSOCK2_H, 1, [XXX])
 ucsim_cv_header_ok=1
@@ -303,7 +419,7 @@ else
 AC_DEFINE(FD_NEED_WINSOCK2_H, 0, [XXX])
 fi
 
-AC_DEFINE_UNQUOTED(FD_HEADER_OK, ${ucsim_cv_header_ok}, [XXX])
+dnl AC_DEFINE_UNQUOTED(FD_HEADER_OK, ${ucsim_cv_header_ok}, [XXX])
 AC_DEFINE_UNQUOTED(HEADER_FD, ${ucsim_cv_fd}, [XXX])
 
 
@@ -325,19 +441,6 @@ DL="")
 AC_SUBST(dl_ok)
 AC_SUBST(DL)
 
-#AC_CHECK_LIB(panel,panel_above,
-#panel_ok="yes"
-#curses_ok="yes"
-#CURSES_LIBS="-lpanel -lcurses"
-#,
-#panel_ok="no"
-#AC_CHECK_LIB(curses,nl,
-#curses_ok="yes"
-#CURSES_LIBS="-lcurses"
-#,
-#curses_ok="no")
-#,
-#-lcurses)
 CURSES_LIBS=""
 if test $curses_h_ok != yes; then
   panel_ok="no"
@@ -364,84 +467,94 @@ else
       CURSES_LIBS="${CURSES_LIBS} -lncurses",
       curses_ok="no")
   fi
+
+  AC_CHECK_LIB(tinfo,curs_set,
+	       curses_ok="yes"
+	       CURSES_LIBS="${CURSES_LIBS} -ltinfo",
+	       ,
+	       $CURSES_LIBS)
+  
 fi
+
 
 AC_SUBST(panel_ok)
 AC_SUBST(curses_ok)
 AC_SUBST(CURSES_LIBS)
 
+AC_FUNC_FORK
+AC_CHECK_FUNCS(_exit dup2 dup3 pipe pipe2 waitpid)
 AC_CHECK_FUNCS(vasprintf)
-AC_CHECK_FUNCS(strdup)
+AC_CHECK_FUNCS(vsnprintf)
+dnl AC_CHECK_FUNCS(strdup)
 dnl AC_CHECK_FUNCS(getline)
 dnl AC_CHECK_FUNCS(getdelim)
 AC_CHECK_FUNCS(yylex)
 
-AC_CACHE_CHECK(whether scanf knows %a, ucsim_cv_scanf_a,
-[echo "a b" >conftest.data
-AC_TRY_RUN([
-#include <stdio.h>
-void main(void)
-{
-  FILE *f;
-  char *a;
-  int  i;
-  if ((f= fopen("conftest.data", "r")) == NULL)
-    exit(1);
-  i= fscanf(f, " %a[a-z] ", &a);
-  fclose(f);
-  if (i == 0)
-    exit(2);
-  if (i == 1)
-    exit(0);
-  exit(3);
-}],
-ucsim_cv_scanf_a="yes",
-ucsim_cv_scanf_a="no",
-ucsim_cv_scanf_a="unknown")
-])
-if test "$ucsim_cv_scanf_a" = "yes"; then
-  AC_DEFINE(SCANF_A, 1, [XXX])
-fi
+# AC_CACHE_CHECK(whether scanf knows %a, ucsim_cv_scanf_a,
+# [echo "a b" >conftest.data
+# AC_TRY_RUN([
+# #include <stdio.h>
+# void main(void)
+# {
+#   FILE *f;
+#   char *a;
+#   int  i;
+#   if ((f= fopen("conftest.data", "r")) == NULL)
+#     exit(1);
+#   i= fscanf(f, " %a[a-z] ", &a);
+#   fclose(f);
+#   if (i == 0)
+#     exit(2);
+#   if (i == 1)
+#     exit(0);
+#   exit(3);
+# }],
+# ucsim_cv_scanf_a="yes",
+# ucsim_cv_scanf_a="no",
+# ucsim_cv_scanf_a="unknown")
+# ])
+# if test "$ucsim_cv_scanf_a" = "yes"; then
+#   AC_DEFINE(SCANF_A, 1, [XXX])
+# fi
 
-AC_CACHE_CHECK(whether getcwd is GNUish, ucsim_cv_getcwd,
-[AC_TRY_RUN([
-#include <unistd.h>
-void main(void)
-{
-  if ((getcwd(NULL, 0)) == NULL)
-    exit(1);
-  exit(0);
-}],
-ucsim_cv_getcwd="yes",
-ucsim_cv_getcwd="no",
-ucsim_cv_getcwd="unknown")
-])
-if test "$ucsim_cv_getcwd" = "yes"; then
-  AC_DEFINE(GNU_GETCWD, 1, [XXX])
-fi
+# AC_CACHE_CHECK(whether getcwd is GNUish, ucsim_cv_getcwd,
+# [AC_TRY_RUN([
+# #include <unistd.h>
+# void main(void)
+# {
+#   if ((getcwd(NULL, 0)) == NULL)
+#     exit(1);
+#   exit(0);
+# }],
+# ucsim_cv_getcwd="yes",
+# ucsim_cv_getcwd="no",
+# ucsim_cv_getcwd="unknown")
+# ])
+# if test "$ucsim_cv_getcwd" = "yes"; then
+#   AC_DEFINE(GNU_GETCWD, 1, [XXX])
+# fi
 
-AC_DEFUN([ucsim_ACCEPT_LENGTH_T],
- [AC_CACHE_CHECK([for type of length pointer parameter of accept],
-   ucsim_cv_accept_length_type,
-   [ac_save_CPPFLAGS="$CPPFLAGS"
-    ucsim_cv_accept_length_type=no
-    for ac_val in int size_t socklen_t; do
-      CPPFLAGS="$ac_save_CPPFLAGS -DACCEPT_SOCKLEN_T=$ac_val"
-      AC_TRY_COMPILE([#include <sys/types.h>
-#include ${ucsim_cv_socket}],
-        [struct sockaddr a; $ac_val len; accept (0, &a, &len);],
-        [ucsim_cv_accept_length_type=$ac_val; break])
-    done
-    CPPFLAGS="$ac_save_CPPFLAGS"])
-  if test "$ucsim_cv_accept_length_type" != no; then
-    AC_DEFINE_UNQUOTED(ACCEPT_SOCKLEN_T, $ucsim_cv_accept_length_type,
-      [Define to be the type of length parameter of accept (without the \*').])
-  fi
- ]
-)
-#'
-
-ucsim_ACCEPT_LENGTH_T
+#AC_DEFUN([ucsim_ACCEPT_LENGTH_T],
+# [AC_CACHE_CHECK([for type of length pointer parameter of accept],
+#   ucsim_cv_accept_length_type,
+#   [ac_save_CPPFLAGS="$CPPFLAGS"
+#    ucsim_cv_accept_length_type=no
+#    for ac_val in int size_t socklen_t; do
+#      CPPFLAGS="$ac_save_CPPFLAGS -DACCEPT_SOCKLEN_T=$ac_val"
+#      AC_TRY_COMPILE([#include <sys/types.h>
+#        [struct sockaddr a; $ac_val len; accept (0, &a, &len);],
+#        [ucsim_cv_accept_length_type=$ac_val; break])
+#    done
+#    CPPFLAGS="$ac_save_CPPFLAGS"])
+#  if test "$ucsim_cv_accept_length_type" != no; then
+#    AC_DEFINE_UNQUOTED(ACCEPT_SOCKLEN_T, $ucsim_cv_accept_length_type,
+#      [Define to be the type of length parameter of accept (without the \*').])
+#  fi
+# ]
+#)
+##'
+#
+#ucsim_ACCEPT_LENGTH_T
 
 # Macro definitions
 ###################
@@ -465,7 +578,7 @@ AC_DEFUN([sdcc_IS_SUNPRO],
 # For example: sdcc_VALID_OPT(-fPIC)
 
 AC_DEFUN([sdcc_IS_VALID_OPTION],
-[arg1=`echo $1 | sed -e"s/^-*//" -e"s/-/_/"`
+[arg1=`echo $1 | sed -e"s/^-*//" -e"s/-/_/g"`
 ac_test_[]_AC_LANG_PREFIX[]FLAGS=${[]_AC_LANG_PREFIX[]FLAGS+set}
 sdcc_save_[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
 AC_CACHE_CHECK(whether _AC_LANG accepts $1, sdcc_cv_[]_AC_LANG_ABBREV[]_$arg1,
@@ -494,6 +607,7 @@ if test "$CC" = "i586-mingw32msvc-gcc"; then
   ac_cv_sizeof_long_long=4
 fi
 
+
 # Checking whether byte ordering is bigendian
 # --------------------------------------------------------
 AC_C_BIGENDIAN
@@ -515,28 +629,38 @@ if test "$ac_cv_cxx_compiler_gnu" = "yes"; then
 
   # This is the first time when CFLAGS are set/modified!!
 
-  sdcc_IS_VALID_OPTION(-ggdb)
-  sdcc_IS_VALID_OPTION(-gstabs)
-  if test "$ucsim_cv_cxx_gstabs" = "yes"; then
-    gopt="-gstabs+ -g3"
-  elif test "$ucsim_cv_cxx_ggdb" = "yes"; then
-    gopt="-ggdb -g3"
-  else
-    gopt="-g"
-  fi
-  if test "$CXXFLAGS"x = x ;then
-    CXXFLAGS="$gopt"
-  else
-    CXXFLAGS="$CXXFLAGS $gopt"
-  fi
-
+dnl  sdcc_IS_VALID_OPTION(-ggdb)
+#  if test "$sdcc_cv_cxx_ggdb" = "yes"; then
+#      CXXFLAGS="$CXXFLAGS -ggdb"
+#  fi
+dnl  sdcc_IS_VALID_OPTION(-gstabs)
   sdcc_IS_VALID_OPTION(-pipe)
-  if test "$ucsim_cv_cxx_pipe" = "yes"; then
+  if test "$sdcc_cv_cxx_pipe" = "yes"; then
     CXXFLAGS="$CXXFLAGS -pipe"
   fi
-
+  
+dnl  sdcc_IS_VALID_OPTION(-fhandle-exceptions)
+#  if test "$sdcc_cv_cxx_fhandle_exceptions" = "yes"; then
+#    CXXFLAGS="$CXXFLAGS -fhandle-exceptions"
+#  fi
+  
   MAKEDEP="$CXX $ucsim_cv_MM"
   WALL_FLAG="-Wall"
+
+  sdcc_IS_VALID_OPTION(-Wno-overloaded-virtual)
+  if test "$sdcc_cv_cxx_Wno_overloaded_virtual" = "yes"; then
+      WALL_FLAG="$WALL_FLAG -Wno-overloaded-virtual"
+  fi
+
+  sdcc_IS_VALID_OPTION(-Wno-unused-parameters)
+  if test "$sdcc_cv_cxx_Wno_unused_parameters" = "yes"; then
+      WALL_FLAG="$WALL_FLAG -Wno-unused-parameters"
+  fi
+
+  sdcc_IS_VALID_OPTION(-Wno-unused)
+  if test "$sdcc_cv_cxx_Wno_unused" = "yes"; then
+      WALL_FLAG="$WALL_FLAG -Wno-unused"
+  fi
 else
   sdcc_IS_SUNPRO
   if test "$sdcc_cv_cxx_compiler_sunpro" = "yes"; then
@@ -566,24 +690,18 @@ AC_SUBST(dlso_ok)
 # Checks for typedefs, structures, and compiler characteristics.
 # ===========================================================================
 
-AC_TYPE_SIGNAL
-if test "$cross_compiling" = "no"; then
-AC_CHECK_SIZEOF(char)
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(long long)
+if $CXX -v 2>&1|grep "mingw" >/dev/null 2>&1; then
+    ac_cv_sizeof_char=1
+    ac_cv_sizeof_short=2
+    ac_cv_sizeof_int=4
+    ac_cv_sizeof_long=4
+    ac_cv_sizeof_long_long=4
 else
-    if $CXX -v 2>&1|grep "mingw" >/dev/null 2>&1; then
-        ac_cv_sizeof_char=1
-        ac_cv_sizeof_short=2
-        ac_cv_sizeof_int=4
-        ac_cv_sizeof_long=4
-        ac_cv_sizeof_long_long=4
-    else
-        : # FIXME
-    fi
-#echo
+    AC_CHECK_SIZEOF(char)
+    AC_CHECK_SIZEOF(short)
+    AC_CHECK_SIZEOF(int)
+    AC_CHECK_SIZEOF(long)
+    AC_CHECK_SIZEOF(long long)
 fi
 
 type_name()
@@ -675,12 +793,8 @@ AC_DEFINE_UNQUOTED(SPEC_QWORD, [$SPEC_QWORD], [XXX])
 
 AH_TOP([#ifndef DDCONFIG_HEADER
 #define DDCONFIG_HEADER])
-AH_BOTTOM([/* ucsim custom defines */
-#define DD_TRUE     1
-#define DD_FALSE    0
-#define NIL         0
-#endif /* DDCONFIG_HEADER */])
-
+AH_BOTTOM([#endif])
+	
 if echo $TYPE_DWORD|grep short >/dev/null; then
     A="h"
 elif echo $TYPE_DWORD|grep long >/dev/null; then
@@ -700,24 +814,67 @@ AC_DEFINE_UNQUOTED(_M_, "${M}", [XXX])
 # Generating output files
 # ===========================================================================
 
-AC_OUTPUT(Makefile
+AC_CONFIG_FILES(Makefile
 main.mk:main_in.mk
 packages.mk:packages_in.mk
-sim.src/Makefile
 cmd.src/Makefile
-s51.src/Makefile
-avr.src/Makefile
-z80.src/Makefile
-tlcs.src/Makefile
-hc08.src/Makefile
-xa.src/Makefile
-stm8.src/Makefile
-pdk.src/Makefile
-st7.src/Makefile
+motorola.src/Makefile
+
+sim.src/Makefile   sim.src/test/Makefile
+
+avr.src/Makefile     avr.src/test/Makefile
+m68hc08.src/Makefile m68hc08.src/test/Makefile
+m6809.src/Makefile   m6809.src/test/Makefile
+m6800.src/Makefile   m6800.src/test/Makefile
+m68hc11.src/Makefile m68hc11.src/test/Makefile
+m68hc12.src/Makefile m68hc12.src/test/Makefile
+mos6502.src/Makefile mos6502.src/test/Makefile
+rxk.src/Makefile     rxk.src/test/Makefile
+pblaze.src/Makefile  pblaze.src/test/Makefile
+i8085.src/Makefile   i8085.src/test/Makefile
+f8.src/Makefile      f8.src/test/Makefile
+i8048.src/Makefile   i8048.src/test/Makefile
+p1516.src/Makefile   p1516.src/test/Makefile
+pdk.src/Makefile     pdk.src/test/Makefile
+s51.src/Makefile     s51.src/test/Makefile
+st7.src/Makefile     st7.src/test/Makefile
+stm8.src/Makefile    stm8.src/test/Makefile
+tlcs.src/Makefile    tlcs.src/test/Makefile
+xa.src/Makefile      xa.src/test/Makefile
+z80.src/Makefile     z80.src/test/Makefile
+
 gui.src/Makefile
 gui.src/serio.src/Makefile
+
 doc/Makefile
 )
+AC_OUTPUT
+
+echo "Compile for SDCC  $in_sdcc"
+echo "Compile dlso      $enable_dlso"
+echo "Compile ucsim     $enable_ucsim"
+echo "Compile s51       $enable_mcs51_port"
+echo "Compile avr       $enable_avr_port"
+echo "Compile z80       $enable_z80_port"
+echo "Compile tlcs      $enable_tlcs_port"
+echo "Compile m68hc08   $enable_m68hc08_port"
+echo "Compile s08       $enable_s08_port"
+echo "Compile xa        $enable_xa_port"
+echo "Compile stm8      $enable_stm8_port"
+echo "Compile pdk       $enable_pdk_port"
+echo "Compile st7       $enable_st7_port"
+echo "Compile p1516     $enable_p1516_port"
+echo "Compile m6809     $enable_m6809_port"
+echo "Compile m6800     $enable_m6800_port"
+echo "Compile m68hc11   $enable_m68hc11_port"
+echo "Compile m68hc12   $enable_m68hc12_port"
+echo "Compile mos6502   $enable_mos6502_port"
+echo "Compile rxk       $enable_rxk_port"
+echo "Compile pblaze    $enable_pblaze_port"
+echo "Compile i8085     $enable_i8085_port"
+echo "Compile f8        $enable_f8_port"
+echo "Compile i8048     $enable_i8048_port"
+echo "Compile serio     $enable_serio"
 
 #gui.src/portmon.src/Makefile
 

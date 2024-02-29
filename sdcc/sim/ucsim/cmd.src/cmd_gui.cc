@@ -25,13 +25,13 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 // prj
-#include "globals.h"
+//#include "globals.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "cmd_guicl.h"
@@ -68,7 +68,7 @@ COMMAND_DO_WORK_UC(cl_gui_start_cmd)
 CMDHELP(cl_gui_start_cmd,
 	"gui start",
 	"Start interfacing with GUI tool",
-	"long help of gui start")
+	"")
 
 /*
  * Command: gui stop
@@ -86,6 +86,6 @@ COMMAND_DO_WORK_UC(cl_gui_stop_cmd)
 CMDHELP(cl_gui_stop_cmd,
 	"gui stop",
 	"Stop interfacing with GUI tool",
-	"long help of gui stop")
+	"")
 
 /* End of cmd.src/cmd_gui.cc */

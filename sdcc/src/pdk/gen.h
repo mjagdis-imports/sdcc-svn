@@ -81,10 +81,12 @@ typedef struct asmop
     int stk_off;
     asmop_byte bytes[8];
   } aopu;
+  struct valinfo valinfo;
 }
 asmop;
 
 void genPdkCode (iCode *);
+void pdk_emitDebuggerSymbol (const char *);
 
 extern bool pdk_assignment_optimal;
 void pdk_init_asmops (void);

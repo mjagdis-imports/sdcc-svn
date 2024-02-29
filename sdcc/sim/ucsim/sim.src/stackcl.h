@@ -64,7 +64,7 @@ protected:
   virtual void print_info(class cl_console_base *con);
 public:
   virtual const char *get_op_name(void);
-  virtual const char *get_matching_name(void) { return(cchars("unknown")); }
+  virtual const char *get_matching_name(void) { return("unknown"); }
   virtual bool sp_increased(void);
   virtual int data_size(void);
   virtual bool match(class cl_stack_op *op);
@@ -76,7 +76,7 @@ public:
   virtual bool can_removed(class cl_stack_op *op);
 };
 
-/* Call of a subrutine, must match with RET */
+/* Call of a subroutine, must match with RET */
 class cl_stack_call: public cl_stack_op
 {
 protected:
@@ -183,6 +183,19 @@ public:
 };
 
 /*
+ * Stack overflow error
+ */
+class cl_error_stack_overflow: public cl_error_stack
+{
+protected:
+  t_addr PC, SP_before, SP_after;
+public:
+  cl_error_stack_overflow(class cl_stack_op *op);
+  cl_error_stack_overflow(t_addr iPC, t_addr SPbef, t_addr SPaft);
+  virtual void print(class cl_commander_base *c);
+};
+  
+/*
  * All kind of stack tracker errors
  */
 class cl_error_stack_tracker: public cl_error_stack
@@ -197,7 +210,6 @@ public:
   bool write_operation;
 public:
   cl_error_stack_tracker_wrong_handle(bool write_op);
-
   virtual void print(class cl_commander_base *c);
 };
 
@@ -208,7 +220,6 @@ protected:
 public:
   cl_error_stack_tracker_empty(class cl_stack_op *op);
   virtual ~cl_error_stack_tracker_empty(void);
-
   virtual void print(class cl_commander_base *c);
 };
 
@@ -220,7 +231,6 @@ public:
   cl_error_stack_tracker_unmatch(class cl_stack_op *Top,
                                 class cl_stack_op *op);
   virtual ~cl_error_stack_tracker_unmatch(void);
-
   virtual void print(class cl_commander_base *c);
 };
 
@@ -233,7 +243,6 @@ public:
   cl_error_stack_tracker_inconsistent(class cl_stack_op *op,
 				      int the_unread_data_size);
   virtual ~cl_error_stack_tracker_inconsistent(void);
-
   virtual void print(class cl_commander_base *c);
 };
 

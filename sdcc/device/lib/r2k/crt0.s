@@ -1,9 +1,10 @@
 ;--------------------------------------------------------------------------
-;  crt0.s - Generic crt0.s for a rabbit 2000
+;  crt0.s - Generic crt0.s for a Rabbit 2000
 ;	derived from "Generic crt0.s for a Z80"
 ;
 ;  Copyright (C) 2000, Michael Hope
-;  Modified for rabbit by Leland Morrison 2011
+;  Modified for Rabbit by Leland Morrison 2011
+;  Copyright (C) 2020, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -28,38 +29,133 @@
 ;   might be covered by the GNU General Public License.
 ;--------------------------------------------------------------------------
 
-        .module crt0
-       	.globl	_main
+	.module crt0
+	.globl	_main
+	.globl	___sdcc_external_startup
+
+GCSR		.equ	0x00 ; Global control / status register
+MMIDR		.equ	0x10
+STACKSEG	.equ	0x11
+SEGSIZE		.equ	0x13
+MB0CR		.equ	0x14 ; Memory Bank 0 Control Register
+MB1CR		.equ	0x15 ; Memory Bank 1 Control Register
+MB2CR		.equ	0x16 ; Memory Bank 2 Control Register
+MB3CR		.equ	0x17 ; Memory Bank 3 Control Register
 
 	.area	_HEADER (ABS)
-	;; Reset vector
+
+	; Reset vector - assuming smode0 and smode1 input pins are grounded
 	.org 	0
-	jp	init
 
-	.org	0x08
-	reti
-	.org	0x10
-	reti
-	.org	0x18
-	reti
-	.org	0x20
-	reti
-	.org	0x28
-	reti
-	.org	0x30
-	reti
-	.org	0x38
-	reti
+	; Setup internal interrupts. Upper byte of interrupt vector table address. For compatibility with Rabbit 3000, we choose this even here (Rabbit 2000 allows odd values, so #1 could be used to save space).
+	ld	a, #2
+	ld	iir, a
 
-	.org	0x100
-init:
-	;; Set stack pointer directly above top of memory.
-	ld	sp,#0x0000
+	; Configure physical address space.
+	; Leave MB0CR Flash at default slow at /OE0, /CS0
+	; Assume slow RAM at /CS1, /OE1, /WE1
+	ld	a, #0x05
+	ioi
+	ld	(MB2CR), a;
 
-        ;; Initialise global variables
-        call    gsinit
+	; Configure logical address space. 32 KB root segment followed by 8 KB data segment, 16 KB stack segment, 8 KB xpc segment.
+	; By default, SDCC will use the root segment for code and constant data, stack segment for data (including stack). data segment and xpc segment are then unused.
+	ld	a, #0xa8	; 16 KB stack segment at 0xa000, 8 KB data segment at 0x8000
+	ioi
+	ld	(SEGSIZE), a
+
+	; Configure mapping to physical address space.
+	ld	a, #0x76
+	ioi
+	ld	(STACKSEG), a	; stack segment base at 0x76000 + 0xa000 = 0x80000
+
+	; Set stack pointer directly above top of stack segment
+	ld	sp, #0xe000
+
+	call ___sdcc_external_startup
+
+	; Initialise global variables. Skip if __sdcc_external_startup returned
+	; non-zero value. Note: calling convention version 0 only.
+	or	a, a
+	jr	NZ, skip_gsinit
+	call	gsinit
+skip_gsinit:
+
 	call	_main
 	jp	_exit
+
+	; Periodic Interrupt
+	.org	0x200
+	push	af
+	ioi
+	ld	a, (GCSR) ; clear interrupt
+	pop	af
+	ipres
+	ret
+
+	; Secondary Watchdog - Rabbit 3000A only
+	.org	0x210
+	reti
+
+	; rst 0x10
+	.org	0x220
+	ret
+
+	; rst 0x18
+	.org	0x230
+	ret
+
+	; rst 0x20
+	.org	0x240
+	ret
+
+	; rst 0x28
+	.org	0x250
+	ret
+
+	; Syscall instruction - Rabbit 3000A only
+	.org	0x260
+	ret
+
+	; rst 0x38
+	.org	0x270
+	ret
+
+	; Slave Port
+	.org	0x280
+	ipres
+	ret
+
+	; Timer A
+	.org	0x2a0
+	ipres
+	ret
+
+	; Timer B
+	.org	0x2b0
+	ipres
+	ret
+
+	; Serial Port A
+	.org	0x2c0
+	reti
+
+	; Serial Port B
+	.org	0x2d0
+	ipres
+	ret
+
+	; Serial Port C
+	.org	0x2e0
+	ipres
+	ret
+
+	; Serial Port D
+	.org	0x2f0
+	ipres
+	ret
+
+	.org	0x300
 
 	;; Ordering of segments for the linker.
 	.area	_HOME
@@ -75,11 +171,6 @@ init:
 	.area   _HEAP
 
 	.area   _CODE
-__clock::
-	ld	a,#2
-        rst     #0x28
-	ret
-
 _exit::
 	;; Exit - special code to the emulator
 	ld	a,#0
@@ -90,13 +181,34 @@ _exit::
 
 	.area   _GSINIT
 gsinit::
+	ld	bc, #l__DATA
+	ld	a, b
+	or	a, c
+	jr	Z, zeroed_data
+	ld	hl,	#s__DATA
+	ld	(hl), #0x00
+	dec	bc
+	ld	a, b
+	or	a, c
+	jr	Z, zeroed_data
+	ld	e, l
+	ld	d, h
+	inc	de
+zero_loop:
+	ldi	; Work around new ldir wait state bug.
+	jp	LO, zero_loop
+
+zeroed_data:
+
 	ld	bc, #l__INITIALIZER
 	ld	a, b
 	or	a, c
 	jr	Z, gsinit_next
 	ld	de, #s__INITIALIZED
 	ld	hl, #s__INITIALIZER
-	ldir
+copy_loop:
+	ldi	; Work around new ldir wait state bug.
+	jp	LO, copy_loop
 gsinit_next:
 
 	.area   _GSFINAL

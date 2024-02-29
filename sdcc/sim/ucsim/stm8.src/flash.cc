@@ -26,6 +26,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /*@1@*/
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "globals.h"
 
@@ -65,11 +66,11 @@ cl_flash_as::cl_flash_as(const char *id, t_addr astart, t_addr asize):
   decoders= new cl_decoder_list(2, 2, false);
   cella= (class cl_memory_cell *)malloc(size * sizeof(class cl_memory_cell));
   //cell->init();
-  int i;
+  t_addr i;
   for (i= 0; i < size; i++)
     {
       void *p= &(cella[i]);
-      memcpy(p, cell, sizeof(class cl_memory_cell));
+      memcpy(p, (void*)cell, sizeof(class cl_memory_cell));
       cella[i].init();
     }
   dummy= new cl_dummy_cell(8);
@@ -100,26 +101,48 @@ cl_flash::init(void)
 {
   cl_hw::init();
   registration();
-  reset();
   return 0;
 }
 
-char *
+void
+cl_flash::reset(void)
+{
+  uc->sim->app->debug("FLASH reset\n");
+  puk1st= false;
+  duk1st= false;
+  p_unlocked= false;
+  d_unlocked= false;
+  p_failed= false;
+  d_failed= false;
+
+  state= fs_wait_mode;
+  mode= fm_unknown;
+  
+  cr1r->set/*write*/(0);
+  iapsr->set/*write*/(0x40);
+  cr2r->set/*write*/(0);
+  if (ncr2r)
+    ncr2r->set/*write*/(0xff);
+}
+
+
+const char *
 cl_flash::cfg_help(t_addr addr)
 {
   switch (addr)
     {
-    case stm8_flash_on: return (char*)"Turn simulation of flash on/off (bool, RW)";
+    case stm8_flash_on: return "Turn ticking of flash on/off (bool, RW)";
     }
-  return (char*)"Not used";
+  return "Not used";
 }
+
 
 int
 cl_flash::tick(int cycles)
 {
   if (state & fs_busy)
     {
-      double now= uc->get_rtime();
+      double now= uc->ticks->get_rtime();
       double elapsed= (now - start_time) * 10e6;
 
       if ((state == fs_pre_erase) &&
@@ -164,38 +187,22 @@ void
 cl_flash::finish_program(bool ok)
 {
   if (ok)
-    iapsr->set_bit1(0x04);
+    iapsr->set(iapsr->get() | 0x04);
   else
-    iapsr->set_bit1(0x01);
+    iapsr->set(iapsr->get() | 0x01);
+  uc->sim->app->debug("FLASH prg finish\n");
   state= fs_wait_mode;
-}
-
-void
-cl_flash::reset(void)
-{
-  uc->sim->app->debug("FLASH reset\n");
-  puk1st= false;
-  duk1st= false;
-  p_unlocked= false;
-  d_unlocked= false;
-  p_failed= false;
-  d_failed= false;
-
-  state= fs_wait_mode;
-  mode= fm_unknown;
-  
-  cr1r->write(0);
-  iapsr->write(0x40);
-  cr2r->write(0);
-  if (ncr2r)
-    ncr2r->write(0xff);
 }
 
 t_mem
 cl_flash::read(class cl_memory_cell *cell)
 {
-  t_mem v= cell->get();
+  t_mem v;
 
+  if (conf(cell, NULL))
+    return cell->get();
+
+  v= cell->get();
   if (cell == pukr)
     v= 0;
   else if (cell == dukr)
@@ -208,7 +215,7 @@ cl_flash::read(class cl_memory_cell *cell)
       if (d_unlocked)
 	v|= 0x08;
       // read clears EOP and WR_PG_DIS bits
-      cell->set(v & ~0x05);
+      cell->set(v&= ~0x05);
       if (v & 0x05) uc->sim->app->debug("FLASH read iapsr5 %02x\n",v);	
     }
   return v;
@@ -220,9 +227,6 @@ cl_flash::write(class cl_memory_cell *cell, t_mem *val)
   if (conf(cell, val))
     return;
 
-  if (conf(cell, NULL))
-    return;
-  
   if (cell == pukr)
     {
       uc->sim->app->debug("FLASH write-pukr %02x\n",*val);
@@ -314,6 +318,7 @@ cl_flash::write(class cl_memory_cell *cell, t_mem *val)
     }
 }
 
+
 t_mem
 cl_flash::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 {
@@ -335,6 +340,7 @@ cl_flash::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
     }
   return cell->get();
 }
+
 
 void
 cl_flash::flash_write(t_addr a, t_mem val)
@@ -474,6 +480,7 @@ cl_flash::set_flash_mode(t_mem cr2val)
       wbuf_size= 4;
     }
   state= fs_wait_data;
+  uc->sim->app->debug("FLASH state=wait_data\n");
   wbuf_started= false;
   wbuf_start= 0;
 }
@@ -494,7 +501,7 @@ cl_flash::start_program(enum stm8_flash_state start_state)
 {
   uc->sim->app->debug("FLASH start prg %d\n", start_state);
   state= start_state;
-  start_time= uc->get_rtime();
+  start_time= uc->ticks->get_rtime();
 }
 
 const char *
@@ -538,7 +545,7 @@ cl_flash::print_info(class cl_console_base *con)
   con->dd_printf("\n");
 
   con->dd_printf("State: %s\n", state_name(state));
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 
@@ -565,12 +572,12 @@ cl_saf_flash::registration(void)
 					cr1r,0x02,
 					iapsr,0x04,
 					0x8008+24*4, false, false,
-					chars("end of flash programming"), 20*20+0));
+					"FLASH_EOP", 20*20+0));
   uc->it_sources->add(is= new cl_it_src(uc, 24,
 					cr1r,0x02,
 					iapsr,0x01,
 					0x8008+24*4, false, false,
-					chars("write attempted to protected page"), 20*20+1));
+					"FLASH_RO", 20*20+1));
   is->init();
 }
 
@@ -598,12 +605,12 @@ cl_l_flash::registration(void)
 					cr1r,0x02,
 					iapsr,0x04,
 					0x8008+1*4, false, false,
-					chars("end of flash programming"), 20*20+0));
+					"FLASH_EOP", 20*20+0));
   uc->it_sources->add(is= new cl_it_src(uc, 1,
 					cr1r,0x02,
 					iapsr,0x01,
 					0x8008+1*4, false, false,
-					chars("write attempted to protected page"), 20*20+1));
+					"FLASH_RO", 20*20+1));
   is->init();
 }
 

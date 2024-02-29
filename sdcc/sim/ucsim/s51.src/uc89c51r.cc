@@ -25,10 +25,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdio.h>
-#include <ctype.h>
+//#include <stdio.h>
+//#include <ctype.h>
 
 // local
 #include "uc89c51rcl.h"
@@ -50,7 +50,7 @@ cl_uc89c51r::init(void)
   cpu->cfg_set(uc51cpu_aof_mdpc, 0xA2);
   cpu->cfg_set(uc51cpu_mask_mdpc, 1);
   class cl_memory_chip *dptr_chip=
-    new cl_memory_chip("dptr_chip", 3*8, 8);
+    new cl_chip8("dptr_chip", 3*8, 8);
   dptr_chip->init();
   memchips->add(dptr_chip);
   decode_dptr();
@@ -80,11 +80,11 @@ void
 cl_uc89c51r::reset(void)
 {
   cl_uc51r::reset();
-  sfr->set_bit1(CCAPM0, bmECOM);
-  sfr->set_bit1(CCAPM1, bmECOM);
-  sfr->set_bit1(CCAPM2, bmECOM);
-  sfr->set_bit1(CCAPM3, bmECOM);
-  sfr->set_bit1(CCAPM4, bmECOM);
+  sfr->set(CCAPM0, sfr->get(CCAPM0) | bmECOM);
+  sfr->set(CCAPM1, sfr->get(CCAPM1) | bmECOM);
+  sfr->set(CCAPM2, sfr->get(CCAPM2) | bmECOM);
+  sfr->set(CCAPM3, sfr->get(CCAPM3) | bmECOM);
+  sfr->set(CCAPM4, sfr->get(CCAPM4) | bmECOM);
   sfr->write(IPH, 0);
 }
 

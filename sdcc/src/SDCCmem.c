@@ -358,22 +358,24 @@ allocIntoSeg (symbol *sym)
 {
   memmap *segment;
 
-  if (SPEC_ADDRSPACE (sym->etype))
+  const symbol *symbolspace = getAddrspace (sym->type);
+
+  if (symbolspace)
     {
       namedspacemap *nm;
       for (nm = namedspacemaps; nm; nm = nm->next)
-        if (!strcmp (nm->name, SPEC_ADDRSPACE (sym->etype)->name))
+        if (!strcmp (nm->name, symbolspace->name))
           break;
 
       if (!nm)
         {
           nm = Safe_alloc (sizeof (namedspacemap));
-          nm->name = Safe_alloc (strlen(SPEC_ADDRSPACE (sym->etype)->name) + 1);
-          strcpy (nm->name, SPEC_ADDRSPACE (sym->etype)->name);
-          nm->is_const = (SPEC_ADDRSPACE (sym->etype)->type && SPEC_CONST (SPEC_ADDRSPACE (sym->etype)->type));
+          nm->name = Safe_alloc (strlen(symbolspace->name) + 1);
+          strcpy (nm->name, symbolspace->name);
+          nm->is_const = (symbolspace->type && SPEC_CONST (symbolspace->type));
           nm->map = nm->is_const ?
-            allocMap (0, 1, 0, 0, 0, 1, options.code_loc, SPEC_ADDRSPACE (sym->etype)->name, 'C', CPOINTER) :
-            allocMap (0, 0, 0, 1, 0, 0, options.data_loc, SPEC_ADDRSPACE (sym->etype)->name, 'E', POINTER);
+            allocMap (0, 1, 0, 0, 0, 1, options.code_loc, symbolspace->name, 'C', CPOINTER) :
+            allocMap (0, 0, 0, 1, 0, 0, options.data_loc, symbolspace->name, 'E', POINTER);
           nm->next = namedspacemaps;
           namedspacemaps = nm;
         }
@@ -430,6 +432,11 @@ defaultOClass (symbol *sym)
         }
       else
         {
+          if (!sym->ival && !SPEC_ABSA (sym->etype) && !(IS_EXTERN (sym->etype) || IS_FUNC (sym->type)))
+            {
+              sym->ival = newiList(INIT_DEEP, revinit(newiList(INIT_NODE, newAst_VALUE(constIntVal("0"))))); // Default initialization to 0.
+              sym->ival->lineno = sym->lineDef;
+            }
           SPEC_OCLS (sym->etype) = statsg;
         }
       break;
@@ -602,6 +609,8 @@ allocGlobal (symbol * sym)
         }
       else
         {
+          if (SPEC_SCLS (sym->etype) != S_XDATA)
+            SPEC_SCLS_IMPLICITINTRINSIC (sym->etype) = true;
           SPEC_SCLS (sym->etype) = S_XDATA;
         }
     }
@@ -633,6 +642,12 @@ allocParms (value *val, bool smallc)
 
   for (lval = val; lval; lval = lval->next, pNum++)
     {
+      if (!lval->sym) // Can only happen if there was a syntax error in the declaration.
+        {
+          fatalError++;
+          return;
+        }
+
       /* check the declaration */
       checkDecl (lval->sym, 0);
 
@@ -649,7 +664,7 @@ allocParms (value *val, bool smallc)
       /* if automatic variables r 2b stacked */
       if (options.stackAuto || IFFUNC_ISREENT (currFunc->type))
         {
-          int paramsize = getSize (lval->type) + (getSize (lval->type) == 1 && (smallc || TARGET_PDK_LIKE));
+          int paramsize = getSize (lval->type) + (getSize (lval->type) == 1 && smallc) + (getSize (lval->type) % 2 && TARGET_PDK_LIKE);
 
           if (lval->sym)
             lval->sym->onStack = 1;
@@ -711,7 +726,8 @@ allocParms (value *val, bool smallc)
           /* otherwise depending on the memory model */
           SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) =
               port->mem.default_local_map;
-          if (options.model == MODEL_SMALL)
+          if (options.model == MODEL_SMALL ||
+            options.model == NO_MODEL && !TARGET_PIC_LIKE /* The test for NO_MODEL was introduced to fix an issue for pdk (pdk has no xdata) maybe it is the right thing to do for pic, too. But I don't know about pic*/)
             {
               /* note here that we put it into the overlay segment
                  first, we will remove it from the overlay segment
@@ -749,6 +765,9 @@ deallocParms (value * val)
 
   for (lval = val; lval; lval = lval->next)
     {
+      if (!lval->sym) /* Syntax error in declaration */
+        continue;
+
       /* unmark is myparm */
       lval->sym->ismyparm = 0;
 
@@ -805,6 +824,12 @@ allocLocal (symbol * sym)
             port->fun_prefix,
             currFunc->name, sym->name, sym->level, sym->block);
 
+  if (!sym->ismyparm && IS_ARRAY(sym->type) && DCL_ARRAY_VLA (sym->type))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_VLA_OBJECT);
+      return;
+    }
+
   sym->islocal = 1;
   sym->localof = currFunc;
 
@@ -817,7 +842,7 @@ allocLocal (symbol * sym)
     }
 
   /* if volatile then */
-  if (IS_VOLATILE (sym->etype))
+  if (IS_VOLATILE (sym->type))
     sym->allocreq = 1;
 
   /* this is automatic           */
@@ -854,7 +879,7 @@ allocLocal (symbol * sym)
   /* else depending on the storage class specified */
 
   /* if this is a function then assign code space    */
-  if (IS_FUNC (sym->type))
+  if (IS_FUNC (sym->type) && !sym->isitmp)
     {
       SPEC_OCLS (sym->etype) = code;
       return;
@@ -884,7 +909,9 @@ allocLocal (symbol * sym)
   /* again note that we have put it into the overlay segment
      will remove and put into the 'data' segment if required after
      overlay  analysis has been done */
-  if (options.model == MODEL_SMALL)
+  if (options.model == MODEL_SMALL &&
+    // Do not put anything into overlay segment for non-extern, non-static inline function, since it would never get removed (was bug #3030).
+    !(FUNC_ISINLINE (sym->localof->type) && !IS_EXTERN (getSpec (sym->localof->type)) && !IS_STATIC (getSpec (sym->localof->type))))
     {
       SPEC_OCLS (sym->etype) =
         (options.noOverlay ? port->mem.default_local_map : overlay);
@@ -939,6 +966,7 @@ overlay2data ()
        sym = setNextItem (overlay->syms))
     {
 
+//      SPEC_OCLS (sym->etype) = (options.xdata_spill)?xdata:data;
       SPEC_OCLS (sym->etype) = data;
       allocIntoSeg (sym);
     }
@@ -1007,7 +1035,7 @@ allocVariables (symbol * symChain)
       /* function then do args processing        */
       if (funcInChain (csym->type))
         {
-          processFuncArgs (csym);
+          processFuncArgs (csym, NULL);
         }
 
       /* if this is an extern variable then change */
@@ -1061,7 +1089,7 @@ clearStackOffsets (void)
 
   if (currFunc)
     {
-      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->sams.
+      //wassert(!(currFunc->stack)); // Sometimes some local variable was included in istack->syms.
       currFunc->stack = 0;
     }
 }
@@ -1223,12 +1251,15 @@ printAllocInfoSeg (memmap * map, symbol * func, struct dbuf_s *oBuf)
                 stack_offset = func->stack;
             }
 
+  //        if (IS_STRUCT (func->type->next) && sym->stack < 0)
+   //         stack_offset += GPTRSIZE;
+
           stack_offset += port->stack.offset; /* in case sp/bp points to the next location instead of last */
 
           if (port->stack.direction < 0)
             stack_offset = -stack_offset;
 
-          dbuf_printf (oBuf, "to stack - %s %+d\n", SYM_BP (sym), sym->stack - stack_offset);
+          dbuf_printf (oBuf, "to stack - %s %+d %+d \n", SYM_BP (sym), sym->stack - stack_offset, getSize (sym->type));
           continue;
         }
 
@@ -1258,8 +1289,16 @@ canOverlayLocals (eBBlock ** ebbs, int count)
     {
       return FALSE;
     }
+
+  wassert (currFunc);
+
   /* if this is a forces overlay */
   if (IFFUNC_ISOVERLAY(currFunc->type)) return TRUE;
+
+  // struct / union parameters are written using memcpy, which goes very wrong if they are overlaid with memcpy's parameters.
+  for (value *arg = FUNC_ARGS (currFunc->type); arg; arg = arg->next)
+    if (IS_STRUCT (arg->type))
+      return false;
 
   /* otherwise do thru the blocks and see if there
      any function calls if found then return false */

@@ -25,15 +25,15 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
 // local
 #include "uc390hwcl.h"
 #include "regs51.h"
-#include "uc51cl.h"
+//#include "uc51cl.h"
 
 
 cl_uc390_hw::cl_uc390_hw (class cl_uc *auc):
@@ -76,7 +76,7 @@ cl_uc390_hw::read (class cl_memory_cell *cell)
   if (cell == cell_exif)
     {
       if (ctm_ticks &&
-          uc390->ticks->ticks >= ctm_ticks + 65535)
+          uc390->ticks->get_ticks() >= ctm_ticks + 65535)
 	{
 	  ctm_ticks = 0;
 	  cell->set (cell->get() | 0x08); /* set CKRDY */
@@ -94,7 +94,7 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
     {
       /* Bit 0 (BGS) is TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
 	*val = (*val & ~0x01) | (cell_exif->get() & 0x01);
 
       /* CKRDY and RGMD are read-only */
@@ -104,7 +104,7 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
     {
       /* P4CNT is TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
         *val = cell_p4cnt->get();
       *val |= 0x80; /* always 1 */
     }
@@ -112,7 +112,7 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
     {
       /* ACON is TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
         *val = cell_acon->get();
       else
         {
@@ -126,14 +126,14 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
     {
       /* Bits 0...2 are TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
 	*val = (*val & ~0x07) | (cell_p5cnt->get() & 0x07);
     }
   else if (cell == cell_c0c)
     {
       /* Bit 3 (CRST) is TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
 	*val = (*val & ~0x08) | (cell_c0c->get() & 0x08);
     }
   else if (cell == cell_pmr)
@@ -141,7 +141,7 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
       /* fixme: check previous state */
       if ((*val & 0xd0) == 0x90) /* CD1:CD0 set to 10, CTM set */
         {
-	  ctm_ticks = uc390->ticks->ticks;
+	  ctm_ticks = uc390->ticks->get_ticks();
 	  cell_exif->set (cell_exif->get() & ~0x08); /* clear CKRDY */
         }
       else
@@ -152,7 +152,7 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
     {
       /* MCON is TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
         *val = cell_mcon->get();
       else
         /* lockout: IDM1:IDM0 and SA can't be set at the same time */
@@ -166,14 +166,14 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
       if (*val == 0xAA)
         {
           timed_access_state = 1;
-          timed_access_ticks = uc390->ticks->ticks;
+          timed_access_ticks = uc390->ticks->get_ticks();
         }
       else if (*val == 0x55 &&
                timed_access_state == 1 &&
-               timed_access_ticks + 2*12 >= uc390->ticks->ticks) // fixme: 3 cycles
+               timed_access_ticks + 2*12 >= uc390->ticks->get_ticks()) // fixme: 3 cycles
         {
           timed_access_state = 2;
-          timed_access_ticks = uc390->ticks->ticks;
+          timed_access_ticks = uc390->ticks->get_ticks();
         }
       else
         timed_access_state = 0;
@@ -182,7 +182,7 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
     {
       /* COR is TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
 	*val = cell_cor->get();
     }
   else if (cell == cell_mcnt0)
@@ -209,14 +209,14 @@ cl_uc390_hw::write (class cl_memory_cell *cell, t_mem *val)
     {
       /* Bits 0, 1, 3 and 6 are TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
 	*val = (*val & ~0x4b) | (cell_wdcon->get() & 0x4b);
     }
   else if (cell == cell_c1c)
     {
       /* Bit 3 (CRST) is TA-protected */
       if (timed_access_state != 2 ||
-          timed_access_ticks + 2*12 < uc390->ticks->ticks) // fixme: 3 cycles
+          timed_access_ticks + 2*12 < uc390->ticks->get_ticks()) // fixme: 3 cycles
 	*val = (*val & ~0x08) | (cell_c1c->get() & 0x08);
     }
 }
@@ -262,7 +262,7 @@ cl_uc390_hw::print_info(class cl_console_base *con)
       sfr->get (DPH1) * 256 +
       sfr->get (DPL1);
   con->dd_printf ("\tDPTR1 0x%06lx\n", l);
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 /* End of s51.src/uc390hw.cc */

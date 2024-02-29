@@ -133,7 +133,7 @@ typedef std::vector<var_t> varset_t; // Faster than std::set,  std::tr1::unorder
 
 typedef boost::container::flat_map<int, float> icosts_t; // Faster than std::map and stx::btree_map here.
 
-typedef std::vector<var_t> cfg_alive_t; // Faster than stx::btree_set here .
+typedef std::vector<var_t> cfg_alive_t; // Faster than stx::btree_set here.
 typedef boost::container::flat_set<var_t> cfg_dying_t; // Faster than stx::btree_set and std::set here.
 
 struct assignment
@@ -364,7 +364,7 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
         if (currFunc)
           currFunc->funcDivFlagSafe &= !(ic->op == INLINEASM || ic->op == '/' || ic->op == '%' || ic->op == PCALL ||
             ic->op == CALL && (IS_OP_LITERAL (IC_LEFT (ic)) || !OP_SYMBOL(IC_LEFT (ic))->funcDivFlagSafe) ||
-            ic->op == RIGHT_OP && IS_OP_LITERAL (IC_RIGHT (ic))); // Right shift might be implemented using division.
+            ic->op == RIGHT_OP && IS_OP_LITERAL (IC_RIGHT (ic)) && ulFromVal (OP_VALUE_CONST (IC_RIGHT (ic))) > 2); // Right shift might be implemented using division when shifting by more than 2.
 
 #ifdef DEBUG_SEGV
         default_constructor_of_cfg_node_called = false;
@@ -481,16 +481,9 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
             }
         }
 
-      if (ic->op == IFX)
-        add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_COND(ic), sym_to_index);
-      else if (ic->op == JUMPTABLE)
-        add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_JTCOND(ic), sym_to_index);
-      else
-        {
-          add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_RESULT(ic), sym_to_index);
-          add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_LEFT(ic), sym_to_index);
-          add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_RIGHT(ic), sym_to_index);
-        }
+      add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_RESULT(ic), sym_to_index);
+      add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_LEFT(ic), sym_to_index);
+      add_operand_to_cfg_node(cfg[key_to_index[ic->key]], IC_RIGHT(ic), sym_to_index);
 
       // TODO: Extend live-ranges of returns of built-in function calls back to first SEND.
 
@@ -672,7 +665,6 @@ void assignments_introduce_instruction(assignment_list_t &alist, unsigned short 
         }
       inserter_t& operator++(int i)
         {
-          i;
           return(*this);
         }
       private:
@@ -755,7 +747,7 @@ struct assignment_rep
 };
 
 template <class I_t>
-float compability_cost(const assignment& a, const assignment& ac, const I_t &I)
+float compatibility_cost(const assignment& a, const assignment& ac, const I_t &I)
 {
   typedef typename boost::graph_traits<I_t>::adjacency_iterator adjacency_iter_t;
   
@@ -809,7 +801,7 @@ static void drop_worst_assignments(assignment_list_t &alist, unsigned short int 
   for (n = 0, ai = alist.begin(); n < alist_size; ++ai, n++)
     {
       arep[n].i = ai;
-      arep[n].s = ai->s + rough_cost_estimate(*ai, i, G, I) + compability_cost(*ai, ac, I);
+      arep[n].s = ai->s + rough_cost_estimate(*ai, i, G, I) + compatibility_cost(*ai, ac, I);
     }
 
   std::nth_element(arep + 1, arep + options.max_allocs_per_node / port->num_regs, arep + alist_size);
@@ -836,7 +828,7 @@ static void drop_worst_assignments(assignment_list_t &alist, unsigned short int 
           alist.erase(ai++);
           continue;
         }
-      s += compability_cost(*ai, ac, I);
+      s += compatibility_cost(*ai, ac, I);
       if(s > bound)
         {
           alist.erase(ai++);
@@ -888,6 +880,7 @@ static void tree_dec_ralloc_leaf(T_t &T, typename boost::graph_traits<T_t>::vert
   assignment_list_t &alist = T[t].assignments;
 
   a.s = 0;
+  a.marked = false;
   a.global.resize(boost::num_vertices(I), -1);
   alist.push_back(a);
   

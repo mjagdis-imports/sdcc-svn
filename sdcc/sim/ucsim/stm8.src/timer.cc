@@ -25,6 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
+#include <string.h>
+
 #include "itsrccl.h"
 
 #include "clkcl.h"
@@ -65,6 +67,7 @@ cl_tim::cl_tim(class cl_uc *auc, int aid, t_addr abase):
   for (i= 0; i<32+6; i++)
     regs[i]= 0;
   memset(&idx, 0xff, sizeof(idx));
+  clk_en_is_set= false;
 }
 
 int
@@ -72,7 +75,7 @@ cl_tim::init(void)
 {
   int i;
   chars s("tim");
-  s.append("%d", id);
+  s.appendf("%d", id);
   set_name(s);
   id_string= strdup(s);
   cl_hw::init();
@@ -104,19 +107,22 @@ cl_tim::init(void)
     }
   pbits= 16;
   bidir= true;
-  clk_enabled= false;
+  if (clk_en_is_set)
+    clk_en_is_set= false;
+  else
+    clk_enabled= false;
   
   return 0;
 }
 
-char *
+const char *
 cl_tim::cfg_help(t_addr addr)
 {
   switch (addr)
     {
-    case stm8_tim_on: return (char*)"Turn simulation of timer on/off (bool, RW)";
+    case stm8_tim_on: return "Turn simulation of timer on/off (bool, RW)";
     }
-  return (char*)"Not used";
+  return "Not used";
 }
 
 int
@@ -161,7 +167,7 @@ cl_tim::reset(void)
   regs[idx.arrl]->set(0xff);
 
   update_event();
-  regs[idx.sr1]->set_bit0(uif);
+  regs[idx.sr1]->set(regs[idx.sr1]->get() & ~uif);
 }
 
 void
@@ -175,6 +181,7 @@ cl_tim::happen(class cl_hw *where, enum hw_event he,
       if ((e->cath == HW_TIMER) &&
 	  (e->id == id))
 	clk_enabled= he == EV_CLK_ON;
+      clk_en_is_set= true;
     }
 }
 
@@ -195,7 +202,7 @@ cl_tim::read(class cl_memory_cell *cell)
   a-= base;
 
   if (a == idx.pscrl)
-    v= prescaler_preload && 0xff;
+    v= prescaler_preload & 0xff;
   else if (a == idx.pscrh)
     v= (prescaler_preload >> 8) & 0xff;
     
@@ -374,7 +381,7 @@ cl_tim::update_event(void)
   u8_t c1= regs[idx.cr1]->get();
 
   if (c1 & opm)
-    regs[idx.cr1]->set_bit0(cen);
+    regs[idx.cr1]->set(regs[idx.cr1]->get() & ~cen);
   else
     {
       if (get_dir())
@@ -389,7 +396,7 @@ cl_tim::update_event(void)
 	  set_counter(ar);
 	}
     }
-  regs[idx.sr1]->write_bit1(uif);
+  regs[idx.sr1]->write(regs[idx.sr1]->read() | uif);
 }
 
 // true: UP, false: down
@@ -443,7 +450,7 @@ cl_tim::print_info(class cl_console_base *con)
 		 prescaler_cnt, prescaler_cnt,
 		 calc_prescaler(), calc_prescaler());
   con->dd_printf("arr= 0x%04x %d\n", get_arr(), get_arr());
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

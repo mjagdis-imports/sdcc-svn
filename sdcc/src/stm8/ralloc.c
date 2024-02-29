@@ -3,8 +3,6 @@
 
 #include "dbuf_string.h"
 
-extern void genSTM08Code (iCode *);
-
 reg_info stm8_regs[] =
 {
   {REG_GPR, A_IDX,   "a"},
@@ -80,7 +78,7 @@ DEFSETFUNC (isFreeSTM8)
   /* if it is free && and the itmp assigned to
      this does not have any overlapping live ranges
      with the one currently being assigned and
-     the size can be accomodated  */
+     the size can be accommodated  */
   if (sym->isFree && noOverLap (sym->usl.itmpStack, fsym) && getSize (sym->type) >= getSize (fsym->type))
     {
       *sloc = sym;
@@ -281,7 +279,7 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
 
   if (!IS_ITEMP (IC_RIGHT (ic)) || OP_SYMBOL (IC_RIGHT (ic))->isind || OP_LIVETO (IC_RIGHT (ic)) > ic->seq)
     return 0;
-  
+
   /* Avoid having multiple named address spaces in one iCode. */
   if (IS_SYMOP (IC_RESULT (ic)) && SPEC_ADDRSPACE (OP_SYMBOL (IC_RESULT (ic))->etype))
     return 0;
@@ -363,14 +361,23 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
         }
     }
 
-  /* For now eliminate 8-bit temporary variables only.
+  // Can do wide shift by 1 in place.
+  if ((dic->op == LEFT_OP || dic->op == RIGHT_OP) && IS_OP_LITERAL (IC_RIGHT (dic)) && operandLitValue (IC_RIGHT (dic))  == 1 &&
+    IS_SYMOP (IC_LEFT (dic)) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_LEFT (dic)) == OP_SYMBOL (IC_RESULT (ic)))
+    ;
+  // Optimize out short-lived extra temporary.
+  else if ((dic->op == CAST ||
+    dic->op == UNARYMINUS || dic->op == '+' || dic->op == '-' || dic->op == '*' || dic->op == '%' ||
+    dic->op == '~' || dic->op == '^' || dic->op == '|' || dic->op == BITWISEAND ||
+    dic->op == LEFT_OP || dic->op == RIGHT_OP || dic->op == ROT || dic->op == GETABIT) &&
+    dic->next == ic && IS_ITEMP (IC_RESULT (ic)))
+    ;
+  /* Otherwise, for now eliminate 8-bit temporary variables only.
      The STM8 instructions operating directly on memory
      operands are 8-bit, so the most benefit is in 8-bit
      operations. On the other hand, supporting wider
-     operations well in codegen is also more effort. */
-  if (bitsForType (operandType (IC_RESULT (dic))) > 8 &&
-    !((dic->op == LEFT_OP || dic->op == RIGHT_OP) && IS_OP_LITERAL (IC_RIGHT (dic)) && operandLitValue (IC_RIGHT (dic))  == 1 && // Can do wide shift by 1 in place.
-      IS_SYMOP (IC_LEFT (dic)) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_LEFT (dic)) == OP_SYMBOL (IC_RESULT (ic))))
+     operations well in codegen is also more effort. */ 
+  else if (bitsForType (operandType (IC_RESULT (dic))) > 8)
     return 0;
 
   /* if the result is on stack or iaccess then it must be
@@ -542,7 +549,7 @@ packRegisters (eBBlock * ebp)
       /* if straight assignment then carry remat flag if this is the
          only definition */
       if (ic->op == '=' && IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the paramter is not accounted for in DEFS */
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_SYMBOL (IC_RESULT (ic))->defs) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the parameter is not accounted for in DEFS */
         !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           OP_SYMBOL (IC_RESULT (ic))->remat = OP_SYMBOL (IC_RIGHT (ic))->remat;
@@ -553,7 +560,7 @@ packRegisters (eBBlock * ebp)
          cast is remat, then we can remat this cast as well */
       if (ic->op == CAST &&
         IS_SYMOP (IC_RIGHT (ic)) && OP_SYMBOL (IC_RIGHT (ic))->remat &&
-        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the paramter is not accounted for in DEFS */
+        !isOperandGlobal (IC_RESULT (ic)) && bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1 && !IS_PARM (IC_RESULT (ic)) && /* The receiving of the parameter is not accounted for in DEFS */
         !OP_SYMBOL (IC_RESULT (ic))->addrtaken)
         {
           sym_link *to_type = operandType (IC_LEFT (ic));
@@ -564,6 +571,21 @@ packRegisters (eBBlock * ebp)
               OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;
               OP_SYMBOL (IC_RESULT (ic))->usl.spillLoc = NULL;
             }
+        }
+
+      /* if this is a +/- operation with a rematerializable
+         then mark this as rematerializable as well */
+      if ((ic->op == '+' || ic->op == '-') &&
+          IS_SYMOP (IC_LEFT (ic)) &&
+          IS_ITEMP (IC_RESULT (ic)) &&
+          IS_OP_LITERAL (IC_RIGHT (ic)) &&
+          OP_SYMBOL (IC_LEFT (ic))->remat &&
+          (!IS_SYMOP (IC_RIGHT (ic)) || !IS_CAST_ICODE (OP_SYMBOL (IC_RIGHT (ic))->rematiCode)) &&
+          bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) == 1)
+        {
+          OP_SYMBOL (IC_RESULT (ic))->remat = 1;
+          OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;
+          OP_SYMBOL (IC_RESULT (ic))->usl.spillLoc = NULL;
         }
 
       /* In some cases redundant moves can be eliminated */
@@ -608,16 +630,13 @@ serialRegMark (eBBlock ** ebbs, int count)
               stm8_call_stack_size = ic->parmBytes + 5 + 2 * (getSize (ftype->next) > 4);
             }
 
-          if (ic->op == IPOP)
-            wassert (0);
-
           /* if result is present && is a true symbol */
           if (IC_RESULT (ic) && ic->op != IFX && IS_TRUE_SYMOP (IC_RESULT (ic)))
             OP_SYMBOL (IC_RESULT (ic))->allocreq++;
 
           /* some don't need registers, since there is no result. */
           if (SKIP_IC2 (ic) ||
-              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == IPOP || ic->op == SET_VALUE_AT_ADDRESS)
+              ic->op == JUMPTABLE || ic->op == IFX || ic->op == IPUSH || ic->op == SET_VALUE_AT_ADDRESS)
             continue;
 
           /* now we need to allocate registers only for the result */
@@ -633,7 +652,7 @@ serialRegMark (eBBlock ** ebbs, int count)
                   sym->isspilt = FALSE;
                 }
 
-              /* Make sure any spill location is definately allocated */
+              /* Make sure any spill location is definitely allocated */
               if (sym->isspilt && !sym->remat && sym->usl.spillLoc && !sym->usl.spillLoc->allocreq)
                 sym->usl.spillLoc->allocreq++;
 
@@ -653,7 +672,7 @@ serialRegMark (eBBlock ** ebbs, int count)
                   sym->isspilt = false;
                 }
 
-              if (sym->nRegs > 4 && ic->op == CALL) // To be allocated to stack due to the way long long return values are handled via a hidden pointer.
+              if (sym->nRegs > 4 && (ic->op == CALL || ic->op == PCALL)) // To be allocated to stack due to the way long long return values are handled via a hidden pointer.
                 {
                   sym->for_newralloc = 0;
                   stm8SpillThis (sym, TRUE);
@@ -729,26 +748,12 @@ stm8RegFix (eBBlock ** ebbs, int count)
           if (SKIP_IC2 (ic))
             continue;
 
-          if (ic->op == IFX)
-            {
-              verifyRegsAssigned (IC_COND (ic), ic);
-              continue;
-            }
-
-          if (ic->op == JUMPTABLE)
-            {
-              verifyRegsAssigned (IC_JTCOND (ic), ic);
-              continue;
-            }
-
           verifyRegsAssigned (IC_RESULT (ic), ic);
           verifyRegsAssigned (IC_LEFT (ic), ic);
           verifyRegsAssigned (IC_RIGHT (ic), ic);
         }
     }
 }
-
-void stm8_init_asmops (void);
 
 /*-----------------------------------------------------------------*/
 /* assignRegisters - assigns registers to each live range as need  */
@@ -759,8 +764,6 @@ stm8_assignRegisters (ebbIndex *ebbi)
   eBBlock **ebbs = ebbi->bbOrder;
   int count = ebbi->count;
   iCode *ic;
-
-  stm8_init_asmops();
 
   transformPointerSet (ebbs, count);
 

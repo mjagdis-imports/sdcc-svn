@@ -153,7 +153,7 @@ cl_option::get_value(char **val)
 }
 
 void
-cl_option::set_value(char *opt)
+cl_option::set_value(const char *opt)
 {
   //fprintf(stderr,"set_string_value (%s) to %p\"%s\"\n",opt,this,object_name(this));
   //fprintf(stderr,"old value=%p\"%s\"\n",value.sval,value.sval);
@@ -166,12 +166,6 @@ cl_option::set_value(char *opt)
     value.sval= strdup("");
   //fprintf(stderr,"new value=%p\"%s\"\n",value.sval,value.sval);
   inform_users();
-}
-
-void
-cl_option::set_value(const char *opt)
-{
-  set_value(cchars(opt));
 }
 
 void
@@ -223,24 +217,20 @@ cl_option::set_value(double opt)
  * List of options
  */
 
-void *
-cl_options::key_of(void *item)
+const void *
+cl_options::key_of(const void *item) const
 {
-  return (void*)(((class cl_base *)item)->get_name());
+  return ((const class cl_base *)item)->get_name();
 }
 
 int
-cl_options::compare(void *key1, void *key2)
+cl_options::compare(const void *key1, const void *key2)
 {
-  //class cl_option *k1, *k2;
-  int i;
-  char *k1, *k2;
+  const char *k1, *k2;
 
-  k1= /*(class cl_option *)*/(char *)key1;
-  k2= /*(class cl_option *)*/(char *)key2;
-  if ((i= strcmp(k1, k2)) != 0)
-    return(i);
-  return(i);
+  k1= (const char *)key1;
+  k2= (const char *)key2;
+  return strcmp(k1, k2);
 }
 
 void
@@ -262,7 +252,7 @@ cl_options::get_option(const char *the_name)
 {
   t_index idx;
 
-  if (search((void*)the_name, idx))
+  if (search(the_name, idx))
     return((class cl_option *)(at(idx)));
   return(0);
 }
@@ -273,71 +263,71 @@ cl_options::get_option(const char *the_name, class cl_base *creator)
   t_index idx;
   class cl_option *o;
 
-  if (!search((void*)the_name, idx))
+  if (!search(the_name, idx))
     return(0);
   if (idx > 0)
     {
       idx--;
       o= (class cl_option *)(at(idx));
-      while (compare((void*)the_name, key_of(o)) == 0 &&
+      while (compare(the_name, key_of(o)) == 0 &&
 	     idx > 0)
 	{
 	  idx--;
 	  o= (class cl_option *)(at(idx));
 	}
-      if (compare((void*)the_name, key_of(o)) != 0)
+      if (compare(the_name, key_of(o)) != 0)
 	idx++;
     }
   o= (class cl_option *)(at(idx));
-  while (compare((void*)the_name, key_of(o)) == 0 &&
+  while (compare(the_name, key_of(o)) == 0 &&
 	 o->get_creator() != creator &&
 	 idx < count)
     {
       idx++;
       o= (class cl_option *)(at(idx));
-      if (compare((void*)the_name, key_of(o)) == 0 &&
+      if (compare(the_name, key_of(o)) == 0 &&
 	  o->get_creator() == creator)
 	return(o);
     }
-  if (compare((void*)the_name, key_of(o)) == 0 &&
+  if (compare(the_name, key_of(o)) == 0 &&
       o->get_creator() == creator)
     return(o);
   return(0);
 }
 
 class cl_option *
-cl_options::get_option(const char *the_name, char *creator)
+cl_options::get_option(const char *the_name, const char *creator)
 {
   t_index idx;
   class cl_option *o;
 
-  if (!search((void*)the_name, idx))
+  if (!search(the_name, idx))
     return(0);
   if (idx > 0)
     {
       idx--;
       o= (class cl_option *)(at(idx));
-      while (compare((void*)the_name, key_of(o)) == 0 &&
+      while (compare(the_name, key_of(o)) == 0 &&
 	     idx > 0)
 	{
 	  idx--;
 	  o= (class cl_option *)(at(idx));
 	}
-      if (compare((void*)the_name, key_of(o)) != 0)
+      if (compare(the_name, key_of(o)) != 0)
 	idx++;
     }
   o= (class cl_option *)(at(idx));
-  while (compare((void*)the_name, key_of(o)) == 0 &&
+  while (compare(the_name, key_of(o)) == 0 &&
 	 strcmp(object_name(o->get_creator()), creator) != 0 &&
 	 idx < count)
     {
       idx++;
       o= (class cl_option *)(at(idx));
-      if (compare((void*)the_name, key_of(o)) == 0 &&
+      if (compare(the_name, key_of(o)) == 0 &&
 	  strcmp(object_name(o->get_creator()), creator) == 0)
 	return(o);
     }
-  if (compare((void*)the_name, key_of(o)) == 0 &&
+  if (compare(the_name, key_of(o)) == 0 &&
       strcmp(object_name(o->get_creator()), creator) == 0)
     return(o);
   return(0);
@@ -366,7 +356,7 @@ cl_options::nuof_options(char *the_name)
 }
 
 int
-cl_options::nuof_options(char *the_name, char *creator)
+cl_options::nuof_options(char *the_name, const char *creator)
 {
   int i, n= 0;
 
@@ -391,7 +381,7 @@ cl_options::set_value(const char *the_name, cl_base *creator, bool value)
 }
 
 class cl_option *
-cl_options::set_value(const char *the_name, cl_base *creator, char *value)
+cl_options::set_value(const char *the_name, cl_base *creator, const char *value)
 {
   class cl_option *o= get_option(the_name, creator);
 
@@ -446,6 +436,17 @@ cl_optref::cl_optref(class cl_base *the_owner, class cl_option *new_option)
   owner= the_owner;
   option= new_option;
   application->options->new_option(option);
+  if (option)
+    {
+      option->new_reference(this);
+      set_name(option->get_name());
+    }
+}
+
+cl_optref::cl_optref(class cl_base *the_owner, const char *to_use)
+{
+  owner= the_owner;
+  option= application->options->get_option(to_use);
   if (option)
     {
       option->new_reference(this);
@@ -556,8 +557,6 @@ cl_optref::get_value(bool)
 {
   if (!option)
     {
-      fprintf(stderr, "Warning: \"%s\" is dereferencing a non-existent "
-	      "bool option: %s\n", object_name(owner), get_name());
       return(false);
     }
   else
@@ -568,15 +567,20 @@ cl_optref::get_value(bool)
     }
 }
 
+bool
+cl_optref::get_value(bool *val)
+{
+  if (!option)
+    return false;
+  option->get_value(val);
+  return false;
+}
+
 char *
 cl_optref::get_value(const char *)
 {
   if (!option)
     {
-      char *o= (char *)object_name(owner);
-      char *n= (char *)get_name();
-      fprintf(stderr, "Warning: \"%s\" is dereferencing a non-existent "
-	      "string option: %s\n", o, n?n:"?"); 
       return(0);
     }
   else
@@ -592,8 +596,6 @@ cl_optref::get_value(void *)
 {
   if (!option)
     {
-      fprintf(stderr, "Warning: \"%s\" is dereferencing a non-existent "
-	      "pointer option: %s\n", object_name(owner), get_name());
       return(0);
     }
   else
@@ -609,8 +611,6 @@ cl_optref::get_value(long)
 {
   if (!option)
     {
-      fprintf(stderr, "Warning: \"%s\" is dereferencing a non-existent "
-	      "number option: %s\n", object_name(owner), get_name());
       return(0);
     }
   else
@@ -621,13 +621,20 @@ cl_optref::get_value(long)
     }
 }
 
+bool
+cl_optref::get_value(long *val)
+{
+  if (!option)
+    return false;
+  option->get_value(val);
+  return true;
+}
+
 double
 cl_optref::get_value(double)
 {
   if (!option)
     {
-      fprintf(stderr, "Warning: \"%s\" is dereferencing a non-existent "
-	      "float option: %s\n", object_name(owner), get_name());
       return(0);
     }
   else
@@ -660,7 +667,7 @@ cl_bool_option::print(class cl_console_base *con)
 }
 
 void
-cl_bool_option::set_value(char *s)
+cl_bool_option::set_value(const char *s)
 {
   char c;
 
@@ -709,7 +716,7 @@ cl_string_option::print(class cl_console_base *con)
 
 
 /*
- * PONITER type of option
+ * POINTER type of option
  *____________________________________________________________________________
  *
  */
@@ -779,7 +786,7 @@ cl_cons_debug_opt::set_value(bool opt)
 }
 
 void
-cl_cons_debug_opt::set_value(char *s)
+cl_cons_debug_opt::set_value(const char *s)
 {
   char c;
 
@@ -815,7 +822,7 @@ cl_number_option::print(class cl_console_base *con)
 }
 
 void
-cl_number_option::set_value(char *s)
+cl_number_option::set_value(const char *s)
 {
   if (s)
     value.ival= strtol(s, 0, 0);
@@ -841,7 +848,7 @@ cl_float_option::print(class cl_console_base *con)
 }
 
 void
-cl_float_option::set_value(char *s)
+cl_float_option::set_value(const char *s)
 {
   if (s)
     value.fval= strtod(s, 0);

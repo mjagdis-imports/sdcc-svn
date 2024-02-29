@@ -84,6 +84,7 @@ pic16_sectioninfo_t pic16_sectioninfo;
 int has_xinst_config = 0;
 
 static int regParmFlg = 0;  /* determine if we can register a parameter */
+static struct sym_link *regParmFuncType;
 
 pic16_options_t pic16_options;
 pic16_config_options_t *pic16_config_options;
@@ -113,11 +114,15 @@ static void
 _pic16_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
+  regParmFuncType = funcType;
 }
 
 static int
 _pic16_regparm (sym_link * l, bool reentrant)
 {
+  if (IFFUNC_HASVARARGS (regParmFuncType))
+    return 0;
+
   /* force all parameters via SEND/RECEIVE */
   if(0 /*pic16_options.ip_stack*/) {
     /* for this processor it is simple
@@ -1224,16 +1229,11 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == RRC
-      || op == RLC
-      || op == GETABIT
-      /* || op == GETHBIT */ /* GETHBIT doesn't look complete for PIC */
-     )
-    return TRUE;
-  else
-    return FALSE;
+  unsigned int lbits = bitsForType (left);
+  return (op == ROT && (right & lbits == 1 || right % lbits == lbits - 1) ||
+    op == GETABIT);
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -1314,10 +1314,11 @@ PORT pic16_port =
     2,      /* near ptr */
     3,      /* far ptr, far pointers (see Microchip) */
     3,      /* gptr */
-    2,      /* func ptr */
+    3,      /* func ptr */
     3,      /* banked func ptr */
     1,      /* bit */
     4,      /* float */
+    0,      /* _BitInt (in bits) */
   },
 
     /* generic pointer tags */
@@ -1353,12 +1354,14 @@ PORT pic16_port =
     NULL,                   // default location for auto vars
     NULL,                   // default location for global vars
     1,                      // code is read only 1=yes
+    true,                  // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
     1                       // No fancy alignments supported.
   },
   {
     NULL,       /* genExtraAreaDeclaration */
     NULL        /* genExatrAreaLinkOptions */
   },
+  0,            /* ABI revision */
   {
     /* stack related information */
     -1,         /* -1 stack grows downwards, +1 upwards */
@@ -1370,7 +1373,7 @@ PORT pic16_port =
     1           /* sp is offset by 1 from last item pushed */
   },
   {
-     -1, FALSE
+    -1, false, false         // Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine.
   },
   {
     pic16_emitDebuggerSymbol

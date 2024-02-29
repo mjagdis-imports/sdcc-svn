@@ -74,7 +74,8 @@ cl_z80::inst_XXcb_rlc(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -118,7 +119,8 @@ cl_z80::inst_XXcb_rrc(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -162,7 +164,8 @@ cl_z80::inst_XXcb_rl(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -206,7 +209,8 @@ cl_z80::inst_XXcb_rr(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -250,7 +254,8 @@ cl_z80::inst_XXcb_sla(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -294,7 +299,8 @@ cl_z80::inst_XXcb_sra(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -338,7 +344,8 @@ cl_z80::inst_XXcb_slia(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -382,7 +389,8 @@ cl_z80::inst_XXcb_srl(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -402,7 +410,8 @@ cl_z80::inst_XXcb_bit(t_mem code)
   
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(19);
   return(resGO);
 }
 
@@ -441,7 +450,8 @@ cl_z80::inst_XXcb_res(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -480,7 +490,8 @@ cl_z80::inst_XXcb_set(t_mem code)
   }
   store1(addr, tmp);
   vc.wr++;
-  
+
+  tick(22);
   return(resGO);
 }
 
@@ -496,7 +507,6 @@ cl_z80::inst_XXcb(void)
 
   if (fetch(&code))
     return(resBREAKPOINT);
-  tick(1);
   switch (code)
     {
     case 0x00: // RLC B
@@ -711,11 +721,8 @@ cl_z80::inst_XXcb(void)
     case 0xFF: // SET 7,A
       return (inst_XXcb_set(code));
     }
-  /*if (PC)
-    PC--;
-  else
-  PC= get_mem_size(MEM_ROM_ID)-1;*/
-  PC= rom->inc_address(PC, -1);
+
+  //PC= instPC;//rom->inc_address(PC, -1);
   return(resINV_INST);
 }
 

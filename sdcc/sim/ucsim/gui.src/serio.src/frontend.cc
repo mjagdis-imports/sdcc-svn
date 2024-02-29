@@ -2,31 +2,35 @@
  * to emulate the serial input and output of an 8051 controller               *
  * frontend.cc - the ncurses frontend                                         *
  ******************************************************************************/
-#include <sys/types.h>
-#include <iostream>
+
+#include <stdio.h>
+#include <ctype.h>
+//#include <sys/types.h>
+//#include <iostream>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <curses.h>
-#include <errno.h>
+//#include <sys/stat.h>
+//#include <fcntl.h>
+//#include <curses.h>
+//#include <errno.h>
 #include <string.h>
-#include <unistd.h>
+//#include <unistd.h>
+
 #include "frontend.hh"
 
-char *
+static const char *
 flt_name(enum filter_t f)
 {
   switch (f)
     {
-    case flt_none	: return (char*)"none";
-    case flt_hex	: return (char*)"hex";
+    case flt_none	: return "none";
+    case flt_hex	: return "hex";
     }
-  return (char*)"unknown";
+  return "unknown";
 }
 
 Viewer::Viewer()
 {
-  /* initalise the output screen */
+  /* initialise the output screen */
   initscr();
   cbreak();
   noecho();
@@ -66,7 +70,7 @@ Viewer::Viewer()
   inp = subwin(stdscr, inp_c.max_y, inp_c.max_x, inp_c.min_y, inp_c.min_x);
   outp = subwin(stdscr, outp_c.max_y, outp_c.max_x, outp_c.min_y,outp_c.min_x);
   
-  // initalise the windows
+  // initialise the windows
   touchwin(inp);
   werase(inp);
   wrefresh(inp);
@@ -113,7 +117,7 @@ Viewer::oflt_mode(enum filter_t oflt)
 {
   char s[100];
   flt_out= oflt;
-  sprintf(s, "Otput filter: %s\n", flt_name(flt_out));
+  sprintf(s, "Output filter: %s\n", flt_name(flt_out));
   waddstr(outp, s);
   wrefresh(outp);
   wrefresh(inp);

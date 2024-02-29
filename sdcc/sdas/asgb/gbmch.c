@@ -1,7 +1,7 @@
 /* gbmch.c */
 
 /*
- *  Copyright (C) 1989-2009  Alan R. Baldwin
+ *  Copyright (C) 1989-2021  Alan R. Baldwin
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,19 @@
  */
 
 /*
+ * xerr messages Copyright (C) 1989-2021  Alan R. Baldwin
+ * from ASxxxx 5.40
+ * Things missing that exist in 5.40:
+ * .rel format
+ * cycle counting
+ */
+
+/*
  * Extensions: P. Felber
+ *
+ * they seem to be:
+ * ldhl
+ * lda
  */
 
 /* Gameboy mods by Roger Ivie (ivie at cc dot usu dot edu); see gb.h for more info 
@@ -32,7 +44,7 @@
 #include "asxxxx.h"
 #include "gb.h"
 
-char    *cpu    = "GameBoy Z80-like CPU";
+char    *cpu    = "GameBoy";
 char    *dsft   = "asm";
 
 char    imtab[3] = { 0x46, 0x56, 0x5E };
@@ -50,6 +62,56 @@ char    imtab[3] = { 0x46, 0x56, 0x5E };
 #define P2      ((char) (OPCY_NONE | 0x01))
 
 /*
+ * GB Opcode Cycle Pages
+ */
+
+static char  gbpg1[256] = {
+/*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
+/*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+/*00*/   4,12, 8, 8, 4, 4, 8, 4,20, 8, 8, 8, 4, 4, 8, 4,
+/*10*/   4,12, 8, 8, 4, 4, 8, 4,12, 8, 8, 8, 4, 4, 8, 4,
+/*20*/  12,12, 8, 8, 4, 4, 8, 4,12, 8, 8, 8, 4, 4, 8, 4,
+/*30*/  12,12, 8, 8,12,12,12, 4,12, 8, 8, 8, 4, 4, 8, 4,
+/*40*/   4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+/*50*/   4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+/*60*/   4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+/*70*/   8, 8, 8, 8, 8, 8, 4, 8, 4, 4, 4, 4, 4, 4, 8, 4,
+/*80*/   4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+/*90*/   4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+/*A0*/   4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+/*B0*/   4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+/*C0*/  20,12,16,16,24,16, 8,16,20,16,16,P2,24,24, 8,16,
+/*D0*/  20,12,16,UN,24,16, 8,16,20,16,16,UN,24,UN, 8,16,
+/*E0*/  12,12, 8,UN,UN,16, 8,16,16, 4,16,UN,UN,UN, 8,16,
+/*F0*/  12,12, 8, 4,UN,16, 8,16,12, 8,16, 4,UN,UN, 8,16
+};
+
+static char  gbpg2[256] = {  /* P2 == CB */
+/*--*--* 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
+/*--*--* -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - */
+/*00*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*10*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*20*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*30*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*40*/   8, 8, 8, 8, 8, 8,12, 8, 8, 8, 8, 8, 8, 8,12, 8,
+/*50*/   8, 8, 8, 8, 8, 8,12, 8, 8, 8, 8, 8, 8, 8,12, 8,
+/*60*/   8, 8, 8, 8, 8, 8,12, 8, 8, 8, 8, 8, 8, 8,12, 8,
+/*70*/   8, 8, 8, 8, 8, 8,12, 8, 8, 8, 8, 8, 8, 8,12, 8,
+/*80*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*90*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*A0*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*B0*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*C0*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*D0*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*E0*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8,
+/*F0*/   8, 8, 8, 8, 8, 8,16, 8, 8, 8, 8, 8, 8, 8,16, 8
+};
+
+static char *gbPage[2] = {
+    gbpg1, gbpg2
+};
+
+/*
  * Process a machine op.
  */
 VOID
@@ -59,6 +121,7 @@ struct mne *mp;
         int op, t1, t2;
         struct expr e1, e2;
         int rf, v1, v2;
+	int d,c,i,th,tl,oops; /* for dealing with .tile */
 
         clrexpr(&e1);
         clrexpr(&e2);
@@ -75,7 +138,7 @@ struct mne *mp;
                         if ((v1 = admode(CND)) != 0) {
                                 outab(op | (v1<<3));
                         } else {
-                                qerr();
+                                xerr('q', "Condition codes are NZ, Z, NC, and C.");
                         }
                 } else {
                         outab(0xC9);
@@ -91,13 +154,13 @@ struct mne *mp;
                         outab(op | (v1<<4));
                         break;
                 }
-                aerr();
+                xerr('a', "Register SP is invalid.");
                 break;
 
         case S_RST:
                 v1 = (int) absexpr();
                 if (v1 & ~0x38) {
-                        aerr();
+                        xerr('a', "Valid values are N * 0x08, N = 0 -> 7.");
                         v1 = 0;
                 }
                 outab(op|v1);
@@ -107,7 +170,7 @@ struct mne *mp;
                 expr(&e1, 0);
                 abscheck(&e1);
                 if (e1.e_addr > 2) {
-                        aerr();
+                        xerr('a', "Valid values are 0 -> 2.");
                         e1.e_addr = 0;
                 }
                 outab(op);
@@ -127,7 +190,7 @@ struct mne *mp;
                 addr(&e2);
                 abscheck(&e1);
                 if (genop(0xCB, op, &e2, 0) || t1)
-                        aerr();
+                        xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_RL:
@@ -141,8 +204,10 @@ struct mne *mp;
                         t2 = addr(&e2);
                 }
                 if (genop(0xCB, op, &e2, 0) || t1)
-                        aerr();
+                        xerr('a', "Invalid Addressing Mode.");
                 break;
+        
+        /* TODO: where is S_SWAP? */
 
         case S_AND:
         case S_SUB:
@@ -156,7 +221,7 @@ struct mne *mp;
                         t2 = addr(&e2);
                 }
                 if (genop(0, op, &e2, 1) || t1)
-                        aerr();
+                        xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_ADC:
@@ -169,15 +234,15 @@ struct mne *mp;
                 }
                 if (t2 == 0) {
                         if (genop(0, op, &e1, 1))
-                                aerr();
+                                xerr('a', "Invalid Addressing Mode.");
                         break;
                 }
                 if ((t1 == S_R8) && (e1.e_addr == A)) {
                         if (genop(0, op, &e2, 1))
-                                aerr();
+                                xerr('a', "Invalid Addressing Mode.");
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_ADD:
@@ -189,32 +254,40 @@ struct mne *mp;
                 }
                 if (t2 == 0) {
                         if (genop(0, op, &e1, 1))
-                                aerr();
+                                xerr('a', "Invalid Addressing Mode.");
                         break;
                 }
                 if ((t1 == S_R8) && (e1.e_addr == A)) {
                         if (genop(0, op, &e2, 1))
-                                aerr();
+                                xerr('a', "Invalid Addressing Mode.");
                         break;
                 }
                 if ((t1 == S_R16) && (t2 == S_R16)) {
-                        op = 0x09;
-                        v1 = (int) e1.e_addr;
-                        v2 = (int) e2.e_addr;
-                        if ((v1 == HL) && (v2 <= SP)) {
-                                outab(op | (v2 << 4));
-                                break;
+                        if( rf == S_ADD ) {
+                                op = 0x09;
+                                v1 = (int) e1.e_addr;
+                                v2 = (int) e2.e_addr;
+                                if ((v1 == HL) && (v2 <= SP)) {
+                                        outab(op | (v2 << 4));
+                                        break;
+                                }
                         }
                 }
                 /*
                  * 0xE8 : ADD SP,#n
                  */
-                if ((t1 == S_R16) && (e1.e_addr == SP) && (t2 == S_IMMED)) {
-                        outab(0xE8);
-                        outrb(&e2,0);
-                        break;
+                if ((t1 == S_R16) && (t2 == S_IMMED)) {
+                        if (rf != S_ADD ) {
+                                xerr('a', "ADC, SUB, and SBC are invalid.");
+                                break;
+                        }
+                        if( e1.e_addr == SP ) {
+                                outab(0xE8);
+                                outrb(&e2,0);
+                                break;
+                        }
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_LD:
@@ -318,9 +391,10 @@ struct mne *mp;
                         outab(0x22);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
+        /* TODO: find out where this handled in upstream */
         case S_STOP:    /* 0x10 */
                 /*
                  * 0x10 : STOP
@@ -329,8 +403,7 @@ struct mne *mp;
                 outab(0x00);
                 break;
 
-
-        case S_LDA:     /* 0xE8 */
+        case S_LDA:     /* 0xE8 */ /* extension */
                 /*
                  * 0xE8 : LDA SP,#n(SP)
                  * 0xF8 : LDA HL,#n(SP)
@@ -348,10 +421,10 @@ struct mne *mp;
                         outrb(&e2,0);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
-        case S_LDHL:    /* 0xF8 */
+        case S_LDHL:    /* 0xF8 */ /* extension */
                 /*
                  * 0xF8 : LDHL SP,#n
                  */
@@ -363,7 +436,7 @@ struct mne *mp;
                         outrb(&e2,0);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_DEC:
@@ -388,7 +461,7 @@ struct mne *mp;
                                 break;
                         }
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_JR:
@@ -396,7 +469,7 @@ struct mne *mp;
                         if ((v1 &= 0xFF) <= 0x03) {
                                 op += (v1+1)<<3;
                         } else {
-                                aerr();
+                                xerr('q', "Condition codes are NZ, Z, NC, and C.");
                         }
                         comma(1);
                 }
@@ -405,7 +478,7 @@ struct mne *mp;
                 if (mchpcr(&e2)) {
                         v2 = (int) (e2.e_addr - dot.s_addr - 1);
                         if (pass == 2 && ((v2 < -128) || (v2 > 127)))
-                                aerr();
+                                xerr('a', "Branching Range Exceeded.");
                         outab(v2);
                 } else {
                         outrb(&e2, R_PCR);
@@ -445,7 +518,7 @@ struct mne *mp;
                         outab(0xE9);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
         case S_LDH:
@@ -480,13 +553,128 @@ struct mne *mp;
                         outab(0xE2);
                         break;
                 }
-                aerr();
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
+	case S_TILE:
+                /* Ported from ASXXXX 5.40 */
+		/* The .tile pseudo-op. It generates two bytes from
+		 * an 8-character ASCII string to represent a line of
+		 * pixels in a Gameboy character.
+		 */
+
+		/* Like .ASCII, the first character after .TILE is used
+		 * as the string delimiter. Get it.
+		 */
+
+		if ((d = getnb()) == '^') {
+		  d = get();
+		}
+		if(d == '\0' ) {
+		  xerr('q', "TILE is a chunk of 8 characters."); 
+		}
+
+		/* .tile deals with chunks of 8 characters. We need to
+		 * generate an error if we get fewer than 8 characters in
+		 * chunk, so we have a modulo-8 counter to keep track of
+		 * how many characters we've processed. We also need to
+		 * generate an error if we see a character we don't 
+		 * recognize; this can be done either with a goto
+		 * or an 'oops' flag. Although I normally lean towards
+		 * goto implementations, since I didn't design _all_
+		 * of this code that would be ugly; so we need to
+		 * initialize the oops flag. We also need to initialize
+		 * the variables we'll be using to collect the bits.
+		 */
+
+		i = 0;
+		c = get(); /* Prime the pump */
+		th = 0;
+		tl = 0;
+		oops = 0;
+
+		/* Process characters until we find one we don't
+		 * understand, encounter the delimiter, or run into
+		 * the end of line.
+		 */
+
+		while( ( oops == 0 ) && ( c != d ) && ( c != 0 ) ) {
+
+		  th = th << 1;
+		  tl = tl << 1;
+
+		  switch( c ) {
+		    case ' ':
+		    case '0':
+		      break;
+		    case '.':
+		    case '1':
+		      tl++; 
+		      break;
+		    case '+':
+		    case '2':
+		      th++; 
+		      break;
+		    case '*':
+		    case '3':
+		      th++; 
+		      tl++; 
+		      break;
+		    default:  
+		      oops = 1;
+		      break;
+		  }
+
+		  c = get();
+		  i++;
+
+		  /* Spit out the tile data.
+		   */
+
+		  if( i == 8 ) {
+		    outab( tl );
+		    outab( th );
+		    i = 0;
+		    tl = 0;
+		    th = 0;
+		  }
+		}
+
+		/* Figure out whether we left the while loop early. If so,
+		 * complain.
+		 */
+
+		if( i != 0 ) {
+		  xerr('a', "Invalid character or terminated without 8 characters.");
+		  break;
+		}
+
+		/* Make sure we have the delimiter next. This should
+		 * already have been fetched by the end of the while().
+		 * What this primarily buys us that the check for
+		 * the modulo-8 counter does not is detecting a string
+		 * which ended with an end-of-line rather than a
+		 * delimiter.
+		 */
+
+		if( c != d ) {
+		  xerr('q', "Missing TILE terminator.");
+		  break;
+		}
+
+		break;
         default:
-                err('o');
+		opcycles = OPCY_ERR;
+                xerr('o', "Internal Opcode Error.");
                 break;
         }
+
+	if (opcycles == OPCY_NONE) {
+		opcycles = gbpg1[cb[0] & 0xFF];
+		if ((opcycles & OPCY_NONE) && (opcycles & OPCY_MASK)) {
+			opcycles = gbPage[opcycles & OPCY_MASK][cb[1] & 0xFF];
+		}
+	}
 }
 
 /*
@@ -558,4 +746,9 @@ minit()
          * Byte Order
          */
         hilo = 0;
+
+        /*
+         * Address Space
+         */
+        exprmasks(4);
 }

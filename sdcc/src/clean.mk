@@ -1,4 +1,4 @@
-CLEANALLPORTS = avr ds390 ds400 hc08 mcs51 pic14 pic16 stm8 z80 xa51
+CLEANALLPORTS = avr ds390 ds400 hc08 mos6502 mcs51 pic14 pic16 stm8 z80 xa51 pdk
 
 # Deleting all files created by building the program
 # --------------------------------------------------
@@ -7,7 +7,7 @@ clean:
 	rm -f .[a-z]*~ \#*
 	rm -f version.h
 	rm -f SDCCy.c SDCCy.h SDCClex.c
-	rm -f $(top_builddir)/bin/sdcc$(EXEEXT) sdcc$(EXEEXT)
+	rm -f $(TARGET)
 	for port in $(CLEANALLPORTS) ; do\
 	  if [ -f $$port/Makefile ]; then\
 	    $(MAKE) -C $$port clean ;\

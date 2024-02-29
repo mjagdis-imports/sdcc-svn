@@ -25,14 +25,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdio.h>
+//#include <stdio.h>
 
 // local
 #include "uc51rcl.h"
 #include "regs51.h"
-#include "types51.h"
+//#include "types51.h"
 #include "wdtcl.h"
 
 
@@ -72,7 +72,7 @@ cl_uc51r::make_chips(void)
 {
   cl_uc52::make_chips();
   
-  eram_chip= new cl_memory_chip("eram_chip", 0x100, 8);
+  eram_chip= new cl_chip8("eram_chip", 0x100, 8);
   eram_chip->init();
   memchips->add(eram_chip);
 }
@@ -136,10 +136,10 @@ cl_uc51r::received(int c)
 	  ||
 	  /* Check for broadcast address */
 	  (br == (br & c)))
-	sfr->set_bit1(SCON, bmRI);
+	sfr->set(SCON, sfr->get(SCON) | bmRI);
       return;
     }
-  sfr->set_bit1(SCON, bmRI);
+  sfr->set(SCON, sfr->get(SCON) | bmRI);
 }
 
 

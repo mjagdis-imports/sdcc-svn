@@ -11,10 +11,20 @@
 # include HEADER_SOCKET
 #endif
 
+#include <stdio.h>
+#include <wchar.h>
 #include <windows.h>
+#ifdef HAVE_WINCON_H
+#include <wincon.h>
+#endif
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 #include <io.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "fwiocl.h"
 
@@ -26,7 +36,7 @@ void deb(const char *format, ...)
   return;
   /*if (dd==NULL)
     {
-      dd= cp_io(stdout,cchars("w"));
+      dd= cp_io(stdout,"w");
       dd->init();
       }*/
   va_list ap;
@@ -215,7 +225,7 @@ cl_io::check_dev(void)
         /*
          * Peek all pending console events
          */
-	//printf("win iput check on console id=%d handle=%p\n", file_id, handle);
+	//printf("win input check on console id=%d handle=%p\n", file_id, handle);
         if (INVALID_HANDLE_VALUE == handle)
 	  return ret;
 	if (!GetNumberOfConsoleInputEvents(handle, &NumPending))
@@ -346,6 +356,13 @@ cl_io::check(void)
     input_avail();
 }
 
+bool
+cl_io::writable(void)
+{
+  // TODO
+  return true;
+}
+
 void
 cl_io::changed(void)
 {
@@ -370,7 +387,7 @@ cl_io::changed(void)
   if (server_port > 0)
     {
       //printf("win opened socket id=%d\n", file_id);
-      handle= (void*)file_id;
+      handle= (void *)((ULONG_PTR)file_id);
       type= F_SOCKET;
       deb("assuming TTY on socket %d\n", file_id);
       tty= true;
@@ -414,7 +431,7 @@ cl_io::prepare_terminal()
       write(s, 7);
     }
 }
- 
+
 
 int
 mk_srv_socket(int port)
@@ -455,11 +472,11 @@ mk_srv_socket(int port)
 
 
 class cl_f *
-mk_io(chars fn, chars mode)
+mk_io(const char *fn, const char *mode)
 {
   class cl_io *io;
 
-  if (fn.empty())
+  if (!fn || !*fn)
     {
       io= new cl_io();
       io->init();
@@ -482,7 +499,7 @@ mk_io(chars fn, chars mode)
 }
 
 class cl_f *
-cp_io(/*FILE *f*/int file_id, chars mode)
+cp_io(/*FILE *f*/int file_id, const char *mode)
 {
   class cl_io *io;
 
@@ -528,7 +545,7 @@ srv_accept(class cl_f *listen_io,
 	    {
 	      FILE *f= fdopen(fh, "r");
 	      //printf("fdopened f=%p for fh=%d as input\n", f, fh);
-	      io->own_opened(f, cchars("r"));
+	      io->own_opened(f, "r");
 	      io->type= F_SOCKET;
 	      io->server_port= listen_io->server_port;
 	    }
@@ -546,7 +563,7 @@ srv_accept(class cl_f *listen_io,
 	    {
 	      FILE *f= fdopen(fh, "w");
 	      //printf("fdopened f=%p for fh=%d as output\n", f, fh);
-	      io->use_opened(f, cchars("w"));
+	      io->use_opened(f, "w");
 	      io->type= F_SOCKET;
 	      io->server_port= listen_io->server_port;
 	    }
@@ -597,6 +614,104 @@ loop_delay()
 
 void
 sigpipe_off()
+{
+}
+
+unsigned int cperiod_value() { return 10000; }
+
+int
+set_console_mode()
+{
+  // Set output mode to handle virtual terminal sequences
+  HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (hOut == INVALID_HANDLE_VALUE)
+    {
+      return false;
+    }
+  HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+  if (hIn == INVALID_HANDLE_VALUE)
+    {
+      return false;
+    }
+  
+  DWORD dwOriginalOutMode = 0;
+  DWORD dwOriginalInMode = 0;
+  if (!GetConsoleMode(hOut, &dwOriginalOutMode))
+    {
+      return false;
+    }
+  if (!GetConsoleMode(hIn, &dwOriginalInMode))
+    {
+      return false;
+    }
+  
+  DWORD dwRequestedOutModes =
+#ifdef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#else
+    0x4
+#endif
+    |
+#ifdef DISABLE_NEWLINE_AUTO_RETURN
+    DISABLE_NEWLINE_AUTO_RETURN
+#else
+    0x8
+#endif
+    ;
+  //DWORD dwRequestedInModes = ENABLE_VIRTUAL_TERMINAL_INPUT;
+  
+  DWORD dwOutMode = dwOriginalOutMode | dwRequestedOutModes;
+  if (!SetConsoleMode(hOut, dwOutMode))
+    {
+      // we failed to set both modes, try to step down mode gracefully.
+      dwRequestedOutModes =
+#ifdef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+	ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#else
+	0x4
+#endif
+	;
+      dwOutMode = dwOriginalOutMode | dwRequestedOutModes;
+      if (!SetConsoleMode(hOut, dwOutMode))
+        {
+	  // Failed to set any VT mode, can't do anything here.
+	  return -1;
+        }
+    }
+  
+  DWORD dwInMode = dwOriginalInMode |
+#ifdef ENABLE_VIRTUAL_TERMINAL_INPUT
+    ENABLE_VIRTUAL_TERMINAL_INPUT
+#else
+    0x200
+#endif
+    ;
+  if (!SetConsoleMode(hIn, dwInMode))
+    {
+      // Failed to set VT input mode, can't do anything here.
+      return -1;
+    }
+  
+  return 0;
+}
+
+
+double
+dnow(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (double)tv.tv_sec + ((double)tv.tv_usec/1000000.0);
+}
+
+
+void
+save_std_attribs()
+{
+}
+
+void
+restore_std_attribs()
 {
 }
 

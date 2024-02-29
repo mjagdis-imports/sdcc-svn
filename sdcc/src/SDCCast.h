@@ -50,6 +50,7 @@ typedef struct ast
   unsigned lvalue:1;
   unsigned initMode:1;
   unsigned reversed:1;
+  unsigned inlined:1;
   long level;                   /* level for expr */
   int block;                    /* block number   */
   int seqPoint;                 /* sequence point */
@@ -198,6 +199,7 @@ ast *removePreIncDecOps (ast *);
 ast *removePostIncDecOps (ast *);
 value *sizeofOp (sym_link *);
 value *alignofOp (sym_link *);
+sym_link *typeofOp (ast *tree);
 ast *offsetofOp (sym_link * type, ast * snd);
 value *evalStmnt (ast *);
 ast *createRMW (ast *, unsigned, ast *);
@@ -212,7 +214,7 @@ ast *argAst (ast *);
 ast *resolveSymbols (ast *);
 void CodePtrPointsToConst (sym_link * t);
 void checkPtrCast (sym_link * newType, sym_link * orgType, bool implicit, bool orgIsNullPtrConstant);
-ast *decorateType (ast *, RESULT_TYPE);
+ast *decorateType (ast *, RESULT_TYPE, bool reduceTypeAllowed);
 ast *createWhile (symbol *, symbol *, symbol *, ast *, ast *);
 ast *createIf (ast *, ast *, ast *);
 ast *createDo (symbol *, symbol *, symbol *, ast *, ast *);

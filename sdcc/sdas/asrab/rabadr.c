@@ -30,6 +30,11 @@
  */
 
 /*
+ * xerr messages and order fix Copyright (C) 1989-2021  Alan R. Baldwin
+ * from ASxxxx 5.40
+ */
+
+/*
  * Extensions: P. Felber
  *
  * Altered by Leland Morrison to support rabbit 2000 
@@ -59,6 +64,18 @@ addr(esp)
 struct expr *esp;
 {
         int c, mode, indx;
+	char *p;
+
+	/* fix order of '<', '>', and '#' */
+	p = ip;
+	if (((c = getnb()) == '<') || (c == '>')) {
+		p = ip-1;
+		if (getnb() == '#') {
+			*p = *(ip-1);
+			*(ip-1) = c;
+		}
+	}
+	ip = p;
 
         if ((c = getnb()) == '#') {
                 expr(esp, 0);
@@ -85,8 +102,12 @@ struct expr *esp;
                         mode = S_R8X;
                         aerr();
                 } else
-                if ((indx = admode(R16X)) != 0) {
-                        mode = S_R16X;
+                if ((indx = admode(R16AF_ALT)) != 0) {
+                        mode = S_R16AF_ALT;
+                        aerr();
+                } else
+                if ((indx = admode(R16AF)) != 0) {
+                        mode = S_R16AF;
                         aerr();
                 } else
                 if ((indx = admode(R16)) != 0) {
@@ -104,7 +125,7 @@ struct expr *esp;
                  *   flag an error if the closing paren is absent
                  */
                 if ((c = getnb()) != RTIND) {
-                        qerr();
+                        xerr('q', "Missing ')'.");
                 }
         } else {
                 unget(c);
@@ -126,8 +147,14 @@ struct expr *esp;
                 if ((indx = admode(R8X)) != 0) {
                         mode = S_R8X;
                 } else
-                if ((indx = admode(R16X)) != 0) {
-                        mode = S_R16X;
+                if ((indx = admode(R16AF_ALT)) != 0) {
+                        mode = S_R16AF_ALT;
+                } else
+                if ((indx = admode(R16AF)) != 0) {
+                        mode = S_R16AF;
+                } else
+                if ((indx = admode(R16_ALT)) != 0) {
+                        mode = S_R16_ALT;
                 } else
                 if ((indx = admode(R16)) != 0) {
                         mode = S_R16;
@@ -159,10 +186,10 @@ struct expr *esp;
                         } else if ( (indx&0xFF)==HL ) {
                           esp->e_mode = S_IDHL_OFFSET;
                         } else {
-                                aerr();
+                                xerr('a', "BC, DE, HL, SP, IX, or IY required.");
                         }
                         if ((c = getnb()) != RTIND)
-                                qerr();
+                                xerr('q', "Missing ')'.");
                 } else {
                         unget(c);
                 }
@@ -263,9 +290,20 @@ struct  adsym   R16[] = {
     {   "",     0000    }
 };
 
-struct  adsym   R16X[] = {
-    {   "af'",  AF|0400 },      /* af' must be first !!! */
+struct  adsym   R16_ALT[] = {
+    {   "bc'",  BC|0400 },
+    {   "de'",  DE|0400 },
+    {   "hl'",  HL|0400 },
+    {   "",     0000 }
+};
+
+struct  adsym   R16AF[] = {
     {   "af",   AF|0400 },
+    {   "",     0000    }
+};
+
+struct  adsym   R16AF_ALT[] = {
+    {   "af'",  AF|0400 },
     {   "",     0000    }
 };
 

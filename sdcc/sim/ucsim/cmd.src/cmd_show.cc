@@ -25,18 +25,19 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
-#include "errorcl.h"
+//#include "errorcl.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "cmd_showcl.h"
@@ -67,7 +68,7 @@ COMMAND_DO_WORK(cl_show_copying_cmd)
 CMDHELP(cl_show_copying_cmd,
 	"show copying",
 	"Conditions for redistributing copies of uCsim",
-	"long help of show copying")
+	"")
 
 /*
  * Command: show warranty
@@ -86,7 +87,7 @@ COMMAND_DO_WORK(cl_show_warranty_cmd)
 CMDHELP(cl_show_warranty_cmd,
 	"show warranty",
 	"Various kinds of warranty you do not have",
-	"long help of show warranty")
+	"")
 
 /*
  * Command: show option
@@ -146,7 +147,7 @@ COMMAND_DO_WORK_APP(cl_show_option_cmd)
 CMDHELP(cl_show_option_cmd,
 	"show option [name]",
 	"Show internal data of options",
-	"long help of show option")
+	"")
 
 // prj
 #include "errorcl.h"
@@ -161,7 +162,7 @@ show_error_cmd_print_node(class cl_console_base *con,
   for (i= 0; i < indent; i++)
     con->dd_printf(" ");
   const char *name= node->get_name("unknown");
-  class cl_error_class *ec= dynamic_cast<class cl_error_class *>(node);
+  class cl_error_class *ec= (class cl_error_class *)(node);
   char *str;
   con->dd_printf("%s: %s [%s/%s]\n",
 		 str= case_string(case_case, ec->get_type_name()),
@@ -199,7 +200,7 @@ COMMAND_DO_WORK_APP(cl_show_error_cmd)
   for (i= 0; i < registered_errors->count; i++)
     {
       class cl_error_class *ec;
-      ec= dynamic_cast<class cl_error_class*>(registered_errors->object_at(i));
+      ec= (class cl_error_class*)(registered_errors->object_at(i));
       if (!ec->get_parent())
 	show_error_cmd_print_node(con, 0, ec);
     }
@@ -209,9 +210,9 @@ COMMAND_DO_WORK_APP(cl_show_error_cmd)
 CMDHELP(cl_show_error_cmd,
 	"show error",
 	"Show class of errors",
-	"long help of show error")
+	"")
 
-#include "newcmdposixcl.h"
+//#include "newcmdposixcl.h"
 
 /*
  * Command: show console
@@ -223,9 +224,9 @@ print_fio_info(class cl_console_base *con, class cl_f *ff)
 {
   if (ff)
     {
-      char *n= ff->get_file_name();
-      chars t= fio_type_name(ff->type);
-      con->dd_printf("\"%s\",%s,", n, (char*)t);
+      const char *n= ff->get_file_name();
+      const char *t= fio_type_name(ff->type);
+      con->dd_printf("\"%s\",%s,", n, t);
       con->dd_printf("%d,%d,", ff->file_id, ff->server_port);
       con->dd_printf("%s,%s",
 		     ff->tty?"tty":"non-tty",

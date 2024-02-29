@@ -25,6 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
+//#include <string.h>
+
 #include "portcl.h"
 
 #include "uc380cl.h"
@@ -54,7 +56,7 @@ cl_uc380::mk_hw_elements(void)
   add_hw(p4);
   p4->init();
 
-  class cl_port_ui *d= (class cl_port_ui *)get_hw(cchars("dport"), NULL);
+  class cl_port_ui *d= (class cl_port_ui *)get_hw("dport", NULL);
   if (d)
     {
       class cl_port_data pd;
@@ -64,7 +66,7 @@ cl_uc380::mk_hw_elements(void)
       pd.set_name("P4");
       pd.cell_p  = p4->cell_p;
       pd.cell_in = p4->cell_in;
-      pd.keyset  = chars(keysets[4]);
+      pd.keyset  = keysets[4];
       pd.basx    = 1;
       pd.basy    = 4+7;
       d->add_port(&pd, 4);
@@ -76,7 +78,7 @@ cl_uc380::make_chips(void)
 {
   cl_uc52::make_chips();
   sfr_chip->set_name("sfr_0_chip");
-  sfr_f_chip= new cl_memory_chip("sfr_f_chip", 0x80, 8, 0);
+  sfr_f_chip= new cl_chip8("sfr_f_chip", 0x80, 8, 0);
   sfr_f_chip->init();
   memchips->add(sfr_f_chip);
 }

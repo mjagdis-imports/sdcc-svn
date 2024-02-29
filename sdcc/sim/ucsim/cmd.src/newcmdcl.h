@@ -109,9 +109,7 @@ class cl_console_base: public cl_base
   class cl_debug_option *debug_option;
   class cl_ustrings *lines_printed;
   class cl_cmd *last_command;
-  //class cl_cmdline *last_cmdline;
   chars last_cmd;
-  chars startup_command;
   
   char nl;
   chars lbuf;
@@ -126,7 +124,7 @@ class cl_console_base: public cl_base
   
   virtual class cl_console_base *clone_for_exec(char *fin) = 0;
 
-  virtual void redirect(char *fname, char *mode) = 0;
+  virtual void redirect(const char *fname, const char *mode) = 0;
   virtual void un_redirect(void) = 0;
   virtual bool is_tty(void) const = 0;
   virtual bool is_eof(void) const = 0;
@@ -139,15 +137,16 @@ class cl_console_base: public cl_base
   virtual void replace_files(bool close_old, cl_f *new_in, cl_f *new_out)= 0;
   
   virtual int init(void);
-  virtual void set_startup(chars the);
-  virtual chars *get_startup() { return &startup_command; }
-  virtual bool has_startup() { return startup_command.nempty(); }
   
   virtual void welcome(void);
   virtual int proc_input(class cl_cmdset *cmdset);
   virtual bool need_check(void) { return false; }
-  
+
+  virtual bool non_color(void)= 0;
   virtual void print_prompt(void);
+  virtual void print_expr_result(t_mem val, const char *fmt);
+  virtual void print_expr_result(t_mem val, const chars &fmt)
+  { print_expr_result(val, fmt.c_str()); }
   virtual int dd_printf(const char *format, ...);
   virtual int dd_cprintf(const char *color_name, const char *format, ...);
   virtual chars get_color_ansiseq(const char *color_name, bool add_reset= false);
@@ -158,7 +157,6 @@ class cl_console_base: public cl_base
   virtual void print_char_octal(char c);
   virtual int cmd_do_print(const char *format, va_list ap);
   virtual int cmd_do_cprint(const char *color_name, const char *format, va_list ap);
-  //virtual void flush(void);
   virtual void tu_cls(void);
   virtual void tu_clc(void);
   virtual void tu_cll(void);
@@ -178,7 +176,6 @@ class cl_console_base: public cl_base
   virtual void set_prompt(char *p);
   
   virtual bool input_active(void) const;
-  //virtual bool accept_last(void) { return /*is_tty() ? DD_TRUE : DD_FALSE;*/flags&CONS_INTERACTIVE; }
   virtual bool prevent_quit(void) { return (prev_quit>=0)?prev_quit:true; }
   
  private:
@@ -198,6 +195,58 @@ class cl_console_base: public cl_base
   int id;
 };
 
+
+class cl_console_stdout: public cl_console_base
+{
+public:
+  class cl_f *f_stdout;
+public:
+  cl_console_stdout(class cl_app *the_app);
+  virtual ~cl_console_stdout(void);
+  virtual int init(void);
+  virtual bool non_color(void) { return false; }
+  virtual class cl_f *get_fout(void) { return f_stdout; }
+  virtual class cl_f *get_fin(void) { return NULL; }
+  virtual class cl_console_base *clone_for_exec(char *fin);
+  virtual void redirect(const char *fname, const char *mode) {}
+  virtual void un_redirect(void) {}
+  virtual bool is_tty(void) const { return true; }
+  virtual bool is_eof(void) const { return false; }
+  virtual bool input_avail(void) { return false; }
+  virtual int read_line(void) { return 0; }
+  virtual void drop_files(void) {}
+  virtual void close_files(bool close_in, bool close_out) {}
+  virtual void replace_files(bool close_old, cl_f *new_in, cl_f *new_out) {}
+};
+
+
+class cl_console_sout: public cl_console_base
+{
+public:
+  chars sout;
+public:
+  cl_console_sout(class cl_app *the_app);
+  virtual ~cl_console_sout(void);
+  virtual int init(void);
+  virtual bool non_color(void) { return true; }
+  virtual class cl_f *get_fout(void) { return NULL; }
+  virtual class cl_f *get_fin(void) { return NULL; }
+  virtual class cl_console_base *clone_for_exec(char *fin) { return NULL; }
+  virtual void redirect(const char *fname, const char *mode) {}
+  virtual void un_redirect(void) {}
+  virtual bool is_tty(void) const { return false; }
+  virtual bool is_eof(void) const { return false; }
+  virtual bool input_avail(void) { return false; }
+  virtual int read_line(void) { return 0; }
+  virtual void drop_files(void) {}
+  virtual void close_files(bool close_in, bool close_out) {}
+  virtual void replace_files(bool close_old, cl_f *new_in, cl_f *new_out) {}
+  virtual int write(char *buf, int count);
+  virtual int cmd_do_print(const char *format, va_list ap);
+  virtual int cmd_do_cprint(const char *color_name, const char *format, va_list ap);
+};
+
+
 class cl_console_dummy: public cl_console_base
 {
  public:
@@ -205,7 +254,8 @@ class cl_console_dummy: public cl_console_base
 
   virtual class cl_console_base *clone_for_exec(char *fin) { return NULL; }
 
-  virtual void redirect(char *fname, char *mode) {}
+  virtual bool non_color(void) { return false; }
+  virtual void redirect(const char *fname, const char *mode) {}
   virtual void un_redirect(void) {}
   virtual bool is_tty(void) const { return false; }
   virtual bool is_eof(void) const { return false; }
@@ -227,7 +277,9 @@ class cl_commander_base: public cl_base
  public:
   class cl_app *app;
   class cl_list *cons;
-  class cl_console_base *actual_console, *frozen_console, *config_console;
+  class cl_console_base *actual_console, *config_console;
+protected: class cl_console_base *frozen_console;
+public:
   class cl_cmdset *cmdset;
  protected:
   class cl_list *active_inputs;
@@ -242,8 +294,11 @@ class cl_commander_base: public cl_base
   virtual void activate_console(class cl_console_base *console);
   virtual void deactivate_console(class cl_console_base *console);
   virtual int consoles_prevent_quit(void);
+  virtual class cl_console_base *frozen_or_actual(void);
+  virtual class cl_console_base *frozen(void) { return frozen_console; }
+  virtual void freeze(class cl_console_base *con)
+  { frozen_console= con; }
   
-  //void prompt(void);
   int all_printf(const char *format, ...);        // print to all consoles
   int dd_printf(const char *format, va_list ap);  // print to actual_console
   int dd_cprintf(const char *color_name, const char *format, va_list ap);  // print to actual_console
@@ -259,7 +314,6 @@ class cl_commander_base: public cl_base
   virtual void update_active(void) = 0;
   virtual int proc_input(void) = 0;
   virtual int input_avail(void) = 0;
-  virtual int wait_input(void) = 0;
   virtual void check(void) { return; }
 };
 

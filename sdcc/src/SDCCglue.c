@@ -46,7 +46,7 @@ int noInit = 0;                 /* no initialization */
 
 
 char *
-aopLiteralGptr (const char * name, value * val)
+aopLiteralGptr (const char *name, const value *val)
 {
   unsigned long v = ulFromVal (val);
   struct dbuf_s dbuf;
@@ -150,12 +150,18 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
     {
       /* PENDING: special case here - should remove */
       if (!strcmp (map->sname, CODE_NAME))
-        dbuf_tprintf (&map->oBuf, "\t!areacode\n", map->sname);
+        {
+          if (options.code_seg && strcmp (CODE_NAME, options.code_seg))
+            dbuf_tprintf (&map->oBuf, "\t!areacode\n", options.code_seg);
+          else
+            dbuf_tprintf (&map->oBuf, "\t!areacode\n", map->sname);
+        }
       else if (!strcmp (map->sname, DATA_NAME))
         {
-          dbuf_tprintf (&map->oBuf, "\t!areadata\n", map->sname);
           if (options.data_seg && strcmp (DATA_NAME, options.data_seg))
-            dbuf_tprintf (&map->oBuf, "\t!area\n", options.data_seg);
+            dbuf_tprintf (&map->oBuf, "\t!areadata\n", options.data_seg);
+          else
+            dbuf_tprintf (&map->oBuf, "\t!areadata\n", map->sname);
         }
       else if (!strcmp (map->sname, HOME_NAME))
         dbuf_tprintf (&map->oBuf, "\t!areahome\n", map->sname);
@@ -229,17 +235,21 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                       werrorfl (tsym->fileDef, tsym->lineDef, W_EXCESS_INITIALIZERS, "scalar", tsym->name);
                     }
                   ival = newNode ('=', newAst_VALUE (symbolVal (tsym)),
-                                  decorateType (resolveSymbols (list2expr (tsym->ival)), RESULT_TYPE_NONE));
+                                  decorateType (resolveSymbols (list2expr (tsym->ival)), RESULT_TYPE_NONE, true));
                 }
               if (ival)
                 {
+                  // No point trying to initialize by something that doesn't even make sense.
+                  if (astErrors (ival))
+                    continue;
+                  
                   // set ival's lineno to where the symbol was defined
                   setAstFileLine (ival, filename = tsym->fileDef, lineno = tsym->lineDef);
                   // check if this is not a constant expression
                   if (!constExprTree (ival))
                     {
                       werrorfl (ival->filename, ival->lineno, E_CONST_EXPECTED, "found expression");
-                      // but try to do it anyway
+                      continue; // Don't even try to do it anyway to avoid segfaults later.
                     }
                 }
 
@@ -311,11 +321,11 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                       werrorfl (sym->fileDef, sym->lineDef, W_EXCESS_INITIALIZERS, "scalar", sym->name);
                     }
                   ival = newNode ('=', newAst_VALUE (symbolVal (sym)),
-                                  decorateType (resolveSymbols (list2expr (sym->ival)), RESULT_TYPE_NONE));
+                                  decorateType (resolveSymbols (list2expr (sym->ival)), RESULT_TYPE_NONE, true));
                 }
               codeOutBuf = &statsg->oBuf;
 
-              if (ival)
+              if (ival && !astErrors (ival)) // No point trying to initialize by something that doesn't even make sense.
                 {
                   // set ival's lineno to where the symbol was defined
                   setAstFileLine (ival, filename = sym->fileDef, lineno = sym->lineDef);
@@ -323,12 +333,15 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
                   if (!constExprTree (ival))
                     {
                       werrorfl (ival->filename, ival->lineno, E_CONST_EXPECTED, "found expression");
-                      // but try to do it anyway
+                      // Don't try to do it anyway, as this is likely to result in a segfault in codegen later, especially if the expression contains function calls.
                     }
-                  allocInfo = 0;
-                  if (!astErrors (ival))
-                    eBBlockFromiCode (iCodeFromAst (ival));
-                  allocInfo = 1;
+                  else
+                    {
+                      allocInfo = 0;
+                      if (!astErrors (ival))
+                        eBBlockFromiCode (iCodeFromAst (ival));
+                      allocInfo = 1;
+                    }
                 }
             }
         }
@@ -518,7 +531,7 @@ initValPointer (ast *expr)
       while (t->left != NULL && t->opval.op != '[')
         t = t->left;
 
-      return valForStructElem (t, expr->right); 
+      return valForStructElem (t, expr->right);
     }
 
   /* case 7. function name */
@@ -562,7 +575,7 @@ initPointer (initList *ilist, sym_link *toType, int showError)
       (expr->opval.op == '+' || expr->opval.op == '-') &&
       IS_AST_SYM_VALUE (expr->left) &&
       (IS_ARRAY (expr->left->ftype) || IS_PTR (expr->left->ftype)) &&
-      compareType (toType, expr->left->ftype) && IS_AST_LIT_VALUE (expr->right))
+      compareType (toType, expr->left->ftype, false) && IS_AST_LIT_VALUE (expr->right))
     {
       return valForCastAggr (expr->left, expr->left->ftype, expr->right, expr->opval.op);
     }
@@ -570,7 +583,7 @@ initPointer (initList *ilist, sym_link *toType, int showError)
   /* (char *)(expr1) */
   if (IS_CAST_OP (expr))
     {
-      if (compareType (toType, expr->left->ftype) == 0 && showError)
+      if (compareType (toType, expr->left->ftype, false) == 0 && showError)
         {
           werror (W_INIT_WRONG);
           printFromToType (expr->left->ftype, toType);
@@ -860,7 +873,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
     {
       if (!!(val = initPointer (ilist, type, 0)))
         {
-          int i, size = getSize (type), le = port->little_endian, top = (options.model == MODEL_FLAT24) ? 3 : 2;;         
+          int i, size = getSize (type), le = port->little_endian, top = (options.model == MODEL_FLAT24) ? 3 : 2;;
           dbuf_printf (oBuf, "\t.byte ");
           for (i = (le ? 0 : size - 1); le ? (i < size) : (i > -1); i += (le ? 1 : -1))
             {
@@ -873,7 +886,7 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
 			    if (val->name && strlen (val->name) > 0)
                   dbuf_printf (oBuf, "(%s >> %d)", val->name, i * 8);
 				else
-                  dbuf_printf (oBuf, "#0x00");				
+                  dbuf_printf (oBuf, "#0x00");
               else
                 dbuf_printf (oBuf, "#0x00");
               if (i == (le ? (size - 1) : 0))
@@ -968,11 +981,9 @@ printIvalType (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
             }
         }
       break;
-    case 8:
-      printIvalVal (oBuf, val, 8, true); // TODO: Print value as comment. Does dbuf_printf support long long even on MSVC?
-      break;
     default:
-      wassertl (0, "Attempting to initialize integer of non-handled size.");
+      printIvalVal (oBuf, val, getSize (type), true);
+      break;
     }
 }
 
@@ -985,7 +996,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
 {
   symbol *lsym = *sym;
   initList *lilist = *ilist;
-  unsigned long ival = 0;
+  unsigned long long ival = 0;
   unsigned size = 0;
   unsigned bit_start = 0;
   unsigned long int bytes_written = 0;
@@ -1023,7 +1034,7 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
               werror (W_LIT_OVERFLOW);
             }
 
-          ival |= (ulFromVal (val) & ((1ul << bit_length) - 1ul)) << bit_start;
+          ival |= (ullFromVal (val) & (0xffffffffffffffffull >> (64 - bit_length))) << bit_start;
           lilist = lilist ? lilist->next : NULL;
         }
       bit_start += bit_length;
@@ -1035,36 +1046,15 @@ printIvalBitFields (symbol ** sym, initList ** ilist, struct dbuf_s *oBuf)
         }
     }
 
-  switch (size)
+  for (unsigned int i = 0; i < size ; i++)
     {
-    case 0:
-      dbuf_tprintf (oBuf, "\n");
-      break;
-
-    case 1:
-      dbuf_tprintf (oBuf, "\t!db !constbyte\n", ival);
-      bytes_written++;
-      break;
-
-    case 2:
       if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
-        {
-          dbuf_tprintf (oBuf, "\t!db !constbyte\n", (ival & 0xff));
-          dbuf_tprintf (oBuf, "\t!db !constbyte\n", ((ival >> 8) & 0xff));
-        }
+        dbuf_tprintf (oBuf, "\tret !constbyte\n", (unsigned)(((unsigned long long)ival >> i * 8) & 0xff));
       else
-        dbuf_tprintf (oBuf, "\t!db !constbyte, !constbyte\n", (ival & 0xff), (ival >> 8) & 0xff);
-      bytes_written += 2;
-      break;
-
-    case 4:
-      dbuf_tprintf (oBuf, "\t!db !constbyte, !constbyte, !constbyte, !constbyte\n",
-                    (ival & 0xff), (ival >> 8) & 0xff, (ival >> 16) & 0xff, (ival >> 24) & 0xff);
-      bytes_written += 4;
-      break;
-    default:
-      wassert (0);
+        dbuf_tprintf (oBuf, "\t!db !constbyte\n", (unsigned)(((unsigned long long)ival >> i * 8) & 0xff));
+      bytes_written++;
     }
+
   *sym = lsym;
   *ilist = lilist;
 
@@ -1120,6 +1110,10 @@ printIvalStruct (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oB
     }
   else
     {
+      // Hack to avoid the hack below (the one that fixed bug #2643) breaking zero-length bit-fields as first member of a struct (bug #3542).
+      if(IS_BITFIELD (sflds->type) && !SPEC_BLEN (sflds->etype))
+        sflds = sflds->next;
+
       while (sflds)
         {
           unsigned int oldoffset = sflds->offset;
@@ -1452,7 +1446,7 @@ printIvalFuncPtr (sym_link * type, initList * ilist, struct dbuf_s *oBuf)
 
   if (IS_LITERAL (val->etype))
     {
-      if (compareType (type, val->type) == 0)
+      if (compareType (type, val->type, false) == 0)
         {
           if (ilist)
             werrorfl (ilist->filename, ilist->lineno, E_INCOMPAT_TYPES);
@@ -1691,12 +1685,14 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
       return;
 
   /* check the type      */
-  if (compareType (type, val->type) == 0)
+  if (compareType (type, val->type, false) == 0)
     {
       assert (ilist != NULL);
       werrorfl (ilist->filename, ilist->lineno, W_INIT_WRONG);
       printFromToType (val->type, type);
     }
+
+  const bool use_ret = TARGET_PDK_LIKE && !TARGET_IS_PDK16;
 
   /* if val is literal */
   if (IS_LITERAL (val->etype))
@@ -1710,7 +1706,12 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
           if (port->use_dw_for_init)
             dbuf_tprintf (oBuf, "\t!dws\n", aopLiteralLong (val, 0, 2));
           else if (port->little_endian)
-            dbuf_tprintf (oBuf, "\t.byte %s,%s\n", aopLiteral (val, 0), aopLiteral (val, 1));
+            {
+              if (use_ret)
+                dbuf_tprintf (oBuf, "\tret %s\n\tret %s\n", aopLiteral (val, 0), aopLiteral (val, 1));
+              else
+                dbuf_tprintf (oBuf, "\t.byte %s,%s\n", aopLiteral (val, 0), aopLiteral (val, 1));
+            }
           else
             dbuf_tprintf (oBuf, "\t.byte %s,%s\n", aopLiteral (val, 1), aopLiteral (val, 0));
           break;
@@ -1742,7 +1743,7 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
 
   size = getSize (type);
 
-  if (TARGET_PDK_LIKE && size == 2)
+  if (use_ret && size == 2)
     {
       if (IN_CODESPACE (SPEC_OCLS (val->etype)))
         {
@@ -1797,7 +1798,7 @@ printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf,
       else
         {
           ast *ast = newAst_VALUE (constVal("0"));
-          ast = decorateType (ast, RESULT_TYPE_NONE);
+          ast = decorateType (ast, RESULT_TYPE_NONE, true);
           ilist = newiList(INIT_NODE, ast);
         }
     }
@@ -1832,10 +1833,14 @@ printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf,
             }
         }
 
+      // Give up here, to avoid reading invalid memory below.
+      if (ilist->init.node->isError)
+        goto ilist_done;
+
       // and the type must match
       itype = ilist->init.node->ftype;
 
-      if (compareType (type, itype) == 0)
+      if (compareType (type, itype, false) == 0)
         {
           // special case for literal strings
           if (IS_ARRAY (itype) && IS_CHAR (getSpec (itype)) &&
@@ -1859,6 +1864,7 @@ printIval (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *oBuf,
             }
         }
     }
+ilist_done:
 
   /* if this is a pointer */
   if (IS_PTR (type))
@@ -2073,8 +2079,17 @@ emitMaps (void)
 void
 flushStatics (void)
 {
+  if (!setFirstItem (statsg->syms))
+    return;
+
+  if (options.const_seg)
+    dbuf_tprintf (&code->oBuf, "\t!area\n", options.const_seg);
+
   emitStaticSeg (statsg, codeOutBuf);
-  statsg->syms = NULL;
+  statsg->syms = 0;
+
+  if (options.const_seg)
+    dbuf_tprintf (&code->oBuf, "\t!area\n", options.code_seg);
 }
 
 /*-----------------------------------------------------------------*/
@@ -2089,7 +2104,7 @@ createInterruptVect (struct dbuf_s *vBuf)
   /* only if the main function exists */
   if (!(mainf = findSymWithLevel (SymbolTab, mainf)))
     {
-      if (!options.cc_only && !noAssemble && !options.c1mode)
+      if (!options.cc_only && !options.no_assemble && !options.c1mode)
         werror (E_NO_MAIN);
       return;
     }
@@ -2098,7 +2113,7 @@ createInterruptVect (struct dbuf_s *vBuf)
   if (!IFFUNC_HASBODY (mainf->type))
     {
       /* if ! compile only then main function should be present */
-      if (!options.cc_only && !noAssemble)
+      if (!options.cc_only && !options.no_assemble)
         werror (E_NO_MAIN);
       return;
     }
@@ -2116,7 +2131,7 @@ createInterruptVect (struct dbuf_s *vBuf)
 
 char *iComments1 = {
   ";--------------------------------------------------------\n"
-  "; File Created by SDCC : free open source ANSI-C Compiler\n"
+  "; File Created by SDCC : free open source ISO C Compiler \n"
 };
 
 char *iComments2 = {
@@ -2128,7 +2143,7 @@ char *iComments2 = {
 /* initialComments - puts in some initial comments                 */
 /*-----------------------------------------------------------------*/
 void
-initialComments (FILE * afile)
+initialComments (FILE *afile)
 {
   fprintf (afile, "%s", iComments1);
   fprintf (afile, "; Version " SDCC_VERSION_STR " #%s (%s)\n", getBuildNumber (), getBuildEnvironment ());
@@ -2148,7 +2163,15 @@ printPublics (FILE * afile)
   fprintf (afile, "%s", iComments2);
 
   for (sym = setFirstItem (publics); sym; sym = setNextItem (publics))
-    tfprintf (afile, "\t!global\n", sym->rname);
+    {
+      if (TARGET_Z80_LIKE && IFFUNC_BANKED(sym->type))
+        {
+          /* TODO: use template for bank symbol generation */
+          sprintf (buffer, "b%s", sym->rname);
+          tfprintf (afile, "\t!global\n", buffer);
+        }
+      tfprintf (afile, "\t!global\n", sym->rname);
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -2287,7 +2310,7 @@ glue (void)
 
   /* -o option overrides default name? */
   dbuf_init (&asmFileName, PATH_MAX);
-  if ((noAssemble || options.c1mode) && fullDstFileName)
+  if ((options.no_assemble || options.c1mode) && fullDstFileName)
     {
       dbuf_append_str (&asmFileName, fullDstFileName);
     }
@@ -2299,7 +2322,7 @@ glue (void)
 
   if (!(asmFile = fopen (dbuf_c_str (&asmFileName), "w")))
     {
-      werror (E_FILE_OPEN_ERR, dbuf_c_str (&asmFileName));
+      werror (E_OUTPUT_FILE_OPEN_ERR, dbuf_c_str (&asmFileName), strerror (errno));
       dbuf_destroy (&asmFileName);
       exit (EXIT_FAILURE);
     }
@@ -2308,6 +2331,7 @@ glue (void)
   /* initial comments */
   initialComments (asmFile);
 
+  // TODO: Move this stuff from here to port-specific genAssemblerPreamble?
   if (TARGET_IS_S08)
     fprintf (asmFile, "\t.cs08\n");
   else if (TARGET_IS_Z180)
@@ -2316,6 +2340,12 @@ glue (void)
     fprintf (asmFile, "\t.r3k\n");
   else if (TARGET_IS_EZ80_Z80)
     fprintf (asmFile, "\t.ez80\n");
+  else if (TARGET_IS_Z80N)
+    fprintf (asmFile, "\t.zxn\n");
+  else if (TARGET_IS_R800)
+    fprintf (asmFile, "\t.r800\n");
+  else if (TARGET_IS_Z80 && options.allow_undoc_inst)
+    fprintf (asmFile, "\t.allow_undocumented\n");
 
   /* print module name */
   tfprintf (asmFile, "\t!module\n", moduleName);
@@ -2378,7 +2408,7 @@ glue (void)
   if (port->assembler.externGlobal)
     printExterns (asmFile);
 
-  if ((mcs51_like) || (TARGET_IS_Z80 || TARGET_IS_GBZ80 || TARGET_IS_Z180 || TARGET_IS_RABBIT || TARGET_IS_EZ80_Z80) || TARGET_PDK_LIKE)  /*.p.t.20030924 need to output SFR table for Z80 as well */
+  if ((mcs51_like) || (TARGET_Z80_LIKE && !TARGET_IS_TLCS90) || TARGET_PDK_LIKE)  /*.p.t.20030924 need to output SFR table for Z80 as well */
     {
       /* copy the sfr segment */
       fprintf (asmFile, "%s", iComments2);
@@ -2430,7 +2460,8 @@ glue (void)
 
   /* copy the data segment */
   fprintf (asmFile, "%s", iComments2);
-  fprintf (asmFile, ";%s ram data\n", mcs51_like ? " internal" : "");
+  if(!TARGET_MOS6502_LIKE)  fprintf (asmFile, ";%s ram data\n", mcs51_like ? " internal" : "");
+  else fprintf (asmFile, "; ZP ram data\n");
   fprintf (asmFile, "%s", iComments2);
   dbuf_write_and_destroy (&data->oBuf, asmFile);
 
@@ -2456,7 +2487,7 @@ glue (void)
   if (overlay)
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; overlayable items in%s ram \n", mcs51_like ? " internal" : "");
+      fprintf (asmFile, "; overlayable items in%s ram\n", mcs51_like ? " internal" : "");
       fprintf (asmFile, "%s", iComments2);
       dbuf_write_and_destroy (&ovrBuf, asmFile);
     }
@@ -2465,9 +2496,9 @@ glue (void)
   if (mainf && IFFUNC_HASBODY (mainf->type))
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; Stack segment in internal ram \n");
+      fprintf (asmFile, "; Stack segment in internal ram\n");
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "\t.area\tSSEG\n" "__start__stack:\n\t.ds\t1\n\n");
+      tfprintf (asmFile, "\t!area\n" "__start__stack:\n\t.ds\t1\n\n", "SSEG");
     }
 
   /* create the idata segment */
@@ -2513,16 +2544,16 @@ glue (void)
   if (mainf && IFFUNC_HASBODY (mainf->type) && options.useXstack)
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; external stack \n");
+      fprintf (asmFile, "; external stack\n");
       fprintf (asmFile, "%s", iComments2);
       fprintf (asmFile, "\t.area XSTK (PAG,XDATA)\n" "__start__xstack:\n\t.ds\t1\n\n");
     }
 
   /* copy external ram data */
-  if (xdata && mcs51_like)
+  if (xdata && (mcs51_like || TARGET_MOS6502_LIKE ))
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; external ram data\n");
+      fprintf (asmFile, "; uninitialized external ram data\n");
       fprintf (asmFile, "%s", iComments2);
       dbuf_write_and_destroy (&xdata->oBuf, asmFile);
     }
@@ -2540,7 +2571,7 @@ glue (void)
   if (xidata)
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; external initialized ram data\n");
+      fprintf (asmFile, "; initialized external ram data\n");
       fprintf (asmFile, "%s", iComments2);
       dbuf_write_and_destroy (&xidata->oBuf, asmFile);
     }
@@ -2555,7 +2586,7 @@ glue (void)
   if (mainf && IFFUNC_HASBODY (mainf->type))
     {
       fprintf (asmFile, "%s", iComments2);
-      fprintf (asmFile, "; interrupt vector \n");
+      fprintf (asmFile, "; interrupt vector\n");
       fprintf (asmFile, "%s", iComments2);
       dbuf_write_and_destroy (&vBuf, asmFile);
     }
@@ -2599,7 +2630,7 @@ glue (void)
        */
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
-        fprintf (asmFile, "\tjp\t__sdcc_program_startup\n");
+        fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t__sdcc_program_startup\n");
       else
@@ -2613,7 +2644,7 @@ glue (void)
   if (mainf && IFFUNC_HASBODY (mainf->type))
     {
       /* STM8 note: there is no need to call main().
-         Instead of that, it's address is specified in the 
+         Instead of that, it's address is specified in the
          interrupts table and always equals to 0x8080.
        */
 

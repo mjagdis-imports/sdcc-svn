@@ -7,7 +7,6 @@
 #pragma std_sdcc99
 #endif
 
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Bug #2874
 /*--------------
     bug 2591
     inline definition with parameters not in registers
@@ -253,6 +252,7 @@ bug_3564755 (void)
 void
 bug_2295 (void)
 {
+#ifndef PORT_HOST // Fails on GNU/Linux on aarch64 (using GCC 12.2)
   char x = 0, y = 0, z = 0;
   for (x = inlined_function(); inlined_function() - z; y += inlined_function())
     {
@@ -261,15 +261,34 @@ bug_2295 (void)
   ASSERT (x == 1);
   ASSERT (y == 1);
   ASSERT (z == 1);
+#endif
 }
 
+/*--------------
+    bug 3264
+    A const parameter of an inline function inside another inline function
+    would lose its initMode flag, resulting in an error about an attempt
+    to assign a value to a const variable.
+*/
+static inline int f_3264 (const int x) {
+  return x;
+}
+
+static inline void g_3264 (void) {
+  f_3264 (0);
+}
+
+void bug_3264 (void)
+{
+  g_3264 ();
+}
+
+
 /*--------------*/
-#endif
 
 void
 testInline (void)
 {
-#if !defined(__SDCC_pdk14) && !defined(__SDCC_pdk15) // Bug #2874
 #ifndef SKIP_EXTERNAL
   char x = inlined_function(); /* can use the inlined or the external implementation */
   ASSERT (x == 1 || x == 2);
@@ -281,7 +300,6 @@ testInline (void)
   bug_3564755 ();
 #ifndef SKIP_EXTERNAL
   bug_2295 ();
-#endif
 #endif
 }
 

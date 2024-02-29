@@ -170,7 +170,7 @@ dwWriteHalf (const char * label, int offset, char * comment)
 static void
 dwWriteWord (const char * label, int offset, char * comment)
 {
-  /* FIXME: need to implement !dd pseudo-op in the assember. In the */
+  /* FIXME: need to implement !dd pseudo-op in the assembler. In the */
   /* meantime, we use dw with zero padding and hope the values fit  */
   /* in only 16 bits.                                               */
 #if 0
@@ -331,9 +331,9 @@ dwSizeofSLEB128 (int value)
 static void
 dwWriteString (const char * string, const char * comment)
 {
-  /* FIXME: need to safely handle nonalphanumeric data in string */
-  
-  tfprintf (dwarf2FilePtr, "\t!ascii\n", string);
+  char * escaped = string_escape (string);
+  tfprintf (dwarf2FilePtr, "\t!ascii\n", escaped);
+  Safe_free (escaped);
   dwWriteByte (NULL, 0, comment);
 }
 
@@ -1335,18 +1335,30 @@ dwAssignAbbrev (dwtag *tp, void *info)
 /* dwWriteAbbrevs - write the abbreviations to the .debug_abbrev section */
 /*-----------------------------------------------------------------------*/
 static void
-dwWriteAbbrevs (void)
+dwWriteAbbrevs (int abbrevNum)
 {
   dwtag * tp;
   dwattr * ap;
   int key;
+  dwtag ** tptable = NULL;
+  int abbrev;
   
   tfprintf (dwarf2FilePtr, "\n\t!area\n", ".debug_abbrev (NOLOAD)");
   tfprintf (dwarf2FilePtr, "!slabeldef\n", "Ldebug_abbrev");
 
+  /* Sort the abbreviations by their abbreviation number so that   */
+  /* we can output them in this order. I don't see any requirement */
+  /* in the standard for this, but some things seem to assume it.  */
+  tptable = Safe_calloc (1+abbrevNum, sizeof(dwtag *));
   tp = hTabFirstItem (dwAbbrevTable, &key);
   for (; tp; tp = hTabNextItem (dwAbbrevTable, &key))
+    tptable[tp->abbrev] = tp;
+
+  for (abbrev=1; abbrev<=abbrevNum; abbrev++)
     {
+      tp = tptable[abbrev];
+      if (!tp) continue;
+
       dwWriteULEB128 (NULL, tp->abbrev, NULL);
       dwWriteULEB128 (NULL, tp->tag, NULL);
       dwWriteByte (NULL, tp->firstChild ? DW_CHILDREN_yes : DW_CHILDREN_no,
@@ -1364,6 +1376,7 @@ dwWriteAbbrevs (void)
     }
   dwWriteULEB128 (NULL, 0, NULL);
   
+  Safe_free (tptable);
   hTabDeleteAll (dwAbbrevTable);
 }
 
@@ -1407,6 +1420,9 @@ dwWriteTag (dwtag *tp, void *info)
 static void
 dwWriteTags (void)
 {  
+  if (!dwRootTag)
+    return;
+
   tfprintf (dwarf2FilePtr, "\n\t!area\n", ".debug_info (NOLOAD)");
   
   dwWriteWordDelta ("Ldebug_info_end", "Ldebug_info_start");
@@ -1418,11 +1434,14 @@ dwWriteTags (void)
   dwWriteWord ("Ldebug_abbrev", 0, NULL);
     
   dwWriteByte (NULL, port->debugger.dwarf.addressSize, NULL);
-    
-  dwTraverseTag (dwRootTag, dwWriteTag, NULL);
-  
-  dwWriteULEB128 (NULL, 0, NULL);
-  
+
+  // The root tag has no siblings and must not have an end-of-sibling-
+  // chain marker, so handle it separately and start the traversal with
+  // its children.
+  dwWriteTag (dwRootTag, NULL);
+  if (dwRootTag->firstChild)
+    dwTraverseTag (dwRootTag->firstChild, dwWriteTag, NULL);
+
   tfprintf (dwarf2FilePtr, "!slabeldef\n", "Ldebug_info_end");
 
 }
@@ -1702,7 +1721,7 @@ dwWriteLineNumber (dwline * lp)
               /* ok, we can use a "special" opcode */
               
               /* If the deltaAddr value was symbolic, it can't be part */
-              /* of the "special" opcode, so encode it seperately      */
+              /* of the "special" opcode, so encode it separately      */
               if (!deltaAddrValid)
                 {
                   dwWriteByte (NULL, DW_LNS_advance_pc, NULL);
@@ -1723,8 +1742,15 @@ dwWriteLineNumber (dwline * lp)
       /* encode this the long way.                                */
       if (!usedSpecial)
         {
+#if 0 // Fails to assemble for initializations of local static variables. TODO: Use this, when possible, as DW_LNS_fixed_advance_pc is much shorter than DW_LNE_set_address below.
           dwWriteByte (NULL, DW_LNS_fixed_advance_pc, NULL);
           dwWriteHalfDelta (lp->label, curLabel, lp->offset-curOffset);
+#else // Todo: This was implemented to make initializations of local static variables compile, but stepping through those initializations in gdb reports "Cannot find bounds of current function".
+          dwWriteByte (NULL, 0, NULL);
+          dwWriteULEB128 (NULL, 1+port->debugger.dwarf.addressSize, NULL);
+          dwWriteByte (NULL, DW_LNE_set_address, NULL);
+          dwWriteAddress (lp->label, lp->offset, NULL);
+#endif
           curLabel = lp->label;
           curOffset = lp->offset;
         
@@ -1969,6 +1995,7 @@ dwGenCFIins (int callsize, int id)
   dwcfop * op;
   int i;
   char s[32];
+  int padding;
   
   tfprintf (dwarf2FilePtr, "\n\t!area\n", ".debug_frame (NOLOAD)");
 
@@ -2031,6 +2058,14 @@ dwGenCFIins (int callsize, int id)
       }
 
   dwWriteCFAinstructions (ip);
+
+  //pad with NOPs if needed to maintain 32-bit alignment
+  padding = (4 - ((5 + dwSizeofCFAinstructions (ip)) & 3)) & 3;
+  while (padding)
+    {
+      dwWriteByte (NULL, DW_CFA_nop, NULL);
+      padding--;
+    }
   
   op = ip->first;
   while (op)
@@ -2050,9 +2085,12 @@ dwGenCFIins (int callsize, int id)
 static void
 dwWriteFDE (dwfde * fp, int id)
 {
+  int length = dwSizeofCFAinstructions(fp->ins) + 4
+               + port->debugger.dwarf.addressSize * 2;
+  int padding = (4 - (length & 3)) & 3;
+
   //length
-  dwWriteWord (NULL, dwSizeofCFAinstructions(fp->ins) + 4
-                + port->debugger.dwarf.addressSize * 2 , NULL);
+  dwWriteWord (NULL, length + padding , NULL);
 
   //CIE ptr
   char s[32];
@@ -2067,6 +2105,13 @@ dwWriteFDE (dwfde * fp, int id)
 
   //instructions
   dwWriteCFAinstructions (fp->ins);
+
+  //pad with NOPs if needed to maintain 32-bit alignment
+  while (padding)
+    {
+      dwWriteByte (NULL, DW_CFA_nop, NULL);
+      padding--;
+    }
 }
 
 static void
@@ -2078,9 +2123,11 @@ dwWriteFrames (void)
   dwlocregion * lrp;
 
   int id = 0;
-  cfip = dwCFIRoot;
-  while (cfip)
+  for (cfip = dwCFIRoot; cfip; cfip = cfip->next)
     {
+      if (!cfip->startLabel || !cfip->endLabel)
+        continue;
+        
       fp.startLabel=cfip->startLabel;
       fp.endLabel=cfip->endLabel;
 
@@ -2116,8 +2163,6 @@ dwWriteFrames (void)
         Safe_free(op);
         op = next;
       }
-
-      cfip = cfip->next;
     }
 }
 
@@ -3048,7 +3093,10 @@ dwWriteCLine (iCode *ic)
 {
   dwline * lp;
   char * debugSym;
-  
+
+  if (ic->inlined)
+    return 0;
+
   lp = Safe_alloc (sizeof (dwline));
 
   lp->line = ic->lineno;
@@ -3230,7 +3278,7 @@ dwarf2FinalizeFile (FILE *of)
   dwTraverseTag (dwRootTag, dwAssignTagAddress, &tagAddress);
   
   /* Write the .debug_abbrev section */
-  dwWriteAbbrevs ();  
+  dwWriteAbbrevs (abbrevNum);  
   
   /* Write the .debug_info section */
   dwWriteTags ();

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------
    strtoul() - convert a string to a unsigned long int and return it
 
-   Copyright (C) 2018, Philipp Klaus Krause . krauseph@informatik.uni-freiburg.de
+   Copyright (C) 2018-2023, Philipp Klaus Krause . krauseph@informatik.uni-freiburg.de
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -31,6 +31,9 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
+#include <stdckdint.h>
+#endif
 #include <limits.h>
 #include <errno.h>
 
@@ -53,12 +56,15 @@ static signed char _isdigit(const char c, unsigned char base)
   return (v);
 }
 
+// NOTE for maintenance: strtoull, wcstoul and wcstoull have been derived from strtoul
+
 unsigned long int strtoul(const char *nptr, char **endptr, int base)
 {
   const char *ptr = nptr;
   unsigned long int ret;
   bool range_error = false;
   bool neg = false;
+  unsigned char b = base;
 
   while (isblank (*ptr))
     ptr++;
@@ -73,28 +79,34 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base)
     }
 
   // base not specified.
-  if (!base)
+  if (!b)
     {
       if (!strncmp (ptr, "0x", 2) || !strncmp (ptr, "0X", 2))
         {
-          base = 16;
+          b = 16;
+          ptr += 2;
+        }
+      else if (!strncmp (ptr, "0b", 2) || !strncmp (ptr, "0B", 2))
+        {
+          b = 2;
           ptr += 2;
         }
       else if (*ptr == '0')
         {
-          base = 8;
+          b = 8;
           ptr++;
         }
       else
-        base = 10;
+        b = 10;
     }
   // Handle optional hex prefix.
-  else if (base == 16 && (!strncmp (ptr, "0x", 2) || !strncmp (ptr, "0X", 2)))
+  else if (b == 16 && (!strncmp (ptr, "0x", 2) || !strncmp (ptr, "0X", 2)))
+    ptr += 2;
+  else if (b == 2 && (!strncmp (ptr, "0b", 2) || !strncmp (ptr, "0B", 2)))
     ptr += 2;
 
-
   // Empty sequence conversion error
-  if (_isdigit (*ptr, base) < 0)
+  if (_isdigit (*ptr, b) < 0)
     {
       if (endptr)
         *endptr = (char*)nptr;
@@ -103,18 +115,22 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base)
 
   for (ret = 0;; ptr++)
     {
-      unsigned long int oldret;
-      signed char digit = _isdigit (*ptr, base);
+      signed char digit = _isdigit (*ptr, b);
 
       if (digit < 0)
         break;
 
-      oldret = ret;
-      ret *= base;
+#if !defined(__SDCC_pic14) && !defined(__SDCC_pic16)
+      range_error |= ckd_mul (&ret, ret, b);
+      range_error |= ckd_add (&ret, ret, digit);
+#else
+      unsigned long int oldret = ret;
+      ret *= b;
       if (ret < oldret)
         range_error = true;
-
       ret += (unsigned char)digit;
+#warning INEXACT RANGE ERROR CHECK WILL NOT REPORT ALL OVERFLOWS (fix by implementing ckd_mul and ckd_add)
+#endif
     }
 
   if (endptr)

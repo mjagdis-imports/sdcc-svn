@@ -25,11 +25,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 // local
 #include "z80cl.h"
-#include "regsz80.h"
+//#include "regsz80.h"
 #include "z80mac.h"
 
 int
@@ -61,6 +61,7 @@ cl_z80::inst_cb_rlc(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x07: // RLC A
@@ -99,6 +100,7 @@ cl_z80::inst_cb_rrc(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x0F: // RRC A
@@ -137,6 +139,7 @@ cl_z80::inst_cb_rl(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x17: // RL A
@@ -175,6 +178,7 @@ cl_z80::inst_cb_rr(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x1F: // RR A
@@ -213,6 +217,7 @@ cl_z80::inst_cb_sla(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x27: // SLA A
@@ -251,6 +256,7 @@ cl_z80::inst_cb_sra(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x2F: // SRA A
@@ -289,6 +295,7 @@ cl_z80::inst_cb_slia(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x37: // SLIA A
@@ -327,6 +334,7 @@ cl_z80::inst_cb_srl(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x3F: // SRL A
@@ -340,32 +348,41 @@ cl_z80::inst_cb_srl(t_mem code)
 int
 cl_z80::inst_cb_bit(t_mem code)
 {
-#define bit_bitnum ((code >> 3) & 7)
+  u8_t bit_bitnum= ((code >> 3) & 7);
 
   switch(code & 7) {
     case 0x0: // BIT x,B
-      bit_byte(regs.bc.h, bit_bitnum); break;
+      bit_byte(regs.bc.h, bit_bitnum);
+      break;
     case 0x1: // BIT x,C
-      bit_byte(regs.bc.l, bit_bitnum); break;
+      bit_byte(regs.bc.l, bit_bitnum);
+      break;
     case 0x2: // BIT x,D
-      bit_byte(regs.de.h, bit_bitnum); break;
+      bit_byte(regs.de.h, bit_bitnum);
+      break;
     case 0x3: // BIT x,E
-      bit_byte(regs.de.l, bit_bitnum); break;
+      bit_byte(regs.de.l, bit_bitnum);
+      break;
     case 0x4: // BIT x,H
-      bit_byte(regs.hl.h, bit_bitnum); break;
+      bit_byte(regs.hl.h, bit_bitnum);
+      break;
     case 0x5: // BIT x,L
-      bit_byte(regs.hl.l, bit_bitnum); break;
+      bit_byte(regs.hl.l, bit_bitnum);
+      break;
     case 0x6: // BIT x,(HL)
-      { unsigned char tmp;
+      {
+	unsigned char tmp;
         tmp = get1(regs.HL);
         bit_byte(tmp, bit_bitnum);
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(4);
+	break;
       }
-    break;
     case 0x7: // BIT x,A
-      bit_byte(regs.raf.A, bit_bitnum); break;
+      bit_byte(regs.raf.A, bit_bitnum);
+      break;
     break;
   }
   return(resGO);
@@ -396,6 +413,7 @@ cl_z80::inst_cb_res(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.rd++;
+        tick(7);
       }
     break;
     case 0x7: // RES x,A
@@ -429,6 +447,7 @@ cl_z80::inst_cb_set(t_mem code)
         store1(regs.HL, tmp);
 	vc.rd++;
 	vc.wr++;
+        tick(7);
       }
     break;
     case 0x7: // SET x,A
@@ -445,7 +464,7 @@ cl_z80::inst_cb(void)
 
   if (fetch(&code))
     return(resBREAKPOINT);
-  tick(1);
+  tick(7);
   switch (code)
     {
     case 0x00: // RLC B
@@ -716,11 +735,8 @@ cl_z80::inst_cb(void)
     case 0xFF: // SET 7,A
       return (inst_cb_set(code));
     }
-  /*if (PC)
-    PC--;
-  else
-  PC= get_mem_size(MEM_ROM_ID)-1;*/
-  PC= rom->inc_address(PC, -1);
+
+  //PC= instPC;//rom->inc_address(PC, -1);
   return(resINV_INST);
 }
 

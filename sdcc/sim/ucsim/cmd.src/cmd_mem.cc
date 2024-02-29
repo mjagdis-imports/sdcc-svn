@@ -27,10 +27,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // prj
 #include "globals.h"
-#include "utils.h"
+//#include "utils.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "cmd_memcl.h"
@@ -93,8 +93,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_chip_cmd)
     con->dd_printf("Wrong width\n");
   else
     {
-      class cl_memory *mem= new cl_memory_chip(memid, size, width);
-      mem->init();
+      class cl_memory *mem= new_chip(memid, size, width);
       uc->memchips->add(mem);
       mem->set_uc(uc);
     }
@@ -104,7 +103,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_chip_cmd)
 CMDHELP(cl_memory_create_chip_cmd,
 	"memory create chip id size cellsize",
 	"Create a new memory chip",
-	"long help of memory create chip")
+	"")
 
 /*
  * Command: memory create addressspace
@@ -164,7 +163,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_addressspace_cmd)
 CMDHELP(cl_memory_create_addressspace_cmd,
 	"memory create addressspace id startaddr size",
 	"Create a new address space",
-	"long help of memory create addressspace")
+	"")
 
 /*
  * Command: memory create addressdecoder
@@ -251,7 +250,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_addressdecoder_cmd)
 CMDHELP(cl_memory_create_addressdecoder_cmd,
 	"memory create addressdecoder addressspace begin end chip begin",
 	"Create a new address decoder",
-	"long help of memory create addressdecoder")
+	"")
 
 /*
  * Command: memory create banker
@@ -310,7 +309,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_banker_cmd)
 CMDHELP(cl_memory_create_banker_cmd,
 	"memory create banker switcher_addressspace switcher_address switcher_mask banked_addressspace start end",
 	"Create a new bank switcher",
-	"long help of memory create banker")
+	"")
 
 /*
  * Command: memory create bander
@@ -383,7 +382,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_bander_cmd)
 CMDHELP(cl_memory_create_bander_cmd,
 	"memory create bander addressspace begin end chip begin bits_per_chip [distance]",
 	"Create a new bit bander",
-	"long help of memory create bander")
+	"")
 
 /*
  * Command: memory create bank
@@ -445,7 +444,7 @@ COMMAND_DO_WORK_UC(cl_memory_create_bank_cmd)
 CMDHELP(cl_memory_create_bank_cmd,
 	"memory create bank addressspace begin bank_nr chip begin",
 	"Add a new bank to bank switcher",
-	"long help of memory create bank")
+	"")
 
 /*
  * Command: memory cell
@@ -473,18 +472,18 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
       if (m->is_address_space())
 	as= (cl_address_space *)m;
     }
-  if (as == 0)
-    return syntax_error(con), false;
-
+  if (!c && !as)
+    return false;
+  
   if (!c)
     c= as->get_cell(a);
-  con->dd_printf("%s", as->get_name());
+  con->dd_printf("%s", as?(as->get_name()):"-");
   con->dd_printf("[");
-  con->dd_printf(as->addr_format, a);
-  con->dd_printf("] %s\n", (char*)uc->cell_name(c));
+  if (as) con->dd_printf(as->addr_format, a);
+  con->dd_printf("] %s\n", uc->cell_name(c).c_str());
 
-  con->dd_printf("cell data=%p/%d mask=%x flags=%x\n",
-		 c->get_data(),
+  con->dd_printf("cell width=%d mask=%x flags=%x\n",
+		 //c->get_data(),
 		 MU(c->get_width()),
 		 MU(c->get_mask()),
 		 MU(c->get_flags()));
@@ -494,7 +493,7 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
     {
       cl_memory_chip *ch= (cl_memory_chip*)(uc->memchips->at(i));
       t_addr ad;
-      if ((ad= ch->is_slot(c->get_data())) >= 0)
+      if (ch->is_slot(c->get_data(), &ad))
 	{
 	  con->dd_printf("  decoded to %s[%u]\n",
 			 ch->get_name(), AU(ad));
@@ -511,6 +510,54 @@ COMMAND_DO_WORK_UC(cl_memory_cell_cmd)
 CMDHELP(cl_memory_cell_cmd,
 	"memory cell",
 	"Information about a memory cell",
-	"long help of memory cell")
+	"")
+
+
+
+void
+set_memory_remove_help(class cl_cmd *cmd)
+{
+  cmd->set_help("memory remove subcommand",
+		"Set of commands to remove memory objects",
+		"Long of memory remove");
+}
+
+
+COMMAND_DO_WORK_UC(cl_memory_remove_chip_cmd)
+{
+  class cl_cmd_arg *params[4]= { cmdline->param(0),
+				 cmdline->param(1),
+				 cmdline->param(2),
+				 cmdline->param(3) };
+  class cl_memory *chip= 0;
+
+  if (cmdline->syntax_match(uc, MEMORY)) {
+    chip= params[0]->value.memory.memory;
+  }
+  else
+    syntax_error(con);
+
+  if (!chip)
+    con->dd_printf("Wrong id\n");
+  else if (!chip->is_chip())
+    con->dd_printf("Not chip\n");
+  else
+    {
+      /*
+      class cl_memory *mem= new_chip(memid, size, width);
+      uc->memchips->add(mem);
+      mem->set_uc(uc);
+      */
+      uc->remove_chip(chip);
+    }
+  return(false);
+}
+
+CMDHELP(cl_memory_remove_chip_cmd,
+	"memory remove chip id",
+	"Delete a memory chip",
+	"")
+
+
 
 /* End of cmd.src/cmd_mem.cc */

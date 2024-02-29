@@ -50,9 +50,6 @@ static OPTION _mcs51_options[] =
     { 0, OPTION_LARGE_MODEL, NULL, "external data space is used"},
     { 0, OPTION_HUGE_MODEL, NULL, "functions are banked, data in external space"},
     { 0, OPTION_STACK_SIZE,  &options.stack_size, "Tells the linker to allocate this space for stack", CLAT_INTEGER },
-    { 0, "--parms-in-bank1", &options.parms_in_bank1, "use Bank1 for parameter passing"},
-    { 0, "--pack-iram",      NULL, "Tells the linker to pack variables in internal ram (default)"},
-    { 0, "--no-pack-iram",   &options.no_pack_iram, "Deprecated: Tells the linker not to pack variables in internal ram"},
     { 0, "--acall-ajmp",     &options.acall_ajmp, "Use acall/ajmp instead of lcall/ljmp" },
     { 0, "--no-ret-without-call", &options.no_ret_without_call, "Do not use ret independent of acall/lcall" },
     { 0, NULL }
@@ -92,11 +89,15 @@ void mcs51_assignRegisters (ebbIndex *);
 
 static int regParmFlg = 0;      /* determine if we can register a parameter     */
 static int regBitParmFlg = 0;   /* determine if we can register a bit parameter */
+static struct sym_link *regParmFuncType;
+
+extern void mcs51_init_asmops (void);
 
 static void
 _mcs51_init (void)
 {
   asm_addTree (&asm_asxxxx_mapping);
+  mcs51_init_asmops ();
 }
 
 static void
@@ -104,51 +105,38 @@ _mcs51_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
   regBitParmFlg = 0;
+  regParmFuncType = funcType;
 }
 
 static int
-_mcs51_regparm (sym_link * l, bool reentrant)
+_mcs51_regparm (sym_link *l, bool reentrant)
 {
+  ++regParmFlg;
+
+  if (IFFUNC_HASVARARGS (regParmFuncType))
+    return 0;
+
+  if (IS_STRUCT (l))
+    return 0;
+
+  // For struct return keep regs free for pushing hidden parameter.
+  if (IS_STRUCT (regParmFuncType->next))
+    return 0;
+
   if (IS_SPEC(l) && (SPEC_NOUN(l) == V_BIT))
     {
       /* bit parameters go to b0 thru b7 */
       if (reentrant && (regBitParmFlg < 8))
         {
           regBitParmFlg++;
-          return 12 + regBitParmFlg;
+          return 1000 + regBitParmFlg;
         }
       return 0;
     }
-  if (options.parms_in_bank1 == 0)
-    {
-      /* simple can pass only the first parameter in a register */
-      if (regParmFlg)
-        return 0;
 
-      regParmFlg = 1;
-      return 1;
-    }
-  else
-    {
-      int size = getSize(l);
-      int remain;
+  bool is_regarg = mcs51IsRegArg (regParmFuncType, regParmFlg, 0);
 
-      /* first one goes the usual way to DPTR */
-      if (regParmFlg == 0)
-        {
-          regParmFlg += 4 ;
-          return 1;
-        }
-      /* second one onwards goes to RB1_0 thru RB1_7 */
-      remain = regParmFlg - 4;
-      if (size > (8 - remain))
-        {
-          regParmFlg = 12 ;
-          return 0;
-        }
-      regParmFlg += size ;
-      return regParmFlg - size + 1;
-    }
+  return (is_regarg ? regParmFlg : 0);
 }
 
 static bool
@@ -190,9 +178,6 @@ _mcs51_finaliseOptions (void)
       break;
     }
 
-  if (options.parms_in_bank1)
-    addSet(&preArgvSet, Safe_strdup("-DSDCC_PARMS_IN_BANK1"));
-
   /* mcs51 has an assembly coded float library that's almost always reentrant */
   if (!options.useXstack)
     options.float_rent = 1;
@@ -221,12 +206,6 @@ _mcs51_getRegName (const struct reg_info *reg)
 static void
 _mcs51_genAssemblerPreamble (FILE * of)
 {
-  if (options.parms_in_bank1)
-    {
-      int i;
-      for (i=0; i < 8 ; i++ )
-        fprintf (of, "\tb1_%d = 0x%x \n", i, 8+i);
-    }
 }
 
 /* Generate interrupt vector table. */
@@ -331,18 +310,29 @@ static bool cseCostEstimation (iCode *ic, iCode *pdic)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == RRC
-      || op == RLC
-      || op == GETABIT
-      || op == GETBYTE
-      || op == GETWORD
-      || (op == SWAP && size <= 2)
-     )
-    return TRUE;
-  else
-    return FALSE;
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+      return true;
+    case ROT:
+      {
+        unsigned int lbits = bitsForType (left);
+        if (lbits % 8)
+          return false;
+        if (lbits == 8)
+          return true;
+        if (lbits <= 16 && (right % lbits  == 1 || right % lbits == lbits - 1))
+          return true;
+        if (lbits <= 16 && lbits == right * 2)
+          return true;
+      }
+      return false;
+    }
+  return false;
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -358,6 +348,9 @@ oclsExpense (struct memmap *oclass)
 static bool
 _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
   return getSize (left) == 1 && getSize (right) == 1;
 }
 
@@ -539,15 +532,21 @@ mcs51operandCompare (const void *key, const void *member)
 }
 
 static void
-updateOpRW (asmLineNode *aln, char *op, char *optype)
+updateOpRW (asmLineNode *aln, const char *op_in, const char *optype)
 {
   mcs51operanddata *opdat;
-  char *dot;
 
-  dot = strchr(op, '.');
-  if (dot)
-    *dot = '\0';
+  /* Ignore dots or brackets in operand (bit numbes) for operand table search.
+     But remember that it's a bit access for special case handling.  */
+  char op[32];
+  strncpy (op, op_in, 31);
+  op[31] = '\0';
 
+  char *bit_sep;
+  if (bit_sep = strchr (op, '.'))
+    *bit_sep = '\0';
+  else if (bit_sep = strchr (op, '['))
+    *bit_sep = '\0';
   opdat = bsearch (op, mcs51operandDataTable,
                    sizeof(mcs51operandDataTable)/sizeof(mcs51operanddata),
                    sizeof(mcs51operanddata), mcs51operandCompare);
@@ -565,6 +564,13 @@ updateOpRW (asmLineNode *aln, char *op, char *optype)
         aln->regsWritten = bitVectSetBit (aln->regsWritten, opdat->regIdx1);
       if (opdat->regIdx2 >= 0)
         aln->regsWritten = bitVectSetBit (aln->regsWritten, opdat->regIdx2);
+
+      /* Any bit access always implies a read of the full register.  */
+      if (opdat->regIdx1 == A_IDX && bit_sep)
+        aln->regsRead = bitVectSetBit (aln->regsRead, A_IDX);
+
+      if (opdat->regIdx1 == B_IDX && bit_sep)
+        aln->regsRead = bitVectSetBit (aln->regsRead, B_IDX);
     }
   if (op[0] == '@')
     {
@@ -646,6 +652,12 @@ mcs51opcodeCompare (const void *key, const void *member)
   return strcmp((const char *)key, ((mcs51opcodedata *)member)->name);
 }
 
+static const char* skip_spaces (const char* p)
+{
+  while (*p && isspace(*p)) p++;
+  return p;
+}
+
 static asmLineNode *
 asmLineNodeFromLineNode (lineNode *ln)
 {
@@ -655,10 +667,13 @@ asmLineNodeFromLineNode (lineNode *ln)
   const char *p;
   char inst[8];
   mcs51opcodedata *opdat;
+  bool op_ignore_case;
 
   p = ln->line;
 
-  while (*p && isspace(*p)) p++;
+  /* extract instruction */
+
+  p = skip_spaces (p);
   for (op = inst, opsize=1; *p; p++)
     {
       if (isspace(*p) || *p == ';' || *p == ':' || *p == '=')
@@ -672,22 +687,33 @@ asmLineNodeFromLineNode (lineNode *ln)
   if (*p == ';' || *p == ':' || *p == '=')
     return aln;
 
-  while (*p && isspace(*p)) p++;
+  p = skip_spaces (p);
   if (*p == '=')
     return aln;
+
+
+  /* extract first operand.  if it starts with '_' that usually means
+     it's a case sensitive symbol from c code.  */
+  op_ignore_case = *p != '_';
 
   for (op = op1, opsize=1; *p && *p != ','; p++)
     {
       if (!isspace(*p) && opsize < sizeof(op1))
-        *op++ = tolower(*p), opsize++;
+        *op++ = (op_ignore_case ? tolower(*p) : *p), opsize++;
     }
   *op = '\0';
 
   if (*p == ',') p++;
+
+  /* extract second operand.  if it starts with '_' that usually means
+     it's a case sensitive symbol from c code.  */
+  p = skip_spaces (p);
+  op_ignore_case = *p != '_';
+
   for (op = op2, opsize=1; *p && *p != ','; p++)
     {
       if (!isspace(*p) && opsize < sizeof(op2))
-        *op++ = tolower(*p), opsize++;
+        *op++ = (op_ignore_case ? tolower(*p) : *p), opsize++;
     }
   *op = '\0';
 
@@ -704,6 +730,8 @@ asmLineNodeFromLineNode (lineNode *ln)
     {
       updateOpRW (aln, op1, opdat->op1type);
       updateOpRW (aln, op2, opdat->op2type);
+      if (!strcmp (inst, "jnz") || !strcmp (inst, "jz"))
+        aln->regsRead = bitVectSetBit (aln->regsRead, A_IDX);
       if (strchr(opdat->pswtype,'r'))
         aln->regsRead = bitVectSetBit (aln->regsRead, CND_IDX);
       if (strchr(opdat->pswtype,'w'))
@@ -782,11 +810,12 @@ get_model (void)
     $2 is always the output file.
     $3 varies
     $l is the list of extra options that should be there somewhere...
+    $L is the list of extra options that should be passed on the command line...
     MUST be terminated with a NULL.
 */
 static const char *_linkCmd[] =
 {
-  "sdld", "-nf", "$1", NULL
+  "sdld", "-nf", "$1", "$L", NULL
 };
 
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
@@ -835,13 +864,15 @@ PORT mcs51_port =
     getRegsRead,
     getRegsWritten,
     mcs51DeadMove,
+    mcs51notUsed,
     NULL,
+    mcs51notUsedFrom,
     NULL,
     NULL,
     NULL,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 1, 2, 3, 2, 3, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -869,9 +900,11 @@ PORT mcs51_port =
     NULL,
     NULL,
     1,
+    true,                       // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
     1                           // No fancy alignments supported.
   },
   { _mcs51_genExtraAreas, NULL },
+  0,                            // ABI revision
   {
     +1,         /* direction (+1 = stack grows up) */
     0,          /* bank_overhead (switch between register banks) */
@@ -881,7 +914,7 @@ PORT mcs51_port =
     1,          /* banked_overhead (switch between code banks) */
     0           /* sp points directly at last item pushed */
   },
-  { -1, FALSE },
+  { -1, false, false },         // Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine.
   { mcs51_emitDebuggerSymbol },
   {
     256,        /* maxCount */

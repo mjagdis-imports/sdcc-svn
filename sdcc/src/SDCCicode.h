@@ -52,8 +52,6 @@ OPTYPE;
 #define IS_VALOP(op) (op && op->type == VALUE)
 #define IS_TYPOP(op) (op && op->type == TYPE)
 
-#define ADDTOCHAIN(x) addSetHead(&iCodeChain,x)
-
 #define LRFTYPE       sym_link *ltype = operandType(left), \
                            *rtype = operandType(right) ;
 #define LRETYPE       sym_link *letype= getSpec(ltype)   , \
@@ -119,17 +117,19 @@ extern const operand *validateOpTypeConst (const operand * op,
 #define OP_TYPE(op)          validateOpType(op, "OP_TYPE", #op, TYPE, __FILE__, __LINE__)->svt.typeOperand
 
 /* definition for intermediate code */
-#define IC_RESULT(x)     (x)->ulrrcnd.lrr.result
-#define IC_LEFT(x)       (x)->ulrrcnd.lrr.left
-#define IC_RIGHT(x)      (x)->ulrrcnd.lrr.right
-#define IC_COND(x)       (x)->ulrrcnd.cnd.condition
+#define IC_RESULT(x)     (x)->result
+#define IC_LEFT(x)       (x)->left
+#define IC_RIGHT(x)      (x)->right
+#define IC_COND(x)       (x)->left // Not for use in new code. Some code still uses this, as it used to be separate from left.
 #define IC_TRUE(x)       (x)->ulrrcnd.cnd.trueLabel
 #define IC_FALSE(x)      (x)->ulrrcnd.cnd.falseLabel
 #define IC_LABEL(x)      (x)->label
-#define IC_JTCOND(x)     (x)->ulrrcnd.jmpTab.condition
+#define IC_JTCOND(x)     (x)->left // Not for use in new code. Some code still uses this, as it used to be separate from left.
 #define IC_JTLABELS(x)   (x)->ulrrcnd.jmpTab.labels
 #define IC_INLINE(x)     (x)->inlineAsm
 #define IC_ARRAYILIST(x) (x)->arrayInitList
+
+struct valinfos;
 
 typedef struct iCode
 {
@@ -148,6 +148,9 @@ typedef struct iCode
   unsigned bankSaved:1;         /* register bank has been saved */
   unsigned builtinSEND:1;       /* SEND for parameter of builtin function */
   bool localEscapeAlive:1;      /* At this iCode, a local variable, a pointer to which has escaped (e.g. by having been stored in a global variable, cast to integer, passed to function) might be alive. */
+  bool parmEscapeAlive:1;       /* At this iCode, a stack parameter, a pointer to which has escaped (e.g. by having been stored in a global variable, cast to integer, passed to function) might be alive. */
+  unsigned inlined:1;           /* from an inlined function */
+  unsigned mergedElsewhere:1;   /* merged into another iCode during optimization */
 
   struct iCode *next;           /* next in chain */
   struct iCode *prev;           /* previous in chain */
@@ -158,19 +161,17 @@ typedef struct iCode
   bitVect *rUsed;               /* registers used by this instruction */
   bitVect *rMask;               /* registers in use during this instruction */
   bitVect *rSurv;               /* registers that survive this instruction (i.e. they are in use, it is not their last use and they are not in the return) */
+  struct valinfos *valinfos;    /* Information on the possible values of symbols just before this iCode. */
+  struct valinfo *resultvalinfo;/* Information on the possible values of the result. */ 
+
+  operand *left;                // left if any
+  operand *right;               // right if any
+  operand *result;              // result of this op, if any
+
   union
   {
     struct
     {
-      operand *left;            /* left if any   */
-      operand *right;           /* right if any  */
-      operand *result;          /* result of this op */
-    }
-    lrr;
-
-    struct
-    {
-      operand *condition;       /* if this is a conditional */
       symbol *trueLabel;        /* true for conditional     */
       symbol *falseLabel;       /* false for conditional    */
     }
@@ -178,7 +179,6 @@ typedef struct iCode
 
     struct
     {
-      operand *condition;       /* condition for the jump */
       set *labels;              /* ordered set of labels  */
     }
     jmpTab;
@@ -211,7 +211,7 @@ typedef struct icodeFuncTable
 {
   int icode;
   char *printName;
-  void (*iCodePrint) (struct dbuf_s *, iCode *, char *);
+  void (*iCodePrint) (struct dbuf_s *, const iCode *, char *);
   iCode *(*iCodeCopy) (iCode *);
 }
 iCodeTable;
@@ -228,6 +228,7 @@ iCodeTable;
 
 #define SKIP_IC(x)   (x->op == PCALL        ||    \
                       x->op == IPUSH        ||    \
+                      x->op == IPUSH_VALUE_AT_ADDRESS || \
                       x->op == IPOP         ||    \
                       x->op == JUMPTABLE    ||    \
                       x->op == RECEIVE      ||    \
@@ -335,13 +336,13 @@ symbol *newiTempLoopHeaderLabel (bool);
 iCode *newiCode (int, operand *, operand *);
 sym_link *operandType (const operand *);
 unsigned int operandSize (operand *);
-operand *operandFromValue (value *);
-operand *operandFromSymbol (symbol *);
+operand *operandFromValue (value *, bool convert_sym_to_ptr);
+operand *operandFromSymbol (symbol *, bool convert_sym_to_ptr);
 operand *operandFromLink (sym_link *);
 sym_link *aggrToPtr (sym_link *, bool);
 int aggrToPtrDclType (sym_link *, bool);
 void setOClass (sym_link * ptr, sym_link * spec);
-int piCode (void *, FILE *);
+int piCode (const iCode *, FILE *);
 int dbuf_printOperand (operand *, struct dbuf_s *);
 int printOperand (operand *, FILE *);
 void setOperandType (operand *, sym_link *);
@@ -356,6 +357,9 @@ operand *newiTempOperand (sym_link *, char);
 operand *newiTempFromOp (operand *);
 iCode *getBuiltinParms (iCode *, int *, operand **);
 int isiCodeInFunctionCall (iCode *);
+operand *detachiCodeOperand (operand **, iCode *);
+void attachiCodeOperand (operand *, operand **, iCode *);
+
 /*-----------------------------------------------------------------*/
 /* declaration of exported variables                               */
 /*-----------------------------------------------------------------*/

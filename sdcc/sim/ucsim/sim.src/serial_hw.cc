@@ -31,7 +31,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "utils.h"
 #include "globals.h"
-#include "fiocl.h"
+//#include "fiocl.h"
 
 #include "serial_hwcl.h"
 
@@ -46,135 +46,163 @@ cl_serial_io::input_avail(void)
 cl_serial_hw::cl_serial_hw(class cl_uc *auc, int aid, chars aid_string):
   cl_hw(auc, HW_UART, aid, (const char *)aid_string)
 {
-  listener= 0;
+  listener_io= listener_i= listener_o= NULL;
 }
 
 cl_serial_hw::~cl_serial_hw(void)
 {
   delete serial_in_file_option;
   delete serial_out_file_option;
+  delete serial_ifirst_option;
   delete io;
 }
 
 int
 cl_serial_hw::init(void)
 {
-  char *s;
-
+  chars cs;
+  bool raw= false;
+  
   cl_hw::init();
-
+  
   make_io();
   input_avail= false;
   
-  s= format_string("serial%d_in_file", id);
-  serial_in_file_option= new cl_optref(this);
-  serial_in_file_option->init();
-  serial_in_file_option->use(s);
-  free(s);
-  s= format_string("serial%d_out_file", id);
-  serial_out_file_option= new cl_optref(this);
-  serial_out_file_option->init();
-  serial_out_file_option->use(s);
-  free(s);
+  cs.format("serial%d_in_file", id);
+  serial_in_file_option= new cl_optref(this, cs.c_str());
+  cs.format("serial%d_out_file", id);
+  serial_out_file_option= new cl_optref(this, cs.c_str());
+  cs.format("serial%d_ifirst", id);
+  serial_ifirst_option= new cl_optref(this, cs.c_str());
+  cs.format("serial%d_raw", id);
+  serial_raw_option= new cl_optref(this, cs.c_str());
+  serial_raw_option->get_value(&raw);
+  
+  cs.format("serial%d_port", id);
+  serial_port_option= new cl_optref(this, cs.c_str());
 
-  s= format_string("serial%d_port", id);
-  serial_port_option= new cl_optref(this);
-  serial_port_option->init();
-  class cl_option *o= serial_port_option->use(s);
-  free(s);
-
-  int port= -1;
-  if (o)
+  long port= -1;
+  if (serial_port_option->get_value(&port))
     {
-      port= serial_port_option->get_value((long)0);
-      if (port < 0)
-	;
+      if (port < 0) {}
+      if (port > 0)
+	{
+	  listener_io= new cl_serial_listener(port, application, this, sl_io);
+	  listener_io->init();
+	  class cl_commander_base *c= application->get_commander();
+	  c->add_console(listener_io);
+	}
     }
-  if (port > 0)
-    {
-      listener= new cl_serial_listener(port, application, this, sl_io);
-      listener->init();
-      class cl_commander_base *c= application->get_commander();
-      c->add_console(listener);
-    }
-
-  o= NULL;
-  s= format_string("serial%d_iport", id);
-  serial_iport_option= new cl_optref(this);
-  serial_iport_option->init();
-  o= serial_iport_option->use(s);
-  free(s);
-
+  
+  cs.format("serial%d_iport", id);
+  serial_iport_option= new cl_optref(this, cs.c_str());
   port= -1;
-  if (o)
+  if (serial_iport_option->get_value(&port))
     {
-      port= serial_iport_option->get_value((long)0);
-      if (port < 0)
-	;
-    }
-  if (port > 0)
-    {
-      listener= new cl_serial_listener(port, application, this, sl_i);
-      listener->init();
-      class cl_commander_base *c= application->get_commander();
-      c->add_console(listener);
+      if (port < 0) {}
+      if (port > 0)
+	{
+	  listener_i= new cl_serial_listener(port, application, this, sl_i);
+	  listener_i->init();
+	  class cl_commander_base *c= application->get_commander();
+	  c->add_console(listener_i);
+	}
     }
 
-  o= NULL;
-  s= format_string("serial%d_oport", id);
-  serial_oport_option= new cl_optref(this);
-  serial_oport_option->init();
-  o= serial_oport_option->use(s);
-  free(s);
-
+  cs.format("serial%d_oport", id);
+  serial_oport_option= new cl_optref(this, cs.c_str());
   port= -1;
-  if (o)
+  if (serial_oport_option->get_value(&port))
     {
-      port= serial_oport_option->get_value((long)0);
-      if (port < 0)
-	;
+      if (port < 0) {}
+      if (port > 0)
+	{
+	  listener_o= new cl_serial_listener(port, application, this, sl_o);
+	  listener_o->init();
+	  class cl_commander_base *c= application->get_commander();
+	  c->add_console(listener_o);
+	}
     }
-  if (port > 0)
-    {
-      listener= new cl_serial_listener(port, application, this, sl_o);
-      listener->init();
-      class cl_commander_base *c= application->get_commander();
-      c->add_console(listener);
-    }
-
-  char *f_serial_in = (char*)serial_in_file_option->get_value((char*)0);
-  char *f_serial_out= (char*)serial_out_file_option->get_value((char*)0);
+  
+  const char *f_serial_in = serial_in_file_option->get_value("");
+  const char *f_serial_out= serial_out_file_option->get_value("");
+  bool ifirst= false;
+  ifirst= serial_ifirst_option->get_value(ifirst);
   class cl_f *fi, *fo;
-  if (f_serial_in)
-    {
-      if (f_serial_in[0] == '\001')
-	fi= (class cl_f *)(strtoll(&f_serial_in[1], 0, 0));
-      else
-	fi= mk_io(chars(f_serial_in), cchars("r"));
-      if (!fi->tty)
-	fprintf(stderr, "Warning: serial input interface connected to a "
-		"non-terminal file.\n");
-    }
-  else
-    fi= 0;//mk_io(chars(""), chars(""));
-  if (f_serial_out)
-    {
-      if (f_serial_out[0] == '\001')
-	fo= (class cl_f *)(strtoll(&f_serial_out[1], 0, 0));
-      else
-	fo= mk_io(chars(f_serial_out), "w");
-      if (!fo->tty)
-	fprintf(stderr, "Warning: serial output interface connected to a "
-		"non-terminal file.\n");
-    }
-  else
-    fo= 0;//mk_io(chars(""), chars(""));
 
+  if (ifirst)
+    {
+      if (f_serial_in && *f_serial_in)
+	{
+	  if (f_serial_in[0] == '\001')
+	    {
+	      chars c= &(f_serial_in[1]);
+	      fi= (class cl_f *)(c.htoll());
+	    }
+	  else
+	    fi= mk_io(f_serial_in, "r");
+	  if (!fi->tty && !raw)
+	    fprintf(stderr, "Warning: serial input interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fi= 0;
+      if (f_serial_out && *f_serial_out)
+	{
+	  if (f_serial_out[0] == '\001')
+	    {
+	      chars c= &(f_serial_out[1]);
+	      fo= (class cl_f *)(c.htoll());
+	    }
+	  else
+	    fo= mk_io(chars(f_serial_out), "w");
+	  if (!fo->tty && !raw)
+	    fprintf(stderr, "Warning: serial output interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fo= 0;
+    }
+  else
+    {
+      if (f_serial_out && *f_serial_out)
+	{
+	  if (f_serial_out[0] == '\001')
+	    {
+	      chars c= &(f_serial_out[1]);
+	      fo= (class cl_f *)(c.htoll());
+	    }
+	  else
+	    fo= mk_io(chars(f_serial_out), "w");
+	  if (!fo->tty && !raw)
+	    fprintf(stderr, "Warning: serial output interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fo= 0;
+      if (f_serial_in && *f_serial_in)
+	{
+	  if (f_serial_in[0] == '\001')
+	    {
+	      chars c= &(f_serial_in[1]);
+	      fi= (class cl_f *)(c.htoll());
+	    }
+	  else
+	    fi= mk_io(f_serial_in, "r");
+	  if (!fi->tty && !raw)
+	    fprintf(stderr, "Warning: serial input interface connected to a "
+		    "non-terminal file.\n");
+	}
+      else
+	fi= 0;
+    }
+  
   io->replace_files(true, fi, fo);
   
   if (fi)
     {
-      fi->interactive(NULL);
+      if (!raw)
+	fi->interactive(NULL);
       fi->raw();
       fi->echo(NULL);
     }
@@ -185,56 +213,134 @@ cl_serial_hw::init(void)
   cfg_set(serconf_check_often, false);
   cfg_set(serconf_escape, 'x'-'a'+1);
 
-  cl_var *v;
-  chars pn(id_string);
-  pn.append("%d_", id);
-  uc->vars->add(v= new cl_var(pn+chars("on"), cfg, serconf_on,
-			      cfg_help(serconf_on)));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("check_often"), cfg, serconf_check_often,
-			      cfg_help(serconf_check_often)));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("esc_char"), cfg, serconf_escape,
-			      cfg_help(serconf_escape)));
-  v->init();
-
-  uc->vars->add(v= new cl_var(pn+chars("received_char"), cfg, serconf_received,
-			      cfg_help(serconf_received)));
-  v->init();
-		
-  uc->vars->add(v= new cl_var(pn+chars("flowctrl"), cfg, serconf_flowctrl,
-			      cfg_help(serconf_flowctrl)));
-  v->init();
-
-  uc->vars->add(v= new cl_var(pn+chars("able_receive"), cfg, serconf_able_receive,
-			      cfg_help(serconf_able_receive)));
-  v->init();
+  chars pn("", "%s%d_", id_string, id);
+  uc->vars->add(pn+"on", cfg, serconf_on, cfg_help(serconf_on));
+  uc->vars->add(pn+"check_often", cfg, serconf_check_often, cfg_help(serconf_check_often));
+  uc->vars->add(pn+"esc_char", cfg, serconf_escape, cfg_help(serconf_escape));
+  uc->vars->add(pn+"received_char", cfg, serconf_received, cfg_help(serconf_received));
+  uc->vars->add(pn+"flowctrl", cfg, serconf_flowctrl, cfg_help(serconf_flowctrl));
+  uc->vars->add(pn+"able_receive", cfg, serconf_able_receive, cfg_help(serconf_able_receive));
 
   cfg_set(serconf_able_receive, 1);
   return 0;
 }
 
-char *
+const char *
 cl_serial_hw::cfg_help(t_addr addr)
 {
   switch (addr)
     {
     case serconf_on:
-      return (char*)"Turn simulation of UART on or off (bool, RW)";
+      return "Turn ticking of UART on/off (bool, RW)";
     case serconf_check_often:
-      return (char*)"Check input file at every cycle (bool, RW)";
+      return "Check input file at every cycle (bool, RW)";
     case serconf_escape:
-      return (char*)"Escape char on display (int, RW)";
+      return "Escape char on display (int, RW)";
     case serconf_common:
-      return (char*)"Not used";
+      return "Not used";
     case serconf_received:
-      return (char*)"Received char written by simulator (int, R)";
+      return "Received char written by simulator (int, R)";
     case serconf_flowctrl:
-      return (char*)"Flow-control simulation on/off (bool, RW)";
+      return "Flow-control simulation on/off (bool, RW)";
     case serconf_able_receive:
-      return (char*)"UART enabled to receive by flow-control (bool, RW)";
+      return "UART enabled to receive by flow-control (bool, RW)";
     }
-  return (char*)"Not used";
+  return "Not used";
+}
+
+void
+cl_serial_hw::set_cmd(class cl_cmdline *cmdline,
+		      class cl_console_base *con)
+{
+  class cl_cmd_arg *params[2]= {
+    cmdline->param(0),
+    cmdline->param(1)
+  };
+  class cl_commander_base *c= application->get_commander();
+  if (cmdline->syntax_match(uc, STRING NUMBER))
+    {
+      char *p1= params[0]->value.string.string;
+      int port= params[1]->value.number;
+      if (strcmp(p1, "port")==0)
+	{
+	  del_listener_i();
+	  del_listener_o();
+	  if ((port > 0) && c)
+	    {
+	      listener_io= new cl_serial_listener(port, application, this, sl_io);
+	      listener_io->init();
+	      c->add_console(listener_io);
+	    }
+	}
+      if (strcmp(p1, "iport")==0)
+	{
+	  del_listener_i();
+	  if ((port > 0) && c)
+	    {
+	      listener_i= new cl_serial_listener(port, application, this, sl_i);
+	      listener_i->init();
+	      c->add_console(listener_i);
+	    }
+	}
+      if (strcmp(p1, "oport")==0)
+	{
+	  del_listener_o();
+	  if ((port > 0) && c)
+	    {
+	      listener_o= new cl_serial_listener(port, application, this, sl_o);
+	      listener_o->init();
+	      c->add_console(listener_o);
+	    }
+	}
+    }
+  else if (cmdline->syntax_match(uc, STRING STRING))
+    {
+      class cl_f *fi, *fo;
+      char *p1= params[0]->value.string.string;
+      const char *p2= params[1]->value.string.string;
+      if (strcmp(p1, "file")==0)
+	{
+	  if (p2 && *p2)
+	    {
+	      fi= mk_io(p2, "r");
+	      fo= mk_io(p2, "w");
+	      new_io(fi, fo);
+	    }
+	}
+      if (strcmp(p1, "in")==0)
+	{
+	  if (p2 && *p2)
+	    {
+	      fi= mk_io(p2, "r");
+	      if (fi->opened())
+		new_i(fi);
+	      else
+		con->dd_cprintf("error", "Error opening file \"%s\"\n",p2);
+	    }
+	}
+      if (strcmp(p1, "out")==0)
+	{
+	  if (p2 && *p2)
+	    {
+	      fo= mk_io(p2, "w");
+	      new_o(fo);
+	    }
+	}
+      if (strcmp(p1, "raw")==0)
+	{
+	  serial_raw_option->option->set_value(p2);
+	}
+    }
+  else
+    {
+      con->dd_printf("set hardware uart[%d] raw   0|1\n", id);
+      con->dd_printf("set hardware uart[%d] file  \"file\"\n", id);
+      con->dd_printf("set hardware uart[%d] in    \"file\"\n", id);
+      con->dd_printf("set hardware uart[%d] out   \"file\"\n", id);
+      con->dd_printf("set hardware uart[%d] port  nr\n", id);
+      con->dd_printf("set hardware uart[%d] iport nr\n", id);
+      con->dd_printf("set hardware uart[%d] oport nr\n", id);
+    }
 }
 
 t_mem
@@ -288,13 +394,95 @@ cl_serial_hw::make_io()
 void
 cl_serial_hw::new_io(class cl_f *f_in, class cl_f *f_out)
 {
-  char esc= (char)cfg_get(serconf_escape);
-  cl_hw::new_io(f_in, f_out);
-  if (io)
-    io->dd_printf("%s[%d] terminal display, press ^%c to access control menu\n",
-		  id_string, id,
-		  'a'+esc-1);
+  //bool raw= false;
+  //serial_raw_option->get_value(&raw);
+  make_io();
+  if (!io)
+    return;
+  new_o(f_out);
+  new_i(f_in);
+}
+
+void
+cl_serial_hw::new_i(class cl_f *f_in)
+{
+  bool raw= false;
+
+  serial_raw_option->get_value(&raw);
+  io->replace_files(true, f_in, io->get_fout());
+  if (!f_in)
+    return;
+  if (!raw)
+    f_in->interactive(NULL);
+  f_in->set_telnet(!raw);
+  f_in->raw();
+  if (f_in->tty)
+    {
+      char esc= (char)cfg_get(serconf_escape);
+      io->tu_reset();
+      io->dd_printf("%s[%d] terminal display, press ^%c to access control menu\n",
+		    id_string, id,
+		    'a'+esc-1);
+    }
   menu= 0;
+}
+
+void
+cl_serial_hw::new_o(class cl_f *f_out)
+{
+  bool raw= false;
+
+  serial_raw_option->get_value(&raw);
+  io->replace_files(true, io->get_fin(), f_out);
+  if (!f_out)
+    return;
+  enum file_type ft= f_out->determine_type();
+  if ((ft != F_FILE) && (ft != F_CHAR))
+    {
+      f_out->set_telnet(!raw);
+      if (!raw)
+	{
+	  io->tu_reset();
+	}
+    }
+}
+
+void
+cl_serial_hw::del_listener_i(void)
+{
+  class cl_commander_base *c= application->get_commander();
+  if (listener_io)
+    {
+      if (listener_i == listener_io)
+	listener_i= NULL;
+      if (listener_o == listener_io)
+	listener_o= NULL;
+    }
+  if (c && listener_io)
+    c->del_console(listener_io);
+  listener_io= NULL;
+  if (c && listener_i)
+    c->del_console(listener_i);
+  listener_i= NULL;
+}
+
+void
+cl_serial_hw::del_listener_o(void)
+{
+  class cl_commander_base *c= application->get_commander();
+  if (listener_io)
+    {
+      if (listener_i == listener_io)
+	listener_i= NULL;
+      if (listener_o == listener_io)
+	listener_o= NULL;
+    }
+  if (c && listener_io)
+    c->del_console(listener_io);
+  listener_io= NULL;
+  if (c && listener_o)
+    c->del_console(listener_o);
+  listener_o= NULL;
 }
 
 bool
@@ -309,7 +497,7 @@ cl_serial_hw::proc_input(void)
 
   fin= io->get_fin();
   fout= io->get_fout();
-  
+
   if (fin->eof())
     {
       if (fout &&
@@ -356,6 +544,8 @@ cl_serial_hw::proc_input(void)
 		  input= c;
 		  input_avail= true;
 		}
+	      else
+		fin->unget(c);
 	    }
 	}
       else if (!input_avail)
@@ -387,7 +577,7 @@ cl_serial_hw::proc_input(void)
 		  if (run && !input_avail)
 		    {
 		      input= esc, input_avail= true;
-		      io->dd_printf("^%c enterted.\n", 'a'+esc-1);
+		      io->dd_printf("^%c entered.\n", 'a'+esc-1);
 		    }
 		  else
 		    io->dd_printf("Control menu exited.\n");
@@ -486,17 +676,17 @@ int
 cl_serial_listener::proc_input(class cl_cmdset *cmdset)
 {
   class cl_f *i, *o;
+  bool raw= false;
 
+  serial_hw->serial_raw_option->get_value(&raw);
   switch (sl_for)
     {
     case sl_io:
       srv_accept(fin, &i, &o);
-      i->set_telnet(true);
       serial_hw->new_io(i, o);
       break;
     case sl_i:
       srv_accept(fin, &i, NULL);
-      i->set_telnet(true);
       serial_hw->new_i(i);
       break;
     case sl_o:

@@ -25,27 +25,29 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <ctype.h>
-#include <stdarg.h> /* for va_list */
-#include <cassert>
+//#include <ctype.h>
+//#include <stdarg.h> /* for va_list */
+//#include <cassert>
 #include <stdio.h>
 #include <stdlib.h>
-#include "i_string.h"
+#include <string.h>
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
-#include "pobjcl.h"
+//#include "pobjcl.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
+#include "dregcl.h"
 
 // local
 #include "glob.h"
 #include "pdkcl.h"
-#include "portcl.h"
-#include "regspdk.h"
+//#include "portcl.h"
+//#include "regspdk.h"
 
 /*******************************************************************/
 
@@ -55,13 +57,18 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 cl_pdk::cl_pdk(struct cpu_entry *IType, class cl_sim *asim) : cl_uc(asim) {
   type = IType;
+  if (type->type == CPU_PDK13)
+    PCmask= 0x3ff;
+  if (type->type == CPU_PDK14)
+    PCmask= 0x7ff;
+  if (type->type == CPU_PDK15)
+    PCmask= 0xfff;
 }
 
 int cl_pdk::init(void) {
   cl_uc::init(); /* Memories now exist */
 
-  xtal = 8000000;
-  sp_max = 0x00;
+  //set_xtal(8000000);
 
   // rom = address_space(MEM_ROM_ID);
   // ram = mem(MEM_XRAM);
@@ -77,24 +84,25 @@ int cl_pdk::init(void) {
 
 void cl_pdk::reset(void) {
   cl_uc::reset();
+  sp_most = 0x00;
 
   PC = 0x0000;
   regs.a = 0;
-  for (size_t i = 0; i < io_size; ++i) {
+  for (t_addr i = 0; i < io_size; ++i) {
     store_io(i, 0);
   }
 }
 
-char *cl_pdk::id_string(void) {
+const char *cl_pdk::id_string(void) {
   switch (type->type) {
     case CPU_PDK13:
-      return((char *)"pdk13");
+      return("pdk13");
     case CPU_PDK14:
-      return((char *)"pdk14");
+      return("pdk14");
     case CPU_PDK15:
-      return((char *)"pdk15");
+      return("pdk15");
     default:
-      return((char*)"unknown pdk");
+      return("unknown pdk");
   }
 }
 
@@ -115,9 +123,14 @@ cl_pdk::get_mem_size(enum mem_class type)
 }
 */
 
-void cl_pdk::mk_hw_elements(void) {
+void cl_pdk::mk_hw_elements(void)
+{
   // TODO: Add hardware stuff here.
+  class cl_hw *h;
   cl_uc::mk_hw_elements();
+
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
 }
 
 class cl_memory_chip *c;
@@ -140,7 +153,7 @@ void cl_pdk::make_memories(void) {
     ram_storage = 0x100;
     break;
   default:
-    __builtin_unreachable();
+    return;//__builtin_unreachable();
   }
   rom = as = new cl_address_space("rom", 0, rom_storage, 16);
   as->init();
@@ -156,11 +169,29 @@ void cl_pdk::make_memories(void) {
     class cl_address_decoder *ad;
     class cl_memory_chip *chip;
 
-    chip = new cl_memory_chip("rom_chip", rom_storage, 16);
+    chip = new cl_chip16("rom_chip", rom_storage, 16);
     chip->init();
     memchips->add(chip);
 
-    ad = new cl_address_decoder(as = address_space("rom"), chip, 0, rom_storage, 0);
+    ad = new cl_address_decoder(as = address_space("rom"), chip, 0, rom_storage-1, 0);
+    ad->init();
+    as->decoders->add(ad);
+    ad->activate(0);
+
+    chip = new cl_chip16("ram_chip", ram_storage, 8);
+    chip->init();
+    memchips->add(chip);
+
+    ad = new cl_address_decoder(as = address_space("ram"), chip, 0, ram_storage-1, 0);
+    ad->init();
+    as->decoders->add(ad);
+    ad->activate(0);
+
+    chip = new cl_chip16("io_chip", io_size, 8);
+    chip->init();
+    memchips->add(chip);
+
+    ad = new cl_address_decoder(as = address_space("regs8"), chip, 0, io_size-1, 0);
     ad->init();
     as->decoders->add(ad);
     ad->activate(0);
@@ -170,11 +201,8 @@ void cl_pdk::make_memories(void) {
     regs8->get_cell(io_size)->decode(&(regs._a));
   }
 
-  class cl_var *v;
-  vars->add(v = new cl_var(cchars("flag"), regs8, 0, ""));
-  v->init();
-  vars->add(v = new cl_var(cchars("sp"), regs8, 1, ""));
-  v->init();
+  vars->add("flag", regs8, 0, 7, 0, "Flags");
+  vars->add("sp", regs8, 1, 7, 0, "Stack Pointer");
 }
 
 /*
@@ -190,7 +218,7 @@ struct dis_entry *cl_pdk::dis_tbl(void) {
   case CPU_PDK15:
     return (disass_pdk_15);
   default:
-    __builtin_unreachable();
+    return NULL;//__builtin_unreachable();
   }
 }
 
@@ -251,7 +279,7 @@ const char *cl_pdk::get_disasm_info(t_addr addr, int *ret_len, int *ret_branch,
         break;
 
       default:
-        __builtin_unreachable();
+        return "";//__builtin_unreachable();
   }
 
   uint code = rom->get(addr++);
@@ -280,109 +308,113 @@ const char *cl_pdk::get_disasm_info(t_addr addr, int *ret_len, int *ret_branch,
   return b;
 }
 
-char *cl_pdk::disass(t_addr addr, const char *sep) {
-  char work[256], temp[20];
+char *cl_pdk::disass(t_addr addr)
+{
+  chars work, temp;
   const char *b;
-  char *buf, *p, *t;
   int len = 0;
   int immed_offset = 0;
   struct dis_entry *dis_e;
-
-  p = work;
+  bool first= true;
+  
+  work= "";
 
   b = get_disasm_info(addr, &len, NULL, &immed_offset, &dis_e);
 
-  if (b == NULL) {
-    buf = (char *)malloc(30);
-    strcpy(buf, "UNKNOWN/INVALID");
-    return (buf);
-  }
+  if (b == NULL)
+    {
+      return (strdup("UNKNOWN/INVALID"));
+    }
 
-  while (*b) {
-    if (*b == '%') {
-      b++;
-      uint code = rom->get(addr) & ~(uint)dis_e->mask;
-      switch (*(b++)) {
-        case 'k':  // k    immediate addressing
-          sprintf(temp, "#%u", code);
-          break;
-        case 'm':  // m    memory addressing
-          if (*b == 'n') {
-            code &= 0x3F;
-            ++b;
-          }
-          sprintf(temp, "%u", code);
-          break;
-        case 'i':  // i    IO addressing
-          // TODO: Maybe add pretty printing.
-          if (*b == 'n') {
-            switch (type->type) {
-            case CPU_PDK13:
-              code &= 0x1F;
-              break;
-            case CPU_PDK14:
-              code &= 0x3F;
-              break;
-            case CPU_PDK15:
-              code &= 0x7F;
-              break;
-            default:
-              __builtin_unreachable();
-           }
+  while (*b)
+    {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
+      if (*b == '%')
+	{
+	  temp= "";
+	  b++;
+	  uint code = rom->get(addr) & ~(uint)dis_e->mask;
+	  switch (*(b++))
+	    {
+	    case 'k':  // k    immediate addressing
+	      temp.format("#0x%x", code);
+	      break;
+	    case 'm':  // m    memory addressing
+	      if (*b == 'n') {
+		switch (type->type) {
+		case CPU_PDK13:
+		  code &= 0x0F;
+		  break;
+		case CPU_PDK14:
+		  code &= 0x3F;
+		  break;
+		case CPU_PDK15:
+		  code &= 0x7F;
+		  break;
+		default:
+		  ;//__builtin_unreachable();
+		}
+		++b;
+	      }
+	      temp.format("0x%x", code);
+	      break;
+	    case 'i':  // i    IO addressing
+	      // TODO: Maybe add pretty printing.
+	      if (*b == 'n') {
+		switch (type->type) {
+		case CPU_PDK13:
+		  code &= 0x1F;
+		  break;
+		case CPU_PDK14:
+		  code &= 0x3F;
+		  break;
+		case CPU_PDK15:
+		  code &= 0x7F;
+		  break;
+		default:
+		  ;//__builtin_unreachable();
+		}
+		
+		++b;
+	      }
+	      temp.format("[0x%x]", code);
+	      break;
+	    case 'n':  // n    N-bit addressing
+	      uint n;
+	      switch (type->type) {
+	      case CPU_PDK13:
+		n = (code & 0xE0) >> 5;
+		break;
+	      case CPU_PDK14:
+		n = (code & 0x1C0) >> 6;
+		break;
+	      case CPU_PDK15:
+		n = (code & 0x380) >> 7;
+		break;
+	      default:
+		n= 0;//__builtin_unreachable();
+	      }
+	      temp.format("#0x%x", n);
+	      break;
+	    default:
+	      temp= "%?";
+	      break;
+	    }
+	  work+= temp;
+	}
+      else
+	work+= *(b++);
+    }
 
-            ++b;
-          }
-          sprintf(temp, "[%u]", code);
-          break;
-        case 'n':  // n    N-bit addressing
-          uint n;
-          switch (type->type) {
-          case CPU_PDK13:
-            n = (code & 0xE0) >> 5;
-            break;
-          case CPU_PDK14:
-            n = (code & 0x1C0) >> 6;
-            break;
-          case CPU_PDK15:
-            n = (code & 0x380) >> 7;
-            break;
-          default:
-            __builtin_unreachable();
-          }
-          sprintf(temp, "#%u", n);
-          break;
-        default:
-          strcpy(temp, "%?");
-          break;
-      }
-      t = temp;
-      while (*t) *(p++) = *(t++);
-    } else
-      *(p++) = *(b++);
-  }
-  *p = '\0';
-
-  p = strchr(work, ' ');
-  if (!p) {
-    buf = strdup(work);
-    return (buf);
-  }
-  if (sep == NULL)
-    buf = (char *)malloc(6 + strlen(p) + 1);
-  else
-    buf = (char *)malloc((p - work) + strlen(sep) + strlen(p) + 1);
-  for (p = work, t = buf; *p != ' '; p++, t++) *t = *p;
-  p++;
-  *t = '\0';
-  if (sep == NULL) {
-    while (strlen(buf) < 6) strcat(buf, " ");
-  } else
-    strcat(buf, sep);
-  strcat(buf, p);
-  return (buf);
+  return strdup(work.c_str());
 }
 
 void cl_pdk::print_regs(class cl_console_base *con) {
+  con->dd_color("answer");
   con->dd_printf("A= 0x%02x(%3d)\n", regs.a, regs.a);
   con->dd_printf("Flag= 0x%02x(%3d)  \n", get_flags(), get_flags());
   con->dd_printf("SP= 0x%02x(%3d)\n", get_SP(), get_SP());
@@ -394,21 +426,22 @@ void cl_pdk::print_regs(class cl_console_base *con) {
  * Execution
  */
 
-int cl_pdk::exec_inst(void) {
+int cl_pdk::exec_inst(void)
+{
   t_mem code;
 
+  instPC= PC;
   if (fetch(&code)) {
     return (resBREAKPOINT);
   }
   tick(1);
 
   int status = execute(code);
-  if (status == resINV_INST) {
-    PC = rom->inc_address(PC, -1);
-
-    sim->stop(resINV_INST);
-    return (resINV_INST);
-  }
+  if (status == resINV_INST)
+    {
+      //PC = instPC;//rom->inc_address(PC, -1);
+      return (resINV_INST);
+    }
   return (status);
 }
 

@@ -11,7 +11,7 @@
 #include "dbuf.h"
 
 #define TARGET_ID_MCS51    1
-#define TARGET_ID_GBZ80    2
+#define TARGET_ID_SM83     2
 #define TARGET_ID_Z80      3
 #define TARGET_ID_AVR      4
 #define TARGET_ID_DS390    5
@@ -30,6 +30,11 @@
 #define TARGET_ID_PDK14    20
 #define TARGET_ID_PDK15    21
 #define TARGET_ID_PDK16    22
+#define TARGET_ID_Z80N     23
+#define TARGET_ID_R2KA     24
+#define TARGET_ID_MOS6502  25
+#define TARGET_ID_MOS65C02 26
+#define TARGET_ID_R800     27
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -43,10 +48,13 @@
 #define TARGET_IS_Z80      (port->id == TARGET_ID_Z80)
 #define TARGET_IS_Z180     (port->id == TARGET_ID_Z180)
 #define TARGET_IS_R2K      (port->id == TARGET_ID_R2K)
+#define TARGET_IS_R2KA     (port->id == TARGET_ID_R2KA)
 #define TARGET_IS_R3KA     (port->id == TARGET_ID_R3KA)
-#define TARGET_IS_GBZ80    (port->id == TARGET_ID_GBZ80)
+#define TARGET_IS_SM83     (port->id == TARGET_ID_SM83)
 #define TARGET_IS_TLCS90   (port->id == TARGET_ID_TLCS90)
 #define TARGET_IS_EZ80_Z80 (port->id == TARGET_ID_EZ80_Z80)
+#define TARGET_IS_Z80N     (port->id == TARGET_ID_Z80N)
+#define TARGET_IS_R800     (port->id == TARGET_ID_R800)
 #define TARGET_IS_HC08     (port->id == TARGET_ID_HC08)
 #define TARGET_IS_S08      (port->id == TARGET_ID_S08)
 #define TARGET_IS_STM8     (port->id == TARGET_ID_STM8)
@@ -54,13 +62,16 @@
 #define TARGET_IS_PDK14    (port->id == TARGET_ID_PDK14)
 #define TARGET_IS_PDK15    (port->id == TARGET_ID_PDK15)
 #define TARGET_IS_PDK16    (port->id == TARGET_ID_PDK16)
+#define TARGET_IS_MOS6502  (port->id == TARGET_ID_MOS6502)
+#define TARGET_IS_MOS65C02 (port->id == TARGET_ID_MOS65C02)
 
 #define TARGET_MCS51_LIKE  (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_IS_DS400)
-#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_GBZ80 || TARGET_IS_R2K || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80)
-#define TARGET_IS_RABBIT   (TARGET_IS_R2K || TARGET_IS_R3KA)
+#define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_SM83 || TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N || TARGET_IS_R800)
+#define TARGET_IS_RABBIT   (TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA)
 #define TARGET_HC08_LIKE   (TARGET_IS_HC08 || TARGET_IS_S08)
 #define TARGET_PIC_LIKE    (TARGET_IS_PIC14 || TARGET_IS_PIC16)
 #define TARGET_PDK_LIKE    (TARGET_IS_PDK13 || TARGET_IS_PDK14 || TARGET_IS_PDK15 || TARGET_IS_PDK16)
+#define TARGET_MOS6502_LIKE  (TARGET_IS_MOS6502 || TARGET_IS_MOS65C02)
 
 /* is using sdas / sdld assembler / linker */
 #define IS_SDASLD          (TARGET_Z80_LIKE || TARGET_MCS51_LIKE || TARGET_HC08_LIKE)
@@ -110,7 +121,7 @@ typedef struct
     /** TRUE if all types of glue functions should be inserted into
         the file that also defines main.
         We dont want this in cases like the z80 where the startup
-        code is provided by a seperate module.
+        code is provided by a separate module.
      */
     bool glue_up_main;
     /* OR of MODEL_* */
@@ -171,7 +182,9 @@ typedef struct
     bool (*notUsed) (const char *reg, lineNode * currPl, lineNode * head);
     bool (*canAssign) (const char *op1, const char *op2, const char *op3);
     bool (*notUsedFrom) (const char *reg, const char *label, lineNode *head);
-    bool (*symmParmStack) (void);
+    bool (*symmParmStack) (const char *name);
+    bool (*canJoinRegs) (const char **regs, char dst[20]);
+    bool (*canSplitReg) (const char *reg, char dst[][16], int nDst);
   }
   peep;
 
@@ -190,6 +203,7 @@ typedef struct
     int banked_funcptr_size;
     int bit_size;
     int float_size;
+    unsigned bitint_maxwidth;        // BITINT_MAXWIDTH - maximum size in bits
   }
   s;
 
@@ -208,13 +222,8 @@ typedef struct
   {
     const char *const xstack_name;
     const char *const istack_name;
-    /*
-     * The following 2 items can't be const pointers
-     * due to ugly implementation in gbz80 target;
-     * this should be fixed in src/z80/main.c (borutr)
-     */
-    const char *code_name;
-    const char *data_name;
+    const char *const code_name;
+    const char *const data_name;
     const char *const idata_name;
     const char *const pdata_name;
     const char *const xdata_name;
@@ -235,6 +244,7 @@ typedef struct
     struct memmap *default_local_map;   // default location for auto vars
     struct memmap *default_globl_map;   // default location for globl vars
     int code_ro;                        // code space read-only 1=yes
+    bool sfrupointer;                   // unqualified pointer can point to __sfr,
     unsigned int maxextalign;           // maximum extended alignment supported, nonnegative power of 2 (C11 standard, section 6.2.8).
   }
   mem;
@@ -245,6 +255,9 @@ typedef struct
     void (*genExtraAreaLinkOptions) (FILE *);
   }
   extraAreas;
+
+  /* Default ABI version */
+  unsigned sdcccall;
 
   /* stack related information */
   struct
@@ -272,8 +285,10 @@ typedef struct
     /** Size of the biggest shift the port can handle. -1 if port can handle shifts of arbitrary size. */
     signed int shift;
 
-    /* Has support routines for int x int -> long multiplication and unsigned int x unsigned int -> unsigned long multiplication */
+    // Has support routines for int x int -> long multiplication and unsigned int x unsigned int -> unsigned long multiplication
     bool has_mulint2long;
+    // Has support routine for unsigned long x unsigned char -> unsigned long long multiplication.
+    bool has_mululonguchar2ulonglong;
   }
   support;
 
@@ -310,7 +325,7 @@ typedef struct
   const char *fun_prefix;
 
   /** Called once the processor target has been selected.
-      First chance to initalise and set any port specific variables.
+      First chance to initialise and set any port specific variables.
       'port' is set before calling this.  May be NULL.
   */
   void (*init) (void);
@@ -377,9 +392,14 @@ typedef struct
   bool (*hasNativeMulFor) (iCode *ic, sym_link *left, sym_link *right);
 
   /** Returns true if the port has implemented certain bit
-      manipulation iCodes (RRC, RLC, SWAP, GETHBIT, GETABIT, GETBYTE, GETWORD)
+      manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
+      right parameter: value of right operand if in >= 0; negative if non-literal.
    */
-  bool (*hasExtBitOp) (int op, int size);
+  bool (*hasExtBitOp) (int op, sym_link *left, int right);
+
+  /** Returns true if the port has implemented certain bit
+      manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
+   */
 
   /** Returns the relative expense of accessing a particular output
       storage class. Larger values indicate higher expense.
@@ -430,19 +450,28 @@ extern PORT z80_port;
 extern PORT z180_port;
 #endif
 #if !OPT_DISABLE_R2K
-extern PORT r2k_port;  /* Rabbit 2000/3000 */
+extern PORT r2k_port;  // Rabbit 2000
+#endif
+#if !OPT_DISABLE_R2KA
+extern PORT r2ka_port; // Rabbit 2000A, 2000C, 2000C, 3000
 #endif
 #if !OPT_DISABLE_R3KA
-extern PORT r3ka_port; /* Rabbit 3000A */
+extern PORT r3ka_port; // Rabbit 3000A
 #endif
-#if !OPT_DISABLE_GBZ80
-extern PORT gbz80_port;
+#if !OPT_DISABLE_SM83
+extern PORT sm83_port;
 #endif
 #if !OPT_DISABLE_TLCS90
 extern PORT tlcs90_port;
 #endif
 #if !OPT_DISABLE_EZ80_Z80
 extern PORT ez80_z80_port;
+#endif
+#if !OPT_DISABLE_Z80N
+extern PORT z80n_port;
+#endif
+#if !OPT_DISABLE_R800
+extern PORT r800_port;
 #endif
 #if !OPT_DISABLE_AVR
 extern PORT avr_port;
@@ -479,6 +508,12 @@ extern PORT pdk14_port;
 #endif
 #if !OPT_DISABLE_PDK15
 extern PORT pdk15_port;
+#endif
+#if !OPT_DISABLE_MOS6502
+extern PORT mos6502_port;
+#endif
+#if !OPT_DISABLE_MOS65C02
+extern PORT mos65c02_port;
 #endif
 
 #endif /* PORT_INCLUDE */

@@ -25,16 +25,17 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "i_string.h"
+//#include "i_string.h"
 
 // prj
 #include "globals.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 #include "simifcl.h"
 
@@ -251,7 +252,7 @@ cl_sif_commands::produce_answer(void)
     {
       answer[i+1]= 0;
       class cl_sif_command *sc=
-	dynamic_cast<class cl_sif_command *>(sif->commands->object_at(i));
+	(class cl_sif_command *)(sif->commands->object_at(i));
       if (!sc)
 	continue;
       answer[i+1]= sc->get_command();
@@ -277,7 +278,7 @@ cl_sif_cmdinfo::produce_answer(void)
   for (i= 0; i < sif->commands->count; i++)
     {
       class cl_sif_command *sc=
-	dynamic_cast<class cl_sif_command *>(sif->commands->object_at(i));
+	(class cl_sif_command *)(sif->commands->object_at(i));
       if (sc->get_command() == (enum sif_command)cm)
 	{
 	  about= sc;
@@ -308,7 +309,7 @@ cl_sif_cmdhelp::produce_answer(void)
   for (i= 0; i < sif->commands->count; i++)
     {
       class cl_sif_command *sc=
-	dynamic_cast<class cl_sif_command *>(sif->commands->object_at(i));
+	(class cl_sif_command *)(sif->commands->object_at(i));
       if (sc->get_command() == (enum sif_command)cm)
 	{
 	  about= sc;
@@ -472,7 +473,7 @@ cl_simulator_interface::cl_simulator_interface(class cl_uc *auc):
 cl_simulator_interface::~cl_simulator_interface(void)
 {
   if (as_name)
-    free((void*)as_name);
+    free(const_cast<char *>(as_name));
   delete commands;
 }
 
@@ -496,7 +497,7 @@ cl_simulator_interface::init(void)
 	  (strlen(oas_v) > 0))
 	{
 	  if (as_name)
-	    free((void*)as_name);
+	    free(const_cast<char *>(as_name));
 	  as_name= strdup(oas_v);
 	  addr= oa_v;
 	}
@@ -508,8 +509,8 @@ cl_simulator_interface::init(void)
       if (as)
 	{
 	  address= addr;
-	  if (addr < 0)
-	    address= as->highest_valid_address();
+	  //if (addr < 0)
+	  //address= as->highest_valid_address();
 	  cell= register_cell(as, address);
 	}
       else
@@ -567,79 +568,48 @@ cl_simulator_interface::init(void)
   commands->add(c= new cl_sif_write(this));
   c->init();
 
-  cl_var *v;
-  uc->vars->add(v= new cl_var(cchars("simif_on"), cfg, simif_on,
-			      cfg_help(simif_on)));
-  v->init();
+  uc->vars->add("simif_on", cfg, simif_on, cfg_help(simif_on));
   cfg_set(simif_on, 1);
-  uc->vars->add(v= new cl_var(cchars("sim_run"), cfg, simif_run,
-			      cfg_help(simif_run)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_start"), cfg, simif_start,
-			      cfg_help(simif_start)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_stop"), cfg, simif_stop,
-			      cfg_help(simif_stop)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_quit"), cfg, simif_quit,
-			      cfg_help(simif_quit)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_reason"), cfg, simif_reason,
-			      cfg_help(simif_reason)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_xtal"), cfg, simif_xtal,
-			      cfg_help(simif_xtal)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_ticks"), cfg, simif_ticks,
-			      cfg_help(simif_ticks)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_isr_ticks"), cfg, simif_isr_ticks,
-			      cfg_help(simif_isr_ticks)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_idle_ticks"), cfg, simif_idle_ticks,
-			      cfg_help(simif_idle_ticks)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_real_time"), cfg, simif_real_time,
-			      cfg_help(simif_real_time)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_vclk"), cfg, simif_vclk,
-			      cfg_help(simif_vclk)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("PC"), cfg, simif_pc,
-			      cfg_help(simif_pc)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_print"), cfg, simif_print,
-			      cfg_help(simif_print)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("sim_write"), cfg, simif_write,
-			      cfg_help(simif_write)));
-  v->init();
+  uc->vars->add("sim_run", cfg, simif_run, cfg_help(simif_run));
+  uc->vars->add("sim_start", cfg, simif_start, cfg_help(simif_start));
+  uc->vars->add("sim_stop", cfg, simif_stop, cfg_help(simif_stop));
+  uc->vars->add("sim_quit", cfg, simif_quit, cfg_help(simif_quit));
+  uc->vars->add("sim_reason", cfg, simif_reason, cfg_help(simif_reason));
+  uc->vars->add("sim_xtal", cfg, simif_xtal, cfg_help(simif_xtal));
+  uc->vars->add("sim_ticks", cfg, simif_ticks, cfg_help(simif_ticks));
+  uc->vars->add("sim_isr_ticks", cfg, simif_isr_ticks, cfg_help(simif_isr_ticks));
+  uc->vars->add("sim_idle_ticks", cfg, simif_idle_ticks, cfg_help(simif_idle_ticks));
+  uc->vars->add("sim_real_time", cfg, simif_real_time, cfg_help(simif_real_time));
+  uc->vars->add("sim_vclk", cfg, simif_vclk, cfg_help(simif_vclk));
+  //uc->vars->add("PC", cfg, simif_pc, cfg_help(simif_pc));
+  uc->vars->add("sim_print", cfg, simif_print, cfg_help(simif_print));
+  uc->vars->add("sim_write", cfg, simif_write, cfg_help(simif_write));
 
   return(0);
 }
 
-char *
+const char *
 cl_simulator_interface::cfg_help(t_addr addr)
 {
   switch (addr)
     {
-    case simif_on	: return (char*)"Turn simif on/off (bool, RW)";
-    case simif_run	: return (char*)"WR: sets running state, RD: check if simulation is running";
-    case simif_start	: return (char*)"WR: start simulation, RD: true if running";
-    case simif_stop	: return (char*)"WR: stop simulation, RD: true if stopped";
-    case simif_quit	: return (char*)"Quit simulator (any, WO)";
-    case simif_reason	: return (char*)"Reason of last stop (int, RO)";
-    case simif_xtal	: return (char*)"Xtal frequency in Hz (int, RW)";
-    case simif_ticks	: return (char*)"Nuof ticks simulated so far (int, RO)";
-    case simif_isr_ticks: return (char*)"Ticks spent in ISR (int, RO)";
-    case simif_idle_ticks:return (char*)"Ticks spent in idle state (int, RO)";
-    case simif_real_time: return (char*)"Real time since reset in msec (int, RO)";
-    case simif_vclk	: return (char*)"Nuof simulated virtual clocks (int, RO)";
-    case simif_pc	: return (char*)"PC register (int, RW)";
-    case simif_print	: return (char*)"Print char on stdout (int, WO)";
-    case simif_write	: return (char*)"Write char to simif output (int, WO)";
+    case simif_on	: return "Turn simif on/off (bool, RW)";
+    case simif_run	: return "WR: sets running state, RD: check if simulation is running";
+    case simif_start	: return "WR: start simulation, RD: true if running";
+    case simif_stop	: return "WR: stop simulation, RD: true if stopped";
+    case simif_quit	: return "Quit simulator (any, WO)";
+    case simif_reason	: return "Reason of last stop (int, RO)";
+    case simif_xtal	: return "Xtal frequency in Hz (int, RW)";
+    case simif_ticks	: return "Nuof ticks simulated so far (int, RO)";
+    case simif_isr_ticks: return "Ticks spent in ISR (int, RO)";
+    case simif_idle_ticks:return "Ticks spent in idle state (int, RO)";
+    case simif_real_time: return "Real time since reset in msec (int, RO)";
+    case simif_vclk	: return "Nuof simulated virtual clocks (int, RO)";
+      //case simif_pc	: return "PC register (int, RW)";
+    case simif_print	: return "Print char on stdout (int, WO)";
+    case simif_write	: return "Write char to simif output (int, WO)";
     }
-  return (char*)"Not used";
+  return "Not used";
 }
 
 void
@@ -667,13 +637,13 @@ cl_simulator_interface::set_cmd(class cl_cmdline *cmdline,
 			 AU(mem->highest_valid_address()));
 	  return;
 	}
-      as_name= strdup((char*)mem->get_name());
+      as_name= strdup(mem->get_name());
       addr= a;
-      if ((as= dynamic_cast<class cl_address_space *>(mem)) != 0)
+      if ((as= (class cl_address_space *)(mem)) != 0)
 	{
 	  address= addr;
-	  if (addr < 0)
-	    address= as->highest_valid_address();
+	  //if (addr < 0)
+	  //address= as->highest_valid_address();
 	  if (cell != NULL)
 	    unregister_cell(cell);
 	  cell= register_cell(as, address);
@@ -744,7 +714,7 @@ cl_simulator_interface::write(class cl_memory_cell *cel, t_mem *val)
       for (i= 0; i < commands->count; i++)
 	{
 	  class cl_sif_command *c=
-	    dynamic_cast<class cl_sif_command *>(commands->object_at(i));
+	    (class cl_sif_command *)(commands->object_at(i));
 	  if (!c)
 	    continue;
 	  enum sif_command cm= c->get_command();
@@ -827,35 +797,35 @@ cl_simulator_interface::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
       break;
     case simif_xtal: // xtal frequ
       if (val)
-	uc->xtal= *val;
-      cell->set(uc->xtal);
+	uc->set_xtal(*val);
+      cell->set((u32_t)(uc->get_xtal()));
       break;
     case simif_ticks: // tick counter
       if (val)
 	*val= cell->get();
-      cell->set(uc->ticks->ticks);
+      cell->set(uc->ticks->get_ticks());
       break;
     case simif_isr_ticks: // isr tick counter
       if (val)
 	*val= cell->get();
-      cell->set(uc->isr_ticks->ticks);
+      cell->set(uc->isr_ticks->get_ticks());
       break;
     case simif_idle_ticks: // idle tick counter
       if (val)
 	*val= cell->get();
-      cell->set(uc->idle_ticks->ticks);
+      cell->set(uc->idle_ticks->get_ticks());
       break;
     case simif_real_time: // real time in msec
       if (val)
 	*val= cell->get();
-      cell->set(uc->get_rtime() * 1000);
+      cell->set((u32_t)(uc->ticks->get_rtime() * 1000));
       break;
     case simif_vclk: // virtual clock
       if (val)
 	*val= cell->get();
       cell->set(uc->vc.fetch + uc->vc.rd + uc->vc.wr);
       break;
-    case simif_pc: // PC of uc
+      /*case simif_pc: // PC of uc
       if (val)
 	{
 	  t_addr addr= *val;
@@ -868,7 +838,7 @@ cl_simulator_interface::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 	  uc->PC= addr;
 	}
       cell->set(uc->PC);
-      break;
+      break;*/
     case simif_print:
       if (val)
 	{
@@ -946,7 +916,7 @@ cl_simulator_interface::print_info(class cl_console_base *con)
   for (i= 0; i < commands->count; i++)
     {
       class cl_sif_command *c=
-	dynamic_cast<class cl_sif_command *>(commands->object_at(i));
+	(class cl_sif_command *)(commands->object_at(i));
       if (!c)
 	continue;
       int cmd= c->get_command();
@@ -965,7 +935,7 @@ cl_simulator_interface::print_info(class cl_console_base *con)
     con->dd_printf("%s", fout->get_file_name());
   con->dd_printf("\n");
 
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

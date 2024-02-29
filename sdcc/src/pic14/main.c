@@ -69,7 +69,7 @@ static char *_pic14_keywords[] =
 };
 
 static int regParmFlg = 0;  /* determine if we can register a parameter */
-
+static struct sym_link *regParmFuncType;
 
 /** $1 is always the basename.
     $2 is always the output file.
@@ -100,11 +100,15 @@ static void
 _pic14_reset_regparm (struct sym_link *funcType)
 {
   regParmFlg = 0;
+  regParmFuncType = funcType;
 }
 
 static int
 _pic14_regparm (sym_link * l, bool reentrant)
 {
+  if (IFFUNC_HASVARARGS (regParmFuncType))
+    return 0;
+
 /* for this processor it is simple
   can pass only the first parameter in a register */
   //if (regParmFlg)
@@ -245,16 +249,11 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == RRC
-    || op == RLC
-    || op == GETABIT
-    /* || op == GETHBIT */ /* GETHBIT doesn't look complete for PIC */
-    )
-    return TRUE;
-  else
-    return FALSE;
+  unsigned int lbits = bitsForType (left);
+  return (op == ROT && (right & lbits == 1 || right % lbits == lbits - 1) ||
+    op == GETABIT);
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -383,10 +382,10 @@ PORT pic_port =
     _defaultRules
   },
   {
-    /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-    1, 2, 2, 4, 8, 2, 2, 3, 2, 3, 1, 4
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+    1, 2, 2, 4, 8, 2, 2, 3, 2, 3, 1, 4, 0
     /* TSD - I changed the size of gptr from 3 to 1. However, it should be
-       2 so that we can accomodate the PIC's with 4 register banks (like the
+       2 so that we can accommodate the PIC's with 4 register banks (like the
        16f877)
      */
   },
@@ -417,15 +416,17 @@ PORT pic_port =
     NULL,
     NULL,
     1,                      // code is read only
+    true,                   // unqualified pointer can point to __sfr: TODO: CHECK IF THIS IS ACTUALLY SUPPORTED. Set to true to emulate behaviour of rpevious version of sdcc for now.
     1                       // No fancy alignments supported.
   },
   { NULL, NULL },
+  0,                        // ABI revision
   {
     +1, 1, 4, 1, 1, 0, 0
   },
     /* pic14 has an 8 bit mul */
   {
-    -1, FALSE
+    -1, false, false         // Neither int x int -> long nor unsigned long x unsigned char -> unsigned long long multiplication support routine.
   },
   {
     pic14_emitDebuggerSymbol

@@ -40,6 +40,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 
 extern bool jaj;
+extern int juj;
 
 /* Options */
 /*
@@ -92,14 +93,24 @@ public:
   int going;
   long expr_result;
   chars startup_command;
-  
+  class cl_mc32 cperiod, ccyc;
+  u32_t period, cyc, acyc;
+  bool quiet;
+  class cl_console_stdout *ocon;
+
 public:
   cl_app(void);
   virtual ~cl_app(void);
 
 public:
   virtual int init(int argc , char *argv[]);
+  virtual void read_conf_file(void);
+  virtual void read_input_files(void);
+  virtual void exec_startup_cmd(void);
+  virtual int check_start_options(void);
   virtual int run(void);
+  virtual int run_go(void);
+  virtual int run_nogo(void);
   virtual void done(void);
 
 protected:
@@ -110,8 +121,9 @@ public:
   class cl_uc *get_uc(void);
   class cl_commander_base *get_commander(void) { return(commander); }
   //virtual class cl_cmd *get_cmd(class cl_cmdline *cmdline);
-  virtual long eval(chars expr);
+  virtual t_mem eval(chars expr);
   virtual void exec(chars line);
+  virtual void exec(chars line, class cl_console_base *con);
   
 public: // messages to broadcast
   //virtual void mem_cell_changed(class cl_m *mem, t_addr addr);
@@ -128,6 +140,9 @@ public: // output functions
   virtual int dd_printf(const char *format, ...);
   virtual int dd_cprintf(const char *color_name, const char *format, ...);
   virtual int debug(const char *format, ...);
+
+public:
+  virtual void set_option_s(const char *opt_name, const char *new_value);
 };
 
 

@@ -36,15 +36,15 @@ typedef enum
   AOP_STK,
   /* Is an immediate value */
   AOP_IMMD,
-  /* Is a string (?) */
-  AOP_STR,
+  /* Is an address on the stack */
+  AOP_STL,
   /* Is in the carry register */
   AOP_CRY,
   /* Is pointed to by IY */
   AOP_IY,
   /* Is pointed to by HL */
   AOP_HL,
-  /* Is in the extended stack pointer (IY on the Z80) */
+  /* Is on the extended stack (addressed via IY or HL) */
   AOP_EXSTK,
   /* Is referenced by a pointer in a register pair. */
   AOP_PAIRPTR,
@@ -71,17 +71,27 @@ typedef struct asmop
     reg_info *aop_reg[4];       /* array of registers */
     char *aop_dir;              /* if direct  */
     char *aop_immd;             /* if immediate others are implied */
-    int aop_stk;                /* stack offset when AOP_STK */
-    const char *aop_str[4];     /* just a string array containing the location */
+    int aop_stk;                /* stack offset when AOP_STK or AOP_STL*/
     int aop_pairId;             /* The pair ID */
   }
   aopu;
   signed char regs[9]; // Byte of this aop that is in the register. -1 if no byte of this aop is in the reg.
+  struct valinfo valinfo;
 }
 asmop;
 
 void genZ80Code (iCode *);
 void z80_emitDebuggerSymbol (const char *);
+
+
+bool z80IsReturned(const char *what);
+
+// Check if what is part of the ith argument (counting from 1) to a function of type ftype.
+// If what is 0, just check if hte ith argument is in registers.
+bool z80IsRegArg(struct sym_link *ftype, int i, const char *what);
+
+// Check if what is part of the any argument (counting from 1) to a function of type ftype.
+bool z80IsParmInCall(sym_link *ftype, const char *what);
 
 extern bool z80_assignment_optimal;
 extern bool should_omit_frame_ptr;

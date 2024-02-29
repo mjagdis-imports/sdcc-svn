@@ -27,9 +27,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
   
 // prj
 #include "globals.h"
+#include "utils.h"
 
 // sim.src
-#include "appcl.h"
+//#include "appcl.h"
 
 // local
 #include "simst7cl.h"
@@ -40,7 +41,9 @@ main(int argc, char *argv[])
 {
   class cl_sim *sim;
 
+  app_start_at= dnow();
   application= new cl_app();
+  application->set_name("sst7");
   application->init(argc, argv);
   sim= new cl_simst7(application);
   if (sim->init())

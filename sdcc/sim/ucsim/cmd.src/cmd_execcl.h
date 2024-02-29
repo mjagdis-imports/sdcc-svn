@@ -38,6 +38,7 @@ COMMAND_ON(sim,cl_run_cmd);
 COMMAND_ON(sim,cl_stop_cmd);
 COMMAND_ON(sim,cl_step_cmd);
 COMMAND_ON(sim,cl_next_cmd);
+COMMAND_ON(sim,cl_emu_cmd);
 
 //COMMAND_ON(app,cl_help_cmd);
 COMMAND_HEAD(cl_help_cmd)
@@ -53,6 +54,14 @@ COMMAND(cl_quit_cmd);
 COMMAND_ON(app,cl_kill_cmd);
 COMMAND_ON(app,cl_exec_cmd);
 COMMAND_ON(app,cl_expression_cmd);
+COMMAND_ON(app,cl_echo_cmd);
+COMMAND_ON(app,cl_dev_cmd);
+  
+// History
+COMMAND_ON(uc,cl_hist_cmd);
+COMMAND_ON(uc,cl_hist_info_cmd);
+COMMAND_ON(uc,cl_hist_clear_cmd);
+COMMAND_ON(uc,cl_hist_list_cmd);
 
 
 #endif

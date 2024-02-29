@@ -349,7 +349,7 @@ isOperandInvariant (operand * op, region * theLoop, set * lInvars)
   int opin = 0;
   /* operand is an invariant if it is a                */
   /*       a. constants .                              */
-  /*       b. that have defintions reaching loop entry */
+  /*       b. that have definitions reaching loop entry */
   /*       c. that are already defined as invariant    */
   /*       d. has no assignments in the loop           */
   if (op)
@@ -550,7 +550,7 @@ loopInvariants (region *theLoop, ebbIndex *ebbi)
               set *lSet = setFromSet (theLoop->regBlocks);
 
               /* if this block does not dominate all exits */
-              /* make sure this defintion is not used anywhere else */
+              /* make sure this definition is not used anywhere else */
               if (!domsAllExits)
                 {
                   if (isOperandGlobal (IC_RESULT (ic)))
@@ -625,6 +625,10 @@ loopInvariants (region *theLoop, ebbIndex *ebbi)
 
               if (sBlock)
                 continue;       /* another definition present in the block */
+
+              // Avoid bug #3560 - the address might have been passed elsewehere, so functions called in the loop could change the value (and rely on the changed value).
+              if (OP_SYMBOL (IC_RESULT (ic))->addrtaken && fCallsInBlock)
+                continue;
 
               /* now check if it exists in the in of this block */
               /* if not then it was killed before this instruction */
@@ -781,7 +785,7 @@ addPostLoopBlock (region * loopReg, ebbIndex * ebbi, iCode * ic)
 
   /* if the number of exits is greater than one then
      we use another trick: we will create an intersection
-     of succesors of the exits, then take those that are not
+     of successors of the exits, then take those that are not
      part of the loop and have dfNumber greater loop entry (eblock),
      insert a new predecessor postLoopBlk before them and add
      a copy of ic in the new block. The postLoopBlk in between
@@ -1009,7 +1013,7 @@ basicInduction (region * loopReg, ebbIndex * ebbi)
           /* Only consider variables with integral type. */
           /* (2004/12/06 - EEP - ds390 fails regression tests unless */
           /* pointers are also considered for induction (due to some */
-          /* register alloctaion bugs). Remove !IS_PTR clause when */
+          /* register allocation bugs). Remove !IS_PTR clause when */
           /* that gets fixed) */
           optype = operandType (IC_RIGHT (ic));
           if (!IS_INTEGRAL (optype) && !IS_PTR (optype))
@@ -1096,6 +1100,7 @@ basicInduction (region * loopReg, ebbIndex * ebbi)
                  but it's a nice to see a clean dumploop now. */
               remiCodeFromeBBlock (lBlock, ic);
               /* clear the definition */
+              bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
               bitVectUnSetBit (lBlock->defSet, ic->key);
               ic = saveic;
             }
@@ -1215,6 +1220,7 @@ loopInduction (region * loopReg, ebbIndex * ebbi)
           ic->op = '=';
           IC_LEFT (ic) = NULL;
           IC_RIGHT (ic) = IC_RESULT (ic);
+          bitVectUnSetBit (OP_USES (aSym), ic->key);
 
           /* Insert an update of the induction variable just before */
           /* the update of the basic induction variable. */

@@ -23,17 +23,18 @@ GUIDIR		= gui.src
 
 DEFS            = $(subs -DHAVE_CONFIG_H,,@DEFS@)
 # FIXME: -Imcs51 must be removed!!!
+PICOPT		= @PICOPT@
 CPPFLAGS        = @CPPFLAGS@ -I$(top_builddir) -I$(srcdir) \
                   -I$(top_srcdir)/$(SIMDIR) \
 		  -I$(top_srcdir)/$(CMDDIR) -I$(top_srcdir)/$(GUIDIR)
-CFLAGS          = @CFLAGS@ -I$(top_builddir) @WALL_FLAG@
-CXXFLAGS        = @CXXFLAGS@ -I$(top_builddir) @WALL_FLAG@
+CFLAGS          = @WALL_FLAG@ @CFLAGS@ -I$(top_builddir)
+CXXFLAGS        = @WALL_FLAG@ @CXXFLAGS@ $(PICOPT) -I$(top_builddir)
 WINSOCK_AVAIL   = @WINSOCK_AVAIL@
 LDFLAGS		= @LDFLAGS@
 
 EXEEXT		= @EXEEXT@
 
-LIB_LIST	= sim ucsimutil guiucsim cmd ucsimutil sim
+LIB_LIST	= sim ucsimutil guiucsim cmd sim
 UCSIM_LIBS	= $(patsubst %,-l%,$(LIB_LIST)) @LIBS@
 UCSIM_LIB_FILES	= $(patsubst %,lib%.a,$(LIB_LIST))
 
@@ -78,7 +79,7 @@ libs: libucsimutil.a
 
 main_app: checkconf ucsim_app relay_app
 
-# Compiling and installing everything and runing test
+# Compiling and installing everything and running test
 # ---------------------------------------------------
 install: all installdirs
 
@@ -92,6 +93,8 @@ uninstall:
 	rm -f $(DESTDIR)$(bindir)/portmon$(EXEEXT)
 	rm -f $(DESTDIR)$(bindir)/sstm8$(EXEEXT)
 	rm -f $(DESTDIR)$(bindir)/sst7$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/sp1516$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/sm6809$(EXEEXT)
 
 
 # Performing self-test

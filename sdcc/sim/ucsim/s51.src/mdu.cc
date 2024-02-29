@@ -25,6 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
+#include <stdio.h>
+
 #include "uc51cl.h"
 
 #include "mducl.h"
@@ -190,7 +192,7 @@ cl_mdu517::read(class cl_memory_cell *cell)
   else if (sfr->is_owned(cell, &a))
     {
       a-= 0xe9;
-      if ((a < 0) ||
+      if (/*(a < 0) ||*/
 	  (a > 5))
 	return v;
     }
@@ -211,7 +213,7 @@ cl_mdu517::write(class cl_memory_cell *cell, t_mem *val)
     {
       // if (a==0xee) printf(" WRITE EE %02x\n", *val);
       a-= 0xe9;
-      if ((a < 0) ||
+      if (/*(a < 0) ||*/
 	  (a > 6))
 	{
 	  return;
@@ -329,18 +331,18 @@ void
 cl_mdu517::set_ovr(bool val)
 {
   if (val)
-    con->set_bit1(0x40);
+    con->set(con->get() | 0x40);
   else
-    con->set_bit0(0x40);
+    con->set(con->get() | 0x40);
 }
 
 void
 cl_mdu517::set_err(bool val)
 {
   if (val)
-    con->set_bit1(0x80);
+    con->set(con->get() | 0x80);
   else
-    con->set_bit0(0x80);
+    con->set(con->get() & ~0x80);
 }
 
 t_mem
@@ -392,8 +394,8 @@ cl_mdu88x::read(class cl_memory_cell *cell)
   else if (sfr->is_owned(cell, &a))
     {
       a-= 0xb2;
-      if ((a < 0) ||
-	  (a > 5))
+      if ((/*(a < 0) ||*/
+	   (a > 5)))
 	{
 	  if (con->get() & 0x20)
 	    val= regs[a]->get();
@@ -476,7 +478,7 @@ cl_mdu88x::write(class cl_memory_cell *cell, t_mem *val)
   else if (sfr->is_owned(cell, &a))
     {
       a-= 0xb2;
-      if ((a < 0) ||
+      if (/*(a < 0) ||*/
 	  (a > 5))
 	return;
       /*if (calcing)
@@ -625,18 +627,18 @@ void
 cl_mdu88x::set_err(bool val)
 {
   if (val)
-    stat->set_bit1(0x02);
+    stat->set(stat->get() | 0x02);
   else
-    stat->set_bit0(0x02);
+    stat->set(stat->get() & ~0x02);
 }
 
 void
 cl_mdu88x::set_bsy(bool val)
 {
   if (val)
-    stat->set_bit1(0x04);
+    stat->set(stat->get() | 0x04);
   else
-    stat->set_bit0(0x04);
+    stat->set(stat->get() & ~0x04);
 }
 
 bool

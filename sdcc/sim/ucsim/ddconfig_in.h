@@ -4,13 +4,13 @@
 #define DDCONFIG_HEADER
 
 /* Define to be the type of length parameter of accept (without the \*'). */
-#undef ACCEPT_SOCKLEN_T
+//#undef ACCEPT_SOCKLEN_T
 
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
 
 /* XXX */
-#undef FD_HEADER_OK
+//#undef FD_HEADER_OK
 
 /* XXX */
 #undef FD_NEED_SELECT_H
@@ -25,10 +25,17 @@
 #undef FD_NEED_WINSOCK2_H
 
 /* XXX */
-#undef GNU_GETCWD
+#undef FD_NEED_GNUTYPES_H
+
+/* XXX */
+//#undef GNU_GETCWD
 
 /* XXX */
 #undef HAVE_CURSES_H
+#undef HAVE_NCURSESW_H
+#undef HAVE_NCURSES_H
+#undef HAVE_NCURSESW_CURSES_H
+#undef HAVE_NCURSES_CURSES_H
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -48,6 +55,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <sys/wait.h> header file. */
+#undef HAVE_SYS_WAIT_H
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #undef HAVE_LIBNSL
@@ -70,11 +80,14 @@
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
+/* Define to 1 if you have the <cstdint.h> header file. */
+#undef HAVE_CSTDINT_H
+
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
 /* Define to 1 if you have the `strdup' function. */
-#undef HAVE_STRDUP
+//#undef HAVE_STRDUP
 
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
@@ -111,8 +124,35 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <wincon.h> header file. */
+#undef HAVE_WINCON_H
+
+/* Define to 1 if you have a working `fork' function. */
+#undef HAVE_WORKING_FORK
+
+/* Define to 1 if you have the `_exit' function. */
+#undef HAVE__EXIT
+
+/* Define to 1 if you have the `dup2' function. */
+#undef HAVE_DUP2
+
+/* Define to 1 if you have the `dup3' function. */
+#undef HAVE_DUP3
+
+/* Define to 1 if you have the `pipe' function. */
+#undef HAVE_PIPE
+
+/* Define to 1 if you have the `pipe2' function. */
+#undef HAVE_PIPE2
+
+/* Define to 1 if you have the `waitpid' function. */
+#undef HAVE_WAITPID
+
 /* Define to 1 if you have the `vasprintf' function. */
 #undef HAVE_VASPRINTF
+
+/* Define to 1 if you have the `vsnprintf' function. */
+#undef HAVE_VSNPRINTF
 
 /* XXX */
 #undef HAVE_WINSOCK2_H
@@ -151,7 +191,7 @@
 #undef RETSIGTYPE
 
 /* XXX */
-#undef SCANF_A
+//#undef SCANF_A
 
 /* The size of `char', as computed by sizeof. */
 #undef SIZEOF_CHAR
@@ -241,8 +281,4 @@
 /* XXX */
 #undef _M_
 
-/* ucsim custom defines */
-#define DD_TRUE     1
-#define DD_FALSE    0
-#define NIL         0
 #endif /* DDCONFIG_HEADER */

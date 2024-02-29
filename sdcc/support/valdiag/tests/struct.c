@@ -113,3 +113,25 @@ void test(void)
 }
 
 #endif
+
+/* bug 3086: SDCC had infinite loop on this error */
+#ifdef TEST9
+struct tag1 {
+  union {
+    struct tag2;	/* ERROR(SDCC) */ /* IGNORE(GCC) */
+  } tag3;		/* IGNORE */
+};
+#endif
+
+// C23 allows multiple compatible definitions for struct.
+#ifdef TEST10
+#ifdef __SDCC
+#pragma std_c23
+#endif
+
+struct A {int x; int y;}; /* IGNORE */
+struct A {int x; int y;}; /* IGNORE(GCC) */
+struct A {int x; int z;}; /* ERROR */
+
+#endif
+

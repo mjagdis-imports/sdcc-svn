@@ -39,12 +39,14 @@ struct _dumpFiles dumpFiles[] = {
   {DUMP_LOOP, ".dumploop", NULL},
   {DUMP_LOOPG, ".dumploopg", NULL},
   {DUMP_LOOPD, ".dumploopd", NULL},
+  {DUMP_LOSPRE, ".dumplospre", NULL},
+  {DUMP_GENCONSTPROP, ".dumpgenconstprop", NULL},
   {DUMP_RANGE, ".dumprange", NULL},
   {DUMP_PACK, ".dumppack", NULL},
   {DUMP_RASSGN, ".dumprassgn", NULL},
   {DUMP_LRANGE, ".dumplrange", NULL},
-  {DUMP_LOSPRE, ".dumplospre", NULL},
-  {DUMP_CUSTOM, ".dumpcustom", NULL},
+  {DUMP_CUSTOM0, ".dumpcustom0", NULL},
+  {DUMP_CUSTOM1, ".dumpcustom1", NULL},
   {0, NULL, NULL}
 };
 
@@ -125,7 +127,7 @@ createDumpFile (int id)
       dbuf_append_str (&dumpFileName, dumpFilesPtr->ext);
       if (!(dumpFilesPtr->filePtr = fopen (dbuf_c_str (&dumpFileName), "w")))
         {
-          werror (E_FILE_OPEN_ERR, dbuf_c_str (&dumpFileName));
+          werror (E_OUTPUT_FILE_OPEN_ERR, dbuf_c_str (&dumpFileName), strerror (errno));
           dbuf_destroy (&dumpFileName);
           exit (1);
         }
@@ -449,7 +451,7 @@ edgesTo (eBBlock * to)
 /* addiCodeToeBBlock - will add an iCode to the end of a block     */
 /*-----------------------------------------------------------------*/
 void
-addiCodeToeBBlock (eBBlock * ebp, iCode * ic, iCode * ip)
+addiCodeToeBBlock (eBBlock *ebp, iCode *ic, iCode *ip)
 {
   ic->prev = ic->next = NULL;
   /* if the insert point is given */
@@ -462,11 +464,16 @@ addiCodeToeBBlock (eBBlock * ebp, iCode * ic, iCode * ip)
       ip->prev = ic;
       ic->next = ip;
       if (!ic->prev)
-        ebp->sch = ic;
+        {
+          wassert (ebp);
+          ebp->sch = ic;
+        }
       else
         ic->prev->next = ic;
       return;
     }
+
+  wassert (ebp);
 
   /* if the block has no  instructions */
   if (ebp->ech == NULL)
@@ -685,16 +692,6 @@ replaceSymBySym (set * sset, operand * src, operand * dest)
       /* for all instructions in this block do */
       for (ic = rBlock->sch; ic; ic = ic->next)
         {
-
-          /* if we find usage */
-          if (ic->op == IFX && isOperandEqual (src, IC_COND (ic)))
-            {
-              bitVectUnSetBit (OP_USES (IC_COND (ic)), ic->key);
-              IC_COND (ic) = operandFromOperand (dest);
-              OP_USES (dest) = bitVectSetBit (OP_USES (dest), ic->key);
-              continue;
-            }
-
           if (isOperandEqual (IC_RIGHT (ic), src))
             {
               bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
@@ -803,7 +800,8 @@ iCodeFromeBBlock (eBBlock ** ebbs, int count)
           while (ic);
           if (foundNonlabel && ic)
             {
-              werrorfl (ic->filename, ic->lineno, W_CODE_UNREACH);
+              if (!ic->mergedElsewhere)
+                werrorfl (ic->filename, ic->lineno, W_CODE_UNREACH);
               continue;
             }
         }

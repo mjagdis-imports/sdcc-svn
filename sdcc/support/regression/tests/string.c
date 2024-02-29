@@ -7,7 +7,14 @@
 #include <wchar.h>
 #endif
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#include <uchar.h>
+#if defined(__APPLE__) || defined(__OpenBSD__) // As of 2023, macOS and OpenBSD are still not fully C11-compliant: they lack uchar.h.
+// Work around Apple's missing uchar.h
+#include <stdint.h>
+typedef int_least16_t char16_t;
+typedef int_least32_t char32_t;
+#else
+#include <uchar.h> // For char16_t, char32_t
+#endif
 #endif
 
 /** tests for strcmp

@@ -144,6 +144,7 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
   for(unsigned int i = 0; i < boost::num_vertices(G); i++)
     {
       G[i].ic->localEscapeAlive = false;
+      G[i].ic->parmEscapeAlive = false;
 
       for(unsigned int j = 0; j < boost::num_vertices(scon); j++)
         {
@@ -151,7 +152,7 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
           if(p == G[i].ic->block || p == scon[j].sym->block)
             {
               G[i].stack_alive.insert(j);
-              if (scon[j].sym->addrtaken || IS_AGGREGATE(scon[j].sym->type) ) // TODO: More accurate analysis.
+              if (scon[j].sym->addrtaken || IS_AGGREGATE(scon[j].sym->type)) // TODO: More accurate analysis.
                 G[i].ic->localEscapeAlive = true;
             }
         }
@@ -217,6 +218,10 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
   // Ugly hack: Regparms.
   for(sym = static_cast<symbol *>(setFirstItem(istack->syms)), j = boost::num_vertices(scon); sym; sym = static_cast<symbol *>(setNextItem(istack->syms)))
     {
+      if (sym->_isparm && !IS_REGPARM(sym->etype) && sym->addrtaken)
+        for(unsigned int i = 0; i < boost::num_vertices(G); i++)
+          G[i].ic->parmEscapeAlive = true;
+      
       if(!sym->_isparm || !IS_REGPARM(sym->etype) || !sym->onStack || !sym->allocreq)
         continue;
       
@@ -226,7 +231,11 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
 
       // Extend liverange to cover everything.
       for(unsigned int i = 0; i < boost::num_vertices(G); i++)
-        G[i].stack_alive.insert(j);
+        {
+          G[i].stack_alive.insert(j);
+          if (sym->addrtaken)
+            G[i].ic->localEscapeAlive = true;
+        }
 
       // Conflict with everything.
       for(unsigned int i = 0; i < j; i++)
@@ -235,7 +244,7 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
       j++;
     }
 
-  // Edges for aligment conflict
+  // Edges for alignment conflict
   typename SI_t::edge_iterator ei, ei_end;
   for(boost::tie(ei, ei_end) = boost::edges(scon); ei != ei_end; ++ei)
     scon[*ei].alignment_conflict_only = false;
@@ -250,8 +259,13 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
       const var_t right = var_from_operand (symbol_to_sindex, IC_RIGHT(G[i].ic));
 
       if(left >= 0 && !boost::edge (result, left, scon).second)
-        scon[(boost::add_edge(result, left, scon)).first].alignment_conflict_only =
-          !(TARGET_PDK_LIKE && G[i].ic->op == GET_VALUE_AT_ADDRESS && getSize(scon[result].sym->type) > 2); // Padauk still needs pointer read operand, since pointer read of more than 2 bytes is broken into multiple support routine calls.
+        {
+          scon[(boost::add_edge(result, left, scon)).first].alignment_conflict_only = true;
+          if (TARGET_PDK_LIKE && G[i].ic->op == GET_VALUE_AT_ADDRESS && getSize(scon[result].sym->type) > 2) // Padauk still needs pointer read operand, since pointer read of more than 2 bytes is broken into multiple support routine calls.
+            scon[(boost::add_edge(result, left, scon)).first].alignment_conflict_only = false;
+          if (TARGET_IS_STM8 && (G[i].ic->op == RIGHT_OP || G[i].ic->op == LEFT_OP) && IS_OP_LITERAL(IC_RIGHT(G[i].ic)) && ulFromVal (OP_VALUE_CONST (IC_RIGHT(G[i].ic))) >= 6) // Byte shifting in shift by constant might fail for partially spilt variables. Currently only the stm8 register allocator might partially spill variables.
+            scon[(boost::add_edge(result, left, scon)).first].alignment_conflict_only = false;
+        }
       if(right >= 0 && !boost::edge (result, right, scon).second)
         scon[(boost::add_edge(result, right, scon)).first].alignment_conflict_only = true;
     }
@@ -265,7 +279,7 @@ void color_stack_var(const var_t v, SI_t &SI, int start, int *ssize)
   
   SI[v].color = start;
 
-  const int sloc = (port->stack.direction > 0) ? start : -start - size ;
+  const int sloc = (port->stack.direction > 0) ? start : -start - size;
   symbol *const ssym = (sym->isspilt && sym->usl.spillLoc) ? sym->usl.spillLoc : sym;
 
   SPEC_STAK(ssym->etype) = ssym->stack = sloc;
@@ -296,8 +310,8 @@ void color_stack_var_greedily(const var_t v, SI_t &SI, int alignment, int *ssize
   const int size = getSize(sym->type);
  
   // Find a suitable free stack location.
-  boost::icl::interval_set<int>::iterator si;
-  for(si = SI[v].free_stack.begin();; ++si)
+  boost::icl::interval_set<int>::iterator si, si_end;
+  for(si = SI[v].free_stack.begin(), si_end = SI[v].free_stack.end(); si != si_end; ++si)
     {
        start = boost::icl::first(*si);
 
@@ -330,8 +344,11 @@ void color_stack_var_greedily(const var_t v, SI_t &SI, int alignment, int *ssize
        if(boost::icl::last(*si) >= start + size - 1)
          break; // Found one.
     }
-    
-  color_stack_var(v, SI, start, ssize);
+
+  if (si == si_end)
+    werror (E_CANNOT_ALLOC, SI[v].sym->name);
+  else
+    color_stack_var(v, SI, start, ssize);
 }
 
 static

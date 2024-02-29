@@ -45,24 +45,18 @@ cl_port::init(void)
   // DDR: 0=input, 1=output
   cell_dir= register_cell(uc->rom, base + 2);
 
-  cl_var *v;
-  chars pn= cchars(get_name());
-  uc->vars->add(v= new cl_var(pn+chars("_ddr"), uc->rom, base+2,
-			      "Direction register"));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("_odr"), uc->rom, base+0,
-			      "Output data register"));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("_idr"), uc->rom, base+1,
-			      "Input data register (outside value of port pins)"));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("_pin"), uc->rom, base+1,
-			      "Outside value of port pins"));
-  v->init();
-  uc->vars->add(v= new cl_var(pn+chars("_pins"), uc->rom, base+1,
-			      "Outside value of port pins"));
-  v->init();
-  
+  chars pn= get_name();
+  uc->vars->add(pn+"_ddr", uc->rom, base+2, 7, 0,
+                         "Direction register");
+  uc->vars->add(pn+"_odr", uc->rom, base+0, 7, 0,
+                         "Output data register");
+  uc->vars->add(pn+"_idr", uc->rom, base+1, 7, 0,
+                         "Input data register (outside value of port pins)");
+  uc->vars->add(pn+"_pin", uc->rom, base+1, 7, 0,
+                         "Outside value of port pins");
+  uc->vars->add(pn+"_pins", uc->rom, base+1, 7, 0,
+                         "Outside value of port pins");
+
   return 0;
 }
 
@@ -123,7 +117,7 @@ cl_port::print_info(class cl_console_base *con)
 	//con->dd_printf("-");
     }
   con->dd_printf("\n");
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

@@ -25,22 +25,22 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <strings.h>
+//#include <errno.h>
+//#include <fcntl.h>
+//#include <sys/time.h>
+//#include <strings.h>
 
 // prj
 #include "globals.h"
-#include "utils.h"
+//#include "utils.h"
 
 // cmd
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 // local
 #include "serialcl.h"
@@ -77,7 +77,7 @@ cl_serial::init(void)
     }
 
   class cl_hw *t2= uc->get_hw(HW_TIMER, 2, 0);
-  if ((there_is_t2= t2 != 0))
+  if (((there_is_t2= t2) != 0))
     {
       t_mem d= sfr->get(T2CON);
       t2_baud= d & (bmRCLK | bmTCLK);
@@ -85,12 +85,10 @@ cl_serial::init(void)
   else
     t2_baud= false;
   /*
-  cl_var *v;
   chars pn(id_string);
   pn.append("%d_", id);
-  uc->vars->add(v= new cl_var(pn+chars("on"), cfg, serconf_on));
-  uc->vars->add(v= new cl_var(pn+chars("check_often"), cfg, serconf_check_often));
-  v->init();
+  uc->vars->add(pn+chars("on"), cfg, serconf_on);
+  uc->vars->add(pn+chars("check_often"), cfg, serconf_check_often);
   */
   return(0);
 }
@@ -98,7 +96,7 @@ cl_serial::init(void)
 void
 cl_serial::new_hw_added(class cl_hw *new_hw)
 {
-  if (new_hw->cathegory == HW_TIMER &&
+  if (new_hw->category == HW_TIMER &&
       new_hw->id == 2)
     {
       there_is_t2= true;
@@ -295,20 +293,24 @@ cl_serial::tick(int cycles)
       (s_tr_bit >= _bits))
     {
       s_sending= false;
-      scon->set_bit1(bmTI);
+      //scon->set(scon->get() | bmTI);
+      scon_bits[1]->write(1);
       io->write((char*)(&s_out), 1);
       s_tr_bit-= _bits;
     }
   if ((_bmREN) &&
-      io->get_fin() &&
+      //io->get_fin() &&
       !s_receiving)
     {
       if (cfg_get(serconf_check_often))
 	{
-	  if (io->input_avail())
-	    io->proc_input(0);
+	  if (io->get_fin())
+	    {
+	      if (io->input_avail())
+		io->proc_input(0);
+	    }
 	}
-      if (/*fin->*/input_avail/*()*/)
+      if (input_avail)
 	{
 	  s_receiving= true;
 	  s_rec_bit= 0;
@@ -318,16 +320,13 @@ cl_serial::tick(int cycles)
   if (s_receiving &&
       (s_rec_bit >= _bits))
     {
-      //if (fin->read(&c, 1) == 1)
-	{
-	  c= input;
-	  uc->sim->app->debug("UART%d received %d,%c\n", id,
-			      c,isprint(c)?c:' ');
-	  input_avail= false;
-	  s_in= c;
-	  sbuf->set(s_in);
-	  received(c);
-	}
+      c= input;
+      uc->sim->app->debug("UART%d received %d,%c\n", id,
+			  c,isprint(c)?c:' ');
+      input_avail= false;
+      s_in= c;
+      sbuf->set(s_in);
+      received(c);
       s_receiving= false;
       s_rec_bit-= _bits;
     }
@@ -341,7 +340,8 @@ cl_serial::tick(int cycles)
 void
 cl_serial::received(int c)
 {
-  scon->set_bit1(bmRI);
+  //scon->set(scon->get() | bmRI);
+  scon_bits[0]->write(1);
   cfg_write(serconf_received, c);
 }
 
@@ -363,7 +363,7 @@ cl_serial::reset(void)
 void
 cl_serial::happen(class cl_hw *where, enum hw_event he, void *params)
 {
-  if (where->cathegory == HW_TIMER)
+  if (where->category == HW_TIMER)
     {
       if (where->id == 1)
 	{
@@ -425,18 +425,20 @@ cl_serial::print_info(class cl_console_base *con)
   con->dd_printf(" %s", (sc&bmREN)?"ON":"OFF");
   con->dd_printf(" RB8=%c", (sc&bmRB8)?'1':'0');
   con->dd_printf(" irq=%c", (sc&bmRI)?'1':'0');
+  con->dd_printf(" buf=0x%02x", s_in);
   con->dd_printf("\n");
 
   con->dd_printf("Transmitter");
   con->dd_printf(" TB8=%c", (sc&bmTB8)?'1':'0');
   con->dd_printf(" irq=%c", (sc&bmTI)?'1':'0');
+  con->dd_printf(" buf=0x%02x", s_out);
   con->dd_printf("\n");
   /*con->dd_printf("s_rec_t1=%d s_rec_bit=%d s_rec_tick=%d\n",
 		 s_rec_t1, s_rec_bit, s_rec_tick);
   con->dd_printf("s_tr_t1=%d s_tr_bit=%d s_tr_tick=%d\n",
 		 s_tr_t1, s_tr_bit, s_tr_tick);
 		 con->dd_printf("divby=%d bits=%d\n", _divby, _bits);*/
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

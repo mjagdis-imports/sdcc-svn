@@ -2158,10 +2158,10 @@ void pcode_test(void)
 		char buffer[200];
 
 		/* create the file name */
-                SNPRINTF(buffer, sizeof(buffer), "%s.p", dstFileName);
+		SNPRINTF(buffer, sizeof(buffer), "%s.p", dstFileName);
 
 		if( !(pFile = fopen(buffer, "w" ))) {
-			werror(E_FILE_OPEN_ERR,buffer);
+			werror(E_OUTPUT_FILE_OPEN_ERR, buffer, strerror(errno));
 			exit(1);
 		}
 
@@ -3102,7 +3102,7 @@ void pCodeInsertAfter(pCode *pc1, pCode *pc2)
 	pc2->prev = pc1;
 	pc1->next = pc2;
 
-	/* If this is an instrution type propogate the flow */
+	/* If this is an instrution type propagate the flow */
 	if (isPCI(pc2))
 		CopyFlow(PCI(pc2),pc1);
 }
@@ -3124,7 +3124,7 @@ void pCodeInsertBefore(pCode *pc1, pCode *pc2)
 	pc2->next = pc1;
 	pc1->prev = pc2;
 
-	/* If this is an instrution type propogate the flow */
+	/* If this is an instrution type propagate the flow */
 	if (isPCI(pc2))
 		CopyFlow(PCI(pc2),pc1);
 }
@@ -5013,7 +5013,7 @@ void pBlockMergeLabels(pBlock *pb)
 				//fprintf(stderr,"Merged label key = %d\n",PCL(pc)->key);
 				// And link it into the instruction's pBranch labels. (Note, since
 				// it's possible to have multiple labels associated with one instruction
-				// we must provide a means to accomodate the additional labels. Thus
+				// we must provide a means to accommodate the additional labels. Thus
 				// the labels are placed into the singly-linked list "label" as 
 				// opposed to being a single member of the pCodeInstruction.)
 
@@ -5199,7 +5199,7 @@ static void AnalyzeFlow(int level)
     /* Phase 2 - Flow Analysis - linking flow blocks
      *
      * In this phase, the individual flow blocks are examined
-     * to determine their order of excution.
+     * to determine their order of execution.
      */
 
     for(pb = the_pFile->pbHead; pb; pb = pb->next)
@@ -5208,7 +5208,7 @@ static void AnalyzeFlow(int level)
     /* Phase 3 - Flow Analysis - Flow Tree
      *
      * In this phase, the individual flow blocks are examined
-     * to determine their order of excution.
+     * to determine their order of execution.
      */
 
     for(pb = the_pFile->pbHead; pb; pb = pb->next)
@@ -5275,7 +5275,7 @@ void AnalyzeBanking(void)
 	pBlock  *pb;
 
 	if(!picIsInitialized()) {
-		werror(E_FILE_OPEN_ERR, "no memory size is known for this processor");
+		werror(E_UNKNOWN_TARGET, "no memory size is known for this processor");
 		exit(1);
 	}
 	
@@ -5316,7 +5316,7 @@ static DEFSETFUNC (resetrIdx)
 static void InitReuseReg(void)
 {
 	/* Find end of statically allocated variables for start idx */
-	/* Start from begining of GPR. Note may not be 0x20 on some PICs */
+	/* Start from beginning of GPR. Note may not be 0x20 on some PICs */
 	/* XXX: Avoid clashes with fixed registers, start late. */
 	unsigned maxIdx = 0x1000;
 	reg_info *r;

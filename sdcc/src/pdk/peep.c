@@ -51,9 +51,9 @@ isReturned(const char *what)
       spec = &(sym->etype->select.s);
       if(spec->noun == V_VOID)
         size = 0;
-      else if(spec->noun == V_CHAR || spec->noun == V_BOOL)
+      else if(spec->noun == V_CHAR || spec->noun == V_BOOL || spec->noun == V_BITINT && SPEC_BITINTWIDTH(sym->etype) <= 8)
         size = 1;
-      else if(spec->noun == V_INT && !(spec->b_long))
+      else if(spec->noun == V_INT && !(spec->b_long) || spec->noun == V_BITINT && SPEC_BITINTWIDTH(sym->etype) <= 16)
         size = 2;
       else
         size = 4;
@@ -140,13 +140,11 @@ findLabel (const lineNode *pl)
 
   /* 3. search lineNode with label definition and return it */
   for (cpl = _G.head; cpl; cpl = cpl->next)
-    {
-      if (   cpl->isLabel
-          && strncmp (p, cpl->line, strlen(p)) == 0)
-        {
-          return cpl;
-        }
-    }
+    if (cpl->isLabel &&
+      strncmp (p, cpl->line, strlen(p)) == 0 &&
+      cpl->line[strlen(p)] == ':')
+        return cpl;
+
   return NULL;
 }
 
@@ -166,16 +164,16 @@ static bool argIs(const char *arg, const char *what)
     arg++;
 
   return !strncmp(arg, what, strlen(what)) &&
-    (!arg[strlen(what)] || isspace((unsigned char)(arg[strlen(what)])) || arg[strlen(what)] == ',');
+    (!arg[strlen(what)] || isspace((unsigned char)(arg[strlen(what)])) || arg[strlen(what)] == ',' || arg[strlen(what)] == '.');
 }
 
 static bool
-stm8MightReadFlag(const lineNode *pl, const char *what)
+pdkMightReadFlag(const lineNode *pl, const char *what)
 {
   if (ISINST (pl->line, "push") && argIs (pl->line + 4, "af") || ISINST (pl->line, "pushaf"))
     return true;
 
-  if (ISINST (pl->line, "t0sn") || ISINST (pl->line, "t1sn"))
+  if (ISINST (pl->line, "t0sn.io") || ISINST (pl->line, "t1sn.io"))
     return argIs(strchr (pl->line, ','), what);
 
   if(ISINST (pl->line, "addc") ||
@@ -186,29 +184,34 @@ stm8MightReadFlag(const lineNode *pl, const char *what)
 }
 
 static bool
-pdkMightRead(const lineNode *pl, const char *what)
+pdkMightRead (const lineNode *pl, const char *what)
 {
 //printf("pdkMightRead() for |%s|%s|\n", pl->line, what);
   if (!strcmp(what, "z") || !strcmp(what, "c") || !strcmp(what, "ac") || !strcmp(what, "ov"))
-    return (stm8MightReadFlag(pl, what));
+    return (pdkMightReadFlag(pl, what));
   else if (strcmp(what, "a") && strcmp(what, "p"))
     return true;
 
   // Instructions that never read anything.
-  if (ISINST(pl->line, "engint") ||
-    ISINST(pl->line, "disgint") ||
-    ISINST(pl->line, "nop") ||
-    ISINST(pl->line, "pop") || ISINST(pl->line, "popaf") ||
-    ISINST(pl->line, "stopsys") ||
-    ISINST(pl->line, "wdreset"))
+  if (ISINST (pl->line, "clear") ||
+    ISINST (pl->line, "engint") ||
+    ISINST (pl->line, "disgint") ||
+    ISINST (pl->line, "goto") ||
+    ISINST (pl->line, "nop") ||
+    ISINST (pl->line, "pop") || ISINST (pl->line, "popaf") ||
+    ISINST (pl->line, "set0.io") || ISINST (pl->line, "set1.io") ||
+    ISINST (pl->line, "stopsys") ||
+    ISINST (pl->line, "t0sn.io") || ISINST (pl->line, "t1sn.io") || // They read I/O (maybe flags) but neither a nor p.
+    ISINST (pl->line, "wdreset"))
     return false;
 
-  if (ISINST(pl->line, "ret") && strchr(pl->line + 2, '#') && !strcmp(what, "a"))
+  if (ISINST (pl->line, "ret") && strchr (pl->line + 2, '#') && !strcmp (what, "a"))
     return false;
-  if (ISINST(pl->line, "ret"))
+  if (ISINST (pl->line, "ret"))
     return isReturned(what);
 
-  if (ISINST(pl->line, "mov"))
+  if (ISINST (pl->line, "mov") ||
+    ISINST (pl->line, "mov.io"))
     return argIs (strchr (pl->line, ','), what);
 
   if (ISINST (pl->line, "push") && argIs (pl->line + 4, "af") || ISINST (pl->line, "pushaf"))
@@ -219,35 +222,42 @@ pdkMightRead(const lineNode *pl, const char *what)
     ISINST (pl->line, "and") ||
     ISINST (pl->line, "or") ||
     ISINST (pl->line, "sub") ||
+    ISINST (pl->line, "xch") ||
     ISINST (pl->line, "xor"))
     return argIs (pl->line + 3, what) || argIs (strchr (pl->line, ','), what);
   if (ISINST(pl->line, "idxm"))
     return argIs (pl->line + 4, what) || argIs (strchr (pl->line, ','), what);
   if (ISINST (pl->line, "ceqsn") ||
-    ISINST (pl->line, "cneqsn"))
+    ISINST (pl->line, "cneqsn") ||
+    ISINST (pl->line, "xor.io"))
     return argIs (pl->line + 6, what) || argIs (strchr (pl->line, ','), what);
 
   // One-operand instructions
-  if (ISINST (pl->line, "neg") ||
+  if (ISINST (pl->line, "dec") ||
+    ISINST (pl->line, "inc") ||
+    ISINST (pl->line, "neg") ||
     ISINST (pl->line, "not") ||
     ISINST (pl->line, "sl") ||
     ISINST (pl->line, "slc") ||
     ISINST (pl->line, "sr") ||
     ISINST (pl->line, "src"))
     return argIs (pl->line + 3, what);
+  if (ISINST (pl->line, "addc") && !strchr (pl->line + 4, ',') || // addc a / addc M
+    ISINST (pl->line, "set0") || ISINST (pl->line, "set1") || // Technically two-operand, but second operand is a literal
+    ISINST (pl->line, "subc") && !strchr (pl->line + 4, ',') || // subc a / subc M)
+    ISINST (pl->line, "swap"))
+    return argIs (pl->line + 4, what);
   if (ISINST (pl->line, "dzsn") ||
     ISINST (pl->line, "izsn") ||
     ISINST (pl->line, "pcadd") ||
     ISINST (pl->line, "stt16"))
     return argIs (pl->line + 5, what);
 
-  // Todo: addc, subc, xch
-
-  return true;
+  return true; // Fail-safe: we have no idea what happens at this line, so assume it might read anything.
 }
 
 static bool
-stm8SurelyWritesFlag(const lineNode *pl, const char *what)
+pdkSurelyWritesFlag(const lineNode *pl, const char *what)
 {
   if (ISINST (pl->line, "pop") && argIs (pl->line + 4, "af") || ISINST (pl->line, "popaf"))
     return true;
@@ -263,46 +273,83 @@ stm8SurelyWritesFlag(const lineNode *pl, const char *what)
     ISINST (pl->line, "izsn") ||
     ISINST (pl->line, "sub") ||
     ISINST (pl->line, "subc"))
-      return true;
+    return true;
 
   // Instructions that write c only
   if (ISINST (pl->line, "sl") ||
     ISINST (pl->line, "slc") ||
     ISINST (pl->line, "sr") ||
-    ISINST (pl->line, "src"))
-      return !strcmp(what, "c");
+    ISINST (pl->line, "src") ||
+    ISINST (pl->line, "swapc.io"))
+    return !strcmp(what, "c");
 
   // Instructions that write z only
   if (ISINST (pl->line, "and") ||
     ISINST (pl->line, "neg") ||
     ISINST (pl->line, "not") ||
     ISINST (pl->line, "or") ||
-    ISINST (pl->line, "xor"))
-      return !strcmp(what, "z");
+    ISINST (pl->line, "xor") ||
+    ISINST (pl->line, "xor.io"))
+    return !strcmp(what, "z");
 
-  // mov writes z when the destination is a and hte source not an immediate only.
-  if (ISINST (pl->line, "mov") && !strcmp(what, "z") && pl->line[4] == 'a' && pl->line[5] == ',' && !strchr(pl->line, '#'))
+  // mov writes z iff the destination is a and the source not an immediate.
+  if (!strcmp(what, "z") && !strchr(pl->line, '#'))
+    {
+      if ( (ISINST (pl->line, "mov") && pl->line[4] == 'a' && pl->line[5] == ',') ||
+         (ISINST (pl->line, "mov.io") && pl->line[7] == 'a' && pl->line[8] == ','))
+        return true;
+    }
+
+  if (ISINST (pl->line, "mov") || ISINST (pl->line, "mov.io") ||
+    ISINST (pl->line, "clear") ||
+    ISINST (pl->line, "goto") ||
+    ISINST (pl->line, "t0sn") || ISINST (pl->line, "t0sn.io") ||
+    ISINST (pl->line, "t1sn") || ISINST (pl->line, "t1sn.io") ||
+    ISINST (pl->line, "xch") ||
+    ISINST (pl->line, "swap") ||
+    ISINST (pl->line, "idxm"))
+    return false;
+
+  // By calling convention, caller has to save flags.
+  if (ISINST (pl->line, "ret") || ISINST (pl->line, "call"))
     return true;
 
-  return false;
+  return false; // Fail-safe: we have no idea what happens at this line, so assume it writes nothing.
 }
 
 static bool
 pdkSurelyWrites(const lineNode *pl, const char *what)
 {
   if (!strcmp(what, "z") || !strcmp(what, "c") || !strcmp(what, "ac") || !strcmp(what, "ov"))
-    return (stm8SurelyWritesFlag(pl, what));
+    return (pdkSurelyWritesFlag(pl, what));
 
-  if (ISINST(pl->line, "mov") || ISINST(pl->line, "idxm"))
+  if (ISINST (pl->line, "mov") || ISINST (pl->line, "idxm") ||
+    ISINST (pl->line, "set1") ||
+    ISINST (pl->line, "set0"))
     return argIs (pl->line + 4, what);
+  if (ISINST(pl->line, "mov.io") ||
+    ISINST (pl->line, "set1.io") ||
+    ISINST (pl->line, "set0.io"))
+    return argIs (pl->line + 7, what);
+  if (ISINST (pl->line, "swapc.io"))
+    return argIs (pl->line + 9, what);
 
   if (ISINST (pl->line, "pop") && argIs (pl->line + 4, "af") || ISINST (pl->line, "popaf"))
-    return !strcmp(what, "a");
+    return !strcmp (what, "a");
 
-  // TODO: Other instructions
+  // Instructions that never write anything
+  if (ISINST (pl->line, "ceqsn") || ISINST (pl->line, "cneqsn") || // Might write flags, but nothing else.
+    ISINST (pl->line, "goto") ||
+    ISINST (pl->line, "t0sn") || ISINST (pl->line, "t0sn.io") ||
+    ISINST (pl->line, "t1sn") || ISINST (pl->line, "t1sn.io"))
+    return false;
 
   // One-operand instructions that write their argument
   if (ISINST (pl->line, "neg") ||
+    ISINST (pl->line, "not") ||
+    ISINST (pl->line, "inc") ||
+    ISINST (pl->line, "dec") ||
+    ISINST (pl->line, "xch") ||
     ISINST (pl->line, "not") ||
     ISINST (pl->line, "sl") ||
     ISINST (pl->line, "slc") ||
@@ -310,6 +357,7 @@ pdkSurelyWrites(const lineNode *pl, const char *what)
     ISINST (pl->line, "src"))
     return argIs (pl->line + 3, what);
   if (ISINST (pl->line, "dzsn") ||
+    ISINST (pl->line, "clear") ||
     ISINST (pl->line, "izsn") ||
     ISINST (pl->line, "ldt16"))
     return argIs (pl->line + 5, what);
@@ -329,13 +377,14 @@ pdkCondJump(const lineNode *pl)
 {
   return (ISINST(pl->line, "ceqsn") || ISINST(pl->line, "cneqsn") ||
     ISINST(pl->line, "t0sn") || ISINST(pl->line, "t1sn") ||
+    ISINST(pl->line, "t0sn.io") || ISINST(pl->line, "t1sn.io") ||
     ISINST(pl->line, "izsn") || ISINST(pl->line, "dzsn"));
 }
 
 static bool
 pdkSurelyReturns(const lineNode *pl)
 {
-  return(ISINST(pl->line, "ret"));
+  return(ISINST(pl->line, "ret") || ISINST(pl->line, "reti") );
 }
 
 /*-----------------------------------------------------------------*/
@@ -433,7 +482,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
           return S4O_CONDJMP;
         }
 
-      /* Don't need to check for de, hl since stm8MightRead() does that */
+      /* Don't need to check for de, hl since pdkMightRead() does that */
       if(pdkSurelyReturns(*pl))
         {
           D(("S4O_TERM\n"));

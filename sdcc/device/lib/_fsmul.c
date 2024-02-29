@@ -88,7 +88,7 @@ ___fsmul:
 00007$:
 	mov	exp_a, a
 
-	// now we need to multipy r4/r3/r2 * r7/r6/r5
+	// now we need to multiply r4/r3/r2 * r7/r6/r5
 	// ------------------------------------------
 	//	                        r2 * r5		<< 0
 	//	            r3 * r5  +  r2 * r6		<< 8
@@ -240,7 +240,7 @@ union float_long
 /* multiply two floats */
 float __fsmul (float a1, float a2) {
   volatile union float_long fl1, fl2;
-  volatile unsigned long result;
+  unsigned long result;
   int exp;
   char sign;
 

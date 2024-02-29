@@ -2,6 +2,7 @@
   main.c - Z80 specific definitions.
 
   Michael Hope <michaelh@juju.net.nz> 2001
+  Copyright (C) 2021, Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -29,19 +30,22 @@
 #include "SDCCargs.h"
 #include "dbuf_string.h"
 
-#define OPTION_BO              "-bo"
-#define OPTION_BA              "-ba"
-#define OPTION_CODE_SEG        "--codeseg"
-#define OPTION_CONST_SEG       "--constseg"
-#define OPTION_DATA_SEG        "--dataseg"
-#define OPTION_CALLEE_SAVES_BC "--callee-saves-bc"
-#define OPTION_PORTMODE        "--portmode="
-#define OPTION_ASM             "--asm="
-#define OPTION_NO_STD_CRT0     "--no-std-crt0"
-#define OPTION_RESERVE_IY      "--reserve-regs-iy"
-#define OPTION_OLDRALLOC       "--oldralloc"
-#define OPTION_FRAMEPOINTER    "--fno-omit-frame-pointer"
-#define OPTION_EMIT_EXTERNS    "--emit-externs"
+#define OPTION_BO               "-bo"
+#define OPTION_BA               "-ba"
+#define OPTION_CODE_SEG         "--codeseg"
+#define OPTION_CONST_SEG        "--constseg"
+#define OPTION_DATA_SEG         "--dataseg"
+#define OPTION_CALLEE_SAVES_BC  "--callee-saves-bc"
+#define OPTION_PORTMODE         "--portmode="
+#define OPTION_ASM              "--asm="
+#define OPTION_NO_STD_CRT0      "--no-std-crt0"
+#define OPTION_RESERVE_IY       "--reserve-regs-iy"
+#define OPTION_FRAMEPOINTER     "--fno-omit-frame-pointer"
+#define OPTION_EMIT_EXTERNS     "--emit-externs"
+#define OPTION_LEGACY_BANKING   "--legacy-banking"
+#define OPTION_NMOS_Z80         "--nmos-z80"
+#define OPTION_SDCCCALL         "--sdcccall"
+#define OPTION_ALLOW_UNDOC_INST "--allow-undocumented-instructions"
 
 static char _z80_defaultRules[] = {
 #include "peeph.rul"
@@ -58,38 +62,76 @@ static char _tlcs90_defaultRules[] = {
 #include "peeph-tlcs90.rul"
 };
 
-static char _gbz80_defaultRules[] = {
+static char _sm83_defaultRules[] = {
+#include "peeph-sm83.rul"
 #include "peeph.rul"
-#include "peeph-gbz80.rul"
 };
 
+static char _ez80_z80_defaultRules[] = {
+#include "peeph.rul"
+#include "peeph-z80.rul"
+#include "peeph-ez80_z80.rul"
+};
+
+static char _z80n_defaultRules[] = {
+#include "peeph.rul"
+#include "peeph-z80.rul"
+#include "peeph-z80n.rul"
+};
 
 
 Z80_OPTS z80_opts;
 
-static OPTION _z80_options[] = {
+static OPTION _z80_like_options[] = {
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_PORTMODE,        NULL, "Determine PORT I/O mode (z80/z180)"},
-  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm)"},
+  {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
+  {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
-  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
+  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
   {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
-  {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator"},
   {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
   {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
+  {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_NMOS_Z80,        &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
+  {0, OPTION_SDCCCALL,        &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
-static OPTION _gbz80_options[] = {
+static OPTION _z80_options[] = {
+  {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
+  {0, OPTION_PORTMODE,        NULL, "Determine PORT I/O mode (z80/z180)"},
   {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
   {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
+  {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
+  {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
+  {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
+  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
+  {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
+  {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
+  {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
+  {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_NMOS_Z80,        &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
+  {0, OPTION_SDCCCALL,        &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
+  {0, OPTION_ALLOW_UNDOC_INST,&options.allow_undoc_inst, "Allow use of undocumented instructions"},
+  {0, NULL}
+};
+
+static OPTION _sm83_options[] = {
+  {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
+  {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
-  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
+  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "Do not link default crt0.rel"},
+  {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_SDCCCALL,        &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -99,16 +141,20 @@ typedef enum
   ASM_TYPE_ASXXXX,
   ASM_TYPE_RGBDS,
   ASM_TYPE_ISAS,
-  ASM_TYPE_Z80ASM
+  ASM_TYPE_Z80ASM,
+  ASM_TYPE_GAS
 }
 ASM_TYPE;
 
 static struct
 {
   ASM_TYPE asmType;
-  /* determine if we can register a parameter */
-  int regParams;
-  bool z88dk_fastcall;
+  // Determine if we can put parameters in registers
+  struct
+  {
+    int n;
+    struct sym_link *ftype;
+  } regparam;
 }
 _G;
 
@@ -156,7 +202,7 @@ static char *_keywordstlcs90[] = {
 
 extern PORT z80_port;
 extern PORT r2k_port;
-extern PORT gbz80_port;
+extern PORT sm83_port;
 
 #include "mappings.i"
 
@@ -169,18 +215,45 @@ static builtins _z80_builtins[] = {
   {NULL, NULL, 0, {NULL}}
 };
 
+extern reg_info sm83_regs[];
+extern reg_info z80_regs[];
+extern void z80_init_asmops (void);
+extern reg_info *regsZ80;
+
 static void
 _z80_init (void)
 {
   z80_opts.sub = SUB_Z80;
-  asm_addTree (&_asxxxx_z80);
+  switch (_G.asmType)
+    {
+    case ASM_TYPE_GAS:
+      asm_addTree (&_gas_z80);
+      break;
+    default:
+      asm_addTree (&_asxxxx_z80);
+      break;
+    }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
 _z180_init (void)
 {
   z80_opts.sub = SUB_Z180;
-  asm_addTree (&_asxxxx_z80);
+  switch (_G.asmType)
+    {
+    case ASM_TYPE_GAS:
+      asm_addTree (&_gas_z80);
+      break;
+    default:
+      asm_addTree (&_asxxxx_z80);
+      break;
+    }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -188,6 +261,19 @@ _r2k_init (void)
 {
   z80_opts.sub = SUB_R2K;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
+}
+
+static void
+_r2ka_init (void)
+{
+  z80_opts.sub = SUB_R2KA;
+  asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -195,12 +281,18 @@ _r3ka_init (void)
 {
   z80_opts.sub = SUB_R3KA;
   asm_addTree (&_asxxxx_r2k);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
-_gbz80_init (void)
+_sm83_init (void)
 {
-  z80_opts.sub = SUB_GBZ80;
+  z80_opts.sub = SUB_SM83;
+
+  regsZ80 = sm83_regs;
+  z80_init_asmops ();
 }
 
 static void
@@ -208,37 +300,72 @@ _tlcs90_init (void)
 {
   z80_opts.sub = SUB_TLCS90;
   asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
 _ez80_z80_init (void)
 {
   z80_opts.sub = SUB_EZ80_Z80;
-  asm_addTree (&_asxxxx_z80);
+  switch (_G.asmType)
+    {
+    case ASM_TYPE_GAS:
+      asm_addTree (&_gas_z80);
+      break;
+    default:
+      asm_addTree (&_asxxxx_z80);
+      break;
+    }
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
 }
 
 static void
-_reset_regparm (struct sym_link *funcType)
+_z80n_init (void)
 {
-  _G.regParams = 0;
-  _G.z88dk_fastcall = IFFUNC_ISZ88DK_FASTCALL (funcType);
-  if (_G.z88dk_fastcall && IFFUNC_HASVARARGS (funcType))
+  z80_opts.sub = SUB_Z80N;
+  asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
+}
+
+static void
+_r800_init (void)
+{
+  z80_opts.sub = SUB_R800;
+  asm_addTree (&_asxxxx_z80);
+
+  regsZ80 = z80_regs;
+  z80_init_asmops ();
+}
+
+static void
+_reset_regparm (struct sym_link *ftype)
+{
+  _G.regparam.n = 0;
+  _G.regparam.ftype = ftype;
+  if (IFFUNC_ISZ88DK_FASTCALL (ftype) && IFFUNC_HASVARARGS (ftype))
     werror (E_Z88DK_FASTCALL_PARAMETERS);
 }
 
 static int
 _reg_parm (sym_link *l, bool reentrant)
 {
-  if (_G.z88dk_fastcall)
+  if (IFFUNC_ISZ88DK_FASTCALL (_G.regparam.ftype))
     {
-      if (_G.regParams)
+      if (_G.regparam.n)
         werror (E_Z88DK_FASTCALL_PARAMETERS);
       if (getSize (l) > 4)
         werror (E_Z88DK_FASTCALL_PARAMETER);
-      _G.regParams++;
-      return TRUE;
     }
- return FALSE;
+
+  bool is_regarg = z80IsRegArg (_G.regparam.ftype, ++_G.regparam.n, 0);
+
+  return (is_regarg ? _G.regparam.n : 0);
 }
 
 enum
@@ -282,12 +409,16 @@ do_pragma (int id, const char *name, const char *cp)
                 break;
 
               case ASM_TYPE_RGBDS:
-                dbuf_printf (&buffer, "CODE,BANK[%d]", token.val.int_val);
+                dbuf_printf (&buffer, "ROMX,BANK[%d]", token.val.int_val);
                 break;
 
               case ASM_TYPE_ISAS:
                 /* PENDING: what to use for ISAS? */
                 dbuf_printf (&buffer, "CODE,BANK(%d)", token.val.int_val);
+                break;
+
+              case ASM_TYPE_GAS:
+                dbuf_printf (&buffer, ".ovly%04x", token.val.int_val);
                 break;
 
               default:
@@ -312,10 +443,7 @@ do_pragma (int id, const char *name, const char *cp)
           }
 
         dbuf_c_str (&buffer);
-        /* ugly, see comment in src/port.h (borutr) */
-        gbz80_port.mem.code_name = dbuf_detach (&buffer);
-        code->sname = gbz80_port.mem.code_name;
-        options.code_seg = (char *) gbz80_port.mem.code_name;
+        options.code_seg = (char *) dbuf_detach (&buffer);
       }
       break;
 
@@ -426,16 +554,16 @@ _process_pragma (const char *s)
   return process_pragma_tbl (pragma_tbl, s);
 }
 
-static const char *_gbz80_rgbasmCmd[] = {
+static const char *_sm83_rgbasmCmd[] = {
   "rgbasm", "-o$1.rel", "$1.asm", NULL
 };
 
-static const char *_gbz80_rgblinkCmd[] = {
+static const char *_sm83_rgblinkCmd[] = {
   "xlink", "-tg", "-n$1.sym", "-m$1.map", "-zFF", "$1.lnk", NULL
 };
 
 static void
-_gbz80_rgblink (void)
+_sm83_rgblink (void)
 {
   FILE *lnkfile;
   struct dbuf_s lnkFileName;
@@ -448,7 +576,7 @@ _gbz80_rgblink (void)
   dbuf_append_str (&lnkFileName, ".lk");
   if (!(lnkfile = fopen (dbuf_c_str (&lnkFileName), "w")))
     {
-      werror (E_FILE_OPEN_ERR, dbuf_c_str (&lnkFileName));
+      werror (E_OUTPUT_FILE_OPEN_ERR, dbuf_c_str (&lnkFileName), strerror (errno));
       dbuf_destroy (&lnkFileName);
       exit (1);
     }
@@ -468,7 +596,7 @@ _gbz80_rgblink (void)
 
   fclose (lnkfile);
 
-  buffer = buildCmdLine (port->linker.cmd, dstFileName, NULL, NULL, NULL);
+  buffer = buildCmdLine (port->linker.cmd, dstFileName, NULL, NULL, NULL, NULL);
   /* call the linker */
   if (sdcc_system (buffer))
     {
@@ -484,7 +612,7 @@ _parseOptions (int *pargc, char **argv, int *i)
 {
   if (argv[*i][0] == '-')
     {
-      if (IS_GB)
+      if (IS_SM83 || IS_Z80)
         {
           if (!strncmp (argv[*i], OPTION_BO, sizeof (OPTION_BO) - 1))
             {
@@ -493,11 +621,16 @@ _parseOptions (int *pargc, char **argv, int *i)
               struct dbuf_s buffer;
 
               dbuf_init (&buffer, 16);
-              dbuf_printf (&buffer, "CODE_%u", bank);
+              if (_G.asmType == ASM_TYPE_RGBDS)
+                {
+                  dbuf_printf (&buffer, "ROMX,BANK[%u]", bank);
+                }
+              else
+                {
+                  dbuf_printf (&buffer, "CODE_%u", bank);
+                }
               dbuf_c_str (&buffer);
-              /* ugly, see comment in src/port.h (borutr) */
-              gbz80_port.mem.code_name = dbuf_detach (&buffer);
-              options.code_seg = (char *) gbz80_port.mem.code_name;
+              options.code_seg = (char *) dbuf_detach (&buffer);
               return TRUE;
             }
           else if (!strncmp (argv[*i], OPTION_BA, sizeof (OPTION_BA) - 1))
@@ -507,10 +640,16 @@ _parseOptions (int *pargc, char **argv, int *i)
               struct dbuf_s buffer;
 
               dbuf_init (&buffer, 16);
-              dbuf_printf (&buffer, "DATA_%u", bank);
+              if (_G.asmType == ASM_TYPE_RGBDS)
+                {
+                  dbuf_printf (&buffer, "SRAM,BANK[%u]", bank);
+                }
+              else
+                {
+                  dbuf_printf (&buffer, "DATA_%u", bank);
+                }
               dbuf_c_str (&buffer);
-              /* ugly, see comment in src/port.h (borutr) */
-              gbz80_port.mem.data_name = dbuf_detach (&buffer);
+              options.data_seg = (char *) dbuf_detach (&buffer);
               return TRUE;
             }
         }
@@ -522,9 +661,26 @@ _parseOptions (int *pargc, char **argv, int *i)
           if (!strcmp (asmblr, "rgbds"))
             {
               asm_addTree (&_rgbds_gb);
-              gbz80_port.assembler.cmd = _gbz80_rgbasmCmd;
-              gbz80_port.linker.cmd = _gbz80_rgblinkCmd;
-              gbz80_port.linker.do_link = _gbz80_rgblink;
+              // rgbds doesn't understand that
+              options.noOptsdccInAsm = true;
+
+              sm83_port.assembler.cmd = _sm83_rgbasmCmd;
+              sm83_port.linker.cmd = _sm83_rgblinkCmd;
+              sm83_port.linker.do_link = _sm83_rgblink;
+
+              if(!(options.code_seg && strcmp(options.code_seg, CODE_NAME)))
+                {
+                  if (options.code_seg)
+                    Safe_free (options.code_seg);
+                  options.code_seg = Safe_strdup ("ROMX");
+                }
+              if(!(options.data_seg && strcmp(options.data_seg, DATA_NAME)))
+                {
+                  if (options.data_seg)
+                    Safe_free (options.data_seg);
+                  options.data_seg = Safe_strdup ("WRAMX");
+                }
+
               _G.asmType = ASM_TYPE_RGBDS;
               return TRUE;
             }
@@ -537,7 +693,7 @@ _parseOptions (int *pargc, char **argv, int *i)
             {
               asm_addTree (&_isas_gb);
               /* Munge the function prefix */
-              gbz80_port.fun_prefix = "";
+              sm83_port.fun_prefix = "";
               _G.asmType = ASM_TYPE_ISAS;
               return TRUE;
             }
@@ -546,6 +702,13 @@ _parseOptions (int *pargc, char **argv, int *i)
               port->assembler.externGlobal = TRUE;
               asm_addTree (&_z80asm_z80);
               _G.asmType = ASM_TYPE_ISAS;
+              return TRUE;
+            }
+          else if (!strcmp (asmblr, "gas"))
+            {
+              port->assembler.externGlobal = TRUE;
+              asm_addTree (&_gas_z80);
+              _G.asmType = ASM_TYPE_GAS;
               return TRUE;
             }
         }
@@ -567,7 +730,7 @@ _parseOptions (int *pargc, char **argv, int *i)
       else if (!strncmp (argv[*i], OPTION_EMIT_EXTERNS, sizeof (OPTION_EMIT_EXTERNS) - 1))
         {
           port->assembler.externGlobal = 1;
-          return TRUE;
+          return true;
         }
     }
   return FALSE;
@@ -637,7 +800,7 @@ _setValues (void)
   setMainValue ("z80extralibpaths", (s = joinStrSet (libPathsSet)));
   Safe_free ((void *) s);
 
-  if (IS_GB)
+  if (IS_SM83)
     {
       setMainValue ("z80outputtypeflag", "-Z");
       setMainValue ("z80outext", ".gb");
@@ -658,10 +821,6 @@ _setValues (void)
   dbuf_printf (&dbuf, "-b_CODE=0x%04X -b_DATA=0x%04X", options.code_loc, options.data_loc);
   setMainValue ("z80bases", dbuf_c_str (&dbuf));
   dbuf_destroy (&dbuf);
-
-  /* For the old register allocator (with the new one we decide to omit the frame pointer for each function individually) */
-  if (!IS_GB && options.omitFramePtr)
-    port->stack.call_overhead = 2;
 }
 
 static void
@@ -669,8 +828,20 @@ _finaliseOptions (void)
 {
   port->mem.default_local_map = data;
   port->mem.default_globl_map = data;
-  if (_G.asmType == ASM_TYPE_ASXXXX && IS_GB)
-    asm_addTree (&_asxxxx_gb);
+  if (IS_SM83)
+    switch (_G.asmType)
+      {
+      case ASM_TYPE_ASXXXX:
+        asm_addTree (&_asxxxx_gb);
+        break;
+      case ASM_TYPE_GAS:
+        asm_addTree (&_gas_gb);
+        break;
+      case ASM_TYPE_ISAS:
+      case ASM_TYPE_RGBDS:
+      case ASM_TYPE_Z80ASM:
+        break;
+      }
 
   if (IY_RESERVED)
     port->num_regs -= 2;
@@ -689,8 +860,15 @@ _setDefaultOptions (void)
   options.noRegParams = 0;
   /* Default code and data locations. */
   options.code_loc = 0x200;
+  options.allow_undoc_inst = false;
 
-  options.data_loc = IS_GB ? 0xC000 : 0x8000;
+  if (IS_SM83)
+    options.data_loc = 0xc000;
+  else if (IS_RAB) // Match default crt0
+    options.data_loc = 0xa000;
+  else
+    options.data_loc = 0x8000;
+
   options.out_fmt = 'i';        /* Default output format is ihx */
 }
 
@@ -773,9 +951,10 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   int result_size = IS_SYMOP (IC_RESULT(ic)) ? getSize (OP_SYM_TYPE (IC_RESULT(ic))) : 4;
 
   if (ic->op != '*')
-    {
-      return FALSE;
-    }
+    return(false);
+
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
 
   if (IS_LITERAL (left))
     test = left;
@@ -783,36 +962,49 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
     test = right;
   /* 8x8 unsigned multiplication code is shorter than
      call overhead for the multiplication routine. */
-  else if (IS_CHAR (right) && IS_UNSIGNED (right) && IS_CHAR (left) && IS_UNSIGNED (left) && !IS_GB)
-    {
-      return TRUE;
-    }
+  else if (IS_CHAR (right) && IS_UNSIGNED (right) && IS_CHAR (left) && IS_UNSIGNED (left) && !IS_SM83)
+    return(true);
   /* Same for any multiplication with 8 bit result. */
-  else if (result_size == 1 && !IS_GB)
-    {
-      return TRUE;
-    }
+  else if (result_size == 1 && !IS_SM83)
+    return(true);
+  // Rabbits have signed 16x16->32 multiplication, which is broken on original Rabbit 2000.
+  else if (IS_RAB && !IS_R2K && getSize (left) == 2 && getSize(right) == 2 &&
+    (result_size == 2 || result_size <= 4 && !IS_UNSIGNED (left) && !IS_UNSIGNED (right)))
+    return(true);
   else
-    {
-      return FALSE;
-    }
+    return(false);
 
   if (getSize (test) <= 2)
-    {
-      return TRUE;
-    }
+    return(true);
 
-  return FALSE;
+  return(false);
 }
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  if (op == GETHBIT)
-    return TRUE;
-  else
-    return FALSE;
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+      return (true);
+    case ROT:
+      {
+        unsigned int lbits = bitsForType (left);
+        if (lbits % 8)
+          return (false);
+        if (lbits == 8)
+          return (true);
+        if (right % lbits  == 1 || right % lbits == lbits - 1)
+          return (true);
+        if ((getSize (left) <= 2 || getSize (left) == 4) && lbits == right * 2)
+          return (true);
+      }
+      return (false);
+    }
+  return (false);
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -839,13 +1031,17 @@ oclsExpense (struct memmap *oclass)
 */
 
 static const char *_z80LinkCmd[] = {
-  "sdldz80", "-nf", "$1", NULL
+  "sdldz80", "-nf", "$1", "$L", NULL
 };
 
 static const char *_gbLinkCmd[] = {
-  "sdldgb", "-nf", "$1", NULL
+  "sdldgb", "-nf", "$1", "$L", NULL
 };
-
+/*
+static const char *_gnuLdCmd[] = {
+  "z80-elf-ld", "", "$1", NULL
+};
+*/
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
 static const char *_z80AsmCmd[] = {
   "sdasz80", "$l", "$3", "$2", "$1.asm", NULL
@@ -862,15 +1058,22 @@ static const char *_gbAsmCmd[] = {
 static const char *_tlcs90AsmCmd[] = {
   "sdastlcs90", "$l", "$3", "$2", "$1.asm", NULL
 };
-
+/*
+static const char *_GnuAsmCmd[] = {
+  "z80-elf-as", "$l", "$3", "$2", "$1.asm", NULL
+};
+*/
 static const char *const _crt[] = { "crt0.rel", NULL, };
 static const char *const _libs_z80[] = { "z80", NULL, };
 static const char *const _libs_z180[] = { "z180", NULL, };
 static const char *const _libs_r2k[] = { "r2k", NULL, };
+static const char *const _libs_r2ka[] = { "r2ka", NULL, };
 static const char *const _libs_r3ka[] = { "r3ka", NULL, };
 static const char *const _libs_tlcs90[] = { "tlcs90", NULL, };
-static const char *const _libs_gb[] = { "gbz80", NULL, };
+static const char *const _libs_sm83[] = { "sm83", NULL, };
 static const char *const _libs_ez80_z80[] = { "ez80_z80", NULL, };
+static const char *const _libs_z80n[] = { "z80n", NULL, };
+static const char *const _libs_r800[] = { "r800", NULL, };
 
 /* Globals */
 PORT z80_port =
@@ -913,9 +1116,11 @@ PORT z80_port =
     z80canAssign,
     z80notUsedFrom,
     z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -943,11 +1148,17 @@ PORT z80_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
-  { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
+  1,                            /* ABI revision */
+  { -1, 0, 0, 4, 0, 3, 0 },
+  { 
+    -1,                         /* shifts never use support routines */
+    true,                       /* use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1039,9 +1250,11 @@ PORT z180_port =
     z80canAssign,
     z80notUsedFrom,
     z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1069,11 +1282,17 @@ PORT z180_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
-  { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
+  1,                            /* ABI revision */
+  { -1, 0, 0, 4, 0, 3, 0 },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1086,7 +1305,7 @@ PORT z180_port =
   "_",
   _z180_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1164,9 +1383,11 @@ PORT r2k_port =
     z80canAssign,
     z80notUsedFrom,
     z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, _BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1194,11 +1415,17 @@ PORT r2k_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1211,7 +1438,141 @@ PORT r2k_port =
   "_",
   _r2k_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
+  NULL,
+  _finaliseOptions,
+  _setDefaultOptions,
+  z80_assignRegisters,
+  _getRegName,
+  _getRegByName,
+  NULL,
+  _keywords,
+  0,                            /* no assembler preamble */
+  NULL,                         /* no genAssemblerEnd */
+  0,                            /* no local IVT generation code */
+  0,                            /* no genXINIT code */
+  NULL,                         /* genInitStartup */
+  _reset_regparm,
+  _reg_parm,
+  _process_pragma,
+  NULL,
+  _hasNativeMulFor,
+  hasExtBitOp,                  /* hasExtBitOp */
+  oclsExpense,                  /* oclsExpense */
+  TRUE,
+  TRUE,                         /* little endian */
+  0,                            /* leave lt */
+  0,                            /* leave gt */
+  1,                            /* transform <= to ! > */
+  1,                            /* transform >= to ! < */
+  1,                            /* transform != to !(a == b) */
+  0,                            /* leave == */
+  FALSE,                        /* Array initializer support. */
+  0,                            /* no CSE cost estimation yet */
+  _z80_builtins,                /* builtin functions */
+  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  1,                            /* reset labelKey to 1 */
+  1,                            /* globals & local statics allowed */
+  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+  PORT_MAGIC
+};
+
+PORT r2ka_port =
+{
+  TARGET_ID_R2KA,
+  "r2ka",
+  "Rabbit 2000A",               /* Target name */
+  NULL,                         /* Processor name */
+  {
+    glue,
+    FALSE,
+    NO_MODEL,
+    NO_MODEL,
+    NULL,                       /* model == target */
+  },
+  {                             /* Assembler */
+    _r2kAsmCmd,
+    NULL,
+    "-plosgffwy",               /* Options with debug */
+    "-plosgffw",                /* Options without debug */
+    0,
+    ".asm"
+  },
+  {                             /* Linker */
+    _z80LinkCmd,                //NULL,
+    NULL,                       //LINKCMD,
+    NULL,
+    ".rel",
+    1,
+    _crt,                       /* crt */
+    _libs_r2ka,                 /* libs */
+  },
+  {                             /* Peephole optimizer */
+    _r2k_defaultRules,
+    z80instructionSize,
+    0,
+    0,
+    0,
+    z80notUsed,
+    z80canAssign,
+    z80notUsedFrom,
+    z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
+  },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  /* tags for generic pointers */
+  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {
+    "XSEG",
+    "STACK",
+    "CODE",
+    "DATA",
+    NULL,                       /* idata */
+    NULL,                       /* pdata */
+    NULL,                       /* xdata */
+    NULL,                       /* bit */
+    "RSEG (ABS)",
+    "GSINIT",
+    NULL,                       /* overlay */
+    "GSFINAL",
+    "HOME",
+    NULL,                       /* xidata */
+    NULL,                       /* xinit */
+    NULL,                       /* const_name */
+    "CABS (ABS)",               /* cabs_name */
+    "DABS (ABS)",               /* xabs_name */
+    NULL,                       /* iabs_name */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,
+    NULL,
+    1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
+    1                           /* No fancy alignments supported. */
+  },
+  { NULL, NULL },
+  1,                            /* ABI revision */
+  { -1, 0, 0, 4, 0, 2, 0 },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
+  { z80_emitDebuggerSymbol },
+  {
+    256,                        /* maxCount */
+    3,                          /* sizeofElement */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+  },
+  "_",
+  _r2ka_init,
+  _parseOptions,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1290,9 +1651,11 @@ PORT r3ka_port =
     z80canAssign,
     z80notUsedFrom,
     z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1320,11 +1683,17 @@ PORT r3ka_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1337,7 +1706,7 @@ PORT r3ka_port =
   "_",
   _r3ka_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1377,11 +1746,11 @@ PORT r3ka_port =
 };
 
 /* Globals */
-PORT gbz80_port =
+PORT sm83_port =
 {
-  TARGET_ID_GBZ80,
-  "gbz80",
-  "Gameboy Z80-like",           /* Target name */
+  TARGET_ID_SM83,
+  "sm83",
+  "Sharp SM83",           /* Target name */
   NULL,
   {
     glue,
@@ -1406,21 +1775,23 @@ PORT gbz80_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_gb,                   /* libs */
+    _libs_sm83,                 /* libs */
   },
   {                             /* Peephole optimizer */
-    _gbz80_defaultRules,
+    _sm83_defaultRules,
+    z80instructionSize,
     NULL,
     NULL,
     NULL,
-    NULL,
-    NULL,
+    z80notUsed,
     z80canAssign,
-    NULL,
+    z80notUsedFrom,
     z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 /* non-compliant - C23 rewuires t least 64 here. SM83 has some special paths in codegen for + and - of more than 16 bits. Those do not yet support _BitInt */ },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1443,16 +1814,22 @@ PORT gbz80_port =
     "CABS (ABS)",               /* cabs_name */
     "DABS (ABS)",               /* xabs_name */
     NULL,                       /* iabs_name */
-    NULL,                       /* name of segment for initialized variables */
-    NULL,                       /* name of segment for copies of initialized variables in code space */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
     1,                          /* CODE is read-only */
+    true,                       // unqualified pointers can point to __sfr (the i/o space is part of the flat address space).
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
+  1,                            /* default ABI revision */
   { -1, 0, 0, 2, 0, 4, 0 },
-  { -1, FALSE },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1463,9 +1840,9 @@ PORT gbz80_port =
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
-  _gbz80_init,
+  _sm83_init,
   _parseOptions,
-  _gbz80_options,
+  _sm83_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1494,13 +1871,13 @@ PORT gbz80_port =
   1,                            /* transform >= to ! < */
   1,                            /* transform != to !(a == b) */
   0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
+  false,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
   NULL,                         /* no builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
-  5,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+  7,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
   PORT_MAGIC
 };
 
@@ -1544,9 +1921,11 @@ PORT tlcs90_port =
     z80canAssign,
     z80notUsedFrom,
     z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1574,11 +1953,17 @@ PORT tlcs90_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // doesn't matter, as port has no __sfr anyway
     1                           /* No fancy alignments supported. */
    },
   { NULL, NULL },
+  1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1591,7 +1976,7 @@ PORT tlcs90_port =
   "_",
   _tlcs90_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
@@ -1622,7 +2007,7 @@ PORT tlcs90_port =
   0,                            /* leave == */
   FALSE,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
-  _z80_builtins,                /* builtin functions */
+  0,                            /* no builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
@@ -1634,7 +2019,7 @@ PORT ez80_z80_port =
 {
   TARGET_ID_EZ80_Z80,
   "ez80_z80",
-  "eZ80-Z80",                  /* Target name */
+  "eZ80-Z80",                   /* Target name */
   NULL,                         /* Processor name */
   {
     glue,
@@ -1658,10 +2043,10 @@ PORT ez80_z80_port =
     ".rel",
     1,
     _crt,                       /* crt */
-    _libs_ez80_z80,                 /* libs */
+    _libs_ez80_z80,             /* libs */
   },
   {                             /* Peephole optimizer */
-    _z80_defaultRules,
+    _ez80_z80_defaultRules,
     z80instructionSize,
     NULL,
     NULL,
@@ -1670,9 +2055,11 @@ PORT ez80_z80_port =
     z80canAssign,
     z80notUsedFrom,
     z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
   },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -1700,11 +2087,17 @@ PORT ez80_z80_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
     1                           /* No fancy alignments supported. */
   },
   { NULL, NULL },
-  { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
+  1,                            /* ABI revision */
+  { -1, 0, 0, 4, 0, 3, 0 },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { z80_emitDebuggerSymbol },
   {
     256,                        /* maxCount */
@@ -1717,7 +2110,275 @@ PORT ez80_z80_port =
   "_",
   _ez80_z80_init,
   _parseOptions,
-  _z80_options,
+  _z80_like_options,
+  NULL,
+  _finaliseOptions,
+  _setDefaultOptions,
+  z80_assignRegisters,
+  _getRegName,
+  _getRegByName,
+  NULL,
+  _keywords,
+  0,                            /* no assembler preamble */
+  NULL,                         /* no genAssemblerEnd */
+  0,                            /* no local IVT generation code */
+  0,                            /* no genXINIT code */
+  NULL,                         /* genInitStartup */
+  _reset_regparm,
+  _reg_parm,
+  _process_pragma,
+  NULL,
+  _hasNativeMulFor,
+  hasExtBitOp,                  /* hasExtBitOp */
+  oclsExpense,                  /* oclsExpense */
+  TRUE,
+  TRUE,                         /* little endian */
+  0,                            /* leave lt */
+  0,                            /* leave gt */
+  1,                            /* transform <= to ! > */
+  1,                            /* transform >= to ! < */
+  1,                            /* transform != to !(a == b) */
+  0,                            /* leave == */
+  FALSE,                        /* Array initializer support. */
+  0,                            /* no CSE cost estimation yet */
+  _z80_builtins,                /* builtin functions */
+  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  1,                            /* reset labelKey to 1 */
+  1,                            /* globals & local statics allowed */
+  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+  PORT_MAGIC
+};
+
+PORT z80n_port =
+{
+  TARGET_ID_Z80N,
+  "z80n",
+  "Z80N",                       /* Target name */
+  NULL,                         /* Processor name */
+  {
+    glue,
+    FALSE,
+    NO_MODEL,
+    NO_MODEL,
+    NULL,                       /* model == target */
+  },
+  {                             /* Assembler */
+    _z80AsmCmd,
+    NULL,
+    "-plosgffwy",               /* Options with debug */
+    "-plosgffw",                /* Options without debug */
+    0,
+    ".asm"
+  },
+  {                             /* Linker */
+    _z80LinkCmd,                //NULL,
+    NULL,                       //LINKCMD,
+    NULL,
+    ".rel",
+    1,
+    _crt,                       /* crt */
+    _libs_z80n,                 /* libs */
+  },
+  {                             /* Peephole optimizer */
+    _z80n_defaultRules,
+    z80instructionSize,
+    NULL,
+    NULL,
+    NULL,
+    z80notUsed,
+    z80canAssign,
+    z80notUsedFrom,
+    z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
+  },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  /* tags for generic pointers */
+  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {
+    "XSEG",
+    "STACK",
+    "CODE",
+    "DATA",
+    NULL,                       /* idata */
+    NULL,                       /* pdata */
+    NULL,                       /* xdata */
+    NULL,                       /* bit */
+    "RSEG (ABS)",
+    "GSINIT",
+    NULL,                       /* overlay */
+    "GSFINAL",
+    "HOME",
+    NULL,                       /* xidata */
+    NULL,                       /* xinit */
+    NULL,                       /* const_name */
+    "CABS (ABS)",               /* cabs_name */
+    "DABS (ABS)",               /* xabs_name */
+    NULL,                       /* iabs_name */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,
+    NULL,
+    1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
+    1                           /* No fancy alignments supported. */
+  },
+  { NULL, NULL },
+  1,                            /* ABI revision */
+  { -1, 0, 0, 4, 0, 3, 0 },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
+  { z80_emitDebuggerSymbol },
+  {
+    256,                        /* maxCount */
+    3,                          /* sizeofElement */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+  },
+  "_",
+  _z80n_init,
+  _parseOptions,
+  _z80_like_options,
+  NULL,
+  _finaliseOptions,
+  _setDefaultOptions,
+  z80_assignRegisters,
+  _getRegName,
+  _getRegByName,
+  NULL,
+  _keywords,
+  0,                            /* no assembler preamble */
+  NULL,                         /* no genAssemblerEnd */
+  0,                            /* no local IVT generation code */
+  0,                            /* no genXINIT code */
+  NULL,                         /* genInitStartup */
+  _reset_regparm,
+  _reg_parm,
+  _process_pragma,
+  NULL,
+  _hasNativeMulFor,
+  hasExtBitOp,                  /* hasExtBitOp */
+  oclsExpense,                  /* oclsExpense */
+  TRUE,
+  TRUE,                         /* little endian */
+  0,                            /* leave lt */
+  0,                            /* leave gt */
+  1,                            /* transform <= to ! > */
+  1,                            /* transform >= to ! < */
+  1,                            /* transform != to !(a == b) */
+  0,                            /* leave == */
+  FALSE,                        /* Array initializer support. */
+  0,                            /* no CSE cost estimation yet */
+  _z80_builtins,                /* builtin functions */
+  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  1,                            /* reset labelKey to 1 */
+  1,                            /* globals & local statics allowed */
+  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+  PORT_MAGIC
+};
+
+PORT r800_port =
+{
+  TARGET_ID_R800,
+  "r800",
+  "R800",                       /* Target name */
+  NULL,                         /* Processor name */
+  {
+    glue,
+    FALSE,
+    NO_MODEL,
+    NO_MODEL,
+    NULL,                       /* model == target */
+  },
+  {                             /* Assembler */
+    _z80AsmCmd,
+    NULL,
+    "-plosgffwy",               /* Options with debug */
+    "-plosgffw",                /* Options without debug */
+    0,
+    ".asm"
+  },
+  {                             /* Linker */
+    _z80LinkCmd,                //NULL,
+    NULL,                       //LINKCMD,
+    NULL,
+    ".rel",
+    1,
+    _crt,                       /* crt */
+    _libs_r800,                 /* libs */
+  },
+  {                             /* Peephole optimizer */
+    _z80_defaultRules,
+    z80instructionSize,
+    NULL,
+    NULL,
+    NULL,
+    z80notUsed,
+    z80canAssign,
+    z80notUsedFrom,
+    z80symmParmStack,
+    z80canJoinRegs,
+    z80canSplitReg,
+  },
+  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
+  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  /* tags for generic pointers */
+  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {
+    "XSEG",
+    "STACK",
+    "CODE",
+    "DATA",
+    NULL,                       /* idata */
+    NULL,                       /* pdata */
+    NULL,                       /* xdata */
+    NULL,                       /* bit */
+    "RSEG (ABS)",
+    "GSINIT",
+    NULL,                       /* overlay */
+    "GSFINAL",
+    "HOME",
+    NULL,                       /* xidata */
+    NULL,                       /* xinit */
+    NULL,                       /* const_name */
+    "CABS (ABS)",               /* cabs_name */
+    "DABS (ABS)",               /* xabs_name */
+    NULL,                       /* iabs_name */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,
+    NULL,
+    1,                          /* CODE  is read-only */
+    false,                      // unqualified pointers cannot point to __sfr.
+    1                           /* No fancy alignments supported. */
+  },
+  { NULL, NULL },
+  1,                            /* ABI revision */
+  { -1, 0, 0, 4, 0, 3, 0 },
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* do not use support routine for int x int -> long multiplication */
+    false,                      /* do not use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
+  { z80_emitDebuggerSymbol },
+  {
+    256,                        /* maxCount */
+    3,                          /* sizeofElement */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+  },
+  "_",
+  _r800_init,
+  _parseOptions,
+  _z80_like_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,

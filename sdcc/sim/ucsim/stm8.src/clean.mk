@@ -3,7 +3,11 @@
 clean:
 	rm -f *core *[%~] *.[oa]
 	rm -f .[a-z]*~
-	rm -f sstm8$(EXEEXT)
+	rm -f sstm8 sstm8.exe
+	rm -f ucsim_stm8 ucsim_stm8.exe
+ifneq ($(shell test -f test/Makefile && echo ok), )
+	$(MAKE) -C test clean
+endif
 
 
 # Deleting all files created by configuring or building the program
@@ -11,6 +15,7 @@ clean:
 distclean: clean
 	rm -f config.cache config.log config.status
 	rm -f Makefile *.dep
+	rm -f test/Makefile
 
 
 # Like clean but some files may still exist

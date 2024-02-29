@@ -25,13 +25,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include <stdio.h>
+//#include <stdio.h>
 
   // prj
 #include "globals.h"
+#include "utils.h"
 
 // sim.src
-#include "appcl.h"
+//#include "appcl.h"
 
 // local
 #include "simavrcl.h"
@@ -42,7 +43,9 @@ main(int argc, char *argv[])
 {
   class cl_sim *sim;
   
+  app_start_at= dnow();
   application= new cl_app();
+  application->set_name("savr");
   application->init(argc, argv);
   sim= new cl_simavr(application);
   if (sim->init())

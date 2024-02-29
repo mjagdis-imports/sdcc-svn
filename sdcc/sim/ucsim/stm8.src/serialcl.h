@@ -44,6 +44,7 @@ class cl_serial: public cl_serial_hw
 {
  protected:
   bool clk_enabled;
+  bool clk_en_is_set;
   t_addr base;
   int type, txit, rxit;
   class cl_memory_cell *regs[12];
@@ -68,7 +69,7 @@ class cl_serial: public cl_serial_hw
 	    int ttype, int atxit, int arxit);
   virtual ~cl_serial(void);
   virtual int init(void);
-  virtual int cfg_size(void) { return 10; }
+  virtual unsigned int cfg_size(void) { return 10; }
 
   virtual void new_hw_added(class cl_hw *new_hw);
   virtual void added_to_uc(void);

@@ -25,28 +25,21 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/time.h>
-//#if FD_HEADER_OK
-//# include HEADER_FD
-//#endif
-#include "i_string.h"
+#include <string.h>
 
 // prj
 #include "utils.h"
 #include "globals.h"
 
 // sim
-#include "optioncl.h"
+//#include "optioncl.h"
 #include "iwrap.h"
+#include "dregcl.h"
 
 //cmd.src
 #include "cmd_uccl.h"
@@ -55,12 +48,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "uc51cl.h"
 #include "glob.h"
 #include "regs51.h"
-#include "timer0cl.h"
+//#include "timer0cl.h"
 #include "timer1cl.h"
 #include "serialcl.h"
 #include "portcl.h"
-#include "interruptcl.h"
-#include "types51.h"
+//#include "interruptcl.h"
+//#include "types51.h"
 
 
 
@@ -482,6 +475,7 @@ cl_irq_stop_option::init(void)
 {
   cl_optref::init();
   create(uc51, bool_opt, "irq_stop", "Stop when IRQ accepted");
+  
   return(0);
 }
 
@@ -495,7 +489,8 @@ cl_irq_stop_option::option_changed(void)
   uc51->stop_at_it= b;
 }
 
-instruction_wrapper_fn itab51[256];
+
+//instruction_wrapper_fn itab51[256];
 
 /*
  * Making a new micro-controller and reset it
@@ -519,7 +514,8 @@ cl_51core::cl_51core(struct cpu_entry *Itype, class cl_sim *asim):
 int
 cl_51core::init(void)
 {
-  fill_def_wrappers(itab51);
+  //fill_def_wrappers(itab51);
+  /*
   itab51[0x89]= itab51[0x88];
   itab51[0x8a]= itab51[0x88];
   itab51[0x8b]= itab51[0x88];
@@ -699,6 +695,187 @@ cl_51core::init(void)
   itab51[0xf3]= itab51[0xf2];
 
   itab51[0xf7]= itab51[0xf6];
+  */
+  
+  uc_itab[0x89]= uc_itab[0x88];
+  uc_itab[0x8a]= uc_itab[0x88];
+  uc_itab[0x8b]= uc_itab[0x88];
+  uc_itab[0x8c]= uc_itab[0x88];
+  uc_itab[0x8d]= uc_itab[0x88];
+  uc_itab[0x8e]= uc_itab[0x88];
+  uc_itab[0x8f]= uc_itab[0x88];
+
+  uc_itab[0xf9]= uc_itab[0xf8];
+  uc_itab[0xfa]= uc_itab[0xf8];
+  uc_itab[0xfb]= uc_itab[0xf8];
+  uc_itab[0xfc]= uc_itab[0xf8];
+  uc_itab[0xfd]= uc_itab[0xf8];
+  uc_itab[0xfe]= uc_itab[0xf8];
+  uc_itab[0xff]= uc_itab[0xf8];
+
+  uc_itab[0x21]= uc_itab[0x01];
+  uc_itab[0x41]= uc_itab[0x01];
+  uc_itab[0x61]= uc_itab[0x01];
+  uc_itab[0x81]= uc_itab[0x01];
+  uc_itab[0xa1]= uc_itab[0x01];
+  uc_itab[0xc1]= uc_itab[0x01];
+  uc_itab[0xe1]= uc_itab[0x01];
+
+  uc_itab[0x07]= uc_itab[0x06];
+
+  uc_itab[0x09]= uc_itab[0x08];
+  uc_itab[0x0a]= uc_itab[0x08];
+  uc_itab[0x0b]= uc_itab[0x08];
+  uc_itab[0x0c]= uc_itab[0x08];
+  uc_itab[0x0d]= uc_itab[0x08];
+  uc_itab[0x0e]= uc_itab[0x08];
+  uc_itab[0x0f]= uc_itab[0x08];
+
+  uc_itab[0x31]= uc_itab[0x11];
+  uc_itab[0x51]= uc_itab[0x11];
+  uc_itab[0x71]= uc_itab[0x11];
+  uc_itab[0x91]= uc_itab[0x11];
+  uc_itab[0xb1]= uc_itab[0x11];
+  uc_itab[0xd1]= uc_itab[0x11];
+  uc_itab[0xf1]= uc_itab[0x11];
+
+  uc_itab[0x17]= uc_itab[0x16];
+
+  uc_itab[0x19]= uc_itab[0x18];
+  uc_itab[0x1a]= uc_itab[0x18];
+  uc_itab[0x1b]= uc_itab[0x18];
+  uc_itab[0x1c]= uc_itab[0x18];
+  uc_itab[0x1d]= uc_itab[0x18];
+  uc_itab[0x1e]= uc_itab[0x18];
+  uc_itab[0x1f]= uc_itab[0x18];
+
+  uc_itab[0x29]= uc_itab[0x28];
+  uc_itab[0x2a]= uc_itab[0x28];
+  uc_itab[0x2b]= uc_itab[0x28];
+  uc_itab[0x2c]= uc_itab[0x28];
+  uc_itab[0x2d]= uc_itab[0x28];
+  uc_itab[0x2e]= uc_itab[0x28];
+  uc_itab[0x2f]= uc_itab[0x28];
+
+  uc_itab[0x27]= uc_itab[0x26];
+
+  uc_itab[0x37]= uc_itab[0x36];
+  
+  uc_itab[0x39]= uc_itab[0x38];
+  uc_itab[0x3a]= uc_itab[0x38];
+  uc_itab[0x3b]= uc_itab[0x38];
+  uc_itab[0x3c]= uc_itab[0x38];
+  uc_itab[0x3d]= uc_itab[0x38];
+  uc_itab[0x3e]= uc_itab[0x38];
+  uc_itab[0x3f]= uc_itab[0x38];
+
+  uc_itab[0x47]= uc_itab[0x46];
+
+  uc_itab[0x49]= uc_itab[0x48];
+  uc_itab[0x4a]= uc_itab[0x48];
+  uc_itab[0x4b]= uc_itab[0x48];
+  uc_itab[0x4c]= uc_itab[0x48];
+  uc_itab[0x4d]= uc_itab[0x48];
+  uc_itab[0x4e]= uc_itab[0x48];
+  uc_itab[0x4f]= uc_itab[0x48];
+
+  uc_itab[0x97]= uc_itab[0x96];
+
+  uc_itab[0x99]= uc_itab[0x98];
+  uc_itab[0x9a]= uc_itab[0x98];
+  uc_itab[0x9b]= uc_itab[0x98];
+  uc_itab[0x9c]= uc_itab[0x98];
+  uc_itab[0x9d]= uc_itab[0x98];
+  uc_itab[0x9e]= uc_itab[0x98];
+  uc_itab[0x9f]= uc_itab[0x98];
+
+  uc_itab[0xb7]= uc_itab[0xb6];
+
+  uc_itab[0xb9]= uc_itab[0xb8];
+  uc_itab[0xba]= uc_itab[0xb8];
+  uc_itab[0xbb]= uc_itab[0xb8];
+  uc_itab[0xbc]= uc_itab[0xb8];
+  uc_itab[0xbd]= uc_itab[0xb8];
+  uc_itab[0xbe]= uc_itab[0xb8];
+  uc_itab[0xbf]= uc_itab[0xb8];
+
+  uc_itab[0xd9]= uc_itab[0xd8];
+  uc_itab[0xda]= uc_itab[0xd8];
+  uc_itab[0xdb]= uc_itab[0xd8];
+  uc_itab[0xdc]= uc_itab[0xd8];
+  uc_itab[0xdd]= uc_itab[0xd8];
+  uc_itab[0xde]= uc_itab[0xd8];
+  uc_itab[0xdf]= uc_itab[0xd8];
+
+  uc_itab[0x57]= uc_itab[0x56];
+
+  uc_itab[0x59]= uc_itab[0x58];
+  uc_itab[0x5a]= uc_itab[0x58];
+  uc_itab[0x5b]= uc_itab[0x58];
+  uc_itab[0x5c]= uc_itab[0x58];
+  uc_itab[0x5d]= uc_itab[0x58];
+  uc_itab[0x5e]= uc_itab[0x58];
+  uc_itab[0x5f]= uc_itab[0x58];
+
+  uc_itab[0x67]= uc_itab[0x66];
+
+  uc_itab[0x69]= uc_itab[0x68];
+  uc_itab[0x6a]= uc_itab[0x68];
+  uc_itab[0x6b]= uc_itab[0x68];
+  uc_itab[0x6c]= uc_itab[0x68];
+  uc_itab[0x6d]= uc_itab[0x68];
+  uc_itab[0x6e]= uc_itab[0x68];
+  uc_itab[0x6f]= uc_itab[0x68];
+
+  uc_itab[0x77]= uc_itab[0x76];
+
+  uc_itab[0x79]= uc_itab[0x78];
+  uc_itab[0x7a]= uc_itab[0x78];
+  uc_itab[0x7b]= uc_itab[0x78];
+  uc_itab[0x7c]= uc_itab[0x78];
+  uc_itab[0x7d]= uc_itab[0x78];
+  uc_itab[0x7e]= uc_itab[0x78];
+  uc_itab[0x7f]= uc_itab[0x78];
+
+  uc_itab[0x87]= uc_itab[0x86];
+
+  uc_itab[0xa7]= uc_itab[0xa6];
+
+  uc_itab[0xa9]= uc_itab[0xa8];
+  uc_itab[0xaa]= uc_itab[0xa8];
+  uc_itab[0xab]= uc_itab[0xa8];
+  uc_itab[0xac]= uc_itab[0xa8];
+  uc_itab[0xad]= uc_itab[0xa8];
+  uc_itab[0xae]= uc_itab[0xa8];
+  uc_itab[0xaf]= uc_itab[0xa8];
+
+  uc_itab[0xc7]= uc_itab[0xc6];
+
+  uc_itab[0xc9]= uc_itab[0xc8];
+  uc_itab[0xca]= uc_itab[0xc8];
+  uc_itab[0xcb]= uc_itab[0xc8];
+  uc_itab[0xcc]= uc_itab[0xc8];
+  uc_itab[0xcd]= uc_itab[0xc8];
+  uc_itab[0xce]= uc_itab[0xc8];
+  uc_itab[0xcf]= uc_itab[0xc8];
+
+  uc_itab[0xd7]= uc_itab[0xd6];
+
+  uc_itab[0xe3]= uc_itab[0xe2];
+
+  uc_itab[0xe7]= uc_itab[0xe6];
+
+  uc_itab[0xe9]= uc_itab[0xe8];
+  uc_itab[0xea]= uc_itab[0xe8];
+  uc_itab[0xeb]= uc_itab[0xe8];
+  uc_itab[0xec]= uc_itab[0xe8];
+  uc_itab[0xed]= uc_itab[0xe8];
+  uc_itab[0xee]= uc_itab[0xe8];
+  uc_itab[0xef]= uc_itab[0xe8];
+
+  uc_itab[0xf3]= uc_itab[0xf2];
+
+  uc_itab[0xf7]= uc_itab[0xf6];
 
   irq_stop_option->init();
   dptr= 0;
@@ -708,13 +885,12 @@ cl_51core::init(void)
   reset();
 
   make_vars();
-
   return(0);
 }
 
 static char id_string_51[100];
 
-char *
+const char *
 cl_51core::id_string(void)
 {
   int i;
@@ -732,7 +908,7 @@ cl_51core::id_string(void)
 void
 cl_51core::make_cpu_hw(void)
 {
-  cpu= new cl_uc51_cpu(this);
+  add_hw(cpu= new cl_uc51_cpu(this));
   cpu->init();
 }
 
@@ -745,12 +921,18 @@ cl_51core::mk_hw_elements(void)
 
   acc= sfr->get_cell(ACC);
   psw= sfr->get_cell(PSW);
+  
+  h= new cl_timer0(this, 0, "timer0");
+  h->init();
+  add_hw(h);
+  h= new cl_timer1(this, 1, "timer1");
+  h->init();
+  add_hw(h);
+  h= new cl_serial(this);
+  h->init();
+  add_hw(h);
 
-  add_hw(h= new cl_timer0(this, 0, "timer0"));
-  h->init();
-  add_hw(h= new cl_timer1(this, 1, "timer1"));
-  h->init();
-  add_hw(h= new cl_serial(this));
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
   h->init();
 
   class cl_port_ui *d;
@@ -770,37 +952,37 @@ cl_51core::mk_hw_elements(void)
   class cl_port_data pd;
   pd.init();
   pd.cell_dir= NULL;
-
+  
   pd.set_name("P0");
   pd.cell_p  = p0->cell_p;
   pd.cell_in = p0->cell_in;
-  pd.keyset  = chars(keysets[0]);
+  pd.keyset  = keysets[0];
   pd.basx    = 1;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 0);
   
   pd.set_name("P1");
   pd.cell_p  = p1->cell_p;
   pd.cell_in = p1->cell_in;
-  pd.keyset  = chars(keysets[1]);
+  pd.keyset  = keysets[1];
   pd.basx    = 20;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 1);
   
   pd.set_name("P2");
   pd.cell_p  = p2->cell_p;
   pd.cell_in = p2->cell_in;
-  pd.keyset  = chars(keysets[2]);
+  pd.keyset  = keysets[2];
   pd.basx    = 40;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 2);
   
   pd.set_name("P3");
   pd.cell_p  = p3->cell_p;
   pd.cell_in = p3->cell_in;
-  pd.keyset  = chars(keysets[3]);
+  pd.keyset  = keysets[3];
   pd.basx    = 60;
-  pd.basy    = 4;
+  pd.basy    = 5;
   d->add_port(&pd, 3);
   
   add_hw(interrupt= new cl_interrupt(this));
@@ -871,7 +1053,7 @@ cl_51core::make_address_spaces(void)
   bits->init();
   address_spaces->add(bits);
 
-  dptr= new cl_address_space("dptr", 0, 2, 8);
+  dptr= new cl_address_space("dptr", 0, 4, 8);
   dptr->init();
   address_spaces->add(dptr);
 }
@@ -879,19 +1061,19 @@ cl_51core::make_address_spaces(void)
 void
 cl_51core::make_chips(void)
 {
-  rom_chip= new cl_memory_chip("rom_chip", 0x10000, 8, 0/*, 0xff*/);
+  rom_chip= new cl_chip8("rom_chip", 0x10000, 8, 0xff);
   rom_chip->init();
   memchips->add(rom_chip);
   
-  iram_chip= new cl_memory_chip("iram_chip", 0x100, 8);
+  iram_chip= new cl_chip8("iram_chip", 0x100, 8);
   iram_chip->init();
   memchips->add(iram_chip);
 
-  xram_chip= new cl_memory_chip("xram_chip", 0x10000, 8);
+  xram_chip= new cl_chip8("xram_chip", 0x10000, 8);
   xram_chip->init();
   memchips->add(xram_chip);
 
-  sfr_chip= new cl_memory_chip("sfr_chip", 0x80, 8);
+  sfr_chip= new cl_chip8("sfr_chip", 0x80, 8);
   sfr_chip->init();
   memchips->add(sfr_chip);
 }
@@ -1033,7 +1215,7 @@ cl_51core::decode_dptr(void)
 	  class cl_memory_chip *dptr_chip= (cl_memory_chip*)memory("dptr_chip");
 	  if (dptr_chip == 0)
 	    {
-	      dptr_chip= new cl_memory_chip("dptr_chip", 3*8, 8);
+	      dptr_chip= new cl_chip8("dptr_chip", 3*8, 8);
 	      dptr_chip->init();
 	      memchips->add(dptr_chip);
 	    }
@@ -1076,59 +1258,34 @@ cl_51core::decode_dptr(void)
       ad->activate(0);
     }
   
-  cl_var *v;
-  vars->add(v= new cl_var(chars("dpl"), dptr, 0, ""));
-  v->init();
-  vars->add(v= new cl_var(chars("DPL"), dptr, 0, ""));
-  v->init();
-  vars->add(v= new cl_var(chars("dph"), dptr, 1, ""));
-  v->init();
-  vars->add(v= new cl_var(chars("DPH"), dptr, 1, ""));
-  v->init();
+  vars->add("dpl", dptr, 0, "");
+  vars->add("DPL", dptr, 0, "");
+  vars->add("dph", dptr, 1, "");
+  vars->add("DPH", dptr, 1, "");
 }
 
 void
 cl_51core::make_vars(void)
 {
-  cl_var *v;
-
-  vars->add(v= new cl_var(cchars("R0"), regs, 0, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("R1"), regs, 1, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("R2"), regs, 2, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("R3"), regs, 3, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("R4"), regs, 4, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("R5"), regs, 5, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("R6"), regs, 6, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("R7"), regs, 7, ""));
-  v->init();
+  vars->add("R0", regs, 0, 7, 0, "");
+  vars->add("R1", regs, 1, 7, 0, "");
+  vars->add("R2", regs, 2, 7, 0, "");
+  vars->add("R3", regs, 3, 7, 0, "");
+  vars->add("R4", regs, 4, 7, 0, "");
+  vars->add("R5", regs, 5, 7, 0, "");
+  vars->add("R6", regs, 6, 7, 0, "");
+  vars->add("R7", regs, 7, 7, 0, "");
 
   int i;
   for (i= 0; sfr_tab51[i].name != NULL; i++)
     {
       if (type->type & sfr_tab51[i].cpu_type)
-	{
-	  vars->add(v= new cl_var(chars(sfr_tab51[i].name),
-				  sfr,
-				  sfr_tab51[i].addr, ""));
-	  v->init();
-	}
+        vars->add(sfr_tab51[i].name, sfr, sfr_tab51[i].addr, 7, 0, "");
     }
   for (i= 0; bit_tab51[i].name != NULL; i++)
     {
       if (type->type & bit_tab51[i].cpu_type)
-	{
-	  vars->add(v= new cl_var(chars(bit_tab51[i].name),
-				  bits,
-				  bit_tab51[i].addr, ""));
-	  v->init();
-	}
+        vars->add(bit_tab51[i].name, bits, bit_tab51[i].addr, 7, 0, "");
     }
 }
 
@@ -1159,123 +1316,107 @@ cl_51core::bit_tbl(void)
 }
 
 char *
-cl_51core::disass(t_addr addr, const char *sep)
+cl_51core::disass(t_addr addr)
 {
-  char work[256], temp[200]/*, c[2]*/;
-  char *buf, *p, *t, *s;
+  chars work= chars(), temp= chars();
   const char *b;
+  t_addr operand;
   t_mem code= rom->get(addr);
+  struct dis_entry *dt;
+  bool first;
 
-  p= work;
-  b= dis_tbl()[code].mnemonic;
+  dt= dis_tbl();
+  if (!dt) return NULL;
+  dt= &dt[code];
+  
+  work= ""; first= true;
+  b= dt->mnemonic;
   while (*b)
     {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
       if (*b == '%')
 	{
+	  temp= "";
 	  b++;
 	  switch (*(b++))
 	    {
 	    case 'A': // absolute address
-	      sprintf(temp, "%04x",
-		      /*t_addr*/int((addr&0xf800)|
-				    (((code>>5)&0x07)*256 +
-				     rom->get(addr+1))));
+	      operand= (addr&0xf800)|
+		       (((code>>5)&0x07)*256 +
+			rom->get(addr+1));
+	      temp.appendf(rom->addr_format, operand);
+	      addr_name(operand, rom, &temp);
 	      break;
 	    case 'l': // long address
-	      sprintf(temp, "%04x",
-		      /*t_addr*/int(rom->get(addr+1)*256 +
-				    rom->get(addr+2)));
+	      operand= rom->get(addr+1)*256 + rom->get(addr+2);
+	      temp.appendf(rom->addr_format, operand);
+	      addr_name(operand, rom, &temp);
 	      break;
 	    case 'a': // addr8 (direct address) at 2nd byte
-	      daddr_name(rom->get(addr+1), temp);
+	      daddr_name(rom->get(addr+1), &temp);
 	      break;
 	    case '8': // addr8 (direct address) at 3rd byte
-	      daddr_name(rom->get(addr+2), temp);
+	      daddr_name(rom->get(addr+2), &temp);
 	      break;
 	    case 'b': // bitaddr at 2nd byte
 	      {
 		t_addr ba= rom->get(addr+1);
-		/*if (get_name(ba, bit_tbl(), temp))
-		  break;
-		if (ba<128)
-		  addr_name((ba/8)+32,iram,temp);
-		else
-		  addr_name(ba&0xf8,sfr,temp);
-		strcat(temp, ".");
-		sprintf(c, "%1d", (int)(ba & 0x07));
-		strcat(temp, c);*/
-		baddr_name(ba, temp);
+		baddr_name(ba, &temp);
 		break;
 	      }
 	    case 'r': // rel8 address at 2nd byte
-	      sprintf(temp, "%04x",
-		      /*t_addr*/int(addr+2+(signed char)(rom->get(addr+1))));
+	      operand= (u16_t)(addr+2 + (i8_t)rom->get(addr+1));
+	      temp.appendf(rom->addr_format, operand);
+	      addr_name(operand, rom, &temp);
 	      break;
 	    case 'R': // rel8 address at 3rd byte
-	      sprintf(temp, "%04x",
-		      /*t_addr*/int(addr+3+(signed char)(rom->get(addr+2))));
+	      operand= (u16_t)(addr+3 + (i8_t)rom->get(addr+2));
+	      temp.appendf(rom->addr_format, operand);
+	      addr_name(operand, rom, &temp);
 	      break;
 	    case 'd': // data8 at 2nd byte
-	      sprintf(temp, "%02x", (int)rom->get(addr+1));
+	      temp.appendf("0x%02x", (int)rom->get(addr+1));
 	      break;
 	    case 'D': // data8 at 3rd byte
-	      sprintf(temp, "%02x", (int)rom->get(addr+2));
+	      temp.appendf("0x%02x", (int)rom->get(addr+2));
 	      break;
 	    case '6': // data16 at 2nd(H)-3rd(L) byte
-	      sprintf(temp, "%04x",
-		      /*t_addr*/int(rom->get(addr+1)*256 +
-				    rom->get(addr+2)));
+	      temp.appendf("0x%04x",
+			   int(rom->get(addr+1)*256 +
+			       rom->get(addr+2)));
 	      break;
 	    default:
-	      strcpy(temp, "?");
+	      temp= "?";
 	      break;
 	    }
-	  t= temp;
-	  while (*t)
-	    *(p++)= *(t++);
+	  work+= temp;
 	}
       else
-	*(p++)= *(b++);
+	work+= *(b++);
     }
-  *p= '\0';
-
-  p= strchr(work, ' ');
-  if (!p)
-    {
-      buf= strdup(work);
-      return(buf);
-    }
-  if (sep == NULL)
-    buf= (char *)malloc(6+strlen(p)+1);
-  else
-    buf= (char *)malloc((p-work)+strlen(sep)+strlen(p)+1);
-  for (p= work, s= buf; *p != ' '; p++, s++)
-    *s= *p;
-  p++;
-  *s= '\0';
-  if (sep == NULL)
-    {
-      while (strlen(buf) < 6)
-	strcat(buf, " ");
-    }
-  else
-    strcat(buf, sep);
-  strcat(buf, p);
-  return(buf);
+  
+  return(strdup(work.c_str()));
 }
 
 
 void
 cl_51core::print_regs(class cl_console_base *con)
 {
-  t_addr start;
+  int start, stop;
   t_mem data;
-  t_mem dp;
-  
+  u16_t dp;
+
   // show regs
   start= psw->get() & 0x18;
-  con->dd_printf("     R0 R1 R2 R3 R4 R5 R6 R7\n");
-  iram->dump(start, start+7, 8, con/*->get_fout()*/);
+  con->dd_color("answer");
+  con->dd_printf("     R0 R1 R2 R3 R4 R5 R6 R7\n    ");
+  for (t_addr i= 0; i < 8; i++)
+    con->dd_cprintf("dump_number", " %02x", iram->get(start + i));
+  con->dd_printf("\n");
   con->dd_color("answer");
   // show indirectly addressed IRAM and some basic regs
   data= iram->get(iram->get(start));
@@ -1291,8 +1432,16 @@ cl_51core::print_regs(class cl_console_base *con)
               (data&bmOV)?'1':'0', (data&bmP)?'1':'0');
   /* show stack pointer */
   start = sfr->get (SP);
+  if (start >= 7)
+    stop = start-7;
+  else
+    stop= 0;
   con->dd_printf ("SP ", start);
-  iram->dump (start, start - 7, 8, con/*->get_fout()*/);
+  con->dd_cprintf("dump_address", "0x%02x", (u8_t)start);
+  con->dd_printf (" ->");
+  for (; start >= stop; start--)
+    con->dd_cprintf("dump_number", " %02x", iram->get(start));
+  con->dd_printf("\n");
   con->dd_color("answer");
   // show DPTR(s)
   if (dptr)
@@ -1323,7 +1472,7 @@ cl_51core::print_regs(class cl_console_base *con)
 		  for (di= dptr->get_size()-1; di >= 0; di--)
 		    dp= (dp*256) + dptr_chip->get(a+di);
 		  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
-		  con->dd_printf(xram->addr_format, dp);
+		  con->dd_printf("0x%04x", dp);
 		  data= xram->read(dp);
 		  con->dd_printf(" @DPTR%d= ", i);
 		  con->dd_printf("0x%02x %3d %c\n", data, data,
@@ -1347,7 +1496,7 @@ cl_51core::print_regs(class cl_console_base *con)
 	  dp= (sfr_chip->get(DPL-0x80) +
 	       sfr_chip->get(DPH-0x80) * 256) & 0xffff;
 	  con->dd_printf("  %cDPTR%d= ", (i==act)?'*':' ', i);
-	  con->dd_printf(xram->addr_format, dp);
+	  con->dd_printf("0x%04x", dp);
 	  data= xram->read(dp);
 	  con->dd_printf(" @DPTR%d= ", i);
 	  con->dd_printf("0x%02x %3d %c\n", data, data,
@@ -1376,7 +1525,7 @@ cl_51core::print_regs(class cl_console_base *con)
 	  f.format("0x%%0%dx",a*2);
 	  data= xram->get(dp);
 	  con->dd_printf("   DPTR= ");
-	  con->dd_printf(/*xram->addr_format*/(char*)f, dp);
+	  con->dd_printf(f.c_str(), dp);
 	  con->dd_printf(" @DPTR= 0x%02x %3d %c\n",
 			 data, data, isprint(data)?data:'.');
 	}
@@ -1400,7 +1549,7 @@ cl_51core::print_regs(class cl_console_base *con)
  */
 
 class cl_address_space *
-cl_51core::bit2mem(t_addr bitaddr, t_addr *memaddr, t_mem *bitmask)
+cl_51core::bit2mem(t_addr bitaddr, t_addr *memaddr, int *bitnr_high, int *bitnr_low)
 {
   class cl_address_space *m;
   t_addr ma;
@@ -1418,19 +1567,25 @@ cl_51core::bit2mem(t_addr bitaddr, t_addr *memaddr, t_mem *bitmask)
     }
   if (memaddr)
     *memaddr= ma;
-  if (bitmask)
-    *bitmask= 1 << (bitaddr & 0x7);
+  if (bitnr_low)
+    {
+      *bitnr_low= (bitaddr & 0x7);
+      if (bitnr_high)
+        *bitnr_high = *bitnr_low;
+    }
   return(m);
 }
 
+/*
 t_addr
 cl_51core::bit_address(class cl_memory *mem,
 		       t_addr mem_address, int bit_number)
 {
   if (bit_number < 0 ||
       bit_number > 7 ||
-      mem_address < 0)
-    return(-1);
+      mem_address < 0
+      )
+    return(AU(-1));
   class cl_memory *sfrchip= memory("sfr_chip");
   if (mem == sfrchip)
     {
@@ -1442,66 +1597,82 @@ cl_51core::bit_address(class cl_memory *mem,
       if (mem_address < 128 ||
 	  mem_address % 8 != 0 ||
 	  mem_address > 255)
-	return(-1);
+	return(AU(-1));
       return(128 + (mem_address-128) + bit_number);
     }
   if (mem == iram)
     {
       if (mem_address < 0x20 ||
 	  mem_address >= 0x20+32)
-	return(-1);
+	return(AU(-1));
       return((mem_address-0x20)*8 + bit_number);
     }
-  return(-1);
+  return(AU(-1));
 }
+*/
 
 /* Get name of directly addressed iram/sfr cell */
 
-void
-cl_51core::daddr_name(t_addr addr, char *buf)
+bool
+cl_51core::daddr_name(t_addr addr, chars *buf)
 {
   if (!buf)
-    return;
+    return false;
+
+  buf->format("0x%02x", addr);
+
   if (addr < 128)
     {
       // register?
       if (addr_name(addr, regs, buf))
-	return;
+	{
+	  return true;
+	}
       // variale?
       if (addr_name(addr, iram, buf))
-	return;
+	{
+	  return true;
+	}
     }
   else
     {
       // dptr?
-      if (addr_name(addr-0x82, dptr, buf))
-	return;
+      if (dptr && addr_name(addr-0x82, dptr, buf))
+	{
+	  return true;
+	}
       // sfr?
       if (addr_name(addr, sfr, buf))
-	return;
+	{
+	  return true;
+	}
     }
-  unsigned int a= addr;
-  sprintf(buf, "%02x", a);
+
+  return false;
 }
 
 /* Get name of a bit cell */
 
 void
-cl_51core::baddr_name(t_addr addr, char *buf)
+cl_51core::baddr_name(t_addr addr, chars *buf)
 {
   t_addr ma;
-  
+
   if (!buf)
     return;
+
+  buf->appendf("0x%02x", addr);
+
   if (addr_name(addr, bits, buf))
     return;
   if (addr < 128)
     ma= 32+(addr/8);
   else
     ma= addr&0xf8;
-  daddr_name(ma, buf);
-  chars c= chars("", "%s.%d", buf, (int)(addr & 7));
-  strcpy(buf, (char*)c);
+
+  chars temp;
+  if (daddr_name(ma, &temp))
+    buf->appendf("%s.%d", temp.c_str(), (int)(addr & 7));
 }
 
 
@@ -1562,7 +1733,7 @@ cl_51core::clear_sfr(void)
 
 
 /*
- * Analyzing code and settig up instruction map
+ * Analyzing code and setting up instruction map
  */
 
 void
@@ -1570,7 +1741,8 @@ cl_51core::analyze(t_addr addr)
 {
   uint code;
   struct dis_entry *tabl;
-
+  t_addr a;
+  
   code= rom->get(addr);
   tabl= &(dis_tbl()[code]);
   while (!inst_at(addr) &&
@@ -1580,44 +1752,45 @@ cl_51core::analyze(t_addr addr)
       switch (tabl->branch)
 	{
 	case 'a': // acall
-	  analyze((addr & 0xf800)|
-		  ((rom->get(addr+1)&0x07)*256+
-		   rom->get(addr+2)));
-	  analyze(addr+tabl->length);
+	  a= (addr & 0xf800)|
+	    ((rom->get(addr+1)&0x07)*256+
+	     rom->get(addr+2));
+	  analyze_jump(addr, a, 's');
 	  break;
 	case 'A': // ajmp
-	  addr= (addr & 0xf800)|
-	    ((rom->get(addr+1) & 0x07)*256 + rom->get(addr+2));
-	  break;
+	  a= (addr & 0xf800)|
+	    (((rom->get(addr)>>5) & 0x07)*256 + rom->get(addr+1));
+	  analyze_jump(addr, a, 'j');
+	  return;
 	case 'l': // lcall
-	  analyze(rom->get(addr+1)*256 + rom->get(addr+2));
-	  analyze(addr+tabl->length);
+	  a= rom->get(addr+1)*256 + rom->get(addr+2);
+	  analyze_jump(addr, a, 's');
 	  break;
 	case 'L': // ljmp
-	  addr= rom->get(addr+1)*256 + rom->get(addr+2);
-	  break;
+	  a= rom->get(addr+1)*256 + rom->get(addr+2);
+	  analyze_jump(addr, a, 'j');
+	  return;
 	case 'r': // reljmp (2nd byte)
-	  analyze(rom->validate_address(addr+(signed char)(rom->get(addr+1))));
-	  analyze(addr+tabl->length);
+	  a= rom->validate_address(addr+2+(signed char)(rom->get(addr+1)));
+	  analyze_jump(addr, a, 'j');
 	  break;
 	case 'R': // reljmp (3rd byte)
-	  analyze(rom->validate_address(addr+(signed char)(rom->get(addr+2))));
-	  analyze(addr+tabl->length);
+	  a= rom->validate_address(addr+3+(signed char)(rom->get(addr+2)));
+	  analyze_jump(addr, a, 'j');
 	  break;
 	case 's': // sjmp
 	  {
-	    signed char target;
-	    target= rom->get(addr+1);
-	    addr+= 2;
-	    addr= rom->validate_address(addr+target);
-	    break;
+	    a= rom->validate_address(addr+(signed char)(rom->get(addr+1)));
+	    analyze_jump(addr, a, 'j');
+	    return;
 	  }
+	case ' ': break;
 	case '_':
 	  return;
 	default:
-	  addr= rom->validate_address(addr+tabl->length);
-	  break;
+	  return;
 	}
+      addr= rom->validate_address(addr+tabl->length);
       code= rom->get(addr);
       tabl= &(dis_tbl()[code]);
     }
@@ -1673,74 +1846,139 @@ cl_51core::exec_inst(void)
   t_mem code;
   int res= resGO;
 
-  if ((res= exec_inst_tab(itab51)) != resNOT_DONE)
-    return res;
+  //if ((res= exec_inst_tab(itab51)) == resNOT_DONE)
+  if ((res= exec_inst_uctab()) == resNOT_DONE)
+    {
+      fetch(&code);
+      res= inst_unknown(code);
+    }
+  
+  return res;
+}
 
-  instPC= PC;
-  if (fetch(&code))
-    return(resBREAKPOINT);
-  tick(1);
-  res= inst_unknown();
-  return(res);
+
+int
+cl_51core::high_movxri(void)
+{
+  t_mem mode= cpu->cfg_read(uc51cpu_movxri_mode);
+
+  if (mode == 'm')
+    {
+      t_addr addr= cpu->cfg_read(uc51cpu_movxri_addr);
+      switch (cpu->cfg_read(uc51cpu_movxri_as))
+	{
+	case 's': return sfr->read(addr);
+	case 'c':
+	case 'r': return rom->read(addr);
+	case 'i': return iram->read(addr);
+	default: return xram->read(addr);
+	}
+    }
+  else if (mode == 'e')
+    {
+      t_mem v;
+      class cl_uc51_cpu *c= (class cl_uc51_cpu *)cpu;
+      v= application->eval(c->movxri_expr);
+      return v & 0xff;
+    }
+  else
+    {
+      return sfr->read(P2);
+    }
+  return 0;
 }
 
 
 /*
  * Simulating execution of next instruction
- *
- * This is an endless loop if requested number of steps is negative.
- * In this case execution is stopped if an instruction results other
- * status than GO. Execution can be stopped if `cmd_in' is not NULL
- * and there is input available on that file. It is usefull if the
- * command console is on a terminal. If input is available then a
- * complete line is read and dropped out because input is buffered
- * (inp_avail will be TRUE if ENTER is pressed) and it can confuse
- * command interepter.
  */
-//static class cl_console *c= NULL;
+
 int
-cl_51core::do_inst(int step)
+cl_51core::do_inst(void)
 {
+  t_addr PCsave= PC;
   result= resGO;
-  while ((result == resGO) &&
-	 (state != stPD) &&
-	 (step != 0))
+
+  save_hist();
+  if (state == stGO)
     {
-      if (step > 0)
-	step--;
-      if (state == stGO)
+      interrupt->was_reti= false;
+      pre_inst();
+      PCsave= PC;
+      result= exec_inst();
+      if (analyzer)
 	{
-	  interrupt->was_reti= false;
-	  pre_inst();
-	  result= exec_inst();
-	  post_inst();
+	  if (result == resGO && !inst_at(PCsave))
+	    analyze(PCsave);
 	}
-      else
-	{
-	  // tick hw in idle state
-	  inst_ticks= 1;
-	  post_inst();
-	  tick(1);
-	}
-      if (result == resGO)
-	{
-	  int res;
-	  if ((res= do_interrupt()) != resGO)
-	    result= res;
-	  else
-	    result= idle_pd();
-	}
-      if (((result == resINTERRUPT) &&
-	   stop_at_it) ||
-	  result >= resSTOP)
-	{
-	  sim->stop(result);
-	  break;
-	}
+      post_inst();
     }
+  else
+    {
+      // tick hw in idle state
+      tick(1);
+    }
+
+  if ((result == resGO) && (PC == PCsave) && stop_selfjump)
+    {
+      result= resSELFJUMP;
+      return result;
+    }
+  
+  if (result == resGO)
+    {
+      int res;
+      if ((res= do_interrupt()) != resGO)
+	result= res;
+      else
+	result= idle_pd();
+    }
+  if ((result == resINTERRUPT) &&
+      stop_at_it)
+    {
+      sim->stop(result);
+      return result;
+    }
+
   if (state == stPD)
     {
       //FIXME: tick outsiders eg. watchdog
+    }
+  return(result);
+}
+
+int
+cl_51core::do_emu(void)
+{
+  result= resGO;
+
+  if (state == stGO)
+    {
+      interrupt->was_reti= false;
+      pre_emu();
+      instPC= PC;
+      result= exec_inst();
+      post_emu();
+    }
+  else
+    {
+      // tick hw in idle state
+      tick(1);
+    }
+
+  if (result == resGO)
+    {
+      int res;
+      if ((res= do_interrupt()) != resGO)
+	result= res;
+      else
+	result= idle_pd();
+    }
+  if ((result == resINTERRUPT) &&
+      stop_at_it)
+    {
+      sim->stop(result);
+      return result;
     }
   return(result);
 }
@@ -1787,14 +2025,14 @@ cl_51core::do_interrupt(void)
 	  if (state == stIDLE)
 	    {
 	      state= stGO;
-	      sfr->set_bit0(PCON, bmIDL);
+	      sfr->set(PCON, sfr->get(PCON) & ~bmIDL);
 	      interrupt->was_reti= true;
 	      return(resGO);
 	    }
 	  is->clear();
 	  sim->app->get_commander()->
 	    debug("%g sec (%d clks): Accepting interrupt `%s' PC= 0x%06x\n",
-			  get_rtime(), ticks->ticks, object_name(is), PC);
+			  ticks->get_rtime(), ticks->get_ticks(), object_name(is), PC);
 	  IL= new it_level(pr, is->addr, PC, is);
 	  return(accept_it(IL));
 	}
@@ -1819,7 +2057,7 @@ int
 cl_51core::accept_it(class it_level *il)
 {
   state= stGO;
-  sfr->set_bit0(PCON, bmIDL);
+  sfr->set(PCON, sfr->get(PCON) & ~bmIDL);
   it_levels->push(il);
   tick(1);
   int res= inst_lcall(0, il->addr, true);
@@ -1840,6 +2078,26 @@ cl_51core::it_enabled(void)
 }
 
 
+/* 
+ * Check SP validity after stack (write) operation
+ */
+
+void
+cl_51core::stack_check_overflow(class cl_stack_op *op)
+{
+  t_addr b, a;
+  b= op->get_before();
+  a= op->get_after();
+  if (a < b)
+    {
+      class cl_error_stack_overflow *e=
+	new cl_error_stack_overflow(op);
+      e->init();
+      error(e);
+    }
+}
+
+
 /*
  * Checking if Idle or PowerDown mode should be activated
  */
@@ -1856,7 +2114,7 @@ cl_51core::idle_pd(void)
       if (state != stIDLE)
 	sim->app->get_commander()->
 	  debug("%g sec (%d clks): CPU in Idle mode (PC=0x%x, PCON=0x%x)\n",
-		get_rtime(), ticks->ticks, PC, pcon);
+		ticks->get_rtime(), ticks->get_ticks(), PC, pcon);
       state= stIDLE;
       //was_reti= 1;
     }
@@ -1865,26 +2123,9 @@ cl_51core::idle_pd(void)
       if (state != stPD)
 	sim->app->get_commander()->
 	  debug("%g sec (%d clks): CPU in PowerDown mode\n",
-			get_rtime(), ticks->ticks);
+			ticks->get_rtime(), ticks->get_ticks());
       state= stPD;
     }
-  return(resGO);
-}
-
-
-/*
- * Simulating an unknown instruction
- *
- * Normally this function is called for unimplemented instructions, because
- * every instruction must be known!
- */
-
-int
-cl_51core::inst_unknown(void)
-{
-  //PC--;
-  class cl_error_unknown_code *e= new cl_error_unknown_code(this);
-  error(e);
   return(resGO);
 }
 
@@ -1952,48 +2193,53 @@ cl_uc51_cpu::init(void)
   for (i= 0; i < 8; i++)
     acc_bits[i]= register_cell(bas, ACC+i);
 
-  cl_var *v;
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps"), cfg, uc51cpu_aof_mdps,
-			      cfg_help(uc51cpu_aof_mdps)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_mask_mdps"), cfg, uc51cpu_mask_mdps,
-			      cfg_help(uc51cpu_mask_mdps)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps1l"), cfg, uc51cpu_aof_mdps1l,
-			      cfg_help(uc51cpu_aof_mdps1l)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdps1h"), cfg, uc51cpu_aof_mdps1h,
-			      cfg_help(uc51cpu_aof_mdps1h)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_aof_mdpc"), cfg, uc51cpu_aof_mdpc,
-			      cfg_help(uc51cpu_aof_mdpc)));
-  v->init();
-  uc->vars->add(v= new cl_var(cchars("cpu_mask_mdpc"), cfg, uc51cpu_mask_mdpc,
-			      cfg_help(uc51cpu_mask_mdpc)));
-  v->init();
-  
+  uc->vars->add("cpu_aof_mdps", cfg, uc51cpu_aof_mdps, cfg_help(uc51cpu_aof_mdps));
+  uc->vars->add("cpu_mask_mdps", cfg, uc51cpu_mask_mdps, cfg_help(uc51cpu_mask_mdps));
+  uc->vars->add("cpu_aof_mdps1l", cfg, uc51cpu_aof_mdps1l, cfg_help(uc51cpu_aof_mdps1l));
+  uc->vars->add("cpu_aof_mdps1h", cfg, uc51cpu_aof_mdps1h, cfg_help(uc51cpu_aof_mdps1h));
+  uc->vars->add("cpu_aof_mdpc", cfg, uc51cpu_aof_mdpc, cfg_help(uc51cpu_aof_mdpc));
+  uc->vars->add("cpu_mask_mdpc", cfg, uc51cpu_mask_mdpc, cfg_help(uc51cpu_mask_mdpc));
+  uc->vars->add("cpu_mdp_mode", cfg, uc51cpu_mdp_mode, cfg_help(uc51cpu_mdp_mode));
+  class cl_cvar *v;
+  v = uc->vars->add("cpu_movxri_mode", cfg, uc51cpu_movxri_mode, cfg_help(uc51cpu_movxri_mode));
+  v->write('m');
+  v = uc->vars->add("cpu_movxri_as", cfg, uc51cpu_movxri_as, cfg_help(uc51cpu_movxri_as));
+  v->write('s');
+  v = uc->vars->add("cpu_movxri_addr", cfg, uc51cpu_movxri_addr, cfg_help(uc51cpu_movxri_addr));
+  v->write(0xa0);
+
+  movxri_expr= "port2_odr";
+
   return(0);
 }
 
-char *
+const char *
 cl_uc51_cpu::cfg_help(t_addr addr)
 {
   switch (addr)
     {
     case uc51cpu_aof_mdps:
-      return (char*)"Address of multi_DPTR_sfr selector, WR selects this style of multi_DPTR (int, RW)";
+      return "Address of multi_DPTR_sfr selector, WR selects this style of multi_DPTR (int, RW)";
     case uc51cpu_mask_mdps:
-      return (char*)"Mask in multi_DPTR_srf selector (int, RW)";
+      return "Mask in multi_DPTR_srf selector (int, RW)";
     case uc51cpu_aof_mdps1l:
-      return (char*)"Address of multi_DPTR_sfr DPL1 (int, RW)";
+      return "Address of multi_DPTR_sfr DPL1 (int, RW)";
     case uc51cpu_aof_mdps1h:
-      return (char*)"Address of multi_DPTR_sfr DPH1 (int, RW)";
+      return "Address of multi_DPTR_sfr DPH1 (int, RW)";
     case uc51cpu_aof_mdpc:
-      return (char*)"Address of multi_DPTR_chip selector, WR selects this stlye of multi_DPTR (int, RW)";
+      return "Address of multi_DPTR_chip selector, WR selects this style of multi_DPTR (int, RW)";
     case uc51cpu_mask_mdpc:
-      return (char*)"Mask in multi_DPTR_chip selector (int, RW)";
+      return "Mask in multi_DPTR_chip selector (int, RW)";
+    case uc51cpu_mdp_mode:
+      return "Multi DPTR simulation mode 's'=sfr, 'c'=chip, 'n'=none (int, RO)";
+    case uc51cpu_movxri_mode:
+      return "Calc mode of high address for MOVX @Ri, 'm'=memory, 'e'=expr  (int, RW)";
+    case uc51cpu_movxri_as:
+      return "Address space where high address is in 'm' mode, 'i','s','x','c' (int, RW)";
+    case uc51cpu_movxri_addr:
+      return "Address where high address is in 'm' mode (int, RW)";
     }
-  return (char*)"Not used";
+  return "Not used";
 }
 
 void
@@ -2003,33 +2249,19 @@ cl_uc51_cpu::write(class cl_memory_cell *cell, t_mem *val)
     return;
   if (cell == cell_sp)
     {
-      if (*val > uc->sp_max)
-	uc->sp_max= *val;
-      uc->sp_avg= (uc->sp_avg+(*val))/2;
+      if (*val > uc->sp_most)
+	uc->sp_most= *val;
     }
-  else 
+  else // ACC and its bits
     {
-      bool p;
-      int i;
       uchar uc, n= *val;
-
       if (cell != cell_acc)
 	{
 	  cell->set(*val);
 	  n= cell_acc->get();
 	}
-      p = false;
-      uc= n;
-      for (i= 0; i < 8; i++)
-	{
-	  if (uc & 1)
-	    p= !p;
-	  uc>>= 1;
-	}
-      if (p)
-	cell_psw->set_bit1(bmP);
-      else
-	cell_psw->set_bit0(bmP);
+      uc= cell_psw->get() & ~bmP;
+      cell_psw->set(uc | ptab51[n]);
     }
   /*else if (cell == cell_pcon)
     {
@@ -2062,11 +2294,55 @@ cl_uc51_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
       break;
     case uc51cpu_mask_mdpc: // mask in multi_DPTR_chip selector
       break;
-  
+
+    case uc51cpu_mdp_mode: // mode of dual dptr simulation
+      {
+	t_mem adps= cfg_get(uc51cpu_aof_mdps),
+	  dpl1= cfg_get(uc51cpu_aof_mdps1l),
+	  dph1= cfg_get(uc51cpu_aof_mdps1h),
+	  adpc= cfg_get(uc51cpu_aof_mdpc);;
+	if (adps > 0x7f &&
+	    dpl1 > 0x7f &&
+	    dph1 > 0x7f)
+	  cell->set('s');
+	else if (adpc > 0x7f)
+	  cell->set('c');
+	else
+	  cell->set('n');
+	break;
+      }
+
+    case uc51cpu_movxri_mode:
+      break;
+    case uc51cpu_movxri_as:
+      break;
+    case uc51cpu_movxri_addr:
+      break;
+      
     case uc51cpu_nuof:
       break;
     }
   return cell->get();
+}
+
+
+void
+cl_uc51_cpu::set_cmd(class cl_cmdline *cmdline, class cl_console_base *con)
+{
+  class cl_cmd_arg *params[1]= { cmdline->param(0) };
+
+  if (cmdline->syntax_match(uc, STRING))
+    {
+      movxri_expr= params[0]->value.string.string;
+    }
+}
+
+void
+cl_uc51_cpu::print_info(class cl_console_base *con)
+{
+  con->dd_printf("%s[%d]\n", id_string, id);
+  con->dd_printf("Expression for MOVX @Ri: \"%s\"\n", movxri_expr.c_str());
+  //print_cfg_info(con);
 }
 
 /* End of s51.src/uc51.cc */

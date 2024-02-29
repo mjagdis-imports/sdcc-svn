@@ -1,8 +1,11 @@
 %{
 #include <stdio.h>
 //#include <stdint.h>
+#include <unistd.h>
+#include <string.h>
 #include "cmdlexcl.h"
 #include "cmdpars.hh"
+#include "cmdutil.h"
 
 static int uc_yy_check_id(char *token);
 static int uc_yy_input(char *buf, int max_size);
@@ -54,13 +57,26 @@ static int uc_yy_input(char *buf, int max_size);
 "?"			return(PTOK_QUESTION);
 ":"			return(PTOK_COLON);
 "<"			return(PTOK_LESS);
-">"			return(PTOK_GREATHER);
+">"			return(PTOK_GREATER);
 "!"			return(PTOK_EXCLAMATION);
 ","			return(PTOK_COMMA);
 
-([0-9]+)|(0x[0-9a-fA-F]+) {
-  //printf("\nlexer found a nr: %s\n",yytext);
-  yylval.number = strtol(yytext, 0, 0);
+($|0[xX])[0-9a-fA-F]+ {
+  yylval.number = 0;
+  int i;
+  if (yytext[0]=='$')
+    i=1;
+  else
+    i=2;
+  for (; yytext[i]; i++)
+  {
+  char c= yytext[i];
+  int val= 0;
+  if (c>='0' && c<='9') val= c-'0';
+  else if (c>='a' && c<='f') val= c-'a'+10;
+  else if (c>='A' && c<='F') val= c-'A'+10;
+  yylval.number = (yylval.number << 4) | (val&0xf);
+  }
   return PTOK_NUMBER;
 }
 
@@ -71,7 +87,45 @@ static int uc_yy_input(char *buf, int max_size);
   return PTOK_NUMBER;
 }
 
-[a-zA-Z_][0-9a-zA-Z_]*	return(uc_yy_check_id(yytext));
+0[0-7]* {
+  yylval.number = 0;
+  for (int i= 1; yytext[i]; i++)
+  {
+  char c= yytext[i];
+  int val= c-'0';
+  yylval.number = (yylval.number << 3) | (val&0x7);
+  }
+  return PTOK_NUMBER;
+}
+
+[1-9][0-9]* {
+  yylval.number = 0;
+  for (int i= 0; yytext[i]; i++)
+  {
+  char c= yytext[i];
+  int val= c-'0';
+  yylval.number = (yylval.number * 10) + (val&0xf);
+  }
+  return PTOK_NUMBER;
+}
+
+\.?[a-zA-Z_][0-9a-zA-Z_]*($[0-9]+)?	return(uc_yy_check_id(yytext));
+
+'.*' {
+  char *s, *p;
+  int l= strlen(&yytext[1]);
+  yylval.number=0;
+  if (l>0)
+  {
+    s= strdup(&yytext[1]);
+    s[strlen(s)-1]= 0;
+    p= proc_escape(s, &l);
+    yylval.number= p[0];
+    free(s);
+    free(p);
+  }
+  return PTOK_NUMBER;
+}
 
 .			return(yytext[0]);
 
@@ -148,34 +202,34 @@ uc_yy_check_id(char *token)
 	}
       
       t_addr addr;
-      class cl_address_space *as;
       bool found;
-      if ((found= uc->symbol2address(yytext, &as, &addr)))
+      if ((found= uc->symbol2address(yytext, &mem, &addr)))
 	  {
-	      yylval.memory.memory= as;
+	      yylval.memory.memory= mem;
 	      yylval.memory.address= addr;
 	      return PTOK_MEMORY;
 	  }
-      /*
-      else if ((found= uc->symbol2address(yytext, uc->sfr_tbl(), &addr)))
-	{
-	  //yylval.number= addr; return PTOK_NUMBER;
-	  yylval.memory.memory = uc->address_space(MEM_SFR_ID);
-	  yylval.memory.address = addr;
-	  return PTOK_MEMORY;
-	}
-      */
-      //found= uc->symbol2address(yytext, uc->bit_tbl(), &addr);
       if (found)
 	{
 	  t_addr memaddr;
-	  t_mem mask;
-	  yylval.bit.memory= uc->bit2mem(addr, &memaddr, &mask);
+	  int bitnr_low, bitnr_high;
+	  yylval.bit.memory= uc->bit2mem(addr, &memaddr, &bitnr_high, &bitnr_low);
 	  yylval.bit.mem_address = memaddr;
 	  yylval.bit.bit_address = addr;
-	  yylval.bit.mask = mask;
-	  return PTOK_BIT;
+	  yylval.bit.bitnr_high = bitnr_high;
+	  yylval.bit.bitnr_low = bitnr_low;
+	  return PTOK_BITS;
 	}
+      {
+	t_index i;
+	found= uc->vars->by_name.search(token, i);
+	if (found)
+	  {
+	    class cl_cvar *v= (class cl_cvar *)uc->vars->by_name.at(i);
+	    yylval.cell= v->get_cell();
+	    return PTOK_CELL;
+          }
+       }
     }
 
   return 0;

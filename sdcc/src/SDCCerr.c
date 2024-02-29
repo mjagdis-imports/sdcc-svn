@@ -18,8 +18,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "SDCCglobl.h"
+#include "dbuf_string.h"
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
 #include <unistd.h>
 #include <execinfo.h>
@@ -244,7 +246,7 @@ struct
   { E_NONRENT_ARGS, ERROR_LEVEL_ERROR,
      "Functions called via pointers must be 'reentrant' to take this many (bytes for) arguments", 0 },
   { W_DOUBLE_UNSUPPORTED, ERROR_LEVEL_WARNING,
-     "type 'double' not supported assuming 'float'", 0 },
+     "types 'double', 'long double' not supported. Assuming 'float'", 0 },
   { W_COMP_RANGE, ERROR_LEVEL_PEDANTIC,
      "comparison is always %s due to limited range of data type", 0 },
   { W_FUNC_NO_RETURN, ERROR_LEVEL_WARNING,
@@ -440,8 +442,8 @@ struct
      "flexible array member '%s' not at end of struct", 0 },
   { E_FLEXARRAY_INEMPTYSTRCT, ERROR_LEVEL_ERROR,
      "flexible array '%s' in otherwise empty struct", 0 },
-  { W_EMPTY_SOURCE_FILE, ERROR_LEVEL_PEDANTIC,
-     "ISO C forbids an empty source file", 0 },
+  { W_EMPTY_TRANSLATION_UNIT, ERROR_LEVEL_PEDANTIC,
+     "ISO C forbids an empty translation unit", 0 },
   { W_BAD_PRAGMA_ARGUMENTS, ERROR_LEVEL_WARNING,
      "#pragma %s: bad argument(s); pragma ignored", 0 },
   { E_BAD_RESTRICT, ERROR_LEVEL_ERROR,
@@ -468,7 +470,7 @@ struct
      "Invalid designator for designated initializer", 0 },
   { W_DUPLICATE_INIT, ERROR_LEVEL_WARNING,
      "Duplicate initializer at position %d; ignoring previous.", 0 },
-  { E_INVALID_UNIVERSAL, ERROR_LEVEL_ERROR,
+  { W_INVALID_UNIVERSAL, ERROR_LEVEL_WARNING,
      "invalid universal character name \\%s.", 0 },
   { W_UNIVERSAL_C95, ERROR_LEVEL_WARNING,
      "universal character names are only valid in C95 or later", 0 },
@@ -480,8 +482,8 @@ struct
      "named address space not allowed for automatic var '%s'", 0},
   { W_NORETURNRETURN, ERROR_LEVEL_WARNING,
      "return in _Noreturn function", 0},
-  { E_STRUCT_REDEF, ERROR_LEVEL_ERROR,
-     "struct/union '%s' redefined", 0 },
+  { E_STRUCT_REDEF_INCOMPATIBLE, ERROR_LEVEL_ERROR,
+     "struct/union '%s' redefined to incompatible type", 0 },
   { W_STRING_CANNOT_BE_TERMINATED, ERROR_LEVEL_PEDANTIC,
     "string '%s'cannot be terminated within array", 0 },
   { W_LONGLONG_LITERAL, ERROR_LEVEL_WARNING,
@@ -521,8 +523,8 @@ struct
     "multiple matching expressions in generic association", 0 },
   { E_NO_MATCH_IN_GENERIC, ERROR_LEVEL_ERROR,
     "no matching expression in generic association", 0 },
-  { W_LABEL_WITHOUT_STATEMENT, ERROR_LEVEL_WARNING,
-    "label without statement", 0},
+  { W_LABEL_WITHOUT_STATEMENT_C23, ERROR_LEVEL_WARNING,
+    "label without statement requires ISO C23 or later", 0},
   { E_WCHAR_CONST_C95, ERROR_LEVEL_ERROR,
     "character constant of type wchar_t requires C95 or later", 0},
   { E_WCHAR_CONST_C11, ERROR_LEVEL_ERROR,
@@ -551,8 +553,8 @@ struct
     "multiple interrupt numbers for '%s'", 0},
   { W_INCOMPAT_PTYPES, ERROR_LEVEL_WARNING,
      "pointer types incompatible ", 0 },
-  { E_STATIC_ASSERTION_C2X, ERROR_LEVEL_ERROR,
-    "static assertion with one argument requires C2X or later", 0 },
+  { E_STATIC_ASSERTION_C23, ERROR_LEVEL_ERROR,
+    "static assertion with one argument requires C23 or later", 0 },
   { W_STATIC_ASSERTION_2, ERROR_LEVEL_WARNING,
     "static assertion failed", 0 },
   { E_DECL_AFTER_STATEMENT_C99, ERROR_LEVEL_ERROR,
@@ -563,14 +565,100 @@ struct
     "duplicate parameter name %s for function %s", 0},
   { E_AUTO_FILE_SCOPE, ERROR_LEVEL_ERROR,
     "auto in declaration at file scope", 0},
-  { E_U8_CHAR_C2X, ERROR_LEVEL_ERROR,
-    "u8 character constant requires ISO C2X or later", 0},
+  { E_U8_CHAR_C23, ERROR_LEVEL_ERROR,
+    "u8 character constant requires ISO C23 or later", 0},
   { E_U8_CHAR_INVALID, ERROR_LEVEL_ERROR,
     "invalid u8 character constant", 0},
-  { E_ATTRIBUTE_C2X, ERROR_LEVEL_ERROR,
-    "attribute requires C2X or later", 0},
+  { E_ATTRIBUTE_C23, ERROR_LEVEL_ERROR,
+    "attribute requires C23 or later", 0},
   { E_COMPOUND_LITERALS_C99, ERROR_LEVEL_ERROR,
     "compound literals require ISO C99 or later and are not implemented", 0},
+  { E_THREAD_LOCAL, ERROR_LEVEL_ERROR,
+    "thread-local storage is not implemented", 0},
+  { E_ENUM_COMMA_C99,  ERROR_LEVEL_ERROR,
+    "trailing comma after enumerator list requires ISO C99 or later", 0},
+  { E_OUTPUT_FILE_OPEN_ERR, ERROR_LEVEL_ERROR,
+     "Failed to open output file '%s' (%s)", 0 },
+  { E_INPUT_FILE_OPEN_ERR, ERROR_LEVEL_ERROR,
+     "Failed to open input file '%s' (%s)", 0 },
+  { W_SHIFT_NEGATIVE, ERROR_LEVEL_WARNING,
+     "%s shift by negative amount", 0 },
+  { W_INVALID_STACK_LOCATION, ERROR_LEVEL_WARNING,
+     "access to invalid stack location", 0 },
+  { W_BINARY_INTEGER_CONSTANT_C23, ERROR_LEVEL_WARNING,
+     "binary integer constant requires C23 or later", 0 },
+  { E_U8CHAR_STRING_C11, ERROR_LEVEL_ERROR,
+     "unicode string literal requires ISO C 11 or later", 0 },
+  { W_PREFIXED_STRINGS, ERROR_LEVEL_WARNING,
+     "sequence of differently prefixed string literals", 0 },
+  { W_DIGIT_SEPARATOR_C23, ERROR_LEVEL_WARNING,
+     "digit separators require ISO C23 or later", 0 },
+  { E_INVALID_LANG_OVERRIDE, ERROR_LEVEL_ERROR,
+     "argument to option -x is not a valid file type override", 0},
+  { E_RAISONANCE_LARGE_RETURN, ERROR_LEVEL_ERROR,
+     "return values larger than 16 bits are not supported for Raisonance calling convention", 0},
+  { E_IAR_LARGE_RETURN, ERROR_LEVEL_ERROR,
+     "return values larger than 16 bits are not supported for IAR calling convention", 0},
+  { E_IAR_PSEUDOPARM, ERROR_LEVEL_ERROR,
+     "IAR function call with parameter in pseudoregister", 0},
+  { E_COSMIC_LARGE_RETURN, ERROR_LEVEL_ERROR,
+     "return values larger than 16 bits are not supported for Cosmic calling convention", 0},
+  { E_MULTIPLE_CALLINGCONVENTIONS, ERROR_LEVEL_ERROR,
+     "multiple incompatible calling conventions for '%s'", 0},
+  { E_SFR_POINTER, ERROR_LEVEL_ERROR,
+     "unsupported pointer to __sfr", 0},
+  { E_INVALID_BITINTWIDTH, ERROR_LEVEL_ERROR,
+     "invalid width for bit-precise integer type", 0},
+  { W_BITINTCONST_C23, ERROR_LEVEL_WARNING,
+     "bit-precise integer constant requires ISO C23 or later", 0},
+  { E_INVALID_UNIVERSAL_IDENTIFIER, ERROR_LEVEL_ERROR,
+     "universal character name \\%s invalid in identifier", 0 },
+  { E_COMPLEX_UNSUPPORTED, ERROR_LEVEL_ERROR,
+     "complex numbers are not supported", 0 },
+  { E_DECIMAL_FLOAT_UNSUPPORTED, ERROR_LEVEL_ERROR,
+     "decimal floating-point numbers are not supported", 0 },
+  { E_ATOMIC_UNSUPPORTED, ERROR_LEVEL_ERROR,
+     "atomics are not supported", 0 },
+  { W_RETURN_TYPE_OMITTED_INT, ERROR_LEVEL_WARNING,
+     "return type of function omitted, assuming int", 0 },
+  { W_SINGLE_DASH_LONG_OPT, ERROR_LEVEL_WARNING,
+     "use of single-dash long options is discouraged, use '-%s' instead", 0 },
+  { E_UNKNOWN_LANGUAGE_STANDARD, ERROR_LEVEL_ERROR,
+     "unknown language standard '%s'", 0 },
+  { E_CONSTEXPR, ERROR_LEVEL_ERROR,
+     "constexpr not implemented", 0 },
+  { E_TYPEOF, ERROR_LEVEL_ERROR,
+     "typeof and typeof_unqual not implemented for nontrivial expressions", 0 },
+  { W_FUNCDECL_WITH_NO_PROTOTYPE, ERROR_LEVEL_WARNING,
+     "function declarator with no prototype", 0 },
+  { W_UNKNOWN_ATTRIBUTE, ERROR_LEVEL_WARNING,
+     "unknown attribute '%s' ignored", 0 },
+  { W_EMPTY_INIT_C23, ERROR_LEVEL_WARNING,
+     "empty initializer requires ISO C23 or later", 0 },
+  { E_EMPTY_INIT_UNKNOWN_SIZE, ERROR_LEVEL_ERROR,
+     "array of unknown size cannnot be initialized by an empty initializer", 0 },
+  { E_VLA_TYPE_C99, ERROR_LEVEL_ERROR,
+     "variable length array type requires ISO C99 or later", 0 },
+  { E_VLA_OBJECT, ERROR_LEVEL_ERROR,
+     "object of variable length array type not supported", 0 },
+  { E_VLA_SCOPE, ERROR_LEVEL_ERROR,
+     "variable length array declarators must have function prototype scope or block scope", 0 },
+  { E_VLA_INIT, ERROR_LEVEL_ERROR,
+     "variable length arrays can be initialized by empty initalizers only", 0 },
+  { W_ENUM_INT_RANGE_C23, ERROR_LEVEL_WARNING,
+     "enumeration constant outside the range of int requires ISO C23 or later", 0 },
+  { E_Z88DK_CALLEE_VARARG, ERROR_LEVEL_ERROR,
+     "__z88dk_callee with variable arguments not supported", 0 },
+  { W_CODEMEM_WRITE, ERROR_LEVEL_WARNING, // This is a warning, not an error, since writing to a string literal is syntactically correct, but has undefined behaviour. So if the code is never executed, the program is still correct and should work.
+     "attempt to write to read-only-memory", 0},
+  { W__SDCC_EXTERNAL_STARTUP_DEF, ERROR_LEVEL_WARNING,
+     "_sdcc_external_startup function definition - probable deprecated old-style variant of __sdcc_external_startup", 0},
+  { E_NO_SKIP_TARGET, ERROR_LEVEL_ERROR,
+     "target label missing for skip instruction '%s'", 0},
+  { W_SDCCCALL_STD_LIB_CRT0, ERROR_LEVEL_WARNING,
+     "non-default sdcccall specified, but default stdlib or crt0", 0},
+  { W_PEEPHOLE_RULE_LIMIT, ERROR_LEVEL_WARNING,
+     "peephole rule application limit reached", 0},
 };
 
 /* -------------------------------------------------------------------------------
@@ -602,6 +690,10 @@ void setErrorLogLevel (ERROR_LOG_LEVEL level)
 int
 vwerror (int errNum, va_list marker)
 {
+  struct dbuf_s dbuf;
+  char *errmsg;
+  char *oldmsg;
+
   if (_SDCCERRG.out == NULL)
     {
       _SDCCERRG.out = DEFAULT_ERROR_OUT;
@@ -620,6 +712,8 @@ vwerror (int errNum, va_list marker)
       return 0;
     }
 
+  dbuf_init(&dbuf, 200);
+  
   if ((ErrTab[errNum].errType >= _SDCCERRG.logLevel) && (!ErrTab[errNum].disabled))
     {
       if (ErrTab[errNum].errType >= ERROR_LEVEL_ERROR || _SDCCERRG.werror)
@@ -628,47 +722,55 @@ vwerror (int errNum, va_list marker)
       if (filename && lineno)
         {
           if (_SDCCERRG.style)
-            fprintf (_SDCCERRG.out, "%s(%d) : ", filename, lineno);
+            dbuf_printf (&dbuf, "%s(%d) : ", filename, lineno);
           else
-            fprintf (_SDCCERRG.out, "%s:%d: ", filename, lineno);
+            dbuf_printf (&dbuf, "%s:%d: ", filename, lineno);
         }
       else if (lineno)
         {
-          fprintf (_SDCCERRG.out, "at %d: ", lineno);
+          dbuf_printf (&dbuf, "at %d: ", lineno);
         }
       else
         {
-          fprintf (_SDCCERRG.out, "-:0: ");
+          dbuf_printf (&dbuf, "-:0: ");
         }
 
       switch (ErrTab[errNum].errType)
         {
         case ERROR_LEVEL_SYNTAX_ERROR:
-          fprintf (_SDCCERRG.out, "syntax error: ");
+          dbuf_printf (&dbuf, "syntax error: ");
           break;
 
         case ERROR_LEVEL_ERROR:
-          fprintf (_SDCCERRG.out, "error %d: ", errNum);
+          dbuf_printf (&dbuf, "error %d: ", errNum);
           break;
 
         case ERROR_LEVEL_WARNING:
         case ERROR_LEVEL_PEDANTIC:
           if (_SDCCERRG.werror)
-            fprintf (_SDCCERRG.out, "error %d: ", errNum);
+            dbuf_printf (&dbuf, "error %d: ", errNum);
           else
-            fprintf (_SDCCERRG.out, "warning %d: ", errNum);
+            dbuf_printf (&dbuf, "warning %d: ", errNum);
           break;
 
         case ERROR_LEVEL_INFO:
-          fprintf (_SDCCERRG.out, "info %d: ", errNum);
+          dbuf_printf (&dbuf, "info %d: ", errNum);
           break;
 
         default:
           break;
         }
 
-      vfprintf (_SDCCERRG.out, ErrTab[errNum].errText, marker);
-      fprintf (_SDCCERRG.out, "\n");
+      dbuf_vprintf (&dbuf, ErrTab[errNum].errText, marker);
+      errmsg = dbuf_detach_c_str (&dbuf);
+      for (oldmsg = setFirstItem (_SDCCERRG.log); oldmsg; oldmsg = setNextItem (_SDCCERRG.log))
+        if (strcmp (errmsg, oldmsg) == 0)
+          {
+            free(errmsg);
+            return 0;
+          }
+      addSetHead (&_SDCCERRG.log, errmsg);
+      fprintf (_SDCCERRG.out, "%s\n", errmsg);
       return 1;
     }
   else

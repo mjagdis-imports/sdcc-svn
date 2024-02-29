@@ -12,6 +12,7 @@
   Bug Fixes  -  Raphael Neider <rneider AT web.de> (2004,2005)
   Bug Fixes  -  Borut Razem <borut.razem AT siol.net> (2007)
   Bug Fixes  -  Mauro Giachero <maurogiachero AT users.sourceforge.net> (2008)
+  Copyright (C) 2024, Jonathon Hall dabigjhall@gmail.com
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -486,7 +487,7 @@ aopForSym (iCode * ic, operand * op, bool result)
   /* space we need to assign either r0 or r1 to it   */
   if (sym->onStack)             // || sym->iaccess)
     {
-      pCodeOp *pcop[4];
+      pCodeOp *pcop[PIC16_MAX_ASMOP_REGS];
       int i;
 
       DEBUGpic16_emitcode ("; ***", "%s:%d sym->onStack:%d || sym->iaccess:%d",
@@ -1486,7 +1487,7 @@ pic16_popGetTempRegCond (bitVect * f, bitVect * v, int lock)
   cfunc = currFunc;
   currFunc = NULL;
 
-  i = bitVectFirstBit (f);
+  i = bitVectFirstBit (f) + 1;
   while (i < 128)
     {
 
@@ -2483,13 +2484,19 @@ pic16_toBoolean (operand * oper)
 
   DEBUGpic16_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
 
-  if (AOP_TYPE (oper) != AOP_ACC)
+  /* If it's in WREG already, there's nothing to do */
+  if (AOP_TYPE (oper) == AOP_ACC)
+    return;
+
+  /* Load the MSB first, because for floating-point types, we need to mask off
+   * the sign bit so -0 becomes false. */
+  pic16_emitpcode (POC_MOVFW, pic16_popGet (AOP (oper), size));
+  if (IS_FLOAT (operandType (oper)))
+    pic16_emitpcode (POC_ANDLW, pic16_popGetLit (0x7F));
+  while (size)
     {
-      pic16_emitpcode (POC_MOVFW, pic16_popGet (AOP (oper), 0));
-    }
-  while (size--)
-    {
-      pic16_emitpcode (POC_IORFW, pic16_popGet (AOP (oper), offset++));
+      --size;
+      pic16_emitpcode (POC_IORFW, pic16_popGet (AOP (oper), size));
     }
 }
 
@@ -2739,21 +2746,13 @@ assignResultValue (operand * oper, int res_size, int rescall)
         }
       else
         {
-          /* >32-bits, result on stack, and FSR0 points to beginning.
-           * Fix stack when done */
-          /* FIXME FIXME */
-//      debugf("WARNING: Possible bug when returning more than 4-bytes\n");
-          while (size--)
+          /* >32-bits, result on stack, and FSR0 points to beginning. */
+          for (int resultOffs=0; resultOffs<size; ++resultOffs)
             {
-//          DEBUGpic16_emitcode("; ", "POC_MOVLW %d", GpseudoStkPtr);
-//          DEBUGpic16_emitcode("; ", "POC_MOVFW PLUSW2");
-
-              popaopidx (AOP (oper), size, GpseudoStkPtr);
+              pic16_emitpcode (POC_MOVFF, pic16_popCombine2 (&pic16_pc_preinc0,
+                PCOR (pic16_popGet (AOP (oper), resultOffs)), 0));
               GpseudoStkPtr++;
             }
-
-          /* fix stack */
-          free_stack_parameters (AOP_SIZE (oper));
         }
     }
   else
@@ -3025,6 +3024,9 @@ genCall (iCode * ic)
 
   /* make the call */
   pic16_emitpcode (POC_CALL, pic16_popGetWithString (fname));
+
+  if (strcmp(fname, "___memcpy") == 0)
+    pic16_addExtern("___memcpy");
 
   GpseudoStkPtr = 0;
 
@@ -3568,7 +3570,7 @@ genEndFunction (iCode * ic)
           emitSKPNC;
           pic16_emitpcode (POC_INCF, pic16_popCopyReg (pic16_stackpnt_hi));
           pic16_emitpcode (POC_COMF, pic16_popCopyReg (&pic16_pc_wreg));        // WREG = - (WREG+1)!
-          pic16_emitpcode (POC_MOVFW, pic16_popCopyReg (pic16_stack_plusw));    // this holds a retrun value!
+          pic16_emitpcode (POC_MOVFW, pic16_popCopyReg (pic16_stack_plusw));    // this holds a return value!
         }
     }
 
@@ -3738,27 +3740,20 @@ genRet (iCode * ic)
       /* >32-bits, setup stack and FSR0 */
       while (size--)
         {
-//                      DEBUGpic16_emitcode("; ", "POC_MOVLW %d", GpseudoStkPtr);
-//                      DEBUGpic16_emitcode("; ", "POC_MOVFW PLUSW2");
-
           pic16_pushpCodeOp (pic16_popGet (AOP (IC_LEFT (ic)), size));
-
-//                      popaopidx(AOP(oper), size, GpseudoStkPtr);
           GpseudoStkPtr++;
         }
 
-      /* setup FSR0 */
+      /* set up FSR0 */
       pic16_emitpcode (POC_MOVFF, pic16_popGet2p (pic16_popCopyReg (pic16_stackpnt_lo), pic16_popCopyReg (&pic16_pc_fsr0l)));
 
-      if (STACK_MODEL_LARGE)
-        {
-          pic16_emitpcode (POC_MOVFF,
-                           pic16_popGet2p (pic16_popCopyReg (pic16_stackpnt_hi), pic16_popCopyReg (&pic16_pc_fsr0h)));
-        }
-      else
-        {
-          pic16_emitpcode (POC_CLRF, pic16_popCopyReg (pic16_stackpnt_hi));
-        }
+      pic16_emitpcode (POC_MOVFF,
+                        pic16_popGet2p (pic16_popCopyReg (pic16_stackpnt_hi), pic16_popCopyReg (&pic16_pc_fsr0h)));
+
+      /* Roll back the stack.  The callee must do this (here) rather than the
+       * caller (assignResultValue()) so the callee's epilogue will restore
+       * preserved registers from the stack correctly. */
+      free_stack_parameters (AOP_SIZE (IC_LEFT (ic)));
     }
 
   pic16_freeAsmop (IC_LEFT (ic), NULL, ic, TRUE);
@@ -4841,7 +4836,7 @@ mov2w_regOrLit (asmop * aop, unsigned long lit, int offset)
  *
  * This version leaves in sequences like
  * "B[CS]F STATUS,0; BTFS[CS] STATUS,0"
- * which should be optmized by the peephole
+ * which should be optimized by the peephole
  * optimizer - RN 2005-01-01 */
 static void
 genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign)
@@ -5109,7 +5104,7 @@ result_in_carry:
 
 correct_result_in_carry:
 
-  // assign result to variable (if neccessary)
+  // assign result to variable (if necessary)
   if (result && AOP_TYPE (result) != AOP_CRY)
     {
       //DEBUGpc ("assign result");
@@ -5905,6 +5900,10 @@ genAnd (iCode * ic, iCode * ifx)
   unsigned long lit = 0L;
   resolvedIfx rIfx;
 
+  // This becomes true if we need to emit a jump to ifx based on the zero flag
+  // after freeing the asm operands
+  bool emitIfxZJump = false;
+
   FENTRY;
 
   pic16_aopOp ((left = IC_LEFT (ic)), ic, FALSE);
@@ -6005,107 +6004,49 @@ genAnd (iCode * ic, iCode * ifx)
   // bit = val & 0xZZ     - size = 1, ifx = FALSE -
   if ((AOP_TYPE (right) == AOP_LIT) && (AOP_TYPE (result) == AOP_CRY) && (AOP_TYPE (left) != AOP_CRY))
     {
-      symbol *tlbl = newiTempLabel (NULL);
-      int sizel = AOP_SIZE (left);
-      int nonnull = 0;
-      char emitBra;
+      /* Jump to nonzerolbl as soon as we know the result is nonzero (don't need
+       * to check the remaining bytes) */
+      symbol *nonzerolbl = newiTempLabel (NULL);
 
-      if (size)
-        emitSETC;
+      /* If the literal is 0, we won't emit any tests, and the result is always
+       * false.  Clear the zero flag and emit the remaining code normally - this
+       * could be short-circuited, but for now focus on generating correct code.
+       * A peephole optimization might be able to simplify this. */
+      if (lit == 0)
+        emitCLRZ;
 
-      /* get number of non null bytes in literal */
-      while (sizel--)
-        {
-          if (lit & (0xff << (sizel * 8)))
-            ++nonnull;
-        }
-
-      emitBra = nonnull || rIfx.condition;
-
-      for (sizel = AOP_SIZE (left); sizel--; ++offset, lit >>= 8)
+      /* Check each byte of left where the corresponding byte of right is
+       * nonzero.  Once any nonzero result is found, jump ahead to the end. */
+      for (int sizel = AOP_SIZE (left); sizel--; ++offset)
         {
           unsigned char bytelit = lit & 0xFF;
 
-          if (bytelit != 0)
-            {
-              int posbit;
+          lit >>= 8;
 
-              --nonnull;
+          if (bytelit == 0)
+            continue; // Don't bother testing this byte
 
-              /* patch provided by Aaron Colwell */
-              if ((posbit = isLiteralBit (bytelit)) != 0)
-                {
-                  if (nonnull)
-                    {
-                      pic16_emitpcode (POC_BTFSC,
-                                       pic16_newpCodeOpBit (pic16_aopGet (AOP (left), offset, FALSE, FALSE), posbit - 1, 0,
-                                                            PO_GPR_REGISTER));
-                      pic16_emitpcode (POC_GOTO, pic16_popGetLabel (rIfx.condition ? rIfx.lbl->key : tlbl->key));
-                    }
-                  else
-                    {
-                      pic16_emitpcode (rIfx.condition ? POC_BTFSC : POC_BTFSS,
-                                       pic16_newpCodeOpBit (pic16_aopGet (AOP (left), offset, FALSE, FALSE), posbit - 1, 0,
-                                                            PO_GPR_REGISTER));
-                    }
-                }
-              else
-                {
-                  if (bytelit == 0xff)
-                    {
-                      /* Aaron had a MOVF instruction here, changed to MOVFW cause
-                       * a peephole could optimize it out -- VR */
-                      pic16_emitpcode (POC_MOVFW, pic16_popGet (AOP (left), offset));
-                    }
-                  else
-                    {
-                      pic16_emitpcode (POC_MOVFW, pic16_popGet (AOP (left), offset));
-                      pic16_emitpcode (POC_ANDLW, pic16_popGetLit (bytelit));
-                    }
-                  if (nonnull)
-                    {
-                      if (rIfx.condition)
-                        {
-                          emitSKPZ;
-                          pic16_emitpcode (POC_GOTO, pic16_popGetLabel (rIfx.lbl->key));        /* to false */
-                        }
-                      else
-                        {
-                          pic16_emitpcode (POC_BNZ, pic16_popGetLabel (tlbl->key));     /* to true */
-                        }
-                    }
-                  else
-                    {
-                      /* last non null byte */
-                      if (rIfx.condition)
-                        emitSKPZ;
-                      else
-                        emitSKPNZ;
-                    }
-                }
-            }
+          pic16_emitpcode (POC_MOVFW, pic16_popGet (AOP (left), offset));
+          // Don't bother with ANDLW 0xFF; MOVFW already set the zero flag
+          if (bytelit != 0xff)
+            pic16_emitpcode (POC_ANDLW, pic16_popGetLit (bytelit));
+          // Once we get a nonzero byte we're done, result is in zero flag.
+          // The last nonzero byte doesn't have to branch though.
+          if (lit)
+            pic16_emitpcode (POC_BNZ, pic16_popGetLabel (nonzerolbl->key));
         }
 
-      // bit = left & literal
+      pic16_emitpLabel (nonzerolbl->key);
+      // For nonzero size, result is in the zero flag and we need to store it
       if (size)
         {
-          emitCLRC;
-          pic16_emitpLabel (tlbl->key);
+          /* There's no logic to store a bit result from the Z bit.  It's
+           * not too complex, but pic16 doesn't have bit variables yet. */
+          werror(W_POSSBUG2, __FILE__, __LINE__);
+          abort();
         }
-
-      // if(left & literal)
       else
-        {
-          if (ifx)
-            {
-              if (emitBra)
-                pic16_emitpcode (POC_GOTO, pic16_popGetLabel (rIfx.lbl->key));
-              ifx->generated = 1;
-            }
-          pic16_emitpLabel (tlbl->key);
-          goto release;
-        }
-      pic16_outBitC (result);
+        emitIfxZJump = true;  // Can't skip freeing asm ops, check Z and jump after that
       goto release;
     }
 
@@ -6282,6 +6223,16 @@ release:
   pic16_freeAsmop (left, NULL, ic, (RESULTONSTACK (ic) ? FALSE : TRUE));
   pic16_freeAsmop (right, NULL, ic, (RESULTONSTACK (ic) ? FALSE : TRUE));
   pic16_freeAsmop (result, NULL, ic, TRUE);
+
+  if (emitIfxZJump)
+    {
+      if (rIfx.condition)
+        emitSKPZ;
+      else
+        emitSKPNZ;
+      pic16_emitpcode (POC_GOTO, pic16_popGetLabel (rIfx.lbl->key));
+      ifx->generated = 1;
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -7221,42 +7172,6 @@ genRLC (iCode * ic)
         }
 
       offset++;
-    }
-
-
-  pic16_freeAsmop (left, NULL, ic, TRUE);
-  pic16_freeAsmop (result, NULL, ic, TRUE);
-}
-
-
-/* gpasm can get the highest order bit with HIGH/UPPER
- * so the following probably is not needed -- VR */
-
-/*-----------------------------------------------------------------*/
-/* genGetHbit - generates code get highest order bit               */
-/*-----------------------------------------------------------------*/
-static void
-genGetHbit (iCode * ic)
-{
-  operand *left, *result;
-  left = IC_LEFT (ic);
-  result = IC_RESULT (ic);
-  pic16_aopOp (left, ic, FALSE);
-  pic16_aopOp (result, ic, FALSE);
-
-  DEBUGpic16_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-  /* get the highest order byte into a */
-  MOVA (pic16_aopGet (AOP (left), AOP_SIZE (left) - 1, FALSE, FALSE));
-  if (AOP_TYPE (result) == AOP_CRY)
-    {
-      pic16_emitcode ("rlc", "a");
-      pic16_outBitC (result);
-    }
-  else
-    {
-      pic16_emitcode ("rl", "a");
-      pic16_emitcode ("anl", "a,#0x01");
-      pic16_outAcc (result);
     }
 
 
@@ -8403,6 +8318,11 @@ pic16_genLeftShiftLiteral (operand * left, operand * right, operand * result, iC
         case 4:
           genlshFour (result, left, shCount);
           break;
+        case 8:
+        default:
+          pic16_emitcode ("; ", "UNIMPLEMENTED left shift from value of size %d to result of size %d", getSize(operandType(left)), size);
+          fprintf (stderr, "UNIMPLEMENTED left shift from value of size %d to result of size %d\n", getSize(operandType(left)), size);
+          break;
         }
     }
   pic16_freeAsmop (left, NULL, ic, TRUE);
@@ -8698,7 +8618,10 @@ genRightShiftLiteral (operand * left, operand * right, operand * result, iCode *
         case 4:
           genrshFour (result, left, shCount, sign);
           break;
+        case 8:
         default:
+          pic16_emitcode ("; ", "UNIMPLEMENTED right shift from value of size %d to result of size %d", getSize(operandType(left)), res_size);
+          fprintf (stderr, "UNIMPLEMENTED right shift from value of size %d to result of size %d\n", getSize(operandType(left)), res_size);
           break;
         }
     }
@@ -8734,7 +8657,10 @@ genGenericShift (iCode * ic, int isShiftLeft)
 
   /* if the shift count is known then do it
      as efficiently as possible */
-  if (AOP_TYPE (right) == AOP_LIT)
+  /* This isn't implemented yet for 8-byte types, for now use the dynamic shift
+   * code for those (works but inefficient) */
+  if (AOP_TYPE (right) == AOP_LIT && pic16_getDataSize(left) <= 4 &&
+    pic16_getDataSize(result) <= 4)
     {
       long lit = (long) ulFromVal (AOP (right)->aopu.aop_lit);
       if (signedCount && lit < 0)
@@ -8828,6 +8754,11 @@ genGenericShift (iCode * ic, int isShiftLeft)
   else
     {
       pic16_mov2w (AOP (right), 0);
+      /* If the shift count is a literal, the MOVLW generated above doesn't
+       * update the Z/N flags.  Add 0 to W just to update the flags.  (This will
+       * go away when 8-byte literal shifts are implemented.) */
+      if(AOP_TYPE (right) == AOP_LIT)
+        pic16_emitpcode (POC_ADDLW, pic16_popGetLit (0x00));
     }                           // if
 
   pic16_emitpcode (POC_BZ, pic16_popGetLabel (label_complete->key));
@@ -8893,6 +8824,23 @@ release:
   pic16_freeAsmop (right, NULL, ic, TRUE);
   pic16_freeAsmop (left, NULL, ic, TRUE);
   pic16_freeAsmop (result, NULL, ic, TRUE);
+}
+
+/*-----------------------------------------------------------------*/
+/* genRot - generates code for rotation                            */
+/*-----------------------------------------------------------------*/
+static void
+genRot (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  unsigned int lbits = bitsForType (operandType (left));
+  if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits == 1)
+    genRLC (ic);
+  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits ==  lbits - 1)
+    genRRC (ic);
+  else
+    wassertl (0, "Unsupported rotation.");
 }
 
 static void
@@ -8981,12 +8929,11 @@ pic16_derefPtr (operand * ptr, int p_type, int doWrite, int *fsr0_setup)
     case GPOINTER:
       if (AOP (ptr)->aopu.aop_reg[2])
         {
-          if (doWrite)
-            pic16_emitpcode (POC_MOVWF, pic16_popCopyReg (pic16_stack_postdec));
-          // prepare call to __gptrget1, this is actually genGenPointerGet(result, WREG, ?ic?)
-          mov2fp (pic16_popCopyReg (&pic16_pc_fsr0l), AOP (ptr), 0);
-          mov2fp (pic16_popCopyReg (&pic16_pc_prodl), AOP (ptr), 1);
-          pic16_mov2w (AOP (ptr), 2);
+          mov2fp (pic16_popCopyReg (&pic16_pc_tblptrl), AOP (ptr), 0);
+          mov2fp (pic16_popCopyReg (&pic16_pc_tblptrh), AOP (ptr), 1);
+          mov2fp (pic16_popCopyReg (&pic16_pc_pclath), AOP (ptr), 2);
+          pic16_callGenericPointerLoad ();
+          /* call _gptrget1() or _gptrput1(), this already uses WREG for data */
           pic16_callGenericPointerRW (doWrite, 1);
         }
       else
@@ -9340,18 +9287,19 @@ genNearPointerGet (operand * left, operand * result, iCode * ic)
 }
 
 /*-----------------------------------------------------------------*/
-/* genGenPointerGet - gget value from generic pointer space        */
+/* genGenPointerGet - get value from generic pointer space        */
 /*-----------------------------------------------------------------*/
 static void
 genGenPointerGet (operand * left, operand * result, iCode * ic)
 {
-  int size;
+  int size, resultOffs;
   sym_link *letype = getSpec (operandType (left));
 
   DEBUGpic16_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
   pic16_aopOp (left, ic, FALSE);
   pic16_aopOp (result, ic, TRUE);
   size = AOP_SIZE (result);
+  resultOffs = 0;
 
   DEBUGpic16_pic16_AopType (__LINE__, left, NULL, result);
 
@@ -9362,13 +9310,41 @@ genGenPointerGet (operand * left, operand * result, iCode * ic)
       goto release;
     }
 
-  /* set up WREG:PRODL:FSR0L with address from left */
-  mov2fp (pic16_popCopyReg (&pic16_pc_fsr0l), AOP (left), 0);
-  mov2fp (pic16_popCopyReg (&pic16_pc_prodl), AOP (left), 1);
-  pic16_mov2w (AOP (left), 2);
+  /* Load pointer into PCLATH:TBLPTRH:TBLPTRL */
+  mov2fp (pic16_popCopyReg (&pic16_pc_tblptrl), AOP (left), 0);
+  mov2fp (pic16_popCopyReg (&pic16_pc_tblptrh), AOP (left), 1);
+  mov2fp (pic16_popCopyReg (&pic16_pc_pclath), AOP (left), 2);
+  pic16_callGenericPointerLoad ();
+
+  /* If result is more than 4 bytes, break up the read into multiple reads of
+   * 4 or fewer bytes */
+  while (size > PIC16_GENPTRRW_MAXSIZE)
+    {
+      /* Call _gptrget4 */
+      pic16_callGenericPointerRW (0, PIC16_GENPTRRW_MAXSIZE);
+
+      /* Load result from TABLAT:PRODH:PRODL:WREG */
+      pic16_emitpcode (POC_MOVWF, pic16_popGet (AOP (result), resultOffs));
+      pic16_loadFromReturn (result, resultOffs+1, pic16_popCopyReg (&pic16_pc_prodl));
+      pic16_loadFromReturn (result, resultOffs+2, pic16_popCopyReg (&pic16_pc_prodh));
+      pic16_loadFromReturn (result, resultOffs+3, pic16_popCopyReg (&pic16_pc_tablat));
+
+      size -= PIC16_GENPTRRW_MAXSIZE;
+      resultOffs += PIC16_GENPTRRW_MAXSIZE;
+    }
+
+  /* Read the last chunk of 1-4 bytes */
   pic16_callGenericPointerRW (0, size);
 
-  assignResultValue (result, size, 1);
+  /* Load result from TABLAT:TBLPTRL:PRODH:WREG */
+  if (AOP_TYPE(result) != AOP_ACC)
+    pic16_emitpcode (POC_MOVWF, pic16_popGet (AOP (result), resultOffs));
+  if (size > 1)
+    pic16_loadFromReturn (result, resultOffs+1, pic16_popCopyReg (&pic16_pc_prodl));
+  if (size > 2)
+    pic16_loadFromReturn (result, resultOffs+2, pic16_popCopyReg (&pic16_pc_prodh));
+  if (size > 3)
+    pic16_loadFromReturn (result, resultOffs+3, pic16_popCopyReg (&pic16_pc_tablat));
 
 release:
   pic16_freeAsmop (left, NULL, ic, TRUE);
@@ -9977,7 +9953,7 @@ genNearPointerSet (operand * right, operand * result, iCode * ic)
 static void
 genGenPointerSet (operand * right, operand * result, iCode * ic)
 {
-  int size;
+  int size, rightOffs;
   sym_link *retype = getSpec (operandType (result));
 
   DEBUGpic16_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
@@ -9985,6 +9961,7 @@ genGenPointerSet (operand * right, operand * result, iCode * ic)
   pic16_aopOp (result, ic, FALSE);
   pic16_aopOp (right, ic, FALSE);
   size = AOP_SIZE (right);
+  rightOffs = 0;
 
   DEBUGpic16_pic16_AopType (__LINE__, NULL, right, result);
 
@@ -10001,27 +9978,40 @@ genGenPointerSet (operand * right, operand * result, iCode * ic)
 
   DEBUGpic16_emitcode ("; ***", "%s  %d size=%d", __FUNCTION__, __LINE__, size);
 
+  /* Load pointer into PRODL:FSR0H:FSR0L */
+  mov2fp (pic16_popCopyReg (&pic16_pc_tblptrl), AOP (result), 0);
+  mov2fp (pic16_popCopyReg (&pic16_pc_tblptrh), AOP (result), 1);
+  mov2fp (pic16_popCopyReg (&pic16_pc_pclath), AOP (result), 2);
+  pic16_callGenericPointerLoad ();
 
-  /* load value to write in TBLPTRH:TBLPTRL:PRODH:[stack] */
+  /* If right is more than 4 bytes, break up the write into multiple writes of
+   * 4 or fewer bytes */
+  while (size > PIC16_GENPTRRW_MAXSIZE)
+    {
+      /* Load 4 bytes to TABLAT:TBLPTRL:PRODH:WREG */
+      mov2fp (pic16_popCopyReg (&pic16_pc_tablat), AOP (right), rightOffs+3);
+      mov2fp (pic16_popCopyReg (&pic16_pc_prodh), AOP (right), rightOffs+2);
+      mov2fp (pic16_popCopyReg (&pic16_pc_prodl), AOP (right), rightOffs+1);
+      pic16_mov2w (AOP (right), rightOffs); // Load WREG last
 
-  /* value of right+0 is placed on stack, which will be retrieved
-   * by the support function thus restoring the stack. The important
-   * thing is that there is no need to manually restore stack pointer
-   * here */
-  pushaop (AOP (right), 0);
-//    mov2fp(pic16_popCopyReg(&pic16_pc_postdec1), AOP(right), 0);
-  if (size > 1)
-    mov2fp (pic16_popCopyReg (&pic16_pc_prodh), AOP (right), 1);
-  if (size > 2)
-    mov2fp (pic16_popCopyReg (&pic16_pc_tblptrl), AOP (right), 2);
+      /* Call _gptrput4 */
+      pic16_callGenericPointerRW (1, PIC16_GENPTRRW_MAXSIZE);
+
+      size -= PIC16_GENPTRRW_MAXSIZE;
+      rightOffs += PIC16_GENPTRRW_MAXSIZE;
+    }
+
+  /* Write the last chunk of 1-4 bytes */
+  /* Load 1-4 bytes to TABLAT:TBLPTRL:PRODH:WREG */
   if (size > 3)
-    mov2fp (pic16_popCopyReg (&pic16_pc_tblptrh), AOP (right), 3);
+    mov2fp (pic16_popCopyReg (&pic16_pc_tablat), AOP (right), rightOffs+3);
+  if (size > 2)
+    mov2fp (pic16_popCopyReg (&pic16_pc_prodh), AOP (right), rightOffs+2);
+  if (size > 1)
+    mov2fp (pic16_popCopyReg (&pic16_pc_prodl), AOP (right), rightOffs+1);
+  pic16_mov2w (AOP (right), rightOffs);
 
-  /* load address to write to in WREG:FSR0H:FSR0L */
-  pic16_emitpcode (POC_MOVFF, pic16_popGet2p (pic16_popGet (AOP (result), 0), pic16_popCopyReg (&pic16_pc_fsr0l)));
-  pic16_emitpcode (POC_MOVFF, pic16_popGet2p (pic16_popGet (AOP (result), 1), pic16_popCopyReg (&pic16_pc_prodl)));
-  pic16_emitpcode (POC_MOVFW, pic16_popGet (AOP (result), 2));
-
+  /* Call _gptrputN */
   pic16_callGenericPointerRW (1, size);
 
 release:
@@ -11166,7 +11156,7 @@ release:
 }
 
 /*-----------------------------------------------------------------*/
-/* genDjnz - generate decrement & jump if not zero instrucion      */
+/* genDjnz - generate decrement & jump if not zero instruction      */
 /*-----------------------------------------------------------------*/
 static int
 genDjnz (iCode * ic, iCode * ifx)
@@ -11486,20 +11476,12 @@ genpic16Code (iCode * lic)
           pic16_genInline (ic);
           break;
 
-        case RRC:
-          genRRC (ic);
-          break;
-
-        case RLC:
-          genRLC (ic);
-          break;
-
         case GETABIT:
           genGetABit (ic);
           break;
 
-        case GETHBIT:
-          genGetHbit (ic);
+        case ROT:
+          genRot (ic);
           break;
 
         case LEFT_OP:

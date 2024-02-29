@@ -2,6 +2,8 @@
   SDCC.lex - lexical analyser for use with sdcc (free open source
   compiler for 8/16 bit microcontrollers)
   Written by : Sandeep Dutta . sandeep.dutta@usa.net (1997)
+  Revised by : Philipp Klaus Krause krauspeh@informatik.uni-freiburg.de (2022)
+  Using inspiration from the grammar by Jutta Degener as extended by Jens Gustedt (under Expat license)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -22,14 +24,20 @@
   what you give them.   Help stamp out software-hoarding!
 -------------------------------------------------------------------------*/
 
-B       [0-1]
+DC  '?[0-9]
+OC  '?[0-7]
+HC  '?[a-fA-F0-9]
+BC  '?[01]
+
 D       [0-9]
-L       [a-zA-Z_$]
 H       [a-fA-F0-9]
+B       [01]
+L       [a-zA-Z_$]
 E       [Ee][+-]?{D}+
 BE      [Pp][+-]?{D}+
-FS      (f|F|l|L)
-IS      (u|U|l|L)*
+FS      (f|F|l|L|df|dd|dl|DF|DD|DL)
+IS      [uUlL]*
+WB      (((u|U)(wb|WB))|((wb|WB)(u|U)?))
 CP      (L|u|U|u8)
 HASH    (#|%:)
 UCN     \\u{H}{4}|\\U{H}{8}
@@ -53,7 +61,7 @@ UTF8IDF         {UTF8IDF1ST}|\xcc[\x80-\xbf]|\xcd[\x80-\xaf]|\xe2\x83[\x90-\xbf]
 #include "common.h"
 #include "newalloc.h"
 #include "dbuf_string.h"
-/* Some systems, noteably Mac OS, do not have uchar.h. */
+/* Some systems, notably Mac OS, do not have uchar.h. */
 /* If it is missing, use our own type definitions. */
 #ifdef HAVE_UCHAR_H
 #include <uchar.h>
@@ -75,8 +83,7 @@ UTF8IDF         {UTF8IDF1ST}|\xcc[\x80-\xbf]|\xcd[\x80-\xaf]|\xe2\x83[\x90-\xbf]
                                 check_type())
 
 #define TKEYWORD99(token) return (options.std_c99 ? (token) : check_type())
-
-#define TKEYWORD2X(token) return (options.std_c2x ? (token) : check_type())
+#define TKEYWORD2X(token) return (options.std_c23 ? (token) : check_type())
 
 int column = 0;         /* current column */
 
@@ -114,6 +121,10 @@ static void checkCurrFile (const char *s);
   BEGIN (INITIAL);
   return INLINEASM;
 }
+<asm>^{HASH}.*          {
+  count ();
+  checkCurrFile (yytext);
+}
 <asm>\n                 {
   count ();
   dbuf_append_char(&asmbuff, *yytext);
@@ -121,59 +132,31 @@ static void checkCurrFile (const char *s);
 <asm>.                  {
   dbuf_append_char(&asmbuff, *yytext);
 }
-"__asm__"               { count (); return ASM; }
-"__at"                  { count (); TKEYWORD (AT); }
+
+ /* C90 */
 "auto"                  { count (); return AUTO; }
-"__bit"                 { count (); TKEYWORD (BIT); }
-"bool"                  { count (); TKEYWORD2X (SD_BOOL); }
-"_Bool"                 { count (); TKEYWORD99 (SD_BOOL); }
 "break"                 { count (); return BREAK; }
 "case"                  { count (); return CASE; }
 "char"                  { count (); return SD_CHAR; }
-"__code"                { count (); TKEYWORD (CODE); }
 "const"                 { count (); return SD_CONST; }
 "continue"              { count (); return CONTINUE; }
-"__critical"            { count (); TKEYWORD (CRITICAL); }
-"__data"                { count (); TKEYWORD (DATA); }
 "default"               { count (); return DEFAULT; }
 "do"                    { count (); return DO; }
-"double"                { count (); werror (W_DOUBLE_UNSUPPORTED); return SD_FLOAT; }
+"double"                { count (); return DOUBLE; }
 "else"                  { count (); return ELSE; }
 "enum"                  { count (); return ENUM; }
 "extern"                { count (); return EXTERN; }
-"__far"                 { count (); TKEYWORD (XDATA); }
-"__eeprom"              { count (); TKEYWORD (EEPROM); }
 "float"                 { count (); return SD_FLOAT; }
-"__fixed16x16"          { count (); TKEYWORD (FIXED16X16); }
-"__flash"               { count (); TKEYWORD (CODE); }
 "for"                   { count (); return FOR; }
 "goto"                  { count (); return GOTO; }
-"__idata"               { count (); TKEYWORD (IDATA); }
 "if"                    { count (); return IF; }
 "int"                   { count (); return SD_INT; }
-"__interrupt"           { count (); TKEYWORD (INTERRUPT); }
-"__nonbanked"           { count (); TKEYWORD (NONBANKED); }
-"__banked"              { count (); TKEYWORD (BANKED); }
-"__trap"                { count (); TKEYWORD (TRAP); }
 "long"                  { count (); return SD_LONG; }
-"__near"                { count (); TKEYWORD (DATA); }
-"__pdata"               { count (); TKEYWORD (PDATA); }
-"__reentrant"           { count (); TKEYWORD (REENTRANT); }
-"__shadowregs"          { count (); TKEYWORD (SHADOWREGS); }
-"__wparam"              { count (); TKEYWORD (SD_WPARAM); }
 "register"              { count (); return REGISTER; }
 "return"                { count (); return RETURN; }
-"__sfr"                 { count (); TKEYWORD (SFR); }
-"__sfr16"               { count (); TKEYWORD (SFR16); }
-"__sfr32"               { count (); TKEYWORD (SFR32); }
-"__sbit"                { count (); TKEYWORD (SBIT); }
 "short"                 { count (); return SD_SHORT; }
 "signed"                { count (); return SIGNED; }
 "sizeof"                { count (); return SIZEOF; }
-"alignof"               { count (); TKEYWORD2X (ALIGNOF); }
-"_Alignof"              { count (); return ALIGNOF; }
-"__builtin_offsetof"    { count (); return OFFSETOF; }
-"__sram"                { count (); TKEYWORD (XDATA); }
 "static"                { count (); return STATIC; }
 "struct"                { count (); return STRUCT; }
 "switch"                { count (); return SWITCH; }
@@ -182,29 +165,92 @@ static void checkCurrFile (const char *s);
 "unsigned"              { count (); return UNSIGNED; }
 "void"                  { count (); return SD_VOID; }
 "volatile"              { count (); return VOLATILE; }
+"while"                 { count (); return WHILE; }
+"..."                   { count (); return ELLIPSIS; }
+
+ /* C99 */
+"__func__"              { count (); return FUNC; }
+"_Bool"                 { count (); TKEYWORD99 (SD_BOOL); }
+"_Complex"              { count (); return COMPLEX; }
+"_Imaginary"            { count (); return IMAGINARY; }
+"_Noreturn"             { count (); return NORETURN;}
+"_Static_assert"        { count (); return STATIC_ASSERT; }
+"inline"                { count (); TKEYWORD99 (INLINE); }
+"restrict"              { count (); TKEYWORD99 (RESTRICT); }
+
+ /* C11 */
+"_Alignas"              { count (); return ALIGNAS; }
+"_Alignof"              { count (); return ALIGNOF; }
+"_Atomic"               { count (); return ATOMIC; }
+"_Generic"              { count (); return GENERIC; }
+"_Thread_local"         { count (); return THREAD_LOCAL; }
+
+ /* C23 */
+"_BitInt"               { count (); return SD_BITINT; }
+"_Decimal32"            { count (); return DECIMAL32; }
+"_Decimal64"            { count (); return DECIMAL64; }
+"_Decimal128"           { count (); return DECIMAL128; }
+"alignas"               { count (); TKEYWORD2X (ALIGNAS); }
+"alignof"               { count (); TKEYWORD2X (ALIGNOF); }
+"bool"                  { count (); TKEYWORD2X (SD_BOOL); }
+"static_assert"         { count (); TKEYWORD2X (STATIC_ASSERT); }
+"true"                  { count (); TKEYWORD2X (TOKEN_TRUE); }
+"false"                 { count (); TKEYWORD2X (TOKEN_FALSE); }
+"nullptr"               { count (); TKEYWORD2X (NULLPTR); }
+"constexpr"             { count (); TKEYWORD2X (CONSTEXPR); }
+"typeof"                { count (); TKEYWORD2X (TYPEOF); }
+"typeof_unqual"         { count (); TKEYWORD2X (TYPEOF_UNQUAL); }
+
+ /* SDCC-specific intrinsic named address spaces (as per Embedded C TS) */
+"__code"                { count (); TKEYWORD (CODE); }
+"__data"                { count (); TKEYWORD (DATA); }
+"__eeprom"              { count (); TKEYWORD (EEPROM); }
+"__far"                 { count (); TKEYWORD (XDATA); }
+"__flash"               { count (); TKEYWORD (CODE); }
+"__idata"               { count (); TKEYWORD (IDATA); }
+"__near"                { count (); TKEYWORD (DATA); }
+"__pdata"               { count (); TKEYWORD (PDATA); }
+"__sram"                { count (); TKEYWORD (XDATA); }
+"__xdata"               { count (); TKEYWORD (XDATA); }
+"__zp"                  { count (); TKEYWORD (DATA); }
+
+ /* SDCC language extensions */
+"__asm__"               { count (); return ASM; }
+"__at"                  { count (); TKEYWORD (AT); }
+"__bit"                 { count (); TKEYWORD (BIT); }
+"__critical"            { count (); TKEYWORD (CRITICAL); }
+"__fixed16x16"          { count (); TKEYWORD (FIXED16X16); }
+"__interrupt"           { count (); TKEYWORD (INTERRUPT); }
+"__nonbanked"           { count (); TKEYWORD (NONBANKED); }
+"__banked"              { count (); TKEYWORD (BANKED); }
+"__trap"                { count (); TKEYWORD (TRAP); }
+"__reentrant"           { count (); TKEYWORD (REENTRANT); }
+"__shadowregs"          { count (); TKEYWORD (SHADOWREGS); }
+"__wparam"              { count (); TKEYWORD (SD_WPARAM); }
+"__sfr"                 { count (); TKEYWORD (SFR); }
+"__sfr16"               { count (); TKEYWORD (SFR16); }
+"__sfr32"               { count (); TKEYWORD (SFR32); }
+"__sbit"                { count (); TKEYWORD (SBIT); }
+"__builtin_offsetof"    { count (); return OFFSETOF; }
+"__builtin_rot"         { count (); return ROT; }
 "__using"               { count (); TKEYWORD (USING); }
 "__naked"               { count (); TKEYWORD (NAKED); }
-"while"                 { count (); return WHILE; }
-"__xdata"               { count (); TKEYWORD (XDATA); }
-"..."                   { count (); return VAR_ARGS; }
-"__typeof"              { count (); return TYPEOF; }
 "_JavaNative"           { count (); TKEYWORD (JAVANATIVE); }
 "__overlay"             { count (); TKEYWORD (OVERLAY); }
-"inline"                { count (); TKEYWORD99 (INLINE); }
-"_Noreturn"             { count (); return NORETURN;}
-"restrict"              { count (); TKEYWORD99 (RESTRICT); }
 "__smallc"              { count (); TKEYWORD (SMALLC); }
+"__raisonance"          { count (); TKEYWORD (RAISONANCE); }
+"__iar"                 { count (); TKEYWORD (IAR); }
+"__cosmic"              { count (); TKEYWORD (COSMIC); }
+"__sdcccall"            { count (); return SDCCCALL; }
 "__preserves_regs"      { count (); return PRESERVES_REGS; }
 "__z88dk_fastcall"      { count (); TKEYWORD (Z88DK_FASTCALL); }
 "__z88dk_callee"        { count (); TKEYWORD (Z88DK_CALLEE); }
 "__z88dk_shortcall"     { count (); return Z88DK_SHORTCALL; }
 "__z88dk_params_offset" { count (); return Z88DK_PARAMS_OFFSET; }
 "__addressmod"          { count (); return ADDRESSMOD; }
-"static_assert"         { count (); TKEYWORD2X (STATIC_ASSERT); }
-"_Static_assert"        { count (); return STATIC_ASSERT; }
-"alignas"               { count (); TKEYWORD2X (ALIGNAS); }
-"_Alignas"              { count (); return ALIGNAS; }
-"_Generic"              { count (); return GENERIC; }
+"__typeof"              { count (); return TYPEOF; }
+
+
 ({L}|{UCN}|{UTF8IDF1ST})({L}|{D}|{UCN}|{UTF8IDF})*  {
   if (!options.dollars_in_ident && strchr (yytext, '$'))
     {
@@ -224,18 +270,12 @@ static void checkCurrFile (const char *s);
   count ();
   return check_type();
 }
-0[bB]{B}+{IS}?          {
-  if (!options.std_sdcc)
-    {
-      yyerror ("binary (0b) constants are not allowed in ISO C");
-    }
-  count ();
-  yylval.val = constIntVal (yytext);
-  return CONSTANT;
-}
-0[xX]{H}+{IS}?               { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
-0[0-7]*{IS}?                 { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
-[1-9]{D}*{IS}?               { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+
+
+[1-9]{DC}*({IS}|{WB})?       { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0[xX]{H}{HC}*({IS}|{WB})?    { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0{OC}*({IS}|{WB})?           { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0[bB]{B}{BC}*({IS}|{WB})?    { count (); yylval.val = constIntVal (yytext); return CONSTANT; } /* C23 binary integer constant. All standard version warnings on integer constants are done in constIntVal. */
 {CP}?'(\\.|[^\\'])+'         { count (); yylval.val = charVal (yytext); return CONSTANT; /* ' make syntax highlighter happy */ }
 {D}+{E}{FS}?                 { count (); yylval.val = constFloatVal (yytext); return CONSTANT; }
 {D}*"."{D}+({E})?{FS}?       { count (); yylval.val = constFloatVal (yytext); return CONSTANT; }
@@ -245,7 +285,7 @@ static void checkCurrFile (const char *s);
 0[xX]{H}+"."{H}*({BE})?{FS}? { count (); if (!options.std_c99) werror(E_HEXFLOAT_C99); yylval.val = constFloatVal (yytext); return CONSTANT; }
 \"                           { count (); yylval.yystr = stringLiteral (0); return STRING_LITERAL; }
 "L\""                        { count (); if (!options.std_c95) werror(E_WCHAR_STRING_C95); yylval.yystr = stringLiteral ('L'); return STRING_LITERAL; }
-"u8\""                       { count (); if (!options.std_c11) werror(E_WCHAR_STRING_C11); yylval.yystr = stringLiteral (0); return STRING_LITERAL; }
+"u8\""                       { count (); if (!options.std_c11) werror(E_U8CHAR_STRING_C11); yylval.yystr = stringLiteral ('8'); return STRING_LITERAL; }
 "u\""                        { count (); if (!options.std_c11) werror(E_WCHAR_STRING_C11); yylval.yystr = stringLiteral ('u'); return STRING_LITERAL; }
 "U\""                        { count (); if (!options.std_c11) werror(E_WCHAR_STRING_C11); yylval.yystr = stringLiteral ('U'); return STRING_LITERAL; }
 ">>="                   { count (); yylval.yyint = RIGHT_ASSIGN; return RIGHT_ASSIGN; }
@@ -277,6 +317,7 @@ static void checkCurrFile (const char *s);
 "="                     { count (); return '='; }
 "("                     { count (); ignoreTypedefType = 0; return '('; }
 ")"                     { count (); return ')'; }
+"[["|"<:<:"             { count (); return ATTR_START; } /* The double brackets of attributes. Otherwise the ambiguity of the grammar explodes. */
 "["|"<:"                { count (); return '['; }
 "]"|":>"                { count (); return ']'; }
 "."                     { count (); return '.'; }
@@ -293,7 +334,7 @@ static void checkCurrFile (const char *s);
 "^"                     { count (); return '^'; }
 "|"                     { count (); return '|'; }
 "?"                     { count (); return '?'; }
-"::"                    { count (); return ATTRIBCOLON; }
+"::"                    { count (); return TOK_SEP; }
 ^{HASH}pragma.*         { count (); process_pragma (yytext); }
 ^{HASH}.*               { count (); checkCurrFile (yytext); }
 
@@ -326,9 +367,24 @@ checkCurrFile (const char *s)
   int lNum;
   char *tptr;
 
-  /* skip '#' character */
-  if (*s++ != '#')
+  /* skip "#" or "#line" prefix */
+  if (*s++ != '#'){
     return;
+  }else if (*s == ' '){
+    // ok, old lineinfo "# ..."
+  }else if (*s++ != 'l'){
+    return;
+  }else if (*s++ != 'i'){
+    return;
+  }else if (*s++ != 'n'){
+    return;
+  }else if (*s++ != 'e'){
+    return;
+  }else if (*s != ' '){
+    return;
+  }else{
+    // ok, new lineinfo "#line ..."
+  }
 
   /* get the line number */
   lNum = strtol (s, &tptr, 10);
@@ -477,7 +533,7 @@ decode_UCNs_to_utf8 (char *dest, const char *src, size_t n)
             }
           if (!is_UCN_valid_in_idf(c, is_first))
             {
-              werror(E_INVALID_UNIVERSAL, s);
+              werror(E_INVALID_UNIVERSAL_IDENTIFIER, s);
             }
 
           if (c >= 0x10000)
@@ -560,11 +616,17 @@ stringLiteral (char enc)
     case 'u': // UTF-16
       dbuf_append_str(&dbuf, "u\"");
       break;
-    case 'L':
+    case 'L': // UTF-32
+      enc = 'L';
+      dbuf_append_str(&dbuf, "L\"");
+      break;
     case 'U': // UTF-32
       enc = 'U';
       dbuf_append_str(&dbuf, "U\"");
       break;
+    case '8': // UTF-8
+      enc = '8';
+      dbuf_append_str(&dbuf, "u8\"");
     default: // UTF-8 or whatever else the source character set is encoded in
       dbuf_append_char(&dbuf, '"');
     }
@@ -575,7 +637,7 @@ stringLiteral (char enc)
     {
       ch = input();
       count_char(ch);
-      if (ch == EOF)
+      if (!ch || ch == EOF) // We have to check for both: at the end of the file, some lexe return 0, some EOF.
         break;
 
       switch (ch)
@@ -592,7 +654,7 @@ stringLiteral (char enc)
             {
               char buf[2];
 
-              if (ch == EOF)
+              if (!ch || ch == EOF)
                 goto out;
 
               buf[0] = '\\';
@@ -621,7 +683,7 @@ stringLiteral (char enc)
                   if ((ch = input()) != '\n')
                     {
                       werror(W_STRAY_BACKSLASH, column);
-                      if (ch != EOF)
+                      if (ch && ch != EOF)
                         unput(ch);
                       else
                         count_char(ch);
@@ -646,7 +708,7 @@ stringLiteral (char enc)
                       dbuf_init(&linebuf, STR_BUF_CHUNCK_LEN);
                       dbuf_append_char(&linebuf, '#');
 
-                      while ((ch = input()) != EOF && ch != '\n')
+                      while ((ch = input()) && ch != EOF && ch != '\n')
                         dbuf_append_char(&linebuf, (char)ch);
 
                       if (ch == '\n')
@@ -674,10 +736,10 @@ stringLiteral (char enc)
                 }
             }
 
-          if (ch == EOF)
+          if (!ch || ch == EOF)
             goto out;
 
-          if (ch == 'u' || ch == 'U' || ch == 'L') /* Could be an utf-16 or utf-32 wide string literal prefix */
+          if (ch == 'u' || ch == 'U' || ch == 'L') /* Could be an utf-16 or utf-32 wide string literal prefix or an utf-8 prefix */
             {
               int ch2;
 
@@ -698,6 +760,8 @@ stringLiteral (char enc)
                       dbuf_prepend_char(&dbuf, ch == 'L' ? 'U' : ch);
                       enc = ch;
                     }
+                  else if (enc != ch)
+                    werror (W_PREFIXED_STRINGS);
                   count_char(ch);
                   count_char(ch2);
                   break;
@@ -721,6 +785,10 @@ stringLiteral (char enc)
                   unput('u');
                   goto out;
                 }
+              if (!enc)
+                enc = '8';
+              else if (enc != '8')
+                werror (W_PREFIXED_STRINGS);
             }
           if (ch != '"')
             {
@@ -763,9 +831,12 @@ enum {
    P_STD_C89,
    P_STD_C99,
    P_STD_C11,
+   P_STD_C23,
    P_STD_C2X,
    P_STD_SDCC89,
    P_STD_SDCC99,
+   P_STD_SDCC11,
+   P_STD_SDCC23,
    P_CODESEG,
    P_CONSTSEG
 };
@@ -1098,7 +1169,7 @@ doPragma (int id, const char *name, const char *cp)
 
       options.std_c99 = 0;
       options.std_c11 = 0;
-      options.std_c2x = 0;
+      options.std_c23 = 0;
       options.std_sdcc = 0;
       break;
 
@@ -1112,7 +1183,7 @@ doPragma (int id, const char *name, const char *cp)
 
       options.std_c99 = 1;
       options.std_c11 = 0;
-      options.std_c2x = 0;
+      options.std_c23 = 0;
       options.std_sdcc = 0;
       break;
 
@@ -1126,10 +1197,11 @@ doPragma (int id, const char *name, const char *cp)
 
       options.std_c99 = 1;
       options.std_c11 = 1;
-      options.std_c2x = 0;
+      options.std_c23 = 0;
       options.std_sdcc = 0;
       break;
 
+    case P_STD_C23:
     case P_STD_C2X:
       cp = get_pragma_token(cp, &token);
       if (TOKEN_EOL != token.type)
@@ -1140,7 +1212,7 @@ doPragma (int id, const char *name, const char *cp)
 
       options.std_c99 = 1;
       options.std_c11 = 1;
-      options.std_c2x = 1;
+      options.std_c23 = 1;
       options.std_sdcc = 0;
       break;
 
@@ -1154,7 +1226,7 @@ doPragma (int id, const char *name, const char *cp)
 
       options.std_c99 = 0;
       options.std_c11 = 0;
-      options.std_c2x = 0;
+      options.std_c23 = 0;
       options.std_sdcc = 1;
       break;
 
@@ -1168,7 +1240,35 @@ doPragma (int id, const char *name, const char *cp)
 
       options.std_c99 = 1;
       options.std_c11 = 0;
-      options.std_c2x = 0;
+      options.std_c23 = 0;
+      options.std_sdcc = 1;
+      break;
+
+    case P_STD_SDCC11:
+      cp = get_pragma_token(cp, &token);
+      if (TOKEN_EOL != token.type)
+        {
+          err = 1;
+          break;
+        }
+
+      options.std_c99 = 1;
+      options.std_c11 = 1;
+      options.std_c23 = 0;
+      options.std_sdcc = 1;
+      break;
+
+    case P_STD_SDCC23:
+      cp = get_pragma_token(cp, &token);
+      if (TOKEN_EOL != token.type)
+        {
+          err = 1;
+          break;
+        }
+
+      options.std_c99 = 1;
+      options.std_c11 = 1;
+      options.std_c23 = 1;
       options.std_sdcc = 1;
       break;
 
@@ -1238,9 +1338,12 @@ static struct pragma_s pragma_tbl[] = {
   { "std_c89",           P_STD_C89,         0, doPragma },
   { "std_c99",           P_STD_C99,         0, doPragma },
   { "std_c11",           P_STD_C11,         0, doPragma },
-  { "std_c2x",           P_STD_C2X,         0, doPragma },
+  { "std_c23",           P_STD_C23,         0, doPragma },
+  { "std_c2x",           P_STD_C2X,         1, doPragma },
   { "std_sdcc89",        P_STD_SDCC89,      0, doPragma },
   { "std_sdcc99",        P_STD_SDCC99,      0, doPragma },
+  { "std_sdcc11",        P_STD_SDCC11,      0, doPragma },
+  { "std_sdcc23",        P_STD_SDCC23,      0, doPragma },
   { "codeseg",           P_CODESEG,         0, doPragma },
   { "constseg",          P_CONSTSEG,        0, doPragma },
   { NULL,                0,                 0, NULL },

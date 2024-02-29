@@ -12,7 +12,7 @@ unsigned int *gpInt;
 #include <8052.h>
 
 void
-T2_isr (void) __interrupt 5 //no using
+T2_isr (void) __interrupt (5) //no using
 {
   //do not clear flag TF2 so it keeps interrupting !
   (*gpInt)++;
@@ -47,6 +47,11 @@ void f1(void)
 
 #endif
 
+// Get FreeBSD version to skip part of test for known broken setjmp (FreeBSD bug #255320, affecting at least FreeBSD 13.0 and FreeBSD 13.1).
+#ifdef __FreeBSD__
+#include <sys/param.h>
+#endif
+
 void
 testJmp (void)
 {
@@ -70,8 +75,10 @@ testJmp (void)
       ASSERT (0);
     }
   ASSERT (exception == 1);
-
+  
+#if !defined(__FreeBSD__) || __FreeBSD_version >= 1302000 // Known FreeBSD 13.0 and 13.1 bug #255320.
   f1();
+#endif
 #endif
 
 // C99 might require setjmp to be a macro. The standard seems self-contradicting on this issue.

@@ -35,6 +35,7 @@
 #define OPTION_CODE_SEG        "--codeseg"
 #define OPTION_CONST_SEG       "--constseg"
 #define OPTION_ELF             "--out-fmt-elf"
+#define OPTION_SDCCCALL        "--sdcccall"
 
 extern DEBUGFILE dwarf2DebugFile;
 extern int dwarf2FinalizeFile(FILE *);
@@ -45,6 +46,7 @@ static OPTION stm8_options[] = {
   {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_ELF,             NULL, "Output executable in ELF format"},
+  {0, OPTION_SDCCCALL,         &options.sdcccall, "Set ABI version for default calling convention", CLAT_INTEGER},
   {0, NULL}
 };
 
@@ -53,6 +55,17 @@ enum
   P_CODESEG = 1,
   P_CONSTSEG,
 };
+
+static struct
+{
+  // Determine if we can put parameters in registers
+  struct
+  {
+    int n;
+    struct sym_link *ftype;
+  } regparam;
+}
+_G;
 
 static int
 stm8_do_pragma (int id, const char *name, const char *cp)
@@ -138,6 +151,10 @@ static char *stm8_keywords[] = {
   "interrupt",
   "trap",
   "naked",
+  "raisonance",
+  "iar",
+  "cosmic",
+  "z88dk_callee",
   NULL
 };
 
@@ -150,34 +167,41 @@ stm8_genAssemblerEnd (FILE *of)
     }
 }
 
+extern void stm8_init_asmops (void);
+
 static void
 stm8_init (void)
 {
   asm_addTree (&asm_asxxxx_mapping);
+
+  stm8_init_asmops ();
 }
 
-
 static void
-stm8_reset_regparm (struct sym_link *funcType)
+stm8_reset_regparm (struct sym_link *ftype)
 {
+  _G.regparam.n = 0;
+  _G.regparam.ftype = ftype;
 }
 
 static int
-stm8_reg_parm (sym_link * l, bool reentrant)
+stm8_reg_parm (sym_link *l, bool reentrant)
 {
-  return FALSE;
+  bool is_regarg = stm8IsRegArg (_G.regparam.ftype, ++_G.regparam.n, 0);
+
+  return (is_regarg ? _G.regparam.n : 0);
 }
 
 static bool
 stm8_parseOptions (int *pargc, char **argv, int *i)
 {
-  if (!strcmp (argv[*i], "--out-fmt-elf"))
+  if (!strncmp (argv[*i], OPTION_ELF, sizeof (OPTION_ELF) - 1))
   {
     options.out_fmt = 'E';
     debugFile = &dwarf2DebugFile;
-    return TRUE;
+    return true;
   }
-  return FALSE;
+  return false;
 }
 
 static void
@@ -234,13 +258,19 @@ stm8_genExtraArea (FILE *of, bool hasMain)
 static void
 stm8_genInitStartup (FILE *of)
 {
-  fprintf (of, "__sdcc_gs_init_startup:\n");
-
   if (options.stack_loc >= 0)
     {
       fprintf (of, "\tldw\tx, #0x%04x\n", options.stack_loc);
       fprintf (of, "\tldw\tsp, x\n");
     }
+
+  /* Call external startup code */
+  fprintf (of, options.model == MODEL_LARGE ? "\tcallf\t___sdcc_external_startup\n" : "\tcall\t___sdcc_external_startup\n");
+
+  /* If external startup returned non-zero, skip init */
+  fprintf (of, "\ttnz\ta\n");
+  fprintf (of, "\tjreq\t__sdcc_init_data\n");
+  fprintf (of, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
 
   /* Init static & global variables */
   fprintf (of, "__sdcc_init_data:\n");
@@ -305,6 +335,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   int result_size = IS_SYMOP (IC_RESULT (ic)) ? getSize (OP_SYM_TYPE (IC_RESULT(ic))) : 4;
   sym_link *test = NULL;
 
+  if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
+    return false;
+
   if (IS_LITERAL (left))
     test = left;
   else if (IS_LITERAL (right))
@@ -313,6 +346,8 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   switch (ic->op)
     {
     case '/':
+      if (getSize (left) <= 2 && getSize (right) <= 2 && IS_LITERAL (right) && isPowerOf2 (ulFromVal (valFromType (right))) && ulFromVal (valFromType (right)) <= 32) // Using arithmetic right-shift is worth it for small divisors only.
+        return true;
     case '%':
       return (getSize (left) <= 2 && IS_UNSIGNED (left) && getSize (right) <= 2 && IS_UNSIGNED (right));
     case '*':
@@ -325,10 +360,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
         unsigned long long add, sub;
         int topbit, nonzero;
-        
 
-        if (floatFromVal (valFromType (test)) < 0 || csdOfVal (&topbit, &nonzero, &add, &sub, valFromType (test)))
-          return FALSE;
+        if (floatFromVal (valFromType (test)) < 0 || csdOfVal (&topbit, &nonzero, &add, &sub, valFromType (test), 0xffff))
+          return false;
 
         int shifts = topbit;
 
@@ -351,9 +385,32 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 
 /* Indicate which extended bit operations this port supports */
 static bool
-hasExtBitOp (int op, int size)
+hasExtBitOp (int op, sym_link *left, int right)
 {
-  return (op == GETABIT);
+  int size = getSize (left);
+
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+      return (true);
+    case ROT:
+      {
+        unsigned int lbits = bitsForType (left);
+        if (lbits % 8)
+          return (false);
+        if (size <= 1)
+          return (true);
+        if (size <= 2 && (right % lbits  == 1 || right % lbits == lbits - 1))
+          return (true);
+        if ((size <= 2 || size == 4) && lbits == right * 2)
+          return (true);
+      }
+      return (false);
+    }
+
+  return (false);
 }
 
 static const char *
@@ -377,11 +434,12 @@ get_model (void)
     $2 is always the output file.
     $3 varies
     $l is the list of extra options that should be there somewhere...
+    $L is the list of extra options that should be passed on the command line...
     MUST be terminated with a NULL.
 */
 static const char *_linkCmd[] =
 {
-  "sdldstm8", "-nf", "\"$1\"", NULL
+  "sdldstm8", "-nf", "\"$1\"", "$L", NULL
 };
 
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
@@ -432,8 +490,10 @@ PORT stm8_port =
     stm8canAssign,
     stm8notUsedFrom,
     NULL,
+    NULL,
+    NULL,
   },
-  /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
+  /* Sizes */
   {
     1,                          /* char */
     2,                          /* short */
@@ -444,9 +504,10 @@ PORT stm8_port =
     2,                          /* far ptr */
     2,                          /* generic ptr */
     2,                          /* func ptr */
-    0,                          /* banked func ptr */
+    3,                          /* banked func ptr */
     1,                          /* bit */
     4,                          /* float */
+    64,                         /* bit-precise integer types up to _BitInt (64) */
   },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
@@ -475,9 +536,11 @@ PORT stm8_port =
     NULL,
     NULL,
     1,                          /* CODE  is read-only */
+    false,                      // doesn't matter, as port has no __sfr anyway
     1                           /* No fancy alignments supported. */
   },
   { stm8_genExtraArea, NULL },
+  1,                            /* default ABI revision */
   {                             /* stack information */
     -1,                         /* stack grows down */
      0,
@@ -487,7 +550,11 @@ PORT stm8_port =
      2,
      1,                         /* sp points to next free stack location */
   },     
-  { -1, TRUE },
+  { 
+    -1,                         /* shifts never use support routines */
+    true,                       /* use support routine for int x int -> long multiplication */
+    true,                       /* use support routine for unsigned long x unsigned char -> unsigned long long multiplication */
+  },
   { stm8_emitDebuggerSymbol,
     {
       stm8_dwarfRegNum,

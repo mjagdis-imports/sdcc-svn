@@ -262,19 +262,20 @@ status collapsed
 
 \end_inset
 
-, etc.), Dallas DS80C390 variants, Freescale (formerly Motorola) HC08 based
- (hc08, s08), Zilog Z80 based MCUs (Z80, Z180, eZ90 in Z80 mode, gbz80,
+, etc.), Dallas DS80C390 variants, NXP (formerly Freescale/Motorola) HC08
+ based (hc08, s08), Zilog Z80 based MCUs (Z80, Z180, eZ80 in Z80 mode, SM83,
  Rabbit 2000/3000, Rabbit 3000A 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-Z80, Z180, GBZ80, Rabbit 2000/3000, Rabbit 3000A CPU
+Z80, Z180, SM83, Rabbit 2000/3000, Rabbit 3000A CPU
 \end_layout
 
 \end_inset
 
-), Toshiba TLCS-90, Zilog eZ80 in Z80 mode, STMicroelectronics STM8 
+), Toshiba TLCS-90, Zilog eZ80 in Z80 mode, ASCII R800, STMicroelectronics
+ STM8 
 \begin_inset Index idx
 status collapsed
 
@@ -285,8 +286,9 @@ STM8
 \end_inset
 
 , Padauk PDK14 and PDK15.
- It can be retargeted for other microprocessors, support for Microchip PIC
- and Padauk PDK13 is under development.
+ It can be retargeted for other microprocessors, support for Padauk PDK13
+ and MOS6502 is under development, whereas Microchip PIC is currently unmaintain
+ed.
  The entire source code for the compiler is distributed under GPL.
  SDCC uses a modified version of ASXXXX
 \begin_inset Index idx
@@ -317,11 +319,11 @@ rollers and underlying hardware effectively.
 
 You might also want to have a look at the wiki 
 \begin_inset Flex URL
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
-http://sdcc.sourceforge.net/wiki/
+https://sourceforge.net/p/sdcc/wiki/
 \end_layout
 
 \end_inset
@@ -395,7 +397,7 @@ Supported data-types are:
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="10" columns="5">
+<lyxtabular version="3" rows="11" columns="5">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -685,7 +687,7 @@ signed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -704,7 +706,7 @@ Incomplete support in the pic14 and pic16 backends.
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -713,11 +715,68 @@ Incomplete support in the pic14 and pic16 backends.
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
 signed
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+_BitInt
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Incomplete support in the hc08, s08, mod6502, pic14 and pic16 backends.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8 to 64 bits, 1 to 8 bytes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
 \end_layout
 
 \end_inset
@@ -1058,7 +1117,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
-http://shop-pdp.kent.edu/ashtml/asxxxx.htm
+https://shop-pdp.net/ashtml/
 \end_layout
 
 \end_inset
@@ -1200,6 +1259,23 @@ makebin:
 \end_inset
 
 zlib/libpng License
+\end_layout
+
+\begin_layout Itemize
+pic libraries in device/non-free:
+\begin_inset Newline newline
+\end_inset
+
+Microchip Technology Inc.
+\begin_inset space \space{}
+\end_inset
+
+claims to have copyrights on this, and their term are non-free.
+ However, a more common opinion is that Microchip Technology Inc.
+\begin_inset space \space{}
+\end_inset
+
+is just claiming a copyright on uncopyrightable facts.
 \end_layout
 
 \end_deeper
@@ -1623,7 +1699,7 @@ status collapsed
 
 -std-c11
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 -
@@ -1661,7 +1737,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \begin_inset Index idx
 status open
 
@@ -1679,7 +1755,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \end_layout
 
 \end_inset
@@ -1846,7 +1922,7 @@ status collapsed
 
 -std-c11
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 -
@@ -1884,7 +1960,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \begin_inset Index idx
 status open
 
@@ -1902,7 +1978,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \end_layout
 
 \end_inset
@@ -1964,27 +2040,42 @@ status collapsed
 \end_layout
 
 \begin_layout Itemize
-bit
+__bit
 \begin_inset Index idx
 status collapsed
 
 \begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
 bit
 \end_layout
 
 \end_inset
 
- and sbit
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-sbit
-\end_layout
-
-\end_inset
-
-
+ and __sbit
 \begin_inset Index idx
 status collapsed
 
@@ -2066,7 +2157,7 @@ Bit toggling
 \begin_inset space ~
 \end_inset
 
-bit b;
+__bit b;
 \begin_inset Newline newline
 \end_inset
 
@@ -2563,7 +2654,11 @@ reference "subsec:PIC16_Pragmas"
 \begin_layout Itemize
 In 3.2.0 new inline assembler format 
 \family typewriter
-__asm__ (inline_assembler_code
+__asm__ (
+\begin_inset Quotes sld
+\end_inset
+
+inline_assembler_code
 \begin_inset Quotes srd
 \end_inset
 
@@ -2608,7 +2703,7 @@ In 3.6.0, the default for char changed from signed to unsigned.
 
 \begin_layout Itemize
 In 3.7.0, the prototype for putchar() changed from void putchar(char) to int
- putchar(int)
+ putchar(int).
 \end_layout
 
 \begin_layout Itemize
@@ -2616,16 +2711,250 @@ In 3.7.0 mcs51 and ds390 got a full _Bool/bool type, separate from __bit.
 \end_layout
 
 \begin_layout Itemize
-In 3.7.0, the option –nojtbound and the corresponding pragma have been deprecated.
+In 3.7.0, the option 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nojtbound
+\series default
+ and the corresponding pragma have been deprecated.
 \end_layout
 
 \begin_layout Itemize
 In 3.7.0, the prototype for getchar() changed from char getchar(void) to int
- getchar().
+ getchar(void).
 \end_layout
 
 \begin_layout Itemize
 In 3.8.6, the deprecated sdcclib was removed.
+\end_layout
+
+\begin_layout Itemize
+In 4.0.3, _itoa, _uitoa, _ltoa, _ultoa were renamed to __itoa, __uitoa, __ltoa,
+ __ultoa.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.1, typeof.h has been removed.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.3, support for 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-oldralloc
+\series default
+ has been removed for the z80-related backends.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.10, the default calling convention switched from __sdccall(0) to __sdccall(
+1) for stm8 and gbz80.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.10, support for
+\series bold
+ -
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-profile
+\series default
+ has been removed for gbz80.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.11, the minimum Z80N Core version for the z80n port has been raised
+ from 1.0 to 2.0.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.12, the default calling convention switched from __sdccall(0) to __sdccall(
+1) for z80, z180 and z80n.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.12, support for 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-profile
+\series default
+ has been removed for z80, z180, z80n.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.13, support for 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-profile
+\series default
+ has been removed.
+\end_layout
+
+\begin_layout Itemize
+In 4.1.14, the gbz80 port was renamed to sm83.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.3, support for non-parenthesized arguments to __using and __interrupt
+ was dropped.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.3, support for non-parenthesized arguments to __at that are not constants
+ was dropped.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.4, the placement of __at in declarations was restricted.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.6, bool is chosen as the underlying integer type for enumerations with
+ just two values.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.9, support for
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-pedantic-parse-number
+\series default
+ and #pragma pedantic_parse_numer was dropped.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.9, support for #pragma sdcc_hash was dropped, necessitating a wrapper
+ macro for literal 
+\begin_inset Quotes sld
+\end_inset
+
+#
+\begin_inset Quotes srd
+\end_inset
+
+ characters in macro bodies.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.9, support for arguments to -MMD was dropped.
+ The output file can be specified via -MF instead.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.10, _sdcc_external_startup was renamed to __sdcc_external_startup and
+ support for it was added to further ports.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.13, for the sm83 port, __sfr addresses need to be specified using the
+ full 16-bit address.
+\end_layout
+
+\begin_layout Itemize
+In 4.2.14, byte order in output from the %p specifier of printf()-family functions
+ was corrected for big-endian platforms (stm8, hc08, s08, mos6502) to match
+ uintptr_t.
+\end_layout
+
+\begin_layout Itemize
+In 4.3.1, __builtin_rlc, __builtin_rrc and __builtin_swap were replaced by
+ __builtin_rot.
+\end_layout
+
+\begin_layout Itemize
+In 4.3.6, support for 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-parms-in-bank1
+\series default
+ was removed from the mcs51 port.
+\end_layout
+
+\begin_layout Itemize
+In 4.4.1, the address width in .rel files was increased from 24 bits to 32
+ bits for the z80 (and related) ports.
 \end_layout
 
 \begin_layout Section
@@ -3013,7 +3342,61 @@ status collapsed
 
 \end_inset
 
+-disable-z80n-port Excludes the z80n port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-r800-port Excludes the r800 port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
 -disable-r2k-port Excludes the r2k port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-r2ka-port Excludes the r2ka port
 \end_layout
 
 \begin_layout Labeling
@@ -3049,7 +3432,7 @@ status collapsed
 
 \end_inset
 
--disable-gbz80-port Excludes the Game Boy gbz80 port
+-disable-sm83-port Excludes the SM83 port
 \end_layout
 
 \begin_layout Labeling
@@ -3067,7 +3450,7 @@ status collapsed
 
 \end_inset
 
--disable-avr-port Excludes the AVR port (disabled by default)
+-disable-tlcs90-port Excludes the TLCS-90 port
 \end_layout
 
 \begin_layout Labeling
@@ -3086,6 +3469,24 @@ status collapsed
 \end_inset
 
 -disable-ds390-port Excludes the DS390 port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-ds400-port Excludes the DS400 port
 \end_layout
 
 \begin_layout Labeling
@@ -3157,7 +3558,61 @@ status collapsed
 
 \end_inset
 
--disable-pic-port Excludes the PIC14 port
+-disable-pdk13-port Excludes the PDK13 port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-pdk14-port Excludes the PDK14 port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-pdk15-port Excludes the PDK15 port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-pic14-port Excludes the PIC14 port
 \end_layout
 
 \begin_layout Labeling
@@ -3193,7 +3648,25 @@ status collapsed
 
 \end_inset
 
--disable-xa51-port Excludes the XA51 port (disabled by default)
+-disable-mos6502-port Excludes the MOS6502
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-mos65c02-port Excludes the MOS65C02
 \end_layout
 
 \begin_layout Labeling
@@ -4263,7 +4736,7 @@ status collapsed
 
 \end_inset
 
--disable-device-lib
+-disable-device-lib 
 \backslash
 
 \begin_inset Newline newline
@@ -4282,7 +4755,7 @@ status collapsed
 
 \end_inset
 
--host=i586-mingw32msvc
+-host=i586-mingw32msvc 
 \backslash
 
 \begin_inset Newline newline
@@ -6520,6 +6993,17 @@ Building SDCC
 
 \end_layout
 
+\begin_layout Standard
+SDCC can be built for various host platforms using the instructions provided
+ below.
+ Note that the PIC14 and PIC16 library folders in the source distribution
+ contain Autotools-generated files.
+ These are included for convenience and to avoid introducing Autotools as
+ an additional dependency.
+ They have to be regenerated in case of a version mismatch.
+ Alternatively, the PIC backends can be disabled.
+\end_layout
+
 \begin_layout Subsection
 Building SDCC on Linux
 \begin_inset CommandInset label
@@ -6719,8 +7203,11 @@ Cross compiling SDCC on Linux for Windows
 \end_layout
 
 \begin_layout Standard
-With the Mingw32 gcc cross compiler it's easy to compile SDCC for Win32.
+With the MinGW gcc cross compiler SDCC can be cross-compiled for Win32.
  See section 'Configure Options'.
+ SDCC requires boost, but the header-only parts should be sufficient: Get
+ a current boost tarball from www.boost.org, unpack it, and choose suitable
+ configure options so the headers are found by the C++ compiler.
 \end_layout
 
 \begin_layout Subsection
@@ -7896,8 +8383,8 @@ Documentation
 \end_layout
 
 \begin_layout Standard
-Currently reading the document in pdf format is recommended, as for unknown
- reason the hyperlinks are working there whereas in the html version they
+Currently reading the document in PDF format is recommended, as for unknown
+ reason the hyperlinks are working there whereas in the HTML version they
  are not
 \begin_inset Foot
 status collapsed
@@ -7912,7 +8399,7 @@ If you should know why please drop us a note
 \begin_inset Newline newline
 \end_inset
 
-You'll find the pdf version
+You'll find the PDF version
 \begin_inset Index idx
 status collapsed
 
@@ -8106,8 +8593,9 @@ version
 
 
 \family typewriter
-SDCC : mcs51/z80/avr/ds390/pic16/pic14/ds400/hc08 2.5.6 #4169 (May 8 2006)
- (UNIX)
+SDCC : mcs51/z80/z180/r2k/r2ka/r3ka/sm83/tlcs90/ez80_z80/z80n/r800/ds390/pic16/p
+ic14/TININative/ds400/hc08/s08/stm8/pdk13/pdk14/pdk15/mos6502/mos65c02 4.4.0
+ #14546 (Linux)
 \end_layout
 
 \begin_layout Standard
@@ -8616,7 +9104,8 @@ SDCC is not just a compiler, but a collection of tools by various developers.
 \end_inset
 
 You might want to look at the files which are installed in <installdir>.
- At the time of this writing, we find the following programs for gcc-builds:
+ At the time of this writing, we find the following programs, among others,
+ for gcc-builds:
 \begin_inset Newline newline
 \end_inset
 
@@ -8676,19 +9165,19 @@ sdld6808 - The 6808 linker.
 \end_layout
 
 \begin_layout Itemize
-s51 - The ucSim 8051 simulator.
+ucsim_51, s51 - The ucSim 8051 simulator.
 \end_layout
 
 \begin_layout Itemize
-sz80 - The ucSim Z80 simulator.
+ucsim_m68hc08 - The ucSim 6808 simulator.
 \end_layout
 
 \begin_layout Itemize
-shc08 - The ucSim 6808 simulator.
+ucsim_stm8 - The ucSim STM8 simulator.
 \end_layout
 
 \begin_layout Itemize
-sstm8 - The ucSim STM8 simulator.
+ucsim_z80 - The ucSim Z80 simulator.
 \end_layout
 
 \begin_layout Itemize
@@ -8754,7 +9243,7 @@ sdcc - The Compiler
 \end_layout
 
 \begin_layout Standard
-This is the actual compiler, it in turn uses the c-preprocessor and invokes
+This is the actual compiler, it in turn uses the C-preprocessor and invokes
  the assembler and linkage editor.
 \end_layout
 
@@ -8853,7 +9342,7 @@ status collapsed
 
 \begin_layout Plain Layout
 
-http://shop-pdp.kent.edu/
+https://shop-pdp.net/
 \end_layout
 
 \end_inset
@@ -8865,11 +9354,12 @@ http://shop-pdp.kent.edu/
 \end_layout
 
 \begin_layout Subsection
-s51, sz80, shc08, sstm8 - The Simulators
+ucsim_51, ucsim_z80, ucsim_stm8 etc.
+ - The Simulators
 \end_layout
 
 \begin_layout Standard
-s51
+ucsim_51 (or s51)
 \begin_inset Index idx
 status collapsed
 
@@ -8879,7 +9369,7 @@ s51 (simulator)
 
 \end_inset
 
-, sz80
+, ucsim_z80
 \begin_inset Index idx
 status collapsed
 
@@ -8889,7 +9379,7 @@ sz80 (simulator)
 
 \end_inset
 
- shc08
+ ucsim_m68hc08
 \begin_inset Index idx
 status collapsed
 
@@ -8899,7 +9389,7 @@ shc08 (simulator)
 
 \end_inset
 
- and sstm8 
+ and ucsim_stm8 
 \begin_inset Index idx
 status collapsed
 
@@ -8909,7 +9399,8 @@ sstm8 (simulator)
 
 \end_inset
 
- are free open source simulators developed by Daniel Drotos.
+, as well as similarly named programs provided with SDCC, are free open
+ source simulators developed by Daniel Drotos.
  The simulators are built as part of the build process.
  For more information visit Daniel's web site at: 
 \begin_inset Flex URL
@@ -8924,7 +9415,7 @@ http://mazsola.iit.uni-miskolc.hu/~drdani/embedded/s51
 
 .
  It currently supports the core mcs51, the Dallas DS80C390, the Phillips
- XA51 family, the Z80, 6808 and the STM8.
+ XA51 family, the Z80, 6808 the STM8 and various others.
 \end_layout
 
 \begin_layout Subsection
@@ -8992,7 +9483,22 @@ name "subsec:Standard-Compliance"
 \begin_layout Standard
 SDCC aims to be a conforming freestanding implementation of the C programming
  language.
- 
+ The latest publicly available version of the standard 
+\emph on
+ISO/IEC 9899 - Programming languages - C
+\emph default
+ should be available at: 
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://www.open-std.org/jtc1/sc22/wg14/www/standards.html#9899
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -9044,25 +9550,6 @@ status collapsed
 \end_layout
 
 \begin_layout Standard
-The latest publicly available version of the standard 
-\emph on
-ISO/IEC 9899 - Programming languages - C
-\emph default
- should be available at: 
-\begin_inset Flex URL
-status collapsed
-
-\begin_layout Plain Layout
-
-http://www.open-std.org/jtc1/sc22/wg14/www/standards.html#9899
-\end_layout
-
-\end_inset
-
-.
-\begin_inset Newline newline
-\end_inset
-
 
 \end_layout
 
@@ -9071,7 +9558,149 @@ Deviations from standard compliance:
 \end_layout
 
 \begin_layout Itemize
-structures
+initialization of structure arrays must be fully braced.
+\begin_inset Separator latexpar
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Verse
+
+\family typewriter
+struct s { char x } a[] = {1, 2};
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+/* invalid in SDCC */
+\begin_inset Newline newline
+\end_inset
+
+struct s { char x } a[] = {{1}, {2}}; /* OK */
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+'double
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+double (not supported)
+\end_layout
+
+\end_inset
+
+' precision floating point 
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Floating point support
+\end_layout
+
+\end_inset
+
+not supported.
+ Instead a warning is emitted, and float is used instead.
+ long double is treated the same.
+\end_layout
+
+\begin_layout Itemize
+K&R style
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+K
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+&
+\end_layout
+
+\end_inset
+
+R style
+\end_layout
+
+\end_inset
+
+ function declarations are not supported.
+\begin_inset Separator latexpar
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Verse
+
+\family typewriter
+foo(i,j) /* this old style of function declarations */
+\begin_inset Newline newline
+\end_inset
+
+int i,j; /* is valid in ANSI but not valid in SDCC */
+\begin_inset Newline newline
+\end_inset
+
+{ 
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+...
+ 
+\begin_inset Newline newline
+\end_inset
+
+}
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Some features of this standard are not supported in some ports:
+\end_layout
+
+\begin_layout Itemize
+pic14, pic16: structures
 \begin_inset Index idx
 status collapsed
 
@@ -9091,7 +9720,8 @@ union
 
 \end_inset
 
- cannot be passed as function parameters and cannot be a return value
+ cannot be passed as function parameters; hc08, s08, mos6502, pic14, pic16:
+ they cannot be a return value
 \begin_inset Index idx
 status collapsed
 
@@ -9204,149 +9834,8 @@ return rets; /* is invalid in SDCC although allowed in ANSI */
 
 \end_deeper
 \begin_layout Itemize
-initialization of structure arrays must be fully braced.
-\begin_inset Separator latexpar
-\end_inset
-
-
-\end_layout
-
-\begin_deeper
-\begin_layout Verse
-
-\family typewriter
-struct s { char x } a[] = {1, 2};
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-/* invalid in SDCC */
-\begin_inset Newline newline
-\end_inset
-
-struct s { char x } a[] = {{1}, {2}}; /* OK */
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-'double
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-double (not supported)
-\end_layout
-
-\end_inset
-
-' precision floating point 
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Floating point support
-\end_layout
-
-\end_inset
-
-not supported.
- Instead a warning is emitted, and float is used instead.
- long double is not supported.
-\end_layout
-
-\begin_layout Itemize
-Old K&R style
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-K
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-&
-\end_layout
-
-\end_inset
-
-R style
-\end_layout
-
-\end_inset
-
- function declarations are not supported.
-\begin_inset Separator latexpar
-\end_inset
-
-
-\end_layout
-
-\begin_deeper
-\begin_layout Verse
-
-\family typewriter
-foo(i,j) /* this old style of function declarations */
-\begin_inset Newline newline
-\end_inset
-
-int i,j; /* is valid in ANSI but not valid in SDCC */
-\begin_inset Newline newline
-\end_inset
-
-{ 
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-...
- 
-\begin_inset Newline newline
-\end_inset
-
-}
-\end_layout
-
-\end_deeper
-\begin_layout Standard
-Some features of this standard are not supported in some ports:
-\end_layout
-
-\begin_layout Itemize
-Functions are not reentrant unless explicitly declared as such or 
+mcs51, ds390, hc08, s08, pdk13, pdk14, pdk15 and mos6502 ports: functions
+ are not reentrant unless explicitly declared as such or 
 \series bold
 
 \begin_inset Flex Code
@@ -9364,7 +9853,7 @@ stack-auto
 
 
 \series default
- is specified in the mcs51, ds390, hc08, s08, pdk13, pdk14 and pdk15 ports.
+ is specified.
 \end_layout
 
 \begin_layout Subsection
@@ -9478,7 +9967,11 @@ Compound literals.
 \end_layout
 
 \begin_layout Itemize
-Variable-length arrays.
+Objects of variably-modified types.
+\end_layout
+
+\begin_layout Itemize
+ptrdiff_t has 16 bits, while the standard requires at least 17 bits.
 \end_layout
 
 \begin_layout Standard
@@ -9486,9 +9979,9 @@ Some features of this standard are not supported in some ports:
 \end_layout
 
 \begin_layout Itemize
-There is no support for data types long long, unsigned long long, int_fast64_t,
- int_least64_t, int64_t, uint_fast64_t, uint_least64_t, uint64_t in the
- pic14 and pic16 ports.
+pic14, pic16: there is no support for data types long long, unsigned long
+ long, int_fast64_t, int_least64_t, int64_t, uint_fast64_t, uint_least64_t,
+ uint64_t.
  
 \end_layout
 
@@ -9545,7 +10038,7 @@ Except for the issues mentioned in the section above, this standard is supported
 \end_layout
 
 \begin_layout Subsection
-ISO C2X
+ISO C23
 \end_layout
 
 \begin_layout Standard
@@ -9564,7 +10057,7 @@ status open
 
 \end_inset
 
--std-c2x
+-std-c23
 \begin_inset Index idx
 status open
 
@@ -9582,7 +10075,7 @@ status collapsed
 
 \end_inset
 
--std-c2x
+-std-c23
 \end_layout
 
 \end_inset
@@ -9593,7 +10086,269 @@ status collapsed
 \end_layout
 
 \begin_layout Standard
-Standard and support are still quite incomplete.
+Deviations from standard compliance:
+\end_layout
+
+\begin_layout Itemize
+initialization of structure arrays must be fully braced.
+\begin_inset Separator latexpar
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Verse
+
+\family typewriter
+struct s { char x } a[] = {1, 2};
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+/* invalid in SDCC */
+\begin_inset Newline newline
+\end_inset
+
+struct s { char x } a[] = {{1}, {2}}; /* OK */
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+'double
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+double (not supported)
+\end_layout
+
+\end_inset
+
+' precision floating point 
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Floating point support
+\end_layout
+
+\end_inset
+
+not supported.
+ Instead a warning is emitted, and float is used instead.
+ long double is treated the same.
+\end_layout
+
+\begin_layout Itemize
+Compound literals are not supported.
+\end_layout
+
+\begin_layout Itemize
+Support for attributes is slightly incomplete.
+\end_layout
+
+\begin_layout Itemize
+Checked integer arithmetic is not supported for (unsigned) long long.
+\end_layout
+
+\begin_layout Itemize
+Qualifier-preserving standard library functions are not implemented.
+\end_layout
+
+\begin_layout Itemize
+Enhanced enumerations are not implemented.
+\end_layout
+
+\begin_layout Itemize
+constexpr is not implemented.
+\end_layout
+
+\begin_layout Standard
+Some features of this standard are not supported in some ports:
+\end_layout
+
+\begin_layout Itemize
+pic14, pic16: structures
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+struct
+\end_layout
+
+\end_inset
+
+ and unions
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+union
+\end_layout
+
+\end_inset
+
+ cannot be passed as function parameters; hc08, s08, mos6502, pic14, pic16:
+ they cannot be a return value
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+return value
+\end_layout
+
+\end_inset
+
+ from a function, e.g.:
+\begin_inset Separator latexpar
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Verse
+
+\family typewriter
+struct s { ...
+ };
+\begin_inset Newline newline
+\end_inset
+
+
+\series bold
+struct
+\family default
+\series default
+ 
+\family typewriter
+s foo1 (
+\series bold
+struct
+\family default
+\series default
+ 
+\family typewriter
+s parms) /* invalid in SDCC although allowed in ANSI */
+\begin_inset Newline newline
+\end_inset
+
+{
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+struct s rets;
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+...
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+return rets; /* is invalid in SDCC although allowed in ANSI */
+\begin_inset Newline newline
+\end_inset
+
+}
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+mcs51, ds390, hc08, s08, pdk13, pdk14, pdk15 and mos6502 ports: functions
+ are not reentrant unless explicitly declared as such or 
+\series bold
+
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+--
+\series default
+stack-auto
+\end_layout
+
+\end_inset
+
+
+\series default
+ is specified.
+\end_layout
+
+\begin_layout Itemize
+pic14, pic16: there is no support for data types long long, unsigned long
+ long, int_fast64_t, int_least64_t, int64_t, uint_fast64_t, uint_least64_t,
+ uint64_t.
+ 
+\end_layout
+
+\begin_layout Itemize
+pic14, pic16: _BitInt is not supported.
 \end_layout
 
 \begin_layout Subsection
@@ -9601,9 +10356,263 @@ Embedded C
 \end_layout
 
 \begin_layout Standard
-SDCC supports named address spaces.
+SDCC supports objects in named address spaces and to some degree pointers
+ to such objects.
  The support for fixed-point math in SDCC is inconsistent with the standard.
  Other parts of the standard are not supported.
+\end_layout
+
+\begin_layout Subsection
+Implementation-defined behavior
+\end_layout
+
+\begin_layout Subsubsection
+Translation
+\end_layout
+
+\begin_layout Itemize
+Diagnostics are output to stderr, in the format <filename>:<line-number>:
+ <warning|error> <diagnostic-number>: <diagnostic-description>
+\end_layout
+
+\begin_layout Itemize
+Nonempty sequences of white-space are retained in translation phase 3.
+\end_layout
+
+\begin_layout Subsubsection
+Environment
+\end_layout
+
+\begin_layout Itemize
+See SDCC source (and your own code if you use a custom crt0 for a target
+ that supports it) for any information on the environment.
+\end_layout
+
+\begin_layout Subsubsection
+Identifiers
+\end_layout
+
+\begin_layout Itemize
+See the compiler and assembler source for information on characters that
+ may appear in identifiers and on the number of significant initial characters.
+\end_layout
+
+\begin_layout Subsubsection
+Characters
+\end_layout
+
+\begin_layout Itemize
+There are 8 bits in a byte.
+\end_layout
+
+\begin_layout Itemize
+Values of members of the execution character set: TODO.
+\end_layout
+
+\begin_layout Itemize
+Values of members of the execution character set for escape sequences: TODO.
+\end_layout
+
+\begin_layout Itemize
+Value of char with something weird stored in it: TODO.
+\end_layout
+
+\begin_layout Itemize
+unsigned char has the same range, representation and behavior as 
+\begin_inset Quotes sld
+\end_inset
+
+plain
+\begin_inset Quotes srd
+\end_inset
+
+ char.
+\end_layout
+
+\begin_layout Itemize
+See the SDCC source for further information on character sets.
+\end_layout
+
+\begin_layout Subsubsection
+Integers
+\end_layout
+
+\begin_layout Itemize
+There are no extended integer types.
+\end_layout
+
+\begin_layout Subsubsection
+Floating point
+\end_layout
+
+\begin_layout Itemize
+See the implementation (soft float library) for any information on floating
+ point.
+\end_layout
+
+\begin_layout Subsubsection
+Arrays and Pointers
+\end_layout
+
+\begin_layout Itemize
+For the result of converting between pointers and integers see the SDCC
+ source code.
+\end_layout
+
+\begin_layout Itemize
+For the size of the result of subtracting two pointers to elements of the
+ same array see the SDCC source code.
+\end_layout
+
+\begin_layout Subsubsection
+Hints
+\end_layout
+
+\begin_layout Itemize
+The extend to which suggestions made by register are effective depends on
+ the target.
+\end_layout
+
+\begin_layout Itemize
+SDCC will inline functions if and only if they are declared using inline
+ and do not have variable arguments.
+\end_layout
+
+\begin_layout Subsubsection
+Structures, unions, enumerations and bit-fields
+\end_layout
+
+\begin_layout Itemize
+A plain int bit-field is treated as an unsigned int bit-field.
+\end_layout
+
+\begin_layout Itemize
+There are no allowed bit-field types other than _Bool, signed int and unsigned
+ int.
+\end_layout
+
+\begin_layout Itemize
+Atomic types are not permitted for bit-fields.
+\end_layout
+
+\begin_layout Itemize
+If a bit-fields does not fit into the same byte as the previous bit-fields,
+ it starts on the next byte.
+\end_layout
+
+\begin_layout Itemize
+bit-fields are allocated in the same order as they appear in the source.
+\end_layout
+
+\begin_layout Itemize
+Non-bit-field members of structures are aligned on byte boundaries (i.e.
+ there are no padding bytes).
+\end_layout
+
+\begin_layout Itemize
+For enumerations, the compatible type is the first from the following list
+ that fits the constants: bool, unsigned char, signed char, unsigned int,
+ signed int, unsigned long int, signed long int, unsigned long long int,
+ signed long long int.
+\end_layout
+
+\begin_layout Subsubsection
+Qualifiers
+\end_layout
+
+\begin_layout Itemize
+SDCC shall preserve all volatile reads and writes, but does not guarantee
+ them to be atomic (except for atomic types and volatile sig_atomic_t).
+\end_layout
+
+\begin_layout Subsubsection
+Preprocessing directives
+\end_layout
+
+\begin_layout Itemize
+See the preprocessor source for information on preprocessing directives.
+\end_layout
+
+\begin_layout Subsubsection
+Library functions
+\end_layout
+
+\begin_layout Itemize
+See the respective library headers for the library functions available.
+\end_layout
+
+\begin_layout Itemize
+See assert.h and library source for the format of the diagnostic printed
+ by the assert macro.
+\end_layout
+
+\begin_layout Itemize
+There is no fegetexceptflag function.
+\end_layout
+
+\begin_layout Itemize
+There is no feraiseexcept function.
+\end_layout
+
+\begin_layout Itemize
+There is no setlocale function.
+\end_layout
+
+\begin_layout Itemize
+There is no FLT_EVAL_METHOD macro.
+\end_layout
+
+\begin_layout Itemize
+There is no DEC_EVAL_METHOD macro.
+\end_layout
+
+\begin_layout Itemize
+There are no non-required domain errors for mathematics functions.
+\end_layout
+
+\begin_layout Itemize
+See library source for the values returned by mathematical functions on
+ domain error and pole error (and anything else on mathematical functions
+ and floating type encodings).
+\end_layout
+
+\begin_layout Itemize
+See library headers for the null-pointer constant to which NULL expands.
+\end_layout
+
+\begin_layout Itemize
+See library headers and source for anything else about the library.
+\end_layout
+
+\begin_layout Subsubsection
+Architecture
+\end_layout
+
+\begin_layout Itemize
+See the respective library headers for the values or expressions for macros
+ specified in float.h, limits.h, stdint.h.
+\end_layout
+
+\begin_layout Itemize
+Multithreading is not supported.
+\end_layout
+
+\begin_layout Itemize
+The number of bytes in any object is the minimum allowed (except for some
+ padding bits on bit-fields), byte order depends on the target.
+\end_layout
+
+\begin_layout Itemize
+No extended alignments are supported.
+\end_layout
+
+\begin_layout Itemize
+There are no valid alignments other than those returned by _Alignof.
+\end_layout
+
+\begin_layout Itemize
+sizeof always returns the smallest value allowed assuming an 8-bit char.
+ _Alignof always returns 0.
 \end_layout
 
 \begin_layout Section
@@ -10599,6 +11608,17 @@ status collapsed
 
 \emph default
  library file.
+ Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Using-sdar-to"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ below contains a minimal example.
  Libraries created in this manner can be included in the command line.
  Make sure you include the -L <library-path> option to tell the linker where
  to look for these files if they are not in the current directory.
@@ -11023,24 +12043,24 @@ status collapsed
 \labelwidthstring 00.00.0000
 
 \series bold
--mgbz80
+-msm83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
--mgbz80
+-msm83
 \end_layout
 
 \end_inset
 
 
 \series default
- Generate code for the LR35902 GameBoy Z80
+ Generate code for the Sharp SM83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-gbz80 (GameBoy Z80)
+sm83 (GameBoy Z80)
 \end_layout
 
 \end_inset
@@ -11233,6 +12253,46 @@ PIC16
 
 -bit processors (p18f452 and variants.
  In development, not complete).
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mmos6502
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-mmos6502
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the original MOS Technology NMOS 6502 processor and compatibl
+e derivatives including the 6510 and 8502.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mmos65c02
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-mmos65c02
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the CMOS Rockwell/WDC 65C02.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -11605,66 +12665,6 @@ status collapsed
 \size default
 Like `-dD' except that the macro arguments and contents are omitted.
  Only `#define name' is included in the output.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--pedantic-parse-number
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-pedantic
-\end_layout
-
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--pedantic-parse-number
-\end_layout
-
-\end_inset
-
-
-\size large
-\bar under
-
-\begin_inset CommandInset label
-LatexCommand label
-name "lyx:-pedantic-parse-number"
-
-\end_inset
-
-
-\series default
-\bar default
- 
-\size default
-Pedantic parse numbers so that situations like 0xfe-LO_B(3) are parsed properly
- and the macro LO_B(3) gets expanded.
- See also #pragma pedantic_parse_number 
-\begin_inset CommandInset ref
-LatexCommand vpageref
-reference "ite:pedantic_parse_number"
-
-\end_inset
-
- in section
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sec:Pragmas"
-
-\end_inset
-
- 
-\emph on
-Note: this functionality is not in conformance with C99 standard!
 \end_layout
 
 \begin_layout Labeling
@@ -12721,12 +13721,13 @@ status collapsed
 \end_inset
 
  Setting this to a high value will result in increased compilation time
- and more optimized code being generated.
- Setting it to lower values speed up compilation, but does not optimize
+ (and increased memory use during compilation) and more optimized code being
+ generated.
+ Setting it to lower values speeds up compilation, but does not optimize
  as much.
  The default value is 3000.
- This option currently only affects the hc08, s08, z80, z180, r2k, r3ka
- and gbz80 ports.
+ This option currently does not affect the mcs51, ds390, pic14 and pic16
+ ports.
 \end_layout
 
 \begin_layout Labeling
@@ -13086,6 +14087,54 @@ Preprocessor
 \labelwidthstring 00.00.0000
 
 \series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-syntax-only
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-syntax-only
+\end_layout
+
+\end_inset
+
+
+\series default
+\size large
+ 
+\size default
+Parse and verify syntax only, no output files are produced.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
 -o
 \begin_inset space ~
 \end_inset
@@ -13166,6 +14215,64 @@ F:/Projects/test3/output 1/
 
 \emph default
 .
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-x
+\begin_inset space ~
+\end_inset
+
+<type>
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-x <type>
+\end_layout
+
+\end_inset
+
+
+\series default
+ The specified type overrides the file type that SDCC detected based on
+ the file name extension.
+ The currently supported options are 
+\begin_inset Quotes sld
+\end_inset
+
+c
+\begin_inset Quotes srd
+\end_inset
+
+, 
+\begin_inset Quotes sld
+\end_inset
+
+c-header
+\begin_inset Quotes srd
+\end_inset
+
+ and 
+\begin_inset Quotes sld
+\end_inset
+
+none
+\begin_inset Quotes srd
+\end_inset
+
+.
+ The option 
+\begin_inset Quotes sld
+\end_inset
+
+none
+\begin_inset Quotes srd
+\end_inset
+
+ restores the default behavior.
 \end_layout
 
 \begin_layout Labeling
@@ -13284,7 +14391,6 @@ status collapsed
 
 \series default
 -float-reent.
- 
 \end_layout
 
 \begin_layout Labeling
@@ -13544,8 +14650,8 @@ status collapsed
  
 \series default
 When this option is used the compiler will generate debug information.
- The debug information collected in a file with .cdb extension can be used
- with the SDCDB.
+ By default, the debug information collected in a file with .cdb extension
+ can be used with the SDCDB.
  For more information see documentation for SDCDB.
  Another file with a .omf extension contains debug information in AOMF or
  AOMF51
@@ -13559,6 +14665,7 @@ AOMF, AOMF51
 \end_inset
 
  format which is commonly used by third party tools.
+ When –out-gmt-elf is used, the debug information is in DWARF format instead.
 \end_layout
 
 \begin_layout Labeling
@@ -13801,7 +14908,7 @@ status collapsed
 unsigned
 \family default
 .
- To set the signess for characters to signed, use the option -
+ To set the signedness for characters to signed, use the option -
 \series bold
 
 \begin_inset ERT
@@ -14537,7 +15644,279 @@ status collapsed
 
 \end_inset
 
--std-sdcc89
+-std-<arg>
+\series default
+ Determine the language standard.
+ For enhanced compatibility with other compilers, 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std
+\series default
+ can also be used with a single dash (i.e.
+ 
+\series bold
+-std
+\series default
+) and with 
+\series bold
+=
+\series default
+ or 
+\series bold
+
+\begin_inset space \textvisiblespace{}
+\end_inset
+
+
+\series default
+ (whitespace) as delimiter.
+ The language standard, specified via 
+\series bold
+<arg>
+\series default
+, can be one of the following:
+\end_layout
+
+\begin_deeper
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c89 
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-c89
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ANSI C89 / ISO C90 standard.
+ Alternative spellings: 
+\series bold
+c90
+\series default
+, 
+\series bold
+iso9899:1990
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c95 
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO C90 standard as modified in amendment 1.
+ Alternative spelling: 
+\series bold
+iso9899:199409
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c99 
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO C99 standard.
+ Alternative spelling: 
+\series bold
+iso9899:1999
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c11 
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc11
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO C11 standard.
+ Alternative spelling: 
+\series bold
+iso9899:2011
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c17 
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc17
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO C17 standard.
+ Alternative spellings: 
+\series bold
+iso9899:2017
+\series default
+, 
+\series bold
+c18
+\series default
+, 
+\series bold
+iso9899:2018
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c23 
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc23
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO C23 standard.
+ Alternative spelling: 
+\series bold
+c2x
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc89 
 \begin_inset Index idx
 status collapsed
 
@@ -14564,71 +15943,16 @@ status collapsed
 \series default
  Generally follow the ANSI C89 / ISO C90 standard, but allow some SDCC behaviour
  that conflicts with the standard.
+ Alternative spelling: 
+\series bold
+sdcc90
 \end_layout
 
 \begin_layout Labeling
 \labelwidthstring 00.00.0000
 
 \series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-c89
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-c89
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ANSI C89 / ISO C90 standard.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
+sdcc99 
 \begin_inset Index idx
 status collapsed
 
@@ -14661,67 +15985,9 @@ status collapsed
 \labelwidthstring 00.00.0000
 
 \series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-c99
+sdcc11 
 \begin_inset Index idx
 status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO C99 standard.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc11
-\begin_inset Index idx
-status open
 
 \begin_layout Plain Layout
 -
@@ -14752,20 +16018,7 @@ status collapsed
 \labelwidthstring 00.00.0000
 
 \series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-c11
+sdcc17 
 \begin_inset Index idx
 status collapsed
 
@@ -14783,34 +16036,25 @@ status collapsed
 
 \end_inset
 
--std-sdcc11
+-std-sdcc17
 \end_layout
 
 \end_inset
 
 
 \series default
- Follow the ISO C11 standard.
+ Generally follow the ISO C17 standard, but allow some SDCC behaviour that
+ conflicts with the standard.
+ Alternative spelling: 
+\series bold
+sdcc18
 \end_layout
 
 \begin_layout Labeling
 \labelwidthstring 00.00.0000
 
 \series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc2x
+sdcc23 
 \begin_inset Index idx
 status open
 
@@ -14828,62 +16072,21 @@ status collapsed
 
 \end_inset
 
--std-sdcc2x
+-std-sdcc23
 \end_layout
 
 \end_inset
 
 
 \series default
- Generally follow the ISO C2X standard, but allow some SDCC behaviour that
- conflicts with the standard (default).
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
+ Generally follow the ISO C23 standard, but allow some SDCC behaviour that
+ conflicts with the standard.
+ Alternative spelling: 
 \series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
+sdcc2x
 \end_layout
 
-\end_inset
-
--std-c2x
-\begin_inset Index idx
-status open
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc2x
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO C2X standard.
-\end_layout
-
+\end_deeper
 \begin_layout Labeling
 \labelwidthstring 00.00.0000
 
@@ -15686,20 +16889,7 @@ status collapsed
 \begin_inset space ~
 \end_inset
 
-<Value> By default the stack
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-stack
-\end_layout
-
-\end_inset
-
- is placed after the data segment for mcs51.
- By using this option the stack can be placed anywhere in the internal memory
- space of the mcs51.
- The value entered can be in Hexadecimal or Decimal format, e.g.
+<Value> The value entered can be in Hexadecimal or Decimal format, e.g.
  -
 \begin_inset ERT
 status collapsed
@@ -15727,101 +16917,6 @@ status collapsed
 \end_inset
 
 -stack-loc 32.
- Since the sp register is incremented before a push or call, the initial
- sp will be set to one byte prior the provided value.
- The provided value should not overlap any other memory areas such as used
- register banks or the data segment and with enough space for the current
- application.
- The 
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pack-iram
-\end_layout
-
-\end_inset
-
- option (which is now a default setting) will override this setting, so
- you should also specify the 
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\end_layout
-
-\end_inset
-
- option if you need to manually place the stack.
 \end_layout
 
 \begin_deeper
@@ -15892,7 +16987,7 @@ xstack
 
  is placed after the __pdata
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset ERT
@@ -15955,7 +17050,7 @@ status collapsed
 
 \end_inset
 
--stack-loc 32768.
+-xstack-loc 32768.
  The provided value should not overlap any other memory areas such as the
  pdata or xdata segment and with enough space for the current application.
 \end_layout
@@ -16457,7 +17552,8 @@ HC08
 
 \end_inset
 
- and S08 processors)
+, S08 and STM8 processors).
+ When used with –debug, the debug info is in DWARF format instead of CDB.
 \end_layout
 
 \begin_layout Labeling
@@ -17045,121 +18141,6 @@ status collapsed
 
 \end_inset
 
--pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pack-iram
-\end_layout
-
-\end_inset
-
- Causes the linker to use unused register banks for data variables and pack
- data, idata and stack together.
- This is the default and this option will probably be removed along with
- the removal of -
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\series default
-
-\begin_inset space ~
-\end_inset
-
-(deprecated)
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-pack-iram
-\end_layout
-
-\end_inset
-
- Causes the linker to use old style for allocating memory areas.
- This option is now deprecated and will be removed in future versions.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
 -acall-ajmp
 \series default
 
@@ -17713,7 +18694,7 @@ status collapsed
 \end_layout
 
 \begin_layout Subsection
-Options common to all z80-related ports (z80, z180, r2k, r3ka, gbz80, tlcs90,
+Options common to all z80-related ports (z80, z180, r2k, r3ka, sm83, tlcs90,
  ez80_z80)
 \end_layout
 
@@ -18106,71 +19087,6 @@ status collapsed
 
 \end_inset
 
--oldralloc
-\series default
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Z80!Options!-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--oldralloc
-\end_layout
-
-\end_inset
-
-
-\size large
- 
-\size default
-Use old register allocator.
- The old register allocator is typically is faster than the current one,
- but the current one generates better code.
- This differences are the most noticeable, when a high value for -
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--max-allocs-per-node is used.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
 -fno-omit-frame-pointer
 \series default
 
@@ -18204,7 +19120,7 @@ Never omit the frame pointer.
 \end_layout
 
 \begin_layout Subsection
-GBZ80 Options
+SM83 Options
 \begin_inset Index idx
 status collapsed
 
@@ -18216,10 +19132,10 @@ Options GBZ80
 
 
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-GBZ80
+SM83
 \end_layout
 
 \end_inset
@@ -18391,6 +19307,172 @@ status collapsed
  If this option is used all source files in the project have to be compiled
  with this option.
  It must also be used when invoking the linker.
+\end_layout
+
+\begin_layout Subsection
+MOS6502 Options
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+Options MOS6502
+\end_layout
+
+\end_inset
+
+
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+MOS6502 options
+\end_layout
+
+\end_inset
+
+ (apply to mos6502, mos65c02)
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-model-small
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-model-small
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for small model programs, see section Memory Models for more
+ details.
+ 
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-model-large
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-model-large
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for large model programs, see section Memory Models for more
+ details.
+ This is the default memory model.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-no-zp-spill
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-no-zp-spill
+\end_layout
+
+\end_inset
+
+
+\series default
+ Force the compiler to spill registers to 16-bit addressable memory (xdata)
+ instead of Page Zero.
+ When running out of Page Zero space, this option will allow to free many
+ Page Zero locations at the expense of slightly larger and slower code
 \end_layout
 
 \begin_layout Subsection
@@ -19130,6 +20212,8 @@ SDCC supports some language extensions useful for embedded systems.
  Unlike the Embedded C standard, SDCC allows local variables to have an
  intrinsic named address space even when not explicitly declared as static
  or extern.
+ Depending on the target architecture, support can be limited to objects
+ in such address spaces and exclude pointer-based access to those.
 \end_layout
 
 \begin_layout Subsection
@@ -21570,7 +22654,7 @@ Z180!I/O memory
 \begin_layout Verse
 
 \family typewriter
-__sfr __at 0x78 IoPort;
+__sfr __at(0x78) IoPort;
 \begin_inset space ~
 \end_inset
 
@@ -21728,7 +22812,7 @@ at
 
 \end_inset
 
- 0x123 IoPort; 
+(0x123) IoPort; 
 \end_layout
 
 \begin_layout Standard
@@ -21946,6 +23030,99 @@ in/out
 \end_layout
 
 \begin_layout Subsection
+SM83 intrinsic named address spaces
+\end_layout
+
+\begin_layout Subsubsection
+__sfr
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+sfr
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The keyword 
+\emph on
+__sfr
+\emph default
+ is an alternative way to access memory locations 0xff00 to 0xffff, which
+ are typically used for memory-mapped I/O e.g.:
+\end_layout
+
+\begin_layout Verse
+
+\family typewriter
+__sfr __at
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+at
+\end_layout
+
+\end_inset
+
+(0xff01) IoPort; 
+\end_layout
+
+\begin_layout Subsection
 HC08/S08 intrinsic named address spaces
 \end_layout
 
@@ -21989,7 +23166,7 @@ data (hc08 named address space)
 \end_layout
 
 \begin_layout Standard
-Variables int the address space __data resides in the first 256 bytes of
+Variables in the address space __data resides in the first 256 bytes of
  memory (the direct page).
  The HC08
 \begin_inset Index idx
@@ -22107,7 +23284,7 @@ utput memory.
 \begin_layout Verse
 
 \family typewriter
-__sfr __at 0x18 gpcc;
+__sfr __at(0x18) gpcc;
 \begin_inset space ~
 \end_inset
 
@@ -22159,6 +23336,112 @@ sfr16
 
 \begin_layout Standard
 The Padauk family has a 16-bit timer accessed with special instructions.
+\end_layout
+
+\begin_layout Subsection
+MOS6502 intrinsic named address spaces
+\end_layout
+
+\begin_layout Subsubsection
+__zp/__data
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+data (hc08 named address space)
+\end_layout
+
+\end_inset
+
+ /__near
+\end_layout
+
+\begin_layout Standard
+Variables in the address space __zp reside in the first 256 bytes of memory
+ (the Page Zero).
+ The MOS6502
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+MOS6502
+\end_layout
+
+\end_inset
+
+ is most efficient at accessing variables stored here.
+ Pointers can only be dereferenced directly if they reside in Page Zero.
+ This is the default for the small memory model.
+\end_layout
+
+\begin_layout Subsubsection
+__xdata
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+xdata (hc08 named address space)
+\end_layout
+
+\end_inset
+
+ /__far
+\end_layout
+
+\begin_layout Standard
+Variables in the address space __xdata can reside anywhere in the 64K memory
+ space.
+ This is the default (for the large memory model).
 \end_layout
 
 \begin_layout Subsection
@@ -22410,13 +23693,15 @@ at
 
  <address>
 \emph default
- keyword, which can also be used in addition to a named address space, e.g.:
+ keyword (the address needs to be either a parenthesized constant expression
+ or a constant), which can also be used in addition to a named address space,
+ e.g.:
 \end_layout
 
 \begin_layout Verse
 
 \family typewriter
-__xdata __at (0x7ffe) unsigned int chksum;
+__xdata unsigned int __at (0x7ffe) chksum;
 \end_layout
 
 \begin_layout Standard
@@ -22496,7 +23781,7 @@ Variable initialization
 \begin_layout Verse
 
 \family typewriter
-__code __at (0x7ff0) char Id[5] = 
+__code char __at (0x7ff0) Id[5] = 
 \begin_inset Quotes sld
 \end_inset
 
@@ -22568,7 +23853,7 @@ xdata (mcs51, ds390 named address space)
 
 \end_inset
 
- __at
+ unsigned char __at
 \begin_inset Index idx
 status open
 
@@ -22603,7 +23888,7 @@ at
 
 \end_inset
 
- (0x8000) unsigned char PORTA_8255;
+ (0x8000) PORTA_8255;
 \end_layout
 
 \begin_layout Standard
@@ -23442,6 +24727,143 @@ and you can use the same hardware dependent routine without changes, as
 \end_layout
 
 \begin_layout Subsection
+__sdcc_external_startup
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+sdcc
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+external
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+startup
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When a function 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+unsigned char __sdcc_external_startup(void)
+\end_layout
+
+\end_inset
+
+ is present, it is executed before both the initialization of static and
+ global variables, as well as 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+main
+\end_layout
+
+\end_inset
+
+.
+ This allows to implement functionality that needs to be done early.
+ For example: disabling a hardware watchdog that would otherwise bite during
+ the time it takes to initialize global variables; setup or calibration
+ of system/peripheral clocks; or, a memory check that needs to be done before
+ any memory (other than the return address for 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+__sdcc_external_startup
+\end_layout
+
+\end_inset
+
+ itself) is in use.
+\end_layout
+
+\begin_layout Standard
+If this routine returns a non-zero value, the static and global variable
+ initialization will be skipped and the function 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+main
+\end_layout
+
+\end_inset
+
+ will be invoked.
+ Otherwise static and global variables will be initialized before the function
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+main
+\end_layout
+
+\end_inset
+
+ is invoked.
+\end_layout
+
+\begin_layout Standard
+For mos6502, z80, z80n, z180, sm83, ez80_z80, tlcs90, r2k, r2ka, r3ka, when
+ using a custom crt0, support depends on the custom crt0.
+\end_layout
+
+\begin_layout Subsection
 Preserved register specification
 \end_layout
 
@@ -23473,8 +24895,8 @@ Binary constants
 \end_layout
 
 \begin_layout Standard
-SDCC supports the use of binary constants, such as 0b01100010.
- This feature is only enabled when the compiler is invoked using 
+SDCC supports the use of C23 binary constants, such as 0b01100010 when the
+ compiler is invoked using 
 \begin_inset Flex Code
 status open
 
@@ -23484,7 +24906,28 @@ status open
 
 \end_inset
 
-.
+, even when the corresponding 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--std-cxx
+\end_layout
+
+\end_inset
+
+, does not.
+ Note: 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+xx
+\end_layout
+
+\end_inset
+
+ is a placeholder for the desired version of the C standard.
 \end_layout
 
 \begin_layout Subsection
@@ -23504,6 +24947,17 @@ status open
 \end_inset
 
 .
+ Note: 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+xx
+\end_layout
+
+\end_inset
+
+ is a placeholder for the desired version of the C standard.
 \end_layout
 
 \begin_layout Subsection
@@ -23547,6 +25001,17 @@ status open
 
  can result in failing programs when arguments to vararg functions are explicitl
 y cast.
+ Note: 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+xx
+\end_layout
+
+\end_inset
+
+ is a placeholder for the desired version of the C standard.
 \end_layout
 
 \begin_layout Section
@@ -23903,7 +25368,7 @@ __bit bvar;
 \begin_inset space ~
 \end_inset
 
-__data __at
+__data unsigned char __at
 \begin_inset Index idx
 status collapsed
 
@@ -23913,7 +25378,7 @@ at
 
 \end_inset
 
- (0x31) unsigned char j;
+ (0x31) j;
 \begin_inset Newline newline
 \end_inset
 
@@ -25338,10 +26803,10 @@ using (mcs51, ds390 register bank)
 \emph on
 __using
 \emph default
- 0), the compiler will save the registers used by itself on the stack upon
- entry and restore them at exit, however if such an interrupt service routine
- calls another function then the entire register bank will be saved on the
- stack.
+ (0)), the compiler will save the registers used by itself on the stack
+ upon entry and restore them at exit, however if such an interrupt service
+ routine calls another function then the entire register bank will be saved
+ on the stack.
  This scheme may be advantageous for small interrupt service routines which
  have low register usage.
 \end_layout
@@ -25616,7 +27081,7 @@ Interrupt handler can be interrupted by NMI only
 \end_layout
 
 \begin_layout Subsection
-Rabbit 2000, 3000, 3000A and 4000 Interrupt Service Routines
+Rabbit 2000, 3000 and 3000A Interrupt Service Routines
 \end_layout
 
 \begin_layout Standard
@@ -25725,7 +27190,7 @@ Interrupt handler can be interrupted by interrupts of higher priority only
 \end_layout
 
 \begin_layout Subsection
-GBZ80 and TLCS-90 Interrupt Service Routines
+SM83 and TLCS-90 Interrupt Service Routines
 \end_layout
 
 \begin_layout Standard
@@ -25921,7 +27386,9 @@ interrupt
 \end_inset
 
  upon entry to a critical function and restore the interrupt enable to the
- previous state before returning.
+ previous state before returning (for architectures where there is no efficient
+ way to do so (sm83, tlcs90, stm8), interrupts will be unconditionally enabled
+ instead).
  Nesting critical functions will need one additional byte on the stack
 \begin_inset Index idx
 status collapsed
@@ -26695,7 +28162,7 @@ or for SDCC version 3.2.0 or newer:
 \begin_layout Verse
 
 \family typewriter
-#define CLI asm (
+#define CLI __asm__ (
 \begin_inset Quotes sld
 \end_inset
 
@@ -26709,7 +28176,7 @@ cli
 \begin_layout Verse
 
 \family typewriter
-#define SEI asm (
+#define SEI __asm__ (
 \begin_inset Quotes sld
 \end_inset
 
@@ -27338,6 +28805,11 @@ nop
 __endasm;
 \end_layout
 
+\begin_layout Standard
+Note: As of SDCC 4.2.9, assembler comments occurring in this type of inline
+ assembler block are affected by macro expansion.
+\end_layout
+
 \begin_layout Subsubsection
 New __asm__ (
 \begin_inset Quotes sld
@@ -27353,6 +28825,8 @@ inline_assembler_code
 \begin_layout Standard
 The __asm__ inline assembler code format was introduced in SDCC version
  3.2.0.
+ Its main advantage is that it is compatible with all standard compliant
+ C preprocessors.
 \end_layout
 
 \begin_layout Standard
@@ -27376,6 +28850,88 @@ tnop
 \begin_inset Quotes srd
 \end_inset
 
+);
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Or for better readability:
+\end_layout
+
+\begin_layout Verse
+
+\family typewriter
+__asm__ (
+\end_layout
+
+\begin_layout Verse
+
+\family typewriter
+\begin_inset Quotes sld
+\end_inset
+
+; This is a comment
+\backslash
+n
+\begin_inset Quotes srd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Verse
+
+\family typewriter
+\begin_inset Quotes sld
+\end_inset
+
+label:
+\backslash
+n
+\begin_inset Quotes srd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Verse
+
+\family typewriter
+\begin_inset Quotes sld
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+nop
+\begin_inset Quotes srd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Verse
+
+\family typewriter
 );
 \end_layout
 
@@ -30009,7 +31565,7 @@ volatile
 
 \end_inset
 
- data unsigned char counter;
+ __data unsigned char counter;
 \begin_inset Newline newline
 \end_inset
 
@@ -31926,7 +33482,7 @@ SDCC supports (single precision 4 bytes) floating point numbers; the format
 
 \size footnotesize
 \begin_inset Tabular
-<lyxtabular version="3" rows="17" columns="2">
+<lyxtabular version="3" rows="19" columns="2">
 <features tabularvalignment="middle">
 <column alignment="left" valignment="top">
 <column alignment="left" valignment="top">
@@ -32029,7 +33585,7 @@ _fssub.c
 \bar no
 \noun off
 \color none
-subtract floating point numbers 
+subtract floating point numbers
 \end_layout
 
 \end_inset
@@ -32067,7 +33623,7 @@ _fsdiv.c
 \bar no
 \noun off
 \color none
-divide floating point numbers 
+divide floating point numbers
 \end_layout
 
 \end_inset
@@ -32105,7 +33661,7 @@ _fsmul.c
 \bar no
 \noun off
 \color none
-multiply floating point numbers 
+multiply floating point numbers
 \end_layout
 
 \end_inset
@@ -32163,7 +33719,7 @@ convert floating point to unsigned char
 \bar no
 \noun off
 \color none
-_fs2char.c
+_fs2schar.c
 \end_layout
 
 \end_inset
@@ -32239,7 +33795,7 @@ convert floating point to unsigned int
 \bar no
 \noun off
 \color none
-_fs2int.c
+_fs2sint.c
 \end_layout
 
 \end_inset
@@ -32323,7 +33879,7 @@ convert floating point to unsigned long
 \bar no
 \noun off
 \color none
-_fs2long.c
+_fs2slong.c
 \end_layout
 
 \end_inset
@@ -32399,7 +33955,7 @@ convert unsigned char to floating point
 \bar no
 \noun off
 \color none
-_char2fs.c
+_schar2fs.c
 \end_layout
 
 \end_inset
@@ -32417,7 +33973,7 @@ _char2fs.c
 \bar no
 \noun off
 \color none
-convert char to floating point number
+convert signed char to floating point
 \end_layout
 
 \end_inset
@@ -32475,7 +34031,7 @@ convert unsigned int to floating point
 \bar no
 \noun off
 \color none
-_int2fs.c
+_sint2fs.c
 \end_layout
 
 \end_inset
@@ -32493,7 +34049,7 @@ _int2fs.c
 \bar no
 \noun off
 \color none
-convert int to floating point numbers
+convert signed int to floating point
 \end_layout
 
 \end_inset
@@ -32531,7 +34087,65 @@ _ulong2fs.c
 \bar no
 \noun off
 \color none
-convert unsigned long to floating point number
+convert unsigned long to floating point
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+_slong2fs.c
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+convert signed long to floating point
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+_ulonglong2fs.c
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+convert unsigned long long to floating point
 \end_layout
 
 \end_inset
@@ -32542,16 +34156,7 @@ convert unsigned long to floating point number
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\noun off
-\color none
-_long2fs.c
+_slonglong2fs.c
 \end_layout
 
 \end_inset
@@ -32560,16 +34165,7 @@ _long2fs.c
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\noun off
-\color none
-convert long to floating point number
+convert singed long long to floating point
 \end_layout
 
 \end_inset
@@ -34929,6 +36525,62 @@ In the large memory model, the address space is 16 bits for objects and
  slightly more stack space than code generated for the medium model.
 \end_layout
 
+\begin_layout Subsection
+MOS6502 Memory Models
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+Memory model
+\end_layout
+
+\end_inset
+
+
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+MOS6502 memory models
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+SDCC implements two memory models for the MOS6502: 
+\emph on
+small
+\emph default
+ and 
+\emph on
+large
+\emph default
+ (default).
+ Modules compiled with different memory models should 
+\emph on
+never
+\emph default
+ be combined together.
+ The library routines supplied with the compiler are compiled for all models.
+\end_layout
+
+\begin_layout Standard
+In the small model all data objects are placed by default in Page Zero.
+ This is normally only useful in embedded systems.
+\end_layout
+
+\begin_layout Standard
+In the large memory model, data is placed by default in 16-bit addressable
+ memory.
+ Critical data can still be placed in Page Zero using the __ZP or __near
+ storage modifier.
+ Code generated for the large model is slightly bigger and slower than code
+ generated for the small model.
+\end_layout
+
 \begin_layout Section
 Pragmas
 \begin_inset CommandInset label
@@ -36224,6 +37876,186 @@ c99
 \begin_layout Itemize
 
 \series bold
+std_c11
+\series default
+ 
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma std
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+c11
+\end_layout
+
+\end_inset
+
+- Follow the C11 standard and disable SDCC features that conflict with the
+ standard.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+std_sdcc11
+\series default
+ 
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma std
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+sdcc11
+\end_layout
+
+\end_inset
+
+- Follow the C11 standard, but allow SDCC features that conflict with the
+ standard.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+std_c23
+\series default
+
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma std
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+c23
+\end_layout
+
+\end_inset
+
+- Follow the C23 standard and disable SDCC features that conflict with the
+ standard (for backwards compatibility, 
+\series bold
+std_c2x
+\series default
+ still exists as an alias).
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+std_sdcc99
+\series default
+ 
+\begin_inset Index idx
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma std
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+sdcc23
+\end_layout
+
+\end_inset
+
+- Generally follow the C23 standard, but allow SDCC features that conflict
+ with the standard.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
 codeseg
 \series default
  <name>
@@ -36333,228 +38165,6 @@ sdcpp (preprocessor)
 \end_inset
 
  supports the following #pragma directives:
-\end_layout
-
-\begin_layout Itemize
-
-\series bold
-pedantic_parse_number
-\series default
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-pedantic
-\end_layout
-
-\end_inset
-
-
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma pedantic
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-parse
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-number
-\end_layout
-
-\end_inset
-
- (+ | -) 
-\begin_inset CommandInset label
-LatexCommand label
-name "ite:pedantic_parse_number"
-
-\end_inset
-
-- Pedantic parse numbers so that situations like 0xfe-LO_B(3) are parsed
- properly and the macro LO_B(3) gets expanded.
- Default is off.
- See also the -
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--pedantic-parse-number command line option 
-\begin_inset CommandInset ref
-LatexCommand vpageref
-reference "lyx:-pedantic-parse-number"
-
-\end_inset
-
-.
- 
-\begin_inset Newline newline
-\end_inset
-
-Below is an example on how to use this pragma.
- 
-\emph on
-Note: this functionality is not in conformance with standard!
-\end_layout
-
-\begin_layout Verse
-
-\family typewriter
-#pragma pedantic_parse_number +
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-#
-\end_layout
-
-\end_inset
-
-pragma pedantic
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-parse
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-number
-\end_layout
-
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-#define LO_B(x) ((x) & 0xff)
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-unsigned char foo(void)
-\begin_inset Newline newline
-\end_inset
-
-{
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-unsigned char c=0xfe-LO_B(3);
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-return c;
-\begin_inset Newline newline
-\end_inset
-
-}
-\begin_inset Newline newline
-\end_inset
-
-
 \end_layout
 
 \begin_layout Itemize
@@ -37000,7 +38610,17 @@ hash
 
 \end_inset
 
- (+ | -) - Allow "naked" hash in macro definition, for example:
+ (+ | -) - 
+\begin_inset Flex Emph
+status open
+
+\begin_layout Plain Layout
+Until SDCC 4.2.8:
+\end_layout
+
+\end_inset
+
+ Allow "naked" hash in macro definition, for example:
 \begin_inset Newline newline
 \end_inset
 
@@ -37416,7 +39036,7 @@ Defines created by the compiler
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="20" columns="2">
+<lyxtabular version="3" rows="23" columns="2">
 <features tabularvalignment="middle">
 <column alignment="left" valignment="top" width="3in">
 <column alignment="left" valignment="top" width="3in">
@@ -37469,7 +39089,7 @@ version macro
 
 \end_inset
 
- 
+
 \end_layout
 
 \end_inset
@@ -37598,7 +39218,6 @@ z80
 \begin_layout Plain Layout
 depending on the model used (e.g.: -mds390).
  Older versions used SDCC_mcs51, etc instead.
- 
 \end_layout
 
 \end_inset
@@ -38083,7 +39702,7 @@ TENBIT (ds390)
 
 \end_inset
 
- 
+
 \end_layout
 
 \end_inset
@@ -38238,7 +39857,7 @@ Always defined.
 \begin_layout Plain Layout
 __SDCC_REVISION
 \begin_inset Index idx
-status open
+status collapsed
 
 \begin_layout Plain Layout
 SDCC!Defines!SDCC
@@ -38522,7 +40141,7 @@ status collapsed
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38580,7 +40199,7 @@ REENT
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -38602,6 +40221,182 @@ status collapsed
 -int-long-reent
 \emph default
  is used
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+__SDCC_OPTIMIZE_SPEED
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SDCC!Defines!SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+OPTIMIZE
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+SPEED
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+when 
+\emph on
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-opt-code-speed
+\emph default
+ is used
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+__SDCC_OPTIMIZE_SIZE
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SDCC!Defines!SDCC
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+OPTIMIZE
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+SIZE
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+when 
+\emph on
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-opt-code-size
+\emph default
+ is used
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+__SDCCCALL
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+SDCC!Defines!SDCCCALL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Default ABI version for calling convention
 \end_layout
 
 \end_inset
@@ -39570,7 +41365,7 @@ mov _spx,#__start__xstack
 \begin_inset space ~
 \end_inset
 
-lcall __sdcc_external_startup
+lcall ___sdcc_external_startup
 \begin_inset Newline newline
 \end_inset
 
@@ -41678,92 +43473,7 @@ sjmp .
 \end_layout
 
 \begin_layout Standard
-One of these modules (crtstart.asm) contains a call to the C routine 
-\emph on
-_sdcc_external_startup()
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-sdcc
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-external
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-_
-\end_layout
-
-\end_inset
-
-startup()
-\end_layout
-
-\end_inset
-
-
-\emph default
- at the start of the CODE area.
- This routine is also in the runtime library
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Runtime library
-\end_layout
-
-\end_inset
-
- and returns 0 by default.
- If this routine returns a non-zero value, the static & global variable
- initialization will be skipped and the function main will be invoked.
- Otherwise static & global variables will be initialized before the function
- main is invoked.
- You could add an 
-\emph on
-_sdcc_external_startup()
-\emph default
- routine to your program to override the default if you need to setup hardware
- or perform some other critical operation prior to static & global variable
- initialization
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Variable initialization
-\end_layout
-
-\end_inset
-
-.
- On some mcs51 variants __xdata
+On some mcs51 variants __xdata
 \begin_inset Index idx
 status open
 
@@ -41849,7 +43559,7 @@ status collapsed
 
 \end_inset
 
-n
+ <n>
 \emph default
  is used.
  (recommended for Chipcon CC1010).
@@ -41919,7 +43629,7 @@ While these initialization modules are meant as generic startup code there
  might be the need for customization.
  Let's assume the return value of 
 \emph on
-_sdcc_external_startup()
+__sdcc_external_startup()
 \emph default
  in 
 \emph on
@@ -41927,7 +43637,7 @@ crtstart.asm
 \emph default
  should not be checked (or 
 \emph on
-_sdcc_external_startup()
+__sdcc_external_startup()
 \emph default
  should not be called at all).
  The recommended way would be to copy 
@@ -42068,8 +43778,8 @@ ACC (mcs51, ds390 register)
 
 
 \emph default
- to pass the first (non-bit) parameter to a function, and also to pass the
- return value 
+ to pass the first (non-bit, non-struct) parameter to a function, and also
+ to pass the return value 
 \begin_inset Index idx
 status collapsed
 
@@ -42166,7 +43876,8 @@ This might not be the case of certain memory models (medium???)
 \end_layout
 
 \begin_layout Standard
-The second parameter onwards is either allocated on the stack (for reentrant
+Further such parameters (and all struct parameters, as well as the bit parameter
+s from the 9th onwards) are either allocated on the stack (for reentrant
  routines or if -
 \begin_inset ERT
 status collapsed
@@ -42184,8 +43895,9 @@ status collapsed
 \end_layout
 
 \begin_layout Standard
-Bit parameters are passed in a virtual register called 'bits' in bit-addressable
- space for reentrant functions or allocated directly in bit memory otherwise.
+The first 8 bit parameters are passed in a virtual register called 'bits'
+ in bit-addressable space for reentrant functions or allocated directly
+ in bit memory otherwise.
 \end_layout
 
 \begin_layout Standard
@@ -43719,7 +45431,8 @@ ftp://ftp.dalsemi.com/pub/tini/ds80c400/c_libraries/sdcc/index.html
 \end_layout
 
 \begin_layout Section
-The Z80, Z180, Rabbit 2000/3000, Rabbit 3000A, GBZ80, eZ80 and TLCS-90 ports
+The Z80, Z180, Rabbit 2000, Rabbit 2000A, Rabbit 3000A, SM83 (GameBoy),
+ eZ80, TLCS-90 and R800 ports
 \end_layout
 
 \begin_layout Standard
@@ -43733,13 +45446,13 @@ Z80
 
 \end_inset
 
-, Z180, eZ80 in Z80 mode, Rabbit 2000/3000, Rabbit 3000A and LR35902, the
- Nintendo GameBoy's Z80-like gbz80
+, Z180, eZ80 in Z80 mode, Rabbit 2000, Rabbit 2000A, Rabbit 3000A and LR35902,
+ the Sharp SM83 (used .e.g in the Nintendo GameBoy) sm83
 \begin_inset Index idx
-status collapsed
+status open
 
 \begin_layout Plain Layout
-gbz80 (GameBoy Z80)
+sm83 (GameBoy Z80)
 \end_layout
 
 \end_inset
@@ -43751,21 +45464,6 @@ gbz80 (GameBoy Z80)
 When a frame pointer is used, it resides in IX.
  Register A, B, C, D, E, H, L and IY are used as a temporary registers for
  holding variables.
- Return values
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Z80!return value
-\end_layout
-
-\end_inset
-
- for the Z80 port are stored in L (one byte), HL (two bytes), or DEHL (four
- bytes).
- The gbz80 port use the same set of registers for the return values, but
- in a different order of significance: E (one byte), DE (two bytes), or
- HLDE (four bytes).
 \end_layout
 
 \begin_layout Standard
@@ -43789,7 +45487,7 @@ status open
 
 \end_inset
 
- sdcc typically generates much better code for these architectures than
+ SDCC typically generates much better code for these architectures than
  many other compilers.
  A comparison of compilers for these architecture can be found at 
 \begin_inset Flex URL
@@ -43873,6 +45571,327 @@ status collapsed
 \end_layout
 
 \begin_layout Subsection
+Rabbit ports
+\end_layout
+
+\begin_layout Standard
+SDCC has three Rabbit-supporting ports: r2k for the Rabbit 2000, r2ka for
+ the Rabbit 2000A, 2000B, 2000C and 3000, r3ka for the Rabbit 3000A.
+ The instruction set of the Rabbit 2000 to Rabbit 3000 is the same, and
+ a subset of the Rabbit 3000A instruction set.
+ Code from the r2k backend will work on Rabbit 2000 to 3000A and code from
+ the r2ka backend will work on Rabbit 2000A to 3000A.
+ In some hardware configurations (see below), code from the r2ka backend
+ will work on the Rabbit 2000.
+ Typically, code from the r3ka backend will be faster and smaller than code
+ from the r2ka backend, and code from the r2ka backend will be faster and
+ smaller than code from the r2k backend.
+\end_layout
+
+\begin_layout Subsubsection
+Rabbit wait states
+\end_layout
+
+\begin_layout Standard
+There are multiple wait state bugs present in some of the the Rabbits.
+ The difference between the r2k and r2ka port is in additional wait state
+ bug workarounds.
+ If all memory used has zero wait states, code from the r2ka backend can
+ be safely run on the original Rabbit 2000.
+\end_layout
+
+\begin_layout Standard
+Note that The r2k and r2ka port assume that the whole stack has the same
+ number of wait states (code from the r2k and r2ka ports can fail is the
+ stack spans memories with a different amount of wait states).
+\end_layout
+
+\begin_layout Standard
+The Rabbit 2000 has some wait state bugs that SDCC does not work around.
+ These bugs result in the number of wait states used being one less than
+ configured for some instructions.
+ The workaround has to be supplied by the user, by configuring all memories
+ that do use wait states to use on additional wait state.
+\end_layout
+
+\begin_layout Standard
+For all Rabbit ports, SDCC assumes that all data memory is at least as fast
+ (i.e.
+ does not need more wait states) as all code memory.
+ Code where this is not the case (e.g.
+ code in fast Flash writing into slow battery-backed SRAM) will have to
+ be written in assembler by hand.
+\end_layout
+
+\begin_layout Subsection
+Z80, Z180, Z80N and R800 calling conventions
+\end_layout
+
+\begin_layout Standard
+The current default is the SDCC calling convention, version 1.
+ Using the command-line option –sdcccall 0, the default can be changed to
+ version 0.
+ There are three other calling conventions supported, which can be specified
+ using the keywords __smallc, __z88dk_fastcall and __z88dk_callee.
+ They are primarily intended for compatibility with libraries written for
+ other compilers.
+ For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
+ which is passed the same way as the return value of __sdcccall(0).
+ For __z88dk_callee, the stack is not adjusted for stack parameters the
+ parameters after the call (thus the callee has to do this instead).
+ __z88dk_callee can be combined with __smallc, __sdcccall(0) or __sdcccall(1).
+\end_layout
+
+\begin_layout Subsubsection
+Z80 SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen per function via __sdcccall(1).
+ 8-bit return values are passed in a, 16-bit values in de, 24-bit values
+ in lde, 32-bit values in hlde.
+ Larger return values (as well as struct and union independent of their
+ size) are passed in memory in a location specified by the caller through
+ a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename z80-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: the first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in hl.
+ If it has 32 bits, it is passed in hlde.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in l; if the first is passed in a or hl, and the second has 16 bits, it
+ is passed in de; all other parameters are passed on the stack, right-to-left.
+ Independent of their size, struct / union parameters and all following
+ parameters are always passed on the stack.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename z80-stack-cleanup.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If __z88dk_callee is not used, after the call, the stack parameters are
+ cleaned up by the caller, with the following exceptions: functions that
+ do not have variable arguments and return void or a type of at most 16
+ bits, or have both a first parameter of type float and a return value of
+ type float.
+\end_layout
+
+\begin_layout Subsubsection
+Z80 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen per function via __sdcccall(0).
+ All parameters are passed on the stack, right-to-left.
+ 8-bit return values are passed in l, 16-bit values in hl, 24-bit values
+ in ehl, 32-bit values in dehl.
+ Except for the SM83, where 8-bit values are passed in e, 16-bit values
+ in de, 32-bit values in hlde.
+ Larger return values (as well as struct and union independent of their
+ size) are passed in a memory in a location specified by the caller through
+ a hidden pointer argument.
+ Unless __z88dk_callee is used, all stack parameters are cleaned up by the
+ caller.
+\end_layout
+
+\begin_layout Subsection
+Rabbit 2000, Rabbit 2000A, Rabbit 3000A, eZ80 and TLCS-90 calling conventions
+\end_layout
+
+\begin_layout Standard
+The current default is the Rabbit calling convetion desribed here, version
+ 1.
+ Using the command-line option –sdcccall 8, the default can be changed to
+ version 0 of the Z80 calling convention, described above.
+ There are four other calling conventions supported, which can be specified
+ using the keywords __smallc, __z88dk_fastcall and __z88dk_callee.
+ They are primarily intended for compatibility with libraries written for
+ other compilers.
+ For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
+ which is passed the same way as the return value.
+ For __z88dk_callee, the stack is not adjusted for stack parameters the
+ parameters after the call (thus the callee has to do this instead).
+ __z88dk_callee can be combined with __smallc, __sdcccall(0) or __sdcccall(1).
+\end_layout
+
+\begin_layout Subsubsection
+Rabbit SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen per function via __sdcccall(1).
+ 8-bit return values are passed in a, 16-bit values in hl, 24-bit values
+ in lde, 32-bit values in hlde.
+ Larger return values (as well as struct and union independent of their
+ size) are passed in memory in a location specified by the caller through
+ a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename r3ka-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: the first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in hl.
+ If it has 32 bits, it is passed in hlde.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in l; if the first is in hl or hlde, and the second has 8 bits, it is passed
+ in a; if the first is in a, and the second has 16 bits, it is passed in
+ hl; all other parameters are passed on the stack, right-to-left.
+ Independent of their size, struct / union parameters and all following
+ parameters are always passed on the stack.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename z80-stack-cleanup.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If __z88dk_callee is not used, after the call, the stack parameters are
+ cleaned up by the caller, with the following exceptions: functions that
+ do not have variable arguments and return void or a type of at most 16
+ bits, or have both a first parameter of type float and a return value of
+ type float.
+\end_layout
+
+\begin_layout Subsection
+SM83 calling conventions
+\end_layout
+
+\begin_layout Standard
+The current default is the SDCC calling convention, version 1.
+ Using the command-line option –sdcccall 0, the default can be changed to
+ version 0.
+\end_layout
+
+\begin_layout Subsubsection
+SM83 SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen per function via __sdcccall(1).
+\end_layout
+
+\begin_layout Standard
+8-bit return values are passed in a, 16-bit values in bc, 32-bit values
+ in debc.
+ Larger return values (as well as struct and union independent of their
+ size) are passed in memory in a location specified by the caller through
+ a hidden pointer argument.
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments: All parameters are passed on
+ the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename sm83-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For Functions that do not have variable arguments: the first parameter is
+ passed in a if it has 8 bits.
+ If it has 16 bits it is passed in de.
+ If it has 32 bits, it is passed in debc.
+ If the first parameter is in a, and the second has 8 bits, it is passed
+ in e; if the first is in bc or debc, and the second has 8 bits, it is passed
+ in a; if the first is passed in a, and the second has 16 bits, it is passed
+ in bc; if the first is passed in de, and the second has 16 bits, it is
+ passed in bc; all other parameters are passed on the stack, right-to-left.
+ Independent of their size, struct / union parameters and all following
+ parameters are always passed on the stack.
+ The stack is adjusted by the callee (thus explicitly specifying __z88dk_callee
+ does not make a difference), unless the functionhas variable arguments.
+\end_layout
+
+\begin_layout Subsubsection
+SM83 SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen per function via __sdcccall(0).
+ 8-bit return values are passed in e, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values (as well as struct and union independent of their
+ size) are passed in memory in a location specified by the caller through
+ a hidden pointer argument.
+ All parameters are passed on the stack.
+ The stack is not adjusted for the parameters by the callee (thus the caller
+ has to do this instead), unless __z88dk_callee is specified.
+ __sdcccall(0) can be combined with __z88dk_callee.
+\end_layout
+
+\begin_layout Subsection
+Small-C calling convention
+\end_layout
+
+\begin_layout Standard
+Functions declared as __smallc are called using the Small-C calling convention
+ (passing arguments on-stack left-to-right, 1 byte arguments are passed
+ as 2 bytes, with the value in the lower byte).
+ 8-bit return values are passed in a, 16-bit values in de, 32-bit values
+ in hlde.
+ Larger return values (as well as struct and union independent of their
+ size) are passed in memory in a location specified by the caller through
+ a hidden pointer argument.
+ This way assembler routines originally written for Small-C or code generated
+ by Small-C can be called from SDCC.
+ Currently variable arguments are not yet supported (neither on the caller
+ nor on the callee side).
+\end_layout
+
+\begin_layout Subsection
 Complex instructions
 \end_layout
 
@@ -43895,56 +45914,36 @@ Depending on the target, code generation options and the parameters to the
 \end_layout
 
 \begin_layout Subsection
-Calling conventions
-\end_layout
-
-\begin_layout Standard
-By default, all parameters are passed on the stack, right-to-left.
- 8-bit return values are passed in l, 16-bit values in hl, 32-bit values
- in dehl.
- Except for the GBZ80, where 8-bit values are passed in e, 16-bit values
- in de, 32-bit values in hlde.
- Larger return values are passed in memory in a location specified by the
- caller through a hidden pointer argument.
-\end_layout
-
-\begin_layout Standard
-There are three other calling conventions supported, which can be specified
- using the keywords __smallc, __z88dk_fastcall (not on GBZ80) and __z88dk_callee.
- They are primarily intended for compability with libraries written for
- other compilers.
- For __z88dk_fastcall, there may be only one parameter of at most 32 bits,
- which is passed the same way as the return value.
- For __z88dk_callee, parameters are passed on the stack, but the stack is
- not adjusted for the parameters after the call (thus the callee has to
- do this instead).
- __z88dk_callee is currently supported on the caller side only.
- __z88dk_callee can be combined with __smallc.
-\end_layout
-
-\begin_layout Subsection
-Small-C calling convention
-\end_layout
-
-\begin_layout Standard
-Functions declared as __smallc are called using the Small-C calling convention
- (passing arguments on-stack left-to-right, 1 byte arguments are passed
- as 2 bytes, with the value in the lower byte).
- This way assembler routines originally written for Small-C or code generated
- by Small-C can be called from SDCC.
- Currently variable arguments are not yet supported (neither on the caller
- nor on the callee side).
-\end_layout
-
-\begin_layout Subsection
 Unsafe reads
 \end_layout
 
 \begin_layout Standard
-Usually, Z80-based systems (except for the Gameboy) have separate I/O and
- memory spaces, and any memory location can be read without side-effects.
+Usually, Z80-based systems (except for the SM83 and TLCS-90) have separate
+ I/O and memory spaces, and any normal memory location can be read without
+ side-effects.
  For such systems, the option –allow-unsafe-reads can be used to enable
- some extra optimizations.
+ some extra optimizations that rely on this.
+\end_layout
+
+\begin_layout Subsection
+Z80 banked calls
+\end_layout
+
+\begin_layout Standard
+Banked calls are supported via __banked.
+ Banked calls are done via a trampoline (__sdcc_bcall if --legacy-banking
+ is specified, __sdcc_bcall_abc for z88dk_fastcall, __sdcc_bcall_ehl for
+ other calls).
+ Default trampolines are provided in the library.
+ The default trampolines calls user supplied helper functions set_bank and
+ get_bank that set the current bank to the value in register a, or return
+ the current bank in register a.
+\end_layout
+
+\begin_layout Standard
+For banked functions, the calling convention is slightly different: the
+ stack is always cleared up by the caller.
+ Unless __z88dk_fastcall is used, all parameters are passed on the stack.
 \end_layout
 
 \begin_layout Section
@@ -44001,14 +46000,122 @@ The STM8 port
 \end_layout
 
 \begin_layout Subsection
-Calling convention
+Calling conventions
+\end_layout
+
+\begin_layout Standard
+By default, the SDCC calling convention, version 1 is used.
+ Using the option –sdcccall 0, the default can be changed to version 0.
 \end_layout
 
 \begin_layout Standard
 Arguments are passed on the stack right-to-left.
  Return values are in a (8 bit), x (16 bit), xyl (24 bit), xy (32 bit) or
  use a hidden extra pointer parameter pointing to the location (anything
- wider than 32 bit).
+ wider than 32 bit, and all struct / union).
+\end_layout
+
+\begin_layout Subsubsection
+SDCC calling convention, version 1
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename stm8-arguments.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For functions that have variable arguments, all parameters are passed on
+ the stack.
+ For other functions, if the first parameter has 8 or 16 bits, it is passed
+ in a or x.
+ If the first parameter is passed in a, and the second has 16 bits, the
+ second is passed in x.
+ If the first parameter is passed in x, and the second has 8 bits, the second
+ is passed in a.
+ All other parameters are passed on the stack.
+ Independent of their size, struct / union parameters and all following
+ parameters are always passed on the stack.
+ If __z88dk_callee is specified, the stack is always adjusted by the callee.
+ Otherwise, for the large memory model, the stack is always adjusted by
+ the caller.
+ For the medium memory model the stack is adjusted by the caller, with the
+ following exceptions: functions that do not have variable arguments and
+ return void or a type of at most 16 bits, or have both a first parameter
+ of type float and a return value of type float.
+\end_layout
+
+\begin_layout Subsubsection
+SDCC calling convention, version 0
+\end_layout
+
+\begin_layout Standard
+This calling convention can be chosen per function via __sdcccall(0) (e.g.
+ for compatibility with functions written in assembler for use with older
+ versions of SDCC).
+ All parameters are passed on the stack.
+ The stack is not adjusted for the parametersby the callee (thus the caller
+ has to do this instead), unless __z88dk_callee is specified.
+\end_layout
+
+\begin_layout Subsubsection
+Raisonance calling convention
+\end_layout
+
+\begin_layout Standard
+For compatibility with the 
+\lang british
+Raisonance
+\lang english
+ STM8 compiler, the __raisonance calling convention is supported.
+ If the first parameter is 8 or 16 bits, it is passed in a or x.
+ If the first parameter is 8 bits, and the second 16 bits, the second is
+ passed in x.
+ If the first parameter is 16 bits, and the second is 8 bits, the second
+ is passed in a.
+ All other parameters are passed on the stack.
+ If the return value is 8 bits, it is passed in a.
+ If it is 16 bits, it is passed in x.
+ Raisonance passes larger return values in pseudoregisters, which is not
+ supported by SDCC.
+\end_layout
+
+\begin_layout Subsubsection
+IAR calling convention
+\end_layout
+
+\begin_layout Standard
+For compatibility with the IAR STM8 compiler, the __iar calling convention
+ is supported.
+ The first 8-bit parameter is passed in a, the first 16-bit parameter in
+ x, the second 16-bit parameter in y.
+ Further parameters of up to 32 bits are passed in pseudoregisters, which
+ is not supported by SDCC.
+ All other parameters are passed on the stack.
+ If the return value is 8 bits, it is passed in a.
+ If it is 16 bits, it is passed in x.
+ IAR passes larger return values in pseudoregisters, which is not supported
+ by SDCC.
+\end_layout
+
+\begin_layout Subsubsection
+Cosmic calling convention
+\end_layout
+
+\begin_layout Standard
+For compatibility with the Cosmic STM8 compiler, the __cosmic calling convention
+ is supported.
+ If the first parameter is 8 or 16 bits, it is passed in a or x.
+ If the return value is 8 bits, it is passed in a.
+ If it is 16 bits, it is passed in x.
+ Cosmic passes larger return values in pseudoregisters, which is not supported
+ by SDCC.
+ Even for the medium memory model, __cosmic functions use a 24-bit return
+ address in their stack frame, and are called using callf.
 \end_layout
 
 \begin_layout Section
@@ -44401,8 +46508,8 @@ Make local functions static, as non static functions require code page selection
 \begin_inset Newline newline
 \end_inset
 
-Due to the way sdcc handles functions, place called functions prior to calling
- functions in the file wherever possible: Otherwise sdcc will insert unnecessary
+Due to the way SDCC handles functions, place called functions prior to calling
+ functions in the file wherever possible: Otherwise SDCC will insert unnecessary
  pagesel directives around the call, believing that the called function
  is externally defined.
 \end_layout
@@ -44514,7 +46621,7 @@ PIC14!interrupt
 \begin_layout Verse
 
 \family typewriter
-void Intr(void) __interrupt 0
+void Intr(void) __interrupt (0)
 \begin_inset Newline newline
 \end_inset
 
@@ -49186,7 +51293,7 @@ __interrupt
 \end_layout
 
 \begin_layout LyX-Code
-void isr_shadow(void) __shadowregs __interrupt 1
+void isr_shadow(void) __shadowregs __interrupt (1)
 \end_layout
 
 \begin_layout LyX-Code
@@ -49383,7 +51490,7 @@ __interrupt
 \begin_layout LyX-Code
 void isr(void) __interrupt 
 \emph on
-n
+(n)
 \end_layout
 
 \begin_layout LyX-Code
@@ -51389,6 +53496,93 @@ reference "sec:Quality-control"
 
 ), thus no automatic regression tests are currently performed for the PIC16
  target.
+\end_layout
+
+\begin_layout Section
+The MOS6502 port
+\end_layout
+
+\begin_layout Standard
+The mos6502
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+MOS6502
+\end_layout
+
+\end_inset
+
+ port can target the original MOS Technology NMOS 6502 , and the CMOS Rockwell/W
+DC 65C02 with enhanched instruction set.
+ 
+\end_layout
+
+\begin_layout Subsection
+Startup Code
+\end_layout
+
+\begin_layout Standard
+On the MOS6502
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+MOS6502
+\end_layout
+
+\end_inset
+
+ the startup code is inserted by linking with crt0.rel which is generated
+ from sdcc/device/lib/mos6502/crt0.s.
+ If you need a different startup code you can use the compiler option 
+\emph on
+-
+\series bold
+\emph default
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+\emph on
+-no-std-crt0
+\emph default
+
+\begin_inset Index idx
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-no-std-crt0
+\end_layout
+
+\end_inset
+
+ and provide your own crt0.rel.
+ When using a custom crt0.rel it needs to be listed first when linking.
 \end_layout
 
 \begin_layout Chapter
@@ -55470,6 +57664,21 @@ Toggle list mode
 ;;
 \end_layout
 
+\begin_layout Section
+Debugging with other debuggers (e.g.
+ GDB): ELF / DWARF
+\end_layout
+
+\begin_layout Standard
+For some ports, SDCC can create ELF binaries with DWARF debug information.
+ This can e.g.
+ be used for on-target debugging on STM8 using OpenOCD and GDB.
+ To do so, compile with –debug –out-fmt-elf.
+ Note that –out-fmt-elf needs to be specified both when compiling (to generate
+ the debug info in DWARF rather than CDB format) and linking (to get an
+ ELF binary instead of Intel Hex).
+\end_layout
+
 \begin_layout Chapter
 TIPS
 \end_layout
@@ -56041,7 +58250,7 @@ Tools
 \begin_layout Standard
 \align left
 \begin_inset Tabular
-<lyxtabular version="3" rows="28" columns="3">
+<lyxtabular version="3" rows="29" columns="3">
 <features tabularvalignment="middle">
 <column alignment="left" valignment="top" width="0pt">
 <column alignment="left" valignment="top" width="0pt">
@@ -56616,6 +58825,44 @@ sdcc/bin
 \begin_inset Text
 
 \begin_layout Plain Layout
+sdas6500
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+assembler
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+sdcc/bin
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 sdas8051
 \end_layout
 
@@ -56992,7 +59239,7 @@ sdcc/bin
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -57011,7 +59258,7 @@ uCsim
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -57020,7 +59267,7 @@ simulator for various architectures
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -64077,17 +66324,7 @@ Endianness
 \end_layout
 
 \begin_layout Subsection
-Highest Order Bit
-\begin_inset Index idx
-status collapsed
-
-\begin_layout Plain Layout
-Highest Order Bit
-\end_layout
-
-\end_inset
-
- / Any Order Bit
+Getting a Bit
 \begin_inset Index idx
 status collapsed
 
@@ -68175,10 +70412,10 @@ Register-Allocation
 \begin_layout Standard
 SDCC currently has two register allocators.
  One of them is optimal when optimizing for code size.
- This register allocator is used by default on the hc08, s08, z80, z180,
- ez80_z80, r2k, and r3ka ports.
- For the gbz80, stm8,pdk13, pdk14 and pdk15 ports it is the only available
- register allocator.
+ This register allocator is used by default on all ports except for mcs51,
+ ds390, pic14 and pic16.
+ With the exception of hc08 and s08, it is also the only available register
+ allocator for these ports.
  Even though it runs in polynomial time, it can be quite slow; therefore
  the 
 \begin_inset Flex Code
@@ -69236,11 +71473,11 @@ wiki
 
  (preliminary link 
 \begin_inset Flex URL
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
-http://sdcc.sourceforge.net/wiki/index.php/SDCC_internals_and_porting
+https://sourceforge.net/p/sdcc/wiki/Adding%20a%20port/
 \end_layout
 
 \end_inset
@@ -69499,7 +71736,7 @@ iCode
 \size footnotesize
 Figure II 
 \begin_inset Tabular
-<lyxtabular version="3" rows="39" columns="4">
+<lyxtabular version="3" rows="38" columns="4">
 <features islongtable="true" headBottomDL="true" longtabularalignment="center">
 <column alignment="block" valignment="top" width="13col%">
 <column alignment="left" valignment="top" width="13col%">
@@ -69742,52 +71979,6 @@ Rotate left with carry
 
 \size footnotesize
 IC_RESULT = (IC_LEFT << (sizeof(LC_LEFT)*8-1) ) | (IC_LEFT >> 1);
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-GETHBIT
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-IC_LEFT() IC_RESULT()
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-Get the highest order bit of IC_LEFT
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size footnotesize
-IC_RESULT = (IC_LEFT >> (sizeof(IC_LEFT)*8 -1));
 \end_layout
 
 \end_inset

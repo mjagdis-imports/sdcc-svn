@@ -57,7 +57,7 @@ public:
 public:
   cl_xa(class cl_sim *asim);
   virtual int init(void);
-  virtual char *id_string(void);
+  virtual const char *id_string(void);
 
   //virtual class cl_m *mk_mem(enum mem_class type, char *class_name);
   //virtual t_addr get_mem_size(enum mem_class type);
@@ -68,8 +68,8 @@ public:
 
   virtual struct name_entry *sfr_tbl(void);
   virtual struct name_entry *bit_tbl(void);
-  virtual char *get_dir_name(short);
-  virtual char *get_bit_name(short);
+  virtual chars get_dir_name(short);
+  virtual chars get_bit_name(short);
 
   virtual int inst_length(t_addr addr);
   virtual int inst_branch(t_addr addr);
@@ -82,7 +82,7 @@ public:
                        int *parms,
                        int *mnemonic);
 
-  virtual char *disass(t_addr addr, const char *sep);
+  virtual char *disass(t_addr addr);
   virtual void print_regs(class cl_console_base *con);
 
   virtual int exec_inst(void);

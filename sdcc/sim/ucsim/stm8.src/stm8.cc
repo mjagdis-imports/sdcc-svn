@@ -28,27 +28,28 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
-#include <stdarg.h> /* for va_list */
+//#include <stdarg.h> /* for va_list */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <string.h>
 
 // prj
-#include "pobjcl.h"
+//#include "pobjcl.h"
 #include "globals.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
+#include "dregcl.h"
 
 // local
 #include "stm8cl.h"
 #include "glob.h"
-#include "regsstm8.h"
+//#include "regsstm8.h"
 #include "stm8mac.h"
-#include "itccl.h"
+//#include "itccl.h"
 #include "serialcl.h"
 #include "rstcl.h"
 #include "timercl.h"
@@ -57,6 +58,23 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "uidcl.h"
 #include "bl.h"
 #include "flashcl.h"
+
+
+/*******************************************************************/
+
+t_mem
+cl_sp::write(t_mem val)
+{
+  t_mem l, h;
+  l= u->sp_limit;
+  h= u->sp_start;
+  if (val < u->sp_most)
+    u->sp_most= val;
+  if (rollover && (val == l))
+    val= h;
+  return cl_cell16::write(val);
+}
+
 
 /*******************************************************************/
 
@@ -70,14 +88,17 @@ cl_stm8::cl_stm8(struct cpu_entry *IType, class cl_sim *asim):
 {
   type= IType;
   flash_ctrl= NULL;
+  cSP.set_uc(this);
+  cSP.decode(&regs.SP);
 }
 
 int
 cl_stm8::init(void)
 {
   cl_uc::init(); /* Memories now exist */
+  sp_limit= 0x14ff;
 
-  xtal = 8000000;
+  //set_xtal(8000000);
 
   //rom = address_space(MEM_ROM_ID);
   //ram = mem(MEM_XRAM);
@@ -105,7 +126,7 @@ cl_stm8::reset(void)
 {
   cl_uc::reset();
 
-  regs.SP = 0x17ff;
+  cSP.W(sp_start= sp_most= 0x17ff);
   regs.A = 0;
   regs.X = 0;
   regs.Y = 0;
@@ -115,19 +136,19 @@ cl_stm8::reset(void)
 }
 
 
-char *
+const char *
 cl_stm8::id_string(void)
 {
   switch (type->type)
     {
     case CPU_STM8S:
-      return((char*)"STM8 S,AF");
+      return("STM8 S,AF");
     case CPU_STM8L:
-      return((char*)"STM8 AL,L");
+      return("STM8 AL,L");
     case CPU_STM8L101:
-      return((char*)"STM8 L101");
+      return("STM8 L101");
     default:
-      return((char*)"STM8");
+      return("STM8");
     }
 }
 
@@ -155,7 +176,7 @@ cl_stm8::get_mem_size(enum mem_class type)
 
 static class cl_port_ui *d= NULL;
 static int puix= 1;
-static int puiy= 4;
+static int puiy= 5;
 static int puik= 0;
 static int puis= 1;
 static const char *puiks= keysets[puik];
@@ -172,7 +193,7 @@ cl_stm8::mk_port(t_addr base, chars n)
   pd.cell_p  = p->cell_p;
   pd.cell_in = p->cell_in;
   pd.cell_dir= p->cell_dir;
-  pd.keyset  = chars(puiks);
+  pd.keyset  = puiks;
   pd.basx    = puix;
   pd.basy    = puiy;
   d->add_port(&pd, puis++);
@@ -181,12 +202,19 @@ cl_stm8::mk_port(t_addr base, chars n)
     {
       puix= 1;
       if ((puiy+= 7) > 20)
-	;
+        {}
     }
   if ((puik+= 1) > 7)
     puiks= NULL;
   else
     puiks= keysets[puik];
+}
+
+void
+cl_stm8::make_cpu_hw(void)
+{
+  add_hw(cpu= new cl_stm8_cpu(this));
+  cpu->init();
 }
 
 void
@@ -264,12 +292,12 @@ cl_stm8::mk_hw_elements(void)
       o->hide();
     }
   
+  add_hw(h= new cl_dreg(this, 0, "dreg"));
+  h->init();
+
   add_hw(d= new cl_port_ui(this, 0, "dport"));
   d->init();
   pd.init();
-  
-  add_hw(h= new cl_stm8_cpu(this));
-  h->init();
   
   if (type->type == CPU_STM8S)
     {
@@ -533,32 +561,34 @@ cl_stm8::make_memories(void)
   rom_chip->init();
   memchips->add(rom_chip);*/
 
-  ram_chip= new cl_memory_chip("ram_chip", 0x1800, 8);
+  ram_chip= new cl_chip8("ram_chip", 0x1800, 8);
   ram_chip->init();
   memchips->add(ram_chip);
-  eeprom_chip= new cl_memory_chip("eeprom_chip", 0x0800, 8, 0);
+  eeprom_chip= new cl_chip8("eeprom_chip", 0x0800, 8, 0);
   eeprom_chip->init();
   memchips->add(eeprom_chip);
-  option_chip= new cl_memory_chip("option_chip", 0x0800, 8, 0);
+  option_chip= new cl_chip8("option_chip", 0x0800, 8, 0);
   option_chip->init();
   memchips->add(option_chip);
-  io_chip= new cl_memory_chip("io_chip", 0x0800, 8);
+  io_chip= new cl_chip8("io_chip", 0x0800, 8);
   io_chip->init();
   memchips->add(io_chip);
   if (type->subtype & DEV_STM8S105)
-    boot_chip= new cl_memory_chip("boot_chip_s105", bl_s105_length, 8, bl_s105);
+    boot_chip= new cl_chip8("boot_chip_s105",
+			    bl_s105_length, 8, bl_s105, bl_s105_length);
   else if (type->subtype & DEV_STM8L15x46)
-    boot_chip= new cl_memory_chip("boot_chip_l15x46", bl_l15x46_length, 8, bl_l15x46);
+    boot_chip= new cl_chip8("boot_chip_l15x46",
+			    bl_l15x46_length, 8, bl_l15x46, bl_l15x46_length);
   /*else if (type->subtype & DEV_STM8L101)
     boot_chip= new cl_memory_chip("boot_chip_l101", bl_l15x46_length, 8, bl_l15x46);*/
   else
-    boot_chip= new cl_memory_chip("boot_chip", 0x0800, 8);
+    boot_chip= new cl_chip8("boot_chip", 0x0800, 8);
   boot_chip->init();
   memchips->add(boot_chip);
-  cpu_chip= new cl_memory_chip("cpu_chip", 0x0100, 8);
+  cpu_chip= new cl_chip8("cpu_chip", 0x0100, 8);
   cpu_chip->init();
   memchips->add(cpu_chip);
-  flash_chip= new cl_memory_chip("flash_chip", 0x20000, 8, 0);
+  flash_chip= new cl_chip8("flash_chip", 0x20000, 8, 0);
   flash_chip->init();
   memchips->add(flash_chip);
   /*
@@ -624,18 +654,19 @@ cl_stm8::make_memories(void)
   address_spaces->add(regs8);
   address_spaces->add(regs16);
 
-  class cl_var *v;
-  vars->add(v= new cl_var(cchars("A"), regs8, 0, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("CC"), regs8, 1, ""));
-  v->init();
+  vars->add("A",     regs8, 0, 7, 0, "Accumulator");
+  vars->add("CC",    regs8, 1, -1, -1, "Condition Code");
+  vars->add("CC_C",  regs8, 1, BITPOS_C,  BITPOS_C,  "Carry");
+  vars->add("CC_Z",  regs8, 1, BITPOS_Z,  BITPOS_Z,  "Zero");
+  vars->add("CC_N",  regs8, 1, BITPOS_N,  BITPOS_N,  "Negative");
+  vars->add("CC_I0", regs8, 1, BITPOS_I0, BITPOS_I0, "Interrupt mask level 0");
+  vars->add("CC_H",  regs8, 1, BITPOS_H,  BITPOS_H,  "Half carry");
+  vars->add("CC_I1", regs8, 1, BITPOS_I1, BITPOS_I1, "Interrupt mask level 1");
+  vars->add("CC_V",  regs8, 1, BITPOS_V,  BITPOS_V,  "Overflow");
   
-  vars->add(v= new cl_var(cchars("X"), regs16, 0, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("Y"), regs16, 1, ""));
-  v->init();
-  vars->add(v= new cl_var(cchars("SP"), regs16, 2, ""));
-  v->init();
+  vars->add("X",  regs16, 0, 15, 0, "X index register");
+  vars->add("Y",  regs16, 1, 15, 0, "Y index register");
+  vars->add("SP", regs16, 2, 15, 0, "Stack pointer");
 }
 
 
@@ -709,7 +740,6 @@ cl_stm8::get_disasm_info(t_addr addr,
   const char *b = NULL;
   uint code;
   int len = 0;
-  int immed_n = 0;
   int i;
   int start_addr = addr;
   struct dis_entry *dis_e;
@@ -796,11 +826,8 @@ cl_stm8::get_disasm_info(t_addr addr,
     *ret_branch = dis_e->branch;
   }
 
-  if (immed_offset) {
-    if (immed_n > 0)
-         *immed_offset = immed_n;
-    else *immed_offset = (addr - start_addr);
-  }
+  if (immed_offset)
+    *immed_offset = (addr - start_addr);
 
   if (len == 0)
     len = 1;
@@ -815,144 +842,161 @@ cl_stm8::get_disasm_info(t_addr addr,
 }
 
 char *
-cl_stm8::disass(t_addr addr, const char *sep)
+cl_stm8::disass(t_addr addr)
 {
-  char work[256], temp[20];
+  const class cl_var *context = 0;
+  chars work, temp;
   const char *b;
-  char *buf, *p, *t;
   int len = 0;
   int immed_offset = 0;
+  t_addr operand= 0;
+  bool first= true;
 
-
-  p= work;
+  work= "";
 
   b = get_disasm_info(addr, &len, NULL, &immed_offset, NULL);
 
-  if (b == NULL) {
-    buf= (char*)malloc(30);
-    strcpy(buf, "UNKNOWN/INVALID");
-    return(buf);
-  }
+  if (b == NULL)
+    {
+      return strdup("UNKNOWN/INVALID");
+    }
 
+  int operand_n = 0;
   while (*b)
     {
+      if ((*b == ' ') && first)
+	{
+	  first= false;
+	  while (work.len() < 6) work.append(' ');
+	}
       if (*b == '%')
         {
+
           b++;
           switch (*(b++))
             {
             case 's': // s    signed byte immediate
-              sprintf(temp, "#%d", (char)rom->get(addr+immed_offset));
+              temp.format("#%d", (i8_t)rom->get(addr+immed_offset));
               ++immed_offset;
               break;
             case 'e': // e    extended 24bit immediate operand
-              sprintf(temp, "#0x%06lx",
-                 (ulong)((rom->get(addr+immed_offset)<<16) |
-                        (rom->get(addr+immed_offset+1)<<8) |
-                        (rom->get(addr+immed_offset+2))) );
+	      operand= ((rom->get(addr+immed_offset)<<16) |
+			  (rom->get(addr+immed_offset+1)<<8) |
+			  (rom->get(addr+immed_offset+2)));
+              temp.format("#0x%06lx", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               ++immed_offset;
               break;
             case 'w': // w    word immediate operand
-              sprintf(temp, "#0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
+	      operand=  ((rom->get(addr+immed_offset)<<8) |
+			 (rom->get(addr+immed_offset+1)));
+              temp.format("#0x%04x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               break;
             case 'b': // b    byte immediate operand
-              sprintf(temp, "#0x%02x", (uint)rom->get(addr+immed_offset));
+              operand= (uint)rom->get(addr+immed_offset);
+              temp.format("#0x%02x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               break;
             case 'x': // x    extended addressing
-              sprintf(temp, "0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
-              ++immed_offset;
-              ++immed_offset;
+              if (rom->get(addr) == 0x35) // mov %x,%b - mov $8000,#$ff is 35 ff 80 00
+                operand= (uint)((rom->get(addr+immed_offset+1)<<8) |
+                           (rom->get(addr+immed_offset+2)));
+              else if (rom->get(addr) == 0x55 && operand_n == 0) // mov %x,%x - mov $8000,$9fff is 9f ff 80 00
+                operand= (uint)((rom->get(addr+immed_offset+2)<<8) |
+                           (rom->get(addr+immed_offset+3)));
+              else
+                {
+                  operand= (uint)((rom->get(addr+immed_offset)<<8) |
+                             (rom->get(addr+immed_offset+1)));
+                  ++immed_offset;
+                  ++immed_offset;
+                }
+              temp.format("0x%04x", operand);
+              context = addr_name(operand, rom, &temp);
               break;
             case 'd': // d    direct addressing
-              sprintf(temp, "0x%02x", (uint)rom->get(addr+immed_offset));
-              ++immed_offset;
+              if (rom->get(addr) == 0x45 && operand_n == 0) // mov %d,%d - mov $80,$10 is 45 10 80
+                  operand= (uint)rom->get(addr+immed_offset+1);
+              else
+                {
+                  operand= (uint)rom->get(addr+immed_offset);
+                  ++immed_offset;
+                }
+              temp.format("0x%02x", operand);
               break;
             case '3': // 3    24bit index offset
-              sprintf(temp, "0x%06lx",
-                 (ulong)((rom->get(addr+immed_offset)<<16) |
-                        (rom->get(addr+immed_offset+1)<<8) |
-                        (rom->get(addr+immed_offset+2))) );
+              // Assumption: the 24bit offset address is the address of a
+              // fixed table and the index register selects an entry.
+	      operand= (ulong)((rom->get(addr+immed_offset)<<16) |
+			  (rom->get(addr+immed_offset+1)<<8) |
+			  (rom->get(addr+immed_offset+2)));
+              temp.format("0x%06lx", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               ++immed_offset;
-             break;
+              break;
             case '2': // 2    word index offset
-              sprintf(temp, "0x%04x",
-                 (uint)((rom->get(addr+immed_offset)<<8) |
-                        (rom->get(addr+immed_offset+1))) );
+              // Assumption: the word offset address is the address of a
+              // fixed table and the index register selects an entry.
+	      operand= (uint)((rom->get(addr+immed_offset)<<8) |
+			 (rom->get(addr+immed_offset+1)));
+              temp.format("0x%04x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               ++immed_offset;
               break;
             case '1': // b    byte index offset
-              sprintf(temp, "0x%02x", (uint)rom->get(addr+immed_offset));
+              // Assumption: the index register points to a struct/record
+              // and the byte offset selects an entry.
+              operand= (uint)rom->get(addr+immed_offset);
+              temp.format("0x%02x", operand);
+              addr_name(operand, rom, &temp);
               ++immed_offset;
               break;
-            case 'p': // b    byte index offset
-	      {
-		long int base;
-		i8_t offs;
-		base= addr+immed_offset+1;
-		offs= rom->get(addr+immed_offset);
-		long int res= base+offs;
-		sprintf(temp, "0x%04lx",
-			/*(long int)(addr+immed_offset+1
-			  +(int)rom->get(addr+immed_offset))*/
-			res
-			);
-		++immed_offset;
-	      }
+            case 'p': // p    pc relative
+              operand = (addr+immed_offset+1 + (i8_t)rom->get(addr+immed_offset)) & 0xffff;
+              temp.format("0x%04lx", operand);
+              addr_name(operand, rom, &temp);
+              ++immed_offset;
+              break;
+            case 'B': // B    bit number
+              {
+                uint bit = (rom->get(addr+1) & 0xf) >> 1;
+                temp.format("%u", bit);
+                // N.B. The address comes before the bit so operand has already
+                // been set to the address when we get here.
+                addr_name(operand, rom, bit, bit, &temp, context);
+              }
               break;
             default:
-              strcpy(temp, "?");
+	      temp= "?";
               break;
             }
-          t= temp;
-          while (*t)
-            *(p++)= *(t++);
+	  work+= temp;
         }
       else
-        *(p++)= *(b++);
+        {
+          if (*b == ',')
+            operand_n++;
+          work+= *(b++);
+        }
     }
-  *p= '\0';
 
-  p= strchr(work, ' ');
-  if (!p)
-    {
-      buf= strdup(work);
-      return(buf);
-    }
-  if (sep == NULL)
-    buf= (char *)malloc(6+strlen(p)+1);
-  else
-    buf= (char *)malloc((p-work)+strlen(sep)+strlen(p)+1);
-  for (p= work, t= buf; *p != ' '; p++, t++)
-    *t= *p;
-  p++;
-  *t= '\0';
-  if (sep == NULL)
-    {
-      while (strlen(buf) < 6)
-        strcat(buf, " ");
-    }
-  else
-    strcat(buf, sep);
-  strcat(buf, p);
-  return(buf);
+  return strdup(work.c_str());
 }
 
 
 void
 cl_stm8::print_regs(class cl_console_base *con)
 {
+  con->dd_color("answer");
   con->dd_printf("V-IHINZC  Flags= 0x%02x %3d %c  ",
                  regs.CC, regs.CC, isprint(regs.CC)?regs.CC:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",
@@ -969,9 +1013,10 @@ cl_stm8::print_regs(class cl_console_base *con)
                  regs.X, regs.X, isprint(regs.X)?regs.X:'.');
   con->dd_printf("Y= 0x%04x %3d %c\n",
                  regs.Y, regs.Y, isprint(regs.Y)?regs.Y:'.');
-  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c\n",
-                 regs.SP, ram->get(regs.SP+1), ram->get(regs.SP+1),
-                 isprint(ram->get(regs.SP+1))?ram->get(regs.SP+1):'.');
+  con->dd_printf("SP= 0x%04x [SP+1]= %02x %3d %c  Limit= 0x%04x\n",
+                 regs.SP, ram->read(regs.SP+1), ram->read(regs.SP+1),
+                 isprint(ram->read(regs.SP+1))?ram->read(regs.SP+1):'.',
+		 AU(sp_limit));
 
   print_disass(PC, con);
 }
@@ -1022,6 +1067,7 @@ cl_stm8::exec_inst(void)
 	int ch= fetch();
 	int cl= fetch();
 	PC= ce*0x10000 + ch*0x100 + cl;
+	tick(1);
 	return resGO;
       }
     case 0x8b: return resSTOP; // BREAK instruction
@@ -1096,6 +1142,7 @@ cl_stm8::exec_inst(void)
 		     delete il;
 		   }
 	       }
+	       tick(10);
                return(resGO);
             case 0x10: 
             case 0xA0:
@@ -1137,6 +1184,7 @@ cl_stm8::exec_inst(void)
                tempi = get1(opaddr);
                store1( opaddr, regs.A);
                regs.A = tempi;
+	       tick(2);
                return(resGO);
             case 0x40: // exg A,XL
                tempi = regs.X;
@@ -1164,6 +1212,7 @@ cl_stm8::exec_inst(void)
                }
             case 0x80: // ret
                pop2( PC);
+	       tick(3);
                return(resGO);
             case 0x10: 
             case 0xA0:
@@ -1206,7 +1255,7 @@ cl_stm8::exec_inst(void)
                pop1(tempi);
                store1(opaddr, tempi);
                return(resGO);
-            case 0x40: // mul
+            case 0x40: // MUL
                tick(3);
                if(cprefix==0x90) {
                   regs.Y = (regs.Y&0xff) * regs.A;
@@ -1219,10 +1268,10 @@ cl_stm8::exec_inst(void)
                FLAG_CLEAR(BIT_C);
                return(resGO);
                break;
-            case 0x50: // sub sp,#val
-               regs.SP -= fetch();
-               return(resGO);
-               break;            
+	 case 0x50: // sub sp,#val
+	   cSP.set(regs.SP - fetch());
+	   return(resGO);
+	   break;            
             case 0x60: //div
                return(inst_div(code, cprefix));
                break;
@@ -1251,6 +1300,7 @@ cl_stm8::exec_inst(void)
                return( inst_cpl( code, cprefix));
                break;
             case 0x80: // TRAP
+	      tick(8);
 	       {
 		 class it_level *il= new it_level(3, 0x8004, PC, trap_src);
 		 accept_it(il);
@@ -1295,9 +1345,9 @@ cl_stm8::exec_inst(void)
                return(resGO);
             case 0x90:
                if(cprefix==0x90) {
-                  regs.SP = regs.Y;
+		 cSP.set(regs.Y);
                } else if(cprefix==0x00) {
-                  regs.SP = regs.X;
+		 cSP.set(regs.X);
                } else {
                   return(resHALT);
                }
@@ -1340,7 +1390,8 @@ cl_stm8::exec_inst(void)
             case 0x60: // DIVW
                return( inst_div( code, cprefix));
                break;
-            case 0x80:
+	 case 0x80: // POPW
+	   tick(1);
                if(cprefix==0x90) {
                   pop2(regs.Y);
                } else if(cprefix==0x00) {
@@ -1434,6 +1485,7 @@ cl_stm8::exec_inst(void)
                pop1( tempi);
                pop2( PC);
                PC += (tempi <<16); //Add PCE to PC
+	       tick(5);
                return(resGO);
             case 0x90:
                if(cprefix==0x90) {
@@ -1445,12 +1497,14 @@ cl_stm8::exec_inst(void)
                }
                return(resGO);
                break;
-            case 0xA0:
+	 case 0xA0: // LDF
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   store1(get3(opaddr)+regs.X,regs.A);
+		  tick(3);
                } else if(cprefix==0x91) {
-                  store1(get3(opaddr)+regs.Y,regs.A);
+		 store1(get3(opaddr)+regs.Y,regs.A);
+		 tick(3);
                } else if(cprefix==0x90) {
                   store1((opaddr << 8) + fetch() + regs.Y, regs.A);
                } else if(cprefix==0x00) {
@@ -1513,6 +1567,7 @@ cl_stm8::exec_inst(void)
                return( inst_rlc( code, cprefix));
                break;
             case 0x80: // PUSHW
+	      tick(1);
                if(cprefix==0x90) {
                   push2(regs.Y);
                } else if(cprefix==0x00) {
@@ -1573,15 +1628,22 @@ cl_stm8::exec_inst(void)
       case 0xb:
          switch ( code & 0xf0) {
             case 0x30: // push longmem
-               push1( get1(fetch2()));
-               return(resGO);
+	      {
+		t_addr a= fetch2();
+		t_mem v= get1(a);
+		push1( v /*get1(fetch2())*/);
+		return(resGO);
+	      }
             case 0x40: // push #byte
-               push1( fetch1());
-               return(resGO);
-            case 0x50: // addw sp,#val
-               regs.SP += fetch1();
-               return(resGO);
-               break;
+	      {
+		t_mem v= fetch1();
+		push1(v);
+		return(resGO);
+	      }
+	 case 0x50: // addw sp,#val
+	   cSP.set(regs.SP + fetch1());
+	   return(resGO);
+	   break;
             case 0x60: // ld (shortoff,SP),A
                store1(fetch1()+regs.SP, regs.A);
                FLAG_NZ(regs.A);
@@ -1636,8 +1698,10 @@ cl_stm8::exec_inst(void)
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   PC = get3(opaddr);
+		  tick(5);
                } else {
                   PC = (opaddr << 8) + fetch();
+		  tick(1);
                }
                return(resGO);
                break;
@@ -1681,11 +1745,13 @@ cl_stm8::exec_inst(void)
                    push2(PC & 0xffff);
                    push1(PC >> 16);
                    PC = get3(opaddr);
+		   tick(7);
                } else {
                    unsigned char c = fetch();
                    push2(PC & 0xffff);
                    push1(PC >> 16);
                    PC = (opaddr << 8) + c;
+		   tick(4);
                }
                return(resGO);
                break;
@@ -1697,6 +1763,7 @@ cl_stm8::exec_inst(void)
                signed char c = (signed char) fetch1();
                push2(PC);
                PC += c;
+	       tick(3);
                return(resGO);
              }
                break;            
@@ -1704,6 +1771,7 @@ cl_stm8::exec_inst(void)
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   store1(get3(opaddr),regs.A);
+		  tick(3);
                } else {
                   store1((opaddr << 8) + fetch(), regs.A);
                }
@@ -1733,6 +1801,7 @@ cl_stm8::exec_inst(void)
                break;
             case 0x80: 
 	      //printf("************* HALT instruction reached !!!!\n");
+	      tick(9);
                return(resHALT);
             case 0x90: // LD A, YH / XH
                if(cprefix==0x90) {
@@ -1774,6 +1843,7 @@ cl_stm8::exec_inst(void)
                break;
             case 0x80: 
 	      //printf("************* WFI/WFE instruction not implemented !!!!\n");
+	      tick(9);
                return(resINV_INST);
             case 0x90:
                if(cprefix==0x90) {
@@ -1788,8 +1858,10 @@ cl_stm8::exec_inst(void)
                opaddr = fetch2();
                if (cprefix == 0x92) {
                   regs.A = get1(get3(opaddr)+regs.X);
+		  tick(4);
                } else if(cprefix==0x91) {
                   regs.A = get1(get3(opaddr)+regs.Y);
+		  tick(4);
                } else if(cprefix==0x90) {
                   regs.A = get1((opaddr << 8) + fetch() + regs.Y);
                } else if(cprefix==0x00) {
@@ -1817,14 +1889,6 @@ cl_stm8::exec_inst(void)
       
    }
 
-   //printf("************* bad code !!!!\n");
-  /*if (PC)
-    PC--;
-  else
-  PC= get_mem_size(MEM_ROM_ID)-1;*/
-  //PC= rom->inc_address(PC, -1);
-
-  //sim->stop(resINV_INST);
   return(resINV_INST);
 }
 
@@ -1911,6 +1975,24 @@ cl_stm8::it_enabled(void)
   return !(regs.CC & BIT_I0) || !(regs.CC & BIT_I1);
 }
 
+void
+cl_stm8::stack_check_overflow(class cl_stack_op *op)
+{
+  if (op)
+    {
+      if (op->get_op() & stack_write_operation)
+	{
+	  t_addr a= op->get_after();
+	  if (a < sp_limit)
+	    {
+	      class cl_error_stack_overflow *e=
+		new cl_error_stack_overflow(op);
+	      e->init();
+	      error(e);
+	    }
+	}
+    }
+}
 
 cl_stm8_cpu::cl_stm8_cpu(class cl_uc *auc):
   cl_hw(auc, HW_DUMMY, 0, "cpu")
@@ -1921,11 +2003,22 @@ int
 cl_stm8_cpu::init(void)
 {
   int i;
+  cl_stm8 *u= (cl_stm8*)uc;
   cl_hw::init();
   for (i= 0; i < 11; i++)
     {
       regs[i]= register_cell(uc->rom, 0x7f00+i);
     }
+  cl_var *v;
+  uc->vars->add(v= new cl_var(chars("sp_limit"), cfg, cpuconf_sp_limit,
+			      cfg_help(cpuconf_sp_limit)));
+  v->init();
+  v->write(u->sp_limit);
+
+  uc->vars->add(v= new cl_var(chars("rollover"), cfg, cpuconf_rollover,
+			      cfg_help(cpuconf_rollover)));
+  v->init();
+  
   return 0;
 }
 
@@ -1976,10 +2069,10 @@ cl_stm8_cpu::write(class cl_memory_cell *cell, t_mem *val)
       u->regs.Y= (u->regs.Y & 0xff00) | (*val);
       break;
     case 8:
-      u->regs.SP= (u->regs.SP & 0xff) | (*val << 8);
+      u->cSP.set((u->regs.SP & 0xff) | (*val << 8));
       break;
     case 9:
-      u->regs.SP= (u->regs.SP & 0xff00) | (*val);
+      u->cSP.set((u->regs.SP & 0xff00) | (*val));
       break;
     case 0xa:
       u->regs.CC= (u->regs.CC & 0xff00) | (*val);
@@ -1995,7 +2088,7 @@ cl_stm8_cpu::read(class cl_memory_cell *cell)
   cl_stm8 *u= (cl_stm8*)uc;
   
   if (conf(cell, NULL))
-    return v;
+    return cell->get();
   if (!uc->rom->is_owned(cell, &a))
     return v;
   if ((a < 0x7f00) ||
@@ -2045,10 +2138,39 @@ cl_stm8_cpu::read(class cl_memory_cell *cell)
 t_mem
 cl_stm8_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 {
-  if (val)
-    cell->set(*val);
+  class cl_stm8 *u= (class cl_stm8 *)uc;
+  switch ((enum stm8_cpu_cfg)addr)
+    {
+    case cpuconf_sp_limit:
+      if (val)
+	u->sp_limit= *val & 0xffff;
+      cell->set(u->sp_limit);
+      return u->sp_limit;
+      break;
+    case cpuconf_rollover:
+      if (val)
+	u->cSP.set_rollover(*val);
+      cell->set((u->cSP.get_rollover())?1:0);
+      break;
+    default:
+      if (val)
+	cell->set(*val);
+      break;
+    }
   return cell->get();
 }
 
+const char *
+cl_stm8_cpu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+    case cpuconf_sp_limit:
+      return "Stack overflows when SP reaches this limit";
+    case cpuconf_rollover:
+      return "Use hw roll-over of stack pointer";
+    }
+  return "Not used";
+}
 
 /* End of stm8.src/stm8.cc */

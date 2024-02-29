@@ -71,12 +71,16 @@ void ftest(int a, int b)
 {
   if (ftest1(a) != b)
     ASSERT (0);
+#if 0 // This tests triggers signed integer overflow, which is undefined behaviour in C (though GCC apparently makes it implementation-defined, and tests for the implementation-defined behaviour here).
   if (ftest2(a) != b)
     ASSERT (0);
+#endif
   if (ftest4(a) != b)
     ASSERT (0);
+#if 0 // This tests triggers signed integer overflow, which is undefined behaviour in C (though GCC apparently makes it implementation-defined, and tests for the implementation-defined behaviour here).
   if (ftest5(a) != b)
     ASSERT (0);
+#endif
 }
 
 void ftestu(unsigned int a, unsigned int b)
@@ -133,4 +137,3 @@ testTortureExecute (void)
 
   return;
 }
-

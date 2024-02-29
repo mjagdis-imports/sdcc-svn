@@ -224,16 +224,9 @@ static void assign_operands_for_cost(const assignment &a, unsigned short int i, 
 {
   const iCode *ic = G[i].ic;
   
-  if(ic->op == IFX)
-    assign_operand_for_cost(IC_COND(ic), a, i, G, I);
-  else if(ic->op == JUMPTABLE)
-    assign_operand_for_cost(IC_JTCOND(ic), a, i, G, I);
-  else
-    {
-      assign_operand_for_cost(IC_LEFT(ic), a, i, G, I);
-      assign_operand_for_cost(IC_RIGHT(ic), a, i, G, I);
-      assign_operand_for_cost(IC_RESULT(ic), a, i, G, I);
-    }
+  assign_operand_for_cost(IC_LEFT(ic), a, i, G, I);
+  assign_operand_for_cost(IC_RIGHT(ic), a, i, G, I);
+  assign_operand_for_cost(IC_RESULT(ic), a, i, G, I);
     
   if(ic->op == SEND && ic->builtinSEND)
     assign_operands_for_cost(a, (unsigned short)*(adjacent_vertices(i, G).first), G, I);
@@ -242,55 +235,30 @@ static void assign_operands_for_cost(const assignment &a, unsigned short int i, 
 template <class G_t, class I_t>
 static bool operand_sane(const operand *o, const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
-#if 0
-  int v, byteregs[8];   // Todo: Change this when sdcc supports variables larger than 8 bytes.
-  unsigned short int size;
-
-  if(!o || !IS_SYMOP(o))
+  // stm8 code generation is very flexible, and can handle nearly anything (including variables where some bytes are spilt, while others are not).
+  // The only thing it can't handle is variables where some bytes are rematerialized, while others are not.
+  if(!o || !IS_SYMOP(o) || !OP_SYMBOL_CONST(o)->remat)
     return(true);
- 
+
   operand_map_t::const_iterator oi, oi_end;
   boost::tie(oi, oi_end) = G[i].operands.equal_range(OP_SYMBOL_CONST(o)->key);
   
   if(oi == oi_end)
     return(true);
   
-  // Ensure: Fully in registers or fully in mem.
-  if(a.local.find(oi->second) != a.local.end())
+  // In registers.
+  if(std::binary_search(a.local.begin(), a.local.end(), oi->second))
     {
       while(++oi != oi_end)
-        if(a.local.find(oi->second) == a.local.end())
+        if(!std::binary_search(a.local.begin(), a.local.end(), oi->second))
           return(false);
     }
   else
     {
        while(++oi != oi_end)
-        if(a.local.find(oi->second) != a.local.end())
+        if(std::binary_search(a.local.begin(), a.local.end(), oi->second))
           return(false);
     }
-
-  boost::tie(oi, oi_end) = G[i].operands.equal_range(OP_SYMBOL_CONST(o)->key);
-  v = oi->second;
-  byteregs[I[v].byte] = a.global[v];
-  size = 1;
-  while(++oi != oi_end)
-    {
-      v = oi->second;
-      byteregs[I[v].byte] = a.global[v];
-      size++;
-    }
-
-  if (byteregs[0] == -1)
-    return(true);
-
-  // Ensure: 8 bit only in A, 16 bit only in X or Y.
-  if (size == 1)
-    return(byteregs[0] == A_IDX);
-  if (size == 2)
-    return(byteregs[0] == XL_IDX && byteregs[1] == XH_IDX || byteregs[0] == YL_IDX && byteregs[1] == YH_IDX);
-  if (size > 2)
-    return(false);
-#endif
 
   return(true);
 }
@@ -358,7 +326,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case '|':
     case BITWISEAND:
     case IPUSH:
-    //case IPOP:
+    case IPUSH_VALUE_AT_ADDRESS:
     case CALL:
     case PCALL:
     case RETURN:
@@ -376,6 +344,7 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case GETABIT:
     case GETBYTE:
     case GETWORD:
+    case ROT:
     case LEFT_OP:
     case RIGHT_OP:
     case GET_VALUE_AT_ADDRESS:
@@ -385,12 +354,11 @@ static float instruction_cost(const assignment &a, unsigned short int i, const G
     case ADDRESS_OF:
     case JUMPTABLE:
     case CAST:
-    /*case RECEIVE:
-    case SEND:*/
+    case RECEIVE:
+    case SEND:
     case DUMMY_READ_VOLATILE:
-    /*case CRITICAL:
-    case ENDCRITICAL:*/
-    case SWAP:
+    case CRITICAL:
+    case ENDCRITICAL:
       assign_operands_for_cost(a, i, G, I);
       set_surviving_regs(a, i, G, I);
       c = drySTM8iCode(ic);
@@ -509,7 +477,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
   assignment_optimal = true;
   tree_dec_ralloc_nodes(T, find_root(T), G, I2, ac, &assignment_optimal);
 
-  const assignment &winner = *(T[find_root(T)].assignments.begin());
+  /*const*/ assignment &winner = *(T[find_root(T)].assignments.begin());
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Winner: ";
@@ -570,6 +538,11 @@ iCode *stm8_ralloc2_cc(ebbIndex *ebbi)
   con_t conflict_graph;
 
   iCode *ic = create_cfg(control_flow_graph, conflict_graph, ebbi);
+
+  if(optimize.genconstprop)
+    recomputeValinfos(ic, ebbi, "_2");
+
+  guessCounts(ic, ebbi);
 
   if(options.dump_graphs)
     dump_cfg(control_flow_graph);

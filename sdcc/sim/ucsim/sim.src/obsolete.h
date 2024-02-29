@@ -21,13 +21,13 @@ public:
 	 class cl_uc *auc);
   virtual ~cl_mem(void);
   virtual int init(void);
-  virtual char *id_string(void);
+  virtual const char *id_string(void);
   virtual int get_cell_flag(t_addr //addr
 			    ) { return(CELL_NORMAL); }
   virtual bool get_cell_flag(t_addr //addr
 			     , int //flag
 			     )
-  { return(DD_FALSE); }
+  { return(false); }
   virtual void set_cell_flag(t_addr addr, bool set_to, int flag) {}
 
   virtual t_mem read(t_addr addr);
@@ -108,7 +108,7 @@ public:
   cl_m(t_addr asize, int awidth);
   virtual ~cl_m(void);
   virtual int init(void);
-  virtual char *id_string(void);
+  virtual const char *id_string(void);
 
   virtual int get_cell_flag(t_addr addr);
   virtual bool get_cell_flag(t_addr addr, int flag);

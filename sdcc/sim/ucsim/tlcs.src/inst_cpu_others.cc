@@ -80,7 +80,7 @@ cl_tlcs::inst_neg_a()
   if (reg.raf.a)
     reg.raf.f|= (FLAG_C|FLAG_X);
 
-  //uint8_t a= ~reg.raf.a;
+  //u8_t a= ~reg.raf.a;
   if ((reg.raf.a & 0x0f) == 0)//if (a&0xf + 1 > 15)
     reg.raf.f|= FLAG_H;
   reg.raf.a= 0-reg.raf.a;
@@ -173,8 +173,10 @@ cl_tlcs::inst_div_hl(u8_t d)
       ((reg.hl / m) > 255))
     reg.raf.f|= FLAG_V;
   else
-    reg.rhl.l= reg.hl / m;
-  reg.rhl.h= reg.hl % m;
+    {
+      reg.rhl.l= reg.hl / m;
+      reg.rhl.h= reg.hl % m;
+    }
   return resGO;
 }
 

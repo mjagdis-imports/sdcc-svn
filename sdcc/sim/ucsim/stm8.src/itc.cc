@@ -27,7 +27,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // prj
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include "utils.h"
 
 // sim
@@ -159,7 +159,7 @@ cl_itc::print_info(class cl_console_base *con)
 	  con->dd_printf("\n");
 	}
     }
-  print_cfg_info(con);
+  //print_cfg_info(con);
 }
 
 

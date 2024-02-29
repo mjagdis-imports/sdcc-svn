@@ -160,7 +160,7 @@ DEFSETFUNC (mergeInDefs)
 
 
 /*------------------------------------------------------------------*/
-/* computeDataFlow - does computations for data flow accross blocks */
+/* computeDataFlow - does computations for data flow across blocks */
 /*------------------------------------------------------------------*/
 void
 computeDataFlow (ebbIndex * ebbi)
@@ -293,15 +293,6 @@ usedBetweenPoints (operand * op, iCode * start, iCode * end)
       if (SKIP_IC2 (lic))
         continue;
 
-      /* if ifx then check the condition */
-      if (lic->op == IFX &&
-          IC_COND (lic)->key == op->key)
-        return 1;
-
-      if (lic->op == JUMPTABLE &&
-          IC_JTCOND (lic)->key == op->key)
-        return 1;
-
       if (IC_RIGHT (lic) &&
           IC_RIGHT (lic)->key == op->key)
         return 1;
@@ -359,13 +350,6 @@ usedInRemaining (operand * op, iCode * ic)
       if (SKIP_IC1 (lic))
         continue;
 
-      /* if ifx then check the condition */
-      if (lic->op == IFX && isOperandEqual (IC_COND (lic), op))
-        return lic;
-
-      if (lic->op == JUMPTABLE && isOperandEqual (IC_JTCOND (lic), op))
-        return lic;
-
       if (IC_RIGHT (lic) && isOperandEqual (IC_RIGHT (lic), op))
         return lic;
 
@@ -385,7 +369,7 @@ usedInRemaining (operand * op, iCode * ic)
 
 
 /*-------------------------------------------------------------------*/
-/* isDefAlive - will return true if definiton reaches a block & used */
+/* isDefAlive - will return true if definition reaches a block & used */
 /*-------------------------------------------------------------------*/
 DEFSETFUNC (isDefAlive)
 {

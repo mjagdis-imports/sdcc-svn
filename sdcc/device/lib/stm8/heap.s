@@ -38,4 +38,5 @@
 ___sdcc_heap::
 	.ds 1023
 ___sdcc_heap_end::
-	.ds 1 
+	.ds 1
+

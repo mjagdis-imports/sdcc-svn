@@ -121,6 +121,13 @@
 #define	S_INDM	57
 
 /*
+ * Undocumented instructions
+ */
+
+#define X_UNDOCD 58
+#define S_RL_UNDOCD  59
+
+/*
  * Instruction types
  */
 #define	S_LD	60
@@ -150,18 +157,7 @@
 /*
  * CPU Types
  */
-#define	S_CPU	83
-
-#define S_RL_UNDOCD  85
-#define X_UNDOCD 89
-
-/*
- * Processor Types (S_CPU)
- */
-#define	X_Z80	0
-#define	X_HD64	1
-#define	X_ZXN	2
-#define	X_EZ80	3
+#define	S_CPU	84
 
 /*
  * HD64180 Instructions
@@ -174,17 +170,25 @@
 #define	X_TSTIO	95
 
 /*
+ * Processor Types (S_CPU)
+ */
+#define	X_Z80	0
+#define	X_HD64	1
+#define	X_ZXN	2
+#define	X_EZ80	3
+#define X_R800  4
+
+/*
  * Z80-ZX Next Instructions
  */
 #define X_ZXN_INH2	100
 #define X_ZXN_MUL	101
 #define X_ZXN_MIRROR	102
 #define X_ZXN_NEXTREG   103
-#define X_ZXN_MMU       104
-#define X_ZXN_CU_WAIT   105
-#define X_ZXN_CU_MOVE   106
-#define X_ZXN_CU_STOP   107
-#define X_ZXN_CU_NOP    108
+#define X_ZXN_CU_WAIT   104
+#define X_ZXN_CU_MOVE   105
+#define X_ZXN_CU_STOP   106
+#define X_ZXN_CU_NOP    107
 
 /*
  * eZ80 Instructions
@@ -193,6 +197,12 @@
 #define	X_EZ_INH2	111
 #define	X_EZ_LEA	112
 #define	X_EZ_PEA	113
+
+/*
+ * R800/Z280 Instructions
+ */
+#define X_Z280_MULTU   120  
+#define X_Z280_MULTUW  121  
 
 /*
  * eZ80 specific addressing extensions (used in mne m_flag)

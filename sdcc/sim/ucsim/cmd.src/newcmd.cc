@@ -26,30 +26,34 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#include "ddconfig.h"
+//#include "ddconfig.h"
 
 #include <stdio.h>
-#include <errno.h>
+//#include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "i_string.h"
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+//#include "i_string.h"
 
 //#include "cmdlexcl.h"
 
 // prj
 #include "globals.h"
 #include "utils.h"
-#include "fiocl.h"
+//#include "fiocl.h"
 
 // sim
-#include "simcl.h"
-#include "argcl.h"
-#include "appcl.h"
+//#include "simcl.h"
+//#include "argcl.h"
+//#include "appcl.h"
 
 // local
 #include "newcmdcl.h"
-#include "cmdutil.h"
+//#include "cmdutil.h"
 
 
 /*
@@ -161,22 +165,18 @@ cl_console_base::init(void)
 }
 
 void
-cl_console_base::set_startup(chars the)
-{
-  startup_command= the;
-}
-
-void
 cl_console_base::welcome(void)
 {
   if (!(flags & CONS_NOWELCOME))
     {
-      dd_printf("uCsim %s, Copyright (C) 1997 Daniel Drotos.\n"
+      dd_printf("uCsim%s, Copyright (C) %s Daniel Drotos.\n"
         "uCsim comes with ABSOLUTELY NO WARRANTY; for details type "
         "`show w'.\n"
         "This is free software, and you are welcome to redistribute it\n"
         "under certain conditions; type `show c' for details.\n",
-        VERSIONSTR);
+		(app->quiet)?"":(" " VERSIONSTR),
+		(app->quiet)?"":"1997"
+		);
     }
 }
 
@@ -204,6 +204,67 @@ cl_console_base::print_prompt(void)
       dd_cprintf("prompt_console", "%d", id);
       dd_cprintf("prompt", "%s", (prompt && prompt[0]) ? prompt : "> ");
     }
+}
+
+void
+cl_console_base::print_expr_result(t_mem val, const char *fmt)
+{
+  class cl_console_base *con= this;
+  t_mem v= val;
+  if ((fmt == NULL) || (*fmt == 0))
+    {
+      class cl_option *o= application->options->get_option("expression_format");
+      char *cc= NULL;
+      if (o)
+	{
+	  o->get_value(&cc);
+	  fmt= cc;
+	}
+    }
+  if (fmt && *fmt)
+    {
+      int i, fmt_len= strlen(fmt);
+      for (i= 0; i < fmt_len; i++)
+	{
+	  switch (fmt[i])
+	    {
+	    case 'x': con->dd_printf("%x\n", MU(v)); break;
+	    case 'X': con->dd_printf("0x%x\n", MU(v)); break;
+	    case '$': con->dd_printf("$%x\n", MU(v)); break;
+	    case '0': con->dd_printf("0x%08x\n", MU32(v)); break;
+	    case 'd': con->dd_printf("%d\n", MI(v)); break;
+	    case 'o': con->dd_printf("%o\n", MU(v)); break;
+	    case 'u': con->dd_printf("%u\n", MU(v)); break;
+	    case 'b': con->dd_printf("%s\n", cbin(v,8*sizeof(v)).c_str()); break;
+	    case 'B': con->dd_printf("%d\n", (v)?1:0); break;
+	    case 'L': con->dd_printf("%c\n", (v)?'T':'F'); break;
+	    case 'c':
+	      if ((MU(v) < 0x100) && isprint(MI(v)))
+		con->dd_printf("'%c'",MI(v));
+	      else
+		{
+		  switch (MI(v))
+		    {
+		    case '\a': con->dd_printf("'\\a'"); break;
+		    case '\b': con->dd_printf("'\\b'"); break;
+		    case '\e': con->dd_printf("'\\e'"); break;
+		    case '\f': con->dd_printf("'\\f'"); break;
+		    case '\n': con->dd_printf("'\\n'"); break;
+		    case '\r': con->dd_printf("'\\r'"); break;
+		    case '\t': con->dd_printf("'\\t'"); break;
+		    case '\v': con->dd_printf("'\\v'"); break;
+		    default:
+		      con->dd_printf("'\\%03o'",MI(v));
+		      break;
+		    }
+		}
+	      con->dd_printf("\n");
+	      break;
+	    }
+	}
+    }
+  else
+    con->dd_printf("%d\n", MI(v));
 }
 
 int
@@ -236,12 +297,14 @@ cl_console_base::dd_cprintf(const char *color_name, const char *format, ...)
       !fo->tty)
       )
     bw= true;
-
-  o= application->options->get_option((char*)chars("", "color_%s", color_name));
+  if (non_color())
+    bw= true;
+  
+  o= application->options->get_option(chars("", "color_%s", color_name));
   cc= NULL;
   if (o) o->get_value(&cc);
   cce= colopt2ansiseq(cc);
-  if (!bw) dd_printf("\033[0m%s", (char*)cce);
+  if (!bw) dd_printf("\033[0m%s", cce.c_str());
   
   va_start(ap, format);
   ret= cmd_do_print(format, ap);
@@ -255,12 +318,12 @@ cl_console_base::dd_cprintf(const char *color_name, const char *format, ...)
 chars
 cl_console_base::get_color_ansiseq(const char *color_name, bool add_reset)
 {
-  bool bw= false;
+  bool bw= non_color();
   char *cc;
   chars cce= "";
   class cl_f *fo= get_fout();
   class cl_option *o= application->options->get_option("black_and_white");
-  if (o) o->get_value(&cc);
+  if (o) o->get_value(&bw);
 
   if (!fo ||
       (fo &&
@@ -269,7 +332,7 @@ cl_console_base::get_color_ansiseq(const char *color_name, bool add_reset)
       )
     return cce;
 
-  o= application->options->get_option((char*)chars("", "color_%s", color_name));
+  o= application->options->get_option(chars("", "color_%s", color_name));
   cc= NULL;
   if (o) o->get_value(&cc);
   if (add_reset)
@@ -283,7 +346,8 @@ cl_console_base::get_color_ansiseq(const char *color_name, bool add_reset)
 void
 cl_console_base::dd_color(const char *color_name)
 {
-  dd_printf("%s", (char*)(get_color_ansiseq(color_name, true)));
+  if (!non_color())
+    dd_printf("%s", get_color_ansiseq(color_name, true).c_str());
 }
 
 int
@@ -354,7 +418,7 @@ cl_console_base::cmd_do_print(const char *format, va_list ap)
 	{
 	  return 0;
 	}
-      ret= fo->vprintf((char*)format, ap);
+      ret= fo->vprintf(format, ap);
       //fo->flush();
       return ret;
     }
@@ -378,8 +442,10 @@ cl_console_base::cmd_do_cprint(const char *color_name, const char *format, va_li
       !fo->tty)
       )
     bw= true;
-
-  o= application->options->get_option((char*)chars("", "color_%s", color_name));
+  if (non_color())
+    bw= true;
+      
+  o= application->options->get_option(chars("", "color_%s", color_name));
   cc= NULL;
   if (o) o->get_value(&cc);
   cce= colopt2ansiseq(cc);
@@ -392,8 +458,8 @@ cl_console_base::cmd_do_cprint(const char *color_name, const char *format, va_li
 	{
 	  return 0;
 	}
-      if (!bw) fo->prntf("\033[0m%s", (char*)cce);
-      ret= fo->vprintf((char*)format, ap);
+      if (!bw) fo->prntf("\033[0m%s", cce.c_str());
+      ret= fo->vprintf(format, ap);
       if (!bw) fo->prntf("\033[0m");
       //fo->flush();
       return ret;
@@ -565,8 +631,8 @@ cl_console_base::proc_input(class cl_cmdset *cmdset)
 {
   int retval= 0, i, do_print_prompt= 1;
 
-  un_redirect();
-  char *cmdstr;
+  //un_redirect();
+  const char *cmdstr;
   i= read_line();
   if (i < 0)
     {
@@ -576,7 +642,7 @@ cl_console_base::proc_input(class cl_cmdset *cmdset)
     return 0;
   cmdstr= lbuf;
   if (cmdstr==NULL)
-    cmdstr= (char*)"";
+    cmdstr= "";
   if (is_frozen())
     {
       application->get_sim()->stop(resUSER);
@@ -596,6 +662,7 @@ cl_console_base::proc_input(class cl_cmdset *cmdset)
             dd_printf("%s\n", cmdstr);
 	  do
 	    {
+	      un_redirect();
 	      cmdline= new cl_cmdline(app, cmdstr, this);
 	      cmdline->init();
 	      if (cmdline->repeat() &&
@@ -624,8 +691,9 @@ cl_console_base::proc_input(class cl_cmdset *cmdset)
 		  char *e= cmdline->cmd;
 		  if (strlen(e) > 0)
 		    {
-		      long l= application->eval(e);
-		      dd_cprintf("result", "%ld\n", l);
+		      t_mem l= application->eval(e);
+		      dd_color("result");
+		      print_expr_result(l, NULL);
 		    }
 		}
 	      if (get_fin() != NULL)
@@ -680,6 +748,130 @@ cl_console_base::set_cooked(bool new_val)
 
 
 /*
+ * Console where all output goes to the standard output
+ */
+
+cl_console_stdout::cl_console_stdout(class cl_app *the_app):
+  cl_console_base()
+{
+  f_stdout= mk_io("-", "w");
+  app= the_app;
+}
+
+cl_console_stdout::~cl_console_stdout(void)
+{
+  delete f_stdout;
+}
+
+int
+cl_console_stdout::init(void)
+{
+  cl_base::init();
+  prompt_option= 0;
+  null_prompt_option= 0;
+  debug_option= 0;
+  set_flag(CONS_NOWELCOME, true);
+  //cl_console_base::init();
+  if (get_fin() != NULL)
+    get_fin()->set_echo_color(get_color_ansiseq("command"));
+  last_command= 0;
+  //last_cmdline= 0;
+  last_cmd= chars("");
+  prev_quit= -1;
+  set_interactive(false);
+  return 0;
+}
+
+class cl_console_base *
+cl_console_stdout::clone_for_exec(char *_fin)
+{
+  class cl_f *fi= 0, *fo= 0, *fout;
+
+  if (!_fin)
+    return(0);
+  if (fi= mk_io(_fin, "r"), !fi)
+    {
+      fprintf(stderr, "Can't open `%s': %s\n", _fin, strerror(errno));
+      return(0);
+    }
+
+  fout= get_fout();
+  if ((fout == 0) || ((fo= fout->copy("a")) == 0))
+    {
+      delete fi;
+      fprintf(stderr, "Can't re-open output file: %s\n", strerror(errno));
+      return(0);
+    }
+    
+  class cl_console *con= new cl_sub_console(this, fi, fo, app);
+  return(con);
+}
+
+
+/*
+ * Console where all output is caught in a string
+ */
+
+cl_console_sout::cl_console_sout(class cl_app *the_app):
+  cl_console_base()
+{
+  app= the_app;
+}
+
+cl_console_sout::~cl_console_sout(void)
+{
+}
+
+int
+cl_console_sout::init(void)
+{
+  cl_base::init();
+  prompt_option= 0;
+  null_prompt_option= 0;
+  debug_option= 0;
+  set_flag(CONS_NOWELCOME, true);
+  //cl_console_base::init();
+  last_command= 0;
+  //last_cmdline= 0;
+  last_cmd= chars("");
+  prev_quit= -1;
+  set_interactive(false);
+  return 0;
+}
+
+int
+cl_console_sout::write(char *buf, int count)
+{
+  int ret= 0;
+  if (!buf)
+    return 0;
+  while (buf[ret] && (ret<count))
+    sout+= buf[ret++];
+  sout.trim();
+  return ret;
+}
+
+int
+cl_console_sout::cmd_do_print(const char *format, va_list ap)
+{
+  int ret;
+  char *msg;
+  msg= vformat_string(format, ap);
+  sout+= msg;
+  ret= strlen(msg);
+  free(msg);
+  sout.trim();
+  return ret;
+}
+
+int
+cl_console_sout::cmd_do_cprint(const char *color_name, const char *format, va_list ap)
+{
+  return cmd_do_print(format, ap);
+}
+
+
+/*
  * Command interpreter
  *____________________________________________________________________________
  */
@@ -698,6 +890,7 @@ cl_commander_base::~cl_commander_base(void)
   cons->free_all();
   delete cons;
   delete cmdset;
+  //delete stdout_console;
 }
 
 void
@@ -747,6 +940,17 @@ cl_commander_base::consoles_prevent_quit(void)
 	r++;
     }
   return r;
+}
+
+
+class cl_console_base *
+cl_commander_base::frozen_or_actual(void)
+{
+  if (frozen_console)
+    {
+      return frozen_console;
+    }
+  return actual_console?actual_console:(app->ocon);
 }
 
 
@@ -860,19 +1064,11 @@ int
 cl_commander_base::debug(const char *format, ...)
 {
   va_list ap;
-  int i, ret= 0;
 
-  for (i= 0; i < cons->count; i++)
-    {
-      class cl_console_base *c= (class cl_console_base*)(cons->at(i));
-      if (c->get_flag(CONS_DEBUG))
-        {
-          va_start(ap, format);
-          ret= c->cmd_do_cprint("debug", format, ap);
-          va_end(ap);
-        }
-    }
-  return(ret);
+  va_start(ap, format);
+  int ret = debug(format, ap);
+  va_end(ap);
+  return ret;
 }
 
 int
@@ -883,9 +1079,17 @@ cl_commander_base::debug(const char *format, va_list ap)
   for (i= 0; i < cons->count; i++)
     {
       class cl_console_base *c= (class cl_console_base*)(cons->at(i));
-      if (c->get_flag(CONS_DEBUG))
+      if (c->get_flag(CONS_DEBUG) && !c->get_flag(CONS_INACTIVE))
         {
-          ret= c->cmd_do_cprint("debug", format, ap);
+          va_list aq;
+#ifdef va_copy
+          va_copy(aq, ap);
+          ret= c->cmd_do_cprint("debug", format, aq);
+          va_end(aq);
+#else
+	  memcpy(&aq, &ap, sizeof(va_list));
+          ret= c->cmd_do_cprint("debug", format, aq);
+#endif	  
         }
     }
   return(ret);
@@ -921,7 +1125,16 @@ cl_commander_base::input_avail_on_frozen(void)
 class cl_console_base *
 cl_commander_base::exec_on(class cl_console_base *cons, char *file_name)
 {
-  if (!cons || !file_name || !fopen(file_name, "r"))
+  FILE *dummy;
+  bool oped= false;
+  if ((file_name == NULL) || (*file_name == 0))
+    return 0;
+  dummy= fopen(file_name, "r");
+  if (dummy)
+    oped= true, fclose(dummy);
+  else
+    fprintf(stderr, "Error opening file: %s\n", file_name);
+  if (!cons || !oped)
     return 0;
 
   class cl_console_base *subcon = cons->clone_for_exec(file_name);

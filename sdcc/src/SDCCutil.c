@@ -96,7 +96,7 @@ shell_escape (const char *str)
               if (str > begin)
                 dbuf_append (&dbuf, begin, str - begin);
 
-              /* append additional beckslash */
+              /* append additional backslash */
               ++backshl;
 
               /* special handling if last chars before double quote are backslashes */
@@ -117,7 +117,7 @@ shell_escape (const char *str)
             }
           else if ('%' == *str)
             {
-              /* diseble env. variable expansion */
+              /* disable env. variable expansion */
               /* append the remaining characters */
               if (begin && str > begin)
                 dbuf_append (&dbuf, begin, str - begin);
@@ -233,6 +233,42 @@ shell_escape (const char *str)
 #endif
 }
 
+
+/** Escape string for string constants.
+    Returns dynamically allocated string, which should be free-ed.
+    TODO: Maybe handle other non-printable characters.
+*/
+char *
+string_escape (const char *str)
+{
+  struct dbuf_s dbuf;
+
+  dbuf_init (&dbuf, 128);
+
+  while (*str)
+    {
+      switch (*str)
+        {
+        case '\\': case '"':
+          dbuf_append_char (&dbuf, '\\');
+          dbuf_append_char (&dbuf, *str);
+          break;
+
+        case '\n':
+          dbuf_append_str (&dbuf, "\\n");
+          break;
+
+        default:
+          dbuf_append_char (&dbuf, *str);
+          break;
+        }
+      ++str;
+    }
+
+  return dbuf_detach_c_str (&dbuf);
+}
+
+
 /** Prints elements of the set to the file, each element on new line
 */
 void
@@ -283,7 +319,7 @@ processStrSet (set * list, const char *pre, const char *post, char *(*func)(cons
   return new_list;
 }
 
-/** Given a set returns a string containing all of the strings seperated
+/** Given a set returns a string containing all of the strings separated
     by spaces. The returned string is on the heap.
 */
 const char *
@@ -478,7 +514,7 @@ buildMacros (const char *cmd)
 }
 
 char *
-buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3, set * list)
+buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3, set * list, set * list2)
 {
   int first = 1;
   struct dbuf_s dbuf;
@@ -529,20 +565,33 @@ buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3,
                 const char *tmp;
                 par = NULL;
 
-                if (list != NULL && (tmp = (const char *) setFirstItem (list)) != NULL)
+                for (tmp = setFirstItem (list); tmp; tmp = setNextItem (list))
                   {
-                    do
+                    if (*tmp != '\0')
                       {
-                        if (*tmp != '\0')
-                          {
-                            if (sep)
-                              dbuf_append_char (&dbuf, ' ');    /* seperate it */
-                            dbuf_append_str (&dbuf, tmp);
-                            tmp++;
-                            sep = 1;
-                          }
+                        if (sep)
+                          dbuf_append_char (&dbuf, ' ');    /* separate it */
+                        dbuf_append_str (&dbuf, tmp);
+                        sep = 1;
                       }
-                    while ((tmp = (const char *) setNextItem (list)) != NULL);
+                  }
+              }
+              break;
+
+            case 'L':
+              {
+                const char *tmp;
+                par = NULL;
+
+                for (tmp = setFirstItem (list2); tmp; tmp = setNextItem (list2))
+                  {
+                    if (*tmp != '\0')
+                      {
+                        if (sep)
+                          dbuf_append_char (&dbuf, ' ');    /* separate it */
+                        dbuf_append_str (&dbuf, tmp);
+                        sep = 1;
+                      }
                   }
               }
               break;
@@ -555,7 +604,7 @@ buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3,
           if (par && *par != '\0')
             {
               if (!first && sep)
-                dbuf_append_char (&dbuf, ' ');  /* seperate it */
+                dbuf_append_char (&dbuf, ' ');  /* separate it */
               dbuf_append_str (&dbuf, par);
               sep = 0;
             }
@@ -565,7 +614,7 @@ buildCmdLine (const char **cmds, const char *p1, const char *p2, const char *p3,
       if (*from != '\0')
         {
           if (!first && sep)
-            dbuf_append_char (&dbuf, ' ');      /* seperate it */
+            dbuf_append_char (&dbuf, ' ');      /* separate it */
           dbuf_append_str (&dbuf, from);
           sep = 0;
         }
@@ -839,8 +888,8 @@ hexEscape (const char **src)
 
 /*------------------------------------------------------------------*/
 /* universalEscape - process an hex constant of exactly four digits */
-/* return the hex value, throw a warning for illegal octal          */
-/* adjust src to point at the last proccesed char                   */
+/* return the hex value, throw an error warning for invalid hex     */
+/* adjust src to point at the last processed char                   */
 /*------------------------------------------------------------------*/
 
 unsigned long int
@@ -859,22 +908,23 @@ universalEscape (const char **str, unsigned int n)
 
   for (digits = 0; digits < n; ++digits)
     {
-      if (**str >= '0' && **str <= '7')
+      if (**str >= '0' && **str <= '9')
         {
           value = (value << 4) + (**str - '0');
           ++*str;
         }
-      else if ((**str | 0x20) >= 'a' && (**str | 0x20) <= 'f')
+      else if (tolower((unsigned char)(**str)) >= 'a' && (tolower((unsigned char)(**str)) <= 'f'))
         {
-          value = (value << 4) + ((**str | 0x20) - 'a' + 10);
+          value = (value << 4) + (tolower((unsigned char)(**str)) - 'a' + 10);
           ++*str;
         }
       else
           break;
     }
-  if (digits != n || value < 0x00a0 && value != 0x0024 && value != 0x0040 && value != 0x0060 || value >= 0xd800 && 0xdfff >= value)
+  if (digits != n || value < 0x00a0 && value != 0x0024 && value != 0x0040 && value != 0x0060 || value >= 0xd800 && 0xdfff >= value ||
+    value > 0x10ffff) // Additional diagnostic required in C23, but since it is just a warning, we enable it even for older standards.
     {
-      werror (E_INVALID_UNIVERSAL, s);
+      werror (W_INVALID_UNIVERSAL, s);
     }
 
   return value;
@@ -883,7 +933,7 @@ universalEscape (const char **str, unsigned int n)
 /*------------------------------------------------------------------*/
 /* octalEscape - process an octal constant of max three digits      */
 /* return the octal value, throw a warning for illegal octal        */
-/* adjust src to point at the last proccesed char                   */
+/* adjust src to point at the last processed char                   */
 /*------------------------------------------------------------------*/
 
 unsigned long int
@@ -914,8 +964,8 @@ octalEscape (const char **str)
   Copies source string to a dynamically allocated buffer interpreting
   escape sequences and special characters
 
-  /param src  Buffer containing the source string with escape sequecnes
-  /param size Pointer to loction where the resulting buffer length is written
+  /param src  Buffer containing the source string with escape sequences
+  /param size Pointer to location where the resulting buffer length is written
   /return Dynamically allocated resulting buffer
 */
 

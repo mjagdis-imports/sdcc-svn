@@ -27,10 +27,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 // prj
 #include "globals.h"
-#include "utils.h"
+//#include "utils.h"
 
 // sim
-#include "simcl.h"
+//#include "simcl.h"
 
 // local
 #include "cmd_confcl.h"
@@ -55,7 +55,8 @@ cl_conf_cmd::do_work(class cl_uc *uc,
 {
   int i;
 
-  con->dd_printf("ucsim version %s\n", VERSIONSTR);
+  if (!application->quiet)
+    con->dd_printf("ucsim version %s\n", VERSIONSTR);
   con->dd_printf("Type of microcontroller: %s", uc->id_string());
   if (cpus &&
       uc->type)
@@ -78,7 +79,7 @@ cl_conf_cmd::do_work(class cl_uc *uc,
 CMDHELP(cl_conf_cmd,
 	"conf",
 	"Configuration",
-	"long help of conf 1")
+	"")
 
 
 /*
@@ -125,7 +126,30 @@ COMMAND_DO_WORK_APP(cl_conf_objects_cmd)
 CMDHELP(cl_conf_objects_cmd,
 	"conf objects",
 	"Show object tree",
-	"long help of conf objects")
+	"")
+
+
+/*
+ * Command: ver
+ *----------------------------------------------------------------------------
+ */
+
+COMMAND_DO_WORK_APP(cl_ver_cmd)
+{
+  con->dd_printf("%s\n", VERSIONSTR);
+  return false;
+}
+
+CMDHELP(cl_ver_cmd,
+	"version",
+	"Version of the program",
+	"")
+
+
+/*
+ * Command: jaj
+ *----------------------------------------------------------------------------
+ */
 
 COMMAND_DO_WORK_APP(cl_jaj_cmd)
 {
@@ -134,19 +158,25 @@ COMMAND_DO_WORK_APP(cl_jaj_cmd)
 				 cmdline->param(1),
 				 cmdline->param(2),
 				 cmdline->param(3) };
-
+  int i;
+  
   if (params[0] != NULL)
     {
-      int i= params[0]->i_value;
+      i= params[0]->i_value;
       jaj= i?true:false;
     }
-  con->dd_printf("%d\n", jaj);
+  if (params[1] != NULL)
+    {
+      i= params[1]->i_value;
+      juj= i;
+    }
+  con->dd_printf("%d %d\n", jaj, juj);
   return(false);
 }
 
 CMDHELP(cl_jaj_cmd,
 	"jaj [val]",
 	"Jaj",
-	"long help of jaj")
+	"")
 
 /* End of cmd.src/cmd_conf.cc */

@@ -4,18 +4,21 @@
 
 #include <testfwk.h>
 
+#pragma disable_warning 85
+
 struct assembly_operand
 {
   int type, value, symtype, symflags, marker;
 };
 
 struct assembly_operand to_input, from_input;
-#if 0 // Enabe when SDCC can pass struct
+
+#ifndef __SDCC_ds390 // bug?
 void
 assemblez_1 (int internal_number, struct assembly_operand o1)
 {
   if (o1.type != from_input.type)
-    __builtin_abort ();
+    ASSERT (0);
 }
 
 void
@@ -27,6 +30,7 @@ t0 (struct assembly_operand to, struct assembly_operand from)
     ASSERT (0);
 }
 #endif
+
 void
 testTortureExecute (void)
 {
@@ -41,8 +45,11 @@ testTortureExecute (void)
   from_input.symtype = 7;
   from_input.symflags = 8;
   from_input.marker = 9;
-#if 0
+
+#ifndef __SDCC_ds390 // bug?
   t0 (to_input, from_input);
 #endif
+
   return;
 }
+

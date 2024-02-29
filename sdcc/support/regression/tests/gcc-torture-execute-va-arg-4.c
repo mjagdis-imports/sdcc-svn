@@ -12,7 +12,7 @@ va-arg-4.c from the execute part of the gcc torture tests.
 typedef struct {
   char a[32];
 } big;
-#if 0 // TODO: enable when SDCC can pass struct
+
 void
 f (big x, char *s, ...)
 {
@@ -29,14 +29,12 @@ f (big x, char *s, ...)
     ASSERT (0);
   va_end (ap);
 }
-#endif
+
 void
 testTortureExecute (void)
 {
-#if 0
   static big x = { "abc" };
 
   f (x, "", 42, 'x', 0);
   return;
-#endif
 }

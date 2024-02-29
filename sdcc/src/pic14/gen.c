@@ -1980,7 +1980,7 @@ genIpush (iCode * ic)
       return;
     }
 
-  /* this is a paramter push: in this case we call
+  /* this is a parameter push: in this case we call
      the routine to find the call and save those
      registers that need to be saved */
   saveRegisters (ic);
@@ -2190,7 +2190,7 @@ genCall (iCode * ic)
        * As SDCC emits code as soon as it reaches the end of each
        * function's definition, prototyped functions that are implemented
        * after the current one are always considered EXTERN, which
-       * introduces many unneccessary PAGESEL instructions.
+       * introduces many unnecessary PAGESEL instructions.
        * XXX: Use a post pass to iterate over all `CALL _name' statements
        * and insert `PAGESEL _name' and `PAGESEL $' around the CALL
        * only iff there is no definition of the function in the whole
@@ -3336,7 +3336,7 @@ pic14_mov2w_regOrLit (asmop * aop, unsigned long lit, int offset)
  *
  * This version leaves in sequences like
  * "B[CS]F STATUS,0; BTFS[CS] STATUS,0"
- * which should be optmized by the peephole
+ * which should be optimized by the peephole
  * optimizer - RN 2005-01-01 */
 static void
 genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign)
@@ -3569,7 +3569,7 @@ result_in_carry:
 
 correct_result_in_carry:
 
-  // assign result to variable (if neccessary), but keep CARRY intact to be used below
+  // assign result to variable (if necessary), but keep CARRY intact to be used below
   if (result && AOP_TYPE (result) != AOP_CRY)
     {
       //DEBUGpc ("assign result");
@@ -5077,39 +5077,6 @@ genGetABit (iCode * ic)
 }
 
 /*-----------------------------------------------------------------*/
-/* genGetHbit - generates code get highest order bit               */
-/*-----------------------------------------------------------------*/
-static void
-genGetHbit (iCode * ic)
-{
-  operand *left, *result;
-  left = IC_LEFT (ic);
-  result = IC_RESULT (ic);
-  aopOp (left, ic, FALSE);
-  aopOp (result, ic, FALSE);
-
-  FENTRY;
-  DEBUGpic14_emitcode ("; ***", "%s  %d", __FUNCTION__, __LINE__);
-  /* get the highest order byte into a */
-  MOVA (aopGet (AOP (left), AOP_SIZE (left) - 1, FALSE, FALSE));
-  if (AOP_TYPE (result) == AOP_CRY)
-    {
-      pic14_emitcode ("rlc", "a");
-      pic14_outBitC (result);
-    }
-  else
-    {
-      pic14_emitcode ("rl", "a");
-      pic14_emitcode ("anl", "a,#0x01");
-      pic14_outAcc (result);
-    }
-
-
-  freeAsmop (left, NULL, ic, TRUE);
-  freeAsmop (result, NULL, ic, TRUE);
-}
-
-/*-----------------------------------------------------------------*/
 /* AccLsh - shift left accumulator by known count                  */
 /* MARK: pic14 always rotates through CARRY!                       */
 /*-----------------------------------------------------------------*/
@@ -5781,6 +5748,23 @@ genGenericShift (iCode * ic, int shiftRight)
   freeAsmop (result, NULL, ic, TRUE);
 }
 
+/*-----------------------------------------------------------------*/
+/* genRot - generates code for rotation                            */
+/*-----------------------------------------------------------------*/
+static void
+genRot (iCode *ic)
+{
+  operand *left = IC_LEFT (ic);
+  operand *right = IC_RIGHT (ic);
+  unsigned int lbits = bitsForType (operandType (left));
+  if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits == 1)
+    genRLC (ic);
+  else if (IS_OP_LITERAL (right) && operandLitValueUll (right) % lbits ==  lbits - 1)
+    genRRC (ic);
+  else
+    wassertl (0, "Unsupported rotation.");
+}
+
 static void
 genRightShift (iCode * ic)
 {
@@ -5826,7 +5810,7 @@ SetIrp (operand * result)
     }
   else
     {
-      emitCLRIRP;           /* always ensure this is clear as it may have previouly been set */
+      emitCLRIRP;           /* always ensure this is clear as it may have previously been set */
       if (AOP_SIZE (result) > 1)
         {
           emitpcode (POC_BTFSC, newpCodeOpBit (aopGet (AOP (result), 1, FALSE, FALSE), 0, 0));
@@ -7593,7 +7577,7 @@ release:
 }
 
 /*-----------------------------------------------------------------*/
-/* genDjnz - generate decrement & jump if not zero instrucion      */
+/* genDjnz - generate decrement & jump if not zero instruction      */
 /*-----------------------------------------------------------------*/
 static int
 genDjnz (iCode * ic, iCode * ifx)
@@ -7778,7 +7762,7 @@ genpic14Code (iCode * lic)
              spilt live range, if there is an ifx statement
              following this pop then the if statement might
              be using some of the registers being popped which
-             would destory the contents of the register so
+             would destroy the contents of the register so
              we need to check for this condition and handle it */
           if (ic->next && ic->next->op == IFX && regsInCommon (IC_LEFT (ic), IC_COND (ic->next)))
             genIfx (ic->next, ic);
@@ -7881,20 +7865,12 @@ genpic14Code (iCode * lic)
           pic14_genInline (ic);
           break;
 
-        case RRC:
-          genRRC (ic);
-          break;
-
-        case RLC:
-          genRLC (ic);
-          break;
-
         case GETABIT:
           genGetABit (ic);
           break;
 
-        case GETHBIT:
-          genGetHbit (ic);
+        case ROT:
+          genRot (ic);
           break;
 
         case LEFT_OP:

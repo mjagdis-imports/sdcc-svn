@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <stdio.h>
+#include <errno.h>
 
 # ifndef __cplusplus
 #  include <stdbool.h>
@@ -190,7 +191,7 @@
                                          : "empty"))
 
 /* for semantically partitioned nest level values */
-#define LEVEL_UNIT      65536
+#define LEVEL_UNIT      10000
 #define SUBLEVEL_UNIT   1
 
 /* optimization options */
@@ -208,6 +209,7 @@ struct optimize
     int codeSpeed;
     int codeSize;
     int lospre;
+    int genconstprop;
     int allow_unsafe_read;
     int noStdLibCall;
   };
@@ -257,7 +259,10 @@ struct options
     int dump_ast;               /* dump front-end tree before lowering to iCode */
     int dump_i_code;            /* dump iCode at various stages */
     int dump_graphs;            /* Dump graphs in .dot format (control-flow, conflict, etc) */
-    int cc_only;                /* compile only flag              */
+    int syntax_only;            /* Parse and check syntax only, generate no output files */
+    int no_assemble;            /* Do not assemble, stop after code generation, generate asm */
+    int cc_only;                /* compile and assemble only, generate asm and rel object */
+    int c1mode;                 /* Act like c1 - no pre-proc, asm or link, generate asm */
     int intlong_rent;           /* integer & long support routines reentrant */
     int float_rent;             /* floating point routines are reentrant */
     int out_fmt;                /* 0 = undefined, 'i' = intel Hex format, 's' = motorola S19 format, 'E' = elf format, 'Z' = gb format */
@@ -268,14 +273,12 @@ struct options
     int asmpeep;                /* pass inline assembler thru peep hole */
     int peepReturn;             /* enable peephole optimization for return instructions */
     int debug;                  /* generate extra debug info */
-    int c1mode;                 /* Act like c1 - no pre-proc, asm or link */
     char *peep_file;            /* additional rules for peep hole */
     int nostdlib;               /* Don't use standard lib files */
     int nostdinc;               /* Don't use standard include files */
     int noRegParams;            /* Disable passing some parameters in registers */
     int verbose;                /* Show what the compiler is doing */
     int lessPedantic;           /* disable some warnings */
-    int profile;                /* Turn on extra profiling information */
     int omitFramePtr;           /* Turn off the frame pointer. */
     int useAccelerator;         /* use ds390 Arithmetic Accelerator */
     int noiv;                   /* do not generate irq vector table entries */
@@ -285,7 +288,6 @@ struct options
     int protect_sp_update;      /* DS390 - will disable interrupts during ESP:SP updates */
     int parms_in_bank1;         /* DS390 - use reg bank1 to pass parameters */
     int stack_size;             /* MCS51/DS390 - Tells the linker to allocate this space for stack */
-    int no_pack_iram;           /* MCS51/DS390 - Deprecated: Tells the linker not to pack variables in internal ram */
     int acall_ajmp;             /* MCS51 - Use acall/ajmp instead of lcall/ljmp */
     int no_ret_without_call;    /* MCS51 - Do not use ret independent of acall/lcall */
     int use_non_free;           /* Search / include non-free licensed libraries and header files */
@@ -309,11 +311,11 @@ struct options
     int printSearchDirs;        /* display the directories in the compiler's search path */
     int vc_err_style;           /* errors and warnings are compatible with Micro$oft visual studio */
     int use_stdout;             /* send errors to stdout instead of stderr */
-    int no_std_crt0;            /* for the z80/gbz80 do not link default crt0.o*/
+    int no_std_crt0;            /* for the z80/sm83 do not link default crt0.o*/
     int std_c95;                /* enable C95 keywords/constructs */
     int std_c99;                /* enable C99 keywords/constructs */
     int std_c11;                /* enable C11 keywords/constructs */
-    int std_c2x;                /* enable C2X keywords/constructs */
+    int std_c23;                /* enable C23 keywords/constructs */
     int std_sdcc;               /* enable SDCC extensions to C */
     int dollars_in_ident;       /* zero means dollar signs are punctuation */
     int signed_char;            /* use signed for char without signed/unsigned modifier */
@@ -328,10 +330,13 @@ struct options
     int max_allocs_per_node;    /* Maximum number of allocations / combinations considered at each node in the tree-decomposition based algorithms */
     bool noOptsdccInAsm;        /* Do not emit .optsdcc in asm */
     bool oldralloc;             /* Use old register allocator */
+    int sdcccall;               /* ABI version */
+    bool allow_undoc_inst;      /* Allow the use of undocumented instructions */
+//    int xdata_overlay;          /* Place the overlay in 16-bit addressable memory to conserve ZP space */
+    int xdata_spill;            /* Place the register spills in 16-bit addressable memory */
   };
 
 /* forward definition for variables accessed globally */
-extern int noAssemble;          /* no assembly, stop after code generation */
 extern char *yytext;
 extern char *lexFilename;       /* lex idea of current file name */
 extern int lexLineno;           /* lex idea of line number of the current file */
@@ -390,12 +395,14 @@ enum {
   DUMP_LOOP,
   DUMP_LOOPG,
   DUMP_LOOPD,
+  DUMP_LOSPRE,
+  DUMP_GENCONSTPROP,
   DUMP_RANGE,
   DUMP_PACK,
   DUMP_RASSGN,
   DUMP_LRANGE,
-  DUMP_LOSPRE,
-  DUMP_CUSTOM /* For temporary dump points */
+  DUMP_CUSTOM0, // For temporary dump points
+  DUMP_CUSTOM1  // For temporary dump points
 };
 
 struct _dumpFiles {
