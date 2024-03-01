@@ -2,6 +2,10 @@
 
 	; Test 8-bit cast to bool.
 
+	; Set stack pointer one above RAM.
+	ldw	y, #0x4000
+	ldw	sp, y
+
 	ld	xl, #0x00
 	bool	xl
 	jrnz	#l1trap
@@ -32,9 +36,9 @@ l1:
 	cp	yl, #0
 	jrnz	#l2trap
 	ld	yl, #2
-	bool	yl
 	clr	(0, sp)
 	xch	f, (0, sp)
+	bool	yl
 	jrz	l2trap
 	jrc	l2trap
 	jrn	l2trap
@@ -56,10 +60,10 @@ l2trap:
 	cp	zl, #0
 	jrnz	#l3trap
 	ld	zl, #2
-	bool	zl
 	ld	xl, #0x1f
 	ld	(0, sp), xl
 	xch	f, (0, sp)
+	bool	zl
 	jrz	#l3trap
 	jrnc	#l3trap
 	jrnn	#l3trap
