@@ -25,11 +25,11 @@
 	jrnz	l1trap
 	push	#0x1f
 	xch	f, (0, sp)
-	xch	xh, (2, sp)
+	xch	xh, (1, sp)
 	xch	f, (0, sp)
 	cp	xh, #0x00
 	jrnz	l1trap
-	ld	xl, (2, sp)
+	ld	xl, (1, sp)
 	cp	xl, #0xa5
 	jrnz	l1trap
 	ld	xl, (0, sp)

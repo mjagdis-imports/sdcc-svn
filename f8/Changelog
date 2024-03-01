@@ -1,7 +1,8 @@
 2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* hardware/cpu.v:
-	  Fix f8 instruction xchw x, (y).
+	* hardware/cpu.v,
+	  tests/xch_xl_sprel/test.s:
+	  Fix f8 instructions xch and xchw.
 
 2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
