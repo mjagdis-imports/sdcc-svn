@@ -49,12 +49,12 @@ l4:
 	pushw	#0x0000
 	pushw	#0x0001
 	pushw	#0x8000
-	ldw	z, #0xffa
+	ldw	z, #0x3ffa
 	tstw	(4, sp)
 	jrnc	l5trap
 	jrn	l5trap
 	jrnz	l5trap
-	tstw	0xffe
+	tstw	0x3ffe
 	jrnc	l5trap
 	jrn	l5trap
 	jrnz	l5trap
@@ -66,7 +66,7 @@ l4:
 	jrnc	l5trap
 	jrn	l5trap
 	jrz	l5trap
-	tstw	0xffc
+	tstw	0x3ffc
 	jrnc	l5trap
 	jrn	l5trap
 	jrz	l5trap
@@ -78,7 +78,7 @@ l4:
 	jrnc	l5trap
 	jrnn	l5trap
 	jrz	l5trap
-	tstw	0xffa
+	tstw	0x3ffa
 	jrnc	l5trap
 	jrnn	l5trap
 	jrz	l5trap

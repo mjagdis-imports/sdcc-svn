@@ -7,8 +7,9 @@
 	  hardware/testsystem.v,
 	  hardware/postsynthcputestsystem.v:
 	  Basic infrastructure for post-synthesis simulation.
-	* hardware/tests/bool/test.s:
-	  Fix stack handling in test of f8 bool instruction.
+	* hardware/tests/bool/test.s,
+	  hardware/tests/tstw/test.s:
+	  Fix stack handling in test of f8 bool and tstw instructions.
 
 2023-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
