@@ -1,3 +1,8 @@
+2024-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
+	  Implement f8 instruction cax (y), zl, xl.
+
 2024-02-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
@@ -9,6 +14,7 @@
 	  src/SDCCsymt.c,
 	  support/regression/tests/bug-3711.c:
 	  Fix bug #3711.
+
 2024-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/main.c:

@@ -173,7 +173,6 @@ machine(mp)
 struct mne *mp;
 {
 	struct expr e1, e2, e3;
-	char *p1, *p2;
 	int t1, t2, t3;
 	int r1, r2, r3;
 	int op, rf;
@@ -982,8 +981,10 @@ sex:
 		t3 = addr(&e3);
 		r3 = rcode;
 
-		if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == ZL && t3 == S_REG && r3 == XL)
+		if(t1 == S_IX && r1 == Y && t2 == S_REG && r2 == ZL && t3 == S_REG && (r3 == XL || r3 == XH)) {
+			altacc(r3);
 			outab(op);
+		}
 		else
 			aerr();
 

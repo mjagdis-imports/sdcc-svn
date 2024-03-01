@@ -5,6 +5,8 @@
 	  Fix f8 instructions xch and xchw.
 	* hardware/alu.v:
 	  f8 carry flag fixes.
+	* hardware/tests/cax:
+	  Test cax.
 
 2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
