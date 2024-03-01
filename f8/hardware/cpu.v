@@ -189,7 +189,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	always_comb
 	begin 
 		if (interrupt_start)
-			op0 = opcode == OPCODE_RETI ? next_pc_noint : old_pc;
+			op0 = opcode == OPCODE_RETI ? dread_data : old_pc;
 		else if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY ||
 			opcode == OPCODE_LD_DIR_XL ||opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL ||
 			opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)

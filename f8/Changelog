@@ -1,3 +1,13 @@
+2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/alu.v,
+	  hardware/cpu.v,
+	  hardware/opcode.v,
+	  hardware/testsystem.v,
+	  hardware/postsynthcputestsystem.v:
+	  Basic infrastructure for post-synthesis simulation.
+
 2023-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,

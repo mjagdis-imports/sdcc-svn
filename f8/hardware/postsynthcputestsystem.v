@@ -1,4 +1,4 @@
-`include "cpu.v"
+`include "cpu_synth.v"
 `include "memory.v"
 `include "interruptcontroller.v"
 `include "timer.v"
@@ -157,7 +157,7 @@ module testsystem ();
 
 	initial
 	begin
-		$dumpfile("test.vcd");
+		$dumpfile("postsynthcputest.vcd");
     	$dumpvars(0,testsystem);
     	power_on_reset <= 1;
     	#20
