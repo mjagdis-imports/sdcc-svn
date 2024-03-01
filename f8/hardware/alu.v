@@ -50,7 +50,7 @@ typedef enum logic [5:0] {
 
 function automatic carry4(logic [3:0] op0, op1, input logic c_in);
 	logic [4:0] result;
-	result = op0 + op1 + c_in;
+	result = op0 + op1 + {4'h0, c_in};
 	return result[4];
 endfunction
 
@@ -62,7 +62,7 @@ endfunction
 
 function automatic carry15(logic [14:0] op0, op1, input logic c_in);
 	logic [15:0] result;
-	result = op0 + op1 + c_in;
+	result = op0 + op1 + {15'b0, c_in};
 	return result[15];
 endfunction
 
@@ -138,10 +138,10 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ADSW);
 
 	assign result =
-		aluinst == ALUINST_ADD ? op0[7:0] + op1[7:0] + 0:
-		aluinst == ALUINST_ADC ? op0[7:0] + op1[7:0] + c_in:
-		aluinst == ALUINST_SUB ? (swapop_in ? op1[7:0] + 8'(~op0[7:0]) : op0[7:0] + 8'(~op1[7:0])) + 1 :
-		aluinst == ALUINST_SBC ? (swapop_in ? op1[7:0] + 8'(~op0[7:0]) : op0[7:0] + 8'(~op1[7:0])) + c_in :
+		aluinst == ALUINST_ADD ? {1'b0, op0[7:0]} + {1'b0, op1[7:0]} + 0:
+		aluinst == ALUINST_ADC ? {1'b0, op0[7:0]} + {1'b0, op1[7:0]} + c_in:
+		aluinst == ALUINST_SUB ? (swapop_in ? {1'b0, op1[7:0]} + {1'b0, ~op0[7:0]} : {1'b0, op0[7:0]} + {1'b0, ~op1[7:0]}) + 1 :
+		aluinst == ALUINST_SBC ? (swapop_in ? {1'b0, op1[7:0]} + {1'b0, ~op0[7:0]} : {1'b0, op0[7:0]} + {1'b0, ~op1[7:0]}) + c_in :
 		aluinst == ALUINST_AND ? op0[7:0] & op1[7:0] :
 		aluinst == ALUINST_OR ? op0[7:0] | op1[7:0] :
 		aluinst == ALUINST_XOR ? op0[7:0] ^ op1[7:0] :
@@ -150,21 +150,21 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_RRC ? {c_in, op0[7:0]} >> 1 :
 		aluinst == ALUINST_RLC ? {op0[6:0], c_in} :
 		aluinst == ALUINST_SRA ? {op0[7], op0[7:0]}  >> 1:
-		aluinst == ALUINST_INC ? op0[7:0] + 8'h01 :
-		aluinst == ALUINST_DEC ? op0[7:0] + 8'hff :
+		aluinst == ALUINST_INC ? {1'b0, op0[7:0]} + 9'h001 :
+		aluinst == ALUINST_DEC ? {1'b0, op0[7:0]} + 9'h0ff :
 		aluinst == ALUINST_BOOL ? |op0[7:0] :
 		aluinst == ALUINST_XCH0 ? {op0[7:0], op0[15:8]} :
 		aluinst == ALUINST_DAA ? daa(op0, c_in, h_in) :
 		aluinst == ALUINST_ROT ? rot(op0, op1) :
 		aluinst == ALUINST_CLRW ? 0 :
-		aluinst == ALUINST_INCW ? op0[15:0] + 16'h0001 :
-		aluinst == ALUINST_DECW ? op0[15:0] + 16'hffff :
-		aluinst == ALUINST_ADCW0 ? op0[15:0] + c_in :
-		aluinst == ALUINST_SBCW0 ? op0[15:0] + 16'hffff + c_in :
-		aluinst == ALUINST_SUBW ? (swapop_in ? op1[15:0] + 16'(~op0[15:0]) : op0[15:0] + 16'(~op1[15:0])) + 1 :
-		aluinst == ALUINST_SBCW ? (swapop_in ? op1[15:0] + 16'(~op0[15:0]) : op0[15:0] + 16'(~op1[15:0])) + c_in :
-		aluinst == ALUINST_ADDW ? op0[15:0] + op1[15:0] + 0 :
-		aluinst == ALUINST_ADCW ? op0[15:0] + op1[15:0] + c_in :
+		aluinst == ALUINST_INCW ? {1'b0, op0[15:0]} + 17'h00001 :
+		aluinst == ALUINST_DECW ? {1'b0, op0[15:0]} + 17'h0ffff :
+		aluinst == ALUINST_ADCW0 ? {1'b0, op0[15:0]} + c_in :
+		aluinst == ALUINST_SBCW0 ? {1'b0, op0[15:0]} + 17'h0ffff + c_in :
+		aluinst == ALUINST_SUBW ? (swapop_in ? {1'b0, op1[15:0]} + {1'b0, ~op0[15:0]} : {1'b0, op0[15:0]} + {1'b0, ~op1[15:0]}) + 1 :
+		aluinst == ALUINST_SBCW ? (swapop_in ? {1'b0, op1[15:0]} + {1'b0, ~op0[15:0]} : {1'b0, op0[15:0]} + {1'b0, ~op1[15:0]}) + c_in :
+		aluinst == ALUINST_ADDW ? {1'b0, op0[15:0]} + {1'b0, op1[15:0]} + 0 :
+		aluinst == ALUINST_ADCW ? {1'b0, op0[15:0]} + {1'b0, op1[15:0]} + c_in :
 		aluinst == ALUINST_ORW ? op0[15:0] | op1[15:0] :
 		aluinst == ALUINST_XCHB ? (op1[7:0] & ~(1 << op2[2:0]) | (op0[0] << op2[2:0])) :
 		aluinst == ALUINST_SRLW ? {1'b0, op0[15:0]} >> 1 :
@@ -191,7 +191,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_ADC ? carry7 (op0[7:0], op1[7:0], c_in) ^ c_out :
 		aluinst == ALUINST_DEC ? carry7 (op0[7:0], 8'hff, 0) ^ c_out :
 		aluinst == ALUINST_DECW ? carry15 (op0[15:0], 16'hffff, 0) ^ c_out :
-		aluinst == ALUINST_SUB ? carry7 (op0[7:0], ~op1[7:0], 0) ^ c_out :
+		aluinst == ALUINST_SUB ? carry7 (op0[7:0], ~op1[7:0], 1) ^ c_out :
 		aluinst == ALUINST_SBC ? carry7 (op0[7:0], ~op1[7:0], c_in) ^ c_out :
 		aluinst == ALUINST_INC ? carry7 (op0[7:0], 8'h01, 0) ^ c_out :
 		aluinst == ALUINST_INCW ? carry15 (op0[15:0], 16'h0001, 0) ^ c_out :
@@ -206,7 +206,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_ADD ? carry4 (op0[7:0], op1[7:0], 0) :
 		aluinst == ALUINST_ADC ? carry4 (op0[7:0], op1[7:0], c_in) :
 		aluinst == ALUINST_DEC ? carry4 (op0[7:0], 8'hff, 0) :
-		aluinst == ALUINST_SUB ? carry4 (op0[7:0], ~op1[7:0], 0) :
+		aluinst == ALUINST_SUB ? carry4 (op0[7:0], ~op1[7:0], 1) :
 		aluinst == ALUINST_SBC ? carry4 (op0[7:0], ~op1[7:0], c_in) :
 		aluinst == ALUINST_INC ? carry4 (op0[7:0], 8'h01, 0) :
 		'x;
