@@ -523,7 +523,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		'x;
 	assign regwrite_en =
 		interrupt_start ? 0 :
-		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
+		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) || opcode_is_8_1_zh(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
 			(accsel_in == ACCSEL_XH_Y ? 2'b10 : 2'b01) :
 		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :
 		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in || opcode == OPCODE_CAX_IY_ZL_XL && !z_out) ? 2'b01 :
