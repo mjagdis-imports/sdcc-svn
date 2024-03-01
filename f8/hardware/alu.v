@@ -179,8 +179,8 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		/*aluinst == ALUINST_CLTZ ? {ctz(op0), clz(op0)} :*/
 		aluinst == ALUINST_SEX ? {{8{op0[7]}}, op0[7:0]} :
 		aluinst == ALUINST_MSK ? (op0[7:0] & ~op1[7:0] | op2[7:0] & op1[7:0]) :
-		aluinst == ALUINST_CAX ? (op0[7:0] == op2[7:0]) :
-		aluinst == ALUINST_CAXW ? (op0 == op2) :
+		aluinst == ALUINST_CAX ? (op1[7:0] == op2[7:0]) :
+		aluinst == ALUINST_CAXW ? (op1 == op2) :
 		aluinst == ALUINST_ADSW ? op0[15:0] + {{8{op1[7]}}, op1[7:0]} + 0 :
 		aluinst == ALUINST_PASS0 ? op0[7:0] :
 		aluinst == ALUINST_PASSW0 ? op0 :
@@ -212,13 +212,11 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		'x;
 
 	assign result_reg =
-		(aluinst == ALUINST_XCHW) ? op1 :
+		(aluinst == ALUINST_XCHW || aluinst == ALUINST_CAX || aluinst == ALUINST_CAXW) ? op1 :
 		(aluinst == ALUINST_XCHB) ? op1[op2[2:0]] :
-		(aluinst == ALUINST_CAX || aluinst == ALUINST_CAXW) ? (z_out ? 'x : op0) :
 		result[15:0];
 	assign result_mem =
-		(aluinst == ALUINST_XCHW) ? op0 :
-		(aluinst == ALUINST_CAX || aluinst == ALUINST_CAXW) ? (z_out ? op1 : 'x) :
+		(aluinst == ALUINST_XCHW || aluinst == ALUINST_CAX || aluinst == ALUINST_CAXW) ? op0 :
 		result[15:0];
 
 	assign c_out = 
