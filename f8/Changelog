@@ -1,3 +1,12 @@
+2023-03-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/testsystem.v,
+	  hardware/watchdog.v,
+	  hardware/io.v,
+	  hardware/postsynthtestsystem.v:
+	  Post-synthesis test of peripherals.
+
 2023-03-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

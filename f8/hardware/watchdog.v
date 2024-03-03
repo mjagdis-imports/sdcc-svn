@@ -46,10 +46,6 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 				countreg++;
 			end
 		end
-		if (power_on_reset)
-			configreg[1] = 0;
-		else if (overflow_int)
-			configreg[1] = 1;
 		if (counter_write[0])
 			countreg[7:0] = counter_in[7:0];
 		if (counter_write[1])
@@ -58,26 +54,24 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 	assign counter_out = countreg;
 	assign reload_out = reloadreg;
 
-	// Trap
-	always @(posedge clk)
-	begin
-		if(power_on_reset)
-			configreg[2] = 0;
-		else if(trap)
-			configreg[2] = 1;
-	end
-
 	assign reset = power_on_reset || overflow_int || trap;
 
 	// Config
 	always @(posedge clk)
 	begin
 		if(power_on_reset)
-			configreg[0] = 0;
+			configreg[2:0] = 0;
 		else if(reset)
 			configreg[0] = 0;
 		else if(config_write)
 			configreg[7:0] = config_in[7:0];
+		else
+		begin
+			if(overflow_int )
+				configreg[1] = 1;
+			if(trap)
+				configreg[2] = 1;
+		end
 		if(reload_write)
 		begin
 			if(reload_write[0])

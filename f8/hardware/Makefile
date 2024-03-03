@@ -7,18 +7,18 @@ SV2V = /home/philipp/sv2v-0.0.11/bin/sv2v
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 
-.PHONY: all tests simpletests postsynthcputests alltests clean
+.PHONY: all tests simpletests postsynthtests alltests clean
 
 all: f8-testsystem f8-simpletestsystem
 
 clean:
-	rm -f f8-testsystem f8-simpletestsystem f8-postsynthcputestsystem cpu_flat.v cpu_synth.v tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.vcd tests/*/*.log
+	rm -f f8-testsystem f8-simpletestsystem f8-postsynthtestsystem cpu_flat.v cpu_synth.v io_flat.v io_synth.v tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.vcd tests/*/*.log
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
-IOSOURCES = gpio.v interruptcontroller.v timer.v watchdog.v
+IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 TESTSYSTEMSOURCES = testsystem.v memory.v $(CPUSOURCES) $(IOSOURCES)
 SIMPLETESTSYSTEMSOURCES = simpletestsystem.v memory.v $(CPUSOURCES)
-POSTSYNTHCPUTESTSYSTEMSOURCES = postsynthcputestsystem.v memory.v cpu_synth.v $(IOSOURCES)
+POSTSYNTHTESTSYSTEMSOURCES = postsynthtestsystem.v memory.v cpu_synth.v io_synth.v
 
 f8-testsystem: $(TESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem.v
@@ -26,8 +26,8 @@ f8-testsystem: $(TESTSYSTEMSOURCES)
 f8-simpletestsystem: $(SIMPLETESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ simpletestsystem.v
 
-f8-postsynthcputestsystem: $(POSTSYNTHCPUTESTSYSTEMSOURCES)
-	iverilog -g2009 -Wall -o $@ postsynthcputestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
+f8-postsynthtestsystem: $(POSTSYNTHTESTSYSTEMSOURCES)
+	iverilog -g2009 -Wall -o $@ postsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 	
 
 TESTDIRS = ${shell find tests/* -type d -print}
@@ -38,14 +38,20 @@ TESTSYSTEMVCDS = $(TESTDIRS:=/testsystem.vcd)
 SIMPLETESTSYSTEMVCDS = $(TESTDIRS:=/simpletestsystem.vcd)
 TESTLOGS = $(TESTDIRS:=/test.log)
 SIMPLETESTLOGS = $(TESTDIRS:=/simpletest.log)
-POSTSYNTHCPUTESTLOGS = $(TESTDIRS:=/postsynthcputest.log)
+POSTSYNTHTESTLOGS = $(TESTDIRS:=/postsynthtest.log)
 
 cpu_flat.v: $(CPUSOURCES)
 	$(SV2V) --exclude=always --exclude=logic cpu.v > $@
 
+io_flat.v: $(IOSOURCES)
+	$(SV2V) --exclude=always --exclude=logic io.v > $@
+
 cpu_synth.v: cpu_flat.v
 	$(YOSYS) -p "read_verilog -sv cpu_flat.v; synth_ice40 -noflatten -top cpu; write_verilog cpu_synth.v" # Without -noflatten we get lots of test failures
 
+io_synth.v: io_flat.v
+	$(YOSYS) -p "read_verilog -sv io_flat.v; synth_ice40 -noflatten -top iosystem; write_verilog io_synth.v" #
+	
 %.rel: %.s
 	$(SDAS) -plosgff $@ $<
 
@@ -61,8 +67,8 @@ cpu_synth.v: cpu_flat.v
 %/simpletest.vcd %/simpletest.log &: f8-simpletestsystem %/test.vmem
 	cd $*; ../../f8-simpletestsystem > simpletest.log
 
-%/postsynthcputest.vcd %/postsynthcputest.log &: f8-postsynthcputestsystem %/test.vmem
-	cd $*; ../../f8-postsynthcputestsystem > postsynthcputest.log
+%/postsynthtest.vcd %/postsynthtest.log &: f8-postsynthtestsystem %/test.vmem
+	cd $*; ../../f8-postsynthtestsystem > postsynthtest.log
 
 tests: $(TESTLOGS)
 	for testlog in $(TESTLOGS); do \
@@ -74,10 +80,10 @@ simpletests: $(SIMPLETESTLOGS)
 		echo -n "simpletestsystem": $$simpletestlog ""; grep ERROR $$simpletestlog | tr -d '\n'; echo ""; \
 	done
 
-postsynthcputests: $(POSTSYNTHCPUTESTLOGS)
-	for testlog in $(POSTSYNTHCPUTESTLOGS); do \
-		echo -n "postsynthcputestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+postsynthtests: $(POSTSYNTHTESTLOGS)
+	for testlog in $(POSTSYNTHTESTLOGS); do \
+		echo -n "postsynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-alltests: tests simpletests postsynthcputests
+alltests: tests simpletests postsynthtests
 

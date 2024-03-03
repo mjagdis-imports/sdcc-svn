@@ -1,6 +1,6 @@
-`include "cpu.v"
+`include "cpu_synth.v"
 `include "memory.v"
-`include "io.v"
+`include "io_synth.v"
 
 `begin_keywords "1800-2009"
 
@@ -56,7 +56,7 @@ module testsystem ();
 
 	initial
 	begin
-		$dumpfile("test.vcd");
+		$dumpfile("postsynthtest.vcd");
     	$dumpvars(0,testsystem);
     	power_on_reset <= 1;
     	#20
