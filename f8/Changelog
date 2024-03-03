@@ -4,6 +4,8 @@
 	  hardware/alu.v,
 	  hardware/tests/sbc:
 	  Fix interaction of swapop prefix with overflow flag.
+	* hardware/tests/xor:
+	  Test f8 instruction xor.
 
 2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
