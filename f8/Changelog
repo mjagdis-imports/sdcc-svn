@@ -1,3 +1,15 @@
+2023-03-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/alu.v,
+	  hardware/tests/sbc:
+	  Fix interaction of swapop prefix with overflow flag.
+
+2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
+	  Fix for f8 8-bit one-operand memory instructions.
+
 2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
