@@ -1,4 +1,5 @@
 `include "cpu_synth.v"
+`include "ram_synth.v"
 `include "memory.v"
 `include "io_synth.v"
 

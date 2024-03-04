@@ -16,9 +16,9 @@ clean:
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
-TESTSYSTEMSOURCES = testsystem.v memory.v $(CPUSOURCES) $(IOSOURCES)
-SIMPLETESTSYSTEMSOURCES = simpletestsystem.v memory.v $(CPUSOURCES)
-POSTSYNTHTESTSYSTEMSOURCES = postsynthtestsystem.v memory.v cpu_synth.v io_synth.v
+TESTSYSTEMSOURCES = testsystem.v memory.v ram.v $(CPUSOURCES) $(IOSOURCES)
+SIMPLETESTSYSTEMSOURCES = simpletestsystem.v memory.v ram.v $(CPUSOURCES)
+POSTSYNTHTESTSYSTEMSOURCES = postsynthtestsystem.v memory.v ram_synth.v cpu_synth.v io_synth.v
 
 f8-testsystem: $(TESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem.v
@@ -46,12 +46,18 @@ cpu_flat.v: $(CPUSOURCES)
 io_flat.v: $(IOSOURCES)
 	$(SV2V) --exclude=always --exclude=logic io.v > $@
 
+ram_flat.v: ram.v
+	$(SV2V) --exclude=always --exclude=logic ram.v > $@
+
 cpu_synth.v: cpu_flat.v
 	$(YOSYS) -p "read_verilog -sv cpu_flat.v; synth_ice40 -noflatten -top cpu; write_verilog cpu_synth.v" # Without -noflatten we get lots of test failures
 
 io_synth.v: io_flat.v
-	$(YOSYS) -p "read_verilog -sv io_flat.v; synth_ice40 -noflatten -top iosystem; write_verilog io_synth.v" #
-	
+	$(YOSYS) -p "read_verilog -sv io_flat.v; synth_ice40 -noflatten -top iosystem; write_verilog io_synth.v"
+
+ram_synth.v: ram_flat.v
+	$(YOSYS) -p "read_verilog -sv ram_flat.v; synth_ice40 -noflatten -top ram; write_verilog ram_synth.v"
+
 %.rel: %.s
 	$(SDAS) -plosgff $@ $<
 
@@ -59,7 +65,7 @@ io_synth.v: io_flat.v
 	$(SDLD) -b HOME=0x4000 -i $@ $<
 
 %.vmem: %.ihx
-	objcopy --input-target ihex --output-target verilog $< $@
+	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@
 
 %/test.vcd %/test.log &: f8-testsystem %/test.vmem
 	cd $*; ../../f8-testsystem > test.log

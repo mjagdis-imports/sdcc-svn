@@ -1,4 +1,5 @@
 `include "cpu.v"
+`include "ram.v"
 `include "memory.v"
 `include "io.v"
 
@@ -16,7 +17,7 @@ module clkgen (clk);
 endmodule
 
 module testsystem ();
-	parameter RAMADDRBASE = 16'h2000;
+	parameter MEMADDRBASE = 16'h2000;
 	
 	wire [15:0] iread_addr, dread_addr, dwrite_addr;
 	wire [23:0] iread_data;
@@ -43,12 +44,12 @@ module testsystem ();
 		old_dread_addr = dread_addr;
 	end
 
-	assign mem_dwrite_en = (dwrite_addr >= RAMADDRBASE) ? dwrite_en : 2'b00;
-	assign io_dwrite_en = (dwrite_addr < RAMADDRBASE) ? dwrite_en : 2'b00;
+	assign mem_dwrite_en = (dwrite_addr >= MEMADDRBASE) ? dwrite_en : 2'b00;
+	assign io_dwrite_en = (dwrite_addr < MEMADDRBASE) ? dwrite_en : 2'b00;
 
 	always_comb
 	begin
-		if (old_dread_addr >= RAMADDRBASE)
+		if (old_dread_addr >= MEMADDRBASE)
 			dread_data = mem_dread_data;
 		else
 			dread_data = io_dread_data;

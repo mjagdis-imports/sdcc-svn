@@ -1,31 +1,44 @@
-// Dual port RAM module suitable for iCE40 4kb Embedded Block RAM
-module dualportram(din, write_en, waddr, wclk, raddr, rclk, dout);
-	parameter addr_width = 9; // 512 x
-	parameter data_width = 8; // x 8
-	input write_en, wclk, rclk;
-	input [addr_width - 1 : 0] waddr, raddr;
-	input [data_width - 1 : 0] din;
-	output reg [data_width - 1 : 0] dout;
+`begin_keywords "1800-2009"
 
-	reg [data_width - 1 : 0] mem[(1 << addr_width) - 1 : 0];
-  
-	always @(posedge wclk)
-	begin
-		if (write_en)
-			mem[waddr] <= din;
-	end
+// Memory subsystem
 
-	always @(posedge rclk)
+// 512B ROM
+module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
+	parameter ROMSIZE = 512;
+	parameter logic [15:0] ROMBASE = 16'h4000;
+
+	input [15 : 0] iread_addr;
+	output reg [23 : 0] iread_data;
+	output reg iread_valid;
+	input [15 : 0] dread_addr;
+	output reg [15 : 0] dread_data;
+	input clk;
+
+	logic [15:0] dread_addr_rombased;
+
+	reg [7:0] rom[ROMSIZE - 1 : 0];
+
+	logic [15:0] iread_addr_rombased;
+
+	assign iread_addr_rombased = iread_addr - ROMBASE;
+	assign dread_addr_rombased = dread_addr - ROMBASE;
+
+	initial $readmemh("test.vmem", rom);
+		
+	always @(posedge clk)
 	begin
-		dout <= mem[raddr];
+		iread_data[7 : 0] <= rom[iread_addr_rombased];
+		iread_data[15 : 8] <= rom[iread_addr_rombased + 1];
+		iread_data[23 : 16] <= rom[iread_addr_rombased + 2];
+		dread_data[7:0] <= rom [dread_addr_rombased];
+		dread_data[15:8] <= rom [dread_addr_rombased + 1];
+		iread_valid <= 1;
 	end
 endmodule
 
-
-// Memory subsystem - ideal memory for simulation. TODO: Build an implementation from dualportram above, using ivalid to resolve read conflicts?
-// Has three ports (instruction read, data read, data write)
 module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk);
-	parameter ramsize = 32768;
+	parameter logic [15:0] ROMBASE = 16'h4000;
+
 	input [15 : 0] iread_addr;
 	output reg [23 : 0] iread_data;
 	output reg iread_valid;
@@ -36,28 +49,18 @@ module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrit
 	input [1:0] dwrite_en;
 	input clk;
 
-	reg [7:0] mem[ramsize - 1 : 0];
+	logic [15:0] dread_data_rom, dread_data_ram;
 
-	initial $readmemh("test.vmem", mem);
-		
+	rom rom(.dread_data(dread_data_rom), .*);
+	ram ram(.dread_data(dread_data_ram), .*);
+
+	logic dread_rom;
 	always @(posedge clk)
 	begin
-		if (dwrite_en[0])
-			mem[dwrite_addr] <= dwrite_data[7:0];
-		if (dwrite_en[1])
-			mem[dwrite_addr + 1] <= dwrite_data[15:8];
-		iread_data[7 : 0] <= mem[iread_addr];
-		iread_data[15 : 8] <= mem[iread_addr + 1];
-		iread_data[23 : 16] <= mem[iread_addr + 2];
-		dread_data[7:0] <=
-			(dwrite_en[0] && dread_addr == dwrite_addr) ? dwrite_data[7:0] :
-			(dwrite_en[1] && dread_addr == dwrite_addr + 1) ? dwrite_data[15:8] :
-			mem[dread_addr];
-		dread_data[15:8] <=
-			(dwrite_en[1] && dread_addr == dwrite_addr) ? dwrite_data[15:8] :
-			(dwrite_en[0] && dread_addr + 1 == dwrite_addr) ? dwrite_data[7:0] :
-			mem[dread_addr + 1];
-		iread_valid <= 1;
+		dread_rom = dread_addr >= ROMBASE;
 	end
+	assign dread_data = dread_rom ? dread_data_rom : dread_data_ram;
 endmodule
+
+`end_keywords
 

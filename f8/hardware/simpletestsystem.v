@@ -1,4 +1,5 @@
 `include "cpu.v"
+`include "ram.v"
 `include "memory.v"
 
 `begin_keywords "1800-2009"
