@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   gen.c - code generator for F8.
 
-  Copyright (C) 2021-2023, Philipp Klaus Krause krauseph@informatik.uni-freiburg.de)
+  Copyright (C) 2021-2024, Philipp Klaus Krause krauseph@informatik.uni-freiburg.de)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -3392,7 +3392,7 @@ genFunction (iCode *ic)
       return;
   }
 
-  if (IFFUNC_ISISR (sym->type) && !sym->funcDivFlagSafe)
+  if (IFFUNC_ISISR (sym->type))
     {
       push (ASMOP_F, 0, 1);
       push (ASMOP_X, 0, 2);
@@ -3463,8 +3463,6 @@ genEndFunction (iCode *ic)
   if (sym->stack)
     adjustStack (sym->stack, xl_free, y_free);
 
-  wassertl (!G.stack.pushed, "Unbalanced stack.");
-
   if (poststackadjust)
     wassert (0);
 
@@ -3478,8 +3476,8 @@ genEndFunction (iCode *ic)
   if (IFFUNC_ISISR (sym->type))
     {
       pop (ASMOP_Z, 0, 2);
-      pop (ASMOP_X, 0, 2);
       pop (ASMOP_Y, 0, 2);
+      pop (ASMOP_X, 0, 2);
       pop (ASMOP_F, 0, 1);
       emit2 ("reti", "");
       cost (1, 1);
@@ -3489,6 +3487,8 @@ genEndFunction (iCode *ic)
       emit2 ("ret", "");
       cost (1, 1);
     }
+
+  wassertl (!G.stack.pushed, "Unbalanced stack.");
 
   D (emit2 (";", "Total %s function size at codegen: %u bytes.", sym->name, (unsigned int)regalloc_dry_run_cost_bytes));
 }

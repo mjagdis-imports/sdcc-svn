@@ -19,10 +19,10 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 	begin
 		if(reset)
 			presccounter = 0;
-		else
+		else if(count_now)
 			presccounter++;
 	end
-	assign prescaled_count_now = !reset && (presccounter == 0);
+	assign prescaled_count_now = (presccounter == 4'hf);
 
 	// Watchdog counter
 	always @(posedge clk)
@@ -65,7 +65,7 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 			configreg[7:0] = config_in[7:0];
 		else
 		begin
-			if(overflow_int )
+			if(overflow_int)
 				configreg[1] = 1;
 			if(trap)
 				configreg[2] = 1;

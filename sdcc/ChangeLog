@@ -1,3 +1,9 @@
+2024-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c,
+	  src/f8/main.c:
+	  Fix code generation for interrupt handlers.
+
 2024-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:

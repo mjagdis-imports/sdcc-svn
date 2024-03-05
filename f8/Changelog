@@ -1,6 +1,22 @@
 2023-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
+	  hardware/postsynthtestsystem.v,
+	  hardware/tests/blink/test.s,
+	  hardware/testsystem.v,
+	  hardware/watchdog.v,
+	  hardware/fullpostsynthtestsystem.v,
+	  hardware/icebreaker.pcf,
+	  hardware/icebreaker.v,
+	  hardware/postsynthsystem.v,
+	  hardware/system.v,
+	  hardware/tests/blink,
+	  hardware/tests/cblink:
+	  Infrastructure for trying f8 on iCEBreaker FPGA board.
+
+2023-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
 	  hardware/alu.v,
 	  hardware/cpu.v,
 	  hardware/io.v,

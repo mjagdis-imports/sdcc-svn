@@ -268,7 +268,12 @@ int
 f8_genIVT(struct dbuf_s * oBuf, symbol ** intTable, int intCount)
 {
   dbuf_tprintf (oBuf, "\tjp #s_GSINIT ; reset\n");
-
+  dbuf_tprintf (oBuf, "\tnop\n");
+  if (interrupts[0])
+    dbuf_printf (oBuf, "\tjp #%s ; interrupt handler\n", interrupts[0]->rname);
+  else
+    dbuf_printf (oBuf, "\treti ; no interrupt handler declared\n");
+ 
   return true;
 }
 
