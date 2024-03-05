@@ -1,6 +1,6 @@
 .area HOME
 
-	; Tesst tstw.
+	; Test tstw.
 
 	; Set stack pointer one above RAM.
 	ldw	y, #0x4000
@@ -11,7 +11,9 @@
 	jrnc	l1trap
 	jrn	l1trap
 	jrnz	l1trap
-	jrno	l1
+	jro	l1trap
+	cpw	y, #0x0000
+	jrz	l1
 l1trap:
 	trap
 l1:
@@ -21,7 +23,9 @@ l1:
 	jrnc	l2trap
 	jrnn	l2trap
 	jrz	l2trap
-	jro	l2
+	jrno	l2trap
+	cpw	y, #0x8000
+	jrz	l2
 l2trap:
 	trap
 l2:
@@ -31,17 +35,26 @@ l2:
 	jrnc	l1trap
 	jrn	l3trap
 	jrnz	l3trap
-	jrno	l3
+	jro	l3trap
+	cpw	x, #0x0000
+	jrz	l3
 l3trap:
 	trap
 l3:
 
+	ldw	x, #0xaa55
 	ldw	z, #0x8000
 	tstw	z
 	jrnc	l4trap
 	jrnn	l4trap
 	jrz	l4trap
-	jro	l4
+	jrno	l4trap
+	cpw	x, #0xaa55
+	jrnz	l4trap
+	cpw	y, #0x8000
+	jrnz	l4trap
+	cpw	z, #0x8000
+	jrz	l4
 l4trap:
 	trap
 l4:
