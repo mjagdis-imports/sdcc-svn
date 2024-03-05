@@ -17,7 +17,6 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 	logic[3:0] presccounter;
 	always @(posedge clk)
 	begin
-		$display("HERE A posedge countreg %h presccounter %d prescaled_count_now %h", countreg, presccounter, prescaled_count_now);
 		if(reset)
 			presccounter = 0;
 		else
@@ -28,7 +27,6 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 	// Watchdog counter
 	always @(posedge clk)
 	begin
-		$display("HERE B posedge countreg %h presccounter %d prescaled_count_now %h", countreg, presccounter, prescaled_count_now);
 		if(!prescaled_count_now)
 		begin
 			overflow_int = 0;

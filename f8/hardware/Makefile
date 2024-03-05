@@ -7,24 +7,20 @@ SV2V = /home/philipp/sv2v-0.0.11/bin/sv2v
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 
-.PHONY: all tests simpletests postsynthtests alltests clean
+.PHONY: all tests postsynthtests alltests clean
 
-all: f8-testsystem f8-simpletestsystem
+all: f8-testsystem
 
 clean:
-	rm -f f8-testsystem f8-simpletestsystem f8-postsynthtestsystem cpu_flat.v cpu_synth.v io_flat.v io_synth.v tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.vcd tests/*/*.log
+	rm -f f8-testsystem f8-postsynthtestsystem cpu_flat.v cpu_synth.v io_flat.v io_synth.v ram_flat.v ram_synth.v tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.vcd tests/*/*.log
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 TESTSYSTEMSOURCES = testsystem.v memory.v ram.v $(CPUSOURCES) $(IOSOURCES)
-SIMPLETESTSYSTEMSOURCES = simpletestsystem.v memory.v ram.v $(CPUSOURCES)
 POSTSYNTHTESTSYSTEMSOURCES = postsynthtestsystem.v memory.v ram_synth.v cpu_synth.v io_synth.v
 
 f8-testsystem: $(TESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem.v
-
-f8-simpletestsystem: $(SIMPLETESTSYSTEMSOURCES)
-	iverilog -g2009 -Wall -o $@ simpletestsystem.v
 
 f8-postsynthtestsystem: $(POSTSYNTHTESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ postsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
@@ -35,9 +31,7 @@ TESTSS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
 TESTSYSTEMVCDS = $(TESTDIRS:=/testsystem.vcd)
-SIMPLETESTSYSTEMVCDS = $(TESTDIRS:=/simpletestsystem.vcd)
 TESTLOGS = $(TESTDIRS:=/test.log)
-SIMPLETESTLOGS = $(TESTDIRS:=/simpletest.log)
 POSTSYNTHTESTLOGS = $(TESTDIRS:=/postsynthtest.log)
 
 cpu_flat.v: $(CPUSOURCES)
@@ -70,9 +64,6 @@ ram_synth.v: ram_flat.v
 %/test.vcd %/test.log &: f8-testsystem %/test.vmem
 	cd $*; ../../f8-testsystem > test.log
 
-%/simpletest.vcd %/simpletest.log &: f8-simpletestsystem %/test.vmem
-	cd $*; ../../f8-simpletestsystem > simpletest.log
-
 %/postsynthtest.vcd %/postsynthtest.log &: f8-postsynthtestsystem %/test.vmem
 	cd $*; ../../f8-postsynthtestsystem > postsynthtest.log
 
@@ -81,15 +72,10 @@ tests: $(TESTLOGS)
 		echo -n "testsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-simpletests: $(SIMPLETESTLOGS)
-	for simpletestlog in $(SIMPLETESTLOGS); do \
-		echo -n "simpletestsystem": $$simpletestlog ""; grep ERROR $$simpletestlog | tr -d '\n'; echo ""; \
-	done
-
 postsynthtests: $(POSTSYNTHTESTLOGS)
 	for testlog in $(POSTSYNTHTESTLOGS); do \
 		echo -n "postsynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-alltests: tests simpletests postsynthtests
+alltests: tests postsynthtests
 

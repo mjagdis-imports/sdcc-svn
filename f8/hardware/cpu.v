@@ -393,8 +393,6 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			aluinst = ALUINST_SLLW1;
 		else if (opcode == OPCODE_SEX_Y_XL)
 			aluinst = ALUINST_SEX;
-		else if (opcode == OPCODE_CLTZ_Y)
-			aluinst = ALUINST_CLTZ;
 		else if (opcode == OPCODE_NEGW_Y)
 			aluinst = ALUINST_SUBW;
 		else if (opcode == OPCODE_BOOLW_Y)

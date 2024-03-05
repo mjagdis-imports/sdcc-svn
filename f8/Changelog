@@ -1,5 +1,19 @@
 2023-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/Makefile,
+	  hardware/alu.v,
+	  hardware/cpu.v,
+	  hardware/io.v,
+	  hardware/opcode.v,
+	  hardware/opcodemap.v,
+	  hardware/postsynthtestsystem.v,
+	  hardware/tests/gpio,
+	  hardware/testsystem.v,
+	  hardware/watchdog.v:
+	  Test gpio peripheral.
+
+2023-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/cpu.v,
 	  hardware/tests/tst,
 	  hardware/tests/tstw/test.s:
