@@ -8,9 +8,12 @@ YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 
-.PHONY: all tests postsynthtests fullpostsynthtests alltests clean
+.PHONY: all tests postsynthtests fullpostsynthtests alltests clean images
 
 all: f8-testsystem
+
+# Images for the iCEBrekaer FPGA board.
+images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
 
 clean:
 	rm -f f8-testsystem f8-postsynthtestsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-fullpostsynthtestsystem tests/*/*.vcd tests/*/*.log
@@ -18,7 +21,7 @@ clean:
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 SYSTEMSOURCES = system.v $(CPUSOURCES) $(IOSOURCES)
-TESTSYSTEMSOURCES = $(SYSTEMSOURCES)
+TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)
 POSTSYNTHTESTSYSTEMSOURCES = postsynthtestsystem.v system.v memory.v ram_synth.v cpu_synth.v io_synth.v
 
 f8-testsystem: $(TESTSYSTEMSOURCES)
@@ -54,7 +57,7 @@ icebreaker_nosv.v: icebreaker.v $(SYSTEMSOURCES)
 	$(SV2V) --exclude=always --exclude=logic icebreaker.v > $@
 
 cpu_synth.v: cpu_nosv.v
-	$(YOSYS) -p "read_verilog -sv cpu_nosv.v; synth_ice40 -noflatten -top cpu; write_verilog cpu_synth.v" # Without -noflatten we get lots of test failures
+	$(YOSYS) -p "read_verilog -sv cpu_nosv.v; synth_ice40 -noflatten -top cpu; write_verilog cpu_synth.v" # -noflatten makes debugging easier.
 
 io_synth.v: io_nosv.v
 	$(YOSYS) -p "read_verilog -sv io_nosv.v; synth_ice40 -noflatten -top iosystem; write_verilog io_synth.v"
@@ -62,17 +65,14 @@ io_synth.v: io_nosv.v
 ram_synth.v: ram_nosv.v
 	$(YOSYS) -p "read_verilog -sv ram_nosv.v; synth_ice40 -noflatten -top ram; write_verilog ram_synth.v"
 
-test.vmem: tests/cblink/test.vmem
-	cp tests/cblink/test.vmem $@
+%/icebreaker_synth.json: icebreaker_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -noflatten -top icebreaker -json icebreaker_synth.json"
 
-icebreaker_synth.json: icebreaker_nosv.v test.vmem
-	$(YOSYS) -p "read_verilog -sv icebreaker_nosv.v; synth_ice40 -noflatten -top icebreaker -json icebreaker_synth.json"
+%/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
+	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 3 --asc $@
 
-icebreaker_synth.asc: icebreaker_synth.json icebreaker.pcf
-	nextpnr-ice40 --up5k --json icebreaker_synth.json --pcf icebreaker.pcf --freq 3 --asc $@
-
-icebreaker_synth.bin: icebreaker_synth.asc
-	icepack icebreaker_synth.asc $@
+%/icebreaker_synth.bin: %/icebreaker_synth.asc
+	icepack $< $@
 	
 icebreaker_synth.v: icebreaker_synth.json
 	yosys -p 'read_json $^; write_verilog $@'
@@ -87,7 +87,10 @@ icebreaker_synth.v: icebreaker_synth.json
 	$(SDLD) -b HOME=0x4000 -i $@ $<
 
 tests/cblink/test.ihx: tests/cblink/test.c
-	cd tests/cblink; $(SDCC) -mf8 test.c --data-loc 0x3f00
+	cd tests/cblink; $(SDCC) -mf8 test.c --data-loc 0x3e00
+
+tests/chello/test.ihx: tests/chello/test.c
+	cd tests/chello; $(SDCC) -mf8 test.c --data-loc 0x3e00
 
 %.vmem: %.ihx
 	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@

@@ -16,7 +16,7 @@ module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
 
 	logic [15:0] dread_addr_rombased;
 
-	reg [7:0] rom[ROMSIZE - 1 : 0];
+	(* ram_style = "block" *) reg [7:0] rom[ROMSIZE - 1 : 0];
 
 	logic [15:0] iread_addr_rombased;
 

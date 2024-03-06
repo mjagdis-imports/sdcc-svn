@@ -1,6 +1,7 @@
 `begin_keywords "1800-2009"
 
 // Dual port RAM module suitable for iCE40 4kb Embedded Block RAM
+// Todo: paramtrize by size or address width!
 module dualportram(din, write_en, waddr, raddr, dout, clk);
 	parameter addr_width = 9; // 512 x
 	parameter data_width = 8; // x 8
@@ -50,8 +51,14 @@ module ram #(parameter ADDRBITS = 10) (input logic [15:0] dread_addr, output log
 	assign dread_addr_rambased_even = dread_addr_even - RAMBASE;
 	assign dread_addr_rambased_odd = dread_addr_odd - RAMBASE;
 
-	dualportram evenram(.din(dwrite_data_even), .write_en(dwrite_en_even), .waddr(dwrite_addr_even[9:1]), .raddr(dread_addr_even[9:1]), .dout(dread_ram_data_even), .clk(clk));
-	dualportram oddram(.din(dwrite_data_odd), .write_en(dwrite_en_odd), .waddr(dwrite_addr_odd[9:1]), .raddr(dread_addr_odd[9:1]), .dout (dread_ram_data_odd), .clk(clk));
+	dualportram evenram
+		(.din(dwrite_data_even), .write_en(dwrite_en_even), .waddr(dwrite_addr_even[ADDRBITS-1:1]),
+		.raddr(dread_addr_even[ADDRBITS-1:1]), .dout(dread_ram_data_even),
+		.clk(clk));
+	dualportram oddram
+		(.din(dwrite_data_odd), .write_en(dwrite_en_odd), .waddr(dwrite_addr_odd[ADDRBITS-1:1]),
+		.raddr(dread_addr_odd[ADDRBITS-1:1]), .dout (dread_ram_data_odd),
+		.clk(clk));
 
 	logic dread_odd;
 	always @(posedge clk)

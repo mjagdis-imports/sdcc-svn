@@ -10,12 +10,14 @@ module iosystem
 	IRQCTRLADDRBASE = 16'h0010,
 	TIMER0ADDRBASE = 16'h0018,
 	WATCHDOGADDRBASE = 16'h0020,
-	GPIO0ADDDRBASE = 16'h0028)
+	GPIO0ADDDRBASE = 16'h0028,
+	GPIO1ADDDRBASE = 16'h0030,
+	GPIO2ADDDRBASE = 16'h0038)
 	
 	(input logic [15:0] dread_addr, output logic [15:0] dread_data,
 	input logic [15:0] dwrite_addr, dwrite_data, input logic [1:0] dwrite_en,
 	output logic interrupt, input logic clk, output logic reset, input logic trap, input logic power_on_reset,
-	inout tri logic [7:0] gpio0pins);
+	inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins);
 
 	wire [15:0] dwrite_addr_even, dwrite_addr_odd;
 	wire [15:0] dread_addr_even, dread_addr_odd;
@@ -101,6 +103,38 @@ module iosystem
 		.ddr_write(gpio0_ddr_write), .odr_write(gpio0_odr_write), .pr_write(gpio0_pr_write),
 		.*);
 
+	// GPIO1
+	wire gpio1_ddr_read, gpio1_odr_read, gpio1_idr_read, gpio1_pr_read;
+	wire gpio1_ddr_write, gpio1_odr_write, gpio1_pr_write;
+	logic [7:0] gpio1_ddr_dread, gpio1_odr_dread, gpio1_idr_dread, gpio1_pr_dread;
+	assign gpio1_ddr_read = (dread_addr_even == GPIO1ADDDRBASE);
+	assign gpio1_odr_read = (dread_addr_even == GPIO1ADDDRBASE + 2);
+	assign gpio1_idr_read = (dread_addr_even == GPIO1ADDDRBASE + 4);
+	assign gpio1_pr_read = (dread_addr_even == GPIO1ADDDRBASE + 6);
+	assign gpio1_ddr_write = dwrite_en_even && (dwrite_addr_even == GPIO1ADDDRBASE);
+	assign gpio1_odr_write = dwrite_en_even && (dwrite_addr_even == GPIO1ADDDRBASE + 2);
+	assign gpio1_pr_write = dwrite_en_even && (dwrite_addr_even == GPIO1ADDDRBASE + 6);
+	gpio gpio1(.pins(gpio1pins), .ddr_out(gpio1_ddr_dread), .odr_out(gpio1_odr_dread), .idr_out(gpio1_idr_dread), .pr_out(gpio1_pr_dread),
+		.ddr_in(dwrite_data[7:0]), .odr_in(dwrite_data[7:0]), .pr_in(dwrite_data[7:0]),
+		.ddr_write(gpio1_ddr_write), .odr_write(gpio1_odr_write), .pr_write(gpio1_pr_write),
+		.*);
+
+	// GPIO2
+	wire gpio2_ddr_read, gpio2_odr_read, gpio2_idr_read, gpio2_pr_read;
+	wire gpio2_ddr_write, gpio2_odr_write, gpio2_pr_write;
+	logic [7:0] gpio2_ddr_dread, gpio2_odr_dread, gpio2_idr_dread, gpio2_pr_dread;
+	assign gpio2_ddr_read = (dread_addr_even == GPIO2ADDDRBASE);
+	assign gpio2_odr_read = (dread_addr_even == GPIO2ADDDRBASE + 2);
+	assign gpio2_idr_read = (dread_addr_even == GPIO2ADDDRBASE + 4);
+	assign gpio2_pr_read = (dread_addr_even == GPIO2ADDDRBASE + 6);
+	assign gpio2_ddr_write = dwrite_en_even && (dwrite_addr_even == GPIO2ADDDRBASE);
+	assign gpio2_odr_write = dwrite_en_even && (dwrite_addr_even == GPIO2ADDDRBASE + 2);
+	assign gpio2_pr_write = dwrite_en_even && (dwrite_addr_even == GPIO2ADDDRBASE + 6);
+	gpio gpio2(.pins(gpio2pins), .ddr_out(gpio2_ddr_dread), .odr_out(gpio2_odr_dread), .idr_out(gpio2_idr_dread), .pr_out(gpio2_pr_dread),
+		.ddr_in(dwrite_data[7:0]), .odr_in(dwrite_data[7:0]), .pr_in(dwrite_data[7:0]),
+		.ddr_write(gpio2_ddr_write), .odr_write(gpio2_odr_write), .pr_write(gpio2_pr_write),
+		.*);
+
 	always @(posedge clk)
 	begin
 		if(dread_addr_even == dwrite_addr_even)
@@ -119,6 +153,22 @@ module iosystem
 			dread_data[7:0] = {'x, gpio0_idr_dread[7:0]};
 		else if(gpio0_pr_read)
 			dread_data[7:0] = {'x, gpio0_pr_dread[7:0]};
+		else if(gpio1_ddr_read)
+			dread_data[7:0] = {'x, gpio1_ddr_dread[7:0]};
+		else if(gpio1_odr_read)
+			dread_data[7:0] = {'x, gpio1_odr_dread[7:0]};
+		else if(gpio1_idr_read)
+			dread_data[7:0] = {'x, gpio1_idr_dread[7:0]};
+		else if(gpio1_pr_read)
+			dread_data[7:0] = {'x, gpio1_pr_dread[7:0]};
+		else if(gpio2_ddr_read)
+			dread_data[7:0] = {'x, gpio2_ddr_dread[7:0]};
+		else if(gpio2_odr_read)
+			dread_data[7:0] = {'x, gpio2_odr_dread[7:0]};
+		else if(gpio2_idr_read)
+			dread_data[7:0] = {'x, gpio2_idr_dread[7:0]};
+		else if(gpio2_pr_read)
+			dread_data[7:0] = {'x, gpio2_pr_dread[7:0]};
 		else
 			dread_data[7:0] = 'x;
 		if (dread_addr_odd == dwrite_addr_odd)

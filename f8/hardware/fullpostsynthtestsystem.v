@@ -13,11 +13,11 @@ module clkgen (clk);
 	initial
 		clk = 0;
 
-	always #5 clk = !clk;
+	always #2 clk = !clk;
 endmodule
 
 module testsystem ();
-	wire [7:0] gpio0pins;
+	wire [7:0] gpio0pins, gpio1pins, gpio2pins;
 	wire clk;
 	wire trap;
 	reg power_on_reset;
@@ -29,7 +29,7 @@ module testsystem ();
     		power_on_reset <= 1;
     		#20
     		power_on_reset <= 0;
-		#2180
+		#8180
 		$finish;
 	end
 
