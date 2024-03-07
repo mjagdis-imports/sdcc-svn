@@ -16,7 +16,7 @@ all: f8-testsystem
 images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
 
 clean:
-	rm -f f8-testsystem f8-postsynthtestsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-fullpostsynthtestsystem tests/*/*.vcd tests/*/*.log
+	rm -f f8-testsystem f8-postsynthtestsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-fullpostsynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
@@ -30,7 +30,7 @@ f8-testsystem: $(TESTSYSTEMSOURCES)
 f8-postsynthtestsystem: $(POSTSYNTHTESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ postsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
-%/f8-fullpostsynthtestsystem: %/system_synth.v
+%/f8-fullpostsynthtestsystem: fullpostsynthtestsystem.v %/system_synth.v
 	cd $*; iverilog -g2009 -Wall -o f8-fullpostsynthtestsystem ../../fullpostsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
 TESTDIRS = ${shell find tests/* -type d -print}

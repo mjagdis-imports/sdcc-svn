@@ -10,9 +10,9 @@ module regfile(output logic [15:0] x, y, z, output logic [15:0] next_x, next_y, 
 	assign y = regs[1];
 	assign z = regs[2];
 
-	assign next_x = {(addr_in == 0 && write_en[1]) ? data_in[15:8]: regs[0][15:8], (addr_in == 0 && write_en[0]) ? data_in[7:0]: regs[0][7:0]};
-	assign next_y = {(addr_in == 1 && write_en[1]) ? data_in[15:8]: regs[1][15:8], (addr_in == 1 && write_en[0]) ? data_in[7:0]: regs[1][7:0]};
-	assign next_z = {(addr_in == 2 && write_en[1]) ? data_in[15:8]: regs[2][15:8], (addr_in == 2 && write_en[0]) ? data_in[7:0]: regs[2][7:0]};
+	assign next_x = {(addr_in == 0 && write_en[1]) ? data_in[15:8] : regs[0][15:8], (addr_in == 0 && write_en[0]) ? data_in[7:0] : regs[0][7:0]};
+	assign next_y = {(addr_in == 1 && write_en[1]) ? data_in[15:8] : regs[1][15:8], (addr_in == 1 && write_en[0]) ? data_in[7:0] : regs[1][7:0]};
+	assign next_z = {(addr_in == 2 && write_en[1]) ? data_in[15:8] : regs[2][15:8], (addr_in == 2 && write_en[0]) ? data_in[7:0] : regs[2][7:0]};
 
 	always @(posedge clk)
 	begin
@@ -522,7 +522,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	assign regwrite_en =
 		interrupt_start ? 0 :
 		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || (opcode_is_8_1_xl(opcode) || opcode_is_8_1_zh(opcode)) && !opcode_is_tst(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
-			(accsel_in == ACCSEL_XH_Y ? 2'b10 : 2'b01) :
+			((accsel_in == ACCSEL_XH_Y || opcode_is_8_1_zh(opcode)) ? 2'b10 : 2'b01) :
 		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :
 		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in || opcode == OPCODE_CAX_IY_ZL_XL && !z_out) ? 2'b01 :
 		((opcode == OPCODE_LD_XL_YL || opcode == OPCODE_LD_XL_ZL) && swapop_in) ? 2'b01 :
@@ -532,7 +532,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		(opcode == OPCODE_DNJNZ_YH_D || opcode == OPCODE_LD_YH_IMMD) ? 2'b10 :
 		0;
 	assign regwrite_data =
-		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) && accsel_in == ACCSEL_XH_Y || (opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? {result_reg[7:0], 8'bx} :
+		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) && accsel_in == ACCSEL_XH_Y || opcode_is_8_1_zh(opcode) || (opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? {result_reg[7:0], 8'bx} :
 		((opcode == OPCODE_LD_XL_XH || opcode == OPCODE_LD_XL_YH || opcode == OPCODE_LD_XL_ZH) && swapop_in) ? {result_reg[7:0], 8'bx} :
 		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode_is_ld_xl(opcode) && !swapop_in) && accsel_in == ACCSEL_XH_Y) ? {result_reg[7:0], 8'bx} :
 		(opcode == OPCODE_DNJNZ_YH_D || opcode == OPCODE_LD_YH_IMMD) ? {result_reg[7:0], 8'bx} :
@@ -567,13 +567,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		2'b00;
 	assign dwrite_data = dwrite_en ? result_mem : 'x;
 
-	always @(posedge clk)
-	begin
-		if (!reset && (opcode == OPCODE_TRAP))
-			trap = 1;
-		else
-			trap = 0;
-	end
+	assign trap = !reset && (opcode == OPCODE_TRAP);
 
 	always @(posedge clk)
 	begin

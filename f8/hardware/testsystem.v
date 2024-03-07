@@ -35,12 +35,13 @@ module testsystem ();
 	clkgen clkgen(.*);
 	system system(.*);
 
-	always @(posedge trap)
-	begin
-		$display("ERROR: TRAP");
-		#20
-		$finish;
-	end
+	always @(posedge clk)
+		if(trap)
+		begin
+			$display("ERROR: TRAP");
+			#20
+			$finish;
+		end
 endmodule
 
 `end_keywords

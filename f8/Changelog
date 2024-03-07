@@ -1,3 +1,15 @@
+2023-03-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/cpu.v,
+	  hardware/fullpostsynthtestsystem.v,
+	  hardware/io.v,
+	  hardware/postsynthtestsystem.v,
+	  hardware/tests/sll,
+	  hardware/testsystem.v,
+	  hardware/watchdog.v:
+	  Implement trap on null pointer write, fix sll zh.
+
 2023-03-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
