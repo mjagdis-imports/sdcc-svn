@@ -5,7 +5,7 @@
 // Prescaler: /16.
 // On overflow: watchdog reset. On trap: trap reset.
 // I/O registers: counter (16 bit), reload (16 bit), config (8 bit - lowest bit enables watchdog, next three bits indicate type of most recent reset)
-module watchdog (output logic reset, output logic [15:0] counter_out, reload_out, output logic [7:0] config_out, input logic [15:0] counter_in, reload_in,  input logic [7:0] config_in, input logic [1:0] counter_write, reload_write, zero_write, input config_write, input logic clk, power_on_reset, trap);
+module watchdog (output logic reset, output logic [15:0] counter_out, reload_out, output logic [7:0] config_out, input logic [15:0] counter_in, reload_in,  input logic [7:0] config_in, input logic [1:0] counter_write, reload_write, input config_write, zero_write, input logic clk, power_on_reset, trap);
 	logic [7:0] configreg;
 	logic [15:0] countreg, reloadreg;
 	logic internal_reset;

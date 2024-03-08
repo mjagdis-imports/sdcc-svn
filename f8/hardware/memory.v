@@ -4,7 +4,7 @@
 
 // 512B ROM
 module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
-	parameter ROMSIZE = 512;
+	parameter ROMSIZE = 2048;
 	parameter logic [15:0] ROMBASE = 16'h4000;
 
 	input [15 : 0] iread_addr;

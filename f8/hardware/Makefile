@@ -20,7 +20,7 @@ clean:
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
-SYSTEMSOURCES = system.v $(CPUSOURCES) $(IOSOURCES)
+SYSTEMSOURCES = system.v memory.v ram.v $(CPUSOURCES) $(IOSOURCES)
 TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)
 POSTSYNTHTESTSYSTEMSOURCES = postsynthtestsystem.v system.v memory.v ram_synth.v cpu_synth.v io_synth.v
 

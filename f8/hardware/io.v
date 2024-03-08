@@ -72,10 +72,11 @@ module iosystem
 	logic [1:0] watchdog_counter_write, watchdog_reload_write;
 	logic watchdog_config_read;
 	logic watchdog_config_write;
+	logic watchdog_zero_write;
 	logic [7:0] watchdog_config_dread;
 	logic [15:0] watchdog_counter_dread, watchdog_reload_dread;
 	logic [7:0] watchdog_config_dwrite;
-	logic [15:0] watchdog_counter_dwrite, watchdog_reload_dwrite, watchdog_zero_write;
+	logic [15:0] watchdog_counter_dwrite, watchdog_reload_dwrite;
 	always_comb
 	begin
 		watchdog_config_read = (dread_addr_even == WATCHDOGADDRBASE);
