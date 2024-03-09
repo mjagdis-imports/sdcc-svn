@@ -134,6 +134,29 @@ l8trap:
 	trap
 l8:
 
+	; Load from memory updates n and z, but neither o nor c.
+	ld	xl, #0x00
+	tst	xl
+	sll	xl
+	push	#0x80
+	ld	xl, (0, sp)
+	jrz	l9trap
+	jrnn	l9trap
+	jrc	l9trap
+	jro	l9trap
+	push	#0x00
+	ld	xl, #0x83
+	tst	xl
+	sll	xl
+	ld	xl, (0, sp)
+	jrnz	l9trap
+	jrn	l9trap
+	jrnc	l9trap
+	jro	l9
+l9trap:
+	trap
+l9:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

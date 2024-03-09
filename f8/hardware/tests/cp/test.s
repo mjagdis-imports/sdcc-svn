@@ -32,7 +32,7 @@ l4:
 l5:
 
 	cp	xl, yh
-	jrnz	#l6
+	jrz	#l6
 	trap
 l6:
 

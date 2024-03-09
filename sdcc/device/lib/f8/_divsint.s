@@ -40,7 +40,6 @@ __divsint:
 x_nonnegative:
 
 	ldw	z, (2, sp)
-	tstw	z
 	jrnn	y_nonnegative
 	negw	z
 	xor	xl, #0x80

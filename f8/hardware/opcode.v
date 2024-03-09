@@ -118,13 +118,22 @@ function automatic logic opcode_is_tstw(opcode_t opcode);
 	return(opcode == OPCODE_TSTW_DIR || opcode == OPCODE_TSTW_SPREL || opcode == OPCODE_TSTW_ZREL || opcode == OPCODE_TSTW_Y);
 endfunction
 
+function automatic logic opcode_is_ld_xl_mem(opcode_t opcode);
+	return(opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LD_XL_ZREL ||
+		opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL);
+endfunction
+
 function automatic logic opcode_is_ld_xl(opcode_t opcode);
-	return(opcode == OPCODE_LD_XL_IMMD || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LD_XL_ZREL ||
-		opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LD_XL_XH || opcode == OPCODE_LD_XL_YL || opcode == OPCODE_LD_XL_YH || opcode == OPCODE_LD_XL_ZL || opcode == OPCODE_LD_XL_ZH);
+	return(opcode == OPCODE_LD_XL_IMMD || opcode_is_ld_xl_mem(opcode) ||
+		opcode == OPCODE_LD_XL_XH || opcode == OPCODE_LD_XL_YL || opcode == OPCODE_LD_XL_YH || opcode == OPCODE_LD_XL_ZL || opcode == OPCODE_LD_XL_ZH);
+endfunction
+
+function automatic logic opcode_is_ldw_y_mem(opcode_t opcode);
+	return(opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY);
 endfunction
 
 function automatic logic opcode_is_ldw_y(opcode_t opcode);
-	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode == OPCODE_LDW_Y_DIR || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_Y_D);
+	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode_is_ldw_y_mem(opcode) || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_Y_D);
 endfunction
 
 function automatic logic opcode_is_mad(opcode_t opcode);
@@ -147,27 +156,27 @@ function automatic logic opcode_is_8_2_sprel(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_8_2_zrel(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_ZREL || opcode == OPCODE_SBC_XL_ZREL || opcode == OPCODE_ADD_XL_ZREL || opcode == OPCODE_ADC_XL_ZREL ||
+	return(opcode == OPCODE_SUB_XL_ZREL || opcode == OPCODE_SBC_XL_ZREL || opcode == OPCODE_ADD_XL_ZREL || opcode == OPCODE_ADC_XL_ZREL || opcode == OPCODE_CP_XL_ZREL ||
 	opcode == OPCODE_OR_XL_ZREL || opcode == OPCODE_AND_XL_ZREL || opcode == OPCODE_XOR_XL_ZREL);
 endfunction
 
 function automatic logic opcode_is_8_2_zl(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_ZL || opcode == OPCODE_SBC_XL_ZL || opcode == OPCODE_ADD_XL_ZL || opcode == OPCODE_ADC_XL_ZL ||
+	return(opcode == OPCODE_SUB_XL_ZL || opcode == OPCODE_SBC_XL_ZL || opcode == OPCODE_ADD_XL_ZL || opcode == OPCODE_ADC_XL_ZL || opcode == OPCODE_CP_XL_ZL ||
 	opcode == OPCODE_OR_XL_ZL || opcode == OPCODE_AND_XL_ZL || opcode == OPCODE_XOR_XL_ZL);
 endfunction
 
 function automatic logic opcode_is_8_2_xh(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_XH|| opcode == OPCODE_SBC_XL_XH || opcode == OPCODE_ADD_XL_XH || opcode == OPCODE_ADC_XL_XH ||
+	return(opcode == OPCODE_SUB_XL_XH|| opcode == OPCODE_SBC_XL_XH || opcode == OPCODE_ADD_XL_XH || opcode == OPCODE_ADC_XL_XH || opcode == OPCODE_CP_XL_XH ||
 	opcode == OPCODE_OR_XL_XH || opcode == OPCODE_AND_XL_XH || opcode == OPCODE_XOR_XL_XH);
 endfunction
 
 function automatic logic opcode_is_8_2_yl(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_YL|| opcode == OPCODE_SBC_XL_YL || opcode == OPCODE_ADD_XL_YL || opcode == OPCODE_ADC_XL_YL ||
+	return(opcode == OPCODE_SUB_XL_YL|| opcode == OPCODE_SBC_XL_YL || opcode == OPCODE_ADD_XL_YL || opcode == OPCODE_ADC_XL_YL || opcode == OPCODE_CP_XL_YL ||
 		opcode == OPCODE_OR_XL_YL || opcode == OPCODE_AND_XL_YL || opcode == OPCODE_XOR_XL_YL);
 endfunction
 
 function automatic logic opcode_is_8_2_yh(opcode_t opcode);
-	return(opcode == OPCODE_SUB_XL_YH|| opcode == OPCODE_SBC_XL_YH || opcode == OPCODE_ADD_XL_YH || opcode == OPCODE_ADC_XL_YH ||
+	return(opcode == OPCODE_SUB_XL_YH|| opcode == OPCODE_SBC_XL_YH || opcode == OPCODE_ADD_XL_YH || opcode == OPCODE_ADC_XL_YH || opcode == OPCODE_CP_XL_YH ||
 	opcode == OPCODE_OR_XL_YH || opcode == OPCODE_AND_XL_YH || opcode == OPCODE_XOR_XL_YH);
 endfunction
 

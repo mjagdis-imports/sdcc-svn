@@ -1,3 +1,12 @@
+2023-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/cpu.v,
+	  hardware/opcode.v,
+	  hardware/tests/cp/test.s,
+	  hardware/tests/ld_xl/test.s,
+	  hardware/tests/ldw_y/test.s:
+	  Implement new behaviour of n and z flags for loads from memory.
+
 2023-03-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

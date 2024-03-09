@@ -1,3 +1,9 @@
+2024-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/f8.src/imove.cc,
+	  device/lib/f8/_divsint.s:
+	  Implement new behaviour of n and z flags for loads from memory.
+
 2024-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c,
