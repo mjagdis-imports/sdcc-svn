@@ -1,6 +1,6 @@
 .area HOME
 
-	; A minimal test, to check that the basic test infrastructure works, using a relative jump.
+	; Test one-operand wide add carry.
 
 	; Set stack pointer one above RAM.
 	ldw	y, #0x4000

@@ -1,3 +1,9 @@
+2023-03-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/alu.v,
+	  hardware/tests/adcw0:
+	  Test 1-operand variant of f8 instruction adcw.
+
 2023-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,

@@ -8,12 +8,14 @@ YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 
-.PHONY: all tests postsynthtests fullpostsynthtests alltests clean images
+.PHONY: all tests postsynthtests fullpostsynthtests alltests clean icebreaker-images gatemate-images
 
 all: f8-testsystem
 
-# Images for the iCEBrekaer FPGA board.
-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
+# Images for the iCEBreaker FPGA board.
+icrebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
+# Images for the GateMateA1-EVB FPGA board.
+gatemate-images:
 
 clean:
 	rm -f f8-testsystem f8-postsynthtestsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-fullpostsynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json
