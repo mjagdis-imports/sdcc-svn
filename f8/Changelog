@@ -3,6 +3,10 @@
 	* hardware/alu.v,
 	  hardware/tests/adcw0:
 	  Test 1-operand variant of f8 instruction adcw.
+	* hardware/Makefile,
+	  hardware/gatematea1evb.ccf,
+	  hardware/gatematea1evb.v:
+	  Infrastructure for trying f8 on GateMateA1-EVB FPGA board.
 
 2023-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
