@@ -1,3 +1,20 @@
+2023-03-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/f8/_divuint.s,
+	  src/f8/peep.c,
+	  src/f8/peeph.def:
+	  Some small f8 codesize improvements.
+
+2024-03-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/peeph.def:
+	  Optimize out some tnz(w).
+
+2024-03-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/peeph.def:
+	  Simplify some stm8 pushw, common at beginning of function.
+
 2024-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sim/ucsim/f8.src/imove.cc,
@@ -9,6 +26,11 @@
 	* src/f8/gen.c,
 	  src/f8/main.c:
 	  Fix code generation for interrupt handlers.
+
+2024-03-03 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCCgenconstprop.cc:
+	  Remove semicolon after if-condition. (bug #3713)
 
 2024-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
