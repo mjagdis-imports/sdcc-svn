@@ -17,12 +17,57 @@ replace restart {
 } if same(%1 'and' 'or' 'xor'), notVolatile(%2)
 
 replace restart {
+	ld	%1, xl
+	tst	%1
+} by {
+	ld	%1, xl
+	tst	xl
+	; peephole 3 tested xl instead of %1
+} if notVolatile(%1)
+
+replace restart {
+	ld	xl, %1
+	tst	%1
+} by {
+	ld	xl, %1
+	tst	xl
+	; peephole 4 tested xl instead of %1
+} if notVolatile(%1)
+
+replace restart {
 	ld	(%1, sp), xl
 	tst	(%1, sp)
 } by {
 	ld	(%1, sp), xl
 	tst	xl
-	; peephole 3 tested xl instead of %1
+	; peephole 5 tested xl instead of (%1, sp)
+}
+
+replace restart {
+	ldw	%1, y
+	tstw	%1
+} by {
+	ldw	%1, y
+	tstw	y
+	; peephole 6 tested y instead of %1
+} if notVolatile(%1)
+
+replace restart {
+	ldw	y, %1
+	tstw	%1
+} by {
+	ldw	y, %1
+	tstw	y
+	; peephole 7 tested y instead of %1
+} if notVolatile(%1)
+
+replace restart {
+	ldw	(%1, sp), y
+	tstw	(%1, sp)
+} by {
+	ldw	(%1, sp), y
+	tstw	y
+	; peephole 7 tested y instead of (%1, sp)
 }
 
 replace restart {
@@ -30,8 +75,32 @@ replace restart {
 	tstw	%2
 } by {
 	orw	%2, %3
-	; peephole 3 removed redundant tst after orw
+	; peephole 8 removed redundant tst after orw
 } if notVolatile(%2)
+
+replace restart {
+	ld	%1, xl
+	dec	xl
+	tst	zh
+	jrnz	#%2
+} by {
+	ld	%1, xl
+	dec	xl
+	jrc	#%2
+	; peephole 9 removed tst by adjusting jump condition
+} if notVolatile(%1), notUsed('nf' 'zf'), notUsedFrom(%2 'nf' 'zf')
+
+replace restart {
+	ld	%1, xl
+	dec	xl
+	tst	zh
+	jrz	#%2
+} by {
+	ld	%1, xl
+	dec	xl
+	jrnc	#%2
+	; peephole 10 removed tst by adjusting jump condition
+} if notVolatile(%1), notUsed('nf' 'zf'), notUsedFrom(%2 'nf' 'zf')
 
 replace restart {
 	jp	#%1

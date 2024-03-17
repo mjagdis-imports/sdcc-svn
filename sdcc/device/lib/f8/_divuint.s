@@ -38,9 +38,8 @@ __divuint:
 
 1$:
 
-	sllw	z
 	sllw	y
-	adcw	z
+	rlcw	z
 
 	incw	y
 	subw	z, (2, sp)

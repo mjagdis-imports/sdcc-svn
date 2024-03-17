@@ -78,7 +78,7 @@ findLabel (const lineNode *pl)
 
   /* scan backward until space or ',' */
   for (; p > pl->line; p--)
-    if (isspace(*p) || *p == ',')
+    if (isspace(*p) || *p == ',' || *p == '#')
       break;
 
   /* sanity check */
@@ -106,13 +106,58 @@ findLabel (const lineNode *pl)
 }
 
 static bool
-f8MightReadFlag(const lineNode *pl, const char *what)
+f8MightReadFlag (const lineNode *pl, const char *what)
 {
+  if (ISINST (pl->line, "jr") || ISINST (pl->line, "jp"))
+    return false;
+  if (ISINST (pl->line, "adc") || ISINST (pl->line, "sbc"))
+    return !strcmp (what, "cf");
+  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "sbcw"))
+    return strcmp (what, "cf");
+  if (ISINST (pl->line, "add") || ISINST (pl->line, "and") || ISINST (pl->line, "cp") || ISINST (pl->line, "or") || ISINST (pl->line, "sub") || ISINST (pl->line, "xor"))
+    return false;
+  if (ISINST (pl->line, "addw") || ISINST (pl->line, "subw"))
+    return false;
+  if (ISINST (pl->line, "ld") || ISINST (pl->line, "ldw"))
+    return false;
+  if (ISINST (pl->line, "ret"))
+    return false;
+
+  // Fail-safe fallback.
   return true;
 }
 
+/* Check if reading arg implies reading what. */
+static bool argCont(const char *arg, char what)
+{
+  if (!arg || strlen (arg) == 0 || !(what == 'x' || what == 'y' || what == 'z'))
+    return false;
+
+  while (isblank ((unsigned char)(arg[0])))
+    arg++;
+
+  if (arg[0] == ',')
+    arg++;
+
+  while (isblank ((unsigned char)(arg[0])))
+    arg++;
+
+  if (arg[0] == '#')
+    return false;
+
+  if (arg[0] == '(') 
+    arg++;
+  if (arg[0] == '0' && (tolower(arg[1])) == 'x') 
+    arg += 2; // Skip hex prefix to avoid false x positive.
+
+  if (strlen(arg) == 0)
+    return false;
+
+  return (strchr(arg, what));
+}
+
 static bool
-f8MightRead(const lineNode *pl, const char *what)
+f8MightRead (const lineNode *pl, const char *what)
 {
   char extra = 0;
 
@@ -125,30 +170,46 @@ f8MightRead(const lineNode *pl, const char *what)
   else
     return f8MightReadFlag(pl, what);
 
+  if (ISINST (pl->line, "jp") || ISINST (pl->line, "jr"))
+    return false;
+
+  if (ISINST (pl->line, "ldw"))
+    return argCont (strchr (pl->line, ','), extra);
+
+  // Fail-safe fallback.
   return true;
 }
 
 static bool
-f8UncondJump(const lineNode *pl)
+f8UncondJump (const lineNode *pl)
 {
-  return (ISINST(pl->line, "jp") || ISINST(pl->line, "jr"));
+  return (ISINST (pl->line, "jp") || ISINST (pl->line, "jr"));
 }
 
 static bool
-f8CondJump(const lineNode *pl)
+f8CondJump (const lineNode *pl)
 {
-  return (!f8UncondJump(pl) && STARTSINST(pl->line, "jr") ||
-    ISINST(pl->line, "dnjz"));
+  return (!f8UncondJump (pl) && STARTSINST (pl->line, "jr") ||
+    ISINST (pl->line, "dnjz"));
 }
 
 static bool
-f8SurelyWritesFlag(const lineNode *pl, const char *what)
+f8SurelyWritesFlag (const lineNode *pl, const char *what)
 {
+  if (ISINST (pl->line, "adc") || ISINST (pl->line, "add") || ISINST (pl->line, "cp") || ISINST (pl->line, "sbc") || ISINST (pl->line, "sub"))
+    return true;
+  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "addw") || ISINST (pl->line, "sbcw") || ISINST (pl->line, "subw"))
+    return strcmp (what, "hf");
+
+  if (ISINST (pl->line, "ret"))
+    return true;
+
+  // Fail-safe fallback.
   return false;
 }
 
 static bool
-f8SurelyWrites(const lineNode *pl, const char *what)
+f8SurelyWrites (const lineNode *pl, const char *what)
 {
   char extra = 0;
 
@@ -161,13 +222,17 @@ f8SurelyWrites(const lineNode *pl, const char *what)
   else
     return (f8SurelyWritesFlag (pl, what));
 
+  if (ISINST (pl->line, "ldw"))
+    return (pl->line[4] == extra);
+
+  // Fail-safe fallback.
   return false;
 }
 
 static bool
-f8SurelyReturns(const lineNode *pl)
+f8SurelyReturns (const lineNode *pl)
 {
-  return(false);
+  return (false);
 }
 
 /*-----------------------------------------------------------------*/
