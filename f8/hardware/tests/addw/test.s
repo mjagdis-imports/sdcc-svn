@@ -60,6 +60,42 @@ l5trap:
 	trap
 l5:
 
+	; register-to-register
+	ldw	x, #0x1001
+	ldw	y, #0x4004
+	ldw	z, #0x8008
+	addw	y, x
+	jro	l6trap
+	jrz	l6trap
+	jrn	l6trap
+	jrc	l6trap
+	cpw	y, #0x5005
+	jrnz	l6trap
+	addw	z, y
+	jro	l6trap
+	jrz	l6trap
+	jrnn	l6trap
+	jrc	l6trap
+	cpw	z, #0xd00d
+	jrnz	l6trap
+	addw	x, y
+	jro	l6trap
+	jrz	l6trap
+	jrn	l6trap
+	jrc	l6trap
+	cpw	x, #0x6006
+	jrnz	l6trap
+	addw	x, z
+	jro	l6trap
+	jrz	l6trap
+	jrn	l6trap
+	jrnc	l6trap
+	cpw	x, #0x3013
+	jrz	l6
+l6trap:
+	trap
+l6:
+
 loop:
 	jr	#loop	; An endless loop, so we never fail until we reach the time limit.
 

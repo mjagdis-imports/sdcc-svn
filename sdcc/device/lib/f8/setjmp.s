@@ -50,16 +50,18 @@ ___setjmp:
 
 _longjmp:
 	ldw	z, y
+	ldw	x, (2, sp)
+
+	; Restore stack pointer
+	ldw	y, (2, z)
+	ldw	sp, y
 
 	; Calculate return value
-	ldw	y, (2, sp)
+	ldw	y, x
 	tstw	y
 	jrnz	jump
 	incw	y
 jump:
-	; Restore stack pointer
-	ldw	x, (2, z)
-	ldw	sp, x
 
 	; Return
 	ldw	x, (0, z)

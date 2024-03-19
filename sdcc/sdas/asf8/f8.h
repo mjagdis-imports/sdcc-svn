@@ -48,6 +48,12 @@
 	$(STACK) = 3000
 */
 
+// Opcodes
+#define OPCODE_SWAPOP 0x9c
+#define OPCODE_ALTACC1 0x9d
+#define OPCODE_ALTACC2 0x9e
+#define OPCODE_ALTACC3 0x9f
+
 /*
  * Registers
  */

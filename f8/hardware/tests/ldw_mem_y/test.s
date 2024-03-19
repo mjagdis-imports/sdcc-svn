@@ -27,6 +27,30 @@ l1trap:
 	trap
 l1:
 
+	; altacc', altacc''.
+	pushw	#0xa55a
+	ldw	z, sp
+	ldw	y, #0xb66b
+	ldw	(z), y
+	cpw	y, #0xb66b
+	jrnz	l2trap
+	xchw	y, (0, sp)
+	cpw	y, #0xb66b
+	jrnz	l2trap
+	ldw	x, sp
+	ldw	z, #0x0ff0
+	ldw	(x), z
+	cpw	y, #0xb66b
+	jrnz	l2trap
+	cpw	z, #0x0ff0
+	jrnz	l2trap
+	popw	y
+	cpw	y, #0x0ff0
+	jrz	l2
+l2trap:
+	trap
+l2:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

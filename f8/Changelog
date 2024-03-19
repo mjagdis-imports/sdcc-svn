@@ -1,3 +1,16 @@
+2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* cpu.v,
+	  tests/addw/test.s,
+	  tests/ld_mem_xl/test.s,
+	  tests/ld_xl/test.s,
+	  tests/ldw_mem_x/test.s,
+	  tests/ldw_mem_y/test.s,
+	  tests/ldw_y/test.s,
+	  tests/orw/test.s,
+	  tests/xchw/test.s:
+	  Adjustments in f8 opcode prefix semantics.
+
 2023-03-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/tests/sbcw:

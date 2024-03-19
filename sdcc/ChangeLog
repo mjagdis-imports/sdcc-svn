@@ -1,3 +1,11 @@
+2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/f8/setjmp.s,
+	  sdas/asf8/f8.h,
+	  sdas/asf8/f8mch.c,
+	  src/f8/gen.c:
+	  Adjustments in f8 opcode prefix semantics.
+
 2023-03-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/lib/f8/_divuint.s,

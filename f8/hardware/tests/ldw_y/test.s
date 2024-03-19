@@ -94,10 +94,10 @@ l5:
 	cpw	y, #0x5445
 	jrnz	l6trap
 	ldw	y, #0x3ffc
-	ldw	x, (y)
+	ldw	x, (0, y)
 	cpw	x, #0x6446
 	jrnz	l6trap
-	ldw	z, (y)
+	ldw	z, (0, y)
 	cpw	z, #0x6446
 	jrz	l6
 l6trap:
@@ -108,7 +108,21 @@ l6:
 	addw	x, #0x0101
 	ldw	y, x
 	cpw	y, #0x6547
+	jrnz	l7trap
+	ldw	y, #0xa55a
+	cpw	y, #0xa55a
+	jrnz	l7trap
+	ldw	x, y
+	cpw	x, #0xa55a
+	jrnz	l7trap
+	ldw	z, y
+	cpw	z, #0xa55a
+	jrnz	l7trap
+	incw	z
+	ldw	y, z
+	cpw	z, #0xa55b
 	jrz	l7
+l7trap:
 	trap
 l7:
 
@@ -154,6 +168,37 @@ l8:
 l9trap:
 	trap
 l9:
+
+	; altacc': ldw	z, (z), altacc'': ldw	x, (x)
+	clrw	y
+	ldw	z, #0x3ffe
+	ldw	z, (z)
+	cpw	z, #0x5445
+	jrnz	latrap
+	ldw	x, #0x3ffc
+	ldw	x, (x)
+	cpw	x, #0x6446
+	jrz	la
+latrap:
+	trap
+la:
+
+	ldw	x, #0x0102
+	ldw	y, #0x0304
+	ldw	z, #0x0506	
+	tstw	y
+	ldw	z, x
+	cpw	z, #0x0102
+	jrnz	lbtrap
+	incw	z
+	ldw	x, z
+	cpw	x, #0x0103
+	jrnz	lbtrap
+	cpw	y, #0x0304
+	jrz	lb
+lbtrap:
+	trap
+lb:
 
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.

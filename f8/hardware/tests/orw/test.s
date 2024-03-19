@@ -74,6 +74,24 @@ l7trap:
 	trap
 l7:
 
+	ldw	z, #0x1122
+	ldw	y, #0x2244
+	orw	z, y
+	cpw	z, #0x3366
+	jrz	l8
+l8trap:
+	trap
+l8:
+
+	ldw	z, #0x1122
+	ldw	x, #0x2244
+	orw	x, z
+	cpw	x, #0x3366
+	jrz	l9
+l9trap:
+	trap
+l9:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

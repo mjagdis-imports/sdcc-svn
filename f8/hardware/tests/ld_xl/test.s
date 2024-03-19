@@ -109,8 +109,9 @@ l6trap:
 	trap
 l6:
 
-	; altacc'' loads from (y) and (n, y)
-	ld	zl, (y)
+	; altacc'' loads from (x) and (n, y)
+	ldw	x, y
+	ld	zl, (x)
 	cp	zl, #0x5a
 	jrnz	l7trap
 	ld	zl, (1, y)
@@ -120,10 +121,10 @@ l7trap:
 	trap
 l7:
 
-	; altacc' loads from (y) and (n, y)
+	; altacc' loads from (z) and (n, y)
 	pushw	#0xa55a
-	ldw	y, sp
-	ld	yl, (y)
+	ldw	z, sp
+	ld	yl, (z)
 	cp	yl, #0x5a
 	jrnz	l8trap
 	ldw	y, sp

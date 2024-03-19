@@ -202,7 +202,7 @@ struct mne *mp;
 			struct expr te = e1;
 			e1 = e2;
 			e2 = te;
-			outab(0x9c);
+			outab(OPCODE_SWAPOP);
 		}
 		else if(t1 != S_REG)
 			aerr();
@@ -321,7 +321,7 @@ struct mne *mp;
 			break;
 		}
 
-		if(t2 == S_REG && r2 == Y) { // swapped operand.
+		if(t2 == S_REG && r1 == X && r2 == Y || t1 == S_SPREL || t1 == S_DIR) { // swapped operands.
 			int tr = r1;
 			r1 = r2;
 			r2 = tr;
@@ -331,7 +331,7 @@ struct mne *mp;
 			struct expr te = e1;
 			e1 = e2;
 			e2 = te;
-			outab(0x9c);
+			outab(OPCODE_SWAPOP);
 		}
 		else if(t1 != S_REG)
 			aerr();
@@ -356,7 +356,7 @@ struct mne *mp;
 				outrb(&e2, R_USGN);
 			break;
 		case S_REG:
-			if(r2 == X) {
+			if(r1 == Y && r2 == X || r1 == Z && r2 == Y || r1 == X && r2 == Z) {
 				outab(op | 0x03);
 				break;
 			}
@@ -408,17 +408,13 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (t1 == S_REG && t2 == S_REG && // Use both swapop and altacc.
-		  (r1 == YH && (r2 == XH || r2 == YL || r2 == ZL) ||
-		  r1 == ZH && (r2 == XH || r2 == YL || r2 == ZL))) { 
-			outab(0x9c);
-			altacc(r2);
-			outab(r1 == YH ? 0x88 : 0x8a);
+		if (t1 == S_REG && r1 == YH && t2 == S_IMM) { // ld yh, #i
+			outab(0x94);
+			outrb(&e2, R_NORM);
 			break;
 		}
-		else if (t1 == S_REG && t2 == S_IMM && // Use both swapop and altacc.
-		  (r1 == YH || r1 == ZH)) { 
-		    altaccw(r1 == ZH ? Z : Y);
+		else if (t1 == S_REG && r1 == ZH && t2 == S_IMM) { // ld zh, #i
+			outab(OPCODE_ALTACC2);
 			outab(0x94);
 			outrb(&e2, R_NORM);
 			break;
@@ -448,6 +444,8 @@ opw:
 			case S_IX:
 				if(r2 == Y)
 					outab(op | 0x04);
+				else if (r1 == ZL && r2 == X || r1 == YL && r2 == Z)
+					outab(0x84);
 				else
 					aerr();
 				break;
@@ -478,7 +476,7 @@ opw:
 			break;
 		}
 		else if(t1 == S_REG && t2 == S_REG && r2 == XL) { // Use swapop prefix
-			outab(0x9c);
+			outab(OPCODE_SWAPOP);
 			if(r1 == XH)
 				outab(0x86);
 			else if(r1 == YL)
@@ -512,8 +510,10 @@ opw:
 				outrw(&e1, R_USGN);
 				break;
 			case S_IX:
-				if(r1== Y)
+				if(r1 == Y && (r2 == XL || r2 == XH))
 					outab(op | 0x0e);
+				else if (r1 == Z && r2 == YL || r1 == X && r2 == ZL)
+					outab(0x8e);
 				else
 					aerr();
 				break;
@@ -548,9 +548,23 @@ opw:
 			outab(op | 0x0c);
 			break;
 		}
-		else if(t1 == S_REG && r1 == SP && t2 == S_REG) {
-			outab(0x9c);
-			altaccw(r2);
+		else if(t1 == S_REG && r1 == Y && t2 == S_REG && r2 == Z) {
+			outab(OPCODE_SWAPOP);
+			outab(op | 0x0c);
+			break;
+		}
+		else if(t1 == S_REG && r1 == X && t2 == S_REG && r2 == Z) {
+			outab(OPCODE_ALTACC3);
+			outab(0xc6);
+			break;
+		}
+		else if(t1 == S_REG && r1 == Z && t2 == S_REG && r2 == X) {
+			outab(OPCODE_ALTACC3);
+			outab(0xcb);
+			break;
+		}
+		else if(t1 == S_REG && r1 == SP && t2 == S_REG && r2 == Y) { // ldw sp, y
+			outab(OPCODE_SWAPOP);
 			outab(0x70);
 			break;
 		}
@@ -594,8 +608,8 @@ opw:
 					outrb(&e2, R_USGN);
 				break;
 			case S_IX:
-				if(r2 == Y)
-					outab(op | 0x05);
+				if((r1 == Y || r1 == Z || r1 == X) && r1 == r2)
+					outab(0xc5);
 				else
 					aerr();
 				break;
@@ -610,7 +624,7 @@ opw:
 			}
 			break;
 		}
-		else if(t1 == S_IX && (r1 == Y || r1 == Z) && t2 == S_REG && r2 == X) {
+		else if(t1 == S_IX && t2 == S_REG && (r1 == Y && r2 == X || r1 == Z && r2 == Y || r1 == X && r2 == Z)) {
 			altaccw(r1);
 			outab(0xcd);
 			break;
@@ -711,11 +725,11 @@ opw:
 			if (r1 == YL && r2 == YH)
 				outab(0x93);
 			else if (r1 == XL && r2 == XH) {
-				outab(0x9f);
+				outab(OPCODE_ALTACC3);
 				outab(0x93);
 			}
 			else if (r1 == ZL && r2 == ZH) {
-				outab(0x9e);
+				outab(OPCODE_ALTACC2);
 				outab(0x93);
 			}
 			else
@@ -790,7 +804,7 @@ opw:
 		comma(1);
 		t2 = addr(&e2);
 		r2 = rcode;
-		if(t1 == S_REG && r1 == X && t2 == S_IX && (r2 == Y || r2 == Z)) {
+		if(t1 == S_REG && t2 == S_IX && (r1 == X && r2 == Y || r1 == Y && r2 == Z || r1 == Z && r2 == X)) {
 			altaccw(r2);
 			outab(0xf4);
 		}
@@ -1229,11 +1243,11 @@ void altacc(int reg)
 {
 	if(reg != XL) {
 		if(reg == XH)
-			outab(0x9d);
+			outab(OPCODE_ALTACC1);
 		else if(reg == YL)
-			outab(0x9e);
+			outab(OPCODE_ALTACC2);
 		else if(reg == ZL)
-			outab(0x9f);
+			outab(OPCODE_ALTACC3);
 		else
 			aerr();
 	}
@@ -1244,9 +1258,9 @@ void altaccw(int reg)
 {
 	if(reg != Y) {
 		if(reg == X)
-			outab(0x9f);
+			outab(OPCODE_ALTACC3);
 		else if(reg == Z)
-			outab(0x9e);
+			outab(OPCODE_ALTACC2);
 		else
 			aerr();
 	}

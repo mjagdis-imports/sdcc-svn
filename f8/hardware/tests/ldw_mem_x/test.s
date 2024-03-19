@@ -25,7 +25,7 @@ l1:
 	addw	sp, #-4
 	ldw	z, #0x3ffc
 	ldw	x, #0xa66a
-	ldw	(z), x
+	ldw	(0, z), x
 	ldw	x, #0xa44a
 	ldw	(2, z), x
 	popw	y
