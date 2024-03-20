@@ -75,14 +75,14 @@ ram_synth.v: ram_nosv.v
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -noflatten -top icebreaker -json icebreaker_synth.json"
 
 %/gatematea1evb_synth.v: gatematea1evb_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -noflatten -top gatematea1evb; write_verilog gatematea1evb_synth.v"
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_synth.v" # But p_r can't handle yosys -noflatten output, and needs -nomx8 here.
 
 %/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
 	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 3 --asc $@
 
 # Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
 %/gatematea1evb_synth_00.cfg.bit: %/gatematea1evb_synth.v gatematea1evb.ccf
-	cd $*; $(P_R) -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
+	cd $*; $(P_R) ++verbose -cCP -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
 
 %/icebreaker_synth.bin: %/icebreaker_synth.asc
 	icepack $< $@
