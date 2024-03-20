@@ -1,14 +1,20 @@
+2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/tests/cblink/test.c,
+	  hardware/tests/chello/test.c:
+	  C source for tests.
+
 2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* cpu.v,
-	  tests/addw/test.s,
-	  tests/ld_mem_xl/test.s,
-	  tests/ld_xl/test.s,
-	  tests/ldw_mem_x/test.s,
-	  tests/ldw_mem_y/test.s,
-	  tests/ldw_y/test.s,
-	  tests/orw/test.s,
-	  tests/xchw/test.s:
+	* hardware/cpu.v,
+	  hardware/tests/addw/test.s,
+	  hardware/tests/ld_mem_xl/test.s,
+	  hardware/tests/ld_xl/test.s,
+	  hardware/tests/ldw_mem_x/test.s,
+	  hardware/tests/ldw_mem_y/test.s,
+	  hardware/tests/ldw_y/test.s,
+	  hardware/tests/orw/test.s,
+	  hardware/tests/xchw/test.s:
 	  Adjustments in f8 opcode prefix semantics.
 
 2023-03-15 Philipp Klaus Krause <philipp@colecovision.eu>
