@@ -3,6 +3,11 @@
 	* hardware/tests/cblink/test.c,
 	  hardware/tests/chello/test.c:
 	  C source for tests.
+	* hardware/Makefile,
+	  hardware/gatematea1evb.ccf,
+	  hardware/gatematea1evb.v,
+	  hardware/icebreaker.v:
+	  Attempt to port to GateMateA1-EVB FPGA board.
 
 2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
 

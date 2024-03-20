@@ -4,7 +4,7 @@
 
 // Test module for use on iCEBreaker FPGA board.
 
-// Divide clock by 2.
+// Divide clock by 4.
 module clkgen (output clk, input CLK);
 	reg clk2;
 	always @(posedge CLK)

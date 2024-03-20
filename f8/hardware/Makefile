@@ -19,7 +19,7 @@ icrebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_sy
 gatematea1evb-images: tests/cblink/gatematea1evb_synth_00.cfg.bit tests/chello/gatematea1evb_synth_00.cfg.bit
 
 clean:
-	rm -f f8-testsystem f8-postsynthtestsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-fullpostsynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json
+	rm -f f8-testsystem f8-postsynthtestsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-fullpostsynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
@@ -59,7 +59,7 @@ system_nosv.v: $(SYSTEMSOURCES)
 icebreaker_nosv.v: icebreaker.v $(SYSTEMSOURCES)
 	$(SV2V) --exclude=always --exclude=logic icebreaker.v > $@
 
-gatematea1evb_nosv.v: icebreaker.v $(SYSTEMSOURCES)
+gatematea1evb_nosv.v: gatematea1evb.v $(SYSTEMSOURCES)
 	$(SV2V) --exclude=always --exclude=logic gatematea1evb.v > $@
 
 cpu_synth.v: cpu_nosv.v
@@ -82,7 +82,7 @@ ram_synth.v: ram_nosv.v
 
 # Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
 %/gatematea1evb_synth_00.cfg.bit: %/gatematea1evb_synth.v gatematea1evb.ccf
-	cd $*; $(P_R) -i gatematea1evb_synth.v -o gatematea1evb -ccf ../../gatematea1evb.ccf
+	cd $*; $(P_R) -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
 
 %/icebreaker_synth.bin: %/icebreaker_synth.asc
 	icepack $< $@

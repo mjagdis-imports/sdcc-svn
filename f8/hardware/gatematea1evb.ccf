@@ -50,17 +50,17 @@
 #
 
 Pin_in     "CLK"     Loc = "IO_SB_A8" | SCHMITT_TRIGGER=true;
-Pin_in     "RST"     Loc = "IO_SB_B7" | SCHMITT_TRIGGER=true;
+Pin_in     "BTN_N"   Loc = "IO_SB_B7" | SCHMITT_TRIGGER=true;
 
-Pin_inout  "PMOD_1"  Loc = "IO_EA_A4"
-Pin_inout  "PMOD_2"  Loc = "IO_EA_A5"
-Pin_inout  "PMOD_3"  Loc = "IO_EA_A6"
-Pin_inout  "PMOD_4"  Loc = "IO_EA_A7"
-Pin_inout  "PMOD_7"  Loc = "IO_EA_B4"
-Pin_inout  "PMOD_8"  Loc = "IO_EA_B5"
-Pin_inout  "PMOD_9"  Loc = "IO_EA_B6"
-Pin_inout  "PMOD_10" Loc = "IO_EA_B7"
+Pin_inout  "PMOD_1"  Loc = "IO_EA_A4";
+Pin_inout  "PMOD_2"  Loc = "IO_EA_A5";
+Pin_inout  "PMOD_3"  Loc = "IO_EA_A6";
+Pin_inout  "PMOD_4"  Loc = "IO_EA_A7";
+Pin_inout  "PMOD_7"  Loc = "IO_EA_B4";
+Pin_inout  "PMOD_8"  Loc = "IO_EA_B5";
+Pin_inout  "PMOD_9"  Loc = "IO_EA_B6";
+Pin_inout  "PMOD_10" Loc = "IO_EA_B7";
 
-Pin_inout  "TX"      Loc = "IO_EA_A0"
-Pin_inout  "RX"      Loc = "IO_EA_B0"
+Pin_inout  "TX"      Loc = "IO_EA_A0";
+Pin_inout  "RX"      Loc = "IO_EA_B0";
 
