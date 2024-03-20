@@ -8,6 +8,8 @@
 // SoC. trap output line needed for tests only.
 module system (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,
 	input logic clk, power_on_reset, output trap);
+	parameter ROMSIZE = 2048;
+	parameter RAMADDRBITS = 10;
 	parameter MEMADDRBASE = 16'h2000;
 	
 	wire [15:0] iread_addr, dread_addr, dwrite_addr;
@@ -22,7 +24,7 @@ module system (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins,
 	wire [15:0] mem_dread_data, io_dread_data;
 
 	cpu cpu(.*);
-	memory memory(.dwrite_en(mem_dwrite_en), .dread_data(mem_dread_data), .*);
+	memory #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) memory(.dwrite_en(mem_dwrite_en), .dread_data(mem_dread_data), .*);
 	iosystem iosystem(.dwrite_en(io_dwrite_en), .dread_data(io_dread_data), .*);
 
 	logic [15:0] old_dread_addr;

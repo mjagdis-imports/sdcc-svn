@@ -82,7 +82,7 @@ ram_synth.v: ram_nosv.v
 
 # Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
 %/gatematea1evb_synth_00.cfg.bit: %/gatematea1evb_synth.v gatematea1evb.ccf
-	cd $*; $(P_R) ++verbose -cCP -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
+	cd $*; $(P_R) -cCP -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
 
 %/icebreaker_synth.bin: %/icebreaker_synth.asc
 	icepack $< $@

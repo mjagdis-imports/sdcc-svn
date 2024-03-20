@@ -28,8 +28,8 @@ endmodule
 // ADDRBITS = 13: 8K RAM at 0x2000 to 0x3fff
 module ram #(parameter ADDRBITS = 10) (input logic [15:0] dread_addr, output logic [15:0] dread_data, input logic [15:0] dwrite_addr, input logic [15:0] dwrite_data, input logic[1:0] dwrite_en, input logic clk);
 
-	localparam RAMSIZE = 1 << (ADDRBITS - 1);
-	localparam logic [15:0] RAMBASE = 16'h4000 - RAMSIZE;
+	localparam SIZE = 1 << (ADDRBITS - 1);
+	localparam logic [15:0] RAMBASE = 16'h4000 - SIZE;
 
 	logic [ADDRBITS-1:0] dwrite_addr_rambased, dwrite_addr_rambased_even, dwrite_addr_rambased_odd;
 	logic [15:0] dread_addr_rambased, dread_addr_rambased_even, dread_addr_rambased_odd;

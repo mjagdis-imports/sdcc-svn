@@ -34,6 +34,9 @@ void main(void)
 	// Set up TIMER0 for 1 KHz interrupt assuming 3 MHz system clock.
 	TIMER0CNT = 62536;
 	TIMER0RLD = 62536;
+	// Set up TIMER0 for 1 KHz interrupt assuming 2.5 MHz system clock.
+	//TIMER0CNT = 65276;
+	//TIMER0RLD = 65276;
 	IRQCTRLEN = 0x01;  // Enable timer 0 overflow interrupt.
 	TIMER0CTRL = 0x01; // Start timer.
 

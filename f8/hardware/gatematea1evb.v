@@ -4,7 +4,7 @@
 
 // Test module for use on GateMateA1-EVB FPGA board.
 
-// Divide clock by 4.
+// Divide oscillator clock by 4 to get 2.5 MHz system clock.
 module clkgen (output clk, input CLK);
 	reg clk2;
 	always @(posedge CLK)
@@ -17,7 +17,8 @@ module clkgen (output clk, input CLK);
 	end
 endmodule
 
-module gatematea1evb (input logic CLK,
+// Default: 8KB ROM, 8 KB RAM.
+module gatematea1evb #(parameter ROMSIZE = 8192, RAMADDRBITS = 13) (input logic CLK,
 	inout tri PMOD_1, inout tri PMOD_2, inout tri PMOD_3, inout tri PMOD_4, inout tri PMOD_7, inout tri PMOD_8, inout tri PMOD_9, inout tri PMOD_10,
 	input logic BTN_N, inout tri RX, inout tri TX);
 	wire [7:0] gpio0pins, gpio1pins, gpio2pins;
@@ -53,7 +54,7 @@ module gatematea1evb (input logic CLK,
 	assign gpio2pins[1] = RX;
 
 	clkgen clkgen(.*);
-	system system(.*);
+	system #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) system(.*);
 endmodule
 
 `end_keywords

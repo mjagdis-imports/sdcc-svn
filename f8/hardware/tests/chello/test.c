@@ -57,6 +57,9 @@ void main(void)
 	// Set up TIMER0 for 9.6 KHz interrupt assuming 3 MHz system clock.
 	TIMER0CNT = 65224;
 	TIMER0RLD = 65224;
+	// Set up TIMER0 for 9.6 KHz interrupt assuming 2.5 MHz system clock.
+	//TIMER0CNT = 65276;
+	//TIMER0RLD = 65276;
 	TIMER0CTRL = 0x01; // Start timer.
 
 	printf("Hello, World!\n");

@@ -4,7 +4,7 @@
 
 // Test module for use on iCEBreaker FPGA board.
 
-// Divide clock by 4.
+// Divide clock by 4 to get 3 MHz system clock.
 module clkgen (output clk, input CLK);
 	reg clk2;
 	always @(posedge CLK)
@@ -17,7 +17,8 @@ module clkgen (output clk, input CLK);
 	end
 endmodule
 
-module icebreaker (input logic CLK,
+// Default: 2KB ROM, 1 KB RAM.
+module icebreaker #(parameter ROMSIZE = 2048, RAMADDRBITS = 10) (input logic CLK,
 	inout tri PMOD_2_1, inout tri PMOD_2_2, inout tri PMOD_2_3, inout tri PMOD_2_4, inout tri PMOD_2_7, inout tri PMOD_2_8, inout tri PMOD_2_9, inout tri PMOD_2_10,
 	inout tri PMOD_1A_1, inout tri PMOD_1A_2, inout tri PMOD_1A_3, inout tri PMOD_1A_4, inout tri PMOD_1A_7, inout tri PMOD_1A_8, inout tri PMOD_1A_9, inout tri PMOD_1A_10,
 	input logic BTN_N, inout tri RX, inout tri TX);
@@ -72,7 +73,7 @@ module icebreaker (input logic CLK,
 	assign gpio2pins[1] = RX;
 
 	clkgen clkgen(.*);
-	system system(.*);
+	system #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) system(.*);
 endmodule
 
 `end_keywords

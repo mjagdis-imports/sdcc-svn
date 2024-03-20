@@ -4,7 +4,7 @@
 
 // 512B ROM
 module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
-	parameter ROMSIZE = 2048;
+	parameter SIZE = 2048;
 	parameter logic [15:0] ROMBASE = 16'h4000;
 
 	input [15 : 0] iread_addr;
@@ -16,7 +16,7 @@ module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
 
 	logic [15:0] dread_addr_rombased;
 
-	(* ram_style = "block" *) reg [7:0] rom[ROMSIZE - 1 : 0];
+	(* ram_style = "block" *) reg [7:0] rom[SIZE - 1 : 0];
 
 	logic [15:0] iread_addr_rombased;
 
@@ -37,6 +37,8 @@ module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
 endmodule
 
 module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk);
+	parameter RAMADDRBITS = 10;
+	parameter ROMSIZE = 2048;
 	parameter logic [15:0] ROMBASE = 16'h4000;
 
 	input [15 : 0] iread_addr;
@@ -51,8 +53,8 @@ module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrit
 
 	logic [15:0] dread_data_rom, dread_data_ram;
 
-	rom rom(.dread_data(dread_data_rom), .*);
-	ram ram(.dread_data(dread_data_ram), .*);
+	rom #(.SIZE(ROMSIZE), .ROMBASE(ROMBASE)) rom(.dread_data(dread_data_rom), .*);
+	ram #(.ADDRBITS(10)) ram(.dread_data(dread_data_ram), .*);
 
 	logic dread_rom;
 	always @(posedge clk)

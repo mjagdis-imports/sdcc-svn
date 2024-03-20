@@ -1,5 +1,17 @@
 2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/Makefile,
+	  hardware/gatematea1evb.v,
+	  hardware/icebreaker.v,
+	  hardware/memory.v,
+	  hardware/ram.v,
+	  hardware/system.v,
+	  hardware/tests/cblink/test.c,
+	  hardware/tests/chello/test.c:
+	  Adaptions for GateMateA1-EVB FPGA board.
+
+2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/tests/cblink/test.c,
 	  hardware/tests/chello/test.c:
 	  C source for tests.
