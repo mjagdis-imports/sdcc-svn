@@ -150,7 +150,7 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return strcmp (what, "cf");
   if (ISINST (pl->line, "addw") || ISINST (pl->line, "orw") || ISINST (pl->line, "subw"))
     return false;
-  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "sbcw"))
+  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrcw") || ISINST (pl->line, "sbcw"))
     return strcmp (what, "cf");
   if (ISINST (pl->line, "clrw") || ISINST (pl->line, "pushw") || ISINST (pl->line, "tstw"))
     return false;
@@ -183,7 +183,7 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return true;
   if (ISINST (pl->line, "nop"))
     return false;
-
+printf("ReadFlag Fallback at %s\n", pl->line);
   // Fail-safe fallback.
   return true;
 }
@@ -367,10 +367,17 @@ f8SurelyWritesFlag (const lineNode *pl, const char *what)
     return (!strcmp (what, "of") || !strcmp (what, "zf") || !strcmp (what, "nf"));
   if (ISINST (pl->line, "tstw"))
     return strcmp (what, "hf");
-  // ld
-  // todo
-  // ldw
-  // todo
+  // ld / ldw
+  if (ISINST (pl->line, "ld") || ISINST (pl->line, "ldw"))
+    {
+      const char *rarg = rightArg (pl->line);
+      const char *rest = strstr (rarg, ", ");
+      if (!rest || strchr (rarg, '#') && strchr (rarg, '#') < rest || strchr (rarg, ';') && strchr (rarg, ';') < rest)
+        return false; // todo: ld xl, mm / ldw y, mm
+      if (!strncmp (rest, ", y)", 2) || !strncmp (rest, ", z)", 2) || !strncmp (rest, ", sp)", 3))
+        return (!strcmp (what, "zf") || !strcmp (what, "nf"));
+      return false;
+    }
   // 8-bit 0-op inst.
   if (ISINST (pl->line, "bool") || ISINST (pl->line, "cax"))
     return !strcmp (what, "zf");
@@ -403,7 +410,7 @@ f8SurelyWritesFlag (const lineNode *pl, const char *what)
     return true;
   if (ISINST (pl->line, "nop"))
     return false;
-
+printf("WriteFlag Fallback at %s\n", pl->line);
   // Fail-safe fallback.
   return false;
 }
