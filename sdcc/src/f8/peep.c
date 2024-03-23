@@ -108,19 +108,48 @@ findLabel (const lineNode *pl)
 static bool
 f8MightReadFlag (const lineNode *pl, const char *what)
 {
-  if (ISINST (pl->line, "jr") || ISINST (pl->line, "jp"))
-    return false;
   if (ISINST (pl->line, "adc") || ISINST (pl->line, "sbc"))
     return !strcmp (what, "cf");
   if (ISINST (pl->line, "adcw") || ISINST (pl->line, "sbcw"))
     return strcmp (what, "cf");
   if (ISINST (pl->line, "add") || ISINST (pl->line, "and") || ISINST (pl->line, "cp") || ISINST (pl->line, "or") || ISINST (pl->line, "sub") || ISINST (pl->line, "xor"))
     return false;
-  if (ISINST (pl->line, "addw") || ISINST (pl->line, "subw"))
+  if (ISINST (pl->line, "sll") || ISINST (pl->line, "srl") || ISINST (pl->line, "inc") || ISINST (pl->line, "dec") || ISINST (pl->line, "clr") || ISINST (pl->line, "push") || ISINST (pl->line, "tst"))
+    return false;
+  if (ISINST (pl->line, "rlc") || ISINST (pl->line, "rrc"))
+    return strcmp (what, "cf");
+  if (ISINST (pl->line, "addw") || ISINST (pl->line, "orw") || ISINST (pl->line, "subw"))
+    return false;
+  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "sbcw"))
+    return strcmp (what, "cf");
+  if (ISINST (pl->line, "clrw") || ISINST (pl->line, "pushw") || ISINST (pl->line, "tstw"))
     return false;
   if (ISINST (pl->line, "ld") || ISINST (pl->line, "ldw"))
     return false;
+  if (ISINST (pl->line, "bool") || ISINST (pl->line, "cax") || ISINST (pl->line, "mad") || ISINST (pl->line, "msk") || ISINST (pl->line, "pop") || ISINST (pl->line, "rot") || ISINST (pl->line, "sra") || ISINST (pl->line, "thrd"))
+    return false;
+  if (ISINST (pl->line, "daa"))
+    return (strcmp (what, "cf") || strcmp (what, "hf"));
+  if (ISINST (pl->line, "xch"))
+    return true; // Todo: make this more accurate.
+  if (ISINST (pl->line, "boolw") || ISINST (pl->line, "caxw") || ISINST (pl->line, "cpw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incnw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "popw") || ISINST (pl->line, "sex") || ISINST (pl->line, "xchw") || ISINST (pl->line, "zex")) // Todo: wide shifts / rotations.
+    return false;
+  if (ISINST (pl->line, "xchb"))
+    return false;
+  if (ISINST (pl->line, "dnjnz") || ISINST (pl->line, "jr") || ISINST (pl->line, "jp"))
+    return false;
+  if (ISINST (pl->line, "jrc") || ISINST (pl->line, "jrnc"))
+    return strcmp (what, "cf");
+  if (ISINST (pl->line, "jrn") || ISINST (pl->line, "jrnn"))
+    return strcmp (what, "nf");
+  if (ISINST (pl->line, "jro") || ISINST (pl->line, "jrno"))
+    return strcmp (what, "of");
+  if (ISINST (pl->line, "jrz") || ISINST (pl->line, "jrnz"))
+    return strcmp (what, "zf");
+  // Todo: remaining conditional jumps.
   if (ISINST (pl->line, "ret"))
+    return false;
+  if (ISINST (pl->line, "nop"))
     return false;
 
   // Fail-safe fallback.
@@ -196,13 +225,65 @@ f8CondJump (const lineNode *pl)
 static bool
 f8SurelyWritesFlag (const lineNode *pl, const char *what)
 {
+  // 8-bit 2-op inst.
   if (ISINST (pl->line, "adc") || ISINST (pl->line, "add") || ISINST (pl->line, "cp") || ISINST (pl->line, "sbc") || ISINST (pl->line, "sub"))
     return true;
-  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "addw") || ISINST (pl->line, "sbcw") || ISINST (pl->line, "subw"))
+  if (ISINST (pl->line, "or") || ISINST (pl->line, "and") || ISINST (pl->line, "xor"))
+    return (!strcmp (what, "zf") || !strcmp (what, "nf"));
+  // 8-bit 1-op inst.
+  if (ISINST (pl->line, "dec") || ISINST (pl->line, "inc"))
+    return true;
+  if (ISINST (pl->line, "clr") || ISINST (pl->line, "push"))
+    return false;
+  if (ISINST (pl->line, "srl") || ISINST (pl->line, "sll") || ISINST (pl->line, "rrc") || ISINST (pl->line, "rlc"))
+    return (!strcmp (what, "zf") || !strcmp (what, "cf"));
+  if (ISINST (pl->line, "tst"))
     return strcmp (what, "hf");
-
+  // 16-bit 1/2-op inst.
+  if (ISINST (pl->line, "adcw") || /*ISINST (pl->line, "addw") || - enable when addw sp, #d can be handles correctly */ ISINST (pl->line, "sbcw") || ISINST (pl->line, "subw"))
+    return strcmp (what, "hf");
+  if (ISINST (pl->line, "clrw") || ISINST (pl->line, "pushw"))
+    return false;
+  if (ISINST (pl->line, "orw"))
+    return (!strcmp (what, "of") || !strcmp (what, "zf") || !strcmp (what, "nf"));
+  if (ISINST (pl->line, "tstw"))
+    return strcmp (what, "hf");
+  // ld
+  // todo
+  // ldw
+  // todo
+  // 8-bit 0-op inst.
+  if (ISINST (pl->line, "bool") || ISINST (pl->line, "cax"))
+    return !strcmp (what, "zf");
+  if (ISINST (pl->line, "daa") || ISINST (pl->line, "sra"))
+    return (!strcmp (what, "zf") || !strcmp (what, "cf"));
+  if (ISINST (pl->line, "mad"))
+    return (!strcmp (what, "zf") || !strcmp (what, "nf"));
+  if (ISINST (pl->line, "msk") || ISINST (pl->line, "pop"))
+     return false;
+  // todo: rot
+  if (ISINST (pl->line, "xch"))
+    return false; // todo: improve accuracy
+  // 16-bit 0-op inst.
+  if (ISINST (pl->line, "boolw") || ISINST (pl->line, "zex"))
+    return !strcmp (what, "zf");
+  if (ISINST (pl->line, "decw"))
+    return true;
+  if (ISINST (pl->line, "incnw") || ISINST (pl->line, "popw") || ISINST (pl->line, "xchw"))
+    return false;
+  if (ISINST (pl->line, "mul") || ISINST (pl->line, "srlw") || ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrcw"))
+    return (!strcmp (what, "zf") || !strcmp (what, "nf") || !strcmp (what, "cf"));
+  if (ISINST (pl->line, "sex"))
+    return (!strcmp (what, "zf") || !strcmp (what, "nf"));
+  // todo: sllw
+  if (ISINST (pl->line, "xchb"))
+    return !strcmp (what, "zf");
+  // jumps
+  // todo
   if (ISINST (pl->line, "ret"))
     return true;
+  if (ISINST (pl->line, "nop"))
+    return false;
 
   // Fail-safe fallback.
   return false;
