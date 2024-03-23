@@ -6844,7 +6844,7 @@ f8IsRegArg (struct sym_link *ftype, int i, const char *what)
     
   if (!what)
     return true;
-    
+
   for (int i = 0; i < argaop->size; i++)
     if (!strcmp(argaop->aopu.bytes[i].byteu.reg->name, what))
       return true;

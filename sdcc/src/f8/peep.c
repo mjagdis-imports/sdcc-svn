@@ -105,6 +105,36 @@ findLabel (const lineNode *pl)
   return NULL;
 }
 
+const char *leftArg (const char *arg)
+{
+  while (isspace (*arg))
+    arg++;
+  while (!isspace (*arg))
+    arg++;
+  while (isspace (*arg))
+    arg++;
+  wassert (*arg);
+  return (arg);
+}
+
+const char *rightArg (const char *arg)
+{
+  arg = leftArg (arg);
+  unsigned int parens = 0;
+  for(; *arg; arg++)
+    {
+      if (*arg == '(')
+        parens++;
+      if (*arg == ')')
+        parens--;
+      if (isspace (*arg) && !parens)
+        break;
+    }
+  while (isspace (*arg))
+    arg++;
+  return (arg);
+}
+
 static bool
 f8MightReadFlag (const lineNode *pl, const char *what)
 {
@@ -131,7 +161,7 @@ f8MightReadFlag (const lineNode *pl, const char *what)
   if (ISINST (pl->line, "daa"))
     return (strcmp (what, "cf") || strcmp (what, "hf"));
   if (ISINST (pl->line, "xch"))
-    return true; // Todo: make this more accurate.
+    return leftArg (pl->line)[0] == 'f';
   if (ISINST (pl->line, "boolw") || ISINST (pl->line, "caxw") || ISINST (pl->line, "cpw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incnw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "popw") || ISINST (pl->line, "sex") || ISINST (pl->line, "xchw") || ISINST (pl->line, "zex")) // Todo: wide shifts / rotations.
     return false;
   if (ISINST (pl->line, "xchb"))
@@ -149,6 +179,8 @@ f8MightReadFlag (const lineNode *pl, const char *what)
   // Todo: remaining conditional jumps.
   if (ISINST (pl->line, "ret"))
     return false;
+  if (ISINST (pl->line, "reti"))
+    return true;
   if (ISINST (pl->line, "nop"))
     return false;
 
@@ -202,9 +234,96 @@ f8MightRead (const lineNode *pl, const char *what)
   if (ISINST (pl->line, "jp") || ISINST (pl->line, "jr"))
     return false;
 
-  if (ISINST (pl->line, "ldw"))
-    return argCont (strchr (pl->line, ','), extra);
+  // 8-bit 2-op inst, and some others.
+  if (ISINST (pl->line, "adc") || ISINST (pl->line, "add") || ISINST (pl->line, "and") || ISINST (pl->line, "cp") || ISINST (pl->line, "or") || ISINST (pl->line, "sbc") || ISINST (pl->line, "sub") || ISINST (pl->line, "xch") || ISINST (pl->line, "xor"))
+    {
+      const char *larg = leftArg (pl->line);
+      const char *rarg = rightArg (pl->line);
 
+      if (larg[0] == what[0] && larg[1] == what[1] || argCont (larg, extra))
+        return true;
+      if (rarg && (rarg[0] == what[0] && rarg[1] == what[1] || argCont (rarg, extra)))
+        return true;
+      return false;
+    }
+  // 8-bit 1-op inst, and some others
+  if (ISINST (pl->line, "clr") || ISINST (pl->line, "pop"))
+    return false;
+  if (ISINST (pl->line, "bool") || ISINST (pl->line, "dec") || ISINST (pl->line, "inc") || ISINST (pl->line, "push") || ISINST (pl->line, "rlc") || ISINST (pl->line, "rot") || ISINST (pl->line, "rrc") || ISINST (pl->line, "sll") || ISINST (pl->line, "sra") || ISINST (pl->line, "srl") || ISINST (pl->line, "tst") || ISINST (pl->line, "xchb"))
+    {
+      const char *larg = leftArg (pl->line);
+
+      if (larg[0] == what[0] && larg[1] == what[1] || argCont (larg, extra))
+        return true;
+      return false;
+    }
+  // 16-bit 2/1-op inst, and some others.
+  if (ISINST (pl->line, "clrw") || ISINST (pl->line, "popw"))
+    return false;
+  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "addw") || ISINST (pl->line, "boolw") || ISINST (pl->line, "cpw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "orw") || ISINST (pl->line, "pushw") || ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrcw") || ISINST (pl->line, "sllw") || ISINST (pl->line, "sraw") || ISINST (pl->line, "srlw") || ISINST (pl->line, "subw") || ISINST (pl->line, "sbcw") || ISINST (pl->line, "tstw"))
+    {
+      const char *larg = leftArg (pl->line);
+      const char *rarg = rightArg (pl->line);
+
+      if (argCont (larg, extra))
+        return true;
+      if (rarg && argCont (rarg, extra))
+        return true;
+      return false;
+    }
+  // ld
+  if (ISINST (pl->line, "ld"))
+    {
+      const char *larg = leftArg (pl->line);
+      const char *rarg = rightArg (pl->line);
+
+      if (rarg && (rarg[0] == what[0] && rarg[1] == what[1] || argCont (rarg, extra)))
+        return true;
+      if (larg[0] == what[0] && larg[1] == what[1])
+        return false;
+      if (argCont (larg, extra))
+        return true;
+      return false;
+    }
+  // ldw
+  if (ISINST (pl->line, "ldw"))
+    {
+      const char *larg = leftArg (pl->line);
+      const char *rarg = rightArg (pl->line);
+
+      if (rarg && argCont (rarg, extra))
+        return true;
+      if (larg[0] == extra)
+        return false;
+      if (argCont (larg, extra))
+        return true;
+      return false;
+    }
+  if (ISINST (pl->line, "sex") || ISINST (pl->line, "zex"))
+    {
+      const char *rarg = rightArg (pl->line);
+      if (rarg && (rarg[0] == what[0] && rarg[1] == what[1]))
+        return true;
+      return false;
+    }
+  if (ISINST (pl->line, "call"))
+    {
+      const char *larg = leftArg (pl->line);
+      const symbol *f = findSym (SymbolTab, 0, larg);
+      if (*larg == extra)
+        return true;
+      if (f && IS_FUNC (f->type))
+        return f8IsParmInCall(f->type, what);
+      else // Fallback needed for calls through function pointers and for calls to literal addresses.
+        return true; // todo: improve accuracy here.
+    }
+  if (STARTSINST (pl->line, "jr"))
+    return false;
+  if (ISINST (pl->line, "ret"))
+    return f8IsReturned(what);
+  if (ISINST (pl->line, "reti"))
+    return true;
+printf("Read Fallback at %s\n", pl->line);
   // Fail-safe fallback.
   return true;
 }
@@ -263,7 +382,7 @@ f8SurelyWritesFlag (const lineNode *pl, const char *what)
      return false;
   // todo: rot
   if (ISINST (pl->line, "xch"))
-    return false; // todo: improve accuracy
+    return leftArg (pl->line)[0] == 'f';
   // 16-bit 0-op inst.
   if (ISINST (pl->line, "boolw") || ISINST (pl->line, "zex"))
     return !strcmp (what, "zf");
@@ -303,9 +422,39 @@ f8SurelyWrites (const lineNode *pl, const char *what)
   else
     return (f8SurelyWritesFlag (pl, what));
 
+  // 8-bit 1/2-op inst, and some others.
+  if (ISINST (pl->line, "push") || ISINST (pl->line, "tst"))
+     return false;
+  if (ISINST (pl->line, "adc") || ISINST (pl->line, "add") || ISINST (pl->line, "and") || ISINST (pl->line, "bool") || ISINST (pl->line, "clr") || ISINST (pl->line, "dec") || ISINST (pl->line, "cp") || ISINST (pl->line, "inc") || ISINST (pl->line, "or") || ISINST (pl->line, "pop") || ISINST (pl->line, "rlc") || ISINST (pl->line, "rot") || ISINST (pl->line, "rrc") || ISINST (pl->line, "sbc") || ISINST (pl->line, "sub") || ISINST (pl->line, "sll") || ISINST (pl->line, "sra") || ISINST (pl->line, "srl") || ISINST (pl->line, "xor"))
+    {
+      const char *larg = leftArg (pl->line);
+      return (larg[0] == what[0] && larg[1] == what[1]);
+    }
+  // 16-bit 2/1-op inst, and some others.
+  if (ISINST (pl->line, "pushw") || ISINST (pl->line, "tstw"))
+    return false;
+  if (ISINST (pl->line, "adcw") || ISINST (pl->line, "addw") || ISINST (pl->line, "boolw") || ISINST (pl->line, "clrw") || ISINST (pl->line, "cpw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "orw") || ISINST (pl->line, "popw") || ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrcw") || ISINST (pl->line, "sex") || ISINST (pl->line, "sllw") || ISINST (pl->line, "sraw") || ISINST (pl->line, "srlw") || ISINST (pl->line, "subw") || ISINST (pl->line, "sbcw") || ISINST (pl->line, "zex"))
+    {
+      const char *larg = leftArg (pl->line);
+      return (larg[0] == extra);
+    }
+  if (ISINST (pl->line, "ld"))
+    return (pl->line[3] == what[0] && pl->line[4] == what[1]);
   if (ISINST (pl->line, "ldw"))
     return (pl->line[4] == extra);
-
+  if (ISINST (pl->line, "xch"))
+    {
+      const char *larg = leftArg (pl->line);
+      const char *rarg = rightArg (pl->line);
+      return (larg[0] == what[0] && larg[1] == what[1] || rarg[0] == what[0] && rarg[1] == what[1]);
+    }
+  if (STARTSINST (pl->line, "jr"))
+    return false;
+  if (ISINST (pl->line, "jp") || ISINST (pl->line, "call"))
+    return false; // Todo: Improve accuracy?
+  if (ISINST (pl->line, "ret") || ISINST (pl->line, "reti"))
+    return true;
+printf("Write Fallback at %s\n", pl->line);
   // Fail-safe fallback.
   return false;
 }
@@ -471,12 +620,19 @@ bool
 f8notUsed (const char *what, lineNode *endPl, lineNode *head)
 {
   lineNode *pl;
-  if(strcmp(what, "x") == 0)
+  if(!strcmp(what, "x"))
     return(f8notUsed("xl", endPl, head) && f8notUsed("xh", endPl, head));
-  else if(strcmp(what, "y") == 0)
+  else if(!strcmp(what, "y"))
     return(f8notUsed("yl", endPl, head) && f8notUsed("yh", endPl, head));
-  else if(strcmp(what, "z") == 0)
+  else if(!strcmp(what, "z"))
     return(f8notUsed("zl", endPl, head) && f8notUsed("zh", endPl, head));
+
+  // Only handle general-purpose registers and documented flags.
+  if (!strcmp(what, "xl") || !strcmp(what, "xh") || !strcmp(what, "yl") || !strcmp(what, "yh") || !strcmp(what, "zl") || !strcmp(what, "zh") ||
+    !strcmp(what, "of") || !strcmp(what, "zf") || !strcmp(what, "nf") || !strcmp(what, "cf") || !strcmp(what, "hf"))
+    ;
+  else
+    return false;
 
   _G.head = head;
 
