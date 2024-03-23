@@ -6,9 +6,7 @@
 
 `timescale 1us/1ns
 
-module clkgen (clk);
-	output reg clk;
-
+module clkgen (output logic clk);
 	initial
 		clk = 0;
 

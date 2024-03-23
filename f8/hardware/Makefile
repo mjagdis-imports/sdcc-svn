@@ -33,13 +33,16 @@ f8-testsystem: $(TESTSYSTEMSOURCES)
 %/f8-icesynthtestsystem: icesynthtestsystem.v %/system_icesynth.v
 	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem ../../icesynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
+%/f8-gmsynthtestsystem: gmsynthtestsystem.v %/system_gmsynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtestsystem ../../gmsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
+
 TESTDIRS = ${shell find tests/* -type d -print}
 TESTSS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
 TESTLOGS = $(TESTDIRS:=/test.log)
 ICESYNTHTESTLOGS = $(TESTDIRS:=/icesynthtest.log)
-GMSYNTHTESTLOGS = $(TESTDIRS:=/icesynthtest.log)
+GMSYNTHTESTLOGS = $(TESTDIRS:=/gmsynthtest.log)
 
 cpu_nosv.v: $(CPUSOURCES)
 	$(SV2V) --exclude=always --exclude=logic cpu.v > $@

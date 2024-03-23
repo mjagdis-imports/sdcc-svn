@@ -27,7 +27,6 @@ endmodule
 // ADDRBITS = 12: 4K RAM at 0x3000 to 0x3fff
 // ADDRBITS = 13: 8K RAM at 0x2000 to 0x3fff
 module ram #(parameter ADDRBITS = 10) (input logic [15:0] dread_addr, output logic [15:0] dread_data, input logic [15:0] dwrite_addr, input logic [15:0] dwrite_data, input logic[1:0] dwrite_en, input logic clk);
-
 	localparam SIZE = 1 << (ADDRBITS - 1);
 	localparam logic [15:0] RAMBASE = 16'h4000 - SIZE;
 

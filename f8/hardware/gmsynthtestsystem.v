@@ -2,14 +2,11 @@
 
 `begin_keywords "1800-2009"
 
-// Test module for (partial post-synthesis) Verilog design of f8.
-// ROM is not synthesized to allow testing of the rest with different programs
+// Test module for post-synthesis Verilog design of f8.
 
 `timescale 1us/1ns
 
-module clkgen (clk);
-	output reg clk;
-
+module clkgen (output logic clk);
 	initial
 		clk = 0;
 
