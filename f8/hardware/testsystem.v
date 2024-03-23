@@ -15,7 +15,7 @@ module clkgen (clk);
 	always #2 clk = !clk;
 endmodule
 
-module testsystem ();
+module testsystem #(parameter ROMSIZE = 8192, RAMADDRBITS = 13) ();
 	wire [7:0] gpio0pins, gpio1pins, gpio2pins;
 	wire clk;
 	wire trap;
@@ -33,7 +33,7 @@ module testsystem ();
 	end
 
 	clkgen clkgen(.*);
-	system system(.*);
+	system #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) system(.*);
 
 	always @(posedge clk)
 		if(trap)

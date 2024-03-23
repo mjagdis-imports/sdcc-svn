@@ -1,4 +1,4 @@
-`include "system_synth.v"
+`include "system_icesynth.v"
 
 `begin_keywords "1800-2009"
 

@@ -20,14 +20,13 @@ volatile sig_atomic_t sending;
 
 void send_bit(void) __interrupt(0)
 {
-	GPIO2ODR = senddata & 1;
-	senddata >>= 1;
-
-	if(!--sendcounter)
+	if(sending)
 	{
-		sending = 0;
+		GPIO2ODR = senddata & 1;
+		senddata >>= 1;
 
-		IRQCTRLEN &= ~0x01;  // Disable timer 0 overflow interrupt.
+		if(!--sendcounter)
+			sending = 0;
 	}
 
 	IRQCTRLACT = 0; // Clear interrupt request.
@@ -42,8 +41,6 @@ int putchar(int c)
 	sendcounter = 10;
 
 	sending = 1;
-
-	IRQCTRLEN = 0x01;  // Enable timer 0 overflow interrupt.
 
 	return (c);
 }
@@ -61,6 +58,7 @@ void main(void)
 	//TIMER0CNT = 65276;
 	//TIMER0RLD = 65276;
 	TIMER0CTRL = 0x01; // Start timer.
+	IRQCTRLEN = 0x01;  // Enable timer 0 overflow interrupt.
 
 	printf("Hello, World!\n");
 

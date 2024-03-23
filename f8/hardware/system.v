@@ -1,4 +1,5 @@
 `include "cpu.v"
+`include "rom.v"
 `include "ram.v"
 `include "memory.v"
 `include "io.v"

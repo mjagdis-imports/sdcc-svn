@@ -1,4 +1,4 @@
-`include "postsynthsystem.v"
+`include "system_gmsynth.v"
 
 `begin_keywords "1800-2009"
 
@@ -24,7 +24,7 @@ module testsystem ();
 
 	initial
 	begin
-		$dumpfile("postsynthtest.vcd");
+		$dumpfile("fullpostsynthtest.vcd");
     		$dumpvars(0,testsystem);
     		power_on_reset <= 1;
     		#20

@@ -9,7 +9,7 @@ YOSYS_CONFIG = yosys-config
 P_R = /tmp/gatemate/cc-toolchain-linux/bin/p_r/p_r
 SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 
-.PHONY: all tests postsynthtests fullpostsynthtests alltests clean icebreaker-images gatematea1evb-images
+.PHONY: all tests icesynthtests gmsynthtests alltests clean icebreaker-images gatematea1evb-images
 
 all: f8-testsystem
 
@@ -19,30 +19,27 @@ icrebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_sy
 gatematea1evb-images: tests/cblink/gatematea1evb_synth_00.cfg.bit tests/chello/gatematea1evb_synth_00.cfg.bit
 
 clean:
-	rm -f f8-testsystem f8-postsynthtestsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-fullpostsynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit
+	rm -f f8-testsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 SYSTEMSOURCES = system.v memory.v ram.v $(CPUSOURCES) $(IOSOURCES)
-TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)
-POSTSYNTHTESTSYSTEMSOURCES = postsynthtestsystem.v system.v memory.v ram_synth.v cpu_synth.v io_synth.v
+SYNTHTESTSYSTEMSOURCES = system.v memory.v ram_synth.v cpu_synth.v io_synth.v
+ICESYNTHTESTSYSTEMSOURCES = icesynthtestsystem.v $(SYNTHTESTSYSTEMSOURCES)
 
 f8-testsystem: $(TESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem.v
 
-f8-postsynthtestsystem: $(POSTSYNTHTESTSYSTEMSOURCES)
-	iverilog -g2009 -Wall -o $@ postsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
-
-%/f8-fullpostsynthtestsystem: fullpostsynthtestsystem.v %/system_synth.v
-	cd $*; iverilog -g2009 -Wall -o f8-fullpostsynthtestsystem ../../fullpostsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
+%/f8-icesynthtestsystem: icesynthtestsystem.v %/system_icesynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem ../../icesynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
 TESTDIRS = ${shell find tests/* -type d -print}
 TESTSS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
 TESTLOGS = $(TESTDIRS:=/test.log)
-POSTSYNTHTESTLOGS = $(TESTDIRS:=/postsynthtest.log)
-FULLPOSTSYNTHTESTLOGS = $(TESTDIRS:=/fullpostsynthtest.log)
+ICESYNTHTESTLOGS = $(TESTDIRS:=/icesynthtest.log)
+GMSYNTHTESTLOGS = $(TESTDIRS:=/icesynthtest.log)
 
 cpu_nosv.v: $(CPUSOURCES)
 	$(SV2V) --exclude=always --exclude=logic cpu.v > $@
@@ -90,8 +87,11 @@ ram_synth.v: ram_nosv.v
 icebreaker_synth.v: icebreaker_synth.json
 	$(YOSYS) -p 'read_json $^; write_verilog $@'
 
-%/system_synth.v: system_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_synth.v"
+%/system_icesynth.v: system_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_icesynth.v"
+
+%/system_gmsynth.v: system_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system_gmsynth.v"
 
 %.rel: %.s
 	$(SDAS) -plosgff $@ $<
@@ -111,26 +111,26 @@ tests/chello/test.ihx: tests/chello/test.c
 %/test.vcd %/test.log &: f8-testsystem %/test.vmem
 	cd $*; ../../f8-testsystem > test.log
 
-%/postsynthtest.vcd %/postsynthtest.log &: f8-postsynthtestsystem %/test.vmem
-	cd $*; ../../f8-postsynthtestsystem > postsynthtest.log
+%/icesynthtest.vcd %/icesynthtest.log &: %/f8-icesynthtestsystem
+	cd $*; ./f8-icesynthtestsystem > icesynthtest.log
 
-%/fullpostsynthtest.vcd %/fullpostsynthtest.log &: %/f8-fullpostsynthtestsystem
-	cd $*; ./f8-fullpostsynthtestsystem > fullpostsynthtest.log
-
+%/gmsynthtest.vcd %/gmsynthtest.log &: %/f8-gmsynthtestsystem
+	cd $*; ./f8-gmsynthtestsystem > gmsynthtest.log
+	
 tests: $(TESTLOGS)
 	for testlog in $(TESTLOGS); do \
 		echo -n "testsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-postsynthtests: $(POSTSYNTHTESTLOGS)
-	for testlog in $(POSTSYNTHTESTLOGS); do \
-		echo -n "postsynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+icesynthtests: $(ICESYNTHTESTLOGS)
+	for testlog in $(ICESYNTHTESTLOGS); do \
+		echo -n "icesynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-fullpostsynthtests: $(FULLPOSTSYNTHTESTLOGS)
-	for testlog in $(FULLPOSTSYNTHTESTLOGS); do \
-		echo -n "fullpostsynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+gmsynthtests: $(GMSYNTHTESTLOGS)
+	for testlog in $(GMSYNTHTESTLOGS); do \
+		echo -n "gmsynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-alltests: tests postsynthtests fullpostsynthtests
+alltests: tests icesynthtests gmsynthtests
 
