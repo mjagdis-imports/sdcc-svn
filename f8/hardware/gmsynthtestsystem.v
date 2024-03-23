@@ -21,7 +21,7 @@ module testsystem ();
 
 	initial
 	begin
-		$dumpfile("fullpostsynthtest.vcd");
+		$dumpfile("gmsynthtest.vcd");
     		$dumpvars(0,testsystem);
     		power_on_reset <= 1;
     		#20
