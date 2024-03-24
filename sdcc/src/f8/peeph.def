@@ -46,8 +46,14 @@ replace restart {
 	ldw	%2, (%1, sp)
 } by {
 	ldw	(%1, sp), %2
-	; peephole 1 removed redundant load from (%1, sp) into %2.
+	; peephole 1a removed redundant load from (%1, sp) into %2.
 }
+
+replace restart {
+	%1	%2
+} by {
+	; peephole 1b removed dead %1 %2.
+} if same(%1 'tst' 'tstw'), notVolatile(%2), notUsed('of' 'zf' 'nf' 'cf')
 
 replace restart {
 	%1	%2, %3
@@ -158,6 +164,14 @@ replace restart {
 	jrnc	#%2
 	; peephole 10 removed tst by adjusting jump condition
 } if notVolatile(%1), notUsed('nf' 'zf'), notUsedFrom(%2 'nf' 'zf')
+
+replace restart {
+	clr	%1
+	srl	%1
+} by {
+	tst	%1
+	; peephole 11 replaced clr-srl by tst.
+} if notVolatile(%1), notUsed(%1), notUsed('of')
 
 replace restart {
 	jp	#%1

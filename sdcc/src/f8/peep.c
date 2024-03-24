@@ -394,8 +394,9 @@ f8SurelyWritesFlag (const lineNode *pl, const char *what)
   if (ISINST (pl->line, "mad"))
     return (!strcmp (what, "zf") || !strcmp (what, "nf"));
   if (ISINST (pl->line, "msk") || ISINST (pl->line, "pop"))
-     return false;
-  // todo: rot
+    return false;
+  if (ISINST (pl->line, "rot"))
+    return false;
   if (ISINST (pl->line, "xch"))
     return leftArg (pl->line)[0] == 'f';
   // 16-bit 0-op inst.
