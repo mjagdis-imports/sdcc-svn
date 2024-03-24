@@ -458,7 +458,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			// n flag
 			if (opcode_is_ld_xl_mem(opcode) || opcode_is_ldw_y(opcode) ||
 				opcode_is_8_2(opcode) || opcode_is_tst(opcode) || opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_BOOLW_Y && opcode != OPCODE_XCH_YL_YH && opcode != OPCODE_INCNW_Y ||
-				opcode_is_inc(opcode) || opcode_is_dec(opcode) ||
+				opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode == OPCODE_SLLW_Y_XL ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
 				opcode == OPCODE_SEX_Y_XL)

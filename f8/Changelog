@@ -1,13 +1,19 @@
+2023-03-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/cpu.v:
+	  Fix n flag for sllw y, xl.
+
 2023-03-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* Makefile,
-	  memory.v,
-	  system.v,
-	  tests/chello/test.c,
-	  testsystem.v,
-	  gmsynthtestsystem.v,
-	  icesynthtestsystem.v,
-	  rom.v:
+	* hardware/Makefile,
+	  hardware/memory.v,
+	  hardware/system.v,
+	  hardware/tests/chello/test.c,
+	  hardware/testsystem.v,
+	  hardware/gmsynthtestsystem.v,
+	  hardware/icesynthtestsystem.v,
+	  hardware/rom.v,
+	  hardware/ram.v:
 	  Post-synthesis test infrastructure refactoring.
 
 2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>

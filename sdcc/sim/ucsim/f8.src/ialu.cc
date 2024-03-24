@@ -1235,11 +1235,12 @@ int
 cl_f8::SLLW_A_XL(t_mem code)
 {
   u32_t v= acc16->get();
-  rF&= ~flagCZ;
+  rF&= ~flagZN;
   v<<= rXL;
   if (v & 0x10000) rF|= flagC;
   v&= 0xffff;
   if (!v) rF|= flagZ;
+  if (v & 0x8000) rF|= flagN;
   acc16->W(v);
   cF.W(rF);
   return resGO;

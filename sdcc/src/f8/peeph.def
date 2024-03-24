@@ -1,16 +1,37 @@
 // peeph.def - F8 peephole rules
 
 replace restart {
-	ld %1, %2
+	%1	%2, %3
 } by {
-	; peephole 0 removed dead load into %1 from %2.
-} if notUsed(%1), notVolatile(%2), notUsed('zf'), notUsed('nf')
+	; peephole 0 removed dead load into %2 from %3.
+} if same(%1 'ld' 'ldw'), notUsed(%2), notVolatile(%3), notUsed('zf'), notUsed('nf')
 
 replace restart {
-	ldw %1, %2
+	%1	%2
 } by {
-	; peephole 0a removed dead load into %1 from %2.
-} if notUsed(%1), notVolatile(%2), notUsed('zf'), notUsed('nf')
+	; peephole 0a removed dead clear of %2.
+} if same(%1 'clr' 'clrw'), notUsed(%1)
+
+replace restart {
+	clrw	x
+} by {
+	clr	xl
+	; peephole 0b cleared xl instead of x.
+} if notUsed('xh')
+
+replace restart {
+	ldw	x, (%1, sp)
+} by {
+	ld	xl, (%1, sp)
+	; peephole 0c loaded xl instead of x.
+} if notUsed('xh'), notUsed('zf'), notUsed('nf')
+
+replace restart {
+	ldw	x, (y)
+} by {
+	ld	xl, (y)
+	; peephole 0d loaded xl instead of x.
+} if notUsed('xh'), notUsed('zf'), notUsed('nf')
 
 replace restart {
 	ldw	(%1, sp), %2
@@ -95,8 +116,24 @@ replace restart {
 	tstw	%2
 } by {
 	orw	%2, %3
-	; peephole 8 removed redundant tst after orw
-} if notVolatile(%2)
+	; peephole 8 removed redundant tstw after orw.
+} if notVolatile(%2), notUsed('cf')
+
+replace restart {
+	%1	%3, (%4, sp)
+	%2	%3
+} by {
+	%1	%3, (%4, sp)
+	; peephole 8a removed redundant tst(w) %3 after ld(w).
+} if same(%1 'ld' 'ldw'), same(%2 'tst' 'tstw'), notUsed('cf')
+
+replace restart {
+	%1	%3, (y)
+	%2	%3
+} by {
+	%1	%3, (y)
+	; peephole 8b removed redundant tst(w) %3 after ld(w).
+} if same(%1 'ld' 'ldw'), same(%2 'tst' 'tstw'), notUsed('cf')
 
 replace restart {
 	ld	%1, xl
