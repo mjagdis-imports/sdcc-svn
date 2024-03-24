@@ -4492,6 +4492,15 @@ genOr (const iCode *ic)
            i = end;
            continue;
          }
+       else if (aopIsLitVal (left->aop, i, 1, 0x00) || aopIsLitVal (left->aop, i, 1, 0xff))
+         {
+           unsigned int bytelit = aopIsLitVal (left->aop, i, 1, 0x00) ? 0x00 : 0xff;
+           int end;
+           for(end = i; end < size && aopIsLitVal (left->aop, end, 1, bytelit); end++);
+           genMove_o (result->aop, i, bytelit == 0xff ? ASMOP_MONE : right->aop, i, end - i, xl_free, xh_free, y_free, false, true);
+           i = end;
+           continue;
+         }
 
        if (i + 1 < size && aopIsAcc16 (result->aop, i) && aopIsOp16_2 (right->aop, i) && !(aopInReg (result->aop, i, Z_IDX) && aopInReg (right->aop, i, X_IDX)) &&
          !(aopRS (right->aop) && (right->aop->regs[result->aop->aopu.bytes[i].byteu.reg->rIdx] >= i || right->aop->regs[result->aop->aopu.bytes[i + 1].byteu.reg->rIdx] >= i)))
@@ -4663,6 +4672,15 @@ genAnd (const iCode *ic, iCode *ifx)
            int end;
            for(end = i; end < size && aopIsLitVal (right->aop, end, 1, bytelit); end++);
            genMove_o (result->aop, i, bytelit == 0x00 ? ASMOP_ZERO : left->aop, i, end - i, xl_free, xh_free, false, false, true);
+           i = end;
+           continue;
+         }
+       else if (aopIsLitVal (left->aop, i, 1, 0x00) || aopIsLitVal (left->aop, i, 1, 0xff))
+         {
+           unsigned int bytelit = aopIsLitVal (left->aop, i, 1, 0x00) ? 0x00 : 0xff;
+           int end;
+           for(end = i; end < size && aopIsLitVal (left->aop, end, 1, bytelit); end++);
+           genMove_o (result->aop, i, bytelit == 0x00 ? ASMOP_ZERO : right->aop, i, end - i, xl_free, xh_free, false, false, true);
            i = end;
            continue;
          }

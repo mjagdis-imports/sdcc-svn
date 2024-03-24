@@ -4,7 +4,9 @@
 	  src/f8/peeph.def:
 	  Improve f8 notUsed() and notUsedFrom(), add more peephole optimizer rules using these.
 	* sim/ucsim/f8.src/ialu.cc:
-	   Fix n flag for sllw y, xl.
+	  Fix n flag for sllw y, xl.
+	* src/f8/gen.c:
+	  Improve codegen for bitwise operations with partially-known operands.
 
 2023-03-23 Philipp Klaus Krause <philipp@colecovision.eu>
 

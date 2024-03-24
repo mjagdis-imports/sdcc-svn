@@ -10,7 +10,7 @@ replace restart {
 	%1	%2
 } by {
 	; peephole 0a removed dead clear of %2.
-} if same(%1 'clr' 'clrw'), notUsed(%1)
+} if same(%1 'clr' 'clrw'), notUsed(%2)
 
 replace restart {
 	clrw	x
