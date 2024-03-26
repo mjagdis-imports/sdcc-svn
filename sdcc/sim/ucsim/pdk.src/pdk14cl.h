@@ -1,5 +1,5 @@
 /*
- * Simulator of microcontrollers (lr35902cl.h)
+ * Simulator of microcontrollers (pdk14cl.h)
  *
  * Copyright (C) @@S@@,@@Y@@ Drotos Daniel, Talker Bt.
  * 
@@ -25,19 +25,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-#ifndef LR35902_HEADER
-#define LR35902_HEADER
-
-#include "gb80cl.h"
-
-
-class cl_lr35902: public cl_gb80
-{
-public:
-  cl_lr35902(struct cpu_entry *Itype, class cl_sim *asim);
-};
-
-
+#ifndef PDK14CL_HEADER
+#define PDK14CL_HEADER
 #endif
 
-/* End of z80.src/lr35902cl.h */
+/* End of pdk.src/pdk14cl.h */

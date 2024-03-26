@@ -1,3 +1,17 @@
+2024-03-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  src/SDCCsymt.c:
+	  Fix bug #3720.
+
+2024-03-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Improve generalized constant propagation analysis accuracy.
+	* src/stm8/peep.c,
+	  src/z80/peep.c:
+	  Fix a peephole optimizer issue in the handling of register parameters to calls through function pointers when a symbol had the same name as a register.
+
 2023-03-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/peep.c,
