@@ -166,6 +166,8 @@ getTypeValinfo (sym_link *type)
     {
       v.anything = false;
       v.max = 0x7fffffffffffffffull >> (64 - bitsForType (type));
+      if (IS_CHAR (type))
+        v.max = 0xffffffffffffffffull >> (64 - bitsForType (type)); // Use upper limit of unsigned type here, since sometimes, SDCC generates incorrect AST (using signed char, where there should be unsigned char) trying to avoid the costs of integer promotion.
       v.min = -v.max - 1;
       v.knownbitsmask = ~(0xffffffffffffffffull >> (64 - bitsForType (type)));
       v.knownbits = 0;
@@ -328,13 +330,13 @@ valinfoUpdate (struct valinfo *v)
     return;
 
   // Update bits from min/max.
-  if (v->min == v->max)
+  if (v->min == v->max) // Fixed value.
     {
       v->knownbitsmask = ~0ull;
       v->knownbits = v->min;
       return;
     }
-  for (int i = 0; i < 62; i++)
+  for (int i = 0; i < 62; i++) // Leading zeroes.
     {
       if (v->min >= 0 && v->max < (1ll << i))
         {
@@ -582,24 +584,26 @@ valinfoGetABit (struct valinfo *result, const struct valinfo &left, const struct
 static void
 valinfoLeft (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
-  if (!left.anything && !right.anything && right.min == right.max && right.max < 64)
+  if (!left.anything && !right.anything && right.min == right.max && right.max < 62)
     {
       result->nothing = left.nothing || right.nothing;
-      struct valinfo rv;
-      rv.nothing = result->nothing;
-      rv.anything = false;
-      rv.min = left.min;
-      rv.max = left.max;
+      long long min, max;
+      min = left.min;
+      max = left.max;
       for(long long r = right.max; r; r--)
         {
-          if (rv.min < 0 || rv.max > (1ll << 61))
+          if (min < 0 || max > (1ll << 61))
             return;
-          rv.min <<= 1;
-          rv.max <<= 1;
+          min <<= 1;
+          max <<= 1;
         }
-      *result = rv;
+      if (!result->anything)
+      	max = std::min (result->max, max);
+      result->anything = false;
+      result->min = min;
+      result->max = max;
     }
-  if(!right.anything && right.min > 0 && right.max < 64)
+  if(!right.anything && right.min > 0 && right.min < 63)
     {
       result->knownbitsmask |= ~(~0ull << right.min);
       result->knownbits &= (~0ull << right.min);
@@ -610,14 +614,14 @@ static void
 valinfoRight (struct valinfo *result, const struct valinfo &left, const struct valinfo &right)
 {
   if (!left.anything && !right.anything &&
-    left.min >= 0 && right.min >= 0 && right.min <= 60)
+    left.min >= 0 && right.min >= 0 && right.min <= 61)
     {
-      result->anything = false;
       result->nothing = left.nothing || right.nothing;
       result->min = 0;
       auto max = (left.max >> right.min);
-      if (max <= result->max)
+      if (result->anything || max <= result->max)
         result->max = max;
+      result->anything = false;
       if (right.min == right.max)
         {
           result->knownbitsmask = left.knownbitsmask >> right.min;
