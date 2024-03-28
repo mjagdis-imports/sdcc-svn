@@ -1,8 +1,27 @@
+2024-03-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Optimize out some more intermediate pop/push.
+	* src/z80/gen.c:
+	  Fine-tune djnz optimization hint.
+
+2024-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Fix an issue introduced in yesterday's fix for bug #3720.
+
+2024-03-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix an optimization hint inversion bug that prevented use of djnz.
+
 2024-03-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,
 	  src/SDCCsymt.c:
 	  Fix bug #3720.
+	* src/z80/gen.c:
+	  Allow for some more flexibility in the handling of register arguments.
 
 2024-03-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
