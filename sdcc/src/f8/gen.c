@@ -5441,7 +5441,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
   bool use_z = false;
   int i = 0;
 
-  bool bit_field = IS_BITVAR (getSpec (operandType (result)));
+  bool bit_field = IS_BITVAR (operandType (result));
   int blen = bit_field ? SPEC_BLEN (getSpec (operandType (result))) : 0;
   int bstr = bit_field ? SPEC_BSTR (getSpec (operandType (result))) : 0;
   

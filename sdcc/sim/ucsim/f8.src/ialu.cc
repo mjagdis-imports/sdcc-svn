@@ -784,7 +784,7 @@ cl_f8::ADCW1_M(t_mem code)
   u16_t a= a_mm();
   u16_t v= read_addr(rom, a);
   vc.rd+= 2;
-  add16(v, 0, (rF&flagC)?1:0, false);
+  v = add16(v, 0, (rF&flagC)?1:0, false);
   rom->write(a  , v);
   rom->write(a+1, v>>8);
   vc.wr+= 2;

@@ -376,12 +376,15 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
     dic->op == ROT || dic->op == GETABIT) &&
     dic->next == ic && IS_ITEMP (IC_RESULT (ic)))
     ;
-  /* Otherwise, for now eliminate 8-bit temporary variables only.
-     The STM8 instructions operating directly on memory
-     operands are 8-bit, so the most benefit is in 8-bit
+  /* Otherwise, for now eliminate 16-bit temporary variables only.
+     The f8 instructions operating directly on memory
+     operands are 8/16-bit, so the most benefit is in 8/16-bit
      operations. On the other hand, supporting wider
-     operations well in codegen is also more effort. */ 
-  else if (bitsForType (operandType (IC_RESULT (dic))) > 8)
+     operations well in codegen is also more effort. On the other hand,
+     allowing wider operations here could help reduce register pressure.
+     Currently, codegen can already handle more than 8 bits correctly
+     (except for shifts/rotations), but the code size regresses. */
+  else if (bitsForType (operandType (IC_RESULT (dic))) > 8 /*&& (dic->op == LEFT_OP || dic->op == RIGHT_OP || dic->op == ROT)*/)
     return 0;
 
   /* if the result is on stack or iaccess then it must be
