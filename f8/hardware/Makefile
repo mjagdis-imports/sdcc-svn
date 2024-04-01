@@ -14,7 +14,7 @@ SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -I/home/philipp/sdcc-branche
 all: f8-testsystem
 
 # Images for the iCEBreaker FPGA board.
-icrebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
+icebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
 # Images for the GateMateA1-EVB FPGA board.
 gatematea1evb-images: tests/cblink/gatematea1evb_synth_00.cfg.bit tests/chello/gatematea1evb_synth_00.cfg.bit
 
