@@ -79,10 +79,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	always @(posedge clk)
 	begin
 		pc <= next_pc;
-		/*if (next_opcode == OPCODE_RETI && opcode != OPCODE_RETI) // Do not update old_pc during first cycle of reti (otherwise reti can get executed twice, after an interrupt that was pending at the end of the previous interrupt handler).
-			old_pc = old_pc;
-		else*/
-			old_pc = pc;
+		old_pc = pc;
 		sp <= next_sp;
 	end
 

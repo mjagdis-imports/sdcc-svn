@@ -22,9 +22,11 @@ clean:
 	rm -f f8-testsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
+CPU2SOURCES = cpu2.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
+IO2SOURCES = io2.v watchdog2.v
 SYSTEMSOURCES = system.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
-SYSTEM2SOURCES = system2.v memory2.v rom2.v ram2.v dualportram2.v
+SYSTEM2SOURCES = system2.v memory2.v rom2.v ram2.v dualportram.v $(CPU2SOURCES) $(IO2SOURCES)
 TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)
 TESTSYSTEM2SOURCES = testsystem2.v $(SYSTEM2SOURCES)
 SYNTHTESTSYSTEMSOURCES = system.v memory.v ram_synth.v cpu_synth.v io_synth.v
@@ -33,7 +35,7 @@ ICESYNTHTESTSYSTEMSOURCES = icesynthtestsystem.v $(SYNTHTESTSYSTEMSOURCES)
 f8-testsystem: $(TESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem.v
 
-f8-testsystem2: $(TESTSYSTEMSOURCES)
+f8-testsystem2: $(TESTSYSTEM2SOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem2.v
 
 %/f8-icesynthtestsystem: icesynthtestsystem.v %/system_icesynth.v
@@ -43,7 +45,7 @@ f8-testsystem2: $(TESTSYSTEMSOURCES)
 	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtestsystem ../../gmsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
 
 TESTDIRS = ${shell find tests/* -type d -print}
-TESTSS = $(TESTDIRS:=/test.s)
+TESTS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
 TESTLOGS = $(TESTDIRS:=/test.log)
@@ -119,6 +121,9 @@ tests/chello/test.ihx: tests/chello/test.c
 
 %/test.vcd %/test.log &: f8-testsystem %/test.vmem
 	cd $*; ../../f8-testsystem > test.log
+
+%/test2.vcd %/test2.log &: f8-testsystem2 %/test.vmem
+	cd $*; ../../f8-testsystem2 > test2.log
 
 %/icesynthtest.vcd %/icesynthtest.log &: %/f8-icesynthtestsystem
 	cd $*; ./f8-icesynthtestsystem > icesynthtest.log

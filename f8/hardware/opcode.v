@@ -2,6 +2,10 @@
 
 `include "opcodemap.v"
 
+function automatic logic opcode_is_prefix(opcode_t opcode);
+	return(opcode == OPCODE_SWAPOP || opcode == OPCODE_ALTACC1 || opcode == OPCODE_ALTACC2 || opcode == OPCODE_ALTACC3);
+endfunction
+
 function automatic logic opcode_is_sub(opcode_t opcode);
 	return(opcode == OPCODE_SUB_XL_DIR || opcode == OPCODE_SUB_XL_SPREL || opcode == OPCODE_SUB_XL_ZREL || opcode == OPCODE_SUB_XL_ZL || opcode == OPCODE_SUB_XL_XH || opcode == OPCODE_SUB_XL_YL || opcode == OPCODE_SUB_XL_YH);
 endfunction

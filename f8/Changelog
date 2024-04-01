@@ -1,6 +1,7 @@
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
+	  hardware/opcode.v,
 	  hardware/ram.v,
 	  hardware/rom.v,
 	  hardware/system.v,
@@ -9,7 +10,10 @@
 	  hardware/ram2.v,
 	  hardware/rom2.v,
 	  hardware/system2.v,
-	  hardware/testsystem2.v:
+	  hardware/testsystem2.v,
+	  hardware/cpu2.v,
+	  hardware/io2.v,
+	  hardware/watchdog2.v:
 	  Verilog code cleanup, preparations for multicycle f8 implementation.
 
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
