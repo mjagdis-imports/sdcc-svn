@@ -2,6 +2,18 @@
 
 `include "opcode.v"
 
+typedef enum logic [2:0]
+{
+	FLAG_H,	// Half-carry
+	FLAG_C,	// Carry
+	FLAG_N,	// Negative
+	FLAG_Z,	// Zero
+	FLAG_O,	// Overflow
+	FLAG_5,
+	FLAG_6,
+	FLAG_7
+} flagname_t;
+
 // Could be written nicer using unpacked structs, but icarus does not yet support those.
 module registers(output logic [15:0] x, y, z, input logic [1:0] addr_in, input logic [15:0] data_in, input logic [1:0] write_en,
 	output logic [7:0] f, input logic [7:0] next_f,
@@ -23,6 +35,10 @@ module registers(output logic [15:0] x, y, z, input logic [1:0] addr_in, input l
 			gpregs[addr_in][7:0] = data_in[7:0];
 		if (write_en[1])
 			gpregs[addr_in][15:8] = data_in[15:8];
+		if (reset)
+			f = {3'b000, next_f[4:0]};
+		else
+			f = next_f;
 		if (reset)
 			pc = 16'h4000;
 		else
@@ -48,8 +64,15 @@ function automatic logic opcode_loads_upper(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_loads_operand(opcode_t opcode);
-	return(opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_IMMD);
+	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_IMMD);
 endfunction
+
+typedef enum logic [1:0] {
+	ACCSEL_XL_Y = 2'b00,
+	ACCSEL_XH_Y = 2'b01,
+	ACCSEL_YL_Z = 2'b10,
+	ACCSEL_ZL_X = 2'b11
+} accsel_t;
 
 module cpu
 	(output logic [14:0] mem_read_addr_even, input logic [7:0] mem_read_data_even, output logic [14:0] mem_write_addr_even, output logic [7:0] mem_write_data_even, output logic mem_write_en_even,
@@ -68,6 +91,9 @@ module cpu
 	logic oldinst_loadsop, next_oldinst_loadsop;
 
 	logic [15:0] mem_read_data;
+	logic [15:0] memwrite_data;
+	logic [15:0] memwrite_addr;
+	logic [1:0] memwrite_en;
 	logic [7:0] opcode;
 	logic [15:0] memop;
 	logic [15:0] memop_addr;
@@ -82,8 +108,10 @@ module cpu
 	always_comb
 	begin
 		logic [15:0] mem_read_addr;
-		if (opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_IMMD)
+		if(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode))
 			memop_addr = pc + 1;
+		else if(opcode == OPCODE_XCH_F_SPREL)
+			memop_addr = sp + inst[15:8];
 		else
 			memop_addr = 'x;
 		if(loading_upper_inst)
@@ -108,6 +136,17 @@ module cpu
 			mem_read_addr_even = mem_read_addr[15:1];
 			mem_read_addr_odd = mem_read_addr[15:1];
 		end
+	end
+
+	// Memory write
+	always_comb
+	begin
+		mem_write_addr_even = memwrite_addr[0] ? memwrite_addr[15:1] + 1 : memwrite_addr[15:1];
+		mem_write_addr_odd = memwrite_addr[15:1];
+		mem_write_data_even = memwrite_addr[0] ? memwrite_data[15:8] : memwrite_data[7:0];
+		mem_write_data_odd = memwrite_addr[0] ? memwrite_data[7:0] : memwrite_data[15:8];
+		mem_write_en_even = memwrite_addr[0] ? memwrite_en[1] : memwrite_en[0];
+		mem_write_en_odd = memwrite_addr[0] ? memwrite_en[0] : memwrite_en[1];
 	end
 
 	// Instruction handling
@@ -144,12 +183,17 @@ module cpu
 			next_pc_noint = memop;
 		else if(opcode == OPCODE_JP_Y)
 			next_pc_noint = y;
-		else if(opcode == OPCODE_JR_D)
+		else if(opcode == OPCODE_JR_D ||
+			opcode == OPCODE_JRC_D && f[FLAG_C] || opcode == OPCODE_JRNC_D && !f[FLAG_C] ||
+			opcode == OPCODE_JRN_D && f[FLAG_N] || opcode == OPCODE_JRNN_D && !f[FLAG_N] ||
+			opcode == OPCODE_JRZ_D && f[FLAG_Z] || opcode == OPCODE_JRNZ_D && !f[FLAG_Z] ||
+			opcode == OPCODE_JRO_D && f[FLAG_O] || opcode == OPCODE_JRNO_D && !f[FLAG_O] ||
+			opcode == OPCODE_JRSGE_D && !(f[FLAG_N] ^ f[FLAG_O]) || opcode == OPCODE_JRSLT_D && (f[FLAG_N] ^ f[FLAG_O]) ||
+			opcode == OPCODE_JRSGT_D && !(f[FLAG_Z] || (f[FLAG_N] ^ f[FLAG_O])) || opcode == OPCODE_JRSLE_D && (f[FLAG_Z] || (f[FLAG_N] ^ f[FLAG_O])) ||
+			opcode == OPCODE_JRGT_D && (f[FLAG_C] && !f[FLAG_Z]) || opcode == OPCODE_JRLE_D && (!f[FLAG_C] || f[FLAG_Z]))
 			next_pc_noint = signed'(pc) + signed'(inst[15:8]);
-		else if(opcode == OPCODE_LDW_Y_IMMD)
-			next_pc_noint = pc + 3;
 		else
-			next_pc_noint = pc + 1;
+			next_pc_noint = pc + opcode_instsize(opcode);
 		next_pc = next_pc_noint;
 	end
 
@@ -157,22 +201,64 @@ module cpu
 	assign trap = !reset && (opcode == OPCODE_TRAP);
 	always_comb
 	begin
+		accsel_t accsel;
+		logic swapop;
+		logic [1:0] acc16_addr;
+		swapop = f[5];
+		accsel = accsel_t'(f[7:6]);
+		acc16_addr = (accsel == ACCSEL_ZL_X) ? 0 : (accsel == ACCSEL_YL_Z) ? 2 : 1;
 		regwrite_data = 'x;
 		regwrite_addr = 'x;
 		regwrite_en = 2'b00;
+		next_f = {3'b000, f[4:0]};
+		memwrite_en = 2'b00;
+		next_sp = sp;
 		if(execute)
 		begin
-			if(opcode == OPCODE_LDW_Y_IMMD)
+			if(opcode == OPCODE_SWAPOP)
+				next_f |= 1 << FLAG_5;
+			else if(opcode == OPCODE_ALTACC1)
+				next_f[7:6] = 1;
+			else if(opcode == OPCODE_ALTACC2)
+				next_f[7:6] = 2;
+			else if(opcode == OPCODE_ALTACC3)
+				next_f[7:6] = 3;
+			else if(opcode == OPCODE_PUSH_IMMD)
+			begin
+				memwrite_data = memop;
+				memwrite_addr = sp - 1;
+				memwrite_en = 2'b01;
+				next_f = f;
+				next_sp = sp - 1;
+			end
+			else if(opcode == OPCODE_XCH_F_SPREL)
+			begin
+				memwrite_data = f;
+				memwrite_addr = sp - 1;
+				memwrite_en = 2'b01;
+				next_f = memop;
+			end
+			else if(opcode == OPCODE_LDW_Y_SP)
+			begin
+				if(swapop)
+					next_sp = y;
+				else
+				begin
+					regwrite_data = sp;
+					regwrite_addr = acc16_addr;
+					regwrite_en = 2'b11;
+				end
+			end
+			else if(opcode == OPCODE_LDW_Y_IMMD)
 			begin
 				regwrite_data = memop;
-				regwrite_addr = 1;
+				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
+				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_N] = regwrite_data[15];
 			end
 		end
 	end
-	
-	assign mem_write_en_even = 0;
-	assign mem_write_en_odd = 0;
 endmodule
 
 `end_keywords

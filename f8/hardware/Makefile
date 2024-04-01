@@ -9,7 +9,7 @@ YOSYS_CONFIG = yosys-config
 P_R = /tmp/gatemate/cc-toolchain-linux/bin/p_r/p_r
 SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 
-.PHONY: all tests icesynthtests gmsynthtests alltests clean icebreaker-images gatematea1evb-images
+.PHONY: all tests tests2 icesynthtests gmsynthtests alltests clean icebreaker-images gatematea1evb-images
 
 all: f8-testsystem
 
@@ -49,6 +49,7 @@ TESTS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
 TESTLOGS = $(TESTDIRS:=/test.log)
+TESTLOGS2 = $(TESTDIRS:=/test2.log)
 ICESYNTHTESTLOGS = $(TESTDIRS:=/icesynthtest.log)
 GMSYNTHTESTLOGS = $(TESTDIRS:=/gmsynthtest.log)
 
@@ -136,6 +137,11 @@ tests: $(TESTLOGS)
 		echo -n "testsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
+tests2: $(TESTLOGS2)
+	for testlog in $(TESTLOGS2); do \
+		echo -n "testsystem2:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+	done
+	
 icesynthtests: $(ICESYNTHTESTLOGS)
 	for testlog in $(ICESYNTHTESTLOGS); do \
 		echo -n "icesynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \

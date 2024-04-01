@@ -301,5 +301,13 @@ function automatic logic opcode_is_jr_d(opcode_t opcode);
 	return(opcode == OPCODE_JR_D || opcode == OPCODE_DNJNZ_YH_D || opcode == OPCODE_JRZ_D || opcode == OPCODE_JRNZ_D || opcode == OPCODE_JRC_D || opcode == OPCODE_JRNC_D || opcode == OPCODE_JRN_D || opcode == OPCODE_JRNN_D || opcode == OPCODE_JRO_D || opcode == OPCODE_JRNO_D || opcode == OPCODE_JRSGE_D || opcode == OPCODE_JRSLT_D || opcode == OPCODE_JRSGT_D || opcode == OPCODE_JRSLE_D || opcode == OPCODE_JRGT_D || opcode == OPCODE_JRLE_D);
 endfunction
 
+function automatic logic[2:0] opcode_instsize(opcode_t opcode);
+	if (opcode_is_8_immd(opcode) || opcode_is_sprel(opcode) || opcode_is_yrel(opcode) || opcode_is_jr_d(opcode) || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
+		return(2);
+	if(opcode_is_16_immd(opcode) || opcode_is_dir(opcode) || opcode_is_zrel(opcode) || opcode == OPCODE_JP_IMMD || opcode == OPCODE_CALL_IMMD)
+		return(3);
+	return(1);
+endfunction
+
 `end_keywords
 
