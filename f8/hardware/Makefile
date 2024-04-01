@@ -23,12 +23,18 @@ clean:
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
-SYSTEMSOURCES = system.v memory.v ram.v $(CPUSOURCES) $(IOSOURCES)
+SYSTEMSOURCES = system.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
+SYSTEM2SOURCES = system2.v memory2.v rom2.v ram2.v dualportram2.v
+TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)
+TESTSYSTEM2SOURCES = testsystem2.v $(SYSTEM2SOURCES)
 SYNTHTESTSYSTEMSOURCES = system.v memory.v ram_synth.v cpu_synth.v io_synth.v
 ICESYNTHTESTSYSTEMSOURCES = icesynthtestsystem.v $(SYNTHTESTSYSTEMSOURCES)
 
 f8-testsystem: $(TESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem.v
+
+f8-testsystem2: $(TESTSYSTEMSOURCES)
+	iverilog -g2009 -Wall -o $@ testsystem2.v
 
 %/f8-icesynthtestsystem: icesynthtestsystem.v %/system_icesynth.v
 	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem ../../icesynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`

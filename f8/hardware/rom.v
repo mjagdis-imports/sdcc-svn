@@ -1,6 +1,6 @@
 `begin_keywords "1800-2009"
 
-// 512B ROM
+// ROM
 module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
 	parameter SIZE = 2048;
 	parameter logic [15:0] ROMBASE = 16'h4000;

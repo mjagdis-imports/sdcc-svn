@@ -1,0 +1,26 @@
+`begin_keywords "1800-2009"
+
+// Memory subsystem
+
+module memory #(parameter RAMADDRBITS = 10, ROMSIZE = 2048, logic [15:0] ROMBASE = 16'h4000)
+	(input logic [14:0] dread_addr_even, output logic [7:0] dread_data_even, input logic [14:0] dwrite_addr_even, input logic [7:0] dwrite_data_even, input logic dwrite_en_even,
+	input logic [14:0] dread_addr_odd, output logic [7:0] dread_data_odd, input logic [14:0] dwrite_addr_odd, input logic [7:0] dwrite_data_odd, input logic dwrite_en_odd,
+	input logic clk);
+
+	logic [7:0] dread_data_rom_even, dread_data_rom_odd, dread_data_ram_even, dread_data_ram_odd;
+
+	rom #(.SIZE(ROMSIZE), .ROMBASE(ROMBASE)) rom(.dread_data_even(dread_data_rom_even), .dread_data_odd(dread_data_rom_odd),.*);
+	ram #(.ADDRBITS(RAMADDRBITS)) ram(.dread_data_even(dread_data_ram_even), .dread_data_odd(dread_data_ram_odd), .*);
+
+	logic dread_rom_even, dread_rom_odd;
+	always @(posedge clk)
+	begin
+		dread_rom_even = dread_addr_even >= ROMBASE;
+		dread_rom_odd = dread_addr_odd >= ROMBASE;
+	end
+	assign dread_data_even = dread_rom_even ? dread_data_rom_even : dread_data_ram_even;
+	assign dread_data_odd = dread_rom_odd ? dread_data_rom_odd : dread_data_ram_odd;
+endmodule
+
+`end_keywords
+

@@ -7,12 +7,9 @@
 `begin_keywords "1800-2009"
 
 // SoC. trap output line needed for tests only.
-module system (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,
+module system  #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, MEMADDRBASE = 16'h2000) (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,
 	input logic clk, power_on_reset, output trap);
-	parameter ROMSIZE = 8192;
-	parameter RAMADDRBITS = 13;
-	parameter MEMADDRBASE = 16'h2000;
-	
+
 	wire [15:0] iread_addr, dread_addr, dwrite_addr;
 	wire [23:0] iread_data;
 	logic [15:0] dread_data, dwrite_data;

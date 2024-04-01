@@ -1,26 +1,6 @@
 `begin_keywords "1800-2009"
 
-// Dual port RAM module suitable for iCE40 4kb Embedded Block RAM
-module dualportram(din, write_en, waddr, raddr, dout, clk);
-	parameter ADDRBITS = 9; // 512 x
-	parameter DATAWIDTH = 8; // x 8
-	input write_en, clk;
-	input [ADDRBITS-1:0] waddr, raddr;
-	input [DATAWIDTH-1:0] din;
-	output reg [DATAWIDTH-1:0] dout;
-
-	reg [DATAWIDTH-1:0] mem[(1 << ADDRBITS) - 1 : 0];
-  
-	always @(posedge clk)
-	begin
-		if (write_en)
-			mem[waddr] <= din;
-		if (write_en && waddr == raddr)
-			dout <= din;
-		else
-			dout <= mem[raddr];
-	end
-endmodule
+`include "dualportram.v"
 
 // ADDRBITS = 10: 1K RAM at 0x3c00 to 0x3fff
 // ADDRBITS = 11: 2K RAM at 0x3800 to 0x3fff
