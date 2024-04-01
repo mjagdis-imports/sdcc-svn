@@ -10,6 +10,7 @@ module rom #(parameter SIZE = 2048,  logic [15:0] ROMBASE = 16'h4000)
 
 	initial $readmemh("test.vmem", rom);
 
+	logic [15:0] read_addr_even_rombased, read_addr_odd_rombased;
 	assign read_addr_even_rombased = {read_addr_even, 1'b0} - ROMBASE;
 	assign read_addr_odd_rombased = {read_addr_odd, 1'b1} - ROMBASE;
 

@@ -36,7 +36,7 @@ f8-testsystem: $(TESTSYSTEMSOURCES)
 	iverilog -g2009 -Wall -o $@ testsystem.v
 
 f8-testsystem2: $(TESTSYSTEM2SOURCES)
-	iverilog -g2009 -Wall -o $@ testsystem2.v
+	iverilog -g2009 -Wall -pfileline=1 -o $@ testsystem2.v
 
 %/f8-icesynthtestsystem: icesynthtestsystem.v %/system_icesynth.v
 	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem ../../icesynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
