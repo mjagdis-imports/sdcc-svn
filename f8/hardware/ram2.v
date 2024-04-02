@@ -11,24 +11,24 @@ module ram #(parameter ADDRBITS = 10)
 	input logic [14:0] read_addr_odd, output logic [7:0] read_data_odd, input logic [14:0] write_addr_odd, input logic [7:0] write_data_odd, input logic write_en_odd,
 	input logic clk);
 
-	localparam SIZE = 1 << (ADDRBITS - 1);
+	localparam SIZE = 1 << ADDRBITS;
 	localparam logic [15:0] RAMBASE = 16'h4000 - SIZE;
 
 	logic [ADDRBITS-1:0] write_addr_rambased_even, write_addr_rambased_odd;
-	logic [15:0] read_addr_rambased_even, read_addr_rambased_odd;
+	logic [ADDRBITS-1:0] read_addr_rambased_even, read_addr_rambased_odd;
 
-	assign write_addr_rambased_even = write_addr_even - RAMBASE;
-	assign write_addr_rambased_odd = write_addr_odd - RAMBASE;
-	assign read_addr_rambased_even = read_addr_even - RAMBASE;
-	assign read_addr_rambased_odd = read_addr_odd - RAMBASE;
+	assign write_addr_rambased_even = write_addr_even - RAMBASE / 2;
+	assign write_addr_rambased_odd = write_addr_odd - RAMBASE / 2;
+	assign read_addr_rambased_even = read_addr_even - RAMBASE / 2;
+	assign read_addr_rambased_odd = read_addr_odd - RAMBASE / 2;
 
 	dualportram #(.ADDRBITS(ADDRBITS-1)) evenram
-		(.din(write_data_even), .write_en(write_en_even), .waddr(write_addr_even[ADDRBITS-1:1]),
-		.raddr(read_addr_even[ADDRBITS-1:1]), .dout(read_data_even),
+		(.din(write_data_even), .write_en(write_en_even), .waddr(write_addr_rambased_even),
+		.raddr(read_addr_rambased_even), .dout(read_data_even),
 		.clk(clk));
 	dualportram #(.ADDRBITS(ADDRBITS-1)) oddram
-		(.din(write_data_odd), .write_en(write_en_odd), .waddr(write_addr_odd[ADDRBITS-1:1]),
-		.raddr(read_addr_odd[ADDRBITS-1:1]), .dout (read_data_odd),
+		(.din(write_data_odd), .write_en(write_en_odd), .waddr(write_addr_rambased_odd),
+		.raddr(read_addr_rambased_odd), .dout (read_data_odd),
 		.clk(clk));
 endmodule
 

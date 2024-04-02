@@ -22,7 +22,7 @@ clean:
 	rm -f f8-testsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
-CPU2SOURCES = cpu2.v opcodemap.v opcode.v
+CPU2SOURCES = cpu2.v alu2.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 IO2SOURCES = io2.v watchdog2.v
 SYSTEMSOURCES = system.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)

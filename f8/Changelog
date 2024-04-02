@@ -1,3 +1,11 @@
+2023-04-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/cpu2.v,
+	  hardware/alu2.v,
+	  hardware/ram2.v:
+	  Implement a few instructions for multicycle f8 implementation.
+
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
