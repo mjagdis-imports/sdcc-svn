@@ -14,8 +14,8 @@ module ram #(parameter ADDRBITS = 10)
 	localparam SIZE = 1 << ADDRBITS;
 	localparam logic [15:0] RAMBASE = 16'h4000 - SIZE;
 
-	logic [ADDRBITS-1:0] write_addr_rambased_even, write_addr_rambased_odd;
-	logic [ADDRBITS-1:0] read_addr_rambased_even, read_addr_rambased_odd;
+	logic [ADDRBITS-2:0] write_addr_rambased_even, write_addr_rambased_odd;
+	logic [ADDRBITS-2:0] read_addr_rambased_even, read_addr_rambased_odd;
 
 	assign write_addr_rambased_even = write_addr_even - RAMBASE / 2;
 	assign write_addr_rambased_odd = write_addr_odd - RAMBASE / 2;

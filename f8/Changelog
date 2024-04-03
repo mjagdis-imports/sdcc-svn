@@ -4,7 +4,7 @@
 	  hardware/cpu2.v,
 	  hardware/alu2.v,
 	  hardware/ram2.v:
-	  Implement a few instructions for multicycle f8 implementation.
+	  Implement some instructions for multicycle f8 implementation.
 
 2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 

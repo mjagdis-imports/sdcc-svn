@@ -164,6 +164,10 @@ function automatic logic opcode_is_8_2_zrel(opcode_t opcode);
 	opcode == OPCODE_OR_XL_ZREL || opcode == OPCODE_AND_XL_ZREL || opcode == OPCODE_XOR_XL_ZREL);
 endfunction
 
+function automatic logic opcode_is_8_2_mem(opcode_t opcode);
+	return(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode));
+endfunction
+
 function automatic logic opcode_is_8_2_zl(opcode_t opcode);
 	return(opcode == OPCODE_SUB_XL_ZL || opcode == OPCODE_SBC_XL_ZL || opcode == OPCODE_ADD_XL_ZL || opcode == OPCODE_ADC_XL_ZL || opcode == OPCODE_CP_XL_ZL ||
 	opcode == OPCODE_OR_XL_ZL || opcode == OPCODE_AND_XL_ZL || opcode == OPCODE_XOR_XL_ZL);
@@ -202,6 +206,10 @@ function automatic logic opcode_is_8_1_sprel(opcode_t opcode);
 	return(opcode == OPCODE_SRL_SPREL || opcode == OPCODE_SLL_SPREL || opcode == OPCODE_RLC_SPREL || opcode == OPCODE_RRC_SPREL ||
 		opcode == OPCODE_INC_SPREL || opcode == OPCODE_DEC_SPREL ||
 		opcode == OPCODE_CLR_SPREL || opcode == OPCODE_TST_SPREL ||opcode == OPCODE_PUSH_SPREL);
+endfunction
+
+function automatic logic opcode_is_8_1_mem(opcode_t opcode);
+	return(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode));
 endfunction
 
 function automatic logic opcode_is_8_1_xl(opcode_t opcode);
@@ -289,8 +297,16 @@ function automatic logic opcode_is_sprel(opcode_t opcode);
 	return(opcode_is_8_2_sprel(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_16_2_sprel(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_MAD_X_SPREL_YL || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_LDW_ISPREL_Y || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_SPREL_Y || opcode == OPCODE_XCHW_Y_SPREL);
 endfunction
 
+function automatic logic opcode_is_sprel_read(opcode_t opcode);
+	return(opcode_is_sprel(opcode) && opcode != OPCODE_CLR_SPREL && opcode != OPCODE_CLRW_SPREL && opcode != OPCODE_LDW_ISPREL_Y && opcode != OPCODE_LD_SPREL_XL && opcode != OPCODE_LDW_SPREL_Y);
+endfunction
+
+function automatic logic opcode_is_zrel_read(opcode_t opcode);
+	return(opcode_is_8_2_zrel(opcode) || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LD_XL_ZREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_MAD_X_ZREL_YL);
+endfunction
+
 function automatic logic opcode_is_zrel(opcode_t opcode);
-	return(opcode_is_8_2_zrel(opcode) || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_XL_ZREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_ZREL_Y || opcode == OPCODE_MAD_X_ZREL_YL);
+	return(opcode_is_zrel_read(opcode) || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LDW_ZREL_Y);
 endfunction
 
 function automatic logic opcode_is_yrel(opcode_t opcode);
