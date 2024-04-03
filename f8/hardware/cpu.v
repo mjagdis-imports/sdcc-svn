@@ -112,7 +112,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			next_opcode == OPCODE_JRSGE_D && !(next_flags[2] ^ next_flags[4]) || next_opcode == OPCODE_JRSLT_D && (next_flags[2] ^ next_flags[4]) ||
 			next_opcode == OPCODE_JRSGT_D && !(next_flags[3] || (next_flags[2] ^ next_flags[4])) || next_opcode == OPCODE_JRSLE_D && (next_flags[3] || (next_flags[2] ^ next_flags[4])) ||
 			next_opcode == OPCODE_JRGT_D && (next_flags[1] && !next_flags[3]) || next_opcode == OPCODE_JRLE_D && (!next_flags[1] || next_flags[3]) ||
-			next_opcode == OPCODE_DNJNZ_YH_D && ((next_accsel_in == ACCSEL_ZL_X) ? next_x[15:8] : (next_accsel_in == ACCSEL_YL_Z) ? next_z[15:8] : next_y[15:8]) == 8'h01)
+			next_opcode == OPCODE_DNJNZ_YH_D && ((next_accsel_in == ACCSEL_ZL_X) ? next_x[15:8] : (next_accsel_in == ACCSEL_YL_Z) ? next_z[15:8] : next_y[15:8]) != 8'h01)
 			next_pc_noint = signed'(pc) + signed'(next_inst[15:8]);
 		else if(opcode_is_8_immd(next_opcode) || opcode_is_sprel(next_opcode) || opcode_is_yrel(next_opcode) || opcode_is_jr_d(next_opcode) || next_opcode == OPCODE_LDW_Y_D || next_opcode == OPCODE_ADDW_Y_D || next_opcode == OPCODE_ADDW_SP_D)
 			next_pc_noint = pc + 2;
@@ -458,7 +458,8 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode == OPCODE_SLLW_Y_XL ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
-				opcode == OPCODE_SEX_Y_XL)
+				opcode == OPCODE_SEX_Y_XL ||
+				opcode == OPCODE_DNJNZ_YH_D)
 				next_flags[2] = n_out;
 			else
 				next_flags[2] = flags[2];
@@ -473,7 +474,8 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				opcode == OPCODE_SLLW_Y_XL ||
 				opcode == OPCODE_MUL_Y || opcode_is_mad(opcode) ||
 				opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL ||
-				opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X) 
+				opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X ||
+				opcode == OPCODE_DNJNZ_YH_D) 
 				next_flags[3] = z_out;
 			else
 				next_flags[3] = flags[3];

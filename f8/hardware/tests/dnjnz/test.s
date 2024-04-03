@@ -7,7 +7,7 @@
 	ldw	sp, y
 
 	; Test basic jump.
-	ld	xl, #1
+	ld	xl, #2
 	ld	yh, xl
 	dnjnz	yh, l1
 l1trap:
@@ -16,23 +16,23 @@ l1:
 	dnjnz	yh, l1trap
 
 	; Test alternative acc.
-	ld	xh, #1
+	ld	xh, #2
 	dnjnz	xh, l2
 l2trap:
 	trap
 l2:
 	dnjnz	xh, l2trap
 
-	ld	xl, #1
+	ld	xl, #2
 	ld	zh, xl
 	dnjnz	zh, l3
 l3trap:
 	trap
 l3:
-	dnjnz	zh, l1trap
+	dnjnz	zh, l3trap
 
 	; Test flags
-	ld	xh, #0x01
+	ld	xh, #0x02
 	push	#0x00
 	xch	f, (0, sp)
 	dnjnz	xh, l4
@@ -49,7 +49,7 @@ l4:
 	xch	f, (0, sp)
 	pop	xl
 	tst	xl
-	jrnz	l4trap
+	jrz	l4trap
 
 loop:
 	jr	#loop	; An endless loop, so we never fail until we reach the time limit.

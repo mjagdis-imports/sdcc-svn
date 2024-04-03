@@ -1,3 +1,12 @@
+2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/alu2.v
+	  hardware/cpu.v
+	  hardware/cpu2.v
+	  hardware/opcode.v
+	  hardware/tests/dnjnz/test.s:
+	  Implement more instructions for multicycle f8 implementation.
+
 2023-04-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

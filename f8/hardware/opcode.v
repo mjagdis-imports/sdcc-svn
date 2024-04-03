@@ -122,6 +122,14 @@ function automatic logic opcode_is_tstw(opcode_t opcode);
 	return(opcode == OPCODE_TSTW_DIR || opcode == OPCODE_TSTW_SPREL || opcode == OPCODE_TSTW_ZREL || opcode == OPCODE_TSTW_Y);
 endfunction
 
+function automatic logic opcode_is_rrcw(opcode_t opcode);
+	return(opcode == OPCODE_RRCW_Y || opcode == OPCODE_RRCW_SPREL);
+endfunction
+
+function automatic logic opcode_is_rlcw(opcode_t opcode);
+	return(opcode == OPCODE_RLCW_Y || opcode == OPCODE_RLCW_SPREL);
+endfunction
+
 function automatic logic opcode_is_ld_xl_mem(opcode_t opcode);
 	return(opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LD_XL_SPREL || opcode == OPCODE_LD_XL_ZREL ||
 		opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL);
@@ -245,6 +253,10 @@ function automatic logic opcode_is_16_2_x(opcode_t opcode);
 	return(opcode == OPCODE_SUBW_Y_X || opcode == OPCODE_SBCW_Y_X || opcode == OPCODE_ADDW_Y_X || opcode == OPCODE_ADCW_Y_X || opcode == OPCODE_ORW_Y_X);
 endfunction
 
+function automatic logic opcode_is_16_2_mem(opcode_t opcode);
+	return(opcode_is_16_2_dir(opcode) || opcode_is_16_2_sprel(opcode));
+endfunction
+
 function automatic logic opcode_is_16_2(opcode_t opcode);
 	return(opcode_is_16_2_immd(opcode) ||opcode_is_16_2_dir(opcode) || opcode_is_16_2_sprel(opcode) || opcode_is_16_2_x(opcode));
 endfunction
@@ -264,6 +276,10 @@ endfunction
 function automatic logic opcode_is_16_1_zrel(opcode_t opcode);
 	return(opcode == OPCODE_CLRW_ZREL || opcode == OPCODE_INCW_ZREL || opcode == OPCODE_ADCW_ZREL || opcode == OPCODE_SBCW_ZREL ||
 		opcode == OPCODE_PUSHW_ZREL || opcode == OPCODE_TSTW_ZREL);
+endfunction
+
+function automatic logic opcode_is_16_1_mem(opcode_t opcode);
+	return(opcode_is_16_1_dir(opcode) || opcode_is_16_1_sprel(opcode) || opcode_is_16_1_zrel(opcode));
 endfunction
 
 function automatic logic opcode_is_16_1_y(opcode_t opcode);
@@ -298,7 +314,7 @@ function automatic logic opcode_is_sprel(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_sprel_read(opcode_t opcode);
-	return(opcode_is_sprel(opcode) && opcode != OPCODE_CLR_SPREL && opcode != OPCODE_CLRW_SPREL && opcode != OPCODE_LDW_ISPREL_Y && opcode != OPCODE_LD_SPREL_XL && opcode != OPCODE_LDW_SPREL_Y);
+	return(opcode_is_sprel(opcode) && opcode != OPCODE_CLR_SPREL && opcode != OPCODE_CLRW_SPREL && opcode != OPCODE_LD_SPREL_XL && opcode != OPCODE_LDW_SPREL_Y);
 endfunction
 
 function automatic logic opcode_is_zrel_read(opcode_t opcode);

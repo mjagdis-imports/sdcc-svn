@@ -23,6 +23,19 @@ function automatic logic [7:0] rot(logic [7:0] op, logic [2:0] count);
 	return tmp[15:8];
 endfunction
 
+function automatic logic [7:0] daaadjust(logic [7:0] op, logic c_in, logic h_in);
+	logic[7:0] adjust = 8'h00;
+	logic[3:0] bound = 4'ha;
+	if (h_in || op[3:0] >= 4'ha)
+	begin
+		adjust += 8'h06;
+		bound = 4'h9;
+	end
+	if (c_in || op[7:4] >= bound)
+		adjust += 8'h60;
+	return adjust;
+endfunction
+
 function automatic logic [8:0] daa(logic [7:0] op, logic c_in, logic h_in);
 	logic[7:0] adjust = 8'h00;
 	logic[3:0] bound = 4'ha;
