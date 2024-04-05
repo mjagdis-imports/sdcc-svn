@@ -7,6 +7,7 @@
 
 module iosystem
 	#(parameter
+	NUM_IRQ = 2,
 	IRQCTRLADDRBASE = 16'h0010,
 	TIMER0ADDRBASE = 16'h0018,
 	WATCHDOGADDRBASE = 16'h0020,
@@ -40,7 +41,7 @@ module iosystem
 	assign irqctrl_active_read = (dread_addr_even == IRQCTRLADDRBASE + 2);
 	assign irqctrl_enable_write = dwrite_en_even && (dwrite_addr_even == IRQCTRLADDRBASE);
 	assign irqctrl_active_write = dwrite_en_even && (dwrite_addr_even == IRQCTRLADDRBASE + 2);
-	interruptcontroller #(.NUM_INPUTS(2))
+	interruptcontroller #(.NUM_INPUTS(NUM_IRQ))
 		irqctrl(.int_out(interrupt), .enable_out(irqctrl_enable_dread), .active_out(irqctrl_active_dread), .enable_in(dwrite_data[1:0]), .active_in(dwrite_data[1:0]), .enable_in_write(irqctrl_enable_write), .active_in_write(irqctrl_active_write),
 		.in(interrupts), .*);
 
@@ -142,9 +143,9 @@ module iosystem
 		if(dread_addr_even == dwrite_addr_even)
 			dread_data[7:0] = dwrite_data;
 		else if(irqctrl_enable_read)
-			dread_data[7:0] = {'x, irqctrl_enable_dread[0:0]};
+			dread_data[7:0] = {'x, irqctrl_enable_dread[NUM_IRQ-1:0]};
 		else if(irqctrl_active_read)
-			dread_data[7:0] = {'x, irqctrl_active_dread[0:0]};
+			dread_data[7:0] = {'x, irqctrl_active_dread[NUM_IRQ-1:0]};
 		else if(timer0_config_read)
 			dread_data[7:0] = {'x, timer0_config_dread[7:0]};
 		else if(gpio0_ddr_read)

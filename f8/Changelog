@@ -1,5 +1,12 @@
 2023-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/Makefile,
+	  hardware/io.v,
+	  hardware/io2.v:
+	  Port basic peripherals to multicycle f8 implementation.
+
+2023-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/alu2.v,
 	  hardware/cpu2.v:
 	  Multiplication instructions for multicycle f8 implementation.
