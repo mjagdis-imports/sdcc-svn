@@ -62,7 +62,7 @@ function automatic logic opcode_loads_upper(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_loads_operand(opcode_t opcode);
-	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode_is_dir_read(opcode) || opcode_is_sprel_read(opcode) || opcode_is_zrel_read(opcode) ||
+	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode_is_dir_read(opcode) || opcode_is_sprel_read(opcode) || opcode_is_zrel_read(opcode) || opcode == OPCODE_MAD_X_IZ_YL ||
 	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CAXW_IY_Z_X);
 endfunction
 
@@ -923,9 +923,26 @@ module cpu
 				memwrite_addr = acc16;
 				memwrite_en = 2'b01;
 			end
+			else if(opcode == OPCODE_MUL_Y)
+			begin
+				regwrite_data = mad(acc16[15:8], acc16[7:0], 0, 0);
+				regwrite_addr = acc16_addr;
+				regwrite_en = 2'b11;
+				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_N] = regwrite_data[15];
+				next_f[FLAG_C] = 0;
+			end
 			else if(opcode == OPCODE_RET)
 			begin
 				next_sp = sp + 2;
+			end
+			else if(opcode_is_mad(opcode))
+			begin
+				regwrite_data = mad(mem8, y[7:0], x[15:8], f[FLAG_C]);
+				regwrite_addr = 0;
+				regwrite_en = 2'b11;
+				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_N] = regwrite_data[15];
 			end
 			else if(opcode == OPCODE_LDW_Y_IMMD)
 			begin

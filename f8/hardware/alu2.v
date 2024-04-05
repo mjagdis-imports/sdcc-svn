@@ -79,5 +79,11 @@ function automatic addsub_result_t addsub(logic [15:0] op0, logic [15:0] op1, lo
 	return(result);
 endfunction;
 
+function automatic logic[15:0] mad(logic [7:0] op0, logic [7:0] op1, logic [7:0] op2, logic c_in);
+	logic [15:0] product = {8'h00, op0} * {8'h00, op1};
+	logic [15:0] result = product + op2 + c_in;
+	return(result);
+endfunction;
+
 `end_keywords
 
