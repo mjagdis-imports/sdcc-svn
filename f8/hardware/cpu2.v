@@ -23,6 +23,7 @@ module registers(output logic [15:0] x, y, z, input logic [1:0] addr_in, input l
 	output logic [23:0] oldinst, input logic [23:0] inst,
 	output logic oldinst_valid, input next_oldinst_valid,
 	output logic oldinst_loadsop, input next_oldinst_loadsop,
+	output logic interrupt_active, input next_interrupt_active,
 	input logic clk, reset);
 	logic [15:0] gpregs[3];
 
@@ -54,6 +55,10 @@ module registers(output logic [15:0] x, y, z, input logic [1:0] addr_in, input l
 			oldinst_loadsop = 0;
 		else
 			oldinst_loadsop = next_oldinst_loadsop;
+		if (reset)
+			interrupt_active = 0;
+		else
+			interrupt_active = next_interrupt_active;
 	end
 endmodule
 
@@ -63,7 +68,7 @@ endfunction
 
 function automatic logic opcode_loads_operand(opcode_t opcode);
 	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode_is_dir_read(opcode) || opcode_is_sprel_read(opcode) || opcode_is_zrel_read(opcode) || opcode == OPCODE_MAD_X_IZ_YL ||
-	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CAXW_IY_Z_X);
+	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CAXW_IY_Z_X);
 endfunction
 
 typedef enum logic [1:0] {
@@ -88,6 +93,7 @@ module cpu
 	logic [23:0] inst, oldinst;
 	logic oldinst_valid, next_oldinst_valid;
 	logic oldinst_loadsop, next_oldinst_loadsop;
+	logic interrupt_active, next_interrupt_active, interrupt_start;
 
 	logic [15:0] mem_read_addr;
 	logic [15:0] mem_read_data;
@@ -125,7 +131,7 @@ module cpu
 			memop_addr = acc16;
 		else if(opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL)
 			memop_addr = y + {8'h00, inst[15:8]};
-		else if(opcode == OPCODE_POP_XL || opcode == OPCODE_RET || opcode == OPCODE_POPW_Y)
+		else if(opcode == OPCODE_POP_XL || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y)
 			memop_addr = sp;
 		else
 			memop_addr = 'x;
@@ -164,11 +170,15 @@ module cpu
 		mem_write_en_odd = memwrite_addr[0] ? memwrite_en[0] : memwrite_en[1];
 	end
 
+	// Interrupts
+	assign interrupt_start = interrupt && !interrupt_active;
+	assign next_interrupt_active = interrupt_start && !interrupt_active || interrupt_active && opcode != OPCODE_RETI;
+
 	// Instruction handling
 	assign loading_upper_inst = opcode_loads_upper (opcode) && !oldinst_valid && !execute;
 	assign inst_upper_valid = oldinst_valid;
 	assign next_oldinst_loadsop = opcode_loads_operand(opcode) && !loading_upper_inst && !execute;
-	assign execute = !reset && (!opcode_loads_upper(opcode) || inst_upper_valid || oldinst_loadsop) && (!opcode_loads_operand(opcode) || oldinst_loadsop);
+	assign execute = !reset && interrupt_start || (!opcode_loads_upper(opcode) || inst_upper_valid || oldinst_loadsop) && (!opcode_loads_operand(opcode) || oldinst_loadsop);
 	assign next_oldinst_valid = loading_upper_inst;
 	assign loading_operand = opcode_loads_operand(opcode) && !execute;
 	
@@ -201,7 +211,7 @@ module cpu
 			next_pc_noint = memop;
 		else if(opcode == OPCODE_CALL_Y || opcode == OPCODE_JP_Y)
 			next_pc_noint = acc16;
-		else if(opcode == OPCODE_RET)
+		else if(opcode == OPCODE_RET || opcode == OPCODE_RETI)
 			next_pc_noint = memop;
 		else if(opcode == OPCODE_JR_D ||
 			opcode == OPCODE_JRC_D && f[FLAG_C] || opcode == OPCODE_JRNC_D && !f[FLAG_C] ||
@@ -217,6 +227,8 @@ module cpu
 			next_pc_noint = pc + opcode_instsize(opcode);
 		if(reset)
 			next_pc = 16'h4000;
+		else if(interrupt_start)
+			next_pc = 16'h4004;
 		else
 			next_pc = next_pc_noint;
 	end
@@ -254,9 +266,10 @@ module cpu
 		memwrite_addr = 'x;
 		memwrite_en = 2'b00;
 		next_sp = sp;
+		
 		if(execute)
 		begin
-			if (opcode_is_8_immd(opcode))
+			if(opcode_is_8_immd(opcode))
 				op8 = imm8;
 			else if(opcode_is_8_2_mem(opcode) || opcode_is_8_1_mem(opcode) && !opcode_is_clr(opcode))
 				op8 = mem8;
@@ -332,7 +345,17 @@ module cpu
 					memwrite_addr = z + inst[23:8];
 			end
 
-			if(opcode == OPCODE_SWAPOP)
+			if(interrupt_start)
+			begin
+				if(opcode != OPCODE_RETI)
+				begin
+					memwrite_data = pc;
+					memwrite_addr = sp - 2;
+					memwrite_en = 2'b11;
+					next_sp = sp - 2;
+				end
+			end
+			else if(opcode == OPCODE_SWAPOP)
 				next_f |= 1 << FLAG_5;
 			else if(opcode == OPCODE_ALTACC1)
 				next_f[7:6] = 1;
@@ -932,7 +955,7 @@ module cpu
 				next_f[FLAG_N] = regwrite_data[15];
 				next_f[FLAG_C] = 0;
 			end
-			else if(opcode == OPCODE_RET)
+			else if(opcode == OPCODE_RET || opcode == OPCODE_RETI)
 			begin
 				next_sp = sp + 2;
 			end
