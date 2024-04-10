@@ -974,7 +974,7 @@ module cpu
 			begin
 				next_sp = sp + 2;
 			end
-			else if(opcode == OPCODE_RET)
+			else if(opcode == OPCODE_RETI)
 			begin
 				next_sp = sp + 2;
 				next_f = f;

@@ -1,5 +1,11 @@
 2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/cpu2.v,
+	  hardware/tests/cblink/test.c:
+	  Fix reti instruction in multicycle f8 implementation.
+
+2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/Makefile,
 	  hardware/cpu2.v,
 	  hardware/io.v,
