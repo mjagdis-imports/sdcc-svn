@@ -6,12 +6,12 @@ SV2V = /home/philipp/sv2v-0.0.11/bin/sv2v
 # Debian has yosys 0.33, which is too old. A custom build of yosys 0.38 has been installed to /usr/local.
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
-P_R = /tmp/gatemate/cc-toolchain-linux/bin/p_r/p_r
+P_R = /home/philipp/p_r/p_r
 SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 
-.PHONY: all tests tests2 icesynthtests gmsynthtests alltests clean icebreaker-images gatematea1evb-images
+.PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images
 
-all: f8-testsystem
+all: f8-testsystem f8-testsystem2
 
 # Images for the iCEBreaker FPGA board.
 icebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
@@ -19,7 +19,7 @@ icebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_syn
 gatematea1evb-images: tests/cblink/gatematea1evb_synth_00.cfg.bit tests/chello/gatematea1evb_synth_00.cfg.bit
 
 clean:
-	rm -f f8-testsystem *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit
+	rm -f f8-testsystem f8-testsystem2 *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit tests/*/*_synth.*
 
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 CPU2SOURCES = cpu2.v alu2.v opcodemap.v opcode.v
@@ -44,6 +44,12 @@ f8-testsystem2: $(TESTSYSTEM2SOURCES)
 %/f8-gmsynthtestsystem: gmsynthtestsystem.v %/system_gmsynth.v
 	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtestsystem ../../gmsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
 
+%/f8-icesynthtest2system: icesynthtest2system.v %/system2_icesynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-icesynthtest2system ../../icesynthtest2system.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
+
+%/f8-gmsynthtest2system: gmsynthtest2system.v %/system2_gmsynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtest2system ../../gmsynthtest2system.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
+
 TESTDIRS = ${shell find tests/* -type d -print}
 TESTS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
@@ -52,18 +58,14 @@ TESTLOGS = $(TESTDIRS:=/test.log)
 TESTLOGS2 = $(TESTDIRS:=/test2.log)
 ICESYNTHTESTLOGS = $(TESTDIRS:=/icesynthtest.log)
 GMSYNTHTESTLOGS = $(TESTDIRS:=/gmsynthtest.log)
-
-cpu_nosv.v: $(CPUSOURCES)
-	$(SV2V) --exclude=always --exclude=logic cpu.v > $@
-
-io_nosv.v: $(IOSOURCES)
-	$(SV2V) --exclude=always --exclude=logic io.v > $@
-
-ram_nosv.v: ram.v
-	$(SV2V) --exclude=always --exclude=logic ram.v > $@
+ICESYNTHTEST2LOGS = $(TESTDIRS:=/icesynthtest2.log)
+GMSYNTHTEST2LOGS = $(TESTDIRS:=/gmsynthtest2.log)
 
 system_nosv.v: $(SYSTEMSOURCES)
 	$(SV2V) --exclude=always --exclude=logic system.v > $@
+
+system2_nosv.v: $(SYSTEM2SOURCES)
+	$(SV2V) --exclude=always --exclude=logic system2.v > $@
 
 icebreaker_nosv.v: icebreaker.v $(SYSTEMSOURCES)
 	$(SV2V) --exclude=always --exclude=logic icebreaker.v > $@
@@ -71,21 +73,24 @@ icebreaker_nosv.v: icebreaker.v $(SYSTEMSOURCES)
 gatematea1evb_nosv.v: gatematea1evb.v $(SYSTEMSOURCES)
 	$(SV2V) --exclude=always --exclude=logic gatematea1evb.v > $@
 
-cpu_synth.v: cpu_nosv.v
-	$(YOSYS) -p "read_verilog -sv cpu_nosv.v; synth_ice40 -noflatten -top cpu; write_verilog cpu_synth.v" # -noflatten makes debugging easier.
+icebreaker2_nosv.v: icebreaker2.v $(SYSTEM2SOURCES)
+	$(SV2V) --exclude=always --exclude=logic icebreaker2.v > $@
 
-io_synth.v: io_nosv.v
-	$(YOSYS) -p "read_verilog -sv io_nosv.v; synth_ice40 -noflatten -top iosystem; write_verilog io_synth.v"
-
-ram_synth.v: ram_nosv.v
-	$(YOSYS) -p "read_verilog -sv ram_nosv.v; synth_ice40 -noflatten -top ram; write_verilog ram_synth.v"
+gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
+	$(SV2V) --exclude=always --exclude=logic gatematea1evb2.v > $@
 
 %/icebreaker_synth.json: icebreaker_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -noflatten -top icebreaker -json icebreaker_synth.json"
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40  -top icebreaker -json icebreaker_synth.json" # -noflatten makes debugging easier.
 
 %/gatematea1evb_synth.v: gatematea1evb_nosv.v %/test.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_synth.v" # But p_r can't handle yosys -noflatten output, and needs -nomx8 here.
 
+%/icebreaker2_synth.json: icebreaker2_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker2_nosv.v; synth_ice40  -top icebreaker -json icebreaker2_synth.json" # -noflatten makes debugging easier.
+
+%/gatematea1evb2_synth.v: gatematea1evb2_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v" # But p_r can't handle yosys -noflatten output, and needs -nomx8 here.
+	
 %/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
 	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 3 --asc $@
 
@@ -93,10 +98,23 @@ ram_synth.v: ram_nosv.v
 %/gatematea1evb_synth_00.cfg.bit: %/gatematea1evb_synth.v gatematea1evb.ccf
 	cd $*; $(P_R) -cCP -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
 
+%/icebreaker2_synth.asc: %/icebreaker2_synth.json icebreaker.pcf
+	nextpnr-ice40 --up5k --json $*/icebreaker2_synth.json --pcf icebreaker.pcf --freq 3 --asc $@
+
+# Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
+%/gatematea1evb2_synth_00.cfg.bit: %/gatematea1evb2_synth.v gatematea1evb.ccf
+	cd $*; $(P_R) -cCP -i gatematea1evb2_synth.v -o gatematea1evb2_synth -ccf ../../gatematea1evb.ccf
+
 %/icebreaker_synth.bin: %/icebreaker_synth.asc
+	icepack $< $@
+
+%/icebreaker2_synth.bin: %/icebreaker2_synth.asc
 	icepack $< $@
 	
 icebreaker_synth.v: icebreaker_synth.json
+	$(YOSYS) -p 'read_json $^; write_verilog $@'
+
+icebreaker2_synth.v: icebreaker_synth.json
 	$(YOSYS) -p 'read_json $^; write_verilog $@'
 
 %/system_icesynth.v: system_nosv.v %/test.vmem
@@ -104,6 +122,12 @@ icebreaker_synth.v: icebreaker_synth.json
 
 %/system_gmsynth.v: system_nosv.v %/test.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system_gmsynth.v"
+
+%/system2_icesynth.v: system2_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system2_icesynth.v"
+
+%/system2_gmsynth.v: system2_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system2_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system2_gmsynth.v"
 
 %.rel: %.s
 	$(SDAS) -plosgff $@ $<
@@ -131,7 +155,13 @@ tests/chello/test.ihx: tests/chello/test.c
 
 %/gmsynthtest.vcd %/gmsynthtest.log &: %/f8-gmsynthtestsystem
 	cd $*; ./f8-gmsynthtestsystem > gmsynthtest.log
-	
+
+%/icesynthtest2.vcd %/icesynthtest2.log &: %/f8-icesynthtest2system
+	cd $*; ./f8-icesynthtest2system > icesynthtest2.log
+
+%/gmsynthtest2.vcd %/gmsynthtest2.log &: %/f8-gmsynthtest2system
+	cd $*; ./f8-gmsynthtest2system > gmsynthtest2.log
+
 tests: $(TESTLOGS)
 	for testlog in $(TESTLOGS); do \
 		echo -n "testsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
@@ -152,5 +182,15 @@ gmsynthtests: $(GMSYNTHTESTLOGS)
 		echo -n "gmsynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-alltests: tests icesynthtests gmsynthtests
+icesynthtests2: $(ICESYNTHTEST2LOGS)
+	for testlog in $(ICESYNTHTEST2LOGS); do \
+		echo -n "icesynthtest2system:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+	done
+
+gmsynthtests2: $(GMSYNTHTEST2LOGS)
+	for testlog in $(GMSYNTHTEST2LOGS); do \
+		echo -n "gmsynthtest2system:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
+	done
+
+alltests: tests icesynthtests gmsynthtests tests2 icesynthtests2 gmsynthtests2
 

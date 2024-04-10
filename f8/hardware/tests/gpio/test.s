@@ -30,6 +30,22 @@ l1trap:
 	trap
 l1:
 
+	clr	GPIO0ODR
+	inc	GPIO0ODR
+	ld	xl, GPIO0ODR
+	cp	xl, #1
+	jrnz	l2trap
+	ld	xl, GPIO0ODR
+	inc	xl
+	ld	GPIO0ODR, xl
+	clr	xl
+	ld	xl, GPIO0ODR
+	cp	xl, #2
+	jrz	l2
+l2trap:
+	trap
+l2:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

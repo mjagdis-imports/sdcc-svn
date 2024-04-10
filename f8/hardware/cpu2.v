@@ -243,6 +243,19 @@ module cpu
 		logic [1:0] acc8_en, op8_en;
 		logic [7:0] acc8, imm8, mem8, op8;
 		logic [15:0] imm16, mem16, op16;
+
+		// Temporaries, need to be here, rather than in blocks below, to work around yosys issue #4325.
+		logic[7:0] result8;
+		addsub_result_t addsub_result;
+		logic[8:0] result9;
+		logic[7:0] newacc8;
+		logic[15:0] result16;
+		result8 = 'x;
+		addsub_result = 'x;
+		result9 = 'x;
+		newacc8= 'x;
+		result16 = 'x;
+
 		swapop = f[5];
 		acc8_addr = (accsel == ACCSEL_ZL_X) ? 2 : (accsel == ACCSEL_YL_Z) ? 1 : 0;
 		op8_addr = 'x;
@@ -256,8 +269,10 @@ module cpu
 			x[7:0];
 		imm8 = opcode == OPCODE_MSK_IY_XL_IMMD ? inst[15:8] : memop[7:0];
 		mem8 = memop[7:0];
+		op8 = 'x;
 		imm16 = memop[15:0];
 		mem16 = memop[15:0];
+		op16 = 'x;
 		regwrite_data = 'x;
 		regwrite_addr = 'x;
 		regwrite_en = 2'b00;
@@ -266,7 +281,9 @@ module cpu
 		memwrite_addr = 'x;
 		memwrite_en = 2'b00;
 		next_sp = sp;
+
 		
+
 		if(execute)
 		begin
 			if(opcode_is_8_immd(opcode))
@@ -309,8 +326,7 @@ module cpu
 				op8_en = 2'b10;
 				op8 = z[15:8];
 			end
-			else
-				op8 = 'x;
+
 			if(opcode_is_16_immd(opcode))
 				op16 = imm16;
 			else if(opcode_is_16_2_mem(opcode) || opcode_is_16_1_mem(opcode) && !opcode_is_clrw(opcode))
@@ -329,8 +345,6 @@ module cpu
 				op16_addr = acc16_addr;
 				op16 = acc16;
 			end
-			else
-				op16 = 'x;
 
 			if (opcode_is_8_2_mem(opcode) && !opcode_is_cp(opcode) || opcode_is_8_1_mem(opcode) && !opcode_is_tst(opcode) ||
 				opcode_is_16_1_mem(opcode) && !opcode_is_tstw(opcode) || opcode_is_16_2_mem(opcode) && opcode != OPCODE_CPW_Y_IMMD ||
@@ -354,6 +368,7 @@ module cpu
 					memwrite_en = 2'b11;
 					next_sp = sp - 2;
 				end
+				next_f = f;
 			end
 			else if(opcode == OPCODE_SWAPOP)
 				next_f |= 1 << FLAG_5;
@@ -365,12 +380,12 @@ module cpu
 				next_f[7:6] = 3;
 			else if(opcode_is_8_2(opcode) || opcode_is_8_1(opcode) && !opcode_is_push(opcode))
 			begin
-				logic[7:0] result8;
-				result8 = 'x;
+				//logic[7:0] result8;
+				//result8 = 'x;
 				if(opcode_is_sub(opcode) || opcode_is_cp(opcode))
 				begin
 					
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					if (!swapop)
 						addsub_result = addsub ({8'h00, acc8}, {8'h00, ~op8}, 1, 0);
 					else
@@ -380,7 +395,7 @@ module cpu
 				end
 				else if(opcode_is_sbc(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					if (!swapop)
 						addsub_result = addsub ({8'h00, acc8}, {8'h00, ~op8}, f[FLAG_C], 0);
 					else
@@ -390,14 +405,14 @@ module cpu
 				end
 				else if(opcode_is_add(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, acc8}, {8'h00, op8}, 0, 0);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_adc(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, acc8}, {8'h00, op8}, f[FLAG_C], 0);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
 					result8 = addsub_result.result[7:0];
@@ -419,42 +434,42 @@ module cpu
 				end
 				else if(opcode_is_srl(opcode))
 				begin
-					logic[8:0] result9;
+					//logic[8:0] result9;
 					result9 = {1'b0, op8};
 					result8 = result9[8:1];
 					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[0], f[FLAG_H]};
 				end
 				else if(opcode_is_sll(opcode))
 				begin
-					logic[8:0] result9;
+					//logic[8:0] result9;
 					result9 = {op8, 1'b0};
 					result8 = result9[7:0];
 					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[8], f[FLAG_H]};
 				end
 				else if(opcode_is_rrc(opcode))
 				begin
-					logic[8:0] result9;
+					//logic[8:0] result9;
 					result9 = {f[FLAG_C], op8};
 					result8 = result9[8:1];
 					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[0], f[FLAG_H]};
 				end
 				else if(opcode_is_rlc(opcode))
 				begin
-					logic[8:0] result9;
+					//logic[8:0] result9;
 					result9 = {op8, f[FLAG_C]};
 					result8 = result9[7:0];
 					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[8], f[FLAG_H]};
 				end
 				else if(opcode_is_inc(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, op8}, 16'h0001, 0, 0);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
 					result8 = addsub_result.result[7:0];
 				end
 				else if(opcode_is_dec(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, op8}, 16'h00fe, 1, 0);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
 					result8 = addsub_result.result[7:0];
@@ -475,7 +490,7 @@ module cpu
 				end
 				else if(opcode == OPCODE_DAA_XL)
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub ({8'h00, op8}, {8'h00, daaadjust(op8, f[FLAG_C], f[FLAG_H])}, 0, 0);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
 					result8 = addsub_result.result[7:0];
@@ -528,7 +543,7 @@ module cpu
 			end
 			else if(opcode_is_xchb(opcode))
 			begin
-				logic [7:0] result8, newacc8;
+				//logic [7:0] result8, newacc8;
 				newacc8 = 8'h00;
 				result8 = mem8;
 				if(opcode == OPCODE_XCHB_XL_MM_0)
@@ -759,7 +774,7 @@ module cpu
 			end
 			else if(opcode == OPCODE_ROT_XL_IMMD)
 			begin
-				logic [7:0] result8;
+				//logic [7:0] result8;
 				result8 = rot(acc8, imm8[2:0]);
 				regwrite_data = {result8, result8};
 				regwrite_addr = acc8_addr;
@@ -791,11 +806,11 @@ module cpu
 			end
 			else if(opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode))
 			begin
-				logic[15:0] result16;
-				result16 = 'x;
+				//logic[15:0] result16;
+				//result16 = 'x;
 				if(opcode_is_subw(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					if (!swapop)
 						addsub_result = addsub (acc16, ~op16, 1, 1);
 					else
@@ -805,7 +820,7 @@ module cpu
 				end
 				if(opcode_is_sbcw(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					if (!swapop)
 						addsub_result = addsub (acc16, ~op16, f[FLAG_C], 1);
 					else
@@ -815,14 +830,14 @@ module cpu
 				end
 				else if(opcode_is_addw(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub (acc16, op16, 0, 1);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
 					result16 = addsub_result.result;
 				end
 				else if(opcode_is_adcw(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub (acc16, op16, f[FLAG_C], 1);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
 					result16 = addsub_result.result;
@@ -842,7 +857,7 @@ module cpu
 				end
 				else if(opcode_is_incw(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub (op16, 16'h0001, 0, 1);
 					if (opcode != OPCODE_INCNW_Y)
 						next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
@@ -850,14 +865,14 @@ module cpu
 				end
 				else if(opcode_is_adcw0(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub (op16, 16'h0000, f[FLAG_C], 1);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
 					result16 = addsub_result.result;
 				end
 				else if(opcode_is_sbcw0(opcode))
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub (op16, 16'hffff, f[FLAG_C], 1);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
 					result16 = addsub_result.result;
@@ -894,14 +909,14 @@ module cpu
 				end
 				else if(opcode == OPCODE_DECW_SPREL)
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub (op16, 16'hfffe, 1, 1);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
 					result16 = addsub_result.result;
 				end
 				else if(opcode == OPCODE_NEGW_Y)
 				begin
-					addsub_result_t addsub_result;
+					//addsub_result_t addsub_result;
 					addsub_result = addsub (16'h0000, ~op16, 1, 1);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
 					result16 = addsub_result.result;
@@ -955,9 +970,14 @@ module cpu
 				next_f[FLAG_N] = regwrite_data[15];
 				next_f[FLAG_C] = 0;
 			end
-			else if(opcode == OPCODE_RET || opcode == OPCODE_RETI)
+			else if(opcode == OPCODE_RET)
 			begin
 				next_sp = sp + 2;
+			end
+			else if(opcode == OPCODE_RET)
+			begin
+				next_sp = sp + 2;
+				next_f = f;
 			end
 			else if(opcode_is_mad(opcode))
 			begin
@@ -1050,7 +1070,7 @@ module cpu
 			end
 			else if(opcode == OPCODE_DNJNZ_YH_D)
 			begin
-				addsub_result_t addsub_result;
+				//addsub_result_t addsub_result;
 				addsub_result = addsub ({8'h00, acc16[15:8]}, 16'h00fe, 1, 0);
 				regwrite_data = {addsub_result.result[7:0], 8'h00};
 				regwrite_addr = acc16_addr;
@@ -1082,14 +1102,14 @@ module cpu
 			end
 			else if(opcode == OPCODE_ADDW_SP_D)
 			begin
-				addsub_result_t addsub_result;
+				//addsub_result_t addsub_result;
 				addsub_result = addsub (sp, {{8{imm8[7]}}, imm8}, 0, 1);
 				next_f = f;
 				next_sp = addsub_result.result;
 			end
 			else if(opcode == OPCODE_ADDW_Y_D)
 			begin
-				addsub_result_t addsub_result;
+				//addsub_result_t addsub_result;
 				addsub_result = addsub (acc16, {{8{imm8[7]}}, imm8}, 0, 1);
 				next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, f[FLAG_H]};
 				regwrite_data = addsub_result.result;
@@ -1136,7 +1156,7 @@ module cpu
 			end
 			else if(opcode == OPCODE_CPW_Y_IMMD)
 			begin
-				addsub_result_t addsub_result;
+				//addsub_result_t addsub_result;
 				if (!swapop)
 					addsub_result = addsub (acc16, ~imm16, 1, 1);
 				else

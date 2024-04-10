@@ -137,7 +137,7 @@ module iosystem
 
 	always @(posedge clk)
 	begin
-		if(read_addr_even == write_addr_even)
+		if(read_addr_even == write_addr_even && write_en_even)
 			read_data_even = write_data_even;
 		else if(watchdog_config_read)
 			read_data_even = watchdog_config_dread;
@@ -183,7 +183,7 @@ module iosystem
 			read_data_even = gpio2_pr_dread[7:0];
 		else
 			read_data_even = 'x;
-		if (read_addr_odd == write_addr_odd)
+		if (read_addr_odd == write_addr_odd && write_en_odd)
 			read_data_odd = write_data_odd;
 		else if(watchdog_counter_read[1])
 			read_data_even = watchdog_counter_dread[15:8];

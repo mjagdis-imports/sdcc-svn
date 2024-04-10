@@ -1,3 +1,18 @@
+2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/cpu2.v,
+	  hardware/io.v,
+	  hardware/io2.v,
+	  hardware/tests/cblink/test.c,
+	  hardware/tests/gpio/test.s,
+	  hardware/gatematea1evb2.v,
+	  hardware/gmsynthtest2system.v,
+	  hardware/icebreaker2.v,
+	  hardware/icesynthtest2system.v,
+	  hardware/tests/timercnt:
+	  Synthesis infrastructure for multicycle f8 implementation.
+
 2023-04-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu2.v:

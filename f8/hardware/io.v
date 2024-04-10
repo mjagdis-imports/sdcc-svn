@@ -140,7 +140,7 @@ module iosystem
 
 	always @(posedge clk)
 	begin
-		if(dread_addr_even == dwrite_addr_even)
+		if(dread_addr_even == dwrite_addr_even && dwrite_en_even)
 			dread_data[7:0] = dwrite_data;
 		else if(irqctrl_enable_read)
 			dread_data[7:0] = {'x, irqctrl_enable_dread[NUM_IRQ-1:0]};
@@ -174,7 +174,7 @@ module iosystem
 			dread_data[7:0] = {'x, gpio2_pr_dread[7:0]};
 		else
 			dread_data[7:0] = 'x;
-		if (dread_addr_odd == dwrite_addr_odd)
+		if (dread_addr_odd == dwrite_addr_odd && dwrite_en_odd)
 			dread_data[15:8] = dwrite_data;
 		else
 			dread_data[15:8] = 'x;

@@ -12,14 +12,14 @@
 #define GPIO0DDR (*((volatile uint8_t *)0x0028))
 #define GPIO0ODR (*((volatile uint8_t *)0x002a))
 
-uint16_t counter = 64536;
-
+uint16_t counter = /*64536*/0xff80;
+uint8_t v;
 void interrupthandler(void) __interrupt(0)
 {
 	counter++;
 	if(!counter)
 	{
-		counter = 64536;
+		counter = /*64536*/0xff80;
 		GPIO0ODR++; // Increment second counter on LEDs once per second.
 	}
 	IRQCTRLACT = 0; // Clear interrupt request.
