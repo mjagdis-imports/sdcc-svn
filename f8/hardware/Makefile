@@ -25,8 +25,8 @@ CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 CPU2SOURCES = cpu2.v alu2.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 IO2SOURCES = io2.v watchdog2.v interruptcontroller.v
-SYSTEMSOURCES = system.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
-SYSTEM2SOURCES = system2.v memory2.v rom2.v ram2.v dualportram.v $(CPU2SOURCES) $(IO2SOURCES)
+SYSTEMSOURCES = clkdiv.v system.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
+SYSTEM2SOURCES = clkdiv.v system2.v memory2.v rom2.v ram2.v dualportram.v $(CPU2SOURCES) $(IO2SOURCES)
 TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)
 TESTSYSTEM2SOURCES = testsystem2.v $(SYSTEM2SOURCES)
 SYNTHTESTSYSTEMSOURCES = system.v memory.v ram_synth.v cpu_synth.v io_synth.v
@@ -79,17 +79,18 @@ icebreaker2_nosv.v: icebreaker2.v $(SYSTEM2SOURCES)
 gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
 	$(SV2V) --exclude=always --exclude=logic gatematea1evb2.v > $@
 
+# For yosys, -noflatten makes debugging easier but results in less optimization, and p_r can't handle yosys -noflatten output (and needs -nomx8 here).
 %/icebreaker_synth.json: icebreaker_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40  -top icebreaker -json icebreaker_synth.json" # -noflatten makes debugging easier.
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -top icebreaker -json icebreaker_synth.json"
 
 %/gatematea1evb_synth.v: gatematea1evb_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_synth.v" # But p_r can't handle yosys -noflatten output, and needs -nomx8 here.
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_synth.v"
 
 %/icebreaker2_synth.json: icebreaker2_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker2_nosv.v; synth_ice40  -top icebreaker -json icebreaker2_synth.json" # -noflatten makes debugging easier.
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker2_nosv.v; synth_ice40 -top icebreaker -json icebreaker2_synth.json"
 
 %/gatematea1evb2_synth.v: gatematea1evb2_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v" # But p_r can't handle yosys -noflatten output, and needs -nomx8 here.
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
 	
 %/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
 	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 3 --asc $@

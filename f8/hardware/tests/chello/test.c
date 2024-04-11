@@ -51,12 +51,9 @@ void main(void)
 	GPIO2ODR = 0x01;
 	GPIO2DDR = 0x01;
 
-	// Set up TIMER0 for 9.6 KHz interrupt assuming 3 MHz system clock.
-	TIMER0CNT = 65224;
-	TIMER0RLD = 65224;
-	// Set up TIMER0 for 9.6 KHz interrupt assuming 2.5 MHz system clock.
-	//TIMER0CNT = 65276;
-	//TIMER0RLD = 65276;
+	// Set up TIMER0 for 9.6 KHz interrupt assuming 2 MHz system clock.
+	TIMER0CNT = 65328;
+	TIMER0RLD = 65328;
 	TIMER0CTRL = 0x01; // Start timer.
 	IRQCTRLEN = 0x01;  // Enable timer 0 overflow interrupt.
 

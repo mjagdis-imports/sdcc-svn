@@ -1,3 +1,14 @@
+2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/gatematea1evb.v,
+	  hardware/gatematea1evb2.v,
+	  hardware/icebreaker.v,
+	  hardware/icebreaker2.v,
+	  hardware/tests/cblink/test.c,
+	  hardware/tests/chello/test.c:
+	  Use 2 MHz system clock for all boards, so the same test software runs on them.
+
 2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,

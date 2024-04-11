@@ -1,24 +1,12 @@
-`include "system2.v"
-
 `begin_keywords "1800-2009"
+
+`include "clkdiv.v"
+`include "system2.v"
 
 // Test module for use on iCEBreaker FPGA board.
 
-// Divide clock by 4 to get 3 MHz system clock.
-module clkgen (output clk, input CLK);
-	reg clk2;
-	always_ff @(posedge CLK)
-	begin
-		clk2 <= !clk2;
-	end
-	always_ff @(posedge clk2)
-	begin
-		clk <= !clk;
-	end
-endmodule
-
-// Default: 2KB ROM, 1 KB RAM.
-module icebreaker #(parameter ROMSIZE = 2048, RAMADDRBITS = 10) (input logic CLK,
+// Default: 2KB ROM, 1 KB RAM, 2 MHz system clock.
+module icebreaker #(parameter ROMSIZE = 2048, RAMADDRBITS = 10, CLKDIV = 6) (input logic CLK,
 	inout tri PMOD_2_1, inout tri PMOD_2_2, inout tri PMOD_2_3, inout tri PMOD_2_4, inout tri PMOD_2_7, inout tri PMOD_2_8, inout tri PMOD_2_9, inout tri PMOD_2_10,
 	inout tri PMOD_1A_1, inout tri PMOD_1A_2, inout tri PMOD_1A_3, inout tri PMOD_1A_4, inout tri PMOD_1A_7, inout tri PMOD_1A_8, inout tri PMOD_1A_9, inout tri PMOD_1A_10,
 	input logic BTN_N, inout tri RX, inout tri TX);
@@ -72,7 +60,7 @@ module icebreaker #(parameter ROMSIZE = 2048, RAMADDRBITS = 10) (input logic CLK
 	assign RX = gpio2pins[1];
 	assign gpio2pins[1] = RX;
 
-	clkgen clkgen(.*);
+	clkdiv #(.CLKDIV(CLKDIV)) clkdiv(.*);
 	system #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) system(.*);
 endmodule
 
