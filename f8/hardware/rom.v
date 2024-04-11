@@ -23,7 +23,7 @@ module rom(iread_addr, iread_data, iread_valid, dread_addr, dread_data, clk);
 
 	initial $readmemh("test.vmem", rom);
 		
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		iread_data[7 : 0] <= rom[iread_addr_rombased];
 		iread_data[15 : 8] <= rom[iread_addr_rombased + 1];

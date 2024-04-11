@@ -13,10 +13,10 @@ module memory #(parameter RAMADDRBITS = 10, ROMSIZE = 2048, logic [15:0] ROMBASE
 	ram #(.ADDRBITS(RAMADDRBITS)) ram(.read_data_even(read_data_ram_even), .read_data_odd(read_data_ram_odd), .*);
 
 	logic read_rom_even, read_rom_odd;
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
-		read_rom_even = read_addr_even >= ROMBASE / 2;
-		read_rom_odd = read_addr_odd >= ROMBASE / 2;
+		read_rom_even <= read_addr_even >= ROMBASE / 2;
+		read_rom_odd <= read_addr_odd >= ROMBASE / 2;
 	end
 	assign read_data_even = read_rom_even ? read_data_rom_even : read_data_ram_even;
 	assign read_data_odd = read_rom_odd ? read_data_rom_odd : read_data_ram_odd;

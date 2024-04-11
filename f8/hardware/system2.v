@@ -36,10 +36,10 @@ module system  #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, MEMADDRBASE = 16'h2
 	iosystem iosystem(.write_en_even(io_write_en_even), .write_en_odd(io_write_en_odd), .read_data_even(io_read_data_even), .read_data_odd(io_read_data_odd) , .*);
 
 	logic read_mem_even, read_mem_odd;
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
-		read_mem_even = read_addr_even >= MEMADDRBASE / 2;
-		read_mem_odd = read_addr_odd >= MEMADDRBASE / 2;
+		read_mem_even <= read_addr_even >= MEMADDRBASE / 2;
+		read_mem_odd <= read_addr_odd >= MEMADDRBASE / 2;
 	end
 
 	assign read_data_even = read_mem_even ? mem_read_data_even : io_read_data_even;

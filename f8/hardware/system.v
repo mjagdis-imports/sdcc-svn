@@ -26,9 +26,9 @@ module system  #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, MEMADDRBASE = 16'h2
 	iosystem iosystem(.dwrite_en(io_dwrite_en), .dread_data(io_dread_data), .*);
 
 	logic [15:0] old_dread_addr;
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
-		old_dread_addr = dread_addr;
+		old_dread_addr <= dread_addr;
 	end
 
 	assign mem_dwrite_en = (dwrite_addr >= MEMADDRBASE) ? dwrite_en : 2'b00;

@@ -11,17 +11,17 @@ module gpio #(parameter WIDTH = 8) (
 
 	logic [WIDTH-1:0] odr, ddr, pr;
 
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		if(reset)
-			ddr = 0;
+			ddr <= 0;
 		else if (ddr_write)
-			ddr = ddr_in;
+			ddr <= ddr_in;
 
 		if(odr_write)
-			odr = odr_in;
+			odr <= odr_in;
 		if(pr_write)
-			pr = pr_in;
+			pr <= pr_in;
 	end
 	always_comb
 	begin

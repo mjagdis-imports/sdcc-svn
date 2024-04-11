@@ -31,34 +31,34 @@ module registers(output logic [15:0] x, y, z, input logic [1:0] addr_in, input l
 	assign y = gpregs[1];
 	assign z = gpregs[2];
 
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		if (write_en[0])
-			gpregs[addr_in][7:0] = data_in[7:0];
+			gpregs[addr_in][7:0] <= data_in[7:0];
 		if (write_en[1])
-			gpregs[addr_in][15:8] = data_in[15:8];
+			gpregs[addr_in][15:8] <= data_in[15:8];
 		if (reset)
-			f = {3'b000, next_f[4:0]};
+			f <= {3'b000, next_f[4:0]};
 		else
-			f = next_f;
-		pc = next_pc;
-		sp = next_sp;
+			f <= next_f;
+		pc <= next_pc;
+		sp <= next_sp;
 		if (reset)
-			oldinst = OPCODE_NOP;
+			oldinst <= OPCODE_NOP;
 		else
-			oldinst = inst;
+			oldinst <= inst;
 		if (reset)
-			oldinst_valid = 0;
+			oldinst_valid <= 0;
 		else
-			oldinst_valid = next_oldinst_valid;
+			oldinst_valid <= next_oldinst_valid;
 		if (reset)
-			oldinst_loadsop = 0;
+			oldinst_loadsop <= 0;
 		else
-			oldinst_loadsop = next_oldinst_loadsop;
+			oldinst_loadsop <= next_oldinst_loadsop;
 		if (reset)
-			interrupt_active = 0;
+			interrupt_active <= 0;
 		else
-			interrupt_active = next_interrupt_active;
+			interrupt_active <= next_interrupt_active;
 	end
 endmodule
 
@@ -68,7 +68,7 @@ endfunction
 
 function automatic logic opcode_loads_operand(opcode_t opcode);
 	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode_is_dir_read(opcode) || opcode_is_sprel_read(opcode) || opcode_is_zrel_read(opcode) || opcode == OPCODE_MAD_X_IZ_YL ||
-	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CAXW_IY_Z_X);
+	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X);
 endfunction
 
 typedef enum logic [1:0] {
@@ -127,7 +127,7 @@ module cpu
 			memop_addr = sp + {8'h00, inst[15:8]};
 		else if(opcode_is_zrel_read(opcode))
 			memop_addr = z + inst[23:8];
-		else if(opcode == OPCODE_LD_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_CAXW_IY_Z_X)
+		else if(opcode == OPCODE_LD_XL_IY || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X)
 			memop_addr = acc16;
 		else if(opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL)
 			memop_addr = y + {8'h00, inst[15:8]};

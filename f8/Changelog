@@ -1,5 +1,24 @@
 2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/dualportram.v,
+	  hardware/gatematea1evb.v,
+	  hardware/gatematea1evb2.v,
+	  hardware/gpio.v,
+	  hardware/icebreaker.v,
+	  hardware/icebreaker2.v,
+	  hardware/memory.v,
+	  hardware/memory2.v,
+	  hardware/ram.v,
+	  hardware/rom.v,
+	  hardware/rom2.v,
+	  hardware/system.v,
+	  hardware/system2.v:
+	  Fix xch xl, (y) and xchw x, (y) instructions in multicycle f8 implementation; refactor some sequential logic.
+
+2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* hardware/cpu2.v,
 	  hardware/tests/cblink/test.c:
 	  Fix reti instruction in multicycle f8 implementation.

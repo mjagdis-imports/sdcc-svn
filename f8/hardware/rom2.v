@@ -14,7 +14,7 @@ module rom #(parameter SIZE = 2048,  logic [15:0] ROMBASE = 16'h4000)
 	assign read_addr_even_rombased = {read_addr_even, 1'b0} - ROMBASE;
 	assign read_addr_odd_rombased = {read_addr_odd, 1'b1} - ROMBASE;
 
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		read_data_even <= rom[read_addr_even_rombased];
 		read_data_odd <= rom[read_addr_odd_rombased];

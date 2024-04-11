@@ -14,12 +14,12 @@ module regfile(output logic [15:0] x, y, z, output logic [15:0] next_x, next_y, 
 	assign next_y = {(addr_in == 1 && write_en[1]) ? data_in[15:8] : regs[1][15:8], (addr_in == 1 && write_en[0]) ? data_in[7:0] : regs[1][7:0]};
 	assign next_z = {(addr_in == 2 && write_en[1]) ? data_in[15:8] : regs[2][15:8], (addr_in == 2 && write_en[0]) ? data_in[7:0] : regs[2][7:0]};
 
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		if (write_en[0])
-			regs[addr_in][7:0] = data_in[7:0];
+			regs[addr_in][7:0] <= data_in[7:0];
 		if (write_en[1])
-			regs[addr_in][15:8] = data_in[15:8];
+			regs[addr_in][15:8] <= data_in[15:8];
 	end
 endmodule
 
@@ -76,26 +76,26 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	assign opcode = interrupt_start ? OPCODE_NOP : inst[7:0];
 
 	// Handle program counter
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		pc <= next_pc;
 		old_pc = pc;
 		sp <= next_sp;
 	end
 
-	always @(posedge clk)
+	always_ff @(posedge clk)
 		inst <= next_inst;
 
 	// Interrupts
 	assign interrupt_start = interrupt && !interrupt_active;
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		if(reset)
-			interrupt_active = 0;
+			interrupt_active <= 0;
 		else if(interrupt_start && !interrupt_active)
-			interrupt_active = 1;
+			interrupt_active <= 1;
 		else if(interrupt_active && opcode == OPCODE_RETI && next_opcode != OPCODE_RETI)
-			interrupt_active = 0;
+			interrupt_active <= 0;
 	end
 
 	always_comb
@@ -581,18 +581,13 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 
 	assign trap = !reset && (opcode == OPCODE_TRAP);
 
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
 		if(reset)
-			flags = 8'b00000000;
+			flags <= 8'b00000000;
 		else
-			flags = next_flags;
+			flags <= next_flags;
 	end
-
-	//always @(negedge clk)
-	//begin
-	//	$display("CPU negedge pc %h nextinst %h inst %h", pc, next_inst, inst);
-	//end
 endmodule
 
 `end_keywords

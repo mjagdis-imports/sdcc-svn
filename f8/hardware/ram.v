@@ -42,9 +42,9 @@ module ram #(parameter ADDRBITS = 10) (input logic [15:0] dread_addr, output log
 		.clk(clk));
 
 	logic dread_odd;
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
-		dread_odd = dread_addr[0];
+		dread_odd <= dread_addr[0];
 	end
 
 	assign dread_data[7:0] = dread_odd ? dread_ram_data_odd : dread_ram_data_even;

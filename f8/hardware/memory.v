@@ -23,9 +23,9 @@ module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrit
 	ram #(.ADDRBITS(RAMADDRBITS)) ram(.dread_data(dread_data_ram), .*);
 
 	logic dread_rom;
-	always @(posedge clk)
+	always_ff @(posedge clk)
 	begin
-		dread_rom = dread_addr >= ROMBASE;
+		dread_rom <= dread_addr >= ROMBASE;
 	end
 	assign dread_data = dread_rom ? dread_data_rom : dread_data_ram;
 endmodule

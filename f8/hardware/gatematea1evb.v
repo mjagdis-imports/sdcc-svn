@@ -7,13 +7,13 @@
 // Divide oscillator clock by 4 to get 2.5 MHz system clock.
 module clkgen (output clk, input CLK);
 	reg clk2;
-	always @(posedge CLK)
+	always_ff @(posedge CLK)
 	begin
-		clk2 = !clk2;
+		clk2 <= !clk2;
 	end
-	always @(posedge clk2)
+	always_ff @(posedge clk2)
 	begin
-		clk = !clk;
+		clk <= !clk;
 	end
 endmodule
 
