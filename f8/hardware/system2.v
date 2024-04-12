@@ -7,7 +7,7 @@
 `include "io2.v"
 
 // SoC. trap output line needed for tests only.
-module system  #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, MEMADDRBASE = 16'h2000) (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,
+module system  #(parameter ROMSIZE = 6144, RAMADDRBITS = 13, MEMADDRBASE = 16'h2000) (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,
 	input logic clk, power_on_reset, output trap);
 
 	logic [14:0] read_addr_even, read_addr_odd, write_addr_even, write_addr_odd;

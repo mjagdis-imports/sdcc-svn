@@ -101,6 +101,10 @@ _main:
 	call	#func
 	call	#func
 	call	#func
+	call	#func
+	call	#func
+	call	#func
+	call	#func
 	ld	xl, GPIO0ODR
 	cp	xl, #2
 	jrc	loop

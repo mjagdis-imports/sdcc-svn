@@ -86,10 +86,10 @@ gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
 %/gatematea1evb_synth.v: gatematea1evb_nosv.v %/test.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_synth.v"
 
-%/icebreaker2_synth.json: icebreaker2_nosv.v %/test.vmem
+%/icebreaker2_synth.json: icebreaker2_nosv.v %/test.even.vmem %/test.odd.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker2_nosv.v; synth_ice40 -top icebreaker -json icebreaker2_synth.json"
 
-%/gatematea1evb2_synth.v: gatematea1evb2_nosv.v %/test.vmem
+%/gatematea1evb2_synth.v: gatematea1evb2_nosv.v %/test.even.vmem %/test.odd.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
 	
 %/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
@@ -124,10 +124,10 @@ icebreaker2_synth.v: icebreaker_synth.json
 %/system_gmsynth.v: system_nosv.v %/test.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system_gmsynth.v"
 
-%/system2_icesynth.v: system2_nosv.v %/test.vmem
+%/system2_icesynth.v: system2_nosv.v %/test.even.vmem %/test.odd.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../system2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system2_icesynth.v"
 
-%/system2_gmsynth.v: system2_nosv.v %/test.vmem
+%/system2_gmsynth.v: system2_nosv.v %/test.even.vmem %/test.odd.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../system2_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system2_gmsynth.v"
 
 %.rel: %.s
@@ -145,10 +145,16 @@ tests/chello/test.ihx: tests/chello/test.c
 %.vmem: %.ihx
 	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@
 
+%.even.vmem: %.vmem
+	srec_cat $< -Vmem --split 2 0 -o $@ -Vmem 8
+
+%.odd.vmem: %.vmem
+	srec_cat $< -Vmem --split 2 1 -o $@ -Vmem 8
+
 %/test.vcd %/test.log &: f8-testsystem %/test.vmem
 	cd $*; ../../f8-testsystem > test.log
 
-%/test2.vcd %/test2.log &: f8-testsystem2 %/test.vmem
+%/test2.vcd %/test2.log &: f8-testsystem2 %/test.even.vmem %/test.odd.vmem
 	cd $*; ../../f8-testsystem2 > test2.log
 
 %/icesynthtest.vcd %/icesynthtest.log &: %/f8-icesynthtestsystem
