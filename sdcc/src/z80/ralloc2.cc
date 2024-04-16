@@ -743,12 +743,14 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
     ic->op == GETBYTE || ic->op == GETWORD ||
-    ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
+    ic->op == ROT && (getSize(operandType(IC_RESULT(ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     !((IS_SM83 || IY_RESERVED) && (operand_on_stack(result, a, i, G) || operand_on_stack(right, a, i, G))) && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
-    ic->op == RECEIVE || ic->op == SEND)
+    ic->op == RECEIVE || ic->op == SEND ||
+    POINTER_SET(ic) && !IS_BITVAR (operandType (result)->next))
     return(true);
 
-  if((ic->op == EQ_OP || ic->op == NE_OP) && IS_VALOP(right))
+  if((ic->op == EQ_OP || ic->op == NE_OP) &&
+    (IS_VALOP(right) || operand_in_reg(right, ia, i, G) && !(exstk && operand_on_stack(ic->left, a, i, G)) && (!isOperandInDirSpace(ic->left) || getSize(operandType(ic->left)) == 1)))
     return(true);
 
   // Due to lack of ex hl, (sp), the generic push code generation fallback doesn't work for gbz80, so we need to be able to use hl if we can't just push a pair or use a.
@@ -816,6 +818,9 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(!IS_SM83 && ic->op == '+' && getSize(operandType(result)) == 2 && IS_TRUE_SYMOP (left) &&
     (IS_OP_LITERAL (right) && ulFromVal (OP_VALUE (IC_RIGHT(ic))) <= 3 || IS_OP_LITERAL (left) && ulFromVal (OP_VALUE (IC_LEFT(ic))) <= 3) &&
     (operand_in_reg(result, REG_C, ia, i, G) && I[ia.registers[REG_C][1]].byte == 0 && operand_in_reg(result, REG_B, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G) && I[ia.registers[REG_E][1]].byte == 0 && operand_in_reg(result, REG_D, ia, i, G))) // Can use ld rr, (nn) followed by inc rr
+    return(true);
+
+  if(!IS_SM83 && ic->op == '+' && getSize(operandType(result)) <= 2 && result_only_HL && !isOperandInDirSpace(ic->result))
     return(true);
 
   if((ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS) && getSize(operandType(result)) >= 2 &&
@@ -901,7 +906,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(ic->op == CALL)
     return(true);
 
-  if(POINTER_GET(ic) && getSize(operandType(IC_RESULT(ic))) == 1 && !IS_BITVAR(getSpec(operandType(result))) &&
+  if(ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(IC_RESULT(ic))) == 1 && !IS_BITVAR(getSpec(operandType(result))) &&
     operand_is_pair(left, a, i, G) && // Use ld a, (dd) or ld r, 0 (iy).
     IS_OP_LITERAL (right) && ulFromVal (OP_VALUE_CONST(right)) == 0) 
     return(true);
