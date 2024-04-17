@@ -1,3 +1,9 @@
+2023-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Makefile,
+	  sdcctests:
+	  Infrastructure for using some of the sdcc regression tests as tests for the f8 Verilog model.
+
 2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

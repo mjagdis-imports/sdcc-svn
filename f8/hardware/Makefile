@@ -7,9 +7,9 @@ SV2V = /home/philipp/sv2v-0.0.11/bin/sv2v
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 P_R = /home/philipp/p_r/p_r
-SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
+SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 
-.PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images
+.PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images sdcctests
 
 all: f8-testsystem f8-testsystem2
 
@@ -137,10 +137,10 @@ icebreaker2_synth.v: icebreaker_synth.json
 	$(SDLD) -b HOME=0x4000 -i $@ $<
 
 tests/cblink/test.ihx: tests/cblink/test.c
-	cd tests/cblink; $(SDCC) -mf8 test.c --data-loc 0x3e00
+	cd tests/cblink; $(SDCC) test.c --data-loc 0x3e00
 
 tests/chello/test.ihx: tests/chello/test.c
-	cd tests/chello; $(SDCC) -mf8 test.c --data-loc 0x3e00
+	cd tests/chello; $(SDCC) test.c --data-loc 0x3e00
 
 %.vmem: %.ihx
 	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@
@@ -200,4 +200,7 @@ gmsynthtests2: $(GMSYNTHTEST2LOGS)
 	done
 
 alltests: tests icesynthtests gmsynthtests tests2 icesynthtests2 gmsynthtests2
+
+sdcctests: f8-testsystem2
+	cd sdcctests; $(MAKE) SDCC="$(SDCC)"
 
