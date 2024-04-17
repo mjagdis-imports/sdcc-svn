@@ -1,3 +1,25 @@
+2024-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/discussion-1854.c,
+	  support/regression/tests/bug-3728.c:
+	  Add 2 regression tests for potential issues.
+
+2024-04-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/asm/r2k/features.h,
+	  device/include/asm/r3ka/features.h,
+	  device/include/asm/sm83/features.h,
+	  device/include/asm/stm8/features.h,
+	  device/include/asm/tlcs90/features.h,
+	  device/include/asm/z80/features.h,
+	  device/lib/_strcmp.c,
+	  device/lib/_strcpy.c,
+	  src/z80/peeph.def,
+	  support/regression/tests/bug-3728.c:
+	  Fix bug #3728.
+	* support/regression/tests/bug-3727.c:
+	  Simplify regression test, as suggested by Janko Stamenović.
+
 2024-04-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
