@@ -194,7 +194,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				(accsel_in == ACCSEL_YL_Z) ? y[7:0] :
 				(accsel_in == ACCSEL_ZL_X) ? z[7:0] :
 				x[7:0]};
-		else if(opcode_is_8_1_zh(opcode))
+		else if(opcode_is_8_1_zh(opcode) && !opcode_is_clr(opcode))
 			op0 = {8'bx, z[15:8]};
 		else if(opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_POP_XL || opcode_is_ld_xl_mem(opcode))
 			op0 = {8'bx, dread_data[7:0]};

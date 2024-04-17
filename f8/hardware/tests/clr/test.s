@@ -52,6 +52,13 @@ l7:
 	trap
 l8:	
 
+	ldw	z, #0xaa55
+	clr	zh
+	cpw	z, #0x0055
+	jrz	l9
+	trap
+l9:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

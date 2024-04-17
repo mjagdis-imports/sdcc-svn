@@ -230,7 +230,8 @@ endfunction
 function automatic logic opcode_is_8_1_zh(opcode_t opcode);
 	return(opcode == OPCODE_SRL_ZH || opcode == OPCODE_SLL_ZH || opcode == OPCODE_SRL_ZH || opcode == OPCODE_RRC_ZH ||
 		opcode == OPCODE_INC_ZH || opcode == OPCODE_DEC_ZH ||
-		opcode == OPCODE_INC_ZH || opcode == OPCODE_TST_ZH ||opcode == OPCODE_PUSH_ZH);
+		opcode == OPCODE_CLR_ZH ||
+		opcode == OPCODE_INC_ZH || opcode == OPCODE_TST_ZH || opcode == OPCODE_PUSH_ZH);
 endfunction
 
 function automatic logic opcode_is_8_1(opcode_t opcode);

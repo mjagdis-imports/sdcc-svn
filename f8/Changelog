@@ -1,5 +1,13 @@
 2023-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* f8/hardware/cpu.v,
+	  f8/hardware/opcode.v,
+	  f8/hardware/sdcctests/Makefile,
+	  f8/hardware/tests/clr/test.s:
+	  Fix clr zh.
+
+2023-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Makefile,
 	  sdcctests:
 	  Infrastructure for using some of the sdcc regression tests as tests for the f8 Verilog model.

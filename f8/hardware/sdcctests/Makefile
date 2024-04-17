@@ -41,6 +41,6 @@ extern1.rel: $(SDCCREGTESTPATH)/fwk/lib/extern1.c
 extern2.rel: $(SDCCREGTESTPATH)/fwk/lib/extern2.c
 	$(SDCC) -c $< -o $@
 
-%.ihx: %.rel $(FWKLIB)
+%.ihx: $(FWKLIB) %.rel
 	$(SDCC) --data-loc 0x2000 $^ -o $@
 
