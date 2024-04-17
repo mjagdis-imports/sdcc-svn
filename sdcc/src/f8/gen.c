@@ -5829,7 +5829,7 @@ genPointerSet (const iCode *ic)
       bool xl_dead2 = regDead (XL_IDX, ic) && (right->aop->regs[XL_IDX] <= i + 1);
       bool xh_dead2 = regDead (XH_IDX, ic) && (right->aop->regs[XH_IDX] <= i + 1);
       bool x_dead2 = xl_dead2 && xh_dead2;
-
+emit2 (";", "xl_dead %d", xl_dead);
       if (!bit_field && i + 1 < size &&
         (aopInReg (right->aop, i, X_IDX) || x_dead2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2))))
         {
@@ -5859,6 +5859,9 @@ genPointerSet (const iCode *ic)
         {
           unsigned char bval = (byteOfVal (right->aop->aopu.aop_lit, i) << bstr) & ((0xff >> (8 - blen)) << bstr);
 
+          if (!xl_dead)
+            UNIMPLEMENTED;
+
           if (!i)
             {
               emit2 ("ld", "xl, (y)", i);
@@ -5881,6 +5884,7 @@ genPointerSet (const iCode *ic)
               emit2 ("or", "xl, #0x%02x", bval);
               cost (2, 1);
             }
+
           goto store;
         }
 

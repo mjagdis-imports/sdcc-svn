@@ -4,6 +4,8 @@
 	  support/regression/tests/bug-3728.c,
 	  support/regression/tests/bug-3729.c:
 	  Add 2 regression tests for potential issues.
+	* src/f8/gen.c:
+	  Fix bug #3729.
 
 2024-04-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
