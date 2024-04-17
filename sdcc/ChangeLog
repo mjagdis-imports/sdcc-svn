@@ -6,6 +6,9 @@
 	  Add 2 regression tests for potential issues.
 	* src/f8/gen.c:
 	  Fix bug #3729.
+	* support/regression/tests/bug-2568.c,
+	  support/regression/tests/bug2729218.c:
+	  Adapt two tests that potentially use fixed addresses for f8 RAM location.
 
 2024-04-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
