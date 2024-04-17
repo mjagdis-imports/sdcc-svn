@@ -13,7 +13,7 @@ module clkgen (output logic clk);
 	always #2 clk = !clk;
 endmodule
 
-module testsystem #(parameter ROMSIZE = 8192, RAMADDRBITS = 13) ();
+module testsystem #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, SIMULATIONTIME = 8200) ();
 	logic [7:0] gpio0pins, gpio1pins, gpio2pins;
 	logic clk;
 	logic trap;
@@ -26,7 +26,7 @@ module testsystem #(parameter ROMSIZE = 8192, RAMADDRBITS = 13) ();
     		power_on_reset <= 1;
     		#20
     		power_on_reset <= 0;
-		#8180
+		#(SIMULATIONTIME - 20)
 		$finish;
 	end
 

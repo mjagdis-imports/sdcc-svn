@@ -74,6 +74,17 @@ l6trap:
 	trap
 l6:
 
+	ldw	z, #0x0516
+	add	yl, #0	; reset carry
+	rlc	zh
+	jrz	#l7trap
+	jrc	#l7trap
+	cpw	z, #0x0a16
+	jrz	l7
+l7trap:
+	trap
+l7:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

@@ -12,8 +12,8 @@ all: $(TEST2LOGS)
 clean:
 	rm -rf tst_* testfwk.rel
 
-%/test2.vcd %/test2.log &: ../f8-testsystem2 %/test.even.vmem %/test.odd.vmem
-	cd $*; ../../f8-testsystem2 > test2.log
+%/test2.vcd %/test2.log &: ../f8-testsystem2-long %/test.even.vmem %/test.odd.vmem
+	cd $*; ../../f8-testsystem2-long > test2.log
 
 %.vmem: %.ihx
 	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@
