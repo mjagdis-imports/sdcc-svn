@@ -3,17 +3,19 @@
 .PHONY: all clean
 
 SDCCREGTESTPATH = ../../../sdcc/support/regression
-TESTSOURCES = $(wildcard ../../../sdcc/support/regression/tests/*.c)
-TESTCASES = $(TESTSOURCES:../../../sdcc/support/regression/tests/%.c=%)
-TEST2LOGS = $(TESTCASES:%=tst_%/test2.log)
+TESTSOURCES = $(wildcard ../../../sdcc/support/regression/cases/tst_*.c) $(wildcard ../../../sdcc/support/regression/cases/*/*.c)
+TESTCASES = $(TESTSOURCES:../../../sdcc/support/regression/cases/%.c=%)
+TEST2LOGS = $(TESTCASES:%=gen/%/test2.log)
 
 all: $(TEST2LOGS)
 
+FWKLIB = testfwk.rel statics.rel extern1.rel extern2.rel
+
 clean:
-	rm -rf tst_* testfwk.rel
+	rm -rf $(FWKLIB) gen/*
 
 %/test2.vcd %/test2.log &: ../f8-testsystem2-long %/test.even.vmem %/test.odd.vmem
-	cd $*; ../../f8-testsystem2-long > test2.log
+	cd $*; $(CURDIR)/../f8-testsystem2-long > test2.log
 
 %.vmem: %.ihx
 	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@
@@ -24,10 +26,8 @@ clean:
 %.odd.vmem: %.vmem
 	srec_cat $< -Vmem --split 2 1 -o $@ -Vmem 8
 
-tst_%/test.rel: $(SDCCREGTESTPATH)/cases/tst_%.c $(SDCCREGTESTPATH)/fwk/include/testfwk.h
-	rm -rf tst_$*; mkdir tst_$*; $(SDCC) -I$(SDCCREGTESTPATH)/fwk/include -c $< -o $@
-
-FWKLIB = testfwk.rel statics.rel extern1.rel extern2.rel
+gen/%/test.rel: $(SDCCREGTESTPATH)/cases/%.c $(SDCCREGTESTPATH)/fwk/include/testfwk.h
+	rm -rf gen/$*; mkdir -p gen/$*; $(SDCC) -I$(SDCCREGTESTPATH)/../.. -I$(SDCCREGTESTPATH)/fwk/include -c $< -o $@
 
 testfwk.rel: testfwk.c $(SDCCREGTESTPATH)/fwk/include/testfwk.h
 	$(SDCC) -I$(SDCCREGTESTPATH)/fwk/include -c $< -o $@

@@ -39,7 +39,7 @@ f8-testsystem2: $(TESTSYSTEM2SOURCES)
 	iverilog -g2009 -Wall -pfileline=1 -o $@ testsystem2.v
 
 f8-testsystem2-long: $(TESTSYSTEM2SOURCES)
-	iverilog -g2009 -Wall -pfileline=1 -Ptestsystem.SIMULATIONTIME=100000 -o $@ testsystem2.v
+	iverilog -g2009 -Wall -pfileline=1 -Ptestsystem.SIMULATIONTIME=400000 -o $@ testsystem2.v
 
 %/f8-icesynthtestsystem: icesynthtestsystem.v %/system_icesynth.v
 	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem ../../icesynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`

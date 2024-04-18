@@ -200,6 +200,44 @@ lbtrap:
 	trap
 lb:
 
+	ldw	y, #0xaa55
+	pushw	#0xa55a
+	clrw	y
+	tstw	y	; set z flag
+	ldw	y, sp
+	ldw	y, (y)
+	jrz	lctrap
+	cpw	y, #0xa55a
+	jrnz	lctrap
+	clrw	(0, sp)
+	ldw	y, sp
+	ldw	y, (y)
+	jrnz	lctrap
+	tstw	y
+	jrz	lc
+lctrap:
+	trap
+lc:
+
+	ldw	y, #0xaa55
+	pushw	#0xa55a
+	clrw	y
+	tstw	y	; set z flag
+	ldw	y, sp
+	ldw	y, (0, y)
+	jrz	ldtrap
+	cpw	y, #0xa55a
+	jrnz	ldtrap
+	clrw	(0, sp)
+	ldw	y, sp
+	ldw	y, (0, y)
+	jrnz	ldtrap
+	tstw	y
+	jrz	lc
+ldtrap:
+	trap
+ld:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

@@ -1003,19 +1003,13 @@ module cpu
 				next_f[FLAG_Z] = !(|regwrite_data);
 				next_f[FLAG_N] = regwrite_data[15];
 			end
-			else if(opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL)
-			begin
-				regwrite_data = memop;
-				regwrite_addr = acc16_addr;
-				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
-				next_f[FLAG_N] = regwrite_data[15];
-			end
-			else if(opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY)
+			else if(opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY)
 			begin
 				regwrite_data = mem16;
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
+				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_N] = regwrite_data[15];
 			end
 			else if(opcode == OPCODE_LDW_Y_X)
 			begin
