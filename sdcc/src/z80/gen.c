@@ -7434,6 +7434,13 @@ genPlusIncr (const iCode *ic)
           return TRUE;
         }
 
+      if (size == 2 && icount == 256 && ic->result->aop->type == AOP_REG && ic->left->aop->type == AOP_REG && ic->result->aop->aopu.aop_reg[0]->rIdx == ic->left->aop->aopu.aop_reg[0]->rIdx &&
+        (HAS_IYL_INST || !aopInReg (ic->result->aop, 1, IYL_IDX) && !aopInReg (ic->result->aop, 1, IYH_IDX)))
+        {
+          emit3_o (A_INC, ic->result->aop, 1, 0, 0);
+          return true;
+        }
+
       if (IS_Z80N && resultId == getPairId (IC_LEFT (ic)->aop) && resultId != PAIR_IY && icount > 3 && icount < 256 && isRegDead (A_IDX, ic)) // Saves once cycle vs. add dd, nn below.
         {
           cheapMove (ASMOP_A, 0, IC_RIGHT (ic)->aop, 0, true);
@@ -8423,7 +8430,7 @@ genPlus (iCode * ic)
           else if (!started && i == size - 1 && (aopIsLitVal (rightop, i, 1, 1) || aopIsLitVal (rightop, i, 1, 255)))
             {
               emit3 (aopIsLitVal (rightop, i, 1, 1) ? A_INC : A_DEC, ASMOP_A, 0);
-              started = TRUE;
+              started = true;
             }
           else if (rightop->type == AOP_STL && i < 2)
             {
@@ -9735,8 +9742,8 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
         }
       else if (ifx && size == 1 && !sign && aopInReg (right->aop, 0, A_IDX) && left->aop->type == AOP_LIT && ullFromVal (left->aop->aopu.aop_lit) < 255)
         {
-          emit3 (A_CP, ASMOP_A, left->aop);
           emit2 ("cp a, !immedbyte", ullFromVal (left->aop->aopu.aop_lit) + 1);
+          cost2 (2, 7, 6, 4, 8, 6, 2, 2);
           result_in_carry = true;
           inv = true;
           goto release;
