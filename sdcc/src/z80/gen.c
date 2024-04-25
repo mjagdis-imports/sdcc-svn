@@ -2504,6 +2504,7 @@ updatePair (PAIR_ID pairId, int diff)
     _G.pairs[pairId].offset += diff;
 }
 
+// Return 0, if adjusting the old value in the pair is sufficient.
 static int
 fetchLitPair (PAIR_ID pairId, asmop *left, int offset, bool f_dead, bool dry)
 {
@@ -3656,7 +3657,7 @@ poppairwithsavedreg (PAIR_ID pair, short survivingreg, short tempreg)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
-#if 1
+#if 0
   emitDebug ("; cheapMove");
 #endif
 
@@ -4698,6 +4699,12 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   emitDebug ("; genMove_o size %d result type %d source type %d hl_dead %d", size, result->type, source->type, hl_dead_global);
   wassert (result->size >= roffset + size);
 
+  a_dead_global |= result->type == AOP_REG && result->regs[A_IDX] >= roffset && result->regs[A_IDX] < roffset + size;
+  hl_dead_global |= result->type == AOP_REG && result->regs[L_IDX] >= roffset && result->regs[L_IDX] < roffset + size && result->regs[H_IDX] >= roffset && result->regs[H_IDX] < roffset + size;
+  de_dead_global |= result->type == AOP_REG && result->regs[E_IDX] >= roffset && result->regs[E_IDX] < roffset + size && result->regs[D_IDX] >= roffset && result->regs[D_IDX] < roffset + size;
+  iy_dead_global |= result->type == AOP_REG && result->regs[IYL_IDX] >= roffset && result->regs[IYL_IDX] < roffset + size && result->regs[IYH_IDX] >= roffset && result->regs[IYH_IDX] < roffset + size;
+  bool bc_dead_global = result->type == AOP_REG && result->regs[C_IDX] >= roffset && result->regs[C_IDX] < roffset + size && result->regs[B_IDX] >= roffset && result->regs[B_IDX] < roffset + size;
+
   if (aopSame (result, roffset, source, soffset, size))
     return;
 
@@ -4722,19 +4729,21 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
     {
       bool a_dead = a_dead_global && source->regs[A_IDX] <= soffset + i && (result->regs[A_IDX] < 0 || result->regs[A_IDX] >= roffset + i);
       bool hl_dead = hl_dead_global && source->regs[L_IDX] <= soffset + i && source->regs[H_IDX] <= soffset + i && (result->regs[L_IDX] < 0 || result->regs[L_IDX] >= roffset + i) && (result->regs[H_IDX] < 0 || result->regs[H_IDX] >= roffset + i);
+      bool de_dead = de_dead_global && source->regs[E_IDX] <= soffset + i && source->regs[D_IDX] <= soffset + i && (result->regs[E_IDX] < 0 || result->regs[E_IDX] >= roffset + i) && (result->regs[D_IDX] < 0 || result->regs[D_IDX] >= roffset + i);
       bool iy_dead = iy_dead_global && source->regs[IYL_IDX] <= soffset + i && source->regs[IYH_IDX] <= soffset + i && (result->regs[IYL_IDX] < 0 || result->regs[IYL_IDX] >= roffset + i) && (result->regs[IYH_IDX] < 0 || result->regs[IYH_IDX] >= roffset + i);
+      bool bc_dead = bc_dead_global && source->regs[C_IDX] <= soffset + i && source->regs[B_IDX] <= soffset + i && (result->regs[C_IDX] < 0 || result->regs[C_IDX] >= roffset + i) && (result->regs[B_IDX] < 0 || result->regs[B_IDX] >= roffset + i);
 
       if (source->type == AOP_STL && (soffset + i) >= 2)
         {
           genMove_o (result, roffset + i, ASMOP_ZERO, 0, size - i, a_dead, hl_dead, false, iy_dead, f_dead);
           return;
         }
-      else if (IS_EZ80_Z80 && source->type == AOP_STL && !(soffset + i) && getPairId_o(result, roffset) != PAIR_INVALID &&
+      else if ((IS_TLCS90 || IS_EZ80_Z80) && source->type == AOP_STL && !(soffset + i) && getPairId_o(result, roffset) != PAIR_INVALID &&
         !_G.omitFramePtr && abs(fpOffset (source->aopu.aop_stk)) <= 127)
         {
-          emit2 ("lea %s, ix, !immed%d", _pairs[getPairId_o(result, roffset)].name, fpOffset (source->aopu.aop_stk));
+          emit2 (IS_TLCS90 ? "lda %s, ix, !immed%d" : "lea %s, ix, !immed%d", _pairs[getPairId_o(result, roffset)].name, fpOffset (source->aopu.aop_stk));
           spillPair (getPairId_o(result, roffset));
-          cost (3, 3);
+          cost (3, IS_TLCS90 ? 10 : 3);
           i += 2;
           continue;
         }
@@ -4772,7 +4781,11 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         }
       else if (source->type == AOP_STL)
         {
-          if (i || soffset || !hl_dead)
+          if (!hl_dead && (result->regs[L_IDX] > roffset || result->regs[H_IDX] > roffset))
+            UNIMPLEMENTED;
+          if (!hl_dead)
+            _push (PAIR_HL);
+          if (i || soffset)
             UNIMPLEMENTED;
           if (!f_dead)
             _push (PAIR_AF);
@@ -4784,6 +4797,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             _pop (PAIR_AF);
           spillPair (PAIR_HL);
           genMove_o (result, roffset, ASMOP_HL, 0, size, a_dead, true, de_dead_global, iy_dead, f_dead);
+          if (!hl_dead)
+            _pop (PAIR_HL);
           i += 2;
           continue;
         }
@@ -4851,8 +4866,38 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           continue;
         }
 
+      // 16-bit load into register might be cheaper than 8-bit, if the latter has to go through a. For bc and de it is only worth it if a would have to be saved.
+      if ((optimize.allow_unsafe_read || i + 1 == size && soffset + i + 1 <= source->size) && !IS_SM83 && !IS_TLCS90 && result->type == AOP_REG && !aopInReg (result, roffset + i, A_IDX) &&
+        (i + 1 == size || soffset + i + 1 >= source->size) && (source->type == AOP_HL && fetchLitPair (PAIR_HL, source, soffset + i, f_dead, true) || source->type == AOP_IY))
+        {
+          bool upper = aopInReg (result, roffset + i, B_IDX) || aopInReg (result, roffset + i, D_IDX) || aopInReg (result, roffset + i, H_IDX) || aopInReg (result, roffset + i, IYH_IDX);
+          PAIR_ID pair = PAIR_INVALID;
+          if ((aopInReg (result, roffset + i, C_IDX) || aopInReg (result, roffset + i, B_IDX)) && bc_dead && !a_dead)
+            pair = PAIR_BC;
+          else if ((aopInReg (result, roffset + i, E_IDX) || aopInReg (result, roffset + i, D_IDX)) && de_dead && !a_dead)
+            pair = PAIR_DE;
+          else if ((aopInReg (result, roffset + i, L_IDX) || aopInReg (result, roffset + i, H_IDX)) && hl_dead)
+            pair = PAIR_HL;
+          else if ((aopInReg (result, roffset + i, IYL_IDX) || aopInReg (result, roffset + i, IYH_IDX)) && iy_dead)
+            pair = PAIR_IY;
+
+          if (pair != PAIR_INVALID && soffset + i - upper >= 0)
+            {
+              emit2 ("ld %s, !mems", _pairs[pair].name, aopGetLitWordLong (source, soffset + i - upper, false));
+              if (pair == PAIR_HL)
+                cost2 (3, 16, 15, 11, 0, 12, 5, 5);
+              else
+                cost2 (4, 20, 18, 13, 0, 12, 6, 6);
+              i++;
+              spillPair (pair);
+              continue;
+            }
+        }
+
       // Cache a copy of zero in a.
-      if (size > 1 && result->type != AOP_REG && aopIsLitVal (source, soffset + i, 2, 0x0000) && !zeroed_a && a_dead && source->regs[A_IDX] <= i && f_dead)
+      if (f_dead &&
+        (size > 1 && result->type != AOP_REG && aopIsLitVal (source, soffset + i, 2, 0x0000) && !zeroed_a && a_dead && source->regs[A_IDX] <= i ||
+        size == 1 && (result->type == AOP_HL && fetchLitPair (PAIR_HL, result, roffset + i, f_dead, true) || result->type == AOP_IY && fetchLitPair (PAIR_IY, result, roffset + i, f_dead, true)) && aopIsLitVal (source, soffset + i, 1, 0x00)))
         {
           emit3 (A_XOR, ASMOP_A, ASMOP_A);
           zeroed_a = true;
@@ -4862,7 +4907,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         {
           if (source->type == AOP_HL)
             {
-              emit2 ("ld a, !mems", aopGetLitWordLong (source, soffset + i, FALSE));
+              emit2 ("ld a, !mems", aopGetLitWordLong (source, soffset + i, false));
               cost2 (3, 13, 12, 9, 16, 10, 4, 4);
             }
           else if (!aopIsLitVal (source, soffset + i, 1, 0x00) || !zeroed_a)
@@ -4885,14 +4930,26 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           bool pushed_hl = false;
           bool via_a = false;
           bool premoved_a = false;
+
           if (!i && a_dead && // Avoid setting up hl or iy for a single byte.
             (source->type == AOP_HL && fetchLitPair (PAIR_HL, source, soffset + i, f_dead, true) || source->type == AOP_IY && fetchLitPair (PAIR_IY, source, soffset + i, f_dead, true)) &&
             result->type == AOP_REG && (i + 1 > size || soffset + i < source->size))
             {
-              emit2 ("ld a, !mems", aopGetLitWordLong (source, soffset + i, false));
-              cost2 (3, 13, 12, 9, 16, 10, 4, 4);
-              via_a = true;
-              premoved_a = true;
+              if (IS_TLCS90 && result->type == AOP_REG && !aopInReg (result, roffset + i, IYL_IDX) && !aopInReg (result, roffset + i, IYH_IDX))
+                {
+                  if (!regalloc_dry_run)
+                    emit2 ("ld %s, !mems", aopGet (result, roffset + i, false), aopGetLitWordLong (source, soffset + i, false));
+                  cost (4, 10);
+                  i++;
+                  continue;
+                }
+              else
+                {
+                  emit2 ("ld a, !mems", aopGetLitWordLong (source, soffset + i, false));
+                  cost2 (3 + IS_TLCS90, 13, 12, 9, 16, 10, 4, 4);
+                  via_a = true;
+                  premoved_a = true;
+                }
             }
           else if ((requiresHL (result) && result->type != AOP_REG || requiresHL (source) && source->type != AOP_REG && soffset + i < source->size) && !hl_dead)
             {
@@ -4902,7 +4959,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
               if (via_a && source->type == AOP_HL)
                 {
                   emit2 ("ld a, !mems", aopGetLitWordLong (source, soffset + i, false));
-                  cost2 (3, 13, 12, 9, 16, 10, 4, 4);
+                  cost2 (3 + IS_TLCS90, 13, 12, 9, 16, 10, 4, 4);
                   premoved_a = true;
                 }
               else
@@ -7449,7 +7506,7 @@ genPlusIncr (const iCode *ic)
           return true;
         }
       else if (resultId == getPairId (ic->left->aop) &&
-        (IS_Z80N && resultId != PAIR_IY && icount > 3 ||IS_TLCS90 && (resultId == PAIR_HL || resultId == PAIR_IY) && icount > 2))
+        (IS_Z80N && resultId != PAIR_IY && icount > 3 || IS_TLCS90 && (resultId == PAIR_HL || resultId == PAIR_IY) && icount > 2))
         {
           emit2 ("add %s, !immed%s", getPairName (IC_RESULT (ic)->aop), aopGetLitWordLong (IC_RIGHT (ic)->aop, 0, false));
           cost2 (4 - IS_TLCS90, 16, 0, 0, 0, 6, 0, 0);
@@ -7793,13 +7850,13 @@ genPlus (iCode * ic)
     }
 
   // eZ80 has lea.
-  if (IS_EZ80_Z80 && !maskedtopbyte && isPair (IC_RESULT (ic)->aop) && getPairId (IC_LEFT (ic)->aop) == PAIR_IY && IC_RIGHT (ic)->aop->type == AOP_LIT)
+  if ((IS_TLCS90 || IS_EZ80_Z80) && !maskedtopbyte && isPair (IC_RESULT (ic)->aop) && getPairId (IC_LEFT (ic)->aop) == PAIR_IY && IC_RIGHT (ic)->aop->type == AOP_LIT)
     {
        int lit = (int) ulFromVal (IC_RIGHT (ic)->aop->aopu.aop_lit);
        if (lit >= -128 && lit < 128)
          {
-           emit2 ("lea %s, iy, !immed%d", _pairs[getPairId (IC_RESULT (ic)->aop)].name, lit);
-           cost (3, 3);
+           emit2 (IS_TLCS90 ? "lda %s, iy, !immed%d" : "lea %s, iy, !immed%d", _pairs[getPairId (IC_RESULT (ic)->aop)].name, lit);
+           cost (3, IS_TLCS90 ? 10 : 3);
            spillPair (getPairId (IC_RESULT (ic)->aop));
            goto release;
          }
@@ -10388,6 +10445,8 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
       while (size--)
         {
           bool hl_dead = isRegDead (HL_IDX, ic) && left->aop->regs[L_IDX] < offset && left->aop->regs[H_IDX] < offset && right->aop->regs[L_IDX] < offset && right->aop->regs[H_IDX] < offset;
+          bool iy_dead = isRegDead (IY_IDX, ic) && left->aop->regs[IYL_IDX] < offset && left->aop->regs[IYH_IDX] < offset && right->aop->regs[IYL_IDX] < offset && right->aop->regs[IYH_IDX] < offset;
+
           if (aopInReg (right->aop, offset, A_IDX)  || aopInReg (right->aop, offset, HL_IDX) || aopInReg (left->aop, offset, BC_IDX) || aopInReg (left->aop, offset, DE_IDX))
             {
               operand *t = right;
@@ -10417,7 +10476,10 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               continue;
             }
 
-          cheapMove (ASMOP_A, 0, left->aop, offset, true);
+          if (!hl_dead)
+            genMove_o (ASMOP_A, 0, left->aop, offset, 1, true, false, false, iy_dead, true);
+          else
+            cheapMove (ASMOP_A, 0, left->aop, offset, true);
           if (right->aop->type == AOP_LIT && byteOfVal (right->aop->aopu.aop_lit, offset) == 0 || right->aop->type == AOP_STL && offset >= 2)
             {
               emit3 (A_OR, ASMOP_A, ASMOP_A);
@@ -15083,10 +15145,10 @@ genAddrOf (const iCode * ic)
       else
         pair = (getPairId (IC_RESULT (ic)->aop) == PAIR_IY) ? PAIR_IY : PAIR_HL;
       spillPair (pair);
-      if (IS_EZ80_Z80 && in_fp_range)
+      if ((IS_TLCS90 || IS_EZ80_Z80) && in_fp_range)
         {
-          emit2 ("lea %s, ix, !immed%d", _pairs[pair].name, fp_offset);
-          cost (3, 3);
+          emit2 (IS_TLCS90 ? "lda %s, ix, !immed%d" : "lea %s, ix, !immed%d", _pairs[pair].name, fp_offset);
+          cost (3, IS_TLCS90 ? 10 : 3);
         }
       else
         setupPairFromSP (pair, sp_offset);
@@ -15451,6 +15513,29 @@ genJumpTab (const iCode *ic)
 
   aopOp (jtcond, ic, FALSE, FALSE);
 
+  if (!regalloc_dry_run)
+    jtab = newiTempLabel (NULL);
+
+  if (IS_TLCS90 && !aopInReg (jtcond->aop, 0, C_IDX) && !aopInReg (jtcond->aop, 0, E_IDX))
+    {
+      genMove (ASMOP_A, jtcond->aop, isRegDead (A_IDX, ic), true,isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
+      if (!regalloc_dry_run)
+        emit2 ("ld hl, !immed!tlabel", labelKey2num (jtab->key));
+      cost (3, 6);
+      emit2 ("lda hl, hl, a");
+      emit2 ("lda hl, hl, a");
+      cost (2 * 2, 2 * 14);
+#if 0 // Enable when supported in assembler
+      emit2 ("jp a(hl)");
+      cost (2, 16);
+      goto genlabeltab;
+#else
+      emit2 ("lda hl, hl, a");
+      cost (2, 14);
+      goto calculated;
+#endif
+    }
+
   // Choose extra pair DE or BC for addition
   if (jtcond->aop->type == AOP_REG && jtcond->aop->aopu.aop_reg[0]->rIdx == E_IDX && isPairDead (PAIR_DE, ic))
     pair = PAIR_DE;
@@ -15466,37 +15551,38 @@ genJumpTab (const iCode *ic)
     }
 
   cheapMove (pair == PAIR_DE ? ASMOP_E : ASMOP_C, 0, jtcond->aop, 0, true);
-  if (!regalloc_dry_run)
-    {
-      emit2 ("ld %s, !zero", _pairs[pair].h);
-      jtab = newiTempLabel (NULL);
-    }
+  emit2 ("ld %s, !zero", _pairs[pair].h);
   cost2 (2, 7, 6, 4, 8, 4, 2, 2);
+
   spillPair (PAIR_HL);
   if (!regalloc_dry_run)
-    {
-      emit2 ("ld hl, !immed!tlabel", labelKey2num (jtab->key));
-      emit2 ("add hl, %s", _pairs[pair].name);
-      emit2 ("add hl, %s", _pairs[pair].name);
-      emit2 ("add hl, %s", _pairs[pair].name);
-    }
-  regalloc_dry_run_cost += 5;
-  freeAsmop (IC_JTCOND (ic), NULL);
+    emit2 ("ld hl, !immed!tlabel", labelKey2num (jtab->key));
+  cost2 (3, 10, 9, 6, 12, 6, 3, 3);
+  emit2 ("add hl, %s", _pairs[pair].name);
+  cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+  emit2 ("add hl, %s", _pairs[pair].name);
+  cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+  emit2 ("add hl, %s", _pairs[pair].name);
+  cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+
+calculated:
 
   if (pushed_pair)
     _pop (pair);
 
-  if (!regalloc_dry_run)
-    {
-      emit2 ("!jphl");
-      emitLabelSpill (jtab);
-    }
+  emit2 ("!jphl");
   cost2 (1 + IS_TLCS90, 4, 3, 4, 4, 8, 3, 1);
+
   /* now generate the jump labels */
+genlabeltab:
+  if (!regalloc_dry_run)
+    emitLabelSpill (jtab);
   for (jtab = setFirstItem (IC_JTLABELS (ic)); jtab; jtab = setNextItem (IC_JTLABELS (ic)))
     if (!regalloc_dry_run)
       emit2 ("jp !tlabel", labelKey2num (jtab->key));
   /*regalloc_dry_run_cost += 3 doesn't matter and might overflow cost */
+
+  freeAsmop (IC_JTCOND (ic), NULL);
 }
 
 /*-----------------------------------------------------------------*/
@@ -16787,14 +16873,15 @@ genBuiltInStrchr (const iCode *ic, int nParams, operand **pparams)
     pair = PAIR_HL;
 
   if (c->aop->type == AOP_REG && c->aop->aopu.aop_reg[0]->rIdx != IYL_IDX && c->aop->aopu.aop_reg[0]->rIdx != IYH_IDX &&
+    c->aop->aopu.aop_reg[0]->rIdx != A_IDX &&
     !(pair == PAIR_HL && (c->aop->aopu.aop_reg[0]->rIdx == L_IDX || c->aop->aopu.aop_reg[0]->rIdx == H_IDX)) &&
     !(pair == PAIR_DE && (c->aop->aopu.aop_reg[0]->rIdx == E_IDX || c->aop->aopu.aop_reg[0]->rIdx == D_IDX)) &&
     !(pair == PAIR_BC && (c->aop->aopu.aop_reg[0]->rIdx == B_IDX || c->aop->aopu.aop_reg[0]->rIdx == C_IDX)))
-    direct_c = TRUE;
+    direct_c = true;
   else if (c->aop->type == AOP_LIT && optimize.codeSize)
-    direct_c = TRUE;
+    direct_c = true;
   else
-    direct_c = FALSE;
+    direct_c = false;
 
   aop_c = direct_c ? c->aop : (pair == PAIR_DE ? ASMOP_H : ASMOP_D);
 
@@ -16817,6 +16904,9 @@ genBuiltInStrchr (const iCode *ic, int nParams, operand **pparams)
   if (!direct_c)
     cheapMove (aop_c, 0, c->aop, 0, true);
   fetchPair (pair, s->aop);
+
+  if (!isRegDead (A_IDX, ic))
+    UNIMPLEMENTED;
 
   if (!regalloc_dry_run)
     emitLabel (tlbl2);

@@ -1,3 +1,44 @@
+2024-04-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Update documentation on implementation-defined behaviour.
+	* sdas/astlcs90/t90.h,
+	  sdas/astlcs90/t90mch.c,
+	  sdas/astlcs90/t90pst.c,
+	  src/z80/gen.c:
+	  Use lda for tlcs90 codegen.
+
+2024-04-23 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/cc1_dummies.cc
+	  Amend unused function prototypes. Fixes #3725
+
+2024-04-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Global operand handling fixes.
+
+2024-04-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/ports/ucz80-unsafe-read:
+	  Allow use 16-bit loads from memory to load 8-bit registers.
+
+2024-04-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Improve storing of 0 into global variables.
+
+2024-04-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/as2gbmap.py:
+	  Migrate as2gbmap to Python 3, patch from Debian.
+	* src/z80/peep.c:
+	  Improve handling of function calls in notUsed(From)('iy').
+	* src/z80/gen.c:
+	  Fix handling of operand in a in built-in strchr.
+
 2024-04-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:
