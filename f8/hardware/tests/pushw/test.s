@@ -75,6 +75,28 @@ l6trap:
 	trap
 l6:
 
+	ldw	x, #0x0102
+	ldw	y, #0x0304
+	ldw	z, #0x0506
+	pushw	x
+	pushw	y
+	pushw	z
+	clrw	x
+	clrw	y
+	clrw	z
+	popw	z
+	popw	y
+	popw	x
+	cpw	x, #0x0102
+	jrnz	l7trap
+	cpw	y, #0x0304
+	jrnz	l7trap
+	cpw	z, #0x0506
+	jrz	l7
+l7trap:
+	trap
+l7:
+	
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

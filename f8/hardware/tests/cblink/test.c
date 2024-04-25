@@ -31,7 +31,7 @@ void main(void)
 	GPIO0ODR = 0;    // Switch off all LEDs.
 	GPIO0DDR = 0x1f; // Set the lines connected to LEDs as output.
 
-	// Set up TIMER0 for 1 KHz interrupt assuming 3 MHz system clock.
+	// Set up TIMER0 for 1 KHz interrupt assuming 2 MHz system clock.
 	TIMER0CNT = 63536;
 	TIMER0RLD = 63536;
 	IRQCTRLEN = 0x01;  // Enable timer 0 overflow interrupt.

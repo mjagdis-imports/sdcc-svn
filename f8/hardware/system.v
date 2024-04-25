@@ -1,10 +1,10 @@
+`begin_keywords "1800-2009"
+
 `include "cpu.v"
 `include "rom.v"
 `include "ram.v"
 `include "memory.v"
 `include "io.v"
-
-`begin_keywords "1800-2009"
 
 // SoC. trap output line needed for tests only.
 module system  #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, MEMADDRBASE = 16'h2000) (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,

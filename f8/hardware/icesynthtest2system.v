@@ -13,7 +13,7 @@ module clkgen (output logic clk);
 	always #2 clk = !clk;
 endmodule
 
-module testsystem ();
+module testsystem #(SIMULATIONTIME = 8200) ();
 	wire [7:0] gpio0pins, gpio1pins, gpio2pins;
 	wire clk;
 	wire trap;
@@ -26,7 +26,7 @@ module testsystem ();
     		power_on_reset <= 1;
     		#20
     		power_on_reset <= 0;
-		#8180
+		#(SIMULATIONTIME - 20)
 		$finish;
 	end
 

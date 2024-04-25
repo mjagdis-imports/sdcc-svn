@@ -1,4 +1,23 @@
-2023-04-18 Philipp Klaus Krause <philipp@colecovision.eu>
+2023-04-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/gatematea1evb2.v,
+	  hardware/icebreaker.pcf,
+	  hardware/icebreaker2.v,
+	  hardware/icesynthtest2system.v,
+	  hardware/sdcctests/Makefile,
+	  hardware/system.v,
+	  hardware/tests/cblink/test.c,
+	  hardware/tests/jp/test.s,
+	  hardware/tests/pushw/test.s,
+	  hardware/testsystem2.v:
+	  Change jr/jp behaviour wrt. flags.
+	* hardware/benchmarks:
+	  Benchmarks for the f8.
+
+2024-04-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/cpu2.v,
@@ -7,7 +26,7 @@
 	  hardware/sdcctests/gen:
 	  Fix flags for ldw y, (y) and ldw, (n, y) in multicycle implementation of f8.
 
-2023-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/opcode.v,
@@ -16,7 +35,7 @@
 	  hardware/testsystem2.v:
 	  Fix rlc zh.
 
-2023-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* f8/hardware/cpu.v,
 	  f8/hardware/opcode.v,
@@ -24,13 +43,13 @@
 	  f8/hardware/tests/clr/test.s:
 	  Fix clr zh.
 
-2023-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Makefile,
 	  sdcctests:
 	  Infrastructure for using some of the sdcc regression tests as tests for the f8 Verilog model.
 
-2023-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/gatematea1evb.v,
@@ -41,7 +60,7 @@
 	  hardware/tests/chello/test.c:
 	  Use 2 MHz system clock for all boards, so the same test software runs on them.
 
-2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/cpu2.v,
@@ -60,13 +79,13 @@
 	  hardware/system2.v:
 	  Fix xch xl, (y) and xchw x, (y) instructions in multicycle f8 implementation; refactor some sequential logic.
 
-2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu2.v,
 	  hardware/tests/cblink/test.c:
 	  Fix reti instruction in multicycle f8 implementation.
 
-2023-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/cpu2.v,
@@ -81,30 +100,30 @@
 	  hardware/tests/timercnt:
 	  Synthesis infrastructure for multicycle f8 implementation.
 
-2023-04-08 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu2.v:
 	  Interrupt handling in multicycle f8 implementation.
 
-2023-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/io.v,
 	  hardware/io2.v:
 	  Port basic peripherals to multicycle f8 implementation.
 
-2023-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu2.v,
 	  hardware/cpu2.v:
 	  Multiplication instructions for multicycle f8 implementation.
 
-2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu2.v:
 	  Implement more ldw instructions for multicycle f8 implementation.
 
-2023-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu2.v
 	  hardware/cpu.v
@@ -113,7 +132,7 @@
 	  hardware/tests/dnjnz/test.s:
 	  Implement more instructions for multicycle f8 implementation.
 
-2023-04-03 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/cpu2.v,
@@ -121,7 +140,7 @@
 	  hardware/ram2.v:
 	  Implement some instructions for multicycle f8 implementation.
 
-2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/opcode.v,
@@ -139,17 +158,17 @@
 	  hardware/watchdog2.v:
 	  Verilog code cleanup, preparations for multicycle f8 implementation.
 
-2023-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-04-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile:
 	  Fix typo.
 
-2023-03-24 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v:
 	  Fix n flag for sllw y, xl.
 
-2023-03-23 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/memory.v,
@@ -162,7 +181,7 @@
 	  hardware/ram.v:
 	  Post-synthesis test infrastructure refactoring.
 
-2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/gatematea1evb.v,
@@ -174,7 +193,7 @@
 	  hardware/tests/chello/test.c:
 	  Adaptions for GateMateA1-EVB FPGA board.
 
-2023-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/tests/cblink/test.c,
 	  hardware/tests/chello/test.c:
@@ -185,7 +204,7 @@
 	  hardware/icebreaker.v:
 	  Port to GateMateA1-EVB FPGA board.
 
-2023-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/tests/addw/test.s,
@@ -198,12 +217,12 @@
 	  hardware/tests/xchw/test.s:
 	  Adjustments in f8 opcode prefix semantics.
 
-2023-03-15 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/tests/sbcw:
 	  Test 2-operand variant of f8 instruction sbcw.
 
-2023-03-11 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu.v,
 	  hardware/tests/sbcw0:
@@ -213,7 +232,7 @@
 	  hardware/gatematea1evb.v:
 	  Infrastructure for trying f8 on GateMateA1-EVB FPGA board.
 
-2023-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/opcode.v,
@@ -222,7 +241,7 @@
 	  hardware/tests/ldw_y/test.s:
 	  Implement new behaviour of n and z flags for loads from memory.
 
-2023-03-08 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/io.v,
@@ -231,7 +250,7 @@
 	  hardware/watchdog.v:
 	  Parametrize RAM size.
 
-2023-03-07 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/cpu.v,
@@ -243,7 +262,7 @@
 	  hardware/watchdog.v:
 	  Implement trap on null pointer write, fix sll zh.
 
-2023-03-06 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/fullpostsynthtestsystem.v,
@@ -258,7 +277,7 @@
 	  hardware/tests/chello:
 	  "Hello, world!" on f8 on icebreaker FPGA board.
 
-2023-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/postsynthtestsystem.v,
@@ -274,7 +293,7 @@
 	  hardware/tests/cblink:
 	  Infrastructure for trying f8 on iCEBreaker FPGA board.
 
-2023-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/alu.v,
@@ -288,14 +307,14 @@
 	  hardware/watchdog.v:
 	  Test gpio peripheral.
 
-2023-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/tests/tst,
 	  hardware/tests/tstw/test.s:
 	  Fix f8 instruction tst.
 
-2023-03-04 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/memory.v,
@@ -305,7 +324,7 @@
 	  hardware/testsystem.v:
 	  Post-synthesis test of RAM.
 
-2023-03-04 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/testsystem.v,
@@ -314,7 +333,7 @@
 	  hardware/postsynthtestsystem.v:
 	  Post-synthesis test of peripherals.
 
-2023-03-03 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/alu.v,
@@ -323,12 +342,12 @@
 	* hardware/tests/xor:
 	  Test f8 instruction xor.
 
-2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:
 	  Fix for f8 8-bit one-operand memory instructions.
 
-2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  tests/xch_xl_sprel/test.s:
@@ -338,7 +357,7 @@
 	* hardware/tests/cax:
 	  Test cax.
 
-2023-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-03-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
 	  hardware/alu.v,
@@ -351,7 +370,7 @@
 	  hardware/tests/tstw/test.s:
 	  Fix stack handling in test of f8 bool and tstw instructions.
 
-2023-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/tests/watchdog/test.s,
@@ -361,27 +380,27 @@
 	  hardware/Makefile:
 	  Implement basic watchdog and trap reset.
 
-2023-02-26 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/opcode.v,
 	  hardware/opcodemap.v,
 	  hardware/tests/ld_yh:
 
-2023-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu.v,
 	  hardware/cpu.v,
 	  hardware/tests/dnjnz:
 	  Implement dnjnz.
 
-2023-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/tests/interrupt:
 	  Interrupt handling fixes.
 
-2023-02-20 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/opcode.v,
@@ -389,7 +408,7 @@
 	  hardware/tests/jr/test.s:
 	  Implement remaining jr variants.
 
-2023-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu.v,
 	  hardware/cpu.v,
@@ -400,7 +419,7 @@
 	  hardware/tests/ldw_mem_x,
 	  Implement incnw, xchw y, ldw (y), x, ldw (n, y), x.
 
-2023-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/*.v,
 	  hardware/tests/inc/test.s
@@ -410,14 +429,14 @@
 	* hardware/tests/dec:
 	  Test 8-bit decrement.
 
-2023-02-08 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/simpletestsystem.v,
 	  hardware/testsystem.v:
 	  Preparations for interrupt support.
 
-2023-02-01 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-02-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/cpu.v,
 	  hardware/tests/ret:

@@ -9,7 +9,7 @@ YOSYS_CONFIG = yosys-config
 P_R = /home/philipp/p_r/p_r
 SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 
-.PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images sdcctests
+.PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images sdcctests2 benchmarks2
 
 all: f8-testsystem f8-testsystem2
 
@@ -96,14 +96,14 @@ gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
 	
 %/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
-	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 3 --asc $@
+	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 2 --asc $@
 
 # Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
 %/gatematea1evb_synth_00.cfg.bit: %/gatematea1evb_synth.v gatematea1evb.ccf
 	cd $*; $(P_R) -cCP -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
 
 %/icebreaker2_synth.asc: %/icebreaker2_synth.json icebreaker.pcf
-	nextpnr-ice40 --up5k --json $*/icebreaker2_synth.json --pcf icebreaker.pcf --freq 3 --asc $@
+	nextpnr-ice40 --up5k --json $*/icebreaker2_synth.json --pcf icebreaker.pcf --freq 2 --asc $@
 
 # Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
 %/gatematea1evb2_synth_00.cfg.bit: %/gatematea1evb2_synth.v gatematea1evb.ccf
@@ -140,10 +140,10 @@ icebreaker2_synth.v: icebreaker_synth.json
 	$(SDLD) -b HOME=0x4000 -i $@ $<
 
 tests/cblink/test.ihx: tests/cblink/test.c
-	cd tests/cblink; $(SDCC) test.c --data-loc 0x3e00
+	cd tests/cblink; $(SDCC) test.c --data-loc 0x3c00
 
 tests/chello/test.ihx: tests/chello/test.c
-	cd tests/chello; $(SDCC) test.c --data-loc 0x3e00
+	cd tests/chello; $(SDCC) test.c --data-loc 0x3c00
 
 %.vmem: %.ihx
 	objcopy --change-addresses -0x4000 --input-target ihex --output-target verilog $< $@
@@ -204,6 +204,12 @@ gmsynthtests2: $(GMSYNTHTEST2LOGS)
 
 alltests: tests icesynthtests gmsynthtests tests2 icesynthtests2 gmsynthtests2
 
-sdcctests: f8-testsystem2-long
-	cd sdcctests; $(MAKE) SDCC="$(SDCC)"
+sdcctests2: f8-testsystem2-long
+	cd sdcctests; $(MAKE) SDCC="$(SDCC)" tests2
+
+sdccicesynthtests2: system2_nosv.v icesynthtestsystem.v
+	cd sdcctests; $(MAKE) SDCC="$(SDCC)" YOSYS="$(YOSYS)" YOSYS_CONFIG="$(YOSYS_CONFIG)" icesynthtests2
+
+benchmarks2: icebreaker2_nosv.v
+	cd benchmarks; $(MAKE) SDCC="$(SDCC)" YOSYS="$(YOSYS)" YOSYS_CONFIG="$(YOSYS_CONFIG)"
 

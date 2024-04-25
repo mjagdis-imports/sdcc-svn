@@ -1,13 +1,18 @@
 # Requires sdcc regression tests to have been run once before (e.g. via "make test-f8" in sdcc/support/regression).
 
-.PHONY: all clean
+.PHONY: all tests2 icesynthtests2 clean
 
 SDCCREGTESTPATH = ../../../sdcc/support/regression
 TESTSOURCES = $(wildcard ../../../sdcc/support/regression/cases/tst_*.c) $(wildcard ../../../sdcc/support/regression/cases/*/*.c)
 TESTCASES = $(TESTSOURCES:../../../sdcc/support/regression/cases/%.c=%)
 TEST2LOGS = $(TESTCASES:%=gen/%/test2.log)
+ICESYNTHTEST2LOGS = gen/tst_printf_d/icesynthtest2.log
 
-all: $(TEST2LOGS)
+all: tests2
+
+tests2: $(TEST2LOGS)
+
+icesynthtests2: $(ICESYNTHTEST2LOGS)
 
 FWKLIB = testfwk.rel statics.rel extern1.rel extern2.rel
 
@@ -43,4 +48,13 @@ extern2.rel: $(SDCCREGTESTPATH)/fwk/lib/extern2.c
 
 %.ihx: $(FWKLIB) %.rel
 	$(SDCC) --data-loc 0x2000 $^ -o $@
+
+%/icesynthtest2.vcd %/icesynthtest2.log &: %/f8-icesynthtest2system
+	cd $*; ./f8-icesynthtest2system > icesynthtest2.log
+
+%/system2_icesynth.v: ../system2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../system2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system2_icesynth.v"
+
+%/f8-icesynthtest2system: ../icesynthtest2system.v %/system2_icesynth.v
+	cd $*; iverilog -g2009 -Wall -Ptestsystem.SIMULATIONTIME=30000 -o f8-icesynthtest2system $(CURDIR)/../icesynthtest2system.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 

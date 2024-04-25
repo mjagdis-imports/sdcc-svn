@@ -5,8 +5,8 @@
 
 // Test module for use on iCEBreaker FPGA board.
 
-// Default: 6 KB ROM, 8 KB RAM, 2 MHz system clock.
-module icebreaker #(parameter ROMSIZE = 6144, RAMADDRBITS = 13, CLKDIV = 6) (input logic CLK,
+// Default: 7 KB ROM, 8 KB RAM, 2 MHz system clock.
+module icebreaker #(parameter ROMSIZE = 7168, RAMADDRBITS = 13, CLKDIV = 6) (input logic CLK,
 	inout tri PMOD_2_1, inout tri PMOD_2_2, inout tri PMOD_2_3, inout tri PMOD_2_4, inout tri PMOD_2_7, inout tri PMOD_2_8, inout tri PMOD_2_9, inout tri PMOD_2_10,
 	inout tri PMOD_1A_1, inout tri PMOD_1A_2, inout tri PMOD_1A_3, inout tri PMOD_1A_4, inout tri PMOD_1A_7, inout tri PMOD_1A_8, inout tri PMOD_1A_9, inout tri PMOD_1A_10,
 	input logic BTN_N, inout tri RX, inout tri TX);

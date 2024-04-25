@@ -527,6 +527,14 @@ module cpu
 					end
 				end
 			end
+			else if(opcode == OPCODE_NOP)
+			begin
+				next_f = f;
+			end
+			else if(opcode == OPCODE_JP_IMMD)
+			begin
+				next_f = f;
+			end
 			else if(opcode == OPCODE_CALL_IMMD)
 			begin
 				memwrite_data = pc + 3;
@@ -1061,6 +1069,10 @@ module cpu
 				memwrite_data = op16;
 				memwrite_addr = y + {8'h00, inst[15:8]};
 				memwrite_en = 2'b11;
+			end
+			else if(opcode == OPCODE_JR_D)
+			begin
+				next_f = f;
 			end
 			else if(opcode == OPCODE_DNJNZ_YH_D)
 			begin

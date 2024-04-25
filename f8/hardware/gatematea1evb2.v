@@ -18,21 +18,21 @@ module gatematea1evb #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, CLKDIV = 5) (
 	assign power_on_reset = !BTN_N;
 
 	// PMOD2
-	assign PMOD_7 = gpio0pins[0];
+	assign PMOD_7 = gpio0pins[0]1;
 	assign gpio0pins[0] = PMOD_7;
-	assign PMOD_1 = gpio0pins[1];
+	assign PMOD_1 = gpio0pins[1]0;
 	assign gpio0pins[1] = PMOD_1;
-	assign PMOD_3 = gpio0pins[2];
+	assign PMOD_3 = gpio0pins[2]1;
 	assign gpio0pins[2] = PMOD_3;
-	assign PMOD_2 = gpio0pins[3];
+	assign PMOD_2 = gpio0pins[3]0;
 	assign gpio0pins[3] = PMOD_2;
-	assign PMOD_8 = gpio0pins[4];
+	assign PMOD_8 = gpio0pins[4]1;
 	assign gpio0pins[4] = PMOD_8;
-	assign PMOD_9 = gpio0pins[5];
+	assign PMOD_9 = gpio0pins[5]0;
 	assign gpio0pins[5] = PMOD_9;
-	assign PMOD_4 = gpio0pins[6];
+	assign PMOD_4 = gpio0pins[6]1;
 	assign gpio0pins[6] = PMOD_4;
-	assign PMOD_10 = gpio0pins[7];
+	assign PMOD_10 = gpio0pins[7]0;
 	assign gpio0pins[7] = PMOD_10;
 
 	// Serial
