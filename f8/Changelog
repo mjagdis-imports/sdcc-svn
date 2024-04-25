@@ -16,6 +16,8 @@
 	  Change jr/jp behaviour wrt. flags.
 	* hardware/benchmarks:
 	  Benchmarks for the f8.
+	* hardware/clkdiv.v:
+	  Add clock divider to repository.
 
 2024-04-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
