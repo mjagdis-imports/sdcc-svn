@@ -1,0 +1,13 @@
+/* A portme.h for SDCC */
+
+typedef unsigned long stdcbench_clock_t;
+#define STDCBENCH_CLOCKS_PER_SEC 9600
+
+#define C90BASE
+
+#undef C90FLOAT
+
+#undef C90DOUBLE
+
+#undef C90LIB // Lack of ROM on iCEBreaker FPGA board
+

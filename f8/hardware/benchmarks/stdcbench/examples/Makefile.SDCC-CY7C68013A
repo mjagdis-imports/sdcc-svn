@@ -1,0 +1,25 @@
+# A Makefile for SDCC targeting the CY7C68013A EZ-USB FX2LP USB2.0 board
+
+CC = sdcc -mmcs51 --model-large --stack-auto --code-loc 0x0000 --code-size 0x3500 --xram-loc 0x3500 --xram-size 0x0b00 --opt-code-speed --max-allocs-per-node 10000
+SOURCES = c90base.c c90base-data.c c90base-huffman-recursive.c c90base-isort.c c90float.c c90base-huffman_tree.c stdcbench.c c90base-compression.c c90base-huffman-iterative.c c90base-immul.c c90double.c c90lib.c c90lib-lnlc.c c90lib-peep.c c90lib-peep-stm8.c c90lib-htab.c portme.c
+OBJECTS = $(SOURCES:.c=.rel)
+
+.PHONY: all clean
+
+all: stdcbench.ihx
+
+stdcbench.ihx: $(OBJECTS)
+	$(CC) *.rel -o stdcbench.ihx
+
+%.rel: %.c *.h portme.h
+	$(CC) -c $<
+
+portme.c: examples/portme.c.SDCC-CY7C68013A
+	cp examples/portme.c.SDCC-CY7C68013A portme.c
+
+portme.h: examples/portme.h.SDCC-CY7C68013A
+	cp examples/portme.h.SDCC-CY7C68013A portme.h
+
+clean:
+	rm -f *.asm *.lst *.rel *.sym *.rst *.map *.lk *.cdb portme.c portme.h
+

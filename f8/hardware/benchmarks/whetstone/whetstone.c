@@ -57,6 +57,8 @@ C**********************************************************************
 #include <string.h>
 #include <math.h>
 
+void interrupthandler(void) __interrupt(0);
+
 /* the following is optional depending on the timing function used */
 void init(void);
 unsigned long clock(void);

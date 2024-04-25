@@ -1,0 +1,16 @@
+/* A portme.h for GCC targeting a GNU system (e.g. GNU/Linux)
+   It should also work for other hosted implementations of C */
+
+#include <time.h>
+
+typedef clock_t stdcbench_clock_t;
+#define STDCBENCH_CLOCKS_PER_SEC CLOCKS_PER_SEC
+
+#define C90BASE
+
+#undef C90FLOAT
+
+#undef C90DOUBLE
+
+#define C90LIB
+

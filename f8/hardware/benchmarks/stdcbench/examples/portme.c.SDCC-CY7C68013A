@@ -1,0 +1,147 @@
+/* A portme.c for SDCC targeting the CY7C68013A EZ-USB FX2LP USB2.0 board
+
+   (c) 2018 Philipp Klaus Krause
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version. */
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "stdcbench.h"
+
+__sfr __at(0x80) IOA;
+__sfr __at(0xb2) OEA;
+
+__sfr __at(0x88) TCON;
+__sfr __at(0x89) TMOD;
+__sfr __at(0x8a) TL0;
+__sfr __at(0x8c) TH0;
+__sfr __at(0x8b) TL1;
+__sfr __at(0x8d) TH1;
+
+__sfr __at(0xa8) IE;
+
+volatile __near unsigned long int clocktime;
+volatile bool clockupdate;
+
+volatile __near unsigned char sendcounter;
+volatile __near unsigned int senddata;
+volatile bool sending;
+
+volatile uint8_t __at(0xe600) CPUCS;
+
+void init(void)
+{
+	// 48 MHz core clock
+	CPUCS = 0x12;
+
+	// Configure timer 0 for 1000 clock ticks / second
+	TH0 = (65536 - 4000) / 256;
+	TL0 = (65536 - 4000) % 256;
+
+	// Configure timer 1 for 1200 baud
+	TH1 = (65536 - 3333) / 256;
+	TL1 = (65536 - 3333) % 256;
+
+	TMOD = 0x11;
+	IE = 0x82;
+	TCON |= 0x50; // Start timers
+
+	OEA=0x01; // port A as output
+}
+
+void clockinc(void) __interrupt(1)
+{
+	TH0 = (65536 - 4000) / 256;
+	TL0 = (65536 - 4000) % 256;
+	clocktime++;
+	clockupdate = true;
+}
+
+stdcbench_clock_t stdcbench_clock(void)
+{
+	stdcbench_clock_t ctmp;
+
+	do
+	{
+		clockupdate = false;
+		ctmp = clocktime;
+	} while (clockupdate);
+	
+	return(ctmp);
+}
+
+void send_bit(void) __interrupt(3)
+{
+	TH1 = (65536 - 3333) / 256;
+	TL1 = (65536 - 3333) % 256;
+
+	if(!sending)
+		return;
+
+	IOA = senddata & 1;
+	senddata >>= 1;
+
+	if(!--sendcounter)
+	{
+		sending = false;
+		IE &= ~0x08;
+	}
+}
+
+#if defined(__SDCC) && __SDCC_REVISION < 9624 // Old SDCC weirdness
+void putchar(char c)
+{
+	while(sending);
+
+	senddata = (c << 1) | 0x200;
+
+	sendcounter = 10;
+
+	sending = true;
+	IE |= 0x08;
+}
+#else // Standard C
+int putchar(int c)
+{
+	while(sending);
+
+	senddata = (c << 1) | 0x200;
+
+	sendcounter = 10;
+
+	sending = true;
+	IE |= 0x08;
+
+	return (c);
+}
+#endif
+
+void stdcbench_error(const char *message)
+{
+	printf("ERROR: %s\n", message);
+}
+
+_Noreturn void main(void)
+{
+	unsigned long score;
+
+	init();
+		
+	printf("\n%s\n", stdcbench_name_version_string);
+	score = stdcbench();
+#ifdef C90BASE
+	printf("stdcbench c90base score: %lu\n", c90base_score);
+#endif
+#ifdef C90LIB
+	printf("stdcbench c90lib score: %lu\n", c90lib_score);
+#endif
+	printf("stdcbench final score: %lu\n", score);
+
+	for(;;);
+}
+

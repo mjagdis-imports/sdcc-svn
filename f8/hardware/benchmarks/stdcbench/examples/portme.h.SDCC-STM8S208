@@ -1,0 +1,19 @@
+/* A portme.h for SDCC (or IAR or Cosmic or Raisonance) targeting the STM8/128-EVAL board */
+
+typedef unsigned int stdcbench_clock_t;
+#define STDCBENCH_CLOCKS_PER_SEC 1000
+
+#define C90BASE
+
+#undef C90FLOAT
+
+#undef C90DOUBLE
+
+#if defined(__SDCC) && __SDCC_REVISION < 10221 /* Older SDCC doesn't have strtol() */
+#undef C90LIB
+#elif defined(__CSMC__) || defined(__RCSTM8__) /* Cosmic doesn't have qsort(), Raisonance has other issues compiling c90lib */
+#undef C90LIB
+#else
+#define C90LIB
+#endif
+

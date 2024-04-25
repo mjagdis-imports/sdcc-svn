@@ -1,0 +1,136 @@
+/* A portme.c for SDCC (or IAR or Cosmic or Raisonance) targeting the NUCLEO-8L152R8 board
+
+   (c) 2018 Philipp Klaus Krause
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version. */
+
+#include <stdio.h>
+
+#include "stdcbench.h"
+
+void stdcbench_error(const char *message)
+{
+	printf("ERROR: %s\n", message);
+}
+
+#include <stdio.h>
+#include <stdint.h>
+
+#if __STDC_VERSION__ < 201112L
+#define _Noreturn
+#endif
+
+#define PC_DDR	(*(volatile uint8_t *)0x500c)
+#define PC_CR1	(*(volatile uint8_t *)0x500d)
+
+#define CLK_DIVR	(*(volatile uint8_t *)0x50c0)
+#define CLK_PCKENR1	(*(volatile uint8_t *)0x50c3)
+#define CLK_PCKENR2	(*(volatile uint8_t *)0x50c4)
+
+#define USART1_SR	(*(volatile uint8_t *)0x5230)
+#define USART1_DR	(*(volatile uint8_t *)0x5231)
+#define USART1_BRR1	(*(volatile uint8_t *)0x5232)
+#define USART1_BRR2	(*(volatile uint8_t *)0x5233)
+#define USART1_CR2	(*(volatile uint8_t *)0x5235)
+#define USART1_CR3	(*(volatile uint8_t *)0x5236)
+
+#define TIM1_CR1	(*(volatile uint8_t *)0x52b0)
+#define TIM1_PCNTRH	(*(volatile uint8_t *)0x52bf)
+#define TIM1_PCNTRL	(*(volatile uint8_t *)0x52c0)
+#define TIM1_PSCRH	(*(volatile uint8_t *)0x52c1)
+#define TIM1_PSCRL	(*(volatile uint8_t *)0x52c2)
+
+#define USART_CR2_TEN (1 << 3)
+#define USART_CR3_STOP2 (1 << 5)
+#define USART_CR3_STOP1 (1 << 4)
+#define USART_SR_TXE (1 << 7)
+
+void init(void)
+{
+	CLK_DIVR = 0x00; // Set the frequency to 16 MHz
+	CLK_PCKENR2 |= 0x02; // Enable clock to timer
+
+	// Configure timer
+	// 1000 ticks per second
+	TIM1_PSCRH = 0x3e;
+	TIM1_PSCRL = 0x80;
+	// Enable timer
+	TIM1_CR1 = 0x01;
+
+	CLK_PCKENR1 = 0xff; // Enable peripherals
+
+	PC_DDR = 0x08; // Put TX line on
+	PC_CR1 = 0x08;
+
+	USART1_CR2 = USART_CR2_TEN; // Allow TX & RX
+	USART1_CR3 &= ~(USART_CR3_STOP1 | USART_CR3_STOP2); // 1 stop bit
+	USART1_BRR2 = 0x03; USART1_BRR1 = 0x68; // 9600 baud
+}
+
+stdcbench_clock_t stdcbench_clock(void)
+{
+	unsigned char h = TIM1_PCNTRH;
+	unsigned char l = TIM1_PCNTRL;
+	return((unsigned int)(h) << 8 | l);
+}
+
+#if defined(__CSMC__) // Cosmic weirdness
+char putchar(char c)
+{
+        while(!(USART1_SR & USART_SR_TXE));
+
+        USART1_DR = c;
+        
+        return c;
+}
+#elif defined(__RCSTM8__) // Raisonance weirdness
+int putchar(char c)
+{
+	while(!(USART1_SR & USART_SR_TXE));
+
+	USART1_DR = c;
+
+	return(c);
+}
+#elif defined(__SDCC) && __SDCC_REVISION < 9624 // Old SDCC weirdness
+void putchar(char c)
+{
+  	while(!(USART1_SR & USART_SR_TXE));
+
+	USART1_DR = c;
+}
+#else // Standard C
+int putchar(int c)
+{
+	while(!(USART1_SR & USART_SR_TXE));
+
+	USART1_DR = c;
+
+	return(c);
+}
+#endif
+
+_Noreturn void main(void)
+{
+	unsigned long score;
+
+	init();
+		
+	printf("\n%s\n", stdcbench_name_version_string);
+
+	score = stdcbench();
+
+#ifdef C90BASE
+	printf("stdcbench c90base score: %lu\n", c90base_score);
+#endif
+#ifdef C90LIB
+	printf("stdcbench c90lib score: %lu\n", c90lib_score);
+#endif
+	printf("stdcbench final score: %lu\n", score);
+
+	for(;;);
+}
+

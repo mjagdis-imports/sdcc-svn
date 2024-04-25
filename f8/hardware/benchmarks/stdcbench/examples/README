@@ -1,0 +1,15 @@
+This directory contains example ports of stdcbench to toolchain/hardware combinations. Currently there are:
+
+Name              Compiler  Architecture  Core        Prozessor     Clock    Board
+
+GCC-GNU           GCC       *             *           *             *        [host system]
+GCC-STM32F051     GCC       ARM           Cortex-M0   STM32F051R8   48 MHz   STM32F0-Discovery
+GCC-STM32F103     GCC       ARM           Cortex-M3   STM32F103RB   36 MHz   NUCLEO-F103RB
+GCC-STM32F302     GCC       ARM           Cortex-M4   STM32F302R8   64 MHz   NUCLEO-F302R8
+GCC-STM32L073     GCC       ARM           Cortex-M0+  STM32L073RZ   32 MHz   NUCLEO-L073RZ
+SDCC-C8051        SDCC      MCS-51        C8051       C8051F120     98 MHz   C8051F V2.1 board
+SDCC-CY7C68013A   SDCC      MCS-51                    CY7C68013A    48 MHz   CY7C68013A EZ-USB FX2LP USB2.0 board
+SDCC-STM8AF       SDCC      STM8          STM8S       STM8AF5288    16 MHz   STM8AF board from the STM8A-Discovery kit
+SDCC-STM8S208     SDCC      STM8          STM8S       STM8S208MB    24 MHz   STM8/128-EVAL
+SDCC-STM8LNUCLEO  SDCC      STM8          STM8L       STM8L152RB    16 Mhz   NUCLEO-8L152R8
+

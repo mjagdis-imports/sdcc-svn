@@ -1,0 +1,13 @@
+/* A portme.h for SDCC targeting the CY7C68013A EZ-USB FX2LP USB2.0 board */
+
+typedef unsigned long int stdcbench_clock_t;
+#define STDCBENCH_CLOCKS_PER_SEC 1000
+
+#define C90BASE
+
+#undef C90FLOAT
+
+#undef C90DOUBLE
+
+#undef C90LIB /* c90lib module needs too much stack space for the MCS-51 */
+

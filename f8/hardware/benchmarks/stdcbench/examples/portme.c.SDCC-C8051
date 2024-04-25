@@ -1,0 +1,140 @@
+/* A portme.c for SDCC targeting the C8051F120
+
+   (c) 2018 Philipp Klaus Krause
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version. */
+
+#include <stdio.h>
+#include <stdbool.h>
+
+#include "stdcbench.h"
+
+#include <C8051F120.h>
+
+static volatile unsigned long int clocktime;
+static volatile bool clockupdate;
+
+void clockinc(void) __interrupt(1)
+{
+	TH0 = (65536 - 8167) / 256;
+	TL0 = (65536 - 8167) % 256;
+	clocktime++;
+	clockupdate = true;
+}
+
+void stdcbench_error(const char *message)
+{
+	printf("ERROR: %s\n", message);
+}
+
+stdcbench_clock_t stdcbench_clock(void)
+{
+	unsigned long int ctmp;
+
+	do
+	{
+		clockupdate = false;
+		ctmp = clocktime;
+	} while (clockupdate);
+	
+	return(ctmp);
+}
+
+unsigned char _sdcc_external_startup(void)
+{
+	// Disable watchdog timer
+	WDTCN = 0xde;
+	WDTCN = 0xad;
+
+	return 0; // perform normal initialization
+}
+
+void init(void)
+{
+	unsigned char i;
+
+	// Initialize I/O pins
+	SFRPAGE = 0xf;
+	XBR0 = 0x04;				// UART0 on P0.0 and P0.1
+	P0MDOUT = 0x01;				// Set port P0.0 (Uart tx) to push-pull
+	XBR2 = 0x40;				// Enable crossbar
+
+	OSCICN = 0xc3;				// Run internal oscillator at full 24.5 Mhz
+
+	// Use PLL to get SYSCLK to 98 MHz for higher benchmark scores
+	SFRPAGE = 0x0;
+	FLSCL = 0xb0;
+	SFRPAGE = 0xf;
+	PLL0CN = 0x01;
+	PLL0FLT = 0x01;
+	PLL0MUL = 0x04;
+	for (i = 0; i < 31; i++) // Wait 5 µs
+        {
+          __asm
+          nop
+          nop
+          nop
+          nop
+          __endasm;
+        }
+	PLL0CN = 0x03;
+	while (!(PLL0CN & 0x10));
+	CLKSEL = 0x02;
+
+	// Configure timer for 24.5 Mhz SYSCLK
+	// 1000 ticks per second
+	SFRPAGE = 0x0;
+	TH0 = (65536 - 8167) / 256;
+	TL0 = (65536 - 8167) % 256;
+	TMOD = 0x01;
+	IE |= 0x82;
+	TCON |= 0x10; // Start timer
+
+	// Configure UART for 4800 baud, 8 data bits, 1 stop bit.
+	SFRPAGE = 0x0;
+	TMOD = 0x21;
+	SCON0 = 0x40;
+	TH1 = 203;
+	TCON |= 0x40;
+	SCON0 |= 0x02;				// Tell putchar() the UART is ready to send.
+}
+
+#if defined(__SDCC) && __SDCC_REVISION < 9624 // Old SDCC weirdness
+void putchar(char c)
+{
+	while(!(SCON0 & 0x02));
+	SCON0 &= ~0x02;
+	SBUF0 = c;
+}
+#else // Standard C
+int putchar(int c)
+{
+	while(!(SCON0 & 0x02));
+	SCON0 &= ~0x02;
+	SBUF0 = c;
+	return (c);
+}
+#endif
+
+_Noreturn void main(void)
+{
+	unsigned long score;
+
+	init();
+		
+	printf("\n%s\n", stdcbench_name_version_string);
+	score = stdcbench();
+#ifdef C90BASE
+	printf("stdcbench c90base score: %lu\n", c90base_score);
+#endif
+#ifdef C90LIB
+	printf("stdcbench c90lib score: %lu\n", c90lib_score);
+#endif
+	printf("stdcbench final score: %lu\n", score);
+
+	for(;;);
+}
+

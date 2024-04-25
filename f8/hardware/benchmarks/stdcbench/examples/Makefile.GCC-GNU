@@ -1,0 +1,20 @@
+# A Makefile for GCC targeting a GNU system (e.g. GNU/Linux)
+
+SOURCES = c90base.c c90base-data.c c90base-huffman-recursive.c c90base-isort.c c90float.c c90base-huffman_tree.c stdcbench.c c90base-compression.c c90base-huffman-iterative.c c90base-immul.c c90double.c c90lib.c c90lib-lnlc.c c90lib-peep.c c90lib-peep-stm8.c c90lib-htab.c portme.c
+
+.PHONY: all clean
+
+all: stdcbench
+
+stdcbench: $(SOURCES) *.h portme.h
+	gcc -O2 -march=native *.c -o stdcbench
+
+portme.c: examples/portme.c.GCC-GNU
+	cp examples/portme.c.GCC-GNU portme.c
+
+portme.h: examples/portme.h.GCC-GNU
+	cp examples/portme.h.GCC-GNU portme.h
+
+clean:
+	rm -f portme.c portme.h
+

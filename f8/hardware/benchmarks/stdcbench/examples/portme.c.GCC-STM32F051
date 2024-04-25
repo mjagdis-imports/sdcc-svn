@@ -1,0 +1,225 @@
+/* A portme.c for GCC targeting a STM32F0-Discovery board
+
+   (c) 2018 Philipp Klaus Krause
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version. */
+
+#include "stdcbench.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
+extern unsigned char _sidata, _sdata, _edata, _sbss, _ebss, _estack;
+
+int main(void);
+
+void __attribute__((naked)) __libc_init_array ();
+
+void __attribute__((naked)) Reset_Handler () {
+  memcpy (&_sdata, &_sidata, &_edata - &_sdata);
+  memset (&_sbss, 0, &_ebss - &_sbss);
+  __libc_init_array ();
+  main ();
+}
+
+__attribute__ ((section(".isr_vector")))
+void (* const table_interrupt_vector[])(void) =
+{
+	(void *) &_estack, // 0 - stack
+	Reset_Handler, // 1
+};
+
+#define TIM2_BASE	0x40000000
+#define TIM2_CR1	(*(volatile uint16_t *)(TIM2_BASE + 0x00))
+#define TIM2_EGR	(*(volatile uint32_t *)(TIM2_BASE + 0x14))
+#define TIM2_CNT	(*(volatile uint32_t *)(TIM2_BASE + 0x24))
+#define TIM2_PSC	(*(volatile uint16_t *)(TIM2_BASE + 0x28))
+#define RCC_BASE	0x40021000
+#define RCC_CR	(*(volatile uint32_t *)(RCC_BASE + 0x00))
+#define RCC_CFGR	(*(volatile uint32_t *)(RCC_BASE + 0x04))
+#define RCC_AHBENR	(*(volatile uint32_t *)(RCC_BASE + 0x14))
+#define RCC_APB2ENR	(*(volatile uint32_t *)(RCC_BASE + 0x18))
+#define RCC_APB1ENR	(*(volatile uint32_t *)(RCC_BASE + 0x1c))
+#define FLASH_BASE	0x40022000
+#define FLASH_ACR	(*(volatile uint32_t *)(FLASH_BASE + 0x00))
+#define GPIOA_BASE	0x48000000
+#define GPIOA_MODER	(*(volatile uint32_t *)(GPIOA_BASE + 0x00))
+#define GPIOA_AFRH	(*(volatile uint32_t *)(GPIOA_BASE + 0x24))
+#define USART1_BASE	0x40013800
+#define USART1_CR1	(*(volatile uint32_t *)(USART1_BASE + 0x00))
+#define USART1_BRR	(*(volatile uint32_t *)(USART1_BASE + 0x0c))
+#define USART1_ISR	(*(volatile uint32_t *)(USART1_BASE + 0x1c))
+#define USART1_TDR	(*(volatile uint32_t *)(USART1_BASE + 0x28))
+
+void init48(void)
+{
+	// Set system clock to 48 MHz.
+	FLASH_ACR = 0x00000030; // Flash timing
+	RCC_CFGR = 0x00280000; // PLL x12
+	RCC_CR |= (1ul << 24); // Enable PLL
+	while(!(RCC_CR & (1ul << 25))); // Wait for PLL to become stable
+	RCC_CFGR = 0x00280002; // Use PLL output for system clock
+	while((RCC_CFGR & 0x3) != 0x2); // Wait for system clock to use PLL output
+}
+
+void init(void)
+{
+	init48();
+
+	RCC_AHBENR |= (1ul << 17); // Enable I/O A
+	RCC_APB2ENR |= (1ul << 14); // Enable USART1
+	RCC_APB1ENR |= (1ul << 0); // Enable Timer 2
+
+	// Use PA9, PA10 for USART instead of GPIO.
+	GPIOA_MODER |= (0x2ul << 18) | (0x2ul << 20);
+	GPIOA_AFRH |= (0x1ul << 4) | (0x1ul << 8);
+
+	// 9600 baud, 1 start bit, 8 data bits, 1 stop bit.
+	USART1_BRR = 48000000 / 9600;
+	USART1_CR1 = 0xd;
+
+	// Set timer for 1000 ticks per second.
+	TIM2_PSC = 48000;
+	TIM2_EGR = (1ul << 0);
+	TIM2_CR1 = (1ul << 0);
+}
+
+static void pc(int c)
+{
+	while(!(USART1_ISR & (1 << 7)));
+
+	USART1_TDR = (uint8_t)c;
+}
+
+#include <errno.h>
+#include <sys/stat.h>
+#include <sys/times.h>
+#include <sys/unistd.h>
+
+#undef errno
+extern int errno;
+
+int _write(int file, char *ptr, int len);
+
+void _exit(int status)
+{
+	_write(1, "exit", 4);
+	for(;;);
+}
+
+int _close(int file)
+{
+	return -1;
+}
+
+int _fstat(int file, struct stat *st)
+{
+	st->st_mode = S_IFCHR;
+	return 0;
+}
+
+int _isatty(int file)
+{
+	switch (file)
+	{
+	case STDOUT_FILENO:
+	case STDERR_FILENO:
+	case STDIN_FILENO:
+		return 1;
+	default:
+		errno = EBADF;
+		return 0;
+	}
+}
+
+int _lseek(int file, int ptr, int dir)
+{
+	return 0;
+}
+
+caddr_t _sbrk(int incr)
+{
+	static unsigned char heap[3072]; // 1KB of Heap space for stdcbench itself, 2 KB for printf() from newlib.
+	static unsigned char *heap_end;
+	unsigned char *prev_heap_end;
+
+	if (!heap_end)
+		heap_end = heap;
+
+	prev_heap_end = heap_end;
+
+	if (heap_end + incr > heap + sizeof(heap)) {
+		errno = ENOMEM;
+		return (caddr_t) -1;
+	}
+
+	heap_end += incr;
+	return (caddr_t) prev_heap_end;
+
+}
+
+int _read(int file, char *ptr, int len)
+{
+	errno = EBADF;
+		return -1;
+}
+
+int _stat(const char *filepath, struct stat *st)
+{
+	st->st_mode = S_IFCHR;
+	return 0;
+}
+
+clock_t _times(struct tms *buf)
+{
+	return -1;
+}
+
+int _write(int file, char *ptr, int len)
+{
+	int n;
+	switch (file) {
+	case STDOUT_FILENO:
+	case STDERR_FILENO:
+		for (n = 0; n < len; n++)
+			pc(*ptr++);
+		break;
+	default:
+		errno = EBADF;
+		return -1;
+	}
+	return len;
+}
+
+stdcbench_clock_t stdcbench_clock(void)
+{
+	return(TIM2_CNT);
+}
+
+void stdcbench_error(const char *message)
+{
+	printf("ERROR: %s\n", message);
+}
+
+int main(void)
+{
+	unsigned long score;
+
+	init();
+
+	printf("\n%s\n", stdcbench_name_version_string);
+	score = stdcbench();
+#ifdef C90BASE
+	printf("stdcbench c90base score: %lu\n", c90base_score);
+#endif
+#ifdef C90LIB
+	printf("stdcbench c90lib score: %lu\n", c90lib_score);
+#endif
+	printf("stdcbench final score: %lu\n", score);
+}
+

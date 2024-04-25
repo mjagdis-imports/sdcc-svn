@@ -1,0 +1,40 @@
+/* A portme.c for GCC targeting a GNU system (e.g. GNU/Linux)
+   It should also work for other hosted implementations of C
+
+   (c) 2018 Philipp Klaus Krause
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version. */
+
+#include <stdio.h>
+
+#include "stdcbench.h"
+
+#include <time.h>
+stdcbench_clock_t stdcbench_clock(void)
+{
+	return(clock());
+}
+
+void stdcbench_error(const char *message)
+{
+	printf("ERROR: %s\n", message);
+}
+
+int main(void)
+{
+	unsigned long score;
+
+	printf("\n%s\n", stdcbench_name_version_string);
+	score = stdcbench();
+#ifdef C90BASE
+	printf("stdcbench c90base score: %lu\n", c90base_score);
+#endif
+#ifdef C90LIB
+	printf("stdcbench c90lib score: %lu\n", c90lib_score);
+#endif
+	printf("stdcbench final score: %lu\n", score);
+}
+

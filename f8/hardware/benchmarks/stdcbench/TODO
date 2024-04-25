@@ -1,0 +1,7 @@
+* Add module for floating-point
+* Add example ports for:
+  - RISC-V: HiFive 1
+  - AVR: MEGA 2560
+  - MSP430: MSP430F247, MSP430F5510, MSP430F5529
+  - ARM: STM32F072, STM32F031, STM32F722
+
