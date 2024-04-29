@@ -2,7 +2,7 @@
 
 // Memory subsystem
 
-module memory #(parameter RAMADDRBITS = 10, ROMSIZE = 2048, logic [15:0] ROMBASE = 16'h4000)
+module memory #(parameter RAMSIZE = 1024, ROMSIZE = 2048, logic [15:0] ROMBASE = 16'h4000)
 	(input logic [14:0] read_addr_even, output logic [7:0] read_data_even, input logic [14:0] write_addr_even, input logic [7:0] write_data_even, input logic write_en_even,
 	input logic [14:0] read_addr_odd, output logic [7:0] read_data_odd, input logic [14:0] write_addr_odd, input logic [7:0] write_data_odd, input logic write_en_odd,
 	input logic clk);
@@ -10,7 +10,7 @@ module memory #(parameter RAMADDRBITS = 10, ROMSIZE = 2048, logic [15:0] ROMBASE
 	logic [7:0] read_data_rom_even, read_data_rom_odd, read_data_ram_even, read_data_ram_odd;
 
 	rom #(.SIZE(ROMSIZE), .ROMBASE(ROMBASE)) rom(.read_data_even(read_data_rom_even), .read_data_odd(read_data_rom_odd),.*);
-	ram #(.ADDRBITS(RAMADDRBITS)) ram(.read_data_even(read_data_ram_even), .read_data_odd(read_data_ram_odd), .*);
+	ram #(.SIZE(RAMSIZE)) ram(.read_data_even(read_data_ram_even), .read_data_odd(read_data_ram_odd), .*);
 
 	logic read_rom_even, read_rom_odd;
 	always_ff @(posedge clk)

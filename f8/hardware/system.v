@@ -7,7 +7,7 @@
 `include "io.v"
 
 // SoC. trap output line needed for tests only.
-module system  #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, MEMADDRBASE = 16'h2000) (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,
+module system  #(parameter ROMSIZE = 8192, RAMSIZE = 8192, MEMADDRBASE = 16'h2000) (inout tri logic [7:0] gpio0pins, inout tri logic [7:0] gpio1pins, inout tri logic [7:0] gpio2pins,
 	input logic clk, power_on_reset, output trap);
 
 	wire [15:0] iread_addr, dread_addr, dwrite_addr;
@@ -22,7 +22,7 @@ module system  #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, MEMADDRBASE = 16'h2
 	wire [15:0] mem_dread_data, io_dread_data;
 
 	cpu cpu(.*);
-	memory #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) memory(.dwrite_en(mem_dwrite_en), .dread_data(mem_dread_data), .*);
+	memory #(.ROMSIZE(ROMSIZE), .RAMSIZE(RAMSIZE)) memory(.dwrite_en(mem_dwrite_en), .dread_data(mem_dread_data), .*);
 	iosystem iosystem(.dwrite_en(io_dwrite_en), .dread_data(io_dread_data), .*);
 
 	logic [15:0] old_dread_addr;

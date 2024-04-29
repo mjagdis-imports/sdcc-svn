@@ -1,9 +1,11 @@
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
+SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
+SDCCFLAGS = --opt-code-size --max-allocs-per-node 20000
 
 .PHONY: all whetstone dhrystone clean
 
-all: whetstone/image.ihx dhrystone/image.ihx stdcbench/image.ihx whetstone/icebreaker2_synth.bin dhrystone/icebreaker2_synth.bin stdcbench/icebreaker2_synth.bin
+all: whetstone/image.ihx dhrystone/image.ihx stdcbench/image.ihx whetstone/icebreaker2_synth.bin dhrystone/icebreaker2_synth.bin stdcbench/icebreaker2_synth.bin whetstone/icesynthtest2.vcd dhrystone/icesynthtest2.vcd
 
 clean:
 	cd whetstone; $(MAKE) clean
@@ -11,14 +13,14 @@ clean:
 	cd stdcbench; $(MAKE) -f examples/Makefile.SDCC-F8 clean
 	rm -f */*.ihx */test*.vmem */icebreaker2_synth.json */icebreaker2_synth.asc */icebreaker2_synth.bin
 
-whetstone/image.ihx:
-	cd whetstone; $(MAKE) SDCC="$(SDCC)"
+whetstone/image.ihx: whetstone/*.c
+	cd whetstone; $(MAKE) SDCC="$(SDCC)" SDCCFLAGS="$(SDCCFLAGS)"
 
-dhrystone/image.ihx:
-	cd dhrystone; $(MAKE) SDCC="$(SDCC)"
+dhrystone/image.ihx: dhrystone/*.c dhrystone/*.h
+	cd dhrystone; $(MAKE) SDCC="$(SDCC)" SDCCFLAGS="$(SDCCFLAGS)"
 
-stdcbench/image.ihx:
-	cd stdcbench; $(MAKE) -f examples/Makefile.SDCC-F8 CC="$(SDCC)"
+stdcbench/image.ihx: stdcbench/*.c stdcbench/*.h
+	cd stdcbench; $(MAKE) -f examples/Makefile.SDCC-F8 CC="$(SDCC)" SDCCFLAGS="$(SDCCFLAGS)"
 	cd stdcbench; cp stdcbench.ihx image.ihx
 
 %/test.vmem: %/image.ihx
@@ -29,6 +31,17 @@ stdcbench/image.ihx:
 
 %/test.odd.vmem: %/test.vmem
 	srec_cat $< -Vmem --split 2 1 -o $@ -Vmem 8
+
+
+%/system2_icesynth.v: ../system2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../system2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system2_icesynth.v"
+
+%/f8-icesynthtest2system: ../icesynthtest2system.v %/system2_icesynth.v
+	cd $*; iverilog -g2009 -Wall -Ptestsystem.SIMULATIONTIME=30000 -o f8-icesynthtest2system $(CURDIR)/../icesynthtest2system.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
+
+%/icesynthtest2.vcd %/icesynthtest2.log &: %/f8-icesynthtest2system
+	cd $*; ./f8-icesynthtest2system > icesynthtest2.log
+
 
 %/icebreaker2_synth.json: $(CURDIR)/../icebreaker2_nosv.v %/test.odd.vmem %/test.even.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../icebreaker2_nosv.v; synth_ice40 -top icebreaker -json icebreaker2_synth.json"

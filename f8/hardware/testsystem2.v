@@ -14,7 +14,7 @@ module clkgen (output logic clk);
 endmodule
 
 // 10 KB ROM, 8 KB RAM.
-module testsystem #(parameter ROMSIZE = 10240, RAMADDRBITS = 13, SIMULATIONTIME = 8200) ();
+module testsystem #(parameter ROMSIZE = 10240, RAMSIZE = 8192, SIMULATIONTIME = 8200) ();
 	logic [7:0] gpio0pins, gpio1pins, gpio2pins;
 	logic clk;
 	logic trap;
@@ -32,7 +32,7 @@ module testsystem #(parameter ROMSIZE = 10240, RAMADDRBITS = 13, SIMULATIONTIME 
 	end
 
 	clkgen clkgen(.*);
-	system #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) system(.*);
+	system #(.ROMSIZE(ROMSIZE), .RAMSIZE(RAMSIZE)) system(.*);
 
 	always @(posedge clk)
 		if(trap)

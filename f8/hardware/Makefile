@@ -210,6 +210,6 @@ sdcctests2: f8-testsystem2-long
 sdccicesynthtests2: system2_nosv.v icesynthtestsystem.v
 	cd sdcctests; $(MAKE) SDCC="$(SDCC)" YOSYS="$(YOSYS)" YOSYS_CONFIG="$(YOSYS_CONFIG)" icesynthtests2
 
-benchmarks2: icebreaker2_nosv.v
+benchmarks2: icebreaker2_nosv.v icesynthtest2system.v system2_nosv.v
 	cd benchmarks; $(MAKE) SDCC="$(SDCC)" YOSYS="$(YOSYS)" YOSYS_CONFIG="$(YOSYS_CONFIG)"
 

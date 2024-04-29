@@ -6,7 +6,7 @@
 // Test module for use on GateMateA1-EVB FPGA board.
 
 // Default: 8KB ROM, 8 KB RAM, 2 MHz system clock.
-module gatematea1evb #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, CLKDIV = 5) (input logic CLK,
+module gatematea1evb #(parameter ROMSIZE = 8192, RAMSIZE = 8192, CLKDIV = 5) (input logic CLK,
 	inout tri PMOD_1, inout tri PMOD_2, inout tri PMOD_3, inout tri PMOD_4, inout tri PMOD_7, inout tri PMOD_8, inout tri PMOD_9, inout tri PMOD_10,
 	input logic BTN_N, inout tri RX, inout tri TX);
 	wire [7:0] gpio0pins, gpio1pins, gpio2pins;
@@ -42,7 +42,7 @@ module gatematea1evb #(parameter ROMSIZE = 8192, RAMADDRBITS = 13, CLKDIV = 5) (
 	assign gpio2pins[1] = RX;
 
 	clkdiv #(.CLKDIV(CLKDIV)) clkdiv(.*);
-	system #(.ROMSIZE(ROMSIZE), .RAMADDRBITS(RAMADDRBITS)) system(.*);
+	system #(.ROMSIZE(ROMSIZE), .RAMSIZE(RAMSIZE)) system(.*);
 endmodule
 
 `end_keywords

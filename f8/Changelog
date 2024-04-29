@@ -1,3 +1,23 @@
+2023-04-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile
+	  hardware/benchmarks/Makefile
+	  hardware/dualportram.v
+	  hardware/gatematea1evb.v
+	  hardware/gatematea1evb2.v
+	  hardware/icebreaker.v
+	  hardware/icebreaker2.v
+	  hardware/memory.v
+	  hardware/memory2.v
+	  hardware/ram.v
+	  hardware/ram2.v
+	  hardware/sdcctests/Makefile
+	  hardware/system.v
+	  hardware/system2.v
+	  hardware/testsystem.v
+	  hardware/testsystem2.v
+	  Support for non-power-of-two RAM sizes, use 6 KB RAM by default.
+
 2023-04-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

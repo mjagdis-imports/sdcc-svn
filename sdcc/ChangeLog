@@ -1,3 +1,8 @@
+2024-04-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/main.c:
+	  Assume 6 KB RAM for f8 by default.
+
 2024-04-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/ralloc2.cc:

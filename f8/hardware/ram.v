@@ -6,11 +6,10 @@
 // ADDRBITS = 11: 2K RAM at 0x3800 to 0x3fff
 // ADDRBITS = 12: 4K RAM at 0x3000 to 0x3fff
 // ADDRBITS = 13: 8K RAM at 0x2000 to 0x3fff
-module ram #(parameter ADDRBITS = 10) (input logic [15:0] dread_addr, output logic [15:0] dread_data, input logic [15:0] dwrite_addr, input logic [15:0] dwrite_data, input logic[1:0] dwrite_en, input logic clk);
-	localparam SIZE = 1 << (ADDRBITS - 1);
+module ram #(parameter SIZE = 1024) (input logic [15:0] dread_addr, output logic [15:0] dread_data, input logic [15:0] dwrite_addr, input logic [15:0] dwrite_data, input logic[1:0] dwrite_en, input logic clk);
 	localparam logic [15:0] RAMBASE = 16'h4000 - SIZE;
 
-	logic [ADDRBITS-1:0] dwrite_addr_rambased, dwrite_addr_rambased_even, dwrite_addr_rambased_odd;
+	logic [$clog2(SIZE)-1:0] dwrite_addr_rambased, dwrite_addr_rambased_even, dwrite_addr_rambased_odd;
 	logic [15:0] dread_addr_rambased, dread_addr_rambased_even, dread_addr_rambased_odd;
 	wire [15:0] dwrite_addr_even, dwrite_addr_odd;
 	wire [15:0] dread_addr_even, dread_addr_odd;
@@ -32,13 +31,13 @@ module ram #(parameter ADDRBITS = 10) (input logic [15:0] dread_addr, output log
 	assign dread_addr_rambased_even = dread_addr_even - RAMBASE;
 	assign dread_addr_rambased_odd = dread_addr_odd - RAMBASE;
 
-	dualportram #(.ADDRBITS(ADDRBITS-1)) evenram
-		(.din(dwrite_data_even), .write_en(dwrite_en_even), .waddr(dwrite_addr_even[ADDRBITS-1:1]),
-		.raddr(dread_addr_even[ADDRBITS-1:1]), .dout(dread_ram_data_even),
+	dualportram #(.SIZE(SIZE / 2)) evenram
+		(.din(dwrite_data_even), .write_en(dwrite_en_even), .waddr(dwrite_addr_even[$clog2(SIZE)-1:1]),
+		.raddr(dread_addr_even[$clog2(SIZE)-1:1]), .dout(dread_ram_data_even),
 		.clk(clk));
-	dualportram #(.ADDRBITS(ADDRBITS-1)) oddram
-		(.din(dwrite_data_odd), .write_en(dwrite_en_odd), .waddr(dwrite_addr_odd[ADDRBITS-1:1]),
-		.raddr(dread_addr_odd[ADDRBITS-1:1]), .dout (dread_ram_data_odd),
+	dualportram #(.SIZE(SIZE / 2)) oddram
+		(.din(dwrite_data_odd), .write_en(dwrite_en_odd), .waddr(dwrite_addr_odd[$clog2(SIZE)-1:1]),
+		.raddr(dread_addr_odd[$clog2(SIZE)-1:1]), .dout (dread_ram_data_odd),
 		.clk(clk));
 
 	logic dread_odd;

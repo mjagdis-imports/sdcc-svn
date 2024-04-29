@@ -3,7 +3,7 @@
 // Memory subsystem
 
 module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_addr, dwrite_data, dwrite_en, clk);
-	parameter RAMADDRBITS = 10;
+	parameter RAMSIZE = 1024;
 	parameter ROMSIZE = 2048;
 	parameter logic [15:0] ROMBASE = 16'h4000;
 
@@ -20,7 +20,7 @@ module memory(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrit
 	logic [15:0] dread_data_rom, dread_data_ram;
 
 	rom #(.SIZE(ROMSIZE), .ROMBASE(ROMBASE)) rom(.dread_data(dread_data_rom), .*);
-	ram #(.ADDRBITS(RAMADDRBITS)) ram(.dread_data(dread_data_ram), .*);
+	ram #(.SIZE(RAMSIZE)) ram(.dread_data(dread_data_ram), .*);
 
 	logic dread_rom;
 	always_ff @(posedge clk)

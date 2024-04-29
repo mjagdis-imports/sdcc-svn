@@ -47,7 +47,7 @@ extern2.rel: $(SDCCREGTESTPATH)/fwk/lib/extern2.c
 	$(SDCC) -c $< -o $@
 
 %.ihx: $(FWKLIB) %.rel
-	$(SDCC) --data-loc 0x2000 $^ -o $@
+	$(SDCC) --data-loc 0x2800 $^ -o $@
 
 %/icesynthtest2.vcd %/icesynthtest2.log &: %/f8-icesynthtest2system
 	cd $*; ./f8-icesynthtest2system > icesynthtest2.log
