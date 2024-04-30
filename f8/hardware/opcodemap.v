@@ -238,7 +238,7 @@ typedef enum logic [7:0] {
 	OPCODE_ADDW_SP_D =    8'hea, // addw sp, #d
 	OPCODE_ADDW_Y_D =     8'heb, // addw y, #d
 	OPCODE_XCH_F_SPREL =  8'hec, // xch f, (n, sp)
-	// todo
+	OPCODE_RESERVED_ED =  8'hed,
 	OPCODE_SEX_Y_XL =     8'hee, // sex y, xl
 	OPCODE_ZEX_Y_XL =     8'hef, // zex y, xl
 	OPCODE_ORW_Y_IMMD =   8'hf0, // orw y, #ii
