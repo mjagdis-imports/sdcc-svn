@@ -313,7 +313,7 @@ inline static void modify_table_random(uint8_t *table)
 	columnheight = NUM_OPCODES / rowlength;
 
 	uint8_t select[2];
-	getrandom (&select, 1, 0);
+	getrandom (&select, 2, 0);
 	if(!swap_rows) // Swap columns
 	{
 		select[0] %= rowlength;

@@ -13,7 +13,8 @@ genopcodemap: genopcodemap.c
 
 OPCODEMAPS = $(wildcard testdata_*/*/*/*/opcodemap.v)
 CASES = $(OPCODEMAPS:testdata_%/opcodemap.v=testdata_%)
-SIZES = $(CASES:testdata_%=testdata_%/icesynth2.size)
+ICESYNTHSIZES = $(CASES:testdata_%=testdata_%/icesynth.size)
+ICESYNTH2SIZES = $(CASES:testdata_%=testdata_%/icesynth2.size)
 
 %/cpu_nosv.v: ../hardware/cpu.v ../hardware/alu.v ../hardware/opcode.v
 	cd $*; cp $(CURDIR)/../hardware/cpu.v ./; cp $(CURDIR)/../hardware/alu.v ./; cp $(CURDIR)/../hardware/opcode.v ./; $(SV2V) --exclude=always --exclude=logic cpu.v > cpu_nosv.v
@@ -33,5 +34,5 @@ SIZES = $(CASES:testdata_%=testdata_%/icesynth2.size)
 %/icesynth2.size: %/icesynth2.yosyslog
 	grep "Number of cells:" $< | sed -e 's/.*: *//' > $@
 
-data: $(SIZES)
+data: $(ICESYNTHSIZES) $(ICESYNTH2SIZES)
 
