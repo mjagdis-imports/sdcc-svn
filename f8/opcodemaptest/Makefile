@@ -6,6 +6,9 @@ YOSYS_CONFIG = yosys-config
 
 all: genopcodemap
 
+clean:
+	rm -rf testdata_*
+
 .PHONY: data clean
 
 genopcodemap: genopcodemap.c

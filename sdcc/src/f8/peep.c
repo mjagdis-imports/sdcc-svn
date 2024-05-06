@@ -172,7 +172,7 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return !strcmp (what, "cf");
   if (ISINST (pl->line, "jrn") || ISINST (pl->line, "jrnn"))
     return !strcmp (what, "nf");
-  if (ISINST (pl->line, "jro") || ISINST (pl->line, "jrno"))
+  if (ISINST (pl->line, "jrno"))
     return !strcmp (what, "of");
   if (ISINST (pl->line, "jrz") || ISINST (pl->line, "jrnz"))
     return !strcmp (what, "zf");

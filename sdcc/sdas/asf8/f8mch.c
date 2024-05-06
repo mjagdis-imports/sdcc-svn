@@ -266,23 +266,20 @@ struct mne *mp;
 
 		switch(t1) {
 		case S_DIR:
-			outab(op | 0x00);
+			outab(op + 0x00);
 			outrw(&e1, R_USGN);
 			break;
 		case S_SPREL:
-			outab(op | 0x01);
+		case S_YREL:
+			outab(op + (t1 == S_SPREL ? 0x01 : 0x03));
 			if(ls_mode(&e1))
 				aerr();
 			else
 				outrb(&e1, R_USGN);
 			break;
-		case S_REG:
-			if(r1 == ZH) {
-				outab(op | 0x03);
-				break;
-			}		
+		case S_REG:		
 			altacc(r1);
-			outab(op | 0x02);
+			outab(op + 0x02);
 			break;
 
 		default:
@@ -408,18 +405,7 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (t1 == S_REG && r1 == YH && t2 == S_IMM) { // ld yh, #i
-			outab(0x94);
-			outrb(&e2, R_NORM);
-			break;
-		}
-		else if (t1 == S_REG && r1 == ZH && t2 == S_IMM) { // ld zh, #i
-			outab(OPCODE_ALTACC2);
-			outab(0x94);
-			outrb(&e2, R_NORM);
-			break;
-		}
-		else if(t1 == S_REG && !(t2 == S_REG && r2 == XL)) {
+		if(t1 == S_REG && !(t2 == S_REG && r2 == XL)) {
 			altacc(r1);
 			switch(t2) {
 			case S_IMM:
@@ -896,6 +882,8 @@ sex:
 			aerr();
 		break;
 
+        case S_JR2:
+                outab(OPCODE_SWAPOP);
 	case S_JR:
 		expr(&e1, 0);
 		outab(op);
@@ -1248,6 +1236,10 @@ void altacc(int reg)
 			outab(OPCODE_ALTACC2);
 		else if(reg == ZL)
 			outab(OPCODE_ALTACC3);
+		else if(reg == YH)
+			outab(OPCODE_ALTACC4);
+		else if(reg == ZH)
+			outab(OPCODE_ALTACC5);
 		else
 			aerr();
 	}

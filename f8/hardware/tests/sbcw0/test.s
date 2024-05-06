@@ -9,7 +9,9 @@
 	ldw	y, #0
 	tst	xl	; reset c
 	sbcw	y
-	jro	l1trap
+	jrno	l1n
+	trap
+l1n:
 	jrc	l1trap
 	jrz	l1trap
 	jrnn	l1trap
@@ -22,7 +24,9 @@ l1:
 	ldw	y, #0
 	tstw	y	; set c
 	sbcw	y
-	jro	l2trap
+	jrno	l2n
+	trap
+l2n:
 	jrnc	l2trap
 	jrnz	l2trap
 	jrn	l2trap
@@ -48,7 +52,9 @@ l3:
 	ldw	x, #0
 	tst	xl	; reset c
 	sbcw	x
-	jro	l4trap
+	jrno	l4n
+	trap
+l4n:
 	jrc	l4trap
 	jrz	l4trap
 	jrnn	l4trap
@@ -61,7 +67,9 @@ l4:
 	ldw	x, #0
 	tstw	y	; set c
 	sbcw	x
-	jro	l5trap
+	jrno	l5n
+	trap
+l5n:
 	jrnc	l5trap
 	jrnz	l5trap
 	jrn	l5trap
@@ -88,7 +96,9 @@ l6:
 	pushw	#0x0000
 	tst	xl	; reset c
 	sbcw	(0, sp)
-	jro	l7trap
+	jrno	l7n
+	trap
+l7n:
 	jrc	l7trap
 	jrz	l7trap
 	jrnn	l7trap
@@ -105,7 +115,9 @@ l7:
 	pushw	#0x0000
 	tstw	y	; set c
 	sbcw	(0, sp)
-	jro	l8trap
+	jrno	l8n
+	trap
+l8n:
 	jrnc	l8trap
 	jrnz	l8trap
 	jrn	l8trap
@@ -139,7 +151,9 @@ l9:
 	pushw	#0x0000
 	tst	xl	; reset c
 	sbcw	0x3ffe
-	jro	latrap
+	jrno	lan
+	trap
+lan:
 	jrc	latrap
 	jrz	latrap
 	jrnn	latrap
@@ -156,7 +170,9 @@ la:
 	pushw	#0x0000
 	tstw	y	; set c
 	sbcw	0x3ffe
-	jro	lbtrap
+	jrno	lbn
+	trap
+lbn:
 	jrnc	lbtrap
 	jrnz	lbtrap
 	jrn	lbtrap
@@ -192,7 +208,9 @@ lc:
 	pushw	#0x0000
 	tst	xl	; reset c
 	sbcw	(0x3f00, z)
-	jro	ldtrap
+	jrno	ldn
+	trap
+ldn:
 	jrc	ldtrap
 	jrz	ldtrap
 	jrnn	ldtrap
@@ -209,7 +227,9 @@ ld:
 	pushw	#0x0000
 	tstw	y	; set c
 	sbcw	(0x3f00, z)
-	jro	letrap
+	jrno	len
+	trap
+len:
 	jrnc	letrap
 	jrnz	letrap
 	jrn	letrap

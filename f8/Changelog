@@ -1,3 +1,16 @@
+2024-05-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/alu.v,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/opcode.v,
+	  hardware/opcodemap.v,
+	  hardware/tests/ld_yh/test.s,
+	  hardware/tests/ldw_y/test.s,
+	  hardware/tests/sbcw0/test.s,
+	  hardware/tests/xorw:
+	  Revise f8 instruction set.
+
 2023-04-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/opcodemap.v,

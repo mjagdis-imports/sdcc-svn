@@ -276,6 +276,7 @@ struct	mne	mne[] = {
     {	NULL,	"addw",		S_2OPWADD,	0,	0x78	},
     {	NULL,	"adcw",		S_2OPWADC,	0,	0x7c	},
     {	NULL,	"orw",		S_2OPW,		0,	0xf0	},
+    {	NULL,	"xorw",		S_2OPW,		0,	0xfc	},
 
 	/* 16-bit 1-op-instrustions */
     {	NULL,	"clrw",		S_1OPW,		0,	0xa0	},
@@ -342,14 +343,14 @@ struct	mne	mne[] = {
     {	NULL,	"jrnc",		S_JR,		0,	0xd5	},
     {	NULL,	"jrn",		S_JR,		0,	0xd6	},
     {	NULL,	"jrnn",		S_JR,		0,	0xd7	},
-    {	NULL,	"jro",		S_JR,		0,	0xd8	},
     {	NULL,	"jrno",		S_JR,		0,	0xd9	},
+    {	NULL,	"jro",		S_JR2,		0,	0xd9	},
     {	NULL,	"jrsge",	S_JR,		0,	0xda	},
     {	NULL,	"jrslt",	S_JR,		0,	0xdb	},
-    {	NULL,	"jrsgt",	S_JR,		0,	0xdc	},
     {	NULL,	"jrsle",	S_JR,		0,	0xdd	},
-    {	NULL,	"jrgt",		S_JR,		0,	0xde	},
+    {	NULL,	"jrsgt",	S_JR2,		0,	0xdd	},
     {	NULL,	"jrle",		S_JR,		0,	0xdf	},
+    {	NULL,	"jrgt",		S_JR2,		0,	0xdf	},
     {	NULL,	"dnjnz",	S_DNJNZ,	0,	0xd1	},
 
     /* other instructions */

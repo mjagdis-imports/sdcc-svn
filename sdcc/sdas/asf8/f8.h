@@ -53,6 +53,8 @@
 #define OPCODE_ALTACC1 0x9d
 #define OPCODE_ALTACC2 0x9e
 #define OPCODE_ALTACC3 0x9f
+#define OPCODE_ALTACC4 0x94
+#define OPCODE_ALTACC5 0xd8
 
 /*
  * Registers
@@ -117,6 +119,7 @@ S_0OPWSEX,
 S_0OPWCAX,
 S_BIT,
 S_JR,
+S_JR2,
 S_DNJNZ,
 S_JP,
 S_RET,

@@ -21,9 +21,10 @@ typedef enum logic [5:0] {
 	ALUINST_ADDW,	// 0x13
 	ALUINST_ADCW,
 	ALUINST_ORW,
+	ALUINST_XORW,
 	ALUINST_XCHB,
 	ALUINST_CLRW,
-	ALUINST_INCW,   // 0x18
+	ALUINST_INCW,   // 0x19
 	ALUINST_DECW,
 	ALUINST_ADCW0,
 	ALUINST_SBCW0,
@@ -31,7 +32,7 @@ typedef enum logic [5:0] {
 	ALUINST_SRLW,
 	ALUINST_RRCW,
 	ALUINST_RLCW,
-	ALUINST_SRAW,   // 0x20
+	ALUINST_SRAW,   // 0x21
 	ALUINST_SLLW1,
 	ALUINST_BOOLW,
 	ALUINST_XCH0,
@@ -89,7 +90,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 	wire logic overflow, halfcarry;
 
 	assign wideop =
-		(aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ORW ||
+		(aluinst == ALUINST_SUBW || aluinst == ALUINST_SBCW || aluinst == ALUINST_ADDW || aluinst == ALUINST_ADCW || aluinst == ALUINST_ORW || aluinst == ALUINST_XORW ||
 		aluinst == ALUINST_INCW || aluinst == ALUINST_DECW || aluinst == ALUINST_ADCW0 || aluinst == ALUINST_SBCW0 ||
 		aluinst == ALUINST_XCH0 ||
 		aluinst == ALUINST_SRLW || aluinst == ALUINST_SLLW || aluinst == ALUINST_RRCW || aluinst == ALUINST_RLCW || aluinst == ALUINST_SRAW || aluinst == ALUINST_SLLW1 ||
@@ -131,6 +132,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_ADDW ? {1'b0, op0[15:0]} + {1'b0, op1[15:0]} + 0 :
 		aluinst == ALUINST_ADCW ? {1'b0, op0[15:0]} + {1'b0, op1[15:0]} + c_in :
 		aluinst == ALUINST_ORW ? op0[15:0] | op1[15:0] :
+		aluinst == ALUINST_XORW ? op0[15:0] ^ op1[15:0] :
 		aluinst == ALUINST_XCHB ? (op1[7:0] & ~(1 << op2[2:0]) | (op0[0] << op2[2:0])) :
 		aluinst == ALUINST_SRLW ? {1'b0, op0[15:0]} >> 1 :
 		aluinst == ALUINST_SLLW ? {op0[14:0], 1'b0} :

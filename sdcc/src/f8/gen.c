@@ -87,6 +87,7 @@ enum asminst
   A_TSTW,
   A_XCH,
   A_XOR,
+  A_XORW,
 };
 
 static const char *asminstnames[] =
@@ -990,7 +991,7 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
   {
   case A_SBC:
   case A_SUB:
-    wassertl_bt (op1->type != AOP_LIT && op1->type != AOP_IMMD, "Subtraction with constant right operand not available.");
+    wassertl_bt (op1 && op1->type != AOP_LIT && op1->type != AOP_IMMD, "Subtraction with constant right operand not available.");
   case A_ADC:
   case A_ADD:
   case A_AND:
@@ -1041,6 +1042,7 @@ emit3cost (enum asminst inst, const asmop *op0, int offset0, const asmop *op1, i
         break;
       }
   case A_ORW:
+  case A_XORW:
     if (op1)
       op2w_cost (op0, offset0, op1, offset1);
     else
@@ -4046,10 +4048,11 @@ genCmp (const iCode *ic, iCode *ifx)
       if (!regalloc_dry_run)
         {
           tlbl = newiTempLabel (0);
+
           if (!sign)
-            emit2 (IC_TRUE (ifx) ? "jrle" : "jrgt", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrle" : "jrgt", "#!tlabel", labelKey2num (tlbl->key));
           else
-            emit2 (IC_TRUE (ifx) ? "jrsle" : "jrsgt", "!tlabel", labelKey2num (tlbl->key));
+            emit2 (IC_TRUE (ifx) ? "jrsle" : "jrsgt", "#!tlabel", labelKey2num (tlbl->key));
         }
       cost (2, 1);
       emitJP (IC_TRUE (ifx) ? IC_TRUE (ifx) : IC_FALSE (ifx), 0.5f);

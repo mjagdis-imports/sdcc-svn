@@ -155,7 +155,10 @@ l8:
 	jrz	l9trap
 	jrnn	l9trap
 	jrc	l9trap
-	jro	l9trap
+	jrno	l9n1
+l9trap:
+	trap
+l9n1:
 	pushw	#0x0000
 	ld	xl, #0x83
 	tst	xl
@@ -164,9 +167,7 @@ l8:
 	jrnz	l9trap
 	jrn	l9trap
 	jrnc	l9trap
-	jro	l9
-l9trap:
-	trap
+	jrno	l9trap
 l9:
 
 	; altacc': ldw	z, (z), altacc'': ldw	x, (x)

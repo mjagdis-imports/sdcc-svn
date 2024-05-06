@@ -1,6 +1,7 @@
 .area HOME
 
 	; Test 8-bit register-from-memory loads
+	; In an earlier draft of the f8 instruction set, ld yh, #i was an opcode. Now it is just a prefixed ld xl, #i
 
 	; Set stack pointer one above RAM.
 	ldw	y, #0x4000

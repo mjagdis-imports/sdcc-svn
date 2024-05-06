@@ -157,7 +157,7 @@ const char *opcodenames[NUM_OPCODES] =	{
 	"OPCODE_XCH_XL_SPREL",
 	"OPCODE_XCH_XL_IY",
 	"OPCODE_XCH_YL_YH",
-	"OPCODE_LD_YH_IMMD",
+	"OPCODE_ALTACC4",
 	"OPCODE_ROT_XL_IMMD",
 	"OPCODE_SRA_XL",
 	"OPCODE_DAA_XL",
@@ -225,7 +225,7 @@ const char *opcodenames[NUM_OPCODES] =	{
 	"OPCODE_JRNC_D",
 	"OPCODE_JRN_D",
 	"OPCODE_JRNN_D",
-	"OPCODE_JRO_D",
+	"OPCODE_ALTACC5",
 	"OPCODE_JRNO_D",
 	"OPCODE_JRSGE_D",
 	"OPCODE_JRSLT_D",
@@ -261,10 +261,10 @@ const char *opcodenames[NUM_OPCODES] =	{
 	"OPCODE_CAXW_IY_Z_X",
 	"OPCODE_NEGW_Y",
 	"OPCODE_BOOLW_Y",
-	"OPCODE_RESERVED_FC",
-	"OPCODE_RESERVED_FD",
-	"OPCODE_RESERVED_FE",
-	"OPCODE_RESERVED_FF",
+	"OPCODE_XORW_Y_IMMD",
+	"OPCODE_XORW_Y_DIR",
+	"OPCODE_XORW_Y_SPREL",
+	"OPCODE_XORW_Y_X",
 	};
 
 inline static void init_table_order(uint8_t *table)
