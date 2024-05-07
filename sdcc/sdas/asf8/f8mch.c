@@ -519,6 +519,21 @@ opw:
 		aerr(); // todo
 		break;
 
+	case S_LDI:
+		t1 = addr(&e1);
+		r1 = rcode;
+		comma(1);
+		t2 = addr(&e2);
+		r2 = rcode;
+
+		if (t1 == S_IX && r1 == Z && t2 == S_IX)
+		{
+			altaccw(r2);
+			outab(op);
+		}
+		else
+			aerr();
+		break;
 	case S_LDW:
 		t1 = addr(&e1);
 		r1 = rcode;

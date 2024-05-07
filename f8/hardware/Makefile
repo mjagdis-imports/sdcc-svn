@@ -2,7 +2,7 @@
 SDAS = /home/philipp/sdcc-branches/f8/sdcc/bin/sdasf8
 SDLD = /home/philipp/sdcc-branches/f8/sdcc/bin/sdldf8
 # sv2v is not in Debian. Use custom build of sv2v 0.0.11
-SV2V = /home/philipp/sv2v-0.0.11/bin/sv2v
+SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 # Debian has yosys 0.33, which is too old. A custom build of yosys 0.38 has been installed to /usr/local.
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
@@ -84,13 +84,13 @@ gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
 
 # For yosys, -noflatten makes debugging easier but results in less optimization, and p_r can't handle yosys -noflatten output (and needs -nomx8 here).
 %/icebreaker_synth.json: icebreaker_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -top icebreaker -json icebreaker_synth.json"
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -abc2 -top icebreaker -json icebreaker_synth.json"
 
 %/gatematea1evb_synth.v: gatematea1evb_nosv.v %/test.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_synth.v"
 
 %/icebreaker2_synth.json: icebreaker2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker2_nosv.v; synth_ice40 -top icebreaker -json icebreaker2_synth.json"
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker2_nosv.v; synth_ice40 -abc2 -top icebreaker -json icebreaker2_synth.json"
 
 %/gatematea1evb2_synth.v: gatematea1evb2_nosv.v %/test.even.vmem %/test.odd.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"

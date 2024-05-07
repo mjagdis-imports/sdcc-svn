@@ -1,5 +1,5 @@
 # sv2v is not in Debian. Use custom build of sv2v 0.0.11
-SV2V = /home/philipp/sv2v-0.0.11/bin/sv2v
+SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 # Debian has yosys 0.33, which is too old. A custom build of yosys 0.38 has been installed to /usr/local.
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config

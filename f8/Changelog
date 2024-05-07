@@ -8,7 +8,11 @@
 	  hardware/tests/ld_yh/test.s,
 	  hardware/tests/ldw_y/test.s,
 	  hardware/tests/sbcw0/test.s,
-	  hardware/tests/xorw:
+	  hardware/tests/xorw,
+	  hardware/tests/ldi,
+	  hardware/tests/ldwi,
+	  opcodemaptest/Makefile,
+	  opcodemaptest/genopcodemap.c_
 	  Revise f8 instruction set.
 
 2023-04-30 Philipp Klaus Krause <philipp@colecovision.eu>

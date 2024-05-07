@@ -288,9 +288,11 @@ struct	mne	mne[] = {
 
     /* 8-bit loads */
     {	NULL,	"ld",		S_LD,		0,	0x80	},
+    {	NULL,	"ldi",		S_LDI,		0,	0xed	},
 
     /* 16-bit loads */
     {	NULL,	"ldw",		S_LDW,		0,	0xc0	},
+    {	NULL,	"ldwi",		S_LDI,		0,	0xcf	},
     
     /* 8-bit 0-op-instrustions */     
     {	NULL,	"bool",		S_0OP,		0,	0x98	},
