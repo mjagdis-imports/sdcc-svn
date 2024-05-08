@@ -1,4 +1,12 @@
-2024-05-06 Philipp Klaus Krause <philipp@colecovision.eu>
+2024-05-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/f8.src/decode.h,
+	  sim/ucsim/f8.src/f8cl.h,
+	  sim/ucsim/f8.src/glob.cc,
+	  sim/ucsim/f8.src/imove.cc:
+	  ldi, ldwi f8 simulator support.
+
+2024-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8.h,
 	  sdas/asf8/f8mch.c,
