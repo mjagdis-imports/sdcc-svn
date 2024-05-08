@@ -1,3 +1,8 @@
+2024-05-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* opcodemaptest/Makefile
+	  f8 opcode map experiments infrastructure.
+
 2024-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/alu.v,

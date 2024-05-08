@@ -9,7 +9,7 @@ all: genopcodemap
 clean:
 	rm -rf testdata_*
 
-.PHONY: data clean
+.PHONY: data clean icehead ice2head
 
 genopcodemap: genopcodemap.c
 	gcc --std=c2x -Wall -pedantic $< -o $@
@@ -38,4 +38,10 @@ ICESYNTH2SIZES = $(CASES:testdata_%=testdata_%/icesynth2.size)
 	grep "Number of cells:" $< | sed -e 's/.*: *//' > $@
 
 data: $(ICESYNTHSIZES) $(ICESYNTH2SIZES)
+
+icehead: data
+	find . -name icesynth.size -exec cat {} \; | sort -n | head
+
+icehead2: data
+	find . -name icesynth2.size -exec cat {} \; | sort -n | head
 
