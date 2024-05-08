@@ -22,6 +22,34 @@
 	  src/f8/peep.c:
 	  Revise f8 instruction set.
 
+2024-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/sha3-256.c:
+	  SHA3-256 test assumes little endian, so disable it for other systems.
+
+2024-05-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  mcs51 named address space clarifications.
+	* support/regression/tests/sha3-256.c:
+	  Test for bug #3731.
+
+2024-05-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Fix an issue in previous commit.
+
+2024-04-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/peeph.def:
+	  Improve use of register a and (hl) in comparisons.
+
+2024-04-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  Fix an issue in the handling of register hl vs a in write via pointer.
+
 2024-04-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/main.c:
