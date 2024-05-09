@@ -1,6 +1,8 @@
-#include <stdio.h>
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <fcntl.h>
 #include <sys/random.h>
@@ -356,25 +358,47 @@ static void print_table(FILE *f, const uint8_t * table)
 	fprintf(f, "} opcode_t;\n");
 }
 
+void help(FILE *f)
+{
+	fprintf(f, "genopcodemap [-d <n>] [order|<path>]\n");
+	fprintf(f, "<path> format: testdata_<128 hex digits>/<128 hex digits>/<128 hex digits>/<128 hex digits>[/opcodemap.v]\n");
+}
+
 int main(int argc, char **argv)
 {
 	uint8_t table[NUM_OPCODES];
+	int d = 0;
 
 	if(argc < 2)
 		init_table_random(table);
+	else if(!strcmp(argv[1], "--help") || !strcmp(argv[argc - 1], "--help"))
+	{
+		help(stdout);
+		return(0);
+	}
 	else if(!strcmp(argv[1], "order"))
 		init_table_order(table);
-	else if(strlen(argv[1]) >= 64 * 4 * 2 + 3)
-	{
-		init_table_arg(table, argv[1]);
-		modify_table_random(table);
-	}
+	else if(strlen(argv[argc - 1]) >= 64 * 4 * 2 + 3)
+		init_table_arg(table, argv[argc - 1]);	
 	else
 	{
-		fprintf(stderr, "genopcodemap [order|<path>]\n");
-		fprintf(stderr, "<path> format: testdata_<128 hex digits>/<128 hex digits>/<128 hex digits>/<128 hex digits>[/opcodemap.v]\n");
+		help(stderr);
 		return(-1);
 	}
+
+	if(argc == 4)
+	{
+		long l = strtol(argv[2], 0, 0);
+		if(strcmp(argv[1], "-d") || l < 0 || l == LONG_MAX || l > INT_MAX)
+		{
+			help(stderr);
+			return(-1);
+		}
+		d = l;
+	}
+
+	while (d--)
+		modify_table_random(table);
 
 	char dirname[9 + NUM_OPCODES * 2 + 3 + 1] = "testdata_";
 	char filename[9 + NUM_OPCODES * 2 + 3 + 1 + 11 + 1] = "testdata_";
