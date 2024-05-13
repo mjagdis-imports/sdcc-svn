@@ -33,12 +33,6 @@ static struct
 //extern bool stm8_regs_used_as_parms_in_calls_from_current_function[YH_IDX + 1];
 //extern bool stm8_regs_used_as_parms_in_pcalls_from_current_function[YH_IDX + 1];
 
-int
-f8instructionSize(lineNode *pl)
-{
-  return 4; // Max instruction size is 4 (including one prefix byte).}
-}
-
 /*-----------------------------------------------------------------*/
 /* incLabelJmpToCount - increment counter "jmpToCount" in entry    */
 /* of the list labelHash                                           */
@@ -105,7 +99,7 @@ findLabel (const lineNode *pl)
   return NULL;
 }
 
-const char *leftArg (const char *arg)
+static const char *leftArg (const char *arg)
 {
   while (isspace (*arg))
     arg++;
@@ -113,11 +107,10 @@ const char *leftArg (const char *arg)
     arg++;
   while (isspace (*arg))
     arg++;
-  wassert (*arg);
   return (arg);
 }
 
-const char *rightArg (const char *arg)
+static const char *rightArg (const char *arg)
 {
   arg = leftArg (arg);
   unsigned int parens = 0;
@@ -133,6 +126,210 @@ const char *rightArg (const char *arg)
   while (isspace (*arg))
     arg++;
   return (arg);
+}
+
+static bool isReg8(const char *arg)
+{
+  return (!strncmp (arg, "xl", 2) || !strncmp (arg, "xh", 2) ||
+    !strncmp (arg, "yl", 2) || !strncmp (arg, "yh", 2) ||
+    !strncmp (arg, "zl", 2) || !strncmp (arg, "zh", 2));
+}
+
+static bool isReg16(const char *arg)
+{
+  return ((arg[0] == 'x' || arg[0] == 'y' || arg[0] == 'z') && !isalnum(arg[1]));
+}
+
+static bool isSprel(const char *arg)
+{
+  if (*arg != '(')
+    return false;
+  arg++;
+  for(;; arg++)
+    {
+      if (!*arg)
+        return false;
+      if (*arg == ',')
+        break;
+    }
+  return (!strncmp (arg, ", sp)", 5));
+}
+
+static bool isYrel(const char *arg)
+{
+  if (*arg != '(')
+    return false;
+  arg++;
+  for(;; arg++)
+    {
+      if (!*arg)
+        return false;
+      if (*arg == ',')
+        break;
+    }
+  return (!strncmp (arg, ", y)", 4));
+}
+
+int
+f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
+{
+  const char *larg = leftArg (pl->line);
+  const char *rarg = rightArg (pl->line);
+
+  if (ISINST (pl->line, "adc") || ISINST (pl->line, "add") || ISINST (pl->line, "and") ||  ISINST (pl->line, "cp") ||
+    ISINST (pl->line, "or") || ISINST (pl->line, "sbc") || ISINST (pl->line, "sub") || ISINST (pl->line, "xor"))
+    {
+      if (!strncmp (larg, "xl", 2) && isReg8 (rarg))
+        return 1;
+      else if (isReg8 (larg) && !strncmp (rarg, "xl", 2))
+        return 2;
+      else if (!strncmp (larg, "xl", 2) && isSprel (rarg))
+        return 2;
+      else if (isReg8 (larg) && isSprel (rarg))
+        return 3;
+      else if (!strncmp (larg, "xl", 2) && rarg[0] == '#')
+        return 2;
+      else if (isReg8 (larg) && rarg[0] == '#')
+        return 3;
+      else if (!strncmp (larg, "xl", 2) )
+        return 3;
+      else
+        return 4;
+    }
+
+  if (ISINST (pl->line, "bool") || ISINST (pl->line, "clr") || ISINST (pl->line, "daa") || ISINST (pl->line, "dec") ||
+    ISINST (pl->line, "inc") ||  ISINST (pl->line, "pop") ||  ISINST (pl->line, "push") ||  ISINST (pl->line, "rlc") ||
+    ISINST (pl->line, "rrc") || ISINST (pl->line, "sll") || ISINST (pl->line, "sra") || ISINST (pl->line, "srl") ||
+    ISINST (pl->line, "thrd") || ISINST (pl->line, "tst"))
+    {
+      if (!strncmp (larg, "xl", 2))
+        return 1;
+      else if (isReg8 (larg))
+        return 2;
+      else if (larg[0] == '#' || isSprel (larg))
+        return 2;
+      else
+        return 3;
+    }
+
+  if (ISINST (pl->line, "boolw") || ISINST (pl->line, "clrw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incw") ||
+    ISINST (pl->line, "incnw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "popw") ||
+    ISINST (pl->line, "pushw") || ISINST (pl->line, "sllw") || ISINST (pl->line, "sraw") || ISINST (pl->line, "srlw") ||
+    ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrcw") || ISINST (pl->line, "tstw"))
+    {
+      if (larg[0] == 'y')
+        return 1;
+      else if (isReg16 (larg))
+        return 2;
+      else if (isSprel (larg))
+        return 2;
+      else
+        return 3;
+    }
+
+  if (ISINST (pl->line, "xch") && !strncmp (larg, "f", 2) && isSprel (larg))
+    return 1;
+
+  if (ISINST (pl->line, "addw") && !strncmp (larg, "sp", 2) && rarg[0] == '#')
+    return 2;
+
+  if (ISINST (pl->line, "cpw") || ISINST (pl->line, "orw") || ISINST (pl->line, "sbcw") || ISINST (pl->line, "subw") || ISINST (pl->line, "xorw"))
+    {
+      if (larg[0] == 'y' && rarg[0] == 'x')
+        return 1;
+      else if (isReg16 (larg) && isReg16 (rarg))
+        return 2;
+      else if (larg[0] == 'y' && isSprel (rarg))
+        return 2;
+      else if (isReg16 (larg) && isSprel (rarg))
+        return 3;
+      else if (larg[0] == 'y')
+        return 3;
+      else
+        return 4;
+    }
+
+  if (ISINST (pl->line, "ld")) // todo: more cases.
+    {
+      if (!strncmp (larg, "xl", 2) && isReg8 (rarg))
+        return 1;
+      else if (isReg8 (larg) && !strncmp (rarg, "xl", 2))
+        return 2;
+      else if (!strncmp (larg, "xl", 2) && (isSprel (rarg) || isYrel (rarg)) ||
+        (isSprel (larg) || isYrel (larg)) && !strncmp (rarg, "xl", 2))
+        return 2;
+      else if (isReg8 (larg) && (isSprel (rarg) || isYrel (rarg)) ||
+        (isSprel (larg) || isYrel (larg)) && isReg8 (rarg))
+        return 3;
+      else if (!strncmp (larg, "xl", 2) && rarg[0] == '#')
+        return 2;
+      else if (!strncmp (larg, "xl", 2) && !strncmp (rarg, "(y)", 3))
+        return 1;
+      else if (isReg8 (larg) && !strncmp (rarg, "(y)", 3))
+        return 2;
+      else if (!strncmp (larg, "(y)", 3) && !strncmp (rarg, "xl", 2))
+        return 1;
+      else if (!strncmp (larg, "(y)", 3) && isReg8 (rarg))
+        return 2;
+    }
+
+  if (ISINST (pl->line, "ldw")) // todo: more cases.
+    {
+      if (!strncmp (larg, "y", 1) && !strncmp (larg, "x", 1))
+        return 1;
+      else if (isReg16 (larg) && !strncmp (rarg, "y", 1))
+        return 1;
+      else if (!strncmp (larg, "y", 1) && !strncmp (larg, "z", 1))
+        return 2;
+      else if (!strncmp (larg, "y", 1) && (isSprel (rarg) || isYrel (rarg)) ||
+        isSprel (larg) && !strncmp (rarg, "y", 1))
+        return 2;
+      else if (!strncmp (larg, "y", 1) && !strncmp (rarg, "(y)", 3))
+        return 1;
+      else if (!strncmp (larg, "(y)", 3) &&  !strncmp (larg, "x", 1))
+        return 1;
+      else if (isYrel (larg) &&  !strncmp (larg, "x", 1))
+        return 2;
+    }
+
+  if (ISINST (pl->line, "zex") || ISINST (pl->line, "sex"))
+    {
+      if (!strncmp (larg, "y", 1) && !strncmp (rarg, "xl", 2))
+        return 1;
+      else
+        return 2;
+    }
+
+  if (ISINST (pl->line, "mad") || ISINST (pl->line, "nop"))
+    return 1;
+
+  if (ISINST (pl->line, "call") || ISINST (pl->line, "jp"))
+    {
+      if (larg[0] == 'y')
+        return 1;
+      else if (isReg16 (larg))
+        return 2;
+      else
+        return 3;
+    }
+  else if (STARTSINST (pl->line, "jr"))
+    {
+      if (ISINST (pl->line, "jro") || ISINST (pl->line, "jrsgt") || ISINST (pl->line, "jrgt"))
+        return 3;
+      else
+        return 2;
+    }
+  else if (ISINST (pl->line, "dnjnz"))
+    {
+      if (!strncmp (larg, "yh", 2))
+        return 2;
+      else
+        return 3;
+    }
+  else if (ISINST (pl->line, "ret") || ISINST (pl->line, "reti"))
+    return 1;
+
+  return 4; // Fallback: maximal instruction size is 4 (including one prefix byte).}
 }
 
 static bool
@@ -166,17 +363,22 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return false;
   if (ISINST (pl->line, "xchb"))
     return false;
+
   if (ISINST (pl->line, "call") || ISINST (pl->line, "dnjnz") || ISINST (pl->line, "jr") || ISINST (pl->line, "jp"))
     return false;
   if (ISINST (pl->line, "jrc") || ISINST (pl->line, "jrnc"))
     return !strcmp (what, "cf");
   if (ISINST (pl->line, "jrn") || ISINST (pl->line, "jrnn"))
     return !strcmp (what, "nf");
-  if (ISINST (pl->line, "jrno"))
-    return !strcmp (what, "of");
   if (ISINST (pl->line, "jrz") || ISINST (pl->line, "jrnz"))
     return !strcmp (what, "zf");
-  // Todo: remaining conditional jumps.
+  if (ISINST (pl->line, "jrno") || ISINST (pl->line, "jro"))
+    return !strcmp (what, "of");
+  if (ISINST (pl->line, "jrsle") || ISINST (pl->line, "jrsgt"))
+    return !strcmp (what, "zf") || !strcmp (what, "nf") || !strcmp (what, "of");
+  if (ISINST (pl->line, "jrle") || ISINST (pl->line, "jrgt"))
+    return !strcmp (what, "cf") || !strcmp (what, "zf");
+
   if (ISINST (pl->line, "ret"))
     return false;
   if (ISINST (pl->line, "reti"))
