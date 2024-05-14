@@ -170,6 +170,36 @@ static bool isYrel(const char *arg)
   return (!strncmp (arg, ", y)", 4));
 }
 
+static bool
+isInt(const char *str)
+{
+  int ret;
+  while(str[0] == '#' || str[0] == '(' || str[0] == '[' || isspace ((unsigned char)str[0]))
+    str++;
+  if(sscanf(str, "0x%x", &ret))
+    return(ret);
+  if(!sscanf(str, "%d", &ret))
+    return(false);
+  return(true);
+}
+
+static int
+readint(const char *str)
+{
+  int ret;
+  while(str[0] == '#' || str[0] == '(' || str[0] == '[' || isspace ((unsigned char)str[0]))
+    str++;
+  if(sscanf(str, "0x%x", &ret))
+    return(ret);
+  if(!sscanf(str, "%d", &ret))
+    {
+      wassertl (0, "readint() got non-integer argument:");
+      fprintf (stderr, "%s\n", str);
+      ret = -1;
+    }
+  return(ret);
+}
+
 int
 f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
 {
@@ -212,7 +242,8 @@ f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
         return 3;
     }
 
-  if (ISINST (pl->line, "boolw") || ISINST (pl->line, "clrw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incw") ||
+  if ((ISINST (pl->line, "adcw") || ISINST (pl->line, "sbcw") && !rarg[0]) ||
+    ISINST (pl->line, "boolw") || ISINST (pl->line, "clrw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incw") ||
     ISINST (pl->line, "incnw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "popw") ||
     ISINST (pl->line, "pushw") || ISINST (pl->line, "sllw") || ISINST (pl->line, "sraw") || ISINST (pl->line, "srlw") ||
     ISINST (pl->line, "rlcw") || ISINST (pl->line, "rrcw") || ISINST (pl->line, "tstw"))
@@ -227,13 +258,22 @@ f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
         return 3;
     }
 
-  if (ISINST (pl->line, "xch") && !strncmp (larg, "f", 2) && isSprel (larg))
+  if (ISINST (pl->line, "xch") && larg[0] == 'f' && isSprel (rarg))
     return 1;
 
   if (ISINST (pl->line, "addw") && !strncmp (larg, "sp", 2) && rarg[0] == '#')
     return 2;
 
-  if (ISINST (pl->line, "cpw") || ISINST (pl->line, "orw") || ISINST (pl->line, "sbcw") || ISINST (pl->line, "subw") || ISINST (pl->line, "xorw"))
+  if (ISINST (pl->line, "addw") && rarg[0] == '#' && isInt (rarg) && readint (rarg) <= 0xff)
+    {
+      if (larg[0] == 'y')
+        return 2;
+      else
+        return 3;
+    }
+
+  if (ISINST (pl->line, "addw") || ISINST (pl->line, "cpw") || ISINST (pl->line, "orw") || ISINST (pl->line, "sbcw") ||
+    ISINST (pl->line, "subw") || ISINST (pl->line, "xorw"))
     {
       if (larg[0] == 'y' && rarg[0] == 'x')
         return 1;
@@ -271,25 +311,66 @@ f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
         return 1;
       else if (!strncmp (larg, "(y)", 3) && isReg8 (rarg))
         return 2;
+      else if (isReg8 (larg) && isReg8 (rarg))
+        return 2;
+      else if (!strncmp (larg, "xl", 2) || !strncmp (rarg, "xl", 2))
+        return 3;
+      else
+        return 4;
     }
 
-  if (ISINST (pl->line, "ldw")) // todo: more cases.
+  if (ISINST (pl->line, "ldi") || ISINST (pl->line, "ldwi"))
     {
-      if (!strncmp (larg, "y", 1) && !strncmp (larg, "x", 1))
+      if (!strncmp (rarg, "(y)", 3))
         return 1;
-      else if (isReg16 (larg) && !strncmp (rarg, "y", 1))
-        return 1;
-      else if (!strncmp (larg, "y", 1) && !strncmp (larg, "z", 1))
+      else
         return 2;
-      else if (!strncmp (larg, "y", 1) && (isSprel (rarg) || isYrel (rarg)) ||
-        isSprel (larg) && !strncmp (rarg, "y", 1))
-        return 2;
-      else if (!strncmp (larg, "y", 1) && !strncmp (rarg, "(y)", 3))
+    }
+
+  if (ISINST (pl->line, "ldw"))
+    {
+      if (larg[0] == 'y' && rarg[0] == 'x')
         return 1;
-      else if (!strncmp (larg, "(y)", 3) &&  !strncmp (larg, "x", 1))
+      else if (isReg16 (larg) && rarg[0] == 'y')
         return 1;
-      else if (isYrel (larg) &&  !strncmp (larg, "x", 1))
+      else if (larg[0] == 'y' && rarg[0] == 'z')
         return 2;
+      else if (larg[0] == 'y' && (isSprel (rarg) || isYrel (rarg)) ||
+        isSprel (larg) && rarg[0] == 'y')
+        return 2;
+      else if (isReg16 (larg) && isSprel (rarg) ||
+        isSprel (larg) && isReg16 (rarg))
+        return 3;
+      else if (larg[0] == 'y' && !strncmp (rarg, "(y)", 3))
+        return 1;
+      else if (!strncmp (larg, "(y)", 3) && rarg[0] == 'x')
+        return 1;
+      else if (isYrel (larg) && rarg[0] == 'x')
+        return 2;
+      else if (larg[0] == 'y' && rarg[0] == '#' && isInt (rarg) && readint (rarg) <= 0xff)
+        return 2;
+      else if (isReg16 (larg) && rarg[0] == '#' && isInt (rarg) && readint (rarg) <= 0xff)
+        return 3;
+      else if (larg[0] == 'y' || rarg[0] == 'y')
+        return 3;
+      else
+        return 4;
+    }
+
+  if (ISINST (pl->line, "xchb"))
+    {
+      if (!strncmp (larg, "xl", 2))
+        return 3;
+      else
+        return 4;
+    }
+
+  if (ISINST (pl->line, "rot"))
+    {
+      if (!strncmp (larg, "xl", 2))
+        return 2;
+      else
+        return 3;
     }
 
   if (ISINST (pl->line, "zex") || ISINST (pl->line, "sex"))
@@ -329,7 +410,14 @@ f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
   else if (ISINST (pl->line, "ret") || ISINST (pl->line, "reti"))
     return 1;
 
-  return 4; // Fallback: maximal instruction size is 4 (including one prefix byte).}
+  // If the instruction is unrecognized, we shouldn't try to optimize.
+  // For all we know it might be some .ds or similar possibly long line
+  // Return a large value to discourage optimization.
+  if (pl->ic)
+    werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+  else
+    werrorfl("unknown", 0, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+  return(999);
 }
 
 static bool
@@ -385,7 +473,12 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return true;
   if (ISINST (pl->line, "nop"))
     return false;
-printf("ReadFlag Fallback at %s\n", pl->line);
+
+  if (pl->ic)
+    werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+  else
+    werrorfl("unknown", 0, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+
   // Fail-safe fallback.
   return true;
 }
@@ -525,7 +618,12 @@ f8MightRead (const lineNode *pl, const char *what)
     return f8IsReturned(what);
   if (ISINST (pl->line, "reti"))
     return true;
-printf("Read Fallback at %s\n", pl->line);
+
+  if (pl->ic)
+    werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+  else
+    werrorfl("unknown", 0, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+
   // Fail-safe fallback.
   return true;
 }
@@ -633,7 +731,12 @@ f8SurelyWritesFlag (const lineNode *pl, const char *what)
     return false;
   if (ISINST (pl->line, "nop"))
     return false;
-printf("WriteFlag Fallback at %s\n", pl->line);
+
+  if (pl->ic)
+    werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+  else
+    werrorfl("unknown", 0, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+
   // Fail-safe fallback.
   return false;
 }
@@ -684,7 +787,12 @@ f8SurelyWrites (const lineNode *pl, const char *what)
     return false; // Todo: Improve accuracy?
   if (ISINST (pl->line, "ret") || ISINST (pl->line, "reti"))
     return true;
-printf("Write Fallback at %s\n", pl->line);
+
+  if (pl->ic)
+    werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+  else
+    werrorfl("unknown", 0, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
+
   // Fail-safe fallback.
   return false;
 }
