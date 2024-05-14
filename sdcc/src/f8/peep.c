@@ -201,7 +201,7 @@ readint(const char *str)
 }
 
 int
-f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
+f8instructionSize (lineNode *pl)
 {
   const char *larg = leftArg (pl->line);
   const char *rarg = rightArg (pl->line);
@@ -289,7 +289,7 @@ f8instructionSize(lineNode *pl) // todo: (n, sp) mode.
         return 4;
     }
 
-  if (ISINST (pl->line, "ld")) // todo: more cases.
+  if (ISINST (pl->line, "ld"))
     {
       if (!strncmp (larg, "xl", 2) && isReg8 (rarg))
         return 1;
@@ -447,7 +447,7 @@ f8MightReadFlag (const lineNode *pl, const char *what)
     return (!strcmp (what, "cf") || !strcmp (what, "hf"));
   if (ISINST (pl->line, "xch"))
     return (leftArg (pl->line)[0] == 'f');
-  if (ISINST (pl->line, "boolw") || ISINST (pl->line, "caxw") || ISINST (pl->line, "cpw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incnw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "popw") || ISINST (pl->line, "sex") || ISINST (pl->line, "xchw") || ISINST (pl->line, "zex")) // Todo: wide shifts / rotations.
+  if (ISINST (pl->line, "boolw") || ISINST (pl->line, "caxw") || ISINST (pl->line, "cpw") || ISINST (pl->line, "decw") || ISINST (pl->line, "incnw") || ISINST (pl->line, "mul") || ISINST (pl->line, "negw") || ISINST (pl->line, "popw") || ISINST (pl->line, "sex") || ISINST (pl->line, "xchw") || ISINST (pl->line, "zex"))
     return false;
   if (ISINST (pl->line, "xchb"))
     return false;
