@@ -826,16 +826,21 @@ callSurelyWrites (const lineNode *pl, const char *what)
 
   const bool *preserved_regs;
 
+  if (f && (strlen(what) == 2 && what[1] == 'f')) // Flags are never preserved across function calls.
+    return(true);
+
   if(!strcmp(what, "ix"))
     return(false);
 
   if(f)
     preserved_regs = f->type->funcAttrs.preserved_regs;
-  else if (ISINST(pl->line, "call")) // Err on the safe side.
+  else if (ISINST(pl->line, "call"))
     preserved_regs = z80_regs_preserved_in_calls_from_current_function;
-  else
+  else // Err on the safe side for jp and jr - might not be a function call, might e.g. be a jump table.
     return (false);
 
+  if (!strcmp (what, "a"))
+    return !preserved_regs[A_IDX];
   if (!strcmp (what, "c"))
     return !preserved_regs[C_IDX];
   if (!strcmp (what, "b"))
@@ -848,6 +853,10 @@ callSurelyWrites (const lineNode *pl, const char *what)
     return !preserved_regs[L_IDX];
   if (!strcmp (what, "h"))
     return !preserved_regs[H_IDX];
+  if (!strcmp (what, "iyl"))
+    return !preserved_regs[IYL_IDX];
+  if (!strcmp (what, "iyh"))
+    return !preserved_regs[IYH_IDX];
   if (!strcmp (what, "iy"))
     return !preserved_regs[IYL_IDX] && !preserved_regs[IYH_IDX];
 
@@ -1004,11 +1013,11 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
 
       if(isFlag)
         {
-        if(z80MightReadFlag(*pl, what))
-          {
-            D(("S4O_RD_OP (flag)\n"));
-            return S4O_RD_OP;
-          }
+          if(z80MightReadFlag(*pl, what))
+            {
+              D(("S4O_RD_OP (flag)\n"));
+              return S4O_RD_OP;
+            }
         }
       else
         {

@@ -27,6 +27,24 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #ifndef PDK15CL_HEADER
 #define PDK15CL_HEADER
+
+#include "pdk14cl.h"
+
+
+class cl_fpp15: public cl_fpp14
+{
+ public:
+  cl_fpp15(int aid, class cl_pdk *the_puc, class cl_sim *asim);
+  cl_fpp15(int aid, class cl_pdk *the_puc, struct cpu_entry *IType, class cl_sim *asim);
+  virtual const char *id_string(void) { return "pdk15"; }
+  virtual int m_mask(void) { return 0xff; }
+  virtual int io_mask(void) { return 0x7f; }
+  virtual int rom_mask(void) { return 0x1fff; }
+  virtual struct dis_entry *dis_tbl(void);
+  virtual int execute(unsigned int code);
+};
+
+
 #endif
 
 /* End of pdk.src/pdk15cl.h */

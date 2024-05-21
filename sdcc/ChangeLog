@@ -1,8 +1,183 @@
+2024-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/sha3-256.c:
+	  SHA3-256 test assumes little endian, so disable it for other systems.
+
+2024-05-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  mcs51 named address space clarifications.
+	* support/regression/tests/sha3-256.c:
+	  Test for bug #3731.
+
+2024-05-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Fix an issue in previous commit.
+
+2024-04-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/peeph.def:
+	  Improve use of register a and (hl) in comparisons.
+
+2024-04-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  Fix an issue in the handling of register hl vs a in write via pointer.
+
+2024-04-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc:
+	  Fix bug #3730.
+
+2024-04-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3730.c:
+	  Test for bug #3730.
+
+2024-04-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Update documentation on implementation-defined behaviour.
+	* sdas/astlcs90/t90.h,
+	  sdas/astlcs90/t90mch.c,
+	  sdas/astlcs90/t90pst.c,
+	  src/z80/gen.c:
+	  Use lda for tlcs90 codegen.
+
+2024-04-23 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp/gcc/cc1_dummies.cc
+	  Amend unused function prototypes. Fixes #3725
+
+2024-04-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Global operand handling fixes.
+
+2024-04-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/ports/ucz80-unsafe-read:
+	  Allow use 16-bit loads from memory to load 8-bit registers.
+
+2024-04-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Improve storing of 0 into global variables.
+
+2024-04-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/as2gbmap.py:
+	  Migrate as2gbmap to Python 3, patch from Debian.
+	* src/z80/peep.c:
+	  Improve handling of function calls in notUsed(From)('iy').
+	* src/z80/gen.c:
+	  Fix handling of operand in a in built-in strchr.
+
+2024-04-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve handling of register argument in a in register allocation.
+
+2024-04-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix generation of a redundant instruction in z80 comparison.
+
+2024-04-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Improve handling of function calls in notUsed(From).
+	* src/z80/gen.c:
+	  Improve addition of 256 to 16-bit register operand.
+
+2024-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/discussion-1854.c,
+	  support/regression/tests/bug-3728.c,
+	  support/regression/tests/bug-3729.c:
+	  Add 2 regression tests for potential issues.
+
+2024-04-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/asm/r2k/features.h,
+	  device/include/asm/r3ka/features.h,
+	  device/include/asm/sm83/features.h,
+	  device/include/asm/stm8/features.h,
+	  device/include/asm/tlcs90/features.h,
+	  device/include/asm/z80/features.h,
+	  device/lib/_strcmp.c,
+	  device/lib/_strcpy.c,
+	  src/z80/peeph.def,
+	  support/regression/tests/bug-3728.c:
+	  Fix bug #3728.
+	* support/regression/tests/bug-3727.c:
+	  Simplify regression test, as suggested by Janko Stamenović.
+
+2024-04-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def,
+	  src/z80/ralloc2.cc:
+	  Improve use of hl, towards RFE #905.
+
+2024-04-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Small z80 codegen improvements, part of RFE #905.
+
+2024-04-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Small z80 codegen improvements, RFE #904.
+	* support/regression/tests/bug-3727.c:
+	  Regression test (for now disabled) for not-yet fixed bug #3727.
+
+2024-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve code generation for z80 comparisons.
+	* src/SDCClospre.cc,
+	  src/SDCClospre.hpp:
+	  Improve lospre debug output.
+
+2024-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/stm8/ralloc.c,
+	  src/pdk/ralloc.c,
+	  src/z80/ralloc.c:
+	  Enable more register packing optimizations.
+
+2024-03-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Optimize out some more intermediate pop/push.
+	* src/z80/gen.c:
+	  Fine-tune djnz optimization hint.
+
+2024-03-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Fix an issue introduced in yesterday's fix for bug #3720.
+
+2024-03-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix an optimization hint inversion bug that prevented use of djnz.
+
 2024-03-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,
 	  src/SDCCsymt.c:
 	  Fix bug #3720.
+	* src/z80/gen.c:
+	  Allow for some more flexibility in the handling of register arguments.
 
 2024-03-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
