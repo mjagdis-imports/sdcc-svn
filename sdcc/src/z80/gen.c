@@ -472,6 +472,21 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
 }
 
 /*-----------------------------------------------------------------*/
+/* aopIsLitBit - asmop from offset is val.                         */
+/* False negatives are possible.                                   */
+/*-----------------------------------------------------------------*/
+static bool
+aopIsLitBit (const asmop *aop, int boffset, bool val)
+{
+  if (!aop->valinfo.anything && boffset < 64 &&
+    ((aop->valinfo.knownbitsmask >> boffset) & 1) &&
+    ((aop->valinfo.knownbits >> boffset) & 1) == val)
+    return(true);
+
+  return (false);
+}
+
+/*-----------------------------------------------------------------*/
 /* aopIsNotLitVal - asmop from offset is not val.                  */
 /* False negatives are possible.                                   */
 /* Note that both aopIsLitVal and aopIsNotLitVal can be false for  */
@@ -1965,6 +1980,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
       aop->size = getSize (operandType (op));
       if (!result)
         op->aop->valinfo = getOperandValinfo (ic, op);
+      else if(ic->resultvalinfo)
+        op->aop->valinfo = *ic->resultvalinfo;
       return;
     }
 
@@ -1986,6 +2003,10 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
         {
           op->aop->bcInUse = isPairInUse (PAIR_BC, ic);
         }
+      if (result && ic->resultvalinfo)
+        valinfo_union (&(op->aop->valinfo), *ic->resultvalinfo);
+      else if (result)
+        op->aop->valinfo.anything = true;
       return;
     }
 
@@ -1995,6 +2016,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
       op->aop = aopForSym (ic, OP_SYMBOL (op), requires_a);
       if (!result)
         op->aop->valinfo = getOperandValinfo (ic, op);
+      else if(ic->resultvalinfo)
+        op->aop->valinfo = *ic->resultvalinfo;
       return;
     }
 
@@ -2032,6 +2055,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
           aop->size = getSize (sym->type);
           if (!result)
             aop->valinfo = getOperandValinfo (ic, op);
+          else if(ic->resultvalinfo)
+            aop->valinfo = *ic->resultvalinfo;
           return;
         }
 
@@ -2042,6 +2067,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
           aop->size = getSize (sym->type);
           if (!result)
             aop->valinfo = getOperandValinfo (ic, op);
+          else if(ic->resultvalinfo)
+            aop->valinfo = *ic->resultvalinfo;
           return;
         }
 
@@ -2065,6 +2092,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
           aop->size = getSize (sym->type);
           if (!result)
             aop->valinfo = getOperandValinfo (ic, op);
+          else if(ic->resultvalinfo)
+            aop->valinfo = *ic->resultvalinfo;
           return;
         }
 
@@ -2073,6 +2102,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
       aop->size = getSize (sym->type);
       if (!result)
         aop->valinfo = getOperandValinfo (ic, op);
+      else if(ic->resultvalinfo)
+        aop->valinfo = *ic->resultvalinfo;
       return;
     }
 
@@ -2081,6 +2112,8 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
   aop->size = sym->nRegs;
   if (!result)
     aop->valinfo = getOperandValinfo (ic, op);
+  else if(ic->resultvalinfo)
+    aop->valinfo = *ic->resultvalinfo;
   memset (aop->regs, -1, sizeof(aop->regs));
   for (i = 0; i < sym->nRegs; i++)
     {
@@ -4895,8 +4928,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         }
 
       // Cache a copy of zero in a.
-      if (f_dead &&
-        (size > 1 && result->type != AOP_REG && aopIsLitVal (source, soffset + i, 2, 0x0000) && !zeroed_a && a_dead && source->regs[A_IDX] <= i ||
+      if (f_dead && !zeroed_a && a_dead && source->regs[A_IDX] <= i &&
+        (size > 1 && result->type != AOP_REG && aopIsLitVal (source, soffset + i, 2, 0x0000) ||
         size == 1 && (result->type == AOP_HL && fetchLitPair (PAIR_HL, result, roffset + i, f_dead, true) || result->type == AOP_IY && fetchLitPair (PAIR_IY, result, roffset + i, f_dead, true)) && aopIsLitVal (source, soffset + i, 1, 0x00)))
         {
           emit3 (A_XOR, ASMOP_A, ASMOP_A);
@@ -7505,6 +7538,20 @@ genPlusIncr (const iCode *ic)
           cost (2, 8);
           return true;
         }
+      else if (icount == 255 && resultId != PAIR_IY)
+        {
+          fetchPair (resultId, IC_LEFT (ic)->aop);
+          emit3w (A_DEC, ic->result->aop, 0);
+          emit3_o (A_INC, ic->result->aop, 1, 0, 0);
+          return true;
+        }
+      else if (icount == 257 && resultId != PAIR_IY)
+        {
+          fetchPair (resultId, IC_LEFT (ic)->aop);
+          emit3w (A_INC, ic->result->aop, 0);
+          emit3_o (A_INC, ic->result->aop, 1, 0, 0);
+          return true;
+        }
       else if (resultId == getPairId (ic->left->aop) &&
         (IS_Z80N && resultId != PAIR_IY && icount > 3 || IS_TLCS90 && (resultId == PAIR_HL || resultId == PAIR_IY) && icount > 2))
         {
@@ -7600,6 +7647,12 @@ genPlusIncr (const iCode *ic)
         {
           if (offset)
             regalloc_dry_run_state_scale /= 256.0f; // Cycle cost contribution of upper byte additions is negligible
+          if (aopIsLitVal (ic->result->aop, offset, size + 1, 0)) // Skip known leading zero result bytes.
+            {
+              offset += size;
+              size = 0;
+              break;
+            }
           if (size == 1 && getPairId_o (IC_RESULT (ic)->aop, offset) != PAIR_INVALID)
             {
               emit3w_o (A_INC, ic->result->aop, offset, 0, 0);
@@ -10063,7 +10116,12 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
         {
           bool left_already_in_a = (left->aop->type == AOP_LIT && byteOfVal (left->aop->aopu.aop_lit, offset) == a_always_byte);
 
-          if (!IS_SM83 && size >= 2 && (!sign || size > 2) && !left_already_in_a &&
+          if (started && !sign && aopIsLitVal (left->aop, offset, size, 0) && aopIsLitVal (right->aop, offset, size, 0)) // Skip leading zeroes.
+            {
+              offset += size;
+              size = 0;
+            }
+          else if (!IS_SM83 && size >= 2 && (!sign || size > 2) && !left_already_in_a &&
             isPairDead (PAIR_HL, ic) &&
             (getPartPairId (left->aop, offset) == PAIR_HL || (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD || left->aop->type == AOP_HL || left->aop->type == AOP_IY || IS_RAB && left->aop->type == AOP_STK) && right->aop->regs[L_IDX] < offset && right->aop->regs[H_IDX] < offset) &&
             (getPartPairId (right->aop, offset) == PAIR_DE || getPartPairId (right->aop, offset) == PAIR_BC))
@@ -10245,6 +10303,11 @@ genCmpGt (iCode * ic, iCode * ifx)
   aopOp (right, ic, FALSE, FALSE);
   aopOp (result, ic, TRUE, FALSE);
 
+  if (!IS_BITVAR (operandType (left)) && (!IS_BITINT (operandType (left)) || !(SPEC_BITINTWIDTH (operandType (left)) % 8)) &&
+    !IS_BITVAR (operandType (right)) && (!IS_BITINT (operandType (right)) || !(SPEC_BITINTWIDTH (operandType (right)) % 8)) &&
+    aopIsLitBit (left->aop, left->aop->size * 8 - 1, false) && aopIsLitBit (right->aop, right->aop->size * 8 - 1, false))
+    sign = 0;
+
   if (max (left->aop->size, right->aop->size) > 1)
     {
       if ((requiresHL (IC_RESULT (ic)->aop) && IC_RESULT (ic)->aop->type != AOP_REG || requiresHL (left->aop) && left->aop->type != AOP_REG || requiresHL (right->aop) && right->aop->type != AOP_REG) &&
@@ -10288,6 +10351,11 @@ genCmpLt (iCode * ic, iCode * ifx)
   aopOp (left, ic, FALSE, FALSE);
   aopOp (right, ic, FALSE, FALSE);
   aopOp (result, ic, TRUE, FALSE);
+
+  if (!IS_BITVAR (operandType (left)) && (!IS_BITINT (operandType (left)) || !(SPEC_BITINTWIDTH (operandType (left)) % 8)) &&
+    !IS_BITVAR (operandType (right)) && (!IS_BITINT (operandType (right)) || !(SPEC_BITINTWIDTH (operandType (right)) % 8)) &&
+    aopIsLitBit (left->aop, left->aop->size * 8 - 1, false) && aopIsLitBit (right->aop, right->aop->size * 8 - 1, false))
+    sign = 0;
 
   if (max (left->aop->size, right->aop->size) > 1)
     {
@@ -13416,7 +13484,10 @@ genrshTwo (const iCode *ic, operand *result, operand *left, int shCount, int sig
       if (sign)
         {
           /* Sign extend the result */
-          cheapMove (ASMOP_A, 0, result->aop, 0, true);
+          if (result->aop->type != AOP_REG && left->aop->type == AOP_REG)
+            cheapMove (ASMOP_A, 0, left->aop, 1, true);
+          else
+            cheapMove (ASMOP_A, 0, result->aop, 0, true);
           emit3 (A_RLCA, 0, 0);
           emit3 (A_SBC, ASMOP_A, ASMOP_A);
           cheapMove (result->aop, 1, ASMOP_A, 0, true);
