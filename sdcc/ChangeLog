@@ -1,37 +1,3 @@
-2024-05-14 Philipp Klaus Krause <philipp@colecovision.eu>
-
-	* src/f8/peep.c:
-	  f8 jump distance calculation.
-
-2024-05-13 Philipp Klaus Krause <philipp@colecovision.eu>
-
-	* src/f8/peep.c:
-	  f8 jump distance estimation.
-
-2024-05-08 Philipp Klaus Krause <philipp@colecovision.eu>
-
-	* sim/ucsim/f8.src/decode.h,
-	  sim/ucsim/f8.src/f8cl.h,
-	  sim/ucsim/f8.src/glob.cc,
-	  sim/ucsim/f8.src/imove.cc:
-	  ldi, ldwi f8 simulator support.
-
-2024-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
-
-	* sdas/asf8/f8.h,
-	  sdas/asf8/f8mch.c,
-	  sdas/asf8/f8pst.c,
-	  sim/ucsim/f8.src/decode.h,
-	  sim/ucsim/f8.src/disass.cc,
-	  sim/ucsim/f8.src/f8.cc,
-	  sim/ucsim/f8.src/f8cl.h,
-	  sim/ucsim/f8.src/glob.cc,
-	  sim/ucsim/f8.src/ialu.cc,
-	  sim/ucsim/f8.src/imove.cc,
-	  src/f8/gen.c,
-	  src/f8/peep.c:
-	  Revise f8 instruction set.
-
 2024-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/*/ez80_z80/setjmp.s:
