@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   gen.c - code generator for STM8.
 
-  Copyright (C) 2012 - 2023, Philipp Klaus Krause pkk@spth.de, philipp@informatik.uni-frankfurt.de, krauseph@informatik.uni-freiburg.de)
+  Copyright (C) 2012 - 2024, Philipp Klaus Krause pkk@spth.de, philipp@informatik.uni-frankfurt.de, krauseph@informatik.uni-freiburg.de)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -1216,7 +1216,9 @@ aopOp (operand *op, const iCode *ic, bool result)
 
             if (!regalloc_dry_run)
               {
-                aop->aopu.bytes[i].byteu.stk = (long int)(sym->usl.spillLoc->stack) + aop->size - i;
+                long int base = sym->usl.spillLoc->stack + (sym->usl.spillLoc->stack > 0 ? G.stack.param_offset : 0);
+
+                aop->aopu.bytes[i].byteu.stk = base + aop->size - i;
 
                 if (sym->usl.spillLoc->stack + aop->size - (int)(i) <= -G.stack.pushed)
                   {

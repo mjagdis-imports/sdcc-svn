@@ -1,3 +1,122 @@
+2024-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/*/ez80_z80/setjmp.s:
+	  Improve setjmp/longjmp for z80-related ports, patch #479 by Janko Stamenović.
+
+2024-06-18 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* device/lib/s08-stack-auto/_setjmp.c: fix bug #3743
+	* support/regression/tests/longjump.c: re-enable test affected by bug
+
+2024-06-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/sm83/Makefile.in:
+	  Fix strnlen build for sm83 port.
+
+2024-06-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/longjmp.c:
+	  Disable a test for configuration affected by known bug #3743 (-ms08 --stack-auto).
+
+2024-06-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/hc08/main.c (hasExtBitOp),
+	  src/mos6502/main.c (hasExtBitOp): fix bug #3731
+	* support/regression/tests/sha3-256.c: only enabled for ports
+	  that can handle returning large structs 
+	* src/mos6502/gen.c (genRet): fail unsupported struct return better
+
+2024-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/r2k/setjmp.s
+	  device/lib/r2ka/setjmp.s
+	  device/lib/r3ka/setjmp.s
+	  support/regression/tests/setjmp.c,
+	  support/regression/tests/longjmp.c:
+	  Fix setjmp/longjmp return value for Rabbits.
+	* device/include/string.h,
+	  device/lib/strlen.v,
+	  device/lib/strnlen.v,
+	  device/lib/strndup.c,
+	  device/lib/Makefile.in,
+	  device/lib/*/Makefile.in,
+	  device/lib/pic14/libc/Makefile.am,
+	  device/lib/pic14/libc/Makefile.in,
+	  support/regression/tests/strnlen.c:
+	  C2Y strnlen.
+	* support/regression/tests/bug-3730.c,
+	  support/regression/tests/bug-3740.c:
+	  Disable warnings on (intentionally) unused parameters in two regression tests.
+	* device/lib/tlcs90/setjmp.s:
+	  Fix TLCs-90 interrupt flag handling in longjmp.
+
+2024-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsalloc.hpp:
+	  Fix handling of edges in vertex removal from stack conflict graph on spill location parameter merge.
+
+2024-06-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3741.c:
+	  Fix test for ports without banked function calls.
+
+2024-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3741.c:
+	  Add a regression test for a reported bug that I haven't been able to reproduce locally.
+
+2024-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  src/SDCCdflow.h:
+	  Fix a z80 codegen issue in the handling of information from generalized constant propagation.
+
+2024-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3740.c:
+	  Fix bug #3740.
+
+2024-05-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Parse ZX Spectrum Next nextreg instruction.
+
+2024-05-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCralloc.hpp,
+	  src/hc08/gen.c:
+	  Reject boost 1.85.0.
+
+2024-05-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Skip leading zeroes on comparisons and some increments.
+
+2024-05-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Use information from generalized constant propagation to optimize comparisons of signed types.
+
+2024-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  z80 codegen improvements.
+
+2024-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsalloc.hpp,
+	  src/stm8/ralloc2.cc,
+	  src/stm8/gen.c,
+	  src/z80/ralloc2.cc:
+	  Use stack parameter locations as spill locations in some simple cases.
+
+2024-05-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def,
+	  support/regression/tests/bug-3733.c:
+	  Fix bug #3733.
+
 2024-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/sha3-256.c:
@@ -404,28 +523,17 @@
 	* src/mos6502/gen.c:
 	  Improve asmopToBool.
 
-2023-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
-||||||| .merge-left.r14616
-2023-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
-=======
 2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
->>>>>>> .merge-right.r14635
 
 	* src/hc08/main.c:
 	  Fix bug #3690.
 
-<<<<<<< .working
 2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/pdk/peep.c:
 	  Improve pdk notUsed() accuracy.
 
-2023-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
-||||||| .merge-left.r14616
-2023-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
-=======
 2024-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
->>>>>>> .merge-right.r14635
 
 	* src/z80/main.c:
 	  Fix bug #3693.
