@@ -14,7 +14,7 @@ else
   ifdef UCSIM_DIR
     UCF8A = $(UCSIM_DIR)/f8.src/ucsim_f8$(EXEEXT)
   else
-    UCF8A = $(top_builddir)/sim/ucsim/f8.src/ucsim_f8$(EXEEXT)
+    UCF8A = $(top_builddir)/sim/ucsim/src/sims/f8.src/ucsim_f8$(EXEEXT)
     UCF8B = $(top_builddir)/bin/ucsim_f8$(EXEEXT)
   endif
 
