@@ -1,3 +1,8 @@
+2024-06-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/gatematea1evb2.v:
+	  GateMateA1-EVB FPGA board infrastructure fix.
+
 2024-05-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/genopcodemap.c:
