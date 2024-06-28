@@ -1,5 +1,6 @@
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
+P_R = /home/philipp/p_r/p_r
 SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
 SDCCFLAGS = --opt-code-size --max-allocs-per-node 20000
 
@@ -51,4 +52,11 @@ stdcbench/image.ihx: stdcbench/*.c stdcbench/*.h
 
 %/icebreaker2_synth.bin: %/icebreaker2_synth.asc
 	icepack $< $@
+
+%/gatematea1evb2_synth.v: $(CURDIR)/../gatematea1evb2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
+
+# Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
+%/gatematea1evb2_synth_00.cfg.bit: %/gatematea1evb2_synth.v $(CURDIR)/../gatematea1evb.ccf
+	cd $*; $(P_R) -cCP -i gatematea1evb2_synth.v -o gatematea1evb2_synth -ccf $(CURDIR)/../gatematea1evb.ccf
 
