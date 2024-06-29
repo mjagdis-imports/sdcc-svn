@@ -4,9 +4,9 @@
 // Input: system clock.
 // Prescaler: /16.
 // On overflow: watchdog reset. On trap: trap reset.
-// I/O registers: counter (16 bit), reload (16 bit), config (8 bit - lowest bit enables watchdog, next three bits indicate type of most recent reset)
+// I/O registers: counter (16 bit), reload (16 bit), config (8 bit - lowest bit enables watchdog, next three bits indicate type of most recent reset, upper 4 bits unused and read as 0)
 module watchdog (output logic reset, output logic [15:0] counter_out, reload_out, output logic [7:0] config_out, input logic [15:0] counter_in, reload_in,  input logic [7:0] config_in, input logic [1:0] counter_write, reload_write, input config_write, zero_write, input logic clk, power_on_reset, trap);
-	logic [7:0] configreg;
+	logic [3:0] configreg;
 	logic [15:0] countreg, reloadreg;
 	logic internal_reset;
 	logic count_now, overflow_int, prescaled_count_now;
@@ -60,7 +60,7 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 		else if(reset)
 			configreg[0] = 0;
 		else if(config_write)
-			configreg[7:0] = config_in[7:0];
+			configreg[3:0] = config_in[3:0];
 		else
 		begin
 			if(overflow_int)
@@ -79,7 +79,7 @@ module watchdog (output logic reset, output logic [15:0] counter_out, reload_out
 		end
 		internal_reset = overflow_int || trap || zero_write;
 	end
-	assign config_out = configreg;
+	assign config_out = {4'b0000, configreg};
 	assign reset = power_on_reset || internal_reset;
 endmodule
 

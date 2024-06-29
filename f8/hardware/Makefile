@@ -24,7 +24,7 @@ clean:
 CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 CPU2SOURCES = cpu2.v alu2.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
-IO2SOURCES = io2.v watchdog2.v interruptcontroller.v
+IO2SOURCES = io2.v interruptcontroller.v timer.v watchdog2.v
 SYSTEMSOURCES = clkdiv.v system.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
 SYSTEM2SOURCES = clkdiv.v system2.v memory2.v rom2.v ram2.v dualportram.v $(CPU2SOURCES) $(IO2SOURCES)
 TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)

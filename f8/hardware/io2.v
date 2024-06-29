@@ -55,8 +55,8 @@ module iosystem
 	assign irqctrl_active_read = (read_addr_even == (IRQCTRLADDRBASE + 2) / 2);
 	assign irqctrl_enable_write = write_en_even && (write_addr_even == IRQCTRLADDRBASE / 2);
 	assign irqctrl_active_write = write_en_even && (write_addr_even == (IRQCTRLADDRBASE + 2) / 2);
-	interruptcontroller #(.NUM_INPUTS(NUM_IRQ))
-		irqctrl(.int_out(interrupt), .enable_out(irqctrl_enable_dread), .active_out(irqctrl_active_dread), .enable_in(write_data_even[1:0]), .active_in(write_data_even[1:0]), .enable_in_write(irqctrl_enable_write), .active_in_write(irqctrl_active_write),
+	interruptcontroller #(.NUM_INPUTS(NUM_IRQ)) irqctrl(.int_out(interrupt), .enable_out(irqctrl_enable_dread), .active_out(irqctrl_active_dread),
+		.enable_in(write_data_even[1:0]), .active_in(write_data_even[1:0]), .enable_in_write(irqctrl_enable_write), .active_in_write(irqctrl_active_write),
 		.in(interrupts), .*);
 
 	// Timer 0

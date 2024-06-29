@@ -1,8 +1,18 @@
+2024-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/io2.v,
+	  hardware/memory2.v,
+	  hardware/system2.v,
+	  hardware/timer.v,
+	  hardware/watchdog2.v:
+	  Refactor and optimize perpherals of f8-bases system.
+
 2024-06-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/gatematea1evb2.v,
-	  f8/hardware/benchmarks/Makefile,
-	  f8/hardware/io2.v:
+	  hardware/benchmarks/Makefile,
+	  hardware/io2.v:
 	  GateMateA1-EVB FPGA board infrastructure fixes.
 
 2024-05-09 Philipp Klaus Krause <philipp@colecovision.eu>
