@@ -6,7 +6,7 @@
 	  hardware/system2.v,
 	  hardware/timer.v,
 	  hardware/watchdog2.v:
-	  Refactor and optimize perpherals of f8-bases system.
+	  Refactor and optimize perpherals of f8-based system.
 
 2024-06-28 Philipp Klaus Krause <philipp@colecovision.eu>
 

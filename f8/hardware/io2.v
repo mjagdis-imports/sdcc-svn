@@ -183,18 +183,19 @@ module iosystem
 			read_data_even = gpio2_pr_dread[7:0];
 		else
 			read_data_even = 'x;
+
 		if (read_addr_odd == write_addr_odd && write_en_odd)
 			read_data_odd = write_data_odd;
 		else if(watchdog_counter_read[1])
-			read_data_even = watchdog_counter_dread[15:8];
+			read_data_odd = watchdog_counter_dread[15:8];
 		else if(watchdog_reload_read[1])
-			read_data_even = watchdog_reload_dread[15:8];
+			read_data_odd = watchdog_reload_dread[15:8];
 		else if(timer0_counter_read[1])
-			read_data_even = timer0_counter_dread[15:8];
+			read_data_odd = timer0_counter_dread[15:8];
 		else if(timer0_reload_read[1])
-			read_data_even = timer0_reload_dread[15:8];
+			read_data_odd = timer0_reload_dread[15:8];
 		else if(timer0_compare_read[1])
-			read_data_even = timer0_compare_dread[15:8];
+			read_data_odd = timer0_compare_dread[15:8];
 		else
 			read_data_odd = 'x;
 	end
