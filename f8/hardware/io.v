@@ -148,6 +148,12 @@ module iosystem
 			dread_data[7:0] = {'x, irqctrl_active_dread[NUM_IRQ-1:0]};
 		else if(timer0_config_read)
 			dread_data[7:0] = {'x, timer0_config_dread[7:0]};
+		else if(dread_addr_even == TIMER0ADDRBASE + 2)
+			dread_data[7:0] = timer0_counter_dread[7:0];
+		else if(dread_addr_even == TIMER0ADDRBASE + 4)
+			dread_data[7:0] = timer0_reload_dread[7:0];
+		else if(dread_addr_even == TIMER0ADDRBASE + 6)
+			dread_data[7:0] = timer0_compare_dread[7:0];
 		else if(gpio0_ddr_read)
 			dread_data[7:0] = {'x, gpio0_ddr_dread[7:0]};
 		else if(gpio0_odr_read)
@@ -174,8 +180,14 @@ module iosystem
 			dread_data[7:0] = {'x, gpio2_pr_dread[7:0]};
 		else
 			dread_data[7:0] = 'x;
-		if (dread_addr_odd == dwrite_addr_odd && dwrite_en_odd)
+		if(dread_addr_odd == dwrite_addr_odd && dwrite_en_odd)
 			dread_data[15:8] = dwrite_data;
+		else if(dread_addr_odd == TIMER0ADDRBASE + 3)
+			dread_data[15:8] = timer0_counter_dread[15:8];
+		else if(dread_addr_odd == TIMER0ADDRBASE + 5)
+			dread_data[15:8] = timer0_reload_dread[15:8];
+		else if(dread_addr_odd == TIMER0ADDRBASE + 7)
+			dread_data[15:8] = timer0_compare_dread[15:8];
 		else
 			dread_data[15:8] = 'x;
 	end

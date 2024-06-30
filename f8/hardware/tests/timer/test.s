@@ -32,6 +32,21 @@ _main:
 	ldw     y, #0x4000
 	ldw     sp, y
 
+	; Test read/write of 16-bit timer registers.
+	ldw	y, #0xa5b6
+	ldw	TIMER0CNT, y
+	ldw	y, #0x5a6b
+	ldw	TIMER0RLD, y
+	ldw	y, TIMER0CNT
+	cpw	y, #0xa5b6
+	jrnz	l1trap
+	ldw	y, TIMER0RLD
+	cpw	y, #0x5a6b
+	jrz	l1
+l1trap:
+	trap
+l1:
+
 	; Do not change, add or remove instructions from here (we want to eventually trigger an interrupt during ret)!
 	ld	xl, #1
 	ld	0x3ff0, xl

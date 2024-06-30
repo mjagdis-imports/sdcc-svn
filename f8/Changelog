@@ -1,3 +1,9 @@
+2024-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/io.v,
+	  hardware/tests/timer/test.s:
+	  Fix a timer register read issue in single-cycle-based f8 SoC.
+
 2024-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

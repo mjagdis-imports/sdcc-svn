@@ -135,7 +135,7 @@ void main (void)
   {
     int n;
     /*scanf ("%d", &n)*/;
-    Number_Of_Runs = /*2*/5000/*n*/; // NORMALLY, WE'D USE 25000 HERE, BUT THAT MAKES DHRYSTONE HANG ON f8. I SUSPECT A BUG IN INTERRUPT HANDLING.
+    Number_Of_Runs = 25000/*n*/;
   }
   printf ("\n");
 
