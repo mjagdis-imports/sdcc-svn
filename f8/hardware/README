@@ -1,0 +1,19 @@
+Two Verilog implementations of the f8 can be found here:
+
+* A single-cycle implementation that needs rather complex memories.
+  - A SoC using this one is in system.v.
+  - icebreaker.v can be used to synthesize it for the iCEbreaker board.
+  - gatematea1evb.v can be used to synthesize it for the GateMateA1-EVB board.
+
+* A multi-cycle implementation using pseudo-dualport RAM.
+  - A SoC using this one is in system2.v.
+  - icebreaker2.v can be used to synthesize it for the iCEbreaker board.
+  - gatematea1evb2.v can be used to synthesize it for the GateMateA1-EVB board.
+
+Each SoC consists of an f8 core, memories and basic peripherals (watchdog, timer, interrupt controller, 2 x GPIO).
+
+Test infrastructure can be found in tests/ (simple tests to test basic functionality, typically one small program per f8 instruction testes) and sdcctests/ (complex tests based on SDCC regression tests).
+Two of the test programs can also be used as a basic test on hardware: tests/cblink (counds seconds from 0 to 31 using LEDs on GPIO0) and tests/chello (Outputs "Hello, world!" via a software-emulated UART on GPIO2).
+
+Simple benchmarks (Dhrystone, etc) can be found in benchmarks/.
+

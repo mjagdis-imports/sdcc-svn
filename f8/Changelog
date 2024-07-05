@@ -1,3 +1,14 @@
+2024-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/system.v,
+	  hardware/system2.v,
+	  hardware/COPYING,
+	  opcodemaptest/COPYING:
+	  Basic information including licensing.
+
 2024-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/io.v,
