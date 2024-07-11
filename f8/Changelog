@@ -1,3 +1,10 @@
+2024-07-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/README,
+	  README,
+	  doc:
+	  A little bit of documentation.
+
 2024-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

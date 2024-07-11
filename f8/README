@@ -1,0 +1,4 @@
+* doc:           documentation of the f8 architecture
+* hardware:      implementations of the f8
+* opcodemaptest: tools to optimize the f8 opcode map
+
