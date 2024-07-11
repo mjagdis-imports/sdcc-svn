@@ -80,6 +80,7 @@ sbcw y, op [oznc] (02) ; y = y + ~op + c (except for immd op - saves 1 opcode)
 addw y, op [oznc] (02) ; y = y + op
 adcw y, op [oznc] (02) ; y = y + op + c
 orw y, op [ozn] (02)   ; todo: do we really want the effect on o here? If yes, why not on the 8-bit logic ops?
+xorw y, op [ozn] (02)  ; todo: do we really want the effect on o here? If yes, why not on the 8-bit logic ops?
 
 Valid op:
 x
@@ -178,7 +179,7 @@ mad x, (nn, z), yl [zn]   ; x <- (nn, z) * yl + xh + c
 mad x, (z), yl [zn]       ; x <- (z) * yl + xh + c
 rot xl, #i (12)           ; rotate xl left by i
 thrd xl (12) [z]          ; get current hardware thread number
-push #i []                ; Ignores all flags, changes no flags, not even hidden ones.
+push #i []                ; Ignores all flags, changes no flags, not even the upper ones.
 xch f, (n, sp) [xxxocznh]
 
 Other 16-bit instructions:
@@ -195,10 +196,10 @@ popw y (2)
 xchw x, (y) (2)
 xchw y, (n, sp) [] (2)
 caxw (y), z, x [Z]     ; if ((y) == z) (y) = x; else z = (y); compare-and-exchange.
-addw sp, #d            ; Ignores all flags, changes no flags, not even hidden ones.
+addw sp, #d            ; Ignores all flags, changes no flags, not even the upper ones.
 addw y, #d [OCZN] (2)
 cpw y, #ii [OCZN] (02)
-incnw y (2)            ; Ignores all flags, changes no flags (except maybe hidden ones).
+incnw y (2)            ; Ignores all flags, changes no flags (except possibly the upper ones).
 decw (n, sp) [OCZN]
 pushw #ii []
 sllw y, xl [ZN] (12)
@@ -213,7 +214,7 @@ xchb xl, mm, #b [Z] (12) ; exchange xl with bit b at mm.
 
 Relative jumps:
 
-jr #d                 ; jump relative to pc. Ignores all flags, changes no flags, not even hidden ones.
+jr #d                 ; jump relative to pc. Ignores all flags, changes no flags, not even the upper ones.
 dnjnz yh, #d [ZN] (2) ; decrement yh, without updating carry, jump if result is not zero.
 jrz #d                ; jump relative to pc if z flag is set.
 jrnz #d               ; if !z
@@ -231,9 +232,9 @@ Other instructions:
 
 call #ii
 call y (2)
-jp #ii     ; Ignores all flags, changes no flags, not even hidden ones.
+jp #ii     ; Ignores all flags, changes no flags, not even the upper ones.
 jp y (2)
 ret
-reti       ; Ignores all flags, changes no flags, not even hidden ones.
+reti       ; Ignores all flags, changes no flags, not even the upper ones.
 trap       ; Opcode 0x00. Trap reset.
 
