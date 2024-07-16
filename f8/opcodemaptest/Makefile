@@ -4,20 +4,35 @@ SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 
-all: genopcodemap
+all: opcodemaptool
 
 clean:
-	rm -rf testdata_*
+	rm -rf testdata_* opcodemaps opcodemapstable
 
-.PHONY: data clean icehead ice2head
+.PHONY: olddata newdata clean oldicehead oldice2head
 
+# new tool: opcodemaptool
+
+opcodemaptool: opcodemaptool.cc
+	g++ -Wall -pedantic $< -o $@ -lboost_serialization
+
+NEWOPCODEMAPS = $(wildcard opcodemaps/*/opcodemap.v)
+NEWCASES = $(NEWOPCODEMAPS:opcodemaps/%/opcodemap.v=opcodemaps/%)
+NEWICESYNTHSIZES = $(NEWCASES:opcodemaps/%=opcodemaps/%/icesynth.size)
+NEWICESYNTH2SIZES = $(NEWCASES:opcodemaps/%=opcodemaps/%/icesynth2.size)
+
+# The big target. Takes a lot of time and memory if there are many maps. Rule of thumb when using make -j <n> data: System should have (n*3) GB of RAM.
+newdata: $(NEWICESYNTHSIZES) $(NEWICESYNTH2SIZES)
+
+# old tool: genopcodemap
+	
 genopcodemap: genopcodemap.c
 	gcc --std=c2x -Wall -pedantic $< -o $@
 
-OPCODEMAPS = $(wildcard testdata_*/*/*/*/opcodemap.v)
-CASES = $(OPCODEMAPS:testdata_%/opcodemap.v=testdata_%)
-ICESYNTHSIZES = $(CASES:testdata_%=testdata_%/icesynth.size)
-ICESYNTH2SIZES = $(CASES:testdata_%=testdata_%/icesynth2.size)
+OLDOPCODEMAPS = $(wildcard testdata_*/*/*/*/opcodemap.v)
+OLDCASES = $(OLDOPCODEMAPS:testdata_%/opcodemap.v=testdata_%)
+OLDICESYNTHSIZES = $(OLDCASES:testdata_%=testdata_%/icesynth.size)
+OLDICESYNTH2SIZES = $(OLDCASES:testdata_%=testdata_%/icesynth2.size)
 
 %/cpu_nosv.v: ../hardware/cpu.v ../hardware/alu.v ../hardware/opcode.v
 	cd $*; cp $(CURDIR)/../hardware/cpu.v ./; cp $(CURDIR)/../hardware/alu.v ./; cp $(CURDIR)/../hardware/opcode.v ./; $(SV2V) --exclude=always --exclude=logic cpu.v > cpu_nosv.v
@@ -38,14 +53,14 @@ ICESYNTH2SIZES = $(CASES:testdata_%=testdata_%/icesynth2.size)
 	grep "Number of cells:" $< | sed -e 's/.*: *//' > $@
 
 # The big target. Takes a lot of time and memory if there are many maps. Rule of thumb when using make -j <n> data: System should have (n*3) GB of RAM.
-data: $(ICESYNTHSIZES) $(ICESYNTH2SIZES)
+olddata: $(OLDICESYNTHSIZES) $(OLDICESYNTH2SIZES)
 
 # Find the smallest sizes.
-icehead: data
+oldicehead: olddata
 	find . -name icesynth.size -exec cat {} \; | sort -n | head
 
 # Find the smallest sizes.
-icehead2: data
+oldicehead2: olddata
 	find . -name icesynth2.size -exec cat {} \; | sort -n | head
 
 # To generate a large number of random maps, use e.g. for i in {0..10000}; do ./genopcodemap; done
