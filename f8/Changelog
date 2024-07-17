@@ -3,6 +3,11 @@
 	* opcodemaptest/opcodemaptool.cc,
 	  opcodemaptest/genopcodemap.c:
 	  Improve handling of corrupted directory structure, fix file handle leak.
+	* doc/README,
+	  doc/opcodemap.ods,
+	  hardware/cpu2.v,
+	  hardware/opcode.v:
+	  Simplified f8l variant of f8 multicycle core.
 
 2024-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 

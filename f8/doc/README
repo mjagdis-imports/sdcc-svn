@@ -171,8 +171,8 @@ pop xl (12)               ; xl = (sp++)
 xch xl, (n, sp) (12)
 xch xl, (y) (12)
 xch yl, yh (2)            ; exchange yl with yh.
-msk (y), xl, #i (12)      ; (y) = (xl & i) | ((y) & ~i)
-cax (y), zl, xl [z] (1)   ;  if ((y) == zl) (y) = xl; else zl = (y); compare-and-exchange
+msk (y), xl, #i [z](12)   ; (y) = xl & i | (y) & ~i; z flag according to (y) & ~i
+cax (y), zl, xl [z] (1)   ; if ((y) == zl) (y) = xl; else zl = (y); compare-and-exchange
 mad x, mm, yl [zn]        ; x <- m * yl + xh + c
 mad x, (n, sp), yl [zn]   ; x <- (n, sp) * yl + xh + c
 mad x, (nn, z), yl [zn]   ; x <- (nn, z) * yl + xh + c
@@ -210,7 +210,7 @@ zex y, xl (12) [Z]     ; zero-extend xl to y
 
 Bit instructions:
 
-xchb xl, mm, #b [Z] (12) ; exchange xl with bit b at mm.
+xchb xl, mm, #b [Z] (12) ; exchange xl with bit b at mm. z flag according to new value of xl.
 
 Relative jumps:
 
