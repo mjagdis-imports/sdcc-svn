@@ -397,9 +397,10 @@ void create_opcodemapsfiles(void)
 		name << "opcodemaps/";
 		name << it->second;
 		if (!std::filesystem::exists(name.str().c_str()))
-		{
 			mkdir (name.str().c_str(), 0750);
-			name << "/opcodemap.v";
+		name << "/opcodemap.v";
+		if (!std::filesystem::exists(name.str().c_str()))
+		{
 			FILE *file = fopen(name.str().c_str(), "wx");
 			print_table(file, it->first.data());
 		}

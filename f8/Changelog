@@ -1,3 +1,8 @@
+2024-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* opcodemaptest/opcodemaptool.cc:
+	  Improve handling of corrupted directory structure.
+
 2024-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/opcodemaptool.cc,
