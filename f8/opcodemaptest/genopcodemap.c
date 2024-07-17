@@ -427,7 +427,10 @@ int main(int argc, char **argv)
 
 	FILE *file = fopen(filename, "wx");
 	if(file)
+	{
 		print_table(file, table);
+		fclose(file);
+	}
 
 	return(0);
 }

@@ -402,7 +402,13 @@ void create_opcodemapsfiles(void)
 		if (!std::filesystem::exists(name.str().c_str()))
 		{
 			FILE *file = fopen(name.str().c_str(), "wx");
-			print_table(file, it->first.data());
+			if (file)
+			{
+				print_table(file, it->first.data());
+				fclose(file);
+			}
+			else
+				fprintf(stderr, "Failed to open file %s", name.str().c_str());
 		}
 	}
 }
