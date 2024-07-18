@@ -152,7 +152,7 @@ typedef enum logic [7:0] {
 	OPCODE_ALTACC4 =      8'h94, // altacc''''
 	OPCODE_ROT_XL_IMMD =  8'h95, // rot xl, #i
 	OPCODE_SRA_XL =       8'h96, // sra xl
-	OPCODE_DAA_XL =       8'h97, // daa xl
+	OPCODE_DA_XL =        8'h97, // da xl
 	OPCODE_BOOL_XL =      8'h98, // bool xl
 	OPCODE_POP_XL =       8'h99, // pop xl
 	OPCODE_THRD_XL =      8'h9a, // thrd xl

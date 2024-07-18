@@ -228,7 +228,7 @@ function automatic logic opcode_is_8_1_xl(opcode_t opcode);
 	return(opcode == OPCODE_SRL_XL || opcode == OPCODE_SLL_XL || opcode == OPCODE_RLC_XL || opcode == OPCODE_RRC_XL ||  opcode == OPCODE_SRA_XL ||
 		opcode == OPCODE_INC_XL || opcode == OPCODE_DEC_XL ||
 		opcode == OPCODE_CLR_XL || opcode == OPCODE_TST_XL ||opcode == OPCODE_PUSH_XL ||
-		opcode == OPCODE_DAA_XL || opcode == OPCODE_BOOL_XL);
+		opcode == OPCODE_DA_XL || opcode == OPCODE_BOOL_XL);
 endfunction
 
 function automatic logic opcode_is_8_1_yrel(opcode_t opcode);

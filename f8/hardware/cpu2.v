@@ -527,10 +527,10 @@ module cpu
 					next_f[FLAG_Z] = !result8;
 					next_f[FLAG_C] = op8[0];
 				end
-				else if(opcode == OPCODE_DAA_XL)
+				else if(opcode == OPCODE_DA_XL)
 				begin
 					//addsub_result_t addsub_result;
-					addsub_result = addsub ({8'h00, op8}, {8'h00, daaadjust(op8, f[FLAG_C], f[FLAG_H])}, 0, 0);
+					addsub_result = addsub ({8'h00, op8}, {8'h00, dadjust(op8, f[FLAG_C], f[FLAG_H])}, 0, 0);
 					next_f = {3'b000, addsub_result.o, addsub_result.z, addsub_result.n, addsub_result.c, addsub_result.h};
 					result8 = addsub_result.result[7:0];
 				end

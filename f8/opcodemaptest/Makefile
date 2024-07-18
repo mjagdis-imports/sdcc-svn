@@ -9,7 +9,7 @@ all: opcodemaptool
 clean:
 	rm -rf testdata_* opcodemaps opcodemapstable
 
-.PHONY: olddata newdata clean oldicehead oldice2head
+.PHONY: olddata newdata newdata2 clean oldicehead oldice2head
 
 # new tool: opcodemaptool
 
@@ -22,7 +22,9 @@ NEWICESYNTHSIZES = $(NEWCASES:opcodemaps/%=opcodemaps/%/icesynth.size)
 NEWICESYNTH2SIZES = $(NEWCASES:opcodemaps/%=opcodemaps/%/icesynth2.size)
 
 # The big target. Takes a lot of time and memory if there are many maps. Rule of thumb when using make -j <n> data: System should have (n*3) GB of RAM.
-newdata: $(NEWICESYNTHSIZES) $(NEWICESYNTH2SIZES)
+newdata: $(NEWICESYNTHSIZES)
+
+newdata2: $(NEWICESYNTH2SIZES)
 
 # old tool: genopcodemap
 	
