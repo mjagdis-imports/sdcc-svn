@@ -1,0 +1,934 @@
+\documentclass{book}
+\usepackage{bytefield}
+\usepackage{hyperref}
+\usepackage{makecell}
+\renewcommand{\cellalign}{tl}
+
+\title{f8 Manual}
+\author{Philipp Klaus Krause}
+
+\begin{document}
+
+\maketitle
+
+\chapter{Architecture}
+
+\section{Introduction}
+
+Little-endian. Stack grows downward. 16-bit flat address space.
+
+\texttt{pc} after reset: 0x4000. Other registers (including \texttt{sp}) after reset: unspecified. (P)ROM/Flash from 0x4000. RAM up to 0x3fff. I/O from 0x0000. Empty PROM/Flash is logically 0x00 (to trigger trap). All instructions execute atomically.
+
+Safety features: trap on opcode 0x00. Trap on write to address 0x0000.
+
+\section{Registers}
+
+There is an 8-bit flag register \texttt{f}, which contains the half-carry flag \texttt{h}, the carry flag \texttt{c}, the negative flag \texttt{n}, the zero flag \texttt{z}, the overflow / parity flag \texttt{o}, and three reserved bits. Unless otherwise noted, instructions leave the reserved flags in an undefined state. The reserved bits should not be written by the user except via the \texttt{xch f, (}n\texttt{, sp)} instruction.
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.050\linewidth]{8}
+	\bitheader{0,7} \\
+	\bitbox{1}{\texttt{h}} & \bitbox{1}{\texttt{c}} & \bitbox{1}{\texttt{n}} & \bitbox{1}{\texttt{z}} & \bitbox{1}{\texttt{o}} & \bitbox{3}{reserved}
+\end{bytefield}
+
+\vspace{3mm}
+There are a 16-bit program counter \texttt{pc} and a 16-bit stack pointer \texttt{sp}.
+
+\begin{bytefield}[bitwidth=0.025\linewidth]{16}
+	\bitheader{0,15} \\
+	\wordbox{1}{\texttt{pc}}
+\end{bytefield}
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.025\linewidth]{16}
+	\bitheader{0,15} \\
+	\wordbox{1}{\texttt{sp}}
+\end{bytefield}
+
+There are three 16-bit general-purpose registers, each consisting of two 8.bit registers.
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.025\linewidth]{16}
+	\bitheader{0,7,8,15} \\
+	\wordbox{1}{\texttt{x}} \\
+	\bitbox{8}{\texttt{xl}} &
+	\bitbox{8}{\texttt{xh}}
+\end{bytefield}
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.025\linewidth]{16}
+	\bitheader{0,7,8,15} \\
+	\wordbox{1}{\texttt{y}} \\
+	\bitbox{8}{\texttt{yl}} &
+	\bitbox{8}{\texttt{yh}}
+\end{bytefield}
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.025\linewidth]{16}
+	\bitheader{0,7,8,15} \\
+	\wordbox{1}{\texttt{z}} \\
+	\bitbox{8}{\texttt{zl}} &
+	\bitbox{8}{\texttt{zh}}
+\end{bytefield}
+
+\section{Instructions}
+
+Instructions have up to 3 source and up to 2 destination operands. At most one source and one destination operand are in memory.
+
+Each instruction is encoded by 1 to 3 bytes: an optional prefix byte is followed by the opcode byte and 0 to 2 operand bytes.
+
+There are 8 prefix bytes:
+
+\begin{tabular}{l l l}
+Prefix & semantics & group \\
+\texttt{swapop} & swap operands & 0 \\
+\texttt{altacc1} & alternative acumulator \texttt{xh} instead of \texttt{xl} & 1 \\
+\texttt{altacc2} & alternative acumulator \texttt{yl} instead of \texttt{xl}, \texttt{z} instead of \texttt{y} & 2 \\
+\texttt{altacc4} & alternative acumulator \texttt{yh} instead of \texttt{xl}, \texttt{z} instead of \texttt{y} & 2 \\
+\texttt{altacc3} & alternative acumulator \texttt{zl} instead of \texttt{xl}, \texttt{x} instead of \texttt{y} & 2 \\
+\texttt{altacc5} & alternative acumulator \texttt{zh} instead of \texttt{xl} & 2
+\end{tabular}
+
+\section{Addressing Modes}
+
+\begin{tabular}{l l l}
+\texttt{xl}, \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{zh} & 8-bit register \\
+\texttt{x}, \texttt{y}, \texttt{z}, \texttt{sp} & 16-bit register \\
+\texttt{\#i} & 8-bit immediate \\
+\texttt{\#ii} & 16-bit immediate \\
+\texttt{\#d} & 8-bit immediate sign-extended to 16 bit \\
+\texttt{mm} & direct \\
+\texttt{(n, sp)}, \texttt{(n, y)} & indexed with 8-bit offset \\
+\texttt{(nn, z)} & indexed with 16-bit offset \\
+\texttt{(x)}, \texttt{(y)}, \texttt{(z)} & indirect
+\end{tabular}
+
+
+
+\begin{tabular}{l l l}
+\texttt{op8\_2} & Any of \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{\#i}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
+\texttt{op8\_2ni} & Any of \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
+\texttt{altacc8} & Any of \texttt{xl}, \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{zh}. \\
+\texttt{op16\_2} & Any of \texttt{x}, \texttt{\#ii}, \texttt{mm}, \texttt{(n, sp)}. \\
+\texttt{op16\_2} & Any of \texttt{x}, \texttt{mm}, \texttt{(n, sp)}. \\
+\texttt{altacc16} & Any of \texttt{x}, \texttt{z}. \\
+\texttt{op8\_1} & Any of \texttt{xl}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(n, y)}. \\
+\texttt{op16\_1} & Any of \texttt{y}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
+\end{tabular}
+
+\chapter{Instructions}
+
+\section{8-bit two-operand instructions}
+
+Instructions where the location is used for \texttt{altacc8} and \texttt{op8} are not valid.
+
+\subsection{adc: 8-bit addition with carry}
+
+\begin{tabular}{l l l}
+Assembler code            & Operation                                    & Prefix \\
+\texttt{adc xl, op8\_2}      & \texttt{; xl = xl + op8\_2 + c}           & \\
+\texttt{adc altacc8, op8\_2} & \texttt{; altacc8 = altacc8 + op8\_2 + c} & 1, 2 \\
+\texttt{adc op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni + xl + c}   & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
+
+
+\subsection{add: 8-bit addition}
+
+\begin{tabular}{l l l}
+Assembler code            & Operation                                & Prefix \\
+\texttt{add xl, op8\_2}      & \texttt{; xl = xl + op8\_2}           & \\
+\texttt{add altacc8, op8\_2} & \texttt{; altacc8 = altacc8 + op8\_2} & 1, 2 \\
+\texttt{add op8\_2ni, xl}      & \texttt{; op8\_2ni = op8\_2ni + xl} & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
+
+
+\subsection{and: 8-bit bitwise and}
+
+\begin{tabular}{l l l}
+Assembler code               & Operation                              & Prefix \\
+\texttt{and xl, op8\_2}      & \texttt{; xl = xl \& op8\_2}           & \\
+\texttt{and altacc8, op8\_2} & \texttt{; altacc8 = altacc8 \& op8\_2} & 1, 2 \\
+\texttt{and op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni \& xl}   & 0
+\end{tabular}
+
+
+\subsection{cp: 8-bit comparison}
+
+Subtraction where the result is used to update the flags only.
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                        & Prefix \\
+\texttt{cp xl, op8\_2}      & \texttt{; xl + ~op8\_2 + 1}      & \\
+\texttt{cp altacc8, op8\_2} & \texttt{; altacc8 + ~op8\_2 + 1} & 1, 2 \\
+\texttt{cp op8\_2, xl}      & \texttt{; op8\_2 + ~xl + 1}      & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
+
+
+\subsection{or: 8-bit bitwise or}
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                             & Prefix \\
+\texttt{or xl, op8\_2}      & \texttt{; xl = xl | op8\_2}           & \\
+\texttt{or altacc8, op8\_2} & \texttt{; altacc8 = altacc8 | op8\_2} & 1, 2 \\
+\texttt{or op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni | xl}   & 0
+\end{tabular}
+
+
+\subsection{sbc: 8-bit subtraction with carry}
+
+\begin{tabular}{l l l}
+Assembler code                 & Operation                                    & Prefix \\
+\texttt{sbc xl, op8\_2ni}      & \texttt{; xl = xl + ~op8\_2ni + c}           & \\
+\texttt{sbc altacc8, op8\_2ni} & \texttt{; altacc8 = altacc8 + ~op8\_2ni + c} & 1, 2 \\
+\texttt{sbc op8\_2ni, xl}      & \texttt{; op8\_2ni = op8\_2ni + ~xl + c}     & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
+
+
+\subsection{sub: 8-bit subtraction}
+
+\begin{tabular}{l l l}
+Assembler code                 & Operation                                    & Prefix \\
+\texttt{sub xl, op8\_2ni}      & \texttt{; xl = xl + ~op8\_2ni + 1}           & \\
+\texttt{sub altacc8, op8\_2ni} & \texttt{; altacc8 = altacc8 + ~op8\_2ni + 1} & 1, 2 \\
+\texttt{sub op8\_2ni, xl}      & \texttt{; op8\_2ni = op8\_2ni + ~xl + 1}     & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
+
+
+\subsection{xor: 8-bit bitwise exclusive or}
+
+\begin{tabular}{l l l}
+Assembler code               & Operation                              & Prefix \\
+\texttt{xor xl, op8\_2}      & \texttt{; xl = xl \^ op8\_2}           & \\
+\texttt{xor altacc8, op8\_2} & \texttt{; altacc8 = altacc8 \^ op8\_2} & 1, 2 \\
+\texttt{xor op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni \^ xl}   & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
+
+
+\section{16-bit 2-operand-instructions}
+
+Todo: Document possible altacc prefixes.
+
+\subsection{adcw: 16 bit addition with carry}
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                                & Prefix \\
+\texttt{adcw xl, op16\_2}   & \texttt{; y = y + op16\_2 + c}           & \\
+\texttt{adcw op16\_2ni, xl} & \texttt{; op16\_2ni = op16\_2ni + y + c} & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{addw: 16 bit addition}
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                            & Prefix \\
+\texttt{adcw xl, op16\_2}   & \texttt{; y = y + op16\_2}           & \\
+\texttt{adcw op16\_2ni, xl} & \texttt{; op16\_2ni = op16\_2ni + y} & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{orw: 16 bit bitwise or}
+
+todo: do we really want the effect on o here? If yes, why not on the 8-bit logic ops?
+
+\begin{tabular}{l l l}
+Assembler code             & Operation                            & Prefix \\
+\texttt{orw xl, op16\_2}   & \texttt{; y = y | op16\_2}           & \\
+\texttt{orw op16\_2ni, xl} & \texttt{; op16\_2ni = op16\_2ni | y} & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{nzo}
+
+
+\subsection{sbcw: 16 bit subtraction with carry}
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                               & Prefix \\
+\texttt{sbcw xl, op16\_2ni} & \texttt{; y = y + ~op16\_2ni + c}       & \\
+\texttt{sbcw op16\_2ni, xl} & \texttt{; op16\_2 = ~op16\_2ni + y + c} & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{subw: 16 bit subtraction}
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                               & Prefix \\
+\texttt{subw xl, op16\_2ni} & \texttt{; y = y + ~op16\_2ni + 1}       & \\
+\texttt{subw op16\_2ni, xl} & \texttt{; op16\_2 = ~op16\_2ni + y + 1} & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{xorw: 16 bit bitwise exclusive or}
+
+todo: do we really want the effect on o here? If yes, why not on the 8-bit logic ops?
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                             & Prefix \\
+\texttt{xorw xl, op16\_2}   & \texttt{; y = y \^ op16\_2}           & \\
+\texttt{xorw op16\_2ni, xl} & \texttt{; op16\_ni2 = op16\_2ni \^ y} & 0
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{nzo}
+
+
+\section{8-bit 1-operand-instructions}
+
+\subsection{clr: 8-bit clear}
+
+\begin{tabular}{l l l}
+Assembler code       & Operation                 & Prefix \\
+\texttt{clr op8\_1}  & \texttt{; op8 = 0x00}     & \\
+\texttt{clr altacc8} & \texttt{; altacc8 = 0x00} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{dec: 8-bit decrement}
+
+\begin{tabular}{l l l}
+Assembler code       & Operation                         & Prefix \\
+\texttt{dec op8\_1}  & \texttt{; op8 = op8 + -1}         & \\
+\texttt{dec altacc8} & \texttt{; altacc8 = altacc8 + -1} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
+
+
+\subsection{inc: 8-bit increment}
+
+\begin{tabular}{l l l}
+Assembler code       & Operation                        & Prefix \\
+\texttt{inc op8\_1}  & \texttt{; op8 = op8 + 1}         & \\
+\texttt{inc altacc8} & \texttt{; altacc8 = altacc8 + 1} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
+
+
+\subsection{push: 8-bit push onto stack}
+
+\begin{tabular}{l l l}
+Assembler code        & Operation                   & Prefix \\
+\texttt{push op8\_1}  & \texttt{; (--sp) = op8}     & \\
+\texttt{push altacc8} & \texttt{; (--sp) = altacc8} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{sll: 8-bit shift left logical}
+
+\begin{tabular}{l l l}
+Assembler code       & Operation                                                                       & Prefix \\
+\texttt{sll op8\_1}  & \makecell{\texttt{; c = (op8 \& 0x80) >> 7}\\\texttt{; op8 = op8 << 1}}         & \\
+\texttt{sll altacc8} & \makecell{\texttt{; c = (op8 \& 0x80) >> 7}\\\texttt{; altacc8 = altacc8 << 1}} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cz}
+
+
+\subsection{srl: 8-bit shift right logical}
+
+\begin{tabular}{l l l}
+Assembler code       & Operation                                                              & Prefix \\
+\texttt{srl op8\_1}  & \makecell{\texttt{; c = op8 \& 0x01}\\\texttt{; op8 = op8 >> 1}}         & \\
+\texttt{srl altacc8} & \makecell{\texttt{; c = op8 \& 0x01}\\\texttt{; altacc8 = altacc8 >> 1}} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cz}
+
+
+\subsection{rlc: 8-bit rotate left thourgh carry}
+
+\begin{tabular}{l l l}
+Assembler code       & Operation                                                                                                   & Prefix \\
+\texttt{rlc op8\_1}  & \makecell{\texttt{; tc = (op8  \& 0x80) >> 7}\\\texttt{; op8 = (op8 << 1) | c}\\\texttt{; c = tc}}            & \\
+\texttt{rlc altacc8} & \makecell{\texttt{; tc = (altacc8 \& 0x80) >> 7}\\\texttt{; altacc8 = (altacc8 << 1) | c}\\\texttt{; c = tc}} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cz}
+
+
+\subsection{rrc: 8-bit rotate right through carry}
+
+\begin{tabular}{l l l}
+Assembler code       & Operation                                                                                                     & Prefix \\
+\texttt{rrc op8\_1}  & \makecell{\texttt{; tc = op8  \& 0x01}\\\texttt{; op8 = (op8 >> 1) | (c << 7)}\\\texttt{; c = tc}}            & \\
+\texttt{rrc altacc8} & \makecell{\texttt{; tc = altacc8 \& 0x01}\\\texttt{; altacc8 = (altacc8 >> 1) | (c << 7)}\\\texttt{; c = tc}} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cz}
+
+
+\subsection{tst: 8-bit test}
+
+Set n and z flags according to value of operand, o flag by parity, reset c.
+
+\begin{tabular}{l l l}
+Assembler code       & Operation          & Prefix \\
+\texttt{tst op8\_1}  & \texttt{; op8}     & \\
+\texttt{tst altacc8} & \texttt{; altacc8} & 1, 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\section{16-bit 1-operand-instructions}
+
+Valid op:
+y
+mm      ; direct
+(n, sp) ; indexed
+(nn, z) ; indexed
+
+\subsection{adcw: 16 bit addition with carry}
+
+\begin{tabular}{l l l}
+Assembler code         & Operation                          & Prefix \\
+\texttt{adcw op16\_1}  & \texttt{; op16 = op16 + c}         & \\
+\texttt{adcw altacc16} & \texttt{; altacc16 = altacc16 + c} & 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{clrw}
+
+clrw op (2)        ; op = 0
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{incw: 16-bit increment}
+
+\begin{tabular}{l l l}
+Assembler code         & Operation                          & Prefix \\
+\texttt{incw op16\_1}  & \texttt{; op16 = op16 + 1}         & \\
+\texttt{incw altacc16} & \texttt{; altacc16 = altacc16 + 1} & 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{pushw: 16-bit push onto stack}
+
+pushw op (2)
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{sbcw: 16-bit subtraction with carry}
+
+sbcw op (2) ; op = op + 0xffff + c
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{tstw: 16-bit test}
+
+Set n and z flags according to value of operand, o flag by parity, set c.
+
+\begin{tabular}{l l l}
+Assembler code         & Operation           & Prefix \\
+\texttt{tstw op16\_1}  & \texttt{; op16}     & \\
+\texttt{tstw altacc16} & \texttt{; altacc16} & 2
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\section{8-bit loads}
+
+\subsection{ld}
+
+ld xl, \#i (12)
+
+ld xl, mm [zn] (12)
+
+ld xl, (n, sp) [zn] (12)
+
+ld xl, (nn, z) [zn] (12)
+
+ld xl, (y) [zn] (12)
+
+ld xl, (n, y) [zn] (12)
+
+ld xl, xh (02)
+
+ld xl, yl (012)
+
+ld xl, yh (012)
+
+ld xl, zl (012)
+
+ld xl, zh (012)
+
+ld mm, xl (12)
+
+ld (n, sp), xl (12)
+
+ld (nn, z), xl (12)
+
+ld (y), xl (12)
+
+ld (n, y), xl (12)
+
+
+\subsection{ldi}
+
+ldi (z), (y) (2)   ; (z++) = (y)
+
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
+
+
+\section{16-bit loads}
+
+\subsection{ldw}
+
+ldw y, \#ii (2)
+
+ldw y, mm [ZN] (2)
+
+ldw y, (n, sp) [ZN] (2)
+
+ldw y, (nn, z) [ZN] (2)
+
+ldw y, (n, y) [ZN] (2)
+
+ldw y, (y) [ZN] (2) 
+
+ldw y, x (2)
+
+ldw y, \#d (2)
+
+ldw mm, y (2)
+
+ldw (n, sp), y (2)
+
+ldw (nn, z), y (2)
+
+ldw x, y
+
+ldw z, y (0)
+
+ldw (y), x (2)
+
+ldw (n, y), x
+
+ldw y, sp (2)
+
+ldw ((d, sp)), y (2)
+
+
+\subsection{ldwi}
+
+ldwi (z), (y) (2) ; (z++) = (y); (z++) = (y)
+
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
+
+
+\section{Other 8-bit instructions}
+
+\subsection{bool: 8-bit cast to bool}
+
+bool xl (12) ; cast to bool
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
+
+
+\subsection{cax: 8-bit compare and exchange}
+
+cax (y), zl, xl [z] (1)   ; if ((y) == zl) (y) = xl; else zl = (y); compare-and-exchange
+
+
+\subsection{da: decimal adjust}
+
+da xl [ocznh] (12)        ; decimal adjust for addition / subtraction - binary coded decimal semantics
+
+
+\subsection{mad: multiply and add}
+
+mad x, mm, yl [zn]        ; x <- m * yl + xh + c
+
+mad x, (n, sp), yl [zn]   ; x <- (n, sp) * yl + xh + c
+
+mad x, (nn, z), yl [zn]   ; x <- (nn, z) * yl + xh + c
+
+mad x, (z), yl [zn]       ; x <- (z) * yl + xh + c
+
+
+\subsection{msk: mask}
+
+msk (y), xl, \#i [z](12)   ; (y) = xl \& i | (y) \& ~i; z flag according to (y) \& ~i
+
+
+\subsection{pop}
+
+pop xl (12)               ; xl = (sp++)
+
+
+\subsection{push: 8-bit push onto stack}
+
+push \#i []                ; Ignores all flags, changes no flags, not even the reserved ones.
+
+
+\subsection{rot: 8-bit rotate}
+
+rot xl, \#i (12)           ; rotate xl left by i
+
+
+\subsection{sra: 8-bit shift right arithmetic}
+
+sra xl (12)
+
+\subsubsection*{Affected Flags}
+
+\texttt{cz}
+
+
+\subsection{thrd}
+
+thrd xl (12) ; get current hardware thread number
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
+
+
+\subsection{xch}
+
+xch xl, (n, sp) (12)
+
+xch xl, (y) (12)
+
+xch yl, yh (2)            ; exchange yl with yh.
+
+xch f, (n, sp) [xxxocznh]
+
+\section{Other 16-bit instructions}
+
+\subsection{addw: 16-bit addition}
+
+addw sp, \#d            ; Ignores all flags, changes no flags, not even the reserved ones.
+
+addw y, \#d [OCZN] (2)
+
+
+\subsection{boolw: 16-bit cast to bool}
+
+boolw y (2)
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
+
+
+\subsection{caxw: 16-bit compare and exchange}
+
+caxw (y), z, x ; if ((y) == z) (y) = x; else z = (y); compare-and-exchange.
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
+
+
+\subsection{cpw: 16-bit comparison}
+
+cpw y, \#ii (02)
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{decw: 16-bit decrement}
+
+decw (n, sp)
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{incnw: 16-bit increment without carry update}
+
+incnw y (2)            ; Ignores all flags, changes no flags (except possibly the reserved ones).
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{negw: 16-bit negation}
+
+negw y (2)      ; y = ~y + 1
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnzo}
+
+
+\subsection{mul: multiplication}
+
+mul y [ZNC] (2)        ; y = yl * yh , clears carry.
+
+
+\subsection{popw}
+
+popw y (2)
+
+
+\subsection{pushw: 16-bit push onto stack}
+
+pushw \#ii []
+
+
+\subsection{rlcw}
+
+rlcw y [ZNC] (2)
+
+rlcw (n, sp) [ZNC]
+
+
+\subsection{rrcw}
+
+rrcw y [ZNC] (2)
+
+rrcw (n, sp) [ZNC]
+
+\subsection{sex: sign-extend}
+
+sex y, xl (12) [ZN]    ; sign-extend xl to y
+
+\subsection{sllw}
+
+sllw y [ZNC] (2)
+
+sllw y, xl [ZN] (12)
+
+
+\subsection{sraw}
+
+sraw y [ZNC] (2)
+
+
+\subsection{srlw}
+
+srlw y [ZNC] (2)
+
+
+\subsection{xchw}
+
+xchw x, (y) (2)
+
+xchw y, (n, sp) [] (2)
+
+
+\subsection{zex: zero-extend}
+
+zex y, xl (12) ; zero-extend xl to y
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
+
+
+\section{Bit Instructions}
+
+\subsection{xchb: exchange bit}
+
+xchb xl, mm, \#b (12) ; exchange xl with bit b at mm. z flag according to new value of xl.
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
+
+
+\section{Relative Jumps}
+
+\subsection{dnjnz}
+
+dnjnz yh, \#d (2) ; decrement yh, without updating carry, jump if result is not zero.
+
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
+
+
+\subsection{jr}
+
+jr \#d                 ; jump relative to pc. Ignores all flags, changes no flags, not even reserved ones.
+
+
+\subsection{jrc}
+
+jrc \#d                ; if c
+
+
+\subsection{jrle}
+
+jrle \#d               ; if !c or z
+
+
+\subsection{jrn}
+
+jrn \#d                ; if n
+
+
+\subsection{jrnc}
+
+jrnc \#d               ; if !c
+
+
+\subsection{jrnn}
+
+jrnn \#d               ; if !n
+
+
+\subsection{jrno}
+
+jrno \#d               ; if !o
+
+
+\subsection{jrnz}
+
+jrnz \#d               ; if !z
+
+
+\subsection{jrsge}
+
+jrsge \#d              ; if n xnor o
+
+
+\subsection{jrsle}
+
+jrsle \#d              ; if (z or (n xor o))
+
+
+\subsection{jrslt}
+
+jrslt \#d              ; if n xor o
+
+
+
+\subsection{jrz}
+
+jrz \#d                ; jump relative to pc if z flag is set.
+
+
+\section{Other Instructions}
+
+\subsection{call}
+
+call \#ii
+
+call y (2)
+
+
+\subsection{jp: jump}
+
+jp \#ii     ; Ignores all flags, changes no flags, not even reserved ones.
+
+jp y (2)
+
+
+\subsection{ret: return}
+
+ret
+
+
+\subsection{reti: return from interrupt}
+
+reti ; Ignores all flags, changes no flags, not even reserved ones.
+
+
+\subsection{trap}
+
+trap ; Opcode 0x00. Trap reset.
+
+\chapter{Opcode Map}
+
+todo
+
+\end{document}
+
