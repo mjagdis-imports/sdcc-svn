@@ -127,10 +127,10 @@ Instructions where the location is used for \texttt{altacc8} and \texttt{op8} ar
 \subsection{adc: 8-bit addition with carry}
 
 \begin{tabular}{l l l}
-Assembler code            & Operation                                    & f8l \\
-\texttt{adc xl, op8\_2}      & \texttt{; xl = xl + op8\_2 + c}           & Yes \\
-\texttt{adc altacc8, op8\_2} & \texttt{; altacc8 = altacc8 + op8\_2 + c} & Yes \\
-\texttt{adc op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni + xl + c}   & Yes
+Assembler code            & Operation                                  & f8l \\
+\texttt{adc xl, op8\_2}      & \texttt{xl = xl + op8\_2 + c}           & Yes \\
+\texttt{adc altacc8, op8\_2} & \texttt{altacc8 = altacc8 + op8\_2 + c} & Yes \\
+\texttt{adc op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni + xl + c}   & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -141,10 +141,10 @@ Assembler code            & Operation                                    & f8l \
 \subsection{add: 8-bit addition}
 
 \begin{tabular}{l l l}
-Assembler code            & Operation                                & f8l \\
-\texttt{add xl, op8\_2}      & \texttt{; xl = xl + op8\_2}           & Yes \\
-\texttt{add altacc8, op8\_2} & \texttt{; altacc8 = altacc8 + op8\_2} & Yes \\
-\texttt{add op8\_2ni, xl}      & \texttt{; op8\_2ni = op8\_2ni + xl} & Yes
+Assembler code            & Operation                              & f8l \\
+\texttt{add xl, op8\_2}      & \texttt{xl = xl + op8\_2}           & Yes \\
+\texttt{add altacc8, op8\_2} & \texttt{altacc8 = altacc8 + op8\_2} & Yes \\
+\texttt{add op8\_2ni, xl}      & \texttt{op8\_2ni = op8\_2ni + xl} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -155,10 +155,10 @@ Assembler code            & Operation                                & f8l \\
 \subsection{and: 8-bit bitwise and}
 
 \begin{tabular}{l l l}
-Assembler code               & Operation                              & f8l \\
-\texttt{and xl, op8\_2}      & \texttt{; xl = xl \& op8\_2}           & Yes \\
-\texttt{and altacc8, op8\_2} & \texttt{; altacc8 = altacc8 \& op8\_2} & Yes \\
-\texttt{and op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni \& xl}   & Yes
+Assembler code               & Operation                            & f8l \\
+\texttt{and xl, op8\_2}      & \texttt{xl = xl \& op8\_2}           & Yes \\
+\texttt{and altacc8, op8\_2} & \texttt{altacc8 = altacc8 \& op8\_2} & Yes \\
+\texttt{and op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni \& xl}   & Yes
 \end{tabular}
 
 
@@ -167,10 +167,10 @@ Assembler code               & Operation                              & f8l \\
 Subtraction where the result is used to update the flags only.
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                        & f8l\\
-\texttt{cp xl, op8\_2}      & \texttt{; xl + ~op8\_2 + 1}      & Yes \\
-\texttt{cp altacc8, op8\_2} & \texttt{; altacc8 + ~op8\_2 + 1} & Yes \\
-\texttt{cp op8\_2, xl}      & \texttt{; op8\_2 + ~xl + 1}      & No
+Assembler code              & Operation                      & f8l\\
+\texttt{cp xl, op8\_2}      & \texttt{xl + \~{}op8\_2 + 1}      & Yes \\
+\texttt{cp altacc8, op8\_2} & \texttt{altacc8 + \~{}op8\_2 + 1} & Yes \\
+\texttt{cp op8\_2, xl}      & \texttt{op8\_2 + \~{}xl + 1}      & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -181,20 +181,20 @@ Assembler code              & Operation                        & f8l\\
 \subsection{or: 8-bit bitwise or}
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                             & f8l \\
-\texttt{or xl, op8\_2}      & \texttt{; xl = xl | op8\_2}           & Yes \\
-\texttt{or altacc8, op8\_2} & \texttt{; altacc8 = altacc8 | op8\_2} & Yes \\
-\texttt{or op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni | xl}   & Yes
+Assembler code              & Operation                           & f8l \\
+\texttt{or xl, op8\_2}      & \texttt{xl = xl | op8\_2}           & Yes \\
+\texttt{or altacc8, op8\_2} & \texttt{altacc8 = altacc8 | op8\_2} & Yes \\
+\texttt{or op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni | xl}   & Yes
 \end{tabular}
 
 
 \subsection{sbc: 8-bit subtraction with carry}
 
 \begin{tabular}{l l l}
-Assembler code                 & Operation                                    & f8l \\
-\texttt{sbc xl, op8\_2ni}      & \texttt{; xl = xl + ~op8\_2ni + c}           & Yes \\
-\texttt{sbc altacc8, op8\_2ni} & \texttt{; altacc8 = altacc8 + ~op8\_2ni + c} & Yes \\
-\texttt{sbc op8\_2ni, xl}      & \texttt{; op8\_2ni = op8\_2ni + ~xl + c}     & No
+Assembler code                 & Operation                                  & f8l \\
+\texttt{sbc xl, op8\_2ni}      & \texttt{xl = xl + \~{}op8\_2ni + c}           & Yes \\
+\texttt{sbc altacc8, op8\_2ni} & \texttt{altacc8 = altacc8 + \~{}op8\_2ni + c} & Yes \\
+\texttt{sbc op8\_2ni, xl}      & \texttt{op8\_2ni = op8\_2ni + \~{}xl + c}     & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -205,10 +205,10 @@ Assembler code                 & Operation                                    & 
 \subsection{sub: 8-bit subtraction}
 
 \begin{tabular}{l l l}
-Assembler code                 & Operation                                    & f8l \\
-\texttt{sub xl, op8\_2ni}      & \texttt{; xl = xl + ~op8\_2ni + 1}           & Yes \\
-\texttt{sub altacc8, op8\_2ni} & \texttt{; altacc8 = altacc8 + ~op8\_2ni + 1} & Yes \\
-\texttt{sub op8\_2ni, xl}      & \texttt{; op8\_2ni = op8\_2ni + ~xl + 1}     & No
+Assembler code                 & Operation                                  & f8l \\
+\texttt{sub xl, op8\_2ni}      & \texttt{xl = xl + \~{}op8\_2ni + 1}           & Yes \\
+\texttt{sub altacc8, op8\_2ni} & \texttt{altacc8 = altacc8 + \~{}op8\_2ni + 1} & Yes \\
+\texttt{sub op8\_2ni, xl}      & \texttt{op8\_2ni = op8\_2ni + \~{}xl + 1}     & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -219,10 +219,10 @@ Assembler code                 & Operation                                    & 
 \subsection{xor: 8-bit bitwise exclusive or}
 
 \begin{tabular}{l l l}
-Assembler code               & Operation                                & f8l \\
-\texttt{xor xl, op8\_2}      & \texttt{; xl = xl \^{} op8\_2}           & Yes \\
-\texttt{xor altacc8, op8\_2} & \texttt{; altacc8 = altacc8 \^{} op8\_2} & Yes \\
-\texttt{xor op8\_2ni, xl}    & \texttt{; op8\_2ni = op8\_2ni \^{} xl}   & Yes
+Assembler code               & Operation                              & f8l \\
+\texttt{xor xl, op8\_2}      & \texttt{xl = xl \^{} op8\_2}           & Yes \\
+\texttt{xor altacc8, op8\_2} & \texttt{altacc8 = altacc8 \^{} op8\_2} & Yes \\
+\texttt{xor op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni \^{} xl}   & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -237,9 +237,9 @@ Todo: Document possible altacc prefixes.
 \subsection{adcw: 16 bit addition with carry}
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                                & f8l \\
-\texttt{adcw xl, op16\_2}   & \texttt{; y = y + op16\_2 + c}           & No \\
-\texttt{adcw op16\_2ni, xl} & \texttt{; op16\_2ni = op16\_2ni + y + c} & No
+Assembler code              & Operation                              & f8l \\
+\texttt{adcw xl, op16\_2}   & \texttt{y = y + op16\_2 + c}           & No \\
+\texttt{adcw op16\_2ni, xl} & \texttt{op16\_2ni = op16\_2ni + y + c} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -250,9 +250,9 @@ Assembler code              & Operation                                & f8l \\
 \subsection{addw: 16 bit addition}
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                            & f8l \\
-\texttt{adcw xl, op16\_2}   & \texttt{; y = y + op16\_2}           & No \\
-\texttt{adcw op16\_2ni, xl} & \texttt{; op16\_2ni = op16\_2ni + y} & No
+Assembler code              & Operation                          & f8l \\
+\texttt{adcw xl, op16\_2}   & \texttt{y = y + op16\_2}           & No \\
+\texttt{adcw op16\_2ni, xl} & \texttt{op16\_2ni = op16\_2ni + y} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -265,9 +265,9 @@ Assembler code              & Operation                            & f8l \\
 todo: do we really want the effect on o here? If yes, why not on the 8-bit logic ops?
 
 \begin{tabular}{l l l}
-Assembler code             & Operation                            & f8l \\
-\texttt{orw xl, op16\_2}   & \texttt{; y = y | op16\_2}           & No \\
-\texttt{orw op16\_2ni, xl} & \texttt{; op16\_2ni = op16\_2ni | y} & No
+Assembler code             & Operation                          & f8l \\
+\texttt{orw xl, op16\_2}   & \texttt{y = y | op16\_2}           & No \\
+\texttt{orw op16\_2ni, xl} & \texttt{op16\_2ni = op16\_2ni | y} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -278,9 +278,9 @@ Assembler code             & Operation                            & f8l \\
 \subsection{sbcw: 16 bit subtraction with carry}
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                               & f8l \\
-\texttt{sbcw xl, op16\_2ni} & \texttt{; y = y + ~op16\_2ni + c}       & No \\
-\texttt{sbcw op16\_2ni, xl} & \texttt{; op16\_2 = ~op16\_2ni + y + c} & No
+Assembler code              & Operation                             & f8l \\
+\texttt{sbcw xl, op16\_2ni} & \texttt{y = y + \~{}op16\_2ni + c}       & No \\
+\texttt{sbcw op16\_2ni, xl} & \texttt{op16\_2 = \~{}op16\_2ni + y + c} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -291,9 +291,9 @@ Assembler code              & Operation                               & f8l \\
 \subsection{subw: 16 bit subtraction}
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                               & f8l \\
-\texttt{subw xl, op16\_2ni} & \texttt{; y = y + ~op16\_2ni + 1}       & No \\
-\texttt{subw op16\_2ni, xl} & \texttt{; op16\_2 = ~op16\_2ni + y + 1} & No
+Assembler code              & Operation                             & f8l \\
+\texttt{subw xl, op16\_2ni} & \texttt{y = y + \~{}op16\_2ni + 1}       & No \\
+\texttt{subw op16\_2ni, xl} & \texttt{op16\_2 = \~{}op16\_2ni + y + 1} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -306,9 +306,9 @@ Assembler code              & Operation                               & f8l \\
 todo: do we really want the effect on o here? If yes, why not on the 8-bit logic ops?
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                               & f8l \\
-\texttt{xorw xl, op16\_2}   & \texttt{; y = y \^{} op16\_2}           & No \\
-\texttt{xorw op16\_2ni, xl} & \texttt{; op16\_ni2 = op16\_2ni \^{} y} & No
+Assembler code              & Operation                             & f8l \\
+\texttt{xorw xl, op16\_2}   & \texttt{y = y \^{} op16\_2}           & No \\
+\texttt{xorw op16\_2ni, xl} & \texttt{op16\_ni2 = op16\_2ni \^{} y} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -321,9 +321,9 @@ Assembler code              & Operation                               & f8l \\
 \subsection{clr: 8-bit clear}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                 & f8l \\
-\texttt{clr op8\_1}  & \texttt{; op8 = 0x00}     & Yes, except (n, y) \\
-\texttt{clr altacc8} & \texttt{; altacc8 = 0x00} & Yes
+Assembler code       & Operation               & f8l \\
+\texttt{clr op8\_1}  & \texttt{op8 = 0x00}     & Yes, except (n, y) \\
+\texttt{clr altacc8} & \texttt{altacc8 = 0x00} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -334,9 +334,9 @@ none
 \subsection{dec: 8-bit decrement}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                         & f8l \\
-\texttt{dec op8\_1}  & \texttt{; op8 = op8 + -1}         & Yes, except (n, y) \\
-\texttt{dec altacc8} & \texttt{; altacc8 = altacc8 + -1} & Yes
+Assembler code       & Operation                       & f8l \\
+\texttt{dec op8\_1}  & \texttt{op8 = op8 + -1}         & Yes, except (n, y) \\
+\texttt{dec altacc8} & \texttt{altacc8 = altacc8 + -1} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -347,9 +347,9 @@ Assembler code       & Operation                         & f8l \\
 \subsection{inc: 8-bit increment}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                        & f8l \\
-\texttt{inc op8\_1}  & \texttt{; op8 = op8 + 1}         & Yes, except (n, y) \\
-\texttt{inc altacc8} & \texttt{; altacc8 = altacc8 + 1} & Yes
+Assembler code       & Operation                      & f8l \\
+\texttt{inc op8\_1}  & \texttt{op8 = op8 + 1}         & Yes, except (n, y) \\
+\texttt{inc altacc8} & \texttt{altacc8 = altacc8 + 1} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -360,9 +360,9 @@ Assembler code       & Operation                        & f8l \\
 \subsection{push: 8-bit push onto stack}
 
 \begin{tabular}{l l l}
-Assembler code        & Operation                   & f8l \\
-\texttt{push op8\_1}  & \texttt{; (--sp) = op8}     & Yes, except (n, y) \\
-\texttt{push altacc8} & \texttt{; (--sp) = altacc8} & Yes
+Assembler code        & Operation                 & f8l \\
+\texttt{push op8\_1}  & \texttt{(--sp) = op8}     & Yes, except (n, y) \\
+\texttt{push altacc8} & \texttt{(--sp) = altacc8} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -373,9 +373,9 @@ none
 \subsection{sll: 8-bit shift left logical}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                                                                       & f8l \\
-\texttt{sll op8\_1}  & \makecell{\texttt{; c = (op8 \& 0x80) >> 7}\\\texttt{; op8 = op8 << 1}}         & Yes, except (n, y) \\
-\texttt{sll altacc8} & \makecell{\texttt{; c = (op8 \& 0x80) >> 7}\\\texttt{; altacc8 = altacc8 << 1}} & Yes
+Assembler code       & Operation                                                                   & f8l \\
+\texttt{sll op8\_1}  & \makecell{\texttt{c = (op8 \& 0x80) >> 7}\\\texttt{op8 = op8 << 1}}         & Yes, except (n, y) \\
+\texttt{sll altacc8} & \makecell{\texttt{c = (op8 \& 0x80) >> 7}\\\texttt{altacc8 = altacc8 << 1}} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -386,9 +386,9 @@ Assembler code       & Operation                                                
 \subsection{srl: 8-bit shift right logical}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                                                                & f8l \\
-\texttt{srl op8\_1}  & \makecell{\texttt{; c = op8 \& 0x01}\\\texttt{; op8 = op8 >> 1}}         & Yes (except (n, y) \\
-\texttt{srl altacc8} & \makecell{\texttt{; c = op8 \& 0x01}\\\texttt{; altacc8 = altacc8 >> 1}} & Yes
+Assembler code       & Operation                                                            & f8l \\
+\texttt{srl op8\_1}  & \makecell{\texttt{c = op8 \& 0x01}\\\texttt{op8 = op8 >> 1}}         & Yes (except (n, y) \\
+\texttt{srl altacc8} & \makecell{\texttt{c = op8 \& 0x01}\\\texttt{altacc8 = altacc8 >> 1}} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -399,9 +399,9 @@ Assembler code       & Operation                                                
 \subsection{rlc: 8-bit rotate left through carry}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                                                                                                     & f8l \\
-\texttt{rlc op8\_1}  & \makecell{\texttt{; tc = (op8  \& 0x80) >> 7}\\\texttt{; op8 = (op8 << 1) | c}\\\texttt{; c = tc}}            & Yes (except (n, y) \\
-\texttt{rlc altacc8} & \makecell{\texttt{; tc = (altacc8 \& 0x80) >> 7}\\\texttt{; altacc8 = (altacc8 << 1) | c}\\\texttt{; c = tc}} & Yes
+Assembler code       & Operation                                                                                               & f8l \\
+\texttt{rlc op8\_1}  & \makecell{\texttt{tc = (op8  \& 0x80) >> 7}\\\texttt{op8 = (op8 << 1) | c}\\\texttt{c = tc}}            & Yes (except (n, y) \\
+\texttt{rlc altacc8} & \makecell{\texttt{tc = (altacc8 \& 0x80) >> 7}\\\texttt{altacc8 = (altacc8 << 1) | c}\\\texttt{c = tc}} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -412,9 +412,9 @@ Assembler code       & Operation                                                
 \subsection{rrc: 8-bit rotate right through carry}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                                                                                                     & f8l \\
-\texttt{rrc op8\_1}  & \makecell{\texttt{; tc = op8  \& 0x01}\\\texttt{; op8 = (op8 >> 1) | (c << 7)}\\\texttt{; c = tc}}            & Yes (except (n, y) \\
-\texttt{rrc altacc8} & \makecell{\texttt{; tc = altacc8 \& 0x01}\\\texttt{; altacc8 = (altacc8 >> 1) | (c << 7)}\\\texttt{; c = tc}} & Yes
+Assembler code       & Operation                                                                                               & f8l \\
+\texttt{rrc op8\_1}  & \makecell{\texttt{tc = op8  \& 0x01}\\\texttt{op8 = (op8 >> 1) | (c << 7)}\\\texttt{c = tc}}            & Yes (except (n, y) \\
+\texttt{rrc altacc8} & \makecell{\texttt{tc = altacc8 \& 0x01}\\\texttt{altacc8 = (altacc8 >> 1) | (c << 7)}\\\texttt{c = tc}} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -427,9 +427,9 @@ Assembler code       & Operation                                                
 Set n and z flags according to value of operand, o flag by parity, reset c.
 
 \begin{tabular}{l l l}
-Assembler code       & Operation          & f8l \\
-\texttt{tst op8\_1}  & \texttt{; op8}     & Yes (except (n, y) \\
-\texttt{tst altacc8} & \texttt{; altacc8} & Yes
+Assembler code       & Operation        & f8l \\
+\texttt{tst op8\_1}  & \texttt{op8}     & Yes (except (n, y) \\
+\texttt{tst altacc8} & \texttt{altacc8} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -442,9 +442,9 @@ Assembler code       & Operation          & f8l \\
 \subsection{adcw: 16 bit addition with carry}
 
 \begin{tabular}{l l l}
-Assembler code         & Operation                          & f8l \\
-\texttt{adcw op16\_1}  & \texttt{; op16 = op16 + c}         & No \\
-\texttt{adcw altacc16} & \texttt{; altacc16 = altacc16 + c} & No
+Assembler code         & Operation                        & f8l \\
+\texttt{adcw op16\_1}  & \texttt{op16 = op16 + c}         & No \\
+\texttt{adcw altacc16} & \texttt{altacc16 = altacc16 + c} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -455,9 +455,9 @@ Assembler code         & Operation                          & f8l \\
 \subsection{clrw: 16-bit clear}
 
 \begin{tabular}{l l l}
-Assembler code         & Operation                    & f8l \\
-\texttt{clrw op16\_1}  & \texttt{; op16 = 0x0000}     & Yes \\
-\texttt{clrw altacc15} & \texttt{; altacc16 = 0x0000} & Yes
+Assembler code         & Operation                  & f8l \\
+\texttt{clrw op16\_1}  & \texttt{op16 = 0x0000}     & Yes \\
+\texttt{clrw altacc15} & \texttt{altacc16 = 0x0000} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -468,9 +468,9 @@ none
 \subsection{incw: 16-bit increment}
 
 \begin{tabular}{l l l}
-Assembler code         & Operation                          & f8l \\
-\texttt{incw op16\_1}  & \texttt{; op16 = op16 + 1}         & Yes \\
-\texttt{incw altacc16} & \texttt{; altacc16 = altacc16 + 1} & Yes
+Assembler code         & Operation                        & f8l \\
+\texttt{incw op16\_1}  & \texttt{op16 = op16 + 1}         & Yes \\
+\texttt{incw altacc16} & \texttt{altacc16 = altacc16 + 1} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -481,9 +481,9 @@ Assembler code         & Operation                          & f8l \\
 \subsection{pushw: 16-bit push onto stack}
 
 \begin{tabular}{l l l}
-Assembler code          & Operation                           & f8l \\
-\texttt{pushw op16\_1}  & \texttt{; sp -= 2; (sp) = op16}     & Yes \\
-\texttt{pushw altacc16} & \texttt{; sp -= 2; (sp) = altacc16} & Yes
+Assembler code          & Operation                         & f8l \\
+\texttt{pushw op16\_1}  & \texttt{sp -= 2; (sp) = op16}     & Yes \\
+\texttt{pushw altacc16} & \texttt{sp -= 2; (sp) = altacc16} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -494,9 +494,9 @@ none
 \subsection{sbcw: 16-bit subtraction with carry}
 
 \begin{tabular}{l l l}
-Assembler code         & Operation                                   & f8l \\
-\texttt{sbcw op16\_1}  & \texttt{; op16 = op16 + 0xffff + c}         & No \\
-\texttt{sbcw altacc16} & \texttt{; altacc16 = altacc16 + 0xffff + c} & No
+Assembler code         & Operation                                 & f8l \\
+\texttt{sbcw op16\_1}  & \texttt{op16 = op16 + 0xffff + c}         & No \\
+\texttt{sbcw altacc16} & \texttt{altacc16 = altacc16 + 0xffff + c} & No
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -509,9 +509,9 @@ Assembler code         & Operation                                   & f8l \\
 Set n and z flags according to value of operand, o flag by parity, set c.
 
 \begin{tabular}{l l l}
-Assembler code         & Operation           & f8l \\
-\texttt{tstw op16\_1}  & \texttt{; op16}     & Yes \\
-\texttt{tstw altacc16} & \texttt{; altacc16} & Yes
+Assembler code         & Operation         & f8l \\
+\texttt{tstw op16\_1}  & \texttt{op16}     & Yes \\
+\texttt{tstw altacc16} & \texttt{altacc16} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -626,13 +626,13 @@ bool xl (12) ; cast to bool
 
 \subsection{cax: 8-bit compare and exchange}
 
-z is set according to the old value of (y).
+z is set according to the old value of (y) - zl.
 
 \begin{tabular}{l l l}
-Assembler code            & Operation                                          & f8l \\
-\texttt{cax (y), zl, xl}  & \texttt{; if ((y) == zl) (y) = xl; else zl = (y);} & Yes \\
-\texttt{cax (y), zl, xh}  & \texttt{; if ((y) == zl) (y) = xh; else zl = (y);} & Yes \\
-\texttt{cax (y), zl, zh}  & \texttt{; if ((y) == zl) (y) = zh; else zl = (y);} & Yes
+Assembler code            & Operation                                        & f8l \\
+\texttt{cax (y), zl, xl}  & \texttt{if ((y) == zl) (y) = xl; else zl = (y);} & Yes \\
+\texttt{cax (y), zl, xh}  & \texttt{if ((y) == zl) (y) = xh; else zl = (y);} & Yes \\
+\texttt{cax (y), zl, zh}  & \texttt{if ((y) == zl) (y) = zh; else zl = (y);} & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -663,22 +663,50 @@ msk (y), xl, \#i [z](12)   ; (y) = xl \& i | (y) \& ~i; z flag according to (y) 
 
 \subsection{pop: 8-bit pop from stack}
 
-pop xl (12)               ; xl = (sp++)
+\begin{tabular}{l l l}
+Assembler code       & Operation                 & f8l \\
+\texttt{pop xl}      & \texttt{xl = (sp++)}      & Yes \\
+\texttt{pop altacc8} & \texttt{altacc8 = (sp++)} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{push: 8-bit push onto stack}
 
-push \#i []                ; Ignores all flags, changes no flags, not even the reserved ones.
+Ignores all flags, changes no flags, not even the reserved ones.
 
+\begin{tabular}{l l l}
+Assembler code    & Operation             & f8l \\
+\texttt{push \#i} & \texttt{(--sp) = \#i} & Yes
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 \subsection{rot: 8-bit rotate}
 
-rot xl, \#i (12)           ; rotate xl left by i
+\begin{tabular}{l l l}
+Assembler code            & Operation                                                    & f8l \\
+\texttt{rot xl, \#i}      & \texttt{xl = (xl << \#i) | (xl >> (8 - \#i))}                & No \\
+\texttt{rot altacc8, \#i} & \texttt{altacc8 = (altacc8 << \#i) | (altacc8 >> (8 - \#i))} & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none todo: do we want some flags to be affedted?
 
 
 \subsection{sra: 8-bit shift right arithmetic}
 
-sra xl (12)
+\begin{tabular}{l l l}
+Assembler code       & Operation                                                                               & f8l \\
+\texttt{sra xl}      & \makecell{\texttt{c = op8 \& 0x01}\\\texttt{xl = (xl >> 1) | xl \& 0x80}}               & Yes \\
+\texttt{sra altacc8} & \makecell{\texttt{c = op8 \& 0x01}\\\texttt{altacc8 = (altacc8 >> 1) | altacc \& 0x80}} & Yes
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -708,9 +736,18 @@ xch f, (n, sp) [xxxocznh]
 
 \subsection{addw: 16-bit addition}
 
-addw sp, \#d            ; Ignores all flags, changes no flags, not even the reserved ones.
+\texttt{addw sp, \#d} ignores all flags, changes no flags, not even the reserved ones.
 
-addw y, \#d [OCZN] (2)
+\begin{tabular}{l l l}
+Assembler code              & Operation                          & f8l \\
+\texttt{addw sp, \#d}       & \texttt{sp = sp + \#d}             & Yes \\
+\texttt{addw y, \#d}        & \texttt{y = y + \#d}               & Yes \\
+\texttt{addw altacc16, \#d} & \texttt{altacc16 = altacc16 + \#d} & Yes
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none (\texttt{addw sp, \#d}) or \texttt{cnzo} (all others).
 
 
 \subsection{boolw: 16-bit cast to bool}
@@ -724,11 +761,11 @@ boolw y (2)
 
 \subsection{caxw: 16-bit compare and exchange}
 
-z is set according to the old value of (y).
+z is set according to the old value of (y) - z.
 
 \begin{tabular}{l l l}
-Assembler code            & Operation                                     & f8l \\
-\texttt{cax (y), z, x}  & \texttt{; if ((y) == z) (y) = x; else z = (y);} & Yes \\
+Assembler code           & Operation                                     & f8l \\
+\texttt{caxw (y), z, x}  & \texttt{if ((y) == z) (y) = x; else z = (y);} & Yes \\
 
 \end{tabular}
 
@@ -748,7 +785,10 @@ cpw y, \#ii (02)
 
 \subsection{decw: 16-bit decrement}
 
-decw (n, sp)
+\begin{tabular}{l l l}
+Assembler code        & Operation                       & f8l \\
+\texttt{decw (n, sp)} & \texttt{(n, sp) = (n, sp) + -1} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -757,7 +797,13 @@ decw (n, sp)
 
 \subsection{incnw: 16-bit increment without carry update}
 
-incnw y (2)            ; Ignores all flags, changes no flags (except possibly the reserved ones).
+Ignores all flags, changes no flags (except possibly the reserved ones).
+
+\begin{tabular}{l l l}
+Assembler code          & Operation                        & f8l \\
+\texttt{incnw y}        & \texttt{y = y + 1}               & No \\
+\texttt{incnw altacc16} & \texttt{altacc16 = altacc16 + 1} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -766,7 +812,11 @@ none
 
 \subsection{negw: 16-bit negation}
 
-negw y (2)      ; y = ~y + 1
+\begin{tabular}{l l l}
+Assembler code         & Operation                            & f8l \\
+\texttt{negw y}        & \texttt{y = \~{}y + 1}               & No \\
+\texttt{negw altacc16} & \texttt{altacc16 = \~{}altacc16 + 1} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -780,13 +830,27 @@ mul y [ZNC] (2)        ; y = yl * yh , clears carry.
 
 \subsection{popw: 16-bit pop from stack}
 
-popw y (2)
+\begin{tabular}{l l l}
+Assembler code         & Operation                         & f8l \\
+\texttt{popw y}        & \texttt{y = (sp); sp += 2}        & Yes \\
+\texttt{popw altacc16} & \texttt{altacc16 = (sp); sp += 2} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{pushw: 16-bit push onto stack}
 
-pushw \#ii []
+\begin{tabular}{l l l}
+Assembler code          & Operation                    & f8l \\
+\texttt{pushw \#ii}  & \texttt{sp -= 2; (sp) = \#ii} & Yes \\
+\end{tabular}
 
+\subsubsection*{Affected Flags}
+
+none
 
 \subsection{rlcw: 16-bit rotate left through carry}
 
@@ -807,19 +871,42 @@ sex y, xl (12) [ZN]    ; sign-extend xl to y
 
 \subsection{sllw: 16-bit shift left logical}
 
-sllw y [ZNC] (2)
+\begin{tabular}{l l l}
+Assembler code                  & Operation                                    & f8l \\
+\texttt{sllw y}                 & \texttt{c = y \& (0x8000 >> 15); y = y << 1} & No \\
+\texttt{sllw altacc16}          & \texttt{altacc16 = altacc16 << 1}            & No \\
+\texttt{sllw y, xl}             & \texttt{c = y \& (0x8000 >> 15);y = y << xl} & No \\
+\texttt{sllw altacc16, altacc8} & \texttt{altacc16 = altacc16 << altacc8}      & No \\
+\end{tabular}
 
-sllw y, xl [ZN] (12)
+\subsubsection*{Affected Flags}
+
+\texttt{cnz} (\texttt{sllw y} and \texttt{sllw altacc16}) or \texttt{nz} (others).
 
 
 \subsection{sraw: 16-bit shift right arithmetic}
 
-sraw y [ZNC] (2)
+\begin{tabular}{l l l}
+Assembler code         & Operation                                                               & f8l \\
+\texttt{sraw y}        & \texttt{c = y \& 0x0001; y = y >> 1 | y \& 0x8000}                      & No \\
+\texttt{sraw altacc16} & \texttt{c = y \& 0x0001; altacc16 = altacc16 >> 1 | altacc16 \& 0x8000} & No \\
+\end{tabular}
 
+\subsubsection*{Affected Flags}
 
-\subsection{srlw: 16-bit shift right logic}
+\texttt{cnz}
 
-srlw y [ZNC] (2)
+\subsection{srlw: 16-bit shift right logical}
+
+\begin{tabular}{l l l}
+Assembler code         & Operation                                          & f8l \\
+\texttt{srlw y}        & \texttt{c = y \& 0x0001; y = y >> 1}               & No \\
+\texttt{srlw altacc16} & \texttt{c = y \& 0x0001; altacc16 = altacc16 >> 1} & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnz}
 
 
 \subsection{xchw: 16-bit exchange}
@@ -925,31 +1012,69 @@ jrz \#d                ; jump relative to pc if z flag is set.
 
 \subsection{call}
 
-call \#ii
+\begin{tabular}{l l l}
+Assembler code         & Operation                                  & f8l \\
+\texttt{call \#ii}     & \texttt{sp -= 2; (sp) = pc; pc = \#ii}     & Yes \\
+\texttt{call y}        & \texttt{sp -= 2; (sp) = pc; pc = y}        & Yes \\
+\texttt{call altacc16} & \texttt{sp -= 2; (sp) = pc; pc = altacc16} & Yes \\
+\end{tabular}
 
-call y (2)
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jp: jump}
 
-jp \#ii     ; Ignores all flags, changes no flags, not even reserved ones.
+\texttt{jp \#ii} ignores all flags, changes no flags, not even reserved ones.
 
-jp y (2)
+\begin{tabular}{l l l}
+Assembler code       & Operation              & f8l \\
+\texttt{jp \#ii}     & \texttt{pc = \#ii}     & Yes \\
+\texttt{jp y}        & \texttt{pc = y}        & Yes \\
+\texttt{jp altacc16} & \texttt{pc = altacc16} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{ret: return}
 
-ret
+\begin{tabular}{l l l}
+Assembler code & Operation                   & f8l \\
+\texttt{ret}   & \texttt{pc = (sp); sp += 2} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{reti: return from interrupt}
 
-reti ; Ignores all flags, changes no flags, not even reserved ones.
+Ignores all flags, changes no flags, not even reserved ones.
+
+\begin{tabular}{l l l}
+Assembler code  & Operation                   & f8l \\
+\texttt{reti}   & \texttt{pc = (sp); sp += 2} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{trap}
 
-trap ; Opcode 0x00. Trap reset.
+Opcode 0x00. Trap reset.
+
+\begin{tabular}{l l l}
+Assembler code  & Operation  & f8l \\
+\texttt{trap}   & Trap reset & Yes \\
+\end{tabular}
+
 
 \chapter{Opcode Map}
 
