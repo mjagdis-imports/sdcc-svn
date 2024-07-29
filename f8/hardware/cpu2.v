@@ -361,10 +361,10 @@ module cpu
 			else if(opcode_is_16_2_x(opcode) || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_IY_X || opcode == OPCODE_LDW_YREL_X)
 			begin
 				op16_addr = (accsel == ACCSEL_YL_Z || accsel == ACCSEL_YH_Z) ? 1 :
-					(accsel == ACCSEL_ZL_X) ? 2 :
+					(accsel == ACCSEL_ZL_X || accsel == ACCSEL_ZH_Y) ? 2 :
 					0;
 				op16 = (accsel == ACCSEL_YL_Z || accsel == ACCSEL_YH_Z) ? y :
-					(accsel == ACCSEL_ZL_X) ? z :
+					(accsel == ACCSEL_ZL_X || accsel == ACCSEL_ZH_Y) ? z :
 					x;
 			end
 			else if(opcode_is_16_1_y(opcode)

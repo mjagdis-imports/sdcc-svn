@@ -1,3 +1,8 @@
+2024-07-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c:
+	  Update xchw instruction.
+
 2024-06-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/ports/f8/spec.mk:

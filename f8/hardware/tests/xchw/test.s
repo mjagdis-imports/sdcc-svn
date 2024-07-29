@@ -109,6 +109,19 @@ l6trap:
 	trap
 l6:
 
+	ldw	z, #0xb66b
+	pushw	#0xa55a
+	ldw	y, sp
+	xchw	z, (y)
+	cpw	z, #0xa55a
+	jrnz	l7trap
+	popw	y
+	cpw	y, #0xb66b
+	jrz	l7
+l7trap:
+	trap
+l7:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

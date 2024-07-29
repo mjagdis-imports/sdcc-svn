@@ -1,7 +1,10 @@
 2024-07-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,
-	  doc/opcodemap.ods:
+	  doc/Makefile,
+	  doc/opcodemap.ods,
+	  hardware/cpu2.v,
+	  hardware/tests/xchw/test.s:
 	  Architecture manual draft.
 
 2024-07-24 Philipp Klaus Krause <philipp@colecovision.eu>

@@ -809,6 +809,10 @@ opw:
 			altaccw(r2);
 			outab(0xf4);
 		}
+		else if(t1 == S_REG && t2 == S_IX && (r1 == Z && r2 == Y)) {
+			outab(0xd8);
+			outab(0xf4);
+		}
 		else if(t2 != S_SPREL || ls_mode(&e2))
 			aerr();
 		else {
