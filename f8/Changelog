@@ -1,6 +1,15 @@
 2024-07-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,
+	  hardware/io.v,
+	  hardware/io2.v,
+	  hardware/watchdog.v,
+	  hardware/watchdog2.v:
+	  Simplify watchdog.
+
+2024-07-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex,
 	  doc/Makefile,
 	  doc/opcodemap.ods,
 	  hardware/cpu2.v,

@@ -70,25 +70,24 @@ module iosystem
 		.counter_write(timer0_counter_write), .reload_write(timer0_reload_write), .compare_write(timer0_compare_write), .config_write(timer0_config_write), .in(timer0in), .*);
 
 	// Watchdog
-	logic [1:0] watchdog_counter_write, watchdog_reload_write;
+	logic [1:0] watchdog_counter_write;
 	logic watchdog_config_read;
 	logic watchdog_config_write;
 	logic watchdog_zero_write;
 	logic [7:0] watchdog_config_dread;
-	logic [15:0] watchdog_counter_dread, watchdog_reload_dread;
+	logic [15:0] watchdog_counter_dread;
 	logic [7:0] watchdog_config_dwrite;
-	logic [15:0] watchdog_counter_dwrite, watchdog_reload_dwrite;
+	logic [15:0] watchdog_counter_dwrite;
 	always_comb
 	begin
 		watchdog_config_read = (dread_addr_even == WATCHDOGADDRBASE);
 		watchdog_config_write = dwrite_en_even && (dwrite_addr_even == WATCHDOGADDRBASE);
 		watchdog_counter_write = {dwrite_en_odd && (dwrite_addr_odd == WATCHDOGADDRBASE + 3), dwrite_en_even && (dwrite_addr_even == WATCHDOGADDRBASE + 2)};
-		watchdog_reload_write = {dwrite_en_odd && (dwrite_addr_odd == WATCHDOGADDRBASE + 5), dwrite_en_even && (dwrite_addr_even == WATCHDOGADDRBASE + 4)};
 		watchdog_zero_write = dwrite_en_even && (dwrite_addr_even == 0);
 	end
-	watchdog watchdog(.counter_out(watchdog_counter_dread), .reload_out(watchdog_reload_dread), .config_out(watchdog_config_dread),
-		.counter_in(dwrite_data), .reload_in(dwrite_data), .config_in(dwrite_data[7:0]),
-		.counter_write(watchdog_counter_write), .reload_write(watchdog_reload_write), .config_write(watchdog_config_write), .zero_write(watchdog_zero_write), .*);
+	watchdog watchdog(.counter_out(watchdog_counter_dread), .config_out(watchdog_config_dread),
+		.counter_in(dwrite_data), .config_in(dwrite_data[7:0]),
+		.counter_write(watchdog_counter_write), .config_write(watchdog_config_write), .zero_write(watchdog_zero_write), .*);
 
 	// GPIO0
 	wire gpio0_ddr_read, gpio0_odr_read, gpio0_idr_read, gpio0_pr_read;

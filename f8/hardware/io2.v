@@ -23,26 +23,24 @@ module iosystem
 	// Watchdog
 	localparam WATCHDOG_CONFIG_ADDR = WATCHDOGADDRBASE + 0;
 	localparam WATCHDOG_COUNTER_ADDR = WATCHDOGADDRBASE + 2;
-	localparam WATCHDOG_RELOAD_ADDR = WATCHDOGADDRBASE + 4;
-	logic [1:0] watchdog_counter_read, watchdog_reload_read;
-	logic [1:0] watchdog_counter_write, watchdog_reload_write;
+	logic [1:0] watchdog_counter_read;
+	logic [1:0] watchdog_counter_write;
 	logic watchdog_config_read;
 	logic watchdog_config_write;
 	logic watchdog_zero_write;
 	logic [7:0] watchdog_config_dread;
-	logic [15:0] watchdog_counter_dread, watchdog_reload_dread;
+	logic [15:0] watchdog_counter_dread;
 	logic [7:0] watchdog_config_dwrite;
-	logic [15:0] watchdog_counter_dwrite, watchdog_reload_dwrite;
+	logic [15:0] watchdog_counter_dwrite;
 	always_comb
 	begin
 		watchdog_config_write = write_en_even && (write_addr_even == WATCHDOG_CONFIG_ADDR / 2);
 		watchdog_counter_write = {write_en_even && (write_addr_even == WATCHDOG_COUNTER_ADDR / 2), write_en_odd && (write_addr_odd == (WATCHDOG_COUNTER_ADDR + 1) / 2)};
-		watchdog_reload_write = {write_en_even && (write_addr_even == WATCHDOG_RELOAD_ADDR / 2), write_en_odd && (write_addr_odd == (WATCHDOG_RELOAD_ADDR + 1) / 2)};
 		watchdog_zero_write = write_en_even && (write_addr_even == 0);
 	end
-	watchdog watchdog(.counter_out(watchdog_counter_dread), .reload_out(watchdog_reload_dread), .config_out(watchdog_config_dread),
-		.counter_in({write_data_odd, write_data_even}), .reload_in({write_data_odd, write_data_even}), .config_in(write_data_even),
-		.counter_write(watchdog_counter_write), .reload_write(watchdog_reload_write), .config_write(watchdog_config_write), .zero_write(watchdog_zero_write), .*);
+	watchdog watchdog(.counter_out(watchdog_counter_dread), .config_out(watchdog_config_dread),
+		.counter_in({write_data_odd, write_data_even}), .config_in(write_data_even),
+		.counter_write(watchdog_counter_write), .config_write(watchdog_config_write), .zero_write(watchdog_zero_write), .*);
 
 	// Interrupt controller
 	localparam IRQCTRL_ENABLE_ADDR = IRQCTRLADDRBASE + 0;
@@ -138,8 +136,6 @@ module iosystem
 			read_data_even = watchdog_config_dread;
 		WATCHDOG_COUNTER_ADDR / 2:
 			read_data_even = watchdog_counter_dread[7:0];
-		WATCHDOG_RELOAD_ADDR / 2:
-			read_data_even = watchdog_reload_dread[7:0];
 		IRQCTRL_ENABLE_ADDR / 2:
 			read_data_even = {'x, irqctrl_enable_dread[NUM_IRQ-1:0]};
 		IRQCTRL_ACTIVE_ADDR / 2:
@@ -177,8 +173,6 @@ module iosystem
 		else case(read_addr_odd)
 		(WATCHDOG_COUNTER_ADDR + 1) / 2:
 			read_data_odd = watchdog_counter_dread[15:8];
-		(WATCHDOG_RELOAD_ADDR + 1) / 2:
-			read_data_odd = watchdog_reload_dread[15:8];
 		(TIMER0_COUNTER_ADDR + 1) / 2:
 			read_data_odd = timer0_counter_dread[15:8];
 		(TIMER0_RELOAD_ADDR + 1) / 2:

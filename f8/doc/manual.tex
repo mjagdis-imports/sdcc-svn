@@ -334,7 +334,7 @@ none
 \subsection{dec: 8-bit decrement}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                         & Prefix \\
+Assembler code       & Operation                         & f8l \\
 \texttt{dec op8\_1}  & \texttt{; op8 = op8 + -1}         & Yes, except (n, y) \\
 \texttt{dec altacc8} & \texttt{; altacc8 = altacc8 + -1} & Yes
 \end{tabular}
@@ -347,7 +347,7 @@ Assembler code       & Operation                         & Prefix \\
 \subsection{inc: 8-bit increment}
 
 \begin{tabular}{l l l}
-Assembler code       & Operation                        & Prefix \\
+Assembler code       & Operation                        & f8l \\
 \texttt{inc op8\_1}  & \texttt{; op8 = op8 + 1}         & Yes, except (n, y) \\
 \texttt{inc altacc8} & \texttt{; altacc8 = altacc8 + 1} & Yes
 \end{tabular}
@@ -360,7 +360,7 @@ Assembler code       & Operation                        & Prefix \\
 \subsection{push: 8-bit push onto stack}
 
 \begin{tabular}{l l l}
-Assembler code        & Operation                   & Prefix \\
+Assembler code        & Operation                   & f8l \\
 \texttt{push op8\_1}  & \texttt{; (--sp) = op8}     & Yes, except (n, y) \\
 \texttt{push altacc8} & \texttt{; (--sp) = altacc8} & Yes
 \end{tabular}
@@ -952,6 +952,48 @@ reti ; Ignores all flags, changes no flags, not even reserved ones.
 trap ; Opcode 0x00. Trap reset.
 
 \chapter{Opcode Map}
+
+todo - see opcodemap.ods for now.
+
+\chapter{Peripherals}
+
+\section{Watchdog and Reset}
+
+The watchdog has an 8-bit configuration register and a 16-bit counter register.
+
+When the watchdog is active, the system clock is divided by 16, and then used to increment the counter register.
+
+The system is reset when a power-on reset happens, the watchdog counter register reaches 0xffff, the trap instruction is executed, or the byte at memory address 0 is written.
+
+\subsection*{Configuration Register}
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.13\linewidth]{8}
+	\bitheader{0,1,2,3,4,7} \\
+	\bitbox{1}{dog active} & \bitbox{1}{dog reset} & \bitbox{1}{trap reset} & \bitbox{1}{null reset} & \bitbox{4}{reserved}
+\end{bytefield}
+
+The lowest bit of the configuration register decides if the watchdog is active. It is 0 on reset. The following three bits give the reason of the previous reset. On a power-on-reset they are all 0.
+
+\section{Interrupt Controller}
+
+The interrupt controller has a 16-bit enable register, and a 16-bit active register.
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.06\linewidth]{8}
+	\bitheader{0,1,15} \\
+	\bitbox{1}{tm 0} & \bitbox{15}{reserved}
+\end{bytefield}
+
+When an interrupt happens and the corresponding bit in the enable register is set, the corresponding bit in the active register is set. When a bit in the active register is set, and no interrupt routine is currently executing, the program counter is put onto the stack and then set to 0x4004. From then on, an interrupt routine is considered to be executing until the \texttt{reti} instruction is executed.
+
+The lowest bit of the enable register indicates that interrupts from timer 0 are enabled. The lowest bit of the active register indicates that an interrupt from timer 0 is active. These bits are 0 on reset. All other bits are reserved.
+
+\section{Timer}
+
+todo
+
+\section{GPIO}
 
 todo
 
