@@ -658,8 +658,17 @@ mad x, (z), yl [zn]       ; x <- (z) * yl + xh + c
 
 \subsection{msk: mask}
 
-msk (y), xl, \#i [z](12)   ; (y) = xl \& i | (y) \& ~i; z flag according to (y) \& ~i
+z flag set according to old value of  (y) \& \~{}\#i.
 
+\begin{tabular}{l l l}
+Assembler code                        & Operation                                                    & f8l \\
+\texttt{msk (y), xl, \#i}             & \texttt{(y) = xl \& \#i | (y) \& \~{}\#i}                    & Yes \\
+\texttt{msk (altacc16), altacc8, \#i} & \texttt{(altacc16) = altacc8 \& \#i | (altacc16) \& \~{}\#i} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
 
 \subsection{pop: 8-bit pop from stack}
 
@@ -697,7 +706,7 @@ Assembler code            & Operation                                           
 
 \subsubsection*{Affected Flags}
 
-none todo: do we want some flags to be affedted?
+none todo: do we want some flags to be affected?
 
 
 \subsection{sra: 8-bit shift right arithmetic}
@@ -715,7 +724,13 @@ Assembler code       & Operation                                                
 
 \subsection{thrd}
 
-thrd xl (12) ; get current hardware thread number
+Get current hardware thread number.
+
+\begin{tabular}{l l l}
+Assembler code        & Operation                                         & f8l \\
+\texttt{thrd xl}      & \texttt{xl =} current hardware thread number      & Yes \\
+\texttt{thrd altacc8} & \texttt{altacc8 =} current hardware thread number & Yes \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -776,7 +791,14 @@ Assembler code           & Operation                                     & f8l \
 
 \subsection{cpw: 16-bit comparison}
 
-cpw y, \#ii (02)
+Subtraction where the result is used to update the flags only.
+
+\begin{tabular}{l l l}
+Assembler code              & Operation                        & f8l\\
+\texttt{cpw y, \#ii}        & \texttt{y + \~{}\#ii + 1}        & No \\
+\texttt{cpw \#ii, y}        & \texttt{\#ii + \~{}y + 1}        & No \\
+\texttt{cpw altacc16, \#ii} & \texttt{altacc16 + \~{}\#ii + 1} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -825,7 +847,18 @@ Assembler code         & Operation                            & f8l \\
 
 \subsection{mul: multiplication}
 
-mul y [ZNC] (2)        ; y = yl * yh , clears carry.
+Clears carry.
+
+\begin{tabular}{l l l}
+Assembler code & Operation            & f8l \\
+\texttt{mul y} & \texttt{y = yl * yh} & No \\
+\texttt{mul x} & \texttt{x = xl * xh} & No \\
+\texttt{mul z} & \texttt{z = zl * zh} & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{cnz}
 
 
 \subsection{popw: 16-bit pop from stack}
@@ -844,8 +877,8 @@ none
 \subsection{pushw: 16-bit push onto stack}
 
 \begin{tabular}{l l l}
-Assembler code          & Operation                    & f8l \\
-\texttt{pushw \#ii}  & \texttt{sp -= 2; (sp) = \#ii} & Yes \\
+Assembler code      & Operation                     & f8l \\
+\texttt{pushw \#ii} & \texttt{sp -= 2; (sp) = \#ii} & Yes \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -854,29 +887,51 @@ none
 
 \subsection{rlcw: 16-bit rotate left through carry}
 
-rlcw y [ZNC] (2)
+\begin{tabular}{l l l}
+Assembler code         & Operation                                                                                                             & f8l \\
+\texttt{rlcw y}        & \makecell{\texttt{tc = (y \& 0x8000) >> 15}\\\texttt{y = (y >> 1) | (c << 15)}\\\texttt{c = tc}}                      & No \\
+\texttt{rlcw (n, sp)}  & \makecell{\texttt{tc = ((n, sp) \& 0x8000) >> 15}\\\texttt{(n, sp) = ((n, sp) >> 1) | (c << 15)}\\\texttt{c = tc}}    & No \\
+\texttt{rlcw altacc16} & \makecell{\texttt{tc = (altacc16 \& 0x8000) >> 15}\\\texttt{altacc16 = (altacc16 >> 1) | (c << 15)}\\\texttt{c = tc}} & No
+\end{tabular}
 
-rlcw (n, sp) [ZNC]
+\subsubsection*{Affected Flags}
+
+\texttt{cnz}
 
 
 \subsection{rrcw: 16-bit rotate right through carry}
 
-rrcw y [ZNC] (2)
+\begin{tabular}{l l l}
+Assembler code         & Operation                                                                                                   & f8l \\
+\texttt{rrcw y}        & \makecell{\texttt{tc = y \& 0x0001}\\\texttt{y = (y >> 1) | c}\\\texttt{c = tc}}                    & No \\
+\texttt{rrcw (n, sp)}  & \makecell{\texttt{tc = (n, sp) \& 0x0001}\\\texttt{(n, sp) = ((n, sp) << 1) | c}\\\texttt{c = tc}}  & No \\
+\texttt{rrcw altacc16} & \makecell{\texttt{tc = altacc16 \& 0x0001}\\\texttt{altacc16 = (altacc16 << 1) | c}\\\texttt{c = tc}} & No
+\end{tabular}
 
-rrcw (n, sp) [ZNC]
+\subsubsection*{Affected Flags}
+
+\texttt{cnz}
 
 \subsection{sex: sign-extend}
 
-sex y, xl (12) [ZN]    ; sign-extend xl to y
+\begin{tabular}{l l l}
+Assembler code                 & Operation                            & f8l \\
+\texttt{sex y, xl}             & \texttt{y = (int8\_t)xl}             & No \\
+\texttt{sex altacc16, altacc8} & \texttt{altacc16 = (int8\_t)altacc8} & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
 
 \subsection{sllw: 16-bit shift left logical}
 
 \begin{tabular}{l l l}
-Assembler code                  & Operation                                    & f8l \\
-\texttt{sllw y}                 & \texttt{c = y \& (0x8000 >> 15); y = y << 1} & No \\
-\texttt{sllw altacc16}          & \texttt{altacc16 = altacc16 << 1}            & No \\
-\texttt{sllw y, xl}             & \texttt{c = y \& (0x8000 >> 15);y = y << xl} & No \\
-\texttt{sllw altacc16, altacc8} & \texttt{altacc16 = altacc16 << altacc8}      & No \\
+Assembler code                  & Operation                                     & f8l \\
+\texttt{sllw y}                 & \texttt{c = y \& (0x8000 >> 15); y = y << 1}  & No \\
+\texttt{sllw altacc16}          & \texttt{altacc16 = altacc16 << 1}             & No \\
+\texttt{sllw y, xl}             & \texttt{c = y \& (0x8000 >> 15); y = y << xl} & No \\
+\texttt{sllw altacc16, altacc8} & \texttt{altacc16 = altacc16 << altacc8}       & No \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -918,7 +973,11 @@ xchw y, (n, sp) [] (2)
 
 \subsection{zex: zero-extend}
 
-zex y, xl (12) ; zero-extend xl to y
+\begin{tabular}{l l l}
+Assembler code                 & Operation                   & f8l \\
+\texttt{zex y, xl}             & \texttt{y = xl}         & No \\
+\texttt{zex altacc16, altacc8} & \texttt{altacc16 = altacc8} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
