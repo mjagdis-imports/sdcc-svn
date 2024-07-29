@@ -380,11 +380,12 @@ static void print_table(FILE *f, const uint8_t * table)
 void help(FILE *f)
 {
 	fprintf(f, "opcodemaptool <command> [n]\n");
-	fprintf(f, "<command>:   create, startrandom <n>, walkrandom <n>, showbest <n>\n");
+	fprintf(f, "<command>:   create, startrandom <n>, walkrandom <n>, showbest <n>, deleteworst <n>\n");
 	fprintf(f, "create:      init data structures, insert default opcode map\n");
 	fprintf(f, "startrandom: add n random opcode maps\n");
 	fprintf(f, "walkrandom:  add n random opcode maps that are similar to good existing ones\n");
 	fprintf(f, "showbest:    add show best n opcode maps\n");
+	fprintf(f, "deleteworst: delete worst n opcode maps\n");
 }
 
 std::map <std::vector<uint8_t>, unsigned long int> opcodemapstable;
@@ -464,6 +465,24 @@ void show_bestsizes(int n)
 	}
 }
 
+void delete_worst(int n)
+{
+	std::multimap<unsigned int, std::vector<uint8_t>>::reverse_iterator it;
+	for(it = sizes.rbegin(); n && it != sizes.rend(); it++, n--)
+	{
+		std::ostringstream name;
+		name << "opcodemaps/";
+		name << opcodemapstable[it->second];
+		if (!std::filesystem::exists(name.str().c_str()))
+		{
+			std::cout << "Missing directory for " << "opcodemaps/" << opcodemapstable[it->second] << "\n";
+			continue;
+		}
+		std::filesystem::remove_all(name.str().c_str());
+		opcodemapstable.erase(it->second);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	uint8_t table[NUM_OPCODES];
@@ -538,6 +557,13 @@ int main(int argc, char **argv)
 		read_opcodemapstable();
 		get_sizes();
 		show_bestsizes(n);
+	}
+	else if (argc == 3 && !strcmp(argv[1], "deleteworst"))
+	{
+		read_opcodemapstable();
+		get_sizes();
+		delete_worst(n);
+		write_opcodemapstable();
 	}
 	else
 	{

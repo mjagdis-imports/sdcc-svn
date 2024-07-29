@@ -2,6 +2,8 @@
 
 	* doc/manual.tex:
 	  Improve f8 architecture manual.
+	* opcodemaptest/opcodemaptool.cc:
+	  Add deleteworst command.
 
 2024-07-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
