@@ -87,7 +87,23 @@ l2:
 	ld	yl, #1
 	sllw	z, yl
 	cpw	z, #0x0700
-	jrz	l3
+	jrnz	l3trap
+	ldw	y, #0xa5a5
+	ld	zh, #0x1
+	sllw	y, zh
+	jrz	l3trap
+	jrn	l3trap
+	cpw	y, #0x4b4a
+	jrnz	l3trap
+	sllw	y, zh
+	jrz	l3trap
+	jrnn	l3trap
+	cpw	y, #0x9694
+	jrnz	l3trap
+	ld	zh, #14
+	sllw	y, zh
+	jrnz	l3trap
+	jrnn	l3
 l3trap:
 	trap
 l3:

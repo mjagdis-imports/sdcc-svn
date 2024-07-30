@@ -34,6 +34,21 @@ l1trap:
 	trap
 l1:
 
+	ldw	y, #0x5555
+	ld	zh, #0xaa
+	zex	y, zh
+	jrz	l2trap
+	cpw	y, #0x00aa
+	jrnz	l2trap
+	ldw	z, #0x00ff
+	zex	y, zh
+	jrnz	l2trap
+	tstw	y
+	jrz	l2
+l2trap:
+	trap
+l2:
+
 loop:
 	jr	#loop	; An endless loop, so we never fail until we reach the time limit.
 

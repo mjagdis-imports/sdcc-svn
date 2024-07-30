@@ -42,6 +42,22 @@ l2trap:
 	trap
 l2:
 
+	ld	yh, #0x05
+	rot	yh, #4
+	jrz	l3trap
+	jrn	l3trap
+	cp	yh, #0x50
+	jrnz	l3trap
+	ld	zh, #0x01
+	rot	zh, #7
+	jrz	l3trap
+	jrnn	l3trap
+	cp	zh, #0x80
+	jrz	l3
+l3trap:
+	trap
+l3:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

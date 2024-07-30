@@ -1,6 +1,16 @@
 2024-07-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/tests/rot/test.s,
+	  hardware/tests/sllw/test.s,
+	  hardware/tests/zex/test.s:
+	  Fixes for new opcode prefixes.
+
+2024-07-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex,
 	  hardware/alu2.v,
 	  hardware/timer.v,
 	  hardware/cpu2.v:

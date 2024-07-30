@@ -23,7 +23,7 @@
 `include "opcode.v"
 `include "alu2.v"
 
-`define F8L // Enable for simplified f8l core.
+//`define F8L // Enable for simplified f8l core.
 
 typedef enum logic [2:0]
 {
@@ -828,6 +828,8 @@ module cpu
 				regwrite_data = {result8, result8};
 				regwrite_addr = acc8_addr;
 				regwrite_en = acc8_en;
+				next_f[FLAG_Z] = !result8;
+				next_f[FLAG_N] = result8[7];
 			end
 `endif
 			else if(opcode == OPCODE_POP_XL)
