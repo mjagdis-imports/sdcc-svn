@@ -5,7 +5,7 @@
 // Prescaler: /1, /4, /16, /64.
 // Interrupt on overflow and compare.
 // On overflow: reset counter to reload value.
-// I/O registers: counter (16 bit), reload (16 bit), config (8 bit - lower 4 bits select input, next two bits select prescaler, upper 2 bits unused and read as 0)
+// I/O registers: counter (16 bit), reload (16 bit), compare (16 bit), config (8 bit - lower 4 bits select input, next two bits select prescaler, upper 2 bits unused and read as 0)
 module timer #(parameter NUM_INPUTS = 1) (output logic [15:0] counter_out, reload_out, compare_out, output logic [7:0] config_out, output logic overflow_int, compare_int, input logic [15:0] counter_in, reload_in, compare_in, input logic [7:0] config_in, input logic [1:0] counter_write, reload_write, compare_write, input config_write, input logic [NUM_INPUTS-1:0] in, input logic clk, input logic reset);
 	wire [3:0] clksel;
 	wire [1:0] prescsel;

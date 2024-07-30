@@ -2,9 +2,12 @@
 \usepackage{bytefield}
 \usepackage{hyperref}
 \usepackage{makecell}
+\usepackage[english]{isodate}
 \renewcommand{\cellalign}{tl}
 
-\title{f8 Manual}
+\isodate
+
+\title{f8 manual}
 \author{Philipp Klaus Krause}
 
 \begin{document}
@@ -94,7 +97,7 @@ Prefix & semantics & group \\
 \section{Addressing Modes}
 
 \begin{tabular}{l l l}
-\texttt{xl}, \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{zh} & 8-bit register \\
+\texttt{xl}, \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{zh}, \texttt{f} & 8-bit register \\
 \texttt{x}, \texttt{y}, \texttt{z}, \texttt{sp} & 16-bit register \\
 \texttt{\#i} & 8-bit immediate \\
 \texttt{\#ii} & 16-bit immediate \\
@@ -106,19 +109,18 @@ Prefix & semantics & group \\
 \end{tabular}
 
 
+\chapter{Instructions}
 
 \begin{tabular}{l l l}
 \texttt{op8\_2} & Any of \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{\#i}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
 \texttt{op8\_2ni} & Any of \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
 \texttt{altacc8} & Any of \texttt{xl}, \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{zh}. \\
 \texttt{op16\_2} & Any of \texttt{x}, \texttt{\#ii}, \texttt{mm}, \texttt{(n, sp)}. \\
-\texttt{op16\_2} & Any of \texttt{x}, \texttt{mm}, \texttt{(n, sp)}. \\
+\texttt{op16\_2ni} & Any of \texttt{x}, \texttt{mm}, \texttt{(n, sp)}. \\
 \texttt{altacc16} & Any of \texttt{x}, \texttt{z}. \\
 \texttt{op8\_1} & Any of \texttt{xl}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(n, y)}. \\
 \texttt{op16\_1} & Any of \texttt{y}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
 \end{tabular}
-
-\chapter{Instructions}
 
 \section{8-bit two-operand instructions}
 
@@ -161,6 +163,10 @@ Assembler code               & Operation                            & f8l \\
 \texttt{and op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni \& xl}   & Yes
 \end{tabular}
 
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
+
 
 \subsection{cp: 8-bit comparison}
 
@@ -186,6 +192,10 @@ Assembler code              & Operation                           & f8l \\
 \texttt{or altacc8, op8\_2} & \texttt{altacc8 = altacc8 | op8\_2} & Yes \\
 \texttt{or op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni | xl}   & Yes
 \end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
 
 
 \subsection{sbc: 8-bit subtraction with carry}
@@ -521,44 +531,74 @@ Assembler code         & Operation         & f8l \\
 
 \section{8-bit loads}
 
-\subsection{ld}
+\subsection{ld: 8-bit load from memory}
 
-ld xl, \#i (12)
+\begin{tabular}{l l l}
+Assembler code                  & Operation                     & f8l \\
+\texttt{ld xl, \#i}             & \texttt{xl = \#i}             & Yes \\
+\texttt{ld altacc8, \#i}        & \texttt{altacc8 = \#i}        & Yes \\
+\texttt{ld xl, mm}              & \texttt{xl = mm}              & Yes \\
+\texttt{ld altacc8, mm}         & \texttt{altacc8 = mm}         & Yes \\
+\texttt{ld xl, (n, sp)}         & \texttt{xl = (n, sp)}         & Yes \\
+\texttt{ld altacc8, (n, sp)}    & \texttt{altacc8 = (n, sp)}    & Yes \\
+\texttt{ld xl, (nn, z)}         & \texttt{xl = (nn, z)}         & Yes \\
+\texttt{ld altacc8, (nn, z)}    & \texttt{altacc8 = (nn, z)}    & Yes \\
+\texttt{ld xl, (y)}             & \texttt{xl = xh}              & Yes \\
+\texttt{ld altacc8, (altacc16)} & \texttt{altacc8 = (altacc16)} & Yes \\
+\texttt{ld xl, (n, y)}          & \texttt{xl = (n, y)}          & No \\
+\texttt{ld altacc8, (n, y)}     & \texttt{altacc8 = (n, y)}     & No \\
+\end{tabular}
 
-ld xl, mm [zn] (12)
+\subsubsection*{Affected Flags}
 
-ld xl, (n, sp) [zn] (12)
-
-ld xl, (nn, z) [zn] (12)
-
-ld xl, (y) [zn] (12)
-
-ld xl, (n, y) [zn] (12)
-
-ld xl, xh (02)
-
-ld xl, yl (012)
-
-ld xl, yh (012)
-
-ld xl, zl (012)
-
-ld xl, zh (012)
-
-ld mm, xl (12)
-
-ld (n, sp), xl (12)
-
-ld (nn, z), xl (12)
-
-ld (y), xl (12)
-
-ld (n, y), xl (12)
+\texttt{nz}
 
 
-\subsection{ldi}
+\subsection{ld: 8-bit load from register}
 
-ldi (z), (y) (2)   ; (z++) = (y)
+\begin{tabular}{l l l}
+Assembler code                  & Operation                     & f8l \\
+\texttt{ld xl, xh}              & \texttt{xl = xh}              & Yes \\
+\texttt{ld xh, xl}              & \texttt{xh = xl}              & Yes \\
+\texttt{ld altacc8, xh}         & \texttt{altacc8 = xh}         & Yes \\
+\texttt{ld xl, yl}              & \texttt{xl = yl}              & Yes \\
+\texttt{ld yl, xl}              & \texttt{yl = xl}              & Yes \\
+\texttt{ld altacc8, yl}         & \texttt{altacc8 = yl}         & Yes \\
+\texttt{ld xl, yh}              & \texttt{xl = yh}              & Yes \\
+\texttt{ld yh, xl}              & \texttt{yh = xl}              & Yes \\
+\texttt{ld altacc8, yh}         & \texttt{altacc8 = yh}         & Yes \\
+\texttt{ld xl, zl}              & \texttt{xl = zl}              & Yes \\
+\texttt{ld zl, xl}              & \texttt{zl = xl}              & Yes \\
+\texttt{ld altacc8, zl}         & \texttt{altacc8 = zl}         & Yes \\
+\texttt{ld xl, zh}              & \texttt{xl = zh}              & Yes \\
+\texttt{ld zh, xl}              & \texttt{zh = xl}              & Yes \\
+\texttt{ld altacc8, zh}         & \texttt{altacc8 = zh}         & Yes \\
+\texttt{ld mm, xl}              & \texttt{mm = xl}              & Yes \\
+\texttt{ld mm, altacc8}         & \texttt{mm = altacc8}         & Yes \\
+\texttt{ld (n, sp), xl}         & \texttt{(n, sp) = xl}         & Yes \\
+\texttt{ld (n, sp), altacc8}    & \texttt{(n, sp) = altacc8}    & Yes \\
+\texttt{ld (nn, z), xl}         & \texttt{(nn, z) = altacc8}    & Yes \\
+\texttt{ld (nn, z), altacc8}    & \texttt{(nn, z) = altacc8}    & Yes \\
+\texttt{ld (y), xl}             & \texttt{(y) = xl}             & Yes \\
+\texttt{ld (altacc16), altacc8} & \texttt{(altacc16) = altacc8} & Yes \\
+\texttt{ld (n, y), xl}          & \texttt{(n, y) = xl}          & No \\
+\texttt{ld (n, y), altacc8}     & \texttt{(n, y) = altacc8}     & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{ldi: 8-bit load with increment}
+
+Flags according to old (y).
+
+\begin{tabular}{l l l}
+Assembler code        & Operation                   & f8l \\
+\texttt{ldi (z), (y)} & \texttt{(z) = (y); z += 1;} & No \\
+\texttt{ldi (z), (x)} & \texttt{(z) = (x); z += 1;} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -567,46 +607,73 @@ ldi (z), (y) (2)   ; (z++) = (y)
 
 \section{16-bit loads}
 
-\subsection{ldw}
+\subsection{ldw: 16-bit load from memory}
 
-ldw y, \#ii (2)
+\begin{tabular}{l l l}
+Assembler code                    & Operation                      & f8l \\
+\texttt{ldw y, \#ii}              & \texttt{y = \#ii}              & Yes \\
+\texttt{ldw altacc16, \#ii}       & \texttt{altacc16 = \#ii}       & Yes \\
+\texttt{ldw y, mm}                & \texttt{y = mm}                & Yes \\
+\texttt{ldw altacc16, mm}         & \texttt{altacc16 = mm}         & Yes \\
+\texttt{ldw y, (n, sp)}           & \texttt{y = (n, sp)}           & Yes \\
+\texttt{ldw altacc16, (n, sp)}    & \texttt{altacc16 = (n, sp)}    & Yes \\
+\texttt{ldw y, (nn, z)}           & \texttt{y = (nn, z)}           & Yes \\
+\texttt{ldw altacc16, (nn, z)}    & \texttt{altacc16 = (nn, z)}    & Yes \\
+\texttt{ldw y, (n, y)}            & \texttt{y = (n, y)}            & No \\
+\texttt{ldw altacc16, (n, y)}     & \texttt{altacc16 = (n, y)}     & No \\
+\texttt{ldw y, (y)}               & \texttt{y = (y)}               & Yes \\
+\texttt{ldw altacc16, (altacc16)} & \texttt{altacc16 = (altacc16)} & Yes \\
+\end{tabular}
 
-ldw y, mm [ZN] (2)
+\subsubsection*{Affected Flags}
 
-ldw y, (n, sp) [ZN] (2)
-
-ldw y, (nn, z) [ZN] (2)
-
-ldw y, (n, y) [ZN] (2)
-
-ldw y, (y) [ZN] (2) 
-
-ldw y, x (2)
-
-ldw y, \#d (2)
-
-ldw mm, y (2)
-
-ldw (n, sp), y (2)
-
-ldw (nn, z), y (2)
-
-ldw x, y
-
-ldw z, y (0)
-
-ldw (y), x (2)
-
-ldw (n, y), x
-
-ldw y, sp (2)
-
-ldw ((d, sp)), y (2)
+\texttt{nz}
 
 
-\subsection{ldwi}
+\subsection{ldw 16-bit load from register}
 
-ldwi (z), (y) (2) ; (z++) = (y); (z++) = (y)
+\begin{tabular}{l l l}
+Assembler code                   & Operation                   & f8l \\
+\texttt{ldw y, x}                & \texttt{y = x}              & Yes \\
+\texttt{ldw x, z}                & \texttt{x = z}              & Yes \\
+\texttt{ldw y, \#d}              & \texttt{y = \#d}            & Yes \\
+\texttt{ldw altacc16, \#d}       & \texttt{altacc16 = \#d}     & Yes \\
+\texttt{ldw mm, y}               & \texttt{mm = y}             & Yes \\
+\texttt{ldw mm, altacc16}        & \texttt{mm = altacc16}      & Yes \\
+\texttt{ldw (n, sp), y}          & \texttt{(n, sp) = y}        & Yes \\
+\texttt{ldw (n, sp), altacc16}   & \texttt{(n, sp) = altacc16} & Yes \\
+\texttt{ldw (nn, z), y}          & \texttt{(nn, z) = y}        & Yes \\
+\texttt{ldw (nn, z), altacc16}   & \texttt{(nn, z) = altacc16} & Yes \\
+\texttt{ldw x, y}                & \texttt{x = y}              & Yes \\
+\texttt{ldw z, y}                & \texttt{z = y}              & Yes \\
+\texttt{ldw y, z}                & \texttt{y = z}              & Yes \\
+\texttt{ldw z, x}                & \texttt{z = x}              & Yes \\
+\texttt{ldw (y), x}              & \texttt{(y) = x}            & Yes \\
+\texttt{ldw (z), y}              & \texttt{(z) = y}            & Yes \\
+\texttt{ldw (x), z}              & \texttt{(x) = z}            & Yes \\
+\texttt{ldw (y), z}              & \texttt{(y) = z}            & Yes \\
+\texttt{ldw (n, y), x}           & \texttt{(n, y) = x}         & No \\
+\texttt{ldw y, sp}               & \texttt{y = sp}             & Yes \\
+\texttt{ldw sp, y}               & \texttt{sp = y}             & Yes \\
+\texttt{ldw altacc16, sp}        & \texttt{altacc16 = sp}      & Yes \\
+\texttt{ldw ((d, sp)), y}        & \texttt{(d, sp) = y}        & No \\
+\texttt{ldw ((d, sp)), altacc16} & \texttt{(d, sp) = altacc16} & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{ldwi: 16-bit load with increment}
+
+Flags according to old (y).
+
+\begin{tabular}{l l l}
+Assembler code         & Operation                   & f8l \\
+\texttt{ldwi (z), (y)} & \texttt{(z) = (y); z += 2;} & No \\
+\texttt{ldwi (z), (x)} & \texttt{(z) = (x); z += 2;} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -617,7 +684,13 @@ ldwi (z), (y) (2) ; (z++) = (y); (z++) = (y)
 
 \subsection{bool: 8-bit cast to bool}
 
-bool xl (12) ; cast to bool
+Todo: Remove from f8l subset?
+
+\begin{tabular}{l l l}
+Assembler code        & Operation                        & f8l \\
+\texttt{bool xl}      & \texttt{xl = (bool)xl}           & Yes \\
+\texttt{bool altacc8} & \texttt{altacc8 = (bool)altacc8} & Yes \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -642,18 +715,34 @@ Assembler code            & Operation                                        & f
 
 \subsection{da: decimal adjust}
 
-da xl [ocznh] (12)        ; decimal adjust for addition / subtraction - binary coded decimal semantics
+Decimal adjust for addition / subtraction - binary coded decimal semantics.
+
+todo: describe details!
+
+\begin{tabular}{l l l}
+Assembler code       & Operation & f8l \\
+\texttt{da xl}      &           & Yes \\
+\texttt{da altacc8} &           & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{hcnzo}
 
 
 \subsection{mad: multiply and add}
 
-mad x, mm, yl [zn]        ; x <- m * yl + xh + c
+\begin{tabular}{l l l}
+Assembler code              & Operation                          & f8l \\
+\texttt{mad x, mm, yl}      & \texttt{x = mm * yl + xh + c}      & No \\
+\texttt{mad x, (n, sp), yl} & \texttt{x = (n, sp) * yl + xh + c} & No \\
+\texttt{mad x, (nn, z), yl} & \texttt{x = (nn, z) * yl + xh + c} & No \\
+\texttt{mad x, (z), yl}     & \texttt{x = (z) * yl + xh + c}     & No \\
+\end{tabular}
 
-mad x, (n, sp), yl [zn]   ; x <- (n, sp) * yl + xh + c
+\subsubsection*{Affected Flags}
 
-mad x, (nn, z), yl [zn]   ; x <- (nn, z) * yl + xh + c
-
-mad x, (z), yl [zn]       ; x <- (z) * yl + xh + c
+\texttt{nz}
 
 
 \subsection{msk: mask}
@@ -739,13 +828,21 @@ Assembler code        & Operation                                         & f8l 
 
 \subsection{xch: 8-bit exchange}
 
-xch xl, (n, sp) (12)
+\begin{tabular}{l l l}
+Assembler code                   & Operation                                                  & f8l \\
+\texttt{xch yl, yh}              & \texttt{t = yl; yl = yh; yh = t}                           & Yes \\
+\texttt{xch xl, xh}              & \texttt{t = xl; xl = xh; xh = t}                           & Yes \\
+\texttt{xch zl, zh}              & \texttt{t = zl; zl = zh; zh = t}                           & Yes \\
+\texttt{xch xl, (n, sp)}         & \texttt{t = (n, sp); (n, sp) = xl; xl = t}                 & No \\
+\texttt{xch altacc8, (n, sp)}    & \texttt{t = (n, sp); (n, sp) = altacc8; altacc8 = t}       & No \\
+\texttt{xch xl, (y)}             & \texttt{t = (y); (y) = xl; xl = t}                         & Yes \\
+\texttt{xch altacc8, (altacc16)} & \texttt{t = (altacc16); (altacc16) = altacc8; altacc8 = t} & Yes \\
+\texttt{xch f, (n, sp)}          & \texttt{t = (n, sp); (n, sp) = f; f = t}                   & Yes
+\end{tabular}
 
-xch xl, (y) (12)
+\subsubsection*{Affected Flags}
 
-xch yl, yh (2)            ; exchange yl with yh.
-
-xch f, (n, sp) [xxxocznh]
+All, including reserved ones (\texttt{xch f, (n, sp)}) or none (all others).
 
 \section{Other 16-bit instructions}
 
@@ -767,7 +864,11 @@ none (\texttt{addw sp, \#d}) or \texttt{cnzo} (all others).
 
 \subsection{boolw: 16-bit cast to bool}
 
-boolw y (2)
+\begin{tabular}{l l l}
+Assembler code          & Operation                          & f8l \\
+\texttt{boolw y}        & \texttt{y = (bool)y}               & No \\
+\texttt{boolw altacc16} & \texttt{altacc16 = (bool)altacc16} & No \\
+\end{tabular}
 
 \subsubsection*{Affected Flags}
 
@@ -966,9 +1067,19 @@ Assembler code         & Operation                                          & f8
 
 \subsection{xchw: 16-bit exchange}
 
-xchw x, (y) (2)
+\begin{tabular}{l l l}
+Assembler code                  & Operation                                              & f8l \\
+\texttt{xchw x, (y)}            & \texttt{t = x; x = (y); (y) = t}                       & Yes \\
+\texttt{xchw y, (z)}            & \texttt{t = y; y = (z); (z) = t}                       & Yes \\
+\texttt{xchw z, (x)}            & \texttt{t = z; z = (x); (x) = t}                       & Yes \\
+\texttt{xchw z, (y)}            & \texttt{t = z; z = (y); (y) = t}                       & Yes \\
+\texttt{xchw y, (n, sp)}        & \texttt{t = y; y = (n, sp); (n, sp) = t}               & No \\
+\texttt{xchw altacc16, (n, sp)} & \texttt{t = altacc16; altacc16 = (n, sp); (n, sp) = t} & No \\
+\end{tabular}
 
-xchw y, (n, sp) [] (2)
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{zex: zero-extend}
@@ -988,7 +1099,16 @@ Assembler code                 & Operation                   & f8l \\
 
 \subsection{xchb: exchange bit}
 
-xchb xl, mm, \#b (12) ; exchange xl with bit b at mm. z flag according to new value of xl.
+Exchange xl with bit b at mm. z flag according to new value of xl.
+
+todo: is it really worth having this?
+
+\begin{tabular}{l l l}
+Assembler code                 & Operation                                                                                                      & f8l \\
+\texttt{xchb xl, mm, \#b}      & \makecell{\texttt{t = mm >> \#b}\\\texttt{mm = mm \& \~{}(1 << \#b) | (xl << \#b)}\\\texttt{xl = t}}           & No \\
+\texttt{xchb altacc8, mm, \#b} & \makecell{\texttt{t = mm >> \#b}\\\texttt{mm = mm \& \~{}(1 << \#b) | (altacc8 << \#b)}\\\texttt{altacc8 = t}} & No \\
+\end{tabular}
+
 
 \subsubsection*{Affected Flags}
 
@@ -1008,63 +1128,182 @@ dnjnz yh, \#d (2) ; decrement yh, without updating carry, jump if result is not 
 
 \subsection{jr}
 
-jr \#d                 ; jump relative to pc. Ignores all flags, changes no flags, not even reserved ones.
+\texttt{jr \#d} ignores all flags, changes no flags, not even reserved ones.
+
+\begin{tabular}{l l l}
+Assembler code  & Operation          & f8l \\
+\texttt{jr \#d} & \texttt{pc += \#d} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrc}
 
-jrc \#d                ; if c
+\begin{tabular}{l l l}
+Assembler code  & Operation                  & f8l \\
+\texttt{jr \#d} & \texttt{if (c) pc += \#d;} & Yes \\
+\end{tabular}
 
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrgt}
+
+\begin{tabular}{l l l}
+Assembler code    & Operation                        & f8l \\
+\texttt{jrgt \#d} & \texttt{if (c && !z) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 \subsection{jrle}
 
-jrle \#d               ; if !c or z
+\begin{tabular}{l l l}
+Assembler code    & Operation                        & f8l \\
+\texttt{jrle \#d} & \texttt{if (!c || z) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrn}
 
-jrn \#d                ; if n
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jrn \#d} & \texttt{if (n) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrnc}
 
-jrnc \#d               ; if !c
+\begin{tabular}{l l l}
+Assembler code    & Operation                    & f8l \\
+\texttt{jrnc \#d} & \texttt{if (!c) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrnn}
 
-jrnn \#d               ; if !n
+\begin{tabular}{l l l}
+Assembler code    & Operation                   & f8l \\
+\texttt{jrnn \#d} & \texttt{if (!n) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrno}
 
-jrno \#d               ; if !o
+\begin{tabular}{l l l}
+Assembler code    & Operation                   & f8l \\
+\texttt{jrno \#d} & \texttt{if (!o) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrnz}
 
-jrnz \#d               ; if !z
+\begin{tabular}{l l l}
+Assembler code    & Operation                   & f8l \\
+\texttt{jrnz \#d} & \texttt{if (!n) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jro}
+
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jro \#d} & \texttt{if (o) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrsge}
 
-jrsge \#d              ; if n xnor o
+\begin{tabular}{l l l}
+Assembler code     & Operation                            & f8l \\
+\texttt{jrsge \#d} & \texttt{if (!(n \^{} o)) pc += \#d;} & Yes \\
+\end{tabular}
 
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrsgt}
+
+\begin{tabular}{l l l}
+Assembler code     & Operation                            & f8l \\
+\texttt{jrsgt \#d} & \texttt{if (!z && !(n \^{} o)) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 \subsection{jrsle}
 
-jrsle \#d              ; if (z or (n xor o))
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jrsle \#d} & \texttt{if (z || (n \^{} o)) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrslt}
 
-jrslt \#d              ; if n xor o
+\begin{tabular}{l l l}
+Assembler code     & Operation                         & f8l \\
+\texttt{jrslt \#d} & \texttt{if (n \^{} o) pc += \#d;} & Yes \\
+\end{tabular}
 
+\subsubsection*{Affected Flags}
+
+none
 
 
 \subsection{jrz}
 
-jrz \#d                ; jump relative to pc if z flag is set.
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jrz \#d} & \texttt{if (z) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
 
 
 \section{Other Instructions}
@@ -1141,6 +1380,8 @@ todo - see opcodemap.ods for now.
 
 \chapter{Peripherals}
 
+Unless otherwise noted, the vlaue of I/O registers on reset is unspecified.
+
 \section{Watchdog and Reset}
 
 The watchdog has an 8-bit configuration register and a 16-bit counter register.
@@ -1171,15 +1412,25 @@ The interrupt controller has a 16-bit enable register, and a 16-bit active regis
 
 When an interrupt happens and the corresponding bit in the enable register is set, the corresponding bit in the active register is set. When a bit in the active register is set, and no interrupt routine is currently executing, the program counter is put onto the stack and then set to 0x4004. From then on, an interrupt routine is considered to be executing until the \texttt{reti} instruction is executed.
 
-The lowest bit of the enable register indicates that interrupts from timer 0 are enabled. The lowest bit of the active register indicates that an interrupt from timer 0 is active. These bits are 0 on reset. All other bits are reserved.
+Bit 0 of the enable register indicates that timer 0 overflow interrupts are enabled. Bit 0 of the active register indicates that a timer0 overflow interrupt is active. Bit 1 of the enable register indicates that timer 0 compare interrupts are enabled. Bit 1 of the active register indicates that a timer 0 compare interrupt is active. These bits are 0 on reset. All other bits are reserved.
 
 \section{Timer}
 
-todo
+The timer has an 8-bit configuration register and 16-bit counter, reload and comparison registers.
+
+\vspace{3mm}
+\begin{bytefield}[bitwidth=0.13\linewidth]{8}
+	\bitheader{0,3,4,5,6,7} \\
+	\bitbox{4}{input clock} & \bitbox{2}{prescaler} & \bitbox{2}{reserved}
+\end{bytefield}
+
+The lowest 4 bits of the configurationr egister select the clock source (0 none, 1 system clock, 2 to 15 for other inputs), the next 2 select the prescaler factor (0 for 1, 1 for 4, 2 for 16, 3 for 64). All 6 bits are 0 on reset.
+
+The timer increments the 16-bit counter register. When incrementing from 0xffff, a timer overflow interrupt happens, and the value from the reload register gets loaded into the counter register instead. When the timer register gets incremented to the value of the compare register, a timer compare interrupt happens.
 
 \section{GPIO}
 
-todo
+The GPIO has (up to 16 bit) data direction, output data, input data, pull-up registers.
 
 \end{document}
 

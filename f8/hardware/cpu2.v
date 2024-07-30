@@ -23,7 +23,7 @@
 `include "opcode.v"
 `include "alu2.v"
 
-// `define F8L // Enable for simplified f8l core.
+`define F8L // Enable for simplified f8l core.
 
 typedef enum logic [2:0]
 {
@@ -252,8 +252,11 @@ module cpu
 			opcode == OPCODE_JRNO_D && ((accsel == ACCSEL_SWAPOP) ^ !f[FLAG_O]) ||
 			opcode == OPCODE_JRSGE_D && !(f[FLAG_N] ^ f[FLAG_O]) || opcode == OPCODE_JRSLT_D && (f[FLAG_N] ^ f[FLAG_O]) ||
 			opcode == OPCODE_JRSLE_D && ((accsel == ACCSEL_SWAPOP) ^ (f[FLAG_Z] || (f[FLAG_N] ^ f[FLAG_O]))) ||
-			opcode == OPCODE_JRLE_D && ((accsel == ACCSEL_SWAPOP) ^ (!f[FLAG_C] || f[FLAG_Z])) ||
-			opcode == OPCODE_DNJNZ_YH_D && ((accsel == ACCSEL_ZL_X) ? x[15:8] : (accsel == ACCSEL_YL_Z) ? z[15:8] : y[15:8]) != 8'h01)
+			opcode == OPCODE_JRLE_D && ((accsel == ACCSEL_SWAPOP) ^ (!f[FLAG_C] || f[FLAG_Z]))
+`ifndef F8L
+			|| opcode == OPCODE_DNJNZ_YH_D && ((accsel == ACCSEL_ZL_X) ? x[15:8] : (accsel == ACCSEL_YL_Z) ? z[15:8] : y[15:8]) != 8'h01
+`endif
+			)
 			next_pc_noint = signed'(pc) + signed'(inst[15:8]);
 		else
 			next_pc_noint = pc + opcode_instsize(opcode);
