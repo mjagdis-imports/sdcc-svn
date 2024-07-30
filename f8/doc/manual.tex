@@ -1156,7 +1156,7 @@ none
 
 \begin{tabular}{l l l}
 Assembler code    & Operation                        & f8l \\
-\texttt{jrgt \#d} & \texttt{if (c && !z) pc += \#d;} & Yes \\
+\texttt{jrgt \#d} & \texttt{if (c \&\& !z) pc += \#d;} & Yes \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -1263,7 +1263,7 @@ none
 
 \begin{tabular}{l l l}
 Assembler code     & Operation                            & f8l \\
-\texttt{jrsgt \#d} & \texttt{if (!z && !(n \^{} o)) pc += \#d;} & Yes \\
+\texttt{jrsgt \#d} & \texttt{if (!z \&\& !(n \^{} o)) pc += \#d;} & Yes \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
