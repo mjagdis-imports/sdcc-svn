@@ -810,7 +810,7 @@ opw:
 			outab(0xf4);
 		}
 		else if(t1 == S_REG && t2 == S_IX && (r1 == Z && r2 == Y)) {
-			outab(0xd8);
+			outab(OPCODE_ALTACC5);
 			outab(0xf4);
 		}
 		else if(t2 != S_SPREL || ls_mode(&e2))
@@ -876,7 +876,8 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 sex:
-		if(t1 != S_REG || t2 != S_REG || !(r1 == Y && r2 == XL || r1 == Y && r2 == XH || r1 == Z && r2 == YL || r1 == X && r2 == ZL))
+		if(t1 != S_REG || t2 != S_REG ||
+			!(r1 == Y && r2 == XL || r1 == Y && r2 == XH || r1 == Z && r2 == YL || r1 == X && r2 == ZL || r1 == Y && r2 == ZH))
 			aerr();
 		altacc(r2);
 		outab(op);
@@ -982,7 +983,7 @@ sex:
 		r3 = rcode;
 
 		if(t1 == S_IX && t2 == S_REG && t3 == S_IMM &&
-			(r1 == Y && r2 == XL || r1 == Y && r2 == XH || r1 == Z && r2 == YL || r1 == X && r2 == ZL)) {
+			(r1 == Y && r2 == XL || r1 == Y && r2 == XH || r1 == Z && r2 == YL || r1 == X && r2 == ZL || r1 == Y && r2 == ZH)) {
 			altacc(r2);
 			outab(op);
 			outrb(&e3, R_NORM);

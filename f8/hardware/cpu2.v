@@ -591,61 +591,6 @@ module cpu
 				memwrite_en = 2'b11;
 				next_sp = sp - 2;
 			end
-`ifndef F8L
-			else if(opcode_is_xchb(opcode))
-			begin
-				//logic [7:0] result8, newacc8;
-				newacc8 = 8'h00;
-				result8 = mem8;
-				if(opcode == OPCODE_XCHB_XL_MM_0)
-				begin
-					newacc8[0] = mem8[0];
-					result8[0] = acc8[0];
-				end
-				else if (opcode == OPCODE_XCHB_XL_MM_1)
-				begin
-					newacc8[0] = mem8[1];
-					result8[1] = acc8[0];
-				end
-				else if (opcode == OPCODE_XCHB_XL_MM_2)
-				begin
-					newacc8[0] = mem8[2];
-					result8[2] = acc8[0];
-				end
-				else if (opcode == OPCODE_XCHB_XL_MM_3)
-				begin
-					newacc8[0] = mem8[3];
-					result8[3] = acc8[0];
-				end
-				else if (opcode == OPCODE_XCHB_XL_MM_4)
-				begin
-					newacc8[0] = mem8[4];
-					result8[4] = acc8[0];
-				end
-				else if (opcode == OPCODE_XCHB_XL_MM_5)
-				begin
-					newacc8[0] = mem8[5];
-					result8[5] = acc8[0];
-				end
-				else if (opcode == OPCODE_XCHB_XL_MM_6)
-				begin
-					newacc8[0] = mem8[6];
-					result8[6] = acc8[0];
-				end
-				else if (opcode == OPCODE_XCHB_XL_MM_7)
-				begin
-					newacc8[0] = mem8[7];
-					result8[7] = acc8[0];
-				end
-				regwrite_data = {newacc8, newacc8};
-				regwrite_addr = acc8_addr;
-				regwrite_en = acc8_en;
-				next_f[FLAG_Z] = !newacc8[0];
-				memwrite_data = result8;
-				memwrite_addr = inst[23:8];
-				memwrite_en = 2'b01;
-			end
-`endif
 			else if(opcode == OPCODE_LDW_Y_SP)
 			begin
 				if(swapop)
@@ -1028,7 +973,7 @@ module cpu
 				memwrite_data = {8'hxx, acc8 & imm8 | mem8 & ~imm8};
 				memwrite_addr = acc16;
 				memwrite_en = 2'b01;
-				next_f[FLAG_Z] = !(mem8 & ~imm8);
+				next_f[FLAG_Z] = !(mem8 & imm8);
 			end
 `ifndef F8L
 			else if(opcode == OPCODE_MUL_Y)

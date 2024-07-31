@@ -680,6 +680,32 @@ Assembler code         & Operation                   & f8l \\
 \texttt{nz}
 
 
+\subsection{sex: sign-extend}
+
+\begin{tabular}{l l l}
+Assembler code                 & Operation                            & f8l \\
+\texttt{sex y, xl}             & \texttt{y = (int8\_t)xl}             & No \\
+\texttt{sex altacc16, altacc8} & \texttt{altacc16 = (int8\_t)altacc8} & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{nz}
+
+
+\subsection{zex: zero-extend}
+
+\begin{tabular}{l l l}
+Assembler code                 & Operation                   & f8l \\
+\texttt{zex y, xl}             & \texttt{y = xl}         & No \\
+\texttt{zex altacc16, altacc8} & \texttt{altacc16 = altacc8} & No \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+\texttt{z}
+
+
 \section{Other 8-bit instructions}
 
 \subsection{bool: 8-bit cast to bool}
@@ -747,7 +773,7 @@ Assembler code              & Operation                          & f8l \\
 
 \subsection{msk: mask}
 
-z flag set according to old value of  (y) \& \~{}\#i.
+z flag set according to old value of  (y) \& \#i.
 
 \begin{tabular}{l l l}
 Assembler code                        & Operation                                                    & f8l \\
@@ -1013,17 +1039,6 @@ Assembler code         & Operation                                              
 
 \texttt{cnz}
 
-\subsection{sex: sign-extend}
-
-\begin{tabular}{l l l}
-Assembler code                 & Operation                            & f8l \\
-\texttt{sex y, xl}             & \texttt{y = (int8\_t)xl}             & No \\
-\texttt{sex altacc16, altacc8} & \texttt{altacc16 = (int8\_t)altacc8} & No \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-\texttt{nz}
 
 \subsection{sllw: 16-bit shift left logical}
 
@@ -1082,231 +1097,12 @@ Assembler code                  & Operation                                     
 none
 
 
-\subsection{zex: zero-extend}
-
-\begin{tabular}{l l l}
-Assembler code                 & Operation                   & f8l \\
-\texttt{zex y, xl}             & \texttt{y = xl}         & No \\
-\texttt{zex altacc16, altacc8} & \texttt{altacc16 = altacc8} & No \\
-\end{tabular}
-
 \subsubsection*{Affected Flags}
 
 \texttt{z}
 
 
-\section{Bit Instructions}
-
-\subsection{xchb: exchange bit}
-
-Exchange xl with bit b at mm. z flag according to new value of xl.
-
-todo: is it really worth having this?
-
-\begin{tabular}{l l l}
-Assembler code                 & Operation                                                                                                      & f8l \\
-\texttt{xchb xl, mm, \#b}      & \makecell{\texttt{t = mm >> \#b}\\\texttt{mm = mm \& \~{}(1 << \#b) | (xl << \#b)}\\\texttt{xl = t}}           & No \\
-\texttt{xchb altacc8, mm, \#b} & \makecell{\texttt{t = mm >> \#b}\\\texttt{mm = mm \& \~{}(1 << \#b) | (altacc8 << \#b)}\\\texttt{altacc8 = t}} & No \\
-\end{tabular}
-
-
-\subsubsection*{Affected Flags}
-
-\texttt{z}
-
-
-\section{Relative Jumps}
-
-\subsection{dnjnz}
-
-dnjnz yh, \#d (2) ; decrement yh, without updating carry, jump if result is not zero.
-
-\subsubsection*{Affected Flags}
-
-\texttt{nz}
-
-
-\subsection{jr}
-
-\texttt{jr \#d} ignores all flags, changes no flags, not even reserved ones.
-
-\begin{tabular}{l l l}
-Assembler code  & Operation          & f8l \\
-\texttt{jr \#d} & \texttt{pc += \#d} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrc}
-
-\begin{tabular}{l l l}
-Assembler code  & Operation                  & f8l \\
-\texttt{jr \#d} & \texttt{if (c) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrgt}
-
-\begin{tabular}{l l l}
-Assembler code    & Operation                        & f8l \\
-\texttt{jrgt \#d} & \texttt{if (c \&\& !z) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-\subsection{jrle}
-
-\begin{tabular}{l l l}
-Assembler code    & Operation                        & f8l \\
-\texttt{jrle \#d} & \texttt{if (!c || z) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrn}
-
-\begin{tabular}{l l l}
-Assembler code   & Operation                  & f8l \\
-\texttt{jrn \#d} & \texttt{if (n) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrnc}
-
-\begin{tabular}{l l l}
-Assembler code    & Operation                    & f8l \\
-\texttt{jrnc \#d} & \texttt{if (!c) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrnn}
-
-\begin{tabular}{l l l}
-Assembler code    & Operation                   & f8l \\
-\texttt{jrnn \#d} & \texttt{if (!n) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrno}
-
-\begin{tabular}{l l l}
-Assembler code    & Operation                   & f8l \\
-\texttt{jrno \#d} & \texttt{if (!o) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrnz}
-
-\begin{tabular}{l l l}
-Assembler code    & Operation                   & f8l \\
-\texttt{jrnz \#d} & \texttt{if (!n) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jro}
-
-\begin{tabular}{l l l}
-Assembler code   & Operation                  & f8l \\
-\texttt{jro \#d} & \texttt{if (o) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrsge}
-
-\begin{tabular}{l l l}
-Assembler code     & Operation                            & f8l \\
-\texttt{jrsge \#d} & \texttt{if (!(n \^{} o)) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrsgt}
-
-\begin{tabular}{l l l}
-Assembler code     & Operation                            & f8l \\
-\texttt{jrsgt \#d} & \texttt{if (!z \&\& !(n \^{} o)) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-\subsection{jrsle}
-
-\begin{tabular}{l l l}
-Assembler code   & Operation                  & f8l \\
-\texttt{jrsle \#d} & \texttt{if (z || (n \^{} o)) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrslt}
-
-\begin{tabular}{l l l}
-Assembler code     & Operation                         & f8l \\
-\texttt{jrslt \#d} & \texttt{if (n \^{} o) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\subsection{jrz}
-
-\begin{tabular}{l l l}
-Assembler code   & Operation                  & f8l \\
-\texttt{jrz \#d} & \texttt{if (z) pc += \#d;} & Yes \\
-\end{tabular}
-
-\subsubsection*{Affected Flags}
-
-none
-
-
-\section{Other Instructions}
+\section{Jumps}
 
 \subsection{call}
 
@@ -1315,6 +1111,20 @@ Assembler code         & Operation                                  & f8l \\
 \texttt{call \#ii}     & \texttt{sp -= 2; (sp) = pc; pc = \#ii}     & Yes \\
 \texttt{call y}        & \texttt{sp -= 2; (sp) = pc; pc = y}        & Yes \\
 \texttt{call altacc16} & \texttt{sp -= 2; (sp) = pc; pc = altacc16} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{dnjnz: decrement without carry update amd jump if not zero}
+
+\begin{tabular}{l l l}
+Assembler code         & Operation          & f8l \\
+\texttt{dnjnz yh, \#d} & \texttt{if(--yh) pc += \#d} & No \\
+\texttt{dnjnz xh, \#d} & \texttt{if(--xh) pc += \#d} & No \\
+\texttt{dnjnz zh, \#d} & \texttt{if(--zh) pc += \#d} & No \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -1331,6 +1141,185 @@ Assembler code       & Operation              & f8l \\
 \texttt{jp \#ii}     & \texttt{pc = \#ii}     & Yes \\
 \texttt{jp y}        & \texttt{pc = y}        & Yes \\
 \texttt{jp altacc16} & \texttt{pc = altacc16} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+\subsection{jr: jump}
+
+\texttt{jr \#d} ignores all flags, changes no flags, not even reserved ones.
+
+\begin{tabular}{l l l}
+Assembler code  & Operation          & f8l \\
+\texttt{jr \#d} & \texttt{pc += \#d} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrc: jump on carry}
+
+\begin{tabular}{l l l}
+Assembler code  & Operation                  & f8l \\
+\texttt{jr \#d} & \texttt{if (c) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrgt: jump on greater}
+
+\begin{tabular}{l l l}
+Assembler code    & Operation                        & f8l \\
+\texttt{jrgt \#d} & \texttt{if (c \&\& !z) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+\subsection{jrle: jump on less or equal}
+
+\begin{tabular}{l l l}
+Assembler code    & Operation                        & f8l \\
+\texttt{jrle \#d} & \texttt{if (!c || z) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrn: jump on negative}
+
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jrn \#d} & \texttt{if (n) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrnc: jump on no carry}
+
+\begin{tabular}{l l l}
+Assembler code    & Operation                    & f8l \\
+\texttt{jrnc \#d} & \texttt{if (!c) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrnn: jump on nonnegative}
+
+\begin{tabular}{l l l}
+Assembler code    & Operation                   & f8l \\
+\texttt{jrnn \#d} & \texttt{if (!n) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrno: jump on no overflow}
+
+\begin{tabular}{l l l}
+Assembler code    & Operation                   & f8l \\
+\texttt{jrno \#d} & \texttt{if (!o) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrnz: jump on nonzero}
+
+\begin{tabular}{l l l}
+Assembler code    & Operation                   & f8l \\
+\texttt{jrnz \#d} & \texttt{if (!n) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jro: jump on overflow}
+
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jro \#d} & \texttt{if (o) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrsge: jump on signed greater or equal}
+
+\begin{tabular}{l l l}
+Assembler code     & Operation                            & f8l \\
+\texttt{jrsge \#d} & \texttt{if (!(n \^{} o)) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrsgt: jump on signed greater}
+
+\begin{tabular}{l l l}
+Assembler code     & Operation                            & f8l \\
+\texttt{jrsgt \#d} & \texttt{if (!z \&\& !(n \^{} o)) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+\subsection{jrsle: jump on signed less or equal}
+
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jrsle \#d} & \texttt{if (z || (n \^{} o)) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrslt: jump on signed less}
+
+\begin{tabular}{l l l}
+Assembler code     & Operation                         & f8l \\
+\texttt{jrslt \#d} & \texttt{if (n \^{} o) pc += \#d;} & Yes \\
+\end{tabular}
+
+\subsubsection*{Affected Flags}
+
+none
+
+
+\subsection{jrz: jump on zero}
+
+\begin{tabular}{l l l}
+Assembler code   & Operation                  & f8l \\
+\texttt{jrz \#d} & \texttt{if (z) pc += \#d;} & Yes \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}

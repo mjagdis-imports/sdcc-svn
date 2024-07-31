@@ -5757,17 +5757,6 @@ genPointerSet (const iCode *ic)
       cost (3, 1);
       goto release;
     }
-  else if (bit_field && blen == 1 && (left->aop->type == AOP_LIT || left->aop->type == AOP_IMMD) &&
-    regDead (XL_IDX, ic))
-    {
-      genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
-      if (left->aop->type == AOP_LIT)
-        emit2 ("xchb", "xl, 0x%02x%02x, #%u", byteOfVal (left->aop->aopu.aop_lit, 1), byteOfVal (left->aop->aopu.aop_lit, 0), bstr);
-      else
-        emit2 ("xchb", "xl, %s+%d, #%u", left->aop->aopu.immd, left->aop->aopu.immd_off, bstr);
-      cost (3, 1);
-      goto release;
-    }
   else if (!bit_field && left->aop->type == AOP_STL)
     {
       struct asmop stackop_impl;

@@ -50,6 +50,36 @@ l2trap:
 	trap
 l2:
 
+	; Check effect on flags
+	clr	(0, sp)
+	ld	xl, #0xff
+	ldw	y, sp
+	msk	(y), xl, #0x55
+	jrnz	l3trap
+	ld	xl, (y)
+	cp	xl, #0x55
+	jrnz	l3trap
+	ld	xl, #0x00
+	msk	(y), xl, #0x55
+	jrz	l3trap
+	ld	xl, (y)
+	jrnz	l3trap
+	ldw	z, #0x5f00
+	push	#0x1f
+	xch	f, (0, sp)	; Set all non-reserved flags
+	msk	(y), zh, #0xf5
+	xch	f, (0, sp)
+	ld	xl, (y)
+	cp	xl, #0x55
+	jrnz	l3trap
+	pop	xl
+	and	xl, #0x1f
+	cp	xl, #0x1f	; All non-reserved flags should be set.
+	jrz	l3
+l3trap:
+	trap
+l3:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

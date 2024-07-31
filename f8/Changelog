@@ -1,3 +1,15 @@
+2024-07-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* f8/doc/manual.tex,
+	  f8/doc/opcodemap.ods,
+	  f8/hardware/cpu2.v,
+	  f8/hardware/tests/msk/test.s,
+	  sdcc/device/lib/f8/Makefile.in,
+	  sdcc/sdas/asf8/f8mch.c,
+	  sdcc/src/f8/gen.c,
+	  f8/hardware/tests/xchb:
+	  Replace xchb by modified msk.
+
 2024-07-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,

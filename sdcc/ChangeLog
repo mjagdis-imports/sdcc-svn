@@ -1,3 +1,10 @@
+2024-07-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/f8/Makefile.in,
+	  sdas/asf8/f8mch.c,
+	  src/f8/gen.c:
+	  Replace xchb by modified msk.
+
 2024-07-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c:

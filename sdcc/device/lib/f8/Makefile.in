@@ -41,10 +41,10 @@ F8_SDCC = $(COMMON_SDCC) \
   __itoa.c \
   __ltoa.c \
   _startup.c \
-  _strlen.c \
   _strcmp.c \
   _strcpy.c \
-  _strlen.c \
+  strlen.c \
+  strnlen.c \
   memcpy.c \
   __memcpy.c \
   _memmove.c \
