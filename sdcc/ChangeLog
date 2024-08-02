@@ -20,6 +20,192 @@
 	* support/regression/ports/f8/spec.mk:
 	  Adapt f8 regression testing to new simulator directory structure.
 
+2024-07-24 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/wchar.c.in: added _FORTIFY_SOURCE==3 exception
+
+2024-07-23 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/cases/HTMLgen.py: fixed bad escape no longer accepted
+	  by Python 3.12
+
+2024-07-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/z80/__ultobcd.s: removed comments about odd ABI,
+	  added .optsdcc -mz80 sdcccall(1)
+
+2024-07-17 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/lib/ds390/__sdcc_atomic_maybe_rollback.c: bugfix moved push psw,
+	  renamed __sdcc_atomic_exchange_rollback_impl to sdcc_atomic_exchange_rollback_start,
+	  changed __sdcc_atomic_exchange_rollback_impl+40 to sdcc_atomic_exchange_rollback_end,
+	  bugfix outer_skip, 3$ & 4$
+	* device/lib/mcs51/__sdcc_atomic_maybe_rollback.asm: bugfix moved push psw,
+	  renamed __sdcc_atomic_exchange_rollback_impl to sdcc_atomic_exchange_rollback_start,
+	  changed __sdcc_atomic_exchange_rollback_impl+40 to sdcc_atomic_exchange_rollback_end
+	* device/lib/ds390/atomic_flag_test_and_set.c,
+	* device/lib/mcs51/atomic_flag_test_and_set.asm: renamed
+	  ___sdcc_atomic_exchange_gptr_impl to sdcc_atomic_exchange_gptr_impl,
+	  use ljmp instead of lcall saving stack space,
+	  let that return in dpl instead of going through acc
+	* device/lib/mcs51/gptr_cmp.asm: moved push/pop dpl inside if
+	* device/lib/z80/__itoa.s,
+	* device/lib/z80/__ltoa.s,
+	* device/lib/z80/__mulsint2slong.s,
+	* device/lib/z80/__strreverse.s,
+	* device/lib/z80/__uitobcd.s,
+	* device/lib/z80/abs.s,
+	* device/lib/z80/atomic_flag_test_and_set.s,
+	* device/lib/z80/crt0.s,
+	* device/lib/z80/divmixed.s,
+	* device/lib/z80/divsigned.s,
+	* device/lib/z80/divunsigned.s,
+	* device/lib/z80/memcpy.s,
+	* device/lib/z80/memmove.s,
+	* device/lib/z80/modmixed.s,
+	* device/lib/z80/modsigned.s,
+	* device/lib/z80/modunsigned.s,
+	* device/lib/z80/mul.s,
+	* device/lib/z80/mulchar.s,
+	* device/lib/z80/setjmp.s,
+	* device/lib/z80/strcpy.s,
+	* device/lib/z80/strlen.s: added .module <name> & .optsdcc -mz80 sdcccall(1)
+	* device/lib/z80/__ultobcd.s: added .module <name>,
+	  added comments about odd ABI,
+	  small optimization
+	* src/SDCCerr.c (vwerror): print with newlines
+	* src/SDCCglue.c (glue): emit .module first,
+	  renamed genAssemblerPreamble to genAssemblerStart,
+	  moved mcs51_like part to genAssemblerStart,
+	  emit .optsdcc in genAssemblerStart
+	* src/SDCCopt.c (checkRestartAtomic),
+	* src/SDCCsymt.c (newSymbol): added commented out C11 check
+	* src/pic14/glue.c (picglue),
+	* src/pic16/glue.c (pic16glue),
+	* src/port.h: renamed genAssemblerPreamble to genAssemblerStart
+	* src/avr/main.c (_avr_genAssemblerPreamble): emit .optsdcc,
+	   renamed to _avr_genAssemblerStart
+	* src/ds390/main.c (_ds390_genAssemblerPreamble): emit .optsdcc,
+	  renamed to _ds390_genAssemblerStart,
+	  (ds390_genAtomicSupport): added commented out C11 check,
+	  renamed __sdcc_atomic_exchange_rollback_impl to sdcc_atomic_exchange_rollback_start,
+	  renamed ___sdcc_atomic_exchange_<>_impl to sdcc_atomic_exchange_<>_impl,
+	  added sdcc_atomic_exchange_rollback_end,
+	  added sdcc_atomic_exchange_exit to load dpl,
+	  (_ds390_genIVT): bugfix nextbyteaddr calculations
+	* src/hc08/main.c (_hc08_genAssemblerPreamble): emit .optsdcc,
+	  renamed to _hc08_genAssemblerStart
+	* src/mcs51/gen.c (genCall, genPcall): skip saving regs & call cleanup for
+	  NoReturn destination, also use ljmp
+	* src/mcs51/main.c (_mcs51_genAssemblerPreamble): emit .optsdcc,
+	  renamed to _mcs51_genAssemblerStart,
+	  (mcs51_genAtomicSupport): added commented out C11 check,
+	  renamed __sdcc_atomic_exchange_rollback_impl to sdcc_atomic_exchange_rollback_start,
+	  renamed ___sdcc_atomic_exchange_<>_impl to sdcc_atomic_exchange_<>_impl,
+	  added sdcc_atomic_exchange_rollback_end,
+	  added sdcc_atomic_exchange_exit to load dpl,
+	  (_mcs51_genIVT): bugfix nextbyteaddr calculations
+	* src/mos6502/main.c: emit .optsdcc,
+	  renamed <>_genAssemblerPreamble to <>_genAssemblerStart,
+	  many cosmetics
+	* src/pdk/main.c (pdk_genAssemblerStart): emit .optsdcc
+	* src/pic14/main.c (_pic14_genAssemblerPreamble),
+	* src/pic16/main.c (_pic16_genAssemblerPreamble): renamed to <>_genAssemblerStart
+	* src/z80/main.c (_z80_genAssemblerStart): new, added to emit .optsdcc,
+	  includes calling convention
+	* src/z80/mappings.i: added .optsdcc
+
+2024-07-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/ds390/main.c,
+	  src/mcs51/main.c:
+	  Optimize atomic_exchange / atomic_flag_test_and_set.
+	* src/SDCCpeeph.c:
+	  Fix bug #3753.
+	* src/stm8/peep.c:
+	  Improve stm8 notUsed() accuracy, part of RFE #936.
+	* src/stm8/gen.c:
+	  Improve choice of shift location, part of RFE #936.
+
+2024-07-14 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* device/include/setjmp.h: explicit __SDCC_mcs51 condition
+	* device/lib/_fs2schar.c,
+	* device/lib/_fs2sint.c,
+	* device/lib/_fs2slong.c,
+	* device/lib/_fs2uchar.c,
+	* device/lib/_fs2uint.c,
+	* device/lib/_fs2ulong.c,
+	* device/lib/_fsadd.c,
+	* device/lib/_fsdiv.c,
+	* device/lib/_fseq.c,
+	* device/lib/_fslt.c,
+	* device/lib/_fsmul.c,
+	* device/lib/_fsneq.c,
+	* device/lib/_fssub.c,
+	* device/lib/_schar2fs.c,
+	* device/lib/_sint2fs.c,
+	* device/lib/_slong2fs.c,
+	* device/lib/_uchar2fs.c,
+	* device/lib/_uint2fs.c,
+	* device/lib/_ulong2fs.c: __fs* explicitly marked __SDCC_FLOAT_NONBANKED
+	* device/lib/printf_tiny.c: indented #if, simplified
+	* src/z80/gen.c (genJumpTab): fixed warning
+	* support/regression/MakeList: extended EXCLUDE_mcs51-xstack-auto
+	* support/regression/compact-results.py: tidied result output
+	* support/regression/gte/loop-ivopts-2.c: cosmetics
+	* support/regression/gte/memcpy-1.c: fixed warnings
+	* support/regression/gte/20030920-1.c,
+	* support/regression/qct/0025-string.c,
+	* support/regression/qct/0027-charval.c,
+	* support/regression/qct/0059-multistring.c,
+	* support/regression/tcc/21_char_array.c,
+	* support/regression/tcc/80_flexarray.c: const pointers to fix warnings
+	* support/regression/gte/20041218-1.c,
+	* support/regression/tests/bug-3727.c: void cast unused params to fix warnings
+	* support/regression/tests/bug-3741.c: fixed warnings
+
+2024-07-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  device/include/stdatomic.h,
+	  device/lib/ds390/Makefile.in,
+	  device/lib/ds390/atomic_flag_test_and_set.c,
+	  device/lib/ds390/__sdcc_atomic_maybe_rollback.c,
+	  device/lib/mcs51/__sdcc_atomic_maybe_rollback.asm,
+	  device/lib/mcs51/Makefile.in,
+	  device/lib/mcs51/atomic_flag_test_and_set.asm,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/ds390/main.c,
+	  src/mcs51/gen.c,
+	  src/mcs51/main.c,
+	  support/regression/tests/atomic.c:
+	  Full atomic_flag for mcs51, ds390. Some infrastructure for lock-free atomics.
+
+2024-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Fix bug #3757.
+
+2024-06-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c,
+	  src/z80/peeph.def:
+	  z80 peephole optimizer improvements.
+
+2024-06-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve 16-bit signed right shift code generation.
+
+2024-06-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Improve handling of hl in code generation.
+
 2024-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/lib/*/setjmp.s:
