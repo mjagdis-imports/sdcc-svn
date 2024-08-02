@@ -1152,7 +1152,7 @@ emit3 (enum asminst inst, asmop *op0, asmop *op1)
   emit3_o (inst, op0, 0, op1, 0);
 }
 
-// A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents. USed to be definedhere, but has been moved further down, since some workarounds for assembler issues require the use of pop and push.
+// A variant of emit3_o that replaces the non-existing subtraction instructions with immediate operand by their addition equivalents. Used to be defined here, but has been moved further down, since some workarounds for assembler issues require the use of pop and push.
 static void
 emit3sub_o (enum asminst inst, asmop *op0, int offset0, asmop *op1, int offset1); // todo: allow to pass size, so instead of setting carry, we can just go for addition with +1 added to literal operand, when doing the full size in one instruction.
 
@@ -2882,20 +2882,36 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
         {
           if (aopIsOp8_2 (right_aop, i))
             {
-              if (!xl_free)
-                push (ASMOP_XL, 0, 1);
-              genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false, !started);
+              bool pushed_xl = false;
+              asmop *lop;
+              int lopoffset;
+              if (aopSame (result_aop, i, left_aop, i, 1) && aopIsAcc8 (left_aop, i))
+                {
+                 lop = left_aop;
+                 lopoffset = i;
+                }
+              else
+                {
+                  if (!xl_free)
+                    {
+                      push (ASMOP_XL, 0, 1);
+                      pushed_xl = true;
+                    }
+                  lop = ASMOP_XL;
+                  lopoffset = 0;
+                  genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false, !started);
+                }
               if (!started && (aopIsLitVal (right_aop, i, 1, 1) || aopIsLitVal (right_aop, i, 1, -1))) // Use inc / dec
                 emit3 (aopIsLitVal (right_aop, i, 1, -11) ? A_INC : A_DEC, ASMOP_XL, 0);
               else
-                emit3sub_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right_aop, i);
+                emit3sub_o (started ? A_SBC : A_SUB, lop, lopoffset, right_aop, i);
               if (maskedbyte)
                 {
                   emit2 ("and", "xl, #0x%02x", topbytemask);
                   cost (2, 1);
                 }
-              genMove_o (result_aop, i, ASMOP_XL, 0, 1, true, false, false, false, i + 1 == size);
-              if (!xl_free)
+              genMove_o (result_aop, i, lop, lopoffset, 1, true, false, false, false, i + 1 == size);
+              if (pushed_xl)
                 pop (ASMOP_XL, 0, 1);
             }
           else if (!xl_free)
