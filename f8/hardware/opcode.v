@@ -153,7 +153,7 @@ function automatic logic opcode_is_ldw_y_mem(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_ldw_y(opcode_t opcode);
-	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode_is_ldw_y_mem(opcode) || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_Y_D);
+	return(opcode == OPCODE_LDW_Y_SP || opcode == OPCODE_LDW_Y_IMMD || opcode_is_ldw_y_mem(opcode) || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_Y_Z || opcode == OPCODE_LDW_Y_D);
 endfunction
 
 function automatic logic opcode_is_mad(opcode_t opcode);

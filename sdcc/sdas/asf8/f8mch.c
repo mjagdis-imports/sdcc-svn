@@ -549,19 +549,14 @@ opw:
 			outab(op | 0x0c);
 			break;
 		}
-		else if(t1 == S_REG && r1 == Y && t2 == S_REG && r2 == Z) {
-			outab(OPCODE_SWAPOP);
-			outab(op | 0x0c);
-			break;
-		}
 		else if(t1 == S_REG && r1 == X && t2 == S_REG && r2 == Z) {
 			outab(OPCODE_ALTACC3);
-			outab(0xc6);
+			outab(0xdc);
 			break;
 		}
 		else if(t1 == S_REG && r1 == Z && t2 == S_REG && r2 == X) {
-			outab(OPCODE_ALTACC3);
-			outab(0xcb);
+			outab(OPCODE_ALTACC2);
+			outab(0xc6);
 			break;
 		}
 		else if(t1 == S_REG && r1 == SP && t2 == S_REG && r2 == Y) { // ldw sp, y
@@ -617,6 +612,8 @@ opw:
 			case S_REG:
 				if(r2 == X)
 					outab(op | 0x06);
+				else if (r2 == Z)
+					outab(0xdc);
 				else
 					aerr();
 				break;

@@ -361,7 +361,7 @@ module cpu
 				op16 = imm16;
 			else if(opcode_is_16_2_mem(opcode) || opcode_is_16_1_mem(opcode) && !opcode_is_clrw(opcode))
 				op16 = mem16;
-			else if(opcode_is_16_2_x(opcode) || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_LDW_Y_X || opcode == OPCODE_LDW_X_Y || opcode == OPCODE_LDW_IY_X || opcode == OPCODE_LDW_YREL_X)
+			else if(opcode_is_16_2_x(opcode) || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_LDW_IY_X || opcode == OPCODE_LDW_YREL_X)
 			begin
 				op16_addr = (accsel == ACCSEL_YL_Z || accsel == ACCSEL_YH_Z) ? 1 :
 					(accsel == ACCSEL_ZL_X || accsel == ACCSEL_ZH_Y) ? 2 :
@@ -1031,7 +1031,13 @@ module cpu
 			end
 			else if(opcode == OPCODE_LDW_Y_X)
 			begin
-				regwrite_data = op16;
+				regwrite_data = x;
+				regwrite_addr = acc16_addr;
+				regwrite_en = 2'b11;
+			end
+			else if(opcode == OPCODE_LDW_Y_Z)
+			begin
+				regwrite_data = z;
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
 			end
@@ -1051,21 +1057,13 @@ module cpu
 			else if(opcode == OPCODE_LDW_X_Y)
 			begin
 				regwrite_data = acc16;
-				regwrite_addr = op16_addr;
+				regwrite_addr = 0;
 				regwrite_en = 2'b11;
 			end
 			else if(opcode == OPCODE_LDW_Z_Y)
 			begin
-				if(swapop)
-				begin
-					regwrite_data = z;
-					regwrite_addr = 1;
-				end
-				else
-				begin
-					regwrite_data = y;
-					regwrite_addr = 2;
-				end
+				regwrite_data = acc16;
+				regwrite_addr = 2;
 				regwrite_en = 2'b11;
 			end
 			else if(opcode == OPCODE_LDW_IY_X)

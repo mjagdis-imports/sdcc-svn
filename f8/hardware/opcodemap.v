@@ -221,7 +221,7 @@ typedef enum logic [7:0] {
 	OPCODE_JRNO_D =       8'hd9, // jrno #d
 	OPCODE_JRSGE_D =      8'hda, // jrsge #d
 	OPCODE_JRSLT_D =      8'hdb, // jrslt #d
-	OPCODE_RESERVED_DC =  8'hdc,
+	OPCODE_LDW_Y_Z =      8'hdc, // ldw y, z
 	OPCODE_JRSLE_D =      8'hdd, // jrsle #d
 	OPCODE_RESERVED_DE =  8'hde,
 	OPCODE_JRLE_D =       8'hdf, // jrle #d
