@@ -853,14 +853,8 @@ ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
         }
     }
 
-  if (r0Idx == Z_IDX && r1Idx == Y_IDX) // ldw z, y
-    {
-      *prefixes = 0;
-      return 1;
-    }
-
   if (r0Idx == Y_IDX)
-    if (r1Idx == X_IDX) // ldw y, x
+    if (r1Idx == X_IDX || r1Idx == Z_IDX)
       {
         *prefixes = 0;
         return 1;
@@ -884,7 +878,7 @@ ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
     else
       return -1;
   else if (r1Idx == Y_IDX)
-    if (r0Idx == X_IDX) // ldw x, y
+    if (r0Idx == X_IDX || r0Idx == Z_IDX)
       {
         *prefixes = 0;
         return 1;
@@ -899,6 +893,12 @@ ldw_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
         *prefixes = 0;
         return 2;
       }
+
+  if(r0Idx == X_IDX && r1Idx == Z_IDX || r0Idx == Z_IDX && r1Idx == X_IDX)
+    {
+      *prefixes = 1;
+      return 2;
+    }
 
   if (r0Idx == X_IDX || r0Idx == Z_IDX || // Try with alternate accumulator prefix.
     r1Idx == X_IDX || r1Idx == Z_IDX)
@@ -1962,7 +1962,9 @@ outer_continue:
   genCopyStack (result, roffset, source, soffset, n, assigned, &size, xl_free, xh_free, y_free, z_free, false);
 
   // Now do the register shuffling.
-  for (int b = XL_IDX; b <= ZL_IDX; b += 2) // Try to use xch yl, yh, etc.
+
+  // Try to use xch yl, yh, etc.
+  for (int b = XL_IDX; b <= ZL_IDX; b += 2)
     if (regsize >= 2)
       {
         int i;
@@ -2038,7 +2040,34 @@ outer_continue:
     }
   }
 
-  // Try to use ldw z, y
+  // Try to use ldw y, z
+  {
+    const int il = result->regs[YL_IDX] - roffset;
+    const int ih = result->regs[YH_IDX] - roffset;
+    const bool assign_l = (il >= 0 && il < n && !assigned[il] && aopInReg (source, soffset + il, ZL_IDX));
+    const bool assign_h = (ih >= 0 && ih < n && !assigned[ih] && aopInReg (source, soffset + ih, ZH_IDX));
+    const bool yl_dead = z_dead_global && source->regs[YL_IDX] < soffset;
+    const bool yh_dead = z_dead_global && source->regs[YH_IDX] < soffset;
+    if (source->regs[YL_IDX] < soffset && source->regs[YH_IDX] < soffset &&
+      (assign_l && assign_h || yl_dead && il < 0 && assign_h || yh_dead && ih < 0 && assign_l))
+    {
+      emit3 (A_LDW, ASMOP_Y, ASMOP_Z);
+      if (assign_l)
+        {
+          assigned[il] = true;
+          regsize--;
+          size--;
+        }
+      if (assign_h)
+        {
+          assigned[ih] = true;
+          regsize--;
+          size--;
+        }
+    }
+  }
+
+   // Try to use ldw z, y
   {
     const int il = result->regs[ZL_IDX] - roffset;
     const int ih = result->regs[ZH_IDX] - roffset;
@@ -2205,7 +2234,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassertl_bt (result->type != AOP_IMMD, "Trying to write to immediate.");
   wassertl_bt (roffset + size <= result->size, "Trying to write beyond end of operand");
 
-#if 0
+#if 1
   emit2 (";", "genMove_o size %d, xl_dead_global %d xh_dead_global %d", size, xl_dead_global, xh_dead_global);
 #endif
 

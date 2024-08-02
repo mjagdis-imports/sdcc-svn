@@ -1,6 +1,7 @@
 2024-08-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* sdas/asf8/f8mch.c:
+	* sdas/asf8/f8mch.c,
+	  src/z80/gen.c:
 	  ldw instruction changes.
 
 2024-07-31 Philipp Klaus Krause <philipp@colecovision.eu>
