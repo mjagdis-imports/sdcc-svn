@@ -375,7 +375,9 @@ aopSame (const asmop *aop1, int offset1, const asmop *aop2, int offset2, int siz
 static bool
 aopIsAcc8 (const asmop *aop, int offset)
 {
-  return (aopInReg (aop, offset, XL_IDX) || aopInReg (aop, offset, XH_IDX) || aopInReg (aop, offset, YL_IDX) || aopInReg (aop, offset, ZL_IDX));
+  return (aopInReg (aop, offset, XL_IDX) || aopInReg (aop, offset, XH_IDX) ||
+    aopInReg (aop, offset, YL_IDX) || aopInReg (aop, offset, YH_IDX) ||
+    aopInReg (aop, offset, ZL_IDX) || aopInReg (aop, offset, ZH_IDX));
 }
 
 /*-----------------------------------------------------------------*/
@@ -572,7 +574,7 @@ op2_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int o
     else
       return -1;
 
-  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX) // Try with alternate accumulator prefix.
+  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == YH_IDX || r0Idx == ZL_IDX || r0Idx == ZH_IDX) // Try with alternate accumulator prefix.
     {
       int bytes = op2_bytes (prefixes, ASMOP_XL, 0, op1, offset1);
       if (bytes >= 0)
@@ -612,9 +614,9 @@ op_cost (const asmop *op0, int offset0)
     cost (3, 1);
   else if (aopOnStack (op0, offset0, 1))
     cost (2, 1);
-  else if (aopInReg (op0, offset0, XL_IDX) || aopInReg (op0, offset0, ZH_IDX))
+  else if (aopInReg (op0, offset0, XL_IDX))
     cost (1, 1);
-  else if (aopInReg (op0, offset0, XH_IDX) || aopInReg (op0, offset0, YL_IDX) || aopInReg (op0, offset0, ZL_IDX))
+  else if (aopInReg (op0, offset0, XH_IDX) || aopInReg (op0, offset0, YL_IDX) || aopInReg (op0, offset0, YH_IDX) || aopInReg (op0, offset0, ZL_IDX) || aopInReg (op0, offset0, ZH_IDX))
     cost (2, 2);
   else
     wassert (0);
@@ -758,10 +760,9 @@ ld_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int of
       return 3;
     }
 
-  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX) // Try with alternate accu prefix.
+  if (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == YH_IDX || r0Idx == ZL_IDX || r0Idx == ZH_IDX) // Try with alternate accu prefix.
     {
-      bool replace0 = (r0Idx == XH_IDX || r0Idx == YL_IDX || r0Idx == ZL_IDX);
-      int bytes = ld_bytes (prefixes, replace0 ? ASMOP_XL : op0, replace0 ? 0 : offset0, op1, offset1);
+      int bytes = ld_bytes (prefixes, ASMOP_XL, 0, op1, offset1);
       if (bytes >= 0)
         {
           (*prefixes)++;
@@ -2884,7 +2885,10 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
               if (!xl_free)
                 push (ASMOP_XL, 0, 1);
               genMove_o (ASMOP_XL, 0, left_aop, i, 1, true, false, false, false, !started);
-              emit3sub_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right_aop, i);
+              if (!started && (aopIsLitVal (right_aop, i, 1, 1) || aopIsLitVal (right_aop, i, 1, -1))) // Use inc / dec
+                emit3 (aopIsLitVal (right_aop, i, 1, -11) ? A_INC : A_DEC, ASMOP_XL, 0);
+              else
+                emit3sub_o (started ? A_SBC : A_SUB, ASMOP_XL, 0, right_aop, i);
               if (maskedbyte)
                 {
                   emit2 ("and", "xl, #0x%02x", topbytemask);
@@ -3858,7 +3862,10 @@ genPlus (const iCode *ic)
          }
        else if (xl_free && aopInReg (rightop, i, XL_IDX) && aopIsOp8_2 (leftop, i))
          {
-           emit3_o (started ? A_ADC : A_ADD, ASMOP_XL, 0, leftop, i);
+           if (!started && (aopIsLitVal (rightop, i, 1, 1) || aopIsLitVal (rightop, i, 1, -1))) // Use inc / dec
+             emit3 (aopIsLitVal (rightop, i, 1, 1) ? A_INC : A_DEC, ASMOP_XL, 0);
+           else
+             emit3_o (started ? A_ADC : A_ADD, ASMOP_XL, 0, leftop, i);
            if (maskedbyte)
             {
               emit2 ("and", "xl, #0x%02x", topbytemask);
