@@ -401,7 +401,7 @@ aopIsOp8_1 (const asmop *aop, int offset)
 {
   return (aop->type == AOP_DIR ||
     aopOnStackNotExt (aop, offset, 1) ||
-    aopRS (aop) && aop->aopu.bytes[offset].in_reg && !aopInReg (aop, offset, YH_IDX));
+    aopRS (aop) && aop->aopu.bytes[offset].in_reg);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1802,7 +1802,7 @@ outer_continue_down:
               i += 2;
               continue;
             }
-    
+
           if (xl_free || really_do_it_now)
             {
               if (!xl_free)
@@ -5691,7 +5691,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
           else if (aopInReg (result->aop, i, Z_IDX))
             taop = ASMOP_Z;
 
-          if (!(offset + i) && !use_z && aopInReg (result->aop, i, Y_IDX))
+          if (!(offset + i) && !use_z && aopInReg (taop, i, Y_IDX))
             {
               emit2 ("ldw", "%s, (y)", aopGet2 (taop, 0));
               cost (1, 1);
@@ -5710,9 +5710,9 @@ genPointerGet (const iCode *ic, iCode *ifx)
         UNIMPLEMENTED;
 
       if ((!bit_field || blen >= 8) &&
-        (aopInReg (result->aop, i, XL_IDX) || aopInReg (result->aop, i, XH_IDX)))
+        (aopIsAcc8 (result->aop, i)))
         {
-          if (!(offset + i) && !use_z)
+          if (!(offset + i) && !use_z && (aopInReg (result->aop, i, XL_IDX) || aopInReg (result->aop, i, XH_IDX) || aopInReg (result->aop, i, ZH_IDX)))
             {
               emit2 ("ld", "%s, (y)", aopGet (result->aop, i));
               cost (2, 1);

@@ -1,7 +1,12 @@
+2024-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Small f8 codegen improvements.
+
 2024-08-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdas/asf8/f8mch.c,
-	  src/z80/gen.c:
+	  src/f8/gen.c:
 	  Adapt to instruction changes.
 
 2024-07-31 Philipp Klaus Krause <philipp@colecovision.eu>
