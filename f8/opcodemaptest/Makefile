@@ -27,7 +27,7 @@ newdata: $(NEWICESYNTHSIZES)
 newdata2: $(NEWICESYNTH2SIZES)
 
 # old tool: genopcodemap
-	
+
 genopcodemap: genopcodemap.c
 	gcc --std=c2x -Wall -pedantic $< -o $@
 

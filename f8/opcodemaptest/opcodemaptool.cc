@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <utility>
+#include <set>
 #include <map>
 #include <iostream>
 #include <sstream>
@@ -467,6 +468,7 @@ void show_bestsizes(int n)
 
 void delete_worst(int n)
 {
+	std::set<unsigned long int> deletedset;
 	std::multimap<unsigned int, std::vector<uint8_t>>::reverse_iterator it;
 	for(it = sizes.rbegin(); n && it != sizes.rend(); it++, n--)
 	{
@@ -479,8 +481,30 @@ void delete_worst(int n)
 			continue;
 		}
 		std::filesystem::remove_all(name.str().c_str());
+		deletedset.insert(opcodemapstable[it->second]);
 		opcodemapstable.erase(it->second);
 	}
+	std::map<std::vector<uint8_t>, unsigned long int>::iterator mit;
+	for(mit = opcodemapstable.begin(); mit != opcodemapstable.end(); mit++)
+		if(mit->second >= opcodemapstable.size())
+		{
+			if(!deletedset.size())
+			{
+				std::cerr << "Error: data structure corrupted\n";
+				return;
+			}
+			unsigned long int newdir = *deletedset.begin();
+			std::ostringstream newname, oldname;
+			oldname << "opcodemaps/"; newname << "opcodemaps/";
+			oldname << mit->second; newname << newdir;
+			if(!std::filesystem::exists(oldname.str().c_str()))
+				std::cout << "Missing directory for " << oldname.str() << "\n";
+			else if(std::filesystem::exists(newname.str().c_str()))
+				std::cout << "Existing directory for " << newname.str() << "\n";
+			else
+				std::filesystem::rename(oldname.str().c_str(), newname.str().c_str());
+			mit->second = newdir;
+		}
 }
 
 int main(int argc, char **argv)

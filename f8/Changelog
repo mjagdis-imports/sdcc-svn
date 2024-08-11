@@ -1,3 +1,8 @@
+2024-08-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* opcodemaptest/opcodemaptool.cc:
+	  Defragmentation for deleteworst command.
+
 2024-08-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,

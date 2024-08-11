@@ -40,7 +40,7 @@
 
 Little-endian. Stack grows downward. 16-bit flat address space.
 
-\texttt{pc} after reset: 0x4000. Other registers (including \texttt{sp}) after reset: unspecified. (P)ROM/Flash from 0x4000. RAM up to 0x3fff. I/O from 0x0000. Empty PROM/Flash is logically 0x00 (to trigger trap). All instructions execute atomically.
+\texttt{pc} after reset: 0x4000. Other registers (including \texttt{sp}) after reset: unspecified. (P)ROM/Flash from 0x4000. RAM up to 0x3fff. I/O from 0x0000. Empty PROM/Flash is logically 0x00 (to trigger trap). All instructions execute atomically. Memory reads have no side-effects.
 
 Safety features: trap on opcode 0x00. Trap on write to address 0x0000.
 
