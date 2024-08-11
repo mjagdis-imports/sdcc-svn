@@ -504,6 +504,7 @@ void delete_worst(int n)
 			else
 				std::filesystem::rename(oldname.str().c_str(), newname.str().c_str());
 			mit->second = newdir;
+			deletedset.erase(newdir);
 		}
 }
 
