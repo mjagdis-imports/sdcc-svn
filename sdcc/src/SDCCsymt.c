@@ -342,8 +342,9 @@ newSymbol (const char *name, long scope)
   sym->usl.spillLoc = 0;
 
   // Err on the safe side, when in doubt disabling optimizations.
-  sym->funcDivFlagSafe = 0;
-  sym->funcUsesVolatile = 1;
+  sym->funcDivFlagSafe = false;
+  sym->funcUsesVolatile = true;
+  sym->funcRestartAtomicSupport = true; //options.std_c11;
 
   return sym;
 }
@@ -2852,6 +2853,10 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplici
 {
   int res;
 
+#if 0
+  printf("comparePtrType (must cast %d): ", mustCast); printTypeChain (dest, stdout); printf(" vs. "); printTypeChain (src, 0);
+#endif
+
   if (getAddrspace (src->next) != getAddrspace (dest->next))
     mustCast = 1;
 
@@ -2863,8 +2868,10 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplici
     return mustCast ? -1 : 1;
   res = compareType (dest->next, src->next, ignoreimplicitintrinsic);
 
-  /* All function pointers can be cast (6.6 in the ISO C11 standard) TODO: What about address spaces? */
-  if (res == 0 && !mustCast && IS_DECL (src) && IS_FUNC (src->next) && IS_DECL (dest) && IS_FUNC (dest->next))
+  /* All function pointers can be cast (6.3.2.3 in the ISO C23 standard), similar for objects. TODO: What about address spaces? */
+  if (res == 0 && !mustCast && IS_DECL (src) && IS_DECL (dest) && (IS_FUNC (src->next) == IS_FUNC (dest->next)))
+    return -1;
+  else if (res == 0 && !mustCast && IS_DECL (src) && IS_FUNC (src->next) && IS_DECL (dest) && IS_FUNC (dest->next))
     return -1;
   else if (res == 1)
     return mustCast ? -1 : 1;
@@ -3684,9 +3691,9 @@ processFuncArgs (symbol *func, sym_link *funcType)
       int argreg = 0;
       struct dbuf_s dbuf;
 
-      if (val->sym && val->sym->name)
+      if (val->sym)
         for (value *val2 = val->next; val2; val2 = val2->next)
-          if (val2->sym && val2->sym->name && !strcmp (val->sym->name, val2->sym->name))
+          if (val2->sym && !strcmp (val->sym->name, val2->sym->name))
             werror (E_DUPLICATE_PARAMTER_NAME, val->sym->name, funcName);
 
       dbuf_init (&dbuf, 128);
@@ -4747,8 +4754,11 @@ initCSupport (void)
           dbuf_init (&dbuf, 128);
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
-            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE ) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
-                        options.intlong_rent);
+            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
+              multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su % 2],
+              multypes[bwd][su / 2],
+              2,
+              options.intlong_rent);
           dbuf_destroy (&dbuf);
         }
     }
@@ -4764,8 +4774,11 @@ initCSupport (void)
               dbuf_init (&dbuf, 128);
               dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su * 3], sbwd[bwd]);
               muldiv[muldivmod][bwd][su] =
-                funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE) && bwd == 0) ? 1 : bwd][su], multypes[bwd][su], 2,
-                            options.intlong_rent);
+                funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
+                  multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su],
+                  multypes[bwd][su],
+                  2,
+                  options.intlong_rent);
               dbuf_destroy (&dbuf);
             }
         }

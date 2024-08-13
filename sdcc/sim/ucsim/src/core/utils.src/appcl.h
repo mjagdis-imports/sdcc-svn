@@ -97,7 +97,10 @@ public:
   u32_t period, cyc, acyc;
   bool quiet;
   class cl_console_stdout *ocon;
-
+  int rgdb_port;
+  enum hw_cath con_hw_cath;
+  int con_hw_id;
+  chars con_hw_name;
 public:
   cl_app(void);
   virtual ~cl_app(void);
@@ -107,6 +110,7 @@ public:
   virtual void read_conf_file(void);
   virtual void read_input_files(void);
   virtual void exec_startup_cmd(void);
+  virtual void check_con_hw(void);
   virtual int check_start_options(void);
   virtual int run(void);
   virtual int run_go(void);
@@ -148,4 +152,4 @@ public:
 
 #endif
 
-/* End of appcl.h */
+/* End of utils.src/appcl.h */

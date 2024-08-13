@@ -1,10 +1,10 @@
 /*
  * Simulator of microcontrollers (cmd.src/newcmdcl.h)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 1999 Drotos Daniel
  * Copyright (C) 2006, Borut Razem - borut.razem@siol.net
  *
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -279,7 +279,7 @@ class cl_commander_base: public cl_base
  public:
   class cl_app *app;
   class cl_list *cons;
-  class cl_console_base *actual_console, *config_console;
+  class cl_console_base *actual_console, *config_console, *std_console;
 protected: class cl_console_base *frozen_console;
 public:
   class cl_cmdset *cmdset;

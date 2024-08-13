@@ -658,7 +658,7 @@ FBYNAME (labelIsUncondJump)
       jpInst = "jmp";
       jpInst2 = "bra";
     }
-  else if (TARGET_Z80_LIKE)
+  else if (TARGET_Z80_LIKE || TARGET_IS_F8)
     {
       jpInst = "jp";
       jpInst2 = "jr";
@@ -3526,13 +3526,17 @@ replaceRule (lineNode ** shead, lineNode * stail, peepRule * pr)
       lineNode *lc = comment;
       while (lc->next)
         lc = lc->next;
-      lc->next = lhead;
       if (lhead)
-        lhead->prev = lc;
+        {
+          lc->next = lhead;
+          lhead->prev = lc;
+        }
+      else
+        cl = lc;
       lhead = comment;
     }
 
-  if (lhead && cl)
+  if (lhead)
     {
       /* determine which iCodes the replacement lines relate to */
       reassociate_ic(*shead,stail,lhead,cl);
@@ -3549,8 +3553,7 @@ replaceRule (lineNode ** shead, lineNode * stail, peepRule * pr)
       if (stail && stail->next)
         {
           stail->next->prev = cl;
-          if (cl)
-            cl->next = stail->next;
+          cl->next = stail->next;
         }
     }
   else

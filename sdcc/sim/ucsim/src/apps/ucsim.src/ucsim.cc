@@ -107,6 +107,7 @@ main(int argc, char *argv[])
   if (sim->init())
     sim->state|= SIM_QUIT;
   application->set_simulator(sim);
+  /*
   {
     id= dnow();
     i= 0;
@@ -116,9 +117,10 @@ main(int argc, char *argv[])
     fprintf(stderr, "\n%f MFlop ", fd);
     fprintf(stderr, "%f kips\n", id);
   }
+  */
   ret= application->run();
   application->done();
   return(ret);
 }
 
-/* End of sim.src/ucsim.cc */
+/* End of apps/ucsim.cc */

@@ -1,9 +1,9 @@
 /*
  * Simulator of microcontrollers (inst_cb.cc)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 1999 Drotos Daniel
  * 
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -736,7 +736,6 @@ cl_z80::inst_cb(void)
       return (inst_cb_set(code));
     }
 
-  //PC= instPC;//rom->inc_address(PC, -1);
   return(resINV_INST);
 }
 

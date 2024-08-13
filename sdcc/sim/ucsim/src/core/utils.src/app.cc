@@ -80,6 +80,9 @@ cl_app::cl_app(void)
   period= 0;
   cyc= 0;
   acyc= 0;
+  con_hw_cath= HW_DUMMY;
+  con_hw_id= -1;
+  con_hw_name= "";
 }
 
 cl_app::~cl_app(void)
@@ -98,6 +101,7 @@ cl_app::init(int argc, char *argv[])
   cl_base::init();
   if (!have_real_name())
     set_name("application");
+  rgdb_port= 0;
   mk_options();
   proc_arguments(argc, argv);
   class cl_cmdset *cmdset= new cl_cmdset();
@@ -107,7 +111,6 @@ cl_app::init(int argc, char *argv[])
   ocon->init();
   commander= new cl_commander(this, cmdset/*, sim*/);
   commander->init();
-
   return(0);
 }
 
@@ -143,6 +146,48 @@ cl_app::exec_startup_cmd(void)
 {
   if (startup_command.nempty())
     exec(startup_command);
+}
+
+void
+cl_app::check_con_hw(void)
+{
+  class cl_hw *hw= 0;
+  //int hw_idx;
+  if (con_hw_id >= 0)
+    {
+      hw= sim->uc->get_hw(con_hw_cath, con_hw_id, 0);
+    }
+  else if (con_hw_name.nempty())
+    {
+      con_hw_name.start_parse();
+      chars name, id;
+      name= con_hw_name.token("[,");
+      id= con_hw_name.token("],");
+      if (id.empty())
+	hw= sim->uc->get_hw(name.c_str(), id.lint(), 0);
+      else
+	hw= sim->uc->get_hw(name.c_str(), 0);
+    }
+  else
+    return;
+  if (hw == 0)
+    {
+      fprintf(stderr, "No hw found\n");
+      return;
+    }
+  class cl_console_base *con= commander->std_console;
+  if (con == 0)
+    {
+      fprintf(stderr, "No consol on standard io\n");
+      return;
+    }
+  con->dd_printf("Converting console to display of %s[%d]...\n",
+		 hw->id_string, hw->id);
+  hw->new_io(con->get_fin(), con->get_fout());
+  if (hw->get_io())
+    con->drop_files();
+  else
+    con->dd_printf("%s[%d]: no display\n", hw->id_string, hw->id);
 }
 
 int
@@ -181,6 +226,7 @@ cl_app::run(void)
   read_conf_file();
   read_input_files();
   exec_startup_cmd();
+  check_con_hw();
   check_start_options();
   if (commander->consoles_prevent_quit() < 1)
     done= 1;
@@ -283,13 +329,20 @@ cl_app::done(void)
 static void
 print_help(const char *name)
 {
-  printf("%s: %s\n", name, VERSIONSTR);
-  printf("Usage: %s [-hHVvPgGEwlbBq] [-p prompt] [-t CPU] [-X freq[k|M]] [-R seed]\n"
-	 "       [-C cfg_file] [-c file] [-e command] [-s file] [-S optionlist]\n"
-	 "       [-I if_optionlist] [-o colorlist] [-a nr]\n"
 #ifdef SOCKET_AVAIL
-	 "       [-z portnum] [-Z portnum] [-k portnum]"
+#define ZOPT "[-z portnum] [-Z portnum]"
+#define KOPT "[-k portnum]"
+#define DOPT //"[-d portnum]"
+#else
+#define ZOPT
+#define KOPT
+#define DOPT
 #endif
+  printf("%s: %s\n", name, VERSIONSTR);
+  printf("Usage: %s [-bBEgGhHlPqVvw] [-a nr] [-c file] [-C cfg_file] " DOPT "\n"
+	 "       [-e command] [-I if_optionlist] " KOPT " [-o colorlist]\n"
+	 "       [-p prompt] [-R seed] [-s file] [-S optionlist]\n"
+	 "       [-t CPU] [-U uartnr] [-u hw] [-X freq[k|M]] " ZOPT "\n"
 	 "\n"
 	 "       [files...]\n", name);
   printf
@@ -299,15 +352,32 @@ print_help(const char *name)
                1         2         3         4         5         6         7         8
       */
      "Options:\n"
-     "  -t CPU       Type of CPU: 51, C52, 251, etc.\n"
-     "  -X freq[k|M] XTAL frequency\n"
-     "  -R seed      Set the random number generator seed value\n"
-     "  -C cfg_file  Read initial commands from `cfg_file' and execute them\n"
-     "  -e command   Execute command on startup\n"
+     "  -a nr        Specify size of variable space (default=256)\n"
+     "  -b           Black & white (non-color) theme\n"
+     "  -B           Beep on breakpoints\n"
      "  -c file      Open command console on `file' (use `-' for std in/out)\n"
-     "  -z portnum   Listen portnum for command console\n"
-     "  -Z portnum   Listen portnum for command console (no console on stdio)\n"
+     "  -C cfg_file  Read initial commands from `cfg_file' and execute them\n"
+   //"  -d portnum   Act as gdbserver, listen on portnum for gdb connections\n"
+     "  -e command   Execute command on startup\n"
+     "  -E           Go, start simulation in emulation mode\n"
+     "  -g           Go, start simulation\n"
+     "  -G           Go, start simulation, quit on stop\n"
+     "  -h           Print out this help and quit\n"
+     "  -H           Print out types of known CPUs and quit\n"
+     "  -I options   `options' is a comma separated list of options according to\n"
+     "               simulator interface. Known options are:\n"
+     "                 if=memory[address]  turn on interface on given memory location\n"
+     "                 in=file             specify input file for IO\n"
+     "                 out=file            specify output file for IO\n"
      "  -k portnum   Listen portnum for serial I/O (obsolete, use -S)\n"
+     "  -l           Use light theme (default is dark)\n"
+     "  -o colors    `colors' is a list of color specification: what=colspec,...\n"
+     "               where colspec is : separated list of color options\n"
+     "               e.g.: prompt=b:white:black (bold white on black)\n"
+     "  -p prompt    Specify string for prompt\n"
+     "  -P           Prompt is a null ('\\0') character\n"
+     "  -q           Quiet mode (implies -b)\n"
+     "  -R seed      Set the random number generator seed value\n"
      "  -s file      Connect serial interface uart0 to `file' (obsolete, use -S)\n"
      "  -S options   `options' is a comma separated list of options according to\n"
      "               serial interface. Know options are:\n"
@@ -318,29 +388,15 @@ print_help(const char *name)
      "                  iport=nr  use localhost:nr as server for serial input\n"
      "                  oport=nr  use localhost:nr as server for serial output\n"
      "                  raw       perform non-interactive communication even on tty\n"
-     "  -I options   `options' is a comma separated list of options according to\n"
-     "               simulator interface. Known options are:\n"
-     "                 if=memory[address]  turn on interface on given memory location\n"
-     "                 in=file             specify input file for IO\n"
-     "                 out=file            specify output file for IO\n"
-     "  -p prompt    Specify string for prompt\n"
-     "  -P           Prompt is a null ('\\0') character\n"
-     "  -o colors    `colors' is a list of color specification: what=colspec,...\n"
-     "               where colspec is : separated list of color options\n"
-     "               e.g.: prompt=b:white:black (bold white on black)\n"
-     "  -l           Use light theme (default is dark)\n"
-     "  -b           Black & white (non-color) theme\n"
-     "  -B           Beep on breakpoints\n"
-     "  -g           Go, start simulation\n"
-     "  -G           Go, start simulation, quit on stop\n"
-     "  -E           Go, start simulation in emulation mode\n"
-     "  -a nr        Specify size of variable space (default=256)\n"
-     "  -w           Writable flash\n"
-     "  -V           Verbose mode\n"
-     "  -q           Quiet mode (implies -b)\n"
+     "  -t CPU       Type of CPU: 51, C52, 251, etc.\n"
+     "  -U uartnr    Use std console as terminal for UART id=uartnr\n"
+     "  -u hw        Use std console as display for hardware element\n"
      "  -v           Print out version number and quit\n"
-     "  -H           Print out types of known CPUs and quit\n"
-     "  -h           Print out this help and quit\n"
+     "  -V           Verbose mode\n"
+     "  -w           Writable flash\n"
+     "  -X freq[k|M] XTAL frequency\n"
+     "  -z portnum   Listen portnum for command console\n"
+     "  -Z portnum   Listen portnum for command console (no console on stdio)\n"
      );
 }
 
@@ -390,9 +446,9 @@ cl_app::proc_arguments(int argc, char *argv[])
   bool /*s_done= false,*/ k_done= false;
   //bool S_i_done= false, S_o_done= false;
 
-  strcpy(opts, "qc:C:e:p:PX:vVt:s:S:I:a:whHgGEJo:blBR:_");
+  strcpy(opts, "qc:C:e:p:PX:vVt:s:S:I:a:whHgGEJo:blBR:U:u:_");
 #ifdef SOCKET_AVAIL
-  strcat(opts, "Z:r:k:z:");
+  strcat(opts, "Z:r:k:z:d:");
 #endif
 
   for (i= 0; i < argc; i++)
@@ -592,6 +648,9 @@ cl_app::proc_arguments(int argc, char *argv[])
 	  free(s);
 	  break;
 	}
+      case 'd':
+	rgdb_port= strtol(optarg, 0, 0);
+	break;
 #endif
       case 'S':
 	{
@@ -862,6 +921,13 @@ cl_app::proc_arguments(int argc, char *argv[])
 	if (!options->set_value("beep_break", this, (bool)true))
 	  fprintf(stderr, "Warning: No \"debug\" option found to set "
 		  "by -B parameter\n");	
+	break;
+      case 'U':
+	con_hw_cath= HW_UART;
+	con_hw_id= strtol(optarg, 0, 0);
+	break;
+      case 'u':
+	con_hw_name= optarg;
 	break;
       case 'h':
 	print_help(get_name());
@@ -1359,32 +1425,32 @@ cl_app::mk_options(void)
   o->set_value("white:red");
   
   options->new_option(o= new cl_string_option(this, "color_led_on",
-					      ""));
+					      "ON LED color on FPGA display"));
   o->init();
   o->set_value("b:green:black");
   
   options->new_option(o= new cl_string_option(this, "color_led_off",
-					      ""));
+					      "OFF LED color on FPGA display"));
   o->init();
   o->set_value("white:black");
   
   options->new_option(o= new cl_string_option(this, "color_btn_on",
-					      ""));
+					      "ON button color on FPGA display"));
   o->init();
   o->set_value("bcyan:black");
   
   options->new_option(o= new cl_string_option(this, "color_btn_off",
-					      ""));
+					      "OFF button color on FPGA display"));
   o->init();
   o->set_value("white:black");
   
   options->new_option(o= new cl_string_option(this, "color_sw_on",
-					      ""));
+					      "ON switch color on FPGA display"));
   o->init();
   o->set_value("bcyan:black");
   
   options->new_option(o= new cl_string_option(this, "color_sw_off",
-					      ""));
+					      "OFF switch color on FPGA display"));
   o->init();
   o->set_value("white:black");
   
@@ -1448,4 +1514,4 @@ cl_app::set_option_s(const char *opt_name, const char *new_value)
     }
 }
 
-/* End of app.cc */
+/* End of utils.src/app.cc */

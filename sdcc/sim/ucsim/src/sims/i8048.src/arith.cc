@@ -1,9 +1,9 @@
 /*
  * Simulator of microcontrollers (arith.cc)
  *
- * Copyright (C) 2022 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2022 Drotos Daniel
  * 
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -157,4 +157,4 @@ CL2::anld(int addr, cl_memory_cell *op2)
 }
 
 
-/* End of i8085.src/arith.cc */
+/* End of i8048.src/arith.cc */

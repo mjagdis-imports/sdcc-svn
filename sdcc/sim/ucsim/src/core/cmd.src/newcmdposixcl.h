@@ -1,10 +1,10 @@
 /*
  * Simulator of microcontrollers (cmd.src/newcmdposixcl.h)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 1999 Drotos Daniel
  * Copyright (C) 2006, Borut Razem - borut.razem@siol.net
  *
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -80,6 +80,7 @@ class cl_listen_console: public cl_console
   virtual void welcome(void) {}
   virtual int proc_input(class cl_cmdset *cmdset);
   virtual bool set_cooked(bool new_val) { return false; }
+  virtual class cl_console_base *mk_console(cl_f *fi, cl_f *fo);
 };
 //#endif
 

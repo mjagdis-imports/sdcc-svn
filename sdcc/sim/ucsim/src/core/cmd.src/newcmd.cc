@@ -1,10 +1,10 @@
 /*
  * Simulator of microcontrollers (cmd.src/newcmd.cc)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 1999 Drotos Daniel
  * Copyright (C) 2006, Borut Razem - borut.razem@siol.net
  *
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -900,7 +900,7 @@ cl_commander_base::cl_commander_base(class cl_app *the_app, class cl_cmdset *acm
 {
   app= the_app;
   cons= new cl_list(1, 1, "consoles");
-  actual_console= frozen_console= config_console= 0;
+  actual_console= frozen_console= config_console= std_console= 0;
   cmdset= acmdset;
 }
 

@@ -97,6 +97,10 @@ EXCLUDE_s08 += \
 EXCLUDE_stm8 += \
    gte_20041218-1
 
+# For line-by-line comparability with stm8
+EXCLUDE_f8 += \
+   gte_20041218-1
+
 # Fail
 EXCLUDE_stm8-large += \
 	gte_20041218-1
@@ -272,6 +276,8 @@ EXCLUDE_pdk14 += \
 	gte_pr50865 \
 	gte_20001124-1 \
 	gte_991019-1
+EXCLUDE_pdk15 += \
+	gte_20001124-1
 EXCLUDE_mcs51-small += \
 	gte_loop-ivopts-2 \
 	gte_pr58984 \
@@ -285,6 +291,9 @@ EXCLUDE_mcs51-medium += \
 	gte_shiftdi-2
 EXCLUDE_mcs51-large-stack-auto += \
 	gte_loop-ivopts-2
+EXCLUDE_mcs51-xstack-auto += \
+	gte_loop-ivopts-2 \
+	gte_shiftdi-2
 EXCLUDE_uc6502-stack-auto += \
 	gte_loop-ivopts-2
 

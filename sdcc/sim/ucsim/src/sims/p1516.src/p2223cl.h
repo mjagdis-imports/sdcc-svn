@@ -1,9 +1,9 @@
 /*
  * Simulator of microcontrollers (p2223cl.h)
  *
- * Copyright (C) 2020,20 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020 Drotos Daniel
  * 
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -53,19 +53,42 @@ public:
 };
 
 
+class cl_sfr_op: public cl_memory_operator
+{
+public:
+  class cl_p2223 *uc;
+  t_addr addr;
+public:
+  cl_sfr_op(class cl_memory_cell *acell,
+	    class cl_p2223 *the_uc,
+	    t_addr a):
+    cl_memory_operator(acell)
+  {
+    uc= the_uc;
+    addr= a;
+  }
+  virtual t_mem write(t_mem val);
+  virtual t_mem read(void);
+};
+
+
 class cl_p2223: public cl_p1516
 {
 public:
   //bool dbg_reg;
+  chars id_chars;
+  class cl_address_space *sfr;
 public:
   cl_p2223(class cl_sim *asim);
   virtual int init(void);
   virtual const char *id_string(void);
+  virtual void make_memories(void);
 
   virtual struct dis_entry *dis_tbl(void);
   virtual char *disassc(t_addr addr, chars *comment);
   //virtual void analyze_start(void);
   virtual void analyze(t_addr addr);
+  virtual t_addr next_inst(t_addr addr);
   virtual void print_regs(class cl_console_base *con);
 
   virtual bool cond(t_mem code);
@@ -73,6 +96,8 @@ public:
   virtual int inst_alu(t_mem code);
   virtual int inst_mem(t_mem code);
   virtual int inst_ext(t_mem code);
+  virtual int inst_uncond(t_mem code);
+  virtual int inst_call(t_mem code);
   virtual int exec_inst(void);
 };
 

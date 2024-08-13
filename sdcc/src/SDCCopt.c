@@ -1813,7 +1813,7 @@ replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isad
 /* replaceRegEqv - replace all local variables with their reqv     */
 /*-----------------------------------------------------------------*/
 static void
-replaceRegEqv (ebbIndex * ebbi)
+replaceRegEqv (ebbIndex *ebbi)
 {
   eBBlock ** ebbs = ebbi->bbOrder;
   int count = ebbi->count;
@@ -1830,6 +1830,17 @@ replaceRegEqv (ebbIndex * ebbi)
 
       for (ic = ebbs[i]->sch; ic; ic = ic->next)
         {
+          // Convert struct / union to pointer.
+          if(ic->op != ADDRESS_OF && ic->op != RETURN && ic->op != CALL && ic->op != PCALL)
+            {
+              if (ic->left && IS_AGGREGATE (operandType (ic->left)))
+                setOperandType (ic->left, aggrToPtr (operandType (ic->left), false));
+              if (ic->right && IS_AGGREGATE (operandType (ic->right)))
+                setOperandType (ic->right, aggrToPtr (operandType (ic->right), false));
+              if (ic->result && IS_AGGREGATE (operandType (ic->result)))
+                setOperandType (ic->result, aggrToPtr (operandType (ic->result), false));
+            }
+          
           if (SKIP_IC2 (ic))
             continue;
 
@@ -2632,7 +2643,7 @@ optimizeStdLibCall (eBBlock ** ebbs, int count)
           // Look for call to puts().
           if (ic->op != CALL || !ic->prev || ic->prev->op != IPUSH && ic->prev->op != SEND)
             continue;
-          if (!IS_SYMOP (IC_LEFT (ic)) || !OP_SYMBOL (IC_LEFT (ic))->rname || strcmp (OP_SYMBOL (IC_LEFT (ic))->rname, "_puts"))
+          if (!IS_SYMOP (ic->left) || strcmp (OP_SYMBOL (ic->left)->rname, "_puts"))
             continue;
 
           // Look for following call to puts().
@@ -2660,7 +2671,7 @@ optimizeStdLibCall (eBBlock ** ebbs, int count)
             }
           if (!nic || nic->op != CALL || nic->prev->op != IPUSH && nic->prev->op != SEND)
             continue;
-          if (!IS_SYMOP (IC_LEFT (nic)) || !OP_SYMBOL (IC_LEFT (nic))->rname || strcmp (OP_SYMBOL (IC_LEFT (nic))->rname, "_puts"))
+          if (!IS_SYMOP (nic->left) || strcmp (OP_SYMBOL (nic->left)->rname, "_puts"))
             continue;
 
           // Check that the return values are unused
@@ -2878,7 +2889,7 @@ offsetFoldGet (eBBlock **ebbs, int count)
   iCode *ic;
   iCode *uic;
 
-  if (!TARGET_Z80_LIKE && !TARGET_IS_STM8)
+  if (!TARGET_Z80_LIKE && !TARGET_IS_STM8 && !TARGET_IS_F8)
     return;
 
   for (i = 0; i < count; i++)
@@ -2930,7 +2941,7 @@ offsetFoldUse (eBBlock **ebbs, int count)
   iCode *ic;
   iCode *uic;
 
-  if (!(TARGET_Z80_LIKE && !TARGET_IS_SM83) && !TARGET_IS_STM8) // All z80-related targets except sm83 support non-zero right operand. stm8 also supports it.
+  if (!(TARGET_Z80_LIKE && !TARGET_IS_SM83) && !TARGET_IS_STM8 && !TARGET_IS_F8) // All z80-related targets except sm83 support non-zero right operand. stm8 also supports it.
     return;
 
   for (i = 0; i < count; i++)
@@ -3146,6 +3157,33 @@ removeRedundantTemps (iCode *sic)
 }
 
 /*-----------------------------------------------------------------*/
+/* checkRestartAtomic - try to prove that no restartable           */
+/*                      atomics implementation is used from here.  */
+/*-----------------------------------------------------------------*/
+void
+checkRestartAtomic (ebbIndex *ebbi)
+{
+  if (!currFunc)
+    return;
+
+  currFunc->funcRestartAtomicSupport = false;
+//  if (!options.std_c11)
+//    return;
+
+  for (int i = 0; i < ebbi->count; i++)
+    {
+      eBBlock **ebbs = ebbi->bbOrder;
+      const eBBlock *ebp = ebbs[i];
+
+      for (const iCode *ic = ebp->sch; ic; ic = ic->next)
+        if (ic->op == CALL && !IS_OP_LITERAL (ic->left))
+          currFunc->funcRestartAtomicSupport |= OP_SYMBOL(ic->left)->funcRestartAtomicSupport;
+        else if (ic->op == CALL || ic->op == PCALL || ic->op == INLINEASM)
+          currFunc->funcRestartAtomicSupport = true;
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* eBBlockFromiCode - creates extended basic blocks from iCode     */
 /*                    will return an array of eBBlock pointers     */
 /*-----------------------------------------------------------------*/
@@ -3302,7 +3340,7 @@ eBBlockFromiCode (iCode *ic)
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
   shortenLiveRanges (ic, ebbi);
   guessCounts (ic, ebbi);
-  if (optimize.lospre && (TARGET_Z80_LIKE || TARGET_HC08_LIKE || TARGET_IS_STM8)) /* For mcs51, we get a code size regression with lospre enabled, since the backend can't deal well with the added temporaries */
+  if (optimize.lospre && (TARGET_Z80_LIKE || TARGET_HC08_LIKE || TARGET_IS_STM8 || TARGET_IS_F8)) /* For mcs51, we get a code size regression with lospre enabled, since the backend can't deal well with the added temporaries */
     {
       lospre (ic, ebbi);
       if (options.dump_i_code)
@@ -3440,7 +3478,9 @@ eBBlockFromiCode (iCode *ic)
    */
   discardDeadParamReceives (ebbi->bbOrder, ebbi->count);
 
-  narrowReads(ebbi);
+  narrowReads (ebbi);
+
+  checkRestartAtomic (ebbi);
 
   /* allocate registers & generate code */
   if (!options.syntax_only)

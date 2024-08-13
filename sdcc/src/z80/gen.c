@@ -4952,7 +4952,13 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           cost2 (3, 13, 13, 10, 16, 10, 4, 4);
         }
       else if (aopIsLitVal (source, soffset + i, 1, 0x00) && zeroed_a)
-        cheapMove (result, roffset + i, ASMOP_A, 0, false);
+        {
+          if (requiresHL (result) && result->type != AOP_REG && !hl_dead)
+            _push (PAIR_HL);
+          cheapMove (result, roffset + i, ASMOP_A, 0, false);
+          if (requiresHL (result) && result->type != AOP_REG && !hl_dead)
+            _pop (PAIR_HL);
+        }
       else if (aopIsLitVal (source, soffset + i, 1, 0x00) && aopInReg (result, roffset + i, A_IDX) && f_dead)
         {
           emit3 (A_XOR, ASMOP_A, ASMOP_A);
@@ -7285,6 +7291,8 @@ done:
   _G.flushStatics = 1;
   _G.stack.pushed = 0;
   _G.stack.offset = 0;
+
+  emitDebug (";\tTotal %s function size at codegen: %u bytes.", sym->name, (unsigned int)regalloc_dry_run_cost);
 }
 
 /*-----------------------------------------------------------------*/
@@ -10306,7 +10314,7 @@ genCmpGt (iCode * ic, iCode * ifx)
     aopIsLitBit (left->aop, left->aop->size * 8 - 1, false) && aopIsLitBit (right->aop, right->aop->size * 8 - 1, false))
     sign = 0;
 
-  if (max (left->aop->size, right->aop->size) > 1)
+  if (max (left->aop->size, right->aop->size) > 1 && (couldDestroyCarry (left->aop) || couldDestroyCarry (right->aop)))
     {
       if ((requiresHL (IC_RESULT (ic)->aop) && IC_RESULT (ic)->aop->type != AOP_REG || requiresHL (left->aop) && left->aop->type != AOP_REG || requiresHL (right->aop) && right->aop->type != AOP_REG) &&
         (left->aop->regs[L_IDX] > 0 || left->aop->regs[H_IDX] > 0 || right->aop->regs[L_IDX] > 0 || right->aop->regs[H_IDX] > 0) || !isPairDead (PAIR_HL, ic))
@@ -10355,7 +10363,7 @@ genCmpLt (iCode * ic, iCode * ifx)
     aopIsLitBit (left->aop, left->aop->size * 8 - 1, false) && aopIsLitBit (right->aop, right->aop->size * 8 - 1, false))
     sign = 0;
 
-  if (max (left->aop->size, right->aop->size) > 1)
+  if (max (left->aop->size, right->aop->size) > 1 && (couldDestroyCarry (left->aop) || couldDestroyCarry (right->aop)))
     {
       if ((requiresHL (IC_RESULT (ic)->aop) && IC_RESULT (ic)->aop->type != AOP_REG || requiresHL (left->aop) && left->aop->type != AOP_REG || requiresHL (right->aop) && right->aop->type != AOP_REG) &&
         (left->aop->regs[L_IDX] > 0 || left->aop->regs[H_IDX] > 0 || right->aop->regs[L_IDX] > 0 || right->aop->regs[H_IDX] > 0) || !isPairDead (PAIR_HL, ic))
@@ -11214,7 +11222,7 @@ genAnd (const iCode * ic, iCode * ifx)
             aopInReg (result->aop, i, H_IDX) && aopInReg (result->aop, i + 1, L_IDX) && (aopInReg (left->aop, i, H_IDX) && aopInReg (left->aop, i + 1, L_IDX) && !isPairInUse (PAIR_DE, ic) || aopInReg (left->aop, i, D_IDX) && aopInReg (left->aop, i + 1, E_IDX))))
             {
               unsigned int mask = aopInReg (result->aop, i, L_IDX) ? (bytelit + (byteOfVal (right->aop->aopu.aop_lit, i + 1) << 8)) : (byteOfVal (right->aop->aopu.aop_lit, i + 1) + (bytelit << 8));
-              bool mask_in_de = (aopInReg (left->aop, i, L_IDX) | aopInReg (left->aop, i, H_IDX));
+              bool mask_in_de = (aopInReg (left->aop, i, L_IDX) || aopInReg (left->aop, i, H_IDX));
               emit2 (mask_in_de ? "ld de, !immedword" : "ld hl, !immedword", mask);
               emit2 ("and hl, de");
               cost2 (1 + IS_TLCS90, 0, 0, 2, 0, 8, 0, 0);
@@ -11523,7 +11531,7 @@ genOr (const iCode * ic, iCode * ifx)
             aopInReg (result->aop, i, H_IDX) && aopInReg (result->aop, i + 1, L_IDX) && (aopInReg (left->aop, i, H_IDX) && aopInReg (left->aop, i + 1, L_IDX) && !isPairInUse (PAIR_DE, ic) || aopInReg (left->aop, i, D_IDX) && aopInReg (left->aop, i + 1, E_IDX))))
             {
               unsigned int mask = aopInReg (result->aop, i, L_IDX) ? (bytelit + (byteOfVal (right->aop->aopu.aop_lit, i + 1) << 8)) : (byteOfVal (right->aop->aopu.aop_lit, i + 1) + (bytelit << 8));
-              bool mask_in_de = (aopInReg (left->aop, i, L_IDX) | aopInReg (left->aop, i, H_IDX));
+              bool mask_in_de = (aopInReg (left->aop, i, L_IDX) || aopInReg (left->aop, i, H_IDX));
               emit2 (mask_in_de ? "ld de, !immedword" : "ld hl, !immedword", mask);
               cost2 (3, 10, 9, 6, 12, 6, 3, 3);
               emit2 ("or hl, de");
@@ -11536,7 +11544,7 @@ genOr (const iCode * ic, iCode * ifx)
             aopInReg (result->aop, i, IYH_IDX) && aopInReg (result->aop, i + 1, IYL_IDX) && (aopInReg (left->aop, i, IYH_IDX) && aopInReg (left->aop, i + 1, IYL_IDX) && !isPairInUse (PAIR_DE, ic) || aopInReg (left->aop, i, D_IDX) && aopInReg (left->aop, i + 1, E_IDX))))
             {
               unsigned int mask = aopInReg (result->aop, i, IYL_IDX) ? (bytelit + (byteOfVal (right->aop->aopu.aop_lit, i + 1) << 8)) : (byteOfVal (right->aop->aopu.aop_lit, i + 1) + (bytelit << 8));
-              bool mask_in_de = (aopInReg (left->aop, i, IYL_IDX) | aopInReg (left->aop, i, IYH_IDX));
+              bool mask_in_de = (aopInReg (left->aop, i, IYL_IDX) || aopInReg (left->aop, i, IYH_IDX));
               emit2 (mask_in_de ? "ld de, !immedword" : "ld iy, !immedword", mask);
               cost (3 + !mask_in_de, 6 + 2 * !mask_in_de);
               emit2 ("or iy, de");
@@ -12352,6 +12360,23 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       emit2 ("and hl, de");
       cost (1, 2);
       genMove (IC_RESULT (ic)->aop, ASMOP_HL, true, true, isPairDead (PAIR_DE, ic), true);
+      return;
+    }
+  else if ((getPairId (result->aop) == PAIR_HL || getPairId (left->aop) == PAIR_HL) && isPairDead (PAIR_HL, ic) &&
+    shCount == 7 && is_signed)
+    {
+      tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
+      genMove (ASMOP_HL, left->aop, isRegDead (A_IDX, ic), true, isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
+      emit3w (A_ADD, ASMOP_HL, ASMOP_HL);
+      emit3 (A_LD, ASMOP_L, ASMOP_H);
+      emit3 (A_LD, ASMOP_H, ASMOP_ZERO);
+      if (!regalloc_dry_run)
+        emit2 ("jr nc,!tlabel", labelKey2num (tlbl->key));      
+      emit2 ("dec h");
+      if (!regalloc_dry_run)
+        emitLabel (tlbl);
+      cost (3, 11.5f);
+      genMove (result->aop, ASMOP_HL, isRegDead (A_IDX, ic), true, isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
       return;
     }
 
@@ -15591,7 +15616,7 @@ genJumpTab (const iCode *ic)
       emit2 ("lda hl, hl, a");
       emit2 ("lda hl, hl, a");
       cost (2 * 2, 2 * 14);
-#if 0 // Enable when supported in assembler
+#if 0 // Enable when "jp a(hl)" supported in assembler
       emit2 ("jp a(hl)");
       cost (2, 16);
       goto genlabeltab;
@@ -15640,7 +15665,9 @@ calculated:
   cost2 (1 + IS_TLCS90, 4, 3, 4, 4, 8, 3, 1);
 
   /* now generate the jump labels */
+#if 0 // Enable when "jp a(hl)" supported in assembler
 genlabeltab:
+#endif
   if (!regalloc_dry_run)
     emitLabelSpill (jtab);
   for (jtab = setFirstItem (IC_JTLABELS (ic)); jtab; jtab = setNextItem (IC_JTLABELS (ic)))
@@ -17417,7 +17444,7 @@ genZ80Code (iCode * lic)
           emit2 (";ic:%d: %s", ic->key, iLine);
           dbuf_free (iLine);
         }
-      regalloc_dry_run_cost = 0;
+      //regalloc_dry_run_cost = 0;
       regalloc_dry_run_cost_bytes = 0;
       regalloc_dry_run_cost_states = 0;
       genZ80iCode (ic);

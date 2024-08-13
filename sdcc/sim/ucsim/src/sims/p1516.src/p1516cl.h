@@ -1,9 +1,9 @@
 /*
  * Simulator of microcontrollers (p1516cl.h)
  *
- * Copyright (C) 2020,20 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020 Drotos Daniel
  * 
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -63,10 +63,10 @@ public:
 class cl_p1516: public cl_uc
 {
 public:
-  u8_t F;
+  u32_t F;
   u32_t R[16];
   cl_memory_cell *RC[16];
-  cl_cell8 cF;
+  cl_cell32 cF;
   cl_address_space *regs;
   class cl_porto *pa, *pb, *pc, *pd;
   class cl_porti *pi, *pj;
@@ -89,6 +89,7 @@ public:
   virtual char *disassc(t_addr addr, chars *comment);
   virtual void analyze_start(void);
   virtual void analyze(t_addr addr);
+  virtual int inst_length(t_addr addr) { return 1; }
   virtual void print_regs(class cl_console_base *con);
 
   virtual bool cond(t_mem code);
@@ -98,7 +99,7 @@ public:
 };
 
 #define SET_C(v) ( cF.W( (F&~C) | ((v)?C:0) ))
-#define SET_Z(v) ( cF.W( (F&~Z) | ((v==0)?Z:0) ))
+#define SET_Z(v) ( cF.W( (F&~Z) | (((v)==0)?Z:0) ))
 #define SET_S(v) ( cF.W( (F&~S) | ((v)?S:0) ))
 
 #endif

@@ -3,9 +3,9 @@
  *
  * some st7 code base from Karl Bongers karl@turbobit.com
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2015 Drotos Daniel
  *
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -1165,7 +1165,6 @@ cl_st7::exec_inst(void)
 		return(resINV_INST);
 	}
 	  
-  //PC= instPC;//rom->inc_address(PC, -1);
   return(resINV_INST);
 }
 

@@ -1,10 +1,10 @@
 /*
  * Simulator of microcontrollers (cmd.src/newcmdposix.cc)
  *
- * Copyright (C) 1999,99 Drotos Daniel, Talker Bt.
+ * Copyright (C) 1999 Drotos Daniel
  * Copyright (C) 2006, Borut Razem - borut.razem@siol.net
  *
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -342,12 +342,20 @@ cl_listen_console::proc_input(class cl_cmdset *cmdset)
   cmd= app->get_commander();
 
   srv_accept(fin, &in, &out);
-  class cl_console_base *c= new cl_console(in, out, app);
-  c->set_flag(CONS_INTERACTIVE, true);
-  in->interactive(out);
+  class cl_console_base *c= mk_console(in, out);
   cmd->add_console(c);
   return(0);
 }
+
+class cl_console_base *
+cl_listen_console::mk_console(cl_f *fi, cl_f *fo)
+{
+  class cl_console_base *c= new cl_console(fi, fo, app);
+  c->set_flag(CONS_INTERACTIVE, true);
+  fi->interactive(fo);
+  return c;
+}
+
 
 //#endif /* SOCKET_AVAIL */
 
@@ -441,6 +449,12 @@ cl_commander::init(void)
       c->init();
       add_console(c);
     }
+  if (app->rgdb_port > 0)
+    {
+      c= new cl_rgdb_listener(app->rgdb_port, app, app->sim);
+      c->init();
+      add_console(c);
+    }
 
   char *Config= config_file_option.get_value("");
   char *cn= console_on_option.get_value("");
@@ -454,6 +468,7 @@ cl_commander::init(void)
 	  out= cp_io(fileno(stdout), "w");
 	  in->interactive(out);
 	  add_console(con= new cl_console(in, out, app));
+	  std_console= con;
 	  if (in->tty)
 	    con->set_flag(CONS_INTERACTIVE, true);
 	}
@@ -480,6 +495,7 @@ cl_commander::init(void)
       out= cp_io(fileno(stdout), "w");
       in->interactive(out);
       add_console(con= new cl_console(in, out, app));
+      std_console= con;
       if (in->tty)
 	con->set_flag(CONS_INTERACTIVE, true);
     }

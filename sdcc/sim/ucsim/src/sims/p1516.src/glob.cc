@@ -1,9 +1,9 @@
 /*
  * Simulator of microcontrollers (glob.cc)
  *
- * Copyright (C) 2020,20 Drotos Daniel, Talker Bt.
+ * Copyright (C) 2020 Drotos Daniel
  * 
- * To contact author send email to drdani@mazsola.iit.uni-miskolc.hu
+ * To contact author send email to dr.dkdb@gmail.com
  *
  */
 
@@ -75,7 +75,11 @@ struct dis_entry disass_p1516[]=
 
 struct dis_entry disass_p2223[]=
   {
-    // Macro
+   // UNCONDITIONAL
+   { 0xf4000000, 0xff000000, ' ', 1, "ces 'ar'", true },
+   { 0xf5000000, 0xff000000, ' ', 1, "ces %d,'s20'", true },
+
+   // Macro
    { 0x00000000, 0x0fffffff, ' ', 1, "nop", false },
    { 0x00000000, 0x0fffff00, ' ', 1, "'char8'", false },
    { 0x00f00e00, 0x00f00f00, ' ', 1, "ret", false },
@@ -86,11 +90,11 @@ struct dis_entry disass_p2223[]=
    { 0x01f20000, 0x0fff0000, ' ', 1, "jmp 'j'", false },
    { 0x0d0d0000, 0x0f0f0000, ' ', 1, "push %d", false },
    { 0x0f0d0000, 0x0f0f0000, ' ', 1, "pop %d", false },
-   { 0x00f00000, 0x00f00000, ' ', 1, "jp 'jp'", false },
+   { 0x00f00000, 0x0fff0000, ' ', 1, "jp 'jp'", false },
    { 0x01040001, 0x0f0fffff, ' ', 1, "inc %d", false },
    { 0x0104ffff, 0x0f0fffff, ' ', 1, "dec %d", false },
     
-    // CALL
+   // CALL
    { 0x04000000, 0x0f000000, ' ', 1, "call 'ar'", true },
    { 0x05000000, 0x0f000000, ' ', 1, "call %d,'s20'", true },
 
@@ -167,10 +171,16 @@ struct dis_entry disass_p2223[]=
    // EXT
    { 0x06000000, 0x0f0f0000, ' ', 1, "st mem['u16']:=%d", false },
    { 0x07000000, 0x0f0f0000, ' ', 1, "ld %d:=mem['u16']", false },
-   { 0x06010000, 0x0f0f8000, ' ', 1, "getb %d:=%b['ri0']", false },
-   { 0x06018000, 0x0f0f8000, ' ', 1, "getb %d:=%b['u2']", false },
+   { 0x06014000, 0x0f0fe000, ' ', 1, "getbz %d:=%b['ri0']", false },
+   { 0x0601c000, 0x0f0fe000, ' ', 1, "getbz %d:=%b['u2']", false },
+   { 0x06016000, 0x0f0fe000, ' ', 1, "getbs %d:=%b['ri0']", false },
+   { 0x0601e000, 0x0f0fe000, ' ', 1, "getbs %d:=%b['u2']", false },
+   { 0x06010000, 0x0f0fc000, ' ', 1, "getb %d:=%b['ri0']", false },
+   { 0x06018000, 0x0f0fc000, ' ', 1, "getb %d:=%b['u2']", false },
    { 0x07010000, 0x0f0f8000, ' ', 1, "putb %d:=%b['ri0']", false },
    { 0x07018000, 0x0f0f8000, ' ', 1, "putb %d:=%b['u2']", false },
+   { 0x06020000, 0x0f0f0000, ' ', 1, "rds %d:='sfr'", false },
+   { 0x07020000, 0x0f0f0000, ' ', 1, "wrs 'sfr':=%d", false },
    
    { 0, 0, 0, 0, 0, 0 }
   };
