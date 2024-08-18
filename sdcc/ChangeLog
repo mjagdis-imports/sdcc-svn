@@ -1,3 +1,17 @@
+2024-08-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix label defore declaration.
+	* src/pdk/gen.c:
+	  Fix a pdk code generation issue, part of bug #3697.
+
+2024-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdccconf_in.h:
+	  Regenerate file via autoheader to fix --disable-f8-port.
+	* support/regression/tests/bug-3745.c.in:
+	  Test more qualifiers.
+
 2024-08-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/MakeList:
