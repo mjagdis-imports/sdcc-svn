@@ -512,7 +512,7 @@ aopIsNotLitVal (const asmop *aop, int offset, int size, unsigned long long int v
           unsigned char knownbitsmask = aop->valinfo.knownbitsmask >> (offset * 8);
           unsigned char knownbits = aop->valinfo.knownbits >> (offset * 8);
 
-          if (knownbits & knownbitsmask != b & knownbitsmask)
+          if ((knownbits & knownbitsmask) != (b & knownbitsmask))
             return (true);
           if (!offset && aop->valinfo.min > 0 && aop->valinfo.max <= 255 &&
             (aop->valinfo.min > b || aop->valinfo.min < b))
@@ -4914,7 +4914,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           else if ((aopInReg (result, roffset + i, IYL_IDX) || aopInReg (result, roffset + i, IYH_IDX)) && iy_dead)
             pair = PAIR_IY;
 
-          if (pair != PAIR_INVALID && soffset + i - upper >= 0)
+          if (pair != PAIR_INVALID && soffset + i - upper >= 0 && (optimize.allow_unsafe_read || upper || soffset + i + 1 < source->size))
             {
               emit2 ("ld %s, !mems", _pairs[pair].name, aopGetLitWordLong (source, soffset + i - upper, false));
               if (pair == PAIR_HL)
@@ -8859,8 +8859,12 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
               pushed_hl = true;
             }
 
-          if (aopInReg (left, offset, A_IDX))
-            cheapMove (tmpaop, 0, right, offset, false);
+          if (aopInReg (left, offset, A_IDX) ||
+            (aopInReg (tmpaop, 0, L_IDX) || aopInReg (tmpaop, 0, H_IDX)) && requiresHL (left))
+            {
+              cheapMove (ASMOP_A, 0, left, offset, true);
+              cheapMove (tmpaop, 0, right, offset, false);
+            }
           else
             {
               cheapMove (tmpaop, 0, right, offset, true);
@@ -12444,14 +12448,27 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
 {
   asmop *shiftaop = result->aop;
 
+  if (shCount == 7 && aopIsLitVal (left->aop, 1, 1, 0x00) && result->aop->type == AOP_REG &&
+    result->aop->aopu.aop_reg[0]->rIdx != IYL_IDX && result->aop->aopu.aop_reg[1]->rIdx != IYL_IDX && result->aop->aopu.aop_reg[0]->rIdx != IYH_IDX && result->aop->aopu.aop_reg[1]->rIdx != IYH_IDX)
+    {
+      genMove_o (result->aop, 1, left->aop, 0, 1, isRegDead(A_IDX, ic), false, false, false, true);
+      bool reuse_zero = left->aop->type == AOP_REG && !aopInReg (left->aop, 1, IYL_IDX) && !aopInReg (left->aop, 1, IYH_IDX) && !aopInReg (left->aop, 1, result->aop->aopu.aop_reg[1]->rIdx);
+      genMove_o (result->aop, 0, reuse_zero ? left->aop : ASMOP_ZERO, 1, 1, isRegDead(A_IDX, ic) && !aopInReg (result->aop, 1, A_IDX), false, false, false, true);
+      emit3_o (A_SRL, result->aop, 1, 0, 0);
+      if (aopInReg (result->aop, 0, A_IDX))
+        emit3 (A_RRA, 0, 0);
+      else
+        emit3 (A_RR, result->aop, 0);
+      return;
+    }
   /* For a shift of 7 we can use cheaper right shifts */
-  if (shCount == 7 && left->aop->type == AOP_REG && !bitVectBitValue (ic->rSurv, left->aop->aopu.aop_reg[0]->rIdx) && result->aop->type == AOP_REG &&
+  else if (shCount == 7 && left->aop->type == AOP_REG && !bitVectBitValue (ic->rSurv, left->aop->aopu.aop_reg[0]->rIdx) && result->aop->type == AOP_REG &&
     left->aop->aopu.aop_reg[0]->rIdx != IYL_IDX && left->aop->aopu.aop_reg[1]->rIdx != IYL_IDX && left->aop->aopu.aop_reg[0]->rIdx != IYH_IDX && left->aop->aopu.aop_reg[1]->rIdx != IYH_IDX &&
     result->aop->aopu.aop_reg[0]->rIdx != IYL_IDX && result->aop->aopu.aop_reg[1]->rIdx != IYL_IDX && result->aop->aopu.aop_reg[0]->rIdx != IYH_IDX && result->aop->aopu.aop_reg[1]->rIdx != IYH_IDX &&
     (optimize.codeSpeed || getPairId (result->aop) != PAIR_HL || getPairId (left->aop) != PAIR_HL)) /* but a sequence of add hl, hl might still be cheaper code-size wise */
     {
       // Handling the low byte in A with xor clearing is cheaper.
-      bool special_a = (isRegDead (A_IDX, ic) && !aopInReg (left->aop, 0, A_IDX) && !aopInReg (left->aop, 0, A_IDX));
+      bool special_a = (isRegDead (A_IDX, ic) && !aopInReg (left->aop, 0, A_IDX) && !aopInReg (left->aop, 1, A_IDX));
       asmop *lowbyte = special_a ? ASMOP_A : result->aop;
 
       if (special_a)

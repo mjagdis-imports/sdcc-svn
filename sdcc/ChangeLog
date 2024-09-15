@@ -1,3 +1,94 @@
+2024-09-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3779.c:
+	  Fix bug #3779.
+
+2024-09-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCval.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c:
+	  Operator priority fixes from patch #474.
+	* device/lib/clean.mk:
+	  Fix make clean for f8 library.
+	* src/mcs51/main.c,
+	  support/regression/tests/patch-466.c:
+	  Pick some bits of patch #466.
+
+2024-09-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/ports/ez80-z80/spec.mk,
+	  support/regression/ports/ucz180/spec.mk,
+	  support/regression/ports/ucz180-resiy/spec.mk:
+	  Use 60s regression test timeout for most z80-related ports.
+
+2024-09-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-2645.c,
+	  support/regression/tests/bug-2663.c:
+	  Fix remaining part of bug #3770.
+
+2024-09-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Fix a remaining aspect of bug #3778, affecting the huge memory model of mcs51.
+
+2024-09-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3460.c.in,
+	  support/regression/tests/sizeof.c.in,
+	  support/regression/tests/bug-2854.c,
+	  support/regression/MakeList,
+	  support/regression/tests/bug-2776.c,
+	  support/regression/tests/implicit_int.c
+	  Fix most of bug #3770, mostly by disabling tests for host target that rely on features no longer available in current host compilers.
+
+2024-09-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/bug-3773.c:
+	  Improve diagnostics on out-of-range absolute addresses.
+	* sim/ucsim/src/sims/stm8.src/stm8.cc:
+	  Fix stm8 program counter width.
+	* src/SDCCgenconstprop.cc,
+	  support/regression/tests/bug-3778.c,
+	  .version:
+	  Fix bug #3778.
+
+2024-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Optimize shift of 8-bit values, part of RFE #939.
+
+2024-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix an unsafe read being used even without --allow-unsafe-read.
+
+2024-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsalloc.hpp:
+	  Do not compile with older, known-to-be-broken boost.
+
+2024-08-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCval.c:
+	  Fix bug #3745.
+
+2024-08-23 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/Makefile.in: fixed distclean for cases dir
+
+2024-08-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix label at end of compound statement.
+
 2024-08-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
