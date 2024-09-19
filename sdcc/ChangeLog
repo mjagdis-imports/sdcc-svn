@@ -1,7 +1,34 @@
+2024-09-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/hc08/gen.c,
+	  src/mos6502/gen.c:
+	  Assertions to help track down bug #3781.
+
+2024-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def:
+	  Peephole optimizer rule flag condition fix.
+
+2024-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Fix and improve right shift optimization, RFE #935.
+
+2024-09-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def,
+	  support/regression/tests/shifts3.c.in:
+	  Right shift optimization inspired by RFE #935.
+
 2024-09-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc/support/scripts/sdcc.nsi:
 	  Include f8 port in Windows installer.
+	* src/SDCClabel.c,
+	  src/SDCCopt.c:
+	  Improve handling of string literals in dead-code elimination, RFE #567.
 
 2024-09-10 Philipp Klaus Krause <philipp@colecovision.eu>
 

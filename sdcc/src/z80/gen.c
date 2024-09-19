@@ -12375,12 +12375,41 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       emit3 (A_LD, ASMOP_L, ASMOP_H);
       emit3 (A_LD, ASMOP_H, ASMOP_ZERO);
       if (!regalloc_dry_run)
-        emit2 ("jr nc,!tlabel", labelKey2num (tlbl->key));      
+        emit2 ("jr nc,!tlabel", labelKey2num (tlbl->key));
       emit2 ("dec h");
       if (!regalloc_dry_run)
         emitLabel (tlbl);
       cost (3, 11.5f);
       genMove (result->aop, ASMOP_HL, isRegDead (A_IDX, ic), true, isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
+      return;
+    }
+  // If the leading bits are all the same, we can shift the other way, and use efficient 16-bit addition for shifts.
+  else if (shCount < 8 &&
+    aopInReg (left->aop, 0, HL_IDX) && aopInReg (result->aop, 0, H_IDX) && isRegDead (L_IDX, ic) && isRegDead (A_IDX, ic) &&
+    shCount >= 5 - !optimize.codeSpeed) // Smaller code size for 4 and above, but at least for Z80(N), only faster from 5.
+    {
+      emit3 (A_XOR, ASMOP_A, ASMOP_A);
+      emit2 ("add hl, hl");
+      cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+      if (is_signed && (left->aop->valinfo.anything || left->aop->valinfo.min < 0))
+        {
+          tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
+          if (!regalloc_dry_run)
+            emit2 ("jr nc,!tlabel", labelKey2num (tlbl->key));
+          emit2 ("dec a");
+          cost2 (3, 11.5, 9.0, 7.0, 12.0, 7.0, 3.0, 3.0);
+          if (!regalloc_dry_run)
+            emitLabel (tlbl);
+        }
+      else if (!is_signed)
+        emit3 (A_RLA, 0, 0);
+      for (int i = 1; i < (8 - shCount); i++)
+        {
+          emit2 ("add hl, hl");
+          cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+          emit3 (A_RLA, 0, 0);
+        }
+      genMove_o (result->aop, 1, ASMOP_A, 0, 1, true, false, isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic), true);
       return;
     }
 
@@ -13543,7 +13572,7 @@ genrshTwo (const iCode *ic, operand *result, operand *left, int shCount, int sig
 /* genRightShiftLiteral - right shifting by known count              */
 /*-----------------------------------------------------------------*/
 static void
-genRightShiftLiteral (operand * left, operand * right, operand * result, const iCode *ic, int sign)
+genRightShiftLiteral (operand *left, operand *right, operand *result, const iCode *ic, int sign)
 {
   unsigned int shCount = (unsigned int) ulFromVal (right->aop->aopu.aop_lit);
   unsigned int size;
