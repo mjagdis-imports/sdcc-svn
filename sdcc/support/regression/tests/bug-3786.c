@@ -1,4 +1,4 @@
-/** bug-3778.c: Incorrect top byte on 24-bit function pointers
+/** bug-3778.c: Some initalized variables placed in code segement instead of const segment.
 */
 
 #include <testfwk.h>
@@ -32,42 +32,13 @@ void dummyfunc(void)
 
 const char c[ARRAYSIZE];
 
-void f1(char c, int i) __reentrant
-{
-	j = c + i;
-}
-
-void g1(void(*ptr)(char, int) __reentrant)
-{
-	(*ptr)(1, 2); // Topmost byte of ptr incorrectly assumed to be 0.
-}
-
-void h1(void)
-{
-	g1(&f1);
-}
-
-void f2(char c, int i) __reentrant
-{
-	j = c + i;
-}
-
-void g2(void(*ptr)(char, int) __reentrant)
-{
-	(*ptr)(2, 3); // Topmost byte of ptr incorrectly assumed to be 0.
-}
-
-void h2(void)
-{
-	g2(&f2);
-}
+extern const unsigned int i;
 
 void
 testBug(void)
 {	
-	h1();
-	ASSERT(j == 3);
-	h2();
-	ASSERT(j == 5);
+	ASSERT(i == 0xa55a);
 }
+
+const unsigned int i = 0xa55a; // Would be placed in CODE instead of CONST.
 

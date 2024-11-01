@@ -1,3 +1,221 @@
+2024-11-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.c:
+	  Fix bug #3792.
+	* src/SDCCopt.c:
+	  Workaround for bug #3793.
+
+2024-10-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3791.c:
+	  Fix bug #3791.
+
+2024-10-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3788.c:
+	  Disable a test that assuems SDCC implementation-defined behaviour for host.
+	* src/z80/peeph.def:
+	  z80 peephole optimizer rule improvements.
+	* src/z80/gen.c:
+	  Improve use of information from generalized constant propagation in z80 subtraction code generation.
+	* src/SDCCopt.c:
+	  Optimize out a few more casts, part of RFE #937.
+
+2024-10-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Fix some mentions of Windows in manual.
+
+2024-10-27 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCast.h,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/regression/tests/caseranges.c,
+	  support/valdiag/tests/switch.c:
+	  Add C2y case range expressions [feature-requests:#947] based on [patches:#313], adapted to match n3370.
+
+2024-10-27 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c:
+	  Add C2y mode in preparation for the first C2y features.
+
+2024-10-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Small improvment in stm8 struct/union parameter passing.
+
+2024-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/z80n/mul.s,
+	  device/lib/z80n/mulchar.s:
+	  Z80N hardware multiplication for _mulint, patch #481 by Janko Stamenović.
+	* src/SDCCcse.c,
+	  support/regression/tests/bug-3788.c:
+	  Fix bug #3788.
+
+2024-10-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3788.c:
+	  Regression test for bug #3788 (disabled until bug is fixed).
+
+2024-10-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix bug #3789.
+
+2024-10-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Generalize a byte-assembly | optimization to make better use of 16-bit stores to stack.
+
+2024-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  src/z80/gen.c:
+	  Some improvements in optimizations based on generalized constant propagation.
+
+2024-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Optimize out some casts and assignments earlier, part of RFE #937.
+	* src/z80/gen.c:
+	  Improve handling of parameters of z80 builtin functions.
+
+2024-10-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Optimize out some more casts, part of RFE #937.
+
+2024-10-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  src/z80/gen.c:
+	  Fix a z80 pointer write codegen bug.
+
+2024-10-12 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/f8/gen.c: fixed warnings
+	* src/mos6502/gen.c (genFunction, genEndFunction): fixed bug #3787
+	* src/ds390/main.c: cosmetics
+	* src/SDCCralloc.hpp: fail for all 1.85.x
+	* src/SDCCsalloc.hpp: require Boost >= 1.79
+	* src/SDCCgenconstprop.cc,
+	* src/SDCClospre.hpp,
+	* src/SDCCnaddr.hpp: removed BOOST_VERSION = 1.60 test
+	* src/SDCCmem.c (printAllocInfoSeg): print upto 8 registers
+	* src/SDCCmem.h: Added void as parameter
+	* src/SDCCsymt.h: removed unused IS_RENT
+
+2024-10-12 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* sdas/as6500/clean.mk,
+	* sdas/as6808/clean.mk,
+	* sdas/as8051/clean.mk,
+	* sdas/as8xcxxx/clean.mk,
+	* sdas/asf8/clean.mk,
+	* sdas/asgb/clean.mk,
+	* sdas/aspdk13/clean.mk,
+	* sdas/aspdk14/clean.mk,
+	* sdas/aspdk15/clean.mk,
+	* sdas/aspdk16/clean.mk,
+	* sdas/asrab/clean.mk,
+	* sdas/asstm8/clean.mk,
+	* sdas/astlcs90/clean.mk,
+	* sdas/asz80/clean.mk,
+	* sdas/linksrc/clean.mk,
+	* sdas/clean.mk,
+	* src/clean.mk,
+	* src/port-clean.mk,
+	* support/makebin/clean.mk,
+	* support/packihx/clean.mk,
+	* support/scripts/clean.mk,
+	* clean.mk: improved cleaning
+
+2024-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Optimize out CAST following ADDRESS_OF, part of RFE #937.
+	* src/SDCCglue.c,
+	  support/regression/tests/bug-3786.c,
+	  support/regression/tests/bug-3728.c:
+	  Fix bug #3786.
+
+2024-10-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Fix an issue in cast optimization that resulted in a -mmcs51 --model-large regression test failure.
+
+2024-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  src/SDCCopt.h,
+	  src/stm8/ralloc.c:
+	  Code cleanup using C99 features.
+
+2024-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Optimize out some assignments followed by casts, part of RFE #937.
+	* src/stm8/peep.c,
+	  src/stm8/peeph.def:
+	  Merge some offset calculations into stm8 instructions.
+
+2024-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/gen.c:
+	  Fix a code generation bug in pointer write (register save/restore order).
+	* src/z80/gen.c:
+	  Improve flexibility of handling of rematerialized on-stack addresses.
+	* src/SDCCcse.c,
+	  src/SDCCloop.c,
+	  src/SDCCopt.c:
+	  unsetDefsAndUses at uses of remiCodeFromeBBlockcalls.
+
+2024-10-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  src/mcs51/gen.c:
+	  Fix bug #3783.
+
+2024-09-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Disable an optimization while bug #3783 is being looked into.
+	* doc/sdccman.lyx,
+	  src/port.h:
+	  Remove references to obsolete RLC, RRC iCode.
+
+2024-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCmain.c:
+	  Fix an issue in command line parsing.
+
+2024-09-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCCmain.c:
+	  Make the official standard names and nicknames the most prominent way to refer to standards in documentation.
+
+2024-09-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  src/SDCClospre.cc:
+	  Improve handling of nested struct/union/array, part of RFE #937.
+
+2024-09-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c:
+	  Improve handling of rematerialized stack locations.
+
 2024-09-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/hc08/gen.c,
