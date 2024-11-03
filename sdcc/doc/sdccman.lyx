@@ -9982,55 +9982,10 @@ R style
 
 \end_inset
 
- function declarations are not supported.
-\begin_inset Separator latexpar
-\end_inset
-
-
+ functions are syntactically supported,
+ but with the semantics of ISO style functions.
 \end_layout
 
-\begin_deeper
-\begin_layout Verse
-
-\family typewriter
-foo(i,j) /* this old style of function declarations */
-\begin_inset Newline newline
-\end_inset
-
-int i,j;
- /* is valid in ANSI but not valid in SDCC */
-\begin_inset Newline newline
-\end_inset
-
-{ 
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-...
- 
-\begin_inset Newline newline
-\end_inset
-
-}
-\end_layout
-
-\end_deeper
 \begin_layout Standard
 Some features of this standard are not supported in some ports:
 \end_layout
@@ -10821,16 +10776,29 @@ In anticipation of the upcoming version of the language standard,
 \end_layout
 
 \begin_layout Itemize
-Case range expressions as described in 
 \begin_inset CommandInset href
 LatexCommand href
-name "n3370"
+name "N3260"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3260.pdf"
+literal "false"
+
+\end_inset
+
+:
+ _Generic selection expression with a type operand
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
+name "N3370"
 target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3370.htm"
 literal "false"
 
 \end_inset
 
-.
+:
+ Case range expressions
 \end_layout
 
 \begin_layout Subsection
