@@ -1,3 +1,8 @@
+2024-11-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/sdcc.nsi:
+	  Include zlib1.dll in installer (to fix bug #3714).
+
 2024-11-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCralloc.hpp:
