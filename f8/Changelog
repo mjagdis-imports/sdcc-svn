@@ -1,3 +1,10 @@
+2024-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex:
+	  Fix n and z flag documentation for ldw of immediate to register.
+	* doc/opcodemap.ods_
+	  Complete documentation of f8 vs. f8l differences in opcodemap.
+
 2024-08-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/opcodemaptool.cc:

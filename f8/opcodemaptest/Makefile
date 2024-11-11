@@ -68,4 +68,4 @@ oldicehead2: olddata
 # To generate a large number of random maps, use e.g. for i in {0..10000}; do ./genopcodemap; done
 # To generate nearby maps to a given one, use e.g. (for 500 in distances 1 to 5) for i in {0..100}; do for j in {1..5}; do ./genopcodemap -d $j <basemap>; done; done
 # Find which map has a given size: grep -r --include "*.size" 4622 .
-
+# To calculate data for a subset of mape, e.g: nice make -j 40  `for i in {20000..22000}; do echo opcodemaps/$i/icesynth2.size; done` &> log

@@ -643,6 +643,8 @@ Assembler code                    & Operation                      & f8l \\
 \texttt{ldw altacc16, (n, y)}     & \texttt{altacc16 = (n, y)}     & No \\
 \texttt{ldw y, (y)}               & \texttt{y = (y)}               & Yes \\
 \texttt{ldw altacc16, (altacc16)} & \texttt{altacc16 = (altacc16)} & Yes \\
+\texttt{ldw y, \#d}               & \texttt{y = \#d}               & Yes \\
+\texttt{ldw altacc16, \#d}        & \texttt{altacc16 = \#d}        & Yes \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -658,8 +660,6 @@ Assembler code                   & Operation                   & f8l \\
 \texttt{ldw y, z}                & \texttt{x = z}              & Yes \\
 \texttt{ldw z, x}                & \texttt{x = z}              & Yes \\
 \texttt{ldw x, z}                & \texttt{x = z}              & Yes \\
-\texttt{ldw y, \#d}              & \texttt{y = \#d}            & Yes \\
-\texttt{ldw altacc16, \#d}       & \texttt{altacc16 = \#d}     & Yes \\
 \texttt{ldw mm, y}               & \texttt{mm = y}             & Yes \\
 \texttt{ldw mm, altacc16}        & \texttt{mm = altacc16}      & Yes \\
 \texttt{ldw (n, sp), y}          & \texttt{(n, sp) = y}        & Yes \\
