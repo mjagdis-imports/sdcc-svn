@@ -125,6 +125,7 @@ public:
   t_addr sp_limit;
   class cl_cell8 *acc8;
   class cl_cell16 *acc16;
+  class cl_cell16 *rop16; // The 16-bit register that acc8 is part of.
   int prefixes;
 public:
   cl_f8(class cl_sim *asim);
@@ -146,6 +147,7 @@ public:
   virtual u16_t a16(u8_t prefs);
   virtual const char *a8_name(u8_t prefs);
   virtual const char *a16_name(u8_t prefs);
+  virtual const char *r16_name(u8_t prefs);
   virtual const char *a16h_name(u8_t prefs);
   virtual const char *a16l_name(u8_t prefs);
   virtual char *disassc(t_addr addr, chars *comment=NULL);
@@ -223,6 +225,7 @@ public:
   int LDW_A_NY(t_mem code)   { return ldw_a_m(a_n_y()); }
   int LDW_A_Y(t_mem code)    { return ldw_a_m(rY); }
   int LDW_A_X(t_mem code)    { return ldw_a_r(rX); }
+  int LDW_A_Z(t_mem code)    { return ldw_a_r(rZ); }
   int LDW_A_D(t_mem code)    { return ldw_a_i(sexd()); }
   int LDW_M_A(t_mem code)    { return ldw_m_a(a_mm()); }
   int LDW_NSP_A(t_mem code)  { return ldw_m_a(a_n_sp()); }

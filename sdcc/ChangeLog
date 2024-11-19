@@ -1,3 +1,96 @@
+2024-11-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/gcc-torture-execute-pr44575.c:
+	  Redisable one test that turned out to fail for z80-related ports (bug #3799).
+
+2024-11-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/gcc-torture-execute-20000706-1.c,
+	  support/regression/tests/gcc-torture-execute-20081103-1.c,
+	  support/regression/tests/gcc-torture-execute-950607-2.c,
+	  support/regression/tests/gcc-torture-execute-pr44575.c:
+	  Enable further struct parameter tests.
+
+2024-11-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3231.c:
+	  Enable test for f8.
+	* support/regression/tests/gcc-torture-execute-20050826-1.c:
+	  Enable test for stm8.
+
+2024-11-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def,
+	  src/z80/gen.c:
+	  Unify formatting of conditional jump asm for z80-related ports.
+
+2024-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/ato.c:
+	  Disable atoll test for pdk15 due to lack of target RAM.
+
+2024-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sim/ucsim/src/sims/f8.src/imove.cc:
+	  Fix simulation of f8 N and Z flags.
+	* src/f8/main.c:
+	  Use Z flag of 16-bit load to shorten startup code.
+	* src/f8/peeph.def:
+	  Optimize out some f8 tst, tstw where N and Z flags were already set by previous instructions, optimize jumps.
+	* src/f8/peep.c:
+	  Fix calculation of relative jump distance over f8 xch instruction.
+	* src/f8/gen.c:
+	  Improve f8 code generation for conditional jumps; improve value caching.
+
+2024-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.c,
+	  src/f8/gen.c,
+	  src/f8/peeph.def:
+	  Improve code for conditional branches in f8 port.
+	* device/include/stdlib.h,
+	  device/lib/strtoll.c,
+	  device/lib/strtoull.c,
+	  device/lib/wcstoll.c,
+	  device/lib/wcstoull.c:
+	  Partial fix for bug #3798, to get atoll.
+
+2024-11-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8.h,
+	  sdas/asf8/f8mch.c,
+	  sim/ucsim/src/sims/f8.src/disass.cc,
+	  sim/ucsim/src/sims/f8.src/f8.cc,
+	  sim/ucsim/src/sims/f8.src/f8cl.h,
+	  sim/ucsim/src/sims/f8.src/glob.cc,
+	  sim/ucsim/src/sims/f8.src/ialu.cc:
+	  Fixes for two-operand 16 and 16/8 bit f8 instructions.
+	* src/f8/gen.c:
+	  Improve use of two-operand f8 instructions. Improve f8 code generation for pointer access.
+	* src/f8/peep.c:
+	  Fix asm argument handling buffer overflow. Fix handling of clear via pointer.
+
+2024-11-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Fix generation of invalid asm for bit-field read.
+	* sim/ucsim/src/sims/f8.src/decode.h,
+	  sim/ucsim/src/sims/f8.src/f8cl.h,
+	  sim/ucsim/src/sims/f8.src/glob.cc:
+	  Fix ldw y, z f8 instruction simulation.
+
+2024-11-08 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/typed-enum.c,
+	  support/valdiag/tests/typed-enum.c:
+	  Implement C23's explicitly typed enums, see [feature-requests:#847].
+
 2024-11-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/scripts/sdcc.nsi:
@@ -73,7 +166,7 @@
 2024-10-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-3788.c:
-	  Disable a test that assuems SDCC implementation-defined behaviour for host.
+	  Disable a test that assumes SDCC implementation-defined behaviour for host.
 	* src/z80/peeph.def:
 	  z80 peephole optimizer rule improvements.
 	* src/z80/gen.c:
