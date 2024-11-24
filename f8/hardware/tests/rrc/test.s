@@ -7,6 +7,7 @@
 	rrc	xl
 	jrz	#l1trap
 	jrc	#l1trap
+	jrn	#l1trap
 	cp	xl, #0x55
 	jrz	#l1
 l1trap:
@@ -17,6 +18,7 @@ l1:
 	rrc	xl
 	jrz	#l2trap
 	jrnc	#l2trap
+	jrn	#l2trap
 	cp	xl, #0x2a
 	jrz	#l2
 l2trap:
@@ -28,6 +30,7 @@ l2:
 	rrc	xl
 	jrz	#l3trap
 	jrc	#l3trap
+	jrnn	#l3trap
 	cp	xl, #0xd5
 	jrz	#l3
 l3trap:
@@ -39,6 +42,7 @@ l3:
 	rrc	xl
 	jrnz	#l4trap
 	jrnc	#l4trap
+	jrn	#l4trap
 	cp	xl, #0x00
 	jrz	#l4
 l4trap:

@@ -1,3 +1,15 @@
+2024-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/tests/rlc/test.s,
+	  hardware/tests/rrc/test.s,
+	  hardware/tests/sll/test.s,
+	  hardware/tests/sra/test.s,
+	  hardware/tests/srl/test.s:
+	  Change n flag semantics for 8-bit shifts.
+
 2024-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex:

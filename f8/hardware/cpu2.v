@@ -479,28 +479,28 @@ module cpu
 					//logic[8:0] result9;
 					result9 = {1'b0, op8};
 					result8 = result9[8:1];
-					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[0], f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[0], f[FLAG_H]};
 				end
 				else if(opcode_is_sll(opcode))
 				begin
 					//logic[8:0] result9;
 					result9 = {op8, 1'b0};
 					result8 = result9[7:0];
-					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[8], f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[8], f[FLAG_H]};
 				end
 				else if(opcode_is_rrc(opcode))
 				begin
 					//logic[8:0] result9;
 					result9 = {f[FLAG_C], op8};
 					result8 = result9[8:1];
-					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[0], f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[0], f[FLAG_H]};
 				end
 				else if(opcode_is_rlc(opcode))
 				begin
 					//logic[8:0] result9;
 					result9 = {op8, f[FLAG_C]};
 					result8 = result9[7:0];
-					next_f = {3'b000, f[FLAG_O], !(|result8[7:0]), f[FLAG_N], result9[8], f[FLAG_H]};
+					next_f = {3'b000, f[FLAG_O], !(|result8), result8[7], result9[8], f[FLAG_H]};
 				end
 				else if(opcode_is_inc(opcode))
 				begin
@@ -527,7 +527,8 @@ module cpu
 				else if(opcode == OPCODE_SRA_XL)
 				begin
 					result8 = {op8[7], op8[7:1]};
-					next_f[FLAG_Z] = !result8;
+					next_f[FLAG_Z] = !(|result8);
+					next_f[FLAG_N] = result8[7];
 					next_f[FLAG_C] = op8[0];
 				end
 				else if(opcode == OPCODE_DA_XL)
