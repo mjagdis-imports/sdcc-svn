@@ -1,6 +1,6 @@
 # Use custom f8 assembler and linker (latest from f8 branch)
-SDAS = /home/philipp/sdcc-branches/f8/sdcc/bin/sdasf8
-SDLD = /home/philipp/sdcc-branches/f8/sdcc/bin/sdldf8
+SDAS = /home/philipp/sdcc-trunk/sdcc/bin/sdasf8
+SDLD = /home/philipp/sdcc-trunk/sdcc/bin/sdldf8
 # sv2v is not in Debian. Use custom build of sv2v 0.0.11
 SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 # Debian has yosys 0.33, which is too old. A custom build of yosys 0.38 has been installed to /usr/local.

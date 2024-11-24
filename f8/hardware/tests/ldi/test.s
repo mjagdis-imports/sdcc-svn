@@ -11,30 +11,30 @@
 	push	#0x00
 	push	#0xa5
 	push	#0x50
-	ldw	y, sp
-	push	#0xaa
-	push	#0xaa
-	push	#0xaa
 	ldw	z, sp
-	ldi	(z), (y)
+	push	#0xaa
+	push	#0xaa
+	push	#0xaa
+	ldw	y, sp
+	ldi	(y), (z)
 	incnw	y
 	jrz	l1trap
 	jrn	l1trap
 	jrc	l1trap
 	tstw	x	; set c
-	ldi	(z), (y)
+	ldi	(y), (z)
 	incnw	y
 	jrz	l1trap
 	jrnn	l1trap
 	jrnc	l1trap
-	ldi	(z), (y)
+	ldi	(y), (z)
 	incnw	y
 	jrnz	l1trap
 	jrn	l1trap
 	jrnc	l1trap
-	cpw	y, #0x4000
+	cpw	z, #0x4000
 	jrnz	l1trap
-	cpw	z, #0x4000-3
+	cpw	y, #0x4000-3
 	jrnz	l1trap
 	pop	xl
 	cp	xl, #0x50
@@ -53,14 +53,14 @@ l1:
 
 	push	#0x01
 	push	#0x00
-	ldw	x, sp
-	push	#0x03
 	ldw	z, sp
-	ldi	(z), (x)
+	push	#0x03
+	ldw	x, sp
+	ldi	(x), (z)
 	incnw	x
 	jrnz	l2trap
 	jrn	l2trap
-	ldi	(z), (x)
+	ldi	(x), (z)
 	jrz	l2trap
 	jrn	l2trap
 	pop	xl

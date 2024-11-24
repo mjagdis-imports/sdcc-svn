@@ -156,9 +156,10 @@ module cpu
 			memop_addr = sp + {8'h00, inst[15:8]};
 		else if(opcode_is_zrel_read(opcode))
 			memop_addr = z + inst[23:8];
-		else if(opcode == OPCODE_LD_XL_IY || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X ||
-			opcode == OPCODE_LDI_IZ_IY || opcode == OPCODE_LDWI_IZ_IY)
+		else if(opcode == OPCODE_LD_XL_IY || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X)
 			memop_addr = acc16;
+		else if(opcode == OPCODE_MAD_X_IZ_YL || opcode == OPCODE_LDI_IZ_IY || opcode == OPCODE_LDWI_IZ_IY)
+			memop_addr = z;
 `ifndef F8L
 		else if(opcode_is_8_1_yrel(opcode) || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL)
 			memop_addr = y + {8'h00, inst[15:8]};
@@ -1208,7 +1209,7 @@ module cpu
 			begin
 				regwrite_addr = 2;
 				regwrite_en = 2'b11;
-				memwrite_addr = z;
+				memwrite_addr = acc16;
 				regwrite_data = z + 1;
 				memwrite_data = mem8;
 				memwrite_en = 2'b01;
@@ -1218,7 +1219,7 @@ module cpu
 			begin
 				regwrite_addr = 2;
 				regwrite_en = 2'b11;
-				memwrite_addr = z;
+				memwrite_addr = acc16;
 				regwrite_data = z + 2;
 				memwrite_data = mem16;
 				memwrite_en = 2'b11;

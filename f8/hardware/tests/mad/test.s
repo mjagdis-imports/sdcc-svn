@@ -45,33 +45,47 @@ l3trap:
 	trap
 l3:
 
+	ldw	x, #0x00ff
+	ldw	z, #0x3fff
+	ld	yl, #0x01
+	tst	xl
+	mad	x, (z), yl
+	jrc	l4trap
+	jrz	l4trap
+	jrn	l4trap
+	cpw	x,	#0x0001
+	jrz	l4
+l4trap:
+	trap
+l4:
+
 	ldw	x, #0x02ff
 	push	#0x02
 	ld	yl, #0x02
 	tst	xl
 	mad	x, (0, sp), yl
-	jrc	l4trap
-	jrz	l4trap
-	jrn	l3trap
+	jrc	l5trap
+	jrz	l5trap
+	jrn	l5trap
 	cpw	x,	#0x0006
-	jrz	l4
-l4trap:
+	jrz	l5
+l5trap:
 	trap
-l4:
+l5:
 
 	ldw	x, #0xffff
 	push	#0xff
 	ld	yl, #0xff
 	tst	xl
 	mad	x, (0, sp), yl
-	jrc	l5trap
-	jrz	l5trap
-	jrnn	l3trap
+	jrc	l6trap
+	jrz	l6trap
+	jrnn	l6trap
 	cpw	x,	#0xff00
 	jrz	l5
-l5trap:
+l6trap:
 	trap
-l5:
+l6:
 
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.

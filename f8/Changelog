@@ -1,6 +1,18 @@
 2024-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,
+	  doc/opcodemap.ods,
+	  hardware/Makefile,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/tests/ldi/test.s,
+	  hardware/tests/ldwi/test.s,
+	  hardware/tests/mad/test.s:
+	  ldi, ldwi operand swap. mad x, (z), yl fix.
+
+2024-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex,
 	  hardware/cpu.v,
 	  hardware/cpu2.v,
 	  hardware/tests/rlc/test.s,

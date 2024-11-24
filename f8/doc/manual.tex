@@ -616,8 +616,8 @@ Flags according to old (y).
 
 \begin{tabular}{l l l}
 Assembler code        & Operation                   & f8l \\
-\texttt{ldi (z), (y)} & \texttt{(z) = (y); z += 1;} & No \\
-\texttt{ldi (z), (x)} & \texttt{(z) = (x); z += 1;} & No \\
+\texttt{ldi (y), (z)} & \texttt{(y) = (z); z += 1;} & No \\
+\texttt{ldi (x), (z)} & \texttt{(x) = (z); z += 1;} & No \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -693,8 +693,8 @@ Flags according to old (y).
 
 \begin{tabular}{l l l}
 Assembler code         & Operation                   & f8l \\
-\texttt{ldwi (z), (y)} & \texttt{(z) = (y); z += 2;} & No \\
-\texttt{ldwi (z), (x)} & \texttt{(z) = (x); z += 2;} & No \\
+\texttt{ldwi (y), (z)} & \texttt{(y) = (z); z += 2;} & No \\
+\texttt{ldwi (x), (z)} & \texttt{(x) = (z); z += 2;} & No \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
