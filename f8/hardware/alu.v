@@ -192,6 +192,7 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		wideop ? result[16] : result[8];
 	assign n_out = wideop ? result[15] : result[7];
 	assign z_out = (aluinst == ALUINST_CAX || aluinst == ALUINST_CAXW) ? result[0] :
+		aluinst == ALUINST_MSK ? !(op0[7:0] & op1[7:0]) :
 		!(wideop ? |result_reg[15:0] : |result_reg[7:0]);
 	assign o_out = arithop ? overflow :
 		wideop ? ^result_reg[15:0] : ^result_reg[7:0];

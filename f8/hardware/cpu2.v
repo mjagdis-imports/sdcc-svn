@@ -983,7 +983,7 @@ module cpu
 				regwrite_data = mad(acc16[15:8], acc16[7:0], 0, 0);
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 				next_f[FLAG_C] = 0;
 			end
@@ -1003,7 +1003,7 @@ module cpu
 				regwrite_data = mad(mem8, y[7:0], x[15:8], f[FLAG_C]);
 				regwrite_addr = 0;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
 `endif
@@ -1012,7 +1012,7 @@ module cpu
 				regwrite_data = imm16;
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
 			else if(opcode == OPCODE_LDW_Y_DIR)
@@ -1020,7 +1020,7 @@ module cpu
 				regwrite_data = mem16;
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
 			else if(opcode == OPCODE_LDW_Y_SPREL || opcode == OPCODE_LDW_Y_ZREL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_Y_IY)
@@ -1028,7 +1028,7 @@ module cpu
 				regwrite_data = mem16;
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
 			else if(opcode == OPCODE_LDW_Y_X)
@@ -1048,7 +1048,7 @@ module cpu
 				regwrite_data = {{8{imm8[7]}}, imm8};
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
 			else if(opcode == OPCODE_LDW_DIR_Y || opcode == OPCODE_LDW_SPREL_Y || opcode == OPCODE_LDW_ZREL_Y)
@@ -1102,7 +1102,7 @@ module cpu
 				regwrite_data = acc16 << acc8[3:0];
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
 `endif
@@ -1148,7 +1148,7 @@ module cpu
 				regwrite_data = {{8{acc8[7]}}, acc8};
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
 			else if(opcode == OPCODE_ZEX_Y_XL)
@@ -1156,7 +1156,7 @@ module cpu
 				regwrite_data = {8'h00, acc8};
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
-				next_f[FLAG_Z] = !(|regwrite_data);
+				next_f[FLAG_Z] = !regwrite_data;
 			end
 `endif
 			else if(opcode == OPCODE_XCHW_X_IY)

@@ -1,5 +1,13 @@
 2024-11-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* hardware/alu.v,
+	  hardware/cpu.v:
+	  msk z flag fix.
+	  hardware/cpu2.v:
+	  Code cleanup.
+
+2024-11-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* doc/manual.tex:
 	  Fix timer interrupt documentation.
 	* hardware/alu.v,

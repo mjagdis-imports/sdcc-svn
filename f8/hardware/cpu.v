@@ -481,7 +481,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				opcode_is_8_2(opcode) ||
 				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) ||  opcode == OPCODE_SRA_XL || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
 				opcode == OPCODE_ROT_XL_IMMD ||
-				opcode == OPCODE_DA_XL || opcode == OPCODE_BOOL_XL ||
+				opcode == OPCODE_DA_XL || opcode == OPCODE_BOOL_XL || opcode == OPCODE_MSK_IY_XL_IMMD ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_XCH_YL_YH && opcode != OPCODE_INCNW_Y ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
 				opcode == OPCODE_SLLW_Y_XL ||
