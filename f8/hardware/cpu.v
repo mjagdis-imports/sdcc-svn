@@ -211,7 +211,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	begin 
 		if (interrupt_start)
 			op0 = opcode == OPCODE_RETI ? dread_data : old_pc;
-		else if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY ||
+		else if(opcode_is_8_2(opcode) || opcode_is_8_1_xl(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY ||
 			opcode == OPCODE_LD_DIR_XL ||opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL ||
 			opcode == OPCODE_SEX_Y_XL || opcode == OPCODE_ZEX_Y_XL)
 			op0 = {8'bx,
@@ -277,7 +277,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 
 		if(opcode_is_8_2_immd(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D)
 			op1 = {8'bx, inst[15:8]};
-		else if(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode) || opcode_is_xchb(opcode) || opcode_is_mad(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_CAX_IY_ZL_XL)
+		else if(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode) || opcode_is_mad(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_CAX_IY_ZL_XL)
 			op1 = {8'bx, dread_data[7:0]};
 		else if(opcode_is_8_2_zl(opcode))
 			op1 = z[7:0];
@@ -310,23 +310,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		else
 			op1 = 'x;
 
-		if(opcode == OPCODE_XCHB_XL_MM_0)
-			op2 = 0;
-		else if(opcode == OPCODE_XCHB_XL_MM_1)
-			op2 = 1;
-		else if(opcode == OPCODE_XCHB_XL_MM_2)
-			op2 = 2;
-		else if(opcode == OPCODE_XCHB_XL_MM_3)
-			op2 = 3;
-		else if(opcode == OPCODE_XCHB_XL_MM_4)
-			op2 = 4;
-		else if(opcode == OPCODE_XCHB_XL_MM_5)
-			op2 = 5;
-		else if(opcode == OPCODE_XCHB_XL_MM_6)
-			op2 = 6;
-		else if(opcode == OPCODE_XCHB_XL_MM_7)
-			op2 = 7;
-		else if (opcode == OPCODE_MUL_Y)
+		if (opcode == OPCODE_MUL_Y)
 			op2 = {8'bx,
 				(accsel_in == ACCSEL_ZL_X) ? x[7:0] :
 				(accsel_in == ACCSEL_YL_Z) ? z[7:0] :
@@ -400,8 +384,6 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			aluinst = ALUINST_ORW;
 		else if (opcode_is_xorw(opcode))
 			aluinst = ALUINST_XORW;
-		else if (opcode_is_xchb(opcode))
-			aluinst = ALUINST_XCHB;
 		else if (opcode_is_clrw(opcode))
 			aluinst = ALUINST_CLRW;
 		else if (opcode_is_incw(opcode))
@@ -498,7 +480,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 			if (opcode_is_ld_xl_mem(opcode) || opcode_is_ldw_y(opcode) ||
 				opcode_is_8_2(opcode) ||
 				opcode_is_srl(opcode) || opcode_is_sll(opcode) || opcode_is_rrc(opcode) || opcode_is_rlc(opcode) ||  opcode == OPCODE_SRA_XL || opcode_is_inc(opcode) || opcode_is_dec(opcode) || opcode_is_tst(opcode) ||
-				opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD ||
+				opcode == OPCODE_ROT_XL_IMMD ||
 				opcode == OPCODE_DA_XL || opcode == OPCODE_BOOL_XL ||
 				opcode_is_16_2(opcode) || opcode_is_16_1(opcode) && !opcode_is_pushw(opcode) && !opcode_is_clrw(opcode) && opcode != OPCODE_XCH_YL_YH && opcode != OPCODE_INCNW_Y ||
 				opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_CPW_Y_IMMD ||
@@ -544,7 +526,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	end
 
 	assign regwrite_addr =
-		(opcode_is_8_2(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) && !opcode_is_tst(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
+		(opcode_is_8_2(opcode) && !swapop_in || opcode_is_8_1_xl(opcode) && !opcode_is_tst(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
 			((accsel_in == ACCSEL_YL_Z || accsel_in == ACCSEL_YH_Z)? 1 : (accsel_in == ACCSEL_ZL_X || accsel_in == ACCSEL_ZH_Y) ? 2 : 0) :
 		(opcode_is_8_2_xh(opcode) && swapop_in) ? 0 :
 		(opcode_is_8_2_zl(opcode) && swapop_in) ? 2 :
@@ -565,7 +547,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		'x;
 	assign regwrite_en =
 		interrupt_start ? 0 :
-		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || (opcode_is_8_1_xl(opcode)) && !opcode_is_tst(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
+		(opcode_is_8_2(opcode) && !opcode_is_cp(opcode) && !swapop_in || (opcode_is_8_1_xl(opcode)) && !opcode_is_tst(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_THRD_XL || opcode_is_ld_xl(opcode) && !swapop_in) ?
 			((accsel_in == ACCSEL_XH_Y || accsel_in == ACCSEL_YH_Z || accsel_in == ACCSEL_ZH_Y) ? 2'b10 : 2'b01) :
 		((opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? 2'b10 :
 		((opcode_is_8_2_zl(opcode) || opcode_is_8_2_yl(opcode)) && swapop_in || opcode == OPCODE_CAX_IY_ZL_XL && !z_out) ? 2'b01 :
@@ -579,7 +561,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	assign regwrite_data =
 		((opcode_is_8_2(opcode) && !opcode_is_cp(opcode)) && (accsel_in == ACCSEL_XH_Y || accsel_in == ACCSEL_YH_Z || accsel_in == ACCSEL_ZH_Y) || (opcode_is_8_2_xh(opcode) || opcode_is_8_2_yh(opcode)) && swapop_in) ? {result_reg[7:0], 8'bx} :
 		((opcode == OPCODE_LD_XL_XH || opcode == OPCODE_LD_XL_YH || opcode == OPCODE_LD_XL_ZH) && swapop_in) ? {result_reg[7:0], 8'bx} :
-		((opcode_is_8_1(opcode) || opcode_is_xchb(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode_is_ld_xl(opcode) && !swapop_in) && (accsel_in == ACCSEL_XH_Y || accsel_in == ACCSEL_YH_Z || accsel_in == ACCSEL_ZH_Y)) ? {result_reg[7:0], 8'bx} :
+		((opcode_is_8_1(opcode) || opcode == OPCODE_ROT_XL_IMMD || opcode == OPCODE_POP_XL || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode_is_ld_xl(opcode) && !swapop_in) && (accsel_in == ACCSEL_XH_Y || accsel_in == ACCSEL_YH_Z || accsel_in == ACCSEL_ZH_Y)) ? {result_reg[7:0], 8'bx} :
 		opcode == OPCODE_DNJNZ_YH_D ? {result_reg[7:0], 8'bx} :
 		opcode == OPCODE_THRD_XL ? 0 : // todo: fix for multithreaded implementations
 		opcode == OPCODE_LDI_IZ_IY ? z + 1 :
@@ -591,7 +573,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		(opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_IY_X || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_CAXW_IY_Z_X || opcode == OPCODE_LDI_IZ_IY || opcode == OPCODE_LDWI_IZ_IY) ? (accsel_in == ACCSEL_ZL_X ? x : (accsel_in == ACCSEL_YL_Z || accsel_in == ACCSEL_YH_Z) ? z : y) :
 		opcode_is_push(opcode) ? sp - 1 :
 		opcode_is_pushw(opcode) ? sp - 2 :
-		(opcode_is_8_1_dir(opcode) && !opcode_is_tst(opcode) || opcode_is_xchb(opcode) || opcode_is_16_1_dir(opcode) || (opcode_is_8_2_dir(opcode) || opcode_is_16_2_dir(opcode)) && swapop_in || opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LDW_DIR_Y) ? inst[23:8] :
+		(opcode_is_8_1_dir(opcode) && !opcode_is_tst(opcode) || opcode_is_16_1_dir(opcode) || (opcode_is_8_2_dir(opcode) || opcode_is_16_2_dir(opcode)) && swapop_in || opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LDW_DIR_Y) ? inst[23:8] :
 		(opcode_is_8_1_sprel(opcode) && !opcode_is_tst(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_F_SPREL ||
 		(opcode_is_8_2_sprel(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LDW_SPREL_Y || opcode == OPCODE_XCHW_Y_SPREL) ? sp + inst[15:8] :
 		(opcode_is_8_2_zrel(opcode) && swapop_in || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_MAD_X_ZREL_YL || opcode == OPCODE_LDW_ZREL_Y) ? z + inst[23:8] :
@@ -602,7 +584,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 	assign dwrite_en =
 		reset ? 2'b00 :
 		interrupt_start ? 2'b11 :
-		((opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode)) && !opcode_is_tst(opcode) || opcode_is_push(opcode) || opcode_is_xchb(opcode) ||
+		((opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode)) && !opcode_is_tst(opcode) || opcode_is_push(opcode) ||
 			opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_CAX_IY_ZL_XL && z_out ||
 			opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL || opcode == OPCODE_LDI_IZ_IY ||
 			(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode)) && !opcode_is_cp(opcode) && swapop_in) ? 2'b01 :

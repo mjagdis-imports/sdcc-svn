@@ -134,7 +134,7 @@ Prefix & semantics & group \\
 \begin{tabular}{l l l}
 \texttt{op8\_2} & Any of \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{\#i}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
 \texttt{op8\_2ni} & Any of \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{mm}, \texttt{(n, sp)}, \texttt{(nn, z)}. \\
-\texttt{altacc8} & Any of \texttt{xl}, \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{zh}. \\
+\texttt{altacc8} & Any of \texttt{xh}, \texttt{yl}, \texttt{yh}, \texttt{zl}, \texttt{zh}. \\
 \texttt{op16\_2} & Any of \texttt{x}, \texttt{\#ii}, \texttt{mm}, \texttt{(n, sp)}. \\
 \texttt{op16\_2ni} & Any of \texttt{x}, \texttt{mm}, \texttt{(n, sp)}. \\
 \texttt{altacc16} & Any of \texttt{x}, \texttt{z}. \\
@@ -1409,7 +1409,7 @@ The system is reset when a power-on reset happens, the watchdog counter register
 	\bitbox{1}{dog active} & \bitbox{1}{dog reset} & \bitbox{1}{trap reset} & \bitbox{1}{null reset} & \bitbox{4}{reserved}
 \end{bytefield}
 
-The lowest bit of the configuration register decides if the watchdog is active. It is 0 on reset. The following three bits give the reason of the previous reset. On a power-on-reset they are all 0.
+The lowest bit of the configuration register decides if the watchdog is active. It is 0 on reset. The following three bits give the reason of the latest reset. On a power-on-reset they are all 0.
 
 \section{Interrupt Controller}
 
@@ -1418,7 +1418,7 @@ The interrupt controller has a 16-bit enable register, and a 16-bit active regis
 \vspace{3mm}
 \begin{bytefield}[bitwidth=0.06\linewidth]{8}
 	\bitheader{0,1,15} \\
-	\bitbox{1}{tm 0} & \bitbox{15}{reserved}
+	\bitbox{1}{t0ov} & \bitbox{1}{t0cp} & \bitbox{14}{reserved}
 \end{bytefield}
 
 When an interrupt happens and the corresponding bit in the enable register is set, the corresponding bit in the active register is set. When a bit in the active register is set, and no interrupt routine is currently executing, the program counter is put onto the stack and then set to 0x4004. From then on, an interrupt routine is considered to be executing until the \texttt{reti} instruction is executed.
@@ -1435,7 +1435,7 @@ The timer has an 8-bit configuration register and 16-bit counter, reload and com
 	\bitbox{4}{input clock} & \bitbox{2}{prescaler} & \bitbox{2}{reserved}
 \end{bytefield}
 
-The lowest 4 bits of the configurationr egister select the clock source (0 none, 1 system clock, 2 to 15 for other inputs), the next 2 select the prescaler factor (0 for 1, 1 for 4, 2 for 16, 3 for 64). All 6 bits are 0 on reset.
+The lowest 4 bits of the configuration register select the clock source (0 none, 1 system clock, 2 to 15 for other inputs), the next 2 select the prescaler factor (0 for 1, 1 for 4, 2 for 16, 3 for 64). All 6 bits are 0 on reset.
 
 The timer increments the 16-bit counter register. When incrementing from 0xffff, a timer overflow interrupt happens, and the value from the reload register gets loaded into the counter register instead. When the timer register gets incremented to the value of the compare register, a timer compare interrupt happens.
 

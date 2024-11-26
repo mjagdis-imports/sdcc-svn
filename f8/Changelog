@@ -1,3 +1,14 @@
+2024-11-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex:
+	  Fix timer interrupt documentation.
+	* hardware/alu.v,
+	  hardware/cpu.v,
+	  hardware/opcode.v:
+	  Remove leftover bits of xchb instruction implementation.
+	* hardware/Makefile:
+	  Fix compiler path.
+
 2024-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,

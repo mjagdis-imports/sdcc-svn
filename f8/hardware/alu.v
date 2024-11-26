@@ -133,7 +133,6 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 		aluinst == ALUINST_ADCW ? {1'b0, op0[15:0]} + {1'b0, op1[15:0]} + c_in :
 		aluinst == ALUINST_ORW ? op0[15:0] | op1[15:0] :
 		aluinst == ALUINST_XORW ? op0[15:0] ^ op1[15:0] :
-		aluinst == ALUINST_XCHB ? (op1[7:0] & ~(1 << op2[2:0]) | (op0[0] << op2[2:0])) :
 		aluinst == ALUINST_SRLW ? {1'b0, op0[15:0]} >> 1 :
 		aluinst == ALUINST_SLLW ? {op0[14:0], 1'b0} :
 		aluinst == ALUINST_RRCW ? {c_in, op0[15:0]} >> 1 :
@@ -179,7 +178,6 @@ module alu(output logic [15:0] result_reg, result_mem, input logic [15:0] op0, o
 
 	assign result_reg =
 		(aluinst == ALUINST_XCHW || aluinst == ALUINST_CAX || aluinst == ALUINST_CAXW) ? op1 :
-		(aluinst == ALUINST_XCHB) ? op1[op2[2:0]] :
 		result[15:0];
 	assign result_mem =
 		(aluinst == ALUINST_XCHW || aluinst == ALUINST_CAX || aluinst == ALUINST_CAXW) ? op0 :

@@ -7,7 +7,7 @@ SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 P_R = /home/philipp/p_r/p_r
-SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
+SDCC = /home/philipp/sdcc-trunk/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-trunk/sdcc/device/include -L/home/philipp/sdcc-trunk/sdcc/device/lib/build/f8
 
 .PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images sdcctests2 benchmarks2
 

@@ -74,10 +74,6 @@ function automatic logic opcode_is_push(opcode_t opcode);
 	return(opcode == OPCODE_PUSH_DIR || opcode == OPCODE_PUSH_SPREL || opcode == OPCODE_PUSH_XL || opcode == OPCODE_PUSH_YREL || opcode == OPCODE_PUSH_IMMD);
 endfunction
 
-function automatic logic opcode_is_xchb(opcode_t opcode);
-	return(opcode == OPCODE_XCHB_XL_MM_0 || opcode == OPCODE_XCHB_XL_MM_1 || opcode == OPCODE_XCHB_XL_MM_2 || opcode == OPCODE_XCHB_XL_MM_3 || opcode == OPCODE_XCHB_XL_MM_4 || opcode == OPCODE_XCHB_XL_MM_5 || opcode == OPCODE_XCHB_XL_MM_6 || opcode == OPCODE_XCHB_XL_MM_7);
-endfunction
-
 function automatic logic opcode_is_subw(opcode_t opcode);
 	return(opcode == OPCODE_SUBW_Y_DIR || opcode == OPCODE_SUBW_Y_SPREL || opcode == OPCODE_SUBW_Y_X);
 endfunction
@@ -315,7 +311,7 @@ function automatic logic opcode_is_16_immd(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_is_dir_read(opcode_t opcode);
-	return(opcode_is_8_2_dir(opcode) || opcode_is_8_1_dir(opcode) || opcode_is_xchb(opcode) || opcode_is_16_2_dir(opcode) || opcode_is_16_1_dir(opcode) || opcode == OPCODE_MAD_X_DIR_YL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LDW_Y_DIR);
+	return(opcode_is_8_2_dir(opcode) || opcode_is_8_1_dir(opcode) || opcode_is_16_2_dir(opcode) || opcode_is_16_1_dir(opcode) || opcode == OPCODE_MAD_X_DIR_YL || opcode == OPCODE_LD_XL_DIR || opcode == OPCODE_LDW_Y_DIR);
 endfunction
 
 function automatic logic opcode_is_dir(opcode_t opcode);
