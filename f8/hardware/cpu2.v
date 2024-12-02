@@ -1209,7 +1209,7 @@ module cpu
 			begin
 				regwrite_addr = 2;
 				regwrite_en = 2'b11;
-				memwrite_addr = acc16;
+				memwrite_addr = y + {8'h00, inst[15:8]};
 				regwrite_data = z + 1;
 				memwrite_data = mem8;
 				memwrite_en = 2'b01;
@@ -1219,7 +1219,7 @@ module cpu
 			begin
 				regwrite_addr = 2;
 				regwrite_en = 2'b11;
-				memwrite_addr = acc16;
+				memwrite_addr = y + {8'h00, inst[15:8]};
 				regwrite_data = z + 2;
 				memwrite_data = mem16;
 				memwrite_en = 2'b11;

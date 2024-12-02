@@ -98,7 +98,7 @@ There are three 16-bit general-purpose registers, each consisting of two 8.bit r
 
 There is the f8 lightweight instruction subset f8l.
 
-Instructions have up to 3 source and up to 2 destination operands. At most one source and one destination operand are in memory.
+Instructions have up to 3 source and up to 2 destination operands. At most one source and one destination operand are in memory. All destination operands in general-purpose registers need to be one 16 bit register or part of the same 16-bit genral-purpose register.
 
 Each instruction is encoded by 1 to 3 bytes: an optional prefix byte is followed by the opcode byte and 0 to 2 operand bytes.
 
@@ -615,15 +615,17 @@ none
 Flags according to old (y).
 
 \begin{tabular}{l l l}
-Assembler code        & Operation                   & f8l \\
-\texttt{ldi (y), (z)} & \texttt{(y) = (z); z += 1;} & No \\
-\texttt{ldi (x), (z)} & \texttt{(x) = (z); z += 1;} & No \\
+Assembler code           & Operation                      & f8l \\
+\texttt{ldi (n, y), (z)} & \texttt{(n, y) = (z); z += 1;} & No \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
 
 \texttt{nz}
 
+\subsubsection*{Rationale}
+
+Copying larger blocks of data is a very common operation, both explicitly via \texttt{memcpy}, and when assigning larger variables. While \texttt{ldwi} has higher throughput, this instruction can be used for the first or last byte when copying an odd number of bytes. Due to its effect on the \texttt{z} flag, it is also useful, when the value of the individual copied byte matters, in particular for implementing \texttt{strlen} and \texttt{strnlen}.
 
 \section{16-bit loads}
 
@@ -692,15 +694,17 @@ none
 Flags according to old (y).
 
 \begin{tabular}{l l l}
-Assembler code         & Operation                   & f8l \\
-\texttt{ldwi (y), (z)} & \texttt{(y) = (z); z += 2;} & No \\
-\texttt{ldwi (x), (z)} & \texttt{(x) = (z); z += 2;} & No \\
+Assembler code         & Operation                         & f8l \\
+\texttt{ldwi (n, y), (z)} & \texttt{(n, y) = (z); z += 2;} & No \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}
 
 \texttt{nz}
 
+\subsubsection*{Rationale}
+
+Copying larger blocks of data is a very common operation, both explicitly via \texttt{memcpy}, and when assigning larger variables. This instruction substantially increases throughput vs. using individual loads and stores. The effect on the \texttt{z} flag makes it suitable for copying zero-terminated UTF-16 strings.
 
 \subsection{sex: sign-extend}
 
@@ -719,7 +723,7 @@ Assembler code                 & Operation                            & f8l \\
 
 \begin{tabular}{l l l}
 Assembler code                 & Operation                   & f8l \\
-\texttt{zex y, xl}             & \texttt{y = xl}         & No \\
+\texttt{zex y, xl}             & \texttt{y = xl}             & No \\
 \texttt{zex altacc16, altacc8} & \texttt{altacc16 = altacc8} & No \\
 \end{tabular}
 
@@ -744,6 +748,9 @@ Assembler code        & Operation                        & f8l \\
 
 \texttt{z}
 
+\subsubsection*{Rationale}
+
+This instruction allows the efficientimplentation of explicit casts of 8-bit numbers to bool and, together with the \texttt{xor} instruction, of the negation operator for 8-bit numbers.
 
 \subsection{cax: 8-bit compare and exchange}
 
@@ -760,6 +767,9 @@ Assembler code            & Operation                                        & f
 
 \texttt{z}
 
+\subsubsection*{Rationale}
+
+This instruction is essential for the implementation of 8-bit lock-free atomics.
 
 \subsection{da: decimal adjust}
 
@@ -768,10 +778,14 @@ Decimal adjust for addition / subtraction - binary coded decimal semantics.
 todo: describe details!
 
 \begin{tabular}{l l l}
-Assembler code       & Operation & f8l \\
+Assembler code      & Operation & f8l \\
 \texttt{da xl}      &           & Yes \\
 \texttt{da altacc8} &           & Yes \\
 \end{tabular}
+
+\subsubsection*{Rationale}
+
+While the binary-coded-decimal (BCD) representation of numbers if mostly obsolete today, this instruction still has a use: it allows efficient conversion from binary to BCD, and thus to ASCII. This can substantially speed up the printing of numbers, considering that the f8 does not have division or modulo hardware.
 
 \subsubsection*{Affected Flags}
 
@@ -792,6 +806,9 @@ Assembler code              & Operation                          & f8l \\
 
 \texttt{nz}
 
+\subsubsection*{Rationale}
+
+Multiplication hardware is expensive. We need it for the \texttt{mul} instruction. However, on multiplications of larger numbers, if we only had \texttt{mul}, we'd spend a lot of cycles moving and adding, and the multiplication hardware would be idle for many cycles. This instruction speeds up multiplications of large numbers substantially, so that every other instruction actually uses the multiplication hardware.
 
 \subsection{msk: mask}
 
@@ -807,6 +824,10 @@ Assembler code                        & Operation                               
 
 \texttt{z}
 
+\subsubsection*{Rationale}
+
+Bit-fields are an important tool to reduce data memory usage. This instruction allows for substantially better code for writing bit-fields, and for writing parts of i/o registers. Due to its effect on the z flag, it also can be used as a single bit exchange instruction, which can be useful on memory-mapped i/o.
+
 \subsection{pop: 8-bit pop from stack}
 
 \begin{tabular}{l l l}
@@ -819,6 +840,9 @@ Assembler code       & Operation                 & f8l \\
 
 none
 
+\subsubsection*{Rationale}
+
+Registers that were saved temporarily via a \texttt{push} can be restored by this instruction. Not affecting flags makes the instruction more useful for restoring registers after a comparison before a conditional jump, or in the middle of a long addition/subtraction/multiplication.
 
 \subsection{push: 8-bit push onto stack}
 
@@ -831,7 +855,11 @@ Assembler code    & Operation             & f8l \\
 
 \subsubsection*{Affected Flags}
 
-none
+8-bit stack parameters can be passed easily via this instruction. Not affecting any flags makes this instruction, together with \texttt{xch f, (n,sp)}, suitable for saving the flags at the beginning of an interrupt handler.
+
+\subsubsection*{Rationale}
+
+8-bit stack parameters can be passed easily via this instruction. REgisters can be saved temporarily (e.g. for the duration of a function call, or in the middle of a complex computation). Not affecting flags makes the instruction more useful for saving registers in the middle of a long addition/subtraction/comparison/multiplication.
 
 \subsection{rot: 8-bit rotate}
 
@@ -845,6 +873,9 @@ Assembler code            & Operation                                           
 
 \texttt{nz}
 
+\subsubsection*{Rationale}
+
+8-bit rotations happen in code. Together with an \texttt{and}, this instruction can be used to efficiently do shifts by more than 2. Another important use if shuffling bits around for bit-field reads and writes (and bit-fields are an important tool to reduce data memory usage).
 
 \subsection{sra: 8-bit shift right arithmetic}
 
@@ -858,6 +889,9 @@ Assembler code       & Operation                                                
 
 \texttt{cnz}
 
+\subsubsection*{Rationale}
+
+This instruction is used for right-shift of signed integers, which is also relevant to implementing signed division by powers of two.
 
 \subsection{thrd}
 
@@ -873,6 +907,9 @@ Assembler code        & Operation                                         & f8l 
 
 \texttt{z}
 
+\subsubsection*{Rationale}
+
+Getting the hardware thread number efficiently is useful for implementing thread-local storage. While \texttt{thrd} will not be a common instruction is typical programs, the alternative is doing a search for the current calue of \texttt{sp} in a list of stack pointer ranges, which would be quite inefficient.
 
 \subsection{xch: 8-bit exchange}
 
@@ -891,6 +928,10 @@ Assembler code                   & Operation                                    
 \subsubsection*{Affected Flags}
 
 All, including reserved ones (\texttt{xch f, (n, sp)}) or none (all others).
+
+\subsubsection*{Rationale}
+
+The instruction with register and stack parameters is useful for shuffling data in registers and on the stack around, allowing for substantially more efficient register and stack allocation. The \texttt{xch xl, (y)} instruction and its variant \texttt{xch xl, (y)} are useful for implementing 8-bit atomics. \texttt{xch f, (n, sp)} together with \texttt{push \#i} and \texttt{addw sp, \#d} is suitable for saving and restoring the flags for interrupt handlers.
 
 \section{Other 16-bit instructions}
 
