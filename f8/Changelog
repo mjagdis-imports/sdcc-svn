@@ -1,11 +1,16 @@
+2024-12-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex:
+	  Add rationales for f8 instructions.
+
 2024-12-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* doc/manual.tex
-	  doc/opcodemap.ods
-	  hardware/cpu.v
-	  hardware/cpu2.v
-	  hardware/opcode.v
-	  hardware/tests/ldi/test.s
+	* doc/manual.tex,
+	  doc/opcodemap.ods,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/opcode.v,
+	  hardware/tests/ldi/test.s,
 	  hardware/tests/ldwi/test.s:
 	  Change destination operand to y-relative for f8 ld(w)i instruction.
 
