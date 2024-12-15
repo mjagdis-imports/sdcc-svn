@@ -1,3 +1,16 @@
+2024-12-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex,
+	  doc/opcodemap.ods,
+	  hardware/benchmarks/Makefile,
+	  hardware/cpu.v,
+	  hardware/cpu2.v,
+	  hardware/opcode.v,
+	  hardware/opcodemap.v,
+	  hardware/tests/ldw_x,
+	  opcodemaptest/opcodemaptool.cc:
+	  Add ldw x, (y) f8 instruction.
+
 2024-12-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex:

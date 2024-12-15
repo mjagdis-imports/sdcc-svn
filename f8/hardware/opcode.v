@@ -347,7 +347,7 @@ function automatic logic opcode_is_jr_d(opcode_t opcode);
 endfunction
 
 function automatic logic[2:0] opcode_instsize(opcode_t opcode);
-	if (opcode_is_8_immd(opcode) || opcode_is_sprel(opcode) || opcode_is_yrel(opcode) || opcode_is_jr_d(opcode) || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_LDI_IZ_IY || opcode == OPCODE_LDWI_IZ_IY)
+	if (opcode_is_8_immd(opcode) || opcode_is_sprel(opcode) || opcode_is_yrel(opcode) || opcode_is_jr_d(opcode) || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ)
 		return(2);
 	if(opcode_is_16_immd(opcode) || opcode_is_dir(opcode) || opcode_is_zrel(opcode) || opcode == OPCODE_JP_IMMD || opcode == OPCODE_CALL_IMMD)
 		return(3);

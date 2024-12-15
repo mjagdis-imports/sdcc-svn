@@ -208,7 +208,7 @@ typedef enum logic [7:0] {
 	OPCODE_LDW_Z_Y =      8'hcc, // ldw z, y
 	OPCODE_LDW_IY_X =     8'hcd, // ldw (y), x
 	OPCODE_LDW_YREL_X =   8'hce, // ldw (n, y), x
-	OPCODE_LDWI_IZ_IY =   8'hcf, // ldwi (z), (y)
+	OPCODE_LDWI_YREL_IZ = 8'hcf, // ldwi (z), (y)
 	OPCODE_JR_D =         8'hd0, // jr #d
 	OPCODE_DNJNZ_YH_D =   8'hd1, // dnjnz yh, #d
 	OPCODE_JRZ_D =        8'hd2, // jrz #d
@@ -223,7 +223,7 @@ typedef enum logic [7:0] {
 	OPCODE_JRSLT_D =      8'hdb, // jrslt #d
 	OPCODE_LDW_Y_Z =      8'hdc, // ldw y, z
 	OPCODE_JRSLE_D =      8'hdd, // jrsle #d
-	OPCODE_RESERVED_DE =  8'hde,
+	OPCODE_LDW_X_IY =     8'hde, // ldw x, (y)
 	OPCODE_JRLE_D =       8'hdf, // jrle #d
 	OPCODE_SRLW_Y =       8'he0, // srlw y
 	OPCODE_SLLW_Y =       8'he1, // sllw y
@@ -238,7 +238,7 @@ typedef enum logic [7:0] {
 	OPCODE_ADDW_SP_D =    8'hea, // addw sp, #d
 	OPCODE_ADDW_Y_D =     8'heb, // addw y, #d
 	OPCODE_XCH_F_SPREL =  8'hec, // xch f, (n, sp)
-	OPCODE_LDI_IZ_IY =    8'hed, // ldi (z), (y)
+	OPCODE_LDI_YREL_IZ =  8'hed, // ldi (z), (y)
 	OPCODE_SEX_Y_XL =     8'hee, // sex y, xl
 	OPCODE_ZEX_Y_XL =     8'hef, // zex y, xl
 	OPCODE_ORW_Y_IMMD =   8'hf0, // orw y, #ii

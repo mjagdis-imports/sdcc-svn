@@ -1,7 +1,7 @@
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 P_R = /home/philipp/p_r/p_r
-SDCC = /home/philipp/sdcc-branches/f8/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-branches/f8/sdcc/device/include -L/home/philipp/sdcc-branches/f8/sdcc/device/lib/build/f8
+SDCC = /home/philipp/sdcc-trunk/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-trunk/sdcc/device/include -L/home/philipp/sdcc-trunk/sdcc/device/lib/build/f8
 SDCCFLAGS = --opt-code-size --max-allocs-per-node 20000
 
 .PHONY: all whetstone dhrystone clean

@@ -149,7 +149,7 @@ Instructions where the location is used for \texttt{altacc8} and \texttt{op8} ar
 \subsection{adc: 8-bit addition with carry}
 
 \begin{tabular}{l l l}
-Assembler code            & Operation                                  & f8l \\
+Assembler code               & Operation                               & f8l \\
 \texttt{adc xl, op8\_2}      & \texttt{xl = xl + op8\_2 + c}           & Yes \\
 \texttt{adc altacc8, op8\_2} & \texttt{altacc8 = altacc8 + op8\_2 + c} & Yes \\
 \texttt{adc op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni + xl + c}   & Yes
@@ -163,10 +163,10 @@ Assembler code            & Operation                                  & f8l \\
 \subsection{add: 8-bit addition}
 
 \begin{tabular}{l l l}
-Assembler code            & Operation                              & f8l \\
+Assembler code               & Operation                           & f8l \\
 \texttt{add xl, op8\_2}      & \texttt{xl = xl + op8\_2}           & Yes \\
 \texttt{add altacc8, op8\_2} & \texttt{altacc8 = altacc8 + op8\_2} & Yes \\
-\texttt{add op8\_2ni, xl}      & \texttt{op8\_2ni = op8\_2ni + xl} & Yes
+\texttt{add op8\_2ni, xl}    & \texttt{op8\_2ni = op8\_2ni + xl}   & Yes
 \end{tabular}
 
 \subsubsection*{Affected Flags}
@@ -193,7 +193,7 @@ Assembler code               & Operation                            & f8l \\
 Subtraction where the result is used to update the flags only.
 
 \begin{tabular}{l l l}
-Assembler code              & Operation                      & f8l\\
+Assembler code              & Operation                         & f8l\\
 \texttt{cp xl, op8\_2}      & \texttt{xl + \~{}op8\_2 + 1}      & Yes \\
 \texttt{cp altacc8, op8\_2} & \texttt{altacc8 + \~{}op8\_2 + 1} & Yes \\
 \texttt{cp op8\_2, xl}      & \texttt{op8\_2 + \~{}xl + 1}      & No
@@ -221,7 +221,7 @@ Assembler code              & Operation                           & f8l \\
 \subsection{sbc: 8-bit subtraction with carry}
 
 \begin{tabular}{l l l}
-Assembler code                 & Operation                                  & f8l \\
+Assembler code                 & Operation                                     & f8l \\
 \texttt{sbc xl, op8\_2ni}      & \texttt{xl = xl + \~{}op8\_2ni + c}           & Yes \\
 \texttt{sbc altacc8, op8\_2ni} & \texttt{altacc8 = altacc8 + \~{}op8\_2ni + c} & Yes \\
 \texttt{sbc op8\_2ni, xl}      & \texttt{op8\_2ni = op8\_2ni + \~{}xl + c}     & No
@@ -235,7 +235,7 @@ Assembler code                 & Operation                                  & f8
 \subsection{sub: 8-bit subtraction}
 
 \begin{tabular}{l l l}
-Assembler code                 & Operation                                  & f8l \\
+Assembler code                 & Operation                                     & f8l \\
 \texttt{sub xl, op8\_2ni}      & \texttt{xl = xl + \~{}op8\_2ni + 1}           & Yes \\
 \texttt{sub altacc8, op8\_2ni} & \texttt{altacc8 = altacc8 + \~{}op8\_2ni + 1} & Yes \\
 \texttt{sub op8\_2ni, xl}      & \texttt{op8\_2ni = op8\_2ni + \~{}xl + 1}     & No
@@ -691,6 +691,10 @@ Assembler code                    & Operation                      & f8l \\
 \texttt{ldw altacc16, (altacc16)} & \texttt{altacc16 = (altacc16)} & Yes \\
 \texttt{ldw y, \#d}               & \texttt{y = \#d}               & Yes \\
 \texttt{ldw altacc16, \#d}        & \texttt{altacc16 = \#d}        & Yes \\
+\texttt{ldw x, (y)}               & \texttt{x = (y)}               & Yes \\
+\texttt{ldw y, (z)}               & \texttt{y = (z)}               & Yes \\
+\texttt{ldw z, (x)}               & \texttt{z = (x)}               & Yes \\
+\texttt{ldw z, (y)}               & \texttt{z = (y)}               & Yes \\
 \end{tabular}
 
 \subsubsection*{Affected Flags}

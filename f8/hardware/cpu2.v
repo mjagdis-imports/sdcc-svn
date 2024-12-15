@@ -90,7 +90,7 @@ endfunction
 
 function automatic logic opcode_loads_operand(opcode_t opcode);
 	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode_is_dir_read(opcode) || opcode_is_sprel_read(opcode) || opcode_is_zrel_read(opcode) || opcode == OPCODE_MAD_X_IZ_YL ||
-	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY ||  opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X || opcode == OPCODE_LDI_IZ_IY || opcode == OPCODE_LDWI_IZ_IY
+	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY ||  opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_X_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ
 `ifndef F8L
 	|| opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL
 `endif
@@ -156,9 +156,9 @@ module cpu
 			memop_addr = sp + {8'h00, inst[15:8]};
 		else if(opcode_is_zrel_read(opcode))
 			memop_addr = z + inst[23:8];
-		else if(opcode == OPCODE_LD_XL_IY || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X)
+		else if(opcode == OPCODE_LD_XL_IY || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_X_IY || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X)
 			memop_addr = acc16;
-		else if(opcode == OPCODE_MAD_X_IZ_YL || opcode == OPCODE_LDI_IZ_IY || opcode == OPCODE_LDWI_IZ_IY)
+		else if(opcode == OPCODE_MAD_X_IZ_YL || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ)
 			memop_addr = z;
 `ifndef F8L
 		else if(opcode_is_8_1_yrel(opcode) || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL)
@@ -362,7 +362,7 @@ module cpu
 				op16 = imm16;
 			else if(opcode_is_16_2_mem(opcode) || opcode_is_16_1_mem(opcode) && !opcode_is_clrw(opcode))
 				op16 = mem16;
-			else if(opcode_is_16_2_x(opcode) || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_LDW_IY_X || opcode == OPCODE_LDW_YREL_X)
+			else if(opcode_is_16_2_x(opcode) || opcode == OPCODE_LDW_X_IY || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_LDW_IY_X || opcode == OPCODE_LDW_YREL_X)
 			begin
 				op16_addr = (accsel == ACCSEL_YL_Z || accsel == ACCSEL_YH_Z) ? 1 :
 					(accsel == ACCSEL_ZL_X || accsel == ACCSEL_ZH_Y) ? 2 :
@@ -1074,6 +1074,14 @@ module cpu
 				memwrite_addr = acc16;
 				memwrite_en = 2'b11;
 			end
+			else if(opcode == OPCODE_LDW_X_IY)
+			begin
+				regwrite_data = mem16;
+				regwrite_addr = op16_addr;
+				regwrite_en = 2'b11;
+				next_f[FLAG_Z] = !regwrite_data;
+				next_f[FLAG_N] = regwrite_data[15];
+			end
 `ifndef F8L
 			else if(opcode == OPCODE_LDW_YREL_X)
 			begin
@@ -1205,7 +1213,7 @@ module cpu
 				end
 			end
 `ifndef F8L
-			else if(opcode == OPCODE_LDI_IZ_IY)
+			else if(opcode == OPCODE_LDI_YREL_IZ)
 			begin
 				regwrite_addr = 2;
 				regwrite_en = 2'b11;
@@ -1215,7 +1223,7 @@ module cpu
 				memwrite_en = 2'b01;
 				next_f = {3'b000, f[FLAG_O], !(|mem8), mem8[7], f[FLAG_C], f[FLAG_H]};
 			end
-			else if(opcode == OPCODE_LDWI_IZ_IY)
+			else if(opcode == OPCODE_LDWI_YREL_IZ)
 			begin
 				regwrite_addr = 2;
 				regwrite_en = 2'b11;
