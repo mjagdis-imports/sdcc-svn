@@ -871,6 +871,9 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
       switch (op2type)
         {
         case AOP_REG:
+          // ld r, r is dangerous, since support for it is inconsistent even among otherwise binary-compatible Rabbit devices.
+          if (IS_RAB && op1->aopu.aop_reg[offset1]->rIdx == op2->aopu.aop_reg[offset2]->rIdx)
+            werror (W_INTERNAL_ERROR, __FILE__, __LINE__, "ld r, r considered");
           // eZ80 ld r, ir / ld ir, r / ld ir, ir
           if (op1->aopu.aop_reg[offset1]->rIdx == IYL_IDX || op1->aopu.aop_reg[offset1]->rIdx == IYH_IDX ||
             op2->aopu.aop_reg[offset2]->rIdx == IYL_IDX || op2->aopu.aop_reg[offset2]->rIdx == IYH_IDX)
@@ -2741,6 +2744,9 @@ makeFreePairId (const iCode * ic, bool * pisUsed)
     }
 }
 
+static void
+genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global, bool hl_dead_global, bool de_dead_global, bool iy_dead_global, bool f_dead);
+
 /* If ic != 0, we can safely use isPairDead(). */
 /* By now, genMove / genMove_o is as good or better than this for nearly all uses. */
 static void
@@ -2924,12 +2930,7 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
               if (isUsed)
                 _push (id);
               /* Can't load into parts, so load into HL then exchange. */
-              if (!regalloc_dry_run)
-                {
-                  emit2 ("ld %s, %s", _pairs[id].l, aopGet (aop, offset, FALSE));
-                  emit2 ("ld %s, %s", _pairs[id].h, aopGet (aop, offset + 1, FALSE));
-                }
-              ld_cost (ASMOP_L, 0, aop, offset, true); ld_cost (ASMOP_H, 0, aop, offset + 1, true);
+              genMove_o (id == PAIR_HL ? ASMOP_HL : id == PAIR_DE ? ASMOP_DE : id == PAIR_BC ? ASMOP_BC : ASMOP_IY, 0, aop, offset, 2, false, false, false, false, false);
 
               if ((IS_RAB || IS_TLCS90) && id == PAIR_HL)
                 {
@@ -2976,7 +2977,7 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
               _moveA3 (aop, offset);
               if (!regalloc_dry_run)
                 emit2 ("ld %s, %s", _pairs[pairId].h, aopGet (aop, offset + 1, FALSE));
-              ld_cost (ASMOP_H, 0, aop, offset + 1, true);
+              ld_cost (pairId == PAIR_HL ? ASMOP_H : pairId == PAIR_DE ? ASMOP_D : ASMOP_B, 0, aop, offset + 1, true);
               emit2 ("ld %s, a", _pairs[pairId].l);
               ld_cost (ASMOP_L, 0, ASMOP_A, 0, true);
             }
@@ -2986,8 +2987,8 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
               emit2 ("bool hl");
               cost (1, 2);
               if (!regalloc_dry_run)
-                emit2 ("ld %s, %s", _pairs[pairId].l, aopGet (aop, offset, FALSE));
-              ld_cost (ASMOP_L, 0, aop, offset, true);
+                emit2 ("ld %s, %s", _pairs[pairId].l, aopGet (aop, offset, false));
+              ld_cost (pairId == PAIR_HL ? ASMOP_L : pairId == PAIR_DE ? ASMOP_E : ASMOP_C, 0, aop, offset, true);
             }
           else
             {
@@ -2998,8 +2999,8 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
                   if (!HAS_IYL_INST && (aopInReg (aop, offset, IYL_IDX) || aopInReg (aop, offset, IYH_IDX)))
                     UNIMPLEMENTED;
                   if (!regalloc_dry_run)
-                    emit2 ("ld %s, %s", _pairs[pairId].l, aopGet (aop, offset, FALSE));
-                  ld_cost (ASMOP_L, 0, aop, offset, true);
+                    emit2 ("ld %s, %s", _pairs[pairId].l, aopGet (aop, offset, false));
+                  ld_cost (pairId == PAIR_HL ? ASMOP_L : pairId == PAIR_DE ? ASMOP_E : ASMOP_C, 0, aop, offset, true);
                 }
               if (pairId == PAIR_HL && (aopInReg (aop, offset + 1, IYL_IDX) || aopInReg (aop, offset + 1, IYH_IDX)))
                 UNIMPLEMENTED;
@@ -3008,8 +3009,8 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
                   if (!HAS_IYL_INST && (aopInReg (aop, offset + 1, IYL_IDX) || aopInReg (aop, offset + 1, IYH_IDX)))
                     UNIMPLEMENTED;
                   if (!regalloc_dry_run)
-                    emit2 ("ld %s, %s", _pairs[pairId].h, aopGet (aop, offset + 1, FALSE));
-                  ld_cost (ASMOP_H, 0, aop, offset, true);
+                    emit2 ("ld %s, %s", _pairs[pairId].h, aopGet (aop, offset + 1, false));
+                  ld_cost (pairId == PAIR_HL ? ASMOP_H : pairId == PAIR_DE ? ASMOP_D : ASMOP_B, 0, aop, offset + 1, true);
                 }
             }
         }
@@ -4770,8 +4771,9 @@ skip_byte:
 static void
 genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, bool a_dead_global, bool hl_dead_global, bool de_dead_global, bool iy_dead_global, bool f_dead)
 {
-  emitDebug ("; genMove_o size %d result type %d source type %d hl_dead %d", size, result->type, source->type, hl_dead_global);
+  wassert (result);
   wassert (result->size >= roffset + size);
+  emitDebug ("; genMove_o size %d result type %d source type %d hl_dead %d", size, result->type, source->type, hl_dead_global);
 
   a_dead_global |= result->type == AOP_REG && result->regs[A_IDX] >= roffset && result->regs[A_IDX] < roffset + size;
   hl_dead_global |= result->type == AOP_REG && result->regs[L_IDX] >= roffset && result->regs[L_IDX] < roffset + size && result->regs[H_IDX] >= roffset && result->regs[H_IDX] < roffset + size;
@@ -5101,6 +5103,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 static void
 genMove (asmop *result, asmop *source, bool a_dead, bool hl_dead, bool de_dead, bool iy_dead)
 {
+  wassert (result);
   genMove_o (result, 0, source, 0, result->size, a_dead, hl_dead, de_dead, iy_dead, true);
 }
 
@@ -6247,22 +6250,56 @@ genPointerPush (const iCode *ic)
 
   genMove (ASMOP_HL, IC_LEFT (ic)->aop, true, true, swap_de ? false : isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
 
-  int size = getSize (operandType (IC_LEFT (ic))->next);
-  for(int i = 1; i < size; i++)
-    emit3w (A_INC, ASMOP_HL, 0);
-
-  for(int i = 0; i < size; i++)
+  int size = getSize (operandType (ic->left)->next);
+  if (TARGET_IS_TLCS90 && size >= (optimize.codeSpeed? 3 : 4))
     {
-      emit2 ("ld a, (hl)");
-      cost2 (1, 7, 6, 6, 8, 6, 2, 2);
-      emit2 ("dec hl");
-      cost2 (1, 6, 4, 2, 8, 4, 1, 1);
-      emit2 ("push af");
-      cost2 (1, 11, 11, 10, 16, 8, 3, 4);
-      emit2 ("inc sp");
-      cost2 (1, 6, 4, 2, 8, 4, 1, 1);
-      if (!regalloc_dry_run)
-        _G.stack.pushed++;
+      emit2 ("add hl, !immed%d", size - 1);
+      cost (3, 6);
+    }
+  else if (isRegDead (BC_IDX, ic) && size > 5)
+    {
+      emit2 ("ld bc, !immed%d", size - 1);
+      cost2 (3, 10, 9, 6, 12, 6, 3, 3);
+      emit2 ("add hl, bc");
+      cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+    }
+  else
+    for(int i = 1; i < size; i++)
+      emit3w (A_INC, ASMOP_HL, 0);
+
+  for(int i = 0; i < size;)
+    {
+      if (i + 1 < size && isRegDead (BC_IDX, ic))
+        {
+          emit2 ("ld b, !*hl");
+          cost2 (1, 7, 6, 6, 8, 6, 2, 2);
+          emit2 ("dec hl");
+          cost2 (1, 6, 4, 2, 8, 4, 1, 1);
+          emit2 ("ld c, !*hl");
+          cost2 (1, 7, 6, 6, 8, 6, 2, 2);
+          emit2 ("push bc");
+          cost2 (1, 11, 11, 10, 16, 8, 3, 4);
+          _G.stack.pushed += 2;
+          i += 2;
+        }
+      else
+        {
+          emit2 ("ld a, !*hl");
+          cost2 (1, 7, 6, 6, 8, 6, 2, 2);
+          emit2 ("push af");
+          cost2 (1, 11, 11, 10, 16, 8, 3, 4);
+          emit2 ("inc sp");
+          cost2 (1, 6, 4, 2, 8, 4, 1, 1);
+          if (!regalloc_dry_run)
+            _G.stack.pushed++;
+          i++;
+        }
+
+      if (i < size) // Both to save an instruction on the last byte, and to ensure we get the correct value as cached for hl.
+        {
+          emit2 ("dec hl");
+          cost2 (1, 6, 4, 2, 8, 4, 1, 1);
+        }
     }
 
   if (swap_de)
@@ -9628,9 +9665,9 @@ no_mlt:
       emit2 ("ld %s, a", _pairs[pair].h);
       ld_cost (ASMOP_L, 0, ASMOP_A, 0, true);
       emit2 ("ld l, %s", _pairs[pair].l);
-      ld_cost (ASMOP_L, 0, ASMOP_C, 0, true);
+      ld_cost (ASMOP_L, 0, pair == PAIR_HL ? ASMOP_L : pair == PAIR_DE ? ASMOP_E : ASMOP_C, 0, true);
       emit2 ("ld h, %s", _pairs[pair].h);
-      ld_cost (ASMOP_L, 0, ASMOP_C, 0, true);
+      ld_cost (ASMOP_L, 0, pair == PAIR_HL ? ASMOP_H : pair == PAIR_DE ? ASMOP_D : ASMOP_B, 0, true);
     }
   else
     {
@@ -9638,9 +9675,9 @@ no_mlt:
       if (getPairId (IC_LEFT (ic)->aop) != PAIR_HL)
         {
           emit2 ("ld l, %s", _pairs[pair].l);
-          ld_cost (ASMOP_L, 0, ASMOP_C, 0, true);
+          ld_cost (ASMOP_L, 0, pair == PAIR_HL ? ASMOP_L : pair == PAIR_DE ? ASMOP_E : ASMOP_C, 0, true);
           emit2 ("ld h, %s", _pairs[pair].h);
-          ld_cost (ASMOP_H, 0, ASMOP_C, 0, true);
+          ld_cost (ASMOP_H, 0, pair == PAIR_HL ? ASMOP_H : pair == PAIR_DE ? ASMOP_D : ASMOP_B, 0, true);
         }
     }
 
@@ -12599,8 +12636,6 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
   else if (result->aop->type != AOP_REG && left->aop->type == AOP_REG && left->aop->size >= 2 && !bitVectBitValue (ic->rSurv, left->aop->aopu.aop_reg[0]->rIdx) && !bitVectBitValue (ic->rSurv, left->aop->aopu.aop_reg[1]->rIdx) ||
     getPairId (left->aop) == PAIR_HL && isPairDead (PAIR_HL, ic))
     shiftaop = left->aop;
-  else if (isPair (result->aop))
-    fetchPairLong (getPairId (result->aop), left->aop, ic, 0);
   else
     genMove_o (result->aop, 0, left->aop, 0, 2, isRegDead (A_IDX, ic), isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic), true, true);
 
@@ -14063,7 +14098,7 @@ _moveFrom_tpair_ (asmop * aop, int offset, PAIR_ID pair)
     {
       if (!regalloc_dry_run)
         aopPut (aop, "!*hl", offset);
-      ld_cost (aop, 0, ASMOP_A, 0, true);
+      ld_cost (aop, 0, aopInReg (aop, 0, A_IDX) ? ASMOP_L : ASMOP_A, 0, true);
     }
   else
     {
@@ -14223,7 +14258,7 @@ genPointerGet (const iCode *ic)
               aopPut (result->aop, dbuf_c_str (&dbuf), 0);
               dbuf_destroy (&dbuf);
             }
-          ld_cost (result->aop, 0, ASMOP_A, 0, true);
+          ld_cost (result->aop, 0, aopInReg(result->aop, 0, A_IDX) ? ASMOP_L : ASMOP_A, 0, true);
         }
       else
         {
@@ -14636,7 +14671,7 @@ genPointerGet (const iCode *ic)
             {
               if (!regalloc_dry_run)
                 aopPut (result->aop, "!*hl", offset++);
-              ld_cost (result->aop, 0, ASMOP_A, 0, true);
+              ld_cost (result->aop, 0, aopInReg (result->aop, 0, A_IDX) ? ASMOP_L : ASMOP_A, 0, true);
             }
           else
             {
@@ -14874,7 +14909,7 @@ genPackBits (sym_link * etype, operand * right, int pair, const iCode * ic)
                 }
             }
 
-          emit2 ("ld %s,a", _pairs[extraPair].l);
+          emit2 ("ld %s, a", _pairs[extraPair].l);
           ld_cost (ASMOP_L, 0, ASMOP_A, 0, true);
           spillPair (extraPair);
 
@@ -15080,7 +15115,7 @@ genPointerSet (iCode *ic)
             {
               if (!regalloc_dry_run)
                 emit2 ("ld !mems, %s", _pairs[PAIR_HL].name, aopGet (right->aop, offset, FALSE));
-              ld_cost (ASMOP_A, 0, right->aop, offset, true);
+              ld_cost (aopInReg (right->aop, offset, A_IDX) ? ASMOP_L : ASMOP_A, 0, right->aop, offset, true);
               offset++;
             }
           else
@@ -15222,7 +15257,7 @@ genPointerSet (iCode *ic)
             {
               if (!regalloc_dry_run)
                 emit2 ("ld !mems, %s", _pairs[pairId].name, aopGet (right->aop, offset, FALSE));
-              ld_cost (ASMOP_A, 0, right->aop, offset, true);
+              ld_cost (aopInReg (right->aop, offset, A_IDX) ? ASMOP_L : ASMOP_A, 0, right->aop, offset, true);
             }
           else
             {
@@ -15717,32 +15752,31 @@ genJumpTab (const iCode *ic)
 {
   symbol *jtab = NULL;
   operand *jtcond = IC_JTCOND (ic);
-  bool pushed_pair = FALSE;
+  bool pushed_pair = false;
   PAIR_ID pair;
 
-  aopOp (jtcond, ic, FALSE, FALSE);
+  aopOp (jtcond, ic, false, false);
+
+  wassert (isPairDead (PAIR_HL, ic));
 
   if (!regalloc_dry_run)
     jtab = newiTempLabel (NULL);
 
-  if (IS_TLCS90 && !aopInReg (jtcond->aop, 0, C_IDX) && !aopInReg (jtcond->aop, 0, E_IDX))
+  if (IS_TLCS90 && // Use lda hl, hl, a
+    (jtcond->aop->size == 1 || aopIsLitVal (jtcond->aop, 1, jtcond->aop->size - 1, 0)) &&
+    (isRegDead (A_IDX, ic) || aopInReg (jtcond->aop, 0, A_IDX)) &&
+    !aopInReg (jtcond->aop, 0, C_IDX) && !aopInReg (jtcond->aop, 0, E_IDX))
     {
-      genMove (ASMOP_A, jtcond->aop, isRegDead (A_IDX, ic), true,isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
+      
+      genMove (ASMOP_A, jtcond->aop, isRegDead (A_IDX, ic), true, isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic));
       if (!regalloc_dry_run)
         emit2 ("ld hl, !immed!tlabel", labelKey2num (jtab->key));
-      cost (3, 6);
-      emit2 ("lda hl, hl, a");
-      emit2 ("lda hl, hl, a");
-      cost (2 * 2, 2 * 14);
-#if 0 // Enable when "jp a(hl)" supported in assembler
-      emit2 ("jp a(hl)");
-      cost (2, 16);
-      goto genlabeltab;
-#else
+      cost2 (3, 10, 9, 6, 12, 6, 3, 3);
       emit2 ("lda hl, hl, a");
       cost (2, 14);
-      goto calculated;
-#endif
+      emit2 ("ld hl, a(hl)");
+      cost (2 , 16);
+      goto jump;
     }
 
   // Choose extra pair DE or BC for addition
@@ -15756,14 +15790,11 @@ genJumpTab (const iCode *ic)
   if (!isPairDead (pair, ic))
     {
       _push (pair);
-      pushed_pair = TRUE;
+      pushed_pair = true;
     }
 
-  cheapMove (pair == PAIR_DE ? ASMOP_E : ASMOP_C, 0, jtcond->aop, 0, true);
-  emit2 ("ld %s, !zero", _pairs[pair].h);
-  cost2 (2, 7, 6, 4, 8, 4, 2, 2);
+  genMove (pair == PAIR_DE ? ASMOP_DE : ASMOP_BC, jtcond->aop, isRegDead (A_IDX, ic), true, isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic));
 
-  spillPair (PAIR_HL);
   if (!regalloc_dry_run)
     emit2 ("ld hl, !immed!tlabel", labelKey2num (jtab->key));
   cost2 (3, 10, 9, 6, 12, 6, 3, 3);
@@ -15771,27 +15802,43 @@ genJumpTab (const iCode *ic)
   cost2 (1, 11, 7, 2, 8, 8, 1, 1);
   emit2 ("add hl, %s", _pairs[pair].name);
   cost2 (1, 11, 7, 2, 8, 8, 1, 1);
-  emit2 ("add hl, %s", _pairs[pair].name);
-  cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+  spillPair (PAIR_HL);
 
-calculated:
+  if (IS_TLCS90 || IS_EZ80_Z80)
+    {
+      emit2 ("ld hl, (hl)");
+      cost (2, IS_TLCS90 ? 8 : 4);
+    }
+  else if (IS_RAB)
+    {
+      emit2 ("ld hl, 0(hl)");
+      cost (3, 11);
+    }
+  else
+    {
+      emit2 ("ld %s, !*hl", _pairs[pair].l);
+      cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+      emit2 ("inc hl");
+      cost2 (1, 6, 4, 2, 8, 4, 1, 1);
+      emit2 ("ld h, !*hl");
+      cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+      emit3 (A_LD, ASMOP_L, pair == PAIR_DE ? ASMOP_E : ASMOP_C);
+    }
 
+jump:
   if (pushed_pair)
     _pop (pair);
 
   emit2 ("!jphl");
   cost2 (1 + IS_TLCS90, 4, 3, 4, 4, 8, 3, 1);
 
-  /* now generate the jump labels */
-#if 0 // Enable when "jp a(hl)" supported in assembler
-genlabeltab:
-#endif
   if (!regalloc_dry_run)
-    emitLabelSpill (jtab);
-  for (jtab = setFirstItem (IC_JTLABELS (ic)); jtab; jtab = setNextItem (IC_JTLABELS (ic)))
-    if (!regalloc_dry_run)
-      emit2 ("jp !tlabel", labelKey2num (jtab->key));
-  /*regalloc_dry_run_cost += 3 doesn't matter and might overflow cost */
+    {
+      emitLabelSpill (jtab);
+      for (jtab = setFirstItem (IC_JTLABELS (ic)); jtab; jtab = setNextItem (IC_JTLABELS (ic)))
+        emit2 (".dw !tlabel", labelKey2num (jtab->key));
+    }
+  // regalloc_dry_run_cost += 3 // doesn't matter and might overflow cost
 
   freeAsmop (IC_JTCOND (ic), NULL);
 }
@@ -16749,11 +16796,12 @@ genBuiltInMemset (const iCode *ic, int nParams, operand **pparams)
 
   double_loop = (size > 255 || optimize.codeSpeed);
 
-  sizecost_direct = 3 + 2 * size - 1 + !direct_c * ld_cost (ASMOP_A, 0, c->aop, 0, false);
+  int sizecost_ld_a_caop = aopInReg (c->aop, 0, A_IDX) ? 0 : ld_cost (ASMOP_A, 0, c->aop, 0, false);
+  sizecost_direct = 3 + 2 * size - 1 + !direct_c * sizecost_ld_a_caop;
   sizecost_direct += (live_HL) * 2;
-  sizecost_loop = 9 + double_loop * 2 + ((size % 2) && double_loop) * 2 + !direct_cl * ld_cost (ASMOP_A, 0, c->aop, 0, false);
+  sizecost_loop = 9 + double_loop * 2 + ((size % 2) && double_loop) * 2 + !direct_cl * sizecost_ld_a_caop;
   sizecost_loop += (live_HL + live_B) * 2;
-  sizecost_ldir = indirect_c ? 11 : (12 + !direct_c * ld_cost (ASMOP_A, 0, c->aop, 0, false) - (IS_R3KA && !optimize.codeSpeed));
+  sizecost_ldir = indirect_c ? 11 : (12 + !direct_c * sizecost_ld_a_caop - (IS_R3KA && !optimize.codeSpeed));
   sizecost_ldir += (live_HL + live_DE + live_BC) * 2;
 
   if (sizecost_direct <= sizecost_loop && sizecost_direct < sizecost_ldir) // straight-line code.

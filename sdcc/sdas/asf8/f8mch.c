@@ -332,20 +332,22 @@ struct mne *mp;
 		}
 		else if(t1 != S_REG)
 			aerr();
-		altaccw(r1);
 
 		switch(t2) {
 		case S_IMM:
+			altaccw(r1);
 			if(rf == S_2OPWSUB || rf == S_2OPWSBC) // Immediate operand invalid for subw and sbcw.
 				aerr();
 			outab(op | 0x00);
 			outrw(&e2, R_USGN);
 			break;
 		case S_DIR:
+			altaccw(r1);
 			outab(op | 0x01);
 			outrw(&e2, R_USGN);
 			break;
 		case S_SPREL:
+			altaccw(r1);
 			outab(op | 0x02);
 			if(ls_mode(&e1))
 				aerr();
@@ -353,10 +355,9 @@ struct mne *mp;
 				outrb(&e2, R_USGN);
 			break;
 		case S_REG:
-			if(r1 == Y && r2 == X || r1 == Z && r2 == Y || r1 == X && r2 == Z) {
-				outab(op | 0x03);
-				break;
-			}
+			altaccw2(r1, r2);
+			outab(op | 0x03);
+			break;
 		default:
 			aerr();
 		}
@@ -496,7 +497,7 @@ opw:
 				outrw(&e1, R_USGN);
 				break;
 			case S_IX:
-				if(r1 == Y && (r2 == XL || r2 == XH))
+				if(r1 == Y && (r2 == XL || r2 == XH || r2 == ZL || r2 == ZH))
 					outab(op | 0x0e);
 				else if (r1 == Z && r2 == YL || r1 == X && r2 == ZL)
 					outab(0x8e);
@@ -526,14 +527,18 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-		if (t1 == S_IX && r1 == Z && t2 == S_IX)
+		if (t1 == S_YREL && r2 == Z)
 		{
-			altaccw(r2);
 			outab(op);
+			if(ls_mode(&e1))
+				aerr();
+			else
+				outrb(&e1, R_USGN);
 		}
 		else
 			aerr();
 		break;
+
 	case S_LDW:
 		t1 = addr(&e1);
 		r1 = rcode;
@@ -567,6 +572,16 @@ opw:
 		else if (t1 == S_REG && t2 == S_REG && r2 == SP) { // ldw y, sp
 			altaccw(r1);
 			outab(0x70);
+			break;
+		}
+		else if(t1 == S_REG && t2 == S_IX && (r1 == X && r2 == Y || r1 == Z && r2 == Y || r1 == Z && r2 == X || r1 == Y && r2 == Z)) { // ldw x, (y)
+			if (r1 == Z && r2 == Y)
+				outab (OPCODE_ALTACC5);
+			else if (r1 == Z && r2 == X)
+				outab (OPCODE_ALTACC3);
+			else if (r1 == Y && r2 == Z)
+				outab (OPCODE_ALTACC2);
+			outab (0xde);
 			break;
 		}
 		else if(t1 == S_REG) {
@@ -622,20 +637,20 @@ opw:
 			}
 			break;
 		}
-		else if(t1 == S_IX && t2 == S_REG && (r1 == Y && r2 == X || r1 == Z && r2 == Y || r1 == X && r2 == Z)) {
-			altaccw(r1);
+		else if(t1 == S_IX && t2 == S_REG && (r1 == Y && r2 == X || r1 == Z && r2 == Y || r1 == X && r2 == Z || r1 == Y && r2 == Z)) {
+			altaccw2(r1, r2);
 			outab(0xcd);
 			break;
 		}
-		else if(t1 == S_YREL && t2 == S_REG && r2 == X) {
+		else if(t1 == S_YREL && t2 == S_REG && (r2 == X || r2 == Z)) {
+			if (r2 == Z)
+				outab (OPCODE_ALTACC3);
 			if(!ls_mode(&e2)) {
 				outab(0xce);
 				outrb(&e1, R_USGN);
 			}
-			else {
-				outab(0xcf);
-				outrw(&e1, R_USGN);
-			}
+			else
+				aerr();
 			break;
 		}
 		else if(t2 == S_REG) {
@@ -692,15 +707,14 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 
-        if (t1 == S_REG && r1 == F && t2 == S_SPREL) // xch f, (n, sp)
-          {
-            outab(0xec);
-            if(ls_mode(&e2))
+		if (t1 == S_REG && r1 == F && t2 == S_SPREL) { // xch f, (n, sp)
+			outab(0xec);
+			if(ls_mode(&e2))
 				aerr();
 			else
 				outrb(&e2, R_USGN);
-            break;
-          }
+			break;
+		}
 
 		if (t1 != S_REG)
 			aerr();
@@ -873,10 +887,7 @@ opw:
 		t2 = addr(&e2);
 		r2 = rcode;
 sex:
-		if(t1 != S_REG || t2 != S_REG ||
-			!(r1 == Y && r2 == XL || r1 == Y && r2 == XH || r1 == Z && r2 == YL || r1 == X && r2 == ZL || r1 == Y && r2 == ZH))
-			aerr();
-		altacc(r2);
+		altaccw2(r1, r2);
 		outab(op);
 		break;	
 
@@ -1273,5 +1284,24 @@ void altaccw(int reg)
 		else
 			aerr();
 	}
+}
+
+extern
+void altaccw2(int reg0, int reg1)
+{
+	if(reg0 == Y && (reg1 == X || reg1 == XL))
+		;
+	else if (reg0 == Y && (reg1 == XH))
+		outab(OPCODE_ALTACC1);
+	else if (reg0 == Z && (reg1 == Y  || reg1 == YL))
+		outab(OPCODE_ALTACC2);
+	else if (reg0 == X && (reg1 == Z  || reg1 == ZL))
+		outab(OPCODE_ALTACC3);
+	else if (reg0 == Z && (reg1 == YH))
+		outab(OPCODE_ALTACC4);
+	else if (reg0 == Y && (reg1 == Z  || reg1 == ZH))
+		outab(OPCODE_ALTACC5);
+	else
+		aerr ();
 }
 

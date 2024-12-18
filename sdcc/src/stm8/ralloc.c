@@ -63,32 +63,6 @@ noOverLap (set *itmpStack, symbol *fsym)
 }
 
 /*-----------------------------------------------------------------*/
-/* isFree - will return 1 if the a free spil location is found     */
-/*-----------------------------------------------------------------*/
-DEFSETFUNC (isFreeSTM8)
-{
-  symbol *sym = item;
-  V_ARG (symbol **, sloc);
-  V_ARG (symbol *, fsym);
-
-  /* if already found */
-  if (*sloc)
-    return 0;
-
-  /* if it is free && and the itmp assigned to
-     this does not have any overlapping live ranges
-     with the one currently being assigned and
-     the size can be accommodated  */
-  if (sym->isFree && noOverLap (sym->usl.itmpStack, fsym) && getSize (sym->type) >= getSize (fsym->type))
-    {
-      *sloc = sym;
-      return 1;
-    }
-
-  return 0;
-}
-
-/*-----------------------------------------------------------------*/
 /* createStackSpil - create a location on the stack to spil        */
 /*-----------------------------------------------------------------*/
 static symbol *
@@ -648,7 +622,7 @@ serialRegMark (eBBlock ** ebbs, int count)
                   continue;
                 }
 
-              if (sym->usl.spillLoc && !sym->usl.spillLoc->_isparm) // I have no idea where these spill locations come from. Sometime two symbols even have the same spill location, whic tends to mess up stack allocation. THose that come from previous iterations in this loop would be okay, but those from outside are a problem.
+              if (sym->usl.spillLoc && !sym->usl.spillLoc->_isparm) // I have no idea where these spill locations come from. Sometime two symbols even have the same spill location, which tends to mess up stack allocation. Those that come from previous iterations in this loop would be okay, but those from outside are a problem.
                 {
                   sym->usl.spillLoc = 0;
                   sym->isspilt = false;

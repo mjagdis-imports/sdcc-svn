@@ -2554,6 +2554,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   long val_x = -1;
   long val_y = -1;
 
+  wassert_bt (result);
   wassertl_bt (result->type != AOP_LIT, "Trying to write to literal.");
   wassertl_bt (result->type != AOP_IMMD, "Trying to write to immediate.");
   wassertl_bt (roffset + size <= result->size, "Trying to write beyond end of operand");
@@ -2753,6 +2754,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 static void
 genMove (asmop *result, asmop *source, bool a_dead, bool x_dead, bool y_dead)
 {
+  wassert (result);
   genMove_o (result, 0, source, 0, result->size, a_dead, x_dead, y_dead);
 }
 
@@ -8631,10 +8633,13 @@ genPointerGet (const iCode *ic)
           cost (2, 1);
         }
 
-      if (bit_field && blen <= 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
-        {  
-          emit2 ("bcp", "a, #0x%02x", 0x80 >> (8 - blen));
-          cost (2, 1);
+      if (bit_field && blen < 8 && !SPEC_USIGN (getSpec (operandType (result)))) // Sign extension for partial byte of signed bit-field
+        {
+          if (blen != 1) // The and above already set the z flag for blen == 1.
+            {
+              emit2 ("bcp", "a, #0x%02x", 0x80 >> (8 - blen));
+              cost (2, 1);
+            }
           if (tlbl)
             emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 0);
@@ -10022,10 +10027,8 @@ genSTM8Code (iCode *lic)
           cln = ic->lineno;
         }
 
-#if 0
       regalloc_dry_run_cost_bytes = 0;
       regalloc_dry_run_cost_cycles = 0;
-#endif
 
       if (options.iCodeInAsm)
         {

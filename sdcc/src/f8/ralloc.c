@@ -66,32 +66,6 @@ noOverLap (set *itmpStack, symbol *fsym)
 }
 
 /*-----------------------------------------------------------------*/
-/* isFree - will return 1 if the a free spil location is found     */
-/*-----------------------------------------------------------------*/
-DEFSETFUNC (isFreeF8)
-{
-  symbol *sym = item;
-  V_ARG (symbol **, sloc);
-  V_ARG (symbol *, fsym);
-
-  /* if already found */
-  if (*sloc)
-    return 0;
-
-  /* if it is free && and the itmp assigned to
-     this does not have any overlapping live ranges
-     with the one currently being assigned and
-     the size can be accomodated  */
-  if (sym->isFree && noOverLap (sym->usl.itmpStack, fsym) && getSize (sym->type) >= getSize (fsym->type))
-    {
-      *sloc = sym;
-      return 1;
-    }
-
-  return 0;
-}
-
-/*-----------------------------------------------------------------*/
 /* createStackSpil - create a location on the stack to spil        */
 /*-----------------------------------------------------------------*/
 static symbol *
@@ -364,6 +338,9 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
         }
     }
 
+  if (IS_VOLATILE (operandType (ic->result)) && bitsForType (operandType (IC_RESULT (dic))) > 8)
+    return 0;
+
   // Can do wide shift by 1 in place.
   if ((dic->op == LEFT_OP || dic->op == RIGHT_OP) && IS_OP_LITERAL (IC_RIGHT (dic)) && operandLitValue (IC_RIGHT (dic))  == 1 &&
     IS_SYMOP (IC_LEFT (dic)) && IS_SYMOP (IC_RESULT (ic)) && OP_SYMBOL (IC_LEFT (dic)) == OP_SYMBOL (IC_RESULT (ic)))
@@ -384,7 +361,7 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
      allowing wider operations here could help reduce register pressure.
      Currently, codegen can already handle more than 8 bits correctly
      (except for shifts/rotations), but the code size regresses. */
-  else if (bitsForType (operandType (IC_RESULT (dic))) > 8 /*&& (dic->op == LEFT_OP || dic->op == RIGHT_OP || dic->op == ROT)*/)
+  else if (bitsForType (operandType (IC_RESULT (dic))) > 16 /*&& (dic->op == LEFT_OP || dic->op == RIGHT_OP || dic->op == ROT)*/)
     return 0;
 
   /* found the definition */

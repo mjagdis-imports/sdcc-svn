@@ -116,6 +116,19 @@ cl_f8::ldw_m_r(u16_t addr, u16_t r)
 }
 
 int
+cl_f8::ldw_r_m(u16_t addr)
+{
+  u16_t v= rom->read(addr);
+  v+= (rom->read(addr+1))*256;
+  rF&= ~(flagN|flagZ);
+  if (v & 0x8000) rF|= flagN;
+  if (!v) rF|= flagZ;
+  rop16->W(v);
+  vc.rd+= 2;
+  return resGO;
+}
+
+int
 cl_f8::ldw_a_r(u16_t r)
 {
   acc16->W(r);
@@ -159,10 +172,10 @@ cl_f8::LDW_DSP_A(t_mem code)
 }
 
 int
-cl_f8::LDI_Z_Y(t_mem code)
+cl_f8::LDI_Y_Z(t_mem code)
 {
-  u8_t v= rom->read(acc16->get());
-  rom->write(rZ++, v);
+  u8_t v= rom->read(rZ++);
+  rom->write(a_n_y(), v);
   rF&= ~(flagN|flagZ);
   if (v & 0x80) rF|= flagN;
   if (!v) rF|= flagZ;
@@ -172,13 +185,13 @@ cl_f8::LDI_Z_Y(t_mem code)
 }
 
 int
-cl_f8::LDWI_Z_Y(t_mem code)
+cl_f8::LDWI_Y_Z(t_mem code)
 {
-  u16_t addr = acc16->get();
-  u16_t v= rom->read(addr);
-  v+= (rom->read(addr+1))*256;
-  rom->write(rZ++, v);
-  rom->write(rZ++, v >> 8);
+  u16_t addr = a_n_y();
+  u16_t v= rom->read(rZ++);
+  v+= (rom->read(rZ++))*256;
+  rom->write(addr, v);
+  rom->write(addr+1, v >> 8);
   rF&= ~(flagN|flagZ);
   if (v & 0x8000) rF|= flagN;
   if (!v) rF|= flagZ;
@@ -326,27 +339,27 @@ cl_f8::XCH_A_A(t_mem code)
 }
 
 int
-cl_f8::XCHW_Y_Z(t_mem code)
+cl_f8::XCHW_X_Y(t_mem code)
 {
-  u16_t t= read_addr(rom, rZ);
+  u16_t t= read_addr(rom, acc16->get());
   vc.rd+= 2;
-  rom->write(rZ  , rYL);
-  rom->write(rZ+1, rYH);
+  rom->write(acc16->get()  , (rop16->get() >> 0) & 0xff);
+  rom->write(acc16->get()+1, (rop16->get() >> 8) & 0xff);
   vc.wr+= 2;
-  cY.W(t);
+  rop16->W(t);
   return resGO;
 }
 
 int
-cl_f8::XCHW_Z_NSP(t_mem code)
+cl_f8::XCHW_Y_NSP(t_mem code)
 {
   u16_t a= a_n_sp();
   u16_t t= read_addr(rom, a);
   vc.rd+= 2;
-  rom->write(a  , rZL);
-  rom->write(a+1, rZH);
+  rom->write(a  , (acc16->get() >> 0) & 0xff);
+  rom->write(a+1, (acc16->get() >> 8) & 0xff);
   vc.wr+= 2;
-  cZ.W(t);
+  acc16->W(t);
   return resGO;
 }
 

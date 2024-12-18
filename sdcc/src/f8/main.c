@@ -242,7 +242,7 @@ f8_genInitStartup (FILE *of)
   fprintf (of, "__sdcc_init_data:\n");
   
   /* Zeroing memory (required by standard for static & global variables) */
-  fprintf (of, "\tldw z, #l_DATA\n");
+  fprintf (of, "\tldw\tz, #l_DATA\n");
   fprintf (of, "\tjrz\t#00002$\n");
   fprintf (of, "\tclr\txl\n");
   fprintf (of, "00001$:\n");
@@ -305,7 +305,30 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 static bool
 hasExtBitOp (int op, sym_link *left, int right)
 {
-  return (op == GETABIT || op == GETBYTE || op == GETWORD);
+  int size = getSize (left);
+
+  switch (op)
+    {
+    case GETABIT:
+    case GETBYTE:
+    case GETWORD:
+      return (true);
+    case ROT:
+      {
+        unsigned int lbits = bitsForType (left);
+        if (lbits % 8)
+          return (false);
+        if (size == 1)
+          return (true);
+        if (size == 2 && right % 8 <= 3)
+          return (true);
+        if ((size <= 2 || size == 4) && lbits == right * 2)
+          return (true);
+      }
+      return (false);
+    }
+
+  return (false);
 }
 
 /** $1 is always the basename.

@@ -285,7 +285,7 @@ dump_op_info (std::ostream &os, const iCode *ic, operand *op)
 
 // Dump cfg.
 static void
-dump_cfg_genconstprop (const cfg_t &cfg, std::string suffix)
+dump_cfg_genconstprop (const cfg_t &cfg, const std::string& suffix)
 {
   std::ofstream dump_file ((std::string (dstFileName) + ".dumpgenconstpropcfg" + suffix + (currFunc ? currFunc->rname : "__global") + ".dot").c_str());
 
@@ -758,9 +758,13 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       break;
     default:
       G[*out] = *ic->valinfos;
+      if (ic->resultvalinfo)
+        G[*out].map[ic->result->key] = *ic->resultvalinfo;
 
       if (resultsym)
         resultvalinfo = getTypeValinfo (operandType (IC_RESULT (ic)), true);
+      else
+        resultvalinfo.anything = true;
 
 #ifdef DEBUG_GCP_ANALYSIS
       if (localchange && resultsym)
@@ -782,7 +786,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
 
       if (!localchange) // Input didn't change. No need to recompute result.
         resultsym = 0;
-      else if (IS_OP_VOLATILE (IC_RESULT (ic))) // No point trying to find out what we write to a volatile operand. At the next use, it could be anything, anyway.
+      else if (IS_OP_VOLATILE (ic->result)) // No point trying to find out what we write to a volatile operand. At the next use, it could be anything, anyway.
         ;
       else if (ic->op == '!')
         {
@@ -887,7 +891,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           if (!ic->resultvalinfo)
             ic->resultvalinfo = new struct valinfo;
           *ic->resultvalinfo = resultvalinfo;
-          G[*out].map[resultsym->key] = resultvalinfo;
+          G[*out].map[ic->result->key] = resultvalinfo;
         }
       if (todo.second.find (boost::target(*out, G)) == todo.second.end())
         {
@@ -1000,6 +1004,9 @@ optimizeValinfoConst (iCode *sic)
 static void
 reTypeOp (operand *op, sym_link *newtype)
 {
+#if 0
+  std::cout << "reType Op to "; std::cout.flush(); printTypeChain (newtype, 0);
+#endif
   if (IS_OP_LITERAL (op))
     {
       op->svt.valOperand = valCastLiteral (newtype, operandLitValue (op), operandLitValueUll (op));
@@ -1063,6 +1070,7 @@ optimizeNarrowOpNet (iCode *ic)
   checknet.insert (ic->result);
 
   struct valinfo v = *(ic->resultvalinfo);
+  unsigned int ptropwidth = 0; // Width of pointers that an integer net is added to (only bits within address space count, not tag bits).
 
 #if 0
   std::cout << "optimizeNarrowOpNet at ic " << ic->key << ": " << OP_SYMBOL (ic->result)->name << "\n"; std::cout.flush();
@@ -1095,12 +1103,12 @@ optimizeNarrowOpNet (iCode *ic)
               wassert (isOperandEqual (dic->result, op));
               if (net.find(dic->left) == net.end() && IS_PTR (operandType (ic->result)) == IS_PTR (operandType (dic->left)))
                 {
-                  net.insert (dic->left),
+                  net.insert (dic->left);
                   checknet.insert (dic->left);
                 }
               if (net.find(dic->right) == net.end() && IS_PTR (operandType (ic->result)) == IS_PTR (operandType (dic->right)))
                 {
-                  net.insert (dic->right),
+                  net.insert (dic->right);
                   checknet.insert (dic->right);
                 }
             }
@@ -1127,7 +1135,7 @@ optimizeNarrowOpNet (iCode *ic)
                   valinfo_union (&v, getOperandValinfo (uic, uic->right));
                   if (net.find(uic->right) == net.end())
                     {
-                      net.insert (uic->right),
+                      net.insert (uic->right);
                       checknet.insert (uic->right);
                     }
                 }
@@ -1136,42 +1144,65 @@ optimizeNarrowOpNet (iCode *ic)
                   valinfo_union (&v, getOperandValinfo (uic, uic->left));
                   if (net.find(uic->left) == net.end())
                     {
-                      net.insert (uic->left),
+                      net.insert (uic->left);
                       checknet.insert (uic->left);
                     }
                 }
             }
           else if (uic->op == '+' || uic->op == '-' || uic->op == '^' || uic->op == '|' || uic->op == BITWISEAND)
             {
-              if (isOperandEqual (uic->left, op) && !isOperandEqual (uic->right, op) && !IS_PTR (operandType (ic->result)))
+              if (!IS_PTR (operandType (op)) && IS_PTR (operandType (uic->result)) && v.min < 0) // Avoid breaking the addition of signed offsets to pointers (bug #3807).
+                {
+                  unsigned int pwidth = bitsForType (operandType (uic->result));
+                  // mcs51 has 24 bit pointers, but at most 16 bits in each individual address space.
+                  if (TARGET_IS_MCS51 && pwidth > 16)
+                    pwidth = 16;
+                  if (TARGET_IS_DS390 && pwidth > 24)
+                    pwidth = 24;
+                  // The pdk ports are actually named for the maximum number of address bits in their biggest address space.
+                  else if (TARGET_IS_PDK13 && pwidth > 13)
+                    pwidth = 13;
+                  else if (TARGET_IS_PDK14 && pwidth > 14)
+                    pwidth = 14;
+                  else if (TARGET_IS_PDK15 && pwidth > 15)
+                    pwidth = 15;
+                  else if (TARGET_IS_PDK16 && pwidth > 16)
+                    pwidth = 16;
+                  if (pwidth > ptropwidth)
+                    ptropwidth = pwidth;
+                }
+              if (isOperandEqual (uic->left, op) && !IS_PTR (operandType (uic->result)))
                 {
                   if (net.find(uic->right) == net.end())
                     {
-                      net.insert (uic->right),
+                      net.insert (uic->right);
                       checknet.insert (uic->right);
                     }
                 }
-              if (!isOperandEqual (uic->left, op) && isOperandEqual (uic->right, op) && !IS_PTR (operandType (ic->result)))
+              if (isOperandEqual (uic->right, op) && !IS_PTR (operandType (uic->result)) )
                 {
                   if (net.find(uic->left) == net.end())
                     {
-                      net.insert (uic->left),
+                      net.insert (uic->left);
                       checknet.insert (uic->left);
                     }
                 }
-              if (net.find(uic->result) == net.end())
+              if (IS_PTR (operandType (ic->result)) == IS_PTR (operandType (uic->result)))
                 {
-                  net.insert (uic->result),
-                  checknet.insert (uic->result);
+                  if(net.find(uic->result) == net.end())
+                  {
+                    net.insert (uic->result);
+                    checknet.insert (uic->result);
+                  }
                 }
             }
           else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) && !isOperandEqual (uic->left, op))
             ;
-          else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == UNARYMINUS || uic->op == '~') && isOperandEqual (uic->left, op)) // Not ROT, since the size affects emantics.
+          else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == UNARYMINUS || uic->op == '~') && isOperandEqual (uic->left, op)) // Not ROT, since the size affects semantics.
             {
               if (net.find(uic->result) == net.end())
                 {
-                  net.insert (uic->result),
+                  net.insert (uic->result);
                   checknet.insert (uic->result);
                 }
             }
@@ -1213,6 +1244,8 @@ optimizeNarrowOpNet (iCode *ic)
       if (my_stdc_bit_width (-v.min) > width)
         width = my_stdc_bit_width (-v.min);
       width++; // Add one for the "sign bit".
+      if (ptropwidth > width)
+        width = ptropwidth;
       width = ((width + 7) & (-8)); // Round up to multiple of 8.
       if (width >= bitsForType (operandType (ic->result)))
         return;

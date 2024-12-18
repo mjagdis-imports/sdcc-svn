@@ -1306,11 +1306,11 @@ PORT z180_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
@@ -1439,12 +1439,12 @@ PORT r2k_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
+    8,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _r2k_init,
@@ -1573,12 +1573,12 @@ PORT r2ka_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
+    8,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _r2ka_init,
@@ -1707,12 +1707,12 @@ PORT r3ka_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
+    8,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _r3ka_init,
@@ -1843,11 +1843,11 @@ PORT sm83_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
@@ -1977,11 +1977,11 @@ PORT tlcs90_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
@@ -2111,12 +2111,12 @@ PORT ez80_z80_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
+    7,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _ez80_z80_init,
@@ -2245,11 +2245,11 @@ PORT z80n_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
@@ -2379,11 +2379,11 @@ PORT r800_port =
   },
   { z80_emitDebuggerSymbol },
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
+    8000,                       /* maxCount */
+    2,                          /* sizeofElement */
     {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
     {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    1,                          /* sizeofSubtract - Assumes use of a single inc or dec */
     9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
