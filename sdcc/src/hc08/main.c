@@ -200,12 +200,18 @@ _hc08_getRegName (const struct reg_info *reg)
 }
 
 static void
-_hc08_genAssemblerPreamble (FILE * of)
+_hc08_genAssemblerStart (FILE * of)
 {
   int i;
   int needOrg = 1;
   symbol *mainExists=newSymbol("main", 0);
   mainExists->block=0;
+
+  if (!options.noOptsdccInAsm)
+    {
+      fprintf (of, "\t.optsdcc -m%s", port->target);
+      fprintf (of, "\n");
+    }
 
   fprintf (of, "\t.area %s\n",HOME_NAME);
   fprintf (of, "\t.area GSINIT0 (CODE)\n");
@@ -368,6 +374,8 @@ hasExtBitOp (int op, sym_link *left, int right)
           return false;
         if (lbits == 8)
           return true;
+        if (lbits > (unsigned)port->support.shift*8)
+          return false;
         if (right % lbits  == 1 || right % lbits == lbits - 1)
           return true;
         if (lbits <= 16 && lbits == right * 2)
@@ -907,7 +915,7 @@ PORT hc08_port =
   0,
   NULL,
   _hc08_keywords,
-  _hc08_genAssemblerPreamble,
+  _hc08_genAssemblerStart,
   _hc08_genAssemblerEnd,        /* no genAssemblerEnd */
   _hc08_genIVT,
   _hc08_genXINIT,
@@ -1054,7 +1062,7 @@ PORT s08_port =
   0,
   NULL,
   _hc08_keywords,
-  _hc08_genAssemblerPreamble,
+  _hc08_genAssemblerStart,
   _hc08_genAssemblerEnd,        /* no genAssemblerEnd */
   _hc08_genIVT,
   _hc08_genXINIT,

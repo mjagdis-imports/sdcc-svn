@@ -1,4 +1,4 @@
-CLEANALLPORTS = avr ds390 ds400 hc08 mos6502 mcs51 pic14 pic16 stm8 z80 xa51 pdk
+CLEANALLPORTS = avr ds390 ds400 hc08 mos6502 mcs51 pic14 pic16 stm8 z80 xa51 pdk f8
 
 # Deleting all files created by building the program
 # --------------------------------------------------
@@ -18,7 +18,7 @@ clean:
 # Deleting all files created by configuring or building the program
 # -----------------------------------------------------------------
 distclean: clean
-	rm -f Makefile *.dep
+	rm -f Makefile *.dep *.depcc *.depcxx
 	for port in $(CLEANALLPORTS) ; do\
 	  if [ -f $$port/Makefile ]; then\
 	    $(MAKE) -C $$port distclean ;\

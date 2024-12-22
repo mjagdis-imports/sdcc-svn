@@ -484,7 +484,7 @@ hasSEFcalls (ast * tree)
   if (astHasVolatile(tree))
     return TRUE;
 
-  return (hasSEFcalls (tree->left) | hasSEFcalls (tree->right));
+  return (hasSEFcalls (tree->left) || hasSEFcalls (tree->right));
 }
 
 /*-----------------------------------------------------------------*/
@@ -1114,10 +1114,7 @@ createIvalStruct (ast *sym, sym_link *type, initList *ilist, ast *rootValue)
   sym_link *etype = getSpec (type);
 
   if (ilist && ilist->type != INIT_DEEP)
-    {
-      werror (E_INIT_STRUCT, "");
-      return NULL;
-    }
+    return createIvalType (sym, type, ilist);
 
   initList *iloop = ilist ? ilist->init.deep : NULL;
 
@@ -2999,8 +2996,8 @@ checkPtrCast (sym_link *newType, sym_link *orgType, bool implicit, bool orgIsNul
             }
           else
             {
-              // shouldn't do that with float, array or structure unless to void
-              if (!IS_VOID (getSpec (newType)) && !(IS_CODEPTR (newType) && IS_FUNC (newType->next) && IS_FUNC (orgType)))
+              // shouldn't do that with float, array or structure unless to void, but from nullptr is fine
+              if (!IS_VOID (getSpec (newType)) && !(IS_CODEPTR (newType) && IS_FUNC (newType->next) && IS_FUNC (orgType)) && !orgIsNullPtrConstant)
                 {
                   errors += werror (E_INCOMPAT_TYPES);
                 }
@@ -3223,7 +3220,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
   ast *parms = tree->right;
   ast *func = tree->left;
 
-  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE && !TARGET_PDK_LIKE) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
+  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE && !TARGET_PDK_LIKE && !TARGET_IS_F8) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
     return;
 
   if (!IS_FUNC (func->ftype) || IS_LITERAL (func->ftype) || func->type != EX_VALUE || !func->opval.val->sym)
@@ -5437,10 +5434,19 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
     case GENERIC:
       {
-        sym_link *type = tree->left->ftype;
+        bool ctrl_op_is_type = (tree->left->type == EX_LINK);
+        sym_link *type = ctrl_op_is_type ? tree->left->opval.lnk : tree->left->ftype;
         ast *assoc_list;
         ast *default_expr = 0;
         ast *found_expr = 0;
+
+        if (!options.std_c2y && ctrl_op_is_type)
+          {
+            werror (E_GENERIC_WITH_TYPENAME_C2Y);
+            goto errorTreeReturn;
+          }
+
+        /* TODO: verify that 'type' is not a variably modified type */
 
         for(assoc_list = tree->right; assoc_list; assoc_list = assoc_list->left)
           {
@@ -5462,14 +5468,29 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                 assoc_type = assoc->left->opval.lnk;
                 for (assoc_etype = assoc_type; !IS_SPEC(assoc_etype); assoc_etype = assoc_etype->next);
                 checkTypeSanity (assoc_etype, "(_Generic)");
-                if (compareType (assoc_type, type, true) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
+                if (ctrl_op_is_type)
                   {
-                    if (found_expr)
+                    if (compareTypeExact (assoc_type, type, 0) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
                       {
-                        werror (E_MULTIPLE_MATCHES_IN_GENERIC);
-                        goto errorTreeReturn;
+                        if (found_expr)
+                          {
+                            werror (E_MULTIPLE_MATCHES_IN_GENERIC);
+                            goto errorTreeReturn;
+                          }
+                        found_expr = assoc->right;
                       }
-                    found_expr = assoc->right;
+                  }
+                else
+                  {
+                    if (compareType (assoc_type, type, true) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
+                      {
+                        if (found_expr)
+                          {
+                            werror (E_MULTIPLE_MATCHES_IN_GENERIC);
+                            goto errorTreeReturn;
+                          }
+                        found_expr = assoc->right;
+                      }
                   }
               }
           }
@@ -5953,16 +5974,19 @@ alignofOp (sym_link *type)
 }
 
 /*-----------------------------------------------------------------*/
-/* sizeofOp - processes typeof for expression                      */
+/* typeofOp - processes typeof for expression                      */
 /*-----------------------------------------------------------------*/
 sym_link *
 typeofOp (ast *tree)
 {
   ++noAlloc;
-  decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
+  tree = decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
   --noAlloc;
   sym_link *type = copyLinkChain (tree->ftype);
-  SPEC_SCLS (type) = 0;
+  sym_link *spec_type;
+  for (spec_type = type; !IS_SPEC (spec_type); spec_type = spec_type->next);
+  SPEC_SCLS (spec_type) = 0;
+  SPEC_STAT (spec_type) = 0;
   return type;
 }
 
@@ -6209,9 +6233,62 @@ createCase (ast * swStat, ast * caseVal, ast * stmnt)
   return rexpr;
 }
 
-/*-----------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/* createCaseRange - generates the parsetree for a case range statement */
+/*----------------------------------------------------------------------*/
+ast *
+createCaseRange (ast * swStat, ast * caseValLow, ast * caseValHigh, ast * stmnt)
+{
+  int cVal;
+  ast *rexpr = stmnt;
+
+  caseValLow = decorateType (resolveSymbols (caseValLow), RESULT_TYPE_NONE, true);
+  caseValHigh = decorateType (resolveSymbols (caseValHigh), RESULT_TYPE_NONE, true);
+  /* if not a constant then error  */
+  if (!IS_LITERAL (caseValLow->ftype))
+    {
+      werrorfl (caseValLow->filename, caseValLow->lineno, E_CASE_CONSTANT);
+      return NULL;
+    }
+  if (!IS_LITERAL (caseValHigh->ftype))
+    {
+      werrorfl (caseValHigh->filename, caseValLow->lineno, E_CASE_CONSTANT);
+      return NULL;
+    }
+
+  /* if not a integer than error */
+  if (!IS_LITERAL (caseValLow->ftype))
+    {
+      werrorfl (caseValLow->filename, caseValLow->lineno, E_CASE_CONSTANT);
+      return NULL;
+    }
+  if (!IS_LITERAL (caseValHigh->ftype))
+    {
+      werrorfl (caseValHigh->filename, caseValHigh->lineno, E_CASE_CONSTANT);
+      return NULL;
+    }
+
+  int cValLow = (int) ulFromVal (caseValLow->opval.val);
+  int cValHigh = (int) ulFromVal (caseValHigh->opval.val);
+  if (cValLow > cValHigh)
+    {
+      werrorfl (caseValLow->filename, caseValLow->lineno, W_CASE_RANGE_EMPTY);
+      return NULL;
+    }
+
+  for (cVal = cValLow; cVal <= cValHigh; cVal++)
+    {
+      rexpr = createCase (swStat, newAst_VALUE (valueFromLit (cVal)), rexpr);
+      if (!rexpr)
+        return NULL;
+    }
+
+  return rexpr;
+}
+
+/*------------------------------------------------------------------*/
 /* createDefault - creates the parse tree for the default statement */
-/*-----------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
 ast *
 createDefault (ast * swStat, ast * defaultVal, ast * stmnt)
 {

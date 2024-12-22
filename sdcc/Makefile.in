@@ -87,6 +87,11 @@ SDCC_AS        += sdas/aspdk16
 SDCC_LD        += sdcc-ldpdk
 endif
 
+ifeq ($(OPT_DISABLE_F8), 0)
+SDCC_AS        += sdas/asf8
+SDCC_LD        += sdcc-ldf8
+endif
+
 
 ifeq ($(OPT_DISABLE_UCSIM), 0)
 TARGETS        += sdcc-misc
@@ -117,7 +122,7 @@ endif
 ifeq ($(OPT_ENABLE_DOC), 1)
 TARGETS        += sdcc-doc
 endif
-# always install docs, which don't need to be built 
+# always install docs, which don't need to be built
 PKGS            += $(SDCC_DOC)
 
 ifeq ($(OPT_DISABLE_SDCPP), 0)

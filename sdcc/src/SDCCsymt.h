@@ -249,6 +249,7 @@ typedef struct sym_link
     unsigned hasFcall:1;            /* does it call other functions         */
     unsigned reent:1;               /* function is reentrant                */
     unsigned naked:1;               /* naked function                       */
+    unsigned oldStyle:1;            /* K&R function (TODO: remove, once noprototype can be used for K&R functions) */
 
     unsigned shadowregs:1;          /* function uses shadow registers (pic16 port) */
     unsigned wparam:1;              /* first byte of arguments is passed via WREG (pic16 port) */
@@ -338,6 +339,7 @@ typedef struct symbol
   unsigned noSpilLoc:1;             /* cannot be assigned a spil location */
   bool funcDivFlagSafe:1;           /* we know this function is safe to call with undocumented stm8 flag bit 6 set*/
   bool funcUsesVolatile:1;          /* The function accesses a volatile variable */
+  bool funcRestartAtomicSupport:1;  /* The function uses (directly or indirectly) restartable atomic support routines. */
   unsigned isstrlit;                /* is a string literal and it's usage count  */
   unsigned accuse;                  /* can be left in the accumulator
                                        On the Z80 accuse is divided into
@@ -551,7 +553,6 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_STRUCT(x)     (IS_SPEC(x) && x->select.s.noun == V_STRUCT)
 #define IS_ABSOLUTE(x)   (IS_SPEC(x) && x->select.s.b_absadr )
 #define IS_REGISTER(x)   (IS_SPEC(x) && SPEC_SCLS(x) == S_REGISTER)
-#define IS_RENT(x)       (IS_SPEC(x) && x->select.s._reent )
 #define IS_STATIC(x)     (IS_SPEC(x) && SPEC_STAT(x))
 #define IS_INLINE(x)     (IS_SPEC(x) && SPEC_INLINE(x))
 #define IS_NORETURN(x)   (IS_SPEC(x) && SPEC_NORETURN(x))
@@ -737,13 +738,14 @@ void changePointer (sym_link * p);
 void checkTypeSanity (sym_link * etype, const char *name);
 sym_link *typeFromStr (const char *);
 STORAGE_CLASS sclsFromPtr (sym_link * ptr);
-sym_link *newEnumType (symbol *);
+sym_link *newEnumType (symbol *enumlist, sym_link *userRequestedType);
 void promoteAnonStructs (int, structdef *);
 int isConstant (sym_link * type);
 int isVolatile (sym_link * type);
 int isRestrict (sym_link * type);
 value *aggregateToPointer (value *);
 void leaveBlockScope (int block);
+void mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls);
 
 
 extern char *nounName (sym_link *);     /* noun strings */

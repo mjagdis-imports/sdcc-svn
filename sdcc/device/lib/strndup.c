@@ -32,9 +32,7 @@
 
 char *strndup (const char *s, size_t n)
 {
-	size_t l = strlen (s);
-	if (l > n)
-		l = n;
+	size_t l = strnlen (s, n);
 	char *r = malloc (l + 1);
 	if (r)
 	{

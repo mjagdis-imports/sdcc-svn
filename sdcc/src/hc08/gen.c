@@ -2619,7 +2619,8 @@ aopOp (operand *op, iCode * ic, bool result)
   aop->size = sym->nRegs;
   for (i = 0; i < sym->nRegs; i++)
     {
-       wassert (sym->regs[i] < regshc08 + 3);
+       wassert (sym->regs[i] >= regshc08 && sym->regs[i] < regshc08 + 3);
+       wassertl (sym->regs[i], "Symbol in register, but no register assigned.");
        aop->aopu.aop_reg[i] = sym->regs[i];
        aop->regmask |= sym->regs[i]->mask;
     }
@@ -11278,7 +11279,7 @@ genhc08Code (iCode *lic)
           regsSurv[2] = (bitVectBitValue (ic->rSurv, X_IDX)) ? 'x' : '-';
           regsSurv[3] = 0;
           iLine = printILine (ic);
-          emitcode ("", "; [%s] ic:%d: %s", regsSurv, ic->seq, printILine (ic));
+          emitcode ("", "; [%s] ic:%d: %s", regsSurv, ic->key, iLine);
           dbuf_free (iLine);
         }
 

@@ -162,7 +162,6 @@ template <class G_t, class I_t>
 static bool Yinst_ok(const assignment &a, unsigned short int i, const G_t &G, const I_t &I)
 {
   const iCode *ic = G[i].ic;
-  const operand *const left = IC_LEFT(ic);
 
   const i_assignment_t &ia = a.i_assignment;
 
@@ -385,7 +384,6 @@ static void get_best_local_assignment_biased(assignment &a, typename boost::grap
 {
   a = *T[t].assignments.begin();
 
-  std::set<var_t>::const_iterator vi, vi_end;
   varset_t newlocal;
   std::set_union(T[t].alive.begin(), T[t].alive.end(), a.local.begin(), a.local.end(), std::inserter(newlocal, newlocal.end()));
   a.local = newlocal;
@@ -477,7 +475,7 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
   assignment_optimal = true;
   tree_dec_ralloc_nodes(T, find_root(T), G, I2, ac, &assignment_optimal);
 
-  /*const*/ assignment &winner = *(T[find_root(T)].assignments.begin());
+  const assignment &winner = *(T[find_root(T)].assignments.begin());
 
 #ifdef DEBUG_RALLOC_DEC
   std::cout << "Winner: ";
@@ -569,8 +567,12 @@ iCode *stm8_ralloc2_cc(ebbIndex *ebbi)
 
   stm8_assignment_optimal = !tree_dec_ralloc(tree_decomposition, control_flow_graph, conflict_graph, stack_conflict_graph);
 
-  stm8RegFix (ebbs, count);
+  stm8RegFix(ebbs, count);
 
+  // Try to reuse parameter locations first.
+  mergeSpiltParms(stack_conflict_graph);
+
+  // Then allocate the rest of the spilt variables via Chaitin's heuristic.
   chaitin_salloc(stack_conflict_graph);
 
   if(options.dump_graphs)

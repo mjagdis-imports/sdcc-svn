@@ -2,7 +2,6 @@
 
 # simulation timeout in cycles
 SIM_CYCLES = 1000000000
-SIM_TIMEOUT = 40
 
 ifdef SDCC_BIN_PATH
   AS = $(SDCC_BIN_PATH)/sdas6500$(EXEEXT)
@@ -11,7 +10,7 @@ else
   ifdef UCSIM_DIR
     UC65 = $(UCSIM_DIR)/mos6502.src/ucsim_mos6502$(EXEEXT)
   else
-    UC65 = $(top_builddir)/sim/ucsim/mos6502.src/ucsim_mos6502$(EXEEXT)
+    UC65 = $(top_builddir)/sim/ucsim/src/sims/mos6502.src/ucsim_mos6502$(EXEEXT)
   endif
   AS = $(WINE) $(top_builddir)/bin/sdas6500$(EXEEXT)
 ifndef CROSSCOMPILING

@@ -342,8 +342,9 @@ newSymbol (const char *name, long scope)
   sym->usl.spillLoc = 0;
 
   // Err on the safe side, when in doubt disabling optimizations.
-  sym->funcDivFlagSafe = 0;
-  sym->funcUsesVolatile = 1;
+  sym->funcDivFlagSafe = false;
+  sym->funcUsesVolatile = true;
+  sym->funcRestartAtomicSupport = true; //options.std_c11;
 
   return sym;
 }
@@ -1443,7 +1444,7 @@ arraySizes (sym_link *type, const char *name)
       else
         {
           int size = ulFromVal(tval);
-          if (tval < 0)
+          if (floatFromVal(tval) < 0.0)
             {
               werror(E_NEGATIVE_ARRAY_SIZE, name);
               size = 1;
@@ -2048,6 +2049,21 @@ checkSClass (symbol *sym, int isProto)
       for (n = 0; n < size; n += 8)
         if (((addr >> n) & 0xFF) < 0x80)
           werror (W_SFR_ABSRANGE, sym->name);
+    }
+  else if (TARGET_IS_MCS51 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_DATA)
+    {
+      if (SPEC_ADDR (sym->etype) + getSize (sym->type) - 1 > 0x7f)
+        werror (W_DATA_ABSRANGE, sym->name);
+    }
+  else if (TARGET_IS_MCS51 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_IDATA)
+    {
+      if (SPEC_ADDR (sym->etype) + getSize (sym->type) - 1 > 0xff)
+        werror (W_IDATA_ABSRANGE, sym->name);
+    }
+  else if ((TARGET_HC08_LIKE || TARGET_MOS6502_LIKE) && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_DATA)
+    {
+      if (SPEC_ADDR (sym->etype) + getSize (sym->type) - 1 > 0xff)
+        werror (W_DATA_ABSRANGE, sym->name);
     }
   else if (TARGET_IS_SM83 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
     {// Unlike the other z80-like ports, sm83 has memory mapped I/O in the 0xff00-0xffff range.
@@ -2727,8 +2743,8 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
                               && !IS_CHAR (etype1)) ||  /* same for 2nd operand */
                              (SPEC_USIGN (etype2) && !(bitsForType (etype2) < bitsForType (reType)) && !IS_CHAR (etype2)) ||    /* if both are 'unsigned char' and not promoted
                                                                                                                                    let the result be unsigned too */
-                             (SPEC_USIGN (etype1)
-                              && SPEC_USIGN (etype2) && IS_CHAR (etype1) && IS_CHAR (etype2) && IS_CHAR (reType))) ||
+                             (SPEC_USIGN (etype1) && IS_CHAR (etype1)
+                              && (SPEC_USIGN (etype2) && IS_CHAR (etype2) || op == LEFT_OP || op == RIGHT_OP || op == ROT) && IS_CHAR (reType))) ||
                              SPEC_USIGN (etype1) && SPEC_USIGN (etype2) && IS_BITINT (rType) ||  // unsigned _BitInt stays unsigned.
                              SPEC_USIGN (etype1) && SPEC_USIGN (etype2) && bitsForType (etype1) <= bitsForType (reType) && bitsForType (etype2) < bitsForType (reType)) // keep operations on small unsigned bit-fields unsigned.
     SPEC_USIGN (reType) = 1;
@@ -2852,6 +2868,10 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplici
 {
   int res;
 
+#if 0
+  printf("comparePtrType (must cast %d): ", mustCast); printTypeChain (dest, stdout); printf(" vs. "); printTypeChain (src, 0);
+#endif
+
   if (getAddrspace (src->next) != getAddrspace (dest->next))
     mustCast = 1;
 
@@ -2863,8 +2883,8 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplici
     return mustCast ? -1 : 1;
   res = compareType (dest->next, src->next, ignoreimplicitintrinsic);
 
-  /* All function pointers can be cast (6.6 in the ISO C11 standard) TODO: What about address spaces? */
-  if (res == 0 && !mustCast && IS_DECL (src) && IS_FUNC (src->next) && IS_DECL (dest) && IS_FUNC (dest->next))
+  /* All function pointers can be cast (6.3.2.3 in the ISO C23 standard), similar for objects. TODO: What about address spaces? */
+  if (res == 0 && !mustCast && IS_DECL (src) && IS_DECL (dest) && (IS_FUNC (src->next) == IS_FUNC (dest->next)))
     return -1;
   else if (res == 1)
     return mustCast ? -1 : 1;
@@ -3684,9 +3704,9 @@ processFuncArgs (symbol *func, sym_link *funcType)
       int argreg = 0;
       struct dbuf_s dbuf;
 
-      if (val->sym && val->sym->name)
+      if (val->sym)
         for (value *val2 = val->next; val2; val2 = val2->next)
-          if (val2->sym && val2->sym->name && !strcmp (val->sym->name, val2->sym->name))
+          if (val2->sym && !strcmp (val->sym->name, val2->sym->name))
             werror (E_DUPLICATE_PARAMTER_NAME, val->sym->name, funcName);
 
       dbuf_init (&dbuf, 128);
@@ -3914,10 +3934,10 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                   dbuf_append_str (dbuf, "generic*");
               break;
             case CPOINTER:
-              dbuf_append_str (dbuf, "code*");
+              dbuf_append_str (dbuf, "__code*");
               break;
             case FPOINTER:
-              dbuf_append_str (dbuf, "xdata*");
+              dbuf_append_str (dbuf, "__xdata*");
               break;
             case EEPPOINTER:
               dbuf_append_str (dbuf, "eeprom*");
@@ -3926,10 +3946,10 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               dbuf_append_str (dbuf, "near*");
               break;
             case IPOINTER:
-              dbuf_append_str (dbuf, "idata*");
+              dbuf_append_str (dbuf, "__idata*");
               break;
             case PPOINTER:
-              dbuf_append_str (dbuf, "pdata*");
+              dbuf_append_str (dbuf, "__pdata*");
               break;
             case UPOINTER:
               dbuf_append_str (dbuf, "unknown*");
@@ -4039,6 +4059,10 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               dbuf_append_str (dbuf, "double");
               break;
 
+            case V_NULLPTR:
+              dbuf_append_str (dbuf, "nullptr_t");
+              break;
+
             default:
               dbuf_append_str (dbuf, "unknown type");
               break;
@@ -4061,22 +4085,22 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               dbuf_append_str (dbuf, " data");
               break;
             case S_XDATA:
-              dbuf_append_str (dbuf, " xdata");
+              dbuf_append_str (dbuf, " __xdata");
               break;
             case S_SFR:
               dbuf_append_str (dbuf, " sfr");
               break;
             case S_SBIT:
-              dbuf_append_str (dbuf, " sbit");
+              dbuf_append_str (dbuf, " __sbit");
               break;
             case S_CODE:
-              dbuf_append_str (dbuf, " code");
+              dbuf_append_str (dbuf, " __code");
               break;
             case S_IDATA:
-              dbuf_append_str (dbuf, " idata");
+              dbuf_append_str (dbuf, " __idata");
               break;
             case S_PDATA:
-              dbuf_append_str (dbuf, " pdata");
+              dbuf_append_str (dbuf, " __pdata");
               break;
             case S_LITERAL:
               dbuf_append_str (dbuf, " literal");
@@ -4088,7 +4112,7 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               dbuf_append_str (dbuf, " xstack");
               break;
             case S_BIT:
-              dbuf_append_str (dbuf, " bit");
+              dbuf_append_str (dbuf, " __bit");
               break;
             case S_EEPROM:
               dbuf_append_str (dbuf, " eeprom");
@@ -4747,8 +4771,11 @@ initCSupport (void)
           dbuf_init (&dbuf, 128);
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
-            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE ) && bwd == 0) ? 1 : bwd][su % 2], multypes[bwd][su / 2], 2,
-                        options.intlong_rent);
+            funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
+              multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su % 2],
+              multypes[bwd][su / 2],
+              2,
+              options.intlong_rent);
           dbuf_destroy (&dbuf);
         }
     }
@@ -4764,8 +4791,11 @@ initCSupport (void)
               dbuf_init (&dbuf, 128);
               dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su * 3], sbwd[bwd]);
               muldiv[muldivmod][bwd][su] =
-                funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)), multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE) && bwd == 0) ? 1 : bwd][su], multypes[bwd][su], 2,
-                            options.intlong_rent);
+                funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
+                  multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su],
+                  multypes[bwd][su],
+                  2,
+                  options.intlong_rent);
               dbuf_destroy (&dbuf);
             }
         }
@@ -4880,20 +4910,103 @@ validateLink (sym_link * l, const char *macro, const char *args, const char sele
   return l;                     // never reached, makes compiler happy.
 }
 
+static bool
+llFitsInIntType (long long ll, sym_link *type)
+{
+  long long min = 0, max = 0;
+
+  // determine min and max values for explicitly or implicitly unsigned integers
+  if (SPEC_USIGN (type) || SPEC_NOUN (type) == V_BOOL)
+    {
+      switch (SPEC_NOUN (type))
+        {
+        case V_BOOL:
+          max = 1ll;
+          break;
+        case V_CHAR:
+          max = 0xffll;
+          break;
+        case V_INT:
+          if (SPEC_LONGLONG (type))
+            max = 0x7fffffffffffffffll;  // actual ull max would not fit and input is ll, anyway
+          else if (SPEC_LONG (type))
+            max = 0xffffffffll;
+          else
+            max = 0xffffll;
+          break;
+        default:
+          assert (0);  // not implemented for non-integer types
+        }
+    }
+  else  // determine min and max values for signed integers
+    {
+      switch (SPEC_NOUN (type))
+        {
+        case V_CHAR:
+          min = -128ll;
+          max = 127ll;
+          break;
+        case V_INT:
+          if (SPEC_LONGLONG (type))
+            {
+              min = -9223372036854775808ull;  // the "-" is not part of the literal, which does not fit in ll
+              max = 9223372036854775807ll;
+            }
+          else if (SPEC_LONG (type))
+            {
+              min = -2147483648ll;
+              max = 2147483647ll;
+            }
+          else
+            {
+              min = -32768ll;
+              max = 32767ll;
+            }
+          break;
+        default:
+          assert (0);  // not implemented for non-integer types
+        }
+    }
+
+  return ll >= min && ll <= max;
+}
+
 /*--------------------------------------------------------------------*/
 /* newEnumType - create an integer type compatible with enumerations  */
 /*--------------------------------------------------------------------*/
 sym_link *
-newEnumType (symbol *enumlist)
+newEnumType (symbol *enumlist, sym_link *userRequestedType)
 {
   long long int min, max, v;
   symbol *sym;
-  sym_link *type;
+  sym_link *type = newLink (SPECIFIER);
+  SPEC_ENUM (type) = 1;
+
+  /* Catch user-requested types that make no sense for an enum; provide fallback if none specified */
+  if (userRequestedType)
+    {
+      checkTypeSanity (userRequestedType, NULL);
+      if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) || SPEC_ENUM (userRequestedType))
+        {
+          werror (E_ENUM_UNDERLYING_TYPE);
+          /* try to keep going */
+          SPEC_NOUN (type) = V_INT;
+          return type;
+        }
+
+      SPEC_NOUN (type) = SPEC_NOUN (userRequestedType);
+      SPEC_SIGN (type) = SPEC_SIGN (userRequestedType);
+      SPEC_USIGN (type) = SPEC_USIGN (userRequestedType);
+      SPEC_LONG (type) = SPEC_LONG (userRequestedType);
+      SPEC_LONGLONG (type) = SPEC_LONGLONG (userRequestedType);
+    }
+  else
+    {
+      SPEC_NOUN (type) = V_INT;
+    }
 
   if (!enumlist)
     {
-      type = newLink (SPECIFIER);
-      SPEC_NOUN (type) = V_INT;
       return type;
     }
 
@@ -4909,8 +5022,15 @@ newEnumType (symbol *enumlist)
         max = v;
     }
 
-  // Use the smallest integer type that is compatible with this range and not a bit-precise type.
-  type = newLink (SPECIFIER);
+  /* Figure out if everything fits in the user requested (or default int) type */
+  if (!llFitsInIntType (min, type) || !llFitsInIntType (max, type))
+    werror (userRequestedType ? E_ENUM_TYPE_RANGE_TOO_SMALL : W_ENUM_INT_RANGE_C23);
+
+  /* It does: If the type was explicitly requested, return it! */
+  if (userRequestedType)
+    return type;
+
+  /* Otherwise: Use the smallest integer type that is compatible with this range and not a bit-precise type. */
   if (min >= 0 && max <= 1)
     {
       SPEC_NOUN (type) = V_BOOL;
@@ -5008,4 +5128,81 @@ isRestrict (sym_link * type)
     return SPEC_RESTRICT (type);
   else
     return DCL_PTR_RESTRICT (type);
+}
+
+/*-------------------------------------------------------------------*/
+/* mergeKRDeclListIntoFuncDecl - merge the type information from the */
+/*      declaration list between function declaration and body into  */
+/*      the function declaration, replacing the default type int     */
+/*-------------------------------------------------------------------*/
+void
+mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls)
+{
+  if (kr_decls != NULL)
+    {
+      if (options.std_c23)
+        {
+          werror (E_OLD_STYLE, (funcDecl ? funcDecl->name: ""));
+          exit (1);
+        }
+
+      symbol *declLoop;
+      value *parLoop;
+
+      sym_link *funcType;
+
+      funcType = funcDecl->type;
+      while (funcType && !IS_FUNC (funcType))
+        funcType = funcType->next;
+
+      assert (funcType);
+
+      /* TODO:
+       * use FUNC_NOPROTOTYPE, once prototype-less functions are fully
+       * supported and K&R functions can be treated as such, because
+       * a function with prototype cannot have been declared in K&R style
+       */
+      if (!funcType->funcAttrs.oldStyle)
+        werror (E_MIXED_FUNCTION_STYLES, (funcDecl ? funcDecl->name: ""));
+
+      /* iterate over members of declaration list */
+      for (declLoop = kr_decls; declLoop; declLoop = declLoop->next)
+        {
+          bool found = false;
+          /* iterate over parameters */
+          for (parLoop = FUNC_ARGS (funcType); parLoop; parLoop = parLoop->next)
+            {
+              if (strcmp (declLoop->name, parLoop->sym->name) == 0)
+                found = true;
+            }
+          if (!found)
+            werror (E_ID_UNDEF, declLoop->name);
+        }
+
+      /* iterate over parameters */
+      for (parLoop = FUNC_ARGS (funcType); parLoop; parLoop = parLoop->next)
+        {
+          bool found = false;
+          /* iterate over members of declaration list */
+          for (declLoop = kr_decls; declLoop; declLoop = declLoop->next)
+            {
+              if (strcmp (declLoop->name, parLoop->sym->name) == 0)
+                {
+                  if (found)
+                    {
+                      werror (E_DUPLICATE, declLoop->name);
+                      continue;
+                    }
+                  found = true;
+                  /* delete default int type */
+                  Safe_free (parLoop->type);
+                  /* propagate type */
+                  parLoop->type = declLoop->type;
+                  parLoop->etype = declLoop->etype;
+                  parLoop->sym->type = copyLinkChain (parLoop->type);
+                  parLoop->sym->etype = getSpec (parLoop->sym->type);
+                }
+            }
+        }
+    }
 }

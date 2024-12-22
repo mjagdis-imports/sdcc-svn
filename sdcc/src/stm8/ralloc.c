@@ -63,32 +63,6 @@ noOverLap (set *itmpStack, symbol *fsym)
 }
 
 /*-----------------------------------------------------------------*/
-/* isFree - will return 1 if the a free spil location is found     */
-/*-----------------------------------------------------------------*/
-DEFSETFUNC (isFreeSTM8)
-{
-  symbol *sym = item;
-  V_ARG (symbol **, sloc);
-  V_ARG (symbol *, fsym);
-
-  /* if already found */
-  if (*sloc)
-    return 0;
-
-  /* if it is free && and the itmp assigned to
-     this does not have any overlapping live ranges
-     with the one currently being assigned and
-     the size can be accommodated  */
-  if (sym->isFree && noOverLap (sym->usl.itmpStack, fsym) && getSize (sym->type) >= getSize (fsym->type))
-    {
-      *sloc = sym;
-      return 1;
-    }
-
-  return 0;
-}
-
-/*-----------------------------------------------------------------*/
 /* createStackSpil - create a location on the stack to spil        */
 /*-----------------------------------------------------------------*/
 static symbol *
@@ -376,24 +350,13 @@ packRegsForAssign (iCode *ic, eBBlock *ebp)
      The STM8 instructions operating directly on memory
      operands are 8-bit, so the most benefit is in 8-bit
      operations. On the other hand, supporting wider
-     operations well in codegen is also more effort. */ 
-  else if (bitsForType (operandType (IC_RESULT (dic))) > 8)
+     operations well in codegen is also more effort. On the other hand,
+     allowing wider operations here could help reduce register pressure.
+     Currently, codegen can already handle more than 8 bits correctly
+     (except for shifts/rotations), but the code size regresses. */
+  else if (bitsForType (operandType (IC_RESULT (dic))) > 8 /*&& (dic->op == LEFT_OP || dic->op == RIGHT_OP || dic->op == ROT)*/)
     return 0;
 
-  /* if the result is on stack or iaccess then it must be
-     the same as at least one of the operands */
-  if (OP_SYMBOL (IC_RESULT (ic))->onStack || OP_SYMBOL (IC_RESULT (ic))->iaccess)
-    {
-      /* the operation has only one symbol
-         operator then we can pack */
-      if ((IC_LEFT (dic) && !IS_SYMOP (IC_LEFT (dic))) || (IC_RIGHT (dic) && !IS_SYMOP (IC_RIGHT (dic))))
-        goto pack;
-
-      if (!((IC_LEFT (dic) &&
-             IC_RESULT (ic)->key == IC_LEFT (dic)->key) || (IC_RIGHT (dic) && IC_RESULT (ic)->key == IC_RIGHT (dic)->key)))
-        return 0;
-    }
-pack:
   /* found the definition */
 
   /* delete from liverange table also
@@ -507,19 +470,16 @@ packRegsForOneuse (iCode *ic, operand **opp, eBBlock *ebp)
 static void
 packRegisters (eBBlock * ebp)
 {
-  iCode *ic;
-  int change = 0;
-
   D (D_ALLOC, ("packRegisters: entered.\n"));
 
   for(;;)
     {
-      change = 0;
+      int change = 0;
       /* look for assignments of the form */
       /* iTempNN = TRueSym (someoperation) SomeOperand */
       /*       ....                       */
       /* TrueSym := iTempNN:1             */
-      for (ic = ebp->sch; ic; ic = ic->next)
+      for (iCode *ic = ebp->sch; ic; ic = ic->next)
         {
           /* find assignment of the form TrueSym := iTempNN:1 */
           if (ic->op == '=')
@@ -529,7 +489,7 @@ packRegisters (eBBlock * ebp)
         break;
     }
 
-  for (ic = ebp->sch; ic; ic = ic->next)
+  for (iCode *ic = ebp->sch; ic; ic = ic->next)
     {
       D (D_ALLOC, ("packRegisters: looping on ic %p\n", ic));
 
@@ -594,7 +554,6 @@ packRegisters (eBBlock * ebp)
         ic->op == IPUSH && operandSize (IC_LEFT (ic)) == 1)
         packRegsForOneuse (ic, &(IC_LEFT (ic)), ebp);
     }
-
 }
 
 /**
@@ -603,7 +562,6 @@ packRegisters (eBBlock * ebp)
 static void
 serialRegMark (eBBlock ** ebbs, int count)
 {
-  int i;
   short int max_alloc_bytes = SHRT_MAX; // Byte limit. Set this to a low value to pass only few variables to the register allocator. This can be useful for debugging.
 
   stm8_call_stack_size = 2; // Saving of register to stack temporarily.
@@ -611,15 +569,13 @@ serialRegMark (eBBlock ** ebbs, int count)
   D (D_ALLOC, ("serialRegMark for %s, currFunc->stack %d\n", currFunc->name, currFunc->stack));
 
   /* for all blocks */
-  for (i = 0; i < count; i++)
+  for (int i = 0; i < count; i++)
     {
-      iCode *ic;
-
       if (ebbs[i]->noPath && (ebbs[i]->entryLabel != entryLabel && ebbs[i]->entryLabel != returnLabel))
         continue;
 
       /* for all instructions do */
-      for (ic = ebbs[i]->sch; ic; ic = ic->next)
+      for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
         {
           if ((ic->op == CALL || ic->op == PCALL) && ic->parmBytes + 5 > stm8_call_stack_size)
             {
@@ -666,7 +622,7 @@ serialRegMark (eBBlock ** ebbs, int count)
                   continue;
                 }
 
-              if (sym->usl.spillLoc && !sym->usl.spillLoc->_isparm) // I have no idea where these spill locations come from. Sometime two symbols even have the same spill location, whic tends to mess up stack allocation. THose that come from previous iterations in this loop would be okay, but those from outside are a problem.
+              if (sym->usl.spillLoc && !sym->usl.spillLoc->_isparm) // I have no idea where these spill locations come from. Sometime two symbols even have the same spill location, which tends to mess up stack allocation. Those that come from previous iterations in this loop would be okay, but those from outside are a problem.
                 {
                   sym->usl.spillLoc = 0;
                   sym->isspilt = false;

@@ -2766,8 +2766,6 @@ genCmp (const iCode *ic, iCode *ifx)
     {
       if (ic->op == '>' && right->aop->type == AOP_LIT)
         {
-          wassert (!aopIsLitVal (right->aop, 0, 1, 0x00));
-          
           if (IC_TRUE (ifx))
             {
               emit2 ("ceqsn", "a, #0x%02x", byteOfVal (right->aop->aopu.aop_lit, 0) + 1);
@@ -3736,8 +3734,8 @@ genRot (iCode *ic)
   bool pushed_a = false;
   
   asmop *shiftop = ASMOP_A;
-  if ((TARGET_IS_PDK16 || s < 3 || s > 5) && // swap m is supported in pdk16, but not pdk13 and pdk14. Some pdk15 devices support it officially, some support it as undocumented feature. It is unclear if there are pdk15 that do not support it.
-    (result->aop->type == AOP_DIR || aopInReg (result->aop, 0, P_IDX)))
+  if ((TARGET_IS_PDK16 || s < 3 || s > 6) && // swap m is supported in pdk16, but not pdk13 and pdk14. Some pdk15 devices support it officially, some support it as undocumented feature. It is unclear if there are pdk15 that do not support it.
+    (result->aop->type == AOP_DIR && s != 7 || aopInReg (result->aop, 0, P_IDX)))
     shiftop = result->aop;
   else if (!a_free)
     {
@@ -3751,6 +3749,7 @@ genRot (iCode *ic)
     {
       if (s >= 3 && s <= 6)
         {
+          wassert (aopInReg (shiftop, 0, A_IDX) || TARGET_IS_PDK16);
           emit2 ("swap", "%s", aopGet (shiftop, 0));
           cost (1, 1);
           s = s + 4;
@@ -3766,7 +3765,12 @@ genRot (iCode *ic)
         {
           emit2 ("sr", "%s", aopGet (shiftop, 0));
           emit2 ("t0sn.io", "f, c");
-          emit2 ("or", "%s, #0x80", aopGet (shiftop, 0));
+          if (aopInReg (shiftop, 0, A_IDX))
+            emit2 ("or", "a, #0x80");
+          else if (aopInReg (shiftop, 0, P_IDX))
+            emit2 ("set1", "p, #7");
+          else
+            wassert (0);
           emitCondTargetLbl ();
           cost (3, 3);
           s++;

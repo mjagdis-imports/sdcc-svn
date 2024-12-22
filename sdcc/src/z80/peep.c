@@ -372,7 +372,7 @@ z80MightRead(const lineNode *pl, const char *what)
   if(ISINST(pl->line, "call") && strchr(pl->line, ',') == 0)
     {
       const symbol *f = findSym (SymbolTab, 0, pl->line + 6);
-      if (f)
+      if (f && IS_FUNC (f->type))
         return z80IsParmInCall(f->type, what);
       else // Fallback needed for calls through function pointers and for calls to literal addresses.
         return z80MightBeParmInCallFromCurrentFunction(what);
@@ -396,7 +396,9 @@ z80MightRead(const lineNode *pl, const char *what)
     {
       if(argCont(strchr(pl->line, ','), what))
         return(true);
-      if(*(strchr(pl->line, ',') - 1) == ')' && strstr(pl->line + 3, what) && (strchr(pl->line, '#') == 0 || strchr(pl->line, '#') > strchr(pl->line, ',')))
+      if(*(strchr(pl->line, ',') - 1) == ')' && strstr(pl->line + 3, what) &&
+        (strchr(pl->line, '#') == 0 || strchr(pl->line, '#') > strchr(pl->line, ',')) &&
+        (strchr(pl->line, '_') == 0 || strchr(pl->line, '_') > strchr(pl->line, ',')))
         return(true);
       if (!strcmp(what, "sp") && strchr(pl->line, '(')) // Assume any indirect memory access to be a stack access. This avoids optimizing out stackframe setups for local variables (bug #3173).
         return(true);
@@ -826,16 +828,21 @@ callSurelyWrites (const lineNode *pl, const char *what)
 
   const bool *preserved_regs;
 
+  if (f && (strlen(what) == 2 && what[1] == 'f')) // Flags are never preserved across function calls.
+    return(true);
+
   if(!strcmp(what, "ix"))
     return(false);
 
   if(f)
     preserved_regs = f->type->funcAttrs.preserved_regs;
-  else if (ISINST(pl->line, "call")) // Err on the safe side.
+  else if (ISINST(pl->line, "call"))
     preserved_regs = z80_regs_preserved_in_calls_from_current_function;
-  else
+  else // Err on the safe side for jp and jr - might not be a function call, might e.g. be a jump table.
     return (false);
 
+  if (!strcmp (what, "a"))
+    return !preserved_regs[A_IDX];
   if (!strcmp (what, "c"))
     return !preserved_regs[C_IDX];
   if (!strcmp (what, "b"))
@@ -848,6 +855,10 @@ callSurelyWrites (const lineNode *pl, const char *what)
     return !preserved_regs[L_IDX];
   if (!strcmp (what, "h"))
     return !preserved_regs[H_IDX];
+  if (!strcmp (what, "iyl"))
+    return !preserved_regs[IYL_IDX];
+  if (!strcmp (what, "iyh"))
+    return !preserved_regs[IYH_IDX];
   if (!strcmp (what, "iy"))
     return !preserved_regs[IYL_IDX] && !preserved_regs[IYH_IDX];
 
@@ -1004,11 +1015,11 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
 
       if(isFlag)
         {
-        if(z80MightReadFlag(*pl, what))
-          {
-            D(("S4O_RD_OP (flag)\n"));
-            return S4O_RD_OP;
-          }
+          if(z80MightReadFlag(*pl, what))
+            {
+              D(("S4O_RD_OP (flag)\n"));
+              return S4O_RD_OP;
+            }
         }
       else
         {
@@ -1737,6 +1748,9 @@ int z80instructionSize(lineNode *pl)
     ISINST(pl->line, "bsrf") ||
     ISINST(pl->line, "brlc")))
     return(2);
+
+  if(IS_Z80N && ISINST(pl->line, "nextreg"))
+    return(op2start && !STRNCASECMP(op2start, "a", 1) ? 3 : 4);
 
   if(ISINST(pl->line, ".db") || ISINST(pl->line, ".byte"))
     {

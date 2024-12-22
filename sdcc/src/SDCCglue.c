@@ -1891,14 +1891,14 @@ emitStaticSeg (memmap *map, struct dbuf_s *oBuf)
   set *tmpSet = NULL;
 
   /* fprintf(out, "\t.area\t%s\n", map->sname); */
-
+//printf("emitStaticSeg %s\n", map->sname);
   /* eliminate redundant __str_%d (generated in stringToSymbol(), SDCCast.c) */
   for (sym = setFirstItem (map->syms); sym; sym = setNextItem (map->syms))
     addSet (&tmpSet, sym);
 
   /* for all variables in this segment do */
   for (sym = setFirstItem (map->syms); sym; sym = setNextItem (map->syms))
-    {
+    {//printf("emit symbol %s\n", sym->name);
       /* if it is "extern" then do nothing */
       if (IS_EXTERN (sym->etype) && !sym->ival)
         continue;
@@ -1942,11 +1942,13 @@ emitStaticSeg (memmap *map, struct dbuf_s *oBuf)
             }
           /* if it has an initial value */
           if (sym->ival)
-            {
+            {//printf("ival.\n");
               if (SPEC_ABSA (sym->etype))
                 {
                   dbuf_tprintf (oBuf, "\t!org\n", SPEC_ADDR (sym->etype));
                 }
+              else if (options.const_seg && map != xinit && map != initializer)
+                dbuf_tprintf(&code->oBuf, "\t!area\n", options.const_seg);
               if (options.debug)
                 {
                   emitDebugSym (oBuf, sym);
@@ -1964,9 +1966,11 @@ emitStaticSeg (memmap *map, struct dbuf_s *oBuf)
                 {
                   freeStringSymbol (list2val (sym->ival, TRUE)->sym);
                 }
+              if (!SPEC_ABSA (sym->etype) && options.const_seg && map != xinit && map != initializer)
+                dbuf_tprintf(oBuf, "\t!areacode\n", options.code_seg);
             }
           else
-            {
+            {//printf("no ival.\n");
               /* allocate space */
               if (options.debug)
                 {
@@ -2131,7 +2135,7 @@ createInterruptVect (struct dbuf_s *vBuf)
 
 char *iComments1 = {
   ";--------------------------------------------------------\n"
-  "; File Created by SDCC : free open source ISO C Compiler \n"
+  "; File Created by SDCC : free open source ISO C Compiler\n"
 };
 
 char *iComments2 = {
@@ -2331,7 +2335,10 @@ glue (void)
   /* initial comments */
   initialComments (asmFile);
 
-  // TODO: Move this stuff from here to port-specific genAssemblerPreamble?
+  /* print module name */
+  tfprintf (asmFile, "\t!module\n", moduleName);
+
+  // TODO: Move this stuff from here to port-specific genAssemblerStart?
   if (TARGET_IS_S08)
     fprintf (asmFile, "\t.cs08\n");
   else if (TARGET_IS_Z180)
@@ -2347,60 +2354,12 @@ glue (void)
   else if (TARGET_IS_Z80 && options.allow_undoc_inst)
     fprintf (asmFile, "\t.allow_undocumented\n");
 
-  /* print module name */
-  tfprintf (asmFile, "\t!module\n", moduleName);
-  if (mcs51_like)
-    {
-      if(!options.noOptsdccInAsm)
-        fprintf (asmFile, "\t.optsdcc -m%s", port->target);
-
-      switch (options.model)
-        {
-        case MODEL_SMALL:
-          fprintf (asmFile, " --model-small");
-          break;
-        case MODEL_COMPACT:
-          fprintf (asmFile, " --model-compact");
-          break;
-        case MODEL_MEDIUM:
-          fprintf (asmFile, " --model-medium");
-          break;
-        case MODEL_LARGE:
-          fprintf (asmFile, " --model-large");
-          break;
-        case MODEL_FLAT24:
-          fprintf (asmFile, " --model-flat24");
-          break;
-        case MODEL_HUGE:
-          fprintf (asmFile, " --model-huge");
-          break;
-        default:
-          break;
-        }
-      /*if(options.stackAuto)      fprintf (asmFile, " --stack-auto"); */
-      if (options.useXstack)
-        fprintf (asmFile, " --xstack");
-      /*if(options.intlong_rent)   fprintf (asmFile, " --int-long-rent"); */
-      /*if(options.float_rent)     fprintf (asmFile, " --float-rent"); */
-      if (options.noRegParams)
-        fprintf (asmFile, " --no-reg-params");
-      if (options.parms_in_bank1)
-        fprintf (asmFile, " --parms-in-bank1");
-      if (options.all_callee_saves)
-        fprintf (asmFile, " --all-callee-saves");
-      fprintf (asmFile, "\n");
-    }
-  else if (!TARGET_PIC_LIKE && !options.noOptsdccInAsm)
-    {
-      fprintf (asmFile, "\t.optsdcc -m%s\n", port->target);
-    }
-
   tfprintf (asmFile, "\t!fileprelude\n");
 
   /* Let the port generate any global directives, etc. */
-  if (port->genAssemblerPreamble)
+  if (port->genAssemblerStart)
     {
-      port->genAssemblerPreamble (asmFile);
+      port->genAssemblerStart (asmFile);
     }
 
   /* print the global variables in this module */
@@ -2631,6 +2590,8 @@ glue (void)
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
+      else if (TARGET_IS_F8)
+        fprintf (asmFile, "\tjp\t#__sdcc_program_startup\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t__sdcc_program_startup\n");
       else
@@ -2654,6 +2615,8 @@ glue (void)
       /* put in jump or call to main */
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t_main\n" : "\tjp\t_main\n");
+      else if(TARGET_IS_F8)
+        fprintf (asmFile, "\tjp\t#_main\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t_main\n");
       else

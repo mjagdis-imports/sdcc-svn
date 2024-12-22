@@ -1,8 +1,5 @@
 # Regression test specification for the tlcs90 target running with uCsim
 
-# simulation timeout in seconds
-SIM_TIMEOUT = 40
-
 # path to uCsim
 ifdef SDCC_BIN_PATH
   UCTLCS90C = $(SDCC_BIN_PATH)/ucsim_tlcs$(EXEEXT)
@@ -12,7 +9,7 @@ else
   ifdef UCSIM_DIR
     UCTLCS90A = $(UCSIM_DIR)/tlcs.src/ucsim_tlcs$(EXEEXT)
   else
-    UCTLCS90A = $(top_builddir)/sim/ucsim/tlcs.src/ucsim_tlcs$(EXEEXT)
+    UCTLCS90A = $(top_builddir)/sim/ucsim/src/sims/tlcs.src/ucsim_tlcs$(EXEEXT)
     UCTLCS90B = $(top_builddir)/bin/ucsim_tlcs$(EXEEXT)
   endif
 

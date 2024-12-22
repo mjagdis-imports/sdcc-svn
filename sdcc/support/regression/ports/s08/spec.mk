@@ -1,8 +1,5 @@
 # Regression test specification for the s08 target running with uCsim
 
-# simulation timeout in seconds
-SIM_TIMEOUT = 70
-
 EMU_PORT_FLAG=-thcs08
 
 # path to uCsim
@@ -14,7 +11,7 @@ else
   ifdef UCSIM_DIR
     UCHC08A = $(UCSIM_DIR)/m68hc08.src/ucsim_m68hc08$(EXEEXT)
   else
-    UCHC08A = $(top_builddir)/sim/ucsim/m68hc08.src/ucsim_m68hc08$(EXEEXT)
+    UCHC08A = $(top_builddir)/sim/ucsim/src/sims/m68hc08.src/ucsim_m68hc08$(EXEEXT)
     UCHC08B = $(top_builddir)/bin/ucsim_m68hc08$(EXEEXT)
   endif
 

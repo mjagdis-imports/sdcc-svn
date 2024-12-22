@@ -35,6 +35,7 @@
 #define TARGET_ID_MOS6502  25
 #define TARGET_ID_MOS65C02 26
 #define TARGET_ID_R800     27
+#define TARGET_ID_F8       28
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -64,6 +65,7 @@
 #define TARGET_IS_PDK16    (port->id == TARGET_ID_PDK16)
 #define TARGET_IS_MOS6502  (port->id == TARGET_ID_MOS6502)
 #define TARGET_IS_MOS65C02 (port->id == TARGET_ID_MOS65C02)
+#define TARGET_IS_F8       (port->id == TARGET_ID_F8)
 
 #define TARGET_MCS51_LIKE  (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_IS_DS400)
 #define TARGET_Z80_LIKE    (TARGET_IS_Z80 || TARGET_IS_Z180 || TARGET_IS_SM83 || TARGET_IS_R2K || TARGET_IS_R2KA || TARGET_IS_R3KA || TARGET_IS_TLCS90 || TARGET_IS_EZ80_Z80 || TARGET_IS_Z80N || TARGET_IS_R800)
@@ -358,7 +360,7 @@ typedef struct
   char **keywords;
 
   /* Write any port specific assembler output. */
-  void (*genAssemblerPreamble) (FILE * of);
+  void (*genAssemblerStart) (FILE * of);
   /* invoked at end assembler file */
   void (*genAssemblerEnd) (FILE * of);
 
@@ -392,13 +394,13 @@ typedef struct
   bool (*hasNativeMulFor) (iCode *ic, sym_link *left, sym_link *right);
 
   /** Returns true if the port has implemented certain bit
-      manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
+      manipulation iCodes (ROT, GETABIT, GETBYTE, GETWORD)
       right parameter: value of right operand if in >= 0; negative if non-literal.
    */
   bool (*hasExtBitOp) (int op, sym_link *left, int right);
 
   /** Returns true if the port has implemented certain bit
-      manipulation iCodes (RRC, RLC, SWAP, GETABIT, GETBYTE, GETWORD)
+      manipulation iCodes (ROT, GETABIT, GETBYTE, GETWORD)
    */
 
   /** Returns the relative expense of accessing a particular output
@@ -514,6 +516,9 @@ extern PORT mos6502_port;
 #endif
 #if !OPT_DISABLE_MOS65C02
 extern PORT mos65c02_port;
+#endif
+#if !OPT_DISABLE_F8
+extern PORT f8_port;
 #endif
 
 #endif /* PORT_INCLUDE */

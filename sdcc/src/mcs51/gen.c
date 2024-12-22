@@ -3688,7 +3688,7 @@ genSend (set *sendSet)
   /* then we do all other parameters */
   for (sic = setFirstItem (sendSet); sic; sic = setNextItem (sendSet))
     {
-      wassert (sic->argreg <= 1000);
+      if (sic->argreg <= 1000)
         {
           const iCode *walk;
           for (walk = sic->next; walk; walk = walk->next)
@@ -3818,6 +3818,8 @@ genCall (iCode * ic)
   dtype = operandType (IC_LEFT (ic));
   etype = getSpec (dtype);
   const bool bigreturn = IS_STRUCT (dtype->next);
+  const bool noreturn = SPEC_NORETURN (etype);
+  const char *call = noreturn ? "ljmp" : "lcall";
 
   /* if send set is not empty then assign */
   if (_G.sendSet)
@@ -3844,7 +3846,7 @@ genCall (iCode * ic)
     }
 
   /* if caller saves & we have not saved then */
-  if (!ic->regsSaved)
+  if (!ic->regsSaved && !noreturn)
     saveRegisters (ic);
 
   // Pass pointer for storing return value
@@ -3882,21 +3884,24 @@ genCall (iCode * ic)
               emitcode ("mov", "r1,#(%s >> 8)", name);
               emitcode ("mov", "r2,#(%s >> 16)", name);
             }
-          emitcode ("lcall", "__sdcc_banked_call");
+          emitcode (call, "__sdcc_banked_call");
         }
     }
   else
     {
       if (IS_LITERAL (etype))
         {
-          emitcode ("lcall", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+          emitcode (call, "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
         }
       else
         {
-          emitcode ("lcall", "%s", (OP_SYMBOL (IC_LEFT (ic))->rname[0] ?
-                                    OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+          emitcode (call, "%s", (OP_SYMBOL (IC_LEFT (ic))->rname[0] ?
+                                 OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
         }
     }
+
+  if (noreturn)
+    return;
 
   // Adjust stack pointer for the hidden pointer parameter.
   if (bigreturn)
@@ -4029,9 +4034,11 @@ genPcall (iCode * ic)
     dtype = dtype->next;
   etype = getSpec (dtype);
   const bool bigreturn = IS_STRUCT (dtype->next);
+  const bool noreturn = SPEC_NORETURN (etype);
+  const char *call = noreturn ? "ljmp" : "lcall";
 
   /* if caller saves & we have not saved then */
-  if (!ic->regsSaved)
+  if (!ic->regsSaved && !noreturn)
     saveRegisters (ic);
 
   /* if we are calling a not _naked function that is not using
@@ -4076,12 +4083,12 @@ genPcall (iCode * ic)
               emitcode ("mov", "r0,#%s", aopLiteralLong (OP_VALUE (IC_LEFT (ic)), 0, 1));
               emitcode ("mov", "r1,#%s", aopLiteralLong (OP_VALUE (IC_LEFT (ic)), 1, 1));
               emitcode ("mov", "r2,#%s", aopLiteralLong (OP_VALUE (IC_LEFT (ic)), 2, 1));
-              emitcode ("lcall", "__sdcc_banked_call");
+              emitcode (call, "__sdcc_banked_call");
             }
         }
       else
         {
-          emitcode ("lcall", "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+          emitcode (call, "0x%04X", ulFromVal (OP_VALUE (IC_LEFT (ic))));
         }
     }
   else
@@ -4135,7 +4142,7 @@ genPcall (iCode * ic)
                   emitpop ("ar0");
                 }
               /* make the call */
-              emitcode ("lcall", "__sdcc_banked_call");
+              emitcode (call, "__sdcc_banked_call");
             }
         }
       else if (_G.sendSet)      /* the send set is not empty */
@@ -4200,9 +4207,12 @@ genPcall (iCode * ic)
             }
 
           /* make the call */
-          emitcode ("lcall", "__sdcc_call_dptr");
+          emitcode (call, "__sdcc_call_dptr");
         }
     }
+
+  if (noreturn)
+    return;
 
   // Adjust stack pointer for the hidden pointer parameter.
   if (bigreturn)
@@ -4612,7 +4622,7 @@ genFunction (iCode * ic)
           for (ofs = 0; ofs < sym->recvSize; ofs++)
             {
               emitpush (fReturn[ofs]);
-              _G.stack.pushed--; /* cancel out pushed++ from emitpush()*/
+              _G.stack.pushed--; /* cancel out pushed++ from emitpush() */
             }
           stackAdjust -= sym->recvSize;
           if (stackAdjust < 0)
@@ -4664,7 +4674,7 @@ genFunction (iCode * ic)
   if (stackAdjust)
     {
       unsigned int i = stackAdjust & 0xffu;
-      if (stackAdjust > 256)
+      if (stackAdjust > 248)
         werror (W_STACK_OVERFLOW, sym->name);
 
       if (i > 3 && accIsFree)
@@ -4684,13 +4694,13 @@ genFunction (iCode * ic)
       else if (i > 7)
         {
           emitcode ("push", "acc");
-          emitcode ("mov", "a,sp");
+          emitcode ("mov",  "a,sp");
           emitcode ("push", "ar0");
-          emitcode ("mov", "r0,a");
-          emitcode ("add", "a,#!constbyte", i-1);
-          emitcode ("xch", "a,@r0");
-          emitcode ("pop", "ar0");
-          emitcode ("pop", "sp");
+          emitcode ("mov",  "r0,a");  /* @r0 points to previously pushed 'a' */
+          emitcode ("add", "a,#!constbyte", i - 1);
+          emitcode ("xch",  "a,@r0"); /* restore 'a' and write new 'sp' value */
+          emitcode ("pop",  "ar0");
+          emitcode ("pop",  "sp");    /* t=@(sp); sp--; sp=t */
         }
       else
         {
@@ -4958,7 +4968,7 @@ genEndFunction (iCode * ic)
       freeBitVect (rsavebits);
 
       /* weird but possible, one should better use a different priority */
-      /* if critical function then turn interrupts off */
+      /* if critical function then turn interrupts back on */
       if (IFFUNC_ISCRITICAL (ftype))
         {
           emitcode ("setb", "ea");
@@ -4970,7 +4980,11 @@ genEndFunction (iCode * ic)
           debugFile->writeEndFunction (currFunc, ic, 1);
         }
 
-      emitcode ("reti", "");
+      wassert (currFunc);
+      if (currFunc->funcRestartAtomicSupport)
+        emitcode (options.acall_ajmp ? "ajmp" : "ljmp", "sdcc_atomic_maybe_rollback");
+      else
+        emitcode ("reti", "");
     }
   else
     {
@@ -7467,7 +7481,7 @@ genCmpEq (iCode * ic, iCode * ifx)
           emitcode ("cpl", "c");
           emitLabel (lbl);
         }
-      /* c = 1 if egal */
+      /* c = 1 if equal */
       if (AOP_TYPE (result) == AOP_CRY && AOP_SIZE (result))
         {
           outBitC (result);
@@ -11746,7 +11760,6 @@ genNearPointerSet (operand * right, operand * result, iCode * ic, iCode * pi)
     {
       if (pi)
         opPut(result, rname, 0);
-      freeAsmop (NULL, aop, ic, TRUE);
     }
   else
     {
@@ -11767,8 +11780,10 @@ genNearPointerSet (operand * right, operand * result, iCode * ic, iCode * pi)
   /* done */
   if (pi)
     pi->generated = 1;
-  freeAsmop (right, NULL, ic, TRUE);
-  freeAsmop (result, NULL, ic, TRUE);
+  freeAsmop (right, NULL, ic, true);
+  if(aop)
+    freeAsmop (NULL, aop, ic, true);
+  freeAsmop (result, NULL, ic, true);
 }
 
 /*-----------------------------------------------------------------*/
@@ -12247,11 +12262,26 @@ genAssign (iCode * ic)
     {
       genLiteralAssign (result, right, size, opPut);
     }
+  // Special case: 2 byte register swap.
+  else if (size == 2 && result->aop->type == AOP_REG && right->aop->type == AOP_REG &&
+    result->aop->aopu.aop_reg[0]->rIdx == right->aop->aopu.aop_reg[1]->rIdx &&
+    result->aop->aopu.aop_reg[1]->rIdx == right->aop->aopu.aop_reg[0]->rIdx)
+    {
+      emitcode ("xch", "a, %s", opGet (result, 0, false, false));
+      emitcode ("xch", "a, %s", opGet (result, 1, false, false));
+      emitcode ("xch", "a, %s", opGet (result, 0, false, false));
+    }
   else
     {
       offset = 0;
       while (size--)
         {
+          // Check for overwriting of result.
+          if (result->aop->type == AOP_REG && right->aop->type == AOP_REG)
+            for (int i = 0; i < offset; i++)
+              if (result->aop->aopu.aop_reg[i]->rIdx == right->aop->aopu.aop_reg[offset]->rIdx)
+                wassert (0);
+
           opPut(result, opGet (right, offset, FALSE, FALSE), offset);
           offset++;
         }
@@ -12297,12 +12327,12 @@ genJumpTab (iCode * ic)
       if ((AOP_TYPE (cond) == AOP_REG) || (IS_AOP_PREG (cond) && !AOP (cond)->paged && !IS_VOLATILE (operandType (cond))))
         {
           emitcode ("add", "a,%s", l);
-          if (options.acall_ajmp == 0)
+          if (!options.acall_ajmp)
             emitcode ("add", "a,%s", l);
         }
       else
         {
-          if (options.acall_ajmp == 0)
+          if (!options.acall_ajmp)
             {
               MOVB ("#0x03");
               emitcode ("mul", "ab");
@@ -12423,7 +12453,7 @@ genCast (iCode * ic)
   D (emitcode (";", "genCast"));
 
   /* if they are equivalent then do nothing */
-  if (operandsEqu (IC_RESULT (ic), IC_RIGHT (ic)))
+  if (operandsEqu (result, right))
     return;
 
   aopOp (right, ic, FALSE);
@@ -12787,7 +12817,7 @@ genReceive (iCode * ic)
       rb1off = ic->argreg;
       while (size--)
         {
-          opPut(IC_RESULT (ic), rb1regs[rb1off++ - 5], offset++);
+          opPut (IC_RESULT (ic), rb1regs[rb1off++ - 5], offset++);
         }
     }
 
@@ -12993,7 +13023,7 @@ gen51Code (iCode * lic)
             }
 #endif
           iLine = printILine (ic);
-          emitcode (";", "[%s] ic:%d: %s", regsInUse, ic->seq, iLine);
+          emitcode (";", "[%s] ic:%d: %s", regsInUse, ic->key, iLine);
           dbuf_free (iLine);
         }
       /* if the result is marked as
@@ -13248,7 +13278,7 @@ mcs51IsReturned (const char *what)
 }
 
 // Check if what is part of the ith argument (counting from 1) to a function of type ftype.
-// If what is 0, just check if hte ith argument is in registers.
+// If what is 0, just check if the ith argument is in registers.
 bool
 mcs51IsRegArg (struct sym_link *ftype, int i, const char *what)
 {

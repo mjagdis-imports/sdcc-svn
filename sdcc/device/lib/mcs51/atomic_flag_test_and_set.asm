@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  atomic_flag_test_and_set.asm - C run-time: C11 atomic flag
 ;
-;  Copyright (C) 2020, Maarten Brock
+;  Copyright (c) 2024, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -40,8 +40,6 @@
 	.area HOME    (CODE)
 
 _atomic_flag_test_and_set::
-	mov  r0,dpl
-	mov  a,#0x01
-	xch  a,@r0
-	mov  dpl,a
-	ret
+	mov  r2, #0x01
+	ljmp sdcc_atomic_exchange_gptr_impl
+

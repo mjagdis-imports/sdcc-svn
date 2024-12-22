@@ -65,17 +65,11 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
 
   ip = ic->next;                /* insertion point */
   /* remove it from the iCode */
+  unsetDefsAndUses (ic);
   remiCodeFromeBBlock (ebp, ic);
 
   left = IC_LEFT (ic);
   right = IC_RIGHT (ic);
-
-  if (IS_SYMOP (left))
-      bitVectUnSetBit (OP_USES (left), ic->key);
-  if (IS_SYMOP (right))
-      bitVectUnSetBit (OP_USES (right), ic->key);
-  if (IS_SYMOP (IC_RESULT (ic)))
-      bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
 
   if (IS_FLOAT (operandType (right)))
     {
@@ -277,11 +271,8 @@ cnvToFloatCast (iCode * ic, eBBlock * ebp)
 
   ip = ic->next;
   /* remove it from the iCode */
+  unsetDefsAndUses (ic);
   remiCodeFromeBBlock (ebp, ic);
-  if (IS_SYMOP (IC_RIGHT (ic)))
-      bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
-  if (IS_SYMOP (IC_RESULT (ic)))
-      bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
 
   /* depending on the type */
   for (bwd = 0; bwd < 4; bwd++)
@@ -402,11 +393,8 @@ cnvToFixed16x16Cast (iCode * ic, eBBlock * ebp)
 
   ip = ic->next;
   /* remove it from the iCode */
+  unsetDefsAndUses (ic);
   remiCodeFromeBBlock (ebp, ic);
-  if (IS_SYMOP (IC_RIGHT (ic)))
-      bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
-  if (IS_SYMOP (IC_RESULT (ic)))
-      bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
 
   /* depending on the type */
   for (bwd = 0; bwd < 4; bwd++)
@@ -514,11 +502,8 @@ cnvFromFloatCast (iCode * ic, eBBlock * ebp)
 
   ip = ic->next;
   /* remove it from the iCode */
+  unsetDefsAndUses (ic);
   remiCodeFromeBBlock (ebp, ic);
-  if (IS_SYMOP (IC_RIGHT (ic)))
-      bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
-  if (IS_SYMOP (IC_RESULT (ic)))
-      bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
 
   /* depending on the type */
   for (bwd = 0; bwd < 4; bwd++)
@@ -626,11 +611,8 @@ cnvFromFixed16x16Cast (iCode * ic, eBBlock * ebp)
 
   ip = ic->next;
   /* remove it from the iCode */
+  unsetDefsAndUses (ic);
   remiCodeFromeBBlock (ebp, ic);
-  if (IS_SYMOP (IC_RIGHT (ic)))
-      bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
-  if (IS_SYMOP (IC_RESULT (ic)))
-      bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
 
   /* depending on the type */
   for (bwd = 0; bwd < 4; bwd++)
@@ -839,8 +821,8 @@ convilong (iCode *ic, eBBlock *ebp)
   SPEC_SHORT (leftType) = 0;
   SPEC_SHORT (rightType) = 0;
 
-  left = IC_LEFT (ic);
-  right = IC_RIGHT (ic);
+  left = ic->left;
+  right = ic->right;
 
   // Special case: 16x16->32 multiplication.
   if (op == '*' && (muls16tos32[0] || muls16tos32[1] || port->hasNativeMulFor) &&
@@ -851,12 +833,12 @@ convilong (iCode *ic, eBBlock *ebp)
       iCode *lic = IS_SYMOP (left) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (left))) : 0;
       iCode *ric = IS_SYMOP (right) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (right))) : 0;
 
-      if ((!lic || lic->op == CAST && getSize (operandType (IC_RIGHT (lic))) == 2 && SPEC_USIGN (operandType (IC_RIGHT (lic))) == SPEC_USIGN (operandType (left))) &&
-        (!ric || ric->op == CAST && getSize (operandType (IC_RIGHT (ric))) == 2 && SPEC_USIGN (operandType (IC_RIGHT (ric))) == SPEC_USIGN (operandType (right))))
+      if ((!lic || lic->op == CAST && IS_INTEGRAL (operandType (lic->right)) && getSize (operandType (lic->right)) == 2 && SPEC_USIGN (operandType (lic->right)) == SPEC_USIGN (operandType (left))) &&
+        (!ric || ric->op == CAST && IS_INTEGRAL (operandType (ric->right)) && getSize (operandType (ric->right)) == 2 && SPEC_USIGN (operandType (ric->right)) == SPEC_USIGN (operandType (right))))
         {
           func = muls16tos32[SPEC_USIGN (operandType (left))];
 
-          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (IC_RIGHT (lic)), operandType (IC_RIGHT (ric))))
+          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (lic->right), operandType (ric->right)))
             {
               if (lic)
                 {
@@ -864,7 +846,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   OP_SYMBOL (left)->type = newIntLink ();
                 }
               else
-                IC_LEFT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
+                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
 
               if (ric)
                 {
@@ -872,7 +854,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   OP_SYMBOL (right)->type = newIntLink ();
                 }
               else
-                IC_RIGHT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
+                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
 
               if (func) // Use 16x16->32 support function
                 goto found;
@@ -889,12 +871,12 @@ convilong (iCode *ic, eBBlock *ebp)
       iCode *lic = IS_SYMOP (left) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (left))) : 0;
       iCode *ric = IS_SYMOP (right) ? hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (right))) : 0;
 
-      if ((lic && lic->op == CAST && getSize (operandType (IC_RIGHT (lic))) <= 4 && SPEC_USIGN (operandType (IC_RIGHT (lic)))) && // Todo: Allow !lic / !ric for literal operands?
-        (ric && ric->op == CAST && getSize (operandType (IC_RIGHT (ric))) <= 1 && SPEC_USIGN (operandType (IC_RIGHT (ric)))))
+      if ((lic && lic->op == CAST && IS_INTEGRAL (operandType (lic->right)) && getSize (operandType (lic->right)) <= 4 && SPEC_USIGN (operandType (lic->right))) && // Todo: Allow !lic / !ric for literal operands?
+        (ric && ric->op == CAST && IS_INTEGRAL (operandType (ric->right)) && getSize (operandType (ric->right)) <= 1 && SPEC_USIGN (operandType (ric->right))))
         {
           func = mulu32u8tou64;
 
-          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (IC_RIGHT (lic)), operandType (IC_RIGHT (ric))))
+          if (func || port->hasNativeMulFor && lic && ric && port->hasNativeMulFor (ic, operandType (lic->right), operandType (ric->right)))
             {
               if (lic)
                 {
@@ -904,7 +886,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
                 }
               else
-                IC_LEFT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
+                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
 
               if (ric)
                 {
@@ -913,7 +895,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
                 }
               else
-                IC_RIGHT (ic) = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
+                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
 
               if (func) // Use 32x8->64 support function
                 goto found;
@@ -996,12 +978,8 @@ found:
   // Update left and right - they might have changed due to inserted casts.
   left = IC_LEFT (ic);
   right = IC_RIGHT (ic);
+  unsetDefsAndUses (ic);
   remiCodeFromeBBlock (ebp, ic);
-
-  if (IS_SYMOP (left))
-    bitVectUnSetBit (OP_USES (left), ic->key);
-  if (IS_SYMOP (right))
-    bitVectUnSetBit (OP_USES (right), ic->key);
 
   /* if int & long support routines NOT compiled as reentrant */
   if (!options.intlong_rent)
@@ -1813,7 +1791,7 @@ replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isad
 /* replaceRegEqv - replace all local variables with their reqv     */
 /*-----------------------------------------------------------------*/
 static void
-replaceRegEqv (ebbIndex * ebbi)
+replaceRegEqv (ebbIndex *ebbi)
 {
   eBBlock ** ebbs = ebbi->bbOrder;
   int count = ebbi->count;
@@ -1830,6 +1808,17 @@ replaceRegEqv (ebbIndex * ebbi)
 
       for (ic = ebbs[i]->sch; ic; ic = ic->next)
         {
+          // Convert struct / union to pointer.
+          if(ic->op != ADDRESS_OF && ic->op != RETURN && ic->op != CALL && ic->op != PCALL)
+            {
+              if (ic->left && IS_AGGREGATE (operandType (ic->left)))
+                setOperandType (ic->left, aggrToPtr (operandType (ic->left), false));
+              if (ic->right && IS_AGGREGATE (operandType (ic->right)))
+                setOperandType (ic->right, aggrToPtr (operandType (ic->right), false));
+              if (ic->result && IS_AGGREGATE (operandType (ic->result)))
+                setOperandType (ic->result, aggrToPtr (operandType (ic->result), false));
+            }
+          
           if (SKIP_IC2 (ic))
             continue;
 
@@ -2113,17 +2102,14 @@ killDeadCode (ebbIndex * ebbi)
                   else
                     {
                       /* nothing is volatile, eliminate the iCode */
+                      unsetDefsAndUses (ic);
                       remiCodeFromeBBlock (ebbs[i], ic);
 
                       /* for the left & right remove the usage */
-                      if (IS_SYMOP (IC_LEFT (ic)))
-                        {
-                          if (OP_SYMBOL (IC_LEFT (ic))->isstrlit)
-                            freeStringSymbol (OP_SYMBOL (IC_LEFT (ic)));
-                          bitVectUnSetBit (OP_USES (IC_LEFT (ic)), ic->key);
-                        }
-                      if (IS_SYMOP (IC_RIGHT (ic)))
-                        bitVectUnSetBit (OP_USES (IC_RIGHT (ic)), ic->key);
+                      if (IS_SYMOP (ic->left) && OP_SYMBOL (ic->left)->isstrlit)
+                        freeStringSymbol (OP_SYMBOL (ic->left));
+                      if (IS_SYMOP (ic->right) && OP_SYMBOL (ic->right)->isstrlit)
+                        freeStringSymbol (OP_SYMBOL (ic->right));
                     }
                 }
             }                   /* end of all instructions */
@@ -2632,7 +2618,7 @@ optimizeStdLibCall (eBBlock ** ebbs, int count)
           // Look for call to puts().
           if (ic->op != CALL || !ic->prev || ic->prev->op != IPUSH && ic->prev->op != SEND)
             continue;
-          if (!IS_SYMOP (IC_LEFT (ic)) || !OP_SYMBOL (IC_LEFT (ic))->rname || strcmp (OP_SYMBOL (IC_LEFT (ic))->rname, "_puts"))
+          if (!IS_SYMOP (ic->left) || strcmp (OP_SYMBOL (ic->left)->rname, "_puts"))
             continue;
 
           // Look for following call to puts().
@@ -2660,7 +2646,7 @@ optimizeStdLibCall (eBBlock ** ebbs, int count)
             }
           if (!nic || nic->op != CALL || nic->prev->op != IPUSH && nic->prev->op != SEND)
             continue;
-          if (!IS_SYMOP (IC_LEFT (nic)) || !OP_SYMBOL (IC_LEFT (nic))->rname || strcmp (OP_SYMBOL (IC_LEFT (nic))->rname, "_puts"))
+          if (!IS_SYMOP (nic->left) || strcmp (OP_SYMBOL (nic->left)->rname, "_puts"))
             continue;
 
           // Check that the return values are unused
@@ -2725,99 +2711,283 @@ optimizeStdLibCall (eBBlock ** ebbs, int count)
 /* a single step.                                                  */
 /*-----------------------------------------------------------------*/
 static void
-optimizeCastCast (eBBlock ** ebbs, int count)
+optimizeCastCast (eBBlock **ebbs, int count)
 {
-  int i;
-  iCode *ic;
-  iCode *uic;
-  sym_link *type1;
-  sym_link *type2;
-  sym_link *type3;
-  symbol *sym;
-  int size1, size2, size3;
-
-  for (i = 0; i < count; i++)
+  for (int i = 0; i < count; i++)
     {
-      for (ic = ebbs[i]->sch; ic; ic = ic->next)
+      for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
         {
-          if (ic->op == CAST && IC_RESULT (ic) && IS_ITEMP (IC_RESULT (ic)))
+          if ((ic->op == CAST || ic->op == '=' || ic->op == '+' || ic->op == ADDRESS_OF) && ic->result && IS_ITEMP (ic->result))
             {
-              type1 = operandType (IC_RIGHT (ic));
-              type2 = operandType (IC_RESULT (ic));
-
-              /* Look only for a cast from an integer type to an */
-              /* integer type that has no loss of bits */
-              if (!IS_INTEGRAL (type1) || !IS_INTEGRAL (type2))
-                continue;
-              size1 = bitsForType (type1);
-              size2 = bitsForType (type2);
-              if (size2 < size1)
-                continue;
-              /* If they are the same size, they must have the same signedness */
-              if (size2 == size1 && SPEC_USIGN (type2) != SPEC_USIGN (type1))
-                continue;
+              sym_link *type1 = operandType ((ic->op == CAST || ic->op == '=')? ic->right : ic->left);
+              sym_link *type2 = operandType (ic->result);
 
               /* There must be only one use of this first result */
-              if (bitVectnBitsOn (OP_USES (IC_RESULT (ic))) != 1 ||
-                bitVectnBitsOn (OP_DEFS (IC_RESULT (ic))) != 1)
+              if (bitVectnBitsOn (OP_USES (ic->result)) != 1 ||
+                bitVectnBitsOn (OP_DEFS (ic->result)) != 1)
                 continue;
 
-              uic = hTabItemWithKey (iCodehTab,
-                        bitVectFirstBit (OP_USES (IC_RESULT (ic))));
-              if(!uic || (uic->op != CAST && uic->op != BITWISEAND))
+              iCode *uic = hTabItemWithKey (iCodehTab,
+                        bitVectFirstBit (OP_USES (ic->result)));
+              if(!uic || !uic->result)
                 continue;
 
-              type3 = operandType (IC_RESULT (uic));
-
-              /* Cast to bool must be preserved to ensure that all nonzero values are correctly cast to true */
-              if (SPEC_NOUN (type2) == V_BOOL && SPEC_NOUN(type3) != V_BOOL)
-                 continue;
-              /* Similarly for signed->unsigned->signed widening casts to ensure that negative values end up as nonnegative ones in the end. */
-              if (!SPEC_USIGN (type1) && SPEC_USIGN (type2) && !SPEC_USIGN (type3) && bitsForType (type3) > bitsForType (type2))
-                continue;
-
-              /* Special case: Second use is a bit test */
-              if (uic->op == BITWISEAND && IS_OP_LITERAL (IC_RIGHT (uic)) && ifxForOp (IC_RESULT (uic), uic))
+              sym_link *type3 = operandType (uic->result);
+              if (ic->op == ADDRESS_OF && uic->op == CAST &&
+                IS_PTR (type2) && IS_PTR (type3) && getAddrspace (type2) == getAddrspace (type3) && sclsFromPtr (type2) == sclsFromPtr (type3) &&
+                ic->next == uic)
                 {
-                  unsigned long long mask = operandLitValueUll (IC_RIGHT (uic));
-
-                  /* Signed cast might set bits above the width of type1 */
-                  if (!SPEC_USIGN (type1) && (mask >> (bitsForType (type1))))
-                    continue;
-
-                  IC_RIGHT (uic) = operandFromValue (valCastLiteral (type1, operandLitValue (IC_RIGHT (uic)), operandLitValue (IC_RIGHT (uic))), false);
+                  bitVectUnSetBit (OP_DEFS (ic->result), ic->key);
+                  IC_RESULT (ic) = IC_RESULT (uic);
+                  bitVectSetBit (OP_DEFS (ic->result), ic->key);
+                  unsetDefsAndUses (uic);
+                  remiCodeFromeBBlock (ebbs[i], uic);
+                  continue;
                 }
-              else if (uic->op == CAST) /* Otherwise this use must be a second cast */
-                {
-                  /* It must be a cast to another integer type that */
-                  /* has no loss of bits */
-                  type3 = operandType (IC_RESULT (uic));
-                  if (!IS_INTEGRAL (type3))
+              else if (ic->op == '=' && !POINTER_SET(ic) && uic->op == CAST && ic->next == uic)
+                 {
+                  if (IS_PTR (type1) && IS_PTR (type2))
+                    ;
+                  else if (IS_INTEGRAL (type1) && IS_INTEGRAL (type2) && SPEC_USIGN (type1) == SPEC_USIGN (type2))
+                    ;
+                  else // Sometimes we encounter weird assignments that change sign. E.g. signed char -> unsigned char -> int would break if we try to optimize.
                     continue;
-                  size3 = bitsForType (type3);
-                  if (size3 < size1)
-                     continue;
+                  bitVectUnSetBit (OP_USES (uic->right), uic->key);
+                  uic->right = ic->right;
+                  if (IS_SYMOP (uic->right))
+                    bitVectSetBit (OP_USES (uic->right), uic->key);
+                  unsetDefsAndUses (ic);
+                  remiCodeFromeBBlock (ebbs[i], ic);
+                  continue;
+                }
+              else if (ic->op == CAST && IS_INTEGRAL (type1) && IS_INTEGRAL (type2) && IS_INTEGRAL (type3))
+                {
+                  int size1 = bitsForType (type1);
+                  int size2 = bitsForType (type2);
+                  if (size2 < size1)
+                    continue;
                   /* If they are the same size, they must have the same signedness */
-                  if (size3 == size2 && SPEC_USIGN (type3) != SPEC_USIGN (type2))
+                  if (size2 == size1 && SPEC_USIGN (type2) != SPEC_USIGN (type1))
                     continue;
 
-                  /* The signedness between the first and last types must match */
-                  if (SPEC_USIGN (type3) != SPEC_USIGN (type1))
+                  /* Cast to bool must be preserved to ensure that all nonzero values are correctly cast to true */
+                  if (SPEC_NOUN (type2) == V_BOOL && SPEC_NOUN(type3) != V_BOOL)
+                     continue;
+                  /* Similarly for signed->unsigned->signed widening casts to ensure that negative values end up as nonnegative ones in the end. */
+                  if (!SPEC_USIGN (type1) && SPEC_USIGN (type2) && !SPEC_USIGN (type3) && bitsForType (type3) > bitsForType (type2))
+                    continue;
+
+                  /* Special case: Second use is a bit test */
+                  if (uic->op == BITWISEAND && IS_OP_LITERAL (uic->right) && ifxForOp (uic->result, uic))
+                    {
+                      unsigned long long mask = operandLitValueUll (IC_RIGHT (uic));
+
+                      /* Signed cast might set bits above the width of type1 */
+                      if (!SPEC_USIGN (type1) && (mask >> (bitsForType (type1))))
+                        continue;
+
+                      IC_RIGHT (uic) = operandFromValue (valCastLiteral (type1, operandLitValue (uic->right), operandLitValue (uic->right)), false);
+                    }
+                  else if (uic->op == CAST) /* Otherwise this use must be a second cast */
+                    {
+                      /* It must be a cast to another integer type that */
+                      /* has no loss of bits */
+                      if (!IS_INTEGRAL (type3))
+                        continue;
+                      int size3 = bitsForType (type3);
+                      if (size3 < size1)
+                         continue;
+                      /* If they are the same size, they must have the same signedness */
+                      if (size3 == size2 && SPEC_USIGN (type3) != SPEC_USIGN (type2))
+                        continue;
+
+                      /* The signedness between the first and last types must match */
+                      if (SPEC_USIGN (type3) != SPEC_USIGN (type1))
+                        continue;
+                    }
+                  else
+                    continue;
+                }
+              else if (IS_PTR (type1) && IS_PTR (type2))
+                {
+                  if (ic->op == CAST && uic->op == CAST)
+                    ;
+                  else if(uic->op == '+' && IS_PTR(type3) &&
+                     getAddrspace (type1) == getAddrspace (type3) && sclsFromPtr (type1) == sclsFromPtr (type3) &&
+                    (ic->op == CAST || ic->op == '+' && IS_OP_LITERAL (ic->right) && IS_OP_LITERAL (uic->right)))
+                    {
+                      if (ic->next == uic && isOperandEqual (ic->result, uic->left)) // Eliminate ic competely.
+                        {
+                          bitVectUnSetBit (OP_USES (uic->left), uic->key);
+                          uic->left = ic->op == CAST ? ic->right : ic->left;
+                          bitVectSetBit (OP_USES (uic->left), uic->key);
+                          if (ic->op == '+')
+                            uic->right = operandFromValue (valPlus (valPlus (constIntVal ("0ll"), OP_VALUE (ic->right), false), OP_VALUE (uic->right), true), false);
+                          unsetDefsAndUses (ic);
+                          remiCodeFromeBBlock (ebbs[i], ic);
+                          continue;
+                        }
+                      else if (ic->op == CAST)
+                        ;
+                      else
+                        continue;
+                    }
+                  else if(ic->op == '+' && uic->op == CAST && IS_PTR(type3) &&
+                    getAddrspace (type1) == getAddrspace (type3) && sclsFromPtr (type1) == sclsFromPtr (type3))
+                    {
+                      // Change cast to assignment, change pointer type at addition.
+                      uic->op = '=';
+                      uic->left = NULL;
+                      symbol *sym = OP_SYMBOL (ic->result);
+                      sym->type = copyLinkChain (type3);
+                      sym->etype = getSpec (sym->type);
+                      continue;
+                    }
+                  else
                     continue;
                 }
               else
                 continue;
 
+
               /* Change the first cast to a simple assignment and */
               /* let the second cast do all the work */
               ic->op = '=';
-              IC_LEFT (ic) = NULL;
+              ic->left= NULL;
 
-              sym = OP_SYMBOL (IC_RESULT (ic));
+              symbol *sym = OP_SYMBOL (ic->result);
               sym->type = copyLinkChain (type1);
               sym->etype = getSpec (sym->type);
             }
         }
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* optimizeFinalCast - remove unneeded intermediate casts.         */
+/* Backends can handle wrong types onmany pointers in poiner write */
+/* and read. Exploit this to optimize out some casts. Typically    */
+/* done late (i.e. just before register allocation).               */
+/*-----------------------------------------------------------------*/
+static void
+optimizeFinalCast (ebbIndex *ebbi)
+{
+  // Apparently this triggers a bug in the mcs51 and ds390 backends.
+  // Some regression tests fail, including gcc-torture-execute-pr38236;
+  // looking into that one for -mmcs51 --model-small , register allocation
+  // puts the result of a 16-bit read from e generic pointer into dptr,
+  // which codegen can't handle (it genrated code where dpl is overwritten by
+  // the lower byte of the result, then used as pointer once more).
+  // This also triggers a pic16 bug resulting in invalid asm code being generated.
+  if (TARGET_MCS51_LIKE || TARGET_IS_PIC16)
+    return;
+
+  for (int i = 0; i < ebbi->count; i++)
+    {
+      eBBlock **ebbs = ebbi->bbOrder;
+      eBBlock *ebp = ebbs[i];
+
+      for (iCode *ic = ebp->sch; ic; ic = ic->next)
+        {
+          if (ic->op != CAST || !IS_ITEMP (ic->result))
+            continue;
+
+          if (bitVectnBitsOn (OP_USES (ic->result)) != 1 || bitVectnBitsOn (OP_DEFS (ic->result)) != 1)
+            continue;
+
+          iCode *uic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_USES (ic->result)));
+          if(!uic ||
+            uic->op != GET_VALUE_AT_ADDRESS && !(POINTER_SET(uic) && !isOperandEqual (ic->result, uic->left) && !isOperandEqual (ic->result, uic->right) && (IS_ITEMP (ic->right) || IS_OP_LITERAL (ic->right))))
+            continue;
+
+          // For now only handle a use that follows immediately or nearly immediately.
+          if (ic->next && ic->next->op != LABEL && !POINTER_SET(ic->next) &&
+            (!IS_ITEMP (ic->right) || !bitVectBitValue (OP_DEFS (ic->right), ic->next->key)) &&
+            uic == ic->next->next &&
+            (!ic->next->result || IS_ITEMP (ic->next->result)))
+            ;
+          else if (uic != ic->next)
+            continue;
+
+          // Not all backends can handle multiple global operands in all operations well.
+          if (IS_OP_GLOBAL (uic->result) && IS_OP_GLOBAL (ic->right) && 
+            !TARGET_Z80_LIKE && !TARGET_IS_STM8 && !TARGET_IS_F8)
+            continue;
+
+          if (ic->op == CAST)
+            {    
+              sym_link *type1 = operandType (ic->right);
+              sym_link *type2 = operandType (ic->left);
+
+              if (IS_INTEGRAL (type1) && IS_INTEGRAL (type2) &&
+                SPEC_NOUN (type1) == SPEC_NOUN (type2) && bitsForType (type1) == bitsForType (type2))
+                ;
+              else if (IS_PTR (type1) && IS_PTR (type2) &&
+                sclsFromPtr (type1) == sclsFromPtr (type2) &&
+                getAddrspace (type1) == getAddrspace (type2))
+                ;
+             else 
+                continue;
+
+             if (!IS_PTR (type1) || IS_BITFIELD(type1->next) || !IS_PTR (type2) || IS_BITFIELD(type2->next))
+               continue;
+            }
+
+          // Introducinvg the duplicate smbol in the commented-out parts below would fix the type.
+          // But the current backends won't propagate the rematerialization flag in their register allocators correctly if there are multiple symbols for the same iTemp.
+          if (isOperandEqual (ic->result, uic->left))
+            {
+              operand *op = operandFromOperand (ic->right);
+              /*if (IS_SYMOP (op))
+                {
+                  symbol *sym = copySymbol (OP_SYMBOL(op));
+                  sym->type = copyLinkChain (operandType (uic->left));
+                  sym->etype = getSpec (sym->type);
+                  OP_SYMBOL (op) = sym;
+                }
+              else
+                setOperandType (op, operandType (uic->left));*/
+              bitVectUnSetBit (OP_USES (uic->left), uic->key);
+              uic->left = op;
+              bitVectSetBit (OP_USES (uic->left), uic->key);
+            }
+          if (isOperandEqual (ic->result, uic->right))
+            {
+              operand *op = operandFromOperand (ic->right);
+              /*if (IS_SYMOP (op))
+                {
+                  symbol *sym = copySymbol (OP_SYMBOL(op));
+                  sym->type = copyLinkChain (operandType (uic->right));
+                  sym->etype = getSpec (sym->type);
+                  OP_SYMBOL (op) = sym;
+                }
+              else
+                setOperandType (op, operandType (uic->right));*/
+              bitVectUnSetBit (OP_USES (uic->right), uic->key);
+              uic->right = op;
+              bitVectSetBit (OP_USES (uic->right), uic->key);
+            }
+          if (POINTER_SET (uic) && isOperandEqual (ic->result, uic->result))
+            {
+              operand *op = operandFromOperand (ic->right);
+              /*if (IS_SYMOP (op))
+                {
+                  symbol *sym = copySymbol (OP_SYMBOL(op));
+                  sym->type = copyLinkChain (operandType (uic->result));
+                  sym->etype = getSpec (sym->type);
+                  OP_SYMBOL (op) = sym;
+                }
+              else
+                setOperandType (op, operandType (uic->result));*/
+              op->isaddr = uic->result->isaddr;
+              bitVectUnSetBit (OP_USES (uic->result), uic->key);
+              uic->result = op;
+              bitVectSetBit (OP_USES (uic->result), uic->key);
+            }
+
+          unsetDefsAndUses (ic);
+          remiCodeFromeBBlock (ebp, ic);
+      }
     }
 }
 
@@ -2878,7 +3048,7 @@ offsetFoldGet (eBBlock **ebbs, int count)
   iCode *ic;
   iCode *uic;
 
-  if (!TARGET_Z80_LIKE && !TARGET_IS_STM8)
+  if (!TARGET_Z80_LIKE && !TARGET_IS_STM8 && !TARGET_IS_F8)
     return;
 
   for (i = 0; i < count; i++)
@@ -2930,7 +3100,7 @@ offsetFoldUse (eBBlock **ebbs, int count)
   iCode *ic;
   iCode *uic;
 
-  if (!(TARGET_Z80_LIKE && !TARGET_IS_SM83) && !TARGET_IS_STM8) // All z80-related targets except sm83 support non-zero right operand. stm8 also supports it.
+  if (!(TARGET_Z80_LIKE && !TARGET_IS_SM83) && !TARGET_IS_STM8 && !TARGET_IS_F8) // All z80-related targets except sm83 support non-zero right operand. stm8 also supports it.
     return;
 
   for (i = 0; i < count; i++)
@@ -3146,6 +3316,33 @@ removeRedundantTemps (iCode *sic)
 }
 
 /*-----------------------------------------------------------------*/
+/* checkRestartAtomic - try to prove that no restartable           */
+/*                      atomics implementation is used from here.  */
+/*-----------------------------------------------------------------*/
+void
+checkRestartAtomic (ebbIndex *ebbi)
+{
+  if (!currFunc)
+    return;
+
+  currFunc->funcRestartAtomicSupport = false;
+//  if (!options.std_c11)
+//    return;
+
+  for (int i = 0; i < ebbi->count; i++)
+    {
+      eBBlock **ebbs = ebbi->bbOrder;
+      const eBBlock *ebp = ebbs[i];
+
+      for (const iCode *ic = ebp->sch; ic; ic = ic->next)
+        if (ic->op == CALL && !IS_OP_LITERAL (ic->left))
+          currFunc->funcRestartAtomicSupport |= OP_SYMBOL(ic->left)->funcRestartAtomicSupport;
+        else if (ic->op == CALL || ic->op == PCALL || ic->op == INLINEASM)
+          currFunc->funcRestartAtomicSupport = true;
+    }
+}
+
+/*-----------------------------------------------------------------*/
 /* eBBlockFromiCode - creates extended basic blocks from iCode     */
 /*                    will return an array of eBBlock pointers     */
 /*-----------------------------------------------------------------*/
@@ -3217,6 +3414,8 @@ eBBlockFromiCode (iCode *ic)
   if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_CSE, ebbi);
 
+  // optimizeCastCast (ebbi->bbOrder, ebbi->count); TODO: Enable after fixing GCSE issue. GCSE messes up some pointer types, triggered by this, resulting in the bitfields.c test failing for some targets.
+
   /* compute the data flow */
   computeDataFlow (ebbi);
 
@@ -3242,6 +3441,11 @@ eBBlockFromiCode (iCode *ic)
 
   if (options.dump_i_code)
     dumpEbbsToFileExt (DUMP_DEADCODE, ebbi);
+
+  // We want to eliminate some unnecessary short-lived temporaries now -
+  // Before they will get lifted out of loops, and have their life-ranges
+  // extended across multiple blocks.
+  optimizeCastCast (ebbi->bbOrder, ebbi->count);
 
   /* do loop optimizations */
   change += (lchange = loopOptimizations (loops, ebbi));
@@ -3273,7 +3477,7 @@ eBBlockFromiCode (iCode *ic)
     }
 
   offsetFoldGet (ebbi->bbOrder, ebbi->count);
-
+  optimizeCastCast (ebbi->bbOrder, ebbi->count);
   computeControlFlow (ebbi);
   loops = createLoopRegions (ebbi);
   computeDataFlow (ebbi);
@@ -3302,7 +3506,7 @@ eBBlockFromiCode (iCode *ic)
   ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
   shortenLiveRanges (ic, ebbi);
   guessCounts (ic, ebbi);
-  if (optimize.lospre && (TARGET_Z80_LIKE || TARGET_HC08_LIKE || TARGET_IS_STM8)) /* For mcs51, we get a code size regression with lospre enabled, since the backend can't deal well with the added temporaries */
+  if (optimize.lospre && (TARGET_Z80_LIKE || TARGET_HC08_LIKE || TARGET_IS_STM8 || TARGET_IS_F8)) /* For mcs51, we get a code size regression with lospre enabled, since the backend can't deal well with the added temporaries */
     {
       lospre (ic, ebbi);
       if (options.dump_i_code)
@@ -3411,6 +3615,8 @@ eBBlockFromiCode (iCode *ic)
         dumpEbbsToFileExt (DUMP_GENCONSTPROP, ebbi);
     }
 
+  optimizeFinalCast (ebbi);
+
   /* Split any live-ranges that became non-connected in dead code elimination. */
   change = 0;
   do
@@ -3440,7 +3646,9 @@ eBBlockFromiCode (iCode *ic)
    */
   discardDeadParamReceives (ebbi->bbOrder, ebbi->count);
 
-  narrowReads(ebbi);
+  narrowReads (ebbi);
+
+  checkRestartAtomic (ebbi);
 
   /* allocate registers & generate code */
   if (!options.syntax_only)

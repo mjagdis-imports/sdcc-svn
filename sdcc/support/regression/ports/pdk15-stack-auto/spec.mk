@@ -1,8 +1,5 @@
 # Regression test specification for the pdk14 target running with uCsim
 
-# simulation timeout in seconds
-SIM_TIMEOUT = 60
-
 EMU_PORT_FLAG = -tPDK15
 
 # path to uCsim
@@ -14,7 +11,7 @@ else
   ifdef UCSIM_DIR
     UCPDK15A = $(UCSIM_DIR)/pdk.src/ucsim_pdk$(EXEEXT)
   else
-    UCPDK15A = $(top_builddir)/sim/ucsim/pdk.src/ucsim_pdk$(EXEEXT)
+    UCPDK15A = $(top_builddir)/sim/ucsim/src/sims/pdk.src/ucsim_pdk$(EXEEXT)
     UCPDK15B = $(top_builddir)/bin/ucsim_pdk$(EXEEXT)
   endif
 

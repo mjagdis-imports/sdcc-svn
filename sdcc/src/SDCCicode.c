@@ -2229,7 +2229,7 @@ geniCodeMultiply (operand * left, operand * right, RESULT_TYPE resultType)
      efficient in most cases than 2 bytes result = 2 bytes << literal
      if port has 1 byte muldiv */
   if ((p2 > 0) && !IS_FLOAT (letype) && !IS_FIXED (letype) &&
-      !((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)) && !(TARGET_Z80_LIKE || TARGET_MOS6502_LIKE || TARGET_IS_STM8 && p2 == 1) /* Mimic old behaviour that tested port->muldiv, which was zero for stm8 and z80-like only. Someone should look into what really makes sense here. */) &&
+      !((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)) && !(TARGET_Z80_LIKE || TARGET_MOS6502_LIKE || TARGET_IS_F8 || TARGET_IS_STM8 && p2 == 1) /* Mimic old behaviour that tested port->muldiv, which was zero for stm8 and z80-like only. Someone should look into what really makes sense here. */) &&
       !TARGET_PIC_LIKE)      /* don't shift for pic */
     {
       if ((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)))
@@ -3397,7 +3397,17 @@ checkTypes (operand * left, operand * right)
     }
 
   if (always_cast || compareType (ltype, rtype, false) == -1)
-    right = geniCodeCast (ltype, right, TRUE);
+    {
+      if (IS_VOLATILE (ltype)) // Don't propagate volatile to right side - we don't want volatile iTemps.
+        {
+          ltype = copyLinkChain (ltype);
+          if (IS_DECL(ltype))
+            DCL_PTR_VOLATILE (ltype) = 0;
+          else
+            SPEC_VOLATILE (ltype) = 0;
+        }
+      right = geniCodeCast (ltype, right, TRUE);
+    }
   checkPtrQualifiers (ltype, rtype, !right->isConstElimnated);
   return right;
 }

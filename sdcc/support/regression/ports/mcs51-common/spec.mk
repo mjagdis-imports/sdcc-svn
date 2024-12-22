@@ -1,8 +1,5 @@
 # Common regression test specification for the mcs51 targets running with uCsim
 
-# simulation timeout in seconds
-SIM_TIMEOUT = 80
-
 EMU_PORT_FLAG = -t32
 EMU_FLAGS = -S in=$(DEV_NULL),out=-
 PORT_BASE = mcs51-common
@@ -14,7 +11,7 @@ else
   ifdef UCSIM_DIR
     S51A = $(UCSIM_DIR)/s51.src/ucsim_51$(EXEEXT)
   else
-    S51A = $(top_builddir)/sim/ucsim/s51.src/ucsim_51$(EXEEXT)
+    S51A = $(top_builddir)/sim/ucsim/src/sims/s51.src/ucsim_51$(EXEEXT)
     S51B = $(top_builddir)/bin/ucsim_51$(EXEEXT)
   endif
 

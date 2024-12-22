@@ -41,7 +41,7 @@ static char _defaultRules[] =
 #define OPTION_MEDIUM_MODEL         "--model-medium"
 #define OPTION_LARGE_MODEL          "--model-large"
 #define OPTION_HUGE_MODEL           "--model-huge"
-#define OPTION_STACK_SIZE       "--stack-size"
+#define OPTION_STACK_SIZE           "--stack-size"
 
 static OPTION _mcs51_options[] =
   {
@@ -204,36 +204,179 @@ _mcs51_getRegName (const struct reg_info *reg)
 }
 
 static void
-_mcs51_genAssemblerPreamble (FILE * of)
+_mcs51_genAssemblerStart (FILE * of)
 {
+  if (!options.noOptsdccInAsm)
+    {
+      fprintf (of, "\t.optsdcc -m%s", port->target);
+
+      switch (options.model)
+        {
+        case MODEL_SMALL:
+          fprintf (of, " --model-small");
+          break;
+        case MODEL_COMPACT:
+          fprintf (of, " --model-compact");
+          break;
+        case MODEL_MEDIUM:
+          fprintf (of, " --model-medium");
+          break;
+        case MODEL_LARGE:
+          fprintf (of, " --model-large");
+          break;
+        case MODEL_HUGE:
+          fprintf (of, " --model-huge");
+          break;
+        default:
+          break;
+        }
+      /*if(options.stackAuto)      fprintf (asmFile, " --stack-auto"); */
+      if (options.useXstack)
+        fprintf (of, " --xstack");
+      /*if(options.intlong_rent)   fprintf (asmFile, " --int-long-rent"); */
+      /*if(options.float_rent)     fprintf (asmFile, " --float-rent"); */
+      if (options.noRegParams)
+        fprintf (of, " --no-reg-params");
+      if (options.all_callee_saves)
+        fprintf (of, " --all-callee-saves");
+      fprintf (of, "\n");
+    }
+}
+
+// Generate support code for restartable sequence implementation of atomics.
+static void
+mcs51_genAtomicSupport (struct dbuf_s *oBuf, unsigned int startaddr)
+{
+//  if (!options.std_c11)
+//    return;
+
+  dbuf_printf (oBuf, "; restartable atomic support routines\n");
+
+  // Support routines need to start on 8B boundary.
+  if (startaddr % 8)
+    {
+      dbuf_printf (oBuf, "\t.ds\t%d\n", 8 - startaddr % 8);
+      startaddr += (8 - startaddr % 8);
+    }
+  // Support routine block may not cross 256B boundary.
+  if (startaddr / 256 != (startaddr + 8 * 4 + 7) / 256)
+    {
+      dbuf_printf (oBuf, "\t.ds\t%d\n", 256 - startaddr % 256);
+      startaddr += 256 - startaddr % 256;
+    }
+
+  dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_start::\n");
+
+  // Each routine (except the last one) needs to be 8 bytes long.
+  // Restart may happen at bytes 1 to 5 of each routine.
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_pdata_impl:\n"
+                     "\tmovx\ta, @r0\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@r0, a\n"
+                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
+  dbuf_printf (oBuf, "\tnop\n"
+                     "\tnop\n"
+                     "sdcc_atomic_exchange_xdata_impl:\n"
+                     "\tmovx\ta, @dptr\n"
+                     "\tmov\tr3, a\n"
+                     "\tmov\ta, r2\n"
+                     "\tmovx\t@dptr, a\n"
+                     "\tsjmp\tsdcc_atomic_exchange_exit\n");
+  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_idata_impl:\n"
+                     "\tmov\ta, @r0\n"
+                     "\tcjne\ta, ar2, .+#5\n"
+                     "\tmov\ta, r3\n"
+                     "\tmov\t@r0, a\n"
+                     "\tret\n"
+                     "\tnop\n");
+  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_pdata_impl:\n"
+                     "\tmovx\ta, @r0\n"
+                     "\tcjne\ta, ar2, .+#5\n"
+                     "\tmov\ta, r3\n"
+                     "\tmovx\t@r0, a\n"
+                     "\tret\n"
+                     "\tnop\n");
+  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_xdata_impl:\n"
+                     "\tmovx\ta, @dptr\n"
+                     "\tcjne\ta, ar2, .+#5\n"
+                     "\tmov\ta, r3\n"
+                     "\tmovx\t@dptr, a\n"
+                     "\tret\n");
+  dbuf_printf (oBuf, "sdcc_atomic_exchange_rollback_end::\n\n");
+
+  // The following two routines just need to be in jnb range of the above ones, they don't have alignment requirements.
+
+  // Store value in r2 into byte at b:dptr, return previous byte at b:dptr in dpl.
+  // Overwrites r0, r2, r3.
+  dbuf_printf (oBuf, "sdcc_atomic_exchange_gptr_impl::\n"
+                     "\tjnb\tb.6, sdcc_atomic_exchange_xdata_impl\n"
+                     "\tmov\tr0, dpl\n"
+                     "\tjb\tb.5, sdcc_atomic_exchange_pdata_impl\n"
+                     "sdcc_atomic_exchange_idata_impl:\n"
+                     "\tmov\ta, r2\n"
+                     "\txch\ta, @r0\n"
+                     "\tmov\tdpl, a\n"
+                     "\tret\n"
+                     "sdcc_atomic_exchange_exit:\n"
+                     "\tmov\tdpl, r3\n"
+                     "\tret\n");
+
+  // If the value of the byte at b:dptr is the value of r2, store the value
+  // of r3 into that byte. Return the new value of that byte in a.
+  // Overwrites r0, r2, r3.
+  dbuf_printf (oBuf, "sdcc_atomic_compare_exchange_gptr_impl::\n"
+                     "\tjnb\tb.6, sdcc_atomic_compare_exchange_xdata_impl\n"
+                     "\tmov\tr0, dpl\n"
+                     "\tjb\tb.5, sdcc_atomic_compare_exchange_pdata_impl\n"
+                     "\tsjmp\tsdcc_atomic_compare_exchange_idata_impl\n");
 }
 
 /* Generate interrupt vector table. */
 static int
-_mcs51_genIVT (struct dbuf_s * oBuf, symbol ** interrupts, int maxInterrupts)
+_mcs51_genIVT (struct dbuf_s *oBuf, symbol **interrupts, int maxInterrupts)
 {
   int i;
+  unsigned int nextbyteaddr;
 
   dbuf_printf (oBuf, "\t%cjmp\t__sdcc_gsinit_startup\n", options.acall_ajmp?'a':'l');
-  if((options.acall_ajmp)&&(maxInterrupts)) dbuf_printf (oBuf, "\t.ds\t1\n");
+  nextbyteaddr = options.acall_ajmp ? 2 : 3;
+  if(options.acall_ajmp && maxInterrupts)
+    {
+      dbuf_printf (oBuf, "\t.ds\t1\n");
+      nextbyteaddr += 1;
+    }
 
   /* now for the other interrupts */
   for (i = 0; i < maxInterrupts; i++)
     {
       if (interrupts[i])
         {
-          dbuf_printf (oBuf, "\t%cjmp\t%s\n", options.acall_ajmp?'a':'l', interrupts[i]->rname);
+          dbuf_printf (oBuf, "\t%cjmp\t%s\n", options.acall_ajmp ? 'a' : 'l', interrupts[i]->rname);
+          nextbyteaddr += options.acall_ajmp ? 2 : 3;
           if ( i != maxInterrupts - 1 )
-            dbuf_printf (oBuf, "\t.ds\t%d\n", options.acall_ajmp?6:5);
+            {
+              dbuf_printf (oBuf, "\t.ds\t%d\n", options.acall_ajmp ? 6 : 5);
+              nextbyteaddr += options.acall_ajmp ? 6 : 5;
+            }
         }
       else
         {
           dbuf_printf (oBuf, "\treti\n");
+          nextbyteaddr += 1;
           if ( i != maxInterrupts - 1 )
-            dbuf_printf (oBuf, "\t.ds\t7\n");
+            {
+              dbuf_printf (oBuf, "\t.ds\t7\n");
+              nextbyteaddr += 7;
+            }
         }
     }
-  return TRUE;
+
+  mcs51_genAtomicSupport (oBuf, nextbyteaddr);
+
+  return true;
 }
 
 static void
@@ -535,6 +678,11 @@ static void
 updateOpRW (asmLineNode *aln, const char *op_in, const char *optype)
 {
   mcs51operanddata *opdat;
+
+  /* There are two bit instructions that accept negated souce bit operand,
+     where a leading '/' denotes the negation.  Ignore that here.  */
+  if (*op_in == '/')
+    op_in += 1;
 
   /* Ignore dots or brackets in operand (bit numbes) for operand table search.
      But remember that it's a bit access for special case handling.  */
@@ -936,7 +1084,7 @@ PORT mcs51_port =
   0,
   _mcs51_rtrackUpdate,
   _mcs51_keywords,
-  _mcs51_genAssemblerPreamble,
+  _mcs51_genAssemblerStart,
   NULL,                         /* no genAssemblerEnd */
   _mcs51_genIVT,
   _mcs51_genXINIT,

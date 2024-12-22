@@ -192,7 +192,7 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_WERROR, NULL, "Treat the warnings as errors"},
   {0,   OPTION_DEBUG, NULL, "Enable debugging symbol output"},
   {0,   "--cyclomatic", &options.cyclomatic, "Display complexity of compiled functions"},
-  {0,   OPTION_STD, NULL, "Determine the language standard (c89, c99, c11, c23, sdcc89 etc.)"},
+  {0,   OPTION_STD, NULL, "Determine the language standard (c90, c99, c11, c23, c2y, sdcc89 etc.)"},
   {0,   OPTION_DOLLARS_IN_IDENT, &options.dollars_in_ident, "Permit '$' as an identifier character"},
   {0,   OPTION_SIGNED_CHAR, &options.signed_char, "Make \"char\" signed by default"},
   {0,   OPTION_USE_NON_FREE, &options.use_non_free, "Search / include non-free licensed libraries and header files"},
@@ -375,6 +375,9 @@ static PORT *_ports[] = {
 #endif
 #if !OPT_DISABLE_MOS65C02
   &mos65c02_port,
+#endif
+#if !OPT_DISABLE_F8
+  &f8_port,
 #endif
 };
 
@@ -622,7 +625,7 @@ static void
 setStackSize (void)
 {
 #if defined (HAVE_SETRLIMIT) && defined (RLIMIT_STACK)
-  struct rlimit rl = {4 * 1024 * 1024, 4 * 1024 * 1024};
+  struct rlimit rl = {8 * 1024 * 1024, 8 * 1024 * 1024};
   setrlimit (RLIMIT_STACK, &rl);
 #endif
 }
@@ -650,6 +653,7 @@ setDefaultOptions (void)
   options.std_c99 = 1;
   options.std_c11 = 1;          /* default to C11 (we want inline by default, so we need at least C99, and support for C11 is more complete than C99) */
   options.std_c23 = 0;
+  options.std_c2y = 0;
   options.code_seg = CODE_NAME ? Safe_strdup (CODE_NAME) : NULL;        /* default to CSEG for generated code */
   options.const_seg = CONST_NAME ? Safe_strdup (CONST_NAME) : NULL;     /* default to CONST for generated code */
   options.data_seg = DATA_NAME ? Safe_strdup (DATA_NAME) : NULL;        /* default to DATA for non-initialized data */
@@ -1258,22 +1262,24 @@ parseCmdLine (int argc, char **argv)
             {
               char *langVer = getStringArgEx (OPTION_CODE_SEG, charsConsumed, argv, &i, argc);
 
-              if (strcmp (langVer, "c89") == 0 || strcmp (langVer, "c90") == 0 || strcmp (langVer, "iso9899:1990") == 0)
+              if (strcmp (langVer, "c90") == 0 || strcmp (langVer, "iso9899:1990") == 0 || strcmp (langVer, "c89") == 0)
                 {
                   options.std_c95 = 0;
                   options.std_c99 = 0;
                   options.std_c11 = 0;
                   options.std_c23 = 0;
+                  options.std_c2y = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
 
-              if (strcmp (langVer, "c95") == 0 || strcmp (langVer, "iso9899:199409") == 0)
+              if (strcmp (langVer, "c94") == 0 || strcmp (langVer, "iso9899:199409") == 0 || strcmp (langVer, "c95") == 0)
                 {
                   options.std_c95 = 1;
                   options.std_c99 = 0;
                   options.std_c11 = 0;
                   options.std_c23 = 0;
+                  options.std_c2y = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
@@ -1284,6 +1290,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c99 = 1;
                   options.std_c11 = 0;
                   options.std_c23 = 0;
+                  options.std_c2y = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
@@ -1295,6 +1302,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c99 = 1;
                   options.std_c11 = 1;
                   options.std_c23 = 0;
+                  options.std_c2y = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
@@ -1305,16 +1313,29 @@ parseCmdLine (int argc, char **argv)
                   options.std_c99 = 1;
                   options.std_c11 = 1;
                   options.std_c23 = 1;
+                  options.std_c2y = 0;
                   options.std_sdcc = 0;
                   continue;
                 }
 
-              if (strcmp (langVer, "sdcc89") == 0 || strcmp (langVer, "sdcc90") == 0)
+              if (strcmp (langVer, "c2y") == 0)
+                {
+                  options.std_c95 = 1;
+                  options.std_c99 = 1;
+                  options.std_c11 = 1;
+                  options.std_c23 = 1;
+                  options.std_c2y = 1;
+                  options.std_sdcc = 0;
+                  continue;
+                }
+
+              if (strcmp (langVer, "sdcc90") == 0 || strcmp (langVer, "sdcc89") == 0)
                 {
                   options.std_c95 = 0;
                   options.std_c99 = 0;
                   options.std_c11 = 0;
                   options.std_c23 = 0;
+                  options.std_c2y = 0;
                   options.std_sdcc = 1;
                   continue;
                 }
@@ -1325,6 +1346,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c99 = 1;
                   options.std_c11 = 0;
                   options.std_c23 = 0;
+                  options.std_c2y = 0;
                   options.std_sdcc = 1;
                   continue;
                 }
@@ -1335,6 +1357,7 @@ parseCmdLine (int argc, char **argv)
                   options.std_c99 = 1;
                   options.std_c11 = 1;
                   options.std_c23 = 0;
+                  options.std_c2y = 0;
                   options.std_sdcc = 1;
                   continue;
                 }
@@ -1345,6 +1368,18 @@ parseCmdLine (int argc, char **argv)
                   options.std_c99 = 1;
                   options.std_c11 = 1;
                   options.std_c23 = 1;
+                  options.std_c2y = 0;
+                  options.std_sdcc = 1;
+                  continue;
+                }
+
+              if (strcmp (langVer, "sdcc2y") == 0)
+                {
+                  options.std_c95 = 1;
+                  options.std_c99 = 1;
+                  options.std_c11 = 1;
+                  options.std_c23 = 1;
+                  options.std_c2y = 1;
                   options.std_sdcc = 1;
                   continue;
                 }
@@ -2825,7 +2860,7 @@ main (int argc, char **argv, char **envp)
   /* finalize common options */
   finalizeOptions ();
 
-  /* When a non-default calling convetion is requested, the default stdlib and crt0 can't be used */
+  /* When a non-default calling convention is requested, the default stdlib and crt0 can't be used */
   /* This is a warning, not an error, since some users like to compile their own stdlib, and use it in the stdlib location. */
   if (options.sdcccall != port->sdcccall &&
   	(TARGET_IS_STM8 && !options.nostdlib ||

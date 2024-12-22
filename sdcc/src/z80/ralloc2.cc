@@ -455,7 +455,7 @@ static bool operand_byte_in_reg(const operand *o, int offset, reg_t r, const ass
   if(!o || !IS_SYMOP(o))
     return(false);
 
-  operand_map_t::const_iterator oi, oi2, oi3, oi_end;
+  operand_map_t::const_iterator oi, oi_end;
 
   for(boost::tie(oi, oi_end) = G[i].operands.equal_range(OP_SYMBOL_CONST(o)->key); offset && oi != oi_end; offset--, oi++);
 
@@ -554,7 +554,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(false);
 
   // For some iCodes, we can handle anything.
-  if(ic->op == '~' || ic->op == IPUSH || ic->op == LABEL || ic->op == GOTO ||
+  if(ic->op == '~' || ic->op == IPUSH || ic->op == SEND || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
     ic->op == GETBYTE || ic->op == GETWORD ||
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
@@ -566,13 +566,17 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     return(true);
 
   // Can use non-destructive cp on == and < (> might swap operands).
-  if((ic->op == EQ_OP || ic->op == '<' && SPEC_USIGN(getSpec(operandType(left))) && SPEC_USIGN(getSpec(operandType(right)))) &&
+  if((ic->op == EQ_OP || (ic->op == '<' || ic->op == '>') && SPEC_USIGN(getSpec(operandType(left))) && SPEC_USIGN(getSpec(operandType(right)))) &&
     getSize(operandType(IC_LEFT(ic))) == 1 && ifxForOp (IC_RESULT(ic), ic) && operand_in_reg(left, REG_A, ia, i, G) &&
     (IS_OP_LITERAL (right) || operand_in_reg(right, REG_C, ia, i, G) || operand_in_reg(right, REG_B, ia, i, G) || operand_in_reg(right, REG_E, ia, i, G) || operand_in_reg(right, REG_D, ia, i, G) || operand_in_reg(right, REG_H, ia, i, G) || operand_in_reg(right, REG_L, ia, i, G)))
     return(true);
 
   const cfg_dying_t &dying = G[i].dying;
   const bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
+
+  if ((ic->op == EQ_OP || ic->op == NE_OP) && getSize(operandType(ic->left)) == 1 && (operand_in_reg(left, REG_A, ia, i, G) || operand_in_reg(right, REG_A, ia, i, G)) &&
+    (ifxForOp (ic->result, ic) || dying_A))
+    return(true);
 
   if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_SM83) &&
     getSize(operandType(IC_RESULT(ic))) == 1 && dying_A)
@@ -743,12 +747,14 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
     ic->op == GETBYTE || ic->op == GETWORD ||
-    ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
+    ic->op == ROT && (getSize(operandType(IC_RESULT(ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     !((IS_SM83 || IY_RESERVED) && (operand_on_stack(result, a, i, G) || operand_on_stack(right, a, i, G))) && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
-    ic->op == RECEIVE || ic->op == SEND)
+    ic->op == RECEIVE || ic->op == SEND ||
+    POINTER_SET(ic) && !IS_BITVAR (operandType (result)->next))
     return(true);
 
-  if((ic->op == EQ_OP || ic->op == NE_OP) && IS_VALOP(right))
+  if((ic->op == EQ_OP || ic->op == NE_OP) &&
+    (IS_VALOP(right) || operand_in_reg(right, ia, i, G) && !(exstk && operand_on_stack(ic->left, a, i, G)) && (!isOperandInDirSpace(ic->left) || getSize(operandType(ic->left)) == 1)))
     return(true);
 
   // Due to lack of ex hl, (sp), the generic push code generation fallback doesn't work for gbz80, so we need to be able to use hl if we can't just push a pair or use a.
@@ -774,7 +780,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(IS_SM83 && POINTER_GET(ic) && !(result_only_HL || getSize(operandType(right)) == 1))
     return(false);
 
-  if((IS_SM83 || IY_RESERVED) && (IS_TRUE_SYMOP(left) || IS_TRUE_SYMOP(right)))
+  if((IS_SM83 || IY_RESERVED) && (IS_TRUE_SYMOP(left) && (!IS_PARM(left) || exstk) || IS_TRUE_SYMOP(right) && (!IS_PARM(right) || exstk)))
     return(false);
 
   if((IS_SM83 || IY_RESERVED) && IS_TRUE_SYMOP(result) && getSize(operandType(IC_RESULT(ic))) > 2)
@@ -790,7 +796,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 
   if(ic->op == '-' && getSize(operandType(result)) == 2 && IS_TRUE_SYMOP (left) && IS_TRUE_SYMOP (right) && result_only_HL)
     return(true);
-    
+
   if(exstk &&
      (operand_on_stack(result, a, i, G) + operand_on_stack(left, a, i, G) + operand_on_stack(right, a, i, G) >= 2) &&
      (result && IS_SYMOP(result) && getSize(operandType(result)) >= 2 || !result_only_HL))
@@ -816,6 +822,9 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(!IS_SM83 && ic->op == '+' && getSize(operandType(result)) == 2 && IS_TRUE_SYMOP (left) &&
     (IS_OP_LITERAL (right) && ulFromVal (OP_VALUE (IC_RIGHT(ic))) <= 3 || IS_OP_LITERAL (left) && ulFromVal (OP_VALUE (IC_LEFT(ic))) <= 3) &&
     (operand_in_reg(result, REG_C, ia, i, G) && I[ia.registers[REG_C][1]].byte == 0 && operand_in_reg(result, REG_B, ia, i, G) || operand_in_reg(result, REG_E, ia, i, G) && I[ia.registers[REG_E][1]].byte == 0 && operand_in_reg(result, REG_D, ia, i, G))) // Can use ld rr, (nn) followed by inc rr
+    return(true);
+
+  if(!IS_SM83 && ic->op == '+' && getSize(operandType(result)) <= 2 && result_only_HL && !isOperandInDirSpace(ic->result))
     return(true);
 
   if((ic->op == '+' || ic->op == '-' || ic->op == UNARYMINUS) && getSize(operandType(result)) >= 2 &&
@@ -901,7 +910,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if(ic->op == CALL)
     return(true);
 
-  if(POINTER_GET(ic) && getSize(operandType(IC_RESULT(ic))) == 1 && !IS_BITVAR(getSpec(operandType(result))) &&
+  if(ic->op == GET_VALUE_AT_ADDRESS && getSize(operandType(IC_RESULT(ic))) == 1 && !IS_BITVAR(getSpec(operandType(result))) &&
     operand_is_pair(left, a, i, G) && // Use ld a, (dd) or ld r, 0 (iy).
     IS_OP_LITERAL (right) && ulFromVal (OP_VALUE_CONST(right)) == 0) 
     return(true);
@@ -1361,7 +1370,6 @@ too_risky:
 
   a = *ai_best;
   
-  std::set<var_t>::const_iterator vi, vi_end;
   varset_t newlocal;
   std::set_union(T[t].alive.begin(), T[t].alive.end(), a.local.begin(), a.local.end(), std::inserter(newlocal, newlocal.end()));
   a.local = newlocal;
@@ -1598,7 +1606,7 @@ static bool omit_frame_ptr(const G_t &G)
 // Adjust stack location when deciding to omit frame pointer.
 void move_parms(void)
 {
-  if(!currFunc || IS_SM83 || options.omitFramePtr || !should_omit_frame_ptr)
+  if(!currFunc || IS_SM83 || !should_omit_frame_ptr)
     return;
 
   for(value *val = FUNC_ARGS (currFunc->type); val; val = val->next)
@@ -1609,7 +1617,7 @@ void move_parms(void)
       val->sym->stack -= 2;
     }
 }
-
+  
 iCode *z80_ralloc2_cc(ebbIndex *ebbi)
 {
   eBBlock **const ebbs = ebbi->bbOrder;
@@ -1663,7 +1671,10 @@ iCode *z80_ralloc2_cc(ebbIndex *ebbi)
   if (USE_OLDSALLOC)
     redoStackOffsets ();
   else
-    chaitin_salloc(stack_conflict_graph); // new Chaitin-style stack allocator
+    {
+      mergeSpiltParms(stack_conflict_graph); // try to reuse parameter locations
+      chaitin_salloc(stack_conflict_graph);  // new Chaitin-style stack allocator
+    }
 
   if(options.dump_graphs && !USE_OLDSALLOC)
     dump_scon(stack_conflict_graph);

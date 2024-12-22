@@ -263,7 +263,7 @@ static void set_spilt(G_t &G, const I_t &I, SI_t &scon)
           scon[(boost::add_edge(result, left, scon)).first].alignment_conflict_only = true;
           if (TARGET_PDK_LIKE && G[i].ic->op == GET_VALUE_AT_ADDRESS && getSize(scon[result].sym->type) > 2) // Padauk still needs pointer read operand, since pointer read of more than 2 bytes is broken into multiple support routine calls.
             scon[(boost::add_edge(result, left, scon)).first].alignment_conflict_only = false;
-          if (TARGET_IS_STM8 && (G[i].ic->op == RIGHT_OP || G[i].ic->op == LEFT_OP) && IS_OP_LITERAL(IC_RIGHT(G[i].ic)) && ulFromVal (OP_VALUE_CONST (IC_RIGHT(G[i].ic))) >= 6) // Byte shifting in shift by constant might fail for partially spilt variables. Currently only the stm8 register allocator might partially spill variables.
+          if ((TARGET_IS_STM8 || TARGET_IS_F8) && (G[i].ic->op == RIGHT_OP || G[i].ic->op == LEFT_OP) && IS_OP_LITERAL(IC_RIGHT(G[i].ic)) && ulFromVal (OP_VALUE_CONST (IC_RIGHT(G[i].ic))) >= 6) // Byte shifting in shift by constant might fail for partially spilt variables. Currently only the stm8 and f8 register allocators might partially spill variables.
             scon[(boost::add_edge(result, left, scon)).first].alignment_conflict_only = false;
         }
       if(right >= 0 && !boost::edge (result, right, scon).second)
@@ -460,12 +460,67 @@ void dump_scon(const scon_t &scon)
       int start = scon[i].color;
       std::ostringstream os;
       os << i;
-      if (scon[i].sym->name)
+      if (scon[i].sym)
         os << " : " << scon[i].sym->name << " : " << getSize(scon[i].sym->type) << " [" << start << "," << (start + getSize(scon[i].sym->type) - 1) << "]";
       name[i] = os.str();
     }
   boost::write_graphviz(dump_file, scon, boost::make_label_writer(name));
   delete[] name;
+}
+
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 79
+#error boost 1.71 (and possibly earlier, but apparently fixed as of boost 1.79.0) bug: clear_vertex followed by remove_vertex could introduce loops into the graph (and omit non-loop edges). See SDCC bug #3772.
+#endif
+
+// Save stack space by merging spilt variables into spill location of stack parameters.
+// Currently handles only a single variable per function, with some additional restrictions.
+template <class SI_t>
+void mergeSpiltParms(SI_t &SI)
+{
+  for(unsigned int i = 0; i < boost::num_vertices(SI); i++)
+    {
+      symbol *psym = 0;
+      operand *parmop = 0;
+      iCode *dic = 0;
+      bitVect *defs = bitVectCopy (SI[i].sym->defs);
+
+      for(int key = bitVectFirstBit (defs); bitVectnBitsOn (defs); bitVectUnSetBit (defs, key), key = bitVectFirstBit (defs))
+        {
+          dic = (iCode *)hTabItemWithKey (iCodehTab, key);
+          if (!dic || !dic->result) // Something went wrong.
+            break;
+          if(dic->op == '=' && !POINTER_SET(dic) && IS_PARM(dic->right) && !IS_REGPARM (OP_SYMBOL(dic->right)->etype))
+            {
+              psym = OP_SYMBOL (dic->right);
+              break;
+            }
+        }
+      freeBitVect (defs);
+
+      if (!psym || bitVectnBitsOn(psym->defs) > 0 || bitVectnBitsOn(psym->uses) > 1)
+        continue;
+
+      for(iCode *ic = dic->prev; ic; ic = ic->prev)
+        {
+          if (ic->op == LABEL)
+            goto no;
+          if (isOperandEqual(ic->left, dic->result) ||
+            isOperandEqual(ic->right, dic->result) ||
+            POINTER_SET(ic) && isOperandEqual(ic->result, dic->result))
+            goto no;
+          if (ic->op == FUNCTION)
+            break;
+        }
+
+      // Merge spill location of spilt variable into stack parameter.
+      SI[i].sym->usl.spillLoc = psym;
+      SI[i].sym->stack = psym->stack; // Needed for volatile local variables.
+      clear_vertex(i, SI);
+      remove_vertex(i, SI);
+      break;
+no:
+      ;
+    }
 }
 #endif
 

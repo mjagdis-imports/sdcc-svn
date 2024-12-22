@@ -11,6 +11,17 @@ EXCLUDE_host += \
 
 ###############################################
 
+# Relies on feeatures of older C standards not supported by curent host compilers.
+EXCLUDE_host += \
+	qct_0026-implicitret \
+	gte_920908-2 \
+	gte_921204-1 \
+	gte_930621-1 \
+	gte_930630-1 \
+	gte_931031-1 \
+	gte_compndlit-1 \
+	tst_gcc-torture-execute-pr34176
+
 #segfault (BUG?)
 EXCLUDE_host += \
 	gte_20041218-1 \
@@ -97,6 +108,10 @@ EXCLUDE_s08 += \
 EXCLUDE_stm8 += \
    gte_20041218-1
 
+# For line-by-line comparability with stm8
+EXCLUDE_f8 += \
+   gte_20041218-1
+
 # Fail
 EXCLUDE_stm8-large += \
 	gte_20041218-1
@@ -127,7 +142,7 @@ EXCLUDE_ucz80 += \
 	gte_20041218-1
 EXCLUDE_ucz80-resiy += \
 	gte_20041218-1
-EXCLUDE_ucz80-nmos += \
+EXCLUDE_ucz80-unsafe-read += \
 	gte_20041218-1
 EXCLUDE_ucz180-resiy += \
 	gte_20041218-1
@@ -142,7 +157,7 @@ EXCLUDE_ucz80 += \
 	gte_20091229-1
 
 # Fail
-EXCLUDE_ucz80-nmos += \
+EXCLUDE_ucz80-unsafe-read += \
 	gte_20091229-1
 
 # Fail
@@ -272,6 +287,8 @@ EXCLUDE_pdk14 += \
 	gte_pr50865 \
 	gte_20001124-1 \
 	gte_991019-1
+EXCLUDE_pdk15 += \
+	gte_20001124-1
 EXCLUDE_mcs51-small += \
 	gte_loop-ivopts-2 \
 	gte_pr58984 \
@@ -285,6 +302,9 @@ EXCLUDE_mcs51-medium += \
 	gte_shiftdi-2
 EXCLUDE_mcs51-large-stack-auto += \
 	gte_loop-ivopts-2
+EXCLUDE_mcs51-xstack-auto += \
+	gte_loop-ivopts-2 \
+	gte_shiftdi-2
 EXCLUDE_uc6502-stack-auto += \
 	gte_loop-ivopts-2
 
@@ -321,18 +341,18 @@ EXCLUDE_mcs51-medium += \
 	qct_0080-arrays	
 
 # Target too slow (fails with timeout)
-EXCLUDE_ARCH_pdk += \
-	qct_0042-prime
-EXCLUDE_uc6502 += \
-	qct_0042-prime
-EXCLUDE_uc6502-stack-auto += \
-	qct_0042-prime
-EXCLUDE_ARCH_mcs51 += \
-	qct_0042-prime
-EXCLUDE_ds390 += \
-	qct_0042-prime
-EXCLUDE_ucgbz80 += \
-	qct_0042-prime
+#EXCLUDE_ARCH_pdk += \
+#	qct_0042-prime
+#EXCLUDE_uc6502 += \
+#	qct_0042-prime
+#EXCLUDE_uc6502-stack-auto += \
+#	qct_0042-prime
+#EXCLUDE_ARCH_mcs51 += \
+#	qct_0042-prime
+#EXCLUDE_ds390 += \
+#	qct_0042-prime
+#EXCLUDE_ucgbz80 += \
+#	qct_0042-prime
 
 ###################################################
 # TinyC Tests
@@ -406,7 +426,7 @@ EXCLUDE_mcs51-medium += \
 
 ###################################################
 EXCLUDE_ucz80 += ${EXCLUDE_ARCH_z80}
-EXCLUDE_ucz80-nmos += ${EXCLUDE_ARCH_z80}
+EXCLUDE_ucz80-unsafe-read += ${EXCLUDE_ARCH_z80}
 EXCLUDE_ucz80-undoc += ${EXCLUDE_ARCH_z80}
 EXCLUDE_ucz80-resiy += ${EXCLUDE_ARCH_z80}
 EXCLUDE_ucz180 += ${EXCLUDE_ARCH_z80}
