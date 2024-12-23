@@ -1,3 +1,38 @@
+2024-12-22 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/lib/strtoull.c,
+	  device/lib/wcstoul.c,
+	  device/lib/wcstoull.c:
+	  Hackfix and re-enable strtoull and wcstoull, see bug #3798.
+
+2024-12-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  support/regression/tests/structinit.c.in,
+	  .version:
+	  struct / union in initializer, RFE #901.
+
+2024-12-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Enable use of ldir for r2k and r2ka in a few cases that are not affected by the wait-state bug.
+	* src/z80/gen.c:
+	  Improve Rabbit negation codegen.
+	* support/regression/tests/sieve.c:
+	  Regression test based on historic Byte magazine sieve of Eratosthenes benchmark.
+
+2024-12-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/r2k/crt0.s,
+	  device/lib/r2ka/crt0.s,
+	  device/lib/r3ka/crt0.s:
+	  Fix comment in Rabbit startup code.
+
+2024-12-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/README.txt:
+	  Fix some links in documentation.
+
 2024-12-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sim/ucsim/src/sims/f8.src/decode.h,
