@@ -1,3 +1,11 @@
+2024-12-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/README,
+	  hardware/tangnano9k.cst,
+	  hardware/tangnano9k2.v:
+	  Start port to Tang Nano 9K board.
+
 2024-12-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,

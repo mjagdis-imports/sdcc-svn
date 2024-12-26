@@ -7,6 +7,8 @@ SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
 P_R = /home/philipp/p_r/p_r
+# nextpnr-himbaechel is not yet in Debian, and nextpnr-gowin, which is in Debian doesn't support block RAM.
+NEXTPNR_HIMBÄCHEL = /home/philipp/nextpnr/nextpnr-himbaechel
 SDCC = /home/philipp/sdcc-trunk/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-trunk/sdcc/device/include -L/home/philipp/sdcc-trunk/sdcc/device/lib/build/f8
 
 .PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images sdcctests2 benchmarks2
@@ -17,6 +19,8 @@ all: f8-testsystem f8-testsystem2
 icebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
 # Images for the GateMateA1-EVB FPGA board.
 gatematea1evb-images: tests/cblink/gatematea1evb_synth_00.cfg.bit tests/chello/gatematea1evb_synth_00.cfg.bit
+# Imags for the Tang Nano 9K board
+tangnano9k-images: 
 
 clean:
 	rm -f f8-testsystem f8-testsystem2 *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit tests/*/*_synth.*
@@ -84,6 +88,9 @@ icebreaker2_nosv.v: icebreaker2.v $(SYSTEM2SOURCES)
 gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
 	$(SV2V) --exclude=always --exclude=logic gatematea1evb2.v > $@
 
+tangnano9k2_nosv.v: tangnano9k2.v $(SYSTEM2SOURCES)
+	$(SV2V) --exclude=always --exclude=logic tangnano9k2.v > $@
+
 # For yosys, -noflatten makes debugging easier but results in less optimization, and p_r can't handle yosys -noflatten output (and needs -nomx8 here).
 %/icebreaker_synth.json: icebreaker_nosv.v %/test.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -abc2 -top icebreaker -json icebreaker_synth.json"
@@ -96,7 +103,10 @@ gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
 
 %/gatematea1evb2_synth.v: gatematea1evb2_nosv.v %/test.even.vmem %/test.odd.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
-	
+
+%/tangnano9k2_synth.json: tangnano9k2_nosv.v %/test.even.vmem %/test.odd.vmem # Current nextpnr 0.7 doesn't support bram yet, but with -nobtam the design doesn't fit.
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../tangnano9k2_nosv.v; synth_gowin -top tangnano9k -json tangnano9k2_synth.json"
+
 %/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
 	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 2 --asc $@
 
@@ -116,7 +126,13 @@ gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
 
 %/icebreaker2_synth.bin: %/icebreaker2_synth.asc
 	icepack $< $@
-	
+
+%/tangnano9k2.json: %/tangnano9k2_synth.json tangnano9k.cst
+	$(NEXTPNR_HIMBÄCHEL) --json $< --write $@ --device GW1NR-LV9QN88PC6/I5 --vopt family=GW1N-9C --vopt cst=tangnano9k.cst
+
+%/tangnano9k2.fs: %/tangnano9k2.json
+	gowin_pack -d GW1N-9C -o $@ $^
+
 icebreaker_synth.v: icebreaker_synth.json
 	$(YOSYS) -p 'read_json $^; write_verilog $@'
 
