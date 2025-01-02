@@ -1,3 +1,9 @@
+2024-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdas/asf8/f8mch.c,
+	  sim/ucsim/src/sims/f8.src/glob.cc:
+	  f8 ldw instruction fixes for assembler and simulator.
+
 2024-12-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* .version,
