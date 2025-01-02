@@ -96,7 +96,7 @@ There are three 16-bit general-purpose registers, each consisting of two 8.bit r
 
 \section{Instructions}
 
-There is the f8 lightweight instruction subset f8l.
+The leightweight f8 instruction subset f8l is meant for smaller cores. This simplification comes at the cost of a reduction in performance and an increase in code size.
 
 Instructions have up to 3 source and up to 2 destination operands. At most one source and one destination operand are in memory. All destination operands in general-purpose registers need to be one 16 bit register or part of the same 16-bit genral-purpose register.
 
@@ -714,16 +714,14 @@ Assembler code                   & Operation                   & f8l \\
 \texttt{ldw y, z}                & \texttt{x = z}              & Yes \\
 \texttt{ldw z, x}                & \texttt{x = z}              & Yes \\
 \texttt{ldw x, z}                & \texttt{x = z}              & Yes \\
+\texttt{ldw x, y}                & \texttt{x = y}              & Yes \\
+\texttt{ldw z, y}                & \texttt{z = y}              & Yes \\
 \texttt{ldw mm, y}               & \texttt{mm = y}             & Yes \\
 \texttt{ldw mm, altacc16}        & \texttt{mm = altacc16}      & Yes \\
 \texttt{ldw (n, sp), y}          & \texttt{(n, sp) = y}        & Yes \\
 \texttt{ldw (n, sp), altacc16}   & \texttt{(n, sp) = altacc16} & Yes \\
 \texttt{ldw (nn, z), y}          & \texttt{(nn, z) = y}        & Yes \\
 \texttt{ldw (nn, z), altacc16}   & \texttt{(nn, z) = altacc16} & Yes \\
-\texttt{ldw x, y}                & \texttt{x = y}              & Yes \\
-\texttt{ldw z, y}                & \texttt{z = y}              & Yes \\
-\texttt{ldw y, z}                & \texttt{y = z}              & Yes \\
-\texttt{ldw z, x}                & \texttt{z = x}              & Yes \\
 \texttt{ldw (y), x}              & \texttt{(y) = x}            & Yes \\
 \texttt{ldw (z), y}              & \texttt{(z) = y}            & Yes \\
 \texttt{ldw (x), z}              & \texttt{(x) = z}            & Yes \\
@@ -986,9 +984,9 @@ Getting the hardware thread number efficiently is useful for implementing thread
 
 \begin{tabular}{l l l}
 Assembler code                   & Operation                                                  & f8l \\
-\texttt{xch yl, yh}              & \texttt{t = yl; yl = yh; yh = t}                           & Yes \\
-\texttt{xch xl, xh}              & \texttt{t = xl; xl = xh; xh = t}                           & Yes \\
-\texttt{xch zl, zh}              & \texttt{t = zl; zl = zh; zh = t}                           & Yes \\
+\texttt{xch yl, yh}              & \texttt{t = yl; yl = yh; yh = t}                           & No \\
+\texttt{xch xl, xh}              & \texttt{t = xl; xl = xh; xh = t}                           & No \\
+\texttt{xch zl, zh}              & \texttt{t = zl; zl = zh; zh = t}                           & No \\
 \texttt{xch xl, (n, sp)}         & \texttt{t = (n, sp); (n, sp) = xl; xl = t}                 & No \\
 \texttt{xch altacc8, (n, sp)}    & \texttt{t = (n, sp); (n, sp) = altacc8; altacc8 = t}       & No \\
 \texttt{xch xl, (y)}             & \texttt{t = (y); (y) = xl; xl = t}                         & Yes \\

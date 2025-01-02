@@ -338,8 +338,12 @@ function automatic logic opcode_is_zrel(opcode_t opcode);
 	return(opcode_is_zrel_read(opcode) || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LDW_ZREL_Y);
 endfunction
 
+function automatic logic opcode_is_yrel_read(opcode_t opcode);
+	return(opcode_is_8_1_yrel(opcode) && opcode != OPCODE_CLR_YREL || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL);
+endfunction
+
 function automatic logic opcode_is_yrel(opcode_t opcode);
-	return(opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LD_YREL_XL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_YREL_X);
+	return(opcode_is_8_1_yrel(opcode) || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LD_YREL_XL || opcode == OPCODE_LDW_Y_YREL || opcode == OPCODE_LDW_YREL_X);
 endfunction
 
 function automatic logic opcode_is_jr_d(opcode_t opcode);

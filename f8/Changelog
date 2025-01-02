@@ -1,3 +1,15 @@
+2024-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/manual.tex,
+	  doc/opcodemap.ods,
+	  hardware/Makefile,
+	  hardware/cpu2.v,
+	  hardware/opcode.v,
+	  hardware/tests/clr/test.s,
+	  hardware/tests/srl/test.s,
+	  hardware/tests/tst/test.s:
+	  Fixes for y-relative f8 addressing mode.
+
 2024-12-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,

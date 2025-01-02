@@ -75,6 +75,35 @@ l2trap:
 	trap
 l2:
 
+	ldw	y, sp
+	tst	(0, y)
+	jrc	l3trap
+	jrn	l3trap
+	jrz	l3trap
+	jro	l3trap
+	tst	(1, y)
+	jrc	l3trap
+	jrnn	l3trap
+	jrz	l3trap
+	jrno	l3trap
+	tst	0x3ffe
+	jrc	l3trap
+	jrn	l3trap
+	jrz	l3trap
+	jro	l3trap
+	tst	0x3fff
+	jrc	l3trap
+	jrnn	l3trap
+	jrz	l3trap
+	jrno	l3trap
+	cpw	x, #0xaa55
+	jrnz	l3trap
+	cpw	z, #0x0001
+	jrz	l3
+l3trap:
+	trap
+l3:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 

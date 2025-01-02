@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   cpu2.v - multi-cycle f8 core
 
-  Copyright (c) 2024, Philipp Klaus Krause philipp@colecovision.eu)
+  Copyright (c) 2024-2025, Philipp Klaus Krause philipp@colecovision.eu)
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -89,10 +89,10 @@ function automatic logic opcode_loads_upper(opcode_t opcode);
 endfunction
 
 function automatic logic opcode_loads_operand(opcode_t opcode);
-	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode_is_dir_read(opcode) || opcode_is_sprel_read(opcode) || opcode_is_zrel_read(opcode) || opcode == OPCODE_MAD_X_IZ_YL ||
-	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY ||  opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_X_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ
+	return(opcode_is_8_immd(opcode) || opcode_is_16_immd(opcode) || opcode_is_dir_read(opcode) || opcode_is_sprel_read(opcode) || opcode_is_zrel_read(opcode) ||
+	opcode == OPCODE_CALL_IMMD || opcode == OPCODE_LD_XL_IY ||  opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_POP_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y || opcode == OPCODE_JP_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_X_IY || opcode == OPCODE_LDW_Y_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_ADDW_Y_D || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X
 `ifndef F8L
-	|| opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL
+	|| opcode == OPCODE_MAD_X_IZ_YL || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ || opcode_is_yrel_read(opcode)
 `endif
 	);
 endfunction
@@ -158,10 +158,10 @@ module cpu
 			memop_addr = z + inst[23:8];
 		else if(opcode == OPCODE_LD_XL_IY || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_CAX_IY_ZL_XL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_LDW_Y_IY || opcode == OPCODE_LDW_X_IY || opcode == OPCODE_XCHW_X_IY || opcode == OPCODE_CAXW_IY_Z_X)
 			memop_addr = acc16;
+`ifndef F8L
 		else if(opcode == OPCODE_MAD_X_IZ_YL || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ)
 			memop_addr = z;
-`ifndef F8L
-		else if(opcode_is_8_1_yrel(opcode) || opcode == OPCODE_LD_XL_YREL || opcode == OPCODE_LDW_Y_YREL)
+		else if(opcode_is_yrel_read(opcode))
 			memop_addr = y + {8'h00, inst[15:8]};
 `endif
 		else if(opcode == OPCODE_POP_XL || opcode == OPCODE_RET || opcode == OPCODE_RETI || opcode == OPCODE_POPW_Y)
@@ -390,6 +390,10 @@ module cpu
 					memwrite_addr = inst[23:8];
 				else if (opcode_is_sprel(opcode))
 					memwrite_addr = sp + {8'h00, inst[15:8]};
+`ifndef F8L
+				else if (opcode_is_yrel(opcode))
+					memwrite_addr = y + {8'h00, inst[15:8]};
+`endif
 				else
 					memwrite_addr = z + inst[23:8];
 			end
@@ -761,13 +765,13 @@ module cpu
 				regwrite_addr = acc8_addr;
 				regwrite_en = acc8_en;
 			end
+`ifndef F8L
 			else if(opcode == OPCODE_XCH_YL_YH)
 			begin
 				regwrite_data = {acc16[7:0], acc16[15:8]};
 				regwrite_addr = acc16_addr;
 				regwrite_en = 2'b11;
 			end
-`ifndef F8L
 			else if(opcode == OPCODE_ROT_XL_IMMD)
 			begin
 				//logic [7:0] result8;
@@ -1074,6 +1078,7 @@ module cpu
 				memwrite_addr = acc16;
 				memwrite_en = 2'b11;
 			end
+`ifndef F8L
 			else if(opcode == OPCODE_LDW_X_IY)
 			begin
 				regwrite_data = mem16;
@@ -1082,7 +1087,6 @@ module cpu
 				next_f[FLAG_Z] = !regwrite_data;
 				next_f[FLAG_N] = regwrite_data[15];
 			end
-`ifndef F8L
 			else if(opcode == OPCODE_LDW_YREL_X)
 			begin
 				memwrite_data = op16;

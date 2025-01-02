@@ -105,7 +105,7 @@ tangnano9k2_nosv.v: tangnano9k2.v $(SYSTEM2SOURCES)
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
 
 %/tangnano9k2_synth.json: tangnano9k2_nosv.v %/test.even.vmem %/test.odd.vmem # Current nextpnr 0.7 doesn't support bram yet, but with -nobtam the design doesn't fit.
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../tangnano9k2_nosv.v; synth_gowin -top tangnano9k -json tangnano9k2_synth.json"
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../tangnano9k2_nosv.v; synth_gowin -noflatten -top tangnano9k -json tangnano9k2_synth.json"
 
 %/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
 	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 2 --asc $@
@@ -132,12 +132,6 @@ tangnano9k2_nosv.v: tangnano9k2.v $(SYSTEM2SOURCES)
 
 %/tangnano9k2.fs: %/tangnano9k2.json
 	gowin_pack -d GW1N-9C -o $@ $^
-
-icebreaker_synth.v: icebreaker_synth.json
-	$(YOSYS) -p 'read_json $^; write_verilog $@'
-
-icebreaker2_synth.v: icebreaker_synth.json
-	$(YOSYS) -p 'read_json $^; write_verilog $@'
 
 %/system_icesynth.v: system_nosv.v %/test.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_icesynth.v"

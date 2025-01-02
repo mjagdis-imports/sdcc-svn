@@ -59,6 +59,20 @@ l8:
 	trap
 l9:
 
+	ldw	y, sp
+	pushw	#0xffff
+	clr	(1, y)
+	clr	xl
+	cp	xl, (1, sp)
+	jrz	la
+	trap
+la:	
+	ld	xl, #0xff
+	cp	xl, (0, sp)
+	jrz	lb
+	trap
+lb:
+
 loop:
 	jp	#loop	; An endless loop, so we never fail until we reach the time limit.
 
