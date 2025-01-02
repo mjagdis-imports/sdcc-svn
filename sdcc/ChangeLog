@@ -1,3 +1,35 @@
+2024-12-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  doc/INSTALL.txt,
+	  doc/sdccman.lyx,
+	  sdcc.spec:
+	  Prepare for SDCC 4.5.0 release.
+
+2024-12-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/gen.c,
+	  support/regression/tests/largeoddstruct.c.in:
+	  Fix bug #3804.
+
+2024-12-31 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Update section 3.1 "Standard Compliance" and improve readability.
+	* support/scripts/sdcclogo.svg,
+	  support/scripts/sdcclogo_bakedtext.svg,
+	  support/scripts/sdcclogo_simplified.svg,
+	  support/scripts/sdcclogo_simplified_bakedtext.svg:
+	  Add logo SVGs for future use, see RFE #813.
+
+2024-12-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  support/regression/tests/bug-3799.c:
+	  Fix bug #3800.
+	* support/regression/tests/bug-3013.c:
+	  Test for non-longer-reproducible bug #3013.
+
 2024-12-22 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* device/lib/strtoull.c,
@@ -10,7 +42,7 @@
 	* src/SDCCast.c,
 	  support/regression/tests/structinit.c.in,
 	  .version:
-	  struct / union in initializer, RFE #901.
+	  struct / union in initializer, RFE #901, RFE #797.
 
 2024-12-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
