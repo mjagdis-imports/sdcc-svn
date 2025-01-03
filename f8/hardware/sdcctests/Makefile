@@ -2,9 +2,9 @@
 
 .PHONY: all tests2 icesynthtests2 clean
 
-SDCCREGTESTPATH = ../../../sdcc/support/regression
-TESTSOURCES = $(wildcard ../../../sdcc/support/regression/cases/tst_*.c) $(wildcard ../../../sdcc/support/regression/cases/*/*.c)
-TESTCASES = $(TESTSOURCES:../../../sdcc/support/regression/cases/%.c=%)
+SDCCREGTESTPATH = /home/philipp/sdcc-trunk/sdcc/support/regression
+TESTSOURCES = $(wildcard  /home/philipp/sdcc-trunk/sdcc/support/regression/cases/tst_*.c) $(wildcard /home/philipp/sdcc-trunk/sdcc/support/regression/cases/*/*.c)
+TESTCASES = $(TESTSOURCES:/home/philipp/sdcc-trunk/sdcc/support/regression/cases/%.c=%)
 TEST2LOGS = $(TESTCASES:%=gen/%/test2.log)
 ICESYNTHTEST2LOGS = gen/tst_printf_d/icesynthtest2.log
 
@@ -17,7 +17,7 @@ icesynthtests2: $(ICESYNTHTEST2LOGS)
 FWKLIB = testfwk.rel statics.rel extern1.rel extern2.rel
 
 clean:
-	rm -rf $(FWKLIB) gen/*
+	rm -rf $(FWKLIB) gen/* 
 
 %/test2.vcd %/test2.log &: ../f8-testsystem2-long %/test.even.vmem %/test.odd.vmem
 	cd $*; $(CURDIR)/../f8-testsystem2-long > test2.log

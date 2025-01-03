@@ -1,4 +1,12 @@
-2024-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
+2025-01-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/sdcctests/Makefile:
+	  SDCC path fixes.
+	  hardware/tests/clr/test.s:
+	  Fix clr f8 instruction test case.
+
+2025-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/manual.tex,
 	  doc/opcodemap.ods,

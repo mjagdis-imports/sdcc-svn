@@ -59,8 +59,8 @@ l8:
 	trap
 l9:
 
-	ldw	y, sp
 	pushw	#0xffff
+	ldw	y, sp
 	clr	(1, y)
 	clr	xl
 	cp	xl, (1, sp)
