@@ -573,14 +573,14 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 		(opcode_is_8_1_sprel(opcode) && !opcode_is_tst(opcode) || opcode_is_16_1_sprel(opcode) || opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_F_SPREL ||
 		(opcode_is_8_2_sprel(opcode) || opcode_is_16_2_sprel(opcode)) && swapop_in || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LDW_SPREL_Y || opcode == OPCODE_XCHW_Y_SPREL) ? sp + inst[15:8] :
 		(opcode_is_8_2_zrel(opcode) && swapop_in || opcode_is_16_1_zrel(opcode) || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_MAD_X_ZREL_YL || opcode == OPCODE_LDW_ZREL_Y) ? z + inst[23:8] :
-		opcode == OPCODE_LD_YREL_XL || opcode == OPCODE_LDW_YREL_X || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ ? y + inst[15:8] : 
+		opcode_is_yrel(opcode) || opcode == OPCODE_LDI_YREL_IZ || opcode == OPCODE_LDWI_YREL_IZ ? y + inst[15:8] : 
 		(opcode == OPCODE_CALL_IMMD || opcode == OPCODE_CALL_Y) ? sp - 2 :
 		opcode == OPCODE_LDW_ISPREL_Y ? result_reg :
 		'x;
 	assign dwrite_en =
 		reset ? 2'b00 :
 		interrupt_start ? 2'b11 :
-		((opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode)) && !opcode_is_tst(opcode) || opcode_is_push(opcode) ||
+		((opcode_is_8_1_dir(opcode) || opcode_is_8_1_sprel(opcode) || opcode_is_8_1_yrel(opcode)) && !opcode_is_tst(opcode) || opcode_is_push(opcode) ||
 			opcode == OPCODE_XCH_XL_SPREL || opcode == OPCODE_XCH_XL_IY || opcode == OPCODE_XCH_F_SPREL || opcode == OPCODE_MSK_IY_XL_IMMD || opcode == OPCODE_CAX_IY_ZL_XL && z_out ||
 			opcode == OPCODE_LD_DIR_XL || opcode == OPCODE_LD_SPREL_XL || opcode == OPCODE_LD_ZREL_XL || opcode == OPCODE_LD_IY_XL || opcode == OPCODE_LD_YREL_XL || opcode == OPCODE_LDI_YREL_IZ ||
 			(opcode_is_8_2_dir(opcode) || opcode_is_8_2_sprel(opcode) || opcode_is_8_2_zrel(opcode)) && !opcode_is_cp(opcode) && swapop_in) ? 2'b01 :

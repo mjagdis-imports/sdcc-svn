@@ -575,10 +575,6 @@ module cpu
 					end
 				end
 			end
-			else if(opcode == OPCODE_NOP)
-			begin
-				next_f = f;
-			end
 			else if(opcode == OPCODE_JP_IMMD)
 			begin
 				next_f = f;
@@ -945,7 +941,6 @@ module cpu
 					next_f[FLAG_Z] = !result16;
 				end
 `endif
-
 				if (!swapop && !opcode_is_16_1_mem(opcode) && !opcode_is_tstw(opcode))
 				begin
 					regwrite_data = result16;
