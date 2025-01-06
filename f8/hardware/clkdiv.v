@@ -6,12 +6,13 @@ module clkdiv #(parameter CLKDIV = 4) (output logic clk, input logic CLK);
 
 	always_ff @(posedge CLK)
 	begin
+		clk <= (counter < CLKDIV / 2);
 		if(counter == CLKDIV - 1)
 			counter <= 4'h0;
 		else
 			counter <= counter + 1;
 	end
-	assign clk = (counter < CLKDIV / 2);
+	//assign clk = (counter < CLKDIV / 2);
 endmodule
 
 `end_keywords

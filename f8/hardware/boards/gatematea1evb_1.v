@@ -1,7 +1,7 @@
 `begin_keywords "1800-2009"
 
-`include "clkdiv.v"
-`include "system.v"
+`include "../clkdiv.v"
+`include "../system_1.v"
 
 // Test module for use on GateMateA1-EVB FPGA board.
 

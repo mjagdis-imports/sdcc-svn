@@ -1,7 +1,7 @@
 `begin_keywords "1800-2009"
 
-`include "clkdiv.v"
-`include "system2.v"
+`include "../clkdiv.v"
+`include "../system_2.v"
 
 // Test module for use on Tang Nano 9K board.
 

@@ -1,4 +1,4 @@
-`include "system2_icesynth.v"
+`include "system_2_icesynth.v"
 
 `begin_keywords "1800-2009"
 
@@ -21,7 +21,7 @@ module testsystem #(SIMULATIONTIME = 8200) ();
 
 	initial
 	begin
-		$dumpfile("icesynthtest2.vcd");
+		$dumpfile("icesynthtest_2.vcd");
     		$dumpvars(0,testsystem);
     		power_on_reset <= 1;
     		#20

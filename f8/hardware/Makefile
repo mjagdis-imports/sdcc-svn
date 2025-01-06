@@ -1,19 +1,18 @@
 # Use custom f8 assembler and linker (latest from f8 branch)
 SDAS = /home/philipp/sdcc-trunk/sdcc/bin/sdasf8
 SDLD = /home/philipp/sdcc-trunk/sdcc/bin/sdldf8
+SDCC = /home/philipp/sdcc-trunk/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-trunk/sdcc/device/include -L/home/philipp/sdcc-trunk/sdcc/device/lib/build/f8
 # sv2v is not in Debian. Use custom build of sv2v 0.0.11
 SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 # Debian has yosys 0.33, which is too old. A custom build of yosys 0.38 has been installed to /usr/local.
 YOSYS = yosys
 YOSYS_CONFIG = yosys-config
-P_R = /home/philipp/p_r/p_r
-# nextpnr-himbaechel is not yet in Debian, and nextpnr-gowin, which is in Debian doesn't support block RAM.
-NEXTPNR_HIMBÄCHEL = /home/philipp/nextpnr/nextpnr-himbaechel
-SDCC = /home/philipp/sdcc-trunk/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-trunk/sdcc/device/include -L/home/philipp/sdcc-trunk/sdcc/device/lib/build/f8
 
-.PHONY: all tests tests2 icesynthtests gmsynthtests icesynthtests2 gmsynthtests2 alltests clean icebreaker-images gatematea1evb-images sdcctests2 benchmarks2
+include boards/boards.mk
 
-all: f8-testsystem f8-testsystem2
+.PHONY: all tests_1 tests_2 icesynthtests_1 gmsynthtests_1 icesynthtests_2 gmsynthtests_2 alltests clean icebreaker-images gatematea1evb-images sdcctests_2 benchmarks2
+
+all: f8-testsystem_1 f8-testsystem_2
 
 # Images for the iCEBreaker FPGA board.
 icebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
@@ -23,7 +22,7 @@ gatematea1evb-images: tests/cblink/gatematea1evb_synth_00.cfg.bit tests/chello/g
 tangnano9k-images: 
 
 clean:
-	rm -f f8-testsystem f8-testsystem2 *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit tests/*/*_synth.*
+	rm -f f8-testsystem_* *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem_* tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit tests/*/*_synth* tests/*/*.fs tests/*/*.net tests/*/*.id
 	cd sdcctests && $(MAKE) clean
 	cd benchmarks && $(MAKE) clean
 
@@ -31,119 +30,62 @@ CPUSOURCES = cpu.v alu.v opcodemap.v opcode.v
 CPU2SOURCES = cpu2.v alu2.v opcodemap.v opcode.v
 IOSOURCES = io.v gpio.v interruptcontroller.v timer.v watchdog.v
 IO2SOURCES = io2.v interruptcontroller.v timer.v watchdog2.v
-SYSTEMSOURCES = clkdiv.v system.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
-SYSTEM2SOURCES = clkdiv.v system2.v memory2.v rom2.v ram2.v dualportram.v $(CPU2SOURCES) $(IO2SOURCES)
-TESTSYSTEMSOURCES = testsystem.v $(SYSTEMSOURCES)
-TESTSYSTEM2SOURCES = testsystem2.v $(SYSTEM2SOURCES)
+SYSTEM_1_SOURCES = clkdiv.v system_1.v memory.v rom.v ram.v dualportram.v $(CPUSOURCES) $(IOSOURCES)
+SYSTEM_2_SOURCES = clkdiv.v system_2.v memory2.v rom2.v ram2.v dualportram.v $(CPU2SOURCES) $(IO2SOURCES)
+TESTSYSTEM_1_SOURCES = testsystem_1.v $(SYSTEM_1_SOURCES)
+TESTSYSTEM_2_SOURCES = testsystem_2.v $(SYSTEM_2_SOURCES)
 SYNTHTESTSYSTEMSOURCES = system.v memory.v ram_synth.v cpu_synth.v io_synth.v
 ICESYNTHTESTSYSTEMSOURCES = icesynthtestsystem.v $(SYNTHTESTSYSTEMSOURCES)
 
-f8-testsystem: $(TESTSYSTEMSOURCES)
-	iverilog -g2009 -Wall -o $@ testsystem.v
+f8-testsystem_1: $(TESTSYSTEM_1_SOURCES)
+	iverilog -g2009 -Wall -o $@ testsystem_1.v
 
-f8-testsystem2: $(TESTSYSTEM2SOURCES)
-	iverilog -g2009 -Wall -pfileline=1 -o $@ testsystem2.v
+f8-testsystem_2: $(TESTSYSTEM_2_SOURCES)
+	iverilog -g2009 -Wall -pfileline=1 -o $@ testsystem_2.v
 
-f8-testsystem2-long: $(TESTSYSTEM2SOURCES)
-	iverilog -g2009 -Wall -pfileline=1 -Ptestsystem.SIMULATIONTIME=400000 -o $@ testsystem2.v
+f8-testsystem_2-long: $(TESTSYSTEM_2_SOURCES)
+	iverilog -g2009 -Wall -pfileline=1 -Ptestsystem.SIMULATIONTIME=400000 -o $@ testsystem_2.v
 
-%/f8-icesynthtestsystem: icesynthtestsystem.v %/system_icesynth.v
-	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem ../../icesynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
+%/f8-icesynthtestsystem_1: icesynthtestsystem.v %/system_1_icesynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem_1 ../../icesynthtestsystem.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
-%/f8-gmsynthtestsystem: gmsynthtestsystem.v %/system_gmsynth.v
-	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtestsystem ../../gmsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
+%/f8-gmsynthtestsystem_1: gmsynthtestsystem.v %/system_1_gmsynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtestsystem_1 ../../gmsynthtestsystem.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
 
-%/f8-icesynthtest2system: icesynthtest2system.v %/system2_icesynth.v
-	cd $*; iverilog -g2009 -Wall -o f8-icesynthtest2system ../../icesynthtest2system.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
+%/f8-icesynthtestsystem_2: icesynthtest2system.v %/system_2_icesynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-icesynthtestsystem_2 ../../icesynthtest2system.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
-%/f8-gmsynthtest2system: gmsynthtest2system.v %/system2_gmsynth.v
-	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtest2system ../../gmsynthtest2system.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
+%/f8-gmsynthtestsystem_2: gmsynthtest2system.v %/system_2_gmsynth.v
+	cd $*; iverilog -g2009 -Wall -o f8-gmsynthtestsystem_2 ../../gmsynthtest2system.v `$(YOSYS_CONFIG) --datdir/gatemate/cells_sim.v`
 
 TESTDIRS = ${shell find tests/* -type d -print}
 TESTS = $(TESTDIRS:=/test.s)
 TESTIHXS = $(TESTDIRS:=/test.ihx)
 TESTVMEMS = $(TESTDIRS:=/test.vmem)
-TESTLOGS = $(TESTDIRS:=/test.log)
-TESTLOGS2 = $(TESTDIRS:=/test2.log)
-ICESYNTHTESTLOGS = $(TESTDIRS:=/icesynthtest.log)
-GMSYNTHTESTLOGS = $(TESTDIRS:=/gmsynthtest.log)
-ICESYNTHTEST2LOGS = $(TESTDIRS:=/icesynthtest2.log)
-GMSYNTHTEST2LOGS = $(TESTDIRS:=/gmsynthtest2.log)
+TESTLOGS_1 = $(TESTDIRS:=/test_1.log)
+TESTLOGS_2 = $(TESTDIRS:=/test_2.log)
+ICESYNTHTESTLOGS_1 = $(TESTDIRS:=/icesynthtest_1.log)
+GMSYNTHTESTLOGS_1 = $(TESTDIRS:=/gmsynthtest_1.log)
+ICESYNTHTESTLOGS_2 = $(TESTDIRS:=/icesynthtest_2.log)
+GMSYNTHTESTLOGS_2 = $(TESTDIRS:=/gmsynthtest_2.log)
 
-system_nosv.v: $(SYSTEMSOURCES)
-	$(SV2V) --exclude=always --exclude=logic system.v > $@
+system_1_nosv.v: $(SYSTEMSOURCES)
+	$(SV2V) --exclude=always --exclude=logic system_1.v > $@
 
-system2_nosv.v: $(SYSTEM2SOURCES)
-	$(SV2V) --exclude=always --exclude=logic system2.v > $@
+system_2_nosv.v: $(SYSTEM2SOURCES)
+	$(SV2V) --exclude=always --exclude=logic system_2.v > $@
 
-icebreaker_nosv.v: icebreaker.v $(SYSTEMSOURCES)
-	$(SV2V) --exclude=always --exclude=logic icebreaker.v > $@
+%/system_1_icesynth.v: system_1_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_1_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_1_icesynth.v"
 
-gatematea1evb_nosv.v: gatematea1evb.v $(SYSTEMSOURCES)
-	$(SV2V) --exclude=always --exclude=logic gatematea1evb.v > $@
+%/system_1_gmsynth.v: system_1_nosv.v %/test.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_1_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system_1_gmsynth.v"
 
-icebreaker2_nosv.v: icebreaker2.v $(SYSTEM2SOURCES)
-	$(SV2V) --exclude=always --exclude=logic icebreaker2.v > $@
+%/system_2_icesynth.v: system_2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_2_icesynth.v"
 
-gatematea1evb2_nosv.v: gatematea1evb2.v $(SYSTEM2SOURCES)
-	$(SV2V) --exclude=always --exclude=logic gatematea1evb2.v > $@
-
-tangnano9k2_nosv.v: tangnano9k2.v $(SYSTEM2SOURCES)
-	$(SV2V) --exclude=always --exclude=logic tangnano9k2.v > $@
-
-# For yosys, -noflatten makes debugging easier but results in less optimization, and p_r can't handle yosys -noflatten output (and needs -nomx8 here).
-%/icebreaker_synth.json: icebreaker_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker_nosv.v; synth_ice40 -abc2 -top icebreaker -json icebreaker_synth.json"
-
-%/gatematea1evb_synth.v: gatematea1evb_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_synth.v"
-
-%/icebreaker2_synth.json: icebreaker2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../icebreaker2_nosv.v; synth_ice40 -abc2 -top icebreaker -json icebreaker2_synth.json"
-
-%/gatematea1evb2_synth.v: gatematea1evb2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
-
-%/tangnano9k2_synth.json: tangnano9k2_nosv.v %/test.even.vmem %/test.odd.vmem # Current nextpnr 0.7 doesn't support bram yet, but with -nobram the design doesn't fit. Also nextpnr from trunk won't work with -noflatten.
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../tangnano9k2_nosv.v; synth_gowin -top tangnano9k -json tangnano9k2_synth.json"
-
-%/icebreaker_synth.asc: %/icebreaker_synth.json icebreaker.pcf
-	nextpnr-ice40 --up5k --json $*/icebreaker_synth.json --pcf icebreaker.pcf --freq 2 --asc $@
-
-# Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
-%/gatematea1evb_synth_00.cfg.bit: %/gatematea1evb_synth.v gatematea1evb.ccf
-	cd $*; $(P_R) -cCP -i gatematea1evb_synth.v -o gatematea1evb_synth -ccf ../../gatematea1evb.ccf
-
-%/icebreaker2_synth.asc: %/icebreaker2_synth.json icebreaker.pcf
-	nextpnr-ice40 --up5k --json $*/icebreaker2_synth.json --pcf icebreaker.pcf --freq 2 --asc $@
-
-# Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
-%/gatematea1evb2_synth_00.cfg.bit: %/gatematea1evb2_synth.v gatematea1evb.ccf
-	cd $*; $(P_R) -cCP -i gatematea1evb2_synth.v -o gatematea1evb2_synth -ccf ../../gatematea1evb.ccf
-
-%/icebreaker_synth.bin: %/icebreaker_synth.asc
-	icepack $< $@
-
-%/icebreaker2_synth.bin: %/icebreaker2_synth.asc
-	icepack $< $@
-
-%/tangnano9k2.json: %/tangnano9k2_synth.json tangnano9k.cst
-	$(NEXTPNR_HIMBÄCHEL) --json $< --write $@ --device GW1NR-LV9QN88PC6/I5 --vopt family=GW1N-9C --vopt cst=tangnano9k.cst
-
-%/tangnano9k2.fs: %/tangnano9k2.json
-	gowin_pack -d GW1N-9C -o $@ $^
-
-%/system_icesynth.v: system_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_icesynth.v"
-
-%/system_gmsynth.v: system_nosv.v %/test.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system_gmsynth.v"
-
-%/system2_icesynth.v: system2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../system2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system2_icesynth.v"
-
-%/system2_gmsynth.v: system2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv ../../system2_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system2_gmsynth.v"
+%/system_2_gmsynth.v: system_2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv ../../system_2_nosv.v; synth_gatemate -nomx8 -noflatten -top system; write_verilog system_2_gmsynth.v"
 
 %.rel: %.s
 	$(SDAS) -plosgff $@ $<
@@ -166,62 +108,62 @@ tests/chello/test.ihx: tests/chello/test.c
 %.odd.vmem: %.vmem
 	srec_cat $< -Vmem --split 2 1 -o $@ -Vmem 8
 
-%/test.vcd %/test.log &: f8-testsystem %/test.vmem
-	cd $*; ../../f8-testsystem > test.log
+%/test_1.vcd %/test_1.log &: f8-testsystem_1 %/test.vmem
+	cd $*; ../../f8-testsystem_1 > test_1.log
 
-%/test2.vcd %/test2.log &: f8-testsystem2 %/test.even.vmem %/test.odd.vmem
-	cd $*; ../../f8-testsystem2 > test2.log
+%/test_2.vcd %/test_2.log &: f8-testsystem_2 %/test.even.vmem %/test.odd.vmem
+	cd $*; ../../f8-testsystem_2 > test_2.log
 
-%/icesynthtest.vcd %/icesynthtest.log &: %/f8-icesynthtestsystem
-	cd $*; ./f8-icesynthtestsystem > icesynthtest.log
+%/icesynthtest_1.vcd %/icesynthtest_1.log &: %/f8-icesynthtestsystem_1
+	cd $*; ./f8-icesynthtestsystem_1 > icesynthtest_1.log
 
-%/gmsynthtest.vcd %/gmsynthtest.log &: %/f8-gmsynthtestsystem
-	cd $*; ./f8-gmsynthtestsystem > gmsynthtest.log
+%/gmsynthtest_1.vcd %/gmsynthtest_1.log &: %/f8-gmsynthtestsystem_1
+	cd $*; ./f8-gmsynthtestsystem_1 > gmsynthtest_1.log
 
-%/icesynthtest2.vcd %/icesynthtest2.log &: %/f8-icesynthtest2system
-	cd $*; ./f8-icesynthtest2system > icesynthtest2.log
+%/icesynthtest_2.vcd %/icesynthtest_2.log &: %/f8-icesynthtestsystem_2
+	cd $*; ./f8-icesynthtestsystem_2 > icesynthtest_2.log
 
-%/gmsynthtest2.vcd %/gmsynthtest2.log &: %/f8-gmsynthtest2system
-	cd $*; ./f8-gmsynthtest2system > gmsynthtest2.log
+%/gmsynthtest_2.vcd %/gmsynthtest_2.log &: %/f8-gmsynthtestsystem_2
+	cd $*; ./f8-gmsynthtestsystem_2 > gmsynthtest_2.log
 
-tests: $(TESTLOGS)
-	for testlog in $(TESTLOGS); do \
+tests_1: $(TESTLOGS_1)
+	for testlog in $(TESTLOGS_1); do \
 		echo -n "testsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-tests2: $(TESTLOGS2)
-	for testlog in $(TESTLOGS2); do \
+tests_2: $(TESTLOGS_2)
+	for testlog in $(TESTLOGS_2); do \
 		echo -n "testsystem2:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 	
-icesynthtests: $(ICESYNTHTESTLOGS)
-	for testlog in $(ICESYNTHTESTLOGS); do \
+icesynthtests_1: $(ICESYNTHTESTLOGS_1)
+	for testlog in $(ICESYNTHTESTLOGS_1); do \
 		echo -n "icesynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-gmsynthtests: $(GMSYNTHTESTLOGS)
-	for testlog in $(GMSYNTHTESTLOGS); do \
+gmsynthtests_1: $(GMSYNTHTESTLOGS_1)
+	for testlog in $(GMSYNTHTESTLOGS_1); do \
 		echo -n "gmsynthtestsystem:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-icesynthtests2: $(ICESYNTHTEST2LOGS)
-	for testlog in $(ICESYNTHTEST2LOGS); do \
+icesynthtests_2: $(ICESYNTHTESTLOGS_2)
+	for testlog in $(ICESYNTHTESTLOGS_2); do \
 		echo -n "icesynthtest2system:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-gmsynthtests2: $(GMSYNTHTEST2LOGS)
-	for testlog in $(GMSYNTHTEST2LOGS); do \
+gmsynthtests_2: $(GMSYNTHTESTLOGS_2)
+	for testlog in $(GMSYNTHTESTLOGS_2); do \
 		echo -n "gmsynthtest2system:" $$testlog ""; grep ERROR $$testlog | tr -d '\n'; echo ""; \
 	done
 
-alltests: tests icesynthtests gmsynthtests tests2 icesynthtests2 gmsynthtests2
+alltests: tests_1 tests_2 icesynthtests_1 gmsynthtests_1 icesynthtests_2 gmsynthtests_2
 
-sdcctests2: f8-testsystem2-long
+sdcctests_2: f8-testsystem_2-long
 	cd sdcctests; $(MAKE) SDCC="$(SDCC)" tests2
 
-sdccicesynthtests2: system2_nosv.v icesynthtestsystem.v
+sdccicesynthtests_2: system2_nosv.v icesynthtestsystem.v
 	cd sdcctests; $(MAKE) SDCC="$(SDCC)" YOSYS="$(YOSYS)" YOSYS_CONFIG="$(YOSYS_CONFIG)" icesynthtests2
 
-benchmarks2: icebreaker2_nosv.v icesynthtest2system.v system2_nosv.v
+benchmarks_2: icebreaker2_nosv.v icesynthtest2system.v system_2_nosv.v
 	cd benchmarks; $(MAKE) SDCC="$(SDCC)" YOSYS="$(YOSYS)" YOSYS_CONFIG="$(YOSYS_CONFIG)"
 

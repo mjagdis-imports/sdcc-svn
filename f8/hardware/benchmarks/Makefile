@@ -12,7 +12,7 @@ clean:
 	cd whetstone; $(MAKE) clean
 	cd dhrystone; $(MAKE) clean
 	cd stdcbench; $(MAKE) -f examples/Makefile.SDCC-F8 clean
-	rm -f */*.ihx */test*.vmem */icebreaker2_synth.json */icebreaker2_synth.asc */icebreaker2_synth.bin
+	rm -f */*.ihx */test*.vmem */*_synth.json */*_synth.asc */*_synth.bin */gatematea1evb*.bit
 
 whetstone/image.ihx: whetstone/*.c
 	cd whetstone; $(MAKE) SDCC="$(SDCC)" SDCCFLAGS="$(SDCCFLAGS)"
@@ -34,29 +34,29 @@ stdcbench/image.ihx: stdcbench/*.c stdcbench/*.h
 	srec_cat $< -Vmem --split 2 1 -o $@ -Vmem 8
 
 
-%/system2_icesynth.v: ../system2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../system2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system2_icesynth.v"
+%/system_2_icesynth.v: ../system_2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../system_2_nosv.v; synth_ice40 -noflatten -top system; write_verilog system_2_icesynth.v"
 
-%/f8-icesynthtest2system: ../icesynthtest2system.v %/system2_icesynth.v
-	cd $*; iverilog -g2009 -Wall -Ptestsystem.SIMULATIONTIME=30000 -o f8-icesynthtest2system $(CURDIR)/../icesynthtest2system.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
+%/f8-icesynthtest2system: ../icesynthtestsystem_2.v %/system_2_icesynth.v
+	cd $*; iverilog -g2009 -Wall -Ptestsystem.SIMULATIONTIME=30000 -o f8-icesynthtestsystem_2 $(CURDIR)/../icesynthtestsystem_2.v `$(YOSYS_CONFIG) --datdir/ice40/cells_sim.v`
 
-%/icesynthtest2.vcd %/icesynthtest2.log &: %/f8-icesynthtest2system
-	cd $*; ./f8-icesynthtest2system > icesynthtest2.log
+%/icesynthtest_2.vcd %/icesynthtest_2.log &: %/f8-icesynthtestsystem_2
+	cd $*; ./f8-icesynthtestsystem_2 > icesynthtest_2.log
 
 
-%/icebreaker2_synth.json: $(CURDIR)/../icebreaker2_nosv.v %/test.odd.vmem %/test.even.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../icebreaker2_nosv.v; synth_ice40 -top icebreaker -json icebreaker2_synth.json"
+%/icebreaker_2_synth.json: $(CURDIR)/../boards/icebreaker_2_nosv.v %/test.odd.vmem %/test.even.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../boards/icebreaker_2_nosv.v; synth_ice40 -top icebreaker -json icebreaker_2_synth.json"
 
-%/icebreaker2_synth.asc: %/icebreaker2_synth.json $(CURDIR)/../icebreaker.pcf
-	nextpnr-ice40 --up5k --json $< --pcf $(CURDIR)/../icebreaker.pcf --freq 2 --asc $@
+%/icebreaker_2_synth.asc: %/icebreaker_2_synth.json $(CURDIR)/../boards/icebreaker.pcf
+	nextpnr-ice40 --up5k --json $< --pcf $(CURDIR)/../boards/icebreaker.pcf --freq 2 --asc $@
 
-%/icebreaker2_synth.bin: %/icebreaker2_synth.asc
+%/icebreaker_2_synth.bin: %/icebreaker_2_synth.asc
 	icepack $< $@
 
-%/gatematea1evb2_synth.v: $(CURDIR)/../gatematea1evb2_nosv.v %/test.even.vmem %/test.odd.vmem
-	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../gatematea1evb2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb2_synth.v"
+%/gatematea1evb_2_synth.v: $(CURDIR)/../boards/gatematea1evb_2_nosv.v %/test.even.vmem %/test.odd.vmem
+	cd $*; $(YOSYS) -p "read_verilog -sv $(CURDIR)/../boards/gatematea1evb_2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_2_synth.v"
 
 # Needs non-free p_r tool (to be replaced by nextpnr - GateMate support in nextpnr is planned for Q4 2024).
-%/gatematea1evb2_synth_00.cfg.bit: %/gatematea1evb2_synth.v $(CURDIR)/../gatematea1evb.ccf
-	cd $*; $(P_R) -cCP -i gatematea1evb2_synth.v -o gatematea1evb2_synth -ccf $(CURDIR)/../gatematea1evb.ccf
+%/gatematea1evb_2_synth_00.cfg.bit: %/gatematea1evb_2_synth.v $(CURDIR)/../boards/gatematea1evb.ccf
+	cd $*; $(P_R) -cCP -i gatematea1evb_2_synth.v -o gatematea1evb_2_synth -ccf $(CURDIR)/../boards/gatematea1evb.ccf
 

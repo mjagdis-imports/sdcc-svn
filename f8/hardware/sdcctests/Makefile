@@ -17,7 +17,7 @@ icesynthtests2: $(ICESYNTHTEST2LOGS)
 FWKLIB = testfwk.rel statics.rel extern1.rel extern2.rel
 
 clean:
-	rm -rf $(FWKLIB) gen/* 
+	rm -rf $(FWKLIB) *.rst *.lst *.sym *.asm gen/* 
 
 %/test2.vcd %/test2.log &: ../f8-testsystem2-long %/test.even.vmem %/test.odd.vmem
 	cd $*; $(CURDIR)/../f8-testsystem2-long > test2.log

@@ -2,14 +2,14 @@ Two Verilog implementations of the f8 can be found here:
 
 * A single-cycle implementation that needs rather complex memories.
   - A SoC using this one is in system.v.
-  - icebreaker.v can be used to synthesize it for the iCEBreaker board.
-  - gatematea1evb.v can be used to synthesize it for the GateMateA1-EVB board.
+  - boards/icebreaker.v can be used to synthesize it for the iCEBreaker board.
+  - boards/gatematea1evb.v can be used to synthesize it for the GateMateA1-EVB board.
 
 * A multi-cycle implementation using pseudo-dualport RAM.
   - A SoC using this one is in system2.v.
-  - icebreaker2.v can be used to synthesize it for the iCEBreaker board.
-  - gatematea1evb2.v can be used to synthesize it for the GateMateA1-EVB board.
-  - tangnano9k2.v can be used to synthesize it for the Tang Nano 9K (interrupts not working with current free synthesis/p&r tools as of 2024-12-26).
+  - boards/icebreaker2.v can be used to synthesize it for the iCEBreaker board.
+  - boards/gatematea1evb2.v can be used to synthesize it for the GateMateA1-EVB board.
+  - boards/tangnano9k2.v can be used to synthesize it for the Tang Nano 9K (interrupts not working with current free synthesis/p&r tools as of 2024-12-26).
 
 Each SoC consists of an f8 core, memories and basic peripherals (watchdog, timer, interrupt controller, 2 x GPIO).
 

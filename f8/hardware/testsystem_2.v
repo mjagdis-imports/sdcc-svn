@@ -1,6 +1,6 @@
-`include "system.v"
-
 `begin_keywords "1800-2009"
+
+`include "system_2.v"
 
 // Test module for RTL Verilog design of f8.
 
@@ -13,20 +13,21 @@ module clkgen (output logic clk);
 	always #2 clk = !clk;
 endmodule
 
-module testsystem #(parameter ROMSIZE = 8192, RAMSIZE = 8192) ();
-	wire [7:0] gpio0pins, gpio1pins, gpio2pins;
-	wire clk;
-	wire trap;
-	reg power_on_reset;
+// 10 KB ROM, 8 KB RAM.
+module testsystem #(parameter ROMSIZE = 10240, RAMSIZE = 8192, SIMULATIONTIME = 8200) ();
+	logic [7:0] gpio0pins, gpio1pins, gpio2pins;
+	logic clk;
+	logic trap;
+	logic power_on_reset;
 
 	initial
 	begin
-		$dumpfile("test.vcd");
+		$dumpfile("test_2.vcd");
     		$dumpvars(0,testsystem);
     		power_on_reset <= 1;
     		#20
     		power_on_reset <= 0;
-		#8180
+		#(SIMULATIONTIME - 20)
 		$finish;
 	end
 
