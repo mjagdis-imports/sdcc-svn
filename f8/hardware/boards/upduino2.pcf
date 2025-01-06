@@ -1,0 +1,8 @@
+# 12 MHz clock - from internal hf oscillator
+set_frequency CLK         12
+
+# RGB LED Driver
+set_io -nowarn LED_RED_N  39
+set_io -nowarn LED_GRN_N  40
+set_io -nowarn LED_BLU_N  41
+
