@@ -1,3 +1,9 @@
+2024-01-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/strnlen.c,
+	  support/regression/tests/wcsnlen.c:
+	  Fix bug #3812.
+
 2024-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
