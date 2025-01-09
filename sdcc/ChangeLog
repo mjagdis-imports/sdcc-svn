@@ -6,6 +6,9 @@
 	  support/regression/MakeList,
 	  support/regression/tests/bug-3601.c:
 	  Fix bug #3601.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3814.c:
+	  Fix z80 part of bug #3814.
 
 2024-01-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
