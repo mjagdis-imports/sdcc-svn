@@ -1,7 +1,41 @@
+2025-01-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/system_1.v,
+	  hardware/system_2.v:
+	  f8 hardware implementation refactoring.
+
+2025-01-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* boards/boards.mk,
+	  boards/upduino2.pcf,
+	  boards/upduino2_2.v:
+	  Support UPduino 2 board.
+
+2025-01-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Makefile,
+	  README,
+	  clkdiv.v,
+	  gmsynthtest2system.v,
+	  gmsynthtestsystem.v,
+	  icesynthtest2system.v,
+	  icesynthtestsystem.v,
+	  sdcctests/Makefile,
+	  testsystem_1.v,
+	  testsystem_2.v,
+	  benchmarks/Makefile,
+	  boards:
+	  Refactoring to move board-specific files into boards/ directory.
+
 2025-01-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* doc:
+	* doc,
+	  README:
 	  Remove f8 architecture documentation from svn following migration to git.
+	* hardware/cpu.v:
+	  Fixes for y-relative f8 addressing mode.
+	  hardware/cpu2.v:
+	  Remove unused nop support.
 
 2025-01-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
