@@ -1,3 +1,8 @@
+2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mos6502/gen.c:
+	  Fix mos6502 part of bug #3814.
+
 2024-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-3601.c:
