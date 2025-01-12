@@ -2,6 +2,8 @@
 
 	* src/mos6502/gen.c:
 	  Fix mos6502 part of bug #3814.
+	* sdas/astlcs90/t90mch.c:
+	  Fix bug #3815.
 
 2024-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
