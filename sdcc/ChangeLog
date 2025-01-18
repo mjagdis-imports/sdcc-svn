@@ -1,5 +1,10 @@
 2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
 
+	* sdas/asxxsrc/asmain.c:
+	  Apply patch #485 by bbbbbr to properly document the -N flag.
+
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
 	* doc/sdccman.lyx,
 	  src/SDCC.lex,
 	  src/SDCCerr.c,
