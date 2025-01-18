@@ -334,6 +334,7 @@ enum {
   E_ENUM_TYPE_SPECIFIER_C23     = 304, /* enum type specifiers require C23 or later */
   E_ENUM_UNDERLYING_TYPE        = 305, /* enum's underlying type must be an integer type and cannot be bit-precise or an enum */
   E_ENUM_TYPE_RANGE_TOO_SMALL   = 306, /* the enum's underlying type cannot represent all enumerator values */
+  E_LENGTHOF_INVALID_TYPE       = 307, /* _Lengthof applied to an incomplete or non-array type */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

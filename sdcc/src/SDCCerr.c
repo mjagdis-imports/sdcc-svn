@@ -677,6 +677,8 @@ struct
      "enum's underlying type must be an integer type and cannot be bit-precise or an enum", 0 },
   { E_ENUM_TYPE_RANGE_TOO_SMALL, ERROR_LEVEL_ERROR,
      "the enum's underlying type cannot represent all enumerator values", 0 },
+  { E_LENGTHOF_INVALID_TYPE, ERROR_LEVEL_ERROR,
+     "_Lengthof applied to an incomplete or non-array type", 0 },
 };
 
 /* -------------------------------------------------------------------------------

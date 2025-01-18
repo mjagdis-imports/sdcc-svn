@@ -10896,6 +10896,29 @@ _Generic
 \begin_layout Itemize
 \begin_inset CommandInset href
 LatexCommand href
+name "N3369"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3369.pdf"
+literal "false"
+
+\end_inset
+
+:
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+_Lengthof
+\end_layout
+
+\end_inset
+
+ Operator
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
 name "N3370"
 target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3370.htm"
 literal "false"

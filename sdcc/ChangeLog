@@ -1,3 +1,17 @@
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCast.h,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/lengthof.c:
+	  Implement the _Lengthof operator (C2y, n3369, see RFE #978).
+
 2025-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/mos6502/gen.c:

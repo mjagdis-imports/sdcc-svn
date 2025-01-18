@@ -1216,6 +1216,25 @@ getSize (sym_link * p)
     }
 }
 
+/*------------------------------------------------------------------*/
+/* getLength - returns the number of elements in an array type      */
+/*------------------------------------------------------------------*/
+unsigned int
+getLength (sym_link * p)
+{
+  /* if nothing return 0 */
+  if (!p)
+    return 0;
+  if (IS_SPEC (p))
+    return 0;
+
+  /* this is a declarator */
+  if (DCL_TYPE (p) == ARRAY)
+    return DCL_ELEM (p);
+  else
+    return 0;
+}
+
 #define FLEXARRAY   1
 #define INCOMPLETE  2
 
