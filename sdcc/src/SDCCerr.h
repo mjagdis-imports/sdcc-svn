@@ -335,6 +335,10 @@ enum {
   E_ENUM_UNDERLYING_TYPE        = 305, /* enum's underlying type must be an integer type and cannot be bit-precise or an enum */
   E_ENUM_TYPE_RANGE_TOO_SMALL   = 306, /* the enum's underlying type cannot represent all enumerator values */
   E_LENGTHOF_INVALID_TYPE       = 307, /* _Lengthof applied to an incomplete or non-array type */
+  W_PREFIXED_OCTAL_C2Y          = 308, /* prefixed octal integer constants require ISO C2y or later */
+  W_OCTAL_DEPRECATED_C2Y        = 309, /* unprefixed octal integer constants are deprecated as of ISO C2y */
+  E_CLOSING_BRACE               = 310, /* invalid character or end of string encountered before '}' */
+  E_INVALID_OCTAL               = 311, /* \o{...} used without valid octal digits */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

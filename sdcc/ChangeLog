@@ -2,6 +2,18 @@
 
 	* doc/sdccman.lyx,
 	  src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCutil.c,
+	  src/SDCCutil.h,
+	  src/SDCCval.c,
+	  support/regression/tests/octal.c:
+	  Implement new octal and escape sequence syntax (C2y, n3353, see RFE #977).
+
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
 	  src/SDCC.y,
 	  src/SDCCast.c,
 	  src/SDCCast.h,

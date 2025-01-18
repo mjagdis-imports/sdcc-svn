@@ -10896,6 +10896,20 @@ _Generic
 \begin_layout Itemize
 \begin_inset CommandInset href
 LatexCommand href
+name "N3353"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3353.htm"
+literal "false"
+
+\end_inset
+
+:
+ Obsolete Octal and Provide New,
+ Proper Escape Sequences
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
 name "N3369"
 target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3369.pdf"
 literal "false"
@@ -10903,7 +10917,7 @@ literal "false"
 \end_inset
 
 :
- The 
+ The
 \begin_inset Flex Code
 status open
 
