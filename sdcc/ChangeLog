@@ -1,5 +1,10 @@
 2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
 
+	* support/regression/Makefile.in:
+	  Check if python is available when running tests. Patch by Felix Salfelder, see bug #3646.
+
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
 	* sdas/asxxsrc/asmain.c:
 	  Apply patch #485 by bbbbbr to properly document the -N flag.
 
