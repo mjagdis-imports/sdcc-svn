@@ -1,8 +1,13 @@
-# Use custom f8 assembler and linker (latest from f8 branch)
-SDAS = /home/philipp/sdcc-trunk/sdcc/bin/sdasf8
-SDLD = /home/philipp/sdcc-trunk/sdcc/bin/sdldf8
-SDCC = /home/philipp/sdcc-trunk/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-trunk/sdcc/device/include -L/home/philipp/sdcc-trunk/sdcc/device/lib/build/f8
-# sv2v is not in Debian. Use custom build of sv2v 0.0.11
+# Use installed SDCC. Requires at least 4.5.0.
+SDAS = sdasf8
+SDLD = sdldf8
+SDCC = sdcc -mf8
+# If SDCC is not installed, but compiled, and in a known location, use something like
+# SDAS = /home/philipp/sdcc-trunk/sdcc/bin/sdasf8
+# SDLD = /home/philipp/sdcc-trunk/sdcc/bin/sdldf8
+# SDCC = /home/philipp/sdcc-trunk/sdcc/bin/sdcc -mf8 -I/home/philipp/sdcc-trunk/sdcc/device/include -L/home/philipp/sdcc-trunk/sdcc/device/lib/build/f8
+
+# sv2v is not in Debian. Use custom build of sv2v 0.0.12 or later.
 SV2V = /home/philipp/sv2v-0.0.12/bin/sv2v
 # Debian has yosys 0.33, which is too old. A custom build of yosys 0.38 has been installed to /usr/local.
 YOSYS = yosys

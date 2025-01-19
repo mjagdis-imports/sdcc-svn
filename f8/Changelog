@@ -1,3 +1,11 @@
+2025-01-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/benchmarks/Makefile,
+	  hardware/benchmarks/dhrystone/Makefile,
+	  hardware/benchmarks/whetstone/Makefile:
+	  Cleanup build infrastructure.
+
 2025-01-10 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/system_1.v,
