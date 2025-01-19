@@ -5225,3 +5225,52 @@ mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls)
         }
     }
 }
+
+/*-------------------------------------------------------------------*/
+/* prepareDeclarationSymbol - add the specifier list to the id       */
+/*                            and do some type-related housekeeping  */
+/* NOTE: moved here from the "declaration" rule in SDCC.y            */
+/*-------------------------------------------------------------------*/
+symbol *
+prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDeclList)
+{
+  symbol *sym , *sym1;
+
+  bool autocandidate = options.std_c23 && IS_SPEC (declSpecs) && SPEC_SCLS (declSpecs) == S_AUTO;
+
+  for (sym1 = sym = reverseSyms (initDeclList); sym != NULL; sym = sym->next)
+    {
+      sym_link *lnk = copyLinkChain (declSpecs);
+      sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
+      /* check illegal declaration */
+      for (l0 = sym->type; l0 != NULL; l0 = l0->next)
+        if (IS_PTR (l0))
+          break;
+      /* check if creating instances of structs with flexible arrays */
+      for (l1 = lnk; l1 != NULL; l1 = l1->next)
+        if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
+          break;
+      if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR (declSpecs) != 1)
+        werror (W_FLEXARRAY_INSTRUCT, sym->name);
+      /* check if creating instances of function type */
+      for (l1 = lnk; l1 != NULL; l1 = l1->next)
+        if (IS_FUNC (l1))
+          break;
+      for (l2 = lnk; l2 != NULL; l2 = l2->next)
+        if (IS_PTR (l2))
+          break;
+      if (l0 == NULL && l2 == NULL && l1 != NULL)
+        werrorfl (sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+      /* C23 auto type inference */
+      if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE)
+        {
+          sym->type = sym->etype = typeofOp (sym->ival->init.node);
+          SPEC_SCLS (lnk) = 0;
+        }
+      /* do the pointer stuff */
+      pointerTypes (sym->type, lnk);
+      addDecl (sym, 0, lnk);
+    }
+
+  return sym1;
+}

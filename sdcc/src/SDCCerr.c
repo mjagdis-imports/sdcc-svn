@@ -687,6 +687,8 @@ struct
      "invalid character or end of string encountered before '}'", 0 },
   { E_INVALID_OCTAL, ERROR_LEVEL_ERROR,
      "\\o{...} used without valid octal digits.", 0 },
+  { E_SELECTION_DECLARATION_C2Y, ERROR_LEVEL_ERROR,
+     "declaration within selection header requires ISO C2y or later", 0 },
 };
 
 /* -------------------------------------------------------------------------------

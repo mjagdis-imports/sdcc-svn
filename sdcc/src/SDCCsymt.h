@@ -747,6 +747,7 @@ int isRestrict (sym_link * type);
 value *aggregateToPointer (value *);
 void leaveBlockScope (int block);
 void mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls);
+symbol *prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDeclList);
 
 
 extern char *nounName (sym_link *);     /* noun strings */

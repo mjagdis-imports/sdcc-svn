@@ -1,3 +1,14 @@
+2025-01-19 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/if-decl.c:
+	  Implement if-declarations (C2y, n3356, see RFE #979).
+
 2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* support/regression/Makefile.in:

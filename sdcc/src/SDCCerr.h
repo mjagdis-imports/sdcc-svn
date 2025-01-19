@@ -339,6 +339,7 @@ enum {
   W_OCTAL_DEPRECATED_C2Y        = 309, /* unprefixed octal integer constants are deprecated as of ISO C2y */
   E_CLOSING_BRACE               = 310, /* invalid character or end of string encountered before '}' */
   E_INVALID_OCTAL               = 311, /* \o{...} used without valid octal digits */
+  E_SELECTION_DECLARATION_C2Y   = 312, /* declaration within selection header requires ISO C2y or later */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

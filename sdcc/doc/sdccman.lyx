@@ -10910,6 +10910,29 @@ literal "false"
 \begin_layout Itemize
 \begin_inset CommandInset href
 LatexCommand href
+name "N3356"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3356.htm"
+literal "false"
+
+\end_inset
+
+:
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+if
+\end_layout
+
+\end_inset
+
+ Declarations
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
 name "N3369"
 target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3369.pdf"
 literal "false"
