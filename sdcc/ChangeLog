@@ -1,3 +1,55 @@
+2025-02-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3830.c:
+	  Disable test for ports where it fails due to known bug #3836.
+
+2025-02-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve storeRegToAop(), shiftLLong() and shiftRLong().
+	  Add some debugging messages and indentation cleanups.
+	  genCmp() and genRRC() improvements.
+	* support/ports/uc6502-stack-auto/spec.mk
+	  add --i-code-in-asm to generated output.
+
+2025-02-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Fix gcc-torture-execute-931102, pr42833 and pr51466 for mos6502-stack-auto.
+
+2025-02-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3834.c:
+	  Fix bug #3834.
+
+2025-02-07 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/_divulong.s:
+	  minor improvements to divulong
+	  
+2025-02-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Basic null pointer optimization.
+
+2025-02-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502-stack-auto/_setjmp.s,
+	  device/lib/mos6502-stack-auto/_setjmp.c:
+	  fix longjmp() for mos6502-stack-auto.
+
+2025-02-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c,
+	  src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c:
+	  valinfo for predefined asmops.
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc:
+	  Prepare for null pointer optimization.
+
 2025-02-07 Gabriele Gorla <gorlik@yahoo.com>
 
 	* device/lib/mos6502/_setjmp.s:

@@ -101,6 +101,7 @@ getTypeValinfo (sym_link *type, bool loose)
   struct valinfo v;
   v.anything = true;
   v.nothing = false;
+  v.nonnull = false;
   // Initialize all members of v, to ensure we don't read uninitalized memory later.
   v.min = v.max = 0ll;
   v.knownbitsmask = 0ull;
@@ -183,6 +184,7 @@ getOperandValinfo (const iCode *ic, const operand *op)
   struct valinfo v;
   v.anything = true;
   v.nothing = false;
+  v.nonnull = false;
   v.min = v.max = 0;
   v.knownbitsmask = 0ull;
   v.knownbits = 0ull;
@@ -193,7 +195,8 @@ getOperandValinfo (const iCode *ic, const operand *op)
   sym_link *type = operandType (op);
 
   if (IS_INTEGRAL (type) && bitsForType (type) < 64 && !IS_OP_VOLATILE (op) && // Todo: More exact check than this bits thing?
-    (IS_OP_LITERAL (op) || IS_SYMOP (op) && SPEC_CONST (type) && OP_SYMBOL_CONST (op)->ival && IS_AST_VALUE (list2expr (OP_SYMBOL_CONST (op)->ival))))
+    (IS_OP_LITERAL (op) || IS_SYMOP (op) && SPEC_CONST (type) && OP_SYMBOL_CONST (op)->ival && IS_AST_VALUE (list2expr (OP_SYMBOL_CONST (op)->ival))) ||
+    (TARGET_Z80_LIKE || TARGET_IS_STM8 || TARGET_IS_F8) && IS_PTR (type) && IS_OP_LITERAL (op)) // Port has no tag bits in pointers
     {
       struct valinfo v2;
       long long litval;
@@ -232,6 +235,9 @@ valinfo_union (struct valinfo *v0, const struct valinfo v1)
   auto new_nothing = v0->nothing && v1.nothing;
   change |= (v0->nothing != new_nothing);
   v0->nothing = new_nothing;
+  auto new_nonnull = v0->nonnull && v1.nonnull;
+  change |= (v0->nonnull != new_nonnull);
+  v0->nonnull = new_nonnull;
   auto new_min = std::min (v0->min, v1.min);
   change |= (v0->min != new_min);
   v0->min = new_min;
@@ -386,6 +392,7 @@ valinfoPlus (struct valinfo *result, sym_link *resulttype, const struct valinfo 
           result->knownbitsmask |= (left.knownbitsmask & 0x8000ull);
           result->knownbits = result->knownbits & ~0x8000ull | left.knownbits & 0x8000ull;
         }
+      result->nonnull |= left.nonnull;
     }
   if (!left.anything && !right.anything &&
     left.min >= 0 && right.min >= 0)
@@ -430,6 +437,7 @@ valinfoMinus (struct valinfo *result, sym_link *resulttype, const struct valinfo
           result->knownbitsmask |= (left.knownbitsmask & 0x8000ull);
           result->knownbits = result->knownbits & ~0x8000ull | left.knownbits & 0x8000ull;
         }
+      result->nonnull |= left.nonnull;
     }
   // todo: rewrite using ckd_sub when we can assume host compiler has c2x support!
   if (!left.anything && !right.anything &&
@@ -630,10 +638,12 @@ valinfoRight (struct valinfo *result, const struct valinfo &left, const struct v
 static void
 valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right)
 {
+  bool genptrtarget = IS_GENPTR (targettype) || (TARGET_Z80_LIKE || TARGET_IS_F8 || TARGET_IS_STM8); // Some ports have no tag bits in pointers.
+
   *result = getTypeValinfo (targettype, false);
   if (right.nothing)
     result->nothing = true;
-  else if (!right.anything && (IS_INTEGRAL (targettype) || IS_GENPTR (targettype)) && 
+  else if (!right.anything && (IS_INTEGRAL (targettype) || genptrtarget) && 
     (!result->anything && right.min >= result->min && right.max <= result->max || result->anything))
     {
       result->min = right.min;
@@ -657,6 +667,11 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
       result->max = right.max & ~result->knownbitsmask;
       result->knownbitsmask = ~0ull;
       result->knownbits = result->min;
+    }
+
+  if (!right.anything && genptrtarget && right.nonnull)
+    {
+      result->nonnull = false;
     }
 }
 
@@ -762,7 +777,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         G[*out].map[ic->result->key] = *ic->resultvalinfo;
 
       if (resultsym)
-        resultvalinfo = getTypeValinfo (operandType (IC_RESULT (ic)), true);
+        resultvalinfo = getTypeValinfo (operandType (ic->result), true);
       else
         resultvalinfo.anything = true;
 
@@ -771,6 +786,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
           std::cout << "getTypeValinfo: resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << std::dec << " min " << resultvalinfo.min << "\n";
+          if (ic->right)
+            std::cout << "rightvalinfo anything " << rightvalinfo.anything << " min " << rightvalinfo.min << " max " << rightvalinfo.max << "\n";
         }
 #endif
 
@@ -788,6 +805,12 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         resultsym = 0;
       else if (IS_OP_VOLATILE (ic->result)) // No point trying to find out what we write to a volatile operand. At the next use, it could be anything, anyway.
         ;
+      else if (ic->op == ADDRESS_OF)
+        {
+          if(resultvalinfo.min <= 0)
+           resultvalinfo.min = 1;
+          resultvalinfo.nonnull = true;
+        }
       else if (ic->op == '!')
         {
           resultvalinfo.nothing = leftvalinfo.nothing;
@@ -849,9 +872,15 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           resultvalinfo.max = 1;
           resultvalinfo.knownbitsmask = ~1ull;
           resultvalinfo.knownbits = 0ull;
-          if (!leftvalinfo.anything && !rightvalinfo.anything && leftvalinfo.min == leftvalinfo.max && rightvalinfo.min == rightvalinfo.max)
+          if (IS_INTEGRAL (operandType (left)) && !leftvalinfo.anything && !rightvalinfo.anything && leftvalinfo.min == leftvalinfo.max && rightvalinfo.min == rightvalinfo.max)
             {
               bool one = (leftvalinfo.min == rightvalinfo.min) ^ (ic->op == NE_OP);
+              resultvalinfo.min = one;
+              resultvalinfo.max = one;
+            }
+          else if (IS_PTR (operandType (left)) && !leftvalinfo.anything && !rightvalinfo.anything && leftvalinfo.nonnull && rightvalinfo.min == 0 && rightvalinfo.max == 0)
+            {
+              bool one = (ic->op == NE_OP);
               resultvalinfo.min = one;
               resultvalinfo.max = one;
             }
@@ -886,7 +915,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           valinfoUpdate (&resultvalinfo);
 #ifdef DEBUG_GCP_ANALYSIS
-          std::cout << "resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << " knownbits 0x" << resultvalinfo.knownbits << std::dec << " min " << resultvalinfo.min << " max " << resultvalinfo.max << "\n";
+          std::cout << "resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << " knownbits 0x" << resultvalinfo.knownbits << std::dec << " min " << resultvalinfo.min << " max " << resultvalinfo.max << " nonnull " << resultvalinfo.nonnull << "\n";
 #endif
           if (!ic->resultvalinfo)
             ic->resultvalinfo = new struct valinfo;
