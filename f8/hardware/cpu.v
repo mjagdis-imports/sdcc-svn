@@ -499,7 +499,7 @@ module cpu(iread_addr, iread_data, iread_valid, dread_addr, dread_data, dwrite_a
 				next_flags[4] = flags[4];
 
 			// hidden flags used internally
-			if (opcode == OPCODE_NOP || opcode == OPCODE_JP_IMMD || opcode == OPCODE_JR_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_RETI && next_opcode != OPCODE_RET)
+			if (opcode == OPCODE_NOP || opcode == OPCODE_CALL_IMMD || opcode == OPCODE_JP_IMMD || opcode == OPCODE_JR_D || opcode == OPCODE_ADDW_SP_D || opcode == OPCODE_RETI && next_opcode != OPCODE_RET)
 				next_flags[7:5] = flags[7:5];
 			else begin
 				if (opcode == OPCODE_SWAPOP ||

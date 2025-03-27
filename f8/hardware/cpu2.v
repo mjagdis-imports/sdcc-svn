@@ -585,6 +585,7 @@ module cpu
 				memwrite_addr = sp - 2;
 				memwrite_en = 2'b11;
 				next_sp = sp - 2;
+				next_f = f;
 			end
 			else if(opcode == OPCODE_CALL_Y)
 			begin
