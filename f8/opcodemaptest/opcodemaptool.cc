@@ -42,7 +42,7 @@
 
 #define NUM_OPCODES 256
 
-const char *opcodenames[NUM_OPCODES] =	{
+const char *opcodenames_verilog[NUM_OPCODES] =	{
 	"OPCODE_TRAP",
 	"OPCODE_SUB_XL_DIR",
 	"OPCODE_SUB_XL_SPREL",
@@ -301,6 +301,264 @@ const char *opcodenames[NUM_OPCODES] =	{
 	"OPCODE_XORW_Y_X",
 	};
 
+const char *opcodenames_tex[NUM_OPCODES] =	{
+	"trap",
+	"sub xl, mm",
+	"sub xl (n, sp)",
+	"sub xl (nn, z)",
+	"sub xl, zl",
+	"sub xl, xh",
+	"sub xl, yl",
+	"sub xl, yh",
+	"",
+	"sbc xl, mm",
+	"sbc xl (n, sp)",
+	"sbc xl (nn, z)",
+	"sbc xl, zl",
+	"sbc xl, xh",
+	"sbc xl, yl",
+	"sbc xl, yh",
+	"add xl, \\#i",
+	"add xl, mm",
+	"add xl (n, sp)",
+	"add xl (nn, z)",
+	"add xl, zl",
+	"add xl, xh",
+	"add xl, yl",
+	"add xl, yh",
+	"adc xl, \\#i",
+	"adc xl, mm",
+	"adc xl (n, sp)",
+	"adc xl (nn, z)",
+	"adc xl, zl",
+	"adc xl, xh",
+	"adc xl, yl",
+	"adc xl, yh",
+	"cp xl, \\#i",
+	"cp xl, mm",
+	"cp xl (n, sp)",
+	"cp xl (nn, z)",
+	"cp xl, zl",
+	"cp xl, xh",
+	"cp xl, yl",
+	"cp xl, yh",
+	"or xl, \\#i",
+	"or xl, mm",
+	"or xl (n, sp)",
+	"or xl (nn, z)",
+	"or xl, zl",
+	"or xl, xh",
+	"or xl, yl",
+	"or xl, yh",
+	"and xl, \\#i",
+	"and xl, mm",
+	"and xl (n, sp)",
+	"and xl (nn, z)",
+	"and xl, zl",
+	"and xl, xh",
+	"and xl, yl",
+	"and xl, yh",
+	"xor xl, \\#i",
+	"xor xl, mm",
+	"xor xl (n, sp)",
+	"xor xl (nn, z)",
+	"xor xl, zl",
+	"xor xl, xh",
+	"xor xl, yl",
+	"xor xl, yh",
+	"srl mm",
+	"srl (n, sp)",
+	"srl xl",
+	"srl (n, y)",
+	"sll mm",
+	"sll (n, sp)",
+	"sll xl",
+	"sll (n, y)",
+	"rrc mm",
+	"rrc (n, sp)",
+	"rrc xl",
+	"rrc (n, y)",
+	"rlc mm",
+	"rlc (n, sp)",
+	"rlc xl",
+	"rlc (n, y)",
+	"inc mm",
+	"inc (n, sp)",
+	"inc xl",
+	"inc (n, y)",
+	"dec mm",
+	"dec (n, sp)",
+	"dec xl",
+	"dec (n, y)",
+	"crl mm",
+	"crl (n, sp)",
+	"crl xl",
+	"crl (n, y)",
+	"tst mm",
+	"tst (n, sp)",
+	"tst xl",
+	"tst (n, y)",
+	"push mm",
+	"push (n, sp)",
+	"push xl",
+	"push (n, y)",
+	"jp \\#ii",
+	"jp y",
+	"call \\#ii",
+	"call y",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"ldw y, sp",
+	"subw y, mm",
+	"subw y, (n, sp)",
+	"subw y, x",
+	"ldw ((n,sp)), y",
+	"sbcw y, mm",
+	"sbcw y, (n, sp)",
+	"sbcw y, x",
+	"addw y, \\#ii",
+	"addw y, mm",
+	"addw y, (n, sp)",
+	"addw y, x",
+	"adcw y, \\#ii",
+	"adcw y, mm",
+	"adcw y, (n, sp)",
+	"adcw y, x",
+	"ld xl, \\#i",
+	"ld xl, mm",
+	"ld xl, (n, sp)",
+	"ld xl, (nn, z)",
+	"ld xl, (y)",
+	"ld xl, (n, y)",
+	"ld xl, xh",
+	"ld xl, yl",
+	"ld xl, yh",
+	"ld xl, zl",
+	"ld xl, zh",
+	"ld mm, xl",
+	"ld (n, sp), xl",
+	"ld (nn, z), xl",
+	"ld (y), xl",
+	"ld (n, y), xl",
+	"push \\#i",
+	"xch xl, (n, sp)",
+	"xch xl, (y)",
+	"xch yl, yh",
+	"altacc4",
+	"rot xl, \\#i",
+	"sra xl",
+	"da xl",
+	"bool xl",
+	"pop xl",
+	"thrd xl",
+	"cax (y), zl, xl",
+	"swapop",
+	"altacc1",
+	"altacc2",
+	"altacc3",
+	"clrw mm",
+	"clrw (n, sp)",
+	"clrw (nn, z)",
+	"clrw y",
+	"incw mm",
+	"incw (n, sp)",
+	"incw (nn, z)",
+	"incw y",
+	"adcw mm",
+	"adcw (n, sp)",
+	"adcw (nn, z)",
+	"adcw y",
+	"sbcw mm",
+	"sbcw (n, sp)",
+	"sbcw (nn, z)",
+	"sbcw y",
+	"pushw mm",
+	"pushw (n, sp)",
+	"pushw (nn, z)",
+	"pushw y",
+	"tstw mm",
+	"tstw (n, sp)",
+	"tstw (nn, z)",
+	"tstw y",
+	"msk (y), xl, \\#i",
+	"mul y",
+	"ret",
+	"reti",
+	"mad x, mm, yl",
+	"mad x, (n, sp), yl",
+	"mad x, (nn, z), yl",
+	"mad x, (z), yl",
+	"ldw y, \\#ii",
+	"ldwy, mm",
+	"ldw y, (n, sp)",
+	"ldw y, (nn, z)",
+	"ldw y, (n, y)",
+	"ldw y, (y)",
+	"ldw y, x",
+	"ldw y, \\#d",
+	"ldw mm, y",
+	"ldw (n, sp), y",
+	"ldw (nn, z), y",
+	"ldw x, y",
+	"ldw z, y",
+	"ldw (y), x",
+	"ldw (n, y), x",
+	"ldwi (n, y), (z)",
+	"jr \\#d",
+	"dnjnz yh, \\#d",
+	"jrz \\#d",
+	"jrnz \\#d",
+	"jrc \\#d",
+	"jrnc \\#d",
+	"jrn \\#d",
+	"jrnn \\#d",
+	"altacc5",
+	"jrno \\#d",
+	"jrsge \\#d",
+	"jrslt \\#d",
+	"ldw y, z",
+	"jrsle \\#d",
+	"ldw x, (y)",
+	"jrle \\#d",
+	"srlw y",
+	"sllw y",
+	"rrcw y",
+	"rlcw y",
+	"sraw y",
+	"sllw y, xl",
+	"rrcw (n, sp)",
+	"rlcw (n, sp)",
+	"pushw \\#ii",
+	"popw y",
+	"addw sp, \\#d",
+	"addw y, \\#d",
+	"xch f, (n, sp)",
+	"ldi (n, y), (z)",
+	"sex y, xl",
+	"zex y, xl",
+	"orw y, \\#ii",
+	"orw y, mm",
+	"orw y, (n, sp)",
+	"orw y, x",
+	"xchw x, (y)",
+	"xchw y, (n, sp)",
+	"incnw y",
+	"decw (n, sp)",
+	"cpw y, \\#ii",
+	"caxw (y), z, x",
+	"negw y",
+	"boolw y",
+	"xorw y, \\#ii",
+	"xorw y, mm",
+	"xorw y, (n, sp)",
+	"xorw y, x",
+	};
 
 inline static void init_table_order(uint8_t *table)
 {
@@ -370,12 +628,24 @@ inline static void modify_table_random(uint8_t *table)
 	}
 }
 
-static void print_table(FILE *f, const uint8_t * table)
+static void print_table_verilog(FILE *f, const uint8_t *table)
 {
 	fprintf(f, "typedef enum logic [7:0] {\n");
 	for(unsigned int i = 0; i < NUM_OPCODES; i++)
-		fprintf(f, "\t%s = 8'h%02x%s\n", opcodenames[table[i]], i, i != 255 ? "," : "");
+		fprintf(f, "\t%s = 8'h%02x%s\n", opcodenames_verilog[table[i]], i, i != 255 ? "," : "");
 	fprintf(f, "} opcode_t;\n");
+}
+
+static void print_table_tex(FILE *f, const uint8_t *table)
+{
+	for(unsigned int i = 0; i < 16; i++)
+		fprintf (f, "x%d %s", i, i != 15 ? "& " : "\\\\\n\\hline\\hline\n");
+	for(unsigned int i = 0; i < NUM_OPCODES; i++)
+	{
+		if (!(i % 16))
+			fprintf (f, "%dx & ", i / 16);
+		fprintf(f, "%s %s", opcodenames_tex[table[i]], (i % 16 != 15) ? "& " : (i != 255) ? "\\\\\n\\hline\n" : "\n");
+	}
 }
 
 void help(FILE *f)
@@ -387,6 +657,7 @@ void help(FILE *f)
 	fprintf(f, "walkrandom:  add n random opcode maps that are similar to good existing ones\n");
 	fprintf(f, "showbest:    add show best n opcode maps\n");
 	fprintf(f, "deleteworst: delete worst n opcode maps\n");
+	fprintf(f, "print_tex:   print table n as TeX table\n");
 }
 
 std::map <std::vector<uint8_t>, unsigned long int> opcodemapstable;
@@ -426,7 +697,7 @@ void create_opcodemapsfiles(void)
 			FILE *file = fopen(name.str().c_str(), "wx");
 			if (file)
 			{
-				print_table(file, it->first.data());
+				print_table_verilog(file, it->first.data());
 				fclose(file);
 			}
 			else
@@ -511,7 +782,7 @@ void delete_worst(int n)
 int main(int argc, char **argv)
 {
 	uint8_t table[NUM_OPCODES];
-	int n = 1;
+	unsigned int n = 1;
 
 	if (argc == 3)
 	{
@@ -539,7 +810,7 @@ int main(int argc, char **argv)
 	else if (argc == 3 && !strcmp(argv[1], "startrandom"))
 	{
 		read_opcodemapstable();
-		for(int i = 0; i < n; i++)
+		for(unsigned int i = 0; i < n; i++)
 		{
 			init_table_random(table);
 			add_opcodemap(table);
@@ -558,7 +829,7 @@ int main(int argc, char **argv)
 		}
 		std::random_device rd;
 		std::geometric_distribution<unsigned long int> dist(1.0 / 10.0);
-		for(int i = 0; i < n; i++)
+		for(unsigned int i = 0; i < n; i++)
 		{
 			unsigned long int r = dist(rd);
 			if (r >= sizes.size())
@@ -590,11 +861,24 @@ int main(int argc, char **argv)
 		delete_worst(n);
 		write_opcodemapstable();
 	}
+	else if (argc == 3 && !strcmp(argv[1], "print_tex"))
+	{
+		read_opcodemapstable();
+		std::map <std::vector<uint8_t>, unsigned long int>::iterator it;
+		for(it = opcodemapstable.begin(); it != opcodemapstable.end(); it++)
+		{
+			if (it->second == n)
+				break;
+		}
+		if (it != opcodemapstable.end())
+			print_table_tex(stdout, it->first.data());
+		else
+			std::cerr << "Entry not found.";
+	}
 	else
 	{
 		help(stderr);
 		return(-1);
 	}
-
 }
 
