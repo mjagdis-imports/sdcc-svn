@@ -176,25 +176,27 @@ stm8_init_asmops (void)
 
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
+  memset (asmop_zero.regs, -1, sizeof(asmop_zero.regs));
   asmop_zero.aopu.aop_lit = constVal ("0");
-  asmop_zero.regs[A_IDX] = -1;
-  asmop_zero.regs[XL_IDX] = -1;
-  asmop_zero.regs[XH_IDX] = -1;
-  asmop_zero.regs[YL_IDX] = -1;
-  asmop_zero.regs[YH_IDX] = -1;
-  asmop_zero.regs[C_IDX] = -1;
-  asmop_zero.valinfo.anything = true;
+  asmop_zero.valinfo.anything = false;
+  asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = false;
+  asmop_zero.valinfo.min = 0;
+  asmop_zero.valinfo.max = 0;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
+  asmop_zero.valinfo.knownbits = 0;
 
   asmop_one.type = AOP_LIT;
   asmop_one.size = 1;
+  memset (asmop_one.regs, -1, sizeof(asmop_one.regs));
   asmop_one.aopu.aop_lit = constVal ("1");
-  asmop_one.regs[A_IDX] = -1;
-  asmop_one.regs[XL_IDX] = -1;
-  asmop_one.regs[XH_IDX] = -1;
-  asmop_one.regs[YL_IDX] = -1;
-  asmop_one.regs[YH_IDX] = -1;
-  asmop_one.regs[C_IDX] = -1;
-  asmop_one.valinfo.anything = true;
+  asmop_zero.valinfo.anything = false;
+  asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = true;
+  asmop_zero.valinfo.min = 1;
+  asmop_zero.valinfo.max = 1;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
+  asmop_zero.valinfo.knownbits = 1;
   
   asmop_mone.type = AOP_LIT;
   asmop_mone.size = 8; // Maximum size for asmop.
@@ -4300,8 +4302,8 @@ genFunction (iCode *ic)
 #else
       // The workaround obtained by further investigation of RFE #449. Experiments on STM8S208MB and STM8L152C6 show that div resets bit 6 of cc.
       if (!optimize.codeSize)
-        emit3 (A_CLR, ASMOP_A, 0);	// Zero accumulator to reduce cycle cost in following division.
-      emit2 ("div", "x, a");	// According to measurements on the STM8S208MB and STM8L152C6, div takes 2-3 cycles for divisions by zero and 2-17 cycles in general.
+        emit3 (A_CLR, ASMOP_A, 0); // Zero accumulator to reduce cycle cost in following division.
+      emit2 ("div", "x, a");       // According to measurements on the STM8S208MB and STM8L152C6, div takes 2-3 cycles for divisions by zero and 2-17 cycles in general.
       cost (1, 3);
 #endif
     }
@@ -6593,9 +6595,9 @@ static void
 genAnd (const iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
-  int size, i, j, omitbyte = -1;
-  bool pushed_a = FALSE;
-  bool result_in_a = FALSE;
+  int i, j, omitbyte = -1;
+  bool pushed_a = false;
+  bool result_in_a = false;
 
   D (emit2 ("; genAnd", ""));
 
@@ -6603,7 +6605,7 @@ genAnd (const iCode *ic, iCode *ifx)
   aopOp ((right = IC_RIGHT (ic)), ic, false);
   aopOp ((result = IC_RESULT (ic)), ic, true);
 
-  size = getSize (operandType (result));
+  int size = getSize (operandType (result));
 
   /* Prefer literal operand on right */
   if (left->aop->type == AOP_LIT ||
@@ -6621,6 +6623,10 @@ genAnd (const iCode *ic, iCode *ifx)
       symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
 
       wassertl (right->aop->type == AOP_LIT, "Code generation for bitwise and can only jump on literal operands");
+
+      // No point checking the upper bytes. They can only be nonzero if the topmost bit of the lower bytes is already.
+      if (left->aop->size < size)
+        size = left->aop->size;
 
       // Find the non-zero byte.
       for (j = 0, nonzero = 0, i = -1; j < size; j++)

@@ -2338,22 +2338,6 @@ glue (void)
   /* print module name */
   tfprintf (asmFile, "\t!module\n", moduleName);
 
-  // TODO: Move this stuff from here to port-specific genAssemblerStart?
-  if (TARGET_IS_S08)
-    fprintf (asmFile, "\t.cs08\n");
-  else if (TARGET_IS_Z180)
-    fprintf (asmFile, "\t.hd64\n");
-  else if (TARGET_IS_R3KA)
-    fprintf (asmFile, "\t.r3k\n");
-  else if (TARGET_IS_EZ80_Z80)
-    fprintf (asmFile, "\t.ez80\n");
-  else if (TARGET_IS_Z80N)
-    fprintf (asmFile, "\t.zxn\n");
-  else if (TARGET_IS_R800)
-    fprintf (asmFile, "\t.r800\n");
-  else if (TARGET_IS_Z80 && options.allow_undoc_inst)
-    fprintf (asmFile, "\t.allow_undocumented\n");
-
   tfprintf (asmFile, "\t!fileprelude\n");
 
   /* Let the port generate any global directives, etc. */
@@ -2590,7 +2574,7 @@ glue (void)
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
-      else if (TARGET_IS_F8)
+      else if (TARGET_F8_LIKE)
         fprintf (asmFile, "\tjp\t#__sdcc_program_startup\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t__sdcc_program_startup\n");
@@ -2615,7 +2599,7 @@ glue (void)
       /* put in jump or call to main */
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t_main\n" : "\tjp\t_main\n");
-      else if(TARGET_IS_F8)
+      else if(TARGET_F8_LIKE)
         fprintf (asmFile, "\tjp\t#_main\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t_main\n");

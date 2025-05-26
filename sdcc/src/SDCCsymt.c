@@ -1216,6 +1216,25 @@ getSize (sym_link * p)
     }
 }
 
+/*------------------------------------------------------------------*/
+/* getElemCount - returns the number of elements in an array type   */
+/*------------------------------------------------------------------*/
+unsigned int
+getElemCount (sym_link * p)
+{
+  /* if nothing return 0 */
+  if (!p)
+    return 0;
+  if (IS_SPEC (p))
+    return 0;
+
+  /* this is a declarator */
+  if (DCL_TYPE (p) == ARRAY)
+    return DCL_ELEM (p);
+  else
+    return 0;
+}
+
 #define FLEXARRAY   1
 #define INCOMPLETE  2
 
@@ -4772,7 +4791,7 @@ initCSupport (void)
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
             funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
-              multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su % 2],
+              multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][su % 2],
               multypes[bwd][su / 2],
               2,
               options.intlong_rent);
@@ -4792,7 +4811,7 @@ initCSupport (void)
               dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su * 3], sbwd[bwd]);
               muldiv[muldivmod][bwd][su] =
                 funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
-                  multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su],
+                  multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][su],
                   multypes[bwd][su],
                   2,
                   options.intlong_rent);
@@ -5205,4 +5224,53 @@ mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls)
             }
         }
     }
+}
+
+/*-------------------------------------------------------------------*/
+/* prepareDeclarationSymbol - add the specifier list to the id       */
+/*                            and do some type-related housekeeping  */
+/* NOTE: moved here from the "declaration" rule in SDCC.y            */
+/*-------------------------------------------------------------------*/
+symbol *
+prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDeclList)
+{
+  symbol *sym , *sym1;
+
+  bool autocandidate = options.std_c23 && IS_SPEC (declSpecs) && SPEC_SCLS (declSpecs) == S_AUTO;
+
+  for (sym1 = sym = reverseSyms (initDeclList); sym != NULL; sym = sym->next)
+    {
+      sym_link *lnk = copyLinkChain (declSpecs);
+      sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
+      /* check illegal declaration */
+      for (l0 = sym->type; l0 != NULL; l0 = l0->next)
+        if (IS_PTR (l0))
+          break;
+      /* check if creating instances of structs with flexible arrays */
+      for (l1 = lnk; l1 != NULL; l1 = l1->next)
+        if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
+          break;
+      if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR (declSpecs) != 1)
+        werror (W_FLEXARRAY_INSTRUCT, sym->name);
+      /* check if creating instances of function type */
+      for (l1 = lnk; l1 != NULL; l1 = l1->next)
+        if (IS_FUNC (l1))
+          break;
+      for (l2 = lnk; l2 != NULL; l2 = l2->next)
+        if (IS_PTR (l2))
+          break;
+      if (l0 == NULL && l2 == NULL && l1 != NULL)
+        werrorfl (sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+      /* C23 auto type inference */
+      if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE)
+        {
+          sym->type = sym->etype = typeofOp (sym->ival->init.node);
+          SPEC_SCLS (lnk) = 0;
+        }
+      /* do the pointer stuff */
+      pointerTypes (sym->type, lnk);
+      addDecl (sym, 0, lnk);
+    }
+
+  return sym1;
 }

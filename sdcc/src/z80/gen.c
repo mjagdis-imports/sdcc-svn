@@ -299,18 +299,30 @@ z80_init_asmops (void)
   z80_init_reg_asmop(&asmop_iy, (const signed char[]){IYL_IDX, IYH_IDX, -1});
   z80_init_reg_asmop(&asmop_hlbc, (const signed char[]){C_IDX, B_IDX, L_IDX, H_IDX, -1});
   z80_init_reg_asmop(&asmop_debc, (const signed char[]){C_IDX, B_IDX, E_IDX, D_IDX, -1});
-  
+
   asmop_zero.type = AOP_LIT;
-  asmop_zero.aopu.aop_lit = constVal ("0");
   asmop_zero.size = 1;
-  memset (asmop_zero.regs, -1, 9);
-  asmop_zero.valinfo.anything = true;
+  memset (asmop_zero.regs, -1, sizeof(asmop_zero.regs));
+  asmop_zero.aopu.aop_lit = constVal ("0");
+  asmop_zero.valinfo.anything = false;
+  asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = false;
+  asmop_zero.valinfo.min = 0;
+  asmop_zero.valinfo.max = 0;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
+  asmop_zero.valinfo.knownbits = 0;
 
   asmop_one.type = AOP_LIT;
-  asmop_one.aopu.aop_lit = constVal ("1");
   asmop_one.size = 1;
-  memset (asmop_one.regs, -1, 9);
-  asmop_one.valinfo.anything = true;
+  memset (asmop_one.regs, -1, sizeof(asmop_one.regs));
+  asmop_one.aopu.aop_lit = constVal ("1");
+  asmop_zero.valinfo.anything = false;
+  asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = true;
+  asmop_zero.valinfo.min = 1;
+  asmop_zero.valinfo.max = 1;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
+  asmop_zero.valinfo.knownbits = 1;
 
   asmop_mone.type = AOP_LIT;
   asmop_mone.aopu.aop_lit = constVal ("-1");
@@ -5983,10 +5995,8 @@ genIpush (const iCode *ic)
               cost2 (1, 11, 11, 10, 16, 8, 3, 4);
             d = 2;
           }
-#if 0 // Fails regression tests. Simulator issue regarding flags?
-        // gbz80 flag handling differs from other z80 variants, allowing this hack to push a 16-bit zero.
-        else if (size >= 2 && IS_SM83 && a_free &&
-          IC_LEFT (ic)->aop->type == AOP_LIT && !byteOfVal (IC_LEFT(ic)->aop->aopu.aop_lit, size - 2) && !byteOfVal (IC_LEFT(ic)->aop->aopu.aop_lit, size - 1))
+        // sm83 flag handling differs from other z80 variants, allowing this hack to push a 16-bit zero.
+        else if (size >= 2 && IS_SM83 && a_free && aopIsLitVal (ic->left->aop, size - 2, 2, 0x0000))
           {
             emit2 ("xor a, a"); // Resets all flags except for z
             emit2 ("rra");      // Resets z (and since a is already 0, c stays reset)
@@ -5994,7 +6004,6 @@ genIpush (const iCode *ic)
             regalloc_dry_run_cost += 3;
             d = 2;
           }
-#endif
         else if (size >= 2 &&
           (hl_free || de_free || bc_free ||
           aopInReg (IC_LEFT (ic)->aop, size - 1, B_IDX) && c_free || b_free && aopInReg (IC_LEFT (ic)->aop, size - 2, C_IDX) ||
@@ -6758,12 +6767,12 @@ genCall (const iCode *ic)
             {
               int rst = ftype->funcAttrs.z88dk_shortcall_rst;
               int value = ftype->funcAttrs.z88dk_shortcall_val;
-              emit2 ("rst !constbyte", (unsigned)rst);
+              emit2 ("rst !immedbyte", (unsigned)rst);
               cost2 (1, 11, 11, 8, 16, 0, 5, 4);
               if (value < 256)
-                emit2 ("defb !constbyte\n", (unsigned)value);
+                emit2 ("defb !immedbyte\n", (unsigned)value);
               else
-                emit2 ("defw !constword\n", (unsigned)value);
+                emit2 ("defw !immedword\n", (unsigned)value);
               regalloc_dry_run_cost_bytes += 2 + (value >= 256);
             }
           else
@@ -7813,7 +7822,7 @@ outBitAcc (operand * result)
       if (!regalloc_dry_run)
         {
           emit2 ("jp Z, !tlabel", labelKey2num (tlbl->key));
-          emit2 ("ld a, !one");
+          emit2 ("ld a, !immedbyte", 1);
           emitLabel (tlbl);
         }
       // Assume that both values are equally likely.
@@ -10528,7 +10537,8 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
             }
 
           // Test for 0 can be done more efficiently using or
-          if (!byteOfVal (right->aop->aopu.aop_lit, offset))
+          if (!byteOfVal (right->aop->aopu.aop_lit, offset) &&
+            (!a_result || left->aop->type != AOP_STL && left->aop->type != AOP_SFR))
             {
               if (!a_result)
                 {
@@ -10705,7 +10715,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
 /* gencjne - compare and jump if not equal                         */
 /*-----------------------------------------------------------------*/
 static void
-gencjne (operand * left, operand * right, symbol * lbl, const iCode *ic)
+gencjne (operand *left, operand *right, symbol *lbl, const iCode *ic)
 {
   symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
   PAIR_ID pop;
@@ -10715,10 +10725,10 @@ gencjne (operand * left, operand * right, symbol * lbl, const iCode *ic)
   /* PENDING: ?? */
   if (!regalloc_dry_run)
     {
-      emit2 ("ld a,!one");
+      emit2 ("ld a, !immedbyte", 1);
       emit2 ("jp !tlabel", labelKey2num (tlbl->key));
       emitLabelSpill (lbl);
-      emit2 ("xor a,a");
+      emit2 ("xor a, a");
       emitLabel (tlbl);
     }
   regalloc_dry_run_cost += 6;
@@ -10729,14 +10739,14 @@ gencjne (operand * left, operand * right, symbol * lbl, const iCode *ic)
 /* genCmpEq - generates code for equal to                          */
 /*-----------------------------------------------------------------*/
 static void
-genCmpEq (iCode * ic, iCode * ifx)
+genCmpEq (iCode *ic, iCode *ifx)
 {
   operand *left, *right, *result;
   bool hl_touched;
 
-  aopOp ((left = IC_LEFT (ic)), ic, FALSE, FALSE);
-  aopOp ((right = IC_RIGHT (ic)), ic, FALSE, FALSE);
-  aopOp ((result = IC_RESULT (ic)), ic, TRUE, FALSE);
+  aopOp ((left = ic->left), ic, false, false);
+  aopOp ((right = ic->right), ic, false, false);
+  aopOp ((result = ic->result), ic, true, false);
 
   hl_touched = (IC_LEFT (ic)->aop->type == AOP_HL || IC_RIGHT (ic)->aop->type == AOP_HL || IS_SM83
                 && IC_LEFT (ic)->aop->type == AOP_STK || IS_SM83 && IC_RIGHT (ic)->aop->type == AOP_STK);
@@ -14434,7 +14444,7 @@ genPointerGet (const iCode *ic)
           rightval = 0;
         }
       else
-        fetchPair (pair, left->aop);
+        fetchPairLong (pair, left->aop, ic, 0);
     }
 
   /* if bit then unpack */
@@ -15290,10 +15300,10 @@ genPointerSet (iCode *ic)
           }
     }
 release:
-  if (pushed_pair)
-    _pop (pairId);
   if (pushed_a)
     _pop (PAIR_AF);
+  if (pushed_pair)
+    _pop (pairId);
 
   freeAsmop (right, NULL);
   freeAsmop (result, NULL);

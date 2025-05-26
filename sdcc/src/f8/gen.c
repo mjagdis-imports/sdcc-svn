@@ -191,16 +191,23 @@ f8_init_asmops (void)
   asmop_zero.aopu.aop_lit = constVal ("0");
   asmop_zero.valinfo.anything = false;
   asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = false;
   asmop_zero.valinfo.min = 0;
   asmop_zero.valinfo.max = 0;
-  asmop_zero.valinfo.knownbitsmask = 0x0000000000000000ull;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
   asmop_zero.valinfo.knownbits = 0;
 
   asmop_one.type = AOP_LIT;
   asmop_one.size = 1;
   memset (asmop_one.regs, -1, sizeof(asmop_one.regs));
   asmop_one.aopu.aop_lit = constVal ("1");
-  asmop_one.valinfo.anything = true;
+  asmop_zero.valinfo.anything = false;
+  asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = true;
+  asmop_zero.valinfo.min = 1;
+  asmop_zero.valinfo.max = 1;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
+  asmop_zero.valinfo.knownbits = 1;
 
   asmop_mone.type = AOP_LIT;
   asmop_mone.size = 8; // Maximum size for asmop.
@@ -5043,6 +5050,11 @@ genAnd (const iCode *ic, iCode *ifx)
       symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
 
       wassertl (right->aop->type == AOP_LIT, "Code generation for bitwise and can only jump on literal operand");
+
+      // No point checking the upper bytes. They can only be nonzero if the topmost bit of the lower bytes is already.
+      if (left->aop->size < size)
+        size = left->aop->size;
+
       // Find the non-zero byte.
       for (j = 0, nonzero = 0, i = -1; j < size; j++)
         if (byteOfVal (right->aop->aopu.aop_lit, j))
