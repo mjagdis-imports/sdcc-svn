@@ -2888,6 +2888,23 @@ gatherImplicitVariables (ast * tree, ast * block)
             }
         }
     }
+  if (tree->type == EX_VALUE && IS_AST_SYM_VALUE (tree) && AST_SYMBOL (tree)->iscomplit)
+    {
+      /* attach the compound literal temporary symbol to the surrounding block, if one exists */
+      symbol *tempsym = AST_SYMBOL (tree);
+      if (block != NULL)
+        {
+          symbol **decl = &(block->values.sym);
+
+          while (*decl)
+            {
+              wassert (*decl != tempsym);  /* should not already be in list */
+              decl = &((*decl)->next);
+            }
+
+          *decl = tempsym;
+        }
+    }
   if (tree->type == EX_VALUE && !(IS_LITERAL (tree->opval.val->etype)) &&
       tree->opval.val->type == NULL && tree->opval.val->sym && tree->opval.val->sym->infertype)
     {
@@ -3220,7 +3237,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
   ast *parms = tree->right;
   ast *func = tree->left;
 
-  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE && !TARGET_PDK_LIKE && !TARGET_IS_F8) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
+  if (!TARGET_IS_STM8 && !TARGET_Z80_LIKE && !TARGET_PDK_LIKE && !TARGET_F8_LIKE) // Regression test gcc-torture-execute-20121108-1.c fails to build for hc08 and mcs51 (without --stack-auto)
     return;
 
   if (!IS_FUNC (func->ftype) || IS_LITERAL (func->ftype) || func->type != EX_VALUE || !func->opval.val->sym)
@@ -3312,7 +3329,7 @@ optStdLibCall (ast *tree, RESULT_TYPE resulttype)
       size_t minlength; // Minimum string length for replacement.
       if (TARGET_IS_STM8)
         minlength = optimize.codeSize ? SIZE_MAX : 12;
-      else if (TARGET_IS_RABBIT)
+      else if (TARGET_RABBIT_LIKE)
         minlength = optimize.codeSize ? SIZE_MAX : (optimize.codeSpeed ? 8 : 24);
       else // TODO:Check for other targets when memcpy() is a better choice than strcpy;
         minlength = SIZE_MAX;
@@ -3616,7 +3633,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         dtr = tree->right;
         break;
       case SIZEOF:
-      case LENGTHOF:
+      case COUNTOF:
       case TYPEOF:
       case TYPEOF_UNQUAL:
         /* don't allocate string if it is a sizeof argument */
@@ -5357,18 +5374,18 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       }
       /*------------------------------------------------------------------*/
       /*----------------------------*/
-      /*          _Lengthof         */
+      /*          _Countof          */
       /*----------------------------*/
-    case LENGTHOF:            /* evaluate without code generation, analogous to sizeof */
+    case COUNTOF:              /* evaluate without code generation, analogous to sizeof */
       {
         /* change the type to a integer */
         struct dbuf_s dbuf;
-        int length = getLength (tree->right->ftype);
+        int length = getElemCount (tree->right->ftype);
 
         dbuf_init (&dbuf, 128);
         dbuf_printf (&dbuf, "%d", length);
         if (!length && !IS_VOID (tree->right->ftype))
-          werrorfl (tree->filename, tree->lineno, E_LENGTHOF_INVALID_TYPE);
+          werrorfl (tree->filename, tree->lineno, E_COUNTOF_INVALID_TYPE);
         tree->type = EX_VALUE;
         tree->opval.val = constVal (dbuf_c_str (&dbuf));
         dbuf_destroy (&dbuf);
@@ -5981,23 +5998,23 @@ sizeofOp (sym_link *type)
 }
 
 /*-----------------------------------------------------------------*/
-/* lengthofOp - processes _Lengthof operation                      */
+/* countofOp - processes _Countof operation                        */
 /*-----------------------------------------------------------------*/
 value *
-lengthofOp (sym_link *type)
+countofOp (sym_link *type)
 {
   struct dbuf_s dbuf;
   value *val;
-  int length;
+  int count;
 
   /* make sure the type is complete and sane */
-  checkTypeSanity (type, "(_Lengthof)");
+  checkTypeSanity (type, "(_Countof)");
 
-  /* get the length and convert it to character  */
+  /* get the element count and convert it to character  */
   dbuf_init (&dbuf, 128);
-  dbuf_printf (&dbuf, "%d", length = getLength (type));
-  if (!length && !IS_VOID (type))
-    werror (E_LENGTHOF_INVALID_TYPE);
+  dbuf_printf (&dbuf, "%d", count = getElemCount (type));
+  if (!count && !IS_VOID (type))
+    werror (E_COUNTOF_INVALID_TYPE);
 
   /* now convert into value  */
   val = constVal (dbuf_c_str (&dbuf));

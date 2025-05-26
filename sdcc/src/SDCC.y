@@ -92,7 +92,7 @@ bool uselessDecl = true;
 
 %token <yychar> IDENTIFIER TYPE_NAME ADDRSPACE_NAME
 %token <val> CONSTANT
-%token SIZEOF LENGTHOF OFFSETOF
+%token SIZEOF COUNTOF OFFSETOF
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token AND_OP OR_OP
 %token ATTR_START TOK_SEP
@@ -147,7 +147,7 @@ bool uselessDecl = true;
 %type <lnk> pointer specifier_qualifier_list type_specifier_list_ type_specifier_qualifier type_specifier typeof_specifier type_qualifier_list type_qualifier_list_opt type_qualifier type_name
 %type <lnk> type_specifier_list_without_struct_or_union type_specifier_qualifier_without_struct_or_union type_specifier_without_struct_or_union
 %type <lnk> storage_class_specifier struct_or_union_specifier function_specifier alignment_specifier
-%type <lnk> declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
+%type <lnk> storage_class_specifiers storage_class_specifiers_ declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
 %type <lnk> function_attribute function_attributes enum_specifier enum_comma_opt enum_type_specifier simple_typed_enum_decl
 %type <lnk> abstract_declarator direct_abstract_declarator direct_abstract_declarator_opt array_abstract_declarator function_abstract_declarator
 %type <lnk> unqualified_pointer
@@ -167,7 +167,7 @@ bool uselessDecl = true;
 %type <asts> generic_selection generic_assoc_list generic_association generic_controlling_operand
 %type <asts> implicit_block statements_and_implicit block_item_list
 %type <dsgn> designator designator_list designation designation_opt
-%type <ilist> initializer initializer_list
+%type <ilist> initializer initializer_list braced_initializer
 %type <yyint> unary_operator assignment_operator struct_or_union
 %type <yystr> asm_string_literal
 
@@ -238,32 +238,59 @@ postfix_expression
                       { $$ = newNode(INC_OP,$1,NULL);}
    | postfix_expression DEC_OP
                       { $$ = newNode(DEC_OP,$1,NULL); }
-   | '(' type_name ')' '{' initializer_list '}'
+   | '(' type_name ')' braced_initializer
                       {
-                        /* if (!options.std_c99) */
+                        if (!options.std_c99)
                           werror(E_COMPOUND_LITERALS_C99);
 
-                        /* TODO: implement compound literals (C99) */
-                        $$ = newAst_VALUE (valueFromLit (0));
+                        /* create anonymous variable with the provided initializer list */
+                        symbol *sym = newSymbol(genSymName(NestLevel), NestLevel);
+                        /* imitate "init_declarator" */
+                        sym->ival = $4;
+                        /* NOTE: Do not increment seqPointNo here, because the initializer is part of a
+                                 compound literal. See Annex C.1 "Known Sequence Points" paragraph 4. */
+
+                        /* add the specifier list to the id */
+                        symbol *sym1 = prepareDeclarationSymbol(NULL, $2, sym);
+
+                        /* mark as temporary symbol for compound literal, so that gatherImplicitVariables
+                           can attach it to a block, and add the temporary symbol to the symbol table */
+                        sym1->iscomplit = 1;
+                        addSymChain(&sym1);
+                        /* allocate memory for the symbol where no block handling does it */
+                        if (NestLevel == 0)
+                          allocVariables(sym1);
+
+                        /* use the anonymous variable in the AST */
+                        $$ = newAst_VALUE(symbolVal(sym1));
                       }
-   | '(' type_name ')' '{' initializer_list ',' '}'
-     {
-       // if (!options.std_c99)
-         werror(E_COMPOUND_LITERALS_C99);
+   | '(' storage_class_specifiers type_name ')' braced_initializer
+                      {
+                        if (!options.std_c23)
+                          werror(E_COMPLIT_SCLASS_C23);
 
-       // TODO: implement compound literals (C99)
-       $$ = newAst_VALUE (valueFromLit (0));
-     }
-   | '(' type_name ')' '{' '}'
-     {
-       if (!options.std_c23)
-         werror(W_EMPTY_INIT_C23);
-       // if (!options.std_c99)
-         werror(E_COMPOUND_LITERALS_C99);
+                        /* create anonymous variable with the provided initializer list */
+                        symbol *sym = newSymbol(genSymName(NestLevel), NestLevel);
+                        /* imitate "init_declarator" */
+                        sym->ival = $5;
+                        /* NOTE: Do not increment seqPointNo here, because the initializer is part of a
+                                 compound literal. See Annex C.1 "Known Sequence Points" paragraph 4. */
 
-       // TODO: implement compound literals (C99)
-       $$ = newAst_VALUE (valueFromLit (0));
-     }
+                        /* add the specifier list to the id */
+                        sym_link *merged = finalizeSpec(mergeDeclSpec($2, $3, "storage_class_specifiers type_name"));
+                        symbol *sym1 = prepareDeclarationSymbol(NULL, merged, sym);
+
+                        /* mark as temporary symbol for compound literal, so that gatherImplicitVariables
+                           can attach it to a block, and add the temporary symbol to the symbol table */
+                        sym1->iscomplit = 1;
+                        addSymChain(&sym1);
+                        /* allocate memory for the symbol where no block handling does it */
+                        if (NestLevel == 0)
+                          allocVariables(sym1);
+
+                        /* use the anonymous variable in the AST */
+                        $$ = newAst_VALUE(symbolVal(sym1));
+                      }
    ;
 
 argument_expr_list
@@ -286,8 +313,8 @@ unary_expression
        }
    | SIZEOF unary_expression        { $$ = newNode (SIZEOF, NULL, $2); }
    | SIZEOF '(' type_name ')'       { $$ = newAst_VALUE (sizeofOp ($3)); }
-   | LENGTHOF unary_expression      { $$ = newNode (LENGTHOF, NULL, $2); }
-   | LENGTHOF '(' type_name ')'     { $$ = newAst_VALUE (lengthofOp ($3)); }
+   | COUNTOF unary_expression       { $$ = newNode (COUNTOF, NULL, $2); }
+   | COUNTOF '(' type_name ')'      { $$ = newAst_VALUE (countofOp ($3)); }
    | ALIGNOF '(' type_name ')'      { $$ = newAst_VALUE (alignofOp ($3)); }
    | OFFSETOF '(' type_name ',' offsetof_member_designator ')' { $$ = offsetofOp($3, $5); }
    | ROT '(' unary_expression ',' unary_expression ')'         { $$ = newNode (ROT, $3, $5); }
@@ -561,6 +588,17 @@ simple_declaration
          symbol *sym1 = prepareDeclarationSymbol (NULL, $1, $2);
          uselessDecl = true;
          $$ = sym1;
+      }
+   ;
+
+storage_class_specifiers
+   : storage_class_specifiers_ { $$ = finalizeSpec($1); };
+
+storage_class_specifiers_
+   : storage_class_specifier { $$ = $1; }
+   | storage_class_specifier storage_class_specifiers_
+      {
+         $$ = mergeDeclSpec($1, $2, "storage_class_specifier storage_class_specifiers - skipped");
       }
    ;
 
@@ -1663,13 +1701,44 @@ parameter_declaration
           $$ = symbolVal ($2);
           ignoreTypedefType = 0;
         }
-   | type_name
+   | declaration_specifiers abstract_declarator  /* analogous to type_name */
         {
+          /* go to the end of the list */
+          sym_link *p;
+
+          if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
+            {
+              werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
+            }
+          pointerTypes ($2,$1);
+          for (p = $2; p && p->next; p = p->next)
+            ;
+          if (!p)
+            {
+              werror(E_SYNTAX_ERROR, yytext);
+            }
+          else
+            {
+              p->next = $1;
+            }
+
+          $$ = newValue ();
+          $$->type = $2;
+          $$->etype = getSpec ($$->type);
+          ignoreTypedefType = 0;
+        }
+   | declaration_specifiers  /* analogous to type_name */
+        {
+          if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
+            {
+              werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
+            }
+
           $$ = newValue ();
           $$->type = $1;
           $$->etype = getSpec ($$->type);
           ignoreTypedefType = 0;
-         }
+        }
    ;
 
 abstract_declarator
@@ -1758,7 +1827,11 @@ function_abstract_declarator
 
 initializer
    : assignment_expr                { $$ = newiList(INIT_NODE,$1); }
-   | '{' '}'
+   | braced_initializer
+   ;
+
+braced_initializer
+   : '{' '}'
      {
        if (!options.std_c23)
          werror(W_EMPTY_INIT_C23);
@@ -2768,7 +2841,7 @@ identifier_list
    ;
 
 type_name
-   : declaration_specifiers
+   : specifier_qualifier_list
         {
           if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
             {
@@ -2776,7 +2849,7 @@ type_name
             }
           $$ = $1; ignoreTypedefType = 0;
         }
-   | declaration_specifiers abstract_declarator
+   | specifier_qualifier_list abstract_declarator
         {
           /* go to the end of the list */
           sym_link *p;
@@ -2915,35 +2988,7 @@ kr_declaration
    : declaration_specifiers init_declarator_list ';'
       {
          /* add the specifier list to the id */
-         symbol *sym , *sym1;
-
-         for (sym1 = sym = reverseSyms($2);sym != NULL;sym = sym->next) {
-             sym_link *lnk = copyLinkChain($1);
-             sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
-             /* check illegal declaration */
-             for (l0 = sym->type; l0 != NULL; l0 = l0->next)
-               if (IS_PTR (l0))
-                 break;
-             /* check if creating instances of structs with flexible arrays */
-             for (l1 = lnk; l1 != NULL; l1 = l1->next)
-               if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
-                 break;
-             if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR($1) != 1)
-               werror (W_FLEXARRAY_INSTRUCT, sym->name);
-             /* check if creating instances of function type */
-             for (l1 = lnk; l1 != NULL; l1 = l1->next)
-               if (IS_FUNC (l1))
-                 break;
-             for (l2 = lnk; l2 != NULL; l2 = l2->next)
-               if (IS_PTR (l2))
-                 break;
-             if (l0 == NULL && l2 == NULL && l1 != NULL)
-               werrorfl(sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
-             /* do the pointer stuff */
-             pointerTypes(sym->type,lnk);
-             addDecl (sym,0,lnk);
-         }
-
+         symbol *sym1 = prepareDeclarationSymbol (NULL, $1, $2);
          uselessDecl = true;
          $$ = sym1;
       }

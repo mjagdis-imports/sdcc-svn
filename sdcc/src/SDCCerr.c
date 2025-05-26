@@ -572,7 +572,7 @@ struct
   { E_ATTRIBUTE_C23, ERROR_LEVEL_ERROR,
     "attribute requires C23 or later", 0},
   { E_COMPOUND_LITERALS_C99, ERROR_LEVEL_ERROR,
-    "compound literals require ISO C99 or later and are not implemented", 0},
+    "compound literals require ISO C99 or later", 0},
   { E_THREAD_LOCAL, ERROR_LEVEL_ERROR,
     "thread-local storage is not implemented", 0},
   { E_ENUM_COMMA_C99,  ERROR_LEVEL_ERROR,
@@ -677,8 +677,8 @@ struct
      "enum's underlying type must be an integer type and cannot be bit-precise or an enum", 0 },
   { E_ENUM_TYPE_RANGE_TOO_SMALL, ERROR_LEVEL_ERROR,
      "the enum's underlying type cannot represent all enumerator values", 0 },
-  { E_LENGTHOF_INVALID_TYPE, ERROR_LEVEL_ERROR,
-     "_Lengthof applied to an incomplete or non-array type", 0 },
+  { E_COUNTOF_INVALID_TYPE, ERROR_LEVEL_ERROR,
+     "_Countof applied to an incomplete or non-array type", 0 },
   { W_PREFIXED_OCTAL_C2Y, ERROR_LEVEL_WARNING,
      "prefixed octal integer constants require ISO C2y or later", 0 },
   { W_OCTAL_DEPRECATED_C2Y, ERROR_LEVEL_WARNING,
@@ -689,6 +689,8 @@ struct
      "\\o{...} used without valid octal digits.", 0 },
   { E_SELECTION_DECLARATION_C2Y, ERROR_LEVEL_ERROR,
      "declaration within selection header requires ISO C2y or later", 0 },
+  { E_COMPLIT_SCLASS_C23, ERROR_LEVEL_ERROR,
+    "compound literals with storage class specifier require ISO C23 or later", 0},
 };
 
 /* -------------------------------------------------------------------------------

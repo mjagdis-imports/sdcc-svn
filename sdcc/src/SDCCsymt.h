@@ -303,6 +303,7 @@ typedef struct symbol
   unsigned implicit:1;              /* implicit flag                     */
   unsigned undefined:1;             /* undefined variable                */
   unsigned infertype:1;             /* type should be inferred from first assign */
+  unsigned iscomplit:1;             /* is a temporary symbol for a compound literal */
   unsigned _isparm:1;               /* is a parameter          */
   unsigned ismyparm:1;              /* is parameter of the function being generated */
   unsigned isitmp:1;                /* is an intermediate temp */
@@ -695,7 +696,7 @@ value *checkStructIval (symbol *, value *);
 value *checkArrayIval (sym_link *, value *);
 value *checkIval (sym_link *, value *);
 unsigned int getSize (sym_link *);
-unsigned int getLength (sym_link *);
+unsigned int getElemCount (sym_link *);
 unsigned int bitsForType (sym_link *);
 sym_link *newBitIntLink (unsigned int width);
 sym_link *newIntLink ();

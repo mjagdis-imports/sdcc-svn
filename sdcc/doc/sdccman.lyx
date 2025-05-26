@@ -73,7 +73,7 @@ End
 \pdf_colorlinks true
 \pdf_backref false
 \pdf_pdfusetitle true
-\papersize letter
+\papersize a4
 \use_geometry true
 \use_package amsmath 1
 \use_package amssymb 1
@@ -106,9 +106,9 @@ End
 \shortcut idx
 \color #008000
 \end_index
-\leftmargin 30mm
-\topmargin 20mm
-\rightmargin 25mm
+\leftmargin 20mm
+\topmargin 25mm
+\rightmargin 20mm
 \bottommargin 20mm
 \secnumdepth 3
 \tocdepth 3
@@ -3157,6 +3157,11 @@ status collapsed
 \begin_layout Itemize
 In 4.4.1,
  the address width in .rel files was increased from 24 bits to 32 bits for the z80 (and related) ports.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.2,
+ the C23 standard library bit and byte utilities (stdbit.h) more closely follow the final ISO C23 standard instead of the 2022 C2X draft.
 \end_layout
 
 \begin_layout Section
@@ -10195,11 +10200,52 @@ stack-auto
 \end_layout
 
 \begin_layout Subsection
-ISO C95
+ISO C94 (aka ISO C95)
 \end_layout
 
 \begin_layout Standard
 Use 
+\series bold
+
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+--std-c94
+\end_layout
+
+\end_inset
+
+
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-c94
+\end_layout
+
+\end_inset
+
+
+\series default
+ or 
 \series bold
 
 \begin_inset Flex Code
@@ -10308,11 +10354,6 @@ Deviations from standard compliance
 \begin_layout Standard
 In addition to what is mentioned in the section above,
  the following features of this standard are not supported by SDCC:
-\end_layout
-
-\begin_layout Itemize
-Compound literals.
- 
 \end_layout
 
 \begin_layout Itemize
@@ -10554,10 +10595,6 @@ double (not supported)
 \end_inset
 
  and a warning is emitted.
-\end_layout
-
-\begin_layout Itemize
-Compound literals are not supported.
 \end_layout
 
 \begin_layout Itemize
@@ -10941,7 +10978,7 @@ literal "false"
 \end_inset
 
 :
- The
+ The 
 \begin_inset Flex Code
 status open
 
@@ -10951,7 +10988,27 @@ _Lengthof
 
 \end_inset
 
- Operator
+ Operator (Note:
+ renamed to 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+_Countof
+\end_layout
+
+\end_inset
+
+ following 
+\begin_inset CommandInset href
+LatexCommand href
+name "N3469"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3469.htm"
+literal "false"
+
+\end_inset
+
+)
 \end_layout
 
 \begin_layout Itemize
@@ -50938,6 +50995,167 @@ For compatibility with the Cosmic STM8 compiler,
 \end_layout
 
 \begin_layout Section
+The f8 port
+\end_layout
+
+\begin_layout Subsection
+Calling convention
+\end_layout
+
+\begin_layout Standard
+If the the function does not have variable arguments,
+ and the first argument is not a struct or union and has 8 or 16 bits,
+ it is passed in xl (8 bits) or y (16 bits).
+ All other arguments are passed on the stack right-to-left.
+ Return values are in xl (8 bit),
+ x (16 bit),
+ xxl (24 bit),
+ yx (32 bit) or use a hidden extra pointer parameter pointing to the location (anything wider than 32 bit,
+ and all struct / union).
+ The stack is not adjusted for the parameters by the callee (thus the caller has to do this instead).
+\end_layout
+
+\begin_layout Section
+The MOS6502 and WDC65C02 ports
+\end_layout
+
+\begin_layout Standard
+The mos6502
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+MOS6502
+\end_layout
+
+\end_inset
+
+ port can target the original MOS Technology NMOS 6502 ,
+ and the CMOS Rockwell/WDC 65C02 with enhanched instruction set.
+ 
+\end_layout
+
+\begin_layout Subsection
+Startup Code
+\end_layout
+
+\begin_layout Standard
+On the MOS6502
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+MOS6502
+\end_layout
+
+\end_inset
+
+ the startup code is inserted by linking with crt0.rel which is generated from sdcc/device/lib/mos6502/crt0.s.
+ If you need a different startup code you can use the compiler option 
+\emph on
+-
+\series bold
+\emph default
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+\emph on
+-no-std-crt0
+\emph default
+
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-no-std-crt0
+\end_layout
+
+\end_inset
+
+ and provide your own crt0.rel.
+ When using a custom crt0.rel it needs to be listed first when linking.
+\end_layout
+
+\begin_layout Subsection
+Hooking up interrupts
+\end_layout
+
+\begin_layout Standard
+ISR can be written in C using SDCC.
+ However,
+ to hook interrupts is necessary to customize crt0.asm and have the interrupt vectors point to the C functions.
+\end_layout
+
+\begin_layout Subsection
+Reentrancy
+\end_layout
+
+\begin_layout Standard
+Due to the very limited stack space,
+ the MOS6502 port by default generates non-reentrant code.
+ Re-entrant functions should be declared using the __reentrant keyword.
+ Alternatively the entire program can be compiled using –stack-auto.
+ On the MOS6502 re-entrant code is,
+ in general,
+ much less efficient.
+\end_layout
+
+\begin_layout Subsection
+Code and Data placement
+\end_layout
+
+\begin_layout Standard
+The compiler can pass segment location to the linker.
+ On the MOS6502 the following switches are supported:
+\end_layout
+
+\begin_layout Standard
+–code-loc:
+ start address of the code segment
+\end_layout
+
+\begin_layout Standard
+–data-loc:
+ start address of the zero page
+\end_layout
+
+\begin_layout Standard
+–xram-loc:
+ start address of the data segment
+\end_layout
+
+\begin_layout Section
 The PIC14
 \begin_inset Index idx
 range none
@@ -58727,146 +58945,6 @@ nolink "false"
 
 ),
  thus no automatic regression tests are currently performed for the PIC16 target.
-\end_layout
-
-\begin_layout Section
-The MOS6502 port
-\end_layout
-
-\begin_layout Standard
-The mos6502
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-MOS6502
-\end_layout
-
-\end_inset
-
- port can target the original MOS Technology NMOS 6502 ,
- and the CMOS Rockwell/WDC 65C02 with enhanched instruction set.
- 
-\end_layout
-
-\begin_layout Subsection
-Startup Code
-\end_layout
-
-\begin_layout Standard
-On the MOS6502
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
-MOS6502
-\end_layout
-
-\end_inset
-
- the startup code is inserted by linking with crt0.rel which is generated from sdcc/device/lib/mos6502/crt0.s.
- If you need a different startup code you can use the compiler option 
-\emph on
--
-\series bold
-\emph default
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
-
-\series default
-\emph on
--no-std-crt0
-\emph default
-
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--no-std-crt0
-\end_layout
-
-\end_inset
-
- and provide your own crt0.rel.
- When using a custom crt0.rel it needs to be listed first when linking.
-\end_layout
-
-\begin_layout Subsection
-Hooking up interrupts
-\end_layout
-
-\begin_layout Standard
-ISR can be written in C using SDCC.
- However,
- to hook interrupts is necessary to customize crt0.asm and have the interrupt vectors point to the C functions.
-\end_layout
-
-\begin_layout Subsection
-Reentrancy
-\end_layout
-
-\begin_layout Standard
-Due to the very limited stack space,
- the MOS6502 port by default generates non-reentrant code.
- Re-entrant functions should be declared using the __reentrant keyword.
- Alternatively the entire program can be compiled using –stack-auto.
- On the MOS6502 re-entrant code is,
- in general,
- much less efficient.
-\end_layout
-
-\begin_layout Subsection
-Code and Data placement
-\end_layout
-
-\begin_layout Standard
-The compiler can pass segment location to the linker.
- On the MOS6502 the following switches are supported:
-\end_layout
-
-\begin_layout Standard
-–code-loc:
- start address of the code segment
-\end_layout
-
-\begin_layout Standard
-–data-loc:
- start address of the zero page
-\end_layout
-
-\begin_layout Standard
-–xram-loc:
- start address of the data segment
 \end_layout
 
 \begin_layout Chapter
