@@ -495,7 +495,7 @@ const char *opcodenames_tex[NUM_OPCODES] =	{
 	"mad x, (nn, z), yl",
 	"mad x, (z), yl",
 	"ldw y, \\#ii",
-	"ldwy, mm",
+	"ldw y, mm",
 	"ldw y, (n, sp)",
 	"ldw y, (nn, z)",
 	"ldw y, (n, y)",
