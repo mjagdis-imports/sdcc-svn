@@ -5,8 +5,8 @@
 
 // Test module for use on Tang Nano 9K board.
 
-// Default: 9 KB ROM, 6 KB RAM, 2 MHz system clock.
-module tangnano9k #(parameter ROMSIZE = 9216, RAMSIZE = 6144, CLKDIV = 6) (input logic CLK,
+// Default: 9 KB ROM, 6 KB RAM, 1.93 MHz system clock.
+module tangnano9k #(parameter ROMSIZE = 9216, RAMSIZE = 6144, CLKDIV = 14) (input logic CLK,
 	inout tri LED0, inout tri LED1, inout tri LED2, inout tri LED3, inout tri LED4, inout tri LED5,
 	input logic BTN_S2, inout tri RX, inout tri TX);
 	wire [7:0] gpio0pins, gpio1pins, gpio2pins;

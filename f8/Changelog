@@ -1,3 +1,12 @@
+2025-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/README,
+	  hardware/boards/boards.mk,
+	  hardware/boards/tangnano9k_2.v,
+	  hardware/boards/upduino2_2.v:
+	  Improved UPDuino v2.0 and Tang Nano 9K support.
+
 2025-05-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/opcodemaptool.cc:

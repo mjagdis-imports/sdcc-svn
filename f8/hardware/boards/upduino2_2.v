@@ -3,7 +3,7 @@
 `include "../clkdiv.v"
 `include "../system_2.v"
 
-// Test module for use on iCEBreaker FPGA board.
+// Test module for use on UPDuino v2.0 board.
 
 // Default: 9 KB ROM, 6 KB RAM, 2 MHz system clock.
 module icebreaker #(parameter ROMSIZE = 9216, RAMSIZE = 6144, CLKDIV = 6) (

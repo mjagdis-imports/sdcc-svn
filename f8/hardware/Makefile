@@ -20,11 +20,13 @@ include boards/boards.mk
 all: f8-testsystem_1 f8-testsystem_2
 
 # Images for the iCEBreaker FPGA board.
-icebreaker-images: tests/cblink/icebreaker_synth.bin tests/chello/icebreaker_synth.bin
+icebreaker-images: tests/cblink/icebreaker_2_synth.bin tests/chello/icebreaker_2_synth.bin
 # Images for the GateMateA1-EVB FPGA board.
-gatematea1evb-images: tests/cblink/gatematea1evb_synth_00.cfg.bit tests/chello/gatematea1evb_synth_00.cfg.bit
-# Imags for the Tang Nano 9K board
-tangnano9k-images: 
+gatematea1evb-images: tests/cblink/gatematea1evb_2_synth_00.cfg.bit tests/chello/gatematea1evb_2_synth_00.cfg.bit
+# Images for the UPDuino v2.0 board.
+upduino2-images: tests/cblink/upduino2_2_synth.bin
+# Images for the Tang Nano 9K board.
+tangnano9k-images: tests/cblink/tangnano9k_2.fs
 
 clean:
 	rm -f f8-testsystem_* *_nosv.v *_synth.v *_synth.asc *_synth.bin *_synth.json tests/*/*.lk tests/*/*.asm tests/*/*.lst tests/*/*.rst tests/*/*.sym tests/*/*.rel tests/*/*.ihx tests/*/*.vmem tests/*/*.v tests/*/f8-icesynthtestsystem_* tests/*/*.vcd tests/*/*.log tests/*/*.bin tests/*/*.map tests/*/*.json tests/*/*.cfg tests/*/*.prn tests/*/*.sdf tests/*/*.cdf tests/*/*.pos tests/*/*.used tests/*/*.pin tests/*/*.cfg.bit tests/*/*_synth* tests/*/*.fs tests/*/*.net tests/*/*.id

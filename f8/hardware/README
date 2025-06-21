@@ -2,19 +2,20 @@ Two Verilog implementations of the f8 can be found here:
 
 * A single-cycle implementation that needs rather complex memories.
   - A SoC using this one is in system.v.
-  - boards/icebreaker.v can be used to synthesize it for the iCEBreaker board.
-  - boards/gatematea1evb.v can be used to synthesize it for the GateMateA1-EVB board.
+  - boards/icebreaker_1.v can be used to synthesize it for the iCEBreaker board.
+  - boards/gatematea1evb_1.v can be used to synthesize it for the GateMateA1-EVB board.
 
 * A multi-cycle implementation using pseudo-dualport RAM.
   - A SoC using this one is in system2.v.
-  - boards/icebreaker2.v can be used to synthesize it for the iCEBreaker board.
-  - boards/gatematea1evb2.v can be used to synthesize it for the GateMateA1-EVB board.
-  - boards/tangnano9k2.v can be used to synthesize it for the Tang Nano 9K (interrupts not working with current free synthesis/p&r tools as of 2024-12-26).
+  - boards/icebreaker_2.v can be used to synthesize it for the iCEBreaker board.
+  - boards/gatematea1evb_2.v can be used to synthesize it for the GateMateA1-EVB board.
+  - boards/upduino2_2.v can be used to synthesize it for the GateMateA1-EVB board.
+  - boards/tangnano9k_2.v can be used to synthesize it for the Tang Nano 9K (interrupts not working with current free synthesis/p&r tools as of 2024-12-26, but working with current tools as of 2025-06-21).
 
 Each SoC consists of an f8 core, memories and basic peripherals (watchdog, timer, interrupt controller, 2 x GPIO).
 
-Test infrastructure can be found in tests/ (simple tests to test basic functionality, typically one small program per f8 instruction testes) and sdcctests/ (complex tests based on SDCC regression tests).
-Two of the test programs can also be used as a basic test on hardware: tests/cblink (counds seconds from 0 to 31 using LEDs on GPIO0) and tests/chello (outputs "Hello, world!" via a software-emulated UART on GPIO2).
+Test infrastructure can be found in tests/ (simple tests to test basic functionality, typically one small program per f8 instruction) and sdcctests/ (complex tests based on SDCC regression tests).
+Two of the test programs can also be used as a basic test on hardware: tests/cblink (counts seconds from 0 to 31 using LEDs on GPIO0) and tests/chello (outputs "Hello, world!" via a software-emulated UART on GPIO2).
 
 Simple benchmarks (Dhrystone, etc) can be found in benchmarks/.
 

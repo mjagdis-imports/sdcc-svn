@@ -38,7 +38,7 @@ boards/tangnano9k_2_nosv.v: boards/tangnano9k_2.v $(SYSTEM_2_SOURCES)
 %/gatematea1evb_2_synth.v: boards/gatematea1evb_2_nosv.v %/test.even.vmem %/test.odd.vmem
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../boards/gatematea1evb_2_nosv.v; synth_gatemate -nomx8 -top gatematea1evb; write_verilog gatematea1evb_2_synth.v"
 
-%/tangnano9k_2_synth.json: boards/tangnano9k2_nosv.v %/test.even.vmem %/test.odd.vmem # Current nextpnr 0.7 doesn't support bram yet, but with -nobram the design doesn't fit. Also nextpnr from trunk won't work with -noflatten.
+%/tangnano9k_2_synth.json: boards/tangnano9k_2_nosv.v %/test.even.vmem %/test.odd.vmem # Current nextpnr 0.7 doesn't support bram yet, but with -nobram the design doesn't fit. Also nextpnr from trunk won't work with -noflatten.
 	cd $*; $(YOSYS) -p "read_verilog -sv ../../boards/tangnano9k_2_nosv.v; synth_gowin -top tangnano9k -json tangnano9k_2_synth.json"
 
 %/icebreaker_1_synth.asc: %/icebreaker_1_synth.json boards/icebreaker.pcf
