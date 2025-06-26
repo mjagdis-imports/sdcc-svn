@@ -1,5 +1,10 @@
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/regression/tests/gcc-torture-execute-pr91137.c:
+	  Disable a test that needs more data memory than the f8l typically has for f8l.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Makefile.common.in,
 	  configure,
 	  configure.ac,
