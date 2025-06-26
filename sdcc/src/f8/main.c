@@ -247,7 +247,14 @@ f8_genInitStartup (FILE *of)
   fprintf (of, "\tclr\txl\n");
   fprintf (of, "00001$:\n");
   fprintf (of, "\tld (s_DATA - 1, z), xl\n");
-  fprintf (of, "\taddw z, #-1\n");
+  if (TARGET_IS_F8L)
+    {
+      fprintf (of, "\tadd zl, #-1\n");
+      fprintf (of, "\tadc zh, #-1\n");
+      fprintf (of, "\ttstw z\n");
+    }
+  else
+    fprintf (of, "\taddw z, #-1\n");
   fprintf (of, "\tjrnz\t#00001$\n");
   fprintf (of, "00002$:\n");
 
@@ -257,7 +264,14 @@ f8_genInitStartup (FILE *of)
   fprintf (of, "00003$:\n");
   fprintf (of, "\tld\txl, (s_INITIALIZER - 1, z)\n");
   fprintf (of, "\tld\t(s_INITIALIZED - 1, z), xl\n");
-  fprintf (of, "\taddw\tz, #-1\n");
+  if (TARGET_IS_F8L)
+    {
+      fprintf (of, "\tadd zl, #-1\n");
+      fprintf (of, "\tadc zh, #-1\n");
+      fprintf (of, "\ttstw z\n");
+    }
+  else
+    fprintf (of, "\taddw z, #-1\n");
   fprintf (of, "\tjrnz\t#00003$\n");
   fprintf (of, "00004$:\n");
 }
@@ -292,6 +306,9 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
   if (IS_BITINT (OP_SYM_TYPE (IC_RESULT(ic))) && SPEC_BITINTWIDTH (OP_SYM_TYPE (IC_RESULT(ic))) % 8)
     return false;
 
+  if (TARGET_IS_F8L)
+    return false;
+
   if (ic->op != '*')
     return false;
 
@@ -318,11 +335,11 @@ hasExtBitOp (int op, sym_link *left, int right)
         unsigned int lbits = bitsForType (left);
         if (lbits % 8)
           return (false);
-        if (size == 1)
+        if (!TARGET_IS_F8L && size == 1)
           return (true);
-        if (size == 2 && right % 8 <= 3)
+        if (!TARGET_IS_F8L && size == 2 && right % 8 <= 3)
           return (true);
-        if ((size <= 2 || size == 4) && lbits == right * 2)
+        if ((!TARGET_IS_F8L && size <= 2 || size == 4) && lbits == right * 2)
           return (true);
       }
       return (false);
@@ -354,7 +371,7 @@ PORT f8_port =
 {
   TARGET_ID_F8,
   "f8",
-  "F8",                         /* Target name */
+  "f8",                         /* Target name */
   NULL,                         /* Processor name */
   {
     glue,
@@ -377,8 +394,8 @@ PORT f8_port =
     NULL,
     ".rel",
     1,
-    NULL,                       /* crt */
-    _libs_f8,                 /* libs */
+    NULL,                       // crt
+    _libs_f8,                   // libs
   },
   {                             /* Peephole optimizer */
     f8_defaultRules,
@@ -515,3 +532,172 @@ PORT f8_port =
   6,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
   PORT_MAGIC
 };
+
+static const char *const _libs_f8l[] = { "f8l", NULL, };
+
+PORT f8l_port =
+{
+  TARGET_ID_F8L,
+  "f8l",
+  "f8l",                        /* Target name */
+  NULL,                         /* Processor name */
+  {
+    glue,
+    true,                       /* We want f8_genIVT to be triggered */
+    NO_MODEL,
+    NO_MODEL,
+    0,
+  },
+  {                             /* Assembler */
+    f8AsmCmd,
+    NULL,
+    "-plosgffwy",               /* Options with debug */
+    "-plosgffw",                /* Options without debug */
+    0,
+    ".asm"
+  },
+  {                             /* Linker */
+    _linkCmd,
+    NULL,                       //LINKCMD,
+    NULL,
+    ".rel",
+    1,
+    NULL,                       // crt
+    _libs_f8l,                  // libs
+  },
+  {                             /* Peephole optimizer */
+    f8_defaultRules,
+    f8instructionSize,
+    NULL,
+    NULL,
+    NULL,
+    f8notUsed,
+    f8canAssign,
+    f8notUsedFrom,
+    NULL,
+    NULL,
+    NULL,
+  },
+  /* Sizes: char, short, int, long, long long, ptr, fptr, gptr, bit, float, max */
+  {
+    1,                          /* char */
+    2,                          /* short */
+    2,                          /* int */
+    4,                          /* long */
+    8,                          /* long long */
+    2,                          /* near ptr */
+    2,                          /* far ptr */
+    2,                          /* generic ptr */
+    2,                          /* func ptr */
+    3,                          /* banked func ptr */
+    1,                          /* bit */
+    4,                          /* float */
+    64,                         /* bit-precise integer types up to _BitInt (64) */
+  },
+  /* tags for generic pointers */
+  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {
+    "XSEG",
+    "STACK",
+    "CODE",                     /* code */
+    "DATA",                     /* data */
+    NULL,                       /* idata */
+    NULL,                       /* pdata */
+    NULL,                       /* xdata */
+    NULL,                       /* bit */
+    "RSEG (ABS)",               /* reg */
+    "GSINIT",                   /* static initialization */
+    NULL,                       /* overlay */
+    "GSFINAL",                  /* gsfinal */
+    "HOME",                     /* home */
+    NULL,                       /* xidata */
+    NULL,                       /* xinit */
+    "CONST",                    /* const_name */
+    "CABS (ABS)",               /* cabs_name */
+    "DABS (ABS)",               /* xabs_name */
+    NULL,                       /* iabs_name */
+    "INITIALIZED",              /* name of segment for initialized variables */
+    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,
+    NULL,
+    1,                          /* CODE  is read-only */
+    false,                      // doesn't matter, as port has no __sfr anyway
+    1                           /* No fancy alignments supported. */
+  },
+  { f8_genExtraArea, NULL },
+  1,                            /* default ABI revision */
+  {                             /* stack information */
+    -1,                         /* stack grows down */
+     0,
+     7,                         /* isr overhead */
+     2,                         /* call overhead */
+     0,
+     2,
+     0,                         /* sp points to next free stack location */
+  },     
+  { 
+    -1,                         /* shifts never use support routines */
+    false,                      /* don't use support routine for int x int -> long multiplication */
+  },
+  { f8_emitDebuggerSymbol,
+    {
+      f8_dwarfRegNum,
+      0,                        /* cfiSame */
+      0,                        /* cfiUndef */
+      4,                        /* addressSize */
+      9,                        /* regNumRet */
+      SP_IDX,                   /* regNumSP */
+      0,                        /* regNumBP */
+      2,                        /* offsetSP */
+    },
+  },
+  {
+    32767,                      /* maxCount */
+    2,                          /* sizeofElement */
+    {4, 5, 5},                  /* sizeofMatchJump[] todo: check!*/
+    {4, 5, 5},                  /* sizeofRangeCompare[] todo:check!*/
+    3,                          /* sizeofSubtract */
+    5,                          /* sizeofDispatch - 1 byte for sllw y followed by 3 bytes for ldw y, (..., y) and 1 byte for jp (y) */
+  },
+  "_",
+  f8_init,
+  f8_parseOptions,
+  f8_options,
+  NULL,
+  f8_finaliseOptions,
+  f8_setDefaultOptions,
+  f8_assignRegisters,
+  f8_getRegName,
+  0,
+  NULL,
+  f8_keywords,
+  NULL,
+  f8_genAssemblerEnd,
+  f8_genIVT,
+  0,                            /* no genXINIT code */
+  f8_genInitStartup,            /* genInitStartup */
+  f8_reset_regparm,
+  f8_reg_parm,
+  f8_process_pragma,            /* process_pragma */
+  NULL,                         /* getMangledFunctionName */
+  _hasNativeMulFor,             /* hasNativeMulFor */
+  hasExtBitOp,                  /* hasExtBitOp */
+  NULL,                         /* oclsExpense */
+  TRUE,
+  true,                         /* little endian */
+  0,                            /* leave lt */
+  0,                            /* leave gt */
+  1,                            /* transform <= to ! > */
+  1,                            /* transform >= to ! < */
+  false,                        // leave !=
+  false,                        // leave ==
+  false,                        // Array initializer support
+  0,                            /* no CSE cost estimation yet */
+  NULL,                         /* builtin functions */
+  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  1,                            /* reset labelKey to 1 */
+  1,                            /* globals & local statics allowed */
+  6,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
+  PORT_MAGIC
+};
+

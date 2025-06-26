@@ -1,3 +1,43 @@
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Makefile.common.in,
+	  configure,
+	  configure.ac,
+	  device/include/math.h,
+	  device/include/sdcc-lib.h,
+	  device/include/setjmp.h,
+	  devicee/include/stdarg.h,
+	  device/include/stdatomic.h,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/f8l,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCmain.c,
+	  src/f8/gen.h,
+	  src/f8/main.c,
+	  src/f8/peeph.def,
+	  src/f8/ralloc2.cc,
+	  src/port.h,
+	  support/regression/MakeList,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/ports/f8l,
+	  support/regression/tests/absolute.c.in,
+	  support/regression/tests/bitfields-bits1.c.in,
+	  support/regression/tests/bitfields-checks.c.in,
+	  support/regression/tests/bitfields-dead-loop.c.in,
+	  support/regression/tests/bitfields-nibbles.c.in,
+	  support/regression/tests/bug-2304.c,
+	  support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-2568.c,
+	  support/regression/tests/bug-3165.c,
+	  support/regression/tests/bug2686159.c,
+	  support/regression/tests/bug3027957.c,
+	  support/regression/tests/bug3379723.c,
+	  support/regression/tests/gcc-torture-execute-20031012-1.c,
+	  support/regression/tests/sieve.c,
+	  support/scripts/sdcc.nsi:
+	  f8l port (not much difference to f8 for now - codegen is still f8, and thus often not valid f8l code).
+
 2025-05-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/coremark.c:

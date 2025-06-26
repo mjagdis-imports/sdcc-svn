@@ -1,4 +1,9 @@
-2024-12-18 Erik Petrich Philipp Klaus Krause <philipp@colecovision.eu>
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/variables.mk:
+	  Enable f8l regression testing.
+
+2024-12-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Fix some links in documentation.
 
