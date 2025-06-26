@@ -7,6 +7,9 @@
 	  src/SDCCsymt.h,
 	  src/z80/gen.c:
 	  Infrastructure for handling the generic address space as a subspace of __far.
+	* sdccconf_in.h,
+	  src/SDCCmain.c:
+	  Rename ez80 port enable macro.
 
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
