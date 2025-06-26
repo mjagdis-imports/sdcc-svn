@@ -1,3 +1,9 @@
+2025-XX-XX Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/z80.h,
+	  src/z80/gen.c:
+	  Extend cost function for tlcs.
+
 2025-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx:
