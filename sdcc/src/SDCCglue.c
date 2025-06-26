@@ -1534,7 +1534,7 @@ printIvalCharPtr (symbol *sym, sym_link *type, value *val, struct dbuf_s *oBuf)
               dbuf_printf (oBuf, "\tret #<%s\n", val->name);
               dbuf_printf (oBuf, IN_CODESPACE (SPEC_OCLS (val->etype)) ? "\tret #>(%s + 0x8000)\n" : "\tret #0\n", val->name);
             }
-          else if ((TARGET_IS_EZ80 || TARGET_RABBIT_LIKE) && IS_FARPTR(type))
+          else if ((TARGET_IS_EZ80 || TARGET_RABBIT_LIKE || TARGET_IS_TLCS90) && IS_FARPTR(type))
             {
               _printPointerType (oBuf, val->name, FARPTRSIZE);
               dbuf_printf (oBuf, "\n");
@@ -1767,7 +1767,7 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
     }
   else if (size == FARPTRSIZE || TARGET_Z80_LIKE /* An ugly hack, but so is everything else in this file. Lots of MCS-51 assumptions everywhere. Like the assumtion that __far pointers are 2 bytes, and generic ones are 3 bytes. For Rabbits it's the opposite. */)
     {
-      if ((TARGET_IS_EZ80 || TARGET_RABBIT_LIKE) && IS_FARPTR(type))
+      if ((TARGET_IS_EZ80 || TARGET_RABBIT_LIKE || TARGET_IS_TLCS90) && IS_FARPTR(type))
         {
           _printPointerType (oBuf, val->name, FARPTRSIZE);
           dbuf_printf (oBuf, "\n");
@@ -2528,7 +2528,7 @@ glue (void)
     }
 
   /* copy external ram data */
-  if (xdata && (mcs51_like || TARGET_MOS6502_LIKE || TARGET_IS_EZ80 || TARGET_RABBIT_LIKE))
+  if (xdata && (mcs51_like || TARGET_MOS6502_LIKE || TARGET_IS_EZ80 || TARGET_RABBIT_LIKE || TARGET_IS_TLCS90))
     {
       fprintf (asmFile, "%s", iComments2);
       fprintf (asmFile, "; uninitialized external ram data\n");

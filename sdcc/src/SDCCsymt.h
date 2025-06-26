@@ -36,18 +36,10 @@
 
 #define BITVAR_PAD -1
 
-// values for first byte (or 3 most significant bits) of generic pointer.
-#if 0
-#define GPTYPE_FAR       0x00
-#define GPTYPE_NEAR      0x40
-#define GPTYPE_XSTACK    0x60
-#define GPTYPE_CODE      0x80
-#else
 #define GPTYPE_FAR      (port->gp_tags.tag_far)
 #define GPTYPE_NEAR     (port->gp_tags.tag_near)
 #define GPTYPE_XSTACK   (port->gp_tags.tag_xstack)
 #define GPTYPE_CODE     (port->gp_tags.tag_code)
-#endif
 
 #define HASHTAB_SIZE 256
 
@@ -474,7 +466,7 @@ extern sym_link *validateLink (sym_link * l,
 
 #define BANKED_FUNCTIONS        ( options.model == MODEL_HUGE || \
                                   ( (options.model == MODEL_LARGE || options.model == MODEL_MEDIUM) && \
-                                    TARGET_Z80_LIKE ) )
+                                    TARGET_Z80_LIKE && !TARGET_RABBIT_LIKE) )
 #define IFFUNC_ISBANKEDCALL(x)  ( IS_FUNC(x) && \
                                   ( FUNC_BANKED(x) || ( BANKED_FUNCTIONS && !FUNC_NONBANKED(x) ) ) )
 

@@ -249,7 +249,7 @@ initMem (void)
   xdata = allocMap (0, 1, 0, 0, 0, 0, options.xdata_loc, XDATA_NAME, 'F', FPOINTER);
   xidata = allocMap (0, 1, 0, 0, 0, 0, 0, XIDATA_NAME, 'F', FPOINTER);
   xinit = allocMap (0, 1, 0, 0, 0, 1, 0, XINIT_NAME, 'C', CPOINTER);
-  if (TARGET_RABBIT_LIKE || TARGET_IS_EZ80)
+  if (TARGET_RABBIT_LIKE || TARGET_IS_EZ80 || TARGET_IS_TLCS90)
     xconst = allocMap (0, 1, 0, 0, 0, 1, 0, XCONST_NAME, 'F', FPOINTER);
 
   /* Absolute external storage segment ;
@@ -444,7 +444,7 @@ defaultOClass (symbol *sym)
         }
       break;
     case S_XDATA:
-      if ((TARGET_RABBIT_LIKE || TARGET_IS_EZ80) && (sym->level == 0 || SPEC_STAT(sym->etype)) && !SPEC_ABSA (sym->etype))
+      if ((TARGET_RABBIT_LIKE || TARGET_IS_EZ80 || TARGET_IS_TLCS90) && (sym->level == 0 || SPEC_STAT(sym->etype)) && !SPEC_ABSA (sym->etype))
         {
           sym_link *t = sym->type;
           while (IS_ARRAY (t))
