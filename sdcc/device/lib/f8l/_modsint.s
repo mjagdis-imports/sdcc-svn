@@ -45,7 +45,7 @@ x_nonnegative:
 	jrnn	y_nonnegative
 	xor	zl, #0xff
 	xor	zh, #0xff
-	incw	y
+	incw	z
 y_nonnegative:
 
 	push	xl
