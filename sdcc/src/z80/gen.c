@@ -15543,7 +15543,7 @@ genAddrOf (const iCode * ic)
     }
   else
     {
-      pair = getPairId (IC_RESULT (ic)->aop);
+      pair = getPairId (IC_RESULT (ic)->aop);emit2(";pair %d", pair);
       if (pair == PAIR_INVALID)
         {
           pair = IS_SM83 ? PAIR_DE : PAIR_HL;

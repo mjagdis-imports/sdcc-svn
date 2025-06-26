@@ -121,6 +121,8 @@ getTypeValinfo (sym_link *type, bool loose)
       v.min = 0;
       if (IS_FUNCPTR (type))
         v.max = (1ll << ((IFFUNC_ISBANKEDCALL (type->next) ? BFUNCPTRSIZE : FUNCPTRSIZE) * 8)) - 1;
+      else if (IS_FARPTR (type))
+        v.max = (1ll << (FARPTRSIZE * 8)) - 1;
       else
         v.max = (1ll << (GPTRSIZE * 8)) - 1;
       v.knownbitsmask = ~((unsigned long long)v.max);

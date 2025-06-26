@@ -1,5 +1,15 @@
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCgenconstprop.cc,
+	  src/SDCCglue.c,
+	  src/SDCCmem.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/z80/gen.c:
+	  Infrastructure for handling the generic address space as a subspace of __far.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* .version,
 	  configure,
 	  configure.ac,
