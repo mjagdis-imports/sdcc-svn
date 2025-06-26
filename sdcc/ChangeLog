@@ -1,13 +1,180 @@
-2025-XX-XX Philipp Klaus Krause <philipp@colecovision.eu>
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/z80.h,
 	  src/z80/gen.c:
 	  Extend cost function for tlcs.
 
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  configure,
+	  configure.ac,
+	  device/include/asm/rab/features.h,
+	  device/include/math.h,
+	  device/include/sdcc-lib.h,
+	  device/include/setjmp.h,
+	  device/include/stdarg.h,
+	  device/include/stdatomic.h,
+	  device/include/stdlib.h,
+	  device/include/string.h,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/ez80/Makefile.in,
+	  device/lib/r2k/Makefile.in,
+	  device/lib/r2ka/Makefile.in,
+	  device/lib/r3ka/Makefile.in,
+	  doc/sdccman.lyx,
+	  src/SDCCglue.c,
+	  src/SDCCmain.c,
+	  src/SDCCmem.c,
+	  src/SDCCmem.h,
+	  src/ds390/main.c,
+	  src/f8/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/mos6502/main.c,
+	  src/pdk/main.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c,
+	  src/port.h,
+	  src/stm8/main.c,
+	  src/z80/main.c,
+	  src/z80/peeph.def,
+	  src/z80/ralloc.c,
+	  src/z80/ralloc.h,
+	  src/z80/z80.h,
+	  support/regression/MakeList,
+	  support/regression/Makefile.in,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/ports/ucez80/spec.mk,
+	  support/regression/ports/ucr4k/spec.mk,
+	  support/regression/ports/ucr5k/spec.mk,
+	  support/regression/ports/ucr6k/spec.mk,
+	  support/regression/tests/banked.c.in,
+	  support/regression/tests/bug-2368.c,
+	  support/regression/tests/bug-2770.c,
+	  support/regression/tests/bug-2771.c,
+	  support/regression/tests/bug-2958.c,
+	  support/regression/tests/bug-2959.c,
+	  support/regression/tests/bug-3231.c,
+	  support/regression/tests/bug-3636.c,
+	  support/regression/tests/bug-3661.c,
+	  support/regression/tests/critical.c,
+	  support/regression/tests/iobit.c.in,
+	  support/regression/tests/malloc.c,
+	  support/regression/tests/preserves_regs.c.in,
+	  support/valdiag/Makefile.in,
+	  support/valdiag/tests/bug-2798.c,
+	  support/valdiag/valdiag.py,
+	  device/include/asm/rab,
+	  device/lib/ez80,
+	  device/lib/r4k,
+	  device/lib/r5k,
+	  device/lib/r6k,
+	  src/z80/peeph-ez80.def,
+	  support/regression/ports/ucez80,
+	  support/regression/ports/ucr4k,
+	  support/regression/ports/ucr5k,
+	  support/regression/ports/ucr6k:
+	  Create r4k, r5k r6k ports (just some compiler infrastructure, and a few other bits here and there, no codegen yet), rename ez80_z80 port to ez80 (to prepare for future use of ADL mode).
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* configure.ac,
+	  configure:
+	  Fix mos65(c)02 configure option descriptions.
+
+2025-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve Z80N, Z180, eZ80 multiplication (RFE #972).
+
+2025-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Minor optimizations for subtractions.
+
+2025-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* configure.ac,
+	  configure,
+	  support/valdiag/Makefile.in:
+	  Reenable mos6502 and mos65c02 port by default.
+
+2025-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pic14/gen.c,
+	  src/pic14/gen.h,
+	  src/pic14/genarith.c,
+	  configure.ac,
+	  configure:
+	  Replace attempted pic14 side fix of bug #3851, that made pic14 library build segfault, and reenable pic14 port build.
+
+2025-06-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/valdiag/Makefile.in:
+	  Disable testing of diagnostics for non-longer-built-by-default mos6502 port.
+
+2025-06-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3855.c:
+	  Disable new test for pdk14, where it fails due to lack of memory.
+
+2025-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  r800 wide multiplication register saving fix.
+	* support/regression/tests/bug-3855.c:
+	  Regression test for bug #3855 (disabled for now, since bug is not yet fixed).
+
+2025-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* configure.ac,
+	  configure:
+	  Disable mos6502, mos65c02 and pic14 port by default (until bugs #3851, #3853 are fixed).
+
+2025-06-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/port.h:
+	  Make port id an enum instead of a macro.
+
+2025-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Improve generalized constant propagation analysis for 64-bit types.
+	* src/z80/gen.c:
+	  Use generalized constant propagation results in >> codegen.
+
+2025-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve comparison codegen.
+	* src/z80/peep.c:
+	  Improve handling of operations that do not depend on their operands.
+
+2025-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Improve tlcs90 and r800 multiplication.
+	* sim/ucsim/src/sims/z80.src/r800.cc:
+	  Fix multuw.
+
+2025-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/peeph.def:
+	  mcs51 peephole optimizer rule improvement inspired by patch #466 by Oleg.
+
 2025-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx:
 	  Migrate Rabbit port choice table from wiki.
+
+2025-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/coremark.c.in:
+	  Disable console output in Coremark test to reduce memory usage, cover more memory types.
 
 2025-05-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -16,6 +183,10 @@
 	* configure.ac,
 	  configure:
 	  Fix a typo (and regenerate the configure script with autoconf 2.72).
+	* support/valdiag/Makefile.in,
+	  support/valdiag/valdiag.py,
+	  support/valdiag/tests/bug-2798.c:
+	  Include f8 port in diagnostics regression testing.
 
 2025-05-25 Philipp Klaus Krause <philipp@colecovision.eu>
 

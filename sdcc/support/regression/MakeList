@@ -162,7 +162,7 @@ EXCLUDE_ucrxk3a += \
 	gte_20041218-1
 
 # abnormal stop
-EXCLUDE_ez80-z80 += \
+EXCLUDE_ucez80 += \
 	gte_20041218-1
 
 # Failure
@@ -396,7 +396,7 @@ EXCLUDE_ucgbz80 += ${EXCLUDE_ARCH_z80}
 EXCLUDE_ucr2k += ${EXCLUDE_ARCH_z80}
 EXCLUDE_ucr2ka += ${EXCLUDE_ARCH_z80}
 EXCLUDE_ucr3ka += ${EXCLUDE_ARCH_z80}
-EXCLUDE_ez80-z80 += ${EXCLUDE_ARCH_z80}
+EXCLUDE_ucez80 += ${EXCLUDE_ARCH_z80}
 EXCLUDE_tlcs90 += ${EXCLUDE_ARCH_z80}
 ###################################################
 EXCLUDE_mcs51-small += ${EXCLUDE_ARCH_mcs51}

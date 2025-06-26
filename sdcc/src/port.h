@@ -10,36 +10,38 @@
 #include "SDCCpeeph.h"
 #include "dbuf.h"
 
-#define TARGET_ID_MCS51    1
-#define TARGET_ID_DS390    2
-#define TARGET_ID_DS400    3
-#define TARGET_ID_Z80      4
-#define TARGET_ID_Z80N     5
-#define TARGET_ID_Z180     6
-#define TARGET_ID_SM83     7
-#define TARGET_ID_TLCS90   8
-#define TARGET_ID_EZ80     9
-#define TARGET_ID_R2K      10
-#define TARGET_ID_R2KA     11
-#define TARGET_ID_R3KA     12
-#define TARGET_ID_R4K      13
-#define TARGET_ID_R5K      14
-#define TARGET_ID_R6K      15
-#define TARGET_ID_R800     16
-#define TARGET_ID_HC08     17
-#define TARGET_ID_S08      18
-#define TARGET_ID_STM8     19
-#define TARGET_ID_PDK13    20
-#define TARGET_ID_PDK14    21
-#define TARGET_ID_PDK15    22
-#define TARGET_ID_PDK16    23
-#define TARGET_ID_MOS6502  24
-#define TARGET_ID_MOS65C02 25
-#define TARGET_ID_F8       26
-#define TARGET_ID_F8L      27
-#define TARGET_ID_PIC14    28
-#define TARGET_ID_PIC16    29
-#define TARGET_ID_AVR      30
+enum target {
+  TARGET_ID_MCS51 = 1,
+  TARGET_ID_DS390,
+  TARGET_ID_DS400,
+  TARGET_ID_Z80,
+  TARGET_ID_Z80N,
+  TARGET_ID_Z180,
+  TARGET_ID_SM83,
+  TARGET_ID_TLCS90,
+  TARGET_ID_EZ80,
+  TARGET_ID_R2K,
+  TARGET_ID_R2KA,
+  TARGET_ID_R3KA,
+  TARGET_ID_R4K,
+  TARGET_ID_R5K,
+  TARGET_ID_R6K,
+  TARGET_ID_R800,
+  TARGET_ID_HC08,
+  TARGET_ID_S08,
+  TARGET_ID_STM8,
+  TARGET_ID_PDK13,
+  TARGET_ID_PDK14,
+  TARGET_ID_PDK15,
+  TARGET_ID_PDK16,
+  TARGET_ID_MOS6502,
+  TARGET_ID_MOS65C02,
+  TARGET_ID_F8,
+  TARGET_ID_F8L,
+  TARGET_ID_PIC14,
+  TARGET_ID_PIC16,
+  TARGET_ID_AVR      
+};
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -115,7 +117,7 @@ int process_pragma_tbl (const struct pragma_s *pragma_tbl, const char *s);
 typedef struct
 {
   /** Unique id for this target */
-  const int id;
+  enum target id;
   /** Target name used for -m */
   const char *const target;
 
@@ -207,9 +209,9 @@ typedef struct
     int int_size;
     int long_size;
     int longlong_size;
-    int near_ptr_size;          // __near
-    int far_ptr_size;           // __far
-    int ptr_size;               // generic
+    int near_ptr_size;          // pointer to __near
+    int far_ptr_size;           // pointer to __far
+    int ptr_size;               // generic pointer
     int funcptr_size;
     int banked_funcptr_size;
     int bit_size;
@@ -238,6 +240,7 @@ typedef struct
     const char *const idata_name;
     const char *const pdata_name;
     const char *const xdata_name;
+    const char *const xconst_name;
     const char *const bit_name;
     const char *const reg_name;
     const char *const static_name;
@@ -438,6 +441,8 @@ typedef struct
   bool (*cseOk) (iCode * ic, iCode * pdic);
   builtins *builtintable;       /* table of builtin functions */
   int unqualified_pointer;      /* unqualified pointers type is  */
+  bool far_in_generic;          // __far is a subset of generic.
+  bool generic_in_far;          // generic is a subset of __far.
   int reset_labelKey;           /* reset Label no 1 at the start of a function */
   int globals_allowed;          /* global & static locals not allowed ?  0 ONLY TININative */
 
@@ -469,14 +474,23 @@ extern PORT r2ka_port; // Rabbit 2000A, 2000C, 2000C, 3000
 #if !OPT_DISABLE_R3KA
 extern PORT r3ka_port; // Rabbit 3000A
 #endif
+#if !OPT_DISABLE_R4K
+extern PORT r4k_port;  // Rabbit 4000
+#endif
+#if !OPT_DISABLE_R5K
+extern PORT r5k_port ; // Rabbit 5000
+#endif
+#if !OPT_DISABLE_R6K
+extern PORT r6k_port;  // Rabbit 6000
+#endif
 #if !OPT_DISABLE_SM83
 extern PORT sm83_port;
 #endif
 #if !OPT_DISABLE_TLCS90
 extern PORT tlcs90_port;
 #endif
-#if !OPT_DISABLE_EZ80_Z80
-extern PORT ez80_z80_port;
+#if !OPT_DISABLE_EZ80
+extern PORT ez80_port;
 #endif
 #if !OPT_DISABLE_Z80N
 extern PORT z80n_port;
@@ -529,5 +543,9 @@ extern PORT mos65c02_port;
 #if !OPT_DISABLE_F8
 extern PORT f8_port;
 #endif
+#if !OPT_DISABLE_F8L
+extern PORT f8l_port;
+#endif
 
 #endif /* PORT_INCLUDE */
+
