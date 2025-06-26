@@ -3,6 +3,16 @@
 	* lib/variables.mk:
 	  Enable regression testing for r4k, r5k, r6k port.
 
+2024-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/variables.mk:
+	  Reenable  mos6502 and mos65c02 port by default.
+
+2024-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/variables.mk:
+	  Disable mos6502 and mos65c02 port by default (until bugs #3851, #3853 are fixed).
+
 2024-12-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Fix some links in documentation.

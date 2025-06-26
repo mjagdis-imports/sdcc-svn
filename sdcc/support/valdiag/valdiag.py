@@ -206,6 +206,10 @@ testmodes = {
             "__has_sdcccall":"1"
         }
     },
+    "f8":{
+        "compiler":sdcc,
+        "port":"f8",
+    },
     "pdk13":{
         "compiler":sdcc,
         "port":"pdk13"
