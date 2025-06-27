@@ -51,10 +51,10 @@ extern Z80_OPTS z80_opts;
 #define IS_RAB (IS_R2K || IS_R2KA || IS_R3KA || IS_R4K || IS_R5K || IS_R6K)
 #define IS_SM83 (z80_opts.sub == SUB_SM83)
 #define IS_TLCS90 (z80_opts.sub == SUB_TLCS90)
-#define IS_EZ80_Z80 (z80_opts.sub == SUB_EZ80)
+#define IS_EZ80 (z80_opts.sub == SUB_EZ80)
 #define IS_Z80N (z80_opts.sub == SUB_Z80N)
 #define IS_R800 (z80_opts.sub == SUB_R800)
-#define HAS_IYL_INST (IS_Z80N || IS_EZ80_Z80 || IS_R800 || IS_Z80 && options.allow_undoc_inst)
+#define HAS_IYL_INST (IS_Z80N || IS_EZ80 || IS_R800 || IS_Z80 && options.allow_undoc_inst)
 
 #define IY_RESERVED (z80_opts.reserveIY)
 

@@ -1,3 +1,10 @@
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/z80.h,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
+	  Rename eZ80 subport macro.
+
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,
