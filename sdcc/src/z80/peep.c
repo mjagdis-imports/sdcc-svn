@@ -1544,100 +1544,73 @@ bool z80canSplitReg (const char *reg, char dst[][16], int nDst)
 
 int z80instructionSize(lineNode *pl)
 {
-  const char *op1start, *op2start;
+  const char *op0start = lineArg (pl, 0);
+  const char *op1start = lineArg (pl, 1);
 
-  /* move to the first operand:
-   * leading spaces are already removed, skip the mnemonic */
-  for (op1start = pl->line; *op1start && !isspace (*op1start); ++op1start);
-
-  /* skip the spaces between mnemonic and the operand */
-  while (isspace (*op1start))
-    ++op1start;
-  if (!(*op1start))
-    op1start = NULL;
-
-  if (op1start)
-    {
-      /* move to the second operand:
-       * find the comma and skip the following spaces */
-      op2start = strchr(op1start, ',');
-      if (op2start)
-        {
-          do
-            ++op2start;
-          while (isspace (*op2start));
-
-          if ('\0' == *op2start)
-            op2start = NULL;
-        }
-    }
-  else
-    op2start = NULL;
-
-  if(TARGET_IS_TLCS90) // Todo: More accurate estimate.
+  if (TARGET_IS_TLCS90) // Todo: More accurate estimate.
     return(6);
 
   /* All ld instructions */
   if(lineIsInst (pl, "ld"))
     {
       /* These 4 are the only cases of 4 byte long ld instructions. */
-      if(!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2))
+      if(!STRNCASECMP(op0start, "ix", 2) || !STRNCASECMP(op0start, "iy", 2))
         return(4);
-      if((argCont(op1start, "(ix)") || argCont(op1start, "(iy)")) && op2start[0] == '#')
+      if((argCont(op0start, "(ix)") || argCont(op0start, "(iy)")) && op1start[0] == '#')
         return(4);
 
-      if(op1start[0] == '('               && STRNCASECMP(op1start, "(bc)", 4) &&
-         STRNCASECMP(op1start, "(de)", 4) && STRNCASECMP(op1start, "(hl" , 3) &&
-         STRNCASECMP(op2start, "hl", 2)   && STRNCASECMP(op2start, "a", 1)   &&
-         (!IS_SM83 || STRNCASECMP(op2start, "sp", 2)) ||
-         op2start[0] == '('               && STRNCASECMP(op2start, "(bc)", 4) &&
-         STRNCASECMP(op1start, "(de)", 4) && STRNCASECMP(op2start, "(hl" , 3) &&
-         STRNCASECMP(op1start, "hl", 2)   && STRNCASECMP(op1start, "a", 1))
+      if(op0start[0] == '('               && STRNCASECMP(op0start, "(bc)", 4) &&
+         STRNCASECMP(op0start, "(de)", 4) && STRNCASECMP(op0start, "(hl" , 3) &&
+         STRNCASECMP(op1start, "hl", 2)   && STRNCASECMP(op1start, "a", 1)   &&
+         (!IS_SM83 || STRNCASECMP(op1start, "sp", 2)) ||
+         op1start[0] == '('               && STRNCASECMP(op1start, "(bc)", 4) &&
+         STRNCASECMP(op0start, "(de)", 4) && STRNCASECMP(op1start, "(hl" , 3) &&
+         STRNCASECMP(op0start, "hl", 2)   && STRNCASECMP(op0start, "a", 1))
         return(4);
 
       /* Rabbit 16-bit pointer load */
-      if(IS_RAB && !STRNCASECMP(op1start, "hl", 2) && (argCont(op2start, "(hl)") || argCont(op2start, "(iy)")))
+      if(IS_RAB && !STRNCASECMP(op0start, "hl", 2) && (argCont(op1start, "(hl)") || argCont(op1start, "(iy)")))
         return(4);
-      if(IS_RAB && !STRNCASECMP(op1start, "hl", 2) && (argCont(op2start, "(sp)") || argCont(op2start, "(ix)")))
+      if(IS_RAB && !STRNCASECMP(op0start, "hl", 2) && (argCont(op1start, "(sp)") || argCont(op1start, "(ix)")))
         return(3);
 
       /* eZ80 16-bit pointer load */
       if(IS_EZ80 &&
-        (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2) || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
-        {
-          if (!STRNCASECMP(op2start, "(hl)", 4))
-            return(2);
-          if (argCont(op2start, "(ix)") || argCont(op2start, "(iy)"))
-            return(3);
-        }
-      if(IS_EZ80 &&
-        (!STRNCASECMP(op2start, "bc", 2) || !STRNCASECMP(op2start, "de", 2) || !STRNCASECMP(op2start, "hl", 2) || !STRNCASECMP(op2start, "ix", 2) || !STRNCASECMP(op2start, "iy", 2)))
+        (!STRNCASECMP(op0start, "bc", 2) || !STRNCASECMP(op0start, "de", 2) || !STRNCASECMP(op0start, "hl", 2) || !STRNCASECMP(op0start, "ix", 2) || !STRNCASECMP(op0start, "iy", 2)))
         {
           if (!STRNCASECMP(op1start, "(hl)", 4))
             return(2);
           if (argCont(op1start, "(ix)") || argCont(op1start, "(iy)"))
             return(3);
         }
+      if(IS_EZ80 &&
+        (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2) || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
+        {
+          if (!STRNCASECMP(op0start, "(hl)", 4))
+            return(2);
+          if (argCont(op0start, "(ix)") || argCont(op0start, "(iy)"))
+            return(3);
+        }
 
       /* These 4 are the only remaining cases of 3 byte long ld instructions. */
-      if(argCont(op2start, "(ix)") || argCont(op2start, "(iy)"))
-        return(3);
       if(argCont(op1start, "(ix)") || argCont(op1start, "(iy)"))
         return(3);
-      if((op1start[0] == '(' && STRNCASECMP(op1start, "(bc)", 4) && STRNCASECMP(op1start, "(de)", 4) && STRNCASECMP(op1start, "(hl", 3)) ||
-         (op2start[0] == '(' && STRNCASECMP(op2start, "(bc)", 4) && STRNCASECMP(op2start, "(de)", 4) && STRNCASECMP(op2start, "(hl", 3)))
+      if(argCont(op0start, "(ix)") || argCont(op0start, "(iy)"))
         return(3);
-      if(op2start[0] == '#' &&
-         (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2) || !STRNCASECMP(op1start, "sp", 2)))
+      if((op0start[0] == '(' && STRNCASECMP(op0start, "(bc)", 4) && STRNCASECMP(op0start, "(de)", 4) && STRNCASECMP(op0start, "(hl", 3)) ||
+         (op1start[0] == '(' && STRNCASECMP(op1start, "(bc)", 4) && STRNCASECMP(op1start, "(de)", 4) && STRNCASECMP(op1start, "(hl", 3)))
+        return(3);
+      if(op1start[0] == '#' &&
+         (!STRNCASECMP(op0start, "bc", 2) || !STRNCASECMP(op0start, "de", 2) || !STRNCASECMP(op0start, "hl", 2) || !STRNCASECMP(op0start, "sp", 2)))
         return(3);
 
       /* These 3 are the only remaining cases of 2 byte long ld instructions. */
-      if(op2start[0] == '#')
+      if(op1start[0] == '#')
         return(2);
-      if(!STRNCASECMP(op1start, "i", 1) || !STRNCASECMP(op1start, "r", 1) ||
-         !STRNCASECMP(op2start, "i", 1) || !STRNCASECMP(op2start, "r", 1))
+      if(!STRNCASECMP(op0start, "i", 1) || !STRNCASECMP(op0start, "r", 1) ||
+         !STRNCASECMP(op1start, "i", 1) || !STRNCASECMP(op1start, "r", 1))
         return(2);
-      if(!STRNCASECMP(op2start, "ix", 2) || !STRNCASECMP(op2start, "iy", 2))
+      if(!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2))
         return(2);
 
       // todo: Rabbit 4000 32-bit loads!
@@ -1664,32 +1637,32 @@ int z80instructionSize(lineNode *pl)
     return(1);
   if(lineIsInst (pl, "ex"))
     {
-      if(!op2start)
+      if(!op1start)
         {
           werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __FUNCTION__, 4, pl->line);
           return(4);
         }
-      if(argCont(op1start, "(sp)") && (IS_RAB || !STRNCASECMP(op2start, "ix", 2) || !STRNCASECMP(op2start, "iy", 2)))
+      if(argCont(op0start, "(sp)") && (IS_RAB || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
         return(2);
       return(1);
     }
 
   /* Push / pop */
-  if(lineIsInst (pl, "push")  && IS_Z80N && op1start[0] == '#')
+  if(lineIsInst (pl, "push")  && IS_Z80N && op0start[0] == '#')
     return(4);
   if(lineIsInst (pl, "push") || lineIsInst (pl, "pop"))
     {
-      if(!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2))
+      if(!STRNCASECMP(op0start, "ix", 2) || !STRNCASECMP(op0start, "iy", 2))
         return(2);
       return(1);
     }
 
   /* 16 bit add / subtract / and / or */
-  if(IS_Z80N && lineIsInst (pl, "add") && (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2)))
+  if(IS_Z80N && lineIsInst (pl, "add") && (!STRNCASECMP(op0start, "bc", 2) || !STRNCASECMP(op0start, "de", 2) || !STRNCASECMP(op0start, "hl", 2)))
     return(4);
   if((lineIsInst (pl, "add") || lineIsInst (pl, "adc") || lineIsInst (pl, "sbc") || IS_RAB && (lineIsInst (pl, "and") || lineIsInst (pl, "or")) ||
     (IS_R4K || IS_R5K || IS_R6K) && (lineIsInst (pl, "sub") || lineIsInst (pl, "cp"))) &&
-     !STRNCASECMP(op1start, "hl", 2))
+     !STRNCASECMP(op0start, "hl", 2))
     {
       if(lineIsInst (pl, "cp")) // cp hl, de / cp hl, #d
         return(3);
@@ -1697,36 +1670,36 @@ int z80instructionSize(lineNode *pl)
         return(1);
       return(2);
     }
-  if((lineIsInst (pl, "add") || IS_RAB && (lineIsInst (pl, "and") || lineIsInst (pl, "or")))&& (!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
+  if((lineIsInst (pl, "add") || IS_RAB && (lineIsInst (pl, "and") || lineIsInst (pl, "or")))&& (!STRNCASECMP(op0start, "ix", 2) || !STRNCASECMP(op0start, "iy", 2)))
     return(2);
 
   /* signed 8 bit adjustment to stack pointer */
-  if((IS_RAB || IS_SM83) && lineIsInst (pl, "add") && !STRNCASECMP(op1start, "sp", 2))
+  if((IS_RAB || IS_SM83) && lineIsInst (pl, "add") && !STRNCASECMP(op0start, "sp", 2))
     return(2);
 
   /* 16 bit adjustment to stack pointer */
-  if(IS_TLCS90 && lineIsInst (pl, "add") && !STRNCASECMP(op1start, "sp", 2))
+  if(IS_TLCS90 && lineIsInst (pl, "add") && !STRNCASECMP(op0start, "sp", 2))
     return(3);
 
   /* 8 bit arithmetic, two operands */
-  if(op2start && op1start[0] == 'a' &&
-     (lineIsInst (pl, "add") || lineIsInst (pl, "adc") || lineIsInst (pl, "sub") || lineIsInst (pl, "sbc") ||
-      lineIsInst (pl, "cp")  || lineIsInst (pl, "and") || lineIsInst (pl, "or")  || lineIsInst (pl, "xor")))
-    {
-      if(argCont(op2start, "(ix)") || argCont(op2start, "(iy)"))
-        return(3);
-      if(op2start[0] == '#')
-        return(2);
-      return(1);
-    }
-  /* 8 bit arithmetic, shorthand for a */
-  if(!op2start &&
+  if(op1start && op0start[0] == 'a' &&
      (lineIsInst (pl, "add") || lineIsInst (pl, "adc") || lineIsInst (pl, "sub") || lineIsInst (pl, "sbc") ||
       lineIsInst (pl, "cp")  || lineIsInst (pl, "and") || lineIsInst (pl, "or")  || lineIsInst (pl, "xor")))
     {
       if(argCont(op1start, "(ix)") || argCont(op1start, "(iy)"))
         return(3);
       if(op1start[0] == '#')
+        return(2);
+      return(1);
+    }
+  /* 8 bit arithmetic, shorthand for a */
+  if(!op1start &&
+     (lineIsInst (pl, "add") || lineIsInst (pl, "adc") || lineIsInst (pl, "sub") || lineIsInst (pl, "sbc") ||
+      lineIsInst (pl, "cp")  || lineIsInst (pl, "and") || lineIsInst (pl, "or")  || lineIsInst (pl, "xor")))
+    {
+      if(argCont(op0start, "(ix)") || argCont(op0start, "(iy)"))
+        return(3);
+      if(op0start[0] == '#')
         return(2);
       return(1);
     }
@@ -1737,9 +1710,9 @@ int z80instructionSize(lineNode *pl)
   /* Increment / decrement */
   if(lineIsInst (pl, "inc") || lineIsInst (pl, "dec"))
     {
-      if(!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2))
+      if(!STRNCASECMP(op0start, "ix", 2) || !STRNCASECMP(op0start, "iy", 2))
         return(2);
-      if(argCont(op1start, "(ix)") || argCont(op1start, "(iy)"))
+      if(argCont(op0start, "(ix)") || argCont(op0start, "(iy)"))
         return(3);
       return(1);
     }
@@ -1747,7 +1720,7 @@ int z80instructionSize(lineNode *pl)
   if(lineIsInst (pl, "rlc") || lineIsInst (pl, "rl")  || lineIsInst (pl, "rrc") || lineIsInst (pl, "rr") ||
      lineIsInst (pl, "sla") || lineIsInst (pl, "sra") || lineIsInst (pl, "srl"))
     {
-      if(argCont(op1start, "(ix)") || argCont(op1start, "(iy)"))
+      if(argCont(op0start, "(ix)") || argCont(op0start, "(iy)"))
         return(4);
       return(2);
     }
@@ -1758,7 +1731,7 @@ int z80instructionSize(lineNode *pl)
   /* Bit */
   if(lineIsInst (pl, "bit") || lineIsInst (pl, "set") || lineIsInst (pl, "res"))
     {
-      if(argCont(op2start, "(ix)") || argCont(op2start, "(iy)"))
+      if(argCont(op1start, "(ix)") || argCont(op1start, "(iy)"))
         return(4);
       return(2);
     }
@@ -1768,9 +1741,9 @@ int z80instructionSize(lineNode *pl)
 
   if(lineIsInst (pl, "jp"))
     {
-      if(!STRNCASECMP(op1start, "(hl)", 4))
+      if(!STRNCASECMP(op0start, "(hl)", 4))
         return(1);
-      if(!STRNCASECMP(op1start, "(ix)", 4) || !STRNCASECMP(op1start, "(iy)", 4))
+      if(!STRNCASECMP(op0start, "(ix)", 4) || !STRNCASECMP(op0start, "(iy)", 4))
         return(2);
       return(3);
     }
@@ -1829,7 +1802,7 @@ int z80instructionSize(lineNode *pl)
     return(2);
 
   if((IS_Z180 || IS_EZ80 || IS_Z80N) && lineIsInst (pl, "tst"))
-    return((op1start[0] == '#' || op2start && op1start[0] == '#') ? 3 : 2);
+    return((op0start[0] == '#' || op1start && op0start[0] == '#') ? 3 : 2);
 
   if((IS_R4K || IS_R5K || IS_R6K) &&
     (lineIsInst (pl, "clr") ||
@@ -1856,7 +1829,7 @@ int z80instructionSize(lineNode *pl)
     return(2);
 
   if(IS_RAB && lineIsInst (pl, "bool"))
-    return(!STRNCASECMP(op1start, "hl", 2) ? 1 : 2);
+    return(!STRNCASECMP(op0start, "hl", 2) ? 1 : 2);
 
   if(IS_RAB && lineIsInst (pl, "lret") ||
     (IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "llret"))
@@ -1882,7 +1855,7 @@ int z80instructionSize(lineNode *pl)
     return(2);
 
   if(IS_Z80N && lineIsInst (pl, "nextreg"))
-    return(op2start && !STRNCASECMP(op2start, "a", 1) ? 3 : 4);
+    return(op1start && !STRNCASECMP(op1start, "a", 1) ? 3 : 4);
 
   if(lineIsInst (pl, ".db") || lineIsInst (pl, ".byte"))
     {
