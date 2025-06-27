@@ -674,7 +674,14 @@ z80MightRead(const lineNode *pl, const char *what)
   if((IS_Z180 || IS_EZ80) && ISINST(pl->line, "tstio"))
     return(!strcmp(what, "c"));
 
-  if(IS_RAB && (ISINST(pl->line, "ioi") || ISINST(pl->line, "ioe")))
+  if(IS_RAB &&
+    (ISINST(pl->line, "ioi") ||
+    ISINST(pl->line, "ioe") ||
+    ISINST(pl->line, "ipres") ||
+    ISINST(pl->line, "ipset0") ||
+    ISINST(pl->line, "ipset1") ||
+    ISINST(pl->line, "ipset2") ||
+    ISINST(pl->line, "ipset3")))
     return(false);
     
   if(IS_RAB && ISINST(pl->line, "mul"))
@@ -703,11 +710,28 @@ z80MightRead(const lineNode *pl, const char *what)
     ISINST(pl->line, "brlc")))
     return(strchr("bde", *what));
 
+  if(IS_TLCS90 &&
+    (ISINST(pl->line, "mul") ||
+    ISINST(pl->line, "div")))
+    {
+      if(!strcmp(what, "h") || !strcmp(what, "l"))
+        return true;
+      const char *arg = strchr (pl->line + 3, ',');
+      wassert (arg);
+      arg++;
+      while(isspace(*arg))
+        arg++;
+      if (arg[0] == what[0])
+        return true;
+      if (strchr (arg, '('));
+        return (!strcmp(what, "ix") || !strcmp(what, "iy") || !strcmp(what, "hl") || !strcmp(what, "sp"));
+    }
+
   /* TODO: Can we know anything about rst? */
   if(ISINST(pl->line, "rst"))
     return(true);
 
-  //printf("z80MightRead unknown asm inst line: %s\n", pl->line);
+  printf("z80MightRead unknown asm inst line: %s\n", pl->line);
 
   return(true);
 }
@@ -1014,15 +1038,41 @@ z80SurelyWrites (const lineNode *pl, const char *what)
   if(!strcmp(what, "a") && (!strcmp(pl->line, "or\ta, #0xff") || !strcmp(pl->line, "or\ta,#0xff") || !strcmp(pl->line, "or\t#0xff")))
     return(true);
 
-  if(ISINST(pl->line, "ld") && strncmp(pl->line + 3, "hl", 2) == 0 && (what[0] == 'h' || what[0] == 'l'))
-    return(true);
-  if(ISINST(pl->line, "ld") && strncmp(pl->line + 3, "de", 2) == 0 && (what[0] == 'd' || what[0] == 'e'))
-    return(true);
-  if(ISINST(pl->line, "ld") && strncmp(pl->line + 3, "bc", 2) == 0 && (what[0] == 'b' || what[0] == 'c'))
-    return(true);
+  if(ISINST(pl->line, "adc") ||
+    ISINST(pl->line, "add") ||
+    ISINST(pl->line, "and") ||
+    ISINST(pl->line, "dec") ||
+    ISINST(pl->line, "inc") ||
+    ISINST(pl->line, "sbc") ||
+    ISINST(pl->line, "sra") ||
+    ISINST(pl->line, "srl") ||
+    ISINST(pl->line, "sub") ||
+    ISINST(pl->line, "xor"))
+    {
+      if (!strcmp(what, "a") && pl->line[4] == 'a')
+        return(true);
+      if ((!strcmp(what, "h") || !strcmp(what, "l")) && !strncmp(pl->line + 4, "hl", 2))
+        return(true);
+      return(false);
+    }
+  if(ISINST(pl->line, "or"))
+    {
+      if (!strcmp(what, "a") && pl->line[3] == 'a')
+        return(true);
+      if ((!strcmp(what, "h") || !strcmp(what, "l")) && !strncmp(pl->line + 3, "hl,", 3))
+        return(true);
+      return(false);
+    }
+
+  if(ISINST(pl->line, "ld") && !strncmp(pl->line + 3, "hl,", 3))
+    return(what[0] == 'h' || what[0] == 'l');
+  if(ISINST(pl->line, "ld") && !strncmp(pl->line + 3, "de,", 3))
+    return(what[0] == 'd' || what[0] == 'e');
+  if(ISINST(pl->line, "ld") && !strncmp(pl->line + 3, "bc,", 3))
+    return(what[0] == 'b' || what[0] == 'c');
   if((ISINST(pl->line, "ld") || ISINST(pl->line, "in"))
-    && strncmp(pl->line + 3, what, strlen(what)) == 0 && pl->line[3 + strlen(what)] == ',')
-    return(true);
+    && strlen(pl->line) >= 3 + strlen(what) && pl->line[3 + strlen(what)] == ',')
+    return(!strncmp(pl->line + 3, what, strlen(what)));
 
   if(IS_RAB && ISINST(pl->line, "ldp") && strncmp(pl->line + 4, "hl", 2) == 0 && (what[0] == 'h' || what[0] == 'l'))
     return(true);
@@ -1030,6 +1080,8 @@ z80SurelyWrites (const lineNode *pl, const char *what)
   if(IS_SM83 && (ISINST(pl->line, "ldd") || ISINST(pl->line, "ldi") || ISINST(pl->line, "ldh")))
     return(strncmp(pl->line + 4, what, strlen(what)) == 0);
 
+  if(ISINST(pl->line, "pop") && !strncmp (pl->line + 4, "af", 2))
+    return(what[0] == 'a');
   if(ISINST(pl->line, "pop") && strstr(pl->line + 4, what))
     return(true);
   if (ISINST(pl->line, "call") && strchr(pl->line, ',') == 0)
@@ -1037,6 +1089,10 @@ z80SurelyWrites (const lineNode *pl, const char *what)
 
   if(strcmp(pl->line, "ret") == 0)
     return true;
+
+  if(ISINST(pl->line, "bit") ||
+    ISINST(pl->line, "push"))
+    return(false);
 
   if (IS_Z180 || IS_EZ80 || IS_Z80N)
     if (ISINST(pl->line, "mlt"))
