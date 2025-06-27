@@ -304,7 +304,9 @@ z80MightReadFlag(const lineNode *pl, const char *what)
     return false;
 
   if(IS_TLCS90 &&
-    ISINST(pl->line, "lda"))
+    (ISINST(pl->line, "div") ||
+    ISINST(pl->line, "lda") ||
+    ISINST(pl->line, "mul")))
     return false;
 
   if(IS_TLCS90 &&
@@ -704,7 +706,9 @@ z80MightRead(const lineNode *pl, const char *what)
   /* TODO: Can we know anything about rst? */
   if(ISINST(pl->line, "rst"))
     return(true);
-    
+
+  //printf("z80MightRead unknown asm inst line: %s\n", pl->line);
+
   return(true);
 }
 
@@ -923,7 +927,8 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
     return (argCont(pl->line + 6, "af"));
 
   if(IS_TLCS90 &&
-    ISINST(pl->line, "lda"))
+    (ISINST(pl->line, "lda") ||
+    ISINST(pl->line, "mul")))
     return false;
 
   if(IS_TLCS90 &&
@@ -1065,6 +1070,8 @@ z80SurelyWrites (const lineNode *pl, const char *what)
 
   if (IS_SM83 && ISINST(pl->line, "ldhl") && (what[0] == 'h' || what[0] == 'l'))
     return(true);
+
+  //printf("z80SurelyWrites unknown asm inst line: %s\n", pl->line);
 
   return(false);
 }

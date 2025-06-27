@@ -1,7 +1,7 @@
 2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peep.c:
-	  Introduce r4k, r5k, r6k peephole optimizer support. Extend ez80 peephole optimizer support.
+	  Introduce r4k, r5k, r6k peephole optimizer support. Extend ez80 and tlcs90 peephole optimizer support.
 
 2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
