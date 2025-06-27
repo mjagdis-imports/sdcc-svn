@@ -1,3 +1,17 @@
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/peep.c:
+	  Replace leftArg and rightArg functions by new lineArg function.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.h,
+	  src/f8/peep.c,
+	  src/mos6502/peep.c,
+	  src/pdk/peep.c,
+	  src/stm8/peep.c:
+	  Replace ISINST macro by a new lineIsInst function.
+
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/gcc-torture-execute-pr91137.c:
