@@ -1,7 +1,9 @@
 2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peep.c:
-	  Replace ISINST macro by lineIsInst function.
+	  Replace ISINST macro by lineIsInst function, refactor using lineArg function.
+	* src/SDCCpeeph.h:
+	  Fix handling of arguments separated by comma only (without white spaes).
 
 2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
 

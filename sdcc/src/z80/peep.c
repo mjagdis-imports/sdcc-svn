@@ -38,8 +38,6 @@
 #define D(_s)
 #endif
 
-#define ISINST(l, i) (!STRNCASECMP((l), (i), sizeof(i) - 1) && (!(l)[sizeof(i) - 1] || isspace((unsigned char)((l)[sizeof(i) - 1]))))
-
 typedef enum
 {
   S4O_CONDJMP,
@@ -400,6 +398,9 @@ z80MightRead(const lineNode *pl, const char *what)
   if(strcmp(what, "ixl") == 0 || strcmp(what, "ixh") == 0)
     what = "ix";
 
+  const char *larg = lineArg (pl, 0);
+  const char *rarg = lineArg (pl, 1);
+
   if(lineIsInst (pl, "call") && strcmp(what, "sp") == 0)
     return TRUE;
 
@@ -458,15 +459,12 @@ z80MightRead(const lineNode *pl, const char *what)
 
 
   // Sometimes the result and flags do not depend on the value of the operands.
-  if(lineIsInst (pl, "cp") ||
+  if (lineIsInst (pl, "cp") ||
     lineIsInst (pl, "sbc") ||
     lineIsInst (pl, "sbc") ||
     lineIsInst (pl, "xor"))
     {
-      const char *arg = pl->line + 3;
-      while(isspace(*arg))
-        arg++;
-      if (!strncmp(arg, "a, a", 4) || !strncmp(arg, "hl, hl", 6) || !strncmp(arg, "iy, iy", 6))
+      if (!strncmp (larg, "a, a", 4) || !strncmp (larg, "hl, hl", 6) || !strncmp (larg, "iy, iy", 6))
         return(false);
     }
 
@@ -478,87 +476,48 @@ z80MightRead(const lineNode *pl, const char *what)
   if(!strcmp(pl->line, "or\ta, #0xff") || !strcmp(pl->line, "or\ta,#0xff") || !strcmp(pl->line, "or\t#0xff"))
     return(false);
 
-  if(lineIsInst (pl, "adc") ||
+  if (lineIsInst (pl, "adc") ||
      lineIsInst (pl, "add") ||
      lineIsInst (pl, "and") ||
+     lineIsInst (pl, "or") ||
+     lineIsInst (pl, "cp") ||
      lineIsInst (pl, "sbc") ||
      lineIsInst (pl, "sub") ||
      lineIsInst (pl, "xor") ||
      IS_R800 && lineIsInst (pl, "multu") ||
      IS_R800 && lineIsInst (pl, "multuw"))
     {
-      const char *arg;
-      if (lineIsInst (pl, "multu"))
-        arg = pl->line + 5;
-      else if (lineIsInst (pl, "multuw"))
-        arg = pl->line + 6;
-      else
-        arg = pl->line + 4;
-      while(isspace(*arg))
-        arg++;
-      if(arg[0] == 'a' && arg[1] == ',')
+      if (larg[0] == 'a' && larg[1] == ',')
         {
           if(!strcmp(what, "a"))
             return(true);
-          arg += 2;
         }
-      else if(IS_Z80N && !strncmp(arg, "bc", 2) && *(arg + 2) == ',')
+      else if (IS_Z80N && !strncmp (larg, "bc", 2) && *(larg + 2) == ',')
         {
           if(!strcmp(what, "b") || !strcmp(what, "c"))
             return(true);
-          arg += 3;
         }
-      else if(IS_Z80N && !strncmp(arg, "de", 2) && *(arg + 2) == ',')
+      else if (IS_Z80N && !strncmp (larg, "de", 2) && *(larg + 2) == ',')
         {
           if(!strcmp(what, "d") || !strcmp(what, "e"))
             return(true);
-          arg += 3;
         }
-      else if(!strncmp(arg, "hl", 2) && arg[2] == ',') // add hl, rr
+      else if (!strncmp (larg, "hl", 2) && larg[2] == ',') // add hl, rr
         {
           if(!strcmp(what, "h") || !strcmp(what, "l"))
             return(true);
-          arg += 3;
         }
-      else if(!strncmp(arg, "sp", 2) && arg[2] == ',') // add sp, rr
+      else if (!strncmp(larg, "sp", 2) && larg[2] == ',') // add sp, rr
         {
           if(!strcmp(what, "sp"))
             return(true);
-          arg += 3;
         }
-      else if(arg[0] == 'i') // add ix/y, rr
+      else if (larg[0] == 'i') // add ix/y, rr
         {
-          if(!strncmp(arg, what, 2))
+          if (!strncmp (larg, what, 2))
             return(true);
-          arg += 3;
         }
-      return(argCont(arg, what));
-    }
-
-  if(lineIsInst (pl, "or") || lineIsInst (pl, "cp") )
-    {
-      const char *arg = pl->line + 3;
-      while(isspace(*arg))
-        arg++;
-      if(*arg == 'a' && *(arg + 1) == ',')
-        {
-          if(!strcmp(what, "a"))
-            return(true);
-          arg += 2;
-        }
-      else if(!strncmp(arg, "hl", 2) && *(arg + 2) == ',')
-        {
-          if(!strcmp(what, "h") || !strcmp(what, "l"))
-            return(true);
-          arg += 3;
-        }
-      else if(!strncmp(arg, "iy", 2) && *(arg + 2) == ',')
-        {
-          if(!strcmp(what, "iy"))
-            return(true);
-          arg += 3;
-        }
-      return(argCont(arg, what));
+      return (argCont (rarg, what));
     }
 
   if(lineIsInst (pl, "neg"))
@@ -567,13 +526,13 @@ z80MightRead(const lineNode *pl, const char *what)
   if(lineIsInst (pl, "pop"))
     return(strcmp(what, "sp") == 0);
 
-  if(lineIsInst (pl, "push"))
-    return(strstr(pl->line + 5, what) != 0 || strcmp(what, "sp") == 0);
+  if (lineIsInst (pl, "push"))
+    return (strstr (larg, what) || !strcmp(what, "sp"));
 
-  if(lineIsInst (pl, "dec") ||
+  if (lineIsInst (pl, "dec") ||
      lineIsInst (pl, "inc"))
     {
-      return(argCont(pl->line + 4, what));
+      return (argCont (larg, what));
     }
 
   if(lineIsInst (pl, "cpl"))
@@ -591,22 +550,19 @@ z80MightRead(const lineNode *pl, const char *what)
     {
       return(strcmp(what, "a") == 0);
     }
-  if(lineIsInst (pl, "rl") ||
-     lineIsInst (pl, "rr"))
+  if (lineIsInst (pl, "rl") ||
+    lineIsInst (pl, "rlc") ||
+    lineIsInst (pl, "sla") ||
+    lineIsInst (pl, "rr") ||
+    lineIsInst (pl, "rrc") ||
+    lineIsInst (pl, "sra") ||
+    lineIsInst (pl, "srl"))
     {
-      return(argCont(pl->line + 3, what));
+      return (argCont (larg, what));
     }
-  if(lineIsInst (pl, "rlc") ||
-     lineIsInst (pl, "sla") ||
-     lineIsInst (pl, "rrc") ||
-     lineIsInst (pl, "sra") ||
-     lineIsInst (pl, "srl"))
+  if ((IS_SM83 || IS_Z80N) && lineIsInst (pl, "swap"))
     {
-      return(argCont(pl->line + 4, what));
-    }
-  if((IS_SM83 || IS_Z80N) && lineIsInst (pl, "swap"))
-    {
-      return(argCont(pl->line + 5, what));
+      return (argCont (larg, what));
     }
   if(!IS_SM83 && !IS_RAB &&
     (lineIsInst (pl, "rld") ||
@@ -614,11 +570,11 @@ z80MightRead(const lineNode *pl, const char *what)
     return(!!strstr("ahl", what));
 
   // Bit set, reset and test group
-  if(lineIsInst (pl, "bit") ||
-     lineIsInst (pl, "set") ||
-     lineIsInst (pl, "res"))
+  if (lineIsInst (pl, "bit") ||
+    lineIsInst (pl, "set") ||
+    lineIsInst (pl, "res"))
     {
-      return(argCont(strchr(pl->line + 4, ','), what));
+      return (argCont (rarg, what));
     }
 
   if(lineIsInst (pl, "ccf") ||
@@ -684,11 +640,11 @@ z80MightRead(const lineNode *pl, const char *what)
     lineIsInst (pl, "ipset3")))
     return(false);
     
-  if(IS_RAB && lineIsInst (pl, "mul"))
-    return(!strcmp(what, "b") || !strcmp(what, "c") || !strcmp(what, "d") || !strcmp(what, "e"));
+  if (IS_RAB && lineIsInst (pl, "mul"))
+    return (!strcmp(what, "b") || !strcmp(what, "c") || !strcmp(what, "d") || !strcmp(what, "e"));
 
-  if(IS_RAB && lineIsInst (pl, "bool"))
-    return(argCont(pl->line + 5, what));
+  if (IS_RAB && lineIsInst (pl, "bool"))
+    return (argCont (larg, what));
     
   if((IS_R3KA || IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "lsdr") || lineIsInst (pl, "lidr") || lineIsInst (pl, "lsddr") || lineIsInst (pl, "lsidr"))
     return(strchr("bcdehl", *what));
@@ -710,20 +666,16 @@ z80MightRead(const lineNode *pl, const char *what)
     lineIsInst (pl, "brlc")))
     return(strchr("bde", *what));
 
-  if(IS_TLCS90 &&
+  if (IS_TLCS90 &&
     (lineIsInst (pl, "mul") ||
     lineIsInst (pl, "div")))
     {
       if(!strcmp(what, "h") || !strcmp(what, "l"))
         return true;
-      const char *arg = strchr (pl->line + 3, ',');
-      wassert (arg);
-      arg++;
-      while(isspace(*arg))
-        arg++;
-      if (arg[0] == what[0])
+      wassert (rarg);
+      if (rarg[0] == what[0])
         return true;
-      if (strchr (arg, '('));
+      if (strchr (rarg, '('));
         return (!strcmp(what, "ix") || !strcmp(what, "iy") || !strcmp(what, "hl") || !strcmp(what, "sp"));
     }
 
@@ -1025,6 +977,8 @@ z80SurelyWrites (const lineNode *pl, const char *what)
   if(strcmp(what, "ixl") == 0 || strcmp(what, "ixh") == 0)
     what = "ix";
 
+  const char *larg = lineArg (pl, 0);
+
   //ld a, #0x00
   if((lineIsInst (pl, "xor") || lineIsInst (pl, "sub")) && !strcmp(what, "a") &&
      (!strcmp(pl->line+4, "a, a") || !strcmp(pl->line+4, "a,a") || (!strchr(pl->line, ',') && !strcmp(pl->line+4, "a"))))
@@ -1038,41 +992,36 @@ z80SurelyWrites (const lineNode *pl, const char *what)
   if(!strcmp(what, "a") && (!strcmp(pl->line, "or\ta, #0xff") || !strcmp(pl->line, "or\ta,#0xff") || !strcmp(pl->line, "or\t#0xff")))
     return(true);
 
-  if(lineIsInst (pl, "adc") ||
+  if (lineIsInst (pl, "adc") ||
     lineIsInst (pl, "add") ||
     lineIsInst (pl, "and") ||
     lineIsInst (pl, "dec") ||
     lineIsInst (pl, "inc") ||
+    lineIsInst (pl, "or") ||
     lineIsInst (pl, "sbc") ||
     lineIsInst (pl, "sra") ||
     lineIsInst (pl, "srl") ||
     lineIsInst (pl, "sub") ||
     lineIsInst (pl, "xor"))
     {
-      if (!strcmp(what, "a") && pl->line[4] == 'a')
+      if (!strcmp (what, "a") && larg[0] == 'a')
         return(true);
-      if ((!strcmp(what, "h") || !strcmp(what, "l")) && !strncmp(pl->line + 4, "hl", 2))
-        return(true);
-      return(false);
-    }
-  if(lineIsInst (pl, "or"))
-    {
-      if (!strcmp(what, "a") && pl->line[3] == 'a')
-        return(true);
-      if ((!strcmp(what, "h") || !strcmp(what, "l")) && !strncmp(pl->line + 3, "hl,", 3))
+      if ((!strcmp (what, "h") || !strcmp (what, "l")) && !strncmp (larg, "hl", 2))
         return(true);
       return(false);
     }
 
-  if(lineIsInst (pl, "ld") && !strncmp(pl->line + 3, "hl,", 3))
+  if (lineIsInst (pl, "ld") && !strncmp (larg, "hl,", 3))
     return(what[0] == 'h' || what[0] == 'l');
-  if(lineIsInst (pl, "ld") && !strncmp(pl->line + 3, "de,", 3))
+  if (lineIsInst (pl, "ld") && !strncmp (larg, "de,", 3))
     return(what[0] == 'd' || what[0] == 'e');
-  if(lineIsInst (pl, "ld") && !strncmp(pl->line + 3, "bc,", 3))
+  if (lineIsInst (pl, "ld") && !strncmp (larg, "bc,", 3))
     return(what[0] == 'b' || what[0] == 'c');
-  if((lineIsInst (pl, "ld") || lineIsInst (pl, "in"))
-    && strlen(pl->line) >= 3 + strlen(what) && pl->line[3 + strlen(what)] == ',')
-    return(!strncmp(pl->line + 3, what, strlen(what)));
+  if (lineIsInst (pl, "ld") && !strncmp (larg, "iy,", 3))
+    return(!strcmp (what, "iy"));
+  if ((lineIsInst (pl, "ld") || lineIsInst (pl, "in"))
+    && strlen (larg) >= strlen (what) && larg[strlen (what)] == ',')
+    return (!strncmp (larg, what, strlen (what)));
 
   if(IS_RAB && lineIsInst (pl, "ldp") && strncmp(pl->line + 4, "hl", 2) == 0 && (what[0] == 'h' || what[0] == 'l'))
     return(true);
@@ -1096,15 +1045,15 @@ z80SurelyWrites (const lineNode *pl, const char *what)
 
   if (IS_Z180 || IS_EZ80 || IS_Z80N)
     if (lineIsInst (pl, "mlt"))
-      return(strchr(pl->line + 4, *what) != 0);
+      return (strchr (larg, *what));
 
   if (IS_R800)
     if (lineIsInst (pl, "multu"))
-      return(strchr("hl", *what) != NULL);
+      return (strchr("hl", *what));
 
   if (IS_R800)
     if (lineIsInst (pl, "multuw"))
-      return(strchr("dehl", *what) != NULL);
+      return (strchr("dehl", *what));
 
   if (IS_Z180 || IS_EZ80)
     {
@@ -1112,14 +1061,14 @@ z80SurelyWrites (const lineNode *pl, const char *what)
         lineIsInst (pl, "otimr") ||
         lineIsInst (pl, "otdm") ||
         lineIsInst (pl, "otdmr"))
-        return(strchr("bchl", *what) != NULL);
+        return (strchr("bchl", *what));
 
       if (lineIsInst (pl, "in0"))
-        return(!strncmp(pl->line + 4, what, strlen(what)));
+        return (!strncmp (larg, what, strlen (what)));
     }
 
   if (IS_EZ80 && lineIsInst (pl, "lea"))
-    return (strstr(pl->line + 4, what));
+    return (strstr (larg, what));
 
   if (IS_SM83 && lineIsInst (pl, "lda") && strncmp(pl->line + 4, "hl", 2) == 0 && (what[0] == 'h' || what[0] == 'l'))
     return(true);
