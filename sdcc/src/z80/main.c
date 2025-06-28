@@ -126,7 +126,6 @@ static OPTION _z80_options[] = {
 
 static OPTION _rab_options[] = {
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
-  {0, OPTION_PORTMODE,        NULL, "Determine PORT I/O mode (z80/z180)"},
   {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
   {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
   {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
@@ -1080,7 +1079,8 @@ _z80_genAssemblerStart (FILE * of)
     fprintf (of, "\t.r800\n");
   else if (TARGET_IS_Z80 && options.allow_undoc_inst)
     fprintf (of, "\t.allow_undocumented\n");
-
+  else if (TARGET_IS_TLCS90)
+    fprintf (of, "\tby = 0xffed\n");
 }
 
 static bool
@@ -2504,7 +2504,7 @@ PORT tlcs90_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  { 1, 2, 2, 4, 8, 2, 3, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -2514,8 +2514,8 @@ PORT tlcs90_port =
     "DATA",
     NULL,                       /* idata */
     NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       // xconst
+    "XDATA",                    // xdata
+    "XCONST",                   // xconst
     NULL,                       /* bit */
     "RSEG (ABS)",
     "GSINIT",                   /* static initialization */
@@ -2589,8 +2589,8 @@ PORT tlcs90_port =
   0,                            /* no CSE cost estimation yet */
   0,                            /* no builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  false,                        // there is no __far, and thus no pointers into it.
-  false,                        // there is no __far, and thus no pointers into it.
+  false,                        // __far is not a subspace of generic.
+  true,                         // generic is a subspace of __far.
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
   9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
@@ -2726,8 +2726,8 @@ PORT ez80_port =
   0,                            /* no CSE cost estimation yet */
   _z80_builtins,                /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  false,                        // there is no __far, and thus no pointers into it.
-  false,                        // there is no __far, and thus no pointers into it.
+  false,                        // __far is not a subspace of generic.
+  true,                         // generic is a subspace of __far.
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
   9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
