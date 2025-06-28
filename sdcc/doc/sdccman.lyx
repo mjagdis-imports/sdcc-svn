@@ -24730,7 +24730,23 @@ at
 \end_inset
 
 (0xff01) IoPort;
- 
+\end_layout
+
+\begin_layout Subsection
+TLCS-90 intrinsic named address spaces
+\end_layout
+
+\begin_layout Standard
+SDCC supports the following TLCS-90-specific intrinsic address spaces:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename tlcs90-named-address-spaces.svg
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
