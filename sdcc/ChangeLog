@@ -1,3 +1,9 @@
+2025-06-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  doc/tlcs90-named-address-spaces.svg:
+	  Document planned tlcs90 __far support.
+
 2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/peep.c:
