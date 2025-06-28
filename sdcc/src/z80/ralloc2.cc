@@ -746,6 +746,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   // For some iCodes, code generation can handle anything.
   if(ic->op == '~' || ic->op == CALL || ic->op == RETURN || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
+    ic->op == ADDRESS_OF ||
     ic->op == GETBYTE || ic->op == GETWORD ||
     ic->op == ROT && (getSize(operandType(IC_RESULT(ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     !((IS_SM83 || IY_RESERVED) && (operand_on_stack(result, a, i, G) || operand_on_stack(right, a, i, G))) && (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST) ||
@@ -836,8 +837,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 
   // HL overwritten by result.
   if(result_only_HL && !POINTER_SET(ic) &&
-      (ic->op == ADDRESS_OF ||
-       ic->op == GET_VALUE_AT_ADDRESS ||
+      (ic->op == GET_VALUE_AT_ADDRESS ||
        ic->op == '+' ||
        ic->op == '*' ||
        ic->op == '=' ||

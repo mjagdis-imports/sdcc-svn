@@ -1,3 +1,14 @@
+2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.h,
+	  src/z80/gen.c,
+	  src/z80/main.c,
+	  src/z80/mappings.i,
+	  device/lib/ez80/crt0.s,
+	  .version:
+	  Initial __far support (untested, also no __far bit-fields yet) for Rabbits, TLCS-90, and eZ80.
+
 2025-06-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx,

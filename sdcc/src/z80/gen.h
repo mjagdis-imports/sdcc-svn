@@ -30,6 +30,8 @@ typedef enum
   AOP_REG,
   /* Is in direct space */
   AOP_DIR,
+  /* Is in far direct space - Rabbits only */
+  AOP_FDIR,
   /* SFR space ($FF00 and above) */
   AOP_SFR,
   /* Is on the stack */
@@ -71,11 +73,11 @@ typedef struct asmop
     reg_info *aop_reg[4];       /* array of registers */
     char *aop_dir;              /* if direct  */
     char *aop_immd;             /* if immediate others are implied */
-    int aop_stk;                /* stack offset when AOP_STK or AOP_STL*/
+    int aop_stk;                // stack offset when AOP_STK or AOP_STL
     int aop_pairId;             /* The pair ID */
   }
   aopu;
-  signed char regs[9]; // Byte of this aop that is in the register. -1 if no byte of this aop is in the reg.
+  signed char regs[11]; // Byte of this aop that is in the register. -1 if no byte of this aop is in the reg.
   struct valinfo valinfo;
 }
 asmop;
