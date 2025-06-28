@@ -59,10 +59,10 @@ extern Z80_OPTS z80_opts;
 #define IS_TLCS870C (z80_opts.sub == SUB_TLCS870C)
 #define IS_TLCS870C1 (z80_opts.sub == SUB_TLCS870C1)
 #define IS_TLCS (IS_TLCS90 || IS_TLCS870 || IS_TLCS870C || IS_TLCS870C1)
-#define IS_EZ80_Z80 (z80_opts.sub == SUB_EZ80)
+#define IS_EZ80 (z80_opts.sub == SUB_EZ80)
 #define IS_Z80N (z80_opts.sub == SUB_Z80N)
 #define IS_R800 (z80_opts.sub == SUB_R800)
-#define HAS_IYL_INST (IS_Z80N || IS_EZ80_Z80 || IS_R800 || IS_Z80 && options.allow_undoc_inst)
+#define HAS_IYL_INST (IS_Z80N || IS_EZ80 || IS_R800 || IS_Z80 && options.allow_undoc_inst)
 
 #define IY_RESERVED (z80_opts.reserveIY)
 

@@ -1,3 +1,29 @@
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/peep.c:
+	  Replace leftArg and rightArg functions by new lineArg function.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.h,
+	  src/f8/peep.c,
+	  src/mos6502/peep.c,
+	  src/pdk/peep.c,
+	  src/stm8/peep.c:
+	  Replace ISINST macro by a new lineIsInst function.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Introduce r4k, r5k, r6k peephole optimizer support. Extend ez80 and tlcs90 peephole optimizer support.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/z80.h,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
+	  Rename eZ80 subport macro.
+
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,
@@ -7,6 +33,9 @@
 	  src/SDCCsymt.h,
 	  src/z80/gen.c:
 	  Infrastructure for handling the generic address space as a subspace of __far.
+	* sdccconf_in.h,
+	  src/SDCCmain.c:
+	  Rename ez80 port enable macro.
 
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
