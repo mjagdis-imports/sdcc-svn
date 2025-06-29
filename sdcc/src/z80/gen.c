@@ -833,18 +833,42 @@ emitJP (const symbol *target, const char *condition, float probability, bool ass
       wassert (currFunc);
       if (condition)
         {
-          emit2 ("jp %s, !tlabel", condition, labelKey2num (target->key));
+          if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+            emit2 ("jp %s, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", condition, currFunc->name, labelKey2num (target->key));
+          else
+            emit2 ("jp %s, !tlabel", condition, labelKey2num (target->key));
         }
       else
         {
-          emit2 ("jp !tlabel", labelKey2num (target->key));
+          if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+            emit2 ("jp (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (target->key));
+          else
+            emit2 ("jp !tlabel", labelKey2num (target->key));
         }
     }
 
-  if (assume_jr)
-    cost2 (2, 12, 8, 5, 12, 8, 3, 3);
+  if (condition)
+    {
+      if ((IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET) && (!strcmp (condition, "gt") || !strcmp (condition, "lt") || !strcmp (condition, "gtu") || !strcmp (condition, "v")) ||
+        IS_R6K_NOTYET && (!strcmp (condition, "ge") || !strcmp (condition, "le") || !strcmp (condition, "leu")))
+        {
+          if (assume_jr)
+            cost (3, 5 + IS_R6K_NOTYET);
+          else
+            cost (4, 9);
+        }
+      else if (assume_jr)
+        cost3 (2, 2, 2, 2, 7 + 5 * probability, 6 + 2 * probability, 5, 6, 8 + 4 * probability, 4 + 4 * probability, 2 + 2 * probability, 2 + 2 * probability, 2 + 2 * probability, 2 + 1 * probability, 2 + 1 * probability);
+      else
+        cost3 (3, 4, -1, -1, 10, 6 + 3 * probability, 7, 7, 12 + 4 * probability, 10 + 2 * probability, -1, -1, -1, 3 + 1 * probability, 3);
+    }
   else
-    cost2 (3, 10, 9, 7, 16, 8, 4, 3);
+    {
+      if (assume_jr)
+        cost3 (2, 2, 2, 2, 12, 8, 5, 6, 12, 8, 4, 4, 4, 3, 3);
+      else
+        cost3 (3, 3, 3, 3, 10, 9, 7, 7, 16, 8, 4, 4, 4, 4, 3);
+    }
 }
 
 static PAIR_ID
@@ -1285,15 +1309,15 @@ op8_cost (const asmop *op, int offset)
       cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
     case AOP_HL:
       cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
-      cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+      cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 3, 3, 2, 2);
       return;
     case AOP_IY:
       cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
-      cost2 (3, 19, 15, 9, 0, 10, 4, 5);
+      cost3 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5);
       return;
     case AOP_PAIRPTR:
       if (op->aopu.aop_pairId == PAIR_HL)
-        cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+        cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 3, 3, 2, 2);
       else if (op->aopu.aop_pairId == PAIR_IY || op->aopu.aop_pairId == PAIR_IX)
         cost3 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5);
       else
@@ -1321,27 +1345,27 @@ incdec_cost (const asmop *op, int offset)
       cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1);
       return;
     case AOP_STK:
-      cost2 (3, 23, 18, 12, 0, 12, 6, 7);
+      cost3 (3, 3, -1, 3, 23, 18, 12, 13, -1, 12, -1, 6, 6, 6, 7);
       return;
     case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
       cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
     case AOP_HL:
       cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
-      cost2 (1, 11, 10, 8, 12, 8, 5, 4);
+      cost3 (1, 2, 1, 2, 11, 10, 8, 8, 12, 8, 4, 4, 4, 4, 4);
       return;
     case AOP_IY:
       cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
-      cost2 (3, 23, 18, 12, 0, 12, 6, 7);
+      cost3 (3, 3, -1, 3, 23, 18, 12, 13, -1, 12, -1, 6, 6, 6, 7);
       return;
     case AOP_PAIRPTR:
       if (op->aopu.aop_pairId == PAIR_HL)
         {
-          cost2 (1, 11, 10, 8, 12, 8, 5, 4);
+          cost3 (1, 2, 1, 2, 11, 10, 8, 8, 12, 8, 4, 4, 4, 4, 4);
           return;
         }
       if (op->aopu.aop_pairId == PAIR_IY || op->aopu.aop_pairId == PAIR_IX)
         {
-          cost2 (3, 23, 18, 12, 0, 12, 6, 7);
+          cost3 (3, 3, -1, 3, 23, 18, 12, 13, -1, 12, -1, 6, 6, 6, 7);
           return;
         }
     default:
@@ -1360,7 +1384,7 @@ bit8_cost (const asmop *op)
       cost3 (2, 2, 2, 2, 8, 7, 4, 4, 8, 4, 2, 2, 2, 2, 2);
       return;
     case AOP_STK:
-      cost2 (4, 23, 19, 13, 0, 12, 7, 7);
+      cost3 (4, 3, -1, -1, 23, 19, 13, 14, -1, 12, -1, -1, -1, 7, 7);
       return;
     case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
       cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
@@ -1370,7 +1394,7 @@ bit8_cost (const asmop *op)
       return;
     case AOP_IY:
       cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
-      cost2 (4, 23, 19, 13, 0, 12, 7, 7);
+      cost3 (4, 3, -1, -1, 23, 19, 13, 14, -1, 12, -1, -1, -1, 7, 7);
       return;
     default:
       printf ("bit8_cost op: %d\n", (int) (op->type));
@@ -8170,11 +8194,7 @@ jumpret:
   /* generate a jump to the return label
      if the next is not the return statement */
   if (!(ic->next && ic->next->op == LABEL && IC_LABEL (ic->next) == returnLabel))
-    {
-      if (!regalloc_dry_run)
-        emit2 ("jp !tlabel", labelKey2num (returnLabel->key));
-      cost2 (3, 10, 9, 8, 16, 8, 4, 3);
-    }
+    emitJP (returnLabel, NULL, 1.0f, false);
 }
 
 /*-----------------------------------------------------------------*/
@@ -8196,7 +8216,7 @@ genLabel (const iCode * ic)
 static void
 genGoto (const iCode * ic)
 {
-  emit2 ("jp !tlabel", labelKey2num (IC_LABEL (ic)->key));
+  emitJP (IC_LABEL (ic), NULL, 1.0f, false);
 }
 
 /*-----------------------------------------------------------------*/
@@ -8369,11 +8389,7 @@ genPlusIncr (const iCode *ic)
           else
             emit3_o (A_INC, IC_RESULT (ic)->aop, offset++, 0, 0);
           if (size)
-            {
-              if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (tlbl->key));
-              cost2 (3, 10, 9, 7, 16, 12, 4, 3); // Assume jump is taken (upper bytes are skipped).
-            }
+            emitJP (tlbl, "nz", 1.0f, true);
         }
       regalloc_dry_run_state_scale = 1.0f;
       if (!regalloc_dry_run)
@@ -8427,14 +8443,10 @@ outBitAcc (operand * result)
     }
   else
     {
-      if (!regalloc_dry_run)
-        {
-          emit2 ("jp Z, !tlabel", labelKey2num (tlbl->key));
-          emit2 ("ld a, !immedbyte", 1);
-          emitLabel (tlbl);
-        }
       // Assume that both values are equally likely.
-      cost2 (3, 10, 7.5f, 3.5f, 14.0f, 11.0f, 3.5f, 3.0f);
+      emitJP (tlbl, "z", 0.5f, true);
+      emit2 ("ld a, !one");
+      emitLabel (tlbl);
       cost2 (1,	3.5f, 3.0f, 2.0f, 4.0f, 4.0f, 2.0f, 2.0f);
       outAcc (result);
     }
@@ -9180,9 +9192,7 @@ genPlus (iCode * ic)
           if (!tlbl && !regalloc_dry_run)
             tlbl = newiTempLabel (0);
 
-          if (!regalloc_dry_run)
-            emit2 ("jp NC, !tlabel", labelKey2num (tlbl->key));
-          cost2 (2 + IS_SM83, 12, 8, 5, 12, 12, 3, 3); // Assume branch is taken. Use cost of jr as the peephole optimizer can typically optimize this jp into jr. Do not emit jr directly to still allow jump-to-jump optimization.
+          emitJP (tlbl, "nc", 255.0f / 256.0f, true);
           regalloc_dry_run_state_scale /= 256.0f; // Carry should be rare.
           emit3w_o (A_INC, leftop, i, 0, 0);
           i += 2;
@@ -9199,9 +9209,7 @@ genPlus (iCode * ic)
         {
           if (!tlbl && !regalloc_dry_run)
             tlbl = newiTempLabel (0);
-          if (!regalloc_dry_run)
-            emit2 ("jp NC, !tlabel", labelKey2num (tlbl->key));
-          cost2 (2 + IS_SM83, 12, 8, 5, 12, 12, 3, 3); // Assume branch is taken. Use cost of jr as the peephole optimizer can typically optimize this jp into jr. Do not emit jr directly to still allow jump-to-jump optimization.
+          emitJP (tlbl, "nc", 255.0f / 256.0f, true);
           regalloc_dry_run_state_scale /= 256.0f; // Carry should be rare.
           emit3_o (A_INC, leftop, i, 0, 0);
           i++;
@@ -9704,10 +9712,9 @@ genMinus (const iCode *ic, const iCode *ifx)
           cheapMove (ic->result->aop, 0, ASMOP_A, 0, true);
         }
       if (IC_TRUE (ifx))
-        emit2 ("jp NZ, !tlabel", labelKey2num (IC_TRUE (ifx)->key));
+        emitJP (IC_TRUE (ifx), "nz", 0.5f, true);
       else
-        emit2 ("jp Z, !tlabel", labelKey2num (IC_FALSE (ifx)->key));
-      cost2 (2, 9.5f, 7.0f, 5.0f, 10.0f, 6.0f, 2.5f, 2.5f); // Assume both branches equally likely. Assume jp will be optimized to jr.
+        emitJP (IC_FALSE (ifx), "z", 0.5f, true);
     }
   else
     genSub (ic, ic->result->aop, ic->left->aop, ic->right->aop);
@@ -9995,9 +10002,7 @@ genMultOneChar (const iCode * ic)
       if (!regalloc_dry_run)
         emitLabel (tlbl1);
       emit3w (A_ADD, ASMOP_HL, ASMOP_HL);
-      if (!regalloc_dry_run)
-        emit2 ("jp NC, !tlabel", labelKey2num (tlbl2->key));
-      cost2 (2 + IS_SM83, 9.5f,	7.0f, 5.0f, 10.0f, 11.0f, 2.5f, 2.5f);
+      emitJP (tlbl2, "nc", 0.5f, !IS_SM83);
       regalloc_dry_run_state_scale = 4.0f;
       emit3w (A_ADD, ASMOP_HL, ASMOP_DE);
       emitLabel (tlbl2);
@@ -10541,9 +10546,7 @@ genIfxJump (iCode * ic, char *jval)
         }
     }
   /* Z80 can do a conditional long jump */
-  if (!regalloc_dry_run)
-    emit2 ("jp %s, !tlabel", inst, labelKey2num (jlbl->key));
-  cost2 (3, 10.0f, 7.5f,7.0f, 14.0f, 11.0f, 3.5f, 3.0f); // Assume either way equally likely.
+  emitJP (jlbl, inst, 0.5f, false);
 }
 
 #if DISABLED
@@ -10955,8 +10958,7 @@ fix:
               if (!regalloc_dry_run)
                 {
                   symbol *tlbl = newiTempLabel (NULL);
-                  emit2 (IS_RAB ? "jp LZ, !tlabel" : "jp PO, !tlabel", labelKey2num (tlbl->key));
-                  cost2 (2 + IS_SM83, 12, 8, 5, 12, 12, 3, 3); // Assume no overflow.
+                  emitJP (tlbl, IS_RAB ? "lz" : "po", 1.0f, false);
                   emit2 ("xor a, !immedbyte", 0x80u);
                   cost (2, 0); // Assume no overflow.
                   emitLabelSpill (tlbl);
@@ -11179,9 +11181,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
       if (pushed_hl)
         _pop (PAIR_HL);
 
-      if (!regalloc_dry_run)
-        emit2 ("jp NZ, !tlabel", labelKey2num (lbl->key));
-      cost2 (3, 10.0f, 7.5f, 7.0f, 14.0f,  11.0f, 3.5f, 3.0f); // Assume both branches equally likely, cp not optimzed into jr.
+      emitJP (lbl, "nz", 0.5f, false);
     }
   /* if the right side is a literal then anything goes */
   else if (right->aop->type == AOP_LIT)
@@ -11271,7 +11271,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
 
           // Only emit jump now if there is no following test for 0 (which would just or to a current result in a)
           if (!(next_zero && a_result))
-            emitJP (lbl, "NZ", 0.5f, false);
+            emitJP (lbl, "nz", 0.5f, false);
           offset++;
         }
     }
@@ -11310,9 +11310,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               emit3 (A_CP, ASMOP_A, ASMOP_A);
               emit2 ("sbc hl, %s", _pairs[pair].name);
               cost2 (2, 15, 10, 4, 0, 8, 2, 2);
-              if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (lbl->key));
-              cost2 (3, 10.0f, 7.5f, 7.0f, 14.0f,  11.0f, 3.5f, 3.0f); // Assume both branches equally likely, jp not optimzed into jr.
+              emitJP (lbl, "nz", 0.5f, false);
               spillPair (PAIR_HL);
               offset += 2;
               size--;
@@ -11326,9 +11324,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
           if (right->aop->type == AOP_LIT && byteOfVal (right->aop->aopu.aop_lit, offset) == 0 || right->aop->type == AOP_STL && offset >= 2)
             {
               emit3 (A_OR, ASMOP_A, ASMOP_A);
-              if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (lbl->key));
-              cost2 (3, 10.0f, 7.5f, 7.0f, 14.0f,  11.0f, 3.5f, 3.0f); // Assume both branches equally likely, jp not optimzed into jr.
+              emitJP (lbl, "nz", 0.5f, false);
             }
           else if (right->aop->type == AOP_STL && offset < 2)
             {
@@ -11338,16 +11334,12 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               emit3 (A_SUB, ASMOP_A, offset ? ASMOP_H : ASMOP_L);
               if (!hl_dead)
                 _pop (PAIR_HL);
-              if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (lbl->key));
-              cost2 (3, 10.0f, 7.5f, 7.0f, 14.0f,  11.0f, 3.5f, 3.0f); // Assume both branches equally likely, jp not optimzed into jr.
+              emitJP (lbl, "nz", 0.5f, false);
             }
           else
             {
               emit3_o (A_SUB, ASMOP_A, 0, right->aop, offset);
-              if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (lbl->key));
-              cost2 (3, 10.0f, 7.5f, 7.0f, 14.0f,  11.0f, 3.5f, 3.0f); // Assume both branches equally likely, jp not optimzed into jr.
+              emitJP (lbl, "nz", 0.5f, false);
             }
           offset++;
         }
@@ -11371,9 +11363,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
           cheapMove (ASMOP_A, 0, right->aop, offset, true);
           emit2 ("sub a, %s", _pairs[pair].l);
           cost2 (1, 4, 4, 2, 4, 4, 1, 1);
-          if (!regalloc_dry_run)
-            emit2 ("jp NZ, !tlabel", labelKey2num (lbl->key));
-          cost2 (3, 10.0f, 7.5f, 7.0f, 14.0f,  11.0f, 3.5f, 3.0f); // Assume both branches equally likely, cp not optimzed into jr.
+          emitJP (lbl, "nz", 0.5f, false);
           offset++;
         }
       return pair;
@@ -11451,9 +11441,7 @@ genCmpEq (iCode *ic, iCode *ifx)
                   emit2 ("pop %s", _pairs[pop].name);
                   cost2 (1, 10, 9, 7, 12, 10, 3, 3);
                 }
-              if (!regalloc_dry_run)
-                emit2 ("jp !tlabel", labelKey2num (IC_TRUE (ifx)->key));
-              regalloc_dry_run_cost += 3;
+              emitJP (IC_TRUE (ifx), NULL, 1.0f, false);
               if (!regalloc_dry_run)
                 hl_touched ? emitLabelSpill (tlbl) : emitLabel (tlbl);
               else if (hl_touched)
@@ -13234,9 +13222,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       else
         {
           emit3 (A_DEC, ASMOP_A, 0);
-          if (!regalloc_dry_run)
-            emit2 ("jp NZ, !tlabel", labelKey2num (tlbl->key));
-          cost2 (2, 12, 8, 5, 12, 8, 3, 3); // Assume jump taken, and optimized to jr.
+          emitJP (tlbl, "nz", 1.0f, true);
         }
 
       regalloc_dry_run_state_scale = 1.0f;
@@ -13384,9 +13370,7 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
               else
                 {
                   emit3 (A_DEC, ASMOP_A, 0);
-                  if (!regalloc_dry_run)
-                    emit2 ("jp NZ, !tlabel", labelKey2num (tlbl->key));
-                  cost2 (2, 12, 8, 5, 12, 8, 3, 3); // Assume jump taken, and optimized to jr.
+                  emitJP (tlbl, "nz", 1.0f, true);
                 }
             }
           if (!use_b && !isRegDead (A_IDX, ic))
@@ -14075,9 +14059,7 @@ genLeftShift (const iCode *ic)
     {
       emit2 ("inc %s", countreg == A_IDX ? "a" : regsZ80[countreg].name);
       cost2 (1, 4, 4, 2, 4, 2, 1, 1);
-      if (!regalloc_dry_run)
-        emit2 ("jp !tlabel", labelKey2num (tlbl1->key));
-      cost2 (3, 10, 9, 8, 16, 8, 4, 3);
+      emitJP (tlbl1, NULL, 1.0f, true);
     }
   if (!(shift_by_lit && shiftcount == 1) && !regalloc_dry_run)
     {
@@ -14544,9 +14526,7 @@ genRightShift (const iCode * ic)
     {
       emit2 ("inc %s", regsZ80[countreg].name);
       cost2 (1, 4, 4, 2, 4, 2, 1, 1);
-      if (!regalloc_dry_run)
-        emit2 ("jp !tlabel", labelKey2num (tlbl1->key));
-      cost2 (3, 10, 9, 8, 16, 8, 4, 3);
+      emitJP (tlbl1, NULL, 1.0f, true);
     }
   if (!shift_by_one && !regalloc_dry_run)
     IS_SM83 ? emitLabelSpill (tlbl) : emitLabel (tlbl);
@@ -17544,12 +17524,8 @@ genBuiltInMemcpy (const iCode *ic, int nparams, operand **pparams)
         {
           emit3 (A_LD, ASMOP_A, ASMOP_B);
           emit3 (A_OR, ASMOP_A, ASMOP_C);
-          if (!regalloc_dry_run)
-            {
-              tlbl = newiTempLabel (0);
-              emit2 ("jp Z, !tlabel", labelKey2num (tlbl->key));
-            }
-          cost2 (3, 10, 6, 7, 12, 10, 3, 3); // For cycle cost, assume that n is non-zero.
+          tlbl = regalloc_dry_run ? NULL : newiTempLabel (NULL);
+          emitJP (tlbl, "z", 0.0f, true);
         }
       if ((IS_R2K || IS_R2KA) && !to_from_stack && optimize.codeSpeed && n != UINT_MAX) // Work around Rabbit 2000 to Rabbit 3000 ldir wait state bug, but care for speed
         {
