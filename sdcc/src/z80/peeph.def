@@ -2826,14 +2826,6 @@ replace restart {
 } if canSplitReg(%1 %0 %0)
 
 replace restart {
-	ld	a, %1
-	push	af
-} by {
-	push	%2
-	; common peephole 177a replace pushed register pair
-} if notUsed('a'), canJoinRegs(%1 '' %2), canSplitReg(%2 %3), same(%3 %1)
-
-replace restart {
 	push	%1
 	ld	(%1), #%2
 } by {

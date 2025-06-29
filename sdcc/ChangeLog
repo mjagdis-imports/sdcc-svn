@@ -1,5 +1,15 @@
 2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+	* src/z80/peeph.def:
+	  Remove broken peephole optimizer rule 177a.
+	* src/z80/peep.c:
+	  Improve peephole optimizer ez80/tlcs90 lea/lda handling and z80n shift handling.
+
+2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/ralloc2.cc,
 	  src/z80/gen.h,
 	  src/z80/gen.c,

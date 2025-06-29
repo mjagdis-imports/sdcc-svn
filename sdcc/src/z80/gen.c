@@ -394,43 +394,47 @@ cost2 (unsigned int bytes, unsigned int z80_states /* also z80n */, unsigned int
     wassert (0);
 }
 
-static void
-cost3 (unsigned int z80_bytes /* also most other ports */, unsigned int tlcs90_bytes, unsigned int tlcs870_bytes, unsigned int tlcs870c_bytes,
+static void // Count costs for register allocator.
+cost3 (int z80_bytes /* also most other ports */, int tlcs90_bytes, int tlcs870_bytes, int tlcs870c_bytes,
   float z80_states /* also z80n */, float z180_states, float r4k_clocks, float r6k_clocks, float sm83_cycles, float tlcs90_states, float tlcs870_cycles, float tlcs870c_cycles, float tlcs870c1_cycles, float ez80_cycles, float r800_cycles)
 {
+  int bytes = -1;
+  float states = -1.0;
   if (IS_TLCS90)
-    regalloc_dry_run_cost_bytes += tlcs90_bytes;
+    bytes = tlcs90_bytes;
   else if (IS_TLCS870)
-    regalloc_dry_run_cost_bytes += tlcs870_bytes;
+    bytes = tlcs870_bytes;
   else if (IS_TLCS870C || IS_TLCS870C1)
-    regalloc_dry_run_cost_bytes += tlcs870c_bytes;
+    bytes = tlcs870c_bytes;
   else
-    regalloc_dry_run_cost_bytes += z80_bytes;
+    bytes = z80_bytes;
 
   if (IS_Z80 || IS_Z80N)
-    regalloc_dry_run_cost_states += z80_states * regalloc_dry_run_state_scale;
+    states += z80_states;
   else if (IS_Z180)
-    regalloc_dry_run_cost_states += z180_states * regalloc_dry_run_state_scale;
+    states += z180_states;
   else if (IS_R2K || IS_R2KA || IS_R3KA || IS_R4K)
-    regalloc_dry_run_cost_states += r4k_clocks * regalloc_dry_run_state_scale;
+    states += r4k_clocks;
   else if (IS_R5K || IS_R6K)
-    regalloc_dry_run_cost_states += r6k_clocks * regalloc_dry_run_state_scale;
+    states += r6k_clocks;
   else if (IS_SM83)
-    regalloc_dry_run_cost_states += sm83_cycles * regalloc_dry_run_state_scale;
+    states += sm83_cycles;
   else if(IS_TLCS90)
-    regalloc_dry_run_cost_states += tlcs90_states * regalloc_dry_run_state_scale;
+    states += tlcs90_states;
   else if(IS_TLCS870)
-    regalloc_dry_run_cost_states += tlcs870_cycles * regalloc_dry_run_state_scale;
+    states += tlcs870_cycles;
   else if(IS_TLCS870C)
-    regalloc_dry_run_cost_states += tlcs870c_cycles * regalloc_dry_run_state_scale;
+    states += tlcs870c_cycles;
   else if(IS_TLCS870C1)
-    regalloc_dry_run_cost_states += tlcs870c1_cycles * regalloc_dry_run_state_scale;
+    states += tlcs870c1_cycles;
   else if(IS_EZ80)
-    regalloc_dry_run_cost_states += ez80_cycles * regalloc_dry_run_state_scale;
+    states += ez80_cycles;
   else if(IS_R800)
-    regalloc_dry_run_cost_states += r800_cycles * regalloc_dry_run_state_scale;
-  else
-    wassert (0);
+    states += r800_cycles;
+
+  wassert (bytes >= 0 && states >= 0.0f);
+  regalloc_dry_run_cost_bytes += bytes;
+  regalloc_dry_run_cost_states += states * regalloc_dry_run_state_scale;
 }
 
 /*-----------------------------------------------------------------*/
@@ -611,6 +615,8 @@ aopInReg (const asmop *aop, int offset, short rIdx)
       return (aopInReg (aop, offset, L_IDX) && aopInReg (aop, offset + 1, H_IDX));
     case IY_IDX:
       return (aopInReg (aop, offset, IYL_IDX) && aopInReg (aop, offset + 1, IYH_IDX));
+    case JK_IDX:
+      return (aopInReg (aop, offset, K_IDX) && aopInReg (aop, offset + 1, J_IDX));
     default:
       return (aop->regs[rIdx] == offset);
     }
@@ -952,7 +958,7 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
             {
               wassert (HAS_IYL_INST);
               if (count)
-                cost2 (2, 8, 0, 0, 0, 0, 2, 2);
+                cost3 (2, -1, -1, -1, 8, -1, -1, -1, -1, -1, -1, -1, -1, 2, 2);
               return (2);
             }
         case AOP_DUMMY:
@@ -974,7 +980,7 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
             {
               wassert (HAS_IYL_INST);
               if (count)
-                cost2 (3, 11, 0, 0, 0, 0, 2, 3); // ld ir, #n
+                cost3 (3, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3); // ld ir, #n
               return (3);
             }
           else
@@ -986,50 +992,64 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
         case AOP_SFR:
           if (count)
             {
-              cost2 (2, 11, 9, 0, 0, 0, 3, 3); // in a, (n)
+              if (IS_SM83)
+                cost (2, 12); // ldh
+              else if (IS_RAB)
+                cost (5, 13); // ioi; ld a, (nn); nop
+              else
+                cost3 (2, -1, -1, -1, 11, 9, -1, -1, -1, -1, -1, -1, -1, 3, 3); // in a, (n)
               if (!aopInReg (op1, 0, A_IDX) && op1type != AOP_DUMMY)
-                cost2 (1, 4, 4, 2, 4, 2, 1, 1); // ld r, a
+                cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1); // ld r, a
             }
           return ((aopInReg (op1, 0, A_IDX) || op1type == AOP_DUMMY) ? 2 : 3);
         case AOP_STK:
           if (count)
-            cost3 (3, 3, 0, 3, 19, 14, 9, 10, 0, 10, 0, 5, 5, 4, 5); // ld r, d(ix)
+            cost3 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5); // ld r, d(ix)
           return (3);
+        case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
+          cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
         case AOP_HL:
           if (count)
             {
-              cost2 (3, 10, 9, 6, 12, 6, 3, 3); // ld hl, #nn
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2); // ld r, (hl)
+              cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
+              if (aopInReg (op1, 0, A_IDX))
+                cost3 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2); // ld a, (hl)
+              else
+                cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2); // ld r, (hl)
             }
           return (4);
-        case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
         case AOP_IY:
           if (count)
             {
-              cost2 (4, 14, 12, 8, 0, 6, 4, 4); // ld iy, #nn
-              cost2 (3, 19, 14, 9, 0, 10, 4, 5); // ld r, d(iy)
+              cost3 (4, 3, -1, 3, 14, 12, 8, 8, 0, 6, -1, 3, 3, 4, 4); // ld iy, #nn
+              cost3 (3, 3, 0, 3, 19, 14, 9, 10, 0, 10, 0, 5, 5, 4, 5); // ld r, d(iy)
             }
           return (7);
         case AOP_PAIRPTR:
           if (op2->aopu.aop_pairId == PAIR_HL)
             {
               if (count)
-                cost2 (1, 7, 6, 5, 8, 6, 2, 2); // ld r, (hl)
+                {
+                  if (aopInReg (op1, 0, A_IDX))
+                    cost3 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2); // ld a, (hl)
+                  else
+                    cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2); // ld r, (hl)
+                }
               return (1);
             }
           if (op2->aopu.aop_pairId == PAIR_IY || op2->aopu.aop_pairId == PAIR_IX)
             {
               if (count)
-                cost2 (3, 19, 14, 9, 0, 10, 4, 5); // ld r, d(ix)
+                cost3 (3, 3, 0, 3, 19, 14, 9, 10, 0, 10, 0, 5, 5, 4, 5); // ld r, d(iy)
               return (3);
             }
           if (op2->aopu.aop_pairId == PAIR_BC || op2->aopu.aop_pairId == PAIR_DE)
             {
               if (count)
                 {
-                  cost2 (1, 7, 6, 6, 8, 6, 2, 2); // ld a, (rr)
+                  cost3 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2); // ld a, (rr)
                   if (!aopInReg (op1, 0, A_IDX))
-                    cost2 (1, 4, 4, 2, 4, 2, 1, 1); // ld r, a
+                    cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1); // ld r, a
                 }
               return ((aopInReg (op1, 0, A_IDX) || op1type == AOP_DUMMY) ? 1 : 2);
             }
@@ -1039,7 +1059,14 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
         }
     case AOP_SFR:
       if (count)
-        cost2 (2, 11, 10, 0, 0, 0, 3, 3); // out (n), a
+        {
+          if (IS_SM83)
+            cost (2, 12); // ldh
+          else if (IS_RAB)
+            cost (5, 14); // ioi; ld (nn), a; nop
+          else
+            cost3 (2, -1, -1, -1, 11, 10, -1, -1, -1, -1, -1, -1, -1, 3, 3); // out (n), a
+        }
       if (aopInReg (op1, 0, A_IDX))
         return (2);
       else
@@ -1069,42 +1096,48 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
         case AOP_IMMD:
         case AOP_LIT:
           if (count)
-            cost3 (4, 4, 0, 4, 19, 15, 11, 12, 0, 12, 0, 6, 5, 5, 5); // ld d(ix), n
+            cost3 (4, 4, -1, 4, 19, 15, 11, 12, -1, 12, -1, 6, 5, 5, 5); // ld d(ix), n
           return (4);
         case AOP_SFR:          /* 2 from in a, (...) */
           if (count)
             {
-              cost2 (2, 11, 9, 0, 0, 0, 3, 3); // in a, (n)
-              cost2 (3, 19, 15, 10, 0, 10, 4, 5); // ld d(ix), a
+              if (IS_SM83)
+                cost (2, 12); // ldh
+              else if (IS_RAB)
+                cost (5, 13); // ioi; ld a, (nn); nop
+              else
+                cost3 (2, -1, -1, -1, 11, 9, -1, -1, -1, -1, -1, -1, -1, 3, 3); // in a, (n)
+              cost3 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5); // ld d(ix), a
             }
           return (5);
         case AOP_STK:
           if (count)
             {
-              cost2 (3, 19, 14, 9, 0, 10, 4, 5); // ld a, d(ix)
-              cost2 (3, 19, 15, 10, 0, 10, 4, 5); // ld d(ix), a
+              cost3 (3, 3, -1, 3, 19, 4, 9, 10, -1, 10, -1, 5, 5, 4, 5); // ld a, d(ix)
+              cost3 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5); // ld d(ix), a
             }
           return (6);
+        case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
+          cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
         case AOP_HL:
           if (count)
             {
-              cost2 (3, 10, 9, 6, 12, 6, 3, 3); // ld hl, nn
-              cost2 (1, 7, 6, 6, 8, 6, 2, 2); // ld a, (hl)
-              cost2 (3, 19, 15, 10, 0, 10, 4, 5); // ld d(ix), a
+              cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
+              cost3 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2); // ld a, (hl)
+              cost3 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5); // ld d(ix), a
             }
           return (7);
-        case AOP_EXSTK:
         case AOP_IY:
           if (count)
             {
-              cost2 (4, 14, 12, 8, 0, 6, 4, 4); // ld iy, #nn
-              cost2 (3, 19, 14, 9, 0, 10, 4, 5); // ld a, d(iy)
-              cost2 (3, 19, 15, 10, 0, 10, 4, 5); // ld d(ix), a
+              cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
+              cost3 (3, 3, -1, 3, 19, 4, 9, 10, -1, 10, -1, 5, 5, 4, 5); // ld a, d(iy)
+              cost3 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5); // ld d(ix), a
             }
           return (10);
         case AOP_PAIRPTR:
           if (count)
-            cost2 (3, 19, 15, 10, 0, 10, 4, 5); // ld d(ix), a
+            cost3 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5); // ld d(ix), a
           return (3 + ld_cost (ASMOP_A, 0, op2, offset2, count));
         default:
           printf ("ld_cost op1: AOP_STK, op2: %d\n", (int) (op2type));
@@ -1112,48 +1145,59 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
         }
     case AOP_HL:
       if (count)
-        cost2 (3, 10, 9, 6, 12, 6, 3, 3); // ld hl, #nn
+        cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
       switch (op2type)
         {
         case AOP_REG:
         case AOP_DUMMY:
           if (count)
-            cost2 (1, 7, 7, 6, 8, 6, 2, 2); // ld (hl), r
+            {
+              if (aopInReg (op1, 0, A_IDX))
+                cost3 (1, 2, 1, 1, 7, 7, 6, 6, 8, 6, 2, 2, 2, 2, 2); // ld (hl), a
+              else
+                cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2); // ld (hl), r
+            }
           return (4);
         case AOP_IMMD:
         case AOP_LIT:
           if (count)
-            cost2 (2 + IS_TLCS90, 10, 9, 7, 12, 8, 3, 3); // ld (hl), n
+            cost3 (2, 3, 2, 2, 10, 9, 7, 7, 12, 8, 3, 4, 3, 3, 3); // ld (hl), n
           return (5 + IS_TLCS90);
         case AOP_STK:
           if (count)
             {
-              cost2 (3, 19, 14, 9, 0, 10, 4, 5); // ld a, d(ix)
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2); // ld (hl), a
+              cost3 (3, 3, -1, 3, 19, 4, 9, 10, -1, 10, -1, 5, 5, 4, 5); // ld a, d(ix)
+              cost3 (1, 2, 1, 1, 7, 7, 6, 6, 8, 6, 2, 2, 2, 2, 2); // ld (hl), a
             }
           return (7);
         case AOP_SFR:
           if (count)
             {
-              cost2 (2, 11, 9, 0, 0, 0, 3, 3); // in a, (n)
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2); // ld (hl), a
+              if (IS_SM83)
+                cost (2, 12); // ldh
+              else if (IS_RAB)
+                cost (5, 13); // ioi; ld a, (nn); nop
+              else
+                cost3 (2, -1, -1, -1, 11, 9, -1, -1, -1, -1, -1, -1, -1, 3, 3); // in a, (n)
+              cost3 (1, 2, 1, 1, 7, 7, 6, 6, 8, 6, 2, 2, 2, 2, 2); // ld (hl), a
             }
           return (6);
+        case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
+          cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
         case AOP_HL:
           if (count)
             {
-              cost2 (3, 10, 9, 6, 12, 6, 3, 3); // ld hl, #nn
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2); // ld a, (hl)
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2); // ld (hl), a
+              cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
+              cost3 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2); // ld a, (hl)
+              cost3 (1, 2, 1, 1, 7, 7, 6, 6, 8, 6, 2, 2, 2, 2, 2); // ld (hl), a
             }
           return (8);
-        case AOP_EXSTK:
         case AOP_IY:
           if (count)
             {
-              cost2 (4, 14, 12, 8, 0, 6, 4, 4); // ld iy, #nn
-              cost2 (3, 19, 14, 9, 0, 10, 4, 5); // ld a, d(iy)
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2); // ld (hl), a
+              cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
+              cost3 (3, 3, -1, 3, 19, 4, 9, 10, -1, 10, -1, 5, 5, 4, 5); // ld a, d(iy)
+              cost3 (1, 2, 1, 1, 7, 7, 6, 6, 8, 6, 2, 2, 2, 2, 2); // ld (hl), a
             }
           return (11);
         default:
@@ -1170,13 +1214,20 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
         case AOP_REG:
           if (op1->aopu.aop_pairId == PAIR_HL)
             {
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+              if (count)
+                {
+                  if (aopInReg (op1, 0, A_IDX))
+                    cost3 (1, 2, 1, 1, 7, 7, 6, 6, 8, 6, 2, 2, 2, 2, 2); // ld (hl), a
+                  else
+                    cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2); // ld (hl), r
+                }
               return (1);
             }
           else if (op1->aopu.aop_pairId == PAIR_IY || op1->aopu.aop_pairId == PAIR_IX)
             {
-               cost2 (3, 19, 15, 9, 0, 10, 4, 5);
-               return (3);
+              if (count)
+                cost3 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5); // ld d(ix), r
+              return (3);
             }
           else
             wassert (0);
@@ -1184,12 +1235,14 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
         case AOP_LIT:
           if (op1->aopu.aop_pairId == PAIR_HL)
             {
-              cost2 (2, 10, 9, 7, 12, 8, 3, 3);
+              if (count)
+                cost3 (2, 3, 2, 2, 10, 9, 7, 7, 12, 8, 3, 4, 3, 3, 3); // ld (hl), n
               return (2);
             }
           else if (op1->aopu.aop_pairId == PAIR_IY || op1->aopu.aop_pairId == PAIR_IX)
             {
-               cost2 (4, 19, 15, 11, 0, 12, 5, 5);
+              if (count)
+                 cost3 (4, 4, -1, 4, 19, 15, 11, 12, -1, 12, -1, 6, 5, 5, 5); // ld d(ix), n
                return (4);
             }
           else
@@ -1226,24 +1279,23 @@ op8_cost (const asmop *op, int offset)
       cost3 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
       return;
     case AOP_STK:
-      if (!IS_SM83)
-        {
-          cost2 (3, 19, 15, 9, 0, 10, 4, 5);
-          return;
-        }
-      cost (1, 8); // add hl, sp
-    case AOP_HL:
-      cost2 (3 + 1, 10 + 7, 9 + 6, 6 + 5, 12 + 8, 6 + 6, 3 + 2, 3 + 2);
+      cost3 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5);
       return;
-    case AOP_IY:               /* 4 from ld iy, #... */
-    case AOP_EXSTK:            /* 4 from ld iy, #... */
-      cost2 (4 + 3, 12 + 19, 12 + 15, 8 + 9, 0 + 0, 6 + 10, 4 + 4, 4 + 5);
+    case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
+      cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
+    case AOP_HL:
+      cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
+      cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+      return;
+    case AOP_IY:
+      cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
+      cost2 (3, 19, 15, 9, 0, 10, 4, 5);
       return;
     case AOP_PAIRPTR:
       if (op->aopu.aop_pairId == PAIR_HL)
         cost2 (1, 7, 6, 5, 8, 6, 2, 2);
       else if (op->aopu.aop_pairId == PAIR_IY || op->aopu.aop_pairId == PAIR_IX)
-        cost2 (3, 19, 15, 9, 0, 10, 4, 5);
+        cost3 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5);
       else
         wassert (0);
       return;
@@ -1269,18 +1321,17 @@ incdec_cost (const asmop *op, int offset)
       cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1);
       return;
     case AOP_STK:
-      if (!IS_SM83)
-        {
-          cost2 (3, 23, 18, 12, 0, 12, 6, 7);
-          return;
-        }
-      cost (1, 8); // add hl, sp
-    case AOP_HL:
-      cost2 (3 + 1, 10 + 11, 9 + 10, 6 + 8, 12 + 12, 6 + 8, 3 + 5, 3 + 4);
+      cost2 (3, 23, 18, 12, 0, 12, 6, 7);
       return;
-    case AOP_IY:               /* 4 from ld iy, #... */
-    case AOP_EXSTK:            /* 4 from ld iy, #... */
-      cost2 (4 + 3, 14 + 23, 12 + 18, 8 + 12, 0 + 0, 6 + 12, 4 + 6, 4 + 7);
+    case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
+      cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
+    case AOP_HL:
+      cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
+      cost2 (1, 11, 10, 8, 12, 8, 5, 4);
+      return;
+    case AOP_IY:
+      cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
+      cost2 (3, 23, 18, 12, 0, 12, 6, 7);
       return;
     case AOP_PAIRPTR:
       if (op->aopu.aop_pairId == PAIR_HL)
@@ -1309,18 +1360,17 @@ bit8_cost (const asmop *op)
       cost3 (2, 2, 2, 2, 8, 7, 4, 4, 8, 4, 2, 2, 2, 2, 2);
       return;
     case AOP_STK:
-      if (!IS_SM83)
-        {
-          cost2 (4, 23, 19, 13, 0, 12, 7, 7);
-          return;
-        }
-      cost (1, 8); // add hl, sp
-    case AOP_HL:               /* 3 from ld hl, #... */
-      cost2 (3 + 2, 10 + 15, 9 + 13, 6 + 10, 12 + 16, 6 + 8, 3 + 5, 3 + 5);
+      cost2 (4, 23, 19, 13, 0, 12, 7, 7);
       return;
-    case AOP_IY:               /* 4 from ld iy, #... */
-    case AOP_EXSTK:            /* 4 from ld iy, #... */
-      cost2 (4 + 4, 14 + 23, 12 + 19, 8 + 13, 0 + 0, 6 + 12, 4 + 7, 4 + 7);
+    case AOP_EXSTK: // Approximation. Don't really know if this is really exstk at this point, anyway.
+      cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1); // add hl, sp
+    case AOP_HL:
+      cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3); // ld hl, #nn
+      cost3 (2, 2, -1, -1, 15, 6, 10, 10, 16, 8, -1, -1, -1, 5, 5);
+      return;
+    case AOP_IY:
+      cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4); // ld iy, #nn
+      cost2 (4, 23, 19, 13, 0, 12, 7, 7);
       return;
     default:
       printf ("bit8_cost op: %d\n", (int) (op->type));
@@ -1344,16 +1394,14 @@ emit3Cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, i
     case A_RLCA:
     case A_RRA:
     case A_RRCA:
-      wassert (!IS_TLCS870C && !IS_TLCS870C1);
-      cost3 (1, 1, 1, 0, 4, 3, 2, 2, 4, 2, 1, 0, 0, 1, 1);
+      cost3 (1, 1, 1, -1, 4, 3, 2, 2, 4, 2, 1, -1, -1, 1, 1);
       return;
     case A_NEG:
-      cost2 (2, 8, 6, 4, 0, 2, 2, 2);
+      cost3 (2, 1, -1, -1, 8, 6, 4, 13, 2, 2, -1, -1, 2, 2, 2);
       return;
     case A_RLD:
     case A_RRD:
-      wassert (!IS_RAB);
-      cost3 (2, 2, 2, 2, 18, 16, 0, 0, 0, 12, 7, 7, 8, 5, 5);
+      cost3 (2, 2, 2, 2, 18, 16, -1, -1, -1, 12, 7, 7, 8, 5, 5);
       return;
     case A_LD:
       ld_cost (op1, offset1, op2, offset2, true);
@@ -1361,7 +1409,7 @@ emit3Cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, i
     case A_LDD:
     case A_LDI:
       wassert (!IS_SM83 && !IS_TLCS870 && !IS_TLCS870C && !IS_TLCS870C1);
-      cost3 (2, 2, 0, 0, 16, 12, 10, 10, 0, 14, 0, 0, 0, 5, 4);
+      cost3 (2, 2, -1, -1, 16, 12, 10, 10, -1, 14, -1, -1, -1, 5, 4);
       return;
     case A_LDF:
       wassert (IS_R4K || IS_R5K || IS_R6K);
@@ -1378,7 +1426,7 @@ emit3Cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, i
       if (IS_TLCS && !aopInReg (op1, offset1, A_IDX) && (op2->type == AOP_LIT || op2->type == AOP_IMMD))
         {
           if (op1->type == AOP_REG)
-            cost3 (0, 3, 3, 3, 0, 0, 0, 0, 0, 6, 3, 3, 3, 0, 0);
+            cost3 (-1, 3, 3, 3, -1, -1, -1, -1, -1, 6, 3, 3, 3, -1, -1);
           else if (op1->type == AOP_DIR && !IS_TLCS870)
             cost (5, 7 + IS_TLCS90 * 7);
           else
@@ -1405,7 +1453,7 @@ emit3Cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, i
       if (aopInReg (op1, offset1, A_IDX) && IS_TLCS870)
         cost (1, 3);
       else
-        cost3 (2, 0, 2, 2, 8, 0, 0, 0, 8, 0, 4, 4, 7, 0, 0);
+        cost3 (2, -1, 2, 2, 8, -1, -1, -1, 8, -1, 4, 4, 7, -1, -1);
       return;
     default:
       wassertl (0, "Tried get cost for unknown instruction");
@@ -1424,21 +1472,21 @@ emit3wCost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, 
     case A_DEC:
       wassert (!op2);
       if (aopInReg (op1, offset1, IY_IDX))
-        cost3 (2, 1, 0, 1, 10, 7, 4, 4, 0, 4, 0, 2, 2, 2, 2);
+        cost3 (2, 1, -1, 1, 10, 7, 4, 4, -1, 4, -1, 2, 2, 2, 2);
       else
         cost3 (1, 1, 1,	1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
       return;
     case A_ADD:
       if (aopInReg (op1, offset1, IY_IDX) && op2->type == AOP_REG)
-        cost3 (2, 2, 0, 2, 15, 10, 4, 4, 0, 8, 0, 4, 3, 2, 2);
+        cost3 (2, 2, -1, 2, 15, 10, 4, 4, -1, 8, -1, 4, 3, 2, 2);
       else if (op2->type == AOP_LIT || op2->type == AOP_IMMD)
-        cost3 (0, 3, 0, 4, 0, 0, 0, 0, 0, 6, 0, 4, 4, 0, 0);
+        cost3 (-1, 3, -1, 4, -1, -1, -1, -1, -1, 6, -1, 4, 4, -1, -1);
       else
-        cost3 (1, 2, 0, 2, 11, 7, 2, 2, 8, 8, 0, 4, 3, 1, 1);
+        cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1);
       return;
     case A_ADC:
     case A_SBC:
-      cost3 (2, 2, 0, 2, 15, 10, 4, 4, 0, 8, 0, 4, 3, 2, 2);
+      cost3 (2, 2, -1, 2, 15, 10, 4, 4, 0, 8, -1, 4, 3, 2, 2);
       return;
     case A_AND:
     case A_OR:
@@ -1446,29 +1494,29 @@ emit3wCost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, 
       if (IS_RAB && aopInReg (op1, offset1, IY_IDX))
         cost (2, 4);
       else if (op2->type == AOP_LIT || op2->type == AOP_IMMD)
-        cost3 (0, 3, 0, 4, 0, 0, 0, 0, 0, 6, 0, 4, 4, 0, 0);
+        cost3 (-1, 3, -1, 4, -1, -1, -1, -1, -1, 6, -1, 4, 4, -1, -1);
       else
-        cost3 (1, 2, 0, 2, 0, 0, 2, 2, 0, 8, 0, 4, 3, 0, 0);   
+        cost3 (1, 2, -1, 2, -1, -1, 2, 2, -1, 8, -1, 4, 3, -1, -1);   
       return;
     case A_EX:
       if (aopInReg (op1, offset1, DE_IDX))
-        cost3 (1, 1, 2, 2, 4, 3, 2, 2, 0, 2, 3, 3, 3, 1, 1);
+        cost3 (1, 1, 2, 2, 4, 3, 2, 2, -1, 2, 3, 3, 3, 1, 1);
       else // Rabbit 4000 ex bc, hl and ex jk, hl.
         cost (2, 4);
       return;
     case A_LD:
       if (op2->type == AOP_LIT || op2->type == AOP_IMMD)
         if (aopInReg (op1, offset1, IY_IDX))
-          cost2 (4, 14, 12, 8, 0, 6, 4, 4);
+          cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4);
         else
-          cost2 (3, 10, 9, 6, 12, 6, 3, 3);
+          cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3);
       else
         wassertl (0, "Tried get cost for 16-bit ld with unknown right operand");
       return;
     case A_POP:
       wassert (!op2);
       if (aopInReg (op1, offset1, IY_IDX))
-        cost3 (2, 1, 0, 2, 14, 12, 9, 9, 0, 10, 0, 5, 5, 4, 5);
+        cost3 (2, 1, -1, 2, 14, 12, 9, 9, -1, 10, -1, 5, 5, 4, 5);
       else
         cost3 (1, 1, 2, 1, 10, 9, 7, 7, 12, 10, 5, 4, 4, 3, 4);
       return;
@@ -1477,10 +1525,10 @@ emit3wCost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, 
       if (op1->type == AOP_LIT || op1->type == AOP_IMMD)
         {
           wassert (IS_Z80N || IS_R4K || IS_R5K || IS_R6K);
-          cost3 (4, 0, 0, 0, 23, 0, 15, 16, 0, 0, 0, 0, 0, 0, 0);
+          cost3 (4, -1, -1, -1, 23, -1, 15, 16, -1, -1, -1, -1, -1, -1, -1);
         }
       else if (aopInReg (op1, offset1, IY_IDX))
-        cost3 (2, 1, 0, 2, 15, 13, 12, 13, 0, 8, 0, 4, 4, 4, 5);
+        cost3 (2, 1, -1, 2, 15, 13, 12, 13, -1, 8, -1, 4, 4, 4, 5);
       else
         cost3 (1, 1, 2, 1, 11, 11, 10, 11, 16, 8, 4, 3, 3, 3, 4);
       return;
@@ -1757,7 +1805,7 @@ _push (PAIR_ID pairId)
   if (pairId == PAIR_IX || pairId == PAIR_IY)
     {
       wassert (!IS_SM83 && !IS_TLCS870);
-      cost3 (2, 1, 0, 2, 15, 13, 12, 13, 0, 8, 0, 4, 4, 4, 5);
+      cost3 (2, 1, -1, 2, 15, 13, 12, 13, -1, 8, -1, 4, 4, 4, 5);
     }
   else
     cost3 (1, 1, 2, 1, 11, 11, 10, 11, 16, 8, 4, 3, 3, 3, 4);
@@ -1773,7 +1821,7 @@ _pop (PAIR_ID pairId)
       if (pairId == PAIR_IX || pairId == PAIR_IY)
         {
           wassert (!IS_SM83 && !IS_TLCS870);
-  	  cost3 (2, 1, 0, 2, 14, 12, 9, 9, 0, 10, 0, 5, 5, 4, 5);
+  	  cost3 (2, 1, -1, 2, 14, 12, 9, 9, -1, 10, -1, 5, 5, 4, 5);
         }
       else
   	cost3 (1, 1, 2, 1, 10, 9, 7, 7, 12, 10, 5, 4, 4, 3, 4);
@@ -1804,9 +1852,9 @@ genMovePairPair (PAIR_ID srcPair, PAIR_ID dstPair)
       else
         {
           emit2 ("ld %s, %s", _pairs[dstPair].l, _pairs[srcPair].l);
-          cost2 (1, 4, 4, 2, 4, 4, 1, 1);
+          cost3 (1, 2, 2, 2, 4, 4, 2, 2, 4, 4, 2, 1, 2, 1, 1);
           emit2 ("ld %s, %s", _pairs[dstPair].h, _pairs[srcPair].h);
-          cost2 (1, 4, 4, 2, 4, 4, 1, 1);
+          cost3 (1, 2, 2, 2, 4, 4, 2, 2, 4, 4, 2, 1, 2, 1, 1);
         }
       break;
     default:
@@ -1860,10 +1908,9 @@ aopForSym (const iCode *ic, symbol *sym, bool requires_a)
          Normally everything is AOP_STK, but for offsets of < -128 or
          > 127 on the Z80 an extended stack pointer is used.
        */
-      if (!IS_SM83 && (_G.omitFramePtr || sym->stack < INT8MIN || sym->stack > (int) (INT8MAX - getSize (sym->type))))
+      if (IS_SM83 || IS_TLCS870 || (_G.omitFramePtr || sym->stack < INT8MIN || sym->stack > (int) (INT8MAX - getSize (sym->type))))
         {
-          emitDebug ("; AOP_EXSTK for %s, _G.omitFramePtr %d, sym->stack %d, size %d", sym->rname, (int) (_G.omitFramePtr),
-                     sym->stack, getSize (sym->type));
+          // emitDebug ("; AOP_EXSTK for %s, _G.omitFramePtr %d, sym->stack %d, size %d", sym->rname, (int) (_G.omitFramePtr), sym->stack, getSize (sym->type));
           sym->aop = aop = newAsmop (AOP_EXSTK);
         }
       else
@@ -2264,7 +2311,7 @@ aopOp (operand *op, const iCode *ic, bool result, bool requires_a)
       /* On-stack for dry run. */
       if (sym->nRegs && regalloc_dry_run)
         {
-          sym->aop = op->aop = aop = newAsmop (_G.omitFramePtr ? AOP_EXSTK : AOP_STK);
+          sym->aop = op->aop = aop = newAsmop ((_G.omitFramePtr || IS_SM83 || IS_TLCS870) ? AOP_EXSTK : AOP_STK);
           aop->size = getSize (sym->type);
           if (!result)
             aop->valinfo = getOperandValinfo (ic, op);
@@ -3403,11 +3450,11 @@ static void pointPairToAop (PAIR_ID pairId, const asmop *aop, int offset)
 {
   switch (aop->type)
     {
-    case AOP_EXSTK:
-      wassertl (!IS_SM83, "The SM83 doesn't have an extended stack");
-
     case AOP_STK:
-      ; int abso = aop->aopu.aop_stk + offset + _G.stack.offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0);
+      wassertl (!IS_SM83 && !IS_TLCS870, "The SM83 and TLCS-870 don't have a non-extended stack");
+
+    case AOP_EXSTK:
+      int abso = aop->aopu.aop_stk + offset + _G.stack.offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0);
 
       if ((_G.pairs[pairId].last_type == AOP_STK || _G.pairs[pairId].last_type == AOP_EXSTK) && abs (_G.pairs[pairId].offset - abso) < (_G.preserveCarry ? 5 : 3))
         adjustPair (_pairs[pairId].name, &_G.pairs[pairId].offset, abso);
@@ -3454,15 +3501,13 @@ setupPair (PAIR_ID pairId, asmop *aop, int offset)
 
     case AOP_HL:
       wassertl (pairId == PAIR_HL, "AOP_HL must be in HL");
-
       fetchLitPair (pairId, aop, offset, true, false);
       _G.pairs[pairId].offset = offset;
       break;
 
     case AOP_EXSTK:
-      wassertl (!IS_SM83, "The SM83 doesn't have an extended stack");
+      wassert (!IS_SM83 && !IS_TLCS870 && !IY_RESERVED || pairId != PAIR_IY);
       wassertl (pairId == PAIR_IY || pairId == PAIR_HL, "The Z80 extended stack must be in IY or HL");
-
       {
         int offset = aop->aopu.aop_stk + _G.stack.offset;
 
@@ -3493,7 +3538,7 @@ setupPair (PAIR_ID pairId, asmop *aop, int offset)
 
     case AOP_STK:
     {
-      /* Doesnt include _G.stack.pushed */
+      /* Doesn't include _G.stack.pushed */
       int abso = aop->aopu.aop_stk + offset + _G.stack.offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0);
 
       assert (pairId == PAIR_HL);
@@ -3667,9 +3712,8 @@ aopGet (asmop *aop, int offset, bool bit16)
           break;
 
         case AOP_EXSTK:
-          if (!IY_RESERVED)
+          if (!IY_RESERVED && !IS_SM83 && !IS_TLCS870)
             {
-              wassert (!IS_SM83);
               setupPair (PAIR_IY, aop, offset);
               dbuf_tprintf (&dbuf, "!*iyx", offset);
               break;
@@ -3679,7 +3723,6 @@ aopGet (asmop *aop, int offset, bool bit16)
           if (IS_TLCS90) // Try to use (sp) addressing mode.
             {
               int sp_offset = aop->aopu.aop_stk + offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + _G.stack.pushed + _G.stack.offset;
-
               if (!sp_offset)
                 {
                   dbuf_tprintf (&dbuf, "(sp)");
@@ -3815,7 +3858,6 @@ aopPut (asmop *aop, const char *s, int offset)
       wassertl (!IS_TLCS90, "TLCS-90 does not have a separate I/O space");
       if (IS_SM83)
         {
-          //  wassert (IS_SM83);
           if (strcmp (s, "a"))
             emit2 ("ld a, %s", s);
           emit2 ("!lldh", aop->aopu.aop_dir, offset);
@@ -3915,9 +3957,8 @@ aopPut (asmop *aop, const char *s, int offset)
       break;
 
     case AOP_EXSTK:
-      if(!IY_RESERVED)
+      if(!IY_RESERVED && !IS_SM83 && !IS_TLCS870)
         {
-          wassert (!IS_SM83);
           if (!canAssignToPtr (s))
             {
               emit2 ("ld a, %s", s);
@@ -4250,7 +4291,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       _push(PAIR_IY);
       if (!regalloc_dry_run)
         emit2 ("ld %s, %d (ix)", aopGet (to, to_offset, false), - _G.stack.pushed - _G.stack.offset + aopInReg (from, from_offset, IYH_IDX));
-      cost3 (3, 3, 0, 3, 19, 14, 9, 10, 0, 10, 0, 5, 5, 4, 5);
+      cost3 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5);
       spillPairReg (to->aopu.aop_reg[to_offset]->name);
       _pop(PAIR_IY);
       return;
@@ -4260,7 +4301,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       _push(PAIR_IY);
       if (!regalloc_dry_run)
         emit2 ("ld %d (ix), %s", - _G.stack.pushed - _G.stack.offset + aopInReg (to, to_offset, IYH_IDX), aopGet (from, from_offset, false));
-      cost3 (3, 3, 0, 3, 19, 15, 10, 11, 0, 10, 0, 5, 4, 4, 5);
+      cost3 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5);
       _pop(PAIR_IY);
       return;
     }
@@ -4269,10 +4310,10 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
     {
       _push (PAIR_IY);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       cheapMove (to, to_offset, aopInReg (from, from_offset, IYL_IDX) ? ASMOP_L : ASMOP_H, 0, a_dead);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       _pop (PAIR_IY);
       return;
     }
@@ -4280,10 +4321,10 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
     {
       _push (PAIR_IY);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       cheapMove (aopInReg (to, to_offset, IYL_IDX) ? ASMOP_L : ASMOP_H, 0, from, from_offset, a_dead);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       _pop (PAIR_IY);
       return;
     }
@@ -4293,10 +4334,10 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       _push (PAIR_IY);
       emit3w (A_EX, ASMOP_DE, ASMOP_HL);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       cheapMove (aopInReg (to, to_offset, L_IDX) ? ASMOP_E : ASMOP_D, 0, aopInReg (from, from_offset, IYL_IDX) ? ASMOP_L : ASMOP_H, 0, a_dead);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       emit3w (A_EX, ASMOP_DE, ASMOP_HL);
       _pop (PAIR_IY);
       return;
@@ -4307,10 +4348,10 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       _push (PAIR_IY);
       emit3w (A_EX, ASMOP_DE, ASMOP_HL);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       cheapMove (aopInReg (to, to_offset, IYL_IDX) ? ASMOP_L : ASMOP_H, 0, aopInReg (from, from_offset, L_IDX) ? ASMOP_E : ASMOP_D, 0, a_dead);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       emit3w (A_EX, ASMOP_DE, ASMOP_HL);
       _pop (PAIR_IY);
       return;
@@ -4319,10 +4360,10 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
     {
       _push (PAIR_IY);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       cheapMove (aopInReg (to, to_offset, IYL_IDX) ? ASMOP_L : ASMOP_H, 0, aopInReg (to, to_offset, IYL_IDX) ? ASMOP_L : ASMOP_H, 0, a_dead);
       emit2 ("ex (sp), hl");
-      cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+      cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
       _pop (PAIR_IY);
       return;
     }
@@ -4364,7 +4405,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
     (from->type == AOP_DIR ||
     from->type == AOP_SFR || to->type == AOP_SFR ||
     (to->type == AOP_HL || to->type == AOP_IY || to->type == AOP_EXSTK || to->type == AOP_STK) && (from->type == AOP_HL || from->type == AOP_IY || from->type == AOP_EXSTK || from->type == AOP_STK) ||
-    (to->type == AOP_HL || IS_SM83 && to->type == AOP_STK || to->type == AOP_EXSTK) && (aopInReg(from, from_offset, L_IDX) || aopInReg(from, from_offset, H_IDX))) ||
+    (to->type == AOP_HL || to->type == AOP_EXSTK) && (aopInReg(from, from_offset, L_IDX) || aopInReg(from, from_offset, H_IDX))) ||
     to->type == AOP_PAIRPTR && from->type == AOP_PAIRPTR)
     {
       if (!a_dead)
@@ -4658,7 +4699,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         !regalloc_dry_run) // Stack positions will change, so do not assume this is possible in the cost function.
         {
           emit2 ("ex (sp), hl");
-          cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+          cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
           spillPair (PAIR_HL);
           assigned[i] = true;
           assigned[i + 1] = true;
@@ -6489,7 +6530,7 @@ genIpush (const iCode *ic)
           emit3w (A_PUSH, ASMOP_HL, 0);
           cheapMove (ASMOP_L, 0, IC_LEFT (ic)->aop, 0, false);
           emit2 ("ex (sp), hl");
-          cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+          cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
           spillPair (PAIR_HL);
         }
       else
@@ -6622,7 +6663,7 @@ genIpush (const iCode *ic)
            genMove_o (ASMOP_HL, 0, IC_LEFT (ic)->aop, size - 2, 2, a_free, hl_free, de_free, true, true);
            _G.stack.pushed -= 2;
            emit2 ("ex (sp), hl");
-           cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+           cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
            spillPair (PAIR_HL);
            d = 2;
          }
@@ -6708,7 +6749,7 @@ genIpush (const iCode *ic)
            emit3w (A_PUSH, ASMOP_HL, 0);
            genMove_o (ASMOP_H, 0, IC_LEFT (ic)->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
            emit2 ("ex (sp), hl");
-           cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+           cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
            spillPair (PAIR_HL);
            emit2 ("inc sp");
            cost2 (1, 6, 4, 2, 8, 4, 1, 1);
@@ -6772,7 +6813,7 @@ genPointerPush (const iCode *ic)
 
   bool swap_de = !isRegDead (HL_IDX, ic);
 
-  if (swap_de)
+  if (swap_de && !IS_SM83)
     emit3w (A_EX, ASMOP_DE, ASMOP_HL);
 
   genMove (ASMOP_HL, IC_LEFT (ic)->aop, true, true, swap_de ? false : isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
@@ -6825,7 +6866,7 @@ genPointerPush (const iCode *ic)
         emit3w (A_DEC, ASMOP_HL, 0);
     }
 
-  if (swap_de)
+  if (swap_de && !IS_SM83)
     emit3w (A_EX, ASMOP_DE, ASMOP_HL);
 
   freeAsmop (IC_LEFT (ic), 0);
@@ -7134,7 +7175,7 @@ genCall (const iCode *ic)
               _push (PAIR_HL);
               genMove (ASMOP_HL, IC_LEFT (ic)->aop, a_not_parm, true, de_not_parm, true);
               emit2 ("ex (sp), hl");
-              cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+              cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
               _pop (PAIR_IY);
             }
           else
@@ -7872,7 +7913,7 @@ genEndFunction (iCode *ic)
               wassert (!IS_SM83);
               wassert (stackparmbytes != 1); // Avoid overwriting return address and hl.
               emit2 ("ex (sp), hl");
-              cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+              cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
               _push (PAIR_DE);
               emit3w (A_EX, ASMOP_DE, ASMOP_HL);
               emit2 ("ld hl, !immedword", (unsigned)(2 +  poststackadjust));
@@ -7886,7 +7927,7 @@ genEndFunction (iCode *ic)
               cost2 (1, 7, 7, 6, 8, 6, 2, 2);
               _pop (PAIR_DE);
               emit2 ("ex (sp), hl");
-              cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+              cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
             }
 
           adjustStack (poststackadjust,
@@ -8075,8 +8116,8 @@ genRet (const iCode *ic)
       while (--size);
     }
   // gbz80 doesn't have have ldir. Rabbit 2000 to Rabbit 3000 (i.e. r2k and r2ka port) have an ldir wait state bug that affects copies between different types of memory.
-  else if (!IS_SM83 && IC_LEFT (ic)->aop->type == AOP_STK || IC_LEFT (ic)->aop->type == AOP_EXSTK
-           || (IC_LEFT (ic)->aop->type == AOP_DIR || IC_LEFT (ic)->aop->type == AOP_IY) && !(IS_R2K || IS_R2KA))
+  else if (!IS_SM83 && (ic->left->aop->type == AOP_STK || ic->left->aop->type == AOP_EXSTK) ||
+    !IS_SM83 && !IS_R2K && !IS_R2KA && (ic->left->aop->type == AOP_DIR || ic->left->aop->type == AOP_IY))
     {
       setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
       emit2 ("ld e, !*hl");
@@ -8336,8 +8377,7 @@ genPlusIncr (const iCode *ic)
         }
       regalloc_dry_run_state_scale = 1.0f;
       if (!regalloc_dry_run)
-        (IC_LEFT (ic)->aop->type == AOP_HL || IS_SM83
-         && IC_LEFT (ic)->aop->type == AOP_STK) ? emitLabelSpill (tlbl) : emitLabel (tlbl);
+        (ic->left->aop->type == AOP_HL || ic->left->aop->type == AOP_EXSTK) ? emitLabelSpill (tlbl) : emitLabel (tlbl);
       else if (IC_LEFT (ic)->aop->type == AOP_HL)
         spillCached ();
       return TRUE;
@@ -8416,8 +8456,6 @@ couldDestroyCarry (const asmop *aop)
 static void
 shiftIntoPair (PAIR_ID id, asmop *aop)
 {
-  wassertl (!IS_SM83, "Not implemented for the SM83");
-
   emitDebug ("; Shift into pair");
 
   switch (id)
@@ -8863,9 +8901,9 @@ genPlus (iCode * ic)
   if (size == 1 && !aopInReg(leftop, 0, H_IDX) && !aopInReg(leftop, 0, L_IDX) && !aopInReg(rightop, 0, H_IDX) && !aopInReg(rightop, 0, L_IDX) && isPairDead (PAIR_HL, ic))
     {
       if (couldDestroyCarry (IC_RESULT (ic)->aop) &&
-        (IC_RESULT (ic)->aop == leftop || IC_RESULT (ic)->aop == rightop))
+        (ic->result->aop == leftop && !requiresHL (rightop) || ic->result->aop == rightop) && !requiresHL (leftop) )
         shiftIntoPair (PAIR_HL, IC_RESULT (ic)->aop);
-      else if (couldDestroyCarry (rightop))
+      else if (couldDestroyCarry (rightop) && !requiresHL (leftop))
         shiftIntoPair (PAIR_HL, rightop);
     }
 
@@ -9299,13 +9337,7 @@ genMinusDec (const iCode *ic, asmop *result, asmop *left, asmop *right)
   if (sameRegs (left, result) && (size > 1) && isPair (result))
     {
       while (icount--)
-        {
-          emit2 ("dec %s", getPairName (result));
-          if (getPairId (result) == PAIR_IY)
-            cost2 (2, 10, 7, 4, 0, 4, 2, 2);
-          else
-            cost2 (1, 6, 4, 2, 8, 4, 1, 1);
-        }
+        emit3w (A_DEC, result, 0);
       return true;
     }
 
@@ -9315,12 +9347,7 @@ genMinusDec (const iCode *ic, asmop *result, asmop *left, asmop *right)
       fetchPair (getPairId (result), left);
       while (icount--)
         {
-          if (!regalloc_dry_run)
-            emit2 ("dec %s", getPairName (result));
-          if (getPairId (result) == PAIR_IY)
-            cost2 (2, 10, 7, 4, 0, 4, 2, 2);
-          else
-            cost2 (1, 6, 4, 2, 8, 4, 1, 1);
+          emit3w (A_DEC, result, 0);
         }
       return true;
     }
@@ -10764,8 +10791,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
                   emit2 ("ld %s, !immedbyte", _pairs[litpair].name, (unsigned) ((lit ^ 0x8000u) & 0xffffu));
                   cost2 (3, 10, 9, 6, 12, 6, 3, 3);
                   emit3w (A_ADD, ASMOP_HL, ASMOP_HL);
-                  emit2 ("ccf");
-                  cost2 (1, 4, 3, 2, 4, 2, 2, 1);
+                  emit3 (A_CCF, 0, 0);
                   if (IS_RAB)
                     {
                       emit2 ("rr hl");
@@ -10800,8 +10826,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
                   if (!size)
                     {
                       emit3 (A_RLA, 0, 0);
-                      emit2 ("ccf");
-                      cost2 (1, 4, 3, 2, 4, 2, 2, 1);
+                      emit3 (A_CCF, 0, 0);
                       emit3 (A_RRA, 0, 0);
                     }
                   /* Subtract through, propagating the carry */
@@ -11393,8 +11418,8 @@ genCmpEq (iCode *ic, iCode *ifx)
   aopOp ((right = ic->right), ic, false, false);
   aopOp ((result = ic->result), ic, true, false);
 
-  hl_touched = (IC_LEFT (ic)->aop->type == AOP_HL || IC_RIGHT (ic)->aop->type == AOP_HL || IS_SM83
-                && IC_LEFT (ic)->aop->type == AOP_STK || IS_SM83 && IC_RIGHT (ic)->aop->type == AOP_STK);
+  hl_touched = (IC_LEFT (ic)->aop->type == AOP_HL || IC_RIGHT (ic)->aop->type == AOP_HL ||
+    ic->left->aop->type == AOP_EXSTK || ic->right->aop->type == AOP_EXSTK);
 
   /* Swap operands if it makes the operation easier. ie if:
      1.  Left is a literal.
@@ -11691,8 +11716,7 @@ genAnd (const iCode * ic, iCode * ifx)
       if (size)
         {
           /* PENDING: Test case for this. */
-          emit2 ("scf");
-          cost2 (1, 4, 3, 2, 4, 2, 1, 1);
+          emit3 (A_SCF, 0, 0);
         }
       while (sizel)
         {
@@ -12888,8 +12912,7 @@ genRLC (const iCode *ic)
         {
           if (!IS_SM83 && i + 1 < size && aopInReg (rotaop, i, HL_IDX))
             {
-              emit2 ("adc hl, hl");
-              cost2 (2, 15, 10, 4, 0, 8, 2, 2);
+              emit3w (A_ADC, ASMOP_HL, ASMOP_HL);
               i += 2;
             }
           else if (IS_RAB && i + 1 < size && aopInReg (rotaop, i, DE_IDX))
@@ -13078,8 +13101,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
     (shCount == 4 || shCount == 5) &&
     (result->aop->type == AOP_DIR || result->aop->type == AOP_HL || result->aop->type == AOP_IY))
     {
-      emit2 ("xor a, a");
-      cost2 (1, 4, 4, 2, 4, 4, 1, 1);
+      emit3 (A_XOR, ASMOP_A, ASMOP_A);
       emit2 ("ld hl, !hashedstr+1", result->aop->aopu.aop_dir);
       cost2 (3, 10, 9, 6, 12, 6, 3, 3);
       emit3 (A_RRD, 0, 0);
@@ -13088,8 +13110,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
           emit2 ("srl (hl)");
           cost2 (2, 15, 6, 10, 16, 8, 5, 5);
         }
-      emit2 ("dec hl");
-      cost2 (1, 6, 4, 2, 8, 4, 1, 1);
+      emit3w (A_DEC, ASMOP_HL, 0);
       emit3 (A_RRD, 0, 0);
       if (shCount == 5)
         {
@@ -13144,8 +13165,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
     shCount >= 5 - !optimize.codeSpeed) // Smaller code size for 4 and above, but at least for Z80(N), only faster from 5.
     {
       emit3 (A_XOR, ASMOP_A, ASMOP_A);
-      emit2 ("add hl, hl");
-      cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+      emit3w (A_ADD, ASMOP_HL, ASMOP_HL);
       if (is_signed && (left->aop->valinfo.anything || left->aop->valinfo.min < 0))
         {
           tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
@@ -13160,8 +13180,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
         emit3 (A_RLA, 0, 0);
       for (int i = 1; i < (8 - shCount); i++)
         {
-          emit2 ("add hl, hl");
-          cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+          emit3w (A_ADD, ASMOP_HL, ASMOP_HL);
           emit3 (A_RLA, 0, 0);
         }
       genMove_o (result->aop, 1, ASMOP_A, 0, 1, true, false, isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic), true);
@@ -13287,18 +13306,10 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
 
   if (shCount == 0)
     ;
-  else if (getPairId (shiftaop) == PAIR_HL)
+  else if (getPairId (shiftaop) == PAIR_HL || getPairId (shiftaop) == PAIR_IY)
     {
       while (shCount--)
-        emit3w (A_ADD, ASMOP_HL, ASMOP_HL);
-    }
-  else if (getPairId (shiftaop) == PAIR_IY)
-    {
-      while (shCount--)
-        {
-          emit2 ("add iy, iy");
-          cost2 (2, 15, 10, 4, 0, 8, 2, 2);
-        }
+        emit3w (A_ADD, shiftaop, shiftaop);
     }
   else if (IS_RAB && getPairId (shiftaop) == PAIR_DE && shCount <= 2 + optimize.codeSpeed)
     {
@@ -13511,7 +13522,7 @@ genSwap (iCode * ic)
             {
               _pop (PAIR_HL);
               emit2 ("ex (sp), hl");
-              cost3 (1 + IS_RAB, 2, 0, 3, 19, 16, 15, 15, 0, 14, 0, 8, 8, 5, 5);
+              cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
               _push (PAIR_HL);
             }
           break;
@@ -13667,8 +13678,7 @@ shiftL1Left2Result (operand *left, int offl, operand *result, int offr, unsigned
   else if (!IS_SM83 && !IS_RAB && aopSame (result->aop, offr, left->aop, offr, 1) && !offr && shCount == 4 && isPairDead (PAIR_HL, ic) && isRegDead (A_IDX, ic) &&
     (result->aop->type == AOP_DIR || result->aop->type == AOP_HL || result->aop->type == AOP_IY))
     {
-      emit2 ("xor a, a");
-      cost2 (1, 4, 4, 2, 4, 4, 1, 1);
+      emit3 (A_XOR, ASMOP_A, ASMOP_A);
       pointPairToAop (PAIR_HL, result->aop, 0);
       emit3 (A_RLD, 0, 0);
     }
@@ -14819,7 +14829,7 @@ init_stackop (asmop *stackop, int size, long int stk_off)
   memset (stackop->regs, -1, 9);
   stackop->aopu.aop_stk = stk_off;
 
-  if (!IS_SM83 && (_G.omitFramePtr || stk_off < INT8MIN || stk_off > (int) (INT8MAX - size)))
+  if (IS_SM83 || IS_TLCS870 || (_G.omitFramePtr || stk_off < INT8MIN || stk_off > (int) (INT8MAX - size)))
     stackop->type = AOP_EXSTK;
   else
     stackop->type = AOP_STK;
@@ -14867,7 +14877,7 @@ genPointerGet (const iCode *ic)
   wassertl (!from_far || IS_EZ80 || IS_RAB || IS_TLCS90, "Only eZ80, Rabbits and TLCS-90 have __far pointers");
   wassertl (!from_far || left->aop->type != AOP_STL, "Stack cannot be __far");
 
-  if (IS_SM83 && left->aop->type == AOP_STK) // Try to avoid (hl) to hl copy, which requires 3 instructions and free a.
+  if (IS_SM83 && left->aop->type == AOP_EXSTK) // Try to avoid (hl) to hl copy, which requires 3 instructions and free a.
     pair = PAIR_DE;
   if ((IS_SM83 || IY_RESERVED) && requiresHL (result->aop) && size > 1 && result->aop->type != AOP_REG)
     pair = PAIR_DE;
@@ -16229,6 +16239,7 @@ genAddrOf (const iCode *ic)
           if (ic->result->aop->regs[L_IDX] >= 0 || ic->result->aop->regs[H_IDX] >= 0) // Can't handle result in partially dead pair.
             UNIMPLEMENTED;
           _push (pair);
+          sp_offset = fp_offset + _G.stack.pushed + _G.stack.offset; // Recalculate stack offset after push.
           pushed_pair = true;
         }
 
