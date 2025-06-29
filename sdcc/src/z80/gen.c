@@ -17658,7 +17658,7 @@ genBuiltInMemset (const iCode *ic, int nParams, operand **pparams)
               c->aop->aopu.aop_reg[0]->rIdx != H_IDX && c->aop->aopu.aop_reg[0]->rIdx != L_IDX &&
               c->aop->aopu.aop_reg[0]->rIdx != IYH_IDX && c->aop->aopu.aop_reg[0]->rIdx != IYL_IDX &&
               c->aop->aopu.aop_reg[0]->rIdx != B_IDX);
-  indirect_c = IS_R3KA && ulFromVal (n->aop->aopu.aop_lit) > 1 && c->aop->type == AOP_IY;
+  indirect_c = (IS_R3KA || IS_R4K || IS_R5K || IS_R6K) && ulFromVal (n->aop->aopu.aop_lit) > 1 && c->aop->type == AOP_IY;
 
   double_loop = (size > 255 || optimize.codeSpeed);
 
@@ -17670,7 +17670,7 @@ genBuiltInMemset (const iCode *ic, int nParams, operand **pparams)
   sizecost_direct += (live_HL) * 2;
   sizecost_loop = 9 + double_loop * 2 + ((size % 2) && double_loop) * 2 + !direct_cl * sizecost_ld_a_caop;
   sizecost_loop += (live_HL + live_B) * 2;
-  sizecost_ldir = indirect_c ? 11 : (12 + !direct_c * sizecost_ld_a_caop - (IS_R3KA && !optimize.codeSpeed));
+  sizecost_ldir = indirect_c ? 11 : (12 + !direct_c * sizecost_ld_a_caop - ((IS_R3KA || IS_R4K || IS_R5K || IS_R6K) && !optimize.codeSpeed));
   sizecost_ldir += (live_HL + live_DE + live_BC) * 2;
 
   if (sizecost_direct <= sizecost_loop && sizecost_direct < sizecost_ldir) // straight-line code.
@@ -17770,7 +17770,7 @@ genBuiltInMemset (const iCode *ic, int nParams, operand **pparams)
 
           emit3 (A_LD, ASMOP_E, ASMOP_L);
           emit3 (A_LD, ASMOP_D, ASMOP_H);
-          if (!IS_R3KA || optimize.codeSpeed)
+          if (!(IS_R3KA || IS_R4K || IS_R5K || IS_R6K) || optimize.codeSpeed)
             {
               emit3w (A_INC, ASMOP_DE, 0);
               preinc = true;
@@ -17778,9 +17778,9 @@ genBuiltInMemset (const iCode *ic, int nParams, operand **pparams)
         }
       emit2 ("ld bc, !immedword", (unsigned)(size - preinc));
       cost2 (3, 10, 9, 6, 12, 6, 3, 3);
-      // The Rabbit 2000 to Rabbit 3000 (i.e. r2ka and r2ka port) have a ldir wait state bug that affects copies between different types of memory.
+      // The Rabbit 2000 to Rabbit 3000 (i.e. r2k and r2ka port) have a ldir wait state bug that affects copies between different types of memory.
       // That is not a problem here, as we copy within an object, and thus within one memory.
-      emit2 (IS_R3KA ? "lsidr" : "ldir");
+      emit2 ((IS_R3KA || IS_R4K || IS_R5K || IS_R6K) ? "lsidr" : "ldir");
       regalloc_dry_run_cost += 2;
     }
 

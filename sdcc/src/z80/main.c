@@ -1069,7 +1069,7 @@ _z80_genAssemblerStart (FILE * of)
 
   if (TARGET_IS_Z180)
     fprintf (of, "\t.hd64\n");
-  else if (TARGET_IS_R3KA)
+  else if (TARGET_IS_R3KA || TARGET_IS_R4K || TARGET_IS_R5K || TARGET_IS_R6K) // Todo: adjust when planned changes in assembler are implemented!
     fprintf (of, "\t.r3k\n");
   else if (TARGET_IS_EZ80)
     fprintf (of, "\t.ez80\n");

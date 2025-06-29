@@ -9,6 +9,8 @@
 	  Improve peephole optimizer ez80/tlcs90 lea/lda handling and z80n shift handling.
 	* src/z80/main.c:
 	  Do not announce r4k/r5k/r6k multiplication capabilities not yet supported by codegen.
+	* doc/sdccman.lyx:
+	  Basic documentation of eZ80, Rabbit, TLCS-90 __far support.
 
 2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
