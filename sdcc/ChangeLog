@@ -11,6 +11,8 @@
 	  Do not announce r4k/r5k/r6k multiplication capabilities not yet supported by codegen.
 	* doc/sdccman.lyx:
 	  Basic documentation of eZ80, Rabbit, TLCS-90 __far support.
+	* support/regression/MakeList:
+	  Enable a few tests that no longer fail for z80-related ports.
 
 2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
