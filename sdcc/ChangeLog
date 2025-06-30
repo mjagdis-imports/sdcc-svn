@@ -2,6 +2,10 @@
 
 	* src/z80/gen.c:
 	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+	* src/z80/main.c,
+	  src/z80/gen.c,
+	  src/SDCCicode.c:
+	  __far pointer fixes.
 
 2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
 

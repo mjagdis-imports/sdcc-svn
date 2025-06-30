@@ -1954,7 +1954,7 @@ PORT r4k_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  { 1, 2, 2, 4, 8, 2, 3, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -2091,7 +2091,7 @@ PORT r5k_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  { 1, 2, 2, 4, 8, 2, 3, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -2228,7 +2228,7 @@ PORT r6k_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  { 1, 2, 2, 4, 8, 2, 3, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {

@@ -1963,7 +1963,7 @@ getArraySizePtr (operand * op)
       return ((IS_GENPTR (ltype) && GPTRSIZE > FARPTRSIZE) ? (size - 1) : size);
     }
 
-  if (IS_ARRAY (ltype))
+  if (IS_ARRAY (ltype)) // There is some code duplication between this switch and the one in getSize in SDCCsymt.c
     {
       sym_link *letype = getSpec (ltype);
       switch (PTR_TYPE (SPEC_OCLS (letype)))
@@ -1972,9 +1972,10 @@ getArraySizePtr (operand * op)
         case PPOINTER:
         case POINTER:
           return (NEARPTRSIZE);
+        case CPOINTER:
+          return (TARGET_Z80_LIKE ? GPTRSIZE : FARPTRSIZE);
         case EEPPOINTER:
         case FPOINTER:
-        case CPOINTER:
         case FUNCTION:
           return (FARPTRSIZE);
         case GPOINTER:

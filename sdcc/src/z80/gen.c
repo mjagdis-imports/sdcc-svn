@@ -5406,7 +5406,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             }
           continue;
         }
-      else if (source->type == AOP_FDIR && (IS_R2K || IS_R2KA || IS_R3KA) && (hl_dead || iy_dead && aopInReg (result, roffset + i, IYL_IDX)))
+      else if (source->type == AOP_FDIR && IS_RAB && (hl_dead || iy_dead && aopInReg (result, roffset + i, IYL_IDX)))
         {
           if (!a_dead)
             _push (PAIR_AF);
@@ -5428,10 +5428,10 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           i++; // Can only get one byte at a time, since ldp might get the wrong upper byte when the source is not even-aligned.
           continue;
         }
-      else if (result->type == AOP_FDIR && (IS_R2K || IS_R2KA || IS_R3KA) && hl_dead &&
+      else if (result->type == AOP_FDIR && IS_RAB && hl_dead &&
         (aopInReg (source, soffset + i, B_IDX) || aopInReg (source, soffset + i, C_IDX) || aopInReg (source, soffset + i, D_IDX) || aopInReg (source, soffset + i, E_IDX) || aopInReg (source, soffset + i, A_IDX) && de_dead))
         {
-          // Neet to do this bitfield-write-style. Can't honor volatile.
+          // Need to do this bitfield-write-style. Can't honor volatile.
           bool via_e = aopInReg (source, soffset + i, A_IDX);
           if (via_e)
             emit3 (A_LD, ASMOP_E, ASMOP_A);
