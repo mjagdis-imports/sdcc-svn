@@ -1,3 +1,8 @@
+2025-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+
 2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
