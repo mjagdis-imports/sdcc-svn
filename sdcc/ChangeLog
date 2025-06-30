@@ -1,6 +1,11 @@
 2025-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:
+	  z80 codegen refactoring.
+
+2025-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
 	  Improve cost function accuracy (mostly for Rabbits and TLCS).
 	* src/z80/main.c,
 	  src/z80/gen.c,
