@@ -1,3 +1,8 @@
+2025-07-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Further bits of __far support. Prototype first bits of Rabbit 4000/6000 optimizations via equivalent TLCS-90 functionality.
+
 2025-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:
