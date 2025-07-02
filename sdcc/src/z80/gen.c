@@ -131,6 +131,8 @@ enum asminst
   A_POP,
   A_PUSH,
   A_RET,
+  A_RETI,
+  A_RETN,
   A_RL,
   A_RLA,
   A_RLC,
@@ -171,6 +173,8 @@ static const char *asminstnames[] =
   "pop",
   "push",
   "ret",
+  "reti",
+  "retn",
   "rl",
   "rla",
   "rlc",
@@ -1444,6 +1448,12 @@ emit3Cost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, i
       return;
     case A_RET:
       cost3 (1, 1, 1, 1, 10, 9, 8, 8, 16, 10, 6, 6, 6, 5, 3);
+      return;
+    case A_RETI:
+      cost3 (2, 1, 1, 1, 14, 12, 12, 12, 16, 14, 6, 6, 6, 6, 5);
+      return;
+    case A_RETN:
+      cost3 (2, -1, 2, 2, 14, 12, -1, -1, -1, -1, 7, 7, 7, 6, 5);
       return;
     case A_RL:
     case A_RLC:
@@ -3273,8 +3283,8 @@ fetchPairLong (PAIR_ID pairId, asmop *aop, const iCode *ic, int offset)
                     cost (1, 8); // ldi
                   else
                     {
-                      cost2 (1, 7, 6, 5, 8, 6, 2, 2); // ld , a(hl)
-                      cost2 (1, 6, 4, 2, 8, 4, 1, 1); // inc hl
+                      cost3 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2); // ld a, (hl)
+                      cost3 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1); // inc hl
                     }
                   emit2 ("ld h, !*hl");
                   cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
@@ -7855,10 +7865,10 @@ genEndFunction (iCode *ic)
         cost3 (2, 2, -1, 2, 8, 6, 6, 6, -1, 8, -1, 3, 3, 4, 2);
       goto done;
     }
-  else if (!IS_SM83 && !_G.omitFramePtr && sym->stack > (optimize.codeSize ? 2 : 1))
+  else if (!IS_SM83 && !IS_TLCS870 && !_G.omitFramePtr && sym->stack > (optimize.codeSize ? 2 : 1))
     {
       emit2 ("ld sp, ix");
-      cost2 (2, 10, 7, 4, 0, 6, 2, 2);
+      cost3 (2, 1, -1, 2, 10, 7, 2, 4, -1, 4, -1, 2, 2, 2, 2);
     }
   else
     adjustStack (_G.stack.offset,
@@ -8001,15 +8011,15 @@ genEndFunction (iCode *ic)
               emit2 ("add hl, sp");
               cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3 , 1, 1);
               emit2 ("ld e, (hl)");
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
               emit3w (A_INC, ASMOP_HL, 0);
               emit2 ("ld d, (hl)");
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
               emit2 ("ld (hl), e");
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               emit3w (A_INC, ASMOP_HL, 0);
               emit2 ("ld (hl), d");
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               _pop (PAIR_DE);
               _pop (PAIR_HL);     
             }
@@ -8020,19 +8030,19 @@ genEndFunction (iCode *ic)
               emit2 ("!ldahlsp", 4);
               regalloc_dry_run_cost += 2;
               emit2 ("ld e, (hl)");
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
               emit3w (A_INC, ASMOP_HL, 0);
               emit2 ("ld d, (hl)");
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
               emit2 ("ld hl, !immedword", (unsigned)(4 +  poststackadjust));
               cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3);
               emit2 ("add hl, sp");
               cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3 , 1, 1);
               emit2 ("ld (hl), e");
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               emit3w (A_INC, ASMOP_HL, 0);
               emit2 ("ld (hl), d");
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               _pop (PAIR_DE);
               _pop (PAIR_HL);  
             }
@@ -8049,10 +8059,10 @@ genEndFunction (iCode *ic)
               emit2 ("add hl, sp");
               cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3 , 1, 1);
               emit2 ("ld (hl), e");
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               emit3w (A_INC, ASMOP_HL, 0);
               emit2 ("ld (hl), d");
-              cost2 (1, 7, 7, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               _pop (PAIR_DE);
               emit2 ("ex (sp), hl");
               cost3 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
@@ -8075,10 +8085,7 @@ genEndFunction (iCode *ic)
   if (IFFUNC_ISISR (sym->type))
     {
       if (is_nmi)
-        {
-          emit2 ("retn");
-          cost2 (2, 14, 12, 0, 0, 0, 6, 5);
-        }
+        emit3 (A_RETN, 0, 0);
       else if (IS_RAB)
         {
           if (IFFUNC_ISCRITICAL (sym->type))
@@ -8089,10 +8096,7 @@ genEndFunction (iCode *ic)
           emit3 (A_RET, 0, 0);
         }
       else if (IS_SM83)
-        {
-          emit2 (IFFUNC_ISCRITICAL (sym->type) ? "reti" : "ret");
-          cost (1 + IFFUNC_ISCRITICAL (sym->type), 16);
-        }
+        emit3 (IFFUNC_ISCRITICAL (sym->type) ? A_RETI : A_RET, 0, 0);
       else
         {
           if (IFFUNC_ISCRITICAL (sym->type) && !is_nmi)
@@ -8100,8 +8104,7 @@ genEndFunction (iCode *ic)
               emit2 ("!ei");
               cost2 (1, 4, 3, 0, 4, 2, 1, 1);
             }
-          emit2 ("reti");
-          cost2 (2, 14, 12, 12, 16, 14, 6, 5);
+          emit3 (A_RETI, 0, 0);
         }
     }
   else
@@ -8284,7 +8287,7 @@ genRet (const iCode *ic)
         {
           cheapMove (ASMOP_A, 0, IC_LEFT (ic)->aop, offset++, true);
           emit2 ("ld !mems, a", "bc");
-          cost2 (1 + IS_TLCS90, 7, 7, 7, 8, 6, 2, 2);
+          cost3 (1, 2, -1, -1, 7, 7, 7, 7, 8, 6, -1, -1, -1, 2, 2);
           if (size > 1)
             emit3w (A_INC, ASMOP_BC, 0);
         }
@@ -9561,14 +9564,14 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
               fetchPair (rightp, right);
 
               emit2 ("ld a, %s", _pairs[leftp].l);
-              cost2 (1, 4, 4, 2, 4, 2, 1, 1);
+              cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1);
               emit2 ("sub a, %s", _pairs[rightp].l);
-              cost2 (1 + IS_TLCS90, 4, 4, 2, 4, 4, 1, 1);
+              cost3 (1, 2, 2, 2, 4, 4, 2, 2, 4, 4, 2, 2, 2, 1, 1);
               emit3 (A_LD, ASMOP_E, ASMOP_A);
               emit2 ("ld a, %s", _pairs[leftp].h);
-              cost2 (1, 4, 4, 2, 4, 2, 1, 1);
+              cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1);
               emit2 ("sbc a, %s", _pairs[rightp].h);
-              cost2 (1 + IS_TLCS90, 4, 4, 2, 4, 4, 1, 1);
+              cost3 (1, 2, 2, 2, 4, 4, 2, 2, 4, 4, 2, 2, 2, 1, 1);
 
               if (IC_RESULT (ic)->aop->size > 1)
                 cheapMove (IC_RESULT (ic)->aop, 1, ASMOP_A, 0, true);
@@ -10908,7 +10911,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
             {
               cheapMove (ASMOP_A, 0, left->aop, offset, true);
               emit2 ("%s a, !*hl", offset == 0 ? "sub" : "sbc");
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 3, 3, 2, 2);
 
               if (size != 0)
                 emit3w (A_INC, ASMOP_HL, 0);
@@ -12001,9 +12004,9 @@ genAnd (const iCode *ic, iCode *ifx)
                 {
                   emit2 ("add %s, %s", _pairs[pair].name, _pairs[pair].name);
                   if (pair == PAIR_HL)
-                    cost2 (1 + IS_TLCS90, 11, 7, 2, 8, 8, 1, 1);
+                    cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3, 1, 1);
                   else
-                    cost2 (2, 15, 10, 4, 0, 8, 2, 2);
+                    cost3 (2, 2, -1, 2, 15, 10, 4, 4, -1, 8, -1, 4, 3, 2, 2);
                 }
               else if (isLiteralBit (bytelit) == 7)
                 {
@@ -12042,7 +12045,7 @@ genAnd (const iCode *ic, iCode *ifx)
             {
               if (!regalloc_dry_run)
                 emit2 ("tst a, %s", aopGet (right->aop, 0, FALSE));
-              cost2 (3, 11, 9, 0, 0, 0, 3, 0);
+              cost3 (3, -1, -1, -1, 11, 9, -1, -1, -1, -1, -1, -1, -1, 3, -1);
               sizel--;
               offset++;
             }
@@ -12154,10 +12157,10 @@ genAnd (const iCode *ic, iCode *ifx)
               cheapMove (result->aop, i, left->aop, i, a_free);
               if (!regalloc_dry_run)
                 emit2 ("res %d, %s", isLiteralBit (~bytelit & 0xffu), aopGet (result->aop, i, false));
-              if (result->aop->type == AOP_STK && !IS_SM83)
-                cost2 (4, 23, 19, 13, 0, 14, 5, 7); // res b, d(ix)
-              else if (result->aop->type == AOP_DIR)
-                cost2 (2, 15, 13, 10, 16, 10, 3 , 5); // res b, (hl)
+              if (result->aop->type == AOP_STK)
+                cost3 (4, 3, -1, 3, 23, 19, 13, 14, -1, 14, -1, 6, 6, 5, 7); // res b, d(ix)
+              else if (result->aop->type == AOP_DIR || result->aop->type == AOP_EXSTK)
+                cost3 (2, 2, 2, 2, 15, 13, 10, 10, 16, 10, 4, 4, 4, 3, 5); // res b, (hl)
               else
                 cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 3, 3, 3, 2, 2);
               if (aopInReg (result->aop, i, A_IDX))
@@ -12507,10 +12510,10 @@ genOr (const iCode * ic, iCode * ifx)
               cheapMove (result->aop, i, left->aop, i, a_free);
               if (!regalloc_dry_run)
                 emit2 ("set %d, %s", isLiteralBit (bytelit), aopGet (result->aop, i, false));
-              if (result->aop->type == AOP_STK && !IS_SM83)
-                cost2 (4, 23, 19, 13, 0, 14, 5, 7); // set b, d(ix)
-              else if (result->aop->type == AOP_DIR)
-                cost2 (2, 15, 13, 10, 16, 10, 3 , 5); // set b, (hl)
+              if (result->aop->type == AOP_STK)
+                cost3 (4, 3, -1, 3, 23, 19, 13, 14, -1, 14, -1, 6, 6, 5, 7); // set b, d(ix)
+              else if (result->aop->type == AOP_DIR || result->aop->type == AOP_EXSTK)
+                cost3 (2, 2, 2, 2, 15, 13, 10, 10, 16, 10, 4, 4, 4, 3, 5); // set b, (hl)
               else
                 cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 3, 3, 3, 2, 2); // set b, r
               if (aopInReg (result->aop, i, A_IDX))
@@ -14128,11 +14131,11 @@ genRot1 (iCode *ic)
         _pop (PAIR_AF);
     }
   else if ((s == 1 || s == 7) && aopSame (result->aop, 0, left->aop, 0, 1) &&
-    ((result->aop->type == AOP_EXSTK || IS_SM83 && result->aop->type == AOP_STK) || result->aop->type == AOP_DIR || result->aop->type == AOP_HL || result->aop->type == AOP_IY) && isPairDead (PAIR_HL, ic))
+    (result->aop->type == AOP_EXSTK || result->aop->type == AOP_DIR || result->aop->type == AOP_HL || result->aop->type == AOP_IY) && isPairDead (PAIR_HL, ic))
     {
       pointPairToAop (PAIR_HL, result->aop, 0);
       emit2 (s == 1 ? "rlc (hl)" : "rrc (hl)");
-      cost2 (2, 15, 13, 10, 16, 8, 5, 5);
+      cost3 (2, 2, -1, -1, 15, 6, 10, 10, 16, 8, -1, -1, -1, 5, 5);
     }
   else if ((s == 1 || s == 7) && aopSame (result->aop, 0, left->aop, 0, 1) && result->aop->type == AOP_STK && !IS_SM83)
     {
@@ -17498,7 +17501,7 @@ genCritical (const iCode * ic)
       if (!regalloc_dry_run)    // _push unbalances _G.stack.pushed.
         _push (PAIR_AF);
       else
-        cost2 (1, 11, 11, 10, 16, 8, 3, 4);
+        cost3 (1, 1, 2, 1, 11, 11, 10, 11, 16, 8, 4, 3, 3, 3, 4);
     }
 }
 
@@ -17985,7 +17988,7 @@ genBuiltInMemcpy (const iCode *ic, int nparams, operand **pparams)
       emit2 ("ld a, !*hl");
       cost3 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
       emit2 ("ld !mems, a", "de");
-      cost2 (1, 7, 7, 7, 8, 6, 2, 2);
+      cost3 (1, 2, -1, -1, 7, 7, 7, 7, 8, 6, -1, -1, -1, 2, 2);
     }
   else if (n == 2)
     {
@@ -17993,7 +17996,7 @@ genBuiltInMemcpy (const iCode *ic, int nparams, operand **pparams)
       emit2 ("ld a, !*hl");
       cost3 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
       emit2 ("ld !mems, a", "de");
-      cost2 (1, 7, 7, 7, 8, 6, 2, 2);
+      cost3 (1, 2, -1, -1, 7, 7, 7, 7, 8, 6, -1, -1, -1, 2, 2);
       if (!isPairDead (PAIR_BC, ic)) /* Restore bc. */
         emit3w (A_INC, ASMOP_BC, 0);
     }
