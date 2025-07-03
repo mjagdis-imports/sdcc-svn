@@ -880,6 +880,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   FUNC_ISRAISONANCE (dest) |= FUNC_ISRAISONANCE (src);
   FUNC_ISIAR (dest) |= FUNC_ISIAR (src);
   FUNC_ISCOSMIC (dest) |= FUNC_ISCOSMIC (src);
+  FUNC_ISDYNAMICC (dest) |= FUNC_ISDYNAMICC (src);
   FUNC_ISZ88DK_FASTCALL (dest) |= FUNC_ISZ88DK_FASTCALL (src);
   FUNC_ISZ88DK_CALLEE (dest) |= FUNC_ISZ88DK_CALLEE (src);
   for (i = 0; i < 9; i++)
@@ -3939,6 +3940,8 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 dbuf_append_str (dbuf, " __iar");
               if (IFFUNC_ISCOSMIC (type))
                 dbuf_append_str (dbuf, " __cosmic");
+              if (IFFUNC_ISDYNAMICC (type))
+                dbuf_append_str (dbuf, " __dynamicc");
               if (IFFUNC_ISZ88DK_CALLEE (type))
                 dbuf_append_str (dbuf, " __z88dk_callee");
               if (IFFUNC_ISZ88DK_FASTCALL (type))

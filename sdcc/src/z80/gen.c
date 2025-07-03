@@ -10640,7 +10640,7 @@ genIfxJump (iCode * ic, char *jval)
         {
           /* The buffer contains the bit on A that we should test */
           emit2 ("bit %s, a", jval);
-          cost2 (2, 8, 6, 4, 8, 4, 2, 2);
+          cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
           inst = "NZ";
         }
     }
@@ -10701,7 +10701,7 @@ genIfxJump (iCode * ic, char *jval)
         {
           /* The buffer contains the bit on A that we should test */
           emit2 ("bit %s, a", jval);
-          cost2 (2, 8, 6, 4, 8, 4, 2, 2);
+          cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
           inst = "Z";
         }
     }
@@ -10835,7 +10835,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
                   if (!regalloc_dry_run)
                     emit2 ("bit 7, %s", aopGet (left->aop, left->aop->size - 1, FALSE));
                   if (left->aop->type == AOP_REG)
-                    cost2 (2, 8, 6, 4, 8, 4, 2, 2);
+                    cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
                   else
                     cost2 (4 - IS_TLCS90, 20, 15, 10, 6, 10, 5, 5);
                   genIfxJump (ifx, "nz");
@@ -10875,11 +10875,11 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
           while (size--)
             {
               emit2 ("ld a, !mems", "de");
-              cost2 (1, 7, 6, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               if (size != 0)
                 emit3w (A_INC, ASMOP_DE, 0);
               emit2 ("%s a, !*hl", offset == 0 ? "sub" : "sbc");
-              cost2 (1, 7, 6, 5, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 3, 3, 2, 2);
               if (size != 0)
                 emit3w (A_INC, ASMOP_HL, 0);
               offset++;
@@ -10888,7 +10888,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
             {
               wassert(isPairDead (PAIR_DE, ic));
               emit2 ("ld a, !mems", "de");
-              cost2 (1, 7, 6, 6, 8, 6, 2, 2);
+              cost3 (1, 2, 2, 2, 7, 6, 6, 6, 8, 6, 3, 3, 3, 2, 2);
               emit3 (A_LD, ASMOP_D, ASMOP_A);
               emit2 ("ld e, !*hl");
               cost3 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
@@ -11167,7 +11167,7 @@ fix:
               symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
               symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
               emit2 ("bit 7, e");
-              cost2 (2, 8, 6, 4, 8, 4, 2, 2);
+              cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
               if (!regalloc_dry_run)
                 emit2 ("jp Z, !tlabel", labelKey2num (tlbl1->key));
               emit2 ("bit 7, d");
@@ -12032,7 +12032,7 @@ genAnd (const iCode *ic, iCode *ifx)
               if (!regalloc_dry_run)
                 emit2 ("bit %d, %s", isLiteralBit (bytelit), aopGet (left->aop, offset, FALSE));
               if (left->aop->type == AOP_REG)
-                cost2 (2, 8, 6, 4, 8, 4, 2, 2);
+                cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
               else
                 cost2 (4, 20 , 15, 10, 6, 10, 5, 5);
               if (requiresHL (left->aop) && left->aop->type != AOP_REG)
@@ -14924,7 +14924,7 @@ unpackMaskA(sym_link *type, int len)
       else
         {
           emit2 ("bit %d, a", len - 1);
-          cost2 (2, 8, 6, 4, 8, 4, 2, 2);
+          cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
           if (!regalloc_dry_run)
             {
               symbol *tlbl = newiTempLabel (NULL);
@@ -16949,7 +16949,7 @@ genAssign (const iCode *ic)
       while (size--)
         {
           emit2 ("ld a, !mems", "de");
-          cost2 (1 + IS_TLCS90, 7, 6, 6, 8, 6, 2, 2);
+          cost3 (1, 2, 2, 2, 7, 6, 6, 6, 8, 6, 3, 3, 3, 2, 2);
           if (size != 0)
             {
               emit2 ("!lldahli");
@@ -17257,7 +17257,7 @@ genCast (const iCode *ic)
         {
           symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
           emit2 ("bit %d, a", (int)(SPEC_BITINTWIDTH (resulttype) % 8 - 1));
-          cost2 (2, 8, 6, 4, 8, 4, 2, 2);
+          cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
           if (!regalloc_dry_run)
             emit2 ("jr z, !tlabel", labelKey2num (tlbl->key));
           emit2 ("or a, #0x%02x", ~topbytemask & 0xffu);
