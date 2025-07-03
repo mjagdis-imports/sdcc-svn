@@ -3465,8 +3465,8 @@ setupPairFromSP (PAIR_ID id, int offset)
         cost (2, 12);
       else
         {
-          cost2 (3, 10, 9, 6, 12, 6, 3, 3);
-          cost2 (1, 11, 7, 2, 8, 8, 1, 1);
+          cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3);
+          cost3 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3 , 1, 1);
         }
     }
 
@@ -8545,7 +8545,7 @@ outBitAcc (operand * result)
       emitJP (tlbl, "z", 0.5f, true);
       emit2 ("ld a, !one");
       emitLabel (tlbl);
-      cost2 (1,	3.5f, 3.0f, 2.0f, 4.0f, 4.0f, 2.0f, 2.0f);
+      cost3 (2, 2, 2, 2, 3.5f, 3.0f, 2.0f, 2.0f, 4.0f, 2.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
       outAcc (result);
     }
 }
@@ -10801,14 +10801,14 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
           else
             {
               if (!(result->aop->type == AOP_CRY && result->aop->size) && ifx &&
-                (left->aop->type == AOP_REG || left->aop->type == AOP_STK && !IS_SM83))
+                (left->aop->type == AOP_REG || left->aop->type == AOP_STK))
                 {
                   if (!regalloc_dry_run)
                     emit2 ("bit 7, %s", aopGet (left->aop, left->aop->size - 1, FALSE));
                   if (left->aop->type == AOP_REG)
                     cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
                   else
-                    cost2 (4 - IS_TLCS90, 20, 15, 10, 6, 10, 5, 5);
+                    cost3 (4, 3, -1, 3, 20, 15, 10, 11, -1, 10, -1, 5, 5, 5 , 5);
                   genIfxJump (ifx, "nz");
                   return;
                 }
@@ -12005,7 +12005,7 @@ genAnd (const iCode *ic, iCode *ifx)
               if (left->aop->type == AOP_REG)
                 cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
               else
-                cost2 (4, 20 , 15, 10, 6, 10, 5, 5);
+                cost3 (4, 3, -1, 3, 20, 15, 10, 11, -1, 10, -1, 5, 5, 5 , 5);
               if (requiresHL (left->aop) && left->aop->type != AOP_REG)
                 _pop (PAIR_HL);
               sizel--;
@@ -13432,10 +13432,9 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       if (is_signed && (left->aop->valinfo.anything || left->aop->valinfo.min < 0))
         {
           tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-          if (!regalloc_dry_run)
-            emit2 ("jr nc,!tlabel", labelKey2num (tlbl->key));
+          emitJP (tlbl, "nc", 0.5f, true);
           emit2 ("dec a");
-          cost2 (3, 11.5, 9.0, 7.0, 12.0, 7.0, 3.0, 3.0);
+          cost3 (1, 1, 1, 1, 2.0f, 2.0f, 1.0f, 2.0f, 2.0f, 1.0f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
           if (!regalloc_dry_run)
             emitLabel (tlbl);
         }
