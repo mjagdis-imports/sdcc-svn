@@ -10593,55 +10593,26 @@ genIfxJump (iCode * ic, char *jval)
       if (!strcmp (jval, "a"))
         {
           emit3 (A_OR, ASMOP_A, ASMOP_A);
-          inst = "NZ";
+          inst = "nz";
         }
-      else if (!strcmp (jval, "z"))
-        {
-          inst = "Z";
-        }
-      else if (!strcmp (jval, "nz"))
-        {
-          inst = "NZ";
-        }
-      else if (!strcmp (jval, "c"))
-        {
-          inst = "C";
-        }
-      else if (!strcmp (jval, "nc"))
-        {
-          inst = "NC";
-        }
-      else if (!strcmp (jval, "m"))
-        {
-          inst = "M";
-        }
-      else if (!strcmp (jval, "p"))
-        {
-          inst = "P";
-        }
-      else if (!strcmp (jval, "po"))
-        {
-          inst = "PO";
-        }
-      else if (!strcmp (jval, "pe"))
-        {
-          inst = "PE";
-        }
+      else if (!strcmp (jval, "z") || !strcmp (jval, "nz") || !strcmp (jval, "c") || !strcmp (jval, "nc") ||
+        !strcmp (jval, "m") || !strcmp (jval, "p") || !strcmp (jval, "po") || !strcmp (jval, "pe"))
+        inst = jval;
       else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) &&
         (!strcmp (jval, "gt") || !strcmp (jval, "lt") || !strcmp (jval, "gtu")))
-          inst = jval;
+        inst = jval;
       else if (IS_R6K_NOTYET &&
         (!strcmp (jval, "ge") || !strcmp (jval, "le") || !strcmp (jval, "leu")))
-          inst = jval;
+        inst = jval;
       else if (IS_TLCS90 &&
         (!strcmp (jval, "ge") || !strcmp (jval, "lt") || !strcmp (jval, "gt") || !strcmp (jval, "le") || !strcmp (jval, "ugt") || !strcmp (jval, "ule")))
-          inst = jval;
+        inst = jval;
       else
         {
           /* The buffer contains the bit on A that we should test */
           emit2 ("bit %s, a", jval);
           cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-          inst = "NZ";
+          inst = "nz";
         }
     }
   else
@@ -10651,39 +10622,39 @@ genIfxJump (iCode * ic, char *jval)
       if (!strcmp (jval, "a"))
         {
           emit3 (A_OR, ASMOP_A, ASMOP_A);
-          inst = "Z";
+          inst = "z";
         }
       else if (!strcmp (jval, "z"))
         {
-          inst = "NZ";
+          inst = "nz";
         }
       else if (!strcmp (jval, "nz"))
         {
-          inst = "Z";
+          inst = "z";
         }
       else if (!strcmp (jval, "c"))
         {
-          inst = "NC";
+          inst = "nc";
         }
       else if (!strcmp (jval, "nc"))
         {
-          inst = "C";
+          inst = "c";
         }
       else if (!strcmp (jval, "m"))
         {
-          inst = "P";
+          inst = "p";
         }
       else if (!strcmp (jval, "p"))
         {
-          inst = "M";
+          inst = "m";
         }
       else if (!strcmp (jval, "po"))
         {
-          inst = "PE";
+          inst = "pe";
         }
       else if (!strcmp (jval, "pe"))
         {
-          inst = "PO";
+          inst = "po";
         }
       else if ((IS_R6K_NOTYET || IS_TLCS90) && !strcmp (jval, "gt"))
         inst = "le";
@@ -10702,7 +10673,7 @@ genIfxJump (iCode * ic, char *jval)
           /* The buffer contains the bit on A that we should test */
           emit2 ("bit %s, a", jval);
           cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-          inst = "Z";
+          inst = "z";
         }
     }
   // Z80 can do a conditional long jump
@@ -11169,17 +11140,17 @@ fix:
               emit2 ("bit 7, e");
               cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
               if (!regalloc_dry_run)
-                emit2 ("jp Z, !tlabel", labelKey2num (tlbl1->key));
+                emit2 ("jp z, !tlabel", labelKey2num (tlbl1->key));
               emit2 ("bit 7, d");
               if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (tlbl2->key));
+                emit2 ("jp nz, !tlabel", labelKey2num (tlbl2->key));
               emit2 ("cp a, a");
               if (!regalloc_dry_run)
                 emit2 ("jp !tlabel", labelKey2num (tlbl2->key));
               emitLabelSpill (tlbl1);
               emit2 ("bit 7, d");
               if (!regalloc_dry_run)
-                emit2 ("jp Z, !tlabel", labelKey2num (tlbl2->key));
+                emit2 ("jp z, !tlabel", labelKey2num (tlbl2->key));
               emit2 ("scf");
               emitLabelSpill (tlbl2);
               regalloc_dry_run_cost += 18;
@@ -11723,7 +11694,7 @@ genAndOp (const iCode * ic)
       symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
       _toBoolean (left, TRUE);
       if (!regalloc_dry_run)
-        emit2 ("jp Z, !tlabel", labelKey2num (tlbl->key));
+        emit2 ("jp z, !tlabel", labelKey2num (tlbl->key));
       regalloc_dry_run_cost += 3;
       _toBoolean (right, FALSE);
       if (!regalloc_dry_run)
@@ -11761,7 +11732,7 @@ genOrOp (const iCode * ic)
       symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
       _toBoolean (left, TRUE);
       if (!regalloc_dry_run)
-        emit2 ("jp NZ, !tlabel", labelKey2num (tlbl->key));
+        emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
       regalloc_dry_run_cost += 3;
       _toBoolean (right, FALSE);
       if (!regalloc_dry_run)
@@ -11927,7 +11898,7 @@ genAnd (const iCode *ic, iCode *ifx)
               emit3 (A_CP, ASMOP_A, ASMOP_A); // Clear carry.
               emit3w (A_ADC, ASMOP_HL, ASMOP_HL); // Cannot use "add hl, hl instead, since it does not affect zero flag.
               if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (tlbl->key));
+                emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
               emit2 ("rl de");
               regalloc_dry_run_cost += 6;
               sizel -= 4;
@@ -12417,7 +12388,7 @@ genOr (const iCode * ic, iCode * ifx)
           if (ifx)              /* emit jmp only, if it is actually used */
             {
               if (!regalloc_dry_run)
-                emit2 ("jp NZ, !tlabel", labelKey2num (tlbl->key));
+                emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
               regalloc_dry_run_cost += 3;
             }
 
@@ -12781,7 +12752,7 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
             }
           if (ifx)              /* emit jmp only, if it is actually used * */
             if (!regalloc_dry_run)
-              emit2 ("jp NZ, !tlabel", labelKey2num (tlbl->key));
+              emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
           regalloc_dry_run_cost += 3;
           offset++;
         }
@@ -14433,9 +14404,7 @@ genLeftShift (const iCode *ic)
         {
           emit2 ("dec %s", regsZ80[countreg].name);
           cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1);
-          if (!regalloc_dry_run)
-            emit2 ("jr NZ,!tlabel", labelKey2num (tlbl->key));
-          cost2 (2, 12, 8, 5, 12, 8, 3, 3); // Assume jump taken, and optimized to jr.
+          emitJP (tlbl, "nz", 1.0f, true);
         }
     }
 
@@ -14884,9 +14853,7 @@ genRightShift (const iCode * ic)
         {
           emit2 ("dec %s", regsZ80[countreg].name);
           cost3 (1, 1, 1, 1, 4, 4, 2, 2, 4, 2, 1, 1, 1, 1, 1);
-          if (!regalloc_dry_run)
-            emit2 ("jr NZ, !tlabel", labelKey2num (tlbl->key));
-          cost2 (2, 12, 8, 5, 12, 8, 3, 3); // Assume jump taken, and optimized to jr.
+          emitJP (tlbl, "nz", 1.0f, true);
         }
     }
 
@@ -14928,7 +14895,7 @@ unpackMaskA(sym_link *type, int len)
           if (!regalloc_dry_run)
             {
               symbol *tlbl = newiTempLabel (NULL);
-              emit2 ("jp Z, !tlabel", labelKey2num (tlbl->key));
+              emit2 ("jp z, !tlabel", labelKey2num (tlbl->key));
               emit2 ("or a, !immedbyte", ((0xffu << len) & 0xffu));
               emitLabel (tlbl);
             }
@@ -17526,7 +17493,7 @@ genEndCritical (const iCode * ic)
       if (!regalloc_dry_run)
         {
           //don't enable interrupts if they were off before
-          emit2 ("jp Z, !tlabel", labelKey2num (tlbl->key));
+          emit2 ("jp z, !tlabel", labelKey2num (tlbl->key));
           emit2 ("!ei");
           emitLabelSpill (tlbl);
         }
@@ -18339,7 +18306,7 @@ genBuiltInStrcpy (const iCode *ic, int nParams, operand **pparams)
       emitLabel (tlbl);
       emit2 ("cp a, !*hl");
       emit2 ("ldi");
-      emit2 ("jr NZ, !tlabel", labelKey2num (tlbl->key));
+      emit2 ("jr nz, !tlabel", labelKey2num (tlbl->key));
     }
   regalloc_dry_run_cost += 5;
 
@@ -18423,12 +18390,12 @@ genBuiltInStrncpy (const iCode *ic, int nparams, operand **pparams)
       emitLabel (tlbl2);
       emit2 ("cp a,!*hl");
       emit2 ("ldi");
-      emit2 (IS_RAB ? "jp LZ, !tlabel" : "jp PO, !tlabel", labelKey2num (tlbl1->key));
-      emit2 ("jr NZ, !tlabel", labelKey2num (tlbl2->key));
+      emit2 (IS_RAB ? "jp lz, !tlabel" : "jp PO, !tlabel", labelKey2num (tlbl1->key));
+      emit2 ("jr nz, !tlabel", labelKey2num (tlbl2->key));
       emitLabel (tlbl3);
       emit2 ("dec hl");
       emit2 ("ldi");
-      emit2 (IS_RAB ? "jp LO, !tlabel" : "jp PE, !tlabel", labelKey2num (tlbl3->key));
+      emit2 (IS_RAB ? "jp lo, !tlabel" : "jp PE, !tlabel", labelKey2num (tlbl3->key));
       emitLabel (tlbl1);
     }
   regalloc_dry_run_cost += 14;
@@ -18519,11 +18486,11 @@ genBuiltInStrchr (const iCode *ic, int nParams, operand **pparams)
   cost2 (1, 7, 6, 6, 8, 6, 2, 2);
   emit3 (A_CP, ASMOP_A, aop_c);
   if (!regalloc_dry_run)
-    emit2 ("jp Z, !tlabel", labelKey2num (tlbl1->key));
+    emit2 ("jp z, !tlabel", labelKey2num (tlbl1->key));
   emit2 ("or a, a");
   emit2 ("inc %s", _pairs[pair].name);
   if (!regalloc_dry_run)
-    emit2 ("jr NZ, !tlabel", labelKey2num (tlbl2->key));
+    emit2 ("jr nz, !tlabel", labelKey2num (tlbl2->key));
   emit2 ("ld %s, a", _pairs[pair].l);
   emit2 ("ld %s, a", _pairs[pair].h);
   regalloc_dry_run_cost += 8; // jp will most likely be optimized into jr.

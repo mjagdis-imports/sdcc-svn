@@ -1161,41 +1161,41 @@ replace restart {
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	NC, %1
+	jp	nc, %1
 	jp	%2
 %1:
 } by {
-	jp	C, %2
+	jp	c, %2
 	; common peephole 79 removed jp by using inverse jump logic
 %1:
 } if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
 
 replace restart {
-	jp	C, %1
+	jp	c, %1
 	jp	%2
 %1:
 } by {
-	jp	NC, %2
+	jp	nc, %2
 	; common peephole 80 removed jp by using inverse jump logic
 %1:
 } if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
 
 replace restart {
-	jp	NZ, %1
+	jp	nz, %1
 	jp	%2
 %1:
 } by {
-	jp	Z, %2
+	jp	z, %2
 	; common peephole 81 removed jp by using inverse jump logic
 %1:
 } if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
 
 replace restart {
-	jp	Z, %1
+	jp	z, %1
 	jp	%2
 %1:
 } by {
-	jp	NZ, %2
+	jp	nz, %2
 	; common peephole 82 removed jp by using inverse jump logic
 %1:
 } if operandsNotRelated(%2 '(hl)' '(ix)' '(iy)'), labelRefCountChange(%1 -1)
@@ -1237,14 +1237,14 @@ replace restart {
 	ld	a, #0x00
 %1:
 	bit	%2, a
-	jp	Z, %3
+	jp	z, %3
 } by {
 	ld	a, #0x00
 	jp	%3
 	; common peephole 86 jumped directly to %3 instead of testing a first.
 %1:
 	bit	%2, a
-	jp	Z, %3
+	jp	z, %3
 } if labelRefCountChange(%3 +1)
 
 replace restart {
@@ -1269,7 +1269,7 @@ replace restart {
 replace restart {
 	ld	%1, #0x01
 	bit	0, %1
-	jp	Z, %2
+	jp	z, %2
 } by {
 	ld	%1, #0x01
 	; common peephole 89 removed impossible jump to %2.
@@ -1278,21 +1278,21 @@ replace restart {
 replace restart {
 	rlca
 	and	a, #0x01
-	jp	Z, %1
+	jp	z, %1
 } by {
 	rlca
 	; common peephole 90a removed and by changing jump condition.
-	jp	NC, %1
+	jp	nc, %1
 } if notUsed('a'), notUsedFrom(%1 'a')
 
 replace restart {
 	rlca
 	and	a, #0x01
-	jp	NZ, %1
+	jp	nz, %1
 } by {
 	; common peephole 90b removed and by changing jump condition.
 	rlca
-	jp	C, %1
+	jp	c, %1
 } if notUsed('a'), notUsedFrom(%1 'a')
 
 replace {
@@ -1664,7 +1664,7 @@ replace restart {
 	sbc	hl, %1
 	jp	%2, %3
 	; common peephole 102c removed redundant or after sbc.
-} if same(%2 'NZ' 'Z')
+} if same(%2 'nz' 'z')
 
 replace restart {
 	sub	a, %1
@@ -1676,7 +1676,7 @@ replace restart {
 	ld	%2, a
 	; common peephole 102d removed redundant or after sub.
 	jp	%3, %4
-} if same(%3 'NZ' 'Z')
+} if same(%3 'nz' 'z')
 
 replace {
 	ld	%1,%2
@@ -1936,22 +1936,22 @@ replace restart {
 
 replace restart {
 	or	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	%3, #0x00
 } by {
 	or	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	%3, a
 	; common peephole 121a replaced constant #0x00 by a (which has just been tested to be #0x00).
 }
 
 replace restart {
 	and	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	%3, #0x00
 } by {
 	and	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	%3, a
 	; common peephole 121b replaced constant #0x00 by a (which has just been tested to be #0x00).
 }
@@ -1965,45 +1965,45 @@ replace restart {
 
 replace restart {
 	sub	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	%3, #0x00
 } by {
 	sub	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	%3, a
 	; common peephole 124 replaced constant #0x00 by a (which has just been tested to be #0x00).
 }
 
 replace restart {
 	inc	a
-	jp	NZ, %1
+	jp	nz, %1
 	ld	%2, #0x00
 } by {
 	inc	a
-	jp	NZ, %1
+	jp	nz, %1
 	ld	%2, a
 	; common peephole 125a replaced constant #0x00 by a (which has just been tested to be #0x00).
 }
 
 replace restart {
 	dec	a
-	jp	NZ, %1
+	jp	nz, %1
 	ld	%2, #0x00
 } by {
 	dec	a
-	jp	NZ, %1
+	jp	nz, %1
 	ld	%2, a
 	; common peephole 125b replaced constant #0x00 by a (which has just been tested to be #0x00).
 }
 
 replace restart {
 	or	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	a, %3
 	or	a, a
 } by {
 	or	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	or	a, %3
 	; common peephole 126a shortened or using a (which has just been tested to be #0x00).
 } if canAssign('b' %3)
@@ -2012,25 +2012,25 @@ replace restart {
 replace restart {
 	or	a, %1
 	ld	%4, a
-	jp	NZ, %2
+	jp	nz, %2
 	ld	a, %3
 	or	a, a
 } by {
 	or	a, %1
 	ld	%4, a
-	jp	NZ, %2
+	jp	nz, %2
 	or	a, %3
 	; common peephole 126b shortened or using a (which has just been tested to be #0x00).
 } if canAssign('b' %3)
 
 replace restart {
 	sub	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	ld	a, %3
 	or	a, a
 } by {
 	sub	a, %1
-	jp	NZ, %2
+	jp	nz, %2
 	or	a, %3
 	; common peephole 127a shortened or using a (which has just been tested to be #0x00).
 } if canAssign('b' %3)
@@ -2039,13 +2039,13 @@ replace restart {
 replace restart {
 	sub	a, %1
 	ld	%4, a
-	jp	NZ, %2
+	jp	nz, %2
 	ld	a, %3
 	or	a, a
 } by {
 	sub	a, %1
 	ld	%4, a
-	jp	NZ, %2
+	jp	nz, %2
 	or	a, %3
 	; common peephole 127b shortened or using a (which has just been tested to be #0x00).
 } if canAssign('b' %3)
@@ -2055,7 +2055,7 @@ replace restart {
 %3:
 	ld	a, (%1)
 	%4	a, a
-	jp	Z, %2
+	jp	z, %2
 	inc	%1
 	jp	%3
 %2:
@@ -2064,7 +2064,7 @@ replace restart {
 	ld	a, (%1)
 	inc	%1
 	%4	a, a
-	jp	NZ, %3
+	jp	nz, %3
 	; common peephole 128a sped up loop body.
 	dec	%1
 %2:
@@ -2080,9 +2080,9 @@ replace restart {
 	inc	%6
 	sub	a, %3
 	ld	%4, a
-	jp	NZ, %2
+	jp	nz, %2
 	or	a,%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 } by {
 %1:
@@ -2092,9 +2092,9 @@ replace restart {
 	ld	a, (%6)
 	inc	%6
 	sub	a, %3
-	jp	NZ, %2
+	jp	nz, %2
 	cp	a,%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 	; common peephole 128b sped up loop body.
 	ld	%4, a
@@ -2109,9 +2109,9 @@ replace restart {
 	inc	%6
 	sub	a, %3
 	ld	%4, a
-	jp	NZ, %2
+	jp	nz, %2
 	or	a,%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 } by {
 %1:
@@ -2121,9 +2121,9 @@ replace restart {
 	ld	a, (%6)
 	inc	%6
 	sub	a, %3
-	jp	NZ, %2
+	jp	nz, %2
 	cp	a,%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 	; common peephole 128c sped up loop body.
 	ld	%4, a
@@ -2482,10 +2482,10 @@ replace restart {
 replace restart {
 	sbc	a,%1
 	bit	7,a
-	jp	NZ,%2
+	jp	nz,%2
 } by {
 	sbc	a,%1
-	jp	M,%2
+	jp	m,%2
 	; common peephole 150 used sign flag instead of testing bit 7.
 } if isPort('z80' 'ez80' 'z180' 'z80n' 'tlcs90')
 
@@ -2521,31 +2521,31 @@ replace {
 
 replace restart {
 	%4	a,%1
-	jp	NZ,%2
+	jp	nz,%2
 	xor	a,a
 } by {
 	%4	a,%1
-	jp	NZ,%2
+	jp	nz,%2
 	; common peephole 154a removed redundant zeroing of a (which has just been tested to be #0x00).
 } if same(%4 'or' 'and'), notUsed('f')
 
 replace restart {
 	%4	a
-	jp	NZ,%2
+	jp	nz,%2
 	xor	a,a
 } by {
 	%4	a
-	jp	NZ,%2
+	jp	nz,%2
 	; common peephole 154b removed redundant zeroing of a (which has just been tested to be #0x00).
 } if same(%4 'inc' 'dec'), notUsed('f')
 
 replace restart {
 	%4	%1
-	jp	NZ,%2
+	jp	nz,%2
 	xor	a,a
 } by {
 	%4	%1
-	jp	NZ,%2
+	jp	nz,%2
 	; common peephole 154c reuseded zero of register (which has just been tested to be #0x00).
 	ld	a, %1
 } if same(%4 'inc' 'dec'), notUsed('f')
@@ -2606,7 +2606,7 @@ replace restart {
 } if same(%1 'bc' 'de' 'hl' 'ix' 'iy' 'sp'), same(%2 'bc' 'de' 'hl' 'ix' 'iy' 'sp'), operandsNotRelated(%1 %2)
 
 replace restart {
-	jp	Z, %2
+	jp	z, %2
 	ld	a, #%3
 	jp	%1
 %2:
@@ -2614,63 +2614,63 @@ replace restart {
 %1:
 } by {
 	ld	a, #%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 	ld	a, #%4
-	; common peephole 168z used double assignment in case of Z condition.
+	; common peephole 168z used double assignment in case of z condition.
 %1:
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	NZ, %2
+	jp	nz, %2
 	ld	a, #%3
 	jp	%1
 %2:
 	ld	a, #%4
+%1:
+} by {
+	ld	a, #%3
+	jp	z, %1
+%2:
+	ld	a, #%4
+	; common peephole 168nz used double assignment in case of nz condition.
+%1:
+} if labelRefCountChange(%2 -1)
+
+replace restart {
+	jp	z, %2
+	ld	a, #%3
+	jp	%1
+%2:
+	xor	a, a
+%1:
+} by {
+	ld	a, #%3
+	jp	nz, %1
+	; common peephole 169xz used double assignment in case of z condition.
+%2:
+	xor	a, a
+%1:
+} if labelRefCountChange(%2 -1)
+
+replace restart {
+	jp	nz, %2
+	ld	a, #%3
+	jp	%1
+%2:
+	xor	a, a
 %1:
 } by {
 	ld	a, #%3
 	jp	Z, %1
-%2:
-	ld	a, #%4
-	; common peephole 168nz used double assignment in case of NZ condition.
-%1:
-} if labelRefCountChange(%2 -1)
-
-replace restart {
-	jp	Z, %2
-	ld	a, #%3
-	jp	%1
-%2:
-	xor	a, a
-%1:
-} by {
-	ld	a, #%3
-	jp	NZ, %1
-	; common peephole 169xz used double assignment in case of Z condition.
+	; common peephole 169xnz used double assignment in case of nz condition.
 %2:
 	xor	a, a
 %1:
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	NZ, %2
-	ld	a, #%3
-	jp	%1
-%2:
-	xor	a, a
-%1:
-} by {
-	ld	a, #%3
-	jp	Z, %1
-	; common peephole 169xnz used double assignment in case of NZ condition.
-%2:
-	xor	a, a
-%1:
-} if labelRefCountChange(%2 -1)
-
-replace restart {
-	jp	Z, %2
+	jp	z, %2
 	ld	c, #%3
 	jp	%1
 %2:
@@ -2678,7 +2678,7 @@ replace restart {
 %1:
 } by {
 	ld	c, #%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 	ld	c, #%4
 	; common peephole 170z used double assignment in case of Z condition.
@@ -2686,7 +2686,7 @@ replace restart {
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	NZ, %2
+	jp	nz, %2
 	ld	c, #%3
 	jp	%1
 %2:
@@ -2694,15 +2694,15 @@ replace restart {
 %1:
 } by {
 	ld	c, #%3
-	jp	Z, %1
+	jp	z, %1
 %2:
 	ld	c, #%4
-	; common peephole 170nz used double assignment in case of NZ condition.
+	; common peephole 170nz used double assignment in case of nz condition.
 %1:
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	Z, %2
+	jp	z, %2
 	ld	e, #%3
 	jp	%1
 %2:
@@ -2710,15 +2710,15 @@ replace restart {
 %1:
 } by {
 	ld	e, #%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 	ld	e, #%4
-	; common peephole 171z used double assignment in case of Z condition.
+	; common peephole 171z used double assignment in case of z condition.
 %1:
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	NZ, %2
+	jp	nz, %2
 	ld	e, #%3
 	jp	%1
 %2:
@@ -2726,15 +2726,15 @@ replace restart {
 %1:
 } by {
 	ld	e, #%3
-	jp	Z, %1
+	jp	z, %1
 %2:
 	ld	e, #%4
-	; common peephole 171nz used double assignment in case of NZ condition.
+	; common peephole 171nz used double assignment in case of nz condition.
 %1:
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	Z, %2
+	jp	z, %2
 	ld	l, #%3
 	jp	%1
 %2:
@@ -2742,15 +2742,15 @@ replace restart {
 %1:
 } by {
 	ld	l, #%3
-	jp	NZ, %1
+	jp	nz, %1
 %2:
 	ld	l, #%4
-	; common peephole 172z used double assignment in case of Z condition.
+	; common peephole 172z used double assignment in case of z condition.
 %1:
 } if labelRefCountChange(%2 -1)
 
 replace restart {
-	jp	NZ, %2
+	jp	nz, %2
 	ld	l, #%3
 	jp	%1
 %2:
@@ -2758,10 +2758,10 @@ replace restart {
 %1:
 } by {
 	ld	l, #%3
-	jp	Z, %1
+	jp	z, %1
 %2:
 	ld	l, #%4
-	; common peephole 172nz used double assignment in case of NZ condition.
+	; common peephole 172nz used double assignment in case of nz condition.
 %1:
 } if labelRefCountChange(%2 -1)
 
@@ -2940,16 +2940,16 @@ replace restart {
 	sbc	a, #0x00
 	ld	a, %4
 	sbc	a, #0x00
-	%5	C, %6
+	%5	c, %6
 } by {
 	; common peephole 194-1: symplify 32-bit compare for 8 bit values
 	ld	a, %2
 	or	a, %3
 	or	a, %4
-	jp	NZ, %9
+	jp	nz, %9
 	ld	a, %1
 	cp	a, #%7
-	%5	C, %6
+	%5	c, %6
 %9:
 } if same(%5 'jr' 'jp' 'call'), notUsed('a'), canAssign('b' %3), canAssign('b' %3), newLabel(%9)
 
@@ -2962,24 +2962,24 @@ replace restart {
 	sbc	a, #0x00
 	ld	a, %4
 	sbc	a, #0x00
-	%5	C, %6
+	%5	c, %6
 } by {
 	; common peephole 194-2: symplify 32-bit compare for 16 bit values
 	ld	a, %3
 	or	a, %4
-	jp	NZ, %9
+	jp	nz, %9
 	ld	a, %1
 	sub	a, #%7
 	ld	a, %2
 	sbc	a, #%8
-	%5	C, %6
+	%5	c, %6
 %9:
 } if same(%5 'jr' 'jp' 'call'), notUsed('a'), canAssign('b' %3), newLabel(%9)
 
 replace restart {
 	ld	a, #0xff
 	cp	a, %1
-	%2	NC, %3
+	%2	nc, %3
 } by {
 	; common peephole 195-1: remove always true check
 } if same(%2 'jr' 'jp' 'call'), notUsed('a'), labelRefCountChange(%3 -1)
@@ -2989,7 +2989,7 @@ replace restart {
 	sub	a, %1
 	ld	a, #0xff
 	sbc	a, %2
-	%3	NC, %4
+	%3	nc, %4
 } by {
 	; common peephole 195-2: remove always true check
 } if same(%3 'jr' 'jp' 'call'), notUsed('a'), labelRefCountChange(%4 -1)
@@ -3086,7 +3086,7 @@ replace restart {
 } by {
 	; common peephole 163 changed absolute to relative conditional jump.
 	jr	%1, %5
-} if same(%1 'C' 'NC' 'NZ' 'Z'), labelInRange(%5)
+} if same(%1 'c' 'nc' 'nz' 'z'), labelInRange(%5)
 
 replace restart {
 	jr	%1, %5
@@ -3098,7 +3098,7 @@ replace restart {
 
 replace {
 	dec	b
-	jr	NZ, %5
+	jr	nz, %5
 } by {
 	; common peephole 167 used djnz
 	djnz	%5
