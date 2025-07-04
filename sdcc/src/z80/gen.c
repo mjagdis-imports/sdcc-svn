@@ -4527,7 +4527,10 @@ commitPair (asmop *aop, PAIR_ID id, const iCode *ic, bool dont_destroy) // Obsol
       if (abs (sp_offset) <= 127)
         {
           emit2 ("ld %d (sp), %s", sp_offset, id == PAIR_IY ? "iy" : "hl");       /* Relative to stack pointer. */
-          cost2 (2 + IS_TLCS90, 0, 0, 11, 0, 12, 0, 0);
+          if (id == PAIR_HL || IS_TLCS90)
+            cost3 (2, 3, -1, 3, -1, -1, 11, 12, -1, 12, -1, 5, 5, -1, -1);
+          else
+            cost3 (3, 3, -1, 3, -1, -1, 13, 14, -1, 12, -1, 5, 5, -1, -1);
         }
       else
         {
@@ -4676,22 +4679,26 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
 
       bool source_sp = IS_RAB && source_sp_offset <= 255 || (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && source_sp_offset <= 127;
       bool result_sp = IS_RAB && result_sp_offset <= 255 || (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && result_sp_offset <= 127;
-      if (i + 1 < n && !assigned[i + 1] && hl_free && (IS_RAB || IS_EZ80 || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && // Todo: For Rabbit, use ld hl n(sp) and ld n(sp), hl when sp_offset is <= 255.
+      if ((IS_RAB || IS_EZ80 || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && i + 1 < n && !assigned[i + 1] && hl_free &&
         (result->type == AOP_STK && result_fp_offset >= -128 && result_fp_offset <= 127 || result_sp) &&
         (source->type == AOP_STK && source_fp_offset >= -128 && source_fp_offset <= 127 || source_sp))
         {
-          if (!regalloc_dry_run)
+          if (source_sp)
+            emit2 ("ld hl, %d (sp)", source_sp_offset);
+          else
             {
-              if (source_sp)
-                emit2 ("ld hl, %d (sp)", source_sp_offset);
-              else
+              if (!regalloc_dry_run)
                 emit2 ("ld hl, %s", aopGet (source, soffset + i, false));
-              if (result_sp)
-                emit2 ("ld %d (sp), hl", result_sp_offset);
-              else
+            }
+          cost3 (2 + IS_EZ80, 3, -1, 3, -1, -1, 9, 10, -1, 12, -1, 6, 6, 5, -1);
+          if (result_sp)
+            emit2 ("ld %d (sp), hl", result_sp_offset);
+          else
+            {
+              if (!regalloc_dry_run)
                 emit2 ("ld %s, hl", aopGet (result, roffset + i, false));
             }
-          cost2 (6 - 2 * IS_RAB, 0, 0, 22, 0, 21, 10, 0);
+          cost3 (2 + IS_EZ80, 3, -1, 3, -1, -1, 11, 12, -1, 12, -1, 6, 5, 5, -1);
 
           spillPair (PAIR_HL);
 
@@ -4795,11 +4802,11 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
           size -= 2;
           i += 2;
         }
-      else if (IS_RAB && i + 1 < n && aopOnStack (result, roffset + i, 2) && aopInReg (source, soffset + i, IY_IDX) &&
-        sp_offset <= 255)
+      else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && i + 1 < n && aopOnStack (result, roffset + i, 2) && aopInReg (source, soffset + i, IY_IDX) &&
+        sp_offset <= (IS_RAB ? 255 : 127))
         {
           emit2 ("ld %d (sp), iy", sp_offset);
-          cost2 (3, 0, 0, 13, 0, 0, 0, 0);
+          cost3 (3, 3, -1, 3, -1, -1, 13, 14, -1, 12, -1, 5, 5, -1, -1);
           assigned[i] = true;
           assigned[i + 1] = true;
           regsize -= 2;
@@ -4820,14 +4827,14 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
           size -= 2;
           i += 2;  
         }
-      else if (IS_RAB && i + 1 < n && aopOnStack (result, roffset + i, 2) && aopInReg (source, soffset + i, DE_IDX) &&
-        (sp_offset <= 255 || abs(fp_offset) <= 127 && !_G.omitFramePtr))
+      else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && i + 1 < n && aopOnStack (result, roffset + i, 2) && aopInReg (source, soffset + i, DE_IDX) &&
+        (sp_offset <= (IS_RAB ? 255 : 127) || abs(fp_offset) <= 127 && !_G.omitFramePtr))
         {
           bool use_sp = (sp_offset <= 255);
           emit2 ("ex de, hl");
           if (!regalloc_dry_run)
             emit2 ("ld %d %s, hl", use_sp ? sp_offset : fp_offset, use_sp ? "(sp)" : "(ix)");
-          cost2 (3, 0, 0, 13, 0, 0, 0, 0);
+          cost3 (2, 3, -1, 3, -1, -1, 11, 12, -1, 12, -1, 6, 5, -1, -1);
           if (!de_dead || !hl_dead || source->regs[L_IDX] >= 0 && !assigned[source->regs[L_IDX]] || source->regs[H_IDX] >= 0 && !assigned[source->regs[H_IDX]])
             emit3w (A_EX, ASMOP_DE, ASMOP_HL);
           spillPair (PAIR_HL);
@@ -5199,19 +5206,18 @@ skip_byte:
           size -= 2;
           i += 2;
         }
-      else if (i + 1 < n && !assigned[i + 1] &&
-        (source->type == AOP_STK && fp_offset <= 127 || sp_offset <= 255) &&
-        (aopInReg (result, roffset + i, DE_IDX) || result->type == AOP_REG && result->regs[L_IDX] < i && result->regs[IYL_IDX] < i && result->regs[H_IDX] < i && result->regs[IYH_IDX] < i && hl_free) &&
-        IS_RAB)
+      else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_EZ80) && i + 1 < n && !assigned[i + 1] &&
+        (source->type == AOP_STK && fp_offset <= 127 || !IS_EZ80 && sp_offset <= IS_RAB ? 255 : 127) &&
+        (aopInReg (result, roffset + i, DE_IDX) || result->type == AOP_REG && result->regs[L_IDX] < i && result->regs[IYL_IDX] < i && result->regs[H_IDX] < i && result->regs[IYH_IDX] < i && hl_free))
         {
           if (!hl_free)
-            emit2 ("ex de, hl");
+            emit3w (A_EX, ASMOP_DE, ASMOP_HL);
           if (!regalloc_dry_run)
-            if (sp_offset <= 255)
+            if (!IS_EZ80 && sp_offset <= 255)
               emit2 ("ld hl, %d (sp)", sp_offset);
             else
               emit2 ("ld hl, %s", aopGet (source, soffset + i, false));
-          cost2 (2 + !hl_free, 0, 0, 11 + !hl_free * 2, 0, 0, 0, 0);
+          cost3 (2 + IS_EZ80, 3, -1, 3, -1, -1, 9, 10, -1, 12, -1, 6, 6, 5, -1);
           spillPair (PAIR_HL);
           if (aopInReg (result, roffset + i, DE_IDX))
             emit3w (A_EX, ASMOP_DE, ASMOP_HL);
@@ -5567,14 +5573,14 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           continue;
         }
 
-      if ((IS_EZ80 || IS_RAB || IS_TLCS90) && i + 1 < size && result->type == AOP_STK &&
+      if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_EZ80) && i + 1 < size && result->type == AOP_STK &&
         source->type == AOP_LIT && (value_hl >= 0 && aopIsLitVal (source, soffset + i, 2, value_hl) || hl_dead))
         {
           if (value_hl < 0 || !aopIsLitVal (source, soffset + i, 2, value_hl))
             fetchLitPair (PAIR_HL, source, soffset + i, f_dead, false);
           if (!regalloc_dry_run)
             emit2 ("ld %s, hl", aopGet (result, roffset + i, false));
-          cost2 (3 - IS_RAB, 0, 0, 11, 0, 12, 5, 0);
+          cost3 (2 + IS_EZ80, 3, -1, 3, -1, -1, 11, 12, -1, 12, -1, 6, 5, 5, -1);
           value_hl = ullFromVal (source->aopu.aop_lit) >> ((soffset + i) * 8) & 0xffff;
           i += 2;
           continue;
@@ -8091,7 +8097,7 @@ genEndFunction (iCode *ic)
           if (IFFUNC_ISCRITICAL (sym->type))
             {
               emit2 ("!ei");
-              cost2 (1, 4, 3, 0, 4, 2, 1, 1);
+              cost (2, 4);
             }
           emit3 (A_RET, 0, 0);
         }
@@ -10148,7 +10154,7 @@ genMultOneChar (const iCode * ic)
       emitLabel (tlbl2);
       if (!regalloc_dry_run)
         emit2 ("djnz !tlabel", labelKey2num (tlbl1->key));
-      cost2 (2, 12.375f, 8.75f, 5.0f, 0, 10.0f, 3.75f, 2.0f);
+      cost3 (2, 2, -1, -1, 12.375f, 8.75f, 5.0f, 6.0f, -1.0f, 10.0f, -1.0f, -1.0f, -1.0f, 3.75f, 2.0f);
       regalloc_dry_run_state_scale = 1.0f;
     }
 
@@ -12004,6 +12010,8 @@ genAnd (const iCode *ic, iCode *ifx)
                 emit2 ("bit %d, %s", isLiteralBit (bytelit), aopGet (left->aop, offset, FALSE));
               if (left->aop->type == AOP_REG)
                 cost3 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+              else if (left->aop->type == AOP_HL)
+                cost3 (2, 2, 2, 2, 12, 9, 7, 7, 16, 6, 3, 3, 3, 3, 3);
               else
                 cost3 (4, 3, -1, 3, 20, 15, 10, 11, -1, 10, -1, 5, 5, 5 , 5);
               if (requiresHL (left->aop) && left->aop->type != AOP_REG)
@@ -13491,7 +13499,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
         {
           if (!regalloc_dry_run)
             emit2 ("djnz !tlabel", labelKey2num (tlbl->key));
-          cost2 (2, 13, 9, 5, 0, 10, 4, 2); // Assume jump taken.
+          cost3 (2, 2, -1, -1, 13, 9, 5, 6, -1, 10, -1, -1, -1, 4, 2); // Assume jump taken.
         }
       else
         {
@@ -13638,7 +13646,7 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
                 {
                   if (!regalloc_dry_run)
                     emit2 ("djnz !tlabel", labelKey2num (tlbl->key));
-                  cost2 (2, 13, 9, 5, 0, 10, 4, 2); // Assume jump taken.
+                  cost3 (2, 2, -1, -1, 13, 9, 5, 6, -1, 10, -1, -1, -1, 4, 2); // Assume jump taken.
                 }
               else
                 {
@@ -14397,7 +14405,7 @@ genLeftShift (const iCode *ic)
         {
           if (!regalloc_dry_run)
             emit2 ("djnz !tlabel", labelKey2num (tlbl->key));
-          cost2 (2, 13, 9, 5, 0, 10, 4, 2); // Assume jump taken.
+          cost3 (2, 2, -1, -1, 13, 9, 5, 6, -1, 10, -1, -1, -1, 4, 2); // Assume jump taken.
         }
       else
         {
@@ -14846,7 +14854,7 @@ genRightShift (const iCode * ic)
         {
           if (!regalloc_dry_run)
             emit2 ("djnz !tlabel", labelKey2num (tlbl->key));
-          cost2 (2, 13, 9, 5, 0, 10, 4, 2); // Assume jump taken.
+          cost3 (2, 2, -1, -1, 13, 9, 5, 6, -1, 10, -1, -1, -1, 4, 2); // Assume jump taken.
         }
       else
         {
@@ -15260,10 +15268,10 @@ genPointerGet (const iCode *ic)
           offset = 2;
           size -= 2;
         }
-      else if ((IS_EZ80 || IS_TLCS90) && getPairId_o (result->aop, 0) != PAIR_INVALID)
+      else if ((IS_EZ80 || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && getPairId_o (result->aop, 0) != PAIR_INVALID)
         {
           emit2 ("ld %s, %d (iy)", _pairs[getPairId_o (result->aop, 0)].name, rightval);
-          cost2 (3, 0, 0, 0, 0, 12, 5, 0);
+          cost3 (3, 3, -1, 3, -1, -1, -1, -1, -1, 12, -1, 6, 6, 5, -1);
           offset = 2;
           size -= 2;
         }
@@ -15286,7 +15294,7 @@ genPointerGet (const iCode *ic)
               aopPut (result->aop, dbuf_c_str (&dbuf), offset);
               dbuf_destroy (&dbuf);
             }
-          cost2 (3, 19, 14, 9, 0, 10, 4, 5); // Assume ld r, d(iy)
+          cost3 (3, 3, -1, 3, 19, 14, 9, 10, -1, 10, -1, 5, 5, 4, 5); // Assume ld r, d(iy)
           offset++;
         }
 
