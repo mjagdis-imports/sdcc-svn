@@ -667,6 +667,10 @@ z80MightRead(const lineNode *pl, const char *what)
     lineIsInst (pl, "brlc")))
     return(strchr("bde", *what));
 
+  if(IS_TLCS90 &&
+    (lineIsInst (pl, "decx") ||
+    lineIsInst (pl, "incx")))
+    return(false);
   if (IS_TLCS90 &&
     (lineIsInst (pl, "mul") ||
     lineIsInst (pl, "div")))

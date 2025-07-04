@@ -1,9 +1,10 @@
-/** dynamicc.in - test Dynamic c calling convention support. AFAIK the original Dynamic C only supported Z180 and the Rabbits. We support he callign convention for all Z80-like architectures, though.
+/** dynamicc.c.in - test Dynamic C calling convention support.
+    AFAIK the original Dynamic C only supported Z180 and the Rabbits.
+    We support this calling convention for all Z80-like architectures, though.
 
     rtype: unsigned int, unsigned long
 */
 #include <testfwk.h>
-#include <stdlib.h>
 
 #define VAL 0xaa55a55a
 
@@ -22,19 +23,18 @@ int frameptruser (char i, int j, long k, long long l)
   volatile int a[5];
   a[0] = i; a[1] = j; a[2] = k, a[3] = l;
   
-  // __dynamicc has the caller save ix.
+  // __dynamicc has the caller save ix (used as framepointer by SDCC).
   a[4] = fret ();
   fnoret ();
   
-  return (a[0] + a[1] + a[2] + a[3] + a[4]);
+  return (a[0] + a[1] + a[2] + a[3] + a[4]); // The reads from the array should use the frame pointer.
 }
 
 // TODO: test unsigned char return when supported for __dynamicc
 // TODO: test struct/union return when supported for __dynamicc
 // TODO: test parameter passing when supported for __dynamicc
 
-void
-testDynamicC(void)
+void testDynamicC(void)
 {
   ASSERT (fret () == ({rtype})VAL);
   ASSERT (frameptruser (1, 2, 3, 4) == 1 + 2 + 3 + 4 + (int)({rtype})VAL);

@@ -1,5 +1,11 @@
 2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c,
+	  support/regression/tests/far_rabbits.c.in:
+	  A few more tiny bits of __far support for Rabbits/TLCS90/eZ80, still not really useable in any way.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.lex,
 	  src/z80/gen.c,
 	  support/regression/fwk/include/testfwk.h,

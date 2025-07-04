@@ -15572,7 +15572,7 @@ genPointerGet (const iCode *ic)
       if (!isRegDead (A_IDX, ic) && !(aopInReg (left->aop, 2, A_IDX) && size == 1 && !rightval && !bit_field))
         _push (PAIR_AF), pushed_a = true;
 
-      bool use_add_iy_d = 0 /* IS_R6K_NOTYET && size == 2 || (!bc_ok && !de_ok) todo: enable when assembler supports r6k add iy, #d*/;
+      bool use_add_iy_d = IS_R6K_NOTYET && (size == 2 || (!bc_ok && !de_ok));
 
       if (!hl_ok && !iy_ok)
         UNIMPLEMENTED;
@@ -15629,6 +15629,12 @@ genPointerGet (const iCode *ic)
 
       goto release;
     }
+  else if (from_far && IS_TLCS90)
+    {
+      wassert (0); // todo: implement.
+    }
+
+  wassert (!from_far); // __far should have been handled above.
 
   extrapair = isPairDead (PAIR_DE, ic) ? PAIR_DE : PAIR_BC;
 
@@ -16473,9 +16479,9 @@ genPointerSet (iCode *ic)
             }
           else
             {
-              emit2 ("ld a, (iy)");
-              cost (2, 6);
               cheapMove (ASMOP_A, 0, right->aop, i, true);
+              emit2 ("ld (iy), a");
+              cost (2, 6);
               if (bit_field)
                 {
                   UNIMPLEMENTED;
@@ -16805,7 +16811,7 @@ genAddrOf (const iCode *ic)
   // Upper byte of pointer to __far
   if (ic->result->aop->size > 2)
     {
-      wassert (IS_EZ80 || IS_RAB);
+      wassert (IS_RAB || IS_TLCS90 || IS_EZ80);
 
       if (sym->onStack)
         cheapMove (ic->result->aop, 2, ASMOP_ZERO, 0, isRegDead (A_IDX, ic) && ic->result->aop->regs[A_IDX] < 0);
