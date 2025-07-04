@@ -407,11 +407,11 @@ z80MightRead(const lineNode *pl, const char *what)
   if(strcmp(pl->line, "call\t__initrleblock") == 0 && (strchr(what, 'd') != 0 || strchr(what, 'e') != 0))
     return TRUE;
 
-  if(strcmp(pl->line, "call\t___sdcc_call_hl") == 0 && (strchr(what, 'h') != 0 || strchr(what, 'l') != 0))
-    return TRUE;
+  if((strcmp(pl->line, "call\t___sdcc_call_hl") == 0 || !strncmp (larg, "(hl)", 4)) && (strchr(what, 'h') != 0 || strchr(what, 'l') != 0))
+    return true;
 
-  if(strcmp(pl->line, "call\t___sdcc_call_iy") == 0 && strstr(what, "iy") != 0)
-    return TRUE;
+  else if((strcmp(pl->line, "call\t___sdcc_call_iy") == 0 || !strncmp (larg, "(iy)", 4)) && strstr(what, "iy") != 0)
+    return true;
 
   if(strncmp(pl->line, "call\t___sdcc_bcall_", 19) == 0)
     if (strchr (what, pl->line[19]) != 0 || strchr (what, pl->line[20]) != 0 || strchr (what, pl->line[21]) != 0)

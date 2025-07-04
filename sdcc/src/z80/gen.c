@@ -2425,8 +2425,24 @@ aopRet (sym_link *ftype)
   int size = getSize (ftype->next);
 
   const bool bigreturn = (size > 4) || IS_STRUCT (ftype->next);
+
+  wassertl (!bigreturn || !FUNC_ISDYNAMICC (ftype), "return type not yet supported for __dynamicc");
+
   if (bigreturn)
     return (0);
+
+  if (FUNC_ISDYNAMICC (ftype))
+    switch (size)
+      {
+      case 0:
+        return 0;
+      case 2:
+        return (ASMOP_HL);
+      case 4:
+        return (ASMOP_BCDE);   
+      default:
+        wassertl (0, "return type not yet supported for __dynamicc");
+      }
 
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || FUNC_ISZ88DK_FASTCALL (ftype))
     switch (size)
@@ -2493,6 +2509,9 @@ aopArg (sym_link *ftype, int i)
           return 0;
         }
     }
+
+  if (FUNC_ISDYNAMICC (ftype))
+    wassertl (0, "Parameters not supported for __dynamicc yet");
 
   // Old SDCC calling convention: Pass everything on the stack.
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || IFFUNC_ISBANKEDCALL (ftype))
@@ -2567,6 +2586,9 @@ isFuncCalleeStackCleanup (sym_link *ftype)
         stackparmbytes += argsize;
     }
   if (!stackparmbytes)
+    return false;
+
+  if (IFFUNC_ISDYNAMICC (ftype))
     return false;
 
   if (IFFUNC_ISZ88DK_CALLEE (ftype))
@@ -4775,7 +4797,9 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       int fp_offset = result->aopu.aop_stk + (result->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + roffset + i;
       int sp_offset = fp_offset + _G.stack.pushed + _G.stack.offset;
 
-      if (!IS_SM83 && !IS_TLCS870 && !IS_RAB && !(IS_TLCS90 && optimize.codeSpeed) && // The sm83 doesn't have ex (sp), hl. The Rabbits and tlcs90 have it, but ld 0 (sp), hl is faster. For the Rabbits, they are also the same size.
+      if (assigned[i])
+        i++;
+      else if (!IS_SM83 && !IS_TLCS870 && !IS_RAB && !(IS_TLCS90 && optimize.codeSpeed) && // The sm83 doesn't have ex (sp), hl. The Rabbits and tlcs90 have it, but ld 0 (sp), hl is faster. For the Rabbits, they are also the same size.
         i + 1 < n && aopOnStack (result, roffset + i, 2) && !sp_offset &&
         aopInReg (source, soffset + i, HL_IDX) && hl_dead && // If we knew that iy was dead, we could also use ex (sp), iy here.
         !regalloc_dry_run) // Stack positions will change, so do not assume this is possible in the cost function.
@@ -4830,6 +4854,20 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && i + 1 < n && aopOnStack (result, roffset + i, 2) && aopInReg (source, soffset + i, DE_IDX) &&
         (sp_offset <= (IS_RAB ? 255 : 127) || abs(fp_offset) <= 127 && !_G.omitFramePtr))
         {
+          // Try to free hl first
+          if (source->regs[L_IDX] >= soffset && source->regs[L_IDX] < soffset + n && !assigned[source->regs[L_IDX]] &&
+            source->regs[H_IDX] >= soffset && source->regs[H_IDX] < soffset + n && !assigned[source->regs[H_IDX]] &&
+            hl_dead && source->regs[H_IDX] == source->regs[L_IDX] + 1 && sp_offset + n < (IS_RAB ? 255 : 127))
+            {
+              int j = source->regs[L_IDX] - soffset;
+              emit2 ("ld %d (sp), hl", result->aopu.aop_stk + (result->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + roffset + j + _G.stack.pushed + _G.stack.offset);
+              cost3 (2, 3, -1, 3, -1, -1, 11, 12, -1, 12, -1, 6, 5, -1, -1);
+              assigned[j] = true;
+              assigned[j + 1] = true;
+              regsize -= 2;
+              size -= 2;
+            }
+
           bool use_sp = (sp_offset <= 255);
           emit2 ("ex de, hl");
           if (!regalloc_dry_run)
@@ -5144,10 +5182,7 @@ skip_byte:
       const bool de_free = e_free && d_free;
 
       if (assigned[i])
-        {
-          i++;
-          continue;
-        }
+        i++;
       else if (i + 1 < n && !assigned[i + 1] && (source->type == AOP_STK || source->type == AOP_EXSTK) &&
         (IS_RAB && sp_offset <= 255 || IS_TLCS90 && sp_offset <= 127) &&
         (aopInReg (result, roffset + i, HL_IDX) || aopInReg (result, roffset + i, IY_IDX)))
@@ -5207,7 +5242,7 @@ skip_byte:
           i += 2;
         }
       else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_EZ80) && i + 1 < n && !assigned[i + 1] &&
-        (source->type == AOP_STK && fp_offset <= 127 || !IS_EZ80 && sp_offset <= IS_RAB ? 255 : 127) &&
+        (source->type == AOP_STK && fp_offset <= 127 || !IS_EZ80 && sp_offset <= (IS_RAB ? 255 : 127)) &&
         (aopInReg (result, roffset + i, DE_IDX) || result->type == AOP_REG && result->regs[L_IDX] < i && result->regs[IYL_IDX] < i && result->regs[H_IDX] < i && result->regs[IYH_IDX] < i && hl_free))
         {
           if (!hl_free)
@@ -7309,13 +7344,21 @@ genCall (const iCode *ic)
           spillPair (PAIR_HL);
           genMove (ASMOP_HL, ic->left->aop, a_free, hl_free, de_free, true);
           adjustStack (prestackadjust, a_not_parm, bc_not_parm, de_not_parm, false, false);
-          emit2 (jump ? "!jphl" : "call ___sdcc_call_hl");
-          if (jump)
-            cost3 (1, 2, 2, 2, 4, 3, 4, 4, 4, 8, 3, 3, 3, 3, 1);
+          if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS) && !jump)
+            {
+              emit2 ("call (hl)");
+              cost3 (2, 2, 2, 2, -1, -1, 12, 13, -1, 14, 6, 6, 6, -1, -1);
+            }
           else
             {
-              cost3 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
-              // todo: add cycles spent in ___sdcc_call_hl here
+              emit2 (jump ? "!jphl" : "call ___sdcc_call_hl");
+              if (jump)
+                cost3 (1, 2, 2, 2, 4, 3, 4, 4, 4, 8, 3, 3, 3, 3, 1);
+              else
+                {
+                  cost3 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
+                  // todo: add cycles spent in ___sdcc_call_hl here
+                }
             }
         }
       else if (!IS_SM83 && !IY_RESERVED && !z80IsParmInCall (ftype, "iy")) // Ensure that we don't access the stack via iy when reading IC_LEFT (ic).
@@ -7332,13 +7375,21 @@ genCall (const iCode *ic)
           else
             genMove (ASMOP_IY, IC_LEFT (ic)->aop, a_not_parm, hl_not_parm, de_not_parm, true);
           adjustStack (prestackadjust, a_not_parm, bc_not_parm, de_not_parm, hl_not_parm, false);
-          emit2 (jump ? "jp (iy)" : "call ___sdcc_call_iy");
-          if (jump)
-            cost3 (2, 2, -1, 2, 8, 6, 6, 6, -1, 8, -1, 3, 3, 4, 2);
+          if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && !jump)
+            {
+              emit2 ("call (iy)");
+              cost3 (2, 2, -1, 2, -1, -1, 12, 13, -1, 14, -1, 6, 6, -1, -1);
+            }
           else
             {
-              cost3 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
-              // todo: add cycles spent in ___sdcc_call_iy here
+              emit2 (jump ? "jp (iy)" : "call ___sdcc_call_iy");
+              if (jump)
+                cost3 (2, 2, -1, 2, 8, 6, 6, 6, -1, 8, -1, 3, 3, 4, 2);
+              else
+               {
+                 cost3 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
+                  // todo: add cycles spent in ___sdcc_call_iy here
+                }
             }
         }
       else if (bc_not_parm && (ic->left->aop->regs[B_IDX] < 0 && ic->left->aop->regs[C_IDX] < 0 || de_free)) // Try bc, since it is the only 16-bit register guarateed to be free even for __z88dk_fastcall with --reserve-regs-iy
@@ -8354,8 +8405,12 @@ genPlusIncr (const iCode *ic)
       bool delayed_move;
       if (isLitWord (ic->left->aop))
         {
-          fetchLitPair (getPairId (IC_RESULT (ic)->aop), IC_LEFT (ic)->aop, icount, true, false);
-          return TRUE;
+          emit2 ("ld %s, !hashedstr", _pairs[resultId].name, aopGetLitWordLong (ic->left->aop, icount, false));
+          if (resultId == PAIR_IY)
+            cost3 (4, 3, -1, 3, 14, 12, 8, 8, -1, 6, -1, 3, 3, 4, 4);
+          else
+            cost3 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3);
+          return true;
         }
 
       if (size == 2 && icount == 256 && ic->result->aop->type == AOP_REG && ic->left->aop->type == AOP_REG && ic->result->aop->aopu.aop_reg[0]->rIdx == ic->left->aop->aopu.aop_reg[0]->rIdx &&
@@ -10224,6 +10279,12 @@ genMultTwoChar (const iCode *ic)
       cost (2, 36);
       spillPair (PAIR_BC);
     }
+  else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && ic->result->aop->size > 2 &&
+    SPEC_USIGN (getSpec (operandType (ic->left))) && SPEC_USIGN (getSpec (operandType (ic->right))))
+    {
+      emit2 ("mulu");
+      cost (2, 14);
+    }
   else
     {
       emit2 ("mul");
@@ -11411,6 +11472,15 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               size--;
               a_result = aopInReg (left->aop, 0, A_IDX);
             }
+          else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90) && size >= 2 && aopInReg (left->aop, offset, HL_IDX) && // tlcs870c(1) has cp rr, nn, but it is expensive (4 bytes).
+            byteOfVal (right->aop->aopu.aop_lit, offset) <= 127 && !byteOfVal (right->aop->aopu.aop_lit, offset + 1))
+            {
+              emit2 ("cp hl, #%d", byteOfVal (right->aop->aopu.aop_lit, offset));
+              cost (3, 6); // Same cycle count for the Rabbits and TLCs-90
+              offset++;
+              size -= 2;
+              a_result = false;
+            }
           else if (!IS_SM83 && size >= 2 && aopInReg (left->aop, offset, HL_IDX) && isRegDead (HL_IDX, ic) && isRegDead (DE_IDX, ic) && !next_zero &&
             (isPairDead (PAIR_DE, ic) && left->aop->regs[E_IDX] < offset && left->aop->regs[D_IDX] < offset || isPairDead (PAIR_BC, ic) && left->aop->regs[C_IDX] < offset && left->aop->regs[B_IDX] < offset))
             {
@@ -11905,8 +11975,8 @@ genAnd (const iCode *ic, iCode *ifx)
               emit3w (A_ADC, ASMOP_HL, ASMOP_HL); // Cannot use "add hl, hl instead, since it does not affect zero flag.
               if (!regalloc_dry_run)
                 emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
-              emit2 ("rl de");
-              regalloc_dry_run_cost += 6;
+              regalloc_dry_run_cost += 3;
+              emit3w (A_RL, ASMOP_DE, 0);
               sizel -= 4;
               offset += 4;
             }
@@ -14351,26 +14421,24 @@ genLeftShift (const iCode *ic)
 
   started = false;
   regalloc_dry_run_state_scale = shift_by_lit ? shiftcount : 2;
-
   while (size)
     {
       if (size >= 2 && offset + 1 >= byteshift &&
         shiftop->type == AOP_REG &&
         (!started || !IS_SM83) && // sm83 doesn't have wide adc
-        (getPairId_o (shiftop, offset) == PAIR_HL ||
-        !started && getPairId_o (shiftop, offset) == PAIR_IY ||
-        (IS_RAB || optimize.codeSize && !started && !IS_SM83) && getPairId_o (shiftop, offset) == PAIR_DE))
+        (aopInReg (shiftop, offset, HL_IDX) ||
+        !started && aopInReg (shiftop, offset, IY_IDX) ||
+        (IS_RAB || optimize.codeSize && !started && !IS_SM83) && aopInReg (shiftop, offset, DE_IDX)) ||
+        (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && aopInReg (shiftop, offset, BC_IDX))
         {
-          if (shiftop->aopu.aop_reg[offset]->rIdx == L_IDX)
-            emit3w (started ? A_ADC : A_ADD, ASMOP_HL, ASMOP_HL);
-          else if (shiftop->aopu.aop_reg[offset]->rIdx == IYL_IDX)
-            emit3w (A_ADD, ASMOP_IY, ASMOP_IY);
-          else if (IS_RAB)
+          if (aopInReg (shiftop, offset, HL_IDX) || aopInReg (shiftop, offset, IY_IDX) || IS_TLCS870C || IS_TLCS870C1)
+            emit3w_o (started ? A_ADC : A_ADD, shiftop, offset, shiftop, offset);
+          else if (IS_RAB && aopInReg (shiftop, offset, DE_IDX) ||
+            (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && aopInReg (shiftop, offset, BC_IDX))
             {
               if (!started)
                 emit3 (A_CP, ASMOP_A, ASMOP_A);
-              emit2 ("rl de");
-              cost (1, 2);
+              emit3w_o (A_RL, shiftop, offset, 0, 0);
             }
           else
             {
@@ -14820,14 +14888,18 @@ genRightShift (const iCode * ic)
     while (size)
       {
         if (IS_RAB && !(is_signed && first) && size >= 2 && byteoffset < 2 && shiftop->type == AOP_REG &&
-          (getPairId_o (shiftop, offset - 1) == PAIR_HL || getPairId_o (shiftop, offset - 1) == PAIR_DE))
-          {
-            if (first)
-              {
-                emit3 (A_CP, ASMOP_A, ASMOP_A);
-                first = 0;
-              }
-            emit2 (shiftop->aopu.aop_reg[offset - 1]->rIdx == L_IDX ? "rr hl" : "rr de");
+        (getPairId_o (shiftop, offset - 1) == PAIR_HL || getPairId_o (shiftop, offset - 1) == PAIR_DE || getPairId_o (shiftop, offset - 1) == PAIR_IY ||
+          ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && getPairId_o (shiftop, offset - 1) == PAIR_BC)))
+        {
+          if (first)
+            {
+              emit3 (A_CP, ASMOP_A, ASMOP_A);
+              first = 0;
+            }
+          emit2 ("rr %s", _pairs[getPairId_o (shiftop, offset - 1)].name);
+          if (getPairId_o (shiftop, offset - 1) == PAIR_IY || getPairId_o (shiftop, offset - 1) == PAIR_BC)
+            cost (2, 4);
+          else
             cost (1, 2);
             size -= 2, offset -= 2;
           }

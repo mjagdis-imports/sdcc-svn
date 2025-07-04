@@ -1,5 +1,12 @@
 2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCC.y,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
+	  Start of Dynamic C calling convention support. Some Rabbit/eZ80/TLCS optimizations.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c:
 	  Improve cost function accuracy.
 
