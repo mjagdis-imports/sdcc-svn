@@ -13,7 +13,7 @@ char farmemblock[2];
 #else
 #undef __far
 // Ensure that farmemblock and farmemblock+sizeof(farmemblock) differ in more than just the lowest 16 bits. Also gives further objects in __far an address > 2^16.
-char memblock[5000];
+char memblock[6000];
 __far char farmemblock[40000];
 #endif
 
@@ -51,13 +51,12 @@ void testFarPtr(void)
 
 	// generic space is in __far
 	{type} k = 23;
-#if 0 // Not yet working - machine independent issues
+
 	ASSERT(readfarptr(&k) == 23);
 	writefarptr(&k, 42);
 	ASSERT(k == 42);
-	__far {type} *volatile p = &j;
+	__far {type} *volatile p = &k;
 	ASSERT(({type} *)p == &k);
-#endif
 }
 
 void testFarArith(void)

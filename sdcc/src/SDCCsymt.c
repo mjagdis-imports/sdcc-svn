@@ -2979,7 +2979,7 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             {
               return comparePtrType (dest, src, true, ignoreimplicitintrinsic);
             }
-          if (IS_FARPTR (dest) && IS_GENPTR (src) && port->generic_in_far)
+          if (IS_FARPTR (dest) && (IS_GENPTR (src) || DCL_TYPE (src) == POINTER) && port->generic_in_far)
             return -1;
           if (IS_PTR (dest) && IS_ARRAY (src))
             {
