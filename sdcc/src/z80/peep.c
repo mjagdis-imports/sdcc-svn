@@ -1844,6 +1844,15 @@ int z80instructionSize(lineNode *pl)
     (IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "llret"))
     return(2);
 
+  if(IS_RAB && lineIsInst (pl, "ldp"))
+    {
+      if (!strncmp (op0start, "(hl)", 4) || !strncmp (op0start, "(ix)", 4) || !strncmp (op0start, "(iy)", 4))
+        return (2);
+      if (!strncmp (op1start, "(hl)", 4) || !strncmp (op1start, "(ix)", 4) || !strncmp (op1start, "(iy)", 4))
+        return (2);
+      return(4);
+    }
+
   if(IS_EZ80 && (lineIsInst (pl, "lea") || lineIsInst (pl, "pea")))
     return(3);
 

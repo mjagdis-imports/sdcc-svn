@@ -14968,104 +14968,18 @@ unpackMaskA(sym_link *type, int len)
 }
 
 /*-----------------------------------------------------------------*/
-/* genUnpackBits - generates code for unpacking bits               */
+/* genUnpackBits - generate code for unpacking bits                */
 /*-----------------------------------------------------------------*/
 static void
-genUnpackBits (operand *result, int pair, const iCode *ic)
+genUnpackBits (operand *result, int offset, int blen, int bstr)
 {
-  int offset = 0;               /* result byte offset */
-  int rsize;                    /* result size */
-  int rlen = 0;                 /* remaining bit-field length */
-  sym_link *etype;              /* bit-field type information */
-  unsigned blen;                /* bit-field length */
-  unsigned bstr;                /* bit-field starting bit within byte */
-  unsigned int pairincrement = 0;
+  sym_link *etype = getSpec (operandType (result));
+  int rsize = getSize (operandType (result));
+  wassert (blen <= 8);
 
-  emitDebug ("; genUnpackBits");
-
-  etype = getSpec (operandType (result));
-  rsize = getSize (operandType (result));
-  blen = SPEC_BLEN (etype);
-  bstr = SPEC_BSTR (etype);
-
-  /* If the bit-field length is less than a byte */
-  if (blen < 8)
-    {
-      emit2 ("ld a, !mems", _pairs[pair].name);
-      regalloc_dry_run_cost += (pair == PAIR_IX || pair == PAIR_IY) ? 3 : 1;
-      AccRol (8 - bstr);
-      unpackMaskA (etype, blen);
-      cheapMove (result->aop, offset++, ASMOP_A, 0, true);
-      goto finish;
-    }
-
-  /* TODO: what if pair == PAIR_DE ? */
-  if (getPairId (result->aop) == PAIR_HL ||
-      result->aop->type == AOP_REG && rsize == 2 && (result->aop->aopu.aop_reg[0]->rIdx == L_IDX
-          || result->aop->aopu.aop_reg[0]->rIdx == H_IDX))
-    {
-      emit2 ("!ldahli");
-      regalloc_dry_run_cost++;
-      if (result->aop->type != AOP_REG || result->aop->aopu.aop_reg[0]->rIdx != H_IDX)
-        {
-          emit2 ("ld h, !*hl");
-          cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
-          cheapMove (result->aop, offset++, ASMOP_A, 0, true);
-          emit3 (A_LD, ASMOP_A, ASMOP_H);
-        }
-      else
-        {
-          emit2 ("ld l, !*hl");
-          cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
-          cheapMove (result->aop, offset++, ASMOP_A, 0, true);
-          emit3 (A_LD, ASMOP_A, ASMOP_L);
-        }
-      unpackMaskA (etype, blen - 8);
-      cheapMove (result->aop, offset++, ASMOP_A, 0, true);
-      spillPair (PAIR_HL);
-      return;
-    }
-
-  /* Bit field did not fit in a byte. Copy all
-     but the partial byte at the end.  */
-  for (rlen = blen; rlen >= 8; rlen -= 8)
-    {
-      emit2 ("ld a, !mems", _pairs[pair].name);
-      if (pair == PAIR_HL)
-        cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
-      else
-        cost2 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2);
-      cheapMove (result->aop, offset++, ASMOP_A, 0, true);
-      if (rlen > 8)
-        {
-          emit2 ("inc %s", _pairs[pair].name);
-          cost2 (1, 1, 1, 1 , 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
-          _G.pairs[pair].offset++;
-          pairincrement++;
-        }
-    }
-
-  /* Handle the partial byte at the end */
-  if (rlen)
-    {
-      emit2 ("ld a, !mems", _pairs[pair].name);
-      if (pair == PAIR_HL)
-        cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
-      else
-        cost2 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2);
-      unpackMaskA (etype, rlen);
-      cheapMove (result->aop, offset++, ASMOP_A, 0, true);
-    }
-
-finish:
-  if (!isPairDead (pair, ic))
-    while (pairincrement)
-      {
-        emit2 ("dec %s", _pairs[pair].name);
-        cost2 (1, 1, 1, 1 , 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
-        pairincrement--;
-        _G.pairs[pair].offset--;
-      }
+  AccRol (8 - bstr);
+  unpackMaskA (etype, blen);
+  cheapMove (result->aop, offset++, ASMOP_A, 0, true);
 
   if (offset < rsize)
     {
@@ -15165,7 +15079,7 @@ static void
 genPointerGet (const iCode *ic)
 {
   operand *left, *right, *result;
-  int size, offset, rightval;
+  int size, rightval;
   int pair = PAIR_HL, extrapair;
   bool pushed_pair = FALSE;
   bool pushed_a = FALSE;
@@ -15176,7 +15090,8 @@ genPointerGet (const iCode *ic)
   right = IC_RIGHT (ic);
   result = IC_RESULT (ic);
   bool bit_field = IS_BITVAR (operandType (result)); // Should be IS_BITVAR (operandType (left)->next), but conflicts with optimizations that reuses pointers (when reading from a union of a struct containing bit-fields and other types).
-
+  int blen = bit_field ? SPEC_BLEN (getSpec (operandType (result))) : 0;
+  int bstr = bit_field ? SPEC_BSTR (getSpec (operandType (result))) : 0;
   aopOp (left, ic, false, false);
   aopOp (result, ic, true, false);
   size = result->aop->size;
@@ -15203,14 +15118,17 @@ genPointerGet (const iCode *ic)
   if ((IS_SM83 || IY_RESERVED) && requiresHL (result->aop) && size > 1 && result->aop->type != AOP_REG)
     pair = PAIR_DE;
 
-  if (IS_SM83 && size == 1 && left->aop->type == AOP_LIT && (((unsigned long)(operandLitValue (left) + rightval) & 0xff00) == 0xff00) && isRegDead (A_IDX, ic) && !bit_field) // SM83 has special instructions for address range 0xff00 - 0xffff.
+  if (IS_SM83 && size == 1 && left->aop->type == AOP_LIT && (((unsigned long)(operandLitValue (left) + rightval) & 0xff00) == 0xff00) && isRegDead (A_IDX, ic)) // SM83 has special instructions for address range 0xff00 - 0xffff.
     {
       emit2 ("ldh a, !mems", aopGetLitWordLong (left->aop, rightval, true));
       cost (2, 12);
-      cheapMove (result->aop, 0, ASMOP_A, 0, true);
+      if (bit_field)
+        genUnpackBits (result, 0, blen, bstr);
+      else
+        cheapMove (result->aop, 0, ASMOP_A, 0, true);
       goto release;
     }
-  if ((left->aop->type == AOP_IMMD || left->aop->type == AOP_LIT && !rightval) && size == 1 && aopInReg (result->aop, 0, A_IDX) && !bit_field &&
+  if ((left->aop->type == AOP_IMMD || left->aop->type == AOP_LIT && !rightval) && size == 1 && aopInReg (result->aop, 0, A_IDX) &&
     (!from_far || IS_EZ80 || IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET))
     {
       if (from_far)
@@ -15231,6 +15149,8 @@ genPointerGet (const iCode *ic)
           emit2 ("ld a, !mems", aopGetLitWordLong (left->aop, rightval, true));
           cost2 (3, 4, -1, 4, 13, 12, 9, 9, 16, 10, -1, 5, 5, 4, 4);
         }
+      if (bit_field)
+        genUnpackBits (result, 0, blen, bstr);
       goto release;
     }
   else if (!IS_SM83 && (left->aop->type == AOP_IMMD || left->aop->type == AOP_LIT && !rightval) && isPair (result->aop) && !bit_field  &&
@@ -15326,7 +15246,7 @@ genPointerGet (const iCode *ic)
     {
       wassert (!from_far);
 
-      offset = 0;
+      int offset = 0;
 
       if (IS_RAB && getPairId_o (result->aop, 0) == PAIR_HL)
         {
@@ -15446,9 +15366,7 @@ genPointerGet (const iCode *ic)
 
   if (from_far && IS_EZ80)
     {
-      bool hl_ok = isRegDead (HL_IDX, ic) && (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] == size - 1) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] == size - 1);
-
-      if (!hl_ok || !isRegDead (A_IDX, ic))
+      if (!isRegDead (HL_IDX, ic) || !isRegDead (A_IDX, ic))
         UNIMPLEMENTED;
 
       // Put the pointer into the 24-bit register hl.
@@ -15498,8 +15416,11 @@ genPointerGet (const iCode *ic)
             _pop (extrapair);
         }
 
-      for (int i = 0; i < size;)
+      for (int i = 0; !bit_field ? i < size : blen > 0;)
         {
+          if (result->aop->regs[L_IDX] >= 0 && result->aop->regs[L_IDX] < i || result->aop->regs[H_IDX] >= 0 && result->aop->regs[H_IDX] < i)
+            UNIMPLEMENTED;
+
           int di = 0;
           if (i + 3 == size && !bit_field && result->aop->type == AOP_FDIR)
             {
@@ -15537,20 +15458,20 @@ genPointerGet (const iCode *ic)
                   emit2 ("push.l hl");
                   cost (2, 5);
                 }
-              cheapMove (result->aop, i, ASMOP_A, 0, true);
+              if (bit_field && blen <= 8)
+                genUnpackBits (result, i, blen, bstr);
+              else
+                cheapMove (result->aop, i, ASMOP_A, 0, true);
               if (save_hl)
                 {
                   emit2 ("pop.l hl");
                   cost (2, 5);
                 }
-              if (bit_field)
-                {
-                  UNIMPLEMENTED;
-                }
               di = 1;
             }
           i += di;
-          if (i + 1 < size)
+          blen -= 8 * di;
+          if (!bit_field ? i < size : blen > 0)
             while (di--)
               {
                 emit2 ("inc.l hl");
@@ -15596,15 +15517,19 @@ genPointerGet (const iCode *ic)
       if (size != 1 && !use_add_iy_d)
         emit3w (A_LD, inc_aop, ASMOP_ONE);
 
-      for (int i = 0; i < size; i++)
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           emit2 ("ldp hl, (%s)", aopInReg (ptr_aop, 0, HL_IDX) ? "hl" : "iy");
           cost (2, 10);
-          genMove_o (result->aop, i, ASMOP_HL, 0, 1, i + 1 == size, false, false, false, true);
-          if (bit_field)
+          if (bit_field && blen <= 8)
             {
-              UNIMPLEMENTED;
+              emit3 (A_LD, ASMOP_A, ASMOP_L);
+              genUnpackBits (result, i, blen, bstr);
+              break;
             }
+          else
+            genMove_o (result->aop, i, ASMOP_HL, 0, 1, i + 1 == size, false, false, false, true);
+
           if (i + 1 < size)
             {
               if (result->aop->type == AOP_REG)
@@ -15652,15 +15577,17 @@ genPointerGet (const iCode *ic)
           cost (2, 6); // Assume no x carry.
         }
 
-      for (int i = 0; i < size; i++)
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
-          if (bit_field)
-            {
-              UNIMPLEMENTED;
-            }
           emit2 ("ld a, (iy)");
           cost (2, 6);
-          if (result->aop->type == AOP_FDIR) // cheapMove would overwrite by.
+          if (bit_field && blen <= 8)
+            {
+              genUnpackBits (result, i, blen, bstr);
+              break;
+            }
+          
+          if (result->aop->type == AOP_FDIR && i + 1 < size) // cheapMove would overwrite by.
             UNIMPLEMENTED;
           cheapMove (result->aop, i, ASMOP_A, 0, true);
           if (i + 1 < size)
@@ -15669,9 +15596,9 @@ genPointerGet (const iCode *ic)
               emit2 ("incx (by)");
               cost (2, 6); // Assume no x carry.
             }
-          emit2 ("ld (by), #0x00");
-          cost (3, 10);
         }
+      emit2 ("ld (by), #0x00");
+      cost (3, 10);
 
       goto release;
     }
@@ -15721,21 +15648,10 @@ genPointerGet (const iCode *ic)
         fetchPairLong (pair, left->aop, ic, 0);
     }
 
-  /* if bit then unpack */
-  if (bit_field)
-    {
-      offsetPair (pair, extrapair, !isPairDead (extrapair, ic), rightval);
-      genUnpackBits (result, pair, ic);
-      if (rightval)
-        spillPair (pair);
-
-      goto release;
-    }
-
- if (isPair (result->aop) && IS_EZ80 && getPairId (left->aop) == PAIR_HL && !bit_field && !rightval)
+ if (isPair (result->aop) && (IS_EZ80 || IS_TLCS) && getPairId (left->aop) == PAIR_HL && !bit_field && !rightval)
    {
      emit2 ("ld %s, !*hl", _pairs[getPairId (result->aop)].name);
-     cost (2, 4);
+     cost2 (2, 2, 2, 2, -1, -1, -1, -1, -1, 8, 4, 4, 4, 4, -1);
      goto release;
    }
  else if (pair == PAIR_HL && !bit_field && (getPairId (result->aop) == PAIR_HL || size == 2 && (aopInReg (result->aop, 0, L_IDX) || aopInReg (result->aop, 0, H_IDX))))
@@ -15776,12 +15692,12 @@ genPointerGet (const iCode *ic)
 
   offsetPair (pair, extrapair, !isPairDead (extrapair, ic), rightval);
 
-  if (pair == PAIR_HL
+  if (!bit_field && (pair == PAIR_HL
            || (!IS_SM83 && (getPairId (left->aop) == PAIR_BC || getPairId (left->aop) == PAIR_DE)
-               && result->aop->type == AOP_STK))
+               && result->aop->type == AOP_STK)))
     {
       size = result->aop->size;
-      offset = 0;
+      int offset = 0;
       int last_offset = 0;
 
       /* might use ld a,(hl) followed by ld d (iy),a */
@@ -15939,23 +15855,34 @@ genPointerGet (const iCode *ic)
   else
     {
       size = result->aop->size;
-      int last_offset = offset = 0;
+      int last_offset = 0;
 
-      if (result->aop->regs[A_IDX] >= 0 && result->aop->regs[A_IDX] < offset)
-        surviving_a = true;
-
-      for (offset = 0; offset < size;)
+      for (int offset = 0; !bit_field ? offset < size : blen > 0; offset++, blen -= 8)
         {
           last_offset = offset;
+          if (result->aop->regs[A_IDX] >= 0 && result->aop->regs[A_IDX] < offset)
+            surviving_a = true;
           if (surviving_a && !pushed_a)
             _push (PAIR_AF), pushed_a = true;
+          if (pair == PAIR_HL &&
+            (result->aop->regs[L_IDX] >= 0 && result->aop->regs[L_IDX] < offset || result->aop->regs[H_IDX] >= 0 && result->aop->regs[H_IDX] < offset))
+            UNIMPLEMENTED;
 
-          /* PENDING: make this better */
-          if ((pair == PAIR_HL) && result->aop->type == AOP_REG)
+          if ((IS_EZ80 || IS_TLCS) && pair == PAIR_HL && (!bit_field || blen > 16) && getPairId_o (result->aop, offset) != PAIR_INVALID)
+            {
+              emit2 ("ld %s, (hl)", _pairs[getPairId_o (result->aop, offset)].name);
+              cost2 (2, 2, 2, 2, -1, -1, -1, -1, -1, 8, 4, 4, 4, 4, -1);
+              offset++;
+              blen -= 8;
+            }
+          else if ((pair == PAIR_HL) && result->aop->type == AOP_REG && (!bit_field || blen > 8))
             {
               if (!regalloc_dry_run)
-                aopPut (result->aop, "!*hl", offset++);
-              ld_cost (result->aop, 0, aopInReg (result->aop, 0, A_IDX) ? ASMOP_L : ASMOP_A, 0, true);
+                aopPut (result->aop, "!*hl", offset);
+              if (aopInReg (result->aop, 0, A_IDX))
+                cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
+              else
+                cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
             }
           else
             {
@@ -15964,9 +15891,15 @@ genPointerGet (const iCode *ic)
                 cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
               else
                 cost2 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2);
-              cheapMove (result->aop, offset++, ASMOP_A, 0, true);
+              if (bit_field && blen <= 8)
+                {
+                  genUnpackBits (result, offset, blen, bstr);
+                  break;
+                }
+              else
+                cheapMove (result->aop, offset, ASMOP_A, 0, true);
             }
-          if (offset < size)
+          if (offset + 1 < size)
             {
               emit2 ("inc %s", _pairs[pair].name);
               cost2 (1, 1, 1, 1 , 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
@@ -16041,6 +15974,13 @@ genPackBits (PAIR_ID pair, operand *right, int roffset, int blen, int bstr, PAIR
       regalloc_dry_run_cost += (pair == PAIR_IX || pair == PAIR_IY) ? 4 : 2;
       return;
     }
+  else if (blen == 4 && bstr % 4 == 0 && pair == PAIR_HL && !aopInReg (right->aop, 0, A_IDX) && !requiresHL (right->aop) && (IS_Z80 || IS_Z80N || IS_Z180 || IS_TLCS90 || IS_R800 || IS_EZ80))
+    {
+      emit3 ((bstr ? A_RLD : A_RRD), 0, 0);
+      cheapMove (ASMOP_A, 0, right->aop, roffset, true);
+      emit3 ((bstr ? A_RRD : A_RLD), 0, 0);
+      return;
+    }
   else if (right->aop->type == AOP_LIT)
     {
       litval = ullFromVal (right->aop->aopu.aop_lit) >> (roffset * 8);
@@ -16060,13 +16000,6 @@ genPackBits (PAIR_ID pair, operand *right, int roffset, int blen, int bstr, PAIR
         }
       emit2 ("ld !mems, a", _pairs[pair].name);
       regalloc_dry_run_cost += (pair == PAIR_IX || pair == PAIR_IY) ? 3 : 1;
-      return;
-    }
-  else if (blen == 4 && bstr % 4 == 0 && pair == PAIR_HL && !aopInReg (right->aop, 0, A_IDX) && !requiresHL (right->aop) && (IS_Z80 || IS_Z180 || IS_EZ80 || IS_Z80N || IS_R800))
-    {
-      emit3 ((bstr ? A_RLD : A_RRD), 0, 0);
-      cheapMove (ASMOP_A, 0, right->aop, roffset, true);
-      emit3 ((bstr ? A_RRD : A_RLD), 0, 0);
       return;
     }
   else

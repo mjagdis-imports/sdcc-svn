@@ -1,6 +1,12 @@
 2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* src/z80/gen.c
+	* src/z80/gen.c,
+	  src/z80/peep.c:
+	  Bit-field read refactoring, read of __far bit-fields.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
 	  src/z80/peep.c,
 	  src/z80/peeph.def,
 	  support/regression/tests/far_rabbits.c.in,
