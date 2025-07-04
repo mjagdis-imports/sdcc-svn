@@ -417,27 +417,27 @@ cost3 (int z80_bytes /* also most other ports */, int tlcs90_bytes, int tlcs870_
     bytes = z80_bytes;
 
   if (IS_Z80 || IS_Z80N)
-    states += z80_states;
+    states = z80_states;
   else if (IS_Z180)
-    states += z180_states;
+    states = z180_states;
   else if (IS_R2K || IS_R2KA || IS_R3KA || IS_R4K)
-    states += r4k_clocks;
+    states = r4k_clocks;
   else if (IS_R5K || IS_R6K)
-    states += r6k_clocks;
+    states = r6k_clocks;
   else if (IS_SM83)
-    states += sm83_cycles;
+    states = sm83_cycles;
   else if(IS_TLCS90)
-    states += tlcs90_states;
+    states = tlcs90_states;
   else if(IS_TLCS870)
-    states += tlcs870_cycles;
+    states = tlcs870_cycles;
   else if(IS_TLCS870C)
-    states += tlcs870c_cycles;
+    states = tlcs870c_cycles;
   else if(IS_TLCS870C1)
-    states += tlcs870c1_cycles;
+    states = tlcs870c1_cycles;
   else if(IS_EZ80)
-    states += ez80_cycles;
+    states = ez80_cycles;
   else if(IS_R800)
-    states += r800_cycles;
+    states = r800_cycles;
 
   wassert (bytes >= 0 && states >= 0.0f);
   regalloc_dry_run_cost_bytes += bytes;
