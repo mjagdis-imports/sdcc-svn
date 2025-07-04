@@ -15631,7 +15631,49 @@ genPointerGet (const iCode *ic)
     }
   else if (from_far && IS_TLCS90)
     {
-      wassert (0); // todo: implement.
+      bool iy_ok = (isRegDead (IY_IDX, ic) || aopInReg (left->aop, 0, IY_IDX) && size == 1 && !rightval) &&
+        left->aop->regs[IYL_IDX] < 2 && left->aop->regs[IYH_IDX] < 2 &&
+        result->aop->regs[IYL_IDX] < 0 && result->aop->regs[IYH_IDX] < 0;
+      bool a_ok = isRegDead (A_IDX, ic) && (result->aop->regs[A_IDX] < 0 || result->aop->regs[A_IDX] == size - 1);
+      bool a_free = left->aop->regs[A_IDX] != 2;
+      bool hl_free = isRegDead (HL_IDX, ic) && left->aop->regs[L_IDX] != 2 && left->aop->regs[H_IDX] != 2;
+      if (!iy_ok || !a_ok)
+        UNIMPLEMENTED;
+      genMove (ASMOP_IY, left->aop, a_free, hl_free, false, true);
+      cheapMove (ASMOP_A, 0, left->aop, 2, true);
+      emit2 ("ld (by), a");
+      cost (2, 8);
+
+      if (rightval)
+        {
+          emit2 ("add iy, !immedword", rightval);
+          cost (3, 6);
+          emit2 ("incx (by)");
+          cost (2, 6); // Assume no x carry.
+        }
+
+      for (int i = 0; i < size; i++)
+        {
+          if (bit_field)
+            {
+              UNIMPLEMENTED;
+            }
+          emit2 ("ld a, (iy)");
+          cost (2, 6);
+          if (result->aop->type == AOP_FDIR) // cheapMove would overwrite by.
+            UNIMPLEMENTED;
+          cheapMove (result->aop, i, ASMOP_A, 0, true);
+          if (i + 1 < size)
+            {
+              emit3w (A_INC, ASMOP_IY, 0);
+              emit2 ("incx (by)");
+              cost (2, 6); // Assume no x carry.
+            }
+          emit2 ("ld (by), #0x00");
+          cost (3, 10);
+        }
+
+      goto release;
     }
 
   wassert (!from_far); // __far should have been handled above.

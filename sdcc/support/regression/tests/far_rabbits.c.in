@@ -4,17 +4,22 @@
 */
 #include <testfwk.h>
 
-// TODO: enablke for ez80 when asm bug #3826 and #3827 are fixed!
+// TODO: enable for ez80 when asm bug #3826 and #3827 are fixed!
 // TODO: enable for Rabbits when sim bug #3858 is fixed!
-#if /*!defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) &&*/ !defined(__SDCC_tlcs90) /*&& !defined(__SDCC_ez80)*/
+// TODO: enable for tlcs90 when sim bug #3859 is fixed!
+#if 1 /*!defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && !defined(__SDCC_tlcs90) && !defined(__SDCC_ez80)*/
 #define __far
+char farmemblock[2];
 #else
 #undef __far
+// Ensure that farmemblock and farmemblock+sizeof(farmemblock) differ in more than just the lowest 16 bits. Also gives further objects in __far an address > 2^16.
+char memblock[5000];
+__far char farmemblock[40000];
 #endif
 
 __far {type} i = 0x55;
 const __far {type} ci = 0xaa;
-#if 0 // Not yet working - codegen
+
 {type} readfarptr(__far {type} *p)
 {
 	return(*p);
@@ -24,25 +29,28 @@ void writefarptr(__far {type} *p, {type} i)
 {
 	*p = i;
 }
-#endif
-void testFar(void)
+
+void testFarObj(void)
 {
-	// Read initialized varaible in __far
+	// Read initialized variable in __far
 	ASSERT(i == 0x55);
 	ASSERT(ci == 0xaa);
+}
 
+void testFarPtr(void)
+{
 	// Write variable in __far
 	i = 0xa5;
 	ASSERT(i == 0xa5);
-#if 0 // Not yet working - codegen
+
 	// Pointer access to __far
 	ASSERT(readfarptr(&i) == 0xa5);
 	writefarptr(&i, 0x5a);
 	ASSERT(i == 0x5a);
-#endif
+
 	// generic space is in __far
 	{type} j = 23;
-#if 0 // Not yet working - machine indepent part
+#if 0 // Not yet working - machine independent issues
 	ASSERT(readfarptr(&j) == 23);
 	writefarptr(&j, 42);
 	ASSERT(j == 42);

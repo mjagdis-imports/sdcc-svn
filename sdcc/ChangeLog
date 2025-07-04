@@ -1,8 +1,10 @@
 2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* src/z80/gen.c,
+	* src/z80/gen.c
+	  src/z80/peep.c,
+	  src/z80/peeph.def,
 	  support/regression/tests/far_rabbits.c.in:
-	  A few more tiny bits of __far support for Rabbits/TLCS90/eZ80, still not really useable in any way.
+	  Some __far support for Rabbits/TLCS90/eZ80, still not really useable in any way.
 
 2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
