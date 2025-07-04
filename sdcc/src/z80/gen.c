@@ -220,6 +220,7 @@ static struct
     int pushedDE;
     int pushedIY;
     int pushedJK;
+    int pushedIX;
   } stack;
 
   struct
@@ -6335,7 +6336,7 @@ _gbz80_emitAddSubLong (const iCode * ic, bool isAdd)
 
 /* Pop saved regs from stack, taking care not to destroy result */
 static void
-restoreRegs (bool jk, bool iy, bool de, bool bc, bool hl, const operand *result, const iCode *const ic)
+restoreRegs (bool ix, bool jk, bool iy, bool de, bool bc, bool hl, const operand *result, const iCode *const ic)
 {
   bool a_live, b_live, c_live, d_live, e_live, h_live, l_live, iyl_live, iyh_live, j_live, k_live;
   bool SomethingReturned;
@@ -6396,6 +6397,9 @@ restoreRegs (bool jk, bool iy, bool de, bool bc, bool hl, const operand *result,
         iyl_live = true;
     }
 
+  if (ix)
+    _pop (PAIR_IX);
+    
   if (iy)
     {
       if (iyh_live && iyl_live)
@@ -6562,6 +6566,7 @@ _saveRegsForCall (const iCode *ic, bool saveHLifused, bool dontsaveIY)
       const bool push_de = !isRegDead (D_IDX, ic) && !call_preserves_d || !isRegDead (E_IDX, ic) && !call_preserves_e;
       const bool push_iy = !dontsaveIY && (!isRegDead (IYH_IDX, ic) || !isRegDead (IYL_IDX, ic));
       const bool push_jk = (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && (!isRegDead (J_IDX, ic) || !isRegDead (K_IDX, ic));
+      const bool push_ix = FUNC_ISDYNAMICC (ftype);
 
       if (push_jk) // there is no separate jk push instruction.
         {
@@ -6597,6 +6602,11 @@ _saveRegsForCall (const iCode *ic, bool saveHLifused, bool dontsaveIY)
         {
           push (ASMOP_IY, 0, 2);
           _G.stack.pushedIY = true;
+        }
+      if (push_ix)
+        {
+          _push (PAIR_IX);
+          _G.stack.pushedIX = true;
         }
 
       if (!regalloc_dry_run)
@@ -7214,7 +7224,7 @@ genCall (const iCode *ic)
   // Check if we can do tail call optimization.
   else if (currFunc && !IFFUNC_ISISR (currFunc->type) &&
     !ic->parmBytes &&
-    !_G.stack.pushedHL && !_G.stack.pushedBC && !_G.stack.pushedDE && !_G.stack.pushedIY && !_G.stack.pushedJK && // If for some reason something got pushed, we don't have the return address in place.
+    !_G.stack.pushedHL && !_G.stack.pushedBC && !_G.stack.pushedDE && !_G.stack.pushedIY && !_G.stack.pushedJK && !_G.stack.pushedIX && // If for some reason something got pushed, we don't have the return address in place.
     (!isFuncCalleeStackCleanup (currFunc->type) || !ic->parmEscapeAlive && ic->op == CALL && 0 /* todo: test and enable depending on optimization goal - as done for stm8 - for z80 and r3ka this will be slower and bigger than without tail call optimization, but it saves RAM */) &&
     !ic->localEscapeAlive &&
     !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL (ftype) &&
@@ -7565,7 +7575,8 @@ genCall (const iCode *ic)
 
   spillCached ();
 
-  restoreRegs (_G.stack.pushedJK, _G.stack.pushedIY, _G.stack.pushedDE, _G.stack.pushedBC, _G.stack.pushedHL, IC_RESULT (ic), ic);
+  restoreRegs (_G.stack.pushedIX, _G.stack.pushedJK, _G.stack.pushedIY, _G.stack.pushedDE, _G.stack.pushedBC, _G.stack.pushedHL, IC_RESULT (ic), ic);
+  _G.stack.pushedIX = false;
   _G.stack.pushedJK = false;
   _G.stack.pushedIY = false;
   _G.stack.pushedDE = false;
@@ -18397,7 +18408,7 @@ genBuiltInStrcpy (const iCode *ic, int nParams, operand **pparams)
       _pop (PAIR_HL);
       genMove (IC_RESULT (ic)->aop, ASMOP_HL, true, true, true, true);
 
-      restoreRegs (false, false, saved_DE, saved_BC, saved_HL, IC_RESULT (ic), ic);
+      restoreRegs (false, false, false, saved_DE, saved_BC, saved_HL, IC_RESULT (ic), ic);
     }
 
   if (SomethingReturned)
@@ -18468,7 +18479,7 @@ genBuiltInStrncpy (const iCode *ic, int nparams, operand **pparams)
 
   spillPair (PAIR_HL);
 
-  restoreRegs (false, false, saved_DE, saved_BC, saved_HL, 0, ic);
+  restoreRegs (false, false, false, saved_DE, saved_BC, saved_HL, 0, ic);
 
 done:
   freeAsmop (n, NULL);
@@ -18566,7 +18577,7 @@ genBuiltInStrchr (const iCode *ic, int nParams, operand **pparams)
   if (SomethingReturned)
     commitPair (IC_RESULT (ic)->aop, pair, ic, FALSE);
 
-  restoreRegs (false, false, saved_DE, saved_BC, saved_HL, SomethingReturned ? IC_RESULT (ic) : 0, ic);
+  restoreRegs (false, false, false, saved_DE, saved_BC, saved_HL, SomethingReturned ? IC_RESULT (ic) : 0, ic);
 
   if (SomethingReturned)
     freeAsmop (IC_RESULT (ic), NULL);

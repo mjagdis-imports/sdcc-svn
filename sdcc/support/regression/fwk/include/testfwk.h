@@ -64,6 +64,7 @@ void __printf(const char *szFormat, ...);
 #define __far
 #define __reentrant
 #else
+#define __dynamicc
 #define __smallc
 #define __z88dk_fastcall
 #ifndef __SDCC_stm8

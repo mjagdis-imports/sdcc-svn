@@ -1,5 +1,13 @@
 2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCC.lex,
+	  src/z80/gen.c,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/tests/dynamic.c.in:
+	  Very basic Dynamic C calling convention support (no arguments; return type must be void, 16 bits, or 32 bits).
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c:
 	  Cost function refactoring.
 
