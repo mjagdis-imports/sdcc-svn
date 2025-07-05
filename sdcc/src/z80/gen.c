@@ -15997,6 +15997,8 @@ genPointerSet (iCode *ic)
 
   wassert (operandType (result)->next);
   bool bit_field = IS_BITVAR (operandType (result)->next);
+  int blen = bit_field ? SPEC_BLEN (getSpec (operandType (result)->next)) : 0;
+  int bstr = bit_field ? SPEC_BSTR (getSpec (operandType (result)->next)) : 0;
 
   aopOp (result, ic, FALSE, FALSE);
   aopOp (right, ic, FALSE, FALSE);
@@ -16243,16 +16245,19 @@ genPointerSet (iCode *ic)
       emit2 ("pop.l hl");     // Pop the 24-bit value from the spl stack into the 24-bit register hl.
       cost (2, 5);
 
-      for (int i = 0; i < size; i++)
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
-          if (bit_field)
-            UNIMPLEMENTED;
-
-          if (aopInReg (right->aop, i, A_IDX) || aopInReg (right->aop, i, B_IDX) || aopInReg (right->aop, i, C_IDX) || aopInReg (right->aop, i, D_IDX) || aopInReg (right->aop, i, E_IDX) || aopInReg (right->aop, i, H_IDX) || aopInReg (right->aop, i, L_IDX) || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD)
+          if ((aopInReg (right->aop, i, A_IDX) || aopInReg (right->aop, i, B_IDX) || aopInReg (right->aop, i, C_IDX) || aopInReg (right->aop, i, D_IDX) || aopInReg (right->aop, i, E_IDX) || aopInReg (right->aop, i, H_IDX) || aopInReg (right->aop, i, L_IDX) || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD) && !bit_field)
             {
               if (!regalloc_dry_run)
                 emit2 ("ld.l (hl), %s", aopGet (right->aop, i, false));
               cost (2, 3);
+            }
+          else if (bit_field && blen == 1 && right->aop->type == AOP_LIT)
+            {
+              unsigned int litval = ullFromVal (right->aop->aopu.aop_lit) >> (i * 8);
+              emit2 (litval & 1 ? "set.l %d, (hl)" : "res.l %d, (hl)", bstr);
+              cost (3, 4);
             }
           else
             {
@@ -16263,14 +16268,63 @@ genPointerSet (iCode *ic)
                   emit2 ("push.l hl");
                   cost (2, 5);
                 }
-              cheapMove (ASMOP_A, 0, right->aop, i, true);
+              if (bit_field && blen < 8)
+                {
+                  const unsigned int mask = ((0xffu << (blen + bstr)) | (0xffu >> (8 - bstr))) & 0xffu;
+                  emit2 ("ld.l a, (hl)");
+                  cost (2, 3);
+                  if (right->aop->type == AOP_LIT)
+                    {
+                      unsigned int litval = ullFromVal (right->aop->aopu.aop_lit) >> (i * 8);
+                      litval <<= bstr;
+                      litval &= (~mask) & 0xff;
+                      if ((mask | litval) != 0xff)
+                        {
+                          emit2 ("and a, !immedbyte", mask);
+                          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                        }
+                      if (litval)
+                        {
+                          emit2 ("or a, !immedbyte", (unsigned)litval);
+                          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                        }
+                    }
+                  else
+                    {
+                      asmop *eaop = ASMOP_A;
+                      if (isRegDead (B_IDX, ic) && right->aop->regs[B_IDX] < i)
+                        eaop = ASMOP_B;
+                      else if (isRegDead (C_IDX, ic) && right->aop->regs[C_IDX] < i)
+                        eaop = ASMOP_C;
+                      else if (isRegDead (D_IDX, ic) && right->aop->regs[D_IDX] < i)
+                        eaop = ASMOP_D;
+                      else if (isRegDead (E_IDX, ic) && right->aop->regs[E_IDX] < i)
+                        eaop = ASMOP_E;
+                      else
+                        UNIMPLEMENTED;
+                      emit2 ("and a, !immedbyte", mask);
+                      cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                      emit3 (A_LD, eaop, ASMOP_A);
+                      cheapMove (ASMOP_A, 0, right->aop, i, true);
+                      if (blen + bstr == 8)
+                        AccLsh (bstr);
+                      else
+                        {
+                          AccRol (bstr);
+                          emit2 ("and a, !immedbyte", ~mask & 0xffu);
+                          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                        }
+                      emit3 (A_OR, ASMOP_A, eaop);
+                    }
+                }
+              else
+                cheapMove (ASMOP_A, 0, right->aop, i, true);
               if (save_hl)
                 {
                   emit2 ("pop.l hl");
                   cost (2, 5);
                 }
-              if (!regalloc_dry_run)
-                emit2 ("ld.l (hl), a");
+              emit2 ("ld.l (hl), a");
               cost (2, 3);
             }
 
@@ -16358,7 +16412,7 @@ genPointerSet (iCode *ic)
       emit2 ("ld (by), a");
       cost (2, 8);
 
-      for (int i = 0; i < size;)
+      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
           int di = 0;
           if (i + 1 <= size && !bit_field && getPairId_o (right->aop, i) != PAIR_INVALID)
@@ -16374,15 +16428,67 @@ genPointerSet (iCode *ic)
               cost (2, 6);
               di = 1;
             }
+          else if (bit_field && blen == 1 && right->aop->type == AOP_LIT)
+            {
+              unsigned int litval = ullFromVal (right->aop->aopu.aop_lit) >> (i * 8);
+              emit2 (litval & 1 ? "set %d, (iy)" : "res %d, (iy)", bstr);
+              cost (3, 4);
+            }
           else
             {
-              cheapMove (ASMOP_A, 0, right->aop, i, true);
+              if (bit_field && blen < 8)
+                {
+                  const unsigned int mask = ((0xffu << (blen + bstr)) | (0xffu >> (8 - bstr))) & 0xffu;
+                  emit2 ("ld a, (iy)");
+                  cost (2, 6);
+                  if (right->aop->type == AOP_LIT)
+                    {
+                      unsigned int litval = ullFromVal (right->aop->aopu.aop_lit) >> (i * 8);
+                      litval <<= bstr;
+                      litval &= (~mask) & 0xff;
+                      if ((mask | litval) != 0xff)
+                        {
+                          emit2 ("and a, !immedbyte", mask);
+                          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                        }
+                      if (litval)
+                        {
+                          emit2 ("or a, !immedbyte", (unsigned)litval);
+                          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                        }
+                    }
+                  else
+                    {
+                      asmop *eaop = ASMOP_A;
+                      if (isRegDead (B_IDX, ic) && right->aop->regs[B_IDX] < i)
+                        eaop = ASMOP_B;
+                      else if (isRegDead (C_IDX, ic) && right->aop->regs[C_IDX] < i)
+                        eaop = ASMOP_C;
+                      else if (isRegDead (D_IDX, ic) && right->aop->regs[D_IDX] < i)
+                        eaop = ASMOP_D;
+                      else if (isRegDead (E_IDX, ic) && right->aop->regs[E_IDX] < i)
+                        eaop = ASMOP_E;
+                      else
+                        UNIMPLEMENTED;
+                      emit2 ("and a, !immedbyte", mask);
+                      cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                      emit3 (A_LD, eaop, ASMOP_A);
+                      cheapMove (ASMOP_A, 0, right->aop, i, true);
+                      if (blen + bstr == 8)
+                        AccLsh (bstr);
+                      else
+                        {
+                          AccRol (bstr);
+                          emit2 ("and a, !immedbyte", ~mask & 0xffu);
+                          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                        }
+                      emit3 (A_OR, ASMOP_A, eaop);
+                    }
+                }
+              else
+                cheapMove (ASMOP_A, 0, right->aop, i, true);
               emit2 ("ld (iy), a");
               cost (2, 6);
-              if (bit_field)
-                {
-                  UNIMPLEMENTED;
-                }
               di = 1;
             }
           i += di;
@@ -16431,8 +16537,6 @@ genPointerSet (iCode *ic)
         isPairDead (PAIR_IY, ic) && right->aop->regs[IYL_IDX] < 0 && right->aop->regs[IYH_IDX] < 0);
     }
 
-  int blen = bit_field ? SPEC_BLEN (getSpec (operandType (result)->next)) : 0;
-  int bstr = bit_field ? SPEC_BSTR (getSpec (operandType (result)->next)) : 0;
   bool zero_a = false;
   for (offset = 0; !bit_field ? offset < size : blen > 0;)
     {

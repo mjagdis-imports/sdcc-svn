@@ -1,5 +1,11 @@
 2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c,
+	  support/regression/tests/far_rabbit_fields.c:
+	  __far-bit-field write for eZ80 and TLCS-90.
+
+2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* sdcc/doc/MCS51_named.svg:
 	  Put __sfr into mcs51 address space graphic.
 
