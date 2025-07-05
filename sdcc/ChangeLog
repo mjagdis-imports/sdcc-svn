@@ -1,5 +1,10 @@
 2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sdcc/doc/MCS51_named.svg:
+	  Put __sfr into mcs51 address space graphic.
+
+2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c,
 	  src/SDCCicode.c:
 	  z80 codegen cleanup.
