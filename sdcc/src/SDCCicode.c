@@ -3244,7 +3244,7 @@ geniCodeLogicAndOr (ast * tree, int lvl)
   symbol *exitLabel = newiTempLabel (NULL);
   operand *op, *result, *condition;
 
-  /* AND_OP and OR_OP are no longer generated because of bug-905492.
+  /* AND_OP and OR_OP are transformed to ensure short-circuit evaluation.
      They can be reenabled by executing the following block. If you find
      a decent optimization you could start right here:
    */

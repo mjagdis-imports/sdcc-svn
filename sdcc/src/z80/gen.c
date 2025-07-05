@@ -823,7 +823,7 @@ emit2 (const char *szFormat, ...)
 // that the branch is taken with given probability, and possibly optimized into a relative (jr) jump later.
 // If target is NULL, calculate costs only.
 static void
-emitJP (const symbol *target, const char *condition, float probability, bool assume_jr)
+emitJP (const symbol *target, const char *condition, float probability, bool target_in_jr_range)
 {
   if (target)
     {
@@ -849,19 +849,19 @@ emitJP (const symbol *target, const char *condition, float probability, bool ass
       if ((IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET) && (!strcmp (condition, "gt") || !strcmp (condition, "lt") || !strcmp (condition, "gtu") || !strcmp (condition, "v")) ||
         IS_R6K_NOTYET && (!strcmp (condition, "ge") || !strcmp (condition, "le") || !strcmp (condition, "leu")))
         {
-          if (assume_jr)
+          if (target_in_jr_range)
             cost (3, 5 + IS_R6K_NOTYET);
           else
             cost (4, 9);
         }
-      else if (assume_jr)
+      else if (target_in_jr_range)
         cost2 (2, 2, 2, 2, 7 + 5 * probability, 6 + 2 * probability, 5, 6, 8 + 4 * probability, 4 + 4 * probability, 2 + 2 * probability, 2 + 2 * probability, 2 + 2 * probability, 2 + 1 * probability, 2 + 1 * probability);
       else
         cost2 (3, 4, -1, -1, 10, 6 + 3 * probability, 7, 7, 12 + 4 * probability, 10 + 2 * probability, -1, -1, -1, 3 + 1 * probability, 3);
     }
   else
     {
-      if (assume_jr)
+      if (target_in_jr_range)
         cost2 (2, 2, 2, 2, 12, 8, 5, 6, 12, 8, 4, 4, 4, 3, 3);
       else
         cost2 (3, 3, 3, 3, 10, 9, 7, 7, 16, 8, 4, 4, 4, 4, 3);
@@ -7988,7 +7988,7 @@ genEndFunction (iCode *ic)
             emit2 ("!ei");
           else
             {
-              symbol *tlbl = newiTempLabel (NULL);
+              symbol *tlbl = regalloc_dry_run ? NULL : newiTempLabel (NULL);
               //restore P/O flag
               if (aopRet (sym->type) && aopRet (sym->type)->regs[A_IDX] >= 0) // Preserve return value in a.
                 {
@@ -8000,10 +8000,10 @@ genEndFunction (iCode *ic)
               emit2 ("pop af");
               //parity odd <==> P/O=0 <==> interrupt enable flag IFF2 was 0 <==>
               //don't enable interrupts as they were off before
-              emit2 ("jp PO,!tlabel", labelKey2num (tlbl->key));
+              emitJP (tlbl, "po", 0.0f, true);
               emit2 ("!ei");
-              emit2 ("!tlabeldef", labelKey2num (tlbl->key));
-              genLine.lineCurr->isLabel = 1;
+              regalloc_dry_run_cost++;
+              emitLabel (tlbl);
             }
         }
     }
@@ -11616,16 +11616,16 @@ gencjne (operand *left, operand *right, symbol *lbl, const iCode *ic)
 
   pop = gencjneshort (left, right, lbl, ic);
 
+  emit3 (A_LD, ASMOP_A, ASMOP_ONE);
   /* PENDING: ?? */
   if (!regalloc_dry_run)
     {
-      emit2 ("ld a, !immedbyte", 1);
       emit2 ("jp !tlabel", labelKey2num (tlbl->key));
       emitLabelSpill (lbl);
       emit2 ("xor a, a");
-      emitLabel (tlbl);
     }
-  regalloc_dry_run_cost += 6; // todo: improve accuracy
+  regalloc_dry_run_cost += 4; // todo: improve accuracy
+  emitLabel (tlbl);
   _pop (pop);
 }
 
@@ -11700,10 +11700,8 @@ genCmpEq (iCode *ic, iCode *ifx)
                 spillCached ();
               _pop (pop);
               if (!regalloc_dry_run)
-                {
-                  emit2 ("jp !tlabel", labelKey2num (IC_FALSE (ifx)->key));
-                  emitLabel (lbl);
-                }
+                emit2 ("jp !tlabel", labelKey2num (IC_FALSE (ifx)->key));
+              emitLabel (lbl);
               regalloc_dry_run_cost += 3;
             }
         }
@@ -11734,80 +11732,6 @@ genCmpEq (iCode *ic, iCode *ifx)
     }
 
 release:
-  freeAsmop (left, NULL);
-  freeAsmop (right, NULL);
-  freeAsmop (result, NULL);
-}
-
-/*-----------------------------------------------------------------*/
-/* genAndOp - for && operation                                     */
-/*-----------------------------------------------------------------*/
-static void
-genAndOp (const iCode * ic)
-{
-  operand *left, *right, *result;
-
-  /* note here that && operations that are in an if statement are
-     taken away by backPatchLabels only those used in arthmetic
-     operations remain */
-  aopOp ((left = IC_LEFT (ic)), ic, FALSE, TRUE);
-  aopOp ((right = IC_RIGHT (ic)), ic, FALSE, TRUE);
-  aopOp ((result = IC_RESULT (ic)), ic, FALSE, FALSE);
-
-  /* if both are bit variables */
-  if (left->aop->type == AOP_CRY && right->aop->type == AOP_CRY)
-    {
-      wassertl (0, "Tried to and two bits");
-    }
-  else
-    {
-      symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-      _toBoolean (left, TRUE);
-      if (!regalloc_dry_run)
-        emit2 ("jp z, !tlabel", labelKey2num (tlbl->key));
-      regalloc_dry_run_cost += 3;
-      _toBoolean (right, FALSE);
-      emitLabel (tlbl);
-      outBitAcc (result);
-    }
-
-  freeAsmop (left, NULL);
-  freeAsmop (right, NULL);
-  freeAsmop (result, NULL);
-}
-
-/*-----------------------------------------------------------------*/
-/* genOrOp - for || operation                                      */
-/*-----------------------------------------------------------------*/
-static void
-genOrOp (const iCode * ic)
-{
-  operand *left, *right, *result;
-
-  /* note here that || operations that are in an
-     if statement are taken away by backPatchLabels
-     only those used in arthmetic operations remain */
-  aopOp ((left = IC_LEFT (ic)), ic, FALSE, TRUE);
-  aopOp ((right = IC_RIGHT (ic)), ic, FALSE, TRUE);
-  aopOp ((result = IC_RESULT (ic)), ic, FALSE, FALSE);
-
-  /* if both are bit variables */
-  if (left->aop->type == AOP_CRY && right->aop->type == AOP_CRY)
-    {
-      wassertl (0, "Tried to OR two bits");
-    }
-  else
-    {
-      symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-      _toBoolean (left, TRUE);
-      if (!regalloc_dry_run)
-        emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
-      regalloc_dry_run_cost += 3;
-      _toBoolean (right, FALSE);
-      emitLabel (tlbl);
-      outBitAcc (result);
-    }
-
   freeAsmop (left, NULL);
   freeAsmop (right, NULL);
   freeAsmop (result, NULL);
@@ -12127,10 +12051,8 @@ genAnd (const iCode *ic, iCode *ifx)
       if (size)
         {
           emit2 ("clr c");
-          if (!regalloc_dry_run)
-            emit2 ("!tlabeldef", labelKey2num (tlbl->key));
           regalloc_dry_run_cost += 3;
-          genLine.lineCurr->isLabel = 1;
+          emitLabel (tlbl);
         }
       // if(left & literal)
       else
@@ -17547,15 +17469,10 @@ genEndCritical (const iCode * ic)
     {
       aopOp (IC_RIGHT (ic), ic, FALSE, TRUE);
       _toBoolean (IC_RIGHT (ic), TRUE);
-
-      if (!regalloc_dry_run)
-        {
-          //don't enable interrupts if they were off before
-          emit2 ("jp z, !tlabel", labelKey2num (tlbl->key));
-          emit2 ("!ei");
-          emitLabelSpill (tlbl);
-        }
-      regalloc_dry_run_cost += 4;
+      emitJP (tlbl, "z", 0.0f, true);
+      emit2 ("!ei");
+      regalloc_dry_run_cost++;
+      emitLabelSpill (tlbl);
       freeAsmop (IC_RIGHT (ic), NULL);
     }
   else
@@ -17567,14 +17484,10 @@ genEndCritical (const iCode * ic)
         regalloc_dry_run_cost++;
       //parity odd <==> P/O=0 <==> interrupt enable flag IFF2 was 0 <==>
       //don't enable interrupts as they were off before
-      if (!regalloc_dry_run)
-        {
-          emit2 ("jp PO, !tlabel", labelKey2num (tlbl->key));
-          emit2 ("!ei");
-          emit2 ("!tlabeldef", labelKey2num ((tlbl->key)));
-          genLine.lineCurr->isLabel = 1;
-        }
-      regalloc_dry_run_cost += 4;
+      emitJP (tlbl, "po", 0.0f, true);
+      emit2 ("!ei");
+      regalloc_dry_run_cost++;
+      emitLabel (tlbl);
     }
 }
 
@@ -18048,25 +17961,29 @@ genBuiltInMemcpy (const iCode *ic, int nparams, operand **pparams)
           wassert (n > 3);
           if (n % 2)
             emit3 (A_LDI, 0, 0);
-          if (!regalloc_dry_run)
-            {
-              const symbol *tlbl2 = newiTempLabel (0);
-              emitLabel (tlbl2);
-              emit3 (A_LDI, 0, 0);
-              emit3 (A_LDI, 0, 0);
-              emit2 ("jp LO, !tlabel", labelKey2num (tlbl2->key));
-            }
-          regalloc_dry_run_cost += 3;         
+          const symbol *tlbl2 = regalloc_dry_run ? NULL : newiTempLabel (NULL);
+          emitLabel (tlbl2);
+          regalloc_dry_run_state_scale = n / 2;
+          emit3 (A_LDI, 0, 0);
+          emit3 (A_LDI, 0, 0);
+          regalloc_dry_run_state_scale = 1.0f;
+          emitJP (tlbl2, "lo", (float)((n / 2) - 1) / (n / 2), true);      
         }
       else if ((IS_R2K || IS_R2KA) && !to_from_stack) // Work around Rabbit 2000 to Rabbit 3000 ldir wait state bug.
         {
-          if (!regalloc_dry_run)
+          if (n == UINT_MAX)
             {
-              const symbol *tlbl2 = newiTempLabel (0);
-              emitLabel (tlbl2);
-              emit3 (A_LDI, 0, 0);
-              emit2 ("jp LO, !tlabel", labelKey2num (tlbl2->key));
+              if (!count->aop->valinfo.anything && count->aop->valinfo.min >= 0 && count->aop->valinfo.max < UINT_MAX / 2)
+                n = (count->aop->valinfo.min + count->aop->valinfo.max) / 2;
+              else 
+                n = 8; // Just a guess.
             }
+          const symbol *tlbl2 = regalloc_dry_run ? NULL : newiTempLabel (NULL);
+          emitLabel (tlbl2);
+          regalloc_dry_run_state_scale = n;
+          emit3 (A_LDI, 0, 0);
+          regalloc_dry_run_state_scale = 1.0f;
+          emitJP (tlbl2, "lo", (float)(n - 1) / n, true);
           regalloc_dry_run_cost += 3;
         }
       else
@@ -18538,6 +18455,7 @@ genBuiltInStrchr (const iCode *ic, int nParams, operand **pparams)
   if (!isRegDead (A_IDX, ic))
     UNIMPLEMENTED;
 
+  // For cost, we just assume that both strings are of length 1, and have the same first char (not a reasoned assumption, just easy to implement).
   emitLabel (tlbl2);
   emit2 ("ld a, !mems", _pairs[pair].name);
   if (pair == PAIR_HL)
@@ -18545,15 +18463,15 @@ genBuiltInStrchr (const iCode *ic, int nParams, operand **pparams)
   else
     cost2 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2);
   emit3 (A_CP, ASMOP_A, aop_c);
-  if (!regalloc_dry_run)
-    emit2 ("jp z, !tlabel", labelKey2num (tlbl1->key));
-  emit2 ("or a, a");
+  emitJP (tlbl1, "z", 0.0f, true);
+  emit3 (A_OR, ASMOP_A, ASMOP_A);
   emit2 ("inc %s", _pairs[pair].name);
-  if (!regalloc_dry_run)
-    emit2 ("jr nz, !tlabel", labelKey2num (tlbl2->key));
+  cost2 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
+  emitJP (tlbl2, "nz", 0.0f, true);
   emit2 ("ld %s, a", _pairs[pair].l);
+  ld_cost (ASMOP_L, 0, ASMOP_A, 0, true);
   emit2 ("ld %s, a", _pairs[pair].h);
-  regalloc_dry_run_cost += 8; // jp will most likely be optimized into jr.
+  ld_cost (ASMOP_H, 0, ASMOP_A, 0, true);
   emitLabel (tlbl1);
   if (SomethingReturned)
     commitPair (IC_RESULT (ic)->aop, pair, ic, FALSE);
@@ -18742,16 +18660,6 @@ genZ80iCode (iCode * ic)
     case EQ_OP:
       emitDebug ("; genCmpEq");
       genCmpEq (ic, ifxForOp (IC_RESULT (ic), ic));
-      break;
-
-    case AND_OP:
-      emitDebug ("; genAndOp");
-      genAndOp (ic);
-      break;
-
-    case OR_OP:
-      emitDebug ("; genOrOp");
-      genOrOp (ic);
       break;
 
     case '^':

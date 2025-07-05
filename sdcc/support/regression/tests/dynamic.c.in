@@ -1,10 +1,14 @@
 /** dynamicc.c.in - test Dynamic C calling convention support.
     AFAIK the original Dynamic C only supported Z180 and the Rabbits.
-    We support this calling convention for all Z80-like architectures, though.
+    We support this calling convention for all Z80-like architectures that have ix, though.
 
     rtype: unsigned int, unsigned long
 */
 #include <testfwk.h>
+
+#if !defined(__SDCC_z80) && !defined(__SDCC_z80n) && !defined(__SDCC_z180) && !defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && !defined(__SDCC_tlcs90) && !defined(__SDCC_ez80) && !defined(__SDCC_r800)
+#define __dynamicc
+#endif
 
 #define VAL 0xaa55a55a
 
