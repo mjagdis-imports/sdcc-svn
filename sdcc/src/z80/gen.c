@@ -3674,7 +3674,7 @@ aopGet (asmop *aop, int offset, bool bit16)
                 {
                 case 2:
                   // dbuf_tprintf (&dbuf, "!bankimmeds", aop->aopu.aop_immd); Bank support not fully implemented yet.
-                  dbuf_tprintf (&dbuf, "!zero");
+                  dbuf_tprintf (&dbuf, "#(%s) >> 16", aop->aopu.aop_immd);
                   break;
 
                 case 1:
@@ -4130,7 +4130,7 @@ poppairwithsavedreg (PAIR_ID pair, short survivingreg, short tempreg)
 static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
-#if 0
+#if 1
   emitDebug ("; cheapMove");
 #endif
 
@@ -4156,7 +4156,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
           else if (IS_TLCS90)
             {
               _push (PAIR_IY);
-              emit2 ("ld (by), #(%s + %d) >> 16", to->aopu.aop_dir, to_offset);
+              emit2 ("ld (by), #(%s) >> 16", to->aopu.aop_dir, to_offset);
               cost (3, 10);
               emit2 ("ld iy, #(%s + %d)", to->aopu.aop_dir, to_offset);
               cost (3, 6);
@@ -4178,25 +4178,25 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
               emit3_o (A_LD, ASMOP_DE, 0, from, from_offset);
               cheapMove (to, to_offset, ASMOP_DE, 0, a_dead);
               pop (ASMOP_DE, 0, 2);
-              return;
             }
           else if (aopInReg (from, from_offset, L_IDX) || aopInReg (from, from_offset, H_IDX))
             {
               emit3w (A_EX, ASMOP_DE, ASMOP_HL);
               cheapMove (to, to_offset, ASMOP_DE, aopInReg (from, from_offset, H_IDX), a_dead);
               emit3w (A_EX, ASMOP_DE, ASMOP_HL);
-              return;
             }
-
-          _push (PAIR_HL);
-          // No byte write instruction for far space before r4k, we need to handle this like a bit-field write, and we can't honor volatile here.
-          emit2 ("ld a, #((%s + %d) >> 16)", to->aopu.aop_dir, to_offset);
-          emit2 ("ldp hl, (%s + %d)", to->aopu.aop_dir, to_offset);
-          cost (6, 17);
-          cheapMove (ASMOP_L, 0, from, from_offset, false);
-          emit2 ("ldp (%s + %d), hl", to->aopu.aop_dir, to_offset);
-          cost (4, 15);
-          _pop (PAIR_HL);
+          else
+            {
+              _push (PAIR_HL);
+              // No byte write instruction for far space before r4k, we need to handle this like a bit-field write, and we can't honor volatile here.
+              emit2 ("ld a, #((%s + %d) >> 16)", to->aopu.aop_dir, to_offset);
+              emit2 ("ldp hl, (%s + %d)", to->aopu.aop_dir, to_offset);
+              cost (6, 17);
+              cheapMove (ASMOP_L, 0, from, from_offset, false);
+              emit2 ("ldp (%s + %d), hl", to->aopu.aop_dir, to_offset);
+              cost (4, 15);
+              _pop (PAIR_HL);
+            }
         }
       if (!a_dead)
         _pop (PAIR_AF);
@@ -16378,9 +16378,9 @@ genPointerSet (iCode *ic)
           cost (2, 12);
           if (i + 1 < size)
             {
-              if (result->aop->type == AOP_REG)
+              if (right->aop->type == AOP_REG)
                 {
-                  int rIdx = result->aop->aopu.aop_reg[i]->rIdx;
+                  int rIdx = right->aop->aopu.aop_reg[i]->rIdx;
                   if (ASMOP_AIY->regs[rIdx] >= 0 || !use_add_iy_d && inc_aop->regs[rIdx] >= 0 || // Still-needed ptr / inc overwritten
                     rIdx == L_IDX || rIdx == H_IDX) // Result will get overwritten when fetching next byte
                     UNIMPLEMENTED;
