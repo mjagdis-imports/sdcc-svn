@@ -50,12 +50,16 @@ void testWrite(void)
 {
 	sb.ui12 = vi;
 	sb.si13 = vi;
+	sb.b = true;
 	ASSERT (sb.ui12 == 0x5a);
 	ASSERT (sb.si13 == 0x5a);
+	ASSERT (sb.b == true);
 	vi = 24;
 	sb.ui12 = 24;
 	sb.si13 = -24;
+	sb.b = false;
 	ASSERT (sb.ui12 == vi);
 	ASSERT (sb.si13 == -vi);
+	ASSERT (sb.b == false);
 }
 

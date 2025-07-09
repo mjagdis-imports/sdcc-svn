@@ -3674,7 +3674,7 @@ aopGet (asmop *aop, int offset, bool bit16)
                 {
                 case 2:
                   // dbuf_tprintf (&dbuf, "!bankimmeds", aop->aopu.aop_immd); Bank support not fully implemented yet.
-                  dbuf_tprintf (&dbuf, "#(%s) >> 16", aop->aopu.aop_immd);
+                  dbuf_tprintf (&dbuf, "#(%s >> 16)", aop->aopu.aop_immd); // Rabbit __xdata / __xconst.
                   break;
 
                 case 1:
@@ -4156,7 +4156,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
           else if (IS_TLCS90)
             {
               _push (PAIR_IY);
-              emit2 ("ld (by), #(%s) >> 16", to->aopu.aop_dir, to_offset);
+              emit2 ("ld (by), #(%s >> 16)", to->aopu.aop_dir, to_offset);
               cost (3, 10);
               emit2 ("ld iy, #(%s + %d)", to->aopu.aop_dir, to_offset);
               cost (3, 6);
@@ -4686,7 +4686,33 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
 
       bool source_sp = IS_RAB && source_sp_offset <= 255 || (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && source_sp_offset <= 127;
       bool result_sp = IS_RAB && result_sp_offset <= 255 || (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && result_sp_offset <= 127;
-      if ((IS_RAB || IS_EZ80 || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && i + 1 < n && !assigned[i + 1] && hl_free &&
+      if (i + 3 < n && !assigned[i + 1] && !assigned[i + 2] && !assigned[i + 3] && jk_free && hl_free && (IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET) &&
+        (result->type == AOP_STK && result_fp_offset >= -128 && result_fp_offset <= 127 || result_sp) &&
+        (source->type == AOP_STK && source_fp_offset >= -128 && source_fp_offset <= 127 || source_sp))
+        {
+          if (!regalloc_dry_run)
+            {
+              if (source_sp)
+                emit2 ("ld jkhl, %d (sp)", source_sp_offset);
+              else
+                emit2 ("ld jkhl, %s", aopGet (source, soffset + i, false));
+              if (result_sp)
+                emit2 ("ld %d (sp), jkhl", result_sp_offset);
+              else
+                emit2 ("ld %s, jkhl", aopGet (result, roffset + i, false));
+            }
+          // TODO: cost2
+          spillPair (PAIR_JK);
+          spillPair (PAIR_HL);
+          assigned[i] = true;
+          assigned[i + 1] = true;
+          assigned[i + 2] = true;
+          assigned[i + 3] = true;
+          (*size) -= 4;
+          j += 4;
+          continue;
+        }
+      else if ((IS_RAB || IS_EZ80 || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && i + 1 < n && !assigned[i + 1] && hl_free &&
         (result->type == AOP_STK && result_fp_offset >= -128 && result_fp_offset <= 127 || result_sp) &&
         (source->type == AOP_STK && source_fp_offset >= -128 && source_fp_offset <= 127 || source_sp))
         {
@@ -4784,6 +4810,23 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
 
       if (assigned[i])
         i++;
+      else if ((IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET) && // The 32 bit loads of the Rabbit 4000 are the fastest way to move data to the stack.
+        i + 3 < n && aopOnStack (result, roffset + i, 4) && (abs(fp_offset) <= 127 || sp_offset <= 255) &&
+        (aopInReg (source, soffset + i + 2, BC_IDX) && aopInReg (source, soffset + i, DE_IDX) || aopInReg (source, soffset + i + 2, JK_IDX) && aopInReg (source, soffset + i, HL_IDX)))
+        {
+          bool use_sp = sp_offset <= 255;
+          emit2 ("ld %d %s, %s%s", use_sp ? sp_offset : fp_offset, use_sp ? "(sp)" : "(ix)", _pairs[getPairId_o (source, soffset + i + 2)].name, _pairs[getPairId_o (source, soffset + i)].name);
+          // todo: cost2
+          assigned[i] = true;
+          assigned[i + 1] = true;
+          assigned[i + 2] = true;
+          assigned[i + 3] = true;
+          spillPair (getPairId_o (source, soffset + i + 2));
+          spillPair (getPairId_o (source, soffset + i));
+          regsize -= 4;
+          size -= 4;
+          i += 4;
+        }
       else if (!IS_SM83 && !IS_TLCS870 && !IS_RAB && !(IS_TLCS90 && optimize.codeSpeed) && // The sm83 doesn't have ex (sp), hl. The Rabbits and tlcs90 have it, but ld 0 (sp), hl is faster. For the Rabbits, they are also the same size.
         i + 1 < n && aopOnStack (result, roffset + i, 2) && !sp_offset &&
         aopInReg (source, soffset + i, HL_IDX) && hl_dead && // If we knew that iy was dead, we could also use ex (sp), iy here.
@@ -5045,6 +5088,242 @@ skip_byte_push_iy:
         }
     }
 
+  // Try to use Rabbit 4000 ex bc, hl
+  if (IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET)
+    {
+      int ex[4] = {-2, -2, -2, -2}; // Swapped bytes
+      bool no = false; // Still needed byte would be overwritten
+
+      // Find L and check that it is exchanged with E, find H and check that it is exchanged with D.
+      for (int i = 0; i < n; i++)
+        {
+          if (assigned[i] &&
+            (aopInReg (result, roffset + i, C_IDX) || aopInReg (result, roffset + i, L_IDX) || aopInReg (result, roffset + i, B_IDX) || aopInReg (result, roffset + i, H_IDX)))
+            no = true;
+       
+          if (!assigned[i] && aopInReg (source, soffset + i, C_IDX))
+            if (aopInReg (result, roffset + i, L_IDX))
+              ex[0] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (source, soffset + i, L_IDX))
+            if (aopInReg (result, roffset + i, C_IDX))
+              ex[1] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (source, soffset + i, B_IDX))
+            if (aopInReg (result, roffset + i, H_IDX))
+              ex[2] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (source, soffset + i, H_IDX))
+            if (aopInReg (result, roffset + i, B_IDX))
+              ex[3] = i;
+            else
+              no = true; 
+        }
+
+      int exsum = (ex[0] >= 0) + (ex[1] >= 0) + (ex[2] >= 0) + (ex[3] >= 0);
+
+      if (!no && exsum >= 2 && hl_dead && bc_dead)
+        {
+          emit3w (A_EX, ASMOP_BC, ASMOP_HL);
+          swapPairs (PAIR_BC, PAIR_HL);
+          if(ex[0] >= 0)
+            assigned[ex[0]] = true;
+          if(ex[1] >= 0)
+            assigned[ex[1]] = true;
+          if(ex[2] >= 0)
+            assigned[ex[2]] = true;
+          if(ex[3] >= 0)
+            assigned[ex[3]] = true;
+          regsize -= exsum;
+          size -= exsum;
+        }
+    }
+
+  // Try to use Rabbit 4000 ex jk, hl
+  if (IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET)
+    {
+      int ex[4] = {-2, -2, -2, -2}; // Swapped bytes
+      bool no = false; // Still needed byte would be overwritten
+
+      // Find L and check that it is exchanged with E, find H and check that it is exchanged with D.
+      for (int i = 0; i < n; i++)
+        {
+          if (assigned[i] &&
+            (aopInReg (result, roffset + i, K_IDX) || aopInReg (result, roffset + i, L_IDX) || aopInReg (result, roffset + i, J_IDX) || aopInReg (result, roffset + i, H_IDX)))
+            no = true;
+       
+          if (!assigned[i] && aopInReg (source, soffset + i, K_IDX))
+            if (aopInReg (result, roffset + i, L_IDX))
+              ex[0] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (source, soffset + i, L_IDX))
+            if (aopInReg (result, roffset + i, K_IDX))
+              ex[1] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (source, soffset + i, J_IDX))
+            if (aopInReg (result, roffset + i, H_IDX))
+              ex[2] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (source, soffset + i, H_IDX))
+            if (aopInReg (result, roffset + i, J_IDX))
+              ex[3] = i;
+            else
+              no = true; 
+        }
+
+      int exsum = (ex[0] >= 0) + (ex[1] >= 0) + (ex[2] >= 0) + (ex[3] >= 0);
+
+      if (!no && exsum >= 2 && hl_dead && jk_dead)
+        {
+          emit3w (A_EX, ASMOP_JK, ASMOP_HL);
+          swapPairs (PAIR_JK, PAIR_HL);
+          if(ex[0] >= 0)
+            assigned[ex[0]] = true;
+          if(ex[1] >= 0)
+            assigned[ex[1]] = true;
+          if(ex[2] >= 0)
+            assigned[ex[2]] = true;
+          if(ex[3] >= 0)
+            assigned[ex[3]] = true;
+          regsize -= exsum;
+          size -= exsum;
+        }
+    }
+
+  // Try to use Rabbit 4000 rlc bcde, 8.
+  if ((IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET) && regsize >= 3)
+    {
+      int ex[4] = {-1, -1, -1, -1};
+      bool no = !bc_dead || !de_dead;
+
+      for (int i = 0; i < n; i++)
+        {
+          if (assigned[i] &&
+            (aopInReg (result, roffset + i, B_IDX) || aopInReg (result, roffset + i, C_IDX) || aopInReg (result, roffset + i, D_IDX) || aopInReg (result, roffset + i, E_IDX)))
+            no = true;
+
+          if (!assigned[i] && aopInReg (result, roffset + i, B_IDX))
+            if (aopInReg (source, soffset + i, C_IDX))
+              ex[0] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (result, roffset + i, C_IDX))
+            if (aopInReg (source, soffset + i, D_IDX))
+              ex[1] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (result, roffset + i, D_IDX))
+            if (aopInReg (source, soffset + i, E_IDX))
+              ex[2] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (result, roffset + i, E_IDX))
+            if (aopInReg (source, soffset + i, B_IDX))
+              ex[3] = i;
+            else
+              no = true;
+        }
+     int exsum = (ex[0] >= 0) + (ex[1] >= 0) + (ex[2] >= 0) + (ex[3] >= 0);
+     if (!no && exsum >= 3)
+        {
+          emit2 ("rlc bcde, 8");
+          cost (2, 4);
+          if(ex[0] >= 0)
+            assigned[ex[0]] = true;
+          if(ex[1] >= 0)
+            assigned[ex[1]] = true;
+          if(ex[2] >= 0)
+            assigned[ex[2]] = true;
+          if(ex[3] >= 0)
+            assigned[ex[3]] = true;
+          regsize -= exsum;
+          size -= exsum;
+        }
+    }
+
+  // Todo: try to use Rabbit 4000 rrc bcde, 8.
+  if ((IS_R4K_NOTYET || IS_R4K_NOTYET || IS_R6K_NOTYET) && regsize >= 3)
+    {
+      int ex[4] = {-1, -1, -1, -1};
+      bool no = !bc_dead || !de_dead;
+
+      for (int i = 0; i < n; i++)
+        {
+          if (assigned[i] &&
+            (aopInReg (result, roffset + i, B_IDX) || aopInReg (result, roffset + i, C_IDX) || aopInReg (result, roffset + i, D_IDX) || aopInReg (result, roffset + i, E_IDX)))
+            no = true;
+
+          if (!assigned[i] && aopInReg (result, roffset + i, B_IDX))
+            if (aopInReg (source, soffset + i, E_IDX))
+              ex[0] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (result, roffset + i, C_IDX))
+            if (aopInReg (source, soffset + i, B_IDX))
+              ex[1] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (result, roffset + i, D_IDX))
+            if (aopInReg (source, soffset + i, C_IDX))
+              ex[2] = i;
+            else
+              no = true;
+          if (!assigned[i] && aopInReg (result, roffset + i, E_IDX))
+            if (aopInReg (source, soffset + i, D_IDX))
+              ex[3] = i;
+            else
+              no = true;
+        }
+     int exsum = (ex[0] >= 0) + (ex[1] >= 0) + (ex[2] >= 0) + (ex[3] >= 0);
+     if (!no && exsum >= 3)
+        {
+          emit2 ("rrc bcde, 8");
+          cost (2, 4);
+          if(ex[0] >= 0)
+            assigned[ex[0]] = true;
+          if(ex[1] >= 0)
+            assigned[ex[1]] = true;
+          if(ex[2] >= 0)
+            assigned[ex[2]] = true;
+          if(ex[3] >= 0)
+            assigned[ex[3]] = true;
+          regsize -= exsum;
+          size -= exsum;
+        }
+    }
+
+  // Try to use Rabbit 6000 swap rr
+  if (IS_R6K_NOTYET)
+    for (int b = C_IDX; b <= K_IDX; b += 2)
+      if (regsize >= 2 && (b == C_IDX || b == E_IDX || b == L_IDX || b == K_IDX))
+        {
+          int i;
+          int ex[2] = {-1, -1};
+
+          i = result->regs[b] - roffset;
+          if (i > 0 && i < n && !assigned[i] && aopInReg (source, soffset + i, b + 1))
+            ex[0] = i;
+          i = result->regs[b + 1] - roffset;
+          if (i > 0 && i < n && !assigned[i] && aopInReg (source, soffset + i, b))
+            ex[1] = i;
+
+          if (ex[0] >= 0 && ex[1] >= 0)
+            {
+              asmop *xchaop = (b == C_IDX) ? ASMOP_BC : (b == E_IDX) ? ASMOP_DE : ASMOP_JK;
+              emit3w (A_SWAP, xchaop, 0);
+              assigned[ex[0]] = true;
+              assigned[ex[1]] = true;
+              regsize -= 2;
+              size -= 2;
+            }
+        }
+
   while (regsize && result->type == AOP_REG && source->type == AOP_REG)
     {
       int i;
@@ -5168,6 +5447,20 @@ skip_byte:
 
       if (assigned[i])
         i++;
+      else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && i + 3 < n && !assigned[i] && !assigned[i + 1] && !assigned[i + 2] && !assigned[i + 3] &&
+        sp_offset <= 255 &&
+        (aopInReg (result, roffset + i + 2, JK_IDX) && aopInReg (result, roffset + i, HL_IDX) || aopInReg (result, roffset + i + 2, BC_IDX) && aopInReg (result, roffset + i, DE_IDX)))
+        {
+          if (!regalloc_dry_run)
+            emit2 ("ld %s%s, %d (sp)", _pairs[getPairId_o (result, roffset + i + 2)].name, _pairs[getPairId_o (result, roffset + i)].name, sp_offset);
+          // todo: cost2
+          assigned[i] = true;
+          assigned[i + 1] = true;
+          assigned[i + 2] = true;
+          assigned[i + 3] = true;
+          size -= 4;
+          i += 4;
+        }
       else if (i + 1 < n && !assigned[i + 1] && (source->type == AOP_STK || source->type == AOP_EXSTK) &&
         (IS_RAB && sp_offset <= 255 || IS_TLCS90 && sp_offset <= 127) &&
         (aopInReg (result, roffset + i, HL_IDX) || aopInReg (result, roffset + i, IY_IDX)))
@@ -5389,14 +5682,14 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           PAIR_ID pair = hl_dead ? PAIR_HL : de_dead ? PAIR_DE : PAIR_BC;
           if (!iy_dead)
             _push (PAIR_IY);
-          emit2 ("ld (by), #(%s + %d) >> 16", source->aopu.aop_dir, soffset + i);
+          emit2 ("ld (by), #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i);
           cost (3, 10);
           emit2 ("ld iy, #(%s + %d)", source->aopu.aop_dir, soffset + i);
           cost (3, 6);
           emit2 ("ld %s, (iy)", _pairs[pair].name);
           cost (2, 8);
           spillPair (pair);
-          emit2 ("ld (by), #(%s + %d) >> 16", result->aopu.aop_dir, roffset + i);
+          emit2 ("ld (by), #((%s + %d) >> 16)", result->aopu.aop_dir, roffset + i);
           cost (3, 10);
           emit2 ("ld iy, #(%s + %d)", result->aopu.aop_dir, roffset + i);
           cost (3, 6);
@@ -5424,7 +5717,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             {
               if (!iy_dead)
                 _push (PAIR_IY);
-              emit2 ("ld (by), #(%s + %d) >> 16", source->aopu.aop_dir, soffset + i);
+              emit2 ("ld (by), #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i);
               cost (3, 10);
               emit2 ("ld iy, #(%s + %d)", source->aopu.aop_dir, soffset + i);
               cost (3, 6);
@@ -5460,7 +5753,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
               wassert (getPairId_o(source, soffset + i) != PAIR_IY);
               if (!iy_dead)
                 _push (PAIR_IY);
-              emit2 ("ld (by), #(%s + %d) >> 16", result->aopu.aop_dir, roffset + i);
+              emit2 ("ld (by), #((%s + %d) >> 16)", result->aopu.aop_dir, roffset + i);
               cost (3, 10);
               emit2 ("ld iy, #(%s + %d)", result->aopu.aop_dir, roffset + i);
               cost (3, 6);
@@ -5605,7 +5898,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           i += 2;
           continue;
         }
-      else if (i + 1 < size && IS_SM83 && result->type != AOP_REG && requiresHL (result) && source->type == AOP_REG && requiresHL (source) && // word through de is cheaper than direct byte-by-byte, since it requires fewer updates of hl.
+      else if (IS_SM83 && i + 1 < size && result->type != AOP_REG && requiresHL (result) && source->type == AOP_REG && requiresHL (source) && // word through de is cheaper than direct byte-by-byte, since it requires fewer updates of hl.
         de_dead_global && source->regs[E_IDX] <= i + 1 && source->regs[D_IDX] <= i + 1 &&
         hl_dead_global && source->regs[L_IDX] <= i + 1 && source->regs[H_IDX] <= i + 1)
         {
@@ -5614,6 +5907,15 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           cheapMove (result, i, ASMOP_E, 0, a_dead);
           cheapMove (result, i + 1, ASMOP_D, 0, a_dead);
           i += 2;
+          continue;
+        }
+      else if((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && i + 3 < size &&
+        (result->type == AOP_IY || result->type == AOP_DIR || result->type == AOP_HL) &&
+        (getPairId_o (source, soffset + i + 2) == PAIR_BC && getPairId_o (source, soffset + i) == PAIR_DE || getPairId_o (source, soffset + i + 2) == PAIR_JK && getPairId_o (source, soffset + i) == PAIR_HL))
+        {
+          emit2 ("ld !mems, %s%s", aopGetLitWordLong (result, roffset + i, false), _pairs[getPairId_o (source, soffset + i + 2)].name, _pairs[getPairId_o (source, soffset + i)].name);
+          cost (4, 21);
+          i += 4;
           continue;
         }
       else if (!IS_SM83 && i + 1 < size && getPairId_o(source, soffset + i) != PAIR_INVALID &&
@@ -5625,6 +5927,24 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           else
             cost2 (4, 4, -1, 4, 20, 19, 15, 15, -1, 12, -1, 6, 6, 6, 6);
           i += 2;
+          continue;
+        }
+      else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && i + 3 < size &&
+        (source->type == AOP_IY || source->type == AOP_DIR || source->type == AOP_HL) &&
+        (getPairId_o (result, roffset + i + 2) == PAIR_BC && getPairId_o (result, roffset + i) == PAIR_DE || getPairId_o (result, roffset + i + 2) == PAIR_JK && getPairId_o (result, roffset + i) == PAIR_HL))
+        {
+          emit2 ("ld %s%s,!mems", _pairs[getPairId_o (result, roffset + i + 2)].name, _pairs[getPairId_o (result, roffset + i)].name, aopGetLitWordLong (source, soffset + i, false));
+          cost (4, 17);
+          i += 4;
+          continue;
+        }
+      else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && i + 3 < size &&
+        (source->type == AOP_LIT && aopIsLitVal (source, i + 1, 3, (byteOfVal (source->aopu.aop_lit, i) & 0x80) ? 0xffffff : 0x000000)) &&
+        (getPairId_o (result, roffset + i + 2) == PAIR_BC && getPairId_o (result, roffset + i) == PAIR_DE || getPairId_o (result, roffset + i + 2) == PAIR_JK && getPairId_o (result, roffset + i) == PAIR_HL))
+        {
+          emit2 ("ld %s%s, !immed%d", _pairs[getPairId_o (result, roffset + i + 2)].name, _pairs[getPairId_o (result, roffset + i)].name, (signed char)(byteOfVal (source->aopu.aop_lit, i)));
+          cost (3, 4);
+          i += 4;
           continue;
         }
       else if (!IS_SM83 && i + 1 < size && soffset + i + 1 < source->size && getPairId_o(result, roffset + i) != PAIR_INVALID &&
@@ -9657,7 +9977,45 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
       bool maskedword = maskedtopbyte && (size == 2);
       bool a_dead = isRegDead (A_IDX, ic) && (result->regs[A_IDX] < 0 || result->regs[A_IDX] >= offset) && left->regs[A_IDX] <= offset && right->regs[A_IDX] <= offset;
 
-      if (!IS_SM83 && !maskedword && size >= 2 &&
+      if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && !maskedword && !offset && size >= 4 && aopIsLitVal (left, offset, 1, 0x00000000) &&
+        (aopInReg (result, offset, DE_IDX) && aopInReg (result, offset + 2, BC_IDX) || aopInReg (result, offset, HL_IDX) && aopInReg (result, offset + 2, JK_IDX)))
+        {
+          genMove_o (result, offset, right, offset, 4, a_dead, false, false, false, true);
+          emit2 ("neg %s%s", _pairs[getPairId_o (result, offset + 2)].name, _pairs[getPairId_o (result, offset)].name);
+          cost (2, 4);
+          offset += 4;
+          size -= 4;
+          _G.preserveCarry = !!size;
+          continue;
+        }
+      else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && !maskedword && !offset && size >= 4 && aopIsLitVal (left, offset, 1, 0x00000000) &&
+        aopOnStack (result, offset, 4) && aopOnStack (right, offset, 4)
+        && (isPairDead (PAIR_JK, ic) && isPairDead (PAIR_HL, ic) || isPairDead (PAIR_BC, ic) && isPairDead (PAIR_DE, ic)))
+        {
+          asmop *taop = isPairDead (PAIR_BC, ic) && isPairDead (PAIR_DE, ic) ? ASMOP_BCDE : ASMOP_JKHL;
+          genMove_o (taop, 0, right, offset, 4, a_dead, false, false, false, true);
+          emit2 ("neg %s%s", _pairs[getPairId_o (taop, 2)].name, _pairs[getPairId_o (taop, 0)].name);
+          cost (2, 4);
+          genMove_o (result, offset, taop, 0, 4, a_dead, false, false, false, size > 4);
+          offset += 4;
+          size -= 4;
+          _G.preserveCarry = !!size;
+          continue;
+        }
+      else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && !maskedword && !offset && size >= 2 && aopIsLitVal (left, offset, 1, 0x0000) && isPairDead (PAIR_HL, ic) &&
+        (result->regs[L_IDX] < 0 || result->regs[L_IDX] >= offset) && (result->regs[H_IDX] < 0 || result->regs[H_IDX] >= offset) &&
+        (aopInReg (right, offset, HL_IDX) || aopInReg (result, offset, HL_IDX) || aopOnStack (result, offset, 2) && (!requiresHL (right) || size == 2)))
+        {
+          genMove_o (ASMOP_HL, 0, right, offset, 2, a_dead, true, false, false, true);
+          emit3w (A_NEG, ASMOP_HL, 0);
+          spillPair (PAIR_HL);
+          genMove_o (result, offset, ASMOP_HL, 0, 2, a_dead, true, false, false, size <= 2);
+          offset += 2;
+          size -= 2;
+          _G.preserveCarry = !!size;
+          continue;
+        }
+      else if (!IS_SM83 && !maskedword && size >= 2 &&
         isPairDead (PAIR_HL, ic) &&
         (aopInReg (result, offset, HL_IDX) || aopInReg (result, offset, DE_IDX) || IS_RAB && result->type == AOP_STK) &&
         (result->regs[L_IDX] < 0 || result->regs[L_IDX] >= offset) && (result->regs[H_IDX] < 0 || result->regs[H_IDX] >= offset) &&
@@ -15015,11 +15373,10 @@ genPointerGet (const iCode *ic)
   int blen = bit_field ? SPEC_BLEN (getSpec (operandType (result))) : 0;
   int bstr = bit_field ? SPEC_BSTR (getSpec (operandType (result))) : 0;
   aopOp (left, ic, false, false);
+  aopOp (right, ic, false, false);
   aopOp (result, ic, true, false);
   size = result->aop->size;
 
-  // Historically GET_VALUE_AT_ADDRESS didn't have a right operand */
-  wassertl (right, "GET_VALUE_AT_ADDRESS without right operand");
   wassertl (IS_OP_LITERAL (ic->right), "GET_VALUE_AT_ADDRESS with non-literal right operand");
   rightval = (int)operandLitValue (right);
   rightval_in_range = (rightval >= -128 && rightval + size - 1 < 127);
@@ -15865,6 +16222,7 @@ release:
     _pop (pair);
 
   freeAsmop (left, NULL);
+  freeAsmop (right, NULL);
   freeAsmop (result, NULL);
 }
 
@@ -16370,10 +16728,35 @@ genPointerSet (iCode *ic)
           // ldp always writes/reads 16 bit. The lower byte is (iy). The upper one depends on alignment.
           emit2 ("ldp hl, (iy)");
           cost (2, 10);
-          if (!bit_field)
-            genMove_o (ASMOP_L, 0, right->aop, i, 1, false, false, false, false, true);
+          if (bit_field && blen == 1 && right->aop->type == AOP_LIT)
+            {
+              unsigned int litval = ullFromVal (right->aop->aopu.aop_lit) >> (i * 8);
+              emit2 (litval & 1 ? "set %d, l" : "res %d, l", bstr);
+              cost (2, 4);
+            }
+          else if (bit_field && blen < 8)
+            {
+              const unsigned int mask = ((0xffu << (blen + bstr)) | (0xffu >> (8 - bstr))) & 0xffu;
+              _push (PAIR_AF);
+              emit2 ("ld a, !immedbyte", mask);
+              cost (2, 4);
+              emit3 (A_AND, ASMOP_A, ASMOP_L);
+              emit3 (A_LD, ASMOP_L, ASMOP_A);
+              genMove_o (ASMOP_A, 0, right->aop, i, 1, true, false, false, false, true);
+              if (blen + bstr == 8)
+                AccLsh (bstr);
+              else
+                {
+                  AccRol (bstr);
+                  emit2 ("and a, !immedbyte", ~mask & 0xffu);
+                  cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+                }
+              emit3 (A_OR, ASMOP_A, ASMOP_L);
+              emit3 (A_LD, ASMOP_L, ASMOP_A);
+              _pop (PAIR_AF);
+            }
           else
-            UNIMPLEMENTED;
+            genMove_o (ASMOP_L, 0, right->aop, i, 1, false, false, false, false, true);
           emit2 ("ldp (iy), hl");
           cost (2, 12);
           if (i + 1 < size)
@@ -16691,6 +17074,32 @@ genIfx (iCode *ic, iCode *popIc)
       emit3 (A_DEC, cond->aop, 0);
       genIfxJump (ic, "nz");
 
+      goto release;
+    }
+  else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && (getPairId (cond->aop) != PAIR_INVALID && getPairId (cond->aop) != PAIR_JK))
+    {
+      emit2 ("test %s", _pairs[getPairId (cond->aop)].name);
+      cost (2, 4);
+      genIfxJump (ic, "nz");
+      
+      goto release;
+    }
+  else if (cond->aop->size == 4 && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) &&
+    (getPairId_o (cond->aop, 0) == PAIR_DE && getPairId_o (cond->aop, 2) == PAIR_BC || getPairId_o (cond->aop, 0) == PAIR_BC && getPairId_o (cond->aop, 2) == PAIR_DE))
+    {
+      emit2 ("test bcde");
+      cost (2, 4);
+      genIfxJump (ic, "nz");
+      
+      goto release;
+    }
+  else if (cond->aop->size == 4 && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) &&
+    (getPairId_o (cond->aop, 0) == PAIR_HL && getPairId_o (cond->aop, 2) == PAIR_JK || getPairId_o (cond->aop, 0) == PAIR_JK && getPairId_o (cond->aop, 2) == PAIR_HL))
+    {
+      emit2 ("test jkhl");
+      cost (2, 4);
+      genIfxJump (ic, "nz");
+      
       goto release;
     }
   else if (IS_RAB && (getPairId (cond->aop) == PAIR_HL || getPairId (cond->aop) == PAIR_IY) && isPairDead (getPairId (cond->aop), ic))
