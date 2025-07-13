@@ -24635,6 +24635,38 @@ in/out
  If you include the file z180.h this will be set automatically.
 \end_layout
 
+\begin_layout Subsubsection
+__far
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+far
+\end_layout
+
+\end_inset
+
+ (eZ80 only)
+\end_layout
+
+\begin_layout Standard
+The ez80 port supports a 24 MB __far address space that contains the generic address space.
+\end_layout
+
 \begin_layout Subsection
 SM83 intrinsic named address spaces
 \end_layout
@@ -24730,6 +24762,97 @@ at
 \end_inset
 
 (0xff01) IoPort;
+\end_layout
+
+\begin_layout Subsection
+Rabbit intrinsic named address spaces
+\end_layout
+
+\begin_layout Subsubsection
+__sfr
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+sfr
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The Rabbit ports support a 64 KB __sfr address space corresponding to the 
+\begin_inset Quotes sld
+\end_inset
+
+internal i/o
+\begin_inset Quotes srd
+\end_inset
+
+space of the Rabbits.
+\end_layout
+
+\begin_layout Subsubsection
+__far
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+far
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+The Rabbit ports supports a 1 MB __far address space that contains the generic address space.
+ Due to limitations of the Rabbit ldp instructions,
+ variables declared as __far can be neither volatile nor atomic.
 \end_layout
 
 \begin_layout Subsection

@@ -537,7 +537,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if(SKIP_IC2(ic))
     return(true);
 
-  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127) || IS_SM83);
+  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127));
 
   //std::cout << "Ainst_ok at " << G[i].ic->key << ": A = (" << ia.registers[REG_A][0] << ", " << ia.registers[REG_A][1] << "), inst " << i << ", " << ic->key << "\n";
 
@@ -699,7 +699,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 {
   const iCode *ic = G[i].ic;
 
-  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127) || IS_SM83);
+  bool exstk = (should_omit_frame_ptr || (currFunc && currFunc->stack > 127));
 
   const i_assignment_t &ia = a.i_assignment;
 
@@ -1571,11 +1571,12 @@ static bool tree_dec_ralloc(T_t &T, G_t &G, const I_t &I, SI_t &SI)
 template <class G_t>
 static bool omit_frame_ptr(const G_t &G)
 {
-  if(IS_SM83 || IY_RESERVED || z80_opts.noOmitFramePtr)
-    return(false);
-
-  if(options.omitFramePtr)
+  // We have to omit the frame poitner if there is no useable ix.
+  if(IS_SM83 || IS_TLCS870 || options.omitFramePtr)
     return(true);
+
+  if(IY_RESERVED || z80_opts.noOmitFramePtr)
+    return(false);
 
   signed char omitcost = -10; // Overhead for setting up frame pointer is 10 bytes of code
   for(unsigned int i = 0; i < boost::num_vertices(G); i++)
@@ -1596,7 +1597,7 @@ static bool omit_frame_ptr(const G_t &G)
       if(o && IS_SYMOP(o) && OP_SYMBOL_CONST(o)->_isparm && !IS_REGPARM (OP_SYMBOL_CONST(o)->etype))
         omitcost += 6;
 
-      if(omitcost > 20) // Chosen greater than zero, since the peephole optimizer often can optimize the use of iy into use of hl, reducing the cost.
+      if(omitcost >= 21) // Chosen greater than zero, since the peephole optimizer often can optimize the use of iy into use of hl, reducing the cost.
         return(false);
     }
 

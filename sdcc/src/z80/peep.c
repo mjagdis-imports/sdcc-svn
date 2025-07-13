@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   peep.c - source file for peephole optimizer helper functions
 
-  Written By - Philipp Klaus Krause
+  Copyright (C) 2011-2025, Philipp Klaus Krause pkk@spth.de, philipp@informatik.uni-frankfurt.de, philipp@colecovision.eu
   Copyright (C) 2020, Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
   This program is free software; you can redistribute it and/or modify it
@@ -407,11 +407,11 @@ z80MightRead(const lineNode *pl, const char *what)
   if(strcmp(pl->line, "call\t__initrleblock") == 0 && (strchr(what, 'd') != 0 || strchr(what, 'e') != 0))
     return TRUE;
 
-  if(strcmp(pl->line, "call\t___sdcc_call_hl") == 0 && (strchr(what, 'h') != 0 || strchr(what, 'l') != 0))
-    return TRUE;
+  if((strcmp(pl->line, "call\t___sdcc_call_hl") == 0 || !strncmp (larg, "(hl)", 4)) && (strchr(what, 'h') != 0 || strchr(what, 'l') != 0))
+    return true;
 
-  if(strcmp(pl->line, "call\t___sdcc_call_iy") == 0 && strstr(what, "iy") != 0)
-    return TRUE;
+  else if((strcmp(pl->line, "call\t___sdcc_call_iy") == 0 || !strncmp (larg, "(iy)", 4)) && strstr(what, "iy") != 0)
+    return true;
 
   if(strncmp(pl->line, "call\t___sdcc_bcall_", 19) == 0)
     if (strchr (what, pl->line[19]) != 0 || strchr (what, pl->line[20]) != 0 || strchr (what, pl->line[21]) != 0)
@@ -649,8 +649,9 @@ z80MightRead(const lineNode *pl, const char *what)
   if((IS_R3KA || IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "lsdr") || lineIsInst (pl, "lidr") || lineIsInst (pl, "lsddr") || lineIsInst (pl, "lsidr"))
     return(strchr("bcdehl", *what));
 
-  if(IS_EZ80 && lineIsInst (pl, "lea"))
-    return(argCont(strchr(pl->line + 4, ','), what));
+  if(IS_EZ80 && lineIsInst (pl, "lea") ||
+    IS_TLCS90 && lineIsInst (pl, "lda"))
+    return(argCont(rarg, what) || argCont(lineArg (pl, 2), what));
 
   if(IS_EZ80 && lineIsInst (pl, "pea"))
     return(argCont(pl->line + 4, what) || !strcmp(what, "sp"));
@@ -666,6 +667,10 @@ z80MightRead(const lineNode *pl, const char *what)
     lineIsInst (pl, "brlc")))
     return(strchr("bde", *what));
 
+  if(IS_TLCS90 &&
+    (lineIsInst (pl, "decx") ||
+    lineIsInst (pl, "incx")))
+    return(false);
   if (IS_TLCS90 &&
     (lineIsInst (pl, "mul") ||
     lineIsInst (pl, "div")))
@@ -835,10 +840,14 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
     lineIsInst (pl, "set"))
     return false;
 
-  if(IS_Z80N &&
-    lineIsInst (pl, "swap"))
+  if (IS_Z80N &&
+    (lineIsInst (pl, "bsla") ||
+    lineIsInst (pl, "bsra") ||
+    lineIsInst (pl, "bsrl") ||
+    lineIsInst (pl, "bsrf") ||
+    lineIsInst (pl, "swap")))
     return false;
-
+    
   if(IS_SM83 && lineIsInst (pl, "ldh"))
     return false;
     
@@ -1834,6 +1843,15 @@ int z80instructionSize(lineNode *pl)
   if(IS_RAB && lineIsInst (pl, "lret") ||
     (IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "llret"))
     return(2);
+
+  if(IS_RAB && lineIsInst (pl, "ldp"))
+    {
+      if (!strncmp (op0start, "(hl)", 4) || !strncmp (op0start, "(ix)", 4) || !strncmp (op0start, "(iy)", 4))
+        return (2);
+      if (!strncmp (op1start, "(hl)", 4) || !strncmp (op1start, "(ix)", 4) || !strncmp (op1start, "(iy)", 4))
+        return (2);
+      return(4);
+    }
 
   if(IS_EZ80 && (lineIsInst (pl, "lea") || lineIsInst (pl, "pea")))
     return(3);

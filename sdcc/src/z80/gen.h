@@ -34,7 +34,7 @@ typedef enum
   AOP_FDIR,
   /* SFR space ($FF00 and above) */
   AOP_SFR,
-  /* Is on the stack */
+  /* Is on the stack (addressed stackpointer-relative or framepointer-relative) */
   AOP_STK,
   /* Is an immediate value */
   AOP_IMMD,
@@ -46,7 +46,7 @@ typedef enum
   AOP_IY,
   /* Is pointed to by HL */
   AOP_HL,
-  /* Is on the extended stack (addressed via IY or HL) */
+  /* Is on the extended stack (addressed via address calculated locally in IY or HL) */
   AOP_EXSTK,
   /* Is referenced by a pointer in a register pair. */
   AOP_PAIRPTR,
@@ -70,7 +70,7 @@ typedef struct asmop
   union
   {
     value *aop_lit;             /* if literal */
-    reg_info *aop_reg[4];       /* array of registers */
+    reg_info *aop_reg[8];       /* array of registers */
     char *aop_dir;              /* if direct  */
     char *aop_immd;             /* if immediate others are implied */
     int aop_stk;                // stack offset when AOP_STK or AOP_STL

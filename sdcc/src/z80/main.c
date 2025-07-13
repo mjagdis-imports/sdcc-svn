@@ -245,7 +245,6 @@ static char *_keywordsgb[] = {
   "interrupt",
   "z88dk_callee",
   "smallc",
-  "dynamicc",
   NULL
 };
 
@@ -1069,7 +1068,7 @@ _z80_genAssemblerStart (FILE * of)
 
   if (TARGET_IS_Z180)
     fprintf (of, "\t.hd64\n");
-  else if (TARGET_IS_R3KA)
+  else if (TARGET_IS_R3KA || TARGET_IS_R4K || TARGET_IS_R5K || TARGET_IS_R6K) // Todo: adjust when planned changes in assembler are implemented!
     fprintf (of, "\t.r3k\n");
   else if (TARGET_IS_EZ80)
     fprintf (of, "\t.ez80\n");
@@ -1111,7 +1110,7 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
     (result_size == 2 || result_size <= 4 && !IS_UNSIGNED (left) && !IS_UNSIGNED (right)))
     return(true);
   // Later Rabbits also have unsigned 16x16->32 multiplication.
-  else if ((IS_R4K || IS_R5K || IS_R6K) && getSize (left) == 2 && getSize (right) == 2 &&
+  else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && getSize (left) == 2 && getSize (right) == 2 &&
     (result_size <= 4 && IS_UNSIGNED (left) && IS_UNSIGNED (right)))
     return(true);
   // The R800 has unsigned 16x16->32 multiplication.
@@ -1954,7 +1953,7 @@ PORT r4k_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  { 1, 2, 2, 4, 8, 2, 3, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -2091,7 +2090,7 @@ PORT r5k_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  { 1, 2, 2, 4, 8, 2, 3, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {
@@ -2228,7 +2227,7 @@ PORT r6k_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float, BitInt (in bits) */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4, 64 },
+  { 1, 2, 2, 4, 8, 2, 3, 2, 2, 2, 1, 4, 64 },
   /* tags for generic pointers */
   { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
   {

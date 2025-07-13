@@ -110,7 +110,7 @@ cl_r800::inst_ed_(t_mem code)
       // ED 11ss 0011
     case 0xc3: case 0xd3: case 0xe3: case 0xf3:
       {
-	unsigned long result = (unsigned long)(regs.HL) *  (unsigned long)(regrp_ss_read((code >> 4)&3));printf("Result %lx\n", result);
+	unsigned long result = (unsigned long)(regs.HL) *  (unsigned long)(regrp_ss_read((code >> 4)&3));
 	regs.HL = (result >> 0) & 0xffff;
 	regs.DE = (result >> 16) & 0xffff;
 	regs.raf.F &= ~(BIT_S | BIT_Z | BIT_P | BIT_C);

@@ -1963,7 +1963,7 @@ getArraySizePtr (operand * op)
       return ((IS_GENPTR (ltype) && GPTRSIZE > FARPTRSIZE) ? (size - 1) : size);
     }
 
-  if (IS_ARRAY (ltype))
+  if (IS_ARRAY (ltype)) // There is some code duplication between this switch and the one in getSize in SDCCsymt.c
     {
       sym_link *letype = getSpec (ltype);
       switch (PTR_TYPE (SPEC_OCLS (letype)))
@@ -1972,9 +1972,10 @@ getArraySizePtr (operand * op)
         case PPOINTER:
         case POINTER:
           return (NEARPTRSIZE);
+        case CPOINTER:
+          return (TARGET_Z80_LIKE ? GPTRSIZE : FARPTRSIZE);
         case EEPPOINTER:
         case FPOINTER:
-        case CPOINTER:
         case FUNCTION:
           return (FARPTRSIZE);
         case GPOINTER:
@@ -3243,7 +3244,7 @@ geniCodeLogicAndOr (ast * tree, int lvl)
   symbol *exitLabel = newiTempLabel (NULL);
   operand *op, *result, *condition;
 
-  /* AND_OP and OR_OP are no longer generated because of bug-905492.
+  /* AND_OP and OR_OP are transformed to ensure short-circuit evaluation.
      They can be reenabled by executing the following block. If you find
      a decent optimization you could start right here:
    */
