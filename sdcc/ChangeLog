@@ -1,3 +1,8 @@
+2025-07-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Some refactoring to prepare for f8l codegen.
+
 2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc/doc/MCS51_named.svg:

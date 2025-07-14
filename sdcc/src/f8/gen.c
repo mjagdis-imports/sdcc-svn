@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
   gen.c - code generator for F8.
 
-  Copyright (C) 2021-2024, Philipp Klaus Krause krauseph@informatik.uni-freiburg.de)
+  Copyright (C) 2021-2025, Philipp Klaus Krause philipp@colecovision.eu
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -20,6 +20,8 @@
 
 #include "ralloc.h"
 #include "gen.h"
+
+#define IS_F8L TARGET_IS_F8L
 
 /* Use the D macro for basic (unobtrusive) debugging messages */
 #define D(x) do if (options.verboseAsm) { x; } while (0)
@@ -89,6 +91,7 @@ enum asminst
   A_XCH,
   A_XOR,
   A_XORW,
+  A_ZEX,
 };
 
 static const char *asminstnames[] =
@@ -135,6 +138,7 @@ static const char *asminstnames[] =
   "xch",
   "xor",
   "xorw",
+  "zex",
 };
 
 bool f8_regs_used_as_parms_in_calls_from_current_function[ZH_IDX + 1];
@@ -1544,6 +1548,72 @@ setc (void)
     emit3 (A_TSTW, ASMOP_Y, 0);
 }
 
+/*--------------------------------------------------------------------------*/
+/* addwConst - Add constant to 16 bit register                              */
+/*--------------------------------------------------------------------------*/
+static void
+addwConst (asmop *aop, int offset, int d)
+{
+  if (!d)
+    return;
+
+  bool big = d >= -128 && d < 128;
+  if (d == 1)
+    emit3_o (A_INCW, aop, offset, 0, 0);
+  else if (IS_F8L && d == 2)
+    {
+      emit3_o (A_INCW, aop, offset, 0, 0);
+      emit3_o (A_INCW, aop, offset, 0, 0);
+    }
+  else if (aopInReg (aop, offset, X_IDX))
+    {
+      if (!IS_F8L)
+        {
+          emit2 ("addw", "x, #%d", d);
+          cost (3 + big, 2);
+        }
+      else
+        {
+          emit2 ("add", "xl, #0x%02x", (((unsigned)d) >> 0) & 0xff);
+          emit2 ("adc", "xh, #0x%02x", (((unsigned)d) >> 8) & 0xff);
+          cost (5, 3);
+        }
+      spillReg (C_IDX);
+    }
+  else if (aopInReg (aop, offset, Y_IDX))
+    {
+      if (!IS_F8L)
+        {
+          emit2 ("addw", "y, #%d", d);
+          cost (2 + big, 1 + big);
+        }
+      else
+        {
+          emit2 ("add", "yl, #0x%02x", (((unsigned)d) >> 0) & 0xff);
+          emit2 ("adc", "yh, #0x%02x", (((unsigned)d) >> 8) & 0xff);
+          cost (6, 4);
+        }
+      spillReg (C_IDX);
+    }
+  else if (aopInReg (aop, offset, Z_IDX))
+    {
+      if (!IS_F8L)
+        {
+          emit2 ("addw", "z, #%d", d);
+          cost (3 + big, 2);
+        }
+      else
+        {
+          emit2 ("add", "zl, #0x%02x", (((unsigned)d) >> 0) & 0xff);
+          emit2 ("adc", "zh, #0x%02x", (((unsigned)d) >> 8) & 0xff);
+          cost (6, 4);
+        }
+      spillReg (C_IDX);
+    }
+  else
+    wassert (0);
+}
+
 static void
 push (const asmop *op, int offset, int size)
 {
@@ -1765,11 +1835,7 @@ pointToSym (asmop *raop, const symbol *sym, long int offset, bool xl_dead, bool 
               spillReg (C_IDX);
             }
           else if (soffset)
-            {
-              emit2 ("addw", "%s, #%ld", aopGet2 (aop, 0), soffset);
-              cost (2 + !aopInReg (aop, 0, Y_IDX) + (labs(soffset) > 127), 1 + !aopInReg (aop, 0, Y_IDX));
-              spillReg (C_IDX);
-            }
+            addwConst (aop, 0, soffset);
         }
       genMove_o (raop, 0, aop, 0, 2, xl_dead, xh_dead, y_dead, z_dead, true);
     }
@@ -2453,14 +2519,15 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
               cost (2, 1);
               if (stack_offset)
                 {
+                  bool c = G.c;
                   if (!c_dead)
                     push (ASMOP_F, 0, 1);
-                  emit2 ("addw", "%s, #%ld", aopGet2 (result, roffset + i), stack_offset);
-                  cost (2 + (labs(stack_offset) > 127), 1);
+                  addwConst (result, roffset + i, stack_offset);
                   if (!c_dead)
-                    pop (ASMOP_F, 0, 1);
-                  else
-                    spillReg (C_IDX);
+                    {
+                      pop (ASMOP_F, 0, 1);
+                      G.c = c;
+                    }
                 }
               i += 2;
             }
@@ -2473,14 +2540,15 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
               cost (1, 1);
               if (stack_offset)
                 {
+                  bool c = G.c;
                   if (!c_dead)
                     push (ASMOP_F, 0, 1);
-                  emit2 ("addw", "y, #%ld", stack_offset);
-                  cost (2 + (labs(stack_offset) > 127), 1);
+                  addwConst (ASMOP_Y, 0, stack_offset);
                   if (!c_dead)
-                    pop (ASMOP_F, 0, 1);
-                  else
-                    spillReg (C_IDX);
+                    {
+                      pop (ASMOP_F, 0, 1);
+                      G.c = c;
+                    }
                 }
               int lsize = size - i;
               genMove_o (result, roffset + i, ASMOP_Y, soffset + i, lsize, xl_dead, xh_dead, true, z_dead, c_dead);
@@ -2722,10 +2790,10 @@ adjustStack (int n, bool xl_free, bool y_free)
   if (abs(n) > 513 && y_free)
    {
      emit2 ("ldw", "y, sp");
-     emit2 ("addw", "y, #%d", n);
+     cost (1, 1);
+     addwConst (ASMOP_Y, 0, n);
      emit2 ("ldw", "sp, y");
-     cost (6, 3);
-     spillReg (C_IDX);
+     cost (2, 1);
      G.stack.pushed -= n;
      updateCFA ();
      return;
@@ -3451,28 +3519,26 @@ genCall (const iCode *ic)
       if (IC_RESULT (ic)->aop->type != AOP_STK)
         UNIMPLEMENTED;
 
+      int d = ic->result->aop->aopu.bytes[0].byteu.stk + G.stack.pushed;
       if (!f8IsParmInCall (ftype, "y") && (ic->op != PCALL || left->aop->regs[YL_IDX] < 0 && left->aop->regs[YH_IDX] < 0))
         {
           emit2 ("ldw", "y, sp");
-          emit2 ("addw", "y, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
-          cost (3 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
-          spillReg (C_IDX);
+          cost (1, 1);
+          addwConst (ASMOP_Y, 0, d);
           push (ASMOP_Y, 0, 2);
         }
       else if (!f8IsParmInCall (ftype, "x") && (ic->op != PCALL || left->aop->regs[XL_IDX] < 0 && left->aop->regs[XH_IDX] < 0))
         {
           emit2 ("ldw", "x, sp");
-          emit2 ("addw", "x, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
-          cost (5 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
-          spillReg (C_IDX);
+          cost (2, 1);
+          addwConst (ASMOP_X, 0, d);
           push (ASMOP_X, 0, 2);
         }
       else if (!f8IsParmInCall (ftype, "z") && (ic->op != PCALL || left->aop->regs[ZL_IDX] < 0 && left->aop->regs[ZH_IDX] < 0 && !f8_extend_stack))
         {
           emit2 ("ldw", "z, sp");
-          emit2 ("addw", "z, #%d", IC_RESULT (ic)->aop->aopu.bytes[0].byteu.stk + G.stack.pushed);
-          cost (5 + (IC_RESULT (ic)->aop->aopu.bytes[getSize (ftype->next) - 1].byteu.stk + G.stack.pushed > 127), 2);
-          spillReg (C_IDX);
+          cost (2, 1);
+          addwConst (ASMOP_Z, 0, d);
           push (ASMOP_Z, 0, 2);
         }
       else
@@ -6322,9 +6388,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
         genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
       if ((unsigned)offset + size - 1 >= 255)
         {
-          emit2 ("addw", "y, #%ld", offset);
-          cost (2 + (offset > 127), 1);
-          spillReg (C_IDX);
+          addwConst (ASMOP_Y, 0, offset);
           offset = 0;
         }
     }
