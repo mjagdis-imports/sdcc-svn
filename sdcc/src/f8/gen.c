@@ -3209,8 +3209,8 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
         }
 
       if (!started && !maskedword && aopSame (result_aop, i, left_aop, i, 1) && aopIsOp8_1 (left_aop, i) && // Use in-place inc / dec
-         (aopIsLitVal (right_aop, i, 1, 1) || aopIsLitVal (right_aop, i, 1, 0xffff)) &&
-         !aopAre16_2 (left_aop, i, right_aop, i)) // Fall throught o 16-bit operation below, if that is more efficient than two 8-bit ones.
+         (aopIsLitVal (right_aop, i, 1, 1) || aopIsLitVal (right_aop, i, 1, 0xff)) &&
+         !aopAre16_2 (left_aop, i, right_aop, i)) // Fall throught to 16-bit operation below, if that is more efficient than two 8-bit ones.
          {
            emit3_o (aopIsLitVal (right_aop, i, 1, 1) ? A_DEC : A_INC, left_aop, i, 0, 0);
            i++;
@@ -5678,6 +5678,7 @@ genRot (const iCode *ic)
         }
       genMove (rotaop, left->aop, regDead (XL_IDX, ic) || pushed_xl, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       emit2 ("rot", "%s, #%d", aopGet(rotaop, 0), s);
+      cost (2, 1);
       genMove (result->aop, rotaop, regDead (XL_IDX, ic) || pushed_xl, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       if (pushed_xl)
         pop (ASMOP_XL, 0, 1);
@@ -6403,9 +6404,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
       genMove (ASMOP_Z, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, true);
       if (offset)
         {
-          emit2 ("addw", "z, #%ld", offset);
-          cost (3, 1);
-          spillReg (C_IDX);
+          addwConst (ASMOP_Z, 0, offset);
           offset = 0;
         }
       use_z = true;
@@ -7227,7 +7226,7 @@ genCast (const iCode *ic)
       if (!regDead (XL_IDX, ic) && !aopInReg (right->aop, 0, XL_IDX))
         pop (ASMOP_XL, 0, 1);
     }
-  else 
+  else if (!IS_F8L && regDead (Y_IDX, ic))
     {
       bool masktopbyte = IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && SPEC_USIGN (resulttype);
 
@@ -7284,6 +7283,38 @@ genCast (const iCode *ic)
             }
         }
     }
+  else if (regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= right->aop->size))
+    {
+      bool masktopbyte = IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && SPEC_USIGN (resulttype);
+
+      genMove_o (result->aop, 0, right->aop, 0, right->aop->size, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic), true);
+
+      genMove_o (ASMOP_XL, 0, result->aop, right->aop->size - 1, 1, true, false, false, false, true);
+      emit3 (A_RLC, ASMOP_XL, 0);
+      emit3 (A_CLR, ASMOP_XL, 0);
+      emit3 (A_ADC, ASMOP_XL, ASMOP_MONE);
+      emit3 (A_XOR, ASMOP_XL, ASMOP_MONE);
+
+      for (int i = right->aop->size; i < result->aop->size; i++)
+        {
+          bool pushed_xl = false;
+          if (masktopbyte && i + 1 == result->aop->size)
+            {
+              if (result->aop->regs[XL_IDX] >= 0 && result->aop->regs[XL_IDX] < i)
+                {
+                  push (ASMOP_XL, 0, 1);
+                  pushed_xl = true;
+                }
+              emit2 ("and", "xl, #0x%02x", topbytemask);
+              cost (2, 1);
+            }
+          genMove_o (result->aop, i, ASMOP_XL, 0, 1, false, false, false, false, true);
+          if (pushed_xl)
+            pop (ASMOP_XL, 0, 1);
+        }
+    }
+  else
+    UNIMPLEMENTED;
 
 release:
   freeAsmop (right);
