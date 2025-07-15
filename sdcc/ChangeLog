@@ -1,7 +1,7 @@
 2025-07-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  Catch non-f8l instructions by assertions in cost function. Some f8l codegen (enough to make the standard library and regression test infrastructure compile again, even though many regression tests still trigger the assertions).
+	  Catch non-f8l instructions by assertions in cost function. Some f8l codegen to make the standard library and regression tests compile again.
 
 2025-07-14 Philipp Klaus Krause <philipp@colecovision.eu>
 

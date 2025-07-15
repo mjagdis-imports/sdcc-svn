@@ -2860,6 +2860,8 @@ genNot (const iCode *ic)
   aopOp (left, ic, false);
   aopOp (result, ic, true);
 
+  bool result_in_y = false;
+
   if (left->aop->size == 1)
     {
       bool is_bool = !left->aop->valinfo.anything && left->aop->valinfo.min >= 0 && left->aop->valinfo.max <= 1;
@@ -2887,7 +2889,7 @@ genNot (const iCode *ic)
             emit3 (A_BOOL, ASMOP_XL, 0);
         }
     }
-  else
+  else if (!IS_F8L)
     {
       if (!regDead (Y_IDX, ic) || left->aop->regs[YL_IDX] >= 2 || left->aop->regs[YH_IDX] >= 2)
         UNIMPLEMENTED;
@@ -2896,7 +2898,7 @@ genNot (const iCode *ic)
           genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
           for (int i = 2; i < left->aop->size;)
             {
-              if (i + 1 < left->aop->size && aopIsOp16_2 (left->aop, i))
+              if (!IS_F8L && i + 1 < left->aop->size && aopIsOp16_2 (left->aop, i))
                 {
                   emit3_o (A_ORW, ASMOP_Y, 0, left->aop, i);
                   i += 2;
@@ -2913,16 +2915,40 @@ genNot (const iCode *ic)
                 }
             }
           emit3 (A_BOOLW, ASMOP_Y, 0);
+          result_in_y = true;
+        }
+    }
+  else
+    {
+      if (!regDead (XL_IDX, ic) || left->aop->regs[XL_IDX] >= 1)
+        UNIMPLEMENTED;
+      else
+        {
+          genMove (ASMOP_XL, left->aop, true, regDead (XH_IDX, ic) && left->aop->regs[XH_IDX] <= 1, false, false);
+          for (int i = 1; i < left->aop->size;)
+            {
+              if (aopIsOp8_2 (left->aop, i))
+                {
+                  emit3_o (A_OR, ASMOP_XL, 0, left->aop, i);
+                  i++;
+                }
+              else
+                {
+                  UNIMPLEMENTED;
+                  i++;
+                }
+            }
+          emit3 (A_BOOL, ASMOP_XL, 0);
         }
     }
 
-  if (result->aop->size == 1)
+  if (result->aop->size == 1 || IS_F8L)
     {
       if (!regDead (XL_IDX, ic))
         UNIMPLEMENTED;
       else
         {
-          if (left->aop->size != 1)
+          if (result_in_y)
             emit3 (A_LD, ASMOP_XL, ASMOP_Y);
           emit3 (A_XOR, ASMOP_XL, ASMOP_ONE);
           genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
@@ -2934,7 +2960,7 @@ genNot (const iCode *ic)
         UNIMPLEMENTED;
       else
         {
-          if (left->aop->size == 1)
+          if (!result_in_y)
             {
               emit2 ("zex", "y, xl");
               cost (1, 1);
@@ -7046,16 +7072,28 @@ genJumpTab (const iCode *ic)
 
   genMove (ASMOP_Y, cond->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
 
-  emit3 (A_SLLW, ASMOP_Y, 0);
+  if (!IS_F8L)
+    emit3 (A_SLLW, ASMOP_Y, 0);
+  else
+    {
+      emit3_o (A_SLL, ASMOP_Y, 0, 0, 0);
+      emit3_o (A_RLC, ASMOP_Y, 1, 0, 0);
+    }
 
   if (!regalloc_dry_run)
     {
       //emit2 ("ldw", "y, (#!tlabel, y)", labelKey2num (jtab->key)); todo: make this work to save a byte and a cycle!
-      emit2 ("addw", "y, #!tlabel", labelKey2num (jtab->key));
+      if (!IS_F8L)
+        emit2 ("addw", "y, #!tlabel", labelKey2num (jtab->key));
+      else
+        {
+          emit2 ("add", "yl, #<!tlabel", labelKey2num (jtab->key));
+          emit2 ("adc", "yh, #>!tlabel", labelKey2num (jtab->key));
+        }
       emit2 ("ldw", "y, (y)");
       emit2 ("jp", "y");
     }
-  cost (4, 3);
+  cost (5 + !IS_F8L * 3, 3 + !IS_F8L * 2);
 
   emitLabel (jtab);
   for (jtab = setFirstItem (IC_JTLABELS (ic)); jtab; jtab = setNextItem (IC_JTLABELS (ic)))
@@ -7134,20 +7172,20 @@ genCast (const iCode *ic)
     {
       wassert (result->aop->size == 1);
 
-      if (right->aop->size == 2 && regDead (Y_IDX, ic) && aopInReg (result->aop, 0, YL_IDX))
+      if (!IS_F8L && right->aop->size == 2 && regDead (Y_IDX, ic) && aopInReg (result->aop, 0, YL_IDX))
         {
           genMove (ASMOP_Y, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
           emit2 ("boolw", "y");
           cost (1, 1);
         }
-      else if (right->aop->size == 2 && regDead (X_IDX, ic))
+      else if (!IS_F8L && right->aop->size == 2 && regDead (X_IDX, ic))
         {
           genMove (ASMOP_X, right->aop, true, true, regDead (Y_IDX, ic), regDead (Z_IDX, ic));
           emit2 ("boolw", "x");
           cost (2, 1);
           genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
         }
-      else if (right->aop->size > 2 && right->aop->size % 2 == 0 && regDead (Y_IDX, ic) && (aopOnStack (right->aop, 2, right->aop->size - 2) || right->aop->type == AOP_DIR))
+      else if (!IS_F8L && right->aop->size > 2 && right->aop->size % 2 == 0 && regDead (Y_IDX, ic) && (aopOnStack (right->aop, 2, right->aop->size - 2) || right->aop->type == AOP_DIR))
         {
           genMove (ASMOP_Y, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
           for (int i = 2; i < right->aop->size; i += 2)
@@ -7156,22 +7194,29 @@ genCast (const iCode *ic)
           cost (1, 1);
           genMove (result->aop, ASMOP_Y, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
         }
-      else if (right->aop->size == 1)
+      else
         {
           if (!regDead (XL_IDX, ic))
             push (ASMOP_XL, 0, 1);
           genMove (ASMOP_XL, right->aop, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
+          if (right->aop->regs[XL_IDX] > 1)
+            UNIMPLEMENTED;
+          for (int i = 1; i < right->aop->size; i++)
+            {
+              if (aopIsOp8_2 (right->aop, i))
+                emit3_o (A_OR, ASMOP_XL, 0, right->aop, i);
+              else
+                UNIMPLEMENTED;
+            }
           emit2 ("bool", "xl");
           cost (1, 1);
           genMove (result->aop, ASMOP_XL, true, regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
           if (!regDead (XL_IDX, ic))
             pop (ASMOP_XL, 0, 1);
         }
-      else
-        UNIMPLEMENTED;
     }
   // Signed cast
-  else if (result->aop->size == 2 && (topbytemask == 0xff || !SPEC_USIGN (resulttype)) &&
+  else if (!IS_F8L && result->aop->size == 2 && (topbytemask == 0xff || !SPEC_USIGN (resulttype)) &&
     (aopInReg (result->aop, 0, Y_IDX) /*|| aopInReg (result->aop, 0, X_IDX) || aopInReg (result->aop, 0, Z_IDX)*/)) // todo: reenable with fixed right operand!
     {
       if (!regDead (XL_IDX, ic) && !aopInReg (right->aop, 0, XL_IDX))
