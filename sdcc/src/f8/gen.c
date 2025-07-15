@@ -3505,14 +3505,25 @@ genPointerPush (const iCode *ic)
             }
         }
     }
-  else if ((regDead (Y_IDX, ic) || aopInReg (left->aop, 0, Y_IDX)) && regDead (XL_IDX, ic) && offset + size - 1 <= 255)
+  else if ((regDead (Y_IDX, ic) || aopInReg (left->aop, 0, Y_IDX) && (!IS_F8L || !offset && size == 1)) && regDead (XL_IDX, ic) && offset + size - 1 <= 255)
     {
+      int last_o = 0;
       genMove (ASMOP_Y, ic->left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       for(int i = size - 1; i >= 0;)
         {
-          int o = i + offset;
-          emit2 ("ld", "xl, (%d, y)", o);
-          cost (2, 1);
+          int o = i + offset - last_o;
+          if (IS_F8L || !o)
+            {
+              addwConst (ASMOP_Y, 0, o - last_o);
+              emit2 ("ld", "xl, (y)", o);
+              cost (1, 1);
+              last_o = o;
+            }
+          else
+            {
+              emit2 ("ld", "xl, (%d, y)", o);
+              cost (2, 1);
+            }
           push (ASMOP_XL, 0, 1);
           i -= 1;
         }
@@ -3560,7 +3571,9 @@ genCall (const iCode *ic)
         UNIMPLEMENTED;
 
       int d = ic->result->aop->aopu.bytes[0].byteu.stk + G.stack.pushed;
-      if (!f8IsParmInCall (ftype, "y") && (ic->op != PCALL || left->aop->regs[YL_IDX] < 0 && left->aop->regs[YH_IDX] < 0))
+      bool x_possible = !f8IsParmInCall (ftype, "x") && (ic->op != PCALL || left->aop->regs[XL_IDX] < 0 && left->aop->regs[XH_IDX] < 0);
+      if (!f8IsParmInCall (ftype, "y") && (ic->op != PCALL || left->aop->regs[YL_IDX] < 0 && left->aop->regs[YH_IDX] < 0) &&
+        !(IS_F8L && x_possible)) // For the f8l only, using x is cheaper.
         {
           emit2 ("ldw", "y, sp");
           cost (1, 1);
