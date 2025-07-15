@@ -4000,11 +4000,22 @@ bigreturn:
         UNIMPLEMENTED;
 
       // Clear xl first.
+      int last_i = 0;
       for(int i = 0; i < size; i++)
         if (aopInReg (left->aop, i, XL_IDX))
           {
-            emit2 ("ld", i ? "(%d, y), xl" : "(y), xl", i);
-            cost (1 + (bool)i, 1);
+            if (!IS_F8L)
+              {
+                emit2 ("ld", (i - last_i) ? "(%d, y), xl" : "(y), xl", (i - last_i));
+                cost (1 + (bool)i, 1);
+              }
+            else
+              {
+                addwConst (ASMOP_Y, 0, i - last_i);
+                emit2 ("ld", "(y), xl");
+                cost (1, 1);
+                last_i = i;
+              }
             break;
           }
 
@@ -4014,15 +4025,35 @@ bigreturn:
             i + 1 < size && (aopOnStack (left->aop, i, 2) || left->aop->type == AOP_DIR) && regDead (X_IDX, ic) && left->aop->regs[XL_IDX] <= i + 1 && left->aop->regs[XH_IDX] <= i + 1)
             {
               genMove_o (ASMOP_X, 0, left->aop, i, 2, true, false, false, true, true);
-              emit2 ("ldw", "(%d, y), x", i);
-              cost (3, 1);
+              if (!IS_F8L)
+                {
+                  emit2 ("ldw", (i - last_i) ? "(%d, y), x" : "(y), x", i - last_i);
+                  cost (1 + (bool)(i - last_i), 1);
+                }
+              else
+                {
+                  addwConst (ASMOP_Y, 0, i - last_i);
+                  emit2 ("ldw", "(y), x");
+                  cost (1, 1);
+                  last_i = i;
+                }
               i += 2;
             }
           else if (!aopInReg (left->aop, i, XL_IDX))
             {
               genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, false, false, true);
-              emit2 ("ld", i ? "(%d, y), xl" : "(y), xl", i);
-              cost (1 + (bool)i, 1);
+              if (!IS_F8L)
+                {
+                  emit2 ("ld", (i - last_i) ? "(%d, y), xl" : "(y), xl", (i - last_i));
+                  cost (1 + (bool)(i - last_i), 1);
+                }
+              else
+                {
+                  addwConst (ASMOP_Y, 0, i - last_i);
+                  emit2 ("ld", "(y), xl");
+                  cost (1, 1);
+                  last_i = i;
+                }
               i++;
             }
           else // xl, already stored earlier.
@@ -6283,10 +6314,16 @@ genPointerGet (const iCode *ic, iCode *ifx)
               emit2 ("ldw", "y, (y)");
               cost (1, 1);
             }
-          else
+          else if (!IS_F8L && offset <= 255)
             {
               emit2 ("ldw", "y, (%u, y)", (unsigned int)offset);
-              cost (2 + (offset > 255), 1);
+              cost (2, 1);
+            }
+          else
+            {
+              addwConst (ASMOP_Y, 0, offset);
+              emit2 ("ldw", "y, (y)");
+              cost (1, 1);
             }
         }
       else if (!wide && (y_dead || aopInReg (left->aop, 0, Y_IDX)) && offset <= 255)
@@ -6299,6 +6336,13 @@ genPointerGet (const iCode *ic, iCode *ifx)
           genMove (ASMOP_Z, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), y_dead, true);
           emit2 ("tstw", "(%u, z)", (unsigned int)offset);
           cost (3, 1);
+        }
+      else if (y_dead && regDead (XL_IDX, ic))
+        {
+          genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+          addwConst (ASMOP_Y, 0, offset);
+          emit2 ("ld", "xl, (y)");
+          cost (1, 1);
         }
       else
         UNIMPLEMENTED;
