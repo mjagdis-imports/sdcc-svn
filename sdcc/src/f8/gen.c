@@ -6722,7 +6722,7 @@ genPointerSet (const iCode *ic)
       cost (3 + !aopInReg (right->aop, 0, XL_IDX), 1);
       goto release;
     }
-  else if (!bit_field && size >= 4 && (regDead (Y_IDX, ic) || aopInReg (left->aop, 0, Y_IDX)) && regDead (Z_IDX, ic) &&
+  else if (!IS_F8L && !bit_field && size >= 4 && (regDead (Y_IDX, ic) || aopInReg (left->aop, 0, Y_IDX)) && regDead (Z_IDX, ic) &&
     (aopOnStack(right->aop, 0, size) || right->aop->type == AOP_DIR))
     {
       genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, true);
@@ -6766,7 +6766,7 @@ genPointerSet (const iCode *ic)
       goto release;
     }
 
-  if (aopInReg (left->aop, 0, Y_IDX))
+  if (aopInReg (left->aop, 0, Y_IDX) && (!IS_F8L || size <= 1 || size == 2 && !bit_field && (aopInReg (right->aop, 0, X_IDX) || aopInReg (right->aop, 0, Z_IDX))))
     ;
   else
     {
@@ -6822,7 +6822,7 @@ genPointerSet (const iCode *ic)
             }
           continue;
         }
-      else if ((!bit_field || blen >= 8) && aopIsLitVal (right->aop, i, 1, 0x00))
+      else if (!IS_F8L && (!bit_field || blen >= 8) && aopIsLitVal (right->aop, i, 1, 0x00))
         {
           emit2 ("clr", "(%d, y)", i);
           cost (2, 1);
