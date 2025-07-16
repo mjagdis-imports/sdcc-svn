@@ -6514,13 +6514,14 @@ genPointerGet (const iCode *ic, iCode *ifx)
       goto release;
     }
 
+  int last_oi = 0;
   for (i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
     {
       bool xl_dead = regDead (XL_IDX, ic) && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
       bool xh_dead = regDead (XH_IDX, ic) && (result->aop->regs[XH_IDX] < 0 || result->aop->regs[XH_IDX] >= i);
       bool x_dead = xl_dead && xh_dead;
 
-      if (i + 4 == size && !use_z && !bit_field &&
+      if (!IS_F8L && i + 4 == size && !use_z && !bit_field &&
         aopInReg (result->aop, i, Y_IDX) && (aopInReg (result->aop, i + 2, X_IDX) || aopInReg (result->aop, i + 2, Z_IDX)))
         {
           emit2 ("ldw", "%s, (%d, y)", aopGet2 (result->aop, i + 2), offset + i + 2);
@@ -6529,7 +6530,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
           i += 4;
           continue;
         }
-      if ((!bit_field && i + 2 <= size || blen >= 16) &&
+      if ((!bit_field && i + 2 <= size || blen >= 16) && (!IS_F8L || !(offset + i - last_oi) || use_z) &&
         (aopInReg (result->aop, i, Y_IDX) || aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Z_IDX) ||
           (i + 2 == size && regDead (Y_IDX, ic) || x_dead) && (aopOnStack (result->aop, i, 2) || result->aop->type == AOP_DIR)))
         {
@@ -6542,15 +6543,15 @@ genPointerGet (const iCode *ic, iCode *ifx)
           else if (aopInReg (result->aop, i, Z_IDX))
             taop = ASMOP_Z;
 
-          if (!(offset + i) && !use_z && aopIsAcc16 (taop, i))
+          if (!(offset + i - last_oi) && !use_z && aopIsAcc16 (taop, i))
             {
               emit2 ("ldw", "%s, (y)", aopGet2 (taop, 0));
               cost (1 + aopInReg (taop, i, Z_IDX), 1);
             }
           else
             {
-              emit2 ("ldw", use_z ? "%s, (%d, z)" : "%s, (%d, y)", aopGet2 (taop, 0), (int)(offset + i));
-              cost (2 + (use_z || offset + i > 255) + !aopInReg (taop, 0, Y_IDX), 1);
+              emit2 ("ldw", use_z ? "%s, (%d, z)" : "%s, (%d, y)", aopGet2 (taop, 0), (int)(offset + i - last_oi));
+              cost (2 + (use_z || offset + i - last_oi > 255) + !aopInReg (taop, 0, Y_IDX), 1);
             }
           genMove_o (result->aop, i, taop, 0, 2, xl_dead, false, true, false, true);
           i++, blen -= 8;
@@ -6568,15 +6569,22 @@ genPointerGet (const iCode *ic, iCode *ifx)
             use_z && (aopInReg (result->aop, i, ZL_IDX) || aopInReg (result->aop, i, ZH_IDX))))
             UNIMPLEMENTED;
             
-          if (!(offset + i) && !use_z && (aopInReg (result->aop, i, XL_IDX) || aopInReg (result->aop, i, XH_IDX) || aopInReg (result->aop, i, ZH_IDX)))
+          if (!(offset + i - last_oi) && !use_z && aopIsAcc8 (result->aop, i))
             {
               emit2 ("ld", "%s, (y)", aopGet (result->aop, i));
               cost (2, 1);
             }
+          else if (use_z || !(offset + i - last_oi))
+            {
+              emit2 ("ld", use_z ? "%s, (%d, z)" : !(offset + i - last_oi) ? "%s, (%d, y)" : "(y)", aopGet (result->aop, i), (int)(offset + i - last_oi));
+              cost (3 + (use_z || offset + i - last_oi > 255), 1);
+            }
           else
             {
-              emit2 ("ld", use_z ? "%s, (%d, z)" : "%s, (%d, y)", aopGet (result->aop, i), (int)(offset + i));
-              cost (3 + (use_z || offset + i > 255), 1);
+              addwConst (ASMOP_Y, 0, offset + i - last_oi);
+              emit2 ("ld", "%s, (y)", aopGet (result->aop, i));
+              cost (2, 1);
+              last_oi = offset + i;
             }
           continue;
         }
@@ -6584,15 +6592,22 @@ genPointerGet (const iCode *ic, iCode *ifx)
       if (!xl_dead)
         UNIMPLEMENTED;
 
-      if (!(offset + i) && !use_z)
+      if (!(offset + i - last_oi) && !use_z)
         {
           emit2 ("ld", "xl, (y)");
           cost (1, 1);
         }
+      else if (use_z || !IS_F8L)
+        {
+          emit2 ("ld", use_z ? "xl, (%d, z)" : "xl, (%d, y)", (int)(offset + i - last_oi));
+          cost (2 + (use_z || offset + i > 255), 1);
+        }
       else
         {
-          emit2 ("ld", use_z ? "xl, (%d, z)" : "xl, (%d, y)", (int)(offset + i));
-          cost (2 + (use_z || offset + i > 255), 1);
+          addwConst (ASMOP_Y, 0, offset + i - last_oi);
+          emit2 ("ld", "xl, (y)");
+          cost (1, 1);
+          last_oi = offset + i;
         }
 
       if (bit_field && blen <= 8) // Sign extension for partial byte of signed bit-field
