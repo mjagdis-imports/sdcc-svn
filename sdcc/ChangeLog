@@ -1,5 +1,10 @@
 2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c:
+	  Codegen preparations for 1MB / 16 MB code space memory model.
+
+2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.lex,
 	  doc/sdccman.lyx:
 	  #pragma max_allocs_per_node.

@@ -8209,8 +8209,11 @@ genEndFunction (iCode *ic)
     }
 
   int poststackadjust = isFuncCalleeStackCleanup (sym->type) ? stackparmbytes : 0;
+  bool rab_lret = IS_RAB && options.model == MODEL_MEDIUM;
+  bool rab_llret = IS_RAB && options.model == MODEL_LARGE;
 
   if (poststackadjust && // Try to merge both stack adjustments.
+    !rab_lret && !rab_llret &&
     _G.omitFramePtr &&
     (IS_RAB && _G.stack.offset <= 255 || IS_TLCS90 && _G.stack.offset <= 127) &&
     (hl_free || iy_free) && 
@@ -8333,7 +8336,7 @@ genEndFunction (iCode *ic)
       wassertl (regalloc_dry_run || !IFFUNC_ISBANKEDCALL (sym->type), "Unimplemented __banked __z88dk_callee support on callee side");
       wassertl (regalloc_dry_run || !IFFUNC_HASVARARGS (sym->type), "__z88dk_callee function may to have variable arguments");
 
-      if (hl_free && !IFFUNC_ISISR (sym->type))
+      if (!rab_lret && !rab_llret && hl_free && !IFFUNC_ISISR (sym->type))
         {
           _pop (PAIR_HL);
           // Parameters should be initialized, so reading them should be fine
@@ -8356,7 +8359,7 @@ genEndFunction (iCode *ic)
           cost2 (1, 2, 2, 2, 4, 3, 4, 4, 4, 8, 3, 3, 3, 3, 1);
           goto done;
         }
-      else if (!IS_SM83 && iy_free && !!IFFUNC_ISISR (sym->type))
+      else if (!rab_lret && !rab_llret && !IS_SM83 && iy_free && !IFFUNC_ISISR (sym->type))
         {
           _pop (PAIR_IY);
           adjustStack (poststackadjust, !aopRet (sym->type) || aopRet (sym->type)->regs[A_IDX] < 0, bc_free, de_free, hl_free, false);
@@ -8364,13 +8367,20 @@ genEndFunction (iCode *ic)
           cost2 (2, 2, -1, 2, 8, 6, 6, 6, -1, 8, -1, 3, 3, 4, 2);
           goto done;
         }
-      else if (bc_free || de_free)
+      else if (!rab_lret && !rab_llret && (bc_free || de_free))
         {
           _pop (bc_free ? PAIR_BC : PAIR_DE);
           adjustStack (poststackadjust, !aopRet (sym->type) || aopRet (sym->type)->regs[A_IDX] < 0, false, bc_free && de_free, hl_free, iy_free);
           _push (bc_free ? PAIR_BC : PAIR_DE);
         }
-      else // Do it the hard way: Copy return address on stack before stack pointer adjustment.
+      else if (rab_llret && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && (bc_free && de_free || jk_free && hl_free))
+       {
+         bool use_bcde = bc_free && de_free; // Prefer to use bcde, to prefer hl free for use in adjustStack (where it is more useful than bc and de).
+         pop (use_bcde ? ASMOP_BCDE: ASMOP_JKHL, 0, 4);
+         adjustStack (poststackadjust, !aopRet (sym->type) || aopRet (sym->type)->regs[A_IDX] < 0, bc_free && !use_bcde, de_free && !use_bcde, hl_free && use_bcde, iy_free);
+         push (use_bcde ? ASMOP_BCDE : ASMOP_JKHL, 0, 4);
+       }
+      else if (!rab_lret && !rab_llret)// Do it the hard way: Copy return address on stack before stack pointer adjustment.
         {
           if (poststackadjust == 1)
             {
@@ -8476,6 +8486,16 @@ genEndFunction (iCode *ic)
             }
           emit3 (A_RETI, 0, 0);
         }
+    }
+  else if (rab_lret)
+    {
+      emit2 ("lret");
+      cost (2, 13);
+    }
+  else if (rab_llret)
+    {
+      emit2 ("llret");
+      cost (2, 13);
     }
   else
     {
