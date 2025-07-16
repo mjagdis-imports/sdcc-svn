@@ -1,5 +1,10 @@
 2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/f8/gen.c:
+	  More f8l codegen.
+
+2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.lex,
 	  doc/sdccman.lyx:
 	  #pragma max_allocs_per_node.

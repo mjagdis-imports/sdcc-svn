@@ -5706,7 +5706,7 @@ genRot (const iCode *ic)
   int size = result->aop->size;
   int s = operandLitValueUll (right) % bitsForType (operandType (left));
 
-  if (size == 1)
+  if (!IS_F8L && size == 1)
     {
       bool pushed_xl = false;
       asmop *rotaop = ASMOP_XL;
@@ -5727,7 +5727,7 @@ genRot (const iCode *ic)
       if (pushed_xl)
         pop (ASMOP_XL, 0, 1);
     }
-  else if (size == 2)
+  else if (!IS_F8L && size == 2)
     {
       asmop *rotaop = ASMOP_Y;
       if (aopSame (result->aop, 0, left->aop, 0, 2) && aopIsAcc16 (left->aop, 0))
@@ -6339,7 +6339,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
               cost (1, 1);
             }
         }
-      else if (!wide && (y_dead || aopInReg (left->aop, 0, Y_IDX)) && offset <= 255)
+      else if (!IS_F8L && !wide && (y_dead || aopInReg (left->aop, 0, Y_IDX)) && offset <= 255)
         {
           genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
           emit2 ("tst", "(%u, y)", (unsigned int)offset);
@@ -6381,7 +6381,8 @@ genPointerGet (const iCode *ic, iCode *ifx)
           emit2 ("ld", "xl, (%u, z)", (unsigned int)offset);
           cost (3, 1);
         }
-      else if ((y_dead || aopInReg (left->aop, 0, Y_IDX)) && offset <= 255)
+      else if ((y_dead || aopInReg (left->aop, 0, Y_IDX)) && offset <= 255 &&
+        (!IS_F8L || !offset)) // No y-relative addressing on f8l.
         {
           genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
           if (!offset)
@@ -6455,7 +6456,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
       goto release;
     }
 
-  if (!bit_field && size >= 4 + (bool)offset && (aopOnStack (result->aop, 0, size) || result->aop->type == AOP_DIR) &&
+  if (!IS_F8L && !bit_field && size >= 4 + (bool)offset && (aopOnStack (result->aop, 0, size) || result->aop->type == AOP_DIR) &&
     regDead (Y_IDX, ic) && regDead (Z_IDX, ic))
     {
       genMove (ASMOP_Z, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, true);
@@ -6469,7 +6470,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
     }
   else if (aopInReg (left->aop, 0, Z_IDX) && !bit_field && size <= 2 && (aopInReg (result->aop, size - 2, Z_IDX) || result->aop->regs[ZL_IDX] < 0 && result->aop->regs[ZH_IDX] < 0))
     use_z = true;
-  else if (aopInReg (left->aop, 0, Y_IDX) && (unsigned)offset + size - 1 <= 255 && (size >= 2 && aopInReg (result->aop, size - 2, Y_IDX) || result->aop->regs[YL_IDX] < 0 && result->aop->regs[YH_IDX] < 0))
+  else if (aopInReg (left->aop, 0, Y_IDX) && (!IS_F8L || size == 1 && !offset) && (unsigned)offset + size - 1 <= 255 && (size >= 2 && aopInReg (result->aop, size - 2, Y_IDX) || result->aop->regs[YL_IDX] < 0 && result->aop->regs[YH_IDX] < 0))
     ;
   else if (y_dead && (size >= 2 && aopInReg (result->aop, size - 2, Y_IDX) ||
                       size >= 4 && !bit_field && aopInReg (result->aop, size - 4, Y_IDX) && aopIsAcc16 (result->aop, size - 2) ||
@@ -6483,7 +6484,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
         }
       else
         genMove (ASMOP_Y, left->aop, false, false, y_dead, false);
-      if ((unsigned)offset + size - 1 >= 255)
+      if (IS_F8L || (unsigned)offset + size - 1 >= 255)
         {
           addwConst (ASMOP_Y, 0, offset);
           offset = 0;
@@ -6494,6 +6495,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
 
   if (blockmove)
     {
+      wassert (!IS_F8L);
       wassert (!bit_field && !offset && use_z);
       pointToSym (ASMOP_Y, OP_SYMBOL_CONST (result), 0,  regDead (XL_IDX, ic), regDead (XH_IDX, ic), false, regDead (Z_IDX, ic));
       for(int i = 0; i < size;)
