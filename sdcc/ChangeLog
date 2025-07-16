@@ -1,7 +1,7 @@
 2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  More f8l codegen.
+	  f8l codegen.
 
 2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 

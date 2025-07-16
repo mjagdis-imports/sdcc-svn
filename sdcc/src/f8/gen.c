@@ -6790,6 +6790,7 @@ genPointerSet (const iCode *ic)
        genMove (ASMOP_Y, left->aop, false, false, true, false);
     }
 
+  int last_i = 0;
   for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
     {
       bool xl_dead = regDead (XL_IDX, ic) && (right->aop->regs[XL_IDX] <= i);
@@ -6801,16 +6802,36 @@ genPointerSet (const iCode *ic)
         (aopInReg (right->aop, i, X_IDX) || x_dead2 && (right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || right->aop->type == AOP_DIR || aopOnStack (right->aop, i, 2))))
         {
           genMove_o (ASMOP_X, 0, right->aop, i, 2, true, true, false, false, true);
-          emit2 ("ldw", i ? "(%d, y), x" : "(y), x", i);
-          cost (1 + (bool)i, 1);
+          if (!IS_F8L)
+            {
+              emit2 ("ldw", (i - last_i) ? "(%d, y), x" : "(y), x", (i - last_i));
+              cost (1 + (bool)i, 1);
+            }
+          else
+            {
+              addwConst (ASMOP_Y, 0, i - last_i);
+              emit2 ("ldw", "(y), x");
+              cost (1, 1);
+              last_i = i;
+            }
           i++;
           blen -= 8;
           continue;
         }
       else if ((!bit_field || blen >= 16) && i + 1 < size && aopInReg (right->aop, i, Z_IDX))
         {
-          emit2 ("ldw", i ? "(%d, y), z" : "(y), z", i);
-          cost (2 + (bool)i, 2);
+          if (!IS_F8L)
+            {
+              emit2 ("ldw", i ? "(%d, y), z" : "(y), z", i);
+              cost (2 + (bool)i, 2);
+            }
+          else
+            {
+              addwConst (ASMOP_Y, 0, i - last_i);
+              emit2 ("ldw", "(y), z");
+              cost (2, 1);
+              last_i = i;
+            }
           i++;
           blen -= 8;
           continue;
@@ -6818,21 +6839,28 @@ genPointerSet (const iCode *ic)
       else if ((!bit_field || blen >= 8) &&
         (aopInReg (right->aop, i, XL_IDX) || aopInReg (right->aop, i, XH_IDX) || aopInReg (right->aop, i, ZL_IDX) || aopInReg (right->aop, i, ZH_IDX)))
         {
-          if (!i)
+          if (!(i - last_i))
             {
               emit2 ("ld", "(y), %s", aopGet (right->aop, i));
               cost (1 + !aopInReg (right->aop, i, XL_IDX), 1);
             }
+          else if (!IS_F8L)
+            {
+              emit2 ("ld", "(%d, y), %s", i - last_i, aopGet (right->aop, i));
+              cost (2 + !aopInReg (right->aop, i, XL_IDX), 1);
+            }
           else
             {
-              emit2 ("ld", "(%d, y), %s", i, aopGet (right->aop, i));
-              cost (2 + !aopInReg (right->aop, i, XL_IDX), 1);
+              addwConst (ASMOP_Y, 0, i - last_i);
+              emit2 ("ld", "(y), %s", aopGet (right->aop, i));
+              cost (2, 1);
+              last_i = i;
             }
           continue;
         }
       else if (!IS_F8L && (!bit_field || blen >= 8) && aopIsLitVal (right->aop, i, 1, 0x00))
         {
-          emit2 ("clr", "(%d, y)", i);
+          emit2 ("clr", "(%d, y)", i - last_i);
           cost (2, 1);
           continue;
         }
@@ -6847,15 +6875,22 @@ genPointerSet (const iCode *ic)
               pushed_xl = true;
             }
 
-          if (!i)
+          if (!(i - last_i))
             {
               emit2 ("ld", "xl, (y)", i);
               cost (1, 1);
             }
-          else
+          else if (!IS_F8L)
             {
               emit2 ("ld", "xl, (%d, y)", i);
               cost (2, 1);
+            }
+          else
+            {
+              addwConst (ASMOP_Y, 0, i - last_i);
+              emit2 ("ld", "xl, (y)", i);
+              cost (1, 1);
+              last_i = i;
             }
                 
           if (((~((0xff >> (8 - blen)) << bstr) & 0xff) | bval) != 0xff)
@@ -6881,9 +6916,9 @@ genPointerSet (const iCode *ic)
             
       genMove_o (ASMOP_XL, 0, right->aop, i, 1, true, false, false, false, true);
 
-      if (!i && bit_field && blen < 8)
+      if (!(i - last_i) && bit_field && blen < 8)
         {
-          if (bstr <= 1)
+          if (bstr <= 1 || IS_F8L)
             for (int j = 0; j < bstr; j++)
               emit3 (A_SLL, ASMOP_XL, 0);
           else
@@ -6899,7 +6934,7 @@ genPointerSet (const iCode *ic)
         {
           if (!regDead (XH_IDX, ic))
             UNIMPLEMENTED;
-          if (bstr <= 1)
+          if (bstr <= 1 || IS_F8L)
             for (int j = 0; j < bstr; j++)
               emit3 (A_SLL, ASMOP_XL, 0);
           else
@@ -6909,15 +6944,22 @@ genPointerSet (const iCode *ic)
             }
           emit2 ("and", "xl, #0x%02x", (0xff >> (8 - blen)) << bstr);
           cost (2, 1);
-          if (!i)
+          if (!(i - last_i))
             {
               emit2 ("ld", "xh, (y)", i);
               cost (2, 1);
             }
-          else
+          else if (!IS_F8L)
             {
               emit2 ("ld", "xh, (%d, y)", i);
               cost (3, 1);
+            }
+          else
+            {
+              addwConst (ASMOP_Y, 0, i - last_i);
+              emit2 ("ld", "xh, (y)", i);
+              cost (2, 1);
+              last_i = i;
             }
           emit2 ("and", "xh, #0x%02x", ~((0xff >> (8 - blen)) << bstr) & 0xff);
           cost (3, 1);
@@ -6925,15 +6967,22 @@ genPointerSet (const iCode *ic)
           cost (1, 1);
         }
 store:
-      if (!i)
+      if (!(i - last_i))
         {
           emit2 ("ld", "(y), xl");
           cost (1, 1);
         }
+      else if (!IS_F8L)
+        {
+          emit2 ("ld", "(%d, y), xl", i - last_i);
+          cost (2, 1);
+        }
       else
         {
-          emit2 ("ld", "(%d, y), xl", i);
-          cost (2, 1);
+          addwConst (ASMOP_Y, 0, i - last_i);
+          emit2 ("ld", "(y), xl", i);
+          cost (1, 1);
+          last_i = i;
         }
 pop:
       if (pushed_xl)
