@@ -3430,11 +3430,19 @@ genIpush (const iCode * ic)
           push (left->aop, i, 1);
           i--;
         }
-      else if (i == 1 && size == 2 && regDead (Y_IDX, ic))
+      else if (i >= 1 && size == 2 && regDead (Y_IDX, ic) && (left->aop->regs[YL_IDX] < 0 || left->aop->regs[YL_IDX] >= i - 1) && (left->aop->regs[YH_IDX] < 0 || left->aop->regs[YH_IDX] >= i - 1))
         {
-          genMove (ASMOP_Y, left->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), true, regDead (Z_IDX, ic));
+          bool xl_dead = regDead (XL_IDX, ic) && (left->aop->regs[XL_IDX] < 0 || left->aop->regs[XL_IDX] >= i - 1);
+          genMove_o (ASMOP_Y, 0, left->aop, i - 1, 2, xl_dead, false, true, false, true);
           push (ASMOP_Y, 0, 2);
           i -= 2;
+        }
+      else if (regDead (XL_IDX, ic) && (left->aop->regs[XL_IDX] < 0 || left->aop->regs[XL_IDX] >= i))
+        {
+          bool y_dead = regDead (Y_IDX, ic) && (left->aop->regs[YL_IDX] < 0 || left->aop->regs[YL_IDX] >= i) && (left->aop->regs[YH_IDX] < 0 || left->aop->regs[YH_IDX] >= i);
+          genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, y_dead, false, true);
+          push (ASMOP_XL, 0, 1);
+          i--;
         }
       else
         {
