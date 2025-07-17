@@ -1665,7 +1665,7 @@ _emitMove3 (asmop *to, int to_offset, asmop *from, int from_offset)
   emit3_o (A_LD, to, to_offset, from, from_offset);
 }
 
-#if 0
+#if 0 // todo: remove this? update it (it is out of sync with gen.h)?
 static const char *aopNames[] =
 {
   "AOP_INVALID",
@@ -4867,7 +4867,6 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
       else if (i + 1 < n && aopOnStack (result, roffset + i, 2) && getPairId_o (source, soffset + i) != PAIR_INVALID && !sp_offset && !regalloc_dry_run) // Stack positions will change, so do not assume this is possible in the cost function.
         {
-          bool iy = aopInReg (source, soffset + i, IY_IDX);
           emit2 ("inc sp");
           cost2 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
           emit2 ("inc sp");
@@ -9081,29 +9080,6 @@ genPlusIncr (const iCode *ic)
     }
 
   return FALSE;
-}
-
-/*-----------------------------------------------------------------*/
-/* outBitAcc - output a bit in acc                                 */
-/*-----------------------------------------------------------------*/
-static void
-outBitAcc (operand * result)
-{
-  symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-  /* if the result is a bit */
-  if (result->aop->type == AOP_CRY)
-    {
-      wassertl (0, "Tried to write A into a bit");
-    }
-  else
-    {
-      // Assume that both values are equally likely.
-      emitJP (tlbl, "z", 0.5f, true);
-      emit2 ("ld a, !one");
-      emitLabel (tlbl);
-      cost2 (2, 2, 2, 2, 3.5f, 3.0f, 2.0f, 2.0f, 4.0f, 2.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-      outAcc (result);
-    }
 }
 
 static bool
