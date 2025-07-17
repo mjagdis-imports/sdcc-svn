@@ -7622,6 +7622,8 @@ genCall (const iCode *ic)
         tailjump = false;
 
   const bool jump = tailjump || !ic->parmBytes && !bigreturn && ic->op != PCALL && !IFFUNC_ISBANKEDCALL (dtype) && !IFFUNC_ISZ88DK_SHORTCALL(ftype) && IFFUNC_ISNORETURN (ftype);
+  bool rab_lcall = IS_RAB && options.model == MODEL_MEDIUM;
+  bool rab_llcall = IS_RAB && options.model == MODEL_LARGE;
 
   if (ic->op == PCALL)
     {
@@ -7644,7 +7646,7 @@ genCall (const iCode *ic)
             emit2 ("rst %s", aopGet (ic->left->aop, 0, false));
             cost2 (1, -1, -1, -1, 11, 11, 8, 11, 16, -1, -1, -1, -1, 5, 4);
         }
-      else if (isLitWord (ic->left->aop))
+      else if (!rab_lcall && !rab_llcall && isLitWord (ic->left->aop))
         {
           adjustStack (prestackadjust, a_free, bc_free, de_free, hl_free, false);
           emit2 (jump ? "jp %s" : "call %s", aopGetLitWordLong (ic->left->aop, 0, FALSE));
@@ -7653,7 +7655,7 @@ genCall (const iCode *ic)
           else
             cost2 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
         }
-      else if (getPairId (ic->left->aop) != PAIR_IY && hl_free)
+      else if (!rab_lcall && !rab_llcall && getPairId (ic->left->aop) != PAIR_IY && hl_free)
         {
           spillPair (PAIR_HL);
           genMove (ASMOP_HL, ic->left->aop, a_free, hl_free, de_free, true);
@@ -7675,7 +7677,7 @@ genCall (const iCode *ic)
                 }
             }
         }
-      else if (!IS_SM83 && !IY_RESERVED && !z80IsParmInCall (ftype, "iy")) // Ensure that we don't access the stack via iy when reading IC_LEFT (ic).
+      else if (!rab_lcall && !rab_llcall && !IS_SM83 && !IY_RESERVED && !z80IsParmInCall (ftype, "iy")) // Ensure that we don't access the stack via iy when reading IC_LEFT (ic).
         {
           spillPair (PAIR_IY);
           if (ic->left->aop->type == AOP_EXSTK) // Ensure that we don't directly overwrite iyl while accessing the stack via iy.
@@ -7703,10 +7705,10 @@ genCall (const iCode *ic)
                {
                  cost2 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
                   // todo: add cycles spent in ___sdcc_call_iy here
-                }
+               }
             }
         }
-      else if (bc_not_parm && (ic->left->aop->regs[B_IDX] < 0 && ic->left->aop->regs[C_IDX] < 0 || de_free)) // Try bc, since it is the only 16-bit register guarateed to be free even for __z88dk_fastcall with --reserve-regs-iy
+      else if (!rab_lcall && !rab_llcall && bc_not_parm && (ic->left->aop->regs[B_IDX] < 0 && ic->left->aop->regs[C_IDX] < 0 || de_free)) // Try bc, since it is the only 16-bit register guarateed to be free even for __z88dk_fastcall with --reserve-regs-iy
         {
           wassert (!prestackadjust);
           wassert (IY_RESERVED || IS_SM83); // The peephole optimizer handles ret for purposes other than returning only for --reserve-regs-iy
@@ -7739,7 +7741,7 @@ genCall (const iCode *ic)
             _G.stack.pushed -= 2;
           emitLabel (tlbl);
         }
-      else if (de_not_parm && (ic->left->aop->regs[D_IDX] < 0 && ic->left->aop->regs[E_IDX] < 0 || bc_free)) // Try de.
+      else if (!rab_lcall && !rab_llcall && de_not_parm && (ic->left->aop->regs[D_IDX] < 0 && ic->left->aop->regs[E_IDX] < 0 || bc_free)) // Try de.
         {
           wassert (!prestackadjust);
           wassert (IY_RESERVED || IS_SM83); // The peephole optimizer handles ret for purposes other than returning only for --reserve-regs-iy
@@ -7771,6 +7773,90 @@ genCall (const iCode *ic)
           if (!regalloc_dry_run)
             _G.stack.pushed -= 2;
           emitLabel (tlbl);
+        }
+      else if (rab_lcall && bc_not_parm && ic->left->aop->regs[B_IDX] < 0 && ic->left->aop->regs[C_IDX] < 0) // There is no indirect lcall or ljp, so we have to do it all manually.
+        {
+          symbol *tlbl = NULL;
+          bool a_dead = a_not_parm && ic->left->aop->regs[A_IDX] < 0;
+          if (!jump)
+            {
+              tlbl = regalloc_dry_run ? NULL : newiTempLabel (NULL);
+              if (!a_dead)
+                {
+                  _push (PAIR_AF);
+                  emit2 ("ld a, xpc");
+                  cost (2, 4);
+                  emit3 (A_LD, ASMOP_B, ASMOP_A);
+                  _pop(PAIR_AF);
+                  push (ASMOP_BC, 0, 1);
+                }
+              else
+                {
+                  emit2 ("ld a, xpc");
+                  cost (2, 4);
+                  push (ASMOP_A, 0, 1);
+                }
+              if (tlbl)
+                emit2 ("ld bc, !immed!tlabel", labelKey2num (tlbl->key));
+              cost (3, 6);
+              push (ASMOP_BC, 0, 2);
+            }
+          a_dead |= (ic->left->aop->regs[A_IDX] > 2);
+          genMove_o (ASMOP_B, 0, ic->left->aop, 2, 1, a_dead, false, false, false, true);
+          push (ASMOP_B, 0, 1);
+          genMove_o (ASMOP_BC, 0, ic->left->aop, 0, 2, a_not_parm, hl_not_parm, de_not_parm, false, true);
+          push (ASMOP_BC, 0, 2);
+          if (!regalloc_dry_run)
+            _G.stack.pushed -= jump ? 3 : 6;
+          emit2 ("lret");
+          cost (2, 13);
+          if (tlbl)
+            emitLabel (tlbl);
+        }
+      else if (rab_llcall && hl_not_parm && jk_not_parm && !jump)
+        {
+          genMove (ASMOP_JKHL, ic->left->aop, a_not_parm, true, de_not_parm, false);
+          emit2 ("llcall (jkhl)");
+          cost (2, IS_R4K_NOTYET ? 29 : 20);
+        }
+      else if (rab_llcall && bc_not_parm && ic->left->aop->regs[B_IDX] < 0 && ic->left->aop->regs[C_IDX] < 0)
+        {
+          symbol *tlbl = NULL;
+          bool a_dead = a_not_parm && ic->left->aop->regs[A_IDX] < 0;
+          bool hl_dead = hl_not_parm && ic->left->aop->regs[H_IDX] < 0 && ic->left->aop->regs[L_IDX] < 0;
+          if (!jump)
+            {
+              tlbl = regalloc_dry_run ? NULL : newiTempLabel (NULL);
+              if (!hl_dead)
+                {
+                  push (ASMOP_HL, 0, 2);
+                  emit2 ("ld hl, xpc");
+                  cost (2, 4);
+                  emit2 ("ex (sp, hl");
+                  cost (2, 15);
+                  adjustStack (2, a_dead, true, false, true, false);
+                }
+              else
+                {
+                  emit2 ("ld hl, xpc");
+                  cost (2, 4);
+                  push (ASMOP_HL, 0, 2);
+                }
+              if (tlbl)
+                emit2 ("ld bc, !immed!tlabel", labelKey2num (tlbl->key));
+              cost (3, 6);
+              push (ASMOP_BC, 0, 2);
+            }
+          genMove_o (ASMOP_BC, 0, ic->left->aop, 0, 2, a_dead, hl_dead, false, false, true);
+          push (ASMOP_BC, 0, 2);
+          genMove_o (ASMOP_BC, 0, ic->left->aop, 2, 2, a_not_parm, hl_not_parm, de_not_parm, false, true);
+          push (ASMOP_BC, 0, 2);
+          if (!regalloc_dry_run)
+            _G.stack.pushed -= jump ? 4 : 8;
+          emit2 ("llret");
+          cost (2, 14);
+          if (tlbl)
+            emitLabel (tlbl);
         }
       else
         UNIMPLEMENTED;
