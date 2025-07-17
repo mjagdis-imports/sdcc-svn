@@ -7910,11 +7910,25 @@ genCall (const iCode *ic)
 
           if (IS_LITERAL (etype))
             {
-              emit2 (jump ? "jp !constword" : "call !constword", ulFromVal (OP_VALUE (IC_LEFT (ic))));
-              if (jump)
-                cost2 (3, 3, 3, 3, 10, 9, 7, 7, 16, 8, 4, 4, 4, 4, 3);
+              if (rab_lcall)
+                {
+                  unsigned int taddrlower = ulFromVal (OP_VALUE (ic->left)) & 0x0fff | 0xe000;
+                  unsigned int taddrupper = ulFromVal (OP_VALUE (ic->left)) >> 12;
+                  wassert (taddrlower <= 0xff);
+                  emit2 (jump ? "ljp 0x%02x, 0x%04x" : "lcall 0x%02x, 0x%04x", taddrupper, taddrlower);
+                  if (jump)
+                    cost2 (4, 0, 0, 0, 0, 0, 10, 10, 0, 0, 0, 0, 0, 0, 0);
+                  else
+                    cost2 (4, 0, 0, 0, 0, 0, 19, 20, 0, 0, 0, 0, 0, 0, 0);
+                }
               else
-                cost2 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
+                {
+                  emit2 (jump ? "jp !constword" : "call !constword", ulFromVal (OP_VALUE (IC_LEFT (ic))));
+                  if (jump)
+                    cost2 (3, 3, 3, 3, 10, 9, 7, 7, 16, 8, 4, 4, 4, 4, 3);
+                  else
+                    cost2 (3, 3, 3, 3, 17, 16, 12, 13, 24, 14, 6, 6, 6, 5, 3);
+                }
             }
           else if (IFFUNC_ISZ88DK_SHORTCALL(ftype))
             {
@@ -7927,6 +7941,65 @@ genCall (const iCode *ic)
               else
                 emit2 ("defw !immedword\n", (unsigned)value);
               regalloc_dry_run_cost_bytes += 2 + (value >= 256);
+            }
+          else if (rab_lcall && 0) // Not yet supported by assembler
+            {
+              const char *t = (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (ic->left)->rname : OP_SYMBOL (ic->left)->name);
+              emit2 ("%s (#%s >> 12), (#%s | #0xe000)", jump ? "ljp" : "lcall", t, t);
+              if (jump)
+                cost2 (4, 0, 0, 0, 0, 0, 10, 10, 0, 0, 0, 0, 0, 0, 0);
+              else
+                cost2 (4, 0, 0, 0, 0, 0, 19, 20, 0, 0, 0, 0, 0, 0, 0);
+            }
+          else if (rab_lcall && bc_not_parm) // Workaround for assembler limitations.
+            {
+              const char *t = (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (ic->left)->rname : OP_SYMBOL (ic->left)->name);
+              if (!regalloc_dry_run)
+                {
+                  symbol *tlbl = newiTempLabel (NULL);
+                  if (!jump)
+                    {
+                      _push (PAIR_AF);
+                      emit2 ("ld a, xpc");
+                      emit2 ("ld b, a");
+                      _pop(PAIR_AF);
+                      emit2 ("push bc");
+                      emit2 ("inc sp");
+                      emit2 ("ld bc, !immed!tlabel", labelKey2num (tlbl->key));
+                      emit2 ("push bc");
+                    }
+                  emit2 ("ld bc, (!immed%s >> 8)", t);
+                  emit2 ("sla c");
+                  emit2 ("rlc b");
+                  emit2 ("sla c");
+                  emit2 ("rlc b");
+                  emit2 ("sla c");
+                  emit2 ("rlc b");
+                  emit2 ("sla c");
+                  emit2 ("rlc b");
+                  emit2 ("push bc");
+                  emit2 ("inc sp");
+                  emit2 ("ld bc, !immed%s", t);
+                  _push (PAIR_AF);
+                  emit2 ("ld a, b");
+                  emit2 ("and a, #0x0f");
+                  emit2 ("or a, #0xe0");
+                  emit2 ("ld b, a");
+                  emit2 ("push bc");
+                  _pop(PAIR_AF);
+                  emit2 ("lret");
+                  emitLabel (tlbl);
+                }
+              regalloc_dry_run_cost += jump ? 36 : 45;
+            }
+          else if (rab_llcall)
+            {
+              const char *t = (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (ic->left)->rname : OP_SYMBOL (ic->left)->name);
+              emit2 ("%s (#%s >> 12), (#%s | #0xe000)", jump ? "lljp" : "llcall", t, t);
+              if (jump)
+                cost2 (4, 0, 0, 0, 0, 0, 12, 12, 0, 0, 0, 0, 0, 0, 0);
+              else
+                cost2 (4, 0, 0, 0, 0, 0, 24, 25, 0, 0, 0, 0, 0, 0, 0);
             }
           else
             {
@@ -11662,23 +11735,23 @@ fix:
                  don't change the carry flag. */
               symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
               symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
+              // TODO: Fix all teh cycle costs in here.
               emit2 ("bit 7, e");
+              regalloc_dry_run_cost += 2;
               cost2 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-              if (!regalloc_dry_run)
-                emit2 ("jp z, !tlabel", labelKey2num (tlbl1->key));
+              emitJP (tlbl1, "z", 0.5f, true);
               emit2 ("bit 7, d");
-              if (!regalloc_dry_run)
-                emit2 ("jp nz, !tlabel", labelKey2num (tlbl2->key));
+              regalloc_dry_run_cost += 2;
+              emitJP (tlbl2, "nz", 0.5f, true);
               emit2 ("cp a, a");
-              if (!regalloc_dry_run)
-                emit2 ("jp !tlabel", labelKey2num (tlbl2->key));
+              regalloc_dry_run_cost += 1;
+              emitJP (tlbl2, NULL, 1.0f, true);
               emitLabelSpill (tlbl1);
               emit2 ("bit 7, d");
-              if (!regalloc_dry_run)
-                emit2 ("jp z, !tlabel", labelKey2num (tlbl2->key));
+              regalloc_dry_run_cost += 2;
+              emitJP (tlbl2, "z", 0.5f, true);
               emit2 ("scf");
               emitLabelSpill (tlbl2);
-              regalloc_dry_run_cost += 18;
               result_in_carry = true;
             }
         }
@@ -12081,13 +12154,10 @@ gencjne (operand *left, operand *right, symbol *lbl, const iCode *ic)
   pop = gencjneshort (left, right, lbl, ic);
 
   emit3 (A_LD, ASMOP_A, ASMOP_ONE);
-  /* PENDING: ?? */
-  if (!regalloc_dry_run)
-    {
-      emit2 ("jp !tlabel", labelKey2num (tlbl->key));
-      emitLabelSpill (lbl);
-      emit2 ("xor a, a");
-    }
+  // todo: fix cycle costs in here.
+  emitJP (tlbl, NULL, 1.0f, true);
+  emitLabelSpill (lbl);
+  emit3 (A_XOR, ASMOP_A, ASMOP_A);
   regalloc_dry_run_cost += 4; // todo: improve accuracy
   emitLabel (tlbl);
   _pop (pop);
@@ -12149,24 +12219,21 @@ genCmpEq (iCode *ic, iCode *ifx)
           else
             {
               /* PENDING: do this better */
+              // todo: fix cycle costs.
               symbol *lbl = regalloc_dry_run ? 0 : newiTempLabel (0);
               if (pop != PAIR_INVALID)
                 {
                   emit2 ("pop %s", _pairs[pop].name);
                   cost2 (1, 1, 2, 1, 10, 9, 7, 7, 12, 10, 5, 4, 4, 3, 4);
                 }
-              if (!regalloc_dry_run)
-                emit2 ("jp !tlabel", labelKey2num (lbl->key));
-              regalloc_dry_run_cost += 3;
+              emitJP (lbl, NULL, 1.0f, true);
               if (!regalloc_dry_run)
                 hl_touched ? emitLabelSpill (tlbl) : emitLabel (tlbl);
               else if (hl_touched)
                 spillCached ();
               _pop (pop);
-              if (!regalloc_dry_run)
-                emit2 ("jp !tlabel", labelKey2num (IC_FALSE (ifx)->key));
+              emitJP (IC_FALSE (ifx), NULL, 1.0f, true);
               emitLabel (lbl);
-              regalloc_dry_run_cost += 3;
             }
         }
       goto release;
@@ -12236,26 +12303,19 @@ jmpTrueOrFalse (iCode *ic, symbol *tlbl)
   // We could jump there from locations with different values in hl.
   // This should be changed to a more efficient solution that spills
   // only what and when necessary.
+  // todo: fix cycle costs
   if (IC_TRUE (ic))
     {
-      if (!regalloc_dry_run)
-        {
-          symbol *nlbl = newiTempLabel (NULL);
-          emit2 ("jp !tlabel", labelKey2num (nlbl->key));
-          emitLabelSpill (tlbl);
-          emit2 ("jp !tlabel", labelKey2num (IC_TRUE (ic)->key));
-          emitLabelSpill (nlbl);
-        }
-      regalloc_dry_run_cost += 6;
+      symbol *nlbl = regalloc_dry_run ? NULL : newiTempLabel (NULL);
+      emitJP (nlbl, NULL, 1.0f, true);
+      emitLabelSpill (tlbl);
+      emitJP (IC_TRUE (ic), NULL, 1.0f, false);
+      emitLabelSpill (nlbl);
     }
   else
     {
-      if (!regalloc_dry_run)
-        {
-          emit2 ("jp !tlabel", labelKey2num (IC_FALSE (ic)->key));
-          emitLabelSpill (tlbl);
-        }
-      regalloc_dry_run_cost += 3;
+      emitJP (IC_FALSE (ic), NULL, 1.0f, false);
+      emitLabelSpill (tlbl);
     }
 }
 
@@ -12354,7 +12414,12 @@ genAnd (const iCode *ic, iCode *ifx)
               emit3 (A_CP, ASMOP_A, ASMOP_A); // Clear carry.
               emit3w (A_ADC, ASMOP_HL, ASMOP_HL); // Cannot use "add hl, hl instead, since it does not affect zero flag.
               if (!regalloc_dry_run)
-                emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
+                {
+                  if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+                    emit2 ("jp nz, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
+                  else
+                    emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
+                }
               regalloc_dry_run_cost += 3;
               emit3w (A_RL, ASMOP_DE, 0);
               sizel -= 4;
@@ -12507,7 +12572,12 @@ genAnd (const iCode *ic, iCode *ifx)
           if (size || ifx)  /* emit jmp only, if it is actually used */
             {
               if (!regalloc_dry_run)
-                emit2 ("jp %s, !tlabel", jumpcond, labelKey2num (tlbl->key));
+                {
+                  if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+                    emit2 ("jp %s, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", jumpcond, currFunc->name, labelKey2num (tlbl->key));
+                  else
+                    emit2 ("jp %s, !tlabel", jumpcond, labelKey2num (tlbl->key));
+                }
               regalloc_dry_run_cost += 3;
             }
         }
@@ -12844,7 +12914,12 @@ genOr (const iCode * ic, iCode * ifx)
           if (ifx)              /* emit jmp only, if it is actually used */
             {
               if (!regalloc_dry_run)
-                emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
+                {
+                  if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+                    emit2 ("jp nz, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
+                 else
+                   emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
+                }
               regalloc_dry_run_cost += 3;
             }
 
@@ -13207,9 +13282,16 @@ genEor (const iCode *ic, iCode *ifx, asmop *result_aop, asmop *left_aop, asmop *
               emit3_o (A_XOR, ASMOP_A, 0, right_aop, offset);
             }
           if (ifx)              /* emit jmp only, if it is actually used * */
-            if (!regalloc_dry_run)
-              emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
-          regalloc_dry_run_cost += 3;
+            {
+              if (!regalloc_dry_run)
+                {
+                  if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+                    emit2 ("jp nz, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
+                  else
+                    emit2 ("jp nz, !tlabel", labelKey2num (tlbl->key));
+                 }
+              regalloc_dry_run_cost += 3;
+            }
           offset++;
         }
       if (pushed_a)
@@ -18026,6 +18108,7 @@ genCritical (const iCode * ic)
     {
       aopOp (IC_RESULT (ic), ic, true, false);
       cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_ZERO, 0, true);
+      // todo: fix cycle costs
       if (!regalloc_dry_run)
         {
           if (z80_opts.nmosZ80)
@@ -18040,7 +18123,10 @@ genCritical (const iCode * ic)
               emit2 ("!di");
             }
           //parity odd <==> P/O=0 <==> interrupt enable flag IFF2=0
-          emit2 ("jp PO, !tlabel", labelKey2num (tlbl->key));
+          if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+            emit2 ("jp po, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl->key));
+          else
+            emit2 ("jp po, !tlabel", labelKey2num (tlbl->key));
         }
       regalloc_dry_run_cost += 5;
       cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_ONE, 0, true);
@@ -18984,15 +19070,21 @@ genBuiltInStrncpy (const iCode *ic, int nparams, operand **pparams)
       emitLabel (tlbl2);
       emit2 ("cp a,!*hl");
       emit2 ("ldi");
-      emit2 (IS_RAB ? "jp lz, !tlabel" : "jp PO, !tlabel", labelKey2num (tlbl1->key));
+      if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+        emit2 ("jp lz, (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl1->key));
+      else
+        emit2 (IS_RAB ? "jp lz, !tlabel" : "jp po, !tlabel", labelKey2num (tlbl1->key));
       emit2 ("jr nz, !tlabel", labelKey2num (tlbl2->key));
       emitLabel (tlbl3);
       emit2 ("dec hl");
       emit2 ("ldi");
-      emit2 (IS_RAB ? "jp lo, !tlabel" : "jp PE, !tlabel", labelKey2num (tlbl3->key));
+      if (IS_RAB && options.model != MODEL_SMALL) // We need to handle the shifting XPC window.
+        emit2 ("jp (((!tlabel & 0xf000) ^ !tlabel) | 0xe000)", currFunc->name, labelKey2num (tlbl3->key));
+      else
+        emit2 (IS_RAB ? "jp LO, !tlabel" : "jp PE, !tlabel", labelKey2num (tlbl3->key));
       emitLabel (tlbl1);
     }
-  regalloc_dry_run_cost += 14;
+  regalloc_dry_run_cost += 14; // todo: fix cycle costs
 
   spillPair (PAIR_HL);
 

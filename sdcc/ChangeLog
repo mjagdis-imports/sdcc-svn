@@ -1,7 +1,7 @@
 2025-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:
-	  Codegen preparations for Rabbit 1 MB / 16 MB code space memory models.
+	  Codegen for Rabbit 1 MB / 16 MB code space memory models.
 
 2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
