@@ -1,3 +1,24 @@
+2025-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Codegen for Rabbit 1 MB / 16 MB code space memory models.
+
+2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Codegen preparations for Rabbit 1 MB / 16 MB code space memory models.
+
+2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.lex,
+	  doc/sdccman.lyx:
+	  #pragma max_allocs_per_node.
+
+2025-07-15 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/mcs51/at89x51.h:
+	  Fix typo in header, see bug #3861.
+
 2025-07-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
