@@ -1,3 +1,8 @@
+2025-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Improve register/stack operand shuffling, mostly for f8l under high register pressure.
+
 2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:

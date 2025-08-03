@@ -144,9 +144,11 @@ static const char *asminstnames[] =
 bool f8_regs_used_as_parms_in_calls_from_current_function[ZH_IDX + 1];
 bool f8_regs_used_as_parms_in_pcalls_from_current_function[ZH_IDX + 1];
 
-static struct asmop asmop_xl, asmop_xh, asmop_x, asmop_y, asmop_z, asmop_xy, asmop_xly, asmop_yx, asmop_zero, asmop_one, asmop_mone, asmop_f;
+static struct asmop asmop_xl, asmop_xh, asmop_zl, asmop_zh, asmop_x, asmop_y, asmop_z, asmop_xy, asmop_xly, asmop_yx, asmop_zero, asmop_one, asmop_mone, asmop_f;
 static struct asmop *const ASMOP_XL = &asmop_xl;
 static struct asmop *const ASMOP_XH = &asmop_xh;
+static struct asmop *const ASMOP_ZL = &asmop_zl;
+static struct asmop *const ASMOP_ZH = &asmop_zh;
 static struct asmop *const ASMOP_X = &asmop_x;
 static struct asmop *const ASMOP_Y = &asmop_y;
 static struct asmop *const ASMOP_Z = &asmop_z;
@@ -182,6 +184,8 @@ f8_init_asmops (void)
 {
   f8_init_reg_asmop(&asmop_xl, (const signed char[]){XL_IDX, -1});
   f8_init_reg_asmop(&asmop_xh, (const signed char[]){XH_IDX, -1});
+  f8_init_reg_asmop(&asmop_zl, (const signed char[]){ZL_IDX, -1});
+  f8_init_reg_asmop(&asmop_zh, (const signed char[]){ZH_IDX, -1});
   f8_init_reg_asmop(&asmop_x, (const signed char[]){XL_IDX, XH_IDX, -1});
   f8_init_reg_asmop(&asmop_y, (const signed char[]){YL_IDX, YH_IDX, -1});
   f8_init_reg_asmop(&asmop_z, (const signed char[]){ZL_IDX, ZH_IDX, -1});
@@ -786,6 +790,8 @@ ld_bytes (int *prefixes, const asmop *op0, int offset0, const asmop *op1, int of
 {
   int r0Idx = ((aopRS (op0) && offset0 < 8 && op0->aopu.bytes[offset0].in_reg)) ? op0->aopu.bytes[offset0].byteu.reg->rIdx : -1;
   int r1Idx = ((aopRS (op1) && offset1 < 8 && op1->aopu.bytes[offset1].in_reg)) ? op1->aopu.bytes[offset1].byteu.reg->rIdx : -1;
+
+  wassert (r0Idx >= 0 || r1Idx >= 0);
 
   *prefixes = 0;
 
@@ -1687,7 +1693,7 @@ pop (const asmop *op, int offset, int size) // todo: xl_dead parameter for more 
       emit2 ("pop", "%s", aopGet (op, offset));
       if (aopInReg (op, offset, XL_IDX))
         cost (1, 1);
-      else if (aopInReg (op, offset, XH_IDX) || aopInReg (op, offset, YL_IDX) || aopInReg (op, offset, YH_IDX) || aopInReg (op, offset, ZL_IDX))
+      else if (aopInReg (op, offset, XH_IDX) || aopInReg (op, offset, YL_IDX) || aopInReg (op, offset, YH_IDX) || aopInReg (op, offset, ZL_IDX) || aopInReg (op, offset, ZH_IDX))
         cost (2, 2);
       else
         wassertl_bt (0, "Invalid aop type for size 1 for pop");
@@ -1952,7 +1958,7 @@ outer_continue_down:
               i++;
               continue;
             }
-    
+
           // Same location.
           if (result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + i].byteu.stk)
             {
@@ -2029,7 +2035,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   int size = n;
   int regsize = 0;
   for (int i = 0; roffset + i < 8 && soffset + i < 8 && i < n; i++)
-    regsize += source->aopu.bytes[soffset + i].in_reg;
+    regsize += (result->aopu.bytes[roffset + i].in_reg && source->aopu.bytes[soffset + i].in_reg);
 
   // Do nothing for coalesced bytes.
   for (int i = 0; roffset + i < 8 && soffset + i < 8 && i < n; i++)
@@ -2071,57 +2077,85 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
     }
 
+  // Handle some stack locations that would be overwritten.
+  if (result->type == AOP_STK || result->type == AOP_REGSTK)
+    for (int i = 0; i < n; i++)
+      {
+        if (assigned[i] || !aopOnStack (source, soffset + i, 1))
+          continue;
+        for (int j = 0; j < n; j++)
+          {
+            if (assigned[j])
+              continue;
+            if (!aopOnStack (result, roffset + j, 1))
+              continue;
+            if (result->aopu.bytes[roffset + j].byteu.stk != source->aopu.bytes[soffset + i].byteu.stk)
+              continue;
+
+            if (result->aopu.bytes[roffset + i].in_reg) // stack-to-register
+              {
+                int rIdx = result->aopu.bytes[roffset + i].byteu.reg->rIdx;
+                if (source->regs[rIdx] > soffset && source->regs[rIdx] < soffset + n)
+                  {
+                    if (source->regs[rIdx] == soffset + j)
+                      {
+                        if (!IS_F8L)
+                          emit3_o (A_XCH, result, roffset + i, source, soffset + i);
+                        else
+                          {
+                            push (source, soffset + i, 1);
+                            emit3_o (A_LD, source, soffset + i, result, roffset + i);
+                            pop (result, roffset + i, 1);
+                          }
+                        assigned[i] = true;
+                        assigned[j] = true;
+                        size -= 2;;
+                      }
+                    else
+                      UNIMPLEMENTED;
+                  }
+                else
+                  {
+                    emit3_o (A_LD, result, roffset + i, source, soffset + i);
+                    assigned[i] = true;
+                    size--;
+                  }
+              }
+            else // stack-to-stack
+              {
+                xl_free = xl_dead_global && source->regs[XL_IDX] < soffset;
+                y_free = y_dead_global && source->regs[YL_IDX] < soffset && source->regs[YH_IDX] < soffset;
+                genCopyStack (result, roffset, source, soffset, n, assigned, &size, xl_free, false, y_free, false, true);
+              }
+            break;
+          }
+      }
+
   // Move everything from registers to the stack.
   for (int i = 0; i < n;)
     {
-      if (aopOnStack (result, roffset + i, 1)) // Check that we don't overwrite a still-needed byte on the stack.
-        for (int j = 0; j < n; j++)
-          if (!assigned[j] && aopOnStack (source, soffset + j, 1) && result->aopu.bytes[roffset + i].byteu.stk == source->aopu.bytes[soffset + j].byteu.stk)
-            {
-              i++;
-              goto outer_continue;
-            }
+      if (assigned[i] || !aopOnStack (result, roffset + i, 1) || !source->aopu.bytes[soffset + i].in_reg) // This byte is not a register-to-stack copy.
+       {
+         i++;
+         continue;
+       }
 
-      bool xl_free = xl_dead_global &&
-        (source->regs[XL_IDX] < soffset || source->regs[XL_IDX] >= soffset + size || assigned[source->regs[XL_IDX] - soffset]) &&
-        (result->regs[XL_IDX] < roffset || result->regs[XL_IDX] >= roffset + size || !assigned[result->regs[XL_IDX] - roffset]);
-
-      if (i + 1 < n && aopOnStack (result, roffset + i, 2) &&
+      if (i + 1 < n && aopOnStack (result, roffset + i, 2) && // Try to copy two bytes at once.
         (aopInReg (source, soffset + i, Y_IDX) || aopInReg (source, soffset + i, X_IDX) || aopInReg (source, soffset + i, Z_IDX)))
         {
           emit3_o (A_LDW, result, roffset + i, source, soffset + i);
           assigned[i] = true;
           assigned[i + 1] = true;
           size -= 2;
-          regsize -= 2;
           i += 2;
         }
-      else if (aopOnStack (result, roffset + i, 1) &&
-        (aopInReg (source, soffset + i, XL_IDX) || aopInReg (source, soffset + i, XH_IDX) || aopInReg (source, soffset + i, YL_IDX) || aopInReg (source, soffset + i, ZL_IDX)))
+      else
         {
           emit3_o (A_LD, result, roffset + i, source, soffset + i);
           assigned[i] = true;
           size--;
-          regsize--;
           i++;
         }
-      else if (aopOnStack (result, roffset + i, 1) && !aopOnStack (source, soffset + i, 1))
-        {
-          if (!xl_free)
-            push (ASMOP_XL, 0, 1);
-          emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
-          emit3_o (A_LD, result, roffset + i, ASMOP_XL, 0);
-          if (!xl_free)
-            pop (ASMOP_XL, 0, 1);
-          assigned[i] = true;
-          size--;
-          regsize--;
-          i++;
-        }
-      else // This byte is not a register-to-stack copy.
-        i++;
-outer_continue:
-        ;
     }
 
   // Copy (stack-to-stack) what we can with whatever free regs we have.
@@ -2392,6 +2426,66 @@ skip_byte:
         }
 
       // No byte can be assigned safely (i.e. the assignment is a permutation).
+      int j;
+      // Try swapping with xl (4B for swap).
+      for (i = 0; i < n; i++)
+        {
+          if (assigned[i] || !source->aopu.bytes[soffset + i].in_reg || !result->aopu.bytes[roffset + i].in_reg)
+            continue;
+          if (!aopInReg (result, roffset + i, XL_IDX))
+            continue;
+          j = source->regs[result->aopu.bytes[roffset + i].byteu.reg->rIdx] - soffset;
+          if (j < 0 || j >= n || !result->aopu.bytes[roffset + j].in_reg || result->aopu.bytes[roffset + j].byteu.reg->rIdx != source->aopu.bytes[soffset + i].byteu.reg->rIdx)
+            continue;
+          break;
+        }
+      if (i < n)
+        {
+          if (aopIsOp8_2 (source, soffset + i))
+            {
+              emit3_o (A_XOR, ASMOP_XL, 0, source, soffset + i);
+              emit3_o (A_XOR, source, soffset + i, ASMOP_XL, 0);
+              emit3_o (A_XOR, ASMOP_XL, 0, source, soffset + i);
+            }
+          else
+            {
+              push (ASMOP_XL, 0, 1);
+              emit3_o (A_LD, ASMOP_XL, 0, source, soffset + i);
+              pop (source, soffset + i, 1);
+            }
+          regsize -= 2;
+          size -= 2;
+          assigned[i] = true;
+          assigned[j] = true;
+          break;
+        }
+      // Try other swaps (6B for swap)
+      for (i = 0; i < n; i++)
+        {
+          if (assigned[i] || !source->aopu.bytes[soffset + i].in_reg || !result->aopu.bytes[roffset + i].in_reg)
+            continue;
+          j = source->regs[result->aopu.bytes[roffset + i].byteu.reg->rIdx] - soffset;
+          if (j < 0 || j >= n || !result->aopu.bytes[roffset + j].in_reg || result->aopu.bytes[roffset + j].byteu.reg->rIdx != source->aopu.bytes[soffset + i].byteu.reg->rIdx)
+            continue;
+          break;
+        }
+      if (i < n)
+        {
+          push (result, roffset + i, 1);
+          emit3_o (A_LD, result, roffset + i, source, soffset + i);
+          pop (source, soffset + i, 1);
+          regsize -= 2;
+          size -= 2;
+          assigned[i] = true;
+          assigned[j] = true;
+          break;
+        }
+/*fprintf(stderr, "\n\nassigned (regsize %d size %d):\n", regsize, size);
+for(int i = 0; i < n; i++) fprintf(stderr, "%d ", assigned[i]);
+fprintf(stderr, "\nresult:\n");
+for(int i = 0; i < n; i++) fprintf(stderr, "%d ", result->aopu.bytes[roffset + i].in_reg ? result->aopu.bytes[roffset + i].byteu.reg->rIdx : -1);
+fprintf(stderr, "\nsource:\n");
+for(int i = 0; i < n; i++) fprintf(stderr, "%d ", source->aopu.bytes[soffset + i].in_reg ? source->aopu.bytes[soffset + i].byteu.reg->rIdx : -1);*/
       UNIMPLEMENTED;
       return;
     }
@@ -2400,8 +2494,12 @@ skip_byte:
   for (int i = 0; i < n;)
     {
       xl_free = xl_dead_global && (result->regs[XL_IDX] < roffset || result->regs[XL_IDX] >= roffset + source->size || !assigned[result->regs[XL_IDX] - roffset]);
-
-      if (i + 1 < n && aopOnStack (source, soffset + i, 2) && aopIsAcc16 (result, roffset + i))
+      if (assigned[i])
+        {
+          i++;
+          continue;
+        }
+      else if (i + 1 < n && !assigned[i + 1] && aopOnStack (source, soffset + i, 2) && aopIsAcc16 (result, roffset + i))
         {
           emit3_o (A_LDW, result, roffset + i, source, soffset + i);
           assigned[i] = true;
@@ -2434,7 +2532,7 @@ skip_byte:
 
   // Copy (stack-to-stack) whatever is left.
   genCopyStack (result, roffset, source, soffset, n, assigned, &size, false, false, false, false, true);
-  
+
   wassertl_bt (size >= 0, "genCopy() copied more than there is to be copied.");
 
   xl_free = xl_dead_global && (result->regs[XL_IDX] < roffset || result->regs[XL_IDX] >= roffset + source->size);
@@ -2457,17 +2555,17 @@ skip_byte:
       i += s;
     }
 
-  if (size > 0)
+  if (size > 0) // can happen with weird permutations of both registers and stack locations at the same time inone copy.
     {
+      UNIMPLEMENTED;
       if (!regalloc_dry_run)
         {
           wassertl_bt (0, "genCopy failed to completely copy operands.");
           fprintf (stderr, "%d bytes left.\n", size);
-          fprintf (stderr, "left type %d source type %d\n", result->type, source->type);
+          fprintf (stderr, "left type %d source type %d n %d\n", result->type, source->type, n);
           for (int i = 0; i < n ; i++)
             fprintf (stderr, "Byte %d, result in reg %d, source in reg %d. %s assigned.\n", i, (roffset + i < 8 && result->aopu.bytes[roffset + i].in_reg) ? result->aopu.bytes[roffset + i].byteu.reg->rIdx : -1, (soffset + i < 8 && source->aopu.bytes[soffset + i].in_reg) ? source->aopu.bytes[soffset + i].byteu.reg->rIdx : -1, assigned[i] ? "" : "not");
         }
-      cost (180, 180);
     }
 }
 
@@ -2485,7 +2583,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
   wassertl_bt (roffset + size <= result->size, "Trying to write beyond end of operand");
 
 #if 0
-  D (emit2 (";", "genMove_o size %d, xl_dead_global %d xh_dead_global %d", size, xl_dead_global, xh_dead_global));
+  D (emit2 (";", "genMove_o roffset %d soffset %d size %d, xl_dead_global %d xh_dead_global %d c_dead %d", roffset, soffset, size, xl_dead_global, xh_dead_global, c_dead));
 #endif
 
   if (aopRS (result) && aopRS (source))
@@ -3373,7 +3471,12 @@ saveRegsForCall (const iCode * ic)
     push (ASMOP_Y, 0, 2);
 
   if (!regDead (Z_IDX, ic))
-    push (ASMOP_Z, 0, 2);
+    if (regDead (ZH_IDX, ic))
+      push (ASMOP_ZL, 0, 1);
+    else if (regDead (ZL_IDX, ic))
+      push (ASMOP_ZH, 0, 1);
+    else
+      push (ASMOP_Z, 0, 2);
 
   G.saved = true;
 }
@@ -3446,7 +3549,23 @@ genIpush (const iCode * ic)
         }
       else
         {
-          UNIMPLEMENTED;
+          bool y_dead = regDead (Y_IDX, ic) && (left->aop->regs[YL_IDX] < 0 || left->aop->regs[YL_IDX] >= i) && (left->aop->regs[YH_IDX] < 0 || left->aop->regs[YH_IDX] >= i);
+          push (ASMOP_XL, 0, 1);
+          genMove_o (ASMOP_XL, 0, left->aop, i, 1, true, false, y_dead, false, true);
+          if (!IS_F8L)
+            {
+              emit2 ("xch", "xl, (0, sp)");
+              cost (2, 1);
+            }
+          else
+            {
+              emit2 ("push", "(0, sp)");
+              cost (2, 1);
+              emit2 ("ld", "(1, sp), xl");
+              cost (2, 1);
+              emit2 ("pop", "xl");
+              cost (1, 1);
+            }
           i--;
         }
     }
@@ -3784,9 +3903,9 @@ restore:
   // Restore regs.
   if (!regDead (Z_IDX, ic) && !f8_extend_stack)
     if (regDead (ZH_IDX, ic))
-      UNIMPLEMENTED;
+      pop (ASMOP_ZL, 0, 1);
     else if (regDead (ZL_IDX, ic))
-      UNIMPLEMENTED;
+      pop (ASMOP_ZH, 0, 1);
     else
       pop (ASMOP_Z, 0, 2);
 
