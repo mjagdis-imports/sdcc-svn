@@ -1574,14 +1574,14 @@ addwConst (asmop *aop, int offset, int d)
   bool big = d >= -128 && d < 128;
   if (d == 1)
     emit3_o (A_INCW, aop, offset, 0, 0);
-  else if (IS_F8L && d == 2)
+  else if (IS_F8L && d == 2 && !aopInReg (aop, offset, Y_IDX))
     {
       emit3_o (A_INCW, aop, offset, 0, 0);
       emit3_o (A_INCW, aop, offset, 0, 0);
     }
   else if (aopInReg (aop, offset, X_IDX))
     {
-      if (!IS_F8L)
+      if (!IS_F8L || !big)
         {
           emit2 ("addw", "x, #%d", d);
           cost (3 + big, 2);
@@ -1596,7 +1596,7 @@ addwConst (asmop *aop, int offset, int d)
     }
   else if (aopInReg (aop, offset, Y_IDX))
     {
-      if (!IS_F8L)
+      if (!IS_F8L || !big)
         {
           emit2 ("addw", "y, #%d", d);
           cost (2 + big, 1 + big);
@@ -1611,7 +1611,7 @@ addwConst (asmop *aop, int offset, int d)
     }
   else if (aopInReg (aop, offset, Z_IDX))
     {
-      if (!IS_F8L)
+      if (!IS_F8L || !big)
         {
           emit2 ("addw", "z, #%d", d);
           cost (3 + big, 2);
@@ -3251,9 +3251,9 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 
       bool xl_free = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i && right_aop->regs[XL_IDX] <= i && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
       bool xl_free2 = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i + 1 && right_aop->regs[XL_IDX] <= i + 1 && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
-      //bool yl_free2 = regDead (YL_IDX, ic) && leftop->regs[YL_IDX] <= i + 1 && rightop->regs[YL_IDX] <= i + 1 && (result->aop->regs[YL_IDX] < 0 || result->aop->regs[YL_IDX] >= i);
-      //bool yh_free2 = regDead (YH_IDX, ic) && leftop->regs[YH_IDX] <= i + 1 && rightop->regs[YH_IDX] <= i + 1 && (result->aop->regs[YH_IDX] < 0 || result->aop->regs[YH_IDX] >= i);
-      //bool y_free2 = yl_free2 && yh_free2;
+      bool yl_free2 = regDead (YL_IDX, ic) && left_aop->regs[YL_IDX] <= i + 1 && right_aop->regs[YL_IDX] <= i + 1 && (result_aop->regs[YL_IDX] < 0 || result_aop->regs[YL_IDX] >= i);
+      bool yh_free2 = regDead (YH_IDX, ic) && left_aop->regs[YH_IDX] <= i + 1 && right_aop->regs[YH_IDX] <= i + 1 && (result_aop->regs[YH_IDX] < 0 || result_aop->regs[YH_IDX] >= i);
+      bool y_free2 = yl_free2 && yh_free2;
 
       if (!started && aopIsLitVal (right_aop, i, 1, 0x00)) // Skip lower bytes.
          {
@@ -3350,6 +3350,18 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           i += 2;
         }
+      else if (i + 1 < size && !maskedword && y_free2 && right_aop->regs[YL_IDX] < i && right_aop->regs[YH_IDX] < i && // Efficient ldw makes usign y worth it for f8l, despite no 16-bit arithmetic instructions.
+         (aopInReg (result_aop, i, Y_IDX) || result_aop->type == AOP_DIR) && (aopInReg (left_aop, i, Y_IDX) || left_aop->type == AOP_DIR) &&
+         aopAre8_2 (ASMOP_Y, 0, right_aop, i) && aopAre8_2 (ASMOP_Y, 1, right_aop, i + 1))
+         {
+           genMove_o (ASMOP_Y, 0, left_aop, i, 2, xl_free2 && right_aop->regs[XL_IDX] < i, false, true, false, !started);
+           emit3sub_o (started ? A_SBC : A_SUB, ASMOP_Y, 0, right_aop, i);
+           emit3sub_o (A_SBC, ASMOP_Y, 1, right_aop, i + 1);
+           genMove_o (result_aop, i, ASMOP_Y, 0, 2, xl_free2 && right_aop->regs[XL_IDX] < i, false, true, false, i + 2 == size);
+           i += 2;
+           started = true;
+           continue;
+         }
       else
         {
           if (aopIsOp8_2 (right_aop, i))
@@ -4450,6 +4462,18 @@ genPlus (const iCode *ic)
            else
              emit3_o (started ? A_ADCW : A_ADDW, leftop, i, rightop, i);
            genMove_o (result->aop, i, leftop, i, 2, true, true, y_free2, false, i + 2 == size);
+           i += 2;
+           started = true;
+           continue;
+         }
+       else if (i + 1 < size && !maskedword && y_free2 && rightop->regs[YL_IDX] < i && rightop->regs[YH_IDX] < i && // Efficient ldw makes using y worth it for f8l, despite no 16-bit arithmetic instructions.
+         (aopInReg (result->aop, i, Y_IDX) || result->aop->type == AOP_DIR) && (aopInReg (leftop, i, Y_IDX) || left->aop->type == AOP_DIR) &&
+         aopAre8_2 (ASMOP_Y, 0, rightop, i) && aopAre8_2 (ASMOP_Y, 1, rightop, i + 1))
+         {
+           genMove_o (ASMOP_Y, 0, leftop, i, 2, xl_free2 && rightop->regs[XL_IDX] < i, false, true, false, !started);
+           emit3_o (started ? A_ADC : A_ADD, ASMOP_Y, 0, rightop, i);
+           emit3_o (A_ADC, ASMOP_Y, 1, rightop, i + 1);
+           genMove_o (result->aop, i, ASMOP_Y, 0, 2, xl_free2 && rightop->regs[XL_IDX] < i, false, true, false, i + 2 == size);
            i += 2;
            started = true;
            continue;
