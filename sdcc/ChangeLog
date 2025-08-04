@@ -1,12 +1,11 @@
 2025-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
-	  f8l pointer read codegen fix.
-
-2025-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
-
-	* src/f8/gen.c:
-	  Improve use of ldw in f8l codegen for additive operators.
+	  f8l codegen fixes and improvements.
+	* sim/ucsim/src/sims/f8.src/disass.cc,
+	  sim/ucsim/src/sims/f8.src/glob.cc,
+	  sim/ucsim/src/sims/f8.src/imove.cc:
+	  Fix ldw ((n, sp)), y simulation for n >= 128.
 
 2025-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
