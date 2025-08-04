@@ -1,6 +1,11 @@
 2025-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:
+	  f8l pointer read codegen fix.
+
+2025-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
 	  Improve use of ldw in f8l codegen for additive operators.
 
 2025-08-03 Philipp Klaus Krause <philipp@colecovision.eu>

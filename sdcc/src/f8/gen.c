@@ -1571,7 +1571,7 @@ addwConst (asmop *aop, int offset, int d)
   if (!d)
     return;
 
-  bool big = d >= -128 && d < 128;
+  bool big = d < -128 || d >= 128;
   if (d == 1)
     emit3_o (A_INCW, aop, offset, 0, 0);
   else if (IS_F8L && d == 2 && !aopInReg (aop, offset, Y_IDX))
