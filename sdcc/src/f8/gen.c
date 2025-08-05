@@ -3254,6 +3254,8 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
 
       bool xl_free = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i && right_aop->regs[XL_IDX] <= i && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
       bool xl_free2 = regDead (XL_IDX, ic) && left_aop->regs[XL_IDX] <= i + 1 && right_aop->regs[XL_IDX] <= i + 1 && (result_aop->regs[XL_IDX] < 0 || result_aop->regs[XL_IDX] >= i);
+      bool xh_free2 = regDead (XH_IDX, ic) && left_aop->regs[XH_IDX] <= i + 1 && right_aop->regs[XH_IDX] <= i + 1 && (result_aop->regs[XH_IDX] < 0 || result_aop->regs[XH_IDX] >= i);
+      bool x_free2 = xl_free2 && xh_free2;
       bool yl_free2 = regDead (YL_IDX, ic) && left_aop->regs[YL_IDX] <= i + 1 && right_aop->regs[YL_IDX] <= i + 1 && (result_aop->regs[YL_IDX] < 0 || result_aop->regs[YL_IDX] >= i);
       bool yh_free2 = regDead (YH_IDX, ic) && left_aop->regs[YH_IDX] <= i + 1 && right_aop->regs[YH_IDX] <= i + 1 && (result_aop->regs[YH_IDX] < 0 || result_aop->regs[YH_IDX] >= i);
       bool y_free2 = yl_free2 && yh_free2;
@@ -3353,7 +3355,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           started = true;
           i += 2;
         }
-      else if (i + 1 < size && !maskedword && y_free2 && right_aop->regs[YL_IDX] < i && right_aop->regs[YH_IDX] < i && // Efficient ldw makes usign y worth it for f8l, despite no 16-bit arithmetic instructions.
+      else if (i + 1 < size && !maskedword && y_free2 && right_aop->regs[YL_IDX] < i && right_aop->regs[YH_IDX] < i && // Efficient ldw makes using y worth it for f8l, despite no 16-bit arithmetic instructions.
          (aopInReg (result_aop, i, Y_IDX) || result_aop->type == AOP_DIR || aopOnStack (result_aop, i, 2)) && (aopInReg (left_aop, i, Y_IDX) || left_aop->type == AOP_DIR || aopOnStack (left_aop, i, 2)) &&
          aopAre8_2 (ASMOP_Y, 0, right_aop, i) && aopAre8_2 (ASMOP_Y, 1, right_aop, i + 1))
          {
@@ -3361,6 +3363,18 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
            emit3sub_o (started ? A_SBC : A_SUB, ASMOP_Y, 0, right_aop, i);
            emit3sub_o (A_SBC, ASMOP_Y, 1, right_aop, i + 1);
            genMove_o (result_aop, i, ASMOP_Y, 0, 2, xl_free2 && right_aop->regs[XL_IDX] < i, false, true, false, i + 2 == size);
+           i += 2;
+           started = true;
+           continue;
+         }
+       else if (i + 1 < size && !maskedword && x_free2 && right_aop->regs[XL_IDX] < i && right_aop->regs[XH_IDX] < i && // Efficient ldw makes using x worth it for f8l, despite no 16-bit arithmetic instructions.
+         (aopInReg (result_aop, i, X_IDX) || result_aop->type == AOP_DIR || aopOnStack (result_aop, i, 2)) && (aopInReg (left_aop, i, X_IDX) || left_aop->type == AOP_DIR || aopOnStack (left_aop, i, 2)) &&
+         aopAre8_2 (ASMOP_X, 0, right_aop, i) && aopAre8_2 (ASMOP_X, 1, right_aop, i + 1))
+         {
+           genMove_o (ASMOP_X, 0, left_aop, i, 2, true, true, false, false, !started);
+           emit3sub_o (started ? A_SBC : A_SUB, ASMOP_X, 0, right_aop, i);
+           emit3sub_o (A_SBC, ASMOP_X, 1, right_aop, i + 1);
+           genMove_o (result_aop, i, ASMOP_X, 0, 2, true, true, false, false, i + 2 == size);
            i += 2;
            started = true;
            continue;
@@ -4299,6 +4313,8 @@ genPlus (const iCode *ic)
 
       bool xl_free = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i && rightop->regs[XL_IDX] <= i && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
       bool xl_free2 = regDead (XL_IDX, ic) && leftop->regs[XL_IDX] <= i + 1 && rightop->regs[XL_IDX] <= i + 1 && (result->aop->regs[XL_IDX] < 0 || result->aop->regs[XL_IDX] >= i);
+      bool xh_free2 = regDead (XH_IDX, ic) && leftop->regs[XH_IDX] <= i + 1 && rightop->regs[XH_IDX] <= i + 1 && (result->aop->regs[XH_IDX] < 0 || result->aop->regs[XH_IDX] >= i);
+      bool x_free2 = xl_free2 && xh_free2;
       bool yl_free2 = regDead (YL_IDX, ic) && leftop->regs[YL_IDX] <= i + 1 && rightop->regs[YL_IDX] <= i + 1 && (result->aop->regs[YL_IDX] < 0 || result->aop->regs[YL_IDX] >= i);
       bool yh_free2 = regDead (YH_IDX, ic) && leftop->regs[YH_IDX] <= i + 1 && rightop->regs[YH_IDX] <= i + 1 && (result->aop->regs[YH_IDX] < 0 || result->aop->regs[YH_IDX] >= i);
       bool y_free2 = yl_free2 && yh_free2;
@@ -4478,6 +4494,18 @@ genPlus (const iCode *ic)
            emit3_o (started ? A_ADC : A_ADD, ASMOP_Y, 0, rightop, i);
            emit3_o (A_ADC, ASMOP_Y, 1, rightop, i + 1);
            genMove_o (result->aop, i, ASMOP_Y, 0, 2, xl_free2 && rightop->regs[XL_IDX] < i, false, true, false, i + 2 == size);
+           i += 2;
+           started = true;
+           continue;
+         }
+       else if (i + 1 < size && !maskedword && x_free2 && rightop->regs[XL_IDX] < i && rightop->regs[XH_IDX] < i && // Efficient ldw makes using y worth it for f8l, despite no 16-bit arithmetic instructions.
+         (aopInReg (result->aop, i, X_IDX) || result->aop->type == AOP_DIR || aopOnStack (result->aop, i, 2)) && (aopInReg (leftop, i, X_IDX) || left->aop->type == AOP_DIR || aopOnStack (left->aop, i, 2)) &&
+         aopAre8_2 (ASMOP_X, 0, rightop, i) && aopAre8_2 (ASMOP_Y, 1, rightop, i + 1))
+         {
+           genMove_o (ASMOP_X, 0, leftop, i, 2, true, true, false, false, !started);
+           emit3_o (started ? A_ADC : A_ADD, ASMOP_X, 0, rightop, i);
+           emit3_o (A_ADC, ASMOP_X, 1, rightop, i + 1);
+           genMove_o (result->aop, i, ASMOP_X, 0, 2, true, true, false, false, i + 2 == size);
            i += 2;
            started = true;
            continue;
