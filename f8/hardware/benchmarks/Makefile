@@ -13,7 +13,7 @@ clean:
 	cd whetstone; $(MAKE) clean
 	cd dhrystone; $(MAKE) clean
 	cd stdcbench; $(MAKE) -f examples/Makefile.SDCC-F8 clean
-	rm -f */*.ihx */test*.vmem */*_synth.json */*_synth.asc */*_synth.bin */gatematea1evb*.bit
+	rm -f */*.ihx */test*.vmem */*_synth.json */*_synth.asc */*_synth.bin */gatematea1evb*synth*
 
 whetstone/image.ihx: whetstone/*.c
 	cd whetstone; $(MAKE) SDCC="$(SDCC)" SDCCFLAGS="$(SDCCFLAGS)"

@@ -1,3 +1,9 @@
+2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* hardware/Makefile,
+	  hardware/benchmarks/Makefile:
+	  Fix removal of some files for make clean target.
+
 2025-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* hardware/Makefile,
