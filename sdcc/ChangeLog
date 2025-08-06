@@ -5,6 +5,8 @@
 	  device/lib/f8l/_modsint.s,
 	  device/lib/f8l/_moduint.s:
 	  Fix f8l support functions for multiplicative operators.
+	* src/f8/main.c:
+	  Improve f8/f8l startup code.
 
 2025-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
