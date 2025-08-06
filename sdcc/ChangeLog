@@ -1,3 +1,11 @@
+2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  device/lib/f8l/_divuint.s,
+	  device/lib/f8l/_modsint.s,
+	  device/lib/f8l/_moduint.s:
+	  Fix f8l support functions for division / modulo.
+
 2025-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/f8/gen.c:

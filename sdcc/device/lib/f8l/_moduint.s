@@ -36,7 +36,7 @@ __moduint:
 
 	pushw	(2, sp)
 	call	#__divuint
-	ldw	y, z
+	ldw	y, x
 	addw	sp, #2
 	ret
 

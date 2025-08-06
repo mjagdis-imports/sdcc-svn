@@ -51,7 +51,7 @@ y_nonnegative:
 	push	xl
 	pushw	z
 	call	#__divuint
-	ldw	y, z
+	ldw	y, x
 	tst	(2, sp)
 	jrnn	return_nonnegative
 	xor	yl, #0xff

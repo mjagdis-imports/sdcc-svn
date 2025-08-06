@@ -31,25 +31,30 @@
 .area CODE
 
 ; _divuint (int x, int y)
-; Return quotient in y, remainder in z.
+; Return quotient in y, remainder in x.
 __divuint:
 
-	clrw	z
-	ld	xl, #0x10
+	clrw	x
+	ld	zl, #0x10
 
 1$:
 
-	sllw	y
-	rlcw	z
+	sll	yl
+	rlc	yh
+	rlc	xl
+	rlc	xh
 
 	incw	y
-	subw	z, (2, sp)
+	sub	xl, (2, sp)
+	sbc	xh, (3, sp)
 	jrc	#2$
-	sbcw	y	; add -1
-	addw	z, (2, sp)
+	dec	yl
+	adc	yl, #0x0ff
+	add	xl, (2, sp)
+	adc	xh, (3, sp)
 2$:
 
-	dec	xl
+	dec	zl
 	jrnz	#1$
 
 	ret
