@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  _divuint.s
 ;
-;  Copyright (c) 2023, Philipp Klaus Krause
+;  Copyright (c) 2023-2025, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the

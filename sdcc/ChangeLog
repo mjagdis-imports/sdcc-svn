@@ -4,7 +4,7 @@
 	  device/lib/f8l/_divuint.s,
 	  device/lib/f8l/_modsint.s,
 	  device/lib/f8l/_moduint.s:
-	  Fix f8l support functions for division / modulo.
+	  Fix f8l support functions for multiplicative operators.
 
 2025-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
 

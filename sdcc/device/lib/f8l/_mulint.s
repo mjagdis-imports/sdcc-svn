@@ -1,7 +1,7 @@
 ;--------------------------------------------------------------------------
 ;  _mulint.s
 ;
-;  Copyright (c) 2023, Philipp Klaus Krause
+;  Copyright (c) 2025, Philipp Klaus Krause
 ;
 ;  This library is free software; you can redistribute it and/or modify it
 ;  under the terms of the GNU General Public License as published by the
@@ -31,20 +31,24 @@
 .area CODE
 
 __mulint:
-	ldw	x, y
-	xch	yl, yh
-	ldw	z, y
+	ld	zh, #16
+	clrw	x
 
-	ld	yl, (2, sp)
-	ld	xl, yl
-	ld	zl, (3, sp)
+loop:
+	sll	xl
+	rlc	xh
 
-	mul	x
-	mul	z
-	add	xl, zl
+	sll	(2, sp)
+	rlc	(3, sp)
 
-	mul	y
-	add	yh, xl
+	jrnc	#noadd
+	add	xl, yl
+	adc	xh, yh
+noadd:
 
+	dec	zh
+	jrnz	#loop
+
+	ldw	y, x
 	ret
 
