@@ -6871,7 +6871,7 @@ genPointerSet (const iCode *ic)
       genMove(&stackop_impl, right->aop, regDead (XL_IDX, ic), regDead (XH_IDX, ic), regDead (Y_IDX, ic), regDead (Z_IDX, ic));
       goto release;
     }
-  else if (!bit_field && size == 2 && aopOnStackNotExt (left->aop, 0, 2) &&
+  else if (!IS_F8L && !bit_field && size == 2 && aopOnStackNotExt (left->aop, 0, 2) &&
     (!regalloc_dry_run || !f8_extend_stack) && // Avoid getting into a situation where stack allocation makes code generation impossible
     aopIsAcc16 (right->aop, 0))
     {
@@ -6880,7 +6880,7 @@ genPointerSet (const iCode *ic)
       cost (2 + !aopInReg (right->aop, 0, Y_IDX), 1);
       goto release;
     }
-  else if (!bit_field && size == 2 && aopOnStackNotExt (left->aop, 0, 2) &&
+  else if (!IS_F8L && !bit_field && size == 2 && aopOnStackNotExt (left->aop, 0, 2) &&
     (!regalloc_dry_run || !f8_extend_stack) && // Avoid getting into a situation where stack allocation makes code generation impossible
     (right->aop->type == AOP_DIR || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD || aopOnStack (right->aop, 0, 2)) &&
     (regDead (Y_IDX, ic) || regDead (X_IDX, ic)))
