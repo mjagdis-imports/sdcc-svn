@@ -1,5 +1,10 @@
 2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/peep.c:
+	  Fix an issue introduced erlier today while resolving merge conflict.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/peep.c,
 	  device/lib/z80/Makefile.in,
 	  device/lib/z80/__mulsint2slong.s,
