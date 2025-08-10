@@ -1,5 +1,12 @@
 2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/f8/peep.c:
+	  Peephole optimizer guard against accidential use of non-f8l instructions.
+	* src/f8/gen.c:
+	  Fix use of non-f8l ldw ((n, sp), y in f8l port.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* device/include/float.h,
 	  device/lib/incl.mk,
 	  support/regression/tests/bitintfromfloat.c.in,
