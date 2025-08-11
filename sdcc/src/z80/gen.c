@@ -9152,7 +9152,8 @@ setupToPreserveCarry (asmop *result, asmop *left, asmop *right)
         }
       else if (couldDestroyCarry (result))
         {
-          shiftIntoPair (PAIR_HL, result);
+          if (!requiresHL (left))
+            shiftIntoPair (PAIR_HL, result);
         }
     }
 }
