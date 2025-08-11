@@ -255,19 +255,89 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
   addiCodeToeBBlock (ebp, newic, ip);
 }
 
+extern operand *geniCodeRValue (operand *, bool);
+
+/* Insert a cast of operand op of ic to type type */
+void
+prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
+{
+  if (IS_OP_LITERAL (op))
+    {
+      operand *newop = operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValue (op)), false);
+      if (isOperandEqual (op, IC_LEFT (ic)))
+        IC_LEFT (ic) = newop;
+      if (isOperandEqual (op, IC_RIGHT (ic)))
+        IC_RIGHT (ic) = newop;
+      return;
+    }
+            
+  iCode *newic = newiCode (CAST, operandFromLink (type), op);
+  hTabAddItem (&iCodehTab, newic->key, newic);
+
+  IC_RESULT (newic) = newiTempOperand (type, 0);
+  bitVectSetBit (OP_USES (op), newic->key);
+  OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
+  bitVectUnSetBit (OP_USES (op), ic->key);
+  OP_USES (IC_RESULT (newic)) = bitVectSetBit (OP_USES (IC_RESULT (newic)), ic->key);
+  newic->filename = ic->filename;
+  newic->lineno = ic->lineno;
+
+  addiCodeToeBBlock (ebb, newic, ic);
+
+  if (isOperandEqual (op, IC_LEFT (ic)))
+    IC_LEFT (ic) = IC_RESULT (newic);
+
+  if (isOperandEqual (op, IC_RIGHT (ic)))
+    IC_RIGHT (ic) = IC_RESULT (newic);
+}
+
+/* Insert a cast of result of ic from type type */
+void
+appendCast (iCode *ic, sym_link *type, eBBlock *ebb)
+{
+  iCode *newic = newiCode (CAST, operandFromLink (operandType (IC_RESULT (ic))), 0);
+  hTabAddItem (&iCodehTab, newic->key, newic);
+
+  IC_RESULT (newic) = IC_RESULT (ic);
+  bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
+  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), newic->key);
+  IC_RESULT (ic) = newiTempOperand (type, 0);
+  IC_RIGHT (newic) = operandFromOperand (IC_RESULT (ic));
+  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
+  bitVectSetBit (OP_USES (IC_RESULT (ic)), newic->key);
+  newic->filename = ic->filename;
+  newic->lineno = ic->lineno;
+  addiCodeToeBBlock (ebb, newic, ic->next);
+}
+
 /*-----------------------------------------------------------------*/
 /* cnvToFloatCast - converts casts to floats to function calls     */
 /*-----------------------------------------------------------------*/
 static void
-cnvToFloatCast (iCode * ic, eBBlock * ebp)
+cnvToFloatCast (iCode *ic, eBBlock *ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = copyLinkChain (operandType (IC_RIGHT (ic)));
-  SPEC_SHORT (type) = 0;
   int linenno = ic->lineno;
   int bwd, su;
   int bytesPushed=0;
+
+  // Use basic type cast function for _BitInt
+  if (IS_BITINT (operandType (ic->right)))
+    {
+      sym_link *newtype;
+      if (SPEC_BITINTWIDTH (operandType (ic->right)) <= 16)
+        newtype = newIntLink();
+      else if (SPEC_BITINTWIDTH (operandType (ic->right)) <= 32)
+        newtype = newLongLink();
+      else // Fall back to 64 bit.
+        newtype = newLongLongLink();
+      SPEC_USIGN (newtype) = SPEC_USIGN (operandType (ic->right));
+      prependCast (ic, ic->right, newtype, ebp);
+    }
+
+  sym_link *type = copyLinkChain (operandType (ic->right));
+  SPEC_SHORT (type) = 0;
 
   ip = ic->next;
   /* remove it from the iCode */
@@ -300,7 +370,7 @@ cnvToFloatCast (iCode * ic, eBBlock * ebp)
       goto found;
     }
 
-  assert (0);
+  wassert (0);
 found:
 
   /* if float support routines NOT compiled as reentrant */
@@ -408,7 +478,7 @@ cnvToFixed16x16Cast (iCode * ic, eBBlock * ebp)
             }
         }
     }
-  assert (0);
+  wassert (0);
 found:
 
   /* if float support routines NOT compiled as reentrant */
@@ -493,12 +563,28 @@ cnvFromFloatCast (iCode * ic, eBBlock * ebp)
 {
   iCode *ip, *newic;
   symbol *func = NULL;
-  sym_link *type = copyLinkChain (operandType (IC_LEFT (ic)));
-  SPEC_SHORT (type) = 0;
   char *filename = ic->filename;
   int lineno = ic->lineno;
   int bwd, su;
   int bytesPushed=0;
+
+  // Use basic type cast function for _BitInt. Choose something big enough to represent all values of the _BitInt, don't worry about what happens if that is not enough for the float value, or some of the basic type values won't fit into the BitInt - all that is UB anyway.
+  if (IS_BITINT (operandType (ic->left)))
+    {
+      sym_link *newtype;
+      if (SPEC_BITINTWIDTH (operandType (ic->left)) <= 16)
+        newtype = newIntLink();
+      else if (SPEC_BITINTWIDTH (operandType (ic->left)) <= 32)
+        newtype = newLongLink();
+      else // Fall back to 64 bit.
+        newtype = newLongLongLink();
+      SPEC_USIGN (newtype) = SPEC_USIGN (operandType (ic->left));
+      ic->left = operandFromLink (newtype);
+      appendCast (ic, newtype, ebp);
+    }
+
+  sym_link *type = copyLinkChain (operandType (ic->left));
+  SPEC_SHORT (type) = 0;
 
   ip = ic->next;
   /* remove it from the iCode */
@@ -517,7 +603,7 @@ cnvFromFloatCast (iCode * ic, eBBlock * ebp)
             }
         }
     }
-  assert (0);
+  wassert (0);
 found:
 
   /* if float support routines NOT compiled as reentrant */
@@ -633,7 +719,7 @@ cnvFromFixed16x16Cast (iCode * ic, eBBlock * ebp)
       goto found;
     }
 
-  assert (0);
+  wassert (0);
 found:
 
   /* if float support routines NOT compiled as reentrant */
@@ -710,61 +796,6 @@ found:
     OP_DEFS (IC_RESULT (ic)) = bitVectSetBit (OP_DEFS (IC_RESULT (ic)), newic->key);
 }
 
-extern operand *geniCodeRValue (operand *, bool);
-
-/* Insert a cast of operand op of ic to type type */
-void
-prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
-{
-  if (IS_OP_LITERAL (op))
-    {
-      operand *newop = operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValue (op)), false);
-      if (isOperandEqual (op, IC_LEFT (ic)))
-        IC_LEFT (ic) = newop;
-      if (isOperandEqual (op, IC_RIGHT (ic)))
-        IC_RIGHT (ic) = newop;
-      return;
-    }
-            
-  iCode *newic = newiCode (CAST, operandFromLink (type), op);
-  hTabAddItem (&iCodehTab, newic->key, newic);
-
-  IC_RESULT (newic) = newiTempOperand (type, 0);
-  bitVectSetBit (OP_USES (op), newic->key);
-  OP_DEFS (IC_RESULT (newic)) = bitVectSetBit (OP_DEFS (IC_RESULT (newic)), newic->key);
-  bitVectUnSetBit (OP_USES (op), ic->key);
-  OP_USES (IC_RESULT (newic)) = bitVectSetBit (OP_USES (IC_RESULT (newic)), ic->key);
-  newic->filename = ic->filename;
-  newic->lineno = ic->lineno;
-
-  addiCodeToeBBlock (ebb, newic, ic);
-
-  if (isOperandEqual (op, IC_LEFT (ic)))
-    IC_LEFT (ic) = IC_RESULT (newic);
-
-  if (isOperandEqual (op, IC_RIGHT (ic)))
-    IC_RIGHT (ic) = IC_RESULT (newic);
-}
-
-/* Insert a cast of result of ic from type type */
-void
-appendCast (iCode *ic, sym_link *type, eBBlock *ebb)
-{
-  iCode *newic = newiCode (CAST, operandFromLink (operandType (IC_RESULT (ic))), 0);
-  hTabAddItem (&iCodehTab, newic->key, newic);
-
-  IC_RESULT (newic) = IC_RESULT (ic);
-  bitVectUnSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
-  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), newic->key);
-  IC_RESULT (ic) = newiTempOperand (type, 0);
-  IC_RIGHT (newic) = operandFromOperand (IC_RESULT (ic));
-  bitVectSetBit (OP_DEFS (IC_RESULT (ic)), ic->key);
-  bitVectSetBit (OP_USES (IC_RESULT (ic)), newic->key);
-  newic->filename = ic->filename;
-  newic->lineno = ic->lineno;
-  addiCodeToeBBlock (ebb, newic, ic->next);
-}
-
 /*-----------------------------------------------------------------*/
 /* convilong - converts int or long mults or divs to fcalls        */
 /*-----------------------------------------------------------------*/
@@ -775,7 +806,7 @@ convilong (iCode *ic, eBBlock *ebp)
 
   // Use basic type multiplication function for _BitInt
   if ((op == '*' || op == '/' || op == '%' || op == LEFT_OP || op == RIGHT_OP) &&
-    (IS_BITINT (operandType (IC_LEFT (ic))) || IS_BITINT (operandType (IC_RIGHT (ic)))))
+(IS_BITINT (operandType (IC_LEFT (ic))) || op != LEFT_OP && op != RIGHT_OP && IS_BITINT (operandType (IC_RIGHT (ic)))))
     {
       sym_link *newtype;
 
@@ -790,7 +821,7 @@ convilong (iCode *ic, eBBlock *ebp)
       else // Fall back to 64x64->64.
         newtype = newLongLongLink();
 
-      wassert (IS_BITINT (operandType (ic->left)) && IS_BITINT (operandType (ic->right)) && SPEC_USIGN (operandType (ic->left)) == SPEC_USIGN (operandType (ic->right)));
+      wassert ((op == LEFT_OP || op == RIGHT_OP) || IS_BITINT (operandType (ic->left)) && IS_BITINT (operandType (ic->right)) && SPEC_USIGN (operandType (ic->left)) == SPEC_USIGN (operandType (ic->right)));
       SPEC_USIGN (newtype) = SPEC_USIGN (operandType (ic->left));
       prependCast (ic, ic->left, newtype, ebp);
       if (op != LEFT_OP && op != RIGHT_OP)
@@ -2871,7 +2902,7 @@ optimizeFinalCast (ebbIndex *ebbi)
   // Some regression tests fail, including gcc-torture-execute-pr38236;
   // looking into that one for -mmcs51 --model-small , register allocation
   // puts the result of a 16-bit read from e generic pointer into dptr,
-  // which codegen can't handle (it genrated code where dpl is overwritten by
+  // which codegen can't handle (it generated code where dpl is overwritten by
   // the lower byte of the result, then used as pointer once more).
   // This also triggers a pic16 bug resulting in invalid asm code being generated.
   if (TARGET_MCS51_LIKE || TARGET_IS_PIC16)

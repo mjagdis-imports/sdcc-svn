@@ -1,3 +1,108 @@
+2025-08-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList,
+	  support/regression/fwk/lib/testfwk.c,
+	  support/regression/tests/*.c.in,
+	  support/regression/tests/*.c:
+	  Disable some tests for pdk13 where they won't work due to lack of target memory.
+
+2025-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/pdk13/Makefile.in,
+	  device/lib/pdk13/_muluchar.s,
+	  device/lib/pdk14/Makefile.in,
+	  device/lib/pdk14/_muluchar.s,
+	  device/lib/pdk15/Makefile.in,
+	  device/lib/pdk15/_muluchar.s,
+	  device/lib/pdk15-stack-auto/Makefile.in:
+	  Enable use of hand-written 8x8->16 multiplication support routine, inspired by patch #470 by Konstantin Kim.
+
+2025-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  src/ds390/gen.c,
+	  src/ds390/ralloc.c,
+	  src/f8/gen.c,
+	  src/f8/gen.h,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c,
+	  src/mos6502/gen.c,
+	  src/pic14/gen.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/ralloc.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  src/z80/gen.h:
+	  Comment spelling fixes from patch #460 by Konstantin Kim.
+	* support/regression/fwk/lib/testfwk.c:
+	  Drop support infrastructure for ports with broken / %. There hasen't been a use case in decades.
+	* support/regression/ports/pdk13/spec.mk,
+	  support/regression/MakeList:
+	  pdk13 regression test infrastructure cleanup.
+	* device/lib/pdk13/Makefile.in:
+	  Make pdk13 behave like other pdk wrt. build of __muluchar.
+	* device/lib/pdk13/heap.s:
+	  Reduce pdk13 default heap size to 16B.
+	  
+2025-08-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  doc/sdccman.lyx,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  support/regression/tests/bug-3355.c,
+	  support/valdiag/tests/constantRange.c:
+	  Fix bug #3355.
+	* src/z80/gen.c:
+	  Fix another aspect of bug #3852.
+	* src/stm8/peep.c:
+	  Fix bug #3278.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/float.h,
+	  device/lib/incl.mk,
+	  support/regression/tests/bitintfromfloat.c.in,
+	  device/lib/_fs2slonglong.c,
+	  device/lib/_fs2ulonglong.c:
+	  Fix third part of bug #3719.
+	* debugger/mcs51/sdcdb.h,
+	  debugger/mcs51/sdcdb.c,
+	  debugger/mcs51/symtab.c:
+	  Fix bug #3823.
+	* src/z80/gen.c:
+	  Fix bug #3854.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Fix an issue introduced erlier today while resolving merge conflict.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c,
+	  device/lib/z80/Makefile.in,
+	  device/lib/z80/__mulsint2slong.s,
+	  device/lib/z80/__muluint2slong.s,
+	  support/regression/tests/coremark.c.in,
+	  support/regression/tests/muldiv.c.in:
+	  Fix bug #3852.
+	* src/pdk/gen.c,
+	  support/regression/tests/bitintfromfloat.c.in:
+	  Fix a pdk codegen issue for casts from int to _BitInt of width > 8, < 16 bits if both operands' least-significant byte is allocated to register a, part of bug #3719.
+
+2025-08-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bitinttofloat.c.in,
+	  support/regression/tests/bitintfromfloat.c.in:
+	  Fix bug #3718, partially fix bug #3719.
+
+2025-08-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Fix a regression caused by yesterday's fix for bug #3855.
+
 2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc/support/regression/tests/rabbit.c:

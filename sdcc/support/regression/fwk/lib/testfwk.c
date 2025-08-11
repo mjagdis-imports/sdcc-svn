@@ -17,11 +17,6 @@ void T2_isr (void) __interrupt (5);
 #define MEMSPACE_BUF
 #endif
 
-/** Define this if the port's div or mod functions are broken.
-    A slow loop based method will be substituded.
-*/
-//#define BROKEN_DIV_MOD		1
-
 extern void _putchar(char c);
 extern void _initEmu(void);
 extern void _exitEmu(void);
@@ -29,32 +24,8 @@ extern void _exitEmu(void);
 int __numTests = 0;
 static int __numFailures = 0;
 
-#if BROKEN_DIV_MOD && !defined(TARGET_VERY_LOW_MEMORY)
-static int
-__div(int num, int denom)
-{
-  int q = 0;
-  while (num >= denom)
-    {
-      q++;
-      num -= denom;
-    }
-  return q;
-}
-
-static int
-__mod (int num, int denom)
-{
-  while (num >= denom)
-    {
-      num -= denom;
-    }
-  return num;
-}
-#else
 #define __div(num, denom) ((num) / (denom))
 #define __mod(num, denom) ((num) % (denom))
-#endif
 
 void
 __prints (const char *s)
@@ -80,16 +51,11 @@ __printNibble (unsigned char c)
   _putchar(c);
 }
 void
-__printd (int n)
+__printu (unsigned int n)
 {
   unsigned char chr;
   #define SWAP_BYTE(x)  ((x) >> 4 | (x) << 4)
 
-  if (0 > n)
-    {
-      n = -n;
-      _putchar('-');
-    }
   _putchar('x');
 
   // This seems to be the most efficient way to do it for PDK (both in RAM & ROM)
@@ -106,40 +72,6 @@ __printd (int n)
   __printNibble(chr);
 }
 #else
-void
-__printd (int n)
-{
-  if (0 == n)
-    {
-      _putchar('0');
-    }
-  else
-    {
-      static char MEMSPACE_BUF buf[6];
-      char MEMSPACE_BUF *p = &buf[sizeof (buf) - 1];
-      char neg = 0;
-
-      buf[sizeof(buf) - 1] = '\0';
-
-      if (0 > n)
-        {
-          n = -n;
-          neg = 1;
-        }
-
-      while (0 != n)
-        {
-          *--p = '0' + __mod (n, 10);
-          n = __div (n, 10);
-        }
-
-      if (neg)
-        _putchar('-');
-
-      __prints(p);
-    }
-}
-
 void
 __printu (unsigned int n)
 {
@@ -252,7 +184,7 @@ __fail (__code const char *szMsg, __code const char *szCond, __code const char *
   __prints(" at ");
   __prints(szFile);
   _putchar(':');
-  __printd(line);
+  __printu(line);
   _putchar('\n');
 
   __numFailures++;
@@ -270,19 +202,19 @@ main (void)
   __runSuite();
 
   __prints("--- Summary: ");
-  __printd(__numFailures);
+  __printu(__numFailures);
   _putchar('/');
-  __printd(__numTests);
+  __printu(__numTests);
   _putchar('/');
-  __printd(__numCases);
+  __printu(__numCases);
 
   #ifndef TARGET_VERY_LOW_MEMORY
   __prints(": ");
-  __printd(__numFailures);
+  __printu(__numFailures);
   __prints(" failed of ");
-  __printd(__numTests);
+  __printu(__numTests);
   __prints(" tests in ");
-  __printd(__numCases);
+  __printu(__numCases);
   __prints(" cases.\n");
   #else
   _putchar('\n');
@@ -293,3 +225,4 @@ main (void)
   return 0;
 }
 #endif
+
