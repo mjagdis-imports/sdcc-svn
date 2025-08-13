@@ -1717,7 +1717,7 @@ PORT r2ka_port =
   { 
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
-    false,                      // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication. - disabled until bug #3865 is fixed
+    true,                       // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication.
   },
   { z80_emitDebuggerSymbol },
   {
@@ -1854,7 +1854,7 @@ PORT r3ka_port =
   { 
     -1,                         /* shifts never use support routines */
     false,                      /* do not use support routine for int x int -> long multiplication */
-    false,                      // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication. - disabled until bug #3865 is fixed
+    true,                       // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication.
   },
   { z80_emitDebuggerSymbol },
   {
