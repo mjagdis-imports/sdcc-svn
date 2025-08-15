@@ -9865,6 +9865,16 @@ genPlus (iCode * ic)
           cheapMove (ic->result->aop, i, rightop, i, true);
           i++;
         }
+      else if ((IS_RAB || IS_TLCS90 || IS_TLCS870 || IS_TLCS870C || IS_EZ80) && i + 1 < size && aopInReg (ic->result->aop, i, DE_IDX) &&
+        isRegDead (HL_IDX, ic) && aopInReg (leftop, i, HL_IDX) && (aopOnStack (rightop, i, 2) || rightop->type == AOP_IMMD))
+        {
+          emit3w (A_EX, ASMOP_DE, ASMOP_HL);
+          genMove_o (ASMOP_HL, 0, rightop, i, 2, false, true, false, false, !started);
+          emit3w (started ? A_ADC: A_ADD, ASMOP_HL, ASMOP_DE);
+          emit3w (A_EX, ASMOP_DE, ASMOP_HL);
+          started = true;
+          i += 2;
+        }
       else
         {
           if (!HAS_IYL_INST && (aopInReg (rightop, i, IYL_IDX) || aopInReg (rightop, i, IYH_IDX)))
@@ -17319,14 +17329,14 @@ genIfx (iCode *ic, iCode *popIc)
       genIfxJump (ic, "nz");
       goto release;
     }
-  else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS970C1) && cond->aop->size == 4 && isRegDead (HL_IDX, ic) &&
+  else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && cond->aop->size == 4 && isRegDead (HL_IDX, ic) &&
     (aopInReg (cond->aop, 0, HL_IDX) && aopInReg (cond->aop, 2, DE_IDX) || aopInReg (cond->aop, 0, DE_IDX) && aopInReg (cond->aop, 2, HL_IDX)))
     {
       emit3w (A_OR, ASMOP_HL, ASMOP_DE);
       genIfxJump (ic, "nz");
       goto release;
     }
-  else if ((IS_RAB || IS_TLCS870C || IS_TLCS970C1) && cond->aop->size == 4 && isRegDead (IY_IDX, ic) &&
+  else if ((IS_RAB || IS_TLCS870C || IS_TLCS870C1) && cond->aop->size == 4 && isRegDead (IY_IDX, ic) &&
     (aopInReg (cond->aop, 0, HL_IDX) && aopInReg (cond->aop, 2, IY_IDX) || aopInReg (cond->aop, 0, DE_IDX) && aopInReg (cond->aop, 2, IY_IDX)))
     {
       emit3w (A_OR, ASMOP_IY, ASMOP_DE);
