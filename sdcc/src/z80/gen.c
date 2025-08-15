@@ -17150,16 +17150,16 @@ genPointerSet (iCode *ic)
 
           if (offset < size)
             {
-              emit3 (A_INC, ASMOP_HL, 0);
-              emit3 (A_INC, ASMOP_HL, 0);
-              emit3 (A_INC, ASMOP_HL, 0);
-              emit3 (A_INC, ASMOP_HL, 0);
+              emit3w (A_INC, ASMOP_HL, 0);
+              emit3w (A_INC, ASMOP_HL, 0);
+              emit3w (A_INC, ASMOP_HL, 0);
+              emit3w (A_INC, ASMOP_HL, 0);
               _G.pairs[pairId].offset += 4;
             }
 
           continue;
         }
-      else if ((IS_EZ80 || IS_TLCS90) && (!bit_field ? offset + 1 < size : blen >= 16) && pairId == PAIR_HL && getPairId_o (right->aop, offset) != PAIR_INVALID)
+      else if ((IS_EZ80 || IS_TLCS) && (!bit_field ? offset + 1 < size : blen >= 16) && pairId == PAIR_HL && getPairId_o (right->aop, offset) != PAIR_INVALID)
         {
           emit2 ("ld !mems, %s", _pairs[pairId].name, _pairs[getPairId_o (right->aop, offset)].name);
           regalloc_dry_run_cost += 2;
@@ -17167,8 +17167,8 @@ genPointerSet (iCode *ic)
 
           if (offset < size)
             {
-              emit3 (A_INC, ASMOP_HL, 0);
-              emit3 (A_INC, ASMOP_HL, 0);
+              emit3w (A_INC, ASMOP_HL, 0);
+              emit3w (A_INC, ASMOP_HL, 0);
               _G.pairs[pairId].offset += 2;
             }
 
@@ -17243,7 +17243,7 @@ genPointerSet (iCode *ic)
         cost (3, 6);
       }
     else
-      while(last_offset --> 0)
+      while (last_offset --> 0)
         {
           emit2 ("dec %s", _pairs[pairId].name);
           cost2 (1, 1, 1, 1 , 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);

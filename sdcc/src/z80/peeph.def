@@ -125,7 +125,7 @@ replace restart {
 	ld	%1, %2 (%3)
 } by {
 	; common peephole 7 removed dead load from %2 (%3) into %1.
-} if notUsed(%1), same(%3 'ix' 'iy', 'hl')
+} if notUsed(%1), same(%3 'ix' 'iy' 'hl')
 // Should probably check for notVolatile(), but gives many false positives and no regression tests fail.
 
 replace {
