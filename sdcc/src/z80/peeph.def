@@ -87,20 +87,6 @@ replace restart {
 	; common peephole 3b replaced adc by add since l is unused.
 } if notUsed('l' 'zf')
 
-replace restart {
-	ld	%1, (%2)
-} by {
-	ld	%1, 0 (%2)
-	; common peephole 4a made 0 offset explicit.
-} if same(%2 'ix' 'iy')
-
-replace restart {
-	ld	(%1), %2
-} by {
-	ld	0 (%1), %2
-	; common peephole 4b made 0 offset explicit.
-} if same(%1 'ix' 'iy')
-
 //remove dead INC/DEC instructions on 16-bit registers
 replace restart {
 	%1	%2
@@ -139,7 +125,7 @@ replace restart {
 	ld	%1, %2 (%3)
 } by {
 	; common peephole 7 removed dead load from %2 (%3) into %1.
-} if notUsed(%1), same(%3 'ix' 'iy')
+} if notUsed(%1), same(%3 'ix' 'iy', 'hl')
 // Should probably check for notVolatile(), but gives many false positives and no regression tests fail.
 
 replace {

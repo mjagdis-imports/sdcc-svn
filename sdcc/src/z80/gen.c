@@ -15688,12 +15688,13 @@ genPointerGet (const iCode *ic)
         }
       else
         {
+          PAIR_ID pair = getPairId (left->aop);
           if (surviving_a && !pushed_a)
             _push (PAIR_AF), pushed_a = true;
-          emit2 ("ld a, !mems", getPairName (left->aop));
-          if (getPairId (left->aop) == PAIR_IY)
+          emit2 (pair == PAIR_IY ? "ld a, 0 (iy)" : "ld a, !mems", getPairName (left->aop));
+          if (pair == PAIR_IY)
             cost2old (3, 19, 14, 9, 0, 10, 4, 5);
-          else if (getPairId (left->aop) == PAIR_HL)
+          else if (pair == PAIR_HL)
             cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
           else
             cost2 (1, 2, -1, -1, 7, 6, 6, 6, 8, 6, -1, -1, -1, 2, 2);

@@ -1,3 +1,9 @@
+2025-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def,
+	  src/z80/gen.c:
+	  Clearly distinguish between 0 (iy) and (iy), since these are different operands for tlcs.
+
 2025-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:
