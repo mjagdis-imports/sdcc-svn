@@ -1553,6 +1553,14 @@ replace restart {
 }
 
 replace restart {
+	ld	%2 (sp), %1
+	ld	%1, %2 (sp)
+} by {
+	ld	%2 (sp), %1
+	; common peephole 98b removed redundant load of %1 from %2 (sp)
+}
+
+replace restart {
 	ld	%1, a
 	ld	a, %2
 	or	a, %1

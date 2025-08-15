@@ -1,5 +1,11 @@
 2025-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Some optimizations for Rabbits and TLCS.
+
+2025-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c:
 	  Fix an eZ80 / TLCS pointer read bug.
 
