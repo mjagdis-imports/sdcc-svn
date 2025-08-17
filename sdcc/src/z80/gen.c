@@ -12786,7 +12786,16 @@ genAnd (const iCode *ic, iCode *ifx)
         (left->aop->regs[L_IDX] <= i && left->aop->regs[H_IDX] <= i && right->aop->regs[L_IDX] <= i && right->aop->regs[H_IDX] <= i) &&
         (result->aop->regs[L_IDX] < 0 || result->aop->regs[L_IDX] >= i) && (result->aop->regs[H_IDX] < 0 || result->aop->regs[H_IDX] >= i);
 
-      genMove_o (result->aop, i, ASMOP_A, 0, 1, true, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
+      if (IS_RAB && aopInReg (result->aop, i, L_IDX) && i + 1 < size && aopInReg (result->aop, i + 1, H_IDX) &&
+        (aopIsLitVal (left->aop, i + 1, 1, 0x00) || aopIsLitVal (right->aop, i + 1, 1, 0x00)))
+        {
+          emit3w (A_BOOL, ASMOP_HL, 0);
+          genMove_o (result->aop, i, ASMOP_A, 0, 1, true, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
+          i += 2;
+          continue;
+        }
+      else
+        genMove_o (result->aop, i, ASMOP_A, 0, 1, true, hl_free, !isPairInUse (PAIR_DE, ic), true, true);
 
       if (aopInReg (result->aop, i, A_IDX))
         a_free = false;
@@ -13882,17 +13891,15 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
   int size = 2;
   symbol *tlbl;
 
-  if (IS_RAB && !is_signed && shCount < 4 &&
-    (getPairId (result->aop) == PAIR_HL || getPairId (result->aop) == PAIR_DE))
+  wassert (shCount >= 0 && shCount <= 16);
+
+  if (IS_RAB && !is_signed && shCount < 4 && (aopInReg (result->aop, 0, HL_IDX) || aopInReg (result->aop, 0, DE_IDX)))
     {
-      bool op_de = (getPairId (result->aop) == PAIR_DE);
-      fetchPairLong (getPairId (result->aop), left->aop, ic, offl);
+      genMove (ic->result->aop, left->aop, isRegDead (A_IDX, ic), isRegDead (HL_IDX, ic), isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
       while (shCount--)
         {
           emit3 (A_CP, ASMOP_A, ASMOP_A);
-          cost (1, 2);
-          emit2 (op_de? "rr de" : "rr hl");
-          cost (1, 2);
+          emit3w (A_RR, ic->result->aop, 0);
         }
       return;
     }
@@ -13917,15 +13924,6 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
           cost2 (2, 2, -1, -1, 15, 6, 10, 10, 16, 8, -1, -1, -1, 5, 5);
         }
       return;
-    }
-  else if (IS_RAB && !is_signed && shCount < 4 && (aopInReg (result->aop, 0, HL_IDX) || aopInReg (result->aop, 0, DE_IDX)))
-    {
-      genMove (ic->result->aop, left->aop, isRegDead (A_IDX, ic), isRegDead (HL_IDX, ic), isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
-      while (shCount--)
-        {
-          emit3 (A_CP, ASMOP_A, ASMOP_A);
-          emit3w (A_RR, ic->result->aop, 0);
-        }
     }
   else if (IS_RAB && !is_signed && shCount >= 2 && isPairDead (PAIR_HL, ic) &&
       ((isPair (left->aop) && getPairId (left->aop) == PAIR_HL || isPair (result->aop)
@@ -13996,8 +13994,6 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
 
   if (shCount == 0)
     return;
-
-  /*  if (result->aop->type == AOP_REG) { */
 
   /* Left is already in result - so now do the shift */
   /* Optimizing for speed by default. */

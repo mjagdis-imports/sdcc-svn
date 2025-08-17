@@ -649,6 +649,17 @@ z80MightRead(const lineNode *pl, const char *what)
   if((IS_R3KA || IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "lsdr") || lineIsInst (pl, "lidr") || lineIsInst (pl, "lsddr") || lineIsInst (pl, "lsidr"))
     return(strchr("bcdehl", *what));
 
+  if ((IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "clr"))
+    return(false);
+
+  if((IS_R4K || IS_R5K || IS_R6K) && (!strcmp(pl->line, "ex\tbc, hl") || !strcmp(pl->line, "ex\tbc,hl")))
+    return(!strcmp(what, "h") || !strcmp(what, "l") || !strcmp(what, "b") || !strcmp(what, "c"));
+  if((IS_R4K || IS_R5K || IS_R6K) && (!strcmp(pl->line, "ex\tjk, hl") || !strcmp(pl->line, "ex\tjk,hl")))
+    return(!strcmp(what, "h") || !strcmp(what, "l") || !strcmp(what, "j") || !strcmp(what, "k"));
+
+  if ((IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "test"))
+    return (argCont (larg, what));
+
   if(IS_EZ80 && lineIsInst (pl, "lea") ||
     IS_TLCS90 && lineIsInst (pl, "lda"))
     return(argCont(rarg, what) || argCont(lineArg (pl, 2), what));
