@@ -54,7 +54,7 @@
 #elif defined(__SDCC_pic16)
 #include <asm/pic16/features.h>
 
-#elif defined(__SDCC_f8)
+#elif defined(__SDCC_f8) || defined(__SDCC_f8l)
 #include <asm/f8/features.h>
 
 #else

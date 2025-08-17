@@ -1,7 +1,16 @@
+2025-08-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge f8l branch.
+
 2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* lib/variables.mk:
 	  Enable regression testing for r4k, r5k, r6k port.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* lib/variables.mk:
+	  Enable f8l regression testing.
 
 2024-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
