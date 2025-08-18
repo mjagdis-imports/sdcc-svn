@@ -1,7 +1,16 @@
+2025-08-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge f8l branch.
+
 2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* index.php:
 	  Announce work-in-progress Rabbit 4000, 5000, 6000 support.
+
+2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* index.php:
+	  Announce work-in-progress f8l support.
 
 2025-02-07 Benedikt Freisen <b.freisen AT gmx.net>
 
