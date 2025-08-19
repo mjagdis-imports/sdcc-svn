@@ -1,6 +1,12 @@
 2025-08-19 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve IFX codegen, in particular for Rabbits.
+
+2025-08-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
 	  src/SDCCgenconstprop.cc,
 	  src/z80/peeph.def:
 	  Improve use of 16-bit instructions, mostly for Rabbits, eZ80 and TLCS.

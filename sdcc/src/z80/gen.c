@@ -17328,7 +17328,13 @@ genIfx (iCode *ic, iCode *popIc)
   aopOp (cond, ic, FALSE, TRUE);
 
   /* Special case: Condition is bool */
-  if (IS_BOOL (operandType (cond)) && !aopInReg (cond->aop, 0, A_IDX) && !aopInReg (cond->aop, 0, IYL_IDX) && !aopInReg (cond->aop, 0, IYH_IDX))
+  if (cond->aop->size == 1 && aopInReg (cond->aop, 0, A_IDX))
+    {
+      emit3 (A_OR, ASMOP_A, ASMOP_A);
+      genIfxJump (ic, "nz");
+      goto release;
+    }
+  else if (IS_BOOL (operandType (cond)) && !aopInReg (cond->aop, 0, IYL_IDX) && !aopInReg (cond->aop, 0, IYH_IDX))
     {
       if (!regalloc_dry_run)
         {
@@ -17339,7 +17345,8 @@ genIfx (iCode *ic, iCode *popIc)
       goto release;
     }
   else if (cond->aop->size == 1 && !isRegDead (A_IDX, ic) &&
-    (aopInReg (cond->aop, 0, B_IDX) || aopInReg (cond->aop, 0, C_IDX) || aopInReg (cond->aop, 0, D_IDX) || aopInReg (cond->aop, 0, E_IDX) || aopInReg (cond->aop, 0, H_IDX) || aopInReg (cond->aop, 0, L_IDX)))
+    (aopInReg (cond->aop, 0, B_IDX) || aopInReg (cond->aop, 0, C_IDX) || aopInReg (cond->aop, 0, D_IDX) || aopInReg (cond->aop, 0, E_IDX) || aopInReg (cond->aop, 0, H_IDX) || aopInReg (cond->aop, 0, L_IDX) ||
+    HAS_IYL_INST && (aopInReg (cond->aop, 0, IYL_IDX) || aopInReg (cond->aop, 0, IYH_IDX))))
     {
       emit3 (A_INC, cond->aop, 0);
       emit3 (A_DEC, cond->aop, 0);
@@ -17350,6 +17357,35 @@ genIfx (iCode *ic, iCode *popIc)
     {
       emit2 ("test %s", _pairs[getPairId (cond->aop)].name);
       cost (2, 4);
+      genIfxJump (ic, "nz");
+      goto release;
+    }
+  else if (IS_RAB && cond->aop->size == 2 &&
+    (isRegDead (HL_IDX, ic) && (aopInReg (cond->aop, 0, L_IDX) && aopInReg (cond->aop, 1, H_IDX) || aopInReg (cond->aop, 0, H_IDX) && aopInReg (cond->aop, 1, L_IDX)) ||
+    isRegDead (IY_IDX, ic) && (aopInReg (cond->aop, 0, IYL_IDX) && aopInReg (cond->aop, 1, IYH_IDX) || aopInReg (cond->aop, 0, IYH_IDX) && aopInReg (cond->aop, 1, IYL_IDX))))
+    {
+      emit3w (A_BOOL, (aopInReg (cond->aop, 0, L_IDX) || aopInReg (cond->aop, 0, H_IDX)) ? ASMOP_HL : ASMOP_IY, 0);
+      genIfxJump (ic, "nz");
+      goto release;
+    }
+  else if (IS_RAB && cond->aop->size == 2 && !isRegDead (A_IDX, ic) &&
+    ((aopInReg (cond->aop, 0, L_IDX) && aopInReg (cond->aop, 1, H_IDX) || aopInReg (cond->aop, 0, H_IDX) && aopInReg (cond->aop, 1, L_IDX)) ||
+    (aopInReg (cond->aop, 0, E_IDX) && aopInReg (cond->aop, 1, D_IDX) || aopInReg (cond->aop, 0, D_IDX) && aopInReg (cond->aop, 1, E_IDX)) ||
+    (aopInReg (cond->aop, 0, IYL_IDX) && aopInReg (cond->aop, 1, IYH_IDX) || aopInReg (cond->aop, 0, IYH_IDX) && aopInReg (cond->aop, 1, IYL_IDX))))
+    {
+      asmop *caop = (aopInReg (cond->aop, 0, L_IDX) || aopInReg (cond->aop, 0, H_IDX)) ? ASMOP_HL : (aopInReg (cond->aop, 0, E_IDX) || aopInReg (cond->aop, 0, D_IDX)) ? ASMOP_DE : ASMOP_IY;
+      if (getPairId (caop) != PAIR_DE)
+        emit3w (A_ADD, caop, cond->aop);
+      else
+        emit3w (A_RL, ASMOP_DE, 0);
+      emit3w (A_RR, caop, 0);
+      genIfxJump (ic, "nz");
+      goto release;
+    }
+  else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && cond->aop->size == 4 && isRegDead (HL_IDX, ic) &&
+    (aopInReg (cond->aop, 0, HL_IDX) && aopInReg (cond->aop, 2, DE_IDX) || aopInReg (cond->aop, 0, DE_IDX) && aopInReg (cond->aop, 2, HL_IDX)))
+    {
+      emit3w (A_OR, ASMOP_HL, ASMOP_DE);
       genIfxJump (ic, "nz");
       goto release;
     }
@@ -17369,19 +17405,6 @@ genIfx (iCode *ic, iCode *popIc)
       genIfxJump (ic, "nz");
       goto release;
     }
-  else if (IS_RAB && (getPairId (cond->aop) == PAIR_HL || getPairId (cond->aop) == PAIR_IY) && isPairDead (getPairId (cond->aop), ic))
-    {
-      emit3w (A_BOOL, cond->aop, 0);
-      genIfxJump (ic, "nz");
-      goto release;
-    }
-  else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && cond->aop->size == 4 && isRegDead (HL_IDX, ic) &&
-    (aopInReg (cond->aop, 0, HL_IDX) && aopInReg (cond->aop, 2, DE_IDX) || aopInReg (cond->aop, 0, DE_IDX) && aopInReg (cond->aop, 2, HL_IDX)))
-    {
-      emit3w (A_OR, ASMOP_HL, ASMOP_DE);
-      genIfxJump (ic, "nz");
-      goto release;
-    }
   else if ((IS_RAB || IS_TLCS870C || IS_TLCS870C1) && cond->aop->size == 4 && isRegDead (IY_IDX, ic) &&
     (aopInReg (cond->aop, 0, HL_IDX) && aopInReg (cond->aop, 2, IY_IDX) || aopInReg (cond->aop, 0, DE_IDX) && aopInReg (cond->aop, 2, IY_IDX)))
     {
@@ -17396,6 +17419,10 @@ genIfx (iCode *ic, iCode *popIc)
       genIfxJump (ic, "nz");
       goto release;
     }
+
+  if (!isRegDead (A_IDX, ic))
+    UNIMPLEMENTED;
+
   /* get the value into acc */
   else if (cond->aop->type != AOP_CRY)
     _toBoolean (cond, !popIc);

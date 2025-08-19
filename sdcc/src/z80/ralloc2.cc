@@ -557,6 +557,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if(ic->op == '~' || ic->op == IPUSH || ic->op == SEND || ic->op == LABEL || ic->op == GOTO ||
     ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
     ic->op == GETBYTE || ic->op == GETWORD ||
+    ic->op == IFX ||
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     ic->op == LEFT_OP ||
     ic->op == RECEIVE || ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
@@ -593,16 +594,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
         (operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G) || !result_in_A))
         return(true);
     }
-
-  // First two bytes of input may be in A.
-  if(ic->op == IFX && dying_A && (getSize(operandType(left)) >= 1 &&
-    operand_byte_in_reg(left, 0, REG_A, a, i, G) || getSize(operandType(left)) >= 2 && !IS_FLOAT (operandType(left)) && operand_byte_in_reg(left, 1, REG_A, a, i, G)))
-    return(true);
-
-  // Can test register via inc / dec.
-  if(ic->op == IFX && getSize(operandType(left)) == 1 &&
-    (operand_byte_in_reg(left, 0, REG_B, a, i, G) || operand_byte_in_reg(left, 0, REG_C, a, i, G) || operand_byte_in_reg(left, 0, REG_D, a, i, G) || operand_byte_in_reg(left, 0, REG_E, a, i, G) || operand_byte_in_reg(left, 0, REG_H, a, i, G) || operand_byte_in_reg(left, 0, REG_L, a, i, G)))
-    return(true);
 
   // Last byte of output may be in A.
   if(ic->op == GET_VALUE_AT_ADDRESS && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))
@@ -649,8 +640,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   // Last use of operand in A.
   if(input_in_A && dying_A)
     {
-      if(ic->op != IFX &&
-        ic->op != RETURN &&
+      if(ic->op != RETURN &&
         !((ic->op == RIGHT_OP || ic->op == LEFT_OP) &&
           (IS_OP_LITERAL(right) || operand_in_reg(right, REG_A, ia, i, G) || getSize(operandType(IC_RESULT(ic))) == 1 && ia.registers[REG_B][1] < 0)) &&
         !((ic->op == '=' || ic->op == CAST) && !(IY_RESERVED && POINTER_SET(ic))) &&
@@ -662,9 +652,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
         }
     }
   // A is used, and has to be preserved for later use.
-  else if(input_in_A &&
-         ic->op != IFX &&
-         ic->op != JUMPTABLE)
+  else if(input_in_A && ic->op != JUMPTABLE)
     {
       //std::cout << "Intermediate use: Dropping at " << i << ", " << ic->key << "(" << int(ic->op) << "\n";
       return(false);
