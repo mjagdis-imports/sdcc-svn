@@ -1,3 +1,10 @@
+2025-08-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/SDCCgenconstprop.cc,
+	  src/z80/peeph.def:
+	  Improve use of 16-bit instructions, mostly for Rabbits, eZ80 and TLCS.
+
 2025-08-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc/src/z80/gen.c,
