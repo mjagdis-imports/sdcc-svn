@@ -1559,6 +1559,10 @@ emit3wCost (enum asminst inst, const asmop *op1, int offset1, const asmop *op2, 
       wassert (IS_RAB);
       cost (1 + (aopInReg (op1, offset1, BC_IDX) || aopInReg (op1, offset1, IY_IDX)), 2 + 2 * (aopInReg (op1, offset1, BC_IDX) || aopInReg (op1, offset1, IY_IDX)));
       return;
+    case A_SWAP:
+      wassert (IS_R6K);
+      cost (2, 4);
+      return;
     case A_XOR:
       if (op2->type == AOP_LIT || op2->type == AOP_IMMD)
         cost2 (-1, 3, -1, 4, -1, -1, -1, -1, -1, 6, -1, 4, 4, -1, -1);
