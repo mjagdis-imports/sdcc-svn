@@ -208,6 +208,7 @@ getOperandValinfo (const iCode *ic, const operand *op)
         litval = ullFromVal (list2expr (OP_SYMBOL_CONST (op)->ival)->opval.val);
       v2.anything = false;
       v2.nothing = false;
+      v2.nonnull = litval;
       v2.min = litval;
       v2.max = litval;
       v2.knownbitsmask = ~0ull;
