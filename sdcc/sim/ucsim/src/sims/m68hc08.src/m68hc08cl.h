@@ -80,6 +80,20 @@ public:
 };
 
 
+class cl_s08: public cl_hc08
+{
+public:
+  cl_s08(struct cpu_entry *Itype, class cl_sim *asim);
+};
+
+
+class cl_9s08: public cl_s08
+{
+public:
+  cl_9s08(struct cpu_entry *Itype, class cl_sim *asim);
+};
+
+
 enum hc08cpu_confs
   {
    hc08cpu_sp_limit	= 0,
