@@ -11980,6 +11980,8 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
   /* if the right side is a literal then anything goes */
   else if (right->aop->type == AOP_LIT)
     {
+      if (!isRegDead (A_IDX, ic) || left->aop->regs[A_IDX] >= 0) // TODO: More fine-grained control!
+        UNIMPLEMENTED;
       while (size)
         {
           bool pushed_hl = false;
@@ -12043,7 +12045,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
             byteOfVal (right->aop->aopu.aop_lit, offset) <= 127 && !byteOfVal (right->aop->aopu.aop_lit, offset + 1))
             {
               emit2 ("cp hl, #%d", byteOfVal (right->aop->aopu.aop_lit, offset));
-              cost (3, 6); // Same cycle count for the Rabbits and TLCs-90
+              cost (3, 6); // Same cycle count for the Rabbits and TLCS-90
               offset++;
               size -= 2;
               a_result = false;
@@ -12093,6 +12095,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
     {
       while (size--)
         {
+          bool a_dead = isRegDead (A_IDX, ic) && left->aop->regs[A_IDX] < offset && right->aop->regs[A_IDX] < offset;
           bool bc_dead = isRegDead (BC_IDX, ic) && left->aop->regs[C_IDX] < offset && left->aop->regs[B_IDX] < offset && right->aop->regs[C_IDX] < offset && right->aop->regs[B_IDX] < offset;
           bool de_dead = isRegDead (DE_IDX, ic) && left->aop->regs[E_IDX] < offset && left->aop->regs[D_IDX] < offset && right->aop->regs[E_IDX] < offset && right->aop->regs[D_IDX] < offset;
           bool hl_dead = isRegDead (HL_IDX, ic) && left->aop->regs[L_IDX] < offset && left->aop->regs[H_IDX] < offset && right->aop->regs[L_IDX] < offset && right->aop->regs[H_IDX] < offset;
@@ -12105,39 +12108,59 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               left = t;
             }
 
-          if (!IS_SM83 && isRegDead (HL_IDX, ic) &&
-            (aopInReg (left->aop, offset, HL_IDX) && (aopInReg (right->aop, offset, BC_IDX) || aopInReg (right->aop, offset, DE_IDX) || bc_dead || de_dead)))
+          if (aopInReg (left->aop, offset, HL_IDX) &&
+            ((!IS_SM83 && isRegDead (HL_IDX, ic) && (aopInReg (right->aop, offset, BC_IDX) || aopInReg (right->aop, offset, DE_IDX) || bc_dead || de_dead)) ||
+            (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (right->aop, offset, DE_IDX) ||
+            (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && aopInReg (right->aop, offset, JK_IDX) ||
+            (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (right->aop, offset, BC_IDX)))
             {
               asmop *rightpairaop;
               if (aopInReg (right->aop, offset, BC_IDX))
                 rightpairaop = ASMOP_BC;
               else if (aopInReg (right->aop, offset, DE_IDX))
                 rightpairaop = ASMOP_DE;
+              else if (aopInReg (right->aop, offset, JK_IDX))
+                rightpairaop = ASMOP_JK;
               else
                 rightpairaop = de_dead ? ASMOP_DE : ASMOP_BC;
 
-              fetchPairLong (PAIR_HL, left->aop, ic, offset);
-              genMove_o (rightpairaop, 0, right->aop, offset, 2, true, false, false, iy_dead, true);
-              emit3 (A_CP, ASMOP_A, ASMOP_A);
-              emit3w (A_SBC, ASMOP_HL, rightpairaop);
+              genMove_o (rightpairaop, 0, right->aop, offset, 2, a_dead, false, false, iy_dead, true);
+              if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (rightpairaop, 0, DE_IDX) ||
+                (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && aopInReg (right->aop, offset, JK_IDX) ||
+                (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (right->aop, offset, BC_IDX))
+                emit3w (A_CP, ASMOP_HL, rightpairaop);
+              else
+                {
+                  emit3 (A_CP, ASMOP_A, ASMOP_A);
+                  emit3w (A_SBC, ASMOP_HL, rightpairaop);
+                }
               emitJP (lbl, "nz", 0.5f, false);
               spillPair (PAIR_HL);
               offset += 2;
               size--;
               continue;
             }
-          else if ((IS_RAB || IS_EZ80) && hl_dead && (de_dead || bc_dead) && aopOnStack (left->aop, offset, 2) && aopOnStack (right->aop, offset, 2)) // Rabbits and eZ80 have efficient 16-bit load from stack.
+          else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_EZ80) && hl_dead && (de_dead || bc_dead) && aopOnStack (left->aop, offset, 2) && aopOnStack (right->aop, offset, 2)) // Rabbits and eZ80 have efficient 16-bit load from stack.
             {
               asmop *rightpairaop = de_dead ? ASMOP_DE : ASMOP_BC;
-              genMove_o (rightpairaop, 0, right->aop, offset, 2, true, true, false, iy_dead, true);
-              genMove_o (ASMOP_HL, 0, left->aop, offset, 2, true, true, false, iy_dead, true);
-              emit3 (A_CP, ASMOP_A, ASMOP_A);
-              emit3w (A_SBC, ASMOP_HL, rightpairaop);
+              genMove_o (rightpairaop, 0, right->aop, offset, 2, a_dead, true, false, iy_dead, true);
+              genMove_o (ASMOP_HL, 0, left->aop, offset, 2, a_dead, true, false, iy_dead, true);
+              if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (rightpairaop, 0, DE_IDX) ||
+                (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (right->aop, offset, BC_IDX))
+                emit3w (A_CP, ASMOP_HL, rightpairaop);
+              else
+                {
+                  emit3 (A_CP, ASMOP_A, ASMOP_A);
+                  emit3w (A_SBC, ASMOP_HL, rightpairaop);
+                }
               emitJP (lbl, "nz", 0.5f, false);
               offset += 2;
               size--;
               continue;
             }
+
+          if (!a_dead && !aopInReg (left->aop, offset, A_IDX))
+            UNIMPLEMENTED;
 
           genMove_o (ASMOP_A, 0, left->aop, offset, 1, true, hl_dead, de_dead, iy_dead, true);
 
@@ -12151,14 +12174,14 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               if (!hl_dead)
                 _push (PAIR_HL);
               genMove_o (ASMOP_HL, 0, right->aop, 0, 2, false, true, false, false, true);
-              emit3 (A_SUB, ASMOP_A, offset ? ASMOP_H : ASMOP_L);
+              emit3 (isRegDead (A_IDX, ic) ? A_SUB : A_CP, ASMOP_A, offset ? ASMOP_H : ASMOP_L);
               if (!hl_dead)
                 _pop (PAIR_HL);
               emitJP (lbl, "nz", 0.5f, false);
             }
           else
             {
-              emit3_o (A_SUB, ASMOP_A, 0, right->aop, offset);
+              emit3_o (isRegDead (A_IDX, ic) ? A_SUB : A_CP, ASMOP_A, 0, right->aop, offset);
               emitJP (lbl, "nz", 0.5f, false);
             }
           offset++;
@@ -12167,6 +12190,8 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
   /* right is in direct space or a pointer reg, need both a & b */
   else
     {
+      if (!isRegDead (A_IDX, ic))
+        UNIMPLEMENTED;
       PAIR_ID pair;
       for (pair = PAIR_BC; pair <= PAIR_HL; pair++)
         {
@@ -12207,7 +12232,6 @@ gencjne (operand *left, operand *right, symbol *lbl, const iCode *ic)
   emitJP (tlbl, NULL, 1.0f, true);
   emitLabelSpill (lbl);
   emit3 (A_XOR, ASMOP_A, ASMOP_A);
-  regalloc_dry_run_cost += 4; // todo: improve accuracy
   emitLabel (tlbl);
   _pop (pop);
 }
@@ -12295,6 +12319,8 @@ genCmpEq (iCode *ic, iCode *ifx)
     }
   else
     {
+      if (!isRegDead (A_IDX, ic))
+        UNIMPLEMENTED;
       gencjne (left, right, regalloc_dry_run ? 0 : newiTempLabel (NULL), ic);
       if (result->aop->type == AOP_CRY && result->aop->size)
         {
