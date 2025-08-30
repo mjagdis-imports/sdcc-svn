@@ -567,7 +567,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))
     return(true);
 
-  // Can use non-destructive cp on == and < (> might swap operands).
+  // Can use non-destructive cp on < (> might swap operands).
   if(((ic->op == '<' || ic->op == '>') && SPEC_USIGN(getSpec(operandType(left))) && SPEC_USIGN(getSpec(operandType(right)))) &&
     getSize(operandType(IC_LEFT(ic))) == 1 && ifxForOp (IC_RESULT(ic), ic) && operand_in_reg(left, REG_A, ia, i, G) &&
     (IS_OP_LITERAL (right) || operand_in_reg(right, REG_C, ia, i, G) || operand_in_reg(right, REG_B, ia, i, G) || operand_in_reg(right, REG_E, ia, i, G) || operand_in_reg(right, REG_D, ia, i, G) || operand_in_reg(right, REG_H, ia, i, G) || operand_in_reg(right, REG_L, ia, i, G)))
@@ -591,6 +591,11 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
         (operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G) || !result_in_A))
         return(true);
     }
+
+  // codegen for small reads can handle anything.
+  if(ic->op == GET_VALUE_AT_ADDRESS && IS_OP_LITERAL(left) && IS_OP_LITERAL(right) && ulFromVal (OP_VALUE_CONST (right)) == 0 &&
+    (getSize(operandType(ic->result)) == 1 || !IS_SM83 && getSize(operandType(ic->result)) == 2 && operand_is_pair(result, a, i, G)))
+    return(true);
 
   // Last byte of output may be in A.
   if(ic->op == GET_VALUE_AT_ADDRESS && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))

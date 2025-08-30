@@ -1,5 +1,11 @@
 2025-08-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve pointer read codegen.
+
+2025-08-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c:
 	  Improve equality comparison codegen.
 

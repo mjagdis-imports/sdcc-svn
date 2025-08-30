@@ -15599,20 +15599,23 @@ genUnpackBits (operand *result, int offset, int blen, int bstr)
 
   if (offset < rsize)
     {
-      asmop *source;
-
+      rsize -= offset;
       if (SPEC_USIGN (etype))
-        source = ASMOP_ZERO;
+        genMove_o (result->aop, offset, ASMOP_ZERO, 0, rsize, true, false, false, false, true);
       else
         {
-          /* signed bit-field: sign extension with 0x00 or 0xff */
+          // signed bit-field: sign extension with 0x00 or 0xff
           emit3 (A_RLA, 0, 0);
-          emit3 (A_SBC, ASMOP_A, ASMOP_A);
-          source = ASMOP_A;
+
+          if (!IS_SM83 && !IS_TLCS870 && rsize == 2 && aopInReg (result->aop, offset, HL_IDX))
+            emit3w (A_SBC, ASMOP_HL, ASMOP_HL);
+          else
+            {
+              emit3 (A_SBC, ASMOP_A, ASMOP_A);
+              while (rsize--)
+                cheapMove (result->aop, offset++, ASMOP_A, 0, true);
+            }
         }
-      rsize -= offset;
-      while (rsize--)
-        cheapMove (result->aop, offset++, source, 0, true);
     }
 }
 
@@ -15735,6 +15738,8 @@ genPointerGet (const iCode *ic)
 
   if (IS_SM83 && size == 1 && left->aop->type == AOP_LIT && (((unsigned long)(operandLitValue (left) + rightval) & 0xff00) == 0xff00) && isRegDead (A_IDX, ic)) // SM83 has special instructions for address range 0xff00 - 0xffff.
     {
+      if (surviving_a)
+        _push (PAIR_AF), pushed_a = true;
       emit2 ("ldh a, !mems", aopGetLitWordLong (left->aop, rightval, true));
       cost (2, 12);
       if (bit_field)
@@ -15746,6 +15751,8 @@ genPointerGet (const iCode *ic)
   if ((left->aop->type == AOP_IMMD || left->aop->type == AOP_LIT && !rightval) && size == 1 && aopInReg (result->aop, 0, A_IDX) &&
     (!from_far || IS_EZ80 || IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET))
     {
+      if (surviving_a)
+        _push (PAIR_AF), pushed_a = true;
       if (from_far)
         {
           if (IS_EZ80)
