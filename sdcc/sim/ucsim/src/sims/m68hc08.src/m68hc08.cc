@@ -109,7 +109,7 @@ cl_hc08::reset(void)
 const char *
 cl_hc08::id_string(void)
 {
-  return("unspecified HC08");
+  return("HC08");
 }
 
 
@@ -729,6 +729,12 @@ cl_s08::cl_s08(struct cpu_entry *Itype, class cl_sim *asim):
 {
 }
 
+const char *
+cl_s08::id_string(void)
+{
+  return("HCS08");
+}
+
 
 /*
  * 9S08
@@ -737,6 +743,76 @@ cl_s08::cl_s08(struct cpu_entry *Itype, class cl_sim *asim):
 cl_9s08::cl_9s08(struct cpu_entry *Itype, class cl_sim *asim):
   cl_s08(Itype, asim)
 {
+}
+
+const char *
+cl_9s08::id_string(void)
+{
+  return("9S08");
+}
+
+void
+cl_9s08::mk_hw_elements(void)
+{
+  cl_s08::mk_hw_elements();
+  add_hw(mmu= new cl_mmu(this));
+  mmu->init();
+}
+
+void
+cl_9s08::make_memories(void)
+{
+  class cl_address_space *as;
+
+  cl_s08::make_memories();
+
+  las= as= new cl_address_space("las", 0, 0x20000, 8);
+  as->init();
+  address_spaces->add(as);
+
+  class cl_address_decoder *ad;
+
+  las_chip= new cl_chip8("las_chip", 0x20000, 8);
+  las_chip->init();
+  memchips->add(las_chip);
+  ad= new cl_address_decoder(las, las_chip, 0, 0x1ffff, 0);
+  ad->init();
+  las->decoders->add(ad);
+  ad->activate(0);
+
+  rom->undecode_area(NULL, 0x2080, 0x3fff, NULL);
+  ad= new cl_address_decoder(rom, las_chip, 0x2080, 0x3fff, 0x2080);
+  ad->init();
+  rom->decoders->add(ad);
+  ad->activate(0);
+
+  rom->undecode_area(NULL, 0x4000, 0x7fff, NULL);
+  ad= new cl_address_decoder(rom, las_chip, 0x4000, 0x7fff, 0x4000);
+  ad->init();
+  rom->decoders->add(ad);
+  ad->activate(0);
+  
+  rom->undecode_area(NULL, 0x8000, 0xbfff, NULL);
+  class cl_banker *b;
+  b= new cl_banker(rom, 0x78, 7,
+		   rom, 0x8000, 0xbfff);
+  b->init();
+  b->add_bank(0, las_chip, 0x00000);
+  b->add_bank(1, las_chip, 0x04000);
+  b->add_bank(2, las_chip, 0x08000);
+  b->add_bank(3, las_chip, 0x0c000);
+  b->add_bank(4, las_chip, 0x10000);
+  b->add_bank(5, las_chip, 0x14000);
+  b->add_bank(6, las_chip, 0x18000);
+  b->add_bank(7, las_chip, 0x1c000);
+  rom->decoders->add(b);
+  b->activate(0);
+  
+  rom->undecode_area(NULL, 0xc000, 0xffff, NULL);
+  ad= new cl_address_decoder(rom, las_chip, 0xc000, 0xffff, 0xc000);
+  ad->init();
+  rom->decoders->add(ad);
+  ad->activate(0);
 }
 
 
@@ -792,5 +868,14 @@ cl_hc08_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
   return cell->get();
 }
 
+
+/*
+ * Memory Management Unit
+ */
+
+cl_mmu::cl_mmu(class cl_uc *auc):
+  cl_hw(auc, (enum hw_cath)HW_MMU, 0, "mmu")
+{
+}
 
 /* End of m68hc08.src/m68hc08.cc */

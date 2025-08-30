@@ -1,3 +1,12 @@
+2025-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  .version,
+	  doc/sdccman.lyx:
+	  Fix bug #3871.
+	* device/lib/realloc.c:
+	  Document a realloc implementation choice.
+
 2025-08-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
