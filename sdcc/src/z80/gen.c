@@ -11980,12 +11980,21 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
   /* if the right side is a literal then anything goes */
   else if (right->aop->type == AOP_LIT)
     {
-      if (!isRegDead (A_IDX, ic) || left->aop->regs[A_IDX] >= 0) // TODO: More fine-grained control!
+      int skipbyte = -1;
+      
+      offset = 0;
+      if (!isRegDead (A_IDX, ic))
         UNIMPLEMENTED;
       while (size)
         {
+          if (offset == skipbyte)
+            {
+              offset++;
+              continue;
+            }
+
           bool pushed_hl = false;
-          bool next_zero = (size > 1) && !byteOfVal (right->aop->aopu.aop_lit, offset + 1);
+          bool next_zero = (size > 1) && aopIsLitVal (right->aop, (skipbyte != offset + 1) ? offset + 1 : offset + 2, 1, 0x00);
 
           if(requiresHL (left->aop) && left->aop->type != AOP_REG && !isPairDead(PAIR_HL, ic))
             {
@@ -11997,8 +12006,48 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
           bool de_dead = isRegDead (DE_IDX, ic) && left->aop->regs[E_IDX] < offset && left->aop->regs[D_IDX] < offset && right->aop->regs[E_IDX] < offset && right->aop->regs[D_IDX] < offset;
           bool hl_dead = pushed_hl || isRegDead (HL_IDX, ic) && left->aop->regs[L_IDX] < offset && left->aop->regs[H_IDX] < offset && right->aop->regs[L_IDX] < offset && right->aop->regs[H_IDX] < offset;
 
+          if (skipbyte < 0 && left->aop->regs[A_IDX] >= 0) // Handle a early
+            {
+              int i = left->aop->regs[A_IDX];
+              skipbyte = i;
+              if (aopIsLitVal (right->aop, i, 1, 0x00))
+                {
+                  emit3 (A_OR, ASMOP_A, ASMOP_A);
+                  a_result = true;
+                }
+              else if (!isRegDead (A_IDX, ic))
+                {
+                  if (aopIsLitVal (right->aop, i, 1, 0x01))
+                    emit3 (A_DEC, ASMOP_A, 0);
+                  else if (aopIsLitVal (right->aop, i, 1, 0xff))
+                    {
+                      for (int j = 0; size > 1; j++)
+                        if (j == i)
+                          continue;
+                        else if (aopIsLitVal (right->aop, j, 1, 0xff) && (HAS_IYL_INST  || !aopInReg (left->aop, j, IYL_IDX) && !aopInReg (left->aop, j, IYH_IDX)))
+                          {
+                            emit3_o (A_AND, ASMOP_A, 0, left->aop, j);
+                            size--;
+                            offset = j;
+                          }
+                        else
+                          break;
+                      emit3 (A_INC, ASMOP_A, 0);
+                    }
+                  else
+                    emit3_o (A_SUB, ASMOP_A, 0, right->aop, i);
+                  a_result = true;
+                }
+              else
+                {
+                  emit3_o (A_CP, ASMOP_A, 0, right->aop, i);
+                  a_result = false;
+                }
+              size--;
+              next_zero = (size > 1) && aopIsLitVal (right->aop, offset, 1, 0x00);
+            }
           // Test for 0 can be done more efficiently using or
-          if (!byteOfVal (right->aop->aopu.aop_lit, offset))
+          else if (!byteOfVal (right->aop->aopu.aop_lit, offset) && isRegDead (A_IDX, ic))
             {
               if (!a_result)
                 {
@@ -12008,6 +12057,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               else
                 emit3_o (A_OR, ASMOP_A, 0, left->aop, offset);
               size--;
+              offset++;
               a_result = true;
             }
           else if ((aopInReg (left->aop, 0, A_IDX) && isRegDead (A_IDX, ic) ||
@@ -12016,21 +12066,23 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
             {
               emit3_o (A_DEC, left->aop, offset, 0, 0);
               size--;
+              offset++;
               a_result = aopInReg (left->aop, 0, A_IDX);
             }
           else if (isRegDead (A_IDX, ic) && left->aop->regs[A_IDX] < offset && size >= 2 && byteOfVal (right->aop->aopu.aop_lit, offset) == 0xff &&
-            (left->aop->type == AOP_REG || left->aop->type == AOP_STK) &&
+            (left->aop->type == AOP_REG || left->aop->type == AOP_STK) && skipbyte != offset + 1 &&
             byteOfVal (right->aop->aopu.aop_lit, offset) == byteOfVal (right->aop->aopu.aop_lit, offset + 1))
             {
               cheapMove (ASMOP_A, 0, left->aop, offset, true);
-              while (byteOfVal (right->aop->aopu.aop_lit, offset + 1) == 0xff && size > 1)
+              while (byteOfVal (right->aop->aopu.aop_lit, offset + 1) == 0xff && size > 1 && skipbyte != offset + 1)
                 {
                   emit3_o (A_AND, ASMOP_A, 0, left->aop, ++offset);
                   size--;
                 }
               emit3 (A_INC, ASMOP_A, 0);
               size--;
-              next_zero = (size > 1) && !byteOfVal (right->aop->aopu.aop_lit, offset + 1);
+              offset++;
+              next_zero = (size > 1) && !byteOfVal (right->aop->aopu.aop_lit, offset);
               a_result = true;
             }
           else if ((aopInReg (left->aop, 0, A_IDX) && isRegDead (A_IDX, ic) ||
@@ -12039,28 +12091,38 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
             {
               emit3_o (A_INC, left->aop, offset, 0, 0);
               size--;
+              offset++;
               a_result = aopInReg (left->aop, 0, A_IDX);
             }
-          else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90) && size >= 2 && aopInReg (left->aop, offset, HL_IDX) && // tlcs870c(1) has cp rr, nn, but it is expensive (4 bytes).
+          else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90) && size >= 2 && skipbyte != offset + 1 &&
+            aopInReg (left->aop, offset, HL_IDX) && // tlcs870c(1) has cp rr, nn, but it is expensive (4 bytes).
             byteOfVal (right->aop->aopu.aop_lit, offset) <= 127 && !byteOfVal (right->aop->aopu.aop_lit, offset + 1))
             {
               emit2 ("cp hl, #%d", byteOfVal (right->aop->aopu.aop_lit, offset));
               cost (3, 6); // Same cycle count for the Rabbits and TLCS-90
-              offset++;
               size -= 2;
+              offset += 2;
               a_result = false;
             }
-          else if (!IS_SM83 && size >= 2 && aopInReg (left->aop, offset, HL_IDX) && isRegDead (HL_IDX, ic) && !next_zero && (de_dead || bc_dead))
+          else if (!IS_SM83 && size >= 2 && skipbyte != offset + 1 && aopInReg (left->aop, offset, HL_IDX) && isRegDead (HL_IDX, ic) && !next_zero && (de_dead || bc_dead))
             {
               asmop *rightpairaop = de_dead ? ASMOP_DE : ASMOP_BC;
               emit3w_o (A_LD, rightpairaop, 0, right->aop, offset);
               emit3 (A_CP, ASMOP_A, ASMOP_A);
               emit3w (A_SBC, ASMOP_HL, rightpairaop);
-              offset++;
               size -= 2;
+              offset += 2;
               a_result = false;
             }
-          else
+          else if (IS_TLCS && !isRegDead (A_IDX, ic) && // tlcs cp r, n is 3 bytes.
+            (aopInReg (left->aop, offset, C_IDX) || aopInReg (left->aop, offset, B_IDX) || aopInReg (left->aop, offset, E_IDX) || aopInReg (left->aop, offset, D_IDX) || aopInReg (left->aop, offset, L_IDX) || aopInReg (left->aop, offset, H_IDX)))
+            {
+              emit3_o (isRegDead (left->aop->aopu.aop_reg[offset]->rIdx, ic) ? A_SUB : A_CP, left->aop, offset, right->aop, offset);
+              size--;
+              offset++;
+              a_result = false;
+            }
+          else if (isRegDead (A_IDX, ic))
             {
               genMove_o (ASMOP_A, 0, left->aop, offset, 1, true, hl_dead, false, false, true);
 
@@ -12071,7 +12133,14 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
               else
                 emit3_o (A_SUB, ASMOP_A, 0, right->aop, offset);
               size--;
+              offset++;
               a_result = true;
+            }
+          else
+            {
+              UNIMPLEMENTED;
+              size--;
+              offset++;
             }
 
           if (pushed_hl)
@@ -12080,7 +12149,6 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
           // Only emit jump now if there is no following test for 0 (which would just or to a current result in a)
           if (!(next_zero && a_result))
             emitJP (lbl, "nz", 0.5f, false);
-          offset++;
         }
     }
   /* if the right side is in a register or

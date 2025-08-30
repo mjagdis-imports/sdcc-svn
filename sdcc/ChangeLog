@@ -1,3 +1,8 @@
+2025-08-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve equality comparison codegen.
+
 2025-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCsymt.c,
@@ -11,7 +16,7 @@
 
 	* src/z80/gen.c,
 	  src/z80/ralloc2.cc:
-	  Improve comparison codegen, in particular for Rabbits and TLCS.
+	  Improve equality comparison codegen, in particular for Rabbits and TLCS.
 
 2025-08-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
