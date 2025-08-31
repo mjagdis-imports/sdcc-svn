@@ -555,9 +555,9 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   // For some iCodes, we can handle anything.
   if(ic->op == '~' || ic->op == IPUSH || ic->op == SEND || ic->op == LABEL || ic->op == GOTO ||
-    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
+    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND || ic->op == UNARYMINUS && IS_FLOAT (operandType (ic->left)) ||
     ic->op == EQ_OP || ic->op == NE_OP ||
-    ic->op == GETBYTE || ic->op == GETWORD ||
+    ic->op == GETABIT || ic->op == GETBYTE || ic->op == GETWORD ||
     ic->op == IFX ||
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     ic->op == LEFT_OP ||
@@ -665,6 +665,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       !POINTER_GET(ic) &&
       ic->op != '+' &&
       ic->op != '-' &&
+      ic->op != UNARYMINUS &&
       (ic->op != '*' || !IS_OP_LITERAL(IC_LEFT(ic)) && !IS_OP_LITERAL(right)) &&
       ic->op != GET_VALUE_AT_ADDRESS &&
       ic->op != '=' &&
