@@ -1,6 +1,13 @@
 2025-08-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c,
+	  support/regression/tests/bug-3873.c,
+	  support/regression/MakeList:
+	  Fix bug #3873.
+
+2025-08-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
 	  src/z80/peeph.def,
 	  src/z80/ralloc2.cc:
 	  Various codegen improvements, in particular for Rabbits.

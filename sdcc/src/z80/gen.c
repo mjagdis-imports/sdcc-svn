@@ -9748,7 +9748,7 @@ genPlus (iCode * ic)
             }
           else
             {
-              bool de_free = de_dead && !aopInReg (ic->right->aop, i + 1, E_IDX) && !aopInReg (ic->right->aop, i + 1, D_IDX);
+              bool de_free = de_dead && ic->right->aop->regs[E_IDX] < i && ic->right->aop->regs[D_IDX] < i;
               genMove_o (ASMOP_HL, 0, ic->left->aop, i, 2, false, true, de_free, false, !started);
               cheapMove (ASMOP_B, 0, ic->right->aop, i + 1, true);
             }
@@ -9763,11 +9763,11 @@ genPlus (iCode * ic)
           if (aopInReg (rightop, i + 1, H_IDX) || aopInReg (rightop, i + 1, L_IDX))
             {
               cheapMove (ASMOP_D, 0, rightop, i + 1, true);
-              genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, de_dead, false, true);
+              genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, false, false, true);
             }
           else
             {
-              bool de_free = de_dead && !aopInReg (ic->right->aop, i + 1, E_IDX) && !aopInReg (ic->right->aop, i + 1, D_IDX);
+              bool de_free = de_dead && ic->right->aop->regs[E_IDX] < i && ic->right->aop->regs[D_IDX] < i;
               genMove_o (ASMOP_HL, 0, ic->left->aop, i, 2, false, true, de_free, false, true);
               cheapMove (ASMOP_D, 0, ic->right->aop, i + 1, true);
             }
