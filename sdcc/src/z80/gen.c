@@ -5522,6 +5522,16 @@ skip_byte:
         {
           PAIR_ID pair = getPairId_o (result, roffset + i);
           _pop (pair);
+          if (i + 3 < n && !assigned[i + 2] && !assigned[i + 3] && getPairId_o (result, roffset + i + 2) != PAIR_INVALID) // Try to do one more pair.
+            {
+              PAIR_ID pair = getPairId_o (result, roffset + i + 2);
+              _pop (pair);
+              _push (pair);
+              assigned[i + 2] = true;
+              assigned[i + 3] = true;
+              size -= 2;
+              i += 2;
+            }
           _push (pair);
           assigned[i] = true;
           assigned[i + 1] = true;
@@ -10194,7 +10204,6 @@ genSub (const iCode *ic, asmop *result, asmop *left, asmop *right)
     UNIMPLEMENTED;
   setupToPreserveCarry (result, left, right);
 
-  /* if literal right, add a, #-lit, else normal subb */
   while (size)
     {
       bool maskedbyte = maskedtopbyte && (size == 1);
@@ -12519,7 +12528,7 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
           bool hl_dead = isRegDead (HL_IDX, ic) && left->aop->regs[L_IDX] < offset && left->aop->regs[H_IDX] < offset && right->aop->regs[L_IDX] < offset && right->aop->regs[H_IDX] < offset;
           bool iy_dead = isRegDead (IY_IDX, ic) && left->aop->regs[IYL_IDX] < offset && left->aop->regs[IYH_IDX] < offset && right->aop->regs[IYL_IDX] < offset && right->aop->regs[IYH_IDX] < offset;
 
-          if (aopInReg (right->aop, offset, A_IDX)  || aopInReg (right->aop, offset, HL_IDX) || aopInReg (left->aop, offset, BC_IDX) || aopInReg (left->aop, offset, DE_IDX))
+          if (aopInReg (right->aop, offset, A_IDX) || aopInReg (right->aop, offset, HL_IDX) || aopInReg (left->aop, offset, BC_IDX) || aopInReg (left->aop, offset, DE_IDX))
             {
               operand *t = right;
               right = left;
@@ -12551,6 +12560,23 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
                 {
                   emit3 (A_CP, ASMOP_A, ASMOP_A);
                   emit3w (A_SBC, ASMOP_HL, rightpairaop);
+                }
+              emitJP (lbl, "nz", 0.5f, false);
+              spillPair (PAIR_HL);
+              offset += 2;
+              size--;
+              continue;
+            }
+          else if (!IS_SM83 && hl_dead && left->aop->type == AOP_STK && (aopInReg (right->aop, offset, DE_IDX) || aopInReg (right->aop, offset, BC_IDX)))
+            {
+              genMove_o (ASMOP_HL, 0, left->aop, offset, 2, a_dead, true, de_dead, iy_dead, true);
+              if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (right->aop, offset, DE_IDX) ||
+                (IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && aopInReg (right->aop, offset, BC_IDX))
+                emit3w_o (A_CP, ASMOP_HL, 0, right->aop, offset);
+              else
+                {
+                  emit3 (A_CP, ASMOP_A, ASMOP_A);
+                  emit3w_o (A_SBC, ASMOP_HL, 0, right->aop, offset);
                 }
               emitJP (lbl, "nz", 0.5f, false);
               spillPair (PAIR_HL);
@@ -12873,13 +12899,20 @@ genAnd (const iCode *ic, iCode *ifx)
             }
           /* Testing for the inverse of the border bits of some 32-bit registers destructively is cheap. */
           /* More combinations would be possible, but this one is the one that is common in the floating-point library. */
-          else if (left->aop->type == AOP_REG && sizel >= 4 && ((lit >> (offset * 8)) & 0xffffffffull) == 0x7fffffffull &&
-            !IS_SM83 && getPairId_o (left->aop, offset) == PAIR_HL && isPairDead (PAIR_HL, ic) &&
-            IS_RAB && getPairId_o (left->aop, offset + 2) == PAIR_DE && isPairDead (PAIR_HL, ic))
+          else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1) && sizel >= 4 && ((lit >> (offset * 8)) & 0xffffffffull) == 0x7fffffffull && isRegDead (HL_IDX, ic) && isRegDead (DE_IDX, ic) &&
+            (aopInReg (left->aop, offset + 3, H_IDX) || aopInReg (left->aop, offset + 3, D_IDX) && !IS_TLCS90) &&
+            left->aop->regs[E_IDX] >= offset && left->aop->regs[E_IDX] < offset + 4 && left->aop->regs[D_IDX] >= offset && left->aop->regs[D_IDX] < offset + 4 &&
+            left->aop->regs[L_IDX] >= offset && left->aop->regs[L_IDX] < offset + 4 && left->aop->regs[H_IDX] >= offset && left->aop->regs[H_IDX] < offset + 4)
             {
-              emit3 (A_CP, ASMOP_A, ASMOP_A); // Clear carry.
-              emit3w (A_ADC, ASMOP_HL, ASMOP_HL); // Cannot use "add hl, hl instead, since it does not affect zero flag.
-              emit3w (A_RL, ASMOP_DE, 0);
+              if (aopInReg (left->aop, 3, H_IDX))
+                emit3w (A_ADD, ASMOP_HL, ASMOP_HL);
+              else if (IS_RAB)
+                {
+                  emit3 (A_CP, ASMOP_A, ASMOP_A); // Clear carry.
+                  emit3w (A_RL, ASMOP_DE, 0);
+                }
+              else
+                emit3w (A_SLA, ASMOP_DE, 0);
               emit3w (A_OR, ASMOP_HL, ASMOP_DE);
               sizel -= 4;
               offset += 4;
@@ -12887,8 +12920,8 @@ genAnd (const iCode *ic, iCode *ifx)
           /* Testing for the inverse of the border bits of some 16-bit registers destructively is cheap. */
           /* More combinations would be possible, but these are the common ones. */
           else if (left->aop->type == AOP_REG && sizel >= 2 && ((lit >> (offset * 8)) & 0xffffull) == 0x7fffull &&
-            (!IS_SM83 && getPairId_o (left->aop, offset) == PAIR_HL && isPairDead (PAIR_HL, ic) ||
-            IS_RAB && getPairId_o (left->aop, offset) == PAIR_DE  && isPairDead (PAIR_DE, ic)))
+            (!IS_SM83 && aopInReg (left->aop, offset, HL_IDX) && isPairDead (PAIR_HL, ic) ||
+            IS_RAB && aopInReg (left->aop, offset, DE_IDX)  && isPairDead (PAIR_DE, ic)))
             {
               PAIR_ID pair;
               switch (left->aop->aopu.aop_reg[offset]->rIdx)
@@ -12906,16 +12939,10 @@ genAnd (const iCode *ic, iCode *ifx)
                   wassertl (0, "Invalid pair");
                 }
               emit3 (A_CP, ASMOP_A, ASMOP_A); // Clear carry.
-              if (pair == PAIR_HL)
-                {
-                  emit2 ("adc %s, %s", _pairs[pair].name, _pairs[pair].name); // Cannot use add hl, hl instead, since it does not affect zero flag.
-                  cost2 (2, 2, -1, 2, 15, 10, 4, 4, -1, 8, -1, 4, 3, 2, 2);
-                }
+              if (aopInReg (left->aop, offset, HL_IDX))
+                emit3w (A_ADC, ASMOP_HL, ASMOP_HL); // Cannot use add hl, hl instead, since it does not affect zero flag.
               else
-                {
-                  emit2 ("rl %s", _pairs[pair].name);
-                  cost (1, 2);
-                }
+                emit3w (A_RL, ASMOP_DE, 0);
               sizel -= 2;
               offset += 2;
             }
@@ -13021,10 +13048,22 @@ genAnd (const iCode *ic, iCode *ifx)
                   emit3 (isLiteralBit (bytelit) == 0 ? A_RRCA : A_RLCA, 0 , 0);
                   jumpcond = "c";
                 }
-              else if (bytelit != 0xffu)
-                emit3_o (A_AND, ASMOP_A, 0, right->aop, offset);
               else
-                emit3 (A_OR, ASMOP_A, ASMOP_A);     /* For the flags */
+                {
+                  bool next_ff = sizel > 1 && aopIsLitVal (right->aop, offset + 1, 1, 0xff) &&
+                    (left->aop->type == AOP_STK || left->aop->type == AOP_REG && (HAS_IYL_INST || !aopInReg (left->aop, offset + 1, IYL_IDX) && !aopInReg (left->aop, offset + 1, IYH_IDX)));
+                  if (bytelit != 0xffu)
+                    emit3_o (A_AND, ASMOP_A, 0, right->aop, offset);
+                  else if (!next_ff)
+                    emit3 (A_OR, ASMOP_A, ASMOP_A); // For the flags
+                  while (next_ff)
+                    {
+                      emit3_o (A_OR, ASMOP_A, 0, left->aop, ++offset);
+                      sizel--;
+                      next_ff = sizel > 1 && aopIsLitVal (right->aop, offset + 1, 1, 0xff) &&
+                        (left->aop->type == AOP_STK || left->aop->type == AOP_REG && (HAS_IYL_INST || !aopInReg (left->aop, offset + 1, IYL_IDX) && !aopInReg (left->aop, offset + 1, IYH_IDX)));
+                    }
+                }
               sizel--;
               offset++;
             }
@@ -14904,13 +14943,10 @@ genLeftShift (const iCode *ic)
     result->aop->aopu.aop_reg[0]->rIdx != right->aop->aopu.aop_reg[0]->rIdx &&
     !aopInReg (result->aop, 0, right->aop->aopu.aop_reg[0]->rIdx) && !aopInReg (result->aop, 1, right->aop->aopu.aop_reg[0]->rIdx) && !aopInReg (result->aop, 2, right->aop->aopu.aop_reg[0]->rIdx) && !aopInReg (result->aop, 3, right->aop->aopu.aop_reg[0]->rIdx)))
     countreg = right->aop->aopu.aop_reg[0]->rIdx;
-  else if (!IS_SM83 && isRegDead (B_IDX, ic) && (sameRegs (left->aop, result->aop) || left->aop->type != AOP_REG || shift_by_lit) &&
-    !aopInReg (result->aop, 0, B_IDX) && !aopInReg (result->aop, 1, B_IDX) && !aopInReg (result->aop, 2, B_IDX) && !aopInReg (result->aop, 3, B_IDX))
+  else if (isRegDead (B_IDX, ic) && result->aop->regs[B_IDX] < 0 && left->aop->regs[B_IDX] < 0)
     countreg = B_IDX;
   else if (isRegDead (A_IDX, ic) && result->aop->regs[A_IDX] < 0 && left->aop->regs[A_IDX] < 0)
     countreg = A_IDX;
-  else if (isRegDead (B_IDX, ic) && result->aop->regs[B_IDX] < 0 && left->aop->regs[B_IDX] < 0)
-    countreg = B_IDX;
   else if (isRegDead (C_IDX, ic) && result->aop->regs[C_IDX] < 0 && left->aop->regs[C_IDX] < 0)
     countreg = C_IDX;
   else if (IS_Z80N && z80n_de && aopInReg (right->aop, 0, B_IDX))

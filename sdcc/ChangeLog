@@ -1,5 +1,10 @@
 2025-08-31 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c:
+	  Various codegen improvements.
+
+2025-08-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c,
 	  support/regression/tests/bug-3873.c,
 	  support/regression/MakeList:
