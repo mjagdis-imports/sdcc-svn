@@ -755,7 +755,7 @@ void
 cl_9s08::mk_hw_elements(void)
 {
   cl_s08::mk_hw_elements();
-  add_hw(mmu= new cl_mmu(this));
+  add_hw(mmu= new cl_mmu(this, las, las_chip));
   mmu->init();
 }
 
@@ -813,6 +813,13 @@ cl_9s08::make_memories(void)
   ad->init();
   rom->decoders->add(ad);
   ad->activate(0);
+}
+
+void
+cl_9s08::reset(void)
+{
+  cl_s08::reset();
+  rom->write(0x78, 2);
 }
 
 
@@ -873,9 +880,28 @@ cl_hc08_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
  * Memory Management Unit
  */
 
-cl_mmu::cl_mmu(class cl_uc *auc):
+cl_mmu::cl_mmu(class cl_uc *auc,
+	       class cl_address_space *Ilas,
+	       class cl_memory_chip *Ilas_chip):
   cl_hw(auc, (enum hw_cath)HW_MMU, 0, "mmu")
 {
+  las= Ilas;
+  las_chip= Ilas_chip;
 }
+
+int
+cl_mmu::init(void)
+{
+  ppage= register_cell(uc->rom, 0x78);
+  lap2 = register_cell(uc->rom, 0x79);
+  lap1 = register_cell(uc->rom, 0x7a);
+  lap0 = register_cell(uc->rom, 0x7b);
+  lwp  = register_cell(uc->rom, 0x7c);
+  lbp  = register_cell(uc->rom, 0x7d);
+  lb   = register_cell(uc->rom, 0x7e);
+  lapab= register_cell(uc->rom, 0x7f);
+  return 0;
+}
+
 
 /* End of m68hc08.src/m68hc08.cc */
