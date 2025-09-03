@@ -338,7 +338,6 @@ unsigned long long __stdc_bit_ceilull(unsigned long long value);
 #define stdc_bit_ceil_ul(value) (stdc_bit_ceil(value)((unsigned long)(value))))
 
 // C2Y 7.18.17 Rotate Left
-#ifdef __SDCC_STACK_AUTO // Bug #3874
 #define __STDC_ROTATE_LEFT {count %= (sizeof(value) * 8); return(value << count) | (value >> (sizeof(value) * 8 - count));}
 inline unsigned char stdc_rotate_left_uc (unsigned char value, unsigned int count) __STDC_ROTATE_LEFT
 inline unsigned short stdc_rotate_left_us (unsigned short value, unsigned int count)__STDC_ROTATE_LEFT
@@ -355,10 +354,8 @@ unsigned long: stdc_rotate_left_ul((value), (count)), \
 unsigned _BitInt(32): stdc_rotate_left_ul((value), (count)), \
 unsigned long long: stdc_rotate_left_ull((value), (count)), \
 unsigned _BitInt(64): stdc_rotate_left_ull((value), (count)))
-#endif
 
 // C2Y 7.18.18 Rotate Right
-#ifdef __SDCC_STACK_AUTO // Bug #3874
 #define __STDC_ROTATE_RIGHT {count %= (sizeof(value) * 8); return(value >> count) | (value << (sizeof(value) * 8 - count));}
 inline unsigned char stdc_rotate_right_uc (unsigned char value, unsigned int count) __STDC_ROTATE_RIGHT
 inline unsigned short stdc_rotate_right_us (unsigned short value, unsigned int count)__STDC_ROTATE_RIGHT
@@ -375,7 +372,6 @@ unsigned long: stdc_rotate_right_ul((value), (count)), \
 unsigned _BitInt(32): stdc_rotate_right_ul((value), (count)), \
 unsigned long long: stdc_rotate_right_ull((value), (count)), \
 unsigned _BitInt(64): stdc_rotate_right_ull((value), (count)))
-#endif
 
 // C2Y 7.18.19 8-bit Memory Reversal
 void stdc_memreverse8(size_t n, unsigned char ptr[static n]);
@@ -401,7 +397,6 @@ __STDC_MEMREVERSE8U(64)
 extern void *__memcpy (void * restrict dest, const void * _NEAR restrict src, _NEAR size_t n);
 #endif
 
-#ifdef __SDCC_STACK_AUTO // Bug #3874
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
 #define __STDC_LOAD8(N) \
 inline uint_least ## N ## _t stdc_load8_leu ## N (const unsigned char ptr[static (N / 8)]) {uint ## N ## _t value; __memcpy (&value, ptr, N / 8); return(value);} \
@@ -427,10 +422,8 @@ __STDC_LOAD8(8)
 __STDC_LOAD8(16)
 __STDC_LOAD8(32)
 __STDC_LOAD8(64)
-#endif
 
 // C2Y 7.18.22 Endian-aware 8-bit Store
-#ifdef __SDCC_STACK_AUTO // Bug #3874
 #if __STDC_ENDIAN_NATIVE__ == __STDC_ENDIAN_LITTLE__
 #define __STDC_STORE8(N) \
 inline void stdc_store8_leu ## N (uint_least ## N ## _t value, unsigned char ptr[static (N / 8)]) {__memcpy (ptr, &value, N / 8);} \
@@ -456,7 +449,6 @@ __STDC_STORE8(8)
 __STDC_STORE8(16)
 __STDC_STORE8(32)
 __STDC_STORE8(64)
-#endif
 
 #endif
 
