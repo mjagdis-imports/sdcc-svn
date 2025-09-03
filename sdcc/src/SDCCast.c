@@ -72,7 +72,6 @@ symbol *currFunc = NULL;
 static ast *createIval (ast *, sym_link *, initList *, ast *, ast *, int);
 static ast *createIvalCharPtr (ast *, sym_link *, ast *, ast *);
 static ast *optimizeCompare (ast *);
-ast *optimizeROT (ast *);
 ast *optimizeGetAbit (ast *, RESULT_TYPE);
 ast *optimizeGetByte (ast *, RESULT_TYPE);
 ast *optimizeGetWord (ast *, RESULT_TYPE);
@@ -2195,7 +2194,6 @@ isConformingBody (ast * pbody, symbol * sym, ast * body)
     case GETABIT:
     case GETBYTE:
     case GETWORD:
-    case ROT:
 
       if (IS_AST_SYM_VALUE (pbody->left) && isSymbolEqual (AST_SYMBOL (pbody->left), sym))
         return FALSE;
@@ -3988,7 +3986,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       if (IS_AST_SYM_VALUE (tree->left))
         {
           AST_SYMBOL (tree->left)->addrtaken = 1;
-          AST_SYMBOL (tree->left)->allocreq = 1;
+          // Do not require allocated space for static variables in inline function definitions for which no code will be emitted. Allocated space will be requested if and where it gets inlined.
+          AST_SYMBOL (tree->left)->allocreq =
+            !(AST_SYMBOL (tree->left)->level && currFunc && FUNC_ISINLINE (currFunc->type) && !IS_EXTERN (getSpec (currFunc->type)) && !IS_STATIC (getSpec (currFunc->type)));
         }
 
       p->next = LTYPE (tree);
@@ -4018,13 +4018,6 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /*  bitwise or                */
       /*----------------------------*/
     case '|':
-      /* if the rewrite succeeds then don't go any further */
-      {
-        ast *wtree = optimizeROT (tree);
-        if (wtree != tree)
-          return decorateType (wtree, RESULT_TYPE_NONE, reduceTypeAllowed);
-      }
-
       /* if left is a literal exchange left & right */
       if (IS_LITERAL (LTYPE (tree)))
         {
@@ -4744,7 +4737,6 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
     case LEFT_OP:
     case RIGHT_OP:
-    case ROT:
       if (!IS_INTEGRAL (LTYPE (tree)) || !IS_INTEGRAL (tree->left->etype))
         {
           werrorfl (tree->filename, tree->lineno, E_SHIFT_OP_INVALID);
@@ -6768,97 +6760,6 @@ optimizeGetWord (ast *tree, RESULT_TYPE resultType)
 }
 
 /*-----------------------------------------------------------------*/
-/* optimizeROT :- optimize for Rotate Left/Right                   */
-/*-----------------------------------------------------------------*/
-ast *
-optimizeROT (ast * root)
-{
-  /* will look for trees of the form
-     (?expr << 1) | (?expr >> 7) or
-     (?expr >> 7) | (?expr << 1) will make that
-     into a RLC : operation ..
-     Will also look for
-     (?expr >> 1) | (?expr << 7) or
-     (?expr << 7) | (?expr >> 1) will make that
-     into a RRC operation
-     note : by 7 I mean (number of bits required to hold the
-     variable -1 ) */
-  /* if the root operation is not a | operation then not */
-  if (!IS_BITOR (root))
-    return root;
-
-  /* I have to think of a better way to match patterns this sucks */
-  /* that aside let's start looking for the first case : I use a
-     negative check a lot to improve the efficiency */
-  /* (?expr << 1) | (?expr >> 7) */
-  if (IS_LEFT_OP (root->left) && IS_RIGHT_OP (root->right))
-    {
-
-      if (!SPEC_USIGN (TETYPE (root->left->left)))
-        return root;
-
-      if (!IS_AST_LIT_VALUE (root->left->right) || !IS_AST_LIT_VALUE (root->right->right))
-        goto tryNext;
-
-      /* make sure it is the same expression */
-      if (!isAstEqual (root->left->left, root->right->left))
-        goto tryNext;
-
-      unsigned char s = AST_ULONG_VALUE (root->left->right);
-
-      if (AST_ULONG_VALUE (root->right->right) != (getSize (TTYPE (root->left->left)) * 8 - s))
-        goto tryNext;
-
-      /* cannot have side effects or volatility */
-      if (hasSEFcalls (root))
-        return root;
-
-      /* make sure the port supports RLC/RRC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), s))
-        goto tryNext;
-
-      /* whew got the first case : create the AST */
-      return newNode (ROT, root->left->left, newAst_VALUE (constCharVal (s)));
-    }
-
-tryNext:
-  /* check for second case */
-  /* (?expr >> 7) | (?expr << 1) */
-  if (IS_LEFT_OP (root->right) && IS_RIGHT_OP (root->left))
-    {
-
-      if (!SPEC_USIGN (TETYPE (root->left->left)))
-        return root;
-
-      if (!IS_AST_LIT_VALUE (root->left->right) || !IS_AST_LIT_VALUE (root->right->right))
-        return root;
-
-      /* make sure it is the same symbol */
-      if (!isAstEqual (root->left->left, root->right->left))
-        return root;
-
-      unsigned char s = AST_ULONG_VALUE (root->right->right);
-
-      if (AST_ULONG_VALUE (root->left->right) != (getSize (TTYPE (root->left->left)) * 8 - s))
-        return root;
-
-      /* cannot have side effects or volatility */
-      if (hasSEFcalls (root))
-        return root;
-
-      /* make sure the port supports RLC/RRC */
-      if (port->hasExtBitOp && !port->hasExtBitOp (ROT, TTYPE (root->left->left), s))
-        return root;
-
-      /* whew got the first case : create the AST */
-      return newNode (ROT, root->left->left, newAst_VALUE (constCharVal (s)));
-    }
-
-  /* not found return root */
-  return root;
-}
-
-/*-----------------------------------------------------------------*/
 /* optimizeCompare - optimizes compares for bit variables          */
 /*-----------------------------------------------------------------*/
 static ast *
@@ -8162,17 +8063,6 @@ ast_print (ast * tree, FILE * outfile, int indent)
       return;
 
     /*------------------------------------------------------------------*/
-    /*----------------------------*/
-    /*           shift            */
-    /*----------------------------*/
-    case ROT:
-      fprintf (outfile, "ROT (%p) type (", tree);
-      printTypeChain (tree->ftype, outfile);
-      fprintf (outfile, ")\n");
-      ast_print (tree->left, outfile, indent + 2);
-      ast_print (tree->right, outfile, indent + 2);
-      return;
-
     case GETABIT:
       fprintf (outfile, "GETABIT (%p) type (", tree);
       printTypeChain (tree->ftype, outfile);

@@ -297,7 +297,8 @@ z80MightReadFlag(const lineNode *pl, const char *what)
     return false;
 
   if((IS_R4K || IS_R5K || IS_R6K) &&
-    (lineIsInst (pl, "clr") ||
+    (lineIsInst (pl, "cbm") ||
+    lineIsInst (pl, "clr") ||
     lineIsInst (pl, "test")))
     return false;
 
@@ -660,6 +661,9 @@ z80MightRead(const lineNode *pl, const char *what)
   if ((IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "test"))
     return (argCont (larg, what));
 
+  if ((IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "cbm"))
+    return (!strcmp(what, "a"));
+
   if(IS_EZ80 && lineIsInst (pl, "lea") ||
     IS_TLCS90 && lineIsInst (pl, "lda"))
     return(argCont(rarg, what) || argCont(lineArg (pl, 2), what));
@@ -889,7 +893,9 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
      lineIsInst (pl, "lsidr")))
     return false;
 
-  if((IS_R4K || IS_R5K || IS_R6K) && lineIsInst (pl, "clr"))
+  if((IS_R4K || IS_R5K || IS_R6K) &&
+    (lineIsInst (pl, "cbm") ||
+    lineIsInst (pl, "clr")))
     return false;
 
   if(lineIsInst (pl, "mlt"))
@@ -1831,6 +1837,10 @@ int z80instructionSize(lineNode *pl)
     lineIsInst (pl, "test")))
     return(2);
 
+  if((IS_R4K || IS_R5K || IS_R6K) &&
+    lineIsInst (pl, "cbm"))
+    return(3);
+    
   if(IS_RAB && (lineIsInst (pl, "ioi") || lineIsInst (pl, "ioe")))
     return(1);
     

@@ -555,8 +555,9 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   // For some iCodes, we can handle anything.
   if(ic->op == '~' || ic->op == IPUSH || ic->op == SEND || ic->op == LABEL || ic->op == GOTO ||
-    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND ||
-    ic->op == GETBYTE || ic->op == GETWORD ||
+    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND || ic->op == UNARYMINUS && IS_FLOAT (operandType (ic->left)) ||
+    ic->op == EQ_OP || ic->op == NE_OP ||
+    ic->op == GETABIT || ic->op == GETBYTE || ic->op == GETWORD ||
     ic->op == IFX ||
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     ic->op == LEFT_OP ||
@@ -566,18 +567,14 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))
     return(true);
 
-  // Can use non-destructive cp on == and < (> might swap operands).
-  if((ic->op == EQ_OP || (ic->op == '<' || ic->op == '>') && SPEC_USIGN(getSpec(operandType(left))) && SPEC_USIGN(getSpec(operandType(right)))) &&
+  // Can use non-destructive cp on < (> might swap operands).
+  if(((ic->op == '<' || ic->op == '>') && SPEC_USIGN(getSpec(operandType(left))) && SPEC_USIGN(getSpec(operandType(right)))) &&
     getSize(operandType(IC_LEFT(ic))) == 1 && ifxForOp (IC_RESULT(ic), ic) && operand_in_reg(left, REG_A, ia, i, G) &&
     (IS_OP_LITERAL (right) || operand_in_reg(right, REG_C, ia, i, G) || operand_in_reg(right, REG_B, ia, i, G) || operand_in_reg(right, REG_E, ia, i, G) || operand_in_reg(right, REG_D, ia, i, G) || operand_in_reg(right, REG_H, ia, i, G) || operand_in_reg(right, REG_L, ia, i, G)))
     return(true);
 
   const cfg_dying_t &dying = G[i].dying;
   const bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
-
-  if ((ic->op == EQ_OP || ic->op == NE_OP) && getSize(operandType(ic->left)) == 1 && (operand_in_reg(left, REG_A, ia, i, G) || operand_in_reg(right, REG_A, ia, i, G)) &&
-    (ifxForOp (ic->result, ic) || dying_A))
-    return(true);
 
   if((ic->op == '+' || ic->op == '-' && !operand_in_reg(right, REG_A, ia, i, G) || ic->op == UNARYMINUS && !IS_SM83) &&
     getSize(operandType(IC_RESULT(ic))) == 1 && dying_A)
@@ -594,6 +591,11 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
         (operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G) || !result_in_A))
         return(true);
     }
+
+  // codegen for small reads can handle anything.
+  if(ic->op == GET_VALUE_AT_ADDRESS && IS_OP_LITERAL(left) && IS_OP_LITERAL(right) && ulFromVal (OP_VALUE_CONST (right)) == 0 &&
+    (getSize(operandType(ic->result)) == 1 || !IS_SM83 && getSize(operandType(ic->result)) == 2 && operand_is_pair(result, a, i, G)))
+    return(true);
 
   // Last byte of output may be in A.
   if(ic->op == GET_VALUE_AT_ADDRESS && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))
@@ -645,7 +647,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
           (IS_OP_LITERAL(right) || operand_in_reg(right, REG_A, ia, i, G) || getSize(operandType(IC_RESULT(ic))) == 1 && ia.registers[REG_B][1] < 0)) &&
         !((ic->op == '=' || ic->op == CAST) && !(IY_RESERVED && POINTER_SET(ic))) &&
         !(ic->op == '*' && (IS_ITEMP(IC_LEFT(ic)) || IS_OP_LITERAL(IC_LEFT(ic))) && (IS_ITEMP(IC_RIGHT(ic)) || IS_OP_LITERAL(IC_RIGHT(ic)))) &&
-        !((ic->op == '-' || ic->op == '+' || ic->op == EQ_OP) && IS_OP_LITERAL(IC_RIGHT(ic))))
+        !((ic->op == '-' || ic->op == '+') && IS_OP_LITERAL(IC_RIGHT(ic))))
         {
           //std::cout << "Last use: Dropping at " << i << ", " << ic->key << "(" << int(ic->op) << ")\n";
           return(false);
@@ -663,10 +665,10 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       !POINTER_GET(ic) &&
       ic->op != '+' &&
       ic->op != '-' &&
+      ic->op != UNARYMINUS &&
       (ic->op != '*' || !IS_OP_LITERAL(IC_LEFT(ic)) && !IS_OP_LITERAL(right)) &&
       ic->op != GET_VALUE_AT_ADDRESS &&
       ic->op != '=' &&
-      ic->op != EQ_OP &&
       ic->op != '<' &&
       ic->op != '>' &&
       ic->op != CALL &&

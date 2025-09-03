@@ -2775,8 +2775,6 @@ replace restart {
 	ld	%1, #%3
 	ld	%2, #%4
 } by {
-	; ld	%1, #%3
-	; ld	%2, #%4
 	ld	%1, #%3
 	; common peephole 174a reused value still in %1.
 	ld	%7, %5
@@ -2788,8 +2786,6 @@ replace restart {
 	ld	%1, #%3
 	ld	%2, #%4
 } by {
-	; ld	%1, #%3
-	; ld	%2, #%4
 	ld	%1, #%3
 	; common peephole 174b reused value still in %1.
 	ld	%7, %5
