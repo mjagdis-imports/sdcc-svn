@@ -80,6 +80,32 @@ public:
 };
 
 
+class cl_s08: public cl_hc08
+{
+public:
+  cl_s08(struct cpu_entry *Itype, class cl_sim *asim);
+public:
+  virtual const char *id_string(void);
+};
+
+
+class cl_mmu;
+
+class cl_9s08: public cl_s08
+{
+public:
+  class cl_mmu *mmu;
+  class cl_address_space *las;
+  class cl_memory_chip *las_chip;
+public:
+  cl_9s08(struct cpu_entry *Itype, class cl_sim *asim);
+  virtual const char *id_string(void);
+  virtual void mk_hw_elements(void);
+  virtual void make_memories(void);
+  virtual void reset(void);
+};
+
+
 enum hc08cpu_confs
   {
    hc08cpu_sp_limit	= 0,
@@ -96,6 +122,24 @@ public:
 
   virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
 };
+
+
+enum { HW_MMU= 0x2000 }; // final place: stypes.h
+
+class cl_mmu: public cl_hw
+{
+public:
+  class cl_address_space *las;
+  class cl_memory_chip *las_chip;
+  class cl_memory_cell *ppage, *lap2, *lap1, *lap0,
+    *lwp, *lbp, *lb, *lapab;
+public:
+  cl_mmu(class cl_uc *auc,
+	 class cl_address_space *Ilas,
+	 class cl_memory_chip *Ilas_chip);
+  virtual int init(void);
+};
+
 
 #endif
 

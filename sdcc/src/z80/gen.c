@@ -4819,7 +4819,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 {
   wassert (result);
   wassert (result->size >= roffset + size);
-  emitDebug ("; genMove_o size %d result type %d source type %d hl_dead %d", size, result->type, source->type, hl_dead_global);
+  emitDebug ("; genMove_o size %d result type %d source type %d a_dead %d hl_dead %d de_dead %d", size, result->type, source->type, a_dead_global, hl_dead_global, de_dead_global);
 
   a_dead_global |= result->type == AOP_REG && result->regs[A_IDX] >= roffset && result->regs[A_IDX] < roffset + size;
   hl_dead_global |= result->type == AOP_REG && result->regs[L_IDX] >= roffset && result->regs[L_IDX] < roffset + size && result->regs[H_IDX] >= roffset && result->regs[H_IDX] < roffset + size;
@@ -8490,7 +8490,7 @@ genPlus (iCode * ic)
             }
           else
             {
-              bool de_free = de_dead && !aopInReg (ic->right->aop, i + 1, E_IDX) && !aopInReg (ic->right->aop, i + 1, D_IDX);
+              bool de_free = de_dead && ic->right->aop->regs[E_IDX] < i && ic->right->aop->regs[D_IDX] < i;
               genMove_o (ASMOP_HL, 0, ic->left->aop, i, 2, false, true, de_free, false, !started);
               cheapMove (ASMOP_B, 0, ic->right->aop, i + 1, true);
             }
@@ -8505,11 +8505,11 @@ genPlus (iCode * ic)
           if (aopInReg (rightop, i + 1, H_IDX) || aopInReg (rightop, i + 1, L_IDX))
             {
               cheapMove (ASMOP_D, 0, rightop, i + 1, true);
-              genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, de_dead, false, true);
+              genMove_o (ASMOP_HL, 0, leftop, i, 2, false, true, false, false, true);
             }
           else
             {
-              bool de_free = de_dead && !aopInReg (ic->right->aop, i + 1, E_IDX) && !aopInReg (ic->right->aop, i + 1, D_IDX);
+              bool de_free = de_dead && ic->right->aop->regs[E_IDX] < i && ic->right->aop->regs[D_IDX] < i;
               genMove_o (ASMOP_HL, 0, ic->left->aop, i, 2, false, true, de_free, false, true);
               cheapMove (ASMOP_D, 0, ic->right->aop, i + 1, true);
             }
@@ -10605,10 +10605,10 @@ gencjneshort (operand *left, operand *right, symbol *lbl, const iCode *ic)
     }
 
   /* Non-destructive compare */
-  if (aopInReg (left->aop, 0, A_IDX) && !isRegDead (A_IDX, ic) &&
+  if (left->aop->size == 1 && aopInReg (left->aop, 0, A_IDX) && !isRegDead (A_IDX, ic) &&
     (right->aop->type == AOP_LIT ||
     right->aop->type == AOP_REG && (HAS_IYL_INST || right->aop->aopu.aop_reg[offset]->rIdx != IYL_IDX && right->aop->aopu.aop_reg[offset]->rIdx != IYH_IDX) ||
-    right->aop->type == AOP_STK))
+    right->aop->type == AOP_STK || right->aop->type == AOP_HL || right->aop->type == AOP_IY))
     {
       bool pushed_hl = false;
       if(requiresHL (right->aop) && right->aop->type != AOP_REG && !isPairDead(PAIR_HL, ic))
@@ -12575,10 +12575,9 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
         }
       return;
     }
-  else if (IS_RAB && !is_signed && shCount >= 2 && isPairDead (PAIR_HL, ic) &&
+  else if (IS_RAB && !is_signed && shCount >= 2 && isPairDead (PAIR_HL, ic) && isPairDead (PAIR_DE, ic) &&
       ((isPair (left->aop) && getPairId (left->aop) == PAIR_HL || isPair (result->aop)
-        && getPairId (result->aop) == PAIR_HL) && isPairDead (PAIR_DE, ic) || isPair (left->aop)
-       && getPairId (left->aop) == PAIR_DE))
+        && getPairId (result->aop) == PAIR_HL) || isPair (left->aop) && getPairId (left->aop) == PAIR_DE))
     {
       bool op_de = (getPairId (left->aop) == PAIR_DE);
       if (op_de)
@@ -12736,7 +12735,8 @@ shiftL2Left2Result (operand *left, operand *result, int shCount, const iCode *ic
       if (special_a)
         emit3 (A_XOR, ASMOP_A, ASMOP_A);
       emit3_o (A_RR, left->aop, 1, 0, 0);
-      emit3_o (A_LD, result->aop, 1, left->aop, 0);
+      if (!aopSame (result->aop, 1, left->aop, 0, 1))
+        emit3_o (A_LD, result->aop, 1, left->aop, 0);
       emit3_o (A_RR, result->aop, 1, 0, 0);
       if (!special_a)
         emit3_o (A_LD, result->aop, 0, ASMOP_ZERO, 0);

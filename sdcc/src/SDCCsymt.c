@@ -690,9 +690,10 @@ checkTypeSanity (sym_link *etype, const char *name)
 
   if (SPEC_NOUN (etype) == V_BITINT)
     {
-      if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || // Check that port supports bit-precise integers this wide.
-       SPEC_BITINTWIDTH (etype) < (SPEC_USIGN (etype) ? 1 : 2)) // Check minimum width mandated by standard.
-       werror (E_INVALID_BITINTWIDTH);
+      if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || SPEC_BITINTWIDTH (etype) < 1) // Check that port supports bit-precise integers this wide.
+        werror (E_INVALID_BITINTWIDTH);
+      if (SPEC_BITINTWIDTH (etype) == 1 && !SPEC_USIGN (etype) && !options.std_sdcc) // In ISO C23, signed _BitInt needs to have width at least 2.
+        werror (W_INVALID_BITINTWIDTH_1);
     }
 }
 
@@ -4956,6 +4957,12 @@ llFitsInIntType (long long ll, sym_link *type)
           else
             max = 0xffffll;
           break;
+        case V_BITINT:
+          if (SPEC_BITINTWIDTH (type) >= 63)
+            max = 0x7fffffffffffffffll;  // actual ull max would not fit and input is ll, anyway
+          else
+            max = (1ll << SPEC_BITINTWIDTH(type)) - 1;
+          break;
         default:
           assert (0);  // not implemented for non-integer types
         }
@@ -4985,6 +4992,10 @@ llFitsInIntType (long long ll, sym_link *type)
               max = 32767ll;
             }
           break;
+        case V_BITINT:
+          min = -(1ll << (SPEC_BITINTWIDTH(type) - 1));
+          max = (1ll << (SPEC_BITINTWIDTH(type) - 1)) - 1;
+          break;
         default:
           assert (0);  // not implemented for non-integer types
         }
@@ -5008,7 +5019,12 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
   if (userRequestedType)
     {
       checkTypeSanity (userRequestedType, NULL);
-      if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) || SPEC_ENUM (userRequestedType))
+      if (SPEC_NOUN (userRequestedType) == V_BITINT)
+        {
+          if (!options.std_sdcc)
+            werror (W_ENUM_UNDERLYING_BITINT);
+        }
+      else if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) || SPEC_ENUM (userRequestedType))
         {
           werror (E_ENUM_UNDERLYING_TYPE);
           /* try to keep going */
@@ -5021,6 +5037,7 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
       SPEC_USIGN (type) = SPEC_USIGN (userRequestedType);
       SPEC_LONG (type) = SPEC_LONG (userRequestedType);
       SPEC_LONGLONG (type) = SPEC_LONGLONG (userRequestedType);
+      SPEC_BITINTWIDTH (type) = SPEC_BITINTWIDTH (userRequestedType);
     }
   else
     {
@@ -5052,12 +5069,8 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
   if (userRequestedType)
     return type;
 
-  /* Otherwise: Use the smallest integer type that is compatible with this range and not a bit-precise type. */
-  if (min >= 0 && max <= 1)
-    {
-      SPEC_NOUN (type) = V_BOOL;
-    }
-  else if (min >= 0 && max <= 255)
+  // Otherwise: use the smallest integer type that is compatible with this range that i neither bool nor a bit-precise type (both bool and bit-prcise types are disallowed here by ISO C23).
+  if (min >= 0 && max <= 255)
     {
       SPEC_NOUN (type) = V_CHAR;
       SPEC_USIGN (type) = 1;
