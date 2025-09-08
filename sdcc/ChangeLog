@@ -1,3 +1,8 @@
+2025-09-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  IMprove peephole optimizer support for eZ80 instructions for __far support.
+
 2025-09-07 Janko Stamenović
 
 	* sdas/asz80/z80pst.c

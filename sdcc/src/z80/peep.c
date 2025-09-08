@@ -445,7 +445,9 @@ z80MightRead(const lineNode *pl, const char *what)
     return(!strcmp(what, "h") || !strcmp(what, "l") || !strcmp(what, "d") || !strcmp(what, "e"));
   if(IS_RAB && lineIsInst (pl, "ldp") && !strcmp(what, "a")) // All ldp use the value in a.
     return(true);
-  if(lineIsInst (pl, "ld") || IS_RAB && (lineIsInst (pl, "ldp") || lineIsInst (pl, "ldf")))
+  if(lineIsInst (pl, "ld") ||
+    IS_RAB && (lineIsInst (pl, "ldp") || lineIsInst (pl, "ldf")) ||
+    IS_EZ80 && (lineIsInst (pl, "ld.il") || lineIsInst (pl, "ld.l") || lineIsInst (pl, "ld.lil") || lineIsInst (pl, "ld.lis")))
     {
       if(argCont(strchr(pl->line, ','), what))
         return(true);
@@ -485,6 +487,7 @@ z80MightRead(const lineNode *pl, const char *what)
      lineIsInst (pl, "sbc") ||
      lineIsInst (pl, "sub") ||
      lineIsInst (pl, "xor") ||
+     IS_EZ80 && lineIsInst (pl, "add.l") ||
      IS_R800 && lineIsInst (pl, "multu") ||
      IS_R800 && lineIsInst (pl, "multuw"))
     {
@@ -524,14 +527,16 @@ z80MightRead(const lineNode *pl, const char *what)
   if(lineIsInst (pl, "neg"))
     return(strcmp(what, "a") == 0);
 
-  if(lineIsInst (pl, "pop"))
+  if(lineIsInst (pl, "pop") || IS_EZ80 && lineIsInst (pl, "pop.l"))
     return(strcmp(what, "sp") == 0);
 
-  if (lineIsInst (pl, "push"))
+  if (lineIsInst (pl, "push") || IS_EZ80 && lineIsInst (pl, "push.l"))
     return (strstr (larg, what) || !strcmp(what, "sp"));
 
   if (lineIsInst (pl, "dec") ||
-     lineIsInst (pl, "inc"))
+     lineIsInst (pl, "inc") ||
+     IS_EZ80 && lineIsInst (pl, "dec.l") ||
+     IS_EZ80 && lineIsInst (pl, "inc.l"))
     {
       return (argCont (larg, what));
     }

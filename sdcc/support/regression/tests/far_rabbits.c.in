@@ -4,9 +4,7 @@
 */
 #include <testfwk.h>
 
-// TODO: enable for ez80 when asm bug #3826 and #3827 are fixed!
-// TODO: enable for Rabbits when sim bug #3858 is fixed!
-// TODO: enable for tlcs90 when sim bug #3859 is fixed!
+// TODO: enable when bug #2930 is fixed!
 #if 1 /*!defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && !defined(__SDCC_tlcs90) && !defined(__SDCC_ez80)*/
 #define __far
 char farmemblock[2];
