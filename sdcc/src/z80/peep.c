@@ -380,7 +380,9 @@ z80MightReadFlag(const lineNode *pl, const char *what)
     lineIsInst (pl, "ld.l") ||
     lineIsInst (pl, "ld.lil") ||
     lineIsInst (pl, "ld.lis") ||
-    lineIsInst (pl, "pop.l")))
+    lineIsInst (pl, "pop.l") ||
+    lineIsInst (pl, "res.l")||
+    lineIsInst (pl, "set.l")))
     return(false);
 
   if(IS_EZ80 && lineIsInst (pl, "push.l"))
@@ -815,7 +817,8 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
   if(lineIsInst (pl, "cpl"))
     return (!strcmp(what, "hf") || !strcmp(what, "nf"));
 
-  if(lineIsInst (pl, "inc") || lineIsInst (pl, "dec"))
+  if(lineIsInst (pl, "inc") || lineIsInst (pl, "dec") ||
+    IS_EZ80 && lineIsInst (pl, "inc.l") || IS_EZ80 && lineIsInst (pl, "dec.l"))
     {
       // 8-bit inc affects all flags other than c.
       if (strlen(pl->line + 4) == 1 || // 8-bit register
@@ -926,7 +929,9 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
     lineIsInst (pl, "ld.lis") ||
     lineIsInst (pl, "lea") ||
     lineIsInst (pl, "pea") ||
-    lineIsInst (pl, "push.l") ))
+    lineIsInst (pl, "push.l") ||
+    lineIsInst (pl, "res.l") ||
+    lineIsInst (pl, "set.l")))
     return false;
 
   // pop af writes

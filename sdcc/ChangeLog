@@ -1,7 +1,8 @@
 2025-09-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* sdcc/src/z80/gen.h,
-	  sdcc/src/z80/gen.c:
+	* src/z80/gen.h,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
 	  Further work towards Rabbit/TLCS-90/eZ80 __far support.
 
 2025-09-09 Philipp Klaus Krause <philipp@colecovision.eu>
