@@ -2,7 +2,9 @@
 
 	* src/z80/gen.h,
 	  src/z80/gen.c,
-	  src/z80/peep.c:
+	  src/z80/peep.c,
+	  support/regression/tests/far_rabbit_fields.c,
+	  support/regression/tests/far_rabbits.c.in:
 	  Further work towards Rabbit/TLCS-90/eZ80 __far support.
 
 2025-09-09 Philipp Klaus Krause <philipp@colecovision.eu>

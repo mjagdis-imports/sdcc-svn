@@ -3798,22 +3798,27 @@ aopGet (asmop *aop, int offset, bool bit16)
           break;
 
         case AOP_EXSTK:
-          if (!IY_RESERVED && !IS_SM83 && !IS_TLCS870)
+        case AOP_STK:
+          int sp_offset = aop->aopu.aop_stk + offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + _G.stack.pushed + _G.stack.offset;
+
+          if (IS_TLCS90 && !sp_offset) // Try to use (sp) addressing mode.
             {
-              setupPair (PAIR_IY, aop, offset);
-              dbuf_tprintf (&dbuf, "!*iyx", offset);
+              dbuf_tprintf (&dbuf, "(sp)");
               break;
             }
-
-        case AOP_STK:
-          if (IS_TLCS90) // Try to use (sp) addressing mode.
+            
+          if (aop->type == AOP_EXSTK && !IY_RESERVED && !IS_SM83 && !IS_TLCS870)
             {
-              int sp_offset = aop->aopu.aop_stk + offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + _G.stack.pushed + _G.stack.offset;
-              if (!sp_offset)
+              if (IS_TLCS90 && sp_offset <= 127)
                 {
-                  dbuf_tprintf (&dbuf, "(sp)");
-                  break;
+                  dbuf_tprintf (&dbuf, "%d (sp)", sp_offset);
                 }
+              else
+                {
+                  setupPair (PAIR_IY, aop, offset);
+                  dbuf_tprintf (&dbuf, "!*iyx", offset);
+                }
+              break;
             }
 
           if (IS_SM83 || aop->type == AOP_EXSTK)
@@ -4043,7 +4048,20 @@ aopPut (asmop *aop, const char *s, int offset)
       break;
 
     case AOP_EXSTK:
-      if(!IY_RESERVED && !IS_SM83 && !IS_TLCS870)
+    case AOP_STK:
+      int sp_offset = aop->aopu.aop_stk + offset + (aop->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + _G.stack.pushed + _G.stack.offset;
+      if (IS_TLCS90 && !sp_offset)
+        {
+          if (!canAssignToPtr (s))
+            {
+              emit2 ("ld a, %s", s);
+              emit2 ("ld (sp), a");
+            }
+          else
+            emit2 ("ld (sp), %s", s);
+          break;
+        }
+      if(aop->type == AOP_EXSTK && !IY_RESERVED && !IS_SM83 && !IS_TLCS870)
         {
           if (!canAssignToPtr (s))
             {
@@ -4059,7 +4077,6 @@ aopPut (asmop *aop, const char *s, int offset)
           break;
        }
 
-    case AOP_STK:
       if (IS_SM83 || aop->type == AOP_EXSTK)
         {
           /* PENDING: re-target */
@@ -4160,7 +4177,7 @@ static void
 cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 {
 #if 1
-  emitDebug ("; cheapMove");
+  emitDebug ("; cheapMove a_dead %d", a_dead);
 #endif
 
   wassert (to_offset < to->size);
@@ -4172,11 +4189,19 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
     {
       wassert (IS_EZ80 || IS_TLCS90 || IS_RAB);
 
-      if (!a_dead)
-        _push (PAIR_AF);
+      bool pushed_a = false;
+      
       if (IS_EZ80 || IS_TLCS90 || IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET)
         {
-          cheapMove (ASMOP_A, 0, from, from_offset, true);
+          if (!aopInReg (from, from_offset, A_IDX))
+            {
+              if (!a_dead)
+                {
+                  _push (PAIR_AF);
+                  pushed_a = true;
+                }
+              cheapMove (ASMOP_A, 0, from, from_offset, true);
+            }
           if (IS_EZ80)
             {
               emit2 ("ld.il (%s + %d), a", to->aopu.aop_dir, to_offset);
@@ -4202,6 +4227,11 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       else
         {
           wassert (IS_RAB);
+          if (!a_dead)
+            {
+              _push (PAIR_AF);
+              pushed_a = true;
+            }
           if (aopInReg (from, from_offset, A_IDX))
             {
               push (ASMOP_DE, 0, 2);
@@ -4229,7 +4259,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
               _pop (PAIR_HL);
             }
         }
-      if (!a_dead)
+      if (pushed_a)
         _pop (PAIR_AF);
 
       return;
@@ -4800,7 +4830,7 @@ genCopyStack (asmop *result, int roffset, asmop *source, int soffset, int n, boo
 /* genCopy - Copy the value from one reg/stk asmop to another      */
 /*-----------------------------------------------------------------*/
 static void
-genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool a_dead, bool hl_dead, bool de_dead, bool jk_dead)
+genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool a_dead, bool hl_dead, bool de_dead, bool iy_dead, bool jk_dead)
 {
   int regsize, size, n = (sizex < source->size - soffset) ? sizex : (source->size - soffset);
   bool assigned[8] = {false, false, false, false, false, false, false, false};
@@ -4819,6 +4849,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
   hl_dead |= (result->regs[L_IDX] >= roffset && result->regs[L_IDX] < roffset + sizex && result->regs[H_IDX] >= roffset && result->regs[H_IDX] < roffset + sizex);
   bool bc_dead = (result->regs[C_IDX] >= roffset && result->regs[C_IDX] < roffset + sizex && result->regs[B_IDX] >= roffset && result->regs[B_IDX] < roffset + sizex);
   de_dead |= (result->regs[E_IDX] >= roffset && result->regs[E_IDX] < roffset + sizex && result->regs[D_IDX] >= roffset && result->regs[D_IDX] < roffset + sizex);
+  iy_dead |= (result->regs[IYL_IDX] >= roffset && result->regs[IYL_IDX] < roffset + sizex && result->regs[IYH_IDX] >= roffset && result->regs[IYH_IDX] < roffset + sizex);
   jk_dead |= (result->regs[K_IDX] >= roffset && result->regs[K_IDX] < roffset + sizex && result->regs[J_IDX] >= roffset && result->regs[J_IDX] < roffset + sizex);
 
   size = n;
@@ -4842,6 +4873,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
       bool a_free = a_dead && (source->regs[A_IDX] < soffset || assigned[source->regs[A_IDX] - soffset] || i == source->regs[A_IDX] - soffset);
       bool hl_free = hl_dead && (source->regs[L_IDX] < soffset || assigned[source->regs[L_IDX] - soffset] || i == source->regs[L_IDX] - soffset) && (source->regs[H_IDX] < soffset || assigned[source->regs[H_IDX] - soffset] || i == source->regs[H_IDX] - soffset);
       bool de_free = de_dead && (source->regs[E_IDX] < soffset || assigned[source->regs[E_IDX] - soffset] || i == source->regs[E_IDX] - soffset) && (source->regs[D_IDX] < soffset || assigned[source->regs[D_IDX] - soffset] || i == source->regs[D_IDX] - soffset);
+      bool iy_free = iy_dead && (source->regs[IYL_IDX] < soffset || assigned[source->regs[IYL_IDX] - soffset] || i == source->regs[IYL_IDX] - soffset) && (source->regs[IYH_IDX] < soffset || assigned[source->regs[IYH_IDX] - soffset] || i == source->regs[IYH_IDX] - soffset);
 
       int fp_offset = result->aopu.aop_stk + (result->aopu.aop_stk > 0 ? _G.stack.param_offset : 0) + roffset + i;
       int sp_offset = fp_offset + _G.stack.pushed + _G.stack.offset;
@@ -4954,7 +4986,7 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
             _push (PAIR_DE);
           emit3w (A_EX, ASMOP_DE, ASMOP_HL);
           spillPair (PAIR_HL);
-          genCopy (result, roffset + i, ASMOP_DE, 0, 2, a_free, true, true, false);
+          genCopy (result, roffset + i, ASMOP_DE, 0, 2, a_free, true, true, iy_free, false);
           if (!de_free)
             _pop (PAIR_DE);
           assigned[i] = true;
@@ -4975,7 +5007,15 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
         }
       else if (aopRS (source) && !aopOnStack (source, soffset + i, 1) && aopOnStack (result, roffset + i, 1))
         {
+          bool pushed_iy = false;
+          if (result->type == AOP_EXSTK && !IY_RESERVED && !IS_SM83 && !IS_TLCS870 && !iy_free)
+            {
+              _push (PAIR_IY);
+              pushed_iy = true;
+            }
           cheapMove (result, roffset + i, source, soffset + i, a_free);
+          if (pushed_iy)
+            _pop (PAIR_IY);
           assigned[i] = true;
           regsize--;
           size--;
@@ -5481,6 +5521,7 @@ skip_byte:
       const bool e_free = de_dead && (result->regs[E_IDX] < roffset || !assigned[result->regs[E_IDX] - roffset]);
       const bool d_free = de_dead && (result->regs[D_IDX] < roffset || !assigned[result->regs[D_IDX] - roffset]);
       const bool de_free = e_free && d_free;
+      const bool iy_free = iy_dead && (result->regs[IYL_IDX] < roffset || !assigned[result->regs[IYL_IDX] - roffset]) && (result->regs[IYH_IDX] < roffset || !assigned[result->regs[IYH_IDX] - roffset]);
 
       if (assigned[i])
         i++;
@@ -5626,6 +5667,14 @@ skip_byte:
               if (!a_free)
                 _pop (PAIR_AF);
             }
+          else if (source->type == AOP_EXSTK && !IY_RESERVED && !IS_SM83 && !IS_TLCS870)
+            {
+              if (!iy_free)
+                _push (PAIR_IY);
+              cheapMove (result, roffset + i, source, soffset + i, a_free);
+              if (!iy_free)
+                _pop (PAIR_IY);
+            }
           else
             {
               if (requiresHL (source) && !hl_free)
@@ -5678,7 +5727,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
 {
   wassert (result);
   wassert (result->size >= roffset + size);
-  emitDebug ("; genMove_o size %d result type %d source type %d a_dead %d hl_dead %d de_dead %d", size, result->type, source->type, a_dead_global, hl_dead_global, de_dead_global);
+  emitDebug ("; genMove_o size %d result type %d source type %d a_dead %d hl_dead %d de_dead %d iy_dead %d f_dead %d", size, result->type, source->type, a_dead_global, hl_dead_global, de_dead_global, iy_dead_global, f_dead);
 
   a_dead_global |= result->type == AOP_REG && result->regs[A_IDX] >= roffset && result->regs[A_IDX] < roffset + size;
   hl_dead_global |= result->type == AOP_REG && result->regs[L_IDX] >= roffset && result->regs[L_IDX] < roffset + size && result->regs[H_IDX] >= roffset && result->regs[H_IDX] < roffset + size;
@@ -5703,7 +5752,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           emit3 (A_LD, ASMOP_L, ASMOP_H);
         }
       else
-        genCopy (result, roffset, source, soffset, csize, a_dead_global, hl_dead_global, de_dead_global, jk_dead_global);
+        genCopy (result, roffset, source, soffset, csize, a_dead_global, hl_dead_global, de_dead_global, iy_dead_global, jk_dead_global);
       roffset += csize;
       size -= csize;
       bool a_dead = a_dead_global && result->regs[A_IDX] < roffset;
@@ -6023,7 +6072,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           continue;      
         }
       else if (i + 1 < size && getPairId_o (result, roffset + i) != PAIR_INVALID &&
-        (source->type == AOP_LIT && !(aopIsLitVal (source, soffset + i, 2, 0x0000) && zeroed_a) || source->type == AOP_IMMD))
+        (source->type == AOP_LIT && !(aopIsLitVal (source, soffset + i, 2, 0x0000) && zeroed_a) || source->type == AOP_IMMD && !(soffset + i)))
         {
           fetchLitPair (getPairId_o (result, roffset + i), source, soffset + i, f_dead, false);
           i += 2;
@@ -10511,7 +10560,7 @@ genMinus (const iCode *ic, const iCode *ifx)
             UNIMPLEMENTED;
           cheapMove (ASMOP_A, 0, ic->left->aop, 0, true);
           emit3 (A_DEC, ASMOP_A, 0);
-          cheapMove (ic->result->aop, 0, ASMOP_A, 0, true);
+          genMove_o (ic->result->aop, 0, ASMOP_A, 0, 1, true, isRegDead (HL_IDX, ic), isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic), false);
         }
       if (IC_TRUE (ifx))
         emitJP (IC_TRUE (ifx), "nz", 0.5f, true);
@@ -16236,6 +16285,7 @@ genPointerGet (const iCode *ic)
 
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
+          bool pushed_by;
           emit2 ("ld a, (iy)");
           cost (2, 6);
           if (bit_field && blen <= 8)
@@ -16244,9 +16294,24 @@ genPointerGet (const iCode *ic)
               break;
             }
           
-          if (result->aop->type == AOP_FDIR && i + 1 < size) // cheapMove would overwrite by.
-            UNIMPLEMENTED;
-          cheapMove (result->aop, i, ASMOP_A, 0, true);
+          if ((result->aop->type == AOP_IY || result->aop->type == AOP_EXSTK) && i + 1 < size || result->aop->type == AOP_EXSTK) // cheapMove would overwrite by.
+            {
+              _push (PAIR_AF);
+              emit2 ("ld a, (by)");
+              cost (2, 8);
+              _push (PAIR_AF);
+              emit2 ("ld (by), #0x00");
+              cost (3, 10);
+              emit2 ("ld a, 3(sp)");
+              genMove_o (result->aop, i, ASMOP_A, 0, 1, true, hl_free, false, i + 1 == size, true);
+              _pop (PAIR_AF);
+              emit2 ("ld (by), a");
+              cost (2, 8);
+              _pop (PAIR_AF);
+            }
+          else
+            genMove_o (result->aop, i, ASMOP_A, 0, 1, true, hl_free, false, i + 1 == size, true);
+
           if (i + 1 < size)
             {
               emit3w (A_INC, ASMOP_IY, 0);
@@ -17206,7 +17271,7 @@ genPointerSet (iCode *ic)
       emit2 ("ld (by), a");
       cost (2, 8);
 
-      for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
+      for (int i = 0; !bit_field ? i < size : blen > 0;)
         {
           int di = 0;
           if (i + 1 <= size && !bit_field && getPairId_o (right->aop, i) != PAIR_INVALID)
@@ -17227,6 +17292,7 @@ genPointerSet (iCode *ic)
               unsigned int litval = ullFromVal (right->aop->aopu.aop_lit) >> (i * 8);
               emit2 (litval & 1 ? "set %d, (iy)" : "res %d, (iy)", bstr);
               cost (3, 4);
+              di = 1;
             }
           else
             {
@@ -17267,7 +17333,7 @@ genPointerSet (iCode *ic)
                       emit2 ("and a, !immedbyte", mask);
                       cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
                       emit3 (A_LD, eaop, ASMOP_A);
-                      cheapMove (ASMOP_A, 0, right->aop, i, true);
+                      genMove_o (ASMOP_A, 0, right->aop, i, 1, true, false, false, false, true);
                       if (blen + bstr == 8)
                         AccLsh (bstr);
                       else
@@ -17280,12 +17346,13 @@ genPointerSet (iCode *ic)
                     }
                 }
               else
-                cheapMove (ASMOP_A, 0, right->aop, i, true);
+                genMove_o (ASMOP_A, 0, right->aop, i, 1, true, false, false, false, true);
               emit2 ("ld (iy), a");
               cost (2, 6);
               di = 1;
             }
           i += di;
+          blen -= di * 8;
           if (i < size)
             {
               if (di == 1)
