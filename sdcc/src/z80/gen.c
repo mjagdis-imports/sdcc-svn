@@ -1981,6 +1981,7 @@ aopForSym (const iCode *ic, symbol *sym, bool requires_a)
       sym->aop = aop = newAsmop (AOP_IMMD);
       aop->aopu.aop_immd = traceAlloc (&_G.trace.aops, Safe_strdup (sym->rname));
       aop->size = getSize (sym->type);
+      aop->banked = IFFUNC_ISBANKEDCALL (sym->type);
       return aop;
     }
 
@@ -2006,7 +2007,7 @@ aopForSym (const iCode *ic, symbol *sym, bool requires_a)
           sym->aop = aop;
           aop->aopu.aop_dir = sym->rname;
           aop->size = getSize (sym->type);
-          aop->paged = FUNC_REGBANK (sym->type);
+          aop->banked = FUNC_REGBANK (sym->type);
           aop->bcInUse = isPairInUse (PAIR_BC, ic);
           /* emitDebug (";Z80 AOP_SFR for %s banked:%d bc:%d", sym->rname, FUNC_REGBANK (sym->type), aop->bcInUse); */
 
@@ -3698,8 +3699,11 @@ aopGet (asmop *aop, int offset, bool bit16)
               switch (offset)
                 {
                 case 2:
-                  // dbuf_tprintf (&dbuf, "!bankimmeds", aop->aopu.aop_immd); Bank support not fully implemented yet.
-                  dbuf_tprintf (&dbuf, "#(%s >> 16)", aop->aopu.aop_immd); // Rabbit __xdata / __xconst.
+                  if (aop->banked)
+                    dbuf_tprintf (&dbuf, "!bankimmeds", aop->aopu.aop_immd);
+                  else
+                    //dbuf_tprintf (&dbuf, "#(%s >> 16)", aop->aopu.aop_immd); // Rabbit __xdata / __xconst.
+                    dbuf_tprintf (&dbuf, "#0", aop->aopu.aop_immd); // Rabbit __xdata / __xconst.
                   break;
 
                 case 1:
@@ -3744,7 +3748,7 @@ aopGet (asmop *aop, int offset, bool bit16)
           else
             {
               /*.p.t.20030716 handling for i/o port read access for Z80 */
-              if (aop->paged)
+              if (aop->banked)
                 {
                   /* banked mode */
                   /* reg A goes to address bits 15-8 during "in a,(x)" instruction */
@@ -3959,7 +3963,7 @@ aopPut (asmop *aop, const char *s, int offset)
       else
         {
           /*.p.t.20030716 handling for i/o port read access for Z80 */
-          if (aop->paged)
+          if (aop->banked)
             {
               /* banked mode */
               if (aop->bcInUse)
@@ -4181,7 +4185,8 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
           else if (IS_TLCS90)
             {
               _push (PAIR_IY);
-              emit2 ("ld (by), #(%s >> 16)", to->aopu.aop_dir, to_offset);
+              //emit2 ("ld (by), #(%s >> 16)", to->aopu.aop_dir, to_offset); todo: fix once 1930 is fixed!
+              emit2 ("ld (by), #0");
               cost (3, 10);
               emit2 ("ld iy, #(%s + %d)", to->aopu.aop_dir, to_offset);
               cost (3, 6);
@@ -4214,7 +4219,8 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
             {
               _push (PAIR_HL);
               // No byte write instruction for far space before r4k, we need to handle this like a bit-field write, and we can't honor volatile here.
-              emit2 ("ld a, #((%s + %d) >> 16)", to->aopu.aop_dir, to_offset);
+              //emit2 ("ld a, #((%s + %d) >> 16)", to->aopu.aop_dir, to_offset); todo: fix once 1930 is fixed!
+              emit2 ("ld a, #0");
               emit2 ("ldp hl, (%s + %d)", to->aopu.aop_dir, to_offset);
               cost (6, 17);
               cheapMove (ASMOP_L, 0, from, from_offset, false);
@@ -4242,7 +4248,8 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       else if (IS_TLCS90)
         {
           _push (PAIR_IY);
-          emit2 ("ld (by), #(%s + %d) >> 16", from->aopu.aop_dir, to_offset);
+          //emit2 ("ld (by), #(%s + %d) >> 16", from->aopu.aop_dir, to_offset); todo: fix once 1930 is fixed!
+          emit2 ("ld (by), #0");
           cost (3, 10);
           emit2 ("ld iy, #(%s + %d)", from->aopu.aop_dir, to_offset);
           cost (3, 6);
@@ -4260,7 +4267,8 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
 
           _push (PAIR_HL);
     
-          emit2 ("ld a, #((%s + %d) >> 16)", from->aopu.aop_dir, from_offset);
+          //emit2 ("ld a, #((%s + %d) >> 16)", from->aopu.aop_dir, from_offset); todo: fix once 1930 is fixed!
+          emit2 ("ld a, #0");
           emit2 ("ldp hl, (%s + %d)", from->aopu.aop_dir, from_offset);
           cost (6, 17);
           emit3 (A_LD, ASMOP_A, ASMOP_L);
@@ -5731,14 +5739,16 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           PAIR_ID pair = hl_dead ? PAIR_HL : de_dead ? PAIR_DE : PAIR_BC;
           if (!iy_dead)
             _push (PAIR_IY);
-          emit2 ("ld (by), #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i);
+          //emit2 ("ld (by), #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i); todo: fix once 1930 is fixed!
+          emit2 ("ld (by), #0");
           cost (3, 10);
           emit2 ("ld iy, #(%s + %d)", source->aopu.aop_dir, soffset + i);
           cost (3, 6);
           emit2 ("ld %s, (iy)", _pairs[pair].name);
           cost (2, 8);
           spillPair (pair);
-          emit2 ("ld (by), #((%s + %d) >> 16)", result->aopu.aop_dir, roffset + i);
+          //emit2 ("ld (by), #((%s + %d) >> 16)", result->aopu.aop_dir, roffset + i); todo: fix once 1930 is fixed!
+          emit2 ("ld (by), #0");
           cost (3, 10);
           emit2 ("ld iy, #(%s + %d)", result->aopu.aop_dir, roffset + i);
           cost (3, 6);
@@ -5766,7 +5776,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             {
               if (!iy_dead)
                 _push (PAIR_IY);
-              emit2 ("ld (by), #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i);
+              //emit2 ("ld (by), #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i); todo: fix once 1930 is fixed!
+              emit2 ("ld (by), #0");
               cost (3, 10);
               emit2 ("ld iy, #(%s + %d)", source->aopu.aop_dir, soffset + i);
               cost (3, 6);
@@ -5802,7 +5813,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
               wassert (getPairId_o(source, soffset + i) != PAIR_IY);
               if (!iy_dead)
                 _push (PAIR_IY);
-              emit2 ("ld (by), #((%s + %d) >> 16)", result->aopu.aop_dir, roffset + i);
+              //emit2 ("ld (by), #((%s + %d) >> 16)", result->aopu.aop_dir, roffset + i); todo: fix once 1930 is fixed!
+              emit2 ("ld (by), #0");
               cost (3, 10);
               emit2 ("ld iy, #(%s + %d)", result->aopu.aop_dir, roffset + i);
               cost (3, 6);
@@ -5826,7 +5838,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         {
           if (!a_dead)
             _push (PAIR_AF);
-          emit2 ("ld a, #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i);
+          //emit2 ("ld a, #((%s + %d) >> 16)", source->aopu.aop_dir, soffset + i); todo: fix once 1930 is fixed!
+          emit2 ("ld a, #0");
           cost (2, 4);
           if (iy_dead && aopInReg (result, roffset + i, IYL_IDX))
             {
@@ -5851,7 +5864,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           bool via_e = aopInReg (source, soffset + i, A_IDX);
           if (via_e)
             emit3 (A_LD, ASMOP_E, ASMOP_A);
-          emit2 ("ld a, #((%s + %d) >> 16)", result->aopu.aop_dir, soffset + i);
+          //emit2 ("ld a, #((%s + %d) >> 16)", result->aopu.aop_dir, soffset + i); todo: fix once 1930 is fixed!
+          emit2 ("ld a, #0");
           cost (2, 4);
           emit2 ("ldp hl, (%s + %d)", result->aopu.aop_dir, roffset + i);
           cost (4, 13);
@@ -17674,7 +17688,8 @@ genAddrOf (const iCode *ic)
       else if (aopInReg (ic->result->aop, 2, A_IDX) || aopInReg (ic->result->aop, 2, B_IDX) || aopInReg (ic->result->aop, 2, C_IDX) || aopInReg (ic->result->aop, 2, D_IDX) || aopInReg (ic->result->aop, 2, E_IDX) || aopInReg (ic->result->aop, 2, H_IDX) || aopInReg (ic->result->aop, 2, L_IDX) || HAS_IYL_INST && (aopInReg (ic->result->aop, 2, IYH_IDX) || aopInReg (ic->result->aop, 2, IYL_IDX)))
         {
           if (!regalloc_dry_run)
-            emit2 ("ld %s, #((%s+%ld) >> 16)", aopGet (ic->result->aop, 2, false), sym->rname, (long)(operandLitValue (right)));
+            //emit2 ("ld %s, #((%s+%ld) >> 16)", aopGet (ic->result->aop, 2, false), sym->rname, (long)(operandLitValue (right)));
+            emit2 ("ld %s, #0"); // TODO: fix when assembler does >> 16 for 24-bit addr! Distinguish obj addr vs. func addr?
           if(aopInReg (ic->result->aop, 2, IYH_IDX) || aopInReg (ic->result->aop, 2, IYL_IDX))
             cost2 (3, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3);
           else
@@ -17684,7 +17699,8 @@ genAddrOf (const iCode *ic)
         {
           if (!isRegDead (A_IDX, ic) || ic->result->aop->regs[A_IDX] >= 0 && ic->result->aop->regs[A_IDX] < 2)
             UNIMPLEMENTED;
-          emit2 ("ld a, #((%s+%ld) >> 16)", sym->rname, (long)(operandLitValue (right)));
+          //emit2 ("ld a, #((%s+%ld) >> 16)", sym->rname, (long)(operandLitValue (right)));
+          emit2 ("ld a, #0"); // TODO: fix when assembler does >> 16 for 24-bit addr! Distinguish obj addr vs. func addr?
           cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
           cheapMove (ic->result->aop, 2, ASMOP_A, 0, true);
         }

@@ -1,7 +1,13 @@
+2025-09-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/src/z80/gen.h,
+	  sdcc/src/z80/gen.c:
+	  Further work towards Rabbit/TLCS-90/eZ80 __far support.
+
 2025-09-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/peep.c:
-	  IMprove peephole optimizer support for eZ80 instructions for __far support.
+	  Improve peephole optimizer support for eZ80 instructions for __far support.
 
 2025-09-07 Janko Stamenović
 

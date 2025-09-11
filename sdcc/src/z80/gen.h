@@ -64,7 +64,7 @@ typedef struct asmop
   short coff;                   /* current offset */
   short size;                   /* total size */
   unsigned code:1;              /* is in Code space */
-  unsigned paged:1;             /* in paged memory  */
+  bool banked:1;                // in banked/paged memory (for i/o and functiomns)
   unsigned freed:1;             /* already freed    */
   unsigned bcInUse:1;           /* for banked I/O, which uses bc for the I/O address */
   union
