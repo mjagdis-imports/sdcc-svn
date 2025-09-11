@@ -1670,7 +1670,7 @@ int z80instructionSize(lineNode *pl)
     {
       if(!op1start)
         {
-          werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __FUNCTION__, 4, pl->line);
+          werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __func__, 4, pl->line);
           return(4);
         }
       if(argCont(op0start, "(sp)") && (IS_RAB || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))

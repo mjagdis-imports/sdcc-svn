@@ -11583,7 +11583,7 @@ genMod (const iCode * ic)
 /* genIfxJump :- will create a jump depending on the ifx           */
 /*-----------------------------------------------------------------*/
 static void
-genIfxJump (iCode * ic, char *jval)
+genIfxJump (iCode *ic, const char *jval)
 {
   symbol *jlbl;
   const char *inst;
