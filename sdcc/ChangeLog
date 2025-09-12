@@ -1,3 +1,8 @@
+2025-09-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  TLCS-90 __far fixes.
+
 2025-09-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.h,

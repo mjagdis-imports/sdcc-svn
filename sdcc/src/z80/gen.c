@@ -959,8 +959,9 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
       switch (op2type)
         {
         case AOP_REG:
-          // ld r, r is dangerous, since support for it is inconsistent even among otherwise binary-compatible Rabbit devices.
-          if (IS_RAB && op1->aopu.aop_reg[offset1]->rIdx == op2->aopu.aop_reg[offset2]->rIdx)
+          // ld r, r is dangerous, since support for it is inconsistent even among otherwise binary-compatible devices.
+          // In particular, Rabbit 6000 does not have it (but Rabbit 2000 and 3000 do), eZ80 does not have it (but Z80 and z180 do).
+          if (op1->aopu.aop_reg[offset1]->rIdx == op2->aopu.aop_reg[offset2]->rIdx)
             werror (W_INTERNAL_ERROR, __FILE__, __LINE__, "ld r, r considered");
           // eZ80 ld r, ir / ld ir, r / ld ir, ir
           if (op1->aopu.aop_reg[offset1]->rIdx == IYL_IDX || op1->aopu.aop_reg[offset1]->rIdx == IYH_IDX ||
@@ -4639,7 +4640,8 @@ commitPair (asmop *aop, PAIR_ID id, const iCode *ic, bool dont_destroy) // Obsol
           aopPut (aop, "d", 1);
         }
       ld_cost (aop, 0, ASMOP_A, 0, true);
-      ld_cost (aop, 0, ASMOP_D, 0, true);
+      if (!aopInReg(aop, 0, D_IDX))
+        ld_cost (aop, 0, ASMOP_D, 0, true);
       if (!isRegDead (D_IDX, ic))
         _pop (PAIR_DE);
     }
@@ -5783,6 +5785,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           spillPair (pair);
           continue;
         }
+#if 0 // Looks like by just supplies the upper address bits, i.e. we could do a 16-bit read only if the destiantion is 16-bit aligned.
       else if (i + 1 < size && IS_TLCS90 && result->type == AOP_FDIR && source->type == AOP_FDIR && (hl_dead || de_dead || bc_dead))
         {
           PAIR_ID pair = hl_dead ? PAIR_HL : de_dead ? PAIR_DE : PAIR_BC;
@@ -5810,7 +5813,8 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           i += 2;
           continue;
         }
-      else if (i + 1 < size && source->type == AOP_FDIR && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90) && getPairId_o (result, roffset + i) != PAIR_INVALID && getPairId_o (result, roffset + i) != PAIR_JK)
+#endif
+      else if (i + 1 < size && source->type == AOP_FDIR && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET /*|| IS_TLCS90 alignment issue - see above*/) && getPairId_o (result, roffset + i) != PAIR_INVALID && getPairId_o (result, roffset + i) != PAIR_JK)
         {
           if (i + 3 < size && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) &&
             (getPairId_o (result, roffset + i) == PAIR_DE && getPairId_o (result, roffset + i + 2) == PAIR_BC ||
@@ -5847,7 +5851,7 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           spillPair (getPairId_o (result, roffset + i));
           continue;
         }
-      else if (i + 1 < size && result->type == AOP_FDIR && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET || IS_TLCS90 && getPairId_o (source, soffset + i) != PAIR_IY) && getPairId_o (source, soffset + i) != PAIR_INVALID && getPairId_o (source, soffset + i) != PAIR_JK)
+      else if (i + 1 < size && result->type == AOP_FDIR && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET /*|| IS_TLCS90 && getPairId_o (source, soffset + i) != PAIR_IY alignment issue - see above*/) && getPairId_o (source, soffset + i) != PAIR_INVALID && getPairId_o (source, soffset + i) != PAIR_JK)
         {
           if (i + 3 < size && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) &&
             (getPairId_o (source, soffset + i) == PAIR_DE && getPairId_o (source, soffset + i + 2) == PAIR_BC ||
@@ -5998,6 +6002,17 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           continue;
         }
 
+#if 0 // TODO: Bug #3882
+      if (IS_EZ80 && i + 3 == size && (result->type == AOP_DIR || result->type == AOP_IY || result->type == AOP_HL) && (source->type == AOP_LIT /*|| source->type == AOP_IMMD TODO: bug #2930*/) && hl_dead)
+        {
+          unsigned long v = ullFromVal (source->aopu.aop_lit) >> ((soffset + i) * 8) & 0xffffff;
+          emit2 ("ld.lil hl, !immed%lu", v);
+          emit2 ("ld.lil !mems, hl", aopGetLitWordLong (result, roffset + i, false));
+          i += 3;
+          continue;
+        }
+      else
+#endif
       if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_EZ80) && i + 1 < size && result->type == AOP_STK &&
         source->type == AOP_LIT && (value_hl >= 0 && aopIsLitVal (source, soffset + i, 2, value_hl) || hl_dead))
         {
@@ -16283,9 +16298,10 @@ genPointerGet (const iCode *ic)
           cost (2, 6); // Assume no x carry.
         }
 
+      // We do this read byte by byte: the upper bits of the address bus are supplied by the register by,
+      // so 16-bit instructions could only be used if we do know that the pointer target is even-aligned.
       for (int i = 0; !bit_field ? i < size : blen > 0; i++, blen -= 8)
         {
-          bool pushed_by;
           emit2 ("ld a, (iy)");
           cost (2, 6);
           if (bit_field && blen <= 8)
@@ -17274,13 +17290,16 @@ genPointerSet (iCode *ic)
       for (int i = 0; !bit_field ? i < size : blen > 0;)
         {
           int di = 0;
+#if 0 // 16-bit instructions could only be used if we do know that the pointer target is even-aligned.
           if (i + 1 <= size && !bit_field && getPairId_o (right->aop, i) != PAIR_INVALID)
             {
               emit2 ("ld (iy), %s", _pairs[getPairId_o (right->aop, i)].name);
               cost (2, 8);
               di = 2;
             }
-          else if (!bit_field && (aopInReg (right->aop, i, A_IDX) || aopInReg (right->aop, i, B_IDX) || aopInReg (right->aop, i, C_IDX) || aopInReg (right->aop, i, D_IDX) || aopInReg (right->aop, i, E_IDX) || aopInReg (right->aop, i, H_IDX) || aopInReg (right->aop, i, L_IDX)))
+          else
+#endif
+          if (!bit_field && (aopInReg (right->aop, i, A_IDX) || aopInReg (right->aop, i, B_IDX) || aopInReg (right->aop, i, C_IDX) || aopInReg (right->aop, i, D_IDX) || aopInReg (right->aop, i, E_IDX) || aopInReg (right->aop, i, H_IDX) || aopInReg (right->aop, i, L_IDX)))
             {
               if (!regalloc_dry_run)
                 emit2 ("ld (iy), %s", aopGet (right->aop, i, false));
