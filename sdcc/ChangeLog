@@ -1,3 +1,17 @@
+2025-09-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  device/lib/r2k/crt0.s,
+	  device/lib/r2ka/crt0.s,
+	  device/lib/r3ka/crt0.s,
+	  device/lib/r4k/crt0.s,
+	  device/lib/r5k/crt0.s,
+	  device/lib/r6k/crt0.s,
+	  doc/sdccman.lyx,
+	  src/SDCCglue.c,
+	  src/z80/main.c:
+	  Have compiler provide internal interrupt table for Rabbits instead of crt0.
+
 2025-09-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:

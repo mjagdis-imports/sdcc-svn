@@ -967,7 +967,7 @@ _setDefaultOptions (void)
   options.float_rent = 1;
   options.noRegParams = 0;
   /* Default code and data locations. */
-  options.code_loc = 0x200;
+  options.code_loc = IS_RAB ? 0x400 : 0x200;
   options.allow_undoc_inst = false;
 
   if (IS_SM83)
@@ -1080,6 +1080,55 @@ _z80_genAssemblerStart (FILE * of)
     fprintf (of, "\t.allow_undocumented\n");
   else if (TARGET_IS_TLCS90)
     fprintf (of, "\tby = 0xffed\n");
+}
+
+#define RAB_INTERRUPTS_COUNT (IS_R2K ? 16 : 32) // The Rabbit 2000A to Rabbit 2000C also have just 16 internal interrupts, but the r2ka port is also used for the Rabbit 3000.
+const char *rab_int_names[32] = {
+  "periodic interrupt", "secondary watchdog", "rst 0x10", "rst 0x18", "rst 0x20", "rst 0x28", "syscall", "rst 0x38", "slave port",
+  "write protect violation", "timer A", "timer B", "serial port A", "serial port B", "serial port C", "serial port D",
+  "network port C (WiFi)", "network port D (USB)", "-", "fima", "fimb", "i2c", "a/d converter", "pwm",
+  "sys/user mode violation", "quadrature decoder", "input capture", "stack limit violation", "serial port E", "serial port F", "network port B (Ethernet)", "timer C"};
+
+static int
+rab_genIVT(struct dbuf_s * oBuf, symbol ** intTable, int intCount)
+{
+  dbuf_tprintf (oBuf, "\tGCSR\t.equ\t0x00 ; Global control / status register\n");
+  dbuf_tprintf (oBuf, "\t.area	_IIVT (ABS)\n");
+  dbuf_printf (oBuf, "\n");
+
+  if(intCount > RAB_INTERRUPTS_COUNT)
+    {
+      werror(E_INT_BAD_INTNO, intCount - 1);
+      intCount = RAB_INTERRUPTS_COUNT;
+    }
+    
+  for (int i = 0; i < intCount; i++)
+    {
+      dbuf_printf (oBuf, "\t.org\t0x%04x ; int %d - %s\n", (unsigned int)(0x200 + i * 0x10), i, rab_int_names[i]);
+      if (interrupts[i]) // User-supplied interrupt handler
+        dbuf_printf (oBuf, "\tjp %s\n", interrupts[i]->rname);
+      else if (i == 0) // Default handler for periodic interrupt
+        {
+          dbuf_printf (oBuf, "\tipres\n");
+          dbuf_printf (oBuf, "\tpush\taf\n");
+	  dbuf_printf (oBuf, "\tioi\n");
+	  dbuf_printf (oBuf, "\tld\ta, (GCSR) ; clear interrupt\n");
+	  dbuf_printf (oBuf, "\tpop\taf\n");
+          dbuf_printf (oBuf, "\tret\n");
+        }
+      else if (i >= 2 && i <= 7) // rst or syscall
+        {
+          dbuf_printf (oBuf, "\tret\n");
+        }
+      else
+        {
+          dbuf_printf (oBuf, "\tipres\n");
+          dbuf_printf (oBuf, "\tret\n");
+        }
+      dbuf_printf (oBuf, "\n");
+    }
+
+  return true;
 }
 
 static bool
@@ -1507,7 +1556,7 @@ PORT r2k_port =
   NULL,                         /* Processor name */
   {
     glue,
-    false,
+    true,                       // Compiler generates (internal) ivt.
     MODEL_SMALL | MODEL_MEDIUM,
     MODEL_SMALL,
     NULL,                       /* model == target */
@@ -1605,7 +1654,7 @@ PORT r2k_port =
   _keywordsrab,
   _z80_genAssemblerStart,
   NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
+  rab_genIVT,
   0,                            /* no genXINIT code */
   NULL,                         /* genInitStartup */
   _reset_regparm,
@@ -1643,7 +1692,7 @@ PORT r2ka_port =
   NULL,                         /* Processor name */
   {
     glue,
-    false,
+    true,                       // Compiler generates (internal) ivt.
     MODEL_SMALL | MODEL_MEDIUM,
     MODEL_SMALL,
     NULL,                       /* model == target */
@@ -1742,7 +1791,7 @@ PORT r2ka_port =
   _keywordsrab,
   _z80_genAssemblerStart,
   NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
+  rab_genIVT,
   0,                            /* no genXINIT code */
   NULL,                         /* genInitStartup */
   _reset_regparm,
@@ -1780,7 +1829,7 @@ PORT r3ka_port =
   NULL,                         /* Processor name */
   {
     glue,
-    false,
+    true,                       // Compiler generates (internal) ivt.
     MODEL_SMALL | MODEL_MEDIUM,
     MODEL_SMALL,
     NULL,                       /* model == target */
@@ -1879,7 +1928,7 @@ PORT r3ka_port =
   _keywordsrab,
   _z80_genAssemblerStart,
   NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
+  rab_genIVT,
   0,                            /* no genXINIT code */
   NULL,                         /* genInitStartup */
   _reset_regparm,
@@ -1917,7 +1966,7 @@ PORT r4k_port =
   NULL,                         /* Processor name */
   {
     glue,
-    false,
+    true,                       // Compiler generates (internal) ivt.
     MODEL_SMALL | MODEL_MEDIUM | MODEL_LARGE,
     MODEL_SMALL,
     NULL,                       /* model == target */
@@ -2016,7 +2065,7 @@ PORT r4k_port =
   _keywordsrab,
   _z80_genAssemblerStart,
   NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
+  rab_genIVT,
   0,                            /* no genXINIT code */
   NULL,                         /* genInitStartup */
   _reset_regparm,
@@ -2054,7 +2103,7 @@ PORT r5k_port =
   NULL,                         /* Processor name */
   {
     glue,
-    false,
+    true,                       // Compiler generates (internal) ivt.
     MODEL_SMALL | MODEL_MEDIUM | MODEL_LARGE,
     MODEL_SMALL,
     NULL,                       /* model == target */
@@ -2153,7 +2202,7 @@ PORT r5k_port =
   _keywordsrab,
   _z80_genAssemblerStart,
   NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
+  rab_genIVT,
   0,                            /* no genXINIT code */
   NULL,                         /* genInitStartup */
   _reset_regparm,
@@ -2191,7 +2240,7 @@ PORT r6k_port =
   NULL,                         /* Processor name */
   {
     glue,
-    false,
+    true,                       // Compiler generates (internal) ivt.
     MODEL_SMALL | MODEL_MEDIUM | MODEL_LARGE,
     MODEL_SMALL,
     NULL,                       /* model == target */
@@ -2290,7 +2339,7 @@ PORT r6k_port =
   _keywordsrab,
   _z80_genAssemblerStart,
   NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
+  rab_genIVT,
   0,                            /* no genXINIT code */
   NULL,                         /* genInitStartup */
   _reset_regparm,
