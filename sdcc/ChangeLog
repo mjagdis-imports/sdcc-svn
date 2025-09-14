@@ -1,5 +1,11 @@
 2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Rabbit codegen improvements.
+
+2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* device/include/rab/r*.h:
 	  Rabbit register name headers.
 	* src/z80/peep.c:

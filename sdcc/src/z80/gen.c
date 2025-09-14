@@ -6025,6 +6025,14 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
           i += 2;
           continue;
         }
+      else if (result->type == AOP_STK && i + 1 == size && value_hl >= 0 && (aopIsLitVal (source, soffset + i, 1, value_hl & 0xff) || aopIsLitVal (source, soffset + i, 1, (value_hl >> 8 )& 0xff)))
+        {
+          if (!regalloc_dry_run)
+            emit2 ("ld %s, %s", aopGet (result, roffset + i, false), aopIsLitVal (source, soffset + i, 1, value_hl & 0xff) ? "l" : "h");
+          cost2 (3, 3, -1, 3, 19, 15, 10, 11, -1, 10, -1, 5, 4, 4, 5);
+          i++;
+          continue;
+        }
       else if (IS_SM83 && i + 1 < size && result->type != AOP_REG && requiresHL (result) && source->type == AOP_REG && requiresHL (source) && // word through de is cheaper than direct byte-by-byte, since it requires fewer updates of hl.
         de_dead_global && source->regs[E_IDX] <= i + 1 && source->regs[D_IDX] <= i + 1 &&
         hl_dead_global && source->regs[L_IDX] <= i + 1 && source->regs[H_IDX] <= i + 1)
@@ -6099,7 +6107,15 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
         {
           genMove_o (ASMOP_HL, 0, source, soffset + i, 2, a_dead, true, false, iy_dead, f_dead);
           genMove_o (result, roffset + i, ASMOP_HL, 0, 2, a_dead, true, false, iy_dead, f_dead);
+          value_hl = -1;
           i += 2;
+          continue;
+        }
+      else if(IS_RAB && aopIsLitVal (source, soffset + i, 1, 0x00) && aopInReg (result, roffset + i, H_IDX) && hl_dead && f_dead)
+        {
+          emit3w (A_BOOL, ASMOP_HL, 0);
+          value_hl = -1;
+          i++;
           continue;
         }
 
@@ -6122,7 +6138,10 @@ genMove_o (asmop *result, int roffset, asmop *source, int soffset, int size, boo
             {
               emit2 ("ld %s, !mems", _pairs[pair].name, aopGetLitWordLong (source, soffset + i - upper, false));
               if (pair == PAIR_HL)
-                cost2 (3, 4, -1, 4, 16, 15, 11, 11, -1, 12, -1, 6, 6, 5, 5);
+                {
+                  cost2 (3, 4, -1, 4, 16, 15, 11, 11, -1, 12, -1, 6, 6, 5, 5);
+                  value_hl = -1;
+                }
               else
                 cost2 (4, 4, -1, 4, 20, 18, 13, 13, -1, 12, -1, 6, 6, 6, 6);
               i++;
@@ -9426,8 +9445,16 @@ genPlus (iCode * ic)
       else if (left == PAIR_HL && (isPairDead (PAIR_DE, ic) || isPairDead (PAIR_BC, ic)))
         {
           PAIR_ID pair = (isPairDead (PAIR_DE, ic) ? PAIR_DE : PAIR_BC);
-          asmop *raop = isPairDead (PAIR_DE, ic) ? ASMOP_DE : ASMOP_BC;
-          genMove (raop, ic->right->aop, false, false, false, false);
+          if (IS_RAB && ic->right->aop->type == AOP_STK && pair == PAIR_DE) // Avoid double ex de, hl - it is not needed due to commutativity of addition.
+            {
+              emit3w (A_EX, ASMOP_DE, ASMOP_HL);
+              genMove (ASMOP_HL, ic->right->aop, false, false, false, false);
+            }
+          else
+            {
+              asmop *raop = isPairDead (PAIR_DE, ic) ? ASMOP_DE : ASMOP_BC;
+              genMove (raop, ic->right->aop, false, false, false, false);
+            }
           emit2 ("add hl, %s", _pairs[pair].name);
           cost2 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3 , 1, 1);
           goto release;
@@ -9435,8 +9462,16 @@ genPlus (iCode * ic)
       else if (right == PAIR_HL && (isPairDead (PAIR_DE, ic) || isPairDead (PAIR_BC, ic)))
         {
           PAIR_ID pair = (isPairDead (PAIR_DE, ic) ? PAIR_DE : PAIR_BC);
-          asmop *raop = isPairDead (PAIR_DE, ic) ? ASMOP_DE : ASMOP_BC;
-          genMove (raop, leftop, false, false, false, false);
+          if (IS_RAB && ic->left->aop->type == AOP_STK && pair == PAIR_DE) // Avoid double ex de, hl - it is not needed due to commutativity of addition.
+            {
+              emit3w (A_EX, ASMOP_DE, ASMOP_HL);
+              genMove (ASMOP_HL, ic->left->aop, false, false, false, false);
+            }
+          else
+            {
+              asmop *raop = isPairDead (PAIR_DE, ic) ? ASMOP_DE : ASMOP_BC;
+              genMove (raop, leftop, false, false, false, false);
+            }
           emit2 ("add hl, %s", _pairs[pair].name);
           cost2 (1, 2, -1, 2, 11, 7, 2, 2, 8, 8, -1, 4, 3 , 1, 1);
           goto release;
@@ -10009,7 +10044,7 @@ genPlus (iCode * ic)
           i += 2;
         }
       else if ((IS_RAB || IS_TLCS90 || IS_TLCS870C || IS_TLCS870C1 || IS_EZ80 || !IS_SM83 && !started) && i + 1 < size &&
-        hl_dead && (bc_dead || de_dead) && ic->result->aop->type == AOP_STK && leftop->type == AOP_STK && rightop->type == AOP_STK)
+        hl_dead && (bc_dead || de_dead) && ic->result->aop->type == AOP_STK && leftop->type == AOP_STK && (rightop->type == AOP_STK || rightop->type == AOP_LIT && ic->result->aop->type == AOP_STK))
         {
           asmop *rightpairaop = de_dead ? ASMOP_DE : ASMOP_BC; // Prefer de due to efficient load from hl via ex de, hl.
           genMove_o (rightpairaop, 0, rightop, i, 2, false, true, false, false, !started);
