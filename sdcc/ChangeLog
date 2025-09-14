@@ -1,7 +1,10 @@
 2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx:
-	  Update information on use of complex Z8ß0 instructions.
+	  Update information on use of complex Z80 instructions.
+	* src/z80/gen.h,
+	  src/z80/gen.c:
+	  Preparations for more efficient handling of small operands as direct operands.
 
 2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
 

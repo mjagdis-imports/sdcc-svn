@@ -1064,6 +1064,12 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
                 }
               return ((aopInReg (op1, 0, A_IDX) || op1type == AOP_DUMMY) ? 1 : 2);
             }
+        case AOP_DIR:
+          if (op1->type == AOP_DUMMY || aopInReg (op1, 0, A_IDX))
+            {
+              cost2 (3, 4, -1, 4, 13, 12, 9, 9, 16, 10, -1, 5, 5, 4, 4);
+              return (3 + IS_TLCS);
+            }
         default:
           fprintf (stderr, "ld_cost op1: AOP_REG, op2: %d\n", (int) (op2type));
           wassert (0);
@@ -2021,12 +2027,12 @@ aopForSym (const iCode *ic, symbol *sym, bool requires_a)
       wassertl (IS_EZ80 || IS_RAB || IS_TLCS90, "__far for eZ80, Rabbits and TLCS-90 only");
       sym->aop = aop = newAsmop (AOP_FDIR);
     }
+  /*else if (!IS_TLCS870 && getSize (sym->type) == 1 && isRegDead(A_IDX, ic) && !isRegDead(HL_IDX, ic) &&
+    (ic->op == '=' || ic->op == CAST) && !IS_OP_LITERAL (ic->right) && !OP_SYMBOL (ic->right)->remat || ic->op == '!')
+    sym->aop = aop = newAsmop (AOP_DIR);*/
   /* put address in hl or iy */
-  else if (IS_SM83 || IY_RESERVED)
-    {
-      /* emitDebug ("; AOP_HL for %s", sym->rname); */
-      sym->aop = aop = newAsmop (AOP_HL);
-    }
+  else if (IS_SM83 || IY_RESERVED /*|| isRegDead(HL_IDX, ic)*/)
+    sym->aop = aop = newAsmop (AOP_HL);
   else
     sym->aop = aop = newAsmop (AOP_IY);
 
@@ -3722,7 +3728,7 @@ aopGet (asmop *aop, int offset, bool bit16)
           break;
 
         case AOP_DIR:
-          wassert (IS_SM83);
+          wassert (!IS_TLCS870);
           emit2 ("ld a, (%s+%d)", aop->aopu.aop_dir, offset);
           cost2 (3, 4, -1, 4, 13, 12, 9, 9, 16, 10, -1, 5, 5, 4, 4);
           dbuf_append_char (&dbuf, 'a');
@@ -3940,10 +3946,10 @@ aopPut (asmop *aop, const char *s, int offset)
 
     case AOP_DIR:
       /* Direct.  Hmmm. */
-      wassert (IS_SM83);
+      wassert (!IS_TLCS90);
       if (strcmp (s, "a"))
         emit2 ("ld a, %s", s);
-      emit2 ("ld (%s+%d),a", aop->aopu.aop_dir, offset);
+      emit2 ("ld (%s+%d), a", aop->aopu.aop_dir, offset);
       break;
 
     case AOP_SFR:
@@ -4546,11 +4552,11 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
       emit3w (A_EX, ASMOP_JK, ASMOP_HL);
     }
   else if (!aopInReg (to, to_offset, A_IDX) && !aopInReg (from, from_offset, A_IDX) && // Go through a.
-    (from->type == AOP_DIR ||
-    from->type == AOP_SFR || to->type == AOP_SFR ||
-    (to->type == AOP_HL || to->type == AOP_IY || to->type == AOP_EXSTK || to->type == AOP_STK) && (from->type == AOP_HL || from->type == AOP_IY || from->type == AOP_EXSTK || from->type == AOP_STK) ||
-    (to->type == AOP_HL || to->type == AOP_EXSTK) && (aopInReg(from, from_offset, L_IDX) || aopInReg(from, from_offset, H_IDX))) ||
-    to->type == AOP_PAIRPTR && from->type == AOP_PAIRPTR)
+    (from->type == AOP_DIR || from->type == AOP_SFR || to->type == AOP_SFR ||
+    (to->type == AOP_DIR || to->type == AOP_HL || to->type == AOP_IY || to->type == AOP_EXSTK || to->type == AOP_STK) && (from->type == AOP_HL || from->type == AOP_IY || from->type == AOP_EXSTK || from->type == AOP_STK) ||
+    (to->type == AOP_HL || to->type == AOP_EXSTK) && (aopInReg(from, from_offset, L_IDX) || aopInReg(from, from_offset, H_IDX)) ||
+    to->type == AOP_PAIRPTR && from->type == AOP_PAIRPTR ||
+    to->type == AOP_DIR && from->type == AOP_REG))
     {
       if (!a_dead)
         _push (PAIR_AF);
@@ -13040,23 +13046,8 @@ genAnd (const iCode *ic, iCode *ifx)
           /* More combinations would be possible, but these are the common ones. */
           else if (left->aop->type == AOP_REG && sizel >= 2 && ((lit >> (offset * 8)) & 0xffffull) == 0x7fffull &&
             (!IS_SM83 && aopInReg (left->aop, offset, HL_IDX) && isPairDead (PAIR_HL, ic) ||
-            IS_RAB && aopInReg (left->aop, offset, DE_IDX)  && isPairDead (PAIR_DE, ic)))
+            IS_RAB && aopInReg (left->aop, offset, DE_IDX) && isPairDead (PAIR_DE, ic)))
             {
-              PAIR_ID pair;
-              switch (left->aop->aopu.aop_reg[offset]->rIdx)
-                {
-                case L_IDX:
-                case H_IDX:
-                  pair = PAIR_HL;
-                  break;
-                case E_IDX:
-                case D_IDX:
-                  pair = PAIR_DE;
-                  break;
-                default:
-                  pair = PAIR_INVALID;
-                  wassertl (0, "Invalid pair");
-                }
               emit3 (A_CP, ASMOP_A, ASMOP_A); // Clear carry.
               if (aopInReg (left->aop, offset, HL_IDX))
                 emit3w (A_ADC, ASMOP_HL, ASMOP_HL); // Cannot use add hl, hl instead, since it does not affect zero flag.

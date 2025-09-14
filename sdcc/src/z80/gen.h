@@ -30,7 +30,7 @@ typedef enum
   AOP_REG,
   /* Is in direct space */
   AOP_DIR,
-  /* Is in far direct space - Rabbits only */
+  /* Is in far direct space - Rabbits, TLCS-90 and eZ80 only */
   AOP_FDIR,
   /* SFR space ($FF00 and above) */
   AOP_SFR,
