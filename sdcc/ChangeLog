@@ -1,7 +1,7 @@
 2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* device/include/rab/r*.h:
-	  New header for Rabbit 4000 register names.
+	  Rabbit register name headers.
 	* src/z80/peep.c:
 	  Fix handling of ipset in peephole optimzer distance estimation.
 	* src/z80/gen.c:

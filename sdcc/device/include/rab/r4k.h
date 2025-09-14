@@ -1,8 +1,8 @@
 /*-------------------------------------------------------------------------
-   r4k.h - definitions of the built in I/O ports for the Rabbit 4000
+   r4k.h - definitions of the built-in I/O ports for the Rabbit 4000
             for use with SDCC
 
-   Copyright (C) 2025, Philipp Klaus Krause <pkk AT spth.de>
+   Copyright (C) 2025, Philipp Klaus Krause <philipp@colecovision.eu>
 
    This library is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -325,7 +325,6 @@ _RABREG(0x051C, TCS3LR);     // Timer C Set 3 Low Register
 _RABREG(0x051D, TCS3HR);     // Timer C Set 3 High Register
 _RABREG(0x051E, TCR3LR);     // Timer C Reset 3 Low Register
 _RABREG(0x051F, TCR3HR);     // Timer C Reset 3 High Register
-
 
 #endif
 
