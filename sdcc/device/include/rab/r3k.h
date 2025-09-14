@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   r3k.h - definitions on the built in I/O ports for the Rabbit 3000
+   r3k.h - definitions of the built in I/O ports for the Rabbit 3000
            for use with SDCC
 
    Copyright (C) 2020, Philipp Klaus Krause <pkk AT spth.de>
@@ -29,10 +29,6 @@
 
 #ifndef __R3K_H__
 #define __R3K_H__ 1
-
-#ifndef _RABREG
-#define _RABREG(addr, reg) __sfr __at(addr) reg
-#endif
 
 #include "r2kc.h"
 

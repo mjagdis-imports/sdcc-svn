@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-   r3ka.h - definitions on the built in I/O ports for the Rabbit 3000A
+   r3ka.h - definitions of the built in I/O ports for the Rabbit 3000A
             for use with SDCC
 
    Copyright (C) 2020, Philipp Klaus Krause <pkk AT spth.de>
