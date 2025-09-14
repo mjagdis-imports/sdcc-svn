@@ -1853,7 +1853,10 @@ int z80instructionSize(lineNode *pl)
     
   if(IS_RAB && (lineIsInst (pl, "ioi") || lineIsInst (pl, "ioe")))
     return(1);
-    
+
+  if(IS_RAB && lineIsInst (pl, "ipset"))
+    return(2);
+
   if(IS_RAB && lineIsInst (pl, "mul"))
     return(1);
 

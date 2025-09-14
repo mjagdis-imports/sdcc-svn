@@ -3963,7 +3963,7 @@ aopPut (asmop *aop, const char *s, int offset)
            * (for internal vs. external I/O space
            */
           emit2 ("ioi");
-          emit2 ("ld !mems,a", aop->aopu.aop_dir);
+          emit2 ("ld !mems, a", aop->aopu.aop_dir);
           emit2 ("nop");        /* Workaround for Rabbit 2000 hardware bug. see TN302 for details. */
         }
       else
@@ -8209,6 +8209,12 @@ resultRemat (const iCode * ic)
   return 0;
 }
 
+static bool
+isSoftInt (sym_link *ftype)
+{
+  return (IS_RAB && IFFUNC_ISISR (ftype) && FUNC_INTNO(ftype) >= 2 && FUNC_INTNO(ftype) <= 7);
+}
+
 /*-----------------------------------------------------------------*/
 /* genFunction - generated code for function entry                 */
 /*-----------------------------------------------------------------*/
@@ -8274,7 +8280,7 @@ genFunction (const iCode * ic)
 
   /* if this is an interrupt service routine
      then save all potentially used registers. */
-  if (IFFUNC_ISISR (sym->type))
+  if (IFFUNC_ISISR (sym->type) && !isSoftInt(sym->type))
     {
       if (!IFFUNC_ISCRITICAL (sym->type))
         {
@@ -8557,7 +8563,7 @@ genEndFunction (iCode *ic)
 
   /* if this is an interrupt service routine
      then restore all potentially used registers. */
-  if (IFFUNC_ISISR (sym->type))
+  if (IFFUNC_ISISR (sym->type) && !isSoftInt(sym->type))
     {
       if (IS_EZ80) // Restore 24-bit pairs
         {

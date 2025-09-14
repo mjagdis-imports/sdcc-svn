@@ -68,7 +68,7 @@ _RABREG(0x0420, EDMR);   // Enable Dual Mode Register
 
 _RABREG(0x0440, WPCR);   // Write Protect Control Register
 
-_RABREG(0x0444, STKKCR); // Stack Limit Control Register
+_RABREG(0x0444, STKCR);  // Stack Limit Control Register
 _RABREG(0x0445, STKLLR); // Stack Low Limit Register
 _RABREG(0x0446, STKHLR); // Stack High Limit Register
 
