@@ -2027,9 +2027,10 @@ aopForSym (const iCode *ic, symbol *sym, bool requires_a)
       wassertl (IS_EZ80 || IS_RAB || IS_TLCS90, "__far for eZ80, Rabbits and TLCS-90 only");
       sym->aop = aop = newAsmop (AOP_FDIR);
     }
-  /*else if (!IS_TLCS870 && getSize (sym->type) == 1 && isRegDead(A_IDX, ic) && !isRegDead(HL_IDX, ic) &&
-    (ic->op == '=' || ic->op == CAST) && !IS_OP_LITERAL (ic->right) && !OP_SYMBOL (ic->right)->remat || ic->op == '!')
-    sym->aop = aop = newAsmop (AOP_DIR);*/
+  else if (!IS_TLCS870 && getSize (sym->type) == 1 && isRegDead(A_IDX, ic) && !isRegDead(HL_IDX, ic) &&
+    ((ic->op == '=' || ic->op == CAST) && !IS_OP_LITERAL (ic->right) && !OP_SYMBOL (ic->right)->remat ||
+    ic->op == '!' && !isOperandEqual (ic->left, ic->result)))
+    sym->aop = aop = newAsmop (AOP_DIR);
   /* put address in hl or iy */
   else if (IS_SM83 || IY_RESERVED /*|| isRegDead(HL_IDX, ic)*/)
     sym->aop = aop = newAsmop (AOP_HL);
