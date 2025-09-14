@@ -1,5 +1,10 @@
 2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* doc/sdccman.lyx:
+	  Update information on use of complex Z8ß0 instructions.
+
+2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/gen.c,
 	  src/z80/peeph.def:
 	  Rabbit codegen improvements.

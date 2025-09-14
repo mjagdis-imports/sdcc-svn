@@ -51351,18 +51351,21 @@ The Z80 and some derivatives support complex instructions,
  cpir,
  ...
  .
- SDCC only emits these instructions for functions in the standard library.
+ SDCC uses these instructions for some functions in the standard library,
+ and sometimes directly generates code for such functions.
+ ldir and ldi are also used for assignments.
  Thus,
  e.g.
- copying one array into another is more efficient when using memcpy() than by using a a user-written loop.
+ copying one array into another is more efficient when using memcpy() than by using a a user-written loop (but not more efficient than assigning a struct containing such an array).
+ 
 \end_layout
 
 \begin_layout Standard
 Depending on the target,
  code generation options and the parameters to the call,
- SDCC emits ldir for memcpy(),
+ SDCC emits ldir or ldi for memcpy(),
  ldir or lsidr for memset(),
- ldi for strcpy(),
+ ldi or ldir for strcpy(),
  ldi for strncpy().
  Other library functions use the complex instructions as well,
  but for those,
