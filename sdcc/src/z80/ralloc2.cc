@@ -555,16 +555,13 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
 
   // For some iCodes, we can handle anything.
   if(ic->op == '~' || ic->op == IPUSH || ic->op == SEND || ic->op == LABEL || ic->op == GOTO ||
-    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND || ic->op == UNARYMINUS && IS_FLOAT (operandType (ic->left)) ||
+    ic->op == '^' || ic->op == '|' || ic->op == BITWISEAND || ic->op == UNARYMINUS && IS_FLOAT (operandType (ic->left)) || ic->op == '!' ||
     ic->op == EQ_OP || ic->op == NE_OP ||
     ic->op == GETABIT || ic->op == GETBYTE || ic->op == GETWORD ||
     ic->op == IFX ||
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
-    ic->op == LEFT_OP ||
+    ic->op == LEFT_OP || ic->op == RIGHT_OP ||
     ic->op == RECEIVE || ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
-    return(true);
-
-  if (ic->op == RIGHT_OP && getSize(operandType(result)) == 1 && IS_OP_LITERAL(right))
     return(true);
 
   // Can use non-destructive cp on < (> might swap operands).
@@ -621,9 +618,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     operand_in_reg(result, REG_A, ia, i, G) && getSize(operandType(result)) != 1)
     return(false);
 
-  if(ic->op == '!' && getSize(operandType(left)) <= 2 && dying_A)
-    return(true);
-
   if(ic->op == '=' && POINTER_SET (ic))
     return(dying_A || !(IS_BITVAR(getSpec(operandType (result))) || IS_BITVAR(getSpec(operandType (right)))));
 
@@ -643,9 +637,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
   if(input_in_A && dying_A)
     {
       if(ic->op != RETURN &&
-        !((ic->op == RIGHT_OP || ic->op == LEFT_OP) &&
-          (IS_OP_LITERAL(right) || operand_in_reg(right, REG_A, ia, i, G) || getSize(operandType(IC_RESULT(ic))) == 1 && ia.registers[REG_B][1] < 0)) &&
-        !((ic->op == '=' || ic->op == CAST) && !(IY_RESERVED && POINTER_SET(ic))) &&
+        !(ic->op == '=' && !(IY_RESERVED && POINTER_SET(ic))) &&
         !(ic->op == '*' && (IS_ITEMP(IC_LEFT(ic)) || IS_OP_LITERAL(IC_LEFT(ic))) && (IS_ITEMP(IC_RIGHT(ic)) || IS_OP_LITERAL(IC_RIGHT(ic)))) &&
         !((ic->op == '-' || ic->op == '+') && IS_OP_LITERAL(IC_RIGHT(ic))))
         {
@@ -672,8 +664,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       ic->op != '<' &&
       ic->op != '>' &&
       ic->op != CALL &&
-      ic->op != PCALL &&
-      !((ic->op == LEFT_OP || ic->op == RIGHT_OP) && IS_OP_LITERAL(right)))
+      ic->op != PCALL)
     {
       //std::cout << "First use: Dropping at " << i << ", " << ic->key << "(" << int(ic->op) << "\n";
       return(false);

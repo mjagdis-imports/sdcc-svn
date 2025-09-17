@@ -1,3 +1,9 @@
+2025-09-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Register allocation / code generation improvements, in particular for right shift relevant to rotation implementation.
+
 2025-09-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/gen.c:
