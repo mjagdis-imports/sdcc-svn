@@ -1,3 +1,10 @@
+2025-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc:
+	  Enable more flexible use of a in pointer reads in register allocator (support in codegen was already added earlier).
+	* src/z80/gen.c:
+	  Prepare for further direct operand handling improvements.
+
 2025-09-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/z80/ralloc2.cc,

@@ -561,7 +561,7 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
     ic->op == IFX ||
     ic->op == ROT && (getSize(operandType(IC_RESULT (ic))) == 1 || operand_in_reg(result, ia, i, G) && IS_OP_LITERAL (IC_RIGHT (ic)) && operandLitValueUll (IC_RIGHT (ic)) * 2 == bitsForType (operandType (IC_LEFT (ic)))) ||
     ic->op == LEFT_OP || ic->op == RIGHT_OP ||
-    ic->op == RECEIVE || ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
+    ic->op == RECEIVE || ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST || ic->op == GET_VALUE_AT_ADDRESS)
     return(true);
 
   // Can use non-destructive cp on < (> might swap operands).
@@ -589,23 +589,10 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
         return(true);
     }
 
-  // codegen for small reads can handle anything.
-  if(ic->op == GET_VALUE_AT_ADDRESS && IS_OP_LITERAL(left) && IS_OP_LITERAL(right) && ulFromVal (OP_VALUE_CONST (right)) == 0 &&
-    (getSize(operandType(ic->result)) == 1 || !IS_SM83 && getSize(operandType(ic->result)) == 2 && operand_is_pair(result, a, i, G)))
-    return(true);
-
-  // Last byte of output may be in A.
-  if(ic->op == GET_VALUE_AT_ADDRESS && IS_ITEMP(result) && operand_byte_in_reg(result, getSize(operandType(IC_RESULT(ic))) - 1, REG_A, a, i, G))
-    return(true);
-
   // inc / dec does not affect a.
   if ((ic->op == '+' || ic->op == '-') && IS_OP_LITERAL(right) && ulFromVal (OP_VALUE_CONST (right)) <= 2 &&
     (getSize(operandType(IC_RESULT(ic))) == 2 && operand_is_pair(IC_RESULT(ic), a, i, G) || getSize(operandType(IC_RESULT(ic))) == 1 && operand_in_reg(result, ia, i, G) && operand_in_reg(result, ia, i, G)))
     return(true);
-
-  if(ic->op == GET_VALUE_AT_ADDRESS) // Any register can be assigned from (hl) and (iy), so we don't need to go through a then.
-    return(!IS_BITVAR(getSpec(operandType(result))) &&
-    (getSize(operandType(result)) == 1 || operand_is_pair(left, a, i, G) && (operand_in_reg(left, REG_L, ia, i, G) && !ulFromVal (OP_VALUE_CONST (right)) || operand_in_reg(left, REG_IYL, ia, i, G) && ulFromVal (OP_VALUE_CONST (right)) <= 127)));
 
   if(ic->op == '=' && POINTER_SET (ic) && // Any register can be assigned to (hl) and (iy), so we don't need to go through a then.
     !(IS_BITVAR(getSpec(operandType (result))) || IS_BITVAR(getSpec(operandType (right)))) &&
@@ -659,7 +646,6 @@ static bool Ainst_ok(const assignment &a, unsigned short int i, const G_t &G, co
       ic->op != '-' &&
       ic->op != UNARYMINUS &&
       (ic->op != '*' || !IS_OP_LITERAL(IC_LEFT(ic)) && !IS_OP_LITERAL(right)) &&
-      ic->op != GET_VALUE_AT_ADDRESS &&
       ic->op != '=' &&
       ic->op != '<' &&
       ic->op != '>' &&
