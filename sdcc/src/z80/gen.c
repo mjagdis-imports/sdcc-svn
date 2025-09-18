@@ -942,12 +942,15 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
   if (offset2 >= op2->size)
     return (ld_cost (op1, offset1, ASMOP_ZERO, 0, count));
 
-  /* Costs are symmetric */
-  if (op1type != AOP_REG && (op2type == AOP_REG || op2type == AOP_DUMMY))
+  /* Some costs are symmetric */
+  if (op1type != AOP_DIR && op1type != AOP_REG && (op2type == AOP_REG || op2type == AOP_DUMMY))
     {
       const asmop *tmp = op1;
+      int to = offset1;
       op1 = op2;
       op2 = tmp;
+      offset1 = offset2;
+      offset2 = to;
       op1type = op1->type;
       op2type = op2->type;
     }
@@ -1233,7 +1236,7 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
             {
               if (count)
                 {
-                  if (aopInReg (op1, 0, A_IDX))
+                  if (aopInReg (op1, offset1, A_IDX))
                     cost2 (1, 2, 1, 1, 7, 7, 6, 6, 8, 6, 2, 2, 2, 2, 2); // ld (hl), a
                   else
                     cost2 (1, 2, 2, 2, 7, 7, 6, 6, 8, 6, 3, 3, 3, 2, 2); // ld (hl), r
@@ -1268,6 +1271,10 @@ ld_cost (const asmop *op1, int offset1, const asmop *op2, int offset2, bool coun
         default:
           wassert (0);
         }
+      break;
+    case AOP_DIR:
+      wassert (aopInReg (op2, offset2, A_IDX));
+      cost2 (3, 4, -1, 4, 13, 13, 10, 10, 16, 10, -1, 5, 5, 4, 4);
       break;
     default:
       printf ("ld_cost op1: %d\n", (int) (op1type));
@@ -2029,10 +2036,11 @@ aopForSym (const iCode *ic, symbol *sym, bool result, bool requires_a)
     }
   else if (!IS_TLCS870 && getSize (sym->type) == 1 && isRegDead(A_IDX, ic) && !isRegDead(HL_IDX, ic) &&
     ((ic->op == '=' || ic->op == CAST) && !IS_OP_LITERAL (ic->right) && !OP_SYMBOL (ic->right)->remat ||
-    ic->op == '!' && !isOperandEqual (ic->left, ic->result)))
+    ic->op == '!' && !isOperandEqual (ic->left, ic->result) ||
+    result && !isOperandEqual (ic->left, ic->result) && !isOperandEqual (ic->right, ic->result)))
     sym->aop = aop = newAsmop (AOP_DIR);
   /* put address in hl or iy */
-  else if (IS_SM83 || IY_RESERVED /*|| isRegDead(HL_IDX, ic)*/)
+  else if (IS_SM83 || IY_RESERVED /*|| getSize (sym->type) == 1 && result && isRegDead(HL_IDX, ic)*/)
     sym->aop = aop = newAsmop (AOP_HL);
   else
     sym->aop = aop = newAsmop (AOP_IY);
@@ -4557,7 +4565,7 @@ cheapMove (asmop *to, int to_offset, asmop *from, int from_offset, bool a_dead)
     (to->type == AOP_DIR || to->type == AOP_HL || to->type == AOP_IY || to->type == AOP_EXSTK || to->type == AOP_STK) && (from->type == AOP_HL || from->type == AOP_IY || from->type == AOP_EXSTK || from->type == AOP_STK) ||
     (to->type == AOP_HL || to->type == AOP_EXSTK) && (aopInReg(from, from_offset, L_IDX) || aopInReg(from, from_offset, H_IDX)) ||
     to->type == AOP_PAIRPTR && from->type == AOP_PAIRPTR ||
-    to->type == AOP_DIR && from->type == AOP_REG))
+    to->type == AOP_DIR && (from->type == AOP_REG || from->type == AOP_LIT)))
     {
       if (!a_dead)
         _push (PAIR_AF);

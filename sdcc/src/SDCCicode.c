@@ -1032,7 +1032,7 @@ isOperandInPagedSpace (operand * op)
 /* isOperandInDirSpace - will return true if operand is in dirSpace */
 /*------------------------------------------------------------------*/
 bool
-isOperandInDirSpace (operand * op)
+isOperandInDirSpace (const operand * op)
 {
   sym_link *etype;
 
@@ -1044,8 +1044,8 @@ isOperandInDirSpace (operand * op)
 
   if (!IS_TRUE_SYMOP (op))
     {
-      if (SPIL_LOC (op))
-        etype = SPIL_LOC (op)->etype;
+      if (SPIL_LOC_CONST (op))
+        etype = SPIL_LOC_CONST (op)->etype;
       else
         return FALSE;
     }

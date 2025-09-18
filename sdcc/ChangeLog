@@ -1,5 +1,13 @@
 2025-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c,
+	  src/SDCCicode.h,
+	  src/SDCCicode.c:
+	  Enable new direct operand handling for more cases.
+
+2025-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/z80/ralloc2.cc:
 	  Enable more flexible use of a in pointer reads in register allocator (support in codegen was already added earlier).
 	* src/z80/gen.c:

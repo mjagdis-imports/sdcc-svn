@@ -670,6 +670,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
 
   const i_assignment_t &ia = a.i_assignment;
 
+  bool unused_A = (ia.registers[REG_A][1] < 0);
   bool unused_L = (ia.registers[REG_L][1] < 0);
   bool unused_H = (ia.registers[REG_H][1] < 0);
 
@@ -685,6 +686,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   const operand *right = IC_RIGHT(ic);
   const operand *result = IC_RESULT(ic);
 
+  bool result_in_A = operand_in_reg(result, REG_A, ia, i, G);
   bool result_in_L = operand_in_reg(result, REG_L, ia, i, G);
   bool result_in_H = operand_in_reg(result, REG_H, ia, i, G);
   bool result_in_HL = result_in_L || result_in_H;
@@ -694,10 +696,12 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   bool input_in_HL = input_in_L || input_in_H;
 
   const cfg_dying_t &dying = G[i].dying;
-  
+
+  bool dying_A = result_in_A || dying.find(ia.registers[REG_A][1]) != dying.end() || dying.find(ia.registers[REG_A][0]) != dying.end();
   bool dying_L = result_in_L || dying.find(ia.registers[REG_L][1]) != dying.end() || dying.find(ia.registers[REG_L][0]) != dying.end();
   bool dying_H = result_in_H || dying.find(ia.registers[REG_H][1]) != dying.end() || dying.find(ia.registers[REG_H][0]) != dying.end();
 
+  bool result_only_A = (result_in_A || unused_A || dying_A);
   bool result_only_HL = (result_in_L || unused_L || dying_L) && (result_in_H || unused_H || dying_H);
 
 #if 0
@@ -827,7 +831,8 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
        !operand_on_stack(result, a, i, G))))
     return(true);
 
-  if(result && IS_SYMOP(result) && isOperandInDirSpace(IC_RESULT(ic)))
+  if(result && IS_SYMOP(result) && isOperandInDirSpace(result) &&
+    (getSize(operandType(ic->result)) > 1 || isOperandEqual(left, ic->result) || isOperandEqual(right, ic->result) || !result_only_A))
     return(false);
 
   if((input_in_HL || !result_only_HL) && left && IS_SYMOP(left) && isOperandInDirSpace(IC_LEFT(ic)))
@@ -836,10 +841,7 @@ static bool HLinst_ok(const assignment &a, unsigned short int i, const G_t &G, c
   if((input_in_HL || !result_only_HL) && right && IS_SYMOP(right) && isOperandInDirSpace(IC_RIGHT(ic)))
     return(false);
 
-  // Operations that leave HL alone.
-  if(ic->op == IFX)
-    return(true);
-  if(SKIP_IC2(ic))
+  if(ic->op == IFX || SKIP_IC2(ic)) // Operations that leave HL alone.
     return(true);
   if(ic->op == IPUSH) // Can handle anything.
     return(true);
