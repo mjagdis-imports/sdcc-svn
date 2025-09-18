@@ -3,8 +3,9 @@
 	* src/z80/ralloc2.cc,
 	  src/z80/gen.c,
 	  src/SDCCicode.h,
-	  src/SDCCicode.c:
-	  Enable new direct operand handling for more cases.
+	  src/SDCCicode.c,
+	  src/z80/z80.h:
+	  Improve small direct operand handling.
 
 2025-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
 

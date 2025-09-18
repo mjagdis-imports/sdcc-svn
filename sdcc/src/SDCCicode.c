@@ -1032,7 +1032,7 @@ isOperandInPagedSpace (operand * op)
 /* isOperandInDirSpace - will return true if operand is in dirSpace */
 /*------------------------------------------------------------------*/
 bool
-isOperandInDirSpace (const operand * op)
+isOperandInDirSpace (const operand *op)
 {
   sym_link *etype;
 
