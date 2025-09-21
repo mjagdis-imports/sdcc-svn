@@ -939,9 +939,9 @@ isOperandGlobal (const operand *op)
 }
 
 /*-----------------------------------------------------------------*/
-/* isOperandVolatile - return 1 if the operand is volatile         */
+/* isOperandVolatile - true if op is volatile                      */
 /*-----------------------------------------------------------------*/
-int
+bool
 isOperandVolatile (const operand *op, bool chkTemp)
 {
   if (!op)
@@ -950,7 +950,22 @@ isOperandVolatile (const operand *op, bool chkTemp)
   if (IS_ITEMP (op) && !chkTemp)
     return 0;
 
-  return IS_VOLATILE (operandType (op));
+  return isVolatile (operandType (op));
+}
+
+/*-----------------------------------------------------------------*/
+/* isOperandVolatileOrAtomic - true if op is volatile or atomic    */
+/*-----------------------------------------------------------------*/
+bool
+isOperandVolatileOrAtomic (const operand *op, bool chkTemp)
+{
+  if (!op)
+    return 0;
+
+  if (IS_ITEMP (op) && !chkTemp)
+    return 0;
+
+  return isVolatile (operandType (op)) || isAtomic (operandType (op));
 }
 
 /*-----------------------------------------------------------------*/
@@ -3406,6 +3421,10 @@ checkTypes (operand * left, operand * right)
             DCL_PTR_VOLATILE (ltype) = 0;
           else
             SPEC_VOLATILE (ltype) = 0;
+          if (IS_DECL(ltype))
+            DCL_PTR_ATOMIC (ltype) = 0;
+          else
+            SPEC_ATOMIC (ltype) = 0;
         }
       right = geniCodeCast (ltype, right, TRUE);
     }

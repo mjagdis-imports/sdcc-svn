@@ -839,6 +839,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_ABSA (dest) |= SPEC_ABSA (src);
   SPEC_VOLATILE (dest) |= SPEC_VOLATILE (src);
   SPEC_RESTRICT (dest) |= SPEC_RESTRICT (src);
+  SPEC_ATOMIC (dest) |= SPEC_ATOMIC (src);
   SPEC_ADDR (dest) |= SPEC_ADDR (src);
   SPEC_OCLS (dest) = SPEC_OCLS (src);
   SPEC_BLEN (dest) |= SPEC_BLEN (src);
@@ -943,6 +944,7 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       DCL_PTR_CONST (decl) |= SPEC_CONST (spec);
       DCL_PTR_VOLATILE (decl) |= SPEC_VOLATILE (spec);
       DCL_PTR_RESTRICT (decl) |= SPEC_RESTRICT (spec);
+      DCL_PTR_ATOMIC (decl) |= SPEC_ATOMIC (spec);
       if (DCL_PTR_ADDRSPACE (decl) && SPEC_ADDRSPACE (spec) &&
         strcmp (DCL_PTR_ADDRSPACE (decl)->name, SPEC_ADDRSPACE (spec)->name))
         werror (E_SYNTAX_ERROR, yytext);
@@ -952,6 +954,7 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       SPEC_CONST (spec) = 0;
       SPEC_VOLATILE (spec) = 0;
       SPEC_RESTRICT (spec) = 0;
+      SPEC_ATOMIC (spec) = 0;
       SPEC_ADDRSPACE (spec) = 0;
     }
 
@@ -2029,6 +2032,18 @@ checkSClass (symbol *sym, int isProto)
     {
       werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
       SPEC_RESTRICT (sym->etype) = 0;
+    }
+
+
+  if (IS_ARRAY (sym->type) && SPEC_ATOMIC (sym->etype))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_ATOMIC_ARRAY);
+      SPEC_ATOMIC (sym->etype) = 0;
+    }
+  else if (IS_FUNC (sym->type) && SPEC_ATOMIC (sym->etype))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_ATOMIC_FUNCTION);
+      SPEC_ATOMIC (sym->etype) = 0;
     }
 
   t = sym->type;
@@ -5115,7 +5130,7 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
 /* isConstant - check if the type is constant                        */
 /*-------------------------------------------------------------------*/
 int
-isConstant (sym_link * type)
+isConstant (sym_link *type)
 {
   if (!type)
     return 0;
@@ -5133,7 +5148,7 @@ isConstant (sym_link * type)
 /* isVolatile - check if the type is volatile                        */
 /*-------------------------------------------------------------------*/
 int
-isVolatile (sym_link * type)
+isVolatile (sym_link *type)
 {
   if (!type)
     return 0;
@@ -5151,7 +5166,7 @@ isVolatile (sym_link * type)
 /* isRestrict - check if the type is restricted                      */
 /*-------------------------------------------------------------------*/
 int
-isRestrict (sym_link * type)
+isRestrict (sym_link *type)
 {
   if (!type)
     return 0;
@@ -5163,6 +5178,24 @@ isRestrict (sym_link * type)
     return SPEC_RESTRICT (type);
   else
     return DCL_PTR_RESTRICT (type);
+}
+
+/*-------------------------------------------------------------------*/
+/* isAtomic - check if the type is atomic                            */
+/*-------------------------------------------------------------------*/
+int
+isAtomic (sym_link *type)
+{
+  if (!type)
+    return 0;
+
+  while (IS_ARRAY (type))
+    type = type->next;
+
+  if (IS_SPEC (type))
+    return SPEC_ATOMIC (type);
+  else
+    return DCL_PTR_ATOMIC (type);
 }
 
 /*-------------------------------------------------------------------*/
