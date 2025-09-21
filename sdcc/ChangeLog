@@ -2,12 +2,12 @@
 
 	* src/SDCC.y,
 	  src/SDCCast.c,
-	  src/SDCCerr.c,
 	  src/SDCCerr.h,
-	  src/SDCCicode.c,
+	  src/SDCCerr.c,
 	  src/SDCCicode.h,
-	  src/SDCCsymt.c,
-	  src/SDCCsymt.h:
+	  src/SDCCicode.c,
+	  src/SDCCsymt.h,
+	  src/SDCCsymt.c:
 	  Foundations for handling _Atomic qualifier and specifier in the front-end.
 
 2025-09-09 Philipp Klaus Krause <philipp@colecovision.eu>

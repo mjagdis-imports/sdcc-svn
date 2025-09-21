@@ -619,6 +619,11 @@ extern symbol *fseq;
 extern symbol *fsneq;
 extern symbol *fslt;
 
+extern symbol *sdcc_atomic_load;
+extern symbol *sdcc_atomic_store;
+extern symbol *sdcc_atomic_exchange;
+extern symbol *sdcc_atomic_compare_exchange;
+
 extern symbol *fps16x16_add;
 extern symbol *fps16x16_sub;
 extern symbol *fps16x16_mul;
@@ -753,8 +758,8 @@ void leaveBlockScope (int block);
 void mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls);
 symbol *prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDeclList);
 
-
 extern char *nounName (sym_link *);     /* noun strings */
 extern void printFromToType (sym_link *, sym_link *);
 
 #endif
+

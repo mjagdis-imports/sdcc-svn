@@ -4430,6 +4430,11 @@ symbol *fseq;
 symbol *fsneq;
 symbol *fslt;
 
+symbol *sdcc_atomic_load;
+symbol *sdcc_atomic_store;
+symbol *sdcc_atomic_exchange;
+symbol *sdcc_atomic_compare_exchange;
+
 symbol *fps16x16_add;
 symbol *fps16x16_sub;
 symbol *fps16x16_mul;
@@ -4489,6 +4494,8 @@ _mangleFunctionName (const char *in)
 /* modifiers -          'S' - signed                               */
 /*                      'U' - unsigned                             */
 /*                      'C' - const                                */
+/*                      'V' - volatile                             */
+/*                      'A' - _Atomic                              */
 /* pointer modifiers -  'g' - generic                              */
 /*                      'x' - xdata                                */
 /*                      'p' - code                                 */
@@ -4505,7 +4512,9 @@ typeFromStr (const char *s)
   sym_link *r = newLink (DECLARATOR);
   int sign = 0;
   int usign = 0;
-  int constant = 0;
+  bool is_const = false;
+  bool is_volatile = false;
+  bool is_atomic = false;
 
   do
     {
@@ -4519,7 +4528,13 @@ typeFromStr (const char *s)
           usign = 1;
           break;
         case 'C':
-          constant = 1;
+          is_const = 1;
+          break;
+        case 'V':
+          is_volatile = 1;
+          break;
+        case 'A':
+          is_atomic = 1;
           break;
         case 'b':
           r->xclass = SPECIFIER;
@@ -4613,10 +4628,14 @@ typeFromStr (const char *s)
           SPEC_USIGN (r) = 1;
           usign = 0;
         }
-      if (IS_SPEC (r) && constant)
+      if (IS_SPEC (r))
         {
-          SPEC_CONST (r) = 1;
-          constant = 0;
+          SPEC_CONST (r) |= is_const;
+          SPEC_VOLATILE (r) |= is_volatile;
+          SPEC_ATOMIC (r) |= is_atomic;
+          is_const = false;
+          is_volatile = false;
+          is_atomic = false;
         }
       s++;
     }
@@ -4697,6 +4716,15 @@ initCSupport (void)
   fseq = funcOfType ("__fseq", boolType, floatType, 2, options.float_rent);
   fsneq = funcOfType ("__fsneq", boolType, floatType, 2, options.float_rent);
   fslt = funcOfType ("__fslt", boolType, floatType, 2, options.float_rent);
+
+  // void __sdcc_atomic_load (void *val, volatile const void *obj, size_t n);
+  sdcc_atomic_load = funcOfTypeVarg ("__sdcc_atomic_load", "v", 3, (const char * []){"vg*", "CVvg*", "Ui"});
+  // void __sdcc_atomic_store (volatile void *obj, void *val, size_t n);
+  sdcc_atomic_store = funcOfTypeVarg ("__sdcc_atomic_store", "v", 3, (const char * []){"Vvg*", "Cvg*", "Ui"});
+  // void __sdcc_atomic_exchange (volatile void *obj, void *val, size_t n);
+  sdcc_atomic_exchange = funcOfTypeVarg ("__sdcc_atomic_exchange", "v", 3, (const char * []){"Vvg*", "vg*", "Ui"});
+  // void __sdcc_atomic_compare_exchange (volatile void *obj, void *exp, void *val, size_t n);
+  sdcc_atomic_compare_exchange = funcOfTypeVarg ("__sdcc_atomic_compare_exchange", "v", 4, (const char * []){"Vvg*", "vg*", "Cvg*", "Ui"});
 
   fps16x16_add = funcOfType ("__fps16x16_add", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
   fps16x16_sub = funcOfType ("__fps16x16_sub", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
@@ -4883,16 +4911,9 @@ initCSupport (void)
         }
     }
 
-  {
-    const char *iparams[] = {"i", "i"};
-    const char *uiparams[] = {"Ui", "Ui"};
-    muls16tos32[0] = port->support.has_mulint2long ? funcOfTypeVarg ("__mulsint2slong", "l", 2, iparams) : 0;
-    muls16tos32[1] = port->support.has_mulint2long ? funcOfTypeVarg ("__muluint2ulong", "Ul", 2, uiparams) : 0;
-  }
-  {
-    const char *uiparams[] = {"Ul", "Uc"};
-    mulu32u8tou64 = port->support.has_mululonguchar2ulonglong ? funcOfTypeVarg ("__mululonguchar2ulonglong", "UL", 2, uiparams) : 0;
-  }
+  muls16tos32[0] = port->support.has_mulint2long ? funcOfTypeVarg ("__mulsint2slong", "l", 2, (const char * []){"i", "i"}) : 0;
+  muls16tos32[1] = port->support.has_mulint2long ? funcOfTypeVarg ("__muluint2ulong", "Ul", 2, (const char * []){"Ui", "Ui"}) : 0;
+  mulu32u8tou64 = port->support.has_mululonguchar2ulonglong ? funcOfTypeVarg ("__mululonguchar2ulonglong", "UL", 2, (const char * []){"Ul", "Uc"}) : 0;
 }
 
 /*-----------------------------------------------------------------*/
@@ -4921,8 +4942,7 @@ initBuiltIns ()
 
   if (!nonbuiltin_memcpy)
     {
-      const char *argTypeStrs[] = {"vg*", "Cvg*", "Ui"};
-      nonbuiltin_memcpy = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
+      nonbuiltin_memcpy = funcOfTypeVarg ("__memcpy", "vg*", 3, (const char * []){"vg*", "Cvg*", "Ui"});
       FUNC_ISBUILTIN (nonbuiltin_memcpy->type) = 0;
       FUNC_ISREENT (nonbuiltin_memcpy->type) = options.stackAuto;
     }
