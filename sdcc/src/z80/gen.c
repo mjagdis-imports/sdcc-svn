@@ -2040,7 +2040,8 @@ aopForSym (const iCode *ic, symbol *sym, bool result, bool requires_a)
     result && !isOperandEqual (ic->left, ic->result) && !isOperandEqual (ic->right, ic->result)))
     sym->aop = aop = newAsmop (AOP_DIR);
   /* put address in hl or iy */
-  else if (IS_SM83 || IS_TLCS870 || IY_RESERVED || getSize (sym->type) == 1 && result && isRegDead(HL_IDX, ic))
+  else if (IS_SM83 || IS_TLCS870 || IY_RESERVED ||
+    getSize (sym->type) == 1 && isRegDead(HL_IDX, ic) && result)
     sym->aop = aop = newAsmop (AOP_HL);
   else
     sym->aop = aop = newAsmop (AOP_IY);
