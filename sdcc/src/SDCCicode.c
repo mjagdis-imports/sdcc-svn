@@ -666,6 +666,32 @@ newiCodeLabelGoto (int op, symbol * label)
   return ic;
 }
 
+iCode *
+newiCodeParm (int op, operand *left, sym_link *ftype, int *stack)
+{
+  iCode *ic;
+
+  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : NULL);
+  if (op != SEND)
+    {
+      ic->parmPush = 1;
+      if (stack)
+        {
+          sym_link *parmtype = operandType(left);
+          if (ic->op == IPUSH_VALUE_AT_ADDRESS)
+            parmtype = parmtype->next;
+          if (IS_ARRAY (parmtype))
+            parmtype = aggrToPtr (parmtype, false);
+          *stack += getSize (parmtype);
+          if (IFFUNC_ISSMALLC (ftype) && getSize (parmtype) == 1) // SmallC calling convention passes 8-bit parameters as 16-bit values.
+            (*stack)++;
+          else if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // So does pdk due to stack alignment requirements.
+            (*stack)++;
+        }
+    }
+  return ic;
+}
+
 /*-----------------------------------------------------------------*/
 /* newiTemp - allocate & return a newItemp Variable                */
 /*-----------------------------------------------------------------*/
@@ -3683,19 +3709,7 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
         {
           if (argVals && (*iArg >= 0))
             pval = checkTypes (operandFromValue (argVals, false), pval);
-          // push
-          if (is_structparm)
-            ic = newiCode (IPUSH_VALUE_AT_ADDRESS, pval, operandFromLit (0));
-          else
-            ic = newiCode (IPUSH, pval, NULL);
-          ic->parmPush = 1;
-          // update the stack adjustment
-          sym_link *parmtype = IS_ARRAY (parms->ftype) ? aggrToPtr (parms->ftype, false) : parms->ftype;
-          *stack += getSize (parmtype);
-          if (IFFUNC_ISSMALLC (ftype) && getSize (parmtype) == 1) // SmallC calling convention passes 8-bit parameters as 16-bit values.
-            (*stack)++;
-          if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // So does pdk due to stack alignment requirements.
-            (*stack)++;
+          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, ftype, stack);
           ADDTOCHAIN (ic);
         }
     }

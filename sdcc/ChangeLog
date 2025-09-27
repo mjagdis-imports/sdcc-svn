@@ -1,3 +1,11 @@
+2025-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c:
+	  Refactor parameter iCode generation (to prepare for atomic support functions).
+
 2025-09-25 Janko Stamenović
 
 	* sdas/linksrc/aslink.h

@@ -1148,7 +1148,7 @@ newVoidLink ()
 /* getSize - returns size of a type chain in bytes                  */
 /*------------------------------------------------------------------*/
 unsigned int
-getSize (sym_link * p)
+getSize (sym_link *p)
 {
   /* if nothing return 0 */
   if (!p)
