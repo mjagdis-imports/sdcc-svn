@@ -638,14 +638,17 @@ static void print_table_verilog(FILE *f, const uint8_t *table)
 
 static void print_table_tex(FILE *f, const uint8_t *table)
 {
+	fprintf(f, "\\begin{tabular}{l||c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}\n");
+	fprintf(f, " &");
 	for(unsigned int i = 0; i < 16; i++)
-		fprintf (f, "x%d %s", i, i != 15 ? "& " : "\\\\\n\\hline\\hline\n");
+		fprintf(f, "x%x %s", i, i != 15 ? "& " : "\\\\\n\\hline\\hline\n");
 	for(unsigned int i = 0; i < NUM_OPCODES; i++)
 	{
 		if (!(i % 16))
-			fprintf (f, "%dx & ", i / 16);
+			fprintf(f, "%xx & ", i / 16);
 		fprintf(f, "%s %s", opcodenames_tex[table[i]], (i % 16 != 15) ? "& " : (i != 255) ? "\\\\\n\\hline\n" : "\n");
 	}
+	fprintf(f, "\\end{tabular}\n");
 }
 
 void help(FILE *f)
