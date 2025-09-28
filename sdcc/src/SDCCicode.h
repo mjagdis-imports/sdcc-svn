@@ -311,7 +311,7 @@ iCodeTable;
 /*-----------------------------------------------------------------*/
 iCode *reverseiCChain ();
 bool isOperandOnStack (operand *);
-int isOperandVolatile (const operand *, bool);
+bool isOperandVolatile (const operand *, bool);
 int isOperandGlobal (const operand *);
 void printiCChain (iCode *, FILE *);
 operand *ast2iCode (ast *, int);
@@ -334,6 +334,7 @@ symbol *newiTempLabel (const char *);
 #define LOOPEXITLBL "loopExitLbl"
 symbol *newiTempLoopHeaderLabel (bool);
 iCode *newiCode (int, operand *, operand *);
+iCode *newiCodeParm (int op, operand *left, sym_link *ftype, int *stack);
 sym_link *operandType (const operand *);
 unsigned int operandSize (operand *);
 operand *operandFromValue (value *, bool convert_sym_to_ptr);
