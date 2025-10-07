@@ -51386,9 +51386,8 @@ All arguments are passed on the stack.
 \begin_layout Standard
 Warning:
  support for the Dynamic C calling convention is still incomplete:
- parameters of 8-bit types are not yet supported (caller side for all,
- callee side for all but the first parameter),
- issues with return values being assigned to local variables (caller side),
+ parameters of 8-bit types are not yet fully supported (missing caller side support for the first parameter of the function),
+ issues with return values being assigned to local variables on the stack (caller side),
  return values of struct/union type are not yet supported (both caller and callee side).
  Any attempt to use such an unsupported aspect will result in an error message from the compiler.
 \end_layout

@@ -17,6 +17,11 @@ void fnoret(void) __dynamicc
   return (({rtype})VAL);
 }
 
+{rtype} fpar(int p0, {rtype} p1) __dynamicc
+{
+  return (p0 + p1);
+}
+
 // A function that uses the stack a lot, so the frame pointer is unlikely to be omitted.
 int frameptruser (char i, int j, long k, long long l)
 {
@@ -37,5 +42,6 @@ void testDynamicC(void)
 {
   ASSERT (fret () == ({rtype})VAL);
   ASSERT (frameptruser (1, 2, 3, 4) == 1 + 2 + 3 + 4 + (int)({rtype})VAL);
+  ASSERT (fpar (0x5a, 1) == 0x5b);
 }
 

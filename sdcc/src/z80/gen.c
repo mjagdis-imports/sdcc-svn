@@ -2626,10 +2626,10 @@ isFuncCalleeStackCleanup (sym_link *ftype)
   const bool farg = !FUNC_HASVARARGS (ftype) && FUNC_ARGS (ftype) && IS_FLOAT (FUNC_ARGS (ftype)->type); 
   const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
   int stackparmbytes = bigreturn * 2;
-  for (value *arg = FUNC_ARGS(ftype); arg && !FUNC_HASVARARGS(ftype); arg = arg->next)
+  for (value *arg = FUNC_ARGS (ftype); arg && !FUNC_HASVARARGS (ftype); arg = arg->next)
     {
       int argsize = getSize (arg->type);
-      if (argsize == 1 && FUNC_ISSMALLC (ftype)) // SmallC calling convention passes 8-bit stack arguments as 16 bit.
+      if (argsize == 1 && (FUNC_ISSMALLC (ftype) || FUNC_ISDYNAMICC (ftype) && !IS_STRUCT (arg->type))) // SmallC and Dynamic C calling conventions pass 8-bit stack arguments as 16 bit.
         argsize++;
       if (!SPEC_REGPARM (arg->etype))
         stackparmbytes += argsize;
@@ -7175,14 +7175,13 @@ genIpush (const iCode *ic)
   sym_link *ftype = operandType (IC_LEFT (walk));
   if (walk->op == PCALL)
     ftype = ftype->next;
-  const bool smallc = IFFUNC_ISSMALLC (ftype);
 
   /* then do the push */
   aopOp (IC_LEFT (ic), ic, FALSE, FALSE);
 
   int size = IC_LEFT (ic)->aop->size;
 
-  if (size == 1 && smallc) /* The SmallC calling convention pushes 8-bit parameters as 16-bit values. */
+  if (size == 1 && (IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype))) // The SmallC and Dynamic C calling conventions push 8-bit parameters as 16-bit values.
     {
       if (ic->left->aop->type == AOP_REG && ic->left->aop->aopu.aop_reg[0]->rIdx == C_IDX)
         emit3w (A_PUSH, ASMOP_BC, 0);
@@ -8569,7 +8568,7 @@ genEndFunction (iCode *ic)
     {
       wassert (arg->sym);
       int argsize = getSize (arg->sym->type);
-      if (argsize == 1 && FUNC_ISSMALLC (sym->type)) // SmallC calling convention passes 8-bit stack arguments as 16 bit.
+      if (argsize == 1 && (FUNC_ISSMALLC (sym->type) || FUNC_ISDYNAMICC (sym->type) && !IS_STRUCT (arg->sym->type))) // SmallC and Dynamic C calling conventions pass 8-bit stack arguments as 16 bit.
         argsize++;
       if (!SPEC_REGPARM (arg->etype))
         stackparmbytes += argsize;

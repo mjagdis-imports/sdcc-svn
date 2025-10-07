@@ -683,7 +683,7 @@ newiCodeParm (int op, operand *left, sym_link *ftype, int *stack)
           if (IS_ARRAY (parmtype))
             parmtype = aggrToPtr (parmtype, false);
           *stack += getSize (parmtype);
-          if (IFFUNC_ISSMALLC (ftype) && getSize (parmtype) == 1) // SmallC calling convention passes 8-bit parameters as 16-bit values.
+          if ((IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype) && !IS_STRUCT (parmtype)) && getSize (parmtype) == 1) // SmallC and Dynamic C calling conventions pass 8-bit parameters as 16-bit values.
             (*stack)++;
           else if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // So does pdk due to stack alignment requirements.
             (*stack)++;
