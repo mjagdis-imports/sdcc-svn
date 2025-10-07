@@ -51378,14 +51378,16 @@ All arguments are passed on the stack.
  32-bit return values are passed in bcde (arithmetic types) or px (pointers to __far).
  struct and union,
  independent of their size,
- are returned via the stack (not yet supported in SDCC).
- Return values of other types are not supported by the convention.
+ are returned via the stack.
+ Return values of other types are not supported by the convention,
+ nor is returning struct/union from functions with variable arguments.
 \end_layout
 
 \begin_layout Standard
 Support for the Dynamic C calling convention is still incomplete:
  pointers to __far can neither be returned nor passed as parameters;
- return values of struct/union type are not yet supported.
+ return values of struct/union type are not yet supported;
+ functions with variable arguments are supported on the caller side only.
  Any attempt to use such an unsupported aspect will result in an error message from the compiler.
  Also,
  8-bit parameters are not sign-extended by the caller (i.e.

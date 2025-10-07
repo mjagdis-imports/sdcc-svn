@@ -2522,7 +2522,7 @@ aopArg (sym_link *ftype, int i)
 {
   wassert (IS_FUNC (ftype));
 
-  if (IFFUNC_HASVARARGS (ftype))
+  if (FUNC_HASVARARGS (ftype) && !FUNC_ISDYNAMICC (ftype))
     return 0;
 
   value *args = FUNC_ARGS(ftype);

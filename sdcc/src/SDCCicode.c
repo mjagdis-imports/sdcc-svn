@@ -3722,8 +3722,8 @@ send:
           ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, ftype, stack);
           ADDTOCHAIN (ic);
         }
-      if (IFFUNC_ISDYNAMICC (ftype) && IS_REGPARM (parms->etype) && !IFFUNC_HASVARARGS (ftype))
-        goto send; // Dynamic C might pass the first paramter both in a register and on the stack.
+      if (IFFUNC_ISDYNAMICC (ftype) && IS_REGPARM (parms->etype))
+        goto send; // Dynamic C might pass the first paramter both in a register (even for vararg functions) and on the stack.
     }
 
   if (*iArg >= 0)
