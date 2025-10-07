@@ -2454,15 +2454,13 @@ aopRet (sym_link *ftype)
 
   const bool bigreturn = (size > 4) || IS_STRUCT (ftype->next);
 
-  wassertl (!bigreturn || !FUNC_ISDYNAMICC (ftype), "return type not yet supported for __dynamicc");
-
   if (bigreturn)
     return (0);
 
   if (FUNC_ISDYNAMICC (ftype))
     {
-      if (IS_STRUCT (ftype->next))
-        wassertl (0, "struct/union return type not yet supported for __dynamicc");
+      if (FUNC_HASVARARGS (ftype->next))
+        wassertl (0, "struct/union return type not yet supported __dynamicc with variable arguments");
       else if (IS_FARPTR (ftype->next))
         wassertl (0, "pointer to __far return type not yet supported for __dynamicc");
       else
@@ -8571,7 +8569,7 @@ genEndFunction (iCode *ic)
       int argsize = getSize (arg->sym->type);
       if (argsize == 1 && (FUNC_ISSMALLC (sym->type) || FUNC_ISDYNAMICC (sym->type) && !IS_STRUCT (arg->sym->type))) // SmallC and Dynamic C calling conventions pass 8-bit stack arguments as 16 bit.
         argsize++;
-      if (!SPEC_REGPARM (arg->etype))
+      if (!SPEC_REGPARM (arg->etype) || FUNC_ISDYNAMICC (sym->type))
         stackparmbytes += argsize;
     }
 
@@ -9013,12 +9011,27 @@ genRet (const iCode *ic)
   else if (!IS_SM83 && (ic->left->aop->type == AOP_STK || ic->left->aop->type == AOP_EXSTK) ||
     !IS_SM83 && !IS_R2K && !IS_R2KA && (ic->left->aop->type == AOP_DIR || ic->left->aop->type == AOP_IY))
     {
-      setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
-      emit2 ("ld e, !*hl");
-      cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
-      emit3w (A_INC, ASMOP_HL, 0);
-      emit2 ("ld d, !*hl");
-      cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
+      if (IFFUNC_ISDYNAMICC (currFunc->type))
+        {
+            int stackparmbytes = 0;
+            for (value *arg = FUNC_ARGS (currFunc->type); arg; arg = arg->next)
+              {
+                wassert (arg->sym);
+                int argsize = getSize (arg->sym->type);
+                if (argsize == 1) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
+                  argsize++;
+              }
+          setupPairFromSP (PAIR_DE, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
+        }
+      else
+        {
+          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+          emit2 ("ld e, !*hl");
+          cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
+          emit3w (A_INC, ASMOP_HL, 0);
+          emit2 ("ld d, !*hl");
+          cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
+        }
       if (IC_LEFT (ic)->aop->type == AOP_STK || IC_LEFT (ic)->aop->type == AOP_EXSTK)
         {
           int sp_offset, fp_offset;
@@ -9041,16 +9054,33 @@ genRet (const iCode *ic)
     }
   else
     {
-      setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
-      emit2 ("ld c, !*hl");
-      cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
-      emit3w (A_INC, ASMOP_HL, 0);
-      emit2 ("ld b, !*hl");
-      cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
-      updatePair (PAIR_HL, 1);
+      if (IFFUNC_ISDYNAMICC (currFunc->type))
+        {
+            int stackparmbytes = 0;
+            for (value *arg = FUNC_ARGS (currFunc->type); arg; arg = arg->next)
+              {
+                wassert (arg->sym);
+                int argsize = getSize (arg->sym->type);
+                if (argsize == 1) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
+                  argsize++;
+              }
+          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
+          emit3 (A_LD, ASMOP_C, ASMOP_L);
+          emit3 (A_LD, ASMOP_B, ASMOP_H);
+        }
+      else
+        {
+          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+          emit2 ("ld c, !*hl");
+          cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
+          emit3w (A_INC, ASMOP_HL, 0);
+          emit2 ("ld b, !*hl");
+          cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
+          updatePair (PAIR_HL, 1);
+        }
       do
         {
-          cheapMove (ASMOP_A, 0, IC_LEFT (ic)->aop, offset++, true);
+          cheapMove (ASMOP_A, 0, ic->left->aop, offset++, true);
           emit2 ("ld !mems, a", "bc");
           cost2 (1, 2, -1, -1, 7, 7, 7, 7, 8, 6, -1, -1, -1, 2, 2);
           if (size > 1)
