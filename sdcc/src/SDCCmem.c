@@ -636,7 +636,7 @@ allocGlobal (symbol *sym)
 /* allocParms - parameters are always passed on stack              */
 /*-----------------------------------------------------------------*/
 void
-allocParms (value *val, bool smallc)
+allocParms (value *val, bool smallc, bool dynamicc)
 {
   value *lval;
   int pNum = 1;
@@ -667,7 +667,8 @@ allocParms (value *val, bool smallc)
       /* if this a register parm then allocate
          it as a local variable by adding it
          to the first block we see in the body */
-      if (IS_REGPARM (lval->etype))
+      if (IS_REGPARM (lval->etype) &&
+        !dynamicc) // DynamicC passes the frist parameter both in a register and on the stack.
         continue;
 
       /* mark it as my parameter */

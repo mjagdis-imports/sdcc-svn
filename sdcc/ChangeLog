@@ -1,3 +1,14 @@
+2025-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCmem.c,
+	  src/SDCCmem.h,
+	  src/z80/gen.c,
+	  support/regression/tests/dynamicc.c:
+	  16- and 32-bit parameter support for __dynamicc.
+
 2025-09-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge atomic branch.

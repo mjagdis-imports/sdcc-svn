@@ -2539,7 +2539,20 @@ aopArg (sym_link *ftype, int i)
     }
 
   if (FUNC_ISDYNAMICC (ftype))
-    wassertl (0, "Parameters not supported for __dynamicc yet");
+    {
+      if (i != 1 || IS_STRUCT (args->type))
+        return 0;
+
+      switch (getSize (args->type))
+        {
+        case 2:
+          return ASMOP_HL;
+        case 4:
+          return ASMOP_BCDE;
+        default:
+          wassertl (0, "Unsupported first parameter size for __dynamicc");
+        }
+    }
 
   // Old SDCC calling convention: Pass everything on the stack.
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || IFFUNC_ISBANKEDCALL (ftype))

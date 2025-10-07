@@ -51046,9 +51046,10 @@ The current default is the SDCC calling convention,
  version 1.
  Using the command-line option –sdcccall 0,
  the default can be changed to version 0.
- There are three other calling conventions supported,
+ There are four other calling conventions supported,
  which can be specified using the keywords __smallc,
- __z88dk_fastcall and __z88dk_callee.
+ __z88dk_fastcall,
+ __z88dk_callee and __dynamicc.
  They are primarily intended for compatibility with libraries written for other compilers.
  For __z88dk_fastcall,
  there may be only one parameter of at most 32 bits,
@@ -51150,18 +51151,22 @@ This calling convention can be chosen per function via __sdcccall(0).
 Rabbit 2000,
  Rabbit 2000A,
  Rabbit 3000A,
+ Rabbit 4000,
+ Rabbit 5000,
+ Rabbit 6000,
  eZ80 and TLCS-90 calling conventions
 \end_layout
 
 \begin_layout Standard
-The current default is the Rabbit calling convetion desribed here,
+The current default is the Rabbit calling convention described here,
  version 1.
  Using the command-line option –sdcccall 8,
  the default can be changed to version 0 of the Z80 calling convention,
  described above.
  There are four other calling conventions supported,
  which can be specified using the keywords __smallc,
- __z88dk_fastcall and __z88dk_callee.
+ __z88dk_fastcall,
+ __z88dk_callee and __dynamicc.
  They are primarily intended for compatibility with libraries written for other compilers.
  For __z88dk_fastcall,
  there may be only one parameter of at most 32 bits,
@@ -51249,6 +51254,8 @@ The current default is the SDCC calling convention,
  version 1.
  Using the command-line option –sdcccall 0,
  the default can be changed to version 0.
+ There is another calling conventions supported,
+ which can be specified using the keyword __dynamicc.
 \end_layout
 
 \begin_layout Subsubsection

@@ -3540,15 +3540,15 @@ geniCodeDummyRead (operand * op)
 /* geniCodeSEParms - generate code for side effecting fcalls       */
 /*-----------------------------------------------------------------*/
 static void
-geniCodeSEParms (ast *parms, int lvl)
+geniCodeSEParms (ast *parms, int lvl, sym_link *ftype)
 {
   if (!parms)
     return;
 
   if (IS_AST_PARAM (parms))
     {
-      geniCodeSEParms (parms->left, lvl);
-      geniCodeSEParms (parms->right, lvl);
+      geniCodeSEParms (parms->left, lvl, ftype);
+      geniCodeSEParms (parms->right, lvl, ftype);
       return;
     }
 
@@ -3564,6 +3564,13 @@ geniCodeSEParms (ast *parms, int lvl)
     parms->opval.op = '+';
 
   parms->opval.oprnd = geniCodeRValue (ast2iCode (parms, lvl + 1), FALSE);
+  if (IFFUNC_ISDYNAMICC (ftype)) // Dynmaic C passes first param both in register and on stack. Need an iTemp to avoid duplication (and double read of volatile, etc).
+    {
+      iCode *ic = newiCode ('=', NULL, parms->opval.oprnd);
+      parms->opval.oprnd = newiTempOperand (operandType (parms->opval.oprnd), 0);
+      IC_RESULT (ic) = parms->opval.oprnd;
+      ADDTOCHAIN (ic);
+    }
   parms->type = EX_OPERAND;
   AST_ARGREG (parms) = parms->etype ? SPEC_ARGREG (parms->etype) : SPEC_ARGREG (parms->ftype);
 }
@@ -3596,8 +3603,10 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
   pval = parms->opval.oprnd;
 
   /* if register parm then make it a send */
-  if ((IS_REGPARM (parms->etype) && !IFFUNC_HASVARARGS (ftype)) || IFFUNC_ISBUILTIN (ftype))
+  if (((IS_REGPARM (parms->etype) && !IFFUNC_HASVARARGS (ftype)) || IFFUNC_ISBUILTIN (ftype)) &&
+    !IFFUNC_ISDYNAMICC (ftype))
     {
+send:
       pval = checkTypes (operandFromValue (argVals, true), pval);
       ic = newiCode (SEND, pval, NULL);
       ic->argreg = SPEC_ARGREG (parms->etype);
@@ -3713,6 +3722,8 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
           ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, ftype, stack);
           ADDTOCHAIN (ic);
         }
+      if (IFFUNC_ISDYNAMICC (ftype) && IS_REGPARM (parms->etype) && !IFFUNC_HASVARARGS (ftype))
+        goto send; // Dynamic C might pass the first paramter both in a register and on the stack.
     }
 
   if (*iArg >= 0)
@@ -3764,13 +3775,13 @@ geniCodeCall (operand * left, ast * parms, int lvl)
   if (inCriticalPair && FUNC_ISCRITICAL (ftype))
     werror (E_INVALID_CRITICAL);
 
+  if (IS_FUNCPTR (ftype))
+    ftype = ftype->next;
+
   /* take care of parameters with side-effecting
      function calls in them, this is required to take care
      of overlaying function parameters */
-  geniCodeSEParms (parms, lvl);
-
-  if (IS_FUNCPTR (ftype))
-    ftype = ftype->next;
+  geniCodeSEParms (parms, lvl, ftype);
 
   /* first the parameters */
   if ((options.stackAuto || IFFUNC_ISREENT (ftype)) && !IFFUNC_ISBUILTIN (ftype))
