@@ -6,7 +6,7 @@
 #define __far
 #endif
 
-char passChar(char p)  // __dynamicc
+char passChar(char p) __dynamicc
 {
 	return p + 1;
 }
@@ -41,7 +41,7 @@ char *passFarPtr(__far char *p) __dynamicc // first parameter on stack, return v
 	return (char *)p + 1;
 }
 
-char passChar2(char p, char p2) // __dynamicc
+char passChar2(char p, char p2) __dynamicc
 {
 	return p + p2;
 }
@@ -77,13 +77,13 @@ void testDynamicC(void)
 	ASSERT(passInt(i) == i + 1);
 	ASSERT(passLong(l) == l + 1);
 	ASSERT(passPtr(&c) == &c + 1);
-	//ASSERT(passStruct(s) == s.i + 1);
+	ASSERT(passStruct(s) == s.i + 1);
 	ASSERT(passFarPtr((__far char*)(&c)) == &c + 1);
 
 	ASSERT(passChar2(c, 2) == c + 2);
 	ASSERT(passInt2(i, 2) == i + 2);
 	ASSERT(passLong2(l, 2) == l + 2);
 	ASSERT(passPtr2(&c, 1) == &c + 1);
-	//ASSERT(passStruct2(s, 2) == s.i + 2);
+	ASSERT(passStruct2(s, 2) == s.i + 2);
 }
 

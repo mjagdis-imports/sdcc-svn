@@ -17,7 +17,7 @@ void fnoret(void) __dynamicc
   return (({rtype})VAL);
 }
 
-{rtype} fpar(int p0, {rtype} p1) __dynamicc
+{rtype} fpar({rtype} p0, {rtype} p1) __dynamicc
 {
   return (p0 + p1);
 }

@@ -2553,6 +2553,8 @@ aopArg (sym_link *ftype, int i)
 
       switch (getSize (args->type))
         {
+        case 1:
+          return ASMOP_L;
         case 2:
           return ASMOP_HL;
         case 4:
@@ -3977,7 +3979,6 @@ aopPut (asmop *aop, const char *s, int offset)
 
     case AOP_DIR:
       /* Direct.  Hmmm. */
-      wassert (!IS_TLCS90);
       if (strcmp (s, "a"))
         emit2 ("ld a, %s", s);
       emit2 ("ld (%s+%d), a", aop->aopu.aop_dir, offset);

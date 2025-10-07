@@ -51361,11 +51361,11 @@ Functions declared __dynamicc are called using the Dynamic C calling convention.
 
 \begin_layout Standard
 All arguments are passed on the stack.
- The first parameter is also passed in hl if it has 16 bits,
- in bcde if it has arithmetic type.
- 8-bit arguments are not yet supported by SDCC.
+ The first parameter is also passed in hl if it has 8 bits (sign-extended,
+ but callees in Dynamic C don't rely on that) or 16 bits,
+ in bcde if it has arithmetic type and 32 bits.
  struct and union,
- and pointers to __far (not yet supported by SDCC),
+ and pointers to __far,
  are passed on the stack only.
  Arguments of other types are not supported by the convention.
  Currently,
@@ -51373,10 +51373,9 @@ All arguments are passed on the stack.
 \end_layout
 
 \begin_layout Standard
-8-bit return values are passed in (h)l,
- 16-bit return values are passed in hl,
- 32-bit return values are passed in px (pointers to __far,
- not yet supported by SDCC) or bcde (arithmetic types).
+8-bit (sign-extended,
+ but callers in Dynamic C don't rely on that) and 16-bit return values are passed in hl,
+ 32-bit return values are passed in bcde (arithmetic types) or px (pointers to __far).
  struct and union,
  independent of their size,
  are returned via the stack (not yet supported in SDCC).
@@ -51384,12 +51383,13 @@ All arguments are passed on the stack.
 \end_layout
 
 \begin_layout Standard
-Warning:
- support for the Dynamic C calling convention is still incomplete:
- parameters of 8-bit types are not yet fully supported (missing caller side support for the first parameter of the function),
- issues with return values being assigned to local variables on the stack (caller side),
- return values of struct/union type are not yet supported (both caller and callee side).
+Support for the Dynamic C calling convention is still incomplete:
+ pointers to __far can neither be returned nor passed as parameters;
+ return values of struct/union type are not yet supported.
  Any attempt to use such an unsupported aspect will result in an error message from the compiler.
+ Also,
+ 8-bit parameters are not sign-extended by the caller (i.e.
+ the upper byte which is not used by Dynamic C callees has an unspecified value).
 \end_layout
 
 \begin_layout Subsection
@@ -51404,10 +51404,10 @@ The Z80 and some derivatives support complex instructions,
  .
  SDCC uses these instructions for some functions in the standard library,
  and sometimes directly generates code for such functions.
- ldir and ldi are also used for assignments.
+ ldir and ldi are also used by code generation.
  Thus,
  e.g.
- copying one array into another is more efficient when using memcpy() than by using a a user-written loop (but not more efficient than assigning a struct containing such an array).
+ copying one array into another is more efficient when using memcpy() than by using a a user-written loop assigning the elements (but not more efficient than assigning a struct containing such an array).
  
 \end_layout
 
