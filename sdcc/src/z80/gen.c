@@ -2460,17 +2460,25 @@ aopRet (sym_link *ftype)
     return (0);
 
   if (FUNC_ISDYNAMICC (ftype))
-    switch (size)
-      {
-      case 0:
-        return 0;
-      case 2:
-        return (ASMOP_HL);
-      case 4:
-        return (ASMOP_BCDE);   
-      default:
-        wassertl (0, "return type not yet supported for __dynamicc");
-      }
+    {
+      if (IS_STRUCT (ftype->next))
+        wassertl (0, "struct/union return type not yet supported for __dynamicc");
+      else if (IS_FARPTR (ftype->next))
+        wassertl (0, "pointer to __far return type not yet supported for __dynamicc");
+      else
+        switch (size)
+          {
+          case 0:
+            return 0;
+          case 1:
+          case 2:
+            return (ASMOP_HL);
+          case 4:
+           return (ASMOP_BCDE);   
+          default:
+            wassertl (0, "return type of size not (yet) supported for __dynamicc");
+          }
+    }
 
   if (FUNC_SDCCCALL (ftype) == 0 || FUNC_ISSMALLC (ftype) || FUNC_ISZ88DK_FASTCALL (ftype))
     switch (size)
@@ -2540,7 +2548,7 @@ aopArg (sym_link *ftype, int i)
 
   if (FUNC_ISDYNAMICC (ftype))
     {
-      if (i != 1 || IS_STRUCT (args->type))
+      if (i != 1 || IS_STRUCT (args->type) || IS_FARPTR (args->type))
         return 0;
 
       switch (getSize (args->type))
@@ -7079,7 +7087,7 @@ _saveRegsForCall (const iCode *ic, bool saveHLifused, bool dontsaveIY)
       const bool push_de = !isRegDead (D_IDX, ic) && !call_preserves_d || !isRegDead (E_IDX, ic) && !call_preserves_e;
       const bool push_iy = !dontsaveIY && (!isRegDead (IYH_IDX, ic) || !isRegDead (IYL_IDX, ic));
       const bool push_jk = (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && (!isRegDead (J_IDX, ic) || !isRegDead (K_IDX, ic));
-      const bool push_ix = FUNC_ISDYNAMICC (ftype);
+      const bool push_ix = FUNC_ISDYNAMICC (ftype) && !IS_SM83;
 
       if (push_jk) // there is no separate jk push instruction.
         {
@@ -8240,9 +8248,10 @@ genCall (const iCode *ic)
   /* if we need assign a result value */
   if (SomethingReturned && !bigreturn)
     {
-      genMove (IC_RESULT (ic)->aop, aopRet (ftype), true, true, true, true);
-
-      freeAsmop (IC_RESULT (ic), 0);
+      genMove (ic->result->aop, aopRet (ftype), true, true, true, true);
+      if (_G.stack.pushedIX && ic->result->aop->type == AOP_STK)
+        UNIMPLEMENTED;
+      freeAsmop (ic->result, 0);
     }
 
   spillCached ();
@@ -8971,7 +8980,15 @@ genRet (const iCode *ic)
             }
         }
       else if (size > 0) // SDCC supports GCC extension of returning void
-        genMove (aopRet (currFunc->type), IC_LEFT (ic)->aop, true, true, true, true);
+        {
+          if (IFFUNC_ISDYNAMICC (currFunc->type) && ic->left->aop->size == 1) // Always zero-extend 1-byte return value to 2 bytes for __dynamicc.
+            {
+              genMove_o (aopRet (currFunc->type), 0, ic->left->aop, 0, 1, true, true, true, true, true);
+              genMove_o (aopRet (currFunc->type), 1, ASMOP_ZERO, 0, 1, false, false, false, false, true);
+            }
+          else
+            genMove (aopRet (currFunc->type), ic->left->aop, true, true, true, true);
+        }
     }
   else if (IC_LEFT (ic)->aop->type == AOP_LIT)
     {

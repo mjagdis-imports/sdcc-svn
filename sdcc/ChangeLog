@@ -6,8 +6,9 @@
 	  src/SDCCmem.c,
 	  src/SDCCmem.h,
 	  src/z80/gen.c,
-	  support/regression/tests/dynamicc.c:
-	  16- and 32-bit parameter support for __dynamicc.
+	  support/regression/tests/dynamicc.c,
+	  support/regression/tests/dynamic.c.in:
+	  16- and 32-bit parameter, 8-bit return value support for __dynamicc.
 
 2025-09-28 Philipp Klaus Krause <philipp@colecovision.eu>
 

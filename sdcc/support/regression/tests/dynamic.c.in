@@ -2,13 +2,9 @@
     AFAIK the original Dynamic C only supported Z180 and the Rabbits.
     We support this calling convention for all Z80-like architectures that have ix, though.
 
-    rtype: unsigned int, unsigned long
+    rtype: signed char, unsigned char, signed int, unsigned int, signed long, unsigned long
 */
 #include <testfwk.h>
-
-#if !defined(__SDCC_z80) && !defined(__SDCC_z80n) && !defined(__SDCC_z180) && !defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && !defined(__SDCC_tlcs90) && !defined(__SDCC_ez80) && !defined(__SDCC_r800)
-#define __dynamicc
-#endif
 
 #define VAL 0xaa55a55a
 
@@ -34,7 +30,6 @@ int frameptruser (char i, int j, long k, long long l)
   return (a[0] + a[1] + a[2] + a[3] + a[4]); // The reads from the array should use the frame pointer.
 }
 
-// TODO: test unsigned char return when supported for __dynamicc
 // TODO: test struct/union return when supported for __dynamicc
 // TODO: test parameter passing when supported for __dynamicc
 

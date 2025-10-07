@@ -245,6 +245,7 @@ static char *_keywordsgb[] = {
   "interrupt",
   "z88dk_callee",
   "smallc",
+  "dynamicc",
   NULL
 };
 
