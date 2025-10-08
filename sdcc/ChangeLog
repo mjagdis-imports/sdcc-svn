@@ -1,3 +1,11 @@
+2025-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  support/regression/tests/dynamic.c.in,
+	  support/regression/tests/dynamicc.c,
+	  support/regression/tests/dynamiccasmchk.c:
+	  Further test cases for __dynamicc.
+
 2025-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx,

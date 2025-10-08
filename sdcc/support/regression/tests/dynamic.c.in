@@ -1,6 +1,6 @@
 /** dynamicc.c.in - test Dynamic C calling convention support.
     AFAIK the original Dynamic C only supported Z180 and the Rabbits.
-    We support this calling convention for all Z80-like architectures that have ix, though.
+    We support this calling convention for all Z80-like architectures, though.
 
     rtype: signed char, unsigned char, signed int, unsigned int, signed long, unsigned long
 */

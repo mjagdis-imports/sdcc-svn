@@ -51384,7 +51384,7 @@ All arguments are passed on the stack.
 \end_layout
 
 \begin_layout Standard
-Support for the Dynamic C calling convention is still incomplete:
+Support for the Dynamic C calling convention is still slightly incomplete:
  pointers to __far can neither be returned nor passed as parameters;
  return values of struct/union type are not yet supported on the caller side;
  functions with variable arguments are not supported on the callee side.
