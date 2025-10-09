@@ -4,17 +4,16 @@
 
 #include <stdbool.h>
 
-// TODO: enable for ez80 when asm bug #3826 and #3827 are fixed!
-// TODO: enable for Rabbits when sim bug #3858 is fixed!
-// TODO: enable for tlcs90 when sim bug #3859 is fixed!
-#if 1 /*!defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && !defined(__SDCC_tlcs90) && !defined(__SDCC_ez80)*/
+// TODO: enable when bug #2930 is fixed!
+#if /*!defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && TODO bug 3881#*/ !defined(__SDCC_tlcs90) /*&& !defined(__SDCC_ez80) TODO bug #3882*/
 #define __far
 char farmemblock[2];
 #else
 #undef __far
 // Ensure that farmemblock and farmemblock+sizeof(farmemblock) differ in more than just the lowest 16 bits. Also gives further objects in __far an address > 2^16.
-char memblock[6000];
-__far char farmemblock[40000];
+// TODO: enable when bug #2930 is fixed!
+char memblock[60/*00*/];
+__far char farmemblock[40/*000*/];
 #endif
 
 struct sb

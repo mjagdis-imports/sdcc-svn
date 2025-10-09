@@ -636,7 +636,7 @@ allocGlobal (symbol *sym)
 /* allocParms - parameters are always passed on stack              */
 /*-----------------------------------------------------------------*/
 void
-allocParms (value *val, bool smallc)
+allocParms (value *val, bool smallc, bool dynamicc)
 {
   value *lval;
   int pNum = 1;
@@ -646,7 +646,7 @@ allocParms (value *val, bool smallc)
     {
       for (lval = val; lval; lval = lval->next)
       {
-        if (IS_REGPARM (lval->etype))
+        if (IS_REGPARM (lval->etype) && !dynamicc)
           continue;
         stackParamSizeAdjust += getSize (lval->type) + (getSize (lval->type) == 1);
       }
@@ -667,7 +667,8 @@ allocParms (value *val, bool smallc)
       /* if this a register parm then allocate
          it as a local variable by adding it
          to the first block we see in the body */
-      if (IS_REGPARM (lval->etype))
+      if (IS_REGPARM (lval->etype) &&
+        !dynamicc) // DynamicC passes all parameters on the stack, even the ones that are in a register, too.
         continue;
 
       /* mark it as my parameter */
@@ -677,7 +678,9 @@ allocParms (value *val, bool smallc)
       /* if automatic variables r 2b stacked */
       if (options.stackAuto || IFFUNC_ISREENT (currFunc->type))
         {
-          int paramsize = getSize (lval->type) + (getSize (lval->type) == 1 && smallc) + (getSize (lval->type) % 2 && TARGET_PDK_LIKE);
+          int paramsize = getSize (lval->type) +
+            (getSize (lval->type) == 1 && (smallc || dynamicc && !IS_STRUCT (lval->type))) +
+            (getSize (lval->type) % 2 && TARGET_PDK_LIKE);
 
           if (lval->sym)
             lval->sym->onStack = 1;

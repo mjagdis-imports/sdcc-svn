@@ -110,6 +110,7 @@ extern const operand *validateOpTypeConst (const operand * op,
 #define OP_SYM_TYPE(op)      validateOpType(op, "OP_SYM_TYPE", #op, SYMBOL, __FILE__, __LINE__)->svt.symOperand->type
 #define OP_SYM_ETYPE(op)     validateOpType(op, "OP_SYM_ETYPE", #op, SYMBOL, __FILE__, __LINE__)->svt.symOperand->etype
 #define SPIL_LOC(op)         validateOpType(op, "SPIL_LOC", #op, SYMBOL, __FILE__, __LINE__)->svt.symOperand->usl.spillLoc
+#define SPIL_LOC_CONST(op)   validateOpTypeConst(op, "SPIL_LOC", #op, SYMBOL, __FILE__, __LINE__)->svt.symOperand->usl.spillLoc
 #define OP_LIVEFROM(op)      validateOpType(op, "OP_LIVEFROM", #op, SYMBOL, __FILE__, __LINE__)->svt.symOperand->liveFrom
 #define OP_LIVETO(op)        validateOpType(op, "OP_LIVETO", #op, SYMBOL, __FILE__, __LINE__)->svt.symOperand->liveTo
 #define OP_REQV(op)          validateOpType(op, "OP_REQV", #op, SYMBOL, __FILE__, __LINE__)->svt.symOperand->reqv
@@ -192,7 +193,7 @@ typedef struct iCode
   literalList *arrayInitList;   /* point to array initializer list. */
 
   int lineno;                   /* file & lineno for debug information */
-  char *filename;
+  const char *filename;
 
   int parmBytes;                /* if call/pcall, count of parameter bytes
                                    on stack */
@@ -310,7 +311,7 @@ iCodeTable;
 /*-----------------------------------------------------------------*/
 iCode *reverseiCChain ();
 bool isOperandOnStack (operand *);
-int isOperandVolatile (const operand *, bool);
+bool isOperandVolatile (const operand *, bool);
 int isOperandGlobal (const operand *);
 void printiCChain (iCode *, FILE *);
 operand *ast2iCode (ast *, int);
@@ -333,6 +334,7 @@ symbol *newiTempLabel (const char *);
 #define LOOPEXITLBL "loopExitLbl"
 symbol *newiTempLoopHeaderLabel (bool);
 iCode *newiCode (int, operand *, operand *);
+iCode *newiCodeParm (int op, operand *left, sym_link *ftype, int *stack);
 sym_link *operandType (const operand *);
 unsigned int operandSize (operand *);
 operand *operandFromValue (value *, bool convert_sym_to_ptr);
@@ -347,7 +349,7 @@ int printOperand (operand *, FILE *);
 void setOperandType (operand *, sym_link *);
 bool isOperandInFarSpace (operand *);
 bool isOperandInPagedSpace (operand *);
-bool isOperandInDirSpace (operand *);
+bool isOperandInDirSpace (const operand *);
 bool isOperandInBitSpace (operand *);
 bool isOperandInCodeSpace (operand *);
 operand *opFromOpWithDU (operand *, bitVect *, bitVect *);
@@ -362,7 +364,7 @@ void attachiCodeOperand (operand *, operand **, iCode *);
 /*-----------------------------------------------------------------*/
 /* declaration of exported variables                               */
 /*-----------------------------------------------------------------*/
-extern char *filename;
+extern const char *filename;
 extern int lineno;
 #endif
 

@@ -30,7 +30,7 @@ typedef enum
   AOP_REG,
   /* Is in direct space */
   AOP_DIR,
-  /* Is in far direct space - Rabbits only */
+  /* Is in far direct space - Rabbits, TLCS-90 and eZ80 only */
   AOP_FDIR,
   /* SFR space ($FF00 and above) */
   AOP_SFR,
@@ -64,7 +64,7 @@ typedef struct asmop
   short coff;                   /* current offset */
   short size;                   /* total size */
   unsigned code:1;              /* is in Code space */
-  unsigned paged:1;             /* in paged memory  */
+  bool banked:1;                // in banked/paged memory (for i/o and functiomns)
   unsigned freed:1;             /* already freed    */
   unsigned bcInUse:1;           /* for banked I/O, which uses bc for the I/O address */
   union

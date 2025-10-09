@@ -69,12 +69,5 @@ extern Z80_OPTS z80_opts;
 
 #define IY_RESERVED (z80_opts.reserveIY)
 
-#define OPTRALLOC_IY !(IY_RESERVED || IS_SM83)
-
-enum
-  {
-    ACCUSE_A = 1,
-    ACCUSE_SCRATCH,
-    ACCUSE_IY
-  };
+#define OPTRALLOC_IY !(IY_RESERVED || IS_SM83 || IS_TLCS870)
 

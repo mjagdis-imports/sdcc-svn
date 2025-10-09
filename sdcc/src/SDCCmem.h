@@ -115,7 +115,7 @@ void initMem (void);
 bool defaultOClass (struct symbol *);
 void allocGlobal (struct symbol *);
 void allocLocal (struct symbol *);
-void allocParms (struct value *, bool smallc);
+void allocParms (struct value *, bool smallc, bool dynamicc);
 void deallocParms (struct value *);
 void deallocLocal (struct symbol *);
 int allocVariables (struct symbol *);

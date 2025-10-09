@@ -64,8 +64,8 @@ static const ASM_MAPPING _asxxxx_z80_mapping[] = {
     { "mems", "(%s)" },
     { "enter",
       "push\tix\n"
-      "ld\tix,#0\n"
-      "add\tix,sp" },
+      "ld\tix, #0\n"
+      "add\tix, sp" },
     { "enters",
       "call\t___sdcc_enter_ix\n" },
     { "adjustsp", "lda sp,-%d(sp)" },
@@ -108,8 +108,8 @@ static const ASM_MAPPING _asxxxx_r2k_mapping[] = {
     { "mems", "(%s)" },
     { "enter",
       "push\tix\n"
-      "ld\tix,#0\n"
-      "add\tix,sp" },
+      "ld\tix, #0\n"
+      "add\tix, sp" },
     { "enters",
       "call\t___sdcc_enter_ix\n" },
     { "adjustsp", "lda sp,-%d(sp)" },

@@ -41,7 +41,7 @@
 
 struct SDCCERRG _SDCCERRG; 
 
-extern char *filename;
+extern const char *filename;
 extern int lineno;
 extern int fatalError;
 
@@ -695,6 +695,14 @@ struct
     "enum's underlying type may not be a bit-prcise type in ISO C23", 0},
   { W_INVALID_BITINTWIDTH_1, ERROR_LEVEL_WARNING,
     "signed bit-precise integer type may not have width 1 in ISO C23", 0},
+  { E_ATOMIC_ARRAY, ERROR_LEVEL_ERROR,
+     "_Atomic array", 0 },
+  { E_ATOMIC_FUNCTION, ERROR_LEVEL_ERROR,
+     "_Atomic function", 0 },
+  { E_ATOMIC_SPEC_ATOMIC, ERROR_LEVEL_ERROR,
+     "_Atomic specifier on atomic type", 0 },
+  { E_ATOMIC_SPEC_QUALIFIED, ERROR_LEVEL_ERROR,
+     "_Atomic specifier on qualified type", 0 },
 };
 
 /* -------------------------------------------------------------------------------
@@ -860,9 +868,9 @@ werror_bt (int errNum, ...)
  * -------------------------------------------------------------------------------
  */
 int
-werrorfl (char *newFilename, int newLineno, int errNum, ...)
+werrorfl (const char *newFilename, int newLineno, int errNum, ...)
 {
-  char *oldFilename = filename;
+  const char *oldFilename = filename;
   int oldLineno = lineno;
   va_list marker;
   int ret;

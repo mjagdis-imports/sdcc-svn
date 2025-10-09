@@ -77,6 +77,8 @@ public:
   
   virtual void reset(void);
 #include "instcl.h"
+  virtual int inst_call(void) { return resINV; }
+  virtual int inst_rtc(void) { return resINV; }
 };
 
 
@@ -102,7 +104,15 @@ public:
   virtual const char *id_string(void);
   virtual void mk_hw_elements(void);
   virtual void make_memories(void);
+  virtual int init(void);
   virtual void reset(void);
+  virtual const char *get_disasm_info(t_addr addr,
+				      int *ret_len,
+				      int *ret_branch,
+				      int *immed_offset,
+				      struct dis_entry **dentry);
+  virtual int inst_call(void);
+  virtual int inst_rtc(void);
 };
 
 
@@ -129,6 +139,7 @@ enum { HW_MMU= 0x2000 }; // final place: stypes.h
 class cl_mmu: public cl_hw
 {
 public:
+  t_addr lin_addr;
   class cl_address_space *las;
   class cl_memory_chip *las_chip;
   class cl_memory_cell *ppage, *lap2, *lap1, *lap0,
@@ -138,6 +149,11 @@ public:
 	 class cl_address_space *Ilas,
 	 class cl_memory_chip *Ilas_chip);
   virtual int init(void);
+  virtual unsigned int cfg_size(void) { return 2; }
+  virtual t_mem read(class cl_memory_cell *cell);
+  virtual void write(class cl_memory_cell *cell, t_mem *val);
+  virtual const char *cfg_help(t_addr addr);
+  virtual t_mem conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val);
 };
 
 

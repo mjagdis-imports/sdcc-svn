@@ -85,7 +85,7 @@ cl_hc08::init(void)
     ram->set((t_addr) i, 0);
   }
 
-  sp_limit= 0x7000;
+  sp_limit= 0x0080;//0x7000;
   return(0);
 }
 
@@ -416,6 +416,14 @@ cl_hc08::disass(t_addr addr)
 		++immed_offset;
 		break;
 	      }
+	    case 'C': // 9s08 CALL page,a16
+	      {
+		operand= rom->get(addr+1);
+		temp.format("%d", operand);
+		operand= rom->get(addr+2)*256+rom->get(addr+3);
+		temp.appendf(",$%04x", operand);
+		break;
+	      }
 	    default:
 	      temp= "?";
 	      break;
@@ -477,6 +485,8 @@ cl_hc08::exec_inst(void)
   if (fetch(&code))
     return(resBREAKPOINT);
   tick(1);
+  if (code == 0xac) return inst_call();
+  if (code == 0x8d) return inst_rtc();
   switch ((code >> 4) & 0xf) {
   case 0x0: return(inst_bittestsetclear(code, /*FALSE*/0));
   case 0x1: return(inst_bitsetclear(code, /*FALSE*/0));
@@ -815,11 +825,101 @@ cl_9s08::make_memories(void)
   ad->activate(0);
 }
 
+int
+cl_9s08::init(void)
+{
+  cl_s08::init();
+  mk_mvar(rom, 0x78, "PPAGE", "Program page register");
+  mk_mvar(rom, 0x79, "LAP2" , "Linear address pointer register 2");
+  mk_mvar(rom, 0x7a, "LAP1" , "Linear address pointer register 1");
+  mk_mvar(rom, 0x7b, "LAP0" , "Linear address pointer register 0");
+  mk_mvar(rom, 0x7c, "LWP"  , "Linear word post increment register");
+  mk_mvar(rom, 0x7d, "LBP"  , "Linear byte post increment register");
+  mk_mvar(rom, 0x7e, "LB"   , "Linear byte register");
+  mk_mvar(rom, 0x7f, "LAPAB", "Linear address pointer add byte register");
+  return 0;
+}
+
 void
 cl_9s08::reset(void)
 {
   cl_s08::reset();
   rom->write(0x78, 2);
+}
+
+
+const char *
+cl_9s08::get_disasm_info(t_addr addr,
+			 int *ret_len,
+			 int *ret_branch,
+			 int *immed_offset,
+			 struct dis_entry **dentry)
+{
+  u8_t code= rom->get(addr++);
+  int immed_n = 0;
+  int i, len;
+  int start_addr = addr;
+  struct dis_entry *dis_e;
+
+  for (i=0;
+       disass_9s08[i].mnemonic &&
+	 ((code & disass_9s08[i].mask) != disass_9s08[i].code);
+       i++)
+    ;
+  if (disass_9s08[i].mnemonic == NULL)
+    return cl_s08::get_disasm_info(addr,
+				   ret_len,
+				   ret_branch,
+				   immed_offset,
+				   dentry);
+  dis_e= &disass_9s08[i];
+
+  if (ret_branch) {
+    *ret_branch = dis_e->branch;
+  }
+
+  if (immed_offset) {
+    if (immed_n > 0)
+         *immed_offset = immed_n;
+    else *immed_offset = (addr - start_addr);
+  }
+
+  len= dis_e->length;
+
+  if (ret_len)
+    *ret_len = len;
+
+  if (dentry)
+    *dentry= dis_e;
+  
+  return dis_e->mnemonic;
+}
+
+
+int
+cl_9s08::inst_call(void)
+{
+  u8_t p= fetch();
+  t_addr a= fetch2();
+  push2(PC);
+  push1(rom->read(0x78));
+  rom->write(0x78, p);
+  PC= a;
+  tick(5);
+  return resGO;
+}
+
+int
+cl_9s08::inst_rtc(void)
+{
+  u8_t p;
+  t_addr a;
+  pop1(p);
+  pop2(a);
+  rom->write(0x78, p);
+  PC= a;
+  tick(6);
+  return resGO;
 }
 
 
@@ -892,6 +992,7 @@ cl_mmu::cl_mmu(class cl_uc *auc,
 int
 cl_mmu::init(void)
 {
+  cl_hw::init();
   ppage= register_cell(uc->rom, 0x78);
   lap2 = register_cell(uc->rom, 0x79);
   lap1 = register_cell(uc->rom, 0x7a);
@@ -900,7 +1001,126 @@ cl_mmu::init(void)
   lbp  = register_cell(uc->rom, 0x7d);
   lb   = register_cell(uc->rom, 0x7e);
   lapab= register_cell(uc->rom, 0x7f);
+  lap2->set(0);
+  lap1->set(0);
+  lap0->set(0);
+  lin_addr= 0;
+  uc->mk_mvar(cfg, 1, "LAP", "Linear address pointer");
   return 0;
+}
+
+t_mem
+cl_mmu::read(class cl_memory_cell *cell)
+{
+  if (cell == ppage)
+    {
+    }
+  else if (cell == lap2)
+    {
+      cell->set(lin_addr >> 16);
+    }
+  else if (cell == lap1)
+    {
+      cell->set(lin_addr >> 8);      
+    }
+  else if (cell == lap0)
+    {
+      cell->set(lin_addr & 0xff);
+    }
+  else if (cell == lwp)
+    {
+      cell->set(las->read(lin_addr));
+      lin_addr= (lin_addr+1) & 0x1ffff;
+    }
+  else if (cell == lbp)
+    {
+      cell->set(las->read(lin_addr));
+      lin_addr= (lin_addr+1) & 0x1ffff;
+    }
+  else if (cell == lb)
+    {
+      cell->set(las->read(lin_addr));
+    }
+  else if (cell == lapab)
+    {
+      cell->set(0);
+    }
+  conf(cell, NULL);
+  return cell->get();
+}
+
+void
+cl_mmu::write(class cl_memory_cell *cell, t_mem *val)
+{
+  if (conf(cell, val))
+    return;
+  if (cell == ppage)
+    {
+    }
+  else if (cell == lap2)
+    {
+      lin_addr&= 0xffff;
+      lin_addr|= ((*val & 1) << 16);
+    }
+  else if (cell == lap1)
+    {
+      lin_addr&= 0x100ff;
+      lin_addr|= ((*val & 0xff) << 8);
+    }
+  else if (cell == lap0)
+    {
+      lin_addr&= 0x1ff00;
+      lin_addr|= (*val & 0xff);
+    }
+  else if (cell == lwp)
+    {
+      las->write(lin_addr, *val);
+      lin_addr= (lin_addr+1) & 0x1ffff;
+    }
+  else if (cell == lbp)
+    {
+      las->write(lin_addr, *val);
+      lin_addr= (lin_addr+1) & 0x1ffff;
+    }
+  else if (cell == lb)
+    {
+      las->write(lin_addr, *val);
+    }
+  else if (cell == lapab)
+    {
+      i8_t v= (*val & 0xff);
+      lin_addr+= v;
+      lin_addr&= 0x1ffff;
+    }
+  cell->set(*val);
+}
+
+const char *
+cl_mmu::cfg_help(t_addr addr)
+{
+  switch (addr)
+    {
+      //case 0: return "";
+    case 1: return "Linear address";
+    }
+  return "Not used";
+}
+
+t_mem
+cl_mmu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
+{
+  switch (addr)
+    {
+    case 0: break;
+    case 1:
+      if (val)
+	{
+	  lin_addr= (*val&= 0x1ffff);
+	}
+      cell->set(lin_addr);
+      break;
+    }
+  return cell->get();
 }
 
 
