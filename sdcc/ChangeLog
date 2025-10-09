@@ -6,6 +6,11 @@
 	  support/regression/tests/dynamiccasmchk.c:
 	  Further test cases for __dynamicc.
 
+2025-09-28 Janko Stamenović
+
+	* sdas/linksrc/lkar.c
+	  Fix sdld less dependent builds (Linux on i386)
+
 2025-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx,

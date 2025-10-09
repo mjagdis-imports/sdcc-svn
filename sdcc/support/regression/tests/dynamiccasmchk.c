@@ -6,9 +6,11 @@ volatile char c = 0x5a;
 volatile int i = 0x55aa;
 volatile long l = 0x5aa555aa;
 
-// For ports that support the Dynamic C calling convention test the passing of the first parameter in both registers and stack. LEave out sm83 and tlcs870 for now, since their restricted instruction set makes it harder to write the tests.
+// For ports that support the Dynamic C calling convention test the passing of the first parameter in both registers and stack. Leave out sm83 and tlcs870 for now, since their restricted instruction set makes it harder to write the tests.
 #if defined (__SDCC_z80) || defined (__SDCC_z80n) || defined (__SDCC_z180) || defined (__SDCC_r2k) || defined (__SDCC_r2ka) || defined (__SDCC_r3ka) || defined (__SDCC_r4k) || defined (__SDCC_r5k) || defined (__SDCC_r6k) || defined (__SDCC_tlcs90) || defined (__SDCC_tlcs870c) || defined (__SDCC_tlcs870c1) || defined (__SDCC_ez80) || defined (__SDCC_r800)
+
 #pragma disable_warning 85
+
 unsigned char passChar(char p) __dynamicc __naked
 {
 __asm
@@ -146,7 +148,7 @@ void testDynamicC(void)
 	ASSERT(passInt(i));
 	ASSERT(passLong(l));
 	ASSERT(passPtr(&c));
-	// Access the local vairables. For testing that the handling of the frame pointer register ix works (for __dynamicc, ix iy caller-saved instead of callee-saved).
+	// Access the local variables. For testing that the handling of the frame pointer register ix works (for __dynamicc, ix is caller-saved instead of callee-saved).
 	ASSERT(lc == c);
 	ASSERT(li == i);
 	ASSERT(ll == l);
