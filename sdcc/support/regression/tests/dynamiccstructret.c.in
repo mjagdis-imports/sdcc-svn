@@ -46,7 +46,7 @@ struct s2 fret3 (struct s1 p) __dynamicc
 
 void testDynamicC(void)
 {
-  /*struct s1 s1;
+  struct s1 s1;
   struct s2 s2;
   fret1 (VAL2);
   s1 = fret1 (VAL1);
@@ -56,6 +56,6 @@ void testDynamicC(void)
   ASSERT (s2.c == 'A');
   s2 = fret3 (s1);
   ASSERT (s2.i == ({rtype})VAL1);
-  ASSERT (s2.c == 'B');*/
+  ASSERT (s2.c == 'B');
 }
 

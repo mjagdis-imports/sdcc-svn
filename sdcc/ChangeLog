@@ -3,7 +3,7 @@
 	* support/regression/tests/dynamiccstructret.c.in,
 	  src/z80/gen.c,
 	  doc/sdccman.lyx:
-	  Prepare for __dynamicc struct return.
+	  __dynamicc struct return.
 
 2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
 

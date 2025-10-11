@@ -51385,8 +51385,8 @@ All arguments are passed on the stack.
 
 \begin_layout Standard
 Support for the Dynamic C calling convention is still slightly incomplete:
- pointers to __far can neither be returned nor passed as parameters.
- Any attempt to use this unsupported aspect will result in an error message from the compiler.
+ pointers to __far are not supported as return values;
+ they are not supported as parameters.
  Also,
  8-bit parameters are not sign-extended by the caller (i.e.
  the upper byte,

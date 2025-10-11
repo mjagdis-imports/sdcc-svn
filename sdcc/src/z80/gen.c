@@ -9048,7 +9048,7 @@ genRet (const iCode *ic)
   else if (IC_LEFT (ic)->aop->type == AOP_LIT)
     {
       unsigned long long lit = ullFromVal (IC_LEFT (ic)->aop->aopu.aop_lit);
-      setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+      setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
       emit2 ("!ldahli");
       regalloc_dry_run_cost += 6;
       emit2 ("ld h, !*hl");
@@ -9075,14 +9075,15 @@ genRet (const iCode *ic)
               {
                 wassert (arg->sym);
                 int argsize = getSize (arg->sym->type);
-                if (argsize == 1) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
+                if (argsize == 1 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
                   argsize++;
+                stackparmbytes += argsize;
               }
-          setupPairFromSP (PAIR_DE, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
+          setupPairFromSP (PAIR_DE, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
         }
       else
         {
-          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+          setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
           emit2 ("ld e, !*hl");
           cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
           emit3w (A_INC, ASMOP_HL, 0);
@@ -9118,16 +9119,17 @@ genRet (const iCode *ic)
               {
                 wassert (arg->sym);
                 int argsize = getSize (arg->sym->type);
-                if (argsize == 1) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
+                if (argsize == 1 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
                   argsize++;
+                stackparmbytes += argsize;
               }
-          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
+          setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
           emit3 (A_LD, ASMOP_C, ASMOP_L);
           emit3 (A_LD, ASMOP_B, ASMOP_H);
         }
       else
         {
-          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+          setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
           emit2 ("ld c, !*hl");
           cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
           emit3w (A_INC, ASMOP_HL, 0);
