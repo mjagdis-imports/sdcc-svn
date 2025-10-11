@@ -1,11 +1,16 @@
 2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/regression/tests/dynamiccstructret.c.in,
+	  src/z80/gen.c,
+	  doc/sdccman.lyx:
+	  Prepare for __dynamicc struct return.
+
+2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* doc/sdccman.lyx,
 	  support/regression/tests/dynamic.c.in,
 	  support/regression/tests/dynamiccasmchk.c:
 	  Test and announce __dynamicc varying argument support.
-	* support/regression/tests/dynamiccstructret.c.in:
-	  Prepare for __dynamicc struct return test.
 
 2025-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
