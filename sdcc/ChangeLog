@@ -1,3 +1,10 @@
+2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  support/regression/tests/dynamic.c.in,
+	  support/regression/tests/dynamiccasmchk.c:
+	  Test and announce __dynamicc varying argument support.
+
 2025-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx,

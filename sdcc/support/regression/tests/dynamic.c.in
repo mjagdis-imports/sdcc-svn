@@ -5,6 +5,7 @@
     rtype: signed char, unsigned char, signed int, unsigned int, signed long, unsigned long
 */
 #include <testfwk.h>
+#include <stdarg.h>
 
 #define VAL 0xaa55a55a
 
@@ -36,12 +37,21 @@ int frameptruser (char i, int j, long k, long long l)
 }
 
 // TODO: test struct/union return when supported for __dynamicc
-// TODO: test parameter passing when supported for __dynamicc
+
+int fvarg(int i, ...)
+{
+  va_list va;
+  va_start (va, i);
+  i += va_arg (va, int);
+  va_end (va);
+  return (i);
+}
 
 void testDynamicC(void)
 {
   ASSERT (fret () == ({rtype})VAL);
   ASSERT (frameptruser (1, 2, 3, 4) == 1 + 2 + 3 + 4 + (int)({rtype})VAL);
   ASSERT (fpar (0x5a, 1) == 0x5b);
+  ASSERT (fvarg (1, 2) == 3);
 }
 

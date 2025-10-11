@@ -51386,12 +51386,13 @@ All arguments are passed on the stack.
 \begin_layout Standard
 Support for the Dynamic C calling convention is still slightly incomplete:
  pointers to __far can neither be returned nor passed as parameters;
- return values of struct/union type are not yet supported on the caller side;
- functions with variable arguments are not supported on the callee side.
+ return values of struct/union type are not yet supported on the caller side.
  Any attempt to use such an unsupported aspect will result in an error message from the compiler.
  Also,
  8-bit parameters are not sign-extended by the caller (i.e.
- the upper byte which is not used by Dynamic C callees has an unspecified value).
+ the upper byte,
+ which is not used by Dynamic C callees,
+ has an unspecified value).
 \end_layout
 
 \begin_layout Subsection
