@@ -9,16 +9,16 @@
 
 #define VAL 0xaa55a55a
 
-void fnoret(void) __dynamicc
+void fnoret (void) __dynamicc
 {
 }
 
-{rtype} fret(void) __dynamicc
+{rtype} fret (void) __dynamicc
 {
   return (({rtype})VAL);
 }
 
-{rtype} fpar({rtype} p0, {rtype} p1) __dynamicc
+{rtype} fpar ({rtype} p0, {rtype} p1) __dynamicc
 {
   return (p0 + p1);
 }
@@ -35,8 +35,6 @@ int frameptruser (char i, int j, long k, long long l)
   
   return (a[0] + a[1] + a[2] + a[3] + a[4]); // The reads from the array should use the frame pointer.
 }
-
-// TODO: test struct/union return when supported for __dynamicc
 
 int fvarg(int i, ...)
 {

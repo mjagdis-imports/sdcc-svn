@@ -1,4 +1,4 @@
-/** dynamicc.c - test Dynamic C calling convention support.
+/** dynamicc.c - test Dynamic C calling convention support, mostly parameter passing.
 */
 #include <testfwk.h>
 
