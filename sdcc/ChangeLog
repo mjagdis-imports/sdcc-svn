@@ -1,5 +1,12 @@
 2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/regression/tests/far_rabbits.c.in:
+	  Disable a test for tlcs90, where it fails due to incomplete __far support.
+	* doc/sdccman.lyx:
+	  Document that __far support for Rabbits, TLCS-90 and eZ80 is still experimental.
+
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* doc/sdccman.lyx,
 	  src/SDCCicode.c,
 	  src/SDCCmem.c,
@@ -10,8 +17,6 @@
 	  sim/ucsim/src/sims/tlcs.src/tlcs.cc.
 	  sim/ucsim/src/sims/tlcs.src/tlcscl.h:
 	  Fix uCsim bug #3883.
-	* support/regression/tests/far_rabbits.c.in:
-	  Disable a test for tlcs90, where it fails due to incomplete __far support.
 
 2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
 

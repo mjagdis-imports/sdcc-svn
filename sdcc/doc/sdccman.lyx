@@ -24709,6 +24709,7 @@ far
 
 \begin_layout Standard
 The ez80 port supports a 24 MB __far address space that contains the generic address space.
+ This support is still very incomplete and should be considered experimental.
 \end_layout
 
 \begin_layout Subsection
@@ -24897,6 +24898,8 @@ far
 The Rabbit ports supports a 1 MB __far address space that contains the generic address space.
  Due to limitations of the Rabbit ldp instructions,
  variables declared as __far can be neither volatile nor atomic.
+ Note:
+ This support is still very incomplete and should be considered experimental.
 \end_layout
 
 \begin_layout Subsection
@@ -24914,6 +24917,10 @@ SDCC supports the following TLCS-90-specific intrinsic address spaces:
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+Support for __far is still very incomplete and should be considered experimental.
 \end_layout
 
 \begin_layout Subsection
