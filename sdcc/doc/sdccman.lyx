@@ -51396,14 +51396,28 @@ Pointers to __far are a feature introduced in Dynamic C 10,
 \end_layout
 
 \begin_layout Standard
-Support for the Dynamic C calling convention is still slightly incomplete in SDCC:
- pointers to __far are not supported as return values;
- they are not supported as parameters on the caller-side.
+Support for the Dynamic C calling convention is slightly incomplete in SDCC vs.
+ Dynamic C 10:
+ pointers to __far are not supported as return values.
  Also,
  8-bit parameters are not sign-extended by the caller (i.e.
  the upper byte,
  which is not used by Dynamic C callees,
  has an unspecified value).
+ When passing or returning struct/union or pointers to those to/from a function actually written for Dynamic C,
+ be aware these should only have members of types supported by both SDCC and Dynamic C,
+ and for which both SDCC and Dynamic C use the same layout.
+ This restricts the members to the following types:
+ char,
+ signed char,
+ unsigned char,
+ (signed) int,
+ unsigned int,
+ (signed) long,
+ unsigned long,
+ float,
+ pointers (excluding pointers to __far),
+ struct/union types to which this restriction applies recursively.
 \end_layout
 
 \begin_layout Subsection

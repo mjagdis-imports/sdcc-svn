@@ -3,8 +3,9 @@
 	* doc/sdccman.lyx,
 	  src/SDCCicode.c,
 	  src/SDCCmem.c,
-	  src/z80/gen.c:
-	  Callee-side support for pointers to __far as __dynamicc parameters.
+	  src/z80/gen.c,
+	  support/regression/tests/dynamicc.c:
+	  Support pointers to __far as __dynamicc parameters.
 
 2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
 

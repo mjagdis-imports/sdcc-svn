@@ -2,7 +2,7 @@
 */
 #include <testfwk.h>
 
-#if !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k)
+#if !defined(__SDCC_r2k) && !defined(__SDCC_r2ka) && !defined(__SDCC_r3ka) && !defined(__SDCC_r4k) && !defined(__SDCC_r5k) && !defined(__SDCC_r6k) && !defined(__SDCC_tlcs90) && !defined(__SDCC_ez80)
 #define __far
 #endif
 
@@ -66,6 +66,13 @@ int passStruct2(struct s p, int p2) __dynamicc
 	return p.i + p2;
 }
 
+__far char fc, fd;
+
+int passFarPtr2(__far char *p, __far char *q) __dynamicc // first parameter on stack, return value would be in px if pointer to __far.
+{
+	return (p == &fc && q == &fd);
+}
+
 volatile char c = 0x5a;
 volatile int i = 0x55aa;
 volatile long l = 0x5aa555aa;
@@ -85,5 +92,6 @@ void testDynamicC(void)
 	ASSERT(passLong2(l, 2) == l + 2);
 	ASSERT(passPtr2(&c, 1) == &c + 1);
 	ASSERT(passStruct2(s, 2) == s.i + 2);
+	ASSERT(passFarPtr2(&fc, &fd));
 }
 

@@ -7217,7 +7217,7 @@ genIpush (const iCode *ic)
           spillPair (PAIR_HL);
         }
       else
-        wassert (0);
+        UNIMPLEMENTED;
 
       if (!regalloc_dry_run)
         _G.stack.pushed += 2;
@@ -7225,7 +7225,26 @@ genIpush (const iCode *ic)
     }
   else if (size == 3 && IFFUNC_ISDYNAMICC (ftype)) // pointer to __far
     {
-      wassert (0);
+      if (isRegDead (BC_IDX, ic) && isRegDead (DE_IDX, ic))
+        {
+          genMove_o (ASMOP_BCDE, 0, ic->left->aop, 0, 3, isRegDead (A_IDX, ic), isRegDead (HL_IDX, ic), true, isRegDead (IY_IDX, ic), true);
+          emit3 (A_LD, ASMOP_B, ASMOP_ZERO);
+          if (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET)
+            {
+              emit2 ("push bcde");
+              cost2 (2, -1, -1, -1, -1, -1, 18, 19, -1, -1, -1, -1, -1, -1, -1);
+            }
+          else
+            {
+              emit3w (A_PUSH, ASMOP_BC, 0);
+              emit3w (A_PUSH, ASMOP_DE, 0);
+            }
+        }
+      else
+        UNIMPLEMENTED;
+
+      if (!regalloc_dry_run)
+        _G.stack.pushed += 4;
       goto release;
     }
 
@@ -7233,13 +7252,13 @@ genIpush (const iCode *ic)
     {
       int d = 0;
 
-      bool a_free = isRegDead (A_IDX, ic) && (IC_LEFT (ic)->aop->regs[A_IDX] < 0 || IC_LEFT (ic)->aop->regs[A_IDX] >= size - 1);
-      bool b_free = isRegDead (B_IDX, ic) && (IC_LEFT (ic)->aop->regs[B_IDX] < 0 || IC_LEFT (ic)->aop->regs[B_IDX] >= size - 1);
-      bool c_free = isRegDead (C_IDX, ic) && (IC_LEFT (ic)->aop->regs[C_IDX] < 0 || IC_LEFT (ic)->aop->regs[C_IDX] >= size - 1);
-      bool d_free = isRegDead (D_IDX, ic) && (IC_LEFT (ic)->aop->regs[D_IDX] < 0 || IC_LEFT (ic)->aop->regs[D_IDX] >= size - 1);
-      bool e_free = isRegDead (E_IDX, ic) && (IC_LEFT (ic)->aop->regs[E_IDX] < 0 || IC_LEFT (ic)->aop->regs[E_IDX] >= size - 1);
-      bool h_free = isRegDead (H_IDX, ic) && (IC_LEFT (ic)->aop->regs[H_IDX] < 0 || IC_LEFT (ic)->aop->regs[H_IDX] >= size - 1);
-      bool l_free = isRegDead (L_IDX, ic) && (IC_LEFT (ic)->aop->regs[L_IDX] < 0 || IC_LEFT (ic)->aop->regs[L_IDX] >= size - 1);
+      bool a_free = isRegDead (A_IDX, ic) && (ic->left->aop->regs[A_IDX] < 0 || ic->left->aop->regs[A_IDX] >= size - 1);
+      bool b_free = isRegDead (B_IDX, ic) && (ic->left->aop->regs[B_IDX] < 0 || ic->left->aop->regs[B_IDX] >= size - 1);
+      bool c_free = isRegDead (C_IDX, ic) && (ic->left->aop->regs[C_IDX] < 0 || ic->left->aop->regs[C_IDX] >= size - 1);
+      bool d_free = isRegDead (D_IDX, ic) && (ic->left->aop->regs[D_IDX] < 0 || ic->left->aop->regs[D_IDX] >= size - 1);
+      bool e_free = isRegDead (E_IDX, ic) && (ic->left->aop->regs[E_IDX] < 0 || ic->left->aop->regs[E_IDX] >= size - 1);
+      bool h_free = isRegDead (H_IDX, ic) && (ic->left->aop->regs[H_IDX] < 0 || ic->left->aop->regs[H_IDX] >= size - 1);
+      bool l_free = isRegDead (L_IDX, ic) && (ic->left->aop->regs[L_IDX] < 0 || ic->left->aop->regs[L_IDX] >= size - 1);
       bool iyh_free = isRegDead (IYH_IDX, ic) && (ic->left->aop->regs[IYH_IDX] < 0 || ic->left->aop->regs[IYH_IDX] >= size - 1);
       bool iyl_free = isRegDead (IYL_IDX, ic) && (ic->left->aop->regs[IYL_IDX] < 0 || ic->left->aop->regs[IYL_IDX] >= size - 1);
       bool j_free = isRegDead (J_IDX, ic) && (ic->left->aop->regs[J_IDX] < 0 || ic->left->aop->regs[J_IDX] >= size - 1);
