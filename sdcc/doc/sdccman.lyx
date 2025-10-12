@@ -298,13 +298,12 @@ status collapsed
  NXP (formerly Freescale/Motorola) HC08 based (HC08,
  S08),
  Zilog Z80 based MCUs (Z80,
+ Z80N,
  Z180,
- eZ80 in Z80 mode,
  SM83,
- Rabbit 2000/3000,
- Rabbit 3000A ,
+ Rabbit 2000/3000/3000A,
  Toshiba TLCS-90,
- Zilog eZ80 in Z80 mode,
+ Zilog eZ80,
  ASCII R800
 \begin_inset Index idx
 range none
@@ -337,7 +336,9 @@ STM8
 ,
  Padauk PDK14 and PDK15.
  It can be retargeted for other microprocessors;
- support for Padauk PDK13 and MOS6502 is under development,
+ support for Padauk PDK13,
+ Rabbit 4000/5000/6000,
+ and MOS6502 is under development,
  whereas Microchip PIC is currently unmaintained.
  The entire source code for the compiler is distributed under GPL.
  SDCC uses a modified version of ASXXXX
@@ -3589,43 +3590,7 @@ status collapsed
 
 \end_inset
 
--disable-ez80_z80-port Excludes the e80_z80 port
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
 -disable-z80n-port Excludes the z80n port
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--disable-r800-port Excludes the r800 port
 \end_layout
 
 \begin_layout Labeling
@@ -3697,6 +3662,60 @@ status collapsed
 
 \end_inset
 
+-disable-r4k-port Excludes the r4k port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-r5k-port Excludes the r5k port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-r6k-port Excludes the r6k port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
 -disable-sm83-port Excludes the SM83 port
 \end_layout
 
@@ -3716,6 +3735,42 @@ status collapsed
 \end_inset
 
 -disable-tlcs90-port Excludes the TLCS-90 port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-ez80-port Excludes the e80 port
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-disable-r800-port Excludes the r800 port
 \end_layout
 
 \begin_layout Labeling
@@ -8919,7 +8974,7 @@ version
 
 \family typewriter
 SDCC :
- mcs51/z80/z180/r2k/r2ka/r3ka/sm83/tlcs90/ez80_z80/z80n/r800/ds390/pic16/pic14/TININative/ds400/hc08/s08/stm8/pdk13/pdk14/pdk15/mos6502/mos65c02 4.4.0 #14546 (Linux)
+ mcs51/z80/z80n/z180/r2k/r2ka/r3ka/sm83/tlcs90/ez80/r800/ds390/pic16/pic14/TININative/ds400/hc08/s08/stm8/pdk13/pdk14/pdk15/mos6502/mos65c02 4.4.0 #14546 (Linux)
 \end_layout
 
 \begin_layout Standard
@@ -12904,6 +12959,39 @@ Z80
 \labelwidthstring 00.00.0000
 
 \series bold
+-mz80n
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-mz80n
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the Z80N
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+Z80N
+\end_layout
+
+\end_inset
+
+ processor.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
 -mz180
 \begin_inset Index idx
 range none
@@ -12951,7 +13039,28 @@ status collapsed
 
 
 \series default
- Generate code for the Rabbit 2000 / Rabbit 3000 family of processors.
+ Generate code for the Rabbit 2000 processor.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mr2ka
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-mr2ka
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the Rabbit 2000A / Rabbit 3000 family of processors.
 \end_layout
 
 \begin_layout Labeling
@@ -12972,7 +13081,70 @@ status collapsed
 
 
 \series default
- Generate code for the Rabbit 3000A family of processors.
+ Generate code for the Rabbit 3000A processor.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mr4k
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-mr3ka
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the Rabbit 4000 processor.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mr5k
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-mr3ka
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the Rabbit 5000 processor.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mr6k
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-mr3ka
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the Rabbit 6000 processor.
 \end_layout
 
 \begin_layout Labeling
@@ -13033,21 +13205,42 @@ status open
 \labelwidthstring 00.00.0000
 
 \series bold
--mez80_z80
+-mez80
 \begin_inset Index idx
 range none
 pageformat default
 status open
 
 \begin_layout Plain Layout
--mez80_z80
+-mez80
 \end_layout
 
 \end_inset
 
 
 \series default
- Generate code for the Zilog eZ80 processor in Z80 mode.
+ Generate code for the Zilog eZ80 processor.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-mr800
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-mr800
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generate code for the ASCII R800 processor.
 \end_layout
 
 \begin_layout Labeling
@@ -20090,12 +20283,17 @@ status collapsed
 
 \begin_layout Subsection
 Options common to all z80-related ports (z80,
+ z80n,
  z180,
  r2k,
  r3ka,
+ r4k,
+ r5k,
+ r6k,
  sm83,
  tlcs90,
- ez80_z80)
+ ez80,
+ r800)
 \end_layout
 
 \begin_layout Labeling
@@ -20326,11 +20524,12 @@ Z80
 \end_inset
 
  (apply to z80,
+ z80n,
  z180,
  r2k,
  r3ka,
  tlcs90,
- ez80_z80)
+ ez80)
 \end_layout
 
 \begin_layout Labeling
@@ -26743,12 +26942,16 @@ For mos6502,
  z80,
  z80n,
  z180,
- sm83,
- ez80_z80,
- tlcs90,
  r2k,
  r2ka,
  r3ka,
+ r4k,
+ r5k,
+ r6k,
+ sm83,
+ tlcs90,
+ ez80,
+ r800,
  when using a custom crt0,
  support depends on the custom crt0.
 \end_layout
@@ -29074,11 +29277,16 @@ Interrupt handler can be interrupted by NMI only
 
 \begin_layout Subsection
 Rabbit 2000,
- 3000 and 3000A Interrupt Service Routines
+ 3000,
+ 3000A,
+ 4000,
+ 5000,
+ and 6000 Interrupt Service Routines
 \end_layout
 
 \begin_layout Standard
-SDCC does not attempt to generate an interrupt vector table.
+SDCC generates an internal interrupt vector table,
+ but does not attempt to generate an external interrupt vector table.
 \end_layout
 
 \begin_layout Standard
@@ -29169,7 +29377,8 @@ void f(void) __critical __interrupt(0)
 \begin_inset Text
 
 \begin_layout Plain Layout
-Interrupt handler can be interrupted by interrupts of higher priority only
+Interrupt handler can be interrupted by interrupts of higher priority only.
+ amd will be added to internal interrupt table as first entry.
 \end_layout
 
 \end_inset
@@ -48123,13 +48332,18 @@ ftp://ftp.dalsemi.com/pub/tini/ds80c400/c_libraries/sdcc/index.html
 
 \begin_layout Section
 The Z80,
+ Z80N,
  Z180,
  Rabbit 2000,
  Rabbit 2000A,
  Rabbit 3000A,
+ Rabbit 4000,
+ Rabbit 5000,
+ Rabbit 6000,
  SM83 (GameBoy),
+ TLCS-90,
  eZ80,
- TLCS-90 and R800 ports
+ and R800 ports
 \end_layout
 
 \begin_layout Standard
@@ -48146,8 +48360,9 @@ Z80
 \end_inset
 
 ,
+ Z80N,
  Z180,
- eZ80 in Z80 mode,
+ eZ80,
  Rabbit 2000,
  Rabbit 2000A,
  Rabbit 3000A and LR35902,
