@@ -6,6 +6,10 @@
 	  src/z80/gen.c,
 	  support/regression/tests/dynamicc.c:
 	  Support pointers to __far as __dynamicc parameters.
+	* sim/ucsim/src/sims/tlcs.src/inst_arith.cc.
+	  sim/ucsim/src/sims/tlcs.src/tlcs.cc.
+	  sim/ucsim/src/sims/tlcs.src/tlcscl.h:
+	  Fix uCsim bug #3883.
 
 2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
