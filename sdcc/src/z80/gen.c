@@ -7223,6 +7223,11 @@ genIpush (const iCode *ic)
         _G.stack.pushed += 2;
       goto release;
     }
+  else if (size == 3 && IFFUNC_ISDYNAMICC (ftype)) // pointer to __far
+    {
+      wassert (0);
+      goto release;
+    }
 
   while (size)
     {
@@ -8626,6 +8631,8 @@ genEndFunction (iCode *ic)
       int argsize = getSize (arg->sym->type);
       if (argsize == 1 && (FUNC_ISSMALLC (sym->type) || FUNC_ISDYNAMICC (sym->type) && !IS_STRUCT (arg->sym->type))) // SmallC and Dynamic C calling conventions pass 8-bit stack arguments as 16 bit.
         argsize++;
+      if (argsize == 3 && FUNC_ISDYNAMICC (sym->type) && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes pointer to__far as 32 bits.
+        argsize++;
       if (!SPEC_REGPARM (arg->etype) || FUNC_ISDYNAMICC (sym->type))
         stackparmbytes += argsize;
     }
@@ -9077,6 +9084,8 @@ genRet (const iCode *ic)
                 int argsize = getSize (arg->sym->type);
                 if (argsize == 1 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
                   argsize++;
+                if (argsize == 3 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes pointer to__far as 32 bits.
+                  argsize++;
                 stackparmbytes += argsize;
               }
           setupPairFromSP (PAIR_DE, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
@@ -9120,6 +9129,8 @@ genRet (const iCode *ic)
                 wassert (arg->sym);
                 int argsize = getSize (arg->sym->type);
                 if (argsize == 1 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
+                  argsize++;
+                if (argsize == 3 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes pointer to__far as 32 bits.
                   argsize++;
                 stackparmbytes += argsize;
               }

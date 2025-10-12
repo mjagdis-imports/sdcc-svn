@@ -51384,9 +51384,21 @@ All arguments are passed on the stack.
 \end_layout
 
 \begin_layout Standard
-Support for the Dynamic C calling convention is still slightly incomplete:
+After the call,
+ all stack parameters and the space for struct/union return values are cleaned up by the caller.
+ All registers are to be saved/restored by the caller as needed.
+\end_layout
+
+\begin_layout Standard
+Pointers to __far are a feature introduced in Dynamic C 10,
+ which supports Rabbit 4000/5000/6000 only;
+ no Dynamic C version targeting Z180 or Rabbit 2000/3000 supports them.
+\end_layout
+
+\begin_layout Standard
+Support for the Dynamic C calling convention is still slightly incomplete in SDCC:
  pointers to __far are not supported as return values;
- they are not supported as parameters.
+ they are not supported as parameters on the caller-side.
  Also,
  8-bit parameters are not sign-extended by the caller (i.e.
  the upper byte,

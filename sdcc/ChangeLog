@@ -1,3 +1,11 @@
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCCicode.c,
+	  src/SDCCmem.c,
+	  src/z80/gen.c:
+	  Callee-side support for pointers to __far as __dynamicc parameters.
+
 2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/dynamiccstructret.c.in,
