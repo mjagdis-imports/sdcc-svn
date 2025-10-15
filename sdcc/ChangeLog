@@ -1,5 +1,16 @@
 2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/umaxabs.c,
+	  device/lib/uabs.c,
+	  device/lib/ulabs.c,
+	  device/lib/ullabs.c,
+	  support/regression/tests/uabs.c:
+	  Implement N3349, as modified by N3577.
+
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge rabbit branch.
 
 2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
