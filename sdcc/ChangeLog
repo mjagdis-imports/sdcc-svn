@@ -1,4 +1,10 @@
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/tests/dynamiccstructret.c.in:
+	  Disable a test for targets where it fails for known reasons.
+
 2025-10-14 Janko Stamenović
+
 	* sdas/linksrc/aslink.h
 	  sdas/linksrc/lkar.h
 	  sdas/linksrc/lkarea.c

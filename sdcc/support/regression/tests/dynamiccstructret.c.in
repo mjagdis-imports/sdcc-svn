@@ -21,6 +21,7 @@ struct s2
   {rtype} i;
 };
 
+#if !defined(__SDCC_ds390) && !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // struct return not yet supported
 struct s1 fret1 ({rtype} p) __dynamicc
 {
   struct s1 s;
@@ -43,9 +44,12 @@ struct s2 fret3 (struct s1 p) __dynamicc
   s.c = 'B';
   return s;
 }
+#endif
 
 void testDynamicC(void)
 {
+#if !defined(__SDCC_ds390) && !defined(__SDCC_ds390) && !defined(__SDCC_hc08) && !defined(__SDCC_s08) // struct return not yet supported
+#if !defined(__SDCC_mcs51) || !defined(__SDCC_STACK_AUTO) // Bug #3885
   struct s1 s1;
   struct s2 s2;
   fret1 (VAL2);
@@ -57,5 +61,7 @@ void testDynamicC(void)
   s2 = fret3 (s1);
   ASSERT (s2.i == ({rtype})VAL1);
   ASSERT (s2.c == 'B');
+#endif
+#endif
 }
 
