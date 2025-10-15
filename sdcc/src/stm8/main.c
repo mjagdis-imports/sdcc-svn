@@ -619,3 +619,4 @@ PORT stm8_port =
   5,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
   PORT_MAGIC
 };
+

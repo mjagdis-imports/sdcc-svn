@@ -1,3 +1,77 @@
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge rabbit branch.
+
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/tests/dynamiccstructret.c.in:
+	  Disable a test for targets where it fails for known reasons.
+
+2025-10-14 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lkar.h
+	  sdas/linksrc/lkarea.c
+	  sdas/linksrc/lkbank.c
+	  sdas/linksrc/lkdata.c
+	  sdas/linksrc/lkeval.c
+	  sdas/linksrc/lkhead.c
+	  sdas/linksrc/lklex.c
+	  sdas/linksrc/lklibr.c
+	  sdas/linksrc/lklist.c
+	  sdas/linksrc/lkmain.c
+	  sdas/linksrc/lknoice.c
+	  sdas/linksrc/lkout.c
+	  sdas/linksrc/lkrloc.c
+	  sdas/linksrc/lkrloc3.c
+	  sdas/linksrc/lksym.c
+	  One more sdld rebase step towards upstream
+
+2025-10-14 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lklib.c
+	  gcc15 sdld compatibilty, lklib loadfile_lib remove fclose on null
+
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Documentation updates for Rabbit and eZ80 ports.
+
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/far_rabbits.c.in:
+	  Disable a test for tlcs90, where it fails due to incomplete __far support.
+	* doc/sdccman.lyx:
+	  Document that __far support for Rabbits, TLCS-90 and eZ80 is still experimental. Document interrupt handler changes in z80-related ports.
+
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCCicode.c,
+	  src/SDCCmem.c,
+	  src/z80/gen.c,
+	  support/regression/tests/dynamicc.c:
+	  Support pointers to __far as __dynamicc parameters.
+	* sim/ucsim/src/sims/tlcs.src/inst_arith.cc.
+	  sim/ucsim/src/sims/tlcs.src/tlcs.cc.
+	  sim/ucsim/src/sims/tlcs.src/tlcscl.h:
+	  Fix uCsim bug #3883.
+
+2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/dynamiccstructret.c.in,
+	  src/z80/gen.c,
+	  doc/sdccman.lyx:
+	  __dynamicc struct return.
+
+2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  support/regression/tests/dynamic.c.in,
+	  support/regression/tests/dynamiccasmchk.c:
+	  Test and announce __dynamicc varying argument support.
+
 2025-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx,

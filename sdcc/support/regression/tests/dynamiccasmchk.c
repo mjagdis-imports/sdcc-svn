@@ -116,6 +116,30 @@ bad_ptr:
 __endasm;
 }
 
+unsigned char passVarg(int p, ...) __dynamicc __naked
+{
+__asm
+	ld	ix, #0xabcd
+	ex	de, hl
+	ld	hl, (_i)
+	cp	a, a
+	sbc	hl, de
+	jr	nz, bad_varg
+	pop	bc
+	pop	hl
+	push	hl
+	push	bc
+	cp	a, a
+	sbc	hl, de
+	jr	nz, bad_varg
+	ld	hl, #1
+	ret
+bad_varg:
+	ld	hl, #0
+	ret
+__endasm;
+}
+
 #else // Just do a very basic check for ports that don't have __dynamicc
 unsigned char passChar(char p) __dynamicc
 {
@@ -136,6 +160,12 @@ unsigned char passPtr(char *p) __dynamicc
 {
 	return p == &c;
 }
+
+unsigned char passVarg(int p, ...) __dynamicc
+{
+	return p == i;
+}
+
 #endif
 
 void testDynamicC(void)
@@ -148,6 +178,7 @@ void testDynamicC(void)
 	ASSERT(passInt(i));
 	ASSERT(passLong(l));
 	ASSERT(passPtr(&c));
+	ASSERT(passVarg(i));
 	// Access the local variables. For testing that the handling of the frame pointer register ix works (for __dynamicc, ix is caller-saved instead of callee-saved).
 	ASSERT(lc == c);
 	ASSERT(li == i);

@@ -5,19 +5,20 @@
     rtype: signed char, unsigned char, signed int, unsigned int, signed long, unsigned long
 */
 #include <testfwk.h>
+#include <stdarg.h>
 
 #define VAL 0xaa55a55a
 
-void fnoret(void) __dynamicc
+void fnoret (void) __dynamicc
 {
 }
 
-{rtype} fret(void) __dynamicc
+{rtype} fret (void) __dynamicc
 {
   return (({rtype})VAL);
 }
 
-{rtype} fpar({rtype} p0, {rtype} p1) __dynamicc
+{rtype} fpar ({rtype} p0, {rtype} p1) __dynamicc
 {
   return (p0 + p1);
 }
@@ -35,13 +36,20 @@ int frameptruser (char i, int j, long k, long long l)
   return (a[0] + a[1] + a[2] + a[3] + a[4]); // The reads from the array should use the frame pointer.
 }
 
-// TODO: test struct/union return when supported for __dynamicc
-// TODO: test parameter passing when supported for __dynamicc
+int fvarg(int i, ...)
+{
+  va_list va;
+  va_start (va, i);
+  i += va_arg (va, int);
+  va_end (va);
+  return (i);
+}
 
 void testDynamicC(void)
 {
   ASSERT (fret () == ({rtype})VAL);
   ASSERT (frameptruser (1, 2, 3, 4) == 1 + 2 + 3 + 4 + (int)({rtype})VAL);
   ASSERT (fpar (0x5a, 1) == 0x5b);
+  ASSERT (fvarg (1, 2) == 3);
 }
 

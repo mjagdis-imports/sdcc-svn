@@ -2631,7 +2631,7 @@ isFuncCalleeStackCleanup (sym_link *ftype)
       int argsize = getSize (arg->type);
       if (argsize == 1 && (FUNC_ISSMALLC (ftype) || FUNC_ISDYNAMICC (ftype) && !IS_STRUCT (arg->type))) // SmallC and Dynamic C calling conventions pass 8-bit stack arguments as 16 bit.
         argsize++;
-      if (!SPEC_REGPARM (arg->etype))
+      if (!SPEC_REGPARM (arg->etype) || FUNC_ISDYNAMICC (ftype))
         stackparmbytes += argsize;
     }
   if (!stackparmbytes)
@@ -2853,6 +2853,7 @@ adjustPair (const char *pair, int *pold, int new_val)
 static void
 spillCached (void)
 {
+  spillPair (PAIR_DE);
   spillPair (PAIR_HL);
   spillPair (PAIR_IY);
 }
@@ -7175,6 +7176,10 @@ genIpush (const iCode *ic)
   if (walk->op == PCALL)
     ftype = ftype->next;
 
+  if (IFFUNC_ISDYNAMICC (ftype) && // Dynamic C needs space on stack for struct return.
+    ic->prev->op != IPUSH && ic->prev->op != IPUSH_VALUE_AT_ADDRESS && ic->prev->op != SEND && IS_STRUCT (ftype->next) && !regalloc_dry_run)
+    adjustStack (-getSize (ftype->next), false, false, false, false, false);
+
   /* then do the push */
   aopOp (IC_LEFT (ic), ic, FALSE, FALSE);
 
@@ -7212,42 +7217,66 @@ genIpush (const iCode *ic)
           spillPair (PAIR_HL);
         }
       else
-        wassert (0);
+        UNIMPLEMENTED;
 
       if (!regalloc_dry_run)
         _G.stack.pushed += 2;
       goto release;
     }
+  else if (size == 3 && IFFUNC_ISDYNAMICC (ftype)) // pointer to __far
+    {
+      if (isRegDead (BC_IDX, ic) && isRegDead (DE_IDX, ic))
+        {
+          genMove_o (ASMOP_BCDE, 0, ic->left->aop, 0, 3, isRegDead (A_IDX, ic), isRegDead (HL_IDX, ic), true, isRegDead (IY_IDX, ic), true);
+          emit3 (A_LD, ASMOP_B, ASMOP_ZERO);
+          if (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET)
+            {
+              emit2 ("push bcde");
+              cost2 (2, -1, -1, -1, -1, -1, 18, 19, -1, -1, -1, -1, -1, -1, -1);
+            }
+          else
+            {
+              emit3w (A_PUSH, ASMOP_BC, 0);
+              emit3w (A_PUSH, ASMOP_DE, 0);
+            }
+        }
+      else
+        UNIMPLEMENTED;
 
-    while (size)
-      {
-        int d = 0;
+      if (!regalloc_dry_run)
+        _G.stack.pushed += 4;
+      goto release;
+    }
 
-        bool a_free = isRegDead (A_IDX, ic) && (IC_LEFT (ic)->aop->regs[A_IDX] < 0 || IC_LEFT (ic)->aop->regs[A_IDX] >= size - 1);
-        bool b_free = isRegDead (B_IDX, ic) && (IC_LEFT (ic)->aop->regs[B_IDX] < 0 || IC_LEFT (ic)->aop->regs[B_IDX] >= size - 1);
-        bool c_free = isRegDead (C_IDX, ic) && (IC_LEFT (ic)->aop->regs[C_IDX] < 0 || IC_LEFT (ic)->aop->regs[C_IDX] >= size - 1);
-        bool d_free = isRegDead (D_IDX, ic) && (IC_LEFT (ic)->aop->regs[D_IDX] < 0 || IC_LEFT (ic)->aop->regs[D_IDX] >= size - 1);
-        bool e_free = isRegDead (E_IDX, ic) && (IC_LEFT (ic)->aop->regs[E_IDX] < 0 || IC_LEFT (ic)->aop->regs[E_IDX] >= size - 1);
-        bool h_free = isRegDead (H_IDX, ic) && (IC_LEFT (ic)->aop->regs[H_IDX] < 0 || IC_LEFT (ic)->aop->regs[H_IDX] >= size - 1);
-        bool l_free = isRegDead (L_IDX, ic) && (IC_LEFT (ic)->aop->regs[L_IDX] < 0 || IC_LEFT (ic)->aop->regs[L_IDX] >= size - 1);
-        bool iyh_free = isRegDead (IYH_IDX, ic) && (ic->left->aop->regs[IYH_IDX] < 0 || ic->left->aop->regs[IYH_IDX] >= size - 1);
-        bool iyl_free = isRegDead (IYL_IDX, ic) && (ic->left->aop->regs[IYL_IDX] < 0 || ic->left->aop->regs[IYL_IDX] >= size - 1);
-        bool j_free = isRegDead (J_IDX, ic) && (ic->left->aop->regs[J_IDX] < 0 || ic->left->aop->regs[J_IDX] >= size - 1);
-        bool k_free = isRegDead (K_IDX, ic) && (ic->left->aop->regs[K_IDX] < 0 || ic->left->aop->regs[K_IDX] >= size - 1);
-        bool bc_free = isPairDead (PAIR_BC, ic) && (b_free || ic->left->aop->regs[B_IDX] >= size - 2) && (c_free || ic->left->aop->regs[C_IDX] >= size - 2);
-        bool de_free = isPairDead (PAIR_DE, ic) && (d_free || ic->left->aop->regs[D_IDX] >= size - 2) && (e_free || ic->left->aop->regs[E_IDX] >= size - 2);
-        bool hl_free = isPairDead (PAIR_HL, ic) && (h_free || ic->left->aop->regs[H_IDX] >= size - 2) && (l_free || ic->left->aop->regs[L_IDX] >= size - 2);
-        bool iy_free = isPairDead (PAIR_IY, ic) && (iyh_free || ic->left->aop->regs[H_IDX] >= size - 2) && (iyl_free || ic->left->aop->regs[IYL_IDX] >= size - 2);
-        bool jk_free = isPairDead (PAIR_JK, ic) && (j_free || ic->left->aop->regs[J_IDX] >= size - 2) && (k_free || ic->left->aop->regs[K_IDX] >= size - 2);
+  while (size)
+    {
+      int d = 0;
 
-        if (size >= 4 && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) &&
-          (aopInReg (ic->left->aop, size - 2, BC_IDX) && aopInReg (ic->left->aop, size - 4, DE_IDX) || aopInReg (ic->left->aop, size - 2, JK_IDX) && aopInReg (ic->left->aop, size - 4, HL_IDX)))
-          {
-            emit2 (aopInReg (ic->left->aop, size - 1, B_IDX) ? "push bcde" : "push jkhl");
-            cost2 (2, -1, -1, -1, -1, -1, 18, 19, -1, -1, -1, -1, -1, -1, -1);
-            d = 4;
-          }
-        else if (size >= 2 && getPairId_o (ic->left->aop, size - 2) != PAIR_INVALID)
+      bool a_free = isRegDead (A_IDX, ic) && (ic->left->aop->regs[A_IDX] < 0 || ic->left->aop->regs[A_IDX] >= size - 1);
+      bool b_free = isRegDead (B_IDX, ic) && (ic->left->aop->regs[B_IDX] < 0 || ic->left->aop->regs[B_IDX] >= size - 1);
+      bool c_free = isRegDead (C_IDX, ic) && (ic->left->aop->regs[C_IDX] < 0 || ic->left->aop->regs[C_IDX] >= size - 1);
+      bool d_free = isRegDead (D_IDX, ic) && (ic->left->aop->regs[D_IDX] < 0 || ic->left->aop->regs[D_IDX] >= size - 1);
+      bool e_free = isRegDead (E_IDX, ic) && (ic->left->aop->regs[E_IDX] < 0 || ic->left->aop->regs[E_IDX] >= size - 1);
+      bool h_free = isRegDead (H_IDX, ic) && (ic->left->aop->regs[H_IDX] < 0 || ic->left->aop->regs[H_IDX] >= size - 1);
+      bool l_free = isRegDead (L_IDX, ic) && (ic->left->aop->regs[L_IDX] < 0 || ic->left->aop->regs[L_IDX] >= size - 1);
+      bool iyh_free = isRegDead (IYH_IDX, ic) && (ic->left->aop->regs[IYH_IDX] < 0 || ic->left->aop->regs[IYH_IDX] >= size - 1);
+      bool iyl_free = isRegDead (IYL_IDX, ic) && (ic->left->aop->regs[IYL_IDX] < 0 || ic->left->aop->regs[IYL_IDX] >= size - 1);
+      bool j_free = isRegDead (J_IDX, ic) && (ic->left->aop->regs[J_IDX] < 0 || ic->left->aop->regs[J_IDX] >= size - 1);
+      bool k_free = isRegDead (K_IDX, ic) && (ic->left->aop->regs[K_IDX] < 0 || ic->left->aop->regs[K_IDX] >= size - 1);
+      bool bc_free = isPairDead (PAIR_BC, ic) && (b_free || ic->left->aop->regs[B_IDX] >= size - 2) && (c_free || ic->left->aop->regs[C_IDX] >= size - 2);
+      bool de_free = isPairDead (PAIR_DE, ic) && (d_free || ic->left->aop->regs[D_IDX] >= size - 2) && (e_free || ic->left->aop->regs[E_IDX] >= size - 2);
+      bool hl_free = isPairDead (PAIR_HL, ic) && (h_free || ic->left->aop->regs[H_IDX] >= size - 2) && (l_free || ic->left->aop->regs[L_IDX] >= size - 2);
+      bool iy_free = isPairDead (PAIR_IY, ic) && (iyh_free || ic->left->aop->regs[H_IDX] >= size - 2) && (iyl_free || ic->left->aop->regs[IYL_IDX] >= size - 2);
+      bool jk_free = isPairDead (PAIR_JK, ic) && (j_free || ic->left->aop->regs[J_IDX] >= size - 2) && (k_free || ic->left->aop->regs[K_IDX] >= size - 2);
+
+      if (size >= 4 && (IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) &&
+        (aopInReg (ic->left->aop, size - 2, BC_IDX) && aopInReg (ic->left->aop, size - 4, DE_IDX) || aopInReg (ic->left->aop, size - 2, JK_IDX) && aopInReg (ic->left->aop, size - 4, HL_IDX)))
+        {
+          emit2 (aopInReg (ic->left->aop, size - 1, B_IDX) ? "push bcde" : "push jkhl");
+          cost2 (2, -1, -1, -1, -1, -1, 18, 19, -1, -1, -1, -1, -1, -1, -1);
+          d = 4;
+        }
+      else if (size >= 2 && getPairId_o (ic->left->aop, size - 2) != PAIR_INVALID)
           {
             emit3w_o (A_PUSH, ic->left->aop, size - 2, 0, 0);
             d = 2;
@@ -7426,35 +7455,35 @@ genIpush (const iCode *ic)
            cost2 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
            d = 1;
          }
-      else if ((IS_Z80N || IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && ic->left->aop->type == AOP_LIT)
-         {
-           emit2 ("push !immedword", (unsigned)(byteOfVal (ic->left->aop->aopu.aop_lit, size - 1) << 8));
-           cost2 (4, -1, -1, -1, 23, -1, 15, 16, -1, -1, -1, -1, -1, -1, -1);
-           emit2 ("inc sp");
-           cost2 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
-           d = 1;
-         }
-       else if (!IS_SM83)
-         {
-           emit3w (A_PUSH, ASMOP_HL, 0);
-           genMove_o (ASMOP_H, 0, IC_LEFT (ic)->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
-           emit2 ("ex (sp), hl");
-           cost2 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
-           spillPair (PAIR_HL);
-           emit2 ("inc sp");
-           cost2 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
-           d = 1;
-         }
-       else
-         wassert (0);
+     else if ((IS_Z80N || IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && ic->left->aop->type == AOP_LIT)
+        {
+          emit2 ("push !immedword", (unsigned)(byteOfVal (ic->left->aop->aopu.aop_lit, size - 1) << 8));
+          cost2 (4, -1, -1, -1, 23, -1, 15, 16, -1, -1, -1, -1, -1, -1, -1);
+          emit2 ("inc sp");
+          cost2 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
+          d = 1;
+        }
+      else if (!IS_SM83)
+        {
+          emit3w (A_PUSH, ASMOP_HL, 0);
+          genMove_o (ASMOP_H, 0, ic->left->aop, size - 1, 1, a_free, h_free && l_free, d_free && e_free, iyh_free && iyl_free, true);
+          emit2 ("ex (sp), hl");
+          cost2 (1 + IS_RAB, 2, -1, 3, 19, 16, 15, 15, -1, 14, -1, 8, 8, 5, 5);
+          spillPair (PAIR_HL);
+          emit2 ("inc sp");
+          cost2 (1, 1, 1, 1, 6, 4, 2, 2, 8, 4, 2, 2, 2, 1, 1);
+          d = 1;
+        }
+      else
+        wassert (0);
 
-       if (!regalloc_dry_run)
-          _G.stack.pushed += d;
-       size -= d;
-     }
+      if (!regalloc_dry_run)
+        _G.stack.pushed += d;
+      size -= d;
+    }
 
 release:
-  freeAsmop (IC_LEFT (ic), NULL);
+  freeAsmop (ic->left, NULL);
 }
 
 /*-----------------------------------------------------------------*/
@@ -7486,6 +7515,10 @@ genPointerPush (const iCode *ic)
   if (walk->op == PCALL)
     ftype = ftype->next;
   const bool smallc = IFFUNC_ISSMALLC (ftype);
+
+  if (IFFUNC_ISDYNAMICC (ftype) && // Dynamic C needs space on stack for struct return.
+    ic->prev->op != IPUSH && ic->prev->op != IPUSH_VALUE_AT_ADDRESS && ic->prev->op != SEND && IS_STRUCT (ftype->next) && !regalloc_dry_run)
+    adjustStack (-getSize (ftype->next), false, false, false, false, false);
 
   /* then do the push */
   aopOp (IC_LEFT (ic), ic, false, false);
@@ -7607,7 +7640,11 @@ static void genSend (const iCode *ic)
 
   sym_link *ftype = IS_FUNCPTR (operandType (IC_LEFT (walk))) ? operandType (IC_LEFT (walk))->next : operandType (IC_LEFT (walk));
   asmop *argreg = aopArg (ftype, ic->argreg);
-  
+
+  if (IFFUNC_ISDYNAMICC (ftype) && // Dynamic C needs space on stack for struct return.
+    ic->prev->op != IPUSH && ic->prev->op != IPUSH_VALUE_AT_ADDRESS && ic->prev->op != SEND && IS_STRUCT (ftype->next) && !regalloc_dry_run)
+    adjustStack (-getSize (ftype->next), false, false, false, false, false);
+
   wassert (argreg);
 
   // The register argument shall not overwrite a still-needed (i.e. as further parameter or function for the call) value.
@@ -7648,7 +7685,7 @@ static void genSend (const iCode *ic)
 static void
 genCall (const iCode *ic)
 {
-  sym_link *dtype = operandType (IC_LEFT (ic));
+  sym_link *dtype = operandType (ic->left);
   sym_link *etype = getSpec (dtype);
   sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
   int i;
@@ -7658,9 +7695,7 @@ genCall (const iCode *ic)
   for (i = 0; i < IYH_IDX + 1; i++)
     z80_regs_preserved_in_calls_from_current_function[i] |= ftype->funcAttrs.preserved_regs[i];
 
-  _saveRegsForCall (ic, false, false);
-
-  aopOp (IC_LEFT (ic), ic, false, false);
+  aopOp (ic->left, ic, false, false);
 
   const bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next); // Return value of big type or returning struct or union.
   const bool SomethingReturned = IS_ITEMP (IC_RESULT (ic)) && (OP_SYMBOL (IC_RESULT (ic))->nRegs || OP_SYMBOL (IC_RESULT (ic))->spildir) ||
@@ -7677,9 +7712,15 @@ genCall (const iCode *ic)
   bool jk_not_parm = !z80IsParmInCall(ftype, "j") && !z80IsParmInCall(ftype, "k");
   
   if (SomethingReturned && !bigreturn)
-    aopOp (IC_RESULT (ic), ic, true, false);
+    aopOp (ic->result, ic, true, false);
 
-  if (bigreturn)
+  _saveRegsForCall (ic, false, false);
+
+  if (IFFUNC_ISDYNAMICC (ftype) && // Dynamic C needs space on stack for struct return.
+    ic->prev->op != IPUSH && ic->prev->op != IPUSH_VALUE_AT_ADDRESS && ic->prev->op != SEND && IS_STRUCT (ftype->next) && !regalloc_dry_run)
+    adjustStack (-getSize (ftype->next), false, false, false, false, false);
+
+  if (bigreturn && !IFFUNC_ISDYNAMICC (ftype))
     {
       PAIR_ID pair;
       int fp_offset, sp_offset;
@@ -7741,7 +7782,7 @@ genCall (const iCode *ic)
     }
 
   // Check if we can do tail call optimization.
-  else if (currFunc && !IFFUNC_ISISR (currFunc->type) &&
+  else if (currFunc && !IFFUNC_ISISR (currFunc->type) && !IFFUNC_ISDYNAMICC (currFunc->type) && !IFFUNC_ISDYNAMICC (ftype) &&
     !ic->parmBytes &&
     !_G.stack.pushedHL && !_G.stack.pushedBC && !_G.stack.pushedDE && !_G.stack.pushedIY && !_G.stack.pushedJK && !_G.stack.pushedIX && // If for some reason something got pushed, we don't have the return address in place.
     (!isFuncCalleeStackCleanup (currFunc->type) || !ic->parmEscapeAlive && ic->op == CALL && 0 /* todo: test and enable depending on optimization goal - as done for stm8 - for z80 and r3ka this will be slower and bigger than without tail call optimization, but it saves RAM */) &&
@@ -8220,19 +8261,56 @@ genCall (const iCode *ic)
   /* Mark the registers as restored. */
   _G.saves.saved = false;
 
+  if (IFFUNC_ISDYNAMICC (ftype) && IS_STRUCT (ftype->next))
+    {
+      aopOp (ic->result, ic, true, false);
+      int size = getSize (ftype->next);
+      wassert (size);
+      wassert (ic->result->aop->type == AOP_STK || ic->result->aop->type == AOP_EXSTK);
+
+      pointPairToAop (PAIR_DE, ic->result->aop, 0);
+      setupPairFromSP (PAIR_HL, ic->parmBytes);
+      emit2 ("ld bc, !immed%d", size);
+      cost2 (3, 3, 3, 3, 10, 9, 6, 6, 12, 6, 3, 3, 3, 3, 3);
+      if (IS_R2K || IS_SM83 || IS_TLCS870 || IS_TLCS870C || IS_TLCS870C1) // No useable ldir
+        {
+          // todo: scale cost.
+          wassert (size <= 256);
+          symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel(0);
+          emitLabel (tlbl);
+          emit2 ("ld a, (hl)");
+          cost2 (1, 2, 1, 1, 7, 6, 5, 5, 8, 6, 2, 2, 2, 2, 2);
+          emit2 ("ld (de), a");
+          cost2 (1, 2, 2, 2, 7, 7, 7, 7, 8, 6, 3, 3, 3, 2, 2);
+          emit3w (A_INC, ASMOP_HL, 0);
+          emit3w (A_INC, ASMOP_DE, 0);
+          emit3 (A_DEC, ASMOP_C, 0);
+          emitJP (tlbl, "nz", 1.0f, true);
+        }
+      else
+        {
+          emit2 ("ldir");
+          cost2 (2, 2, -1, -1, 21 * size -5, 14 * size - 2, 7 * size - 1, 7 * size - 1, -1, 18 * size - 4, -1, -1, -1, 2 * size - 1, 4 * size);
+        }
+      updatePair (PAIR_HL, size);
+
+      freeAsmop (ic->result, 0);
+    }
+
   /* adjust the stack for parameters if required */
   if ((ic->parmBytes || bigreturn) && (IFFUNC_ISNORETURN (ftype) || isFuncCalleeStackCleanup (ftype)))
     {
       if (!regalloc_dry_run)
         {
-          _G.stack.pushed -= (ic->parmBytes + bigreturn * 2);
+          _G.stack.pushed -= ic->parmBytes;
+          _G.stack.pushed -= IFFUNC_ISDYNAMICC (ftype) && IS_STRUCT (ftype->next) ? getSize (ftype->next) :  bigreturn * 2;
           z80_symmParm_in_calls_from_current_function = false;
         }
     }
   else if ((ic->parmBytes || bigreturn))
     {
       bool return_in_reg = SomethingReturned && !bigreturn;
-      adjustStack (ic->parmBytes + bigreturn * 2,
+      adjustStack (ic->parmBytes + ((IFFUNC_ISDYNAMICC (ftype) && IS_STRUCT (ftype->next)) ? getSize (ftype->next) :  bigreturn * 2),
         !return_in_reg || !aopRet (ftype) || aopRet (ftype)->regs[A_IDX] < 0 || aopRet (ftype)->regs[A_IDX] > IC_RESULT (ic)->aop->size,
         !return_in_reg || !aopRet (ftype) || (aopRet (ftype)->regs[C_IDX] < 0 || aopRet (ftype)->regs[C_IDX] > IC_RESULT (ic)->aop->size) && (aopRet (ftype)->regs[B_IDX] < 0 || aopRet (ftype)->regs[B_IDX] > IC_RESULT (ic)->aop->size),
         !return_in_reg || !aopRet (ftype) || (aopRet (ftype)->regs[E_IDX] < 0 || aopRet (ftype)->regs[E_IDX] > IC_RESULT (ic)->aop->size) && (aopRet (ftype)->regs[D_IDX] < 0 || aopRet (ftype)->regs[D_IDX] > IC_RESULT (ic)->aop->size),
@@ -8301,7 +8379,6 @@ genFunction (const iCode * ic)
 
   bool bcInUse = FALSE;
   bool deInUse = FALSE;
-  bool bigreturn;
 
   setArea (IFFUNC_NONBANKED (sym->type));
   _G.stack.pushed = 0;
@@ -8468,11 +8545,11 @@ genFunction (const iCode * ic)
 
   _G.calleeSaves.pushedBC = bcInUse;
 
-  /* adjust the stack for the function */
-//  _G.stack.last = sym->stack;
-
-  bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
-  _G.stack.param_offset += bigreturn * 2;
+  if (!IFFUNC_ISDYNAMICC (ftype))
+    {
+      bool bigreturn = (getSize (ftype->next) > 4) || IS_STRUCT (ftype->next);
+      _G.stack.param_offset += bigreturn * 2;
+    }
 
   stackParm = FALSE;
   for (sym = setFirstItem (istack->syms); sym; sym = setNextItem (istack->syms))
@@ -8561,13 +8638,19 @@ genEndFunction (iCode *ic)
   if (!regalloc_dry_run && IFFUNC_ISZ88DK_CALLEE (sym->type) && FUNC_HASVARARGS (sym->type))
     werror (E_Z88DK_CALLEE_VARARG); // We have no idea how many bytes on the stack we'd have to clean up.
 
-  const bool bigreturn = (getSize (sym->type->next) > 4) || IS_STRUCT (sym->type->next);
-  int stackparmbytes = bigreturn * 2;
+  int stackparmbytes = 0;
+  if (!IFFUNC_ISDYNAMICC (sym->type))
+    {
+      const bool bigreturn = (getSize (sym->type->next) > 4) || IS_STRUCT (sym->type->next);
+      stackparmbytes += bigreturn * 2;
+    }
   for (value *arg = FUNC_ARGS(sym->type); arg; arg = arg->next)
     {
       wassert (arg->sym);
       int argsize = getSize (arg->sym->type);
       if (argsize == 1 && (FUNC_ISSMALLC (sym->type) || FUNC_ISDYNAMICC (sym->type) && !IS_STRUCT (arg->sym->type))) // SmallC and Dynamic C calling conventions pass 8-bit stack arguments as 16 bit.
+        argsize++;
+      if (argsize == 3 && FUNC_ISDYNAMICC (sym->type) && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes pointer to__far as 32 bits.
         argsize++;
       if (!SPEC_REGPARM (arg->etype) || FUNC_ISDYNAMICC (sym->type))
         stackparmbytes += argsize;
@@ -8991,7 +9074,7 @@ genRet (const iCode *ic)
   else if (IC_LEFT (ic)->aop->type == AOP_LIT)
     {
       unsigned long long lit = ullFromVal (IC_LEFT (ic)->aop->aopu.aop_lit);
-      setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+      setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
       emit2 ("!ldahli");
       regalloc_dry_run_cost += 6;
       emit2 ("ld h, !*hl");
@@ -9018,14 +9101,17 @@ genRet (const iCode *ic)
               {
                 wassert (arg->sym);
                 int argsize = getSize (arg->sym->type);
-                if (argsize == 1) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
+                if (argsize == 1 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
                   argsize++;
+                if (argsize == 3 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes pointer to__far as 32 bits.
+                  argsize++;
+                stackparmbytes += argsize;
               }
-          setupPairFromSP (PAIR_DE, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
+          setupPairFromSP (PAIR_DE, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
         }
       else
         {
-          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+          setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
           emit2 ("ld e, !*hl");
           cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
           emit3w (A_INC, ASMOP_HL, 0);
@@ -9061,16 +9147,19 @@ genRet (const iCode *ic)
               {
                 wassert (arg->sym);
                 int argsize = getSize (arg->sym->type);
-                if (argsize == 1) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
+                if (argsize == 1 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes 8-bit stack arguments as 16 bit.
                   argsize++;
+                if (argsize == 3 && !IS_STRUCT (arg->sym->type)) // Dynamic C calling conventions passes pointer to__far as 32 bits.
+                  argsize++;
+                stackparmbytes += argsize;
               }
-          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
+          setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2) + stackparmbytes);
           emit3 (A_LD, ASMOP_C, ASMOP_L);
           emit3 (A_LD, ASMOP_B, ASMOP_H);
         }
       else
         {
-          setupPairFromSP (PAIR_HL, _G.stack.offset + _G.stack.param_offset + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
+          setupPairFromSP (PAIR_HL, _G.stack.offset + 2/* todo: real call overhead */ + _G.stack.pushed + (_G.omitFramePtr || IS_SM83 ? 0 : 2));
           emit2 ("ld c, !*hl");
           cost2 (1, 2, 2, 2, 7, 6, 5, 5, 8, 6, 3, 4, 3, 2, 2);
           emit3w (A_INC, ASMOP_HL, 0);

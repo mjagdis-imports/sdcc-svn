@@ -685,7 +685,9 @@ newiCodeParm (int op, operand *left, sym_link *ftype, int *stack)
           *stack += getSize (parmtype);
           if ((IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype) && !IS_STRUCT (parmtype)) && getSize (parmtype) == 1) // SmallC and Dynamic C calling conventions pass 8-bit parameters as 16-bit values.
             (*stack)++;
-          else if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // So does pdk due to stack alignment requirements.
+          else if (IFFUNC_ISDYNAMICC (ftype) && getSize (parmtype)  == 3 && IS_FARPTR (parmtype)) // Dynamic C passes pointers to __far as 32 bits.
+            (*stack)++;
+          else if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // pdk needs even-oligned stack.
             (*stack)++;
         }
     }
@@ -3564,7 +3566,7 @@ geniCodeSEParms (ast *parms, int lvl, sym_link *ftype)
     parms->opval.op = '+';
 
   parms->opval.oprnd = geniCodeRValue (ast2iCode (parms, lvl + 1), FALSE);
-  if (IFFUNC_ISDYNAMICC (ftype)) // Dynmaic C passes first param both in register and on stack. Need an iTemp to avoid duplication (and double read of volatile, etc).
+  if (IFFUNC_ISDYNAMICC (ftype)) // Dynamic C passes first param both in register and on stack. Need an iTemp to avoid duplication (and double read of volatile, etc).
     {
       iCode *ic = newiCode ('=', NULL, parms->opval.oprnd);
       parms->opval.oprnd = newiTempOperand (operandType (parms->opval.oprnd), 0);

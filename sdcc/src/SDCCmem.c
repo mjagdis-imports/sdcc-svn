@@ -680,6 +680,7 @@ allocParms (value *val, bool smallc, bool dynamicc)
         {
           int paramsize = getSize (lval->type) +
             (getSize (lval->type) == 1 && (smallc || dynamicc && !IS_STRUCT (lval->type))) +
+            (getSize (lval->type) == 3 && dynamicc && IS_FARPTR (lval->type)) +
             (getSize (lval->type) % 2 && TARGET_PDK_LIKE);
 
           if (lval->sym)
