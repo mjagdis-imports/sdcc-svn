@@ -1,7 +1,7 @@
 2025-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/valdiag/tests/undefinedc23.c:
-	  Test case for N3347 resolution of C23 UB.
+	  Test cases for N3347, N3532, N3340 resolutions of C23 UB, and one resolutions from N3244.
 
 2025-10-17 Janko Stamenović
 	  Fixing previous ChangeLog file references
