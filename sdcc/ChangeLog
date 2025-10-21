@@ -1,5 +1,13 @@
 2025-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCsymt.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3244 resolution for UB on block scope function declaration with explicit storage-class specifier.
+
+2025-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* support/valdiag/tests/undefinedc23.c:
 	  Test cases for N3347, N3532, N3340, N3525 resolutions of C23 UB.
 

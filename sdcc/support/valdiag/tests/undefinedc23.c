@@ -1,7 +1,7 @@
 // A lot of undefined behavior from C23 has been removed in C2y
 // Martin Uecker's "Ghosts and Demons" gives a good overview.
 // The numbering of the test cases below corresponds to the numbering therein.
-// In many cases, the resolutionw as to make it a constraint violation.
+// In many cases, the resolution was to make it a constraint violation.
 
 #ifdef TEST1b
 extern int a;
@@ -22,6 +22,21 @@ void g(void)
 (struct f)p; /* ERROR */
 }
 #endif
+
+#ifdef TEST57a
+void i(void)
+{
+static void f(void); /* ERROR */
+}
+#endif
+
+#ifdef TEST57b
+void i(void)
+{
+register void f(void); /* ERROR */
+}
+#endif
+
 
 #ifdef TEST87
 struct foo;

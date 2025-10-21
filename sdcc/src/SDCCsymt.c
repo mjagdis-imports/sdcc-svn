@@ -2014,6 +2014,14 @@ checkSClass (symbol *sym, int isProto)
       werrorfl (sym->fileDef, sym->lineDef, E_TWO_OR_MORE_STORAGE_CLASSES, sym->name);
     }
 
+  // Function at block scope with storage-class specifier other than extern.
+  // UB up to C23, constraint violation from C2y.
+  if (sym->level && IS_FUNC (sym->type) &&
+    (IS_REGISTER (sym->etype) || SPEC_STAT (sym->etype)))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_BLOCK_SCOPE_FUNC_SCLASS, sym->name);
+    }
+
   /* type is literal can happen for enums change to auto */
   if (SPEC_SCLS (sym->etype) == S_LITERAL && !SPEC_ENUM (sym->etype))
     SPEC_SCLS (sym->etype) = S_AUTO;
