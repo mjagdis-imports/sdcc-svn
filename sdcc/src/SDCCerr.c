@@ -705,6 +705,8 @@ struct
      "_Atomic specifier on qualified type", 0 },
   { E_BLOCK_SCOPE_FUNC_SCLASS, ERROR_LEVEL_ERROR,
      " Function declared at block scope with explicit storage-class specifier other than extern", 0 },
+  { W_PTR2INT_NOREPRESENT, ERROR_LEVEL_WARNING,
+     "Cast of pointer to integer type that cannot represent all values of the pointer type", 0},
 };
 
 /* -------------------------------------------------------------------------------

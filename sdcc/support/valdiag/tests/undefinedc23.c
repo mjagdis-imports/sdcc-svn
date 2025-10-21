@@ -8,6 +8,23 @@ extern int a;
 _Static_assert(1 || a); /* ERROR(SDCC) */ /* WARNING(GCC) */
 #endif
 
+#ifdef TEST23
+char foo_impl(int *p)
+{
+return p; /* WARNING */
+}
+
+char foo_expl(int *p)
+{
+return (char)p; /* WARNING */
+}
+
+_Bool foo_bool(int *p)
+{
+return (_Bool)p;
+}
+#endif
+
 #ifdef TEST38a
 struct A {
 int a;

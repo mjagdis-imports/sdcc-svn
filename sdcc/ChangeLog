@@ -1,4 +1,16 @@
-2025-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
+2025-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  support/regression/tests/undefinedc23.c,
+	  support/valdiag/tests/undefinedc23.c,
+	  support/regression/tests/bug-2031.c,
+	  support/regression/tests/bug-2983.c,
+	  support/regression/tests/offsetof.c:
+	  Implement N3217 resolution for C23 UB, while preserving SDCC implementation-defined behavior.
+
+2025-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCsymt.c,
 	  src/SDCCerr.h,

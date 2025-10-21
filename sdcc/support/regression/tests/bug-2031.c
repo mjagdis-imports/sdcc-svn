@@ -4,6 +4,8 @@
 
 #include <testfwk.h>
 
+#pragma disable_warning 321
+
 struct bugtest {
   unsigned int i;
   unsigned char c;

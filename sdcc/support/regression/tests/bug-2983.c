@@ -4,6 +4,8 @@
 
 #include <testfwk.h>
 
+#pragma disable_warning 321
+
 typedef struct {
     unsigned int v0;
     unsigned int v1;
