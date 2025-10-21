@@ -8,7 +8,17 @@
 	  support/regression/tests/bug-2031.c,
 	  support/regression/tests/bug-2983.c,
 	  support/regression/tests/offsetof.c:
-	  Implement N3217 resolution for C23 UB, while preserving SDCC implementation-defined behavior.
+	  Implement N3712 resolution for C23 UB, while preserving SDCC implementation-defined behavior.
+
+2025-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/ralloc.c,
+	  src/pic14/gen.h,
+	  src/pic16/gen.h,
+	  src/pic16/genutils.h,
+	  src/stm8/ralloc.c,
+	  src/z80/ralloc.c:
+	  Code quality fixes inspired by GCC 15.2 -Wall -pedantic warnings.
 
 2025-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -16,12 +26,34 @@
 	  src/SDCCerr.h,
 	  src/SDCCerr.c,
 	  support/valdiag/tests/undefinedc23.c:
-	  Implement N3244 resolution for UB on block scope function declaration with explicit storage-class specifier.
+	  Implement N3244 resolution for C23 UB on block scope function declaration with explicit storage-class specifier.
 
 2025-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/valdiag/tests/undefinedc23.c:
 	  Test cases for N3347, N3532, N3340, N3525 resolutions of C23 UB.
+
+2025-10-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix declaration-after-label issues.
+
+2025-10-18 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lkbank.c
+	  sdas/linksrc/lklex.c
+	  sdas/linksrc/lklib.c
+	  sdas/linksrc/lklibr.c
+	  sdas/linksrc/lklist.c
+	  sdas/linksrc/lkmain.c
+	  sdas/linksrc/lkrloc3.c
+	  sdld rebased to V05.50.4, unchanged sdld behaviour
+
+2025-10-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve passing of struct/union parameters for tlcs, ez80.
 
 2025-10-17 Janko Stamenović
 	  Fixing previous ChangeLog file references
