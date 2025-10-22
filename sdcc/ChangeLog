@@ -1,5 +1,10 @@
 2025-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/valdiag/tests/undefinedc23.c:
+	  Test cases for N3341 resolution for C23 UB (which becomes implementation-defined).
+
+2025-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* doc/sdccman.lyx,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,

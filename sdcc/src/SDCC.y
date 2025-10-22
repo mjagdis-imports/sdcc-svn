@@ -1051,7 +1051,7 @@ member_declarator
           else
               $1->bitVar = bitsize;
         }
-   | { $$ = newSymbol ("", NestLevel); }
+   | { $$ = newSymbol ("", NestLevel); } // TODO: This is not allowed in standard C remove support if no users, otherwise introduce a warning here.
    ;
 
 enum_specifier

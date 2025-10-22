@@ -66,6 +66,23 @@ register void f(void); /* ERROR */
 }
 #endif
 
+// regarding struct/union with no named member: SDCC makes those without any member at all an error, but allow those with memebers, even if all are unnamed bit-fields.
+
+#ifdef TEST58a
+struct f { }; /* ERROR */
+#endif
+
+#ifdef TEST58b
+union u { }; /* ERROR */
+#endif
+
+#ifdef TEST58c
+struct g { struct { }; }; /* ERROR */
+#endif
+
+#ifdef TEST58d
+struct h { int i:3; };
+#endif
 
 #ifdef TEST87
 struct foo;
