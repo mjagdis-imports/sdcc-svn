@@ -707,6 +707,8 @@ struct
      " Function declared at block scope with explicit storage-class specifier other than extern", 0 },
   { W_PTR2INT_NOREPRESENT, ERROR_LEVEL_WARNING,
      "Cast of pointer to integer type that cannot represent all values of the pointer type", 0},
+  { W_MAIN_TYPE, ERROR_LEVEL_WARNING,
+     "Function main should be void main(void) or int main(void)", 0},
 };
 
 /* -------------------------------------------------------------------------------

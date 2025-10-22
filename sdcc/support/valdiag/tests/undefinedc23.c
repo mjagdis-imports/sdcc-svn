@@ -5,7 +5,19 @@
 
 #ifdef TEST1b
 extern int a;
-_Static_assert(1 || a); /* ERROR(SDCC) */ /* WARNING(GCC) */
+_Static_assert(1 || a); /* ERROR(SDCC) */
+#endif
+
+#ifdef TEST4a
+char main(void); /* WARNING(SDCC) */
+#endif
+
+#ifdef TEST4b
+long main(void); /* WARNING(SDCC) */
+#endif
+
+#ifdef TEST4b
+void main(int); /* WARNING(SDCC) */
 #endif
 
 #ifdef TEST23

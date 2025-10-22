@@ -2309,6 +2309,14 @@ checkDecl (symbol * sym, int isProto)
   changePointer (sym->type);    /* change pointers if required */
   arraySizes (sym->type, sym->name);
 
+  // If no custom crt0 is used, the startup function is void main(void) or int main(void).
+  if (!sym->level && IS_FUNC (sym->type) && !strcmp (sym->name, "main") && !options.no_std_crt0)
+    {
+      if (FUNC_ARGS (sym->type) ||
+        (!IS_VOID (sym->type->next) && !IS_INT (sym->type->next)) || IS_LONG (sym->type->next) || IS_LONGLONG (sym->type->next))
+        werror (W_MAIN_TYPE); // This is just a warning, not an error, for those that put a custom crt0 into a custom stdlib, then use it without --no-std-crt0.
+    }
+
   if (IS_ARRAY (sym->type) && DCL_ARRAY_VLA (sym->type) && sym->ival && !sym->ival->isempty)
     werror (E_VLA_INIT);
   /* if this is an array without any dimension
