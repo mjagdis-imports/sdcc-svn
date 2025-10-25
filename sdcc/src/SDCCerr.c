@@ -703,6 +703,8 @@ struct
      "_Atomic specifier on atomic type", 0 },
   { E_ATOMIC_SPEC_QUALIFIED, ERROR_LEVEL_ERROR,
      "_Atomic specifier on qualified type", 0 },
+  { E_BLOCK_SCOPE_EXTERN_INIT, ERROR_LEVEL_ERROR,
+     "block-scope variable'%s' declared extern and intialized", 0},
   { E_BLOCK_SCOPE_FUNC_SCLASS, ERROR_LEVEL_ERROR,
      " Function declared at block scope with explicit storage-class specifier other than extern", 0 },
   { W_PTR2INT_NOREPRESENT, ERROR_LEVEL_WARNING,
