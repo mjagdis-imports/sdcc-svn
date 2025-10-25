@@ -712,7 +712,7 @@ struct
   { W_MAIN_TYPE, ERROR_LEVEL_WARNING,
      "Function main should be void main(void) or int main(void)", 0},
   { E_VOID_SHALL_BE_LONELY, ERROR_LEVEL_ERROR,
-     "void is allowed as single parameter with no storage class specifiers, npo type qualifers, no followign ellipsis", 0},
+     "void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis", 0},
 };
 
 /* -------------------------------------------------------------------------------

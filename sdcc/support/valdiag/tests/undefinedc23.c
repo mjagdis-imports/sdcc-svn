@@ -84,6 +84,15 @@ struct g { struct { }; }; /* ERROR */
 struct h { int i:3; };
 #endif
 
+#ifdef TEST75
+int f(static void); /* ERROR */
+int g(register void); /* ERROR */
+int h(volatile void); /* ERROR */
+int i(const void); /* ERROR */
+int j(void x); /* ERROR */
+int j(void x) { } /* ERROR */
+#endif
+
 #ifdef TEST87
 struct foo;
 static struct foo x; /* ERROR */

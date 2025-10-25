@@ -1706,13 +1706,13 @@ parameter_declaration
           symbol *loop;
 
           if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
-            {
-              werror (E_STORAGE_CLASS_FOR_PARAMETER, $2->name);
-            }
+            werror (E_STORAGE_CLASS_FOR_PARAMETER, $2->name);
           pointerTypes ($2->type, $1);
           if (IS_SPEC ($2->etype))
             SPEC_NEEDSPAR($2->etype) = 0;
           addDecl ($2, 0, $1);
+          if (IS_VOID ($2->type))
+            werror (E_VOID_SHALL_BE_LONELY);
           for (loop = $2; loop; loop->_isparm = 1, loop = loop->next)
             ;
           $$ = symbolVal ($2);
@@ -1746,10 +1746,12 @@ parameter_declaration
         }
    | declaration_specifiers  /* analogous to type_name */
         {
-          if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
-            {
-              werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
-            }
+          if (IS_VOID ($1) &&
+            (SPEC_EXTR ($1) || SPEC_STAT ($1) || SPEC_SCLS ($1) == S_AUTO || SPEC_SCLS ($1) == S_REGISTER || // No storage class specifier allowed with void
+            SPEC_CONST ($1) || SPEC_RESTRICT ($1) || SPEC_VOLATILE ($1) || SPEC_ATOMIC ($1))) // No qualifier allowed with void
+            werror (E_VOID_SHALL_BE_LONELY);
+          else if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
+            werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
 
           $$ = newValue ();
           $$->type = $1;
