@@ -15,7 +15,7 @@
 // only, and keep the implementation-defined semantics (cast of pointer to smaller
 // int type is equivalent to cast to uintptr_t first, then to the smaller type.
 
-#pragma disable_warning 321
+#pragma disable_warning 322
 
 char global_c;
 
@@ -29,7 +29,7 @@ unsigned int PtrToUI(char *p)
 	return((unsigned int)p);
 }
 
-void TestPtrIntCast(void)
+void testPtrIntCast(void)
 {
 #ifdef __SDCC
 	char local_c;

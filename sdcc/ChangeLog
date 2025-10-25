@@ -1,6 +1,17 @@
 2025-10-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/regression/tests/bug-2031.c,
+	  support/regression/tests/bug-2983.c,
+	  support/regression/tests/undefinedc23.c,
+	  support/valdiag/tests/bug-3891.c:
+	  Fix bug #3891.
+
+2025-10-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
 	  src/SDCCast.c,
 	  src/SDCCicode.c,
 	  src/SDCCmem.c,

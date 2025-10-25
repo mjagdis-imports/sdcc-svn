@@ -351,6 +351,7 @@ enum {
   E_BLOCK_SCOPE_FUNC_SCLASS     = 321, /* Function declared at block scope with explicit storage-class specifier other than extern */
   W_PTR2INT_NOREPRESENT         = 322, /* Cast of pointer to integer type that cannot represent all values of the pointer type */
   W_MAIN_TYPE                   = 323, /* Function main should be void main(void) or int main(void) */
+  E_VOID_SHALL_BE_LONELY        = 324, /* void is allowed as single parameter with no storage class specifiers, npo type qualifers, no followign ellipsis */
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

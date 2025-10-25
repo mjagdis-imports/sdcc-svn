@@ -1680,16 +1680,23 @@ type_qualifier_list_opt
   ;
 
 parameter_type_list
-        : parameter_list
-        | parameter_list ',' ELLIPSIS { $1->vArgs = 1;}
+  : parameter_list
+  | parameter_list ',' ELLIPSIS
+         {
+           if (IS_VOID ($1->type))
+             werror (E_VOID_SHALL_BE_LONELY);
+           $1->vArgs = 1;
+         }
         ;
 
 parameter_list
    : parameter_declaration
    | parameter_list ',' parameter_declaration
          {
-            $3->next = $1;
-            $$ = $3;
+           if (IS_VOID ($1->type) || IS_VOID ($3->type))
+             werror (E_VOID_SHALL_BE_LONELY);
+           $3->next = $1;
+           $$ = $3;
          }
    ;
 
