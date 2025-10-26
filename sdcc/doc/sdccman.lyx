@@ -3214,6 +3214,16 @@ In 4.5.11,
  
 \end_layout
 
+\begin_layout Itemize
+In 4.5.12,
+ void parameters may no longer be named or qualified.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.12,
+ struct/union members other than anoymous struct/union or bit-fields must be named.
+\end_layout
+
 \begin_layout Section
 System Requirements
 \end_layout

@@ -9,6 +9,9 @@
 	  Implement N3244 resolution for C23 UB for extern inline declarations without definition in same translation unit.
 	* support/regression/MakeList:
 	  Disable test that won't work on targets with 16-bit int.
+	* .version,
+	  doc/sdccman.lyx:
+	  Document where C23 UB resolution affects SDCC compatibility with previous versions.
 
 2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
