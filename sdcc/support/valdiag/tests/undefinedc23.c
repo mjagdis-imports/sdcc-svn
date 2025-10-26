@@ -95,6 +95,16 @@ void g(void)
 }
 #endif
 
+#ifdef TEST56
+#pragma disable_warning 85
+struct f;
+void i(void)
+{
+struct f y; /* ERROR */
+int i[]; /* ERROR */
+}
+#endif
+
 #ifdef TEST57a
 void i(void)
 {

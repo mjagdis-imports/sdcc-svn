@@ -127,6 +127,12 @@ EXCLUDE_hc08 += \
 # compile issue - test is malformed unless STACK_SIZE is defined
 EXCLUDE_ARCH_mos6502 += \
 	gte_memcpy-1
+EXCLUDE_stm8 += \
+	gte_memcpy-1
+EXCLUDE_ARCH_f8 += \
+	gte_memcpy-1
+EXCLUDE_ARCH_z80 += \
+	gte_memcpy-1
 
 # Failure
 EXCLUDE_stm8 += \
@@ -477,4 +483,7 @@ EXCLUDE_uc6502 += ${EXCLUDE_ARCH_mos6502}
 EXCLUDE_uc65c02 += ${EXCLUDE_ARCH_mos6502}
 EXCLUDE_uc6502-stack-auto += ${EXCLUDE_ARCH_mos6502}
 ###################################################
+EXCLUDE_f8 += ${EXCLUDE_ARCH_f8}
+EXCLUDE_f8l += ${EXCLUDE_ARCH_f8}
+
 

@@ -354,6 +354,7 @@ enum {
   E_VOID_SHALL_BE_LONELY        = 324, // void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis
   W_ANONYMOUS_STRUCT_C11        = 325, // anonymous struct/union requires ISO C11 or later
   E_UNAMED_STRUCT_MEMBER        = 326, // struct/union members need to have a name,unless they are anonymous struct/union or bit-fields
+  E_NO_LINKAGE_INCOMPLETE_TYPE  = 327, // object with no linkage of incomplete type
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 

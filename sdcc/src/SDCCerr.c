@@ -715,8 +715,10 @@ struct
      "void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis", 0},
   { W_ANONYMOUS_STRUCT_C11, ERROR_LEVEL_WARNING,
      "anonymous struct/union requires ISO C11 or later", 0},
-  { E_UNAMED_STRUCT_MEMBER, ERROR_LEVEL_WARNING,
+  { E_UNAMED_STRUCT_MEMBER, ERROR_LEVEL_ERROR,
      "struct/union members need to have a name,unless they are anonymous struct/union or bit-fields", 0 },
+  { E_NO_LINKAGE_INCOMPLETE_TYPE, ERROR_LEVEL_ERROR,
+     "object %s with no linkage of incomplete type", 0 },
 };
 
 /* -------------------------------------------------------------------------------
