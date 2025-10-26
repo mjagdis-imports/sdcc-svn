@@ -1,3 +1,13 @@
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/struct.c:
+	  Implement N3341 resolution for C23 UB on struct/union with unnamed members only, and fix realted diagnostics regarding unnamed struct/union members.
+
 2025-10-25 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCC.y,

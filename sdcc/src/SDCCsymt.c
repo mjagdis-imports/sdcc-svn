@@ -1981,6 +1981,9 @@ promoteAnonStructs (int su, structdef * sdef)
           /* with the fields it contains and adjust all  */
           /* the offsets */
 
+          if (!options.std_c11 && !options.std_sdcc)
+            werrorfl (field->fileDef, field->lineDef, W_ANONYMOUS_STRUCT_C11);
+
           /* tagged anonymous struct/union is rejected here, though gcc allow it */
           if (SPEC_STRUCT (field->type)->tagsym != NULL)
             werrorfl (field->fileDef, field->lineDef, E_ANONYMOUS_STRUCT_TAG, SPEC_STRUCT (field->type)->tag);
@@ -2016,7 +2019,11 @@ promoteAnonStructs (int su, structdef * sdef)
           tofield = &subfield->next;
         }
       else
-        tofield = &field->next;
+        {
+          if (!*field->name && !IS_STRUCT (field->type) && !IS_BITFIELD (field->type))
+            werrorfl (field->fileDef, field->lineDef, E_UNAMED_STRUCT_MEMBER);
+          tofield = &field->next;
+        }
     }
 }
 

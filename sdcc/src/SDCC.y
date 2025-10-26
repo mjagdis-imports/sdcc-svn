@@ -1001,6 +1001,22 @@ member_declaration
           ignoreTypedefType = 0;
           $$ = $3;
         }
+   | attribute_specifier_sequence_opt specifier_qualifier_list ';'
+     {
+       symbol *sym = newSymbol ("", NestLevel);
+       sym_link *btype = copyLinkChain($2);
+       pointerTypes(sym->type, btype);
+       if (!sym->type)
+         {
+           sym->type = btype;
+           sym->etype = getSpec(sym->type);
+         }
+       else
+         addDecl (sym, 0, btype);
+       checkTypeSanity(sym->etype, sym->name);
+      ignoreTypedefType = 0;
+      $$ = sym;
+     }
    ;
 
 type_specifier_qualifier
@@ -1051,7 +1067,6 @@ member_declarator
           else
               $1->bitVar = bitsize;
         }
-   | { $$ = newSymbol ("", NestLevel); } // TODO: This is not allowed in standard C remove support if no users, otherwise introduce a warning here.
    ;
 
 enum_specifier

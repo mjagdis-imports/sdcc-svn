@@ -713,6 +713,10 @@ struct
      "Function main should be void main(void) or int main(void)", 0},
   { E_VOID_SHALL_BE_LONELY, ERROR_LEVEL_ERROR,
      "void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis", 0},
+  { W_ANONYMOUS_STRUCT_C11, ERROR_LEVEL_WARNING,
+     "anonymous struct/union requires ISO C11 or later", 0},
+  { E_UNAMED_STRUCT_MEMBER, ERROR_LEVEL_WARNING,
+     "struct/union members need to have a name,unless they are anonymous struct/union or bit-fields", 0 },
 };
 
 /* -------------------------------------------------------------------------------

@@ -11398,6 +11398,10 @@ Non-bit-field members of structures are aligned on byte boundaries (i.e.
 \end_layout
 
 \begin_layout Itemize
+structures do not need to have named members.
+\end_layout
+
+\begin_layout Itemize
 For enumerations,
  the compatible type is the first from the following list that fits the constants:
  unsigned char,

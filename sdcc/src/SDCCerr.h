@@ -352,6 +352,10 @@ enum {
   W_PTR2INT_NOREPRESENT         = 322, /* Cast of pointer to integer type that cannot represent all values of the pointer type */
   W_MAIN_TYPE                   = 323, /* Function main should be void main(void) or int main(void) */
   E_VOID_SHALL_BE_LONELY        = 324, /* void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis */
+  W_ANONYMOUS_STRUCT_C11        = 325, // anonymous struct/union requires ISO C11 or later
+  E_UNAMED_STRUCT_MEMBER        = 326, // struct/union members need to have a name,unless they are anonymous struct/union or bit-fields
+
+  // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
