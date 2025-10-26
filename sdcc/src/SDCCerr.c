@@ -719,6 +719,8 @@ struct
      "struct/union members need to have a name,unless they are anonymous struct/union or bit-fields", 0 },
   { E_NO_LINKAGE_INCOMPLETE_TYPE, ERROR_LEVEL_ERROR,
      "object %s with no linkage of incomplete type", 0 },
+  { E_EXTERN_INLINE_NO_DEF, ERROR_LEVEL_ERROR,
+     "inline function %s declared with external linkage, but not defined in translation unit", 0 },
 };
 
 /* -------------------------------------------------------------------------------

@@ -1509,7 +1509,7 @@ addSymChain (symbol **symHead)
       changePointer (sym->type);
       checkTypeSanity (sym->etype, sym->name);
 #if 0
-      printf("addSymChain for %p %s level %ld\n", sym, sym->name, sym->level);
+      printf("addSymChain for %p %s level %ld extern %d\n", sym, sym->name, sym->level, IS_EXTERN (sym->etype));
 #endif
       arraySizes (sym->type, sym->name);
       if (IS_NORETURN (sym->etype))
@@ -1675,8 +1675,14 @@ addSymChain (symbol **symHead)
 
           if (csym->ival && !sym->ival)
             sym->ival = csym->ival;
+          sym->generated |= csym->generated;
 
-          if (!csym->cdef && !sym->cdef && IS_EXTERN (sym->etype))
+          if (IS_EXTERN (sym->etype) && IFFUNC_ISINLINE (csym->type))
+            {
+              FUNC_ISINLINE (sym->type) = FUNC_ISINLINE (csym->type);
+              sym->funcTree = csym->funcTree;
+            }
+          else if (!csym->cdef && !sym->cdef && IS_EXTERN (sym->etype))
             {
               /* if none of symbols is a compiler defined function
                  and at least one is not extern

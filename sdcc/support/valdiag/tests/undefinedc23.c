@@ -137,6 +137,11 @@ struct g { struct { }; }; /* ERROR */
 struct h { int i:3; };
 #endif
 
+#ifdef TEST67
+// extern inline declaration without definition in same translation unit
+extern inline void f(void); /* ERROR */
+#endif
+
 #ifdef TEST75
 int f(static void); /* ERROR */
 int g(register void); /* ERROR */

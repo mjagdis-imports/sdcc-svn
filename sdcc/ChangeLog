@@ -2,6 +2,16 @@
 
 	* src/SDCCerr.c,
 	  src/SDCCerr.h,
+	  src/SDCCmain.c,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/undefinedc23.c,
+	  support/regression/tests/gcc-torture-execute-930526-1.c:
+	  Implement N3244 resolution for C23 UB for extern inline declarations without definition in same translation unit.
+
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
 	  src/SDCCmem.c,
 	  support/valdiag/tests/undefinedc23.c:
 	  Implement N3244 resolution for C23 UB for objects with no linage of incomplete types.
