@@ -1,5 +1,14 @@
 2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCerr.c
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3410 resolution for C23 UB on same identifier with internal and external linkage.
+
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* doc/sdccman.lyx,
 	  src/SDCC.y,
 	  src/SDCCerr.c,

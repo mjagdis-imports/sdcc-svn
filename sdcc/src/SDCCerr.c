@@ -692,7 +692,7 @@ struct
   { E_COMPLIT_SCLASS_C23, ERROR_LEVEL_ERROR,
     "compound literals with storage class specifier require ISO C23 or later", 0},
   { W_ENUM_UNDERLYING_BITINT, ERROR_LEVEL_WARNING,
-    "enum's underlying type may not be a bit-prcise type in ISO C23", 0},
+    "enum's underlying type may not be a bit-precise type in ISO C23", 0},
   { W_INVALID_BITINTWIDTH_1, ERROR_LEVEL_WARNING,
     "signed bit-precise integer type may not have width 1 in ISO C23", 0},
   { E_ATOMIC_ARRAY, ERROR_LEVEL_ERROR,

@@ -1537,17 +1537,20 @@ addSymChain (symbol **symHead)
 
       if (IS_EXTERN (sym->etype) && sym->level) // This is really a block-scope name for a file-scope object.
         {
+          symbol *csym;
+          bool declaration_with_no_linkage_visible =
+            (csym = findSymWithLevel (SymbolTab, sym)) && csym->level && !IS_STATIC (csym->etype) && !IS_EXTERN (csym->type);
+
           long saveLevel = sym->level;
           sym->level = 0;
-          symbol *csym;
 
-          // Check type only, not linkage for now (there are some subtle aspects of linkage to be consideed here, a plain check against csym won't do).
-          if ((csym = findSymWithLevel (SymbolTab, sym)) && compareType (csym->type, sym->type, sym->level) != 1)
+          if ((csym = findSymWithLevel (SymbolTab, sym)) && // When a declaration with no linkage is visible, this is really extern, so check for linkage conflicts.
+            (declaration_with_no_linkage_visible ? compareTypeExact (csym->type, sym->type, sym->level) : compareType (csym->type, sym->type, true)) != 1)
             {
               werror (E_EXTERN_MISMATCH, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
             }
-          else if ((csym = findSymWithLevel (SymbolTabE, sym)) && compareType (csym->type, sym->type, sym->level) != 1)
+          else if ((csym = findSymWithLevel (SymbolTabE, sym)) && compareType (csym->type, sym->type, true)  != 1)
             {
               werror (E_EXTERN_MISMATCH, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
@@ -1559,7 +1562,7 @@ addSymChain (symbol **symHead)
       else if (!sym->level) // File-scope object. Check if it was declared at block scope before.
         {
           symbol *csym;
-          if ((csym = findSymWithLevel (SymbolTabE, sym)) && compareType (csym->type, sym->type, sym->level) != 1)
+          if ((csym = findSymWithLevel (SymbolTabE, sym)) && (compareType (csym->type, sym->type, true) != 1 || IS_STATIC (sym->type) && IS_EXTERN (csym->type)))
             {
               werror (E_EXTERN_MISMATCH, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
@@ -1597,6 +1600,12 @@ addSymChain (symbol **symHead)
                     FUNC_ARGS(sym->type) = FUNC_ARGS(csym->type);
                   FUNC_NOPROTOTYPE (csym->type) = false;
                   FUNC_NOPROTOTYPE (sym->type) = false;
+                }
+
+              if (IS_EXTERN (sym->etype) && IS_STATIC (csym->etype)) // Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration.
+                {
+                  SPEC_STAT (sym->etype) = SPEC_STAT (csym->etype);
+                  SPEC_EXTR (sym->etype) = SPEC_EXTR (csym->etype);
                 }
 
 #if 0

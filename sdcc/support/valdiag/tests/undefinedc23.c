@@ -20,6 +20,49 @@ long main(void); /* WARNING(SDCC) */
 void main(int); /* WARNING(SDCC) */
 #endif
 
+#ifdef TEST8a
+// Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration,
+// but the other way round is an error.
+
+static int i;
+extern int i;
+
+extern int j; /* IGNORE */
+static int j; /* ERROR */
+#endif
+
+#ifdef TEST8b
+#pragma disable_warning 85
+void g(void)
+{
+extern int x; /* IGNORE */
+}
+static int x; /* ERROR */
+#endif
+
+#ifdef TEST8c
+#pragma disable_warning 85
+// Block-scope a2 has internal linkage
+static int a2;
+void f2(void)
+{
+int b2;
+{
+extern int a2;
+}
+}
+
+// Block-scope at has external linkage
+static int a1; /* IGNORE */
+void f1(void)
+{
+int a1;
+{
+extern int a1; /* ERROR */
+}
+}
+#endif
+
 #ifdef TEST23
 char foo_impl(int *p)
 {
