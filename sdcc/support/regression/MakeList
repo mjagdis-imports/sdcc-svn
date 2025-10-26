@@ -119,7 +119,7 @@ EXCLUDE_mcs51-small += \
 # Fehlermeldung zu erhalten
 EXCLUDE_ARCH_mcs51 += \
 	gte_memcpy-1
-EXCLUDE_s08 += \
+EXCLUDE_ARCH_hc08 += \
 	gte_memcpy-1
 # fail
 EXCLUDE_hc08 += \
@@ -485,5 +485,8 @@ EXCLUDE_uc6502-stack-auto += ${EXCLUDE_ARCH_mos6502}
 ###################################################
 EXCLUDE_f8 += ${EXCLUDE_ARCH_f8}
 EXCLUDE_f8l += ${EXCLUDE_ARCH_f8}
-
+###################################################
+EXCLUDE_hc08 += ${EXCLUDE_ARCH_hc08}
+EXCLUDE_s08 += ${EXCLUDE_ARCH_hc08}
+EXCLUDE_s08-stack-auto += ${EXCLUDE_ARCH_hc08}
 

@@ -7,6 +7,8 @@
 	  support/valdiag/tests/undefinedc23.c,
 	  support/regression/tests/gcc-torture-execute-930526-1.c:
 	  Implement N3244 resolution for C23 UB for extern inline declarations without definition in same translation unit.
+	* support/regression/MakeList:
+	  Disable test that won't work on targets with 16-bit int.
 
 2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
