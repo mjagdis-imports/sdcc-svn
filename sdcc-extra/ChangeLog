@@ -1,3 +1,146 @@
+2025-10-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  stdcbench-z80-sizetable.p,
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2025-09-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Parametrize tty used for test boards. Compile with gcc --std=gnu17, to work around C23 non-compliant code in sdas (GCC 15 defaults to C23).
+
+2025-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile
+	  historygraphs/*.svg,
+	  historygraphs/*.p:
+	  Update graphs.
+
+2025-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile
+	  historygraphs/*.svg,
+	  historygraphs/*.p:
+	  Update graphs.
+	* historygraphs/hello-r3ka/hello.c,
+	  historygraphs/hello-r3ka/hello.ihx,
+	  sdcc-extra/historygraphs/Makefile,
+	  sdcc-extra/historygraphs/README:
+	  r3ka graph infrastructure update.
+
+2025-05-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2025-04-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Introduction.pdf,
+	  developer meeting/2/Introduction.tex,
+	  developer meeting/2/Rabbits.pdf,
+	  developer meeting/2/Rabbits.tex:
+	  Last changes before the talk today.
+
+2025-04-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Introduction.pdf,
+	  developer meeting/2/Introduction.tex,
+	  developer meeting/2/Rabbits.pdf,
+	  developer meeting/2/Rabbits.tex:
+	  Fix date on slides, since we now know that these talks will be on the first day of the meeting.
+
+2025-04-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Rabbits.pdf,
+	  developer meeting/2/Rabbits.tex:
+	  Mention 78K and RL78.
+
+2025-03-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Poster.pdf,
+	  developer meeting/2/Poster.sla:
+	  Fix developer meeting room number.
+
+2025-03-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Poster.pdf,
+	  developer meeting/2/Poster.sla:
+	  Fix developer meeting date.
+
+2025-03-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Poster.pdf,
+	  developer meeting/2/Poster.sla:
+	  Add treedec talk to poster.
+
+2025-03-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Poster.pdf,
+	  developer meeting/2/Poster.sla:
+	  SDCC developer meeting 2 details on poster.
+
+2025-03-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Introduction.pdf,
+	  developer meeting/2/Introduction.tex,
+	  developer meeting/2/Rabbits.pdf,
+	  developer meeting/2/Rabbits.tex:
+	  Update SDCC developer meeting 2 slides.
+
+2025-03-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Rabbits.pdf,
+	  developer meeting/2/Rabbits.tex:
+	  Update TLCS slides.
+
+2025-03-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Introduction.pdf,
+	  developer meeting/2/Introduction.tex,
+	  developer meeting/2/scores-2024.png,
+	  developer meeting/2/sizes-2024.png,
+	  developer meeting/2/Rabbits.pdf,
+	  developer meeting/2/Rabbits.tex:
+	  SDCC developer meeting 2 slides.
+
+2025-03-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting/2/Poster.pdf,
+	  developer meeting/2/Poster.sla:
+	  SDCC developer meeting 2 location change.
+
+2025-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2025-02-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* developer meeting:
+	  Poster for SDCC developer meeting 2, slides from SDCC developer meeting 1.
+
+2025-02-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Update graphs.
+
 2024-12-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* historygraphs/hello-r3ka/hello.c,

@@ -8,9 +8,12 @@
 # 4.0.0: 11533
 # 4.1.0: 12085
 # 4.2.0: 13131
-# Broken: 8984-9000, 9104 (bug #2280), 9106-9114 (whetstone build segfaults), 9379-9418 (SDCC build fails), 9424 (library build fails) 9477 (SDCC build fails), 9891-9946 (stdcbench build fails), 9958-10147 (Dhrystone z80 build fails) 10233-10270 (stdcbench build segfaults), 10185-10340 (stdcbench build segfaults) 10408 (stdcbench build segfaults) 10426-10462 (coremark build fails) 10682 (library build fails for mcs51) 11952 (library build fails). 14400 (build fails).
+# 4.4.0: 14648
+# 4.5.0: 15246
+# Broken: 8984-9000, 9104 (bug #2280), 9106-9114 (whetstone build segfaults), 9379-9418 (SDCC build fails), 9424 (library build fails) 9477 (SDCC build fails), 9891-9946 (stdcbench build fails), 9958-10147 (Dhrystone z80 build fails) 10233-10270 (stdcbench build segfaults), 10185-10340 (stdcbench build segfaults) 10408 (stdcbench build segfaults) 10426-10462 (coremark build fails) 10682 (library build fails for mcs51) 11952 (library build fails). 14400 (build fails). 14463 (stm8 lib build fails) 14464 (coremark build fails for z80)
 # Build of large-stack-auto lib for mcs51 was enabled in 9521.
-REVISIONS_R3KA_STDCBENCH_POST = 12392 12415 12430 12450 12464 12488 12495 12508 12642 12673 12689 12692 12746 12784 12795 12827 12862 12875 12891 12900 12969 13131 13200 13300 13495 13689 13699 13709 13748 13772 13800 13900 14000 14184 14208 14211 14225 14235 14238 14246 14248 14253 14300 14346 14370 14398 14405 14443 14472 14510 14528 14648 14650 14710 14738 14817 14889 14955 14958 14996 15015 15022 15029 15032 15037 15060 15093 15104 15117 15118 15119 15172
+REVISIONS_R3KA_WHETSTONE = 12891 12900 12969 13131 13200 13300 13495 13689 13699 13709 13748 13772 13800 13804 13813 13825 13845 13885 13900 14000 14184 14208 14211 14225 14235 14238 14246 14248 14253 14300 14346 14370 14398 14405 14443 14448 14453 14472 14510 14528 14648 14650 14710 14738 14817 14889 14955 14958 14996 15015 15022 15029 15032 15037 15060 15093 15104 15117 15118 15119 15172 15240 15246 15317 15418 15435 15451 15486 15550 15580 15669 15724 15725 15768
+REVISIONS_R3KA_STDCBENCH_POST = 12392 12415 12430 12450 12464 12488 12495 12508 12642 12673 12689 12692 12746 12784 12795 12827 12862 12875  $(REVISIONS_R3KA_WHETSTONE)
 # Bug #3216 resulted in wrong r3ka stdcbench scores for 12100-12243. For 12121-12300, Coremark fails for z80. For 14221-14224. Whetstone fails for mcs51.
 REVISIONS_R3KA_STDCBENCH = 12001 12056 12085 12098 $(REVISIONS_R3KA_STDCBENCH_POST) # Bug #3216 resulted in wrong r3ka stdcbench scores for 12100-12243.
 REVISIONS_R3KA = 12001 12056 12085 12098 12100 12102 12106 12109 12114 $(REVISIONS_R3KA_STDCBENCH_POST) # Earlier than 11919 doesn't have a default crt0 that works for RCM boards. For 11919 and 11972, Dhrystone hangs. For 12121-12300, Coremark fails for z80.
@@ -22,6 +25,12 @@ BENCHMARKS = whetstone dhrystone coremark stdcbench
 GOALS = size speed default
 
 TARGETS = stm8 mcs51 r3ka z80
+
+# Adjust these according to attached cables.
+Z80_TTY = /dev/ttyUSB0
+STM8_TTY = /dev/ttyUSB1
+MCS51_TTY = /dev/ttyUSB2
+R3KA_TTY = /dev/ttyUSB3
 
 COMPILERS = $(foreach revision, $(REVISIONS), sdcc-$(revision)/bin/sdcc)
 
@@ -43,6 +52,7 @@ $(BENCHMARKS_MCS51): SDCCFLAGS += -mmcs51 --model-large --stack-auto
 BENCHMARKS_R3KA = $(foreach benchmark, $(BENCHMARKS), $(foreach goal, $(GOALS), $(foreach revision, $(REVISIONS_R3KA), $(benchmark)-r3ka-$(goal)-$(revision)/image.ihx)))
 $(BENCHMARKS_R3KA): TARGET = r3ka
 $(BENCHMARKS_R3KA): SDCCFLAGS += -mr3ka
+BENCHMARKS_R3KA_WHETSTONE = $(foreach benchmark, $(BENCHMARKS), $(foreach goal, $(GOALS), $(foreach revision, $(REVISIONS_R3KA_WHETSTONE), $(benchmark)-r3ka-$(goal)-$(revision)/image.ihx)))
 BENCHMARKS_R3KA_STDCBENCH = $(foreach benchmark, $(BENCHMARKS), $(foreach goal, $(GOALS), $(foreach revision, $(REVISIONS_R3KA_STDCBENCH), $(benchmark)-r3ka-$(goal)-$(revision)/image.ihx)))
 BENCHMARKS_Z80 = $(foreach benchmark, $(BENCHMARKS), $(foreach goal, $(GOALS), $(foreach revision, $(REVISIONS), $(benchmark)-z80-$(goal)-$(revision)/image.ihx)))
 $(BENCHMARKS_Z80): TARGET = z80
@@ -89,7 +99,7 @@ BENCHMARKS_STDCBENCH_R3KA_SIZES = $(patsubst %image.ihx, %size, $(filter $(BENCH
 BENCHMARKS_STDCBENCH_Z80_SIZES = $(patsubst %image.ihx, %size, $(filter $(BENCHMARKS_STDCBENCH), $(BENCHMARKS_Z80)))
 BENCHMARKS_WHETSTONE_STM8_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_STM8)))
 BENCHMARKS_WHETSTONE_MCS51_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_MCS51)))
-BENCHMARKS_WHETSTONE_R3KA_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_R3KA)))
+BENCHMARKS_WHETSTONE_R3KA_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_WHETSTONE), $(BENCHMARKS_R3KA_WHETSTONE)))
 BENCHMARKS_DHRYSTONE_STM8_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_STM8)))
 BENCHMARKS_DHRYSTONE_MCS51_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_MCS51)))
 BENCHMARKS_DHRYSTONE_R3KA_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENCHMARKS_DHRYSTONE), $(BENCHMARKS_R3KA)))
@@ -398,7 +408,7 @@ whetstone-mcs51-scoretable: $(BENCHMARKS_WHETSTONE_MCS51_SCORES)
 
 whetstone-r3ka-scoretable: $(BENCHMARKS_WHETSTONE_R3KA_SCORES)
 	echo "#Revision size speed default" > $@
-	for r in $(REVISIONS_R3KA); do \
+	for r in $(REVISIONS_R3KA_WHETSTONE); do \
 		SIZE_SIZE=`cat whetstone-r3ka-size-$$r/score`; \
 		SIZE_SPEED=`cat whetstone-r3ka-speed-$$r/score`; \
 		SIZE_DEFAULT=`cat whetstone-r3ka-default-$$r/score `; \
@@ -481,7 +491,7 @@ stdcbench-r3ka-scoretable: $(BENCHMARKS_STDCBENCH_R3KA_SCORES)
 $(COMPILERS): sdcc-%/bin/sdcc:
 	rm -rf sdcc-$*
 	svn co -r $* https://svn.code.sf.net/p/sdcc/code/trunk/sdcc sdcc-$* || echo "svn checkout incomplete. Second attempt in 8s." && sleep 8 && svn cleanup sdcc-$* && svn co -r $* https://svn.code.sf.net/p/sdcc/code/trunk/sdcc sdcc-$* || echo "svn checkout incomplete. Third attempt in 8s." && sleep 8 && svn cleanup sdcc-$* && svn co -r $* https://svn.code.sf.net/p/sdcc/code/trunk/sdcc sdcc-$* || echo "svn checkout incomplete. Last attempt in 8s." && sleep 8 && svn cleanup sdcc-$* && svn co -r $* https://svn.code.sf.net/p/sdcc/code/trunk/sdcc sdcc-$*
-	cd sdcc-$* && ./configure --disable-pic14-port --disable-pic16-port && $(MAKE) && rm -rf device/non-free .svn && rm src/*.o src/*/*.o src/*/*.a
+	cd sdcc-$* && ./configure --disable-pic14-port --disable-pic16-port CC="gcc --std=gnu17" && $(MAKE) && rm -rf device/non-free .svn && rm src/*.o src/*/*.o src/*/*.a
 
 %: REVISION=$(lastword $(subst -, ,$*))
 
@@ -503,35 +513,35 @@ $(BENCHMARKS_SIZES): %/size: %/image.ihx
 .NOTPARALLEL: $(BENCHMARKS_SCORES)
 
 $(BENCHMARKS_WHETSTONE_STM8_SCORES): %/score: %/image.ihx
-	echo "scale=3;" 1000000 / `./execute_benchmark-stm8 /dev/ttyUSB0 $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.//"` | bc > $@
+	echo "scale=3;" 1000000 / `./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.//"` | bc > $@
 
 $(BENCHMARKS_WHETSTONE_MCS51_SCORES): %/score: %/image.ihx
-	echo "scale=3;" 1000000 / `./execute_benchmark-mcs51 /dev/ttyUSB1 $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.//"` | bc > $@
+	echo "scale=3;" 1000000 / `./execute_benchmark-mcs51 $(MCS51_TTY) $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.//"` | bc > $@
 
 $(BENCHMARKS_WHETSTONE_R3KA_SCORES): %/score: %/image.ihx
-	echo "scale=3;" 1000000 / `./execute_benchmark-r3ka /dev/ttyUSB2 $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.*//"` | bc > $@
+	echo "scale=3;" 1000000 / `./execute_benchmark-r3ka $(R3KA_TTY) $< | sed -e "s/Loops: 10, Iterations: 1, Duration: //" | sed -e "s/ msec.*//"` | bc > $@
 
 $(BENCHMARKS_DHRYSTONE_STM8_SCORES): %/score: %/image.ihx
-	./execute_benchmark-stm8 /dev/ttyUSB0 $< | sed -e "s/Dhrystones per Second: //" > $@
+	./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/Dhrystones per Second: //" > $@
 
 $(BENCHMARKS_DHRYSTONE_MCS51_SCORES): %/score: %/image.ihx
-	./execute_benchmark-mcs51 /dev/ttyUSB1 $< | sed -e "s/Dhrystones per Second: //" > $@
+	./execute_benchmark-mcs51 $(MCS51_TTY) $< | sed -e "s/Dhrystones per Second: //" > $@
 
 $(BENCHMARKS_DHRYSTONE_R3KA_SCORES): %/score: %/image.ihx
-	./execute_benchmark-r3ka /dev/ttyUSB3 $< | sed -e "s/Dhrystones per Second: //" > $@
+	./execute_benchmark-r3ka $(R3KA_TTY) $< | sed -e "s/Dhrystones per Second: //" > $@
 
 $(BENCHMARKS_COREMARK_STM8_SCORES): %/score: %/image.ihx
-	echo "scale=3;" 60000 / `./execute_benchmark-stm8 /dev/ttyUSB0 $< | sed -e "s/Total ticks : //"` | bc > $@
+	echo "scale=3;" 60000 / `./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
 $(BENCHMARKS_COREMARK_R3KA_SCORES): %/score: %/image.ihx
-	echo "scale=3;" 1966080 / `./execute_benchmark-r3ka /dev/ttyUSB3 $< | sed -e "s/Total ticks : //"` | bc > $@
+	echo "scale=3;" 1966080 / `./execute_benchmark-r3ka $(R3KA_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
 $(BENCHMARKS_STDCBENCH_STM8_SCORES): %/score: %/image.ihx
-	./execute_benchmark-stm8 /dev/ttyUSB0 $< | sed -e "s/stdcbench final score: //" > $@
+	./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/stdcbench final score: //" > $@
 
 $(BENCHMARKS_STDCBENCH_MCS51_SCORES): %/score: %/image.ihx
-	./execute_benchmark-mcs51 /dev/ttyUSB1 $< | sed -e "s/stdcbench final score: //" > $@
+	./execute_benchmark-mcs51 $(MCS51_TTY) $< | sed -e "s/stdcbench final score: //" > $@
 
 $(BENCHMARKS_STDCBENCH_R3KA_SCORES): %/score: %/image.ihx
-	./execute_benchmark-r3ka /dev/ttyUSB3 $< | sed -e "s/stdcbench final score: //" > $@
+	./execute_benchmark-r3ka $(R3KA_TTY) $< | sed -e "s/stdcbench final score: //" > $@
 
