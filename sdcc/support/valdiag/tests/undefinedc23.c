@@ -8,6 +8,11 @@ extern int a;
 _Static_assert(1 || a); /* ERROR(SDCC) */
 #endif
 
+#ifdef TEST3
+#define ASSEMBLE(uc1, uc2) uc1##uc2
+int ASSEMBLE(\u00, c4); /* ERROR */
+#endif
+
 #ifdef TEST4a
 char main(void); /* WARNING(SDCC) */
 #endif

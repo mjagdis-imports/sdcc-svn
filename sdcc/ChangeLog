@@ -1,5 +1,10 @@
 2025-10-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* sdcc/support/valdiag/tests/undefinedc23.c:
+	  Test case for N3479 resolution of C23 UB on token concatenation producing UCN.
+
+2025-10-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* support/regression/MakeList:
 	  Disable memcpy-1.c test (which shall not compile for targets where size_t is less than 18 bits) for r800.
 
