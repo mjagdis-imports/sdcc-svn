@@ -84,6 +84,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define raL    (aJKHL.r32.r16l.r.L)
 
 enum {
+  flagNON= 0,
   flagS = 0x80,
   flagZ = 0x40,
   flagL = 0x04,
@@ -467,6 +468,7 @@ public:
   virtual int EX_DE_HL(t_mem code);
   virtual int LD_HL_iIXd(t_mem code);
   virtual int LD_iIXd_HL(t_mem code);
+  virtual int LD_iIRd_HL(t_mem code);
   virtual int AND_n(t_mem code) { tick(2); return and8(destA(), rA, fetch()); }
   virtual int JP_HL(t_mem code) { tick(3); PC= rHL; return resGO; }
   virtual int XOR_n(t_mem code) { tick(3); return xor8(destA(), rA, fetch()); }

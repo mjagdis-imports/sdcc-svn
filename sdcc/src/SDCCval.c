@@ -763,6 +763,7 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
 
 #if 0
   printf("checkConstantRange\n");
+  printf("   op          = %d\n", op);
   printf("   varBits     = %d\n", varBits);
   printf("   ulitVal     = 0x%016lx\n", ulitVal);
   printf("   signExtMask = 0x%016lx\n", signExtMask);
@@ -859,7 +860,7 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
       TYPE_TARGET_ULONGLONG minValP, maxValP, minValM, maxValM;
       TYPE_TARGET_ULONGLONG opBitsMask = reBits >= sizeof(opBitsMask)*8 ? ~0ull : ((1ull << reBits)-1);
 
-      if (IS_BOOL (var))
+      if (IS_BOOLEAN (var))
         {
           minValP = 0;
           maxValP = 1;
@@ -974,7 +975,7 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
       /* signed operation */
       TYPE_TARGET_LONGLONG minVal, maxVal;
 
-      if (IS_BOOL (var))
+      if (IS_BOOLEAN (var))
         {
           minVal = 0;
           maxVal = 1;
@@ -993,6 +994,12 @@ checkConstantRange (sym_link *var, sym_link *lit, int op, bool exchangeLeftRight
           minVal = signExtMask | signMask;
           maxVal = ~(signExtMask | signMask);
         }
+
+#if 0
+      printf("   litVal     = %lld\n", litVal);
+      printf("   maxVal     = %lld\n", maxVal);
+      printf("   minVal     = %lld\n", minVal);
+#endif
 
       switch (op)
         {
@@ -1264,9 +1271,21 @@ constIntVal (const char *s)
           llval = sepStrToUll (s + 2, &p, 2);
         }
       else if (s[1] == 'x' || s[1] == 'X')
-        llval = sepStrToUll (s + 2, &p, 16);
+        {
+          llval = sepStrToUll (s + 2, &p, 16);
+        }
+      else if (s[1] == 'o' || s[1] == 'O')
+        {
+          if (!options.std_sdcc && !options.std_c2y)
+            werror (W_PREFIXED_OCTAL_C2Y);
+          llval = sepStrToUll (s + 2, &p, 8);
+        }
       else
-        llval = sepStrToUll (s, &p, 8);
+        {
+          llval = sepStrToUll (s, &p, 8);
+          if (llval != 0 && options.std_c2y)
+            werror (W_OCTAL_DEPRECATED_C2Y);
+        }
       dval = (double)(unsigned long long int) llval;
       decimal = FALSE;
     }
@@ -1891,6 +1910,12 @@ charVal (const char *s)
         case '6':
         case '7':
           return constCharacterVal (octalEscape (&s), type);
+
+        case 'o':
+          if (options.std_c2y && s[1] == '{')
+            return constCharacterVal (delimitedOctalEscape (&s), type);
+          else
+            return constCharacterVal (*s, type);
 
         case 'x':
           return constCharacterVal (hexEscape (&s), type);

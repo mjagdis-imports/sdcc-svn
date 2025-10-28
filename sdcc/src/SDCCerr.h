@@ -332,8 +332,32 @@ enum {
   E_GENERIC_WITH_TYPENAME_C2Y   = 302, /* generic selection based on a type name requires C2y or later */
   E_MIXED_FUNCTION_STYLES       = 303, /* function mixes ISO and K&R style */
   E_ENUM_TYPE_SPECIFIER_C23     = 304, /* enum type specifiers require C23 or later */
-  E_ENUM_UNDERLYING_TYPE        = 305, /* enum's underlying type must be an integer type and cannot be bit-precise or an enum */
+  E_ENUM_UNDERLYING_TYPE        = 305, /* enum's underlying type must be an integer type and cannot be an enum */
   E_ENUM_TYPE_RANGE_TOO_SMALL   = 306, /* the enum's underlying type cannot represent all enumerator values */
+  E_COUNTOF_INVALID_TYPE        = 307, /* _Countof applied to an incomplete or non-array type */
+  W_PREFIXED_OCTAL_C2Y          = 308, /* prefixed octal integer constants require ISO C2y or later */
+  W_OCTAL_DEPRECATED_C2Y        = 309, /* unprefixed octal integer constants are deprecated as of ISO C2y */
+  E_CLOSING_BRACE               = 310, /* invalid character or end of string encountered before '}' */
+  E_INVALID_OCTAL               = 311, /* \o{...} used without valid octal digits */
+  E_SELECTION_DECLARATION_C2Y   = 312, /* declaration within selection header requires ISO C2y or later */
+  E_COMPLIT_SCLASS_C23          = 313, // compound literals with storage class specifier require ISO C23 or later
+  W_ENUM_UNDERLYING_BITINT      = 314, // enum's underlying type may not be a bit-precise type in ISO C23
+  W_INVALID_BITINTWIDTH_1       = 315, // signed bit-precise integer type may not have width 1 in ISO C23
+  E_ATOMIC_ARRAY                = 316, // _Atomic array
+  E_ATOMIC_FUNCTION             = 317, // _Atomic function
+  E_ATOMIC_SPEC_ATOMIC          = 318, // _Atomic specifier on atomic type
+  E_ATOMIC_SPEC_QUALIFIED       = 319, // _Atomic specifier on qualified type
+  E_BLOCK_SCOPE_EXTERN_INIT     = 320, // block scope variable declared extern and intialized
+  E_BLOCK_SCOPE_FUNC_SCLASS     = 321, // Function declared at block scope with explicit storage-class specifier other than extern
+  W_PTR2INT_NOREPRESENT         = 322, // Cast of pointer to integer type that cannot represent all values of the pointer type
+  W_MAIN_TYPE                   = 323, // Function main should be void main(void) or int main(void)
+  E_VOID_SHALL_BE_LONELY        = 324, // void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis
+  W_ANONYMOUS_STRUCT_C11        = 325, // anonymous struct/union requires ISO C11 or later
+  E_UNAMED_STRUCT_MEMBER        = 326, // struct/union members need to have a name,unless they are anonymous struct/union or bit-fields
+  E_NO_LINKAGE_INCOMPLETE_TYPE  = 327, // object with no linkage of incomplete type
+  E_EXTERN_INLINE_NO_DEF        = 328, // inline function declared with external linkage, but not defined in translation unit
+
+  // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */
@@ -436,7 +460,7 @@ werrorfl - Output a standard error message with variable number of arguments.
 -------------------------------------------------------------------------------
 */
 
-int werrorfl (char *newFilename, int newLineno, int errNum, ...);
+int werrorfl (const char *newFilename, int newLineno, int errNum, ...);
 
 /*
 -------------------------------------------------------------------------------

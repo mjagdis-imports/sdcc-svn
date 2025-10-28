@@ -1,16 +1,2014 @@
-2024-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
+2025-10-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList:
+	  Disable memcpy-1.c test (which shall not compile for targets where size_t is less than 18 bits) for r800.
+
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge undefined branch.
+
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmain.c,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/undefinedc23.c,
+	  support/regression/tests/gcc-torture-execute-930526-1.c:
+	  Implement N3244 resolution for C23 UB for extern inline declarations without definition in same translation unit.
+	* support/regression/MakeList:
+	  Disable test that won't work on targets with 16-bit int.
+	* .version,
+	  doc/sdccman.lyx:
+	  Document where C23 UB resolution affects SDCC compatibility with previous versions.
+
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmem.c,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3244 resolution for C23 UB for objects with no linage of incomplete types.
+
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.c
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3410 resolution for C23 UB on same identifier with internal and external linkage.
+
+2025-10-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/struct.c:
+	  Implement N3341 resolution for C23 UB on struct/union with unnamed members only, and fix relted diagnostics regarding unnamed struct/union members, including bug #3887.
+
+2025-10-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/regression/tests/bug-2031.c,
+	  support/regression/tests/bug-2983.c,
+	  support/regression/tests/undefinedc23.c,
+	  support/valdiag/tests/bug-3891.c:
+	  Fix bug #3891. Implement N3344 resolution for C23 UB.
+
+2025-10-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCmem.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/bug-3889.c:
+	  Fix remaining parts of bug #3889.
+
+2025-10-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/valdiag/tests/bug-3890.c:
+	  Fix bug #3890.
+
+2025-10-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  support/valdiag/tests/bug-3889.c:
+	  Fix part of bug #3889.
+
+2025-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/valdiag/tests/undefinedc23.c:
+	  Test cases for N3341 resolution for C23 UB (which becomes implementation-defined).
+
+2025-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3623 resolution for C23 UB, (unless a custom crt0 is used).
+
+2025-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Makefile.common.in,
+	  aclocal.m4,
+	  configure,
+	  configure.ac,
+	  device/lib/Makefile.in,
+	  device/non-free/lib/Makefile.in,
+	  sdcc_vc.h.in,
+	  sdccconf_in.h,
+	  src/SDCCmain.c,
+	  src/clean.mk,
+	  src/port.h,
+	  src/avr:
+	  Remove nearly all remains of the avr port.
+
+2025-10-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/stdbit.h,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/ez80/Makefile.in,
+	  device/lib/isspace.c,
+	  device/lib/isxdigit.c,
+	  src/z80/peeph-ez80.def,
+	  support/regression/ports/ucez80/spec.mk,
+	  support/scripts/sdcc.nsi:
+	  Some cleanup for the ez80_z80 port to ez80 port change.
+
+2025-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  support/regression/tests/undefinedc23.c,
+	  support/valdiag/tests/undefinedc23.c,
+	  support/regression/tests/bug-2031.c,
+	  support/regression/tests/bug-2983.c,
+	  support/regression/tests/offsetof.c:
+	  Implement N3712 resolution for C23 UB, while preserving SDCC implementation-defined behavior.
+
+2025-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/ralloc.c,
+	  src/pic14/gen.h,
+	  src/pic16/gen.h,
+	  src/pic16/genutils.h,
+	  src/stm8/ralloc.c,
+	  src/z80/ralloc.c:
+	  Code quality fixes inspired by GCC 15.2 -Wall -pedantic warnings.
+
+2025-10-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3244 resolution for C23 UB on block scope function declaration with explicit storage-class specifier.
+
+2025-10-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/valdiag/tests/undefinedc23.c:
+	  Test cases for N3347, N3532, N3340, N3525 resolutions of C23 UB.
+
+2025-10-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix declaration-after-label issues.
+
+2025-10-18 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lkbank.c
+	  sdas/linksrc/lklex.c
+	  sdas/linksrc/lklib.c
+	  sdas/linksrc/lklibr.c
+	  sdas/linksrc/lklist.c
+	  sdas/linksrc/lkmain.c
+	  sdas/linksrc/lkrloc3.c
+	  sdld rebased to V05.50.4, unchanged sdld behaviour
+
+2025-10-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve passing of struct/union parameters for tlcs, ez80.
+
+2025-10-17 Janko Stamenović
+	  Fixing previous ChangeLog file references
+
+2025-10-17 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lkmain.c
+	  sdas/linksrc/lkout.c
+	  sdas/linksrc/lkrloc.c
+	  sdas/linksrc/lkrloc3.c
+	  sdas/linksrc/lksdcdb.c
+	  sdas/linksrc/lksym.c
+	  One more sdld rebase step to upstream 
+
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/stdlib.h,
+	  device/lib/incl.mk,
+	  device/lib/umaxabs.c,
+	  device/lib/uabs.c,
+	  device/lib/ulabs.c,
+	  device/lib/ullabs.c,
+	  support/regression/tests/uabs.c:
+	  Implement N3349, as modified by N3577.
+
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge rabbit branch.
+
+2025-10-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/tests/dynamiccstructret.c.in:
+	  Disable a test for targets where it fails for known reasons.
+
+2025-10-14 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lkar.h
+	  sdas/linksrc/lkarea.c
+	  sdas/linksrc/lkbank.c
+	  sdas/linksrc/lkdata.c
+	  sdas/linksrc/lkeval.c
+	  sdas/linksrc/lkhead.c
+	  sdas/linksrc/lklex.c
+	  sdas/linksrc/lklibr.c
+	  sdas/linksrc/lklist.c
+	  sdas/linksrc/lkmain.c
+	  sdas/linksrc/lknoice.c
+	  sdas/linksrc/lkout.c
+	  sdas/linksrc/lkrloc.c
+	  sdas/linksrc/lkrloc3.c
+	  sdas/linksrc/lksym.c
+	  One more rebase step toward the new base for sdld
+
+2025-10-14 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lklib.c
+	  gcc15 sdld compatibilty, lklib loadfile_lib remove fclose on null
+
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Documentation updates for Rabbit and eZ80 ports.
+
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/far_rabbits.c.in:
+	  Disable a test for tlcs90, where it fails due to incomplete __far support.
+	* doc/sdccman.lyx:
+	  Document that __far support for Rabbits, TLCS-90 and eZ80 is still experimental. Document interrupt handler changes in z80-related ports.
+
+2025-10-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCCicode.c,
+	  src/SDCCmem.c,
+	  src/z80/gen.c,
+	  support/regression/tests/dynamicc.c:
+	  Support pointers to __far as __dynamicc parameters.
+	* sim/ucsim/src/sims/tlcs.src/inst_arith.cc.
+	  sim/ucsim/src/sims/tlcs.src/tlcs.cc.
+	  sim/ucsim/src/sims/tlcs.src/tlcscl.h:
+	  Fix uCsim bug #3883.
+
+2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/dynamiccstructret.c.in,
+	  src/z80/gen.c,
+	  doc/sdccman.lyx:
+	  __dynamicc struct return.
+
+2025-10-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  support/regression/tests/dynamic.c.in,
+	  support/regression/tests/dynamiccasmchk.c:
+	  Test and announce __dynamicc varying argument support.
+
+2025-10-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  support/regression/tests/dynamic.c.in,
+	  support/regression/tests/dynamicc.c,
+	  support/regression/tests/dynamiccasmchk.c:
+	  Further test cases for __dynamicc.
+
+2025-09-28 Janko Stamenović
+
+	* sdas/linksrc/lkar.c
+	  Fix sdld less dependent builds (Linux on i386)
+
+2025-10-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCmem.c,
+	  src/SDCCmem.h,
+	  src/z80/gen.c,
+	  support/regression/tests/dynamicc.c,
+	  support/regression/tests/dynamic.c.in:
+	  Parameter and 8-bit return value support for __dynamicc; callee struct return support for __dynamicc.
+
+2025-09-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge atomic branch.
+
+2025-09-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c:
+	  Refactor parameter iCode generation (to prepare for atomic support functions).
+
+2025-09-25 Janko Stamenović
+
+	* sdas/linksrc/aslink.h
+	  sdas/linksrc/lkar.c
+	  sdas/linksrc/lkarea.c
+	  sdas/linksrc/lkbank.c
+	  sdas/linksrc/lkdata.c
+	  sdas/linksrc/lkeval.c
+	  sdas/linksrc/lkhead.c
+	  sdas/linksrc/lklex.c
+	  sdas/linksrc/lklibr.c
+	  sdas/linksrc/lklist.c
+	  sdas/linksrc/lkmain.c
+	  sdas/linksrc/lknoice.c
+	  sdas/linksrc/lkout.c
+	  sdas/linksrc/lkrloc.c
+	  sdas/linksrc/lkrloc3.c
+	  sdas/linksrc/lksdcdb.c
+	  sdas/linksrc/lksym.c
+	  Non invasive nore matching sdas/linksrc to its upstream
+
+2025-09-21 Janko Stamenović
+
+	* sdas/linksrc/lkarea.c
+	  sdas/linksrc/lkbank.c
+	  sdas/linksrc/lkdata.c
+	  sdas/linksrc/lkeval.c
+	  sdas/linksrc/lkhead.c
+	  sdas/linksrc/lklex.c
+	  sdas/linksrc/lklibr.c
+	  sdas/linksrc/lklist.c
+	  sdas/linksrc/lkmain.c
+	  sdas/linksrc/lknoice.c
+	  sdas/linksrc/lkout.c
+	  sdas/linksrc/lkrloc.c
+	  sdas/linksrc/lkrloc3.c
+	  sdas/linksrc/lksdcdb.c
+	  sdas/linksrc/lksym.c
+	  Undo whitespace changes of unchanged upstream lines in sdas/linksrc
+
+2025-09-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCicode.h,
+	  src/SDCCicode.c,
+	  src/SDCCsymt.h,
+	  src/SDCCsymt.c:
+	  Foundations for handling _Atomic qualifier and specifier in the front-end.
+
+2025-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c,
+	  src/SDCCicode.h,
+	  src/SDCCicode.c,
+	  src/z80/z80.h:
+	  Improve small direct operand handling.
+
+2025-09-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc:
+	  Enable more flexible use of a in pointer reads in register allocator (support in codegen was already added earlier).
+	* src/z80/gen.c:
+	  Prepare for further direct operand handling improvements.
+
+2025-09-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Register allocation / code generation improvements, in particular for right shift relevant to rotation implementation.
+
+2025-09-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Enable new direct operand handling for a few cases.
+
+2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Update information on use of complex Z80 instructions.
+	* src/z80/gen.h,
+	  src/z80/gen.c:
+	  Preparations for more efficient handling of small operands as direct operands.
+
+2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Rabbit codegen improvements.
+	* src/z80/mappings.i:
+	  Unify whitespace in emitted asm.
+	* doc/sdccman.lyx:
+	  Document syntax for Rabbit interrupt handlers.
+
+2025-09-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/rab/r*.h:
+	  Rabbit register name headers.
+	* src/z80/peep.c:
+	  Fix handling of ipset in peephole optimzer distance estimation.
+	* src/z80/gen.c:
+	  Improve Rabbit software interrupt handlers.
+
+2025-09-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  device/lib/r2k/crt0.s,
+	  device/lib/r2ka/crt0.s,
+	  device/lib/r3ka/crt0.s,
+	  device/lib/r4k/crt0.s,
+	  device/lib/r5k/crt0.s,
+	  device/lib/r6k/crt0.s,
+	  doc/sdccman.lyx,
+	  src/SDCCglue.c,
+	  src/z80/main.c:
+	  Have compiler provide internal interrupt table for Rabbits instead of crt0.
+
+2025-09-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  TLCS-90 __far fixes.
+
+2025-09-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.h,
+	  src/z80/gen.c,
+	  src/z80/peep.c,
+	  support/regression/tests/far_rabbit_fields.c,
+	  support/regression/tests/far_rabbits.c.in:
+	  Further work towards Rabbit/TLCS-90/eZ80 __far support.
+
+2025-09-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCast.h,
+	  src/SDCCdwarf2.c,
+	  src/SDCCdwarf2.h,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.h,
+	  src/SDCCval.h:
+	  Improve const-correctness.
+
+2025-09-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/ralloc.c,
+	  src/pdk/ralloc.h,
+	  src/stm8/gen.c,
+	  src/stm8/ralloc.c,
+	  src/stm8/ralloc.h,
+	  src/z80/gen.c,
+	  src/z80/peep.c,
+	  src/z80/ralloc.c,
+	  src/z80/ralloc.h:
+	  A bit of code cleanup based on warnings from gcc-15 -pedantic -Wwrite-strings.
+
+2025-09-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Clarification on new calloc/malloc/realloc behavior for zero-sized allocations.
+
+2025-09-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Improve peephole optimizer support for eZ80 instructions for __far support.
+
+2025-09-07 Janko Stamenović
+
+	* sdas/asz80/z80pst.c
+	  Fix bug #3827: add the ld.lis instruction
+
+2025-09-07 Janko Stamenović
+
+	* sdas/asz80/z80mch.c 
+	  Fix bug #3826: allow .il sufix for 3-byte address when !adl
+
+2025-09-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/malloc.c,
+	  device/lib/realloc.c,
+	  doc/sdccman.lyx,
+	  .version:
+	  Make realloc follow C99 semantics instead of C90 semantics.
+
+2025-09-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  device/include/stdbit.h,
+	  support/regression/tests/load8.c.in,
+	  support/regression/tests/store8.c.in
+	  support/regression/tests/rotate_left.c.in:
+	  Fix bug #3874. Enable all stdbit.h functions for all ports.
+
+2025-09-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCglue.c,
+	  src/SDCCmem.c,
+	  device/include/stdbit.h,
+	  support/regression/tests/rotate_left.c.in,
+	  support/regression/tests/rotate_right.c.in,
+	  .version,
+	  doc/sdccman.lyx:
+	  Partial fix for bug #3874. Good enough to enable the stdbit.h rotation functions for all ports, and replace __builtin_rot.
+
+2025-09-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix two codegen issues that affected a recently introduced test for stdbit.h functions.
+	* src/pdk/gen.c:
+	  Fix a codegen issue triggered by recently introduced rotation optimization improvements.
+	* src/ds390/main.c,
+	  src/mos6502/main.c:
+	  Fix incorrect announcement of support for rotations of arbitrary _BitInt types.
+	* support/regression/tests/bug-3873.c:
+	  Disable recently added test for mcs51, where it fails due to known bug #3875.
+
+2025-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCopt.c:
+	  Replace AST-based rotation optimization by iCode-based one that works better for inlined functions.
+	* device/include/stdbit.h:
+	  Use built-in memcpy for stdbit.h memory reversal and endian-aware loads and stores.
+
+2025-09-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/stdbit.h,
+	  device/lib/incl.mk,
+	  device/lib/stdc_load8.c,
+	  device/lib/stdc_memreverse8.c,
+	  device/lib/stdc_memreverse8u.c,
+	  device/lib/stdc_store8.c,
+	  support/regression/tests/bit_floor.c.in,
+	  support/regression/tests/bit_width.c.in,
+	  support/regression/tests/load8.c.in,
+	  support/regression/tests/memreverse8.c,
+	  support/regression/tests/single_bit.c.in,
+	  support/regression/tests/store8.c.in,
+	  support/regression/tests/rotate_left.c.in,
+	  support/regression/tests/rotate_right.c.in:
+	  C2Y bit utilities, RFE #1000.
+
+2025-08-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Various codegen improvements.
+
+2025-08-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3873.c,
+	  support/regression/MakeList:
+	  Fix bug #3873.
+
+2025-08-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def,
+	  src/z80/ralloc2.cc:
+	  Various codegen improvements, in particular for Rabbits.
+
+2025-08-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/inttypes.h,
+	  device/lib/incl.mk,
+	  device/lib/umaxabs.c:
+	  C2Y umaxabs.
+
+2025-08-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve pointer read codegen.
+
+2025-08-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  .version,
+	  support/regression/tests/bitint-enum.c:
+	  Allow bit-precise type as fixed underlying type for enum, allow signed bit-precise integer types of width 1.
+
+2025-08-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve equality comparison codegen.
+
+2025-08-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  .version,
+	  doc/sdccman.lyx:
+	  Fix bug #3871.
+	* device/lib/realloc.c:
+	  Document a realloc implementation choice.
+
+2025-08-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve equality comparison codegen, in particular for Rabbits and TLCS.
+
+2025-08-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3870.c:
+	  Fix bug #3870.
+
+2025-08-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peep.c:
+	  Rabbit 4000/5000/6000 fixes.
+
+2025-08-20 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Improve f8(l) struct/union argument passing, also fixing bug #3869.
+
+2025-08-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve IFX codegen, in particular for Rabbits.
+
+2025-08-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/SDCCgenconstprop.cc,
+	  src/z80/peeph.def:
+	  Improve use of 16-bit instructions, mostly for Rabbits, eZ80 and TLCS.
+
+2025-08-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/src/z80/gen.c,
+	  sdcc/src/z80/peep.c:
+	  Improve r4k/r5k/r6k support in peephole optimizer.
+
+2025-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge f8l branch.
+
+2025-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Some optimizations for Rabbits and TLCS.
+
+2025-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Fix an eZ80 / TLCS pointer read bug.
+
+2025-08-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def,
+	  src/z80/gen.c:
+	  Clearly distinguish between 0 (iy) and (iy), since these are different operands for tlcs.
+
+2025-08-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve use of 16-bit instructions for Rabbits, eZ80 and TLCS.
+
+2025-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/main.c:
+	  Enable r2ka/r3ka 32x8->64 multiplication support routine.
+
+2025-08-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/fwk/lib/testfwk.c,
+	  .version:
+	  Restore dummy function until bugs #3863, #3864 are fixed.
+
+2025-08-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/r?ka/Makefile.in,
+	  device/lib/r?ka/__mululonguchar2ulonglong.s,
+	  src/z80/main.c,
+	  support/regression/tests/mulextra.c.in:
+	  r2ka/r3ka 32x8->64 multiplication support routine - disabled until bug #3865 is fixed.
+
+2025-08-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList,
+	  support/regression/fwk/lib/testfwk.c,
+	  support/regression/tests/*.c.in,
+	  support/regression/tests/*.c:
+	  Disable some tests for pdk13 where they won't work due to lack of target memory.
+
+2025-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/lib/pdk13/Makefile.in,
+	  device/lib/pdk13/_muluchar.s,
+	  device/lib/pdk14/Makefile.in,
+	  device/lib/pdk14/_muluchar.s,
+	  device/lib/pdk15/Makefile.in,
+	  device/lib/pdk15/_muluchar.s,
+	  device/lib/pdk15-stack-auto/Makefile.in:
+	  Enable use of hand-written 8x8->16 multiplication support routine, inspired by patch #470 by Konstantin Kim.
+
+2025-08-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  src/ds390/gen.c,
+	  src/ds390/ralloc.c,
+	  src/f8/gen.c,
+	  src/f8/gen.h,
+	  src/hc08/gen.c,
+	  src/mcs51/gen.c,
+	  src/mos6502/gen.c,
+	  src/pic14/gen.c,
+	  src/pic14/ralloc.c,
+	  src/pic16/ralloc.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c,
+	  src/z80/gen.h:
+	  Comment spelling fixes from patch #460 by Konstantin Kim.
+	* support/regression/fwk/lib/testfwk.c:
+	  Drop support infrastructure for ports with broken / %. There hasen't been a use case in decades.
+	* support/regression/ports/pdk13/spec.mk,
+	  support/regression/MakeList:
+	  pdk13 regression test infrastructure cleanup.
+	* device/lib/pdk13/Makefile.in:
+	  Make pdk13 behave like other pdk wrt. build of __muluchar.
+	* device/lib/pdk13/heap.s:
+	  Reduce pdk13 default heap size to 16B.
+	  
+2025-08-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  doc/sdccman.lyx,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  support/regression/tests/bug-3355.c,
+	  support/valdiag/tests/constantRange.c:
+	  Fix bug #3355.
+	* src/z80/gen.c:
+	  Fix another aspect of bug #3852.
+	* src/stm8/peep.c:
+	  Fix bug #3278.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/peep.c:
+	  Peephole optimizer guard against accidential use of non-f8l instructions.
+	* src/f8/gen.c:
+	  Fix use of non-f8l ldw ((n, sp), y in f8l port.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/float.h,
+	  device/lib/incl.mk,
+	  support/regression/tests/bitintfromfloat.c.in,
+	  device/lib/_fs2slonglong.c,
+	  device/lib/_fs2ulonglong.c:
+	  Fix third part of bug #3719.
+	* debugger/mcs51/sdcdb.h,
+	  debugger/mcs51/sdcdb.c,
+	  debugger/mcs51/symtab.c:
+	  Fix bug #3823.
+	* src/z80/gen.c:
+	  Fix bug #3854.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Fix an issue introduced erlier today while resolving merge conflict.
+
+2025-08-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c,
+	  device/lib/z80/Makefile.in,
+	  device/lib/z80/__mulsint2slong.s,
+	  device/lib/z80/__muluint2slong.s,
+	  support/regression/tests/coremark.c.in,
+	  support/regression/tests/muldiv.c.in:
+	  Fix bug #3852.
+	* src/pdk/gen.c,
+	  support/regression/tests/bitintfromfloat.c.in:
+	  Fix a pdk codegen issue for casts from int to _BitInt of width > 8, < 16 bits if both operands' least-significant byte is allocated to register a, part of bug #3719.
+
+2025-08-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bitinttofloat.c.in,
+	  support/regression/tests/bitintfromfloat.c.in:
+	  Fix bug #3718, partially fix bug #3719.
+
+2025-08-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c:
+	  Fix a regression caused by yesterday's fix for bug #3855.
+
+2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/tests/rabbit.c:
+	  Enable test for f8, since it now passes.
+	* src/SDCCopt.c,
+	  support/regression/tests/bitintarith.c.in,
+	  support/regression/tests/bug-3855.c:
+	  Fix bug #3855.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3850.c:
+	  Fix bug #3850.
+
+2025-08-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  device/lib/f8l/_divuint.s,
+	  device/lib/f8l/_modsint.s,
+	  device/lib/f8l/_moduint.s:
+	  Fix f8l support functions for multiplicative operators.
+	* src/f8/main.c:
+	  Improve f8/f8l startup code.
+
+2025-08-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Improve use of 16-bit load instructions in f8l codegen for additive operators.
+
+2025-08-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  f8l codegen fixes and improvements.
+	* sim/ucsim/src/sims/f8.src/disass.cc,
+	  sim/ucsim/src/sims/f8.src/glob.cc,
+	  sim/ucsim/src/sims/f8.src/imove.cc:
+	  Fix ldw ((n, sp)), y simulation for n >= 128.
+
+2025-08-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Improve register/stack operand shuffling, mostly for f8l under high register pressure.
+
+2025-07-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Codegen for Rabbit 1 MB / 16 MB code space memory models.
+
+2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Codegen preparations for Rabbit 1 MB / 16 MB code space memory models.
+
+2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  f8l codegen.
+
+2025-07-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.lex,
+	  doc/sdccman.lyx:
+	  #pragma max_allocs_per_node.
+
+2025-07-15 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/mcs51/at89x51.h:
+	  Fix typo in header, see bug #3861.
+
+2025-07-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Catch non-f8l instructions by assertions in cost function. Some f8l codegen to make the standard library and regression tests compile again.
+
+2025-07-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Some refactoring to prepare for f8l codegen.
+
+2025-07-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/far_rabbit_fields.c:
+	  __far-bit-field write for Rabbits; preparations for future Rabbit 4000 and 6000 instruction use.
+
+2025-07-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  __far fixes.
+
+2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/far_rabbit_fields.c:
+	  __far-bit-field write for eZ80 and TLCS-90.
+
+2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/doc/MCS51_named.svg:
+	  Put __sfr into mcs51 address space graphic.
+
+2025-07-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/SDCCicode.c:
+	  z80 codegen cleanup.
+	* src/z80/main.c,
+	  support/regression/tests/dynamic.c.in:
+	  Disable Dynamic C calling convention support for sm83, since it has no ix register.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peep.c:
+	  Bit-field read refactoring, read of __far bit-fields.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peep.c,
+	  src/z80/peeph.def,
+	  support/regression/tests/far_rabbits.c.in,
+	  src/SDCCsymt.c:
+	  Some __far support for Rabbits/TLCS90/eZ80, still not really useable in any way.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.lex,
+	  src/z80/gen.c,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/tests/dynamic.c.in:
+	  Very basic Dynamic C calling convention support (no arguments; return type must be void, 16 bits, or 32 bits).
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Cost function refactoring.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
+	  Start of Dynamic C calling convention support. Some Rabbit/eZ80/TLCS optimizations.
+
+2025-07-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve cost function accuracy.
+
+2025-07-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Unify conditional jump handling.
+
+2025-07-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+	* src/SDCCsymt.h,
+	  src/SDCCsymt.c:
+	  Some infrastructure for Dynamic C calling convention support.
+
+2025-07-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+
+2025-07-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+
+2025-07-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Further bits of __far support. Prototype first bits of Rabbit 4000/6000 optimizations via equivalent TLCS-90 functionality.
+
+2025-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+
+2025-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  z80 codegen refactoring.
+
+2025-06-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+	* src/z80/main.c,
+	  src/z80/gen.c,
+	  src/SDCCicode.c:
+	  __far pointer fixes.
+
+2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/ralloc2.cc:
+	  Improve cost function accuracy (mostly for Rabbits and TLCS).
+	* src/z80/peeph.def:
+	  Remove broken peephole optimizer rule 177a.
+	* src/z80/peep.c:
+	  Improve peephole optimizer ez80/tlcs90 lea/lda handling and z80n shift handling.
+	* src/z80/main.c:
+	  Do not announce r4k/r5k/r6k multiplication capabilities not yet supported by codegen.
+	* doc/sdccman.lyx:
+	  Basic documentation of eZ80, Rabbit, TLCS-90 __far support.
+	* support/regression/MakeList:
+	  Enable a few tests that no longer fail for z80-related ports.
+
+2025-06-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.h,
+	  src/z80/gen.c,
+	  src/z80/main.c,
+	  src/z80/mappings.i,
+	  device/lib/ez80/crt0.s,
+	  .version:
+	  Initial __far support (untested, also no __far bit-fields yet) for Rabbits, TLCS-90, and eZ80.
+
+2025-06-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  doc/tlcs90-named-address-spaces.svg:
+	  Document planned tlcs90 __far support.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Replace ISINST macro by lineIsInst function, refactor using lineArg function.
+	* src/SDCCpeeph.h:
+	  Fix handling of arguments separated by comma only (without white spaes).
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/peep.c:
+	  Replace leftArg and rightArg functions by new lineArg function.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCpeeph.h,
+	  src/f8/peep.c,
+	  src/mos6502/peep.c,
+	  src/pdk/peep.c,
+	  src/stm8/peep.c:
+	  Replace ISINST macro by a new lineIsInst function.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peep.c:
+	  Introduce r4k, r5k, r6k peephole optimizer support. Extend ez80 and tlcs90 peephole optimizer support.
+
+2025-06-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/z80.h,
+	  src/z80/gen.c,
+	  src/z80/peep.c:
+	  Rename eZ80 subport macro.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+<<<<<<< .working
+	* src/SDCCgenconstprop.cc,
+	  src/SDCCglue.c,
+	  src/SDCCmem.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/z80/gen.c:
+	  Infrastructure for handling the generic address space as a subspace of __far.
+	* sdccconf_in.h,
+	  src/SDCCmain.c:
+	  Rename ez80 port enable macro.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/z80.h,
+	  src/z80/gen.c:
+	  Extend cost function for tlcs.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  configure,
+	  configure.ac,
+	  device/include/asm/rab/features.h,
+	  device/include/math.h,
+	  device/include/sdcc-lib.h,
+	  device/include/setjmp.h,
+	  device/include/stdarg.h,
+	  device/include/stdatomic.h,
+	  device/include/stdlib.h,
+	  device/include/string.h,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/ez80/Makefile.in,
+	  device/lib/r2k/Makefile.in,
+	  device/lib/r2ka/Makefile.in,
+	  device/lib/r3ka/Makefile.in,
+	  doc/sdccman.lyx,
+	  src/SDCCglue.c,
+	  src/SDCCmain.c,
+	  src/SDCCmem.c,
+	  src/SDCCmem.h,
+	  src/ds390/main.c,
+	  src/f8/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/mos6502/main.c,
+	  src/pdk/main.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c,
+	  src/port.h,
+	  src/stm8/main.c,
+	  src/z80/main.c,
+	  src/z80/peeph.def,
+	  src/z80/ralloc.c,
+	  src/z80/ralloc.h,
+	  src/z80/z80.h,
+	  support/regression/MakeList,
+	  support/regression/Makefile.in,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/ports/ucez80/spec.mk,
+	  support/regression/ports/ucr4k/spec.mk,
+	  support/regression/ports/ucr5k/spec.mk,
+	  support/regression/ports/ucr6k/spec.mk,
+	  support/regression/tests/banked.c.in,
+	  support/regression/tests/bug-2368.c,
+	  support/regression/tests/bug-2770.c,
+	  support/regression/tests/bug-2771.c,
+	  support/regression/tests/bug-2958.c,
+	  support/regression/tests/bug-2959.c,
+	  support/regression/tests/bug-3231.c,
+	  support/regression/tests/bug-3636.c,
+	  support/regression/tests/bug-3661.c,
+	  support/regression/tests/critical.c,
+	  support/regression/tests/iobit.c.in,
+	  support/regression/tests/malloc.c,
+	  support/regression/tests/preserves_regs.c.in,
+	  support/valdiag/Makefile.in,
+	  support/valdiag/tests/bug-2798.c,
+	  support/valdiag/valdiag.py,
+	  device/include/asm/rab,
+	  device/lib/ez80,
+	  device/lib/r4k,
+	  device/lib/r5k,
+	  device/lib/r6k,
+	  src/z80/peeph-ez80.def,
+	  support/regression/ports/ucez80,
+	  support/regression/ports/ucr4k,
+	  support/regression/ports/ucr5k,
+	  support/regression/ports/ucr6k:
+	  Create r4k, r5k r6k ports (just some compiler infrastructure, and a few other bits here and there, no codegen yet), rename ez80_z80 port to ez80 (to prepare for future use of ADL mode).
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/gcc-torture-execute-pr91137.c:
+	  Disable a test that needs more data memory than the f8l typically has for f8l.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* configure.ac,
+	  configure:
+	  Fix mos65(c)02 configure option descriptions.
+
+2025-06-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Makefile.common.in,
+	  configure,
+	  configure.ac,
+	  device/include/math.h,
+	  device/include/sdcc-lib.h,
+	  device/include/setjmp.h,
+	  device/include/stdarg.h,
+	  device/include/stdatomic.h,
+	  device/lib/Makefile.in,
+	  device/lib/clean.mk,
+	  device/lib/f8l,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCmain.c,
+	  src/f8/gen.h,
+	  src/f8/main.c,
+	  src/f8/peeph.def,
+	  src/f8/ralloc2.cc,
+	  src/port.h,
+	  support/regression/MakeList,
+	  support/regression/fwk/include/testfwk.h,
+	  support/regression/ports/f8l,
+	  support/regression/tests/absolute.c.in,
+	  support/regression/tests/bitfields-bits1.c.in,
+	  support/regression/tests/bitfields-checks.c.in,
+	  support/regression/tests/bitfields-dead-loop.c.in,
+	  support/regression/tests/bitfields-nibbles.c.in,
+	  support/regression/tests/bug-2304.c,
+	  support/regression/tests/bug-2305.c,
+	  support/regression/tests/bug-2568.c,
+	  support/regression/tests/bug-3165.c,
+	  support/regression/tests/bug2686159.c,
+	  support/regression/tests/bug3027957.c,
+	  support/regression/tests/bug3379723.c,
+	  support/regression/tests/gcc-torture-execute-20031012-1.c,
+	  support/regression/tests/sieve.c,
+	  support/scripts/sdcc.nsi:
+	  f8l port (not much difference to f8 for now - codegen is still f8, and thus often not valid f8l code).
+
+2025-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve Z80N, Z180, eZ80 multiplication (RFE #972).
+
+2025-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def:
+	  Minor optimizations for subtractions.
+
+2025-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* configure.ac,
+	  configure,
+	  support/valdiag/Makefile.in:
+	  Reenable mos6502 and mos65c02 port by default.
+
+2025-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pic14/gen.c,
+	  src/pic14/gen.h,
+	  src/pic14/genarith.c,
+	  configure.ac,
+	  configure:
+	  Replace attempted pic14 side fix of bug #3851, that made pic14 library build segfault, and reenable pic14 port build.
+
+2025-06-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/valdiag/Makefile.in:
+	  Disable testing of diagnostics for non-longer-built-by-default mos6502 port.
+
+2025-06-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3855.c:
+	  Disable new test for pdk14, where it fails due to lack of memory.
+
+2025-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  r800 wide multiplication register saving fix.
+	* support/regression/tests/bug-3855.c:
+	  Regression test for bug #3855 (disabled for now, since bug is not yet fixed).
+
+2025-06-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* configure.ac,
+	  configure:
+	  Disable mos6502, mos65c02 and pic14 port by default (until bugs #3851, #3853 are fixed).
+
+2025-06-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/port.h:
+	  Make port id an enum instead of a macro.
+
+2025-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Improve generalized constant propagation analysis for 64-bit types.
+	* src/z80/gen.c:
+	  Use generalized constant propagation results in >> codegen.
+
+2025-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c:
+	  Improve comparison codegen.
+	* src/z80/peep.c:
+	  Improve handling of operations that do not depend on their operands.
+
+2025-06-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/main.c:
+	  Improve tlcs90 and r800 multiplication.
+	* sim/ucsim/src/sims/z80.src/r800.cc:
+	  Fix multuw.
+
+2025-06-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/peeph.def:
+	  mcs51 peephole optimizer rule improvement inspired by patch #466 by Oleg.
+
+2025-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Migrate Rabbit port choice table from wiki.
+
+2025-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/coremark.c.in:
+	  Disable console output in Coremark test to reduce memory usage, cover more memory types.
+
+2025-05-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/coremark.c:
+	  Disable Coremark test for mos65(c)02, due to lack of ZP memory.
+	* configure.ac,
+	  configure:
+	  Fix a typo (and regenerate the configure script with autoconf 2.72).
+	* support/valdiag/Makefile.in,
+	  support/valdiag/valdiag.py,
+	  support/valdiag/tests/bug-2798.c:
+	  Include f8 port in diagnostics regression testing.
+
+2025-05-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pic14/gen.c,
+	  src/pic14/gen.h,
+	  src/pic14/genarith.c:
+	  Fix pic14 side of bug #3851.
+	* src/z80/gen.c,
+	  src/z80/mappings.i:
+	  GAS syntax support fixes, partly from parts of patch #484 by Atirut Wattanamongkol.
+	* support/regression/tests/dhrystone.c,
+	  support/regression/tests/coremark.c:
+	  Add test based on Coremark.
+	* src/port.h,
+	  src/SDCCast.c,
+	  src/SDCCglue.c,
+	  src/SDCCicode.c,
+	  src/SDCClrange.c,
+	  src/SDCCmain.c,
+	  src/SDCCopt.c,
+	  src/SDCCpeeph.c,
+	  src/SDCCsymt.c,
+	  src/z80/main.c:
+	  Prepare for future f8l, r4k, r5k, r6k ports.
+
+2025-05-23 Gabriele Gorla <gorlik@yahoo.com>
+
+   	* src/mos6502/peeph.def:
+   	  Improve load after load and store after store rules.
+ 	* src/mos6502/stackops.c:
+ 	  Implement multiple code paths for adjustStack and select the fastest.
+   	* src/mos6502/gen.c:   	
+   	  save A only when sendSet is not empty.
+   	  
+2025-05-21 Gabriele Gorla <gorlik@yahoo.com>
+
+   	* src/mos6502/gen.h,
+   	  src/mos6502/gen.c,
+   	  src/mos6502/genand.c,
+   	  src/mos6502/genor.c,
+   	  src/mos6502/genxor.c,
+   	  src/mos6502/genplus.c,
+   	  src/mos6502/genminus.c,
+   	  src/mos6502/genlshift.c,
+  	  src/mos6502/genrshift.c,
+   	  src/mos6502/stackops.c,
+   	  src/mos6502/tempops.c:
+   	  Code refactoring to improve maintainability.
+ 	* src/mos6502/gen.c,
+   	  src/mos6502/genplus.c,
+   	  src/mos6502/genminus.c:
+   	  genPlus and genMinus improvements.
+   	  
+2025-05-20 Gabriele Gorla <gorlik@yahoo.com>
+
+   	* src/mos6502/gen.c:
+   	  genRightShift improvements.
+   	  
+2025-05-19 Gabriele Gorla <gorlik@yahoo.com>
+
+   	* src/mos6502/gen.c:
+   	  Additional DPTR optimizations.
+
+2025-05-16 Gabriele Gorla <gorlik@yahoo.com>
+
+   	* src/mos6502/gen.c:
+   	  Small genPointerGet improvement.
+
+2025-05-15 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/peeph.def:
+  	  Remove dead XY rule. Add genPlus/Minus optimization.
+   	* src/mos6502/gen.c:
+   	  Enable tracking of regTemp loads/stores.
+  	  Enable tracking of other regTemp operations.
+  	  
+2025-05-13 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos65c02/_strlen.s,
+  	  device/lib/mos65c02/strlen.s,
+  	  device/lib/mos65c02/memcpy.s,
+  	  device/lib/mos65c02/strcmp.s,
+  	  device/lib/mos65c02/_setjmp.s,
+  	  device/lib/mos65c02/_mullong.s,
+  	  device/lib/mos65c02/_milint.s,
+  	  device/lib/mos65c02/memcpy.s:
+  	  Update mos65c02 library based on mos6502 improvements.
+  	* device/lib/mos6502/_setjmp.s,
+  	  device/lib/mos6502/_fsmul.s:
+  	  Minor cleanup.
+  	* src/mos6502/gen.c:
+  	  Improve handling of volatile in loadRegFromAop().
+  	  Improve register selection in genPointerSet().
+  	
+2025-05-12 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_fslt.s,
+  	  device/lib/mos6502/_fslib.s:
+  	  Implement fslt in assembly.
+  	* device/lib/mos65c02/_temp.s,
+  	  device/lib/mos65c02/_ret4567.s,
+  	  device/lib/mos65c02/_ret23.s,
+  	  device/lib/mos65c02/_ret01.s,
+  	  device/lib/mos65c02/_dptr.s,
+   	  device/lib/mos6502/__sdcc_regs.s,
+   	  device/lib/mos6502/Makefile.in,   	  
+  	  device/lib/mos6502-stack-auto/_temp.s,
+  	  device/lib/mos6502-stack-auto/_ret4567.s,
+  	  device/lib/mos6502-stack-auto/_ret23.s,
+  	  device/lib/mos6502-stack-auto/_ret01.s,
+  	  device/lib/mos6502-stack-auto/_dptr.s,
+   	  device/lib/mos6502-stack-auto/__sdcc_regs.s,
+   	  device/lib/mos6502-stack-auto/Makefile.in:
+   	  Reduce mos65c02 and mos6502-stack-auto ZP footprint.
+ 	
+2025-05-10 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  Save A in genPointerSet only when necessary.
+  	  Restore registers from DPTR when possible in genPointerSet.
+   	* src/mos6502/peeph.def:
+  	  Transform lda+tax+lda into ldx+lda.
+
+2025-05-09 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  Prefer X over Y for getFreeReg.
+  	* src/mos6502/peeph.def:
+  	  Fix Bug-3090 regression.
+  	  
+2025-05-06 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  More DPTR optimizations.
+  	  
+2025-05-04 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  Improve genMinusDec.
+  	  Skip writing to DPTR if it already has the correct value.
+  	  Additional genMinusDec improvements.
+  	  Renamed several variables in genPointerSet.
+  	  Allow register tracking on partial DPTR.
+
+2025-05-03 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/Makefile.in:
+  	  Fixed build warning.
+   	* src/mos6502/gen.h:
+   	  Change REGTEMP size to 6
+  	* support/regression/tests/float_single.c.in:
+  	  Fix host regression failures.
+  	
+2025-04-26 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_fslib.s,
+  	  device/lib/mos6502/_fsadd.s,
+  	  device/lib/mos6502/_fsmul.s,
+  	  device/lib/mos6502/Makefile.in,
+  	  support/regression/tests/bug1805702.c:
+  	  Implement _fsmul in assembly. Separate common fp code in _fslib.s.
+  	* device/lib/mos6502/memcpy.s:
+  	  Change to more readable labels.
+  	* device/lib/mos6502/__sdcc_regs.s,
+  	  device/lib/mos6502/_temp.s,
+  	  device/lib/mos6502/_dptr.s,
+  	  device/lib/mos6502/_ret01.s,
+  	  device/lib/mos6502/_ret23.s,
+  	  device/lib/mos6502/_ret4567.s,
+  	  device/lib/mos6502/Makefile.in:
+  	  Combine internal registers to save ZP space.
+   	* device/lib/mos6502/fabsf.s:
+   	  Implement fabsf in assembly.
+
+2025-04-22 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  Fix regression failures in mos6502_stack-auto introduced by register tracking.
+  	  
+2025-04-21 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_mullong.s:
+  	  Reimplement mullong.
+
+2025-04-20 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/include/string.h:
+  	  Add intrinsic named address space to library functions implemented in asm.
+  	* support/regression/tests/float_single.c.in:
+  	  Add support for non-reentrant float library.
+  	* device/include/math.h:
+  	  Make the math library non-reentrant by default on mos6502/65c02 and HC08/S08.
+
+2025-04-17 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  Improved DPTR tracking and cleanup genPointerGet.
+
+2025-04-11 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  Fix issue in genPointerGet when both left and result are XA.
+
+2025-04-06 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* src/mos6502/gen.c:
+  	  Try to keep 0 in Y when possible.
+ 
+2025-04-05 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_mulint.s:
+  	  Minor mulint improvement.
+  	* src/mos6502/gen.c:
+	  Add tracking for XA register.
+	  Cleanup literal register debug printing.
+	  Additional register tracking.
+   	* src/mos6502/peeph.def:
+   	  Remove several rules made obsolete by register tracking.
+
+2025-03-23 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_mulint.s:
+  	  Reimplement mulint.
+
+2025-03-29 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y:
+	  Reduce code duplication in kr_declaration.
+
+2025-03-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Document current f8 calling convention.
+
+2025-03-23 Gabriele Gorla <gorlik@yahoo.com>
+
+  	* device/lib/mos6502/_strcmp.s,
+  	  device/lib/mos6502/_strrchr.s:
+  	  Small strcmp and strrchr in fixes.
+   	* device/lib/_fsadd.c:
+   	  Remove redundant sign check.
+  	* device/lib/mos6502/_fsadd.s,
+  	  device/lib/mos6502/_fssub.s:
+  	  Implement fsadd and fssub in assembly.
+  	* src/mos6502/gen.c:
+  	  Restore regs from DPTR in genPointerGet.
+  	  Enable XA=A+op optimization in genPlus.
+  	* src/mos6502/peeph.def:
+  	  Add several new rules.
+
+2025-03-22 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve genCmpEQorNE.
+	  Implement DPTR tracking.
+  	* device/lib/mos6502/strlen.s,
+  	  device/lib/mos6502/_strlen.s:
+  	  Fix incorrect file name.
+  	* device/lib/mos6502/_strchr.s,
+  	  device/lib/mos6502/_strrchr.s:
+  	  Implement strchr and strrchr in assembly.
+
+2025-03-21 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve register tracking.
+
+2025-03-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c,
+	  src/mos6502/gen.h,
+	  src/mos6502/ralloc.c,
+	  src/mos6502/ralloc.h,
+	  src/mos6502/ralloc2.cc:
+	  Always use freeReg, useReg and dirtyReg.
+	  Implement dirtyAllRegs and freeAllRegs.
+
+2025-03-16 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h:
+	  Add support for storage class specifiers in compound literals (C23, RFE #332).
+
+2025-03-15 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y:
+	  Change parameter_declaration and type_name productions to match the C standard.
+	* support/regression/get_ticks.py:
+	  Address a deprecation warning.
+
+2025-03-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve genLeftShiftLiteral and genRightShiftLiteral.
+	  Improve genReceive.
+	  Prepare for register tracking.
+	  Improve genRRC.
+	  Improve genPlus.
+	  Enable simple register tracking.
+
+2025-03-15 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Optimize the page format for on-screen reading.
+
+2025-03-11 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve stack management.
+
+2025-03-10 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Rewrite genrsh32.
+
+2025-03-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/z80/main.c,
+	  src/mos6502/main.c,
+	  src/hc08/main.c,
+	  src/SDCCglue.c,
+	  src/SDCCmem.h:
+	  Move port specific assembler directives to genAssemblerStart.
+
+2025-03-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  src/f8/gen.c:
+	  Fix bug #3841.
+
+2025-03-08 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  More cosmetic changes to match sdcc coding style.
+
+2025-03-08 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* device/include/stdcountof.h,
+	  doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCast.h,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/countof.c,
+	  support/regression/tests/lengthof.c:
+	  Rename _Lengthof to _Countof/countof (C2y, n3469, see RFE #978).
+
+2025-03-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCralloc.hpp,
+	  src/stm8/gen.c:
+	  Improve some comments about the stm8 division hardware bug workaround.
+
+2025-03-03 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Replace emitCpz with emitCmp. Replace label macros with functions.
+	  Fix bug in genRLC.
+	  Improve genCmp.
+
+2025-03-02 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve genPlus, genMinus and genlsh16.
+	  Several cosmetic changes to match sdcc coding style.
+	  Rewrite genlsh32.
+
+2025-02-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Adjust C94/C95 support documentation.
+
+2025-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version,
+	  device/include/stdbit.h,
+	  device/lib/__stdc_bit_ceilull.c,
+	  device/lib/__stdc_first_leading_one.c,
+	  device/lib/incl.mk,
+	  device/lib/__stdc_bit_width.c,
+	  device/lib/__stdc_count_ones.c,
+	  device/lib/__stdc_first_trailing_one.c,
+	  device/lib/__stdc_leading_zeros.c,
+	  device/lib/__stdc_trailing_ones.c,
+	  doc/sdccman.lyx,
+	  support/regression/tests/bitcount.c.in,
+	  support/regression/tests/bitcountleading.c.in,
+	  support/regression/tests/bitcounttrailing.c.in,
+	  support/regression/tests/bitfirst.c.in,
+	  support/regression/tests/bitfirstleading.c.in:
+	  Make the C23 standard library bit and byte utilities (stdbit.h) more closely follow the final ISO C23 standard instead of the 2022 C2X draft.
+
+2025-02-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/peep.c,
+	  src/stm8/peep.c:
+	  Improve notUsed accuracy based on patch #487 by Mike Vand.
+
+2025-02-23 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Remove dead/redundant code.
+	  Improve loadRegFromAop, genRightShift and genLeftShift.
+	  Rename multiple shift functions.
+
+2025-02-22 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Replace direct access to _G.tempOfs with a function.
+	  Remove AOP_IDX dead code.
+	  Replace several instances of storeRegTempIfSurv with storeRegTempIfUsed.
+
+2025-02-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3834.c:
+	  Provide required external definition of inline function.
+	* src/SDCCopt.c,
+	  src/f8/main.c,
+	  src/port.h,
+	  src/stm8/main.c:
+	  Simplify equality operator handling.
+
+2025-02-17 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/gcc-touture-execute-2010030-1.c:
+	  Disable gcc-touture-execute-2010030-1 for mos6502-stack-auto.
+	* src/mos6502/gen.c:
+	  Improve loadRegFromAop().
+	* src/mos6502/peeph.def:
+	  Additional peephole rule for store after load at the same address.
+
+2025-02-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Several improvements to stack code generation.
+	  Improvements in genCmp() and genCast().
+
+2025-02-15 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve code generation for stack accesses.
+	* src/mos6502/peeph.def:
+	  Additional peephole rules.
+
+2025-02-15 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCsymt.h,
+	  support/regression/cases/Makefile.in,
+	  support/regression/tests/compound-literal.c:
+	  Implement compound literals (C99, see RFE #332).
+
+2025-02-14 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/div.s,
+	  device/lib/mos6502/ldiv.s,
+	  device/lib/mos6502/_divuint.s,
+	  device/lib/mos6502/_divulong.s:
+	  Implement div and ldiv in assembly.
+
+2025-02-13 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Remove incorrect workaround for gte-991019-1.
+	  Fix shifts3 and muldiv failures on mos6502-stack-auto.
+
+2025-02-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3830.c:
+	  Disable test for ports where it fails due to known bug #3836.
+
+2025-02-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Improve storeRegToAop(), shiftLLong() and shiftRLong().
+	  Add some debugging messages and indentation cleanups.
+	  genCmp() and genRRC() improvements.
+	* support/ports/uc6502-stack-auto/spec.mk
+	  add --i-code-in-asm to generated output.
+
+2025-02-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Fix gcc-torture-execute-931102, pr42833 and pr51466 for mos6502-stack-auto.
+
+2025-02-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3834.c:
+	  Fix bug #3834.
+
+2025-02-07 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/_divulong.s:
+	  minor improvements to divulong
+
+2025-02-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc:
+	  Basic null pointer optimization.
+
+2025-02-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502-stack-auto/_setjmp.s,
+	  device/lib/mos6502-stack-auto/_setjmp.c:
+	  fix longjmp() for mos6502-stack-auto.
+
+2025-02-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c,
+	  src/pdk/gen.c,
+	  src/stm8/gen.c,
+	  src/z80/gen.c:
+	  valinfo for predefined asmops.
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc:
+	  Prepare for null pointer optimization.
+
+2025-02-07 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/_setjmp.s:
+	  minor size and speed improvements to longjmp()
+
+2025-02-07 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCast.h,
+	  support/regression/tests/cond-omit-2nd.c:
+	  Allow conditional operator with omitted second operand.
+
+2025-02-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph-sm83.def:
+	  Use sm83 bits for optimized 16-bit zero push.
+
+2025-02-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3830.c:
+	  Fix bug #3830.
+
+2025-02-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-3831.c:
+	  Regression test for bug #3831.
+	* support/scripts/sdcclogo.png:
+	  Pixel graphics version of new logo created by Benedikt Freisen, as used for SourceForge project.
+
+2025-02-04 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.c:
+	  Fix bug #3831.
+
+2025-02-01 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* src/SDCC.y,
+	  support/regression/tests/bug-3822.c:
+	  Fix bug #3822.
+
+2025-01-31 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Improve Rabbit port documentation.
+
+2025-01-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Fix a typo in the manual (abbr. of Rabbit 2000 revision A).
+
+2025-01-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge next branch to trunk.
+
+2025-01-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* .version:
+	  Start of post-4.5.0 development.
+
+2025-01-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/peeph.def,
+	  support/regression/tests/bug-3824.c:
+	  Fix bug #3824.
+
+2025-01-21 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/scripts/sdcc.nsi:
+	  Fix bug #3820 via patch by Janko Stamenović.
+	* src/z80/gen.c:
+	  Fix bug #3821.
+
+2025-01-19 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx:
+	  Clarify linking order resulting from mixed command lines.
+
+2025-01-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Improve Rabbit port documentation.
+
+2025-01-19 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/if-decl.c:
+	  Implement if-declarations (C2y, n3356, see RFE #979).
+
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* support/regression/Makefile.in:
+	  Check if python is available when running tests. Patch by Felix Salfelder, see bug #3646.
+
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* sdas/asxxsrc/asmain.c:
+	  Apply patch #485 by bbbbbr to properly document the -N flag.
+
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCutil.c,
+	  src/SDCCutil.h,
+	  src/SDCCval.c,
+	  support/regression/tests/octal.c:
+	  Implement new octal and escape sequence syntax (C2y, n3353, see RFE #977).
+
+2025-01-18 Benedikt Freisen <b.freisen AT gmx.net>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCast.h,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/regression/tests/lengthof.c:
+	  Implement the _Lengthof operator (C2y, n3369, see RFE #978).
+
+2025-01-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/mos6502/gen.c:
 	  Fix mos6502 part of bug #3814.
 	* sdas/astlcs90/t90mch.c:
 	  Fix bug #3815.
 
-2024-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
+2025-01-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/bug-3601.c:
 	  Commit fix for typo in disabling of test for low-memory devices.
 
-2024-01-09 Philipp Klaus Krause <philipp@colecovision.eu>
+2025-01-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCicode.c,
 	  src/SDCCsymt.c,
@@ -22,11 +2020,16 @@
 	  support/regression/tests/bug-3814.c:
 	  Fix z80 part of bug #3814.
 
-2024-01-08 Philipp Klaus Krause <philipp@colecovision.eu>
+2025-01-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/tests/strnlen.c,
 	  support/regression/tests/wcsnlen.c:
 	  Fix bug #3812.
+
+2025-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c:
+	  Improve ldw use in f8 codegen.
 
 2024-01-02 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -212,11 +2215,11 @@
 2024-02-29 Gabriele Gorla <gorlik@yahoo.com>
 
 	* doc/sdccman.lyx:
-      additional documentation for the MOS6502 port. Addresses:
-      - bug #3749
-      - bug #3787
-      - support req #199
-      - feature request #931
+	  additional documentation for the MOS6502 port. Addresses:
+	  - bug #3749
+	  - bug #3787
+	  - support req #199
+	  - feature request #931
 
 2024-12-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -504,11 +2507,6 @@
 	  support/regression/tests/typed-enum.c,
 	  support/valdiag/tests/typed-enum.c:
 	  Implement C23's explicitly typed enums, see [feature-requests:#847].
-
-2024-11-07 Philipp Klaus Krause <philipp@colecovision.eu>
-
-	* support/scripts/sdcc.nsi:
-	  Include zlib1.dll in installer (to fix bug #3714).
 
 2024-11-06 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -1202,7 +3200,7 @@
 	* src/hc08/main.c (hasExtBitOp),
 	  src/mos6502/main.c (hasExtBitOp): fix bug #3731
 	* support/regression/tests/sha3-256.c: only enabled for ports
-	  that can handle returning large structs 
+	  that can handle returning large structs
 	* src/mos6502/gen.c (genRet): fail unsupported struct return better
 
 2024-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
@@ -1729,8 +3727,8 @@
 
 	* src/mos6502/gen.c:
 	  Refactor asmopToBool().
-  	* src/mos6502/gen.c:
-  	  Improvements to genAnd().
+	* src/mos6502/gen.c:
+	  Improvements to genAnd().
 
 2024-01-27 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -1747,8 +3745,8 @@
 
 	* src/mos6502/ralloc.c:
 	  Small cleanup of m6502_dirtyReg.
-   	* src/mos6502/gen.c:
-   	  Imporvements to genCmp.
+	* src/mos6502/gen.c:
+	  Imporvements to genCmp.
 
 2024-01-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -1778,7 +3776,7 @@
 
 	* src/mos6502/peep.def:
 	  Fix bug in peephole load 12 rule.
-  	* src/mos6502/gen.c,
+	* src/mos6502/gen.c,
 	  src/mos6502/peep.def:
 	  Improvements in genCast(), genCopy() and loadRegFromAop().
 
@@ -1815,11 +3813,11 @@
 	  support/regression/tests/lonesha256.c,
 	  support/regression/tests/tinyaes.c.in:
 	  disable tests failing in the mos6502-stack-auto port due to stack size limitation.
-  	* src/mos6502/main.c:
+	* src/mos6502/main.c:
 	  Rearrange memory segments to support systems without ROM space.
-   	* src/mos6502/gen.c,
-   	  src/mos6502/ralloc.h:
-   	  Remove dead code to support registers in reverse order.
+	* src/mos6502/gen.c,
+	  src/mos6502/ralloc.h:
+	  Remove dead code to support registers in reverse order.
 
 2024-01-12 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -1848,16 +3846,11 @@
 	* src/mos6502/gen.c:
 	  Implement a few 65C02 optimizations.
 
-2024-01-09 Philipp Klaus Krause <philipp@colecovision.eu>
-
-	* support/scripts/sdcc.nsi:
-	  Include some more DLLs in 32-bit installer, as required by current MinGW (previously these were required for 64-bit only).
-
 2024-01-09 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/gen.c:
 	  Additional carry flag tracking optimizations.
-  	* src/mos6502/gen.c:
+	* src/mos6502/gen.c:
 	  Improve debug messages.
 
 2024-01-08 Philipp Klaus Krause <philipp@colecovision.eu>
@@ -1875,10 +3868,10 @@
 
 	* src/mos6502/gen.c:
 	  replace all instances of emitLabel() with safeEmitLabel().
- 	* src/mos6502/gen.c,
- 	  src/mos6502/main.c:
- 	  enable last operation flag tracking.
-   	* src/mos6502/gen.c:
+	* src/mos6502/gen.c,
+	  src/mos6502/main.c:
+	  enable last operation flag tracking.
+	* src/mos6502/gen.c:
 	  enable carry flag tracking.
 
 2024-01-03 Philipp Klaus Krause <philipp@colecovision.eu>
@@ -2014,8 +4007,8 @@
 
 2023-12-17 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* src/mos6502/main.c
-  	  fix bra in the opcode table. Use strncmp in the opcode search to support 65C02 bit manipulation instructions.
+	* src/mos6502/main.c
+	  fix bra in the opcode table. Use strncmp in the opcode search to support 65C02 bit manipulation instructions.
 	* src/mos6502/gen.c
 	  fix wrong offset for struct return in mos6502-stack-auto port
 	  indentation changes
@@ -2038,23 +4031,23 @@
 
 2023-12-12 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* src/mos6502/gen.c
-  	  fix bug3223041 regression failure for mos6502-stack-auto port
-  	  fix bug3531687 regression failure for mos6502-stack-auto port
-  	* device/lib/mos65c02/Makefile.in,
-  	  device/lib/mos65c02/__memcpy.s,
-  	  device/lib/mos65c02/_memcmp.s,
-  	  device/lib/mos65c02/_memset.s,
-  	  device/lib/mos65c02/_mullong.s,
-  	  device/lib/mos65c02/_mulschar.s,
-  	  device/lib/mos65c02/_muluchar.s,
-  	  device/lib/mos65c02/_setjmp.s,
-  	  device/lib/mos65c02/_strcmp.s,
-  	  device/lib/mos65c02/_strcpy.s,
-  	  device/lib/mos65c02/_strlen.s,
-  	  device/lib/mos65c02/abs.s,
-  	  device/lib/mos65c02/crt0.s,
-  	  device/lib/mos65c02/memcpy.s
+	* src/mos6502/gen.c
+	  fix bug3223041 regression failure for mos6502-stack-auto port
+	  fix bug3531687 regression failure for mos6502-stack-auto port
+	* device/lib/mos65c02/Makefile.in,
+	  device/lib/mos65c02/__memcpy.s,
+	  device/lib/mos65c02/_memcmp.s,
+	  device/lib/mos65c02/_memset.s,
+	  device/lib/mos65c02/_mullong.s,
+	  device/lib/mos65c02/_mulschar.s,
+	  device/lib/mos65c02/_muluchar.s,
+	  device/lib/mos65c02/_setjmp.s,
+	  device/lib/mos65c02/_strcmp.s,
+	  device/lib/mos65c02/_strcpy.s,
+	  device/lib/mos65c02/_strlen.s,
+	  device/lib/mos65c02/abs.s,
+	  device/lib/mos65c02/crt0.s,
+	  device/lib/mos65c02/memcpy.s
 	  add mos6502 improvements to mos65c02 port
 
 2023-12-12 Philipp Klaus Krause <philipp@colecovision.eu>
@@ -2098,30 +4091,30 @@
 
 2023-12-07 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* device/lib/mos6502/memcpy.s,
-  	  device/lib/mos6502/_memcmp.s,
-  	  device/lib/mos6502/_setjmp.s,
-  	  device/lib/mos6502/Makefile.in
-  	  optimize memcpy, memcmp amd setjump implemetations
+	* device/lib/mos6502/memcpy.s,
+	  device/lib/mos6502/_memcmp.s,
+	  device/lib/mos6502/_setjmp.s,
+	  device/lib/mos6502/Makefile.in
+	  optimize memcpy, memcmp amd setjump implemetations
 
 2023-12-06 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* device/lib/mos6502/_muluchar.s,
-  	  device/lib/mos6502/_mulschar.s
-  	  use ZP instead of absolute address
-   	* device/lib/mos6502/_strcpy.s,
-  	  device/lib/mos6502/_strcmp.s
-  	  use DPTR instead of temp
-   	* device/lib/mos6502/_strlen.s
+	* device/lib/mos6502/_muluchar.s,
+	  device/lib/mos6502/_mulschar.s
+	  use ZP instead of absolute address
+	* device/lib/mos6502/_strcpy.s,
+	  device/lib/mos6502/_strcmp.s
+	  use DPTR instead of temp
+	* device/lib/mos6502/_strlen.s
 	  implement strlen in asm
-   	* device/lib/mos6502/_memset.s,
-   	  device/lib/mos6502/crt0.s
-   	  implement memset in asm
-   	* device/lib/mos6502/abs.s,
-   	  device/lib/mos6502/abs.c
-   	  rename abs.c to abs.s
-   	* doc/sdccman.lyx
-   	  add mos6502 port documentation to SDCC manual
+	* device/lib/mos6502/_memset.s,
+	  device/lib/mos6502/crt0.s
+	  implement memset in asm
+	* device/lib/mos6502/abs.s,
+	  device/lib/mos6502/abs.c
+	  rename abs.c to abs.s
+	* doc/sdccman.lyx
+	  add mos6502 port documentation to SDCC manual
 
 2023-12-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -2133,18 +4126,18 @@
 
 2023-12-04 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* device/lib/mos6502/_setjump.c,
-  	  device/lib/mos65c02/_setjump.c,
-  	  device/lib/mos6502-stack-auto/_setjump.c
-  	  Reduce ZP usage in setjump.
-  	* device/lib/mos6502/_ret01.s,
-  	  device/lib/mos6502/_ret23.s,
+	* device/lib/mos6502/_setjump.c,
+	  device/lib/mos65c02/_setjump.c,
+	  device/lib/mos6502-stack-auto/_setjump.c
+	  Reduce ZP usage in setjump.
+	* device/lib/mos6502/_ret01.s,
+	  device/lib/mos6502/_ret23.s,
 	  device/lib/mos6502/_ret4567.s,
 	  device/lib/mos65c02/_ret01.s,
-  	  device/lib/mos65c02/_ret23.s,
+	  device/lib/mos65c02/_ret23.s,
 	  device/lib/mos65c02/_ret4567.s,
 	  device/lib/mos6502-stack-auto/_ret01.s,
-  	  device/lib/mos6502-stack-auto/_ret23.s,
+	  device/lib/mos6502-stack-auto/_ret23.s,
 	  device/lib/mos6502-stack-auto/_ret4567.s
 	  Remove unnecessary .optsdcc directive.
 	* src/SDCCmem.c,
@@ -2155,59 +4148,59 @@
 
 2023-12-03 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* src/mos6502/gen.c
+	* src/mos6502/gen.c
 	  Fix bug #3511
 	* src/mos6502/gen.c,
 	  src/SDCCsymt.c
-  	  Add limited support to return aggregates to mos6502 port.
-  	* device/lib/div.c,
-  	  device/lib/ldiv.c,
-  	  device/include/stdlib.h
-  	  Add div and ldiv to the mos6502 standard library.
-  	* device/lib/_divulonglong.c
-  	  Trivial spelling fix.
-  	* sdas/as6500/r6500.h,
-  	  sdas/as6500/r65adr.c,
-  	  sdas/as6500/r65mch.c,
-  	  sdas/as6500/pst.c
-  	  Merge several minor changes from upstream asxxxx 5.50
-  	* support/regression/MakeList,
-  	  support/regression/tests/bigstack.c.in,
-  	  support/regression/tests/div.c,
-  	  support/regression/tests/gcc-roture-execute-20131127-1.c
-  	  Enable additional tests for mos6502.
+	  Add limited support to return aggregates to mos6502 port.
+	* device/lib/div.c,
+	  device/lib/ldiv.c,
+	  device/include/stdlib.h
+	  Add div and ldiv to the mos6502 standard library.
+	* device/lib/_divulonglong.c
+	  Trivial spelling fix.
+	* sdas/as6500/r6500.h,
+	  sdas/as6500/r65adr.c,
+	  sdas/as6500/r65mch.c,
+	  sdas/as6500/pst.c
+	  Merge several minor changes from upstream asxxxx 5.50
+	* support/regression/MakeList,
+	  support/regression/tests/bigstack.c.in,
+	  support/regression/tests/div.c,
+	  support/regression/tests/gcc-roture-execute-20131127-1.c
+	  Enable additional tests for mos6502.
 
 2023-12-02 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* src/mos6502/gen.c,
-  	  support/regression/tests/structreturn.c.in,
+	* src/mos6502/gen.c,
+	  support/regression/tests/structreturn.c.in,
 	  support/regression/tests/gcc-torture-execute-va-arg-4.c,
-  	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
+	  support/regression/tests/gcc-torture-execute-va-arg-23.c,
 	  support/regression/tests/gcc-torture-execute-struct-ret-1.c,
-  	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
+	  support/regression/tests/gcc-torture-execute-strct-varg-1.c,
 	  support/regression/tests/gcc-torture-execute-pr60017.c,
-  	  support/regression/tests/gcc-torture-execute-920625-1.c,
+	  support/regression/tests/gcc-torture-execute-920625-1.c,
 	  support/regression/tests/funptrsstructreturn.c,
-  	  support/regression/tests/div.c,
+	  support/regression/tests/div.c,
 	  support/regression/tests/bug-3385.c,
 	  support/regression/tests/bug-3368.c,
 	  support/regression/tests/bug-2776.c,
 	  support/regression/tests/bigreturn-remat.c.in,
 	  support/regression/MakeList,
-  	  Implement IPUSH_VALUE_AT_ADDRESS iCode and enable corresponding regression tests.
-  	  Disable failing tests for mos65c02.
+	  Implement IPUSH_VALUE_AT_ADDRESS iCode and enable corresponding regression tests.
+	  Disable failing tests for mos65c02.
 	* src/mos6502/gen.c
 	  Make sure result is a register before dereferencing the pointer (fix bug #3631)
 
 2023-12-02 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* src/mos6502/main.c
+	* src/mos6502/main.c
 	  Correct opcode ordering.
 	  Fix get_model() reporting.
-   	* src/mos6502/gen.c
+	* src/mos6502/gen.c
 	  Make mos65c02 register transfer code use phx/phy/plx/ply.
-   	* src/mos6502/gen.c,
-   	  src/hc08/gen.c
+	* src/mos6502/gen.c,
+	  src/hc08/gen.c
 	  Reformat comments to match other ports.
 
 2023-12-02 Philipp Klaus Krause <philipp@colecovision.eu>
@@ -2247,7 +4240,7 @@
 	  support/regression/ports/uc65c02/support.c,
 	  support/regression/ports/uc65c02/spec.mk
 	  Add regression for mos65c02 using uCsim.
-  	* src/mos6502/main.c
+	* src/mos6502/main.c
 	  Add crt to mos65c02 link step by default.
 	* src/mos6502/gen.c
 	  Implement GenAnd and GenOr for mos65c02.
@@ -3539,7 +5532,7 @@
 2023-06-22 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/scripts/sdcc.nsi:
-	  Change references to bin\cc1.exe to libexec\sdcc\cc1. Remove readline5.dll.
+	  Change references to bin\cc1.exe to libexec\sdcc\cc1 (picked from nativecrosstools branch).
 
 2023-06-21 Philipp Klaus Krause <philipp@colecovision.eu>
 
@@ -6984,7 +8977,7 @@
 	  device/lib/hc08/Makefile.in,
 	  device/lib/mos6502/Makefile.in,
 	  device/lib/mos65c02/Makefile.in,
-  	  device/lib/mos6502-stack-auto/Makefinle.in:
+	  device/lib/mos6502-stack-auto/Makefinle.in:
 	  Enable div and ldviv for mos6502 and hc08/s08 ports.
 	* src/mos6502/gen.c,
 	  src/mos6502/main.c:
@@ -7391,10 +9384,10 @@
 	* support/regression/tests/bug3475630.c,
 	  support/regression/tests/bug2094505.c:
 	  Adjust tests parameters for stack-auto.
-  	* src/mos6502/gen.c,
+	* src/mos6502/gen.c,
 	  src/mos6502/main.c,
 	  src/mos6502/ralloc2.cc:
-  	  Use DPTR instead of YX for indexed addressing.
+	  Use DPTR instead of YX for indexed addressing.
 
 2022-03-07 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
@@ -7874,8 +9867,8 @@
 
 	* src/mos6502/gen.c:
 	  Fix corner cases in genPointerSet.
-  	* src/mos6502/gen.c:
-  	  Add peephole rules to remove redundnat php/plp.
+	* src/mos6502/gen.c:
+	  Add peephole rules to remove redundnat php/plp.
 
 2022-02-08 Sebastian 'basxto' Riedel <sdcc@basxto.de>
 
@@ -8835,7 +10828,7 @@
 
 	* src/stm8/gen.c:
 	  Improve wide left shift by literal.
-	  
+
 2021-10-12 Philipp Klaus Krause <krauseph@informatik.uni-freiburg.de>
 
 	* src/f8/gen.c,
@@ -9144,12 +11137,12 @@
 
     * sim/ucsim/pdk.src/inst.cc
     Fix bug in pdk15 simulation (introduced in [r12557]).
-    
+
 2021/07/28 Visenri
 
     * support/regression/compact-results.py
       Fix parsing of test name.
-      
+
 2021/07/27 Visenri
 
     * src/pdk/gen.c
@@ -9308,7 +11301,7 @@
       support/regression/tests/sizeof.c
       Removed empty definition of __data for pdk from testfwk.h.
       Added tests for SIZEOF operator.
-      
+
 2021-07-04 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* src/SDCClospre.hpp: fix bug #3166
@@ -9535,7 +11528,7 @@
 2021-06-08 Visenri
 	* src/SDCCpeeph.c:
 	  Fixed buffer overflow in operand string in "immdInRange" function.
-	  
+
 2021-06-07 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/main.c,

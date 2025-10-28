@@ -125,7 +125,7 @@ extern void *bsearch(const void *key, const void *base, size_t nmemb, size_t siz
 extern void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *) __reentrant);
 
 /* Integer arithmetic functions (ISO C11 7.22.6) */
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80_z80) || defined (__SDCC_z80n) || defined(__SDCC_r800)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r2ka) || defined(__SDCC_r3ka) || defined(__SDCC_r4k) || defined(__SDCC_r5k) || defined(__SDCC_r6k) || defined(__SDCC_tlcs90) || defined (__SDCC_ez80) || defined (__SDCC_z80n) || defined(__SDCC_r800)
 int abs(int j) __preserves_regs(b, c, iyl, iyh);
 #else
 int abs(int j);
@@ -133,6 +133,12 @@ int abs(int j);
 long int labs(long int j);
 #ifdef __SDCC_LONGLONG
 long long int llabs(long long int j);
+#endif
+/* C2y Integer arithmetic functions */
+#if __STDC_VERSION__ > 202311L
+unsigned int uabs(int j);
+unsigned long int ulabs(unsigned long int j);
+unsigned long long int ullabs(long long int j);
 #endif
 
 typedef struct

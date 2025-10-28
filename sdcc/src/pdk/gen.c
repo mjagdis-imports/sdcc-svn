@@ -95,12 +95,24 @@ pdk_init_asmops (void)
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
   asmop_zero.aopu.aop_lit = constVal ("0");
-  asmop_zero.valinfo.anything = true;
+  asmop_zero.valinfo.anything = false;
+  asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = false;
+  asmop_zero.valinfo.min = 0;
+  asmop_zero.valinfo.max = 0;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
+  asmop_zero.valinfo.knownbits = 0;
 
   asmop_one.type = AOP_LIT;
   asmop_one.size = 1;
   asmop_one.aopu.aop_lit = constVal ("1");
-  asmop_one.valinfo.anything = true;
+  asmop_zero.valinfo.anything = false;
+  asmop_zero.valinfo.nothing = true;
+  asmop_zero.valinfo.nonnull = true;
+  asmop_zero.valinfo.min = 1;
+  asmop_zero.valinfo.max = 1;
+  asmop_zero.valinfo.knownbitsmask = 0xffffffffffffffffull;
+  asmop_zero.valinfo.knownbits = 1;
   
   asmop_mone.type = AOP_LIT;
   asmop_mone.size = 8; // Maximum size for asmop.
@@ -5315,6 +5327,8 @@ genCast (const iCode *ic)
   // Cast to _BitInt can require mask of top byte.
   if (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && bitsForType (resulttype) < bitsForType (righttype))
     {
+      bool swapped_a = false;
+
       aopOp (right, ic);
       aopOp (result, ic);
 
@@ -5324,6 +5338,12 @@ genCast (const iCode *ic)
           pushed_a = true;
         }
       genMove (result->aop, right->aop, true, regDead (P_IDX, ic));
+      if (result->aop->size == 2 && aopInReg (result->aop, 0, A_IDX))
+        {
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+          swapped_a = true;
+        }
       cheapMove (ASMOP_A, 0, result->aop, result->aop->size - 1, true, false, true);
       emit2 ("and", "a, #0x%02x", topbytemask);
       cost (2, 1);
@@ -5342,7 +5362,11 @@ genCast (const iCode *ic)
           emitLabel (tlbl);
         }
       cheapMove (result->aop, result->aop->size - 1, ASMOP_A, 0, true, false, true);
-
+      if (swapped_a)
+        {
+          emit2 ("xch", "a, p");
+          cost (1, 1);
+        }
       goto release;
     }
 
@@ -5476,7 +5500,7 @@ genDummyRead (const iCode *ic)
         }
 
       for (int i = 0; i < op->aop->size; i++)
-        cheapMove (ASMOP_A, 0, op->aop, i, true, true, true);
+        cheapMove (ASMOP_A, 0, op->aop, i, true, regDead(P_IDX, ic), true);
 
       if (!regDead(A_IDX, ic))
         {

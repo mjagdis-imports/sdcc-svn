@@ -179,7 +179,6 @@ emitRegularMap (memmap *map, bool addPublics, bool arFlag)
       /* if allocation required check is needed
          then check if the symbol really requires
          allocation only for local variables */
-
       if (arFlag && !IS_AGGREGATE (sym->type) && !(sym->_isparm && !IS_REGPARM (sym->etype)) && !sym->allocreq && sym->level)
         continue;
 
@@ -1504,7 +1503,7 @@ printIvalFuncPtr (sym_link * type, initList * ilist, struct dbuf_s *oBuf)
 /* printIvalCharPtr - generates initial values for character pointers */
 /*--------------------------------------------------------------------*/
 int
-printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBuf)
+printIvalCharPtr (symbol *sym, sym_link *type, value *val, struct dbuf_s *oBuf)
 {
   int size = 0;
   char *p;
@@ -1527,12 +1526,17 @@ printIvalCharPtr (symbol * sym, sym_link * type, value * val, struct dbuf_s *oBu
         {
           dbuf_tprintf (oBuf, "\t!dbs\n", val->name);
         }
-      else if (size == FARPTRSIZE)
+      else if (size == FARPTRSIZE || TARGET_Z80_LIKE /* An ugly hack, but so is everything else in this file. Lots of MCS-51 assumptions everywhere. */)
         {
           if (TARGET_PDK_LIKE && !TARGET_IS_PDK16)
             {
               dbuf_printf (oBuf, "\tret #<%s\n", val->name);
               dbuf_printf (oBuf, IN_CODESPACE (SPEC_OCLS (val->etype)) ? "\tret #>(%s + 0x8000)\n" : "\tret #0\n", val->name);
+            }
+          else if ((TARGET_IS_EZ80 || TARGET_RABBIT_LIKE || TARGET_IS_TLCS90) && IS_FARPTR(type))
+            {
+              _printPointerType (oBuf, val->name, FARPTRSIZE);
+              dbuf_printf (oBuf, "\n");
             }
           else if (port->use_dw_for_init)
             dbuf_tprintf (oBuf, "\t!dws\n", val->name);
@@ -1760,9 +1764,14 @@ printIvalPtr (symbol *sym, sym_link *type, initList *ilist, struct dbuf_s *oBuf)
     {
       dbuf_tprintf (oBuf, "\t!dbs\n", val->name);
     }
-  else if (size == FARPTRSIZE)
+  else if (size == FARPTRSIZE || TARGET_Z80_LIKE /* An ugly hack, but so is everything else in this file. Lots of MCS-51 assumptions everywhere. Like the assumtion that __far pointers are 2 bytes, and generic ones are 3 bytes. For Rabbits it's the opposite. */)
     {
-      if (port->use_dw_for_init)
+      if ((TARGET_IS_EZ80 || TARGET_RABBIT_LIKE || TARGET_IS_TLCS90) && IS_FARPTR(type))
+        {
+          _printPointerType (oBuf, val->name, FARPTRSIZE);
+          dbuf_printf (oBuf, "\n");
+        }
+      else if (port->use_dw_for_init)
         dbuf_tprintf (oBuf, "\t!dws\n", val->name);
       else
         printPointerType (oBuf, val->name);
@@ -2051,6 +2060,11 @@ emitMaps (void)
   if (port->genXINIT)
     {
       emitRegularMap (xidata, TRUE, TRUE);
+    }
+  if (xconst)
+    {
+      dbuf_tprintf (&xconst->oBuf, "\t!areacode\n", xconst->sname);
+      emitStaticSeg (xconst, &xconst->oBuf);
     }
   emitRegularMap (sfr, publicsfr, FALSE);
   emitRegularMap (sfrbit, publicsfr, FALSE);
@@ -2345,7 +2359,11 @@ glue (void)
     fprintf (asmFile, "\t.hd64\n");
   else if (TARGET_IS_R3KA)
     fprintf (asmFile, "\t.r3k\n");
-  else if (TARGET_IS_EZ80_Z80)
+  else if (TARGET_IS_R4K || TARGET_IS_R5K)
+    fprintf (asmFile, "\t.r3k\n");
+  else if (TARGET_IS_R6K)
+    fprintf (asmFile, "\t.r3k\n");
+  else if (TARGET_IS_EZ80)
     fprintf (asmFile, "\t.ez80\n");
   else if (TARGET_IS_Z80N)
     fprintf (asmFile, "\t.zxn\n");
@@ -2509,7 +2527,7 @@ glue (void)
     }
 
   /* copy external ram data */
-  if (xdata && (mcs51_like || TARGET_MOS6502_LIKE ))
+  if (xdata && (mcs51_like || TARGET_MOS6502_LIKE || TARGET_IS_EZ80 || TARGET_RABBIT_LIKE || TARGET_IS_TLCS90))
     {
       fprintf (asmFile, "%s", iComments2);
       fprintf (asmFile, "; uninitialized external ram data\n");
@@ -2574,14 +2592,16 @@ glue (void)
         }
       else
         {
-          assert (0);
+          assert (TARGET_RABBIT_LIKE); // Only the Rabbits use a combination of crt0-based startup code with a compiler-generated interrupt table.
         }
     }
   dbuf_write_and_destroy (&statsg->oBuf, asmFile);
+  if (xconst)
+    dbuf_write_and_destroy (&xconst->oBuf, asmFile);
 
   /* STM8 / PDK14 note: there are no such instructions supported.
      Also, we don't need this logic as well. */
-  if (port->general.glue_up_main && mainf && IFFUNC_HASBODY (mainf->type))
+  if (port->general.glue_up_main && mainf && IFFUNC_HASBODY (mainf->type) && !TARGET_RABBIT_LIKE)
     {
       /* This code is generated in the post-static area.
        * This area is guaranteed to follow the static area
@@ -2590,7 +2610,7 @@ glue (void)
       tfprintf (asmFile, "\t!area\n", port->mem.post_static_name);
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t__sdcc_program_startup\n" : "\tjp\t__sdcc_program_startup\n");
-      else if (TARGET_IS_F8)
+      else if (TARGET_F8_LIKE)
         fprintf (asmFile, "\tjp\t#__sdcc_program_startup\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t__sdcc_program_startup\n");
@@ -2602,7 +2622,7 @@ glue (void)
   tfprintf (asmFile, "\t!areahome\n", HOME_NAME);
   dbuf_write_and_destroy (&home->oBuf, asmFile);
 
-  if (mainf && IFFUNC_HASBODY (mainf->type))
+  if (mainf && IFFUNC_HASBODY (mainf->type) && !TARGET_RABBIT_LIKE)
     {
       /* STM8 note: there is no need to call main().
          Instead of that, it's address is specified in the
@@ -2615,7 +2635,7 @@ glue (void)
       /* put in jump or call to main */
       if(TARGET_IS_STM8)
         fprintf (asmFile, options.model == MODEL_LARGE ? "\tjpf\t_main\n" : "\tjp\t_main\n");
-      else if(TARGET_IS_F8)
+      else if(TARGET_F8_LIKE)
         fprintf (asmFile, "\tjp\t#_main\n");
       else if(TARGET_PDK_LIKE)
         fprintf (asmFile, "\tgoto\t_main\n");

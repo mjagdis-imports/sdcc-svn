@@ -645,6 +645,8 @@ hasExtBitOp (int op, sym_link *left, int right)
     case ROT:
       {
         unsigned int lbits = bitsForType (left);
+        if (lbits % 8)
+          return false;
         if (getSize (left) <= 2 && (right % lbits  == 1 || right % lbits == lbits - 1))
           return true;
         if (getSize (left) <= 2 && lbits == right * 2)
@@ -1211,6 +1213,7 @@ PORT ds390_port =
     "ISEG    (DATA)",
     "PSEG    (PAG,XDATA)",
     "XSEG    (XDATA)",
+    NULL,                       // xconst_name
     "BSEG    (BIT)",
     "RSEG    (DATA)",
     "GSINIT  (CODE)",
@@ -1281,6 +1284,8 @@ PORT ds390_port =
   cseCostEstimation,
   __ds390_builtins,             /* table of builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  true,
+  false,
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local static allowed */
   0,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
@@ -1564,6 +1569,7 @@ PORT tininative_port =
     "ISEG    (DATA)",
     "PSEG    (PAG,XDATA)",
     "XSEG    (XDATA)",
+    NULL,                       // xconst_name
     "BSEG    (BIT)",
     "RSEG    (DATA)",
     "GSINIT  (CODE)",
@@ -1634,6 +1640,8 @@ PORT tininative_port =
   cseCostEstimation,
   __tininative_builtins,        /* table of builtin functions */
   FPOINTER,                     /* treat unqualified pointers as far pointers */
+  true,
+  false,
   0,                            /* DONOT reset labelKey */
   0,                            /* globals & local static NOT allowed */
   0,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
@@ -1822,6 +1830,7 @@ PORT ds400_port =
     "ISEG    (DATA)",
     "PSEG    (PAG,XDATA)",
     "XSEG    (XDATA)",
+    NULL,                       // xconst_name
     "BSEG    (BIT)",
     "RSEG    (DATA)",
     "GSINIT  (CODE)",
@@ -1891,6 +1900,8 @@ PORT ds400_port =
   cseCostEstimation,
   __ds390_builtins,             /* table of builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  true,
+  false,
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local static allowed */
   0,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */

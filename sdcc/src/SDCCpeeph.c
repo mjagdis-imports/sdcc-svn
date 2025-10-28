@@ -657,7 +657,7 @@ FBYNAME (labelIsUncondJump)
       jpInst = "jmp";
       jpInst2 = "bra";
     }
-  else if (TARGET_Z80_LIKE || TARGET_IS_F8)
+  else if (TARGET_Z80_LIKE || TARGET_F8_LIKE)
     {
       jpInst = "jp";
       jpInst2 = "jr";
@@ -700,7 +700,7 @@ FBYNAME (labelIsUncondJump)
         return false; /* conditional jump */
     }
 
-  if (TARGET_IS_F8 && p[0] == '#')
+  if (TARGET_F8_LIKE && p[0] == '#')
     p++;
 
   /* now put the destination in %6 */
@@ -4042,3 +4042,4 @@ const char * StrStr (const char * str1, const char * str2)
 
   return (NULL) ;
 }
+

@@ -319,23 +319,29 @@ static PORT *_ports[] = {
 #if !OPT_DISABLE_R3KA
   &r3ka_port,
 #endif
+#if !OPT_DISABLE_R4K
+  &r4k_port,
+#endif
+#if !OPT_DISABLE_R5K
+  &r5k_port,
+#endif
+#if !OPT_DISABLE_R6K
+  &r6k_port,
+#endif
 #if !OPT_DISABLE_SM83
   &sm83_port,
 #endif
 #if !OPT_DISABLE_TLCS90
   &tlcs90_port,
 #endif
-#if !OPT_DISABLE_EZ80_Z80
-  &ez80_z80_port,
+#if !OPT_DISABLE_EZ80
+  &ez80_port,
 #endif
 #if !OPT_DISABLE_Z80N
   &z80n_port,
 #endif
 #if !OPT_DISABLE_R800
   &r800_port,
-#endif
-#if !OPT_DISABLE_AVR
-  &avr_port,
 #endif
 #if !OPT_DISABLE_DS390
   &ds390_port,
@@ -378,6 +384,9 @@ static PORT *_ports[] = {
 #endif
 #if !OPT_DISABLE_F8
   &f8_port,
+#endif
+#if !OPT_DISABLE_F8L
+  &f8l_port,
 #endif
 };
 
@@ -2528,7 +2537,7 @@ setIncludePath (void)
 
       tempSet = processStrSet (dataDirsSet, NULL, INCLUDE_DIR_SUFFIX, NULL);
       includeDirsSet = processStrSet (tempSet, NULL, DIR_SEPARATOR_STRING, NULL);
-      if (TARGET_IS_RABBIT) // Rabbits have a shared include directory.
+      if (TARGET_RABBIT_LIKE) // Rabbits have a shared include directory.
         includeDirsSet = processStrSet (includeDirsSet, NULL, "rab", NULL);
       else
         includeDirsSet = processStrSet (includeDirsSet, NULL, port->target, NULL);
@@ -2897,6 +2906,24 @@ main (int argc, char **argv, char **envp)
 
       if (fatalError)
         exit (EXIT_FAILURE);
+
+      // Check for extern inline function for which no non-inline definition has been emitted yet.
+      for (int i = 0; i < HASHTAB_SIZE; i++)
+        {
+          for (bucket *chain = SymbolTab[i]; chain; chain = chain->next)
+            {
+              symbol *sym = (symbol *)chain->sym;
+              if (sym->level)
+                continue;
+              if (IS_FUNC (sym->type) && IS_EXTERN (sym->etype) && IS_INLINE (sym->etype) && !sym->generated)
+                {
+                  if (!sym->funcTree)
+                    werrorfl (sym->fileDef, sym->lineDef, E_EXTERN_INLINE_NO_DEF, sym->name);
+                  else
+                    fprintf (stderr, "Internal issue for function %s: todo: implement emission of definition for inline function after extern declaration.\n", sym->name);
+                }
+            }
+        }
 
       if (port->general.do_glue != NULL)
         (*port->general.do_glue) ();

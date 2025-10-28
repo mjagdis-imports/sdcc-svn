@@ -129,15 +129,18 @@ cl_app::read_input_files(void)
   if (sim && (sim->uc != NULL))
     {
       int i;
+      bool read_some= false;
       for (i= 0; i < in_files->count; i++)
 	{
 	  const char *fname= (const char *)(in_files->at(i));
 	  long l;
 	  if ((l= sim->uc->read_file(fname, NULL)) >= 0)
 	    {
-	      sim->uc->reset();
+	      read_some= true;
 	    }
 	}
+      if (read_some)
+	sim->uc->reset();
     }
 }
 
@@ -600,19 +603,32 @@ cl_app::proc_arguments(int argc, char *argv[])
 	  cpu_type= case_string(case_upper, optarg);
 	  if (!options->set_value("cpu_type", this, /*optarg*/cpu_type))
 	    fprintf(stderr, "Warning: No \"cpu_type\" option found to set "
-		    "parameter of -t as type of controller\n");	
+		    "parameter of -t as type of controller\n");
+	  if (cpus)
+	    {
+	      int i= 0;
+	      while ((cpus[i].type_str != NULL) &&
+		     (strcasecmp(cpu_type, cpus[i].type_str) != 0))
+		i++;
+	      if (cpus[i].type_str == NULL)
+		{
+		  fprintf(stderr, "Unknown processor type. "
+			  "Use -H option to see known types.\n");
+		  exit(1);
+		}
+	    }
 	  break;
 	}
       case 's':
-      {
-	if (!options->set_value("serial0_in_file", this, /*(void*)Ser_in*/optarg))
-	  fprintf(stderr, "Warning: No \"serial0_in_file\" option found to set "
-		  "parameter of -s as serial input file\n");
-	if (!options->set_value("serial0_out_file", this, /*Ser_out*/optarg))
-	  fprintf(stderr, "Warning: No \"serial_out0_file\" option found "
-		  "to set parameter of -s as serial output file\n");
-	break;
-      }
+	{
+	  if (!options->set_value("serial0_in_file", this, /*(void*)Ser_in*/optarg))
+	    fprintf(stderr, "Warning: No \"serial0_in_file\" option found to set "
+		    "parameter of -s as serial input file\n");
+	  if (!options->set_value("serial0_out_file", this, /*Ser_out*/optarg))
+	    fprintf(stderr, "Warning: No \"serial_out0_file\" option found "
+		    "to set parameter of -s as serial output file\n");
+	  break;
+	}
 #ifdef SOCKET_AVAIL
       // socket serial I/O by Alexandre Frey <Alexandre.Frey@trusted-logic.fr>
       case 'k':
@@ -894,6 +910,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 	set_option_s("color_prompt_console", "blue:bwhite");
 	set_option_s("color_command", "blue:bwhite");
 	set_option_s("color_answer", "black:bwhite");
+	set_option_s("color_gray_answer", "black:white");
 	set_option_s("color_result", "bblue:bwhite");
 	set_option_s("color_dump_address", "blue:bwhite");
 	set_option_s("color_dump_number", "bblack:bwhite");
@@ -1098,6 +1115,8 @@ cl_app::build_cmdset(class cl_cmdset *cmdset)
     cmd->init();
     cset->add(cmd= new cl_conf_objects_cmd("objects", 0));
     cmd->init();
+    cset->add(cmd= new cl_conf_types_cmd("types", 0));
+    cmd->init();
   }
   cmdset->add(cmd= new cl_super_cmd("conf", 0, cset));
   cmd->init();
@@ -1218,7 +1237,11 @@ cl_app::mk_options(void)
   options->new_option(o= new cl_bool_option(this, "black_and_white",
 					    "Non-color console (-b)"));
   o->init();
-  o->set_value((bool)false);
+  char *no_color= getenv("NO_COLOR");
+  bool bw= false;
+  if ((no_color != NULL) && (no_color[0] != '\0'))
+    bw= true;
+  o->set_value((bool)bw);
   
   options->new_option(o= new cl_bool_option(this, "null_prompt",
 					    "Use \\0 as prompt (-P)"));
@@ -1338,6 +1361,11 @@ cl_app::mk_options(void)
 					      "Answer color"));
   o->init();
   o->set_value("bwhite:black");
+  
+  options->new_option(o= new cl_string_option(this, "color_gray_answer",
+					      "Gray answer color"));
+  o->init();
+  o->set_value("white:black");
   
   options->new_option(o= new cl_string_option(this, "color_result",
 					      "Result of expression"));

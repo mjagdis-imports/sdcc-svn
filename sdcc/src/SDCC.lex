@@ -30,6 +30,7 @@ HC  '?[a-fA-F0-9]
 BC  '?[01]
 
 D       [0-9]
+O       [0-7]
 H       [a-fA-F0-9]
 B       [01]
 L       [a-zA-Z_$]
@@ -201,6 +202,10 @@ static void checkCurrFile (const char *s);
 "typeof"                { count (); TKEYWORD2X (TYPEOF); }
 "typeof_unqual"         { count (); TKEYWORD2X (TYPEOF_UNQUAL); }
 
+ /* C2y */
+"_Countof"              { count (); return COUNTOF; }
+"_Lengthof"             { count (); return COUNTOF; }  /* kept for compatibility with earlier drafts */
+
  /* SDCC-specific intrinsic named address spaces (as per Embedded C TS) */
 "__code"                { count (); TKEYWORD (CODE); }
 "__data"                { count (); TKEYWORD (DATA); }
@@ -232,7 +237,6 @@ static void checkCurrFile (const char *s);
 "__sfr32"               { count (); TKEYWORD (SFR32); }
 "__sbit"                { count (); TKEYWORD (SBIT); }
 "__builtin_offsetof"    { count (); return OFFSETOF; }
-"__builtin_rot"         { count (); return ROT; }
 "__using"               { count (); TKEYWORD (USING); }
 "__naked"               { count (); TKEYWORD (NAKED); }
 "_JavaNative"           { count (); TKEYWORD (JAVANATIVE); }
@@ -241,6 +245,7 @@ static void checkCurrFile (const char *s);
 "__raisonance"          { count (); TKEYWORD (RAISONANCE); }
 "__iar"                 { count (); TKEYWORD (IAR); }
 "__cosmic"              { count (); TKEYWORD (COSMIC); }
+"__dynamicc"            { count (); TKEYWORD (DYNAMICC); }
 "__sdcccall"            { count (); return SDCCCALL; }
 "__preserves_regs"      { count (); return PRESERVES_REGS; }
 "__z88dk_fastcall"      { count (); TKEYWORD (Z88DK_FASTCALL); }
@@ -274,7 +279,7 @@ static void checkCurrFile (const char *s);
 
 [1-9]{DC}*({IS}|{WB})?       { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
 0[xX]{H}{HC}*({IS}|{WB})?    { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
-0{OC}*({IS}|{WB})?           { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
+0([oO]{O})?{OC}*({IS}|{WB})? { count (); yylval.val = constIntVal (yytext); return CONSTANT; }
 0[bB]{B}{BC}*({IS}|{WB})?    { count (); yylval.val = constIntVal (yytext); return CONSTANT; } /* C23 binary integer constant. All standard version warnings on integer constants are done in constIntVal. */
 {CP}?'(\\.|[^\\'])+'         { count (); yylval.val = charVal (yytext); return CONSTANT; /* ' make syntax highlighter happy */ }
 {D}+{E}{FS}?                 { count (); yylval.val = constFloatVal (yytext); return CONSTANT; }
@@ -814,6 +819,7 @@ enum {
    P_INDUCTION,
    P_NOINDUCTION,
    P_NOINVARIANT,
+   P_MAX_ALLOCS_PER_NODE,
    P_STACKAUTO,
    P_OVERLAY_,     /* I had a strange conflict with P_OVERLAY while */
                    /* cross-compiling for MINGW32 with gcc 3.2 */
@@ -1008,6 +1014,24 @@ doPragma (int id, const char *name, const char *cp)
         }
 
       optimize.loopInvariant = 0;
+      break;
+
+    case P_MAX_ALLOCS_PER_NODE:
+      cp = get_pragma_token(cp, &token);
+      if (TOKEN_INT != token.type)
+        {
+          err = 1;
+          break;
+        }
+
+      options.max_allocs_per_node = token.val.int_val;
+
+      cp = get_pragma_token(cp, &token);
+      if (TOKEN_EOL != token.type)
+        {
+          err = 1;
+          break;
+        }
       break;
 
     case P_STACKAUTO:
@@ -1357,38 +1381,39 @@ doPragma (int id, const char *name, const char *cp)
 }
 
 static struct pragma_s pragma_tbl[] = {
-  { "save",              P_SAVE,            0, doPragma },
-  { "restore",           P_RESTORE,         0, doPragma },
-  { "induction",         P_INDUCTION,       0, doPragma },
-  { "noinduction",       P_NOINDUCTION,     0, doPragma },
-  { "noinvariant",       P_NOINVARIANT,     0, doPragma },
-  { "noloopreverse",     P_LOOPREV,         0, doPragma },
-  { "stackauto",         P_STACKAUTO,       0, doPragma },
-  { "nogcse",            P_NOGCSE,          0, doPragma },
-  { "overlay",           P_OVERLAY_,        0, doPragma },
-  { "nooverlay",         P_NOOVERLAY,       0, doPragma },
-  { "callee_saves",      P_CALLEE_SAVES,    0, doPragma },
-  { "exclude",           P_EXCLUDE,         0, doPragma },
-  { "noiv",              P_NOIV,            0, doPragma },
-  { "less_pedantic",     P_LESSPEDANTIC,    0, doPragma },
-  { "disable_warning",   P_DISABLEWARN,     0, doPragma },
-  { "opt_code_speed",    P_OPTCODESPEED,    0, doPragma },
-  { "opt_code_size",     P_OPTCODESIZE,     0, doPragma },
-  { "opt_code_balanced", P_OPTCODEBALANCED, 0, doPragma },
-  { "std_c89",           P_STD_C89,         0, doPragma },
-  { "std_c99",           P_STD_C99,         0, doPragma },
-  { "std_c11",           P_STD_C11,         0, doPragma },
-  { "std_c23",           P_STD_C23,         0, doPragma },
-  { "std_c2x",           P_STD_C2X,         1, doPragma },
-  { "std_c2y",           P_STD_C2Y,         0, doPragma },
-  { "std_sdcc89",        P_STD_SDCC89,      0, doPragma },
-  { "std_sdcc99",        P_STD_SDCC99,      0, doPragma },
-  { "std_sdcc11",        P_STD_SDCC11,      0, doPragma },
-  { "std_sdcc23",        P_STD_SDCC23,      0, doPragma },
-  { "std_sdcc2y",        P_STD_SDCC2Y,      0, doPragma },
-  { "codeseg",           P_CODESEG,         0, doPragma },
-  { "constseg",          P_CONSTSEG,        0, doPragma },
-  { NULL,                0,                 0, NULL },
+  { "save",                P_SAVE,                0, doPragma },
+  { "restore",             P_RESTORE,             0, doPragma },
+  { "induction",           P_INDUCTION,           0, doPragma },
+  { "noinduction",         P_NOINDUCTION,         0, doPragma },
+  { "noinvariant",         P_NOINVARIANT,         0, doPragma },
+  { "max_allocs_per_node", P_MAX_ALLOCS_PER_NODE, 0, doPragma },
+  { "noloopreverse",       P_LOOPREV,             0, doPragma },
+  { "stackauto",           P_STACKAUTO,           0, doPragma },
+  { "nogcse",              P_NOGCSE,              0, doPragma },
+  { "overlay",             P_OVERLAY_,            0, doPragma },
+  { "nooverlay",           P_NOOVERLAY,           0, doPragma },
+  { "callee_saves",        P_CALLEE_SAVES,        0, doPragma },
+  { "exclude",             P_EXCLUDE,             0, doPragma },
+  { "noiv",                P_NOIV,                0, doPragma },
+  { "less_pedantic",       P_LESSPEDANTIC,        0, doPragma },
+  { "disable_warning",     P_DISABLEWARN,         0, doPragma },
+  { "opt_code_speed",      P_OPTCODESPEED,        0, doPragma },
+  { "opt_code_size",       P_OPTCODESIZE,         0, doPragma },
+  { "opt_code_balanced",   P_OPTCODEBALANCED,     0, doPragma },
+  { "std_c89",             P_STD_C89,             0, doPragma },
+  { "std_c99",             P_STD_C99,             0, doPragma },
+  { "std_c11",             P_STD_C11,             0, doPragma },
+  { "std_c23",             P_STD_C23,             0, doPragma },
+  { "std_c2x",             P_STD_C2X,             1, doPragma },
+  { "std_c2y",             P_STD_C2Y,             0, doPragma },
+  { "std_sdcc89",          P_STD_SDCC89,          0, doPragma },
+  { "std_sdcc99",          P_STD_SDCC99,          0, doPragma },
+  { "std_sdcc11",          P_STD_SDCC11,          0, doPragma },
+  { "std_sdcc23",          P_STD_SDCC23,          0, doPragma },
+  { "std_sdcc2y",          P_STD_SDCC2Y,          0, doPragma },
+  { "codeseg",             P_CODESEG,             0, doPragma },
+  { "constseg",            P_CONSTSEG,            0, doPragma },
+  { NULL,                  0,                     0, NULL },
 };
 
 /*

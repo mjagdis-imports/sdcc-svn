@@ -41,7 +41,7 @@
 
 struct SDCCERRG _SDCCERRG; 
 
-extern char *filename;
+extern const char *filename;
 extern int lineno;
 extern int fatalError;
 
@@ -337,7 +337,7 @@ struct
   { W_ESC_SEQ_OOR_FOR_CHAR, ERROR_LEVEL_WARNING,
      "escape sequence out of range for char.", 0 },
   { E_INVALID_HEX, ERROR_LEVEL_ERROR,
-     "\\x used with no following hex digits.", 0 },
+     "\\x used without valid hexadecimal digits.", 0 },
   { W_FUNCPTR_IN_USING_ISR, ERROR_LEVEL_WARNING,
      "call via function pointer in ISR using non-zero register bank.\n"
      "            Cannot determine which register bank to save.", 0 },
@@ -572,7 +572,7 @@ struct
   { E_ATTRIBUTE_C23, ERROR_LEVEL_ERROR,
     "attribute requires C23 or later", 0},
   { E_COMPOUND_LITERALS_C99, ERROR_LEVEL_ERROR,
-    "compound literals require ISO C99 or later and are not implemented", 0},
+    "compound literals require ISO C99 or later", 0},
   { E_THREAD_LOCAL, ERROR_LEVEL_ERROR,
     "thread-local storage is not implemented", 0},
   { E_ENUM_COMMA_C99,  ERROR_LEVEL_ERROR,
@@ -677,6 +677,50 @@ struct
      "enum's underlying type must be an integer type and cannot be bit-precise or an enum", 0 },
   { E_ENUM_TYPE_RANGE_TOO_SMALL, ERROR_LEVEL_ERROR,
      "the enum's underlying type cannot represent all enumerator values", 0 },
+  { E_COUNTOF_INVALID_TYPE, ERROR_LEVEL_ERROR,
+     "_Countof applied to an incomplete or non-array type", 0 },
+  { W_PREFIXED_OCTAL_C2Y, ERROR_LEVEL_WARNING,
+     "prefixed octal integer constants require ISO C2y or later", 0 },
+  { W_OCTAL_DEPRECATED_C2Y, ERROR_LEVEL_WARNING,
+     "unprefixed octal integer constants are deprecated as of ISO C2y", 0 },
+  { E_CLOSING_BRACE, ERROR_LEVEL_ERROR,
+     "invalid character or end of string encountered before '}'", 0 },
+  { E_INVALID_OCTAL, ERROR_LEVEL_ERROR,
+     "\\o{...} used without valid octal digits.", 0 },
+  { E_SELECTION_DECLARATION_C2Y, ERROR_LEVEL_ERROR,
+     "declaration within selection header requires ISO C2y or later", 0 },
+  { E_COMPLIT_SCLASS_C23, ERROR_LEVEL_ERROR,
+    "compound literals with storage class specifier require ISO C23 or later", 0},
+  { W_ENUM_UNDERLYING_BITINT, ERROR_LEVEL_WARNING,
+    "enum's underlying type may not be a bit-precise type in ISO C23", 0},
+  { W_INVALID_BITINTWIDTH_1, ERROR_LEVEL_WARNING,
+    "signed bit-precise integer type may not have width 1 in ISO C23", 0},
+  { E_ATOMIC_ARRAY, ERROR_LEVEL_ERROR,
+     "_Atomic array", 0 },
+  { E_ATOMIC_FUNCTION, ERROR_LEVEL_ERROR,
+     "_Atomic function", 0 },
+  { E_ATOMIC_SPEC_ATOMIC, ERROR_LEVEL_ERROR,
+     "_Atomic specifier on atomic type", 0 },
+  { E_ATOMIC_SPEC_QUALIFIED, ERROR_LEVEL_ERROR,
+     "_Atomic specifier on qualified type", 0 },
+  { E_BLOCK_SCOPE_EXTERN_INIT, ERROR_LEVEL_ERROR,
+     "block-scope variable'%s' declared extern and intialized", 0},
+  { E_BLOCK_SCOPE_FUNC_SCLASS, ERROR_LEVEL_ERROR,
+     " Function declared at block scope with explicit storage-class specifier other than extern", 0 },
+  { W_PTR2INT_NOREPRESENT, ERROR_LEVEL_WARNING,
+     "Cast of pointer to integer type that cannot represent all values of the pointer type", 0},
+  { W_MAIN_TYPE, ERROR_LEVEL_WARNING,
+     "Function main should be void main(void) or int main(void)", 0},
+  { E_VOID_SHALL_BE_LONELY, ERROR_LEVEL_ERROR,
+     "void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis", 0},
+  { W_ANONYMOUS_STRUCT_C11, ERROR_LEVEL_WARNING,
+     "anonymous struct/union requires ISO C11 or later", 0},
+  { E_UNAMED_STRUCT_MEMBER, ERROR_LEVEL_ERROR,
+     "struct/union members need to have a name,unless they are anonymous struct/union or bit-fields", 0 },
+  { E_NO_LINKAGE_INCOMPLETE_TYPE, ERROR_LEVEL_ERROR,
+     "object %s with no linkage of incomplete type", 0 },
+  { E_EXTERN_INLINE_NO_DEF, ERROR_LEVEL_ERROR,
+     "inline function %s declared with external linkage, but not defined in translation unit", 0 },
 };
 
 /* -------------------------------------------------------------------------------
@@ -842,9 +886,9 @@ werror_bt (int errNum, ...)
  * -------------------------------------------------------------------------------
  */
 int
-werrorfl (char *newFilename, int newLineno, int errNum, ...)
+werrorfl (const char *newFilename, int newLineno, int errNum, ...)
 {
-  char *oldFilename = filename;
+  const char *oldFilename = filename;
   int oldLineno = lineno;
   va_list marker;
   int ret;

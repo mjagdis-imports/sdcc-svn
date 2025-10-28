@@ -93,7 +93,8 @@ nounName (sym_link * sl)
   return "unknown";
 }
 
-bucket *SymbolTab[HASHTAB_SIZE];         /* the symbol    table  */
+bucket *SymbolTab[HASHTAB_SIZE];         // the symbol    table (all symbols)
+bucket *SymbolTabE[HASHTAB_SIZE];        // extern symbol table (for symbols declared with external linkage at block-scope before any declaration at file-scope)
 bucket *StructTab[HASHTAB_SIZE];         /* the structure table  */
 bucket *TypedefTab[HASHTAB_SIZE];        /* the typedef   table  */
 bucket *LabelTab[HASHTAB_SIZE];          /* the Label     table  */
@@ -109,7 +110,7 @@ initSymt (void)
   int i = 0;
 
   for (i = 0; i < HASHTAB_SIZE; i++)
-    SymbolTab[i] = StructTab[i] = (void *) NULL;
+    SymbolTab[i] = SymbolTabE[i] = StructTab[i] = NULL;
 }
 
 /*-----------------------------------------------------------------*/
@@ -142,7 +143,7 @@ hashKey (const char *s)
 /* addSym - adds a symbol to the hash Table                        */
 /*-----------------------------------------------------------------*/
 void
-addSym (bucket ** stab, void *sym, char *sname, long level, int block, int checkType)
+addSym (bucket ** stab, void *sym, char *sname, long level, int block, bool checkType)
 {
   int i;                        /* index into the hash Table */
   bucket *bp;                   /* temp bucket    *          */
@@ -641,6 +642,8 @@ checkTypeSanity (sym_link *etype, const char *name)
 
   if ((SPEC_NOUN (etype) == V_BITINT ||
        SPEC_NOUN (etype) == V_BOOL ||
+       SPEC_NOUN (etype) == V_BIT ||
+       SPEC_NOUN (etype) == V_SBIT ||
        SPEC_NOUN (etype) == V_CHAR ||
        SPEC_NOUN (etype) == V_FLOAT ||
        SPEC_NOUN (etype) == V_FIXED16X16 ||
@@ -653,7 +656,8 @@ checkTypeSanity (sym_link *etype, const char *name)
   if ((SPEC_NOUN (etype) == V_BOOL ||
        SPEC_NOUN (etype) == V_FLOAT ||
        SPEC_NOUN (etype) == V_FIXED16X16 ||
-       SPEC_NOUN (etype) == V_DOUBLE || SPEC_NOUN (etype) == V_VOID) && (etype->select.s.b_signed || SPEC_USIGN (etype)))
+       SPEC_NOUN (etype) == V_DOUBLE || SPEC_NOUN (etype) == V_VOID) && (etype->select.s.b_signed || SPEC_USIGN (etype)) ||
+       (SPEC_NOUN (etype) == V_BIT || SPEC_NOUN (etype) == V_SBIT) && etype->select.s.b_signed)
     {                           // signed or unsigned for float double or void
       werror (E_SIGNED_OR_UNSIGNED_INVALID, noun, name);
     }
@@ -687,9 +691,10 @@ checkTypeSanity (sym_link *etype, const char *name)
 
   if (SPEC_NOUN (etype) == V_BITINT)
     {
-      if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || // Check that port supports bit-precise integers this wide.
-       SPEC_BITINTWIDTH (etype) < (SPEC_USIGN (etype) ? 1 : 2)) // Check minimum width mandated by standard.
-       werror (E_INVALID_BITINTWIDTH);
+      if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || SPEC_BITINTWIDTH (etype) < 1) // Check that port supports bit-precise integers this wide.
+        werror (E_INVALID_BITINTWIDTH);
+      if (SPEC_BITINTWIDTH (etype) == 1 && !SPEC_USIGN (etype) && !options.std_sdcc) // In ISO C23, signed _BitInt needs to have width at least 2.
+        werror (W_INVALID_BITINTWIDTH_1);
     }
 }
 
@@ -835,6 +840,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_ABSA (dest) |= SPEC_ABSA (src);
   SPEC_VOLATILE (dest) |= SPEC_VOLATILE (src);
   SPEC_RESTRICT (dest) |= SPEC_RESTRICT (src);
+  SPEC_ATOMIC (dest) |= SPEC_ATOMIC (src);
   SPEC_ADDR (dest) |= SPEC_ADDR (src);
   SPEC_OCLS (dest) = SPEC_OCLS (src);
   SPEC_BLEN (dest) |= SPEC_BLEN (src);
@@ -880,6 +886,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   FUNC_ISRAISONANCE (dest) |= FUNC_ISRAISONANCE (src);
   FUNC_ISIAR (dest) |= FUNC_ISIAR (src);
   FUNC_ISCOSMIC (dest) |= FUNC_ISCOSMIC (src);
+  FUNC_ISDYNAMICC (dest) |= FUNC_ISDYNAMICC (src);
   FUNC_ISZ88DK_FASTCALL (dest) |= FUNC_ISZ88DK_FASTCALL (src);
   FUNC_ISZ88DK_CALLEE (dest) |= FUNC_ISZ88DK_CALLEE (src);
   for (i = 0; i < 9; i++)
@@ -939,6 +946,7 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       DCL_PTR_CONST (decl) |= SPEC_CONST (spec);
       DCL_PTR_VOLATILE (decl) |= SPEC_VOLATILE (spec);
       DCL_PTR_RESTRICT (decl) |= SPEC_RESTRICT (spec);
+      DCL_PTR_ATOMIC (decl) |= SPEC_ATOMIC (spec);
       if (DCL_PTR_ADDRSPACE (decl) && SPEC_ADDRSPACE (spec) &&
         strcmp (DCL_PTR_ADDRSPACE (decl)->name, SPEC_ADDRSPACE (spec)->name))
         werror (E_SYNTAX_ERROR, yytext);
@@ -948,6 +956,7 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       SPEC_CONST (spec) = 0;
       SPEC_VOLATILE (spec) = 0;
       SPEC_RESTRICT (spec) = 0;
+      SPEC_ATOMIC (spec) = 0;
       SPEC_ADDRSPACE (spec) = 0;
     }
 
@@ -1141,7 +1150,7 @@ newVoidLink ()
 /* getSize - returns size of a type chain in bytes                  */
 /*------------------------------------------------------------------*/
 unsigned int
-getSize (sym_link * p)
+getSize (sym_link *p)
 {
   /* if nothing return 0 */
   if (!p)
@@ -1198,9 +1207,11 @@ getSize (sym_link * p)
     case PPOINTER:
     case POINTER:
       return (NEARPTRSIZE);
+    case CPOINTER:
+      if (!IS_FUNCPTR(p))
+        return (TARGET_Z80_LIKE ? GPTRSIZE : FARPTRSIZE);
     case EEPPOINTER:
     case FPOINTER:
-    case CPOINTER:
       if (!IS_FUNCPTR(p))
         return (FARPTRSIZE);
     case GPOINTER:
@@ -1214,6 +1225,25 @@ getSize (sym_link * p)
     default:
       return 0;
     }
+}
+
+/*------------------------------------------------------------------*/
+/* getElemCount - returns the number of elements in an array type   */
+/*------------------------------------------------------------------*/
+unsigned int
+getElemCount (sym_link * p)
+{
+  /* if nothing return 0 */
+  if (!p)
+    return 0;
+  if (IS_SPEC (p))
+    return 0;
+
+  /* this is a declarator */
+  if (DCL_TYPE (p) == ARRAY)
+    return DCL_ELEM (p);
+  else
+    return 0;
 }
 
 #define FLEXARRAY   1
@@ -1466,7 +1496,7 @@ arraySizes (sym_link *type, const char *name)
 /* addSymChain - adds a symbol chain to the symboltable             */
 /*------------------------------------------------------------------*/
 void
-addSymChain (symbol ** symHead)
+addSymChain (symbol **symHead)
 {
   symbol *sym;
   symbol *csym = NULL;
@@ -1479,7 +1509,7 @@ addSymChain (symbol ** symHead)
       changePointer (sym->type);
       checkTypeSanity (sym->etype, sym->name);
 #if 0
-      printf("addSymChain for %p %s level %ld\n", sym, sym->name, sym->level);
+      printf("addSymChain for %p %s level %ld extern %d\n", sym, sym->name, sym->level, IS_EXTERN (sym->etype));
 #endif
       arraySizes (sym->type, sym->name);
       if (IS_NORETURN (sym->etype))
@@ -1505,6 +1535,40 @@ addSymChain (symbol ** symHead)
             elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
         }
 
+      if (IS_EXTERN (sym->etype) && sym->level) // This is really a block-scope name for a file-scope object.
+        {
+          symbol *csym;
+          bool declaration_with_no_linkage_visible =
+            (csym = findSymWithLevel (SymbolTab, sym)) && csym->level && !IS_STATIC (csym->etype) && !IS_EXTERN (csym->type);
+
+          long saveLevel = sym->level;
+          sym->level = 0;
+
+          if ((csym = findSymWithLevel (SymbolTab, sym)) && // When a declaration with no linkage is visible, this is really extern, so check for linkage conflicts.
+            (declaration_with_no_linkage_visible ? compareTypeExact (csym->type, sym->type, sym->level) : compareType (csym->type, sym->type, true)) != 1)
+            {
+              werror (E_EXTERN_MISMATCH, sym->name);
+              werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
+            }
+          else if ((csym = findSymWithLevel (SymbolTabE, sym)) && compareType (csym->type, sym->type, true)  != 1)
+            {
+              werror (E_EXTERN_MISMATCH, sym->name);
+              werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
+            }
+          else // No previous declaration at file-scope.
+            addSym (SymbolTabE, sym, sym->name, sym->level, sym->block, false);
+          sym->level = saveLevel;
+        }
+      else if (!sym->level) // File-scope object. Check if it was declared at block scope before.
+        {
+          symbol *csym;
+          if ((csym = findSymWithLevel (SymbolTabE, sym)) && (compareType (csym->type, sym->type, true) != 1 || IS_STATIC (sym->type) && IS_EXTERN (csym->type)))
+            {
+              werror (E_EXTERN_MISMATCH, sym->name);
+              werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
+            }
+        }
+
       /* if already exists in the symbol table on the same level, ignoring sublevels */
       if ((csym = findSymWithLevel (SymbolTab, sym)) && csym->level / LEVEL_UNIT == sym->level / LEVEL_UNIT)
         {
@@ -1517,7 +1581,7 @@ addSymChain (symbol ** symHead)
             {
               /* If the previous definition was for an array with incomplete
                  type, and the new definition has completed the type, update
-                 the original type to match (or the otehr way round) */
+                 the original type to match (or the other way round) */
               if (IS_ARRAY (csym->type) && IS_ARRAY (sym->type))
                 {
                   if (!DCL_ELEM (csym->type) && DCL_ELEM (sym->type))
@@ -1536,6 +1600,12 @@ addSymChain (symbol ** symHead)
                     FUNC_ARGS(sym->type) = FUNC_ARGS(csym->type);
                   FUNC_NOPROTOTYPE (csym->type) = false;
                   FUNC_NOPROTOTYPE (sym->type) = false;
+                }
+
+              if (IS_EXTERN (sym->etype) && IS_STATIC (csym->etype)) // Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration.
+                {
+                  SPEC_STAT (sym->etype) = SPEC_STAT (csym->etype);
+                  SPEC_EXTR (sym->etype) = SPEC_EXTR (csym->etype);
                 }
 
 #if 0
@@ -1605,8 +1675,14 @@ addSymChain (symbol ** symHead)
 
           if (csym->ival && !sym->ival)
             sym->ival = csym->ival;
+          sym->generated |= csym->generated;
 
-          if (!csym->cdef && !sym->cdef && IS_EXTERN (sym->etype))
+          if (IS_EXTERN (sym->etype) && IFFUNC_ISINLINE (csym->type))
+            {
+              FUNC_ISINLINE (sym->type) = FUNC_ISINLINE (csym->type);
+              sym->funcTree = csym->funcTree;
+            }
+          else if (!csym->cdef && !sym->cdef && IS_EXTERN (sym->etype))
             {
               /* if none of symbols is a compiler defined function
                  and at least one is not extern
@@ -1626,7 +1702,7 @@ addSymChain (symbol ** symHead)
         }
 
       /* add new entry */
-      addSym (SymbolTab, sym, sym->name, sym->level, sym->block, 1);
+      addSym (SymbolTab, sym, sym->name, sym->level, sym->block, true);
     }
 }
 
@@ -1920,6 +1996,9 @@ promoteAnonStructs (int su, structdef * sdef)
           /* with the fields it contains and adjust all  */
           /* the offsets */
 
+          if (!options.std_c11 && !options.std_sdcc)
+            werrorfl (field->fileDef, field->lineDef, W_ANONYMOUS_STRUCT_C11);
+
           /* tagged anonymous struct/union is rejected here, though gcc allow it */
           if (SPEC_STRUCT (field->type)->tagsym != NULL)
             werrorfl (field->fileDef, field->lineDef, E_ANONYMOUS_STRUCT_TAG, SPEC_STRUCT (field->type)->tag);
@@ -1955,7 +2034,11 @@ promoteAnonStructs (int su, structdef * sdef)
           tofield = &subfield->next;
         }
       else
-        tofield = &field->next;
+        {
+          if (!*field->name && !IS_STRUCT (field->type) && !IS_BITFIELD (field->type))
+            werrorfl (field->fileDef, field->lineDef, E_UNAMED_STRUCT_MEMBER);
+          tofield = &field->next;
+        }
     }
 }
 
@@ -1985,6 +2068,14 @@ checkSClass (symbol *sym, int isProto)
       werrorfl (sym->fileDef, sym->lineDef, E_TWO_OR_MORE_STORAGE_CLASSES, sym->name);
     }
 
+  // Function at block scope with storage-class specifier other than extern.
+  // UB up to C23, constraint violation from C2y.
+  if (sym->level && IS_FUNC (sym->type) &&
+    (IS_REGISTER (sym->etype) || SPEC_STAT (sym->etype)))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_BLOCK_SCOPE_FUNC_SCLASS, sym->name);
+    }
+
   /* type is literal can happen for enums change to auto */
   if (SPEC_SCLS (sym->etype) == S_LITERAL && !SPEC_ENUM (sym->etype))
     SPEC_SCLS (sym->etype) = S_AUTO;
@@ -2006,6 +2097,18 @@ checkSClass (symbol *sym, int isProto)
     {
       werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
       SPEC_RESTRICT (sym->etype) = 0;
+    }
+
+
+  if (IS_ARRAY (sym->type) && SPEC_ATOMIC (sym->etype))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_ATOMIC_ARRAY);
+      SPEC_ATOMIC (sym->etype) = 0;
+    }
+  else if (IS_FUNC (sym->type) && SPEC_ATOMIC (sym->etype))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_ATOMIC_FUNCTION);
+      SPEC_ATOMIC (sym->etype) = 0;
     }
 
   t = sym->type;
@@ -2259,6 +2362,14 @@ checkDecl (symbol * sym, int isProto)
   checkSClass (sym, isProto);   /* check the storage class     */
   changePointer (sym->type);    /* change pointers if required */
   arraySizes (sym->type, sym->name);
+
+  // If no custom crt0 is used, the startup function is void main(void) or int main(void).
+  if (!sym->level && IS_FUNC (sym->type) && !strcmp (sym->name, "main") && !options.no_std_crt0)
+    {
+      if (FUNC_ARGS (sym->type) ||
+        (!IS_VOID (sym->type->next) && !IS_INT (sym->type->next)) || IS_LONG (sym->type->next) || IS_LONGLONG (sym->type->next))
+        werror (W_MAIN_TYPE); // This is just a warning, not an error, for those that put a custom crt0 into a custom stdlib, then use it without --no-std-crt0.
+    }
 
   if (IS_ARRAY (sym->type) && DCL_ARRAY_VLA (sym->type) && sym->ival && !sym->ival->isempty)
     werror (E_VLA_INIT);
@@ -2896,7 +3007,7 @@ comparePtrType (sym_link *dest, sym_link *src, bool mustCast, bool ignoreimplici
 
 /*--------------------------------------------------------------------*/
 /* compareType - will do type check return 1 if match, 0 if no match, */
-/*               -1 if castable, -2 if only signedness differs        */
+/*               -1 if castable, -2 if only signedness differs        */ // Hmm. Does "castable" mean "implicitly castable" here? Apparently this function is used that way in SDCCast.c.
 /* ignoreimplicitintrinsic - ignore implicitly assigned intrinsic named address spaces */
 /*--------------------------------------------------------------------*/
 int
@@ -2947,10 +3058,18 @@ compareType (sym_link *dest, sym_link *src, bool ignoreimplicitintrinsic)
             {
               return -1;
             }
+
+          if (IS_GENPTR (dest) && IS_FARPTR (src) && !port->far_in_generic)
+            return 0;
+          if (IS_FARPTR (dest) && IS_GENPTR (src) && !port->generic_in_far)
+            return 0;
+
           if (IS_PTR (src) && (IS_GENPTR (dest) || ((DCL_TYPE (src) == POINTER) && (DCL_TYPE (dest) == IPOINTER))))
             {
               return comparePtrType (dest, src, true, ignoreimplicitintrinsic);
             }
+          if (IS_FARPTR (dest) && (IS_GENPTR (src) || DCL_TYPE (src) == POINTER) && port->generic_in_far)
+            return -1;
           if (IS_PTR (dest) && IS_ARRAY (src))
             {
               value *val = aggregateToPointer (valFromType (src));
@@ -3585,7 +3704,7 @@ checkFunction (symbol * sym, symbol * csym)
   sym->cdef = csym->cdef;
   deleteSym (SymbolTab, csym, csym->name);
   deleteFromSeg (csym);
-  addSym (SymbolTab, sym, sym->name, sym->level, sym->block, 1);
+  addSym (SymbolTab, sym, sym->name, sym->level, sym->block, true);
   if (IS_EXTERN (csym->etype) && !IS_EXTERN (sym->etype))
     {
       SPEC_EXTR (sym->etype) = 1;
@@ -3910,6 +4029,8 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 dbuf_append_str (dbuf, " __iar");
               if (IFFUNC_ISCOSMIC (type))
                 dbuf_append_str (dbuf, " __cosmic");
+              if (IFFUNC_ISDYNAMICC (type))
+                dbuf_append_str (dbuf, " __dynamicc");
               if (IFFUNC_ISZ88DK_CALLEE (type))
                 dbuf_append_str (dbuf, " __z88dk_callee");
               if (IFFUNC_ISZ88DK_FASTCALL (type))
@@ -4392,6 +4513,11 @@ symbol *fseq;
 symbol *fsneq;
 symbol *fslt;
 
+symbol *sdcc_atomic_load;
+symbol *sdcc_atomic_store;
+symbol *sdcc_atomic_exchange;
+symbol *sdcc_atomic_compare_exchange;
+
 symbol *fps16x16_add;
 symbol *fps16x16_sub;
 symbol *fps16x16_mul;
@@ -4451,6 +4577,8 @@ _mangleFunctionName (const char *in)
 /* modifiers -          'S' - signed                               */
 /*                      'U' - unsigned                             */
 /*                      'C' - const                                */
+/*                      'V' - volatile                             */
+/*                      'A' - _Atomic                              */
 /* pointer modifiers -  'g' - generic                              */
 /*                      'x' - xdata                                */
 /*                      'p' - code                                 */
@@ -4467,7 +4595,9 @@ typeFromStr (const char *s)
   sym_link *r = newLink (DECLARATOR);
   int sign = 0;
   int usign = 0;
-  int constant = 0;
+  bool is_const = false;
+  bool is_volatile = false;
+  bool is_atomic = false;
 
   do
     {
@@ -4481,7 +4611,13 @@ typeFromStr (const char *s)
           usign = 1;
           break;
         case 'C':
-          constant = 1;
+          is_const = 1;
+          break;
+        case 'V':
+          is_volatile = 1;
+          break;
+        case 'A':
+          is_atomic = 1;
           break;
         case 'b':
           r->xclass = SPECIFIER;
@@ -4575,10 +4711,14 @@ typeFromStr (const char *s)
           SPEC_USIGN (r) = 1;
           usign = 0;
         }
-      if (IS_SPEC (r) && constant)
+      if (IS_SPEC (r))
         {
-          SPEC_CONST (r) = 1;
-          constant = 0;
+          SPEC_CONST (r) |= is_const;
+          SPEC_VOLATILE (r) |= is_volatile;
+          SPEC_ATOMIC (r) |= is_atomic;
+          is_const = false;
+          is_volatile = false;
+          is_atomic = false;
         }
       s++;
     }
@@ -4659,6 +4799,15 @@ initCSupport (void)
   fseq = funcOfType ("__fseq", boolType, floatType, 2, options.float_rent);
   fsneq = funcOfType ("__fsneq", boolType, floatType, 2, options.float_rent);
   fslt = funcOfType ("__fslt", boolType, floatType, 2, options.float_rent);
+
+  // void __sdcc_atomic_load (void *val, volatile const void *obj, size_t n);
+  sdcc_atomic_load = funcOfTypeVarg ("__sdcc_atomic_load", "v", 3, (const char * []){"vg*", "CVvg*", "Ui"});
+  // void __sdcc_atomic_store (volatile void *obj, void *val, size_t n);
+  sdcc_atomic_store = funcOfTypeVarg ("__sdcc_atomic_store", "v", 3, (const char * []){"Vvg*", "Cvg*", "Ui"});
+  // void __sdcc_atomic_exchange (volatile void *obj, void *val, size_t n);
+  sdcc_atomic_exchange = funcOfTypeVarg ("__sdcc_atomic_exchange", "v", 3, (const char * []){"Vvg*", "vg*", "Ui"});
+  // void __sdcc_atomic_compare_exchange (volatile void *obj, void *exp, void *val, size_t n);
+  sdcc_atomic_compare_exchange = funcOfTypeVarg ("__sdcc_atomic_compare_exchange", "v", 4, (const char * []){"Vvg*", "vg*", "Cvg*", "Ui"});
 
   fps16x16_add = funcOfType ("__fps16x16_add", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
   fps16x16_sub = funcOfType ("__fps16x16_sub", fixed16x16Type, fixed16x16Type, 2, options.float_rent);
@@ -4772,7 +4921,7 @@ initCSupport (void)
           dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su], sbwd[bwd]);
           muldiv[muldivmod][bwd][su] =
             funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
-              multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su % 2],
+              multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_PIC14 || TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_MOS6502_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][su % 2],
               multypes[bwd][su / 2],
               2,
               options.intlong_rent);
@@ -4792,7 +4941,7 @@ initCSupport (void)
               dbuf_printf (&dbuf, "_%s%s%s", smuldivmod[muldivmod], ssu[su * 3], sbwd[bwd]);
               muldiv[muldivmod][bwd][su] =
                 funcOfType (_mangleFunctionName (dbuf_c_str (&dbuf)),
-                  multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_IS_F8) && bwd == 0) ? 1 : bwd][su],
+                  multypes[(TARGET_IS_PIC16 && muldivmod == 1 && bwd == 0 && su == 0 || (TARGET_IS_STM8 || TARGET_Z80_LIKE || TARGET_PDK_LIKE || TARGET_F8_LIKE) && bwd == 0) ? 1 : bwd][su],
                   multypes[bwd][su],
                   2,
                   options.intlong_rent);
@@ -4845,16 +4994,9 @@ initCSupport (void)
         }
     }
 
-  {
-    const char *iparams[] = {"i", "i"};
-    const char *uiparams[] = {"Ui", "Ui"};
-    muls16tos32[0] = port->support.has_mulint2long ? funcOfTypeVarg ("__mulsint2slong", "l", 2, iparams) : 0;
-    muls16tos32[1] = port->support.has_mulint2long ? funcOfTypeVarg ("__muluint2ulong", "Ul", 2, uiparams) : 0;
-  }
-  {
-    const char *uiparams[] = {"Ul", "Uc"};
-    mulu32u8tou64 = port->support.has_mululonguchar2ulonglong ? funcOfTypeVarg ("__mululonguchar2ulonglong", "UL", 2, uiparams) : 0;
-  }
+  muls16tos32[0] = port->support.has_mulint2long ? funcOfTypeVarg ("__mulsint2slong", "l", 2, (const char * []){"i", "i"}) : 0;
+  muls16tos32[1] = port->support.has_mulint2long ? funcOfTypeVarg ("__muluint2ulong", "Ul", 2, (const char * []){"Ui", "Ui"}) : 0;
+  mulu32u8tou64 = port->support.has_mululonguchar2ulonglong ? funcOfTypeVarg ("__mululonguchar2ulonglong", "UL", 2, (const char * []){"Ul", "Uc"}) : 0;
 }
 
 /*-----------------------------------------------------------------*/
@@ -4883,8 +5025,7 @@ initBuiltIns ()
 
   if (!nonbuiltin_memcpy)
     {
-      const char *argTypeStrs[] = {"vg*", "Cvg*", "Ui"};
-      nonbuiltin_memcpy = funcOfTypeVarg ("__memcpy", "vg*", 3, argTypeStrs);
+      nonbuiltin_memcpy = funcOfTypeVarg ("__memcpy", "vg*", 3, (const char * []){"vg*", "Cvg*", "Ui"});
       FUNC_ISBUILTIN (nonbuiltin_memcpy->type) = 0;
       FUNC_ISREENT (nonbuiltin_memcpy->type) = options.stackAuto;
     }
@@ -4934,6 +5075,12 @@ llFitsInIntType (long long ll, sym_link *type)
           else
             max = 0xffffll;
           break;
+        case V_BITINT:
+          if (SPEC_BITINTWIDTH (type) >= 63)
+            max = 0x7fffffffffffffffll;  // actual ull max would not fit and input is ll, anyway
+          else
+            max = (1ll << SPEC_BITINTWIDTH(type)) - 1;
+          break;
         default:
           assert (0);  // not implemented for non-integer types
         }
@@ -4963,6 +5110,10 @@ llFitsInIntType (long long ll, sym_link *type)
               max = 32767ll;
             }
           break;
+        case V_BITINT:
+          min = -(1ll << (SPEC_BITINTWIDTH(type) - 1));
+          max = (1ll << (SPEC_BITINTWIDTH(type) - 1)) - 1;
+          break;
         default:
           assert (0);  // not implemented for non-integer types
         }
@@ -4986,7 +5137,12 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
   if (userRequestedType)
     {
       checkTypeSanity (userRequestedType, NULL);
-      if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) || SPEC_ENUM (userRequestedType))
+      if (SPEC_NOUN (userRequestedType) == V_BITINT)
+        {
+          if (!options.std_sdcc)
+            werror (W_ENUM_UNDERLYING_BITINT);
+        }
+      else if ((SPEC_NOUN (userRequestedType) != V_INT && SPEC_NOUN (userRequestedType) != V_CHAR && SPEC_NOUN (userRequestedType) != V_BOOL) || SPEC_ENUM (userRequestedType))
         {
           werror (E_ENUM_UNDERLYING_TYPE);
           /* try to keep going */
@@ -4999,6 +5155,7 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
       SPEC_USIGN (type) = SPEC_USIGN (userRequestedType);
       SPEC_LONG (type) = SPEC_LONG (userRequestedType);
       SPEC_LONGLONG (type) = SPEC_LONGLONG (userRequestedType);
+      SPEC_BITINTWIDTH (type) = SPEC_BITINTWIDTH (userRequestedType);
     }
   else
     {
@@ -5030,12 +5187,8 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
   if (userRequestedType)
     return type;
 
-  /* Otherwise: Use the smallest integer type that is compatible with this range and not a bit-precise type. */
-  if (min >= 0 && max <= 1)
-    {
-      SPEC_NOUN (type) = V_BOOL;
-    }
-  else if (min >= 0 && max <= 255)
+  // Otherwise: use the smallest integer type that is compatible with this range that i neither bool nor a bit-precise type (both bool and bit-prcise types are disallowed here by ISO C23).
+  if (min >= 0 && max <= 255)
     {
       SPEC_NOUN (type) = V_CHAR;
       SPEC_USIGN (type) = 1;
@@ -5080,7 +5233,7 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
 /* isConstant - check if the type is constant                        */
 /*-------------------------------------------------------------------*/
 int
-isConstant (sym_link * type)
+isConstant (sym_link *type)
 {
   if (!type)
     return 0;
@@ -5098,7 +5251,7 @@ isConstant (sym_link * type)
 /* isVolatile - check if the type is volatile                        */
 /*-------------------------------------------------------------------*/
 int
-isVolatile (sym_link * type)
+isVolatile (sym_link *type)
 {
   if (!type)
     return 0;
@@ -5116,7 +5269,7 @@ isVolatile (sym_link * type)
 /* isRestrict - check if the type is restricted                      */
 /*-------------------------------------------------------------------*/
 int
-isRestrict (sym_link * type)
+isRestrict (sym_link *type)
 {
   if (!type)
     return 0;
@@ -5128,6 +5281,24 @@ isRestrict (sym_link * type)
     return SPEC_RESTRICT (type);
   else
     return DCL_PTR_RESTRICT (type);
+}
+
+/*-------------------------------------------------------------------*/
+/* isAtomic - check if the type is atomic                            */
+/*-------------------------------------------------------------------*/
+int
+isAtomic (sym_link *type)
+{
+  if (!type)
+    return 0;
+
+  while (IS_ARRAY (type))
+    type = type->next;
+
+  if (IS_SPEC (type))
+    return SPEC_ATOMIC (type);
+  else
+    return DCL_PTR_ATOMIC (type);
 }
 
 /*-------------------------------------------------------------------*/
@@ -5205,4 +5376,53 @@ mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls)
             }
         }
     }
+}
+
+/*-------------------------------------------------------------------*/
+/* prepareDeclarationSymbol - add the specifier list to the id       */
+/*                            and do some type-related housekeeping  */
+/* NOTE: moved here from the "declaration" rule in SDCC.y            */
+/*-------------------------------------------------------------------*/
+symbol *
+prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDeclList)
+{
+  symbol *sym , *sym1;
+
+  bool autocandidate = options.std_c23 && IS_SPEC (declSpecs) && SPEC_SCLS (declSpecs) == S_AUTO;
+
+  for (sym1 = sym = reverseSyms (initDeclList); sym != NULL; sym = sym->next)
+    {
+      sym_link *lnk = copyLinkChain (declSpecs);
+      sym_link *l0 = NULL, *l1 = NULL, *l2 = NULL;
+      /* check illegal declaration */
+      for (l0 = sym->type; l0 != NULL; l0 = l0->next)
+        if (IS_PTR (l0))
+          break;
+      /* check if creating instances of structs with flexible arrays */
+      for (l1 = lnk; l1 != NULL; l1 = l1->next)
+        if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
+          break;
+      if (!options.std_c99 && l0 == NULL && l1 != NULL && SPEC_EXTR (declSpecs) != 1)
+        werror (W_FLEXARRAY_INSTRUCT, sym->name);
+      /* check if creating instances of function type */
+      for (l1 = lnk; l1 != NULL; l1 = l1->next)
+        if (IS_FUNC (l1))
+          break;
+      for (l2 = lnk; l2 != NULL; l2 = l2->next)
+        if (IS_PTR (l2))
+          break;
+      if (l0 == NULL && l2 == NULL && l1 != NULL)
+        werrorfl (sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+      /* C23 auto type inference */
+      if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE)
+        {
+          sym->type = sym->etype = typeofOp (sym->ival->init.node);
+          SPEC_SCLS (lnk) = 0;
+        }
+      /* do the pointer stuff */
+      pointerTypes (sym->type, lnk);
+      addDecl (sym, 0, lnk);
+    }
+
+  return sym1;
 }

@@ -519,6 +519,7 @@ PORT stm8_port =
     NULL,                       /* idata */
     NULL,                       /* pdata */
     NULL,                       /* xdata */
+    NULL,                       // xconst_name
     NULL,                       /* bit */
     "RSEG (ABS)",               /* reg */
     "GSINIT",                   /* static initialization */
@@ -605,14 +606,17 @@ PORT stm8_port =
   0,                            /* leave gt */
   1,                            /* transform <= to ! > */
   1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
+  false,                        // leave !=
+  false,                        // leave ==
+  false,                        // Array initializer support
   0,                            /* no CSE cost estimation yet */
   NULL,                         /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
+  false,                        // there is no __far yet, and thus no pointers into it.
+  false,                        // there is no __far yet, and thus no pointers into it.
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
   5,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
   PORT_MAGIC
 };
+

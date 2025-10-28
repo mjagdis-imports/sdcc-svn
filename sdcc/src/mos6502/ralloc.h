@@ -59,6 +59,7 @@ enum
 #define M6502MASK_XA (M6502MASK_X | M6502MASK_A)
 //#define M6502MASK_YA (M6502MASK_Y | M6502MASK_A)
 #define M6502MASK_YX (M6502MASK_Y | M6502MASK_X)
+#define HW_REG_SIZE (Y_IDX+1)
     
 /* definition for the registers */
 typedef struct reg_info
@@ -115,7 +116,10 @@ extern reg_info *m6502_reg_sp;
 reg_info *m6502_regWithIdx (int);
 void m6502_useReg (reg_info * reg);
 void m6502_freeReg (reg_info * reg);
+void m6502_freeAllRegs ();
 void m6502_dirtyReg (reg_info * reg);
+void m6502_dirtyAllRegs ();
+
 bitVect *m6502_rUmaskForOp (operand * op);
 
 const m6502opcodedata *m6502_getOpcodeData(const char *inst);

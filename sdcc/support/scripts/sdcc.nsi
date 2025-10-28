@@ -408,7 +408,6 @@ ${Section} "SDCC application files" SEC01
   File "${SDCC_ROOT}\bin\readline5.dll"
   File "${SDCC_ROOT}\bin\libgcc_s_*-1.dll"
   File "${SDCC_ROOT}\bin\libstdc++-6.dll"
-  File "${SDCC_ROOT}\bin\zlib1.dll"
 !ifdef WIN64
   File "${SDCC_ROOT}\bin\libwinpthread-1.dll"
 !endif
@@ -641,6 +640,10 @@ ${Section} "SDCC library sources" SEC25
   File "${DEV_ROOT}\lib\src\z80\*.s"
 #  File "${DEV_ROOT}\lib\src\z80\Makefile"
 
+  SetOutPath "$INSTDIR\lib\src\z80n"
+  File "${DEV_ROOT}\lib\src\z80n\*.s"
+#  File "${DEV_ROOT}\lib\src\z80n\Makefile"
+
   SetOutPath "$INSTDIR\lib\src\z180"
   File "${DEV_ROOT}\lib\src\z180\*.s"
 #  File "${DEV_ROOT}\lib\src\z180\Makefile"
@@ -838,10 +841,10 @@ ${Section} "SDCC STM8 large model library" SEC26
   File "${DEV_ROOT}\lib\stm8-large\*.*"
 ${SectionEnd}
 
-${Section} "SDCC EZ80_Z80 library" SEC27
+${Section} "SDCC eZ80 library" SEC27
   SectionIn 1 2
-  SetOutPath "$INSTDIR\lib\ez80_z80"
-  File "${DEV_ROOT}\lib\ez80_z80\*.*"
+  SetOutPath "$INSTDIR\lib\ez80"
+  File "${DEV_ROOT}\lib\ez80\*.*"
 ${SectionEnd}
 
 ${Section} "SDCC PDK13 library" SEC28
@@ -910,6 +913,12 @@ ${Section} "SDCC f8 library" SEC38
   File "${DEV_ROOT}\lib\f8\*.*"
 ${SectionEnd}
 
+${Section} "SDCC f8l library" SEC39
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\f8l"
+  File "${DEV_ROOT}\lib\f8l\*.*"
+${SectionEnd}
+
 ;--------------------------------
 ;Descriptions
 
@@ -940,7 +949,7 @@ LangString DESC_SEC23 ${LANG_ENGLISH} "SDCC STM8 medium model library"
 LangString DESC_SEC24 ${LANG_ENGLISH} "SDCC TLCS90 library"
 LangString DESC_SEC25 ${LANG_ENGLISH} "SDCC library sources"
 LangString DESC_SEC26 ${LANG_ENGLISH} "SDCC STM8 large model library"
-LangString DESC_SEC27 ${LANG_ENGLISH} "SDCC EZ80_Z80 library"
+LangString DESC_SEC27 ${LANG_ENGLISH} "SDCC eZ80 library"
 LangString DESC_SEC28 ${LANG_ENGLISH} "SDCC PDK13 library"
 LangString DESC_SEC29 ${LANG_ENGLISH} "SDCC PDK14 library"
 LangString DESC_SEC30 ${LANG_ENGLISH} "SDCC PDK15 library"
@@ -952,6 +961,7 @@ LangString DESC_SEC35 ${LANG_ENGLISH} "SDCC R800 library"
 LangString DESC_SEC36 ${LANG_ENGLISH} "SDCC WDC 65C02 library"
 LangString DESC_SEC37 ${LANG_ENGLISH} "SDCC S08 stack-auto library"
 LangString DESC_SEC38 ${LANG_ENGLISH} "SDCC f8 library"
+LangString DESC_SEC39 ${LANG_ENGLISH} "SDCC f8l library"
 
 ;Assign language strings to sections
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -1118,10 +1128,10 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\src\r3ka\*.s"
 
-  Delete "$INSTDIR\lib\src\ez80_z80\*.s"
-  Delete "$INSTDIR\lib\src\ez80_z80\ez80_z80.lib"
-  Delete "$INSTDIR\lib\src\ez80_z80\README"
-  Delete "$INSTDIR\lib\src\ez80_z80\Makefile"
+  Delete "$INSTDIR\lib\src\ez80\*.s"
+  Delete "$INSTDIR\lib\src\ez80\ez80.lib"
+  Delete "$INSTDIR\lib\src\ez80\README"
+  Delete "$INSTDIR\lib\src\ez80\Makefile"
 
   Delete "$INSTDIR\lib\src\ds390\*.c"
   Delete "$INSTDIR\lib\src\ds390\libds390.lib"
@@ -1175,6 +1185,9 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\src\f8\f8.lib"
   Delete "$INSTDIR\lib\src\f8\Makefile"
 
+  Delete "$INSTDIR\lib\src\f8l\f8l.lib"
+  Delete "$INSTDIR\lib\src\f8l\Makefile"
+
   Delete "$INSTDIR\lib\src\*.c"
 
   Delete "$INSTDIR\lib\pic14\*.lib"
@@ -1209,8 +1222,8 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\r3ka\*.rel"
   Delete "$INSTDIR\lib\r3ka\*.lib"
 
-  Delete "$INSTDIR\lib\ez80_z80\*.rel"
-  Delete "$INSTDIR\lib\ez80_z80\*.lib"
+  Delete "$INSTDIR\lib\ez80\*.rel"
+  Delete "$INSTDIR\lib\ez80\*.lib"
 
   Delete "$INSTDIR\lib\small\*.lib"
 
@@ -1256,6 +1269,7 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\s08-stack-auto\*.lib"
 
   Delete "$INSTDIR\lib\f8\*.lib"
+  Delete "$INSTDIR\lib\f8l\*.lib"
 
   Delete "$INSTDIR\include\asm\z80\*.h"
   Delete "$INSTDIR\include\asm\r2k\*.h"
@@ -1320,7 +1334,6 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\bin\readline5.dll"
   Delete "$INSTDIR\bin\libgcc_s_*-1.dll"
   Delete "$INSTDIR\bin\libstdc++-6.dll"
-  Delete "$INSTDIR\bin\zlib1.dll"
 !ifdef WIN64
   Delete "$INSTDIR\bin\libwinpthread-1.dll"
 !endif
@@ -1365,7 +1378,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\r2k"
   RMDir "$INSTDIR\lib\src\r2ka"
   RMDir "$INSTDIR\lib\src\r3ka"
-  RMDir "$INSTDIR\lib\src\ez80_z80"
+  RMDir "$INSTDIR\lib\src\ez80"
   RMDir "$INSTDIR\lib\src\ds390\examples"
   RMDir "$INSTDIR\lib\src\ds390"
   RMDir "$INSTDIR\lib\src\ds400"
@@ -1384,6 +1397,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\mos65c02"
   RMDir "$INSTDIR\lib\src\s08-stack-auto"
   RMDir "$INSTDIR\lib\src\f8"
+  RMDir "$INSTDIR\lib\src\f8l"
   RMDir "$INSTDIR\lib\src"
   RMDir "$INSTDIR\non-free\lib\src"
 
@@ -1396,7 +1410,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\r2k"
   RMDir "$INSTDIR\lib\r2ka"
   RMDir "$INSTDIR\lib\r3ka"
-  RMDir "$INSTDIR\lib\ez80_z80"
+  RMDir "$INSTDIR\lib\ez80"
   RMDir "$INSTDIR\lib\small"
   RMDir "$INSTDIR\lib\medium"
   RMDir "$INSTDIR\lib\large"
@@ -1421,6 +1435,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\mos65c02"
   RMDir "$INSTDIR\lib\s08-stack-auto"
   RMDir "$INSTDIR\lib\f8"
+  RMDir "$INSTDIR\lib\f8l"
   RMDir "$INSTDIR\lib"
   RMDir "$INSTDIR\non-free\lib"
 

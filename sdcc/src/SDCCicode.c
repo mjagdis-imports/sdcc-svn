@@ -37,7 +37,7 @@ int iTempNum = 0;
 int iTempLblNum = 0;
 int operandKey = 0;
 int iCodeKey = 0;
-char *filename;                 /* current file name */
+const char *filename;           // current file name
 int lineno = 1;                 /* current line number */
 int block;
 long scopeLevel;
@@ -81,7 +81,6 @@ PRINTFUNC (picEndCritical);
 iCodeTable codeTable[] = {
   {'!', "not", picGenericOne, NULL},
   {'~', "~", picGenericOne, NULL},
-  {ROT, "rot", picGenericOne, NULL},
   {GETABIT, "gabit", picGenericOne, NULL},
   {GETBYTE, "gbyte", picGenericOne, NULL},
   {GETWORD, "gword", picGenericOne, NULL},
@@ -112,6 +111,7 @@ iCodeTable codeTable[] = {
   {BITWISEAND, "&", picGeneric, NULL},
   {LEFT_OP, "<<", picGeneric, NULL},
   {RIGHT_OP, ">>", picGeneric, NULL},
+  {ROT, "rot", picGeneric, NULL},
   {GET_VALUE_AT_ADDRESS, "@", picGetValueAtAddr, NULL},
   {SET_VALUE_AT_ADDRESS, "@", picSetValueAtAddr, NULL},
   {ADDRESS_OF, "&", picAddrOf, NULL},
@@ -666,6 +666,34 @@ newiCodeLabelGoto (int op, symbol * label)
   return ic;
 }
 
+iCode *
+newiCodeParm (int op, operand *left, sym_link *ftype, int *stack)
+{
+  iCode *ic;
+
+  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : NULL);
+  if (op != SEND)
+    {
+      ic->parmPush = 1;
+      if (stack)
+        {
+          sym_link *parmtype = operandType(left);
+          if (ic->op == IPUSH_VALUE_AT_ADDRESS)
+            parmtype = parmtype->next;
+          if (IS_ARRAY (parmtype))
+            parmtype = aggrToPtr (parmtype, false);
+          *stack += getSize (parmtype);
+          if ((IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype) && !IS_STRUCT (parmtype)) && getSize (parmtype) == 1) // SmallC and Dynamic C calling conventions pass 8-bit parameters as 16-bit values.
+            (*stack)++;
+          else if (IFFUNC_ISDYNAMICC (ftype) && getSize (parmtype)  == 3 && IS_FARPTR (parmtype)) // Dynamic C passes pointers to __far as 32 bits.
+            (*stack)++;
+          else if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // pdk needs even-oligned stack.
+            (*stack)++;
+        }
+    }
+  return ic;
+}
+
 /*-----------------------------------------------------------------*/
 /* newiTemp - allocate & return a newItemp Variable                */
 /*-----------------------------------------------------------------*/
@@ -718,7 +746,7 @@ newiTempLabel (const char *s)
   itmplbl->isitmp = 1;
   itmplbl->islbl = 1;
   itmplbl->key = labelKey++;
-  addSym (LabelTab, itmplbl, itmplbl->name, 0, 0, 0);
+  addSym (LabelTab, itmplbl, itmplbl->name, 0, 0, false);
   return itmplbl;
 }
 
@@ -739,7 +767,7 @@ newiTempLoopHeaderLabel (bool pre)
   itmplbl->isitmp = 1;
   itmplbl->islbl = 1;
   itmplbl->key = labelKey++;
-  addSym (LabelTab, itmplbl, itmplbl->name, 0, 0, 0);
+  addSym (LabelTab, itmplbl, itmplbl->name, 0, 0, false);
   return itmplbl;
 }
 
@@ -939,9 +967,9 @@ isOperandGlobal (const operand *op)
 }
 
 /*-----------------------------------------------------------------*/
-/* isOperandVolatile - return 1 if the operand is volatile         */
+/* isOperandVolatile - true if op is volatile                      */
 /*-----------------------------------------------------------------*/
-int
+bool
 isOperandVolatile (const operand *op, bool chkTemp)
 {
   if (!op)
@@ -950,7 +978,22 @@ isOperandVolatile (const operand *op, bool chkTemp)
   if (IS_ITEMP (op) && !chkTemp)
     return 0;
 
-  return IS_VOLATILE (operandType (op));
+  return isVolatile (operandType (op));
+}
+
+/*-----------------------------------------------------------------*/
+/* isOperandVolatileOrAtomic - true if op is volatile or atomic    */
+/*-----------------------------------------------------------------*/
+bool
+isOperandVolatileOrAtomic (const operand *op, bool chkTemp)
+{
+  if (!op)
+    return 0;
+
+  if (IS_ITEMP (op) && !chkTemp)
+    return 0;
+
+  return isVolatile (operandType (op)) || isAtomic (operandType (op));
 }
 
 /*-----------------------------------------------------------------*/
@@ -1032,7 +1075,7 @@ isOperandInPagedSpace (operand * op)
 /* isOperandInDirSpace - will return true if operand is in dirSpace */
 /*------------------------------------------------------------------*/
 bool
-isOperandInDirSpace (operand * op)
+isOperandInDirSpace (const operand *op)
 {
   sym_link *etype;
 
@@ -1044,8 +1087,8 @@ isOperandInDirSpace (operand * op)
 
   if (!IS_TRUE_SYMOP (op))
     {
-      if (SPIL_LOC (op))
-        etype = SPIL_LOC (op)->etype;
+      if (SPIL_LOC_CONST (op))
+        etype = SPIL_LOC_CONST (op)->etype;
       else
         return FALSE;
     }
@@ -1963,7 +2006,7 @@ getArraySizePtr (operand * op)
       return ((IS_GENPTR (ltype) && GPTRSIZE > FARPTRSIZE) ? (size - 1) : size);
     }
 
-  if (IS_ARRAY (ltype))
+  if (IS_ARRAY (ltype)) // There is some code duplication between this switch and the one in getSize in SDCCsymt.c
     {
       sym_link *letype = getSpec (ltype);
       switch (PTR_TYPE (SPEC_OCLS (letype)))
@@ -1972,9 +2015,10 @@ getArraySizePtr (operand * op)
         case PPOINTER:
         case POINTER:
           return (NEARPTRSIZE);
+        case CPOINTER:
+          return (TARGET_Z80_LIKE ? GPTRSIZE : FARPTRSIZE);
         case EEPPOINTER:
         case FPOINTER:
-        case CPOINTER:
         case FUNCTION:
           return (FARPTRSIZE);
         case GPOINTER:
@@ -2229,7 +2273,7 @@ geniCodeMultiply (operand * left, operand * right, RESULT_TYPE resultType)
      efficient in most cases than 2 bytes result = 2 bytes << literal
      if port has 1 byte muldiv */
   if ((p2 > 0) && !IS_FLOAT (letype) && !IS_FIXED (letype) &&
-      !((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)) && !(TARGET_Z80_LIKE || TARGET_MOS6502_LIKE || TARGET_IS_F8 || TARGET_IS_STM8 && p2 == 1) /* Mimic old behaviour that tested port->muldiv, which was zero for stm8 and z80-like only. Someone should look into what really makes sense here. */) &&
+      !((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)) && !(TARGET_Z80_LIKE || TARGET_MOS6502_LIKE || TARGET_F8_LIKE || TARGET_IS_STM8 && p2 == 1) /* Mimic old behaviour that tested port->muldiv, which was zero for stm8 and z80-like only. Someone should look into what really makes sense here. */) &&
       !TARGET_PIC_LIKE)      /* don't shift for pic */
     {
       if ((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)))
@@ -3243,7 +3287,7 @@ geniCodeLogicAndOr (ast * tree, int lvl)
   symbol *exitLabel = newiTempLabel (NULL);
   operand *op, *result, *condition;
 
-  /* AND_OP and OR_OP are no longer generated because of bug-905492.
+  /* AND_OP and OR_OP are transformed to ensure short-circuit evaluation.
      They can be reenabled by executing the following block. If you find
      a decent optimization you could start right here:
    */
@@ -3406,6 +3450,10 @@ checkTypes (operand * left, operand * right)
             DCL_PTR_VOLATILE (ltype) = 0;
           else
             SPEC_VOLATILE (ltype) = 0;
+          if (IS_DECL(ltype))
+            DCL_PTR_ATOMIC (ltype) = 0;
+          else
+            SPEC_ATOMIC (ltype) = 0;
         }
       right = geniCodeCast (ltype, right, TRUE);
     }
@@ -3494,15 +3542,15 @@ geniCodeDummyRead (operand * op)
 /* geniCodeSEParms - generate code for side effecting fcalls       */
 /*-----------------------------------------------------------------*/
 static void
-geniCodeSEParms (ast *parms, int lvl)
+geniCodeSEParms (ast *parms, int lvl, sym_link *ftype)
 {
   if (!parms)
     return;
 
   if (IS_AST_PARAM (parms))
     {
-      geniCodeSEParms (parms->left, lvl);
-      geniCodeSEParms (parms->right, lvl);
+      geniCodeSEParms (parms->left, lvl, ftype);
+      geniCodeSEParms (parms->right, lvl, ftype);
       return;
     }
 
@@ -3518,6 +3566,13 @@ geniCodeSEParms (ast *parms, int lvl)
     parms->opval.op = '+';
 
   parms->opval.oprnd = geniCodeRValue (ast2iCode (parms, lvl + 1), FALSE);
+  if (IFFUNC_ISDYNAMICC (ftype)) // Dynamic C passes first param both in register and on stack. Need an iTemp to avoid duplication (and double read of volatile, etc).
+    {
+      iCode *ic = newiCode ('=', NULL, parms->opval.oprnd);
+      parms->opval.oprnd = newiTempOperand (operandType (parms->opval.oprnd), 0);
+      IC_RESULT (ic) = parms->opval.oprnd;
+      ADDTOCHAIN (ic);
+    }
   parms->type = EX_OPERAND;
   AST_ARGREG (parms) = parms->etype ? SPEC_ARGREG (parms->etype) : SPEC_ARGREG (parms->ftype);
 }
@@ -3550,8 +3605,10 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
   pval = parms->opval.oprnd;
 
   /* if register parm then make it a send */
-  if ((IS_REGPARM (parms->etype) && !IFFUNC_HASVARARGS (ftype)) || IFFUNC_ISBUILTIN (ftype))
+  if (((IS_REGPARM (parms->etype) && !IFFUNC_HASVARARGS (ftype)) || IFFUNC_ISBUILTIN (ftype)) &&
+    !IFFUNC_ISDYNAMICC (ftype))
     {
+send:
       pval = checkTypes (operandFromValue (argVals, true), pval);
       ic = newiCode (SEND, pval, NULL);
       ic->argreg = SPEC_ARGREG (parms->etype);
@@ -3664,21 +3721,11 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
         {
           if (argVals && (*iArg >= 0))
             pval = checkTypes (operandFromValue (argVals, false), pval);
-          // push
-          if (is_structparm)
-            ic = newiCode (IPUSH_VALUE_AT_ADDRESS, pval, operandFromLit (0));
-          else
-            ic = newiCode (IPUSH, pval, NULL);
-          ic->parmPush = 1;
-          // update the stack adjustment
-          sym_link *parmtype = IS_ARRAY (parms->ftype) ? aggrToPtr (parms->ftype, false) : parms->ftype;
-          *stack += getSize (parmtype);
-          if (IFFUNC_ISSMALLC (ftype) && getSize (parmtype) == 1) // SmallC calling convention passes 8-bit parameters as 16-bit values.
-            (*stack)++;
-          if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // So does pdk due to stack alignment requirements.
-            (*stack)++;
+          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, ftype, stack);
           ADDTOCHAIN (ic);
         }
+      if (IFFUNC_ISDYNAMICC (ftype) && IS_REGPARM (parms->etype))
+        goto send; // Dynamic C might pass the first paramter both in a register (even for vararg functions) and on the stack.
     }
 
   if (*iArg >= 0)
@@ -3730,13 +3777,13 @@ geniCodeCall (operand * left, ast * parms, int lvl)
   if (inCriticalPair && FUNC_ISCRITICAL (ftype))
     werror (E_INVALID_CRITICAL);
 
+  if (IS_FUNCPTR (ftype))
+    ftype = ftype->next;
+
   /* take care of parameters with side-effecting
      function calls in them, this is required to take care
      of overlaying function parameters */
-  geniCodeSEParms (parms, lvl);
-
-  if (IS_FUNCPTR (ftype))
-    ftype = ftype->next;
+  geniCodeSEParms (parms, lvl, ftype);
 
   /* first the parameters */
   if ((options.stackAuto || IFFUNC_ISREENT (ftype)) && !IFFUNC_ISBUILTIN (ftype))
@@ -3883,7 +3930,7 @@ geniCodeFunctionBody (ast * tree, int lvl)
 {
   iCode *ic;
   operand *func;
-  char *savefilename;
+  const char *savefilename;
   int savelineno;
   short functionBlock;
 

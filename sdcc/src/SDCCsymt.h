@@ -36,18 +36,10 @@
 
 #define BITVAR_PAD -1
 
-// values for first byte (or 3 most significant bits) of generic pointer.
-#if 0
-#define GPTYPE_FAR       0x00
-#define GPTYPE_NEAR      0x40
-#define GPTYPE_XSTACK    0x60
-#define GPTYPE_CODE      0x80
-#else
 #define GPTYPE_FAR      (port->gp_tags.tag_far)
 #define GPTYPE_NEAR     (port->gp_tags.tag_near)
 #define GPTYPE_XSTACK   (port->gp_tags.tag_xstack)
 #define GPTYPE_CODE     (port->gp_tags.tag_code)
-#endif
 
 #define HASHTAB_SIZE 256
 
@@ -152,7 +144,7 @@ typedef struct specifier
   unsigned b_const:1;               /* is a constant              */
   unsigned b_restrict:1;            /* is restricted              */
   unsigned b_volatile:1;            /* is marked as volatile      */
-  unsigned b_atomic:1;              /* is marked as _Atomic       */
+  bool     b_atomic:1;              /* is qualified as _Atomic    */
   struct symbol *addrspace;         /* is in named address space  */
   unsigned b_typedef:1;             /* is typedefed               */
   unsigned b_isregparm:1;           /* is the first parameter     */
@@ -213,6 +205,7 @@ typedef struct declarator
   unsigned ptr_const:1;             /* pointer is constant        */
   unsigned ptr_volatile:1;          /* pointer is volatile        */
   unsigned ptr_restrict:1;          /* pointer is resticted       */
+  bool ptr_atomic:1;                /* pointer is atomic          */
   bool array_vla:1;                 // Array is known to be a VLA.
   bool vla_check_visited:1;         // Already visited in check for VLA - implementation detail to prevent infinite recursion */
   struct symbol *ptr_addrspace;     /* pointer is in named address space  */
@@ -266,6 +259,7 @@ typedef struct sym_link
     unsigned raisonance:1;          /* Raisonance calling convention for STM8 */
     unsigned iar:1;                 /* IAR calling convention               */
     unsigned cosmic:1;              /* Cosmic calling convention            */
+    unsigned dynamicc:1;            /* Dynamic C calling convention         */
     unsigned z88dk_fastcall:1;      /* For the z80-related ports: Function has a single parameter of at most 32 bits that is passed in dehl */
     unsigned z88dk_callee:1;        /* Stack pointer adjustment for parameters passed on the stack is done by the callee */
     unsigned z88dk_shortcall:1;     /* Short call available via rst (see values later) (Z80 only) */
@@ -276,7 +270,7 @@ typedef struct sym_link
     unsigned javaNative;            /* is a JavaNative Function (TININative ONLY) */
     unsigned overlay;               /* force parameters & locals into overlay segment */
     unsigned hasStackParms;         /* function has parameters on stack     */
-    bool preserved_regs[9];         /* Registers preserved by the function - may be an underestimate */
+    bool preserved_regs[11];        /* Registers preserved by the function - may be an underestimate */
     unsigned char z88dk_shortcall_rst;  /* Rst for a short call */
     unsigned short z88dk_shortcall_val; /* Value for a short call */
     unsigned short z88dk_params_offset;  /* Additional offset from for arguments */
@@ -303,6 +297,7 @@ typedef struct symbol
   unsigned implicit:1;              /* implicit flag                     */
   unsigned undefined:1;             /* undefined variable                */
   unsigned infertype:1;             /* type should be inferred from first assign */
+  unsigned iscomplit:1;             /* is a temporary symbol for a compound literal */
   unsigned _isparm:1;               /* is a parameter          */
   unsigned ismyparm:1;              /* is parameter of the function being generated */
   unsigned isitmp:1;                /* is an intermediate temp */
@@ -373,7 +368,7 @@ typedef struct symbol
   unsigned offset;                  /* offset from top if struct */
 
   int lineDef;                      /* defined line number        */
-  char *fileDef;                    /* defined filename           */
+  const char *fileDef;              // defined filename
   int lastLine;                     /* for functions the last line */
   struct sym_link *type;            /* 1st link to declarator chain */
   struct sym_link *etype;           /* last link to declarator chain */
@@ -408,6 +403,7 @@ extern sym_link *validateLink (sym_link * l,
 #define DCL_PTR_CONST(l) validateLink(l, "DCL_PTR_CONST", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_const
 #define DCL_PTR_VOLATILE(l) validateLink(l, "DCL_PTR_VOLATILE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_volatile
 #define DCL_PTR_RESTRICT(l) validateLink(l, "DCL_PTR_RESTRICT", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_restrict
+#define DCL_PTR_ATOMIC(l) validateLink(l, "DCL_PTR_ATOMIC", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_atomic
 #define DCL_ARRAY_VLA(l) validateLink(l, "DCL_ARRAY_VLA", #l, DECLARATOR, __FILE__, __LINE__)->select.d.array_vla
 #define DCL_PTR_ADDRSPACE(l) validateLink(l, "DCL_PTR_ADDRSPACE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_addrspace
 #define DCL_TSPEC(l) validateLink(l, "DCL_TSPEC", #l, DECLARATOR, __FILE__, __LINE__)->select.d.tspec
@@ -464,6 +460,8 @@ extern sym_link *validateLink (sym_link * l,
 #define IFFUNC_ISIAR(x) (IS_FUNC(x) && FUNC_ISIAR(x))
 #define FUNC_ISCOSMIC(x) (x->funcAttrs.cosmic)
 #define IFFUNC_ISCOSMIC(x) (IS_FUNC(x) && FUNC_ISCOSMIC(x))
+#define FUNC_ISDYNAMICC(x) (x->funcAttrs.dynamicc)
+#define IFFUNC_ISDYNAMICC(x) (IS_FUNC(x) && FUNC_ISDYNAMICC(x))
 #define FUNC_ISZ88DK_FASTCALL(x) (x->funcAttrs.z88dk_fastcall)
 #define IFFUNC_ISZ88DK_FASTCALL(x) (IS_FUNC(x) && FUNC_ISZ88DK_FASTCALL(x))
 #define FUNC_ISZ88DK_CALLEE(x) (x->funcAttrs.z88dk_callee)
@@ -473,7 +471,7 @@ extern sym_link *validateLink (sym_link * l,
 
 #define BANKED_FUNCTIONS        ( options.model == MODEL_HUGE || \
                                   ( (options.model == MODEL_LARGE || options.model == MODEL_MEDIUM) && \
-                                    TARGET_Z80_LIKE ) )
+                                    TARGET_Z80_LIKE && !TARGET_RABBIT_LIKE) )
 #define IFFUNC_ISBANKEDCALL(x)  ( IS_FUNC(x) && \
                                   ( FUNC_BANKED(x) || ( BANKED_FUNCTIONS && !FUNC_NONBANKED(x) ) ) )
 
@@ -603,6 +601,7 @@ extern sym_link *validateLink (sym_link * l,
 
 /* forward declaration for the global vars */
 extern bucket *SymbolTab[];
+extern bucket *SymbolTabE[];
 extern bucket *StructTab[];
 extern bucket *TypedefTab[];
 extern bucket *LabelTab[];
@@ -615,6 +614,11 @@ extern symbol *fsdiv;
 extern symbol *fseq;
 extern symbol *fsneq;
 extern symbol *fslt;
+
+extern symbol *sdcc_atomic_load;
+extern symbol *sdcc_atomic_store;
+extern symbol *sdcc_atomic_exchange;
+extern symbol *sdcc_atomic_compare_exchange;
 
 extern symbol *fps16x16_add;
 extern symbol *fps16x16_sub;
@@ -695,6 +699,7 @@ value *checkStructIval (symbol *, value *);
 value *checkArrayIval (sym_link *, value *);
 value *checkIval (sym_link *, value *);
 unsigned int getSize (sym_link *);
+unsigned int getElemCount (sym_link *);
 unsigned int bitsForType (sym_link *);
 sym_link *newBitIntLink (unsigned int width);
 sym_link *newIntLink ();
@@ -705,7 +710,7 @@ sym_link *newBoolLink ();
 sym_link *newPtrDiffLink ();
 sym_link *newVoidLink ();
 int compareType (sym_link *, sym_link *, bool ignoreimplicitintrinsic);
-int compareTypeExact (sym_link *, sym_link *, long);
+int compareTypeExact (sym_link *, sym_link *, long level);
 int compareTypeInexact (sym_link *, sym_link *);
 int checkFunction (symbol *, symbol *);
 void cleanUpLevel (bucket **, long);
@@ -729,26 +734,28 @@ void pointerTypes (sym_link *, sym_link *);
 void cdbStructBlock (int);
 void initHashT ();
 bucket *newBucket ();
-void addSym (bucket **, void *, char *, long, int, int checkType);
-void deleteSym (bucket **, void *, const char *);
-void *findSym (bucket **, void *, const char *);
-void *findSymWithLevel (bucket **, struct symbol *);
-void *findSymWithBlock (bucket **, struct symbol *, int, long);
+void addSym (bucket **, void *sym, char *name, long level, int block, bool checkType);
+void deleteSym (bucket **, void *sym, const char *sname);
+void *findSym (bucket **, void *sym, const char *sname);
+void *findSymWithLevel (bucket **, struct symbol *sym);
+void *findSymWithBlock (bucket **, struct symbol *sym, int, long);
 void changePointer (sym_link * p);
 void checkTypeSanity (sym_link * etype, const char *name);
 sym_link *typeFromStr (const char *);
 STORAGE_CLASS sclsFromPtr (sym_link * ptr);
 sym_link *newEnumType (symbol *enumlist, sym_link *userRequestedType);
 void promoteAnonStructs (int, structdef *);
-int isConstant (sym_link * type);
-int isVolatile (sym_link * type);
-int isRestrict (sym_link * type);
+int isConstant (sym_link *type);
+int isVolatile (sym_link *type);
+int isRestrict (sym_link *type);
+int isAtomic (sym_link *type);
 value *aggregateToPointer (value *);
 void leaveBlockScope (int block);
 void mergeKRDeclListIntoFuncDecl (symbol *funcDecl, symbol *kr_decls);
-
+symbol *prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDeclList);
 
 extern char *nounName (sym_link *);     /* noun strings */
 extern void printFromToType (sym_link *, sym_link *);
 
 #endif
+

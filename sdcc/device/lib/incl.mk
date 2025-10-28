@@ -13,9 +13,11 @@ COMMON_FLOAT = \
   _fs2schar.c \
   _fs2sint.c \
   _fs2slong.c \
+  _fs2slonglong.c \
   _fs2uchar.c \
   _fs2uint.c \
   _fs2ulong.c \
+  _fs2ulonglong.c \
   _fsadd.c \
   _fsdiv.c \
   _fsmul.c \
@@ -97,7 +99,11 @@ COMMON_SDCC = \
   abs.c \
   labs.c \
   llabs.c \
+  uabs.c \
+  ulabs.c \
+  ullabs.c \
   imaxabs.c \
+  umaxabs.c \
   rand.c \
   _strcat.c \
   _strchr.c \
@@ -150,13 +156,17 @@ COMMON_SDCC = \
   gets.c \
   __assert.c \
   time.c \
-  __stdc_count_leading_zeros.c \
-  __stdc_count_trailing_onesull.c \
+  __stdc_leading_zeros.c \
+  __stdc_trailing_ones.c \
   __stdc_first_leading_one.c \
-  __stdc_first_trailing_oneull.c \
-  __stdc_count_onesull.c \
-  __stdc_bit_widthull.c \
-  __stdc_bit_ceilull.c
+  __stdc_first_trailing_one.c \
+  __stdc_count_ones.c \
+  __stdc_bit_width.c \
+  __stdc_bit_ceilull.c \
+  stdc_memreverse8.c \
+  stdc_memreverse8u.c \
+  stdc_load8.c \
+  stdc_store8.c
 
 MODELS = small medium large huge
 
