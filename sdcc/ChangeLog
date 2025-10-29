@@ -1,5 +1,13 @@
 2025-10-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3571 resolution for C23 UB.
+
+2025-10-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* support/regression/MakeList:
 	  Disable memcpy-1.c test (which shall not compile for targets where size_t is less than 18 bits) for ez80 and stm8.
 	* src/SDCCattr.c:

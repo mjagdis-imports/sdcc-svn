@@ -25,6 +25,12 @@ long main(void); /* WARNING(SDCC) */
 void main(int); /* WARNING(SDCC) */
 #endif
 
+#ifdef TEST6
+void f(void) {
+int © rate = 100; /* WARNING */
+}
+#endif
+
 #ifdef TEST8a
 // Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration,
 // but the other way round is an error.
