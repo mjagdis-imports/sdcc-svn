@@ -721,8 +721,8 @@ struct
      "object %s with no linkage of incomplete type", 0 },
   { E_EXTERN_INLINE_NO_DEF, ERROR_LEVEL_ERROR,
      "inline function %s declared with external linkage, but not defined in translation unit", 0 },
-  { W_STRAY_CHARACTER, ERROR_LEVEL_WARNING,
-     "stray character at column %d ignored", 0 },
+  { E_STRAY_CHARACTER, ERROR_LEVEL_ERROR,
+     "stray character at column %d", 0 },
 };
 
 /* -------------------------------------------------------------------------------

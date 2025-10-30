@@ -27,7 +27,7 @@ void main(int); /* WARNING(SDCC) */
 
 #ifdef TEST6
 void f(void) {
-int © rate = 100; /* WARNING */
+int © rate = 100; /* ERROR */
 }
 #endif
 

@@ -356,7 +356,7 @@ enum {
   E_UNAMED_STRUCT_MEMBER        = 326, // struct/union members need to have a name,unless they are anonymous struct/union or bit-fields
   E_NO_LINKAGE_INCOMPLETE_TYPE  = 327, // object with no linkage of incomplete type
   E_EXTERN_INLINE_NO_DEF        = 328, // inline function declared with external linkage, but not defined in translation unit
-  W_STRAY_CHARACTER             = 329, // stray character at column %d ignored
+  E_STRAY_CHARACTER             = 329, // stray character at column %d
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 

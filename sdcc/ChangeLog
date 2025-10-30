@@ -1,3 +1,13 @@
+2025-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/valdiag/tests/undefinedc23.c,
+	  .version,
+	  doc/sdccman.lyx:
+	  Revise implementation of N3571 resolution for C23 UB (on second thought the new diagnostic should be an error, since this is the lexer equivalent of a syntax error on the parser).
+
 2025-10-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCC.lex,
