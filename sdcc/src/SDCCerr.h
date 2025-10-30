@@ -357,6 +357,7 @@ enum {
   E_NO_LINKAGE_INCOMPLETE_TYPE  = 327, // object with no linkage of incomplete type
   E_EXTERN_INLINE_NO_DEF        = 328, // inline function declared with external linkage, but not defined in translation unit
   E_STRAY_CHARACTER             = 329, // stray character at column %d
+  W_UNICODE_RANGE               = 330, // character out of unicode range
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 

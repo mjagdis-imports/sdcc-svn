@@ -1,5 +1,13 @@
 2025-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCutil.c,
+	  support/valdiag/tests/undefinedc23.c:
+	  Partially (UCN only) implement N3672 resolution for C23 UB.
+
+2025-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.lex,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,

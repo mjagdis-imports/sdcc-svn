@@ -723,6 +723,8 @@ struct
      "inline function %s declared with external linkage, but not defined in translation unit", 0 },
   { E_STRAY_CHARACTER, ERROR_LEVEL_ERROR,
      "stray character at column %d", 0 },
+  { W_UNICODE_RANGE, ERROR_LEVEL_WARNING,
+     "character out of unicode range", 0 },
 };
 
 /* -------------------------------------------------------------------------------

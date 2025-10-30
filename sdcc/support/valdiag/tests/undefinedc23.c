@@ -31,6 +31,13 @@ int © rate = 100; /* ERROR */
 }
 #endif
 
+#ifdef TEST7a
+// Invalid multibyte character
+#include <wchar.h>
+const wchar_t wc = L'\U00110000'; /* WARNING */
+const char *ws = "\U00110000"; /* WARNING */
+#endif
+
 #ifdef TEST8a
 // Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration,
 // but the other way round is an error.
