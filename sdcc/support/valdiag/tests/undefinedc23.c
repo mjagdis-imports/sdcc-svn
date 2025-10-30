@@ -81,6 +81,20 @@ extern int a1; /* ERROR */
 }
 #endif
 
+#ifdef TEST19
+struct f *p, *q;
+
+void g1(void)
+{
+  *p; /* ERROR */
+}
+
+void g3(void)
+{
+  *q = *p; /* ERROR */
+}
+#endif
+
 #ifdef TEST23
 char foo_impl(int *p)
 {

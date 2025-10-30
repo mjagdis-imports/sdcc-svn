@@ -725,6 +725,8 @@ struct
      "stray character at column %d", 0 },
   { W_UNICODE_RANGE, ERROR_LEVEL_WARNING,
      "character out of unicode range", 0 },
+  { E_INCOMPLETE_TYPE_LVALUE, ERROR_LEVEL_ERROR,
+     "lvalue of incomplete type", 0 },
 };
 
 /* -------------------------------------------------------------------------------

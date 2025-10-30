@@ -1,5 +1,13 @@
 2025-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3481 resolution for C23 UB.
+
+2025-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCerr.c,
 	  src/SDCCerr.h,
 	  src/SDCCutil.c,
