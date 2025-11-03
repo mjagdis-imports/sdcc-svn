@@ -1,3 +1,11 @@
+2025-11-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c:
+	  Improvements for register storage class diagnostics in preparation for work on C23 UB for arrays with register storage class.
+
 2025-11-02 Janko Stamenović
 
 	* sdas/asxxsrc/asdata.c

@@ -359,6 +359,7 @@ enum {
   E_STRAY_CHARACTER             = 329, // stray character at column %d
   W_UNICODE_RANGE               = 330, // character out of unicode range
   E_INCOMPLETE_TYPE_LVALUE      = 331, // lvalue of incomplete type
+  W_REGISTER_EXTERNAL_DECL      = 332, // storage class register on external declaration
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 

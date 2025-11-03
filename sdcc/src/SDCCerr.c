@@ -727,6 +727,8 @@ struct
      "character out of unicode range", 0 },
   { E_INCOMPLETE_TYPE_LVALUE, ERROR_LEVEL_ERROR,
      "lvalue of incomplete type", 0 },
+  { W_REGISTER_EXTERNAL_DECL, ERROR_LEVEL_WARNING,
+     "storage class register on external declaration", 0 },
 };
 
 /* -------------------------------------------------------------------------------
