@@ -1,5 +1,11 @@
 2025-11-03 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* support/regression/tests/bug-3791.c,
+	  support/valdiag/tests/bug-3791.c:
+	  Follow-up work on test cases after N3571 resolution for C23 UB.
+
+2025-11-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.y,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,
