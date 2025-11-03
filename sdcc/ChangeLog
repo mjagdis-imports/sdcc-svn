@@ -1,3 +1,9 @@
+2025-11-02 Janko Stamenović
+
+	* sdas/asxxsrc/asdata.c
+	  sdas/asxxsrc/asxxxx.h
+	  More rebasing sdas assemblers to the current upstream
+
 2025-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,
@@ -5,6 +11,14 @@
 	  src/SDCCerr.h,
 	  support/valdiag/tests/undefinedc23.c:
 	  Implement N3481 resolution for C23 UB.
+
+2025-10-30 Janko Stamenović
+
+	* sdas/asxxsrc/asdbg.c
+	  sdas/asxxsrc/aslex.c
+	  sdas/asxxsrc/asmcro.c
+	  sdas/asxxsrc/assubr.c
+	  Start rebasing sdas assemblers to the current upstream
 
 2025-10-30 Philipp Klaus Krause <philipp@colecovision.eu>
 
