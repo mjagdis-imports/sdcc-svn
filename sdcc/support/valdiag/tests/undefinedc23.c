@@ -244,6 +244,38 @@ int j1 = {{7}}; /* WARNING */
 }
 #endif
 
+#ifdef TEST81
+struct s
+{
+	int i;
+};
+
+struct s s = 7; /* ERROR */
+#endif /* IGNORE */
+
+#ifdef TEST82a
+char c0[7] = L"test"; /* ERROR */
+char c2[7] = u"test"; /* ERROR */
+#endif
+
+#ifdef TEST82b
+void f(void)
+{
+char c0[7] = L"test"; /* ERROR */
+long long c1[7] = "test"; /* ERROR */
+char c2[7] = u"test"; /* ERROR */
+}
+#endif
+
+#ifdef TEST82c
+void f(void)
+{
+char c0[7] = L"test"; /* ERROR */
+long long c1[7] = "test"; /* ERROR */
+char c2[7] = u"test"; /* ERROR */
+}
+#endif
+
 #ifdef TEST87
 struct foo;
 static struct foo x; /* ERROR */

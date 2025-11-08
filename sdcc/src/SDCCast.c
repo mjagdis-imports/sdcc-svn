@@ -1372,6 +1372,8 @@ createIvalCharPtr (ast * sym, sym_link * type, ast * iexpr, ast * rootVal)
       unsigned int symsize = DCL_ELEM (type);
 
       size = DCL_ELEM (iexpr->ftype);
+      if (IS_CHAR (type->next) && !IS_CHAR (iexpr->ftype->next))
+        werror (E_TYPE_MISMATCH, "initialization", "");
       if (symsize && size > symsize)
         {
           if (size > symsize)

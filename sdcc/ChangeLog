@@ -1,6 +1,12 @@
 2025-11-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3346 resolution for C23 UB on malformed initializations of aggregates.
+
+2025-11-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,
 	  src/SDCCglue.c,
