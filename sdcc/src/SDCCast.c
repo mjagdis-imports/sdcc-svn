@@ -1306,6 +1306,8 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
             }
 
           aSym = newNode ('[', sym, newAst_VALUE (valueFromLit ((float) (idx))));
+          aSym->filename = iloop ? iloop->filename : sym->filename;
+          aSym->lineno = iloop ? iloop->lineno : sym->lineno;
           aSym = decorateType (resolveSymbols (aSym), RESULT_TYPE_NONE, true);
           rast = createIval (aSym, type->next, iloop, rast, rootValue, 0);
           idx++;
@@ -1506,6 +1508,8 @@ ast *
 initAggregates (symbol *sym, initList *ival, ast *wid)
 {
   ast *newAst = newAst_VALUE (symbolVal (sym));
+  newAst->filename = sym->fileDef;
+  newAst->lineno = sym->lineDef;
   return createIval (newAst, sym->type, ival, wid, newAst, 1);
 }
 
@@ -3608,6 +3612,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     else
       dtl = decorateType (tree->left, resultTypeProp, reduceTypeAllowed);
 
+    if (dtl && dtl->isError)
+      goto errorTreeReturn;
+
     /* if an array node, we may need to swap branches */
     if (tree->opval.op == '[')
       {
@@ -3720,6 +3727,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         {
           SPEC_SCLS (TETYPE (tree)) = sclsFromPtr (LTYPE (tree));
         }
+
+      if (!tree->initMode && IS_REGISTER (TETYPE (tree)))
+        werrorfl (tree->filename, tree->lineno, W_REGISTER_ELEMENT_ACCESS_C2Y);
 
       return tree;
 
@@ -3938,7 +3948,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
         
-      if (SPEC_SCLS (LETYPE (tree)) == S_SFR && !port->mem.sfrupointer)
+      if (LETYPE (tree) && SPEC_SCLS (LETYPE (tree)) == S_SFR && !port->mem.sfrupointer)
         {
           werror (E_SFR_POINTER);
         }
@@ -5739,6 +5749,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               printFromToType (RTYPE (tree), LTYPE (tree));
             }
         }
+      else if (IS_ARRAY (RTYPE (tree)) && IS_REGISTER (RTYPE (tree)->next))
+        werrorfl (tree->filename, tree->lineno, E_ILLEGAL_ADDR, "address of register variable");
 
       /* if the left side of the tree is of type void
          then report error */

@@ -2489,7 +2489,7 @@ leaveBlockScope (int block)
 symbol *
 getAddrspace (sym_link *type)
 {
-  while(IS_ARRAY (type))
+  while (IS_ARRAY (type))
     type = type->next;
 
   if (IS_DECL (type))

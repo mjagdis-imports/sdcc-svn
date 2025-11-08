@@ -95,6 +95,28 @@ void g3(void)
 }
 #endif
 
+#ifdef TEST21
+void f(void)
+{
+	register int a[4] = {0};
+	a[2]; /* WARNING */
+}
+
+void g(void)
+{
+	register int i;
+	int *p = &i; /* ERROR */
+}
+
+void h(void)
+{
+	register int a[4];
+	int *p = a; /*ERROR */
+	int *q;
+	q = a; /* ERROR*/
+}
+#endif
+
 #ifdef TEST23
 char foo_impl(int *p)
 {
