@@ -205,6 +205,45 @@ int j(void x); /* ERROR */
 int j(void x) { } /* ERROR */
 #endif
 
+#ifdef TEST80a
+#pragma std_c23
+// Allowed
+int i0 = 7;
+int i1 = {7};
+int i2 = {};
+// Disallowed
+int j0 = {7, 0}; /* WARNING */
+int j1 = {{7}}; /* WARNING */
+#endif
+
+#ifdef TEST80b
+#pragma std_c23
+void f(void)
+{
+// Allowed
+int i0 = 7;
+int i1 = {7};
+int i2 = {};
+// Disallowed
+int j0 = {7, 0}; /* WARNING */
+int j1 = {{7}}; /* WARNING */
+}
+#endif
+
+#ifdef TEST80c
+#pragma std_c23
+void g(void)
+{
+// Allowed
+static int i0 = 7;
+static int i1 = {7};
+static int i2 = {};
+// Disallowed
+int j0 = {7, 0}; /* WARNING */
+int j1 = {{7}}; /* WARNING */
+}
+#endif
+
 #ifdef TEST87
 struct foo;
 static struct foo x; /* ERROR */

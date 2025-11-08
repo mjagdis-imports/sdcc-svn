@@ -3,9 +3,20 @@
 	* src/SDCCast.c,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,
+	  src/SDCCglue.c,
+	  src/SDCCval.c,
+	  src/SDCCval.h,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3346 resolution for C23 UB on malformed initializations of scalars.
+
+2025-11-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
 	  src/SDCCsymt.c,
 	  support/valdiag/tests/undefinedc23.c:
-	  Implement N3244 (warning for modes earlier than C2y) / N3517 (behavior) resolution for C23 UB on access to array with storage class register.
+	  Implement N3244 (diagnostics) / N3517 (behavior) resolution for C23 UB on uses of array with storage class register.
 
 2025-11-05 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -361,6 +361,7 @@ enum {
   E_INCOMPLETE_TYPE_LVALUE      = 331, // lvalue of incomplete type
   W_REGISTER_EXTERNAL_DECL      = 332, // storage class register on external declaration
   W_REGISTER_ELEMENT_ACCESS_C2Y = 333, // access to element of array with storage class specifier register requires ISO C2y or later
+  W_EXCESS_BRACES_INITIALIZER   = 334, // excess braces in initializer
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 

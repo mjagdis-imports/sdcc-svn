@@ -730,7 +730,9 @@ struct
   { W_REGISTER_EXTERNAL_DECL, ERROR_LEVEL_WARNING,
      "storage class register on external declaration", 0 },
   { W_REGISTER_ELEMENT_ACCESS_C2Y, ERROR_LEVEL_WARNING,
-     "access to element of array with storage class specifier register requires ISO C2y or later", 0 }
+     "access to element of array with storage class specifier register requires ISO C2y or later", 0 },
+  { W_EXCESS_BRACES_INITIALIZER, ERROR_LEVEL_WARNING,
+     "excess braces in initializer", 0 },
 };
 
 /* -------------------------------------------------------------------------------
