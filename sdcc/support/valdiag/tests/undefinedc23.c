@@ -219,6 +219,15 @@ struct g { struct { }; }; /* ERROR */
 struct h { int i:3; };
 #endif
 
+#ifdef TEST63
+// Qualified funtion
+typedef void f(void);
+
+f g;
+const f const_g; /* ERROR */
+volatile f volatile_g; /* ERROR */
+#endif
+
 #ifdef TEST67
 // extern inline declaration without definition in same translation unit
 extern inline void f(void); /* ERROR */

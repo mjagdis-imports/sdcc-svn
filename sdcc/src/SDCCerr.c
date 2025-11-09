@@ -737,6 +737,8 @@ struct
      "[*] variable length array declarators of unspecified length must have function prototype scope", 0 },
   { W_INCOMPLETE_ARRAY_IMPLICIT_1, ERROR_LEVEL_WARNING,
      "incomplete array type has length 1 due to implicit initializer", 0 },
+  { E_QUALIFIED_FUNCTION, ERROR_LEVEL_ERROR,
+     "qualified function", 0 },
 };
 
 /* -------------------------------------------------------------------------------

@@ -1,3 +1,12 @@
+2025-11-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.c,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  doc/sdccman.lyx,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3342 resolution of C23 UB on qualified function types, choosing an error as implementation-define behavior.
+
 2025-11-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCsymt.h,

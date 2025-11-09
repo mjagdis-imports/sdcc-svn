@@ -959,6 +959,11 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       SPEC_ATOMIC (spec) = 0;
       SPEC_ADDRSPACE (spec) = 0;
     }
+  else if (DCL_TYPE (decl) == FUNCTION)
+    {
+      if (SPEC_CONST (spec) || SPEC_VOLATILE (spec))
+        werror ( E_QUALIFIED_FUNCTION);
+    }
 
   lnk = decl;
   while (lnk && !IS_SPEC (lnk->next))
@@ -5436,8 +5441,8 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
       for (l2 = lnk; l2 != NULL; l2 = l2->next)
         if (IS_PTR (l2))
           break;
-      if (l0 == NULL && l2 == NULL && l1 != NULL)
-        werrorfl (sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+      //if (l0 == NULL && l2 == NULL && l1 != NULL)
+      //  werrorfl (sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
       /* C23 auto type inference */
       if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE)
         {
