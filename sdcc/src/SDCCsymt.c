@@ -1464,12 +1464,12 @@ arraySizes (sym_link *type, const char *name)
 
   if (IS_ARRAY (type) && !DCL_ELEM (type) && DCL_ELEM_AST (type))
     {
-      value *tval = constExprValue(DCL_ELEM_AST (type), true);
-      if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
+      value *tval = constExprValue (DCL_ELEM_AST (type), true);
+      if (!tval || (SPEC_SCLS (tval->etype) != S_LITERAL))
         {
           if (!options.std_c99)
-            werror(E_VLA_TYPE_C99);
-          DCL_ARRAY_VLA(type) = true;
+            werror (E_VLA_TYPE_C99);
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_SPECIFIED; // todo: check if this is true for all cases
         }
       else
         {
@@ -1480,6 +1480,7 @@ arraySizes (sym_link *type, const char *name)
               size = 1;
             }
           DCL_ELEM(type) = size;
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
         }
     }
   if (IS_DECL(type))
@@ -1518,7 +1519,7 @@ addSymChain (symbol **symHead)
           FUNC_ISNORETURN (sym->type) = 1;
         }
 
-      if (!sym->level && IS_ARRAY (sym->type) && IS_ARRAY (sym->type) && DCL_ARRAY_VLA (sym->type))
+      if (!sym->level && IS_ARRAY (sym->type) && IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST)
         {
           werror (E_VLA_SCOPE);
           continue;
@@ -2373,7 +2374,7 @@ checkDecl (symbol * sym, int isProto)
         werror (W_MAIN_TYPE); // This is just a warning, not an error, for those that put a custom crt0 into a custom stdlib, then use it without --no-std-crt0.
     }
 
-  if (IS_ARRAY (sym->type) && DCL_ARRAY_VLA (sym->type) && sym->ival && !sym->ival->isempty)
+  if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST && sym->ival && !sym->ival->isempty)
     werror (E_VLA_INIT);
   /* if this is an array without any dimension
      then update the dimension from the initial value */

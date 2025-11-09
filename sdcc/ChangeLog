@@ -1,3 +1,10 @@
+2025-11-09 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.h,
+	  src/SDCCsymt.c,
+	  src/SDCCmem.c:
+	  Preparations for N3652/N3397 resolution of C23 UB on array types of unevaluated sizes.
+
 2025-11-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCast.c,
