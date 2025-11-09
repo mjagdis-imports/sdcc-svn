@@ -1736,6 +1736,7 @@ strVal (const char *s)
   /* get a declarator */
   val->type = newLink (DECLARATOR);
   DCL_TYPE (val->type) = ARRAY;
+  DCL_ARRAY_LENGTH_TYPE (val->type) = ARRAY_LENGTH_KNOWN_CONST;
   val->type->next = val->etype = newLink (SPECIFIER);
   SPEC_SCLS (val->etype) = S_LITERAL;
   SPEC_CONST (val->etype) = 1;
@@ -1809,6 +1810,7 @@ rawStrVal (const char *s, size_t size)
   /* get a declarator */
   val->type = newLink (DECLARATOR);
   DCL_TYPE (val->type) = ARRAY;
+  DCL_ARRAY_LENGTH_TYPE (val->type) = ARRAY_LENGTH_KNOWN_CONST;
   val->type->next = val->etype = newLink (SPECIFIER);
   SPEC_SCLS (val->etype) = S_LITERAL;
   SPEC_CONST (val->etype) = 1;

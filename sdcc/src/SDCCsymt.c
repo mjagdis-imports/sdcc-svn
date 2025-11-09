@@ -1469,7 +1469,7 @@ arraySizes (sym_link *type, const char *name)
         {
           if (!options.std_c99)
             werror (E_VLA_TYPE_C99);
-          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_SPECIFIED; // todo: check if this is true for all cases
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_SPECIFIED;
         }
       else
         {
@@ -1479,8 +1479,8 @@ arraySizes (sym_link *type, const char *name)
               werror(E_NEGATIVE_ARRAY_SIZE, name);
               size = 1;
             }
-          DCL_ELEM(type) = size;
           DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+          DCL_ELEM(type) = size;
         }
     }
   if (IS_DECL(type))
@@ -1519,7 +1519,8 @@ addSymChain (symbol **symHead)
           FUNC_ISNORETURN (sym->type) = 1;
         }
 
-      if (!sym->level && IS_ARRAY (sym->type) && IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST)
+      if (!sym->level && IS_ARRAY (sym->type) && IS_ARRAY (sym->type) &&
+        DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_UNKNOWN)
         {
           werror (E_VLA_SCOPE);
           continue;
@@ -1533,7 +1534,10 @@ addSymChain (symbol **symHead)
             arraySizes (sym->type, sym->name);
           // if this is an array without any dimension then update the dimension from the initial value
           else if (IS_ARRAY (sym->type) && !DCL_ELEM_AST (sym->type) && !DCL_ELEM (sym->type))
-            elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+            {
+              DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+              elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+            }
         }
 
       if (IS_EXTERN (sym->etype) && sym->level) // This is really a block-scope name for a file-scope object.
@@ -1591,6 +1595,15 @@ addSymChain (symbol **symHead)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                   if ((DCL_ELEM (csym->type) > DCL_ELEM (sym->type)) && elemsFromIval)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
+                  if (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_KNOWN_CONST || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_KNOWN_CONST)
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) = DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+                  else if (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_SPECIFIED || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_SPECIFIED)
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) = DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_SPECIFIED;
+                  else if (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_UNSPECIFIED || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNSPECIFIED ||
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_UNEVALUATED || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNEVALUATED)
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) = DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_UNSPECIFIED;
+                  else
+                    wassert (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_UNKNOWN && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN);
                 }
               // Is one is a function declarator without a prototype (valid up to C17), and the other one with a prototype, use the prototype for both. */
               if (IS_FUNC (csym->type) && IS_FUNC (sym->type) && (FUNC_NOPROTOTYPE (csym->type) ^ FUNC_NOPROTOTYPE (sym->type)))
@@ -2123,6 +2136,11 @@ checkSClass (symbol *sym, int isProto)
           DCL_PTR_RESTRICT (t) = 0;
           break;
         }
+      else if (IS_DECL (t) && IS_ARRAY (t) && DCL_ARRAY_LENGTH_TYPE (t) == ARRAY_LENGTH_UNSPECIFIED)
+        {
+          werrorfl (sym->fileDef, sym->lineDef, E_VLA_UNSPECIFIED_SCOPE);
+          break;
+        }
       t = t->next;
     }
 
@@ -2374,15 +2392,19 @@ checkDecl (symbol * sym, int isProto)
         werror (W_MAIN_TYPE); // This is just a warning, not an error, for those that put a custom crt0 into a custom stdlib, then use it without --no-std-crt0.
     }
 
-  if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST && sym->ival && !sym->ival->isempty)
-    werror (E_VLA_INIT);
+  if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_UNKNOWN &&
+    sym->ival && !sym->ival->isempty)
+    werrorfl (sym->fileDef, sym->lineDef, E_VLA_INIT);
   /* if this is an array without any dimension
      then update the dimension from the initial value */
   if (IS_ARRAY (sym->type) && !DCL_ELEM (sym->type))
     if (sym->ival && sym->ival->isempty)
       werror (E_EMPTY_INIT_UNKNOWN_SIZE);
     else
-      return DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+      {
+        DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+        return DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+      }
 
   return 0;
 }
@@ -4079,14 +4101,14 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               dbuf_append_str (dbuf, "unknown*");
               break;
             case ARRAY:
-              if (DCL_ELEM (type))
-                {
-                  dbuf_printf (dbuf, "[%u]", (unsigned int) DCL_ELEM (type));
-                }
+              if (DCL_ARRAY_LENGTH_TYPE (type) == ARRAY_LENGTH_KNOWN_CONST)
+                dbuf_printf (dbuf, "[%u]", (unsigned int) DCL_ELEM (type));
+              else if (DCL_ARRAY_LENGTH_TYPE (type) == ARRAY_LENGTH_UNSPECIFIED)
+                dbuf_append_str (dbuf, "[*]");
+              else if (DCL_ARRAY_LENGTH_TYPE (type) == ARRAY_LENGTH_UNKNOWN)
+                dbuf_append_str (dbuf, "[]");
               else
-                {
-                  dbuf_append_str (dbuf, "[]");
-                }
+                dbuf_append_str (dbuf, "[?]");
               break;
             default:
               dbuf_append_str (dbuf, "unknown?");

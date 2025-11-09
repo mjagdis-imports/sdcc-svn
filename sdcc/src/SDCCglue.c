@@ -1164,7 +1164,10 @@ printIvalChar (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *o
               if (sym && IS_STRUCT (sym->type))
                 sym->flexArrayLength = size;
               else
-                DCL_ELEM (type) = size;
+                {
+                  DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+                  DCL_ELEM (type) = size;
+                }
             }
 
           if (check && DCL_ELEM (val->type) > size)
@@ -1224,7 +1227,10 @@ printIvalChar16 (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s 
               if (sym && IS_STRUCT (sym->type))
                 sym->flexArrayLength = size;
               else
-                DCL_ELEM (type) = size;
+                {
+                  DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+                  DCL_ELEM (type) = size;
+                }
             }
 
           if (check && DCL_ELEM (val->type) > size)
@@ -1283,7 +1289,10 @@ printIvalChar32 (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s 
               if (sym && IS_STRUCT (sym->type))
                 sym->flexArrayLength = size;
               else
-                DCL_ELEM (type) = size;
+                {
+                  DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+                  DCL_ELEM (type) = size;
+                }
             }
 
           if (check && DCL_ELEM (val->type) > size)
@@ -1410,7 +1419,10 @@ printIvalArray (symbol * sym, sym_link * type, initList * ilist, struct dbuf_s *
       if (IS_STRUCT (sym->type))
         sym->flexArrayLength = size * getSize (type->next);
       else
-        DCL_ELEM (type) = size;
+        {
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+          DCL_ELEM (type) = size;
+        }
     }
 
   return;

@@ -199,11 +199,12 @@ typedef enum
   ARRAY_LENGTH_SPECIFIED,           // VLA of specified length: [n], for some expression n that is not an integer constant expression.
   ARRAY_LENGTH_UNSPECIFIED,         // VLA of unspecified length: [*],
   ARRAY_LENGTH_UNEVALUATED,         // Array of unevaluated length: [n], in a context where the expression n is not evaluated.
-                                    // Only exists from C99 to C23; since C2y these are treated as arrays of unspecified length instead.
-                                    // SDCC shall follow C2y and not use this enum value. That is compliant with earlier standards:
+                                    // Only really exists from C99 to C23; since C2y these are treated as arrays of unspecified length instead.
+                                    // SDCC shall follow C2y and not use this enum value¹. That is compliant with earlier standards:
                                     // Array of unevaluated length either behave like arrays of unspecified length
                                     // (when forming a composite type with an array of known kength) or have undefined behavior
                                     // (all other uses), so always following C2y is correct.
+                                    // ¹ We do use it in the parser as placeholder, until we fill in the proper value in the function arraySizes.
   ARRAY_LENGTH_UNKNOWN              // Array of unknown length: [], these arrays have incomplete type
 }
 ARRAY_LENGTH_TYPE;

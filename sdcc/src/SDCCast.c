@@ -1321,7 +1321,10 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
       if (IS_STRUCT (AST_VALUE (rootValue)->type))
         AST_SYMBOL (rootValue)->flexArrayLength = size * getSize (type->next);
       else
-        DCL_ELEM (type) = size;
+        {
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+          DCL_ELEM (type) = size;
+        }
     }
 
   return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);
@@ -1434,7 +1437,10 @@ createIvalCharPtr (ast * sym, sym_link * type, ast * iexpr, ast * rootVal)
           if (IS_STRUCT (AST_VALUE (rootVal)->type))
             AST_SYMBOL (rootVal)->flexArrayLength = size * getSize (type->next);
           else
-            DCL_ELEM (type) = size;
+            {
+              DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
+              DCL_ELEM (type) = size;
+            }
         }
 
       return decorateType (resolveSymbols (rast), RESULT_TYPE_NONE, true);

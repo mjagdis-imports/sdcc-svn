@@ -81,6 +81,34 @@ extern int a1; /* ERROR */
 }
 #endif
 
+#ifdef TEST15a
+char a[];
+char a[4];
+char b[]; /* WARNING */
+#pragma disable_warning 85
+void f(char a[*])
+{
+}
+#endif
+
+#ifdef TEST15b
+char a[*]; /* ERROR */
+#endif
+
+#ifdef TEST15c
+void f(int i)
+{
+char c[*]; /* ERROR */
+}
+#endif
+
+#ifdef TEST15d
+void f(int i)
+{
+char c[i] = "test"; /* ERROR */
+}
+#endif
+
 #ifdef TEST19
 struct f *p, *q;
 

@@ -2,8 +2,16 @@
 
 	* src/SDCCsymt.h,
 	  src/SDCCsymt.c,
-	  src/SDCCmem.c:
-	  Preparations for N3652/N3397 resolution of C23 UB on array types of unevaluated sizes.
+	  src/SDCCmem.c,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCglue.c,
+	  src/SDCCmain.c,
+	  src/SDCCval.c,
+	  support/valdiag/tests/undefinedc23.c:
+	  Work towards N3652/N3397 resolution of C23 UB on array types of unevaluated length.
 
 2025-11-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
