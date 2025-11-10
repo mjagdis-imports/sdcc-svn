@@ -6,6 +6,11 @@
 	  doc/sdccman.lyx,
 	  support/valdiag/tests/undefinedc23.c:
 	  Implement N3342 resolution of C23 UB on qualified function types, choosing an error as implementation-define behavior.
+	* support/regression/tests/bug-3462.c,
+	  support/regression/tests/bug-3831.c,
+	  support/regression/tests/bug-3873.c,
+	  support/regression/tests/gcc-torture-execute-20030626-2.c:
+	  Regression test cleanup for some recently-introduced new warnings.
 
 2025-11-09 Philipp Klaus Krause <philipp@colecovision.eu>
 
