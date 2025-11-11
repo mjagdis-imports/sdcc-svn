@@ -1,5 +1,20 @@
 2025-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* aclocal.m4,
+	  configure,
+	  configure.ac,
+	  sdccconf_in.h,
+	  src/SDCC.lex,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCutil.c,
+	  src/SDCCutil.h,
+	  support/valdiag/tests/undefinedc23.c:
+	  Implement N3565 resolution for C23 UB on invalid characters in identifiers, modified to allow _, and potentially $.
+
+2025-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* Merge undefined branch.
 
 2025-11-10 Gabriele Gorla <gorlik@yahoo.com>
