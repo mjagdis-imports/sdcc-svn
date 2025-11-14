@@ -1,3 +1,13 @@
+2025-11-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCsymt.h
+	  src/SDCCsymt.c
+	  src/SDCC.y
+	  src/SDCCgenconstprop.cc
+	  src/SDCCicode.c
+	  src/SDCCmem.c:
+	  Infrastructure for handling [static], a simple optimization based on it. Part of RFE #1002.
+
 2025-11-11 Gabriele Gorla <gorlik@yahoo.com>
 
   	* src/mos6502/genrshift.c:
@@ -36,7 +46,7 @@
 	  src/SDCCerr.c,
 	  doc/sdccman.lyx,
 	  support/valdiag/tests/undefinedc23.c:
-	  Implement N3342 resolution of C23 UB on qualified function types, choosing an error as implementation-define behavior.
+	  Implement N3342 resolution of C23 UB on qualified function types, choosing an error as implementation-defined behavior.
 	* support/regression/tests/bug-3462.c,
 	  support/regression/tests/bug-3831.c,
 	  support/regression/tests/bug-3873.c,

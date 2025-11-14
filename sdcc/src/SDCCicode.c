@@ -3862,7 +3862,7 @@ geniCodeCall (operand * left, ast * parms, int lvl)
 /* geniCodeReceive - generate intermediate code for "receive"      */
 /*-----------------------------------------------------------------*/
 static void
-geniCodeReceive (value * args, operand * func)
+geniCodeReceive (value *args, operand *func)
 {
   unsigned char paramByteCounter = 0;
 
@@ -3880,7 +3880,6 @@ geniCodeReceive (value * args, operand * func)
              and before liveRange calculation */
           if (!sym->addrtaken && !IS_VOLATILE (sym->etype))
             {
-
               if ((IN_FARSPACE (SPEC_OCLS (sym->etype)) && !TARGET_HC08_LIKE && !TARGET_MOS6502_LIKE) &&
                   options.stackAuto == 0 && (!(options.model == MODEL_FLAT24)))
                 {
@@ -3894,6 +3893,7 @@ geniCodeReceive (value * args, operand * func)
                   OP_SYMBOL (sym->reqv)->isreqv = 1;
                   OP_SYMBOL (sym->reqv)->islocal = 0;
                   SPIL_LOC (sym->reqv) = sym;
+                  checkDecl (OP_SYMBOL (sym->reqv), 0);
                 }
             }
 

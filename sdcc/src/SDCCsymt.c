@@ -1467,7 +1467,7 @@ arraySizes (sym_link *type, const char *name)
   if (IS_DECL(type) && type->select.d.vla_check_visited)
     return;
 
-  if (IS_ARRAY (type) && !DCL_ELEM (type) && DCL_ELEM_AST (type))
+  if ((IS_ARRAY (type) || IS_PTR (type)) && !DCL_ELEM (type) && DCL_ELEM_AST (type))
     {
       value *tval = constExprValue (DCL_ELEM_AST (type), true);
       if (!tval || (SPEC_SCLS (tval->etype) != S_LITERAL))

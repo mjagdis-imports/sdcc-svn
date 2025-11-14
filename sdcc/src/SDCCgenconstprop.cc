@@ -361,6 +361,9 @@ valinfoUpdate (struct valinfo *v)
       if (bitmin > (unsigned long long)(v->min))
         v->min = bitmin;
     }
+
+  if (v->min > 0 || v->max < 0)
+    v->nonnull = true;
 }
 
 static void
@@ -809,10 +812,22 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         resultsym = 0;
       else if (IS_OP_VOLATILE (ic->result)) // No point trying to find out what we write to a volatile operand. At the next use, it could be anything, anyway.
         ;
+      else if (ic->op == RECEIVE)
+        {
+          if (IS_DECL (operandType (ic->result)) && DCL_STATIC_ARRAY_PARAM (operandType (ic->result)))
+            {
+              if (DCL_ELEM(operandType (ic->result)))
+                {
+                  if(resultvalinfo.min <= 0)
+                    resultvalinfo.min = 1;
+                  resultvalinfo.nonnull = true;
+                }
+            }
+        }
       else if (ic->op == ADDRESS_OF)
         {
           if(resultvalinfo.min <= 0)
-           resultvalinfo.min = 1;
+            resultvalinfo.min = 1;
           resultvalinfo.nonnull = true;
         }
       else if (ic->op == '!')

@@ -1389,6 +1389,7 @@ array_declarator
        DCL_TYPE(p) = ARRAY;
        DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNEVALUATED;
        DCL_ELEM_AST (p) = $5;
+       DCL_STATIC_ARRAY_PARAM (p) = true;
 
        if ($4)
          {
@@ -1418,6 +1419,7 @@ array_declarator
        DCL_TYPE(p) = ARRAY;
        DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNEVALUATED;
        DCL_ELEM_AST (p) = $5;
+       DCL_STATIC_ARRAY_PARAM (p) = true;
 
        DCL_PTR_CONST(p) = SPEC_CONST ($3);
        DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);

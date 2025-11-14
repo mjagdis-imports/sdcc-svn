@@ -645,11 +645,11 @@ allocParms (value *val, bool smallc, bool dynamicc)
   if (smallc)
     {
       for (lval = val; lval; lval = lval->next)
-      {
-        if (IS_REGPARM (lval->etype) && !dynamicc)
-          continue;
-        stackParamSizeAdjust += getSize (lval->type) + (getSize (lval->type) == 1);
-      }
+        {
+          if (IS_REGPARM (lval->etype) && !dynamicc)
+            continue;
+          stackParamSizeAdjust += getSize (lval->type) + (getSize (lval->type) == 1);
+        }
     }
   stackPtr += stackParamSizeAdjust;
 
