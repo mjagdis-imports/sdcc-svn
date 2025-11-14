@@ -667,11 +667,11 @@ newiCodeLabelGoto (int op, symbol * label)
 }
 
 iCode *
-newiCodeParm (int op, operand *left, sym_link *ftype, int *stack)
+newiCodeParm (int op, operand *left, sym_link *type, sym_link *ftype, int *stack)
 {
   iCode *ic;
 
-  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : NULL);
+  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : operandFromLink (type));
   if (op != SEND)
     {
       ic->parmPush = 1;
@@ -3610,7 +3610,7 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
     {
 send:
       pval = checkTypes (operandFromValue (argVals, true), pval);
-      ic = newiCode (SEND, pval, NULL);
+      ic = newiCode (SEND, pval, operandFromLink (argVals->type));
       ic->argreg = SPEC_ARGREG (parms->etype);
       ic->builtinSEND = FUNC_ISBUILTIN (ftype);
       ADDTOCHAIN (ic);
@@ -3644,7 +3644,7 @@ send:
               castic_end = iCodeChainEnd;
               if (IS_REGPARM (FUNC_ARGS (builtin_memcpy->type)->etype))
                 {
-                  dstic = newiCode (SEND, dstop, 0);
+                  dstic = newiCode (SEND, dstop, NULL);
                   dstic->argreg = SPEC_ARGREG (FUNC_ARGS (builtin_memcpy->type)->etype);
                 }
               else
@@ -3654,7 +3654,7 @@ send:
                 }
               if (IS_REGPARM (FUNC_ARGS (builtin_memcpy->type)->next->etype))
                 {
-                  srcic = newiCode (SEND, pval, 0);
+                  srcic = newiCode (SEND, pval, NULL);
                   srcic->argreg = SPEC_ARGREG (FUNC_ARGS (builtin_memcpy->type)->next->etype);
                 }
               else
@@ -3664,7 +3664,7 @@ send:
                 }
               if (IS_REGPARM (FUNC_ARGS (builtin_memcpy->type)->next->next->etype))
                 {
-                  nic = newiCode (SEND, operandFromLit (getSize (parms->ftype)), 0);
+                  nic = newiCode (SEND, operandFromLit (getSize (parms->ftype)), NULL);
                   nic->argreg = SPEC_ARGREG (FUNC_ARGS (builtin_memcpy->type)->next->next->etype);
                 }
               else
@@ -3719,9 +3719,13 @@ send:
         }
       else
         {
+          sym_link *type = NULL;
           if (argVals && (*iArg >= 0))
-            pval = checkTypes (operandFromValue (argVals, false), pval);
-          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, ftype, stack);
+            {
+              pval = checkTypes (operandFromValue (argVals, false), pval);
+              type = argVals->type;
+            }
+          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, type, ftype, stack);
           ADDTOCHAIN (ic);
         }
       if (IFFUNC_ISDYNAMICC (ftype) && IS_REGPARM (parms->etype))

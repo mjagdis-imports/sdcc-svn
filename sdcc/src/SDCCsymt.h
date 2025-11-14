@@ -711,7 +711,6 @@ sym_link *getSpec (sym_link *);
 int compStructSize (int, structdef *);
 sym_link *copyLinkChain (const sym_link *);
 int checkDecl (symbol *, int);
-void checkBasic (sym_link *, sym_link *);
 value *checkPointerIval (sym_link *, value *);
 value *checkStructIval (symbol *, value *);
 value *checkArrayIval (sym_link *, value *);

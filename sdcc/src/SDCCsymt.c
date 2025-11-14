@@ -1524,7 +1524,7 @@ addSymChain (symbol **symHead)
           FUNC_ISNORETURN (sym->type) = 1;
         }
 
-      if (!sym->level && IS_ARRAY (sym->type) && IS_ARRAY (sym->type) &&
+      if (!sym->level && IS_ARRAY (sym->type) &&
         DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_UNKNOWN)
         {
           werror (E_VLA_SCOPE);
@@ -1542,6 +1542,19 @@ addSymChain (symbol **symHead)
             {
               DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
               elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+            }
+        }
+
+      if (IS_FUNC (sym->type))
+        {
+          for (value *args = FUNC_ARGS (sym->type); args; args = args->next)
+            {
+              if (!IS_DECL (args->type) || !DCL_ELEM_AST(args->type))
+                continue;
+              if (args->sym && IS_DECL(args->sym->type) && DCL_ELEM_AST(args->sym->type) && IS_AST_LIT_VALUE (DCL_ELEM_AST(args->sym->type))) // todo: make this work for non-constant array size! And check that the symbols are really in scope from prev. param!
+                checkDecl (args->sym, 1);
+              if (IS_DECL(args->type) && DCL_ELEM_AST(args->type) && IS_AST_LIT_VALUE (DCL_ELEM_AST(args->type))) // todo: make this work for non-constant array size! And check that the symbols are really in scope from prev. param!
+                arraySizes (args->type, args->sym ? args->sym->name : "");
             }
         }
 

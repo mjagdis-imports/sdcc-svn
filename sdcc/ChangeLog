@@ -3,10 +3,14 @@
 	* src/SDCCsymt.h
 	  src/SDCCsymt.c
 	  src/SDCC.y
-	  src/SDCCgenconstprop.cc
-	  src/SDCCicode.c
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCicode.h,
+	  src/SDCCicode.c,
+	  src/SDCCopt.c,
 	  src/SDCCmem.c:
-	  Infrastructure for handling [static], a simple optimization based on it. Part of RFE #1002.
+	  Infrastructure for handling [static], a simple optimization, and a simple warning based on it. Part of RFE #1002.
 
 2025-11-11 Gabriele Gorla <gorlik@yahoo.com>
 

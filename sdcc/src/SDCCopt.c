@@ -188,12 +188,12 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       /* push right */
       if (IS_REGPARM (FUNC_ARGS(func->type)->next->etype))
         {
-          newic = newiCodeParm (SEND, right, func->type, &bytesPushed);
+          newic = newiCodeParm (SEND, right, NULL, func->type, &bytesPushed);
           newic->argreg = SPEC_ARGREG (FUNC_ARGS (func->type)->next->etype);
         }
       else
         {
-          newic = newiCodeParm (IPUSH, right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, right, NULL, func->type, &bytesPushed);
         }
 
       hTabAddItem (&iCodehTab, newic->key, newic);
@@ -206,12 +206,12 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       /* insert push left */
       if (IS_REGPARM (FUNC_ARGS(func->type)->etype))
         {
-          newic = newiCodeParm (SEND, left, func->type, &bytesPushed);
+          newic = newiCodeParm (SEND, left, NULL, func->type, &bytesPushed);
           newic->argreg = SPEC_ARGREG (FUNC_ARGS (func->type)->etype);
         }
       else
         {
-          newic = newiCodeParm (IPUSH, left, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, left, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -400,7 +400,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -506,7 +506,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -629,7 +629,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -743,7 +743,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -1045,7 +1045,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -1062,7 +1062,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->left, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->left, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -1141,7 +1141,7 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       /* TODO: Eliminate it, convert any SEND of volatile into DUMMY_READ_VOLATILE. */
       /* For now just convert back to call to make sure any volatiles are read. */
 
-      strcpy(OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
+      strcpy (OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
       goto convert;
     }
 
@@ -2145,6 +2145,35 @@ printCyclomatic (eBBlock ** ebbs, int count)
 
   /* print the information */
   werror (I_CYCLOMATIC, currFunc->name, nEdges, nNodes, nEdges - nNodes + 2);
+}
+
+/*-----------------------------------------------------------------*/
+/* checkStaticArrayParams - try to warn if a [static] parameter is */
+/* not an array of sufficient size.                                */
+/*-----------------------------------------------------------------*/
+static void
+checkStaticArrayParams (ebbIndex *ebbi)
+{
+  eBBlock ** ebbs = ebbi->bbOrder;
+  int count = ebbi->count;
+
+  for (int i = 0; i < count; i++)
+    for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
+      if ((ic->op == IPUSH || ic->op == SEND) &&
+        ic->right && // variable arguments lack type information (and so do some arguments to builtin functions).
+        IS_DECL (operandType (ic->right)) && DCL_STATIC_ARRAY_PARAM (operandType (ic->right))) // Only check [static] array parameters.
+        {
+          // TODO: Try to find out if we are passing an array of insuffient length.
+          // TODO: Handle [static] array sizes that are not constant.
+          // For now only the most basic warning: check that we are not passing a null pointer.
+          if (DCL_ELEM (operandType (ic->right)) == 0)
+            continue;
+
+          const struct valinfo v = getOperandValinfo (ic, ic->left);
+
+          if (!v.anything && v.min == 0 && v.max == 0)
+            werror (W_STATIC_ARRAY_PARAM_LENGTH);
+        }
 }
 
 /*-----------------------------------------------------------------*/
@@ -3689,6 +3718,7 @@ eBBlockFromiCode (iCode *ic)
       killDeadCode (ebbi);
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_GENCONSTPROP, ebbi);
+      checkStaticArrayParams (ebbi); // Only do this after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
     }
 
   optimizeFinalCast (ebbi);

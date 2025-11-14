@@ -739,6 +739,8 @@ struct
      "incomplete array type has length 1 due to implicit initializer", 0 },
   { E_QUALIFIED_FUNCTION, ERROR_LEVEL_ERROR,
      "qualified function", 0 },
+  { W_STATIC_ARRAY_PARAM_LENGTH, ERROR_LEVEL_WARNING,
+     "argument for [static] array parameter is not of sufficient length", 0 },
 };
 
 /* -------------------------------------------------------------------------------

@@ -742,7 +742,6 @@ funcOfType (const char *name, sym_link * type, sym_link * argType, int nArgs, in
         {
           args->type = copyLinkChain (argType);
           args->etype = getSpec (args->type);
-          SPEC_EXTR (args->etype) = 1;
           if (!nArgs)
             break;
           args = args->next = newValue ();
@@ -783,7 +782,6 @@ funcOfTypeVarg (const char *name, const char *rtype, int nArgs, const char **aty
         {
           args->type = typeFromStr (atypes[i]);
           args->etype = getSpec (args->type);
-          SPEC_EXTR (args->etype) = 1;
           if ((i + 1) == nArgs)
             break;
           args = args->next = newValue ();

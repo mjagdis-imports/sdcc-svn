@@ -365,6 +365,7 @@ enum {
   E_VLA_UNSPECIFIED_SCOPE       = 335, //  "[*] variable length array declarators of unspecified length must have function prototype scope
   W_INCOMPLETE_ARRAY_IMPLICIT_1 = 336, // incomplete array type has length 1 due to implicit initializer
   E_QUALIFIED_FUNCTION          = 337, // qualified function
+  W_STATIC_ARRAY_PARAM_LENGTH   = 338, // argument for [static] array parameter is not of sufficient length
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 
