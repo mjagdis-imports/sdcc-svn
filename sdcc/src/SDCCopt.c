@@ -2160,19 +2160,34 @@ checkStaticArrayParams (ebbIndex *ebbi)
   for (int i = 0; i < count; i++)
     for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
       if ((ic->op == IPUSH || ic->op == SEND) &&
-        ic->right && // variable arguments lack type information (and so do some arguments to builtin functions).
-        IS_DECL (operandType (ic->right)) && DCL_STATIC_ARRAY_PARAM (operandType (ic->right))) // Only check [static] array parameters.
+        ic->right || // variable arguments lack type information (and so do some arguments to builtin functions).
+        ic->op == '=' && IS_PARM (ic->result))
         {
-          // TODO: Try to find out if we are passing an array of insuffient length.
-          // TODO: Handle [static] array sizes that are not constant.
-          // For now only the most basic warning: check that we are not passing a null pointer.
-          if (DCL_ELEM (operandType (ic->right)) == 0)
-            continue;
+          operand *argop;
+          sym_link *paramtype;
+          if (ic->op == '=')
+            {
+              argop = ic->right;
+              paramtype = operandType (ic->result);
+            }
+          else
+            {
+              argop = ic->left;
+              paramtype = operandType (ic->right);
+            }
 
-          const struct valinfo v = getOperandValinfo (ic, ic->left);
+          if (IS_DECL (paramtype) && DCL_STATIC_ARRAY_PARAM (paramtype)) // Only check [static] array parameters.
+            {
+              // TODO: Try to find out if we are passing an array of insuffient length.
+              // TODO: Handle [static] array sizes that are not constant.
+              // For now only the most basic warning: check that we are not passing a null pointer.
+              if (DCL_ELEM (paramtype) == 0)
+                continue;
 
-          if (!v.anything && v.min == 0 && v.max == 0)
-            werror (W_STATIC_ARRAY_PARAM_LENGTH);
+              const struct valinfo v = getOperandValinfo (ic, argop);
+              if (!v.anything && v.min == 0 && v.max == 0)
+                werror (W_STATIC_ARRAY_PARAM_LENGTH);
+            }
         }
 }
 

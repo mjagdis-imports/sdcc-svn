@@ -4,7 +4,7 @@ int f3(char c[static 2]);
 // Passing null pointer
 void g0(void)
 {
-	f3(0); /* TODO */
+	f3(0); /* WARNING */
 }
 
 // Passing array that is too short

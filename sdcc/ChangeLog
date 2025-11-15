@@ -1,5 +1,11 @@
 2025-11-15 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCopt.c,
+	  support/valdiag/tests/arraybounds.c:
+	  Generalize warning for passing null pointer as [static] array to parameters that are neither in registers nor on the stack.
+
+2025-11-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCgenconstprop.cc,
 	  support/valdiag/tests/arraybounds.c:
 	  Generalize warning for passing null pointer as [static] array to targets with non-flat address space.
