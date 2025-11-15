@@ -2147,6 +2147,46 @@ printCyclomatic (eBBlock ** ebbs, int count)
   werror (I_CYCLOMATIC, currFunc->name, nEdges, nNodes, nEdges - nNodes + 2);
 }
 
+/* Given array (or pointer decayed to array) try to find the
+   maximum length of the array */
+static long
+maxArrayLength (const iCode *ic, operand *op, int limit)
+{
+  const struct valinfo v = getOperandValinfo (ic, op);
+
+  if (!v.anything && v.min == 0 && v.max == 0)
+    return (0);
+
+  if (!limit)
+    return (LONG_MAX);
+
+  if (IS_ITEMP (op) && bitVectnBitsOn (OP_DEFS (op)) == 1) // TODO: Handle multiple definitions?
+    {
+      const iCode *dic = hTabItemWithKey (iCodehTab, bitVectFirstBit (OP_DEFS (op)));
+      switch (dic->op) // TODO: Handle more operations?
+        {
+        case '=':
+          return (maxArrayLength (dic, dic->right, limit - 1));
+        case CAST:
+          if (!IS_PTR (operandType (dic->right)) || !compareTypeInexact (operandType (op)->next, operandType (dic->right)->next))
+            break;
+          return (maxArrayLength (dic, dic->right, limit - 1));
+        case ADDRESS_OF:
+          wassert (IS_SYMOP (dic->left));
+          sym_link *dltype = operandType (dic->left);
+          if (!IS_ARRAY (dltype))
+            return (1);
+          else if (DCL_ARRAY_LENGTH_TYPE (dltype) == ARRAY_LENGTH_KNOWN_CONST)
+            return (DCL_ELEM (dltype));
+          break;
+        default:
+          break;
+        }
+    }
+
+  return (LONG_MAX);
+}
+
 /*-----------------------------------------------------------------*/
 /* checkStaticArrayParams - try to warn if a [static] parameter is */
 /* not an array of sufficient size.                                */
@@ -2178,14 +2218,12 @@ checkStaticArrayParams (ebbIndex *ebbi)
 
           if (IS_DECL (paramtype) && DCL_STATIC_ARRAY_PARAM (paramtype)) // Only check [static] array parameters.
             {
-              // TODO: Try to find out if we are passing an array of insuffient length.
-              // TODO: Handle [static] array sizes that are not constant.
-              // For now only the most basic warning: check that we are not passing a null pointer.
+              // TODO: Handle [static] array sizes that are not constant?
+
               if (DCL_ELEM (paramtype) == 0)
                 continue;
 
-              const struct valinfo v = getOperandValinfo (ic, argop);
-              if (!v.anything && v.min == 0 && v.max == 0)
+              if (maxArrayLength (ic, argop, 4) < DCL_ELEM (paramtype))
                 werror (W_STATIC_ARRAY_PARAM_LENGTH);
             }
         }
