@@ -214,7 +214,6 @@ getOperandValinfo (const iCode *ic, const operand *op)
       v2.knownbitsmask = ~0ull;
       v2.knownbits = litval;
       valinfoCast (&v, type, v2); // Need to cast: ival could be out of range of type.
-      return (v);
     }
   else if (IS_ITEMP (op) && !IS_OP_VOLATILE (op))
     {
@@ -222,10 +221,20 @@ getOperandValinfo (const iCode *ic, const operand *op)
         return (ic->valinfos->map[op->key]);
       v.nothing = true;
       v.anything = false;
-      return (v);
     }
   else
-    return (getTypeValinfo (type, true));
+    {
+      v = getTypeValinfo (type, true);
+      if (IS_SYMOP (op) && OP_SYMBOL_CONST (op)->ismyparm &&
+        IS_DECL (type) && DCL_STATIC_ARRAY_PARAM (type) && DCL_ELEM (type))
+        {
+          // Valid pointer to an array of at least DCL_ELEM (type) elements.
+          v.min = 1;
+          v.max -= DCL_ELEM (type) * getSize (type->next);
+          v.nonnull = true;
+        }
+    }
+  return (v);
 }
 
 bool
@@ -814,12 +823,14 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         ;
       else if (ic->op == RECEIVE)
         {
-          if (IS_DECL (operandType (ic->result)) && DCL_STATIC_ARRAY_PARAM (operandType (ic->result)))
+          sym_link *type = operandType (ic->result);
+          if (IS_DECL (type) && DCL_STATIC_ARRAY_PARAM (type))
             {
-              if (DCL_ELEM(operandType (ic->result)))
+              if (DCL_ELEM (type))
                 {
-                  if(resultvalinfo.min <= 0)
-                    resultvalinfo.min = 1;
+                  // Valid pointer to an array of at least DCL_ELEM (type) elements.
+                  resultvalinfo.min = 1;
+                  resultvalinfo.max -= DCL_ELEM (type) * getSize (type->next);
                   resultvalinfo.nonnull = true;
                 }
             }
