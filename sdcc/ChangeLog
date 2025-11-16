@@ -1,3 +1,9 @@
+2025-11-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCutil.c,
+	  support/regression/tests/idf_ucn_utf8.c:
+	  Update identifier check for current (git master branch as of 2025-11-16) libu8ident.
+
 2025-11-16 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* support/scripts/sdcc.nsi: update some Rabbit related paths

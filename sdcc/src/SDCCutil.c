@@ -1444,9 +1444,10 @@ process_identifier (char *dest, const char *src, size_t n)
 
   // We keep reinitializing, thus we can detect invalid script combinationss only within a single identifier,
   // not between different identifiers in the same translation unit.
-  // But reinitialization is the only was to change the profile, which we need to do to handle changing C standards
+  // But reinitialization is the only way to change the profile, which we need to do to handle changing C standards
   // from #pragma within a translation unit.
-  u8ident_init (U8ID_PROFILE_C11_6, U8ID_NFC, options.std_c23 ? U8ID_TR31_C23 : U8ID_TR31_C11);
+  // The choice of the profile and options here was done experimentally. The libu8dient API and docuemtnation are quire confusing when it comes to the combinationsof profiles with options.
+  u8ident_init (options.std_c23 ? U8ID_PROFILE_5 : U8ID_PROFILE_C11_6, U8ID_NFC, options.std_c23 ? U8ID_TR31_C23 : U8ID_TR31_C11);
 
   if (options.std_c23)
     {
@@ -1456,26 +1457,19 @@ process_identifier (char *dest, const char *src, size_t n)
       free (normalized);
     }
 
-  // Work around _ and $ handling issues (affect first character of identifier only) in libu8ident: https://github.com/rurban/libu8ident/issues/24 https://github.com/rurban/libu8ident/issues/25
-  if (*dest == '_' || *dest == '$') // Will get false positives for such identifiers. Can't just skip these characters, since the next one might be a digit or such. So don't check them at all.
-    {
-      u8ident_free ();
-      return;
-    }
-
   enum u8id_errors errors_c = u8ident_check (dest, NULL);
   u8ident_free ();
   if (errors_c < 0) // Invalid identifier.
     werror (E_INVALID_ID, dest);
   else // Only check for subtle errors if there's no obvious ones.
     {
-      if (errors_c == U8ID_EOK_NORM || errors_c == U8ID_EOK_NORM_WARN_CONFUS) // Only possible for C17 an earlier, from C23 we normalize.
+      if (errors_c == U8ID_EOK_NORM || errors_c == U8ID_EOK_NORM_WARN_CONFUS) // Only possible for C17 and earlier, from C23 we normalize first.
         werror (W_ID_NOT_NORMALIZED_NFC, dest);
-      u8ident_init (U8ID_PROFILE_DEFAULT, U8ID_NFC, U8ID_TR31_SAFEC26);
-      int errors_safec = u8ident_check (dest, NULL);
+      u8ident_init (U8ID_PROFILE_TR39_4, U8ID_NFC, U8ID_TR31_TR39);
+      int errors_tr39 = u8ident_check (dest, NULL);
       u8ident_free ();
       const char *errormsg = "no issue";
-      switch(errors_safec)
+      switch(errors_tr39)
         {
         case 0:
           break ;
@@ -1502,7 +1496,7 @@ process_identifier (char *dest, const char *src, size_t n)
         default:
           errormsg = "other issue";
         }
-      if (errors_safec)
+      if (errors_tr39)
         werror (W_INSECURE_ID, dest, errormsg);
     }
 #endif
