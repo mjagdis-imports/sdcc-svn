@@ -1,5 +1,14 @@
 2025-11-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCerr.h,
+	  src/SDCCerr.c,
+	  src/SDCCopt.c,
+	  src/SDCCgenconstprop.cc,
+	  support/valdiag/tests/arraybounds.c:
+	  Preparations for generalizing  [static] parameter warning to also warn on dereference of invalid pointers.
+
+2025-11-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCdflow.h,
 	  src/SDCCgenconstprop.cc,
 	  src/SDCCopt.c:

@@ -749,6 +749,8 @@ struct
      "insecure identifier '%s' not compliant with UTS #39 (%s)", 0 },
   { W_STATIC_ARRAY_PARAM_LENGTH, ERROR_LEVEL_WARNING,
      "argument for [static] array parameter is not of sufficient length", 0 },
+  { W_INVALID_PTR_DEREF, ERROR_LEVEL_WARNING, 
+     "possibly invalid pointer dereferenced or array index out of bounds", 0 },
 };
 
 /* -------------------------------------------------------------------------------

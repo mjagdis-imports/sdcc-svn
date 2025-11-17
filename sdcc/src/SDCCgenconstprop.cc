@@ -343,7 +343,7 @@ dump_cfg_genconstprop (const cfg_t &cfg, const std::string& suffix)
           else if (ic->resultvalinfo->anything)
             os << "*";
           else
-            os << "[" << ic->resultvalinfo->min << ", " << ic->resultvalinfo->max << "] " << ic->resultvalinfo->knownbitsmask;
+            os << "[" << ic->resultvalinfo->min << ", " << ic->resultvalinfo->max << "] " << "[" << ic->resultvalinfo->minlength << ", " << ic->resultvalinfo->maxlength << "] " << ic->resultvalinfo->knownbitsmask;
         }
       name[i] = os.str();
     }
@@ -430,8 +430,12 @@ valinfoPlus (struct valinfo *result, sym_link *resulttype, const struct valinfo 
       result->nonnull |= left.nonnull;
       if (left.minlength >= right.max)
         result->minlength = left.minlength - right.max;
+      else
+        result->minlength = 0;
       if (left.maxlength >= right.min)
         result->maxlength = left.maxlength - right.min;
+      else
+        result->maxlength = 0;
     }
   if (!left.anything && !right.anything &&
     left.min >= 0 && right.min >= 0)
@@ -879,7 +883,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           if (!IS_ARRAY (objtype))
             resultvalinfo.minlength = resultvalinfo.maxlength = (o ? 0 : 1);
           else if (IS_ARRAY (objtype) && DCL_ARRAY_LENGTH_TYPE (objtype) == ARRAY_LENGTH_KNOWN_CONST)
-            resultvalinfo.minlength = resultvalinfo.maxlength = (DCL_ELEM (objtype) - o);
+            resultvalinfo.minlength = resultvalinfo.maxlength = ((DCL_ELEM (objtype) >= o) ? DCL_ELEM (objtype) - o : 0);
         }
       else if (ic->op == '!')
         {

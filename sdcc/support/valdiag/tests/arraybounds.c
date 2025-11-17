@@ -64,3 +64,53 @@ void g2 (void)
 }
 #endif
 
+#ifdef TEST3
+// Dereference instead of parameter passing
+
+char c[3];
+
+char g2 (void)
+{
+	char *p = c + 2;
+	return *p;
+}
+
+char g3 (void)
+{
+	char *p = c + 3;
+	return *p; /* TODO */
+}
+
+char g2a (_Bool i)
+{
+	char *p = c + 2 + i;
+	return *p;
+}
+
+char g2b (_Bool i)
+{
+	char *p;
+	if (i)
+		p = c + 3;
+	else
+		p = c + 2;
+	return *p;
+}
+
+char g3a (_Bool i)
+{
+	char *p = c + 3 + i;
+	return *p; /* TODO */
+}
+
+char g3b (_Bool i)
+{
+	char *p;
+	if (i)
+		p = c + 4;
+	else
+		p = c + 3;
+	return *p; /* TODO */
+}
+#endif
+

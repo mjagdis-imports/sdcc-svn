@@ -51,7 +51,7 @@ enum {
   W_STACK_OVERFLOW              =  21, /* stack overflow       */
   E_NEED_ARRAY_PTR              =  22, /* array or pointer reqd*/
   E_IDX_NOT_INT                 =  23, /* index not an integer */
-  W_IDX_OUT_OF_BOUNDS           =  24, /* array index out of bounds */
+  W_IDX_OUT_OF_BOUNDS           =  24, // array index out of bounds (for cases where we know exact index and bound) - see also W_INVALID_PTR_DEREF for other cases
   E_STRUCT_UNION                =  25, /* struct,union expected*/
   E_NOT_MEMBER                  =  26, /* !struct/union member */
   E_PTR_REQD                    =  27, /* pointer required     */
@@ -370,6 +370,7 @@ enum {
   W_ID_NOT_NORMALIZED_NFC       = 340, // identifier not normalized to unicode normalization form C
   W_INSECURE_ID                 = 341, // insecure identifier not compliant with UTS #39
   W_STATIC_ARRAY_PARAM_LENGTH   = 342, // argument for [static] array parameter is not of sufficient length
+  W_INVALID_PTR_DEREF           = 343, // possibly invalid pointer dereferenced or array index out of bounds - see also W_IDX_OUT_OF_BOUNDS (for cases where we know exact index and bound)
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 

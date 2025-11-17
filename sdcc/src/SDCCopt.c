@@ -2149,7 +2149,8 @@ printCyclomatic (eBBlock ** ebbs, int count)
 
 /*-----------------------------------------------------------------*/
 /* checkStaticArrayParams - try to warn if a [static] parameter is */
-/* not an array of sufficient size.                                */
+/* not an array of sufficient size. Also try to warn on deref.     */
+/* of invalid pointer.                                             */
 /*-----------------------------------------------------------------*/
 static void
 checkStaticArrayParams (ebbIndex *ebbi)
@@ -2159,36 +2160,46 @@ checkStaticArrayParams (ebbIndex *ebbi)
 
   for (int i = 0; i < count; i++)
     for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
-      if ((ic->op == IPUSH || ic->op == SEND) &&
-        ic->right || // variable arguments lack type information (and so do some arguments to builtin functions).
-        ic->op == '=' && IS_PARM (ic->result))
-        {
-          operand *argop;
-          sym_link *paramtype;
-          if (ic->op == '=')
-            {
-              argop = ic->right;
-              paramtype = operandType (ic->result);
-            }
-          else
-            {
-              argop = ic->left;
-              paramtype = operandType (ic->right);
-            }
-
-          if (IS_DECL (paramtype) && DCL_STATIC_ARRAY_PARAM (paramtype)) // Only check [static] array parameters.
-            {
-              // TODO: Handle [static] array sizes that are not constant?
-
-              if (DCL_ELEM (paramtype) == 0)
-                continue;
-                
-              const struct valinfo v = getOperandValinfo (ic, argop);
-
-              if (!v.anything && v.maxlength < DCL_ELEM (paramtype))
-                werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
-            }
-        }
+      {
+        if ((ic->op == IPUSH || ic->op == SEND) &&
+          ic->right || // variable arguments lack type information (and so do some arguments to builtin functions).
+          ic->op == '=' && IS_PARM (ic->result))
+          {
+            operand *argop;
+            sym_link *paramtype;
+            if (ic->op == '=')
+              {
+                argop = ic->right;
+                paramtype = operandType (ic->result);
+              }
+            else
+              {
+                argop = ic->left;
+                paramtype = operandType (ic->right);
+              }
+  
+            if (IS_DECL (paramtype) && DCL_STATIC_ARRAY_PARAM (paramtype)) // Only check [static] array parameters.
+              {
+                // TODO: Handle [static] array sizes that are not constant?
+  
+                if (DCL_ELEM (paramtype) == 0)
+                  continue;
+                  
+                const struct valinfo v = getOperandValinfo (ic, argop);
+  
+                if (!v.anything && v.maxlength < DCL_ELEM (paramtype))
+                  werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
+              }
+          }
+         else if (ic->op == GET_VALUE_AT_ADDRESS)
+          {
+            /*const struct valinfo v = getOperandValinfo (ic, ic->left);
+            wassert (IS_OP_LITERAL (ic->right));
+            unsigned long o = operandLitValue (ic->right) / getSize (operandType (ic->left)->next);
+            if (o >= v.maxlength)
+              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);*/
+          }
+      }
 }
 
 /*-----------------------------------------------------------------*/
