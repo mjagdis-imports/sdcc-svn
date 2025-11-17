@@ -268,6 +268,12 @@ valinfo_union (struct valinfo *v0, const struct valinfo v1)
   auto new_knownbitsmask = v0->knownbitsmask & v1.knownbitsmask & ~(v0->knownbits ^ v1.knownbits);
   change |= (v0->knownbitsmask != new_knownbitsmask);
   v0->knownbitsmask = new_knownbitsmask;
+  auto new_minlength = std::min (v0->minlength, v1.minlength);
+  change |= (v0->minlength != new_minlength);
+  v0->minlength = new_minlength;
+  auto new_maxlength = std::max (v0->maxlength, v1.maxlength);
+  change |= (v0->maxlength != new_maxlength);
+  v0->maxlength = new_maxlength;
   return (change);
 }
 
@@ -422,6 +428,10 @@ valinfoPlus (struct valinfo *result, sym_link *resulttype, const struct valinfo 
           result->knownbits = result->knownbits & ~0x8000ull | left.knownbits & 0x8000ull;
         }
       result->nonnull |= left.nonnull;
+      if (left.minlength >= right.max)
+        result->minlength = left.minlength - right.max;
+      if (left.maxlength >= right.min)
+        result->maxlength = left.maxlength - right.min;
     }
   if (!left.anything && !right.anything &&
     left.min >= 0 && right.min >= 0)
@@ -865,10 +875,11 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
             resultvalinfo.min = 1;
           resultvalinfo.nonnull = true;
           sym_link *objtype = operandType (ic->left);
+          unsigned long o = operandLitValue (ic->right) / getSize (IS_ARRAY (objtype) ? objtype->next : objtype);
           if (!IS_ARRAY (objtype))
-            resultvalinfo.minlength = resultvalinfo.maxlength = 1;
+            resultvalinfo.minlength = resultvalinfo.maxlength = (o ? 0 : 1);
           else if (IS_ARRAY (objtype) && DCL_ARRAY_LENGTH_TYPE (objtype) == ARRAY_LENGTH_KNOWN_CONST)
-            resultvalinfo.minlength = resultvalinfo.maxlength = DCL_ELEM (objtype);
+            resultvalinfo.minlength = resultvalinfo.maxlength = (DCL_ELEM (objtype) - o);
         }
       else if (ic->op == '!')
         {

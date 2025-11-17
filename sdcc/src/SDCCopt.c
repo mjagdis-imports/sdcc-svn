@@ -2184,9 +2184,9 @@ checkStaticArrayParams (ebbIndex *ebbi)
                 continue;
                 
               const struct valinfo v = getOperandValinfo (ic, argop);
-              
+
               if (!v.anything && v.maxlength < DCL_ELEM (paramtype))
-                werror (W_STATIC_ARRAY_PARAM_LENGTH);
+                werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
             }
         }
 }
