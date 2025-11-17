@@ -106,6 +106,8 @@ getTypeValinfo (sym_link *type, bool loose)
   v.min = v.max = 0ll;
   v.knownbitsmask = 0ull;
   v.knownbits = 0ull;
+  v.minlength = 0;
+  v.maxlength = ULONG_MAX;
 
   if (IS_BOOLEAN (type))
     {
@@ -153,6 +155,8 @@ getTypeValinfo (sym_link *type, bool loose)
           else
             wassert (0);
         }
+      if (getSize (type->next)) // Could be pointer to void.
+        v.maxlength = v.max / getSize (type->next);
     }
   else if (IS_INTEGRAL (type) && IS_UNSIGNED (type) && bitsForType (type) < 64)
     {
@@ -176,7 +180,10 @@ getTypeValinfo (sym_link *type, bool loose)
 }
 
 static void
-valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right);
+valinfoUpdate (struct valinfo *v);
+
+static void
+valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right, sym_link *sourcetype);
 
 struct valinfo
 getOperandValinfo (const iCode *ic, const operand *op)
@@ -213,7 +220,8 @@ getOperandValinfo (const iCode *ic, const operand *op)
       v2.max = litval;
       v2.knownbitsmask = ~0ull;
       v2.knownbits = litval;
-      valinfoCast (&v, type, v2); // Need to cast: ival could be out of range of type.
+      valinfoCast (&v, type, v2, NULL); // Need to cast: ival could be out of range of type.
+      valinfoUpdate (&v);
     }
   else if (IS_ITEMP (op) && !IS_OP_VOLATILE (op))
     {
@@ -229,9 +237,10 @@ getOperandValinfo (const iCode *ic, const operand *op)
         IS_DECL (type) && DCL_STATIC_ARRAY_PARAM (type) && DCL_ELEM (type))
         {
           // Valid pointer to an array of at least DCL_ELEM (type) elements.
+          v.nonnull = true;
           v.min = 1;
           v.max -= DCL_ELEM (type) * getSize (type->next);
-          v.nonnull = true;
+          v.minlength = DCL_ELEM (type);
         }
     }
   return (v);
@@ -349,7 +358,6 @@ valinfoUpdate (struct valinfo *v)
     {
       v->knownbitsmask = ~0ull;
       v->knownbits = v->min;
-      return;
     }
   for (int i = 0; i < 62; i++) // Leading zeroes.
     {
@@ -373,6 +381,12 @@ valinfoUpdate (struct valinfo *v)
 
   if (v->min > 0 || v->max < 0)
     v->nonnull = true;
+
+  if (v->max == 0) // Null pointer points to zero objects
+   {
+     v->minlength = 0;
+     v->maxlength = 0;
+   }
 }
 
 static void
@@ -552,8 +566,8 @@ valinfoAnd (struct valinfo *result, sym_link *resulttype, const struct valinfo &
 {
   // In iCode, bitwise and sometimes has operands of different type.
   struct valinfo left, right;
-  valinfoCast (&left, resulttype, left_orig);
-  valinfoCast (&right, resulttype, right_orig);
+  valinfoCast (&left, resulttype, left_orig, NULL);
+  valinfoCast (&right, resulttype, right_orig, NULL);
 
   if (!left.anything && !right.anything &&
     (left.min >= 0 || right.min >= 0))
@@ -650,8 +664,9 @@ valinfoRight (struct valinfo *result, const struct valinfo &left, const struct v
     }
 }
 
+// sourcetype is optional
 static void
-valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right)
+valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right, sym_link *sourcetype)
 {
   bool genptrtarget = IS_GENPTR (targettype) || (TARGET_Z80_LIKE || TARGET_F8_LIKE || TARGET_IS_STM8); // Some ports have no tag bits in pointers.
 
@@ -686,8 +701,16 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
     }
 
   if (!right.anything && genptrtarget && right.nonnull)
+    result->nonnull = true;
+
+  if (!right.anything && IS_PTR (targettype) && sourcetype && IS_PTR (sourcetype) && compareTypeInexact (targettype->next, sourcetype->next))
     {
-      result->nonnull = false;
+      if (result->minlength < right.minlength)
+        result->minlength = right.minlength;
+      if (result->maxlength > right.maxlength)
+        result->maxlength = right.maxlength;
+      if (result->minlength)
+        result->nonnull = true;
     }
 }
 
@@ -831,6 +854,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                   // Valid pointer to an array of at least DCL_ELEM (type) elements.
                   resultvalinfo.min = 1;
                   resultvalinfo.max -= DCL_ELEM (type) * getSize (type->next);
+                  resultvalinfo.minlength = DCL_ELEM (type);
                   resultvalinfo.nonnull = true;
                 }
             }
@@ -840,6 +864,11 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           if(resultvalinfo.min <= 0)
             resultvalinfo.min = 1;
           resultvalinfo.nonnull = true;
+          sym_link *objtype = operandType (ic->left);
+          if (!IS_ARRAY (objtype))
+            resultvalinfo.minlength = resultvalinfo.maxlength = 1;
+          else if (IS_ARRAY (objtype) && DCL_ARRAY_LENGTH_TYPE (objtype) == ARRAY_LENGTH_KNOWN_CONST)
+            resultvalinfo.minlength = resultvalinfo.maxlength = DCL_ELEM (objtype);
         }
       else if (ic->op == '!')
         {
@@ -939,7 +968,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         valinfoRight (&resultvalinfo, leftvalinfo, rightvalinfo);
       else if (ic->op == '=' && !POINTER_SET (ic) || ic->op == CAST)
         //resultvalinfo = rightvalinfo; // Doesn't work for = - sometimes = with mismatched types arrive here.
-        valinfoCast (&resultvalinfo, operandType (IC_RESULT (ic)), rightvalinfo);
+        valinfoCast (&resultvalinfo, operandType (ic->result), rightvalinfo, operandType (ic->right));
 
       if (resultsym)
         {

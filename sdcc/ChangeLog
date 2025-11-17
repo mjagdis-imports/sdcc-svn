@@ -1,3 +1,9 @@
+2025-11-17 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/valdiag/tests/arraybounds.c:
+	  Integrate static analysis for warning for passing too-short array as [static] parameter into generalized constant propagation.
+
 2025-11-16 Gabriele Gorla <gorlik@yahoo.com>
 
   	* src/mos6502/gen.c,
