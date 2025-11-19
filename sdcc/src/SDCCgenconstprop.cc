@@ -889,6 +889,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           else if (IS_ARRAY (objtype) && DCL_ARRAY_LENGTH_TYPE (objtype) == ARRAY_LENGTH_KNOWN_CONST)
             {
               unsigned long lsize = DCL_ELEM (objtype) * getSize (objtype->next);
+              wassert (lsize); // There are no arrays of known constant length 0 in SDCC.
               if (lsize >= roff)
                 resultvalinfo.minsize = resultvalinfo.maxsize = lsize - roff;
               else

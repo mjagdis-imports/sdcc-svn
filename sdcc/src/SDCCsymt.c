@@ -1538,7 +1538,7 @@ addSymChain (symbol **symHead)
           if (IS_ARRAY (sym->type) && DCL_ELEM_AST (sym->type))
             arraySizes (sym->type, sym->name);
           // if this is an array without any dimension then update the dimension from the initial value
-          else if (IS_ARRAY (sym->type) && !DCL_ELEM_AST (sym->type) && !DCL_ELEM (sym->type))
+          else if (IS_ARRAY (sym->type) && !DCL_ELEM_AST (sym->type) && !DCL_ELEM (sym->type) && sym->ival)
             {
               DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
               elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
@@ -2416,13 +2416,15 @@ checkDecl (symbol * sym, int isProto)
   /* if this is an array without any dimension
      then update the dimension from the initial value */
   if (IS_ARRAY (sym->type) && !DCL_ELEM (sym->type))
-    if (sym->ival && sym->ival->isempty)
-      werror (E_EMPTY_INIT_UNKNOWN_SIZE);
-    else
-      {
-        DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
-        return DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
-      }
+    {
+      if (sym->ival && sym->ival->isempty)
+        werror (E_EMPTY_INIT_UNKNOWN_SIZE);
+      else if (sym->ival)
+        {
+          DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+          return (DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival));
+        }
+    }
 
   return 0;
 }

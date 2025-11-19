@@ -195,7 +195,7 @@ DECLARATOR_TYPE;
 
 typedef enum
 {
-  ARRAY_LENGTH_KNOWN_CONST = 0,     // The normal tyspe of array: [N], for some integer constant expression N.
+  ARRAY_LENGTH_KNOWN_CONST = 0,     // The normal type of array: [N], for some integer constant expression N.
   ARRAY_LENGTH_SPECIFIED,           // VLA of specified length: [n], for some expression n that is not an integer constant expression.
   ARRAY_LENGTH_UNSPECIFIED,         // VLA of unspecified length: [*],
   ARRAY_LENGTH_UNEVALUATED,         // Array of unevaluated length: [n], in a context where the expression n is not evaluated.

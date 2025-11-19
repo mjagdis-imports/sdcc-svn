@@ -3,6 +3,7 @@
 	* src/SDCCdflow.h,
 	  src/SDCCgenconstprop.cc,
 	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
 	  support/regression/tests/bug-2222.c,
 	  support/regression/tests/bug-2384.c,
 	  support/valdiag/tests/arraybounds.c:

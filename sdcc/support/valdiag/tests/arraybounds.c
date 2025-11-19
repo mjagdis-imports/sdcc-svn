@@ -41,26 +41,26 @@ int f3(char c[static 2]);
 int i;
 
 // Multiple possible pointer targets, but all are too short
-void g0 (void)
+void g0(void)
 {
 	char c[1];
 	char *p = 0;
-	if (i)
+	if(i)
 		p = c;
-	f3 (p); /* WARNING */
+	f3(p); /* WARNING */
 }
 
 // Array too short after pointer arithmetic
-void g1 (void)
+void g1(void)
 {
 	char c[3];
-	f3 (c + 2); /* WARNING */
+	f3(c + 2); /* WARNING */
 }
 
-void g2 (void)
+void g2(void)
 {
 	char c[3];
-	f3 (c + 1);
+	f3(c + 1);
 }
 #endif
 
@@ -69,48 +69,83 @@ void g2 (void)
 
 char c[3];
 
-char g2 (void)
+char g2(void)
 {
 	char *p = c + 2;
 	return *p;
 }
 
-char g3 (void)
+char g3(void)
 {
 	char *p = c + 3;
 	return *p; /* WARNING */
 }
 
-char g2a (_Bool i)
+char g2a(_Bool i)
 {
 	char *p = c + 2 + i;
 	return *p;
 }
 
-char g2b (_Bool i)
+char g2b(_Bool i)
 {
 	char *p;
-	if (i)
+	if(i)
 		p = c + 3;
 	else
 		p = c + 2;
 	return *p;
 }
 
-char g3a (_Bool i)
+char g3a(_Bool i)
 {
 	char *p = c + 3 + i;
 	return *p; /* WARNING */
 }
 
-char g3b (_Bool i)
+char g3b(_Bool i)
 {
 	char *p;
-	if (i)
+	if(i)
 		p = c + 4;
 	else
 		p = c + 3;
 	return *p; /* WARNING */
+}
+#endif
+
+#ifdef TEST4
+// Don't warn if the array length is not known.
+
+extern unsigned long array[]; // Unknown length
+
+unsigned long f(void)
+{
+	return(array[2]);
+}
+
+unsigned long g(void)
+{
+	return(*array);
+}
+
+unsigned long array[] = {0, 1, 2}; // Known length here
+#endif
+
+#ifdef TEST5
+// Object accessed as array of char.
+long l;
+
+char f(void)
+{
+	char *p = &l;
+	return(p[sizeof(long) - 1]);
+}
+
+char g(void)
+{
+	char *p = &l;
+	return(p[sizeof(long)]); /* WARNING */
 }
 #endif
 

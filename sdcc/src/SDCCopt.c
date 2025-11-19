@@ -1764,7 +1764,7 @@ isLocalWithoutDef (symbol * sym)
 }
 
 static void
-replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isaddr)
+replaceRegEqvOperand (iCode *ic, operand **opp, int force_isaddr, int new_isaddr)
 {
   operand * op = *opp;
   symbol * sym = OP_SYMBOL (op);
@@ -2181,12 +2181,11 @@ checkStaticArrayParams (ebbIndex *ebbi)
             if (IS_DECL (paramtype) && DCL_STATIC_ARRAY_PARAM (paramtype)) // Only check [static] array parameters.
               {
                 // TODO: Handle [static] array sizes that are not constant?
-  
+
                 if (DCL_ELEM (paramtype) == 0)
                   continue;
                   
                 const struct valinfo v = getOperandValinfo (ic, argop);
-  
                 if (!v.anything && v.maxsize < DCL_ELEM (paramtype) * getSize (paramtype->next))
                   werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
               }
@@ -2196,7 +2195,6 @@ checkStaticArrayParams (ebbIndex *ebbi)
             const struct valinfo v = getOperandValinfo (ic, ic->left);
             wassert (IS_OP_LITERAL (ic->right));
             unsigned long roff = operandLitValue (ic->right);
-//printf("ic %d roff %lu maxsize %lu\n", ic->key, roff, v.maxsize);
             if (roff >= v.maxsize)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
           }
