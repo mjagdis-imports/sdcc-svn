@@ -47,8 +47,8 @@ struct valinfo
 	long long int min, max;
 	unsigned long long knownbitsmask;
 	unsigned long long knownbits;
-	unsigned long minlength;          // Pointing to first element of array of at least this length
-	unsigned long maxlength;          // Pointing to first element of array of at most this length
+	unsigned long minsize;            // Pointing to somewhere where there are at least minsize bytes of the pointed-to object
+	unsigned long maxsize;            // Pointing to somewhere where there are at most maxsize bytes of the pointed-to object
 };
 
 bool valinfo_union (struct valinfo *v0, const struct valinfo v1);

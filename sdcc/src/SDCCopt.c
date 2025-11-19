@@ -2187,17 +2187,18 @@ checkStaticArrayParams (ebbIndex *ebbi)
                   
                 const struct valinfo v = getOperandValinfo (ic, argop);
   
-                if (!v.anything && v.maxlength < DCL_ELEM (paramtype))
+                if (!v.anything && v.maxsize < DCL_ELEM (paramtype) * getSize (paramtype->next))
                   werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
               }
           }
          else if (ic->op == GET_VALUE_AT_ADDRESS)
           {
-            /*const struct valinfo v = getOperandValinfo (ic, ic->left);
+            const struct valinfo v = getOperandValinfo (ic, ic->left);
             wassert (IS_OP_LITERAL (ic->right));
-            unsigned long o = operandLitValue (ic->right) / getSize (operandType (ic->left)->next);
-            if (o >= v.maxlength)
-              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);*/
+            unsigned long roff = operandLitValue (ic->right);
+//printf("ic %d roff %lu maxsize %lu\n", ic->key, roff, v.maxsize);
+            if (roff >= v.maxsize)
+              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
           }
       }
 }

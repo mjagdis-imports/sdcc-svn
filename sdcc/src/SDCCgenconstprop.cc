@@ -106,8 +106,8 @@ getTypeValinfo (sym_link *type, bool loose)
   v.min = v.max = 0ll;
   v.knownbitsmask = 0ull;
   v.knownbits = 0ull;
-  v.minlength = 0;
-  v.maxlength = ULONG_MAX;
+  v.minsize = 0;
+  v.maxsize = ULONG_MAX;
 
   if (IS_BOOLEAN (type))
     {
@@ -155,8 +155,7 @@ getTypeValinfo (sym_link *type, bool loose)
           else
             wassert (0);
         }
-      if (getSize (type->next)) // Could be pointer to void.
-        v.maxlength = v.max / getSize (type->next);
+      v.maxsize = v.max;
     }
   else if (IS_INTEGRAL (type) && IS_UNSIGNED (type) && bitsForType (type) < 64)
     {
@@ -239,8 +238,8 @@ getOperandValinfo (const iCode *ic, const operand *op)
           // Valid pointer to an array of at least DCL_ELEM (type) elements.
           v.nonnull = true;
           v.min = 1;
-          v.max -= DCL_ELEM (type) * getSize (type->next);
-          v.minlength = DCL_ELEM (type);
+          v.minsize = DCL_ELEM (type) * getSize (type->next);
+          v.max -= v.minsize;
         }
     }
   return (v);
@@ -268,12 +267,12 @@ valinfo_union (struct valinfo *v0, const struct valinfo v1)
   auto new_knownbitsmask = v0->knownbitsmask & v1.knownbitsmask & ~(v0->knownbits ^ v1.knownbits);
   change |= (v0->knownbitsmask != new_knownbitsmask);
   v0->knownbitsmask = new_knownbitsmask;
-  auto new_minlength = std::min (v0->minlength, v1.minlength);
-  change |= (v0->minlength != new_minlength);
-  v0->minlength = new_minlength;
-  auto new_maxlength = std::max (v0->maxlength, v1.maxlength);
-  change |= (v0->maxlength != new_maxlength);
-  v0->maxlength = new_maxlength;
+  auto new_minsize = std::min (v0->minsize, v1.minsize);
+  change |= (v0->minsize != new_minsize);
+  v0->minsize = new_minsize;
+  auto new_maxsize = std::max (v0->maxsize, v1.maxsize);
+  change |= (v0->maxsize != new_maxsize);
+  v0->maxsize = new_maxsize;
   return (change);
 }
 
@@ -343,7 +342,7 @@ dump_cfg_genconstprop (const cfg_t &cfg, const std::string& suffix)
           else if (ic->resultvalinfo->anything)
             os << "*";
           else
-            os << "[" << ic->resultvalinfo->min << ", " << ic->resultvalinfo->max << "] " << "[" << ic->resultvalinfo->minlength << ", " << ic->resultvalinfo->maxlength << "] " << ic->resultvalinfo->knownbitsmask;
+            os << "[" << ic->resultvalinfo->min << ", " << ic->resultvalinfo->max << "] " << "[" << ic->resultvalinfo->minsize << ", " << ic->resultvalinfo->maxsize << "] " << ic->resultvalinfo->knownbitsmask;
         }
       name[i] = os.str();
     }
@@ -388,10 +387,10 @@ valinfoUpdate (struct valinfo *v)
   if (v->min > 0 || v->max < 0)
     v->nonnull = true;
 
-  if (v->max == 0) // Null pointer points to zero objects
+  if (v->max == 0) // Null pointer points to zero bytes
    {
-     v->minlength = 0;
-     v->maxlength = 0;
+     v->minsize = 0;
+     v->maxsize = 0;
    }
 }
 
@@ -428,14 +427,14 @@ valinfoPlus (struct valinfo *result, sym_link *resulttype, const struct valinfo 
           result->knownbits = result->knownbits & ~0x8000ull | left.knownbits & 0x8000ull;
         }
       result->nonnull |= left.nonnull;
-      if (left.minlength >= right.max)
-        result->minlength = left.minlength - right.max;
+      if ((long long)(left.minsize) >= right.max)
+        result->minsize = (long long)(left.minsize) - right.max;
       else
-        result->minlength = 0;
-      if (left.maxlength >= right.min)
-        result->maxlength = left.maxlength - right.min;
+        result->minsize = 0;
+      if ((long long)(left.maxsize) >= right.min)
+        result->maxsize = (long long)(left.maxsize) - right.min;
       else
-        result->maxlength = 0;
+        result->maxsize = 0;
     }
   if (!left.anything && !right.anything &&
     left.min >= 0 && right.min >= 0)
@@ -717,13 +716,13 @@ valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo 
   if (!right.anything && genptrtarget && right.nonnull)
     result->nonnull = true;
 
-  if (!right.anything && IS_PTR (targettype) && sourcetype && IS_PTR (sourcetype) && compareTypeInexact (targettype->next, sourcetype->next))
+  if (!right.anything && IS_PTR (targettype) && sourcetype && IS_PTR (sourcetype))
     {
-      if (result->minlength < right.minlength)
-        result->minlength = right.minlength;
-      if (result->maxlength > right.maxlength)
-        result->maxlength = right.maxlength;
-      if (result->minlength)
+      if (result->minsize < right.minsize)
+        result->minsize = right.minsize;
+      if (result->maxsize > right.maxsize)
+        result->maxsize = right.maxsize;
+      if (result->minsize)
         result->nonnull = true;
     }
 }
@@ -867,8 +866,8 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
                 {
                   // Valid pointer to an array of at least DCL_ELEM (type) elements.
                   resultvalinfo.min = 1;
-                  resultvalinfo.max -= DCL_ELEM (type) * getSize (type->next);
-                  resultvalinfo.minlength = DCL_ELEM (type);
+                  resultvalinfo.minsize = DCL_ELEM (type) * getSize (type->next);
+                  resultvalinfo.max -= resultvalinfo.minsize;
                   resultvalinfo.nonnull = true;
                 }
             }
@@ -879,11 +878,23 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
             resultvalinfo.min = 1;
           resultvalinfo.nonnull = true;
           sym_link *objtype = operandType (ic->left);
-          unsigned long o = operandLitValue (ic->right) / getSize (IS_ARRAY (objtype) ? objtype->next : objtype);
-          if (!IS_ARRAY (objtype))
-            resultvalinfo.minlength = resultvalinfo.maxlength = (o ? 0 : 1);
+          unsigned long roff = operandLitValue (ic->right);
+          if (!IS_ARRAY (objtype) && !(IS_STRUCT (objtype) && SPEC_STRUCT (objtype)->b_flexArrayMember)) // Single object. We know the size unless it has a flexible array memeber.
+            {
+              if (getSize (objtype) >= roff)
+                resultvalinfo.minsize = resultvalinfo.maxsize = getSize (objtype) - roff;
+              else
+                resultvalinfo.minsize = resultvalinfo.maxsize = 0;
+            }
           else if (IS_ARRAY (objtype) && DCL_ARRAY_LENGTH_TYPE (objtype) == ARRAY_LENGTH_KNOWN_CONST)
-            resultvalinfo.minlength = resultvalinfo.maxlength = ((DCL_ELEM (objtype) >= o) ? DCL_ELEM (objtype) - o : 0);
+            {
+              unsigned long lsize = DCL_ELEM (objtype) * getSize (objtype->next);
+              if (lsize >= roff)
+                resultvalinfo.minsize = resultvalinfo.maxsize = lsize - roff;
+              else
+                resultvalinfo.minsize = resultvalinfo.maxsize = 0;
+            }
+          resultvalinfo.max -= resultvalinfo.minsize;
         }
       else if (ic->op == '!')
         {

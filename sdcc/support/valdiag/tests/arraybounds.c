@@ -78,7 +78,7 @@ char g2 (void)
 char g3 (void)
 {
 	char *p = c + 3;
-	return *p; /* TODO */
+	return *p; /* WARNING */
 }
 
 char g2a (_Bool i)
@@ -100,7 +100,7 @@ char g2b (_Bool i)
 char g3a (_Bool i)
 {
 	char *p = c + 3 + i;
-	return *p; /* TODO */
+	return *p; /* WARNING */
 }
 
 char g3b (_Bool i)
@@ -110,7 +110,7 @@ char g3b (_Bool i)
 		p = c + 4;
 	else
 		p = c + 3;
-	return *p; /* TODO */
+	return *p; /* WARNING */
 }
 #endif
 

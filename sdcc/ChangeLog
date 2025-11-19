@@ -1,4 +1,15 @@
+2025-11-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCdflow.h,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCopt.c,
+	  support/regression/tests/bug-2222.c,
+	  support/regression/tests/bug-2384.c,
+	  support/valdiag/tests/arraybounds.c:
+	  Generalize  [static] parameter warning to also warn on dereference of invalid pointers. Improve pointer arithmetic support in static analysis for such warnings.
+
 2025-11-18 Gabriele Gorla <gorlik@yahoo.com>
+
   	* device/lib/mos6502/fabsf.s:
   	  Use ZP addressing to store fabs result.
   	* src/mos6502/gen.c,
