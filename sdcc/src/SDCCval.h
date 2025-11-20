@@ -183,5 +183,6 @@ int csdOfVal (int *topbit, int *nonzero, unsigned long long *csd_add, unsigned l
 int isEqualVal (value *, int);
 TYPE_TARGET_ULONGLONG ullFromLit (sym_link * lit);
 value * valRecastLitVal (sym_link * dtype, value * val);
+void checkParameterList (value *forward_declaration, value *parameters);
 
 #endif

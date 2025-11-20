@@ -1531,7 +1531,7 @@ function_declarator
           wassert (funcType);
 
           FUNC_HASVARARGS(funcType) = IS_VARG($4);
-          FUNC_ARGS(funcType) = reverseVal($4);
+          FUNC_ARGS(funcType) = $4;
 
           FUNC_SDCCCALL(funcType) = -1;
 
@@ -1728,11 +1728,17 @@ type_qualifier_list_opt
 
 parameter_type_list
   : parameter_list
+         {
+           $$ = reverseVal ($1);
+           checkParameterList (NULL, $$);
+         }
   | parameter_list ',' ELLIPSIS
          {
            if (IS_VOID ($1->type))
              werror (E_VOID_SHALL_BE_LONELY);
-           $1->vArgs = 1;
+           $$ = reverseVal ($1);
+           $$->vArgs = 1;
+           checkParameterList (NULL, $$);
          }
         ;
 
@@ -1891,7 +1897,7 @@ function_abstract_declarator
           DCL_TYPE(p) = FUNCTION;
 
           FUNC_HASVARARGS(p) = IS_VARG($4);
-          FUNC_ARGS(p) = reverseVal($4);
+          FUNC_ARGS(p) = $4;
 
           /* nest level was incremented to take care of the parms  */
           NestLevel -= LEVEL_UNIT;

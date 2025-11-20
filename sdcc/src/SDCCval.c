@@ -3616,3 +3616,20 @@ valForCastArr (ast * aexpr, sym_link * type)
   val->etype = getSpec (val->type);
   return val;
 }
+
+void
+checkParameterList (value *forward_declaration, value *parameters)
+{
+  for (value *p = parameters; p; p = p->next)
+    {
+      changePointer (p->type);
+      if (p->sym)
+        addSymChain (&p->sym);
+    }
+  for (value *p = parameters; p; p = p->next)
+    {
+      if (p->sym)
+        deleteSym (SymbolTab, p->sym, p->sym->name);
+    }
+}
+

@@ -149,3 +149,41 @@ char g(void)
 }
 #endif
 
+// Chekc that parameters only reference known other parametrs (C99/C23 syntax)
+#ifdef TEST6a
+#pragma disable_warning 85
+void f(int i, char a[j]); /* ERROR */
+
+void f(int i, char a[j]) /* ERROR */
+{
+}
+
+void g(char a[i], int i) /* ERROR */
+{
+}
+
+void g2(int i, char a[i]);
+
+void g2(int i, char a[i])
+{
+}
+#endif
+#ifdef TEST6b
+#pragma disable_warning 85
+void f(int i, char a[static j]); /* ERROR */
+
+void f(int i, char a[static j]) /* ERROR */
+{
+}
+
+void g(char a[static i], int i) /* ERROR */
+{
+}
+
+void g2(int i, char a[static i]);
+
+void g2(int i, char a[static i])
+{
+}
+#endif
+
