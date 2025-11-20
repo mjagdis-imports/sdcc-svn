@@ -2194,8 +2194,8 @@ checkStaticArrayParams (ebbIndex *ebbi)
           {
             const struct valinfo v = getOperandValinfo (ic, ic->left);
             wassert (IS_OP_LITERAL (ic->right));
-            unsigned long roff = operandLitValue (ic->right);
-            if (roff >= v.maxsize)
+            long long roff = operandLitValue (ic->right);
+            if (roff >= (long long)v.maxsize)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
           }
       }

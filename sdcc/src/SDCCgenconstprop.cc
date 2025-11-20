@@ -222,10 +222,13 @@ getOperandValinfo (const iCode *ic, const operand *op)
       valinfoCast (&v, type, v2, NULL); // Need to cast: ival could be out of range of type.
       valinfoUpdate (&v);
     }
-  else if (IS_ITEMP (op) && !IS_OP_VOLATILE (op))
+  else if ((IS_ITEMP (op) ||
+    IS_SYMOP (op) && OP_SYMBOL_CONST (op)->islocal && // Also include a few non-iTemps in the analysis, since since they don't always get replaced by register-equivalent iTemps without --stack-auto.
+      !OP_SYMBOL_CONST (op)->addrtaken && !IS_STATIC (OP_SYMBOL_CONST (op)->etype) && !IS_EXTERN (OP_SYMBOL_CONST (op)->etype)) // Exclude what might change in between, e.g. by a backjump via longjmp, or for extern/addrtaken by an intermediate call to another function.
+    && !IS_OP_VOLATILE (op) && ic->valinfos && ic->valinfos->map.find (op->key) != ic->valinfos->map.end ())
+    return (ic->valinfos->map[op->key]);
+  else if (IS_ITEMP (op))
     {
-      if (ic->valinfos && ic->valinfos->map.find (op->key) != ic->valinfos->map.end ())
-        return (ic->valinfos->map[op->key]);
       v.nothing = true;
       v.anything = false;
     }
