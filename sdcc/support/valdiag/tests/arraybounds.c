@@ -149,16 +149,16 @@ char g(void)
 }
 #endif
 
-// Chekc that parameters only reference known other parametrs (C99/C23 syntax)
+// Check that parameters only reference known other parametrs (C99/C23 syntax)
 #ifdef TEST6a
 #pragma disable_warning 85
 void f(int i, char a[j]); /* ERROR */
 
-void f(int i, char a[j]) /* ERROR */
+void f(int i, char a[j])  /* ERROR */
 {
 }
 
-void g(char a[i], int i) /* ERROR */
+void g(char a[i], int i)  /* ERROR */
 {
 }
 
@@ -172,11 +172,11 @@ void g2(int i, char a[i])
 #pragma disable_warning 85
 void f(int i, char a[static j]); /* ERROR */
 
-void f(int i, char a[static j]) /* ERROR */
+void f(int i, char a[static j])  /* ERROR */
 {
 }
 
-void g(char a[static i], int i) /* ERROR */
+void g(char a[static i], int i)  /* ERROR */
 {
 }
 
@@ -184,6 +184,57 @@ void g2(int i, char a[static i]);
 
 void g2(int i, char a[static i])
 {
+}
+#endif
+
+// Check diagnostics for passing null pointers to standard library functions, where not allowed.
+#ifdef TEST7a
+#include <string.h>
+void f(void)
+{
+	char c[] = "";
+	char d[] = "";
+
+	strcpy(c, d);
+	strcpy(c, NULL);    /* WARNING */
+	strcpy(NULL, d);    /* WARNING */
+	strcpy(NULL, NULL); /* WARNING */
+
+	strdup(c);
+	strdup(NULL);       /* WARNING */
+
+	strcmp(c, d);
+	strcmp(c, NULL);    /* WARNING */
+	strcmp(NULL, d);    /* WARNING */
+	strcmp(NULL, NULL); /* WARNING */
+
+	strchr(c, 'd');
+	strchr(NULL, 'd');  /* WARNING */
+
+	strstr(c, d);
+	strstr(c, NULL);    /* WARNING */
+	strstr(NULL, d);    /* WARNING */
+	strstr(NULL, NULL); /* WARNING */
+
+	strlen(c);
+	strlen(NULL);       /* WARNING */
+}
+#endif
+
+#ifdef TEST7b
+#include <stdlib.h>
+#include <wchar.h>
+
+void f(void)
+{
+	atoi(NULL);               /* WARNING */
+	strtoull("", NULL, 10);
+	strtoull(NULL, NULL, 10); /* WARNING */
+	wcstol(NULL, NULL, 10);   /* WARNING */
+	wcscmp(L"", L"");
+	wcscmp(NULL, L"");        /* WARNING */
+	wcscmp(L"", NULL);        /* WARNING */
+	wcscmp(NULL, NULL);       /* WARNING */
 }
 #endif
 

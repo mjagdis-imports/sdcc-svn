@@ -106,7 +106,7 @@ bool uselessDecl = true;
 %token COMPLEX IMAGINARY
 %token STRUCT UNION ENUM RANGE SD_FAR
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
-%token NAKED JAVANATIVE OVERLAY TRAP
+%token NAKED JAVANATIVE OVERLAY TRAP BUILTIN
 %token <yystr> STRING_LITERAL INLINEASM FUNC
 %token IFX ADDRESS_OF GET_VALUE_AT_ADDRESS SET_VALUE_AT_ADDRESS SPIL UNSPIL GETABIT GETBYTE GETWORD
 %token BITWISEAND UNARYMINUS IPUSH IPUSH_VALUE_AT_ADDRESS IPOP PCALL ENDFUNCTION JUMPTABLE
@@ -2499,7 +2499,8 @@ external_declaration
           if ($1 && $1->type && IS_REGISTER (getSpec ($1->type)))
             werror (W_REGISTER_EXTERNAL_DECL);
           addSymChain (&$1);
-          allocVariables ($1);
+          if (!($1 && $1->type && IFFUNC_ISBUILTIN ($1->type)))
+            allocVariables ($1);
           cleanUpLevel (SymbolTab, 1);
         }
    | addressmod
@@ -2648,6 +2649,9 @@ function_attribute
                         $$ = newLink (SPECIFIER);
                         FUNC_INTNO($$) = INTNO_TRAP;
                         FUNC_ISISR($$) = 1;
+                     }
+   |  BUILTIN        {  $$ = newLink (SPECIFIER);
+                        FUNC_ISBUILTIN ($$) = 1;
                      }
    |  SMALLC         {  $$ = newLink (SPECIFIER);
                         FUNC_ISSMALLC($$) = 1;

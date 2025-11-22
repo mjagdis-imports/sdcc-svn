@@ -1332,6 +1332,7 @@ getBuiltinParms (iCode * fic, int *pcount, operand ** parms)
       parms[*pcount] = IC_LEFT (ic);
       ic = ic->next;
       (*pcount)++;
+      wassert (*pcount < MAX_BUILTIN_ARGS);
     }
 
   ic->generated = 1;

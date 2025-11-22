@@ -1,3 +1,32 @@
+2025-11-22 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/stdatomic.h,
+	  device/include/stdio.h,
+	  device/include/stdlib.h,
+	  device/include/string.h,
+	  device/include/time.h,
+	  device/include/uchar.h,
+	  device/include/wchar.h,
+	  src/SDCC.lex,
+	  src/SDCC.y,
+	  src/SDCCicode.c,
+	  src/SDCCmain.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  src/ds390/main.c,
+	  src/f8/main.c,
+	  src/hc08/main.c,
+	  src/mcs51/main.c,
+	  src/pdk/main.c,
+	  src/pic14/main.c,
+	  src/pic16/main.c,
+	  src/port.h,
+	  src/stm8/main.c,
+	  src/z80/main.c,
+	  support/regression/tests/gcc-torture-execute-pr34176.c,
+	  support/valdiag/tests/arraybounds.c:
+	  Use [static] notation in standard library headers to enable improved diagnostics on passing null pointers where invalid. Rewrite mechanism for announcing built-in functions by ports.
+
 2025-11-20 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCC.y,

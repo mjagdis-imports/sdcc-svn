@@ -5053,17 +5053,6 @@ initBuiltIns ()
   int i;
   symbol *sym;
 
-  if (port->builtintable)
-    {
-      for (i = 0; port->builtintable[i].name; i++)
-        {
-          sym = funcOfTypeVarg (port->builtintable[i].name, port->builtintable[i].rtype,
-                                port->builtintable[i].nParms, (const char **)port->builtintable[i].parm_types);
-          FUNC_ISBUILTIN (sym->type) = 1;
-          FUNC_ISREENT (sym->type) = 0;     /* can never be reentrant */
-        }
-    }
-
   /* initialize memcpy symbol for struct assignment */
   builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy");
   nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");

@@ -283,7 +283,7 @@ typedef struct sym_link
     unsigned z88dk_has_params_offset:1;     /* Has a parameter offset (Z80 only) */
     unsigned intno;                 /* Number of interrupt for interrupt service routine */
     short regbank;                  /* register bank 2b used                */
-    unsigned builtin;               /* is a builtin function                */
+    bool builtin;                   // is a builtin function
     unsigned javaNative;            /* is a JavaNative Function (TININative ONLY) */
     unsigned overlay;               /* force parameters & locals into overlay segment */
     unsigned hasStackParms;         /* function has parameters on stack     */
