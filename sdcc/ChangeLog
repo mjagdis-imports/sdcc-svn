@@ -7,7 +7,9 @@
 	  src/SDCCval.c,
 	  src/SDCCval.h,
 	  src/port.h,
-	  support/valdiag/tests/arraybounds.c:
+	  support/valdiag/tests/arraybounds.c,
+	  .version,
+	  doc/sdccman.lyx:
 	  Support parameter forward declaration syntax for a single parameter of integer type.
 
 2025-11-23 Benedikt Freisen <b.freisen AT gmx.net>

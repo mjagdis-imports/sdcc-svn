@@ -27199,6 +27199,31 @@ xx
  is a placeholder for the desired version of the C standard.
 \end_layout
 
+\begin_layout Subsection
+Parameter forward declarations
+\end_layout
+
+\begin_layout Standard
+SDCC (when using 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--std-sdccxx
+\end_layout
+
+\end_inset
+
+) supports parameter forward declarations for s single parameter of integer type.
+ The supported functionality is thus a subset of the GCC extension:
+\end_layout
+
+\begin_layout Verse
+void f(size_t n;
+ char a[static n],
+ size_t n);
+\end_layout
+
 \begin_layout Section
 Parameters
 \begin_inset Index idx
