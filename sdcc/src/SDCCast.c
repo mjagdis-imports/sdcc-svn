@@ -1607,7 +1607,9 @@ gatherAutoInit (symbol * autoChain)
             }
           setAstFileLine (work, sym->fileDef, sym->lineDef);
 
-          sym->ival = NULL;
+          // if this is a constexpr, keep the ival for compile-time evaluation
+          if (!(IS_CONSTEXPR (sym->etype)))
+            sym->ival = NULL;
           if (init)
             init = newNode (NULLOP, init, work);
           else
@@ -1796,6 +1798,11 @@ constExprTree (ast *cexpr)
           // the offset of a struct field will never change
           return TRUE;
         }
+      if (IS_AST_SYM_VALUE (cexpr) && SPEC_CONSTEXPR (AST_SYMBOL (cexpr)->type))
+        {
+          // a C23 constexpr is by definition a constant expression
+          return TRUE;
+        }
 #if 0
       if (IS_AST_SYM_VALUE (cexpr) && IN_CODESPACE (SPEC_OCLS (AST_SYMBOL (cexpr)->etype)))
         {
@@ -1876,6 +1883,18 @@ constExprValue (ast * cexpr, int check)
       if (IS_CAST_OP (cexpr) && IS_LITERAL (cexpr->right->ftype))
         {
           return valCastLiteral (cexpr->ftype, floatFromVal (cexpr->right->opval.val), (TYPE_TARGET_ULONGLONG) ullFromVal (cexpr->right->opval.val));
+        }
+
+      /* if this is a C23 constexpr, use its value */
+      if (IS_CONSTEXPR (cexpr->ftype))
+        {
+          value *ivalAsVal = list2val (AST_SYMBOL (cexpr)->ival, check);
+          value *val = valRecastLitVal (cexpr->etype, ivalAsVal);
+          // TODO: find a way to properly check for loss of range or precisioin
+          // /* initializer must not exceed target type's range or precision */
+          // if (check && isEqualVal (valCompare (val, ivalAsVal, 0, true), 0))
+          //   werrorfl (cexpr->filename, cexpr->lineno, E_CONSTEXPR_RANGE_PRECISION);
+          return val;
         }
 
       if (IS_AST_VALUE (cexpr))
@@ -3453,6 +3472,22 @@ rewriteStructAssignment (ast *tree)
   return decorateType (newTree, RESULT_TYPE_OTHER, true);
 }
 
+/*--------------------------------------------------------------*/
+/* propagateConstExpr - propagates the value of an AST declared */
+/* 'constexpr' to the current AST node, which it replaces.      */
+/* To be used from within decorateType.                         */
+/*--------------------------------------------------------------*/
+void
+propagateConstExpr (ast **ptree, RESULT_TYPE resultType, bool reduceTypeAllowed)
+{
+  if (ptree && *ptree && SPEC_CONSTEXPR ((*ptree)->etype))
+    {
+      ast *newAst = newAst_VALUE (constExprValue (*ptree, true));
+      copyAstLoc (newAst, *ptree);
+      *ptree = decorateType (newAst, resultType, reduceTypeAllowed);
+    }
+}
+
 /*--------------------------------------------------------------------*/
 /* decorateType - compute type for this tree, also does type checking.*/
 /* This is done bottom up, since type has to flow upwards.            */
@@ -3693,6 +3728,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
+
       if (IS_LITERAL (RTYPE (tree)))
         {
           int arrayIndex = (int) ulFromVal (valFromType (RETYPE (tree)));
@@ -3708,6 +3745,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       RRVAL (tree) = 1;
       TTYPE (tree) = copyLinkChain (LTYPE (tree)->next);
       TETYPE (tree) = getSpec (TTYPE (tree));
+      /* we now have to access the memory allocated for a constexpr */
+      SPEC_CONSTEXPR (TETYPE (tree)) = 0;
 
       if (IS_PTR (LTYPE (tree)) /* && !IS_LITERAL (TETYPE (tree)) caused bug #2850 */)
         {
@@ -4024,6 +4063,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /*  bitwise or                */
       /*----------------------------*/
     case '|':
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
+
       /* if left is a literal exchange left & right */
       if (IS_LITERAL (LTYPE (tree)))
         {
@@ -4077,6 +4119,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           fprintf (stderr, "\n");
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
       /* if they are both literal then rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
@@ -4174,6 +4219,10 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_INVALID_OP, "divide");
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
+
       /* check if div by zero */
       if (IS_LITERAL (RTYPE (tree)) && !IS_LITERAL (LTYPE (tree)))
         checkZero (valFromType (RETYPE (tree)));
@@ -4246,6 +4295,10 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           fprintf (stderr, "\n");
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
+
       /* check if div by zero */
       if (IS_LITERAL (RTYPE (tree)) && !IS_LITERAL (LTYPE (tree)))
         checkZero (valFromType (RETYPE (tree)));
@@ -4285,6 +4338,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
           TTYPE (tree) = copyLinkChain (LTYPE (tree)->next);
           TETYPE (tree) = getSpec (TTYPE (tree));
+          /* we now have to access the memory allocated for a constexpr */
+          SPEC_CONSTEXPR (TETYPE (tree)) = 0;
           /* adjust the storage class */
           if (DCL_TYPE (tree->left->ftype) != ARRAY && DCL_TYPE (tree->left->ftype) != FUNCTION)
             SPEC_SCLS (TETYPE (tree)) = sclsFromPtr (tree->left->ftype);
@@ -4301,6 +4356,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_INVALID_OP, "multiplication");
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
       /* if they are both literal then */
       /* rewrite the tree */
@@ -4364,6 +4422,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               goto errorTreeReturn;
             }
 
+          propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+
           /* if left is a literal then do it */
           if (IS_LITERAL (LTYPE (tree)))
             {
@@ -4409,6 +4469,10 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_PLUS_INVALID, "+");
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
+
       /* if they are both literal then */
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
@@ -4504,6 +4568,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               goto errorTreeReturn;
             }
 
+          propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+
           /* if left is a literal then do it */
           if (IS_LITERAL (LTYPE (tree)))
             {
@@ -4542,6 +4608,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_PLUS_INVALID, "-");
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
       /* if they are both literal then */
       /* rewrite the tree */
@@ -4649,6 +4718,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+
       /* if left is a literal then do it */
       if (IS_LITERAL (LTYPE (tree)))
         {
@@ -4688,6 +4759,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_UNARY_OP, tree->opval.op);
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
 
       /* if left is another '!' */
 #if 0 /* Disabled optimization due to bugs #2548, #2551. */
@@ -4762,6 +4835,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /* make smaller type only if it's a LEFT_OP */
       if (tree->opval.op == LEFT_OP)
         tree->left = addCast (tree->left, resultTypeProp, TRUE);
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
       /* if they are both literal then */
       /* rewrite the tree */
@@ -5085,6 +5161,10 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           werrorfl (tree->filename, tree->lineno, E_COMPARE_OP);
           goto errorTreeReturn;
         }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
+
       /* if they are both literal then */
       /* rewrite the tree */
       if (IS_LITERAL (RTYPE (tree)) && IS_LITERAL (LTYPE (tree)))
@@ -5112,6 +5192,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
         if (tree != lt)
           return lt;
       }
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
+      propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
       /* C does not allow comparison of struct or union. */
       if (IS_STRUCT (LTYPE (tree)) || IS_STRUCT (RTYPE (tree)))
@@ -5410,6 +5493,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case '?':
       /* the type is value of the colon operator (on the right) */
       assert (IS_COLON_OP (tree->right));
+
+      propagateConstExpr (&tree->left, resultType, reduceTypeAllowed);
 
       /* If already known then replace the tree : optimizer will do it
          but faster to do it here. If done before decorating tree->right
@@ -5851,6 +5936,8 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
 
           typecompat = compareType (currFunc->type->next, RTYPE (tree), false);
+
+          propagateConstExpr (&tree->right, resultType, reduceTypeAllowed);
 
           /* if there is going to be a casting required then add it */
           if (typecompat == -1)

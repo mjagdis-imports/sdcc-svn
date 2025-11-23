@@ -308,7 +308,7 @@ enum {
   W_RETURN_TYPE_OMITTED_INT     = 278, /* return type of function omitted, assuming int */
   W_SINGLE_DASH_LONG_OPT        = 279, /* use of single-dash long options is discouraged */
   E_UNKNOWN_LANGUAGE_STANDARD   = 280, /* unknown language standard */
-  E_CONSTEXPR                   = 281, /* constexpr not implemented */
+  E_CONSTEXPR_C23               = 281, /* constexpr requires ISO C23 or later */
   E_TYPEOF                      = 282, /* typeof and typeof_unqual not implemented for nontrivial expressions */
   W_FUNCDECL_WITH_NO_PROTOTYPE  = 283, /* function declarator with no prototype */
   W_UNKNOWN_ATTRIBUTE           = 284, /* unknown attribute ignored*/
@@ -369,8 +369,11 @@ enum {
   E_INVALID_ID                  = 339, // invalid identifier
   W_ID_NOT_NORMALIZED_NFC       = 340, // identifier not normalized to unicode normalization form C
   W_INSECURE_ID                 = 341, // insecure identifier not compliant with UTS #39
-  W_STATIC_ARRAY_PARAM_LENGTH   = 342, // argument for [static] array parameter is not of sufficient length
-  W_INVALID_PTR_DEREF           = 343, // possibly invalid pointer dereferenced or array index out of bounds - see also W_IDX_OUT_OF_BOUNDS (for cases where we know exact index and bound)
+  E_CONSTEXPR_WITHOUT_INIT      = 342, // constexpr declaration without initialization
+  E_CONSTEXPR_RANGE_PRECISION   = 343, // type of constexpr declaration has insufficient range or precision
+  E_CONSTEXPR_INVALID_QUAL      = 344, // object of constexpr type cannot be atomic, variably modified, volatile or restrict qualified
+  W_STATIC_ARRAY_PARAM_LENGTH   = 345, // argument for [static] array parameter is not of sufficient length
+  W_INVALID_PTR_DEREF           = 346, // possibly invalid pointer dereferenced or array index out of bounds - see also W_IDX_OUT_OF_BOUNDS (for cases where we know exact index and bound)
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 

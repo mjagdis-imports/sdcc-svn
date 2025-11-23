@@ -4,7 +4,7 @@
 
 #include <testfwk.h>
 
-#pragma disable_warning 343 // Expected warning, this stuff is UB.
+#pragma disable_warning 346 // Expected warning, this stuff is UB.
 
 typedef char chararr[4];
 
