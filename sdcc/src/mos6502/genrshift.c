@@ -74,7 +74,8 @@ AccSRsh (int shCount)
 /**************************************************************************
  * AccRsh - right shift accumulator by known count
  *************************************************************************/
-void AccRsh (int shCount, bool sign)
+void
+AccRsh (int shCount, bool sign)
 {
   int i;
 
@@ -91,7 +92,6 @@ void AccRsh (int shCount, bool sign)
       emit6502op ("rol", "a");
       loadRegFromConst(m6502_reg_a, 0);
       emit6502op ("rol", "a");
-      /* total: 6 cycles, 4 bytes */
     }
   else if(shCount==6)
     {
@@ -99,12 +99,11 @@ void AccRsh (int shCount, bool sign)
       emit6502op ("rol", "a");
       emit6502op ("rol", "a");
       emit6502op ("and", "#0x03");
-      /* total: 8 cycles, 5 bytes */
     }
   else
     {
       /* lsr a is 2 cycles and 1 byte, so an unrolled loop is the      */
-      /* the fastest and shortest (shCount<6).            */
+      /* fastest and shortest (shCount<6).                             */
       for (i = 0; i < shCount; i++)
         emit6502op ("lsr", "a");
     }
@@ -113,7 +112,8 @@ void AccRsh (int shCount, bool sign)
 /**************************************************************************
  * XAccSRsh - signed right shift register pair XA by known count
  *************************************************************************/
-static void XAccSRsh (int shCount)
+static void
+XAccSRsh (int shCount)
 {
   symbol *tlbl;
   int i;
@@ -264,9 +264,34 @@ genrsh16 (operand * result, operand * left, int shCount, int sign)
 	  storeConstToAop (0, AOP (result), 1);
 	}
     }
+  else if(IS_AOP_XA(AOP(result)))
+    {
+      if(shCount==1 && !IS_AOP_XA(AOP(left)))
+        {
+          loadRegFromAop (m6502_reg_a, AOP (left), 1);
+          if(sign)
+            {
+	      emit6502op ("cmp", "#0x80");
+	      emit6502op ("ror", "a");
+            }
+          else 
+	    emit6502op ("lsr", "a");
+
+          transferRegReg(m6502_reg_a, m6502_reg_x, true);
+          loadRegFromAop (m6502_reg_a, AOP (left), 0);
+	  emit6502op ("ror", "a");
+          storeRegToAop (m6502_reg_xa, AOP (result), 0);
+        }
+      else
+	{
+	  /*  1 <= shCount <= 7 */
+	  // TODO: count > 2 efficient?
+	  loadRegFromAop (m6502_reg_xa, AOP (left), 0);
+	  XAccRsh (shCount, sign);
+        }
+    }
   else
     {
-      /*  1 <= shCount <= 7 */
       needpulla = storeRegTempIfSurv (m6502_reg_a);
       needpullx = storeRegTempIfSurv (m6502_reg_x);
       loadRegFromAop (m6502_reg_xa, AOP (left), 0);
@@ -887,7 +912,7 @@ genRightShiftLiteral (operand * left, operand * result, int shCount, int sign)
 
   emitComment (TRACEGEN, __func__);
 
-//  size = AOP_SIZE (left);
+  //  size = AOP_SIZE (left);
   /* test the LEFT size !!! */
   size = AOP_SIZE (result);
   emitComment (TRACEGEN|VVDBG, "  %s - result size=%d, left size=%d",
@@ -974,12 +999,11 @@ m6502_genRightShift (iCode * ic)
 
   int size, offset;
   symbol *tlbl, *tlbl1;
-  bool sign;
   reg_info *countreg = NULL;
-  int count_offset=0;
   bool restore_a = false;
   bool restore_y = false;
   bool x_in_regtemp = false;
+  bool sign;
 
   emitComment (TRACEGEN, __func__);
 
@@ -1095,9 +1119,9 @@ m6502_genRightShift (iCode * ic)
   emitCmp(countreg, 0);
   emitBranch ("beq", tlbl1);
 
-// FIXME: find a good solution for this
-//  if(IS_AOP_WITH_A (AOP (right)) && sameRegs (AOP (left), AOP (result)) )
-//    loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
+  // FIXME: find a good solution for this
+  //  if(IS_AOP_WITH_A (AOP (right)) && sameRegs (AOP (left), AOP (result)) )
+  //    loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
 
   safeEmitLabel (tlbl); // loop label
 
