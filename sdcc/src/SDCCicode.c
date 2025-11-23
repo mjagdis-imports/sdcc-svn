@@ -667,27 +667,33 @@ newiCodeLabelGoto (int op, symbol * label)
 }
 
 iCode *
-newiCodeParm (int op, operand *left, sym_link *type, sym_link *ftype, int *stack)
+newiCodeParm (int op, operand *left, value *param, sym_link *ftype, int *stack)
 {
   iCode *ic;
-
-  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : operandFromLink (type));
+  operand *valop = NULL;
+  if (op != IPUSH_VALUE_AT_ADDRESS && param)
+    {
+      valop = newOperand (); // Can't use operandFromValue, since it would create symop.
+      valop->type = VALUE;
+      valop->svt.valOperand = param;
+    }
+  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : valop);
   if (op != SEND)
     {
       ic->parmPush = 1;
       if (stack)
         {
-          sym_link *parmtype = operandType(left);
+          sym_link *argtype = operandType (left);
           if (ic->op == IPUSH_VALUE_AT_ADDRESS)
-            parmtype = parmtype->next;
-          if (IS_ARRAY (parmtype))
-            parmtype = aggrToPtr (parmtype, false);
-          *stack += getSize (parmtype);
-          if ((IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype) && !IS_STRUCT (parmtype)) && getSize (parmtype) == 1) // SmallC and Dynamic C calling conventions pass 8-bit parameters as 16-bit values.
+            argtype = argtype->next;
+          if (IS_ARRAY (argtype))
+            argtype = aggrToPtr (argtype, false);
+          *stack += getSize (argtype);
+          if ((IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype) && !IS_STRUCT (argtype)) && getSize (argtype) == 1) // Small-C and Dynamic C calling conventions pass 8-bit parameters as 16-bit values.
             (*stack)++;
-          else if (IFFUNC_ISDYNAMICC (ftype) && getSize (parmtype)  == 3 && IS_FARPTR (parmtype)) // Dynamic C passes pointers to __far as 32 bits.
+          else if (IFFUNC_ISDYNAMICC (ftype) && getSize (argtype)  == 3 && IS_FARPTR (argtype)) // Dynamic C passes pointers to __far as 32 bits.
             (*stack)++;
-          else if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // pdk needs even-oligned stack.
+          else if (TARGET_PDK_LIKE && getSize (argtype) % 2) // pdk needs even-oligned stack.
             (*stack)++;
         }
     }
@@ -3611,7 +3617,10 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
     {
 send:
       pval = checkTypes (operandFromValue (argVals, true), pval);
-      ic = newiCode (SEND, pval, operandFromLink (argVals->type));
+      operand *valop = newOperand (); // Can't use operandFromValue, since it would create symop.
+      valop->type = VALUE;
+      valop->svt.valOperand = argVals;
+      ic = newiCode (SEND, pval, valop);
       ic->argreg = SPEC_ARGREG (parms->etype);
       ic->builtinSEND = FUNC_ISBUILTIN (ftype);
       ADDTOCHAIN (ic);
@@ -3720,13 +3729,9 @@ send:
         }
       else
         {
-          sym_link *type = NULL;
           if (argVals && (*iArg >= 0))
-            {
-              pval = checkTypes (operandFromValue (argVals, false), pval);
-              type = argVals->type;
-            }
-          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, type, ftype, stack);
+            pval = checkTypes (operandFromValue (argVals, false), pval);
+          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, (*iArg >= 0) ? argVals : NULL, ftype, stack);
           ADDTOCHAIN (ic);
         }
       if (IFFUNC_ISDYNAMICC (ftype) && IS_REGPARM (parms->etype))

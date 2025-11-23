@@ -1470,7 +1470,7 @@ arraySizes (sym_link *type, const char *name)
 
   if ((IS_ARRAY (type) || IS_PTR (type)) && !DCL_ELEM (type) && DCL_ELEM_AST (type))
     {
-      value *tval = constExprValue (DCL_ELEM_AST (type), true);
+      value *tval = constExprValue (DCL_ELEM_AST (type), false);
       if (!tval || (SPEC_SCLS (tval->etype) != S_LITERAL))
         {
           if (!options.std_c99)

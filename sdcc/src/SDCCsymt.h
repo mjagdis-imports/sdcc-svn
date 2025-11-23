@@ -216,8 +216,8 @@ typedef struct declarator
 {
   DECLARATOR_TYPE dcl_type;         /* POINTER,ARRAY or FUNCTION  */
   bool dcl_type_implicitintrinsic:1;/* intrinsic named address space indicated by dcltype has been assigned implicitly. */
-  size_t num_elem;                  /* # of elems if type==array, */
-  ast *num_elem_ast;                /* ast for # of elems, used to calculate num_elem. */
+  size_t num_elem;                  // # of elems if dcl_type == ARRAY,
+  ast *num_elem_ast;                // ast for # of elems, used to calculate num_elem.
   bool static_array_param:1;        // [static] parameter
   /* always 0 for flexible arrays */
   unsigned ptr_const:1;             /* pointer is constant        */
@@ -225,7 +225,7 @@ typedef struct declarator
   unsigned ptr_restrict:1;          /* pointer is resticted       */
   bool ptr_atomic:1;                /* pointer is atomic          */
   ARRAY_LENGTH_TYPE array_length_type; // Array is known to be a VLA?
-  bool vla_check_visited:1;         // Already visited in check for VLA - implementation detail to prevent infinite recursion */
+  bool vla_check_visited:1;         // Already visited in check for VLA - implementation detail to prevent infinite recursion
   struct symbol *ptr_addrspace;     /* pointer is in named address space  */
 
   struct sym_link *tspec;           /* pointer type specifier     */

@@ -2177,16 +2177,97 @@ checkStaticArrayParams (ebbIndex *ebbi)
                 argop = ic->left;
                 paramtype = operandType (ic->right);
               }
-  
+
             if (IS_DECL (paramtype) && DCL_STATIC_ARRAY_PARAM (paramtype)) // Only check [static] array parameters.
               {
-                // TODO: Handle [static] array sizes that are not constant?
+                unsigned long paramsize;
+                if (DCL_ELEM (paramtype) != 0) // Array size is an integer constant
+                  paramsize = DCL_ELEM (paramtype) * getSize (paramtype->next);
+                else if (DCL_ELEM_AST (paramtype))
+                  {
+                    // Find sym used in array size. Also for simple arithmetic expressions like (sym * N + M).
+                    symbol *sym;
+                    long long pscale = 1;
+                    long long poffset = 0;
+                    ast *ast = DCL_ELEM_AST (paramtype);
+                    if (IS_AST_OP (ast) && ast->opval.op == '+' && ast->right && IS_LITERAL (ast->right->ftype))
+                      {
+                        value *rval = valFromType (ast->right->ftype);
+                        if (floatFromVal (rval) >= -4096 && floatFromVal (rval) < 4096)
+                          {
+                            poffset = floatFromVal (rval);
+                            ast = ast->left;
+                          }
+                      }
+                    if (IS_AST_OP (ast) && ast->opval.op == '*' && ast->right && IS_LITERAL (ast->right->ftype))
+                      {
+                        value *rval = valFromType (ast->right->ftype);
+                        if (floatFromVal (rval) >= 0 && floatFromVal (rval) < 4096)
+                          {
+                            pscale = floatFromVal (rval);
+                            ast = ast->left;
+                          }
+                      }
+                    if (IS_AST_SYM_VALUE (ast))
+                      sym = AST_SYMBOL (ast);
+                    else
+                      continue;
+                    
+                    // Find called function
+                    iCode *cic;
+                    for (cic = ic->next; cic && cic->op != CALL  && cic->op != PCALL; cic = cic->next);
+                    if (!cic) // call not found.
+                      continue;
+                    sym_link *dtype = operandType (cic->left);
+                    sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
 
-                if (DCL_ELEM (paramtype) == 0)
+                    // Find parameter for symbol.
+                    value *v;
+                    for (v = FUNC_ARGS (ftype); v; v = v->next)
+                      if (v->sym && !strcmp(v->sym->name, sym->name))
+                        break;
+                    if (!v)
+                      continue;
+
+                    // Find pic where the corresponding argument is passed.
+                    iCode *pic;
+                    operand *pargop;
+                    for (pic = cic->prev; pic; pic = pic->prev)
+                      {
+                        if ((pic->op == IPUSH || pic->op == SEND) && pic->right || pic->op == '=' && IS_PARM (pic->result))
+                          {
+                            if (pic->op == '=')
+                              pargop = pic->right;
+                            else
+                              pargop = pic->left;
+                            if (pic->op != '=' && IS_VALOP (pic->right) && !strcmp (OP_VALUE (pic->right)->sym->name, sym->name))
+                              break;
+                            if (pic->op == '=' && !strcmp (OP_SYMBOL(pic->result)->name, sym->name))
+                              break;
+                          }
+                        else
+                          {
+                            pic = NULL;
+                            break;
+                          }
+                      }
+                    if (!pic)
+                      continue;
+
+                    // Deduce bound
+                    const struct valinfo vi = getOperandValinfo (pic, pargop);
+                    long long pargv = (vi.anything || vi.min < 0 || vi.min > ULONG_MAX) ? 0 : vi.min;
+                    pargv *= pscale;
+                    pargv += poffset;
+                    if (pargv < 1) // Array size expression 
+                      pargv = 0;
+                    paramsize = pargv * getSize (paramtype->next);
+                  }
+                else
                   continue;
                   
-                const struct valinfo v = getOperandValinfo (ic, argop);
-                if (!v.anything && v.maxsize < DCL_ELEM (paramtype) * getSize (paramtype->next))
+                const struct valinfo vi = getOperandValinfo (ic, argop);
+                if (!vi.anything && vi.maxsize < paramsize)
                   werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
               }
           }

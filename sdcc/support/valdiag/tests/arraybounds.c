@@ -1,8 +1,7 @@
 #include <stddef.h>
 
-#ifdef TEST1
 // Basic functionality
-
+#ifdef TEST1
 int f3(char c[static 2]);
 
 // Passing null pointer
@@ -33,9 +32,8 @@ void g2(void)
 }
 #endif
 
-#ifdef TEST2
 // Generalized constant propagation analysis information needs to be used
-
+#ifdef TEST2
 int f3(char c[static 2]);
 
 int i;
@@ -64,9 +62,8 @@ void g2(void)
 }
 #endif
 
-#ifdef TEST3
 // Dereference instead of parameter passing
-
+#ifdef TEST3
 char c[3];
 
 char g2(void)
@@ -114,9 +111,8 @@ char g3b(_Bool i)
 }
 #endif
 
-#ifdef TEST4
 // Don't warn if the array length is not known.
-
+#ifdef TEST4
 extern unsigned long array[]; // Unknown length
 
 unsigned long f(void)
@@ -132,8 +128,8 @@ unsigned long g(void)
 unsigned long array[] = {0, 1, 2}; // Known length here
 #endif
 
-#ifdef TEST5
 // Object accessed as array of char.
+#ifdef TEST5
 long l;
 
 char f(void)
@@ -261,5 +257,71 @@ void f6(_BitInt(8) i; char a[i], _BitInt(8) i);
 
 // Types don't match
 void f7(int i; long i);    /* ERROR */
+#endif
+
+// Array size is not an integer constant
+#ifdef TEST9
+#pragma std_sdcc23
+void f0(int i, char a[static i]);
+
+void g0(void)
+{
+	char a[5];
+	f0(4, a);
+	f0(5, a);
+	f0(6, a); /* WARNING */
+	f0(7, a); /* WARNING */
+}
+
+void f1(int i; char a[static i], int i);
+
+void g1(void)
+{
+	char a[5];
+	f1(a, 4);
+	f1(a, 5);
+	f1(a, 6); /* WARNING */
+	f1(a, 7); /* WARNING */
+}
+#endif
+
+// Array size is a simple arithmetic expression
+#ifdef TEST10
+void f0(int i, char a[static i * 3 + 2]);
+
+void g0(void)
+{
+	char a[6];
+	f0(0, a);
+	f0(1, a);
+	f0(2, a); /* WARNING */
+	f0(3, a); /* WARNING */
+}
+
+void f1(int i; char a[static i * 3 + 2], int i);
+
+void g1(void)
+{
+	char a[6];
+	f1(a, 0);
+	f1(a, 1);
+	f1(a, 2); /* WARNING */
+	f1(a, 3); /* WARNING */
+}
+#endif
+
+// Check diagnostics for passing arrays of minimum size to standard library function
+#ifdef TEST11
+#pragma std_c2y
+#include <stdbit.h>
+
+void f(void)
+{
+	char a[6];
+	stdc_memreverse8(2, a);
+	stdc_memreverse8(6, a);
+	stdc_memreverse8(8, a); /* WARNING */
+	stdc_memreverse8(9, a); /* WARNING */
+}
 #endif
 

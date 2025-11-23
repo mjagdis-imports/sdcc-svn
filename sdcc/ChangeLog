@@ -1,5 +1,14 @@
 2025-11-23 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCicode.c,
+	  src/SDCCicode.h,
+	  src/SDCCopt.c,
+	  src/SDCCsymt.c,
+	  support/valdiag/tests/arraybounds.c:
+	  Warnings on [static n] array parameters where n is not an integer constant.
+
+2025-11-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.y,
 	  src/SDCCerr.c,
 	  src/SDCCerr.h,
