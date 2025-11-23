@@ -429,7 +429,7 @@ typedef struct
 
   bool arrayInitializerSuppported;
   bool (*cseOk) (iCode * ic, iCode * pdic);
-  const char *c_preamble;       // declarations of builtin functions
+  const char *c_preamble;       // A block of C code to be prepended to the user's code after preprocessing. Meant for declarations of builtin functions. Directly fed into ISO C23 translation phase 5.
   int unqualified_pointer;      /* unqualified pointers type is  */
   bool far_in_generic;          // __far is a subset of generic.
   bool generic_in_far;          // generic is a subset of __far.

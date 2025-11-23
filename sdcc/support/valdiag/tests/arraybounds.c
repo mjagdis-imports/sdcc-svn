@@ -238,3 +238,28 @@ void f(void)
 }
 #endif
 
+// Check well-formedness of parameter forward declarations
+#ifdef TEST8
+#pragma std_sdcc23
+// Forward declared parameter not named
+void f0(int; int j);       /* ERROR */
+
+// Forward declared parameter missing in parameter list
+void f1(int i; char a[i]); /* ERROR */
+
+void f2(int i; char a[i], int i);
+
+void f3(int i; int i);
+
+// Not integer type
+void f4(float i; float i); /* ERROR */
+
+// Not integer type
+void f5(int *i; int *i);   /* ERROR */
+
+void f6(_BitInt(8) i; char a[i], _BitInt(8) i);
+
+// Types don't match
+void f7(int i; long i);    /* ERROR */
+#endif
+

@@ -5069,9 +5069,6 @@ initCSupport (void)
 void
 initBuiltIns ()
 {
-  int i;
-  symbol *sym;
-
   /* initialize memcpy symbol for struct assignment */
   builtin_memcpy = findSym (SymbolTab, NULL, "__builtin_memcpy");
   nonbuiltin_memcpy = findSym (SymbolTab, NULL, "__memcpy");

@@ -1734,19 +1734,37 @@ type_qualifier_list_opt
 
 parameter_type_list
   : parameter_list
-         {
-           $$ = reverseVal ($1);
-           checkParameterList (NULL, $$);
-         }
+    {
+      $$ = reverseVal ($1);
+      checkParameterTypeList (NULL, $$);
+    }
   | parameter_list ',' ELLIPSIS
-         {
-           if (IS_VOID ($1->type))
-             werror (E_VOID_SHALL_BE_LONELY);
-           $$ = reverseVal ($1);
-           $$->vArgs = 1;
-           checkParameterList (NULL, $$);
-         }
-        ;
+    {
+      if (IS_VOID ($1->type))
+        werror (E_VOID_SHALL_BE_LONELY);
+      $$ = reverseVal ($1);
+      $$->vArgs = 1;
+      checkParameterTypeList (NULL, $$);
+    }
+  | parameter_declaration ';' parameter_list
+    {
+       if (!options.std_sdcc)
+        werror (W_PARAM_FWD_DECL);
+      $$ = reverseVal ($3);
+      checkParameterTypeList ($1, $$);
+    }
+  | parameter_declaration ';' parameter_list ',' ELLIPSIS
+    {
+      if (!options.std_sdcc)
+        werror (W_PARAM_FWD_DECL);
+      if (IS_VOID ($3->type))
+        werror (E_VOID_SHALL_BE_LONELY);
+      $$ = reverseVal ($3);
+      $$->vArgs = 1;
+      checkParameterTypeList ($1, $$);
+    }
+    
+  ;
 
 parameter_list
    : parameter_declaration

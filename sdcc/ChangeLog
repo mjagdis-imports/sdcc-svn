@@ -1,3 +1,15 @@
+2025-11-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.c,
+	  src/SDCCval.c,
+	  src/SDCCval.h,
+	  src/port.h,
+	  support/valdiag/tests/arraybounds.c:
+	  Support parameter forward declaration syntax for a single parameter of integer type.
+
 2025-11-23 Benedikt Freisen <b.freisen AT gmx.net>
 
 	* doc/sdccman.lyx,

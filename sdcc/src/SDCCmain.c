@@ -2889,7 +2889,11 @@ main (int argc, char **argv, char **envp)
         {
           int p[2];
           FILE *preamble;
+#ifdef _WIN32
+          wassert (!_pipe (p));
+#else
           wassert (!pipe (p));
+#endif
           preamble = fdopen (p[1], "w");
           wassert (preamble);
           fprintf (preamble, port->c_preamble);
