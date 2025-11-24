@@ -763,6 +763,8 @@ struct
      "forward-declared parameter '%s' missing from parameter list", 0 },
   { E_PARAM_FWD_DECL_UNSUPPORTED, ERROR_LEVEL_ERROR,
      "unsupported parameter forward declaration; only single forward-declared parameters of integer type are supported", 0 },
+  { W_VARARG_ONLY_C23, ERROR_LEVEL_WARNING,
+     "function with variable arguments only requires ISO C23 or later", 0 },
 };
 
 /* -------------------------------------------------------------------------------

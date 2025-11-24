@@ -1536,8 +1536,9 @@ function_declarator
 
           wassert (funcType);
 
-          FUNC_HASVARARGS(funcType) = IS_VARG($4);
-          FUNC_ARGS(funcType) = $4;
+          FUNC_HASVARARGS(funcType) = !$4 || IS_VARG($4);
+          if ($4)
+            FUNC_ARGS(funcType) = $4;
 
           FUNC_SDCCCALL(funcType) = -1;
 
@@ -1737,6 +1738,12 @@ parameter_type_list
     {
       $$ = reverseVal ($1);
       checkParameterTypeList (NULL, $$);
+    }
+  | ELLIPSIS
+    {
+      if (!options.std_c23)
+        werror (W_VARARG_ONLY_C23);
+      $$ = NULL;
     }
   | parameter_list ',' ELLIPSIS
     {

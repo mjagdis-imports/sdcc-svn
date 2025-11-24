@@ -924,10 +924,11 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
       /* don't perform integer promotion of explicitly typecasted variable arguments
        * if sdcc extensions are enabled */
-      if (options.std_sdcc && !TARGET_PDK_LIKE && IFFUNC_HASVARARGS (functype) &&
-          (IS_CAST_OP (*actParm) ||
-           (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
-           (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
+      if (options.std_sdcc && (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_MOS6502_LIKE || TARGET_PIC_LIKE) &&
+        IFFUNC_HASVARARGS (functype) &&
+        (IS_CAST_OP (*actParm) ||
+          (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
+          (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
         {
           /* Parameter was explicitly typecast; don't touch it. */
           return 0;

@@ -377,6 +377,7 @@ enum {
   W_PARAM_FWD_DECL              = 347, // parameter forward declaration not allowed in ISO C
   E_PARAM_FWD_DECL_NOPARAM      = 348, // forward-declared parameter '%s' missing from parameter list
   E_PARAM_FWD_DECL_UNSUPPORTED  = 349, // unsupported parameter forward declaration; only single forward-declared parameters of integer type are supported
+  W_VARARG_ONLY_C23             = 350, // function with variable arguments only requires ISO C23 or later
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

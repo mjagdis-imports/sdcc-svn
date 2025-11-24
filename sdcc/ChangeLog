@@ -1,13 +1,28 @@
 2025-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* .version,
+	  ChangeLog,
+	  doc/sdccman.lyx,
+	  src/SDCC.y,
+	  src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/regression/tests/vaargs.c.in,
+	  tests/vaargs-c23.c.in,
+	  tests/vaargs.c.in,
+	  support/valdiag/tests/varg.c:
+	  ISO C23 variable arguments, integer promotion changes on variable arguments, tests and documentation therefor and for ISO C23 va_start.
+
+2025-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* evice/include/stdarg.h,
 	  src/SDCCast.c,
 	  src/SDCCmem.c,
 	  src/SDCCmem.h,
 	  support/regression/tests/bitintvararg.c.in,
 	  support/regression/tests/bug-3172.c.in,
-	  support/regression/tests/vaargs.c.in:
-	  Move va_start implementation from library into compiler to fix false positive [static n9 warnins in funtions with variable arguments, and to make va_start ISO C23-compliant.
+	  support/regression/tests/vaargs.c.in,
+	  Move va_start implementation from library into compiler to fix false positive [static n] warnins in functions with variable arguments, and to make va_start ISO C23-compliant.
 
 2025-11-23 Gabriele Gorla <gorlik@yahoo.com>
 

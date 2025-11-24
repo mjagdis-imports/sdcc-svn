@@ -3229,6 +3229,14 @@ In 4.5.13,
  stray non-ASCII characters in source files are an error instead of being silently ignored.
 \end_layout
 
+\begin_layout Itemize
+In 4.5.15 the omission of integer promotions on explicitly cast variable arguments only happens for the mcs51,
+ ds390,
+ mos6502,
+ mos65c02,
+ pic14 and pic16 ports.
+\end_layout
+
 \begin_layout Section
 System Requirements
 \end_layout
@@ -27145,9 +27153,11 @@ xx
 \end_layout
 
 \begin_layout Subsection
-Omitting promotion on arguments of vararg function (does not apply to pdk13,
- pdk14,
- pdk15)
+Omitting promotion on arguments of vararg function (mcs51,
+ ds390,
+ mos6502,
+ mos65c02,
+ pic14 and pic16 only)
 \end_layout
 
 \begin_layout Standard
