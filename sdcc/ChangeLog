@@ -1,3 +1,14 @@
+2025-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* evice/include/stdarg.h,
+	  src/SDCCast.c,
+	  src/SDCCmem.c,
+	  src/SDCCmem.h,
+	  support/regression/tests/bitintvararg.c.in,
+	  support/regression/tests/bug-3172.c.in,
+	  support/regression/tests/vaargs.c.in:
+	  Move va_start implementation from library into compiler to fix false positive [static n9 warnins in funtions with variable arguments, and to make va_start ISO C23-compliant.
+
 2025-11-23 Gabriele Gorla <gorlik@yahoo.com>
 
   	* src/mos6502/genplus.c,
