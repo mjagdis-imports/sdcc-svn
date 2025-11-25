@@ -1,3 +1,8 @@
+2025-11-25 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/ralloc2.cc:
+	  Fix interaction of new va_start with frame pointer omission.
+
 2025-11-24 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* .version,
