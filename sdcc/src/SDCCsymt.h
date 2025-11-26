@@ -142,6 +142,7 @@ typedef struct specifier
   unsigned b_alignas:1;             /* alignment                  */
   unsigned b_absadr:1;              /* absolute address specfied  */
   unsigned b_const:1;               /* is a constant              */
+  unsigned b_constexpr:1;           /* is a constant expression   */
   unsigned b_restrict:1;            /* is restricted              */
   unsigned b_volatile:1;            /* is marked as volatile      */
   bool     b_atomic:1;              /* is qualified as _Atomic    */
@@ -193,6 +194,22 @@ typedef enum
 }
 DECLARATOR_TYPE;
 
+typedef enum
+{
+  ARRAY_LENGTH_KNOWN_CONST = 0,     // The normal tyspe of array: [N], for some integer constant expression N.
+  ARRAY_LENGTH_SPECIFIED,           // VLA of specified length: [n], for some expression n that is not an integer constant expression.
+  ARRAY_LENGTH_UNSPECIFIED,         // VLA of unspecified length: [*],
+  ARRAY_LENGTH_UNEVALUATED,         // Array of unevaluated length: [n], in a context where the expression n is not evaluated.
+                                    // Only really exists from C99 to C23; since C2y these are treated as arrays of unspecified length instead.
+                                    // SDCC shall follow C2y and not use this enum value¹. That is compliant with earlier standards:
+                                    // Array of unevaluated length either behave like arrays of unspecified length
+                                    // (when forming a composite type with an array of known kength) or have undefined behavior
+                                    // (all other uses), so always following C2y is correct.
+                                    // ¹ We do use it in the parser as placeholder, until we fill in the proper value in the function arraySizes.
+  ARRAY_LENGTH_UNKNOWN              // Array of unknown length: [], these arrays have incomplete type
+}
+ARRAY_LENGTH_TYPE;
+
 typedef struct ast ast;
 
 typedef struct declarator
@@ -206,7 +223,7 @@ typedef struct declarator
   unsigned ptr_volatile:1;          /* pointer is volatile        */
   unsigned ptr_restrict:1;          /* pointer is resticted       */
   bool ptr_atomic:1;                /* pointer is atomic          */
-  bool array_vla:1;                 // Array is known to be a VLA.
+  ARRAY_LENGTH_TYPE array_length_type; // Array is known to be a VLA?
   bool vla_check_visited:1;         // Already visited in check for VLA - implementation detail to prevent infinite recursion */
   struct symbol *ptr_addrspace;     /* pointer is in named address space  */
 
@@ -404,7 +421,7 @@ extern sym_link *validateLink (sym_link * l,
 #define DCL_PTR_VOLATILE(l) validateLink(l, "DCL_PTR_VOLATILE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_volatile
 #define DCL_PTR_RESTRICT(l) validateLink(l, "DCL_PTR_RESTRICT", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_restrict
 #define DCL_PTR_ATOMIC(l) validateLink(l, "DCL_PTR_ATOMIC", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_atomic
-#define DCL_ARRAY_VLA(l) validateLink(l, "DCL_ARRAY_VLA", #l, DECLARATOR, __FILE__, __LINE__)->select.d.array_vla
+#define DCL_ARRAY_LENGTH_TYPE(l) validateLink(l, "DCL_ARRAY_LENGTH_TYPE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.array_length_type
 #define DCL_PTR_ADDRSPACE(l) validateLink(l, "DCL_PTR_ADDRSPACE", #l, DECLARATOR, __FILE__, __LINE__)->select.d.ptr_addrspace
 #define DCL_TSPEC(l) validateLink(l, "DCL_TSPEC", #l, DECLARATOR, __FILE__, __LINE__)->select.d.tspec
 
@@ -506,6 +523,7 @@ extern sym_link *validateLink (sym_link * l,
  */
 #define SPEC_ISR_SAVED_BANKS(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s._bitStart
 #define SPEC_CONST(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_const
+#define SPEC_CONSTEXPR(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_constexpr
 #define SPEC_RESTRICT(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_restrict
 #define SPEC_VOLATILE(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_volatile
 #define SPEC_ATOMIC(x) validateLink(x, "SPEC_NOUN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_atomic
@@ -593,8 +611,9 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_LITERAL(x)    (IS_SPEC(x) && x->select.s.sclass == S_LITERAL)
 #define IS_CODE(x)       (IS_SPEC(x) && SPEC_SCLS(x) == S_CODE)
 #define IS_REGPARM(x)    (IS_SPEC(x) && SPEC_REGPARM(x))
+#define IS_CONSTEXPR(x)  (IS_SPEC(x) && SPEC_CONSTEXPR(x))
 
-#define IS_VALID_PARAMETER_STORAGE_CLASS_SPEC(x)    (!SPEC_TYPEDEF(x) && !SPEC_EXTR(x) && !SPEC_STAT(x) && SPEC_SCLS(x) != S_AUTO)
+#define IS_VALID_PARAMETER_STORAGE_CLASS_SPEC(x)    (!SPEC_TYPEDEF(x) && !SPEC_EXTR(x) && !SPEC_STAT(x) && !SPEC_CONSTEXPR(x) && SPEC_SCLS(x) != S_AUTO)
 
 /* symbol check macros */
 #define IS_AUTO(x)       (x->level && !IS_STATIC(x->etype) && !IS_EXTERN(x->etype))
@@ -710,7 +729,7 @@ sym_link *newBoolLink ();
 sym_link *newPtrDiffLink ();
 sym_link *newVoidLink ();
 int compareType (sym_link *, sym_link *, bool ignoreimplicitintrinsic);
-int compareTypeExact (sym_link *, sym_link *, long);
+int compareTypeExact (sym_link *, sym_link *, long level);
 int compareTypeInexact (sym_link *, sym_link *);
 int checkFunction (symbol *, symbol *);
 void cleanUpLevel (bucket **, long);

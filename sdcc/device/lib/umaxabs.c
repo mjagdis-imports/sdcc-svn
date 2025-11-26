@@ -30,6 +30,6 @@
 
 uintmax_t umaxabs(intmax_t j)
 {
-  return (j < 0) ? -j : j;
+  return (j < 0) ? -j : j; // Relies on SDCC implementation-defined behavior.
 }
 

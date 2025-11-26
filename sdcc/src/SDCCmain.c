@@ -2907,6 +2907,32 @@ main (int argc, char **argv, char **envp)
       if (fatalError)
         exit (EXIT_FAILURE);
 
+      for (int i = 0; i < HASHTAB_SIZE; i++)
+        {
+          for (bucket *chain = SymbolTab[i]; chain; chain = chain->next)
+            {
+              symbol *sym = (symbol *)chain->sym;
+              if (sym->level)
+                continue;
+              // Check for arrays of unknown size that get size 1 due to an implicit initializer.
+              if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
+                {
+                  wassert (!DCL_ELEM (sym->type));
+                  werrorfl (sym->fileDef, sym->lineDef, W_INCOMPLETE_ARRAY_IMPLICIT_1, sym->name);
+                  DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+                  DCL_ELEM (sym->type) = 1;
+                }
+              // Check for extern inline function for which no non-inline definition has been emitted yet.
+              if (IS_FUNC (sym->type) && IS_EXTERN (sym->etype) && IS_INLINE (sym->etype) && !sym->generated)
+                {
+                  if (!sym->funcTree)
+                    werrorfl (sym->fileDef, sym->lineDef, E_EXTERN_INLINE_NO_DEF, sym->name);
+                  else
+                    fprintf (stderr, "Internal issue for function %s: todo: implement emission of definition for inline function after extern declaration.\n", sym->name);
+                }
+            }
+        }
+
       if (port->general.do_glue != NULL)
         (*port->general.do_glue) ();
       else

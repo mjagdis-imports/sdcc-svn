@@ -54,20 +54,36 @@ genMinusDec (iCode * ic)
 
   emitComment (TRACEGEN, "  %s - size=%d  icount=%d", __func__, size, icount);
 
+  emitComment (TRACEGEN|VVDBG, "  %s: icount = %d, sameRegs=%d",
+               __func__, icount, sameRegs (AOP (left), AOP (result)));
+
   if (icount>255 && ((icount&0xff)!=0) )
     return false;
 
   if (icount>255)
     {
-#if 0
+#if 1
       int bcount = icount>>8;
-      if (!IS_AOP_XA (AOP (result)) || bcount>4 )
-        return false;
+      if (IS_AOP_XA (AOP (result)) && IS_AOP_XA (AOP (left)) )
+        {
+          if(m6502_reg_x->isLitConst)
+            {
+	      //              loadRegFromConst(m6502_reg_x, m6502_reg_x->litConst - bcount);
+              emit6502op ("ldx", "0x%02x", (m6502_reg_x->litConst - bcount)&0xff );
+              return true;
+            }
+          else if(bcount<4)
+            {
+	      while (bcount--)
+		emit6502op ("dex", "");
+	      return true;
 
-      while (bcount--)
-        emit6502op ("dex", "");
-#endif
+            }
+        }
       return false;
+#else
+      return false;
+#endif
     }
 
   if(IS_AOP_XA (AOP (result)) && icount >=0 )
@@ -157,17 +173,17 @@ genMinusDec (iCode * ic)
  * genMinus - generates code for subtraction
  *************************************************************************/
 void
-genMinus (iCode * ic)
+m6502_genMinus (iCode * ic)
 {
   operand *right  = IC_RIGHT (ic);
   operand *left   = IC_LEFT (ic);
   operand *result = IC_RESULT (ic);
 
   bool init_carry = true;
-  int size, offset = 0;
+  int size, offset;
   bool needpulla = false;
-  bool earlystore = false;
-  bool delayedstore = false;
+  //  bool earlystore = false;
+  //  bool delayedstore = false;
 
   sym_link *resulttype = operandType (IC_RESULT (ic));
   unsigned topbytemask = (IS_BITINT (resulttype) && SPEC_USIGN (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
@@ -188,18 +204,20 @@ genMinus (iCode * ic)
   emitComment (TRACEGEN|VVDBG, "    %s - Can't Dec", __func__);
 
   size = AOP_SIZE (result);
+  bool is_right_byte = (AOP_SIZE(right)==1) 
+    || ( AOP_TYPE (right) == AOP_LIT
+	 && operandLitValue (right) >= 0
+	 && operandLitValue (right) <= 255 );
 
   offset = 0;
 
-  if ( size==2 && AOP_TYPE (right) == AOP_LIT && !maskedtopbyte
-       && operandLitValue (right) >= 0
-       && operandLitValue (right) <= 255
+  if ( size==2 && is_right_byte && !maskedtopbyte
        && AOP_TYPE(result) != AOP_SOF
        && sameRegs(AOP(result),AOP(left)) )
     {
       symbol *skiplabel = safeNewiTempLabel (NULL);
 
-      emitComment (TRACEGEN|VVDBG, "    %s: size==2 && AOP_LIT", __func__);
+      emitComment (TRACEGEN|VVDBG, "    %s: size==2 && one byte", __func__);
       needpulla = pushRegIfSurv (m6502_reg_a);
       emitSetCarry(1);
       loadRegFromAop (m6502_reg_a, AOP(left), 0);
@@ -253,14 +271,10 @@ genMinus (iCode * ic)
       goto release;
     }
 
-  needpulla = storeRegTempIfSurv (m6502_reg_a);
+  needpulla = pushRegIfSurv (m6502_reg_a);
 
-  while (size--)
+  for(offset=0; offset<size; offset++)
     {
-      if (earlystore &&
-	  (AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == A_IDX ||
-	   AOP_TYPE (right) == AOP_REG && AOP (right)->aopu.aop_reg[offset]->rIdx == A_IDX))
-	pullReg (m6502_reg_a);
       if (AOP_TYPE (right) == AOP_REG && AOP (right)->aopu.aop_reg[offset]->rIdx == A_IDX)
 	{
 	  storeRegTemp (m6502_reg_a, true);
@@ -281,28 +295,28 @@ genMinus (iCode * ic)
 
 	  accopWithAop ("sbc", AOP(right), offset);
 	}
-      if (!size && maskedtopbyte)
+
+      if ( (offset==size-1) && maskedtopbyte)
 	emit6502op ("and", IMMDFMT, topbytemask);
-      if (size && AOP_TYPE (result) == AOP_REG && AOP (result)->aopu.aop_reg[offset]->rIdx == A_IDX)
+
+      if ( offset==0 && IS_AOP_XA (AOP(result)) )
 	{
-	  emitComment (TRACEGEN|VVDBG, "    - push");
-	  pushReg (m6502_reg_a, true);
-	  delayedstore = true;
+	  emitComment (TRACEGEN|VVDBG, "  %s - push offset=%d", __func__, offset);
+	  m6502_pushReg (m6502_reg_a, true);
+          if(needpulla)
+            emitcode("ERROR", " %s - needpulla && delayedstore == true ", __func__);
+	  needpulla = true;
 	}
       else
 	{
-	  emitComment (TRACEGEN|VVDBG, "    - store");
+	  emitComment (TRACEGEN|VVDBG, "  %s - store offset=%d", __func__, offset);
 	  storeRegToAop (m6502_reg_a, AOP (result), offset);
 	}
-      offset++;
+
       init_carry = false;
     }
-  if(delayedstore)
-    pullReg (m6502_reg_a);
 
-  loadOrFreeRegTemp (m6502_reg_a, needpulla);
-
-  wassert (!earlystore || !delayedstore);
+  pullOrFreeReg (m6502_reg_a, needpulla);
 
  release:
   freeAsmop (left, NULL);

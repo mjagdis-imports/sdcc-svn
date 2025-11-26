@@ -3214,6 +3214,21 @@ In 4.5.11,
  
 \end_layout
 
+\begin_layout Itemize
+In 4.5.12,
+ void parameters may no longer be named or qualified.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.12,
+ struct/union members other than anoymous struct/union or bit-fields must be named.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.13,
+ stray non-ASCII characters in source files are an error instead of being silently ignored.
+\end_layout
+
 \begin_layout Section
 System Requirements
 \end_layout
@@ -10739,19 +10754,6 @@ long long
 Qualifier-preserving standard library functions are not implemented.
 \end_layout
 
-\begin_layout Itemize
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-constexpr
-\end_layout
-
-\end_inset
-
- is not implemented.
-\end_layout
-
 \begin_layout Subsubsection*
 Features missing in some ports
 \end_layout
@@ -11134,6 +11136,29 @@ literal "false"
  Case range expressions
 \end_layout
 
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
+name "N3398"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3398.pdf"
+literal "false"
+
+\end_inset
+
+:
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+containerof
+\end_layout
+
+\end_inset
+
+ Macro
+\end_layout
+
 \begin_layout Subsection
 Embedded C
 \end_layout
@@ -11168,7 +11193,64 @@ Environment
 \end_layout
 
 \begin_layout Itemize
-See SDCC source (and your own code if you use a custom crt0 for a target that supports it) for any information on the environment.
+When no custom crt0 is used (i.e.
+ the port does not support a custom crt0,
+ or the option 
+\series bold
+
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-no-std-crt0
+\end_layout
+
+\end_inset
+
+
+\series default
+ is not used),
+ the name and type of the function called at program startup is 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+void main(void)
+\end_layout
+
+\end_inset
+
+ or 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+int main(void)
+\end_layout
+
+\end_inset
+
+.
+ Otherwise the name and type depends on the custom crt0.
+\end_layout
+
+\begin_layout Itemize
+See SDCC source (and your own code if you use a custom crt0 for a target that supports it) for any other information on the environment.
 \end_layout
 
 \begin_layout Subsubsection
@@ -11341,6 +11423,10 @@ Non-bit-field members of structures are aligned on byte boundaries (i.e.
 \end_layout
 
 \begin_layout Itemize
+structures do not need to have named members.
+\end_layout
+
+\begin_layout Itemize
 For enumerations,
  the compatible type is the first from the following list that fits the constants:
  unsigned char,
@@ -11360,6 +11446,10 @@ Qualifiers
 \begin_layout Itemize
 SDCC shall preserve all volatile reads and writes,
  but does not guarantee them to be atomic (except for atomic types and volatile sig_atomic_t).
+\end_layout
+
+\begin_layout Itemize
+Function types may not be qualified.
 \end_layout
 
 \begin_layout Subsubsection
@@ -12448,7 +12538,7 @@ the source file being compiled is always linked in first
 
 ,
  regardless of its position in the command line.
- This can be problematic when a custom CRT is supplied as object file.
+ This can be problematic when a custom crt0 is supplied as object file.
  As an alternative to the above,
  
 \emph on
@@ -12478,7 +12568,23 @@ foomain.c
 \begin_inset Newline newline
 \end_inset
 
-sdcc foomain.rel foo1.rel foo2.rel
+sdcc
+\begin_inset space ~
+\end_inset
+
+custom_crt0.rel
+\begin_inset space ~
+\end_inset
+
+foomain.rel
+\begin_inset space ~
+\end_inset
+
+foo1.rel
+\begin_inset space ~
+\end_inset
+
+foo2.rel
 \begin_inset Newline newline
 \end_inset
 

@@ -301,14 +301,14 @@ enum {
   E_SFR_POINTER                 = 271, /* unsupported pointer to __sfr */
   E_INVALID_BITINTWIDTH         = 272, /* invalid with for bit-precise integer type */
   W_BITINTCONST_C23             = 273, /* bit-precise integer constant requires ISO C23 or later */
-  E_INVALID_UNIVERSAL_IDENTIFIER = 274, /* universal character name %s invalid in identifier */
+  E_INVALID_UNIVERSAL_ID        = 274, /* universal character name %s invalid in identifier */
   E_COMPLEX_UNSUPPORTED         = 275, /* complex numbers are not supported */
   E_DECIMAL_FLOAT_UNSUPPORTED   = 276, /* decimal floating-point numbers are not supported */
   E_ATOMIC_UNSUPPORTED          = 277, /* atomics are not supported */
   W_RETURN_TYPE_OMITTED_INT     = 278, /* return type of function omitted, assuming int */
   W_SINGLE_DASH_LONG_OPT        = 279, /* use of single-dash long options is discouraged */
   E_UNKNOWN_LANGUAGE_STANDARD   = 280, /* unknown language standard */
-  E_CONSTEXPR                   = 281, /* constexpr not implemented */
+  E_CONSTEXPR_C23               = 281, /* constexpr requires ISO C23 or later */
   E_TYPEOF                      = 282, /* typeof and typeof_unqual not implemented for nontrivial expressions */
   W_FUNCDECL_WITH_NO_PROTOTYPE  = 283, /* function declarator with no prototype */
   W_UNKNOWN_ATTRIBUTE           = 284, /* unknown attribute ignored*/
@@ -340,14 +340,40 @@ enum {
   E_CLOSING_BRACE               = 310, /* invalid character or end of string encountered before '}' */
   E_INVALID_OCTAL               = 311, /* \o{...} used without valid octal digits */
   E_SELECTION_DECLARATION_C2Y   = 312, /* declaration within selection header requires ISO C2y or later */
-  E_COMPLIT_SCLASS_C23          = 313, /* compound literals with storage class specifier require ISO C23 or later */
-  W_ENUM_UNDERLYING_BITINT      = 314, /* enum's underlying type may not be a bit-prcise type in ISO C23 */
-  W_INVALID_BITINTWIDTH_1       = 315, /* signed bit-precise integer type may not have width 1 in ISO C23 */
-  E_ATOMIC_ARRAY                = 316, /* _Atomic array */
-  E_ATOMIC_FUNCTION             = 317, /* _Atomic function */
-  E_ATOMIC_SPEC_ATOMIC          = 318, /* _Atomic specifier on atomic type */
-  E_ATOMIC_SPEC_QUALIFIED       = 319, /* _Atomic specifier on qualified type */
-  E_BLOCK_SCOPE_EXTERN_INIT     = 320, /* block scope variable declared extern and intialized */
+  E_COMPLIT_SCLASS_C23          = 313, // compound literals with storage class specifier require ISO C23 or later
+  W_ENUM_UNDERLYING_BITINT      = 314, // enum's underlying type may not be a bit-precise type in ISO C23
+  W_BITINTWIDTH_1_C2Y           = 315, // signed bit-precise integer type of width 1 requires ISO C2y or later
+  E_ATOMIC_ARRAY                = 316, // _Atomic array
+  E_ATOMIC_FUNCTION             = 317, // _Atomic function
+  E_ATOMIC_SPEC_ATOMIC          = 318, // _Atomic specifier on atomic type
+  E_ATOMIC_SPEC_QUALIFIED       = 319, // _Atomic specifier on qualified type
+  E_BLOCK_SCOPE_EXTERN_INIT     = 320, // block scope variable declared extern and intialized
+  E_BLOCK_SCOPE_FUNC_SCLASS     = 321, // Function declared at block scope with explicit storage-class specifier other than extern
+  W_PTR2INT_NOREPRESENT         = 322, // Cast of pointer to integer type that cannot represent all values of the pointer type
+  W_MAIN_TYPE                   = 323, // Function main should be void main(void) or int main(void)
+  E_VOID_SHALL_BE_LONELY        = 324, // void is allowed as single parameter with no storage class specifiers, npo type qualifers, no following ellipsis
+  W_ANONYMOUS_STRUCT_C11        = 325, // anonymous struct/union requires ISO C11 or later
+  E_UNAMED_STRUCT_MEMBER        = 326, // struct/union members need to have a name,unless they are anonymous struct/union or bit-fields
+  E_NO_LINKAGE_INCOMPLETE_TYPE  = 327, // object with no linkage of incomplete type
+  E_EXTERN_INLINE_NO_DEF        = 328, // inline function declared with external linkage, but not defined in translation unit
+  E_STRAY_CHARACTER             = 329, // stray character at column %d
+  W_UNICODE_RANGE               = 330, // character out of unicode range
+  E_INCOMPLETE_TYPE_LVALUE      = 331, // lvalue of incomplete type
+  W_REGISTER_EXTERNAL_DECL      = 332, // storage class register on external declaration
+  W_REGISTER_ELEMENT_ACCESS_C2Y = 333, // access to element of array with storage class specifier register requires ISO C2y or later
+  W_EXCESS_BRACES_INITIALIZER   = 334, // excess braces in initializer
+  E_VLA_UNSPECIFIED_SCOPE       = 335, //  "[*] variable length array declarators of unspecified length must have function prototype scope
+  W_INCOMPLETE_ARRAY_IMPLICIT_1 = 336, // incomplete array type has length 1 due to implicit initializer
+  E_QUALIFIED_FUNCTION          = 337, // qualified function
+  W_NONASCII_ID_NOUNILIB        = 338, // non-ascii characters in identifier, but SDCC built without libu8ident library; diagnostics on and semantics of identifier names limited to be minimum required by ISO C11
+  E_INVALID_ID                  = 339, // invalid identifier
+  W_ID_NOT_NORMALIZED_NFC       = 340, // identifier not normalized to unicode normalization form C
+  W_INSECURE_ID                 = 341, // insecure identifier not compliant with UTS #39
+  E_CONSTEXPR_WITHOUT_INIT      = 342, // constexpr declaration without initialization
+  E_CONSTEXPR_RANGE_PRECISION   = 343, // type of constexpr declaration has insufficient range or precision
+  E_CONSTEXPR_INVALID_QUAL      = 344, // object of constexpr type cannot be atomic, variably modified, volatile or restrict qualified
+
+  // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution.
 
   /* don't touch this! */
   NUMBER_OF_ERROR_MESSAGES             /* Number of error messages */

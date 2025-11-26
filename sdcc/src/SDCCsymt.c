@@ -694,7 +694,7 @@ checkTypeSanity (sym_link *etype, const char *name)
       if (SPEC_BITINTWIDTH (etype) > port->s.bitint_maxwidth || SPEC_BITINTWIDTH (etype) < 1) // Check that port supports bit-precise integers this wide.
         werror (E_INVALID_BITINTWIDTH);
       if (SPEC_BITINTWIDTH (etype) == 1 && !SPEC_USIGN (etype) && !options.std_sdcc) // In ISO C23, signed _BitInt needs to have width at least 2.
-        werror (W_INVALID_BITINTWIDTH_1);
+        werror (W_BITINTWIDTH_1_C2Y);
     }
 }
 
@@ -837,6 +837,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_INLINE (dest) |= SPEC_INLINE (src);
   SPEC_NORETURN (dest) |= SPEC_NORETURN(src);
   SPEC_CONST (dest) |= SPEC_CONST (src);
+  SPEC_CONSTEXPR (dest) |= SPEC_CONSTEXPR (src);
   SPEC_ABSA (dest) |= SPEC_ABSA (src);
   SPEC_VOLATILE (dest) |= SPEC_VOLATILE (src);
   SPEC_RESTRICT (dest) |= SPEC_RESTRICT (src);
@@ -958,6 +959,11 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       SPEC_RESTRICT (spec) = 0;
       SPEC_ATOMIC (spec) = 0;
       SPEC_ADDRSPACE (spec) = 0;
+    }
+  else if (DCL_TYPE (decl) == FUNCTION)
+    {
+      if (SPEC_CONST (spec) || SPEC_VOLATILE (spec))
+        werror ( E_QUALIFIED_FUNCTION);
     }
 
   lnk = decl;
@@ -1464,12 +1470,12 @@ arraySizes (sym_link *type, const char *name)
 
   if (IS_ARRAY (type) && !DCL_ELEM (type) && DCL_ELEM_AST (type))
     {
-      value *tval = constExprValue(DCL_ELEM_AST (type), true);
-      if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
+      value *tval = constExprValue (DCL_ELEM_AST (type), true);
+      if (!tval || (SPEC_SCLS (tval->etype) != S_LITERAL))
         {
           if (!options.std_c99)
-            werror(E_VLA_TYPE_C99);
-          DCL_ARRAY_VLA(type) = true;
+            werror (E_VLA_TYPE_C99);
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_SPECIFIED;
         }
       else
         {
@@ -1479,6 +1485,7 @@ arraySizes (sym_link *type, const char *name)
               werror(E_NEGATIVE_ARRAY_SIZE, name);
               size = 1;
             }
+          DCL_ARRAY_LENGTH_TYPE (type) = ARRAY_LENGTH_KNOWN_CONST;
           DCL_ELEM(type) = size;
         }
     }
@@ -1509,7 +1516,7 @@ addSymChain (symbol **symHead)
       changePointer (sym->type);
       checkTypeSanity (sym->etype, sym->name);
 #if 0
-      printf("addSymChain for %p %s level %ld\n", sym, sym->name, sym->level);
+      printf("addSymChain for %p %s level %ld extern %d\n", sym, sym->name, sym->level, IS_EXTERN (sym->etype));
 #endif
       arraySizes (sym->type, sym->name);
       if (IS_NORETURN (sym->etype))
@@ -1518,7 +1525,8 @@ addSymChain (symbol **symHead)
           FUNC_ISNORETURN (sym->type) = 1;
         }
 
-      if (!sym->level && IS_ARRAY (sym->type) && IS_ARRAY (sym->type) && DCL_ARRAY_VLA (sym->type))
+      if (!sym->level && IS_ARRAY (sym->type) && IS_ARRAY (sym->type) &&
+        DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_UNKNOWN)
         {
           werror (E_VLA_SCOPE);
           continue;
@@ -1532,22 +1540,28 @@ addSymChain (symbol **symHead)
             arraySizes (sym->type, sym->name);
           // if this is an array without any dimension then update the dimension from the initial value
           else if (IS_ARRAY (sym->type) && !DCL_ELEM_AST (sym->type) && !DCL_ELEM (sym->type))
-            elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+            {
+              DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+              elemsFromIval = DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+            }
         }
 
       if (IS_EXTERN (sym->etype) && sym->level) // This is really a block-scope name for a file-scope object.
         {
+          symbol *csym;
+          bool declaration_with_no_linkage_visible =
+            (csym = findSymWithLevel (SymbolTab, sym)) && csym->level && !IS_STATIC (csym->etype) && !IS_EXTERN (csym->type);
+
           long saveLevel = sym->level;
           sym->level = 0;
-          symbol *csym;
 
-          // Check type only, not linkage for now (there are some subtle aspects of linkage to be consideed here, a plain check against csym won't do).
-          if ((csym = findSymWithLevel (SymbolTab, sym)) && compareType (csym->type, sym->type, sym->level) != 1)
+          if ((csym = findSymWithLevel (SymbolTab, sym)) && // When a declaration with no linkage is visible, this is really extern, so check for linkage conflicts.
+            (declaration_with_no_linkage_visible ? compareTypeExact (csym->type, sym->type, sym->level) : compareType (csym->type, sym->type, true)) != 1)
             {
               werror (E_EXTERN_MISMATCH, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
             }
-          else if ((csym = findSymWithLevel (SymbolTabE, sym)) && compareType (csym->type, sym->type, sym->level) != 1)
+          else if ((csym = findSymWithLevel (SymbolTabE, sym)) && compareType (csym->type, sym->type, true)  != 1)
             {
               werror (E_EXTERN_MISMATCH, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
@@ -1559,7 +1573,7 @@ addSymChain (symbol **symHead)
       else if (!sym->level) // File-scope object. Check if it was declared at block scope before.
         {
           symbol *csym;
-          if ((csym = findSymWithLevel (SymbolTabE, sym)) && compareType (csym->type, sym->type, sym->level) != 1)
+          if ((csym = findSymWithLevel (SymbolTabE, sym)) && (compareType (csym->type, sym->type, true) != 1 || IS_STATIC (sym->type) && IS_EXTERN (csym->type)))
             {
               werror (E_EXTERN_MISMATCH, sym->name);
               werrorfl (csym->fileDef, csym->lineDef, E_PREVIOUS_DEF);
@@ -1587,6 +1601,15 @@ addSymChain (symbol **symHead)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
                   if ((DCL_ELEM (csym->type) > DCL_ELEM (sym->type)) && elemsFromIval)
                     DCL_ELEM (sym->type) = DCL_ELEM (csym->type);
+                  if (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_KNOWN_CONST || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_KNOWN_CONST)
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) = DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+                  else if (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_SPECIFIED || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_SPECIFIED)
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) = DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_SPECIFIED;
+                  else if (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_UNSPECIFIED || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNSPECIFIED ||
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_UNEVALUATED || DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNEVALUATED)
+                    DCL_ARRAY_LENGTH_TYPE (csym->type) = DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_UNSPECIFIED;
+                  else
+                    wassert (DCL_ARRAY_LENGTH_TYPE (csym->type) == ARRAY_LENGTH_UNKNOWN && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN);
                 }
               // Is one is a function declarator without a prototype (valid up to C17), and the other one with a prototype, use the prototype for both. */
               if (IS_FUNC (csym->type) && IS_FUNC (sym->type) && (FUNC_NOPROTOTYPE (csym->type) ^ FUNC_NOPROTOTYPE (sym->type)))
@@ -1597,6 +1620,12 @@ addSymChain (symbol **symHead)
                     FUNC_ARGS(sym->type) = FUNC_ARGS(csym->type);
                   FUNC_NOPROTOTYPE (csym->type) = false;
                   FUNC_NOPROTOTYPE (sym->type) = false;
+                }
+
+              if (IS_EXTERN (sym->etype) && IS_STATIC (csym->etype)) // Identifier declared with storage class extern while previous declaration with linkage is visible gets linkage of previous declaration.
+                {
+                  SPEC_STAT (sym->etype) = SPEC_STAT (csym->etype);
+                  SPEC_EXTR (sym->etype) = SPEC_EXTR (csym->etype);
                 }
 
 #if 0
@@ -1666,8 +1695,14 @@ addSymChain (symbol **symHead)
 
           if (csym->ival && !sym->ival)
             sym->ival = csym->ival;
+          sym->generated |= csym->generated;
 
-          if (!csym->cdef && !sym->cdef && IS_EXTERN (sym->etype))
+          if (IS_EXTERN (sym->etype) && IFFUNC_ISINLINE (csym->type))
+            {
+              FUNC_ISINLINE (sym->type) = FUNC_ISINLINE (csym->type);
+              sym->funcTree = csym->funcTree;
+            }
+          else if (!csym->cdef && !sym->cdef && IS_EXTERN (sym->etype))
             {
               /* if none of symbols is a compiler defined function
                  and at least one is not extern
@@ -1981,6 +2016,9 @@ promoteAnonStructs (int su, structdef * sdef)
           /* with the fields it contains and adjust all  */
           /* the offsets */
 
+          if (!options.std_c11 && !options.std_sdcc)
+            werrorfl (field->fileDef, field->lineDef, W_ANONYMOUS_STRUCT_C11);
+
           /* tagged anonymous struct/union is rejected here, though gcc allow it */
           if (SPEC_STRUCT (field->type)->tagsym != NULL)
             werrorfl (field->fileDef, field->lineDef, E_ANONYMOUS_STRUCT_TAG, SPEC_STRUCT (field->type)->tag);
@@ -2016,7 +2054,11 @@ promoteAnonStructs (int su, structdef * sdef)
           tofield = &subfield->next;
         }
       else
-        tofield = &field->next;
+        {
+          if (!*field->name && !IS_STRUCT (field->type) && !IS_BITFIELD (field->type))
+            werrorfl (field->fileDef, field->lineDef, E_UNAMED_STRUCT_MEMBER);
+          tofield = &field->next;
+        }
     }
 }
 
@@ -2040,10 +2082,20 @@ checkSClass (symbol *sym, int isProto)
       SPEC_SCLS (sym->etype) = S_FIXED;
     }
 
-  if (SPEC_SCLS (sym->etype) == S_AUTO && SPEC_EXTR(sym->etype) ||
-    SPEC_SCLS (sym->etype) == S_AUTO && SPEC_STAT(sym->etype))
+  if (SPEC_SCLS (sym->etype) == S_AUTO && SPEC_EXTR (sym->etype) ||
+    SPEC_SCLS (sym->etype) == S_AUTO && SPEC_STAT (sym->etype) ||
+    SPEC_SCLS (sym->etype) == S_REGISTER && SPEC_EXTR (sym->etype) ||
+    SPEC_SCLS (sym->etype) == S_REGISTER && SPEC_STAT (sym->etype))
     {
       werrorfl (sym->fileDef, sym->lineDef, E_TWO_OR_MORE_STORAGE_CLASSES, sym->name);
+    }
+
+  // Function at block scope with storage-class specifier other than extern.
+  // UB up to C23, constraint violation from C2y.
+  if (sym->level && IS_FUNC (sym->type) &&
+    (IS_REGISTER (sym->etype) || SPEC_STAT (sym->etype)))
+    {
+      werrorfl (sym->fileDef, sym->lineDef, E_BLOCK_SCOPE_FUNC_SCLASS, sym->name);
     }
 
   /* type is literal can happen for enums change to auto */
@@ -2088,6 +2140,11 @@ checkSClass (symbol *sym, int isProto)
         {
           werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
           DCL_PTR_RESTRICT (t) = 0;
+          break;
+        }
+      else if (IS_DECL (t) && IS_ARRAY (t) && DCL_ARRAY_LENGTH_TYPE (t) == ARRAY_LENGTH_UNSPECIFIED)
+        {
+          werrorfl (sym->fileDef, sym->lineDef, E_VLA_UNSPECIFIED_SCOPE);
           break;
         }
       t = t->next;
@@ -2301,6 +2358,24 @@ checkSClass (symbol *sym, int isProto)
           SPEC_SCLS (sym->etype) = (options.useXstack ? S_XSTACK : S_STACK);
         }
     }
+
+  /* handle specifics of constexpr declarations */
+  if (SPEC_CONSTEXPR (sym->etype))
+    {
+      /* any constexpr is implicitly const */
+      SPEC_CONST (sym->etype) = 1;
+      /* constexpr declaration at file scope is implicitly static */
+      if (sym->level == 0)
+        SPEC_STAT (sym->etype) = 1;
+      /* constexpr object type cannot be atomic, variably modified (TODO), volatile or restrict */
+      if (SPEC_ATOMIC (sym->etype) || SPEC_VOLATILE (sym->etype) || SPEC_RESTRICT (sym->etype))
+        {
+          werror (E_CONSTEXPR_INVALID_QUAL);
+          SPEC_ATOMIC (sym->etype) = 0;
+          SPEC_VOLATILE (sym->etype) = 0;
+          SPEC_RESTRICT (sym->etype) = 0;
+        }
+    }
 }
 
 /*------------------------------------------------------------------*/
@@ -2333,15 +2408,27 @@ checkDecl (symbol * sym, int isProto)
   changePointer (sym->type);    /* change pointers if required */
   arraySizes (sym->type, sym->name);
 
-  if (IS_ARRAY (sym->type) && DCL_ARRAY_VLA (sym->type) && sym->ival && !sym->ival->isempty)
-    werror (E_VLA_INIT);
+  // If no custom crt0 is used, the startup function is void main(void) or int main(void).
+  if (!sym->level && IS_FUNC (sym->type) && !strcmp (sym->name, "main") && !options.no_std_crt0)
+    {
+      if (FUNC_ARGS (sym->type) ||
+        (!IS_VOID (sym->type->next) && !IS_INT (sym->type->next)) || IS_LONG (sym->type->next) || IS_LONGLONG (sym->type->next))
+        werror (W_MAIN_TYPE); // This is just a warning, not an error, for those that put a custom crt0 into a custom stdlib, then use it without --no-std-crt0.
+    }
+
+  if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_UNKNOWN &&
+    sym->ival && !sym->ival->isempty)
+    werrorfl (sym->fileDef, sym->lineDef, E_VLA_INIT);
   /* if this is an array without any dimension
      then update the dimension from the initial value */
   if (IS_ARRAY (sym->type) && !DCL_ELEM (sym->type))
     if (sym->ival && sym->ival->isempty)
       werror (E_EMPTY_INIT_UNKNOWN_SIZE);
     else
-      return DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+      {
+        DCL_ARRAY_LENGTH_TYPE (sym->type) = ARRAY_LENGTH_KNOWN_CONST;
+        return DCL_ELEM (sym->type) = getNelements (sym->type, sym->ival);
+      }
 
   return 0;
 }
@@ -2449,7 +2536,7 @@ leaveBlockScope (int block)
 symbol *
 getAddrspace (sym_link *type)
 {
-  while(IS_ARRAY (type))
+  while (IS_ARRAY (type))
     type = type->next;
 
   if (IS_DECL (type))
@@ -4038,14 +4125,14 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
               dbuf_append_str (dbuf, "unknown*");
               break;
             case ARRAY:
-              if (DCL_ELEM (type))
-                {
-                  dbuf_printf (dbuf, "[%u]", (unsigned int) DCL_ELEM (type));
-                }
+              if (DCL_ARRAY_LENGTH_TYPE (type) == ARRAY_LENGTH_KNOWN_CONST)
+                dbuf_printf (dbuf, "[%u]", (unsigned int) DCL_ELEM (type));
+              else if (DCL_ARRAY_LENGTH_TYPE (type) == ARRAY_LENGTH_UNSPECIFIED)
+                dbuf_append_str (dbuf, "[*]");
+              else if (DCL_ARRAY_LENGTH_TYPE (type) == ARRAY_LENGTH_UNKNOWN)
+                dbuf_append_str (dbuf, "[]");
               else
-                {
-                  dbuf_append_str (dbuf, "[]");
-                }
+                dbuf_append_str (dbuf, "[?]");
               break;
             default:
               dbuf_append_str (dbuf, "unknown?");
@@ -5360,6 +5447,14 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
       for (l0 = sym->type; l0 != NULL; l0 = l0->next)
         if (IS_PTR (l0))
           break;
+      /* perform sanity checks concerning constexpr initialization */
+      if (IS_CONSTEXPR (declSpecs) && (sym->ival == NULL || !constExprTree (list2expr (sym->ival))))
+        {
+          /* constexpr must be initialized with a constant expression (duh!) */
+          werror (sym->ival ? E_CONST_EXPECTED : E_CONSTEXPR_WITHOUT_INIT);
+          /* fabricate a constant dummy ival to keep going */
+          sym->ival = newiList (INIT_NODE, newAst_VALUE (constIntVal ("0")));
+        }
       /* check if creating instances of structs with flexible arrays */
       for (l1 = lnk; l1 != NULL; l1 = l1->next)
         if (IS_STRUCT (l1) && SPEC_STRUCT (l1)->b_flexArrayMember)
@@ -5373,8 +5468,8 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
       for (l2 = lnk; l2 != NULL; l2 = l2->next)
         if (IS_PTR (l2))
           break;
-      if (l0 == NULL && l2 == NULL && l1 != NULL)
-        werrorfl (sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
+      //if (l0 == NULL && l2 == NULL && l1 != NULL)
+      //  werrorfl (sym->fileDef, sym->lineDef, E_TYPE_IS_FUNCTION, sym->name);
       /* C23 auto type inference */
       if (autocandidate && !sym->type && sym->ival && sym->ival->type == INIT_NODE)
         {
@@ -5388,3 +5483,4 @@ prepareDeclarationSymbol (attribute *attr, sym_link *declSpecs, symbol *initDecl
 
   return sym1;
 }
+

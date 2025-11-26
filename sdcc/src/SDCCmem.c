@@ -843,7 +843,7 @@ allocLocal (symbol *sym)
             port->fun_prefix,
             currFunc->name, sym->name, sym->level, sym->block);
 
-  if (!sym->ismyparm && IS_ARRAY(sym->type) && DCL_ARRAY_VLA (sym->type))
+  if (!sym->ismyparm && IS_ARRAY(sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) != ARRAY_LENGTH_KNOWN_CONST)
     {
       werrorfl (sym->fileDef, sym->lineDef, E_VLA_OBJECT);
       return;
@@ -851,6 +851,10 @@ allocLocal (symbol *sym)
 
   sym->islocal = 1;
   sym->localof = currFunc;
+
+  if (!IS_EXTERN (sym->type) && !IS_STATIC (sym->type) &&
+    (IS_ARRAY (sym->type) && !DCL_ELEM (sym->type) || IS_STRUCT (sym->type) && !SPEC_STRUCT (sym->type)->fields))
+    werrorfl (sym->fileDef, sym->lineDef, E_NO_LINKAGE_INCOMPLETE_TYPE, sym->name);
 
   /* if this is a static variable */
   if (IS_STATIC (sym->etype))

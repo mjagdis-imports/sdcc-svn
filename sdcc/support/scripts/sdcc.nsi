@@ -462,10 +462,8 @@ ${Section} "SDCC include files" SEC05
   File "${DEV_ROOT}\include\asm\pic16\features.h"
   SetOutPath "$INSTDIR\include\asm\z80"
   File "${DEV_ROOT}\include\asm\z80\features.h"
-  SetOutPath "$INSTDIR\include\asm\r2k"
-  File "${DEV_ROOT}\include\asm\r2k\features.h"
-  SetOutPath "$INSTDIR\include\asm\r3ka"
-  File "${DEV_ROOT}\include\asm\r3ka\features.h"
+  SetOutPath "$INSTDIR\include\asm\rab"
+  File "${DEV_ROOT}\include\asm\rab\features.h"
   SetOutPath "$INSTDIR\include\asm\stm8"
   File "${DEV_ROOT}\include\asm\stm8\features.h"
   SetOutPath "$INSTDIR\include\asm\f8"
@@ -532,6 +530,24 @@ ${Section} "SDCC Rabbit 3000A library" SEC11
   SectionIn 1 2
   SetOutPath "$INSTDIR\lib\r3ka"
   File "${DEV_ROOT}\lib\r3ka\*.*"
+${SectionEnd}
+
+${Section} "SDCC Rabbit 4000 library" SEC11
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\r4k"
+  File "${DEV_ROOT}\lib\r4k\*.*"
+${SectionEnd}
+
+${Section} "SDCC Rabbit 5000 library" SEC11
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\r5k"
+  File "${DEV_ROOT}\lib\r5k\*.*"
+${SectionEnd}
+
+${Section} "SDCC Rabbit 6000 library" SEC11
+  SectionIn 1 2
+  SetOutPath "$INSTDIR\lib\r6k"
+  File "${DEV_ROOT}\lib\r6k\*.*"
 ${SectionEnd}
 
 ${Section} "SDCC Z80 library" SEC12
@@ -655,6 +671,18 @@ ${Section} "SDCC library sources" SEC25
   SetOutPath "$INSTDIR\lib\src\r3ka"
   File "${DEV_ROOT}\lib\src\r3ka\*.s"
 #  File "${DEV_ROOT}\lib\src\r3ka\Makefile"
+
+  SetOutPath "$INSTDIR\lib\src\r4k"
+  File "${DEV_ROOT}\lib\src\r4k\*.s"
+#  File "${DEV_ROOT}\lib\src\r4k\Makefile"
+
+  SetOutPath "$INSTDIR\lib\src\r5k"
+  File "${DEV_ROOT}\lib\src\r5k\*.s"
+#  File "${DEV_ROOT}\lib\src\r5k\Makefile"
+
+  SetOutPath "$INSTDIR\lib\src\r6k"
+  File "${DEV_ROOT}\lib\src\r6k\*.s"
+#  File "${DEV_ROOT}\lib\src\r6k\Makefile"
 
   SetOutPath "$INSTDIR\lib\src\hc08"
   File "${DEV_ROOT}\lib\src\hc08\*.c"
@@ -1126,7 +1154,11 @@ ${Section} Uninstall SECUNINSTALL
 
   Delete "$INSTDIR\lib\src\r2ka\*.s"
 
-  Delete "$INSTDIR\lib\src\r3ka\*.s"
+  Delete "$INSTDIR\lib\src\r4k\*.s"
+
+  Delete "$INSTDIR\lib\src\r5k\*.s"
+  
+  Delete "$INSTDIR\lib\src\r6k\*.s"
 
   Delete "$INSTDIR\lib\src\ez80\*.s"
   Delete "$INSTDIR\lib\src\ez80\ez80.lib"
@@ -1222,6 +1254,15 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\r3ka\*.rel"
   Delete "$INSTDIR\lib\r3ka\*.lib"
 
+  Delete "$INSTDIR\lib\r4k\*.rel"
+  Delete "$INSTDIR\lib\r4k\*.lib"
+
+  Delete "$INSTDIR\lib\r5k\*.rel"
+  Delete "$INSTDIR\lib\r5k\*.lib"
+
+  Delete "$INSTDIR\lib\r6k\*.rel"
+  Delete "$INSTDIR\lib\r6k\*.lib"
+
   Delete "$INSTDIR\lib\ez80\*.rel"
   Delete "$INSTDIR\lib\ez80\*.lib"
 
@@ -1272,8 +1313,7 @@ ${Section} Uninstall SECUNINSTALL
   Delete "$INSTDIR\lib\f8l\*.lib"
 
   Delete "$INSTDIR\include\asm\z80\*.h"
-  Delete "$INSTDIR\include\asm\r2k\*.h"
-  Delete "$INSTDIR\include\asm\r3ka\*.h"
+  Delete "$INSTDIR\include\asm\rab\*.h"
   Delete "$INSTDIR\include\asm\pic16\*.h"
   Delete "$INSTDIR\include\asm\pic14\*.h"
   Delete "$INSTDIR\include\asm\mcs51\*.h"
@@ -1378,6 +1418,9 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\src\r2k"
   RMDir "$INSTDIR\lib\src\r2ka"
   RMDir "$INSTDIR\lib\src\r3ka"
+  RMDir "$INSTDIR\lib\src\r4k"
+  RMDir "$INSTDIR\lib\src\r5k"
+  RMDir "$INSTDIR\lib\src\r6k"
   RMDir "$INSTDIR\lib\src\ez80"
   RMDir "$INSTDIR\lib\src\ds390\examples"
   RMDir "$INSTDIR\lib\src\ds390"
@@ -1410,6 +1453,9 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\lib\r2k"
   RMDir "$INSTDIR\lib\r2ka"
   RMDir "$INSTDIR\lib\r3ka"
+  RMDir "$INSTDIR\lib\r4k"
+  RMDir "$INSTDIR\lib\r5k"
+  RMDir "$INSTDIR\lib\r6k"
   RMDir "$INSTDIR\lib\ez80"
   RMDir "$INSTDIR\lib\small"
   RMDir "$INSTDIR\lib\medium"
@@ -1440,8 +1486,7 @@ ${Section} Uninstall SECUNINSTALL
   RMDir "$INSTDIR\non-free\lib"
 
   RMDir "$INSTDIR\include\asm\z80"
-  RMDir "$INSTDIR\include\asm\r2k"
-  RMDir "$INSTDIR\include\asm\r3ka"
+  RMDir "$INSTDIR\include\asm\rab"
   RMDir "$INSTDIR\include\asm\pic16"
   RMDir "$INSTDIR\non-free\include\asm\pic16"
   RMDir "$INSTDIR\include\asm\pic14"

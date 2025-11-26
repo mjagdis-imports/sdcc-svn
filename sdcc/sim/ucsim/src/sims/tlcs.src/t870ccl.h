@@ -96,18 +96,9 @@ public:
   struct rbank_870c_t *rbanks, *rbank;
   u16_t rSP;
   u8_t rPSW;
-  class cl_cell8 cW, cA;
-  class cl_cell8 cB, cC;
-  class cl_cell8 cD, cE;
-  class cl_cell8 cH, cL;
+  class cl_cell8 cW, cA, cB, cC, cD, cE, cH, cL;
   class cl_cell8 *regs8[8];
-  class cl_cell16 cWA;
-  class cl_cell16 cBC;
-  class cl_cell16 cDE;
-  class cl_cell16 cHL;
-  class cl_cell16 cIX;
-  class cl_cell16 cIY;
-  class cl_cell16 cSP;
+  class cl_cell16 cWA, cBC, cDE, cHL, cIX, cIY, cSP;
   class cl_cell16 *regs16[8];
   class cl_cell8 cPSW;
   class cl_address_space *asc, *asd;
@@ -121,15 +112,20 @@ public:
   virtual void decode_regs(void);
   virtual void make_memories(void);
   virtual void make_cpu_hw(void);
-
+  virtual void reset(void);
   virtual void print_regs(class cl_console_base *con);
+
+  virtual struct dis_entry *dis_tbl(void);
+  virtual char *disassc(t_addr addr, chars *comment);
+  virtual int longest_inst(void) { return 4; }
 };
 
 
 enum t870c_cpu_cfg
   {
-    t870c_sp_limit = 0,
-    t870c_nuof     = 1
+    t870c_sp_limit 	= 0,
+    t870c_bootmode	= 1,
+    t870c_nuof     	= 2
   };
   
 class cl_t870c_cpu: public cl_hw

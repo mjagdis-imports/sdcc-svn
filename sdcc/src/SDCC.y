@@ -252,6 +252,10 @@ postfix_expression
 
                         /* add the specifier list to the id */
                         symbol *sym1 = prepareDeclarationSymbol(NULL, $2, sym);
+                        /* implicitly make the symbol a constexpr if the initializer allows it */
+                        sym1->etype = getSpec(sym1->type);
+                        if (constExprTree(list2expr(sym1->ival)))
+                          SPEC_CONSTEXPR(sym1->etype) = 1;
 
                         /* mark as temporary symbol for compound literal, so that gatherImplicitVariables
                            can attach it to a block, and add the temporary symbol to the symbol table */
@@ -629,7 +633,9 @@ storage_class_specifier
                }
    | CONSTEXPR {
                   $$ = newLink (SPECIFIER);
-                  werror (E_CONSTEXPR);
+                  SPEC_CONSTEXPR($$) = 1;
+                  if (!options.std_c23)
+                    werror (E_CONSTEXPR_C23);
                }
    ;
 
@@ -1001,6 +1007,22 @@ member_declaration
           ignoreTypedefType = 0;
           $$ = $3;
         }
+   | attribute_specifier_sequence_opt specifier_qualifier_list ';'
+     {
+       symbol *sym = newSymbol ("", NestLevel);
+       sym_link *btype = copyLinkChain($2);
+       pointerTypes(sym->type, btype);
+       if (!sym->type)
+         {
+           sym->type = btype;
+           sym->etype = getSpec(sym->type);
+         }
+       else
+         addDecl (sym, 0, btype);
+       checkTypeSanity(sym->etype, sym->name);
+      ignoreTypedefType = 0;
+      $$ = sym;
+     }
    ;
 
 type_specifier_qualifier
@@ -1051,7 +1073,6 @@ member_declarator
           else
               $1->bitVar = bitsize;
         }
-   | { $$ = newSymbol ("", NestLevel); }
    ;
 
 enum_specifier
@@ -1318,6 +1339,7 @@ array_declarator
 
        p = newLink (DECLARATOR);
        DCL_TYPE(p) = ARRAY;
+       DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNKNOWN;
        DCL_ELEM(p) = 0;
 
        if ($3)
@@ -1343,6 +1365,7 @@ array_declarator
 
        p = newLink (DECLARATOR);
        DCL_TYPE(p) = ARRAY;
+       DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNEVALUATED;
        DCL_ELEM_AST (p) = $4;
 
        if ($3)
@@ -1370,6 +1393,7 @@ array_declarator
 
        p = newLink (DECLARATOR);
        DCL_TYPE(p) = ARRAY;
+       DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNEVALUATED;
        DCL_ELEM_AST (p) = $5;
 
        if ($4)
@@ -1398,6 +1422,7 @@ array_declarator
 
        p = newLink (DECLARATOR);
        DCL_TYPE(p) = ARRAY;
+       DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNEVALUATED;
        DCL_ELEM_AST (p) = $5;
 
        DCL_PTR_CONST(p) = SPEC_CONST ($3);
@@ -1408,6 +1433,32 @@ array_declarator
        n = newLink (SPECIFIER);
        SPEC_NEEDSPAR(n) = 1;
        addDecl($1,0,n);
+     }
+   | direct_declarator '[' type_qualifier_list_opt '*' ']'
+     {
+       sym_link *p, *n;
+
+       p = newLink (DECLARATOR);
+       DCL_TYPE (p) = ARRAY;
+       DCL_ARRAY_LENGTH_TYPE (p) = ARRAY_LENGTH_UNSPECIFIED;
+       DCL_ELEM (p) = 0;
+
+       if ($3)
+         {
+           if (!options.std_c99)
+             werror (E_QUALIFIED_ARRAY_PARAM_C99);
+
+           DCL_PTR_CONST (p) = SPEC_CONST ($3);
+           DCL_PTR_RESTRICT (p) = SPEC_RESTRICT ($3);
+           DCL_PTR_VOLATILE (p) = SPEC_VOLATILE ($3);
+           DCL_PTR_ADDRSPACE (p) = SPEC_ADDRSPACE ($3);
+           addDecl ($1,0,p);
+           n = newLink (SPECIFIER);
+           SPEC_NEEDSPAR (n) = 1;
+           addDecl ($1,0,n);
+         }
+       else
+         addDecl ($1,0,p);
      }
    ;
 
@@ -1680,16 +1731,23 @@ type_qualifier_list_opt
   ;
 
 parameter_type_list
-        : parameter_list
-        | parameter_list ',' ELLIPSIS { $1->vArgs = 1;}
+  : parameter_list
+  | parameter_list ',' ELLIPSIS
+         {
+           if (IS_VOID ($1->type))
+             werror (E_VOID_SHALL_BE_LONELY);
+           $1->vArgs = 1;
+         }
         ;
 
 parameter_list
    : parameter_declaration
    | parameter_list ',' parameter_declaration
          {
-            $3->next = $1;
-            $$ = $3;
+           if (IS_VOID ($1->type) || IS_VOID ($3->type))
+             werror (E_VOID_SHALL_BE_LONELY);
+           $3->next = $1;
+           $$ = $3;
          }
    ;
 
@@ -1699,13 +1757,13 @@ parameter_declaration
           symbol *loop;
 
           if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
-            {
-              werror (E_STORAGE_CLASS_FOR_PARAMETER, $2->name);
-            }
+            werror (E_STORAGE_CLASS_FOR_PARAMETER, $2->name);
           pointerTypes ($2->type, $1);
           if (IS_SPEC ($2->etype))
             SPEC_NEEDSPAR($2->etype) = 0;
           addDecl ($2, 0, $1);
+          if (IS_VOID ($2->type))
+            werror (E_VOID_SHALL_BE_LONELY);
           for (loop = $2; loop; loop->_isparm = 1, loop = loop->next)
             ;
           $$ = symbolVal ($2);
@@ -1739,10 +1797,12 @@ parameter_declaration
         }
    | declaration_specifiers  /* analogous to type_name */
         {
-          if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
-            {
-              werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
-            }
+          if (IS_VOID ($1) &&
+            (SPEC_EXTR ($1) || SPEC_STAT ($1) || SPEC_SCLS ($1) == S_AUTO || SPEC_SCLS ($1) == S_REGISTER || // No storage class specifier allowed with void
+            SPEC_CONST ($1) || SPEC_RESTRICT ($1) || SPEC_VOLATILE ($1) || SPEC_ATOMIC ($1))) // No qualifier allowed with void
+            werror (E_VOID_SHALL_BE_LONELY);
+          else if (IS_SPEC ($1) && !IS_VALID_PARAMETER_STORAGE_CLASS_SPEC ($1))
+            werror (E_STORAGE_CLASS_FOR_PARAMETER, "type name");
 
           $$ = newValue ();
           $$->type = $1;
@@ -1772,22 +1832,39 @@ direct_abstract_declarator_opt
    ;
 
 array_abstract_declarator
-   : direct_abstract_declarator_opt '[' ']'   {
-                                       $$ = newLink (DECLARATOR);
-                                       DCL_TYPE($$) = ARRAY;
-                                       DCL_ELEM($$) = 0;
-                                       if($1)
-                                         $$->next = $1;
-                                    }
+   : direct_abstract_declarator_opt '[' ']'
+      {
+        $$ = newLink (DECLARATOR);
+        DCL_TYPE ($$) = ARRAY;
+        DCL_ARRAY_LENGTH_TYPE ($$) = ARRAY_LENGTH_UNKNOWN;
+        DCL_ELEM ($$) = 0;
+        if ($1)
+          {
+            $1->next = $$;
+            $$ = $1;
+          }
+      }
    | direct_abstract_declarator_opt '[' constant_expr ']'
-                                    {
-                                       value *val;
-                                       $$ = newLink (DECLARATOR);
-                                       DCL_TYPE($$) = ARRAY;
-                                       DCL_ELEM($$) = (int) ulFromVal(val = constExprValue($3, true));
-                                       if($1)
-                                         $$->next = $1;
-                                    }
+      {
+        value *val = constExprValue ($3, true);
+        $$ = newLink (DECLARATOR);
+        DCL_TYPE ($$) = ARRAY;
+        if (val && SPEC_SCLS (val->etype) == S_LITERAL)
+          {
+            DCL_ARRAY_LENGTH_TYPE ($$) = ARRAY_LENGTH_KNOWN_CONST;
+            DCL_ELEM ($$) = (int) ulFromVal (val);
+          }
+        else
+          {
+            DCL_ARRAY_LENGTH_TYPE ($$) = ARRAY_LENGTH_SPECIFIED;
+            DCL_ELEM ($$) = 0;
+          }
+        if ($1)
+          {
+            $1->next = $$;
+            $$ = $1;
+          }
+      }
    ;
 
 function_abstract_declarator
@@ -2417,6 +2494,8 @@ external_declaration
                   SPEC_EXTR($1->etype) = 1;
                 }
             }
+          if ($1 && $1->type && IS_REGISTER (getSpec ($1->type)))
+            werror (W_REGISTER_EXTERNAL_DECL);
           addSymChain (&$1);
           allocVariables ($1);
           cleanUpLevel (SymbolTab, 1);

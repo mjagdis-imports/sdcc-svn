@@ -45,6 +45,9 @@ t_mem
 cl_t870c1_psw_op::write(t_mem val)
 {
   val&= 0xfe;
+  u8_t new_rbs= val & MRBS;
+  if (new_rbs != uc->act_rbs)
+    uc->change_bank(new_rbs);
   return val;
 }
 
@@ -69,6 +72,38 @@ cl_t870c1::part_init(void)
   class cl_memory_operator *o= new cl_t870c1_psw_op(&cPSW, this);
   o->init();
   cPSW.append_operator(o);
+
+  reg_cell_var(&cW0, &(rbanks[0].rwa.w), "W0", "W register in bank 0");
+  reg_cell_var(&cA0, &(rbanks[0].rwa.a), "A0", "A register in bank 0");
+  reg_cell_var(&cB0, &(rbanks[0].rbc.b), "B0", "B register in bank 0");
+  reg_cell_var(&cC0, &(rbanks[0].rbc.c), "C0", "C register in bank 0");
+  reg_cell_var(&cD0, &(rbanks[0].rde.d), "D0", "D register in bank 0");
+  reg_cell_var(&cE0, &(rbanks[0].rde.e), "E0", "E register in bank 0");
+  reg_cell_var(&cH0, &(rbanks[0].rhl.h), "H0", "H register in bank 0");
+  reg_cell_var(&cL0, &(rbanks[0].rhl.l), "L0", "L register in bank 0");
+
+  reg_cell_var(&cW1, &(rbanks[1].rwa.w), "W1", "W register in bank 1");
+  reg_cell_var(&cA1, &(rbanks[1].rwa.a), "A1", "A register in bank 1");
+  reg_cell_var(&cB1, &(rbanks[1].rbc.b), "B1", "B register in bank 1");
+  reg_cell_var(&cC1, &(rbanks[1].rbc.c), "C1", "C register in bank 1");
+  reg_cell_var(&cD1, &(rbanks[1].rde.d), "D1", "D register in bank 1");
+  reg_cell_var(&cE1, &(rbanks[1].rde.e), "E1", "E register in bank 1");
+  reg_cell_var(&cH1, &(rbanks[1].rhl.h), "H1", "H register in bank 1");
+  reg_cell_var(&cL1, &(rbanks[1].rhl.l), "L1", "L register in bank 1");
+
+  reg_cell_var(&cWA0, &(rbanks[0].wa), "WA0", "WA register in bank 0");
+  reg_cell_var(&cBC0, &(rbanks[0].bc), "BC0", "BC register in bank 0");
+  reg_cell_var(&cDE0, &(rbanks[0].de), "DE0", "DE register in bank 0");
+  reg_cell_var(&cHL0, &(rbanks[0].hl), "HL0", "HL register in bank 0");
+  reg_cell_var(&cIX0, &(rbanks[0].ix), "IX0", "IX register in bank 0");
+  reg_cell_var(&cIY0, &(rbanks[0].iy), "IY0", "IY register in bank 0");
+
+  reg_cell_var(&cWA1, &(rbanks[1].wa), "WA1", "WA register in bank 1");
+  reg_cell_var(&cBC1, &(rbanks[1].bc), "BC1", "BC register in bank 1");
+  reg_cell_var(&cDE1, &(rbanks[1].de), "DE1", "DE register in bank 1");
+  reg_cell_var(&cHL1, &(rbanks[1].hl), "HL1", "HL register in bank 1");
+  reg_cell_var(&cIX1, &(rbanks[1].ix), "IX1", "IX register in bank 1");
+  reg_cell_var(&cIY1, &(rbanks[1].iy), "IY1", "IY register in bank 1");
 }
 
 
@@ -77,6 +112,14 @@ cl_t870c1::mk_rbanks(void)
 {
   rbanks= (struct rbank_870c_t *)malloc(sizeof(*rbanks));
   rbank= &rbanks[0];
+  act_rbs= 0;
+}
+
+void
+cl_t870c1::change_bank(u8_t new_rbs)
+{
+  rbank= &rbanks[(act_rbs= new_rbs)?1:0];
+  decode_regs();
 }
 
 
@@ -167,6 +210,14 @@ cl_t870c1::make_cpu_hw(void)
 
 
 void
+cl_t870c1::reset(void)
+{
+  cl_t870c::reset();
+  cF.W(rF&~MRBS);
+}
+
+
+void
 cl_t870c1::print_regs(class cl_console_base *con)
 {
   con->dd_color("answer");
@@ -213,9 +264,20 @@ cl_t870c1_cpu::cl_t870c1_cpu(class cl_uc *auc):
 int
 cl_t870c1_cpu::init(void)
 {
+  class cl_var *v;
   cl_hw::init();
   psw= register_cell(uc->asd, 0x3f);
-  return 0;
+  uc->vars->add(v= new cl_var(chars("sp_limit"), cfg,
+			      t870c_sp_limit,
+			      cfg_help(t870c_sp_limit)));
+  v->init();
+
+  uc->vars->add(v= new cl_var(chars("bootmode"), cfg,
+			      t870c1_bootmode,
+			      cfg_help(t870c1_bootmode)));
+  v->init();
+
+return 0;
 }
 
 void
@@ -252,6 +314,13 @@ cl_t870c1_cpu::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 	uc->sp_limit= *val & 0xffff;
       return uc->sp_limit;
       break;
+    case t870c1_bootmode:
+      if (val)
+	{
+	  *val= (*val)?1:0;
+	  // TODO: remap memories
+	}
+      break;
     default:
       if (val)
 	cell->set(*val);
@@ -265,7 +334,9 @@ cl_t870c1_cpu::cfg_help(t_addr addr)
   switch (addr)
     {
     case t870c1_sp_limit:
-      return "Stack overflows when SP reaches this limit";
+      return "Stack overflows when SP reaches this limit (uint, RW)";
+    case t870c1_bootmode:
+      return "If true, CPU works in boot mode (bool, RW)";
     }
   return "Not used";
 }
