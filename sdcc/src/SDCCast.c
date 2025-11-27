@@ -2881,8 +2881,9 @@ gatherImplicitVariables (ast * tree, ast * block)
           SPEC_OCLS (assignee->etype) = NULL;
           SPEC_EXTR (assignee->etype) = 0;
           SPEC_STAT (assignee->etype) = 0;
-          SPEC_VOLATILE (assignee->etype) = 0;
-          SPEC_ATOMIC (assignee->etype) = 0;
+          SPEC_VOLATILE (assignee->etype) = false;
+          SPEC_ATOMIC (assignee->etype) = false;
+          SPEC_OPTIONAL (assignee->etype) = false;
           SPEC_ABSA (assignee->etype) = 0;
           SPEC_CONST (assignee->etype) = 0;
 
@@ -7272,14 +7273,14 @@ inlineTempVar (sym_link * type, long level)
   SPEC_STAT (sym->etype) = 0;
   if (IS_SPEC (sym->type))
     {
-      SPEC_VOLATILE (sym->type) = 0;
-      SPEC_ATOMIC (sym->type) = 0;
+      SPEC_VOLATILE (sym->type) = false;
+      SPEC_ATOMIC (sym->type) = false;
       SPEC_ADDRSPACE (sym->type) = 0;
     }
   else
     {
-      DCL_PTR_VOLATILE (sym->type) = 0;
-      DCL_PTR_ATOMIC (sym->type) = 0;
+      DCL_PTR_VOLATILE (sym->type) = false;
+      DCL_PTR_ATOMIC (sym->type) = false;
       DCL_PTR_ADDRSPACE (sym->type) = 0;
     }
   SPEC_ABSA (sym->etype) = 0;

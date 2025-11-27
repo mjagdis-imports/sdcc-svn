@@ -748,6 +748,8 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
         werror (W_REPEAT_QUALIFIER, "const");
       if (SPEC_VOLATILE (dest) && SPEC_VOLATILE (src))
         werror (W_REPEAT_QUALIFIER, "volatile");
+      if (SPEC_OPTIONAL(dest) && SPEC_OPTIONAL (src))
+        werror (W_REPEAT_QUALIFIER, "_Optional");
       if (SPEC_STAT (dest) && SPEC_STAT (src))
         werror (W_REPEAT_QUALIFIER, "static");
       if (SPEC_EXTR (dest) && SPEC_EXTR (src))
@@ -842,6 +844,7 @@ mergeSpec (sym_link * dest, sym_link * src, const char *name)
   SPEC_VOLATILE (dest) |= SPEC_VOLATILE (src);
   SPEC_RESTRICT (dest) |= SPEC_RESTRICT (src);
   SPEC_ATOMIC (dest) |= SPEC_ATOMIC (src);
+  SPEC_OPTIONAL (dest) |= SPEC_OPTIONAL (src);
   SPEC_ADDR (dest) |= SPEC_ADDR (src);
   SPEC_OCLS (dest) = SPEC_OCLS (src);
   SPEC_BLEN (dest) |= SPEC_BLEN (src);
@@ -948,6 +951,7 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       DCL_PTR_VOLATILE (decl) |= SPEC_VOLATILE (spec);
       DCL_PTR_RESTRICT (decl) |= SPEC_RESTRICT (spec);
       DCL_PTR_ATOMIC (decl) |= SPEC_ATOMIC (spec);
+      DCL_PTR_OPTIONAL (decl) |= SPEC_OPTIONAL (spec);
       if (DCL_PTR_ADDRSPACE (decl) && SPEC_ADDRSPACE (spec) &&
         strcmp (DCL_PTR_ADDRSPACE (decl)->name, SPEC_ADDRSPACE (spec)->name))
         werror (E_SYNTAX_ERROR, yytext);
@@ -958,12 +962,13 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
       SPEC_VOLATILE (spec) = 0;
       SPEC_RESTRICT (spec) = 0;
       SPEC_ATOMIC (spec) = 0;
+      SPEC_OPTIONAL (spec) = 0;
       SPEC_ADDRSPACE (spec) = 0;
     }
   else if (DCL_TYPE (decl) == FUNCTION)
     {
       if (SPEC_CONST (spec) || SPEC_VOLATILE (spec))
-        werror ( E_QUALIFIED_FUNCTION);
+        werror (E_QUALIFIED_FUNCTION);
     }
 
   lnk = decl;
@@ -2147,8 +2152,11 @@ checkSClass (symbol *sym, int isProto)
     }
 
   t = sym->type;
+  bool pointed_to= false;
   while (t)
     {
+      if (!pointed_to && isOptional (t))
+        werrorfl (sym->fileDef, sym->lineDef, E_BAD_OPTIONAL);
       if (IS_DECL (t) && DCL_PTR_RESTRICT (t) && !(IS_PTR (t) && !IS_FUNCPTR(t)))
         {
           werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
@@ -2160,6 +2168,7 @@ checkSClass (symbol *sym, int isProto)
           werrorfl (sym->fileDef, sym->lineDef, E_VLA_UNSPECIFIED_SCOPE);
           break;
         }
+      pointed_to = IS_PTR (t);
       t = t->next;
     }
 
@@ -2170,9 +2179,8 @@ checkSClass (symbol *sym, int isProto)
   /* The PIC port uses a different peep hole optimizer based on "pCode" */
   if (!TARGET_PIC_LIKE)
 #endif
-
-  if (IS_ABSOLUTE (sym->etype))
-    SPEC_VOLATILE (sym->etype) = 1;
+    if (IS_ABSOLUTE (sym->etype))
+      SPEC_VOLATILE (sym->etype) = 1;
 
   if (TARGET_IS_MCS51 && IS_ABSOLUTE (sym->etype) && SPEC_SCLS (sym->etype) == S_SFR)
     {
@@ -2384,9 +2392,9 @@ checkSClass (symbol *sym, int isProto)
       if (SPEC_ATOMIC (sym->etype) || SPEC_VOLATILE (sym->etype) || SPEC_RESTRICT (sym->etype))
         {
           werror (E_CONSTEXPR_INVALID_QUAL);
-          SPEC_ATOMIC (sym->etype) = 0;
-          SPEC_VOLATILE (sym->etype) = 0;
-          SPEC_RESTRICT (sym->etype) = 0;
+          SPEC_VOLATILE (sym->etype) = false;
+          SPEC_RESTRICT (sym->etype) = false;
+          SPEC_ATOMIC (sym->etype) = false;
         }
     }
 }
@@ -3274,6 +3282,8 @@ compareTypeExact (sym_link * dest, sym_link * src, long level)
                 return 0;
               if (DCL_PTR_VOLATILE (src) != DCL_PTR_VOLATILE (dest))
                 return 0;
+              if (DCL_PTR_OPTIONAL (src) != DCL_PTR_OPTIONAL (dest))
+                return 0;
               if (IS_FUNC (src))
                 {
                   value *exargs, *acargs, *checkValue;
@@ -3379,6 +3389,8 @@ compareTypeExact (sym_link * dest, sym_link * src, long level)
   if (SPEC_CONST (dest) != SPEC_CONST (src))
     return 0;
   if (SPEC_VOLATILE (dest) != SPEC_VOLATILE (src))
+    return 0;
+  if (SPEC_OPTIONAL (dest) != SPEC_OPTIONAL (src))
     return 0;
   if (SPEC_STAT (dest) != SPEC_STAT (src))
     return 0;
@@ -4167,12 +4179,18 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 {
                   dbuf_append_str (dbuf, " restrict");
                 }
+              if (DCL_PTR_VOLATILE (type))
+                {
+                  dbuf_append_str (dbuf, " _Optional");
+                }
             }
         }
       else
         {
           if (SPEC_VOLATILE (type))
             dbuf_append_str (dbuf, "volatile-");
+          if (SPEC_OPTIONAL (type))
+            dbuf_append_str (dbuf, "_Optional-");
           if (SPEC_CONST (type))
             dbuf_append_str (dbuf, "const-");
           if (SPEC_NOUN (type) == V_CHAR) // char is a different type from both unsigned char and signed char
@@ -4359,6 +4377,10 @@ printTypeChainRaw (sym_link * start, FILE * of)
                 {
                   fprintf (of, "restrict-");
                 }
+              if (DCL_PTR_OPTIONAL (type))
+                {
+                  fprintf (of, "_Optional-");
+                }
             }
           switch (DCL_TYPE (type))
             {
@@ -4473,6 +4495,8 @@ printTypeChainRaw (sym_link * start, FILE * of)
             fprintf (of, "const-");
           if (SPEC_USIGN (type))
             fprintf (of, "unsigned-");
+          if (SPEC_OPTIONAL (type))
+            fprintf (of, "_Optional-");
           switch (SPEC_NOUN (type))
             {
             case V_INT:
@@ -5282,7 +5306,7 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
 /*-------------------------------------------------------------------*/
 /* isConstant - check if the type is constant                        */
 /*-------------------------------------------------------------------*/
-int
+bool
 isConstant (sym_link *type)
 {
   if (!type)
@@ -5300,7 +5324,7 @@ isConstant (sym_link *type)
 /*-------------------------------------------------------------------*/
 /* isVolatile - check if the type is volatile                        */
 /*-------------------------------------------------------------------*/
-int
+bool
 isVolatile (sym_link *type)
 {
   if (!type)
@@ -5318,7 +5342,7 @@ isVolatile (sym_link *type)
 /*-------------------------------------------------------------------*/
 /* isRestrict - check if the type is restricted                      */
 /*-------------------------------------------------------------------*/
-int
+bool
 isRestrict (sym_link *type)
 {
   if (!type)
@@ -5336,7 +5360,7 @@ isRestrict (sym_link *type)
 /*-------------------------------------------------------------------*/
 /* isAtomic - check if the type is atomic                            */
 /*-------------------------------------------------------------------*/
-int
+bool
 isAtomic (sym_link *type)
 {
   if (!type)
@@ -5349,6 +5373,24 @@ isAtomic (sym_link *type)
     return SPEC_ATOMIC (type);
   else
     return DCL_PTR_ATOMIC (type);
+}
+
+/*-------------------------------------------------------------------*/
+/* isOptional - check if the type is optional                        */
+/*-------------------------------------------------------------------*/
+bool
+isOptional (sym_link *type)
+{
+  if (!type)
+    return 0;
+
+  while (IS_ARRAY (type))
+    type = type->next;
+
+  if (IS_SPEC (type))
+    return SPEC_OPTIONAL (type);
+  else
+    return DCL_PTR_OPTIONAL (type);
 }
 
 /*-------------------------------------------------------------------*/

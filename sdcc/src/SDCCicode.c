@@ -2170,6 +2170,8 @@ checkPtrQualifiers (sym_link * ltype, sym_link * rtype, int warn_const)
 #endif
       if (!IS_RESTRICT (ltype->next) && IS_RESTRICT (rtype->next))
         werror (W_TARGET_LOST_QUALIFIER, "restrict");
+      if (!isOptional (ltype->next) && isOptional (rtype->next))
+        werror (W_TARGET_LOST_QUALIFIER, "_Optional");
     }
 }
 
@@ -3453,11 +3455,11 @@ checkTypes (operand * left, operand * right)
       if (IS_VOLATILE (ltype)) // Don't propagate volatile to right side - we don't want volatile iTemps.
         {
           ltype = copyLinkChain (ltype);
-          if (IS_DECL(ltype))
+          if (IS_DECL (ltype))
             DCL_PTR_VOLATILE (ltype) = 0;
           else
             SPEC_VOLATILE (ltype) = 0;
-          if (IS_DECL(ltype))
+          if (IS_DECL (ltype))
             DCL_PTR_ATOMIC (ltype) = 0;
           else
             SPEC_ATOMIC (ltype) = 0;
