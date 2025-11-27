@@ -1653,6 +1653,7 @@ pointer
                  DCL_PTR_CONST($1) = SPEC_CONST($2);
                  DCL_PTR_VOLATILE($1) = SPEC_VOLATILE($2);
                  DCL_PTR_RESTRICT($1) = SPEC_RESTRICT($2);
+                 DCL_PTR_OPTIONAL($1) = SPEC_OPTIONAL($2);
                  DCL_PTR_ADDRSPACE($1) = SPEC_ADDRSPACE($2);
              }
              else
@@ -1691,6 +1692,7 @@ pointer
                  DCL_PTR_CONST($1) = SPEC_CONST($2);
                  DCL_PTR_VOLATILE($1) = SPEC_VOLATILE($2);
                  DCL_PTR_RESTRICT($1) = SPEC_RESTRICT($2);
+                 DCL_PTR_OPTIONAL($1) = SPEC_OPTIONAL($2);
                  DCL_PTR_ADDRSPACE($1) = SPEC_ADDRSPACE($2);
                  switch (SPEC_SCLS($2)) {
                  case S_XDATA:

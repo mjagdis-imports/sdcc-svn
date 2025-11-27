@@ -4181,10 +4181,10 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
                 {
                   dbuf_append_str (dbuf, " restrict");
                 }
-              if (DCL_PTR_VOLATILE (type))
-                {
-                  dbuf_append_str (dbuf, " _Optional");
-                }
+            }
+          if (DCL_PTR_OPTIONAL (type))
+            {
+              dbuf_append_str (dbuf, " _Optional");
             }
         }
       else
