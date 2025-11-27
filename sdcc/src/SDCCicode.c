@@ -2168,6 +2168,9 @@ checkPtrQualifiers (sym_link * ltype, sym_link * rtype, int warn_const)
       if (!IS_VOLATILE (ltype->next) && IS_VOLATILE (rtype->next))
         werror (W_TARGET_LOST_QUALIFIER, "volatile");
 #endif
+    }
+  if (IS_PTR (ltype) && IS_PTR (rtype))
+    {
       if (!IS_RESTRICT (ltype->next) && IS_RESTRICT (rtype->next))
         werror (W_TARGET_LOST_QUALIFIER, "restrict");
       if (!isOptional (ltype->next) && isOptional (rtype->next))

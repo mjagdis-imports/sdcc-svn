@@ -1,5 +1,13 @@
 2025-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/_Optional.c:
+	  Fixes for _Optional functions (_Optional is the only qualifier that has defined semantics when applied to functions).
+
+2025-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.lex,
 	  src/SDCC.y,
 	  src/SDCCast.c,

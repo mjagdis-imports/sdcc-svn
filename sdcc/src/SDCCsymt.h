@@ -225,7 +225,7 @@ typedef struct declarator
   unsigned ptr_volatile:1;              // pointer is volatile
   unsigned ptr_restrict:1;              // pointer is resticted
   bool ptr_atomic:1;                    // pointer is atomic
-  bool ptr_optional:1;                  // pointer is _Optional
+  bool ptr_optional:1;                  // pointer or function is _Optional
   ARRAY_LENGTH_TYPE array_length_type;  // Array is known to be a VLA?
   bool vla_check_visited:1;             // Already visited in check for VLA - implementation detail to prevent infinite recursion
   struct symbol *ptr_addrspace;         // pointer is in named address space

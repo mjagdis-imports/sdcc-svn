@@ -969,6 +969,8 @@ mergeDeclSpec (sym_link * dest, sym_link * src, const char *name)
     {
       if (SPEC_CONST (spec) || SPEC_VOLATILE (spec))
         werror (E_QUALIFIED_FUNCTION);
+      DCL_PTR_OPTIONAL (decl) |= SPEC_OPTIONAL (spec);
+      SPEC_OPTIONAL (spec) = 0;
     }
 
   lnk = decl;
@@ -2138,7 +2140,6 @@ checkSClass (symbol *sym, int isProto)
       werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
       SPEC_RESTRICT (sym->etype) = 0;
     }
-
 
   if (IS_ARRAY (sym->type) && SPEC_ATOMIC (sym->etype))
     {
@@ -4073,8 +4074,9 @@ dbuf_printTypeChain (sym_link * start, struct dbuf_s *dbuf)
             {
             case FUNCTION:
               dbuf_printf (dbuf, "function %s%s",
-                           (IFFUNC_ISBUILTIN (type) ? "__builtin__ " : ""),
-                           (IFFUNC_ISJAVANATIVE (type) ? "_JavaNative " : ""));
+                (DCL_PTR_OPTIONAL (type) ? "_Optional " : ""),
+                (IFFUNC_ISBUILTIN (type) ? "__builtin__ " : ""),
+                (IFFUNC_ISJAVANATIVE (type) ? "_JavaNative " : ""));
               dbuf_append_str (dbuf, "( ");
               if (!FUNC_ARGS (type) && !FUNC_HASVARARGS(type) && !FUNC_NOPROTOTYPE(type))
                 dbuf_append_str (dbuf, "void ");
@@ -4377,10 +4379,10 @@ printTypeChainRaw (sym_link * start, FILE * of)
                 {
                   fprintf (of, "restrict-");
                 }
-              if (DCL_PTR_OPTIONAL (type))
-                {
-                  fprintf (of, "_Optional-");
-                }
+            }
+          if (DCL_PTR_OPTIONAL (type))
+            {
+              fprintf (of, "_Optional-");
             }
           switch (DCL_TYPE (type))
             {
