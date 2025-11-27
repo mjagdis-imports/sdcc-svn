@@ -308,8 +308,21 @@ unary_expression
    | DEC_OP unary_expression        { $$ = newNode (DEC_OP, NULL, $2); }
    | unary_operator cast_expression
        {
+         // &* is ignored except for removing the _Optional qualifier.
          if ($1 == '&' && IS_AST_OP ($2) && $2->opval.op == '*' && $2->right == NULL)
-           $$ = $2->left;
+           {
+             $$ = $2->left;
+             sym_link *type = typeofOp ($$);
+             if (isOptional (type->next))
+               {
+                 type = copyLinkChain (type);
+                 if (IS_DECL (type->next))
+                   DCL_PTR_OPTIONAL (type->next) = false;
+                 else
+                   SPEC_OPTIONAL (type->next) = false;
+                 $$ = newNode (CAST, newAst_LINK(type), $$);
+               }
+           }
          else if ($1 == '*' && IS_AST_OP ($2) && $2->opval.op == '&' && $2->right == NULL)
            $$ = $2->left;
          else

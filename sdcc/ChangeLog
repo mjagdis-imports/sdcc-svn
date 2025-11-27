@@ -1,5 +1,12 @@
 2025-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCC.y,
+	  src/SDCCast.c,
+	  support/valdiag/tests/_Optional.c:
+	  Implement special handling of _Optional qualifier at & and &*.
+
+2025-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCicode.c,
 	  src/SDCCsymt.c,
 	  src/SDCCsymt.h,

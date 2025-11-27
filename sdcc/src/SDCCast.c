@@ -4038,7 +4038,11 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             !(AST_SYMBOL (tree->left)->level && currFunc && FUNC_ISINLINE (currFunc->type) && !IS_EXTERN (getSpec (currFunc->type)) && !IS_STATIC (getSpec (currFunc->type)));
         }
 
-      p->next = LTYPE (tree);
+      p->next = copyLinkChain (LTYPE (tree));
+      if (IS_DECL (p->next))
+        DCL_PTR_OPTIONAL (p->next) = false;
+      else
+        SPEC_OPTIONAL (p->next) = false; // _Optional qualifier is not preserved across &.
       TTYPE (tree) = p;
       TETYPE (tree) = getSpec (TTYPE (tree));
       LLVAL (tree) = 1;
