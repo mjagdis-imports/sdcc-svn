@@ -8,6 +8,8 @@
 	  support/valdiag/tests/_Optional.c,
 	  support/valdiag/tests/restrict.c:
 	  Fix diagnostics for _Optional (and restrict) qualifier on parameters in function declarations that are not definitions, and on explicit casts.
+	* doc/sdccman.lyx:
+	  Basic documentation for _Optional support.
 
 2025-11-27 Gabriele Gorla <gorlik@yahoo.com>
 
