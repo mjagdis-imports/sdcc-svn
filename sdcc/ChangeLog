@@ -1,3 +1,10 @@
+2025-11-27 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/genand.c,
+	  src/mos6502/genor.c,
+	  src/mos6502/genxor.c:
+	  Refactor bit operations.
+
 2025-11-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCC.y,
@@ -19,6 +26,11 @@
 	  src/SDCCsymt.h,
 	  support/valdiag/tests/_Optional.c:
 	  Fixes for _Optional functions (_Optional is the only qualifier that has defined semantics when applied to functions).
+
+2025-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c:
+	  Fix false positives in operand comparsion.
 
 2025-11-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
