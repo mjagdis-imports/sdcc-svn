@@ -63,7 +63,7 @@ static_assert(_Generic(typeof(pci2), const int *: 1, default: 0));
 #ifdef TEST5
 int *_Optional opi; /* ERROR */ // invalid: "int *" is not a referenced type
 _Optional int oi; /* ERROR */ // invalid: "int" is not a referenced type
-_Optional struct s; /*todo! - shouldbe an error! */ // invalid: "struct s" is not a referenced type
+_Optional struct s; /* ERROR */ // invalid: "struct s" is not a referenced type
 _Optional int oa[2][3]; /* ERROR */ // invalid: int is not a referenced type
 #endif
 
