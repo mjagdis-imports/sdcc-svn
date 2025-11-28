@@ -1,5 +1,11 @@
 2025-11-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* src/SDCCerr.h,
+	  src/SDCCerr.c:
+	  Prepare for diagnostics based on combination of _Optional with information from generalized constant propagation analysis.
+
+2025-11-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCC.y,
 	  support/valdiag/tests/_Optional.c:
 	  Fix diagnostics for _Optional on struct/union forward declarations.

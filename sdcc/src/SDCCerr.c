@@ -767,6 +767,8 @@ struct
      "function with variable arguments only requires ISO C23 or later", 0 },
   { E_BAD_OPTIONAL, ERROR_LEVEL_ERROR,
      "types other than the referenced type of a pointer type shall not be optional-qualified", 0 },
+  { W_OPTIONAL_PTR_DEREF, ERROR_LEVEL_WARNING,
+     "pointer to _Optional could not be proven to be non-null at dereference", 0 },
 };
 
 /* -------------------------------------------------------------------------------
