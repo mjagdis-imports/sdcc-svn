@@ -6144,6 +6144,7 @@ typeofOp (ast *tree)
 {
   ++noAlloc;
   tree = decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
+  tree->decorated = 0; // Reset, so we redecorate parameters later at CALL node to ensure that register parameters get marked correctly.
   --noAlloc;
   sym_link *type = copyLinkChain (tree->ftype);
   sym_link *spec_type;
