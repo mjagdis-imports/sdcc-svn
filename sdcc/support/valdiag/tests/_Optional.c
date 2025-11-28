@@ -97,8 +97,8 @@ _Optional F *fp2; // valid: fp2 has type "int (*)(float) _Optional"
 
 // Test case from N3422
 #ifdef TEST10
-void h(_Optional int); /*todo! - shouldbe an error! */ // invalid: "int" is not a referenced type
-//todo - not an error!void l(_Optional int param[2][3]); // valid: param is a pointer
+void h(_Optional int); /* ERROR */ // invalid: "int" is not a referenced type
+//todo - not an error? void l(_Optional int param[2][3]); // valid: param is a pointer
 #endif
 
 // Test case from N3422
@@ -116,8 +116,8 @@ void fred(_Optional int *i)
 	m = i; // valid
 	i = j; // valid
 	bar(j); // valid
-//	j = (int *)i; // valid   TODO!!
-//	foo((int *)i); // valid  TODO!!
+	j = (int *)i; // valid
+	foo((int *)i); // valid
 	// type constraints aren't lifted by path-sensitive analysis
 	if (i) {
 		j = i; /* WARNING */ // violates type constraints for =

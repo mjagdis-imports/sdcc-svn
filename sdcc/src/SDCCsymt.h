@@ -764,6 +764,7 @@ void *findSymWithLevel (bucket **, struct symbol *sym);
 void *findSymWithBlock (bucket **, struct symbol *sym, int, long);
 void changePointer (sym_link * p);
 void checkTypeSanity (sym_link * etype, const char *name);
+void checkQualifiers (symbol *sym, sym_link *type, bool check_vla_unspec);
 sym_link *typeFromStr (const char *);
 STORAGE_CLASS sclsFromPtr (sym_link * ptr);
 sym_link *newEnumType (symbol *enumlist, sym_link *userRequestedType);

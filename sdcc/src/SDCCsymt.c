@@ -2082,15 +2082,56 @@ promoteAnonStructs (int su, structdef * sdef)
     }
 }
 
+/*------------------------------------------------------------------*/
+/* checkQualifers - check qualifiers on type, use sym for           */
+/*                  diagnostics, if provided.                       */
+/*------------------------------------------------------------------*/
+void
+checkQualifiers (symbol *sym, sym_link *type, bool check_vla_unspec)
+{
+  sym_link *t = type;
+  bool pointed_to = false;
+  while (t)
+    {
+      if (!pointed_to && isOptional (t))
+        {
+          if (sym)
+            werrorfl (sym->fileDef, sym->lineDef, E_BAD_OPTIONAL);
+          else
+            werror (E_BAD_OPTIONAL);
+        }
+      if (IS_SPEC (t) && SPEC_RESTRICT (t) ||
+        IS_DECL (t) && DCL_PTR_RESTRICT (t) && (IS_FUNCPTR (t) || IS_FUNC (t)))
+        {
+          if (sym)
+            werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
+          else
+            werror (E_BAD_RESTRICT);
+          if (IS_SPEC (t))
+            SPEC_RESTRICT (t) = false;
+          else
+            DCL_PTR_RESTRICT (t) = false;
+          break;
+        }
+      else if (check_vla_unspec && IS_DECL (t) && IS_ARRAY (t) && DCL_ARRAY_LENGTH_TYPE (t) == ARRAY_LENGTH_UNSPECIFIED)
+        {
+          if (sym)
+            werrorfl (sym->fileDef, sym->lineDef, E_VLA_UNSPECIFIED_SCOPE);
+          else
+            werror (E_VLA_UNSPECIFIED_SCOPE);
+          break;
+        }
+      pointed_to = IS_PTR (t);
+      t = t->next;
+    }
+}
 
 /*------------------------------------------------------------------*/
 /* checkSClass - check the storage class specification              */
 /*------------------------------------------------------------------*/
 static void
-checkSClass (symbol *sym, int isProto)
+checkSClass (symbol *sym, bool isProto)
 {
-  sym_link *t;
-
   if (getenv ("DEBUG_SANITY"))
     {
       fprintf (stderr, "checkSClass: %s \n", sym->name);
@@ -2134,13 +2175,6 @@ checkSClass (symbol *sym, int isProto)
       SPEC_NEEDSPAR (sym->etype) = 0;
     }
 
-  /* make sure restrict is only used with pointers */
-  if (SPEC_RESTRICT (sym->etype))
-    {
-      werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
-      SPEC_RESTRICT (sym->etype) = 0;
-    }
-
   if (IS_ARRAY (sym->type) && SPEC_ATOMIC (sym->etype))
     {
       werrorfl (sym->fileDef, sym->lineDef, E_ATOMIC_ARRAY);
@@ -2152,30 +2186,10 @@ checkSClass (symbol *sym, int isProto)
       SPEC_ATOMIC (sym->etype) = 0;
     }
 
-  t = sym->type;
-  bool pointed_to= false;
-  while (t)
-    {
-      if (!pointed_to && isOptional (t))
-        werrorfl (sym->fileDef, sym->lineDef, E_BAD_OPTIONAL);
-      if (IS_DECL (t) && DCL_PTR_RESTRICT (t) && !(IS_PTR (t) && !IS_FUNCPTR(t)))
-        {
-          werrorfl (sym->fileDef, sym->lineDef, E_BAD_RESTRICT);
-          DCL_PTR_RESTRICT (t) = 0;
-          break;
-        }
-      else if (IS_DECL (t) && IS_ARRAY (t) && DCL_ARRAY_LENGTH_TYPE (t) == ARRAY_LENGTH_UNSPECIFIED)
-        {
-          werrorfl (sym->fileDef, sym->lineDef, E_VLA_UNSPECIFIED_SCOPE);
-          break;
-        }
-      pointed_to = IS_PTR (t);
-      t = t->next;
-    }
+  checkQualifiers (sym, sym->type, true);
 
   /* if absolute address given then it mark it as
      volatile -- except in the PIC port */
-
 #if !OPT_DISABLE_PIC14 || !OPT_DISABLE_PIC16
   /* The PIC port uses a different peep hole optimizer based on "pCode" */
   if (!TARGET_PIC_LIKE)
@@ -2257,7 +2271,7 @@ checkSClass (symbol *sym, int isProto)
   if ((sym->level == 0 || SPEC_STAT(sym->etype)) && SPEC_SCLS (sym->etype) == S_FIXED && !IS_FUNC (sym->type))
     {
       /* find the first non-array link */
-      t = sym->type;
+      sym_link *t = sym->type;
       while (IS_ARRAY (t))
         t = t->next;
       if (IS_CONSTANT (t))
@@ -2271,7 +2285,7 @@ checkSClass (symbol *sym, int isProto)
   if ((sym->level == 0 || SPEC_STAT(sym->etype)) && SPEC_SCLS (sym->etype) == S_CODE && port->mem.code_ro)
     {
       /* find the first non-array link */
-      t = sym->type;
+      sym_link *t = sym->type;
       while (IS_ARRAY (t))
         t = t->next;
       if (IS_SPEC (t))
@@ -2286,7 +2300,7 @@ checkSClass (symbol *sym, int isProto)
       (SPEC_SCLS (sym->etype) != S_FIXED && SPEC_SCLS (sym->etype) != S_SBIT && SPEC_SCLS (sym->etype) != S_BIT))
     {
       /* find out if this is the return type of a function */
-      t = sym->type;
+      sym_link *t = sym->type;
       while (t && t->next != sym->etype)
         t = t->next;
       if (!t || t->next != sym->etype || !IS_FUNC (t))
@@ -2345,7 +2359,7 @@ checkSClass (symbol *sym, int isProto)
        SPEC_SCLS (sym->etype) == S_SFR))
     {
       /* find out if this is the return type of a function */
-      t = sym->type;
+      sym_link *t = sym->type;
       while (t && t->next != sym->etype)
         t = t->next;
       if (t->next != sym->etype || !IS_FUNC (t))
