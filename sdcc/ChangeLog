@@ -1,5 +1,9 @@
 2025-11-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* Merge arraybounds branch.
+
+2025-11-29 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* src/SDCCerr.c,
 	  src/SDCCerr.h,
 	  src/SDCCopt.c,
