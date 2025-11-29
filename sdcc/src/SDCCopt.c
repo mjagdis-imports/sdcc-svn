@@ -2150,7 +2150,7 @@ printCyclomatic (eBBlock ** ebbs, int count)
 /*-----------------------------------------------------------------*/
 /* checkStaticArrayParams - try to warn if a [static] parameter is */
 /* not an array of sufficient size. Also try to warn on deref.     */
-/* of invalid pointer.                                             */
+/* of invalid pointer. Also warnings for other array parameters.   */
 /*-----------------------------------------------------------------*/
 static void
 checkStaticArrayParams (ebbIndex *ebbi)
@@ -2178,7 +2178,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                 paramtype = operandType (ic->right);
               }
 
-            if (IS_DECL (paramtype) && DCL_STATIC_ARRAY_PARAM (paramtype)) // Only check [static] array parameters.
+            if (IS_DECL (paramtype) && (DCL_STATIC_ARRAY_PARAM (paramtype) || DCL_ELEM (paramtype) || DCL_ELEM_AST (paramtype))) // Only check array parameters.
               {
                 unsigned long paramsize;
                 if (DCL_ELEM (paramtype) != 0) // Array size is an integer constant
@@ -2268,15 +2268,23 @@ checkStaticArrayParams (ebbIndex *ebbi)
                   
                 const struct valinfo vi = getOperandValinfo (ic, argop);
                 if (!vi.anything && vi.maxsize < paramsize)
-                  werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
+                  werrorfl (ic->filename, ic->lineno, DCL_STATIC_ARRAY_PARAM (paramtype) ? W_STATIC_ARRAY_PARAM_LENGTH : W_ARRAY_PARAM_LENGTH);
               }
           }
-         else if (ic->op == GET_VALUE_AT_ADDRESS)
+        else if (ic->op == GET_VALUE_AT_ADDRESS)
           {
             const struct valinfo v = getOperandValinfo (ic, ic->left);
             wassert (IS_OP_LITERAL (ic->right));
             long long roff = operandLitValue (ic->right);
-            if (roff >= (long long)v.maxsize)
+            int size = getSize (operandType (ic->left)->next);
+            if (!v.anything && roff + size > (long long)v.maxsize)
+              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
+          }
+        else if (POINTER_SET (ic))
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->result);
+            int size = getSize (operandType (ic->result)->next);
+            if (!v.anything && size > (long long)v.maxsize)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
           }
       }
