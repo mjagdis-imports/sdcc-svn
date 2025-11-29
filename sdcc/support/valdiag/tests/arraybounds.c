@@ -400,3 +400,29 @@ void h(void)
 }
 #endif
 
+// Diagnostics based on non-static array parameters
+#ifdef TEST14
+void g1(char a[3])
+{
+	a[2] = 7;
+	a[3] = 8; /* WARNING */
+}
+
+char c, d;
+
+void g2(char a[3])
+{
+	c = a[2];
+	d = a[3]; /* WARNING */
+}
+
+void f0(char a[3]);
+void f1(char a[static 3]);
+
+void g(char a[2])
+{
+	f0(a); /* WARNING */
+	f1(a); /* WARNING */
+}
+#endif
+

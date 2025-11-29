@@ -2267,8 +2267,10 @@ checkStaticArrayParams (ebbIndex *ebbi)
                   continue;
                   
                 const struct valinfo vi = getOperandValinfo (ic, argop);
-                if (!vi.anything && vi.maxsize < paramsize)
-                  werrorfl (ic->filename, ic->lineno, DCL_STATIC_ARRAY_PARAM (paramtype) ? W_STATIC_ARRAY_PARAM_LENGTH : W_ARRAY_PARAM_LENGTH);
+                if (!vi.anything && vi.maxsize < paramsize && DCL_STATIC_ARRAY_PARAM (paramtype))
+                  werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
+                else if (!vi.anything && vi.maybemaxsize < paramsize)
+                  werrorfl (ic->filename, ic->lineno, W_ARRAY_PARAM_LENGTH);
               }
           }
         else if (ic->op == GET_VALUE_AT_ADDRESS)
@@ -2276,16 +2278,20 @@ checkStaticArrayParams (ebbIndex *ebbi)
             const struct valinfo v = getOperandValinfo (ic, ic->left);
             wassert (IS_OP_LITERAL (ic->right));
             long long roff = operandLitValue (ic->right);
-            int size = getSize (operandType (ic->left)->next);
+            int size = getSize (operandType (ic->result));
             if (!v.anything && roff + size > (long long)v.maxsize)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
+            else if (!v.anything && roff + size > (long long)v.maybemaxsize)
+              werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
           }
         else if (POINTER_SET (ic))
           {
             const struct valinfo v = getOperandValinfo (ic, ic->result);
-            int size = getSize (operandType (ic->result)->next);
+            int size = getSize (operandType (ic->right));
             if (!v.anything && size > (long long)v.maxsize)
               werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
+            else if (!v.anything && size > (long long)v.maybemaxsize)
+              werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
           }
       }
 }

@@ -239,13 +239,18 @@ getOperandValinfo (const iCode *ic, const operand *op)
     {
       v = getTypeValinfo (type, true);
       if (IS_SYMOP (op) && OP_SYMBOL_CONST (op)->ismyparm &&
-        IS_DECL (type) && DCL_STATIC_ARRAY_PARAM (type) && DCL_ELEM (type))
+        IS_DECL (type) && DCL_ELEM (type))
         {
-          // Valid pointer to an array of at least DCL_ELEM (type) elements.
-          v.nonnull = true;
-          v.min = 1;
-          v.minsize = DCL_ELEM (type) * getSize (type->next);
-          v.max -= v.minsize;
+          if ( DCL_STATIC_ARRAY_PARAM (type)) // Valid pointer to an array of at least DCL_ELEM (type) elements.
+            {
+              v.nonnull = true;
+              v.min = 1;
+              v.minsize = DCL_ELEM (type) * getSize (type->next);
+              v.max -= v.minsize;
+            }
+          else
+            v.maybemaxsize = DCL_ELEM (type) * getSize (type->next);
+          v.maybeminsize = DCL_ELEM (type) * getSize (type->next);
         }
     }
   return (v);
