@@ -49,10 +49,12 @@ OLDICESYNTH2SIZES = $(OLDCASES:testdata_%=testdata_%/icesynth2.size)
 	cd $*; $(YOSYS) -l icesynth2.yosyslog -p "read_verilog -sv cpu2_nosv.v; synth_ice40 -top cpu -json icesynth2.json"
 
 %/icesynth.size: %/icesynth.yosyslog
-	grep "Number of cells:" $< | sed -e 's/.*: *//' > $@
+	grep "[0-9] submodules" $< | sed -e 's/ *//' | sed -e 's/ submodules.*//'
+# Old rule for yosys up to 0.54 - new rule above is for yosys from 0.59.
+#	grep "Number of cells:" $< | sed -e 's/.*: *//' > $@
 
 %/icesynth2.size: %/icesynth2.yosyslog
-	grep "Number of cells:" $< | sed -e 's/.*: *//' > $@
+	grep "[0-9] submodules" $< | sed -e 's/ *//' | sed -e 's/ submodules.*//'
 
 # The big target. Takes a lot of time and memory if there are many maps. Rule of thumb when using make -j <n> data: System should have (n*3) GB of RAM.
 olddata: $(OLDICESYNTHSIZES) $(OLDICESYNTH2SIZES)
