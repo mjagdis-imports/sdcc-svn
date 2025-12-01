@@ -1,3 +1,9 @@
+2025-12-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  support/valdiag/tests/bug-895992.c:
+	  Improve generalized constant propagation for pointers to prepare for diagnostics based on combination of _Optional with information from generalized constant propagation analysis.
+
 2025-11-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge arraybounds branch.
@@ -15,7 +21,7 @@
 	  support/regression/tests/mm-pnvi-ae-udi-pointer_from_integer_2g.c:
 	  Additional diagnostics for potential array bound issues.
 	* src/z80/gen.c:
-	  Fix a r3la codegen issue triggered by previous changes.
+	  Fix a r3ka codegen issue triggered by previous changes.
 
 2025-11-29 Gabriele Gorla <gorlik@yahoo.com>
 
