@@ -129,3 +129,54 @@ void fred(_Optional int *i)
 }
 #endif
 
+// Basic test for diagnostics based on the interaction of _Optional with information from generalized constant propagation analysis.
+#ifdef TEST12
+int i, j;
+
+void f(_Optional int *pi, _Optional int *pj)
+{
+	i = *pi; /* tofo: warn */
+	if (pj)
+		j = *pj;
+}
+#endif
+
+// Test case from N3422
+#ifdef TEST13
+#endif
+
+// Test case from N3422
+#ifdef TEST14
+void sheila(int *j)
+{
+	int k;
+	_Optional int *i, *m;
+
+	if (!j) return;
+	// Conversion preserves non-null constraint on value
+	i = j;
+	// No diagnostic is recommended for the following
+	// statements, because the value of i is constrained
+	// to non-null
+	*i = 10;
+	k = *i;
+	// Cast preserves non-null constraint on value
+	*(_Optional int *)i = 10;
+	k = *(_Optional int *)i;
+	// Assignment preserves non-null constraint on value
+	m = i;
+	// No diagnostic is recommended for the following statements,
+	// because the value of m is constrained to non-null
+	*m = 10;
+	k = *m;
+}
+#endif
+
+// Test case from N3422
+#ifdef TEST15
+#endif
+
+// Test case from N3422
+#ifdef TEST16
+#endif
+

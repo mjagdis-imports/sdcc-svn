@@ -1,3 +1,10 @@
+2025-12-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  src/SDCCopt.c,
+	  support/valdiag/tests/_Optional.c:
+	  Steps towards a fix for bug #3898 and better diagnostics for _Optional.
+
 2025-12-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCgenconstprop.cc,

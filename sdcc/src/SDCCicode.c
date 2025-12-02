@@ -2143,6 +2143,20 @@ geniCodeRValue (operand * op, bool force)
     type = type->next;
 
   type = copyLinkChain (type);
+  if (op->isOptionalEliminated)
+    {
+      if (IS_SPEC (type))
+        SPEC_OPTIONAL (type) = false;
+      else
+        DCL_PTR_OPTIONAL (type) = false;
+    }
+  if (op->isConstEliminated)
+    {
+      if (IS_SPEC (type))
+        SPEC_CONST (type) = false;
+      else
+        DCL_PTR_CONST (type) = false;
+    }
 
   IC_RESULT (ic) = newiTempOperand (type, 1);
   IC_RESULT (ic)->isaddr = 0;
@@ -2214,7 +2228,12 @@ geniCodeCast (sym_link *type, operand *op, bool implicit)
           op->isRestrictEliminated = 1;
         if (isOptional (opetype) && !isOptional (getSpec (type)))
           op->isOptionalEliminated = 1;
+        
       }
+    if (IS_PTR (type) && compareTypeExact (type, optype, -1) != 1 &&
+      (isVolatile (type->next) && !isVolatile (optype->next) || isOptional (type->next) && !isOptional (optype->next)))
+      ; // Need to keep the cast - can't drop volatile, since it could result in reads/writes being optimized out. Can't drop _Optional since it would mess up some warnings (could drop _Optional later, though, after checkStaticArrayParams).
+    else
     return op;
   }
 
