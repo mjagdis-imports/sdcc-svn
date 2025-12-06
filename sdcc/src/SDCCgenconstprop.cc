@@ -829,11 +829,30 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               valinfoUpdate (&v_true);
               valinfoUpdate (&v_false);
               boost::tie(out, out_end) = boost::out_edges(i, G);
+              iCode *extraic;
+              for(extraic = ic->prev; extraic; extraic = extraic->prev)
+                {
+                  if (extraic->op == '=' && !POINTER_SET (extraic) && isOperandEqual (extraic->right, ic->left) && bitVectnBitsOn (OP_DEFS (extraic->result)) == 1)
+                    break; // Found a good candidate
+                  if (extraic->op == LABEL || bitVectBitValue (OP_DEFS (ic->left), extraic->key))
+                    {
+                      extraic = NULL;
+                      break;
+                    }
+                }
               for(; out != out_end; ++out)
                 if (G[boost::target(*out, G)].ic->key == key_true)
-                  G[*out].map[ic->left->key] = v_true;
+                  {
+                    G[*out].map[ic->left->key] = v_true;
+                    if (extraic)
+                      G[*out].map[extraic->result->key] = v_true;
+                  }
                 else if (G[boost::target(*out, G)].ic->key == key_false)
-                  G[*out].map[ic->left->key] = v_false;
+                  {
+                    G[*out].map[ic->left->key] = v_false;
+                    if (extraic)
+                      G[*out].map[extraic->result->key] = v_false;
+                  }
             }
           if (IS_SYMOP (ic->left) && !OP_SYMBOL (ic->left)->addrtaken && !IS_OP_VOLATILE (ic->left) &&
             (bitVectnBitsOn (OP_DEFS (ic->left)) == 1 && !OP_SYMBOL (ic->left)->ismyparm || ic->prev && !POINTER_SET (ic->prev) && isOperandEqual (ic->left, ic->prev->result)))

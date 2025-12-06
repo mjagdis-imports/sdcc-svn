@@ -179,7 +179,7 @@ dbuf_printOperand (operand * op, struct dbuf_s *dbuf)
 
   if (!op)
     return 1;
-
+dbuf_printf (dbuf, "[oelim %d] ", op->isOptionalEliminated);
   switch (op->type)
     {
     case VALUE:
@@ -2228,7 +2228,6 @@ geniCodeCast (sym_link *type, operand *op, bool implicit)
           op->isRestrictEliminated = 1;
         if (isOptional (opetype) && !isOptional (getSpec (type)))
           op->isOptionalEliminated = 1;
-        
       }
     if (IS_PTR (type) && compareTypeExact (type, optype, -1) != 1 &&
       (isVolatile (type->next) && !isVolatile (optype->next) || isOptional (type->next) && !isOptional (optype->next)))
@@ -3116,13 +3115,9 @@ geniCodeDerefPtr (operand *op, int lvl)
   // just in case someone screws up
   wassert (IS_PTR (optype));
 
-  if (IS_TRUE_SYMOP (op))
+  if (IS_TRUE_SYMOP (op) || IS_OP_LITERAL (op))
     {
-      op->isaddr = 1;
-      op = geniCodeRValue (op, TRUE);
-    }
-  else if (IS_OP_LITERAL (op))
-    {
+      // For a true symop, we need the iTemp copy, since setOperandType below will fail otherwise.
       /* To avoid problems converting a dereferenced literal pointer */
       /* back and forth between lvalue and rvalue formats, replace   */
       /* the literal pointer with an iTemp and assign the literal    */
@@ -3134,6 +3129,11 @@ geniCodeDerefPtr (operand *op, int lvl)
       ic = newiCode ('=', NULL, op);
       IC_RESULT (ic) = iop;
       ADDTOCHAIN (ic);
+      if (op->isOptionalEliminated)
+        if (IS_SPEC (operandType (iop)->next))
+          SPEC_OPTIONAL (operandType (iop)->next) = false;
+        else
+          DCL_PTR_OPTIONAL (operandType (iop)->next) = false;
       op = operandFromOperand (iop); /* now use the iTemp as operand */
       optype = operandType (op);
     }

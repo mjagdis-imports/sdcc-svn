@@ -191,7 +191,15 @@ void ReplaceOpWithCheaperOp(operand **op, operand *cop) {
   }
   printf ("\n");
 #endif
-  *op=cop;
+  if (IS_PTR (operandType (*op)) && IS_PTR (operandType (cop)) &&
+    (!isOptional (operandType (*op)->next) || (*op)->isOptionalEliminated) != (!isOptional (operandType (cop)->next) || (cop)->isOptionalEliminated))
+    {
+      operand *nop = operandFromOperand (cop);
+      nop->isOptionalEliminated = (!isOptional (operandType (*op)->next) || (*op)->isOptionalEliminated);
+      *op = nop;
+    }
+  else
+    *op=cop;
 }
 
 /*-----------------------------------------------------------------*/
