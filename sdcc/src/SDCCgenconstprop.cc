@@ -1179,6 +1179,7 @@ optimizeValinfoConst (iCode *sic)
               detachiCodeOperand (&ic->right, ic);
               ic->op = '=';
               ic->right = operandFromValue (valCastLiteral (operandType (result), vresult.min, vresult.min), false);
+              ic->result->isaddr = 0; // Don't know how this can be 1, but it happened once, and made a test fail. Apparenlty some issue in an early stage (the isaddr flag is already set at dumpraw0).
             }
           else
             {
