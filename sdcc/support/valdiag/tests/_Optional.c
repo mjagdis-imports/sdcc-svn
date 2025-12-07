@@ -141,7 +141,7 @@ void f(_Optional int *pi, _Optional int *pj)
 }
 #endif
 
-// Test case from N3422 - a rather bad testcase, since large parts of it get eliminated before we get to _Optional warnings based on data-flow.
+// Test case from N3422 - a rather bad testcase, since large parts of it get eliminated before we get to possible _Optional warnings based on data-flow.
 #ifdef TEST13
 void foo(int *);
 

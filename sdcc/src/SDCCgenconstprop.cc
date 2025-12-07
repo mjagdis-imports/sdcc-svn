@@ -823,8 +823,10 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               struct valinfo v = getOperandValinfo (ic, ic->left);
               struct valinfo v_true = v;
               struct valinfo v_false = v;
-              v_true.min = std::max (v.min, 1ll);
+              if (v_true.min == 0)
+                v_true.min = 1;
               v_true.nonnull = true;
+              v_false.min = 0;
               v_false.max = 0;
               valinfoUpdate (&v_true);
               valinfoUpdate (&v_false);
