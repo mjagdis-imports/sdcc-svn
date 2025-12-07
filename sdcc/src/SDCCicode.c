@@ -2222,18 +2222,15 @@ geniCodeCast (sym_link *type, operand *op, bool implicit)
   {
     if (IS_PTR (type))
       {
-        if (isConstant (opetype) && !isConstant (getSpec (type)))
-          op->isConstEliminated = 1;
-        if (isRestrict (opetype) && !isRestrict (getSpec (type)))
-          op->isRestrictEliminated = 1;
-        if (isOptional (opetype) && !isOptional (getSpec (type)))
-          op->isOptionalEliminated = 1;
+        op->isConstEliminated = (isConstant (opetype) && !isConstant (getSpec (type)));
+        op->isRestrictEliminated = (isRestrict (opetype) && !isRestrict (getSpec (type)));
+        op->isOptionalEliminated = (isOptional (opetype) && !isOptional (getSpec (type)));
       }
     if (IS_PTR (type) && compareTypeExact (type, optype, -1) != 1 &&
       (isVolatile (type->next) && !isVolatile (optype->next) || isOptional (type->next) && !isOptional (optype->next)))
       ; // Need to keep the cast - can't drop volatile, since it could result in reads/writes being optimized out. Can't drop _Optional since it would mess up some warnings (could drop _Optional later, though, after checkStaticArrayParams).
     else
-    return op;
+      return op;
   }
 
   /* if this is a literal then just change the type & return */
