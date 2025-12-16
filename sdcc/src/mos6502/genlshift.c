@@ -572,7 +572,7 @@ shiftLLong4 (operand * left, operand * result, int shift)
       rmwWithReg ("lsr", m6502_reg_a);
       if(shift!=7)
         fastSaveA();
-	//             storeRegTempAlways(m6502_reg_a, true);
+      //             storeRegTempAlways(m6502_reg_a, true);
       loadRegFromAop (m6502_reg_a, AOP (left), 2);
       rmwWithReg ("ror", m6502_reg_a);
       storeRegToAop (m6502_reg_a, AOP (result), 3);
@@ -588,7 +588,6 @@ shiftLLong4 (operand * left, operand * result, int shift)
       if(shift!=7)
 	{
           fastRestoreA();
-	  //        loadRegTemp(m6502_reg_a);
 	  while(shift!=7)
 	    {
 	      rmwWithReg ("lsr", m6502_reg_a);
@@ -804,53 +803,150 @@ m6502_genLeftShift (iCode * ic)
       //	emitcode("ERROR", "%s: countreg is null", __func__);
       if(!m6502_reg_y->isDead && !IS_AOP_WITH_Y (AOP (result)))
         {
-	  storeRegTemp(m6502_reg_y, true);
+	  storeRegTemp(m6502_reg_y, !IS_AOP_WITH_Y (AOP (right)));
 	  restore_y=true;
         }
       countreg = m6502_reg_y;
     }
 
-  bool lsb_in_a = ( IS_AOP_XA (AOP (result)) || IS_AOP_XA (AOP (left)) || size==1);
-  bool msb_in_x = lsb_in_a && AOP_TYPE(result)!=AOP_DIR;
+  bool op_is_xa = ( IS_AOP_XA (AOP (result)) || IS_AOP_XA (AOP (left)));
+  bool msb_in_x = op_is_xa && AOP_TYPE(result)!=AOP_DIR;
+  bool early_load_count = (AOP_TYPE(left)==AOP_SOF || AOP_TYPE(right)==AOP_SOF || IS_AOP_WITH_A(AOP(right)));
+  int a_loc = ( op_is_xa )? 0 : size-1;
 
-  if(lsb_in_a)
+  emitComment (TRACEGEN, "  %s - enter", __func__);
+
+  if(size==1)
     {
-      if(size==2)
+      emitComment (TRACEGEN, "  %s - size==1", __func__);
+      if(IS_AOP_Y(AOP(left)) && IS_AOP_A(AOP(right)) && countreg==m6502_reg_x)
+        early_load_count = true;
+      else if(IS_AOP_Y(AOP(left)))
+        early_load_count = false;
+      
+    }
+
+  if(early_load_count)
+    {
+      emitComment (TRACEGEN, "  %s - early count", __func__);
+      loadRegFromAop (countreg, AOP (right), 0);
+      if(IS_AOP_WITH_A(AOP(right)))
+        m6502_reg_a->isFree=true;
+      if(IS_AOP_WITH_X(AOP(right)))
+        m6502_reg_x->isFree=true;
+      
+    }
+
+  if(size==1)
+    {
+      // do nothing
+      loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
+    }
+  else if(op_is_xa)
+    {
+      emitComment (TRACEGEN, "  %s - op is XA", __func__);
+      if(AOP_TYPE(left)==AOP_SOF)
+        {
+	  emitComment (TRACEGEN, "  %s - op is XA SOF", __func__);
+	  loadRegFromAop (m6502_reg_a, AOP (left), 1);
+	  storeRegTempAlways(m6502_reg_a, true);
+	  dirtyRegTemp (getLastTempOfs());
+	  x_in_regtemp = true;
+	  loadRegFromAop (m6502_reg_a, AOP (left), 0);
+	  loadRegTempAt(m6502_reg_x,getLastTempOfs());
+        }
+      else if(IS_AOP_XA(AOP(result)))
+        {
+          emitComment (TRACEGEN, "  %s - result is XA", __func__);
+          loadRegFromAop (m6502_reg_xa, AOP (left), 0);
+	  storeRegTempAlways(m6502_reg_x, true);
+	  dirtyRegTemp (getLastTempOfs());
+	  x_in_regtemp = true;
+        }
+      else
 	{
-	  loadRegFromAop (m6502_reg_x, AOP (left), 1);
+	  emitComment (TRACEGEN, "  %s - other", __func__);
+
 	  if(msb_in_x)
 	    {
+	      loadRegFromAop (m6502_reg_x, AOP (left), 1);
 	      storeRegTempAlways(m6502_reg_x, true);
 	      dirtyRegTemp (getLastTempOfs());
 	      x_in_regtemp = true;
 	    }
 	  else
-	    storeRegToAop (m6502_reg_x, AOP(result) , 1);
+            {
+	      transferAopAop (AOP (left), 1, AOP (result), 1);
+            }
 	}
     }
   else if (!sameRegs (AOP (left), AOP (result)))
     {
       for (offset=0; offset<size-1; offset++)
 	transferAopAop (AOP (left), offset, AOP (result), offset);
-    }
 
-  int a_loc = ( lsb_in_a )? 0 : size-1;
-
-  emitComment (TRACEGEN|VVDBG, "%s: load countreg", __func__);
-  if(IS_AOP_WITH_A (AOP (right)))
-    {
-      loadRegFromAop (countreg, AOP (right), 0);
       loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
     }
   else
+    loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
+
+
+  if(!early_load_count)
     {
-      loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
+      emitComment (TRACEGEN, "%s: late countreg", __func__);
       loadRegFromAop (countreg, AOP (right), 0);
     }
 
   m6502_useReg (countreg);
   if(IS_AOP_XA(AOP(right)))
     m6502_freeReg(m6502_reg_xa);
+
+  // FIXME: make this conditional on opt code-speed
+  if(size==8 /*|| size==4*/)
+    {
+      symbol *skiplbl = safeNewiTempLabel (NULL);
+      symbol *looplbl = safeNewiTempLabel (NULL);
+
+      emitCmp(countreg, 8);
+      emitBranch ("bcc", skiplbl);
+      safeEmitLabel (looplbl);
+
+      if(size==8)
+	{
+	  loadRegFromAop (m6502_reg_a, AOP (result), 6);
+	  storeRegToAop (m6502_reg_a, AOP(result) , 7);
+	  loadRegFromAop (m6502_reg_a, AOP (result), 5);
+	  storeRegToAop (m6502_reg_a, AOP(result) , 6);
+	  loadRegFromAop (m6502_reg_a, AOP (result), 4);
+	  storeRegToAop (m6502_reg_a, AOP(result) , 5);
+	  loadRegFromAop (m6502_reg_a, AOP (result), 3);
+	  storeRegToAop (m6502_reg_a, AOP(result) , 4);
+	}
+
+      loadRegFromAop (m6502_reg_a, AOP (result), 2);
+      storeRegToAop (m6502_reg_a, AOP(result) , 3);
+      loadRegFromAop (m6502_reg_a, AOP (result), 1);
+      storeRegToAop (m6502_reg_a, AOP(result) , 2);
+      loadRegFromAop (m6502_reg_a, AOP (result), 0);
+      storeRegToAop (m6502_reg_a, AOP(result) , 1);
+
+      loadRegFromConst (m6502_reg_a, 0);
+
+      storeRegToAop (m6502_reg_a, AOP(result) , 0);
+
+
+      transferRegReg(countreg, m6502_reg_a, true);
+      emitSetCarry (1);
+      emit6502op ("sbc", IMMDFMT, 8);
+      transferRegReg(m6502_reg_a, countreg, true);
+      //if(size==8)
+      {
+	emitCmp(countreg, 8);
+	emitBranch ("bcs", looplbl);
+      }
+      loadRegFromAop (m6502_reg_a, AOP (result), a_loc);
+      safeEmitLabel (skiplbl);
+    }
 
   emitCmp(countreg, 0);
   emitBranch ("beq", tlbl1);
@@ -861,8 +957,9 @@ m6502_genLeftShift (iCode * ic)
 
   safeEmitLabel (tlbl); // loop label
 
-  if(lsb_in_a)
+  if(op_is_xa || size==1)
     {
+      emitComment (TRACEGEN, "  %s - op is XA or byte", __func__);
       rmwWithReg ("asl", m6502_reg_a);
       if(size==2)
         {
@@ -890,7 +987,7 @@ m6502_genLeftShift (iCode * ic)
 
   if (maskedtopbyte)
     {
-      if(lsb_in_a && size==2)
+      if(op_is_xa)
         {
           m6502_pushReg (m6502_reg_a, false);
 	  if(msb_in_x)
@@ -910,17 +1007,20 @@ m6502_genLeftShift (iCode * ic)
         emit6502op ("and", IMMDFMT, topbytemask);
     }
 
-  if(lsb_in_a)
+  storeRegToAop (m6502_reg_a, AOP(result) , a_loc);
+
+  //  if(op_is_xa || size==1)
+  //    {
+  //      storeRegToAop (m6502_reg_a, AOP(result) , 0);
+  //      if(size==2)
+  if(op_is_xa)
     {
-      storeRegToAop (m6502_reg_a, AOP(result) , 0);
-      if(size==2)
-        {
-	  if(msb_in_x)
-	    storeRegToAop (m6502_reg_x, AOP(result) , 1);
-        }
+      if(msb_in_x)
+	storeRegToAop (m6502_reg_x, AOP(result) , 1);
     }
-  else
-    storeRegToAop (m6502_reg_a, AOP(result) , size-1);
+  //    }
+  //  else
+  //    storeRegToAop (m6502_reg_a, AOP(result) , size-1);
 
   // After loop, countreg is always 0
   m6502_dirtyReg(countreg);

@@ -742,7 +742,6 @@ funcOfType (const char *name, sym_link * type, sym_link * argType, int nArgs, in
         {
           args->type = copyLinkChain (argType);
           args->etype = getSpec (args->type);
-          SPEC_EXTR (args->etype) = 1;
           if (!nArgs)
             break;
           args = args->next = newValue ();
@@ -783,7 +782,6 @@ funcOfTypeVarg (const char *name, const char *rtype, int nArgs, const char **aty
         {
           args->type = typeFromStr (atypes[i]);
           args->etype = getSpec (args->type);
-          SPEC_EXTR (args->etype) = 1;
           if ((i + 1) == nArgs)
             break;
           args = args->next = newValue ();
@@ -926,10 +924,11 @@ processParms (ast * func, value * defParm, ast ** actParm, int *parmNumber,     
 
       /* don't perform integer promotion of explicitly typecasted variable arguments
        * if sdcc extensions are enabled */
-      if (options.std_sdcc && !TARGET_PDK_LIKE && IFFUNC_HASVARARGS (functype) &&
-          (IS_CAST_OP (*actParm) ||
-           (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
-           (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
+      if (options.std_sdcc && (TARGET_IS_MCS51 || TARGET_IS_DS390 || TARGET_MOS6502_LIKE || TARGET_PIC_LIKE) &&
+        IFFUNC_HASVARARGS (functype) &&
+        (IS_CAST_OP (*actParm) ||
+          (IS_AST_SYM_VALUE (*actParm) && AST_VALUES (*actParm, cast.removedCast)) ||
+          (IS_AST_LIT_VALUE (*actParm) && AST_VALUES (*actParm, cast.literalFromCast))))
         {
           /* Parameter was explicitly typecast; don't touch it. */
           return 0;
@@ -1299,7 +1298,7 @@ createIvalArray (ast * sym, sym_link * type, initList * ilist, ast * rootValue)
           if (iloop && (lcnt && size > lcnt))
             {
               // is this a better way? at least it won't crash
-              char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
+              const char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
               werrorfl (iloop->filename, iloop->lineno, W_EXCESS_INITIALIZERS, "array", name);
 
               break;
@@ -1381,7 +1380,7 @@ createIvalCharPtr (ast * sym, sym_link * type, ast * iexpr, ast * rootVal)
         {
           if (size > symsize)
             {
-              char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
+              const char *name = (IS_AST_SYM_VALUE (sym)) ? AST_SYMBOL (sym)->name : "";
 
               TYPE_TARGET_ULONG c;
               if (IS_CHAR (type->next))
@@ -2882,8 +2881,9 @@ gatherImplicitVariables (ast * tree, ast * block)
           SPEC_OCLS (assignee->etype) = NULL;
           SPEC_EXTR (assignee->etype) = 0;
           SPEC_STAT (assignee->etype) = 0;
-          SPEC_VOLATILE (assignee->etype) = 0;
-          SPEC_ATOMIC (assignee->etype) = 0;
+          SPEC_VOLATILE (assignee->etype) = false;
+          SPEC_ATOMIC (assignee->etype) = false;
+          SPEC_OPTIONAL (assignee->etype) = false;
           SPEC_ABSA (assignee->etype) = 0;
           SPEC_CONST (assignee->etype) = 0;
 
@@ -4038,7 +4038,11 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             !(AST_SYMBOL (tree->left)->level && currFunc && FUNC_ISINLINE (currFunc->type) && !IS_EXTERN (getSpec (currFunc->type)) && !IS_STATIC (getSpec (currFunc->type)));
         }
 
-      p->next = LTYPE (tree);
+      p->next = copyLinkChain (LTYPE (tree));
+      if (IS_DECL (p->next))
+        DCL_PTR_OPTIONAL (p->next) = false;
+      else
+        SPEC_OPTIONAL (p->next) = false; // _Optional qualifier is not preserved across &.
       TTYPE (tree) = p;
       TETYPE (tree) = getSpec (TTYPE (tree));
       LLVAL (tree) = 1;
@@ -4926,7 +4930,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case CAST:                 /* change the type   */
       /* cannot cast to struct / union */
       if (IS_AGGREGATE (LTYPE (tree)))
-        {printTypeChain (LTYPE (tree), 0);
+        {
           werrorfl (tree->filename, tree->lineno, E_CAST_ILLEGAL);
           goto errorTreeReturn;
         }
@@ -5128,21 +5132,21 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
               TETYPE (tree) = getSpec (TTYPE (tree));
               return tree;
             }
-        }
+        }//printf("C\n");printTypeChain (LTYPE (tree), 0);printTypeChain (RTYPE (tree), 0);
       checkPtrCast (LTYPE (tree), RTYPE (tree), tree->values.cast.implicitCast, FALSE);
-      if (IS_GENPTR (LTYPE (tree)) && (resultType != RESULT_TYPE_GPTR))
+      /*if (IS_GENPTR (LTYPE (tree)) && (resultType != RESULT_TYPE_GPTR))
         {
           if (IS_PTR (RTYPE (tree)) && !IS_GENPTR (RTYPE (tree)))
             DCL_TYPE (LTYPE (tree)) = DCL_TYPE (RTYPE (tree));
           if (IS_ARRAY (RTYPE (tree)) && SPEC_OCLS (RETYPE (tree)))
             DCL_TYPE (LTYPE (tree)) = PTR_TYPE (SPEC_OCLS (RETYPE (tree)));
-        }
+        }*/
       TTYPE (tree) = LTYPE (tree);
       TRVAL (tree) = LRVAL (tree) = 1;
 
 #endif
       TETYPE (tree) = getSpec (TTYPE (tree));
-
+//printf("D\n");printTypeChain (LTYPE (tree), 0);printTypeChain (RTYPE (tree), 0);
       return tree;
 
       /*------------------------------------------------------------------*/
@@ -6140,6 +6144,7 @@ typeofOp (ast *tree)
 {
   ++noAlloc;
   tree = decorateType (resolveSymbols (tree), RESULT_TYPE_NONE, false);
+  tree->decorated = 0; // Reset, so we redecorate parameters later at CALL node to ensure that register parameters get marked correctly.
   --noAlloc;
   sym_link *type = copyLinkChain (tree->ftype);
   sym_link *spec_type;
@@ -7273,14 +7278,14 @@ inlineTempVar (sym_link * type, long level)
   SPEC_STAT (sym->etype) = 0;
   if (IS_SPEC (sym->type))
     {
-      SPEC_VOLATILE (sym->type) = 0;
-      SPEC_ATOMIC (sym->type) = 0;
+      SPEC_VOLATILE (sym->type) = false;
+      SPEC_ATOMIC (sym->type) = false;
       SPEC_ADDRSPACE (sym->type) = 0;
     }
   else
     {
-      DCL_PTR_VOLATILE (sym->type) = 0;
-      DCL_PTR_ATOMIC (sym->type) = 0;
+      DCL_PTR_VOLATILE (sym->type) = false;
+      DCL_PTR_ATOMIC (sym->type) = false;
       DCL_PTR_ADDRSPACE (sym->type) = 0;
     }
   SPEC_ABSA (sym->etype) = 0;
@@ -7659,7 +7664,7 @@ createFunction (symbol * name, ast * body)
   if (FUNC_ISINLINE (name->type))
     name->funcTree = copyAst (body);
 
-  allocParms (FUNC_ARGS (name->type), IFFUNC_ISSMALLC (name->type), IFFUNC_ISDYNAMICC (name->type));  /* allocate the parameters */
+  allocParms (FUNC_ARGS (name->type), name->type); // allocate the parameters
 
   /* do processing for parameters that are passed in registers */
   processRegParms (FUNC_ARGS (name->type), body);

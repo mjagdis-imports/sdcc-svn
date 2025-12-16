@@ -81,7 +81,9 @@ typedef struct operand
   unsigned int isGptr:1;            /* is a generic pointer  */
   unsigned int isParm:1;            /* is a parameter        */
   unsigned int isLiteral:1;         /* operand is literal    */
-  unsigned int isConstElimnated:1;  /* if original const casted to non-const */
+  bool isConstEliminated:1;         // if original const casted to non-const
+  bool isRestrictEliminated:1;      // if original restrict casted to non-restrict
+  bool isOptionalEliminated:1;      // if original _Optional casted to non-_Optional */
 
   int key;
   union
@@ -211,8 +213,8 @@ iCode;
 typedef struct icodeFuncTable
 {
   int icode;
-  char *printName;
-  void (*iCodePrint) (struct dbuf_s *, const iCode *, char *);
+  const char *printName;
+  void (*iCodePrint) (struct dbuf_s *, const iCode *, const char *);
   iCode *(*iCodeCopy) (iCode *);
 }
 iCodeTable;
@@ -334,7 +336,7 @@ symbol *newiTempLabel (const char *);
 #define LOOPEXITLBL "loopExitLbl"
 symbol *newiTempLoopHeaderLabel (bool);
 iCode *newiCode (int, operand *, operand *);
-iCode *newiCodeParm (int op, operand *left, sym_link *ftype, int *stack);
+iCode *newiCodeParm (int op, operand *left, value *param, sym_link *ftype, int *stack);
 sym_link *operandType (const operand *);
 unsigned int operandSize (operand *);
 operand *operandFromValue (value *, bool convert_sym_to_ptr);

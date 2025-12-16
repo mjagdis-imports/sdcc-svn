@@ -37,7 +37,7 @@ L       [a-zA-Z_$]
 E       [Ee][+-]?{D}+
 BE      [Pp][+-]?{D}+
 FS      (f|F|l|L|df|dd|dl|DF|DD|DL)
-IS      [uUlL]*
+IS      [uUlLzZ]*
 WB      (((u|U)(wb|WB))|((wb|WB)(u|U)?))
 CP      (L|u|U|u8)
 HASH    (#|%:)
@@ -238,6 +238,7 @@ static void checkCurrFile (const char *s);
 "__iar"                 { count (); TKEYWORD (IAR); }
 "__cosmic"              { count (); TKEYWORD (COSMIC); }
 "__dynamicc"            { count (); TKEYWORD (DYNAMICC); }
+"__builtin__"           { count (); return BUILTIN; }
 "__sdcccall"            { count (); return SDCCCALL; }
 "__preserves_regs"      { count (); return PRESERVES_REGS; }
 "__z88dk_fastcall"      { count (); TKEYWORD (Z88DK_FASTCALL); }
@@ -246,7 +247,7 @@ static void checkCurrFile (const char *s);
 "__z88dk_params_offset" { count (); return Z88DK_PARAMS_OFFSET; }
 "__addressmod"          { count (); return ADDRESSMOD; }
 "__typeof"              { count (); return TYPEOF; }
-
+"_Optional"             { count (); return OPTIONAL; }
 
 ({L}|{UCN}|{UTF8IDF1ST})({L}|{D}|{UCN}|{UTF8IDF})*  {
   if (!options.std_c95)

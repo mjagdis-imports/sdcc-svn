@@ -188,12 +188,12 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       /* push right */
       if (IS_REGPARM (FUNC_ARGS(func->type)->next->etype))
         {
-          newic = newiCodeParm (SEND, right, func->type, &bytesPushed);
+          newic = newiCodeParm (SEND, right, NULL, func->type, &bytesPushed);
           newic->argreg = SPEC_ARGREG (FUNC_ARGS (func->type)->next->etype);
         }
       else
         {
-          newic = newiCodeParm (IPUSH, right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, right, NULL, func->type, &bytesPushed);
         }
 
       hTabAddItem (&iCodehTab, newic->key, newic);
@@ -206,12 +206,12 @@ cnvToFcall (iCode * ic, eBBlock * ebp)
       /* insert push left */
       if (IS_REGPARM (FUNC_ARGS(func->type)->etype))
         {
-          newic = newiCodeParm (SEND, left, func->type, &bytesPushed);
+          newic = newiCodeParm (SEND, left, NULL, func->type, &bytesPushed);
           newic->argreg = SPEC_ARGREG (FUNC_ARGS (func->type)->etype);
         }
       else
         {
-          newic = newiCodeParm (IPUSH, left, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, left, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -259,7 +259,7 @@ prependCast (iCode *ic, operand *op, sym_link *type, eBBlock *ebb)
 {
   if (IS_OP_LITERAL (op))
     {
-      operand *newop = operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValue (op)), false);
+      operand *newop = operandFromValue (valCastLiteral (type, operandLitValue (op), operandLitValueUll (op)), false);
       if (isOperandEqual (op, IC_LEFT (ic)))
         IC_LEFT (ic) = newop;
       if (isOperandEqual (op, IC_RIGHT (ic)))
@@ -400,7 +400,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -506,7 +506,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -629,7 +629,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -743,7 +743,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -860,7 +860,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   OP_SYMBOL (left)->type = newIntLink ();
                 }
               else
-                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
+                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValueUll (left)), false);
 
               if (ric)
                 {
@@ -868,7 +868,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   OP_SYMBOL (right)->type = newIntLink ();
                 }
               else
-                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
+                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValueUll (right)), false);
 
               if (func) // Use 16x16->32 support function
                 goto found;
@@ -900,7 +900,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
                 }
               else
-                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValue (left)), false);
+                ic->left = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (left), operandLitValueUll (left)), false);
 
               if (ric)
                 {
@@ -909,7 +909,7 @@ convilong (iCode *ic, eBBlock *ebp)
                   SPEC_USIGN (OP_SYMBOL (left)->type) = 1;
                 }
               else
-                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValue (right)), false);
+                ic->right = operandFromValue (valCastLiteral (newIntLink(), operandLitValue (right), operandLitValueUll (right)), false);
 
               if (func) // Use 32x8->64 support function
                 goto found;
@@ -1045,7 +1045,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->right, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->right, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -1062,7 +1062,7 @@ found:
         }
       else
         {
-          newic = newiCodeParm (IPUSH, ic->left, func->type, &bytesPushed);
+          newic = newiCodeParm (IPUSH, ic->left, NULL, func->type, &bytesPushed);
         }
       hTabAddItem (&iCodehTab, newic->key, newic);
       addiCodeToeBBlock (ebp, newic, ip);
@@ -1141,7 +1141,7 @@ convbuiltin (iCode *const ic, eBBlock *ebp)
       /* TODO: Eliminate it, convert any SEND of volatile into DUMMY_READ_VOLATILE. */
       /* For now just convert back to call to make sure any volatiles are read. */
 
-      strcpy(OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
+      strcpy (OP_SYMBOL (IC_LEFT (icc))->rname, !strcmp (bif->name, "__builtin_memcpy") ? "___memcpy" : (!strcmp (bif->name, "__builtin_strncpy") ? "_strncpy" : "_memset"));
       goto convert;
     }
 
@@ -1764,7 +1764,7 @@ isLocalWithoutDef (symbol * sym)
 }
 
 static void
-replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isaddr)
+replaceRegEqvOperand (iCode *ic, operand **opp, int force_isaddr, int new_isaddr)
 {
   operand * op = *opp;
   symbol * sym = OP_SYMBOL (op);
@@ -1780,6 +1780,9 @@ replaceRegEqvOperand (iCode * ic, operand ** opp, int force_isaddr, int new_isad
       operand * nop;
 
       nop = operandFromOperand (OP_REQV (op));
+      nop->isConstEliminated = op->isConstEliminated;
+      nop->isRestrictEliminated = op->isRestrictEliminated;
+      nop->isOptionalEliminated = op->isOptionalEliminated;
 
       /* Copy def/use info from true symbol to register equivalent */
       /* but only if this hasn't been done already. */
@@ -2145,6 +2148,163 @@ printCyclomatic (eBBlock ** ebbs, int count)
 
   /* print the information */
   werror (I_CYCLOMATIC, currFunc->name, nEdges, nNodes, nEdges - nNodes + 2);
+}
+
+/*-----------------------------------------------------------------*/
+/* checkStaticArrayParams - try to warn if a [static] parameter is */
+/* not an array of sufficient size. Also try to warn on deref.     */
+/* of invalid pointer. Also warnings for other array parameters.   */
+/*-----------------------------------------------------------------*/
+static void
+checkStaticArrayParams (ebbIndex *ebbi)
+{
+  eBBlock ** ebbs = ebbi->bbOrder;
+  int count = ebbi->count;
+
+  for (int i = 0; i < count; i++)
+    for (iCode *ic = ebbs[i]->sch; ic; ic = ic->next)
+      {
+        if ((ic->op == IPUSH || ic->op == SEND) &&
+          ic->right || // variable arguments lack type information (and so do some arguments to builtin functions).
+          ic->op == '=' && IS_PARM (ic->result))
+          {
+            operand *argop;
+            sym_link *paramtype;
+            if (ic->op == '=')
+              {
+                argop = ic->right;
+                paramtype = operandType (ic->result);
+              }
+            else
+              {
+                argop = ic->left;
+                paramtype = operandType (ic->right);
+              }
+
+            if (IS_DECL (paramtype) && (DCL_STATIC_ARRAY_PARAM (paramtype) || DCL_ELEM (paramtype) || DCL_ELEM_AST (paramtype))) // Only check array parameters.
+              {
+                unsigned long paramsize;
+                if (DCL_ELEM (paramtype) != 0) // Array size is an integer constant
+                  paramsize = DCL_ELEM (paramtype) * getSize (paramtype->next);
+                else if (DCL_ELEM_AST (paramtype))
+                  {
+                    // Find sym used in array size. Also for simple arithmetic expressions like (sym * N + M).
+                    symbol *sym;
+                    long long pscale = 1;
+                    long long poffset = 0;
+                    ast *ast = DCL_ELEM_AST (paramtype);
+                    if (IS_AST_OP (ast) && ast->opval.op == '+' && ast->right && IS_LITERAL (ast->right->ftype))
+                      {
+                        value *rval = valFromType (ast->right->ftype);
+                        if (floatFromVal (rval) >= -4096 && floatFromVal (rval) < 4096)
+                          {
+                            poffset = floatFromVal (rval);
+                            ast = ast->left;
+                          }
+                      }
+                    if (IS_AST_OP (ast) && ast->opval.op == '*' && ast->right && IS_LITERAL (ast->right->ftype))
+                      {
+                        value *rval = valFromType (ast->right->ftype);
+                        if (floatFromVal (rval) >= 0 && floatFromVal (rval) < 4096)
+                          {
+                            pscale = floatFromVal (rval);
+                            ast = ast->left;
+                          }
+                      }
+                    if (IS_AST_SYM_VALUE (ast))
+                      sym = AST_SYMBOL (ast);
+                    else
+                      continue;
+                    
+                    // Find called function
+                    iCode *cic;
+                    for (cic = ic->next; cic && cic->op != CALL  && cic->op != PCALL; cic = cic->next);
+                    if (!cic) // call not found.
+                      continue;
+                    sym_link *dtype = operandType (cic->left);
+                    sym_link *ftype = IS_FUNCPTR (dtype) ? dtype->next : dtype;
+
+                    // Find parameter for symbol.
+                    value *v;
+                    for (v = FUNC_ARGS (ftype); v; v = v->next)
+                      if (v->sym && !strcmp(v->sym->name, sym->name))
+                        break;
+                    if (!v)
+                      continue;
+
+                    // Find pic where the corresponding argument is passed.
+                    iCode *pic;
+                    operand *pargop;
+                    for (pic = cic->prev; pic; pic = pic->prev)
+                      {
+                        if ((pic->op == IPUSH || pic->op == SEND) && pic->right || pic->op == '=' && IS_PARM (pic->result))
+                          {
+                            if (pic->op == '=')
+                              pargop = pic->right;
+                            else
+                              pargop = pic->left;
+                            if (pic->op != '=' && IS_VALOP (pic->right) && !strcmp (OP_VALUE (pic->right)->sym->name, sym->name))
+                              break;
+                            if (pic->op == '=' && !strcmp (OP_SYMBOL(pic->result)->name, sym->name))
+                              break;
+                          }
+                        else
+                          {
+                            pic = NULL;
+                            break;
+                          }
+                      }
+                    if (!pic)
+                      continue;
+
+                    // Deduce bound
+                    const struct valinfo vi = getOperandValinfo (pic, pargop);
+                    long long pargv = (vi.anything || vi.min < 0 || vi.min > ULONG_MAX) ? 0 : vi.min;
+                    pargv *= pscale;
+                    pargv += poffset;
+                    if (pargv < 1) // Array size expression 
+                      pargv = 0;
+                    paramsize = pargv * getSize (paramtype->next);
+                  }
+                else
+                  continue;
+                  
+                const struct valinfo vi = getOperandValinfo (ic, argop);
+                if (!vi.anything && vi.maxsize < paramsize && DCL_STATIC_ARRAY_PARAM (paramtype))
+                  werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
+                else if (!vi.anything && vi.maybemaxsize < paramsize)
+                  werrorfl (ic->filename, ic->lineno, W_ARRAY_PARAM_LENGTH);
+              }
+          }
+        else if (ic->op == GET_VALUE_AT_ADDRESS)
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->left);
+            wassert (IS_OP_LITERAL (ic->right));
+            long long roff = operandLitValue (ic->right);
+            int size = getSize (operandType (ic->result));
+            if (!v.anything && roff + size > (long long)v.maxsize)
+              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
+            else if (!v.anything && roff + size > (long long)v.maybemaxsize)
+              werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
+#if 1 // Needs full fix for bug #3898 before we can enable it
+            if ((v.anything || !v.nonnull) && isOptional(operandType (ic->left)->next) && !ic->left->isOptionalEliminated)
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+#endif
+          }
+        else if (POINTER_SET (ic))
+          {
+            const struct valinfo v = getOperandValinfo (ic, ic->result);
+            int size = getSize (operandType (ic->right));
+            if (!v.anything && size > (long long)v.maxsize)
+              werrorfl (ic->filename, ic->lineno, W_INVALID_PTR_DEREF);
+            else if (!v.anything && size > (long long)v.maybemaxsize)
+              werrorfl (ic->filename, ic->lineno, W_MAYBE_INVALID_PTR_DEREF);
+#if 1 // Needs full fix for bug #3898 before we can enable it
+            if ((v.anything || !v.nonnull) && isOptional(operandType (ic->result)->next) && !ic->result->isOptionalEliminated)
+              werrorfl (ic->filename, ic->lineno, W_OPTIONAL_PTR_DEREF);
+#endif
+          }
+      }
 }
 
 /*-----------------------------------------------------------------*/
@@ -2527,8 +2687,8 @@ optimize:
                     }
                   else
                     {
-                      wassert (IS_OP_LITERAL (IC_LEFT (ic)));
-                      IC_LEFT (ic) = operandFromValue (valCastLiteral (clefttype, operandLitValue (IC_LEFT (ic)), operandLitValue (IC_LEFT (ic))), false);
+                      wassert (IS_OP_LITERAL (ic->left));
+                      ic->left = operandFromValue (valCastLiteral (clefttype, operandLitValue (ic->left), operandLitValueUll (ic->left)), false);
                     }
                   if (ic->op != LEFT_OP && IS_SYMOP (IC_RIGHT (ic)))
                     {
@@ -2546,8 +2706,8 @@ optimize:
                     }
                   else if (ic->op != LEFT_OP && ic->op != UNARYMINUS)
                     {
-                      wassert (IS_OP_LITERAL (IC_RIGHT (ic)));
-                      IC_RIGHT (ic) = operandFromValue (valCastLiteral (crighttype, operandLitValue (IC_RIGHT (ic)), operandLitValue (IC_RIGHT (ic))), false);
+                      wassert (IS_OP_LITERAL (ic->right));
+                      ic->right = operandFromValue (valCastLiteral (crighttype, operandLitValue (ic->right), operandLitValueUll (ic->right)), false);
                     }
                 }
               if (uic->op == CAST && ic->op != RIGHT_OP)
@@ -2794,7 +2954,7 @@ optimizeCastCast (eBBlock **ebbs, int count)
                       if (!SPEC_USIGN (type1) && (mask >> (bitsForType (type1))))
                         continue;
 
-                      IC_RIGHT (uic) = operandFromValue (valCastLiteral (type1, operandLitValue (uic->right), operandLitValue (uic->right)), false);
+                      uic->right = operandFromValue (valCastLiteral (type1, operandLitValue (uic->right), operandLitValue (uic->right)), false);
                     }
                   else if (uic->op == CAST) /* Otherwise this use must be a second cast */
                     {
@@ -2857,7 +3017,6 @@ optimizeCastCast (eBBlock **ebbs, int count)
                 }
               else
                 continue;
-
 
               /* Change the first cast to a simple assignment and */
               /* let the second cast do all the work */
@@ -3600,7 +3759,7 @@ eBBlockFromiCode (iCode *ic)
       separateLiveRanges (ic, ebbi);
     }
 
-  removeRedundantTemps (ic); // Remove some now-redundant leftovers iTemps that can confuse later optimizations.
+  removeRedundantTemps (ic); // Remove some now-redundant leftover iTemps that can confuse later optimizations.
 
   /* Break down again and redo some steps to not confuse live range analysis later. */
   freeeBBlockData (ebbi);
@@ -3689,6 +3848,7 @@ eBBlockFromiCode (iCode *ic)
       killDeadCode (ebbi);
       if (options.dump_i_code)
         dumpEbbsToFileExt (DUMP_GENCONSTPROP, ebbi);
+      checkStaticArrayParams (ebbi); // Only do this after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
     }
 
   optimizeFinalCast (ebbi);

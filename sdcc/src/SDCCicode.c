@@ -58,7 +58,7 @@ operand *geniCodeDerefPtr (operand *, int);
 static int isLvaluereq (int lvl);
 static operand *geniCodeCast (sym_link *, operand *, bool);
 
-#define PRINTFUNC(x) void x (struct dbuf_s *dbuf, const iCode *ic, char *s)
+#define PRINTFUNC(x) void x (struct dbuf_s *dbuf, const iCode *ic, const char *s)
 /* forward definition of ic print functions */
 PRINTFUNC (picGetValueAtAddr);
 PRINTFUNC (picPushValueAtAddr);
@@ -201,13 +201,14 @@ dbuf_printOperand (operand * op, struct dbuf_s *dbuf)
 //#if REGA      /* { */
       if (REGA && !getenv ("PRINT_SHORT_OPERANDS"))
         {
-          dbuf_printf (dbuf, "%s [k%d lr%d:%d so:%d]{ ia%d a2p%d re%d rm%d nos%d ru%d dp%d}",   /*{ar%d rm%d ru%d p%d a%d u%d i%d au%d k%d ks%d}"  , */
+          dbuf_printf (dbuf, "%s [k%d lr%d:%d so:%d]{ ia%d a2p%d re%d rm%d nos%d ru%d dp%d oe%d}",   /*{ar%d rm%d ru%d p%d a%d u%d i%d au%d k%d ks%d}"  , */
                        (OP_SYMBOL (op)->rname[0] ? OP_SYMBOL (op)->rname : OP_SYMBOL (op)->name),
                        op->key,
                        OP_LIVEFROM (op), OP_LIVETO (op),
                        OP_SYMBOL (op)->stack,
                        op->isaddr, op->aggr2ptr, OP_SYMBOL (op)->isreqv,
-                       OP_SYMBOL (op)->remat, OP_SYMBOL (op)->noSpilLoc, OP_SYMBOL (op)->ruonly, OP_SYMBOL (op)->dptr);
+                       OP_SYMBOL (op)->remat, OP_SYMBOL (op)->noSpilLoc, OP_SYMBOL (op)->ruonly, OP_SYMBOL (op)->dptr,
+                       op->isOptionalEliminated);
           {
             dbuf_append_char (dbuf, '{');
             dbuf_printTypeChain (operandType (op), dbuf);
@@ -667,27 +668,33 @@ newiCodeLabelGoto (int op, symbol * label)
 }
 
 iCode *
-newiCodeParm (int op, operand *left, sym_link *ftype, int *stack)
+newiCodeParm (int op, operand *left, value *param, sym_link *ftype, int *stack)
 {
   iCode *ic;
-
-  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : NULL);
+  operand *valop = NULL;
+  if (op != IPUSH_VALUE_AT_ADDRESS && param)
+    {
+      valop = newOperand (); // Can't use operandFromValue, since it would create symop.
+      valop->type = VALUE;
+      valop->svt.valOperand = param;
+    }
+  ic = newiCode (op, left, (op == IPUSH_VALUE_AT_ADDRESS) ? operandFromLit (0) : valop);
   if (op != SEND)
     {
       ic->parmPush = 1;
       if (stack)
         {
-          sym_link *parmtype = operandType(left);
+          sym_link *argtype = operandType (left);
           if (ic->op == IPUSH_VALUE_AT_ADDRESS)
-            parmtype = parmtype->next;
-          if (IS_ARRAY (parmtype))
-            parmtype = aggrToPtr (parmtype, false);
-          *stack += getSize (parmtype);
-          if ((IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype) && !IS_STRUCT (parmtype)) && getSize (parmtype) == 1) // SmallC and Dynamic C calling conventions pass 8-bit parameters as 16-bit values.
+            argtype = argtype->next;
+          if (IS_ARRAY (argtype))
+            argtype = aggrToPtr (argtype, false);
+          *stack += getSize (argtype);
+          if ((IFFUNC_ISSMALLC (ftype) || IFFUNC_ISDYNAMICC (ftype) && !IS_STRUCT (argtype)) && getSize (argtype) == 1) // Small-C and Dynamic C calling conventions pass 8-bit parameters as 16-bit values.
             (*stack)++;
-          else if (IFFUNC_ISDYNAMICC (ftype) && getSize (parmtype)  == 3 && IS_FARPTR (parmtype)) // Dynamic C passes pointers to __far as 32 bits.
+          else if (IFFUNC_ISDYNAMICC (ftype) && getSize (argtype)  == 3 && IS_FARPTR (argtype)) // Dynamic C passes pointers to __far as 32 bits.
             (*stack)++;
-          else if (TARGET_PDK_LIKE && getSize (parmtype) % 2) // pdk needs even-oligned stack.
+          else if (TARGET_PDK_LIKE && getSize (argtype) % 2) // pdk needs even-oligned stack.
             (*stack)++;
         }
     }
@@ -1332,6 +1339,7 @@ getBuiltinParms (iCode * fic, int *pcount, operand ** parms)
       parms[*pcount] = IC_LEFT (ic);
       ic = ic->next;
       (*pcount)++;
+      wassert (*pcount < MAX_BUILTIN_ARGS);
     }
 
   ic->generated = 1;
@@ -1638,7 +1646,7 @@ isOperandEqual (const operand * left, const operand * right)
   if (left->type != right->type)
     return 0;
 
-  if (IS_SYMOP (left) && IS_SYMOP (right))
+  if (IS_ITEMP (left) && IS_ITEMP (right))
     return left->key == right->key;
 
   /* if types are the same */
@@ -1742,7 +1750,9 @@ operandFromOperand (operand * op)
   nop->isLiteral = op->isLiteral;
   nop->usesDefs = op->usesDefs;
   nop->isParm = op->isParm;
-  nop->isConstElimnated = op->isConstElimnated;
+  nop->isConstEliminated = op->isConstEliminated;
+  nop->isRestrictEliminated = op->isRestrictEliminated;
+  nop->isOptionalEliminated = op->isOptionalEliminated;
 
   switch (nop->type)
     {
@@ -2134,6 +2144,20 @@ geniCodeRValue (operand * op, bool force)
     type = type->next;
 
   type = copyLinkChain (type);
+  if (op->isOptionalEliminated)
+    {
+      if (IS_SPEC (type))
+        SPEC_OPTIONAL (type) = false;
+      else
+        DCL_PTR_OPTIONAL (type) = false;
+    }
+  if (op->isConstEliminated)
+    {
+      if (IS_SPEC (type))
+        SPEC_CONST (type) = false;
+      else
+        DCL_PTR_CONST (type) = false;
+    }
 
   IC_RESULT (ic) = newiTempOperand (type, 1);
   IC_RESULT (ic)->isaddr = 0;
@@ -2149,11 +2173,11 @@ geniCodeRValue (operand * op, bool force)
 /* checkPtrQualifiers - check for lost pointer qualifiers          */
 /*-----------------------------------------------------------------*/
 static void
-checkPtrQualifiers (sym_link * ltype, sym_link * rtype, int warn_const)
+checkPtrQualifiers (sym_link * ltype, sym_link * rtype, operand *op)
 {
-  if (IS_PTR (ltype) && IS_PTR (rtype) && !IS_FUNCPTR (ltype) && warn_const)
+  if (IS_PTR (ltype) && IS_PTR (rtype) && !IS_FUNCPTR (ltype) && !op->isConstEliminated)
     {
-      if (!IS_CONSTANT (ltype->next) && IS_CONSTANT (rtype->next))
+      if (!isConstant (ltype->next) && isConstant (rtype->next))
         werror (W_TARGET_LOST_QUALIFIER, "const");
 #if 0
       // disabled because SDCC will make all union fields volatile
@@ -2161,8 +2185,13 @@ checkPtrQualifiers (sym_link * ltype, sym_link * rtype, int warn_const)
       if (!IS_VOLATILE (ltype->next) && IS_VOLATILE (rtype->next))
         werror (W_TARGET_LOST_QUALIFIER, "volatile");
 #endif
-      if (!IS_RESTRICT (ltype->next) && IS_RESTRICT (rtype->next))
+    }
+  if (IS_PTR (ltype) && IS_PTR (rtype))
+    {
+      if (!op->isRestrictEliminated && !isRestrict (ltype->next) && isRestrict (rtype->next))
         werror (W_TARGET_LOST_QUALIFIER, "restrict");
+      if (!op->isOptionalEliminated && !isOptional (ltype->next) && isOptional (rtype->next))
+        werror (W_TARGET_LOST_QUALIFIER, "_Optional");
     }
 }
 
@@ -2192,9 +2221,17 @@ geniCodeCast (sym_link *type, operand *op, bool implicit)
   /* if the operand is already the desired type then do nothing */
   if (compareType (type, optype, false) == 1)
   {
-    if (IS_PTR (type) && IS_CONSTANT (opetype) && !IS_CONSTANT (getSpec(type)))
-      op->isConstElimnated = 1;
-    return op;
+    if (IS_PTR (type))
+      {
+        op->isConstEliminated = (isConstant (opetype) && !isConstant (getSpec (type)));
+        op->isRestrictEliminated = (isRestrict (opetype) && !isRestrict (getSpec (type)));
+        op->isOptionalEliminated = (isOptional (opetype) && !isOptional (getSpec (type)));
+      }
+    if (IS_PTR (type) && compareTypeExact (type, optype, -1) != 1 &&
+      (isVolatile (type->next) && !isVolatile (optype->next) || isOptional (type->next) && !isOptional (optype->next)))
+      ; // Need to keep the cast - can't drop volatile, since it could result in reads/writes being optimized out. Can't drop _Optional since it would mess up some warnings (could drop _Optional later, though, after checkStaticArrayParams).
+    else
+      return op;
   }
 
   /* if this is a literal then just change the type & return */
@@ -3076,13 +3113,9 @@ geniCodeDerefPtr (operand *op, int lvl)
   // just in case someone screws up
   wassert (IS_PTR (optype));
 
-  if (IS_TRUE_SYMOP (op))
+  if (IS_TRUE_SYMOP (op) || IS_OP_LITERAL (op))
     {
-      op->isaddr = 1;
-      op = geniCodeRValue (op, TRUE);
-    }
-  else if (IS_OP_LITERAL (op))
-    {
+      // For a true symop, we need the iTemp copy, since setOperandType below will fail otherwise.
       /* To avoid problems converting a dereferenced literal pointer */
       /* back and forth between lvalue and rvalue formats, replace   */
       /* the literal pointer with an iTemp and assign the literal    */
@@ -3094,6 +3127,11 @@ geniCodeDerefPtr (operand *op, int lvl)
       ic = newiCode ('=', NULL, op);
       IC_RESULT (ic) = iop;
       ADDTOCHAIN (ic);
+      if (op->isOptionalEliminated)
+        if (IS_SPEC (operandType (iop)->next))
+          SPEC_OPTIONAL (operandType (iop)->next) = false;
+        else
+          DCL_PTR_OPTIONAL (operandType (iop)->next) = false;
       op = operandFromOperand (iop); /* now use the iTemp as operand */
       optype = operandType (op);
     }
@@ -3446,18 +3484,18 @@ checkTypes (operand * left, operand * right)
       if (IS_VOLATILE (ltype)) // Don't propagate volatile to right side - we don't want volatile iTemps.
         {
           ltype = copyLinkChain (ltype);
-          if (IS_DECL(ltype))
+          if (IS_DECL (ltype))
             DCL_PTR_VOLATILE (ltype) = 0;
           else
             SPEC_VOLATILE (ltype) = 0;
-          if (IS_DECL(ltype))
+          if (IS_DECL (ltype))
             DCL_PTR_ATOMIC (ltype) = 0;
           else
             SPEC_ATOMIC (ltype) = 0;
         }
       right = geniCodeCast (ltype, right, TRUE);
     }
-  checkPtrQualifiers (ltype, rtype, !right->isConstElimnated);
+  checkPtrQualifiers (ltype, rtype, right);
   return right;
 }
 
@@ -3610,7 +3648,10 @@ geniCodeParms (ast *parms, value *argVals, int *iArg, int *stack, sym_link *ftyp
     {
 send:
       pval = checkTypes (operandFromValue (argVals, true), pval);
-      ic = newiCode (SEND, pval, NULL);
+      operand *valop = newOperand (); // Can't use operandFromValue, since it would create symop.
+      valop->type = VALUE;
+      valop->svt.valOperand = argVals;
+      ic = newiCode (SEND, pval, valop);
       ic->argreg = SPEC_ARGREG (parms->etype);
       ic->builtinSEND = FUNC_ISBUILTIN (ftype);
       ADDTOCHAIN (ic);
@@ -3644,7 +3685,7 @@ send:
               castic_end = iCodeChainEnd;
               if (IS_REGPARM (FUNC_ARGS (builtin_memcpy->type)->etype))
                 {
-                  dstic = newiCode (SEND, dstop, 0);
+                  dstic = newiCode (SEND, dstop, NULL);
                   dstic->argreg = SPEC_ARGREG (FUNC_ARGS (builtin_memcpy->type)->etype);
                 }
               else
@@ -3654,7 +3695,7 @@ send:
                 }
               if (IS_REGPARM (FUNC_ARGS (builtin_memcpy->type)->next->etype))
                 {
-                  srcic = newiCode (SEND, pval, 0);
+                  srcic = newiCode (SEND, pval, NULL);
                   srcic->argreg = SPEC_ARGREG (FUNC_ARGS (builtin_memcpy->type)->next->etype);
                 }
               else
@@ -3664,7 +3705,7 @@ send:
                 }
               if (IS_REGPARM (FUNC_ARGS (builtin_memcpy->type)->next->next->etype))
                 {
-                  nic = newiCode (SEND, operandFromLit (getSize (parms->ftype)), 0);
+                  nic = newiCode (SEND, operandFromLit (getSize (parms->ftype)), NULL);
                   nic->argreg = SPEC_ARGREG (FUNC_ARGS (builtin_memcpy->type)->next->next->etype);
                 }
               else
@@ -3721,7 +3762,7 @@ send:
         {
           if (argVals && (*iArg >= 0))
             pval = checkTypes (operandFromValue (argVals, false), pval);
-          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, ftype, stack);
+          ic = newiCodeParm (is_structparm ? IPUSH_VALUE_AT_ADDRESS : IPUSH, pval, (*iArg >= 0) ? argVals : NULL, ftype, stack);
           ADDTOCHAIN (ic);
         }
       if (IFFUNC_ISDYNAMICC (ftype) && IS_REGPARM (parms->etype))
@@ -3862,7 +3903,7 @@ geniCodeCall (operand * left, ast * parms, int lvl)
 /* geniCodeReceive - generate intermediate code for "receive"      */
 /*-----------------------------------------------------------------*/
 static void
-geniCodeReceive (value * args, operand * func)
+geniCodeReceive (value *args, operand *func)
 {
   unsigned char paramByteCounter = 0;
 
@@ -3880,7 +3921,6 @@ geniCodeReceive (value * args, operand * func)
              and before liveRange calculation */
           if (!sym->addrtaken && !IS_VOLATILE (sym->etype))
             {
-
               if ((IN_FARSPACE (SPEC_OCLS (sym->etype)) && !TARGET_HC08_LIKE && !TARGET_MOS6502_LIKE) &&
                   options.stackAuto == 0 && (!(options.model == MODEL_FLAT24)))
                 {
@@ -3894,6 +3934,7 @@ geniCodeReceive (value * args, operand * func)
                   OP_SYMBOL (sym->reqv)->isreqv = 1;
                   OP_SYMBOL (sym->reqv)->islocal = 0;
                   SPIL_LOC (sym->reqv) = sym;
+                  checkDecl (OP_SYMBOL (sym->reqv), 0);
                 }
             }
 
@@ -3984,7 +4025,7 @@ geniCodeFunctionBody (ast * tree, int lvl)
 /* geniCodeReturn - gen icode for 'return' statement               */
 /*-----------------------------------------------------------------*/
 void
-geniCodeReturn (operand * op)
+geniCodeReturn (operand *op)
 {
   iCode *ic;
 
@@ -3994,7 +4035,7 @@ geniCodeReturn (operand * op)
 
   /* check if a cast is needed */
   if (op && currFunc && currFunc->type && currFunc->type->next)
-    checkPtrQualifiers (currFunc->type->next, operandType (op), !op->isConstElimnated);
+    checkPtrQualifiers (currFunc->type->next, operandType (op), op);
 
   /* if the operand is present force an rvalue */
   if (op)

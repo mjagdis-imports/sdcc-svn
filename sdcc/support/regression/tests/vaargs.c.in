@@ -8,11 +8,12 @@
 #include <testfwk.h>
 #include <stdarg.h>
 
-/* gcc 3.3 throws a warning, if char is in '...' */
-#if defined(PORT_HOST) || defined (__SDCC_pdk13) || defined (__SDCC_pdk14) || defined (__SDCC_pdk15) || defined (__SDCC_f8)
-# define va_char int
-#else
+#pragma disable_warning 85
+
+#if defined(__SDCC_mcs51) || defined (__SDCC_ds390) || defined (__SDCC_mos6502) || defined (__SDCC_mos65c02) || defined (__SDCC_pic14) || defined (__SDCC_pic16)
 # define va_char char
+#else
+# define va_char int
 #endif
 
 #ifndef __SDCC_pic16

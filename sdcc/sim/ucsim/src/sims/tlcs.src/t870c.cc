@@ -70,6 +70,45 @@ cl_t870c::cl_t870c(class cl_sim *asim):
   regs16[7]= &cHL;
 
   def_data= 0xff;
+
+  uc_itab[0x01]= &cl_itab::invalid_instruction;
+  uc_itab[0x02]= &cl_itab::invalid_instruction;
+  uc_itab[0x03]= &cl_itab::invalid_instruction;
+  
+  uc_itab[0x68]= &cl_itab::invalid_instruction;
+  uc_itab[0x69]= &cl_itab::invalid_instruction;
+  uc_itab[0x6a]= &cl_itab::invalid_instruction;
+  uc_itab[0x6b]= &cl_itab::invalid_instruction;
+  uc_itab[0x6c]= &cl_itab::invalid_instruction;
+  uc_itab[0x6d]= &cl_itab::invalid_instruction;
+  uc_itab[0x6e]= &cl_itab::invalid_instruction;
+  uc_itab[0x6f]= &cl_itab::invalid_instruction;
+
+  uc_itab[0xf8]= &cl_itab::invalid_instruction;
+  
+  uc_itab[0x14f]= &cl_itab::invalid_instruction;
+  uc_itab[0x17f]= &cl_itab::invalid_instruction;
+  uc_itab[0x1df]= &cl_itab::invalid_instruction;
+  uc_itab[0x1f8]= &cl_itab::invalid_instruction;
+  uc_itab[0x1f9]= &cl_itab::invalid_instruction;
+  uc_itab[0x1fc]= &cl_itab::invalid_instruction;
+
+  uc_itab[0x24f]= &cl_itab::invalid_instruction;
+  uc_itab[0x26f]= &cl_itab::invalid_instruction;
+
+  uc_itab[0x2d0]= &cl_itab::invalid_instruction;
+  uc_itab[0x2d1]= &cl_itab::invalid_instruction;
+  uc_itab[0x2d2]= &cl_itab::invalid_instruction;
+  uc_itab[0x2d3]= &cl_itab::invalid_instruction;
+  uc_itab[0x2d4]= &cl_itab::invalid_instruction;
+  uc_itab[0x2d5]= &cl_itab::invalid_instruction;
+  uc_itab[0x2d6]= &cl_itab::invalid_instruction;
+  uc_itab[0x2d7]= &cl_itab::invalid_instruction;
+
+  uc_itab[0x2f1]= &cl_itab::invalid_instruction;
+  uc_itab[0x2f4]= &cl_itab::invalid_instruction;
+  uc_itab[0x2f5]= &cl_itab::invalid_instruction;
+  uc_itab[0x2ff]= &cl_itab::invalid_instruction;
 }
 
 int
@@ -201,6 +240,7 @@ cl_t870c::reset(void)
 {
   cl_uc::reset();
   PC= rom->read(0xffff) * 256 + rom->read(0xfffe);
+  rSP= 0x00ff;
 }
 
 
@@ -294,6 +334,61 @@ cl_t870c::disassc(t_addr addr, chars *comment)
     }
 
   return strdup(work.c_str());
+}
+
+
+int
+cl_t870c::exec_inst(void)
+{
+  return exec_inst_uctab();
+}
+
+
+void
+cl_t870c::sd_x(void)
+{
+  sda= fetch();
+  sdc= (class cl_cell8 *)asd->get_cell(sda);
+}
+
+void
+cl_t870c::sd_vw(void)
+{
+  sda= fetch() + (fetch()*256);
+  sdc= (class cl_cell8 *)asd->get_cell(sda);
+}
+
+
+int
+cl_t870c::CLR_CF(MP)
+{
+  rF|= MJF;
+  rF&= ~MCF;
+  cF.W(rF);
+  return resGO;
+}
+
+
+int
+cl_t870c::SET_CF(MP)
+{
+  rF&= ~MJF;
+  rF|= MCF;
+  cF.W(rF);
+  return resGO;
+}
+
+
+int
+cl_t870c::CPL_CF(MP)
+{
+  if (rF & MCF)
+    rF|= MJF;
+  else
+    rF&= ~MJF;
+  rF^= MCF;
+  cF.W(rF);
+  return resGO;
 }
 
 
