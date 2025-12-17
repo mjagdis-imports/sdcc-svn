@@ -8,6 +8,8 @@ WARNINGS:
 * Reproducing the r3ka benchmark score graphs requires the RCM3319 board, and sufficient access privileges on the host system!
 * Reproducing the r4k benchmark score graphs requires the RCM4110 board, and sufficient access privileges on the host system!
 
+The boards for the respective architectures were chosen to make it easy to reproduce results: relatively well-supported by free tools, widely available, cheap.
+
 Files:
 
 Makefile:
