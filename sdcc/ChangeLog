@@ -5,6 +5,10 @@
   	  src/mos6502/support/regression/tests/bug-2767.c,
   	  src/mos6502/support/regression/tests/bigreturn-remat.c.in:
   	  Enable several additional tests for mos6502.
+  	* src/mos6502/gen.c,
+  	  src/mos6502/genplus.c,
+  	  src/mos6502/genminus.c:
+  	  Allow inc/dec on objects on the stack.
   	
 2025-12-16 Gabriele Gorla <gorlik@yahoo.com>
 
