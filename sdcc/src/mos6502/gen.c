@@ -5425,6 +5425,18 @@ genCmp (iCode * ic, iCode * ifx)
       bit=true;
       bmi=false;
     }
+  else if (sign && right_zero && opcode=='<' && AOP_TYPE(left)==AOP_REG) 
+    {
+      emitCmp(AOP (left)->aopu.aop_reg[size-1], 0);
+      bit=true;
+      bmi=true;
+    }
+  else if (sign && right_zero && opcode==GE_OP && AOP_TYPE(left)==AOP_REG) 
+    {
+      emitCmp(AOP (left)->aopu.aop_reg[size-1], 0);
+      bit=true;
+      bmi=false;
+    }
   else if (!sign && size == 1 && IS_AOP_X (AOP (left)) && isAddrSafe(right, m6502_reg_x) )
     {
       if(IS_AOP_A(AOP(result)))
