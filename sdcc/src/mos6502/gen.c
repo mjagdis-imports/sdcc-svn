@@ -5647,11 +5647,10 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
   bool needloada = false;
   int offset = 0;
 
-  emitComment (TRACEGEN, __func__);
-
   opcode = ic->op;
 
-  emitComment (TRACEGEN|VVDBG, "      genCmpEQorNE (%s)", nameCmp (opcode));
+  emitComment (TRACEGEN, "%s - (%s) ifx:%d", 
+               __func__, nameCmp (opcode), ifx?1:0);
 
   /* assign the amsops */
   aopOp (left, ic);
@@ -5689,11 +5688,11 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
     }
 
   if(AOP_TYPE (left) == AOP_REG)
-    emitComment (TRACEGEN|VVDBG, "   genCmpEQorNE left is reg: %s",AOP (left)->aopu.aop_reg[offset]->name);
+    emitComment (TRACEGEN|VVDBG, "   %s - left is reg: %s", __func__, AOP (left)->aopu.aop_reg[offset]->name);
   else
-    emitComment (TRACEGEN|VVDBG, "   genCmpEQorNE left is not not a reg");
+    emitComment (TRACEGEN|VVDBG, "   %s - left is not not a reg", __func__);
 
-  if(ifx && size==1 && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
+  if(size==1 && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
     {
       bool restore_a=false;
       reg_info *reg;
