@@ -2,6 +2,8 @@
 
   	* src/mos6502/gen.c:
       Partial refcator of genCmpEqNeq().
+    * src/mos6502/tempops.c:
+      Fix bug in instruction cycle count.
 
 2025-12-21 Gabriele Gorla <gorlik@yahoo.com>
 

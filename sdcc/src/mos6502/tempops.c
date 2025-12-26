@@ -200,7 +200,11 @@ loadRegTempAt (reg_info * reg, int offset)
         {
           emitComment(REGOPS|VVDBG, "  %s: should load from %s+%d", __func__,
                       _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs);
-          emit6502op (loadOp, "%s(%s+%d)", (_S.tempAttr[offset].aop->type==AOP_DIR)?"*":"",
+          if(_S.tempAttr[offset].aop->type==AOP_DIR)
+          emit6502op (loadOp, "*(%s+%d)",
+           _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );
+          else
+          emit6502op (loadOp, "(%s+%d)",
            _S.tempAttr[offset].aop->aopu.aop_dir, _S.tempAttr[offset].aopofs );
         }
       else
