@@ -5692,7 +5692,8 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
   else
     emitComment (TRACEGEN|VVDBG, "   %s - left is not not a reg", __func__);
 
-  if(size==1 && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
+  if(size==1 
+     && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
     {
       bool restore_a=false;
       reg_info *reg;
@@ -7414,7 +7415,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
   blen = SPEC_BLEN (etype);
   bstr = SPEC_BSTR (etype);
 
-  needpulla = pushRegIfSurv (m6502_reg_a);
+  needpulla = storeRegTempIfSurv (m6502_reg_a);
   if (AOP_TYPE (right) == AOP_REG)
     {
       /* Not optimal, but works for any register sources. */
@@ -7453,7 +7454,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
 	    }
 	  loadRegFromConst(m6502_reg_y, yoff + offset);
 	  emit6502op ("sta", INDFMT_IY, "DPTR");
-	  pullOrFreeReg (m6502_reg_a, needpulla);
+	  loadOrFreeRegTemp (m6502_reg_a, needpulla);
 	  return;
 	}
 
@@ -7476,7 +7477,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
       //      loadRegTemp (m6502_reg_a);
       loadRegTemp (NULL);
       // TODO? redundant?
-      pullOrFreeReg (m6502_reg_a, needpulla);
+      loadOrFreeRegTemp (m6502_reg_a, needpulla);
       return;
     }
 
@@ -7521,7 +7522,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
 	  //          storeRegIndexed (m6502_reg_a, litOffset+offset, rematOffset);
 	  loadRegFromConst(m6502_reg_y, yoff + offset);
 	  emit6502op ("sta", INDFMT_IY, "DPTR");
-	  pullOrFreeReg (m6502_reg_a, needpulla);
+	  loadOrFreeRegTemp (m6502_reg_a, needpulla);
 	  return;
 	}
 
@@ -7541,7 +7542,7 @@ static void genPackBits (operand * result, operand * left, sym_link * etype, ope
       emit6502op ("sta", INDFMT_IY, "DPTR");
     }
 
-  pullOrFreeReg (m6502_reg_a, needpulla);
+  loadOrFreeRegTemp (m6502_reg_a, needpulla);
 }
 
 /**************************************************************************
