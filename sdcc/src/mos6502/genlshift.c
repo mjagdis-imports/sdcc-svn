@@ -572,7 +572,7 @@ shiftLLong4 (operand * left, operand * result, int shift)
       rmwWithReg ("lsr", m6502_reg_a);
       if(shift!=7)
         fastSaveA();
-      //             storeRegTempAlways(m6502_reg_a, true);
+
       loadRegFromAop (m6502_reg_a, AOP (left), 2);
       rmwWithReg ("ror", m6502_reg_a);
       storeRegToAop (m6502_reg_a, AOP (result), 3);

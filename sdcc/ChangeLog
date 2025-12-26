@@ -8,6 +8,9 @@
    	  Additional peephole rules for new codegen paths.
   	* src/mos6502/gen.c:
       Small genPackBits() improvement.
+  	* src/mos6502/genlshift.c,
+  	  support/regression/tests/stack-restore.c.in:
+      Fix typos.
 
 2025-12-21 Gabriele Gorla <gorlik@yahoo.com>
 
@@ -16,10 +19,10 @@
 
 2025-12-20 Gabriele Gorla <gorlik@yahoo.com>
 
-  	* src/mos6502/support/regression/tests/bug-3410.c.in,
-  	  src/mos6502/support/regression/tests/bug-3385.c,
-  	  src/mos6502/support/regression/tests/bug-2767.c,
-  	  src/mos6502/support/regression/tests/bigreturn-remat.c.in:
+  	* support/regression/tests/bug-3410.c.in,
+  	  support/regression/tests/bug-3385.c,
+  	  support/regression/tests/bug-2767.c,
+  	  support/regression/tests/bigreturn-remat.c.in:
   	  Enable several additional tests for mos6502.
   	* src/mos6502/gen.c,
   	  src/mos6502/genplus.c,
