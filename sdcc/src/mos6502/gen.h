@@ -114,6 +114,7 @@ struct attr_t
   unsigned char literalValue;
   struct asmop *aop;		/* last operand */
   int aopofs;			/* last operand offset */
+  int stackOffset;              /* stack offset when aop==tsxaop */
 };
 
 struct m6502_state_t

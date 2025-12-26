@@ -11,6 +11,9 @@
   	* src/mos6502/genlshift.c,
   	  support/regression/tests/stack-restore.c.in:
       Fix typos.
+   	* src/mos6502/tempops.c,
+   	  src/mos6502/gen.h:
+   	  Enable tracking of tsxaop in the tempstack.
 
 2025-12-21 Gabriele Gorla <gorlik@yahoo.com>
 
