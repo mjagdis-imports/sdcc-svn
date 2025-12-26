@@ -1,3 +1,12 @@
+2025-12-26 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/funcptrcmp.c.in:
+	  Disable a test for -mmcs51 --model-large, where it fails due to known bug #3903.
+	* device/include/stdlib.h,
+	  device/include/wchar.h,
+	  support/regression/tests/ato.c:
+	  Cleanup some leftover __SDCC_LONGLONG, which is no longer relevant, since all maintained ports now support long long.
+
 2025-12-25 Gabriele Gorla <gorlik@yahoo.com>
 
   	* src/mos6502/gen.c:
