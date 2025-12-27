@@ -1,3 +1,8 @@
+2025-12-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/wchar.h:
+	  Fix pic14 library compilation.
+
 2025-12-25 Gabriele Gorla <gorlik@yahoo.com>
 
   	* src/mos6502/gen.c:
