@@ -5609,8 +5609,10 @@ genCmp (iCode * ic, iCode * ifx)
         }
       else
         {
-          if(bmi) emitBranch ("bmi", true_lbl);
-          else emitBranch ("bpl", true_lbl);
+          if(bmi)
+            emitBranch ("bmi", true_lbl);
+          else
+            emitBranch ("bpl", true_lbl);
         }
       loadRegFromConst (m6502_reg_a, 0);
       // FIXME: for 6502 change this to beq when optimizing for size
@@ -5644,8 +5646,20 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
   symbol *jlbl = NULL;
   symbol *tlbl_NE = NULL;
   symbol *tlbl_EQ = NULL;
+  symbol *NE_label = NULL;
+  symbol *end_label = NULL;
+
   bool needloada = false;
+  bool needloadx = false;
+  bool needloady = false;
+  reg_info *reg = NULL;
   int offset = 0;
+  bool early_result = false;
+  bool result_equal = false;
+
+  end_label = safeNewiTempLabel (NULL);
+
+  static char instr[3][4] = { "cmp", "cpx", "cpy" };
 
   opcode = ic->op;
 
@@ -5692,93 +5706,161 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
   else
     emitComment (TRACEGEN|VVDBG, "   %s - left is not not a reg", __func__);
 
-  if(size==1 
-     && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
-    {
-      bool restore_a=false;
-      reg_info *reg;
+  result_equal = (opcode == EQ_OP)?1:0;
 
-      if(AOP_TYPE(left)==AOP_REG)
-	{
-	  reg=m6502_regWithIdx(AOP(left)->aopu.aop_reg[0]->rIdx);
-	}
-      else
-	{
-	  reg=getFreeByteReg();
-	  if(!reg)
+  if (!ifx)
+    {
+      NE_label = safeNewiTempLabel (NULL);
+      needloada = storeRegTempIfSurv(m6502_reg_a);
+
+      if(IS_AOP_WITH_A(AOP(left)) || AOP_TYPE(left)==AOP_SOF || AOP_TYPE(right)==AOP_SOF)
+        {
+          reg=m6502_reg_a;
+
+          if(AOP_TYPE(left)==AOP_SOF || AOP_TYPE(right)==AOP_SOF)
+            needloadx=storeRegTempIfSurv(m6502_reg_x);
+        }
+      else// if(AOP_TYPE(left)!=AOP_REG)
+        {
+	  if(AOP_TYPE(left)!=AOP_REG)
 	    {
-	      reg=m6502_reg_a;
-	      restore_a=storeRegTempIfSurv(m6502_reg_a);
+	      reg=getFreeIdxReg();
+
+	      if(!reg)
+		{
+		  reg=m6502_reg_y;
+		  needloady=storeRegTempIfSurv(m6502_reg_y);
+		}
 	    }
-	  loadRegFromAop (reg, AOP(left), 0);
+          loadRegFromConst (m6502_reg_a, !result_equal);
+          early_result=true;
+        }
+   
+      for(offset=0; offset<size; offset++)
+        {
+	  if (AOP_TYPE (left) == AOP_REG 
+              && (AOP (left)->aopu.aop_reg[offset]==m6502_reg_a || AOP_TYPE(right)!=AOP_SOF) )
+            accopWithAop (instr[AOP (left)->aopu.aop_reg[offset]->rIdx], AOP (right), offset);
+          else
+	    {
+              emitComment (TRACEGEN|VVDBG, "    %s - not a reg", __func__);
+
+              loadRegFromAop (reg, AOP (left), offset);
+              if(AOP_TYPE(right)==AOP_LIT)
+                emitCmp(reg, (ullFromVal (AOP(right)->aopu.aop_lit))>>(offset*8) );
+              else
+	        accopWithAop (instr[reg->rIdx], AOP (right), offset);
+	    }
+
+	  if(!early_result)
+	    emitBranch ("bne", NE_label);
+	  else
+	    emitBranch ("bne", end_label);
 	}
-      emitCmp(reg, ullFromVal (AOP(right)->aopu.aop_lit));
-      if(restore_a)
-	loadRegTempNoFlags(m6502_reg_a, true);
+
+      // set EQ
+      loadRegFromConst (m6502_reg_a, result_equal);
+
+      if(!early_result)
+        {
+          // jmp to end
+          emitBranch ("bra", end_label);
+	  safeEmitLabel (NE_label);
+          // set ne
+          loadRegFromConst (m6502_reg_a, !result_equal);
+        }
+
+      safeEmitLabel (end_label);
+
+      m6502_dirtyReg (m6502_reg_a);
+      if(reg)
+        m6502_dirtyReg (reg);
+
+      storeRegToFullAop (m6502_reg_a, AOP (result), true);
+      loadOrFreeRegTemp (m6502_reg_y, needloady);
+      loadOrFreeRegTemp (m6502_reg_x, needloadx);
+      loadOrFreeRegTemp (m6502_reg_a, needloada);
     }
   else
-    // TODO: could clobber A if reg = XA?
     {
-      offset = 0;
-      while (size--)
+      if(size==1 
+	 && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
 	{
-	  if (AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == X_IDX 
-              && isAddrSafe(right, m6502_reg_x))
-	    accopWithAop ("cpx", AOP (right), offset);
-	  else if (AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == Y_IDX
-		   && isAddrSafe(right, m6502_reg_y))
-	    accopWithAop ("cpy", AOP (right), offset);
-	  else 
-	    {
-	      emitComment (TRACEGEN|VVDBG, "      genCmpEQorNE can't cpx or cpy");
+	  bool restore_a=false;
+	  reg_info *reg;
 
-	      // TODO? why do we push when we could cpx?
-	      if (!(AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == A_IDX))
+	  if(AOP_TYPE(left)==AOP_REG)
+	    {
+	      reg=m6502_regWithIdx(AOP(left)->aopu.aop_reg[0]->rIdx);
+	    }
+	  else
+	    {
+	      reg=getFreeByteReg();
+	      if(!reg)
 		{
-		  if(AOP_TYPE(right) == AOP_REG)
-		    {
-		      emitComment (TRACEGEN|VVDBG, "   genCmpEQorNE right is reg: %s",AOP (right)->aopu.aop_reg[offset]->name);
-		    }
-
-		  // FIXME: always?
-		  //                  storeRegTemp (m6502_reg_a, true);
-		  //                  needloada = true;
-		  needloada = storeRegTempIfSurv(m6502_reg_a);
-		  //loadRegFromAop (m6502_reg_a, AOP (left), offset);
+		  reg=m6502_reg_a;
+		  restore_a=storeRegTempIfSurv(m6502_reg_a);
 		}
-              if(m6502_reg_x->aop&&sameRegs(m6502_reg_x->aop, AOP(left))&&m6502_reg_x->aopofs==offset)
-                {
-		  accopWithAop ("cpx", AOP (right), offset);
-                }
-              else
-                {
-		  loadRegFromAop (m6502_reg_a, AOP (left), offset);
-		  accopWithAop ("ucp", AOP (right), offset);
-		}
-	      loadRegTempNoFlags (m6502_reg_a, needloada);
-	      needloada = false;
+	      loadRegFromAop (reg, AOP(left), 0);
 	    }
-	  if (size)
-	    {
-	      symbol *tmp_label = safeNewiTempLabel (NULL);;
-	      if (!tlbl_NE)
-		tlbl_NE = safeNewiTempLabel (NULL);
-	      if (!needloada && !ifx)
-		needloada = storeRegTempIfSurv (m6502_reg_a);
-
-	      emitBranch ("beq", tmp_label);
-	      emitBranch ("jmp", tlbl_NE);
-	      safeEmitLabel (tmp_label);
-
-	      loadOrFreeRegTemp (m6502_reg_a, needloada);
-	      needloada = false;
-	    }
-	  offset++;
+	  emitCmp(reg, ullFromVal (AOP(right)->aopu.aop_lit));
+	  if(restore_a)
+	    loadRegTempNoFlags(m6502_reg_a, true);
 	}
-    }
+      else
+	// TODO: could clobber A if reg = XA?
+	{
+          for(offset=0; offset<size; offset++)
+	    {
+	      if (AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == X_IDX 
+		  && isAddrSafe(right, m6502_reg_x))
+		accopWithAop ("cpx", AOP (right), offset);
+	      else if (AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == Y_IDX
+		       && isAddrSafe(right, m6502_reg_y))
+		accopWithAop ("cpy", AOP (right), offset);
+	      else 
+		{
+                  emitComment (TRACEGEN|VVDBG, "    %s - not a reg", __func__);
 
-  if (ifx)
-    {
+		  // TODO? why do we push when we could cpx?
+		  if (!(AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == A_IDX))
+		    {
+		      if(AOP_TYPE(right) == AOP_REG)
+			{
+			  emitComment (TRACEGEN|VVDBG, "   genCmpEQorNE right is reg: %s",AOP (right)->aopu.aop_reg[offset]->name);
+			}
+
+		      // FIXME: always?
+		      //                  storeRegTemp (m6502_reg_a, true);
+		      //                  needloada = true;
+		      needloada = storeRegTempIfSurv(m6502_reg_a);
+		      //loadRegFromAop (m6502_reg_a, AOP (left), offset);
+		    }
+		  if(m6502_reg_x->aop&&sameRegs(m6502_reg_x->aop, AOP(left))&&m6502_reg_x->aopofs==offset)
+		    {
+		      accopWithAop ("cpx", AOP (right), offset);
+		    }
+		  else
+		    {
+		      loadRegFromAop (m6502_reg_a, AOP (left), offset);
+		      accopWithAop ("ucp", AOP (right), offset);
+		    }
+		  loadRegTempNoFlags (m6502_reg_a, needloada);
+		  needloada = false;
+		}
+	      if (offset<size-1)
+		{
+		  symbol *tmp_label = safeNewiTempLabel (NULL);;
+		  if (!tlbl_NE)
+		    tlbl_NE = safeNewiTempLabel (NULL);
+
+		  emitBranch ("beq", tmp_label);
+		  emitBranch ("jmp", tlbl_NE);
+		  safeEmitLabel (tmp_label);
+		}
+	    }
+	}
+
       if (opcode == EQ_OP)
 	{
 	  if (!tlbl_EQ)
@@ -5801,42 +5883,8 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
       /* mark the icode as generated */
       ifx->generated = 1;
     }
-  else
-    {
-      symbol *tlbl = safeNewiTempLabel (NULL);
 
-      if (!needloada)
-	needloada = storeRegTempIfSurv (m6502_reg_a);
-      if (opcode == EQ_OP)
-	{
-	  if (!tlbl_EQ)
-	    tlbl_EQ = safeNewiTempLabel (NULL);
-	  emitBranch ("beq", tlbl_EQ);
-	  if (tlbl_NE)
-	    safeEmitLabel (tlbl_NE);
-	  loadRegFromConst (m6502_reg_a, 0);
-	  emitBranch ("bra", tlbl);
-	  safeEmitLabel (tlbl_EQ);
-	  loadRegFromConst (m6502_reg_a, 1);
-	}
-      else 
-	{
-	  if (!tlbl_NE)
-	    tlbl_NE = safeNewiTempLabel (NULL);
-	  emitBranch ("bne", tlbl_NE);
-	  loadRegFromConst (m6502_reg_a, 0);
-	  emitBranch ("bra", tlbl);
-	  safeEmitLabel (tlbl_NE);
-	  loadRegFromConst (m6502_reg_a, 1);
-	}
-
-      safeEmitLabel (tlbl);
-      m6502_dirtyReg (m6502_reg_a);
-      storeRegToFullAop (m6502_reg_a, AOP (result), false);
-      loadOrFreeRegTemp (m6502_reg_a, needloada);
-    }
-
-  m6502_dirtyReg (m6502_reg_a);
+  m6502_dirtyReg (m6502_reg_a);  // FIXME: find a less conservative place for this
   _S.DPTRAttr[0].aop=NULL;
   _S.DPTRAttr[1].aop=NULL;
 
