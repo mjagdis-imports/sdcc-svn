@@ -313,7 +313,7 @@ loadRegTempNoFlags (reg_info * reg, bool needpull)
 }
 
 void
-emitRegTempOp( char *op, int offset)
+emitRegTempOp(const char *op, int offset)
 {
 
   if (offset<0 || offset>=_S.tempOfs)

@@ -2,6 +2,7 @@
 
   	* src/mos6502/gen.c:
       Refactor of genCmpEqNeq() for ifx==false.
+      Add m6502 prefix to several functions.
       
 2025-12-26 Philipp Klaus Krause <philipp@colecovision.eu>
 

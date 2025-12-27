@@ -907,7 +907,7 @@ m6502_genLeftShift (iCode * ic)
       symbol *skiplbl = safeNewiTempLabel (NULL);
       symbol *looplbl = safeNewiTempLabel (NULL);
 
-      emitCmp(countreg, 8);
+      m6502_emitCmp(countreg, 8);
       emitBranch ("bcc", skiplbl);
       safeEmitLabel (looplbl);
 
@@ -936,19 +936,19 @@ m6502_genLeftShift (iCode * ic)
 
 
       transferRegReg(countreg, m6502_reg_a, true);
-      emitSetCarry (1);
+      m6502_emitSetCarry (1);
       emit6502op ("sbc", IMMDFMT, 8);
       transferRegReg(m6502_reg_a, countreg, true);
       //if(size==8)
       {
-	emitCmp(countreg, 8);
+	m6502_emitCmp(countreg, 8);
 	emitBranch ("bcs", looplbl);
       }
       loadRegFromAop (m6502_reg_a, AOP (result), a_loc);
       safeEmitLabel (skiplbl);
     }
 
-  emitCmp(countreg, 0);
+  m6502_emitCmp(countreg, 0);
   emitBranch ("beq", tlbl1);
 
   // FIXME: find a good solution for this
