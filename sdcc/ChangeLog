@@ -4,7 +4,9 @@
 	  device/lib/strtoimax.c,
 	  device/lib/strtoll.c,
 	  device/lib/strtoull.c,
-	  device/lib/strtoumax.c:
+	  device/lib/strtoumax.c,
+	  device/lib/wcstoll.c,
+	  device/lib/wcstoull.c:
 	  __SDCC_LONGLONG migration bits.
 
 2025-12-28 Philipp Klaus Krause <philipp@colecovision.eu>
