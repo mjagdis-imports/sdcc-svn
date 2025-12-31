@@ -2,6 +2,7 @@
 
   	* src/mos6502/gen.c:
   	  genCmp improvements.
+  	  Remove unecessay constraint in genCmp.
   	* src/mos6502/genrshift.c:
       Special case shift XA when X is a constant.
       Correct typo.

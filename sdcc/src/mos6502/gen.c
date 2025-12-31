@@ -5477,7 +5477,7 @@ genCmp (iCode * ic, iCode * ifx)
           beq=true;
         }
     }
-  else if (!sign && size == 1 && IS_AOP_A (AOP (left))  && isAddrSafe(right, m6502_reg_a) )
+  else if (!sign && size == 1 && IS_AOP_A (AOP (left)) )
     {
       if (right_zero && opcode=='>' && IS_AOP_A(AOP(result)) )
         {
