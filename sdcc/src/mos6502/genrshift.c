@@ -179,7 +179,7 @@ XAccRsh (int shCount, bool sign)
       if(sign && (v&0x8000))
         v|=0xffff0000;
 
-      v>>shCount;
+      v>>=shCount;
 
       if(shCount<8)
         {
