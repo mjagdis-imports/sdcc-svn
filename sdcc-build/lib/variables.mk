@@ -66,7 +66,7 @@ SVN_ROOT = svn://svn.code.sf.net/p/sdcc/code
 REGTESTTARGETS_1_0 = test-ds390
 REGTESTTARGETS_2_0 = test-mcs51-medium test-mcs51-small-stack-auto test-hc08           test-ucz80       test-ucez80       test-ucr800                             test-ucr2ka test-ucr4k  test-stm8-large test-pdk15-stack-auto test-f8  test-uc6502            
 REGTESTTARGETS_2_1 = test-mcs51-small  test-mcs51-large-stack-auto test-s08            test-ucz80-resiy test-ucz180       test-ucz80-undoc test-ucz80-unsafe-read test-ucr2k  test-ucr5k  test-stm8       test-pdk15            test-f8l test-uc65c02
-REGTESTTARGETS_2_2 = test-mcs51-large  test-mcs51-huge             test-s08-stack-auto test-ucz80n      test-ucz180-resiy test-ucgbz80     test-tlcs90            test-ucr3ka test-ucr6k  test-pdk14                     #test-uc6502-stack-auto enable when it passes
+REGTESTTARGETS_2_2 = test-mcs51-large  test-mcs51-huge             test-s08-stack-auto test-ucz80n      test-ucz180-resiy test-ucgbz80     test-tlcs90            test-ucr3ka test-ucr6k  test-pdk14                     test-uc6502-stack-auto
 DAYMOD = $(shell date +%j | awk '{print $$0%3}')
 ifeq ($(strip $(DAYMOD)),0)
 THIRD_CROSSREGTESTTARGETS = $(REGTESTTARGETS_1_0) $(REGTESTTARGETS_2_0)
