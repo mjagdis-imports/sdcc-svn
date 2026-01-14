@@ -1,3 +1,8 @@
+2026-01-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/*:
+	  Add r4k Coremark graphs.
+
 2025-12-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* historygraphs/README,
