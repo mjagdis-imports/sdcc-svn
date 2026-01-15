@@ -8,7 +8,7 @@
   Copyright (C) 2003, Erik Petrich
   Hacked for the MOS6502:
   Copyright (C) 2020, Steven Hugg  hugg@fasterlight.com
-  Copyright (C) 2021-2025, Gabriele Gorla
+  Copyright (C) 2021-2026, Gabriele Gorla
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -50,6 +50,9 @@ static void aopAdrUnprepare (asmop * aop, int loffset);
 static void updateiTempRegisterUse (operand * op);
 static char * aopName (asmop * aop);
 static bool keepTSX();
+static void genCmpEQorNE (iCode * ic, iCode * ifx);
+// TODO: add compareWithAop()
+// TODO: add genCmpZero 
 
 static asmop *m6502_aop_pass[8];
 asmop tsxaop;
@@ -146,6 +149,10 @@ regTrackAop(reg_info *reg, asmop *aop, int offset)
       break;
     case XA_IDX:
       regTrackAop(m6502_reg_a, aop, offset);
+      regTrackAop(m6502_reg_x, aop, offset+1);
+      break;
+    case XY_IDX:
+      regTrackAop(m6502_reg_y, aop, offset);
       regTrackAop(m6502_reg_x, aop, offset+1);
       break;
     default:
@@ -1033,22 +1040,18 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
     case XA_IDX:
       switch (srcidx)
         {
-        case YX_IDX:           /* YX to XA */
-          transferRegReg(m6502_reg_x, m6502_reg_a, true);
-          storeRegTemp (m6502_reg_y, true);
-          loadRegTemp (m6502_reg_x);
+        case XY_IDX:           /* XY to XA */
+          transferRegReg(m6502_reg_y, m6502_reg_a, true);
           break;
         default:
           error = 1;
         }
       break;
-    case YX_IDX:
+    case XY_IDX:
       switch (srcidx)
         {
-        case XA_IDX:           /* XA to YX */
-          storeRegTemp (m6502_reg_x, false);
-          transferRegReg(m6502_reg_a, m6502_reg_x, true);
-          loadRegTemp (m6502_reg_y);
+        case XA_IDX:           /* XA to XY */
+          transferRegReg(m6502_reg_a, m6502_reg_y, true);
           break;
         default:
           error = 1;
@@ -1060,6 +1063,9 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
   
   if(error)
     emitcode("ERROR", "bad combo in transferRegReg 0x%02x -> 0x%02x", srcidx, dstidx);
+
+  if (freesrc)
+    m6502_freeReg (sreg);
 
   m6502_dirtyReg (dreg);
   m6502_useReg (dreg);
@@ -1076,8 +1082,6 @@ transferRegReg (reg_info *sreg, reg_info *dreg, bool freesrc)
     }
 
   emitComment (REGOPS, "  %s %s", __func__, regInfoStr() );
-  if (freesrc)
-    m6502_freeReg (sreg);
 }
 
 /**************************************************************************
@@ -1141,26 +1145,6 @@ aopName (asmop * aop)
   return "?";
 }
 
-// can we BIT aop ?
-bool
-canBitOp (const operand* aop)
-{
-  switch (AOP_TYPE(aop))
-    {
-      // bit aa, bit aaaa
-    case AOP_DIR:
-    case AOP_EXT:
-      return true;
-      // bit #aa
-    case AOP_LIT:
-      return IS_MOS65C02;
-      // TODO: ind,x for 65c02?
-    default:
-      break;
-    }
-  return false;
-}
-
 /**************************************************************************
  * Load register reg from logical offset loffset of aop.
  * For multi-byte registers, loffset is of the lsb reg.
@@ -1170,7 +1154,8 @@ loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
 {
   int regidx = reg->rIdx;
 
-  emitComment (REGOPS, "      loadRegFromAop (%s, %s, %d)", reg->name, aopName (aop), loffset);
+  emitComment (REGOPS, "      %s (%s, %s, %d)", __func__,
+               reg->name, aopName (aop), loffset);
   
   if (aop->stacked && aop->stk_aop[loffset])
     {
@@ -1192,7 +1177,7 @@ loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
     }
 
   /* check to see if we can transfer from another register */
-  if(reg!=m6502_reg_xa)
+  if(reg!=m6502_reg_xa && reg!=m6502_reg_xy)
     {
       reg_info *srcreg=findRegAop(aop, loffset);
       if(srcreg)
@@ -1225,6 +1210,9 @@ loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
 	{
 	  // TODO: add support for ldy aaaa,x
 	  bool needloada = storeRegTempIfUsed(m6502_reg_a); // FIXME: maybe push?
+	  emitComment (TRACEGEN|VVDBG, "  %s - reg:%s ofs:%d",
+                       __func__, reg->name, loffset);
+
 	  loadRegFromAop(m6502_reg_a, aop, loffset);
 	  transferRegReg(m6502_reg_a, reg, false);
 	  loadOrFreeRegTemp(m6502_reg_a,needloada);
@@ -1248,8 +1236,8 @@ loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
       emitComment (REGOPS, "  %s - XA", __func__);
       if (IS_AOP_XA (aop))
 	break;
-      else if (IS_AOP_YX (aop))
-	transferRegReg (m6502_reg_yx, m6502_reg_xa, false);
+      else if (IS_AOP_XY (aop))
+	transferRegReg (m6502_reg_xy, m6502_reg_xa, false);
       else if(IS_AOP_X(aop))
 	{
 	  transferRegReg (m6502_reg_x, m6502_reg_a, false);
@@ -1259,15 +1247,15 @@ loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
 	{
 	  m6502_freeReg(m6502_reg_x);
 	  loadRegFromAop (m6502_reg_a, aop, loffset);
-	  if(aop->size >= 2)
+	  if(aop->size == 1)
+	    loadRegFromConst (m6502_reg_x, 0);
+	  else
 	    {
 	      fastSaveA();
 	      loadRegFromAop (m6502_reg_a, aop, loffset + 1);
 	      transferRegReg(m6502_reg_a, m6502_reg_x, true);
 	      fastRestoreA();
 	    }
-	  if(aop->size == 1)
-	    loadRegFromConst (m6502_reg_x, 0);
 	}
       else
 	{
@@ -1279,15 +1267,43 @@ loadRegFromAop (reg_info * reg, asmop * aop, int loffset)
 	  loadRegFromAop (m6502_reg_a, aop, loffset);
 	}
       break;
-    case YX_IDX:
-      if (IS_AOP_YX (aop))
+    case XY_IDX:
+      if (IS_AOP_XY (aop))
 	break;
       else if (IS_AOP_XA (aop))
-	transferRegReg (m6502_reg_xa, m6502_reg_yx, false);
+	transferRegReg (m6502_reg_xa, m6502_reg_xy, false);
+      else if(IS_AOP_X(aop))
+	{
+	  transferRegReg (m6502_reg_x, m6502_reg_y, false);
+	  loadRegFromConst (m6502_reg_x, 0);
+	}
+      else if(aop->type == AOP_SOF)
+	{
+          bool savea = storeRegTempIfSurv(m6502_reg_a);
+	  m6502_freeReg(m6502_reg_x);
+	  loadRegFromAop (m6502_reg_a, aop, loffset);
+
+	  if(aop->size == 1)
+            {
+	      loadRegFromConst (m6502_reg_x, 0);
+              transferRegReg(m6502_reg_a, m6502_reg_y, true);
+            }
+	  else
+	    {
+	      transferRegReg(m6502_reg_a, m6502_reg_y, true);
+	      loadRegFromAop (m6502_reg_a, aop, loffset + 1);
+	      transferRegReg(m6502_reg_a, m6502_reg_x, true);
+	    }
+          loadOrFreeRegTemp(m6502_reg_a, savea);
+	}
       else
 	{
-	  loadRegFromAop (m6502_reg_x, aop, loffset);
-	  loadRegFromAop (m6502_reg_y, aop, loffset + 1);
+	  if(aop->size == 1)
+	    loadRegFromConst (m6502_reg_x, 0);
+          else
+	    loadRegFromAop (m6502_reg_x, aop, loffset + 1);
+
+	  loadRegFromAop (m6502_reg_y, aop, loffset);
 	}
       break;
     }
@@ -1382,9 +1398,9 @@ storeRegToAop (reg_info *reg, asmop * aop, int loffset)
           transferRegReg (reg, aop->aopu.aop_reg[loffset], true);
           break;
         case XA_IDX:
-          if (IS_AOP_YX (aop))
+          if (IS_AOP_XY (aop))
             {
-              transferRegReg (reg, m6502_reg_yx, false);
+              transferRegReg (reg, m6502_reg_xy, false);
             }
           else
             {
@@ -1392,15 +1408,15 @@ storeRegToAop (reg_info *reg, asmop * aop, int loffset)
 		emitcode("ERROR", "%s: unsupported reg in AOP (XA)", __func__);
             }
           break;
-        case YX_IDX:
+        case XY_IDX:
           if (IS_AOP_XA (aop))
             {
               transferRegReg (reg, m6502_reg_xa, false);
             }
           else
             {
-              if(!IS_AOP_YX(aop))
-		emitcode("ERROR", "%s: unsupported reg in AOP (YX)", __func__);
+              if(!IS_AOP_XY(aop))
+		emitcode("ERROR", "%s: unsupported reg in AOP (XY)", __func__);
             }
           break;
         }
@@ -1425,9 +1441,9 @@ storeRegToAop (reg_info *reg, asmop * aop, int loffset)
           emit6502op ("sta", aopAdrStr (aop, loffset, true));
           emit6502op ("stx", aopAdrStr (aop, loffset+1, true));
           break;
-        case YX_IDX:
-          emit6502op ("stx", aopAdrStr (aop, loffset, true));
-          emit6502op ("sty", aopAdrStr (aop, loffset+1, true));
+        case XY_IDX:
+          emit6502op ("sty", aopAdrStr (aop, loffset, true));
+          emit6502op ("stx", aopAdrStr (aop, loffset+1, true));
           break;
         }
     }
@@ -1472,14 +1488,14 @@ storeRegToAop (reg_info *reg, asmop * aop, int loffset)
 	  emit6502op ("sta", aopAdrStr (aop, loffset, false));
           loadOrFreeRegTemp(m6502_reg_x, needloadx);
           break;
-        case YX_IDX:
+        case XY_IDX:
           needloada = storeRegTempIfUsed (m6502_reg_a);
           needloadx = storeRegTempIfUsed (m6502_reg_x);
           transferRegReg (m6502_reg_x, m6502_reg_a, true);
           m6502_emitTSX();
-          emit6502op ("sta", aopAdrStr (aop, loffset, false));
+          emit6502op ("sta", aopAdrStr (aop, loffset + 1 , false));
           transferRegReg (m6502_reg_y, m6502_reg_a, true);
-          emit6502op ("sta", aopAdrStr (aop, loffset + 1, false));
+          emit6502op ("sta", aopAdrStr (aop, loffset, false));
           loadOrFreeRegTemp (m6502_reg_x, needloadx);
           loadOrFreeRegTemp (m6502_reg_a, needloada);
           break;
@@ -1584,10 +1600,10 @@ loadRegFromConst (reg_info * reg, int c)
     loadRegFromConst (m6502_reg_x, c >> 8);
     loadRegFromConst (m6502_reg_a, c);
     break;
-  case YX_IDX:
+  case XY_IDX:
     c &= 0xffff;
-    loadRegFromConst (m6502_reg_y, c >> 8);
-    loadRegFromConst (m6502_reg_x, c);
+    loadRegFromConst (m6502_reg_x, c >> 8);
+    loadRegFromConst (m6502_reg_y, c);
     break;
   default:
     emitcode ("ERROR", "bad reg 0x%02x in %s", reg->rIdx, __func__);
@@ -1629,9 +1645,9 @@ loadRegFromImm (reg_info * reg, char * c)
     emit6502op ("ldx", "#%s >> 8", c);
     emit6502op ("lda", "#%s", c);
     break;
-  case YX_IDX:
-    emit6502op ("ldy", "#%s >> 8", c);
-    emit6502op ("ldx", "#%s", c);
+  case XY_IDX:
+    emit6502op ("ldx", "#%s >> 8", c);
+    emit6502op ("ldy", "#%s", c);
     break;
   default:
     werror (E_INTERNAL_ERROR, __FILE__, __LINE__, "Bad rIdx in loadRegFromConst");
@@ -1720,12 +1736,18 @@ storeConstToAop (int c, asmop * aop, int loffset)
 }
 
 /**************************************************************************
- * storeImmToAop - Store immediate value c to logical offset
- *                 loffset of asmop aop.
+ * Store immediate value to asmop
+ *
+ * @param c  pointer to the immediate value
+ * @param aop pointer to the asmop
+ * @param loffset asmop offset
  *************************************************************************/
 static void
 storeImmToAop (char *c, asmop * aop, int loffset)
 {
+  reg_info *reg = NULL;
+  bool savea = false;
+
   emitComment (TRACE_AOP, __func__ );
 
   if (aop->stacked && aop->stk_aop[loffset])
@@ -1743,41 +1765,50 @@ storeImmToAop (char *c, asmop * aop, int loffset)
   case AOP_DUMMY:
     break;
   case AOP_DIR:
+  case AOP_EXT:
     if (!strcmp (c, "#0x00") && IS_MOS65C02 )
       {
         emit6502op ("stz", "%s", aopAdrStr (aop, loffset, false));
         break;
       }
   default:
-    if (m6502_reg_x->isFree)
+      
+    if(aop->type!=AOP_SOF)
+      reg = getFreeByteReg();
+
+    if (reg == NULL)
       {
-        loadRegFromImm (m6502_reg_x, c);
-        storeRegToAop (m6502_reg_x, aop, loffset);
-        m6502_freeReg (m6502_reg_x);
+	savea = fastSaveAIfUsed ();
+	reg = m6502_reg_a;
       }
-    else if (m6502_reg_y->isFree)
-      {
-	loadRegFromImm (m6502_reg_y, c);
-	storeRegToAop (m6502_reg_y, aop, loffset);
-	m6502_freeReg (m6502_reg_y);
-      }
-    else
-      {
-	bool needpulla = pushRegIfUsed (m6502_reg_a);
-	loadRegFromImm (m6502_reg_a, c);
-	storeRegToAop (m6502_reg_a, aop, loffset);
-	pullOrFreeReg (m6502_reg_a, needpulla);
-      }
+    loadRegFromImm (reg, c);
+    storeRegToAop (reg, aop, loffset);
+    m6502_freeReg (reg);
+    fastRestoreOrFreeA (savea);
+
   }
 }
 
+/**************************************************************************
+ * sign extends the register
+ *
+ * @param reg  pointer to the register
+ *************************************************************************/
 void
-signExtendA ()
+m6502_signExtendReg(reg_info *reg)
 {
-  emit6502op ("asl", "a");
-  loadRegFromConst (m6502_reg_a, 0);
-  emit6502op ("adc", "#0xff");
-  emit6502op ("eor", "#0xff");
+  symbol *tlbl = safeNewiTempLabel (NULL);
+
+  if(reg==m6502_reg_a)
+    emit6502op ("asl", "a");
+  else
+    m6502_emitCmp (reg, 0x80);
+
+  loadRegFromConst (reg, 0);
+  emitBranch ("bcc", tlbl);
+  loadRegFromConst (reg, 0xff);
+  safeEmitLabel (tlbl);
+  m6502_dirtyReg (reg);
 }
 
 /**************************************************************************
@@ -1792,7 +1823,6 @@ storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bool isSigned)
 {
   emitComment (TRACE_AOP, __func__ );
 
-  //  int regidx = reg->rIdx;
   int size = aop->size;
 
   if (loffset >= size)
@@ -1807,22 +1837,8 @@ storeRegSignToUpperAop (reg_info * reg, asmop * aop, int loffset, bool isSigned)
   else
     {
       /* Signed case */
-      if(reg!=m6502_reg_a)
-        {
-          symbol *tlbl = safeNewiTempLabel (NULL);
+      m6502_signExtendReg(reg);
 
-          m6502_emitCmp (reg, 0x80);
-          loadRegFromConst (reg, 0);
-          emitBranch ("bcc", tlbl);
-          loadRegFromConst (reg, 0xff);
-          safeEmitLabel (tlbl);
-          m6502_dirtyReg (reg);
-        }
-      else
-        {
-          signExtendA ();
-          m6502_useReg (m6502_reg_a);
-        }
       while (loffset < size)
         storeRegToAop (reg, aop, loffset++);
       m6502_freeReg (reg);
@@ -1865,7 +1881,7 @@ storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
         }
       else
 #endif
-        { 
+        {
           storeRegToAop (reg, aop, 0);
           if (size > 1 && isSigned && aop->type == AOP_REG && aop->aopu.aop_reg[0]->rIdx == A_IDX)
             m6502_pushReg (m6502_reg_a, true);
@@ -1898,15 +1914,15 @@ storeRegToFullAop (reg_info *reg, asmop *aop, bool isSigned)
 	    }
 	}
       break;
-    case YX_IDX:
+    case XY_IDX:
       if (size == 1)
 	{
-	  storeRegToAop (m6502_reg_x, aop, 0);
+	  storeRegToAop (m6502_reg_y, aop, 0);
 	}
       else
 	{
 	  storeRegToAop (reg, aop, 0);
-	  storeRegSignToUpperAop (m6502_reg_y, aop, 2, isSigned);
+	  storeRegSignToUpperAop (m6502_reg_x, aop, 2, isSigned);
 	}
       break;
     default:
@@ -2088,15 +2104,7 @@ static asmop * forceStackedAop (asmop * aop, bool copyOrig)
 void
 accopWithAop (const char *accop, asmop *aop, int loffset)
 {
-  bool ucp = false;
   emitComment (TRACE_AOP, __func__ );
-
-  if ( !strcmp(accop, "ucp") )
-    {
-      // special case for unsigned compare
-      ucp=true;
-      accop = "cmp";
-    }
 
   if (aop->stacked && aop->stk_aop[loffset])
     {
@@ -2122,24 +2130,20 @@ accopWithAop (const char *accop, asmop *aop, int loffset)
     }
   else
     {
-
       if(aop->type==AOP_LIT)
         {
 	  unsigned char v = (ullFromVal(aop->aopu.aop_lit))>>(loffset*8);
 
-	  if(ucp)
+	  if(strcmp(accop,"cmp")==0)
 	    {
 	      m6502_emitCmp(m6502_reg_a, v);
-
 	    }
 	  else if (v==0)
 	    emit6502op (accop, "#0x00");
 	  else
 	    emit6502op (accop, IMMDFMT, v);
          
-
 	  return;          
-
         }
       aopAdrPrepare(aop, loffset);
       //    emit6502op (accop, aopAdrStr (aop, loffset, false));
@@ -2194,10 +2198,6 @@ rmwWithReg (char *rmwop, reg_info * reg)
           m6502_emitSetCarry (0);
           emit6502op ("adc", "#0x01");
         }
-      else if (!strcmp(rmwop, "bit"))
-        { // TODO???
-	  emitcode("ERROR", "   %s : called with unsupported opcode: %s", __func__, rmwop);
-        } 
       else
         {
           emit6502op (rmwop, "a");
@@ -2554,10 +2554,10 @@ newAsmop (short type)
 
 #if 0
 /**************************************************************************
- * operandConflictsWithYX - true if operand in y and/or x register
+ * operandConflictsWithXY - true if operand in y and/or x register
  *************************************************************************/
 static bool
-operandConflictsWithYX (operand *op)
+operandConflictsWithXY (operand *op)
 {
   symbol *sym;
   int i;
@@ -2667,7 +2667,7 @@ tsxUseful(const iCode *ic)
 	break;
       else
 	{
-	  if (operandConflictsWithYX (result))
+	  if (operandConflictsWithXY (result))
 	    break;
 	  if (operandOnStack (left))
 	    uses += operandSize (left);
@@ -2779,7 +2779,7 @@ static asmop * aopForSym (const iCode * ic, symbol * sym)
 	  return aop;
 	else
           {
-	    // FIXME: this is likely incorrect as YX is not a adr register in the 6502
+	    // FIXME: this is likely incorrect as XY is not a adr register in the 6502
 	    /* If this is a pointer gen/set, then hx is definitely in use */
 	    if (POINTER_SET (ic) || POINTER_GET (ic))
 	      return aop;
@@ -2847,7 +2847,7 @@ static asmop * aopForRemat (symbol * sym)
   if (ic->op == ADDRESS_OF) {
     if (val) {
       SNPRINTF (buffer, sizeof (buffer),
-                "(%s %c 0x%04x)", OP_SYMBOL (IC_LEFT (ic))->rname, val >= 0 ? '+' : '-', abs (val) & 0xffff);
+                "(%s%c0x%04x)", OP_SYMBOL (IC_LEFT (ic))->rname, val >= 0 ? '+' : '-', abs (val) & 0xffff);
     } else {
       strncpyz (buffer, OP_SYMBOL (IC_LEFT (ic))->rname, sizeof (buffer));
     }
@@ -3019,6 +3019,31 @@ aopCanShift (asmop * aop)
   default:
     break;
   }
+  return false;
+}
+
+/**************************************************************************
+ * aopCanBitOp - asmop is EXT or DIR
+ *
+ *************************************************************************/
+bool
+aopCanBit (asmop * aop)
+{
+  switch (aop->type)
+    {
+      // bit aa, bit aaaa
+    case AOP_DIR:
+    case AOP_EXT:
+      return true;
+
+      // bit #aa
+    case AOP_LIT:
+      return IS_MOS65C02;
+
+      // TODO: ind,x for 65c02?
+    default:
+      break;
+    }
   return false;
 }
 
@@ -3360,9 +3385,11 @@ static asmop * aopDerefAop (asmop * aop, int offset)
 }
 
 // is it safe to aopAdrStr?
-static bool isAddrSafe(operand* op, reg_info* reg)
+static bool
+isAddrSafe(operand* op, reg_info* reg)
 {
-  switch (AOP(op)->type) {
+  switch (AOP(op)->type)
+  {
   case AOP_IMMD:    // #nn
   case AOP_LIT:
   case AOP_DIR:     // aa
@@ -3381,7 +3408,8 @@ static int aopPrepareStoreTemp = 0;
 static int aopPreparePreserveFlags = 0;
 
 // TODO: make sure this is called before/after aopAdrStr if indexing might be used
-static void aopAdrPrepare (asmop * aop, int loffset)
+static void
+aopAdrPrepare (asmop * aop, int loffset)
 {
   emitComment (TRACE_AOP, "%s", __func__ );
 
@@ -3419,7 +3447,8 @@ static void aopAdrPrepare (asmop * aop, int loffset)
   }
 }
 
-static void aopAdrUnprepare (asmop * aop, int loffset)
+static void
+aopAdrUnprepare (asmop * aop, int loffset)
 {
   if (loffset > (aop->size - 1))
     return;
@@ -3493,7 +3522,7 @@ aopAdrStr (asmop * aop, int loffset, bool bit16)
       if (regalloc_dry_run)
 	return "dry";
       if (offset)
-	sprintf (s, "(%s + %d)", aop->aopu.aop_dir, offset);
+	sprintf (s, "(%s+%d)", aop->aopu.aop_dir, offset);
       else
 	sprintf (s, "%s", aop->aopu.aop_dir);
       rs = Safe_calloc (1, strlen (s) + 1);
@@ -3512,6 +3541,7 @@ aopAdrStr (asmop * aop, int loffset, bool bit16)
     case AOP_SOF: // TODO?
       if (regalloc_dry_run)
 	{
+	  m6502_emitTSX();
 	  return "0x100,x"; // fake result, not needed
 	}
       else
@@ -3601,7 +3631,6 @@ asmopToBool (asmop *aop, bool resultInA)
               if (freereg)
                 {
                   loadRegFromAop (freereg, aop, 0);
-		  //              if(getLastFlag()!=freereg->rIdx)
 		  m6502_emitCmp(freereg, 0x00);
                 }
               else
@@ -3662,7 +3691,7 @@ asmopToBool (asmop *aop, bool resultInA)
 	    if(_S.lastflag==X_IDX) 
 	      {
 		if (!(m6502_reg_x->isLitConst && m6502_reg_x->litConst==0 ) )
-		  emit6502op ("bne", "%05d$", safeLabelNum (tlbl));
+		  emitBranch ("bne", tlbl);
 		m6502_emitCmp(m6502_reg_a, 0);
 	      }
 	    else
@@ -3670,7 +3699,7 @@ asmopToBool (asmop *aop, bool resultInA)
 		m6502_emitCmp(m6502_reg_a, 0);
 		if( !(m6502_reg_x->isLitConst && m6502_reg_x->litConst==0))
 		  {
-		    emit6502op ("bne", "%05d$", safeLabelNum (tlbl));
+                    emitBranch ("bne", tlbl);
 		    // FIXME: this optimization makes the code smaller (expected) and slower (unexpected)
 		    //          if(m6502_reg_a->isDead) 
 		    //            transferRegReg(m6502_reg_x, m6502_reg_a, true);
@@ -3679,11 +3708,13 @@ asmopToBool (asmop *aop, bool resultInA)
 		  }
 	      }
         }
-      else if (IS_AOP_YX (aop))
+      else if (IS_AOP_XY (aop))
         {
+          if(resultInA)
+            loadRegFromConst (m6502_reg_a, 0);
 	  m6502_emitCmp(m6502_reg_x, 0);
-          emit6502op ("bne", "%05d$", safeLabelNum (tlbl));
-	  m6502_emitCmp(m6502_reg_y, 0); // FIXME: needed?
+          emitBranch ("bne", tlbl);
+	  m6502_emitCmp(m6502_reg_y, 0);
         }
       else
         {
@@ -3703,11 +3734,12 @@ asmopToBool (asmop *aop, bool resultInA)
 
     case AOP_DIR:
     case AOP_EXT:
-      emitComment (TRACE_AOP|VVDBG, "asmopToBool - AOP_DIR || AOP_EXT");
+      emitComment (TRACE_AOP|VVDBG, "  %s - AOP_DIR || AOP_EXT", __func__);
 
 #if 1
       if (!resultInA && (size == 1) && !IS_AOP_A (aop) && !m6502_reg_a->isFree && m6502_reg_x->isFree)
         {
+          emitComment (TRACE_AOP|VVDBG, "  %s - load", __func__);
           loadRegFromAop (m6502_reg_x, aop, 0);
           return;
         }
@@ -3715,9 +3747,12 @@ asmopToBool (asmop *aop, bool resultInA)
       if (!resultInA && (size == 1) )
         {
           reg_info *reg=getFreeByteReg();
+          emitComment (TRACE_AOP|VVDBG, "  %s - reg:%s", __func__,(reg)?reg->name:"NULL");
+
           if(reg)
             {
               loadRegFromAop (reg, aop, 0);
+	      m6502_emitCmp(reg, 0x00);
               return;
             }
         }
@@ -3796,6 +3831,12 @@ genCopy (operand * result, operand * source)
   if(IS_AOP_XA (AOP (result)) )
     {
       loadRegFromAop (m6502_reg_xa, AOP(source), 0);
+      return;
+    }
+
+  if(IS_AOP_XY (AOP (result)) )
+    {
+      loadRegFromAop (m6502_reg_xy, AOP(source), 0);
       return;
     }
 
@@ -3947,7 +3988,7 @@ genCpl (iCode * ic)
 	  m6502_pullReg (m6502_reg_a);
 	  rmwWithReg ("com", m6502_reg_a);
 	}
-      else if(IS_AOP_YX(AOP(left)) && IS_AOP_YX(AOP(result)))
+      else if(IS_AOP_XY(AOP(left)) && IS_AOP_XY(AOP(result)))
 	{
 	  bool pa = pushRegIfSurv (m6502_reg_a);
 	  transferRegReg (m6502_reg_y, m6502_reg_a, true);
@@ -3958,7 +3999,7 @@ genCpl (iCode * ic)
 	  transferRegReg (m6502_reg_a, m6502_reg_x, true);
 	  pullOrFreeReg (m6502_reg_a, pa);
 	}
-      else if(IS_AOP_YX(AOP(left)) && IS_AOP_XA(AOP(result)))
+      else if(IS_AOP_XY(AOP(left)) && IS_AOP_XA(AOP(result)))
 	{
 	  transferRegReg (m6502_reg_x, m6502_reg_a, true);
 	  rmwWithReg ("com", m6502_reg_a);
@@ -3968,7 +4009,7 @@ genCpl (iCode * ic)
 	  transferRegReg (m6502_reg_a, m6502_reg_x, true);
 	  m6502_pullReg (m6502_reg_a);
 	}
-      else if(IS_AOP_XA(AOP(left)) && IS_AOP_YX(AOP(result)))
+      else if(IS_AOP_XA(AOP(left)) && IS_AOP_XY(AOP(result)))
 	{
 	  m6502_pushReg (m6502_reg_a, true);
 	  transferRegReg (m6502_reg_x, m6502_reg_a, true);
@@ -3988,6 +4029,7 @@ genCpl (iCode * ic)
 
   if (AOP_TYPE (left) == AOP_REG && size==2)
     {
+      transferRegReg (left->aop->aopu.aop_reg[0], m6502_reg_a, true);
       rmwWithReg ("com", m6502_reg_a);
       storeRegToAop (m6502_reg_a, AOP (result), 0);
       loadRegFromAop (m6502_reg_a, AOP (left), 1);
@@ -4161,7 +4203,8 @@ static void genUminus (iCode * ic)
 /**************************************************************************
  * saveRegisters - will look for a call and save the registers
  *************************************************************************/
-static void saveRegisters (iCode *lic)
+static void
+saveRegisters (iCode *lic)
 {
   int i;
   iCode *ic;
@@ -4181,6 +4224,7 @@ static void saveRegisters (iCode *lic)
      do nothing */
   if (ic->regsSaved)
     return;
+
   if (IS_SYMOP (IC_LEFT (ic)) &&
       (IFFUNC_CALLEESAVES (OP_SYMBOL (IC_LEFT (ic))->type) || IFFUNC_ISNAKED (OP_SYM_TYPE (IC_LEFT (ic)))))
     return;
@@ -4229,15 +4273,17 @@ static void unsaveRegisters (iCode *ic)
 {
   int i;
 
-  emitComment (REGOPS, "; unsaveRegisters");
+  emitComment (REGOPS, "%s", __func__);
 
   // TODO: only clobbered if m6502_reg_a->isFree
 
   bool clobbers_a = !IS_MOS65C02
     && (bitVectBitValue(ic->rSurv, X_IDX) || bitVectBitValue(ic->rSurv, Y_IDX))
     && !bitVectBitValue(ic->rSurv, A_IDX);
+
   if (clobbers_a)
     storeRegTemp (m6502_reg_a, true);
+
   for (i = Y_IDX; i >= A_IDX; i--)
     {
       if (bitVectBitValue (ic->rSurv, i))
@@ -4324,8 +4370,8 @@ assignResultValue (operand * oper)
         }
       else
         {
-          if (IS_AOP_YX(AOP(oper)))
-            transferRegReg(m6502_reg_xa, m6502_reg_yx, true);
+          if (IS_AOP_XY(AOP(oper)))
+            transferRegReg(m6502_reg_xa, m6502_reg_xy, true);
         }
       return;
     }
@@ -4400,15 +4446,15 @@ genIpush (iCode * ic)
   size = AOP_SIZE (left);
 
   //  l = aopGet (AOP (left), 0, false, true);
-/*
-  if (AOP_TYPE (left) == AOP_IMMD || AOP_TYPE (left) == AOP_LIT ||IS_AOP_YX (AOP (left))) {
-    if ((size == 2) && m6502_reg_yx->isDead || IS_AOP_YX (AOP (left))) {
-      loadRegFromAop (m6502_reg_yx, AOP (left), 0);
-      m6502_pushReg (m6502_reg_yx, true);
-      goto release;
+  /*
+    if (AOP_TYPE (left) == AOP_IMMD || AOP_TYPE (left) == AOP_LIT ||IS_AOP_XY (AOP (left))) {
+    if ((size == 2) && m6502_reg_xy->isDead || IS_AOP_XY (AOP (left))) {
+    loadRegFromAop (m6502_reg_xy, AOP (left), 0);
+    m6502_pushReg (m6502_reg_xy, true);
+    goto release;
     }
-  }
-*/
+    }
+  */
 
   if (AOP_TYPE (left) == AOP_REG)
     {
@@ -4564,11 +4610,12 @@ genCall (iCode * ic)
       if (IFFUNC_ISREENT (dtype))
 	{
 	  /* need to reverse the send set */
-	  //genSend (_S.sendSet);
 	  genSend (reverseSet (_S.sendSet));
-	} else {
-	genSend (_S.sendSet);
-      }
+	}
+      else
+        {
+	  genSend (_S.sendSet);
+	}
       _S.sendSet = NULL;
     }
 
@@ -4594,12 +4641,9 @@ genCall (iCode * ic)
   _S.lastflag=-1;
   _S.carryValid=0;
 
-
   /* do we need to recompute the base ptr? */
   if (_S.funcHasBasePtr)
-    {
-      saveBasePtr();
-    }
+    saveBasePtr();
 
   /* if we need assign a result value */
   if ((IS_ITEMP (result) &&
@@ -4616,9 +4660,8 @@ genCall (iCode * ic)
     }
 
   /* adjust the stack for parameters if required */
-  if (ic->parmBytes) {
+  if (ic->parmBytes)
     pullNull (ic->parmBytes);
-  }
 
   /* if we had saved some registers then unsave them */
   if (ic->regsSaved && !IFFUNC_CALLEESAVES (dtype))
@@ -4978,7 +5021,7 @@ genEndFunction (iCode * ic)
               /* save the registers used */
               for (i = sym->regsUsed->size; i >= 0; i--)
                 {
-                  if (bitVectBitValue (sym->regsUsed, i) || (m6502_ptrRegReq && (i == YX_IDX || i == YX_IDX)))
+                  if (bitVectBitValue (sym->regsUsed, i) || (m6502_ptrRegReq && (i == XY_IDX)))
                     {
                       // FIXME
                       emitcode ("pop", "%s", m6502_regWithIdx (i)->name); /* Todo: Cost. Can't find this instruction in manual! */
@@ -5368,6 +5411,8 @@ genCmp (iCode * ic, iCode * ifx)
   symbol *jlbl = NULL;
   bool needloada = false;
   bool bmi = false;
+  bool bpl = false;
+  bool beq = false;
   bool bit = false;
 
   opcode = ic->op;
@@ -5411,6 +5456,9 @@ genCmp (iCode * ic, iCode * ifx)
 
   // TODO: special case for compare with 0
 
+  bool right_zero = (AOP_TYPE (right) == AOP_LIT) && (ullFromVal(AOP (right)->aopu.aop_lit) == 0 );
+  bool result_in_a = false;
+
   if (ifx)
     {
       if (IC_TRUE (ifx))
@@ -5425,20 +5473,17 @@ genCmp (iCode * ic, iCode * ifx)
         }
     }
 
-  bool right_zero = (AOP_TYPE (right) == AOP_LIT) && (ullFromVal(AOP (right)->aopu.aop_lit) == 0 );
-  bool result_in_a = false;
-
-  if (sign && right_zero && opcode=='<' && canBitOp(left) )
+  if (sign && right_zero && opcode=='<' && aopCanBit(AOP(left)) )
     {
       accopWithAop ("bit", AOP (left), size-1);
       bit=true;
       bmi=true;
     }
-  else if (sign && right_zero && opcode==GE_OP && canBitOp(left) )
+  else if (sign && right_zero && opcode==GE_OP && aopCanBit(AOP(left)) )
     {
       accopWithAop ("bit", AOP (left), size-1);
       bit=true;
-      bmi=false;
+      bpl=true;
     }
   else if (sign && right_zero && opcode=='<' && AOP_TYPE(left)==AOP_REG) 
     {
@@ -5450,7 +5495,7 @@ genCmp (iCode * ic, iCode * ifx)
     {
       m6502_emitCmp(AOP (left)->aopu.aop_reg[size-1], 0);
       bit=true;
-      bmi=false;
+      bpl=true;
     }
   else if (!sign && size == 1 && IS_AOP_X (AOP (left)) && isAddrSafe(right, m6502_reg_x) )
     {
@@ -5460,6 +5505,11 @@ genCmp (iCode * ic, iCode * ifx)
           result_in_a=true;
 	}
       accopWithAop ("cpx", AOP (right), 0);
+      if(right_zero)
+        {
+          bit=true;
+          beq=true;
+        }
     }
   else if (!sign && size == 1 && IS_AOP_Y (AOP (left)) && isAddrSafe(right, m6502_reg_y) )
     {
@@ -5469,8 +5519,13 @@ genCmp (iCode * ic, iCode * ifx)
           result_in_a=true;
 	}
       accopWithAop ("cpy", AOP (right), 0);
+      if(right_zero)
+        {
+          bit=true;
+          beq=true;
+        }
     }
-  else if (!sign && size == 1 && IS_AOP_A (AOP (left))  && isAddrSafe(right, m6502_reg_a) )
+  else if (!sign && size == 1 && IS_AOP_A (AOP (left)) )
     {
       if (right_zero && opcode=='>' && IS_AOP_A(AOP(result)) )
         {
@@ -5484,6 +5539,11 @@ genCmp (iCode * ic, iCode * ifx)
       else
         {
           accopWithAop ("cmp", AOP (right), 0);
+          if(right_zero)
+            {
+              bit=true;
+              beq=true;
+            }
         }
     }
   else
@@ -5585,7 +5645,10 @@ genCmp (iCode * ic, iCode * ifx)
 	  else
 	    m6502_freeReg (m6502_reg_a);
 
-          emitBranch (inst, tlbl);
+          if(!sign && right_zero && AOP_SIZE (left)==1)
+            emitBranch ("beq", tlbl);
+          else
+            emitBranch (inst, tlbl);
         }
       else
         {
@@ -5595,7 +5658,8 @@ genCmp (iCode * ic, iCode * ifx)
 	    m6502_freeReg (m6502_reg_a);
 
           if(bmi) emitBranch ("bmi", tlbl);
-          else emitBranch ("bpl", tlbl);
+          else if(bpl) emitBranch ("bpl", tlbl);
+          else if(beq) emitBranch ("beq", tlbl);
         }
       emitBranch ("jmp", jlbl);
       safeEmitLabel (tlbl);
@@ -5685,6 +5749,9 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
   aopOp (right, ic);
   aopOp (result, ic);
   printIC (ic);
+
+  // TODO: rearrange the compare when one of the lit is zero
+  // and the flag is already in the status register
 
   /* need register operand on left, prefer literal operand on right */
   if ((AOP_TYPE (right) == AOP_REG) || AOP_TYPE (left) == AOP_LIT)
@@ -5801,11 +5868,11 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 	 && AOP_TYPE(right)==AOP_LIT && AOP_TYPE(left)!=AOP_SOF)
 	{
 	  bool restore_a=false;
-	  reg_info *reg;
+	  reg_info *reg = NULL;
 
 	  if(AOP_TYPE(left)==AOP_REG)
 	    {
-	      reg=m6502_regWithIdx(AOP(left)->aopu.aop_reg[0]->rIdx);
+	      reg=AOP(left)->aopu.aop_reg[0];
 	    }
 	  else
 	    {
@@ -5826,12 +5893,9 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 	{
           for(offset=0; offset<size; offset++)
 	    {
-	      if (AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == X_IDX 
-		  && isAddrSafe(right, m6502_reg_x))
-		accopWithAop ("cpx", AOP (right), offset);
-	      else if (AOP_TYPE (left) == AOP_REG && AOP (left)->aopu.aop_reg[offset]->rIdx == Y_IDX
-		       && isAddrSafe(right, m6502_reg_y))
-		accopWithAop ("cpy", AOP (right), offset);
+	      if (AOP_TYPE (left) == AOP_REG 
+		  && (AOP (left)->aopu.aop_reg[offset]==m6502_reg_a || AOP_TYPE(right)!=AOP_SOF) )
+		accopWithAop (m6502_cmp[AOP (left)->aopu.aop_reg[offset]->rIdx], AOP (right), offset);
 	      else 
 		{
                   emitComment (TRACEGEN|VVDBG, "    %s - not a reg", __func__);
@@ -5857,20 +5921,17 @@ genCmpEQorNE (iCode * ic, iCode * ifx)
 		  else
 		    {
 		      loadRegFromAop (m6502_reg_a, AOP (left), offset);
-		      accopWithAop ("ucp", AOP (right), offset);
+		      accopWithAop ("cmp", AOP (right), offset);
 		    }
 		  loadRegTempNoFlags (m6502_reg_a, needloada);
 		  needloada = false;
 		}
 	      if (offset<size-1)
 		{
-		  symbol *tmp_label = safeNewiTempLabel (NULL);;
 		  if (!tlbl_NE)
 		    tlbl_NE = safeNewiTempLabel (NULL);
 
-		  emitBranch ("beq", tmp_label);
-		  emitBranch ("jmp", tlbl_NE);
-		  safeEmitLabel (tmp_label);
+		  emitBranch ("bne", tlbl_NE);
 		}
 	    }
 	}
@@ -6102,7 +6163,8 @@ static const char * expand_symbols (iCode * ic, const char *inlin)
 /**************************************************************************
  * genInline - write the inline code out
  *************************************************************************/
-static void m6502_genInline (iCode * ic)
+static void
+m6502_genInline (iCode * ic)
 {
   char *buf, *bp, *begin;
   const char *expanded;
@@ -6163,7 +6225,8 @@ static void m6502_genInline (iCode * ic)
 /**************************************************************************
  * genGetByte - generates code to get a single byte
  *************************************************************************/
-static void genGetByte (const iCode *ic)
+static void
+genGetByte (const iCode *ic)
 {
   operand *left   = IC_LEFT (ic);
   operand *right  = IC_RIGHT (ic);
@@ -6187,7 +6250,8 @@ static void genGetByte (const iCode *ic)
 /**************************************************************************
  * genGetWord - generates code to get a 16-bit word
  *************************************************************************/
-static void genGetWord (const iCode *ic)
+static void
+genGetWord (const iCode *ic)
 {
   operand *left   = IC_LEFT (ic);
   operand *right  = IC_RIGHT (ic);
@@ -6212,7 +6276,8 @@ static void genGetWord (const iCode *ic)
 /**************************************************************************
  * genRRC - rotate right with carry
  *************************************************************************/
-static void genRRC (iCode * ic)
+static void
+genRRC (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
   operand *result = IC_RESULT (ic);
@@ -6301,7 +6366,8 @@ static void genRRC (iCode * ic)
 /**************************************************************************
  * genRLC - generate code for rotate left with carry
  *************************************************************************/
-static void genRLC (iCode * ic)
+static void
+genRLC (iCode * ic)
 {
   operand *left   = IC_LEFT (ic);
   operand *result = IC_RESULT (ic);
@@ -6712,7 +6778,7 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
   needpulla = storeRegTempIfSurv (m6502_reg_a);
 
   // TODO: enable restoring from DPTR
-  if (!IS_AOP_YX (AOP (left)))
+  if (!IS_AOP_XY (AOP (left)))
     {
       needpullx = storeRegTempIfSurv (m6502_reg_x);
       needpully = storeRegTempIfSurv (m6502_reg_y);
@@ -6757,7 +6823,7 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
 	  symbol *tlbl = safeNewiTempLabel (NULL);
 
 	  bitAConst(1 << (blen - 1));
-	  emit6502op ("beq", "%05d$", safeLabelNum (tlbl));
+          emitBranch ("beq", tlbl);
 	  emit6502op ("ora", IMMDFMT, (unsigned char) (0xff << blen));
 	  safeEmitLabel (tlbl);
 	}
@@ -6790,7 +6856,7 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
 	  symbol *tlbl = safeNewiTempLabel (NULL);
 	  // FIXME: works but very ugly
 	  bitAConst(1 << (rlen - 1));
-	  emit6502op ("beq", "%05d$", safeLabelNum (tlbl));
+          emitBranch ("beq", tlbl);
 	  emit6502op ("ora", IMMDFMT, (unsigned char) (0xff << rlen));
 	  safeEmitLabel (tlbl);
 	}
@@ -6813,7 +6879,7 @@ static void genUnpackBits (operand * result, operand * left, operand * right, iC
       else
 	{
 	  /* signed bitfield: sign extension with 0x00 or 0xff */
-	  signExtendA();
+	  m6502_signExtendReg(m6502_reg_a);
 	  while (rsize--)
 	    storeRegToAop (m6502_reg_a, AOP (result), offset++);
 	}
@@ -6924,7 +6990,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 	      /* signed bitfield */
 	      symbol *tlbl = safeNewiTempLabel (NULL);
 	      bitAConst(1 << (blen - 1));
-	      emit6502op ("beq", "%05d$", safeLabelNum (tlbl));
+              emitBranch ("beq", tlbl);
 	      emit6502op ("ora", IMMDFMT, (unsigned char) (0xff << blen));
 	      safeEmitLabel (tlbl);
 	    }
@@ -6979,7 +7045,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 	  symbol *tlbl = safeNewiTempLabel (NULL);
 
 	  bitAConst (1 << (rlen - 1));
-	  emit6502op ("beq", "%05d$", safeLabelNum (tlbl));
+          emitBranch ("beq", tlbl);
 	  emit6502op ("ora", IMMDFMT, (unsigned char) (0xff << rlen));
 	  safeEmitLabel (tlbl);
 	}
@@ -7007,7 +7073,7 @@ static void genUnpackBitsImmed (operand * left, operand *right, operand * result
 	    }
 
 	  /* signed bitfield: sign extension with 0x00 or 0xff */
-	  signExtendA();
+	  m6502_signExtendReg(m6502_reg_a);
 	  while (rsize--)
 	    storeRegToAop (m6502_reg_a, AOP (result), offset++);
 	}
@@ -7053,8 +7119,8 @@ static void genDataPointerGet (operand * left, operand * right, operand * result
   if (ifx)
     needpulla = storeRegTempIfSurv (m6502_reg_a);
 
-  if (IS_AOP_YX (AOP (result)))
-    loadRegFromAop (m6502_reg_yx, derefaop, 0);
+  if (IS_AOP_XY (AOP (result)))
+    loadRegFromAop (m6502_reg_xy, derefaop, 0);
   else while (size--)
 	 {
 	   if (!ifx)
@@ -7217,10 +7283,10 @@ static void genPointerGet (iCode * ic, iCode * ifx)
       else
         {
 	  // otherwise use [aa],y
-	  if (IS_AOP_XA(AOP(result)))
+	  if (IS_AOP_XA(AOP(result)) || IS_AOP_XY(AOP(result)))
 	    {
 	      // reverse order so A is last
-	      emitComment (TRACEGEN|VVDBG, "    %s: dest XA", __func__);
+	      emitComment (TRACEGEN|VVDBG, "    %s: dest XA/XY", __func__);
 	      for (int i=size-1; i>=0; i--)
 		{
 		  loadRegFromConst(m6502_reg_y, litOffset + i);
@@ -7365,6 +7431,12 @@ static void genPointerGet (iCode * ic, iCode * ifx)
 		emit6502op("ldx", "(%s+0x%04x+%d),%c",
 			   rematOffset, litOffset+hi_offset, 1, idx_reg );
                  
+              }              
+            if(IS_AOP_XY(AOP(result)))
+              {
+		emit6502op("lda", "(%s+0x%04x+%d),%c",
+			   rematOffset, litOffset+hi_offset, 1, idx_reg );
+                transferRegReg(m6502_reg_a, m6502_reg_x, true);  
               }
 	  }
 
@@ -7411,7 +7483,7 @@ static void genPointerGet (iCode * ic, iCode * ifx)
 
   emitComment (TRACEGEN|VVDBG, "        %s: generic path", __func__);
 
-  if (IS_AOP_XA (AOP (result)))
+  if (IS_AOP_XA (AOP (result)) || IS_AOP_XY (AOP (result)))
     {
       loadRegFromConst(m6502_reg_y, yoff + 1);
       if(use_dptr)
@@ -7425,6 +7497,9 @@ static void genPointerGet (iCode * ic, iCode * ifx)
         emit6502op ("lda", INDFMT_IY, "DPTR");
       else
         emit6502op("lda", INDFMT_IY, ptr_aop->aopu.aop_dir);
+
+      if(IS_AOP_XY (AOP (result)))
+        transferRegReg(m6502_reg_a, m6502_reg_y, true);
     }
   else
     {
@@ -7876,7 +7951,8 @@ genPointerSet (iCode * ic)
     
       emitComment (TRACEGEN|VVDBG,"   %s - ptr already in zp ", __func__);
     
-      if (IS_AOP_YX(AOP(right)))
+#if 0
+      if (IS_AOP_XY(AOP(right)))
 	{
 	  // reverse order so Y is first
 	  for (int i=size-1; i>=0; i--)
@@ -7887,6 +7963,7 @@ genPointerSet (iCode * ic)
 	    }
 	}
       else
+#endif
 	{
 	  // forward order
 	  for (int i=0; i<size; i++)
@@ -8026,6 +8103,10 @@ genPointerSet (iCode * ic)
           emitComment (TRACEGEN|VVDBG,"    %s : skip saving A2", __func__ );
         }
       else if(IS_AOP_WITH_A(AOP(right)) && (AOP_TYPE(result)==AOP_SOF))
+        needloada = storeRegTempIfUsed (m6502_reg_a);
+      else if(IS_AOP_WITH_A(AOP(right)) && !m6502_reg_x->isDead && !m6502_reg_y->isDead)
+        needloada = storeRegTempIfUsed (m6502_reg_a);
+      else if(IS_AOP_WITH_A(AOP(right)) && IS_AOP_XY(AOP(result)))
         needloada = storeRegTempIfUsed (m6502_reg_a);
       else
         needloada = storeRegTempIfSurv (m6502_reg_a);
@@ -8474,7 +8555,7 @@ static void genCast (iCode * ic)
 	{
 	  save_a = result->aop->aopu.aop_reg[0] == m6502_reg_a || !m6502_reg_a->isDead;
 	  if (save_a)
-	    m6502_pushReg(m6502_reg_a, false);
+	    fastSaveA();
 	  loadRegFromAop (m6502_reg_a, result->aop, result->aop->size - 1);
 	}
       emit6502op ("and", IMMDFMT, topbytemask);
@@ -8525,14 +8606,20 @@ static void genCast (iCode * ic)
       goto release;
     }
   
-  if (IS_AOP_XA (AOP (result) ) && AOP_SIZE (right) == 1 )
+  if(IS_AOP_XY(AOP(right)))
+    {
+      storeRegToFullAop (m6502_reg_xy, AOP (result), signExtend);
+      goto release;
+    }
+
+  if (IS_AOP_XA (AOP (result)) || IS_AOP_XY (AOP (result)) )
     {
 
       genCopy (result, right);
       if (signExtend)
         {
           symbol *tlbl = safeNewiTempLabel (NULL);
-	  m6502_emitCmp(m6502_reg_a, 0);
+	  m6502_emitCmp(result->aop->aopu.aop_reg[0], 0);
           emitBranch ("bpl", tlbl);
           storeConstToAop (0xff, AOP (result), 1);
           safeEmitLabel (tlbl);
@@ -8543,9 +8630,17 @@ static void genCast (iCode * ic)
  
   wassert (AOP (result)->type != AOP_REG);
   
-  save_a = !m6502_reg_a->isDead && signExtend;
-  if (save_a)
-    m6502_pushReg(m6502_reg_a, true);
+  reg_info *reg = NULL;
+
+  if(!IS_AOP_A(AOP(right)))
+    reg=getFreeByteReg();
+
+  if(!reg 
+     && (signExtend|| AOP_TYPE(right)==AOP_SOF || AOP_TYPE(result)==AOP_SOF))
+    {
+      save_a = fastSaveAIfSurv();
+      reg=m6502_reg_a;
+    }
   
   offset = 0;
   size = AOP_SIZE (right);
@@ -8554,8 +8649,8 @@ static void genCast (iCode * ic)
     {
       if (size == 1 && signExtend)
 	{
-	  loadRegFromAop (m6502_reg_a, AOP (right), offset);
-	  storeRegToAop (m6502_reg_a, AOP (result), offset);
+	  loadRegFromAop (reg, AOP (right), offset);
+	  storeRegToAop (reg, AOP (result), offset);
 	  offset++;
 	  size--;
 	}
@@ -8575,18 +8670,18 @@ static void genCast (iCode * ic)
     }
   else if (size)
     {
-      signExtendA();
+      m6502_signExtendReg(reg);
       while (size--)
 	{
 	  if (!size && masktopbyte)
 	    emit6502op ("and", IMMDFMT, topbytemask);
-	  storeRegToAop (m6502_reg_a, AOP (result), offset++);
+
+	  storeRegToAop (reg, AOP (result), offset++);
 	}
     }
 
  release:
-  if (save_a)
-    m6502_pullReg(m6502_reg_a);
+  fastRestoreOrFreeA(save_a);
 
   freeAsmop (right, NULL);
   freeAsmop (result, NULL);
@@ -9157,8 +9252,8 @@ genm6502Code (iCode *lic)
 	emitComment (REGOPS|VVDBG, "  forgot to free x");
       if (!m6502_reg_y->isFree)
 	emitComment (REGOPS|VVDBG, "  forgot to free y");
-      if (!m6502_reg_yx->isFree)
-	emitComment (REGOPS|VVDBG, "  forgot to free yx");
+      if (!m6502_reg_xy->isFree)
+	emitComment (REGOPS|VVDBG, "  forgot to free xy");
       if (!m6502_reg_xa->isFree)
 	emitComment (REGOPS|VVDBG, "  forgot to free xa");
 #endif

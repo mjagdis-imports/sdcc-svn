@@ -8,7 +8,7 @@
   Copyright (C) 2003, Erik Petrich
   Hacked for the MOS6502:
   Copyright (C) 2020, Steven Hugg  hugg@fasterlight.com
-  Copyright (C) 2021-2025, Gabriele Gorla
+  Copyright (C) 2021-2026, Gabriele Gorla
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -172,6 +172,28 @@ XAccRsh (int shCount, bool sign)
 
   shCount &= 0x000f;            // shCount : 0..15
 
+  if(m6502_reg_x->isLitConst)
+    {
+      unsigned long v = (m6502_reg_x->litConst<<8);
+
+      if(sign && (v&0x8000))
+        v|=0xffff0000;
+
+      v>>=shCount;
+
+      if(shCount<8)
+        {
+          AccRsh (shCount, false);
+          if(v&0xff)
+            emit6502op ("ora", IMMDFMT, v&0xff);
+        }
+      else
+        loadRegFromConst(m6502_reg_a, v&0xff);
+
+      loadRegFromConst(m6502_reg_x, (v>>8)&0xff);
+      return;
+    }
+    
   if (sign)
     {
       XAccSRsh (shCount);
@@ -406,7 +428,7 @@ shiftRLong1 (operand * left, operand * result, int shift, int sign)
 	storeRegTemp(m6502_reg_a, true);
       if(sign)
 	{
-	  //	  signExtendA();
+	  //	  m6502_signExtendReg(m6502_reg_a);
 	  //  emit6502op ("asl", "a");
 	  loadRegFromConst (m6502_reg_a, 0);
 	  emit6502op ("adc", "#0xff");
@@ -459,7 +481,7 @@ shiftRLong1 (operand * left, operand * result, int shift, int sign)
 
   if(sign)
     {
-      signExtendA();
+      m6502_signExtendReg(m6502_reg_a);
       storeRegToAop (m6502_reg_a, AOP (result), 1);
       storeRegToAop (m6502_reg_a, AOP (result), 2);
       storeRegToAop (m6502_reg_a, AOP (result), 3);
@@ -565,7 +587,7 @@ shiftRLong2 (operand * left, operand * result, int shift, int sign)
 
   if(sign)
     {
-      signExtendA();
+      m6502_signExtendReg(m6502_reg_a);
       storeRegToAop (m6502_reg_a, AOP (result), 2);
       storeRegToAop (m6502_reg_a, AOP (result), 3);
 
@@ -706,7 +728,7 @@ shiftRLong3 (operand * left, operand * result, int shift, int sign)
           if(sign)
 	    {
 	      loadRegFromAop (m6502_reg_a, AOP (left), 3);
-	      signExtendA();
+	      m6502_signExtendReg(m6502_reg_a);
 	      storeRegToAop (m6502_reg_a, AOP (result), 3);
 	      emit6502op("and", "#0xf0");
 	      rmwWithAop ("ora", AOP(result), 2);
@@ -766,7 +788,7 @@ shiftRLong3 (operand * left, operand * result, int shift, int sign)
   if(sign)
     {
       loadRegFromAop (m6502_reg_a, AOP (result), 2);
-      signExtendA();
+      m6502_signExtendReg(m6502_reg_a);
       storeRegToAop (m6502_reg_a, AOP (result), 3);
     }
   else
@@ -929,7 +951,7 @@ genRightShiftLiteral (operand * left, operand * result, int shCount, int sign)
         {
 	  bool needpulla = pushRegIfSurv (m6502_reg_a);
 	  loadRegFromAop (m6502_reg_a, AOP (left), size - 1);
-	  signExtendA();
+	  m6502_signExtendReg(m6502_reg_a);
 	  for(offset=0;offset<size; offset++)
 	    storeRegToAop (m6502_reg_a, AOP (result), offset);
 
@@ -953,7 +975,7 @@ genRightShiftLiteral (operand * left, operand * result, int shCount, int sign)
       int size = (AOP_SIZE (result) - offset);
       if (size > 0) {
 	if (sign) {
-	  signExtendA();
+	  m6502_signExtendReg(m6502_reg_a);
 	  while (size--)
 	    storeRegToAop (m6502_reg_a, AOP (result), offset++);
 	} else
@@ -998,7 +1020,7 @@ m6502_genRightShift (iCode * ic)
   operand *result = IC_RESULT (ic);
 
   int size, offset;
-  symbol *tlbl, *tlbl1;
+  symbol *loop_label, *skip_label;
   reg_info *countreg = NULL;
   bool restore_a = false;
   bool restore_y = false;
@@ -1037,8 +1059,8 @@ m6502_genRightShift (iCode * ic)
   /* shift count is unknown then we have to form
      a loop get the loop count in X : Note: we take
      only the lower order byte since shifting
-     more that 32 bits make no sense anyway, ( the
-     largest size of an object can be only 32 bits ) */
+     more that 64 bits make no sense anyway, ( the
+     largest size of an object can be only 64 bits ) */
 
   // TODO
 #if 0
@@ -1047,8 +1069,8 @@ m6502_genRightShift (iCode * ic)
 #endif
 
   size = AOP_SIZE (result);
-  tlbl = safeNewiTempLabel (NULL);
-  tlbl1 = safeNewiTempLabel (NULL);
+  loop_label = safeNewiTempLabel (NULL);
+  skip_label = safeNewiTempLabel (NULL);
 
   if (!m6502_reg_a->isDead && !IS_AOP_WITH_A (AOP (result)))
     {
@@ -1079,7 +1101,8 @@ m6502_genRightShift (iCode * ic)
   bool early_load_count = (AOP_TYPE(left)==AOP_SOF || AOP_TYPE(right)==AOP_SOF || IS_AOP_WITH_A(AOP(right)));         
   int a_loc = ( op_is_xa )? 0 : size-1;
 
-  emitComment (TRACEGEN, "  %s - enter", __func__);
+  emitComment (TRACEGEN, "  %s - enter countreg:%s",
+               __func__, countreg->name);
 
   if(size==1)
     {
@@ -1091,6 +1114,9 @@ m6502_genRightShift (iCode * ic)
         
     }
 
+  if(IS_AOP_XY(AOP(left)))
+    early_load_count = false;
+
   if(early_load_count)
     {
       emitComment (TRACEGEN, "  %s - early count", __func__);
@@ -1101,6 +1127,39 @@ m6502_genRightShift (iCode * ic)
     {
       // do nothing
       loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
+    }
+  else if(IS_AOP_XY (AOP(left)) && IS_AOP_A(AOP(right)))
+    {
+      emitComment (TRACEGEN, "  %s - op is XY", __func__);
+
+      transferAopAop (AOP (left), 1, AOP (result), 1);
+
+      storeRegTempAlways(m6502_reg_x, true);
+      dirtyRegTemp (getLastTempOfs());
+      //              m6502_dirtyReg(m6502_reg_x);
+      x_in_regtemp = true;
+      transferRegReg(m6502_reg_a, m6502_reg_x, true);
+      transferRegReg(m6502_reg_y, m6502_reg_a, true);
+      countreg = m6502_reg_x;
+      early_load_count = true;
+      
+    }
+  else if(IS_AOP_XY (AOP(result)))
+    {
+      emitComment (TRACEGEN, "  %s - result is XY", __func__);
+
+      transferAopAop (AOP (left), 1, AOP (result), 1);
+      storeRegTempAlways(m6502_reg_x, true);
+      dirtyRegTemp (getLastTempOfs());
+      loadRegFromAop (m6502_reg_a, AOP (left), 0);
+
+      //              m6502_dirtyReg(m6502_reg_x);
+      x_in_regtemp = true;
+      //              transferRegReg(m6502_reg_a, m6502_reg_x, true);
+      //              transferRegReg(m6502_reg_y, m6502_reg_a, true);
+      countreg = m6502_reg_y;
+      //        early_load_count = true;
+      
     }
   else if(op_is_xa)
     {
@@ -1171,11 +1230,11 @@ m6502_genRightShift (iCode * ic)
       symbol *looplbl = safeNewiTempLabel (NULL);
 
       storeRegToAop (m6502_reg_a, AOP(result) , a_loc);
-      m6502_dirtyReg(m6502_reg_x);
 
       m6502_emitCmp(countreg, 8);
       emitBranch ("bcc", skiplbl);
       safeEmitLabel (looplbl);
+      m6502_dirtyReg(m6502_reg_x);
 
       loadRegFromAop (m6502_reg_a, AOP (result), 1);
       storeRegToAop (m6502_reg_a, AOP(result) , 0);
@@ -1197,7 +1256,7 @@ m6502_genRightShift (iCode * ic)
 	}
 
       if(sign)
-        signExtendA();
+        m6502_signExtendReg(m6502_reg_a);
       else
         loadRegFromConst (m6502_reg_a, 0);
 
@@ -1218,13 +1277,13 @@ m6502_genRightShift (iCode * ic)
     }
 
   m6502_emitCmp(countreg, 0);
-  emitBranch ("beq", tlbl1);
+  emitBranch ("beq", skip_label);
 
   // FIXME: find a good solution for this
   //  if(IS_AOP_WITH_A (AOP (right)) && sameRegs (AOP (left), AOP (result)) )
   //    loadRegFromAop (m6502_reg_a, AOP (left), a_loc);
 
-  safeEmitLabel (tlbl); // loop label
+  safeEmitLabel (loop_label); // loop label
 
   // fixme size 1 should be with XA
   if(op_is_xa)
@@ -1261,27 +1320,20 @@ m6502_genRightShift (iCode * ic)
     }
 
   rmwWithReg("dec", countreg);
-  emit6502op("bne", "%05d$", safeLabelNum (tlbl));
+  emit6502op("bne", "%05d$", safeLabelNum (loop_label));
 
   if (x_in_regtemp)
     loadRegTemp(m6502_reg_x);
 
-  safeEmitLabel (tlbl1); // end label
+  safeEmitLabel (skip_label); // end label
 
   storeRegToAop (m6502_reg_a, AOP(result) , a_loc);
 
-  //  if(op_is_xa || size==1)
-  //    {
-  //      storeRegToAop (m6502_reg_a, AOP(result) , 0);
-  //      if(size==2)
   if(op_is_xa)
     {
       if(msb_in_x)
 	storeRegToAop (m6502_reg_x, AOP(result) , 1);
     }
-  //    }
-  //  else
-  //    storeRegToAop (m6502_reg_a, AOP(result) , size-1);
 
   // After loop, countreg is always 0
   m6502_dirtyReg(countreg);

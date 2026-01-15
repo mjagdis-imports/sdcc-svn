@@ -8,7 +8,7 @@
   Copyright (C) 2003, Erik Petrich
   Hacked for the MOS6502:
   Copyright (C) 2020, Steven Hugg  hugg@fasterlight.com
-  Copyright (C) 2021-2025, Gabriele Gorla
+  Copyright (C) 2021-2026, Gabriele Gorla
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -147,12 +147,16 @@ genMinusDec (iCode * ic)
       reg_info *reg = getFreeByteReg();
       if(reg)
         {
+          bool needpullx=false;
+          if(AOP(result)->type==AOP_SOF)
+            needpullx=storeRegTempIfSurv(m6502_reg_x);
           tlbl = safeNewiTempLabel (NULL);
           loadRegFromAop (reg, AOP (left), 0);
           emitBranch ("bne", tlbl);
           rmwWithAop ("dec", AOP (result), 1);
           safeEmitLabel (tlbl);
           rmwWithAop ("dec", AOP (result), 0);
+          loadOrFreeRegTemp(m6502_reg_x, needpullx);
           return true;
         }
     }
@@ -227,6 +231,40 @@ m6502_genMinus (iCode * ic)
       goto release;
     }
 
+  if ( IS_AOP_XA (AOP(right)) && !IS_AOP_XA(AOP(result)) &&
+       (AOP_TYPE(result) == AOP_SOF || AOP_TYPE(left) == AOP_SOF) )
+    {
+      bool restore_a = !m6502_reg_a->isDead;
+      bool restore_x = !m6502_reg_x->isDead;
+      int a_loc, x_loc;
+      storeRegTemp(m6502_reg_a, true);
+      a_loc=getLastTempOfs();
+      storeRegTemp(m6502_reg_x, true);
+      x_loc=getLastTempOfs();
+
+      m6502_emitSetCarry(1);
+      loadRegFromAop (m6502_reg_a, AOP(left), 0);
+      emitRegTempOp("sbc", a_loc);
+      storeRegToAop (m6502_reg_a, AOP (result), 0);
+
+      loadRegFromAop (m6502_reg_a, AOP(left), 1);
+      emitRegTempOp("sbc", x_loc);
+      if (maskedtopbyte)
+	emit6502op ("and", IMMDFMT, topbytemask);
+      storeRegToAop (m6502_reg_a, AOP (result), 1);
+
+      if(restore_x)
+        loadRegTemp(m6502_reg_x);
+      else
+        loadRegTemp(NULL);
+      if(restore_a)
+        loadRegTemp(m6502_reg_a);
+      else
+        loadRegTemp(NULL);
+
+      goto release;
+    }
+
   if ( IS_AOP_XA (AOP(left)) && !IS_AOP_XA(AOP(result)) &&
        (AOP_TYPE(result) == AOP_SOF || AOP_TYPE(right) == AOP_SOF) )
     {
@@ -238,6 +276,8 @@ m6502_genMinus (iCode * ic)
       storeRegToAop (m6502_reg_a, AOP (result), 0);
       loadRegTempAt(m6502_reg_a, getLastTempOfs() );
       accopWithAop ("sbc", AOP (right), 1);
+      if (maskedtopbyte)
+	emit6502op ("and", IMMDFMT, topbytemask);
       storeRegToAop (m6502_reg_a, AOP (result), 1);
 
       if(restore_x)
