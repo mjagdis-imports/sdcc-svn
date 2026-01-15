@@ -12,7 +12,7 @@
 # 4.5.0: 15246
 # Broken: 8984-9000, 9104 (bug #2280), 9106-9114 (whetstone build segfaults), 9379-9418 (SDCC build fails), 9424 (library build fails) 9477 (SDCC build fails), 9891-9946 (stdcbench build fails), 9958-10147 (Dhrystone z80 build fails) 10233-10270 (stdcbench build segfaults), 10185-10340 (stdcbench build segfaults) 10408 (stdcbench build segfaults) 10426-10462 (coremark build fails) 10682 (library build fails for mcs51) 11952 (library build fails). 14400 (build fails). 14463 (stm8 lib build fails) 14464 (coremark build fails for z80)
 # Build of large-stack-auto lib for mcs51 was enabled in 9521.
-REVISIONS_R4K = 15725 15768 15890 15891 15944 15945 15957
+REVISIONS_R4K = 15725 15768 15890 15891 15944 15945 15957 16016 16053
 REVISIONS_R3KA_WHETSTONE = 12891 12900 12969 13131 13200 13300 13495 13689 13699 13709 13748 13772 13800 13804 13813 13825 13845 13885 13900 14000 14184 14208 14211 14225 14235 14238 14246 14248 14253 14300 14346 14370 14398 14405 14443 14448 14453 14472 14510 14528 14648 14650 14710 14738 14817 14889 14955 14958 14996 15015 15022 15029 15032 15037 15060 15093 15104 15117 15118 15119 15172 15240 15246 15317 15418 15435 15451 15486 15550 15580 15669 15724 $(REVISIONS_R4K)
 REVISIONS_R3KA_STDCBENCH_POST = 12392 12415 12430 12450 12464 12488 12495 12508 12642 12673 12689 12692 12746 12784 12795 12827 12862 12875  $(REVISIONS_R3KA_WHETSTONE)
 # Bug #3216 resulted in wrong r3ka stdcbench scores for 12100-12243. For 12121-12300, Coremark fails for z80. For 14221-14224. Whetstone fails for mcs51.
@@ -32,7 +32,7 @@ Z80_TTY = /dev/ttyUSB0
 STM8_TTY = /dev/ttyUSB1
 MCS51_TTY = /dev/ttyUSB2
 R3KA_TTY = /dev/ttyUSB3
-R4K_TTY = /dev/ttyUSB5
+R4K_TTY = /dev/ttyUSB3
 
 COMPILERS = $(foreach revision, $(REVISIONS), sdcc-$(revision)/bin/sdcc)
 
@@ -124,7 +124,7 @@ BENCHMARKS_STDCBENCH_R4K_SCORES = $(patsubst %image.ihx, %score, $(filter $(BENC
 
 .PHONY: all clean
 
-# Do not include Coremark (historically non-free) or score graphs (require STM8AF / C8051 V2.1 C8051F120 / RCM3319 / RCM4110 boards) in all target.
+# Do not include Coremark (historically non-free) or score graphs (require STM8AF / C8051 V2.1 C8051F120 / RCM3319 / RCM4110 boards) in all targets.
 all: whetstone-stm8-size.svg whetstone-mcs51-size.svg whetstone-r3ka-size.svg whetstone-r4k-size.svg dhrystone-stm8-size.svg dhrystone-mcs51-size.svg dhrystone-r3ka-size.svg dhrystone-r4k-size.svg dhrystone-z80-size.svg stdcbench-stm8-size.svg stdcbench-mcs51-size.svg
 
 clean:
@@ -142,8 +142,15 @@ coremark-r3ka: coremark_v1.0.tgz coremark-1.0-r3ka.patch
 	rm -rf coremark_v1.0 coremark-r3ka
 	tar -xzf coremark_v1.0.tgz
 	mv coremark_v1.0 coremark-r3ka
-	cd coremark-r3ka && cp barebones/core_portme.? ./ && cat ../coremark-1.0-r3ka.patch | patch -p1
+	cd coremark-r4k && cp barebones/core_portme.? ./ && cat ../coremark-1.0-r3ka.patch | patch -p1
 	cp Makefile.coremark coremark-r3ka/Makefile
+
+coremark-r4k: coremark_v1.0.tgz coremark-1.0-r4k.patch
+	rm -rf coremark_v1.0 coremark-r4k
+	tar -xzf coremark_v1.0.tgz
+	mv coremark_v1.0 coremark-r4k
+	cd coremark-r4k && cp barebones/core_portme.? ./ && cat ../coremark-1.0-r4k.patch | patch -p1
+	cp Makefile.coremark coremark-r4k/Makefile
 
 coremark-z80: coremark_v1.0.tgz coremark-1.0-z80.patch
 	rm -rf coremark_v1.0 coremark-z80
@@ -299,6 +306,15 @@ coremark-r3ka-sizetable: $(BENCHMARKS_COREMARK_R3KA_SIZES)
 		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
 	done
 
+coremark-r4k-sizetable: $(BENCHMARKS_COREMARK_R4K_SIZES)
+	echo "#Revision size speed default" > $@
+	for r in $(REVISIONS_R4K); do \
+		SIZE_SIZE=`cat coremark-r4k-size-$$r/size`; \
+		SIZE_SPEED=`cat coremark-r4k-speed-$$r/size`; \
+		SIZE_DEFAULT=`cat coremark-r4k-default-$$r/size `; \
+		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
+	done
+
 coremark-z80-sizetable: $(BENCHMARKS_COREMARK_Z80_SIZES)
 	echo "#Revision size speed default" > $@
 	for r in $(REVISIONS); do \
@@ -434,6 +450,15 @@ coremark-r3ka-scoretable: $(BENCHMARKS_COREMARK_R3KA_SCORES)
 		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
 	done
 
+coremark-r4k-scoretable: $(BENCHMARKS_COREMARK_R4K_SCORES)
+	echo "#Revision size speed default" > $@
+	for r in $(REVISIONS_R4K); do \
+		SIZE_SIZE=`cat coremark-r4k-size-$$r/score`; \
+		SIZE_SPEED=`cat coremark-r4k-speed-$$r/score`; \
+		SIZE_DEFAULT=`cat coremark-r4k-default-$$r/score `; \
+		echo $$r $$SIZE_SIZE $$SIZE_SPEED $$SIZE_DEFAULT >> $@; \
+	done
+
 stdcbench-stm8-scoretable: $(BENCHMARKS_STDCBENCH_STM8_SCORES)
 	echo "#Revision size speed default" > $@
 	for r in $(REVISIONS); do \
@@ -515,6 +540,9 @@ $(BENCHMARKS_COREMARK_STM8_SCORES): %/score: %/image.ihx
 
 $(BENCHMARKS_COREMARK_R3KA_SCORES): %/score: %/image.ihx
 	echo "scale=3;" 1966080 / `./execute_benchmark-r3ka $(R3KA_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
+
+$(BENCHMARKS_COREMARK_R4K_SCORES): %/score: %/image.ihx
+	echo "scale=3;" 1966080 / `./execute_benchmark-r4k $(R4K_TTY) $< | sed -e "s/Total ticks : //"` | bc > $@
 
 $(BENCHMARKS_STDCBENCH_STM8_SCORES): %/score: %/image.ihx
 	./execute_benchmark-stm8 $(STM8_TTY) $< | sed -e "s/stdcbench final score: //" > $@
