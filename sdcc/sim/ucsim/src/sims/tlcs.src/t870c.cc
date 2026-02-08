@@ -35,6 +35,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "t870ccl.h"
 
 
+// bit nr to bit mask converter
+u8_t bit_mask[8]= { 1, 2, 4, 8, 16, 32, 64, 128 };
+
+
 cl_t870c_psw_op::cl_t870c_psw_op(class cl_memory_cell *acell, class cl_t870c *auc):
   cl_memory_operator(acell)
 {
@@ -95,15 +99,6 @@ cl_t870c::cl_t870c(class cl_sim *asim):
 
   uc_itab[0x24f]= &cl_itab::invalid_instruction;
   uc_itab[0x26f]= &cl_itab::invalid_instruction;
-
-  uc_itab[0x2d0]= &cl_itab::invalid_instruction;
-  uc_itab[0x2d1]= &cl_itab::invalid_instruction;
-  uc_itab[0x2d2]= &cl_itab::invalid_instruction;
-  uc_itab[0x2d3]= &cl_itab::invalid_instruction;
-  uc_itab[0x2d4]= &cl_itab::invalid_instruction;
-  uc_itab[0x2d5]= &cl_itab::invalid_instruction;
-  uc_itab[0x2d6]= &cl_itab::invalid_instruction;
-  uc_itab[0x2d7]= &cl_itab::invalid_instruction;
 
   uc_itab[0x2f1]= &cl_itab::invalid_instruction;
   uc_itab[0x2f4]= &cl_itab::invalid_instruction;
@@ -271,20 +266,20 @@ cl_t870c::dis_tbl(void)
   return disass_t870c;
 }
 
-static chars r_names[8]= { "A", "W", "C", "B", "E", "D", "L", "H" };
-static chars rr_names[8]= {
+static const char *r_names[8]= { "A", "W", "C", "B", "E", "D", "L", "H" };
+static const char *rr_names[8]= {
   "WA", "BC", "DE", "HL", "IX", "IY", "SP", "HL"
 };
-static chars dstF[8]= {
+static const char *dstF[8]= {
   "x", "vw", "DE", "HL", "IX", "IY", "SP-", "HL+C"
 };
-static chars dst5[4]= {
+static const char *dst5[4]= {
   "IX", "IY", "SP", "HL"
 };
-static chars srcE[8]= {
+static const char *srcE[8]= {
   "x", "vw", "DE", "HL", "IX", "IY", "+SP", "HL+C"
 };
-static chars srcD[4]= {
+static const char *srcD[4]= {
   "IX", "IY", "SP", "HL"
 };
 
@@ -294,7 +289,7 @@ cl_t870c::disassc(t_addr addr, chars *comment)
   chars work= chars(), temp= chars(), fmt;
   const char *b;
   t_mem code, code32, data= 0;
-  t_mem code0, code1, code2, code3, code4;
+  u8_t code0, code1, code2, code3, code4;
   int i;
   bool first;
   u16_t u16;
@@ -335,13 +330,21 @@ cl_t870c::disassc(t_addr addr, chars *comment)
 	  if (!b[i]) i--;
 	  if (fmt.empty()) work.append("'");
 	  else if (fmt=="r_0.0")  work.append(r_names[code0&7]);
+	  else if (fmt=="r_0.3")  work.append(r_names[(code0&0X38)>>3]);
 	  else if (fmt=="r_1.0")  work.append(r_names[code1&7]);
+	  else if (fmt=="r_1.3")  work.append(r_names[(code1&0x38)>>3]);
 	  else if (fmt=="r_2.0")  work.append(r_names[code2&7]);
+	  else if (fmt=="r_2.3")  work.append(r_names[(code2&0x38)>>3]);
 	  else if (fmt=="r_3.0")  work.append(r_names[code3&7]);
+	  else if (fmt=="r_3.3")  work.append(r_names[(code3&0x38)>>3]);
 	  else if (fmt=="rr_0.0") work.append(rr_names[code0&7]);
+	  else if (fmt=="rr_0.3") work.append(rr_names[(code0&0x38)>>3]);
 	  else if (fmt=="rr_1.0") work.append(rr_names[code1&7]);
+	  else if (fmt=="rr_1.3") work.append(rr_names[(code1&0x38)>>3]);
 	  else if (fmt=="rr_2.0") work.append(rr_names[code2&7]);
+	  else if (fmt=="rr_2.3") work.append(rr_names[(code2&0x38)>>3]);
 	  else if (fmt=="rr_3.0") work.append(rr_names[code3&7]);
+	  else if (fmt=="rr_3.3") work.append(rr_names[(code3&0x38)>>3]);
 	  else if (fmt=="n_1")    work.appendf("0x%02x", code1);
 	  else if (fmt=="n_2")    work.appendf("0x%02x", code2);
 	  else if (fmt=="n_3")    work.appendf("0x%02x", code3);
@@ -349,6 +352,10 @@ cl_t870c::disassc(t_addr addr, chars *comment)
 	  else if (fmt=="mn_1")   work.appendf("0x%04x", code1+code2*256);
 	  else if (fmt=="mn_2")   work.appendf("0x%04x", code2+code3*256);
 	  else if (fmt=="mn_3")   work.appendf("0x%04x", code3+code4*256);
+	  else if (fmt=="b_0.0")  work.appendf("%d", code0&7);
+	  else if (fmt=="b_1.0")  work.appendf("%d", code1&7);
+	  else if (fmt=="b_2.0")  work.appendf("%d", code2&7);
+	  else if (fmt=="b_3.0")  work.appendf("%d", code3&7);
 	  else if (fmt=="vw")
 	    {
 	      work.appendf("0x%04x", u16= code1+code2*256);
@@ -362,23 +369,27 @@ cl_t870c::disassc(t_addr addr, chars *comment)
 	      if (comment)
 		{
 		  u16_t a= aof_dstF(code32);
-		  comment->appendf("; %02x %02x",
-				   asd->read(a), asd->read(a+1));
+		  comment->appendf("; [%04] %02x %02x",
+				   a, asd->read(a), asd->read(a+1));
 		}
 	    }
 	  else if (fmt=="dst5")
 	    {
 	      i8_t d= code1;
-	      work.appendf("%s", dst5[(code0&7)/2]);
-	      if (code1<0)
-		work.appendf("-%02x", -d);
+	      work.appendf("%s", dst5[code0&3]);
+	      if (d<0)
+		{
+		  d= -d;
+		  code1= d;
+		  work.appendf("-%02x", code1);
+		}
 	      else
-		work.appendf("+%02x", d);
+		work.appendf("+%02x", code1);
 	      if (comment)
 		{
 		  u16_t a= aof_dst5(code32);
-		  comment->appendf("; %02x %02x",
-				   asd->read(a), asd->read(a+1));
+		  comment->appendf("; [%04x] %02x %02x",
+				   a, asd->read(a), asd->read(a+1));
 		}
 	    }
 	  else if (fmt=="srcE")
@@ -387,24 +398,79 @@ cl_t870c::disassc(t_addr addr, chars *comment)
 	      if (comment)
 		{
 		  u16_t a= aof_srcE(code32);
-		  comment->appendf("; %02x %02x",
-				   asd->read(a), asd->read(a+1));
+		  comment->appendf("; [%04x] %02x %02x",
+				   a, asd->read(a), asd->read(a+1));
 		}
 	    }
 	  else if (fmt=="srcD")
 	    {
 	      i8_t d= code1;
-	      work.appendf("%s", srcD[(code0&7)/2]);
-	      if (code1<0)
-		work.appendf("-%02x", -d);
+	      work.appendf("%s", srcD[code0&3]);
+	      if (d<0)
+		{
+		  d= -d;
+		  code1= d;
+		  work.appendf("-0x%02x", code1);
+		}
 	      else
-		work.appendf("+%02x", d);
+		work.appendf("+0x%02x", code1);
 	      if (comment)
 		{
 		  u16_t a= aof_srcD(code32);
-		  comment->appendf("; %02x %02x",
-				   asd->read(a), asd->read(a+1));
+		  comment->appendf("; [%04x] %02x %02x",
+				   a, asd->read(a), asd->read(a+1));
 		}
+	    }
+	  else if (fmt=="src4")
+	    {
+	      work.appendf("PC+A");
+	      if (comment)
+		{
+		  u16_t a= (i8_t)rA + addr + 2;
+		  comment->appendf("; [%04x] %02x %02x",
+				   a, asd->read(a), asd->read(a+1));
+		}
+	    }
+	  else if (fmt=="ra5")
+	    {
+	      i16_t d= code0 & 0x1f;
+	      if (d & 0x10) d|= 0xffe0;
+	      u16_t a= ((addr+1) + d + 1);
+	      if (d<0)
+		{
+		  d= -d;
+		  code1= d;
+		  work.appendf("-0x%02x", code1);
+		}
+	      else
+		work.appendf("+0x%02x", d);
+	      if (comment)
+		{
+		  comment->appendf("; %04x", a);
+		}
+	    }
+	  else if (fmt=="ra8")
+	    {
+	      i16_t d= code1;
+	      if (d & 0x80) d|= 0xff00;
+	      u16_t a= ((addr+2) + d + 0);
+	      if (d<0)
+		{
+		  d= -d;
+		  code1= d;
+		  work.appendf("-0x%02x", code1);
+		}
+	      else
+		work.appendf("+0x%02x", d);
+	      if (comment)
+		{
+		  comment->appendf("; %04x", a);
+		}
+	    }
+	  else if (fmt=="a16_1")
+	    {
+	      u16_t a= code1 + code2*256;
+	      work.appendf("0x%04x", a);
 	    }
 	  continue;
 	}
@@ -418,9 +484,12 @@ cl_t870c::disassc(t_addr addr, chars *comment)
 		u16_t x= rom->get(addr+1);
 		work.appendf("0x%02x", x);
 		if (comment)
-		  comment->appendf("; %02x %02x",
-				   asd->read(x), asd->read(x+1));
+		  comment->appendf("; [%04x] %02x %02x",
+				   x, asd->read(x), asd->read(x+1));
 	      }
+	      break;
+	    case 'b':
+	      work.appendf("%d", code0&7);
 	      break;
 	    default:
 	      temp= "?";
@@ -529,13 +598,37 @@ cl_t870c::exec_inst(void)
  * Two byte opcode dispachers for reg/memory prefixes
  */
 
+static const u8_t R_valids[256]=
+  {
+    /*0*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*1*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*2*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*3*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*4*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 0,
+    /*5*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*6*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*7*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 0,
+    /*8*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*9*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*a*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*b*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*c*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*d*/ 8, 8, 8, 8,   8, 8, 8, 8,   1, 1, 1, 1,   8, 8, 8, 0,
+    /*e*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*f*/ 1, 1, 1, 1,   1, 1, 1, 1,   0, 0, 1, 8,   0, 1, 1, 1
+  };
+
 int
 cl_t870c::exec1(void)
 {
   int res= resGO;
+  int valid;
   // prefix info fetched already
   t_mem code2= fetch();
-  int page_code= code2|0x100;
+  int page_code= code2|(page=0x100);
+  valid= R_valids[code2];
+  if (!valid || ((code2 != 0xe8) && (valid == 8)))
+    return resINV;
   if (uc_itab[page_code] == NULL)
     {
       PC= instPC;
@@ -548,13 +641,35 @@ cl_t870c::exec1(void)
   return res;
 }
 
+static const u8_t src_valids[256]=
+  {
+    /*0*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*1*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*2*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*3*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*4*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 0,
+    /*5*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*6*/ 1, 1, 1, 1,   1, 1, 1, 1,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*7*/ 1, 1, 1, 1,   1, 1, 1, 1,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*8*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*9*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*a*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*b*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*c*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*d*/ 0, 0, 0, 0,   0, 0, 0, 0,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*e*/ 1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*f*/ 1, 0, 1, 1,   0, 0, 1, 1,   1, 1, 1, 1,   1, 1, 1, 0
+  };
+
 int
 cl_t870c::execS(void)
 {
   int res= resGO;
   // prefix info fetched already
   t_mem code2= fetch();
-  int page_code= code2|0x200;
+  if (!src_valids[code2])
+    return resINV;
+  int page_code= code2|(page=0x200);
   is_dst= false;
   if (uc_itab[page_code] == NULL)
     {
@@ -568,13 +683,36 @@ cl_t870c::execS(void)
   return res;
 }
 
+
+static const u8_t dst_valids[256]=
+  {
+    /*0*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*1*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*2*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*3*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*4*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*5*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*6*/ 0, 0, 0, 0,   0, 0, 0, 0,   1, 1, 1, 1,   1, 1, 1, 0,
+    /*7*/ 0, 0, 0, 0,   0, 0, 0, 0,   1, 1, 1, 1,   1, 1, 1, 1,
+    /*8*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*9*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*a*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*b*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*c*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*d*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*e*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,   0, 0, 0, 0,
+    /*f*/ 0, 0, 0, 0,   0, 0, 0, 0,   0, 1, 0, 0,   0, 0, 0, 0
+  };
+
 int
 cl_t870c::execD(void)
 {
   int res= resGO;
   // prefix info fetched already
   t_mem code2= fetch();
-  int page_code= code2|0x200;
+  if (!dst_valids[code2])
+    return resINV;
+  int page_code= code2|(page=0x200);
   is_dst= true;
   if (uc_itab[page_code] == NULL)
     {
@@ -599,8 +737,7 @@ cl_t870c::sd_x(void)
 C8 *
 cl_t870c::sd_vw(void)
 {
-  sda= fetch();
-  sda+= (fetch()*256);
+  sda= fetch16();
   return sdc= (C8 *)asd->get_cell(sda);
 }
 
@@ -669,8 +806,7 @@ cl_t870c::sd_spM(void)
 u16_t
 cl_t870c::mn(void)
 {
-  u16_t mn= fetch();
-  mn+= fetch()*256;
+  u16_t mn= fetch16();
   return mn;
 }
 
@@ -704,8 +840,7 @@ int
 cl_t870c::ld16(C16 *reg, u16_t addr)
 {
   u16_t n;
-  n= asd->read(addr) + asd->read(addr+1)*256;
-  RD2;
+  n= rd16(addr);
   reg->W(n);
   cF.W(rF|MJF);
   return resGO;
@@ -729,27 +864,11 @@ cl_t870c::st8(MCELL *dst, u8_t n)
 }
 
 int
-cl_t870c::dst8(MCELL *dst, u8_t n)
-{
-  if (!is_dst) return resINV;
-  return st8(dst, n);
-}
-
-int
 cl_t870c::st16(t_addr addr, u16_t n)
 {
-  asd->write(addr, n);
-  asd->write(addr+1, n>>8);
-  WR2;
+  wr16(addr, n);
   cF.W(rF|MJF);
   return resGO;
-}
-
-int
-cl_t870c::dst16(t_addr addr, u16_t n)
-{
-  if (!is_dst) return resINV;
-  return st16(addr, n);
 }
 
 int
@@ -783,6 +902,580 @@ cl_t870c::xch16_rr(C16 *a, C16 *b)
   u16_t t= b->get();
   b->W(a->get());
   a->W(t);
+  cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::xch16_rm(C16 *a, u16_t addr)
+{
+  u16_t t= rd16(addr);
+  wr16(addr, a->get());
+  a->W(t);  
+  cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::ld1r(C8 *src, u8_t bitnr)
+{
+  rF&= ~(MCF|MJF);
+  if (src->get() & bit_mask[bitnr])
+    cF.W(rF|MCF);
+  else
+    cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::ld1m(C8 *src, u8_t bitnr)
+{
+  rF&= ~(MCF|MJF);
+  if (src->read() & bit_mask[bitnr])
+    cF.W(rF|MCF);
+  else
+    cF.W(rF|MJF);
+  RD;
+  return resGO;
+}
+
+int
+cl_t870c::st1r(C8 *dst, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= dst->get();
+  if (rF&MCF)
+    v|= m;
+  else
+    v&= ~m;
+  dst->W(v);
+  cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::st1m(C8 *dst, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= dst->read();
+  RD;
+  if (rF&MCF)
+    v|= m;
+  else
+    v&= ~m;
+  dst->W(v);
+  WR;
+  cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::setr(C8 *reg, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= reg->get();
+  if (v&m)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= (MJF|MZF);
+  reg->W(v | m);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::setm(C8 *reg, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= reg->read();
+  RD;
+  if (v&m)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= (MJF|MZF);
+  reg->W(v | m);
+  WR;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::clrr(C8 *reg, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= reg->get();
+  if (v&m)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= (MJF|MZF);
+  reg->W(v & ~m);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::clrm(C8 *reg, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= reg->read();
+  RD;
+  if (v&m)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= (MJF|MZF);
+  reg->W(v & ~m);
+  WR;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::cplr(C8 *src, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= src->get();
+  if (v & m)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  src->W(v ^ m);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::cplm(C8 *src, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v= src->read();
+  RD;
+  if (v & m)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  src->W(v ^ m);
+  RD;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::xor1r(C8 *src, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v1= src->get() & m;
+  u8_t v2= (rF & MCF)?m:0;
+  if (v1 ^ v2)
+    {
+      rF|= MCF;
+      rF&= ~MJF;
+    }
+  else
+    {
+      rF&= ~MCF;
+      rF|= MJF;
+    }
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::xor1m(C8 *src, u8_t bitnr)
+{
+  u8_t m= bit_mask[bitnr];
+  u8_t v1= src->read() & m;
+  u8_t v2= (rF & MCF)?m:0;
+  RD;
+  if (v1 & v2)
+    {
+      rF|= MCF;
+      rF&= ~MJF;
+    }
+  else
+    {
+      rF&= ~MCF;
+      rF|= MJF;
+    }
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::inc8r(C8 *reg)
+{
+  u8_t v= reg->get()+1;
+  if (v)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  reg->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::inc16r(C16 *reg)
+{
+  u16_t v= reg->get()+1;
+  if (v)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  reg->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::inc8m(C8 *src)
+{
+  u8_t v= src->read()+1;
+  RD;
+  if (v)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  src->W(v);
+  WR;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::inc16m(C16 *src)
+{
+  u16_t v= src->read()+1;
+  RD;
+  if (v)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  src->W(v);
+  WR;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::dec8r(C8 *reg)
+{
+  u8_t v= reg->get()-1;
+  if (v != 0xff)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  reg->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::dec16r(C16 *reg)
+{
+  u16_t v= reg->get()-1;
+  if (v != 0xffff)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  reg->W(v);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::dec8m(C8 *src)
+{
+  u8_t v= src->read()-1;
+  RD;
+  if (v != 0xff)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  src->W(v);
+  WR;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::dec16m(C16 *src)
+{
+  u16_t v= src->read()-1;
+  RD;
+  if (v != 0xffff)
+    rF&= ~(MJF|MZF);
+  else
+    rF|= MJF|MZF;
+  src->W(v);
+  WR;
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::add8(C8 *reg, u8_t n, bool c)
+{
+  u16_t op1, op1_7, op2, op2_7, res, res_7, c7, c8= 0;
+  op1= reg->get();
+  op2= n;
+  res= op1 + op2 + (c?((rF&MCF)?1:0):0);
+  op1_7= op1 & 0x7f;
+  op2_7= op2 & 0x7f;
+  res_7= op1_7 + op2_7;
+
+  rF&= ~MALL;
+  if (res > 0xff)
+    (rF|= MCF|MJF), c8=1;
+  if (res & 0x80)
+    rF|= MSF;
+  c7= (res_7>0x7f)?1:0;
+  if (c7^c8)
+    rF|= MVF;
+  if ((res & 0xff) == 0)
+    rF|= MZF;
+  if (((op1&0xf) + (op2&0xf)) > 0xf)
+    rF|= MHF;
+
+  reg->W(res);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::add16(C16 *reg, u16_t n, bool c)
+{
+  u32_t op1, op1_15, op2, op2_15, res, res_15, c15, c16= 0;
+  op1= reg->get();
+  op2= n;
+  res= op1 + op2 + (c?((rF&MCF)?1:0):0);
+  op1_15= op1 & 0x7fff;
+  op2_15= op2 & 0x7fff;
+  res_15= op1_15 + op2_15;
+
+  rF&= ~MALL;
+  if (res > 0xffff)
+    (rF|= MCF|MJF), c16=1;
+  if (res & 0x8000)
+    rF|= MSF;
+  c15= (res_15>0x7fff)?1:0;
+  if (c15^c16)
+    rF|= MVF;
+  if ((res & 0xffff) == 0)
+    rF|= MZF;
+
+  reg->W(res);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::sub8(C8 *reg, u8_t n, bool b)
+{
+  u16_t op1, op1_7, op2, op2_7, res, res_7, c7, c8= 0, cin;
+  op1= reg->get();
+  cin= b?((rF&MCF)?0:1):1;
+  op2= (~n + cin) & 0xff;
+  res= op1 + op2;
+  op1_7= op1 & 0x7f;
+  op2_7= op2 & 0x7f;
+  res_7= op1_7 + op2_7;
+
+  rF&= ~MALL;
+  if (res > 0xff)
+    (rF|= MCF|MJF), c8=1;
+  if (res & 0x80)
+    rF|= MSF;
+  c7= (res_7>0x7f)?1:0;
+  if (c7^c8)
+    rF|= MVF;
+  if ((res & 0xff) == 0)
+    rF|= MZF;
+  if (((op1&0xf) + (op2&0xf)) > 0xf)
+    rF|= MHF;
+  rF^= (MCF|MJF|MHF);
+  
+  reg->W(res);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::sub16(C16 *reg, u16_t n, bool b)
+{
+  u32_t op1, op1_15, op2, op2_15, res, res_15, c15, c16= 0, cin;
+  op1= reg->get();
+  cin= b?((rF&MCF)?0:1):1;
+  op2= (~n + cin) & 0xffff;
+  res= op1 + op2;
+  op1_15= op1 & 0x7fff;
+  op2_15= op2 & 0x7fff;
+  res_15= op1_15 + op2_15;
+
+  rF&= ~MALL;
+  if (res > 0xffff)
+    (rF|= MCF|MJF), c16=1;
+  if (res & 0x8000)
+    rF|= MSF;
+  c15= (res_15>0x7fff)?1:0;
+  if (c15^c16)
+    rF|= MVF;
+  if ((res & 0xffff) == 0)
+    rF|= MZF;
+  rF^= (MCF|MJF);
+  
+  reg->W(res);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::cmp8(C8 *reg, u8_t n)
+{
+  u16_t op1, op1_7, op2, op2_7, res, res_7, c7, c8= 0;
+  op1= reg->get();
+  op2= (~n + 1) & 0xff;
+  res= op1 + op2;
+  op1_7= op1 & 0x7f;
+  op2_7= op2 & 0x7f;
+  res_7= op1_7 + op2_7;
+
+  rF&= ~MALL;
+  if (res > 0xff)
+    (rF|= MCF|MJF), c8=1;
+  if (res & 0x80)
+    rF|= MSF;
+  c7= (res_7>0x7f)?1:0;
+  if (c7^c8)
+    rF|= MVF;
+  if ((res & 0xff) == 0)
+    rF|= MZF;
+  if (((op1&0xf) + (op2&0xf)) > 0xf)
+    rF|= MHF;
+  rF^= (MCF|MJF|MHF);
+  
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::cmp16(C16 *reg, u16_t n)
+{
+  u32_t op1, op1_15, op2, op2_15, res, res_15, c15, c16= 0;
+  op1= reg->get();
+  op2= (~n + 1) & 0xffff;
+  res= op1 + op2;
+  op1_15= op1 & 0x7fff;
+  op2_15= op2 & 0x7fff;
+  res_15= op1_15 + op2_15;
+
+  rF&= ~MALL;
+  if (res > 0xffff)
+    (rF|= MCF|MJF), c16=1;
+  if (res & 0x8000)
+    rF|= MSF;
+  c15= (res_15>0x7fff)?1:0;
+  if (c15^c16)
+    rF|= MVF;
+  if ((res & 0xffff) == 0)
+    rF|= MZF;
+  rF^= (MCF|MJF);
+  
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::and8(C8 *reg, u8_t n)
+{
+  rF&= ~(MJF|MZF);
+  u8_t r= reg->R() & n;
+  if (!r)
+    rF|= (MJF|MZF);
+  reg->W(r);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::and16(C16 *reg, u16_t n)
+{
+  rF&= ~(MJF|MZF);
+  u16_t r= reg->R() & n;
+  if (!r)
+    rF|= (MJF|MZF);
+  reg->W(r);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::xor8(C8 *reg, u8_t n)
+{
+  rF&= ~(MJF|MZF);
+  u8_t r= reg->R() ^ n;
+  if (!r)
+    rF|= (MJF|MZF);
+  reg->W(r);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::xor16(C16 *reg, u16_t n)
+{
+  rF&= ~(MJF|MZF);
+  u16_t r= reg->R() ^ n;
+  if (!r)
+    rF|= (MJF|MZF);
+  reg->W(r);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::or8(C8 *reg, u8_t n)
+{
+  rF&= ~(MJF|MZF);
+  u8_t r= reg->R() | n;
+  if (!r)
+    rF|= (MJF|MZF);
+  reg->W(r);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::or16(C16 *reg, u16_t n)
+{
+  rF&= ~(MJF|MZF);
+  u16_t r= reg->R() | n;
+  if (!r)
+    rF|= (MJF|MZF);
+  reg->W(r);
+  cF.W(rF);
+  return resGO;
+}
+
+int
+cl_t870c::jr(u8_t a)
+{
+  i8_t v= a;
+  PC= (PC + v + 0) & PCmask;
+  cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::jrs(u8_t code, bool cond)
+{
+  i16_t v= code & 0x1f;
+  if (v & 0x10)
+    v|= 0xffe0;
+  if (cond)
+    {
+      PC= (PC + v + 1) & PCmask;
+      tick(extra_ticks()[page|code]);
+    }
   cF.W(rF|MJF);
   return resGO;
 }
@@ -875,6 +1568,37 @@ cl_t870c::LD_SP_Md(MP)
 {
   cSP.W(rSP-fetch());
   cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::LD_src_A_CF(MP)
+{
+  u8_t m= bit_mask[rA&7];
+  u8_t v= sdc->read();
+  RD;
+  if (rF & MCF)
+    v|= m;
+  else
+    v&= ~m;
+  sdc->write(v);
+  WR;
+  cF.W(rF|MJF);
+  return resGO;
+}
+
+int
+cl_t870c::LD_CF_src_A(MP)
+{
+  u8_t m= bit_mask[rA&7];
+  u8_t v= sdc->read();
+  RD;
+  rF&= ~(MJF|MCF);
+  if (v&m)
+    rF|= MCF;
+  else
+    rF|= MJF;
+  cF.W(rF);
   return resGO;
 }
 

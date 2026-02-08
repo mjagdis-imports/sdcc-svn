@@ -30,6 +30,10 @@
 #include "gen.h"
 #include "dbuf_string.h"
 
+#define OPCODE  "adc"
+#define OPINCDEC "inc"
+#define INIT_CARRY()   m6502_emitSetCarry(0)
+
 /**************************************************************************
  * genPlusInc :- does addition with increment if possible
  *************************************************************************/
@@ -43,9 +47,9 @@ genPlusInc (iCode * ic)
   int icount;
   unsigned int size = AOP_SIZE (result);
   symbol *tlbl = NULL;
+  bool needpullx = false;
   bool savea = false;
   unsigned int offset;
-  bool needpullx = false;
 
   /* will try to generate an increment */
   /* if the right side is not a literal
@@ -69,15 +73,19 @@ genPlusInc (iCode * ic)
 
       if(size==2 && sameRegs (AOP (left), AOP (result)))
         {
-          if (IS_AOP_XA (AOP (result)) && m6502_reg_x->isLitConst)
+          if (IS_AOP_WITH_X (AOP (result)) && m6502_reg_x->isLitConst)
             {
 	      loadRegFromConst(m6502_reg_x, m6502_reg_x->litConst + bcount);
 	      return true;
             }
-          else if(bcount<3)
+          else if(IS_AOP_WITH_X (AOP (result)) && smallAdjustReg(AOP(result)->aopu.aop_reg[1], bcount))
+            {
+              return true;
+            }
+          else if(bcount<3 && aopCanIncDec(AOP(result)) ) 
             {
 	      while (bcount--)
-                rmwWithAop ("inc", AOP (result), 1);
+                rmwWithAop (OPINCDEC, AOP (result), 1);
 
 	      return true;
             }
@@ -91,10 +99,10 @@ genPlusInc (iCode * ic)
       if(icount)
         {
           tlbl = safeNewiTempLabel (NULL);
-          m6502_emitSetCarry (0);
-          accopWithAop ("adc", AOP (right), 0);
-          emitBranch ("bcc", tlbl);
-	  rmwWithReg ("inc", m6502_reg_x);
+	  INIT_CARRY();
+          accopWithAop (OPCODE, AOP (right), 0);
+          m6502_emitBranch ("bcc", tlbl);
+	  rmwWithReg (OPINCDEC, m6502_reg_x);
           safeEmitLabel (tlbl);
           m6502_dirtyReg(m6502_reg_x);
         }
@@ -113,12 +121,12 @@ genPlusInc (iCode * ic)
 	      if(dst_reg && dst_reg!=m6502_reg_a)
 		{
 		  transferRegReg (src_reg, dst_reg, src_reg->isDead);
-		  rmwWithReg ("inc", dst_reg);
+		  rmwWithReg (OPINCDEC, dst_reg);
 		  return true;  
 		}
 	      if(src_reg->isDead /* && src_reg!=m6502_reg_a */ )
 		{
-		  rmwWithReg ("inc", src_reg);
+		  rmwWithReg (OPINCDEC, src_reg);
 	          storeRegToAop (src_reg, AOP (result), 0);
 		  return true;  
 		}
@@ -129,7 +137,6 @@ genPlusInc (iCode * ic)
 
   // sameRegs
 
-  // TODO: can inc blah,x
   if (!aopCanIncDec (AOP (result)))
     return false;
 
@@ -148,35 +155,34 @@ genPlusInc (iCode * ic)
   if (size > 1)
     tlbl = safeNewiTempLabel (NULL);
 
-  // FIXME: SAVING x SHOULD BE HERE
+  if(AOP_TYPE(result)==AOP_SOF || AOP_TYPE(left)==AOP_SOF)
+    needpullx=storeRegTempIfSurv(m6502_reg_x);
 
   if (icount == 1)
     {
-      if(AOP_TYPE(result)==AOP_SOF)
-        needpullx=storeRegTempIfSurv(m6502_reg_x);
-      rmwWithAop ("inc", AOP (result), 0);
+      rmwWithAop (OPINCDEC, AOP (result), 0);
       if (size > 1)
-	emitBranch ("bne", tlbl);
+	m6502_emitBranch ("bne", tlbl);
     }
   else
     {
       savea = fastSaveAIfSurv ();
 
       loadRegFromAop (m6502_reg_a, AOP (result), 0);
-      m6502_emitSetCarry(0);
-      accopWithAop ("adc", AOP (right), 0);
+      INIT_CARRY();
+      accopWithAop (OPCODE, AOP (right), 0);
       storeRegToAop (m6502_reg_a, AOP (result), 0);
       if (size > 1)
-	emitBranch ("bcc", tlbl);
+	m6502_emitBranch ("bcc", tlbl);
     }
 
   for (offset = 1; offset < size; offset++)
     {
-      rmwWithAop ("inc", AOP (result), offset);
+      rmwWithAop (OPINCDEC, AOP (result), offset);
       if(AOP(result)->type==AOP_REG)
         m6502_dirtyReg(AOP(result)->aopu.aop_reg[offset]);
       if ((offset + 1) < size)
-	emitBranch ("bne", tlbl);
+	m6502_emitBranch ("bne", tlbl);
     }
 
   if (size > 1)
@@ -230,7 +236,7 @@ m6502_genPlus (iCode * ic)
   if (!maskedtopbyte && genPlusInc (ic))
     goto release;
 
-  emitComment (TRACEGEN|VVDBG, "    %s - Can't Inc", __func__);
+  emitComment (TRACEGEN|VVDBG, "    %s - Can't %s", __func__, OPINCDEC);
 
   size = AOP_SIZE (result);
   bool is_right_byte = (AOP_SIZE(right)==1 && SPEC_USIGN (operandType (right))) 
@@ -247,12 +253,12 @@ m6502_genPlus (iCode * ic)
 
       emitComment (TRACEGEN|VVDBG, "    %s: size==2 && one byte", __func__);
       savea = fastSaveAIfSurv ();
-      m6502_emitSetCarry(0);
+      INIT_CARRY();
       loadRegFromAop (m6502_reg_a, AOP(left), 0);
-      accopWithAop ("adc", AOP(right), 0);
+      accopWithAop (OPCODE, AOP(right), 0);
       storeRegToAop (m6502_reg_a, AOP (result), 0);
-      emitBranch ("bcc", skiplabel);
-      rmwWithAop ("inc", AOP(result), 1);
+      m6502_emitBranch ("bcc", skiplabel);
+      rmwWithAop (OPINCDEC, AOP(result), 1);
       if(IS_AOP_WITH_X(AOP(result)))
 	m6502_dirtyReg(m6502_reg_x);
       if(IS_AOP_WITH_Y(AOP(result)))
@@ -267,9 +273,9 @@ m6502_genPlus (iCode * ic)
       symbol *skipInc = safeNewiTempLabel (NULL);
       loadRegFromAop (m6502_reg_xa, AOP(left), 0);
       m6502_emitSetCarry(0);
-      accopWithAop ("adc", AOP(right), 0);
-      emitBranch ("bcc", skipInc);
-      rmwWithAop ("inc", AOP(result), 1);
+      accopWithAop (OPCODE, AOP(right), 0);
+      m6502_emitBranch ("bcc", skipInc);
+      rmwWithAop (OPINCDEC, AOP(result), 1);
       m6502_dirtyReg(m6502_reg_x);
       safeEmitLabel (skipInc);
       goto release;
@@ -278,11 +284,11 @@ m6502_genPlus (iCode * ic)
   if ( IS_AOP_XA(AOP(result)) && !maskedtopbyte && IS_AOP_A(AOP(left)) && AOP_TYPE(right) != AOP_SOF) 
     {
       symbol *skipInc = safeNewiTempLabel (NULL);
-      m6502_emitSetCarry(0);
-      accopWithAop ("adc", AOP(right), 0);
+      INIT_CARRY();
+      accopWithAop (OPCODE, AOP(right), 0);
       loadRegFromAop (m6502_reg_x, AOP(right), 1);
-      emitBranch ("bcc", skipInc);
-      rmwWithAop ("inc", AOP(result), 1);
+      m6502_emitBranch ("bcc", skipInc);
+      rmwWithAop (OPINCDEC, AOP(result), 1);
       m6502_dirtyReg(m6502_reg_x);
       safeEmitLabel (skipInc);
       goto release;
@@ -293,11 +299,11 @@ m6502_genPlus (iCode * ic)
       emitComment (TRACEGEN|VVDBG, "    %s: XA = XA + SOF", __func__);
       storeRegTemp(m6502_reg_x, true);
       int xloc = getLastTempOfs();
-      m6502_emitSetCarry(0);
-      accopWithAop ("adc", AOP (right), 0);
+      INIT_CARRY();
+      accopWithAop (OPCODE, AOP (right), 0);
       fastSaveA();
       loadRegTempAt(m6502_reg_a, xloc);
-      accopWithAop ("adc", AOP (right), 1);
+      accopWithAop (OPCODE, AOP (right), 1);
       if (maskedtopbyte)
         emit6502op ("and", IMMDFMT, topbytemask);
       transferRegReg(m6502_reg_a, m6502_reg_x, true);
@@ -312,16 +318,21 @@ m6502_genPlus (iCode * ic)
       if(m6502_reg_a->aop && sameRegs (m6502_reg_a->aop,AOP(result)) )
         m6502_dirtyReg(m6502_reg_xa);
 
-      savea = fastSaveAIfSurv();
       bool restore_x = !m6502_reg_x->isDead;
+
+      savea = fastSaveAIfSurv();
       storeRegTemp(m6502_reg_x, true);
-      m6502_emitSetCarry(0);
-      accopWithAop ("adc", AOP (right), 0);
+      m6502_emitTSX();
+      loadRegFromAop (m6502_reg_a, AOP(left), 0);
+      INIT_CARRY();
+        accopWithAop (OPCODE, AOP (right), 0);
+
       storeRegToAop (m6502_reg_a, AOP (result), 0);
       loadRegTempAt(m6502_reg_a, getLastTempOfs() );
-      accopWithAop ("adc", AOP (right), 1);
+      accopWithAop (OPCODE, AOP (right), 1);
       if (maskedtopbyte)
         emit6502op ("and", IMMDFMT, topbytemask);
+
       storeRegToAop (m6502_reg_a, AOP (result), 1);
 
       if(restore_x)
@@ -335,8 +346,9 @@ m6502_genPlus (iCode * ic)
 
   if(!m6502_reg_a->isDead)
     m6502_dirtyReg(m6502_reg_a);
+
   if(IS_AOP_XY (AOP(result)))
-    m6502_reg_y->isFree=false;
+    m6502_useReg(m6502_reg_y);
 
   savea = fastSaveAIfSurv ();
 
@@ -350,9 +362,9 @@ m6502_genPlus (iCode * ic)
       if (!opskip || AOP_TYPE (right) != AOP_LIT || (byteOfVal (AOP (right)->aopu.aop_lit, offset) != 0x00) )
 	{
           if (init_carry)
-	    m6502_emitSetCarry(0);
+	    INIT_CARRY();
 
-	  accopWithAop ("adc", AOP(right), offset);
+	  accopWithAop (OPCODE, AOP(right), offset);
 	  opskip = false;
 	}
       else

@@ -317,7 +317,7 @@ typedef struct symbol
                                        in the symbol and not in v_struct or the declarator */
   unsigned implicit:1;              /* implicit flag                     */
   unsigned undefined:1;             /* undefined variable                */
-  unsigned infertype:1;             /* type should be inferred from first assign */
+  bool implicitaddtoblock:1;        /* implicit temporary to be added to block later, once that block exists */
   unsigned iscomplit:1;             /* is a temporary symbol for a compound literal */
   unsigned _isparm:1;               /* is a parameter          */
   unsigned ismyparm:1;              /* is parameter of the function being generated */
@@ -675,14 +675,14 @@ extern symbol *rlrr[2][4][2];
 extern symbol *builtin_memcpy;
 extern symbol *nonbuiltin_memcpy;
 
-#define SCHARTYPE       multypes[0][0]
-#define UCHARTYPE       multypes[0][1]
-#define INTTYPE         multypes[1][0]
-#define UINTTYPE        multypes[1][1]
-#define LONGTYPE        multypes[2][0]
-#define ULONGTYPE       multypes[2][1]
-#define LONGLONGTYPE    multypes[3][0]
-#define ULONGLONGTYPE   multypes[3][1]
+#define SCHARTYPE       multypes[0][1]
+#define UCHARTYPE       multypes[0][0]
+#define INTTYPE         multypes[1][1]
+#define UINTTYPE        multypes[1][0]
+#define LONGTYPE        multypes[2][1]
+#define ULONGTYPE       multypes[2][0]
+#define LONGLONGTYPE    multypes[3][1]
+#define ULONGLONGTYPE   multypes[3][0]
 
 extern sym_link *floatType;
 extern sym_link *fixed16x16Type;

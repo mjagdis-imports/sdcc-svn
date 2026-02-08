@@ -37,7 +37,7 @@ unsigned char _sdcc_external_startup(void)
 	// normal oscillator, processor and peripheral from main clock, no periodic interrupt
 	GCSR = 0x08;
 
-	GCDR = 0x00; // Crystal runs at full system freqeuncy
+	GCDR = 0x00; // Crystal runs at full system frequency
 
 	// Configure memory wait states
 	MB0CR = 0xc8; // Flash - 0 wait states with write-protection

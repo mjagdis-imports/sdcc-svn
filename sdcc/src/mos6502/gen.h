@@ -172,7 +172,7 @@ int safeLabelNum(symbol * a);
 
 void emit6502op (const char *inst, const char *fmt, ...);
 bool m6502_emitCmp (reg_info *reg, unsigned char v);
-void emitBranch (char *branchop, symbol * tlbl);
+void m6502_emitBranch (char *branchop, symbol * tlbl);
 void m6502_emitTSX(void);
 void m6502_emitSetCarry(int c);
 
@@ -213,6 +213,7 @@ void adjustStack (int n); // candidate for moving back into gen.c
 #define pullNull(n)          adjustStack(n)
 
 // regtemp
+bool fastSaveAi(reg_info *reg);
 bool fastSaveA();
 bool fastRestoreA();
 #define fastSaveAIfUsed()     (!m6502_reg_a->isFree)?fastSaveA():false
@@ -240,14 +241,15 @@ void m6502_genXor (iCode * ic, iCode * ifx);
 void m6502_genAnd (iCode * ic, iCode * ifx);
 void m6502_genPlus (iCode * ic);
 void m6502_genMinus (iCode * ic);
+void m6502_genRot (iCode * ic);
 
 void AccRsh (int shCount, bool sign);
 void AccLsh (int shCount);
 void m6502_genRightShift (iCode * ic);
 void m6502_genLeftShift (iCode * ic);
+
 bool aopCanShift (asmop * aop);
 void addSign (operand * result, int offset, int sign);
-
 
 #endif
 
