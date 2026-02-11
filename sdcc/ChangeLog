@@ -1,5 +1,9 @@
 2026-02-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* Merge pqc branch.
+
+2026-02-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* device/lib/ez80/__muluint2ulong.s,
 	  device/lib/z180/__muluint2ulong.s:
 	  Fix an issue in 16x16->32 multiplication support function.
