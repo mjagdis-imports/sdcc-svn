@@ -1,3 +1,41 @@
+2026-02-12 Janko Stamenović
+
+	* sdas/asrab/rabmch.c
+	  sdas/asrab/rabpst.c
+	  sdas/asxxsrc/asxxxx.h
+	  sdasrab: r4 neg fixes and pseudoops cleanup
+
+2026-02-12 Janko Stamenović
+
+	* sdas/asrab/rab.h
+	  sdas/asrab/rabadr.c
+	  sdas/asrab/rabmch.c
+	  sdas/asrab/rabpst.c
+	  sdas/asxxsrc/asxxxx.h
+	  sdasrab: more r4k instructions and .r4k10 modes of them
+
+2026-02-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCglue.c:
+	  Remove redundant emission of assembler directives.
+
+2026-02-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/main.c:
+	  Emit .r3ka instead of .r3k directive in Rabbit 3000A and later asm.
+
+2026-02-11 Janko Stamenović
+
+	* sdas/asxxsrc/asxxxx.h
+	  sdasxxxx: updated sdas reported version
+
+2026-02-11 Janko Stamenović
+
+	* sdas/asrab/rab.h
+	  sdas/asrab/rabmch.c
+	  sdas/asrab/rabpst.c
+	  sdasrab: New r4k modes and r3ka mode, started adding r4k instructions
+
 2026-02-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* Merge pqc branch.

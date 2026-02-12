@@ -52,9 +52,9 @@ char	imtab[3] = { 0x46, 0x56, 0x5E };
 static const unsigned char ipset[4] = { 0x46, 0x56, 0x4E, 0x5E };
 
 
-int     r3k_mode;
-int     r4k_mode;
-/* when set, generate op-code for Rabbit-4000 instead of Rabbit 2000/3000 */
+//int     r3k_mode;
+//int     r4k_mode;
+int rxk_mode;
 
 int	mchtyp;
 
@@ -93,15 +93,19 @@ machine(struct mne *mp)
 	op = (int) mp->m_valu;
 	rf = mp->m_type;
 
-        if (!r4k_mode && rf > X_R4K_MODE)
+        if (!IS_ANY_R_4K(rxk_mode) && rf > X_R4K_XSTART)
                 rf = 0;
 
 	switch (rf) {
 	case S_CPU:
-                if (op == X_R2K)
-                        r3k_mode=1;
-                if (op == X_R4K)
-                        r4k_mode=1;
+		switch (op) {
+		case X_R2K: rxk_mode=R_2K; break;
+		case X_R3KA: rxk_mode=X_R3KA; break;
+		case X_R4K00: rxk_mode=R_4K_00; break;
+		case X_R4K01: rxk_mode=R_4K_01; break;
+		case X_R4K10: rxk_mode=R_4K_10; break;
+		case X_R4K11: rxk_mode=R_4K_11; break;
+		}
 		mchtyp = op;
 		sym[2].s_addr = op;
 		opcycles = OPCY_CPU;
@@ -130,10 +134,12 @@ machine(struct mne *mp)
 		break;
 
 	case S_PUSH:
-		if (admode(R16AF)) {
+		t1 = addr(&e1);
+		v1 = (int) e1.e_addr;
+		if (t1 == S_R16AF) {
 			outab(op+0x30);
 			break;
-                } else if ((v1 = admode(R8IP)) != 0) {
+                } else if (t1 == S_R8IP) {
                         outab(0xED);
                         if (op == 0xC5)
                                 outab(0x76);  /* push */
@@ -141,23 +147,28 @@ machine(struct mne *mp)
                                 outab(0x7E);  /* pop  */
                         break;
 		} else
-		if ((v1 = admode(R16)) != 0 && (v1 &= 0xFF) != SP) {
+		if (t1 == S_R16 && (v1 &= 0xFF) != SP) {
 			if (v1 != gixiy(v1)) {
 				outab(op+0x20);
 				break;
 			}
 			outab(op | (v1<<4));
 			break;
-                } else if (r4k_mode) {
-                        if ( (v1 = admode(R32_JKHL)) != 0 ) {
+                } else if (IS_ANY_R_4K(rxk_mode)) {
+                        if ( t1 == S_R32_JKHL ) {
                                 outab(JKHL_PG);
                                 outab(op+0x30);
                                 break;
-                        } else if ( (v1 = admode(R32_BCDE)) != 0 ) {
+                        } else if ( t1 == S_R32_BCDE ) {
                                 outab(BCDE_PG);
                                 outab(op+0x30);
                                 break;
-                        }
+			} else if ( t1 == S_IMMED ) {
+				outab(0xED);
+				outab(0xA5);
+				outrw(&e1, 0);
+				break;
+			}
 		}
 		xerr('a', "Invalid Addressing Mode.");
 		break;
@@ -212,7 +223,7 @@ machine(struct mne *mp)
 	case S_RL:
 		t1 = 0;
 		t2 = addr(&e2);
-                if ((t2 == S_IMMED) && r4k_mode)
+                if ((t2 == S_IMMED) && IS_ANY_R_4K(rxk_mode))
                 {
                         v1 = (int) e2.e_addr;
                         /* v1 should be shift count of 1,2,4, or 8 */
@@ -261,13 +272,17 @@ machine(struct mne *mp)
                                 break;
                         }
 
-                        if (r4k_mode) {
+                        if (IS_R_4K_10_OR_R_4K_11(rxk_mode)) {
                                 if ((v2 == HL) && (op == 0x10 /* rl */)) {
+					if (IS_R_4K_10(rxk_mode))
+						outab( 0x7F );
                                         outab( 0x42 );
                                         break;
                                 }
                                 if (((v2 == BC)||(v2 == DE)) &&
                                     (op < 0x20 /* 00 rlc, 08 rrc, 10 rl, 18 rr */)) {
+					if (IS_R_4K_10(rxk_mode))
+						outab( 0x7F );
                                         outab( 0x50 + (op >> 3) + ((v2==BC)?0x10:0x00) );
                                         break;
                                 }
@@ -313,7 +328,7 @@ machine(struct mne *mp)
                                  * needs a 0x7F prefix byte when
                                  * operating in rabbit 4000 mode
                                  */
-                                if (r4k_mode)
+                                if (IS_R_4K_11(rxk_mode))
                                         outab(0x7F);
                         }
 
@@ -345,28 +360,41 @@ machine(struct mne *mp)
                 }
                 if ((t1 == S_R16) && (v1 == HL) &&
                     (t2 == S_R16) && (v2 == DE)) {
-                        /*  55     sub  hl, de */
-                        /*         sbc  hl, de  does not exist */
-                        /*  DC     and  hl, de */
-                        /*  54     xor  hl, de */
-                        /*  EC     or   hl, de */
-                        /*  ED 48  cp   hl, de */
-                        if (rf == S_SBC) /* op == 0x98 */
-                                xerr('a', "Not valid for SBC.");
-
-                        switch( op ) {
-                        case 0x90:  /* sub */ outab(0x55); break;
-                        case 0xA0:  /* and */ outab(0xDC); break;
-                        case 0xA8:  /* xor */ outab(0x54); break;
-                        case 0xB0:  /* or  */ outab(0xEC); break;
-                        case 0xB8:  /* cp  */
-                                outab( 0xED );
-                                outab( 0x48 );
-                                break;
-                        }
-                        break;
+			if (op == 0xA0) { /* and */
+				outab(0xDC); break;
+			}
+			if (op == 0xB0) { /* or */
+				outab(0xEC); break;
+			}
+			if (IS_ANY_R_4K(rxk_mode)) {
+				if (rf == S_SBC) /* no sbc hl, de */
+					xerr('a', "Not valid for SBC.");
+				if (op == 0xB8) { 
+					outab( 0xED ); /* cp  hl, de */
+					outab( 0x48 );
+					break;
+				}
+			}
+			if (IS_R_4K_10_OR_R_4K_11(rxk_mode)) {
+                                if (!IS_R_4K_11(rxk_mode))
+                                        outab(0x7F);
+				if (op == 0x90) {
+					outab(0x55); /* sub hl, de */ 
+					break;
+				} else if (op == 0xA8) {
+					outab(0x54); /* xor hl, de*/ 
+					break;
+				}
+			}
                 }
-
+		if (op == 0xB8 && t1 == S_R16 && v1 == HL && 
+			t2 == S_IMMED && IS_R_4K_10_OR_R_4K_11(rxk_mode)) {
+                                if (!IS_R_4K_11(rxk_mode))
+                                        outab(0x7F);
+				outab(0x48);
+                                outrb(&e2, 0);
+                                break;
+		}
                 if ((t1 == S_R16) && ((v1 == IX) || (v1 == IY)) &&
                     (t2 == S_R16) && (v2 == DE) &&
                     ((op == 0xA0 /* and */) || (op == 0xB0 /* or */))) {
@@ -396,14 +424,7 @@ machine(struct mne *mp)
                         break;
                 }
 
-                if ((t1 == S_R16) && (v1 == HL) && (t2 == S_IMMED)) {
-                        /* cp  hl, #signed displacement */
-                        outab(0x48);
-                        outrb(&e2, 0);
-                        break;
-                }
-
-                xerr('a', "Not valid for SBC.");
+                xerr('a', "Invalid Addressing Mode.");
                 break;
 
 	case S_ADD:
@@ -422,7 +443,7 @@ machine(struct mne *mp)
                                  * needs a 0x7F prefix byte when
                                  * operating in rabbit 4000 mode
                                  */
-                                if (r4k_mode)
+                                if (IS_R_4K_11(rxk_mode))
                                         outab(0x7F);
                         }
 
@@ -431,7 +452,7 @@ machine(struct mne *mp)
 			break;
 		}
 		if ((t1 == S_R8) && (e1.e_addr == A)) {
-                        if ( ((t2 == S_R8) || (t2 == S_IDHL)) && r4k_mode )
+                        if ( ((t2 == S_R8) || (t2 == S_IDHL)) && IS_R_4K_11(rxk_mode) )
                                 /* ljm - rabbit 4000 support, see note in t2==0 */
                                 outab(0x7F);
 
@@ -501,7 +522,8 @@ machine(struct mne *mp)
                                 break;
                         }
 
-                        if (r4k_mode && (v1 == A) && (t2 == S_R8) && (v2 == A)) {
+                        if (IS_R_4K_10_OR_R_4K_11(rxk_mode) 
+				&& (v1 == A) && (t2 == S_R8) && (v2 == A)) {
                                 /* exception for "ld a,a" 
                                  * on rabbit 4000 0x7F is a prefix instead of "ld a,a"
                                  */
@@ -521,7 +543,7 @@ machine(struct mne *mp)
                                 /* 8-bit register to 8-bit register */
                                 /* use 0x7F prefix when in rabbit 4000 mode */
                                 v1 = op | e1.e_addr<<3;
-                                if (r4k_mode)
+                                if (IS_R_4K_11(rxk_mode))
                                         outab(0x7F);
                                 if (genop(0, v1, &e2, 0) == 0)
                                         break;
@@ -530,7 +552,7 @@ machine(struct mne *mp)
                         }
 
                         if ((t2 == S_R8) && (v2 == A) &&
-                            ((v1 != A) || (!r4k_mode))) {
+                            ((v1 != A) || (!(IS_R_4K_11(rxk_mode))))) {
                                 /* "ld  r,a", but except "ld a,a" 
                                  * on rabbit 4000 0x7F is a prefix instead of "ld a,a" */
                                 v1 = op | e1.e_addr<<3;
@@ -567,17 +589,12 @@ machine(struct mne *mp)
                 if ((t1 == S_R16) && (v1 == HL))
                 {
                         if ((t2 == S_IDIX) || (t2 == S_IDIY) ||
-                            (t2 == S_IDHL) || (t2 == S_IDHL_OFFSET))
-                        {
-                                /* ljm - added rabbit instruction LD HL,n(IX|HL|IY) */
+                            (t2 == S_IDHL) || (t2 == S_IDHL_OFFSET)) {
+                                /* LD HL,n(IX|HL|IY) */
                                 if (t2 == S_IDIY)
                                         outab(0xFD);
                                 else if ((t2 == S_IDHL) || (t2 == S_IDHL_OFFSET))
-                                        /* ljm - added rabbit instruction LD HL,n(IY)
-                                         * normally 0xFD generated by "gixiy(v1)", but
-                                         * 0xDD results in n(HL) instead of n(IX)
-                                         */
-                                        outab(0xDD);
+                                        outab(0xDD); /* LD HL,n(HL) */
 
                                 outab(0xE4);
                                 outrb(&e2, 0);
@@ -588,8 +605,10 @@ machine(struct mne *mp)
                                 outab(0x7C);
                                 break;
                         }
-                        if (r4k_mode) {
+                        if (IS_R_4K_10_OR_R_4K_11(rxk_mode)) {
                                 if ((t2 == S_R16) && ((v2 == BC) || (v2 == DE))) {
+					if (IS_R_4K_10(rxk_mode))
+						outab( 0x7F );
                                         outab( 0x81 + ((v2 == DE) ? 0x20 : 0) );
 					break;
 				}
@@ -708,8 +727,10 @@ machine(struct mne *mp)
                         break;
                 }
       
-                if ((t1 == S_RXPC) && r4k_mode &&
+                if ((t1 == S_RXPC) && IS_R_4K_10_OR_R_4K_11(rxk_mode) &&
                     (t2 == S_R16) && (v2 == HL)) {
+			if (IS_R_4K_10(rxk_mode))
+				outab( 0x7F );
                         outab(0x97);
                         break;
                 }
@@ -720,8 +741,10 @@ machine(struct mne *mp)
                         break;
                 }
       
-                if ((t2 == S_RXPC) && r4k_mode &&
+                if ((t2 == S_RXPC) && IS_R_4K_10_OR_R_4K_11(rxk_mode) &&
                     (t1 == S_R16) && (v1 == HL)) {
+			if (IS_R_4K_10(rxk_mode))
+				outab( 0x7F );
                         outab(0x9F);
                         break;
                 }
@@ -736,19 +759,23 @@ machine(struct mne *mp)
                 }
       
                 /* 16-bit operations valid only in rabbit 4000 mode */
-                if (r4k_mode && (t1 == S_R16) && (t2 == S_R16)) {
+                if (IS_R_4K_10_OR_R_4K_11(rxk_mode) && (t1 == S_R16) && (t2 == S_R16)) {
                         if ((v1 == HL) && ((v2 == BC) || (v2 == DE))) {
+				if (IS_R_4K_10(rxk_mode))
+					outab( 0x7F );
                                 outab( 0x81 + ((v2==DE)?0x20:0x00) );
                                 break;
                         }
                         if ((v2 == HL) && ((v1 == BC) || (v1 == DE))) {
+				if (IS_R_4K_10(rxk_mode))
+					outab( 0x7F );
                                 outab( 0x91 + ((v1==DE)?0x20:0x00) );
                                 break;
                         }
                 }
       
                 /* 32-bit operations valid in rabbit 4000 mode */
-                if (r4k_mode && ((t1 == S_R32_JKHL) || (t1 == S_R32_BCDE))) {
+                if (IS_ANY_R_4K(rxk_mode) && ((t1 == S_R32_JKHL) || (t1 == S_R32_BCDE))) {
                         if (t2 == S_IDHL) {
                                 outab( ((t1 == S_R32_JKHL)?JKHL_PG:BCDE_PG) );
                                 outab( 0x1A );
@@ -766,18 +793,22 @@ machine(struct mne *mp)
                                 break;
                         }
                         if (t2 == S_INDM) {
+				if (IS_R_4K_10(rxk_mode))
+					outab( 0x7F );
                                 outab( 0x93 + ((t1 == S_R32_JKHL) ? 1 : 0) );
                                 outrw(&e2, 0);
                                 break;
                         }
                         if (t2 == S_IMMED) {
+				if (IS_R_4K_10(rxk_mode))
+					outab( 0x7F );
                                 outab( 0xA3 + ((t1 == S_R32_JKHL) ? 1 : 0) );
                                 outrb(&e2, 0);
                                 break;
                         }
                 }
 
-                if (r4k_mode && ((t2 == S_R32_JKHL) || (t2 == S_R32_BCDE))) {
+                if (IS_ANY_R_4K(rxk_mode) && ((t2 == S_R32_JKHL) || (t2 == S_R32_BCDE))) {
                         if (t1 == S_IDHL) {
                                 outab( ((t2 == S_R32_JKHL)?JKHL_PG:BCDE_PG) );
                                 outab( 0x1B );
@@ -794,7 +825,9 @@ machine(struct mne *mp)
                                 outrb(&e1, 0);
                                 break;
                         }
-                        if (t1 == S_INDM) {
+                        if (t1 == S_INDM && IS_R_4K_10_OR_R_4K_11(rxk_mode)) {
+				if (IS_R_4K_10(rxk_mode))
+					outab( 0x7F );
                                 outab( 0x83 + ((t2 == S_R32_JKHL) ? 1 : 0) );
                                 outrw(&e1, 0);
 				break;
@@ -802,7 +835,8 @@ machine(struct mne *mp)
 		}
 		xerr('a', "Invalid Addressing Mode.");
 		break;
-      
+
+     
 	case S_EX:
 		t1 = addr(&e1);
 		comma(1);
@@ -815,7 +849,9 @@ machine(struct mne *mp)
                                         outab(0xEB);
                                         break;
                                 }
-                                if (r4k_mode && (v1==BC) && (v2==HL)) {
+                                if (IS_R_4K_10_OR_R_4K_11(rxk_mode) && (v1==BC) && (v2==HL)) {
+					if (IS_R_4K_10(rxk_mode))
+						outab( 0x7F );
                                         outab(0xB3);
                                         break;
                                 }
@@ -826,7 +862,7 @@ machine(struct mne *mp)
                                         outab(0xE3);
                                         break;
                                 }
-                                if (r4k_mode && (v1==BC) && (v2==HL)) {
+                                if (IS_ANY_R_4K(rxk_mode) && (v1==BC) && (v2==HL)) {
                                         /* EX BC', HL */
                                         outab(0xED);
                                         outab(0x74);
@@ -905,24 +941,29 @@ machine(struct mne *mp)
 		}
 		t1 = addr(&e1);
 		v1 = (int) e1.e_addr;
-                if ((t1 == S_R8) && (v1 == A)) { /* "neg a" */
+                if (t1 == S_R8 && v1 == A) { /* "neg a" */
 			outab(0xED);
 			outab(op);
 			break;
 		}
-      
-                if ((t1 == S_R16) && (v1 == HL) && r4k_mode) { /* "neg hl" */
-                        outab(0x4D);
-                        break;
-                }
-      
-                if (r4k_mode &&
-                    ((t1 == S_R32_JKHL) || (t1 == S_R32_BCDE))) {
+
+                if ((t1 == S_R32_JKHL || t1 == S_R32_BCDE) && 
+			IS_ANY_R_4K(rxk_mode)) {
                         /* neg jkhl|bcde */
                         outab( ( (t1 == S_R32_BCDE) ? 0xDD : 0xFD ) );
                         outab(0x4D);
                         break;
                 }
+      
+                if (t1 == S_R16 && v1 == HL
+			&& IS_R_4K_10_OR_R_4K_11(rxk_mode)) {
+			/* "neg hl" */
+			if (IS_R_4K_10(rxk_mode))
+				outab( 0x7F );
+                        outab(0x4D);
+                        break;
+		}
+		xerr('a', "Invalid Addressing Mode.");
 		break;
       
 	case S_DJNZ:
@@ -933,6 +974,14 @@ machine(struct mne *mp)
 			} else {
 				xerr('a', "Condition code required.");
 			}
+			comma(1);
+		}
+		if (IS_R_4K_10_OR_R_4K_11(rxk_mode) &&
+			((v1 = admode(ALT_CND)) != 0) &&
+			((v1&0xFF) < CC_NZ)) {
+			op = 0xA0 | (v1&0xFF)<<3;
+			if (IS_R_4K_10(rxk_mode))
+				outab( 0x7F );
 			comma(1);
 		}
 		expr(&e2, 0);
@@ -950,8 +999,15 @@ machine(struct mne *mp)
 		break;
       
 	case S_CALL:
+		t1 = addr(&e1);
+		if (IS_ANY_R_4K(rxk_mode)) {
+			if (t1 == S_IDHL || t1 == S_IDIY) {
+				outab((t1 == S_IDHL) ? 0xED : 0xFD);
+				outab(0xEA);
+				break;
+			}
+		}
                 op = 0xCD;
-		expr(&e1, 0);
 		outab(op);
 		outrw(&e1, 0);
 		break;
@@ -961,6 +1017,18 @@ machine(struct mne *mp)
 			op |= (v1&0xFF)<<3;
 			comma(1);
 			expr(&e1, 0);
+			outab(op);
+			outrw(&e1, 0);
+			break;
+		}
+		if (IS_R_4K_10_OR_R_4K_11(rxk_mode) &&
+			((v1 = admode(ALT_CND)) != 0) &&
+			((v1&0xFF) < CC_NZ)) {
+			op = 0xA2 | (v1&0xFF)<<3;
+			comma(1);
+			expr(&e1, 0);
+			if (IS_R_4K_10(rxk_mode))
+				outab( 0x7F );
 			outab(op);
 			outrw(&e1, 0);
 			break;
@@ -975,6 +1043,7 @@ machine(struct mne *mp)
 			outab(0xE9);
 			break;
 		}
+
 		xerr('a', "Invalid Addressing Mode.");
 		break;
 /*
@@ -1161,22 +1230,22 @@ machine(struct mne *mp)
 		break;
 
         case R3K_INH1:
-                if (!(r3k_mode || r4k_mode))
-                        xerr('o', "A Rabbit 3000/4000 Instruction.");
+                if (rxk_mode == R_2K)
+                        xerr('o', "A Rabbit 3000A/4000 Instruction.");
       
                 outab(op);
                 break;
       
         case R3K_INH2:
-                if (!(r3k_mode || r4k_mode))
-                        xerr('o', "A Rabbit 3000/4000 Instruction.");
+                if (rxk_mode == R_2K)
+                        xerr('o', "A Rabbit 3000A/4000 Instruction.");
       
                 outab(0xED);
                 outab(op);
                 break;
 
         case R4K_INH2:
-                if (!r4k_mode)
+                if (!IS_ANY_R_4K(rxk_mode))
                         xerr('o', "A Rabbit 4000 Instruction.");
       
                 outab(0xED);
@@ -1184,14 +1253,15 @@ machine(struct mne *mp)
                 break;
       
         case X_R4K_MULU:
-                if (!r4k_mode)
+                if (!IS_R_4K_10_OR_R_4K_11(rxk_mode))
                         xerr('o', "A Rabbit 4000 Instruction.");
-      
+		if (IS_R_4K_10(rxk_mode))
+			outab( 0x7F );
                 outab(op);
                 break;
       
         case X_JRE:
-                if (!r4k_mode)
+                if (!IS_R_4K_10_OR_R_4K_11(rxk_mode))
                         xerr('o', "A Rabbit 4000 Instruction.");
       
                 if ((v1 = admode(ALT_CND)) != 0) {
@@ -1201,6 +1271,8 @@ machine(struct mne *mp)
                         op = 0x98;
 		}
 		expr(&e2, 0);
+		if (IS_R_4K_10(rxk_mode))
+			outab( 0x7F );
 		outab(op);
                 if (mchpcr(&e2)) {
                         v2 = (int) (e2.e_addr - dot.s_addr - 1);
@@ -1216,15 +1288,66 @@ machine(struct mne *mp)
 		break;
       
         case X_CLR:
-                if (!r4k_mode)
+                if (!(IS_R_4K_10_OR_R_4K_11(rxk_mode)))
                         xerr('o', "A Rabbit 4000 Instruction.");
 		t1 = addr(&e1);
 		v1 = (int) e1.e_addr;
 		if ((t1 == S_R16) && (v1 == HL)) {
+			if (IS_R_4K_10(rxk_mode))
+				outab( 0x7F );
 			outab(op);
 			break;
 		}
                 aerr( );
+		break;
+
+	case X_TEST:
+                if (!IS_ANY_R_4K(rxk_mode))
+                        xerr('o', "A Rabbit 4000 Instruction.");
+		t1 = addr(&e1);
+		v1 = (int) e1.e_addr;
+		if (t1 == S_R16) {
+			if (v1 == BC) {
+				outab( 0xED );
+				outab(0x4C);
+				break;
+			}
+			if (v1 == HL) {
+				if (IS_R_4K_10(rxk_mode))
+					outab( 0x7F );
+				outab(0x4C);
+				break;
+			}
+			if (v1 == IX || v1 == IY) {
+				gixiy(v1);
+				outab(0x4C);
+				break;
+			}
+		} else if (t1 == S_R32_BCDE) {
+			outab(0xDD);
+			outab(0x5C);
+			break;
+		} else if (t1 == S_R32_JKHL) {
+			outab(0xFD);
+			outab(0x5C);
+			break;
+		}
+
+		aerr( );
+		break;
+
+	case X_CBM:
+		if (!IS_ANY_R_4K(rxk_mode))
+			xerr('o', "A Rabbit 4000 Instruction.");
+		t1 = addr(&e1);
+		v1 = (int) e1.e_addr;
+		if ( t1 == S_IMMED ) {
+			outab(0xED);
+			outab(0x00);
+			outrb(&e1, 0);
+			break;
+		}
+		aerr( );
 		break;
 
 	default:
