@@ -1,3 +1,10 @@
+2026-02-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/stdcbench-0.8-*.patch,
+	  historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Update infrastructure for current Coremark 1.01 and stdcbench 0.8.
+
 2026-01-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* historygraphs/*:
