@@ -1,4 +1,4 @@
---- stdcbench-0.5/examples/Makefile.SDCC-STM8AF	2018-05-10 10:10:43.000000000 +0200
+--- stdcbench-0.8/examples/Makefile.SDCC-STM8AF	2018-05-10 10:10:43.000000000 +0200
 +++ stdcbench-stm8/Makefile	2018-10-29 12:06:39.008647535 +0100
 @@ -1,6 +1,6 @@
  # A Makefile for SDCC targeting the STM8AF board from the STM8A-Discovery kit
