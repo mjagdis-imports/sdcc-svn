@@ -1,3 +1,8 @@
+2026-03-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/dhrystone-r4k/dhry_1.c:
+	  Increase number of Dhrystone runs for r4k to avoid timeout.
+
 2026-03-08 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* historygraphs/Makefile
