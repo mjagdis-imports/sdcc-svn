@@ -135,7 +135,7 @@ void main (void)
   {
     int n;
     /*scanf ("%d", &n)*/;
-    Number_Of_Runs = 25000/*n*/;
+    Number_Of_Runs = 32000/*n*/;
   }
   printf ("\n");
 
