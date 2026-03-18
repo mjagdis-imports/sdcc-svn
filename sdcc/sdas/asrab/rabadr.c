@@ -94,8 +94,11 @@ addr(struct expr *esp)
            *     ref to memory, scan the next 'symbol' to see if
            *     it is a register or an absolute address
            */
-		if ((indx = admode(R8)) != 0) {
-			mode = S_INDB;
+                if ((indx = admode(R32_JKHL)) != 0) {
+                        mode = S_R32_JKHL;
+		} else
+                if ((indx = admode(R32_BCDE)) != 0) {
+                        mode = S_R32_BCDE;
 		} else
 		if ((indx = admode(R8X)) != 0) {
 			mode = S_R8X;
@@ -166,6 +169,15 @@ addr(struct expr *esp)
 		} else
                 if ((indx = admode(RXPC)) != 0) {
                         mode = S_RXPC;
+		} else
+                if ((indx = admode(R16_JK_OR_ALT)) != 0) {
+                        mode = S_R16_JK_OR_ALT;
+		} else
+                if ((indx = admode(R8IP)) != 0) {
+                        mode = S_R8IP;
+		} else
+                if ((indx = admode(R16SU)) != 0) {
+                        mode = S_R16SU;
 		} else {
 			mode = S_USER;
 			expr(esp, 0);
@@ -321,6 +333,12 @@ struct  adsym   R16_ALT[] = {
     {   "",     0000 }
 };
 
+struct	adsym	R16_JK_OR_ALT[] = {
+    {	"jk'",	1|0400	},
+    {	"jk",	0|0400	},
+    {	"",	0000	}
+};
+
 struct  adsym   R32_BCDE[] = {
   {   "bcde",   BCDE|0400 },
   {   "",       0000      }
@@ -333,6 +351,11 @@ struct  adsym   R32_JKHL[] = {
 
 struct  adsym   RXPC[] = {
   {   "xpc",    1|0400  },
+  {   "",       0000    }
+};
+
+struct  adsym   R16SU[] = {
+  {   "su",     1|0400  },
   {   "",       0000    }
 };
 
@@ -361,5 +384,12 @@ struct  adsym   ALT_CND[] = {
     {   "Z",    CC_Z |0400  },
     {   "NC",   CC_NC|0400  },
     {   "C",    CC_C |0400  },
+    {   "",     0000        }
+};
+
+struct  adsym   R6_CND[] = {
+    {   "GE",   CC_GE|0400  },
+    {   "LEU",  CC_LEU|0400 },
+    {   "LE",   CC_LE|0400  },
     {   "",     0000        }
 };

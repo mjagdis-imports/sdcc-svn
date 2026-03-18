@@ -23,7 +23,6 @@
 
 #include <memory.h>
 #include <stdlib.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -321,6 +320,8 @@ struct options
     int std_sdcc;               /* enable SDCC extensions to C */
     int dollars_in_ident;       /* zero means dollar signs are punctuation */
     int signed_char;            /* use signed for char without signed/unsigned modifier */
+    bool const_stringlit;       /* make string literals const, like in C++ */
+    bool const_code;            /* make objects in read-only __code space implicitly const */
     char *code_seg;             /* segment name to use instead of CSEG */
     char *const_seg;            /* segment name to use instead of CONST */
     char *data_seg;             /* segment name to use instead of DATA */

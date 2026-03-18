@@ -406,7 +406,7 @@ initValPointer (ast *expr)
           if (sclass == S_CODE)
             {
               DCL_TYPE (val->type) = CPOINTER;
-              CodePtrPointsToConst (val->type);
+              checkCodePtrPointsToConst (val->type, expr->filename, expr->lineno);
             }
           else if (oclass)
             DCL_TYPE (val->type) = oclass->ptrType;
@@ -473,7 +473,7 @@ initValPointer (ast *expr)
       if (SPEC_SCLS (expr->etype) == S_CODE)
         {
           DCL_TYPE (val->type) = CPOINTER;
-          CodePtrPointsToConst (val->type);
+          checkCodePtrPointsToConst (val->type, expr->filename, expr->lineno);
         }
       else if (oclass)
         DCL_TYPE (val->type) = oclass->ptrType;
@@ -2313,25 +2313,9 @@ glue (void)
   /* print module name */
   tfprintf (asmFile, "\t!module\n", moduleName);
 
-  // TODO: Move this stuff from here to port-specific genAssemblerStart?
+  // TODO: Move this from here to port-specific genAssemblerStart (like we did for the z80-related ports already)?
   if (TARGET_IS_S08)
     fprintf (asmFile, "\t.cs08\n");
-  else if (TARGET_IS_Z180)
-    fprintf (asmFile, "\t.hd64\n");
-  else if (TARGET_IS_R3KA)
-    fprintf (asmFile, "\t.r3k\n");
-  else if (TARGET_IS_R4K || TARGET_IS_R5K)
-    fprintf (asmFile, "\t.r3k\n");
-  else if (TARGET_IS_R6K)
-    fprintf (asmFile, "\t.r3k\n");
-  else if (TARGET_IS_EZ80)
-    fprintf (asmFile, "\t.ez80\n");
-  else if (TARGET_IS_Z80N)
-    fprintf (asmFile, "\t.zxn\n");
-  else if (TARGET_IS_R800)
-    fprintf (asmFile, "\t.r800\n");
-  else if (TARGET_IS_Z80 && options.allow_undoc_inst)
-    fprintf (asmFile, "\t.allow_undocumented\n");
 
   tfprintf (asmFile, "\t!fileprelude\n");
 

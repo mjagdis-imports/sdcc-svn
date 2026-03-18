@@ -80,14 +80,14 @@ enum {
   E_BIT_ARRAY                   =  50, /* bit array not allowed  */
   E_DUPLICATE_TYPEDEF           =  51, /* typedef name duplicate */
   E_ARG_TYPE                    =  52, /* arg type mismatch   */
-  E_RET_VALUE                   =  53, /* return value mismatch */
+  E_RETURN_MISMATCH             =  53, /* return type mismatch */
   E_FUNC_AGGR                   =  54, /* Function cannot return aggregate. Func body ignored */
   E_FUNC_DEF                    =  55, /* ANSI Style def neede */
   E_DUPLICATE_LABEL             =  56, /* duplicate label name */
   E_LABEL_UNDEF                 =  57, /* undefined label used */
   E_FUNC_VOID                   =  58, /* void func ret value  */
   W_VOID_FUNC                   =  59, /* func must return value */
-  W_RETURN_MISMATCH             =  60, /* return value mismatch */
+  W_RETURN_MISMATCH             =  60, /* return type mismatch */
   E_CASE_CONTEXT                =  61, /* case stmnt without switch */
   E_CASE_CONSTANT               =  62, /* case expression ! const */
   E_BREAK_CONTEXT               =  63, /* break statement invalid */
@@ -365,7 +365,7 @@ enum {
   E_VLA_UNSPECIFIED_SCOPE       = 335, //  "[*] variable length array declarators of unspecified length must have function prototype scope
   W_INCOMPLETE_ARRAY_IMPLICIT_1 = 336, // incomplete array type has length 1 due to implicit initializer
   E_QUALIFIED_FUNCTION          = 337, // qualified function
-  W_NONASCII_ID_NOUNILIB        = 338, // non-ascii characters in identifier, but SDCC built without libu8ident library; diagnostics on and semantics of identifier names limited to be minimum required by ISO C11
+  W_NONASCII_ID_NOUNILIB        = 338, // non-ascii characters in identifier, but SDCC built without libu8ident library; diagnostics on and semantics of identifier names limited to the minimum required by ISO C11
   E_INVALID_ID                  = 339, // invalid identifier
   W_ID_NOT_NORMALIZED_NFC       = 340, // identifier not normalized to unicode normalization form C
   W_INSECURE_ID                 = 341, // insecure identifier not compliant with UTS #39
@@ -379,10 +379,14 @@ enum {
   E_PARAM_FWD_DECL_UNSUPPORTED  = 349, // unsupported parameter forward declaration; only single forward-declared parameters of integer type are supported
   W_VARARG_ONLY_C23             = 350, // function with variable arguments only requires ISO C23 or later
   E_BAD_OPTIONAL                = 351, // types other than the referenced type of a pointer type shall not be optional-qualified
-  W_SIZETCONST_C2Y              = 352, // integer literal of type size_t or ptrdiff_t requires C2y
+  W_SIZETCONST_SDCC             = 352, // integer literals of type size_t or ptrdiff_t are an SDCC extension based on C++23
   W_ARRAY_PARAM_LENGTH          = 353, // argument for array parameter might not be of sufficient length
   W_MAYBE_INVALID_PTR_DEREF     = 354, // maybe invalid pointer dereferenced or array index out of bounds (assuming array parameters are arrays of given size)
   W_OPTIONAL_PTR_DEREF          = 355, // pointer to _Optional could not be proven to be non-null at dereference
+  W_NONCONST_CODE_OBJ           = 356, // object in read-only code space should be const
+  W_NONCONST_CODE_PTR           = 357, // pointer to object in read-only code space should be pointer to const
+  W_OPTIONAL_RELATIONAL         = 358, // pointer to _Optional could not be proven to be non-null at relational operator
+  W_OPTIONAL_ARITHMETIC         = 359, // pointer to _Optional could not be proven to be non-null at pointer arithmetic
 
   // If you get a merge conflict here, some #pragma disable_warning in support/valdiag and support/regression will likely need to be adapted to the resolution. Check there!
 

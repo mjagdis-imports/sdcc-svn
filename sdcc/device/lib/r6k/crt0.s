@@ -41,11 +41,22 @@ MB0CR		.equ	0x14 ; Memory Bank 0 Control Register
 MB1CR		.equ	0x15 ; Memory Bank 1 Control Register
 MB2CR		.equ	0x16 ; Memory Bank 2 Control Register
 MB3CR		.equ	0x17 ; Memory Bank 3 Control Register
+EDMR		.equ	0x420 ; Enable Dual-Mode Register
 
 	.area	_HEADER (ABS)
 
 	; Reset vector - assuming smode0 and smode1 input pins are grounded
 	.org 	0
+
+	; Enable 16-bit internal I/O addresses and switch to instruction set mode 10
+.r6k00
+	ld	a, #0x80
+
+	ioi
+	ld	(MMIDR), a
+	ioi
+	ld	(EDMR), a
+.r6k10
 
 	; Setup internal interrupts. Upper byte of interrupt vector table address. Needs to be even.
 	ld	a, #2

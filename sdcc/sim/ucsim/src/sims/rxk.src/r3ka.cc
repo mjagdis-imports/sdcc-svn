@@ -43,6 +43,12 @@ cl_r3ka::cl_r3ka(class cl_sim *asim):
 {
 }
 
+cl_r3ka::cl_r3ka(class cl_sim *asim, t_addr arom_size):
+  cl_r3k(asim)
+{
+  rom_size= arom_size;
+}
+
 int
 cl_r3ka::init(void)
 {
@@ -63,8 +69,17 @@ void
 cl_r3ka::reset(void)
 {
   cl_r3k::reset();
-  edmr= 0;
+  ioi->set(0x420, 0); // edmr
+  ioi->write(0x10, 0); // MMIDR
+  sysmode= false;
   //mode3k();  
+}
+
+void
+cl_r3ka::make_cpu_hw(void)
+{
+  add_hw(cpu= new cl_r3ka_cpu(this));
+  cpu->init();
 }
 
 struct dis_entry *
@@ -231,5 +246,49 @@ cl_r3ka::print_regs(class cl_console_base *con)
   
   print_disass(PC, con);
 }
+
+
+/* R3KA CPU */
+
+cl_r3ka_cpu::cl_r3ka_cpu(class cl_uc *auc):
+  cl_rxk_cpu(auc)
+{
+  r3kauc= (class cl_r3ka *)auc;
+}
+
+int
+cl_r3ka_cpu::init(void)
+{
+  cl_rxk_cpu::init();
+
+  mmidr= register_cell(ruc->ioi, 0x10,
+		      "MMIDR", "MMU Instruction/data Register");
+  return 0;
+}
+
+t_mem
+cl_r3ka_cpu::read(class cl_memory_cell *cell)
+{
+  if (conf(cell, NULL))
+    return cell->get();
+  if (cell == mmidr)
+    return mmidr->get();
+  return cell->get();
+}
+
+void
+cl_r3ka_cpu::write(class cl_memory_cell *cell, t_mem *val)
+{
+  if (conf(cell, val))
+    return;
+  if (cell == mmidr)
+    {
+      if (*val & 0x80)
+	ruc->ioi->addr_mask= 0xffff;
+      else
+	ruc->ioi->addr_mask= 0x00ff;
+    }
+}
+
 
 /* End of rxk.src/r3ka.cc */

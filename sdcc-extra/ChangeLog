@@ -1,3 +1,33 @@
+2026-03-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2026-03-11 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/dhrystone-r4k/dhry_1.c:
+	  Increase number of Dhrystone runs for r4k to avoid timeout.
+
+2026-03-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2026-02-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/Makefile
+	  historygraphs/*.svg:
+	  Update graphs.
+
+2026-02-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* historygraphs/stdcbench-0.8-*.patch,
+	  historygraphs/Makefile,
+	  historygraphs/*.svg:
+	  Update infrastructure for current Coremark 1.01 and stdcbench 0.8.
+
 2026-01-14 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* historygraphs/*:

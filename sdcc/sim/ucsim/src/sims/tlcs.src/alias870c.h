@@ -3,6 +3,7 @@
 #define CLR_CF 			instruction_04
 #define SET_CF 			instruction_05
 #define CPL_CF 			instruction_06
+#define CMP_x_n			instruction_07
 #define LDW_mx_mn               instruction_08
 #define LDW_mhl_mn              instruction_09
 #define LD_mx_n                 instruction_0a
@@ -84,6 +85,10 @@
 #define LD_rrSP_mn              instruction_4e
 
 // 0 50 - 0 5f
+#define PUSH_rrWA		instruction_50
+#define PUSH_rrBC		instruction_51
+#define PUSH_rrDE		instruction_52
+#define PUSH_rrHL		instruction_53
 #define LD_CF_mx_0              instruction_58
 #define LD_CF_mx_1              instruction_59
 #define LD_CF_mx_2              instruction_5a
@@ -102,6 +107,24 @@
 #define XOR_A_n                 instruction_65
 #define OR_A_n                  instruction_66
 #define CMP_A_n                 instruction_67
+
+// 0 70 - 0 7f
+#define CALLV_0			instruction_70
+#define CALLV_1			instruction_71
+#define CALLV_2			instruction_72
+#define CALLV_3			instruction_73
+#define CALLV_4			instruction_74
+#define CALLV_5			instruction_75
+#define CALLV_6			instruction_76
+#define CALLV_7			instruction_77
+#define CALLV_8			instruction_78
+#define CALLV_9			instruction_79
+#define CALLV_a			instruction_7a
+#define CALLV_b			instruction_7b
+#define CALLV_c			instruction_7c
+#define CALLV_d			instruction_7d
+#define CALLV_e			instruction_7e
+#define CALLV_f			instruction_7f
 
 // 0 80 - 0 8f
 #define JRS_T_a00               instruction_80
@@ -193,11 +216,27 @@
 #define CLR_mx_6                instruction_ce
 #define CLR_mx_7                instruction_cf
 
+// 0 d0 - 0 df
+#define POP_rrWA		instruction_d0
+#define POP_rrBC		instruction_d1
+#define POP_rrDE		instruction_d2
+#define POP_rrHL		instruction_d3
+#define JR_Z			instruction_d8
+#define JR_NZ			instruction_d9
+#define JR_CS			instruction_da
+#define JR_CC			instruction_db
+#define JR_LE			instruction_dc
+#define JR_GT			instruction_dd
+#define JR_T			instruction_de
+#define JR_F			instruction_df
+
 // 0 e0 - 0 ef
 
 // 0 f0 - 0 ff
 #define LD_RBS                  instruction_f9
+#define RET			instruction_fa
 #define JR_a                    instruction_fc
+#define CALL_mn			instruction_fd
 #define JP_mn                   instruction_fe
 
 // 1 00 - 1 3f ALU r,g
@@ -444,8 +483,20 @@
 #define CLR_g_7                 instruction_1cf
 
 // 1 d0 - 1 df
+#define JR_M			instruction_1d0
+#define JR_P			instruction_1d1
+#define JR_SLT			instruction_1d2
+#define JR_SGE			instruction_1d3
+#define JR_SLE			instruction_1d4
+#define JR_SGT			instruction_1d5
+#define JR_VS			instruction_1d6
+#define JR_VC			instruction_1d7
+#define PUSH_gg			instruction_1d8
+#define POP_gg			instruction_1d9
 #define DAA_g			instruction_1da
 #define DAS_g			instruction_1db
+#define PUSH_PSW		instruction_1dc
+#define POP_PSW			instruction_1dd
 #define LD_PSW_n		instruction_1de
 
 // 1 e0 - 1 ef
@@ -467,6 +518,8 @@
 #define LD_g_7_CF               instruction_1ef
 
 // 1 f0 - 1 ff
+#define SHLCA_gg		instruction_1f0
+#define SHRCA_gg		instruction_1f1
 #define MUL_gg			instruction_1f2
 #define DIV_gg			instruction_1f3
 #define SHLC_g			instruction_1f4
@@ -474,6 +527,7 @@
 #define ROLC_g			instruction_1f6
 #define RORC_g			instruction_1f7
 #define NEG_gg			instruction_1fa
+#define CALL_gg			instruction_1fd
 #define JP_gg                   instruction_1fe
 #define SWAP_g                  instruction_1ff
 
@@ -743,9 +797,12 @@
 #define INC_src                 instruction_2f0
 #define SET_src_A               instruction_2f2
 #define LD_src_A_CF             instruction_2f3
+#define ROLD_A_src		instruction_2f6
+#define RORD_A_src		instruction_2f7
 #define DEC_src                 instruction_2f8
 #define LD_dst_n                instruction_2f9
 #define CLR_src_A               instruction_2fa
 #define CPL_src_A               instruction_2fb
 #define LD_CF_src_A             instruction_2fc
+#define CALL_src		instruction_2fd
 #define JP_src                  instruction_2fe

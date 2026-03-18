@@ -79,7 +79,7 @@ genMinusDec (iCode * ic)
             {
               return true;
             }
-          else if(bcount<3 && aopCanIncDec(AOP(result)) )
+          else if(bcount<3 && m6502_aopCanIncDec(AOP(result)) )
             {
 	      while (bcount--)
                 rmwWithAop (OPINCDEC, AOP (result), 1);
@@ -134,7 +134,7 @@ genMinusDec (iCode * ic)
 
   // sameRegs
 
-  if (!aopCanIncDec (AOP (result)))
+  if (!m6502_aopCanIncDec (AOP (result)))
     return false;
 
   emitComment (TRACEGEN|VVDBG, "    %s - sameregs", __func__);
@@ -155,9 +155,14 @@ genMinusDec (iCode * ic)
       if(reg)
         {
           bool needpullx=false;
+          bool needpulla=false;
 
           if(AOP_TYPE(result)==AOP_SOF || AOP_TYPE(left)==AOP_SOF)
-            needpullx=storeRegTempIfSurv(m6502_reg_x);
+            {
+              needpullx=storeRegTempIfSurv(m6502_reg_x);
+              needpulla=storeRegTempIfSurv(m6502_reg_a);
+              reg=m6502_reg_a;
+            }
 
           tlbl = safeNewiTempLabel (NULL);
           loadRegFromAop (reg, AOP (left), 0);
@@ -165,6 +170,7 @@ genMinusDec (iCode * ic)
           rmwWithAop (OPINCDEC, AOP (result), 1);
           safeEmitLabel (tlbl);
           rmwWithAop (OPINCDEC, AOP (result), 0);
+          loadOrFreeRegTemp(m6502_reg_a, needpulla);
           loadOrFreeRegTemp(m6502_reg_x, needpullx);
           return true;
         }
@@ -199,9 +205,9 @@ m6502_genMinus (iCode * ic)
 
   emitComment (TRACEGEN, __func__);
 
-  aopOp (left, ic);
-  aopOp (right, ic);
-  aopOp (result, ic);
+  m6502_aopOp (left, ic);
+  m6502_aopOp (right, ic);
+  m6502_aopOp (result, ic);
 
   printIC(ic);
 
@@ -266,6 +272,7 @@ m6502_genMinus (iCode * ic)
         loadRegTemp(m6502_reg_x);
       else
         loadRegTemp(NULL);
+
       if(restore_a)
         loadRegTemp(m6502_reg_a);
       else
@@ -284,7 +291,7 @@ m6502_genMinus (iCode * ic)
       m6502_emitTSX();
       loadRegFromAop (m6502_reg_a, AOP(left), 0);
       INIT_CARRY();
-        accopWithAop (OPCODE, AOP (right), 0);
+      accopWithAop (OPCODE, AOP (right), 0);
 
       storeRegToAop (m6502_reg_a, AOP (result), 0);
       loadRegTempAt(m6502_reg_a, getLastTempOfs() );
@@ -312,6 +319,7 @@ m6502_genMinus (iCode * ic)
       emit6502op("eor", "#0xff");
       if (maskedtopbyte)
 	emit6502op ("and", IMMDFMT, topbytemask);
+
       storeRegToAop (m6502_reg_a, AOP (result), 0);
       fastRestoreOrFreeA (savea);
       goto release;
@@ -368,8 +376,8 @@ m6502_genMinus (iCode * ic)
   fastRestoreOrFreeA (savea);
 
  release:
-  freeAsmop (left, NULL);
-  freeAsmop (right, NULL);
-  freeAsmop (result, NULL);
+  m6502_freeAsmop (left, NULL);
+  m6502_freeAsmop (right, NULL);
+  m6502_freeAsmop (result, NULL);
 }
 

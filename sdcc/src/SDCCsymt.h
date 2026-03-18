@@ -505,6 +505,7 @@ extern sym_link *validateLink (sym_link * l,
 #define SPEC_SHORT(x) validateLink(x, "SPEC_LONG", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_short
 #define SPEC_USIGN(x) validateLink(x, "SPEC_USIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_unsigned
 #define SPEC_SIGN(x) validateLink(x, "SPEC_SIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_signed
+#define SPEC_IMPLICIT_SIGN(x) validateLink(x, "SPEC_IMPLICIT_SIGN", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_implicit_sign
 #define SPEC_SCLS(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass
 #define SPEC_SCLS_IMPLICITINTRINSIC(x) validateLink(x, "SPEC_SCLS", #x, SPECIFIER, __FILE__, __LINE__)->select.s.sclass_implicitintrinsic
 #define SPEC_ENUM(x) validateLink(x, "SPEC_ENUM", #x, SPECIFIER, __FILE__, __LINE__)->select.s.b_isenum
@@ -572,7 +573,7 @@ extern sym_link *validateLink (sym_link * l,
 #define IS_LONGLONG(x)   (IS_SPEC(x) && x->select.s.b_longlong)
 #define IS_UNSIGNED(x)   (IS_SPEC(x) && x->select.s.b_unsigned)
 #define IS_TYPEDEF(x)    (IS_SPEC(x) && x->select.s.b_typedef)
-#define IS_CONSTANT(x)   (isConstant (x))
+#define IS_CONSTANT(x)   (isConst (x))
 #define IS_RESTRICT(x)   (isRestrict (x))
 #define IS_STRUCT(x)     (IS_SPEC(x) && x->select.s.noun == V_STRUCT)
 #define IS_ABSOLUTE(x)   (IS_SPEC(x) && x->select.s.b_absadr )
@@ -661,9 +662,11 @@ extern symbol *fps16x16_gteq;
 /* Dims: mul/div/mod, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED/BOTH */
 extern symbol *muldiv[3][4][4];
 /* 16 x 16 -> 32 multiplication SIGNED/UNSIGNED */
-extern symbol *muls16tos32[2];
+extern symbol *mul_16_16_32[2];
+/* 32 x 32 -> 64 multiplication SIGNED/UNSIGNED */
+extern symbol *mul_32_32_64[2];
 /* 32 x 8 -> 64 multiplication UNSIGNED */
-extern symbol *mulu32u8tou64;
+extern symbol *mul_u32_u8_64;
 /* Dims: BYTE/WORD/DWORD/QWORD SIGNED/UNSIGNED */
 extern sym_link *multypes[4][2];
 /* Dims: to/from float, BYTE/WORD/DWORD/QWORD, SIGNED/UNSIGNED */
@@ -736,7 +739,7 @@ sym_link *newBoolLink ();
 sym_link *newPtrDiffLink ();
 sym_link *newVoidLink ();
 int compareType (sym_link *, sym_link *, bool ignoreimplicitintrinsic);
-int compareTypeExact (sym_link *, sym_link *, long level);
+int compareTypeExact (sym_link *, sym_link *, long level, bool check_top_std_qual);
 int compareTypeInexact (sym_link *, sym_link *);
 int checkFunction (symbol *, symbol *);
 void cleanUpLevel (bucket **, long);
@@ -767,12 +770,12 @@ void *findSymWithLevel (bucket **, struct symbol *sym);
 void *findSymWithBlock (bucket **, struct symbol *sym, int, long);
 void changePointer (sym_link * p);
 void checkTypeSanity (sym_link * etype, const char *name);
-void checkQualifiers (symbol *sym, sym_link *type, bool check_vla_unspec);
+void checkQualifiers (symbol *sym, sym_link *type, bool check_vla_unspec, bool decay);
 sym_link *typeFromStr (const char *);
 STORAGE_CLASS sclsFromPtr (sym_link * ptr);
 sym_link *newEnumType (symbol *enumlist, sym_link *userRequestedType);
 void promoteAnonStructs (int, structdef *);
-bool isConstant (sym_link *type);
+bool isConst (sym_link *type);
 bool isVolatile (sym_link *type);
 bool isRestrict (sym_link *type);
 bool isAtomic (sym_link *type);
