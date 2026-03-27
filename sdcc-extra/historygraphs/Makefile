@@ -13,7 +13,7 @@
 # Broken: 8984-9000, 9104 (bug #2280), 9106-9114 (whetstone build segfaults), 9379-9418 (SDCC build fails), 9424 (library build fails) 9477 (SDCC build fails), 9891-9946 (stdcbench build fails), 9958-10147 (Dhrystone z80 build fails) 10233-10270 (stdcbench build segfaults), 10185-10340 (stdcbench build segfaults). 10345-10668 (sdcpp build fails). 10408 (stdcbench build segfaults). 10426-10462 (coremark build fails) 10682 (library build fails for mcs51) 11952 (library build fails). 13699 (sdcpp build fails). 14225-14238 (sdcc build fails), 14400 (build fails). 14463 (stm8 lib build fails)m 14464 (coremark build fails for z80). 16233-16331 (benchmarks issues on R4K).
 # Build of large-stack-auto lib for mcs51 was enabled in 9521.
 
-REVISIONS_R4K2 = 16340 16351 16354
+REVISIONS_R4K2 = 16340 16351 16354 16379 16400
 REVISIONS_R4K1 = 15725 15768 15890 15891 15944 15945 15957 16016 16053 16153 16176 16220
 REVISIONS_R4K = $(REVISIONS_R4K1) $(REVISIONS_R4K2)
 REVISIONS_R3KA_WHETSTONE = 12891 12900 12969 13131 13200 13300 13495 13689 13709 13748 13772 13800 13804 13813 13825 13845 13885 13900 14000 14184 14208 14211 14246 14248 14253 14300 14346 14370 14398 14405 14443 14448 14453 14472 14510 14528 14648 14650 14710 14738 14817 14889 14955 14958 14996 15015 15022 15029 15032 15037 15060 15093 15104 15117 15118 15119 15172 15240 15246 15317 15418 15435 15451 15486 15550 15580 15669 15724 $(REVISIONS_R4K1) 16233 16305 16311 $(REVISIONS_R4K2)
@@ -31,7 +31,7 @@ GOALS = size speed default
 TARGETS = stm8 mcs51 r3ka r4k z80
 
 # Adjust these according to attached cables!
-STM8_TTY = /dev/ttyUSB2
+STM8_TTY = /dev/ttyUSB1
 MCS51_TTY = /dev/ttyUSB3
 R3KA_TTY = /dev/ttyUSB0
 R4K_TTY = /dev/ttyUSB0
