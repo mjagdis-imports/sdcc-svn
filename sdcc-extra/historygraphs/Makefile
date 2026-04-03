@@ -32,10 +32,10 @@ TARGETS = stm8 mcs51 r3ka r4k z80
 
 # Adjust these according to attached cables!
 STM8_TTY = /dev/ttyUSB1
-MCS51_TTY = /dev/ttyUSB3
-R3KA_TTY = /dev/ttyUSB0
-R4K_TTY = /dev/ttyUSB0
-Z80_TTY = /dev/ttyUSB2
+MCS51_TTY = /dev/ttyUSB2
+R3KA_TTY = /dev/ttyUSB3
+R4K_TTY = /dev/ttyUSB3
+Z80_TTY = /dev/ttyUSB0
 
 COMPILERS = $(foreach revision, $(REVISIONS), sdcc-$(revision)/bin/sdcc)
 
