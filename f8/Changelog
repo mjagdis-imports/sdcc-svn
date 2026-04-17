@@ -1,7 +1,7 @@
 2026-04-17 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* opcodemaptest/opcodemaptool.cc:
-	  ldw y, z opcode fix for opcode map optimization experiments.
+	  ldw y, z opcode fix for opcode map optimization experiments. Allow recreation of file structure for opcode experiments from map table.
 
 2025-12-01 Philipp Klaus Krause <philipp@colecovision.eu>
 

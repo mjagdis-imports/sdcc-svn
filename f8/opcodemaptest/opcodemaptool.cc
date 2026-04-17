@@ -656,6 +656,7 @@ void help(FILE *f)
 	fprintf(f, "opcodemaptool <command> [n]\n");
 	fprintf(f, "<command>:   create, startrandom <n>, walkrandom <n>, showbest <n>, deleteworst <n>\n");
 	fprintf(f, "create:      init data structures, insert default opcode map\n");
+	fprintf(f, "recreate:    reinit data structures (opcodemaps directory) from opcodemapstable\n");
 	fprintf(f, "startrandom: add n random opcode maps\n");
 	fprintf(f, "walkrandom:  add n random opcode maps that are similar to good existing ones\n");
 	fprintf(f, "showbest:    add show best n opcode maps\n");
@@ -808,6 +809,16 @@ int main(int argc, char **argv)
 		init_table_order(table);
 		add_opcodemap(table);
 		write_opcodemapstable();
+		create_opcodemapsfiles();
+	}
+	if (argc == 2 && !strcmp(argv[1], "recreate"))
+	{
+		if (mkdir ("opcodemaps", 0750))
+		{
+			fprintf (stderr, "Failed to create opcodemaps directory\n");
+			return (-1);
+		}
+		read_opcodemapstable();
 		create_opcodemapsfiles();
 	}
 	else if (argc == 3 && !strcmp(argv[1], "startrandom"))
