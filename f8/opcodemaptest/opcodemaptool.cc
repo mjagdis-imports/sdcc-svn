@@ -263,7 +263,7 @@ const char *opcodenames_verilog[NUM_OPCODES] =	{
 	"OPCODE_JRNO_D",
 	"OPCODE_JRSGE_D",
 	"OPCODE_JRSLT_D",
-	"OPCODE_OPCODE_LDW_Y_Z",
+	"OPCODE_LDW_Y_Z",
 	"OPCODE_JRSLE_D",
 	"OPCODE_LDW_X_IY",
 	"OPCODE_JRLE_D",
