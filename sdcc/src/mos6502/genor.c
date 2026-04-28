@@ -52,11 +52,12 @@ m6502_genOr (iCode * ic, iCode * ifx)
   unsigned int bytemask;
   int bitpos = -1;
 
-  emitComment (TRACEGEN, __func__);
+  m6502_emitComment (TRACEGEN, "%s - ifx:%d", 
+               __func__, ifx?1:0);
 
-  aopOp (left, ic);
-  aopOp (right, ic);
-  aopOp (result, ic);
+  m6502_aopOp (left, ic);
+  m6502_aopOp (right, ic);
+  m6502_aopOp (result, ic);
   printIC(ic);
 
   /* force literal on the right and reg on the left */
@@ -79,7 +80,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
       lit = ullFromVal (AOP (right)->aopu.aop_lit);
       lit &= litmask(size);
       bitpos = isLiteralBit (lit) - 1;
-      emitComment (TRACEGEN|VVDBG, "  %s: lit=%04x bitpos=%d", __func__, lit, bitpos);
+      m6502_emitComment (TRACEGEN|VVDBG, "  %s: lit=%04x bitpos=%d", __func__, lit, bitpos);
     }
 
   // test for flags only
@@ -97,7 +98,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
       // FIXME: good optmization but currently not working
       if (IS_MOS65C02 && isLit && lit!=0)
 	{
-	  emit6502op("bit","#0xff");
+	  m6502_emitOp("bit","#0xff");
 	  genIfxJump (ifx, "z");
 	  goto release;
 	}
@@ -105,7 +106,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
 
       if(AOP_TYPE(left)==AOP_REG)
 	{
-	  emitComment (TRACEGEN|VVDBG, "  %s: special case reg bit %d", __func__, bitpos);
+	  m6502_emitComment (TRACEGEN|VVDBG, "  %s: special case reg bit %d", __func__, bitpos);
 
 	  if( size==1 && isLit && lit==NOP_MASK ) 
 	    {
@@ -118,7 +119,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
       // test A for flags only
       if (IS_AOP_A (AOP (left)))
 	{
-	  emitComment (TRACEGEN|VVDBG, "  %s: test A for flags", __func__);
+	  m6502_emitComment (TRACEGEN|VVDBG, "  %s: test A for flags", __func__);
 
 	  if (m6502_reg_a->isDead)
 	    accopWithAop (OPCODE, AOP (right), 0);
@@ -180,12 +181,12 @@ m6502_genOr (iCode * ic, iCode * ifx)
   // Rockwell and WDC only - works but limited usefulness
   if (IS_MOS65C02 && AOP_TYPE (right) == AOP_LIT)
     {
-      if (sameRegs (AOP (left), AOP (result)) && (AOP_TYPE (left) == AOP_DIR) 
+      if (m6502_sameRegs (AOP (left), AOP (result)) && (AOP_TYPE (left) == AOP_DIR) 
 	  && isLiteralBit (lit))
 	{
 	  char inst[5] = "smbx";
 	  inst[3] = '0' + (bitpos & 7);
-	  emit6502op (inst, "%s", aopAdrStr (AOP (left), bitpos >> 3, false));
+	  m6502_emitOp (inst, "%s", aopAdrStr (AOP (left), bitpos >> 3, false));
 	  goto release;
 	}
     }
@@ -193,11 +194,13 @@ m6502_genOr (iCode * ic, iCode * ifx)
 
   unsigned int bmask0 = (isLit) ? ((lit >> (0 * 8)) & 0xff) : 0x100;
   unsigned int bmask1 = (isLit) ? ((lit >> (1 * 8)) & 0xff) : 0x100;
-  bool x_zero = (IS_AOP_XA(AOP(left)) || IS_AOP_XY(AOP(left)))&& (m6502_reg_x->isLitConst) && (m6502_reg_x->litConst==0);
+  bool x_zero = (IS_AOP_XA(AOP(left)) || IS_AOP_XY(AOP(left))) && (m6502_reg_x->isLitConst) && (m6502_reg_x->litConst==0);
 
   if (x_zero)
     {
-      transferAopAop(AOP(right), 1, AOP(result), 1);
+      if(AOP_SIZE (result)>1)
+        transferAopAop(AOP(right), 1, AOP(result), 1);
+
       loadRegFromAop (m6502_reg_a, AOP (left), 0);
       accopWithAop (OPCODE, AOP (right), 0);
       storeRegToAop (m6502_reg_a, AOP (result), 0);
@@ -206,7 +209,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
 
   if(IS_AOP_XA(AOP(result)))
     {
-      emitComment (TRACEGEN|VVDBG, "  %s: XA", __func__);
+      m6502_emitComment (TRACEGEN|VVDBG, "  %s: XA", __func__);
 
       if (IS_AOP_A(AOP(left)))
 	storeConstToAop(0x00, AOP(result), 1);
@@ -235,9 +238,8 @@ m6502_genOr (iCode * ic, iCode * ifx)
 	  if(needpulla) 
 	    fastRestoreA();
 	  else
-	    {
-	      loadRegFromAop (m6502_reg_a, AOP (left), 0);
-	    }
+            loadRegFromAop (m6502_reg_a, AOP (left), 0);
+
 	  if (bmask0!=NOP_MASK)
             accopWithAop (OPCODE, AOP (right), 0);
 	}
@@ -253,9 +255,13 @@ m6502_genOr (iCode * ic, iCode * ifx)
   if(needpulla)
     m6502_reg_a->isDead=true;
 
-  emitComment (TRACEGEN|VVDBG, "  %s: general path", __func__);
+  m6502_emitComment (TRACEGEN|VVDBG, "  %s: general path", __func__);
 
-  for(offset=0; offset<size; offset++)
+  int incdec;
+  incdec = m6502_findRegAop (AOP(left), size-1) ? -1 : 1;
+  offset = incdec>0 ? 0 : size-1;
+
+  for( ; offset>=0 && offset<size; offset+=incdec)
     {
       bytemask = (isLit) ? ((lit >> (offset * 8)) & 0xff) : 0x100;
 
@@ -272,14 +278,15 @@ m6502_genOr (iCode * ic, iCode * ifx)
 	  loadRegFromAop (m6502_reg_a, AOP (left), offset);
 	  accopWithAop (OPCODE, AOP (right), offset);
 	  storeRegToAop (m6502_reg_a, AOP (result), offset);
+          m6502_freeReg(m6502_reg_a);
 	}
     }
 
   fastRestoreOrFreeA(needpulla);
 
  release:
-  freeAsmop (left, NULL);
-  freeAsmop (right, NULL);
-  freeAsmop (result, NULL);
+  m6502_freeAsmop (left, NULL);
+  m6502_freeAsmop (right, NULL);
+  m6502_freeAsmop (result, NULL);
 }
 

@@ -988,6 +988,9 @@ _setDefaultOptions (void)
   else
     options.data_loc = 0x8000;
 
+  if (IS_RAB) // The RCM have RAM physically at 0x80000, the lower 16K can be used in the generic address space (mapped from data_loc), leaving the rest from 0x84000 for xdata.
+    options.xdata_loc = 0x84000;
+
   options.out_fmt = 'i';        /* Default output format is ihx */
 }
 
@@ -1088,9 +1091,9 @@ _z80_genAssemblerStart (FILE * of)
   else if (TARGET_IS_R3KA)
     fprintf (of, "\t.r3ka\n");
   else if (TARGET_IS_R4K || TARGET_IS_R5K)
-    fprintf (of, "\t.r3ka\n"); // Todo: adjust when we actually emit R4K instructions!
+    fprintf (of, "\t.r4k10\n");
   else if (TARGET_IS_R6K)
-    fprintf (of, "\t.r3ka\n"); // Todo: adjust when we actually emit R4K/R6K instructions!
+    fprintf (of, "\t.r6k10\n");
   else if (TARGET_IS_TLCS90)
     fprintf (of, "\tby = 0xffed\n");
   else if (TARGET_IS_EZ80)
@@ -1107,15 +1110,15 @@ const char *rab_int_names[32] = {
   "sys/user mode violation", "quadrature decoder", "input capture", "stack limit violation", "serial port E", "serial port F", "network port B (Ethernet)", "timer C"};
 
 static int
-rab_genIVT(struct dbuf_s * oBuf, symbol ** intTable, int intCount)
+rab_genIVT (struct dbuf_s *oBuf, symbol **intTable, int intCount)
 {
   dbuf_tprintf (oBuf, "\tGCSR\t.equ\t0x00 ; Global control / status register\n");
   dbuf_tprintf (oBuf, "\t.area	_IIVT (ABS)\n");
   dbuf_printf (oBuf, "\n");
 
-  if(intCount > RAB_INTERRUPTS_COUNT)
+  if (intCount > RAB_INTERRUPTS_COUNT)
     {
-      werror(E_INT_BAD_INTNO, intCount - 1);
+      werror (E_INT_BAD_INTNO, intCount - 1);
       intCount = RAB_INTERRUPTS_COUNT;
     }
     
@@ -1176,7 +1179,7 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
     (result_size == 2 || result_size <= 4 && !IS_UNSIGNED (left) && !IS_UNSIGNED (right)))
     return(true);
   // Later Rabbits also have unsigned 16x16->32 multiplication.
-  else if ((IS_R4K_NOTYET || IS_R5K_NOTYET || IS_R6K_NOTYET) && getSize (left) == 2 && getSize (right) == 2 &&
+  else if ((IS_R4K || IS_R5K || IS_R6K) && getSize (left) == 2 && getSize (right) == 2 &&
     (result_size <= 4 && IS_UNSIGNED (left) && IS_UNSIGNED (right)))
     return(true);
   // The R800 has unsigned 16x16->32 multiplication.
@@ -1918,8 +1921,8 @@ PORT r2ka_port =
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { 
-    -1,                         /* shifts never use support routines */
-    false,                      /* do not use support routine for int x int -> long multiplication */
+    -1,                         // shifts never use support routines
+    true,                       // use support routine for unsigned int x unsigned int -> unsigned long multiplication
     true,                       // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication.
   },
   { z80_emitDebuggerSymbol },
@@ -2055,8 +2058,8 @@ PORT r3ka_port =
   1,                            /* ABI revision */
   { -1, 0, 0, 4, 0, 2, 0 },
   { 
-    -1,                         /* shifts never use support routines */
-    false,                      /* do not use support routine for int x int -> long multiplication */
+    -1,                         // shifts never use support routines
+    true,                       // use support routine for unsigned int x unsigned int -> unsigned long multiplication
     true,                       // Use support routine for unsigned long x unsigned char -> unsigned long long multiplication.
   },
   { z80_emitDebuggerSymbol },

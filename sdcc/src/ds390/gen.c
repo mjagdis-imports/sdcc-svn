@@ -10506,7 +10506,7 @@ genUnpackBits (operand * result, const char *rname, int ptype)
       emitPtrByteGet (rname, ptype, FALSE);
       AccRol (8 - bstr);
       emitcode ("anl", "a,#!constbyte", (unsigned)(((unsigned char)-1) >> (8 - blen)));
-      if (!SPEC_USIGN (etype))
+      if (!SPEC_USIGN (etype) && !IS_BOOLEAN (etype))
         {
           /* signed bitfield */
           symbol *tlbl = newiTempLabel (NULL);
@@ -10551,7 +10551,7 @@ finish:
     {
       char *source;
 
-      if (SPEC_USIGN (etype))
+      if (SPEC_USIGN (etype) || IS_BOOLEAN (etype))
         source = zero;
       else
         {
@@ -14025,7 +14025,7 @@ genDummyRead (iCode * ic)
           offset = 0;
           while (size--)
             {
-              MOVA (aopGet (op, offset, FALSE, FALSE, FALSE));
+              MOVA (aopGet (op, offset, false, false, NULL));
               offset++;
             }
         }
@@ -14049,7 +14049,7 @@ genDummyRead (iCode * ic)
           offset = 0;
           while (size--)
             {
-              MOVA (aopGet (op, offset, FALSE, FALSE, FALSE));
+              MOVA (aopGet (op, offset, false, false, NULL));
               offset++;
             }
         }
@@ -14105,7 +14105,7 @@ genEndCritical (iCode * ic)
         }
       else
         {
-          MOVA (aopGet (IC_RIGHT (ic), 0, FALSE, FALSE, FALSE));
+          MOVA (aopGet (IC_RIGHT (ic), 0, false, false, NULL));
           emitcode ("rrc", "a");
           emitcode ("mov", "ea,c");
         }

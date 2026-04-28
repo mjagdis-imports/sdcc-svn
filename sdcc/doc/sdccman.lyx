@@ -3176,7 +3176,7 @@ In 4.5.12,
 
 \begin_layout Itemize
 In 4.5.12,
- struct/union members other than anoymous struct/union or bit-fields must be named.
+ struct/union members other than anonymous struct/union or bit-fields must be named.
 \end_layout
 
 \begin_layout Itemize
@@ -3201,6 +3201,114 @@ In 4.5.17,
 \begin_layout Itemize
 In 4.5.18,
  plain int bit-fields are signed.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.20,
+ some non-matching return types that previously raised warnings raise errors.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.23,
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+_Generic
+\end_layout
+
+\end_inset
+
+ works as clarified by C23,
+ more attention is payed to implicit 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+char
+\end_layout
+
+\end_inset
+
+ signedness,
+ string literals are only 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+const
+\end_layout
+
+\end_inset
+
+ if requested with 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-str
+\end_layout
+
+\end_inset
+
+,
+ and a read-only 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+__code
+\end_layout
+
+\end_inset
+
+ address space only implies 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+const
+\end_layout
+
+\end_inset
+
+ if requested with 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-code
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+In 4.5.24,
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-str
+\end_layout
+
+\end_inset
+
+ has been renamed to 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+--fconst-stringlit
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
@@ -10639,10 +10747,6 @@ long long
 .
 \end_layout
 
-\begin_layout Itemize
-Qualifier-preserving standard library functions are not implemented.
-\end_layout
-
 \begin_layout Subsubsection*
 Features missing in some ports
 \end_layout
@@ -11057,12 +11161,35 @@ literal "false"
 \end_inset
 
 :
- Literal Suffixes for
+ Literal Suffixes for 
 \begin_inset Flex Code
 status open
 
 \begin_layout Plain Layout
 size_t
+\end_layout
+
+\end_inset
+
+ (as an extension)
+\end_layout
+
+\begin_layout Itemize
+\begin_inset CommandInset href
+LatexCommand href
+name "N3804"
+target "https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3804.txt"
+literal "false"
+
+\end_inset
+
+:
+ The Elvis operator 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+?:
 \end_layout
 
 \end_inset
@@ -12730,6 +12857,722 @@ name "sec:Command-Line-Options"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsection
+Language dialect Options
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-<arg>
+\series default
+ Determine the language standard.
+ For enhanced compatibility with other compilers,
+ 
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std
+\series default
+ can also be used with a single dash (i.e.
+ 
+\series bold
+-std
+\series default
+) and with 
+\series bold
+=
+\series default
+ or 
+\series bold
+
+\begin_inset space \textvisiblespace{}
+\end_inset
+
+
+\series default
+ (whitespace) as delimiter.
+ The language standard,
+ specified via 
+\series bold
+<arg>
+\series default
+,
+ can be one of the following:
+\end_layout
+
+\begin_deeper
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c90 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-c89
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 First Edition standard (ANSI C89 / ISO C90).
+ Alternative spellings:
+ 
+\series bold
+c89
+\series default
+,
+ 
+\series bold
+iso9899:1990
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c94 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 First Edition standard as modified in amendment 1.
+ Alternative spelling:
+ 
+\series bold
+c95,
+ iso9899:199409
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c99 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Second Edition standard (ISO C99).
+ Alternative spelling:
+ 
+\series bold
+iso9899:1999
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c11 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc11
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Third Edition standard (ISO C11).
+ Alternative spelling:
+ 
+\series bold
+iso9899:2011
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c17 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc17
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Fourth Edition standard (ISO C17).
+ Alternative spellings:
+ 
+\series bold
+iso9899:2017
+\series default
+,
+ 
+\series bold
+c18
+\series default
+,
+ 
+\series bold
+iso9899:2018
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c23 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc23
+\end_layout
+
+\end_inset
+
+
+\series default
+ Follow the ISO/IEC 9899 Fifth Edition standard (ISO C23).
+ Alternative spelling:
+ 
+\series bold
+c2x
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+c2y 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc2y
+\end_layout
+
+\end_inset
+
+
+\series default
+ Enable features anticipated for the Sixth Edition standard (currently abbreviated ISO C2y).
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc90 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc89
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ANSI C89 / ISO C90,
+ but allow some SDCC behaviour that conflicts with the standard.
+ Alternative spelling:
+ 
+\series bold
+sdcc89
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc99 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc99
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C99,
+ but allow some SDCC behaviour that conflicts with the standard.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc11 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc11
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C11,
+ but allow some SDCC behaviour that conflicts with the standard (default).
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc17 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc17
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C17,
+ but allow some SDCC behaviour that conflicts with the standard.
+ Alternative spelling:
+ 
+\series bold
+sdcc18
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc23 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc23
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C23,
+ but allow some SDCC behaviour that conflicts with the standard.
+ Alternative spelling:
+ 
+\series bold
+sdcc2x
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+sdcc2y 
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-std-sdcc2y
+\end_layout
+
+\end_inset
+
+
+\series default
+ Generally follow ISO C2y,
+ but allow some SDCC behaviour that conflicts with the standard.
+\end_layout
+
+\end_deeper
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fdollars-in-identifiers
+\begin_inset Index idx
+range none
+pageformat default
+status collapsed
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fdollars-in-identifiers
+\end_layout
+
+\end_inset
+
+
+\series default
+ Permit '$' as an identifier character.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fsigned-char
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-fsigned-char
+\end_layout
+
+\end_inset
+
+
+\series default
+ By default char is 
+\family typewriter
+unsigned
+\family default
+.
+ To set the signedness for characters to signed,
+ use the option -
+\series bold
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+-fsigned-char.
+ If this option is not set and no signedness keyword (unsigned/signed) is given,
+ a char will be unsigned.
+ All other types are unaffected.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-const-stringlit
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-const-stringlit
+\end_layout
+
+\end_inset
+
+
+\series default
+ Make string literals const.
 \end_layout
 
 \begin_layout Subsection
@@ -16175,76 +17018,6 @@ status collapsed
 
 \end_inset
 
--fsigned-char
-\begin_inset Index idx
-range none
-pageformat default
-status open
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--fsigned-char
-\end_layout
-
-\end_inset
-
-
-\series default
- By default char is 
-\family typewriter
-unsigned
-\family default
-.
- To set the signedness for characters to signed,
- use the option -
-\series bold
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
-
-\series default
--fsigned-char.
- If this option is set and no signedness keyword (unsigned/signed) is given,
- a char will be unsigned.
- All other types are unaffected.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
 -nostdinc
 \begin_inset Index idx
 range none
@@ -16329,6 +17102,54 @@ Libraries
 \end_inset
 
  path to the linker.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-norestartseqatomics
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-norestartseqatomics
+\end_layout
+
+\end_inset
+
+
+\series default
+ Omit restartable sequence support routines for atomics;
+ can reduce code size,
+ but disables support for atomic that use these support routines;
+ trying to use such atomics will then result in a diagnostic.
 \end_layout
 
 \begin_layout Labeling
@@ -16959,558 +17780,6 @@ status collapsed
 
 \end_inset
 
--std-<arg>
-\series default
- Determine the language standard.
- For enhanced compatibility with other compilers,
- 
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std
-\series default
- can also be used with a single dash (i.e.
- 
-\series bold
--std
-\series default
-) and with 
-\series bold
-=
-\series default
- or 
-\series bold
-
-\begin_inset space \textvisiblespace{}
-\end_inset
-
-
-\series default
- (whitespace) as delimiter.
- The language standard,
- specified via 
-\series bold
-<arg>
-\series default
-,
- can be one of the following:
-\end_layout
-
-\begin_deeper
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c90 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-c89
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 First Edition standard (ANSI C89 / ISO C90).
- Alternative spellings:
- 
-\series bold
-c89
-\series default
-,
- 
-\series bold
-iso9899:1990
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c94 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 First Edition standard as modified in amendment 1.
- Alternative spelling:
- 
-\series bold
-c95,
- iso9899:199409
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c99 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Second Edition standard (ISO C99).
- Alternative spelling:
- 
-\series bold
-iso9899:1999
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c11 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc11
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Third Edition standard (ISO C11).
- Alternative spelling:
- 
-\series bold
-iso9899:2011
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c17 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc17
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Fourth Edition standard (ISO C17).
- Alternative spellings:
- 
-\series bold
-iso9899:2017
-\series default
-,
- 
-\series bold
-c18
-\series default
-,
- 
-\series bold
-iso9899:2018
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c23 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc23
-\end_layout
-
-\end_inset
-
-
-\series default
- Follow the ISO/IEC 9899 Fifth Edition standard (ISO C23).
- Alternative spelling:
- 
-\series bold
-c2x
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-c2y 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc2y
-\end_layout
-
-\end_inset
-
-
-\series default
- Enable features anticipated for the Sixth Edition standard (currently abbreviated ISO C2y).
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc90 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc89
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ANSI C89 / ISO C90,
- but allow some SDCC behaviour that conflicts with the standard.
- Alternative spelling:
- 
-\series bold
-sdcc89
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc99 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc99
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C99,
- but allow some SDCC behaviour that conflicts with the standard.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc11 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc11
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C11,
- but allow some SDCC behaviour that conflicts with the standard (default).
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc17 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc17
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C17,
- but allow some SDCC behaviour that conflicts with the standard.
- Alternative spelling:
- 
-\series bold
-sdcc18
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc23 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc23
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C23,
- but allow some SDCC behaviour that conflicts with the standard.
- Alternative spelling:
- 
-\series bold
-sdcc2x
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
-sdcc2y 
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--std-sdcc2y
-\end_layout
-
-\end_inset
-
-
-\series default
- Generally follow ISO C2y,
- but allow some SDCC behaviour that conflicts with the standard.
-\end_layout
-
-\end_deeper
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
 -codeseg
 \series default
 
@@ -17628,51 +17897,6 @@ const
  default CONST.
  This is useful if you need to tell the compiler to put the const data in a special segment so you can later on tell the linker to put this segment in a special place in memory.
  Can be used for instance when using bank switching to put the const data in a bank.
-\end_layout
-
-\begin_layout Labeling
-\labelwidthstring 00.00.0000
-
-\series bold
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--fdollars-in-identifiers
-\begin_inset Index idx
-range none
-pageformat default
-status collapsed
-
-\begin_layout Plain Layout
--
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-\backslash
-/
-\end_layout
-
-\end_inset
-
--fdollars-in-identifiers
-\end_layout
-
-\end_inset
-
-
-\series default
- Permit '$' as an identifier character.
 \end_layout
 
 \begin_layout Labeling
@@ -24977,6 +25201,38 @@ out (c),a
 \end_layout
 
 \begin_layout Subsubsection
+__far
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+far
+\end_layout
+
+\end_inset
+
+ (eZ80 only)
+\end_layout
+
+\begin_layout Standard
+The ez80 port supports a 1 MB __far address space that contains the generic address space.
+ Support for __far is still very incomplete and should be considered experimental.
+\end_layout
+
+\begin_layout Subsubsection
 __sfr
 \begin_inset Index idx
 range none
@@ -25367,8 +25623,6 @@ far
 The Rabbit ports supports a 1 MB __far address space that contains the generic address space.
  Due to limitations of the Rabbit ldp instructions,
  variables declared as __far can be neither volatile nor atomic.
- Note:
- This support is still very incomplete and should be considered experimental.
 \end_layout
 
 \begin_layout Subsection
@@ -51619,6 +51873,251 @@ void handler(void) __interrupt
 The internal interrupts 2 to 7 are software interrupts (for the rst and syscall instructions).
  Hardware interrupt handlers written in C either run at the priority of the interrupt (with __critical) or at the priority of the code executing before the interrupt (without __critical).
  More complex prioritites (changing priority while the handler is executing) require interrupt handlers written in assembler.
+\end_layout
+
+\begin_layout Subsubsection
+Rabbit memory map and memory models
+\end_layout
+
+\begin_layout Standard
+Most Rabbit instructions operate on a 64K logical address space.
+ The Rabbits support a 1M (up to Rabbit 3000A) or 512K to 16M (from Rabbit 4000,
+ configured via MECR register,
+ default is 1M) physical address space,
+ which the logical address space is mapped into via a memory management unit (MMU).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename rabbit-memory.svg
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+SDCC assumes a 1M physical address space,
+ and that memory for the program and constant data (typically flash) is located from 0x0 in the physical address space,
+ up to at most 0x7ffff.
+ It assumes that memory for non-constant data (typically RAM) is mapped from 0x80000.
+ This is the typical hardware configuration for Rabbit-based systems,
+ including the Rabbit Control Modules (RCM).
+\end_layout
+
+\begin_layout Standard
+The logical address space is divided into four segments,
+ which the MMU maps into physical address space.
+ SDCC uses the Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+Root
+\begin_inset Quotes srd
+\end_inset
+
+ segment for the SDCC code,
+ gsinit,
+ etc segments (startup code,
+ const data not in __far,
+ program code in small memory model).
+ It uses the 
+\begin_inset Quotes sld
+\end_inset
+
+Stack
+\begin_inset Quotes srd
+\end_inset
+
+ segment for the SDCC data segment,
+ stack and heap (non-const data no in __far).
+ The SDCC xdata segment (non-const data in __far) is placed in physical memory above 0x80000 (exact location can be given by 
+\emph on
+-
+\series bold
+\emph default
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+\emph on
+-
+\emph default
+xram-loc
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-xram-loc
+\end_layout
+
+\end_inset
+
+),
+ the SDCC xconst segment (const data in __far) is placed in physical memory above 0x0 (directly after code,
+ gsinit,
+ etc).
+ The Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+Data
+\begin_inset Quotes srd
+\end_inset
+
+ segment is not used directly by SDCC.
+ Its intended use is for user-defined named address spaces.
+ The Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+XPC
+\begin_inset Quotes srd
+\end_inset
+
+ segment is used for the SDCC xcode segment (program code in medium memory model).
+\end_layout
+
+\begin_layout Standard
+The size of the Rabbit 
+\begin_inset Quotes sld
+\end_inset
+
+Root
+\begin_inset Quotes srd
+\end_inset
+
+,
+ 
+\begin_inset Quotes sld
+\end_inset
+
+Data
+\begin_inset Quotes srd
+\end_inset
+
+ and 
+\begin_inset Quotes sld
+\end_inset
+
+Stack
+\begin_inset Quotes srd
+\end_inset
+
+ segments can be adjusted according to user needs by setting up the SEGSIZE register in __sdcc_external_startup and the 
+\emph on
+-
+\series bold
+\emph default
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+
+\series default
+\emph on
+-
+\emph default
+data-loc
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-data-loc
+\end_layout
+
+\end_inset
+
+ command line option (the value for the option shall be 0xS000,
+ where S matches the upper nibble of the SEGSIZE register).
+\end_layout
+
+\begin_layout Standard
+Pointers to objects that are not __far-qualified objects are represented by their logical address as 16-bit value.
+ Pointers to objects that are __far-qualified are represented by their physical address as 24-bit value.
+\end_layout
+
+\begin_layout Standard
+The default crt0 that ships with SDCC uses a 32KB 
+\begin_inset Quotes sld
+\end_inset
+
+Root
+\begin_inset Quotes srd
+\end_inset
+
+ segment followed by a 8KB 
+\begin_inset Quotes sld
+\end_inset
+
+Data
+\begin_inset Quotes srd
+\end_inset
+
+ segment,
+ a 16KB 
+\begin_inset Quotes sld
+\end_inset
+
+Stack
+\begin_inset Quotes srd
+\end_inset
+
+ segment and the 8KB 
+\begin_inset Quotes sld
+\end_inset
+
+XPC
+\begin_inset Quotes srd
+\end_inset
+
+ segment.
 \end_layout
 
 \begin_layout Subsection

@@ -194,7 +194,7 @@ getParamValinfo (const operand *op)
   sym_link *type = operandType (op);
   struct valinfo v = getTypeValinfo (type, true);
   if (IS_SYMOP (op) && OP_SYMBOL_CONST (op)->ismyparm &&
-    IS_DECL (type) && DCL_ELEM (type))
+    IS_DECL (type) && DCL_ELEM (type) && !isOptional (type->next))
     {
       if (DCL_STATIC_ARRAY_PARAM (type)) // Valid pointer to an array of at least DCL_ELEM (type) elements.
         {
@@ -248,11 +248,8 @@ getOperandValinfo (const iCode *ic, const operand *op)
       valinfoCast (&v, type, v2, NULL); // Need to cast: ival could be out of range of type.
       valinfoUpdate (&v);
     }
-  else if ((IS_ITEMP (op) ||
-    IS_SYMOP (op) && (OP_SYMBOL_CONST (op)->islocal || OP_SYMBOL_CONST (op)->ismyparm) && // Also include a few non-iTemps in the analysis, since since they don't always get replaced by register-equivalent iTemps without --stack-auto.
-      !OP_SYMBOL_CONST (op)->addrtaken && !IS_STATIC (OP_SYMBOL_CONST (op)->etype) && !IS_EXTERN (OP_SYMBOL_CONST (op)->etype)) // Exclude what might change in between, e.g. by a backjump via longjmp, or for extern/addrtaken by an intermediate call to another function.
-    && !IS_OP_VOLATILE (op) && ic->valinfos && ic->valinfos->map.find (op->key) != ic->valinfos->map.end ())
-    return (ic->valinfos->map[op->key]);
+  else if (IS_SYMOP (op) && !IS_OP_VOLATILE (op) && ic->valinfos && ic->valinfos->map.find (op->key) != ic->valinfos->map.end ())
+    return (ic->valinfos->map[op->key].anything ? getTypeValinfo (type, true) : ic->valinfos->map[op->key]);
   else if (IS_ITEMP (op))
     {
       v.nothing = true;
@@ -301,7 +298,7 @@ valinfo_union (struct valinfo *v0, const struct valinfo v1)
 }
 
 bool
-valinfos_union (iCode *ic, int key, const struct valinfo &v)
+valinfos_union (iCode *ic, const int key, const struct valinfo &v)
 {
   if (!ic /*|| !bitVectBitValue(ic->rlive, key)*/) // Unfortunately, rlive info is inaccurate, so we can't rely on it.
     return (false);
@@ -712,7 +709,7 @@ valinfoRight (struct valinfo *result, const struct valinfo &left, const struct v
 static void
 valinfoCast (struct valinfo *result, sym_link *targettype, const struct valinfo &right, sym_link *sourcetype)
 {
-  bool genptrtarget = IS_GENPTR (targettype) || (TARGET_Z80_LIKE || TARGET_F8_LIKE || TARGET_IS_STM8); // Some ports have no tag bits in pointers.
+  bool genptrtarget = IS_GENPTR (targettype) || (TARGET_Z80_LIKE && !IS_FARPTR (targettype) && !IS_FARPTR (sourcetype) || TARGET_IS_TLCS90 || TARGET_F8_LIKE || TARGET_IS_STM8); // Some ports have no tag bits in pointers.
 
   *result = getTypeValinfo (targettype, false);
   if (right.nothing)
@@ -775,7 +772,7 @@ static void update_out_edges (cfg_t &G, unsigned int i, int key_false, int key_t
 }
 
 static void
-recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<unsigned int>, std::set<unsigned int> > &todo, bool externchange, int end_it_quickly)
+recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<unsigned int>, std::set<unsigned int> > &todo, const valinfos &global_operands, bool externchange, int end_it_quickly)
 {
   iCode *const ic = G[i].ic;
   bool change = externchange;
@@ -830,7 +827,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           int key_true = IC_TRUE (ic) ? eBBWithEntryLabel(ebbi, IC_TRUE(ic))->sch->key : ic->next->key;
           int key_false = IC_FALSE (ic) ? eBBWithEntryLabel(ebbi, IC_FALSE(ic))->sch->key : ic->next->key;
-          if (IS_SYMOP (ic->left) && !OP_SYMBOL (ic->left)->addrtaken && !IS_OP_VOLATILE (ic->left))
+          if (IS_SYMOP (ic->left) && !IS_OP_VOLATILE (ic->left))
             {
               struct valinfo v = getOperandValinfo (ic, ic->left);
               struct valinfo v_true = v;
@@ -842,16 +839,16 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
               v_false.max = 0;
               valinfoUpdate (&v_true);
               valinfoUpdate (&v_false);
-              for(iCode *extraic = ic->prev; extraic; extraic = extraic->prev)
+              for (iCode *extraic = ic->prev; extraic; extraic = extraic->prev)
                 {
                   if (extraic->op == '=' && !POINTER_SET (extraic) && isOperandEqual (extraic->right, ic->left) &&
-                    IS_SYMOP (extraic->result) && !IS_OP_GLOBAL (extraic->result) && bitVectnBitsOn (OP_DEFS (extraic->result)) <= 1)
+                    IS_SYMOP (extraic->result) && !IS_OP_VOLATILE (extraic->result) && (bitVectnBitsOn (OP_DEFS (extraic->result)) <= 1 || extraic->next == ic))
                     update_out_edges (G, i, key_false, key_true, v_false, v_true, extraic->result->key);
                   else if (extraic->op == '=' && !POINTER_SET (extraic) && isOperandEqual (extraic->result, ic->left) &&
-                    IS_SYMOP (extraic->right) && !IS_OP_GLOBAL (extraic->right) && bitVectnBitsOn (OP_DEFS (extraic->right)) <= 1)
+                    IS_SYMOP (extraic->right) && !IS_OP_VOLATILE (extraic->right) && (bitVectnBitsOn (OP_DEFS (extraic->right)) <= 1 || extraic->next == ic))
                     update_out_edges (G, i, key_false, key_true, v_false, v_true, extraic->right->key);
                   if (extraic->op == LABEL || bitVectBitValue (OP_DEFS (ic->left), extraic->key) ||
-                    IS_OP_GLOBAL (ic->left) && (extraic->op == CALL || extraic->op == PCALL))
+                    (global_operands.map.find (ic->left->key) != global_operands.map.end()) && (POINTER_SET (extraic) || extraic->op == CALL || extraic->op == PCALL))
                     {
                       extraic = NULL;
                       break;
@@ -897,18 +894,27 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       if (ic->resultvalinfo)
         G[*out].map[ic->result->key] = *ic->resultvalinfo;
 
+      // Invalidate valinfo for operands that might have been written via pointer, from other functions, etc.
+      if (ic->op == SET_VALUE_AT_ADDRESS || POINTER_SET (ic) || ic->op == FUNCTION || (ic->op == CALL || ic->op == PCALL) && (!IS_SYMOP (ic->left) || !OP_SYMBOL (ic->left)->funcPure))
+        {
+          for (std::map <int, struct valinfo>::const_iterator i = global_operands.map.begin(); i != global_operands.map.end(); ++i)
+            G[*out].map[i->first] = i->second;
+        }
+
       if (resultsym)
         resultvalinfo = getTypeValinfo (operandType (ic->result), true);
       else
         resultvalinfo.anything = true;
 
 #ifdef DEBUG_GCP_ANALYSIS
+      std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
       if (localchange && resultsym)
-        {
-          std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
+        { 
           std::cout << "getTypeValinfo: resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << std::dec << " min " << resultvalinfo.min << "\n";
+          if (ic->left)
+            std::cout << "leftvalinfo op " << ic->left->key << " anything " << rightvalinfo.anything << " min " << rightvalinfo.min << " max " << rightvalinfo.max << "\n";
           if (ic->right)
-            std::cout << "rightvalinfo anything " << rightvalinfo.anything << " min " << rightvalinfo.min << " max " << rightvalinfo.max << "\n";
+            std::cout << "rightvalinfo op " << ic->right->key << " anything " << rightvalinfo.anything << " min " << rightvalinfo.min << " max " << rightvalinfo.max << "\n";
         }
 #endif
 
@@ -929,7 +935,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       else if (ic->op == RECEIVE)
         {
           sym_link *type = operandType (ic->result);
-          if (IS_DECL (type) && DCL_ELEM (type))
+          if (IS_DECL (type) && DCL_ELEM (type) && !isOptional (type->next))
             {
               if (DCL_STATIC_ARRAY_PARAM (type))
                 {
@@ -951,6 +957,22 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
           resultvalinfo.nonnull = true;
           sym_link *objtype = operandType (ic->left);
           unsigned long roff = operandLitValue (ic->right);
+
+          // This assumes a map where code (flash) is before data (ram) in the 64K address space.
+          if (TARGET_RABBIT_LIKE && IS_SPEC (objtype) && IN_CODESPACE (SPEC_OCLS (getSpec (objtype))) &&
+            !getAddrspace (objtype) && !IN_FARSPACE (SPEC_OCLS (getSpec (objtype))) && resultvalinfo.max >= options.data_loc)
+            {
+              // In Rabbit Root segement, which extends from 0x0 to somewhere just before the start of the "Data" of unknown size which in turn is just before the "Stack" segement at __data_loc.
+              resultvalinfo.max = options.data_loc - 1;
+            }
+          else if (TARGET_RABBIT_LIKE && IS_SPEC (objtype) && !IN_CODESPACE (SPEC_OCLS (getSpec (objtype))) &&
+            !getAddrspace (objtype) && !IN_FARSPACE (SPEC_OCLS (getSpec (objtype))) && resultvalinfo.min < options.data_loc)
+            {
+              // In Rabbit Stack segement, which extends from data_loc to 0xdfff, just before the XPC segment.
+              resultvalinfo.min = options.data_loc;
+              resultvalinfo.max = 0xdfff;
+            }
+
           if (!IS_ARRAY (objtype) && !(IS_STRUCT (objtype) && SPEC_STRUCT (objtype)->b_flexArrayMember)) // Single object. We know the size unless it has a flexible array memeber.
             {
               if (getSize (objtype) >= roff)
@@ -1073,7 +1095,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           valinfoUpdate (&resultvalinfo);
 #ifdef DEBUG_GCP_ANALYSIS
-          std::cout << "resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << " knownbits 0x" << resultvalinfo.knownbits << std::dec << " min " << resultvalinfo.min << " max " << resultvalinfo.max << " nonnull " << resultvalinfo.nonnull << "\n";
+          std::cout << "resultvalinfo op " << ic->result->key << " anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << " knownbits 0x" << resultvalinfo.knownbits << std::dec << " min " << resultvalinfo.min << " max " << resultvalinfo.max << " nonnull " << resultvalinfo.nonnull << "\n";
 #endif
           if (!ic->resultvalinfo)
             ic->resultvalinfo = new struct valinfo;
@@ -1103,6 +1125,7 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
   create_cfg_genconstprop(G, sic, ebbi);
 
   std::pair <std::queue<unsigned int>, std::set<unsigned int> > todo; // Nodes where valinfos need to be updated. We need a pair of a queue and a set to implement a queue with uniqe entries. A plain set wouldn't work, as we'd be working on some nodes all the time while never getting to others before we reach the round limit.
+  valinfos global_operands; // set of operands that are global or had their address taken, and thus need to be invalidated at every potential pointer write (or function call).
 
   // Process each node at least once, and handle incoming non-register parameters.
   typedef /*typename*/ boost::graph_traits<cfg_t>::out_edge_iterator out_iter_t;
@@ -1120,9 +1143,19 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
         G[0].ic->valinfos->map[G[i].ic->right->key] = getParamValinfo (G[i].ic->right);
       if (POINTER_SET (G[i].ic) && IS_SYMOP (G[i].ic->result) && OP_SYMBOL (G[i].ic->result)->ismyparm)
         G[0].ic->valinfos->map[G[i].ic->result->key] = getParamValinfo (G[i].ic->result);
+      // Need to include static objects here, since they might revert their state via setjmp/longjmp.
+      if (G[i].ic->left && !IS_ITEMP(G[i].ic->left) && IS_SYMOP (G[i].ic->left) &&
+        (!OP_SYMBOL_CONST (G[i].ic->left)->islocal && !OP_SYMBOL_CONST (G[i].ic->left)->ismyparm || OP_SYMBOL_CONST (G[i].ic->left)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->left)->etype)))
+        global_operands.map[G[i].ic->left->key] = getOperandValinfo (G[i].ic, G[i].ic->left);
+      if (G[i].ic->right && !IS_ITEMP(G[i].ic->right) && IS_SYMOP (G[i].ic->right) &&
+        (!OP_SYMBOL_CONST (G[i].ic->right)->islocal && !OP_SYMBOL_CONST (G[i].ic->right)->ismyparm || OP_SYMBOL_CONST (G[i].ic->right)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->right)->etype)))
+        global_operands.map[G[i].ic->right->key] = getOperandValinfo (G[i].ic, G[i].ic->right);
+      if (G[i].ic->result && !IS_ITEMP(G[i].ic->result) && IS_SYMOP (G[i].ic->result) &&
+        (!OP_SYMBOL_CONST (G[i].ic->result)->islocal && !OP_SYMBOL_CONST (G[i].ic->result)->ismyparm || OP_SYMBOL_CONST (G[i].ic->result)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->result)->etype)))
+        global_operands.map[G[i].ic->result->key] = getOperandValinfo (G[i].ic, G[i].ic->result);
     }
   for (unsigned int i = 0; i < boost::num_vertices (G); i++)
-    recompute_node (G, i, ebbi, todo, true, 0);
+    recompute_node (G, i, ebbi, todo, global_operands, true, 0);
 
   // Forward pass to get first approximation.
   for (unsigned long round = 0; !todo.first.empty (); round++)
@@ -1136,7 +1169,7 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
       std::cout << "Round " << round << " node " << i << " ic " << G[i].ic->key << "\n"; std::cout.flush();
 #endif
 
-      recompute_node (G, i, ebbi, todo, false, (round >= max_rounds) + (round >= max_rounds * 2));
+      recompute_node (G, i, ebbi, todo, global_operands, false, (round >= max_rounds) + (round >= max_rounds * 2));
     }
 
   // Refinement backward pass.
@@ -1279,7 +1312,7 @@ optimizeNarrowOpNet (iCode *ic)
   unsigned int ptropwidth = 0; // Width of pointers that an integer net is added to (only bits within address space count, not tag bits).
 
 #if 0
-  std::cout << "optimizeNarrowOpNet at ic " << ic->key << ": " << OP_SYMBOL (ic->result)->name << "\n"; std::cout.flush();
+  std::cout << "optimizeNarrowOpNet op " << ic->result->key << " at ic " << ic->key << ": " << OP_SYMBOL (ic->result)->name << " uses " << bitVectnBitsOn (OP_USES (ic->result)) << "\n"; std::cout.flush();
 #endif
 
   while (!checknet.empty())
@@ -1330,8 +1363,9 @@ optimizeNarrowOpNet (iCode *ic)
       for (int key = bitVectFirstBit (uses); bitVectnBitsOn (uses); bitVectUnSetBit (uses, key), key = bitVectFirstBit (uses))
         {
           iCode *uic = (iCode *)hTabItemWithKey (iCodehTab, key);
+          wassert (uic || TARGET_IS_MCS51 && (options.model == MODEL_LARGE || options.model == MODEL_HUGE)); // Shouldn't happen, but does for some mcs51 models.
           if (!uic)
-            bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now.
+            bitVectUnSetBit (OP_USES (op), key); // Looks like some earlier optimization didn't clean up properly. Do it now. Shouldn't happen, see lines above.
           else if (uic->op == CAST && !IS_FLOAT (operandType (uic->result)))
             valinfo_union (&v, getOperandValinfo (uic, uic->right));
           else if (uic->op == EQ_OP || uic->op == NE_OP || uic->op == '<' || uic->op == LE_OP || uic->op == '>' || uic->op == GE_OP)
@@ -1530,9 +1564,6 @@ optimizeMult (iCode *ic)
     return;
 
   if (bitsForType (oldresulttype) <= 16 && (leftv.max > 0xff || rightv.max > 0xff))
-    return;
-
-  if (ic->op == '*' && bitsForType (oldresulttype) <= 16)
     return;
 
   sym_link *newoptype;

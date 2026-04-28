@@ -144,6 +144,8 @@ char buffer[PATH_MAX * 2];
 #define OPTION_DATA_SEG             "--dataseg"
 #define OPTION_DOLLARS_IN_IDENT     "--fdollars-in-identifiers"
 #define OPTION_SIGNED_CHAR          "--fsigned-char"
+#define OPTION_CONST_STRINGLIT      "--fconst-stringlit"
+#define OPTION_CONST_CODE           "--fconst-code"
 #define OPTION_USE_NON_FREE         "--use-non-free"
 #define OPTION_PEEP_RETURN          "--peep-return"
 #define OPTION_NO_PEEP_RETURN       "--no-peep-return"
@@ -189,6 +191,7 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_USE_STDOUT, NULL, "send errors to stdout instead of stderr"},
   {0,   "--nostdlib", &options.nostdlib, "Do not include the standard library directory in the search path"},
   {0,   "--nostdinc", &options.nostdinc, "Do not include the standard include directory in the search path"},
+  {0,   "--norestartseqatomics", &options.norestartseqatomics, "Omit restartable sequence support routines for atomics"},
   {0,   OPTION_LESS_PEDANTIC, NULL, "Disable some of the more pedantic warnings"},
   {0,   OPTION_DISABLE_WARNING, NULL, "<nnnn> Disable specific warning"},
   {0,   OPTION_WERROR, NULL, "Treat the warnings as errors"},
@@ -197,6 +200,8 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_STD, NULL, "Determine the language standard (c90, c99, c11, c23, c2y, sdcc89 etc.)"},
   {0,   OPTION_DOLLARS_IN_IDENT, &options.dollars_in_ident, "Permit '$' as an identifier character"},
   {0,   OPTION_SIGNED_CHAR, &options.signed_char, "Make \"char\" signed by default"},
+  {0,   OPTION_CONST_STRINGLIT, &options.const_stringlit, "Make string literals const, like in C++"},
+  {0,   OPTION_CONST_CODE, &options.const_code, "Make objects in read-only __code space implicitly const"},
   {0,   OPTION_USE_NON_FREE, &options.use_non_free, "Search / include non-free licensed libraries and header files"},
 
   {0,   NULL, NULL, "Code generation options"},
@@ -659,6 +664,7 @@ setDefaultOptions (void)
   options.model = port->general.default_model;
   options.nostdlib = 0;
   options.nostdinc = 0;
+  options.norestartseqatomics = false;
   options.verbose = 0;
   options.std_sdcc = 1;         /* enable SDCC language extensions */
   options.std_c95 = 1;
@@ -1967,6 +1973,8 @@ linkEdit (char **envp)
         {
           WRITE_SEG_LOC ("_CODE", options.code_loc);
           WRITE_SEG_LOC ("_DATA", options.data_loc);
+          if (TARGET_RABBIT_LIKE)
+            WRITE_SEG_LOC ("_XDATA", options.xdata_loc);
         }
 
       /* If the port has any special linker area declarations, get 'em */
@@ -2946,7 +2954,7 @@ main (int argc, char **argv, char **envp)
               if (sym->level)
                 continue;
               // Check for arrays of unknown size that get size 1 due to an implicit initializer.
-              if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
+              if (IS_ARRAY (sym->type) && !IS_EXTERN (sym->etype) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
                 {
                   wassert (!DCL_ELEM (sym->type));
                   werrorfl (sym->fileDef, sym->lineDef, W_INCOMPLETE_ARRAY_IMPLICIT_1, sym->name);

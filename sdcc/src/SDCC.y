@@ -420,7 +420,7 @@ conditional_expr
                      }
    | logical_or_expr '?' { seqPointNo++;} ':' conditional_expr
                      {
-                        if (!options.std_sdcc)
+                        if (!options.std_c2y && !options.std_sdcc)
                           werror (E_SYNTAX_ERROR);
                         $$ = newNode(':',$1,$5);
                         $$ = newNode('?',$1,$$);
@@ -534,7 +534,7 @@ declaration
                  addSym (StructTab, sdef, sdef->tag, sdef->level, currBlockno, false);
                  uselessDecl = false;
                }
-             checkQualifiers (sdef->tagsym, $1, false);
+             checkQualifiers (sdef->tagsym, $1, false, false);
            }
          if (uselessDecl)
            werror(W_USELESS_DECL);
@@ -817,27 +817,17 @@ typeof_specifier
        $$ = $3;
      }
    | TYPEOF_UNQUAL '(' expression ')'
-     {
-       $$ = typeofOp ($3);
-       wassert ($$);
-       wassert (IS_SPEC ($$));
-       SPEC_CONST ($$) = 0;
-       SPEC_RESTRICT ($$) = 0;
-       SPEC_VOLATILE ($$) = 0;
-       SPEC_ATOMIC ($$) = 0;
-       SPEC_ADDRSPACE ($$) = 0;
-     }
+      {
+        $$ = typeofOp ($3);
+        wassert ($$);
+        removeQualifiers ($$);
+      }
    | TYPEOF_UNQUAL '(' type_name ')'
-     {
-       checkTypeSanity ($3, "(typeof_unqual)");
-       $$ = $3;
-       wassert (IS_SPEC ($$));
-       SPEC_CONST ($$) = 0;
-       SPEC_RESTRICT ($$) = 0;
-       SPEC_VOLATILE ($$) = 0;
-       SPEC_ATOMIC ($$) = 0;
-       SPEC_ADDRSPACE ($$) = 0;
-     }
+      {
+        checkTypeSanity ($3, "(typeof_unqual)");
+        $$ = $3;
+        removeQualifiers ($$);
+      }
 
 struct_or_union_specifier
    : struct_or_union attribute_specifier_sequence_opt opt_stag

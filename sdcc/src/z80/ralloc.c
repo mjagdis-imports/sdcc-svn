@@ -684,10 +684,13 @@ packRegsForAssign (iCode * ic, eBBlock * ebp)
         }
     }
 
-  /* Keep assignment if it is an sfr write  - not all of code generation can deal with result in sfr */
-  if (IC_RESULT (ic) && IS_TRUE_SYMOP (IC_RESULT (ic)) && SPEC_OCLS (OP_SYMBOL (IC_RESULT (ic))->etype) && IN_REGSP (SPEC_OCLS (OP_SYMBOL (IC_RESULT (ic))->etype)) &&
-    (dic->op == LEFT_OP || dic->op == RIGHT_OP))
-    return 0;
+  // Keep assignment if it is an sfr write  - shifts can't deal with result in __sfr or __far.
+  if (ic->result && IS_TRUE_SYMOP (ic->result))
+    {
+      memmap *space = SPEC_OCLS (OP_SYMBOL (ic->result)->etype);
+      if ((IN_REGSP (space) || IN_FARSPACE (space)) && (dic->op == LEFT_OP || dic->op == RIGHT_OP))
+        return 0;
+    }
 
   /* found the definition */
 
@@ -993,7 +996,8 @@ packRegisters (eBBlock * ebp)
         {
           sym_link *to_type = operandType (IC_LEFT (ic));
           sym_link *from_type = operandType (IC_RIGHT (ic));
-          if ((IS_PTR (to_type) || IS_INT (to_type)) && IS_PTR (from_type))
+          if ((IS_PTR (to_type) || IS_INT (to_type)) && IS_PTR (from_type) &&
+            !(IS_RAB && (IS_FARPTR (to_type) ^ IS_FARPTR (from_type)))) // Except Rabbit casts of pointers to/from __far - could remat in principle, but would require work in codegen first.
             {
               OP_SYMBOL (IC_RESULT (ic))->remat = 1;
               OP_SYMBOL (IC_RESULT (ic))->rematiCode = ic;

@@ -787,7 +787,7 @@ setAstFileLine (ast *tree, const char *filename, int lineno)
 /* funcOfType :- function of type with name                        */
 /*-----------------------------------------------------------------*/
 symbol *
-funcOfType (const char *name, sym_link *rtype, sym_link * argType, int nArgs, int rent)
+funcOfType (const char *name, sym_link *rtype, sym_link *argType, int nArgs, int rent)
 {
   symbol *sym;
   /* create the symbol */
@@ -3034,12 +3034,17 @@ gatherImplicitVariables (ast *tree, ast *block)
 }
 
 /*-----------------------------------------------------------------*/
-/* CodePtrPointsToConst - if code memory is read-only, then        */
-/*   pointers to code memory implicitly point to constants.        */
-/*   Make this explicit.                                           */
+/* checkCodePtrPointsToConst - if code memory is read-only, then   */
+/*   pointers to code memory should point to constants.            */
+/*   Warn if this is not the case.                                 */
+/*                                                                 */
+/*   Note:                                                         */
+/*   The --fconst-code flag restores the pre-4.5.23 behavior and   */
+/*   implicitly makes them point to constants, omitting the        */
+/*   warning.                                                      */
 /*-----------------------------------------------------------------*/
 void
-CodePtrPointsToConst (sym_link * t)
+checkCodePtrPointsToConst (sym_link *t, const char *filename, int lineno)
 {
   if (port->mem.code_ro)
     {
@@ -3051,15 +3056,104 @@ CodePtrPointsToConst (sym_link * t)
               /* find the first non-array link */
               while (IS_ARRAY (t2->next))
                 t2 = t2->next;
-              if (IS_SPEC (t2->next))
-                SPEC_CONST (t2->next) = 1;
+
+              if (options.const_code)
+                {
+                  /* pre-4.5.23 behavior: just make them point to const */
+                  if (IS_SPEC (t2->next))
+                    SPEC_CONST (t2->next) = 1;
+                  else
+                    DCL_PTR_CONST (t2->next) = 1;
+                }
               else
-                DCL_PTR_CONST (t2->next) = 1;
+                {
+                  /* implicitly overriding const-ness can interfere with
+                   * _Generic, so just output a warning, instead */
+                  if (((IS_SPEC (t2->next) && !SPEC_CONST (t2->next) && !SPEC_SCLS_IMPLICITINTRINSIC (t2->next)) ||
+                      (IS_DECL (t2->next) && !DCL_PTR_CONST (t2->next) && !DCL_TYPE_IMPLICITINTRINSIC (t2->next)))
+                      && !IS_FUNC (t2->next))
+                    werrorfl (filename, lineno, W_NONCONST_CODE_PTR);
+                }
             }
           t = t->next;
         }
     }
 }
+
+/*-----------------------------------------------------------------*/
+/* removeQualifiers - removes all qualifiers from the first        */
+/*                    element of the type chain                    */
+/*-----------------------------------------------------------------*/
+void
+removeQualifiers (sym_link *type)
+{
+  if (IS_SPEC (type))
+    {
+      SPEC_CONST (type) = false;
+      SPEC_RESTRICT (type) = false;
+      SPEC_VOLATILE (type) = false;
+      SPEC_ATOMIC (type) = false;
+      SPEC_OPTIONAL (type) = false;
+      SPEC_ADDRSPACE (type) = NULL;
+    }
+  else
+    {
+      DCL_PTR_CONST (type) = false;
+      DCL_PTR_RESTRICT (type) = false;
+      DCL_PTR_VOLATILE (type) = false;
+      DCL_PTR_ATOMIC (type) = false;
+      DCL_PTR_OPTIONAL (type) = false;
+      DCL_PTR_ADDRSPACE (type) = NULL;
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/* ptrTypeFromType - derive a suitable type for a pointer to a     */
+/*                   given type                                    */
+/*-----------------------------------------------------------------*/
+sym_link *
+ptrTypeFromType (sym_link *type)
+{
+  sym_link *p = newLink (DECLARATOR);
+
+  if (!getSpec (type))
+    {
+      DCL_TYPE (p) = POINTER;
+      DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+    }
+  else
+    {
+      DCL_TYPE_IMPLICITINTRINSIC (p) = SPEC_SCLS_IMPLICITINTRINSIC (getSpec (type));
+      if (SPEC_SCLS (getSpec (type)) == S_CODE)
+        DCL_TYPE (p) = CPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_XDATA)
+        DCL_TYPE (p) = FPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_XSTACK)
+        DCL_TYPE (p) = PPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_IDATA)
+        DCL_TYPE (p) = IPOINTER;
+      else if (SPEC_SCLS (getSpec (type)) == S_EEPROM)
+        DCL_TYPE (p) = EEPPOINTER;
+      else if (SPEC_OCLS (getSpec (type)))
+        {
+          DCL_TYPE (p) = PTR_TYPE (SPEC_OCLS (getSpec (type)));
+          DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+        }
+      else
+        {
+          DCL_TYPE (p) = POINTER;
+          DCL_TYPE_IMPLICITINTRINSIC (p) = true;
+        }
+    }
+
+  p->next = copyLinkChain (type);
+  if (IS_DECL (p->next))
+    DCL_PTR_OPTIONAL (p->next) = false;
+  else
+    SPEC_OPTIONAL (p->next) = false; // _Optional qualifier is not preserved across &.
+  return p;
+}
+
 
 /*-----------------------------------------------------------------*/
 /* checkPtrCast - if casting to/from pointers, do some checking    */
@@ -3928,6 +4022,15 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case DEC_OP:
       {
         sym_link *ltc = (tree->right ? RTYPE (tree) : LTYPE (tree));
+        // Drop _Optional on pointer target
+        if (IS_PTR (ltc) && isOptional (ltc->next))
+          {
+            ltc = copyLinkChain (ltc);
+            if (IS_SPEC (ltc->next))
+              SPEC_OPTIONAL (ltc->next) = false;
+            else
+              DCL_PTR_OPTIONAL (ltc->next) = false;
+          }
         COPYTYPE (TTYPE (tree), TETYPE (tree), ltc);
         if (!tree->initMode && IS_CONSTANT (TTYPE (tree)))
           werrorfl (tree->filename, tree->lineno, E_CODE_WRITE, tree->opval.op == INC_OP ? "++" : "--");
@@ -4622,7 +4725,13 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /* if the left is a pointer */
       if (IS_PTR (LTYPE (tree)) || IS_AGGREGATE (LTYPE (tree)))
-        TETYPE (tree) = getSpec (TTYPE (tree) = LTYPE (tree));
+        {
+          TETYPE (tree) = getSpec (TTYPE (tree) = copyLinkChain (LTYPE (tree)));
+          if (IS_SPEC (TTYPE (tree)->next))
+            SPEC_OPTIONAL (TTYPE (tree)->next) = false;
+          else
+            DCL_PTR_OPTIONAL (TTYPE (tree)->next) = false;
+        }
       else
         {
           tree->left = addCast (tree->left, resultTypeProp, TRUE);
@@ -4721,11 +4830,16 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
       /* the result is a ptrdiff */
       if ((IS_ARRAY (LTYPE (tree)) || IS_PTR (LTYPE (tree))) && (IS_ARRAY (RTYPE (tree)) || IS_PTR (RTYPE (tree))))
         TETYPE (tree) = TTYPE (tree) = newPtrDiffLink();
-      else
-        /* if only the left is a pointer */
-        /* then result is a pointer      */
-      if (IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree)))
-        TETYPE (tree) = getSpec (TTYPE (tree) = LTYPE (tree));
+      // If only the left is a pointer, then result is a pointer,
+      // But any _Optional qualifier on the target is dropped.
+      else if (IS_PTR (LTYPE (tree)) || IS_ARRAY (LTYPE (tree)))
+        {
+          TETYPE (tree) = getSpec (TTYPE (tree) = copyLinkChain (LTYPE (tree)));
+          if (IS_SPEC (TTYPE (tree)->next))
+            SPEC_OPTIONAL (TTYPE (tree)->next) = false;
+          else
+            DCL_PTR_OPTIONAL (TTYPE (tree)->next) = false;
+        }
       else
         {
           tree->left = addCast (tree->left, resultTypeProp, TRUE);
@@ -5008,7 +5122,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
     case CAST:                 /* change the type   */
       /* cannot cast to struct / union */
       if (IS_AGGREGATE (LTYPE (tree)))
-        {printTypeChain (LTYPE (tree), 0);
+        {
           werrorfl (tree->filename, tree->lineno, E_CAST_ILLEGAL);
           goto errorTreeReturn;
         }
@@ -5022,7 +5136,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
 
       /* if 'from' and 'to' are the same remove the superfluous cast,
        * this helps other optimizations */
-      if (compareTypeExact (LTYPE (tree), RTYPE (tree), -1) == 1)
+      if (compareTypeExact (LTYPE (tree), RTYPE (tree), -1, true) == 1)
         {
           /* mark that the explicit cast has been removed,
            * for proper processing (no integer promotion) of explicitly typecasted variable arguments */
@@ -5030,9 +5144,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           return tree->right;
         }
 
-      /* If code memory is read only, then pointers to code memory */
-      /* implicitly point to constants -- make this explicit       */
-      CodePtrPointsToConst (LTYPE (tree));
+      /* If code memory is read only, then pointers to code memory
+       * should point to constants -- warn if this is not the case */
+      checkCodePtrPointsToConst (LTYPE (tree), tree->left->filename, tree->left->lineno);
 
 #if 0
       /* if the right is a literal replace the tree */
@@ -5658,6 +5772,30 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             goto errorTreeReturn;
           }
 
+        /* if we have a controlling expression rather than a type name, apply lvalue
+           conversion, array to pointer conversion and function to pointer conversion */
+        if (!ctrl_op_is_type)
+          {
+            type = typeofOp (tree->left);
+            if (IS_DECL (type))
+              {
+                if (IS_ARRAY (type))
+                  type = aggregateToPointer (valFromType (type))->type;
+
+                if (IS_FUNC (type))
+                  type = ptrTypeFromType (type);
+
+                if (DCL_TYPE_IMPLICITINTRINSIC (type))
+                  DCL_TYPE (type) = GPOINTER;
+              }
+            else
+              {
+                if (SPEC_SCLS_IMPLICITINTRINSIC (type))
+                  SPEC_SCLS (type) = S_FIXED;
+              }
+            removeQualifiers (type);
+          }
+
         /* TODO: verify that 'type' is not a variably modified type */
 
         for(assoc_list = tree->right; assoc_list; assoc_list = assoc_list->left)
@@ -5680,29 +5818,19 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
                 assoc_type = assoc->left->opval.lnk;
                 for (assoc_etype = assoc_type; !IS_SPEC(assoc_etype); assoc_etype = assoc_etype->next);
                 checkTypeSanity (assoc_etype, "(_Generic)");
-                if (ctrl_op_is_type)
+
+                /* treat as non-equal if the address spaces differ */
+                if (SPEC_ADDRSPACE (getSpec (type)) != SPEC_ADDRSPACE (getSpec (assoc_type)))
+                  continue;
+
+                if (compareTypeExact (assoc_type, type, 0, true) > 0)
                   {
-                    if (compareTypeExact (assoc_type, type, 0) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
+                    if (found_expr)
                       {
-                        if (found_expr)
-                          {
-                            werror (E_MULTIPLE_MATCHES_IN_GENERIC);
-                            goto errorTreeReturn;
-                          }
-                        found_expr = assoc->right;
+                        werror (E_MULTIPLE_MATCHES_IN_GENERIC);
+                        goto errorTreeReturn;
                       }
-                  }
-                else
-                  {
-                    if (compareType (assoc_type, type, true) > 0 && !(SPEC_NOUN (getSpec (type)) == V_CHAR && getSpec (type)->select.s.b_implicit_sign != getSpec (assoc_type)->select.s.b_implicit_sign))
-                      {
-                        if (found_expr)
-                          {
-                            werror (E_MULTIPLE_MATCHES_IN_GENERIC);
-                            goto errorTreeReturn;
-                          }
-                        found_expr = assoc->right;
-                      }
+                    found_expr = assoc->right;
                   }
               }
           }
@@ -5936,6 +6064,9 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
           goto errorTreeReturn;
         }
 
+      if (IS_PTR (LTYPE (tree)) && !isConst (LTYPE (tree)->next) && IS_AST_SYM_VALUE (tree->right) && AST_SYMBOL (tree->right)->isstrlit)
+        werrorfl (tree->filename, tree->lineno, W_NONCONST_STRINGLIT);
+
       return tree;
 
       /*------------------------------------------------------------------*/
@@ -6036,7 +6167,7 @@ decorateType (ast *tree, RESULT_TYPE resultType, bool reduceTypeAllowed)
             }
           else if (!typecompat)
             {
-              werrorfl (tree->filename, tree->lineno, W_RETURN_MISMATCH);
+              werrorfl (tree->filename, tree->lineno, E_RETURN_MISMATCH);
               printFromToType (RTYPE (tree), currFunc->type->next);
             }
 

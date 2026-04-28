@@ -4530,7 +4530,7 @@ genPlus (const iCode *ic)
          (aopOnStack (result->aop, i, 2) || result->aop->type == AOP_DIR))
          {
            wassert (!aopInReg (leftop, i, Z_IDX) || !aopInReg (rightop, i, X_IDX));
-           if (started && aopIsLitVal (leftop, i, 2, 0x0000))
+           if (started && aopIsLitVal (rightop, i, 2, 0x0000))
              emit3_o (A_ADCW, left->aop, i, 0, 0);
            else
              emit3_o (started ? A_ADCW : A_ADDW, leftop, i, rightop, i);
@@ -6847,7 +6847,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
       else
         emit2("ld", offset ? "%s, %s+%d" : "%s, %s+%d", aopGet (result->aop, 0), left->aop->aopu.immd, (int)(left->aop->aopu.immd_off + offset));
       cost (3, 1);
-      handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
+      handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
       i = 1;
       goto extend_bitfield;
     }
@@ -7019,7 +7019,7 @@ genPointerGet (const iCode *ic, iCode *ifx)
         }
 
       if (bit_field && blen <= 8) // Sign extension for partial byte of signed bit-field
-        handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
+        handle_bitfield_topbyte_in_xl (blen, bstr, !SPEC_USIGN (getSpec (operandType (result))) && !IS_BOOLEAN (getSpec (operandType (result))), regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0);
 
       if (result->aop->type == AOP_DUMMY) // Pointer dereference where the result is ignored, but wasn't optimized out (typically due to use of volatile).
         continue;
@@ -7028,10 +7028,13 @@ genPointerGet (const iCode *ic, iCode *ifx)
       genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, false, false, false, true);
     }
 
+  if (!use_z && !regDead (Y_IDX, ic) && last_oi)
+    addwConst (ASMOP_Y, 0, -last_oi);
+
 extend_bitfield:
   if (bit_field && i < size)
     {
-      if (SPEC_USIGN (getSpec (operandType (result))))
+      if (SPEC_USIGN (getSpec (operandType (result))) || IS_BOOLEAN (getSpec (operandType (result))))
         genMove_o (result->aop, i, ASMOP_ZERO, 0, i, regDead (XL_IDX, ic) && result->aop->regs[XL_IDX] < 0, regDead (XH_IDX, ic) && result->aop->regs[XH_IDX] < 0, false, false, true);
       else
         wassertl (0, "Unimplemented multibyte sign extension for bit-field.");

@@ -47,6 +47,11 @@ MB3CR		.equ	0x17 ; Memory Bank 3 Control Register
 	; Reset vector - assuming smode0 and smode1 input pins are grounded
 	.org 	0
 
+	; Enable 16-bit internal I/O addresses and switch to instruction set mode 10
+	ld	a, #0x80
+	ioi
+	ld	(MMIDR), a
+
 	; Setup internal interrupts. Upper byte of interrupt vector table address. Needs to be even.
 	ld	a, #2
 	ld	iir, a
@@ -108,6 +113,12 @@ skip_gsinit:
 	.area	_BSEG
 	.area   _BSS
 	.area   _HEAP
+	.area   _HEAP_END
+	.area   _SSEG
+
+	.area   _XCONST
+
+	.area   _XDATA
 
 	.area   _CODE
 _exit::
@@ -134,7 +145,6 @@ gsinit::
 	ld	d, h
 	inc	de
 	ldir
-
 zeroed_data:
 
 	ld	bc, #l__INITIALIZER
