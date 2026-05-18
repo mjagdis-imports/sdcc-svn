@@ -23,10 +23,12 @@
               targets the <b><i>Intel MCS51 </i></b> based microprocessors <b><i>(8031, 8032, 8051, 8052, etc.)</i></b>,
               <b><i>Maxim</i></b> (formerly <b><i>Dallas</i></b>) <b><i>DS80C390</i></b> variants,
               <b><i>Freescale</i></b> (formerly <b><i>Motorola</i></b>) <b><i>HC08</i></b> based <b><i>(hc08, s08)</i></b>,
-              <b><i>Zilog Z80</i></b> based MCUs <b><i>(Z80, Z180, SM83, Rabbit 2000, 2000A, 3000A, TLCS-90, R800)</i></b>, <b><i>Padauk (pdk14, pdk15)</b></i>,
+              <b><i>Zilog Z80</i></b> based MCUs <b><i>(Z80, Z80N, Z180, SM83, Rabbit 2000, 2000A, 3000A, SM83, TLCS-90, eZ80, R800)</i></b>,
+              <b><i>Padauk (pdk14, pdk15)</b></i>,
               <b><i>STMicroelectronics STM8</i></b>, <b><i>MOS 6502</b></i> and <b><i>WDC 65C02</b></i>.
-              Work is in progress on supporting the <b><i>Padauk pdk13</b></i> target; <b><i>Microchip PIC16</i></b> and <b><i>PIC18</i></b>
-              targets are unmaintained. SDCC can be retargeted for other microprocessors.</p>
+              Work is in progress on supporting the <b><i>Rabbit 4000, 5000, 6000</b></i>, <b><i>Padauk pdk13</i></b> and the <b><i>f8</i></b> and <b><i>f8l</i></b> targets;
+              <b><i>Microchip PIC16</i></b> and <b><i>PIC18</i></b> targets are unmaintained.
+              SDCC can be retargeted for other microprocessors.</p>
            <p>SDCC suite is a collection of several components derived from different sources with
               different FOSS licenses. SDCC compiler suite include:</p>
             <ul>
@@ -35,7 +37,7 @@
               <li><b>ucsim</b> <i>simulators</i>, originally written by Daniel Drotos; (GPL).</li>
               <li><b>sdcdb</b> <i>source level debugger</i>, originally written by Sandeep Dutta; (GPL).</li>
               <li><b>sdbinutils</b> <i>library archive utilities</i>, including sdar, sdranlib and sdnm, derived from GNU Binutils; (GPL)</li>
-              <li><b>SDCC run-time libraries</b>; (GPL+LE). Pic device libraries and header files are derived from Microchip header (.inc) and linker script (.lkr) files. Microchip requires that "The header files should state that they are only to be used with authentic Microchip devices" which makes them incompatible with the GPL.</li>
+              <li><b>SDCC run-time libraries</b>; (GPL+LE). Pic device libraries and header files are derived from Microchip header (.inc) and linker script (.lkr) files. Microchip requires that "The header files should state that they are only to be used with authentic Microchip devices" which would make them incompatible with the GPL.</li>
               <li><b>gcc-test</b> <i>regression tests</i>, derived from  <b>gcc-testsuite</b>; (no license explicitely specified, but since it is a part of GCC is probably GPL licensed)</li>
               <li><b>packihx</b>; (public domain)</li>
               <li><b>makebin</b>; (zlib/libpng License)</li>
@@ -67,30 +69,33 @@
             
             <h2><a name="News"></a>News</h2> 
 
-            <p><i><b>January 29th, 2024: SDCC 4.4.0 released.</b></i></p>
+            <p><i><b>2025-10-15: SDCC got funding.</b></i></p>
+            <p>SDCC is primarily developed by unpaid volunteer work; though once in a while there was some outside support, in particular by university employees being allowed to work on SDCC a bit during paid time, and SDCC developers receiving hardware samples from microcontroller vendors.<br/>
+            However, sometimes the limitations of this are felt. In particular when I've had a few free hours to work on SDCC, started working on a feature or bug, but was not able to finish the work during the time I had, or simply was not able to even fully track down the cause of the bug. And when it took a long time until I could work again on that feature or bug, it took extra time or effort to get into it again. Sometimes I would instead start work on another aspect of SDCC instead. Having funding available for working on SDCC is IMO really helpful in these situations - instead of having to stop work on SDCC to go back to other paid work, I can just keep working on the feature or bug, since this then is paid work.
+SDCC developers have been applying for funding for SDCC projects, and we are happy to announce that two important such applications succeeded recently.</p>
+
+            <p>The <a href="https://nlnet.nl/commonsfund/">NGI0 Commons Fund</a> donates to <a href="https://sourceforge.net/p/sdcc/wiki/NGI0-Commons-SDCC">improve SDCC support for various target hardware, as well as implement machine-independent improvements to make SDCC more competitive vs. non-free compilers</a>. Hardware-specific improvements planned include improving support for Padauk's popular low-cost microcontrollers, improving support for the Rabbit microcontrollers common in older IoT devices, and improving support for Toshiba TLCS microcontrollers. The focus for machine-independent improvements will be in enhancing support for recent ISO C standards, an optimization to reduce memory usage for local variables, and implementing a link-time optimization to optimize out unused functions and objects. The latter is the one feature most-requested by SDCC users in recent years. This project in done jointly by five SDCC developers.</p>
+
+            <p>The <a href="https://www.sovereign.tech/programs/fund/">Sovereign Tech Fund</a> comissioned work on <a href="https://sourceforge.net/p/sdcc/wiki/STF-SDCC">improving SDCC for safety and security of embedded firmware</a>. We will improve support for aspects of modern C standards and dialects relevant to safety and security, get SDCC ready for post-quantum cryptography, work on mitigations for potential side-channel attacks and improve the reliability of SDCC via extended testing also covering less-commonly used command-line parameter combinations. This project is done by one SDCC developer.</p>
+
+            <p>We can imagine all this coming together e.g. when writing firmware for an IoT device based on an eZ80 or Rabbit 4000 SoC. The SDCC user writing this firmware will benefit from the improved support for the target architecture, modern C features for efficiency and convenience, general high level optimizations (all part of the NGI0 Commons project), modern C features relevant for safety and security, to help avoid bugs in the user-written code, efficient side-channel-free code generated for modern cryptography algorithms (all part of the STF project). And thanks to improved testing and fixed compiler bugs, the firmware will compile and work very reliably (depending on the details part of the STF or the NGI0 project).</p>
+
+            <p><i><b>January 28th, 2025: SDCC 4.5.0 released.</b></i></p>
             <p>A new release of SDCC, the portable optimizing compiler for STM8, MCS-51, DS390, HC08, S08, Z80, Z180, Rabbit, R800, SM83, eZ80 in Z80 mode, Z80N, TLCS-90, MOS 6502, WDC 65C02, Padauk and PIC microprocessors is now available.
               (<a href="http://sdcc.sourceforge.net" target="_new">http://sdcc.sourceforge.net</a>).
-              Sources, documentation and binaries for GNU/Linux amd64, Windows x86, macOS amd64 are available.</p>
-            <p>SDCC 4.4.0 New Feature List:</p>
+              Sources, documentation and binaries for GNU/Linux amd64, Windows x86 and amd64, macOS amd64 are available.</p>
+            <p>SDCC 4.5.0 New Feature List:</p>
             <ul>
-              <li>Optimizations for rotations.
-              <li>struct / union parameters for hc08, s08 and mos6502.</li>
-              <li>Many bug fixes for -ms08 --stack-auto.</li>
-              <li>struct / union return support for hc08 and s08 (caller side only).</li>
-              <li>Generalized constant propagation.</li>
-              <li>New command line option --syntax-only to only parse the input.</li>
-              <li>Added C99 header inttypes.h</li>
-              <li>Added library functions imaxabs, imaxdiv, llabs, strtoimax, strtoll, strtoull, strtoumax, wcsncmp, wcstoimax, wcstol, wcstoll, wcstoul, wcstoull, wcstoumax</li>
-              <li>New r800 port to better support the ASCII Corp R800 and Zilog Z280.</li>
-              <li>Changed the default calling convention for r2k, r2ka, r3ka, tlcs90, ez80-z80 from version 0 to 1 (this is an ABI break, and will require changes to user-written asm functions or their declarations).</li>
-              <li>Improved optimizations for code speed for stm8, pdk, z80 (and related).</li>
-              <li>New mos65c02 port to better support the WDC 65C02.</li>
+              <li>Full atomic_flag support for msc51 and ds390 ports</li>
+              <li>Experimental f8 port</li>
+              <li>ISO C2y case range expressions</li>
+              <li>ISO C2y _Generic selection expression with a type operand</li>
+              <li>K&R-style function syntax (preliminarily with the semantics of non-K&R ISO-style functions)</li>
+              <li>ISO C23 enums with user-specified underlying type</li>
+              <li>struct / union in initializers</li>
             </ul>
 
-            <p><i><b>January 21st, 2024: SDCC 4.4.0 RC3 released.</b></i></p>
-            <p>SDCC 4.4.0 Release Candidate 3 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows and amd64 macOS are available in corresponding folders at:
-              <a href="http://sourceforge.net/projects/sdcc/files/">
-              http://sourceforge.net/projects/sdcc/files/</a>.</p>
+            <p><a href="previous.php">Previous News</a></p>
 
             <!-- END NEWS -->
 
@@ -104,7 +109,6 @@
             <p>SDCC is known to also work on at least GNU/Linux on aarch64, GNU/Linux on ppc64, FreeBSD on aarch64.</p>
             <p><b>Windows </b> users can also try Cygwin (<a href="https://www.cygwin.com/">https://www.cygwin.com/</a>)
               or may try the unsupported Microsoft Visual C++ build scripts.</p>
-
             <h2><a name="Download"></a>Downloading SDCC</h2>
 
             <p>See the <a href="https://sourceforge.net/projects/sdcc/files/">
@@ -209,7 +213,7 @@
               <li>Michael Hope &lt;michaelh.AT.juju.net.nz&gt; - initial Z80 target, additional coding and bug fixes.</li>
               <li>Maarten Brock &lt;sourceforge.brock.AT.dse.nl&gt; - several bug fixes and improvements, esp. for mcs51 target</li>
               <li>Raphael Neider &lt;RNeider.AT.web.de&gt; - bug fixes and optimizations for PIC16, completion of the PIC14 target</li>
-              <li>Philipp Klaus Krause &lt;pkk.AT.spth.de&gt; - work on the STM8,Z80,Z180,Rabbit,GBZ80,TLCS-90 backends, compiler research</li>
+              <li>Philipp Klaus Krause &lt;pkk.AT.spth.de&gt; - work on the STM8, f8, Z80, Z180, Rabbit, SM83, TLCS-90, eZ80 backends, compiler research</li>
               <li>Leland Morrison &lt;enigmalee.AT.sourceforget.net&gt; - Rabbit 2000 support: the target code generator,
                 sdasrab assembler and ucsim support</li>
               <li>Molnár Károly &lt;molnarkaroly.AT.users.sf.net&gt; - adding pic devices, developing and maintaining pic device files
@@ -233,53 +237,6 @@
               <li>Malini Dutta &lt;malini.AT.mediaone.net&gt; - Sandeep's wife, for her patience and support.</li>
             </ul>
 
-            <!-- START PAST_NEWS -->
-
-            <h2><a name="Past_news"></a>Past news</h2>
-
-            <p><i><b>January 2nd, 2024: SDCC 4.4.0 RC2 released.</b></i></p>
-            <p>SDCC 4.4.0 Release Candidate 2 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows and amd64 macOS are available in corresponding folders at:
-              <a href="http://sourceforge.net/projects/sdcc/files/">
-              http://sourceforge.net/projects/sdcc/files/</a>.</p>
-
-            <p><i><b>December 21st, 2023: SDCC 4.4.0 RC1 released.</b></i></p>
-            <p>SDCC 4.4.0 Release Candidate 1 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows and amd64 macOS are available in corresponding folders at:
-              <a href="http://sourceforge.net/projects/sdcc/files/">
-              http://sourceforge.net/projects/sdcc/files/</a>.</p>
-
-            <p><i><b>Jun 7th, 2023: SDCC 4.3.0 released.</b></i></p>
-            <p>A new release of SDCC, the portable optimizing compiler for STM8, MCS-51, DS390, HC08, S08, Z80, Z180, Rabbit, SM83, eZ80 in Z80 mode, Z80N, TLCS-90, MOS 6502, Padauk and PIC microprocessors is now available.
-              (<a href="http://sdcc.sourceforge.net" target="_new">http://sdcc.sourceforge.net</a>).
-              Sources, documentation and binaries for GNU/Linux amd64, Windows amd64, macOS amd64 are available.</p>
-            <p>SDCC 4.3.0 New Feature List:</p>
-            <ul>
-              <li>C2X bit-precise integer types and bit-fields thereof for (except for pic14, pic16).</li>
-              <li>Added all new general mnemonics from ASxxxx 5.40 except for .bank and enabled for all ports</li>
-              <li>sm83: sdasgb now can output cycles in listing and sz80 has accurate cycles for this processor except for branching</li>
-              <li>struct / union return (except for ds390, hc08, s08, mos6502, pic14, pic16).</li>
-              <li>div standard library function family.</li>
-              <li>struct / union parameters (except for hc08, s08, mos6502, pic14, pic16).</li>
-              <li>C2X nullptr.</li>
-              <li>Many fixes for the type system and _Generic.</li>
-              <li>Adopted more of GCC, QuickC and tinycc tests.</li>
-              <li>C2X char8_t.</li>
-              <li>C2X memalignment.</li>
-              <li>C2X unreachable.</li>
-              <li>C2X typeof, typeof_unqual.</li>
-              <li>C2X auto.</li>
-              <li>C2X keywords bool, true, false, alignas, alignof, static_assert.</li>
-              <li>C90-C17 function declarators without prototypes.</li>
-              <li>C99 variably modified types.</li>
-              <li>C2X bit and byte utilities.</li>
-              <li>call_once.</li>
-              <li>_sdcc_external_startup renamed to __sdcc_external_startup and supported for all ports.</li>
-              <li>makeshift support for long double as another alias for float.</li>
-            </ul>
-
-            <!-- END PAST_NEWS -->
-
-            <p><a href="previous.php">Previous News</a></p>
-
 <?php include('./footer.php')?>
             </td>
           </tr>
@@ -288,3 +245,4 @@
     </div>
   </body>
 </html>
+

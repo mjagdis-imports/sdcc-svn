@@ -1,0 +1,983 @@
+A step in solving #3714 (and similar) and also solving B0a from
+NGI0-Commons-SDCC by completely removing DLL dependencies from Windows
+executables, especially demonstrating the procedure results in
+functional binaries for Windows 32-bit builds independent of DLLs which
+cause various problems in practice.
+
+
+The gh-cross-win32.yml is a github actions workflow file which
+is able, starting from github actions default ubuntu-latest
+(ubuntu-24.04 at the moment it was written) state:
+
+- Checkout the sdcc repo (in which this actions file would
+be).
+
+-  Install MinGW-w64 i686 toolchain and Windows 32 wine
+
+In this step, also 32-bit parts of the operating system and the
+Wine to run 32-bit windows application is installed.
+
+Wine is not necessary for the cross compilation, but it can be
+used to run the resulting cross compiled executables.
+
+Also innstalled: zlib1g-dev, libz-mingw-w64-dev and gputils.
+
+- Install boost and gala
+
+- Build native
+
+Builds SDCC natively, to produce the lib files used in the final
+SDCC package.
+
+- Upload native config.log
+
+A diagnostic step which allows to inspect the config.log
+if the previous step fails
+
+- Build for i686 MinGW-w64
+
+Builds static binaries of SDCC for Windows 32, which don't need
+any additional DLLs, except from those provided by the Windows 32
+operating system. This solves various problems which are present
+in builds which need additional DLLs.
+
+At the end of this step, sdcc.exe is executed on the
+ubuntu latest using the previously installed wine.
+(4.5.20, the svn build version was not visible in the
+git equivalent sources, but it was [r16269]).
+
+- Upload i686 config.log
+
+A diagnostic step which allows to inspect the config.log
+if the previous step fails
+
+- Upload i686 binaries
+
+Uploads the archive containing the natively generated SDCC library
+files and all SDCC binary executable files for Windows 32-bit.
+
+------
+Results:
+
+1) The listing of the produced archive:
+
+-----
+7-Zip 24.09 (x64) : Copyright (c) 1999-2024 Igor Pavlov : 2024-11-29
+
+Scanning the drive for archives:
+1 file, 19079646 bytes (19 MiB)
+
+Listing archive: mingw-i686-binaries-364f5c76db4527d7dfa793af547cb2365813d5ad.zip
+
+--
+Path = mingw-i686-binaries-364f5c76db4527d7dfa793af547cb2365813d5ad.zip
+Type = zip
+Physical Size = 19079646
+
+   Date      Time    Attr         Size   Compressed  Name
+------------------- ----- ------------ ------------  ------------------------
+2026-02-26 01:40:26 .....        52224        27502  sdcc\bin\makebin.exe
+2026-02-26 01:40:24 .....        46080        24158  sdcc\bin\packihx.exe
+2026-02-26 01:41:46 .....       140800        73523  sdcc\bin\sdas390.exe
+2026-02-26 01:41:42 .....       138240        71596  sdcc\bin\sdas6500.exe
+2026-02-26 01:41:38 .....       139776        72270  sdcc\bin\sdas6808.exe
+2026-02-26 01:41:48 .....       139776        73147  sdcc\bin\sdas8051.exe
+2026-02-26 01:42:06 .....       143872        74678  sdcc\bin\sdasf8.exe
+2026-02-26 01:41:58 .....       136704        71522  sdcc\bin\sdasgb.exe
+2026-02-26 01:42:00 .....       139776        72157  sdcc\bin\sdaspdk13.exe
+2026-02-26 01:42:02 .....       140288        72239  sdcc\bin\sdaspdk14.exe
+2026-02-26 01:42:04 .....       140288        72337  sdcc\bin\sdaspdk15.exe
+2026-02-26 01:41:54 .....       151552        79290  sdcc\bin\sdasrab.exe
+2026-02-26 01:41:44 .....       155136        78690  sdcc\bin\sdasstm8.exe
+2026-02-26 01:41:56 .....       142336        74180  sdcc\bin\sdastlcs90.exe
+2026-02-26 01:41:50 .....       157184        79253  sdcc\bin\sdasz80.exe
+2026-02-26 01:39:44 .....       205824        96232  sdcc\bin\sdcdb.exe
+2026-02-26 01:42:10 .....       192000        93890  sdcc\bin\sdld.exe
+2026-02-26 01:42:10 .....       192000        93890  sdcc\bin\sdld6808.exe
+2026-02-26 01:42:10 .....       192000        93890  sdcc\bin\sdldf8.exe
+2026-02-26 01:42:10 .....       192000        93890  sdcc\bin\sdldpdk.exe
+2026-02-26 01:42:10 .....       192000        93890  sdcc\bin\sdldgb.exe
+2026-02-26 01:42:10 .....       192000        93890  sdcc\bin\sdldstm8.exe
+2026-02-26 01:42:10 .....       192000        93890  sdcc\bin\sdldz80.exe
+2026-02-26 01:23:50 .....        49960         8332  sdcc\device\lib\build\ds390\libds390.lib
+2026-02-26 01:23:50 .....       215048        26213  sdcc\device\lib\build\ds390\libfloat.lib
+2026-02-26 01:23:50 .....         8790         1266  sdcc\device\lib\build\ds390\libint.lib
+2026-02-26 01:23:50 .....        16864         2378  sdcc\device\lib\build\ds390\liblong.lib
+2026-02-26 01:23:50 .....        42642         4995  sdcc\device\lib\build\ds390\liblonglong.lib
+2026-02-26 01:23:50 .....       630296        77462  sdcc\device\lib\build\ds390\libsdcc.lib
+2026-02-26 01:23:50 .....        17632         3611  sdcc\device\lib\build\ds400\libds400.lib
+2026-02-26 01:23:50 .....       219124        26341  sdcc\device\lib\build\ds400\libfloat.lib
+2026-02-26 01:23:50 .....         9090         1277  sdcc\device\lib\build\ds400\libint.lib
+2026-02-26 01:23:50 .....        17164         2401  sdcc\device\lib\build\ds400\liblong.lib
+2026-02-26 01:23:50 .....        43302         5005  sdcc\device\lib\build\ds400\liblonglong.lib
+2026-02-26 01:23:50 .....       637830        77520  sdcc\device\lib\build\ds400\libsdcc.lib
+2026-02-26 01:29:36 .....         2323          555  sdcc\device\lib\build\ez80\crt0.rel
+2026-02-26 01:29:36 .....       413860        57699  sdcc\device\lib\build\ez80\ez80.lib
+2026-02-26 01:38:22 .....       315902        45413  sdcc\device\lib\build\f8\f8.lib
+2026-02-26 01:38:52 .....       344656        50302  sdcc\device\lib\build\f8l\f8l.lib
+2026-02-26 01:24:08 .....       800004        96586  sdcc\device\lib\build\hc08\hc08.lib
+2026-02-26 01:25:20 .....       193982        23036  sdcc\device\lib\build\huge\libfloat.lib
+2026-02-26 01:25:20 .....        10580         1361  sdcc\device\lib\build\huge\libint.lib
+2026-02-26 01:25:20 .....        17072         2255  sdcc\device\lib\build\huge\liblong.lib
+2026-02-26 01:25:20 .....        53540         6257  sdcc\device\lib\build\huge\liblonglong.lib
+2026-02-26 01:25:20 .....       734854        83721  sdcc\device\lib\build\huge\libsdcc.lib
+2026-02-26 01:25:20 .....        12824         1938  sdcc\device\lib\build\huge\mcs51.lib
+2026-02-26 01:25:08 .....       186982        22145  sdcc\device\lib\build\large\libfloat.lib
+2026-02-26 01:25:08 .....        10588         1362  sdcc\device\lib\build\large\libint.lib
+2026-02-26 01:25:08 .....        15452         2063  sdcc\device\lib\build\large\liblong.lib
+2026-02-26 01:25:08 .....        53552         6257  sdcc\device\lib\build\large\liblonglong.lib
+2026-02-26 01:25:08 .....       672080        75799  sdcc\device\lib\build\large\libsdcc.lib
+2026-02-26 01:25:08 .....        12824         1938  sdcc\device\lib\build\large\mcs51.lib
+2026-02-26 01:25:04 .....       187238        21204  sdcc\device\lib\build\large-stack-auto\libfloat.lib
+2026-02-26 01:25:04 .....        10516         1432  sdcc\device\lib\build\large-stack-auto\libint.lib
+2026-02-26 01:25:04 .....        16276         2281  sdcc\device\lib\build\large-stack-auto\liblong.lib
+2026-02-26 01:25:04 .....        41476         4719  sdcc\device\lib\build\large-stack-auto\liblonglong.lib
+2026-02-26 01:25:04 .....       605208        68707  sdcc\device\lib\build\large-stack-auto\libsdcc.lib
+2026-02-26 01:25:04 .....        12824         1938  sdcc\device\lib\build\large-stack-auto\mcs51.lib
+2026-02-26 01:24:58 .....       188240        21823  sdcc\device\lib\build\medium\libfloat.lib
+2026-02-26 01:24:58 .....         9488         1261  sdcc\device\lib\build\medium\libint.lib
+2026-02-26 01:24:58 .....        16432         2168  sdcc\device\lib\build\medium\liblong.lib
+2026-02-26 01:24:58 .....        49650         5306  sdcc\device\lib\build\medium\liblonglong.lib
+2026-02-26 01:24:58 .....       642390        72112  sdcc\device\lib\build\medium\libsdcc.lib
+2026-02-26 01:24:58 .....        12824         1938  sdcc\device\lib\build\medium\mcs51.lib
+2026-02-26 01:24:18 .....         1938          522  sdcc\device\lib\build\mos6502\crt0.rel
+2026-02-26 01:24:18 .....       886426       111359  sdcc\device\lib\build\mos6502\mos6502.lib
+2026-02-26 01:24:40 .....         1640          459  sdcc\device\lib\build\mos6502-stack-auto\crt0.rel
+2026-02-26 01:24:40 .....       816282       106078  sdcc\device\lib\build\mos6502-stack-auto\mos6502.lib
+2026-02-26 01:24:44 .....         1938          522  sdcc\device\lib\build\mos65c02\crt0.rel
+2026-02-26 01:24:44 .....       932226       114423  sdcc\device\lib\build\mos65c02\mos65c02.lib
+2026-02-26 01:36:30 .....      1442130       141388  sdcc\device\lib\build\pdk13\pdk13.lib
+2026-02-26 01:36:36 .....      1412858       138616  sdcc\device\lib\build\pdk14\pdk14.lib
+2026-02-26 01:36:44 .....      1412654       138852  sdcc\device\lib\build\pdk15\pdk15.lib
+2026-02-26 01:36:52 .....      2653442       229806  sdcc\device\lib\build\pdk15-stack-auto\pdk15.lib
+2026-02-26 01:25:16 .....       587303       123876  sdcc\device\lib\build\pic14\libc.lib
+2026-02-26 01:25:16 .....       543004       115548  sdcc\device\lib\build\pic14\libce.lib
+2026-02-26 01:25:16 .....       301905        69705  sdcc\device\lib\build\pic14\libm.lib
+2026-02-26 01:25:16 .....       283405        66101  sdcc\device\lib\build\pic14\libme.lib
+2026-02-26 01:25:16 .....       261383        51751  sdcc\device\lib\build\pic14\libsdcc.lib
+2026-02-26 01:25:16 .....       237514        46947  sdcc\device\lib\build\pic14\libsdcce.lib
+2026-02-26 01:28:30 .....          812          332  sdcc\device\lib\build\pic16\crt0.o
+2026-02-26 01:28:30 .....         2858          922  sdcc\device\lib\build\pic16\crt0i.o
+2026-02-26 01:28:30 .....         3110         1025  sdcc\device\lib\build\pic16\crt0iz.o
+2026-02-26 01:28:30 .....       438959        96655  sdcc\device\lib\build\pic16\libc18f.lib
+2026-02-26 01:28:30 .....         1410          390  sdcc\device\lib\build\pic16\libcrt0.lib
+2026-02-26 01:28:30 .....         3470          998  sdcc\device\lib\build\pic16\libcrt0i.lib
+2026-02-26 01:28:30 .....         3722         1091  sdcc\device\lib\build\pic16\libcrt0iz.lib
+2026-02-26 01:28:30 .....         4905         1421  sdcc\device\lib\build\pic16\libdebug.lib
+2026-02-26 01:28:30 .....        84290         7391  sdcc\device\lib\build\pic16\libio18f1230.lib
+2026-02-26 01:28:30 .....        75574         7028  sdcc\device\lib\build\pic16\libio18f1320.lib
+2026-02-26 01:28:30 .....        75574         7026  sdcc\device\lib\build\pic16\libio18f1220.lib
+2026-02-26 01:28:30 .....        84290         7389  sdcc\device\lib\build\pic16\libio18f1330.lib
+2026-02-26 01:28:30 .....       208356        16331  sdcc\device\lib\build\pic16\libio18f13k50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f13k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f14k22.lib
+2026-02-26 01:28:30 .....       150245        12410  sdcc\device\lib\build\pic16\libio18f2220.lib
+2026-02-26 01:28:30 .....       208356        16333  sdcc\device\lib\build\pic16\libio18f14k50.lib
+2026-02-26 01:28:30 .....       163318        13315  sdcc\device\lib\build\pic16\libio18f2221.lib
+2026-02-26 01:28:30 .....       163318        13314  sdcc\device\lib\build\pic16\libio18f2321.lib
+2026-02-26 01:28:30 .....       150245        12410  sdcc\device\lib\build\pic16\libio18f2320.lib
+2026-02-26 01:28:30 .....        69659         6341  sdcc\device\lib\build\pic16\libio18f2331.lib
+2026-02-26 01:28:30 .....       318184        22796  sdcc\device\lib\build\pic16\libio18f23k22.lib
+2026-02-26 01:28:30 .....       175644        14044  sdcc\device\lib\build\pic16\libio18f23k20.lib
+2026-02-26 01:28:30 .....       159722        13005  sdcc\device\lib\build\pic16\libio18f2410.lib
+2026-02-26 01:28:30 .....       162970        13273  sdcc\device\lib\build\pic16\libio18f2420.lib
+2026-02-26 01:28:30 .....       144437        12266  sdcc\device\lib\build\pic16\libio18f242.lib
+2026-02-26 01:28:30 .....       167726        13489  sdcc\device\lib\build\pic16\libio18f2423.lib
+2026-02-26 01:28:30 .....        69659         6341  sdcc\device\lib\build\pic16\libio18f2431.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f2439.lib
+2026-02-26 01:28:30 .....        96888         7835  sdcc\device\lib\build\pic16\libio18f2450.lib
+2026-02-26 01:28:30 .....       110344         8583  sdcc\device\lib\build\pic16\libio18f2455.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f2458.lib
+2026-02-26 01:28:30 .....       340013        24388  sdcc\device\lib\build\pic16\libio18f248.lib
+2026-02-26 01:28:30 .....       613543        45667  sdcc\device\lib\build\pic16\libio18f2480.lib
+2026-02-26 01:28:30 .....       164073        13532  sdcc\device\lib\build\pic16\libio18f24j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f24j11.lib
+2026-02-26 01:28:30 .....       172943        12442  sdcc\device\lib\build\pic16\libio18f24j50.lib
+2026-02-26 01:28:30 .....       175644        14050  sdcc\device\lib\build\pic16\libio18f24k20.lib
+2026-02-26 01:28:30 .....       318184        22795  sdcc\device\lib\build\pic16\libio18f24k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f24k50.lib
+2026-02-26 01:28:30 .....       159722        13005  sdcc\device\lib\build\pic16\libio18f2510.lib
+2026-02-26 01:28:30 .....       159722        13002  sdcc\device\lib\build\pic16\libio18f2515.lib
+2026-02-26 01:28:30 .....       144437        12273  sdcc\device\lib\build\pic16\libio18f252.lib
+2026-02-26 01:28:30 .....       167726        13492  sdcc\device\lib\build\pic16\libio18f2523.lib
+2026-02-26 01:28:30 .....       163550        13292  sdcc\device\lib\build\pic16\libio18f2525.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f2539.lib
+2026-02-26 01:28:30 .....       162970        13270  sdcc\device\lib\build\pic16\libio18f2520.lib
+2026-02-26 01:28:30 .....       110344         8582  sdcc\device\lib\build\pic16\libio18f2550.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f2553.lib
+2026-02-26 01:28:30 .....       340013        24392  sdcc\device\lib\build\pic16\libio18f258.lib
+2026-02-26 01:28:30 .....       613543        45667  sdcc\device\lib\build\pic16\libio18f2580.lib
+2026-02-26 01:28:30 .....       612267        45124  sdcc\device\lib\build\pic16\libio18f2585.lib
+2026-02-26 01:28:30 .....       164073        13527  sdcc\device\lib\build\pic16\libio18f25j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f25j11.lib
+2026-02-26 01:28:30 .....       175644        14046  sdcc\device\lib\build\pic16\libio18f25k20.lib
+2026-02-26 01:28:30 .....       318184        22789  sdcc\device\lib\build\pic16\libio18f25k22.lib
+2026-02-26 01:28:30 .....       172943        12444  sdcc\device\lib\build\pic16\libio18f25j50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f25k50.lib
+2026-02-26 01:28:30 .....          828          182  sdcc\device\lib\build\pic16\libio18f25k80.lib
+2026-02-26 01:28:30 .....       159722        13006  sdcc\device\lib\build\pic16\libio18f2610.lib
+2026-02-26 01:28:30 .....       163550        13292  sdcc\device\lib\build\pic16\libio18f2620.lib
+2026-02-26 01:28:30 .....       615660        45064  sdcc\device\lib\build\pic16\libio18f2680.lib
+2026-02-26 01:28:30 .....       615660        45063  sdcc\device\lib\build\pic16\libio18f2682.lib
+2026-02-26 01:28:30 .....       615660        45063  sdcc\device\lib\build\pic16\libio18f2685.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f26j11.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f26j13.lib
+2026-02-26 01:28:30 .....       172943        12437  sdcc\device\lib\build\pic16\libio18f26j50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f26j53.lib
+2026-02-26 01:28:30 .....       177152        14140  sdcc\device\lib\build\pic16\libio18f26k20.lib
+2026-02-26 01:28:30 .....       319692        22813  sdcc\device\lib\build\pic16\libio18f26k22.lib
+2026-02-26 01:28:30 .....          828          182  sdcc\device\lib\build\pic16\libio18f26k80.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f27j13.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f27j53.lib
+2026-02-26 01:28:30 .....       165006        13217  sdcc\device\lib\build\pic16\libio18f4220.lib
+2026-02-26 01:28:30 .....       173555        13974  sdcc\device\lib\build\pic16\libio18f4221.lib
+2026-02-26 01:28:30 .....       165006        13222  sdcc\device\lib\build\pic16\libio18f4320.lib
+2026-02-26 01:28:30 .....       173555        13976  sdcc\device\lib\build\pic16\libio18f4321.lib
+2026-02-26 01:28:30 .....        74109         6575  sdcc\device\lib\build\pic16\libio18f4331.lib
+2026-02-26 01:28:30 .....       185881        14649  sdcc\device\lib\build\pic16\libio18f43k20.lib
+2026-02-26 01:28:30 .....       329958        23213  sdcc\device\lib\build\pic16\libio18f43k22.lib
+2026-02-26 01:28:30 .....       168103        13523  sdcc\device\lib\build\pic16\libio18f4410.lib
+2026-02-26 01:28:30 .....       156153        12697  sdcc\device\lib\build\pic16\libio18f442.lib
+2026-02-26 01:28:30 .....       173207        13903  sdcc\device\lib\build\pic16\libio18f4420.lib
+2026-02-26 01:28:30 .....       177963        14227  sdcc\device\lib\build\pic16\libio18f4423.lib
+2026-02-26 01:28:30 .....        74109         6568  sdcc\device\lib\build\pic16\libio18f4431.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f4439.lib
+2026-02-26 01:28:30 .....       102536         8082  sdcc\device\lib\build\pic16\libio18f4450.lib
+2026-02-26 01:28:30 .....       119832         9030  sdcc\device\lib\build\pic16\libio18f4455.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f4458.lib
+2026-02-26 01:28:30 .....       361676        25300  sdcc\device\lib\build\pic16\libio18f448.lib
+2026-02-26 01:28:30 .....       631900        46000  sdcc\device\lib\build\pic16\libio18f4480.lib
+2026-02-26 01:28:30 .....       188723        15082  sdcc\device\lib\build\pic16\libio18f44j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f44j11.lib
+2026-02-26 01:28:30 .....       190751        13394  sdcc\device\lib\build\pic16\libio18f44j50.lib
+2026-02-26 01:28:30 .....       185881        14652  sdcc\device\lib\build\pic16\libio18f44k20.lib
+2026-02-26 01:28:30 .....       329958        23210  sdcc\device\lib\build\pic16\libio18f44k22.lib
+2026-02-26 01:28:30 .....       168103        13524  sdcc\device\lib\build\pic16\libio18f4510.lib
+2026-02-26 01:28:30 .....       168103        13527  sdcc\device\lib\build\pic16\libio18f4515.lib
+2026-02-26 01:28:30 .....       156153        12703  sdcc\device\lib\build\pic16\libio18f452.lib
+2026-02-26 01:28:30 .....       173207        13901  sdcc\device\lib\build\pic16\libio18f4520.lib
+2026-02-26 01:28:30 .....       177963        14226  sdcc\device\lib\build\pic16\libio18f4523.lib
+2026-02-26 01:28:30 .....       171931        13790  sdcc\device\lib\build\pic16\libio18f4525.lib
+2026-02-26 01:28:30 .....       119832         9030  sdcc\device\lib\build\pic16\libio18f4550.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f4539.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f4553.lib
+2026-02-26 01:28:30 .....       361676        25290  sdcc\device\lib\build\pic16\libio18f458.lib
+2026-02-26 01:28:30 .....       631900        46000  sdcc\device\lib\build\pic16\libio18f4580.lib
+2026-02-26 01:28:30 .....       632480        46017  sdcc\device\lib\build\pic16\libio18f4585.lib
+2026-02-26 01:28:30 .....       188723        15081  sdcc\device\lib\build\pic16\libio18f45j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f45j11.lib
+2026-02-26 01:28:30 .....       190751        13394  sdcc\device\lib\build\pic16\libio18f45j50.lib
+2026-02-26 01:28:30 .....       185881        14653  sdcc\device\lib\build\pic16\libio18f45k20.lib
+2026-02-26 01:28:30 .....       329958        23214  sdcc\device\lib\build\pic16\libio18f45k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f45k50.lib
+2026-02-26 01:28:30 .....          828          182  sdcc\device\lib\build\pic16\libio18f45k80.lib
+2026-02-26 01:28:30 .....       168103        13523  sdcc\device\lib\build\pic16\libio18f4610.lib
+2026-02-26 01:28:30 .....       170423        13735  sdcc\device\lib\build\pic16\libio18f4620.lib
+2026-02-26 01:28:30 .....       632480        46022  sdcc\device\lib\build\pic16\libio18f4682.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f46j11.lib
+2026-02-26 01:28:30 .....       632480        46020  sdcc\device\lib\build\pic16\libio18f4680.lib
+2026-02-26 01:28:30 .....       632480        46017  sdcc\device\lib\build\pic16\libio18f4685.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f46j13.lib
+2026-02-26 01:28:30 .....       190751        13398  sdcc\device\lib\build\pic16\libio18f46j50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f46j53.lib
+2026-02-26 01:28:30 .....       187389        14708  sdcc\device\lib\build\pic16\libio18f46k20.lib
+2026-02-26 01:28:30 .....       331466        23304  sdcc\device\lib\build\pic16\libio18f46k22.lib
+2026-02-26 01:28:30 .....          828          182  sdcc\device\lib\build\pic16\libio18f46k80.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f47j13.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f47j53.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f6390.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f6310.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f6393.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f63j90.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f63j11.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f6410.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f6493.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f6490.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f64j11.lib
+2026-02-26 01:28:30 .....       200560        14748  sdcc\device\lib\build\pic16\libio18f6520.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f64j90.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f6525.lib
+2026-02-26 01:28:30 .....       645530        46910  sdcc\device\lib\build\pic16\libio18f6585.lib
+2026-02-26 01:28:30 .....       239443        17659  sdcc\device\lib\build\pic16\libio18f6527.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f65j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f65j15.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f65j11.lib
+2026-02-26 01:28:30 .....       317254        22528  sdcc\device\lib\build\pic16\libio18f65j50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f65j94.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f65j90.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f65k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f65k90.lib
+2026-02-26 01:28:30 .....          828          182  sdcc\device\lib\build\pic16\libio18f65k80.lib
+2026-02-26 01:28:30 .....       200560        14750  sdcc\device\lib\build\pic16\libio18f6620.lib
+2026-02-26 01:28:30 .....       239443        17653  sdcc\device\lib\build\pic16\libio18f6622.lib
+2026-02-26 01:28:30 .....          827          180  sdcc\device\lib\build\pic16\libio18f6621.lib
+2026-02-26 01:28:30 .....       239443        17658  sdcc\device\lib\build\pic16\libio18f6627.lib
+2026-02-26 01:28:30 .....       645530        46913  sdcc\device\lib\build\pic16\libio18f6680.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f6628.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j15.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j11.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j16.lib
+2026-02-26 01:28:30 .....       317254        22527  sdcc\device\lib\build\pic16\libio18f66j50.lib
+2026-02-26 01:28:30 .....       317254        22533  sdcc\device\lib\build\pic16\libio18f66j55.lib
+2026-02-26 01:28:30 .....       292021        20016  sdcc\device\lib\build\pic16\libio18f66j60.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j90.lib
+2026-02-26 01:28:30 .....       292021        20018  sdcc\device\lib\build\pic16\libio18f66j65.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j93.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j99.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66j94.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66k22.lib
+2026-02-26 01:28:30 .....          828          182  sdcc\device\lib\build\pic16\libio18f66k80.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f66k90.lib
+2026-02-26 01:28:30 .....       200560        14749  sdcc\device\lib\build\pic16\libio18f6720.lib
+2026-02-26 01:28:30 .....       239443        17657  sdcc\device\lib\build\pic16\libio18f6722.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f6723.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f67j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f67j11.lib
+2026-02-26 01:28:30 .....       317254        22526  sdcc\device\lib\build\pic16\libio18f67j50.lib
+2026-02-26 01:28:30 .....       292021        20016  sdcc\device\lib\build\pic16\libio18f67j60.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f67j90.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f67j93.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f67j94.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f67k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f67k90.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f8310.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f8390.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f8393.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f83j11.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f83j90.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f8410.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f8490.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f8493.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f84j90.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f84j11.lib
+2026-02-26 01:28:30 .....          827          182  sdcc\device\lib\build\pic16\libio18f8525.lib
+2026-02-26 01:28:30 .....       213784        15265  sdcc\device\lib\build\pic16\libio18f8520.lib
+2026-02-26 01:28:30 .....       658754        47220  sdcc\device\lib\build\pic16\libio18f8585.lib
+2026-02-26 01:28:30 .....       252667        18713  sdcc\device\lib\build\pic16\libio18f8527.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f85j11.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f85j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f85j15.lib
+2026-02-26 01:28:30 .....       330478        23110  sdcc\device\lib\build\pic16\libio18f85j50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f85j90.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f85j94.lib
+2026-02-26 01:28:30 .....          828          183  sdcc\device\lib\build\pic16\libio18f85k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f85k90.lib
+2026-02-26 01:28:30 .....       213784        15264  sdcc\device\lib\build\pic16\libio18f8620.lib
+2026-02-26 01:28:30 .....          827          180  sdcc\device\lib\build\pic16\libio18f8621.lib
+2026-02-26 01:28:30 .....       252667        18712  sdcc\device\lib\build\pic16\libio18f8622.lib
+2026-02-26 01:28:30 .....       252667        18722  sdcc\device\lib\build\pic16\libio18f8627.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f8628.lib
+2026-02-26 01:28:30 .....       658754        47217  sdcc\device\lib\build\pic16\libio18f8680.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j11.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j16.lib
+2026-02-26 01:28:30 .....       330478        23108  sdcc\device\lib\build\pic16\libio18f86j50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j15.lib
+2026-02-26 01:28:30 .....       330478        23105  sdcc\device\lib\build\pic16\libio18f86j55.lib
+2026-02-26 01:28:30 .....       312785        21123  sdcc\device\lib\build\pic16\libio18f86j60.lib
+2026-02-26 01:28:30 .....       312785        21121  sdcc\device\lib\build\pic16\libio18f86j65.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j72.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j90.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j93.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j94.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86j99.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f86k90.lib
+2026-02-26 01:28:30 .....       213784        15269  sdcc\device\lib\build\pic16\libio18f8720.lib
+2026-02-26 01:28:30 .....       252667        18709  sdcc\device\lib\build\pic16\libio18f8722.lib
+2026-02-26 01:28:30 .....          827          183  sdcc\device\lib\build\pic16\libio18f8723.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87j10.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87j11.lib
+2026-02-26 01:28:30 .....       330478        23108  sdcc\device\lib\build\pic16\libio18f87j50.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87j72.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87j90.lib
+2026-02-26 01:28:30 .....       312785        21118  sdcc\device\lib\build\pic16\libio18f87j60.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87j93.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87j94.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87k22.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f87k90.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f95j94.lib
+2026-02-26 01:28:30 .....       322529        21693  sdcc\device\lib\build\pic16\libio18f96j65.lib
+2026-02-26 01:28:30 .....       322529        21699  sdcc\device\lib\build\pic16\libio18f96j60.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f96j94.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f96j99.lib
+2026-02-26 01:28:30 .....       322529        21696  sdcc\device\lib\build\pic16\libio18f97j60.lib
+2026-02-26 01:28:30 .....          828          184  sdcc\device\lib\build\pic16\libio18f97j94.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf13k22.lib
+2026-02-26 01:28:30 .....       167177        13873  sdcc\device\lib\build\pic16\libio18lf13k50.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf14k22.lib
+2026-02-26 01:28:30 .....       167177        13873  sdcc\device\lib\build\pic16\libio18lf14k50.lib
+2026-02-26 01:28:30 .....       254581        19253  sdcc\device\lib\build\pic16\libio18lf23k22.lib
+2026-02-26 01:28:30 .....       132244        11764  sdcc\device\lib\build\pic16\libio18lf24j10.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf24j11.lib
+2026-02-26 01:28:30 .....       109701         8868  sdcc\device\lib\build\pic16\libio18lf24j50.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf24k50.lib
+2026-02-26 01:28:30 .....       254581        19257  sdcc\device\lib\build\pic16\libio18lf24k22.lib
+2026-02-26 01:28:30 .....       132244        11766  sdcc\device\lib\build\pic16\libio18lf25j10.lib
+2026-02-26 01:28:30 .....       109701         8869  sdcc\device\lib\build\pic16\libio18lf25j50.lib
+2026-02-26 01:28:30 .....       254581        19256  sdcc\device\lib\build\pic16\libio18lf25k22.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf25j11.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf25k50.lib
+2026-02-26 01:28:30 .....          829          184  sdcc\device\lib\build\pic16\libio18lf25k80.lib
+2026-02-26 01:28:30 .....          829          182  sdcc\device\lib\build\pic16\libio18lf26j11.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf26j13.lib
+2026-02-26 01:28:30 .....       109701         8878  sdcc\device\lib\build\pic16\libio18lf26j50.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf26j53.lib
+2026-02-26 01:28:30 .....       255777        19286  sdcc\device\lib\build\pic16\libio18lf26k22.lib
+2026-02-26 01:28:30 .....          829          184  sdcc\device\lib\build\pic16\libio18lf26k80.lib
+2026-02-26 01:28:30 .....          829          182  sdcc\device\lib\build\pic16\libio18lf27j13.lib
+2026-02-26 01:28:30 .....       263919        19600  sdcc\device\lib\build\pic16\libio18lf43k22.lib
+2026-02-26 01:28:30 .....       151794        12892  sdcc\device\lib\build\pic16\libio18lf44j10.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf27j53.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf44j11.lib
+2026-02-26 01:28:30 .....       120831         9544  sdcc\device\lib\build\pic16\libio18lf44j50.lib
+2026-02-26 01:28:30 .....       263919        19596  sdcc\device\lib\build\pic16\libio18lf44k22.lib
+2026-02-26 01:28:30 .....       151794        12890  sdcc\device\lib\build\pic16\libio18lf45j10.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf45j11.lib
+2026-02-26 01:28:30 .....       120831         9538  sdcc\device\lib\build\pic16\libio18lf45j50.lib
+2026-02-26 01:28:30 .....       263919        19599  sdcc\device\lib\build\pic16\libio18lf45k22.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf45k50.lib
+2026-02-26 01:28:30 .....          829          184  sdcc\device\lib\build\pic16\libio18lf45k80.lib
+2026-02-26 01:28:30 .....          829          182  sdcc\device\lib\build\pic16\libio18lf46j11.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf46j13.lib
+2026-02-26 01:28:30 .....       120831         9543  sdcc\device\lib\build\pic16\libio18lf46j50.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf46j53.lib
+2026-02-26 01:28:30 .....       265115        19661  sdcc\device\lib\build\pic16\libio18lf46k22.lib
+2026-02-26 01:28:30 .....          829          184  sdcc\device\lib\build\pic16\libio18lf46k80.lib
+2026-02-26 01:28:30 .....          829          182  sdcc\device\lib\build\pic16\libio18lf47j13.lib
+2026-02-26 01:28:30 .....          829          185  sdcc\device\lib\build\pic16\libio18lf47j53.lib
+2026-02-26 01:28:30 .....          829          184  sdcc\device\lib\build\pic16\libio18lf65k80.lib
+2026-02-26 01:28:30 .....          829          184  sdcc\device\lib\build\pic16\libio18lf66k80.lib
+2026-02-26 01:28:30 .....       272130        62502  sdcc\device\lib\build\pic16\libm18f.lib
+2026-02-26 01:28:30 .....       343602        64794  sdcc\device\lib\build\pic16\libsdcc.lib
+2026-02-26 01:30:56 .....         1936          515  sdcc\device\lib\build\r2k\crt0.rel
+2026-02-26 01:30:56 .....       372228        52734  sdcc\device\lib\build\r2k\r2k.lib
+2026-02-26 01:31:12 .....         1936          515  sdcc\device\lib\build\r2ka\crt0.rel
+2026-02-26 01:31:12 .....       370582        52349  sdcc\device\lib\build\r2ka\r2ka.lib
+2026-02-26 01:32:16 .....       368588        52030  sdcc\device\lib\build\r3ka\r3ka.lib
+2026-02-26 01:32:16 .....         1819          494  sdcc\device\lib\build\r3ka\crt0.rel
+2026-02-26 01:32:32 .....         2708          626  sdcc\device\lib\build\r4k\crt0.rel
+2026-02-26 01:32:32 .....       364320        51492  sdcc\device\lib\build\r4k\r4k.lib
+2026-02-26 01:33:36 .....         2708          626  sdcc\device\lib\build\r5k\crt0.rel
+2026-02-26 01:33:36 .....       363890        51382  sdcc\device\lib\build\r5k\r5k.lib
+2026-02-26 01:33:52 .....         3179          685  sdcc\device\lib\build\r6k\crt0.rel
+2026-02-26 01:33:52 .....       363890        51382  sdcc\device\lib\build\r6k\r6k.lib
+2026-02-26 01:36:14 .....         2308          547  sdcc\device\lib\build\r800\crt0.rel
+2026-02-26 01:36:14 .....       434988        62645  sdcc\device\lib\build\r800\r800.lib
+2026-02-26 01:24:08 .....       777980        94119  sdcc\device\lib\build\s08\s08.lib
+2026-02-26 01:24:32 .....       526938        72888  sdcc\device\lib\build\s08-stack-auto\s08.lib
+2026-02-26 01:34:54 .....         3028          655  sdcc\device\lib\build\sm83\crt0.rel
+2026-02-26 01:34:54 .....       427924        59650  sdcc\device\lib\build\sm83\sm83.lib
+2026-02-26 01:24:50 .....       190700        22015  sdcc\device\lib\build\small\libfloat.lib
+2026-02-26 01:24:50 .....         9168         1107  sdcc\device\lib\build\small\libint.lib
+2026-02-26 01:24:50 .....        11502         1442  sdcc\device\lib\build\small\liblong.lib
+2026-02-26 01:24:50 .....        49914         5157  sdcc\device\lib\build\small\liblonglong.lib
+2026-02-26 01:24:50 .....       668668        75878  sdcc\device\lib\build\small\libsdcc.lib
+2026-02-26 01:24:48 .....        12824         1938  sdcc\device\lib\build\small\mcs51.lib
+2026-02-26 01:24:54 .....       187474        21280  sdcc\device\lib\build\small-stack-auto\libfloat.lib
+2026-02-26 01:24:54 .....         7950          957  sdcc\device\lib\build\small-stack-auto\libint.lib
+2026-02-26 01:24:54 .....         9164         1220  sdcc\device\lib\build\small-stack-auto\liblong.lib
+2026-02-26 01:24:54 .....        41476         4718  sdcc\device\lib\build\small-stack-auto\liblonglong.lib
+2026-02-26 01:24:54 .....       606160        68851  sdcc\device\lib\build\small-stack-auto\libsdcc.lib
+2026-02-26 01:24:54 .....        12824         1938  sdcc\device\lib\build\small-stack-auto\mcs51.lib
+2026-02-26 01:36:24 .....       336082        46286  sdcc\device\lib\build\stm8\stm8.lib
+2026-02-26 01:37:40 .....       346974        47422  sdcc\device\lib\build\stm8-large\stm8.lib
+2026-02-26 01:34:58 .....         2554          558  sdcc\device\lib\build\tlcs90\crt0.rel
+2026-02-26 01:34:58 .....       363568        54762  sdcc\device\lib\build\tlcs90\tlcs90.lib
+2026-02-26 01:28:14 .....       436114        62954  sdcc\device\lib\build\z180\z180.lib
+2026-02-26 01:28:14 .....         2308          547  sdcc\device\lib\build\z180\crt0.rel
+2026-02-26 01:26:48 .....         2328          563  sdcc\device\lib\build\z80\crt0.rel
+2026-02-26 01:29:52 .....         2308          547  sdcc\device\lib\build\z80n\crt0.rel
+2026-02-26 01:26:48 .....       436412        63061  sdcc\device\lib\build\z80\z80.lib
+2026-02-26 01:29:52 .....       430512        62246  sdcc\device\lib\build\z80n\z80n.lib
+2026-02-26 01:42:14 .....      1017856       374127  sdcc\sim\ucsim\src\sims\m6800.src\ucsim_m6800.exe
+2026-02-26 01:42:18 .....       944640       351903  sdcc\sim\ucsim\src\sims\m68hc08.src\ucsim_m68hc08.exe
+2026-02-26 01:40:40 .....       982016       362808  sdcc\sim\ucsim\src\sims\f8.src\ucsim_f8.exe
+2026-02-26 01:42:32 .....      1049600       370063  sdcc\sim\ucsim\src\sims\mos6502.src\ucsim_mos6502.exe
+2026-02-26 01:42:44 .....      1092608       383436  sdcc\sim\ucsim\src\sims\pdk.src\ucsim_pdk.exe
+2026-02-26 01:42:08 .....      1328640       421436  sdcc\sim\ucsim\src\sims\rxk.src\ucsim_rxk.exe
+2026-02-26 01:41:04 .....      1132544       403333  sdcc\sim\ucsim\src\sims\s51.src\ucsim_51.exe
+2026-02-26 01:42:14 .....      1063936       394022  sdcc\sim\ucsim\src\sims\stm8.src\ucsim_stm8.exe
+2026-02-26 01:41:36 .....      1186304       404330  sdcc\sim\ucsim\src\sims\tlcs.src\ucsim_tlcs.exe
+2026-02-26 01:41:10 .....      1014784       369807  sdcc\sim\ucsim\src\sims\xa.src\ucsim_xa.exe
+2026-02-26 01:41:24 .....      1180160       405867  sdcc\sim\ucsim\src\sims\z80.src\ucsim_z80.exe
+2026-02-26 01:44:40 .....      7918080      2906259  sdcc\src\sdcc.exe
+2026-02-26 01:41:36 .....      1187328       480760  sdcc\support\cpp\gcc\cc1.exe
+2026-02-26 01:41:36 .....      1245696       513588  sdcc\support\cpp\gcc\cpp.exe
+2026-02-26 01:40:24 .....       487424       224418  sdcc\support\sdbinutils\binutils\bfdtest1.exe
+2026-02-26 01:40:24 .....       487424       224575  sdcc\support\sdbinutils\binutils\bfdtest2.exe
+2026-02-26 01:40:24 .....       509952       234792  sdcc\support\sdbinutils\binutils\cxxfilt.exe
+2026-02-26 01:40:24 .....       571904       264713  sdcc\support\sdbinutils\binutils\dlltool.exe
+2026-02-26 01:40:24 .....        85504        43762  sdcc\support\sdbinutils\binutils\dllwrap.exe
+2026-02-26 01:40:24 .....       542720       250220  sdcc\support\sdbinutils\binutils\sdar.exe
+2026-02-26 01:40:24 .....       655872       301027  sdcc\support\sdbinutils\binutils\sdobjcopy.exe
+2026-02-26 01:40:24 .....       542720       250222  sdcc\support\sdbinutils\binutils\sdranlib.exe
+2026-02-26 01:40:24 .....       528896       243486  sdcc\support\sdbinutils\binutils\sdnm.exe
+2026-02-26 01:40:24 .....       537600       248892  sdcc\support\sdbinutils\binutils\windmc.exe
+2026-02-26 01:40:24 .....       632320       293577  sdcc\support\sdbinutils\binutils\windres.exe
+------------------- ----- ------------ ------------  ------------------------
+2026-02-26 01:44:40           97038502     19002152  440 files
+-----
+
+2) The result of running 32-bit SDCC.EXE as the last step in Build
+for i686 MinGW-w64, also suggesting that for the regression tests
+using wine, it's probably more efficient to minimize starts of
+wine, and instead adjust the regression tests to happen as the
+whole in Win32 environment:
+
+
+2026-02-26T01:44:40.6983232Z try sdcc.exe:
+2026-02-26T01:44:40.7022407Z wine: created the configuration directory '/home/runner/.wine'
+2026-02-26T01:44:44.5160410Z 004c:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+2026-02-26T01:44:44.5161562Z 004c:err:winediag:nodrv_CreateWindow L"The explorer process failed to start."
+2026-02-26T01:44:44.5165301Z 004c:err:systray:initialize_systray Could not create tray window
+2026-02-26T01:44:44.5312238Z 004c:err:ole:StdMarshalImpl_MarshalInterface Failed to create ifstub, hr 0x80004002
+2026-02-26T01:44:44.5313760Z 004c:err:ole:CoMarshalInterface Failed to marshal the interface {6d5140c1-7436-11ce-8034-00aa006009fa}, hr 0x80004002
+2026-02-26T01:44:44.5315064Z 004c:err:ole:apartment_get_local_server_stream Failed: 0x80004002
+2026-02-26T01:44:44.5539415Z 002c:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+2026-02-26T01:44:44.5540746Z 002c:err:winediag:nodrv_CreateWindow L"Make sure that your X server is running and that $DISPLAY is set correctly."
+2026-02-26T01:44:44.5569074Z 0054:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+2026-02-26T01:44:44.5570454Z 0054:err:winediag:nodrv_CreateWindow L"Make sure that your X server is running and that $DISPLAY is set correctly."
+2026-02-26T01:44:44.5571462Z 0054:err:ole:apartment_createwindowifneeded CreateWindow failed with error 3
+2026-02-26T01:44:44.5588425Z 0054:err:ole:apartment_createwindowifneeded CreateWindow failed with error 0
+2026-02-26T01:44:44.5606617Z 0054:err:ole:apartment_createwindowifneeded CreateWindow failed with error 14007
+2026-02-26T01:44:44.5607592Z 0054:err:ole:StdMarshalImpl_MarshalInterface Failed to create ifstub, hr 0x800736b7
+2026-02-26T01:44:44.5608609Z 0054:err:ole:CoMarshalInterface Failed to marshal the interface {6d5140c1-7436-11ce-8034-00aa006009fa}, hr 0x800736b7
+2026-02-26T01:44:44.5609715Z 0054:err:ole:apartment_get_local_server_stream Failed: 0x800736b7
+2026-02-26T01:44:44.5645154Z 0054:err:ole:start_rpcss Failed to open RpcSs service
+2026-02-26T01:44:44.5821042Z 0044:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+2026-02-26T01:44:44.5822487Z 0044:err:winediag:nodrv_CreateWindow L"Make sure that your X server is running and that $DISPLAY is set correctly."
+2026-02-26T01:44:44.7057467Z 0090:err:winediag:nodrv_CreateWindow Application tried to create a window, but no driver could be loaded.
+2026-02-26T01:44:44.7059029Z 0090:err:winediag:nodrv_CreateWindow L"Make sure that your X server is running and that $DISPLAY is set correctly."
+2026-02-26T01:44:48.0381790Z wine: configuration in L"/home/runner/.wine" has been updated.
+2026-02-26T01:44:48.0722347Z SDCC : mcs51/z80/z180/r2k/r2ka/r3ka/r4k/r5k/r6k/sm83/tlcs90/ez80/z80n/r800/ds390/pic16/pic14/TININative/ds400/hc08/s08/stm8/pdk13/pdk14/pdk15/mos6502/mos65c02/f8/f8l TD- 4.5.20 #0 (MINGW32)
+2026-02-26T01:44:48.0723858Z published under GNU General Public License (GPL)
+2026-02-26T01:44:48.0724380Z Usage : sdcc [options] filename
+2026-02-26T01:44:48.0724759Z Options :-
+2026-02-26T01:44:48.0724933Z
+2026-02-26T01:44:48.0725063Z General options:
+2026-02-26T01:44:48.0725497Z       --help                Display this help
+2026-02-26T01:44:48.0726016Z   -v  --version             Display sdcc's version
+2026-02-26T01:44:48.0726692Z       --verbose             Trace calls to the preprocessor, assembler, and linker
+2026-02-26T01:44:48.0727309Z   -V                        Execute verbosely. Show sub commands as they are run
+2026-02-26T01:44:48.0728255Z   -d                        Output list of macro definitions in effect. Use with -E
+2026-02-26T01:44:48.0728761Z   -D                        Define macro as in -Dmacro
+2026-02-26T01:44:48.0729479Z   -I                        Add to the include (*.h) path, as in -Ipath
+2026-02-26T01:44:48.0729939Z   -A
+2026-02-26T01:44:48.0730278Z   -U                        Undefine macro as in -Umacro
+2026-02-26T01:44:48.0730723Z   -M                        Preprocessor option
+2026-02-26T01:44:48.0731287Z   -W                        Pass through options to the pre-processor (p), assembler (a) or linker (l)
+2026-02-26T01:44:48.0731987Z       --include             Pre-include a file during pre-processing
+2026-02-26T01:44:48.0732548Z   -E  --preprocessonly      Preprocess only, do not compile
+2026-02-26T01:44:48.0733005Z       --syntax-only         Parse and verify syntax only, do not compile
+2026-02-26T01:44:48.0733532Z   -S                        Compile only; do not assemble or link
+2026-02-26T01:44:48.0734056Z   -c  --compile-only        Compile and assemble, but do not link
+2026-02-26T01:44:48.0734920Z       --c1mode              Act in c1 mode.  The standard input is preprocessed code, the output is assembly code.
+2026-02-26T01:44:48.0735848Z   -o                        Place the output into the given path resp. file
+2026-02-26T01:44:48.0736684Z   -x                        Optional file type override (c, c-header or none), valid until the next -x
+2026-02-26T01:44:48.0737648Z       --print-search-dirs   display the directories in the compiler's search path
+2026-02-26T01:44:48.0738449Z       --vc                  messages are compatible with Micro$oft visual studio
+2026-02-26T01:44:48.0739371Z       --use-stdout          send errors to stdout instead of stderr
+2026-02-26T01:44:48.0740196Z       --nostdlib            Do not include the standard library directory in the search path
+2026-02-26T01:44:48.0741120Z       --nostdinc            Do not include the standard include directory in the search path
+2026-02-26T01:44:48.0742153Z       --less-pedantic       Disable some of the more pedantic warnings
+2026-02-26T01:44:48.0742806Z       --disable-warning     <nnnn> Disable specific warning
+2026-02-26T01:44:48.0743394Z       --Werror              Treat the warnings as errors
+2026-02-26T01:44:48.0743903Z       --debug               Enable debugging symbol output
+2026-02-26T01:44:48.0744491Z       --cyclomatic          Display complexity of compiled functions
+2026-02-26T01:44:48.0745241Z       --std                 Determine the language standard (c90, c99, c11, c23, c2y, sdcc89 etc.)
+2026-02-26T01:44:48.0745990Z       --fdollars-in-identifiers  Permit '$' as an identifier character
+2026-02-26T01:44:48.0746803Z       --fsigned-char        Make "char" signed by default
+2026-02-26T01:44:48.0747491Z       --use-non-free        Search / include non-free licensed libraries and header files
+2026-02-26T01:44:48.0747853Z
+2026-02-26T01:44:48.0747941Z Code generation options:
+2026-02-26T01:44:48.0748201Z   -m                        Set the port to use e.g. -mz80.
+2026-02-26T01:44:48.0748553Z   -p                        Select port specific processor e.g. -mpic14 -p16f84
+2026-02-26T01:44:48.0749183Z       --stack-auto          Stack automatic variables
+2026-02-26T01:44:48.0749507Z       --xstack              Use external stack
+2026-02-26T01:44:48.0749872Z       --int-long-reent      Use reentrant calls on the int and long support functions
+2026-02-26T01:44:48.0750326Z       --float-reent         Use reentrant calls on the float support functions
+2026-02-26T01:44:48.0750738Z       --xram-movc           Use movc instead of movx to read xram (xdata)
+2026-02-26T01:44:48.0751250Z       --callee-saves        <func[,func,...]> Cause the called function to save registers instead of the caller
+2026-02-26T01:44:48.0751729Z       --fomit-frame-pointer  Leave out the frame pointer.
+2026-02-26T01:44:48.0752089Z       --all-callee-saves    callee will always save registers used
+2026-02-26T01:44:48.0752691Z       --stack-probe         insert call to function __stack_probe at each function prologue
+2026-02-26T01:44:48.0753289Z       --no-xinit-opt        don't memcpy initialized xram from code
+2026-02-26T01:44:48.0753853Z       --no-c-code-in-asm    don't include c-code as comments in the asm file
+2026-02-26T01:44:48.0754280Z       --no-peep-comments    don't include peephole optimizer comments
+2026-02-26T01:44:48.0754656Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0755009Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0755371Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0755593Z
+2026-02-26T01:44:48.0755676Z Optimization options:
+2026-02-26T01:44:48.0756035Z       --opt-code-speed      Optimize for code speed rather than size
+2026-02-26T01:44:48.0756780Z       --opt-code-size       Optimize for code size rather than speed
+2026-02-26T01:44:48.0757789Z       --max-allocs-per-node  Maximum number of register assignments considered at each node of the tree decomposition
+2026-02-26T01:44:48.0758973Z       --no-reg-params       On some ports, disable passing some parameters in registers
+2026-02-26T01:44:48.0759775Z       --nostdlibcall        Disable optimization of calls to standard library
+2026-02-26T01:44:48.0760218Z       --nooverlay           Disable overlaying leaf function auto variables
+2026-02-26T01:44:48.0760610Z       --nopurity            Disable optimizations of pure functions
+2026-02-26T01:44:48.0760948Z       --nogcse              Disable the GCSE optimisation
+2026-02-26T01:44:48.0761235Z       --nolospre            Disable lospre
+2026-02-26T01:44:48.0761563Z       --nogenconstprop      Disable generalized constant propagation
+2026-02-26T01:44:48.0761917Z       --nolabelopt          Disable label optimisation
+2026-02-26T01:44:48.0762242Z       --noinvariant         Disable optimisation of invariants
+2026-02-26T01:44:48.0762582Z       --noinduction         Disable loop variable induction
+2026-02-26T01:44:48.0763050Z       --noloopreverse       Disable the loop reverse optimisation
+2026-02-26T01:44:48.0763433Z       --no-peep             Disable the peephole assembly file optimisation
+2026-02-26T01:44:48.0763830Z       --peep-asm            Enable peephole optimization on inline assembly
+2026-02-26T01:44:48.0764372Z       --peep-return         Enable peephole optimization for return instructions
+2026-02-26T01:44:48.0764879Z       --no-peep-return      Disable peephole optimization for return instructions
+2026-02-26T01:44:48.0765284Z       --peep-file           <file> use this extra peephole file
+2026-02-26T01:44:48.0765706Z       --allow-unsafe-read   Allow optimizations to read any memory location anytime
+2026-02-26T01:44:48.0766082Z
+2026-02-26T01:44:48.0766171Z Internal debugging options:
+2026-02-26T01:44:48.0766453Z       --dump-ast            Dump front-end AST before generating i-code
+2026-02-26T01:44:48.0766837Z       --dump-i-code         Dump the i-code structure at all stages
+2026-02-26T01:44:48.0767222Z       --dump-graphs         Dump graphs (control-flow, conflict, etc)
+2026-02-26T01:44:48.0767611Z       --i-code-in-asm       Include i-code as comments in the asm file
+2026-02-26T01:44:48.0768011Z       --fverbose-asm        Include code generator comments in the asm output
+2026-02-26T01:44:48.0768278Z
+2026-02-26T01:44:48.0768348Z Linker options:
+2026-02-26T01:44:48.0768569Z   -l                        Include the given library in the link
+2026-02-26T01:44:48.0769098Z   -L                        Add the next field to the library search path
+2026-02-26T01:44:48.0769520Z       --lib-path            <path> use this path to search for libraries
+2026-02-26T01:44:48.0769870Z       --out-fmt-ihx         Output in Intel hex format
+2026-02-26T01:44:48.0770170Z       --out-fmt-s19         Output in S19 hex format
+2026-02-26T01:44:48.0770474Z       --xram-loc            <nnnn> External Ram start location
+2026-02-26T01:44:48.0770782Z       --xram-size           <nnnn> External Ram size
+2026-02-26T01:44:48.0771200Z       --iram-size           <nnnn> Internal Ram size
+2026-02-26T01:44:48.0771507Z       --xstack-loc          <nnnn> External Stack start location
+2026-02-26T01:44:48.0771835Z       --code-loc            <nnnn> Code Segment Location
+2026-02-26T01:44:48.0772123Z       --code-size           <nnnn> Code Segment size
+2026-02-26T01:44:48.0772433Z       --stack-loc           <nnnn> Stack pointer initial value
+2026-02-26T01:44:48.0772755Z       --data-loc            <nnnn> Direct data start location
+2026-02-26T01:44:48.0773033Z       --idata-loc
+2026-02-26T01:44:48.0773287Z       --no-optsdcc-in-asm   Do not emit .optsdcc in asm
+2026-02-26T01:44:48.0773490Z
+2026-02-26T01:44:48.0773578Z Special options for the mcs51 port:
+2026-02-26T01:44:48.0773871Z       --model-small         internal data space is used (default)
+2026-02-26T01:44:48.0774216Z       --model-medium        external paged data space is used
+2026-02-26T01:44:48.0774533Z       --model-large         external data space is used
+2026-02-26T01:44:48.0774913Z       --model-huge          functions are banked, data in external space
+2026-02-26T01:44:48.0775433Z       --stack-size          Tells the linker to allocate this space for stack
+2026-02-26T01:44:48.0775815Z       --acall-ajmp          Use acall/ajmp instead of lcall/ljmp
+2026-02-26T01:44:48.0776188Z       --no-ret-without-call  Do not use ret independent of acall/lcall
+2026-02-26T01:44:48.0776441Z
+2026-02-26T01:44:48.0776527Z Special options for the z80 port:
+2026-02-26T01:44:48.0776833Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0777195Z       --portmode=           Determine PORT I/O mode (z80/z180)
+2026-02-26T01:44:48.0777515Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0777807Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0778134Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0778589Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0779151Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0779521Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0779853Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0780248Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0780664Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0781003Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0781361Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0781830Z       --nmos-z80            Generate workaround for NMOS Z80 when saving IFF2
+2026-02-26T01:44:48.0782229Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0782665Z       --allow-undocumented-instructions  Allow use of undocumented instructions
+2026-02-26T01:44:48.0782975Z
+2026-02-26T01:44:48.0783065Z Special options for the z180 port:
+2026-02-26T01:44:48.0783389Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0783763Z       --portmode=           Determine PORT I/O mode (z80/z180)
+2026-02-26T01:44:48.0784067Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0784336Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0784661Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0785029Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0785388Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0785928Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0786275Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0786669Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0787214Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0787552Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0787910Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0788356Z       --nmos-z80            Generate workaround for NMOS Z80 when saving IFF2
+2026-02-26T01:44:48.0788751Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0789219Z
+2026-02-26T01:44:48.0789311Z Special options for the r2k port:
+2026-02-26T01:44:48.0789609Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0789946Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0790229Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0790553Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0790935Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0791283Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0791665Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0791995Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0792379Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0792778Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0793110Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0793473Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0793853Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0794259Z       --model-small         16-bit address space for both data and code (default)
+2026-02-26T01:44:48.0794756Z       --model-medium        16-bit address space for data, 24-bit for code
+2026-02-26T01:44:48.0795008Z
+2026-02-26T01:44:48.0795097Z Special options for the r2ka port:
+2026-02-26T01:44:48.0795394Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0795721Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0795996Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0796318Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0796864Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0797220Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0797646Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0797969Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0798352Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0798758Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0799293Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0799659Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0800045Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0800451Z       --model-small         16-bit address space for both data and code (default)
+2026-02-26T01:44:48.0800862Z       --model-medium        16-bit address space for data, 24-bit for code
+2026-02-26T01:44:48.0801110Z
+2026-02-26T01:44:48.0801193Z Special options for the r3ka port:
+2026-02-26T01:44:48.0801494Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0801818Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0802085Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0802408Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0802903Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0803252Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0803601Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0803931Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0804302Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0804700Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0805030Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0805392Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0805771Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0806175Z       --model-small         16-bit address space for both data and code (default)
+2026-02-26T01:44:48.0806595Z       --model-medium        16-bit address space for data, 24-bit for code
+2026-02-26T01:44:48.0806842Z
+2026-02-26T01:44:48.0806924Z Special options for the r4k port:
+2026-02-26T01:44:48.0807389Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0807741Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0808010Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0808327Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0808707Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0809201Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0809636Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0809970Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0810449Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0810861Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0811192Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0811553Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0811939Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0812339Z       --model-small         16-bit address space for both data and code (default)
+2026-02-26T01:44:48.0812755Z       --model-medium        16-bit address space for data, 24-bit for code
+2026-02-26T01:44:48.0813078Z
+2026-02-26T01:44:48.0813162Z Special options for the r5k port:
+2026-02-26T01:44:48.0813461Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0813787Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0814057Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0814381Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0814747Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0815099Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0815450Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0815777Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0816156Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0816559Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0816893Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0817248Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0817630Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0818228Z       --model-small         16-bit address space for both data and code (default)
+2026-02-26T01:44:48.0818949Z       --model-medium        16-bit address space for data, 24-bit for code
+2026-02-26T01:44:48.0819247Z
+2026-02-26T01:44:48.0819335Z Special options for the r6k port:
+2026-02-26T01:44:48.0819644Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0819983Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0820248Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0820569Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0820943Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0821302Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0821653Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0821986Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0822383Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0822784Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0823117Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0823477Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0823863Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0824262Z       --model-small         16-bit address space for both data and code (default)
+2026-02-26T01:44:48.0824678Z       --model-medium        16-bit address space for data, 24-bit for code
+2026-02-26T01:44:48.0824924Z
+2026-02-26T01:44:48.0825015Z Special options for the sm83 port:
+2026-02-26T01:44:48.0825257Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0825524Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0825919Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0826318Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0826682Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0827037Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0827387Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0827710Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0828052Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0828436Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0829053Z
+2026-02-26T01:44:48.0829184Z Special options for the tlcs90 port:
+2026-02-26T01:44:48.0829501Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0829868Z       --portmode=           Determine PORT I/O mode (z80/z180)
+2026-02-26T01:44:48.0830188Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0830452Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0830776Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0831154Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0831508Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0831855Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0832186Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0832576Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0832978Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0833315Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0833683Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0834211Z       --nmos-z80            Generate workaround for NMOS Z80 when saving IFF2
+2026-02-26T01:44:48.0834601Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0834842Z
+2026-02-26T01:44:48.0834928Z Special options for the ez80 port:
+2026-02-26T01:44:48.0835232Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0835589Z       --portmode=           Determine PORT I/O mode (z80/z180)
+2026-02-26T01:44:48.0835893Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0836162Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0836485Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0836851Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0837204Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0837563Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0837888Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0838268Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0838669Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0839204Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0839719Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0840126Z       --nmos-z80            Generate workaround for NMOS Z80 when saving IFF2
+2026-02-26T01:44:48.0840528Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0840769Z
+2026-02-26T01:44:48.0840854Z Special options for the z80n port:
+2026-02-26T01:44:48.0841159Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0841614Z       --portmode=           Determine PORT I/O mode (z80/z180)
+2026-02-26T01:44:48.0841924Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0842188Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0842509Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0842883Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0843236Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0843586Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0843921Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0844374Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0844776Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0845107Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0845473Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0845864Z       --nmos-z80            Generate workaround for NMOS Z80 when saving IFF2
+2026-02-26T01:44:48.0846254Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0846497Z
+2026-02-26T01:44:48.0846580Z Special options for the r800 port:
+2026-02-26T01:44:48.0846881Z       --callee-saves-bc     Force a called function to always save BC
+2026-02-26T01:44:48.0847233Z       --portmode=           Determine PORT I/O mode (z80/z180)
+2026-02-26T01:44:48.0847533Z       -bo                   <num> use code bank <num>
+2026-02-26T01:44:48.0847802Z       -ba                   <num> use data bank <num>
+2026-02-26T01:44:48.0848125Z       --asm=                Define assembler name (rgbds/asxxxx/isas/z80asm/gas)
+2026-02-26T01:44:48.0848502Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0849069Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0849629Z       --dataseg             <name> use this name for the data segment
+2026-02-26T01:44:48.0849956Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0850515Z       --reserve-regs-iy     Do not use IY (incompatible with --fomit-frame-pointer)
+2026-02-26T01:44:48.0850935Z       --fno-omit-frame-pointer  Do not omit frame pointer
+2026-02-26T01:44:48.0851272Z       --emit-externs        Emit externs list in generated asm
+2026-02-26T01:44:48.0851640Z       --legacy-banking      Use legacy method to call banked functions
+2026-02-26T01:44:48.0852031Z       --nmos-z80            Generate workaround for NMOS Z80 when saving IFF2
+2026-02-26T01:44:48.0852429Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0852666Z
+2026-02-26T01:44:48.0852756Z Special options for the ds390 port:
+2026-02-26T01:44:48.0853070Z       --model-flat24        use the flat24 model for the ds390 (default)
+2026-02-26T01:44:48.0853482Z       --stack-8bit          use the 8bit stack for the ds390 (not supported yet)
+2026-02-26T01:44:48.0853890Z       --stack-size          Tells the linker to allocate this space for stack
+2026-02-26T01:44:48.0854272Z       --stack-10bit         use the 10bit stack for ds390 (default)
+2026-02-26T01:44:48.0854663Z       --use-accelerator     generate code for ds390 arithmetic accelerator
+2026-02-26T01:44:48.0855091Z       --protect-sp-update   will disable interrupts during ESP:SP updates
+2026-02-26T01:44:48.0855476Z       --parms-in-bank1      use Bank1 for parameter passing
+2026-02-26T01:44:48.0855695Z
+2026-02-26T01:44:48.0855782Z Special options for the pic16 port:
+2026-02-26T01:44:48.0856090Z       --pstack-model=       use stack model 'small' (default) or 'large'
+2026-02-26T01:44:48.0856538Z   -y  --extended            enable Extended Instruction Set/Literal Offset Addressing mode
+2026-02-26T01:44:48.0857002Z       --pno-banksel         do not generate BANKSEL assembler directives
+2026-02-26T01:44:48.0857486Z       --obanksel=           set banksel optimization level (default=0 no)
+2026-02-26T01:44:48.0857855Z       --denable-peeps       explicit enable of peepholes
+2026-02-26T01:44:48.0858209Z       --no-optimize-goto    do NOT use (conditional) BRA instead of GOTO
+2026-02-26T01:44:48.0858574Z       --optimize-cmp        try to optimize some compares
+2026-02-26T01:44:48.0859085Z       --optimize-df         thoroughly analyze data flow (memory and time intensive!)
+2026-02-26T01:44:48.0859469Z       --asm=                Use alternative assembler
+2026-02-26T01:44:48.0859845Z       --mplab-comp          enable compatibility mode for MPLAB utilities (MPASM/MPLINK)
+2026-02-26T01:44:48.0860335Z       --link=               Use alternative linker
+2026-02-26T01:44:48.0860834Z       --preplace-udata-with=  Place udata variables at another section: udata_acs, udata_ovr, udata_shr
+2026-02-26T01:44:48.0861455Z       --ivt-loc=            Set address of interrupt vector table.
+2026-02-26T01:44:48.0861831Z       --nodefaultlibs       do not link default libraries when linking
+2026-02-26T01:44:48.0862213Z       --use-crt=            use <crt-o> run-time initialization module
+2026-02-26T01:44:48.0862587Z       --no-crt              do not link any default run-time initialization module
+2026-02-26T01:44:48.0862977Z       --debug-xtra          show more debug info in assembly output
+2026-02-26T01:44:48.0863340Z       --debug-ralloc        dump register allocator debug file *.d
+2026-02-26T01:44:48.0863672Z       --pcode-verbose       dump pcode related info
+2026-02-26T01:44:48.0863980Z       --calltree            dump call tree in .calltree file
+2026-02-26T01:44:48.0864318Z       --gstack              trace stack pointer push/pop to overflow
+2026-02-26T01:44:48.0864720Z       --no-warn-non-free    suppress warning on absent --use-non-free option
+2026-02-26T01:44:48.0864986Z
+2026-02-26T01:44:48.0865073Z Special options for the pic14 port:
+2026-02-26T01:44:48.0865361Z       --debug-xtra          show more debug info in assembly output
+2026-02-26T01:44:48.0865888Z       --no-pcode-opt        disable (slightly faulty) optimization on pCode
+2026-02-26T01:44:48.0866357Z       --stack-size          sets the size if the argument passing stack (default: 16, minimum: 4)
+2026-02-26T01:44:48.0866895Z       --no-extended-instructions  forbid use of the extended instruction set (e.g., ADDFSR)
+2026-02-26T01:44:48.0867395Z       --no-warn-non-free    suppress warning on absent --use-non-free option
+2026-02-26T01:44:48.0867659Z
+2026-02-26T01:44:48.0867757Z Special options for the TININative port:
+2026-02-26T01:44:48.0868075Z       --model-flat24        use the flat24 model for the ds390 (default)
+2026-02-26T01:44:48.0868476Z       --stack-8bit          use the 8bit stack for the ds390 (not supported yet)
+2026-02-26T01:44:48.0869104Z       --stack-size          Tells the linker to allocate this space for stack
+2026-02-26T01:44:48.0869494Z       --stack-10bit         use the 10bit stack for ds390 (default)
+2026-02-26T01:44:48.0869884Z       --use-accelerator     generate code for ds390 arithmetic accelerator
+2026-02-26T01:44:48.0870317Z       --protect-sp-update   will disable interrupts during ESP:SP updates
+2026-02-26T01:44:48.0870706Z       --parms-in-bank1      use Bank1 for parameter passing
+2026-02-26T01:44:48.0871051Z       --tini-libid          <nnnn> LibraryID used in -mTININative
+2026-02-26T01:44:48.0871270Z
+2026-02-26T01:44:48.0871353Z Special options for the ds400 port:
+2026-02-26T01:44:48.0871806Z       --model-flat24        use the flat24 model for the ds400 (default)
+2026-02-26T01:44:48.0872212Z       --stack-8bit          use the 8bit stack for the ds400 (not supported yet)
+2026-02-26T01:44:48.0872623Z       --stack-size          Tells the linker to allocate this space for stack
+2026-02-26T01:44:48.0873003Z       --stack-10bit         use the 10bit stack for ds400 (default)
+2026-02-26T01:44:48.0873386Z       --use-accelerator     generate code for ds400 arithmetic accelerator
+2026-02-26T01:44:48.0873894Z       --protect-sp-update   will disable interrupts during ESP:SP updates
+2026-02-26T01:44:48.0874273Z       --parms-in-bank1      use Bank1 for parameter passing
+2026-02-26T01:44:48.0874486Z
+2026-02-26T01:44:48.0874571Z Special options for the hc08 port:
+2026-02-26T01:44:48.0874840Z       --model-small         8-bit address space for data
+2026-02-26T01:44:48.0875167Z       --model-large         16-bit address space for data (default)
+2026-02-26T01:44:48.0875505Z       --out-fmt-elf         Output executable in ELF format
+2026-02-26T01:44:48.0875715Z
+2026-02-26T01:44:48.0875797Z Special options for the s08 port:
+2026-02-26T01:44:48.0876058Z       --model-small         8-bit address space for data
+2026-02-26T01:44:48.0876447Z       --model-large         16-bit address space for data (default)
+2026-02-26T01:44:48.0876783Z       --out-fmt-elf         Output executable in ELF format
+2026-02-26T01:44:48.0876983Z
+2026-02-26T01:44:48.0877069Z Special options for the stm8 port:
+2026-02-26T01:44:48.0877393Z       --model-medium        16-bit address space for both data and code (default)
+2026-02-26T01:44:48.0877819Z       --model-large         16-bit address space for data, 24-bit for code
+2026-02-26T01:44:48.0878197Z       --codeseg             <name> use this name for the code segment
+2026-02-26T01:44:48.0878561Z       --constseg            <name> use this name for the const segment
+2026-02-26T01:44:48.0879105Z       --out-fmt-elf         Output executable in ELF format
+2026-02-26T01:44:48.0879460Z       --sdcccall            Set ABI version for default calling convention
+2026-02-26T01:44:48.0879697Z
+2026-02-26T01:44:48.0879787Z Special options for the mos6502 port:
+2026-02-26T01:44:48.0880052Z       --model-small         8-bit address space for data
+2026-02-26T01:44:48.0880384Z       --model-large         16-bit address space for data (default)
+2026-02-26T01:44:48.0880760Z       --no-zp-spill         place register spills in 16-bit address space
+2026-02-26T01:44:48.0881112Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0881435Z
+2026-02-26T01:44:48.0881523Z Special options for the mos65c02 port:
+2026-02-26T01:44:48.0881793Z       --model-small         8-bit address space for data
+2026-02-26T01:44:48.0882120Z       --model-large         16-bit address space for data (default)
+2026-02-26T01:44:48.0882646Z       --no-zp-spill         place register spills in 16-bit address space
+2026-02-26T01:44:48.0882997Z       --no-std-crt0         Do not link default crt0.rel
+2026-02-26T01:44:48.0883197Z
+2026-02-26T01:44:48.0883282Z Special options for the f8 port:
+2026-02-26T01:44:48.0883432Z
+2026-02-26T01:44:48.0883518Z Special options for the f8l port:
+2026-02-26T01:44:48.0883723Z ----
+
+
+
+-------
+
+Janko Stamenović 20260207
