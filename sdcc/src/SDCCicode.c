@@ -80,7 +80,6 @@ PRINTFUNC (picEndCritical);
 
 iCodeTable codeTable[] = {
   {'!', "not", picGenericOne, NULL},
-  {'~', "~", picGenericOne, NULL},
   {GETABIT, "gabit", picGenericOne, NULL},
   {GETBYTE, "gbyte", picGenericOne, NULL},
   {GETWORD, "gword", picGenericOne, NULL},
@@ -1324,7 +1323,7 @@ extern bool regalloc_dry_run;
 /* getBuiltInParms - returns parameters to a builtin function      */
 /*-----------------------------------------------------------------*/
 iCode *
-getBuiltinParms (iCode * fic, int *pcount, operand ** parms)
+getBuiltinParms (iCode *fic, int *pcount, operand **parms)
 {
   sym_link *ftype;
   iCode *ic = fic;
@@ -1344,9 +1343,9 @@ getBuiltinParms (iCode * fic, int *pcount, operand ** parms)
 
   ic->generated = 1;
   /* make sure this is a builtin function call */
-  assert (IS_SYMOP (IC_LEFT (ic)));
+  wassert (IS_SYMOP (IC_LEFT (ic)));
   ftype = operandType (IC_LEFT (ic));
-  assert (IFFUNC_ISBUILTIN (ftype));
+  wassert (IFFUNC_ISBUILTIN (ftype));
   return ic;
 }
 
@@ -1607,10 +1606,6 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
 
     case UNARYMINUS:
       retval = operandFromValue (valCastLiteral (type, -1 * operandLitValue (left), (-1ll) * operandLitValueUll (left)), false);
-      break;
-
-    case '~':
-      retval = operandFromValue (valCastLiteral (type, ~((TYPE_TARGET_ULONG) double2ul (operandLitValue (left))), ~((TYPE_TARGET_ULONGLONG) operandLitValueUll (left))), false);
       break;
 
     case '!':
@@ -2174,9 +2169,10 @@ geniCodeRValue (operand * op, bool force)
 /* checkPtrQualifiers - check for lost pointer qualifiers          */
 /*-----------------------------------------------------------------*/
 static void
-checkPtrQualifiers (sym_link * ltype, sym_link * rtype, operand *op)
+checkPtrQualifiers (sym_link *ltype, sym_link *rtype, operand *op)
 {
-  if (IS_PTR (ltype) && IS_PTR (rtype) && !IS_FUNCPTR (ltype) && !op->isConstEliminated)
+  // Also checking array rtypes is a hack (workaround for pointer decay not having happened earlier).
+  if (IS_PTR (ltype) && (IS_PTR (rtype) || IS_ARRAY (rtype)) && !IS_FUNCPTR (ltype) && !op->isConstEliminated)
     {
       if (!isConst (ltype->next) && isConst (rtype->next))
         werror (W_TARGET_LOST_QUALIFIER, "const");
@@ -2783,13 +2779,15 @@ geniCodeStruct (operand * left, operand * right, bool islval)
       DCL_PTR_CONST (rtype) |= DCL_PTR_CONST (element->type);
       DCL_PTR_VOLATILE (rtype) |= DCL_PTR_VOLATILE (element->type);
       DCL_PTR_RESTRICT (rtype) |= DCL_PTR_RESTRICT (element->type);
+      DCL_PTR_OPTIONAL (rtype) |= DCL_PTR_OPTIONAL(element->type);
       setOperandType (IC_RESULT (ic), aggrToPtr (operandType (IC_RESULT (ic)), TRUE));
     }
   else
     {
       SPEC_CONST (retype) |= SPEC_CONST (etype);
-      /*Do not preserve volatile */
+      // Do not preserve volatile.
       SPEC_RESTRICT (retype) |= SPEC_RESTRICT (etype);
+      SPEC_OPTIONAL (retype) |= SPEC_OPTIONAL (etype);
     }
 
   IC_RESULT (ic)->isaddr = (!IS_AGGREGATE (element->type));
@@ -2886,16 +2884,7 @@ geniCodePreInc (operand * op, bool lvalue)
     ic = newiCode ('=', NULL, operandFromLit (1));
   else
     ic = newiCode ('+', rop, operandFromLit (size));
-  // Drop _Optional on pointer target,
-  if (IS_PTR (roptype) && isOptional (roptype->next))
-    {
-      roptype = copyLinkChain (roptype);
-      if IS_SPEC (roptype->next)
-        SPEC_OPTIONAL (roptype->next) = false;
-      else
-        DCL_PTR_OPTIONAL (roptype->next) = false;
-      optional_target = true;
-    }
+
   IC_RESULT (ic) = result = newiTempOperand (roptype, 0);
   ADDTOCHAIN (ic);
 
@@ -2926,16 +2915,6 @@ geniCodePostDec (operand * op)
     {
       werror (E_LVALUE_REQUIRED, "--");
       return op;
-    }
-
-  // Drop _Optional on pointer target,
-  if (IS_PTR (rvtype) && isOptional (rvtype->next))
-    {
-      rvtype = copyLinkChain (rvtype);
-      if IS_SPEC (rvtype->next)
-        SPEC_OPTIONAL (rvtype->next) = false;
-      else
-        DCL_PTR_OPTIONAL (rvtype->next) = false;
     }
 
   rOp = newiTempOperand (rvtype, 0);
@@ -3004,16 +2983,7 @@ geniCodePreDec (operand * op, bool lvalue)
     ic = newiCode ('!', rop, 0);
   else
     ic = newiCode ('-', rop, operandFromLit (size));
-  // Drop _Optional on pointer target,
-  if (IS_PTR (roptype) && isOptional (roptype->next))
-    {
-      roptype = copyLinkChain (roptype);
-      if IS_SPEC (roptype->next)
-        SPEC_OPTIONAL (roptype->next) = false;
-      else
-        DCL_PTR_OPTIONAL (roptype->next) = false;
-      optional_target = true;
-    }
+
   IC_RESULT (ic) = result = newiTempOperand (roptype, 0);
   ADDTOCHAIN (ic);
 
@@ -3079,6 +3049,10 @@ geniCodeAddressOf (operand *op)
   DCL_TYPE (p) = PTR_TYPE (SPEC_OCLS (opetype));
 
   p->next = copyLinkChain (optype);
+  if (IS_SPEC (p->next))
+    SPEC_OPTIONAL (p->next) = false;
+  else
+    DCL_PTR_OPTIONAL (p->next) = false;
 
   /* if already a temp */
   if (IS_ITEMP (op))
@@ -4779,7 +4753,7 @@ ast2iCode (ast * tree, int lvl)
 #endif
 
     case '~':
-      return geniCodeUnary (geniCodeRValue (left, FALSE), tree->opval.op, tree->ftype);
+      return geniCodeBitwise (geniCodeRValue (left, false), operandFromValue (valCastLiteral (operandType (left), ~0ull, ~0ull), false), '^', tree->ftype);
 
     case '!':
       {

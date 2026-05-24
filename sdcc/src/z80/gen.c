@@ -7624,10 +7624,20 @@ genPointerPush (const iCode *ic)
   if (!isRegDead (HL_IDX, ic) && !(isRegDead (DE_IDX, ic) && !IS_SM83) || !isRegDead (A_IDX, ic))
     UNIMPLEMENTED;
 
-  bool swap_de = !isRegDead (HL_IDX, ic);
-
-  if (swap_de && !IS_SM83)
-    emit3w (A_EX, ASMOP_DE, ASMOP_HL);
+   bool swap_de = false;
+  if (!isRegDead (HL_IDX, ic) && !IS_SM83)
+    {
+      if (aopInReg (ic->left->aop, 0, HL_IDX))
+        {
+          emit3 (A_LD, ASMOP_E, ASMOP_L);
+          emit3 (A_LD, ASMOP_D, ASMOP_H);
+        }
+      else if (ic->left->aop->regs[L_IDX] >= 0 || ic->left->aop->regs[H_IDX] >= 0)
+        UNIMPLEMENTED;
+      else
+        emit3w (A_EX, ASMOP_DE, ASMOP_HL);
+      swap_de = true;
+    }
 
   genMove (ASMOP_HL, IC_LEFT (ic)->aop, true, true, swap_de ? false : isRegDead (DE_IDX, ic), isRegDead (IY_IDX, ic));
 
@@ -9514,14 +9524,26 @@ genPlusIncr (const iCode *ic)
   /* we can if the aops of the left & result match or
      if they are in registers and the registers are the
      same */
-  if (sameRegs (IC_LEFT (ic)->aop, IC_RESULT (ic)->aop))
+  if (sameRegs (ic->left->aop, ic->result->aop))
     {
+      bool save_iy = false;
+      if (ic->left->aop->type == AOP_IY)
+        {
+          if (isRegDead (HL_IDX, ic))
+            ic->left->aop->type = AOP_HL;
+          else
+            save_iy = !isRegDead (IY_IDX, ic);
+        }
+      if (save_iy)
+        _push (PAIR_IY);
       while (icount--)
-        emit3 (A_INC, IC_LEFT (ic)->aop, 0);
-      return TRUE;
+        emit3 (A_INC, ic->left->aop, 0);
+      if (save_iy)
+        _pop (PAIR_IY);
+      return true;
     }
 
-  return FALSE;
+  return false;
 }
 
 static bool
@@ -14366,23 +14388,6 @@ genXor (const iCode *ic, iCode *ifx)
 }
 
 /*-----------------------------------------------------------------*/
-/* genCpl - generate code for complement                           */
-/*-----------------------------------------------------------------*/
-static void
-genCpl (const iCode *ic)
-{
-  /* assign asmOps to operand & result */
-  aopOp (IC_LEFT (ic), ic, false, false);
-  aopOp (IC_RESULT (ic), ic, true, false);
-
-  genEor (ic, 0, IC_RESULT (ic)->aop, IC_LEFT (ic)->aop, ASMOP_MONE);
-
-  /* release the aops */
-  freeAsmop (IC_LEFT (ic), 0);
-  freeAsmop (IC_RESULT (ic), 0);
-}
-
-/*-----------------------------------------------------------------*/
 /* genGetByte - generates code to get a single byte                */
 /*-----------------------------------------------------------------*/
 static void
@@ -14626,10 +14631,16 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
     }
   else
     {
-      bool use_b = (!IS_SM83 && !IS_TLCS870 && !IS_TLCS870C && !IS_TLCS870C1 || !isRegDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0) && // Some targets do not have djnz, so there is no reason to prefer b.
-        isRegDead (B_IDX, ic) && result->aop->regs[B_IDX] < 0;
-
-      if(!use_b && !isRegDead (A_IDX, ic))
+      asmop *caop = ASMOP_A;
+      
+      if ((!IS_SM83 && !IS_TLCS870 && !IS_TLCS870C && !IS_TLCS870C1 || !isRegDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0) && // Some targets do not have djnz, so there is no reason to prefer b.
+        isRegDead (B_IDX, ic) && result->aop->regs[B_IDX] < 0)
+        caop = ASMOP_B;
+      else if ((!isRegDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0) && isRegDead (E_IDX, ic) && result->aop->regs[E_IDX] < 0)
+        caop = ASMOP_E;
+      else if ((!isRegDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0) && isRegDead (L_IDX, ic) && !requiresHL (result->aop))
+        caop = ASMOP_L;
+      else if (!isRegDead (A_IDX, ic) || result->aop->regs[A_IDX] >= 0)
         UNIMPLEMENTED;
 
       tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
@@ -14637,7 +14648,8 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       if (requiresHL (result->aop))
         spillPair (PAIR_HL);
 
-      emit2 ("ld %s, !immedbyte", use_b ? "b" : "a", (unsigned)shCount);
+      if (!regalloc_dry_run)
+        emit2 ("ld %s, !immedbyte", aopGet (caop, 0, false), (unsigned)shCount);
       cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
 
       regalloc_dry_run_state_scale *= (unsigned)shCount;
@@ -14646,7 +14658,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
 
       emitRsh2 (result->aop, size, is_signed);
 
-      if (use_b && !IS_SM83 && !IS_TLCS870 && !IS_TLCS870C && !IS_TLCS870C1)
+      if (aopInReg (caop, 0, B_IDX) && !IS_SM83 && !IS_TLCS870 && !IS_TLCS870C && !IS_TLCS870C1)
         {
           if (!regalloc_dry_run)
             emit2 ("djnz !tlabel", labelKey2num (tlbl->key));
@@ -14654,7 +14666,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
         }
       else
         {
-          emit3 (A_DEC, use_b ? ASMOP_B : ASMOP_A, 0);
+          emit3 (A_DEC, caop, 0);
           emitJP (tlbl, "nz", 1.0f, true);
         }
 
@@ -20358,11 +20370,6 @@ genZ80iCode (iCode * ic)
     case '!':
       emitDebug ("; genNot");
       genNot (ic);
-      break;
-
-    case '~':
-      emitDebug ("; genCpl");
-      genCpl (ic);
       break;
 
     case UNARYMINUS:

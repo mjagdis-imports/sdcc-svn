@@ -1,3 +1,297 @@
+2026-05-23 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* sdcc/support/regression/MakeList:
+	  Exclude a test for hosts where it doesn't make sense due to different implementation-defined struct layout.
+	* .version,
+	  doc/INSTALL.txt,
+	  sdcc.spec:
+	  Bump version to prepare for SDCC 4.6.0 release.
+
+2026-05-19 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/sdbinutils/bfd/development.sh:
+	  Fix bug #3991.
+
+2026-05-18 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/MakeList,
+	  support/regression/cases/Makefile.in:
+	  Enable several regression tests.
+
+2026-05-17 Gabriele Gorla <gorlik@yahoo.com>
+
+    * device/lib/mos65c02/labs.s:
+      Really checking in labs.s.
+    * src/mos6502/gen.c,
+      src/mos6502/tempops.c:
+      Fix small performance regression from r16535.
+    * tests/smallserpent.c.in:
+      Disable warning 147.
+    * src/mos6502/gen.c,
+      src/mos6502/genor.c,
+      src/mos6502/genminus.c:
+      Comsetic changes.
+
+2026-05-16 Gabriele Gorla <gorlik@yahoo.com>
+
+	* support/regression/tests/serpent.c.in:
+      Disable warning 147.
+	* support/regression/tests/bug-3129.c,
+      support/regression/MakeList:
+      Disable bug-3129 for mos6502 (stack too small).
+    * src/mos6502/gen.c,
+      src/mos6502/gen.h,
+      src/mos6502/genand.c,
+      src/mos6502/genlshift.c,
+      src/mos6502/genminus.c,
+      src/mos6502/genor.c,
+      src/mos6502/genplus.c,
+      src/mos6502/genrot.c,
+      src/mos6502/genrshift.c,
+      src/mos6502/genxor.c,
+      src/mos6502/ralloc.h,
+      src/mos6502/stackops.c,
+      src/mos6502/tempops.c:
+      Fix bug #3851
+
+2026-05-16 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/pdk/gen.c,
+	  support/regression/tests/bug-2903.c:
+	  Fix bug #3987.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3988.c:
+	  Fix bug #3988.
+
+2026-05-15 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/bug-1981238.c,
+	  support/regression/tests/bug-880197.c,
+	  support/regression/tests/bug1723128.c,
+	  support/regression/tests/bug1839321.c,
+	  support/regression/tests/bug1921073.c,
+	  support/regression/tests/bug1928022.c,
+	  support/regression/tests/bug2655200.c,
+	  support/regression/tests/bug2783061.c,
+	  support/regression/tests/bug2989562.c,
+	  support/regression/tests/bug3027957.c,
+	  support/regression/tests/bug3444293.c,
+	  support/regression/tests/gcc-torture-execute-20000419-1.c,
+	  support/regression/tests/gcc-torture-execute-20000706-1.c,
+	  support/regression/tests/gcc-torture-execute-931004-1.c,
+	  support/regression/tests/gcc-torture-execute-931004-11.c,
+	  support/regression/tests/gcc-torture-execute-930208-1.c,
+	  support/regression/tests/gcc-torture-execute-931004-1.c,
+	  support/regression/tests/gcc-torture-execute-inst-check.c,
+	  support/regression/tests/gcc-torture-execute-930719-1.c:
+	  Do not emit some expected warnings in regtest output.
+	* src/SDCCgenconstprop.cc:
+	  Improve generalized constant porpagation analysis for global objects to fix false positive warnings about array length.
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3985.c:
+	  Fix bug #3985.
+	* src/pdk/gen.c,
+	  support/regression/tests/bug-2903.c:
+	  Fix bug #2903.
+
+2026-05-10 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peep.c,
+	  src/mos6502/main.c:
+	  Use opcode table in mos6502SurelyWritesFlag().
+	* src/mos6502/gen.c:
+	  Improve genIPush() and genPointerPush().
+	* src/mos6502/gen.c:
+	  Use CPX and CPY in genCmp() when possible.
+	* src/mos6502/gen.h,
+	  src/mos6502/gen.c:
+	  Refactor genIfxJump().
+	* src/mos6502/peeph.def:
+	  Fix bug in dead load elimination.
+	* src/mos6502/gen.c,
+	  src/mos6502/genor.c,
+	  src/mos6502/genand.c,
+	  src/mos6502/peeph.def:
+	  Add branch always and branch never to genIfxJump().
+	* src/mos6502/genrot.c:
+	  Add special case for swap16.
+	* src/mos6502/genand.c,
+	  src/mos6502/genor.c,
+	  src/mos6502/genxor.c:
+	  Special case when msb is constant.
+
+2026-05-10 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/tests/gcc-torture-execute-961223-1.c:
+	  Add non-inline definition to test to make it work on all hosts.
+
+2026-05-09 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/peep.c:
+	  Fix typo in mos6502SurelyWritesFlag().
+	* src/mos6502/main.c:
+	  Correct affected flags for cmp,cpx and cpy in m6502opcodeDataTable.
+	* src/mos6502/peep.c:
+	  Enable mos65c02 in mos6502notUsed().
+
+2026-05-07 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/rand.s:
+	  Implement rand in assembly.
+
+2026-05-07 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/mcs51/gen.c:
+	  Fix bug #3984.
+
+2026-05-06 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/_memset.s:
+	  Save 6 bytes.
+
+2026-05-06 Gabriele Gorla <gorlik@yahoo.com>
+
+	* device/lib/mos6502/_fsadd.s:
+	  Minor code cleanups.
+	* src/mos6502/gen.h,
+      src/mos6502/gen.c,
+      src/mos6502/genrot.c,
+      src/mos6502/genminus.c,
+      src/mos6502/ralloc2.cc:
+      Remove dead code and small cosmetic fixes.
+
+2026-05-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* device/include/string.h:
+	  Announce support for qualifier-preserving standard library functions.
+	* support/regression/tests/qualifier-preserving.c:
+	  Do not test host compilers where they don't support qualifier-preserving standard library functions.
+	* support/regression/tests/gcc-torture-execute-20030714-1.c,
+	  support/regression/tests/gcc-torture-execute-930208-1.c,
+	  support/regression/tests/gcc-torture-execute-930513-1.c,
+	  support/regression/tests/gcc-torture-execute-931004-1.c,
+	  support/regression/tests/gcc-torture-execute-dbra-1.c,
+	  support/regression/tests/gcc-torture-execute-inst-check.c,
+	  support/regression/tests/gcc-torture-execute-int-compare.c,
+	  support/regression/tests/gcc-torture-execute-loop-9.c,
+	  support/regression/tests/gcc-torture-execute-pr15262-2.c:
+	  Disable some tests for host, where we do not have control over C dialect used, but the tests require C99.
+
+2026-05-04 Felix Salfelder <felix AT salfelder.org>
+
+	* support/cpp
+	  Bump to release/gcc-13.
+	* support/cpp/gcc/config/i386/xm-cygwin.h,
+      support/cpp/gcc/config/i386/xm-djgpp.h,
+      support/cpp/gcc/config/i386/xm-mingw32.h,
+      support/cpp/gcc/config/i386/xmmintrin.h
+      Add various config/i386/xm*h,
+      in an attempt to fix mingw build etc.
+
+2026-05-03 Gabriele Gorla <gorlik@yahoo.com>
+
+	* src/mos6502/gen.h,
+      src/mos6502/gen.c,
+      src/mos6502/genand.c,
+      src/mos6502/genlshift.c,
+      src/mos6502/genminus.c,
+      src/mos6502/genor.c,
+      src/mos6502/genplus.c,
+      src/mos6502/genrot.c,
+      src/mos6502/genrshift.c,
+      src/mos6502/genxor.c,
+      src/mos6502/tempops.c:
+      Add m6502_ prefix to several non static functions.
+	* src/mos6502/stackops.c:
+	  Small stack operations optimizations.
+
+2026-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCgenconstprop.cc,
+	  src/SDCCicode.c:
+	  Improve optimizations based on generalized constant propagation for global variables, RFE #534.
+
+2026-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCcse.c,
+	  src/SDCCgenconstprop.cc,
+	  src/SDCCicode.c,
+	  src/SDCClospre.cc,
+	  src/*/gen.c,
+	  src/*/ralloc.c,
+	  src/*/ralloc2.cc,
+	  src/pic16/genutils.c,
+	  src/ds390/gen.h:
+	  Remove ~ iCode, RFE #971.
+
+2026-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  src/z80/peeph.def,
+	  support/regression/tests/gcc-torture-execute-20000412-3.c:
+	  Fix bug #3983.
+
+2026-05-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
+	  Document lack of #embed in C23 mode.
+	* support/regression/MakeList,
+	  support/regression/tests/gcc-torture-execute-*.c:
+	  Enable test cases from GCC for features that have since been implemented in SDCC.
+
+2026-05-02 Gabriele Gorla <gorlik@yahoo.com>
+
+	* Makefile.in,
+	  Makefile.common.in:
+	  Fix build issue introduced by [r16487]
+	* src/mos6502/ralloc2.cc,
+	  src/hc08/ralloc2.cc:
+	  Fix several typos.
+	* src/mos6502/genplus.c:
+      Fix corner case in genPlusInc().
+	* src/mos6502/gen.c:
+      Free registers in genEndFunction for void functions.
+
+2026-05-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Makefile.in:
+	  Fix bug #3980.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3981.c:
+	  Fix bug #3981.
+
+2026-04-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge _Optional branch.
+
+2026-04-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCicode.c,
+	  support/valdiag/tests/_Optional-draft-2026-04-17.c,
+	  support/valdiag/tests/bug-3953.c:
+	  Fix bug #3953.
+
+2026-04-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCicode.c,
+	  src/SDCCsymt.c,
+	  src/SDCCgenconstprop.cc,
+	  support/valdiag/tests/_Optional.c,#
+	  support/valdiag/tests/_Optional-draft-2026-04-17.c:
+	  Bring _Optional semantics closer to latest TS draft.
+
+2026-04-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCast.c,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCmem.c,
+	  src/SDCCsymt.c,
+	  src/SDCCsymt.h,
+	  support/valdiag/tests/bug-3964.c:
+	  Fix bug #3964.
+
 2026-04-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/MakeList:
@@ -39,7 +333,7 @@
 2026-04-22 Gabriele Gorla <gorlik@yahoo.com>
 
 	* src/mos6502/genrshift.c:
-        Small right shift improvements.
+	  Small right shift improvements.
 
 2026-04-21 Gabriele Gorla <gorlik@yahoo.com>
 
