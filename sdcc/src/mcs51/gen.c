@@ -1230,10 +1230,10 @@ freeAsmop (operand * op, asmop * aaop, iCode * ic, bool pop)
   if (!aop)
     return;
 
-  aop->allocated--;
-
-  if (aop->allocated)
+  if (!aop->allocated)
     goto dealloc;
+
+  aop->allocated--;
 
   /* depending on the asmop type only three cases need work
      AOP_R0, AOP_R1 & AOP_STK */
@@ -1256,7 +1256,7 @@ freeAsmop (operand * op, asmop * aaop, iCode * ic, bool pop)
       bitVectUnSetBit (ic->rUsed, R0_IDX);
       break;
 
-    case AOP_R1:
+    case AOP_R1:emitcode(";", "freeAsmop r1 %d", pop);
       if (R1INB)
         {
           emitcode ("mov", "r1,b");
@@ -1311,6 +1311,7 @@ freeAsmop (operand * op, asmop * aaop, iCode * ic, bool pop)
 
 dealloc:
   /* all other cases just dealloc */
+  aop->allocated = 0;
   if (op)
     {
       op->aop = NULL;
@@ -2650,6 +2651,8 @@ release:
 
 /*-----------------------------------------------------------------*/
 /* genCpl - generate code for complement                           */
+/* no longer used; todo: chekc if something from here could still  */
+/* be useful in genXor for AOP_CRY, then remove genCpl!            */
 /*-----------------------------------------------------------------*/
 static void
 genCpl (iCode * ic)
@@ -8850,13 +8853,16 @@ genXor (iCode * ic, iCode * ifx)
               if (aopIsLitVal (right->aop, offset, 1, 0x00))
                 {
                   opPut (result, opGet (left, offset, FALSE, FALSE), offset);
-                   continue;
+                  continue;
                 }
               else if (AOP_TYPE (right) == AOP_LIT && AOP_TYPE (left) == AOP_ACC)
                 {
                   // this should be the only use of left so A,B can be overwritten
                   char *l = Safe_strdup (opGet (left, offset, FALSE, FALSE));
-                  emitcode ("xrl", "%s,%s", l, opGet (right, offset, FALSE, FALSE));
+                  if (aopIsLitVal (right->aop, offset, 1, 0xff))
+                    emitcode ("cpl", "a");
+                  else
+                    emitcode ("xrl", "%s,%s", l, opGet (right, offset, FALSE, FALSE));
                   opPut (result, l, offset);
                   Safe_free (l);
                   continue;
@@ -8896,7 +8902,10 @@ genXor (iCode * ic, iCode * ifx)
               else if (aopGetUsesAcc (left->aop, offset))
                 {
                   MOVA (opGet (left, offset, FALSE, FALSE));
-                  emitcode ("xrl", "a,%s", opGet (right, offset, FALSE, FALSE));
+                  if (aopIsLitVal (right->aop, offset, 1, 0xff))
+                    emitcode ("cpl", "a");
+                  else
+                    emitcode ("xrl", "a,%s", opGet (right, offset, FALSE, FALSE));
                 }
               else
                 {
@@ -13040,10 +13049,6 @@ gen51Code (iCode * lic)
         {
         case '!':
           genNot (ic);
-          break;
-
-        case '~':
-          genCpl (ic);
           break;
 
         case UNARYMINUS:

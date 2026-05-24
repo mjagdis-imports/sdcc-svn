@@ -245,11 +245,28 @@ getOperandValinfo (const iCode *ic, const operand *op)
       v2.max = litval;
       v2.knownbitsmask = ~0ull;
       v2.knownbits = litval;
+      v2.minsize = 0;
+      v2.maxsize = ULONG_MAX;
+      v2.maybeminsize = 0;
+      v2.maybemaxsize = ULONG_MAX;
       valinfoCast (&v, type, v2, NULL); // Need to cast: ival could be out of range of type.
       valinfoUpdate (&v);
     }
+#if 1
   else if (IS_SYMOP (op) && !IS_OP_VOLATILE (op) && ic->valinfos && ic->valinfos->map.find (op->key) != ic->valinfos->map.end ())
     return (ic->valinfos->map[op->key].anything ? getTypeValinfo (type, true) : ic->valinfos->map[op->key]);
+#else
+  else if (IS_SYMOP (op) && !IS_OP_VOLATILE (op) && ic->valinfos && ic->valinfos->map.find (op->key) != ic->valinfos->map.end () && !ic->valinfos->map[op->key].anything)
+    {
+      if (IS_ITEMP (op))
+        v = ic->valinfos->map[op->key];
+      else
+        {
+          valinfoCast (&v, type, ic->valinfos->map[op->key], NULL); // Need to cast, since updates for global/pointed-to operands might have been too pessimistic.
+          valinfoUpdate (&v);
+        }
+    }
+#endif
   else if (IS_ITEMP (op))
     {
       v.nothing = true;
@@ -257,6 +274,7 @@ getOperandValinfo (const iCode *ic, const operand *op)
     }
   else
     v = getTypeValinfo (type, true);
+
   return (v);
 }
 
@@ -330,7 +348,7 @@ dump_op_info (std::ostream &os, const iCode *ic, operand *op)
   if (v.anything)
     os << "*";
   else
-    os << "[" << v.min << ", " << v.max << "] " << v.knownbitsmask;
+    os << "[" << v.min << ", " << v.max << "] " << "[" << v.minsize << ", " << v.maxsize << "] " << v.knownbitsmask;
 }
 
 // Dump cfg.
@@ -772,7 +790,7 @@ static void update_out_edges (cfg_t &G, unsigned int i, int key_false, int key_t
 }
 
 static void
-recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<unsigned int>, std::set<unsigned int> > &todo, const valinfos &global_operands, bool externchange, int end_it_quickly)
+recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<unsigned int>, std::set<unsigned int> > &todo, const valinfos &global_operands, const std::map <int, sym_link *>& global_types, bool externchange, int end_it_quickly)
 {
   iCode *const ic = G[i].ic;
   bool change = externchange;
@@ -899,7 +917,12 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           for (std::map <int, struct valinfo>::const_iterator i = global_operands.map.begin(); i != global_operands.map.end(); ++i)
             if (ic->op == SET_VALUE_AT_ADDRESS || POINTER_SET (ic))
-              valinfo_union (&G[*out].map[i->first], rightvalinfo);
+              {
+                wassert (global_types.find (i->first) != global_types.end());
+                valinfo v;
+                valinfoCast (&v, global_types.find (i->first)->second, rightvalinfo, NULL);
+                valinfo_union (&G[*out].map[i->first], v);
+              }
             else
               G[*out].map[i->first] = i->second;
         }
@@ -913,11 +936,11 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
       std::cout << "Recompute node " << i << " ic " << ic->key << "\n";
       if (localchange && resultsym)
         { 
-          std::cout << "getTypeValinfo: resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << std::dec << " min " << resultvalinfo.min << "\n";
+          std::cout << "getTypeValinfo: resultvalinfo anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << std::dec << " min " << resultvalinfo.min << " max " << resultvalinfo.max << " maxsize "<< resultvalinfo.maxsize << "\n";
           if (ic->left)
-            std::cout << "leftvalinfo op " << ic->left->key << " anything " << rightvalinfo.anything << " min " << rightvalinfo.min << " max " << rightvalinfo.max << "\n";
+            std::cout << "leftvalinfo op " << ic->left->key << " anything " << leftvalinfo.anything << " min " << leftvalinfo.min << " max " << leftvalinfo.max << " maxsize "<< leftvalinfo.maxsize << "\n";
           if (ic->right)
-            std::cout << "rightvalinfo op " << ic->right->key << " anything " << rightvalinfo.anything << " min " << rightvalinfo.min << " max " << rightvalinfo.max << "\n";
+            std::cout << "rightvalinfo op " << ic->right->key << " anything " << rightvalinfo.anything << " min " << rightvalinfo.min << " max " << rightvalinfo.max << " maxsize "<< rightvalinfo.maxsize << "\n";
         }
 #endif
 
@@ -1098,7 +1121,7 @@ recompute_node (cfg_t &G, unsigned int i, ebbIndex *ebbi, std::pair<std::queue<u
         {
           valinfoUpdate (&resultvalinfo);
 #ifdef DEBUG_GCP_ANALYSIS
-          std::cout << "resultvalinfo op " << ic->result->key << " anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << " knownbits 0x" << resultvalinfo.knownbits << std::dec << " min " << resultvalinfo.min << " max " << resultvalinfo.max << " nonnull " << resultvalinfo.nonnull << "\n";
+          std::cout << "resultvalinfo op " << ic->result->key << " anything " << resultvalinfo.anything << " knownbitsmask 0x" << std::hex << resultvalinfo.knownbitsmask << " knownbits 0x" << resultvalinfo.knownbits << std::dec << " min " << resultvalinfo.min << " max " << resultvalinfo.max << " nonnull " << resultvalinfo.nonnull << " maxsize " << resultvalinfo.maxsize << "\n";
 #endif
           if (!ic->resultvalinfo)
             ic->resultvalinfo = new struct valinfo;
@@ -1128,7 +1151,8 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
   create_cfg_genconstprop(G, sic, ebbi);
 
   std::pair <std::queue<unsigned int>, std::set<unsigned int> > todo; // Nodes where valinfos need to be updated. We need a pair of a queue and a set to implement a queue with uniqe entries. A plain set wouldn't work, as we'd be working on some nodes all the time while never getting to others before we reach the round limit.
-  valinfos global_operands; // set of operands that are global or had their address taken, and thus need to be invalidated at every potential pointer write (or function call).
+  valinfos global_operands;                // Set of operands that are global or had their address taken, and thus need to be invalidated at every potential pointer write (or function call).
+  std::map <int, sym_link *> global_types; // Types for above.
 
   // Process each node at least once, and handle incoming non-register parameters.
   typedef /*typename*/ boost::graph_traits<cfg_t>::out_edge_iterator out_iter_t;
@@ -1149,16 +1173,25 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
       // Need to include static objects here, since they might revert their state via setjmp/longjmp.
       if (G[i].ic->left && !IS_ITEMP(G[i].ic->left) && IS_SYMOP (G[i].ic->left) &&
         (!OP_SYMBOL_CONST (G[i].ic->left)->islocal && !OP_SYMBOL_CONST (G[i].ic->left)->ismyparm || OP_SYMBOL_CONST (G[i].ic->left)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->left)->etype)))
-        global_operands.map[G[i].ic->left->key] = getOperandValinfo (G[i].ic, G[i].ic->left);
+        {
+          global_operands.map[G[i].ic->left->key] = getOperandValinfo (G[i].ic, G[i].ic->left);
+          global_types[G[i].ic->left->key] = operandType (G[i].ic->left);
+        }
       if (G[i].ic->right && !IS_ITEMP(G[i].ic->right) && IS_SYMOP (G[i].ic->right) &&
         (!OP_SYMBOL_CONST (G[i].ic->right)->islocal && !OP_SYMBOL_CONST (G[i].ic->right)->ismyparm || OP_SYMBOL_CONST (G[i].ic->right)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->right)->etype)))
-        global_operands.map[G[i].ic->right->key] = getOperandValinfo (G[i].ic, G[i].ic->right);
+        {
+          global_operands.map[G[i].ic->right->key] = getOperandValinfo (G[i].ic, G[i].ic->right);
+          global_types[G[i].ic->right->key] = operandType (G[i].ic->right);
+        }
       if (G[i].ic->result && !IS_ITEMP(G[i].ic->result) && IS_SYMOP (G[i].ic->result) &&
         (!OP_SYMBOL_CONST (G[i].ic->result)->islocal && !OP_SYMBOL_CONST (G[i].ic->result)->ismyparm || OP_SYMBOL_CONST (G[i].ic->result)->addrtaken || IS_STATIC (OP_SYMBOL_CONST (G[i].ic->result)->etype)))
-        global_operands.map[G[i].ic->result->key] = getOperandValinfo (G[i].ic, G[i].ic->result);
+        {
+          global_operands.map[G[i].ic->result->key] = getOperandValinfo (G[i].ic, G[i].ic->result);
+          global_types[G[i].ic->result->key] = operandType (G[i].ic->result);
+        }
     }
   for (unsigned int i = 0; i < boost::num_vertices (G); i++)
-    recompute_node (G, i, ebbi, todo, global_operands, true, 0);
+    recompute_node (G, i, ebbi, todo, global_operands, global_types, true, 0);
 
   // Forward pass to get first approximation.
   for (unsigned long round = 0; !todo.first.empty (); round++)
@@ -1172,7 +1205,7 @@ recomputeValinfos (iCode *sic, ebbIndex *ebbi, const char *suffix)
       std::cout << "Round " << round << " node " << i << " ic " << G[i].ic->key << "\n"; std::cout.flush();
 #endif
 
-      recompute_node (G, i, ebbi, todo, global_operands, false, (round >= max_rounds) + (round >= max_rounds * 2));
+      recompute_node (G, i, ebbi, todo, global_operands, global_types, false, (round >= max_rounds) + (round >= max_rounds * 2));
     }
 
   // Refinement backward pass.
@@ -1215,7 +1248,7 @@ optimizeValinfoConst (iCode *sic)
             }
           else
             {
-              if (left && IS_ITEMP (left) && !vleft.anything && vleft.min == vleft.max)
+              if (left && IS_SYMOP (left) && ic->op != ADDRESS_OF && ic->op != CALL && !vleft.anything && vleft.min == vleft.max) // TODO: Why doesn't CALL work here? It makes a tinyaes test fail for z80, where the memcpy of symbol gets replaced?
                 {
 #ifdef DEBUG_GCP_OPT
                   std::cout << "Replace left (" << OP_SYMBOL(left)->name << "), key " << left->key << " at " << ic->key << "\n";
@@ -1227,7 +1260,7 @@ optimizeValinfoConst (iCode *sic)
                   attachiCodeOperand (operandFromValue (valCastLiteral (operandType (left), vleft.min, vleft.min), false), &ic->left, ic);
                   ic->left->isaddr = isaddr;
                 }
-              if (right && IS_ITEMP (right) && !vright.anything && vright.min == vright.max)
+              if (right && IS_SYMOP (right) && !vright.anything && vright.min == vright.max)
                 {
 #ifdef DEBUG_GCP_OPT
                   std::cout << "Replace right at " << ic->key << "\n";
@@ -1441,7 +1474,7 @@ optimizeNarrowOpNet (iCode *ic)
             }
           else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == ROT) && !isOperandEqual (uic->left, op))
             ;
-          else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == UNARYMINUS || uic->op == '~') && isOperandEqual (uic->left, op)) // Not ROT, since the size affects semantics.
+          else if ((uic->op == LEFT_OP || uic->op == RIGHT_OP || uic->op == UNARYMINUS) && isOperandEqual (uic->left, op)) // Not ROT, since the size affects semantics.
             {
               if (net.find(uic->result) == net.end())
                 {

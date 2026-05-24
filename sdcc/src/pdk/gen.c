@@ -245,7 +245,7 @@ aopIsLitVal (const asmop *aop, int offset, int size, unsigned long long int val)
       if ((aop->size <= offset || aop->type == AOP_STL && offset) && !b)
         continue;
 
-      if (aop->type == AOP_IMMD && offset > (aop->aopu.code ? 1 : 0) && !b)
+      if (aop->type == AOP_IMMD && offset > ((aop->aopu.code || aop->aopu.func) ? 1 : 0) && !b)
         continue;
 
       // Information from generalized constant propagation analysis
@@ -286,7 +286,7 @@ aopGet(const asmop *aop, int offset)
 
   if (aop->type == AOP_IMMD)
     {
-      if (offset == 0 && aop->aopu.code)
+      if (offset == 0 && (aop->aopu.code || aop->aopu.func))
         SNPRINTF (buffer, sizeof(buffer), "#<(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
       else if (offset == 1 && aop->aopu.func)
         SNPRINTF (buffer, sizeof(buffer), "#>(%s + %d)", aop->aopu.immd, aop->aopu.immd_off);
@@ -1513,26 +1513,6 @@ genXorImpl (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_ao
 
   if (pushed_a)
     popAF();
-}
-
-/*-----------------------------------------------------------------*/
-/* genCpl - generate code for complement                           */
-/*-----------------------------------------------------------------*/
-static void
-genCpl (const iCode *ic)
-{
-  operand *result = IC_RESULT (ic);
-  operand *left = IC_LEFT (ic);
-
-  D (emit2 ("; genCpl", ""));
-
-  aopOp (left, ic);
-  aopOp (result, ic);
-  
-  genXorImpl (ic, result->aop, left->aop, ASMOP_MONE);
-
-  freeAsmop (left);
-  freeAsmop (result);
 }
 
 /*-----------------------------------------------------------------*/
@@ -5566,10 +5546,6 @@ genPdkiCode (iCode *ic)
     {
     case '!':
       genNot (ic);
-      break;
-
-    case '~':
-      genCpl (ic);
       break;
 
     case UNARYMINUS:

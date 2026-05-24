@@ -80,7 +80,6 @@ PRINTFUNC (picEndCritical);
 
 iCodeTable codeTable[] = {
   {'!', "not", picGenericOne, NULL},
-  {'~', "~", picGenericOne, NULL},
   {GETABIT, "gabit", picGenericOne, NULL},
   {GETBYTE, "gbyte", picGenericOne, NULL},
   {GETWORD, "gword", picGenericOne, NULL},
@@ -1324,7 +1323,7 @@ extern bool regalloc_dry_run;
 /* getBuiltInParms - returns parameters to a builtin function      */
 /*-----------------------------------------------------------------*/
 iCode *
-getBuiltinParms (iCode * fic, int *pcount, operand ** parms)
+getBuiltinParms (iCode *fic, int *pcount, operand **parms)
 {
   sym_link *ftype;
   iCode *ic = fic;
@@ -1344,9 +1343,9 @@ getBuiltinParms (iCode * fic, int *pcount, operand ** parms)
 
   ic->generated = 1;
   /* make sure this is a builtin function call */
-  assert (IS_SYMOP (IC_LEFT (ic)));
+  wassert (IS_SYMOP (IC_LEFT (ic)));
   ftype = operandType (IC_LEFT (ic));
-  assert (IFFUNC_ISBUILTIN (ftype));
+  wassert (IFFUNC_ISBUILTIN (ftype));
   return ic;
 }
 
@@ -1607,10 +1606,6 @@ operandOperation (operand * left, operand * right, int op, sym_link * type)
 
     case UNARYMINUS:
       retval = operandFromValue (valCastLiteral (type, -1 * operandLitValue (left), (-1ll) * operandLitValueUll (left)), false);
-      break;
-
-    case '~':
-      retval = operandFromValue (valCastLiteral (type, ~((TYPE_TARGET_ULONG) double2ul (operandLitValue (left))), ~((TYPE_TARGET_ULONGLONG) operandLitValueUll (left))), false);
       break;
 
     case '!':
@@ -2920,16 +2915,6 @@ geniCodePostDec (operand * op)
     {
       werror (E_LVALUE_REQUIRED, "--");
       return op;
-    }
-
-  // Drop _Optional on pointer target,
-  if (IS_PTR (rvtype) && isOptional (rvtype->next))
-    {
-      rvtype = copyLinkChain (rvtype);
-      if IS_SPEC (rvtype->next)
-        SPEC_OPTIONAL (rvtype->next) = false;
-      else
-        DCL_PTR_OPTIONAL (rvtype->next) = false;
     }
 
   rOp = newiTempOperand (rvtype, 0);
@@ -4768,7 +4753,7 @@ ast2iCode (ast * tree, int lvl)
 #endif
 
     case '~':
-      return geniCodeUnary (geniCodeRValue (left, FALSE), tree->opval.op, tree->ftype);
+      return geniCodeBitwise (geniCodeRValue (left, false), operandFromValue (valCastLiteral (operandType (left), ~0ull, ~0ull), false), '^', tree->ftype);
 
     case '!':
       {

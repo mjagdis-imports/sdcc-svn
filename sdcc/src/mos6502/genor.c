@@ -53,12 +53,12 @@ m6502_genOr (iCode * ic, iCode * ifx)
   int bitpos = -1;
 
   m6502_emitComment (TRACEGEN, "%s - ifx:%d", 
-               __func__, ifx?1:0);
+		     __func__, ifx?1:0);
 
   m6502_aopOp (left, ic);
   m6502_aopOp (right, ic);
   m6502_aopOp (result, ic);
-  printIC(ic);
+  m6502_printIC(ic);
 
   /* force literal on the right and reg on the left */
   if (AOP_TYPE (left) == AOP_LIT || AOP_TYPE (right) == AOP_REG)
@@ -78,8 +78,8 @@ m6502_genOr (iCode * ic, iCode * ifx)
   if (isLit)
     {
       lit = ullFromVal (AOP (right)->aopu.aop_lit);
-      lit &= litmask(size);
-      bitpos = isLiteralBit (lit) - 1;
+      lit &= m6502_litmask(size);
+      bitpos = m6502_isLiteralBit (lit) - 1;
       m6502_emitComment (TRACEGEN|VVDBG, "  %s: lit=%04x bitpos=%d", __func__, lit, bitpos);
     }
 
@@ -89,20 +89,9 @@ m6502_genOr (iCode * ic, iCode * ifx)
       if (isLit && lit != 0)
 	{
           // trivial case - always true
-	  m6502_emitSetCarry(1);
-	  genIfxJump (ifx, "c");
+	  m6502_genIfxJump (ifx, "a");
 	  goto release;
 	}
-
-#if 0
-      // FIXME: good optmization but currently not working
-      if (IS_MOS65C02 && isLit && lit!=0)
-	{
-	  m6502_emitOp("bit","#0xff");
-	  genIfxJump (ifx, "z");
-	  goto release;
-	}
-#endif
 
       if(AOP_TYPE(left)==AOP_REG)
 	{
@@ -111,7 +100,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
 	  if( size==1 && isLit && lit==NOP_MASK ) 
 	    {
 	      m6502_emitCmp(AOP (left)->aopu.aop_reg[0], 0);
-	      genIfxJump (ifx, "z");
+	      m6502_genIfxJump (ifx, "z");
 	      goto release;
 	    }
         }
@@ -122,20 +111,20 @@ m6502_genOr (iCode * ic, iCode * ifx)
 	  m6502_emitComment (TRACEGEN|VVDBG, "  %s: test A for flags", __func__);
 
 	  if (m6502_reg_a->isDead)
-	    accopWithAop (OPCODE, AOP (right), 0);
+	    m6502_accopWithAop (OPCODE, AOP (right), 0);
 	  else
 	    {
 	      // no dead register available
 	      storeRegTemp(m6502_reg_a, true);
-	      accopWithAop (OPCODE, AOP(right), 0);
-	      loadRegTempNoFlags(m6502_reg_a, true); // preserve flags
+	      m6502_accopWithAop (OPCODE, AOP(right), 0);
+	      m6502_loadRegTempNoFlags(m6502_reg_a, true); // preserve flags
 	    }
-	  genIfxJump (ifx, "z");
+	  m6502_genIfxJump (ifx, "z");
 	  goto release;
 	}
 
       // test for flags only (general case)
-      symbol *tlbl = safeNewiTempLabel (NULL);
+      symbol *tlbl = m6502_safeNewiTempLabel (NULL);
 
       needpulla = storeRegTempIfSurv (m6502_reg_a);
 
@@ -144,30 +133,30 @@ m6502_genOr (iCode * ic, iCode * ifx)
 	  bytemask = (isLit) ? (lit >> (offset * 8)) & 0xff : 0x100;
 
 	  if(offset==0)
-	    loadRegFromAop (m6502_reg_a, AOP (left), offset);
+	    m6502_loadRegFromAop (m6502_reg_a, AOP (left), offset);
 	  else 
-	    accopWithAop (OPCODE, AOP(left), offset);
+	    m6502_accopWithAop (OPCODE, AOP(left), offset);
 
 	  if (bytemask != NOP_MASK)
-	    accopWithAop (OPCODE, AOP(right), offset);
+	    m6502_accopWithAop (OPCODE, AOP(right), offset);
 
 	  if(((offset+1)%2)==0)
 	    m6502_emitBranch ("bne", tlbl);
 	}
 
       m6502_freeReg (m6502_reg_a);
-      safeEmitLabel (tlbl);
+      m6502_safeEmitLabel (tlbl);
 
       // TODO: better way to preserve flags?
       if (ifx)
 	{
-	  loadRegTempNoFlags (m6502_reg_a, needpulla);
-	  genIfxJump (ifx, "z");
+ 	  m6502_loadRegTempNoFlags (m6502_reg_a, needpulla);
+	  m6502_genIfxJump (ifx, "z");
 	}
       else
 	{
-	  if (needpulla)
-            loadRegTemp (NULL);
+ 	  if (needpulla)
+ 	    m6502_loadRegTemp (NULL);
 	}
       goto release;
     }
@@ -182,7 +171,7 @@ m6502_genOr (iCode * ic, iCode * ifx)
   if (IS_MOS65C02 && AOP_TYPE (right) == AOP_LIT)
     {
       if (m6502_sameRegs (AOP (left), AOP (result)) && (AOP_TYPE (left) == AOP_DIR) 
-	  && isLiteralBit (lit))
+	  && m6502_isLiteralBit (lit))
 	{
 	  char inst[5] = "smbx";
 	  inst[3] = '0' + (bitpos & 7);
@@ -194,16 +183,27 @@ m6502_genOr (iCode * ic, iCode * ifx)
 
   unsigned int bmask0 = (isLit) ? ((lit >> (0 * 8)) & 0xff) : 0x100;
   unsigned int bmask1 = (isLit) ? ((lit >> (1 * 8)) & 0xff) : 0x100;
-  bool x_zero = (IS_AOP_XA(AOP(left)) || IS_AOP_XY(AOP(left))) && (m6502_reg_x->isLitConst) && (m6502_reg_x->litConst==0);
+  bool x_const = (IS_AOP_XA(AOP(left)) || IS_AOP_XY(AOP(left))) && (m6502_reg_x->isLitConst);
 
-  if (x_zero)
+  if (x_const && (m6502_reg_x->litConst==0) )
     {
       if(AOP_SIZE (result)>1)
-        transferAopAop(AOP(right), 1, AOP(result), 1);
+        m6502_transferAopAop(AOP(right), 1, AOP(result), 1);
 
-      loadRegFromAop (m6502_reg_a, AOP (left), 0);
-      accopWithAop (OPCODE, AOP (right), 0);
-      storeRegToAop (m6502_reg_a, AOP (result), 0);
+      m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+      m6502_accopWithAop (OPCODE, AOP (right), 0);
+      m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
+      goto release;
+    }
+
+  if (x_const && bmask1!=0x100 )
+    {
+      if(AOP_SIZE (result)>1)
+        m6502_storeConstToAop(m6502_reg_x->litConst|bmask1, AOP(result), 1);
+
+      m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
+      m6502_accopWithAop (OPCODE, AOP (right), 0);
+      m6502_storeRegToAop (m6502_reg_a, AOP (result), 0);
       goto release;
     }
 
@@ -212,36 +212,36 @@ m6502_genOr (iCode * ic, iCode * ifx)
       m6502_emitComment (TRACEGEN|VVDBG, "  %s: XA", __func__);
 
       if (IS_AOP_A(AOP(left)))
-	storeConstToAop(0x00, AOP(result), 1);
+	m6502_storeConstToAop(0x00, AOP(result), 1);
       else if (bmask1==NOP_MASK)
-	transferAopAop(AOP(left), 1, AOP(result), 1);
+	m6502_transferAopAop(AOP(left), 1, AOP(result), 1);
       else if(bmask1==CONST_MASK)
-	storeConstToAop(CONST_RESULT, AOP(result), 1);
+	m6502_storeConstToAop(CONST_RESULT, AOP(result), 1);
       else if(IS_AOP_XA(AOP(left)) && m6502_reg_x->isLitConst && m6502_reg_x->litConst==NOP_MASK)
-	transferAopAop(AOP(right), 1, AOP(result), 1);
+	m6502_transferAopAop(AOP(right), 1, AOP(result), 1);
       else
 	{
 	  if(IS_AOP_XA(AOP(left)) && (bmask0!=CONST_MASK) )
 	    {
-	      fastSaveA();
+ 	      m6502_fastSaveA();
 	      needpulla=true;
 	    }
-	  loadRegFromAop (m6502_reg_a, AOP (left), 1);
-	  accopWithAop (OPCODE, AOP (right), 1);
-	  storeRegToAop (m6502_reg_a, AOP (result), 1);            
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), 1);
+	  m6502_accopWithAop (OPCODE, AOP (right), 1);
+	  m6502_storeRegToAop (m6502_reg_a, AOP (result), 1);            
 	}
 
       if(bmask0==CONST_MASK)
-	storeConstToAop(CONST_RESULT, AOP(result), 0);
+	m6502_storeConstToAop(CONST_RESULT, AOP(result), 0);
       else
 	{
 	  if(needpulla) 
-	    fastRestoreA();
+ 	    m6502_fastRestoreA();
 	  else
-            loadRegFromAop (m6502_reg_a, AOP (left), 0);
+            m6502_loadRegFromAop (m6502_reg_a, AOP (left), 0);
 
 	  if (bmask0!=NOP_MASK)
-            accopWithAop (OPCODE, AOP (right), 0);
+            m6502_accopWithAop (OPCODE, AOP (right), 0);
 	}
       goto release;
     }
@@ -267,17 +267,17 @@ m6502_genOr (iCode * ic, iCode * ifx)
 
       if ( bytemask==NOP_MASK )
 	{
-	  transferAopAop(AOP(left), offset, AOP(result), offset);
+	  m6502_transferAopAop(AOP(left), offset, AOP(result), offset);
 	}
       else if ( bytemask==CONST_MASK )
 	{
-	  storeConstToAop(CONST_RESULT, AOP(result), offset);
+	  m6502_storeConstToAop(CONST_RESULT, AOP(result), offset);
 	}
       else 
 	{
-	  loadRegFromAop (m6502_reg_a, AOP (left), offset);
-	  accopWithAop (OPCODE, AOP (right), offset);
-	  storeRegToAop (m6502_reg_a, AOP (result), offset);
+	  m6502_loadRegFromAop (m6502_reg_a, AOP (left), offset);
+	  m6502_accopWithAop (OPCODE, AOP (right), offset);
+	  m6502_storeRegToAop (m6502_reg_a, AOP (result), offset);
           m6502_freeReg(m6502_reg_a);
 	}
     }
