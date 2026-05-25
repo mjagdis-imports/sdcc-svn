@@ -3202,26 +3202,6 @@ genEor (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
        i++;
     }
 }
-         
-/*-----------------------------------------------------------------*/
-/* genCpl - generates code for ~                                   */
-/*-----------------------------------------------------------------*/
-static void
-genCpl (const iCode *ic)
-{
-  operand *result = IC_RESULT (ic);
-  operand *left = IC_LEFT (ic);
-
-  D (emit2 ("; genCpl", ""));
-
-  aopOp (left, ic, false);
-  aopOp (result, ic, true);
-
-  genEor (ic, result->aop, left->aop, ASMOP_MONE);
-
-  freeAsmop (left);
-  freeAsmop (result);
-}
 
 /*-----------------------------------------------------------------*/
 /* genSub - generates code for subtraction                         */
@@ -7028,6 +7008,9 @@ genPointerGet (const iCode *ic, iCode *ifx)
       genMove_o (result->aop, i, ASMOP_XL, 0, 1, true, false, false, false, true);
     }
 
+  if (!use_z && !regDead (Y_IDX, ic) && last_oi)
+    addwConst (ASMOP_Y, 0, -last_oi);
+
 extend_bitfield:
   if (bit_field && i < size)
     {
@@ -8041,10 +8024,6 @@ genF8iCode (iCode *ic)
     {
     case '!':
       genNot (ic);
-      break;
-
-    case '~':
-      genCpl (ic);
       break;
 
     case UNARYMINUS:

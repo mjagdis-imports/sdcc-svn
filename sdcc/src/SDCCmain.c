@@ -191,6 +191,7 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_USE_STDOUT, NULL, "send errors to stdout instead of stderr"},
   {0,   "--nostdlib", &options.nostdlib, "Do not include the standard library directory in the search path"},
   {0,   "--nostdinc", &options.nostdinc, "Do not include the standard include directory in the search path"},
+  {0,   "--norestartseqatomics", &options.norestartseqatomics, "Omit restartable sequence support routines for atomics"},
   {0,   OPTION_LESS_PEDANTIC, NULL, "Disable some of the more pedantic warnings"},
   {0,   OPTION_DISABLE_WARNING, NULL, "<nnnn> Disable specific warning"},
   {0,   OPTION_WERROR, NULL, "Treat the warnings as errors"},
@@ -663,6 +664,7 @@ setDefaultOptions (void)
   options.model = port->general.default_model;
   options.nostdlib = 0;
   options.nostdinc = 0;
+  options.norestartseqatomics = false;
   options.verbose = 0;
   options.std_sdcc = 1;         /* enable SDCC language extensions */
   options.std_c95 = 1;
@@ -2952,7 +2954,7 @@ main (int argc, char **argv, char **envp)
               if (sym->level)
                 continue;
               // Check for arrays of unknown size that get size 1 due to an implicit initializer.
-              if (IS_ARRAY (sym->type) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
+              if (IS_ARRAY (sym->type) && !IS_EXTERN (sym->etype) && DCL_ARRAY_LENGTH_TYPE (sym->type) == ARRAY_LENGTH_UNKNOWN)
                 {
                   wassert (!DCL_ELEM (sym->type));
                   werrorfl (sym->fileDef, sym->lineDef, W_INCOMPLETE_ARRAY_IMPLICIT_1, sym->name);

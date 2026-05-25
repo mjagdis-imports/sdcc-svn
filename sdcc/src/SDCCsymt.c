@@ -593,7 +593,7 @@ addDecl (symbol *sym, int type, sym_link *p)
   // if there is a function in this type chain
   if (p && funcInChain (sym->type))
     {
-      processFuncArgs (sym, NULL);
+      processFunc (sym, NULL);
     }
 
   return;
@@ -1784,10 +1784,18 @@ structElemType (sym_link * stype, value * id)
               t = type;
               while (IS_ARRAY (t))
                 t = t->next;
-              if (IS_SPEC (t))
-                SPEC_CONST (t) |= SPEC_CONST (stype);
+              if (IS_SPEC (t)) // TODO: how about restrict, address spaces? Looks like the latter is handled by the caller in SDDCast.c?
+                {
+                  SPEC_CONST (t) |= SPEC_CONST (stype);
+                  SPEC_VOLATILE (t) |= SPEC_VOLATILE (stype);
+                  SPEC_OPTIONAL (t) |= SPEC_OPTIONAL (stype);
+                }
               else
-                DCL_PTR_CONST (t) |= SPEC_CONST (stype);
+                {
+                  DCL_PTR_CONST (t) |= SPEC_CONST (stype);
+                  DCL_PTR_VOLATILE (t) |= SPEC_VOLATILE (stype);
+                  DCL_PTR_OPTIONAL (t) |= SPEC_OPTIONAL (stype);
+                }
               return type;
             }
           fields = fields->next;
@@ -3798,7 +3806,7 @@ checkFunction (symbol * sym, symbol * csym)
           return 0;
         }
     }
-  else if (compareType (csym->type, sym->type, false) <= 0)
+  else if (compareType (csym->type, sym->type, false) <= 0) // todo: needs tigther checking!
     {
       werrorfl (sym->fileDef, sym->lineDef, E_PREV_DECL_CONFLICT, csym->name, "type", csym->fileDef, csym->lineDef);
       printFromToType (csym->type, sym->type);
@@ -3942,21 +3950,21 @@ cdbStructBlock (int block)
 }
 
 /*-----------------------------------------------------------------*/
-/* processFuncPtrArgs - does some processing with args of func ptrs*/
+/* processFuncPtr - does some processing with function pointers    */
 /*-----------------------------------------------------------------*/
 void
-processFuncPtrArgs (sym_link * funcType)
+processFuncPtr (sym_link * funcType)
 {
-  processFuncArgs (NULL, funcType);
+  processFunc (NULL, funcType);
 }
 
 /*-----------------------------------------------------------------*/
-/* processFuncArgs - does some processing with function args       */
+/* processFunc - does some processing with function (types)        */
 /*                                                                 */
 /*   Leave func NULL if processing a type rather than a symbol     */
 /*-----------------------------------------------------------------*/
 void
-processFuncArgs (symbol *func, sym_link *funcType)
+processFunc (symbol *func, sym_link *funcType)
 {
   value *val;
   int pNum = 1;
@@ -3977,7 +3985,7 @@ processFuncArgs (symbol *func, sym_link *funcType)
     }
 
   if (getenv ("SDCC_DEBUG_FUNCTION_POINTERS"))
-    fprintf (stderr, "SDCCsymt.c:processFuncArgs(%s)\n", funcName);
+    fprintf (stderr, "SDCCsymt.c:processFunc(%s)\n", funcName);
 
   /* find the function declaration within the type */
   while (funcType && !IS_FUNC (funcType))
@@ -3989,7 +3997,16 @@ processFuncArgs (symbol *func, sym_link *funcType)
 
   // Also do return type.
   if (funcType->next)
-    processFuncArgs (0, funcType->next);
+    {
+      processFunc (0, funcType->next);
+      
+      // TODO: we probably should remove named address space qualifiers for intrinsic named address spaces, too.
+      if (isConst (funcType->next) || isVolatile (funcType->next) || isRestrict (funcType->next) || isAtomic (funcType->next) || isOptional (funcType->next) || getAddrspace (funcType->next))
+      {
+        werror (W_QUALIFIED_RETURN);
+        removeQualifiers (funcType->next);
+      }
+    }
 
   /* if this function has variable argument list */
   /* then make the function a reentrant one    */
@@ -5372,15 +5389,19 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
         max = v;
     }
 
-  /* Figure out if everything fits in the user requested (or default int) type */
-  if (!llFitsInIntType (min, type) || !llFitsInIntType (max, type))
-    werror (userRequestedType ? E_ENUM_TYPE_RANGE_TOO_SMALL : W_ENUM_INT_RANGE_C23);
-
-  /* It does: If the type was explicitly requested, return it! */
+  // If the type was explicitly requested, return it!
   if (userRequestedType)
-    return type;
+    {
+      if (!llFitsInIntType (min, type) || !llFitsInIntType (max, type))
+        werror (E_ENUM_TYPE_RANGE_TOO_SMALL);
+      return type;
+    }
 
-  // Otherwise: use the smallest integer type that is compatible with this range that i neither bool nor a bit-precise type (both bool and bit-prcise types are disallowed here by ISO C23).
+  // Before C23, enumeration constants were required to fit into an int.
+  if (!options.std_c23 && (!llFitsInIntType (min, type) || !llFitsInIntType (max, type)))
+    werror (W_ENUM_INT_RANGE_C23);
+
+  // Otherwise: use the smallest integer type that is compatible with this range that is neither bool nor a bit-precise type (both bool and bit-prcise types are disallowed here by ISO C23).
   if (min >= 0 && max <= 255)
     {
       SPEC_NOUN (type) = V_CHAR;
@@ -5418,6 +5439,9 @@ newEnumType (symbol *enumlist, sym_link *userRequestedType)
       if (min >= 0)
         SPEC_USIGN (type) = 1;
     }
+
+  if (!llFitsInIntType (min, type) || !llFitsInIntType (max, type))
+    werror (E_ENUM_TYPE_RANGE_TOO_SMALL);
 
   return type;
 }

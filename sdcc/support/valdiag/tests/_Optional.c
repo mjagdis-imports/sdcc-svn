@@ -181,7 +181,7 @@ void jim(_Optional int *i)
 	} else {
 		*i = 8; /* IGNORE */
 	foo(&*i);
-	foo(&i[15]);
+	foo(&i[15]); /* IGNORE */
 	}
 	k = i ? *i : 0; /* IGNORE */
 }

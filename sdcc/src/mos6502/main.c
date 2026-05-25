@@ -389,7 +389,7 @@ newAsmLineNode (void)
 */
 
 /* These must be kept sorted by opcode name */
-static m6502opcodedata m6502opcodeDataTable[] =
+const m6502opcodedata m6502opcodeDataTable[] =
   {
     {".db",   M6502OP_INH, -1,       0 },    // used by the code generator only in the jump table
     {"adc",   M6502OP_REG, A_IDX,    0xc3 },
@@ -412,9 +412,9 @@ static m6502opcodedata m6502opcodeDataTable[] =
     {"cld",   M6502OP_INH, -1,       0x08 },
     {"cli",   M6502OP_INH, -1,       0x04 },
     {"clv",   M6502OP_INH, -1,       0x40 },
-    {"cmp",   M6502OP_CMP, -1,       0xc3 },
-    {"cpx",   M6502OP_CMP, -1,       0xc3 },
-    {"cpy",   M6502OP_CMP, -1,       0xc3 },
+    {"cmp",   M6502OP_CMP, -1,       0x83 },
+    {"cpx",   M6502OP_CMP, -1,       0x83 },
+    {"cpy",   M6502OP_CMP, -1,       0x83 },
     {"dec",   M6502OP_RMW, -1,       0x82 },
     {"dex",   M6502OP_IDD, X_IDX,    0x82 },
     {"dey",   M6502OP_IDD, Y_IDX,    0x82 },
@@ -461,7 +461,8 @@ static m6502opcodedata m6502opcodeDataTable[] =
     {"txa",   M6502OP_INH, A_IDX,    0x82 },
     {"txs",   M6502OP_INH, -1,       0 },
     {"tya",   M6502OP_INH, A_IDX,    0x82 },
-    {"wai",   M6502OP_INH, -1,       0 }     // WDC only
+    {"wai",   M6502OP_INH, -1,       0 },    // WDC only
+    {"zzz",   0,           -1,       0 }     // end of table
   };
 
 static int
@@ -474,7 +475,7 @@ m6502_opcodeCompare (const void *key, const void *member)
 const m6502opcodedata *m6502_getOpcodeData (const char *inst)
 {
   return   bsearch (inst, m6502opcodeDataTable,
-                    sizeof(m6502opcodeDataTable)/sizeof(m6502opcodedata),
+                    sizeof(m6502opcodeDataTable)/sizeof(m6502opcodedata)-1,
                     sizeof(m6502opcodedata), m6502_opcodeCompare);
 }
 

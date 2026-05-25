@@ -2371,7 +2371,7 @@ checkStaticArrayParams (ebbIndex *ebbi)
                   }
                 else
                   continue;
-                  
+
                 const struct valinfo vi = getOperandValinfo (ic, argop);
                 if (!vi.anything && vi.maxsize < paramsize && DCL_STATIC_ARRAY_PARAM (paramtype))
                   werrorfl (ic->filename, ic->lineno, W_STATIC_ARRAY_PARAM_LENGTH);
@@ -3866,21 +3866,19 @@ eBBlockFromiCode (iCode *ic)
   optimizeCastCast (ebbi->bbOrder, ebbi->count);
   optimizeRot (ebbi->bbOrder, ebbi->count); // Now it is worth trying to optimize rotations, after all parameters of inline functions have been propagated.
 
-  // Generalized constant propagation - do it here a first time before the first call to computeLiveRanges to ensure uninitalized variables are still recognized as such.
+  // Generalized constant propagation - analysis for diagnostics only, no optimization yet.
   if (optimize.genconstprop)
     {
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
       recomputeValinfos (ic, ebbi, "_0");
-      optimizeValinfo (ic);
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
       computeControlFlow (ebbi);
       loops = createLoopRegions (ebbi);
       computeDataFlow (ebbi);
       killDeadCode (ebbi);
-      if (options.dump_i_code)
-        dumpEbbsToFileExt (DUMP_GENCONSTPROP0, ebbi);
-      checkStaticArrayParams (ebbi); // Only do this after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
+      // Check before loop optimizations, but after dead code elimination and generalized constant propagation, so we can avoid false positives in dead branches, and have the necessary information.
+      checkStaticArrayParams (ebbi);
     }
 
   /* do loop optimizations */
@@ -3912,6 +3910,22 @@ eBBlockFromiCode (iCode *ic)
         dumpEbbsToFileExt (DUMP_LOOPD, ebbi);
     }
 
+  // Generalized constant propagation - do optimizations here a first time, before the first call to computeLiveRanges to ensure uninitalized variables are still recognized as such.
+  if (optimize.genconstprop)
+    {
+      ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
+      recomputeValinfos (ic, ebbi, "_1");
+      optimizeValinfo (ic);
+      freeeBBlockData (ebbi);
+      ebbi = iCodeBreakDown (ic);
+      computeControlFlow (ebbi);
+      loops = createLoopRegions (ebbi);
+      computeDataFlow (ebbi);
+      killDeadCode (ebbi);
+      if (options.dump_i_code)
+        dumpEbbsToFileExt (DUMP_GENCONSTPROP1, ebbi);
+    }
+
   offsetFoldGet (ebbi->bbOrder, ebbi->count);
   optimizeCastCast (ebbi->bbOrder, ebbi->count);
   computeControlFlow (ebbi);
@@ -3924,6 +3938,7 @@ eBBlockFromiCode (iCode *ic)
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
   while (optimizeOpWidth (ebbi->bbOrder, ebbi->count))
     optimizeCastCast (ebbi->bbOrder, ebbi->count);
+  computeDataFlow (ebbi);                                  // Apparently needed here, since otherwise we get some cases of killDeadCode below killing code not actually dead.
   recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false); // Recompute again before killing dead code, since dead code elimination needs updated ic->seq - the old ones might have been invalidated in optimizeOpWidth above.
   killDeadCode (ebbi);                                     // Ensure lospre doesn't resurrect dead code.
   adjustIChain (ebbi->bbOrder, ebbi->count);
@@ -4028,7 +4043,7 @@ eBBlockFromiCode (iCode *ic)
       computeDataFlow (ebbi);
       recomputeLiveRanges (ebbi->bbOrder, ebbi->count, false);
       ic = iCodeLabelOptimize (iCodeFromeBBlock (ebbi->bbOrder, ebbi->count));
-      recomputeValinfos (ic, ebbi, "_1");
+      recomputeValinfos (ic, ebbi, "_2");
       optimizeValinfo (ic);
       freeeBBlockData (ebbi);
       ebbi = iCodeBreakDown (ic);
@@ -4037,7 +4052,7 @@ eBBlockFromiCode (iCode *ic)
       computeDataFlow (ebbi);
       killDeadCode (ebbi);
       if (options.dump_i_code)
-        dumpEbbsToFileExt (DUMP_GENCONSTPROP1, ebbi);
+        dumpEbbsToFileExt (DUMP_GENCONSTPROP2, ebbi);
     }
 
   optimizeFinalCast (ebbi);

@@ -1,7 +1,9 @@
 #include "common.h"
 #include "SDCCgen.h"
 
+#include "ralloc.h"
 #include "peep.h"
+extern const m6502opcodedata m6502opcodeDataTable[];
 
 #define NOTUSEDERROR() do {werror(E_INTERNAL_ERROR, __FILE__, __LINE__, "error in notUsed()");} while(0)
 
@@ -123,57 +125,49 @@ mos6502MightRead(const lineNode *pl, const char *what)
   return true;
 }
 
+/*
+  processor flags
+  N 0x80
+  V 0x40
+  B 0x10
+  D 0x08
+  I 0x04
+  Z 0x02
+  C 0x01
+*/
+
 static bool
 mos6502SurelyWritesFlag(const lineNode *pl, const char *what)
 {
-  if (lineIsInst (pl, "adc") ||
-    lineIsInst (pl, "sbc"))
-    return (!strcmp(what, "n") || !strcmp(what, "z") || !strcmp(what, "c") || !strcmp(what, "v"));
+  int idx = 0;
+  int ret = 0;
+  int i;
 
-  if (lineIsInst (pl, "asl") ||
-    lineIsInst (pl, "cmp") ||
-    lineIsInst (pl, "cpx") ||
-    lineIsInst (pl, "cpy") ||
-    lineIsInst (pl, "lsr") ||
-    lineIsInst (pl, "rol") ||
-    lineIsInst (pl, "ror"))
-    return (!strcmp(what, "n") || !strcmp(what, "z") || !strcmp(what, "c"));
+ for(i=0; m6502opcodeDataTable[i].name[0]!='z'; i++)
+    {
+      if(lineIsInst (pl, m6502opcodeDataTable[i].name ))
+        {
+          idx=i;
+          break;
+        }
+    }
 
-  if (lineIsInst (pl, "and") ||
-    lineIsInst (pl, "dec") ||
-    lineIsInst (pl, "dex") ||
-    lineIsInst (pl, "dey") ||
-    lineIsInst (pl, "eor") ||
-    lineIsInst (pl, "inc") ||
-    lineIsInst (pl, "inx") ||
-    lineIsInst (pl, "iny") ||
-    lineIsInst (pl, "lda") ||
-    lineIsInst (pl, "ldx") ||
-    lineIsInst (pl, "ldy") ||
-    lineIsInst (pl, "ora") ||
-    lineIsInst (pl, "pla") ||
-    lineIsInst (pl, "tax") ||
-    lineIsInst (pl, "tay") ||
-    lineIsInst (pl, "tsx") ||
-    lineIsInst (pl, "tsa") ||
-    lineIsInst (pl, "tya"))
-    return (!strcmp(what, "n") || !strcmp(what, "z"));
+  if(idx==0)
+    return false;
 
-  if (lineIsInst (pl, "bit"))
-    return (!strcmp(what, "n") || !strcmp(what, "z") || !strcmp(what, "v"));
+  if(m6502opcodeDataTable[idx].flags&0x01)
+    ret |= !strcmp(what, "c");
 
-  if (lineIsInst (pl, "clc") ||
-    lineIsInst (pl, "sec"))
-    return (!strcmp(what, "c"));
+  if(m6502opcodeDataTable[idx].flags&0x02)
+    ret |= !strcmp(what, "z");
 
-  if (lineIsInst (pl, "clv"))
-    return (!strcmp(what, "v"));
+  if(m6502opcodeDataTable[idx].flags&0x40)
+    ret |= !strcmp(what, "v");
 
-  if (lineIsInst (pl, "plp") ||
-    lineIsInst (pl, "rti"))
-    return true;
-    
-  return false;
+  if(m6502opcodeDataTable[idx].flags&0x80)
+    ret |= !strcmp(what, "n");
+
+  return ret;
 }
 
 static bool
@@ -189,7 +183,8 @@ mos6502SurelyWrites(const lineNode *pl, const char *what)
 static bool
 mos6502UncondJump (const lineNode *pl)
 {
-  return (lineIsInst (pl, "jmp"));
+  // FIXME: should jsr be here as well?
+  return (lineIsInst (pl, "jmp") || lineIsInst (pl, "bra"));
 }
 
 static bool
@@ -366,10 +361,6 @@ bool mos6502notUsed (const char *what, lineNode *endPl, lineNode *head)
   _G.head = head;
 
   unvisitLines (_G.head);
-
-  // Todo: Implement WDC 65C02 support, remove this check!
-  if (TARGET_IS_MOS65C02)
-    return (false);
 
   pl = endPl->next;
   return (doTermScan (&pl, what));

@@ -10747,6 +10747,10 @@ long long
 .
 \end_layout
 
+\begin_layout Itemize
+#embed is not supported
+\end_layout
+
 \begin_layout Subsubsection*
 Features missing in some ports
 \end_layout
@@ -17102,6 +17106,54 @@ Libraries
 \end_inset
 
  path to the linker.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-norestartseqatomics
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-norestartseqatomics
+\end_layout
+
+\end_inset
+
+
+\series default
+ Omit restartable sequence support routines for atomics;
+ can reduce code size,
+ but disables support for atomic that use these support routines;
+ trying to use such atomics will then result in a diagnostic.
 \end_layout
 
 \begin_layout Labeling
@@ -25153,6 +25205,38 @@ out (c),a
 \end_layout
 
 \begin_layout Subsubsection
+__far
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+_
+\end_layout
+
+\end_inset
+
+far
+\end_layout
+
+\end_inset
+
+ (eZ80 only)
+\end_layout
+
+\begin_layout Standard
+The ez80 port supports a 1 MB __far address space that contains the generic address space.
+ Support for __far is still very incomplete and should be considered experimental.
+\end_layout
+
+\begin_layout Subsubsection
 __sfr
 \begin_inset Index idx
 range none
@@ -25543,8 +25627,6 @@ far
 The Rabbit ports supports a 1 MB __far address space that contains the generic address space.
  Due to limitations of the Rabbit ldp instructions,
  variables declared as __far can be neither volatile nor atomic.
- Note:
- This support is still very incomplete and should be considered experimental.
 \end_layout
 
 \begin_layout Subsection
