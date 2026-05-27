@@ -188,7 +188,7 @@ all: print-summary
 print-summary: test-ports
 	@cat $(RESULTS_DIR)/*.sum
 
-.PHONY: print-summary
+.PHONY: print-summary clean-random
 
 # Test all ports that you normally would want to test,
 # normally a subset of all ports.
@@ -405,7 +405,7 @@ $(TMP_DIR)/timeout: $(srcdir)/fwk/lib/timeout.c $(TMP_DIR)/stamp
 
 # BeginGeneric rules
 
-clean: clean-results
+clean: clean-results clean-random
 	$(MAKE) -C $(CASES_DIR) clean
 
 clean-results:
@@ -441,4 +441,27 @@ $(PORT_CASES_DIR)/fwk.lib: $(srcdir)/fwk/lib/fwk.lib ${SPEC_LIB}
 
 Makefile: $(srcdir)/Makefile.in
 	 cd $(top_builddir); ./config.status support/regression/Makefile
+
+
+# Rules for fuzzing (pseudo-randomized regression testing)
+
+clean-random:
+	rm -f randseq randport
+	rm -rf ports/random-*
+
+# Build the generator for pseudorandom number sequences
+randseq: randseq.c
+	gcc -Wall -pedantic --std=c99 $< -o $@
+
+# Build the generator for randomised ports (modifies randomly chosen base ports by adding random options)
+randport: randport.c
+	gcc -Wall -pedantic --std=c99 $< -o $@
+
+# This is sequential, but we have so much parallelism inside each random-test-$$ii (thousands of test cases), that it doesn't matter with current hardware.
+random-tests-%: randseq
+	NUMBERS=$$(./randseq $*); for i in $$NUMBERS; do $(MAKE) random-test-$$i; done
+
+random-test-%: randport
+	./randport $*
+	$(MAKE) test-random-$*
 
