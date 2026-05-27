@@ -1,3 +1,8 @@
+2026-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* snapshots.desc/sdcc-extra-src.desc:
+	  Update rrz80 description, which since many years is no longer particularly important to z80 port regression testing.
+
 2025-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* left_menu.inc:
