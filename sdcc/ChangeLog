@@ -1,3 +1,11 @@
+2026-05-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/MakeList,
+	  support/regression/Makefile.in,
+	  support/regression/randport.c,
+	  support/regression/randseq.c:
+	  Improve infrastructure for randomized regression testing (command-line option fuzzing).
+
 2026-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/Makefile.in,

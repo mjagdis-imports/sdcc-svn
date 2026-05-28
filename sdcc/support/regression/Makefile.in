@@ -308,7 +308,8 @@ endif # PORT
 # For each test we produce a result log file, %.log
 ifndef CASES
 TEST_STEMS_FILTERED_ = $(filter-out ${EXCLUDE_${PORT}}, $(TEST_STEMS))
-TEST_STEMS_FILTERED__ = $(filter ${TEST_PREFIX}%, $(TEST_STEMS_FILTERED_))
+TEST_STEMS_FILTERED__ = $(filter-out ${EXCLUDE_extra}, $(TEST_STEMS_FILTERED_))
+TEST_STEMS_FILTERED___ = $(filter ${TEST_PREFIX}%, $(TEST_STEMS_FILTERED__))
 TEST_STEMS_FILTERED = $(shell ${PYTHON} -c 'for i in "${TEST_STEMS_FILTERED__}".split(" ")[${TEST_SLICE}]: print(i)')
 PORT_RESULTS = $(TEST_STEMS_FILTERED:%=$(PORT_RESULTS_DIR)/%.log)
 endif
@@ -460,6 +461,9 @@ randport: randport.c
 # This is sequential, but we have so much parallelism inside each random-test-$$ii (thousands of test cases), that it doesn't matter with current hardware.
 random-tests-%: randseq
 	NUMBERS=$$(./randseq $*); for i in $$NUMBERS; do $(MAKE) random-test-$$i; done
+
+# Just exclude it for random testing, unless the test works for all ports. Doing it more fine-grained would be better, but too much effort for the moment.
+random-test-% : export EXCLUDE_extra = $(EXCLUDE_ds390) $(EXCLUDE_f8) $(EXCLUDE_f8l) $(EXCLUDE_hc08) $(EXCLUDE_mcs51-huge) $(EXCLUDE_mcs51-large) $(EXCLUDE_mcs51-large) $(EXCLUDE_mcs51-large-stack-auto) $(EXCLUDE_mcs51-medium) $(EXCLUDE_mcs51-small) $(EXCLUDE_mcs51-small-stack-auto) $(EXCLUDE_pdk14) $(EXCLUDE_pdk15) $(EXCLUDE_pdk15-stack-auto) $(EXCLUDE_s08) $(EXCLUDE_s08-stack-auto) $(EXCLUDE_stm8) $(EXCLUDE_stm8-large) $(EXCLUDE_tlcs90) $(EXCLUDE_uc6502) $(EXCLUDE_uc6502-stack-auto) $(EXCLUDE_uc65c02) $(EXCLUDE_ucez80) $(EXCLUDE_ucgbz80) $(EXCLUDE_ucr2k) $(EXCLUDE_ucr2ka) $(EXCLUDE_ucr3ka) $(EXCLUDE_ucr4k) $(EXCLUDE_ucr5k) $(EXCLUDE_ucr6k) $(EXCLUDE_ucr800) $(EXCLUDE_ucz180) $(EXCLUDE_ucz180-resiy) $(EXCLUDE_ucz80) $(EXCLUDE_ucz80n) $(EXCLUDE_ucz80-resiy) $(EXCLUDE_ucz80-undoc) $(EXCLUDE_ucz80-unsafe-read) 
 
 random-test-%: randport
 	./randport $*

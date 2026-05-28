@@ -1,42 +1,48 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <errno.h>
 
 // We just need some generator for okayish pseudo-random numbers, but we want the results to be reproducible
-// across hosts, so instead of the hosts rand(), we just use a copy of the one from the SDCC library.
-// If we ever need outout widert than 15 bits, we can migrate to a wider xorshift variant.
+// across hosts, so instead of the hosts rand(), we just our own here. Can't use the one from the SDCC library,
+// since we want wider output here.
 
-#define SDCC_RAND_MAX 32767
-
-static uint32_t s = 0x80000001;
-
-int16_t sdcc_rand(void)
-{
-	register uint32_t t = s;
-
-	t ^= t >> 10;
-	t ^= t << 9;
-	t ^= t >> 25;
-
-	s = t;
-
-	return(t & SDCC_RAND_MAX);
+uint64_t rol64 (uint64_t x, int k) {
+  return (x << k) | (x >> (64 - k));
 }
 
+uint64_t xoshiro256ss (void) {
+  static uint64_t s[4] = {0, 0, 1, 2};
+  const uint64_t result = rol64(s[1] * 5, 7) * 9;
+  const uint64_t t = s[1] << 17;
 
-int main(int argc, const char *argv[])
+  s[2] ^= s[0];
+  s[3] ^= s[1];
+  s[1] ^= s[2];
+  s[0] ^= s[3];
+
+  s[2] ^= t;
+  s[3] = rol64(s[3], 45);
+
+  return result;
+}
+
+int main (int argc, const char *argv[])
 {
   if(argc != 2)
+    {
+      fprintf (stderr, "Usage: randseq <sequence length>\n");
+      return -1;
+    }
+
+  errno = 0;
+  unsigned long seqlen = strtoul (argv[1], NULL, 0);
+  if (errno)
     return -1;
 
-  long seqlen = strtol (argv[1], NULL, 0);
-
-  if(seqlen < 0 || seqlen > SDCC_RAND_MAX)
-    return -1;
-
-  while(seqlen--)
-    printf ("%ld ", (long int)(sdcc_rand()));
-  printf("\n");
+  while (seqlen--)
+    printf ("%llu ", (unsigned long long)(xoshiro256ss()));
+  printf ("\n");
 
   return 0;
 }
