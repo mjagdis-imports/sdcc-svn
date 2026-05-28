@@ -23,10 +23,10 @@
               targets the <b><i>Intel MCS51 </i></b> based microprocessors <b><i>(8031, 8032, 8051, 8052, etc.)</i></b>,
               <b><i>Maxim</i></b> (formerly <b><i>Dallas</i></b>) <b><i>DS80C390</i></b> variants,
               <b><i>Freescale</i></b> (formerly <b><i>Motorola</i></b>) <b><i>HC08</i></b> based <b><i>(hc08, s08)</i></b>,
-              <b><i>Zilog Z80</i></b> based MCUs <b><i>(Z80, Z80N, Z180, SM83, Rabbit 2000, 2000A, 3000A, SM83, TLCS-90, eZ80, R800)</i></b>,
+              <b><i>Zilog Z80</i></b> based MCUs <b><i>(Z80, Z80N, Z180, SM83, Rabbit 2000, 2000A, 3000A, 4000, SM83, TLCS-90, eZ80, R800)</i></b>,
               <b><i>Padauk (pdk14, pdk15)</b></i>,
               <b><i>STMicroelectronics STM8</i></b>, <b><i>MOS 6502</b></i> and <b><i>WDC 65C02</b></i>.
-              Work is in progress on supporting the <b><i>Rabbit 4000, 5000, 6000</b></i>, <b><i>Padauk pdk13</i></b> and the <b><i>f8</i></b> and <b><i>f8l</i></b> targets;
+              Work is in progress on supporting the <b><i>Rabbit 5000, 6000</b></i>, <b><i>Padauk pdk13</i></b> and the <b><i>f8</i></b> and <b><i>f8l</i></b> targets;
               <b><i>Microchip PIC16</i></b> and <b><i>PIC18</i></b> targets are unmaintained.
               SDCC can be retargeted for other microprocessors.</p>
            <p>SDCC suite is a collection of several components derived from different sources with
@@ -68,6 +68,11 @@
             <!-- START NEWS -->
             
             <h2><a name="News"></a>News</h2> 
+
+            <p><i><b>May 28th, 2025: SDCC 4.6.0 RC1 released.</b></i></p>
+            <p>SDCC 4.6.0 Release Candidate 1 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows, and amd64 macOS are available in corresponding folders at:
+              <a href="http://sourceforge.net/projects/sdcc/files/">
+              http://sourceforge.net/projects/sdcc/files/</a>.</p>
 
             <p><i><b>2025-10-15: SDCC got funding.</b></i></p>
             <p>SDCC is primarily developed by unpaid volunteer work; though once in a while there was some outside support, in particular by university employees being allowed to work on SDCC a bit during paid time, and SDCC developers receiving hardware samples from microcontroller vendors.<br/>
