@@ -36,12 +36,12 @@ int main (int argc, const char *argv[])
     }
 
   errno = 0;
-  unsigned long seqlen = strtoul (argv[1], NULL, 0);
+  unsigned long int seqlen = strtoul (argv[1], NULL, 0);
   if (errno)
     return -1;
 
   while (seqlen--)
-    printf ("%llu ", (unsigned long long)(xoshiro256ss()));
+    printf ("%llu ", (unsigned long long int)(xoshiro256ss()));
   printf ("\n");
 
   return 0;

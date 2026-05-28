@@ -26,9 +26,9 @@ const char *options[NUM_OPTIONS] = {"--nopurity", "--nolospre", "--nogenconstpro
 
 #define BUFFERLEN 256
 
-void append_option(const char *option, long seed)
+void append_option(const char *option, unsigned long long int seed)
 {
-  char buffer[BUFFERLEN];
+  char buffer[BUFFERLEN] = {0};
   printf ("%s ", option);
   snprintf (buffer, BUFFERLEN - 1, "sed -i '1s;^;SDCCFLAGS += %s\\n;' ports/random-%llu/spec.mk\n", option, seed);
   system (buffer);
@@ -36,7 +36,7 @@ void append_option(const char *option, long seed)
 
 int main (int argc, const char *argv[])
 {
-  char buffer[BUFFERLEN];
+  char buffer[BUFFERLEN] = {0};
 
   if (argc != 2)
     {
@@ -45,9 +45,9 @@ int main (int argc, const char *argv[])
     }
 
   errno = 0;
-  unsigned long long seed = strtoul (argv[1], NULL, 0);
-  unsigned long long randbits = seed;
-  long randbits_remaining = 64;
+  unsigned long long int seed = strtoul (argv[1], NULL, 0);
+  unsigned long long int randbits = seed;
+  int randbits_remaining = 64;
 
   if (errno)
     return -1;
@@ -84,9 +84,12 @@ int main (int argc, const char *argv[])
         randbits_remaining--;
       }
 
-  // Todo: handle --max-allocs-per-node
   if (randbits_remaining < 4)
     fprintf (stderr, "Insufficient pseudorandom bits; need higher increase SDCC_RAND_MAX!\n");
+
+  unsigned long int maxallocs = 128 << (randbits % 10);
+  snprintf (buffer, BUFFERLEN - 1, "--max-allocs-per-node %lu", maxallocs);
+  append_option (buffer, seed);
 
   printf ("\n");
   snprintf (buffer, BUFFERLEN - 1, "sed -i '1s;^;# Randomized regression testing for seed %llu\\n;' ports/random-%llu/spec.mk\n", seed, seed);
