@@ -21,8 +21,8 @@ const bool lowmemport[NUM_BASEPORTS] = {
   false, false, false, false, false, false, false, false,
   false, false, false, false, false};
 
-#define NUM_OPTIONS 4
-const char *options[NUM_OPTIONS] = {"--nopurity", "--nolospre", "--nogenconstprop", "--no-peep"};
+#define NUM_OPTIONS 6
+const char *options[NUM_OPTIONS] = {"--nopurity", "--nolospre", "--nogenconstprop", "--nolabelopt", "--noloopreverse", "--no-peep"};
 
 #define BUFFERLEN 256
 

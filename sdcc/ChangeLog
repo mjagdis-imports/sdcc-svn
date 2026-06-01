@@ -1,3 +1,10 @@
+2026-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* support/regression/Makefile.in:
+	  Workaorund for bug #3996.
+	* support/regression/randport.c:
+	  Include further optimization options in command-line fuzzing.
+
 2026-05-29 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* sdcc/support/regression/Makefile.in:
