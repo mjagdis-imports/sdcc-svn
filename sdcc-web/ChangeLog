@@ -1,3 +1,8 @@
+2026-05-28 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* index.php:
+	  Announce SDCC 4.6.0 RC1.
+
 2026-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* snapshots.desc/sdcc-extra-src.desc:
