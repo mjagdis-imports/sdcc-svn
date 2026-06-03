@@ -1,7 +1,26 @@
+2026-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/bug-3998.c:
+	  Fix bug #3998.
+
+2026-06-03 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/SDCCBBlock.c:
+	  Fix dump filenames (iCode vs graph dump for generalized constant propagation).
+
+2026-06-02 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-3997.c:
+	  Fix bug #3997.
+	* support/regression/tests/bug-3988.c:
+	  Fix bug description comment.
+
 2026-06-01 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/Makefile.in:
-	  Workaorund for bug #3996.
+	  Workaround for bug #3996.
 	* support/regression/randport.c:
 	  Include further optimization options in command-line fuzzing.
 
