@@ -1,5 +1,10 @@
 2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
+	* doc/sdccman.lyx:
+	  Document f8(l) side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
 	* doc/sdccman.lyx,
 	  src/z80/gen.c:
 	  Control some z80 codegen aspects by --nosidechannel: Addition, right shift (leaking left operand). Document remaining z80 side-channels.

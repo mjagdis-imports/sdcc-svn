@@ -52681,7 +52681,8 @@ The command line option and pragma to avoid the introduction of side channels ar
 
 \begin_layout Itemize
 Division,
- modulo and multiplication operations can leak operand data
+ modulo,
+ and multiplication operations can leak operand data
 \end_layout
 
 \begin_layout Itemize
@@ -52960,6 +52961,41 @@ If the the function does not have variable arguments,
  yx (32 bit) or use a hidden extra pointer parameter pointing to the location (anything wider than 32 bit,
  and all struct / union).
  The stack is not adjusted for the parameters by the callee (thus the caller has to do this instead).
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data
 \end_layout
 
 \begin_layout Section

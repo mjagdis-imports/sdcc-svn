@@ -4299,7 +4299,7 @@ genGoto (const iCode *ic)
 {
   D (emit2 ("; genGoto", ""));
 
-  emitJP(IC_LABEL (ic), 1.0f);
+  emitJP (IC_LABEL (ic), 1.0f);
 }
 
 /*-----------------------------------------------------------------*/
