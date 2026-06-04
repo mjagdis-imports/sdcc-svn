@@ -5,6 +5,8 @@
 	  src/SDCCglobl.h,
 	  src/SDCCmain.c:
 	  Infrastructure for command-line-option and #pragma to avoid introducing side-channels.
+	* src/SDCCicode.c:
+	  Disable some optimizations of divisions by powers of two for --nosidechannel.
 
 2026-05-26 Philipp Klaus Krause <philipp@colecovision.eu>
 

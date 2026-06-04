@@ -2375,7 +2375,8 @@ geniCodeDivision (operand *left, operand *right, RESULT_TYPE resultType, bool pt
   /* if the right is a literal & power of 2
      and left is signed then make it a conditional addition
      followed by right shift */
-  else if (IS_LITERAL (retype) &&
+  else if (!optimize.nosidechannels && // The optimization results in differnet execution time depending on the sign of the left operand, and thus introduces a timing side-channel.
+      IS_LITERAL (retype) &&
       !IS_FLOAT (letype) &&
       !IS_FIXED (letype) && !IS_UNSIGNED (letype) &&
       floatFromVal (OP_VALUE (right)) >= 0 &&
