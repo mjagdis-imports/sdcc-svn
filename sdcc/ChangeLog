@@ -1,6 +1,7 @@
 2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* support/regression/Makefile.in:
+	* support/regression/Makefile.in,
+	  support/regression/randport.c:
 	  Basic documentation for fuzzing infrastructure.
 
 2026-06-03 Philipp Klaus Krause <philipp@colecovision.eu>

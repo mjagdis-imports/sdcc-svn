@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stdbool.h>
 
-// When adding a port hre, also adjust EXCLUDE_extra in Makefile.in!
+// When adding a port here, also adjust EXCLUDE_extra in Makefile.in!
 #define NUM_BASEPORTS 37
 const char *baseports[NUM_BASEPORTS] = {
   "ds390", "f8", "f8l", "hc08", "mcs51-huge", "mcs51-large", "mcs51-large-stack-auto", "mcs51-medium",
@@ -85,7 +85,7 @@ int main (int argc, const char *argv[])
       }
 
   if (randbits_remaining < 4)
-    fprintf (stderr, "Insufficient pseudorandom bits; need higher increase SDCC_RAND_MAX!\n");
+    fprintf (stderr, "Error: insufficient pseudorandom bits remaining!\n");
 
   unsigned long int maxallocs = 128 << (randbits % 10);
   snprintf (buffer, BUFFERLEN - 1, "--max-allocs-per-node %lu", maxallocs);
