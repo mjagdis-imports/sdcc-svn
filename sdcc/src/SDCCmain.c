@@ -159,6 +159,7 @@ char buffer[PATH_MAX * 2];
 #define OPTION_INCLUDE              "--include"
 #define OPTION_NO_GENCONSTPROP      "--nogenconstprop"
 #define OPTION_NO_PURITY            "--nopurity"
+#define OPTION_NO_SIDECHANNELS      "--nosidechannels"
 
 #define OPTION_SMALL_MODEL          "--model-small"
 #define OPTION_MEDIUM_MODEL         "--model-medium"
@@ -244,6 +245,7 @@ static const OPTION optionsTable[] = {
   {0,   OPTION_NO_PEEP_RETURN, NULL, "Disable peephole optimization for return instructions"},
   {0,   OPTION_PEEP_FILE, &options.peep_file, "<file> use this extra peephole file", CLAT_STRING},
   {0,   OPTION_ALLOW_UNSAFE_READ, NULL, "Allow optimizations to read any memory location anytime"},
+  {0,   OPTION_NO_SIDECHANNELS, NULL, "Disable optimizations likely to introduce side-channels"},
 
   {0,   NULL, NULL, "Internal debugging options"},
   {0,   OPTION_DUMP_AST, &options.dump_ast, "Dump front-end AST before generating i-code"},
@@ -692,6 +694,7 @@ setDefaultOptions (void)
   optimize.loopInduction = 1;
   options.max_allocs_per_node = 3000;
   optimize.purity = true;
+  optimize.nosidechannels = false;
   optimize.lospre = 1;
   optimize.allow_unsafe_read = 0;
   optimize.genconstprop = 1;
@@ -1253,6 +1256,12 @@ parseCmdLine (int argc, char **argv)
           if (strcmp (argv[i], OPTION_NO_LOSPRE) == 0)
             {
               optimize.lospre = 0;
+              continue;
+            }
+
+          if (strcmp (argv[i], OPTION_NO_SIDECHANNELS) == 0)
+            {
+              optimize.nosidechannels = 0;
               continue;
             }
 

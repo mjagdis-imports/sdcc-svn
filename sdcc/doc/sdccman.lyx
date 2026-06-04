@@ -15987,6 +15987,52 @@ status collapsed
  Disable the optimization of calls to the standard library.
 \end_layout
 
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+-
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+/
+\end_layout
+
+\end_inset
+
+-nosidechannels
+\end_layout
+
+\end_inset
+
+
+\series default
+ Disable optimizations that are likely to introduce side-channels,
+ which could leak information about the data being processed (in particular timing and energy-use side-channels).
+\end_layout
+
 \begin_layout Subsection
 Other Options
 \begin_inset Index idx
@@ -40504,6 +40550,38 @@ pragma nooverlay
 \end_inset
 
  - the compiler will not overlay the parameters and local variables of a function.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+nosidechannels
+\series default
+
+\begin_inset Index idx
+range none
+pageformat default
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+#
+\end_layout
+
+\end_inset
+
+pragma nosidechannels
+\end_layout
+
+\end_inset
+
+ - the compiler will avoid introducing side channels that could leak information on the processed data (e.g.
+ timing or energy side-channels).
 \end_layout
 
 \begin_layout Itemize

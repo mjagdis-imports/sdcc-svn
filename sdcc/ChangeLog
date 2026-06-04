@@ -1,3 +1,11 @@
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
+	  src/SDCC.lex,
+	  src/SDCCglobl.h,
+	  src/SDCCmain.c:
+	  Infrastructure for command-line-option and #pragma to avoid introducing side-channels.
+
 2026-05-26 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* support/regression/MakeList:
