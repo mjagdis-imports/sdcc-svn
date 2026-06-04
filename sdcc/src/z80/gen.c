@@ -9466,7 +9466,8 @@ genPlusIncr (const iCode *ic)
     }
 
   /* if increment 16 bits in register */
-  if (sameRegs (ic->left->aop, ic->result->aop) && size > 1 && icount == 1 &&
+  if (!optimize.nosidechannels &&
+    sameRegs (ic->left->aop, ic->result->aop) && size > 1 && icount == 1 &&
     ic->left->aop->type != AOP_FDIR &&
     (HAS_IYL_INST || size == 2 && getPairId (IC_RESULT (ic)->aop) != PAIR_INVALID || size >= 2 && !aopInReg (IC_RESULT (ic)->aop, 0, IYL_IDX) && !aopInReg (IC_RESULT (ic)->aop, 0, IYH_IDX) && !aopInReg (IC_RESULT (ic)->aop, 1, IYL_IDX) && !aopInReg (IC_RESULT (ic)->aop, 1, IYH_IDX)))
     {
@@ -10366,7 +10367,8 @@ genPlus (iCode * ic)
           i++;
         }
       // Conditional 16-bit inc.
-      else if (!maskedword && i == size - 2 && started && aopIsLitVal (rightop, i, 2, 0) && (
+      else if (!optimize.nosidechannels &&
+        !maskedword && i == size - 2 && started && aopIsLitVal (rightop, i, 2, 0) && (
         aopInReg (IC_RESULT (ic)->aop, i, BC_IDX) && aopInReg (leftop, i, BC_IDX) ||
         aopInReg (IC_RESULT (ic)->aop, i, DE_IDX) && aopInReg (leftop, i, DE_IDX) ||
         aopInReg (IC_RESULT (ic)->aop, i, HL_IDX) && aopInReg (leftop, i, HL_IDX) ||
@@ -10388,7 +10390,8 @@ genPlus (iCode * ic)
           i++;
         }
       // Conditional 8-bit inc.
-      else if (!maskedbyte && i == size - 1 && started && aopIsLitVal (rightop, i, 1, 0) &&
+      else if (!optimize.nosidechannels &&
+        !maskedbyte && i == size - 1 && started && aopIsLitVal (rightop, i, 1, 0) &&
         !aopInReg (leftop, i, A_IDX) && // adc a, #0 is cheaper than conditional inc.
         (i < leftop->size &&
         leftop->type == AOP_REG && IC_RESULT (ic)->aop->type == AOP_REG &&
@@ -14572,7 +14575,8 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       genMove (IC_RESULT (ic)->aop, ASMOP_HL, isRegDead (A_IDX, ic), true, isPairDead (PAIR_DE, ic), true);
       return;
     }
-  else if ((getPairId (result->aop) == PAIR_HL || getPairId (left->aop) == PAIR_HL) && isPairDead (PAIR_HL, ic) &&
+  else if (!optimize.nosidechannels &&
+    (getPairId (result->aop) == PAIR_HL || getPairId (left->aop) == PAIR_HL) && isPairDead (PAIR_HL, ic) &&
     shCount == 7 && is_signed)
     {
       tlbl = regalloc_dry_run ? 0 : newiTempLabel (NULL);
@@ -14589,7 +14593,8 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       return;
     }
   // If the leading bits are all the same, we can shift the other way, and use efficient 16-bit addition for shifts.
-  else if (shCount < 8 &&
+  else if ((!optimize.nosidechannels || !is_signed)  &&
+    shCount < 8 &&
     aopInReg (left->aop, 0, HL_IDX) && aopInReg (result->aop, 0, H_IDX) && isRegDead (L_IDX, ic) && isRegDead (A_IDX, ic) &&
     shCount >= 5 - !optimize.codeSpeed) // Smaller code size for 4 and above, but at least for Z80(N), only faster from 5.
     {

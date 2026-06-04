@@ -52668,6 +52668,42 @@ For banked functions,
  all parameters are passed on the stack.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data
+\end_layout
+
 \begin_layout Section
 The HC08 and S08 ports
 \end_layout
@@ -52898,7 +52934,11 @@ Comparisons can leak operand data
 \end_layout
 
 \begin_layout Itemize
-Floating-point operations can leak operand data
+Floating-point operations (except unary minus) can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit
 \end_layout
 
 \begin_layout Section
