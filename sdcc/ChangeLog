@@ -7,6 +7,8 @@
 	  Infrastructure for command-line-option and #pragma to avoid introducing side-channels.
 	* src/SDCCicode.c:
 	  Disable some optimizations of divisions by powers of two for --nosidechannel.
+	* src/SDCCicode.c:
+	  Mostly use jump tables to implement switch statements for --nosidechannel.
 
 2026-05-26 Philipp Klaus Krause <philipp@colecovision.eu>
 

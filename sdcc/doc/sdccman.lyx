@@ -16031,6 +16031,23 @@ status collapsed
 \series default
  Disable optimizations that are likely to introduce side-channels,
  which could leak information about the data being processed (in particular timing and energy-use side-channels).
+ While SDCC can try to avoid introducing side-channels,
+ the option cannot remove side-channels introduced by the programmer.
+ Machine-independent code transformations affected by this option include:
+\end_layout
+
+\begin_layout Itemize
+The optimization of divisions of signed operands by powers of two into shifts is disabled.
+\end_layout
+
+\begin_layout Itemize
+When a switch statement has more than two cases,
+ jump tables are preferred over match-and-jump sequences.
+\end_layout
+
+\begin_layout Standard
+Currently,
+ target-specific optimizations are not yet affected by this option.
 \end_layout
 
 \begin_layout Subsection

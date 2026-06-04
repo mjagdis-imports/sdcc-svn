@@ -4214,6 +4214,11 @@ geniCodeJumpTable (operand * cond, value * caseVals, ast * tree)
   /* Compute the total size cost of a match & jump sequence */
   sizeofMatchJump = cnt * port->jumptableCost.sizeofMatchJump[sizeIndex];
 
+  // The match & jump sequence results in the instruction sequence being executed depending far more on the condition value,
+  // and thus introduces worse timing and energy side channels, and they get worse the more cases there are.
+  if (cnt > 2 && optimize.nosidechannels)
+    sizeofMatchJump = INT_MAX;
+
   /* If the size cost of the jump table is uneconomical then exit */
   if (sizeofMatchJump < sizeofJumpTable)
     return 0;
