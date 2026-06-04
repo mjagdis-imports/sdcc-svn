@@ -3229,7 +3229,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i += 2;
          }
       // In some cases we gain so much by using decw that it is worth handling the carry explicitly.
-      else if (started && !maskedword && i == size - 2 && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) && aopIsLitVal (left_aop, i, 2, 0x0000) &&
+      else if (!optimize.nosidechannels && started && !maskedword && i == size - 2 && (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX)) && aopIsLitVal (left_aop, i, 2, 0x0000) &&
         (aopOnStack (right_aop, i, 2) || right_aop->type == AOP_DIR))
         {
           bool x = aopInReg (result_aop, i, X_IDX);
@@ -3244,7 +3244,7 @@ genSub (const iCode *ic, asmop *result_aop, asmop *left_aop, asmop *right_aop)
           i += 2;
          }
        // In some cases we gain so much by using decw that it is worth handling the carry explicitly.
-      else if (started && !maskedword && i == size - 2 && aopIsLitVal (right_aop, i, 2, 0x0000) &&
+      else if (!optimize.nosidechannels && started && !maskedword && i == size - 2 && aopIsLitVal (right_aop, i, 2, 0x0000) &&
         (aopInReg (result_aop, i, X_IDX) || aopInReg (result_aop, i, Y_IDX) || x_free && (aopOnStack (result_aop, i, 2) || result_aop->type == AOP_DIR)))
         {
           bool x = !aopInReg (result_aop, i, Y_IDX);
@@ -4302,7 +4302,7 @@ genFunction (iCode *ic)
       cost (6, 5);
 #else
       // The workaround obtained by further investigation of RFE #449. Experiments on STM8S208MB and STM8L152C6 show that div resets bit 6 of cc.
-      if (!optimize.codeSize)
+      if (!optimize.codeSize || optimize.nosidechannels)
         emit3 (A_CLR, ASMOP_A, 0); // Zero accumulator to reduce cycle cost in following division.
       emit2 ("div", "x, a");       // According to measurements on the STM8S208MB and STM8L152C6, div takes 2-3 cycles for divisions by zero and 2-17 cycles in general.
       cost (1, 3);
@@ -4985,7 +4985,7 @@ genPlus (const iCode *ic)
           started = TRUE;
           i++;
         }
-      else if (started && !maskedword && i == size - 2 && (aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Y_IDX)) &&
+      else if (!optimize.nosidechannels && started && !maskedword && i == size - 2 && (aopInReg (result->aop, i, X_IDX) || aopInReg (result->aop, i, Y_IDX)) &&
         (aopOnStackNotExt (leftop, i, 2) || leftop->type == AOP_DIR) &&
         (aopOnStackNotExt (rightop, i, 2) || rightop->type == AOP_LIT || rightop->type == AOP_IMMD || rightop->type == AOP_DIR))
         {
@@ -8313,7 +8313,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
     }
 
   // div can be cheaper than a sequence of shifts. Keep the decision here consistent with handling of funcDivFlagSafe in SDCCralloc.hpp!
-  if (!sign && shCount < 8 &&
+  if (!optimize.nosidechannels && // div execution time depends on operands
+    !sign && shCount < 8 &&
     (shCount > 3 + !a_free * 2 && (size == 2 && aopInReg (shiftop, 0, X_IDX) || size == 1 && aopInReg (shiftop, 0, XL_IDX) && xh_zero) ||
     shCount * 2 > 4 + !a_free * 2 && (size == 2 && aopInReg (shiftop, 0, Y_IDX) || size == 1 && aopInReg (shiftop, 0, YL_IDX) && yh_zero)))
     {
@@ -8330,7 +8331,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
     }
 
   // divw can be cheaper than a sequence of shifts. Keep the decision here consistent with handling of funcDivFlagSafe in SDCCralloc.hpp!
-  if (!sign && size == 2 && shCount > 5 && regDead (Y_IDX, ic) && aopInReg (shiftop, 0, X_IDX))
+  if (!optimize.nosidechannels && // div execution time depends on operands
+    !sign && size == 2 && shCount > 5 && regDead (Y_IDX, ic) && aopInReg (shiftop, 0, X_IDX))
     {
       emit2 ("ldw", "y, #0x%04x", 1 << shCount);
       cost (4, 2);
@@ -8340,7 +8342,8 @@ genRightShiftLiteral (operand *left, operand *right, operand *result, const iCod
     }
 
   // Testing and rlwa is cheaper than 8 times sraw
-  if (sign && shCount >= (7 - regDead (A_IDX, ic)) && size >= 2 && (aopInReg (shiftop, size - 2, X_IDX) || aopInReg (shiftop, size - 2, Y_IDX)) &&
+  if (!optimize.nosidechannels &&
+    sign && shCount >= (7 - regDead (A_IDX, ic)) && size >= 2 && (aopInReg (shiftop, size - 2, X_IDX) || aopInReg (shiftop, size - 2, Y_IDX)) &&
     (size == 2 || size == 3 && shCount >= 8 && aopInReg (shiftop, 0, A_IDX) || size == 4 && (aopInReg (shiftop, 0, X_IDX) || aopInReg (shiftop, 0, Y_IDX))))
     {
       bool pushed_sign = false;

@@ -16046,8 +16046,7 @@ When a switch statement has more than two cases,
 \end_layout
 
 \begin_layout Standard
-Currently,
- target-specific optimizations are not yet affected by this option.
+Also see the documentation for the individual ports for port-specific details on side-channels.
 \end_layout
 
 \begin_layout Subsection
@@ -52865,6 +52864,41 @@ For compatibility with the Cosmic STM8 compiler,
  Even for the medium memory model,
  __cosmic functions use a 24-bit return address in their stack frame,
  and are called using callf.
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division and modulo operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data
+\end_layout
+
+\begin_layout Itemize
+Rotation operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations can leak operand data
 \end_layout
 
 \begin_layout Section

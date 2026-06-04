@@ -1,6 +1,12 @@
 2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx,
+	  src/stm8/gen.c:
+	  Control some stm8 codegen aspects by --nosidechannel: Addition, subtraction, div hw bug woraround, right shift (leaking left operand). Document remaining stm8 side-channels.
+
+2026-06-04 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx,
 	  src/SDCC.lex,
 	  src/SDCCglobl.h,
 	  src/SDCCmain.c:
