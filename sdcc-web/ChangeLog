@@ -1,7 +1,16 @@
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* Merge next branch.
+
 2026-05-28 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* index.php:
 	  Announce SDCC 4.6.0 RC1.
+
+2026-05-27 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* snapshots.desc/sdcc-extra-src.desc:
+	  Update rrz80 description, which since many years is no longer particularly important to z80 port regression testing.
 
 2025-11-11 Philipp Klaus Krause <philipp@colecovision.eu>
 
