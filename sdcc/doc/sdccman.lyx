@@ -48999,7 +48999,7 @@ The command line option and pragma to avoid the introduction of side channels ar
 
 \begin_layout Itemize
 Division,
- modulo and multiplication operations can leak operand data
+ modulo and multiplication operations can leak operand data.
 \end_layout
 
 \begin_layout Itemize
@@ -49007,27 +49007,27 @@ Addition and subtraction can leak operand data.
 \end_layout
 
 \begin_layout Itemize
-Shift operations can leak right operand data
+Shift operations can leak right operand data.
 \end_layout
 
 \begin_layout Itemize
-Signed right shift can leak left operand sign
+Signed right shift can leak left operand sign.
 \end_layout
 
 \begin_layout Itemize
-Reads from signed bit-fields can leak the sign bit
+Reads from signed bit-fields can leak the sign bit.
 \end_layout
 
 \begin_layout Itemize
-Signed casts can leak the sign of the operand
+Signed casts can leak the sign of the operand.
 \end_layout
 
 \begin_layout Itemize
-Comparisons can leak operand data
+Comparisons can leak operand data.
 \end_layout
 
 \begin_layout Itemize
-Floating-point operations (except unary minus) can leak operand data
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52726,27 +52726,27 @@ The command line option and pragma to avoid the introduction of side channels ar
 \begin_layout Itemize
 Division,
  modulo,
- and multiplication operations can leak operand data
+ and multiplication operations can leak operand data.
 \end_layout
 
 \begin_layout Itemize
-Shift operations can leak right operand data
+Shift operations can leak right operand data.
 \end_layout
 
 \begin_layout Itemize
-Reads from signed bit-fields can leak the sign bit
+Reads from signed bit-fields can leak the sign bit.
 \end_layout
 
 \begin_layout Itemize
-Signed casts can leak the sign of the operand
+Signed casts can leak the sign of the operand.
 \end_layout
 
 \begin_layout Itemize
-Comparisons can leak operand data
+Comparisons can leak operand data.
 \end_layout
 
 \begin_layout Itemize
-Floating-point operations (except unary minus) can leak operand data
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -52798,6 +52798,42 @@ HC08
 \end_inset
 
  startup code follows the same scheme as the MCS51 startup code.
+\end_layout
+
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data.
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit.
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand.
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
@@ -53019,27 +53055,27 @@ The command line option and pragma to avoid the introduction of side channels ar
 \end_layout
 
 \begin_layout Itemize
-Division and modulo operations can leak operand data
+Division and modulo operations can leak operand data.
 \end_layout
 
 \begin_layout Itemize
-Shift operations can leak right operand data
+Shift operations can leak right operand data.
 \end_layout
 
 \begin_layout Itemize
-Reads from signed bit-fields can leak the sign bit
+Reads from signed bit-fields can leak the sign bit.
 \end_layout
 
 \begin_layout Itemize
-Signed casts can leak the sign of the operand
+Signed casts can leak the sign of the operand.
 \end_layout
 
 \begin_layout Itemize
-Comparisons can leak operand data
+Comparisons can leak operand data.
 \end_layout
 
 \begin_layout Itemize
-Floating-point operations (except unary minus) can leak operand data
+Floating-point operations (except unary minus) can leak operand data.
 \end_layout
 
 \begin_layout Section
