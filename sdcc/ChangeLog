@@ -1,11 +1,16 @@
 2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* doc/sdccman.lyx:
+	  Document pdk side-channels.
+
+2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* doc/sdccman.lyx:
 	  Document hc08/s08 side-channels.
 
 2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
-	* src/SDCCmain.c
+	* src/SDCCmain.c:
 	  Fix --nosidechannels comand-line option handling.
 	* doc/sdccman.lyx,
 	  src/z80/gen.c:
