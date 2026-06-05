@@ -48986,6 +48986,50 @@ The compiling and linking procedure remains the same,
  _bp is the stack frame pointer and is used to compute the offset into the stack for parameters and local variables.
 \end_layout
 
+\begin_layout Subsection
+Side channels
+\end_layout
+
+\begin_layout Standard
+The command line option and pragma to avoid the introduction of side channels are supported in the backend.
+ However,
+ some side channels remain even when using it;
+ these include:
+\end_layout
+
+\begin_layout Itemize
+Division,
+ modulo and multiplication operations can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Addition and subtraction can leak operand data.
+\end_layout
+
+\begin_layout Itemize
+Shift operations can leak right operand data
+\end_layout
+
+\begin_layout Itemize
+Signed right shift can leak left operand sign
+\end_layout
+
+\begin_layout Itemize
+Reads from signed bit-fields can leak the sign bit
+\end_layout
+
+\begin_layout Itemize
+Signed casts can leak the sign of the operand
+\end_layout
+
+\begin_layout Itemize
+Comparisons can leak operand data
+\end_layout
+
+\begin_layout Itemize
+Floating-point operations (except unary minus) can leak operand data
+\end_layout
+
 \begin_layout Section
 DS400 port
 \end_layout

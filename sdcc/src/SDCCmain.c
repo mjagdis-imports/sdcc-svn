@@ -1261,7 +1261,7 @@ parseCmdLine (int argc, char **argv)
 
           if (strcmp (argv[i], OPTION_NO_SIDECHANNELS) == 0)
             {
-              optimize.nosidechannels = 0;
+              optimize.nosidechannels = true;
               continue;
             }
 

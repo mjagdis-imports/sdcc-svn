@@ -2642,10 +2642,18 @@ genNot (iCode * ic)
   toBoolean (IC_LEFT (ic));
 
   /* set C, if a == 0 */
-  tlbl = newiTempLabel (NULL);
-  emitcode ("cjne", "a,#0x01,!tlabel", labelKey2num (tlbl->key));
-  emitLabel (tlbl);
-  outBitC (IC_RESULT (ic));
+  if (optimize.nosidechannels)
+    {
+      emitcode ("add", "a, #0xff");
+      emitcode ("cpl", "c");
+    }
+  else
+    {
+      tlbl = newiTempLabel (NULL);
+      emitcode ("cjne", "a,#0x01,!tlabel", labelKey2num (tlbl->key));
+      emitLabel (tlbl);
+    }
+  outBitC (ic->result);
 
 release:
   /* release the aops */
