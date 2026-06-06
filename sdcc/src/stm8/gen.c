@@ -7056,7 +7056,8 @@ genRot1 (iCode *ic)
       emit2 ("bccm", (s == 1) ? "%s, #0" : "%s, #7", aopGet (left->aop, 0));
       cost (4, 1);
     }
-  else if (s == 1 && aopSame (result->aop, 0, left->aop, 0, 1) && aopOnStack (left->aop, 0, 1))
+  else if (!optimize.nosidechannels &&
+    s == 1 && aopSame (result->aop, 0, left->aop, 0, 1) && aopOnStack (left->aop, 0, 1))
     {
       emit3 (A_SLL, left->aop, 0);
       symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
@@ -7124,7 +7125,7 @@ genRot1 (iCode *ic)
             }
           else if (s == 7)
             {
-              if (optimize.codeSpeed) // 5 bytes, 3 cycles
+              if (!optimize.nosidechannels && optimize.codeSpeed) // 5 bytes, 3 cycles
                 {
                   emit3 (A_SRL, ASMOP_A, 0);
                   symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
@@ -7222,6 +7223,17 @@ genRot2 (const iCode *ic)
             }
           emit3w (rlc ? A_SLLW : A_SRLW, use_y ? ASMOP_X : ASMOP_Y, 0);
           emit3w (rlc ? A_RLCW : A_RRCW, rotaop, 0);
+        }
+      else if (!rlc && (optimize.nosidechannels || regDead (A_IDX, ic) && aopInReg (rotaop, 0, X_IDX)))
+        {
+          if (!regDead (A_IDX, ic))
+            push (ASMOP_A, 0, 1);
+          emit3w (rlc ? A_SLLW : A_SRLW, rotaop, 0);
+          emit3 (A_LD, ASMOP_A, ASMOP_X);
+          emit3 (A_ADC, ASMOP_A, ASMOP_ZERO);
+          emit3 (A_LD, ASMOP_X, ASMOP_A);
+          if (!regDead (A_IDX, ic))
+            pop (ASMOP_A, 0, 1);
         }
       else
         {
