@@ -69,7 +69,7 @@
             
             <h2><a name="News"></a>News</h2> 
 
-            <p><i><b>May 28th, 2025: SDCC 4.6.0 RC1 released.</b></i></p>
+            <p><i><b>2026-05-28: SDCC 4.6.0 RC1 released.</b></i></p>
             <p>SDCC 4.6.0 Release Candidate 1 source, doc and binary packages for amd64 GNU/Linux, amd64 Windows, and amd64 macOS are available in corresponding folders at:
               <a href="http://sourceforge.net/projects/sdcc/files/">
               http://sourceforge.net/projects/sdcc/files/</a>.</p>
