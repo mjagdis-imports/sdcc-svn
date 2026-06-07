@@ -6056,7 +6056,7 @@ genCmp (const iCode *ic, iCode *ifx)
     }
 
 _genCmp_1:
-  if (!special && !strcmp(branchInstCmp (opcode, sign, FALSE), "jrc") && !ifx && (aopInReg (result->aop, 0, A_IDX) || regDead (A_IDX, ic)))
+  if (!special && !strcmp (branchInstCmp (opcode, sign, FALSE), "jrc") && !ifx && (aopInReg (result->aop, 0, A_IDX) || regDead (A_IDX, ic)))
     {
       emit3 (A_CLR, ASMOP_A, 0);
       emit3 (A_RLC, ASMOP_A, 0);
@@ -6298,7 +6298,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   if (!ifx)
     {
       cheapMove (result->aop, 0, opcode == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, !regDead (A_IDX, ic));
-      emitJP(tlbl, 0.0f);
+      emitJP (tlbl, 0.0f);
       if (pop_a)
         {
           emitLabel (tlbl_NE_pop);
@@ -7132,7 +7132,7 @@ genRot1 (iCode *ic)
                   if (!regalloc_dry_run)
                     emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
                   emit2 ("or", "a, #0x80");
-                  cost (4, 2);
+                  cost (4, 2); // jrnc takes 2 cycles if jumping, 1 if not, the or takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
                   emitLabel (tlbl);
                 }
               else // 4 bytes, 4 cycles.
@@ -8883,7 +8883,7 @@ genPointerGet (const iCode *ic)
             emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
           cost (2, 0);
           emit2 ("or", "a, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
-          cost (2, 1);
+          cost (2, 1); // jreq takes 2 cycles if jumping, 1 if not, the or takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emitLabel (tlbl);
         }
 
@@ -9605,7 +9605,7 @@ genCast (const iCode *ic)
           if (!regalloc_dry_run)
             emit2 ("jreq", "!tlabel", labelKey2num (tlbl->key));
           emit2 ("or", "a, #0x%02x", ~topbytemask & 0xff);
-          cost (6, 3);
+          cost (6, 3); // jreq takes 2 cycles if jumping, 1 if not, the or takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emitLabel (tlbl);
         }
       cheapMove (result->aop, result->aop->size - 1, ASMOP_A, 0, false);
@@ -9748,7 +9748,7 @@ genCast (const iCode *ic)
 
           if (!regalloc_dry_run)
             emit2 ("jrpl", "!tlabel", labelKey2num (tlbl->key));
-          cost (2, 2); // 2 for cycle cost is just an estimate; it also ignores pipelining.
+          cost (2, 1); // We choose cycle cost 1 for the jump: jrpl takes 2 cycles if jumping, 1 if not, the decw takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emit3w_o (A_DECW, result->aop, offset, 0, 0);
           emitLabel (tlbl);
           
@@ -9770,7 +9770,7 @@ genCast (const iCode *ic)
           emit3w_o (A_CLRW, result->aop, offset, 0, 0);
           if (!regalloc_dry_run)
             emit2 ("jrnc", "!tlabel", labelKey2num (tlbl->key));
-          cost (2, 2); // 2 for cycle cost is just an estimate; it also ignores pipelining.
+          cost (2, 1); // We choose cycle cost 1 for the jump: jrnc takes 2 cycles if jumping, 1 if not, the decw takes 1 cycle. So it's always two cycles, and there is no timing sidechannel leaking the sign.
           emit3w_o (A_DECW, result->aop, offset, 0, 0);
           emitLabel (tlbl);
 

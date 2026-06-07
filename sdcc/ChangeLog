@@ -2,6 +2,12 @@
 
 	* src/stm8/gen.c,
 	  doc/sdccman.lyx:
+	  Check more details of stm8 codegen for side channels, document results.
+
+2026-06-06 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
 	  Control stm8 codegen aspects by --nosidechannels: Rotation.
 
 2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
