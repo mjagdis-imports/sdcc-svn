@@ -16289,19 +16289,35 @@ end:
 /* of bitfield. And mask for unsigned, sign extension for signed.  */
 /*-----------------------------------------------------------------*/
 static void
-unpackMaskA(sym_link *type, int len)
+unpackMaskA (bool sign, int len, bool c_dead)
 {
-  if (SPEC_USIGN (type) || len != 1)
+  if (!(len % 8))
+    return;
+
+  if (sign && len == 1)
     {
-      emit2 ("and a, !immedbyte", ((unsigned)-1 & 0xffu) >> (8 - len));
-      cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+      emit3(A_RRA, 0, 0);
+      emit3(A_SBC, ASMOP_A, ASMOP_A);
     }
-  if (!SPEC_USIGN (type))
+
+  emit2 ("and a, !immedbyte", ((unsigned)-1 & 0xffu) >> (8 - len));
+  cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+
+  if (sign)
     {
-      if (len == 1)
+      if (optimize.nosidechannels)
         {
-          emit3(A_RRA, 0, 0);
-          emit3(A_SBC, ASMOP_A, ASMOP_A);
+          if (!c_dead)
+            _push (PAIR_BC);
+          emit3 (A_LD, ASMOP_C, ASMOP_A);
+          emit2 ("ld a, !immedbyte",  0xff >> (9 - len));
+          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+          emit3 (A_SUB, ASMOP_A, ASMOP_C);
+          emit2 ("and a, !immedbyte", (0xff00 >> (8 - len)) & 0xff);
+          cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
+          emit3 (A_OR, ASMOP_A, ASMOP_B);
+          if (!c_dead)
+            _pop (PAIR_BC);
         }
       else
         {
@@ -16327,7 +16343,7 @@ genUnpackBits (operand *result, int offset, int blen, int bstr)
   wassert (blen <= 8);
 
   AccRol (8 - bstr);
-  unpackMaskA (etype, blen);
+  unpackMaskA (!SPEC_USIGN (etype), blen, false);
   cheapMove (result->aop, offset++, ASMOP_A, 0, true);
 
   if (offset < rsize)
@@ -18908,9 +18924,6 @@ genCast (const iCode *ic)
       wassertl (0, "Tried to cast to a bit");
     }
 
-  unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
-   (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
-
   // Cast to _BitInt can require mask of top byte.
   if (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8) && bitsForType (resulttype) < bitsForType (righttype))
     {
@@ -18920,19 +18933,7 @@ genCast (const iCode *ic)
       if (result->aop->regs[A_IDX] >= 0 && result->aop->regs[A_IDX] != result->aop->size - 1)
         _push (PAIR_AF), pushed_a = true;
       cheapMove (ASMOP_A, 0, result->aop, result->aop->size - 1, true);
-      emit2 ("and a, #0x%02x", topbytemask);
-      cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-      if (!SPEC_USIGN (resulttype)) // Sign-extend
-        {
-          symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-          emit2 ("bit %d, a", (int)(SPEC_BITINTWIDTH (resulttype) % 8 - 1));
-          cost2 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-          if (!regalloc_dry_run)
-            emit2 ("jr z, !tlabel", labelKey2num (tlbl->key));
-          emit2 ("or a, #0x%02x", ~topbytemask & 0xffu);
-          regalloc_dry_run_cost += 4;
-          emitLabel (tlbl);
-        }
+      unpackMaskA (!SPEC_USIGN (resulttype), SPEC_BITINTWIDTH (resulttype) % 8, isRegDead (C_IDX, ic) && result->aop->regs[C_IDX] < 0);
       cheapMove (result->aop, result->aop->size - 1, ASMOP_A, 0, true);
 
       goto release;
@@ -19089,6 +19090,9 @@ genCast (const iCode *ic)
         }
       else
         {
+          unsigned topbytemask = (IS_BITINT (resulttype) && (SPEC_BITINTWIDTH (resulttype) % 8)) ?
+            (0xff >> (8 - SPEC_BITINTWIDTH (resulttype) % 8)) : 0xff;
+
           emit3 (A_SBC, ASMOP_A, ASMOP_A);
           while (size--)
             {
