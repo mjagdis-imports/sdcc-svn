@@ -6600,6 +6600,54 @@ init_stackop (asmop *stackop, int size, long int stk_off)
   stackop->valinfo.anything = true;
 }
 
+// Sign-extending of top bit-field or _BitInt byte), directly after an and which set z flag according to value.
+static void extend_bit_sign (int blen)
+{
+   if (optimize.nosidechannels)
+    {
+      if (blen == 1)
+        {
+          emit3 (A_SRL, ASMOP_XL, 0);
+          emit3 (A_CLR, ASMOP_XL, 0);
+          emit3 (A_ADC, ASMOP_XL, ASMOP_MONE);
+          emit3 (A_XOR, ASMOP_XL, ASMOP_MONE);
+        }
+      else
+        {
+          push (ASMOP_XL, 0, 1);
+          emit2 ("ld", "xl, #0x%02x", 0xff >> (9 - blen));
+          cost (2, 1);
+          emit2 ("sub", "xl, (0, sp)");
+          cost (2, 1);
+          emit2 ("and", "xl, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
+          cost (2, 1);
+          emit2 ("or", "xl, (0, sp)");
+          cost (2, 1);
+          adjustStack (1, false, false);
+        }
+      return;
+    }
+
+  symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
+  if (blen == 1) // The and above already set the z flag.
+    {
+      if (tlbl)
+        emit2 ("jrz", "#!tlabel", labelKey2num (tlbl->key));
+      cost (2, 0);
+    }
+  else if (blen != 1) 
+    {
+      emit2 ("cp", "xl, #0x%02x", 0x80 >> (8 - blen));
+      cost (2, 1);
+      if (tlbl)
+        emit2 ("jrnc", "#!tlabel", labelKey2num (tlbl->key));
+      cost (2, 0);
+    }
+  emit2 ("or", "xl, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
+  cost (2, 1);
+  emitLabel (tlbl);
+}
+
 // Shifting, masking, and sign-extending of top bit-field byte.
 static void
 handle_bitfield_topbyte_in_xl (int blen, int bstr, bool sign_extend, bool xh_dead)
@@ -6627,25 +6675,7 @@ handle_bitfield_topbyte_in_xl (int blen, int bstr, bool sign_extend, bool xh_dea
   if (!sign_extend)
     return;
 
-  // Sign-extend
-  symbol *const tlbl = (regalloc_dry_run ? 0 : newiTempLabel (0));
-  if (blen == 1) // The and above already set the z flag.
-    {
-      if (tlbl)
-        emit2 ("jrz", "#!tlabel", labelKey2num (tlbl->key));
-      cost (2, 0);
-    }
-  else if (blen != 1) 
-    {
-      emit2 ("cp", "xl, #0x%02x", 0x80 >> (8 - blen));
-      cost (2, 1);
-      if (tlbl)
-        emit2 ("jrnc", "#!tlabel", labelKey2num (tlbl->key));
-      cost (2, 0);
-    }
-  emit2 ("or", "xl, #0x%02x", (0xff00 >> (8 - blen)) & 0xff);
-  cost (2, 1);
-  emitLabel (tlbl);
+  extend_bit_sign (blen); // Assumes z flag from and above!
 }
 
 /*-----------------------------------------------------------------*/
@@ -7651,21 +7681,7 @@ genCast (const iCode *ic)
       emit2 ("and", "xl, #0x%02x", topbytemask);
       cost (2, 1);
       if (!SPEC_USIGN (resulttype)) // Sign-extend
-        {
-          unsigned testmask = 1u << (SPEC_BITINTWIDTH (resulttype) % 8 - 1);
-          symbol *tlbl = regalloc_dry_run ? 0 : newiTempLabel (0);
-          if (testmask != topbytemask)
-            {
-              push (ASMOP_XL, 0, 1);
-              emit2 ("and", "xl, #0x%02x", testmask);
-              pop (ASMOP_XL, 0, 1);
-            }
-          if (!regalloc_dry_run)
-            emit2 ("jrz", "#!tlabel", labelKey2num (tlbl->key));
-          emit2 ("or", "xl, #0x%02x", ~topbytemask & 0xff);
-          cost (6, 2.5);
-          emitLabel (tlbl);
-        }
+        extend_bit_sign (SPEC_BITINTWIDTH (resulttype) % 8); // Assumes z flag from and above!
       genMove_o (result->aop, result->aop->size - 1, ASMOP_XL, 0, 1, true, false, false, false, true);
 
       goto release;

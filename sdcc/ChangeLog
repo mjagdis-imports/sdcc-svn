@@ -1,4 +1,10 @@
-2026-06-06 Philipp Klaus Krause <philipp@colecovision.eu>
+2026-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/f8/gen.c,
+	  doc/sdccman.lyx:
+	  Control f8 codegen aspects by --nosidechannels: Reads of signed bit-fields, signed casts.
+
+2026-06-07 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c,
 	  doc/sdccman.lyx:
@@ -29,7 +35,7 @@
 2026-06-05 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/SDCCmain.c:
-	  Fix --nosidechannels comand-line option handling.
+	  Fix --nosidechannels command-line option handling.
 	* doc/sdccman.lyx,
 	  src/z80/gen.c:
 	  Control some mcs51 codegen aspects by --nosidechannels: Negation. Document remaining mcs51 side-channels.

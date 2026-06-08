@@ -53051,14 +53051,6 @@ Shift operations can leak right operand data.
 \end_layout
 
 \begin_layout Itemize
-Reads from signed bit-fields can leak the sign bit.
-\end_layout
-
-\begin_layout Itemize
-Signed casts can leak the sign of the operand.
-\end_layout
-
-\begin_layout Itemize
 Comparisons can leak operand data.
 \end_layout
 
