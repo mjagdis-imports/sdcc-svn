@@ -6128,6 +6128,7 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   symbol *tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
   bool pushed_a = FALSE, pop_a = FALSE;
   int pushed;
+  bool result_in_a = false;
 
   D (emit2 ("; genCmpEQorNE", ""));
 
@@ -6145,6 +6146,58 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
   aopOp (result, ic, true);
 
   size = max (left->aop->size, right->aop->size);
+
+  if (!ifx && size == 2 && regDead (A_IDX, ic) &&
+    (aopInReg (left->aop, 0, X_IDX) && regDead (X_IDX, ic) && (aopOnStackNotExt (right->aop, 0, 2) || right->aop->type == AOP_DIR || right->aop->type == AOP_LIT || right->aop->type == AOP_IMMD)))
+    {
+      emit2 ("subw", "x, %s", aopGet2 (right->aop, 0));
+      cost (3 - aopOnStackNotExt (right->aop, 0, 2), 2);
+      emit2 ("subw", "x, #1");
+      cost (3, 1);
+      emit3 (A_CLR, ASMOP_A, NULL);
+      emit3 (A_RLC, ASMOP_A, NULL);
+      result_in_a = true;
+      goto compared;
+    }
+  else if (!ifx && (optimize.nosidechannels || size == 1 && regDead (A_IDX, ic) && right->aop->regs[A_IDX] < 0))
+    {
+      if (!regDead (A_IDX, ic) || left->aop->regs[A_IDX] >= 1 || right->aop->regs[A_IDX] >= 0)
+        UNIMPLEMENTED;
+      cheapMove (ASMOP_A, 0, left->aop, 0, false);
+      if (aopIsLitVal (right->aop, 0, 1, 0x00))
+        ;
+      else if (right->aop->type == AOP_REG || right->aop->type == AOP_REGSTK && !aopOnStack (right->aop, 0, 1))
+        UNIMPLEMENTED;
+      else
+        emit3 (A_SUB, ASMOP_A, right->aop);
+      if (size > 1)
+        {
+          push (ASMOP_A, 0, 1);
+          for (i = 1; i < size; i++)
+            {
+              cheapMove (ASMOP_A, 0, left->aop, i, false);
+              if (aopIsLitVal (right->aop, i, 1, 0x00))
+                ;
+              else if (right->aop->type = AOP_REG || right->aop->type == AOP_REGSTK && !aopOnStack (right->aop, i, 1))
+                UNIMPLEMENTED;
+              else
+                emit3_o (A_SUB, ASMOP_A, 0, right->aop, i);
+              emit2 ("or", "a, (1, sp)");
+              cost (2, 1);
+              if (i + 1 < size)
+                {
+                  emit2 ("ld", "(1, sp), a");
+                  cost (2, 1);
+                }
+            }
+          adjustStack (1, false, false, false);
+        }
+      emit3 (A_SUB, ASMOP_A, ASMOP_ONE);
+      emit3 (A_CLR, ASMOP_A, NULL);
+      emit3 (A_RLC, ASMOP_A, NULL);
+      result_in_a = true;
+      goto compared;
+    }
 
   for (i = 0; i < size;)
     {
@@ -6290,12 +6343,20 @@ genCmpEQorNE (const iCode *ic, iCode *ifx)
       cost (2, 2); // Cycle cost is an estimate.
     }
 
+compared:
   if (pushed_a)
     pop (ASMOP_A, 0, 1);
 
   wassertl (result->aop->size == 1 || ifx, "Unimplemented result size.");
 
-  if (!ifx)
+  if (result_in_a)
+    {
+      wassert (!ifx);
+      if (opcode == NE_OP)
+        emit3 (A_XOR, ASMOP_A, ASMOP_ONE);
+      cheapMove (result->aop, 0, ASMOP_A, 0, false);
+    }
+  else if (!ifx)
     {
       cheapMove (result->aop, 0, opcode == EQ_OP ? ASMOP_ONE : ASMOP_ZERO, 0, !regDead (A_IDX, ic));
       emitJP (tlbl, 0.0f);
