@@ -2,6 +2,8 @@
 
 	* src/stm8/peeph.def:
 	  Optimize some push / pop cases.
+	* src/z80/gen.c:
+	  Optimize some pointer reads.
 
 2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
