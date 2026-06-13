@@ -52995,10 +52995,6 @@ Shift operations can leak right operand data
 \end_layout
 
 \begin_layout Itemize
-Comparisons can leak operand data
-\end_layout
-
-\begin_layout Itemize
 Floating-point operations (except unary minus) can leak operand data
 \end_layout
 

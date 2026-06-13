@@ -1,4 +1,11 @@
-2026-06-08 Philipp Klaus Krause <philipp@colecovision.eu>
+2026-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  src/stm8/peeph.def,
+	  doc/sdccman.lyx:
+	  Control stm8 codegen aspects by --nosidechannels: Comparisons.
+
+2026-06-12 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c:
 	  Control stm8 codegen aspects by --nosidechannels: Equality comparisons.
