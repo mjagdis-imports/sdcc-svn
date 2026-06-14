@@ -52734,7 +52734,7 @@ Shift operations can leak right operand data.
 \end_layout
 
 \begin_layout Itemize
-Comparisons can leak operand data.
+Comparisons can leak operand data in the sm83 backend.
 \end_layout
 
 \begin_layout Itemize

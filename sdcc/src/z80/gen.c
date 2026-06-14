@@ -12735,6 +12735,21 @@ fix:
               genIfxJump (ifx, "lt");
               return;
             }
+          else if (!ifx && !IS_SM83 && optimize.nosidechannels) // Compute N ^ V (the latter is not a flag bit on SM83).
+            {
+              if (!isRegDead (BC_IDX, ic))
+                _push (PAIR_BC);
+              _push (PAIR_AF);
+              _pop (PAIR_BC);
+              emit3 (A_LD, ASMOP_A, ASMOP_C);
+              emit3 (A_RRCA, NULL, NULL);
+              emit3 (A_RRCA, NULL, NULL);
+              emit3 (A_RRCA, NULL, NULL);
+              emit3 (A_XOR, ASMOP_A, ASMOP_C);
+              if (!isRegDead (BC_IDX, ic))
+                _pop (PAIR_BC);
+              result_in_carry = false;
+            }
           else if (!IS_SM83) // Directly check for overflow, can't be done on SM83.
             {
               // Assume no overflow.
@@ -12753,7 +12768,7 @@ fix:
                  don't change the carry flag. */
               symbol *tlbl1 = regalloc_dry_run ? 0 : newiTempLabel (0);
               symbol *tlbl2 = regalloc_dry_run ? 0 : newiTempLabel (0);
-              // TODO: Fix all teh cycle costs in here.
+              // TODO: Fix all the cycle costs in here.
               emit2 ("bit 7, e");
               regalloc_dry_run_cost += 2;
               cost2 (2, 2, 2, 2, 8, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
@@ -13328,12 +13343,69 @@ genCmpEq (iCode *ic, iCode *ifx)
   /* Swap operands if it makes the operation easier. ie if:
      1.  Left is a literal.
    */
-  if (IC_LEFT (ic)->aop->type == AOP_LIT || IC_RIGHT (ic)->aop->type != AOP_LIT && IC_RIGHT (ic)->aop->type != AOP_REG
-      && IC_LEFT (ic)->aop->type == AOP_REG)
+  if (ic->left->aop->type == AOP_LIT ||
+    ic->right->aop->type != AOP_LIT && ic->right->aop->type != AOP_REG && ic->left->aop->type == AOP_REG)
     {
       operand *t = IC_RIGHT (ic);
       IC_RIGHT (ic) = IC_LEFT (ic);
       IC_LEFT (ic) = t;
+    }
+
+  if (!ifx && optimize.nosidechannels)
+    {
+      int size = max (left->aop->size, right->aop->size);
+      if (left->aop->regs[A_IDX] > 0 || right->aop->regs[A_IDX] > 0 || !isRegDead (A_IDX, ic))
+        UNIMPLEMENTED;
+
+      bool started = false;
+      for (int i = 0; i < size; i++)
+        {
+          if (!started && aopIsLitVal (right->aop, i, 1, 0))
+            {
+              cheapMove (ASMOP_A, 0, left->aop, 0, true);
+              started = true;
+            }
+          else if (!started && aopIsLitVal (left->aop, i, 1, 0))
+            {
+              cheapMove (ASMOP_A, 0, right->aop, 0, true);
+              started = true;
+            }
+          else if (started && aopIsLitVal (right->aop, i, 1, 0))
+            emit3_o (A_OR, ASMOP_A, 0, right->aop, i);
+          else if (right->aop->type == AOP_STL && i < 2)
+            {
+              bool hl_dead = isRegDead (HL_IDX, ic) && left->aop->regs[L_IDX] <= i && left->aop->regs[H_IDX] <= i;
+              if (left->aop->regs[L_IDX] == i || left->aop->regs[H_IDX] == i)
+                UNIMPLEMENTED;
+              cheapMove (ASMOP_A, 0, left->aop, 0, true);
+              if (!hl_dead)
+                _push (PAIR_HL);
+              genMove_o (ASMOP_HL, 0, right->aop, 0, 2, false, true, false, false, true);
+              emit3_o (A_SUB, ASMOP_A, 0, ASMOP_HL, i);
+              if (!hl_dead)
+                _pop (PAIR_HL);
+            }
+          else
+            {
+              bool inv = aopInReg (right->aop, i, A_IDX);
+              if (started)
+                {
+                  if (!isRegDead (BC_IDX, ic) || left->aop->regs[B_IDX] >= i || left->aop->regs[C_IDX] >= i || right->aop->regs[B_IDX] >= i || right->aop->regs[C_IDX] >= i)
+                    UNIMPLEMENTED;
+                  emit3 (A_LD, ASMOP_C, ASMOP_A);
+                }
+              cheapMove (ASMOP_A, 0, inv ? right->aop : left->aop, i, true);
+              emit3_o (A_SUB, ASMOP_A, 0, inv ? left->aop : right->aop, i);
+              if (started)
+                emit3 (A_OR, ASMOP_A, ASMOP_C);
+              started = true;
+            }
+        }
+      emit3 (A_SUB, ASMOP_A, ASMOP_ONE);
+      emit3 (A_LD, ASMOP_A, ASMOP_ZERO);
+      emit3 (A_RLA, NULL, NULL);
+      genMove (result->aop, ASMOP_A, true, isPairDead (PAIR_HL, ic), isPairDead (PAIR_DE, ic), isPairDead (PAIR_IY, ic));
+      goto release;
     }
 
   if (ifx && !result->aop->size)
@@ -14587,7 +14659,7 @@ shiftR2Left2Result (const iCode *ic, operand *left, int offl, operand *result, i
       emit3 (A_LD, ASMOP_L, ASMOP_H);
       emit3 (A_LD, ASMOP_H, ASMOP_ZERO);
       if (!regalloc_dry_run)
-        emit2 ("jr nc,!tlabel", labelKey2num (tlbl->key));
+        emit2 ("jr nc, !tlabel", labelKey2num (tlbl->key));
       emit2 ("dec h");
       emitLabel (tlbl);
       cost (3, 11.5f);
@@ -16316,7 +16388,7 @@ unpackMaskA (bool sign, int len, bool c_dead)
           emit3 (A_SUB, ASMOP_A, ASMOP_C);
           emit2 ("and a, !immedbyte", (0xff00 >> (8 - len)) & 0xff);
           cost2 (2, 2, 2, 2, 7, 6, 4, 4, 8, 4, 2, 2, 2, 2, 2);
-          emit3 (A_OR, ASMOP_A, ASMOP_B);
+          emit3 (A_OR, ASMOP_A, ASMOP_C);
           if (!c_dead)
             _pop (PAIR_BC);
         }

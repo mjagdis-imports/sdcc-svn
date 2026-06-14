@@ -1,3 +1,9 @@
+2026-06-14 Philipp Klaus Krause <philipp@colecovision.eu>
+
+	* src/stm8/gen.c,
+	  doc/sdccman.lyx:
+	  Control z80-related codegen aspects by --nosidechannels: Comparisons.
+
 2026-06-13 Philipp Klaus Krause <philipp@colecovision.eu>
 
 	* src/stm8/gen.c,
