@@ -6657,8 +6657,11 @@ _castBoolean (const operand *right)
     }
   else
     {
-      _toBoolean (right, FALSE);
-      emit3 (A_ADD, ASMOP_A, ASMOP_MONE);
+      _toBoolean (right, false);
+      if (IS_Z80 || IS_TLCS870 || IS_TLCS870C || IS_TLCS870C1) // Only for the original Z80 is the addition faster than neg. TLCS-870(C)(C1) don't have neg.
+        emit3 (A_ADD, ASMOP_A, ASMOP_MONE);
+      else
+        emit3 (A_NEG, ASMOP_A, NULL);
       emit3 (A_LD, ASMOP_A, ASMOP_ZERO);
     }
   emit3 (A_RLA, 0, 0);

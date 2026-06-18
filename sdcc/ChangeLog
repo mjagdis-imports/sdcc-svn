@@ -4,7 +4,7 @@
 	  src/f8/gen.c,
 	  src/hc08/gen.c,
 	  src/z80/gen.c:
-	  Control hc08, s08, f8, z80-related, codegen aspects by --nosidechannels: Reads of signed bit-fields, signed casts.
+	  Control hc08, s08, f8, z80-related, codegen aspects by --nosidechannels: Reads of signed bit-fields, signed casts, comparisons.
 
 2026-06-14 Philipp Klaus Krause <philipp@colecovision.eu>
 

@@ -108,11 +108,11 @@ static bool regalloc_dry_run;
 static unsigned int regalloc_dry_run_cost;
 
 static void
-emitBranch (char *branchop, symbol * tlbl)
+emitBranch (const char *branchop, const symbol *tlbl)
 {
   if (!regalloc_dry_run)
     emitcode (branchop, "%05d$", labelKey2num (tlbl->key));
-  regalloc_dry_run_cost += (!strcmp(branchop, "jmp") || !strcmp(branchop, "brclr") || !strcmp(branchop, "brset") ? 3 : 2);
+  regalloc_dry_run_cost += (!strcmp (branchop, "jmp") || !strcmp (branchop, "brclr") || !strcmp (branchop, "brset") ? 3 : 2);
 }
 
 /*-----------------------------------------------------------------*/
@@ -2960,7 +2960,7 @@ getDataSize (operand *op)
 
 
 /*-----------------------------------------------------------------*/
-/* asmopToBool - Emit code to convert an asmop to a boolean.       */
+/* asmopToBool - Emit code to convert an asmop to a bool.          */
 /*               Result left in A (0=false, 1=true) if ResultInA,  */
 /*               otherwise result left in Z flag (1=false, 0=true) */
 /*-----------------------------------------------------------------*/
@@ -2968,7 +2968,7 @@ static void
 asmopToBool (asmop *aop, bool resultInA)
 {
   bool isFloat; 
-  symbol *tlbl, *tlbl1;
+  symbol *tlbl;
   int size = aop->size;
   bool needpula = false;
   bool flagsonly = true;
@@ -3099,12 +3099,13 @@ asmopToBool (asmop *aop, bool resultInA)
       break;
     case AOP_LIT:
       /* Higher levels should optimize this case away but let's be safe */
+      wassert (resultInA);
       if (ulFromVal (aop->aopu.aop_lit))
         loadRegFromConst (hc08_reg_a, 1);
       else
         loadRegFromConst (hc08_reg_a, 0);
       hc08_freeReg (hc08_reg_a);
-      break;
+      return;
     default:
       if (size == 1)
         {
@@ -3166,11 +3167,10 @@ asmopToBool (asmop *aop, bool resultInA)
 
   if (resultInA)
     {
-      tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
-
       if (flagsonly)
         {
-          tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+          tlbl = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+          symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
           emitBranch ("bne", tlbl1);
           loadRegFromConst (hc08_reg_a, 0);
           emitBranch ("bra", tlbl);
@@ -3178,14 +3178,15 @@ asmopToBool (asmop *aop, bool resultInA)
             emitLabel (tlbl1);
           hc08_dirtyReg (hc08_reg_a, false);
           loadRegFromConst (hc08_reg_a, 1);
+          if (!regalloc_dry_run)
+            emitLabel (tlbl);
         }
       else
         {
-          emitBranch ("beq", tlbl);
-          loadRegFromConst (hc08_reg_a, 1);
+          rmwWithReg ("neg", hc08_reg_a);
+          loadRegFromConst (hc08_reg_a, 0);
+          rmwWithReg ("rol", hc08_reg_a);
         }
-      if (!regalloc_dry_run)
-        emitLabel (tlbl);
       hc08_dirtyReg (hc08_reg_a, false);
       hc08_useReg (hc08_reg_a);
     }
@@ -6033,23 +6034,54 @@ genCmp (iCode * ic, iCode * ifx)
     }
   else
     {
-      symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
-      symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
-
       if (!needpulla)
         needpulla = pushRegIfSurv (hc08_reg_a);
 
-      emitBranch (branchInstCmp (opcode, sign), tlbl1);
-      loadRegFromConst (hc08_reg_a, 0);
-      emitBranch ("bra", tlbl2);
-      if (!regalloc_dry_run)
-        emitLabel (tlbl1);
-      hc08_dirtyReg (hc08_reg_a, false);
-      loadRegFromConst (hc08_reg_a, 1);
-      if (!regalloc_dry_run)
-        emitLabel (tlbl2);
-      hc08_dirtyReg (hc08_reg_a, false);
+      const char *branchinst = branchInstCmp (opcode, sign);
+
+      if ((!strcmp (branchinst, "blt") || !strcmp (branchinst, "bge")) && optimize.nosidechannels) // transform blt to bcs
+        {
+          emitcode ("tpa", "");
+          regalloc_dry_run_cost++;
+          pushReg (hc08_reg_a, true);
+          emitcode ("rora", "");
+          emitcode ("rora", "");
+          emitcode ("rora", "");
+          emitcode ("ora", "1,s");
+          emitcode ("rola", "");
+          adjustStack (1);
+          branchinst = strcmp (branchinst, "blt") ? "bcs" : "bcc";
+        }
+
+      if (!strcmp (branchinst, "bcs") || !strcmp (branchinst, "bcc"))
+        {
+          emitcode ("clra", "");
+          emitcode ("rola", "");
+          regalloc_dry_run_cost += 2;
+          if (!strcmp (branchInstCmp (opcode, sign), "bcc"))
+            {
+              emitcode ("eor", one);
+              regalloc_dry_run_cost += 2;
+            }
+          hc08_dirtyReg (hc08_reg_a, false);
+        }
+      else
+        {
+          symbol *tlbl1 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+          symbol *tlbl2 = (regalloc_dry_run ? 0 : newiTempLabel (NULL));
+          emitBranch (branchinst, tlbl1);
+          loadRegFromConst (hc08_reg_a, 0);
+          emitBranch ("bra", tlbl2);
+          if (!regalloc_dry_run)
+            emitLabel (tlbl1);
+          hc08_dirtyReg (hc08_reg_a, false);
+          loadRegFromConst (hc08_reg_a, 1);
+          if (!regalloc_dry_run)
+            emitLabel (tlbl2);
+          hc08_dirtyReg (hc08_reg_a, false);
+        }
       storeRegToFullAop (hc08_reg_a, AOP (result), false);
+
       pullOrFreeReg (hc08_reg_a, needpulla);
       freeAsmop (result, NULL, ic, true);
     }
