@@ -6943,7 +6943,7 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
       size = max (AOP_SIZE (left), AOP_SIZE (right));
 
       /* if unsigned char cmp with lit, do cjne left,#right,zz */
-      if (size == 1 && !sign && AOP_TYPE (right) == AOP_LIT && AOP_TYPE (left) != AOP_DIR && AOP_TYPE (left) != AOP_SFR && AOP_TYPE (left) != AOP_STR)
+      if (size == 1 && !sign && !optimize.nosidechannels && AOP_TYPE (right) == AOP_LIT && AOP_TYPE (left) != AOP_DIR && AOP_TYPE (left) != AOP_SFR && AOP_TYPE (left) != AOP_STR)
         {
           char *l = Safe_strdup (opGet (left, offset, FALSE, FALSE));
           symbol *lbl = newiTempLabel (NULL);
@@ -7098,7 +7098,7 @@ genCmpGt (iCode * ic, iCode * ifx)
   aopOp (right, ic, FALSE);
   aopOp (left, ic, FALSE);
   
-  genCmp (right, left, result, ifx, sign, ic);emitcode(";","free result");
+  genCmp (right, left, result, ifx, sign, ic);
 
   freeAsmop (result, NULL, ic, TRUE);
 }

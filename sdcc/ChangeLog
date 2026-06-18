@@ -2,7 +2,7 @@
 
 	* doc/sdccman.lyx,
 	  src/mcs51/gen.c:
-	  Control mcs51 codegen aspects by --nosidechannels: addition, subtraction, right shift, casts, bit-field reads.
+	  Control mcs51 codegen aspects by --nosidechannels: addition, subtraction, right shift, casts, bit-field reads, comparisons.
 
 2026-06-18 Philipp Klaus Krause <philipp@colecovision.eu>
 

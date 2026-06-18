@@ -49007,7 +49007,7 @@ Shift operations can leak right operand data.
 \end_layout
 
 \begin_layout Itemize
-Comparisons can leak operand data.
+Equality comparisons can leak operand data.
 \end_layout
 
 \begin_layout Itemize
